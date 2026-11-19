@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/navigation/tabs.md)
+
 unit GuiGallery.Pages.Navigation.Widgets.Tabs;
 
 uses

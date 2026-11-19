@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/navigation/README.md)
+
 unit GuiGallery.Pages.Navigation.State;
 
 // State owned by this gallery feature.

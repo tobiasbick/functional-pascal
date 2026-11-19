@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/motion/README.md)
+
 unit GuiGallery.Pages.Motion.State;
 
 uses Fpas.Ui.Widgets.Audio.NowPlaying as Player, Fpas.Ui.Widgets.Charts.Charts as Colors, Fpas.Ui.Graphics as Graphics;

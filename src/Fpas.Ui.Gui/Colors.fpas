@@ -1,3 +1,5 @@
+// [Documentation](../../docs/ui/gui/host.md#fonts-and-native-captions)
+
 unit Fpas.Ui.Gui.Colors;
 
 uses Fpas.Ui.Graphics as G, Fpas.Ui.Gui.Cui.Resources as Native, Fpas.Ui.Gui.Internal.Data.CreativeParts as C;

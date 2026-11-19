@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/code/code-editor.md)
 namespace Fpas.Ui.Gui.Cui.Widgets.Editors;
 
 /// <summary>Code editing and caret notifications.</summary>

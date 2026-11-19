@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/disclosure/countdown.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Feedback.Countdown;
 
 uses

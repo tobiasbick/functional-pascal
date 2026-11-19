@@ -61,3 +61,31 @@ The default [documentation checker run](../../docs/pascal/tools/documentation-ex
 compiles the examples under `docs/ui` directly from their Markdown fences. It
 uses the UI and managed GUI assemblies copied when building
 [doc-examples](../doc-examples/).
+
+## Source files
+
+<details>
+<summary>Browse 19 source files</summary>
+
+- `apps/gui-doc-captures/`
+  - [AiAndMotion.fpas](AiAndMotion.fpas)
+  - [Chapters.fpas](Chapters.fpas)
+  - [Charts.fpas](Charts.fpas)
+  - [CreativeAndCanvas.fpas](CreativeAndCanvas.fpas)
+  - [DeveloperTools.fpas](DeveloperTools.fpas)
+  - [FeedbackAndDataDisplay.fpas](FeedbackAndDataDisplay.fpas)
+  - [Foundations.fpas](Foundations.fpas)
+  - [GuiDocCaptures.fpasproj](GuiDocCaptures.fpasproj)
+  - [InstrumentsAndCapture.fpas](InstrumentsAndCapture.fpas)
+  - [Overview.fpas](Overview.fpas)
+  - [Presented.fpas](Presented.fpas)
+  - [Regions.fpas](Regions.fpas)
+  - [SelectionAndNavigation.fpas](SelectionAndNavigation.fpas)
+  - [SmartInputs.fpas](SmartInputs.fpas)
+  - [SocialAndVoice.fpas](SocialAndVoice.fpas)
+  - [SourceTools.fpas](SourceTools.fpas)
+  - [Workspaces.fpas](Workspaces.fpas)
+  - [crop.py](crop.py)
+  - [main.fpas](main.fpas)
+
+</details>

@@ -1,3 +1,4 @@
+<!-- [Documentation](../../docs/pascal/libraries/media/tags.md) -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>ATL</AssemblyName>

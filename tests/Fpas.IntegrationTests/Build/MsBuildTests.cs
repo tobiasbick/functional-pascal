@@ -1,3 +1,4 @@
+// [Documentation](../../coverage.md#build-acceptance)
 using Fpas.Tests.Support;
 using System.Xml.Linq;
 using System.Numerics;

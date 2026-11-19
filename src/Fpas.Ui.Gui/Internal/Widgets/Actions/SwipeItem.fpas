@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/actions/swipe-actions.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Actions.SwipeItem;
 
 uses

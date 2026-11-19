@@ -45,3 +45,16 @@ ItemId to focus or inspect a visible action.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/SpeedDials.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Actions/Widgets/SpeedDial.fpas)
 - [Actions](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Actions/`
+  - [SpeedDial.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Actions/SpeedDial.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Actions/`
+  - [NativeMethods.SpeedDial.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Actions/NativeMethods.SpeedDial.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Actions/`
+  - [CuiWindow.SpeedDial.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Actions/CuiWindow.SpeedDial.Types.cs)
+  - [CuiWindow.SpeedDial.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Actions/CuiWindow.SpeedDial.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/actions/`
+  - [speed_dial.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/speed_dial.c)
+  - [speed_dial.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/speed_dial.h)

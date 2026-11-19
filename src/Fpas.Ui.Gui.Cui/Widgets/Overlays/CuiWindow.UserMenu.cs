@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/actions/user-menu.md)
 using Fpas.Ui.Gui.Cui.Widgets.Overlays;
 using Fpas.Ui.Gui.Cui.Interop;
 

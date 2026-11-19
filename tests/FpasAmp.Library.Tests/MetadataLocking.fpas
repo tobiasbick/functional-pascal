@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/library.md#metadata-and-queries)
+
 // Exercise the owned metadata lifetime with a competing SQLite writer.
 unit FpasAmp.Library.Tests.MetadataLocking;
 

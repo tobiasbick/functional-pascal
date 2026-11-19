@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/ai/context-meter.md)
+
 unit Fpas.Ui.Widgets.Ai.ContextMeters;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as Charts;

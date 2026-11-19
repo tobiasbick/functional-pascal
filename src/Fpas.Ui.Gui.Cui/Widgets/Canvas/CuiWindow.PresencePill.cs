@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/canvas-and-bars/presence-pill.md)
 using Fpas.Ui.Gui.Cui.Widgets.Canvas;
 using Fpas.Ui.Gui.Cui.Widgets.Charts;
 using Fpas.Ui.Gui.Cui.Interop;

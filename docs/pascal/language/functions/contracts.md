@@ -234,3 +234,16 @@ behavior.
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- `src/Fpas.Compiler/Binding/Bodies/`
+  - [Binder.Contracts.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.Contracts.cs)
+- `src/Fpas.Compiler/Syntax/Parsing/`
+  - [Parser.Contracts.cs](../../../../src/Fpas.Compiler/Syntax/Parsing/Parser.Contracts.cs)
+- `tests/Fpas.Compiler.Tests/Routines/`
+  - [ContractDiagnosticsTests.cs](../../../../tests/Fpas.Compiler.Tests/Routines/ContractDiagnosticsTests.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.ContractsAndParameters.cs](../../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.ContractsAndParameters.cs)
+- `tests/Fpas.IntegrationTests/Execution/`
+  - [ContractExecutionTests.cs](../../../../tests/Fpas.IntegrationTests/Execution/ContractExecutionTests.cs)

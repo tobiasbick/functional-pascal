@@ -1,3 +1,4 @@
+// [Documentation](../../docs/pascal/libraries/media/audio.md)
 using Fpas.Media.Audio.Decoding;
 using Fpas.Media.Audio.Output;
 using SoundFlow.Backends.MiniAudio.Devices;

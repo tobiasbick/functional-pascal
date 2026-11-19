@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/apps/fpas-amp/library.md#reconciliation-and-persistence)
+
 // Local application data locations for the reconstructible presence index.
 unit FpasAmp.Library.Persistence.Paths;
 

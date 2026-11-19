@@ -47,3 +47,10 @@ Hover a day for its date and amount. A click can send the actual date through `O
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/View.fpas)
 - [Heatmap](heatmap.md)
 - [More charts](README.md)
+
+## Source files
+
+- [CalendarHeatmap.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/CalendarHeatmap.fpas)
+- [CuiWindow.CalendarHeatmap.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.CalendarHeatmap.cs)
+- [calendar_heatmap.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/calendar_heatmap.c)
+- [calendar_heatmap.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/calendar_heatmap.h)

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/apps/fpas-amp/desktop.md#browsing-music-and-collections)
+
 // Reconciles committed user ratings with overlapping library reads.
 unit FpasAmp.Ui.Albums.Music.Ratings;
 

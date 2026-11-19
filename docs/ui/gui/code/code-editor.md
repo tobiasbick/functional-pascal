@@ -62,3 +62,29 @@ also shows global shortcuts and custom highlights.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Code/Tools.fpas)
 - [Code block](code-block.md)
 - [Code](README.md)
+
+## Source files
+
+<details>
+<summary>Browse 11 source files</summary>
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Editors/`
+  - [CodeEditor.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Editors/CodeEditor.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Editors/`
+  - [NativeCodeEditor.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Editors/NativeCodeEditor.cs)
+  - [NativeMethods.CodeEditor.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Editors/NativeMethods.CodeEditor.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Editors/`
+  - [CuiWindow.CodeEditor.Commands.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Editors/CuiWindow.CodeEditor.Commands.cs)
+  - [CuiWindow.CodeEditor.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Editors/CuiWindow.CodeEditor.Types.cs)
+  - [CuiWindow.CodeEditor.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Editors/CuiWindow.CodeEditor.cs)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [editor_extensions.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/editor_extensions.c)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/editors/`
+  - [code_editor.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/editors/code_editor.c)
+  - [code_editor.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/editors/code_editor.h)
+- `tests/Fixtures/gui-host/`
+  - [EditorCommandsContract.fpas](../../../../tests/Fixtures/gui-host/EditorCommandsContract.fpas)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Editors/`
+  - [CuiEditorCommandTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Editors/CuiEditorCommandTests.cs)
+
+</details>

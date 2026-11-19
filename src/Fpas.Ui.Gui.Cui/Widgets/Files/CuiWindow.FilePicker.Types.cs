@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/files/file-picker.md)
 using System.Runtime.InteropServices;
 using Fpas.Ui.Gui.Cui.Interop;
 

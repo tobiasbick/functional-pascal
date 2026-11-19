@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/code/diff-viewer.md)
 using Fpas.Ui.Gui.Cui.Interop;
 
 namespace Fpas.Ui.Gui.Cui.Widgets.Developer;

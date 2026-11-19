@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/radar-chart.md)
 #ifndef FPAS_CUI_RADAR_CHART_H
 #define FPAS_CUI_RADAR_CHART_H
 #include "visualizations.h"

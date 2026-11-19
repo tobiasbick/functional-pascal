@@ -266,3 +266,7 @@ unrelated packages. Keep NUGET_PACKAGES set to the consumer's cache during updat
 - [Project and dependency contract](msbuild.md)
 - [Projects and solutions](../pascal/program-structure/projects.md)
 - [Build acceptance](../../tests/coverage.md#build-acceptance)
+
+## Source files
+
+- [StandaloneSdkGuideTests.cs](../../tests/Fpas.IntegrationTests/Build/StandaloneSdkGuideTests.cs)

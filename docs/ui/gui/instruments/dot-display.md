@@ -45,3 +45,15 @@ CUI performs the marquee animation when enabled.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Display/DotDisplays.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Instruments/View.fpas)
 - [Instruments](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Display/`
+  - [DotDisplay.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Display/DotDisplay.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Display/`
+  - [NativeMethods.DotDisplay.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Display/NativeMethods.DotDisplay.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Display/`
+  - [CuiWindow.DotDisplay.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Display/CuiWindow.DotDisplay.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/display/`
+  - [dot_display.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/display/dot_display.c)
+  - [dot_display.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/display/dot_display.h)

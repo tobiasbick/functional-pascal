@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/tui/host.md#application-lifecycle)
+
 unit Fpas.Ui.Tui.Internal.Hosting.Session;
 
 uses Fpas.Ui.Tui.Internal.Hosting.GridNotifications as Grids, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as Ui, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.View.Lowering as Lower, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Theming.Themes as SharedThemes, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Equivalence as Q, Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Rendering.Decoration as D, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag, System.Threading as Threads, System.Threading.Tasks as Tasks;

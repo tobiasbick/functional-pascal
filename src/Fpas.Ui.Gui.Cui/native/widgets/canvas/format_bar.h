@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/format-bar.md)
 #ifndef FPAS_CUI_FORMAT_BAR_H
 #define FPAS_CUI_FORMAT_BAR_H
 CUI_API int fpas_cui_format_bar(cui_ctx *ui, const char *id, cui_text_format *format, const cui_text_style *styles,

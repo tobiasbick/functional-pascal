@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/capture/signature-pad.md)
 #ifndef FPAS_SIGNATURE_PAD_H
 #define FPAS_SIGNATURE_PAD_H
 

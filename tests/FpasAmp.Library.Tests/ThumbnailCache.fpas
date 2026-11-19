@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/library.md#albums-and-artwork)
+
 // Content addressing, invalidation and corruption recovery are independent of GUI state.
 unit FpasAmp.Library.Tests.ThumbnailCache;
 

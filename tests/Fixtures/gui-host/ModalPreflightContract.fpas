@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/ui/gui/overlays/dialog.md)
+
 unit GalleryModalPreflightContract;
 
 uses

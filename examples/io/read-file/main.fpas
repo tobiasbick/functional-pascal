@@ -1,3 +1,5 @@
+// [Documentation](README.md)
+
 program ReadFile;
 
 uses System as Sys, System.IO as IO, System.Console as Console;

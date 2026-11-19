@@ -48,3 +48,16 @@ in the model if you need it after the pad is removed.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Files/SignaturePads.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Capture/View.fpas)
 - [Capture](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Files/`
+  - [SignaturePad.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Files/SignaturePad.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Files/`
+  - [NativeMethods.SignaturePad.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Files/NativeMethods.SignaturePad.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Files/`
+  - [CuiWindow.SignaturePad.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Files/CuiWindow.SignaturePad.Types.cs)
+  - [CuiWindow.SignaturePad.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Files/CuiWindow.SignaturePad.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/files/`
+  - [signature_pad.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/files/signature_pad.c)
+  - [signature_pad.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/files/signature_pad.h)

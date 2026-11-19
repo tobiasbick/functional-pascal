@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/specs/clr-mapping.md#api-documentation-output)
 using Fpas.Compiler.Binding.Symbols;
 using Fpas.Compiler.Binding.Declarations;
 using Fpas.Compiler.Binding.Bound;

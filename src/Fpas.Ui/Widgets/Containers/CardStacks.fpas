@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/social-and-media/card-stack.md)
+
 unit Fpas.Ui.Widgets.Containers.CardStacks;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;

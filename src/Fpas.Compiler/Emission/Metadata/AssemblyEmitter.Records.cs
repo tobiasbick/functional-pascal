@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/specs/clr-mapping.md#records-and-variants)
 using Fpas.Compiler.Binding.Types;
 using Fpas.Compiler.Binding.Symbols;
 using Fpas.Compiler.Binding.References;

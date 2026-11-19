@@ -107,3 +107,18 @@ cleanup, including async finally.
 - [Topic overview](README.md)
 - [Handbook](../README.md)
 - [Syntax grammar](../../specs/syntax.md)
+
+## Source files
+
+- `apps/doc-examples/contexts/`
+  - [events.fpas.txt](../../../apps/doc-examples/contexts/events.fpas.txt)
+- `src/Fpas.Compiler/Binding/Bodies/`
+  - [Binder.Events.cs](../../../src/Fpas.Compiler/Binding/Bodies/Binder.Events.cs)
+- `src/Fpas.Compiler/Binding/References/`
+  - [ReferenceCatalog.Events.cs](../../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.Events.cs)
+- `tests/Fpas.Compiler.Tests/Routines/`
+  - [EventMetadataTests.cs](../../../tests/Fpas.Compiler.Tests/Routines/EventMetadataTests.cs)
+  - [EventTests.cs](../../../tests/Fpas.Compiler.Tests/Routines/EventTests.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.EventDiagnostics.cs](../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.EventDiagnostics.cs)
+  - [MsBuildTests.Events.cs](../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.Events.cs)

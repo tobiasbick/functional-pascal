@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/inputs/search-field.md)
+
 unit GuiGallery.Pages.Inputs.Widgets.SearchField;
 
 uses

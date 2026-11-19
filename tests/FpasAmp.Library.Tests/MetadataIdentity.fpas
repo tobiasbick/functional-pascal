@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/library.md#durable-identities-and-ratings)
+
 // Durable identities and ratings across moves, copies and index reconstruction.
 unit FpasAmp.Library.Tests.MetadataIdentity;
 

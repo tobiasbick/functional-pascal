@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/overview/metric.md)
 #ifndef FPAS_CUI_METRIC_H
 #define FPAS_CUI_METRIC_H
 

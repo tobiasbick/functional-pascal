@@ -46,3 +46,15 @@ the proposed index to accept manual or timed movement.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Media/Carousels.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/Media.fpas)
 - [Social and media](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Media/`
+  - [Carousel.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Media/Carousel.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Media/`
+  - [NativeMethods.Carousel.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Media/NativeMethods.Carousel.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Media/`
+  - [CuiWindow.Carousel.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Media/CuiWindow.Carousel.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/media/`
+  - [carousel.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/media/carousel.c)
+  - [carousel.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/media/carousel.h)

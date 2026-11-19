@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/motion/dock.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Navigation.Dock;
 
 uses

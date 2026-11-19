@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/workspaces.md#input-consistency-and-ownership)
 using Fpas.Compiler;
 using Fpas.Compiler.Analysis;
 using Fpas.Workspaces.Loading;

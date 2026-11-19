@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/capture/signature-pad.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_signature_pad(cui_ctx *ui, const char *id, const char *placeholder, float height,

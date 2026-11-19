@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/app-chrome/split-view.md)
 using Fpas.Ui.Gui.Cui.Interop;
 
 namespace Fpas.Ui.Gui.Cui.Widgets.Desktop;

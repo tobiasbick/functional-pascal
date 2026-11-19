@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/files/file-picker.md)
+
 unit Fpas.Ui.Widgets.Files.FilePickers;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Files.FileListings as F, System as Sys;

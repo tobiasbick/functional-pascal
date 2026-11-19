@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/apps/fpas-amp/desktop.md#browsing-music-and-collections)
+
 // Shared track detail dialog for both the album and library song tables.
 unit FpasAmp.Ui.Albums.Music.Details.View;
 

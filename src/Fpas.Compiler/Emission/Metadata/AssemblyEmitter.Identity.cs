@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/specs/clr-mapping.md#identity-and-representation)
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;

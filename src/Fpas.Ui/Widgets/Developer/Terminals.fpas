@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/files/terminal.md)
+
 unit Fpas.Ui.Widgets.Developer.Terminals;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;

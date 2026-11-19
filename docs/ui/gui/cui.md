@@ -20,66 +20,109 @@ The `CuiWindow` and `NativeMethods` partial types each share one namespace
 across their topic files. The native C adapters in `native/widgets/<topic>`
 use the same topics and expose the `fpas_cui_` symbols.
 
-## Available binding
+## Window ownership and frames
 
-- CuiWindow owns a native context and window on its creating UI thread.
-  TryWake posts a platform event from workers; disposal releases the wake target
-  before destroying the window. An additional Auto window on an OpenGL-owning
-  thread uses software rendering; a second explicit OpenGL request is rejected.
-- NextFrame pumps events and begins a frame. Close layouts in reverse order;
-  Present completes the view and exposes finalized control rectangles.
-  CapturePng writes the presented view to an existing directory.
-  It also completes a newly constructed view after an earlier presentation,
-  releases that frame's callbacks and surfaces deferred painting failures.
-  Dockspace, dock-panel, split-view, menu-bar and status-bar scopes currently
-  follow native caller discipline: balance their begin/end operations in the
-  same frame; managed layout-stack validation does not cover those scopes.
-- See the [CUI widget inventory](../../cui-widget-inventory.md#widget-inventory)
-  for widget coverage and gallery acceptance. Stable identities are separate
-  from literal labels. The FPAS host maps native interaction results to model
-  proposals. Theme actions compose native segments and icon buttons.
-- Text, headings, separators, box sizing, styles and scrolling are composition
-  foundations. The host supplies shared layout constraints to CUI.
-- Accordion and expandable-card scopes call CUI's native begin/end pairs;
-  expandable text retains its native local state and optional expansion link.
-  Header snapshots and outer layout nodes are tracked separately.
-- Inline alerts, progress bars, spinners and capacity meters call the native
-  CUI widgets. CUI owns dismissal, numeric formatting, threshold colors and motion.
-- TrackLastControl and composite tracking expose geometry, focus and hover.
-  ForgetControl releases retained state and owned popup/feedback state for
-  disappearing controls. Private state keys stay in the native bridge.
-- SetTheme/ReadTheme transfer the shared semantic palette. SystemDark reads
-  CUI's platform appearance and returns null when it is unavailable.
-  Reduced motion is controlled independently of palette changes.
-- DeferClose, TakeCloseRequest and WakeWhenCompleted support close decisions and
-  asynchronous cleanup. SetTitle, Resize and RequestFrame run on the owner;
-  frame requests use CUI's redraw/deadline APIs rather than managed timers.
-  Creation accepts minimum dimensions, fixed size and Linux application identity.
-  SetResizeRenderer roots an owner-thread cached-view callback until detachment;
-  failures are surfaced after the native pump returns.
-- OpenFile, SaveFile and ChooseFolder use CUI's modal platform chooser outside
-  active frames. They return Unicode paths or null when CUI has no selection.
-  Linux needs Zenity or KDialog; Save selects a destination without writing it.
-- ReadShortcuts runs once after widgets. It uses native exact combinations,
-  popup/modal/text ownership and observed held-key levels for repeat policy.
-  Native consumed keys remain unavailable to application bindings.
-- CodeEditorGoTo/Select/Find queue one-view requests between frames; only the
-  last per ID survives. CodeEditor converts UTF-16 scalar-boundary offsets to
-  native UTF-8 and back. CUI copies the visible marks for deferred painting.
-  Live-resize cached rendering does not consume these requests.
-- User-menu avatars reuse native texture loading/lifetime. Tours retain stable
-  action identities across caption changes. Count formats expose only the
-  native integer `%d` slots and literal `%%`, validated before C varargs calls.
-- LoadFont, SetFontRole, AddFontFallback and emoji operations own native font data
-  until window disposal. Role replacement/restoration and caption replacement
-  run between frames. SetStrings copies a partial Unicode caption table.
-- SetTheme accepts optional metric values; ReadThemeMetrics returns a detached
-  snapshot. FollowSystemTheme enables native platform following. The FPAS host
-  reapplies its resolved application palette after appearance changes.
-- DrawingCanvas accepts deferred painting and changed pointer-state callbacks.
-  CuiCanvasPainter is valid only inside its owner-thread callback, forwards to
-  CUI, owns callback-local clip scopes and rejects window reentry. Managed
-  exceptions return through Present/NextFrame after native painting ends.
+`CuiWindow` owns a native context and window on its creating UI thread. One
+OpenGL CUI window can own a thread's OpenGL context. Opening another window in
+Auto mode selects software, and requesting a second OpenGL window explicitly
+fails. Creation accepts minimum dimensions, fixed size and Linux application
+identity. [Window placement](app-chrome/window.md) describes restoring saved
+dimensions and position.
+
+`NextFrame` pumps events, presents an open view if needed and starts the next
+frame. Close layout scopes in reverse order before ending a frame.
+`Present` completes the current view and exposes finalized control rectangles.
+`CapturePng` writes a presented view to an existing directory. After an earlier
+presentation, it can also complete a newly constructed view. It releases that
+frame's callbacks and surfaces deferred painting failures.
+
+`TryWake` can post from workers with a Win32 `WM_NULL` message or through a
+separate X11 connection. The managed window serializes wake posting and target
+release before destroying the window. `DeferClose`, `TakeCloseRequest` and
+`WakeWhenCompleted` support close decisions and asynchronous cleanup.
+`SetTitle`, `Resize` and `RequestFrame` run on the owner thread. Frame
+requests use CUI's redraw and deadline APIs.
+
+`SetResizeRenderer` roots an owner-thread cached-view callback until
+detachment. Failures surface after the native pump returns. The callback draws
+an open CUI frame. The bridge completes deferred paint without presenting when
+it needs to finish an outstanding frame before destroying the window. See
+[drawing callbacks](canvas-and-bars/painting.md) for the lifetime of
+`CuiCanvasPainter` and the rules for avoiding window reentry.
+
+`CodeEditorGoTo`, `CodeEditorSelect` and `CodeEditorFind` queue one-view
+requests between frames. Each editor ID keeps the most recent request, and
+live-resize rendering leaves it queued. The editor translates UTF-16
+scalar-boundary offsets to UTF-8 and back. CUI copies visible marks for
+deferred painting. See [editor commands](host.md#code-editor-commands).
+
+## Layout and control inspection
+
+The host starts each view with `BeginHostView` and supplies shared sizing and
+layout constraints. Text, headings, separators, styles and scroll regions use
+native CUI nodes. Dockspace, dock-panel, split-view, menu-bar and status-bar
+scopes require callers to balance native begin and end operations within the
+same frame. Managed layout-stack checks cover the other managed layout scopes.
+
+`TrackLastControl` and composite tracking register nodes for geometry, focus
+and hover. Header snapshots and outer layout nodes can be tracked separately.
+`ForgetControl` releases retained state and owned popup or feedback state for
+disappearing controls. Private state keys stay in the native bridge. Stable
+identities are separate from literal labels, and the FPAS host maps native
+interaction results to model proposals. See
+[layout](layout/README.md), [widget coverage](../../cui-widget-inventory.md#widget-inventory)
+and [host inspection](host.md#invalidation-and-inspection).
+
+## Input injection
+
+Pointer movement, mouse buttons, keys, text and horizontal or vertical wheel
+input can be injected during an active frame through the managed binding. These
+methods forward to CUI, which routes input according to its current layout and
+ownership. Tests using injection exercise the CUI path. Operating-system
+keyboard and pointer delivery require platform input tests.
+
+## Application shortcuts
+
+Call `ReadShortcuts` once after the frame's widgets have processed input.
+It uses native exact combinations, popup, modal and text ownership, as well as
+observed held-key levels for the repeat policy. CUI's consumed keys are
+unavailable to application bindings. See the
+[host shortcut contract](host.md#application-shortcuts).
+
+## Desktop services
+
+`OpenFile`, `SaveFile` and `ChooseFolder` use CUI's modal platform chooser
+outside active frames. They return a Unicode path or null. Linux needs Zenity
+or KDialog. `SaveFile` selects the destination and the caller writes the data.
+`CuiDesktop.TryOpen` dispatches a URL or absolute path to the registered
+desktop handler, which may finish asynchronously. Clipboard reads and writes
+run on the owner thread through CUI. See [file selection](host.md#file-selection)
+and [clipboard commands](host.md#clipboard).
+
+## Theme and resources
+
+`SetTheme` and `ReadTheme` transfer the shared semantic palette.
+`SetTheme` accepts optional metrics and `ReadThemeMetrics` returns a detached
+snapshot. `SystemDark` returns null when CUI cannot read the platform
+appearance. `FollowSystemTheme` enables native following. The FPAS host
+reapplies its resolved application palette after appearance changes. Reduced
+motion is controlled independently of palette changes.
+
+`LoadFont`, `SetFontRole`, `AddFontFallback` and the emoji operations keep
+native font data alive until window disposal. Role replacement and restoration
+run between frames, as does `SetStrings`, which copies the supplied partial
+Unicode caption table. See [fonts and native captions](host.md#fonts-and-native-captions).
+
+## Data and marshalling
+
+The managed bridge validates UTF-8 inputs before passing them to CUI. Native
+text parameters use zero-terminated strings, so embedded zero characters and
+unpaired UTF-16 surrogates are invalid. Count formats allow bounded integer
+`%d` slots and literal `%%` for C varargs calls. Widget-specific marshalling
+pairs managed sequential records with native input and result structs. Check
+each adapter's buffer lifetime when CUI paints after the call returns. User-menu
+avatars reuse native texture loading and lifetime. Guided-tour action identities
+stay stable across caption changes.
 
 ## Source build and verification
 
@@ -189,3 +232,84 @@ overrides. For single-file and Native AOT, the test copies only the executable
 to a clean directory. Single-file must extract the exact packaged shared library.
 Native AOT must run without CUI imports or extraction. The suite runs on Windows
 x64 and Ubuntu x64 under WSL 2 with Xvfb.
+
+## Source files
+
+<details>
+<summary>Browse 56 source files</summary>
+
+- `src/Fpas.Ui.Gui.Cui/Build/`
+  - [Fpas.Ui.Gui.Cui.targets](../../../src/Fpas.Ui.Gui.Cui/Build/Fpas.Ui.Gui.Cui.targets)
+  - [Package.targets](../../../src/Fpas.Ui.Gui.Cui/Build/Package.targets)
+- `src/Fpas.Ui.Gui.Cui/`
+  - [CuiPrimitives.cs](../../../src/Fpas.Ui.Gui.Cui/CuiPrimitives.cs)
+  - [CuiWindow.cs](../../../src/Fpas.Ui.Gui.Cui/CuiWindow.cs)
+- `src/Fpas.Ui.Gui.Cui/Hosting/`
+  - [CuiDesktop.cs](../../../src/Fpas.Ui.Gui.Cui/Hosting/CuiDesktop.cs)
+  - [CuiShortcut.cs](../../../src/Fpas.Ui.Gui.Cui/Hosting/CuiShortcut.cs)
+  - [CuiWindow.Clipboard.cs](../../../src/Fpas.Ui.Gui.Cui/Hosting/CuiWindow.Clipboard.cs)
+  - [CuiWindow.Commands.cs](../../../src/Fpas.Ui.Gui.Cui/Hosting/CuiWindow.Commands.cs)
+  - [CuiWindow.Dispatch.cs](../../../src/Fpas.Ui.Gui.Cui/Hosting/CuiWindow.Dispatch.cs)
+  - [CuiWindow.Host.cs](../../../src/Fpas.Ui.Gui.Cui/Hosting/CuiWindow.Host.cs)
+  - [CuiWindow.Input.cs](../../../src/Fpas.Ui.Gui.Cui/Hosting/CuiWindow.Input.cs)
+  - [CuiWindow.Shortcuts.cs](../../../src/Fpas.Ui.Gui.Cui/Hosting/CuiWindow.Shortcuts.cs)
+  - [CuiWindow.Snapshots.cs](../../../src/Fpas.Ui.Gui.Cui/Hosting/CuiWindow.Snapshots.cs)
+  - [CuiWindow.Theme.cs](../../../src/Fpas.Ui.Gui.Cui/Hosting/CuiWindow.Theme.cs)
+- `src/Fpas.Ui.Gui.Cui/Interop/`
+  - [CountFormat.cs](../../../src/Fpas.Ui.Gui.Cui/Interop/CountFormat.cs)
+  - [NativeMethods.cs](../../../src/Fpas.Ui.Gui.Cui/Interop/NativeMethods.cs)
+  - [Utf8.cs](../../../src/Fpas.Ui.Gui.Cui/Interop/Utf8.cs)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeDevResult.cs](../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeDevResult.cs)
+- `src/Fpas.Ui.Gui.Cui/Interop/Files/`
+  - [NativeMethods.FileDialog.cs](../../../src/Fpas.Ui.Gui.Cui/Interop/Files/NativeMethods.FileDialog.cs)
+- `src/Fpas.Ui.Gui.Cui/Interop/Hosting/`
+  - [NativeMethods.Clipboard.cs](../../../src/Fpas.Ui.Gui.Cui/Interop/Hosting/NativeMethods.Clipboard.cs)
+  - [NativeMethods.Commands.cs](../../../src/Fpas.Ui.Gui.Cui/Interop/Hosting/NativeMethods.Commands.cs)
+  - [NativeMethods.Host.cs](../../../src/Fpas.Ui.Gui.Cui/Interop/Hosting/NativeMethods.Host.cs)
+  - [NativeMethods.Shortcuts.cs](../../../src/Fpas.Ui.Gui.Cui/Interop/Hosting/NativeMethods.Shortcuts.cs)
+- `src/Fpas.Ui.Gui.Cui/Interop/Resources/`
+  - [NativeMethods.Colors.cs](../../../src/Fpas.Ui.Gui.Cui/Interop/Resources/NativeMethods.Colors.cs)
+  - [NativeMethods.Fonts.cs](../../../src/Fpas.Ui.Gui.Cui/Interop/Resources/NativeMethods.Fonts.cs)
+  - [NativeMethods.Strings.cs](../../../src/Fpas.Ui.Gui.Cui/Interop/Resources/NativeMethods.Strings.cs)
+- `src/Fpas.Ui.Gui.Cui/Layout/`
+  - [CuiWindow.Layout.cs](../../../src/Fpas.Ui.Gui.Cui/Layout/CuiWindow.Layout.cs)
+  - [CuiWindow.LayoutOptions.cs](../../../src/Fpas.Ui.Gui.Cui/Layout/CuiWindow.LayoutOptions.cs)
+- `src/Fpas.Ui.Gui.Cui/Resources/`
+  - [CuiColors.cs](../../../src/Fpas.Ui.Gui.Cui/Resources/CuiColors.cs)
+  - [CuiFontFace.cs](../../../src/Fpas.Ui.Gui.Cui/Resources/CuiFontFace.cs)
+  - [CuiStrings.cs](../../../src/Fpas.Ui.Gui.Cui/Resources/CuiStrings.cs)
+  - [CuiWindow.Fonts.cs](../../../src/Fpas.Ui.Gui.Cui/Resources/CuiWindow.Fonts.cs)
+  - [CuiWindow.Strings.cs](../../../src/Fpas.Ui.Gui.Cui/Resources/CuiWindow.Strings.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Audio/`
+  - [CuiWindow.AudioValidation.cs](../../../src/Fpas.Ui.Gui.Cui/Widgets/Audio/CuiWindow.AudioValidation.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiDevResult.cs](../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiDevResult.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Files/`
+  - [CuiFileDialogKind.cs](../../../src/Fpas.Ui.Gui.Cui/Widgets/Files/CuiFileDialogKind.cs)
+  - [CuiWindow.FileDialog.cs](../../../src/Fpas.Ui.Gui.Cui/Widgets/Files/CuiWindow.FileDialog.cs)
+- `src/Fpas.Ui.Gui.Cui/native/host/`
+  - [bridge.c](../../../src/Fpas.Ui.Gui.Cui/native/host/bridge.c)
+  - [colors.c](../../../src/Fpas.Ui.Gui.Cui/native/host/colors.c)
+  - [control_state.c](../../../src/Fpas.Ui.Gui.Cui/native/host/control_state.c)
+  - [controls.c](../../../src/Fpas.Ui.Gui.Cui/native/host/controls.c)
+  - [fonts.c](../../../src/Fpas.Ui.Gui.Cui/native/host/fonts.c)
+  - [host_theme.c](../../../src/Fpas.Ui.Gui.Cui/native/host/host_theme.c)
+  - [host_widgets.c](../../../src/Fpas.Ui.Gui.Cui/native/host/host_widgets.c)
+  - [host_widgets.h](../../../src/Fpas.Ui.Gui.Cui/native/host/host_widgets.h)
+  - [resources.h](../../../src/Fpas.Ui.Gui.Cui/native/host/resources.h)
+  - [shortcuts.c](../../../src/Fpas.Ui.Gui.Cui/native/host/shortcuts.c)
+  - [shortcuts.h](../../../src/Fpas.Ui.Gui.Cui/native/host/shortcuts.h)
+  - [strings.c](../../../src/Fpas.Ui.Gui.Cui/native/host/strings.c)
+  - [wakeup.c](../../../src/Fpas.Ui.Gui.Cui/native/host/wakeup.c)
+  - [widget_nodes.c](../../../src/Fpas.Ui.Gui.Cui/native/host/widget_nodes.c)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [live_resize.c](../../../src/Fpas.Ui.Gui.Cui/native/tests/live_resize.c)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [developer_data.c](../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/developer_data.c)
+  - [developer_data.h](../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/developer_data.h)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/files/`
+  - [file_dialog.c](../../../src/Fpas.Ui.Gui.Cui/native/widgets/files/file_dialog.c)
+  - [file_dialog.h](../../../src/Fpas.Ui.Gui.Cui/native/widgets/files/file_dialog.h)
+
+</details>

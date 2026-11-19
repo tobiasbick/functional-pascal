@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/interop/interfaces.md)
 namespace Fpas.Compiler.Syntax.Parsing;
 
 internal sealed partial class Parser

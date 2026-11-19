@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/interop/supported-signatures.md)
 using Fpas.IntegrationTests.Support;
 namespace Fpas.IntegrationTests.Execution;
 

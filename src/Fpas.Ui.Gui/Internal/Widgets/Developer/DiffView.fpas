@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/code/diff-viewer.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Developer.DiffView;
 
 uses

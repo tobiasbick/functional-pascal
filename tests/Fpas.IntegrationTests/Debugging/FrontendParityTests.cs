@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#verification)
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Fpas.Tests.Support;

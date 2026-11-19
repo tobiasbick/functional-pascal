@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#passive-scalar-bindings)
 using System.Globalization;
 using System.Numerics;
 using Fpas.Debugging.Core;

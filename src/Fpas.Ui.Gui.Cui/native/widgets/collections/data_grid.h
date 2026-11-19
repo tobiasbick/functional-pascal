@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/data-grid/data-grid.md)
 #ifndef FPAS_CUI_DATA_GRID_H
 #define FPAS_CUI_DATA_GRID_H
 /** Begins a virtual grid; pair with end in this frame, building rows in [range[0], range[1]).

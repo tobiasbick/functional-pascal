@@ -44,3 +44,15 @@ Edit the query as a single line. The clear button proposes an empty string and r
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/SearchFields.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/SearchField.fpas)
 - [Inputs](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [SearchField.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/SearchField.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.SearchField.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.SearchField.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.SearchField.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.SearchField.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [search_field.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/search_field.c)
+  - [search_field.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/search_field.h)

@@ -26,3 +26,15 @@ when its pixels change. These widgets require the GUI host.
 - [Media examples in the gallery](../../../../examples/ui/gui/gallery/Pages/Social/Media.fpas)
 - [Voice](../voice/README.md)
 - [Social and media in the gallery](../../../../examples/ui/gui/gallery/Pages/Social/View.fpas)
+
+## Source files
+
+- `examples/ui/gui/gallery/Pages/Social/`
+  - [Scenes.fpas](../../../../examples/ui/gui/gallery/Pages/Social/Scenes.fpas)
+  - [State.fpas](../../../../examples/ui/gui/gallery/Pages/Social/State.fpas)
+  - [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Social/Update.fpas)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [media.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/media.c)
+  - [social.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/social.c)
+- `tests/Fixtures/gui-host/`
+  - [MediaContract.fpas](../../../../tests/Fixtures/gui-host/MediaContract.fpas)

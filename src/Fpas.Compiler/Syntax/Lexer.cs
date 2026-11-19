@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/basics/lexical-rules.md)
 using System.Text;
 
 namespace Fpas.Compiler.Syntax;

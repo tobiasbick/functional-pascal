@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/smart-inputs/inline-edit.md)
 #ifndef FPAS_INLINE_EDIT_H
 #define FPAS_INLINE_EDIT_H
 /** Draws CUI inline edit, retaining an uncommitted UTF-8 draft until native commit/cancel.

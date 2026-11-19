@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/diagnostics.md)
 using Fpas.Compiler.Syntax;
 
 namespace Fpas.Compiler.Diagnostics;

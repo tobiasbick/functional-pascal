@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/text-and-display/canvas.md)
 using Fpas.Ui.Gui.Cui.Interop;
 
 namespace Fpas.Ui.Gui.Cui.Widgets.Canvas;

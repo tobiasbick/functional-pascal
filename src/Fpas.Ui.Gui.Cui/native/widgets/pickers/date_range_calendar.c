@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/pickers/date-range-calendar.md)
 #include "../../fpas_cui.h"
 
 static bool fpas_range_propose(cui_date_range range, int *start, int *end) {

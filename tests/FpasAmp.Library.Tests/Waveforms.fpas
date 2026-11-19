@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/library.md#focused-verification)
+
 // Exercises the waveform cache through file-backed metadata sessions.
 unit FpasAmp.Library.Tests.Waveforms;
 

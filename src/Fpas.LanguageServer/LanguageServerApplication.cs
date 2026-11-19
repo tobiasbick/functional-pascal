@@ -1,3 +1,4 @@
+// [Documentation](../../docs/architecture/workspaces.md#language-server-adapter)
 using Fpas.LanguageServer.Hosting;
 using Fpas.LanguageServer.Transport;
 using StreamJsonRpc;

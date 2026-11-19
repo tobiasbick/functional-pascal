@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/smart-inputs/README.md)
 using Fpas.Ui.Gui.Cui.Widgets.Inputs;
 
 namespace Fpas.Ui.Gui.Cui.Tests.Inputs;

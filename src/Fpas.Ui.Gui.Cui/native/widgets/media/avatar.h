@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/disclosure/avatar.md)
 #ifndef FPAS_AVATAR_H
 #define FPAS_AVATAR_H
 

@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#voice-and-ai)
+
 unit Fpas.Ui.Widgets.Audio.Voice;
 
 // Speaker tags for a shared waveform.

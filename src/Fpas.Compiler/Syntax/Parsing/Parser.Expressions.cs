@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/specs/syntax.md#expressions-and-patterns)
 namespace Fpas.Compiler.Syntax.Parsing;
 
 internal sealed partial class Parser

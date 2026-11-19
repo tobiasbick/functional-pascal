@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#metadata-and-queries)
+
 // Second owned stage: one file at a time, independent of directory enumeration.
 unit FpasAmp.Library.Metadata.Internal.Worker;
 

@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/pascal/libraries/workflows.md)
+
 async program WorkflowLifetimes;
 
 uses

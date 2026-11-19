@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#bounds-and-shutdown)
 namespace Fpas.Debugging.Core;
 
 internal sealed partial class OutputCapture

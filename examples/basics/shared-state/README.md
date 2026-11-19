@@ -22,3 +22,9 @@ Expected output:
 See [global values](../../../docs/pascal/program-structure/units.md) for visibility,
 initialization, nullable values, and contract rules. Shared field mutation needs
 ordinary .NET synchronization when accessed concurrently.
+
+## Source files
+
+- [SharedState.fpasproj](SharedState.fpasproj)
+- [main.fpas](main.fpas)
+- [statistics.fpas](statistics.fpas)

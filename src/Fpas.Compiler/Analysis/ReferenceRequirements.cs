@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/compiler.md#phases-and-ownership)
 using Fpas.Compiler.Binding.Bound;
 using Fpas.Compiler.Binding.References;
 using Fpas.Compiler.Syntax;

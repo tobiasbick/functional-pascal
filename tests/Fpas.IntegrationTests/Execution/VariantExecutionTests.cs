@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/types/variants.md)
 using Fpas.IntegrationTests.Support;
 namespace Fpas.IntegrationTests.Execution;
 

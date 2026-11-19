@@ -36,6 +36,24 @@ member and excluded signature, never an erased object call or dynamic fallback.
 Generated aggregate metadata is validated before an imported record, variant,
 domain, or alias is used; its ABI belongs in the [CLR mapping](../specs/clr-mapping.md).
 
+## Syntax and binding boundaries
+
+The lexer produces tokens with source offsets and separates ordinary comments
+from declaration documentation. The parser builds syntax nodes and tracks
+declaration and body spans. Its optional layout stream describes token
+placement for the formatter. The formatter uses the original comments and
+tokens alongside that stream, then reparses the formatted text before returning
+it. Grammar and lexical spelling are defined in the [syntax specification](../specs/syntax.md)
+and [lexical rules](../pascal/language/basics/lexical-rules.md).
+
+The source catalog owns declaration identity, including the container and its
+imports and the identities of generic parameters. The reference catalog
+resolves imported signatures from metadata. The binder combines both catalogs
+with lexical scopes and expected types to produce typed operations. Binding
+retains distinct identities for shadowed declarations and for the selected
+overload. Control-flow checks run over the typed body, and the bound tree is
+shared by analysis and emission.
+
 ## Compiler API and output
 
 [Compilation.cs](../../src/Fpas.Compiler/Compilation.cs) defines the public API:
@@ -197,6 +215,12 @@ Turning XML generation on or off does not change assembly/PDB bytes.
 
 ## Typed emission
 
+Assembly layout assigns type and method definition handles before bodies are
+emitted so generated code can refer to declarations whose rows are written
+later. Assembly emission writes metadata and method bodies in that layout.
+Body emission also tracks the evaluation stack and local storage for the
+typed expressions and statements it emits.
+
 Bound operations preserve exact receiver storage, evaluation order, and generic
 parameter identity. Writable value-type receivers use their actual address;
 read-only receivers use defensive copies. Generic dispatch uses constrained
@@ -245,3 +269,80 @@ documentation copying. See the [build contract](../build/msbuild.md) and
 - [Compiler CLI](../pascal/program-structure/cli.md)
 - [Compiled program files](../pascal/program-structure/compiled-programs.md)
 - [Test coverage](../../tests/coverage.md)
+
+## Source files
+
+<details>
+<summary>Browse 53 source files</summary>
+
+- `src/Fpas.Compiler/Analysis/`
+  - [AnalysisRequest.cs](../../src/Fpas.Compiler/Analysis/AnalysisRequest.cs)
+  - [EditorSourceProjection.cs](../../src/Fpas.Compiler/Analysis/EditorSourceProjection.cs)
+  - [MetadataImage.cs](../../src/Fpas.Compiler/Analysis/MetadataImage.cs)
+  - [PreparedCompilation.Recovery.cs](../../src/Fpas.Compiler/Analysis/PreparedCompilation.Recovery.cs)
+  - [PreparedCompilation.cs](../../src/Fpas.Compiler/Analysis/PreparedCompilation.cs)
+  - [ReferenceRequirements.cs](../../src/Fpas.Compiler/Analysis/ReferenceRequirements.cs)
+  - [SemanticCoverage.cs](../../src/Fpas.Compiler/Analysis/SemanticCoverage.cs)
+  - [SemanticSnapshot.cs](../../src/Fpas.Compiler/Analysis/SemanticSnapshot.cs)
+  - [SourceDocument.cs](../../src/Fpas.Compiler/Analysis/SourceDocument.cs)
+  - [SourceOperations.cs](../../src/Fpas.Compiler/Analysis/SourceOperations.cs)
+  - [SyntaxAnalysis.cs](../../src/Fpas.Compiler/Analysis/SyntaxAnalysis.cs)
+  - [SyntaxStructure.cs](../../src/Fpas.Compiler/Analysis/SyntaxStructure.cs)
+- `src/Fpas.Compiler/Binding/Bodies/`
+  - [Binder.Expressions.cs](../../src/Fpas.Compiler/Binding/Bodies/Binder.Expressions.cs)
+  - [Binder.Statements.cs](../../src/Fpas.Compiler/Binding/Bodies/Binder.Statements.cs)
+  - [Binder.cs](../../src/Fpas.Compiler/Binding/Bodies/Binder.cs)
+- `src/Fpas.Compiler/Binding/Bound/`
+  - [BoundNodes.cs](../../src/Fpas.Compiler/Binding/Bound/BoundNodes.cs)
+  - [BoundTree.cs](../../src/Fpas.Compiler/Binding/Bound/BoundTree.cs)
+- `src/Fpas.Compiler/Binding/Declarations/`
+  - [SourceCatalog.cs](../../src/Fpas.Compiler/Binding/Declarations/SourceCatalog.cs)
+- `src/Fpas.Compiler/Binding/Flow/`
+  - [FlowAnalysis.cs](../../src/Fpas.Compiler/Binding/Flow/FlowAnalysis.cs)
+- `src/Fpas.Compiler/Binding/References/`
+  - [ReferenceAssembly.cs](../../src/Fpas.Compiler/Binding/References/ReferenceAssembly.cs)
+  - [ReferenceCatalog.cs](../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.cs)
+- `src/Fpas.Compiler/Binding/Semantics/`
+  - [SemanticPolicy.cs](../../src/Fpas.Compiler/Binding/Semantics/SemanticPolicy.cs)
+  - [SemanticRecorder.Bodies.cs](../../src/Fpas.Compiler/Binding/Semantics/SemanticRecorder.Bodies.cs)
+  - [SemanticRecorder.Context.cs](../../src/Fpas.Compiler/Binding/Semantics/SemanticRecorder.Context.cs)
+  - [SemanticRecorder.Coverage.cs](../../src/Fpas.Compiler/Binding/Semantics/SemanticRecorder.Coverage.cs)
+  - [SemanticRecorder.Declarations.cs](../../src/Fpas.Compiler/Binding/Semantics/SemanticRecorder.Declarations.cs)
+  - [SemanticRecorder.Expressions.cs](../../src/Fpas.Compiler/Binding/Semantics/SemanticRecorder.Expressions.cs)
+  - [SemanticRecorder.Imports.cs](../../src/Fpas.Compiler/Binding/Semantics/SemanticRecorder.Imports.cs)
+  - [SemanticRecorder.Metadata.cs](../../src/Fpas.Compiler/Binding/Semantics/SemanticRecorder.Metadata.cs)
+  - [SemanticRecorder.Operations.cs](../../src/Fpas.Compiler/Binding/Semantics/SemanticRecorder.Operations.cs)
+  - [SemanticRecorder.Types.cs](../../src/Fpas.Compiler/Binding/Semantics/SemanticRecorder.Types.cs)
+  - [SemanticRecorder.cs](../../src/Fpas.Compiler/Binding/Semantics/SemanticRecorder.cs)
+- `src/Fpas.Compiler/Binding/Symbols/`
+  - [SourceSymbols.cs](../../src/Fpas.Compiler/Binding/Symbols/SourceSymbols.cs)
+- `src/Fpas.Compiler/Binding/Types/`
+  - [TypeFacts.cs](../../src/Fpas.Compiler/Binding/Types/TypeFacts.cs)
+  - [TypeList.cs](../../src/Fpas.Compiler/Binding/Types/TypeList.cs)
+  - [TypeSymbol.cs](../../src/Fpas.Compiler/Binding/Types/TypeSymbol.cs)
+- `src/Fpas.Compiler/Emission/`
+  - [AssemblyLayout.cs](../../src/Fpas.Compiler/Emission/AssemblyLayout.cs)
+  - [ExpressionStack.cs](../../src/Fpas.Compiler/Emission/ExpressionStack.cs)
+- `src/Fpas.Compiler/Emission/Bodies/`
+  - [BodyEmitter.Arrays.cs](../../src/Fpas.Compiler/Emission/Bodies/BodyEmitter.Arrays.cs)
+  - [BodyEmitter.Expressions.cs](../../src/Fpas.Compiler/Emission/Bodies/BodyEmitter.Expressions.cs)
+  - [BodyEmitter.Members.cs](../../src/Fpas.Compiler/Emission/Bodies/BodyEmitter.Members.cs)
+  - [BodyEmitter.Storage.cs](../../src/Fpas.Compiler/Emission/Bodies/BodyEmitter.Storage.cs)
+  - [BodyEmitter.cs](../../src/Fpas.Compiler/Emission/Bodies/BodyEmitter.cs)
+- `src/Fpas.Compiler/Emission/Metadata/`
+  - [AssemblyEmitter.Signatures.cs](../../src/Fpas.Compiler/Emission/Metadata/AssemblyEmitter.Signatures.cs)
+  - [AssemblyEmitter.cs](../../src/Fpas.Compiler/Emission/Metadata/AssemblyEmitter.cs)
+- `src/Fpas.Compiler/`
+  - [Fpas.Compiler.csproj](../../src/Fpas.Compiler/Fpas.Compiler.csproj)
+- `src/Fpas.Compiler/Properties/`
+  - [AssemblyInfo.cs](../../src/Fpas.Compiler/Properties/AssemblyInfo.cs)
+- `src/Fpas.Compiler/Syntax/`
+  - [DeclarationSyntax.cs](../../src/Fpas.Compiler/Syntax/DeclarationSyntax.cs)
+  - [Nodes.cs](../../src/Fpas.Compiler/Syntax/Nodes.cs)
+  - [SourceText.cs](../../src/Fpas.Compiler/Syntax/SourceText.cs)
+- `src/Fpas.Compiler/Syntax/Parsing/`
+  - [Parser.Declarations.cs](../../src/Fpas.Compiler/Syntax/Parsing/Parser.Declarations.cs)
+  - [Parser.Recovery.cs](../../src/Fpas.Compiler/Syntax/Parsing/Parser.Recovery.cs)
+  - [Parser.cs](../../src/Fpas.Compiler/Syntax/Parsing/Parser.cs)
+
+</details>

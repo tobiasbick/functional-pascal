@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/planning/gantt.md)
+
 unit Fpas.Ui.Widgets.Planning.Gantts;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;

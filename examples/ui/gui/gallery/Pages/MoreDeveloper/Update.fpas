@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/more-developer-tools/http-request-bar.md)
+
 unit GuiGallery.Pages.MoreDeveloper.Update;
 
 uses

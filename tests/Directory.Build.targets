@@ -1,3 +1,4 @@
+<!-- [Documentation](coverage.md#test-harness) -->
 <Project>
   <ItemGroup Condition="'$(IsTestProject)' == 'true' and '$(MSBuildProjectExtension)' == '.csproj'">
     <Compile Include="$(MSBuildThisFileDirectory)TestSupport/*.cs" Link="TestSupport/%(Filename)%(Extension)" />

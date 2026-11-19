@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/program-structure/cli.md#check-a-project-or-solution)
 using Fpas.Workspaces.Editing;
 using Fpas.Workspaces.Loading;
 using System.CommandLine;

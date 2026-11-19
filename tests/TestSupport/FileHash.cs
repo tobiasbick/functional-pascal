@@ -1,3 +1,4 @@
+// [Documentation](../coverage.md#test-harness)
 using System.Security.Cryptography;
 
 namespace Fpas.Tests.Support;

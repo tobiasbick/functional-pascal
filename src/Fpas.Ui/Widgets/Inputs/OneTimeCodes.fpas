@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/inputs/one-time-code.md)
+
 unit Fpas.Ui.Widgets.Inputs.OneTimeCodes;
 
 uses Fpas.Ui.Elements as E, System as Sys;

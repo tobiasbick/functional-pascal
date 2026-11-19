@@ -1,3 +1,5 @@
+// [Documentation](../../coverage.md#terminal-ui)
+
 program CuiContract;
 
 uses

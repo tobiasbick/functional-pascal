@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/creative-controls/gradient-slider.md)
+
 unit Fpas.Ui.Widgets.Inputs.GradientSliders;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Audio.ControlWells as W;

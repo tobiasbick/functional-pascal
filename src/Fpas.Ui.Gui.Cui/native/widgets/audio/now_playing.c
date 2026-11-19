@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/motion/now-playing.md)
 #include "../../fpas_cui.h"
 
 static void fpas_player_forget(cui_ctx *ui, cui_id key) {

@@ -51,3 +51,15 @@ Use it to open the commit in your application's history view.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/View.fpas)
 - [Commit graph](../developer-tools/commit-graph.md)
 - [More developer tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [Blame.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/Blame.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.Blame.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.Blame.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.Blame.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.Blame.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [blame.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/blame.c)
+  - [blame.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/blame.h)

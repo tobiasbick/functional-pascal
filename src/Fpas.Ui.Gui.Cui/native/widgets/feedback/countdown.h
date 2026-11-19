@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/disclosure/countdown.md)
 #ifndef FPAS_COUNTDOWN_H
 #define FPAS_COUNTDOWN_H
 

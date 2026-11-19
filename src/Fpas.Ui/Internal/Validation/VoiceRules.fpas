@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#voice-and-ai)
+
 unit Fpas.Ui.Internal.Validation.VoiceRules;
 
 uses

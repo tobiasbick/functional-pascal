@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/radar-chart.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Charts.RadarChart;
 
 uses

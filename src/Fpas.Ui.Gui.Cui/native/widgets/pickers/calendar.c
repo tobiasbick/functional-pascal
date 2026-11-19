@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/inputs/calendar.md)
 #include "../../fpas_cui.h"
 
 static void fpas_calendar_part(cui_ctx *ui, cui_id key, int first, int part,

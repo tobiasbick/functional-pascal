@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-developer-tools/api-explorer.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_api_explorer(cui_ctx *ui, const char *id, const cui_api_endpoint * endpoints, int endpoints_count, int selection, float height, int width_kind, float width, int enabled, fpas_dev_result * out) {

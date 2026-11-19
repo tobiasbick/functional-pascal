@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/data-grid/tree-table.md)
+
 unit Fpas.Ui.Widgets.Collections.TreeTables;
 
 uses

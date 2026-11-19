@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/workspaces.md#context-preparation)
 namespace Fpas.Workspaces.Loading;
 
 /// <summary>Selects which project preparation effects workspace loading permits.</summary>

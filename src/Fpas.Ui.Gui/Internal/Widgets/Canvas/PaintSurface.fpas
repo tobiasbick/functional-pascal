@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/painting.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Canvas.PaintSurface;
 
 uses

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-native.md)
 namespace Fpas.Debugging.Native;
 
 internal sealed record NativeStop(string Reason, long[]? Breakpoints = null, Core.BreakpointInfo[]? ChangedBreakpoints = null,

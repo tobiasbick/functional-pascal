@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/navigation/tabs.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_tabs(cui_ctx *ui, const char *id, const char *const *labels,

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/format-bar.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Canvas.FormatBar;
 
 uses

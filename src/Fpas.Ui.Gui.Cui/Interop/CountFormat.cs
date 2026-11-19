@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/cui.md#data-and-marshalling)
 namespace Fpas.Ui.Gui.Cui.Interop;
 
 internal static class CountFormat

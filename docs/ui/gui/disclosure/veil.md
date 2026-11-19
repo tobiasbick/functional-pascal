@@ -47,3 +47,17 @@ Click the covered area or activate it with Enter when focused to propose a revea
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Overlays/Veils.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Disclosure/Widgets/Veil.fpas)
 - [Disclosure](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Overlays/`
+  - [Veil.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Overlays/Veil.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Overlays/`
+  - [NativeMethods.Veil.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Overlays/NativeMethods.Veil.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Overlays/`
+  - [CuiWindow.Veil.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Overlays/CuiWindow.Veil.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/overlays/`
+  - [veil.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/overlays/veil.c)
+  - [veil.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/overlays/veil.h)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Overlays/`
+  - [CuiVeilScopeTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Overlays/CuiVeilScopeTests.cs)

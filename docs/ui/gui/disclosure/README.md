@@ -22,3 +22,10 @@ show progress within a page. These examples require the GUI host.
 - [UI handbook](../README.md)
 - [Overlays](../overlays/README.md)
 - [Disclosure in the gallery](../../../../examples/ui/gui/gallery/Pages/Disclosure/View.fpas)
+
+## Source files
+
+- [Clock.fpas](../../../../examples/ui/gui/gallery/Pages/Disclosure/Clock.fpas)
+- [State.fpas](../../../../examples/ui/gui/gallery/Pages/Disclosure/State.fpas)
+- [DisclosureContract.fpas](../../../../tests/Fixtures/gui-host/DisclosureContract.fpas)
+- [CuiDisclosureTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Overlays/CuiDisclosureTests.cs)

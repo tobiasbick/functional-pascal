@@ -1,3 +1,4 @@
+// [Documentation](../../coverage.md#measurements-and-diagnostic-artifacts)
 using System.Xml.Linq;
 using Fpas.IntegrationTests.Build;
 using Fpas.Tests.Support;

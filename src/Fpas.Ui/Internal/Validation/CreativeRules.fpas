@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#creative-controls)
+
 unit Fpas.Ui.Internal.Validation.CreativeRules;
 
 uses

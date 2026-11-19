@@ -53,3 +53,16 @@ indexes the new curve, and `Removed` indexes the previous curve.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/EditingTools/View.fpas)
 - [Timeline editor](timeline-editor.md)
 - [Editing tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Editors/`
+  - [CurveEditor.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Editors/CurveEditor.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Editors/`
+  - [NativeMethods.CurveEditor.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Editors/NativeMethods.CurveEditor.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Editors/`
+  - [CuiWindow.CurveEditor.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Editors/CuiWindow.CurveEditor.Types.cs)
+  - [CuiWindow.CurveEditor.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Editors/CuiWindow.CurveEditor.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/editors/`
+  - [curve_editor.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/editors/curve_editor.c)
+  - [curve_editor.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/editors/curve_editor.h)

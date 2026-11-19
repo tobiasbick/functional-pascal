@@ -48,3 +48,15 @@ inside the viewport as in the Scroll anchor example.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Reader/View.fpas)
 - [Scroll anchor](scroll-anchor.md)
 - [Chapter index](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Navigation/`
+  - [TableOfContents.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Navigation/TableOfContents.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Navigation/`
+  - [NativeMethods.TableOfContents.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Navigation/NativeMethods.TableOfContents.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Navigation/`
+  - [CuiWindow.TableOfContents.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Navigation/CuiWindow.TableOfContents.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/navigation/`
+  - [table_of_contents.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/navigation/table_of_contents.c)
+  - [table_of_contents.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/navigation/table_of_contents.h)

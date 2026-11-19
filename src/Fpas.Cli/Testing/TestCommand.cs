@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/testing.md)
 using Fpas.Cli.Analysis;
 using Fpas.Cli.Reporting;
 using Fpas.Workspaces.Loading;

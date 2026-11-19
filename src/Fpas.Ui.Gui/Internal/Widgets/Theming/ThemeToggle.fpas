@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/actions/theme-toggle.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Theming.ThemeToggle;
 
 uses Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Internal.Theming.ThemeToggles as Parts, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui;

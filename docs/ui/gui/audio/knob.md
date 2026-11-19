@@ -49,3 +49,15 @@ Backspace restores Reset. Store the proposed value to accept the change.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Audio/Knobs.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Audio/View.fpas)
 - [Audio](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Audio/`
+  - [Knob.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Audio/Knob.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Audio/`
+  - [NativeMethods.Knob.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Audio/NativeMethods.Knob.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Audio/`
+  - [CuiWindow.Knob.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Audio/CuiWindow.Knob.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/audio/`
+  - [knob.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/audio/knob.c)
+  - [knob.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/audio/knob.h)

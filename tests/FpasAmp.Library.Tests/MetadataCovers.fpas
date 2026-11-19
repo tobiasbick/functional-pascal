@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/library.md#albums-and-artwork)
+
 // Cover images remain outside the normal metadata scan and can be reused offline.
 unit FpasAmp.Library.Tests.MetadataCovers;
 

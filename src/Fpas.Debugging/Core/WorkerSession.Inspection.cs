@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#sources-and-stopped-context)
 namespace Fpas.Debugging.Core;
 
 internal sealed partial class WorkerSession

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/tui/app-chrome/status-bar.md)
+
 unit Fpas.Ui.Tui.Internal.Widgets.Desktop.StatusBar;
 
 uses

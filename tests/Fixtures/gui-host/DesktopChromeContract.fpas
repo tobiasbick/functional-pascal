@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/ui/gui/app-chrome/README.md)
+
 unit GalleryDesktopChromeContract;
 
 uses

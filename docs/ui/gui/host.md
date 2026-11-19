@@ -314,6 +314,20 @@ IsSoftware reports the actual renderer, including fallback.
 CapturePng saves the presented frame outside Step on the owner thread. It needs
 a live window, a successful presentation and an existing destination directory.
 
+## Frame preparation and presentation
+
+The session prepares the shared element tree, checks graphical layout rules,
+and gives the prepared tree to the presentation pass. Presentation converts
+FPAS options and values to CUI data, sets native layout hints, and calls each
+widget adapter. Native changes become proposals that the session can deliver
+to the model. The frame context records control IDs and their native tokens.
+After CUI resolves layout, the host uses those tokens to attach finalized
+bounds to control descriptors for inspection.
+
+Focus resolution walks the prepared tree to find enabled targets, including
+keyed parts inside composite widgets. The host tracks the active modal and
+remembers the preceding focus target for restoration when it closes.
+
 ## Build and verification
 
 See [development](../../build/development.md), the
@@ -325,3 +339,87 @@ Native AOT. Linux window tests require a display.
 
 The [CUI inventory](../../cui-widget-inventory.md#acceptance) records GUI
 gallery acceptance and existing TUI coverage.
+
+## Source files
+
+<details>
+<summary>Browse 61 source files</summary>
+
+- `examples/ui/gui/gallery/Pages/Desktop/`
+  - [Editor.fpas](../../../examples/ui/gui/gallery/Pages/Desktop/Editor.fpas)
+  - [HostActions.fpas](../../../examples/ui/gui/gallery/Pages/Desktop/HostActions.fpas)
+- `src/Fpas.Ui.Gui/`
+  - [Application.fpas](../../../src/Fpas.Ui.Gui/Application.fpas)
+  - [Clipboard.fpas](../../../src/Fpas.Ui.Gui/Clipboard.fpas)
+  - [Closing.fpas](../../../src/Fpas.Ui.Gui/Closing.fpas)
+  - [Colors.fpas](../../../src/Fpas.Ui.Gui/Colors.fpas)
+  - [Desktop.fpas](../../../src/Fpas.Ui.Gui/Desktop.fpas)
+  - [EditorCommands.fpas](../../../src/Fpas.Ui.Gui/EditorCommands.fpas)
+  - [FileDialogs.fpas](../../../src/Fpas.Ui.Gui/FileDialogs.fpas)
+  - [Fonts.fpas](../../../src/Fpas.Ui.Gui/Fonts.fpas)
+  - [Fpas.Ui.Gui.fpasproj](../../../src/Fpas.Ui.Gui/Fpas.Ui.Gui.fpasproj)
+  - [Frames.fpas](../../../src/Fpas.Ui.Gui/Frames.fpas)
+  - [Localization.fpas](../../../src/Fpas.Ui.Gui/Localization.fpas)
+  - [Shortcuts.fpas](../../../src/Fpas.Ui.Gui/Shortcuts.fpas)
+  - [Toasts.fpas](../../../src/Fpas.Ui.Gui/Toasts.fpas)
+  - [Windows.fpas](../../../src/Fpas.Ui.Gui/Windows.fpas)
+- `src/Fpas.Ui.Gui/Internal/Data/`
+  - [AiData.fpas](../../../src/Fpas.Ui.Gui/Internal/Data/AiData.fpas)
+  - [CanvasData.fpas](../../../src/Fpas.Ui.Gui/Internal/Data/CanvasData.fpas)
+  - [ChartData.fpas](../../../src/Fpas.Ui.Gui/Internal/Data/ChartData.fpas)
+  - [CreativeParts.fpas](../../../src/Fpas.Ui.Gui/Internal/Data/CreativeParts.fpas)
+  - [CurveData.fpas](../../../src/Fpas.Ui.Gui/Internal/Data/CurveData.fpas)
+  - [FileData.fpas](../../../src/Fpas.Ui.Gui/Internal/Data/FileData.fpas)
+  - [MediaData.fpas](../../../src/Fpas.Ui.Gui/Internal/Data/MediaData.fpas)
+  - [MoreChartData.fpas](../../../src/Fpas.Ui.Gui/Internal/Data/MoreChartData.fpas)
+  - [MotionData.fpas](../../../src/Fpas.Ui.Gui/Internal/Data/MotionData.fpas)
+  - [ScheduleData.fpas](../../../src/Fpas.Ui.Gui/Internal/Data/ScheduleData.fpas)
+- `src/Fpas.Ui.Gui/Internal/Hosting/`
+  - [Context.fpas](../../../src/Fpas.Ui.Gui/Internal/Hosting/Context.fpas)
+  - [FontRequests.fpas](../../../src/Fpas.Ui.Gui/Internal/Hosting/FontRequests.fpas)
+  - [FrameControls.fpas](../../../src/Fpas.Ui.Gui/Internal/Hosting/FrameControls.fpas)
+  - [KeyBindings.fpas](../../../src/Fpas.Ui.Gui/Internal/Hosting/KeyBindings.fpas)
+  - [Requests.fpas](../../../src/Fpas.Ui.Gui/Internal/Hosting/Requests.fpas)
+  - [Session.fpas](../../../src/Fpas.Ui.Gui/Internal/Hosting/Session.fpas)
+  - [ThemeApplication.fpas](../../../src/Fpas.Ui.Gui/Internal/Hosting/ThemeApplication.fpas)
+- `src/Fpas.Ui.Gui/Internal/Input/`
+  - [AiFocus.fpas](../../../src/Fpas.Ui.Gui/Internal/Input/AiFocus.fpas)
+  - [CreativeFocus.fpas](../../../src/Fpas.Ui.Gui/Internal/Input/CreativeFocus.fpas)
+  - [Editor.fpas](../../../src/Fpas.Ui.Gui/Internal/Input/Editor.fpas)
+  - [Focus.fpas](../../../src/Fpas.Ui.Gui/Internal/Input/Focus.fpas)
+  - [Modal.fpas](../../../src/Fpas.Ui.Gui/Internal/Input/Modal.fpas)
+  - [ModalFocus.fpas](../../../src/Fpas.Ui.Gui/Internal/Input/ModalFocus.fpas)
+- `src/Fpas.Ui.Gui/Internal/Layout/`
+  - [LayoutValidation.fpas](../../../src/Fpas.Ui.Gui/Internal/Layout/LayoutValidation.fpas)
+  - [RealizedValidation.fpas](../../../src/Fpas.Ui.Gui/Internal/Layout/RealizedValidation.fpas)
+  - [Sizing.fpas](../../../src/Fpas.Ui.Gui/Internal/Layout/Sizing.fpas)
+- `src/Fpas.Ui.Gui/Internal/Presentation/`
+  - [CanvasPresentation.fpas](../../../src/Fpas.Ui.Gui/Internal/Presentation/CanvasPresentation.fpas)
+  - [ChromePresentation.fpas](../../../src/Fpas.Ui.Gui/Internal/Presentation/ChromePresentation.fpas)
+  - [DeveloperPresentation.fpas](../../../src/Fpas.Ui.Gui/Internal/Presentation/DeveloperPresentation.fpas)
+  - [DisplayPresentation.fpas](../../../src/Fpas.Ui.Gui/Internal/Presentation/DisplayPresentation.fpas)
+  - [EditingToolPresentation.fpas](../../../src/Fpas.Ui.Gui/Internal/Presentation/EditingToolPresentation.fpas)
+  - [Presentation.fpas](../../../src/Fpas.Ui.Gui/Internal/Presentation/Presentation.fpas)
+  - [SourceToolPresentation.fpas](../../../src/Fpas.Ui.Gui/Internal/Presentation/SourceToolPresentation.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Feedback/`
+  - [NativeMethods.Toast.cs](../../../src/Fpas.Ui.Gui.Cui/Interop/Feedback/NativeMethods.Toast.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Feedback/`
+  - [CuiWindow.Toast.Types.cs](../../../src/Fpas.Ui.Gui.Cui/Widgets/Feedback/CuiWindow.Toast.Types.cs)
+  - [CuiWindow.Toast.cs](../../../src/Fpas.Ui.Gui.Cui/Widgets/Feedback/CuiWindow.Toast.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/feedback/`
+  - [toast.c](../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/toast.c)
+  - [toast.h](../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/toast.h)
+- `tests/Fixtures/gui-host/`
+  - [DesktopSchedulingContract.fpas](../../../tests/Fixtures/gui-host/DesktopSchedulingContract.fpas)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Layout/`
+  - [CuiHostLayoutTests.cs](../../../tests/Fpas.Ui.Gui.Cui.Tests/Layout/CuiHostLayoutTests.cs)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Packaging/`
+  - [GuiHostTests.cs](../../../tests/Fpas.Ui.Gui.Cui.Tests/Packaging/GuiHostTests.cs)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Resources/`
+  - [CuiFontThemeTests.cs](../../../tests/Fpas.Ui.Gui.Cui.Tests/Resources/CuiFontThemeTests.cs)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Windowing/`
+  - [CuiFrameSchedulingTests.cs](../../../tests/Fpas.Ui.Gui.Cui.Tests/Windowing/CuiFrameSchedulingTests.cs)
+  - [CuiHostLifecycleReviewTests.cs](../../../tests/Fpas.Ui.Gui.Cui.Tests/Windowing/CuiHostLifecycleReviewTests.cs)
+  - [CuiWakeupTests.cs](../../../tests/Fpas.Ui.Gui.Cui.Tests/Windowing/CuiWakeupTests.cs)
+
+</details>

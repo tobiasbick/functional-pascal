@@ -42,3 +42,18 @@ The avatar is a display element. Use a link or another interactive control when 
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Disclosure/Widgets/HoverCard.fpas)
 - [Hover card](hover-card.md)
 - [Disclosure](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Media/`
+  - [Avatar.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Media/Avatar.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Media/`
+  - [NativeMethods.Avatar.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Media/NativeMethods.Avatar.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Media/`
+  - [CuiWindow.Avatar.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Media/CuiWindow.Avatar.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/media/`
+  - [avatar.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/media/avatar.c)
+  - [avatar.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/media/avatar.h)
+  - [avatar_image.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/media/avatar_image.c)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Media/`
+  - [CuiAvatarTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Media/CuiAvatarTests.cs)

@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#shared-themes)
+
 unit Fpas.Ui.Internal.Theming.ThemePalettes;
 
 uses Fpas.Ui.Widgets.Theming.Themes as Th, Fpas.Ui.Graphics as G, System as Sys, System.Globalization as Global;

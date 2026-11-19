@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#browsing-music-and-collections)
+
 // CUI's virtual rows contain ordinary native grids of cover/title cards.
 unit FpasAmp.Ui.Albums.View;
 

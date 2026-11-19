@@ -114,3 +114,19 @@ infer omitted enclosing arguments.
 - [Generic routines](generic-routines.md)
 - [Generic data types](../types/generics.md)
 - [Test coverage](../../../../tests/coverage.md)
+
+## Source files
+
+- `src/Fpas.Compiler/Binding/Bodies/`
+  - [Binder.Inference.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.Inference.cs)
+  - [Binder.VariantInference.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.VariantInference.cs)
+- `src/Fpas.Compiler/Binding/References/`
+  - [ReferenceCatalog.Inference.cs](../../../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.Inference.cs)
+- `src/Fpas.Compiler/Binding/Types/`
+  - [TypeInference.cs](../../../../src/Fpas.Compiler/Binding/Types/TypeInference.cs)
+- `tests/Fpas.Compiler.Tests/ControlFlow/`
+  - [InferenceTests.cs](../../../../tests/Fpas.Compiler.Tests/ControlFlow/InferenceTests.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.Inference.cs](../../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.Inference.cs)
+- `tests/Fpas.IntegrationTests/Execution/`
+  - [InferenceExecutionTests.cs](../../../../tests/Fpas.IntegrationTests/Execution/InferenceExecutionTests.cs)

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/capture/dropzone.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Files.Dropzone;
 
 uses

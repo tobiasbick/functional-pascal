@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/social-and-media/ticker.md)
 #ifndef FPAS_CUI_TICKER_H
 #define FPAS_CUI_TICKER_H
 typedef struct { const char *label, *value; float delta; int lower_is_better; } fpas_ticker_item;

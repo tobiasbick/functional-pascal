@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/tui/inputs/text-field.md)
+
 unit Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor;
 
 uses

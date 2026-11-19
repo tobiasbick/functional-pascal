@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/cui.md#data-and-marshalling)
 using Fpas.Ui.Gui.Cui.Widgets.Developer;
 using System.Runtime.InteropServices;
 

@@ -32,3 +32,19 @@ next view. In menu and button options, shortcut captions display a hint.
 - [First window](../README.md#first-window)
 - [FPAS widget reference](../../widgets.md)
 - [Gallery](../../../../examples/ui/gui/gallery/README.md)
+
+## Source files
+
+- `examples/ui/gui/gallery/Pages/Actions/`
+  - [Commands.fpas](../../../../examples/ui/gui/gallery/Pages/Actions/Commands.fpas)
+  - [State.fpas](../../../../examples/ui/gui/gallery/Pages/Actions/State.fpas)
+  - [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Actions/Update.fpas)
+  - [View.fpas](../../../../examples/ui/gui/gallery/Pages/Actions/View.fpas)
+- `examples/ui/gui/gallery/Pages/Buttons/`
+  - [State.fpas](../../../../examples/ui/gui/gallery/Pages/Buttons/State.fpas)
+  - [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Buttons/Update.fpas)
+  - [View.fpas](../../../../examples/ui/gui/gallery/Pages/Buttons/View.fpas)
+- `tests/Fixtures/gui-host/`
+  - [ActionWidgetsContract.fpas](../../../../tests/Fixtures/gui-host/ActionWidgetsContract.fpas)
+  - [ActionsContract.fpas](../../../../tests/Fixtures/gui-host/ActionsContract.fpas)
+  - [ActionsPickersContract.fpas](../../../../tests/Fixtures/gui-host/ActionsPickersContract.fpas)

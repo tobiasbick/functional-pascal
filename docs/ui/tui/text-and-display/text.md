@@ -35,3 +35,7 @@ Text is passive. Resize the terminal to change the line breaks. Use semantic rol
 - [Shared API](../../widgets.md#layout-and-style)
 - [GUI text](../../gui/text-and-display/text.md)
 - [Gallery source](../../../../examples/ui/tui/gallery/main.fpas)
+
+## Source files
+
+- [Glyphs.fpas](../../../../src/Fpas.Ui.Tui/Internal/Rendering/Glyphs.fpas)

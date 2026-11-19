@@ -53,3 +53,8 @@ there is no such owner. See [concurrency](../concurrency/README.md).
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- [SourceCatalog.Routines.cs](../../../../src/Fpas.Compiler/Binding/Declarations/SourceCatalog.Routines.cs)
+- [RoutineTests.cs](../../../../tests/Fpas.Compiler.Tests/Routines/RoutineTests.cs)

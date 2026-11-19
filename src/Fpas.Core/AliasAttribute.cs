@@ -1,3 +1,4 @@
+// [Documentation](../../docs/specs/clr-mapping.md#small-language-support-library)
 namespace Fpas.Core;
 
 /// <summary>Records the FPAS source name of a routine whose CLR name differs.</summary>

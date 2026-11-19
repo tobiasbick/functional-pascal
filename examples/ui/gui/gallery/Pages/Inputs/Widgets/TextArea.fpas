@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/inputs/text-area.md)
+
 unit GuiGallery.Pages.Inputs.Widgets.TextArea;
 
 uses

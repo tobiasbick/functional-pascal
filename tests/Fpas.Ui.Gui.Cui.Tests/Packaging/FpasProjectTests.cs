@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/native-build.md)
 using System.Xml.Linq;
 using Fpas.Tests.Support;
 

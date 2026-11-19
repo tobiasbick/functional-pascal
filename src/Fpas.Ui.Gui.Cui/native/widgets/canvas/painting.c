@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/painting.md)
 #include "../../fpas_cui.h"
 
 CUI_API float fpas_cui_canvas_font_scale(cui_ctx *ui) { return cui_theme_get(ui)->font_scale; }

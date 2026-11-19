@@ -1,3 +1,5 @@
+// [Documentation](README.md)
+
 program GameActions;
 
 uses System.Console as Console, Dungeon.Model as Model;

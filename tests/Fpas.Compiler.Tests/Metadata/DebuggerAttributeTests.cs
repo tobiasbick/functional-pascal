@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debug-information.md)
 using Fpas.Compiler.Tests.Support;
 using System.Diagnostics;
 using System.Reflection;

@@ -1,3 +1,5 @@
+// [Documentation](../../coverage.md#native-test-frameworks)
+
 unit NativeTests;
 
 uses

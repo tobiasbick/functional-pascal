@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/language-server.md#navigation-and-edits)
 using Fpas.Compiler;
 using Fpas.Compiler.Formatting;
 using Fpas.Compiler.Syntax;

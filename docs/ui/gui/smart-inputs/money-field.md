@@ -74,3 +74,21 @@ which covers every formatted decimal amount at all supported precisions.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/SmartInputs/Widgets/Editors.fpas)
 - [Number field](../inputs/number-field.md)
 - [Smart inputs](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [MoneyField.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/MoneyField.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.MoneyField.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.MoneyField.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.MoneyField.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.MoneyField.cs)
+  - [CuiWindow.MoneyState.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.MoneyState.cs)
+  - [MoneyAmounts.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/MoneyAmounts.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [money_field.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/money_field.c)
+  - [money_field.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/money_field.h)
+- `tests/Fixtures/gui-host/`
+  - [MoneyDecimalContract.fpas](../../../../tests/Fixtures/gui-host/MoneyDecimalContract.fpas)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Inputs/`
+  - [CuiMoneyFieldTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Inputs/CuiMoneyFieldTests.cs)

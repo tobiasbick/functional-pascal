@@ -1,3 +1,4 @@
+// [Documentation](../../README.md#cli-process-ownership)
 import { spawn } from 'node:child_process';
 import * as vscode from 'vscode';
 import { requireTrusted } from '../context';

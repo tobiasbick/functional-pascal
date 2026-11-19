@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/developer-tools/README.md)
+
 unit GuiGallery.Pages.Developer.Update;
 
 uses GuiGallery.Pages.Developer.State as M, Fpas.Ui.Widgets.Developer.TraceViewers as T, Fpas.Ui.Widgets.Developer.NetworkWaterfalls as W, Fpas.Ui.Widgets.Developer.DependencyGraphs as G, Fpas.Ui.Widgets.Developer.CommitGraphs as C, Fpas.Ui.Widgets.Developer.Pipelines as J, Fpas.Ui.Widgets.Developer.KeyValueEditors as K, Fpas.Ui.Widgets.Developer.QueryBuilders as Q, Fpas.Ui.Widgets.Pickers.SchedulePickers as S, Fpas.Ui.Widgets.Developer.Keymaps as Keys;

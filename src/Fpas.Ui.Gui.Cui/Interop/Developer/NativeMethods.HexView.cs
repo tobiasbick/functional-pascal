@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/code/hex-viewer.md)
 using Fpas.Ui.Gui.Cui.Widgets.Developer;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

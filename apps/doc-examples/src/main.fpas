@@ -1,3 +1,5 @@
+// [Documentation](../README.md#source-layout)
+
 async program DocExamples;
 
 uses

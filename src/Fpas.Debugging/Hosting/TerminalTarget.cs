@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/debugging.md#private-terminal-and-tui-control)
 using System.IO.Pipes;
 using System.Text.Json;
 using Fpas.Debugging.Core;

@@ -89,3 +89,16 @@ support ignores them. Wayland lets a window neither read nor choose its place.
 - [Host reference](../host.md#window-state-and-placement)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Desktop/HostActions.fpas)
 - [Chapter index](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui.Cui/Hosting/`
+  - [CuiWindow.Placement.cs](../../../../src/Fpas.Ui.Gui.Cui/Hosting/CuiWindow.Placement.cs)
+- `src/Fpas.Ui.Gui.Cui/Interop/Hosting/`
+  - [NativeMethods.Window.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Hosting/NativeMethods.Window.cs)
+- `src/Fpas.Ui.Gui.Cui/native/host/`
+  - [window_state.c](../../../../src/Fpas.Ui.Gui.Cui/native/host/window_state.c)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Windowing/`
+  - [CuiPlacementTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Windowing/CuiPlacementTests.cs)
+  - [CuiPresentationTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Windowing/CuiPresentationTests.cs)
+  - [CuiWindowTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Windowing/CuiWindowTests.cs)

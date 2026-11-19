@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/apps/fpas-amp/library.md#playlists)
+
 // A borrowed asynchronous handle; the metadata stage owns its lifetime.
 unit FpasAmp.Library.Playlists.Access;
 

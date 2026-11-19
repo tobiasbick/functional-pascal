@@ -45,3 +45,26 @@ end program;
 - [Topic overview](README.md)
 - [Handbook](../README.md)
 - [Syntax grammar](../../specs/syntax.md)
+
+## Source files
+
+<details>
+<summary>Browse 11 source files</summary>
+
+- `src/Fpas.Compiler/Binding/References/`
+  - [MetadataConstants.cs](../../../src/Fpas.Compiler/Binding/References/MetadataConstants.cs)
+  - [ReferenceCatalog.SignatureLimits.cs](../../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.SignatureLimits.cs)
+  - [ReferenceCatalog.SourceTypes.cs](../../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.SourceTypes.cs)
+  - [ReferenceCatalog.Types.cs](../../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.Types.cs)
+  - [ReferenceSymbols.cs](../../../src/Fpas.Compiler/Binding/References/ReferenceSymbols.cs)
+  - [SignatureTypes.cs](../../../src/Fpas.Compiler/Binding/References/SignatureTypes.cs)
+- `tests/Fpas.Compiler.Tests/ControlFlow/`
+  - [InteropDiagnosticsTests.cs](../../../tests/Fpas.Compiler.Tests/ControlFlow/InteropDiagnosticsTests.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.Interop.cs](../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.Interop.cs)
+  - [MsBuildTests.SignatureLimits.cs](../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.SignatureLimits.cs)
+- `tests/Fpas.IntegrationTests/Execution/`
+  - [InteropExecutionTests.cs](../../../tests/Fpas.IntegrationTests/Execution/InteropExecutionTests.cs)
+  - [RectangularInteropTests.cs](../../../tests/Fpas.IntegrationTests/Execution/RectangularInteropTests.cs)
+
+</details>

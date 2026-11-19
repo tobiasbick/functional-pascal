@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/social-and-media/carousel.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_carousel_begin(cui_ctx *ui, const char *id, int count, int index,

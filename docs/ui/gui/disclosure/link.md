@@ -41,3 +41,15 @@ Click the link or focus it and press Enter or Space. Handle the destination in y
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Disclosure/Widgets/HoverCard.fpas)
 - [Hover card](hover-card.md)
 - [Disclosure](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Display/`
+  - [Link.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Display/Link.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Display/`
+  - [NativeMethods.Link.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Display/NativeMethods.Link.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Display/`
+  - [CuiWindow.Link.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Display/CuiWindow.Link.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/display/`
+  - [link.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/display/link.c)
+  - [link.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/display/link.h)

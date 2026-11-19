@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/build/publishing.md)
 using System.Text.Json;
 using System.Security.Cryptography;
 using System.Xml.Linq;

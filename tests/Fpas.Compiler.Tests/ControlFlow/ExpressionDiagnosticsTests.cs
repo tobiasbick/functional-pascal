@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/diagnostics.md)
 using Fpas.Compiler.Tests.Support;
 namespace Fpas.Compiler.Tests.ControlFlow;
 

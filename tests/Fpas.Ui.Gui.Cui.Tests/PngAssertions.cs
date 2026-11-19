@@ -1,3 +1,4 @@
+// [Documentation](../coverage.md#native-gui)
 using System.Buffers.Binary;
 using System.IO.Compression;
 

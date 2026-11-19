@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/canvas-controls.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_canvas_controls(cui_ctx *ui, const char *id, cui_node_view *view, cui_rect content,

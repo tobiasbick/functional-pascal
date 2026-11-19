@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/selection/rating.md)
+
 unit Fpas.Ui.Widgets.Inputs.Ratings;
 
 uses Fpas.Ui.Elements as E;

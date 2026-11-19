@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/actions/confirm-button.md)
 /* Exercises CUI confirmation with deterministic frame time and real input. */
 #include "../fpas_cui.h"
 #include <stdio.h>

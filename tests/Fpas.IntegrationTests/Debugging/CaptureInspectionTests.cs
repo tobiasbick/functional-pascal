@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#passive-stored-values)
 using Fpas.Debugging.Core;
 using Fpas.Debugging.Hosting;
 using Fpas.Tests.Support;

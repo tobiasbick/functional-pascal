@@ -1,3 +1,5 @@
+// [Documentation](README.md)
+
 unit Fractals.Camera;
 
 uses System as Sys;

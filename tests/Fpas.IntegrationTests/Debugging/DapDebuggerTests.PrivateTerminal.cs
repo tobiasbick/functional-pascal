@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-dap.md)
 using System.Buffers.Binary;
 using System.IO.Pipes;
 using System.Text;

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/actions/dropdown-menu.md)
+
 unit GuiGallery.Pages.Buttons.Widgets.DropdownMenu;
 
 uses

@@ -190,3 +190,13 @@ add Sankey, animated bar lists, activity rings, scatter/bubble charts, radial
 gauges and candlestick/OHLC charts. CUI owns their rendering and interaction,
 including candlestick zoom, panning, keyboard inspection and volume. The GUI
 gallery's More charts page reproduces every original example.
+
+## Source files
+
+- `tests/Fixtures/gui-host/`
+  - [DesktopCommandMappingContract.fpas](../../../tests/Fixtures/gui-host/DesktopCommandMappingContract.fpas)
+  - [DesktopCommandsContract.fpas](../../../tests/Fixtures/gui-host/DesktopCommandsContract.fpas)
+  - [DesktopFocusContract.fpas](../../../tests/Fixtures/gui-host/DesktopFocusContract.fpas)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Windowing/`
+  - [CuiShortcutTests.cs](../../../tests/Fpas.Ui.Gui.Cui.Tests/Windowing/CuiShortcutTests.cs)
+  - [CuiWindowCommandTests.cs](../../../tests/Fpas.Ui.Gui.Cui.Tests/Windowing/CuiWindowCommandTests.cs)

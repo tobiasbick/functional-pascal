@@ -48,3 +48,15 @@ in the application. Reported totals count tests.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/View.fpas)
 - [Pipeline](../developer-tools/pipeline.md)
 - [More developer tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [TestExplorer.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/TestExplorer.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.TestExplorer.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.TestExplorer.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.TestExplorer.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.TestExplorer.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [test_explorer.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/test_explorer.c)
+  - [test_explorer.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/test_explorer.h)

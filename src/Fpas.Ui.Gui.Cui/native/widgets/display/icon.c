@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/text-and-display/icon.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_display_icon(cui_ctx *ui, const char *glyph, float size, uint32_t color) {

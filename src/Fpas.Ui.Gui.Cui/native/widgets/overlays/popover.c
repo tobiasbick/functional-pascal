@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/overlays/popover.md)
 #include "../../fpas_cui.h"
 
 static cui_popup *fpas_prepare_popover(cui_ctx *ui, cui_id key, bool open, unsigned int *owner) {

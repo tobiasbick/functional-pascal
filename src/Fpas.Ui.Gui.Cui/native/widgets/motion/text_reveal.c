@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/motion/text-reveal.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_text_reveal(cui_ctx *ui, const char *id, const char *text, int replay, const fpas_motion_text *o) {

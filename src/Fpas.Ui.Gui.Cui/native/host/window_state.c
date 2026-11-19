@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/app-chrome/window.md)
 /* Window placement adapter with scalar arguments, so the managed side needs no struct layout. */
 
 /** Reads the window's normal size and place and the state it opens in again.

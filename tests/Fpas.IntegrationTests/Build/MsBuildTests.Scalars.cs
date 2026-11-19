@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/basics/primitive-types.md)
 using System.Xml.Linq;
 using Fpas.Tests.Support;
 

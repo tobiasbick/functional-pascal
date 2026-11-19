@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/developer-tools/commit-graph.md)
 using Fpas.Ui.Gui.Cui.Interop.Developer;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

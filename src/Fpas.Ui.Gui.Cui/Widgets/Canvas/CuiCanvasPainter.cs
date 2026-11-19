@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/canvas-and-bars/painting.md)
 using Fpas.Ui.Gui.Cui.Interop;
 using Fpas.Ui.Gui.Cui.Widgets.Media;
 using System.Runtime.InteropServices;

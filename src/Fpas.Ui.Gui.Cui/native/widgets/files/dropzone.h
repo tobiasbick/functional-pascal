@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/capture/dropzone.md)
 #ifndef FPAS_DROPZONE_H
 #define FPAS_DROPZONE_H
 

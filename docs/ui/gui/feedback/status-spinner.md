@@ -44,3 +44,15 @@ Set Busy when work starts, then pass Success or Error when it finishes. Idle has
 - [Spinner](spinner.md)
 - [Status button](../actions/status-button.md)
 - [Feedback](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Feedback/`
+  - [StatusSpinner.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Feedback/StatusSpinner.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Feedback/`
+  - [NativeMethods.StatusSpinner.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Feedback/NativeMethods.StatusSpinner.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Feedback/`
+  - [CuiWindow.StatusSpinner.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Feedback/CuiWindow.StatusSpinner.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/feedback/`
+  - [status_spinner.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/status_spinner.c)
+  - [status_spinner.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/status_spinner.h)

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/inputs/text-area.md)
 #ifndef FPAS_TEXT_AREA_H
 #define FPAS_TEXT_AREA_H
 

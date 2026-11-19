@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/language-server.md#read-only-source-views)
 using Fpas.Compiler.Analysis;
 using Fpas.LanguageServer.Protocol;
 using Fpas.Workspaces.Documentation;

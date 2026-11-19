@@ -1,3 +1,5 @@
+// [Documentation](../../docs/pascal/libraries/workflows.md#capturing-a-child-process)
+
 // Workflows for capturing output from an owned process tree.
 unit Fpas.Processes.Workflows.Capture;
 

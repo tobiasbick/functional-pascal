@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/data-grid/data-grid.md)
 /* Exercises grid drafts through real pointer, text and keyboard input. */
 #include "../fpas_cui.h"
 #include <stdio.h>

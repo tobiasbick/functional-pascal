@@ -48,3 +48,15 @@ to resolve the supplied commit.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Developer/View.fpas)
 - [Blame](../more-developer-tools/blame.md)
 - [Developer tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [CommitGraph.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/CommitGraph.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.CommitGraph.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.CommitGraph.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.CommitGraph.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.CommitGraph.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [commit_graph.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/commit_graph.c)
+  - [commit_graph.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/commit_graph.h)

@@ -42,3 +42,15 @@ typing stops. CUI animates the dots. Reduced motion keeps them still.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/View.fpas)
 - [Chat message](chat-message.md)
 - [Social and media](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Conversation/`
+  - [TypingIndicator.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Conversation/TypingIndicator.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Conversation/`
+  - [NativeMethods.TypingIndicator.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Conversation/NativeMethods.TypingIndicator.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Conversation/`
+  - [CuiWindow.TypingIndicator.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Conversation/CuiWindow.TypingIndicator.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/conversation/`
+  - [typing_indicator.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/conversation/typing_indicator.c)
+  - [typing_indicator.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/conversation/typing_indicator.h)

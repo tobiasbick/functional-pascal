@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/build/standalone-sdk.md)
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Fpas.Tests.Support;

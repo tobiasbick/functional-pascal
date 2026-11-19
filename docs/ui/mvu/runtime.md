@@ -106,3 +106,16 @@ and headless sessions. The [effect contract](../../../tests/Fixtures/tui/EffectC
 drives the same update function directly and through the terminal adapter.
 The [GUI host](../gui/host.md) also uses this runtime for shared commands,
 native event wakeup and responsive asynchronous cleanup.
+
+## Source files
+
+- `src/Fpas.Ui.Mvu/`
+  - [Application.fpas](../../../src/Fpas.Ui.Mvu/Application.fpas)
+  - [Composition.fpas](../../../src/Fpas.Ui.Mvu/Composition.fpas)
+  - [Fpas.Ui.Mvu.fpasproj](../../../src/Fpas.Ui.Mvu/Fpas.Ui.Mvu.fpasproj)
+  - [Session.fpas](../../../src/Fpas.Ui.Mvu/Session.fpas)
+- `src/Fpas.Ui.Mvu/Internal/`
+  - [Effects.fpas](../../../src/Fpas.Ui.Mvu/Internal/Effects.fpas)
+- `tests/TestSupport/Mvu/`
+  - [EffectReplies.fpas](../../../tests/TestSupport/Mvu/EffectReplies.fpas)
+  - [EffectRepliesTests.fpas](../../../tests/TestSupport/Mvu/EffectRepliesTests.fpas)

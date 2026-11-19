@@ -45,3 +45,15 @@ a request is a separate application action.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [Composer](../voice/composer.md)
 - [AI](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Ai/`
+  - [PromptSuggestions.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Ai/PromptSuggestions.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Ai/`
+  - [NativeMethods.PromptSuggestions.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Ai/NativeMethods.PromptSuggestions.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Ai/`
+  - [CuiWindow.PromptSuggestions.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Ai/CuiWindow.PromptSuggestions.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/ai/`
+  - [prompt_suggestions.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/prompt_suggestions.c)
+  - [prompt_suggestions.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/prompt_suggestions.h)

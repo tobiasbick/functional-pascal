@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/audio/README.md)
 static void fpas_creative_node(cui_ctx *ui, int node, cui_id key) {
     ui->last_node = node;
     ui->last_id = ui->nodes[node].id = key;

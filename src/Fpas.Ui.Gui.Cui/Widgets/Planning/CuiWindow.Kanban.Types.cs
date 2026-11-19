@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/planning/kanban.md)
 using System.Runtime.InteropServices;
 using Fpas.Ui.Gui.Cui.Interop;
 

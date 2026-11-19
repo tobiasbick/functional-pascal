@@ -1,3 +1,4 @@
+// [Documentation](../../README.md#project-test-and-debug-workflows)
 import path from 'node:path';
 import { stat } from 'node:fs/promises';
 import * as vscode from 'vscode';

@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/more-charts/README.md)
 using System.Runtime.InteropServices;
 
 namespace Fpas.Ui.Gui.Cui.Widgets.Charts;

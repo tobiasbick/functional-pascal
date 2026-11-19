@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/app-chrome/README.md)
 #ifndef FPAS_CUI_CHROME_INPUT_H
 #define FPAS_CUI_CHROME_INPUT_H
 

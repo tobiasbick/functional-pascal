@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/workspaces.md#context-preparation)
 using Fpas.Workspaces.Processes;
 using System.Xml.Linq;
 using static Fpas.Workspaces.Processes.MsBuildSyntax;

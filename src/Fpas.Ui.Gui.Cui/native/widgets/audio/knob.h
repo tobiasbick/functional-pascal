@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/audio/knob.md)
 #ifndef FPAS_KNOB_H
 #define FPAS_KNOB_H
 

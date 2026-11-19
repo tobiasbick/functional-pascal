@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/editing-tools/timeline-editor.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_timeline_editor(cui_ctx *ui, const char *id, cui_timeline_track *tracks, int count, fpas_timeline_view *view, const fpas_timeline_options *settings) {

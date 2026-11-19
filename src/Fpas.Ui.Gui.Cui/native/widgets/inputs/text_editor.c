@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/native-build.md#native-input-adapters)
 /* Shared binding for CUI's single-line, search, and multiline editors. */
 typedef int (*fpas_editor_draw)(cui_ctx *, const char *, char *, size_t, const cui_input_opts *);
 

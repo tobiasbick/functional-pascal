@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/canvas-and-bars/README.md)
+
 unit GuiGallery.Pages.Canvas.View;
 
 uses

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-dap.md)
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;

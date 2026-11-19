@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/cui.md#application-shortcuts)
 #ifndef FPAS_CUI_SHORTCUTS_H
 #define FPAS_CUI_SHORTCUTS_H
 /** Reports text input, overlays and focused controls as keyboard owners (bits 1, 2 and 4). */

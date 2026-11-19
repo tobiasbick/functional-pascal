@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/social-and-media/presence.md)
 #ifndef FPAS_CUI_PRESENCE_H
 #define FPAS_CUI_PRESENCE_H
 

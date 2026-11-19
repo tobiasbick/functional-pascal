@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/overlays/command-palette.md)
 #ifndef FPAS_CUI_COMMAND_PALETTE_H
 #define FPAS_CUI_COMMAND_PALETTE_H
 

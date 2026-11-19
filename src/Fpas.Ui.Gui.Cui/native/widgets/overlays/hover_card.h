@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/disclosure/hover-card.md)
 #ifndef FPAS_HOVER_CARD_H
 #define FPAS_HOVER_CARD_H
 

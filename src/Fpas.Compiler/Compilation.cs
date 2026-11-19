@@ -1,3 +1,4 @@
+// [Documentation](../../docs/architecture/compiler.md#compiler-api-and-output)
 using Fpas.Compiler.Analysis;
 using Fpas.Compiler.Emission.Metadata;
 

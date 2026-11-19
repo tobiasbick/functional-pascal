@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/host.md#toasts)
 #include "../../fpas_cui.h"
 
 static const cui_id fpas_toast_layer = 0x70A57u;

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/creative-controls/status-tag.md)
 #ifndef FPAS_CUI_STATUS_TAG_H
 #define FPAS_CUI_STATUS_TAG_H
 CUI_API int fpas_cui_status_tag(cui_ctx *ui, const char *id,

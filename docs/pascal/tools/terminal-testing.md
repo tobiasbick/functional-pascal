@@ -92,3 +92,10 @@ fails the command. Each test owns an independent session and transcript.
 - [Native framework tests](testing.md)
 - [CLI report schemas](report-schemas.md)
 - [Processes and cancellation](../libraries/processes.md)
+
+## Source files
+
+- [TerminalCommand.cs](../../../src/Fpas.Cli/Terminal/TerminalCommand.cs)
+- [TerminalScript.cs](../../../src/Fpas.Cli/Terminal/TerminalScript.cs)
+- [HeadlessContract.fpas](../../../tests/Fixtures/tui/HeadlessContract.fpas)
+- [TerminalModes.cs](../../../tests/Fixtures/tui/TerminalModes.cs)

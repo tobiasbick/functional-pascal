@@ -42,3 +42,15 @@ Click anywhere on the row, or press Space or Enter while it has focus. The callb
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Selection/Widgets/Switch.fpas)
 - [Checkbox](checkbox.md)
 - [Selection](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [Switch.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/Switch.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.Switch.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.Switch.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.Switch.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.Switch.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [switch.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/switch.c)
+  - [switch.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/switch.h)

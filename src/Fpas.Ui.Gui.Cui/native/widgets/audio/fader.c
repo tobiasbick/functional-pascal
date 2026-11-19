@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/audio/fader.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_fader(cui_ctx *ui, const char *id, const char *label, float *value,

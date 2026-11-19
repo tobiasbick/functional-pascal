@@ -43,3 +43,8 @@ Place items in the order the reader should see them. CUI wraps the text and alig
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Planning/TimelineItems.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/View.fpas)
 - [Feedback](README.md)
+
+## Source files
+
+- [TimelineItem.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Planning/TimelineItem.fpas)
+- [timeline.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/timeline.c)

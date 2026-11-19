@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/types/variants.md)
 using Fpas.Compiler.Tests.Support;
 using System.Reflection;
 using System.Reflection.Metadata;

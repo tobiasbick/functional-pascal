@@ -60,7 +60,7 @@ Choose relevant tests through the checked-in runner. For the handbook and agent
 reference:
 
 ```sh
-dotnet test tests/Fpas.IntegrationTests/Fpas.IntegrationTests.csproj --no-build --no-restore --configuration Debug --filter 'FullyQualifiedName~HandbookTests|FullyQualifiedName~AgentReferenceTests|FullyQualifiedName~LanguageSpecificationTests|FullyQualifiedName~DocExamplesBehaviorTests' --logger 'console;verbosity=normal'
+dotnet test tests/Fpas.IntegrationTests/Fpas.IntegrationTests.csproj --no-build --no-restore --configuration Debug --filter 'FullyQualifiedName~HandbookTests|FullyQualifiedName~SourceWikiTests|FullyQualifiedName~AgentReferenceTests|FullyQualifiedName~LanguageSpecificationTests|FullyQualifiedName~DocExamplesBehaviorTests' --logger 'console;verbosity=normal'
 ```
 
 AgentReferenceTests checks links, the entrypoint policy, and exact o200k_base
@@ -243,3 +243,9 @@ file and one analysis context is available. When there are several, select one.
 For FPAS-authored tests, use native framework attributes and assertions in a test
 library. [Native .NET testing](../pascal/tools/testing.md) describes `fpas init test`,
 `fpas test` and ordinary `dotnet test`, with filters and structured native results.
+
+## Source files
+
+- [Directory.Build.props](../../Directory.Build.props)
+- [Directory.Packages.props](../../Directory.Packages.props)
+- [Fpas.slnx](../../Fpas.slnx)

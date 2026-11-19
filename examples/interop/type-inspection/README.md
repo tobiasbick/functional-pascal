@@ -20,3 +20,8 @@ True
 2
 String
 ```
+
+## Source files
+
+- [TypeInspection.fpasproj](TypeInspection.fpasproj)
+- [main.fpas](main.fpas)

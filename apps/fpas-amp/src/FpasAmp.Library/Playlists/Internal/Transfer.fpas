@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#playlists)
+
 // Explicit imports create durable copies; export has one canonical UTF-8 format.
 unit FpasAmp.Library.Playlists.Internal.Transfer;
 

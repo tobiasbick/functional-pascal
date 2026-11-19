@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/language-server.md#initialization-and-documents)
 using Fpas.Compiler;
 using Fpas.LanguageServer.Protocol;
 using Fpas.Workspaces.Live;

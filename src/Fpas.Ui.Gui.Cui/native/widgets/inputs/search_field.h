@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/inputs/search-field.md)
 #ifndef FPAS_SEARCH_FIELD_H
 #define FPAS_SEARCH_FIELD_H
 

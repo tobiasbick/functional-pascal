@@ -46,3 +46,7 @@ CUI owns expansion and shows Show more or Show less when the text exceeds the li
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Disclosure/View.fpas)
 - [Expandable card](expandable-card.md)
 - [Disclosure](README.md)
+
+## Source files
+
+- [ExpandableText.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Containers/ExpandableText.fpas)

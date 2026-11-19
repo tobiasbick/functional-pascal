@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/workspaces.md#language-server-adapter)
 using Fpas.LanguageServer.Transport;
 using Fpas.LanguageServer.Protocol;
 using Newtonsoft.Json;

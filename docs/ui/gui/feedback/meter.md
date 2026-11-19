@@ -41,3 +41,9 @@ CUI formats the quantities and applies its warning and danger colors. A zero tot
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/View.fpas)
 - [Progress bar](progress-bar.md)
 - [Feedback](README.md)
+
+## Source files
+
+- [Meter.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/Meter.fpas)
+- [meter.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/meter.c)
+- [CuiMeterTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Feedback/CuiMeterTests.cs)

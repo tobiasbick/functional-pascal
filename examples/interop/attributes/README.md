@@ -17,3 +17,8 @@ Expected output:
 ```json
 {"sample_name":"Alpha","Value":42}
 ```
+
+## Source files
+
+- [Attributes.fpasproj](Attributes.fpasproj)
+- [main.fpas](main.fpas)

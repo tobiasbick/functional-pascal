@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/app-chrome/menu-bar.md)
 using Fpas.Ui.Gui.Cui.Widgets.Overlays;
 
 namespace Fpas.Ui.Gui.Cui.Tests.Overlays;

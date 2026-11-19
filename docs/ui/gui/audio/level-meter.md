@@ -50,3 +50,17 @@ and latches the clip indicators. Clicking a lit indicator clears it and calls
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Audio/LevelMeters.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Audio/View.fpas)
 - [Audio](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Audio/`
+  - [LevelMeter.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Audio/LevelMeter.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Audio/`
+  - [NativeMethods.LevelMeter.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Audio/NativeMethods.LevelMeter.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Audio/`
+  - [CuiWindow.LevelMeter.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Audio/CuiWindow.LevelMeter.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/audio/`
+  - [level_meter.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/audio/level_meter.c)
+  - [level_meter.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/audio/level_meter.h)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Feedback/`
+  - [CuiLevelMeterTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Feedback/CuiLevelMeterTests.cs)

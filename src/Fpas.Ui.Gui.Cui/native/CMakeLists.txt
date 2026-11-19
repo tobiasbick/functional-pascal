@@ -1,3 +1,4 @@
+# [Documentation](../../../docs/ui/gui/native-build.md)
 cmake_minimum_required(VERSION 3.20)
 project(fpas_cui LANGUAGES C)
 

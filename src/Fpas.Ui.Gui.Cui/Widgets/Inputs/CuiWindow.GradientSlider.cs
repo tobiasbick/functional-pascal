@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/creative-controls/gradient-slider.md)
 using Fpas.Ui.Gui.Cui.Widgets.Charts;
 using Fpas.Ui.Gui.Cui.Interop;
 

@@ -20,3 +20,10 @@ track's keys in a separate curve editor while sharing its playhead.
 - [UI handbook](../README.md)
 - [Code](../code/README.md)
 - [Editing tools in the gallery](../../../../examples/ui/gui/gallery/Pages/EditingTools/View.fpas)
+
+## Source files
+
+- [Samples.fpas](../../../../examples/ui/gui/gallery/Pages/EditingTools/Samples.fpas)
+- [State.fpas](../../../../examples/ui/gui/gallery/Pages/EditingTools/State.fpas)
+- [editing_tools.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/editing_tools.c)
+- [EditingToolsContract.fpas](../../../../tests/Fixtures/gui-host/EditingToolsContract.fpas)

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#async-state-machines)
 using Fpas.Debugging.Core;
 
 namespace Fpas.IntegrationTests.Debugging;

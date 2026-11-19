@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/api-documentation.md)
 using System.Text.Json;
 using System.Xml.Linq;
 using Fpas.Tests.Support;

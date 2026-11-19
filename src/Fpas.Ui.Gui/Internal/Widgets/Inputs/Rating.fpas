@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/selection/rating.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Inputs.Rating;
 
 uses Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Context as C;

@@ -75,3 +75,17 @@ capture cells, locals, and async yield/resume locations.
 - [Generic CLR mapping](../specs/clr-mapping.md#generic-routines-and-closures)
 - [Async and cleanup](async-and-cleanup.md)
 - [Capture and generic tests](../../tests/coverage.md#language-and-metadata)
+
+## Source files
+
+- `src/Fpas.Compiler/Binding/Bodies/`
+  - [Binder.CaptureFlow.cs](../../src/Fpas.Compiler/Binding/Bodies/Binder.CaptureFlow.cs)
+  - [Binder.NestedCaptures.cs](../../src/Fpas.Compiler/Binding/Bodies/Binder.NestedCaptures.cs)
+- `src/Fpas.Compiler/Binding/References/`
+  - [ReferenceCatalog.Closures.cs](../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.Closures.cs)
+- `src/Fpas.Compiler/Emission/Bodies/`
+  - [BodyEmitter.Callables.cs](../../src/Fpas.Compiler/Emission/Bodies/BodyEmitter.Callables.cs)
+- `src/Fpas.Compiler/Emission/Metadata/`
+  - [AssemblyEmitter.Closures.cs](../../src/Fpas.Compiler/Emission/Metadata/AssemblyEmitter.Closures.cs)
+- `tests/Fpas.Compiler.Tests/Metadata/`
+  - [CaptureStorageMetadataTests.cs](../../tests/Fpas.Compiler.Tests/Metadata/CaptureStorageMetadataTests.cs)

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/motion/rolling-number.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Motion.NumberRoll;
 
 uses

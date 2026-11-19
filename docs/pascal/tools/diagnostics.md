@@ -192,3 +192,43 @@ and the [compiler CLI](../program-structure/cli.md) for direct invocation.
 - [Topic overview](README.md)
 - [Handbook](../README.md)
 - [Syntax grammar](../../specs/syntax.md)
+
+## Source files
+
+<details>
+<summary>Browse 22 source files</summary>
+
+- `src/Fpas.Cli/Analysis/`
+  - [CheckFixes.cs](../../../src/Fpas.Cli/Analysis/CheckFixes.cs)
+- `src/Fpas.Cli/Diagnostics/`
+  - [DiagnosticJson.cs](../../../src/Fpas.Cli/Diagnostics/DiagnosticJson.cs)
+  - [DiagnosticRenderer.cs](../../../src/Fpas.Cli/Diagnostics/DiagnosticRenderer.cs)
+  - [DisplayLine.cs](../../../src/Fpas.Cli/Diagnostics/DisplayLine.cs)
+- `src/Fpas.Compiler/`
+  - [CompilerDiagnostic.cs](../../../src/Fpas.Compiler/CompilerDiagnostic.cs)
+  - [DiagnosticOptions.cs](../../../src/Fpas.Compiler/DiagnosticOptions.cs)
+- `src/Fpas.Compiler/Diagnostics/`
+  - [DiagnosticBag.cs](../../../src/Fpas.Compiler/Diagnostics/DiagnosticBag.cs)
+  - [DiagnosticHints.cs](../../../src/Fpas.Compiler/Diagnostics/DiagnosticHints.cs)
+- `src/Fpas.Compiler/Syntax/Parsing/`
+  - [Parser.Diagnostics.cs](../../../src/Fpas.Compiler/Syntax/Parsing/Parser.Diagnostics.cs)
+- `src/Fpas.Workspaces/Editing/`
+  - [DiagnosticFixPlan.cs](../../../src/Fpas.Workspaces/Editing/DiagnosticFixPlan.cs)
+- `tests/Fpas.Compiler.Tests/ControlFlow/`
+  - [DiagnosticsTests.cs](../../../tests/Fpas.Compiler.Tests/ControlFlow/DiagnosticsTests.cs)
+  - [ExpressionDiagnosticsTests.cs](../../../tests/Fpas.Compiler.Tests/ControlFlow/ExpressionDiagnosticsTests.cs)
+- `tests/Fpas.Compiler.Tests/Diagnostics/`
+  - [ForeignHabitDiagnosticsTests.cs](../../../tests/Fpas.Compiler.Tests/Diagnostics/ForeignHabitDiagnosticsTests.cs)
+  - [RichDiagnosticsTests.cs](../../../tests/Fpas.Compiler.Tests/Diagnostics/RichDiagnosticsTests.cs)
+- `tests/Fpas.IntegrationTests/Diagnostics/`
+  - [DiagnosticBuildLogger.cs](../../../tests/Fpas.IntegrationTests/Diagnostics/DiagnosticBuildLogger.cs)
+  - [DiagnosticCliTests.cs](../../../tests/Fpas.IntegrationTests/Diagnostics/DiagnosticCliTests.cs)
+  - [DiagnosticWorkspaceTests.cs](../../../tests/Fpas.IntegrationTests/Diagnostics/DiagnosticWorkspaceTests.cs)
+- `tests/Fpas.IntegrationTests/Editing/`
+  - [CheckFixTests.cs](../../../tests/Fpas.IntegrationTests/Editing/CheckFixTests.cs)
+  - [DiagnosticFixPlanTests.cs](../../../tests/Fpas.IntegrationTests/Editing/DiagnosticFixPlanTests.cs)
+  - [FileWorkspaceTests.cs](../../../tests/Fpas.IntegrationTests/Editing/FileWorkspaceTests.cs)
+  - [TextSnapshotTests.cs](../../../tests/Fpas.IntegrationTests/Editing/TextSnapshotTests.cs)
+  - [WindowsPublicationTests.cs](../../../tests/Fpas.IntegrationTests/Editing/WindowsPublicationTests.cs)
+
+</details>

@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#time-picker-wheel-picker-and-time-dial)
+
 unit Fpas.Ui.Internal.Validation.PickerRules;
 
 uses

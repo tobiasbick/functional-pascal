@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/app-chrome/status-bar.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

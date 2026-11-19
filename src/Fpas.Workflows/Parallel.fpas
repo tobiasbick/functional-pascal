@@ -1,3 +1,5 @@
+// [Documentation](../../docs/pascal/libraries/workflows.md#parallel-work-and-streams)
+
 // Bounded parallel execution of deferred workflows.
 unit Fpas.Workflows.Parallel;
 

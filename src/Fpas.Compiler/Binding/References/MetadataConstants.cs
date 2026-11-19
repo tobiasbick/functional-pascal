@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/interop/supported-signatures.md)
 using System.Reflection.Metadata;
 
 namespace Fpas.Compiler.Binding.References;

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/program-structure/cli.md#inspect-and-invoke-the-compiler)
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Text.Json;

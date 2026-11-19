@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/app-chrome/README.md)
+
 unit GuiGallery.Pages.Desktop.State;
 
 uses Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Desktop.DocumentTabs as D, Fpas.Ui.Widgets.Desktop.Toolbars as T, Fpas.Ui.Widgets.Developer.LogConsoles as Log, Fpas.Ui.Widgets.Editors.PropertyInspectors as P, Fpas.Ui.Graphics as Color;

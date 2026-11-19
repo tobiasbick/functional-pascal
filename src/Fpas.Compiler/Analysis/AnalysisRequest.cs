@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/compiler.md#compiler-api-and-output)
 namespace Fpas.Compiler.Analysis;
 
 /// <summary>Explicit source and metadata inputs for semantic validation without emitted output.</summary>

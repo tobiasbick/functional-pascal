@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/apps/fpas-amp/library.md#on-demand-waveforms)
+
 // On-demand, content-addressed loudness envelopes in the reconstructible catalogue.
 unit FpasAmp.Library.Metadata.Waveforms;
 

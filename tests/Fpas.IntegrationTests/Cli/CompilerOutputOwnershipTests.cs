@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/cli-diagnostics.md)
 using Fpas.Tests.Support;
 
 namespace Fpas.IntegrationTests.Cli;

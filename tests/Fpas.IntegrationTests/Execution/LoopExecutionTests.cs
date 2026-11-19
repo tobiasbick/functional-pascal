@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/control-flow/loops.md)
 using Fpas.IntegrationTests.Support;
 namespace Fpas.IntegrationTests.Execution;
 

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/motion/README.md)
 #ifndef FPAS_CUI_MOTION_TEXT_H
 #define FPAS_CUI_MOTION_TEXT_H
 typedef struct {

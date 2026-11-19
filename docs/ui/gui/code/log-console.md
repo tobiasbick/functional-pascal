@@ -47,3 +47,16 @@ apply it. Pass new entries as output arrives.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Code/Tools.fpas)
 - [Terminal](../files/terminal.md)
 - [Code](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [LogConsole.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/LogConsole.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.LogConsole.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.LogConsole.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.LogConsole.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.LogConsole.Types.cs)
+  - [CuiWindow.LogConsole.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.LogConsole.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [log_console.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/log_console.c)
+  - [log_console.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/log_console.h)

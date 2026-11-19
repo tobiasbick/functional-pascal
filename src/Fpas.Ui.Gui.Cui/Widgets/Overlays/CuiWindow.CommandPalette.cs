@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/overlays/command-palette.md)
 using Fpas.Ui.Gui.Cui.Widgets.Overlays;
 using Fpas.Ui.Gui.Cui.Interop;
 

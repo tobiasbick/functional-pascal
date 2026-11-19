@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/canvas-and-bars/presence-pill.md)
+
 unit Fpas.Ui.Widgets.Canvas.PresencePills;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Canvas.LiveCursors as Live;

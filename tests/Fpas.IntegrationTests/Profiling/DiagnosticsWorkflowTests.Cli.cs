@@ -1,3 +1,4 @@
+// [Documentation](../../coverage.md#measurements-and-diagnostic-artifacts)
 using System.Text.Json;
 using Fpas.Tests.Support;
 using Fpas.IntegrationTests.Processes.Support;

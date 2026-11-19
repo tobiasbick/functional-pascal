@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/refactoring.md#validation-and-plans)
 using Fpas.Workspaces.Analysis;
 using Fpas.Workspaces.Editing;
 using Fpas.Workspaces.Loading;

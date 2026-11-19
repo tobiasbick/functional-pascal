@@ -48,3 +48,15 @@ The trigger opens the question in the model. The confirm action receives focus a
 - [Popover](../overlays/popover.md)
 - [Dialog](../overlays/dialog.md)
 - [Disclosure](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Overlays/`
+  - [ConfirmPopover.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Overlays/ConfirmPopover.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Overlays/`
+  - [NativeMethods.ConfirmPopover.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Overlays/NativeMethods.ConfirmPopover.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Overlays/`
+  - [CuiWindow.ConfirmPopover.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Overlays/CuiWindow.ConfirmPopover.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/overlays/`
+  - [confirm_popover.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/overlays/confirm_popover.c)
+  - [confirm_popover.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/overlays/confirm_popover.h)

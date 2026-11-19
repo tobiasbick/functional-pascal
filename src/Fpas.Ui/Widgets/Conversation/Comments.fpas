@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/social-and-media/comment.md)
+
 unit Fpas.Ui.Widgets.Conversation.Comments;
 
 uses Fpas.Ui.Elements as E;

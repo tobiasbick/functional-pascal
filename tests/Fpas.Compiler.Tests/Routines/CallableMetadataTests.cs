@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/functions/first-class.md)
 using Fpas.Compiler.Tests.Support;
 using System.Reflection;
 using System.Reflection.Metadata;

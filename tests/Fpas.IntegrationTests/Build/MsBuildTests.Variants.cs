@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/types/variants.md)
 using System.Xml.Linq;
 
 namespace Fpas.IntegrationTests.Build;

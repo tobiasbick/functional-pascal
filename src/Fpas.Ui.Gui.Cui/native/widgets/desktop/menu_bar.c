@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/app-chrome/menu-bar.md)
 #include "../../fpas_cui.h"
 #include "chrome_input.h"
 

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#passive-scalar-bindings)
 using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
 using Fpas.Debugging.Core;

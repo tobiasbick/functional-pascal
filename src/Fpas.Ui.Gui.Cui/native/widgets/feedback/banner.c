@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/disclosure/banner.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_banner(cui_ctx *ui, const char *id, const char *text, int shown,

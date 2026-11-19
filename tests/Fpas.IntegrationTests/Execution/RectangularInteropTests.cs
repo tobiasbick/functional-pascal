@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/interop/supported-signatures.md)
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;

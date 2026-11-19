@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/canvas-and-bars/live-cursors.md)
 using Fpas.Ui.Gui.Cui.Interop.Canvas;
 using Fpas.Ui.Gui.Cui.Widgets.Canvas;
 using Fpas.Ui.Gui.Cui.Widgets.Charts;

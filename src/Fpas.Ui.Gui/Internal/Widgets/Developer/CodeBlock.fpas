@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/code/code-block.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Developer.CodeBlock;
 
 uses

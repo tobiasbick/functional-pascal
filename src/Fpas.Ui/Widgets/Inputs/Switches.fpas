@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/selection/switch.md)
+
 unit Fpas.Ui.Widgets.Inputs.Switches;
 
 uses Fpas.Ui.Elements as E;

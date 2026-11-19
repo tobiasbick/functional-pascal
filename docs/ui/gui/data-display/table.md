@@ -61,3 +61,16 @@ for focus.
 - [Virtual list](virtual-list.md)
 - [Data grid API](../../widgets.md#data-grid-filter-bar-and-tree-table)
 - [Data display](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Collections/`
+  - [Table.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Collections/Table.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Collections/`
+  - [NativeMethods.Table.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Collections/NativeMethods.Table.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Collections/`
+  - [CuiWindow.Table.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Collections/CuiWindow.Table.Types.cs)
+  - [CuiWindow.Table.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Collections/CuiWindow.Table.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/collections/`
+  - [table.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/table.c)
+  - [table.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/table.h)

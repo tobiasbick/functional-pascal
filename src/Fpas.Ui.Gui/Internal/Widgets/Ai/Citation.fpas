@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/ai/citation.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Ai.Citation;
 
 uses Fpas.Ui.Widgets.Ai.Citations as Citations, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Widgets.Ai.Sources as Sources, System as Sys, Fpas.Ui.Gui.Internal.Data.AiData as Data;

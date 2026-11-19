@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/motion/dock.md)
 #ifndef FPAS_CUI_DOCK_H
 #define FPAS_CUI_DOCK_H
 CUI_API int fpas_cui_dock(cui_ctx *ui, const char *id, const char *const *icons, const char *const *labels,

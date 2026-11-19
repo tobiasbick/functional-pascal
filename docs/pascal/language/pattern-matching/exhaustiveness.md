@@ -30,3 +30,10 @@ throws InvalidOperationException rather than inventing a payload.
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- [Binder.Cases.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.Cases.cs)
+- [PatternCoverage.cs](../../../../src/Fpas.Compiler/Binding/Flow/PatternCoverage.cs)
+- [CaseCoverageTests.cs](../../../../tests/Fpas.Compiler.Tests/Types/CaseCoverageTests.cs)
+- [CaseExecutionTests.cs](../../../../tests/Fpas.IntegrationTests/Execution/CaseExecutionTests.cs)

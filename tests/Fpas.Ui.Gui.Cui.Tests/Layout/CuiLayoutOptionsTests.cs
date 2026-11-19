@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/layout/stack.md)
 namespace Fpas.Ui.Gui.Cui.Tests.Layout;
 
 /// <summary>Checks native spacing, layered boxes, logical insets and two-axis scrolling.</summary>

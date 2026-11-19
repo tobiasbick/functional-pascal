@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/ai/response-actions.md)
+
 unit Fpas.Ui.Widgets.Ai.ResponseActions;
 
 uses Fpas.Ui.Elements as E;

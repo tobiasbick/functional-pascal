@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/build/msbuild.md#verification)
 using System.Collections;
 
 namespace Demo;

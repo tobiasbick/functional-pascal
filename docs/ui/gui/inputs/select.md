@@ -44,3 +44,16 @@ Open the popup with the pointer or Enter. Choosing a row reports its original in
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/Selects.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/PickerFields.fpas)
 - [Inputs](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [Select.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/Select.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.Select.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.Select.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.Select.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.Select.Types.cs)
+  - [CuiWindow.Select.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.Select.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [select.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/select.c)
+  - [select.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/select.h)

@@ -45,3 +45,21 @@ model when appropriate.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/StatusButtons.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Actions/Widgets/StatusButton.fpas)
 - [Actions](README.md)
+
+## Source files
+
+- `src/Fpas.Ui/Internal/Actions/`
+  - [StatusButtons.fpas](../../../../src/Fpas.Ui/Internal/Actions/StatusButtons.fpas)
+- `src/Fpas.Ui.Gui/Internal/Widgets/Actions/`
+  - [StatusButton.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Actions/StatusButton.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Actions/`
+  - [NativeMethods.StatusButton.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Actions/NativeMethods.StatusButton.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Actions/`
+  - [CuiWindow.StatusButton.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Actions/CuiWindow.StatusButton.cs)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [status_button.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/status_button.c)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/actions/`
+  - [status_button.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/status_button.c)
+  - [status_button.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/status_button.h)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Actions/`
+  - [CuiStatusButtonTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Actions/CuiStatusButtonTests.cs)

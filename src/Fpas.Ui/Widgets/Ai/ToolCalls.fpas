@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/ai/tool-call.md)
+
 unit Fpas.Ui.Widgets.Ai.ToolCalls;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.TaskStates as TaskStates;

@@ -51,3 +51,16 @@ For the example, `new W.Value([5u, 0u], '')` selects Engine and Platform.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Collections/FilterBars.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/DataGrid/View.fpas)
 - [Data grid](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Collections/`
+  - [FilterBar.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Collections/FilterBar.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Collections/`
+  - [NativeMethods.FilterBar.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Collections/NativeMethods.FilterBar.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Collections/`
+  - [CuiWindow.FilterBar.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Collections/CuiWindow.FilterBar.Types.cs)
+  - [CuiWindow.FilterBar.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Collections/CuiWindow.FilterBar.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/collections/`
+  - [filter_bar.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/filter_bar.c)
+  - [filter_bar.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/filter_bar.h)

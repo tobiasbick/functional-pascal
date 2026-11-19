@@ -155,3 +155,31 @@ and an explicit cache-root override. It builds through the matching SDK and expl
 executable override, rejects compiler mismatches, publishes and certificate-signs an external application,
 and exercises check/query, real stdio LSP, batch
 debugging and DAP using the delivered executable. See [build acceptance](../../tests/coverage.md#build-acceptance).
+
+## Source files
+
+<details>
+<summary>Browse 14 source files</summary>
+
+- `sdk/Fpas.NET.Sdk/`
+  - [Fpas.NET.Sdk.csproj](../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj)
+  - [GuiAssets.targets](../../sdk/Fpas.NET.Sdk/GuiAssets.targets)
+- `src/Fpas.Cli/Distribution/`
+  - [Distribution.targets](../../src/Fpas.Cli/Distribution/Distribution.targets)
+  - [SdkCommand.cs](../../src/Fpas.Cli/Distribution/SdkCommand.cs)
+- `src/Fpas.Cli/`
+  - [Fpas.Cli.csproj](../../src/Fpas.Cli/Fpas.Cli.csproj)
+- `src/Fpas.Cli/Projects/`
+  - [ToolSdk.cs](../../src/Fpas.Cli/Projects/ToolSdk.cs)
+- `src/Fpas.Deployment/`
+  - [DistributionAssets.cs](../../src/Fpas.Deployment/DistributionAssets.cs)
+  - [Fpas.Deployment.csproj](../../src/Fpas.Deployment/Fpas.Deployment.csproj)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [LocalDeploymentTests.Debugging.cs](../../tests/Fpas.IntegrationTests/Build/LocalDeploymentTests.Debugging.cs)
+  - [LocalDeploymentTests.GuiAssets.cs](../../tests/Fpas.IntegrationTests/Build/LocalDeploymentTests.GuiAssets.cs)
+  - [LocalDeploymentTests.LanguageServer.cs](../../tests/Fpas.IntegrationTests/Build/LocalDeploymentTests.LanguageServer.cs)
+  - [LocalDeploymentTests.Publishing.cs](../../tests/Fpas.IntegrationTests/Build/LocalDeploymentTests.Publishing.cs)
+  - [LocalDeploymentTests.SingleFile.cs](../../tests/Fpas.IntegrationTests/Build/LocalDeploymentTests.SingleFile.cs)
+  - [LocalDeploymentTests.cs](../../tests/Fpas.IntegrationTests/Build/LocalDeploymentTests.cs)
+
+</details>

@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/instruments/dot-chart.md)
 using Fpas.Ui.Gui.Cui.Interop.Charts;
 using Fpas.Ui.Gui.Cui.Widgets.Charts;
 using Fpas.Ui.Gui.Cui.Interop;

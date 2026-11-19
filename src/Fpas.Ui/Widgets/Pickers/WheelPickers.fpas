@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/pickers/wheel-picker.md)
+
 unit Fpas.Ui.Widgets.Pickers.WheelPickers;
 
 uses Fpas.Ui.Elements as E;

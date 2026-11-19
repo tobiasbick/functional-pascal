@@ -1,3 +1,5 @@
+// [Documentation](../README.md#source-layout)
+
 unit DocExamples.Model;
 
 public type Example = record

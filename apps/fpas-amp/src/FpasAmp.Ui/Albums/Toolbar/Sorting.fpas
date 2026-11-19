@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/apps/fpas-amp/desktop.md#browsing-music-and-collections)
+
 // Criterion and direction share one native CUI menu trigger.
 unit FpasAmp.Ui.Albums.Toolbar.Sorting;
 

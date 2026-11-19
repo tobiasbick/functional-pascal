@@ -46,3 +46,15 @@ fraction and move playback to the corresponding position.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/Controls.fpas)
 - [Voice waveform](../voice/voice-waveform.md)
 - [Motion](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Audio/`
+  - [Waveform.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Audio/Waveform.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Audio/`
+  - [NativeMethods.Waveform.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Audio/NativeMethods.Waveform.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Audio/`
+  - [CuiWindow.Waveform.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Audio/CuiWindow.Waveform.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/audio/`
+  - [waveform.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/audio/waveform.c)
+  - [waveform.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/audio/waveform.h)

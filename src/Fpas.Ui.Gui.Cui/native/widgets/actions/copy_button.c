@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/actions/copy-button.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_copy_button(cui_ctx *ui, const char *id, const char *text, int enabled, int focus) {

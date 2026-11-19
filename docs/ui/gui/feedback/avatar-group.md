@@ -41,3 +41,15 @@ CUI draws the visible initials as overlapping avatars and shows the number of re
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/Widgets/BadgesAndAvatars.fpas)
 - [Avatar](../disclosure/avatar.md)
 - [Feedback](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Media/`
+  - [AvatarGroup.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Media/AvatarGroup.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Media/`
+  - [NativeMethods.AvatarGroup.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Media/NativeMethods.AvatarGroup.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Media/`
+  - [CuiWindow.AvatarGroup.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Media/CuiWindow.AvatarGroup.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/media/`
+  - [avatar_group.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/media/avatar_group.c)
+  - [avatar_group.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/media/avatar_group.h)

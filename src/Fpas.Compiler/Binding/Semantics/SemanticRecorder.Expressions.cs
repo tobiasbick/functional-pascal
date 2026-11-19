@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/architecture/compiler.md#semantic-snapshots)
 using Fpas.Compiler.Binding.Bound;
 using Fpas.Compiler.Binding.References;
 using Fpas.Compiler.Binding.Symbols;

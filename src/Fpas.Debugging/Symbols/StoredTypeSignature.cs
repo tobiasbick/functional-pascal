@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debug-information.md)
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using Fpas.Debugging.Core;

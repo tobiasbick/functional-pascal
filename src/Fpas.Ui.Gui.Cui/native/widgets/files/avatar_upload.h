@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/capture/avatar-upload.md)
 #ifndef FPAS_AVATAR_UPLOAD_H
 #define FPAS_AVATAR_UPLOAD_H
 

@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/canvas-and-bars/node-editor.md)
+
 unit Fpas.Ui.Widgets.Editors.NodeEditors;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Canvas.SelectionRings as Ring;

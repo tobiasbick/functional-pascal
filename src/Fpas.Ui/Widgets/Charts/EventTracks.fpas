@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/instruments/event-track.md)
+
 unit Fpas.Ui.Widgets.Charts.EventTracks;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Widgets.Charts.DotCharts as D, System as Sys;

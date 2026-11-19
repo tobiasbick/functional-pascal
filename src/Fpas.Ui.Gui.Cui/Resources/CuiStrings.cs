@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/cui.md#theme-and-resources)
 namespace Fpas.Ui.Gui.Cui.Resources;
 
 /// <summary>Native calendar/file-browser captions; null entries retain CUI's English defaults.</summary>

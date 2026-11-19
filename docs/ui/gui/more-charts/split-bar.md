@@ -46,3 +46,10 @@ Hover a segment or its legend entry to inspect the corresponding amount. Supply 
 - [Donut chart](../charts/donut-chart.md)
 - [Pattern meter](../charts/pattern-meter.md)
 - [More charts](README.md)
+
+## Source files
+
+- [SplitBar.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/SplitBar.fpas)
+- [CuiWindow.SplitBar.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.SplitBar.cs)
+- [split_bar.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/split_bar.c)
+- [split_bar.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/split_bar.h)

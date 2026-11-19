@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/cli-diagnostics.md#failure-reports-and-dumps)
 using System.CommandLine;
 using Fpas.Cli.Analysis;
 using Fpas.Cli.Profiling;

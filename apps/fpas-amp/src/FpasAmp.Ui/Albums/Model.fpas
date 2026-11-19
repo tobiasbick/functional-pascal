@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#browsing-music-and-collections)
+
 // Slice-owned album headers and only the thumbnails needed by the current viewport.
 unit FpasAmp.Ui.Albums.Model;
 

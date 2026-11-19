@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/language-server.md#navigation-and-edits)
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using OmniSharp.Extensions.LanguageServer.Protocol.Serialization;

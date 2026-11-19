@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/host.md)
 namespace Fpas.Ui.Gui.Cui.Tests.Windowing;
 
 /// <summary>Checks CUI deadlines in the real event-driven native window loop.</summary>

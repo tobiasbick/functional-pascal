@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/actions/toggle-group.md)
 #ifndef FPAS_TOGGLE_GROUP_H
 #define FPAS_TOGGLE_GROUP_H
 

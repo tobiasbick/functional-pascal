@@ -1,3 +1,4 @@
+<!-- [Documentation](../coverage.md#language-and-metadata) -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsTestProject>true</IsTestProject>

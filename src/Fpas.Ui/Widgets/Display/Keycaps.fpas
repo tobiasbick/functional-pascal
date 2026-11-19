@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/text-and-display/keycap.md)
+
 unit Fpas.Ui.Widgets.Display.Keycaps;
 
 uses Fpas.Ui.Elements as E;

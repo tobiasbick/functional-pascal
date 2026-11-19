@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/actions/toggle-group.md)
+
 unit Fpas.Ui.Widgets.Actions.ToggleGroups;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B;

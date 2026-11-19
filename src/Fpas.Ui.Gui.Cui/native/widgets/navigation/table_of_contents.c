@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/reader/table-of-contents.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_table_of_contents(cui_ctx *ui, const char *scroll_id,

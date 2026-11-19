@@ -46,3 +46,15 @@ revision to replay the same message. Reduced motion shows the full text.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/View.fpas)
 - [Typewriter](typewriter.md)
 - [Motion](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Motion/`
+  - [TextReveal.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Motion/TextReveal.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Motion/`
+  - [NativeMethods.TextReveal.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Motion/NativeMethods.TextReveal.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Motion/`
+  - [CuiWindow.TextReveal.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Motion/CuiWindow.TextReveal.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/motion/`
+  - [text_reveal.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/motion/text_reveal.c)
+  - [text_reveal.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/motion/text_reveal.h)

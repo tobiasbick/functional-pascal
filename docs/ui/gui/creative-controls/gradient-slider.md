@@ -48,3 +48,15 @@ under the thumb. `Action` reports tool activation, such as the eyedropper.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Creative/View.fpas)
 - [Gradient editor](../editing-tools/gradient-editor.md)
 - [Creative controls](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [GradientSlider.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/GradientSlider.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.GradientSlider.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.GradientSlider.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.GradientSlider.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.GradientSlider.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [gradient_slider.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/gradient_slider.c)
+  - [gradient_slider.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/gradient_slider.h)

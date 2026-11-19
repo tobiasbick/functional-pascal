@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/text-and-display/text.md)
 #ifndef FPAS_CUI_TEXTS_H
 #define FPAS_CUI_TEXTS_H
 /** Draws literal text using a native semantic role.

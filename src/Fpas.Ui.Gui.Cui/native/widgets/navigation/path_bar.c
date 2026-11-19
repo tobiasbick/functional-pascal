@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/files/path-bar.md)
 #include "../../fpas_cui.h"
 
 static void fpas_path_forget(cui_ctx *ui, cui_id key) {

@@ -1,3 +1,5 @@
+// [Documentation](../../docs/pascal/libraries/workflows.md#tracing)
+
 // Optional workflow spans using the .NET diagnostics listener model.
 unit Fpas.Workflows.Tracing;
 

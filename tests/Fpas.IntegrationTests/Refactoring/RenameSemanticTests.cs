@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/refactoring.md)
 using Fpas.IntegrationTests.Build;
 using Fpas.Workspaces.Editing;
 using Fpas.Workspaces.Loading;

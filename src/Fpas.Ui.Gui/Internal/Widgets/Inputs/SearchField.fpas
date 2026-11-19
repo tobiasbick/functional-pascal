@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/inputs/search-field.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Inputs.SearchField;
 
 uses

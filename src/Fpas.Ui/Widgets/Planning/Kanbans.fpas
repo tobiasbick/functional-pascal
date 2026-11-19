@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/planning/kanban.md)
+
 unit Fpas.Ui.Widgets.Planning.Kanbans;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as Colors;

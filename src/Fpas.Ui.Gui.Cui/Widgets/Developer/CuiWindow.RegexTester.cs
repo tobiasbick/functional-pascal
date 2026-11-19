@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/more-developer-tools/regex-tester.md)
 using Fpas.Ui.Gui.Cui.Widgets.Developer;
 using Fpas.Ui.Gui.Cui.Interop;
 

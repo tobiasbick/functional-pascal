@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/ui/mvu/runtime.md#background-effects)
+
 unit Fpas.Ui.Mvu.Internal.Effects;
 
 uses

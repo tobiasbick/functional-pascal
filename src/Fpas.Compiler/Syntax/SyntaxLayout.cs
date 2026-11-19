@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/fmt-style.md)
 namespace Fpas.Compiler.Syntax;
 
 /// <summary>Optional concrete layout facts collected by the parser, using token indices.</summary>

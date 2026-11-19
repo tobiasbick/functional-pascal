@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/reader/README.md)
+
 unit GuiGallery.Pages.Reader.View;
 
 uses

@@ -1,3 +1,4 @@
+// [Documentation](../../docs/pascal/tools/diagnostics.md)
 namespace Fpas.Compiler;
 
 /// <summary>One-based UTF-16 coordinates with an exclusive end and zero-based offset.</summary>

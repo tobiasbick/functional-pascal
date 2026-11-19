@@ -1,3 +1,4 @@
+// [Documentation](../VSCode/README.md#cli-process-ownership)
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;

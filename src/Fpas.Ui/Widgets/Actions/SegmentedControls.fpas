@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/actions/segmented-control.md)
+
 unit Fpas.Ui.Widgets.Actions.SegmentedControls;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B;

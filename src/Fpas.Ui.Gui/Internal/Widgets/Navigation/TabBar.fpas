@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/motion/tab-bar.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Navigation.TabBar;
 
 uses

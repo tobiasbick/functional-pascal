@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/build/publishing.md)
 using System.Security.Cryptography;
 using System.Security.Cryptography.Pkcs;
 using System.Security.Cryptography.X509Certificates;

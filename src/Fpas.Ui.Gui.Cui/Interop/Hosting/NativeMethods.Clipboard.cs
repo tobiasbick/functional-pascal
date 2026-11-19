@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/cui.md#desktop-services)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/concurrency/async-functions.md)
 using Fpas.Compiler.Tests.Support;
 using System.Reflection;
 using System.Runtime.Loader;

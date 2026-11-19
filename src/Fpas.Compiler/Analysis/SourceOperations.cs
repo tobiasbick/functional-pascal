@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/compiler.md#semantic-snapshots)
 namespace Fpas.Compiler.Analysis;
 
 /// <summary>A routine, lambda, or initializer body that contains operations.</summary>

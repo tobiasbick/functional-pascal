@@ -21,3 +21,8 @@ Expected output:
 
 See [nested routines](../../../docs/pascal/language/functions/nested-routines.md) for scope,
 capture initialization, overloads, generics, parameter modes, and async behavior.
+
+## Source files
+
+- [LocalFunctions.fpasproj](LocalFunctions.fpasproj)
+- [main.fpas](main.fpas)

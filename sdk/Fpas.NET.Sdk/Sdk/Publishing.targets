@@ -1,3 +1,4 @@
+<!-- [Documentation](../../../docs/build/publishing.md#direct-sdk-publication) -->
 <Project>
   <PropertyGroup>
     <_FpasPublishCertificate Condition="'$(FpasPublishCertificate)' != ''">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(FpasPublishCertificate)'))</_FpasPublishCertificate>

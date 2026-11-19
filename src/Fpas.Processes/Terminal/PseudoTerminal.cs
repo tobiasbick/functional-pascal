@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/debugging.md#private-terminal-and-tui-control)
 namespace Fpas.Processes.Terminal;
 
 /// <summary>A private terminal session with explicit dimensions and owned descendant lifetime.</summary>

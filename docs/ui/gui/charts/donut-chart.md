@@ -49,3 +49,10 @@ For a percent suffix, pass values already expressed in percent.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Charts/View.fpas)
 - [Split bar](../more-charts/split-bar.md)
 - [Charts](README.md)
+
+## Source files
+
+- [DonutChart.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/DonutChart.fpas)
+- [CuiWindow.DonutChart.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.DonutChart.cs)
+- [donut_chart.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/donut_chart.c)
+- [donut_chart.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/donut_chart.h)

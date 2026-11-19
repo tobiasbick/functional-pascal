@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/ai/prompt-suggestions.md)
+
 unit Fpas.Ui.Widgets.Ai.PromptSuggestions;
 
 uses Fpas.Ui.Elements as E;

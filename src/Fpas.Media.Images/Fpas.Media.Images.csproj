@@ -1,3 +1,4 @@
+<!-- [Documentation](../../docs/pascal/libraries/media/images.md) -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

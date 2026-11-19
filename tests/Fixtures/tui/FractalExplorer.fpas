@@ -1,3 +1,5 @@
+// [Documentation](../../../examples/ui/tui/fractals/README.md)
+
 program FractalExplorerContract;
 
 uses

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/inputs/calendar.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Pickers.Calendar;
 
 uses

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/motion/loader.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Feedback.Loader;
 
 uses

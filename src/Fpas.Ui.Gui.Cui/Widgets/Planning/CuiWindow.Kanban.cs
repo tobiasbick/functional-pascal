@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/planning/kanban.md)
 using Fpas.Ui.Gui.Cui.Widgets.Charts;
 using Fpas.Ui.Gui.Cui.Widgets.Planning;
 using System.Runtime.InteropServices;

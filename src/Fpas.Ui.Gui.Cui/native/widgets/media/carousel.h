@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/social-and-media/carousel.md)
 #ifndef FPAS_CUI_CAROUSEL_H
 #define FPAS_CUI_CAROUSEL_H
 CUI_API int fpas_cui_carousel_begin(cui_ctx *ui, const char *id, int count, int index,

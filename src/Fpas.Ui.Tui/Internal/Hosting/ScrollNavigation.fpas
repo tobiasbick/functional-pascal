@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/tui/layout/scroll-view.md)
+
 unit Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation;
 
 uses Fpas.Ui.Layout as L, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, System as Sys;

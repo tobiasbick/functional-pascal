@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/feedback/badge.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_badge(cui_ctx *ui, const char *text, int tone, int dot, int solid, const char *icon, int size) {

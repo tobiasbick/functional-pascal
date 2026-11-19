@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/language/control-flow/loops.md)
 using Fpas.Compiler.Binding.Types;
 using Fpas.Compiler.Binding.Symbols;
 using Fpas.Compiler.Binding.References;

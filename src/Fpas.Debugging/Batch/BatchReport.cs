@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/batch-debugging.md)
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Fpas.Debugging.Core;

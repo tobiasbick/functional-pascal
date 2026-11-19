@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/creative-controls/palette-strip.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_palette_strip(cui_ctx *ui, const char *id,

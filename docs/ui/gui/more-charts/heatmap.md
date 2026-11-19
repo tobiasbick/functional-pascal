@@ -47,3 +47,10 @@ Hover a square to inspect its value. A click can send its zero-based row and col
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/View.fpas)
 - [Calendar heatmap](calendar-heatmap.md)
 - [More charts](README.md)
+
+## Source files
+
+- [Heatmap.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/Heatmap.fpas)
+- [CuiWindow.Heatmap.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.Heatmap.cs)
+- [heatmap.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/heatmap.c)
+- [heatmap.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/heatmap.h)

@@ -44,3 +44,15 @@ Handle the removal message in the model.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Feedback/StatusTags.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Creative/View.fpas)
 - [Creative controls](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Feedback/`
+  - [StatusTag.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Feedback/StatusTag.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Feedback/`
+  - [NativeMethods.StatusTag.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Feedback/NativeMethods.StatusTag.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Feedback/`
+  - [CuiWindow.StatusTag.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Feedback/CuiWindow.StatusTag.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/feedback/`
+  - [status_tag.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/status_tag.c)
+  - [status_tag.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/status_tag.h)

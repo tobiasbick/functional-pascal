@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/disclosure/veil.md)
 namespace Fpas.Ui.Gui.Cui.Tests.Overlays;
 
 /// <summary>Checks covered native body scopes and separately admitted composed content.</summary>

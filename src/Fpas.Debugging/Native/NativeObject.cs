@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-native.md)
 using System.Runtime.InteropServices;
 
 namespace Fpas.Debugging.Native;

@@ -45,3 +45,17 @@ leave or go idle.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/View.fpas)
 - [Presence pill](../canvas-and-bars/presence-pill.md)
 - [Social and media](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Conversation/`
+  - [Presence.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Conversation/Presence.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Conversation/`
+  - [NativeMethods.Presence.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Conversation/NativeMethods.Presence.Types.cs)
+  - [NativeMethods.Presence.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Conversation/NativeMethods.Presence.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Conversation/`
+  - [CuiWindow.Presence.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Conversation/CuiWindow.Presence.Types.cs)
+  - [CuiWindow.Presence.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Conversation/CuiWindow.Presence.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/conversation/`
+  - [presence.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/conversation/presence.c)
+  - [presence.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/conversation/presence.h)

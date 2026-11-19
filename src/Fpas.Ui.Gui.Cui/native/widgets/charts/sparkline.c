@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/charts/sparkline.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_sparkline(cui_ctx *ui, const char *id, const float *values, int count,

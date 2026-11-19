@@ -49,3 +49,16 @@ zoom together.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Canvas/View.fpas)
 - [Presence pill](presence-pill.md)
 - [Canvas and bars](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Canvas/`
+  - [LiveCursors.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Canvas/LiveCursors.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Canvas/`
+  - [NativeMethods.LiveCursors.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Canvas/NativeMethods.LiveCursors.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Canvas/`
+  - [CuiWindow.LiveCursors.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Canvas/CuiWindow.LiveCursors.Types.cs)
+  - [CuiWindow.LiveCursors.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Canvas/CuiWindow.LiveCursors.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/canvas/`
+  - [live_cursors.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/canvas/live_cursors.c)
+  - [live_cursors.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/canvas/live_cursors.h)

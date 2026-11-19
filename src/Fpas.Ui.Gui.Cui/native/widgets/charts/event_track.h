@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/instruments/event-track.md)
 #ifndef FPAS_CUI_EVENT_TRACK_H
 #define FPAS_CUI_EVENT_TRACK_H
 

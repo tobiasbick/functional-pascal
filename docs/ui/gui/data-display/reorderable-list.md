@@ -46,3 +46,17 @@ Drag a row by its handle. CUI moves the surrounding rows and proposes a new perm
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Lists/Widgets/Tasks.fpas)
 - [Virtual list](virtual-list.md)
 - [Data display](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Collections/`
+  - [ReorderableList.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Collections/ReorderableList.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Collections/`
+  - [NativeMethods.ReorderableList.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Collections/NativeMethods.ReorderableList.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Collections/`
+  - [CuiWindow.ReorderableList.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Collections/CuiWindow.ReorderableList.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/collections/`
+  - [reorderable_list.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/reorderable_list.c)
+  - [reorderable_list.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/reorderable_list.h)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Display/`
+  - [CuiReorderableListTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Display/CuiReorderableListTests.cs)

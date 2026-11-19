@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/smart-inputs/emoji-picker.md)
 #ifndef FPAS_EMOJI_PICKER_H
 #define FPAS_EMOJI_PICKER_H
 

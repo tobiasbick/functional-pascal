@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/candlestick.md)
 #ifndef FPAS_CUI_CANDLESTICK_H
 #define FPAS_CUI_CANDLESTICK_H
 #include "more_charts.h"

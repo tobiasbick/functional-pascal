@@ -19,3 +19,9 @@ A Gantt chart takes day offsets relative to its origin date.
 - [UI handbook](../README.md)
 - [Date picker](../inputs/date-picker.md)
 - [Planning in the gallery](../../../../examples/ui/gui/gallery/Pages/Planning/View.fpas)
+
+## Source files
+
+- [State.fpas](../../../../examples/ui/gui/gallery/Pages/Planning/State.fpas)
+- [CuiWindow.ScheduleParts.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Planning/CuiWindow.ScheduleParts.cs)
+- [planning.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/planning.c)

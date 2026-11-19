@@ -1,3 +1,5 @@
+// [Documentation](README.md)
+
 program InventoryModel;
 
 uses System.Console as Console, Dungeon.Inventory as Inventory;

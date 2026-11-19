@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/code/code-block.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_code_block(cui_ctx *ui, const char *id, const char *code, const char *language,

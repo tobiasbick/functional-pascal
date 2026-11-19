@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#shared-themes)
+
 unit Fpas.Ui.Widgets.Theming.ThemeMetrics;
 
 uses System as Sys;

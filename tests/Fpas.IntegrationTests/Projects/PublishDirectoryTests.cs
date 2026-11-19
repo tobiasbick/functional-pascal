@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/build/publishing.md)
 using System.Security.Cryptography;
 using System.Text.Json;
 using Fpas.Tests.Support;

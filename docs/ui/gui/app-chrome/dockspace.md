@@ -57,3 +57,16 @@ recent accepted value as `KnownLayout` to avoid repeat notifications.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Desktop/Workspace.fpas)
 - [Split view](split-view.md)
 - [Chapter index](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Desktop/`
+  - [Dockspace.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Desktop/Dockspace.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Desktop/`
+  - [NativeMethods.Dockspace.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Desktop/NativeMethods.Dockspace.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Desktop/`
+  - [CuiWindow.Dockspace.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Desktop/CuiWindow.Dockspace.Types.cs)
+  - [CuiWindow.Dockspace.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Desktop/CuiWindow.Dockspace.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/desktop/`
+  - [dockspace.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/desktop/dockspace.c)
+  - [dockspace.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/desktop/dockspace.h)

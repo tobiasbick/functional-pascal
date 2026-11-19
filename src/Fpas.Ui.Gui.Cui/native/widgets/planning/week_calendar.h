@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/planning/week-calendar.md)
 #ifndef FPAS_CUI_WEEK_CALENDAR_H
 #define FPAS_CUI_WEEK_CALENDAR_H
 /** Appointment placed by its day offset and the hours when it starts and finishes. */

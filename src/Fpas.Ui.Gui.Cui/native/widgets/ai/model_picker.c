@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/ai/model-picker.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_model_picker(cui_ctx *ui, const char *id, const cui_model *models, int count,

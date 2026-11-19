@@ -1,3 +1,4 @@
+// [Documentation](../verification.md#fixture-preparation-and-host-runs)
 import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 

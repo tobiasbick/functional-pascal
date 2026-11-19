@@ -54,3 +54,16 @@ Expand or collapse a branch at its header. CUI draws the chevron and indents its
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Lists/Widgets/TreeAndList.fpas)
 - [List item](list-item.md)
 - [Data display](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Collections/`
+  - [Tree.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Collections/Tree.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Collections/`
+  - [NativeMethods.Tree.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Collections/NativeMethods.Tree.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Collections/`
+  - [CuiWindow.Tree.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Collections/CuiWindow.Tree.Types.cs)
+  - [CuiWindow.Tree.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Collections/CuiWindow.Tree.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/collections/`
+  - [tree.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/tree.c)
+  - [tree.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/tree.h)

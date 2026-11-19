@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/overlays/guided-tour.md)
 #ifndef FPAS_TOUR_H
 #define FPAS_TOUR_H
 

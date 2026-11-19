@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/creative-controls/ratio-slider.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Inputs.RatioSlider;
 
 uses

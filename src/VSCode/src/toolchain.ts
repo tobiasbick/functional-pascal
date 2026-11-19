@@ -1,3 +1,4 @@
+// [Documentation](../README.md#install-and-select-a-project)
 import { execFile } from 'node:child_process';
 import { constants } from 'node:fs';
 import { access, realpath, stat } from 'node:fs/promises';

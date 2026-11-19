@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/voice/composer.md)
+
 unit Fpas.Ui.Widgets.Ai.Composers;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Ai.ModelPickers as Models;

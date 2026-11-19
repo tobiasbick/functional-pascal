@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/disclosure/onboarding-checklist.md)
 #ifndef FPAS_CHECKLIST_H
 #define FPAS_CHECKLIST_H
 

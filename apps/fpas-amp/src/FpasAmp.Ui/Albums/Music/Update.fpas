@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/apps/fpas-amp/desktop.md#browsing-music-and-collections)
+
 // Load one release and apply song edits on the UI owner.
 unit FpasAmp.Ui.Albums.Music.Update;
 

@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/host.md#widgets-and-input)
+
 unit Fpas.Ui.Gui.Internal.Input.Modal;
 
 uses

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#settings-and-scan-control)
+
 // General appearance and library database controls.
 unit FpasAmp.Ui.Settings.General;
 

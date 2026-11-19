@@ -47,3 +47,15 @@ it. Use Emoji picker when the user should choose a glyph.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Display/View.fpas)
 - [Emoji picker](../smart-inputs/emoji-picker.md)
 - [Chapter index](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Display/`
+  - [Emoji.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Display/Emoji.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Display/`
+  - [NativeMethods.Emoji.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Display/NativeMethods.Emoji.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Display/`
+  - [CuiWindow.Emoji.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Display/CuiWindow.Emoji.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/display/`
+  - [emoji.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/display/emoji.c)
+  - [emoji.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/display/emoji.h)

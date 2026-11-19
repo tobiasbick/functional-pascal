@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/developer-tools/query-builder.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_query_builder(cui_ctx *ui, const char *id, const cui_query_field *fields,

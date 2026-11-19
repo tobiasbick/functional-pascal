@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/libraries/media/audio.md)
 namespace Fpas.Media.Audio.Tests.Support;
 
 internal static class Wave

@@ -66,3 +66,10 @@ where allowed. Calls invalidate facts about shared mutable captured variables.
 - [Topic overview](README.md)
 - [CLR mapping](../../../specs/clr-mapping.md)
 - [Test coverage](../../../../tests/coverage.md)
+
+## Source files
+
+- [Binder.NestedRoutines.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.NestedRoutines.cs)
+- [NestedRoutineTests.cs](../../../../tests/Fpas.Compiler.Tests/Routines/NestedRoutineTests.cs)
+- [MsBuildTests.NestedRoutines.cs](../../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.NestedRoutines.cs)
+- [NestedRoutineExecutionTests.cs](../../../../tests/Fpas.IntegrationTests/Execution/NestedRoutineExecutionTests.cs)

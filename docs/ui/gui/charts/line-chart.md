@@ -52,3 +52,10 @@ Move the pointer across the chart to inspect values using its native crosshair. 
 - [Shared chart types](../../../../src/Fpas.Ui/Widgets/Charts/Charts.fpas)
 - [Bar chart](bar-chart.md)
 - [Charts](README.md)
+
+## Source files
+
+- [LineChart.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/LineChart.fpas)
+- [CuiWindow.LineChart.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.LineChart.cs)
+- [line_chart.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/line_chart.c)
+- [line_chart.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/line_chart.h)

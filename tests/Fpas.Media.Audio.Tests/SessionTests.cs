@@ -1,3 +1,4 @@
+// [Documentation](../../docs/pascal/libraries/media/audio.md)
 using Fpas.Media.Audio.Tests.Support;
 using Fpas.Tests.Support;
 

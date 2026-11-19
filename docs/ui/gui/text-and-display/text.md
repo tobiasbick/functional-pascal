@@ -65,3 +65,10 @@ heading and `Introduction` for the paragraph beneath it.
 - [Overview](../overview/README.md)
 - [Chapter index](README.md)
 - [Terminal example](../../tui/text-and-display/text.md)
+
+## Source files
+
+- [NativeMethods.Texts.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Display/NativeMethods.Texts.cs)
+- [CuiWindow.Texts.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Display/CuiWindow.Texts.cs)
+- [texts.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/display/texts.c)
+- [texts.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/display/texts.h)

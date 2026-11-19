@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/overlays/action-footer.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_action_footer_begin(cui_ctx *ui) {

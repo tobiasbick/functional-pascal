@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/compiler.md#semantic-snapshots)
 namespace Fpas.Compiler.Analysis;
 
 /// <summary>The CLR identity of an imported or emitted type or member.</summary>

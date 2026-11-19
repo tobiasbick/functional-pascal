@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/charts/README.md)
 #ifndef FPAS_CUI_CHARTS_H
 #define FPAS_CUI_CHARTS_H
 

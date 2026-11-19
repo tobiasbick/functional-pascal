@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/cui.md#layout-and-control-inspection)
 #include "../fpas_cui.h"
 
 int fpas_cui_group_begin(cui_ctx *ui, int horizontal, float padding, float gap, int align, int framed, int wrap, int clip) {

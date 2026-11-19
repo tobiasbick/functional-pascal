@@ -1,3 +1,4 @@
+// [Documentation](../verification.md#editor-and-project-scenarios)
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFile, realpath, rm, symlink, writeFile } from 'node:fs/promises';

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/smart-inputs/shortcut-recorder.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_shortcut_recorder(cui_ctx *ui, const char *id, int *key, int *mods,

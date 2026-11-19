@@ -1,3 +1,4 @@
+// [Documentation](../../docs/specs/clr-mapping.md#small-language-support-library)
 namespace Fpas.Core;
 
 /// <summary>Identifies the versioned FPAS record metadata contract.</summary>

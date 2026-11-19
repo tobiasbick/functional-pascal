@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/interop/construction-and-members.md)
 using Fpas.Compiler.Tests.Support;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;

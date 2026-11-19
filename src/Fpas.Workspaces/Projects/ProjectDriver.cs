@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/program-structure/project-commands.md#build)
 using Fpas.Workspaces.Loading;
 using Fpas.Workspaces.Processes;
 using Fpas.Workspaces.Solutions;

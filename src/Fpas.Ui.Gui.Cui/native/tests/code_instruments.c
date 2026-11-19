@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/instruments/README.md)
 /* Focused native clipboard, parsing and instrument interaction checks. */
 #include "../fpas_cui.h"
 #include <stdio.h>

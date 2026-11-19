@@ -197,3 +197,48 @@ documentation, setup, deadline or limit failures, 2 for invalid arguments and
 - [Source queries](../program-structure/cli.md)
 - [Comments and XML documentation](../language/basics/comments.md)
 - [.NET interoperability](../interop/README.md)
+
+## Source files
+
+<details>
+<summary>Browse 29 source files</summary>
+
+- `src/Fpas.Cli/Documentation/`
+  - [DocCommand.cs](../../../src/Fpas.Cli/Documentation/DocCommand.cs)
+  - [DocReport.cs](../../../src/Fpas.Cli/Documentation/DocReport.cs)
+- `src/Fpas.Compiler/Analysis/Usage/`
+  - [ApiUsageTemplates.cs](../../../src/Fpas.Compiler/Analysis/Usage/ApiUsageTemplates.cs)
+  - [UsageNames.cs](../../../src/Fpas.Compiler/Analysis/Usage/UsageNames.cs)
+  - [UsageSource.cs](../../../src/Fpas.Compiler/Analysis/Usage/UsageSource.cs)
+  - [UsageTypeArguments.cs](../../../src/Fpas.Compiler/Analysis/Usage/UsageTypeArguments.cs)
+  - [UsageUnit.cs](../../../src/Fpas.Compiler/Analysis/Usage/UsageUnit.cs)
+- `src/Fpas.Workspaces/Documentation/`
+  - [BoundDocumentation.cs](../../../src/Fpas.Workspaces/Documentation/BoundDocumentation.cs)
+  - [DocumentationInputs.cs](../../../src/Fpas.Workspaces/Documentation/DocumentationInputs.cs)
+  - [DocumentationMarkdown.cs](../../../src/Fpas.Workspaces/Documentation/DocumentationMarkdown.cs)
+  - [DocumentationQuery.cs](../../../src/Fpas.Workspaces/Documentation/DocumentationQuery.cs)
+  - [DocumentationResult.cs](../../../src/Fpas.Workspaces/Documentation/DocumentationResult.cs)
+  - [MetadataCatalog.cs](../../../src/Fpas.Workspaces/Documentation/MetadataCatalog.cs)
+  - [MetadataSignatureTypes.cs](../../../src/Fpas.Workspaces/Documentation/MetadataSignatureTypes.cs)
+  - [MetadataSignatures.cs](../../../src/Fpas.Workspaces/Documentation/MetadataSignatures.cs)
+  - [XmlDocumentation.cs](../../../src/Fpas.Workspaces/Documentation/XmlDocumentation.cs)
+- `src/Fpas.Workspaces/Queries/`
+  - [SourceQuery.Documentation.cs](../../../src/Fpas.Workspaces/Queries/SourceQuery.Documentation.cs)
+- `tests/Fpas.Compiler.Tests/Metadata/`
+  - [DocumentationTests.cs](../../../tests/Fpas.Compiler.Tests/Metadata/DocumentationTests.cs)
+- `tests/Fpas.IntegrationTests/ApiDocumentation/`
+  - [DocumentationBoundsTests.cs](../../../tests/Fpas.IntegrationTests/ApiDocumentation/DocumentationBoundsTests.cs)
+  - [DocumentationCliTests.cs](../../../tests/Fpas.IntegrationTests/ApiDocumentation/DocumentationCliTests.cs)
+  - [DocumentationFixture.cs](../../../tests/Fpas.IntegrationTests/ApiDocumentation/DocumentationFixture.cs)
+  - [DocumentationScopeTests.cs](../../../tests/Fpas.IntegrationTests/ApiDocumentation/DocumentationScopeTests.cs)
+  - [MemberAccessUsageTests.cs](../../../tests/Fpas.IntegrationTests/ApiDocumentation/MemberAccessUsageTests.cs)
+  - [MetadataDocumentationTests.cs](../../../tests/Fpas.IntegrationTests/ApiDocumentation/MetadataDocumentationTests.cs)
+  - [NamedArgumentUsageTests.cs](../../../tests/Fpas.IntegrationTests/ApiDocumentation/NamedArgumentUsageTests.cs)
+  - [UsageTemplateTests.cs](../../../tests/Fpas.IntegrationTests/ApiDocumentation/UsageTemplateTests.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.Documentation.cs](../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.Documentation.cs)
+  - [MsBuildTests.DocumentationIds.cs](../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.DocumentationIds.cs)
+- `tests/Fpas.IntegrationTests/Cli/`
+  - [DocumentationCliTests.cs](../../../tests/Fpas.IntegrationTests/Cli/DocumentationCliTests.cs)
+
+</details>

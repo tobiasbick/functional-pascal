@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/heatmap.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_heatmap(cui_ctx *ui, const char *id, const float *values, int rows, int columns,

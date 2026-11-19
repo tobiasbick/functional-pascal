@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/functions/type-inference.md)
 using Fpas.IntegrationTests.Support;
 namespace Fpas.IntegrationTests.Execution;
 

@@ -43,3 +43,17 @@ Shortcut displays a hint.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/IconButtons.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Buttons/View.fpas)
 - [Actions](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Actions/`
+  - [IconButton.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Actions/IconButton.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Actions/`
+  - [NativeMethods.IconButton.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Actions/NativeMethods.IconButton.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Actions/`
+  - [CuiWindow.IconButton.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Actions/CuiWindow.IconButton.cs)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [icon_button.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/icon_button.c)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/actions/`
+  - [icon_button.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/icon_button.c)
+  - [icon_button.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/icon_button.h)

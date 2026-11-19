@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/pickers/ruler-slider.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

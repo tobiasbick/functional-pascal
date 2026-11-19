@@ -46,3 +46,17 @@ suppresses activation. GUI shows a spinner and TUI shows an ellipsis.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Buttons/View.fpas)
 - [Actions](README.md)
 - [Terminal example](../../tui/actions/button.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Actions/`
+  - [Button.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Actions/Button.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Actions/`
+  - [NativeMethods.Button.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Actions/NativeMethods.Button.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Actions/`
+  - [CuiWindow.Button.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Actions/CuiWindow.Button.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/actions/`
+  - [button.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/button.c)
+  - [button.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/button.h)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Actions/`
+  - [CuiButtonTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Actions/CuiButtonTests.cs)

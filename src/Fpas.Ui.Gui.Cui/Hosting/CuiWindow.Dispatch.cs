@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/cui.md#window-ownership-and-frames)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.ExceptionServices;

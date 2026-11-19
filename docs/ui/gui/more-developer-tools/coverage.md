@@ -48,3 +48,15 @@ covered lines in the whole report.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/Coverages.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/View.fpas)
 - [More developer tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [Coverage.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/Coverage.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.Coverage.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.Coverage.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.Coverage.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.Coverage.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [coverage.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/coverage.c)
+  - [coverage.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/coverage.h)

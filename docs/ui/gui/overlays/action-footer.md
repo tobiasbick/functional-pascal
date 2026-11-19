@@ -43,3 +43,15 @@ The buttons retain their own activation messages and keyboard behavior. Apply th
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Overlays/Widgets/Dialog.fpas)
 - [Dialog](dialog.md)
 - [Overlays](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Actions/`
+  - [ActionFooter.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Actions/ActionFooter.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Actions/`
+  - [NativeMethods.ActionFooter.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Actions/NativeMethods.ActionFooter.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Actions/`
+  - [CuiWindow.ActionFooter.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Actions/CuiWindow.ActionFooter.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/actions/`
+  - [action_footer.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/action_footer.c)
+  - [action_footer.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/action_footer.h)

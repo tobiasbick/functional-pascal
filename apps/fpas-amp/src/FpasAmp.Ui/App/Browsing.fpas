@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#browsing-music-and-collections)
+
 // Maps the three sidebar destinations and their nested pages to the shared catalogue.
 unit FpasAmp.Ui.App.Browsing;
 

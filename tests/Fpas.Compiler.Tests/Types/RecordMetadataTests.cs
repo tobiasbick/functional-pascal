@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/types/records.md)
 using Fpas.Compiler.Tests.Support;
 using Fpas.Compiler.Analysis;
 using System.Reflection;

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/native-build.md#bridge-translation-unit)
 #if defined(_WIN32) && !defined(WIN32_LEAN_AND_MEAN)
 /* Keep the RPC macro named small out of the UI implementation. */
 #define WIN32_LEAN_AND_MEAN

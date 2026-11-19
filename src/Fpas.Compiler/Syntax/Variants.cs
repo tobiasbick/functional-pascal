@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/types/variants.md)
 namespace Fpas.Compiler.Syntax;
 
 internal sealed record VariantSyntax(Token Name, bool IsPublic, IReadOnlyList<VariantCaseSyntax> Cases,

@@ -51,3 +51,10 @@ Hover to inspect a category and see its native readout. CUI lays out the bars an
 - [Shared chart types](../../../../src/Fpas.Ui/Widgets/Charts/Charts.fpas)
 - [Line chart](line-chart.md)
 - [Charts](README.md)
+
+## Source files
+
+- [BarChart.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/BarChart.fpas)
+- [CuiWindow.BarChart.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.BarChart.cs)
+- [bar_chart.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/bar_chart.c)
+- [bar_chart.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/bar_chart.h)

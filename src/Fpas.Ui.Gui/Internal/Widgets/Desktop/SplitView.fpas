@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/app-chrome/split-view.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Desktop.SplitView;
 
 uses

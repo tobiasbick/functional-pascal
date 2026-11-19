@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/reader/table-of-contents.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Navigation.TableOfContents;
 
 uses

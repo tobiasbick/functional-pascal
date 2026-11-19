@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/app-chrome/split-view.md)
 #include "../../fpas_cui.h"
 #include "chrome_input.h"
 

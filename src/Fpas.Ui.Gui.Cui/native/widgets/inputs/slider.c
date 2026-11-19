@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/selection/slider.md)
 #include "../../fpas_cui.h"
 
 /* Track a pointer gesture when choosing the single-value slider's step. */

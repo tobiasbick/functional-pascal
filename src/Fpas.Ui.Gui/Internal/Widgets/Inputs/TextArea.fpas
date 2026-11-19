@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/inputs/text-area.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Inputs.TextArea;
 
 uses

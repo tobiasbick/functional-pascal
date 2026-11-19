@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/developer-tools/trace-viewer.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_trace_viewer(cui_ctx *ui, const char *id, const cui_trace_track * tracks, int tracks_count, const cui_trace_span * spans, int spans_count, const cui_trace_marker * markers, int markers_count, double start, double stop, float scroll, double mark_start, double mark_end, int selection, float height, float row_height, int width_kind, float width, int enabled, fpas_dev_result * out, const cui_trace_link *links, int link_count, int *hovered_link) {

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/files/file-picker.md)
 using Fpas.Tests.Support;
 using Fpas.Ui.Gui.Cui.Tests.Packaging;
 

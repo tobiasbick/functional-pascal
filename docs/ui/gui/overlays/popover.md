@@ -45,3 +45,17 @@ Use the trigger message to open or close the panel in your model. Escape or a pr
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Overlays/Widgets/Popover.fpas)
 - [Confirm popover](../disclosure/confirm-popover.md)
 - [Overlays](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Overlays/`
+  - [Popover.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Overlays/Popover.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Overlays/`
+  - [NativeMethods.Popover.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Overlays/NativeMethods.Popover.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Overlays/`
+  - [CuiWindow.Popover.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Overlays/CuiWindow.Popover.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/overlays/`
+  - [popover.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/overlays/popover.c)
+  - [popover.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/overlays/popover.h)
+- `tests/Fixtures/gui-host/`
+  - [PopoverContract.fpas](../../../../tests/Fixtures/gui-host/PopoverContract.fpas)

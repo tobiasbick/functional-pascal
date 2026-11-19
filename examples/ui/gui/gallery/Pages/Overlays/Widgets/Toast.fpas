@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/overlays/toast.md)
+
 unit GuiGallery.Pages.Overlays.Widgets.Toast;
 
 uses

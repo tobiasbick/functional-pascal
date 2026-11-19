@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/selection/switch.md)
+
 unit GuiGallery.Pages.Selection.Widgets.Switch;
 
 uses

@@ -58,3 +58,16 @@ application builds the visible rows itself.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/DataGrid/View.fpas)
 - [Gallery update function](../../../../examples/ui/gui/gallery/Pages/DataGrid/Update.fpas)
 - [Data grid](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Collections/`
+  - [TreeTable.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Collections/TreeTable.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Collections/`
+  - [NativeMethods.TreeTable.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Collections/NativeMethods.TreeTable.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Collections/`
+  - [CuiWindow.TreeTable.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Collections/CuiWindow.TreeTable.Types.cs)
+  - [CuiWindow.TreeTable.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Collections/CuiWindow.TreeTable.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/collections/`
+  - [tree_table.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/tree_table.c)
+  - [tree_table.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/tree_table.h)

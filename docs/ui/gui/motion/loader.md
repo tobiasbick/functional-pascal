@@ -44,3 +44,15 @@ work, and CUI animates the indicator.
 - [Shimmer text](shimmer-text.md)
 - [Spinner](../feedback/spinner.md)
 - [Motion](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Feedback/`
+  - [Loader.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Feedback/Loader.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Feedback/`
+  - [NativeMethods.Loader.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Feedback/NativeMethods.Loader.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Feedback/`
+  - [CuiWindow.Loader.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Feedback/CuiWindow.Loader.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/feedback/`
+  - [loader.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/loader.c)
+  - [loader.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/loader.h)

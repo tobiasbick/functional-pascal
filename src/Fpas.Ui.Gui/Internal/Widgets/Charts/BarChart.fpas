@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/charts/bar-chart.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Charts.BarChart;
 
 uses

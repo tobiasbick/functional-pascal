@@ -31,3 +31,8 @@ Tab to the button and press Enter or Space, or click it. Set `Enabled := false` 
 - [Actions](README.md)
 - [Shared API](../../widgets.md#button)
 - [GUI button](../../gui/actions/button.md)
+
+## Source files
+
+- [Buttons.fpas](../../../../src/Fpas.Ui.Tui/Internal/Rendering/Buttons.fpas)
+- [Button.fpas](../../../../src/Fpas.Ui.Tui/Internal/Widgets/Actions/Button.fpas)

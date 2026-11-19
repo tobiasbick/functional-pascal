@@ -68,3 +68,16 @@ the model as it was. Check file size and content in the application.
 - [File chooser command](../../../../src/Fpas.Ui.Gui/FileDialogs.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Capture/View.fpas)
 - [Capture](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Files/`
+  - [Dropzone.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Files/Dropzone.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Files/`
+  - [NativeMethods.Dropzone.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Files/NativeMethods.Dropzone.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Files/`
+  - [CuiWindow.Dropzone.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Files/CuiWindow.Dropzone.Types.cs)
+  - [CuiWindow.Dropzone.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Files/CuiWindow.Dropzone.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/files/`
+  - [dropzone.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/files/dropzone.c)
+  - [dropzone.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/files/dropzone.h)

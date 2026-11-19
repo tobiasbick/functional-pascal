@@ -9,3 +9,8 @@ Hello.fpasproj uses the locally packaged FPAS SDK. Follow the
 then build the project and run bin/Debug/net10.0/Hello.dll with dotnet.
 The [direct CLI instructions](../../../docs/build/development.md#direct-compiler-invocation)
 remain available when supplying reference assemblies explicitly.
+
+## Source files
+
+- [Hello.fpasproj](Hello.fpasproj)
+- [main.fpas](main.fpas)

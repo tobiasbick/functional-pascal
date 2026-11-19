@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/capture/signature-pad.md)
+
 unit Fpas.Ui.Widgets.Files.SignaturePads;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, System as Sys;

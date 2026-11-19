@@ -18,3 +18,10 @@ These controls require the GUI host.
 - [UI handbook](../README.md)
 - [Data display in the gallery](../../../../examples/ui/gui/gallery/Pages/Lists/View.fpas)
 - [Data grid](../data-grid/README.md)
+
+## Source files
+
+- [State.fpas](../../../../examples/ui/gui/gallery/Pages/Lists/State.fpas)
+- [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Lists/Update.fpas)
+- [collection_regressions.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/collection_regressions.c)
+- [CuiCollectionTrackingTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Display/CuiCollectionTrackingTests.cs)

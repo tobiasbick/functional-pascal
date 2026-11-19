@@ -102,3 +102,20 @@ implementations remain outside this scope.
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- `src/Fpas.Compiler/Binding/Bodies/`
+  - [Binder.Operators.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.Operators.cs)
+  - [Binder.Unary.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.Unary.cs)
+- `tests/Fpas.Compiler.Tests/ControlFlow/`
+  - [ComparisonOperatorTests.cs](../../../../tests/Fpas.Compiler.Tests/ControlFlow/ComparisonOperatorTests.cs)
+  - [OperatorSpacingTests.cs](../../../../tests/Fpas.Compiler.Tests/ControlFlow/OperatorSpacingTests.cs)
+- `tests/Fpas.Compiler.Tests/Metadata/`
+  - [ShiftEmissionTests.cs](../../../../tests/Fpas.Compiler.Tests/Metadata/ShiftEmissionTests.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.Comparisons.cs](../../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.Comparisons.cs)
+  - [MsBuildTests.GenericMath.cs](../../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.GenericMath.cs)
+  - [MsBuildTests.ImportedOperators.cs](../../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.ImportedOperators.cs)
+- `tests/Fpas.IntegrationTests/Execution/`
+  - [ComparisonExecutionTests.cs](../../../../tests/Fpas.IntegrationTests/Execution/ComparisonExecutionTests.cs)

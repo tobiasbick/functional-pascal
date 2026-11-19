@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/motion/rolling-number.md)
 using Fpas.Ui.Gui.Cui.Widgets.Motion;
 using Fpas.Ui.Gui.Cui.Interop;
 

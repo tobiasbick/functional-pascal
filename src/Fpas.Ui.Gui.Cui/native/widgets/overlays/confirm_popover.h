@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/disclosure/confirm-popover.md)
 #ifndef FPAS_CONFIRM_POPOVER_H
 #define FPAS_CONFIRM_POPOVER_H
 

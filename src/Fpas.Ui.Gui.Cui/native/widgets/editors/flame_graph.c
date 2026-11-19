@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/editing-tools/flame-graph.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_flame_graph(cui_ctx *ui, const char *id, const cui_flame_span *spans, int count, fpas_flame_view *view, double minimum, float height, float row_height, int width_kind, float width, int flags) {

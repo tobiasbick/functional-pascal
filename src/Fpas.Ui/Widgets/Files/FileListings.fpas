@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#files-and-planning)
+
 unit Fpas.Ui.Widgets.Files.FileListings;
 
 // One child returned by a file-listing provider.

@@ -51,3 +51,16 @@ Click or activate a completion circle with the keyboard to propose a new flag. T
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Feedback/Checklists.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Disclosure/Widgets/Checklist.fpas)
 - [Disclosure](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Feedback/`
+  - [Checklist.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Feedback/Checklist.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Feedback/`
+  - [NativeMethods.Checklist.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Feedback/NativeMethods.Checklist.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Feedback/`
+  - [CuiWindow.Checklist.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Feedback/CuiWindow.Checklist.Types.cs)
+  - [CuiWindow.Checklist.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Feedback/CuiWindow.Checklist.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/feedback/`
+  - [checklist.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/checklist.c)
+  - [checklist.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/checklist.h)

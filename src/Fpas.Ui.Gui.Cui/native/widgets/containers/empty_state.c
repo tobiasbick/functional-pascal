@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/feedback/empty-state.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_empty_state(cui_ctx *ui, const char *id, const char *title, const char *icon,

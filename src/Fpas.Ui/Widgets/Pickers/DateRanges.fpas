@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/pickers/date-range-picker.md)
+
 unit Fpas.Ui.Widgets.Pickers.DateRanges;
 
 uses Fpas.Ui.Widgets.Pickers.Calendars as Calendars, System as Sys;

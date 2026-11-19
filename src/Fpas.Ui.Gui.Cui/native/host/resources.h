@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/cui.md#theme-and-resources)
 #ifndef FPAS_CUI_RESOURCES_H
 #define FPAS_CUI_RESOURCES_H
 CUI_API void fpas_cui_theme_metrics(cui_ctx *ui, float *values, int write);

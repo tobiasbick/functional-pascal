@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-native.md#selected-dependency)
 using System.Runtime.InteropServices;
 using System.Text;
 

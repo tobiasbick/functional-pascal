@@ -44,3 +44,15 @@ the animation. Reduced motion keeps the gradient still.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Motion/GradientTexts.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/View.fpas)
 - [Motion](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Motion/`
+  - [GradientText.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Motion/GradientText.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Motion/`
+  - [NativeMethods.GradientText.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Motion/NativeMethods.GradientText.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Motion/`
+  - [CuiWindow.GradientText.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Motion/CuiWindow.GradientText.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/motion/`
+  - [gradient_text.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/motion/gradient_text.c)
+  - [gradient_text.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/motion/gradient_text.h)

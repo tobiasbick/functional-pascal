@@ -3,7 +3,8 @@
 This executable sample renders an 80 × 24 Mandelbrot view with an iteration
 limit of 50. It uses typed int/double values, mutable locals, a function, numeric
 casts, short-circuit conditions, while/counting loops, and an if expression.
-Its source is the Mandelbrot program from the language examples.
+The [project](Mandelbrot.fpasproj) builds the
+[Mandelbrot program](main.fpas) from the language examples.
 
 After the [local SDK bootstrap](../../../docs/build/development.md#build-an-fpas-application):
 

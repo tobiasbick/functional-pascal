@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/README.md)
 #ifndef FPAS_CUI_MORE_CHARTS_H
 #define FPAS_CUI_MORE_CHARTS_H
 #include "visualizations.h"

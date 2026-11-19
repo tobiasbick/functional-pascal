@@ -538,3 +538,50 @@ The [coverage map](../../tests/coverage.md) links this contract to compiler,
 metadata, CLR execution, mixed-project and debugger tests, including rejection
 cases. Complete [examples](../pascal/examples/README.md) are compiled and executed
 from Markdown. Only open work belongs in [language gaps](../future/language-gaps.md).
+
+## Source files
+
+<details>
+<summary>Browse 31 source files</summary>
+
+- `src/Fpas.Compiler/Binding/Bodies/`
+  - [Binder.NullableOperators.cs](../../src/Fpas.Compiler/Binding/Bodies/Binder.NullableOperators.cs)
+- `src/Fpas.Compiler/Binding/Declarations/`
+  - [SourceCatalog.SourceInterfaces.cs](../../src/Fpas.Compiler/Binding/Declarations/SourceCatalog.SourceInterfaces.cs)
+- `src/Fpas.Compiler/Binding/References/`
+  - [ReferenceCatalog.Attributes.cs](../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.Attributes.cs)
+  - [ReferenceCatalog.Records.cs](../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.Records.cs)
+  - [ReferenceCatalog.Scalars.cs](../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.Scalars.cs)
+  - [ReferenceCatalog.SourceInterfaces.cs](../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.SourceInterfaces.cs)
+  - [ReferenceCatalog.Variants.cs](../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.Variants.cs)
+- `src/Fpas.Compiler/Documentation/`
+  - [DocumentationIds.cs](../../src/Fpas.Compiler/Documentation/DocumentationIds.cs)
+  - [DocumentationModel.cs](../../src/Fpas.Compiler/Documentation/DocumentationModel.cs)
+  - [DocumentationWriter.cs](../../src/Fpas.Compiler/Documentation/DocumentationWriter.cs)
+  - [MarkdownXml.cs](../../src/Fpas.Compiler/Documentation/MarkdownXml.cs)
+  - [StructuredDocumentation.cs](../../src/Fpas.Compiler/Documentation/StructuredDocumentation.cs)
+- `src/Fpas.Compiler/Emission/Metadata/`
+  - [AssemblyEmitter.Aliases.cs](../../src/Fpas.Compiler/Emission/Metadata/AssemblyEmitter.Aliases.cs)
+  - [AssemblyEmitter.AttributeFlags.cs](../../src/Fpas.Compiler/Emission/Metadata/AssemblyEmitter.AttributeFlags.cs)
+  - [AssemblyEmitter.Attributes.cs](../../src/Fpas.Compiler/Emission/Metadata/AssemblyEmitter.Attributes.cs)
+  - [AssemblyEmitter.Constants.cs](../../src/Fpas.Compiler/Emission/Metadata/AssemblyEmitter.Constants.cs)
+  - [AssemblyEmitter.Generics.cs](../../src/Fpas.Compiler/Emission/Metadata/AssemblyEmitter.Generics.cs)
+  - [AssemblyEmitter.Globals.cs](../../src/Fpas.Compiler/Emission/Metadata/AssemblyEmitter.Globals.cs)
+  - [AssemblyEmitter.Identity.cs](../../src/Fpas.Compiler/Emission/Metadata/AssemblyEmitter.Identity.cs)
+  - [AssemblyEmitter.Interfaces.cs](../../src/Fpas.Compiler/Emission/Metadata/AssemblyEmitter.Interfaces.cs)
+  - [AssemblyEmitter.Records.cs](../../src/Fpas.Compiler/Emission/Metadata/AssemblyEmitter.Records.cs)
+  - [AssemblyEmitter.ScalarEquality.cs](../../src/Fpas.Compiler/Emission/Metadata/AssemblyEmitter.ScalarEquality.cs)
+  - [AssemblyEmitter.Scalars.cs](../../src/Fpas.Compiler/Emission/Metadata/AssemblyEmitter.Scalars.cs)
+  - [AssemblyEmitter.Variants.cs](../../src/Fpas.Compiler/Emission/Metadata/AssemblyEmitter.Variants.cs)
+- `src/Fpas.Compiler/Emission/Signing/`
+  - [StrongNameKey.cs](../../src/Fpas.Compiler/Emission/Signing/StrongNameKey.cs)
+- `src/Fpas.Core/`
+  - [AliasAttribute.cs](../../src/Fpas.Core/AliasAttribute.cs)
+  - [DomainAttribute.cs](../../src/Fpas.Core/DomainAttribute.cs)
+  - [Fpas.Core.csproj](../../src/Fpas.Core/Fpas.Core.csproj)
+  - [RecordAttribute.cs](../../src/Fpas.Core/RecordAttribute.cs)
+  - [VariantAttribute.cs](../../src/Fpas.Core/VariantAttribute.cs)
+- `tests/Fpas.Compiler.Tests/Metadata/`
+  - [EmissionTests.cs](../../tests/Fpas.Compiler.Tests/Metadata/EmissionTests.cs)
+
+</details>

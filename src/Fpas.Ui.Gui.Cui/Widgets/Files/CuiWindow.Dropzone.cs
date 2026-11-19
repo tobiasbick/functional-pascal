@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/capture/dropzone.md)
 using Fpas.Ui.Gui.Cui.Widgets.Files;
 using System.Runtime.InteropServices;
 using Fpas.Ui.Gui.Cui.Interop;

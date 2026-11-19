@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/ui/gui/overlays/context-menu.md)
+
 unit GalleryContextContract;
 
 uses

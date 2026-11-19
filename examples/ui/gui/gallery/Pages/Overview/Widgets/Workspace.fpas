@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/overview/workspace-form.md)
+
 unit GuiGallery.Pages.Overview.Widgets.Workspace;
 
 uses

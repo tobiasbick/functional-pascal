@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/pickers/multi-select.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;

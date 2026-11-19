@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/functions/scope-and-effects.md)
 using Fpas.Compiler.Tests.Support;
 using System.Reflection;
 using System.Reflection.Metadata;

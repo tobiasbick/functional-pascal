@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/native-build.md#feedback-adapters)
 /* Native widgets and their ABI adapters must produce identical pixels. */
 #include "../fpas_cui.h"
 #include <stdio.h>

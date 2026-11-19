@@ -102,3 +102,16 @@ syntax/resource limits and expired/fresh frames. Compound-value tests add
 negative runtime array bounds and hostile getter/operator/display sentinels.
 The required native Windows/WSL Debug/Release matrix is described in
 [test instructions](../../tests/README.md#own-coreclr-connection-tests).
+
+## Source files
+
+- `src/Fpas.Debugging/Evaluation/`
+  - [ExpressionLexer.cs](../../src/Fpas.Debugging/Evaluation/ExpressionLexer.cs)
+  - [ExpressionSyntax.cs](../../src/Fpas.Debugging/Evaluation/ExpressionSyntax.cs)
+  - [PassiveEvaluator.cs](../../src/Fpas.Debugging/Evaluation/PassiveEvaluator.cs)
+  - [ScalarOperations.Literals.cs](../../src/Fpas.Debugging/Evaluation/ScalarOperations.Literals.cs)
+  - [ScalarOperations.Operators.cs](../../src/Fpas.Debugging/Evaluation/ScalarOperations.Operators.cs)
+  - [ScalarOperations.ResultTypes.cs](../../src/Fpas.Debugging/Evaluation/ScalarOperations.ResultTypes.cs)
+  - [ScalarOperations.Types.cs](../../src/Fpas.Debugging/Evaluation/ScalarOperations.Types.cs)
+- `tests/Fpas.IntegrationTests/Debugging/`
+  - [ExpressionInspectionTests.cs](../../tests/Fpas.IntegrationTests/Debugging/ExpressionInspectionTests.cs)

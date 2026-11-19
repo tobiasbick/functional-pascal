@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/creative-controls/gradient-slider.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Inputs.GradientSlider;
 
 uses

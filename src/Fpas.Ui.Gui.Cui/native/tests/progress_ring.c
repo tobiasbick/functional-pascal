@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/feedback/progress-ring.md)
 /* Ring painting, independent identities, changing captions and state retirement stay native. */
 #include "../fpas_cui.h"
 #include <stdio.h>

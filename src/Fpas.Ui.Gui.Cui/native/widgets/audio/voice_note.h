@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/voice/voice-note.md)
 #ifndef FPAS_CUI_VOICE_NOTE_H
 #define FPAS_CUI_VOICE_NOTE_H
 CUI_API int fpas_cui_voice_note(cui_ctx *ui, const char *id, const float *levels, int count, float duration,

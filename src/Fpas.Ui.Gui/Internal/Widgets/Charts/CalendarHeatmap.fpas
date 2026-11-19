@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/calendar-heatmap.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Charts.CalendarHeatmap;
 
 uses

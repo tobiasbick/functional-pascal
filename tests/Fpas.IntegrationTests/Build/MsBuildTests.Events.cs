@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/interop/events.md)
 namespace Fpas.IntegrationTests.Build;
 
 public sealed partial class MsBuildTests

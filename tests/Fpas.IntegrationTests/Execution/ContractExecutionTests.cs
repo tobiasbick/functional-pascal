@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/functions/contracts.md)
 using Fpas.IntegrationTests.Support;
 using Fpas.Tests.Support;
 

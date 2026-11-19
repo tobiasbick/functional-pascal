@@ -1,3 +1,5 @@
+// [Documentation](../README.md)
+
 unit Demo.Messages;
 
 public function Describe(Value: int): string;

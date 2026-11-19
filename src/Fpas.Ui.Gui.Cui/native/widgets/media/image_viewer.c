@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/social-and-media/image-viewer.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_image_viewer(cui_ctx *ui, const char *id, const fpas_media_source *source,

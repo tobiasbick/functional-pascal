@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/inputs/one-time-code.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

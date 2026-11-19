@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/ai/agent-plan.md)
+
 unit Fpas.Ui.Widgets.Ai.AgentPlans;
 
 uses Fpas.Ui.Elements as E, System as Sys, Fpas.Ui.Widgets.Feedback.TaskStates as TaskStates;

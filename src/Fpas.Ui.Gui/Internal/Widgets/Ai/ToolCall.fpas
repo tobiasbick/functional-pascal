@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/ai/tool-call.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Ai.ToolCall;
 
 uses Fpas.Ui.Widgets.Ai.ToolCalls as ToolCalls, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P;

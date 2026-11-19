@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/actions/reactions.md)
 using Fpas.Ui.Gui.Cui.Interop;
 
 namespace Fpas.Ui.Gui.Cui.Widgets.Conversation;

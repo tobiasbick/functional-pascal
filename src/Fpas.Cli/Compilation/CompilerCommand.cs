@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/program-structure/cli.md#inspect-and-invoke-the-compiler)
 using System.Text;
 using System.Text.Json;
 using Fpas.Compiler;

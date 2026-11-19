@@ -30,3 +30,9 @@ null elements when U is a non-nullable reference type. The compiler enforces thi
 rule even when U has not yet been instantiated.
 See [generic routines](../../../docs/pascal/language/functions/generic-routines.md) for
 constraints, nullable semantics, CLR interop, and remaining limits.
+
+## Source files
+
+- [GenericPipeline.fpasproj](GenericPipeline.fpasproj)
+- [Pipelines.fpas](Pipelines.fpas)
+- [main.fpas](main.fpas)

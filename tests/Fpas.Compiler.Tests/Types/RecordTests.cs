@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/types/records.md)
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;

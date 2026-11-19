@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/ai/context-meter.md)
 using Fpas.Ui.Gui.Cui.Interop.Charts;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

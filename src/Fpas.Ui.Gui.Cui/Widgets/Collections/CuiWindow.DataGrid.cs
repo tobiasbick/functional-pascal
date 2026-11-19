@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/data-grid/data-grid.md)
 using Fpas.Ui.Gui.Cui.Widgets.Collections;
 using Fpas.Ui.Gui.Cui.Interop;
 

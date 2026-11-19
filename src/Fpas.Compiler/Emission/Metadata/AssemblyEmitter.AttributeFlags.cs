@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/specs/clr-mapping.md#source-attributes)
 using Fpas.Compiler.Binding.Bound;
 using System.Reflection;
 

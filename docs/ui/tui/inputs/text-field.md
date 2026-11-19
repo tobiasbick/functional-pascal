@@ -35,3 +35,9 @@ Click to place the caret. Left/Right and Backspace/Delete move or delete by grap
 - [Shared API](../../widgets.md#text-field)
 - [GUI text field](../../gui/inputs/text-field.md)
 - [Gallery source](../../../../examples/ui/tui/gallery/QueueSample.fpas)
+
+## Source files
+
+- [LineEditor.fpas](../../../../src/Fpas.Ui.Tui/Internal/Widgets/Inputs/LineEditor.fpas)
+- [src/Fpas.Ui.Tui/Internal/Widgets/Inputs/TextField.fpas](../../../../src/Fpas.Ui.Tui/Internal/Widgets/Inputs/TextField.fpas)
+- [tests/Fixtures/tui/TextField.fpas](../../../../tests/Fixtures/tui/TextField.fpas)

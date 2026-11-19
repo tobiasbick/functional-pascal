@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/editing-tools/property-inspector.md)
 /* Model replacements must invalidate a property text editor's old undo history. */
 #include "../fpas_cui.h"
 #include <stdio.h>

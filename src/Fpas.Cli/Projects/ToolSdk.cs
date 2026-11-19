@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/build/distribution.md#export-the-matching-sdk)
 using System.Reflection;
 using System.Xml.Linq;
 

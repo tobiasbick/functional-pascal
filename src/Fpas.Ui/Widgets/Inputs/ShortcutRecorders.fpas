@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/smart-inputs/shortcut-recorder.md)
+
 unit Fpas.Ui.Widgets.Inputs.ShortcutRecorders;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;

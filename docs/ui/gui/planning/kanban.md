@@ -59,3 +59,16 @@ horizontally to reach columns outside the visible area.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Planning/Board.fpas)
 - [Gallery update function](../../../../examples/ui/gui/gallery/Pages/Planning/Update.fpas)
 - [Planning](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Planning/`
+  - [Kanban.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Planning/Kanban.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Planning/`
+  - [NativeMethods.Kanban.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Planning/NativeMethods.Kanban.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Planning/`
+  - [CuiWindow.Kanban.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Planning/CuiWindow.Kanban.Types.cs)
+  - [CuiWindow.Kanban.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Planning/CuiWindow.Kanban.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/planning/`
+  - [kanban.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/planning/kanban.c)
+  - [kanban.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/planning/kanban.h)

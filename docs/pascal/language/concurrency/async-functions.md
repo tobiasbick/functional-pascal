@@ -39,3 +39,16 @@ Task results may be awaited multiple times under normal .NET rules.
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- `apps/doc-examples/contexts/`
+  - [async-declarations.fpas.txt](../../../../apps/doc-examples/contexts/async-declarations.fpas.txt)
+- `tests/Fpas.Compiler.Tests/Metadata/`
+  - [AsyncStackDepthTests.cs](../../../../tests/Fpas.Compiler.Tests/Metadata/AsyncStackDepthTests.cs)
+- `tests/Fpas.Compiler.Tests/Routines/`
+  - [AsyncDiagnosticsTests.cs](../../../../tests/Fpas.Compiler.Tests/Routines/AsyncDiagnosticsTests.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.Async.cs](../../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.Async.cs)
+- `tests/Fpas.IntegrationTests/Execution/`
+  - [AsyncExecutionTests.cs](../../../../tests/Fpas.IntegrationTests/Execution/AsyncExecutionTests.cs)

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/host.md#window-state-and-placement)
+
 unit GuiGallery.Pages.Desktop.HostActions;
 
 uses

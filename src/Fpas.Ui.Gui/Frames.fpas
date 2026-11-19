@@ -1,3 +1,5 @@
+// [Documentation](../../docs/ui/gui/host.md#invalidation-and-inspection)
+
 unit Fpas.Ui.Gui.Frames;
 
 uses Fpas.Ui.Mvu.Application as Mvu;

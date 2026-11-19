@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/code/log-console.md)
 #ifndef FPAS_CUI_LOG_CONSOLE_H
 #define FPAS_CUI_LOG_CONSOLE_H
 typedef struct { const char *text; double time; int level; } fpas_log_entry;

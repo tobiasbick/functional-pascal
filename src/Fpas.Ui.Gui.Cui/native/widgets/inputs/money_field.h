@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/smart-inputs/money-field.md)
 #ifndef FPAS_MONEY_FIELD_H
 #define FPAS_MONEY_FIELD_H
 /** Draws CUI's text input for a managed decimal draft; C never parses an amount.

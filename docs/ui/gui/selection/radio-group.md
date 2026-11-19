@@ -47,3 +47,7 @@ Click or activate an enabled row with Space or Enter to propose its index. Activ
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Selection/Widgets/RadioGroup.fpas)
 - [Radio cards](radio-cards.md)
 - [Selection](README.md)
+
+## Source files
+
+- [RadioGroup.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/RadioGroup.fpas)

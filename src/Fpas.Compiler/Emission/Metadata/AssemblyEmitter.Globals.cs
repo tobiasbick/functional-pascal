@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/specs/clr-mapping.md#identity-and-representation)
 using Fpas.Compiler.Binding.References;
 using Fpas.Compiler.Binding.Bound;
 using System.Reflection;

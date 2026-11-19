@@ -30,6 +30,19 @@ An equivalent frame keeps its presentation sequence while installing current
 input bindings. Resize resolves the new viewport without invalidating unrelated
 cached subviews.
 
+## Cell presentation
+
+The host lowers the prepared view to terminal elements with cell sizes and
+resolved styles. Arrangement measures and places those elements, producing
+paint operations and a scene of control bounds, focus scopes and scroll
+regions. The painter produces rows of cells from those operations and applies
+focus and hover decoration. The same cells feed the headless snapshot and
+interactive output.
+
+The interactive presenter compares cells with the last successful output and
+emits terminal escape sequences for changed cells. A size change or write error
+triggers a full repaint.
+
 ## Input and controlled state
 
 Tab/Shift+Tab traverse enabled controls in the active scope. An explicit Tab
@@ -88,3 +101,45 @@ an actionable encoding under **App chrome**.
 
 The [CUI inventory](../../cui-widget-inventory.md) records the implemented
 terminal widgets and their behavior.
+
+## Source files
+
+<details>
+<summary>Browse 24 source files</summary>
+
+- `src/Fpas.Processes/Terminal/`
+  - [ConsoleTerminal.cs](../../../src/Fpas.Processes/Terminal/ConsoleTerminal.cs)
+  - [VtInput.cs](../../../src/Fpas.Processes/Terminal/VtInput.cs)
+- `src/Fpas.Ui/TerminalExtensions/`
+  - [Input.fpas](../../../src/Fpas.Ui/TerminalExtensions/Input.fpas)
+  - [Views.fpas](../../../src/Fpas.Ui/TerminalExtensions/Views.fpas)
+- `src/Fpas.Ui.Tui/`
+  - [Application.fpas](../../../src/Fpas.Ui.Tui/Application.fpas)
+  - [Fpas.Ui.Tui.fpasproj](../../../src/Fpas.Ui.Tui/Fpas.Ui.Tui.fpasproj)
+- `src/Fpas.Ui.Tui/Internal/Controls/`
+  - [Activation.fpas](../../../src/Fpas.Ui.Tui/Internal/Controls/Activation.fpas)
+- `src/Fpas.Ui.Tui/Internal/Hosting/`
+  - [GridNotifications.fpas](../../../src/Fpas.Ui.Tui/Internal/Hosting/GridNotifications.fpas)
+  - [Interaction.fpas](../../../src/Fpas.Ui.Tui/Internal/Hosting/Interaction.fpas)
+  - [Session.fpas](../../../src/Fpas.Ui.Tui/Internal/Hosting/Session.fpas)
+- `src/Fpas.Ui.Tui/Internal/Layout/`
+  - [Arrangement.fpas](../../../src/Fpas.Ui.Tui/Internal/Layout/Arrangement.fpas)
+  - [Equivalence.fpas](../../../src/Fpas.Ui.Tui/Internal/Layout/Equivalence.fpas)
+  - [Flexible.fpas](../../../src/Fpas.Ui.Tui/Internal/Layout/Flexible.fpas)
+  - [Measurement.fpas](../../../src/Fpas.Ui.Tui/Internal/Layout/Measurement.fpas)
+  - [Scene.fpas](../../../src/Fpas.Ui.Tui/Internal/Layout/Scene.fpas)
+  - [Stacks.fpas](../../../src/Fpas.Ui.Tui/Internal/Layout/Stacks.fpas)
+- `src/Fpas.Ui.Tui/Internal/Rendering/`
+  - [Decoration.fpas](../../../src/Fpas.Ui.Tui/Internal/Rendering/Decoration.fpas)
+  - [Drawing.fpas](../../../src/Fpas.Ui.Tui/Internal/Rendering/Drawing.fpas)
+  - [Presentation.fpas](../../../src/Fpas.Ui.Tui/Internal/Rendering/Presentation.fpas)
+  - [Themes.fpas](../../../src/Fpas.Ui.Tui/Internal/Rendering/Themes.fpas)
+- `src/Fpas.Ui.Tui/Internal/Terminal/`
+  - [Inputs.fpas](../../../src/Fpas.Ui.Tui/Internal/Terminal/Inputs.fpas)
+- `src/Fpas.Ui.Tui/Internal/View/`
+  - [Lowering.fpas](../../../src/Fpas.Ui.Tui/Internal/View/Lowering.fpas)
+  - [Tree.fpas](../../../src/Fpas.Ui.Tui/Internal/View/Tree.fpas)
+- `tests/Fixtures/tui/`
+  - [CompositionContract.fpas](../../../tests/Fixtures/tui/CompositionContract.fpas)
+
+</details>

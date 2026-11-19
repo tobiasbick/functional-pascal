@@ -206,3 +206,40 @@ Native Windows console, pipe and job behavior is covered by the
 - [Project shape and dependencies](projects.md)
 - [Compiler and source analysis CLI](cli.md)
 - [SDK bootstrap and development](../../build/development.md)
+
+## Source files
+
+<details>
+<summary>Browse 23 source files</summary>
+
+- `src/Fpas.Cli/Projects/`
+  - [ExecutionCommand.cs](../../../src/Fpas.Cli/Projects/ExecutionCommand.cs)
+  - [InitCommand.cs](../../../src/Fpas.Cli/Projects/InitCommand.cs)
+  - [MaintenanceCommand.cs](../../../src/Fpas.Cli/Projects/MaintenanceCommand.cs)
+  - [ProjectFiles.cs](../../../src/Fpas.Cli/Projects/ProjectFiles.cs)
+  - [ProjectReport.cs](../../../src/Fpas.Cli/Projects/ProjectReport.cs)
+  - [Scaffolder.cs](../../../src/Fpas.Cli/Projects/Scaffolder.cs)
+  - [SourceProject.cs](../../../src/Fpas.Cli/Projects/SourceProject.cs)
+  - [TargetCommand.cs](../../../src/Fpas.Cli/Projects/TargetCommand.cs)
+- `src/Fpas.Cli/Reporting/`
+  - [ProjectProgress.cs](../../../src/Fpas.Cli/Reporting/ProjectProgress.cs)
+- `src/Fpas.Debugging/Failures/`
+  - [FailureReportFile.cs](../../../src/Fpas.Debugging/Failures/FailureReportFile.cs)
+  - [FailureRunOptions.cs](../../../src/Fpas.Debugging/Failures/FailureRunOptions.cs)
+  - [FailureRunner.cs](../../../src/Fpas.Debugging/Failures/FailureRunner.cs)
+- `src/Fpas.Workspaces/Processes/`
+  - [ProjectBuildDiagnostics.cs](../../../src/Fpas.Workspaces/Processes/ProjectBuildDiagnostics.cs)
+- `src/Fpas.Workspaces/Projects/`
+  - [ProjectDriver.cs](../../../src/Fpas.Workspaces/Projects/ProjectDriver.cs)
+- `tests/Fpas.IntegrationTests/Projects/`
+  - [BuildRunTests.cs](../../../tests/Fpas.IntegrationTests/Projects/BuildRunTests.cs)
+  - [FailureReportTests.cs](../../../tests/Fpas.IntegrationTests/Projects/FailureReportTests.cs)
+  - [InitTests.cs](../../../tests/Fpas.IntegrationTests/Projects/InitTests.cs)
+  - [MaintenanceTests.cs](../../../tests/Fpas.IntegrationTests/Projects/MaintenanceTests.cs)
+  - [ProjectCliFixture.cs](../../../tests/Fpas.IntegrationTests/Projects/ProjectCliFixture.cs)
+  - [ProjectSignalTests.cs](../../../tests/Fpas.IntegrationTests/Projects/ProjectSignalTests.cs)
+  - [RunOwnershipTests.cs](../../../tests/Fpas.IntegrationTests/Projects/RunOwnershipTests.cs)
+  - [SourceRunTests.cs](../../../tests/Fpas.IntegrationTests/Projects/SourceRunTests.cs)
+  - [WindowsConsoleTests.cs](../../../tests/Fpas.IntegrationTests/Projects/WindowsConsoleTests.cs)
+
+</details>

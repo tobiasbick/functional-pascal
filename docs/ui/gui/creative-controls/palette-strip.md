@@ -45,3 +45,15 @@ swatches and new seed after shuffling. With a null seed, handle
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Pickers/PaletteStrips.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Creative/View.fpas)
 - [Creative controls](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Pickers/`
+  - [PaletteStrip.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Pickers/PaletteStrip.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Pickers/`
+  - [NativeMethods.PaletteStrip.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Pickers/NativeMethods.PaletteStrip.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Pickers/`
+  - [CuiWindow.PaletteStrip.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Pickers/CuiWindow.PaletteStrip.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/pickers/`
+  - [palette_strip.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/palette_strip.c)
+  - [palette_strip.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/palette_strip.h)

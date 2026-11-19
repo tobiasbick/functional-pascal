@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/specs/clr-mapping.md#source-interfaces)
 using Fpas.Compiler.Binding.References;
 using Fpas.Compiler.Binding.Symbols;
 using System.Reflection;

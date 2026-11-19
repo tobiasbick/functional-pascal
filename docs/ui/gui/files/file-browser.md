@@ -54,3 +54,16 @@ an unreadable folder, which the browser reports with `Event.Error`.
 - [Listing types](../../../../src/Fpas.Ui/Widgets/Files/FileListings.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Files/View.fpas)
 - [Files](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Files/`
+  - [FileBrowser.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Files/FileBrowser.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Files/`
+  - [NativeMethods.FileBrowser.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Files/NativeMethods.FileBrowser.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Files/`
+  - [CuiWindow.FileBrowser.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Files/CuiWindow.FileBrowser.Types.cs)
+  - [CuiWindow.FileBrowser.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Files/CuiWindow.FileBrowser.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/files/`
+  - [file_browser.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/files/file_browser.c)
+  - [file_browser.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/files/file_browser.h)

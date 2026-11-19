@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#settings-and-scan-control)
+
 // Settings slice update: edits stay synchronous; index clearing runs in the background.
 unit FpasAmp.Ui.Settings.Update;
 

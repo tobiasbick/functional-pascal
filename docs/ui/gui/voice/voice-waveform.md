@@ -49,3 +49,15 @@ seeks. Apply the proposed fraction to your clip's playback state.
 - [Voice note](voice-note.md)
 - [Voice session](voice-session.md)
 - [Voice](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Audio/`
+  - [VoiceWave.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Audio/VoiceWave.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Audio/`
+  - [NativeMethods.VoiceWave.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Audio/NativeMethods.VoiceWave.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Audio/`
+  - [CuiWindow.VoiceWave.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Audio/CuiWindow.VoiceWave.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/audio/`
+  - [voice_wave.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/audio/voice_wave.c)
+  - [voice_wave.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/audio/voice_wave.h)

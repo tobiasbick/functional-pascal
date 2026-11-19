@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/native-build.md#composite-and-popup-adapters)
 #ifndef FPAS_DISCLOSURE_H
 #define FPAS_DISCLOSURE_H
 

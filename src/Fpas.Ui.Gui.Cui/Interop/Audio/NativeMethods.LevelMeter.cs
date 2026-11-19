@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/audio/level-meter.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

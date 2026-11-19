@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/text-and-display/canvas.md)
+
 unit Fpas.Ui.Widgets.Canvas.Canvases;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L, System as Sys, Fpas.Ui.Widgets.Canvas.Painting as Painting;

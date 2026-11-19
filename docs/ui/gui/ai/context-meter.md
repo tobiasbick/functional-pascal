@@ -44,3 +44,15 @@ adds or removes context. The meter is passive.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Ai/ContextMeters.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [AI](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Ai/`
+  - [ContextMeter.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Ai/ContextMeter.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Ai/`
+  - [NativeMethods.ContextMeter.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Ai/NativeMethods.ContextMeter.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Ai/`
+  - [CuiWindow.ContextMeter.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Ai/CuiWindow.ContextMeter.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/ai/`
+  - [context_meter.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/context_meter.c)
+  - [context_meter.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/context_meter.h)

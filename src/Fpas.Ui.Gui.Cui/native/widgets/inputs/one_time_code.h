@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/inputs/one-time-code.md)
 #ifndef FPAS_ONE_TIME_CODE_H
 #define FPAS_ONE_TIME_CODE_H
 

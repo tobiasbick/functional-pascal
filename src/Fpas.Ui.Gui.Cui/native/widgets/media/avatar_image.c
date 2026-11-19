@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/disclosure/avatar.md)
 typedef struct { cui_texture texture; char *path; } fpas_avatar_image;
 
 static void fpas_avatar_image_free(cui_ctx *ui, void *data) {

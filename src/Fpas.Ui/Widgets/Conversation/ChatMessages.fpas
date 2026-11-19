@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/social-and-media/chat-message.md)
+
 unit Fpas.Ui.Widgets.Conversation.ChatMessages;
 
 uses Fpas.Ui.Elements as E;

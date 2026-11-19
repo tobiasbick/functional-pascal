@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-developer-tools/regex-tester.md)
 #include "../../fpas_cui.h"
 
 static void fpas_regex_tester_retire(cui_ctx *ui, cui_id key) {

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/selection/rating.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_rating(cui_ctx *ui, const char *id, int value, int maximum, int enabled, float star_size) {

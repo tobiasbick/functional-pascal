@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/interop/interfaces.md)
 namespace Fpas.Compiler.Syntax;
 
 internal sealed record InterfaceSyntax(Token Name, bool IsPublic, IReadOnlyList<InterfacePropertySyntax> Properties,

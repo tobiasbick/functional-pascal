@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/developer-tools/keymap.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_keymap(cui_ctx *ui, const char *id, const cui_keymap_binding * bindings, int bindings_count, const char *const * categories, int categories_count, int modifiers, int hide_function_row, int width_kind, float width, int enabled, fpas_dev_result * out) {

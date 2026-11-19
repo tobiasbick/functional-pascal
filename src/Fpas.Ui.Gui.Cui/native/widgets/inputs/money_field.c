@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/smart-inputs/money-field.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_money_field(cui_ctx *ui, const char *id, char *text, size_t capacity,

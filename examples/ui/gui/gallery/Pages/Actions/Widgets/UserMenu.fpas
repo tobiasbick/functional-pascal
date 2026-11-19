@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/actions/user-menu.md)
+
 unit GuiGallery.Pages.Actions.Widgets.UserMenu;
 
 uses

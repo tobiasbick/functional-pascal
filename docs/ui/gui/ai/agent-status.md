@@ -44,3 +44,15 @@ is passive.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [Agent plan](agent-plan.md)
 - [AI](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Ai/`
+  - [AgentStatus.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Ai/AgentStatus.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Ai/`
+  - [NativeMethods.AgentStatus.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Ai/NativeMethods.AgentStatus.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Ai/`
+  - [CuiWindow.AgentStatus.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Ai/CuiWindow.AgentStatus.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/ai/`
+  - [agent_status.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/agent_status.c)
+  - [agent_status.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/agent_status.h)

@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/navigation/pagination.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

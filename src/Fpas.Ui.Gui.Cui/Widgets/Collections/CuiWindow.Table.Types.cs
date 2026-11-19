@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/data-display/table.md)
 using Fpas.Ui.Gui.Cui.Interop;
 
 namespace Fpas.Ui.Gui.Cui.Widgets.Collections;

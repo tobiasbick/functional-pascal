@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/actions/copy-button.md)
+
 unit GuiGallery.Pages.Buttons.Widgets.CopyButton;
 
 uses

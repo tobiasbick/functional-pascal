@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/actions/confirm-button.md)
 using Fpas.Ui.Gui.Cui.Widgets.Actions;
 using Fpas.Ui.Gui.Cui.Interop;
 

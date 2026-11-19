@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/activity-rings.md)
 #ifndef FPAS_CUI_ACTIVITY_RINGS_H
 #define FPAS_CUI_ACTIVITY_RINGS_H
 #include "more_charts.h"

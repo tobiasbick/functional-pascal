@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/actions/reactions.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;

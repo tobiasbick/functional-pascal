@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/motion/README.md)
+
 unit GuiGallery.Pages.Motion.Update;
 
 uses

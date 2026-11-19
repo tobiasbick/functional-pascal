@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/libraries/processes.md)
 using System.Diagnostics;
 
 namespace Fpas.IntegrationTests.Processes.Support;

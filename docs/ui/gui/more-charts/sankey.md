@@ -45,3 +45,10 @@ Hover nodes and flows to inspect their amounts. A click can send `Selection.Node
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/Widgets/Flows.fpas)
 - [Funnel](funnel.md)
 - [More charts](README.md)
+
+## Source files
+
+- [Sankey.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/Sankey.fpas)
+- [CuiWindow.Sankey.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.Sankey.cs)
+- [sankey.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/sankey.c)
+- [sankey.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/sankey.h)

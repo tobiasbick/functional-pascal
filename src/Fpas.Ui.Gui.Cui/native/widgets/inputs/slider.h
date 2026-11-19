@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/selection/slider.md)
 #ifndef FPAS_SLIDER_H
 #define FPAS_SLIDER_H
 

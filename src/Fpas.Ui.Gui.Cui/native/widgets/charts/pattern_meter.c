@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/charts/pattern-meter.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_pattern_meter(cui_ctx *ui, const char *id, const fpas_meter_part *parts, int count,

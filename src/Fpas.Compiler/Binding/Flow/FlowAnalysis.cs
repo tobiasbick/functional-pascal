@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/architecture/compiler.md#syntax-and-binding-boundaries)
 using Fpas.Compiler.Binding.Bound;
 namespace Fpas.Compiler.Binding.Flow;
 

@@ -24,3 +24,7 @@ avatars and role badges for Owner, Admin, Editor and Viewer.
 - [Sidebar appearance controls](../navigation/sidebar.md#appearance-controls)
 - [Overview in the gallery](../../../../examples/ui/gui/gallery/Pages/Overview/View.fpas)
 - [Team card in the gallery](../../../../examples/ui/gui/gallery/Pages/Overview/Widgets/Team.fpas)
+
+## Source files
+
+- [State.fpas](../../../../examples/ui/gui/gallery/Pages/Overview/State.fpas)

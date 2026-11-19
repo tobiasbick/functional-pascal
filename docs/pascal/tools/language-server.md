@@ -168,3 +168,51 @@ Invalid command arguments exit with 2 and process cancellation with 130.
 - [Compiler CLI](../program-structure/cli.md)
 - [Diagnostics](diagnostics.md)
 - [Source formatting](fmt-style.md)
+
+## Source files
+
+<details>
+<summary>Browse 32 source files</summary>
+
+- `src/Fpas.Cli/LanguageServer/`
+  - [LspCommand.cs](../../../src/Fpas.Cli/LanguageServer/LspCommand.cs)
+- `src/Fpas.Compiler/Analysis/`
+  - [EditorAnalysis.cs](../../../src/Fpas.Compiler/Analysis/EditorAnalysis.cs)
+  - [EditorImports.cs](../../../src/Fpas.Compiler/Analysis/EditorImports.cs)
+- `src/Fpas.Compiler/Binding/Bodies/`
+  - [Binder.Editor.cs](../../../src/Fpas.Compiler/Binding/Bodies/Binder.Editor.cs)
+- `src/Fpas.Compiler/Binding/References/`
+  - [ReferenceCatalog.Editor.cs](../../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.Editor.cs)
+- `src/Fpas.LanguageServer/Hosting/`
+  - [ServerSession.CodeActions.cs](../../../src/Fpas.LanguageServer/Hosting/ServerSession.CodeActions.cs)
+  - [ServerSession.Diagnostics.cs](../../../src/Fpas.LanguageServer/Hosting/ServerSession.Diagnostics.cs)
+  - [ServerSession.Documents.cs](../../../src/Fpas.LanguageServer/Hosting/ServerSession.Documents.cs)
+  - [ServerSession.Editor.cs](../../../src/Fpas.LanguageServer/Hosting/ServerSession.Editor.cs)
+  - [ServerSession.Features.cs](../../../src/Fpas.LanguageServer/Hosting/ServerSession.Features.cs)
+  - [ServerSession.Hierarchy.cs](../../../src/Fpas.LanguageServer/Hosting/ServerSession.Hierarchy.cs)
+  - [ServerSession.IntelliSense.cs](../../../src/Fpas.LanguageServer/Hosting/ServerSession.IntelliSense.cs)
+  - [ServerSession.Refactoring.cs](../../../src/Fpas.LanguageServer/Hosting/ServerSession.Refactoring.cs)
+  - [ServerSession.Syntax.cs](../../../src/Fpas.LanguageServer/Hosting/ServerSession.Syntax.cs)
+- `src/Fpas.LanguageServer/Protocol/`
+  - [DiagnosticProjection.cs](../../../src/Fpas.LanguageServer/Protocol/DiagnosticProjection.cs)
+  - [FeatureProjection.cs](../../../src/Fpas.LanguageServer/Protocol/FeatureProjection.cs)
+  - [FileUris.cs](../../../src/Fpas.LanguageServer/Protocol/FileUris.cs)
+  - [ProtocolJson.cs](../../../src/Fpas.LanguageServer/Protocol/ProtocolJson.cs)
+- `src/Fpas.Workspaces/Queries/`
+  - [SourceQuery.Editor.cs](../../../src/Fpas.Workspaces/Queries/SourceQuery.Editor.cs)
+- `tests/Fpas.IntegrationTests/LanguageServer/`
+  - [DiagnosticBurstTests.cs](../../../tests/Fpas.IntegrationTests/LanguageServer/DiagnosticBurstTests.cs)
+  - [LspCancellationTests.cs](../../../tests/Fpas.IntegrationTests/LanguageServer/LspCancellationTests.cs)
+  - [LspCliParityTests.cs](../../../tests/Fpas.IntegrationTests/LanguageServer/LspCliParityTests.cs)
+  - [LspDiagnosticsTests.cs](../../../tests/Fpas.IntegrationTests/LanguageServer/LspDiagnosticsTests.cs)
+  - [LspDocumentationTests.cs](../../../tests/Fpas.IntegrationTests/LanguageServer/LspDocumentationTests.cs)
+  - [LspEditorTests.cs](../../../tests/Fpas.IntegrationTests/LanguageServer/LspEditorTests.cs)
+  - [LspFeatureTests.cs](../../../tests/Fpas.IntegrationTests/LanguageServer/LspFeatureTests.cs)
+  - [LspLifecycleTests.cs](../../../tests/Fpas.IntegrationTests/LanguageServer/LspLifecycleTests.cs)
+  - [LspProbe.cs](../../../tests/Fpas.IntegrationTests/LanguageServer/LspProbe.cs)
+  - [LspRefactoringTests.cs](../../../tests/Fpas.IntegrationTests/LanguageServer/LspRefactoringTests.cs)
+  - [LspRenameBehaviorTests.cs](../../../tests/Fpas.IntegrationTests/LanguageServer/LspRenameBehaviorTests.cs)
+  - [LspRequestLifecycleTests.cs](../../../tests/Fpas.IntegrationTests/LanguageServer/LspRequestLifecycleTests.cs)
+  - [LspScopeTests.cs](../../../tests/Fpas.IntegrationTests/LanguageServer/LspScopeTests.cs)
+
+</details>

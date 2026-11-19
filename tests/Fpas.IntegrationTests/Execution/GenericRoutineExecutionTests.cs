@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/functions/generic-routines.md)
 using Fpas.IntegrationTests.Support;
 namespace Fpas.IntegrationTests.Execution;
 

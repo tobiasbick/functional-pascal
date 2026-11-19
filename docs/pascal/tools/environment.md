@@ -89,3 +89,15 @@ and offline SDK export.
 - [Tools](README.md)
 - [Project commands](../program-structure/project-commands.md)
 - [Debugging](debugging.md)
+
+## Source files
+
+- `src/Fpas.Cli/Toolchain/`
+  - [DotnetInspection.cs](../../../src/Fpas.Cli/Toolchain/DotnetInspection.cs)
+  - [EnvironmentCommand.cs](../../../src/Fpas.Cli/Toolchain/EnvironmentCommand.cs)
+  - [EnvironmentInspection.cs](../../../src/Fpas.Cli/Toolchain/EnvironmentInspection.cs)
+  - [EnvironmentReport.cs](../../../src/Fpas.Cli/Toolchain/EnvironmentReport.cs)
+  - [InstalledSdkInspection.cs](../../../src/Fpas.Cli/Toolchain/InstalledSdkInspection.cs)
+- `tests/Fpas.IntegrationTests/Toolchain/`
+  - [EnvironmentCommandTests.cs](../../../tests/Fpas.IntegrationTests/Toolchain/EnvironmentCommandTests.cs)
+  - [EnvironmentProbe.cs](../../../tests/Fpas.IntegrationTests/Toolchain/EnvironmentProbe.cs)

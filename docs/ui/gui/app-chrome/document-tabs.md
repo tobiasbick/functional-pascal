@@ -50,3 +50,16 @@ Resolve the close to a document key before changing the list.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Desktop/Editor.fpas)
 - [Navigation tabs](../navigation/tabs.md)
 - [Chapter index](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Desktop/`
+  - [DocumentTabs.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Desktop/DocumentTabs.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Desktop/`
+  - [NativeMethods.DocumentTabs.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Desktop/NativeMethods.DocumentTabs.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Desktop/`
+  - [CuiWindow.DocumentTabs.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Desktop/CuiWindow.DocumentTabs.Types.cs)
+  - [CuiWindow.DocumentTabs.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Desktop/CuiWindow.DocumentTabs.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/desktop/`
+  - [document_tabs.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/desktop/document_tabs.c)
+  - [document_tabs.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/desktop/document_tabs.h)

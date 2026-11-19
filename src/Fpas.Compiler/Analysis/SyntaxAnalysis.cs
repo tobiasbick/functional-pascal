@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/compiler.md#compiler-api-and-output)
 using Fpas.Compiler.Syntax;
 using Fpas.Compiler.Syntax.Parsing;
 

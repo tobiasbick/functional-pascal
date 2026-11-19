@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/workspaces.md#language-server-adapter)
 using Fpas.LanguageServer.Protocol;
 using Fpas.LanguageServer.Transport;
 using Fpas.Workspaces.Live;

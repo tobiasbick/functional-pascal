@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-native.md#verification)
 using System.IO.Compression;
 using System.Text.Json;
 using Fpas.IntegrationTests.Build;

@@ -63,3 +63,20 @@ the model value. Hidden or removed text rows release their editing state.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Editors/PropertyInspectors.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/EditingTools/View.fpas)
 - [Editing tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Editors/`
+  - [PropertyInspector.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Editors/PropertyInspector.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Editors/`
+  - [NativeMethods.PropertyInspector.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Editors/NativeMethods.PropertyInspector.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Editors/`
+  - [CuiWindow.PropertyInspector.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Editors/CuiWindow.PropertyInspector.Types.cs)
+  - [CuiWindow.PropertyInspector.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Editors/CuiWindow.PropertyInspector.cs)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [property_text_replacement.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/property_text_replacement.c)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/editors/`
+  - [property_inspector.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/editors/property_inspector.c)
+  - [property_inspector.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/editors/property_inspector.h)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Inputs/`
+  - [CuiPropertyInspectorTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Inputs/CuiPropertyInspectorTests.cs)

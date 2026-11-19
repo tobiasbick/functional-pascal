@@ -47,3 +47,15 @@ and `Environment` to find the affected cell and store its `On` and
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/FeatureFlagEditors.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/View.fpas)
 - [More developer tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [FeatureFlags.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/FeatureFlags.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.FeatureFlags.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.FeatureFlags.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.FeatureFlags.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.FeatureFlags.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [feature_flags.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/feature_flags.c)
+  - [feature_flags.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/feature_flags.h)

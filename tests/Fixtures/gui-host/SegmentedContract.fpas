@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/ui/gui/actions/segmented-control.md)
+
 unit GallerySegmentedContract;
 
 uses

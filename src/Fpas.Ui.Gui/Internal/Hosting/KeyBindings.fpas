@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/host.md#application-shortcuts)
+
 unit Fpas.Ui.Gui.Internal.Hosting.KeyBindings;
 
 uses

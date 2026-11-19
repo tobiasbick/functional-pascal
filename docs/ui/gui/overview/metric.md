@@ -54,3 +54,15 @@ them without emitting input events. Use a responsive Grid for several tiles.
 - [Grid](../feedback/grid.md)
 - [Sparkline](../charts/sparkline.md)
 - [Overview](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Charts/`
+  - [Metric.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/Metric.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Charts/`
+  - [NativeMethods.Metric.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Charts/NativeMethods.Metric.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Charts/`
+  - [CuiWindow.Metric.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.Metric.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/charts/`
+  - [metric.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/metric.c)
+  - [metric.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/metric.h)

@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/specs/clr-mapping.md#identity-and-representation)
 using System.Buffers.Binary;
 using System.Reflection.Metadata;
 using System.Security.Cryptography;

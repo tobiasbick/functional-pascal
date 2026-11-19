@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/smart-inputs/money-field.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

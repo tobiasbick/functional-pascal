@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/library.md#metadata-and-queries)
+
 // Read cancellation, ambiguous fingerprints, unavailable sources and user-store errors.
 unit FpasAmp.Library.Tests.MetadataSafety;
 

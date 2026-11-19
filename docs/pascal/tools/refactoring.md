@@ -184,3 +184,36 @@ Plans expire after five minutes and each application consumes its preview.
 - [Compiler and source analysis CLI](../program-structure/cli.md)
 - [Diagnostics and automatic corrections](diagnostics.md)
 - [Workspace architecture](../../architecture/workspaces.md)
+
+## Source files
+
+<details>
+<summary>Browse 21 source files</summary>
+
+- `src/Fpas.Cli/Refactoring/`
+  - [RefactorCommand.cs](../../../src/Fpas.Cli/Refactoring/RefactorCommand.cs)
+  - [RefactorReport.cs](../../../src/Fpas.Cli/Refactoring/RefactorReport.cs)
+- `src/Fpas.Compiler/Analysis/`
+  - [NamedCallArguments.cs](../../../src/Fpas.Compiler/Analysis/NamedCallArguments.cs)
+  - [RefactoringSyntax.cs](../../../src/Fpas.Compiler/Analysis/RefactoringSyntax.cs)
+- `src/Fpas.Workspaces/Refactoring/`
+  - [CheckedRefactoring.cs](../../../src/Fpas.Workspaces/Refactoring/CheckedRefactoring.cs)
+  - [ExtractionRefactoring.cs](../../../src/Fpas.Workspaces/Refactoring/ExtractionRefactoring.cs)
+  - [FileRefactorPlans.cs](../../../src/Fpas.Workspaces/Refactoring/FileRefactorPlans.cs)
+  - [ImportRefactoring.cs](../../../src/Fpas.Workspaces/Refactoring/ImportRefactoring.cs)
+  - [NameArgumentsRefactoring.cs](../../../src/Fpas.Workspaces/Refactoring/NameArgumentsRefactoring.cs)
+  - [ParameterRefactoring.cs](../../../src/Fpas.Workspaces/Refactoring/ParameterRefactoring.cs)
+  - [RefactorPlan.cs](../../../src/Fpas.Workspaces/Refactoring/RefactorPlan.cs)
+  - [RenameBindings.cs](../../../src/Fpas.Workspaces/Refactoring/RenameBindings.cs)
+  - [RenameOverlay.cs](../../../src/Fpas.Workspaces/Refactoring/RenameOverlay.cs)
+  - [RenameService.cs](../../../src/Fpas.Workspaces/Refactoring/RenameService.cs)
+- `tests/Fpas.IntegrationTests/Refactoring/`
+  - [NameArgumentsTests.cs](../../../tests/Fpas.IntegrationTests/Refactoring/NameArgumentsTests.cs)
+  - [RemoveParameterTests.cs](../../../tests/Fpas.IntegrationTests/Refactoring/RemoveParameterTests.cs)
+  - [RenameCliTests.cs](../../../tests/Fpas.IntegrationTests/Refactoring/RenameCliTests.cs)
+  - [RenameFixture.cs](../../../tests/Fpas.IntegrationTests/Refactoring/RenameFixture.cs)
+  - [RenameGraphTests.cs](../../../tests/Fpas.IntegrationTests/Refactoring/RenameGraphTests.cs)
+  - [RenamePlanTests.cs](../../../tests/Fpas.IntegrationTests/Refactoring/RenamePlanTests.cs)
+  - [RenameSemanticTests.cs](../../../tests/Fpas.IntegrationTests/Refactoring/RenameSemanticTests.cs)
+
+</details>

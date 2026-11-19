@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/selection/slider.md)
+
 unit Fpas.Ui.Widgets.Inputs.Sliders;
 
 uses Fpas.Ui.Elements as E;

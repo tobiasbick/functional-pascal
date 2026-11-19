@@ -40,3 +40,10 @@ CUI draws and animates the placeholder. Replace it with the loaded content when 
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/View.fpas)
 - [Skeleton group](skeleton-group.md)
 - [Feedback](README.md)
+
+## Source files
+
+- [Skeleton.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Feedback/Skeleton.fpas)
+- [skeleton.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/skeleton.c)
+- [SkeletonContract.fpas](../../../../tests/Fixtures/gui-host/SkeletonContract.fpas)
+- [CuiSkeletonTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Layout/CuiSkeletonTests.cs)

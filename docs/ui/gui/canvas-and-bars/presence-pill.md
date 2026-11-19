@@ -44,3 +44,15 @@ is passive.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Canvas/View.fpas)
 - [Live cursors](live-cursors.md)
 - [Canvas and bars](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Canvas/`
+  - [PresencePill.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Canvas/PresencePill.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Canvas/`
+  - [NativeMethods.PresencePill.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Canvas/NativeMethods.PresencePill.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Canvas/`
+  - [CuiWindow.PresencePill.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Canvas/CuiWindow.PresencePill.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/canvas/`
+  - [presence_pill.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/canvas/presence_pill.c)
+  - [presence_pill.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/canvas/presence_pill.h)

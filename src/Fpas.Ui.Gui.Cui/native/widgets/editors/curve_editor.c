@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/editing-tools/curve-editor.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_curve_editor(cui_ctx *ui, const char *id, cui_curve_key *keys, int *count, int capacity, int *selected, int *added, int *removed, const fpas_curve_options *settings) {

@@ -2,7 +2,11 @@
 
 Build the private native `fpas_cui` module from the pinned
 [CUI source pair](../../../third-party/cui/UPSTREAM.md). The FPAS CMake target
-links the platform libraries. `fpas_cui.c` includes the generated `cui.c` and
+links the platform libraries.
+
+## Bridge translation unit
+
+`fpas_cui.c` includes the generated `cui.c` and
 the adapters that access its private types in the same translation unit.
 `host/bridge.c` handles window options, screenshots and Win32 live-resize callbacks.
 [`fpas_cui.h`](../../../src/Fpas.Ui.Gui.Cui/native/fpas_cui.h) declares the native adapters for layout, focus, text
@@ -13,6 +17,8 @@ Reuse native CUI primitives before adding adapters. Group adapters by topic in
 `widgets/<topic>/`; `fpas_cui.c` includes them after the shared helpers to contain
 private CUI types within the native bridge. Managed bindings are partial files
 on `CuiWindow` and `NativeMethods`. Compositions need no additional C entry point.
+
+## Native input adapters
 
 Text areas retain CUI's own paint callback and direction-specific wheel routing.
 The code-box adapter forwards CUI's completion event through
@@ -31,6 +37,8 @@ The single-date calendar and date picker expose up to 45 native parts: 42 day
 cells and the title/page arrows, or twelve month/year choices and those three
 header controls. Their adapters use CUI's stable navigation IDs across views.
 Range calendars retain their separate native navigation IDs.
+
+## Action captions and identity
 
 `widgets/actions/button.c` passes the portable button options to CUI and replaces
 its label text after creating the native label slot. This keeps literal
@@ -62,6 +70,13 @@ focus requests and confirmation state for the managed host.
 and keyed inspection. CUI handles keyboard selection. The adapter releases the
 popup when its control disappears from the view.
 
+## Composite and popup adapters
+
+Accordion and expandable-card scopes use CUI's native begin/end pairs.
+Expandable text retains its native local state and optional expansion link.
+The managed bridge exposes header nodes separately from each scope's outer
+layout node.
+
 `widgets/overlays/menu.c` calls CUI's menu begin/item/label/separator
 primitives and exposes keyed commands, input permission, inspection and literal
 captions. CUI owns rendering, placement and navigation. The native menu test
@@ -74,6 +89,14 @@ registration; CUI owns hit testing, pointer positioning, rendering and input.
 Context-popup ownership is separate from the target's widget state. Context
 menus use the same command conversion, rows, inspection and retirement paths
 as dropdowns. The pixel test also compares a context popup with direct CUI.
+
+## Feedback adapters
+
+Alerts, progress bars, spinners and capacity meters call CUI directly. CUI
+owns dismissal, numeric formatting, threshold colors and motion. The adapter
+supplies stable IDs and reports the state needed to construct the next view.
+
+## Native control lifetime
 
 `host/control_state.c` owns native companion-state and popup retirement. A single
 forget operation retires a removed control; changing a control's kind retires
@@ -125,6 +148,8 @@ time and `--config Release` at build time. Run CTest with `-C Release` and find
 the outputs in the build directory's `Release/` subdirectory. Keep the shared
 import library and static archive in separate build directories.
 
+## Native regression tests
+
 The optional smoke target is an independent C consumer linked through
 `fpas::cui`. It initializes the bundled fonts, verifies software-rendered pixels,
 and checks copy, hold and split-button behavior. Dedicated tests cover confirm,
@@ -132,6 +157,8 @@ status, segments, icons, menus, disclosures and feedback, including widget pixel
 comparisons against direct CUI calls. These tests run without a display.
 On Windows, the live-resize test creates a
 hidden window and verifies callback registration and detachment.
+
+## Exported symbols
 
 For Linux ABI inspection, check public symbols in each output:
 
@@ -145,5 +172,74 @@ Static builds omit shared-library import/export definitions and use position
 independent code for final NativeAOT linking. MSVC builds the static archive
 with `/MT` in both configurations to match the Windows NativeAOT runtime.
 
-The [managed project](cui.md) invokes this build through MSBuild.
+## MSBuild integration
+
+The [managed project](cui.md) invokes CMake incrementally through MSBuild for a
+source build. The build outputs include the shared library and accompanying
+notices. The [distribution build](../../build/distribution.md#native-cui-assets)
+supplies both native linkages for packaging.
 Redistributing either library requires its accompanying upstream license notices.
+
+## Source files
+
+<details>
+<summary>Browse 38 source files</summary>
+
+- `src/Fpas.Ui.Gui.Cui/Build/`
+  - [Native.targets](../../../src/Fpas.Ui.Gui.Cui/Build/Native.targets)
+- `src/Fpas.Ui.Gui.Cui/`
+  - [Fpas.Ui.Gui.Cui.csproj](../../../src/Fpas.Ui.Gui.Cui/Fpas.Ui.Gui.Cui.csproj)
+- `src/Fpas.Ui.Gui.Cui/Interop/Containers/`
+  - [NativeMethods.Disclosure.cs](../../../src/Fpas.Ui.Gui.Cui/Interop/Containers/NativeMethods.Disclosure.cs)
+- `src/Fpas.Ui.Gui.Cui/Interop/Feedback/`
+  - [NativeMethods.Feedback.cs](../../../src/Fpas.Ui.Gui.Cui/Interop/Feedback/NativeMethods.Feedback.cs)
+- `src/Fpas.Ui.Gui.Cui/Interop/Overlays/`
+  - [NativeMethods.Menu.cs](../../../src/Fpas.Ui.Gui.Cui/Interop/Overlays/NativeMethods.Menu.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Containers/`
+  - [CuiWindow.Disclosure.cs](../../../src/Fpas.Ui.Gui.Cui/Widgets/Containers/CuiWindow.Disclosure.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Feedback/`
+  - [CuiWindow.Feedback.cs](../../../src/Fpas.Ui.Gui.Cui/Widgets/Feedback/CuiWindow.Feedback.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.Editor.Types.cs](../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.Editor.Types.cs)
+  - [CuiWindow.Editor.cs](../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.Editor.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Overlays/`
+  - [CuiWindow.Menu.Types.cs](../../../src/Fpas.Ui.Gui.Cui/Widgets/Overlays/CuiWindow.Menu.Types.cs)
+  - [CuiWindow.Menu.cs](../../../src/Fpas.Ui.Gui.Cui/Widgets/Overlays/CuiWindow.Menu.cs)
+- `src/Fpas.Ui.Gui.Cui/native/`
+  - [CMakeLists.txt](../../../src/Fpas.Ui.Gui.Cui/native/CMakeLists.txt)
+  - [fpas_cui.c](../../../src/Fpas.Ui.Gui.Cui/native/fpas_cui.c)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [api_extensions.c](../../../src/Fpas.Ui.Gui.Cui/native/tests/api_extensions.c)
+  - [disclosure.c](../../../src/Fpas.Ui.Gui.Cui/native/tests/disclosure.c)
+  - [feedback.c](../../../src/Fpas.Ui.Gui.Cui/native/tests/feedback.c)
+  - [link_render.c](../../../src/Fpas.Ui.Gui.Cui/native/tests/link_render.c)
+  - [menu.c](../../../src/Fpas.Ui.Gui.Cui/native/tests/menu.c)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/actions/`
+  - [morph_button.c](../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/morph_button.c)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/containers/`
+  - [disclosure.c](../../../src/Fpas.Ui.Gui.Cui/native/widgets/containers/disclosure.c)
+  - [disclosure.h](../../../src/Fpas.Ui.Gui.Cui/native/widgets/containers/disclosure.h)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/feedback/`
+  - [feedback.c](../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/feedback.c)
+  - [feedback.h](../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/feedback.h)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [text_editor.c](../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/text_editor.c)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/overlays/`
+  - [menu.c](../../../src/Fpas.Ui.Gui.Cui/native/widgets/overlays/menu.c)
+  - [menu.h](../../../src/Fpas.Ui.Gui.Cui/native/widgets/overlays/menu.h)
+  - [modal.c](../../../src/Fpas.Ui.Gui.Cui/native/widgets/overlays/modal.c)
+- `tests/Fixtures/gui/`
+  - [GuiInterop.fpasproj](../../../tests/Fixtures/gui/GuiInterop.fpasproj)
+  - [GuiPackaged.fpasproj](../../../tests/Fixtures/gui/GuiPackaged.fpasproj)
+  - [main.fpas](../../../tests/Fixtures/gui/main.fpas)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Packaging/`
+  - [FpasProjectTests.Publishing.cs](../../../tests/Fpas.Ui.Gui.Cui.Tests/Packaging/FpasProjectTests.Publishing.cs)
+  - [FpasProjectTests.cs](../../../tests/Fpas.Ui.Gui.Cui.Tests/Packaging/FpasProjectTests.cs)
+  - [GuiPackageFixture.cs](../../../tests/Fpas.Ui.Gui.Cui.Tests/Packaging/GuiPackageFixture.cs)
+  - [GuiPublishingTests.X11.cs](../../../tests/Fpas.Ui.Gui.Cui.Tests/Packaging/GuiPublishingTests.X11.cs)
+  - [GuiPublishingTests.cs](../../../tests/Fpas.Ui.Gui.Cui.Tests/Packaging/GuiPublishingTests.cs)
+  - [NativeDependencies.cs](../../../tests/Fpas.Ui.Gui.Cui.Tests/Packaging/NativeDependencies.cs)
+  - [X11Input.Properties.cs](../../../tests/Fpas.Ui.Gui.Cui.Tests/Packaging/X11Input.Properties.cs)
+  - [X11Input.cs](../../../tests/Fpas.Ui.Gui.Cui.Tests/Packaging/X11Input.cs)
+
+</details>

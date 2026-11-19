@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/navigation/breadcrumb.md)
 #ifndef FPAS_BREADCRUMB_H
 #define FPAS_BREADCRUMB_H
 

@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/smart-inputs/money-field.md)
 using Fpas.Ui.Gui.Cui.Interop;
 using Fpas.Ui.Gui.Cui.Widgets.Inputs;
 using System.Text;

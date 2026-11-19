@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/ui/tui/text-and-display/cell-grid.md)
+
 unit Fpas.Ui.TerminalExtensions.CellGrids;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Widgets.Developer.Terminal as T, System as Sys;

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/batch-debugging.md)
 using System.Text;
 using Fpas.Tests.Support;
 

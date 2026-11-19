@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/capture/signature-pad.md)
 using System.Runtime.InteropServices;
 using Fpas.Ui.Gui.Cui.Interop;
 

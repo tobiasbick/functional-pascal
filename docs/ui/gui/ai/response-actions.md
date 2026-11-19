@@ -44,3 +44,16 @@ and handle regeneration or sharing in the application.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Ai/ResponseActions.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [AI](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Ai/`
+  - [ResponseActions.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Ai/ResponseActions.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Ai/`
+  - [NativeMethods.ResponseActions.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Ai/NativeMethods.ResponseActions.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Ai/`
+  - [CuiWindow.ResponseActions.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Ai/CuiWindow.ResponseActions.Types.cs)
+  - [CuiWindow.ResponseActions.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Ai/CuiWindow.ResponseActions.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/ai/`
+  - [response_actions.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/response_actions.c)
+  - [response_actions.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/response_actions.h)

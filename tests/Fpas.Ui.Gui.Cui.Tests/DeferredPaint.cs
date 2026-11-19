@@ -1,3 +1,4 @@
+// [Documentation](../coverage.md#native-gui)
 using System.Runtime.InteropServices;
 using Fpas.Tests.Support;
 

@@ -1,3 +1,4 @@
+// [Documentation](../README.md)
 import path from 'node:path';
 import * as vscode from 'vscode';
 import { ClientSession } from './client';

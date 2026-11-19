@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/instruments/readout.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_readout(cui_ctx *ui, const char *id, const char *label, const char *value,

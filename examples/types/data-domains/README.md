@@ -28,3 +28,9 @@ system
 See [data domains](../../../docs/pascal/language/types/data-domains.md) for wrapping,
 bounds, and cross-assembly use, and [CLR mapping](../../../docs/specs/clr-mapping.md)
 for emitted signatures and metadata contracts.
+
+## Source files
+
+- [DataDomains.fpasproj](DataDomains.fpasproj)
+- [main.fpas](main.fpas)
+- [types.fpas](types.fpas)

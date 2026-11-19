@@ -1,3 +1,5 @@
+// [Documentation](README.md)
+
 async program LoopDemo;
 
 uses System.Console as Console, System.Threading.Tasks as Tasks;

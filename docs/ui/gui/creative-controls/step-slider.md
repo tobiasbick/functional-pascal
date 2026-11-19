@@ -45,3 +45,15 @@ value on a change. Use that stop for the operation when `Action` is true.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/StepSliders.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Creative/View.fpas)
 - [Creative controls](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [StepSlider.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/StepSlider.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.StepSlider.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.StepSlider.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.StepSlider.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.StepSlider.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [step_slider.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/step_slider.c)
+  - [step_slider.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/step_slider.h)

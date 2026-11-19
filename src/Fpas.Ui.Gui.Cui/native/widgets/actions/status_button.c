@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/actions/status-button.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_status_button(cui_ctx *ui, const char *id, const char *label, int status,

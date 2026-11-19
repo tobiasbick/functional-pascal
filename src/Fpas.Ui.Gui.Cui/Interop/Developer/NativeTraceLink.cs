@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/developer-tools/trace-viewer.md)
 using System.Runtime.InteropServices;
 
 namespace Fpas.Ui.Gui.Cui.Interop.Developer;

@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/social-and-media/presence.md)
+
 unit Fpas.Ui.Widgets.Conversation.Presences;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as Charts;

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/editing-tools/gradient-editor.md)
 #ifndef FPAS_CUI_GRADIENT_EDITOR_H
 #define FPAS_CUI_GRADIENT_EDITOR_H
 /** Draws editable color stops and returns a model proposal.

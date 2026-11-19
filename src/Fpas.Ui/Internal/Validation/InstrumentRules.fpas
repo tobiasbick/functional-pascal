@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#code-blocks-json-and-instruments)
+
 unit Fpas.Ui.Internal.Validation.InstrumentRules;
 
 uses

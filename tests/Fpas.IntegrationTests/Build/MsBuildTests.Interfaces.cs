@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/interop/interfaces.md)
 using Fpas.Tests.Support;
 
 namespace Fpas.IntegrationTests.Build;

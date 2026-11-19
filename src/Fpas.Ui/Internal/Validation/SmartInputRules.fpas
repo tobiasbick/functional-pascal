@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#smart-inputs)
+
 unit Fpas.Ui.Internal.Validation.SmartInputRules;
 
 uses

@@ -19,3 +19,8 @@ of clickable swatches. These widgets require the GUI host.
 - [Link](../disclosure/link.md)
 - [Avatar](../disclosure/avatar.md)
 - [Text and display in the gallery](../../../../examples/ui/gui/gallery/Pages/Display/View.fpas)
+
+## Source files
+
+- [display.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/display.c)
+- [DisplayContract.fpas](../../../../tests/Fixtures/gui-host/DisplayContract.fpas)

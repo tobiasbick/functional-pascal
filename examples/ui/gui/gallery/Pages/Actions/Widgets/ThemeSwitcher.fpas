@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/actions/theme-switcher.md)
+
 unit GuiGallery.Pages.Actions.Widgets.ThemeSwitcher;
 
 uses

@@ -127,3 +127,35 @@ and [FSharp.Core debugger views](https://github.com/dotnet/fsharp/blob/main/src/
 - [Closures](closures.md)
 - [Async lowering](async-and-cleanup.md)
 - [Profiling](../pascal/tools/profiling.md)
+
+## Source files
+
+<details>
+<summary>Browse 18 source files</summary>
+
+- `src/Fpas.Compiler/Emission/Debugging/`
+  - [PortableDebugInfo.Storage.cs](../../src/Fpas.Compiler/Emission/Debugging/PortableDebugInfo.Storage.cs)
+  - [PortableDebugInfo.cs](../../src/Fpas.Compiler/Emission/Debugging/PortableDebugInfo.cs)
+- `src/Fpas.Compiler/Emission/Metadata/`
+  - [AssemblyEmitter.DebugAttributes.cs](../../src/Fpas.Compiler/Emission/Metadata/AssemblyEmitter.DebugAttributes.cs)
+  - [AssemblyEmitter.DebugProxies.cs](../../src/Fpas.Compiler/Emission/Metadata/AssemblyEmitter.DebugProxies.cs)
+- `src/Fpas.Debugging/Symbols/`
+  - [MetadataImage.Contracts.cs](../../src/Fpas.Debugging/Symbols/MetadataImage.Contracts.cs)
+  - [MetadataImage.SourceShapes.cs](../../src/Fpas.Debugging/Symbols/MetadataImage.SourceShapes.cs)
+  - [MetadataImage.cs](../../src/Fpas.Debugging/Symbols/MetadataImage.cs)
+  - [ModuleSymbols.Async.cs](../../src/Fpas.Debugging/Symbols/ModuleSymbols.Async.cs)
+  - [ModuleSymbols.Frames.cs](../../src/Fpas.Debugging/Symbols/ModuleSymbols.Frames.cs)
+  - [ModuleSymbols.Storage.cs](../../src/Fpas.Debugging/Symbols/ModuleSymbols.Storage.cs)
+  - [ModuleSymbols.cs](../../src/Fpas.Debugging/Symbols/ModuleSymbols.cs)
+  - [StoredTypeSignature.cs](../../src/Fpas.Debugging/Symbols/StoredTypeSignature.cs)
+  - [SymbolCatalog.cs](../../src/Fpas.Debugging/Symbols/SymbolCatalog.cs)
+- `tests/Fpas.Compiler.Tests/Metadata/`
+  - [AsyncDebugInfoTests.cs](../../tests/Fpas.Compiler.Tests/Metadata/AsyncDebugInfoTests.cs)
+  - [DebuggerAttributeTests.cs](../../tests/Fpas.Compiler.Tests/Metadata/DebuggerAttributeTests.cs)
+  - [PortableDebugInfoTests.cs](../../tests/Fpas.Compiler.Tests/Metadata/PortableDebugInfoTests.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.DebugSymbols.cs](../../tests/Fpas.IntegrationTests/Build/MsBuildTests.DebugSymbols.cs)
+- `tests/Fpas.IntegrationTests/Cli/`
+  - [DebugSymbolsCliTests.cs](../../tests/Fpas.IntegrationTests/Cli/DebugSymbolsCliTests.cs)
+
+</details>

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/creative-controls/option-action.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Actions.OptionAction;
 
 uses

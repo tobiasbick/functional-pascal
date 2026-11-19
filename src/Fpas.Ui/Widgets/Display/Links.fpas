@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/disclosure/link.md)
+
 unit Fpas.Ui.Widgets.Display.Links;
 
 uses Fpas.Ui.Elements as E;

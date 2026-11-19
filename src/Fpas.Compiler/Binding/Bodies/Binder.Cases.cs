@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/language/pattern-matching/exhaustiveness.md)
 using Fpas.Compiler.Binding.Types;
 using Fpas.Compiler.Binding.Symbols;
 using Fpas.Compiler.Binding.Flow;

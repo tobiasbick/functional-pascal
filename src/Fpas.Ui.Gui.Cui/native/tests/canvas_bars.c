@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/canvas-and-bars/README.md)
 #include "../fpas_cui.h"
 #include <stdio.h>
 #include <math.h>

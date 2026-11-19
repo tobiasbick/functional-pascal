@@ -45,3 +45,10 @@ Hover a stage to inspect its amount. An optional `OnActivate` callback receives 
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/View.fpas)
 - [Sankey](sankey.md)
 - [More charts](README.md)
+
+## Source files
+
+- [Funnel.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/Funnel.fpas)
+- [CuiWindow.Funnel.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.Funnel.cs)
+- [funnel.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/funnel.c)
+- [funnel.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/funnel.h)

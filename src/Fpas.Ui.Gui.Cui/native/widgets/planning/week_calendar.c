@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/planning/week-calendar.md)
 #include "../../fpas_cui.h"
 
 static cui_id fpas_week_read_only_key(cui_id key) { return key ^ 0x7EE051u; }

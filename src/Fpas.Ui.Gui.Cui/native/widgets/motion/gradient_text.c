@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/motion/gradient-text.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_gradient_text(cui_ctx *ui, const char *id, const char *text, const fpas_motion_text *o,

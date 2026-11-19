@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#async-state-machines)
 namespace Fpas.IntegrationTests.Debugging;
 
 public sealed partial class AsyncControlTests

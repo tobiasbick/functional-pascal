@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/feedback/status-spinner.md)
+
 unit Fpas.Ui.Widgets.Feedback.StatusSpinners;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as Charts, Fpas.Ui.Widgets.Actions.StatusButtons as Buttons;

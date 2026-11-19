@@ -1,3 +1,4 @@
+// [Documentation](../verification.md#fixture-preparation-and-host-runs)
 import { execFileSync } from 'node:child_process';
 import { chmod, cp, mkdir, readFile, readdir, symlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';

@@ -58,3 +58,18 @@ Two sources cannot declare the same qualified program/unit name.
 - [Topic overview](README.md)
 - [Handbook](../README.md)
 - [Syntax grammar](../../specs/syntax.md)
+
+## Source files
+
+- `apps/doc-examples/contexts/geometry/`
+  - [geometry.fpas](../../../apps/doc-examples/contexts/geometry/geometry.fpas)
+- `apps/doc-examples/contexts/`
+  - [geometry.fpas.txt](../../../apps/doc-examples/contexts/geometry.fpas.txt)
+  - [imports.fpas.txt](../../../apps/doc-examples/contexts/imports.fpas.txt)
+- `apps/doc-examples/contexts/imports/`
+  - [geometry.fpas](../../../apps/doc-examples/contexts/imports/geometry.fpas)
+- `src/Fpas.Compiler/Binding/Declarations/`
+  - [ImportTargets.cs](../../../src/Fpas.Compiler/Binding/Declarations/ImportTargets.cs)
+  - [SourceCatalog.TypePaths.cs](../../../src/Fpas.Compiler/Binding/Declarations/SourceCatalog.TypePaths.cs)
+- `src/Fpas.Compiler/Binding/References/`
+  - [ReferenceCatalog.NestedTypes.cs](../../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.NestedTypes.cs)

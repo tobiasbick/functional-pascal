@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/mvu/README.md#composing-larger-views)
+
 unit TuiGallery.QueueSample;
 
 uses

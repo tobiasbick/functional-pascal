@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/overlays/guided-tour.md)
+
 unit Fpas.Ui.Widgets.Overlays.Tours;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Menus as M;

@@ -46,3 +46,15 @@ Drag to adjust the value. With focus, use arrow keys, Shift for larger adjustmen
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Selection/Widgets/Slider.fpas)
 - [Range slider](range-slider.md)
 - [Selection](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [Slider.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/Slider.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.Slider.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.Slider.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.Slider.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.Slider.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [slider.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/slider.c)
+  - [slider.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/slider.h)

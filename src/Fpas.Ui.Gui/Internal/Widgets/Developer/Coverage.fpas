@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/more-developer-tools/coverage.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Developer.Coverage;
 
 uses Fpas.Ui.Widgets.Developer.Coverages as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper, System.Collections.Generic as Lists;

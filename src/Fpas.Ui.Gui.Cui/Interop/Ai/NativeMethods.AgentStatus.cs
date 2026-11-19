@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/ai/agent-status.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

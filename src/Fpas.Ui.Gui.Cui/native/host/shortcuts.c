@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/cui.md#application-shortcuts)
 #include "../fpas_cui.h"
 
 int fpas_cui_shortcut_owners(cui_ctx *ui) {

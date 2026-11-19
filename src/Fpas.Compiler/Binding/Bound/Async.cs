@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/architecture/async-and-cleanup.md)
 using Fpas.Compiler.Binding.Types;
 using Fpas.Compiler.Binding.References;
 namespace Fpas.Compiler.Binding.Bound;

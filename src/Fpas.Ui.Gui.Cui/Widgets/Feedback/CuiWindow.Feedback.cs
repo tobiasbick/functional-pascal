@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/native-build.md#feedback-adapters)
 using Fpas.Ui.Gui.Cui.Widgets.Charts;
 using Fpas.Ui.Gui.Cui.Interop;
 

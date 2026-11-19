@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/functions/generic-routines.md)
 using System.Xml.Linq;
 
 namespace Fpas.IntegrationTests.Build;

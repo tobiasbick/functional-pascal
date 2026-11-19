@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/developer-tools/query-builder.md)
 #ifndef FPAS_CUI_QUERY_BUILDER_H
 #define FPAS_CUI_QUERY_BUILDER_H
 /** Draws the query builder and edits the supplied rules when editing is enabled.

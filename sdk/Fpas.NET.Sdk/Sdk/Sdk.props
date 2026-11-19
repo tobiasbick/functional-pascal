@@ -1,3 +1,4 @@
+<!-- [Documentation](../../../docs/build/msbuild.md#fpas-project-sdk) -->
 <Project>
   <PropertyGroup>
     <PlatformTarget Condition="'$(PlatformTarget)' == ''">AnyCPU</PlatformTarget>

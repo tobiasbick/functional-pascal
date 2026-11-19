@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/editing-tools/timeline-editor.md)
+
 unit Fpas.Ui.Widgets.Editors.TimelineEditors;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Editors.CurveEditors as C;

@@ -33,3 +33,9 @@ On `Resized`, use the reported columns and rows to create the image with `Image.
 - [Text and display](README.md)
 - [Terminal host reference](../host.md#terminal-extensions)
 - [Gallery source](../../../../examples/ui/tui/gallery/CellGridSample.fpas)
+
+## Source files
+
+- [CellGrids.fpas](../../../../src/Fpas.Ui/TerminalExtensions/CellGrids.fpas)
+- [CellGrid.fpas](../../../../tests/Fixtures/tui/CellGrid.fpas)
+- [RenderingContract.fpas](../../../../tests/Fixtures/tui/RenderingContract.fpas)

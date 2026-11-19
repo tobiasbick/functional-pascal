@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#native-editing-tools)
+
 unit Fpas.Ui.Internal.Validation.EditingToolValidation;
 
 uses

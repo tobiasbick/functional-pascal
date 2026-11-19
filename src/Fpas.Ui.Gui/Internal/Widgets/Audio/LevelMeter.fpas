@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/audio/level-meter.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Audio.LevelMeter;
 
 uses

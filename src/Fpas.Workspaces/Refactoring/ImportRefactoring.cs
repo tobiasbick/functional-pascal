@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/refactoring.md#vs-code-refactorings)
 using Fpas.Compiler.Analysis;
 
 namespace Fpas.Workspaces.Refactoring;

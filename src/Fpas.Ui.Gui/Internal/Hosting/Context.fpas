@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/host.md#frame-preparation-and-presentation)
+
 unit Fpas.Ui.Gui.Internal.Hosting.Context;
 
 uses Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, System as Sys, System.Text as Text, System.Collections.Generic as C;

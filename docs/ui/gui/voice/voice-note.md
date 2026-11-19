@@ -49,3 +49,16 @@ gallery simulates playback by advancing the position on its clock.
 - [Composer](composer.md)
 - [Gallery playback update](../../../../examples/ui/gui/gallery/Pages/Voice/Update.fpas)
 - [Voice](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Audio/`
+  - [VoiceNote.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Audio/VoiceNote.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Audio/`
+  - [NativeMethods.VoiceNote.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Audio/NativeMethods.VoiceNote.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Audio/`
+  - [CuiWindow.VoiceNote.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Audio/CuiWindow.VoiceNote.Types.cs)
+  - [CuiWindow.VoiceNote.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Audio/CuiWindow.VoiceNote.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/audio/`
+  - [voice_note.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/audio/voice_note.c)
+  - [voice_note.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/audio/voice_note.h)

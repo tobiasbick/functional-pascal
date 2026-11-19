@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/architecture/async-and-cleanup.md)
 using Fpas.Compiler.Binding.Bound;
 using Fpas.Compiler.Syntax;
 

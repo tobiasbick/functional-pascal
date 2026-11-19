@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/charts/line-chart.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Charts.LineChart;
 
 uses

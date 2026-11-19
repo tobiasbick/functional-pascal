@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/disclosure/link.md)
 #ifndef FPAS_LINK_H
 #define FPAS_LINK_H
 

@@ -52,3 +52,15 @@ the model, and feed new peaks as the signal changes.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Audio/View.fpas)
 - [Level meter](level-meter.md)
 - [Audio](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Audio/`
+  - [Fader.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Audio/Fader.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Audio/`
+  - [NativeMethods.Fader.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Audio/NativeMethods.Fader.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Audio/`
+  - [CuiWindow.Fader.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Audio/CuiWindow.Fader.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/audio/`
+  - [fader.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/audio/fader.c)
+  - [fader.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/audio/fader.h)

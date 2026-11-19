@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/actions/button-group.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Actions.ButtonGroup;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Gui.Internal.Hosting.Context as C;

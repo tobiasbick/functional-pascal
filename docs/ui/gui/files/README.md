@@ -19,3 +19,9 @@ provider. The screenshots use the gallery with a temporary sample workspace.
 - [UI handbook](../README.md)
 - [Capture](../capture/README.md)
 - [Files in the gallery](../../../../examples/ui/gui/gallery/Pages/Files/View.fpas)
+
+## Source files
+
+- [Folders.fpas](../../../../examples/ui/gui/gallery/Pages/Files/Folders.fpas)
+- [State.fpas](../../../../examples/ui/gui/gallery/Pages/Files/State.fpas)
+- [CuiFileSource.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Files/CuiFileSource.cs)

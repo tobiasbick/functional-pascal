@@ -24,3 +24,17 @@ These widgets require the GUI host.
 - [Developer tools](../developer-tools/README.md)
 - [Key-value editor for query parameters](../developer-tools/key-value-editor.md)
 - [More developer tools in the gallery](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/View.fpas)
+
+## Source files
+
+- `examples/ui/gui/gallery/Pages/MoreDeveloper/`
+  - [Samples.fpas](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/Samples.fpas)
+  - [State.fpas](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/State.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeDeveloperData.Reports.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeDeveloperData.Reports.cs)
+  - [NativeMethods.DeveloperUtilities.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.DeveloperUtilities.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [DeveloperData.Reports.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/DeveloperData.Reports.Types.cs)
+  - [DeveloperData.Reports.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/DeveloperData.Reports.cs)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [source_tools.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/source_tools.c)

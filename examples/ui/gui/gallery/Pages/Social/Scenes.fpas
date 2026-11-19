@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/social-and-media/README.md)
+
 unit GuiGallery.Pages.Social.Scenes;
 
 uses Fpas.Ui.Widgets.Media.MediaImages as Media, System as Sys;

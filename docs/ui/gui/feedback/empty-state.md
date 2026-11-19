@@ -42,3 +42,15 @@ The optional button sends the supplied message. Apply it in the update and repla
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Containers/EmptyStates.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/View.fpas)
 - [Feedback](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Containers/`
+  - [EmptyState.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Containers/EmptyState.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Containers/`
+  - [NativeMethods.EmptyState.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Containers/NativeMethods.EmptyState.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Containers/`
+  - [CuiWindow.EmptyState.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Containers/CuiWindow.EmptyState.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/containers/`
+  - [empty_state.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/containers/empty_state.c)
+  - [empty_state.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/containers/empty_state.h)

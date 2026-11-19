@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/more-developer-tools/time-histogram.md)
+
 unit Fpas.Ui.Widgets.Charts.TimeHistograms;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;

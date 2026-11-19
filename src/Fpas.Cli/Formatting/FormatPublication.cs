@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/fmt-style.md)
 using Fpas.Workspaces.Editing;
 using System.Text;
 

@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/library.md#metadata-and-queries)
+
 // Schema upgrade, skip decisions, error retention and bounded catalogue ordering.
 unit FpasAmp.Library.Tests.MetadataStorage;
 

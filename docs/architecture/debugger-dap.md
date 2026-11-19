@@ -14,3 +14,27 @@ frame independently of the target. [TUI debug requests](../pascal/tools/debuggin
 
 Only supported capabilities are advertised. Attach, restart, mutation, calls,
 conditional/data/function breakpoints and logpoints are outside this baseline.
+
+## Source files
+
+<details>
+<summary>Browse 14 source files</summary>
+
+- `src/Fpas.Debugging/Dap/`
+  - [DapArguments.cs](../../src/Fpas.Debugging/Dap/DapArguments.cs)
+  - [DapServer.Events.cs](../../src/Fpas.Debugging/Dap/DapServer.Events.cs)
+  - [DapServer.Execution.cs](../../src/Fpas.Debugging/Dap/DapServer.Execution.cs)
+  - [DapServer.Inspection.cs](../../src/Fpas.Debugging/Dap/DapServer.Inspection.cs)
+  - [DapServer.cs](../../src/Fpas.Debugging/Dap/DapServer.cs)
+  - [DapTransport.cs](../../src/Fpas.Debugging/Dap/DapTransport.cs)
+  - [StopHandles.cs](../../src/Fpas.Debugging/Dap/StopHandles.cs)
+- `tests/Fpas.IntegrationTests/Debugging/`
+  - [DapDebuggerTests.Gallery.cs](../../tests/Fpas.IntegrationTests/Debugging/DapDebuggerTests.Gallery.cs)
+  - [DapDebuggerTests.Inspection.cs](../../tests/Fpas.IntegrationTests/Debugging/DapDebuggerTests.Inspection.cs)
+  - [DapDebuggerTests.Lifetime.cs](../../tests/Fpas.IntegrationTests/Debugging/DapDebuggerTests.Lifetime.cs)
+  - [DapDebuggerTests.PrivateTerminal.cs](../../tests/Fpas.IntegrationTests/Debugging/DapDebuggerTests.PrivateTerminal.cs)
+  - [DapDebuggerTests.Transport.cs](../../tests/Fpas.IntegrationTests/Debugging/DapDebuggerTests.Transport.cs)
+  - [DapDebuggerTests.cs](../../tests/Fpas.IntegrationTests/Debugging/DapDebuggerTests.cs)
+  - [DapProbe.cs](../../tests/Fpas.IntegrationTests/Debugging/DapProbe.cs)
+
+</details>

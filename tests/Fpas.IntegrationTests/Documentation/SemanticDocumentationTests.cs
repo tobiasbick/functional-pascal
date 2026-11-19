@@ -1,3 +1,4 @@
+// [Documentation](../../coverage.md#documentation-acceptance)
 using Fpas.Compiler;
 using Fpas.Tests.Support;
 

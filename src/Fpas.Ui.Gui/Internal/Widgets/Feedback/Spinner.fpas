@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/feedback/spinner.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Feedback.Spinner;
 
 uses

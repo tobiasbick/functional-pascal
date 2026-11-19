@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/library.md#playlists)
+
 // The navigation observer includes all pages and publishes committed changes.
 unit FpasAmp.Library.Tests.PlaylistObservation;
 

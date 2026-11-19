@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/social-and-media/image-compare.md)
 using Fpas.Ui.Gui.Cui.Widgets.Charts;
 using Fpas.Ui.Gui.Cui.Widgets.Media;
 using Fpas.Ui.Gui.Cui.Interop;

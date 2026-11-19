@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/architecture/debug-information.md#debugger-attributes-and-value-views)
 using Fpas.Compiler.Binding.Bound;
 using Fpas.Compiler.Binding.References;
 using Fpas.Compiler.Binding.Symbols;

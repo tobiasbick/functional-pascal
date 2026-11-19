@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/smart-inputs/scrub-field.md)
 #ifndef FPAS_SCRUB_FIELD_H
 #define FPAS_SCRUB_FIELD_H
 /** Draws native scrub/typing modes with a stable retained identity and model reconciliation.

@@ -53,3 +53,7 @@ semantic headings and captions, use the text roles on the Text page.
 - [Native font choices](../../../../src/Fpas.Ui/Widgets/Motion/Motion.fpas)
 - [Text](text.md)
 - [Text and display](README.md)
+
+## Source files
+
+- [NativeText.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Display/NativeText.fpas)

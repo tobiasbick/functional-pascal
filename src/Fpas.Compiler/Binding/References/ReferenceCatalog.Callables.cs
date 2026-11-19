@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/interop/calls-and-delegates.md)
 using Fpas.Compiler.Binding.Types;
 using Fpas.Compiler.Binding.Symbols;
 using Fpas.Compiler.Syntax;

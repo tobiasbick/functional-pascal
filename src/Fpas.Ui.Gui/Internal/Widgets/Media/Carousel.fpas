@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/social-and-media/carousel.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Media.Carousel;
 
 uses Fpas.Ui.Widgets.Media.Carousels as Carousels, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys, System.Collections.Generic as Lists;

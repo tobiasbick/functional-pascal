@@ -21,3 +21,9 @@ The controls on this page require the GUI host.
 - [UI handbook](../README.md)
 - [Segmented control](../actions/segmented-control.md)
 - [Selection in the gallery](../../../../examples/ui/gui/gallery/Pages/Selection/View.fpas)
+
+## Source files
+
+- [State.fpas](../../../../examples/ui/gui/gallery/Pages/Selection/State.fpas)
+- [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Selection/Update.fpas)
+- [SelectionContract.fpas](../../../../tests/Fixtures/gui-host/SelectionContract.fpas)

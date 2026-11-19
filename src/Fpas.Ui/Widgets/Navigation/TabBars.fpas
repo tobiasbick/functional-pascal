@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/motion/tab-bar.md)
+
 unit Fpas.Ui.Widgets.Navigation.TabBars;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Layout as L;

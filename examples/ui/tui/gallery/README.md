@@ -50,3 +50,9 @@ The gallery supports the [private debug terminal](../../../../docs/pascal/tools/
 For headless stepping, launch it with `--headless-control` and set
 `FPAS_TUI_CONTROL_PIPE` to the controller's current-user pipe named
 `fpas-tui-<32 hex digits>`. The initial frame is 80 × 24 cells.
+
+## Source files
+
+- [Catalog.fpas](Catalog.fpas)
+- [TuiWidgetGallery.fpasproj](TuiWidgetGallery.fpasproj)
+- [main.fpas](main.fpas)

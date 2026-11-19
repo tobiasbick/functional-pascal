@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/selection/checkbox.md)
 #ifndef FPAS_CHECKBOX_H
 #define FPAS_CHECKBOX_H
 

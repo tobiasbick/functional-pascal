@@ -1,3 +1,5 @@
+// [Documentation](README.md)
+
 program DesktopCommandsExample;
 
 uses

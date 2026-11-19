@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/environment.md)
 using Fpas.Cli.Analysis;
 using System.CommandLine;
 

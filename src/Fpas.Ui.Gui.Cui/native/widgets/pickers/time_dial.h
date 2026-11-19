@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/pickers/time-dial.md)
 #ifndef FPAS_TIME_DIAL_H
 #define FPAS_TIME_DIAL_H
 

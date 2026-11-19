@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/overlays/context-menu.md)
+
 unit GuiGallery.Pages.Overlays.Widgets.ContextMenu;
 
 uses

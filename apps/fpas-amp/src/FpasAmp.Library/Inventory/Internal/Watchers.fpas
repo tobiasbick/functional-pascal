@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#reconciliation-and-persistence)
+
 // Watcher callbacks only invalidate directories; they never enumerate or wait on scans.
 unit FpasAmp.Library.Inventory.Internal.Watchers;
 

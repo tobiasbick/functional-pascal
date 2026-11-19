@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/refactoring.md#validation-and-plans)
 using Fpas.Compiler;
 using Fpas.Compiler.Analysis;
 using Fpas.Compiler.Syntax;

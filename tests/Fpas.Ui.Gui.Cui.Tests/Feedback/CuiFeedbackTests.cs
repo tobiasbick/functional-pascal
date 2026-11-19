@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/feedback/README.md)
 namespace Fpas.Ui.Gui.Cui.Tests.Feedback;
 
 /// <summary>Exercises native CUI feedback, lifetime and literal labels through both renderers.</summary>

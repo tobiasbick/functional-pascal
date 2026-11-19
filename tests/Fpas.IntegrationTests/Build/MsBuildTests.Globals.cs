@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/functions/scope-and-effects.md)
 using System.Xml.Linq;
 
 namespace Fpas.IntegrationTests.Build;

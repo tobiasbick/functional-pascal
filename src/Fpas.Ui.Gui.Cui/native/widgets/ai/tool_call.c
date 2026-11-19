@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/ai/tool-call.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_tool_call(cui_ctx *ui, const char *id, const char *name, int status, const char *icon,

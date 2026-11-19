@@ -1,3 +1,5 @@
+// [Documentation](README.md)
+
 unit Example.Domains;
 
 // An account identity, separate from ordinary numeric values.

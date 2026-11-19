@@ -1,3 +1,4 @@
+// [Documentation](../../docs/ui/gui/cui.md#window-ownership-and-frames)
 using System.Runtime.InteropServices;
 using System.Runtime.ExceptionServices;
 using Fpas.Ui.Gui.Cui.Interop;

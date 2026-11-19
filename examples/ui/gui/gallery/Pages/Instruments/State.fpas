@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/instruments/README.md)
+
 unit GuiGallery.Pages.Instruments.State;
 
 uses Fpas.Ui.Widgets.Charts.DotCharts as Chart, Fpas.Ui.Widgets.Charts.EventTracks as Track;

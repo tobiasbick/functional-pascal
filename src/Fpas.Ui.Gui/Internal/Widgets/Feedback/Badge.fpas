@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/feedback/badge.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Feedback.Badge;
 
 uses Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Feedback.Badges as B;

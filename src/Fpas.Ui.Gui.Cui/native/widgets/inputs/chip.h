@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/selection/chip.md)
 #ifndef FPAS_CHIP_H
 #define FPAS_CHIP_H
 

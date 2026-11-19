@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/inputs/text-field.md)
 using Fpas.Ui.Gui.Cui.Widgets.Inputs;
 
 namespace Fpas.Ui.Gui.Cui;

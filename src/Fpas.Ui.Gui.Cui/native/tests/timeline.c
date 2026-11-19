@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/feedback/timeline-item.md)
 /* Activity layout, literal text, native colors and the last-item connector stay in CUI. */
 #include "../fpas_cui.h"
 #include <stdio.h>

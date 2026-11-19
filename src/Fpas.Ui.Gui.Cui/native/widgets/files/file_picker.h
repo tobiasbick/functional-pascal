@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/files/file-picker.md)
 #ifndef FPAS_CUI_FILE_PICKER_H
 #define FPAS_CUI_FILE_PICKER_H
 /** Draws a model-controlled modal file picker.

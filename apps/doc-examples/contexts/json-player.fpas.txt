@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/pascal/interop/calls-and-delegates.md)
+
 program Example;
 
 uses System.Text.Json as Json;

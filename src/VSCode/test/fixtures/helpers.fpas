@@ -1,3 +1,5 @@
+// [Documentation](../../verification.md#editor-and-project-scenarios)
+
 unit Helpers;
 
 public function Answer(): int;

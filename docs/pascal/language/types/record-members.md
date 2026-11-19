@@ -89,3 +89,8 @@ static fields, with no automatic synchronization.
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- [Binder.Defaults.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.Defaults.cs)
+- [Binder.RecordBodies.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.RecordBodies.cs)

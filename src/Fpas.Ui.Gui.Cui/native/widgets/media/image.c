@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/text-and-display/image.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_display_image(cui_ctx *ui, const char *id, const fpas_media_source *source, int width_kind, float width, int height_kind, float height, float radius, uint32_t tint) {

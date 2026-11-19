@@ -47,3 +47,15 @@ the supplied array and open the source location in your application.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/ProblemsPanels.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Developer/View.fpas)
 - [Developer tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [Problems.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/Problems.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.Problems.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.Problems.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.Problems.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.Problems.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [problems.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/problems.c)
+  - [problems.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/problems.h)

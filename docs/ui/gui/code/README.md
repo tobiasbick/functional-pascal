@@ -20,3 +20,9 @@ revisions and displays a build log. These widgets require the GUI host.
 - [Terminal](../files/terminal.md)
 - [Static code examples in the gallery](../../../../examples/ui/gui/gallery/Pages/Code/View.fpas)
 - [Interactive code examples in the gallery](../../../../examples/ui/gui/gallery/Pages/Code/Tools.fpas)
+
+## Source files
+
+- [Samples.fpas](../../../../examples/ui/gui/gallery/Pages/Code/Samples.fpas)
+- [State.fpas](../../../../examples/ui/gui/gallery/Pages/Code/State.fpas)
+- [SourceToolsContract.fpas](../../../../tests/Fixtures/gui-host/SourceToolsContract.fpas)

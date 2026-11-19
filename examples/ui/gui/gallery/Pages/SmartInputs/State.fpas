@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/smart-inputs/README.md)
+
 unit GuiGallery.Pages.SmartInputs.State;
 
 uses Fpas.Ui.Widgets.Pickers.EmojiPickers as Emojis, Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;

@@ -1,3 +1,4 @@
+// [Documentation](../../coverage.md#measurements-and-diagnostic-artifacts)
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Text.Json;

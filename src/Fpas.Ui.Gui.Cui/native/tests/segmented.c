@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/actions/segmented-control.md)
 /* Checks native segment pixels, keyboard focus and preservation of the model palette. */
 #include "../fpas_cui.h"
 #include <stdio.h>

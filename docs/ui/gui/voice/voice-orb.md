@@ -47,3 +47,15 @@ callback, use its message to handle the change in the application.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Audio/VoiceOrbs.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Voice/View.fpas)
 - [Voice](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Audio/`
+  - [VoiceOrb.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Audio/VoiceOrb.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Audio/`
+  - [NativeMethods.VoiceOrb.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Audio/NativeMethods.VoiceOrb.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Audio/`
+  - [CuiWindow.VoiceOrb.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Audio/CuiWindow.VoiceOrb.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/audio/`
+  - [voice_orb.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/audio/voice_orb.c)
+  - [voice_orb.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/audio/voice_orb.h)

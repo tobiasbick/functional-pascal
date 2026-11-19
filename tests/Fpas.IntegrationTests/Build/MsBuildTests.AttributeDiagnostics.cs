@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/interop/attributes.md)
 using System.Text.Json;
 using Fpas.Tests.Support;
 

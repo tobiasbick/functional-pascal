@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/inputs/tag-input.md)
+
 unit Fpas.Ui.Widgets.Inputs.TagInputs;
 
 uses Fpas.Ui.Elements as E;

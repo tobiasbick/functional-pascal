@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#select)
+
 unit Fpas.Ui.Internal.Validation.SelectRules;
 
 uses Fpas.Ui.Widgets.Inputs.Selects as S, Fpas.Ui.Widgets.Inputs.MultiSelects as M, Fpas.Ui.Internal.Validation.Rules as R, System as Sys;

@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/tui/host.md#cell-presentation)
+
 unit Fpas.Ui.Tui.Internal.Layout.Scene;
 
 uses Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as Validation, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys;

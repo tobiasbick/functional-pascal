@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/cui.md#desktop-services)
 using System.Runtime.InteropServices;
 using Fpas.Ui.Gui.Cui.Interop;
 

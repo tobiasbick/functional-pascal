@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/creative-controls/README.md)
 #include "../fpas_cui.h"
 #include <math.h>
 #include <stdio.h>

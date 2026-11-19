@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/desktop.md#browsing-music-and-collections)
+
 // A native virtual album grid uses synthetic tagged audio and generated cover art.
 unit FpasAmp.Ui.Tests.NativeAlbums;
 

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/native-build.md#bridge-translation-unit)
 #ifndef FPAS_CUI_H
 #define FPAS_CUI_H
 

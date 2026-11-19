@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/reader/table-of-contents.md)
+
 unit Fpas.Ui.Widgets.Navigation.TableOfContents;
 
 uses Fpas.Ui.Elements as E, System as Sys, System.Globalization as Culture;

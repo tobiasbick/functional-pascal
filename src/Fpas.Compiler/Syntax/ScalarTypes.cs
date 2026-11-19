@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/types/data-domains.md)
 namespace Fpas.Compiler.Syntax;
 
 internal enum ScalarCategory { Distinct, Range, Enum }

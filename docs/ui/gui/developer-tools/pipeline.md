@@ -49,3 +49,15 @@ application supplies updated statuses and durations as jobs progress.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Developer/View.fpas)
 - [Test explorer](../more-developer-tools/test-explorer.md)
 - [Developer tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [Pipeline.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/Pipeline.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.Pipeline.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.Pipeline.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.Pipeline.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.Pipeline.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [pipeline.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/pipeline.c)
+  - [pipeline.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/pipeline.h)

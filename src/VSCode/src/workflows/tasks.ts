@@ -1,3 +1,4 @@
+// [Documentation](../../README.md#project-test-and-debug-workflows)
 import * as vscode from 'vscode';
 import { operations, Projects, type Operation, type WorkflowOptions } from './projects';
 

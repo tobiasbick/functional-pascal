@@ -28,3 +28,7 @@ normal CLR behavior.
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- [async-body.fpas.txt](../../../../apps/doc-examples/contexts/async-body.fpas.txt)

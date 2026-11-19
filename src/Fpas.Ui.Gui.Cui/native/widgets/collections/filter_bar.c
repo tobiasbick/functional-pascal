@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/data-grid/filter-bar.md)
 #include "../../fpas_cui.h"
 
 static void fpas_filter_retire(cui_ctx *ui, cui_id owner) {

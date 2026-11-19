@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/workspaces.md#context-preparation)
 using System.Text.Json.Serialization;
 
 namespace Fpas.Workspaces.Loading;

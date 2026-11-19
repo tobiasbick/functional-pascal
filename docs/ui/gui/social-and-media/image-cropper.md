@@ -46,3 +46,15 @@ coordinates to crop or export the source in your application.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Media/ImageCroppers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/Media.fpas)
 - [Social and media](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Media/`
+  - [ImageCropper.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Media/ImageCropper.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Media/`
+  - [NativeMethods.ImageCropper.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Media/NativeMethods.ImageCropper.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Media/`
+  - [CuiWindow.ImageCropper.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Media/CuiWindow.ImageCropper.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/media/`
+  - [image_cropper.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/media/image_cropper.c)
+  - [image_cropper.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/media/image_cropper.h)

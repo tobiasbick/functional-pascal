@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/actions/theme-switcher.md)
 namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow

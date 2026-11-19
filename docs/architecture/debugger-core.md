@@ -402,3 +402,100 @@ independently checks the emitted storage format and deterministic output.
 domains, decoded/default subranges, exact extreme values and raw views. A foreign
 CLR object with an invalid presentation marker proves that the source error
 does not hide valid raw storage or change the stopped context.
+
+## Source files
+
+<details>
+<summary>Browse 81 source files</summary>
+
+- `src/Fpas.Debugging/Core/`
+  - [Models.cs](../../src/Fpas.Debugging/Core/Models.cs)
+  - [OutputCapture.Decoding.cs](../../src/Fpas.Debugging/Core/OutputCapture.Decoding.cs)
+  - [OutputCapture.cs](../../src/Fpas.Debugging/Core/OutputCapture.cs)
+  - [WorkerSession.Breakpoints.cs](../../src/Fpas.Debugging/Core/WorkerSession.Breakpoints.cs)
+  - [WorkerSession.Inspection.cs](../../src/Fpas.Debugging/Core/WorkerSession.Inspection.cs)
+  - [WorkerSession.cs](../../src/Fpas.Debugging/Core/WorkerSession.cs)
+- `src/Fpas.Debugging/`
+  - [DebuggerApplication.cs](../../src/Fpas.Debugging/DebuggerApplication.cs)
+- `src/Fpas.Debugging/Hosting/`
+  - [DebugSessionHost.cs](../../src/Fpas.Debugging/Hosting/DebugSessionHost.cs)
+  - [LaunchBroker.cs](../../src/Fpas.Debugging/Hosting/LaunchBroker.cs)
+  - [PrivateWorker.cs](../../src/Fpas.Debugging/Hosting/PrivateWorker.cs)
+  - [TargetBroker.cs](../../src/Fpas.Debugging/Hosting/TargetBroker.cs)
+  - [WorkerChannel.cs](../../src/Fpas.Debugging/Hosting/WorkerChannel.cs)
+  - [WorkerLauncher.cs](../../src/Fpas.Debugging/Hosting/WorkerLauncher.cs)
+  - [WorkerMessage.cs](../../src/Fpas.Debugging/Hosting/WorkerMessage.cs)
+- `src/Fpas.Debugging/Native/`
+  - [CoreClrSession.AsyncCallers.cs](../../src/Fpas.Debugging/Native/CoreClrSession.AsyncCallers.cs)
+  - [CoreClrSession.AsyncEntry.cs](../../src/Fpas.Debugging/Native/CoreClrSession.AsyncEntry.cs)
+  - [CoreClrSession.AsyncFrames.cs](../../src/Fpas.Debugging/Native/CoreClrSession.AsyncFrames.cs)
+  - [CoreClrSession.AsyncReturn.cs](../../src/Fpas.Debugging/Native/CoreClrSession.AsyncReturn.cs)
+  - [CoreClrSession.AsyncStepping.cs](../../src/Fpas.Debugging/Native/CoreClrSession.AsyncStepping.cs)
+  - [CoreClrSession.Bindings.cs](../../src/Fpas.Debugging/Native/CoreClrSession.Bindings.cs)
+  - [CoreClrSession.BreakpointErrors.cs](../../src/Fpas.Debugging/Native/CoreClrSession.BreakpointErrors.cs)
+  - [CoreClrSession.Breakpoints.cs](../../src/Fpas.Debugging/Native/CoreClrSession.Breakpoints.cs)
+  - [CoreClrSession.Captures.cs](../../src/Fpas.Debugging/Native/CoreClrSession.Captures.cs)
+  - [CoreClrSession.CodePoints.cs](../../src/Fpas.Debugging/Native/CoreClrSession.CodePoints.cs)
+  - [CoreClrSession.CompoundValues.cs](../../src/Fpas.Debugging/Native/CoreClrSession.CompoundValues.cs)
+  - [CoreClrSession.Constants.cs](../../src/Fpas.Debugging/Native/CoreClrSession.Constants.cs)
+  - [CoreClrSession.DomainValues.cs](../../src/Fpas.Debugging/Native/CoreClrSession.DomainValues.cs)
+  - [CoreClrSession.Evaluation.cs](../../src/Fpas.Debugging/Native/CoreClrSession.Evaluation.cs)
+  - [CoreClrSession.EvaluationIndexes.cs](../../src/Fpas.Debugging/Native/CoreClrSession.EvaluationIndexes.cs)
+  - [CoreClrSession.EvaluationNameTypes.cs](../../src/Fpas.Debugging/Native/CoreClrSession.EvaluationNameTypes.cs)
+  - [CoreClrSession.EvaluationNames.cs](../../src/Fpas.Debugging/Native/CoreClrSession.EvaluationNames.cs)
+  - [CoreClrSession.EvaluationTypes.cs](../../src/Fpas.Debugging/Native/CoreClrSession.EvaluationTypes.cs)
+  - [CoreClrSession.ExceptionStack.cs](../../src/Fpas.Debugging/Native/CoreClrSession.ExceptionStack.cs)
+  - [CoreClrSession.Exceptions.cs](../../src/Fpas.Debugging/Native/CoreClrSession.Exceptions.cs)
+  - [CoreClrSession.Frames.cs](../../src/Fpas.Debugging/Native/CoreClrSession.Frames.cs)
+  - [CoreClrSession.Inspection.cs](../../src/Fpas.Debugging/Native/CoreClrSession.Inspection.cs)
+  - [CoreClrSession.Objects.cs](../../src/Fpas.Debugging/Native/CoreClrSession.Objects.cs)
+  - [CoreClrSession.ScalarValues.cs](../../src/Fpas.Debugging/Native/CoreClrSession.ScalarValues.cs)
+  - [CoreClrSession.SourceValues.cs](../../src/Fpas.Debugging/Native/CoreClrSession.SourceValues.cs)
+  - [CoreClrSession.StaticTypes.cs](../../src/Fpas.Debugging/Native/CoreClrSession.StaticTypes.cs)
+  - [CoreClrSession.Statics.cs](../../src/Fpas.Debugging/Native/CoreClrSession.Statics.cs)
+  - [CoreClrSession.Stepping.cs](../../src/Fpas.Debugging/Native/CoreClrSession.Stepping.cs)
+  - [CoreClrSession.StoredFields.cs](../../src/Fpas.Debugging/Native/CoreClrSession.StoredFields.cs)
+  - [CoreClrSession.ValuePaths.cs](../../src/Fpas.Debugging/Native/CoreClrSession.ValuePaths.cs)
+  - [CoreClrSession.ValueTypes.cs](../../src/Fpas.Debugging/Native/CoreClrSession.ValueTypes.cs)
+  - [CoreClrSession.cs](../../src/Fpas.Debugging/Native/CoreClrSession.cs)
+- `src/Fpas.Debugging/Properties/`
+  - [AssemblyInfo.cs](../../src/Fpas.Debugging/Properties/AssemblyInfo.cs)
+- `src/Fpas.Debugging/Values/`
+  - [ScalarValue.cs](../../src/Fpas.Debugging/Values/ScalarValue.cs)
+  - [StoredText.cs](../../src/Fpas.Debugging/Values/StoredText.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.Debugging.cs](../../tests/Fpas.IntegrationTests/Build/MsBuildTests.Debugging.cs)
+- `tests/Fpas.IntegrationTests/Debugging/`
+  - [AsyncControlTests.Callers.cs](../../tests/Fpas.IntegrationTests/Debugging/AsyncControlTests.Callers.cs)
+  - [AsyncControlTests.Failure.cs](../../tests/Fpas.IntegrationTests/Debugging/AsyncControlTests.Failure.cs)
+  - [AsyncControlTests.Kickoff.cs](../../tests/Fpas.IntegrationTests/Debugging/AsyncControlTests.Kickoff.cs)
+  - [AsyncControlTests.Repeated.cs](../../tests/Fpas.IntegrationTests/Debugging/AsyncControlTests.Repeated.cs)
+  - [AsyncControlTests.Return.cs](../../tests/Fpas.IntegrationTests/Debugging/AsyncControlTests.Return.cs)
+  - [AsyncControlTests.Void.cs](../../tests/Fpas.IntegrationTests/Debugging/AsyncControlTests.Void.cs)
+  - [AsyncControlTests.cs](../../tests/Fpas.IntegrationTests/Debugging/AsyncControlTests.cs)
+  - [CaptureInspectionTests.cs](../../tests/Fpas.IntegrationTests/Debugging/CaptureInspectionTests.cs)
+  - [CompoundInspectionTests.cs](../../tests/Fpas.IntegrationTests/Debugging/CompoundInspectionTests.cs)
+  - [CoreSessionTests.Failures.cs](../../tests/Fpas.IntegrationTests/Debugging/CoreSessionTests.Failures.cs)
+  - [CoreSessionTests.Lifetime.cs](../../tests/Fpas.IntegrationTests/Debugging/CoreSessionTests.Lifetime.cs)
+  - [CoreSessionTests.Output.cs](../../tests/Fpas.IntegrationTests/Debugging/CoreSessionTests.Output.cs)
+  - [CoreSessionTests.cs](../../tests/Fpas.IntegrationTests/Debugging/CoreSessionTests.cs)
+  - [Debuggee.cs](../../tests/Fpas.IntegrationTests/Debugging/Debuggee.cs)
+  - [ExceptionInspectionTests.cs](../../tests/Fpas.IntegrationTests/Debugging/ExceptionInspectionTests.cs)
+  - [FailureCaptureTests.cs](../../tests/Fpas.IntegrationTests/Debugging/FailureCaptureTests.cs)
+  - [FrontendParityTests.cs](../../tests/Fpas.IntegrationTests/Debugging/FrontendParityTests.cs)
+  - [InvalidBreakpointSymbols.cs](../../tests/Fpas.IntegrationTests/Debugging/InvalidBreakpointSymbols.cs)
+  - [ModuleContentIdentityTests.cs](../../tests/Fpas.IntegrationTests/Debugging/ModuleContentIdentityTests.cs)
+  - [ScalarInspectionTests.cs](../../tests/Fpas.IntegrationTests/Debugging/ScalarInspectionTests.cs)
+  - [SourceControlTests.Isolation.cs](../../tests/Fpas.IntegrationTests/Debugging/SourceControlTests.Isolation.cs)
+  - [SourceControlTests.Modules.cs](../../tests/Fpas.IntegrationTests/Debugging/SourceControlTests.Modules.cs)
+  - [SourceControlTests.Recursion.cs](../../tests/Fpas.IntegrationTests/Debugging/SourceControlTests.Recursion.cs)
+  - [SourceControlTests.Stepping.cs](../../tests/Fpas.IntegrationTests/Debugging/SourceControlTests.Stepping.cs)
+  - [SourceControlTests.Unload.cs](../../tests/Fpas.IntegrationTests/Debugging/SourceControlTests.Unload.cs)
+  - [SourceControlTests.cs](../../tests/Fpas.IntegrationTests/Debugging/SourceControlTests.cs)
+  - [SourceProjectionTests.cs](../../tests/Fpas.IntegrationTests/Debugging/SourceProjectionTests.cs)
+  - [StaticInspectionTests.cs](../../tests/Fpas.IntegrationTests/Debugging/StaticInspectionTests.cs)
+  - [SymbolContextTests.cs](../../tests/Fpas.IntegrationTests/Debugging/SymbolContextTests.cs)
+  - [TargetIoTests.cs](../../tests/Fpas.IntegrationTests/Debugging/TargetIoTests.cs)
+  - [WorkerSuspension.cs](../../tests/Fpas.IntegrationTests/Debugging/WorkerSuspension.cs)
+
+</details>

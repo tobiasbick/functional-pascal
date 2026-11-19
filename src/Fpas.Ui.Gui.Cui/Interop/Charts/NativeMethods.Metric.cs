@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/overview/metric.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/pickers/time-picker.md)
+
 unit Fpas.Ui.Widgets.Pickers.TimePickers;
 
 uses Fpas.Ui.Elements as E, System as Sys;

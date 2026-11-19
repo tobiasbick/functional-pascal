@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/native-build.md)
 using System.Xml.Linq;
 using System.Text.RegularExpressions;
 using Fpas.Tests.Support;

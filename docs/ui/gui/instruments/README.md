@@ -19,3 +19,8 @@ The gallery lets the event track draw the shared axis.
 - [UI handbook](../README.md)
 - [Charts](../charts/README.md)
 - [Instruments in the gallery](../../../../examples/ui/gui/gallery/Pages/Instruments/View.fpas)
+
+## Source files
+
+- [State.fpas](../../../../examples/ui/gui/gallery/Pages/Instruments/State.fpas)
+- [code_instruments.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/code_instruments.c)

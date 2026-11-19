@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/debugging.md#private-terminal-and-tui-control)
 using System.Buffers.Binary;
 using System.Collections.Concurrent;
 using System.IO.Pipes;

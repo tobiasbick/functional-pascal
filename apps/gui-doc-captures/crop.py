@@ -1,3 +1,4 @@
+# [Documentation](README.md)
 """Crop the FPAS gallery's scale-one captures using their logical bounds."""
 
 import argparse

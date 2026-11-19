@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/testing.md#discover-and-run)
 using System.Security.Cryptography;
 using Fpas.Workspaces.Loading;
 

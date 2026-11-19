@@ -49,3 +49,15 @@ the standalone Markdown widget.
 - [Markdown](../code/markdown.md)
 - [Chat divider](chat-divider.md)
 - [Social and media](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Conversation/`
+  - [ChatMessage.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Conversation/ChatMessage.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Conversation/`
+  - [NativeMethods.ChatMessage.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Conversation/NativeMethods.ChatMessage.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Conversation/`
+  - [CuiWindow.ChatMessage.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Conversation/CuiWindow.ChatMessage.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/conversation/`
+  - [chat_message.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/conversation/chat_message.c)
+  - [chat_message.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/conversation/chat_message.h)

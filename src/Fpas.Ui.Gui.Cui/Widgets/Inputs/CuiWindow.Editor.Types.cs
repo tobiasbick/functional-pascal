@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/native-build.md#native-input-adapters)
 using System.Buffers;
 using System.Text;
 using Fpas.Ui.Gui.Cui.Interop;

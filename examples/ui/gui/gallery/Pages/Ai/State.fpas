@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/ai/README.md)
+
 unit GuiGallery.Pages.Ai.State;
 
 uses Fpas.Ui.Widgets.Ai.Composers as Composer, Fpas.Ui.Widgets.Ai.ResponseActions as Response;

@@ -84,3 +84,32 @@ a fallback. Tree is an ordinary generic domain type, not an implicit library typ
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+<details>
+<summary>Browse 13 source files</summary>
+
+- `src/Fpas.Compiler/Binding/Declarations/`
+  - [SourceCatalog.TypeGenerics.cs](../../../../src/Fpas.Compiler/Binding/Declarations/SourceCatalog.TypeGenerics.cs)
+- `src/Fpas.Compiler/Binding/References/`
+  - [ReferenceCatalog.Constraints.cs](../../../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.Constraints.cs)
+  - [ReferenceCatalog.Generics.cs](../../../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.Generics.cs)
+  - [ReferenceCatalog.SourceGenerics.cs](../../../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.SourceGenerics.cs)
+- `src/Fpas.Compiler/Binding/Symbols/`
+  - [GenericParameterSymbol.cs](../../../../src/Fpas.Compiler/Binding/Symbols/GenericParameterSymbol.cs)
+- `src/Fpas.Compiler/Syntax/`
+  - [Generics.cs](../../../../src/Fpas.Compiler/Syntax/Generics.cs)
+- `src/Fpas.Compiler/Syntax/Parsing/`
+  - [Parser.Generics.cs](../../../../src/Fpas.Compiler/Syntax/Parsing/Parser.Generics.cs)
+- `tests/Fpas.Compiler.Tests/Types/`
+  - [GenericDelimiterTests.cs](../../../../tests/Fpas.Compiler.Tests/Types/GenericDelimiterTests.cs)
+  - [GenericTypeMetadataTests.cs](../../../../tests/Fpas.Compiler.Tests/Types/GenericTypeMetadataTests.cs)
+  - [GenericTypeTests.cs](../../../../tests/Fpas.Compiler.Tests/Types/GenericTypeTests.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.GenericTypes.cs](../../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.GenericTypes.cs)
+  - [MsBuildTests.NestedTypes.cs](../../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.NestedTypes.cs)
+- `tests/Fpas.IntegrationTests/Execution/`
+  - [GenericTypeExecutionTests.cs](../../../../tests/Fpas.IntegrationTests/Execution/GenericTypeExecutionTests.cs)
+
+</details>

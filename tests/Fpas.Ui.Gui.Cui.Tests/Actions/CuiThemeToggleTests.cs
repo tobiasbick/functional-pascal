@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/actions/theme-toggle.md)
 namespace Fpas.Ui.Gui.Cui.Tests.Actions;
 
 /// <summary>Checks stable controlled light/dark actions and their native input paths.</summary>

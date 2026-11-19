@@ -1,3 +1,5 @@
+// [Documentation](../README.md#measure)
+
 unit Diagnostics.MeasureOptions;
 
 uses System as Sys, System.IO as IO, System.Collections.Generic as Collections;

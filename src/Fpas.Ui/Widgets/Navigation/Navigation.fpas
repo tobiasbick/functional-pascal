@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#sidebar-navigation)
+
 unit Fpas.Ui.Widgets.Navigation.Navigation;
 
 uses Fpas.Ui.Elements as E;

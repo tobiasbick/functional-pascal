@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#native-source-tools)
+
 unit Fpas.Ui.Internal.Validation.SourceToolValidation;
 
 uses

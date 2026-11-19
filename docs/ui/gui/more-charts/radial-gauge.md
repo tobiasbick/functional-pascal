@@ -46,3 +46,10 @@ The gauge is passive. Pass the current reading from the model. CUI chooses a ban
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/Widgets/Market.fpas)
 - [Gauge](../charts/gauge.md)
 - [More charts](README.md)
+
+## Source files
+
+- [RadialGauge.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/RadialGauge.fpas)
+- [CuiWindow.RadialGauge.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.RadialGauge.cs)
+- [radial_gauge.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/radial_gauge.c)
+- [radial_gauge.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/radial_gauge.h)

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/developer-tools/trace-viewer.md)
 #ifndef FPAS_CUI_TRACE_VIEWER_H
 #define FPAS_CUI_TRACE_VIEWER_H
 /* Link and span indices use the caller's sorted span array. */

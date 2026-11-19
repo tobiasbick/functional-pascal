@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/selection-ring.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_selection_ring(cui_ctx *ui, int tone, uint32_t rgba, const char *name, float radius) {

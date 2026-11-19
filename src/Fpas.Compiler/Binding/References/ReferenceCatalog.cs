@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/architecture/compiler.md#phases-and-ownership)
 using System.Reflection;
 using System.Reflection.Metadata;
 using Fpas.Compiler.Syntax;

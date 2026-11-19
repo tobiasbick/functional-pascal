@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/social-and-media/ticker.md)
+
 unit Fpas.Ui.Widgets.Feedback.Tickers;
 
 uses Fpas.Ui.Elements as E;

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/editing-tools/property-inspector.md)
 #ifndef FPAS_CUI_PROPERTY_INSPECTOR_H
 #define FPAS_CUI_PROPERTY_INSPECTOR_H
 /** One model-owned property row; changed reports whether CUI proposes an edit. */

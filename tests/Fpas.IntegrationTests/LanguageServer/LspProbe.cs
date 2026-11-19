@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/language-server.md)
 using Fpas.Tests.Support;
 using System.Collections.Concurrent;
 using System.Diagnostics;

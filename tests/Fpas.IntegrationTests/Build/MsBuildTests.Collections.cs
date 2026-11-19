@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/types/arrays.md)
 using Fpas.Tests.Support;
 
 namespace Fpas.IntegrationTests.Build;

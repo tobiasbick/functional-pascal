@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/app-chrome/dockspace.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Desktop.Dockspace;
 
 uses

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/documentation-examples.md)
 using Fpas.IntegrationTests.Documentation.Support;
 using Fpas.IntegrationTests.Processes.Support;
 using Fpas.Tests.Support;

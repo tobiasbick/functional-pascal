@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/build/distribution.md#export-the-matching-sdk)
 using System.CommandLine;
 using System.Security.Cryptography;
 using Fpas.Cli.Projects;

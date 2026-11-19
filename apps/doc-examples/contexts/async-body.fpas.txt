@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/pascal/language/error-handling/async-disposal.md)
+
 async program Example;
 
 uses System.Console as Console, System.IO as IO;

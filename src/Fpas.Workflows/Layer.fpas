@@ -1,3 +1,5 @@
+// [Documentation](../../docs/pascal/libraries/workflows.md#scope-work-and-dependencies)
+
 // Acquisition and release of typed dependencies.
 unit Fpas.Workflows.Layers;
 

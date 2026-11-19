@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/actions/button.md)
 #ifndef FPAS_BUTTON_H
 #define FPAS_BUTTON_H
 

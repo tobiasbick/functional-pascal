@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/specs/clr-mapping.md#generic-data-types)
 using Fpas.Compiler.Binding.Symbols;
 using Fpas.Compiler.Binding.References;
 using System.Reflection;

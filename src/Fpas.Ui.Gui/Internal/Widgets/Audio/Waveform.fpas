@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/motion/waveform.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Audio.Waveform;
 
 uses

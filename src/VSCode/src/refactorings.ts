@@ -1,3 +1,4 @@
+// [Documentation](../README.md#preview-and-apply-a-refactoring)
 import * as vscode from 'vscode';
 import type { ClientSession } from './client';
 import { requireTrusted, settings } from './context';

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/capture/avatar-upload.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_avatar_upload(cui_ctx *ui, const char *id, const char *name, const char *path, float size,

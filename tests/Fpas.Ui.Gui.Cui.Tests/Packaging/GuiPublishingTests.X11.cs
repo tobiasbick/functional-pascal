@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/native-build.md)
 using System.Diagnostics;
 using System.Text;
 using Fpas.Tests.Support;

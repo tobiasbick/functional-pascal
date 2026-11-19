@@ -21,3 +21,16 @@ widgets require the GUI host.
 - [UI handbook](../README.md)
 - [Inputs](../inputs/README.md)
 - [Pickers in the gallery](../../../../examples/ui/gui/gallery/Pages/Pickers/View.fpas)
+
+## Source files
+
+- `examples/ui/gui/gallery/Pages/Pickers/`
+  - [State.fpas](../../../../examples/ui/gui/gallery/Pages/Pickers/State.fpas)
+  - [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Pickers/Update.fpas)
+- `examples/ui/gui/gallery/Pages/Pickers/Widgets/`
+  - [DateRange.fpas](../../../../examples/ui/gui/gallery/Pages/Pickers/Widgets/DateRange.fpas)
+  - [RulerAndHistogram.fpas](../../../../examples/ui/gui/gallery/Pages/Pickers/Widgets/RulerAndHistogram.fpas)
+  - [WheelsAndDial.fpas](../../../../examples/ui/gui/gallery/Pages/Pickers/Widgets/WheelsAndDial.fpas)
+- `tests/Fixtures/gui-host/`
+  - [PickerFieldsContract.fpas](../../../../tests/Fixtures/gui-host/PickerFieldsContract.fpas)
+  - [RulerHistogramContract.fpas](../../../../tests/Fixtures/gui-host/RulerHistogramContract.fpas)

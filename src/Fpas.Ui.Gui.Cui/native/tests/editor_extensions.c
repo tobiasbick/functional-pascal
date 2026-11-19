@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/code/code-editor.md)
 #include "../fpas_cui.h"
 #include <stdio.h>
 #include <stdlib.h>

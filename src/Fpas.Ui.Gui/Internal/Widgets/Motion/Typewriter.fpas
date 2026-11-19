@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/motion/typewriter.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Motion.Typewriter;
 
 uses

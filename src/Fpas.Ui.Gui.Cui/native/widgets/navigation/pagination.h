@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/navigation/pagination.md)
 #ifndef FPAS_PAGINATION_H
 #define FPAS_PAGINATION_H
 

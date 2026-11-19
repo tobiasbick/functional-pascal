@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/charts/gauge.md)
 #ifndef FPAS_CUI_GAUGE_H
 #define FPAS_CUI_GAUGE_H
 #include "charts.h"

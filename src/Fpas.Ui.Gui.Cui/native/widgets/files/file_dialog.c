@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/cui.md#desktop-services)
 #include "../../fpas_cui.h"
 
 int fpas_cui_file_dialog(cui_app *app, int kind, const char *title, const char *filter_name,

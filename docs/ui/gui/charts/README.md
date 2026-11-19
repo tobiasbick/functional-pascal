@@ -27,3 +27,32 @@ values, supply a fixed range wide enough for the axis ticks to advance.
 - [More charts](../more-charts/README.md)
 - [Shared chart types](../../../../src/Fpas.Ui/Widgets/Charts/Charts.fpas)
 - [Charts in the gallery](../../../../examples/ui/gui/gallery/Pages/Charts/View.fpas)
+
+## Source files
+
+<details>
+<summary>Browse 14 source files</summary>
+
+- `examples/ui/gui/gallery/Pages/Charts/`
+  - [State.fpas](../../../../examples/ui/gui/gallery/Pages/Charts/State.fpas)
+  - [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Charts/Update.fpas)
+- `src/Fpas.Ui.Gui.Cui/Hosting/`
+  - [CuiWindow.AxisLabels.cs](../../../../src/Fpas.Ui.Gui.Cui/Hosting/CuiWindow.AxisLabels.cs)
+- `src/Fpas.Ui.Gui.Cui/Interop/Charts/`
+  - [NativeMethods.Charts.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Charts/NativeMethods.Charts.Types.cs)
+  - [NativeMethods.Charts.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Charts/NativeMethods.Charts.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Charts/`
+  - [ChartMemory.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/ChartMemory.cs)
+  - [ChartValidation.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/ChartValidation.cs)
+  - [CuiChartData.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiChartData.cs)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [charts.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/charts.c)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/charts/`
+  - [charts.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/charts.c)
+  - [charts.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/charts.h)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Display/`
+  - [CuiAxisLabelTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Display/CuiAxisLabelTests.cs)
+  - [CuiChartTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Display/CuiChartTests.cs)
+  - [CuiVisualizationTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Display/CuiVisualizationTests.cs)
+
+</details>

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/host.md)
 namespace Fpas.Ui.Gui.Cui.Tests.Layout;
 
 /// <summary>Checks shared flex allocation against finalized native geometry.</summary>

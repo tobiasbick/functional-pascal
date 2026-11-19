@@ -11,3 +11,12 @@ new image pixel array only when its contents change; retained sources are immuta
 
 Paint runs after layout on the owner thread. Its drawing capability expires
 when the callback returns. It cannot reenter the host or change application state.
+
+## Source files
+
+- `examples/ui/gui/painting/`
+  - [Painting.fpasproj](Painting.fpasproj)
+  - [State.fpas](State.fpas)
+  - [Update.fpas](Update.fpas)
+  - [View.fpas](View.fpas)
+  - [main.fpas](main.fpas)

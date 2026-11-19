@@ -48,3 +48,18 @@ Click the field or press Enter while it has focus. Choose an hour, a minute or a
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Pickers/Widgets/Time.fpas)
 - [Time dial](time-dial.md)
 - [Pickers](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Pickers/`
+  - [TimePicker.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Pickers/TimePicker.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Pickers/`
+  - [NativeMethods.TimePicker.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Pickers/NativeMethods.TimePicker.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Pickers/`
+  - [CuiWindow.TimePicker.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Pickers/CuiWindow.TimePicker.Types.cs)
+  - [CuiWindow.TimePicker.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Pickers/CuiWindow.TimePicker.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/pickers/`
+  - [time_picker.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/time_picker.c)
+  - [time_picker.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/time_picker.h)
+- `tests/Fixtures/gui-host/`
+  - [TimePickersContract.fpas](../../../../tests/Fixtures/gui-host/TimePickersContract.fpas)

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/native-build.md#composite-and-popup-adapters)
 /* Common modal header and layout identity handling for native dialogs and sheets. */
 static int fpas_modal_begin(cui_ctx *ui, cui_id key, const char *title, const char *description,
     float width, int kind, cui_side side, bool open, bool enabled, bool persistent,

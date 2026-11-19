@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/documentation-examples.md)
 using System.Text.RegularExpressions;
 
 namespace Fpas.IntegrationTests.Documentation;

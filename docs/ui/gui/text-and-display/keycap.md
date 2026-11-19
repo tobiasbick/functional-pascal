@@ -40,3 +40,15 @@ widget or application action that handles it.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Display/View.fpas)
 - [Command palette](../overlays/command-palette.md)
 - [Chapter index](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Display/`
+  - [Keycap.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Display/Keycap.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Display/`
+  - [NativeMethods.Keycap.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Display/NativeMethods.Keycap.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Display/`
+  - [CuiWindow.Keycap.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Display/CuiWindow.Keycap.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/display/`
+  - [keycap.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/display/keycap.c)
+  - [keycap.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/display/keycap.h)

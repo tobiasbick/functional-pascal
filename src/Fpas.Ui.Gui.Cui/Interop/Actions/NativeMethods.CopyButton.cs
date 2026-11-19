@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/actions/copy-button.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

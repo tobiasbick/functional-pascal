@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/native-build.md#composite-and-popup-adapters)
 #include "../../fpas_cui.h"
 
 static int fpas_menu_rows(cui_ctx *ui, cui_id popup, bool visible,

@@ -111,3 +111,22 @@ other .NET tools and languages.
 - [Topic overview](README.md)
 - [CLR mapping](../../specs/clr-mapping.md)
 - [Test coverage](../../../tests/coverage.md)
+
+## Source files
+
+- `src/Fpas.Compiler/Binding/Bodies/`
+  - [Binder.AttributeValues.cs](../../../src/Fpas.Compiler/Binding/Bodies/Binder.AttributeValues.cs)
+  - [Binder.Attributes.cs](../../../src/Fpas.Compiler/Binding/Bodies/Binder.Attributes.cs)
+- `src/Fpas.Compiler/Binding/Bound/`
+  - [Attributes.cs](../../../src/Fpas.Compiler/Binding/Bound/Attributes.cs)
+- `src/Fpas.Compiler/Binding/References/`
+  - [MetadataAttributes.cs](../../../src/Fpas.Compiler/Binding/References/MetadataAttributes.cs)
+- `src/Fpas.Compiler/Syntax/`
+  - [Attributes.cs](../../../src/Fpas.Compiler/Syntax/Attributes.cs)
+- `src/Fpas.Compiler/Syntax/Parsing/`
+  - [Parser.Attributes.cs](../../../src/Fpas.Compiler/Syntax/Parsing/Parser.Attributes.cs)
+- `tests/Fpas.Compiler.Tests/Metadata/`
+  - [AttributeTests.cs](../../../tests/Fpas.Compiler.Tests/Metadata/AttributeTests.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.AttributeDiagnostics.cs](../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.AttributeDiagnostics.cs)
+  - [MsBuildTests.Attributes.cs](../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.Attributes.cs)

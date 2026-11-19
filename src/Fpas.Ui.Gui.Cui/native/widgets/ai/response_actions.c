@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/ai/response-actions.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_response_actions(cui_ctx *ui, const char *id, const char *copy_text, int *vote, int flags, int *parts) {

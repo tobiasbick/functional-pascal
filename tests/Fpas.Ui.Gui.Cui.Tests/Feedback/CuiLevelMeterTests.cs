@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/audio/level-meter.md)
 namespace Fpas.Ui.Gui.Cui.Tests.Feedback;
 
 /// <summary>Exercises CUI's latching audio clip indicator through the managed adapter.</summary>

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/selection-bar.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_selection_bar(cui_ctx *ui, const char *id, bool *selected, int item_count, int count,

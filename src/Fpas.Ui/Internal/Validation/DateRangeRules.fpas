@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#date-range)
+
 unit Fpas.Ui.Internal.Validation.DateRangeRules;
 
 uses

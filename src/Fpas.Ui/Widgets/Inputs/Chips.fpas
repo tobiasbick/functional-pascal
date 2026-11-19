@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/selection/chip.md)
+
 unit Fpas.Ui.Widgets.Inputs.Chips;
 
 uses Fpas.Ui.Elements as E;

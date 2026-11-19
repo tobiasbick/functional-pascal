@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/fmt-style.md)
 using System.Globalization;
 using System.Text;
 

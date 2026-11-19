@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/language/types/arrays.md)
 using Fpas.Compiler.Binding.Types;
 using Fpas.Compiler.Binding.References;
 using Fpas.Compiler.Binding.Bound;

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/program-structure/project-commands.md)
 using System.Text.Json;
 using Fpas.IntegrationTests.Build;
 using Fpas.Tests.Support;

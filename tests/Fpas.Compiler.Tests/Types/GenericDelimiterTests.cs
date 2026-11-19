@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/types/generics.md)
 using Fpas.Compiler.Analysis;
 using Fpas.Compiler.Tests.Support;
 

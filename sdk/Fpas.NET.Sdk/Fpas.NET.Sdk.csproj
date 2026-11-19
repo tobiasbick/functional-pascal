@@ -1,3 +1,4 @@
+<!-- [Documentation](../../docs/build/distribution.md#build-and-deliver) -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsPackable>true</IsPackable>

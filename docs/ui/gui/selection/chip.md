@@ -41,3 +41,15 @@ Click or press Enter or Space to propose toggling the chip. CUI draws a check ma
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/Chips.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Selection/Widgets/Chip.fpas)
 - [Selection](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [Chip.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/Chip.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.Chip.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.Chip.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.Chip.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.Chip.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [chip.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/chip.c)
+  - [chip.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/chip.h)

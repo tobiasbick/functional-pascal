@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/program-structure/cli.md#find-declarations)
 namespace Fpas.Workspaces.Queries;
 
 /// <summary>Filters explicit checked FPAS declarations by literal name and kind.</summary>

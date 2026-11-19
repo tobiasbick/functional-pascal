@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/pickers/wheel-picker.md)
 /* Adapter-level black-box drag interruption probe; no private native state inspection. */
 #include "../fpas_cui.h"
 #include <stdio.h>

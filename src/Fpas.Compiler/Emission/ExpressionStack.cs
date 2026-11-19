@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/compiler.md#typed-emission)
 using Fpas.Compiler.Binding.Types;
 using Fpas.Compiler.Binding.Bound;
 

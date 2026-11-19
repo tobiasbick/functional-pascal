@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/actions/speed-dial.md)
+
 unit GuiGallery.Pages.Actions.Widgets.SpeedDial;
 
 uses

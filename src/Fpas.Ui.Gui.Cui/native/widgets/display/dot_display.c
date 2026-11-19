@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/instruments/dot-display.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_dot_display(cui_ctx *ui, const char *id, const char *text, float pitch,

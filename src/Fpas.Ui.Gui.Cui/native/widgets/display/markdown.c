@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/code/markdown.md)
 #include "../../fpas_cui.h"
 
 const char *fpas_cui_markdown(cui_ctx *ui, const char *id, const char *text, int width_kind, float width, float size, int flags, int *offset, int *line, int *checked, const char **hovered, int *hover_changed) {

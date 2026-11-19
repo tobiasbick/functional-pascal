@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/inputs/tag-input.md)
 namespace Fpas.Ui.Gui.Cui.Tests.Inputs;
 
 /// <summary>Checks native tag proposals that can contain more than one edit per frame.</summary>

@@ -41,3 +41,16 @@ Activate the swatch to open CUI's palette. Use the hue strip, the saturation and
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Pickers/ColorPickers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/BrandColor.fpas)
 - [Inputs](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Pickers/`
+  - [ColorPicker.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Pickers/ColorPicker.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Pickers/`
+  - [NativeMethods.ColorPicker.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Pickers/NativeMethods.ColorPicker.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Pickers/`
+  - [CuiWindow.ColorPicker.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Pickers/CuiWindow.ColorPicker.Types.cs)
+  - [CuiWindow.ColorPicker.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Pickers/CuiWindow.ColorPicker.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/pickers/`
+  - [color_picker.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/color_picker.c)
+  - [color_picker.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/color_picker.h)

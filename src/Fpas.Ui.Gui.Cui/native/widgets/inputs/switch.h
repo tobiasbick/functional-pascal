@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/selection/switch.md)
 #ifndef FPAS_SWITCH_H
 #define FPAS_SWITCH_H
 

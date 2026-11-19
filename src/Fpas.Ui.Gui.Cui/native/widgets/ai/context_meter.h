@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/ai/context-meter.md)
 #ifndef FPAS_CUI_CONTEXT_METER_H
 #define FPAS_CUI_CONTEXT_METER_H
 CUI_API void fpas_cui_context_meter(cui_ctx *ui, const char *id, float used, float limit,

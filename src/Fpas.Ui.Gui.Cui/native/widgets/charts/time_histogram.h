@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-developer-tools/time-histogram.md)
 #ifndef FPAS_CUI_TIME_HISTOGRAM_H
 #define FPAS_CUI_TIME_HISTOGRAM_H
 /** Draws the histogram and records the geometry of the plot and legend together.

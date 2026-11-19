@@ -1,3 +1,4 @@
+// [Documentation](../verification.md#fixture-preparation-and-host-runs)
 import { execFile } from 'node:child_process';
 import { copyFile, mkdir, readdir, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';

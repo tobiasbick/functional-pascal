@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/overlays/popover.md)
+
 unit GuiGallery.Pages.Overlays.Widgets.Popover;
 
 uses

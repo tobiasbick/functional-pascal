@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/ui/gui/feedback/README.md)
+
 unit GalleryFeedbackContract;
 
 uses

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/creative-controls/palette-strip.md)
 #ifndef FPAS_CUI_PALETTE_STRIP_H
 #define FPAS_CUI_PALETTE_STRIP_H
 /** Draws a palette well and writes proposed colors and locks.

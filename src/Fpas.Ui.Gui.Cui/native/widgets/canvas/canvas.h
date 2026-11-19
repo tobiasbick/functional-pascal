@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/text-and-display/canvas.md)
 #ifndef FPAS_CUI_CANVAS_H
 #define FPAS_CUI_CANVAS_H
 typedef struct { int kind; float x, y, a, b, radius; uint32_t color; } fpas_canvas_shape;

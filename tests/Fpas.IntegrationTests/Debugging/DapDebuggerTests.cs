@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-dap.md)
 using System.Text.Json.Nodes;
 
 namespace Fpas.IntegrationTests.Debugging;

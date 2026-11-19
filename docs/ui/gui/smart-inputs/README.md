@@ -18,3 +18,18 @@ require the GUI host.
 - [UI handbook](../README.md)
 - [Inputs](../inputs/README.md)
 - [Smart inputs in the gallery](../../../../examples/ui/gui/gallery/Pages/SmartInputs/View.fpas)
+
+## Source files
+
+- `examples/ui/gui/gallery/Pages/SmartInputs/`
+  - [State.fpas](../../../../examples/ui/gui/gallery/Pages/SmartInputs/State.fpas)
+- `examples/ui/gui/gallery/Pages/SmartInputs/Widgets/`
+  - [Editors.fpas](../../../../examples/ui/gui/gallery/Pages/SmartInputs/Widgets/Editors.fpas)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.SmartInput.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.SmartInput.cs)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [smart_inputs.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/smart_inputs.c)
+- `tests/Fixtures/gui-host/`
+  - [CompletionContract.fpas](../../../../tests/Fixtures/gui-host/CompletionContract.fpas)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Inputs/`
+  - [CuiSmartInputTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Inputs/CuiSmartInputTests.cs)

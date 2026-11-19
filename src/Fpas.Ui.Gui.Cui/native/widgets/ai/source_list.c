@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/ai/source-list.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_source_list(cui_ctx *ui, const char *id, const cui_source *sources, int count, int flags, int focus, int *parts) {

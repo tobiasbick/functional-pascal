@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/interop/attributes.md)
 using System.Reflection.Metadata;
 
 namespace Fpas.Compiler.Binding.References;

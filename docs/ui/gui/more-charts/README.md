@@ -30,3 +30,40 @@ identify the coordinates or series and point described on their pages.
 - [UI handbook](../README.md)
 - [Charts](../charts/README.md)
 - [More charts in the gallery](../../../../examples/ui/gui/gallery/Pages/MoreCharts/View.fpas)
+
+## Source files
+
+<details>
+<summary>Browse 22 source files</summary>
+
+- `examples/ui/gui/gallery/Pages/MoreCharts/`
+  - [Data.fpas](../../../../examples/ui/gui/gallery/Pages/MoreCharts/Data.fpas)
+  - [Layout.fpas](../../../../examples/ui/gui/gallery/Pages/MoreCharts/Layout.fpas)
+  - [Series.fpas](../../../../examples/ui/gui/gallery/Pages/MoreCharts/Series.fpas)
+  - [State.fpas](../../../../examples/ui/gui/gallery/Pages/MoreCharts/State.fpas)
+  - [Update.fpas](../../../../examples/ui/gui/gallery/Pages/MoreCharts/Update.fpas)
+- `examples/ui/gui/gallery/Pages/MoreCharts/Widgets/`
+  - [Flows.fpas](../../../../examples/ui/gui/gallery/Pages/MoreCharts/Widgets/Flows.fpas)
+  - [Market.fpas](../../../../examples/ui/gui/gallery/Pages/MoreCharts/Widgets/Market.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Charts/`
+  - [NativeMethods.MoreCharts.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Charts/NativeMethods.MoreCharts.Types.cs)
+  - [NativeMethods.MoreCharts.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Charts/NativeMethods.MoreCharts.cs)
+  - [NativeMethods.Visualizations.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Charts/NativeMethods.Visualizations.Types.cs)
+  - [NativeMethods.Visualizations.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Charts/NativeMethods.Visualizations.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Charts/`
+  - [ChartMemory.MoreCharts.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/ChartMemory.MoreCharts.cs)
+  - [CuiMoreChartData.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiMoreChartData.cs)
+  - [CuiVisualizationData.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiVisualizationData.cs)
+  - [MoreChartValidation.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/MoreChartValidation.cs)
+  - [VisualizationValidation.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/VisualizationValidation.cs)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [more_charts.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/more_charts.c)
+  - [visualizations.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/visualizations.c)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/charts/`
+  - [more_charts.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/more_charts.h)
+  - [visualizations.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/visualizations.c)
+  - [visualizations.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/visualizations.h)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Display/`
+  - [CuiMoreChartTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Display/CuiMoreChartTests.cs)
+
+</details>

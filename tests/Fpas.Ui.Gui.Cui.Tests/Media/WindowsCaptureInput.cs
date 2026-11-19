@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/capture/README.md)
 using System.Runtime.InteropServices;
 using System.Text;
 

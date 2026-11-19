@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/activity-rings.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_activity_rings(cui_ctx *ui, const char *id, const fpas_viz_item *items, int count,

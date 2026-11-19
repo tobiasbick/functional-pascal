@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/disclosure/undo-toast.md)
+
 unit GuiGallery.Pages.Disclosure.Widgets.UndoToast;
 
 uses

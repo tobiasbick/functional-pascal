@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/split-bar.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Charts.SplitBar;
 
 uses

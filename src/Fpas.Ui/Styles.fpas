@@ -1,3 +1,5 @@
+// [Documentation](../../docs/ui/widgets.md#layout-and-style)
+
 unit Fpas.Ui.Styles;
 
 // A semantic style supplied by the host's current theme.

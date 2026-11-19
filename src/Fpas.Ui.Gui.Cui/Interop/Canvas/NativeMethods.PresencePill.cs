@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/canvas-and-bars/presence-pill.md)
 using Fpas.Ui.Gui.Cui.Interop.Canvas;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

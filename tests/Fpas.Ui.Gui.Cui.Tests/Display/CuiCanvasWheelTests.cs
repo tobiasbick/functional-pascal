@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/text-and-display/canvas.md)
 namespace Fpas.Ui.Gui.Cui.Tests.Display;
 
 /// <summary>Checks CUI-owned canvas wheel routing, opt-in behavior and retirement.</summary>

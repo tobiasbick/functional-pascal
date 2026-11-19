@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/program-structure/project-commands.md#save-the-original-failure)
 namespace Fpas.Debugging.Failures;
 
 /// <summary>Options for a managed run that saves its first unhandled exception before resuming.</summary>

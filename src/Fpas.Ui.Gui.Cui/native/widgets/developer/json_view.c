@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/code/json-viewer.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_json_view(cui_ctx *ui, const char *id, const char *json, int depth, float height, int enabled) {

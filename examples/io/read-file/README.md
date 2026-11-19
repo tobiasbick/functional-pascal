@@ -24,3 +24,8 @@ The program works regardless of the current working directory. The SDK test
 builds these exact sources/project and checks the output. Use a fresh SDK
 package version/cache entry after changing packaged compiler tools, as described
 in the bootstrap instructions.
+
+## Source files
+
+- [ReadFile.fpasproj](ReadFile.fpasproj)
+- [main.fpas](main.fpas)

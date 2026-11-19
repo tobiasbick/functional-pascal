@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/language-server.md)
 using Fpas.IntegrationTests.Build;
 
 namespace Fpas.IntegrationTests.LanguageServer;

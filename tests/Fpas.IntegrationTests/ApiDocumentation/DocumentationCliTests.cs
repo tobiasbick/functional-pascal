@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/api-documentation.md)
 using Fpas.IntegrationTests.Build;
 using Fpas.IntegrationTests.Build.Support;
 using Fpas.Tests.Support;

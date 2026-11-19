@@ -1,8 +1,9 @@
 # Program with multiple units
 
-Units.fpasproj compiles main.fpas and both sources under lib into one assembly.
-The default `**/*.fpas` glob selects them. Unit headers define Demo.Numbers and
-Demo.Messages; source filenames and glob order do not define their identities.
+[Units.fpasproj](Units.fpasproj) compiles [the program](main.fpas) and both
+sources under lib into one assembly. The default `**/*.fpas` glob selects them.
+The [arithmetic unit](lib/calculations.fpas) declares `Demo.Numbers`, and the
+[messages unit](lib/messages.fpas) declares `Demo.Messages`.
 
 After the [local SDK bootstrap](../../../docs/build/development.md#build-an-fpas-application):
 

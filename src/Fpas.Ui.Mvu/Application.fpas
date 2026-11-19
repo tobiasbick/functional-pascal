@@ -1,3 +1,5 @@
+// [Documentation](../../docs/ui/mvu/runtime.md#driving-a-session)
+
 unit Fpas.Ui.Mvu.Application;
 
 uses System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;

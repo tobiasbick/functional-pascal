@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/tui/host.md#views-layout-and-validation)
+
 unit Fpas.Ui.Tui.Internal.Layout.Flexible;
 
 uses Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Layout as L, System as Sys, System.Collections.Generic as Generic, System.Text as Text;

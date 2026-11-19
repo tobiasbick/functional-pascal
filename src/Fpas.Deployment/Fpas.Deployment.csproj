@@ -1,3 +1,4 @@
+<!-- [Documentation](../../docs/build/distribution.md#extraction-and-ownership) -->
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <PackageReference Include="System.Security.Cryptography.Pkcs" />

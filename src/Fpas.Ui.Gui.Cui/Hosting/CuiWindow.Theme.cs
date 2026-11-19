@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/cui.md#theme-and-resources)
 using Fpas.Ui.Gui.Cui.Interop;
 
 namespace Fpas.Ui.Gui.Cui;

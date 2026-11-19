@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/desktop.md#shell-and-navigation)
+
 // Navigation restoration is validated independently of rendering and display names.
 unit FpasAmp.Ui.Tests.Navigation;
 

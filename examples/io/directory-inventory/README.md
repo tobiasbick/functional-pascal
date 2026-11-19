@@ -25,3 +25,8 @@ repository containing binaries. Output lists relative paths with line counts,
 then file and line totals. Missing/extra arguments return exit code 2; I/O or
 access failures return 1. The inventory is a live traversal without a filesystem
 snapshot; concurrent changes can fail with an I/O error. Counts use checked int.
+
+## Source files
+
+- [DirectoryInventory.fpasproj](DirectoryInventory.fpasproj)
+- [main.fpas](main.fpas)

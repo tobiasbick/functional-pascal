@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/ui/gui/overlays/tooltip.md)
+
 unit GalleryTooltipContract;
 
 uses

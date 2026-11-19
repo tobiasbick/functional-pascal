@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/program-structure/project-commands.md#build)
 using Fpas.Cli.Analysis;
 using Fpas.Cli.Reporting;
 using Fpas.Workspaces.Processes;

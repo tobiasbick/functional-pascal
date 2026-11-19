@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/tui/host.md#input-and-controlled-state)
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text;

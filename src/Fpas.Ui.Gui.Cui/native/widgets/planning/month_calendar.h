@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/planning/month-calendar.md)
 #ifndef FPAS_CUI_MONTH_CALENDAR_H
 #define FPAS_CUI_MONTH_CALENDAR_H
 /** Call-scoped appointment: title, inclusive start/finish .NET day numbers,

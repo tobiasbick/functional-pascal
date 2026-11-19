@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/ui/gui/actions/README.md)
+
 unit GalleryActionsPickersContract;
 
 uses

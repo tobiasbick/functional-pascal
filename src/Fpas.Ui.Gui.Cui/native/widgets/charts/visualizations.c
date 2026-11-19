@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/README.md)
 /* Frame ownership only: CUI retains these strings in deferred paint data. */
 static const char *fpas_viz_text(cui_ctx *ui, const char *text) {
     return text && *text ? cui__frame_strdup(ui, text, -1) : NULL;

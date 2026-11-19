@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/desktop.md#settings-and-scan-control)
+
 // Preference persistence and failure-safe UI proposals, without opening a window.
 unit FpasAmp.Ui.Tests.Preferences;
 

@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/library.md#playlists)
+
 // Durable jobs and serialized schema migration support independent background stages.
 unit FpasAmp.Library.Tests.PlaylistStorage;
 

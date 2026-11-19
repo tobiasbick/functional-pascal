@@ -1,3 +1,5 @@
+// [Documentation](../../docs/ui/widgets.md#native-text-and-drawing)
+
 unit Fpas.Ui.Graphics;
 
 // Native CUI font roles; loaded faces can replace these roles in a GUI window.

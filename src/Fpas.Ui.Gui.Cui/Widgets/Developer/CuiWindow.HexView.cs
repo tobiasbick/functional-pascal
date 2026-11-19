@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/code/hex-viewer.md)
 using Fpas.Ui.Gui.Cui.Widgets.Charts;
 using Fpas.Ui.Gui.Cui.Widgets.Developer;
 using Fpas.Ui.Gui.Cui.Interop;

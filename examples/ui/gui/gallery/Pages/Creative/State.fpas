@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/creative-controls/README.md)
+
 unit GuiGallery.Pages.Creative.State;
 
 uses

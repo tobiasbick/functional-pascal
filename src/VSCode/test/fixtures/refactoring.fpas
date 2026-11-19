@@ -1,3 +1,5 @@
+// [Documentation](../../verification.md#editor-and-project-scenarios)
+
 program RefactoringProbe;
 
 uses System.Text as Unused, System.Console as Console, RefactoringDependency as Keep;

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/inputs/calendar.md)
 #include "../../fpas_cui.h"
 
 /* DateOnly uses a 0001-01-01 epoch. CUI uses 1970-01-01. */

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/files/file-browser.md)
 #ifndef FPAS_CUI_FILE_BROWSER_H
 #define FPAS_CUI_FILE_BROWSER_H
 /** Draws a file browser with model-owned folder and a synchronous source.

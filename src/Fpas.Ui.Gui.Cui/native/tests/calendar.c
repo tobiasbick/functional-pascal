@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/inputs/calendar.md)
 /* Compare calendar views and keyboard navigation with direct CUI pixels. */
 #include "../fpas_cui.h"
 #include <stdio.h>

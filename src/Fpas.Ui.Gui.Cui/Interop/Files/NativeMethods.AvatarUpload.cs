@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/capture/avatar-upload.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

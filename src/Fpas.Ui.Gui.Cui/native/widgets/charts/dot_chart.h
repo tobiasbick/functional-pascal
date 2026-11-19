@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/instruments/dot-chart.md)
 #ifndef FPAS_CUI_DOT_CHART_H
 #define FPAS_CUI_DOT_CHART_H
 

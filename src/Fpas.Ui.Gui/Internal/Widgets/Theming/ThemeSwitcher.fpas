@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/actions/theme-switcher.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Theming.ThemeSwitcher;
 
 uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as S, Fpas.Ui.Internal.Theming.ThemeSwitchers as Parts, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Context as C, System.Collections.Generic as Lists;

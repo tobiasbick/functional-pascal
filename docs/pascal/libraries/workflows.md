@@ -74,11 +74,23 @@ acquisition through cleanup or inside `Retry` for one span per attempt.
 The wrapper records completion, failure, or caller cancellation without
 attaching environment or result payloads.
 
+## Capturing a child process
+
+`Fpas.Processes.Workflows.Capture.Read(TimeoutSeconds, Limit)` builds a
+deferred workflow. Supply an absolute executable path, individual arguments,
+the working directory and optional environment overrides in the request.
+The adapter closes the child's input and drains output and error concurrently.
+A successful result contains both UTF-8 strings and the child's exit code,
+including nonzero exit codes.
+
+`Limit` bounds raw bytes **per stream**. Exceeding it faults the task with
+`InvalidDataException`. The deadline produces `CaptureFailure.Deadline`;
+caller cancellation cancels the task. Cleanup also terminates
+[owned descendants](processes.md#owning-a-process-tree) that still hold pipes.
+
 ## Examples
 
-The [process capture adapter](../../../src/Fpas.Processes.Workflows/Capture.fpas)
-combines a process layer, concurrent readers, a byte limit per stream, and a
-deadline. Both output streams are decoded as UTF-8. The [documentation checker](../../../apps/doc-examples/src/validation.fpas)
+The [documentation checker](../../../apps/doc-examples/src/validation.fpas)
 uses it to compile and execute examples. [Measure](../../../apps/diagnostics/Measure/main.fpas)
 reuses the workflow for each sample. The [contract programs](../../../tests/Fixtures/workflows)
 exercise composition, dependency cleanup, and bounded streams.
@@ -89,3 +101,31 @@ exercise composition, dependency cleanup, and bounded streams.
 - [Function contracts](../language/functions/contracts.md)
 - [Task coordination](task-coordination.md)
 - [Bounded channels](channels.md)
+
+## Source files
+
+<details>
+<summary>Browse 15 source files</summary>
+
+- `src/Fpas.Processes.Workflows/`
+  - [Capture.fpas](../../../src/Fpas.Processes.Workflows/Capture.fpas)
+  - [Fpas.Processes.Workflows.fpasproj](../../../src/Fpas.Processes.Workflows/Fpas.Processes.Workflows.fpasproj)
+- `src/Fpas.Workflows/`
+  - [Layer.fpas](../../../src/Fpas.Workflows/Layer.fpas)
+  - [Parallel.fpas](../../../src/Fpas.Workflows/Parallel.fpas)
+  - [Policies.fpas](../../../src/Fpas.Workflows/Policies.fpas)
+  - [Scope.fpas](../../../src/Fpas.Workflows/Scope.fpas)
+  - [Stream.fpas](../../../src/Fpas.Workflows/Stream.fpas)
+  - [Tracing.fpas](../../../src/Fpas.Workflows/Tracing.fpas)
+  - [Workflow.fpas](../../../src/Fpas.Workflows/Workflow.fpas)
+- `tests/Fixtures/workflows/`
+  - [CaptureEncoding.fpas](../../../tests/Fixtures/workflows/CaptureEncoding.fpas)
+  - [Lifetimes.fpas](../../../tests/Fixtures/workflows/Lifetimes.fpas)
+  - [Operations.fpas](../../../tests/Fixtures/workflows/Operations.fpas)
+  - [Streams.fpas](../../../tests/Fixtures/workflows/Streams.fpas)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [WorkflowProjects.cs](../../../tests/Fpas.IntegrationTests/Build/WorkflowProjects.cs)
+- `tests/Fpas.IntegrationTests/Execution/`
+  - [WorkflowTests.cs](../../../tests/Fpas.IntegrationTests/Execution/WorkflowTests.cs)
+
+</details>

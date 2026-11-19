@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/app-chrome/status-bar.md)
 #ifndef FPAS_CUI_STATUS_BAR_H
 #define FPAS_CUI_STATUS_BAR_H
 

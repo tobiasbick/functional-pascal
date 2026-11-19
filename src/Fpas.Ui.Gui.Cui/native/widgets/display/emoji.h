@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/text-and-display/emoji.md)
 #ifndef FPAS_CUI_EMOJI_H
 #define FPAS_CUI_EMOJI_H
 /** Draws a native emoji.

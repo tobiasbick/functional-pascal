@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/compiler.md#semantic-snapshots)
 using System.Security.Cryptography;
 
 namespace Fpas.Compiler.Analysis;

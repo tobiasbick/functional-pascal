@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#passive-stored-values)
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading.Channels;

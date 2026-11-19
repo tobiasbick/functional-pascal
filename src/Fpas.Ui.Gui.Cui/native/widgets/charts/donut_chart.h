@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/charts/donut-chart.md)
 #ifndef FPAS_CUI_DONUT_CHART_H
 #define FPAS_CUI_DONUT_CHART_H
 #include "charts.h"

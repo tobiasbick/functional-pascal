@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/planning/kanban.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_kanban_begin(cui_ctx *ui, const char *id, int enabled) {

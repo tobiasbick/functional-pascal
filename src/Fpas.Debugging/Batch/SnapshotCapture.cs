@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/batch-debugging.md)
 using Fpas.Debugging.Core;
 using Fpas.Debugging.Hosting;
 

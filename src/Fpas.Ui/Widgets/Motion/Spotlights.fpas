@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/motion/spotlight-card.md)
+
 unit Fpas.Ui.Widgets.Motion.Spotlights;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Layout as L;

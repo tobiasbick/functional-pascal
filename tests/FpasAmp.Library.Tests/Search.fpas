@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/library.md#search)
+
 // Search keys and ranking: folded words, sound-alike codes, typos and word order.
 unit FpasAmp.Library.Tests.Search;
 

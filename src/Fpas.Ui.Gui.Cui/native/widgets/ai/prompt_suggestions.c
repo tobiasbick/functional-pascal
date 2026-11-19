@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/ai/prompt-suggestions.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_prompt_suggestions(cui_ctx *ui, const char *id, const cui_prompt_suggestion *items,

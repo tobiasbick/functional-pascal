@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/cui.md#desktop-services)
 #ifndef FPAS_FILE_DIALOG_H
 #define FPAS_FILE_DIALOG_H
 

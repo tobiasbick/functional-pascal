@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/more-developer-tools/http-response-status.md)
 using Fpas.Ui.Gui.Cui.Interop.Developer;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

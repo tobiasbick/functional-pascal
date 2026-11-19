@@ -16,3 +16,12 @@ Label callbacks run on the owner thread while CUI paints. They must be pure,
 short and return valid Unicode without NUL. CUI supplies a bounded UTF-8
 buffer; excess text is cut at a complete Unicode scalar. An exception is
 re-raised after native rendering returns, without crossing C frames.
+
+## Source files
+
+- `examples/ui/gui/native-api/`
+  - [NativeApi.fpasproj](NativeApi.fpasproj)
+  - [State.fpas](State.fpas)
+  - [Update.fpas](Update.fpas)
+  - [View.fpas](View.fpas)
+  - [main.fpas](main.fpas)

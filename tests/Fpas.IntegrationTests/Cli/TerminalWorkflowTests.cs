@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/terminal-testing.md)
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Fpas.IntegrationTests.Debugging;

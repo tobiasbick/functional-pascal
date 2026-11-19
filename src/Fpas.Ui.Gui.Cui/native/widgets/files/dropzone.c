@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/capture/dropzone.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_dropzone(cui_ctx *ui, const char *id, const char *title, const char *description,

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/overview/metric.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_metric(cui_ctx *ui, const char *label, const char *value, float delta,

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#passive-exception-facts)
 using Fpas.Debugging.Core;
 
 namespace Fpas.Debugging.Native;

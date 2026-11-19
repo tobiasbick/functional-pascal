@@ -24,3 +24,14 @@ messages in your update. These widgets require the GUI host.
 - [Typewriter](../motion/typewriter.md)
 - [Chat message](../social-and-media/chat-message.md)
 - [AI in the gallery](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
+
+## Source files
+
+- `examples/ui/gui/gallery/Pages/Ai/`
+  - [State.fpas](../../../../examples/ui/gui/gallery/Pages/Ai/State.fpas)
+  - [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Ai/Update.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Ai/`
+  - [NativeAiData.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Ai/NativeAiData.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Ai/`
+  - [CuiAiData.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Ai/CuiAiData.Types.cs)
+  - [CuiAiData.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Ai/CuiAiData.cs)

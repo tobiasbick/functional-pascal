@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/inputs/color-picker.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Pickers.ColorPicker;
 
 uses

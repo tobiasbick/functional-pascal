@@ -17,3 +17,9 @@ Tabs switch content within a view. A sidebar switches between destinations.
 - [Reader](../reader/README.md)
 - [App chrome](../app-chrome/README.md)
 - [Navigation in the gallery](../../../../examples/ui/gui/gallery/Pages/Navigation/View.fpas)
+
+## Source files
+
+- [State.fpas](../../../../examples/ui/gui/gallery/Pages/Navigation/State.fpas)
+- [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Navigation/Update.fpas)
+- [NavigationContract.fpas](../../../../tests/Fixtures/gui-host/NavigationContract.fpas)

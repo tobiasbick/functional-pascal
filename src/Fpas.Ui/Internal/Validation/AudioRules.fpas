@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#audio-controls)
+
 unit Fpas.Ui.Internal.Validation.AudioRules;
 
 uses Fpas.Ui.Internal.Validation.Rules as R, Fpas.Ui.Widgets.Audio.LevelMeters as M, System as Sys;

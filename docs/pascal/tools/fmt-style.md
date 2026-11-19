@@ -164,3 +164,38 @@ end program;
 - [Tools](README.md)
 - [CLI reference](../program-structure/cli.md)
 - [Comments and documentation](../language/basics/comments.md)
+
+## Source files
+
+<details>
+<summary>Browse 20 source files</summary>
+
+- `src/Fpas.Cli/Formatting/`
+  - [FormatCommand.cs](../../../src/Fpas.Cli/Formatting/FormatCommand.cs)
+  - [FormatPublication.cs](../../../src/Fpas.Cli/Formatting/FormatPublication.cs)
+  - [FormatReport.cs](../../../src/Fpas.Cli/Formatting/FormatReport.cs)
+- `src/Fpas.Compiler/Formatting/`
+  - [FpasFormatter.cs](../../../src/Fpas.Compiler/Formatting/FpasFormatter.cs)
+  - [LayoutWriter.cs](../../../src/Fpas.Compiler/Formatting/LayoutWriter.cs)
+  - [SourceFormatter.cs](../../../src/Fpas.Compiler/Formatting/SourceFormatter.cs)
+  - [SourceTrivia.cs](../../../src/Fpas.Compiler/Formatting/SourceTrivia.cs)
+  - [TextColumns.cs](../../../src/Fpas.Compiler/Formatting/TextColumns.cs)
+- `src/Fpas.Compiler/Syntax/Parsing/`
+  - [Parser.Layout.cs](../../../src/Fpas.Compiler/Syntax/Parsing/Parser.Layout.cs)
+- `src/Fpas.Compiler/Syntax/`
+  - [SyntaxLayout.cs](../../../src/Fpas.Compiler/Syntax/SyntaxLayout.cs)
+- `src/Fpas.Workspaces/Formatting/`
+  - [FormatSources.cs](../../../src/Fpas.Workspaces/Formatting/FormatSources.cs)
+- `tests/Fpas.Compiler.Tests/Formatting/`
+  - [FormatterTests.cs](../../../tests/Fpas.Compiler.Tests/Formatting/FormatterTests.cs)
+  - [GenericOperatorFormattingTests.cs](../../../tests/Fpas.Compiler.Tests/Formatting/GenericOperatorFormattingTests.cs)
+  - [RecordUpdateFormattingTests.cs](../../../tests/Fpas.Compiler.Tests/Formatting/RecordUpdateFormattingTests.cs)
+  - [SourceSectionTests.cs](../../../tests/Fpas.Compiler.Tests/Formatting/SourceSectionTests.cs)
+- `tests/Fpas.IntegrationTests/Formatting/`
+  - [FormatCliTests.cs](../../../tests/Fpas.IntegrationTests/Formatting/FormatCliTests.cs)
+  - [FormatCorpusTests.cs](../../../tests/Fpas.IntegrationTests/Formatting/FormatCorpusTests.cs)
+  - [FormatProjectTests.cs](../../../tests/Fpas.IntegrationTests/Formatting/FormatProjectTests.cs)
+  - [GenericDelimiterExecutionTests.cs](../../../tests/Fpas.IntegrationTests/Formatting/GenericDelimiterExecutionTests.cs)
+  - [TokenBoundaryExecutionTests.cs](../../../tests/Fpas.IntegrationTests/Formatting/TokenBoundaryExecutionTests.cs)
+
+</details>

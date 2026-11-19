@@ -48,3 +48,15 @@ composer, set its Models and Selected fields.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [Composer](../voice/composer.md)
 - [AI](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Ai/`
+  - [ModelPicker.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Ai/ModelPicker.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Ai/`
+  - [NativeMethods.ModelPicker.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Ai/NativeMethods.ModelPicker.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Ai/`
+  - [CuiWindow.ModelPicker.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Ai/CuiWindow.ModelPicker.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/ai/`
+  - [model_picker.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/model_picker.c)
+  - [model_picker.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/model_picker.h)

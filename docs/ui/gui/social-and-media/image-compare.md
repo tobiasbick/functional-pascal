@@ -46,3 +46,15 @@ fraction to keep the selected comparison in the model.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Media/ImageComparisons.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/Media.fpas)
 - [Social and media](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Media/`
+  - [ImageCompare.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Media/ImageCompare.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Media/`
+  - [NativeMethods.ImageCompare.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Media/NativeMethods.ImageCompare.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Media/`
+  - [CuiWindow.ImageCompare.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Media/CuiWindow.ImageCompare.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/media/`
+  - [image_compare.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/media/image_compare.c)
+  - [image_compare.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/media/image_compare.h)

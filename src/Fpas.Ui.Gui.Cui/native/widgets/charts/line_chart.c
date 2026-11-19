@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/charts/line-chart.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_line_chart(cui_ctx *ui, const char *id, const fpas_chart_series *series, int count, const fpas_chart_options *options) {

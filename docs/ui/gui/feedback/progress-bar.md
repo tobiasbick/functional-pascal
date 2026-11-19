@@ -49,3 +49,7 @@ Indeterminate mode, dither and custom track height require the GUI.
 - [Meter](meter.md)
 - [Feedback](README.md)
 - [Terminal example](../../tui/feedback/progress-bar.md)
+
+## Source files
+
+- [ProgressBar.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Feedback/ProgressBar.fpas)

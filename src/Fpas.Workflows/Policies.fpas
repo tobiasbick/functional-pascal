@@ -1,3 +1,5 @@
+// [Documentation](../../docs/pascal/libraries/workflows.md#describe-and-run-a-workflow)
+
 // Deadlines and retries for deferred operations.
 unit Fpas.Workflows.Policies;
 

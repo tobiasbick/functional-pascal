@@ -49,3 +49,10 @@ Hover a tile to inspect it. With a selection callback, clicking proposes the til
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/View.fpas)
 - [Shared chart types](../../../../src/Fpas.Ui/Widgets/Charts/Charts.fpas)
 - [More charts](README.md)
+
+## Source files
+
+- [Treemap.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/Treemap.fpas)
+- [CuiWindow.Treemap.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.Treemap.cs)
+- [treemap.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/treemap.c)
+- [treemap.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/treemap.h)

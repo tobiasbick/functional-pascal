@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/libraries/media/audio.md#mixer-settings)
 using SoundFlow.Enums;
 using SoundFlow.Utils;
 

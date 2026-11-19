@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/interop/events.md)
 using Fpas.Compiler.Binding.Types;
 using Fpas.Compiler.Binding.Bound;
 using Fpas.Compiler.Syntax;

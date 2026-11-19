@@ -1,3 +1,4 @@
+// [Documentation](../../docs/pascal/libraries/media/audio.md#waveform-analysis)
 using Fpas.Media.Audio.Decoding;
 
 namespace Fpas.Media.Audio;

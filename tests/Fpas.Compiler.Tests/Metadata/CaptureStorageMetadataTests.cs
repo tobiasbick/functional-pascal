@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/closures.md)
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using Fpas.Tests.Support;

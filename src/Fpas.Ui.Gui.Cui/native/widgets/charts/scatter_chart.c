@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/scatter-chart.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_scatter_chart(cui_ctx *ui, const char *id, const fpas_scatter_series *series, int count,

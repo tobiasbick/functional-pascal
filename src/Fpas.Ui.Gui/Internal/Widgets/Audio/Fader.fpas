@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/audio/fader.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Audio.Fader;
 
 uses

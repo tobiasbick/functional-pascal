@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/ui/gui/smart-inputs/emoji-picker.md)
+
 unit GalleryColorEmojiContract;
 
 uses

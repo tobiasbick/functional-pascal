@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/code/markdown.md)
+
 unit GuiGallery.Pages.Code.Update;
 
 uses

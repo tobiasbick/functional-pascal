@@ -1,3 +1,4 @@
+// [Documentation](../../docs/ui/gui/cui.md#window-ownership-and-frames)
 using System.Runtime.InteropServices;
 
 namespace Fpas.Ui.Gui.Cui;

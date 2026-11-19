@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/native-build.md#composite-and-popup-adapters)
 /* Compare the adapter with the native gallery's dropdown primitives. */
 #include "../fpas_cui.h"
 #include <stdio.h>

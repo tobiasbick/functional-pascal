@@ -9,3 +9,7 @@
 
 - [Terminal UI handbook](../README.md)
 - [GUI chapter](../../gui/overlays/README.md)
+
+## Source files
+
+- [ModalPanel.fpas](../../../../src/Fpas.Ui.Tui/Internal/Widgets/Overlays/ModalPanel.fpas)

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-native.md)
 using System.Collections;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

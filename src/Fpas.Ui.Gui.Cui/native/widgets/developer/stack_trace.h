@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-developer-tools/stack-trace.md)
 #ifndef FPAS_CUI_STACK_TRACE_H
 #define FPAS_CUI_STACK_TRACE_H
 /** Draws stack frames and returns an activation proposal.

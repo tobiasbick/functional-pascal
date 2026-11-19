@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/workspaces.md#context-preparation)
 using System.Reflection.Metadata;
 using System.Security.Cryptography;
 using System.Reflection.PortableExecutable;

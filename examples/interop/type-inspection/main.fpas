@@ -1,3 +1,5 @@
+// [Documentation](README.md)
+
 program TypeInspection;
 
 uses System as Sys, System.Console as Console;

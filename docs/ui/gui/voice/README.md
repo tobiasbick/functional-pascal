@@ -19,3 +19,15 @@ These widgets require the GUI host.
 - [Shared voice types](../../../../src/Fpas.Ui/Widgets/Audio/Voice.fpas)
 - [Social and media](../social-and-media/README.md)
 - [Voice in the gallery](../../../../examples/ui/gui/gallery/Pages/Voice/View.fpas)
+
+## Source files
+
+- `examples/ui/gui/gallery/Pages/Voice/`
+  - [State.fpas](../../../../examples/ui/gui/gallery/Pages/Voice/State.fpas)
+  - [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Voice/Update.fpas)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [voice_ai.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/voice_ai.c)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/audio/`
+  - [ai_voice.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/audio/ai_voice.c)
+- `tests/Fixtures/gui-host/`
+  - [VoiceAiContract.fpas](../../../../tests/Fixtures/gui-host/VoiceAiContract.fpas)

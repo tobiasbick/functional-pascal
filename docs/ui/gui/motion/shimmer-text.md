@@ -44,3 +44,15 @@ movement.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/View.fpas)
 - [Loader](loader.md)
 - [Motion](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Motion/`
+  - [ShimmerText.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Motion/ShimmerText.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Motion/`
+  - [NativeMethods.ShimmerText.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Motion/NativeMethods.ShimmerText.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Motion/`
+  - [CuiWindow.ShimmerText.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Motion/CuiWindow.ShimmerText.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/motion/`
+  - [shimmer_text.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/motion/shimmer_text.c)
+  - [shimmer_text.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/motion/shimmer_text.h)

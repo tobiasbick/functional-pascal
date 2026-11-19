@@ -44,3 +44,8 @@ and async Task behavior. These checks use the same CLR exception mechanism.
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- [Binder.Exceptions.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.Exceptions.cs)
+- [Parser.Exceptions.cs](../../../../src/Fpas.Compiler/Syntax/Parsing/Parser.Exceptions.cs)

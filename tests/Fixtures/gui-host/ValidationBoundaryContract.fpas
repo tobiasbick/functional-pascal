@@ -1,3 +1,5 @@
+// [Documentation](../../coverage.md#native-gui)
+
 unit GalleryValidationBoundaryContract;
 
 uses

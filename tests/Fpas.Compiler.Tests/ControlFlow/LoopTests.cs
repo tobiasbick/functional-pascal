@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/control-flow/loops.md)
 using Fpas.Compiler.Tests.Support;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;

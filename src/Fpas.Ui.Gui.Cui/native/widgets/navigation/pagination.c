@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/navigation/pagination.md)
 #include "../../fpas_cui.h"
 
 static cui_id fpas_pager_focus(cui_ctx *ui, const char *id, int focus) {

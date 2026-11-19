@@ -37,3 +37,7 @@ Tab to the encoding and press Enter or click to change it. Text, spacers and inl
 - [Shared API](../../widgets.md#desktop-chrome)
 - [GUI status bar](../../gui/app-chrome/status-bar.md)
 - [Gallery source](../../../../examples/ui/tui/gallery/main.fpas)
+
+## Source files
+
+- [StatusBar.fpas](../../../../src/Fpas.Ui.Tui/Internal/Widgets/Desktop/StatusBar.fpas)

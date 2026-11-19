@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/more-charts/README.md)
 /* Pixel parity and pointer contracts against direct pinned CUI calls. */
 #include "../fpas_cui.h"
 #include <math.h>

@@ -47,3 +47,18 @@ expose only the entered length.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/OneTimeCodes.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/CredentialFields.fpas)
 - [Inputs](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [OneTimeCode.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/OneTimeCode.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.OneTimeCode.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.OneTimeCode.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.OneTimeCode.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.OneTimeCode.Types.cs)
+  - [CuiWindow.OneTimeCode.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.OneTimeCode.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [one_time_code.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/one_time_code.c)
+  - [one_time_code.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/one_time_code.h)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Inputs/`
+  - [CuiOneTimeCodeTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Inputs/CuiOneTimeCodeTests.cs)

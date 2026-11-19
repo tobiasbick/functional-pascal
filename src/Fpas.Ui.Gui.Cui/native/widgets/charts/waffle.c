@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/waffle.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_waffle(cui_ctx *ui, const char *id, const fpas_viz_item *items, int count,

@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/apps/fpas-amp/imaging.md)
 using Fpas.Media.Images;
 using System.Security.Cryptography;
 using System.Text;

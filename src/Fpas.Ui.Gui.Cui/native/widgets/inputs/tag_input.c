@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/inputs/tag-input.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_tag_input(cui_ctx *ui, const char *id, char *value, size_t capacity,

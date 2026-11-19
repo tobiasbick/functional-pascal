@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/ai/reasoning.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_reasoning_begin(cui_ctx *ui, const char *id, int thinking, float seconds, const char *title, int flags, int *nodes) {

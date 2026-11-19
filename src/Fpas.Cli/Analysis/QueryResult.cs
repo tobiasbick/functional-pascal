@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/program-structure/cli.md#query-checked-sources)
 using Fpas.Workspaces.Queries;
 using Fpas.Cli.Diagnostics;
 using System.Text.Json;

@@ -78,11 +78,11 @@ Use an explicit context and source position:
 
 ```sh
 fpas check examples/basics/units/Units.fpasproj
-fpas query definition examples/basics/units/Units.fpasproj --file examples/basics/units/main.fpas --line 6 --column 29
-fpas query type examples/basics/units/Units.fpasproj --file examples/basics/units/main.fpas --line 7 --column 21
-fpas query refs examples/basics/units/Units.fpasproj --file examples/basics/units/lib/calculations.fpas --line 8 --column 17 --limit 100
+fpas query definition examples/basics/units/Units.fpasproj --file examples/basics/units/main.fpas --line 8 --column 29
+fpas query type examples/basics/units/Units.fpasproj --file examples/basics/units/main.fpas --line 9 --column 21
+fpas query refs examples/basics/units/Units.fpasproj --file examples/basics/units/lib/calculations.fpas --line 10 --column 17 --limit 100
 fpas query find examples/basics/units/Units.fpasproj --name SumTo --match exact --kind routine
-fpas query inspect examples/basics/units/Units.fpasproj --file examples/basics/units/lib/calculations.fpas --line 8 --column 17 --limit 20
+fpas query inspect examples/basics/units/Units.fpasproj --file examples/basics/units/lib/calculations.fpas --line 10 --column 17 --limit 20
 ```
 
 Query output is one JSON document, including argument/setup failures. Its status
@@ -191,11 +191,11 @@ Use `query callees` for outgoing operations from a selected callable and
 Run these examples from `examples/numerics/mandelbrot`:
 
 ```sh
-fpas query callees Mandelbrot.fpasproj --file main.fpas --line 5 --column 10
+fpas query callees Mandelbrot.fpasproj --file main.fpas --line 7 --column 10
 
-fpas query callers Mandelbrot.fpasproj --file main.fpas --line 5 --column 10
+fpas query callers Mandelbrot.fpasproj --file main.fpas --line 7 --column 10
 
-fpas query callees Mandelbrot.fpasproj --file main.fpas --line 13 --column 5 --body --limit 20 --offset 0
+fpas query callees Mandelbrot.fpasproj --file main.fpas --line 15 --column 5 --body --limit 20 --offset 0
 ```
 
 Default selection uses a callable declaration or an exact bound target at its
@@ -368,3 +368,37 @@ project SDK for normal applications.
 - [Compiled programs](compiled-programs.md)
 - [Compiler API and output publication](../../architecture/compiler.md#compiler-api-and-output)
 - [Development workflow](../../build/development.md)
+
+## Source files
+
+<details>
+<summary>Browse 21 source files</summary>
+
+- `src/Fpas.Cli/Analysis/`
+  - [CheckCommand.cs](../../../src/Fpas.Cli/Analysis/CheckCommand.cs)
+  - [CheckResult.cs](../../../src/Fpas.Cli/Analysis/CheckResult.cs)
+  - [QueryCommand.cs](../../../src/Fpas.Cli/Analysis/QueryCommand.cs)
+  - [QueryResult.cs](../../../src/Fpas.Cli/Analysis/QueryResult.cs)
+- `src/Fpas.Cli/`
+  - [CliApplication.cs](../../../src/Fpas.Cli/CliApplication.cs)
+  - [CliHelp.cs](../../../src/Fpas.Cli/CliHelp.cs)
+  - [CommandArguments.cs](../../../src/Fpas.Cli/CommandArguments.cs)
+  - [Program.cs](../../../src/Fpas.Cli/Program.cs)
+- `src/Fpas.Cli/Compilation/`
+  - [CompileArguments.cs](../../../src/Fpas.Cli/Compilation/CompileArguments.cs)
+  - [CompileCommand.cs](../../../src/Fpas.Cli/Compilation/CompileCommand.cs)
+  - [CompileResponseFile.cs](../../../src/Fpas.Cli/Compilation/CompileResponseFile.cs)
+  - [CompilerCommand.cs](../../../src/Fpas.Cli/Compilation/CompilerCommand.cs)
+  - [OutputFiles.cs](../../../src/Fpas.Cli/Compilation/OutputFiles.cs)
+- `src/Fpas.Workspaces/Queries/`
+  - [CallQueryResult.cs](../../../src/Fpas.Workspaces/Queries/CallQueryResult.cs)
+  - [InspectionResult.cs](../../../src/Fpas.Workspaces/Queries/InspectionResult.cs)
+  - [SourceQuery.CallIndex.cs](../../../src/Fpas.Workspaces/Queries/SourceQuery.CallIndex.cs)
+  - [SourceQuery.Calls.cs](../../../src/Fpas.Workspaces/Queries/SourceQuery.Calls.cs)
+  - [SourceQuery.Find.cs](../../../src/Fpas.Workspaces/Queries/SourceQuery.Find.cs)
+  - [SourceQuery.Inspect.cs](../../../src/Fpas.Workspaces/Queries/SourceQuery.Inspect.cs)
+- `tests/Fpas.IntegrationTests/Cli/`
+  - [ArgumentParsingTests.cs](../../../tests/Fpas.IntegrationTests/Cli/ArgumentParsingTests.cs)
+  - [CompilerCliTests.cs](../../../tests/Fpas.IntegrationTests/Cli/CompilerCliTests.cs)
+
+</details>

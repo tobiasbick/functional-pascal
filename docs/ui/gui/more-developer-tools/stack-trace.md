@@ -49,3 +49,15 @@ returns minus one. Use that index to open the source in your application.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/StackTraces.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/View.fpas)
 - [More developer tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [StackTrace.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/StackTrace.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.StackTrace.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.StackTrace.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.StackTrace.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.StackTrace.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [stack_trace.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/stack_trace.c)
+  - [stack_trace.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/stack_trace.h)

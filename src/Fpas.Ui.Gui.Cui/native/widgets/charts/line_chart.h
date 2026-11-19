@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/charts/line-chart.md)
 #ifndef FPAS_CUI_LINE_CHART_H
 #define FPAS_CUI_LINE_CHART_H
 #include "charts.h"

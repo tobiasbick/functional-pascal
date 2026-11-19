@@ -19,3 +19,10 @@ order, translate position-based proposals through the order that produced them.
 - [UI handbook](../README.md)
 - [Data display](../data-display/README.md)
 - [Data grid in the gallery](../../../../examples/ui/gui/gallery/Pages/DataGrid/View.fpas)
+
+## Source files
+
+- [People.fpas](../../../../examples/ui/gui/gallery/Pages/DataGrid/People.fpas)
+- [State.fpas](../../../../examples/ui/gui/gallery/Pages/DataGrid/State.fpas)
+- [Update.fpas](../../../../examples/ui/gui/gallery/Pages/DataGrid/Update.fpas)
+- [grid_regressions.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/grid_regressions.c)

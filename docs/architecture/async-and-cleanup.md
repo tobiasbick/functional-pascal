@@ -78,3 +78,34 @@ metadata is diagnosed before emission.
 - [Resource lifetime](../pascal/language/error-handling/resources.md)
 - [Debug information](debug-information.md)
 - [Async and resource tests](../../tests/coverage.md#language-and-metadata)
+
+## Source files
+
+<details>
+<summary>Browse 15 source files</summary>
+
+- `src/Fpas.Compiler/Binding/Bodies/`
+  - [Binder.Async.cs](../../src/Fpas.Compiler/Binding/Bodies/Binder.Async.cs)
+- `src/Fpas.Compiler/Binding/Bound/`
+  - [Async.cs](../../src/Fpas.Compiler/Binding/Bound/Async.cs)
+- `src/Fpas.Compiler/Binding/References/`
+  - [ReferenceCatalog.Async.cs](../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.Async.cs)
+- `src/Fpas.Compiler/Binding/Symbols/`
+  - [AsyncMachineSymbol.cs](../../src/Fpas.Compiler/Binding/Symbols/AsyncMachineSymbol.cs)
+- `src/Fpas.Compiler/Emission/Bodies/`
+  - [BodyEmitter.Async.cs](../../src/Fpas.Compiler/Emission/Bodies/BodyEmitter.Async.cs)
+  - [BodyEmitter.Exceptions.cs](../../src/Fpas.Compiler/Emission/Bodies/BodyEmitter.Exceptions.cs)
+- `src/Fpas.Compiler/Emission/Metadata/`
+  - [AssemblyEmitter.Async.cs](../../src/Fpas.Compiler/Emission/Metadata/AssemblyEmitter.Async.cs)
+  - [AssemblyEmitter.AsyncMachines.cs](../../src/Fpas.Compiler/Emission/Metadata/AssemblyEmitter.AsyncMachines.cs)
+- `src/Fpas.Compiler/Emission/StateMachines/`
+  - [AsyncMachineFields.cs](../../src/Fpas.Compiler/Emission/StateMachines/AsyncMachineFields.cs)
+- `src/Fpas.Compiler/Lowering/Async/`
+  - [AsyncLiveness.cs](../../src/Fpas.Compiler/Lowering/Async/AsyncLiveness.cs)
+  - [AsyncLowering.Expressions.cs](../../src/Fpas.Compiler/Lowering/Async/AsyncLowering.Expressions.cs)
+  - [AsyncLowering.Handlers.cs](../../src/Fpas.Compiler/Lowering/Async/AsyncLowering.Handlers.cs)
+  - [AsyncLowering.cs](../../src/Fpas.Compiler/Lowering/Async/AsyncLowering.cs)
+  - [AsyncPlan.cs](../../src/Fpas.Compiler/Lowering/Async/AsyncPlan.cs)
+  - [AsyncPreparation.cs](../../src/Fpas.Compiler/Lowering/Async/AsyncPreparation.cs)
+
+</details>

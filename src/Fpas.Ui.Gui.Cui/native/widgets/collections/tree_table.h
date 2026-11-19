@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/data-grid/tree-table.md)
 #ifndef FPAS_CUI_TREE_TABLE_H
 #define FPAS_CUI_TREE_TABLE_H
 /** Draws a literal tree cell. depth is nonnegative; open is -1 for a leaf, otherwise

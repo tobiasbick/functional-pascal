@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/host.md#code-editor-commands)
+
 unit GuiGallery.Pages.Desktop.Editor;
 
 uses

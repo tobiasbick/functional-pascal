@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/data-grid/README.md)
+
 unit GuiGallery.Pages.DataGrid.Update;
 
 uses

@@ -51,3 +51,16 @@ activation or returns minus one.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/EditingTools/View.fpas)
 - [Gallery sample spans](../../../../examples/ui/gui/gallery/Pages/EditingTools/Capture.fpas)
 - [Editing tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Editors/`
+  - [FlameGraph.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Editors/FlameGraph.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Editors/`
+  - [NativeMethods.FlameGraph.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Editors/NativeMethods.FlameGraph.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Editors/`
+  - [CuiWindow.FlameGraph.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Editors/CuiWindow.FlameGraph.Types.cs)
+  - [CuiWindow.FlameGraph.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Editors/CuiWindow.FlameGraph.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/editors/`
+  - [flame_graph.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/editors/flame_graph.c)
+  - [flame_graph.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/editors/flame_graph.h)

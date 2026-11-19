@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/program-structure/cli.md#inspect-a-declaration)
 using Fpas.Compiler.Analysis;
 
 namespace Fpas.Workspaces.Queries;

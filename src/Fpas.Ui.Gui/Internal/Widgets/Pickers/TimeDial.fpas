@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/pickers/time-dial.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Pickers.TimeDial;
 
 uses

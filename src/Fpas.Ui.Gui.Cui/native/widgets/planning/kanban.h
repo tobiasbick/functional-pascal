@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/planning/kanban.md)
 #ifndef FPAS_CUI_KANBAN_H
 #define FPAS_CUI_KANBAN_H
 /** Begins a board and its disabled scope.

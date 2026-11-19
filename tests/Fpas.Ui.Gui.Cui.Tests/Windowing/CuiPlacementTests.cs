@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/app-chrome/window.md)
 using System.Diagnostics;
 
 namespace Fpas.Ui.Gui.Cui.Tests.Windowing;

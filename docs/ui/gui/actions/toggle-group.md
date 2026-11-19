@@ -45,3 +45,19 @@ the array in the model after accepting a proposal.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/ToggleGroups.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Actions/Widgets/ToggleGroup.fpas)
 - [Actions](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Actions/`
+  - [ToggleGroup.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Actions/ToggleGroup.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Actions/`
+  - [NativeMethods.ToggleGroup.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Actions/NativeMethods.ToggleGroup.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Actions/`
+  - [CuiWindow.ToggleGroup.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Actions/CuiWindow.ToggleGroup.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/actions/`
+  - [toggle_group.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/toggle_group.c)
+  - [toggle_group.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/toggle_group.h)
+- `tests/Fixtures/gui-host/`
+  - [ToggleGroupContract.fpas](../../../../tests/Fixtures/gui-host/ToggleGroupContract.fpas)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Actions/`
+  - [CuiToggleGroupTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Actions/CuiToggleGroupTests.cs)

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/editing-tools/curve-editor.md)
 #ifndef FPAS_CUI_CURVE_EDITOR_H
 #define FPAS_CUI_CURVE_EDITOR_H
 /** Borrowed curve presentation settings; flags enable input, snapping and playhead rendering. */

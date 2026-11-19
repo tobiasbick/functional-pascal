@@ -1,3 +1,5 @@
+// [Documentation](../../verification.md#editor-and-project-scenarios)
+
 unit Native;
 
 uses Microsoft.VisualStudio.TestTools.UnitTesting as T;

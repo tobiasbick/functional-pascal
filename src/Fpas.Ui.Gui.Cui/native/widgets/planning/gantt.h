@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/planning/gantt.md)
 #ifndef FPAS_CUI_GANTT_H
 #define FPAS_CUI_GANTT_H
 /** Task whose dates are day offsets from the chart's origin. */

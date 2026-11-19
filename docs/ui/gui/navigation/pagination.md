@@ -43,3 +43,15 @@ Click a page button or focus it with Tab and press Enter or Space. CUI displays 
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Navigation/Widgets/Pagination.fpas)
 - [Tabs](tabs.md)
 - [Navigation](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Navigation/`
+  - [Pagination.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Navigation/Pagination.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Navigation/`
+  - [NativeMethods.Pagination.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Navigation/NativeMethods.Pagination.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Navigation/`
+  - [CuiWindow.Pagination.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Navigation/CuiWindow.Pagination.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/navigation/`
+  - [pagination.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/navigation/pagination.c)
+  - [pagination.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/navigation/pagination.h)

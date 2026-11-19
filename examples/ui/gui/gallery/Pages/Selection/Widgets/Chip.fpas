@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/selection/chip.md)
+
 unit GuiGallery.Pages.Selection.Widgets.Chip;
 
 uses

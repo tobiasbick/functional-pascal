@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/report-schemas.md)
 using System.Text.Json.Nodes;
 using System.Text.Json;
 using Json.Schema;

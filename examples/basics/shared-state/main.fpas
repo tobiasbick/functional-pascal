@@ -1,3 +1,5 @@
+// [Documentation](README.md)
+
 program SharedStateDemo;
 
 uses Game.Statistics as Statistics, System.Console as Console;

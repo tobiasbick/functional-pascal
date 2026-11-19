@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/terminal-testing.md)
 namespace Fpas.Cli.Terminal;
 
 [System.Text.Json.Serialization.JsonUnmappedMemberHandling(System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow)]

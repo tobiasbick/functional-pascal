@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-dap.md)
 using Fpas.Debugging.Core;
 
 namespace Fpas.Debugging.Dap;

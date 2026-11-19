@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/presence-pill.md)
 #ifndef FPAS_CUI_PRESENCE_PILL_H
 #define FPAS_CUI_PRESENCE_PILL_H
 /** Draws the pill with optional images from UTF-8 PNG or JPEG paths.

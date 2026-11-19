@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/code/json-viewer.md)
 #ifndef FPAS_CUI_JSON_VIEW_H
 #define FPAS_CUI_JSON_VIEW_H
 

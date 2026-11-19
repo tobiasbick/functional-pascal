@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/ui/gui/native-build.md)
+
 program GuiInterop;
 
 uses Fpas.Ui.Gui.Cui as Cui, System as Sys, System.Console as Console;

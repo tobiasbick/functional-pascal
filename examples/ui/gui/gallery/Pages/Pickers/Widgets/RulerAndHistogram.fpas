@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/pickers/README.md)
+
 unit GuiGallery.Pages.Pickers.Widgets.RulerAndHistogram;
 
 uses

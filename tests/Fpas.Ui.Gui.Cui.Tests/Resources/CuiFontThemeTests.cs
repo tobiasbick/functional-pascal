@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/host.md)
 using Fpas.Tests.Support;
 using Fpas.Ui.Gui.Cui.Resources;
 using Fpas.Ui.Gui.Cui.Widgets.Canvas;

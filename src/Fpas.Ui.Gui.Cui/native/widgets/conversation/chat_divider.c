@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/social-and-media/chat-divider.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_chat_divider(cui_ctx *ui, const char *id, const char *label) {

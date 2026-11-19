@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/navigation/sidebar.md)
+
 unit GuiGallery.App.Sidebar;
 
 uses

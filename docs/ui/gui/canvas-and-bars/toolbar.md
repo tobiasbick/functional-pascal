@@ -60,3 +60,15 @@ proposed choice or toggle value.
 - [App chrome editor](../../../../examples/ui/gui/gallery/Pages/Desktop/Editor.fpas)
 - [App chrome](../app-chrome/README.md)
 - [Canvas and bars](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Desktop/`
+  - [Toolbar.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Desktop/Toolbar.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Desktop/`
+  - [NativeMethods.Toolbar.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Desktop/NativeMethods.Toolbar.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Desktop/`
+  - [CuiWindow.Toolbar.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Desktop/CuiWindow.Toolbar.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/desktop/`
+  - [toolbar.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/desktop/toolbar.c)
+  - [toolbar.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/desktop/toolbar.h)

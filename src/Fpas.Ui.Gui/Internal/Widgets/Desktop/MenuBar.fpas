@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/app-chrome/menu-bar.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Desktop.MenuBar;
 
 uses

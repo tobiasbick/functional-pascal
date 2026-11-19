@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/smart-inputs/shortcut-recorder.md)
 #ifndef FPAS_SHORTCUT_RECORDER_H
 #define FPAS_SHORTCUT_RECORDER_H
 /** Draws CUI's recorder with native key/modifier values and optional clear action tracking.

@@ -97,3 +97,21 @@ end program;
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- `src/Fpas.Compiler/Binding/Bodies/`
+  - [Binder.Callables.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.Callables.cs)
+- `src/Fpas.Compiler/Binding/Bound/`
+  - [Callables.cs](../../../../src/Fpas.Compiler/Binding/Bound/Callables.cs)
+- `src/Fpas.Compiler/Binding/Symbols/`
+  - [Callables.cs](../../../../src/Fpas.Compiler/Binding/Symbols/Callables.cs)
+- `src/Fpas.Compiler/Syntax/Parsing/`
+  - [Parser.Callables.cs](../../../../src/Fpas.Compiler/Syntax/Parsing/Parser.Callables.cs)
+- `tests/Fpas.Compiler.Tests/Routines/`
+  - [CallableDiagnosticsTests.cs](../../../../tests/Fpas.Compiler.Tests/Routines/CallableDiagnosticsTests.cs)
+  - [CallableMetadataTests.cs](../../../../tests/Fpas.Compiler.Tests/Routines/CallableMetadataTests.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.Callables.cs](../../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.Callables.cs)
+- `tests/Fpas.IntegrationTests/Execution/`
+  - [CallableExecutionTests.cs](../../../../tests/Fpas.IntegrationTests/Execution/CallableExecutionTests.cs)

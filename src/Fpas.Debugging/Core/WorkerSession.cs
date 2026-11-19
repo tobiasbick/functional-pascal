@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md)
 using System.Globalization;
 using System.Threading.Channels;
 using Fpas.Debugging.Native;

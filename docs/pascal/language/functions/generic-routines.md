@@ -130,3 +130,10 @@ the compiler does not infer a variant/constant domain for T from its call sites.
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- [GenericRoutineMetadataTests.cs](../../../../tests/Fpas.Compiler.Tests/Routines/GenericRoutineMetadataTests.cs)
+- [GenericRoutineTests.cs](../../../../tests/Fpas.Compiler.Tests/Routines/GenericRoutineTests.cs)
+- [MsBuildTests.GenericRoutines.cs](../../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.GenericRoutines.cs)
+- [GenericRoutineExecutionTests.cs](../../../../tests/Fpas.IntegrationTests/Execution/GenericRoutineExecutionTests.cs)

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/navigation/pagination.md)
+
 unit GuiGallery.Pages.Navigation.Widgets.Pagination;
 
 uses

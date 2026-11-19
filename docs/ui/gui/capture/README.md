@@ -18,3 +18,10 @@ chooser. The application validates file content and size before using a path.
 - [UI handbook](../README.md)
 - [Capture in the gallery](../../../../examples/ui/gui/gallery/Pages/Capture/View.fpas)
 - [Gallery file handling](../../../../examples/ui/gui/gallery/Pages/Capture/Update.fpas)
+
+## Source files
+
+- [State.fpas](../../../../examples/ui/gui/gallery/Pages/Capture/State.fpas)
+- [CaptureContract.fpas](../../../../tests/Fixtures/gui-host/CaptureContract.fpas)
+- [CuiCaptureTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Media/CuiCaptureTests.cs)
+- [WindowsCaptureInput.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Media/WindowsCaptureInput.cs)

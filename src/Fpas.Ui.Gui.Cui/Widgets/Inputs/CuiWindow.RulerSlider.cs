@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/pickers/ruler-slider.md)
 using System.Globalization;
 using Fpas.Ui.Gui.Cui.Interop;
 

@@ -1,3 +1,4 @@
+// [Documentation](../coverage.md#test-harness)
 using System.Reflection;
 
 namespace Fpas.Tests.Support;

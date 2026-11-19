@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/social-and-media/typing-indicator.md)
+
 unit Fpas.Ui.Widgets.Conversation.TypingIndicators;
 
 uses Fpas.Ui.Elements as E;

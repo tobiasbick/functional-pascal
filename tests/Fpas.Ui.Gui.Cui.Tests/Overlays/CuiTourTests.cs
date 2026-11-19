@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/overlays/guided-tour.md)
 using Fpas.Ui.Gui.Cui.Widgets.Overlays;
 
 namespace Fpas.Ui.Gui.Cui.Tests.Overlays;

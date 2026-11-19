@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/inputs/number-field.md)
 using System.Globalization;
 using Fpas.Ui.Gui.Cui.Interop;
 

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/compiler.md#typed-emission)
 using Fpas.Compiler.Lowering.Async;
 using Fpas.Compiler.Binding.Symbols;
 using Fpas.Compiler.Binding.Bound;

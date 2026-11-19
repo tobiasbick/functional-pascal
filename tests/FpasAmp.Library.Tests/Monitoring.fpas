@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/library.md#lifetime-and-control)
+
 // Native watcher delivery, bounded invalidation and structured shutdown.
 unit FpasAmp.Library.Tests.Monitoring;
 

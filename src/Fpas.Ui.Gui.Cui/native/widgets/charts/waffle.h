@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/waffle.md)
 #ifndef FPAS_CUI_WAFFLE_H
 #define FPAS_CUI_WAFFLE_H
 #include "visualizations.h"

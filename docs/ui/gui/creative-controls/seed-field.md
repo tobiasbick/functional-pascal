@@ -47,3 +47,15 @@ a result.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/SeedFields.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Creative/View.fpas)
 - [Creative controls](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [SeedField.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/SeedField.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.SeedField.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.SeedField.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.SeedField.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.SeedField.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [seed_field.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/seed_field.c)
+  - [seed_field.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/seed_field.h)

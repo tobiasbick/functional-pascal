@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/code/diff-viewer.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

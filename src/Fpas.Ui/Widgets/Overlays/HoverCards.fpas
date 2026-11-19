@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/disclosure/hover-card.md)
+
 unit Fpas.Ui.Widgets.Overlays.HoverCards;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Menus as M;

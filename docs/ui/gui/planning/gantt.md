@@ -62,3 +62,17 @@ Scroll the timeline horizontally to see later dates.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Planning/Gantts.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Planning/View.fpas)
 - [Planning](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Planning/`
+  - [Gantt.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Planning/Gantt.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Planning/`
+  - [NativeMethods.Gantt.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Planning/NativeMethods.Gantt.Types.cs)
+  - [NativeMethods.Gantt.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Planning/NativeMethods.Gantt.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Planning/`
+  - [CuiWindow.Gantt.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Planning/CuiWindow.Gantt.Types.cs)
+  - [CuiWindow.Gantt.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Planning/CuiWindow.Gantt.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/planning/`
+  - [gantt.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/planning/gantt.c)
+  - [gantt.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/planning/gantt.h)

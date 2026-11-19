@@ -17,3 +17,7 @@ record, never a dynamic member-import scope. The operand evaluates once. See
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- [point-update.fpas.txt](../../../../apps/doc-examples/contexts/point-update.fpas.txt)

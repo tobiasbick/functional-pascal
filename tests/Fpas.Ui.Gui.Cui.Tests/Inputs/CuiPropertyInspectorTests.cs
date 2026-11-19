@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/editing-tools/property-inspector.md)
 using Fpas.Ui.Gui.Cui.Widgets.Editors;
 
 namespace Fpas.Ui.Gui.Cui.Tests.Inputs;

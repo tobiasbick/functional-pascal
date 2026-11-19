@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#sources-and-stopped-context)
 using System.Globalization;
 using System.Runtime.InteropServices;
 using Fpas.Debugging.Core;

@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#popover-and-confirmation-popover)
+
 unit Fpas.Ui.Internal.Validation.PopoverRules;
 
 uses

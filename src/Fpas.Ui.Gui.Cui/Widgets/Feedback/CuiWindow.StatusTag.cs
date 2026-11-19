@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/creative-controls/status-tag.md)
 using Fpas.Ui.Gui.Cui.Interop;
 
 namespace Fpas.Ui.Gui.Cui;

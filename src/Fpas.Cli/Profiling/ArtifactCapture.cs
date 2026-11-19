@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/cli-diagnostics.md#collect-and-summarize)
 namespace Fpas.Cli.Profiling;
 
 // Collect into an invocation-owned location; publication never replaces an existing artifact.

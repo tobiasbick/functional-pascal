@@ -44,3 +44,16 @@ requests in the application. Supply updated position as playback runs.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/Controls.fpas)
 - [Waveform](waveform.md)
 - [Motion](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Audio/`
+  - [NowPlaying.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Audio/NowPlaying.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Audio/`
+  - [NativeMethods.NowPlaying.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Audio/NativeMethods.NowPlaying.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Audio/`
+  - [CuiWindow.NowPlaying.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Audio/CuiWindow.NowPlaying.Types.cs)
+  - [CuiWindow.NowPlaying.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Audio/CuiWindow.NowPlaying.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/audio/`
+  - [now_playing.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/audio/now_playing.c)
+  - [now_playing.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/audio/now_playing.h)

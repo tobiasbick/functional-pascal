@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/disclosure/banner.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Feedback.Banner;
 
 uses

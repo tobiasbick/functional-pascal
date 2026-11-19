@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/pascal/language/types/record-update.md)
+
 unit Example;
 
 uses System.Math as Math;

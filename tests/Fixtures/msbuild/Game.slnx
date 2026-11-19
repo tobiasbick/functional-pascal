@@ -1,3 +1,4 @@
+<!-- [Documentation](../../../docs/build/msbuild.md#verification) -->
 <Solution>
   <Configurations>
     <BuildType Name="Debug" />

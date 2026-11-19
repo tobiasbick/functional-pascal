@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/inputs/number-field.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_number_field(cui_ctx *ui, const char *id, double *value, double min, double max,

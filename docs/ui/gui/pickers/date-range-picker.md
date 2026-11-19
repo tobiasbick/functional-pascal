@@ -45,3 +45,16 @@ Choose the first day to propose `Started` and leave the popup open for the secon
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Pickers/Widgets/DateRange.fpas)
 - [Date range calendar](date-range-calendar.md)
 - [Pickers](README.md)
+
+## Source files
+
+- `src/Fpas.Ui/Widgets/Pickers/`
+  - [DateRanges.fpas](../../../../src/Fpas.Ui/Widgets/Pickers/DateRanges.fpas)
+- `src/Fpas.Ui.Gui/Internal/Widgets/Pickers/`
+  - [DateRangeParts.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Pickers/DateRangeParts.fpas)
+  - [DateRangePicker.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Pickers/DateRangePicker.fpas)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/pickers/`
+  - [date_range_picker.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/date_range_picker.c)
+  - [date_range_picker.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/date_range_picker.h)
+- `tests/Fixtures/gui-host/`
+  - [DateRangeContract.fpas](../../../../tests/Fixtures/gui-host/DateRangeContract.fpas)

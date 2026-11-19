@@ -1,4 +1,4 @@
-// Exposes an FPAS function that calls a referenced C# library.
+// Exposes an FPAS function that calls a referenced C# library. [Documentation](../../../coverage.md#build-acceptance)
 unit Demo.Bridge;
 
 uses Demo.SharedApi as Shared;

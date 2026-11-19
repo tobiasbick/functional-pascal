@@ -43,3 +43,15 @@ Press the track to move the nearest endpoint and drag to adjust it. CUI keeps th
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Selection/Widgets/RangeSlider.fpas)
 - [Slider](slider.md)
 - [Selection](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [RangeSlider.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/RangeSlider.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.RangeSlider.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.RangeSlider.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.RangeSlider.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.RangeSlider.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [range_slider.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/range_slider.c)
+  - [range_slider.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/range_slider.h)

@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/feedback/avatar-group.md)
+
 unit Fpas.Ui.Widgets.Media.AvatarGroups;
 
 uses Fpas.Ui.Elements as E;

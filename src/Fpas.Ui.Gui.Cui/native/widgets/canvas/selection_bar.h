@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/selection-bar.md)
 #ifndef FPAS_CUI_SELECTION_BAR_H
 #define FPAS_CUI_SELECTION_BAR_H
 /** Builds CUI's selection bar from item flags or a count, using a validated integer count format. */

@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/inputs/text-area.md)
+
 unit Fpas.Ui.Widgets.Inputs.TextAreas;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B, System as Sys;

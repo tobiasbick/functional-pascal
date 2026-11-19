@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/selection/range-slider.md)
+
 unit GuiGallery.Pages.Selection.Widgets.RangeSlider;
 
 uses

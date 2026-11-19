@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/canvas-and-bars/painting.md)
 /* Native canvas painting must match direct public CUI calls, including DPI. */
 #include "../fpas_cui.h"
 #include <stdlib.h>

@@ -21,3 +21,9 @@ the language; use loops for unbounded iteration.
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- [GlobalTests.cs](../../../../tests/Fpas.Compiler.Tests/Routines/GlobalTests.cs)
+- [MsBuildTests.Globals.cs](../../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.Globals.cs)
+- [GlobalExecutionTests.cs](../../../../tests/Fpas.IntegrationTests/Execution/GlobalExecutionTests.cs)

@@ -42,3 +42,15 @@ The badge displays a label and has no input action. Change the caption and tone 
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/Widgets/BadgesAndAvatars.fpas)
 - [Chip](../selection/chip.md)
 - [Feedback](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Feedback/`
+  - [Badge.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Feedback/Badge.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Feedback/`
+  - [NativeMethods.Badge.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Feedback/NativeMethods.Badge.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Feedback/`
+  - [CuiWindow.Badge.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Feedback/CuiWindow.Badge.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/feedback/`
+  - [badge.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/badge.c)
+  - [badge.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/badge.h)

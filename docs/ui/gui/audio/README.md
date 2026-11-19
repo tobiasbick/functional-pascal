@@ -18,3 +18,14 @@ Supply meter peaks as linear amplitudes, where 1.0 represents 0 dBFS.
 - [UI handbook](../README.md)
 - [Guided tour](../overlays/guided-tour.md)
 - [Audio in the gallery](../../../../examples/ui/gui/gallery/Pages/Audio/View.fpas)
+
+## Source files
+
+- `examples/ui/gui/gallery/Pages/Audio/`
+  - [Clock.fpas](../../../../examples/ui/gui/gallery/Pages/Audio/Clock.fpas)
+  - [State.fpas](../../../../examples/ui/gui/gallery/Pages/Audio/State.fpas)
+  - [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Audio/Update.fpas)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/audio/`
+  - [control_well.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/audio/control_well.c)
+- `tests/Fixtures/gui-host/`
+  - [AudioContract.fpas](../../../../tests/Fixtures/gui-host/AudioContract.fpas)

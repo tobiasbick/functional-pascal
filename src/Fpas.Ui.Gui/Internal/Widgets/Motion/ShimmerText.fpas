@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/motion/shimmer-text.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Motion.ShimmerText;
 
 uses

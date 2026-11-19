@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/motion/waveform.md)
+
 unit Fpas.Ui.Widgets.Audio.Waveforms;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Layout as L, System as Sys;

@@ -1,3 +1,4 @@
+// [Documentation](../../coverage.md#native-gui)
 using System.Globalization;
 using System.IO.Compression;
 

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/app-chrome/document-tabs.md)
 #ifndef FPAS_CUI_DOCUMENT_TABS_H
 #define FPAS_CUI_DOCUMENT_TABS_H
 

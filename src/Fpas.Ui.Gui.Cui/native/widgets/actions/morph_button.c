@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/native-build.md#action-captions-and-identity)
 /* Literal text adaptation shared by CUI's morphing button integrations. */
 typedef struct {
     cui_spring width;

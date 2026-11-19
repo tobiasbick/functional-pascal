@@ -1,3 +1,5 @@
+// [Documentation](../../docs/pascal/libraries/media/tags.md#playlist-recognition-and-import)
+
 // ATL's playlist extensions remain independent of audio-format selection.
 unit Fpas.Media.Tags.Playlists;
 

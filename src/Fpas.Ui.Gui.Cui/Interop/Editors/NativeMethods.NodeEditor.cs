@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/canvas-and-bars/node-editor.md)
 using Fpas.Ui.Gui.Cui.Widgets.Editors;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

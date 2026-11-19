@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/inputs/one-time-code.md)
 using System.Text;
 using Fpas.Ui.Gui.Cui.Interop;
 

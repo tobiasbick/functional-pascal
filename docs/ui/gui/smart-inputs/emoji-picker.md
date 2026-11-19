@@ -77,3 +77,18 @@ the field's UTF-8 capacity.
 - [Popover](../overlays/popover.md)
 - [Emoji display](../text-and-display/emoji.md)
 - [Smart inputs](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Pickers/`
+  - [EmojiPicker.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Pickers/EmojiPicker.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Pickers/`
+  - [NativeMethods.EmojiPicker.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Pickers/NativeMethods.EmojiPicker.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Pickers/`
+  - [CuiWindow.EmojiPicker.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Pickers/CuiWindow.EmojiPicker.Types.cs)
+  - [CuiWindow.EmojiPicker.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Pickers/CuiWindow.EmojiPicker.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/pickers/`
+  - [emoji_picker.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/emoji_picker.c)
+  - [emoji_picker.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/emoji_picker.h)
+- `tests/Fixtures/gui-host/`
+  - [ColorEmojiContract.fpas](../../../../tests/Fixtures/gui-host/ColorEmojiContract.fpas)

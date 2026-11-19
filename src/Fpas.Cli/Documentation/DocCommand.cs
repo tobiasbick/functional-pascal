@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/api-documentation.md)
 using Fpas.Cli.Analysis;
 using Fpas.Workspaces.Analysis;
 using Fpas.Workspaces.Documentation;

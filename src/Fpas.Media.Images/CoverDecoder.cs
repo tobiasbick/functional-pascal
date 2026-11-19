@@ -1,3 +1,4 @@
+// [Documentation](../../docs/pascal/libraries/media/images.md)
 using System.Drawing;
 using PhotoSauce.MagicScaler;
 using PhotoSauce.MagicScaler.Transforms;

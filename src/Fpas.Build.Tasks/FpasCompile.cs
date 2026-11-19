@@ -1,3 +1,4 @@
+// [Documentation](../../docs/build/msbuild.md#sdk-task-and-incremental-state)
 using Fpas.Build.Tasks.Incremental;
 using Fpas.Build.Tasks.Documentation;
 using System.Diagnostics;

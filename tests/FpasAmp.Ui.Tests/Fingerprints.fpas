@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/library.md#acoustic-fingerprints)
+
 // Exercises both routes to a fingerprint with the real native tool and a private library.
 unit FpasAmp.Ui.Tests.Fingerprints;
 

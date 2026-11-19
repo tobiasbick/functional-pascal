@@ -1,3 +1,4 @@
+// [Documentation](../../docs/pascal/libraries/processes.md#owning-a-process-tree)
 using Microsoft.Win32.SafeHandles;
 using System.ComponentModel;
 using System.Diagnostics;

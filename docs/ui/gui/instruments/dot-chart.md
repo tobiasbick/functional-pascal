@@ -63,3 +63,17 @@ uses the coordinate to add a cup and updates the plotted bands in its model.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Instruments/View.fpas)
 - [Event track](event-track.md)
 - [Instruments](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Charts/`
+  - [DotChart.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/DotChart.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Charts/`
+  - [NativeMethods.DotChart.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Charts/NativeMethods.DotChart.Types.cs)
+  - [NativeMethods.DotChart.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Charts/NativeMethods.DotChart.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Charts/`
+  - [CuiWindow.DotChart.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.DotChart.Types.cs)
+  - [CuiWindow.DotChart.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.DotChart.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/charts/`
+  - [dot_chart.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/dot_chart.c)
+  - [dot_chart.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/dot_chart.h)

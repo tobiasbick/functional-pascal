@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/actions/reactions.md)
 #ifndef FPAS_REACTIONS_H
 #define FPAS_REACTIONS_H
 

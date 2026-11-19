@@ -1,3 +1,4 @@
+// [Documentation](../../coverage.md#behavioral-checks)
 namespace Fpas.IntegrationTests.Support;
 
 // Reports a fact as skipped on Windows, where creating symbolic links can require elevated privileges.

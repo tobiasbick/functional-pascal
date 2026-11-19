@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/feedback/skeleton.md)
 /* Native shimmer, sizes, reduced motion and percentage button widths must match CUI. */
 #include "../fpas_cui.h"
 #include <stdio.h>

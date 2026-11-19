@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/overlays/guided-tour.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_tour(cui_ctx *ui, const char *id, const unsigned int *targets,

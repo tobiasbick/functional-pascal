@@ -47,3 +47,17 @@ the app needs keyboard-only operation.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/SwipeActions.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Actions/Widgets/SwipeActions.fpas)
 - [Actions](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Actions/`
+  - [SwipeItem.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Actions/SwipeItem.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Actions/`
+  - [NativeMethods.SwipeItem.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Actions/NativeMethods.SwipeItem.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Actions/`
+  - [CuiWindow.SwipeItem.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Actions/CuiWindow.SwipeItem.cs)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [swipe_wheel.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/swipe_wheel.c)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/actions/`
+  - [swipe_item.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/swipe_item.c)
+  - [swipe_item.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/swipe_item.h)

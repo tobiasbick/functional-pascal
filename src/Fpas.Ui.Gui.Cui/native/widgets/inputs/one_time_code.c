@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/inputs/one-time-code.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_one_time_code(cui_ctx *ui, const char *id, char *code, int length, int enabled, int focus, int *complete) {

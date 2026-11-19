@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/pickers/histogram-slider.md)
 #ifndef FPAS_HISTOGRAM_SLIDER_H
 #define FPAS_HISTOGRAM_SLIDER_H
 

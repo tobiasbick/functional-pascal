@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-expressions.md)
 using System.Numerics;
 using Fpas.Debugging.Core;
 

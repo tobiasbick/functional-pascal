@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/testing.md#results-and-process-ownership)
 using Fpas.Compiler;
 using Fpas.Workspaces.Loading;
 using System.Reflection.Metadata;

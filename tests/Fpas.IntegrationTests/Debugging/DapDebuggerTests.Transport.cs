@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-dap.md)
 using System.Text.Json.Nodes;
 using Fpas.Tests.Support;
 using Fpas.IntegrationTests.Processes.Support;

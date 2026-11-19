@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/apps/fpas-amp/desktop.md#browsing-music-and-collections)
+
 // Toolbar edits stay local; the album slice derives the shown albums from them.
 unit FpasAmp.Ui.Albums.Toolbar.Update;
 

@@ -1,3 +1,4 @@
+// [Documentation](../../docs/pascal/program-structure/cli.md)
 namespace Fpas.Cli;
 
 internal static class Program

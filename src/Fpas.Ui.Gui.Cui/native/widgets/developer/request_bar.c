@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-developer-tools/http-request-bar.md)
 #include "../../fpas_cui.h"
 
 static void fpas_request_bar_retire(cui_ctx *ui, cui_id key) {

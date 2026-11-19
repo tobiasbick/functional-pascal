@@ -49,3 +49,18 @@ update and append any resulting output to the model.
 - [Gallery widget](../../../../examples/ui/gui/gallery/Pages/Files/View.fpas)
 - [Gallery command handling](../../../../examples/ui/gui/gallery/Pages/Files/Terminal.fpas)
 - [Files](README.md)
+
+## Source files
+
+- `src/Fpas.Ui/Widgets/Developer/`
+  - [Terminal.fpas](../../../../src/Fpas.Ui/Widgets/Developer/Terminal.fpas)
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [Terminal.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/Terminal.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.Terminal.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.Terminal.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.Terminal.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.Terminal.Types.cs)
+  - [CuiWindow.Terminal.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.Terminal.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [terminal.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/terminal.c)
+  - [terminal.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/terminal.h)

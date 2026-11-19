@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/social-and-media/ticker.md)
 using Fpas.Ui.Gui.Cui.Interop.Feedback;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

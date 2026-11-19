@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/pickers/multi-select.md)
 using Fpas.Ui.Gui.Cui.Widgets.Inputs;
 using Fpas.Ui.Gui.Cui.Interop;
 

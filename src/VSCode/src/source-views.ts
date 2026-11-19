@@ -1,3 +1,4 @@
+// [Documentation](../README.md#explore-code-and-apply-corrections)
 import * as vscode from 'vscode';
 import type { ClientSession } from './client';
 import { requireTrusted, settings } from './context';

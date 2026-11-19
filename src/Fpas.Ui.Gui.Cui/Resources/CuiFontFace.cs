@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/cui.md#theme-and-resources)
 namespace Fpas.Ui.Gui.Cui.Resources;
 
 /// <summary>A font copied into one CUI context; the owning window releases its data on disposal.</summary>

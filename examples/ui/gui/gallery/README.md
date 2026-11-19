@@ -265,3 +265,17 @@ The GUI gallery contract runs this view with both native renderers and captures
 the accepted pages and open overlays, including Data display plus light, dark and narrow
 Disclosure and Feedback views. It drives the widgets with native pointer and keyboard input.
 The same contract also drives the package-only consumer.
+
+## Source files
+
+- `examples/ui/gui/gallery/App/`
+  - [State.fpas](App/State.fpas)
+  - [Update.fpas](App/Update.fpas)
+  - [View.fpas](App/View.fpas)
+- `examples/ui/gui/gallery/`
+  - [GuiWidgetGallery.fpasproj](GuiWidgetGallery.fpasproj)
+  - [main.fpas](main.fpas)
+- `examples/ui/gui/gallery/Shared/`
+  - [Sections.fpas](Shared/Sections.fpas)
+  - [State.fpas](Shared/State.fpas)
+  - [Update.fpas](Shared/Update.fpas)

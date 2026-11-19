@@ -43,3 +43,16 @@ Choose a day for the first endpoint, then choose the second. The callback receiv
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Pickers/Widgets/DateRange.fpas)
 - [Date range picker](date-range-picker.md)
 - [Pickers](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Pickers/`
+  - [DateRangeCalendar.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Pickers/DateRangeCalendar.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Pickers/`
+  - [NativeMethods.DateRange.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Pickers/NativeMethods.DateRange.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Pickers/`
+  - [CuiWindow.DateRange.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Pickers/CuiWindow.DateRange.Types.cs)
+  - [CuiWindow.DateRange.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Pickers/CuiWindow.DateRange.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/pickers/`
+  - [date_range_calendar.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/date_range_calendar.c)
+  - [date_range_calendar.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/date_range_calendar.h)

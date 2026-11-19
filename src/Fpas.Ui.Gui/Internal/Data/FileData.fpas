@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/host.md#frame-preparation-and-presentation)
+
 unit Fpas.Ui.Gui.Internal.Data.FileData;
 
 uses Fpas.Ui.Widgets.Files.FileListings as F, Fpas.Ui.Gui.Cui.Widgets.Files as CuiFiles, System as Sys;

@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/cui.md#layout-and-control-inspection)
 /* Keep companion-state ownership beside the CUI implementation that defines it. */
 typedef struct {
     cui_id first, second, popup;

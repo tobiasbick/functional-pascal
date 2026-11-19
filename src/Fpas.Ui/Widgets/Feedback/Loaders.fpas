@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/motion/loader.md)
+
 unit Fpas.Ui.Widgets.Feedback.Loaders;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C;

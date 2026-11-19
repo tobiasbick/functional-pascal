@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/data-display/virtual-list.md)
+
 unit GuiGallery.Pages.Lists.Widgets.Invoices;
 
 uses

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/actions/confirm-button.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Actions.ConfirmButton;
 
 uses

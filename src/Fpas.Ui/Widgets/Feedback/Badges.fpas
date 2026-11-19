@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/feedback/badge.md)
+
 unit Fpas.Ui.Widgets.Feedback.Badges;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Actions.Buttons as B;

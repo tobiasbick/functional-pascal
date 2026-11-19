@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/cui.md#theme-and-resources)
 #include "../fpas_cui.h"
 
 typedef struct { cui_strings table; } fpas_strings;

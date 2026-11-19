@@ -55,3 +55,16 @@ proposal in the update and return the accepted title to the view.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/SmartInputs/Widgets/Editors.fpas)
 - [Text field](../inputs/text-field.md)
 - [Smart inputs](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [InlineEdit.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/InlineEdit.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.InlineEdit.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.InlineEdit.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.InlineEdit.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.InlineEdit.Types.cs)
+  - [CuiWindow.InlineEdit.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.InlineEdit.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [inline_edit.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/inline_edit.c)
+  - [inline_edit.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/inline_edit.h)

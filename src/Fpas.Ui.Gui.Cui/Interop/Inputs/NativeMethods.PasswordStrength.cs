@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/inputs/password-strength.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/disclosure/README.md)
+
 unit GuiGallery.Pages.Disclosure.State;
 
 uses Fpas.Ui.Widgets.Feedback.Checklists as K, System as Sys;

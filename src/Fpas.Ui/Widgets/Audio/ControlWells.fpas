@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#motion-and-compact-controls)
+
 unit Fpas.Ui.Widgets.Audio.ControlWells;
 
 // An action button next to a native well control.

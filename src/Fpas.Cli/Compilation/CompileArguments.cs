@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/program-structure/cli.md#inspect-and-invoke-the-compiler)
 using Fpas.Compiler;
 
 namespace Fpas.Cli.Compilation;

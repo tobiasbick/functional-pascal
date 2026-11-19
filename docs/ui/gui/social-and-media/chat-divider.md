@@ -43,3 +43,15 @@ in the application and use distinct IDs for multiple dividers.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/View.fpas)
 - [Chat message](chat-message.md)
 - [Social and media](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Conversation/`
+  - [ChatDivider.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Conversation/ChatDivider.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Conversation/`
+  - [NativeMethods.ChatDivider.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Conversation/NativeMethods.ChatDivider.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Conversation/`
+  - [CuiWindow.ChatDivider.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Conversation/CuiWindow.ChatDivider.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/conversation/`
+  - [chat_divider.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/conversation/chat_divider.c)
+  - [chat_divider.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/conversation/chat_divider.h)

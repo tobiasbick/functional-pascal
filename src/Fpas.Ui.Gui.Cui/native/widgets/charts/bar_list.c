@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/bar-list.md)
 #include "../../fpas_cui.h"
 
 typedef struct { cui_id *keys; int count, capacity; } fpas_bar_items;

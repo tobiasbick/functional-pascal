@@ -50,3 +50,15 @@ The underlying string is still part of the model.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Developer/View.fpas)
 - [HTTP request bar](../more-developer-tools/http-request-bar.md)
 - [Developer tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [KeyValueEditor.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/KeyValueEditor.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.KeyValueEditor.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.KeyValueEditor.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.KeyValueEditor.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.KeyValueEditor.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [key_value_editor.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/key_value_editor.c)
+  - [key_value_editor.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/key_value_editor.h)

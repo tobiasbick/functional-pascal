@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/program-structure/project-commands.md#resolve-a-runnable-target)
 using Fpas.Cli.Analysis;
 using Fpas.Workspaces.Loading;
 using Fpas.Workspaces.Projects;

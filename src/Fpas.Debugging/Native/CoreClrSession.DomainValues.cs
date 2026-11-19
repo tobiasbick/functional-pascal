@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#passive-stored-values)
 using System.Globalization;
 using System.Numerics;
 using Fpas.Debugging.Core;

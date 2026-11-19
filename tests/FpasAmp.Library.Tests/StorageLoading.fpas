@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/library.md#reconciliation-and-persistence)
+
 // Cached startup data, configuration context and safe database failures.
 unit FpasAmp.Library.Tests.StorageLoading;
 

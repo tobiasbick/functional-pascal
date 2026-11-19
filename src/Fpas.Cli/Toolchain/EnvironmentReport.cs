@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/environment.md)
 using Fpas.Cli.Diagnostics;
 using System.Text;
 using System.Text.Json;

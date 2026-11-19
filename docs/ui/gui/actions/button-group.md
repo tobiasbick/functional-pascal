@@ -43,3 +43,15 @@ inside a group.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/ButtonGroups.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Buttons/Widgets/ButtonGroup.fpas)
 - [Actions](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Actions/`
+  - [ButtonGroup.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Actions/ButtonGroup.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Actions/`
+  - [NativeMethods.ButtonGroup.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Actions/NativeMethods.ButtonGroup.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Actions/`
+  - [CuiWindow.ButtonGroup.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Actions/CuiWindow.ButtonGroup.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/actions/`
+  - [button_group.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/button_group.c)
+  - [button_group.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/button_group.h)

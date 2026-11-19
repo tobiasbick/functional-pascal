@@ -47,3 +47,15 @@ An enabled row with an action accepts a click, Enter or Space while focused. The
 - [Tree](tree.md)
 - [Avatar](../disclosure/avatar.md)
 - [Data display](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Collections/`
+  - [ListItem.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Collections/ListItem.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Collections/`
+  - [NativeMethods.ListItem.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Collections/NativeMethods.ListItem.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Collections/`
+  - [CuiWindow.ListItem.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Collections/CuiWindow.ListItem.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/collections/`
+  - [list_item.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/list_item.c)
+  - [list_item.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/list_item.h)

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/result-card.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_result_card(cui_ctx *ui, const char *id, const fpas_media_source *source, const char *title,

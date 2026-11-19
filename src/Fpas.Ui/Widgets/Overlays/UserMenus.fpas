@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/actions/user-menu.md)
+
 unit Fpas.Ui.Widgets.Overlays.UserMenus;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Menus as M;

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/inputs/one-time-code.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Inputs.OneTimeCode;
 
 uses

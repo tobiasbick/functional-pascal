@@ -45,3 +45,15 @@ Click the row or focus it with Tab and press Space or Enter. The callback receiv
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Selection/Widgets/Checkbox.fpas)
 - [Switch](switch.md)
 - [Selection](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [Checkbox.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/Checkbox.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.Checkbox.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.Checkbox.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.Checkbox.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.Checkbox.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [checkbox.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/checkbox.c)
+  - [checkbox.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/checkbox.h)

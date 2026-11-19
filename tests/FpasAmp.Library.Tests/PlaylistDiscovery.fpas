@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/library.md#playlists)
+
 // Source file lists follow discovery/watchers while audio inventories stay separate.
 unit FpasAmp.Library.Tests.PlaylistDiscovery;
 

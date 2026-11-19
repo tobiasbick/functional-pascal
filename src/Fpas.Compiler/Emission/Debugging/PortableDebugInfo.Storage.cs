@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/architecture/debug-information.md#passive-source-storage)
 using System.Reflection.Metadata;
 
 namespace Fpas.Compiler.Emission.Debugging;

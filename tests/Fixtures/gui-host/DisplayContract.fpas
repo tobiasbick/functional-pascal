@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/ui/gui/text-and-display/README.md)
+
 unit GalleryDisplayContract;
 
 uses

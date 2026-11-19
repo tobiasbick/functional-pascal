@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/cui.md#layout-and-control-inspection)
 #include "../fpas_cui.h"
 
 /* Shared bridge encoding: content, fill, logical pixels, percentage. */

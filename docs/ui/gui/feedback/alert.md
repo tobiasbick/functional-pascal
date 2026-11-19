@@ -45,3 +45,7 @@ Click the close button or focus it and press Enter or Space. CUI keeps the alert
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/View.fpas)
 - [Toast](../overlays/toast.md)
 - [Feedback](README.md)
+
+## Source files
+
+- [Alert.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Feedback/Alert.fpas)

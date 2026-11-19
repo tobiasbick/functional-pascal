@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/disclosure/veil.md)
+
 unit GuiGallery.Pages.Disclosure.Widgets.Veil;
 
 uses

@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/native-build.md#composite-and-popup-adapters)
 using Fpas.Ui.Gui.Cui.Interop;
 
 namespace Fpas.Ui.Gui.Cui;

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/calendar-heatmap.md)
 #ifndef FPAS_CUI_CALENDAR_HEATMAP_H
 #define FPAS_CUI_CALENDAR_HEATMAP_H
 #include "visualizations.h"

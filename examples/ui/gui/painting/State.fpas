@@ -1,3 +1,5 @@
+// [Documentation](README.md)
+
 unit NativePainting.State;
 
 uses Fpas.Ui.Gui.Cui.Resources as Resources, Fpas.Ui.Widgets.Canvas.Canvases as Canvas;

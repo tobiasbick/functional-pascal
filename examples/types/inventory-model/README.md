@@ -28,3 +28,9 @@ Item retained: True
 See [records](../../../docs/pascal/language/types/records.md) for supported
 construction, equality, private state, and cross-assembly behavior. This is a
 small data model; the dungeon game is not built by this example.
+
+## Source files
+
+- [Inventory.fpas](Inventory.fpas)
+- [InventoryModel.fpasproj](InventoryModel.fpasproj)
+- [main.fpas](main.fpas)

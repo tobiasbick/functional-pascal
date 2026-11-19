@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/disclosure/banner.md)
 #ifndef FPAS_BANNER_H
 #define FPAS_BANNER_H
 

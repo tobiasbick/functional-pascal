@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/reader/table-of-contents.md)
 using Fpas.Ui.Gui.Cui.Interop;
 
 namespace Fpas.Ui.Gui.Cui;

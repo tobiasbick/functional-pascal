@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/pickers/time-dial.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_time_dial(cui_ctx *ui, const char *id, int value, float size,

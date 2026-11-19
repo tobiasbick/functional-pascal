@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/environment.md)
 using Fpas.Processes;
 using Fpas.Workspaces.Processes;
 using System.Text.RegularExpressions;

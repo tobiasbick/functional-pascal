@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/motion/rotating-words.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_word_rotate(cui_ctx *ui, const char *id, const char *const *words, int count,

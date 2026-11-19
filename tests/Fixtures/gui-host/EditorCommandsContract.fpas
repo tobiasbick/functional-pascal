@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/ui/gui/code/code-editor.md)
+
 unit EditorCommandsContract;
 
 uses

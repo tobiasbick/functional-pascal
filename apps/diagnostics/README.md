@@ -19,6 +19,10 @@ dependencies and can also be published with Native AOT.
 
 ## Workload
 
+The [workload implementation](Workload/workloads.fpas) runs the compute,
+allocation and fault scenarios. The [entry program](Workload/main.fpas)
+validates arguments and dispatches them.
+
 ```sh
 dotnet apps/diagnostics/Workload/bin/Release/net10.0/Workload.dll --help
 dotnet apps/diagnostics/Workload/bin/Release/net10.0/Workload.dll cpu 8000
@@ -42,6 +46,9 @@ This permits controlled dump collection without changing OS crash-report policy.
 
 ## Measure
 
+The [entry program](Measure/main.fpas) runs external processes with the
+boundaries and limits selected by the [argument parser](Measure/options.fpas).
+
 `Measure --help` describes the external process wrapper. Supply an absolute
 executable after `--`; every following token is an argument, without a shell.
 Choose `startup`, `compiler` or `sdk-build` as the measurement boundary. Each
@@ -55,7 +62,11 @@ produce no successful CSV; an existing output file is refused. Reports record
 only labels, boundaries, sample times and non-sensitive runtime/settings metadata,
 not the target command line or absolute paths.
 
-CSV files contain raw milliseconds, workload rounds, warmup and runtime settings.
+## Measurements and reports
+
+[Shared reporting code](Shared/samples.fpas) validates report destinations,
+calculates summaries and writes CSVs for both applications. CSV files contain
+raw milliseconds, workload rounds, warmup and runtime settings.
 Stdout summarizes median, minimum, maximum, arithmetic mean and sample standard
 deviation. No performance threshold is imposed.
 
@@ -66,3 +77,8 @@ It checks independent checksum expectations, sample publication, invalid results
 deadline cleanup, actual EventPipe stack/GC/allocation events, runtime counters
 and a heap dump analyzed after the failing process exits. The platform acceptance
 procedure is in [diagnostic workflows](../../docs/pascal/tools/diagnostic-workflows.md#acceptance).
+
+## Source files
+
+- [Measure.fpasproj](Measure/Measure.fpasproj)
+- [Workload.fpasproj](Workload/Workload.fpasproj)

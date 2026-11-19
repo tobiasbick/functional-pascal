@@ -54,3 +54,8 @@ Their cleanup runs on leaving the enclosing lexical scope; see
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- [Binder.Globals.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.Globals.cs)
+- [Globals.cs](../../../../src/Fpas.Compiler/Binding/Declarations/Globals.cs)

@@ -53,3 +53,16 @@ as a fraction and choose indeterminate progress for work without a known total.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Desktop/Editor.fpas)
 - [Chapter index](README.md)
 - [Terminal example](../../tui/app-chrome/status-bar.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Desktop/`
+  - [StatusBar.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Desktop/StatusBar.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Desktop/`
+  - [NativeMethods.StatusBar.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Desktop/NativeMethods.StatusBar.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Desktop/`
+  - [CuiWindow.StatusBar.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Desktop/CuiWindow.StatusBar.Types.cs)
+  - [CuiWindow.StatusBar.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Desktop/CuiWindow.StatusBar.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/desktop/`
+  - [status_bar.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/desktop/status_bar.c)
+  - [status_bar.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/desktop/status_bar.h)

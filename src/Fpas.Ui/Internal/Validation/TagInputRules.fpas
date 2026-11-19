@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#tag-input)
+
 unit Fpas.Ui.Internal.Validation.TagInputRules;
 
 uses Fpas.Ui.Widgets.Inputs.TagInputs as T, Fpas.Ui.Internal.Validation.Rules as R, System.Text as Text;

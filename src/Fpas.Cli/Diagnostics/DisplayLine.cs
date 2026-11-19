@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/diagnostics.md#output-and-exit-status)
 using System.Globalization;
 using System.Text;
 

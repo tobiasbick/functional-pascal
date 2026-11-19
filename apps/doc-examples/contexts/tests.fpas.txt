@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/pascal/tools/testing.md)
+
 unit DocumentationTests;
 
 uses Xunit as X;

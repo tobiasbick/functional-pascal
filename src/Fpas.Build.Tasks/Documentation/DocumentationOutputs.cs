@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/build/msbuild.md#documentation-output)
 namespace Fpas.Build.Tasks.Documentation;
 
 internal static class DocumentationOutputs

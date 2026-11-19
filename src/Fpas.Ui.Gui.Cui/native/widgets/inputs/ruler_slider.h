@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/pickers/ruler-slider.md)
 #ifndef FPAS_RULER_SLIDER_H
 #define FPAS_RULER_SLIDER_H
 

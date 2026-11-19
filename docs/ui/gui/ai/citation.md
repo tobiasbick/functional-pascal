@@ -46,3 +46,15 @@ handle activation in the application and open the intended source.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [Source list](source-list.md)
 - [AI](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Ai/`
+  - [Citation.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Ai/Citation.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Ai/`
+  - [NativeMethods.Citation.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Ai/NativeMethods.Citation.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Ai/`
+  - [CuiWindow.Citation.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Ai/CuiWindow.Citation.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/ai/`
+  - [citation.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/citation.c)
+  - [citation.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/citation.h)

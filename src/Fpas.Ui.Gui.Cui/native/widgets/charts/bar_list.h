@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/bar-list.md)
 #ifndef FPAS_CUI_BAR_LIST_H
 #define FPAS_CUI_BAR_LIST_H
 #include "more_charts.h"

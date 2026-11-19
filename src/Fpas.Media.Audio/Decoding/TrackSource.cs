@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/libraries/media/audio.md#local-formats-and-seek-behavior)
 using SoundFlow.Backends.MiniAudio;
 using SoundFlow.Codecs.FFMpeg;
 using SoundFlow.Enums;

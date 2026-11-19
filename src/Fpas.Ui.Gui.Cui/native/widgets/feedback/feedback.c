@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/native-build.md#feedback-adapters)
 #include "../../fpas_cui.h"
 
 /* Match cui_progress_ex's positional ID and cui_animate_spring's state salt. */

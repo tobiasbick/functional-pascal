@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/debugging.md)
 using Fpas.Debugging;
 using Fpas.Debugging.Batch;
 using Fpas.Workspaces.Processes;
@@ -32,7 +33,7 @@ internal sealed class DebugCommand
             4 deadline/output limit, 130 cancellation.
 
             Examples:
-              fpas debug artifacts/Mandelbrot.dll --break main.fpas:13 --print Iteration
+              fpas debug artifacts/Mandelbrot.dll --break main.fpas:15 --print Iteration
 
               fpas debug artifacts/Mandelbrot.dll --cwd examples/numerics/mandelbrot --timeout 10 -- first "two words"
 

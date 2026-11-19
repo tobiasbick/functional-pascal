@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/overlays/tooltip.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_tooltip(cui_ctx *ui, const char *text, const char *shortcut) {

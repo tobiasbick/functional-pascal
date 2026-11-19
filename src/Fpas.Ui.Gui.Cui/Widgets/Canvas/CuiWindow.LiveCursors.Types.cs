@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/canvas-and-bars/live-cursors.md)
 namespace Fpas.Ui.Gui.Cui.Widgets.Canvas;
 
 /// <summary>A collaborator shown in a canvas or presence pill.</summary>

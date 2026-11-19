@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/language-server.md#initialization-and-documents)
 using StreamJsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 

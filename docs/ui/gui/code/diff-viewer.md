@@ -54,3 +54,16 @@ actual layout and `Count` for the number of change blocks.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/DiffViews.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Code/Tools.fpas)
 - [Code](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [DiffView.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/DiffView.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.DiffView.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.DiffView.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.DiffView.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.DiffView.Types.cs)
+  - [CuiWindow.DiffView.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.DiffView.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [diff_view.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/diff_view.c)
+  - [diff_view.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/diff_view.h)

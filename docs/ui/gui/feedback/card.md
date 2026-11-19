@@ -47,3 +47,15 @@ Without an activation callback the card groups its children. An enabled card wit
 - [Grid](grid.md)
 - [Expandable card](../disclosure/expandable-card.md)
 - [Feedback](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Containers/`
+  - [Card.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Containers/Card.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Containers/`
+  - [NativeMethods.Card.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Containers/NativeMethods.Card.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Containers/`
+  - [CuiWindow.Card.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Containers/CuiWindow.Card.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/containers/`
+  - [card.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/containers/card.c)
+  - [card.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/containers/card.h)

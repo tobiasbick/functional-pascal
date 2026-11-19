@@ -49,3 +49,17 @@ separately with the [Markdown widget](../code/markdown.md).
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/TextAreas.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/TextArea.fpas)
 - [Inputs](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [TextArea.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/TextArea.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.TextArea.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.TextArea.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.TextArea.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.TextArea.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [text_area.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/text_area.c)
+  - [text_area.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/text_area.h)
+- `tests/Fixtures/gui-host/`
+  - [TextAreaContract.fpas](../../../../tests/Fixtures/gui-host/TextAreaContract.fpas)

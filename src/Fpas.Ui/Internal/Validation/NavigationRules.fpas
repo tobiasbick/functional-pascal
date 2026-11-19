@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#tabs-breadcrumb-and-pagination)
+
 unit Fpas.Ui.Internal.Validation.NavigationRules;
 
 uses

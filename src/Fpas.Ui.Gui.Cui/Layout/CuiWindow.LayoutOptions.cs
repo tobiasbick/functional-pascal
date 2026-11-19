@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/cui.md#layout-and-control-inspection)
 using Fpas.Ui.Gui.Cui.Interop;
 
 namespace Fpas.Ui.Gui.Cui;

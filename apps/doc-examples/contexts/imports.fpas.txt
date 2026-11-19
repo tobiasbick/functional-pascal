@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/pascal/program-structure/imports.md)
+
 unit Example;
 
 // @example

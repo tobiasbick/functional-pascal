@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/actions/confirm-button.md)
+
 unit GuiGallery.Pages.Actions.Widgets.ConfirmButton;
 
 uses

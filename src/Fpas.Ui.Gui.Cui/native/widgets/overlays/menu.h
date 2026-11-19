@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/native-build.md#composite-and-popup-adapters)
 #ifndef FPAS_MENU_H
 #define FPAS_MENU_H
 

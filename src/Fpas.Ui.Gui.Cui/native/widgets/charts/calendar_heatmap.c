@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/calendar-heatmap.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_calendar_heatmap(cui_ctx *ui, const char *id, int year, int month, int day,

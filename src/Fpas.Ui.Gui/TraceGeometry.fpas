@@ -1,3 +1,5 @@
+// [Documentation](../../docs/ui/gui/developer-tools/trace-viewer.md)
+
 unit Fpas.Ui.Gui.TraceGeometry;
 
 uses

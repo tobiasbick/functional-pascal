@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/interop/events.md)
 using Fpas.Compiler.Tests.Support;
 namespace Fpas.Compiler.Tests.Routines;
 

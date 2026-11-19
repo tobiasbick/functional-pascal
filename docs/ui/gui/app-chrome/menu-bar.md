@@ -53,3 +53,17 @@ model. The command's `Shortcut` string displays a hint.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Desktop/Editor.fpas)
 - [Command menu](../actions/dropdown-menu.md)
 - [Chapter index](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Desktop/`
+  - [MenuBar.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Desktop/MenuBar.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Desktop/`
+  - [NativeMethods.MenuBar.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Desktop/NativeMethods.MenuBar.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Desktop/`
+  - [CuiWindow.MenuBar.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Desktop/CuiWindow.MenuBar.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/desktop/`
+  - [menu_bar.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/desktop/menu_bar.c)
+  - [menu_bar.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/desktop/menu_bar.h)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Overlays/`
+  - [CuiMenuTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Overlays/CuiMenuTests.cs)

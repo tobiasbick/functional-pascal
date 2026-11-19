@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/text-and-display/canvas.md)
 #include "../../fpas_cui.h"
 
 typedef struct {

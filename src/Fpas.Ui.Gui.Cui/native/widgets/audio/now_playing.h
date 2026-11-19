@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/motion/now-playing.md)
 #ifndef FPAS_CUI_NOW_PLAYING_H
 #define FPAS_CUI_NOW_PLAYING_H
 CUI_API int fpas_cui_now_playing(cui_ctx *ui, const char *id, const char *title, const char *artist,

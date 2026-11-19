@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/host.md#system-appearance)
+
 unit Fpas.Ui.Gui.Internal.Hosting.ThemeApplication;
 
 uses

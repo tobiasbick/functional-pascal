@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/navigation/stepper.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_stepper(cui_ctx *ui, const char *const *steps, int count, int current) {

@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/ai/README.md)
 using System.Runtime.InteropServices;
 
 namespace Fpas.Ui.Gui.Cui.Interop.Ai;

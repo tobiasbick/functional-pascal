@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/feedback/meter.md)
 /* Capacity, threshold, zero-capacity and animation output must remain native. */
 #include "../fpas_cui.h"
 #include <stdio.h>

@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/actions/reactions.md)
+
 unit Fpas.Ui.Widgets.Conversation.Reactions;
 
 uses Fpas.Ui.Elements as E;

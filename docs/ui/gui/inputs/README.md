@@ -25,3 +25,18 @@ widgets on this page require the GUI host.
 - [Smart inputs](../smart-inputs/README.md)
 - [Pickers](../pickers/README.md)
 - [Inputs in the gallery](../../../../examples/ui/gui/gallery/Pages/Inputs/View.fpas)
+
+## Source files
+
+- `examples/ui/gui/gallery/Pages/Inputs/`
+  - [State.fpas](../../../../examples/ui/gui/gallery/Pages/Inputs/State.fpas)
+  - [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Inputs/Update.fpas)
+- `examples/ui/gui/gallery/Pages/Inputs/Widgets/`
+  - [CredentialFields.fpas](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/CredentialFields.fpas)
+  - [PickerFields.fpas](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/PickerFields.fpas)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [input_regressions.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/input_regressions.c)
+- `tests/Fixtures/gui-host/`
+  - [CredentialFieldsContract.fpas](../../../../tests/Fixtures/gui-host/CredentialFieldsContract.fpas)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Inputs/`
+  - [CuiOptionalTrackingTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Inputs/CuiOptionalTrackingTests.cs)

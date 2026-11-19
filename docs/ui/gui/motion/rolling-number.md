@@ -48,3 +48,15 @@ tabular text.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/View.fpas)
 - [Counter](../social-and-media/counter.md)
 - [Motion](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Motion/`
+  - [NumberRoll.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Motion/NumberRoll.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Motion/`
+  - [NativeMethods.NumberRoll.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Motion/NativeMethods.NumberRoll.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Motion/`
+  - [CuiWindow.NumberRoll.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Motion/CuiWindow.NumberRoll.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/motion/`
+  - [number_roll.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/motion/number_roll.c)
+  - [number_roll.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/motion/number_roll.h)

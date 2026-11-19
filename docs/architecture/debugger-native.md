@@ -75,3 +75,25 @@ be loaded; unusable assets fail before target code executes.
 - [.NET 10.0.14 debugging ABI](https://github.com/dotnet/runtime/blob/v10.0.14/src/coreclr/inc/cordebug.idl).
 - [.NET 10.0.14 metadata import ABI](https://github.com/dotnet/runtime/blob/v10.0.14/src/coreclr/inc/cor.h).
 - [Upstream license](../../src/Fpas.Debugging/Native/THIRD-PARTY-NOTICES.txt).
+
+## Source files
+
+<details>
+<summary>Browse 11 source files</summary>
+
+- `src/Fpas.Debugging/`
+  - [DebuggerDeployment.cs](../../src/Fpas.Debugging/DebuggerDeployment.cs)
+  - [Fpas.Debugging.csproj](../../src/Fpas.Debugging/Fpas.Debugging.csproj)
+- `src/Fpas.Debugging/Native/`
+  - [CreatedProcess.cs](../../src/Fpas.Debugging/Native/CreatedProcess.cs)
+  - [DbgShim.cs](../../src/Fpas.Debugging/Native/DbgShim.cs)
+  - [ManagedCallbacks.Extensions.cs](../../src/Fpas.Debugging/Native/ManagedCallbacks.Extensions.cs)
+  - [ManagedCallbacks.cs](../../src/Fpas.Debugging/Native/ManagedCallbacks.cs)
+  - [NativeObject.cs](../../src/Fpas.Debugging/Native/NativeObject.cs)
+  - [NativeOperationException.cs](../../src/Fpas.Debugging/Native/NativeOperationException.cs)
+  - [NativeStop.cs](../../src/Fpas.Debugging/Native/NativeStop.cs)
+- `tests/Fpas.IntegrationTests/Debugging/`
+  - [NativeAssetTests.cs](../../tests/Fpas.IntegrationTests/Debugging/NativeAssetTests.cs)
+  - [NativeCoreTests.cs](../../tests/Fpas.IntegrationTests/Debugging/NativeCoreTests.cs)
+
+</details>

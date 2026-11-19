@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/motion/spotlight-card.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_spotlight_begin(cui_ctx *ui, const char *id, int width_kind, float width,

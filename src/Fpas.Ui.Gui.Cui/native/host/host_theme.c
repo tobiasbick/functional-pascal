@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/cui.md#theme-and-resources)
 #include "../fpas_cui.h"
 
 /* A CUI token change requires updating the managed/shared palette contract. */

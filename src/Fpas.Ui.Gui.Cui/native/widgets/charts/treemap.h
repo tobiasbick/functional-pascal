@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/treemap.md)
 #ifndef FPAS_CUI_TREEMAP_H
 #define FPAS_CUI_TREEMAP_H
 #include "visualizations.h"

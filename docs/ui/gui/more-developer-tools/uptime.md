@@ -46,3 +46,15 @@ updates the service history.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/Uptimes.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/View.fpas)
 - [More developer tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [Uptime.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/Uptime.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.Uptime.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.Uptime.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.Uptime.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.Uptime.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [uptime.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/uptime.c)
+  - [uptime.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/uptime.h)

@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/charts/README.md)
 /* Strict widget parity against the pinned CUI implementation, including input. */
 #include "../fpas_cui.h"
 #include <math.h>

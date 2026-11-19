@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/cli-diagnostics.md)
 using System.Text.Json;
 using Fpas.Tests.Support;
 

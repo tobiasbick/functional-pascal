@@ -49,3 +49,15 @@ application.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/View.fpas)
 - [HTTP request bar](http-request-bar.md)
 - [More developer tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [ApiExplorer.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/ApiExplorer.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.ApiExplorer.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.ApiExplorer.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.ApiExplorer.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.ApiExplorer.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [api_explorer.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/api_explorer.c)
+  - [api_explorer.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/api_explorer.h)

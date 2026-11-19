@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/libraries/processes.md)
 using Fpas.Processes;
 using Fpas.Tests.Support;
 using System.Diagnostics;

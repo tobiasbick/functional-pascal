@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/cui.md#theme-and-resources)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

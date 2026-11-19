@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/navigation/breadcrumb.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Navigation.Breadcrumb;
 
 uses

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/apps/fpas-amp/library.md#reconciliation-and-persistence)
+
 // Parameterized SQLite primitives for the worker-owned inventory database.
 unit FpasAmp.Library.Persistence.Sql;
 

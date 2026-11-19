@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/result-card.md)
 #ifndef FPAS_CUI_RESULT_CARD_H
 #define FPAS_CUI_RESULT_CARD_H
 CUI_API int fpas_cui_result_card(cui_ctx *ui, const char *id, const fpas_media_source *source, const char *title,

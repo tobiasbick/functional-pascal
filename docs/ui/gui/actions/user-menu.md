@@ -46,3 +46,15 @@ the same keyed command entries as a dropdown menu.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Overlays/UserMenus.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Actions/Widgets/UserMenu.fpas)
 - [Actions](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Overlays/`
+  - [UserMenu.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Overlays/UserMenu.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Overlays/`
+  - [NativeMethods.UserMenu.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Overlays/NativeMethods.UserMenu.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Overlays/`
+  - [CuiWindow.UserMenu.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Overlays/CuiWindow.UserMenu.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/overlays/`
+  - [user_menu.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/overlays/user_menu.c)
+  - [user_menu.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/overlays/user_menu.h)

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/voice/composer.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_composer(cui_ctx *ui, const char *id, char *draft, size_t capacity, const char *placeholder,

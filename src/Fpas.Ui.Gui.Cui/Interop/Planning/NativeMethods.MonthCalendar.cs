@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/planning/month-calendar.md)
 using Fpas.Ui.Gui.Cui.Interop.Planning;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

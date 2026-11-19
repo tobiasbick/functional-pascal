@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/disclosure/confirm-popover.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_confirm_popover(cui_ctx *ui, const char *id, const char *title,

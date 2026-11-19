@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/charts/pattern-meter.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Charts.PatternMeter;
 
 uses

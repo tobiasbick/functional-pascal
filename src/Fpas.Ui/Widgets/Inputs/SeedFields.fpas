@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/creative-controls/seed-field.md)
+
 unit Fpas.Ui.Widgets.Inputs.SeedFields;
 
 uses Fpas.Ui.Elements as E;

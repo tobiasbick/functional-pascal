@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/developer-tools/trace-viewer.md)
 using Fpas.Ui.Gui.Cui.Widgets.Developer;
 
 namespace Fpas.Ui.Gui.Cui.Tests.Display;

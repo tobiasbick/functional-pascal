@@ -47,3 +47,15 @@ execution.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Pickers/SchedulePickers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Developer/View.fpas)
 - [Developer tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Pickers/`
+  - [SchedulePicker.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Pickers/SchedulePicker.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Pickers/`
+  - [NativeMethods.SchedulePicker.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Pickers/NativeMethods.SchedulePicker.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Pickers/`
+  - [CuiWindow.SchedulePicker.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Pickers/CuiWindow.SchedulePicker.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/pickers/`
+  - [schedule_picker.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/schedule_picker.c)
+  - [schedule_picker.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/schedule_picker.h)

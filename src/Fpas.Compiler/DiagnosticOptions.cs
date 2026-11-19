@@ -1,3 +1,4 @@
+// [Documentation](../../docs/pascal/tools/diagnostics.md)
 namespace Fpas.Compiler;
 
 /// <summary>The severity of a compiler diagnostic.</summary>

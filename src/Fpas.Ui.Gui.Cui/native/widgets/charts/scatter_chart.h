@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/scatter-chart.md)
 #ifndef FPAS_CUI_SCATTER_CHART_H
 #define FPAS_CUI_SCATTER_CHART_H
 #include "more_charts.h"

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/workspaces.md)
 using Fpas.Tests.Support;
 using Fpas.Workspaces.Live;
 using Fpas.Workspaces.Loading;

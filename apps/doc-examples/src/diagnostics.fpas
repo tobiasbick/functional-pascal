@@ -1,3 +1,5 @@
+// [Documentation](../README.md#source-layout)
+
 unit DocExamples.Diagnostics;
 
 uses DocExamples.Model as M, System as S, System.Text.Json as J;

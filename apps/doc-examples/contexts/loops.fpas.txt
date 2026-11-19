@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/pascal/language/control-flow/loops.md)
+
 program Example;
 
 uses System.Console as Console;

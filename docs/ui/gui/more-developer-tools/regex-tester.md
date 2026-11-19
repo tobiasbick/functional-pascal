@@ -48,3 +48,15 @@ the proposal in the model if you want edits to persist.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/RegexTesters.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/View.fpas)
 - [More developer tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [RegexTester.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/RegexTester.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.RegexTester.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.RegexTester.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.RegexTester.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.RegexTester.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [regex_tester.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/regex_tester.c)
+  - [regex_tester.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/regex_tester.h)

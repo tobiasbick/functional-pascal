@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/specs/syntax.md)
 using Fpas.Compiler.Formatting;
 
 namespace Fpas.Compiler.Tests.Syntax;

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/apps/fpas-amp/library.md#albums-and-artwork)
+
 // Borrowed album queries and artwork access share the metadata session lifetime.
 unit FpasAmp.Library.Albums.Access;
 

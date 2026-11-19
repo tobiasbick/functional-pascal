@@ -49,3 +49,15 @@ The body scrolls beneath the pinned header while focus stays inside. The close b
 - [Sidebar navigation](../navigation/sidebar.md)
 - [Overlays](README.md)
 - [Terminal example](../../tui/overlays/sheet.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Overlays/`
+  - [Sheet.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Overlays/Sheet.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Overlays/`
+  - [NativeMethods.Sheets.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Overlays/NativeMethods.Sheets.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Overlays/`
+  - [CuiWindow.Sheets.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Overlays/CuiWindow.Sheets.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/overlays/`
+  - [sheet.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/overlays/sheet.c)
+  - [sheet.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/overlays/sheet.h)

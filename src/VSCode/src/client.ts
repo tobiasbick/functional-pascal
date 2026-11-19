@@ -1,3 +1,4 @@
+// [Documentation](../README.md#install-and-select-a-project)
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { once } from 'node:events';
 import path from 'node:path';

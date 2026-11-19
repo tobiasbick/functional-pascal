@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/build/publishing.md)
 using System.CommandLine;
 using System.Text.Json;
 using Fpas.Cli.Reporting;

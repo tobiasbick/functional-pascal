@@ -49,3 +49,15 @@ anchors, put them in a viewport inside that body.
 - [Link](link.md)
 - [Avatar](avatar.md)
 - [Disclosure](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Overlays/`
+  - [HoverCard.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Overlays/HoverCard.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Overlays/`
+  - [NativeMethods.HoverCard.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Overlays/NativeMethods.HoverCard.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Overlays/`
+  - [CuiWindow.HoverCard.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Overlays/CuiWindow.HoverCard.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/overlays/`
+  - [hover_card.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/overlays/hover_card.c)
+  - [hover_card.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/overlays/hover_card.h)

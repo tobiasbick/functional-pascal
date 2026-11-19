@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#subview-composition)
+
 unit Fpas.Ui.Internal.Mapping.EditingTools;
 
 uses

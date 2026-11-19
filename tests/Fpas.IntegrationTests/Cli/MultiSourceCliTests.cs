@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/program-structure/units.md)
 using System.Text.Json;
 using Fpas.Tests.Support;
 

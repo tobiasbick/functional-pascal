@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/inputs/date-picker.md)
 using Fpas.Ui.Gui.Cui.Widgets.Pickers;
 using Fpas.Ui.Gui.Cui.Interop;
 

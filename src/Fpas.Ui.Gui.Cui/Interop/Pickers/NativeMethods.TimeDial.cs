@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/pickers/time-dial.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

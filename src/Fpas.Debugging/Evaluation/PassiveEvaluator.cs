@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-expressions.md)
 using Fpas.Debugging.Core;
 
 namespace Fpas.Debugging.Evaluation;

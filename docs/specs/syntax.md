@@ -264,3 +264,16 @@ attribute placement, definite assignment, supported async results, and coverage.
 Contract conditions must be bool, obey their expression restrictions, and use
 correctly typed result bindings. Procedures/non-generic async Task functions
 cannot bind a result; async Task<T> functions bind T rather than Task<T>.
+
+## Source files
+
+- `src/Fpas.Compiler/Syntax/Parsing/`
+  - [Parser.Expressions.cs](../../src/Fpas.Compiler/Syntax/Parsing/Parser.Expressions.cs)
+  - [Parser.Statements.cs](../../src/Fpas.Compiler/Syntax/Parsing/Parser.Statements.cs)
+  - [Parser.Types.cs](../../src/Fpas.Compiler/Syntax/Parsing/Parser.Types.cs)
+- `tests/Fpas.Compiler.Tests/Syntax/`
+  - [AtomicBoundaryTests.cs](../../tests/Fpas.Compiler.Tests/Syntax/AtomicBoundaryTests.cs)
+  - [BoundaryAssertions.cs](../../tests/Fpas.Compiler.Tests/Syntax/BoundaryAssertions.cs)
+  - [BoundaryCases.cs](../../tests/Fpas.Compiler.Tests/Syntax/BoundaryCases.cs)
+  - [ParserLimitTests.cs](../../tests/Fpas.Compiler.Tests/Syntax/ParserLimitTests.cs)
+  - [TokenBoundaryTests.cs](../../tests/Fpas.Compiler.Tests/Syntax/TokenBoundaryTests.cs)

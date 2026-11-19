@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/creative-controls/ratio-slider.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_ratio_slider(cui_ctx *ui, const char *id,

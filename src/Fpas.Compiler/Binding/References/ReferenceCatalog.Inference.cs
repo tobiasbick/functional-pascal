@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/language/functions/type-inference.md)
 using Fpas.Compiler.Binding.Types;
 namespace Fpas.Compiler.Binding.References;
 

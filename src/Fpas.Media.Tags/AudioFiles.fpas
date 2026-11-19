@@ -1,3 +1,5 @@
+// [Documentation](../../docs/pascal/libraries/media/tags.md#audio-properties-and-descriptive-tags)
+
 // ATL is the parser; this boundary selects fields and detaches mutable values.
 unit Fpas.Media.Tags.AudioFiles;
 

@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/social-and-media/presence.md)
 using Fpas.Ui.Gui.Cui.Interop.Conversation;
 using Fpas.Ui.Gui.Cui.Widgets.Charts;
 using Fpas.Ui.Gui.Cui.Widgets.Conversation;

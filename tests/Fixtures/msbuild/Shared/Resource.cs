@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/build/msbuild.md#verification)
 using System.Runtime.CompilerServices;
 using System.Diagnostics.CodeAnalysis;
 

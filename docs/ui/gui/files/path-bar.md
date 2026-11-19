@@ -50,3 +50,16 @@ and pass the resulting segments and menus back to the view.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Files/View.fpas)
 - [File browser](file-browser.md)
 - [Files](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Navigation/`
+  - [PathBar.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Navigation/PathBar.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Navigation/`
+  - [NativeMethods.PathBar.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Navigation/NativeMethods.PathBar.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Navigation/`
+  - [CuiWindow.PathBar.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Navigation/CuiWindow.PathBar.Types.cs)
+  - [CuiWindow.PathBar.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Navigation/CuiWindow.PathBar.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/navigation/`
+  - [path_bar.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/navigation/path_bar.c)
+  - [path_bar.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/navigation/path_bar.h)

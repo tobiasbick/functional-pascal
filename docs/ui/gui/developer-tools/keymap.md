@@ -48,3 +48,15 @@ actions. Store `Event.Modifiers` and use `Event.Key` to open binding details.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/Keymaps.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Developer/View.fpas)
 - [Developer tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [Keymap.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/Keymap.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.Keymap.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.Keymap.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.Keymap.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.Keymap.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [keymap.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/keymap.c)
+  - [keymap.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/keymap.h)

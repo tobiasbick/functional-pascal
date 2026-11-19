@@ -1,3 +1,4 @@
+// [Documentation](../coverage.md#test-harness)
 using System.Diagnostics;
 using System.Text;
 

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/planning/month-calendar.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_month_calendar(cui_ctx *ui, const char *id, int *month, int *selected,

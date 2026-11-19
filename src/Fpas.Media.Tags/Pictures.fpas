@@ -1,3 +1,5 @@
+// [Documentation](../../docs/pascal/libraries/media/tags.md#embedded-artwork)
+
 unit Fpas.Media.Tags.Pictures;
 
 uses ATL as A, System as Sys, System.IO as IO, System.Collections.Generic as C;

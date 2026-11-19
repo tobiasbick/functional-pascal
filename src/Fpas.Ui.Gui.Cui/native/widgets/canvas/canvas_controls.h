@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/canvas-controls.md)
 #ifndef FPAS_CUI_CANVAS_CONTROLS_H
 #define FPAS_CUI_CANVAS_CONTROLS_H
 typedef struct { const char *icon, *label; } fpas_canvas_toggle;

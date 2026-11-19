@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/voice/voice-session.md)
+
 unit GuiGallery.Pages.Voice.Script;
 
 uses Fpas.Ui.Widgets.Audio.Voice as V, System as Sys;

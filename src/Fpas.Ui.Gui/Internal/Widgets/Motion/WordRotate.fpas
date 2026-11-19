@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/motion/rotating-words.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Motion.WordRotate;
 
 uses

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/disclosure/countdown.md)
 #include "../../fpas_cui.h"
 
 static void fpas_countdown_retire(cui_ctx *ui, cui_id key) {

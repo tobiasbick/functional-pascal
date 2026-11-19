@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/inputs/password-strength.md)
 #ifndef FPAS_PASSWORD_STRENGTH_H
 #define FPAS_PASSWORD_STRENGTH_H
 

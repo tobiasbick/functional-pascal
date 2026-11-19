@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/cui.md#window-ownership-and-frames)
 /* Small ABI adapters for options structs and compound-literal CUI macros. */
 #include "../fpas_cui.h"
 #include <math.h>

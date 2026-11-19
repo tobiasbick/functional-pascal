@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/fmt-style.md)
 using Fpas.IntegrationTests.Build;
 using Fpas.IntegrationTests.Projects;
 using Fpas.Tests.Support;

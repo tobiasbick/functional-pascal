@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/creative-controls/option-action.md)
 #ifndef FPAS_CUI_OPTION_ACTION_H
 #define FPAS_CUI_OPTION_ACTION_H
 CUI_API int fpas_cui_option_action(cui_ctx *ui, const char *id,

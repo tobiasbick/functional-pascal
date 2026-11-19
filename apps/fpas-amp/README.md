@@ -120,6 +120,9 @@ It is disabled while that source is paused, offline or scanning.
 Delete asks for confirmation, removes the source from settings and stops its
 monitoring. Actual music files, ratings and other sources' memberships remain.
 
+For the implementation of navigation, playback and scan controls, see the
+[desktop application guide](../../docs/apps/fpas-amp/desktop.md).
+
 Set up the [local FPAS SDK](../../docs/build/development.md#build-an-fpas-application)
 and the [native CUI build tools](../../docs/ui/gui/native-build.md#prerequisites).
 Run these commands from this directory:

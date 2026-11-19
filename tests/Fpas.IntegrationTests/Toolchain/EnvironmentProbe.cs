@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/environment.md)
 using Fpas.IntegrationTests.Build;
 using Fpas.Tests.Support;
 using System.Xml.Linq;

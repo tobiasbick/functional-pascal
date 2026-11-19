@@ -71,3 +71,18 @@ Build the full URL from the address in the update when you need it.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/TextField.fpas)
 - [Smart inputs gallery example](../../../../examples/ui/gui/gallery/Pages/SmartInputs/View.fpas)
 - [Inputs](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [TextField.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/TextField.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.TextField.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.TextField.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.TextField.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.TextField.Types.cs)
+  - [CuiWindow.TextField.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.TextField.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [text_field.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/text_field.c)
+  - [text_field.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/text_field.h)
+- `tests/Fixtures/gui-host/`
+  - [TextFieldContract.fpas](../../../../tests/Fixtures/gui-host/TextFieldContract.fpas)

@@ -1,3 +1,5 @@
+// [Documentation](../../docs/ui/mvu/runtime.md#larger-applications)
+
 unit Fpas.Ui.Mvu.Composition;
 
 uses

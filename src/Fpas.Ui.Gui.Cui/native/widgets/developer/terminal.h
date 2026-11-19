@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/files/terminal.md)
 #ifndef FPAS_CUI_TERMINAL_H
 #define FPAS_CUI_TERMINAL_H
 /** Draws cumulative ANSI output and proposes terminal input.

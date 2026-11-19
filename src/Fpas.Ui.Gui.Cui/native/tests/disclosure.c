@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/native-build.md#composite-and-popup-adapters)
 /* Compare adapter output to the actual CUI widgets, including omitted decorations. */
 #include "../fpas_cui.h"
 #include <stdio.h>

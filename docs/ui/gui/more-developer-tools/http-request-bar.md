@@ -52,3 +52,15 @@ sample data.
 - [Key-value editor](../developer-tools/key-value-editor.md)
 - [Gallery update function](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/Update.fpas)
 - [More developer tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [RequestBar.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/RequestBar.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.RequestBar.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.RequestBar.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.RequestBar.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.RequestBar.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [request_bar.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/request_bar.c)
+  - [request_bar.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/request_bar.h)

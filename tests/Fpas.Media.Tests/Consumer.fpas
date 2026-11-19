@@ -1,3 +1,5 @@
+// [Documentation](../../docs/pascal/libraries/media/README.md)
+
 // Uses the public media projects from FPAS without an application or UI reference.
 unit Fpas.Media.Tests.Consumer;
 

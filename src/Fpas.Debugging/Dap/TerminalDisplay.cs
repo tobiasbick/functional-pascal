@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/debugging.md#private-terminal-and-tui-control)
 using System.Globalization;
 using System.Text;
 

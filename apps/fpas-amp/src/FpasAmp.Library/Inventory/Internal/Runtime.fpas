@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#reconciliation-and-persistence)
+
 // One background owner for SQLite, traversal, clear commands and progress.
 unit FpasAmp.Library.Inventory.Internal.Runtime;
 

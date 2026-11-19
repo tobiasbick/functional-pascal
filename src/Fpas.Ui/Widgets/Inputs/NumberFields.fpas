@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/inputs/number-field.md)
+
 unit Fpas.Ui.Widgets.Inputs.NumberFields;
 
 uses Fpas.Ui.Elements as E;

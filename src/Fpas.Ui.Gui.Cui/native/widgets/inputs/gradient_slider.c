@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/creative-controls/gradient-slider.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_gradient_slider(cui_ctx *ui, const char *id,

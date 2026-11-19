@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/cui.md#window-ownership-and-frames)
 #include "../fpas_cui.h"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>

@@ -41,3 +41,15 @@ when the glyph needs to trigger an action.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Display/View.fpas)
 - [Icon button](../actions/icon-button.md)
 - [Chapter index](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Display/`
+  - [Icon.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Display/Icon.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Display/`
+  - [NativeMethods.Icon.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Display/NativeMethods.Icon.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Display/`
+  - [CuiWindow.Icon.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Display/CuiWindow.Icon.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/display/`
+  - [icon.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/display/icon.c)
+  - [icon.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/display/icon.h)

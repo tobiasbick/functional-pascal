@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/types/generics.md)
 namespace Fpas.Compiler.Syntax;
 
 internal sealed record ConstraintSyntax(int Position, string? Kind, TypeSyntax? Type);

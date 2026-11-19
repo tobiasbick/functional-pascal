@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/program-structure/project-commands.md#reports-and-exit-codes)
 using Fpas.Cli.Diagnostics;
 using Fpas.Workspaces.Processes;
 

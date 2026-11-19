@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/voice/voice-orb.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/selection/range-slider.md)
 #include "../../fpas_cui.h"
 
 static bool fpas_slider_propose_range(float *lower, float *upper, float next_lower,

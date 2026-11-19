@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/canvas-and-bars/painting.md)
 using Fpas.Tests.Support;
 using Fpas.Ui.Gui.Cui.Widgets.Canvas;
 using System.Runtime.CompilerServices;

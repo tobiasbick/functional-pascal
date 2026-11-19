@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/planning/README.md)
 namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow

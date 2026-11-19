@@ -48,3 +48,17 @@ filtering data in your application.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/QueryBuilders.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Developer/View.fpas)
 - [Developer tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [QueryBuilder.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/QueryBuilder.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.QueryBuilder.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.QueryBuilder.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.QueryBuilder.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.QueryBuilder.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [query_builder.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/query_builder.c)
+  - [query_builder.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/query_builder.h)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Developer/`
+  - [CuiDescribeQueryTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Developer/CuiDescribeQueryTests.cs)

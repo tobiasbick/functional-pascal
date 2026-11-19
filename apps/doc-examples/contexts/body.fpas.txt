@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/pascal/tools/documentation-examples.md#contexts-and-companion-projects)
+
 program Example;
 
 uses

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/disclosure/avatar.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Media.Avatar;
 
 uses

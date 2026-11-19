@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/compiler.md#compiler-api-and-output)
 namespace Fpas.Compiler.Analysis;
 
 internal sealed class EditorSourceProjection

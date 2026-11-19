@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/cli-diagnostics.md#collect-and-summarize)
 using System.Reflection;
 using System.Text.Json;
 using Fpas.Cli.Reporting;

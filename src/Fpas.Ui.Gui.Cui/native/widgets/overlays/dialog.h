@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/overlays/dialog.md)
 #ifndef FPAS_DIALOG_H
 #define FPAS_DIALOG_H
 

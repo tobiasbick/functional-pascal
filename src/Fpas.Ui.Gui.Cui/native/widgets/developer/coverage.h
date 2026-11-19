@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-developer-tools/coverage.md)
 #ifndef FPAS_CUI_COVERAGE_H
 #define FPAS_CUI_COVERAGE_H
 /** Draws file coverage, refreshing path data on every call.

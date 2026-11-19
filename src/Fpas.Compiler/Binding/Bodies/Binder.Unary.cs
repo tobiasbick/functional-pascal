@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/language/basics/operators.md)
 using Fpas.Compiler.Binding.Types;
 using Fpas.Compiler.Binding.Bound;
 using Fpas.Compiler.Syntax;

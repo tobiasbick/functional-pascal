@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/reader/scroll-anchor.md)
+
 unit Fpas.Ui.Widgets.Navigation.ScrollAnchors;
 
 uses Fpas.Ui.Elements as E;

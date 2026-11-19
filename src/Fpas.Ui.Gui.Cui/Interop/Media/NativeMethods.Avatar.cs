@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/disclosure/avatar.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

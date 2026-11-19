@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#playlists)
+
 // Durable ordered lists never share the lifetime of source-owned catalogue rows.
 unit FpasAmp.Library.Playlists.Persistence.UserLists;
 

@@ -39,3 +39,17 @@ arguments to avoid depending on third-party parameter naming conventions.
 - [Topic overview](README.md)
 - [Handbook](../README.md)
 - [Syntax grammar](../../specs/syntax.md)
+
+## Source files
+
+- `src/Fpas.Compiler/Binding/Bodies/`
+  - [Binder.Members.cs](../../../src/Fpas.Compiler/Binding/Bodies/Binder.Members.cs)
+- `src/Fpas.Compiler/Binding/References/`
+  - [ReferenceCatalog.Indexers.cs](../../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.Indexers.cs)
+  - [ReferenceCatalog.Members.cs](../../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.Members.cs)
+- `tests/Fpas.Compiler.Tests/Types/`
+  - [TypeOfTests.cs](../../../tests/Fpas.Compiler.Tests/Types/TypeOfTests.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.TypeOf.cs](../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.TypeOf.cs)
+- `tests/Fpas.IntegrationTests/Execution/`
+  - [TypeOfExecutionTests.cs](../../../tests/Fpas.IntegrationTests/Execution/TypeOfExecutionTests.cs)

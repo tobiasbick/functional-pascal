@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/text-and-display/image.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Media.Image;
 
 uses

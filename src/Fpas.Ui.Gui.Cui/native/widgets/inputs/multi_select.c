@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/pickers/multi-select.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_multi_select(cui_ctx *ui, const char *id, const char *const *labels,

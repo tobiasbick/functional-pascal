@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/social-and-media/image-compare.md)
+
 unit Fpas.Ui.Widgets.Media.ImageComparisons;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Media.MediaImages as Media;

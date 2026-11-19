@@ -1,3 +1,4 @@
+// [Documentation](../../docs/pascal/program-structure/cli.md)
 using System.CommandLine;
 using System.CommandLine.Help;
 

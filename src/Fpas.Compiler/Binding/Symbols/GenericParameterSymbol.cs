@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/language/types/generics.md)
 using Fpas.Compiler.Binding.Types;
 namespace Fpas.Compiler.Binding.Symbols;
 

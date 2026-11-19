@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/motion/control-tile.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Audio.ControlTile;
 
 uses

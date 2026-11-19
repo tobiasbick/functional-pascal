@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/inputs/color-picker.md)
 #ifndef FPAS_COLOR_PICKER_H
 #define FPAS_COLOR_PICKER_H
 

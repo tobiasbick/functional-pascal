@@ -46,3 +46,15 @@ Handle the Custom selection in your application to offer custom dimensions.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Pickers/AspectPickers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Creative/View.fpas)
 - [Creative controls](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Pickers/`
+  - [AspectPicker.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Pickers/AspectPicker.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Pickers/`
+  - [NativeMethods.AspectPicker.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Pickers/NativeMethods.AspectPicker.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Pickers/`
+  - [CuiWindow.AspectPicker.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Pickers/CuiWindow.AspectPicker.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/pickers/`
+  - [aspect_picker.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/aspect_picker.c)
+  - [aspect_picker.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/aspect_picker.h)

@@ -47,3 +47,15 @@ to the application.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/View.fpas)
 - [Countdown](../disclosure/countdown.md)
 - [Social and media](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Feedback/`
+  - [Counter.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Feedback/Counter.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Feedback/`
+  - [NativeMethods.Counter.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Feedback/NativeMethods.Counter.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Feedback/`
+  - [CuiWindow.Counter.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Feedback/CuiWindow.Counter.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/feedback/`
+  - [counter.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/counter.c)
+  - [counter.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/counter.h)

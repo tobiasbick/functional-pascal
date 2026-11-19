@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/result-card.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Canvas.ResultCard;
 
 uses

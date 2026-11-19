@@ -1,3 +1,5 @@
+// [Documentation](README.md)
+
 program CollectionEvents;
 
 uses System as Sys, System.Console as Console, System.ComponentModel as Component;

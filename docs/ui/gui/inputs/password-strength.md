@@ -40,3 +40,15 @@ The meter is read-only. When the editor proposes a change, update the password i
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/PasswordStrengthMeters.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/CredentialFields.fpas)
 - [Inputs](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [PasswordStrength.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/PasswordStrength.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.PasswordStrength.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.PasswordStrength.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.PasswordStrength.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.PasswordStrength.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [password_strength.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/password_strength.c)
+  - [password_strength.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/password_strength.h)

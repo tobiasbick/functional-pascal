@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/navigation/tabs.md)
 #ifndef FPAS_TABS_H
 #define FPAS_TABS_H
 

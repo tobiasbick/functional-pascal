@@ -45,3 +45,16 @@ the nonempty set of commands.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/SplitButtons.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Actions/Widgets/SplitButton.fpas)
 - [Actions](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Actions/`
+  - [SplitButton.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Actions/SplitButton.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Actions/`
+  - [NativeMethods.SplitButton.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Actions/NativeMethods.SplitButton.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Actions/`
+  - [CuiWindow.SplitButton.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Actions/CuiWindow.SplitButton.Types.cs)
+  - [CuiWindow.SplitButton.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Actions/CuiWindow.SplitButton.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/actions/`
+  - [split_button.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/split_button.c)
+  - [split_button.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/split_button.h)

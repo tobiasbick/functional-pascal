@@ -40,3 +40,15 @@ Click an ancestor or focus it with Tab and press Enter or Space. Position identi
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Navigation/Breadcrumbs.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Navigation/Widgets/Breadcrumb.fpas)
 - [Navigation](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Navigation/`
+  - [Breadcrumb.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Navigation/Breadcrumb.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Navigation/`
+  - [NativeMethods.Breadcrumb.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Navigation/NativeMethods.Breadcrumb.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Navigation/`
+  - [CuiWindow.Breadcrumb.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Navigation/CuiWindow.Breadcrumb.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/navigation/`
+  - [breadcrumb.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/navigation/breadcrumb.c)
+  - [breadcrumb.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/navigation/breadcrumb.h)

@@ -31,3 +31,7 @@ defined CLR representations and conversions; see [data domains](data-domains.md)
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- [ReferenceCatalog.Aliases.cs](../../../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.Aliases.cs)

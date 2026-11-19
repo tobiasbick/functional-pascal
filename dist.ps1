@@ -1,3 +1,4 @@
+# [Documentation](docs/build/distribution.md#build-and-deliver)
 # Build and deploy matching Release CLI and project SDK artifacts.
 $ErrorActionPreference = 'Stop'
 Push-Location $PSScriptRoot

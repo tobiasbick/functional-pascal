@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/interop/interfaces.md)
 using Fpas.Compiler.Tests.Support;
 namespace Fpas.Compiler.Tests.Routines;
 

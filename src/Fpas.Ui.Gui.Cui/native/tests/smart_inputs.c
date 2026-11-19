@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/smart-inputs/README.md)
 /* Native smart inputs parity; decimal money drafts stay text across the ABI. */
 #include "../fpas_cui.h"
 #include <math.h>

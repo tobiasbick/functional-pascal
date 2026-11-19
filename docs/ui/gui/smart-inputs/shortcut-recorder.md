@@ -71,3 +71,16 @@ value with the action that handles the shortcut. For a passive preview,
 - [Keycap](../text-and-display/keycap.md)
 - [Keymap](../developer-tools/keymap.md)
 - [Smart inputs](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [ShortcutRecorder.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/ShortcutRecorder.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.ShortcutRecorder.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.ShortcutRecorder.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.ShortcutRecorder.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.ShortcutRecorder.Types.cs)
+  - [CuiWindow.ShortcutRecorder.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.ShortcutRecorder.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [shortcut_recorder.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/shortcut_recorder.c)
+  - [shortcut_recorder.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/shortcut_recorder.h)

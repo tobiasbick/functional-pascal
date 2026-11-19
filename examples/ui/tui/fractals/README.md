@@ -29,3 +29,15 @@ run from the repository root.
 ```sh
 dotnet run --project examples/ui/tui/fractals/FractalExplorer.fpasproj
 ```
+
+## Source files
+
+- `examples/ui/tui/fractals/`
+  - [Camera.fpas](Camera.fpas)
+  - [Explorer.fpas](Explorer.fpas)
+  - [FractalExplorer.fpasproj](FractalExplorer.fpasproj)
+  - [Rendering.fpas](Rendering.fpas)
+  - [View.fpas](View.fpas)
+  - [main.fpas](main.fpas)
+- `tests/Fixtures/tui/`
+  - [FractalExplorer.fpas](../../../../tests/Fixtures/tui/FractalExplorer.fpas)

@@ -5,6 +5,18 @@ contracts, not support for every .NET signature or deferred language feature.
 Commands and configuration selection belong in the
 [development workflow](../docs/build/development.md).
 
+## Test harness
+
+[Directory.Build.targets](Directory.Build.targets) includes the shared C#
+helpers and records the reference-assembly directory from the resolved
+`System.Runtime` reference. `TestEnvironment` reads that metadata so direct
+compiler probes use the same framework as the test build.
+
+`TemporaryDirectory` gives each test an isolated scratch directory.
+`ProcessRunner` captures the streams and exit status of bounded subprocess
+tests. `AssemblyInspection` and `FileHash` let tests examine emitted metadata
+and compare output bytes independently of the command's report.
+
 ## Toolchain environment
 
 EnvironmentCommandTests owns the [environment inspection](../docs/pascal/tools/environment.md)
@@ -486,6 +498,10 @@ Deleted articles cannot remain as stale fixtures. See
 
 See also [native test frameworks](#native-test-frameworks) for test-library SDK consumers.
 
+The mixed-language SDK fixture pairs [the FPAS bridge](Fixtures/msbuild/Game/Bridge.fpas)
+with a referenced C# library and a C# consumer. The fixture is also used by
+workspace tests that issue queries at fixed positions inside the bridge.
+
 Projects.PublishingTests owns [application publishing](../docs/build/publishing.md).
 Native Windows x64 and WSL Linux x64 runs use Debug/Release tool builds and targets
 through Native AOT, single-file, self-contained, apphost and managed DLL modes.
@@ -622,3 +638,80 @@ Windows 10 version 1809 or newer; they do not open a visible console window.
 - [Compiler architecture](../docs/architecture/README.md)
 - [CLR mapping](../docs/specs/clr-mapping.md)
 - [MSBuild contract](../docs/build/msbuild.md)
+
+## Source files
+
+<details>
+<summary>Browse 53 source files</summary>
+
+- `tests/Fixtures/gui-host/`
+  - [GalleryHostAssertions.fpas](Fixtures/gui-host/GalleryHostAssertions.fpas)
+  - [GalleryModelContract.fpas](Fixtures/gui-host/GalleryModelContract.fpas)
+  - [PublishedGallery.fpas](Fixtures/gui-host/PublishedGallery.fpas)
+  - [ValidationBoundaryContract.fpas](Fixtures/gui-host/ValidationBoundaryContract.fpas)
+- `tests/Fixtures/testing/`
+  - [mstest.fpas](Fixtures/testing/mstest.fpas)
+  - [nunit.fpas](Fixtures/testing/nunit.fpas)
+  - [xunit.fpas](Fixtures/testing/xunit.fpas)
+- `tests/Fixtures/tui/`
+  - [CuiContract.fpas](Fixtures/tui/CuiContract.fpas)
+- `tests/Fpas.Compiler.Tests/`
+  - [Fpas.Compiler.Tests.csproj](Fpas.Compiler.Tests/Fpas.Compiler.Tests.csproj)
+- `tests/Fpas.Compiler.Tests/Support/`
+  - [TestCompilation.cs](Fpas.Compiler.Tests/Support/TestCompilation.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.Acceptance.cs](Fpas.IntegrationTests/Build/MsBuildTests.Acceptance.cs)
+  - [MsBuildTests.Baseline.cs](Fpas.IntegrationTests/Build/MsBuildTests.Baseline.cs)
+  - [MsBuildTests.cs](Fpas.IntegrationTests/Build/MsBuildTests.cs)
+  - [SdkPackageFixture.cs](Fpas.IntegrationTests/Build/SdkPackageFixture.cs)
+- `tests/Fpas.IntegrationTests/Build/Support/`
+  - [WaitingBuild.cs](Fpas.IntegrationTests/Build/Support/WaitingBuild.cs)
+- `tests/Fpas.IntegrationTests/Documentation/`
+  - [SemanticDocumentationTests.cs](Fpas.IntegrationTests/Documentation/SemanticDocumentationTests.cs)
+- `tests/Fpas.IntegrationTests/`
+  - [Fpas.IntegrationTests.csproj](Fpas.IntegrationTests/Fpas.IntegrationTests.csproj)
+- `tests/Fpas.IntegrationTests/Profiling/`
+  - [DiagnosticsFixture.cs](Fpas.IntegrationTests/Profiling/DiagnosticsFixture.cs)
+  - [DiagnosticsWorkflowTests.Cli.cs](Fpas.IntegrationTests/Profiling/DiagnosticsWorkflowTests.Cli.cs)
+  - [DiagnosticsWorkflowTests.Dumps.cs](Fpas.IntegrationTests/Profiling/DiagnosticsWorkflowTests.Dumps.cs)
+  - [DiagnosticsWorkflowTests.Measurements.cs](Fpas.IntegrationTests/Profiling/DiagnosticsWorkflowTests.Measurements.cs)
+  - [DiagnosticsWorkflowTests.Traces.cs](Fpas.IntegrationTests/Profiling/DiagnosticsWorkflowTests.Traces.cs)
+- `tests/Fpas.IntegrationTests/Support/`
+  - [ProgramExecution.cs](Fpas.IntegrationTests/Support/ProgramExecution.cs)
+  - [UnixTestAttributes.cs](Fpas.IntegrationTests/Support/UnixTestAttributes.cs)
+- `tests/Fpas.IntegrationTests/Testing/`
+  - [ExternalAdapterTests.cs](Fpas.IntegrationTests/Testing/ExternalAdapterTests.cs)
+  - [FrameworkExtensionTests.cs](Fpas.IntegrationTests/Testing/FrameworkExtensionTests.cs)
+  - [NativeFrameworkTests.cs](Fpas.IntegrationTests/Testing/NativeFrameworkTests.cs)
+  - [TestCliTests.cs](Fpas.IntegrationTests/Testing/TestCliTests.cs)
+  - [TestCommandErrors.cs](Fpas.IntegrationTests/Testing/TestCommandErrors.cs)
+  - [TestLifetimeTests.cs](Fpas.IntegrationTests/Testing/TestLifetimeTests.cs)
+  - [TestProjectFixture.cs](Fpas.IntegrationTests/Testing/TestProjectFixture.cs)
+  - [TestReportLimitTests.cs](Fpas.IntegrationTests/Testing/TestReportLimitTests.cs)
+  - [TestSolutionTests.cs](Fpas.IntegrationTests/Testing/TestSolutionTests.cs)
+  - [TestTemplateTests.cs](Fpas.IntegrationTests/Testing/TestTemplateTests.cs)
+  - [TestingPlatformTests.cs](Fpas.IntegrationTests/Testing/TestingPlatformTests.cs)
+  - [TrxReportTests.cs](Fpas.IntegrationTests/Testing/TrxReportTests.cs)
+- `tests/Fpas.IntegrationTests/Tui/`
+  - [HeadlessTuiTests.cs](Fpas.IntegrationTests/Tui/HeadlessTuiTests.cs)
+  - [TerminalBoundaryTests.cs](Fpas.IntegrationTests/Tui/TerminalBoundaryTests.cs)
+  - [TerminalModeTests.cs](Fpas.IntegrationTests/Tui/TerminalModeTests.cs)
+  - [TuiFixture.cs](Fpas.IntegrationTests/Tui/TuiFixture.cs)
+  - [TuiGalleryTests.cs](Fpas.IntegrationTests/Tui/TuiGalleryTests.cs)
+- `tests/Fpas.Ui.Gui.Cui.Tests/`
+  - [DeferredPaint.cs](Fpas.Ui.Gui.Cui.Tests/DeferredPaint.cs)
+  - [Fpas.Ui.Gui.Cui.Tests.csproj](Fpas.Ui.Gui.Cui.Tests/Fpas.Ui.Gui.Cui.Tests.csproj)
+  - [GuiAttributes.cs](Fpas.Ui.Gui.Cui.Tests/GuiAttributes.cs)
+  - [PngAssertions.cs](Fpas.Ui.Gui.Cui.Tests/PngAssertions.cs)
+  - [TestImages.cs](Fpas.Ui.Gui.Cui.Tests/TestImages.cs)
+  - [gui.runsettings](Fpas.Ui.Gui.Cui.Tests/gui.runsettings)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Resources/`
+  - [FontFixture.cs](Fpas.Ui.Gui.Cui.Tests/Resources/FontFixture.cs)
+- `tests/TestSupport/`
+  - [AssemblyInspection.cs](TestSupport/AssemblyInspection.cs)
+  - [FileHash.cs](TestSupport/FileHash.cs)
+  - [ProcessRunner.cs](TestSupport/ProcessRunner.cs)
+  - [TemporaryDirectory.cs](TestSupport/TemporaryDirectory.cs)
+  - [TestEnvironment.cs](TestSupport/TestEnvironment.cs)
+
+</details>

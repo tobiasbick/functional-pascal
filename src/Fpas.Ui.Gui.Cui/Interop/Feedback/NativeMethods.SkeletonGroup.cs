@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/feedback/skeleton-group.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

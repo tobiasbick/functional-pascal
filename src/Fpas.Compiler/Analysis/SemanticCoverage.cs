@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/compiler.md#semantic-snapshots)
 namespace Fpas.Compiler.Analysis;
 
 /// <summary>A source range and whether semantic facts are available for it.</summary>

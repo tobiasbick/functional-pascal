@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/architecture/compiler.md#syntax-and-binding-boundaries)
 namespace Fpas.Compiler.Syntax.Parsing;
 
 internal sealed partial class Parser

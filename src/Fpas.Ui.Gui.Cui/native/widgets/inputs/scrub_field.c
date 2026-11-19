@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/smart-inputs/scrub-field.md)
 #include "../../fpas_cui.h"
 
 typedef struct { float proposed; bool init; } fpas_scrub_binding;

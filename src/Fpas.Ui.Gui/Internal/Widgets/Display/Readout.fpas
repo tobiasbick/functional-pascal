@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/instruments/readout.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Display.Readout;
 
 uses

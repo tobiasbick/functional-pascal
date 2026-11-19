@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/language/functions/first-class.md)
 namespace Fpas.Compiler.Syntax.Parsing;
 
 internal sealed partial class Parser

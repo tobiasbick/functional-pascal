@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#desktop-chrome)
+
 unit Fpas.Ui.Internal.Validation.ChromeValidation;
 
 uses

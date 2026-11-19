@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/tui/navigation/sidebar.md)
+
 unit Fpas.Ui.Tui.Internal.Hosting.SidebarNavigation;
 
 uses

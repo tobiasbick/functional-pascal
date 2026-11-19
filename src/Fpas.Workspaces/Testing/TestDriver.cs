@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/testing.md#discover-and-run)
 using Fpas.Workspaces.Loading;
 using Fpas.Workspaces.Processes;
 using Fpas.Workspaces.Projects;

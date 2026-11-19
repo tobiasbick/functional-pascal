@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/basics/primitive-types.md)
 using Fpas.IntegrationTests.Support;
 namespace Fpas.IntegrationTests.Execution;
 

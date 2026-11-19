@@ -43,3 +43,7 @@ The spinner draws a native activity animation and has no input. Choose when to i
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/Widgets/Loading.fpas)
 - [Status spinner](status-spinner.md)
 - [Feedback](README.md)
+
+## Source files
+
+- [Spinner.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Feedback/Spinner.fpas)

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/testing.md#create-a-test-project)
 using System.Reflection;
 using System.Xml.Linq;
 

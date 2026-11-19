@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/social-and-media/card-stack.md)
 using Fpas.Ui.Gui.Cui.Interop;
 
 namespace Fpas.Ui.Gui.Cui;

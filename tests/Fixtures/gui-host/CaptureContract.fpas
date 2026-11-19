@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/ui/gui/capture/README.md)
+
 unit GalleryCaptureContract;
 
 uses

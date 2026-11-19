@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/language/error-handling/exceptions.md)
 using Fpas.Compiler.Binding.Symbols;
 using Fpas.Compiler.Binding.Flow;
 using Fpas.Compiler.Binding.Bound;

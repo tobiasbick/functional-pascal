@@ -45,3 +45,16 @@ Type to filter commands, use Up or Down to move the highlight and press Enter to
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Overlays/CommandPalettes.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/App/Palette.fpas)
 - [Overlays](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Overlays/`
+  - [CommandPalette.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Overlays/CommandPalette.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Overlays/`
+  - [NativeMethods.CommandPalette.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Overlays/NativeMethods.CommandPalette.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Overlays/`
+  - [CuiWindow.CommandPalette.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Overlays/CuiWindow.CommandPalette.Types.cs)
+  - [CuiWindow.CommandPalette.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Overlays/CuiWindow.CommandPalette.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/overlays/`
+  - [command_palette.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/overlays/command_palette.c)
+  - [command_palette.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/overlays/command_palette.h)

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/navigation/tabs.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Navigation.Tabs;
 
 uses

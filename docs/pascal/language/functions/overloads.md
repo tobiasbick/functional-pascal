@@ -17,3 +17,16 @@ arguments or casts to resolve an ambiguity; do not choose by declaration order.
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- `src/Fpas.Compiler/Binding/Bodies/`
+  - [Binder.SourceCalls.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.SourceCalls.cs)
+- `src/Fpas.Compiler/Binding/Declarations/`
+  - [SourceCatalog.Overloads.cs](../../../../src/Fpas.Compiler/Binding/Declarations/SourceCatalog.Overloads.cs)
+- `src/Fpas.Compiler/Binding/References/`
+  - [ReferenceCatalog.Overloads.cs](../../../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.Overloads.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.Overloads.cs](../../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.Overloads.cs)
+- `tests/Fpas.IntegrationTests/Execution/`
+  - [OverloadExecutionTests.cs](../../../../tests/Fpas.IntegrationTests/Execution/OverloadExecutionTests.cs)

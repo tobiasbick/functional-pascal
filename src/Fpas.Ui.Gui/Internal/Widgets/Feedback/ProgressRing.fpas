@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/feedback/progress-ring.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Feedback.ProgressRing;
 
 uses

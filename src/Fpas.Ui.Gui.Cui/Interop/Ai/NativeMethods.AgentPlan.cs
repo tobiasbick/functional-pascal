@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/ai/agent-plan.md)
 using Fpas.Ui.Gui.Cui.Interop.Ai;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

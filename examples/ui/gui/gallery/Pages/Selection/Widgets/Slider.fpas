@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/selection/slider.md)
+
 unit GuiGallery.Pages.Selection.Widgets.Slider;
 
 uses

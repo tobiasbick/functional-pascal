@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/smart-inputs/scrub-field.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

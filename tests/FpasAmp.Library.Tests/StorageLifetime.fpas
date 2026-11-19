@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/library.md#reconciliation-and-persistence)
+
 // Real disk database restart, unavailable storage and observable database failures.
 unit FpasAmp.Library.Tests.StorageLifetime;
 

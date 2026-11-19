@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/actions/split-button.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Actions.SplitButton;
 
 uses

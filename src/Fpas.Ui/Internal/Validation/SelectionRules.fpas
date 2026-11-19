@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#checkbox-switch-and-radio-controls)
+
 unit Fpas.Ui.Internal.Validation.SelectionRules;
 
 uses

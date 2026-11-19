@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/apps/fpas-amp/library.md#durable-identities-and-ratings)
+
 // Full-file fingerprints assist identity recovery without merging extant copies.
 unit FpasAmp.Library.UserData.Identity;
 

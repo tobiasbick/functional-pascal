@@ -28,3 +28,18 @@ These widgets require the GUI host.
 - [Shared text options](../../../../src/Fpas.Ui/Widgets/Motion/Motion.fpas)
 - [Audio](../audio/README.md)
 - [Motion in the gallery](../../../../examples/ui/gui/gallery/Pages/Motion/View.fpas)
+
+## Source files
+
+- `examples/ui/gui/gallery/Pages/Motion/`
+  - [Clock.fpas](../../../../examples/ui/gui/gallery/Pages/Motion/Clock.fpas)
+  - [State.fpas](../../../../examples/ui/gui/gallery/Pages/Motion/State.fpas)
+  - [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Motion/Update.fpas)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Motion/`
+  - [CuiMotionText.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Motion/CuiMotionText.Types.cs)
+  - [CuiMotionText.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Motion/CuiMotionText.cs)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [motion.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/motion.c)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/motion/`
+  - [motion_text.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/motion/motion_text.c)
+  - [motion_text.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/motion/motion_text.h)

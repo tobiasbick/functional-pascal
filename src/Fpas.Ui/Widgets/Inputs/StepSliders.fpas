@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/creative-controls/step-slider.md)
+
 unit Fpas.Ui.Widgets.Inputs.StepSliders;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Audio.ControlWells as W;

@@ -1,3 +1,4 @@
+// [Documentation](../../docs/pascal/program-structure/cli.md)
 using Fpas.Cli.Compilation;
 using Fpas.Cli.Debugging;
 using Fpas.Cli.Analysis;

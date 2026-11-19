@@ -51,3 +51,16 @@ the resulting graph. A zoom of one is 100 percent.
 - [Canvas controls](canvas-controls.md)
 - [Selection ring](selection-ring.md)
 - [Canvas and bars](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Editors/`
+  - [NodeEditor.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Editors/NodeEditor.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Editors/`
+  - [NativeMethods.NodeEditor.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Editors/NativeMethods.NodeEditor.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Editors/`
+  - [CuiWindow.NodeEditor.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Editors/CuiWindow.NodeEditor.Types.cs)
+  - [CuiWindow.NodeEditor.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Editors/CuiWindow.NodeEditor.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/editors/`
+  - [node_editor.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/editors/node_editor.c)
+  - [node_editor.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/editors/node_editor.h)

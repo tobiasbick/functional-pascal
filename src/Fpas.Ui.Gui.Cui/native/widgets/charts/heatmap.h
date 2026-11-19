@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/heatmap.md)
 #ifndef FPAS_CUI_HEATMAP_H
 #define FPAS_CUI_HEATMAP_H
 #include "visualizations.h"

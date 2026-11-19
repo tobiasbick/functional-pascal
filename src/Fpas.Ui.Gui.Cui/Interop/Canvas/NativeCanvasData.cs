@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/canvas-and-bars/README.md)
 using System.Runtime.InteropServices;
 
 namespace Fpas.Ui.Gui.Cui.Interop.Canvas;

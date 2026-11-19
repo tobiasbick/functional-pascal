@@ -36,3 +36,7 @@ Pass a fraction from zero to one. Update it when work reports progress. The bar 
 - [Shared API](../../widgets.md#alerts-progress-and-spinners)
 - [GUI progress bar](../../gui/feedback/progress-bar.md)
 - [Gallery source](../../../../examples/ui/tui/gallery/main.fpas)
+
+## Source files
+
+- [ProgressBar.fpas](../../../../src/Fpas.Ui.Tui/Internal/Widgets/Feedback/ProgressBar.fpas)

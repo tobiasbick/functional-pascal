@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/pickers/multi-select.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Inputs.MultiSelect;
 
 uses

@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/library.md#reconciliation-and-persistence)
+
 // Source-scoped persistence, deletion authority and transaction rollback.
 unit FpasAmp.Library.Tests.StorageCheckpoints;
 

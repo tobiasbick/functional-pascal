@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#tooltip)
+
 unit Fpas.Ui.Internal.Validation.TooltipRules;
 
 uses

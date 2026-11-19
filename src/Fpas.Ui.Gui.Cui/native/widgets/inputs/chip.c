@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/selection/chip.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_chip(cui_ctx *ui, const char *id, const char *label, const char *icon,

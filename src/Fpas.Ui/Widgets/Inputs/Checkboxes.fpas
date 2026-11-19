@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/selection/checkbox.md)
+
 unit Fpas.Ui.Widgets.Inputs.Checkboxes;
 
 uses Fpas.Ui.Elements as E;

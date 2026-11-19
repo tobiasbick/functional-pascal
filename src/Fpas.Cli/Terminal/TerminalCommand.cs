@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/terminal-testing.md)
 using System.CommandLine;
 using System.Text;
 using System.Text.Json;

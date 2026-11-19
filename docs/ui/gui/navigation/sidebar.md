@@ -64,3 +64,15 @@ the shared model and drive both the sidebar and the narrow drawer.
 - [Theme selection and palette](../actions/theme-switcher.md)
 - [Navigation](README.md)
 - [Terminal example](../../tui/navigation/sidebar.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Navigation/`
+  - [Sidebar.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Navigation/Sidebar.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Navigation/`
+  - [NativeMethods.Navigation.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Navigation/NativeMethods.Navigation.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Navigation/`
+  - [CuiWindow.Navigation.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Navigation/CuiWindow.Navigation.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/navigation/`
+  - [sidebar.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/navigation/sidebar.c)
+  - [sidebar.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/navigation/sidebar.h)

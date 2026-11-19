@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#native-grids-and-surfaces)
+
 unit Fpas.Ui.Internal.Validation.GridRules;
 
 uses

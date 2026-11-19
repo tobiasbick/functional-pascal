@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/motion/gradient-text.md)
+
 unit Fpas.Ui.Widgets.Motion.GradientTexts;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Motion.Motion as Motion;

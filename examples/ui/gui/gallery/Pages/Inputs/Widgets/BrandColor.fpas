@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/inputs/color-picker.md)
+
 unit GuiGallery.Pages.Inputs.Widgets.BrandColor;
 
 uses

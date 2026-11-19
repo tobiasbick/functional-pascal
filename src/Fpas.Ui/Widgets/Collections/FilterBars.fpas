@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/data-grid/filter-bar.md)
+
 unit Fpas.Ui.Widgets.Collections.FilterBars;
 
 uses Fpas.Ui.Elements as E;

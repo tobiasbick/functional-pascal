@@ -1,3 +1,4 @@
+// [Documentation](../../docs/pascal/libraries/processes.md#owning-a-process-tree)
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;

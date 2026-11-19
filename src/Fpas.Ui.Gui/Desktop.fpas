@@ -1,3 +1,5 @@
+// [Documentation](../../docs/ui/gui/host.md#file-selection)
+
 unit Fpas.Ui.Gui.Desktop;
 
 uses Fpas.Ui.Gui.Cui.CuiDesktop as Native;

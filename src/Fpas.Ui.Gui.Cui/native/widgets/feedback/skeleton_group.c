@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/feedback/skeleton-group.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_skeleton_group_begin(cui_ctx *ui, const char *id, int width_kind, float width, float gap, int dither) {

@@ -44,3 +44,15 @@ Click a tab or move with Left and Right while the strip has focus. The callback 
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Navigation/Widgets/Tabs.fpas)
 - [Sidebar navigation](sidebar.md)
 - [Navigation](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Navigation/`
+  - [Tabs.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Navigation/Tabs.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Navigation/`
+  - [NativeMethods.Tabs.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Navigation/NativeMethods.Tabs.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Navigation/`
+  - [CuiWindow.Tabs.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Navigation/CuiWindow.Tabs.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/navigation/`
+  - [tabs.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/navigation/tabs.c)
+  - [tabs.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/navigation/tabs.h)

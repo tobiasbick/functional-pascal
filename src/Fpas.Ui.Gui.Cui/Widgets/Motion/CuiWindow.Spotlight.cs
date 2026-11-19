@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/motion/spotlight-card.md)
 using Fpas.Ui.Gui.Cui.Widgets.Charts;
 using Fpas.Ui.Gui.Cui.Interop;
 

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/host.md)
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

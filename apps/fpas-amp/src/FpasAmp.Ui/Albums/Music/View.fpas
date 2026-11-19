@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/apps/fpas-amp/desktop.md#browsing-music-and-collections)
+
 // Native music table, toolbars and details for a selected album.
 unit FpasAmp.Ui.Albums.Music.View;
 

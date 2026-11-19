@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/report-schemas.md)
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Fpas.Workspaces.Processes;

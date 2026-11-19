@@ -1,3 +1,5 @@
+// [Documentation](../../verification.md#editor-and-project-scenarios)
+
 program Probe;
 
 uses System as Sys;

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/program-structure/project-commands.md#create-files)
 using Fpas.Workspaces.Processes;
 using System.Xml.Linq;
 

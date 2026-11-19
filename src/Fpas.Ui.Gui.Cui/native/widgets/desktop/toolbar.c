@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/toolbar.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_toolbar_begin(cui_ctx *ui, const char *id, int style, int no_border, int enabled) {

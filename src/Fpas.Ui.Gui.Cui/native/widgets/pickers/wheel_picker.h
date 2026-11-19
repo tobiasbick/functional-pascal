@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/pickers/wheel-picker.md)
 #ifndef FPAS_WHEEL_PICKER_H
 #define FPAS_WHEEL_PICKER_H
 

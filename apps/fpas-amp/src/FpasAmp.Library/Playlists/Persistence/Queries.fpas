@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#playlists)
+
 // Read-only combined views of catalogue files and durable local lists.
 unit FpasAmp.Library.Playlists.Persistence.Queries;
 

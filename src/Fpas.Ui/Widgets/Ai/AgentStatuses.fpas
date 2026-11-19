@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/ai/agent-status.md)
+
 unit Fpas.Ui.Widgets.Ai.AgentStatuses;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.TaskStates as TaskStates;

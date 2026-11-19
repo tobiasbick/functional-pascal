@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#number-field)
+
 unit Fpas.Ui.Internal.Validation.NumberFieldRules;
 
 uses Fpas.Ui.Widgets.Inputs.NumberFields as N, Fpas.Ui.Internal.Validation.Rules as R, System as Sys, System.Globalization as Culture;

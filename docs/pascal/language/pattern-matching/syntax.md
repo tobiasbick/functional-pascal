@@ -47,3 +47,14 @@ values. A type pattern uses CLR type compatibility, not constructor execution.
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- `apps/doc-examples/contexts/`
+  - [shape.fpas.txt](../../../../apps/doc-examples/contexts/shape.fpas.txt)
+- `src/Fpas.Compiler/Binding/Bodies/`
+  - [Binder.PatternLowering.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.PatternLowering.cs)
+  - [Binder.PatternOwners.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.PatternOwners.cs)
+  - [Binder.Patterns.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.Patterns.cs)
+- `src/Fpas.Compiler/Binding/Symbols/`
+  - [Patterns.cs](../../../../src/Fpas.Compiler/Binding/Symbols/Patterns.cs)

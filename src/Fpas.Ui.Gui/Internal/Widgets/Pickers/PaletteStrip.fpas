@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/creative-controls/palette-strip.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Pickers.PaletteStrip;
 
 uses

@@ -45,3 +45,17 @@ Click the field or press Enter while it has focus. Choose a day to propose a dat
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/PickerFields.fpas)
 - [Calendar](calendar.md)
 - [Inputs](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Pickers/`
+  - [DatePicker.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Pickers/DatePicker.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Pickers/`
+  - [NativeMethods.DatePicker.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Pickers/NativeMethods.DatePicker.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Pickers/`
+  - [CuiWindow.DatePicker.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Pickers/CuiWindow.DatePicker.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/pickers/`
+  - [date_picker.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/date_picker.c)
+  - [date_picker.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/date_picker.h)
+- `tests/Fixtures/gui-host/`
+  - [DateCalendarContract.fpas](../../../../tests/Fixtures/gui-host/DateCalendarContract.fpas)

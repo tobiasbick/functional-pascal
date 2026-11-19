@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/developer-tools/schedule-picker.md)
+
 unit Fpas.Ui.Widgets.Pickers.SchedulePickers;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;

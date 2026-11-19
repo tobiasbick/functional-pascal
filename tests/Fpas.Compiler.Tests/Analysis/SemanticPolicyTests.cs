@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/workspaces.md)
 using Fpas.Compiler.Binding.Bound;
 using Fpas.Compiler.Binding.Semantics;
 using Fpas.Compiler.Syntax;

@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/app-chrome/document-tabs.md)
+
 unit Fpas.Ui.Widgets.Desktop.DocumentTabs;
 
 uses Fpas.Ui.Elements as E;

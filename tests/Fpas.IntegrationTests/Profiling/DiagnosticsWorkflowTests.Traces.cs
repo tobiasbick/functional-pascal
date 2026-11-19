@@ -1,3 +1,4 @@
+// [Documentation](../../coverage.md#measurements-and-diagnostic-artifacts)
 using System.Globalization;
 using Microsoft.Diagnostics.Tracing;
 

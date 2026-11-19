@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#passive-stored-values)
 using System.Runtime.InteropServices;
 using Fpas.Debugging.Core;
 using Fpas.Debugging.Symbols;

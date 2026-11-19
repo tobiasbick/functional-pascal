@@ -1,3 +1,4 @@
+// [Documentation](../README.md#install-and-select-a-project)
 import { stat } from 'node:fs/promises';
 import path from 'node:path';
 import * as vscode from 'vscode';

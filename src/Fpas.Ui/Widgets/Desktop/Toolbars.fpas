@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/canvas-and-bars/toolbar.md)
+
 unit Fpas.Ui.Widgets.Desktop.Toolbars;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S;

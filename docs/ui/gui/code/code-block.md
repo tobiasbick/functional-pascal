@@ -48,3 +48,15 @@ available viewport.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Code/View.fpas)
 - [Code editor](code-editor.md)
 - [Code](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [CodeBlock.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/CodeBlock.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.CodeBlock.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.CodeBlock.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.CodeBlock.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.CodeBlock.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [code_block.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/code_block.c)
+  - [code_block.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/code_block.h)

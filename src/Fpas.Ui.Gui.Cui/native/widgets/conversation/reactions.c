@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/actions/reactions.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_reactions(cui_ctx *ui, const char *id, const char *const *icons,

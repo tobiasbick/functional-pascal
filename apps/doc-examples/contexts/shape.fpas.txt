@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/pascal/language/pattern-matching/syntax.md)
+
 unit Example;
 
 uses System.Math as Math;

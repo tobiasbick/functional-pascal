@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/files/file-picker.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_file_picker(cui_ctx *ui, const char *id, int open, int enabled, int mode, const char *title,

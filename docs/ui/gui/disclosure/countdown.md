@@ -41,3 +41,15 @@ Refresh the remaining time from a clock in your application. The control display
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Feedback/Countdowns.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Disclosure/Widgets/Countdown.fpas)
 - [Disclosure](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Feedback/`
+  - [Countdown.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Feedback/Countdown.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Feedback/`
+  - [NativeMethods.Countdown.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Feedback/NativeMethods.Countdown.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Feedback/`
+  - [CuiWindow.Countdown.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Feedback/CuiWindow.Countdown.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/feedback/`
+  - [countdown.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/countdown.c)
+  - [countdown.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/countdown.h)

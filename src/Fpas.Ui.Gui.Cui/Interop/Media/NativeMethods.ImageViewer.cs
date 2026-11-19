@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/social-and-media/image-viewer.md)
 using Fpas.Ui.Gui.Cui.Interop.Media;
 using Fpas.Ui.Gui.Cui.Widgets.Media;
 using System.Runtime.CompilerServices;

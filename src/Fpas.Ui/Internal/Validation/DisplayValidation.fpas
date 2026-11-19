@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#native-text-and-drawing)
+
 unit Fpas.Ui.Internal.Validation.DisplayValidation;
 
 uses

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/instruments/readout.md)
 #ifndef FPAS_CUI_READOUT_H
 #define FPAS_CUI_READOUT_H
 

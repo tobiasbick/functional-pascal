@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/actions/hold-button.md)
+
 unit GuiGallery.Pages.Buttons.Widgets.HoldButton;
 
 uses

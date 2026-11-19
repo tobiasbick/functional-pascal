@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/architecture/closures.md)
 using Fpas.Compiler.Syntax;
 
 namespace Fpas.Compiler.Binding.Bodies;

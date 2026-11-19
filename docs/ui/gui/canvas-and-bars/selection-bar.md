@@ -52,3 +52,16 @@ the model. Count mode needs no item-flag array and retains native count animatio
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Canvas/SelectionBars.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Canvas/View.fpas)
 - [Canvas and bars](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Canvas/`
+  - [SelectionBar.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Canvas/SelectionBar.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Canvas/`
+  - [NativeMethods.SelectionBar.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Canvas/NativeMethods.SelectionBar.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Canvas/`
+  - [CuiWindow.SelectionBar.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Canvas/CuiWindow.SelectionBar.Types.cs)
+  - [CuiWindow.SelectionBar.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Canvas/CuiWindow.SelectionBar.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/canvas/`
+  - [selection_bar.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/canvas/selection_bar.c)
+  - [selection_bar.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/canvas/selection_bar.h)

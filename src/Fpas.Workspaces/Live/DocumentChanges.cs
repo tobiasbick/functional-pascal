@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/workspaces.md#live-workspace)
 using Fpas.Workspaces.Loading;
 using Fpas.Workspaces.Snapshots;
 using System.Text;

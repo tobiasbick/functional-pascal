@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/live-cursors.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_live_cursors(cui_ctx *ui, const char *id, const cui_live_user *people, int count,

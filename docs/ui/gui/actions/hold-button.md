@@ -41,3 +41,15 @@ completes.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/HoldButtons.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Buttons/Widgets/HoldButton.fpas)
 - [Actions](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Actions/`
+  - [HoldButton.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Actions/HoldButton.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Actions/`
+  - [NativeMethods.HoldButton.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Actions/NativeMethods.HoldButton.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Actions/`
+  - [CuiWindow.HoldButton.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Actions/CuiWindow.HoldButton.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/actions/`
+  - [hold_button.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/hold_button.c)
+  - [hold_button.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/hold_button.h)

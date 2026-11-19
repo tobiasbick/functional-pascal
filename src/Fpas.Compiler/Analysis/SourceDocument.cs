@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/compiler.md#semantic-snapshots)
 namespace Fpas.Compiler.Analysis;
 
 /// <summary>A UTF-16 range in one source with the one-based coordinates of its start.</summary>

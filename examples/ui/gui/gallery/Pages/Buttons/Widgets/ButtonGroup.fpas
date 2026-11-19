@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/actions/button-group.md)
+
 unit GuiGallery.Pages.Buttons.Widgets.ButtonGroup;
 
 uses

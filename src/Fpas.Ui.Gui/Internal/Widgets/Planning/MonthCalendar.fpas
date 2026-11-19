@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/planning/month-calendar.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Planning.MonthCalendar;
 
 uses

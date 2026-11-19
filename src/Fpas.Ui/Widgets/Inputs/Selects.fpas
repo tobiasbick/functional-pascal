@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/inputs/select.md)
+
 unit Fpas.Ui.Widgets.Inputs.Selects;
 
 uses Fpas.Ui.Elements as E;

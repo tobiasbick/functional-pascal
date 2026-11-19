@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/creative-controls/aspect-ratio-picker.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

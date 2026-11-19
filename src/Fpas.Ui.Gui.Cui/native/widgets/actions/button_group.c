@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/actions/button-group.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_button_group_begin(cui_ctx *ui) {

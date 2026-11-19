@@ -40,3 +40,15 @@ reports submission.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/CopyButtons.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Buttons/Widgets/CopyButton.fpas)
 - [Actions](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Actions/`
+  - [CopyButton.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Actions/CopyButton.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Actions/`
+  - [NativeMethods.CopyButton.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Actions/NativeMethods.CopyButton.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Actions/`
+  - [CuiWindow.CopyButton.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Actions/CuiWindow.CopyButton.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/actions/`
+  - [copy_button.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/copy_button.c)
+  - [copy_button.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/copy_button.h)

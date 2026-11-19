@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/app-chrome/status-bar.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_status_bar_begin(cui_ctx *ui, const char *id, int border) {

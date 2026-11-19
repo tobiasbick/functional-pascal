@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/workspaces.md#language-server-adapter)
 using Fpas.LanguageServer.Protocol;
 using Fpas.Workspaces.Live;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;

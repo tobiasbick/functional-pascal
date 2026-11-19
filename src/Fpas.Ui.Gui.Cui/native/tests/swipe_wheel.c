@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/actions/swipe-actions.md)
 #include "../fpas_cui.h"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>

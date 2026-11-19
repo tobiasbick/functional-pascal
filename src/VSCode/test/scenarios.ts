@@ -1,3 +1,4 @@
+// [Documentation](../verification.md#editor-and-project-scenarios)
 import assert from 'node:assert/strict';
 import { cp, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';

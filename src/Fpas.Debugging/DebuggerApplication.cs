@@ -1,3 +1,4 @@
+// [Documentation](../../docs/architecture/debugger-core.md)
 using Fpas.Debugging.Batch;
 using Fpas.Debugging.Failures;
 

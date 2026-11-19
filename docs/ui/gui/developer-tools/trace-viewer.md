@@ -59,9 +59,34 @@ tone, width and dashed style. `Event.Hovered` identifies the span or link
 under the pointer, with minus one for neither. Store it and pass it back through
 `Options.Hovered` when handling hover changes.
 
+To position an application overlay on a span, return
+`Fpas.Ui.Gui.TraceGeometry.ReadSpanRectangle` from the update. Pass the
+trace control ID, the span, and a callback that wraps the resulting rectangle
+in a message. The command reads logical bounds from the last presented trace
+on the owner thread. An absent, folded or invisible span returns an empty
+rectangle. [Native API example](../../../../examples/ui/gui/native-api/README.md)
+
 ## See also
 
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/TraceViewers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Developer/View.fpas)
 - [Flame graph](../editing-tools/flame-graph.md)
 - [Developer tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [TraceViewer.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/TraceViewer.fpas)
+- `src/Fpas.Ui.Gui/`
+  - [TraceGeometry.fpas](../../../../src/Fpas.Ui.Gui/TraceGeometry.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.TraceViewer.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.TraceViewer.cs)
+  - [NativeTraceLink.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeTraceLink.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.TraceViewer.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.TraceViewer.Types.cs)
+  - [CuiWindow.TraceViewer.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.TraceViewer.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [trace_viewer.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/trace_viewer.c)
+  - [trace_viewer.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/trace_viewer.h)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Display/`
+  - [CuiTraceLinkTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Display/CuiTraceLinkTests.cs)

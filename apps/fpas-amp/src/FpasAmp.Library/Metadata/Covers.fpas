@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/apps/fpas-amp/library.md#durable-identities-and-ratings)
+
 // Embedded artwork is loaded explicitly and cached independently of tag rows.
 unit FpasAmp.Library.Metadata.Covers;
 

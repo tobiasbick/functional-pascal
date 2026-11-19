@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/text-and-display/canvas.md)
 using Fpas.Ui.Gui.Cui.Widgets.Canvas;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

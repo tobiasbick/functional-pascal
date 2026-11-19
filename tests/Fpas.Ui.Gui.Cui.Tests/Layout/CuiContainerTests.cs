@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/layout/README.md)
 namespace Fpas.Ui.Gui.Cui.Tests.Layout;
 
 /// <summary>Exercises native scrolling through the managed window.</summary>

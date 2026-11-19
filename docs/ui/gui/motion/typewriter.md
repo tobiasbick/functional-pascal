@@ -55,3 +55,20 @@ frame can report a completion reached during cached resize painting.
 - [Text reveal](text-reveal.md)
 - [AI](../ai/README.md)
 - [Motion](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Motion/`
+  - [Typewriter.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Motion/Typewriter.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Motion/`
+  - [NativeMethods.Typewriter.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Motion/NativeMethods.Typewriter.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Motion/`
+  - [CuiWindow.Typewriter.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Motion/CuiWindow.Typewriter.Types.cs)
+  - [CuiWindow.Typewriter.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Motion/CuiWindow.Typewriter.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/motion/`
+  - [typewriter.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/motion/typewriter.c)
+  - [typewriter.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/motion/typewriter.h)
+- `tests/Fixtures/gui-host/`
+  - [TypewriterObservationContract.fpas](../../../../tests/Fixtures/gui-host/TypewriterObservationContract.fpas)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Motion/`
+  - [CuiTypewriterTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Motion/CuiTypewriterTests.cs)

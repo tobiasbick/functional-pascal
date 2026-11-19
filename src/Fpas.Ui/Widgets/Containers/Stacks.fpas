@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/layout/stack.md)
+
 unit Fpas.Ui.Widgets.Containers.Stacks;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;

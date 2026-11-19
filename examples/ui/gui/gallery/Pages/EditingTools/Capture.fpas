@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/editing-tools/flame-graph.md)
+
 unit GuiGallery.Pages.EditingTools.Capture;
 
 uses Fpas.Ui.Widgets.Editors.FlameGraphs as F, System.Collections.Generic as C;

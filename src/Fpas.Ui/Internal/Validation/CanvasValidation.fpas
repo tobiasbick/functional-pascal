@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#canvas-and-bars)
+
 unit Fpas.Ui.Internal.Validation.CanvasValidation;
 
 uses

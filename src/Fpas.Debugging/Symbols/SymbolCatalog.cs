@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debug-information.md)
 namespace Fpas.Debugging.Symbols;
 
 internal sealed record SymbolProbe(ModuleSymbols? Symbols, Core.DebugProblem? Error = null);

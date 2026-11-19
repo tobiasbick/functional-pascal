@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/libraries/workflows.md)
 using System.Xml.Linq;
 using Fpas.Processes;
 

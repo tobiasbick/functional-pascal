@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/language/types/type-aliases.md)
 using Fpas.Compiler.Binding.Types;
 using System.Reflection;
 

@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/language/functions/overloads.md)
 using Fpas.Compiler.Binding.Types;
 using Fpas.Compiler.Binding.Symbols;
 using Fpas.Compiler.Syntax;

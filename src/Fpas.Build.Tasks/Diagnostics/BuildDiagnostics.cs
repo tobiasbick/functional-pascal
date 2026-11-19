@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/build/msbuild.md#diagnostics-incremental-work-and-failure)
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Text.Json;

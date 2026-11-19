@@ -44,3 +44,15 @@ the number of items. CUI keeps that expansion state for the mounted widget.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/JsonViews.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Code/View.fpas)
 - [Code](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [JsonView.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/JsonView.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.JsonView.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.JsonView.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.JsonView.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.JsonView.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [json_view.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/json_view.c)
+  - [json_view.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/json_view.h)

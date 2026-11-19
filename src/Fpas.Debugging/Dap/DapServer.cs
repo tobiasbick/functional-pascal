@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-dap.md)
 using System.Collections.Concurrent;
 using System.Text.Json.Nodes;
 using Fpas.Debugging.Core;

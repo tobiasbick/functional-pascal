@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/text-and-display/icon.md)
 #ifndef FPAS_CUI_ICON_H
 #define FPAS_CUI_ICON_H
 /** Draws a native icon.

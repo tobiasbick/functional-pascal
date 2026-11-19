@@ -52,3 +52,16 @@ signal to represent a quiet interval.
 - [Voice waveform](voice-waveform.md)
 - [Gallery voice script](../../../../examples/ui/gui/gallery/Pages/Voice/Script.fpas)
 - [Voice](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Audio/`
+  - [VoiceSession.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Audio/VoiceSession.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Audio/`
+  - [NativeMethods.VoiceSession.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Audio/NativeMethods.VoiceSession.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Audio/`
+  - [CuiWindow.VoiceSession.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Audio/CuiWindow.VoiceSession.Types.cs)
+  - [CuiWindow.VoiceSession.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Audio/CuiWindow.VoiceSession.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/audio/`
+  - [voice_session.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/audio/voice_session.c)
+  - [voice_session.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/audio/voice_session.h)

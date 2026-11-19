@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/audio/level-meter.md)
 using Fpas.Ui.Gui.Cui.Interop;
 
 namespace Fpas.Ui.Gui.Cui;

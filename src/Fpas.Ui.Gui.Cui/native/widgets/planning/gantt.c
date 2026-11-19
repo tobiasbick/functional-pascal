@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/planning/gantt.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_gantt(cui_ctx *ui, const char *id, int origin, int days, fpas_gantt_task *tasks, int count,

@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/inputs/text-field.md)
 namespace Fpas.Ui.Gui.Cui.Widgets.Inputs;
 
 /// <summary>Presentation and capacity of a native single-line editor.</summary>

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/social-and-media/typing-indicator.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_typing_indicator(cui_ctx *ui, const char *id, const char *name) {

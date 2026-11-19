@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/disclosure/link.md)
 #include "../../fpas_cui.h"
 
 static void fpas_paint_link(cui_ctx *ui, cui_node *node, void *data) {

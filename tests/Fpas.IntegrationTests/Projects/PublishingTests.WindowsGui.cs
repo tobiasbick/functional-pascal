@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/build/publishing.md)
 using System.Reflection.PortableExecutable;
 using System.Xml.Linq;
 using Fpas.IntegrationTests.Processes.Support;

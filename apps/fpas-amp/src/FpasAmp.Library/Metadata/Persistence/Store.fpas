@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#metadata-and-queries)
+
 // Atomic metadata replacement retains the last successful tags after read errors.
 unit FpasAmp.Library.Metadata.Persistence.Store;
 

@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#alerts-progress-and-spinners)
+
 unit Fpas.Ui.Internal.Validation.FeedbackRules;
 
 uses

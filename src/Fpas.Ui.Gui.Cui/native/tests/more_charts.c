@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/more-charts/README.md)
 /* Native chart pixels, geometry, input and retained-state retirement. */
 #include "../fpas_cui.h"
 #include <stdio.h>

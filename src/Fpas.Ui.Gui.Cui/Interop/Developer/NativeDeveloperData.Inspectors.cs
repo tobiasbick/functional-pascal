@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/developer-tools/README.md)
 using System.Runtime.InteropServices;
 
 namespace Fpas.Ui.Gui.Cui.Interop.Developer;

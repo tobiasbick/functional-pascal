@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/control-flow/loops.md)
 namespace Fpas.IntegrationTests.Build;
 
 public sealed partial class MsBuildTests

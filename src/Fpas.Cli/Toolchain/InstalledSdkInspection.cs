@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/environment.md)
 namespace Fpas.Cli.Toolchain;
 
 internal static class InstalledSdkInspection

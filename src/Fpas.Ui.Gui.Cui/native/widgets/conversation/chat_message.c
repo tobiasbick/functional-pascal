@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/social-and-media/chat-message.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_chat_message(cui_ctx *ui, const char *id, const char *text, const char *author,

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/code/log-console.md)
 #include "../../fpas_cui.h"
 
 typedef struct { cui_log_buffer log; } fpas_log_console_state;

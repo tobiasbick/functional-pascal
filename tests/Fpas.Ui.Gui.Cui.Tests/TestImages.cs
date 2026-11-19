@@ -1,3 +1,4 @@
+// [Documentation](../coverage.md#native-gui)
 namespace Fpas.Ui.Gui.Cui.Tests;
 
 /// <summary>Small solid-color PNG images for native image decoding checks.</summary>

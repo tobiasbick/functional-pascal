@@ -40,3 +40,15 @@ The stepper marks preceding steps complete. In a narrow view it keeps the curren
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Navigation/Steppers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Navigation/Widgets/Stepper.fpas)
 - [Navigation](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Navigation/`
+  - [Stepper.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Navigation/Stepper.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Navigation/`
+  - [NativeMethods.Stepper.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Navigation/NativeMethods.Stepper.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Navigation/`
+  - [CuiWindow.Stepper.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Navigation/CuiWindow.Stepper.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/navigation/`
+  - [stepper.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/navigation/stepper.c)
+  - [stepper.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/navigation/stepper.h)

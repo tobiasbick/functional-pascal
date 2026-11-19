@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/actions/swipe-actions.md)
+
 unit GuiGallery.Pages.Actions.Widgets.SwipeActions;
 
 uses

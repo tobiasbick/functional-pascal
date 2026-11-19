@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/program-structure/cli.md#query-checked-sources)
 using Fpas.Workspaces.Editing;
 using Fpas.Workspaces.Loading;
 using Fpas.Workspaces.Queries;
@@ -29,7 +30,7 @@ internal sealed class QueryCommand
             Run these examples from examples/numerics/mandelbrot.
 
             Examples:
-              {(name == "find" ? "fpas query find Mandelbrot.fpasproj --name EscapeIterations --kind routine --limit 20" : $"fpas query {name} Mandelbrot.fpasproj --file main.fpas --line 5 --column 10")}
+              {(name == "find" ? "fpas query find Mandelbrot.fpasproj --name EscapeIterations --kind routine --limit 20" : $"fpas query {name} Mandelbrot.fpasproj --file main.fpas --line 7 --column 10")}
             """);
 
         private static string Summary(string operation) => operation switch
@@ -85,19 +86,19 @@ internal sealed class QueryCommand
         Run these examples from examples/numerics/mandelbrot.
 
         Examples:
-          fpas query definition Mandelbrot.fpasproj --file main.fpas --line 5 --column 10
+          fpas query definition Mandelbrot.fpasproj --file main.fpas --line 7 --column 10
 
-          fpas query type Mandelbrot.fpasproj --file main.fpas --line 5 --column 10
+          fpas query type Mandelbrot.fpasproj --file main.fpas --line 7 --column 10
 
-          fpas query refs Mandelbrot.fpasproj --file main.fpas --line 5 --column 10 --limit 100
+          fpas query refs Mandelbrot.fpasproj --file main.fpas --line 7 --column 10 --limit 100
 
           fpas query find Mandelbrot.fpasproj --name EscapeIterations --kind routine
 
-          fpas query inspect Mandelbrot.fpasproj --file main.fpas --line 5 --column 10 --limit 20
+          fpas query inspect Mandelbrot.fpasproj --file main.fpas --line 7 --column 10 --limit 20
 
-          fpas query callees Mandelbrot.fpasproj --file main.fpas --line 5 --column 10
+          fpas query callees Mandelbrot.fpasproj --file main.fpas --line 7 --column 10
 
-          fpas query callers Mandelbrot.fpasproj --file main.fpas --line 5 --column 10
+          fpas query callers Mandelbrot.fpasproj --file main.fpas --line 7 --column 10
         """);
     private readonly Operation[] operations = [new("definition"), new("type"), new("refs"), new("find"), new("inspect"), new("callees"), new("callers")];
 

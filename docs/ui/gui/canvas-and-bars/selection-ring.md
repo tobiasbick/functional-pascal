@@ -47,3 +47,15 @@ the selected object.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Canvas/View.fpas)
 - [Node editor](node-editor.md)
 - [Canvas and bars](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Canvas/`
+  - [SelectionRing.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Canvas/SelectionRing.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Canvas/`
+  - [NativeMethods.SelectionRing.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Canvas/NativeMethods.SelectionRing.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Canvas/`
+  - [CuiWindow.SelectionRing.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Canvas/CuiWindow.SelectionRing.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/canvas/`
+  - [selection_ring.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/canvas/selection_ring.c)
+  - [selection_ring.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/canvas/selection_ring.h)

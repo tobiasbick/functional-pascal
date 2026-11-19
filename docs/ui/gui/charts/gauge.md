@@ -45,3 +45,10 @@ Pass the current model reading. CUI draws and animates the gauge as it changes. 
 - [Radial gauge](../more-charts/radial-gauge.md)
 - [Progress ring](../feedback/progress-ring.md)
 - [Charts](README.md)
+
+## Source files
+
+- [Gauge.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/Gauge.fpas)
+- [CuiWindow.Gauge.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.Gauge.cs)
+- [gauge.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/gauge.c)
+- [gauge.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/gauge.h)

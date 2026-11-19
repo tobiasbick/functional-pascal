@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md)
 namespace Fpas.Debugging.Core;
 
 internal sealed record SourceBreakpoint(string Source, int Line, int? Column = null);

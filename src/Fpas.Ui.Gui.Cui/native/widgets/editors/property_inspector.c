@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/editing-tools/property-inspector.md)
 #include "../../fpas_cui.h"
 
 typedef struct { cui_id field; fpas_text_binding text; } fpas_property_text;

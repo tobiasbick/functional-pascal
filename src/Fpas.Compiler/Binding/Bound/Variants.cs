@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/language/types/variants.md)
 using Fpas.Compiler.Binding.Types;
 
 namespace Fpas.Compiler.Binding.Bound;

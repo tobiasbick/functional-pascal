@@ -44,3 +44,16 @@ Keep visibility in the model. When the close button sends its message, set Open 
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Feedback/Banners.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Disclosure/Widgets/Banner.fpas)
 - [Disclosure](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Feedback/`
+  - [Banner.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Feedback/Banner.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Feedback/`
+  - [NativeMethods.Banner.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Feedback/NativeMethods.Banner.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Feedback/`
+  - [CuiWindow.Banner.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Feedback/CuiWindow.Banner.Types.cs)
+  - [CuiWindow.Banner.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Feedback/CuiWindow.Banner.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/feedback/`
+  - [banner.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/banner.c)
+  - [banner.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/banner.h)

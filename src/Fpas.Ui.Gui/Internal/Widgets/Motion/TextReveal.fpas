@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/motion/text-reveal.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Motion.TextReveal;
 
 uses

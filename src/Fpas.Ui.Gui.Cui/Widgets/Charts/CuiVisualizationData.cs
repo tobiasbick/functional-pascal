@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/more-charts/README.md)
 namespace Fpas.Ui.Gui.Cui.Widgets.Charts;
 
 /// <summary>A named nonnegative amount used by native visualizations.</summary>

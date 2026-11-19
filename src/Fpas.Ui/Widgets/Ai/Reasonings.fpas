@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/ai/reasoning.md)
+
 unit Fpas.Ui.Widgets.Ai.Reasonings;
 
 uses Fpas.Ui.Elements as E;

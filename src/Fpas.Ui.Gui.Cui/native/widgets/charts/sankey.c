@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/sankey.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_sankey(cui_ctx *ui, const char *id, const fpas_sankey_node *nodes, int count,

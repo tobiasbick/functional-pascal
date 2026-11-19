@@ -43,3 +43,15 @@ Click a star to propose its number. Click the selected star again to propose zer
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/Ratings.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Selection/Widgets/Rating.fpas)
 - [Selection](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [Rating.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/Rating.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.Rating.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.Rating.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.Rating.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.Rating.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [rating.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/rating.c)
+  - [rating.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/rating.h)

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/creative-controls/gradient-slider.md)
 #ifndef FPAS_CUI_GRADIENT_SLIDER_H
 #define FPAS_CUI_GRADIENT_SLIDER_H
 CUI_API int fpas_cui_gradient_slider(cui_ctx *ui, const char *id,

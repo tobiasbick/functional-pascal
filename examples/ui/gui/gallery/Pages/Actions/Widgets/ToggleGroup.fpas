@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/actions/toggle-group.md)
+
 unit GuiGallery.Pages.Actions.Widgets.ToggleGroup;
 
 uses

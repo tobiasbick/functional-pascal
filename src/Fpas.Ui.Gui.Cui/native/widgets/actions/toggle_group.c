@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/actions/toggle-group.md)
 #include "../../fpas_cui.h"
 
 uint32_t fpas_cui_toggle_group(cui_ctx *ui, const char *id, const char *const *labels,

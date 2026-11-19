@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/libraries/media/audio.md)
 using System.Threading.Channels;
 
 namespace Fpas.Media.Audio.Tests.Support;

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/node-editor.md)
 #ifndef FPAS_CUI_NODE_EDITOR_H
 #define FPAS_CUI_NODE_EDITOR_H
 /** Begins a node editor and copies the supplied view into frame storage.

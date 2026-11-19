@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/selection/checkbox.md)
 using Fpas.Ui.Gui.Cui.Interop;
 
 namespace Fpas.Ui.Gui.Cui;

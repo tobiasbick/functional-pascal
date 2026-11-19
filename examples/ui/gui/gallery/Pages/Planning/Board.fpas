@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/planning/kanban.md)
+
 unit GuiGallery.Pages.Planning.Board;
 
 uses

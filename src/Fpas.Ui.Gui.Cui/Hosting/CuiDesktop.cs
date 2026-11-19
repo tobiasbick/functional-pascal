@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/cui.md#desktop-services)
 using Fpas.Ui.Gui.Cui.Interop;
 
 namespace Fpas.Ui.Gui.Cui;

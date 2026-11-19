@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/cli-diagnostics.md#collect-and-summarize)
 using System.CommandLine;
 using Fpas.Cli.Analysis;
 using Fpas.Cli.Reporting;

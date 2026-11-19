@@ -22,3 +22,27 @@ widgets require the GUI host.
 - [UI handbook](../README.md)
 - [More developer tools](../more-developer-tools/README.md)
 - [Developer tools in the gallery](../../../../examples/ui/gui/gallery/Pages/Developer/View.fpas)
+
+## Source files
+
+<details>
+<summary>Browse 11 source files</summary>
+
+- `examples/ui/gui/gallery/Pages/Developer/`
+  - [Samples.fpas](../../../../examples/ui/gui/gallery/Pages/Developer/Samples.fpas)
+  - [State.fpas](../../../../examples/ui/gui/gallery/Pages/Developer/State.fpas)
+  - [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Developer/Update.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeDeveloperData.Inspectors.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeDeveloperData.Inspectors.cs)
+  - [NativeDeveloperEditors.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeDeveloperEditors.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [DeveloperData.Editors.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/DeveloperData.Editors.Types.cs)
+  - [DeveloperData.Editors.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/DeveloperData.Editors.cs)
+  - [DeveloperData.Inspectors.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/DeveloperData.Inspectors.Types.cs)
+  - [DeveloperData.Inspectors.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/DeveloperData.Inspectors.cs)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [developer_tools.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/developer_tools.c)
+- `tests/Fixtures/gui-host/`
+  - [DeveloperToolsContract.fpas](../../../../tests/Fixtures/gui-host/DeveloperToolsContract.fpas)
+
+</details>

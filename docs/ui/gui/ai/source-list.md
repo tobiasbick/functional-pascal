@@ -44,3 +44,15 @@ in the application.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [Citation](citation.md)
 - [AI](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Ai/`
+  - [SourceList.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Ai/SourceList.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Ai/`
+  - [NativeMethods.SourceList.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Ai/NativeMethods.SourceList.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Ai/`
+  - [CuiWindow.SourceList.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Ai/CuiWindow.SourceList.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/ai/`
+  - [source_list.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/source_list.c)
+  - [source_list.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/source_list.h)

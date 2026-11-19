@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/motion/tab-bar.md)
 #include "../../fpas_cui.h"
 
 static cui_id fpas_tab_bar_part(cui_id key, int index) {

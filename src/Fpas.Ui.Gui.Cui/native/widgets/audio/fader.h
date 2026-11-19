@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/audio/fader.md)
 #ifndef FPAS_FADER_H
 #define FPAS_FADER_H
 

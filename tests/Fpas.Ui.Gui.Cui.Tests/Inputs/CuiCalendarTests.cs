@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/inputs/calendar.md)
 using Fpas.Ui.Gui.Cui.Widgets.Pickers;
 
 namespace Fpas.Ui.Gui.Cui.Tests.Inputs;

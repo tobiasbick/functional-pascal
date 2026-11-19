@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#breakpoints-and-source-control)
 using Fpas.Debugging.Core;
 using Fpas.Debugging.Hosting;
 using Fpas.Tests.Support;

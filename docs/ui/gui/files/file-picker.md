@@ -54,3 +54,20 @@ a path to use in the application's save operation.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Files/View.fpas)
 - [Gallery update function](../../../../examples/ui/gui/gallery/Pages/Files/Update.fpas)
 - [Files](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Files/`
+  - [FilePicker.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Files/FilePicker.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Files/`
+  - [NativeMethods.FilePicker.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Files/NativeMethods.FilePicker.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Files/`
+  - [CuiWindow.FilePicker.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Files/CuiWindow.FilePicker.Types.cs)
+  - [CuiWindow.FilePicker.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Files/CuiWindow.FilePicker.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/files/`
+  - [file_picker.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/files/file_picker.c)
+  - [file_picker.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/files/file_picker.h)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Packaging/`
+  - [LinuxFileDialogInput.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Packaging/LinuxFileDialogInput.cs)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Windowing/`
+  - [CuiFileDialogTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Windowing/CuiFileDialogTests.cs)

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/overlays/command-palette.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_command_palette(cui_ctx *ui, const char *id, int *open, int enabled,

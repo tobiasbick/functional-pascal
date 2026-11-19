@@ -29,3 +29,9 @@ Stayed
 See [variants and matching](../../../docs/pascal/language/types/variants.md) for
 supported patterns, CLR representation, and remaining limits. This example is a
 small simulation and does not build the separate dungeon game repository.
+
+## Source files
+
+- [GameActions.fpasproj](GameActions.fpasproj)
+- [Model.fpas](Model.fpas)
+- [main.fpas](main.fpas)

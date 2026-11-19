@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/language/basics/variables.md)
 using Fpas.Compiler.Binding.Types;
 using Fpas.Compiler.Binding.References;
 using Fpas.Compiler.Syntax;

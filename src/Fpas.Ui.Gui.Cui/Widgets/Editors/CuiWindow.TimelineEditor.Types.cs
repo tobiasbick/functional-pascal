@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/editing-tools/timeline-editor.md)
 using System.Runtime.InteropServices;
 using Fpas.Ui.Gui.Cui.Interop;
 

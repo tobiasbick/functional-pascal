@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/basics/comments.md)
 namespace Fpas.Compiler.Syntax;
 
 internal sealed record DocumentationLine(string Text, int Position, int Start, int End);

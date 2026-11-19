@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/code/code-block.md)
 #ifndef FPAS_CUI_CODE_BLOCK_H
 #define FPAS_CUI_CODE_BLOCK_H
 

@@ -1,3 +1,5 @@
+// [Documentation](README.md)
+
 program GenericPipeline;
 
 uses System.Console as Console, Pipelines as Pipeline;

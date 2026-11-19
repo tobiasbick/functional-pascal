@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/files/path-bar.md)
 using Fpas.Ui.Gui.Cui.Widgets.Navigation;
 using System.Runtime.InteropServices;
 using Fpas.Ui.Gui.Cui.Interop;

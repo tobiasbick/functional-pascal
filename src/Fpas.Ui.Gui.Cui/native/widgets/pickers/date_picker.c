@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/inputs/date-picker.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_date_picker(cui_ctx *ui, const char *id, int value, const char *label,

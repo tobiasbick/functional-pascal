@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/apps/fpas-amp/library.md#reconciliation-and-persistence)
+
 // Explicit index clearing never deletes media or source preferences.
 unit FpasAmp.Library.Persistence.Clearing;
 

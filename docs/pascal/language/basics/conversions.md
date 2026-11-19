@@ -29,3 +29,7 @@ than string-based type lookup; see the [compiler pipeline](../../../architecture
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- [ConstantConversionTests.cs](../../../../tests/Fpas.Compiler.Tests/Routines/ConstantConversionTests.cs)

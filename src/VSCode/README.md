@@ -107,3 +107,40 @@ an applicable preview. Reprepare after an input or toolchain change. See the
 
 See the [verification guide](verification.md) for testing a development build
 or the installed VSIX.
+
+## CLI process ownership
+
+Captured project and test commands run the resolved workspace-host launcher with
+an argument array. The extension uses the private `--editor-control` entry point
+and keeps its control pipe open until the command finishes or cancellation closes
+the pipe. The CLI then cancels and joins its owned operation. A captured run's
+program stdin is independent of this pipe and receives EOF.
+
+Interactive Run uses `--editor-run` through a VS Code `ProcessExecution`.
+The wrapper decodes a bounded array of run arguments, preserving argument
+boundaries without shell quoting. The integrated terminal supplies program input.
+
+## Source files
+
+<details>
+<summary>Browse 14 source files</summary>
+
+- `src/Fpas.Cli/`
+  - [EditorControl.cs](../Fpas.Cli/EditorControl.cs)
+- `src/VSCode/src/`
+  - [client.ts](src/client.ts)
+  - [context.ts](src/context.ts)
+  - [corrections.ts](src/corrections.ts)
+  - [extension.ts](src/extension.ts)
+  - [refactorings.ts](src/refactorings.ts)
+  - [source-views.ts](src/source-views.ts)
+  - [toolchain.ts](src/toolchain.ts)
+- `src/VSCode/src/workflows/`
+  - [debug.ts](src/workflows/debug.ts)
+  - [problems.ts](src/workflows/problems.ts)
+  - [process.ts](src/workflows/process.ts)
+  - [projects.ts](src/workflows/projects.ts)
+  - [tasks.ts](src/workflows/tasks.ts)
+  - [testing.ts](src/workflows/testing.ts)
+
+</details>

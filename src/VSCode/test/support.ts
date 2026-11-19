@@ -1,3 +1,4 @@
+// [Documentation](../verification.md#editor-and-project-scenarios)
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { readFile, rm, symlink } from 'node:fs/promises';

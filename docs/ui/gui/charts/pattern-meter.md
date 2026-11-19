@@ -51,3 +51,10 @@ Hover a part or its legend entry to inspect it. Tab focuses the bar. Arrow keys,
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Charts/View.fpas)
 - [Meter](../feedback/meter.md)
 - [Charts](README.md)
+
+## Source files
+
+- [PatternMeter.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/PatternMeter.fpas)
+- [CuiWindow.PatternMeter.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.PatternMeter.cs)
+- [pattern_meter.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/pattern_meter.c)
+- [pattern_meter.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/pattern_meter.h)

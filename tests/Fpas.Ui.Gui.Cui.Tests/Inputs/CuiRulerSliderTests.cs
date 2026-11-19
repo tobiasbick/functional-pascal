@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/pickers/ruler-slider.md)
 using Fpas.Tests.Support;
 
 namespace Fpas.Ui.Gui.Cui.Tests.Inputs;

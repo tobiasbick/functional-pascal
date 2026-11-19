@@ -1,3 +1,4 @@
+// [Documentation](../verification.md#editor-and-project-scenarios)
 import assert from 'node:assert/strict';
 import { readFile, rm, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -14,6 +15,9 @@ export async function projectWorkflows(data: Fixture): Promise<void> {
   assert.equal(await command('clean'), 0);
   const duplicate = path.join(path.dirname(data.engineProject), 'Duplicate.fpas');
   const source = path.join(path.dirname(data.engineProject), 'Engine.fpas');
+  const engineLines = (await readFile(source, 'utf8')).split(/\r?\n/);
+  const declarationLine = engineLines.findIndex(line => line.trim() === 'unit Engine;');
+  assert(declarationLine >= 0, 'Expected the Engine unit declaration in the workflow fixture.');
   await writeFile(duplicate, 'unit Engine; end unit;\n');
   try {
     assert.equal(await command('build'), 1);
@@ -21,7 +25,7 @@ export async function projectWorkflows(data: Fixture): Promise<void> {
       vscode.languages.getDiagnostics(vscode.Uri.file(source)).find(item => item.code === 'FP2005'), item => item !== undefined);
     assert(issue);
     assert(issue.relatedInformation?.some(note => note.location.uri.fsPath === vscode.Uri.file(duplicate).fsPath));
-    assert.equal(issue.range.start.line, 0);
+    assert.equal(issue.range.start.line, declarationLine);
     assert.equal(issue.severity, vscode.DiagnosticSeverity.Error);
   } finally { await unlink(duplicate); }
 

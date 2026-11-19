@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/voice/composer.md)
 #ifndef FPAS_CUI_COMPOSER_H
 #define FPAS_CUI_COMPOSER_H
 /** Draws the chat editor or recorder and returns native event bits.

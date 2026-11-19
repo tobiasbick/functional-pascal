@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/selection-bar.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Canvas.SelectionBar;
 
 uses

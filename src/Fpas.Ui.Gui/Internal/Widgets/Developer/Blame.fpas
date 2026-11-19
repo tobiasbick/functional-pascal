@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/more-developer-tools/blame.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Developer.Blame;
 
 uses Fpas.Ui.Widgets.Developer.Blames as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper, System.Collections.Generic as Lists;

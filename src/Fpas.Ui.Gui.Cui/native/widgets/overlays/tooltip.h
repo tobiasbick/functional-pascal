@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/overlays/tooltip.md)
 #ifndef FPAS_TOOLTIP_H
 #define FPAS_TOOLTIP_H
 

@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/tui/host.md#cell-presentation)
+
 unit Fpas.Ui.Tui.Internal.Rendering.Drawing;
 
 uses Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Graphics as Graphics, System as Sys, System.Collections.Generic as Generic, System.Globalization as Global, System.Text as Text;

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/voice/voice-waveform.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_voice_wave(cui_ctx *ui, const char *id, const float *levels, const uint8_t *owners, int count,

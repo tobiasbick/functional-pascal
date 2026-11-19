@@ -37,3 +37,8 @@ Up/Down moves focus without changing the page. Enter, Space or a click sends the
 - [Shared API](../../widgets.md#sidebar-navigation)
 - [GUI sidebar navigation](../../gui/navigation/sidebar.md)
 - [Gallery source](../../../../examples/ui/tui/gallery/main.fpas)
+
+## Source files
+
+- [SidebarNavigation.fpas](../../../../src/Fpas.Ui.Tui/Internal/Hosting/SidebarNavigation.fpas)
+- [Sidebar.fpas](../../../../src/Fpas.Ui.Tui/Internal/Widgets/Navigation/Sidebar.fpas)

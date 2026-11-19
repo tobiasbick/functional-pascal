@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#playback-and-analysis)
+
 // Resolves playback against configured sources and their latest index membership.
 unit FpasAmp.Ui.Player.Availability;
 

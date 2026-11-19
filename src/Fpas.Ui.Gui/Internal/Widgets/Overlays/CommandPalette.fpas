@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/overlays/command-palette.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Overlays.CommandPalette;
 
 uses

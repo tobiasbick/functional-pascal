@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/toolbar.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Desktop.Toolbar;
 
 uses

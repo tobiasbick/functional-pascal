@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/text-and-display/image.md)
+
 unit Fpas.Ui.Widgets.Media.Images;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Media.MediaImages as Media, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L;

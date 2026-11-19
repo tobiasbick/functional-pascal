@@ -61,3 +61,32 @@ actual names: `'Hello'.Length`, not `Length()`.
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+<details>
+<summary>Browse 13 source files</summary>
+
+- `src/Fpas.Compiler/Binding/Bodies/`
+  - [Binder.Numbers.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.Numbers.cs)
+- `src/Fpas.Compiler/Binding/Bound/`
+  - [BoundNumber.cs](../../../../src/Fpas.Compiler/Binding/Bound/BoundNumber.cs)
+  - [ConstantValue.cs](../../../../src/Fpas.Compiler/Binding/Bound/ConstantValue.cs)
+- `src/Fpas.Compiler/Binding/Types/`
+  - [NumericFacts.cs](../../../../src/Fpas.Compiler/Binding/Types/NumericFacts.cs)
+  - [NumericValue.cs](../../../../src/Fpas.Compiler/Binding/Types/NumericValue.cs)
+- `src/Fpas.Compiler/Emission/Bodies/`
+  - [BodyEmitter.Numbers.cs](../../../../src/Fpas.Compiler/Emission/Bodies/BodyEmitter.Numbers.cs)
+- `tests/Fpas.Compiler.Tests/ControlFlow/`
+  - [NativeConstantTests.cs](../../../../tests/Fpas.Compiler.Tests/ControlFlow/NativeConstantTests.cs)
+- `tests/Fpas.Compiler.Tests/Types/`
+  - [ScalarDiagnosticsTests.cs](../../../../tests/Fpas.Compiler.Tests/Types/ScalarDiagnosticsTests.cs)
+  - [ScalarMetadataTests.cs](../../../../tests/Fpas.Compiler.Tests/Types/ScalarMetadataTests.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.Scalars.cs](../../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.Scalars.cs)
+- `tests/Fpas.IntegrationTests/Execution/`
+  - [NumericExecutionTests.cs](../../../../tests/Fpas.IntegrationTests/Execution/NumericExecutionTests.cs)
+  - [PrimitiveExecutionTests.cs](../../../../tests/Fpas.IntegrationTests/Execution/PrimitiveExecutionTests.cs)
+  - [ScalarExecutionTests.cs](../../../../tests/Fpas.IntegrationTests/Execution/ScalarExecutionTests.cs)
+
+</details>

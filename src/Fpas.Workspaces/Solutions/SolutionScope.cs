@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/build/msbuild.md#project-identity-and-solution-shape)
 using Microsoft.VisualStudio.SolutionPersistence.Serializer;
 using System.Xml.Linq;
 

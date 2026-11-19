@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/text-and-display/keycap.md)
 #ifndef FPAS_CUI_KEYCAP_H
 #define FPAS_CUI_KEYCAP_H
 /** Draws native keyboard keycaps.

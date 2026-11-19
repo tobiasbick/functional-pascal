@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/pickers/date-range-picker.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_range_picker(cui_ctx *ui, const char *id, int *start, int *end,

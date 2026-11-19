@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#metadata-and-queries)
+
 // Small configuration mailbox; pending metadata remains in SQLite, not an unbounded queue.
 unit FpasAmp.Library.Metadata.Internal.Policy;
 

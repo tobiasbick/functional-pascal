@@ -45,3 +45,21 @@ segment leaves the model alone.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/SegmentedControls.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Buttons/Widgets/SegmentedControl.fpas)
 - [Actions](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Actions/`
+  - [SegmentedControl.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Actions/SegmentedControl.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Actions/`
+  - [NativeMethods.Segmented.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Actions/NativeMethods.Segmented.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Actions/`
+  - [CuiWindow.Segmented.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Actions/CuiWindow.Segmented.cs)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [segmented.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/segmented.c)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/actions/`
+  - [segmented.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/segmented.c)
+  - [segmented.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/segmented.h)
+- `tests/Fixtures/gui-host/`
+  - [SegmentedContract.fpas](../../../../tests/Fixtures/gui-host/SegmentedContract.fpas)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Actions/`
+  - [CuiSegmentedTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Actions/CuiSegmentedTests.cs)

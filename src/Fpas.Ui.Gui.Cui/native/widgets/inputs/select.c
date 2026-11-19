@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/inputs/select.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_select(cui_ctx *ui, const char *id, const char *const *items, const char *const *icons,

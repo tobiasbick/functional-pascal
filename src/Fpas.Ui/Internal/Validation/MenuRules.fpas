@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#dropdown-menu)
+
 unit Fpas.Ui.Internal.Validation.MenuRules;
 
 uses Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Styles as S, Fpas.Ui.Internal.Validation.Rules as Rules, System as Sys;

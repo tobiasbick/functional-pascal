@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/build/distribution.md)
 using Fpas.IntegrationTests.LanguageServer;
 using Fpas.Tests.Support;
 using System.Text.Json;

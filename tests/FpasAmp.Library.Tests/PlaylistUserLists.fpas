@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/library.md#playlists)
+
 // Durable lists retain user intent independently of rebuildable catalogue entries.
 unit FpasAmp.Library.Tests.PlaylistUserLists;
 

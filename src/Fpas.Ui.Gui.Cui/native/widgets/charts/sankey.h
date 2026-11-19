@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/sankey.md)
 #ifndef FPAS_CUI_SANKEY_H
 #define FPAS_CUI_SANKEY_H
 #include "more_charts.h"

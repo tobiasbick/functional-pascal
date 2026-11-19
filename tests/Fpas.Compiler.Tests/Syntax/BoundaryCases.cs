@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/specs/syntax.md)
 namespace Fpas.Compiler.Tests.Syntax;
 
 internal static class BoundaryCases

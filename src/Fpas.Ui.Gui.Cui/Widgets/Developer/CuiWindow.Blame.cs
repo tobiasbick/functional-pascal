@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/more-developer-tools/blame.md)
 using Fpas.Ui.Gui.Cui.Interop.Developer;
 using Fpas.Ui.Gui.Cui.Widgets.Charts;
 using Fpas.Ui.Gui.Cui.Widgets.Developer;

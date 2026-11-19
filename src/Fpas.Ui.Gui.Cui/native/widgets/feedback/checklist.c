@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/disclosure/onboarding-checklist.md)
 #include "../../fpas_cui.h"
 
 typedef struct { cui_id scope, key, ring; int count; } fpas_checklist_state;

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/voice/voice-orb.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_voice_orb(cui_ctx *ui, const char *id, int activity, float level, float size, int palette, uint32_t rgba, int flags) {

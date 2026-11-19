@@ -16,3 +16,12 @@ input/animation. It neither changes the model nor creates a timer task. Use
 Creation options set native minimum dimensions and Linux desktop identity.
 See the [GUI reference](../../../../docs/ui/gui/host.md) for size, placement,
 fixed-size windows, owner-thread rules and cleanup.
+
+## Source files
+
+- `examples/ui/gui/desktop-commands/`
+  - [DesktopCommands.fpasproj](DesktopCommands.fpasproj)
+  - [State.fpas](State.fpas)
+  - [Update.fpas](Update.fpas)
+  - [View.fpas](View.fpas)
+  - [main.fpas](main.fpas)

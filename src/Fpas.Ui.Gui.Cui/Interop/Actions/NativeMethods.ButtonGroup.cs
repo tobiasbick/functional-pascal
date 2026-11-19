@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/actions/button-group.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

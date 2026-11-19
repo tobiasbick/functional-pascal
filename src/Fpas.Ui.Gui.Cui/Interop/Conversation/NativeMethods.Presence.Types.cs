@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/social-and-media/presence.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

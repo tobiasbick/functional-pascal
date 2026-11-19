@@ -46,3 +46,9 @@ Right-click the target to open the menu at the pointer. Use Up or Down and Enter
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Overlays/Widgets/ContextMenu.fpas)
 - [Dropdown menu](../actions/dropdown-menu.md)
 - [Overlays](README.md)
+
+## Source files
+
+- [ContextMenu.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Overlays/ContextMenu.fpas)
+- [ContextContract.fpas](../../../../tests/Fixtures/gui-host/ContextContract.fpas)
+- [CuiContextMenuTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Overlays/CuiContextMenuTests.cs)

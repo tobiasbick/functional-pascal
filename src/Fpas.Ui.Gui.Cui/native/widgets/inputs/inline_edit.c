@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/smart-inputs/inline-edit.md)
 #include "../../fpas_cui.h"
 
 typedef struct { char *draft, *model; size_t capacity; } fpas_inline_binding;

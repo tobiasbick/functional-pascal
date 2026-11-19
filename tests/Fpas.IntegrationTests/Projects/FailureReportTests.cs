@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/program-structure/project-commands.md)
 using Fpas.IntegrationTests.Debugging;
 using Fpas.Tests.Support;
 using System.Diagnostics;

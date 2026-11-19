@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/editing-tools/flame-graph.md)
+
 unit Fpas.Ui.Widgets.Editors.FlameGraphs;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;

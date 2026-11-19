@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#passive-exception-facts)
 using Fpas.Debugging.Batch;
 using Fpas.Debugging.Core;
 using Fpas.Debugging.Hosting;

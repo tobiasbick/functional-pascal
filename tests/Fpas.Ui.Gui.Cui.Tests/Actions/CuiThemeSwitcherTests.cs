@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/actions/theme-switcher.md)
 namespace Fpas.Ui.Gui.Cui.Tests.Actions;
 
 /// <summary>Checks controlled native appearance choices without palette side effects.</summary>

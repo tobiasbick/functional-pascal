@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/radial-gauge.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_radial_gauge(cui_ctx *ui, const char *id, float value, float minimum, float maximum,

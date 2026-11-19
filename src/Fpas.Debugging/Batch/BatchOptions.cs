@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/batch-debugging.md)
 using System.Globalization;
 using Fpas.Debugging.Core;
 using Fpas.Debugging.Evaluation;

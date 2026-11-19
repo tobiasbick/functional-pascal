@@ -1,3 +1,4 @@
+// [Documentation](../../docs/pascal/libraries/media/images.md)
 namespace Fpas.Media.Images;
 
 /// <summary>A detached square thumbnail. Consumers must retain pixels unchanged.</summary>

@@ -19,3 +19,17 @@ These widgets and commands require the GUI host.
 
 - [UI handbook](../README.md)
 - [App chrome in the gallery](../../../../examples/ui/gui/gallery/Pages/Desktop/View.fpas)
+
+## Source files
+
+- `examples/ui/gui/gallery/Pages/Desktop/`
+  - [State.fpas](../../../../examples/ui/gui/gallery/Pages/Desktop/State.fpas)
+  - [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Desktop/Update.fpas)
+- `src/Fpas.Ui.Gui.Cui/Hosting/`
+  - [CuiWindow.ChromeScopes.cs](../../../../src/Fpas.Ui.Gui.Cui/Hosting/CuiWindow.ChromeScopes.cs)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [desktop_chrome.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/desktop_chrome.c)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/desktop/`
+  - [chrome_input.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/desktop/chrome_input.h)
+- `tests/Fixtures/gui-host/`
+  - [DesktopChromeContract.fpas](../../../../tests/Fixtures/gui-host/DesktopChromeContract.fpas)

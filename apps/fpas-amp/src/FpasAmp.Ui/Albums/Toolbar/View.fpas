@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/apps/fpas-amp/desktop.md#browsing-music-and-collections)
+
 // Groups search, filters and one sort menu.
 unit FpasAmp.Ui.Albums.Toolbar.View;
 

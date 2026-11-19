@@ -1,3 +1,5 @@
+// [Documentation](README.md)
+
 // Prints a message using the first implemented CLR compiler path.
 program Hello;
 

@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#media)
+
 unit Fpas.Ui.Internal.Validation.MediaRules;
 
 uses Fpas.Ui.Widgets.Media.MediaImages as M, Fpas.Ui.Internal.Validation.Rules as R, System as Sys;

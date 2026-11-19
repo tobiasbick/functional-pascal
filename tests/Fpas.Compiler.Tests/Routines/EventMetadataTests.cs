@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/interop/events.md)
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;

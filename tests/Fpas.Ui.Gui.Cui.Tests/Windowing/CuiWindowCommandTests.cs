@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/desktop.md)
 using Fpas.Ui.Gui.Cui.Tests.Packaging;
 
 namespace Fpas.Ui.Gui.Cui.Tests.Windowing;

@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/host.md#frame-preparation-and-presentation)
+
 unit Fpas.Ui.Gui.Internal.Layout.Sizing;
 
 uses Fpas.Ui.Layout as L, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Graphics as G, System as Sys;

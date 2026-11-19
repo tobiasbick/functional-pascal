@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/smart-inputs/README.md)
+
 unit GuiGallery.Pages.SmartInputs.View;
 
 uses

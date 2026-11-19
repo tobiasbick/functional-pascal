@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/voice/voice-session.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Audio.VoiceSession;
 
 uses

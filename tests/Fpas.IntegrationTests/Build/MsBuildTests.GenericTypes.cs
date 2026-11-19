@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/types/generics.md)
 using System.Xml.Linq;
 
 namespace Fpas.IntegrationTests.Build;

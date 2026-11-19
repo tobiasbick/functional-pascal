@@ -50,3 +50,15 @@ ends. Hover a bucket to see its time and counts.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/View.fpas)
 - [More charts](../more-charts/README.md)
 - [More developer tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Charts/`
+  - [TimeHistogram.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/TimeHistogram.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Charts/`
+  - [NativeMethods.TimeHistogram.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Charts/NativeMethods.TimeHistogram.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Charts/`
+  - [CuiWindow.TimeHistogram.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.TimeHistogram.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/charts/`
+  - [time_histogram.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/time_histogram.c)
+  - [time_histogram.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/time_histogram.h)

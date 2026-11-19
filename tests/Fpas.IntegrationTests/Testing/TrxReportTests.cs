@@ -1,3 +1,4 @@
+// [Documentation](../../coverage.md#native-test-frameworks)
 using Fpas.Tests.Support;
 using Fpas.Workspaces.Loading;
 using Fpas.Workspaces.Testing;

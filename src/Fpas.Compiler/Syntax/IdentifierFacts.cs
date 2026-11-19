@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/basics/lexical-rules.md)
 namespace Fpas.Compiler.Syntax;
 
 /// <summary>Canonical source spelling for an unescaped semantic identifier.</summary>

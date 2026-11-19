@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/workspaces.md#source-edits)
 using Fpas.Workspaces.Loading;
 
 namespace Fpas.Workspaces.Editing;

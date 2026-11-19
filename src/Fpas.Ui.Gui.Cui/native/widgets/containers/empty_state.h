@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/feedback/empty-state.md)
 #ifndef FPAS_CUI_EMPTY_STATE_H
 #define FPAS_CUI_EMPTY_STATE_H
 

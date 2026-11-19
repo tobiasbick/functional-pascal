@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/node-editor.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_node_editor_begin(cui_ctx *ui, const char *id, cui_node_view view,

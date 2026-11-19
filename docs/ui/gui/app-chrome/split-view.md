@@ -49,3 +49,16 @@ a saved split.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Desktop/SplitViews.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Desktop/View.fpas)
 - [Chapter index](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Desktop/`
+  - [SplitView.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Desktop/SplitView.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Desktop/`
+  - [NativeMethods.SplitView.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Desktop/NativeMethods.SplitView.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Desktop/`
+  - [CuiWindow.SplitView.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Desktop/CuiWindow.SplitView.Types.cs)
+  - [CuiWindow.SplitView.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Desktop/CuiWindow.SplitView.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/desktop/`
+  - [split_view.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/desktop/split_view.c)
+  - [split_view.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/desktop/split_view.h)

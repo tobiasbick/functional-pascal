@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/actions/hold-button.md)
 #ifndef FPAS_HOLD_BUTTON_H
 #define FPAS_HOLD_BUTTON_H
 

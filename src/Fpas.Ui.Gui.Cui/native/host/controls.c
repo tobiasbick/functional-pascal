@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/cui.md#layout-and-control-inspection)
 #include "../fpas_cui.h"
 
 void fpas_cui_column_begin(cui_ctx *ui, float padding, float gap) {

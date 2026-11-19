@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/language-server.md#checked-refactoring-previews)
 using Fpas.Compiler.Analysis;
 using Fpas.LanguageServer.Protocol;
 using Fpas.Workspaces.Live;

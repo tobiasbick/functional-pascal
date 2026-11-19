@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/code/code-block.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

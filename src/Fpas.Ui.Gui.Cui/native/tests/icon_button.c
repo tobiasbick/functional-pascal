@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/actions/icon-button.md)
 /* Checks stable native icon actions without palette side effects. */
 #include "../fpas_cui.h"
 #include <stdio.h>

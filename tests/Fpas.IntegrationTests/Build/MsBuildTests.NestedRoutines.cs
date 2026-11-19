@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/functions/nested-routines.md)
 using System.Xml.Linq;
 
 namespace Fpas.IntegrationTests.Build;

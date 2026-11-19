@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/charts/README.md)
+
 unit GuiGallery.Pages.Charts.View;
 
 uses

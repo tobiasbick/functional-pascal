@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/disclosure/veil.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Overlays.Veil;
 
 uses

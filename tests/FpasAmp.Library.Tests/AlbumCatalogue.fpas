@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/library.md#albums-and-artwork)
+
 // Catalogue reads and publications during scanning.
 unit FpasAmp.Library.Tests.AlbumCatalogue;
 

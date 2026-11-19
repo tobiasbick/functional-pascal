@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/code/README.md)
+
 unit GuiGallery.Pages.Code.Samples;
 
 uses Fpas.Ui.Widgets.Developer.LogConsoles as Log, System as Sys;

@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/language/error-handling/exceptions.md)
 namespace Fpas.Compiler.Syntax.Parsing;
 
 internal sealed partial class Parser

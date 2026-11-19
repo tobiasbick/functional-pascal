@@ -45,3 +45,10 @@ CUI keeps drawing beyond one revolution when a value exceeds 1, up to four turns
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/Widgets/Flows.fpas)
 - [Progress ring](../feedback/progress-ring.md)
 - [More charts](README.md)
+
+## Source files
+
+- [ActivityRings.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/ActivityRings.fpas)
+- [CuiWindow.ActivityRings.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.ActivityRings.cs)
+- [activity_rings.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/activity_rings.c)
+- [activity_rings.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/activity_rings.h)

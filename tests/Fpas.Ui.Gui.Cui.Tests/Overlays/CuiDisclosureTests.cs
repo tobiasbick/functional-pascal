@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/disclosure/README.md)
 namespace Fpas.Ui.Gui.Cui.Tests.Overlays;
 
 /// <summary>Exercises the native disclosure widgets through their managed bridge.</summary>

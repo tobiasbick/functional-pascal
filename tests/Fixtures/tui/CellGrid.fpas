@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/ui/tui/text-and-display/cell-grid.md)
+
 program CellGridContract;
 
 uses

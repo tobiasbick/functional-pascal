@@ -22,3 +22,9 @@ a toast command from your update to send a notification.
 - [UI handbook](../README.md)
 - [Disclosure](../disclosure/README.md)
 - [Overlays in the gallery](../../../../examples/ui/gui/gallery/Pages/Overlays/View.fpas)
+
+## Source files
+
+- [State.fpas](../../../../examples/ui/gui/gallery/Pages/Overlays/State.fpas)
+- [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Overlays/Update.fpas)
+- [CuiWidgetOptionTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Overlays/CuiWidgetOptionTests.cs)

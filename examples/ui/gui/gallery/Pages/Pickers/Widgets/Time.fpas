@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/pickers/time-picker.md)
+
 unit GuiGallery.Pages.Pickers.Widgets.Time;
 
 uses

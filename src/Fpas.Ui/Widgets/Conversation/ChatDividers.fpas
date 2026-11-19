@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/social-and-media/chat-divider.md)
+
 unit Fpas.Ui.Widgets.Conversation.ChatDividers;
 
 uses Fpas.Ui.Elements as E;

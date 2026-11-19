@@ -140,6 +140,20 @@ ATL's synchronous parser must finish before that operation can exit. The UI
 thread remains free; per-file read errors remain visible in query results and
 fatal lifetime failures are reported by the shell.
 
+## On-demand waveforms
+
+`Metadata.Session.WaveformAsync(Track, Cancellation)` returns 1,024 relative
+RMS values for a valid measurement. It uses an independent decoder so it can
+run alongside playback. The cache key is the indexed full-file SHA-256. The
+lookup checks the track's ID, path, hash and current file size and modification
+time. Cached values are quantized to one byte per interval. If the index hash
+is unavailable, the method measures directly. A SQLite cache error also allows
+measurement to proceed. If the file stamp changes during a cacheable
+measurement, the method returns an empty array and skips the write.
+
+See [audio analysis](../../pascal/libraries/media/audio.md#waveform-analysis)
+and the [waveform cache tests](../../../tests/FpasAmp.Library.Tests/Waveforms.fpas).
+
 ## Durable identities and ratings
 
 `userdata.db` stores UUIDs, latest paths/fingerprints and nullable integer ratings.
@@ -305,3 +319,120 @@ dotnet test tests/FpasAmp.Library.Tests/FpasAmp.Library.Tests.fpasproj
 ```
 
 Run from the repository root after the [local SDK setup](../../build/development.md#build-an-fpas-application).
+
+## Source files
+
+<details>
+<summary>Browse 89 source files</summary>
+
+- `apps/fpas-amp/src/FpasAmp.Library/Albums/`
+  - [Access.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Albums/Access.fpas)
+  - [Model.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Albums/Model.fpas)
+- `apps/fpas-amp/src/FpasAmp.Library/Albums/Artwork/`
+  - [Names.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Albums/Artwork/Names.fpas)
+  - [Reading.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Albums/Artwork/Reading.fpas)
+- `apps/fpas-amp/src/FpasAmp.Library/Albums/Internal/`
+  - [Observing.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Albums/Internal/Observing.fpas)
+- `apps/fpas-amp/src/FpasAmp.Library/Albums/Persistence/`
+  - [Queries.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Albums/Persistence/Queries.fpas)
+  - [Ratings.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Albums/Persistence/Ratings.fpas)
+  - [Schema.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Albums/Persistence/Schema.fpas)
+  - [Store.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Albums/Persistence/Store.fpas)
+- `apps/fpas-amp/src/FpasAmp.Library/Content/`
+  - [Schema.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Content/Schema.fpas)
+- `apps/fpas-amp/src/FpasAmp.Library/`
+  - [FpasAmp.Library.fpasproj](../../../apps/fpas-amp/src/FpasAmp.Library/FpasAmp.Library.fpasproj)
+  - [Sources.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Sources.fpas)
+- `apps/fpas-amp/src/FpasAmp.Library/Inventory/Internal/`
+  - [Catalog.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Inventory/Internal/Catalog.fpas)
+  - [Directories.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Inventory/Internal/Directories.fpas)
+  - [Inbox.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Inventory/Internal/Inbox.fpas)
+  - [Observations.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Inventory/Internal/Observations.fpas)
+  - [Planning.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Inventory/Internal/Planning.fpas)
+  - [Reporting.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Inventory/Internal/Reporting.fpas)
+  - [Runtime.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Inventory/Internal/Runtime.fpas)
+  - [Tree.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Inventory/Internal/Tree.fpas)
+  - [Watchers.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Inventory/Internal/Watchers.fpas)
+- `apps/fpas-amp/src/FpasAmp.Library/Inventory/`
+  - [Model.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Inventory/Model.fpas)
+  - [Monitoring.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Inventory/Monitoring.fpas)
+  - [Progress.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Inventory/Progress.fpas)
+- `apps/fpas-amp/src/FpasAmp.Library/Metadata/`
+  - [Covers.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Metadata/Covers.fpas)
+  - [Monitoring.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Metadata/Monitoring.fpas)
+  - [Waveforms.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Metadata/Waveforms.fpas)
+- `apps/fpas-amp/src/FpasAmp.Library/Metadata/Fingerprints/`
+  - [Calculator.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Metadata/Fingerprints/Calculator.fpas)
+  - [Store.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Metadata/Fingerprints/Store.fpas)
+- `apps/fpas-amp/src/FpasAmp.Library/Metadata/Internal/`
+  - [Pending.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Metadata/Internal/Pending.fpas)
+  - [Policy.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Metadata/Internal/Policy.fpas)
+  - [Reading.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Metadata/Internal/Reading.fpas)
+  - [Recovery.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Metadata/Internal/Recovery.fpas)
+  - [Worker.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Metadata/Internal/Worker.fpas)
+- `apps/fpas-amp/src/FpasAmp.Library/Metadata/Persistence/`
+  - [Queries.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Metadata/Persistence/Queries.fpas)
+  - [Schema.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Metadata/Persistence/Schema.fpas)
+  - [Store.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Metadata/Persistence/Store.fpas)
+- `apps/fpas-amp/src/FpasAmp.Library/Persistence/`
+  - [Checkpoints.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Persistence/Checkpoints.fpas)
+  - [Clearing.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Persistence/Clearing.fpas)
+  - [Loading.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Persistence/Loading.fpas)
+  - [Locations.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Persistence/Locations.fpas)
+  - [Paths.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Persistence/Paths.fpas)
+  - [Schema.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Persistence/Schema.fpas)
+  - [Sql.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Persistence/Sql.fpas)
+- `apps/fpas-amp/src/FpasAmp.Library/Playlists/`
+  - [Access.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Playlists/Access.fpas)
+- `apps/fpas-amp/src/FpasAmp.Library/Playlists/Internal/`
+  - [Observing.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Playlists/Internal/Observing.fpas)
+  - [Reading.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Playlists/Internal/Reading.fpas)
+  - [References.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Playlists/Internal/References.fpas)
+  - [Transfer.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Playlists/Internal/Transfer.fpas)
+- `apps/fpas-amp/src/FpasAmp.Library/Playlists/Persistence/`
+  - [Queries.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Playlists/Persistence/Queries.fpas)
+  - [Schema.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Playlists/Persistence/Schema.fpas)
+  - [Store.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Playlists/Persistence/Store.fpas)
+  - [UserLists.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Playlists/Persistence/UserLists.fpas)
+- `apps/fpas-amp/src/FpasAmp.Library/Search/`
+  - [Matching.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Search/Matching.fpas)
+  - [Text.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/Search/Text.fpas)
+- `apps/fpas-amp/src/FpasAmp.Library/UserData/`
+  - [Identity.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/UserData/Identity.fpas)
+  - [Ratings.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/UserData/Ratings.fpas)
+  - [Schema.fpas](../../../apps/fpas-amp/src/FpasAmp.Library/UserData/Schema.fpas)
+- `tests/FpasAmp.Library.Tests/`
+  - [AlbumCatalogue.fpas](../../../tests/FpasAmp.Library.Tests/AlbumCatalogue.fpas)
+  - [AlbumRatings.fpas](../../../tests/FpasAmp.Library.Tests/AlbumRatings.fpas)
+  - [AlbumSupport.fpas](../../../tests/FpasAmp.Library.Tests/AlbumSupport.fpas)
+  - [Albums.fpas](../../../tests/FpasAmp.Library.Tests/Albums.fpas)
+  - [Controls.fpas](../../../tests/FpasAmp.Library.Tests/Controls.fpas)
+  - [Discovery.fpas](../../../tests/FpasAmp.Library.Tests/Discovery.fpas)
+  - [FpasAmp.Library.Tests.fpasproj](../../../tests/FpasAmp.Library.Tests/FpasAmp.Library.Tests.fpasproj)
+  - [MetadataCovers.fpas](../../../tests/FpasAmp.Library.Tests/MetadataCovers.fpas)
+  - [MetadataIdentity.fpas](../../../tests/FpasAmp.Library.Tests/MetadataIdentity.fpas)
+  - [MetadataLocking.fpas](../../../tests/FpasAmp.Library.Tests/MetadataLocking.fpas)
+  - [MetadataReading.fpas](../../../tests/FpasAmp.Library.Tests/MetadataReading.fpas)
+  - [MetadataSafety.fpas](../../../tests/FpasAmp.Library.Tests/MetadataSafety.fpas)
+  - [MetadataStorage.fpas](../../../tests/FpasAmp.Library.Tests/MetadataStorage.fpas)
+  - [MetadataSupport.fpas](../../../tests/FpasAmp.Library.Tests/MetadataSupport.fpas)
+  - [Monitoring.fpas](../../../tests/FpasAmp.Library.Tests/Monitoring.fpas)
+  - [PlaylistDiscovery.fpas](../../../tests/FpasAmp.Library.Tests/PlaylistDiscovery.fpas)
+  - [PlaylistObservation.fpas](../../../tests/FpasAmp.Library.Tests/PlaylistObservation.fpas)
+  - [PlaylistReaders.fpas](../../../tests/FpasAmp.Library.Tests/PlaylistReaders.fpas)
+  - [PlaylistStorage.fpas](../../../tests/FpasAmp.Library.Tests/PlaylistStorage.fpas)
+  - [PlaylistSupport.fpas](../../../tests/FpasAmp.Library.Tests/PlaylistSupport.fpas)
+  - [PlaylistTransfer.fpas](../../../tests/FpasAmp.Library.Tests/PlaylistTransfer.fpas)
+  - [PlaylistUserLists.fpas](../../../tests/FpasAmp.Library.Tests/PlaylistUserLists.fpas)
+  - [Policies.fpas](../../../tests/FpasAmp.Library.Tests/Policies.fpas)
+  - [Search.fpas](../../../tests/FpasAmp.Library.Tests/Search.fpas)
+  - [StorageCheckpoints.fpas](../../../tests/FpasAmp.Library.Tests/StorageCheckpoints.fpas)
+  - [StorageLifetime.fpas](../../../tests/FpasAmp.Library.Tests/StorageLifetime.fpas)
+  - [StorageLoading.fpas](../../../tests/FpasAmp.Library.Tests/StorageLoading.fpas)
+  - [StorageSupport.fpas](../../../tests/FpasAmp.Library.Tests/StorageSupport.fpas)
+  - [Support.fpas](../../../tests/FpasAmp.Library.Tests/Support.fpas)
+  - [ThumbnailCache.fpas](../../../tests/FpasAmp.Library.Tests/ThumbnailCache.fpas)
+- `tests/FpasAmp.Ui.Tests/`
+  - [Fingerprints.fpas](../../../tests/FpasAmp.Ui.Tests/Fingerprints.fpas)
+
+</details>

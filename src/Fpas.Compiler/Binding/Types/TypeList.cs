@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/architecture/compiler.md#syntax-and-binding-boundaries)
 using System.Collections;
 
 namespace Fpas.Compiler.Binding.Types;

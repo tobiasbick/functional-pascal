@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/developer-tools/schedule-picker.md)
 #ifndef FPAS_CUI_SCHEDULE_PICKER_H
 #define FPAS_CUI_SCHEDULE_PICKER_H
 /** Draws the native schedule editor and reports its next occurrence.

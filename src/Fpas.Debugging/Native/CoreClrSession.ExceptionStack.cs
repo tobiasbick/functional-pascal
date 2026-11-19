@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#passive-exception-facts)
 using System.Runtime.InteropServices;
 using Fpas.Debugging.Core;
 

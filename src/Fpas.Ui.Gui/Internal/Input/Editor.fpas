@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/host.md#code-editor-commands)
+
 unit Fpas.Ui.Gui.Internal.Input.Editor;
 
 uses

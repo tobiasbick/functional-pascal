@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/creative-controls/status-tag.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_status_tag(cui_ctx *ui, const char *id,

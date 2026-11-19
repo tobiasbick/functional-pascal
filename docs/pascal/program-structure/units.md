@@ -106,3 +106,9 @@ No source unit initialization/finalization blocks are introduced.
 - [Topic overview](README.md)
 - [Handbook](../README.md)
 - [Syntax grammar](../../specs/syntax.md)
+
+## Source files
+
+- [MultiSourceTests.cs](../../../tests/Fpas.Compiler.Tests/Metadata/MultiSourceTests.cs)
+- [MsBuildTests.MultiSource.cs](../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.MultiSource.cs)
+- [MultiSourceCliTests.cs](../../../tests/Fpas.IntegrationTests/Cli/MultiSourceCliTests.cs)

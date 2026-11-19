@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/inputs/date-picker.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Pickers.DatePicker;
 
 uses

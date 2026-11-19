@@ -47,3 +47,15 @@ to activate its destination and update running indicators or badges.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/Controls.fpas)
 - [Tab bar](tab-bar.md)
 - [Motion](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Navigation/`
+  - [Dock.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Navigation/Dock.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Navigation/`
+  - [NativeMethods.Dock.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Navigation/NativeMethods.Dock.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Navigation/`
+  - [CuiWindow.Dock.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Navigation/CuiWindow.Dock.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/navigation/`
+  - [dock.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/navigation/dock.c)
+  - [dock.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/navigation/dock.h)

@@ -1642,3 +1642,99 @@ for incompatible units or extensions, unavailable theme selections,
 duplicate keys or IDs, and malformed options. Apply any additional
 adapter-specific limits before drawing. Draw and input callbacks run at their
 respective stages after preflight.
+
+## Source files
+
+<details>
+<summary>Browse 75 source files</summary>
+
+- `src/Fpas.Ui/`
+  - [Composition.fpas](../../src/Fpas.Ui/Composition.fpas)
+  - [Elements.fpas](../../src/Fpas.Ui/Elements.fpas)
+  - [Fpas.Ui.fpasproj](../../src/Fpas.Ui/Fpas.Ui.fpasproj)
+  - [Graphics.fpas](../../src/Fpas.Ui/Graphics.fpas)
+  - [Layout.fpas](../../src/Fpas.Ui/Layout.fpas)
+  - [Styles.fpas](../../src/Fpas.Ui/Styles.fpas)
+  - [Validation.fpas](../../src/Fpas.Ui/Validation.fpas)
+- `src/Fpas.Ui/Internal/Mapping/`
+  - [Actions.fpas](../../src/Fpas.Ui/Internal/Mapping/Actions.fpas)
+  - [Canvas.fpas](../../src/Fpas.Ui/Internal/Mapping/Canvas.fpas)
+  - [Capture.fpas](../../src/Fpas.Ui/Internal/Mapping/Capture.fpas)
+  - [Chrome.fpas](../../src/Fpas.Ui/Internal/Mapping/Chrome.fpas)
+  - [DeveloperTools.fpas](../../src/Fpas.Ui/Internal/Mapping/DeveloperTools.fpas)
+  - [Display.fpas](../../src/Fpas.Ui/Internal/Mapping/Display.fpas)
+  - [EditingTools.fpas](../../src/Fpas.Ui/Internal/Mapping/EditingTools.fpas)
+  - [Editors.fpas](../../src/Fpas.Ui/Internal/Mapping/Editors.fpas)
+  - [Feedback.fpas](../../src/Fpas.Ui/Internal/Mapping/Feedback.fpas)
+  - [MessageMapping.fpas](../../src/Fpas.Ui/Internal/Mapping/MessageMapping.fpas)
+  - [SourceTools.fpas](../../src/Fpas.Ui/Internal/Mapping/SourceTools.fpas)
+  - [Visualizations.fpas](../../src/Fpas.Ui/Internal/Mapping/Visualizations.fpas)
+- `src/Fpas.Ui/Internal/Theming/`
+  - [ThemePalettes.fpas](../../src/Fpas.Ui/Internal/Theming/ThemePalettes.fpas)
+  - [ThemeSwitchers.fpas](../../src/Fpas.Ui/Internal/Theming/ThemeSwitchers.fpas)
+  - [ThemeToggles.fpas](../../src/Fpas.Ui/Internal/Theming/ThemeToggles.fpas)
+- `src/Fpas.Ui/Internal/Validation/`
+  - [ActionRules.fpas](../../src/Fpas.Ui/Internal/Validation/ActionRules.fpas)
+  - [AiRules.fpas](../../src/Fpas.Ui/Internal/Validation/AiRules.fpas)
+  - [AudioRules.fpas](../../src/Fpas.Ui/Internal/Validation/AudioRules.fpas)
+  - [CanvasValidation.fpas](../../src/Fpas.Ui/Internal/Validation/CanvasValidation.fpas)
+  - [ChartRules.fpas](../../src/Fpas.Ui/Internal/Validation/ChartRules.fpas)
+  - [ChromeValidation.fpas](../../src/Fpas.Ui/Internal/Validation/ChromeValidation.fpas)
+  - [CollectionRules.fpas](../../src/Fpas.Ui/Internal/Validation/CollectionRules.fpas)
+  - [CreativeRules.fpas](../../src/Fpas.Ui/Internal/Validation/CreativeRules.fpas)
+  - [DateRangeRules.fpas](../../src/Fpas.Ui/Internal/Validation/DateRangeRules.fpas)
+  - [DeveloperInspectorValidation.fpas](../../src/Fpas.Ui/Internal/Validation/DeveloperInspectorValidation.fpas)
+  - [DeveloperReportValidation.fpas](../../src/Fpas.Ui/Internal/Validation/DeveloperReportValidation.fpas)
+  - [DeveloperValidation.fpas](../../src/Fpas.Ui/Internal/Validation/DeveloperValidation.fpas)
+  - [DisclosureRules.fpas](../../src/Fpas.Ui/Internal/Validation/DisclosureRules.fpas)
+  - [DisplayValidation.fpas](../../src/Fpas.Ui/Internal/Validation/DisplayValidation.fpas)
+  - [EditingToolValidation.fpas](../../src/Fpas.Ui/Internal/Validation/EditingToolValidation.fpas)
+  - [EditorRules.fpas](../../src/Fpas.Ui/Internal/Validation/EditorRules.fpas)
+  - [FeedbackRules.fpas](../../src/Fpas.Ui/Internal/Validation/FeedbackRules.fpas)
+  - [GridRules.fpas](../../src/Fpas.Ui/Internal/Validation/GridRules.fpas)
+  - [InstrumentRules.fpas](../../src/Fpas.Ui/Internal/Validation/InstrumentRules.fpas)
+  - [MediaRules.fpas](../../src/Fpas.Ui/Internal/Validation/MediaRules.fpas)
+  - [MenuRules.fpas](../../src/Fpas.Ui/Internal/Validation/MenuRules.fpas)
+  - [MoreChartRules.fpas](../../src/Fpas.Ui/Internal/Validation/MoreChartRules.fpas)
+  - [MotionRules.fpas](../../src/Fpas.Ui/Internal/Validation/MotionRules.fpas)
+  - [NavigationRules.fpas](../../src/Fpas.Ui/Internal/Validation/NavigationRules.fpas)
+  - [NumberFieldRules.fpas](../../src/Fpas.Ui/Internal/Validation/NumberFieldRules.fpas)
+  - [OneTimeCodeRules.fpas](../../src/Fpas.Ui/Internal/Validation/OneTimeCodeRules.fpas)
+  - [PickerRules.fpas](../../src/Fpas.Ui/Internal/Validation/PickerRules.fpas)
+  - [PlanningRules.fpas](../../src/Fpas.Ui/Internal/Validation/PlanningRules.fpas)
+  - [PopoverRules.fpas](../../src/Fpas.Ui/Internal/Validation/PopoverRules.fpas)
+  - [Rules.fpas](../../src/Fpas.Ui/Internal/Validation/Rules.fpas)
+  - [SelectRules.fpas](../../src/Fpas.Ui/Internal/Validation/SelectRules.fpas)
+  - [SelectionRules.fpas](../../src/Fpas.Ui/Internal/Validation/SelectionRules.fpas)
+  - [SliderRules.fpas](../../src/Fpas.Ui/Internal/Validation/SliderRules.fpas)
+  - [SmartInputRules.fpas](../../src/Fpas.Ui/Internal/Validation/SmartInputRules.fpas)
+  - [SourceToolValidation.fpas](../../src/Fpas.Ui/Internal/Validation/SourceToolValidation.fpas)
+  - [SurfaceRules.fpas](../../src/Fpas.Ui/Internal/Validation/SurfaceRules.fpas)
+  - [TagInputRules.fpas](../../src/Fpas.Ui/Internal/Validation/TagInputRules.fpas)
+  - [ToggleGroupRules.fpas](../../src/Fpas.Ui/Internal/Validation/ToggleGroupRules.fpas)
+  - [TooltipRules.fpas](../../src/Fpas.Ui/Internal/Validation/TooltipRules.fpas)
+  - [VisualizationRules.fpas](../../src/Fpas.Ui/Internal/Validation/VisualizationRules.fpas)
+  - [VoiceAndAiValidation.fpas](../../src/Fpas.Ui/Internal/Validation/VoiceAndAiValidation.fpas)
+  - [VoiceRules.fpas](../../src/Fpas.Ui/Internal/Validation/VoiceRules.fpas)
+- `src/Fpas.Ui/Widgets/Ai/`
+  - [Sources.fpas](../../src/Fpas.Ui/Widgets/Ai/Sources.fpas)
+- `src/Fpas.Ui/Widgets/Audio/`
+  - [ControlWells.fpas](../../src/Fpas.Ui/Widgets/Audio/ControlWells.fpas)
+  - [Voice.fpas](../../src/Fpas.Ui/Widgets/Audio/Voice.fpas)
+- `src/Fpas.Ui/Widgets/Charts/`
+  - [Charts.fpas](../../src/Fpas.Ui/Widgets/Charts/Charts.fpas)
+- `src/Fpas.Ui/Widgets/Feedback/`
+  - [TaskStates.fpas](../../src/Fpas.Ui/Widgets/Feedback/TaskStates.fpas)
+- `src/Fpas.Ui/Widgets/Files/`
+  - [FileListings.fpas](../../src/Fpas.Ui/Widgets/Files/FileListings.fpas)
+- `src/Fpas.Ui/Widgets/Motion/`
+  - [Motion.fpas](../../src/Fpas.Ui/Widgets/Motion/Motion.fpas)
+- `src/Fpas.Ui/Widgets/Navigation/`
+  - [Navigation.fpas](../../src/Fpas.Ui/Widgets/Navigation/Navigation.fpas)
+- `src/Fpas.Ui/Widgets/Overlays/`
+  - [Menus.fpas](../../src/Fpas.Ui/Widgets/Overlays/Menus.fpas)
+- `src/Fpas.Ui/Widgets/Theming/`
+  - [ThemeMetrics.fpas](../../src/Fpas.Ui/Widgets/Theming/ThemeMetrics.fpas)
+  - [Themes.fpas](../../src/Fpas.Ui/Widgets/Theming/Themes.fpas)
+
+</details>

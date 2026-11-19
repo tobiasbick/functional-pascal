@@ -48,3 +48,15 @@ use the wheel to zoom and press F to fit. Save `Event.Selection` and use
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/DependencyGraphs.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Developer/View.fpas)
 - [Developer tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [DependencyGraph.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/DependencyGraph.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.DependencyGraph.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.DependencyGraph.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.DependencyGraph.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.DependencyGraph.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [dependency_graph.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/dependency_graph.c)
+  - [dependency_graph.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/dependency_graph.h)

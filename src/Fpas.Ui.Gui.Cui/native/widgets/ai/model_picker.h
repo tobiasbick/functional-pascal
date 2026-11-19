@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/ai/model-picker.md)
 #ifndef FPAS_CUI_MODEL_PICKER_H
 #define FPAS_CUI_MODEL_PICKER_H
 CUI_API int fpas_cui_model_picker(cui_ctx *ui, const char *id, const cui_model *models, int count,

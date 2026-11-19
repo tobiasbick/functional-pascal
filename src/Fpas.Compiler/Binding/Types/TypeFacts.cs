@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/architecture/compiler.md#syntax-and-binding-boundaries)
 namespace Fpas.Compiler.Binding.Types;
 
 internal static class TypeFacts

@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/native-build.md#native-regression-tests)
 /* Checks real consumer linkage, font initialization and software rendering
  * against either the shared library or static archive, without a display. */
 #include "../fpas_cui.h"

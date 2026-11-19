@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/data-display/README.md)
 using Fpas.Ui.Gui.Cui.Widgets.Collections;
 
 namespace Fpas.Ui.Gui.Cui.Tests.Display;

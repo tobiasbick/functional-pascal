@@ -68,7 +68,10 @@ FpasPrepareCompilation hooks. It resolves references with BuildProjectReferences
 disabled and consumes existing generated files already declared as Compile items.
 Package SDK resolution uses the installed-only Fpas.SdkResolver inside MSBuild,
 with the downloading NuGet SDK resolver disabled. Imported and dynamic SDK
-references follow the same rule. Missing restore assets, sources and foreign
+references follow the same rule. The resolver uses the requested package SDK
+version, or the version from the nearest `global.json` `msbuild-sdks` entry for
+an unversioned reference. The cache entry must contain both `.nupkg.metadata`
+and an `Sdk` directory. Missing restore assets, sources and foreign
 dependency metadata require explicit preparation. This library policy
 is separate from the CLI's NoRestore flag. Context verification retains the chosen
 policy instead of enabling preparation. MSBuild evaluation/reference-resolution
@@ -266,3 +269,100 @@ The CLI only selects the host. Protocol types, zero-based UTF-16 conversion,
 capabilities and watched-file registration stay in the adapter; the workspace
 and compiler remain independent. Lifecycle, limits and configuration belong in
 the [language-server reference](../pascal/tools/language-server.md).
+
+## Source files
+
+<details>
+<summary>Browse 70 source files</summary>
+
+- `src/Fpas.Build.Tasks/Analysis/`
+  - [ExportedContext.cs](../../src/Fpas.Build.Tasks/Analysis/ExportedContext.cs)
+  - [FpasExportAnalysisContext.cs](../../src/Fpas.Build.Tasks/Analysis/FpasExportAnalysisContext.cs)
+- `src/Fpas.Cli/Analysis/`
+  - [ContextCommandOptions.cs](../../src/Fpas.Cli/Analysis/ContextCommandOptions.cs)
+- `src/Fpas.LanguageServer/`
+  - [Fpas.LanguageServer.csproj](../../src/Fpas.LanguageServer/Fpas.LanguageServer.csproj)
+  - [LanguageServerApplication.cs](../../src/Fpas.LanguageServer/LanguageServerApplication.cs)
+- `src/Fpas.LanguageServer/Hosting/`
+  - [NotificationQueue.cs](../../src/Fpas.LanguageServer/Hosting/NotificationQueue.cs)
+  - [RequestStamp.cs](../../src/Fpas.LanguageServer/Hosting/RequestStamp.cs)
+  - [ServerSession.Requests.cs](../../src/Fpas.LanguageServer/Hosting/ServerSession.Requests.cs)
+  - [ServerSession.cs](../../src/Fpas.LanguageServer/Hosting/ServerSession.cs)
+- `src/Fpas.LanguageServer/Transport/`
+  - [BoundedFormatter.cs](../../src/Fpas.LanguageServer/Transport/BoundedFormatter.cs)
+  - [LspMessageHandler.cs](../../src/Fpas.LanguageServer/Transport/LspMessageHandler.cs)
+  - [QuotaReadStream.cs](../../src/Fpas.LanguageServer/Transport/QuotaReadStream.cs)
+  - [ServerRpc.cs](../../src/Fpas.LanguageServer/Transport/ServerRpc.cs)
+- `src/Fpas.SdkResolver/Diagnostics/`
+  - [ProjectDiagnosticLogger.cs](../../src/Fpas.SdkResolver/Diagnostics/ProjectDiagnosticLogger.cs)
+- `src/Fpas.SdkResolver/`
+  - [Fpas.SdkResolver.csproj](../../src/Fpas.SdkResolver/Fpas.SdkResolver.csproj)
+  - [InstalledSdkResolver.cs](../../src/Fpas.SdkResolver/InstalledSdkResolver.cs)
+- `src/Fpas.Workspaces/Analysis/`
+  - [ProjectAnalysisCache.cs](../../src/Fpas.Workspaces/Analysis/ProjectAnalysisCache.cs)
+  - [SemanticCoverage.cs](../../src/Fpas.Workspaces/Analysis/SemanticCoverage.cs)
+  - [SourceGraphAnalysis.cs](../../src/Fpas.Workspaces/Analysis/SourceGraphAnalysis.cs)
+  - [WorkspaceAnalysis.cs](../../src/Fpas.Workspaces/Analysis/WorkspaceAnalysis.cs)
+- `src/Fpas.Workspaces/Editing/`
+  - [CheckedImports.cs](../../src/Fpas.Workspaces/Editing/CheckedImports.cs)
+  - [FileWorkspace.cs](../../src/Fpas.Workspaces/Editing/FileWorkspace.cs)
+  - [SourcePublication.cs](../../src/Fpas.Workspaces/Editing/SourcePublication.cs)
+  - [TextEditSet.cs](../../src/Fpas.Workspaces/Editing/TextEditSet.cs)
+- `src/Fpas.Workspaces/`
+  - [Fpas.Workspaces.csproj](../../src/Fpas.Workspaces/Fpas.Workspaces.csproj)
+- `src/Fpas.Workspaces/Live/`
+  - [DocumentChanges.cs](../../src/Fpas.Workspaces/Live/DocumentChanges.cs)
+  - [LiveSnapshot.cs](../../src/Fpas.Workspaces/Live/LiveSnapshot.cs)
+  - [LiveWorkspace.cs](../../src/Fpas.Workspaces/Live/LiveWorkspace.cs)
+- `src/Fpas.Workspaces/Loading/`
+  - [ContextOptions.cs](../../src/Fpas.Workspaces/Loading/ContextOptions.cs)
+  - [ForeignInputs.cs](../../src/Fpas.Workspaces/Loading/ForeignInputs.cs)
+  - [PassiveEvaluation.cs](../../src/Fpas.Workspaces/Loading/PassiveEvaluation.cs)
+  - [ProjectManifest.cs](../../src/Fpas.Workspaces/Loading/ProjectManifest.cs)
+  - [WorkspaceContext.cs](../../src/Fpas.Workspaces/Loading/WorkspaceContext.cs)
+  - [WorkspaceLoader.cs](../../src/Fpas.Workspaces/Loading/WorkspaceLoader.cs)
+  - [WorkspacePreparation.cs](../../src/Fpas.Workspaces/Loading/WorkspacePreparation.cs)
+- `src/Fpas.Workspaces/Processes/`
+  - [BuildProcess.cs](../../src/Fpas.Workspaces/Processes/BuildProcess.cs)
+  - [MsBuildSyntax.cs](../../src/Fpas.Workspaces/Processes/MsBuildSyntax.cs)
+- `src/Fpas.Workspaces/Queries/`
+  - [SourceQuery.Bindings.cs](../../src/Fpas.Workspaces/Queries/SourceQuery.Bindings.cs)
+  - [SourceQuery.Selection.cs](../../src/Fpas.Workspaces/Queries/SourceQuery.Selection.cs)
+  - [SourceQuery.cs](../../src/Fpas.Workspaces/Queries/SourceQuery.cs)
+- `src/Fpas.Workspaces/Snapshots/`
+  - [WorkspaceTextSnapshot.cs](../../src/Fpas.Workspaces/Snapshots/WorkspaceTextSnapshot.cs)
+- `tests/Fpas.Compiler.Tests/Analysis/`
+  - [AnalysisCancellationTests.cs](../../tests/Fpas.Compiler.Tests/Analysis/AnalysisCancellationTests.cs)
+  - [AnalysisDocumentationTests.cs](../../tests/Fpas.Compiler.Tests/Analysis/AnalysisDocumentationTests.cs)
+  - [AnalysisTests.cs](../../tests/Fpas.Compiler.Tests/Analysis/AnalysisTests.cs)
+  - [DeclarationContextTests.cs](../../tests/Fpas.Compiler.Tests/Analysis/DeclarationContextTests.cs)
+  - [EditorLexicalRecoveryTests.cs](../../tests/Fpas.Compiler.Tests/Analysis/EditorLexicalRecoveryTests.cs)
+  - [MetadataImageTests.cs](../../tests/Fpas.Compiler.Tests/Analysis/MetadataImageTests.cs)
+  - [PartialAnalysisTests.cs](../../tests/Fpas.Compiler.Tests/Analysis/PartialAnalysisTests.cs)
+  - [SemanticConstructTests.cs](../../tests/Fpas.Compiler.Tests/Analysis/SemanticConstructTests.cs)
+  - [SemanticPolicyTests.cs](../../tests/Fpas.Compiler.Tests/Analysis/SemanticPolicyTests.cs)
+  - [SemanticSnapshotTests.cs](../../tests/Fpas.Compiler.Tests/Analysis/SemanticSnapshotTests.cs)
+  - [SourceOperationTests.cs](../../tests/Fpas.Compiler.Tests/Analysis/SourceOperationTests.cs)
+- `tests/Fpas.Compiler.Tests/Analysis/Support/`
+  - [SemanticAnalysis.cs](../../tests/Fpas.Compiler.Tests/Analysis/Support/SemanticAnalysis.cs)
+- `tests/Fpas.IntegrationTests/Workspaces/`
+  - [AnalysisBoundsTests.cs](../../tests/Fpas.IntegrationTests/Workspaces/AnalysisBoundsTests.cs)
+  - [AnalysisCompatibilityTests.cs](../../tests/Fpas.IntegrationTests/Workspaces/AnalysisCompatibilityTests.cs)
+  - [AnalysisContextTests.cs](../../tests/Fpas.IntegrationTests/Workspaces/AnalysisContextTests.cs)
+  - [AnalysisPreparationTests.cs](../../tests/Fpas.IntegrationTests/Workspaces/AnalysisPreparationTests.cs)
+  - [AnalysisSignalTests.cs](../../tests/Fpas.IntegrationTests/Workspaces/AnalysisSignalTests.cs)
+  - [CallQueryTests.cs](../../tests/Fpas.IntegrationTests/Workspaces/CallQueryTests.cs)
+  - [CheckTests.cs](../../tests/Fpas.IntegrationTests/Workspaces/CheckTests.cs)
+  - [ExistingInputTests.cs](../../tests/Fpas.IntegrationTests/Workspaces/ExistingInputTests.cs)
+  - [LiveCancellationTests.cs](../../tests/Fpas.IntegrationTests/Workspaces/LiveCancellationTests.cs)
+  - [LiveDocumentTests.cs](../../tests/Fpas.IntegrationTests/Workspaces/LiveDocumentTests.cs)
+  - [LiveGraphTests.cs](../../tests/Fpas.IntegrationTests/Workspaces/LiveGraphTests.cs)
+  - [LiveWorkspaceTests.cs](../../tests/Fpas.IntegrationTests/Workspaces/LiveWorkspaceTests.cs)
+  - [PartialQueryTests.cs](../../tests/Fpas.IntegrationTests/Workspaces/PartialQueryTests.cs)
+  - [PassivePreparationTests.cs](../../tests/Fpas.IntegrationTests/Workspaces/PassivePreparationTests.cs)
+  - [QueryCliTests.cs](../../tests/Fpas.IntegrationTests/Workspaces/QueryCliTests.cs)
+  - [SourceQueryTests.cs](../../tests/Fpas.IntegrationTests/Workspaces/SourceQueryTests.cs)
+- `tests/Fpas.IntegrationTests/Workspaces/Support/`
+  - [SourcePosition.cs](../../tests/Fpas.IntegrationTests/Workspaces/Support/SourcePosition.cs)
+
+</details>

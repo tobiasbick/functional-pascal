@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#one-time-code-input)
+
 unit Fpas.Ui.Internal.Validation.OneTimeCodeRules;
 
 uses Fpas.Ui.Widgets.Inputs.OneTimeCodes as O, Fpas.Ui.Internal.Validation.Rules as R, System as Sys;

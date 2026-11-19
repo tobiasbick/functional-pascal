@@ -60,3 +60,17 @@ in the array supplied to the widget.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Planning/View.fpas)
 - [Week calendar](week-calendar.md)
 - [Planning](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Planning/`
+  - [MonthCalendar.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Planning/MonthCalendar.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Planning/`
+  - [NativeMethods.MonthCalendar.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Planning/NativeMethods.MonthCalendar.Types.cs)
+  - [NativeMethods.MonthCalendar.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Planning/NativeMethods.MonthCalendar.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Planning/`
+  - [CuiWindow.MonthCalendar.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Planning/CuiWindow.MonthCalendar.Types.cs)
+  - [CuiWindow.MonthCalendar.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Planning/CuiWindow.MonthCalendar.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/planning/`
+  - [month_calendar.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/planning/month_calendar.c)
+  - [month_calendar.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/planning/month_calendar.h)

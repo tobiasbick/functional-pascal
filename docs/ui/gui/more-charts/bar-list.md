@@ -46,3 +46,10 @@ CUI sorts by amount by default and uses labels as animation keys as rows change 
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/Widgets/Flows.fpas)
 - [Bar chart](../charts/bar-chart.md)
 - [More charts](README.md)
+
+## Source files
+
+- [BarList.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/BarList.fpas)
+- [CuiWindow.BarList.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.BarList.cs)
+- [bar_list.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/bar_list.c)
+- [bar_list.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/bar_list.h)

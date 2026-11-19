@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/data-grid/filter-bar.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;

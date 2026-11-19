@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/code/hex-viewer.md)
 #ifndef FPAS_CUI_HEX_VIEW_H
 #define FPAS_CUI_HEX_VIEW_H
 typedef struct { int start, length, tone; const char *label; } fpas_hex_mark;

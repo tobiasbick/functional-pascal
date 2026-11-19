@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/language/types/data-domains.md)
 using Fpas.Compiler.Binding.Types;
 using Fpas.Compiler.Binding.Declarations;
 using Fpas.Compiler.Binding.Bound;

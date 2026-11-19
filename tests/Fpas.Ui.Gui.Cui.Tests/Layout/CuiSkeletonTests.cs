@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/feedback/skeleton.md)
 namespace Fpas.Ui.Gui.Cui.Tests.Layout;
 
 /// <summary>Checks native placeholder sizes, percentage allocation and ABI validation.</summary>

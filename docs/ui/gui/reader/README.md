@@ -15,3 +15,7 @@ widgets require the GUI host.
 - [Navigation](../navigation/README.md)
 - [Scroll view](../layout/scroll-view.md)
 - [Reader in the gallery](../../../../examples/ui/gui/gallery/Pages/Reader/View.fpas)
+
+## Source files
+
+- [ReaderContract.fpas](../../../../tests/Fixtures/gui-host/ReaderContract.fpas)

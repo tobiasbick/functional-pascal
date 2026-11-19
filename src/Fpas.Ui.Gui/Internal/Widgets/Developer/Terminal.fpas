@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/files/terminal.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Developer.Terminal;
 
 uses

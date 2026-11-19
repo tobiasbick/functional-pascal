@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/ui/gui/overlays/guided-tour.md)
+
 unit GalleryTourContract;
 
 uses

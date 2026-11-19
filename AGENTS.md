@@ -15,6 +15,13 @@ for the task.
 - On every code change, review affected files for size, cohesion, directory
   placement, and namespaces. Split or reorganize them as needed in the same change.
 - Write all code comments in English.
+- Put a relative Markdown link labeled `Documentation` in the first-line
+  comment of each first-party source, including examples, tests and build
+  scripts. Link to the page or section that explains the file. Keep a required
+  shebang or XML declaration first. In FPAS, leave a blank line between the
+  wiki comment and any declaration documentation.
+- Link back to each exact source file from its owning Markdown page. Keep both
+  directions current when adding, moving or repurposing files.
 - In FPAS, use `//` comments and Markdown sections for API documentation.
   Do not use C#-style `///` comments or source XML documentation tags.
 - Document every public declaration in source, including types, routines, and
@@ -30,7 +37,7 @@ for the task.
   follow the owning interop and CLR mapping specifications. Update them in the
   same change when revising a mapping. Consume actual .NET APIs.
 - When UI behavior depends on the timing or order of MVU effect replies, tests
-  must use [EffectReplies](tests/TestSupport/Mvu/EffectReplies.fpas) to release
+  must use `tests/TestSupport/Mvu/EffectReplies.fpas` to release
   replies individually and verify what the user sees or can do before and after each release.
 
 ## Approach

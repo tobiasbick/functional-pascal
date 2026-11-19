@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/native-build.md#composite-and-popup-adapters)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

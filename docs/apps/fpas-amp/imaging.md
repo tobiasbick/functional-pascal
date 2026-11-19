@@ -14,3 +14,19 @@ Corrupt/missing cache files are ignored and rebuilt. Disk blobs use a 256 MiB
 budget with access recency eviction; decoded cache entries use 32 MiB. The GUI
 separately retains only its realized viewport. Writes replace temporary files
 atomically. Source reads and decoding occur outside the GUI thread.
+
+
+Construct the store with an absolute, application-owned directory.
+`TryGet(album, revision)` returns null if the reference is stale or the pixels
+are unavailable. `Store(album, revision, encoded, cancellation)` reuses or
+decodes the content blob before publishing the album reference. Concurrent
+calls on one store serialize cache access. Cancellation before updating the
+album reference can leave a reusable blob for a later call.
+
+The [FPAS thumbnail cache tests](../../../tests/FpasAmp.Library.Tests/ThumbnailCache.fpas)
+exercise reuse, revision changes and recovery.
+
+## Source files
+
+- [FpasAmp.Imaging.csproj](../../../apps/fpas-amp/src/FpasAmp.Imaging/FpasAmp.Imaging.csproj)
+- [ThumbnailStore.cs](../../../apps/fpas-amp/src/FpasAmp.Imaging/ThumbnailStore.cs)

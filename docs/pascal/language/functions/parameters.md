@@ -38,3 +38,21 @@ array. The same rules apply to imported CLR `ParamArray` parameters.
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- `src/Fpas.Compiler/Binding/Bodies/`
+  - [Binder.Arguments.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.Arguments.cs)
+- `src/Fpas.Compiler/Binding/Flow/`
+  - [ParameterFlow.cs](../../../../src/Fpas.Compiler/Binding/Flow/ParameterFlow.cs)
+- `src/Fpas.Compiler/Binding/References/`
+  - [ReferenceCatalog.Parameters.cs](../../../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.Parameters.cs)
+- `src/Fpas.Compiler/Syntax/Parsing/`
+  - [Parser.Parameters.cs](../../../../src/Fpas.Compiler/Syntax/Parsing/Parser.Parameters.cs)
+- `tests/Fpas.Compiler.Tests/Routines/`
+  - [ParameterDiagnosticsTests.cs](../../../../tests/Fpas.Compiler.Tests/Routines/ParameterDiagnosticsTests.cs)
+  - [SpanArgumentTests.cs](../../../../tests/Fpas.Compiler.Tests/Routines/SpanArgumentTests.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.ParameterDiagnostics.cs](../../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.ParameterDiagnostics.cs)
+- `tests/Fpas.IntegrationTests/Execution/`
+  - [ParameterExecutionTests.cs](../../../../tests/Fpas.IntegrationTests/Execution/ParameterExecutionTests.cs)

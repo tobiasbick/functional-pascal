@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/workspaces.md#source-edits)
 using Fpas.Workspaces.Analysis;
 using Fpas.Workspaces.Loading;
 using Fpas.Workspaces.Refactoring;

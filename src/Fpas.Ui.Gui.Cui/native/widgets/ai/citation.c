@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/ai/citation.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_citation(cui_ctx *ui, const char *id, int number, const cui_source *source, int flags) {

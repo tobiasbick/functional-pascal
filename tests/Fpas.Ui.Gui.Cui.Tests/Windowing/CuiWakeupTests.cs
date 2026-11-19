@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/host.md)
 namespace Fpas.Ui.Gui.Cui.Tests.Windowing;
 
 /// <summary>Checks wakeup of the real idle platform loop and its lifetime during shutdown.</summary>

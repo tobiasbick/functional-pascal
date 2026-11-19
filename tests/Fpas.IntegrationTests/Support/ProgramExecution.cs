@@ -1,3 +1,4 @@
+// [Documentation](../../coverage.md#behavioral-checks)
 using Fpas.Tests.Support;
 
 namespace Fpas.IntegrationTests.Support;

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/selection/rating.md)
+
 unit GuiGallery.Pages.Selection.Widgets.Rating;
 
 uses

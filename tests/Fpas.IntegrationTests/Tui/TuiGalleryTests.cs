@@ -1,3 +1,4 @@
+// [Documentation](../../coverage.md#terminal-ui)
 using System.Buffers.Binary;
 using System.Diagnostics;
 using System.IO.Pipes;

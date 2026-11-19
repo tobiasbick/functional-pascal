@@ -1,3 +1,4 @@
+<!-- [Documentation](../../docs/architecture/debugger-native.md#selected-dependency) -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

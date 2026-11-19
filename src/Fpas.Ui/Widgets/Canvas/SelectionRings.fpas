@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/canvas-and-bars/selection-ring.md)
+
 unit Fpas.Ui.Widgets.Canvas.SelectionRings;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, Fpas.Ui.Graphics as G;

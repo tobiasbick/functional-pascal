@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/instruments/event-track.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_event_track(cui_ctx *ui, const char *id, double *times, int *count,

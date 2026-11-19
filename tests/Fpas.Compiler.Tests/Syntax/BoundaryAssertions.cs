@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/specs/syntax.md)
 using Fpas.Compiler.Analysis;
 using Fpas.Compiler.Formatting;
 using Fpas.Compiler.Syntax;

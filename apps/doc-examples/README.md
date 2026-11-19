@@ -31,13 +31,17 @@ Keep `DocExamples.sdk.txt` when copying the build. It identifies the SDK compile
 
 ## Source layout
 
-- src/model.fpas defines immutable inputs, mappings and reports.
-- src/markdown.fpas validates fences and instructions.
-- src/preparation.fpas expands explicit contexts and companions with source maps.
-- src/diagnostics.fpas maps compiler diagnostics to their actual origins.
-- src/validation.fpas performs compilation, manifest and execution checks.
-- src/main.fpas owns selection, batching, reporting and cancellation.
+- [Model](src/model.fpas) defines immutable inputs, mappings and reports.
+- [Markdown](src/markdown.fpas) validates fences and instructions.
+- [Preparation](src/preparation.fpas) expands explicit contexts and companions with source maps.
+- [Diagnostics](src/diagnostics.fpas) maps compiler diagnostics to their actual origins.
+- [Validation](src/validation.fpas) performs compilation, manifest and execution checks.
+- [Main](src/main.fpas) owns selection, batching, reporting and cancellation.
 
 Integration tests build a fresh SDK consumer, check all published examples and
 exercise malformed inputs and process lifetime. Existing behavioral assertions
 use the checker's compiled assemblies instead of compiling them again.
+
+## Source files
+
+- [DocExamples.fpasproj](DocExamples.fpasproj)

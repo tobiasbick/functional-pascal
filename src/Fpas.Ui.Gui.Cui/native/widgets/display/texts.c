@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/text-and-display/text.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_display_text(cui_ctx *ui, const char *text, int role) {

@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/cui.md#theme-and-resources)
 #include "../fpas_cui.h"
 
 CUI_API uint32_t fpas_cui_color(int kind, float a, float b, float c, float d, uint32_t left, uint32_t right) {

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/workspaces.md)
 using Fpas.Compiler.Analysis;
 using static Fpas.Compiler.Tests.Analysis.Support.SemanticAnalysis;
 

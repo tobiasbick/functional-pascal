@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/inputs/search-field.md)
 using Fpas.Ui.Gui.Cui.Widgets.Inputs;
 
 namespace Fpas.Ui.Gui.Cui;

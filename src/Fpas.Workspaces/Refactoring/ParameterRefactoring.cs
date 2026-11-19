@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/refactoring.md#remove-an-unused-parameter)
 using Fpas.Compiler.Analysis;
 using Fpas.Compiler.Syntax;
 using Fpas.Workspaces.Queries;

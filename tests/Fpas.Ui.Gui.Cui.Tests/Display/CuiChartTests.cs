@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/charts/README.md)
 using Fpas.Ui.Gui.Cui.Widgets.Charts;
 
 namespace Fpas.Ui.Gui.Cui.Tests.Display;

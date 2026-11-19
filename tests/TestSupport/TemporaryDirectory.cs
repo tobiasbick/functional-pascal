@@ -1,3 +1,4 @@
+// [Documentation](../coverage.md#test-harness)
 namespace Fpas.Tests.Support;
 
 internal sealed class TemporaryDirectory : IDisposable

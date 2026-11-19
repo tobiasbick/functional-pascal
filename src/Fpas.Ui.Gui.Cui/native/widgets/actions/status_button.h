@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/actions/status-button.md)
 #ifndef FPAS_STATUS_BUTTON_H
 #define FPAS_STATUS_BUTTON_H
 

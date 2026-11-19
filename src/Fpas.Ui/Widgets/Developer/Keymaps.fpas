@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/developer-tools/keymap.md)
+
 unit Fpas.Ui.Widgets.Developer.Keymaps;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/pickers/wheel-picker.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Pickers.WheelPicker;
 
 uses

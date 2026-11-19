@@ -1,3 +1,5 @@
+// [Documentation](README.md)
+
 program FractalExplorer;
 
 uses Fractals.Explorer as X, Fractals.View as V, Fpas.Ui.Tui.Application as App;

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/actions/swipe-actions.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_swipe_begin(cui_ctx *ui, const char *id, const char *const *labels,

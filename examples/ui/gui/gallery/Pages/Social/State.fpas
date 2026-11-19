@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/social-and-media/README.md)
+
 unit GuiGallery.Pages.Social.State;
 
 uses Fpas.Ui.Widgets.Conversation.Comments as Comments, Fpas.Ui.Widgets.Media.ImageViewers as Viewer, Fpas.Ui.Widgets.Media.ImageCroppers as Cropper, Fpas.Ui.Widgets.Containers.CardStacks as Deck;

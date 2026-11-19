@@ -1,3 +1,4 @@
+<!-- [Documentation](../../docs/ui/gui/native-build.md#msbuild-integration) -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

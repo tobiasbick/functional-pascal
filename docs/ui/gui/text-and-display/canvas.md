@@ -57,3 +57,18 @@ images and other drawing primitives, or to observe pointer and wheel input.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Display/View.fpas)
 - [Canvas and bars](../canvas-and-bars/README.md)
 - [Chapter index](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Canvas/`
+  - [Canvas.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Canvas/Canvas.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Canvas/`
+  - [NativeMethods.Canvas.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Canvas/NativeMethods.Canvas.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Canvas/`
+  - [CuiWindow.Canvas.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Canvas/CuiWindow.Canvas.Types.cs)
+  - [CuiWindow.Canvas.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Canvas/CuiWindow.Canvas.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/canvas/`
+  - [canvas.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/canvas/canvas.c)
+  - [canvas.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/canvas/canvas.h)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Display/`
+  - [CuiCanvasWheelTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Display/CuiCanvasWheelTests.cs)

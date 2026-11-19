@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/architecture/closures.md)
 using Fpas.Compiler.Binding.Types;
 using Fpas.Compiler.Binding.Symbols;
 namespace Fpas.Compiler.Binding.References;

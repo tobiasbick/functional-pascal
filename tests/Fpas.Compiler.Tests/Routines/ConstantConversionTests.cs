@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/basics/conversions.md)
 using Fpas.Compiler.Tests.Support;
 using Fpas.Tests.Support;
 using System.Reflection.Metadata;

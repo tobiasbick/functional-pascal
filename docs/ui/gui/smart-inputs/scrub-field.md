@@ -52,3 +52,15 @@ number at its original precision.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/SmartInputs/Widgets/Editors.fpas)
 - [Number field](../inputs/number-field.md)
 - [Smart inputs](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [ScrubField.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/ScrubField.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.ScrubField.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.ScrubField.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.ScrubField.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.ScrubField.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [scrub_field.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/scrub_field.c)
+  - [scrub_field.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/scrub_field.h)

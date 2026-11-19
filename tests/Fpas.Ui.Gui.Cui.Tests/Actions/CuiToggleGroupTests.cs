@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/actions/toggle-group.md)
 namespace Fpas.Ui.Gui.Cui.Tests.Actions;
 
 /// <summary>Checks the native toggle group's caption and selection transport.</summary>

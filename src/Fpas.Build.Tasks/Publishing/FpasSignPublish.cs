@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/build/publishing.md#signing)
 using Microsoft.Build.Framework;
 
 namespace Fpas.Build.Tasks.Publishing;

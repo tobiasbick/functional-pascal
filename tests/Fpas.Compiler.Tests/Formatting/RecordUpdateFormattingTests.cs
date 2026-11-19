@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/fmt-style.md)
 namespace Fpas.Compiler.Tests.Formatting;
 
 public sealed class RecordUpdateFormattingTests

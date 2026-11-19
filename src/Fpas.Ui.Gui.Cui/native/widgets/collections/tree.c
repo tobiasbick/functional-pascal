@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/data-display/tree.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_tree_begin(cui_ctx *ui, const char *id, const char *label, const char *icon,

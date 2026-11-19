@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/painting.md)
 #ifndef FPAS_CUI_PAINTING_H
 #define FPAS_CUI_PAINTING_H
 CUI_API void fpas_cui_canvas_primitive(cui_ctx *ui, int kind, float x, float y, const float *values, uint32_t color, uint32_t second, const char *text);

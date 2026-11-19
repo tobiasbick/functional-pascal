@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/motion/text-reveal.md)
 using Fpas.Ui.Gui.Cui.Widgets.Motion;
 using Fpas.Ui.Gui.Cui.Interop;
 

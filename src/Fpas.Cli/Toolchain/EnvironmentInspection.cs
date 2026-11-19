@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/environment.md)
 using Fpas.Compiler;
 using Fpas.Cli.Projects;
 using System.Reflection;

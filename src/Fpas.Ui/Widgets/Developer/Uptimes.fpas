@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/more-developer-tools/uptime.md)
+
 unit Fpas.Ui.Widgets.Developer.Uptimes;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;

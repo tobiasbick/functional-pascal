@@ -88,3 +88,16 @@ end program;
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- `src/Fpas.Compiler/Binding/Bodies/`
+  - [Binder.Arrays.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.Arrays.cs)
+- `tests/Fpas.Compiler.Tests/Metadata/`
+  - [ArrayLengthEmissionTests.cs](../../../../tests/Fpas.Compiler.Tests/Metadata/ArrayLengthEmissionTests.cs)
+- `tests/Fpas.Compiler.Tests/Types/`
+  - [CollectionsDiagnosticsTests.cs](../../../../tests/Fpas.Compiler.Tests/Types/CollectionsDiagnosticsTests.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.Collections.cs](../../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.Collections.cs)
+- `tests/Fpas.IntegrationTests/Execution/`
+  - [CollectionsExecutionTests.cs](../../../../tests/Fpas.IntegrationTests/Execution/CollectionsExecutionTests.cs)

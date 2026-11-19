@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/build/msbuild.md#sdk-task-and-incremental-state)
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;

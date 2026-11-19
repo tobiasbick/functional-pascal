@@ -19,3 +19,9 @@ selections live in the application model. These widgets require the GUI host.
 - [UI handbook](../README.md)
 - [Canvas and bars](../canvas-and-bars/README.md)
 - [Creative controls in the gallery](../../../../examples/ui/gui/gallery/Pages/Creative/View.fpas)
+
+## Source files
+
+- [State.fpas](../../../../examples/ui/gui/gallery/Pages/Creative/State.fpas)
+- [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Creative/Update.fpas)
+- [creative.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/creative.c)

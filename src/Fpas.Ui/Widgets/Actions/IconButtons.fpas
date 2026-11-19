@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/actions/icon-button.md)
+
 unit Fpas.Ui.Widgets.Actions.IconButtons;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S;

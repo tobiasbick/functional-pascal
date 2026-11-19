@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/compiler.md#semantic-snapshots)
 using Fpas.Compiler.Diagnostics;
 using Fpas.Compiler.Syntax;
 using Fpas.Compiler.Syntax.Parsing;

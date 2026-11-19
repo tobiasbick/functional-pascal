@@ -44,3 +44,15 @@ CUI draws the line and its endpoint without axes or a legend. The sparkline is p
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Charts/View.fpas)
 - [Line chart](line-chart.md)
 - [Charts](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Charts/`
+  - [Sparkline.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/Sparkline.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Charts/`
+  - [NativeMethods.Sparkline.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Charts/NativeMethods.Sparkline.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Charts/`
+  - [CuiWindow.Sparkline.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.Sparkline.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/charts/`
+  - [sparkline.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/sparkline.c)
+  - [sparkline.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/sparkline.h)

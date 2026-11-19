@@ -49,3 +49,10 @@ Hover a point to inspect its coordinates. A click can send a typed `PointIndex` 
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/Widgets/Market.fpas)
 - [Shared chart types](../../../../src/Fpas.Ui/Widgets/Charts/Charts.fpas)
 - [More charts](README.md)
+
+## Source files
+
+- [ScatterChart.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/ScatterChart.fpas)
+- [CuiWindow.ScatterChart.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.ScatterChart.cs)
+- [scatter_chart.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/scatter_chart.c)
+- [scatter_chart.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/scatter_chart.h)

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/inputs/password-strength.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_password_strength(cui_ctx *ui, const char *id, const char *password) {

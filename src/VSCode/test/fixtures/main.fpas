@@ -1,3 +1,5 @@
+// [Documentation](../../verification.md#editor-and-project-scenarios)
+
 program EditorProbe;
 
 uses System.Console as Console, Helpers as H, Fixture.Api as Api;

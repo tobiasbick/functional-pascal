@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/workspaces.md#live-workspace)
 using Fpas.Compiler;
 using Fpas.Workspaces.Analysis;
 using Fpas.Workspaces.Editing;

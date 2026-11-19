@@ -42,3 +42,20 @@ letting the limit expire disarms it.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/ConfirmButtons.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Actions/Widgets/ConfirmButton.fpas)
 - [Actions](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Actions/`
+  - [ConfirmButton.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Actions/ConfirmButton.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Actions/`
+  - [NativeMethods.ConfirmButton.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Actions/NativeMethods.ConfirmButton.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Actions/`
+  - [CuiWindow.ConfirmButton.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Actions/CuiWindow.ConfirmButton.Types.cs)
+  - [CuiWindow.ConfirmButton.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Actions/CuiWindow.ConfirmButton.cs)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [confirm_button.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/confirm_button.c)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/actions/`
+  - [confirm_button.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/confirm_button.c)
+  - [confirm_button.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/actions/confirm_button.h)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Actions/`
+  - [CuiConfirmButtonTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Actions/CuiConfirmButtonTests.cs)

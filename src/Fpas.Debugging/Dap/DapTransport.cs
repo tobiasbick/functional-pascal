@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-dap.md)
 using System.Globalization;
 using System.Text;
 using System.Text.Json;

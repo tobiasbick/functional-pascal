@@ -44,3 +44,15 @@ enabled, use the proposed zero-based index to open step details.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Ai/AgentPlans.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [AI](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Ai/`
+  - [AgentPlan.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Ai/AgentPlan.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Ai/`
+  - [NativeMethods.AgentPlan.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Ai/NativeMethods.AgentPlan.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Ai/`
+  - [CuiWindow.AgentPlan.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Ai/CuiWindow.AgentPlan.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/ai/`
+  - [agent_plan.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/agent_plan.c)
+  - [agent_plan.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/agent_plan.h)

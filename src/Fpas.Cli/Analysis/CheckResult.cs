@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/program-structure/cli.md#check-a-project-or-solution)
 using Fpas.Compiler;
 using Fpas.Cli.Diagnostics;
 using Fpas.Workspaces.Analysis;

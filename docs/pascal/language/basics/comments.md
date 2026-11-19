@@ -197,3 +197,7 @@ the compiler, CLI, and SDK documentation tests.
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- [DocumentationComment.cs](../../../../src/Fpas.Compiler/Syntax/DocumentationComment.cs)

@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/data-grid/README.md)
 /* Direct CUI reproductions and focused checks of the adapters. */
 #include "../fpas_cui.h"
 #include <stdio.h>

@@ -212,9 +212,47 @@ literal arguments, environment/cwd, stdin EOF, nonzero exit, output larger than
 pipe buffers, timeout, cancellation after startup, and launch failure. It verifies
 the direct child has exited before timeout/cancellation returns.
 
+## Owning a process tree
+
+For tools that must clean up descendants, `Fpas.Processes.OwnedProcess.Start`
+takes an absolute executable path, separate arguments, a working directory and
+optional environment overrides. Choose `ProcessStdio.Capture` for three pipes,
+`Inherit` for the parent’s streams, or `CaptureOutput` to inherit input while
+reading output and error. Drain both redirected output streams concurrently.
+
+Await disposal to terminate the owned process tree and release its handles.
+Windows uses a job object. Linux uses `setsid` from util-linux and owns the
+resulting process group. A descendant that moves to a different group leaves
+that boundary. For bounded text capture, use the
+[workflow adapter](workflows.md#capturing-a-child-process).
+
 ## See also
 
 - [Library guides](README.md)
 - [Cancellation and coordination](../language/concurrency/cancellation-and-coordination.md)
 - [Async disposal and cleanup](../language/error-handling/async-disposal.md)
 - [StreamReader.ReadAsync reference](https://learn.microsoft.com/en-us/dotnet/api/system.io.streamreader.readasync?view=net-10.0)
+
+## Source files
+
+<details>
+<summary>Browse 13 source files</summary>
+
+- `src/Fpas.Processes/`
+  - [Fpas.Processes.csproj](../../../src/Fpas.Processes/Fpas.Processes.csproj)
+  - [OwnedProcess.cs](../../../src/Fpas.Processes/OwnedProcess.cs)
+  - [WindowsProcess.cs](../../../src/Fpas.Processes/WindowsProcess.cs)
+- `tests/Fpas.IntegrationTests/Processes/`
+  - [BuildProcessTests.cs](../../../tests/Fpas.IntegrationTests/Processes/BuildProcessTests.cs)
+  - [OwnedProcessTests.cs](../../../tests/Fpas.IntegrationTests/Processes/OwnedProcessTests.cs)
+  - [PseudoTerminalTests.cs](../../../tests/Fpas.IntegrationTests/Processes/PseudoTerminalTests.cs)
+- `tests/Fpas.IntegrationTests/Processes/Support/`
+  - [BlockedEvaluation.cs](../../../tests/Fpas.IntegrationTests/Processes/Support/BlockedEvaluation.cs)
+  - [InterruptibleProcess.cs](../../../tests/Fpas.IntegrationTests/Processes/Support/InterruptibleProcess.cs)
+  - [ProcessExit.cs](../../../tests/Fpas.IntegrationTests/Processes/Support/ProcessExit.cs)
+  - [ProcessIdentity.cs](../../../tests/Fpas.IntegrationTests/Processes/Support/ProcessIdentity.cs)
+  - [WindowsConsole.Native.cs](../../../tests/Fpas.IntegrationTests/Processes/Support/WindowsConsole.Native.cs)
+  - [WindowsConsole.cs](../../../tests/Fpas.IntegrationTests/Processes/Support/WindowsConsole.cs)
+  - [WindowsFactAttribute.cs](../../../tests/Fpas.IntegrationTests/Processes/Support/WindowsFactAttribute.cs)
+
+</details>

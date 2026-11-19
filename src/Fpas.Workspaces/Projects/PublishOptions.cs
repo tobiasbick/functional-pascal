@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/build/publishing.md#modes-and-prerequisites)
 using System.Runtime.InteropServices;
 using Fpas.Workspaces.Loading;
 

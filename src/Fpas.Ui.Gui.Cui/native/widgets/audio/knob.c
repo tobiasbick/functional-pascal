@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/audio/knob.md)
 #include "../../fpas_cui.h"
 
 /* A reset may propose the same snapped value that native paint computes on an idle frame. */

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/charts/README.md)
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using Fpas.Tests.Support;

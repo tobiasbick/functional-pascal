@@ -4,6 +4,10 @@ Functional Pascal targets the CLR directly. Start with the handbook to write
 programs, the agent reference for focused authoring guidance, or the development
 workflow to work on the compiler/toolchain.
 
+To navigate from code, follow the `Documentation` link at the top of a source
+file. The target page links back to the implementation, either in its text or
+under **Source files**.
+
 | Area | Entry point |
 | --- | --- |
 | Language, projects, interop, libraries, and user tools | [Pascal handbook](pascal/README.md) |
@@ -23,7 +27,7 @@ workflow to work on the compiler/toolchain.
 | Missing baseline work and deferred proposals | [Language gaps](future/language-gaps.md) |
 | Agent tooling wishes awaiting joint review | [Agent wishes](future/agent-wishes.md) |
 | Desktop GUI, shared widgets and terminal UI | [UI handbook](ui/README.md), [shared MVU model](ui/mvu/README.md) |
-| FPas-Amp music library and album covers | [Library](apps/fpas-amp/library.md), [thumbnail cache](apps/fpas-amp/imaging.md) |
+| FPas-Amp desktop player, music library and album covers | [Desktop player](apps/fpas-amp/desktop.md), [library](apps/fpas-amp/library.md), [thumbnail cache](apps/fpas-amp/imaging.md) |
 | Implemented CUI widgets, gallery acceptance and terminal coverage | [CUI widget inventory](cui-widget-inventory.md) |
 | GUI host, desktop publishing and application tutorial gaps | [Desktop GUI application gaps](future/gui-app-gaps.md) |
 | Reproducible timing, traces, counters and failure dumps | [Measurements](pascal/tools/benchmarks.md), [diagnostic workflows](pascal/tools/diagnostic-workflows.md) |

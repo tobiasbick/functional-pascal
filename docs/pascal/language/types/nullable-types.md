@@ -150,3 +150,15 @@ their positions across FPAS/C# assembly boundaries.
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- `src/Fpas.Compiler/Binding/Bodies/`
+  - [Binder.NullableFlow.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.NullableFlow.cs)
+- `src/Fpas.Compiler/Binding/References/`
+  - [NullabilityMetadata.cs](../../../../src/Fpas.Compiler/Binding/References/NullabilityMetadata.cs)
+- `tests/Fpas.Compiler.Tests/ControlFlow/`
+  - [NullableEffectTests.cs](../../../../tests/Fpas.Compiler.Tests/ControlFlow/NullableEffectTests.cs)
+  - [NullableOperatorDiagnosticsTests.cs](../../../../tests/Fpas.Compiler.Tests/ControlFlow/NullableOperatorDiagnosticsTests.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.NullableOperators.cs](../../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.NullableOperators.cs)

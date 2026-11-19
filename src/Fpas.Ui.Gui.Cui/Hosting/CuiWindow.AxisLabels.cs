@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/charts/README.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;

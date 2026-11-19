@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/layout/README.md)
 /* Insets, RTL, stacks and spacing must paint exactly like direct CUI calls. */
 #include "../fpas_cui.h"
 #include <stdlib.h>

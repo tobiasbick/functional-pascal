@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/workspaces.md#input-consistency-and-ownership)
 using System.Globalization;
 using System.Text;
 

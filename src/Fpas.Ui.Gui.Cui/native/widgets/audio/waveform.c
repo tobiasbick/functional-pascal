@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/motion/waveform.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_waveform(cui_ctx *ui, const char *id, const float *peaks, int count, float *progress,

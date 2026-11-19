@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/voice/composer.md)
 using Fpas.Ui.Gui.Cui.Interop;
 
 namespace Fpas.Ui.Gui.Cui.Widgets.Ai;

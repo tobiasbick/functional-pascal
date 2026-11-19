@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/disclosure/avatar.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_avatar(cui_ctx *ui, const char *id, const char *name, const char *path,

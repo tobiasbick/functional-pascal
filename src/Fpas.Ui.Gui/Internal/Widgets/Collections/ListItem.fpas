@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/data-display/list-item.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Collections.ListItem;
 
 uses

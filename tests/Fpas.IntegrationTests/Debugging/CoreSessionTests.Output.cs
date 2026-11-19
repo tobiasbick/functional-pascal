@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#sessions-and-process-ownership)
 using System.Text;
 using Fpas.Debugging.Core;
 using Fpas.Debugging.Hosting;

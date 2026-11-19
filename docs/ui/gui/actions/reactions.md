@@ -52,3 +52,16 @@ and active flag. Use ItemId to request focus for a particular reaction.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Conversation/Reactions.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Actions/Widgets/Reactions.fpas)
 - [Actions](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Conversation/`
+  - [Reactions.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Conversation/Reactions.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Conversation/`
+  - [NativeMethods.Reactions.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Conversation/NativeMethods.Reactions.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Conversation/`
+  - [CuiWindow.Reactions.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Conversation/CuiWindow.Reactions.Types.cs)
+  - [CuiWindow.Reactions.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Conversation/CuiWindow.Reactions.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/conversation/`
+  - [reactions.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/conversation/reactions.c)
+  - [reactions.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/conversation/reactions.h)

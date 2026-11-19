@@ -158,3 +158,18 @@ the owning directory after the owned processes have exited.
 - [Unprofiled benchmarks](benchmarks.md)
 - [Batch debugger](batch-debugging.md)
 - [Microsoft diagnostic tools](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/tools-overview)
+
+## Source files
+
+- `src/Fpas.Cli/Debugging/`
+  - [DiagnoseCommand.cs](../../../src/Fpas.Cli/Debugging/DiagnoseCommand.cs)
+- `src/Fpas.Cli/Profiling/`
+  - [ArtifactCapture.cs](../../../src/Fpas.Cli/Profiling/ArtifactCapture.cs)
+  - [DiagnosticTools.cs](../../../src/Fpas.Cli/Profiling/DiagnosticTools.cs)
+  - [ProfileCommand.cs](../../../src/Fpas.Cli/Profiling/ProfileCommand.cs)
+  - [ProfileWorker.cs](../../../src/Fpas.Cli/Profiling/ProfileWorker.cs)
+  - [TraceSummary.cs](../../../src/Fpas.Cli/Profiling/TraceSummary.cs)
+- `tests/Fpas.IntegrationTests/Cli/`
+  - [CompilerOutputOwnershipTests.cs](../../../tests/Fpas.IntegrationTests/Cli/CompilerOutputOwnershipTests.cs)
+- `tests/Fpas.IntegrationTests/Debugging/`
+  - [TracepointCliTests.cs](../../../tests/Fpas.IntegrationTests/Debugging/TracepointCliTests.cs)

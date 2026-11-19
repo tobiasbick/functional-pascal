@@ -52,3 +52,16 @@ Reset a GoTo request to minus one after handling its proposal.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/HexViews.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Code/Tools.fpas)
 - [Code](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [HexView.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/HexView.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.HexView.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.HexView.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.HexView.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.HexView.Types.cs)
+  - [CuiWindow.HexView.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.HexView.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [hex_view.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/hex_view.c)
+  - [hex_view.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/hex_view.h)

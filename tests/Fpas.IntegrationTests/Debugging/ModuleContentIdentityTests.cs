@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#sources-and-stopped-context)
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;

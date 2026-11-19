@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/diagnostics.md)
 namespace Fpas.Compiler.Diagnostics;
 
 internal sealed class DiagnosticBag

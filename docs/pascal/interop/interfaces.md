@@ -117,3 +117,31 @@ normal references. No interface runtime wrapper is required.
 - [Topic overview](README.md)
 - [Handbook](../README.md)
 - [Syntax grammar](../../specs/syntax.md)
+
+## Source files
+
+<details>
+<summary>Browse 12 source files</summary>
+
+- `src/Fpas.Compiler/Binding/Declarations/`
+  - [SourceCatalog.InterfaceContracts.cs](../../../src/Fpas.Compiler/Binding/Declarations/SourceCatalog.InterfaceContracts.cs)
+  - [SourceCatalog.Interfaces.cs](../../../src/Fpas.Compiler/Binding/Declarations/SourceCatalog.Interfaces.cs)
+- `src/Fpas.Compiler/Binding/References/`
+  - [ReferenceCatalog.InterfaceOverrides.cs](../../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.InterfaceOverrides.cs)
+  - [ReferenceCatalog.Interfaces.cs](../../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.Interfaces.cs)
+  - [ReferenceCatalog.StaticInterfaces.cs](../../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.StaticInterfaces.cs)
+- `src/Fpas.Compiler/Binding/Symbols/`
+  - [Interfaces.cs](../../../src/Fpas.Compiler/Binding/Symbols/Interfaces.cs)
+- `src/Fpas.Compiler/Syntax/`
+  - [Interfaces.cs](../../../src/Fpas.Compiler/Syntax/Interfaces.cs)
+- `src/Fpas.Compiler/Syntax/Parsing/`
+  - [Parser.Interfaces.cs](../../../src/Fpas.Compiler/Syntax/Parsing/Parser.Interfaces.cs)
+- `tests/Fpas.Compiler.Tests/Routines/`
+  - [OverloadAndInterfaceDiagnosticsTests.cs](../../../tests/Fpas.Compiler.Tests/Routines/OverloadAndInterfaceDiagnosticsTests.cs)
+- `tests/Fpas.Compiler.Tests/Types/`
+  - [SourceInterfaceTests.cs](../../../tests/Fpas.Compiler.Tests/Types/SourceInterfaceTests.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.Interfaces.cs](../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.Interfaces.cs)
+  - [MsBuildTests.SourceInterfaces.cs](../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.SourceInterfaces.cs)
+
+</details>

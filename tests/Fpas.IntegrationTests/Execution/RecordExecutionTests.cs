@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/types/records.md)
 using Fpas.IntegrationTests.Support;
 namespace Fpas.IntegrationTests.Execution;
 

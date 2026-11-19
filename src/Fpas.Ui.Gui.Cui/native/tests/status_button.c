@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/actions/status-button.md)
 /* Drives CUI's status button with real input and deterministic frame time. */
 #include "../fpas_cui.h"
 #include <stdio.h>

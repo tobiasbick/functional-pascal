@@ -61,3 +61,17 @@ Store `Change.Current` to accept a proposal, including selection changes.
 - [Gallery update function](../../../../examples/ui/gui/gallery/Pages/Instruments/Update.fpas)
 - [Dot-matrix chart](dot-chart.md)
 - [Instruments](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Charts/`
+  - [EventTrack.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/EventTrack.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Charts/`
+  - [NativeMethods.EventTrack.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Charts/NativeMethods.EventTrack.Types.cs)
+  - [NativeMethods.EventTrack.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Charts/NativeMethods.EventTrack.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Charts/`
+  - [CuiWindow.EventTrack.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.EventTrack.Types.cs)
+  - [CuiWindow.EventTrack.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.EventTrack.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/charts/`
+  - [event_track.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/event_track.c)
+  - [event_track.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/event_track.h)

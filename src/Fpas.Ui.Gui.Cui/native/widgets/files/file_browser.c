@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/files/file-browser.md)
 #include "../../fpas_cui.h"
 
 static void fpas_file_browser_forget(cui_ctx *ui, cui_id key) {

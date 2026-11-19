@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/interop/interfaces.md)
 using Fpas.Compiler.Binding.Types;
 using Fpas.Compiler.Binding.Symbols;
 using Fpas.Compiler.Binding.References;

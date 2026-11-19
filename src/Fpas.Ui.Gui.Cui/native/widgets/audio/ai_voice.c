@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/voice/README.md)
 static bool fpas_ai_enabled(cui_ctx *ui, int flags, cui_id key) {
     const bool enabled = (flags & 1) && !cui_is_disabled(ui);
     if (enabled && (flags & 2)) ui->focus_next_request = key;

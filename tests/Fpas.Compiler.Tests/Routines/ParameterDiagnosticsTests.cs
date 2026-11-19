@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/functions/parameters.md)
 using Fpas.Compiler.Tests.Support;
 namespace Fpas.Compiler.Tests.Routines;
 

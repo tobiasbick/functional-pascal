@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/text-and-display/emoji.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_display_emoji(cui_ctx *ui, const char *glyph, float size) {

@@ -52,3 +52,15 @@ they are closed, because CUI owns its disclosure state.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Ai/Reasonings.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [AI](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Ai/`
+  - [Reasoning.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Ai/Reasoning.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Ai/`
+  - [NativeMethods.Reasoning.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Ai/NativeMethods.Reasoning.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Ai/`
+  - [CuiWindow.Reasoning.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Ai/CuiWindow.Reasoning.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/ai/`
+  - [reasoning.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/reasoning.c)
+  - [reasoning.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/reasoning.h)

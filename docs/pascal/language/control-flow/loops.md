@@ -112,3 +112,17 @@ shared-capture mutation invalidate earlier facts.
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- `apps/doc-examples/contexts/`
+  - [loops.fpas.txt](../../../../apps/doc-examples/contexts/loops.fpas.txt)
+- `src/Fpas.Compiler/Binding/Bodies/`
+  - [Binder.Enumeration.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.Enumeration.cs)
+  - [Binder.Loops.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.Loops.cs)
+- `tests/Fpas.Compiler.Tests/ControlFlow/`
+  - [LoopTests.cs](../../../../tests/Fpas.Compiler.Tests/ControlFlow/LoopTests.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.Loops.cs](../../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.Loops.cs)
+- `tests/Fpas.IntegrationTests/Execution/`
+  - [LoopExecutionTests.cs](../../../../tests/Fpas.IntegrationTests/Execution/LoopExecutionTests.cs)

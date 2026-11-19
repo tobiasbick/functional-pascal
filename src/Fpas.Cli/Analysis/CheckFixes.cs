@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/diagnostics.md#apply-automatic-corrections)
 using Fpas.Cli.Diagnostics;
 using Fpas.Compiler;
 using Fpas.Workspaces.Editing;

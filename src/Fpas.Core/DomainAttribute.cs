@@ -1,3 +1,4 @@
+// [Documentation](../../docs/specs/clr-mapping.md#small-language-support-library)
 namespace Fpas.Core;
 
 /// <summary>Describes an FPAS domain type: its primitive representation and optional inclusive bounds.</summary>

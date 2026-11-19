@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#conversation-and-activity)
+
 unit Fpas.Ui.Widgets.Feedback.TaskStates;
 
 // Native task state shared by tool calls and agent steps.

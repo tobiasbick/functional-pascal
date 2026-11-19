@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/navigation/pagination.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Navigation.Pagination;
 
 uses

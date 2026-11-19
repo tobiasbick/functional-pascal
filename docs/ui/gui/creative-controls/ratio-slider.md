@@ -45,3 +45,15 @@ Store the proposed first share in the model.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/RatioSliders.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Creative/View.fpas)
 - [Creative controls](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [RatioSlider.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/RatioSlider.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.RatioSlider.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.RatioSlider.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.RatioSlider.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.RatioSlider.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [ratio_slider.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/ratio_slider.c)
+  - [ratio_slider.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/ratio_slider.h)

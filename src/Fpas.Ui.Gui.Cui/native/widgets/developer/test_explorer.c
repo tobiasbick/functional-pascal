@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-developer-tools/test-explorer.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_test_explorer(cui_ctx *ui, const char *id, const cui_test_item * entries, int entries_count, float height, int width_kind, float width, int enabled, fpas_dev_result * out) {

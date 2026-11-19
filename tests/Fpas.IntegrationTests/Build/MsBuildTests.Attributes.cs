@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/interop/attributes.md)
 using System.Xml.Linq;
 
 namespace Fpas.IntegrationTests.Build;

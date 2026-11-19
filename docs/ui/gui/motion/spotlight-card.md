@@ -47,3 +47,15 @@ child widgets for any actions the card contains.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Motion/Spotlights.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/View.fpas)
 - [Motion](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Motion/`
+  - [Spotlight.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Motion/Spotlight.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Motion/`
+  - [NativeMethods.Spotlight.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Motion/NativeMethods.Spotlight.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Motion/`
+  - [CuiWindow.Spotlight.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Motion/CuiWindow.Spotlight.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/motion/`
+  - [spotlight.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/motion/spotlight.c)
+  - [spotlight.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/motion/spotlight.h)

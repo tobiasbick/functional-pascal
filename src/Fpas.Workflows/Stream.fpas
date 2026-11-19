@@ -1,3 +1,5 @@
+// [Documentation](../../docs/pascal/libraries/workflows.md#parallel-work-and-streams)
+
 // Bounded, ordered event streams with structured producer lifetime.
 unit Fpas.Workflows.Streams;
 

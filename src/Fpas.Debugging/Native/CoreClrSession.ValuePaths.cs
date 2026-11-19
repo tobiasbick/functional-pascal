@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#passive-stored-values)
 using Fpas.Debugging.Core;
 
 namespace Fpas.Debugging.Native;

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/native-build.md#composite-and-popup-adapters)
 #include "../../fpas_cui.h"
 
 int fpas_cui_disclosure_begin(cui_ctx *ui, const char *id, const char *title,

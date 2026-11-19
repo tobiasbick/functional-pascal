@@ -42,3 +42,22 @@ Choose a day to propose a date. The title switches from days to twelve months an
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/InlineCalendar.fpas)
 - [Date picker](date-picker.md)
 - [Inputs](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Pickers/`
+  - [Calendar.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Pickers/Calendar.fpas)
+  - [CalendarParts.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Pickers/CalendarParts.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Pickers/`
+  - [NativeMethods.Calendar.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Pickers/NativeMethods.Calendar.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Pickers/`
+  - [CuiWindow.Calendar.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Pickers/CuiWindow.Calendar.Types.cs)
+  - [CuiWindow.Calendar.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Pickers/CuiWindow.Calendar.cs)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [calendar.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/calendar.c)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/pickers/`
+  - [calendar.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/calendar.c)
+  - [calendar.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/calendar.h)
+  - [calendar_parts.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/calendar_parts.c)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Inputs/`
+  - [CuiCalendarTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Inputs/CuiCalendarTests.cs)

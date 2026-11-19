@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/presence-pill.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_presence_pill(cui_ctx *ui, const char *id, const cui_live_user *people,

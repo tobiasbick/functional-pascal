@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/smart-inputs/emoji-picker.md)
 #include "../../fpas_cui.h"
 
 static int fpas_emoji_part(cui_ctx *ui, cui_id key, int first) {

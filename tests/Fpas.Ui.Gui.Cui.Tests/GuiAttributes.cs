@@ -1,3 +1,4 @@
+// [Documentation](../coverage.md#native-gui)
 namespace Fpas.Ui.Gui.Cui.Tests;
 
 internal static class GuiAvailability

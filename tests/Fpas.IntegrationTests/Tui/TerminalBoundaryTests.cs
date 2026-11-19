@@ -1,3 +1,4 @@
+// [Documentation](../../coverage.md#terminal-ui)
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using Fpas.IntegrationTests.Debugging;

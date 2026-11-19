@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/overlays/action-footer.md)
 #ifndef FPAS_ACTION_FOOTER_H
 #define FPAS_ACTION_FOOTER_H
 

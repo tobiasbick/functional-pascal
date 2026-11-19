@@ -293,3 +293,41 @@ Commands belong in the [development workflow](development.md).
 - [Solution XML schema](https://github.com/microsoft/vs-solutionpersistence/blob/main/src/Microsoft.VisualStudio.SolutionPersistence/Serializer/Xml/Slnx.xsd)
 - [MSBuild project SDKs](https://learn.microsoft.com/en-us/visualstudio/msbuild/how-to-use-project-sdk)
 - [MSBuild project-reference targets](https://github.com/dotnet/msbuild/blob/main/src/Tasks/Microsoft.Common.CurrentVersion.targets)
+
+## Source files
+
+<details>
+<summary>Browse 20 source files</summary>
+
+- `sdk/Fpas.NET.Sdk/Sdk/`
+  - [Sdk.props](../../sdk/Fpas.NET.Sdk/Sdk/Sdk.props)
+  - [Sdk.targets](../../sdk/Fpas.NET.Sdk/Sdk/Sdk.targets)
+- `src/Fpas.Build.Tasks/Diagnostics/`
+  - [BuildDiagnostics.cs](../../src/Fpas.Build.Tasks/Diagnostics/BuildDiagnostics.cs)
+- `src/Fpas.Build.Tasks/Documentation/`
+  - [DocumentationOutputs.cs](../../src/Fpas.Build.Tasks/Documentation/DocumentationOutputs.cs)
+- `src/Fpas.Build.Tasks/`
+  - [Fpas.Build.Tasks.csproj](../../src/Fpas.Build.Tasks/Fpas.Build.Tasks.csproj)
+  - [FpasCleanDocumentation.cs](../../src/Fpas.Build.Tasks/FpasCleanDocumentation.cs)
+  - [FpasCompile.cs](../../src/Fpas.Build.Tasks/FpasCompile.cs)
+- `src/Fpas.Build.Tasks/Incremental/`
+  - [CompileFingerprint.cs](../../src/Fpas.Build.Tasks/Incremental/CompileFingerprint.cs)
+- `src/Fpas.Workspaces/Solutions/`
+  - [SolutionScope.cs](../../src/Fpas.Workspaces/Solutions/SolutionScope.cs)
+- `tests/Fixtures/msbuild/`
+  - [Directory.Build.props](../../tests/Fixtures/msbuild/Directory.Build.props)
+  - [Game.slnx](../../tests/Fixtures/msbuild/Game.slnx)
+- `tests/Fixtures/msbuild/Game/`
+  - [Game.fpasproj](../../tests/Fixtures/msbuild/Game/Game.fpasproj)
+- `tests/Fixtures/msbuild/Host/`
+  - [Host.csproj](../../tests/Fixtures/msbuild/Host/Host.csproj)
+  - [Program.cs](../../tests/Fixtures/msbuild/Host/Program.cs)
+- `tests/Fixtures/msbuild/Shared/`
+  - [Callables.cs](../../tests/Fixtures/msbuild/Shared/Callables.cs)
+  - [Collections.cs](../../tests/Fixtures/msbuild/Shared/Collections.cs)
+  - [GlobalValue.cs](../../tests/Fixtures/msbuild/Shared/GlobalValue.cs)
+  - [Resource.cs](../../tests/Fixtures/msbuild/Shared/Resource.cs)
+  - [Shared.csproj](../../tests/Fixtures/msbuild/Shared/Shared.csproj)
+  - [SharedApi.cs](../../tests/Fixtures/msbuild/Shared/SharedApi.cs)
+
+</details>

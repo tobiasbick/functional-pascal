@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/code/code-editor.md)
 using Fpas.Ui.Gui.Cui.Widgets.Editors;
 
 namespace Fpas.Ui.Gui.Cui.Tests.Editors;

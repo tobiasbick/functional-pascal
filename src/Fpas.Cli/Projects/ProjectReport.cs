@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/program-structure/project-commands.md)
 using Fpas.Workspaces.Processes;
 using Fpas.Workspaces.Projects;
 using System.Text.Json;

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/batch-debugging.md)
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using Fpas.Debugging.Core;

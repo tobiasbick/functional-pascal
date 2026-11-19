@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/pickers/ruler-slider.md)
+
 unit Fpas.Ui.Widgets.Inputs.RulerSliders;
 
 uses Fpas.Ui.Elements as E;

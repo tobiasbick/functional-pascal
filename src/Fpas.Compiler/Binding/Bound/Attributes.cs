@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/interop/attributes.md)
 using Fpas.Compiler.Binding.Types;
 using Fpas.Compiler.Binding.References;
 namespace Fpas.Compiler.Binding.Bound;

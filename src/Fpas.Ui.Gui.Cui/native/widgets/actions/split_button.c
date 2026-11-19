@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/actions/split-button.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_split_button(cui_ctx *ui, const char *id, const char *label, const char *icon,

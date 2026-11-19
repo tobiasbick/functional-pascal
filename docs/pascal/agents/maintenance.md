@@ -42,11 +42,16 @@ contexts; C# regression tests retain complete-example execution assertions.
 After changing language behavior or an authoring workflow:
 
 1. Update the affected topic and inspect README.md against the owning contract.
-2. Rebuild the tests so copied Markdown is current; run AgentReferenceTests and
-   LanguageSpecificationTests through the [documented commands](../../build/development.md#build-the-compiler-and-tests).
+2. Rebuild the tests so copied Markdown is current. Run AgentReferenceTests,
+   SourceWikiTests and LanguageSpecificationTests through the [documented commands](../../build/development.md#build-the-compiler-and-tests).
 3. Check diagnostics, actual program output, companion projects, local links/
    fragments, token budgets, and git diff whitespace. Add an execution assertion
    for every new complete program.
 
 Detailed rejection cases belong in the handbook and compiler tests. Keep root
 repository policy in AGENTS.md and development instructions in their owning docs.
+
+## Source files
+
+- [AgentReferenceTests.cs](../../../tests/Fpas.IntegrationTests/Documentation/AgentReferenceTests.cs)
+- [SourceWikiTests.cs](../../../tests/Fpas.IntegrationTests/Documentation/SourceWikiTests.cs)

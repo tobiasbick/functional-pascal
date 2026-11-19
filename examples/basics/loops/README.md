@@ -24,3 +24,8 @@ repeat: 3
 
 See [typed loops](../../../docs/pascal/language/control-flow/loops.md) for scope, cleanup, and
 checked counter rules.
+
+## Source files
+
+- [Loops.fpasproj](Loops.fpasproj)
+- [main.fpas](main.fpas)

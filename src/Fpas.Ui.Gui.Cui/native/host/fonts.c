@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/cui.md#theme-and-resources)
 #include "../fpas_cui.h"
 
 CUI_API int fpas_cui_font_load(cui_ctx *ui, const void *data, size_t size) {

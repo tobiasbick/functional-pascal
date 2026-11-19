@@ -53,3 +53,16 @@ These are application-supplied extents, not measured node sizes.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Canvas/View.fpas)
 - [Node editor](node-editor.md)
 - [Canvas and bars](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Canvas/`
+  - [CanvasControls.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Canvas/CanvasControls.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Canvas/`
+  - [NativeMethods.CanvasControls.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Canvas/NativeMethods.CanvasControls.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Canvas/`
+  - [CuiWindow.CanvasControls.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Canvas/CuiWindow.CanvasControls.Types.cs)
+  - [CuiWindow.CanvasControls.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Canvas/CuiWindow.CanvasControls.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/canvas/`
+  - [canvas_controls.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/canvas/canvas_controls.c)
+  - [canvas_controls.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/canvas/canvas_controls.h)

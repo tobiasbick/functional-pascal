@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/social-and-media/card-stack.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_card_stack_begin(cui_ctx *ui, const char *id, int count,

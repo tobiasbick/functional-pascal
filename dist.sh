@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+# [Documentation](docs/build/distribution.md#build-and-deliver)
 set -eu
 CDPATH= cd -- "$(dirname -- "$0")"
 

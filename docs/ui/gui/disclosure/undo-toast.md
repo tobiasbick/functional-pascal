@@ -43,3 +43,7 @@ Hover pauses the timer. Click Undo or reach it with Tab and activate it with Ent
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Disclosure/Update.fpas)
 - [Toast](../overlays/toast.md)
 - [Disclosure](README.md)
+
+## Source files
+
+- [UndoToast.fpas](../../../../examples/ui/gui/gallery/Pages/Disclosure/Widgets/UndoToast.fpas)

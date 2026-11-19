@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/ui/mvu/runtime.md)
+
 // Controls when posts from selected background runs reach the real MVU mailbox.
 unit Fpas.Tests.Support.Mvu.EffectReplies;
 

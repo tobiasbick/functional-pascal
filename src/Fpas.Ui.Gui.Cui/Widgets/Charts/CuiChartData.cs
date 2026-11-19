@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/charts/README.md)
 namespace Fpas.Ui.Gui.Cui.Widgets.Charts;
 
 /// <summary>Safe numeric formatting; literals are never interpreted as printf directives.</summary>

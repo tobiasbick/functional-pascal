@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/audio/level-meter.md)
 #ifndef FPAS_LEVEL_METER_H
 #define FPAS_LEVEL_METER_H
 

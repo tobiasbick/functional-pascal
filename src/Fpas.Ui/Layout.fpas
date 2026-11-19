@@ -1,3 +1,5 @@
+// [Documentation](../../docs/ui/widgets.md#layout-and-style)
+
 unit Fpas.Ui.Layout;
 
 uses Fpas.Ui.Graphics as G;

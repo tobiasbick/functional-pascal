@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#theme-switcher)
+
 unit Fpas.Ui.Internal.Theming.ThemeSwitchers;
 
 uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers, System as Sys;

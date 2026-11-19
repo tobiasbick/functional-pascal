@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/text-and-display/emoji.md)
+
 unit Fpas.Ui.Widgets.Display.Emojis;
 
 uses Fpas.Ui.Elements as E;

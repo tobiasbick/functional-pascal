@@ -26,3 +26,17 @@ and their transitions in the GUI. The TUI also supports determinate progress bar
 - [UI handbook](../README.md)
 - [Toast](../overlays/toast.md)
 - [Feedback in the gallery](../../../../examples/ui/gui/gallery/Pages/Feedback/View.fpas)
+
+## Source files
+
+- `examples/ui/gui/gallery/Pages/Feedback/`
+  - [State.fpas](../../../../examples/ui/gui/gallery/Pages/Feedback/State.fpas)
+  - [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Feedback/Update.fpas)
+- `examples/ui/gui/gallery/Pages/Feedback/Widgets/`
+  - [BadgesAndAvatars.fpas](../../../../examples/ui/gui/gallery/Pages/Feedback/Widgets/BadgesAndAvatars.fpas)
+  - [Loading.fpas](../../../../examples/ui/gui/gallery/Pages/Feedback/Widgets/Loading.fpas)
+- `tests/Fixtures/gui-host/`
+  - [DisclosureFeedbackContract.fpas](../../../../tests/Fixtures/gui-host/DisclosureFeedbackContract.fpas)
+  - [FeedbackContract.fpas](../../../../tests/Fixtures/gui-host/FeedbackContract.fpas)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Feedback/`
+  - [CuiFeedbackTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Feedback/CuiFeedbackTests.cs)

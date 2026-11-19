@@ -20,3 +20,17 @@ See the complete examples for [distinct types](distinct-types.md#example) and
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- `src/Fpas.Compiler/Binding/Bodies/`
+  - [Binder.ScalarConstants.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.ScalarConstants.cs)
+  - [Binder.Scalars.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.Scalars.cs)
+- `src/Fpas.Compiler/Binding/Declarations/`
+  - [SourceCatalog.Scalars.cs](../../../../src/Fpas.Compiler/Binding/Declarations/SourceCatalog.Scalars.cs)
+- `src/Fpas.Compiler/Binding/Symbols/`
+  - [ScalarTypes.cs](../../../../src/Fpas.Compiler/Binding/Symbols/ScalarTypes.cs)
+- `src/Fpas.Compiler/Syntax/Parsing/`
+  - [Parser.Scalars.cs](../../../../src/Fpas.Compiler/Syntax/Parsing/Parser.Scalars.cs)
+- `src/Fpas.Compiler/Syntax/`
+  - [ScalarTypes.cs](../../../../src/Fpas.Compiler/Syntax/ScalarTypes.cs)

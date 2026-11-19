@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/pickers/histogram-slider.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_histogram_slider(cui_ctx *ui, const char *id, const char *label, const float *bins,

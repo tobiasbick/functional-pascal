@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/editing-tools/timeline-editor.md)
 #ifndef FPAS_CUI_TIMELINE_EDITOR_H
 #define FPAS_CUI_TIMELINE_EDITOR_H
 /** Detached timeline state, updated with native proposals. */

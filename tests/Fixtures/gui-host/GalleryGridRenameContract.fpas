@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/ui/gui/data-grid/data-grid.md)
+
 unit GalleryGridRenameContract;
 
 uses

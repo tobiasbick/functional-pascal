@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/social-and-media/counter.md)
+
 unit Fpas.Ui.Widgets.Feedback.Counters;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as Charts;

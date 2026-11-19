@@ -1,3 +1,5 @@
+// [Documentation](../README.md#measurements-and-reports)
+
 unit Diagnostics.Samples;
 
 uses

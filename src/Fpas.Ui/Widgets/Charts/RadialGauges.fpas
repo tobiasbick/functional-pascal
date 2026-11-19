@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/more-charts/radial-gauge.md)
+
 unit Fpas.Ui.Widgets.Charts.RadialGauges;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;

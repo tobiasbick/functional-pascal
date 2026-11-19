@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/architecture/debug-information.md)
 using Fpas.Compiler.Binding.Types;
 using Fpas.Compiler.Binding.Symbols;
 using System.Collections.Immutable;

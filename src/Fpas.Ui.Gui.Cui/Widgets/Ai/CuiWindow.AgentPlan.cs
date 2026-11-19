@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/ai/agent-plan.md)
 using Fpas.Ui.Gui.Cui.Interop.Ai;
 using Fpas.Ui.Gui.Cui.Widgets.Ai;
 using Fpas.Ui.Gui.Cui.Widgets.Charts;

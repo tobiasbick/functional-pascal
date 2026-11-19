@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/workspaces.md#context-preparation)
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Framework;
 using System.Security.Cryptography;

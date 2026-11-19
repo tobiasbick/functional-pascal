@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/radial-gauge.md)
 #ifndef FPAS_CUI_RADIAL_GAUGE_H
 #define FPAS_CUI_RADIAL_GAUGE_H
 #include "more_charts.h"

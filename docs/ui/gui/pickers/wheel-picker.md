@@ -46,3 +46,17 @@ Drag the list, use the mouse wheel or move with the arrow keys. The callback rec
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Pickers/WheelPickers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Pickers/Widgets/WheelsAndDial.fpas)
 - [Pickers](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Pickers/`
+  - [WheelPicker.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Pickers/WheelPicker.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Pickers/`
+  - [NativeMethods.WheelPicker.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Pickers/NativeMethods.WheelPicker.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Pickers/`
+  - [CuiWindow.WheelPicker.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Pickers/CuiWindow.WheelPicker.cs)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [wheel_interruption.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/wheel_interruption.c)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/pickers/`
+  - [wheel_picker.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/wheel_picker.c)
+  - [wheel_picker.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/wheel_picker.h)

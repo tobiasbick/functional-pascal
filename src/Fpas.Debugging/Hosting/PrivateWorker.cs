@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#sessions-and-process-ownership)
 using System.IO.Pipes;
 using System.Text.Json;
 using Fpas.Debugging.Core;

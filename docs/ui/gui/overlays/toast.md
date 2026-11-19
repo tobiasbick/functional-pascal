@@ -43,3 +43,8 @@ The host shows the toast after committing the model and leaves focus in place. H
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Overlays/Widgets/Toast.fpas)
 - [Undo toast](../disclosure/undo-toast.md)
 - [Overlays](README.md)
+
+## Source files
+
+- [Toast.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Feedback/Toast.fpas)
+- [ToastContract.fpas](../../../../tests/Fixtures/gui-host/ToastContract.fpas)

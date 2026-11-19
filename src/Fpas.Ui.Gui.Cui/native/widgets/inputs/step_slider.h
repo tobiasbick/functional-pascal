@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/creative-controls/step-slider.md)
 #ifndef FPAS_CUI_STEP_SLIDER_H
 #define FPAS_CUI_STEP_SLIDER_H
 CUI_API int fpas_cui_step_slider(cui_ctx *ui, const char *id,

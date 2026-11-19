@@ -26,3 +26,9 @@ True
 See [generic data types](../../../docs/pascal/language/types/generics.md) for constraints,
 CLR representations and cross-assembly behavior; [call inference](../../../docs/pascal/language/functions/type-inference.md)
 describes when explicit type arguments remain necessary.
+
+## Source files
+
+- [GenericTree.fpasproj](GenericTree.fpasproj)
+- [Trees.fpas](Trees.fpas)
+- [main.fpas](main.fpas)

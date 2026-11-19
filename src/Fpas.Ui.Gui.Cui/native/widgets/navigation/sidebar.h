@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/navigation/sidebar.md)
 #ifndef FPAS_SIDEBAR_H
 #define FPAS_SIDEBAR_H
 

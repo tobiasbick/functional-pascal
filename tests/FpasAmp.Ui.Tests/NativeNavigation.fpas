@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/desktop.md#shell-and-navigation)
+
 // Native navigation frames exercise actual discovery, restoration and compact sheets.
 unit FpasAmp.Ui.Tests.NativeNavigation;
 

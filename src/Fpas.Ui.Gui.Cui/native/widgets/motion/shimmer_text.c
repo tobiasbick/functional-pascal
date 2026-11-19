@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/motion/shimmer-text.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_shimmer_text(cui_ctx *ui, const char *id, const char *text, const fpas_motion_text *o) {

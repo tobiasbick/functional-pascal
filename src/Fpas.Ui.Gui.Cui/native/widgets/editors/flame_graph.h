@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/editing-tools/flame-graph.md)
 #ifndef FPAS_CUI_FLAME_GRAPH_H
 #define FPAS_CUI_FLAME_GRAPH_H
 /** Detached flame-graph view and interaction results. */

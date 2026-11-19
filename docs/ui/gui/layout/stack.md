@@ -55,3 +55,7 @@ content.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Layout/View.fpas)
 - [Reading direction and spacing](reading-direction.md)
 - [Chapter index](README.md)
+
+## Source files
+
+- [CuiLayoutOptionsTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Layout/CuiLayoutOptionsTests.cs)

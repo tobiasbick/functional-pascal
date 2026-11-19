@@ -156,3 +156,32 @@ run with only the executable present and .NET host search disabled.
 See Microsoft's [Native AOT](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/),
 [single-file](https://learn.microsoft.com/en-us/dotnet/core/deploying/single-file/overview)
 and [strong-name](https://learn.microsoft.com/en-us/dotnet/standard/assembly/sign-strong-name) references.
+
+## Source files
+
+<details>
+<summary>Browse 14 source files</summary>
+
+- `sdk/Fpas.NET.Sdk/Sdk/`
+  - [Publishing.targets](../../sdk/Fpas.NET.Sdk/Sdk/Publishing.targets)
+- `src/Fpas.Build.Tasks/Incremental/`
+  - [SigningInputs.cs](../../src/Fpas.Build.Tasks/Incremental/SigningInputs.cs)
+- `src/Fpas.Build.Tasks/Publishing/`
+  - [FpasSignPublish.cs](../../src/Fpas.Build.Tasks/Publishing/FpasSignPublish.cs)
+- `src/Fpas.Cli/Projects/`
+  - [PublishCommand.cs](../../src/Fpas.Cli/Projects/PublishCommand.cs)
+- `src/Fpas.Deployment/`
+  - [PublishSignature.cs](../../src/Fpas.Deployment/PublishSignature.cs)
+- `src/Fpas.Workspaces/Projects/`
+  - [PublishDirectory.cs](../../src/Fpas.Workspaces/Projects/PublishDirectory.cs)
+  - [PublishOptions.cs](../../src/Fpas.Workspaces/Projects/PublishOptions.cs)
+- `tests/Fpas.IntegrationTests/Projects/`
+  - [PublishDirectoryTests.cs](../../tests/Fpas.IntegrationTests/Projects/PublishDirectoryTests.cs)
+  - [PublishingTests.Certificate.cs](../../tests/Fpas.IntegrationTests/Projects/PublishingTests.Certificate.cs)
+  - [PublishingTests.Lifetime.cs](../../tests/Fpas.IntegrationTests/Projects/PublishingTests.Lifetime.cs)
+  - [PublishingTests.Selection.cs](../../tests/Fpas.IntegrationTests/Projects/PublishingTests.Selection.cs)
+  - [PublishingTests.Signing.cs](../../tests/Fpas.IntegrationTests/Projects/PublishingTests.Signing.cs)
+  - [PublishingTests.WindowsGui.cs](../../tests/Fpas.IntegrationTests/Projects/PublishingTests.WindowsGui.cs)
+  - [PublishingTests.cs](../../tests/Fpas.IntegrationTests/Projects/PublishingTests.cs)
+
+</details>

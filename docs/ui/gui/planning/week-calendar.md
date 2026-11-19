@@ -60,3 +60,17 @@ resize. Adopt `Event.Events` to accept an edit. A nonnegative
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Planning/View.fpas)
 - [Month calendar](month-calendar.md)
 - [Planning](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Planning/`
+  - [WeekCalendar.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Planning/WeekCalendar.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Planning/`
+  - [NativeMethods.WeekCalendar.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Planning/NativeMethods.WeekCalendar.Types.cs)
+  - [NativeMethods.WeekCalendar.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Planning/NativeMethods.WeekCalendar.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Planning/`
+  - [CuiWindow.WeekCalendar.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Planning/CuiWindow.WeekCalendar.Types.cs)
+  - [CuiWindow.WeekCalendar.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Planning/CuiWindow.WeekCalendar.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/planning/`
+  - [week_calendar.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/planning/week_calendar.c)
+  - [week_calendar.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/planning/week_calendar.h)

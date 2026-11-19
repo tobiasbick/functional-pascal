@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/social-and-media/comment.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_comment(cui_ctx *ui, const char *id, const char *author, const char *text,

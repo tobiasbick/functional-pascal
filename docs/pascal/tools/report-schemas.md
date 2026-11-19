@@ -54,3 +54,9 @@ selected. Use each command's `--help` for examples and accepted options.
 - [Diagnostic commands](cli-diagnostics.md)
 - [Terminal scripts](terminal-testing.md)
 - [Native testing](testing.md)
+
+## Source files
+
+- [OperationReport.cs](../../../src/Fpas.Cli/Reporting/OperationReport.cs)
+- [SchemaCommand.cs](../../../src/Fpas.Cli/Reporting/SchemaCommand.cs)
+- [ReportSchemaTests.cs](../../../tests/Fpas.IntegrationTests/Cli/ReportSchemaTests.cs)

@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/files/README.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Fpas.Ui.Gui.Cui.Interop;

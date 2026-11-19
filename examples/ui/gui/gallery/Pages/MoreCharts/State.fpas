@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/ui/gui/more-charts/README.md)
+
 unit GuiGallery.Pages.MoreCharts.State;
 
 // Model changes in the native More charts demonstrations.

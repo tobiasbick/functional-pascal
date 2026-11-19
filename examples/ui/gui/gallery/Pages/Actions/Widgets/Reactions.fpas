@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/actions/reactions.md)
+
 unit GuiGallery.Pages.Actions.Widgets.Reactions;
 
 uses

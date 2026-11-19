@@ -56,3 +56,21 @@ In the GUI, keep the body available during the exit transition.
 - [Action footer](action-footer.md)
 - [Overlays](README.md)
 - [Terminal example](../../tui/overlays/dialog.md)
+
+## Source files
+
+- `examples/ui/gui/gallery/Pages/Overlays/Widgets/`
+  - [DeleteDialog.fpas](../../../../examples/ui/gui/gallery/Pages/Overlays/Widgets/DeleteDialog.fpas)
+- `src/Fpas.Ui.Gui/Internal/Widgets/Overlays/`
+  - [Dialog.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Overlays/Dialog.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Overlays/`
+  - [NativeMethods.Dialog.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Overlays/NativeMethods.Dialog.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Overlays/`
+  - [CuiWindow.Dialog.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Overlays/CuiWindow.Dialog.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/overlays/`
+  - [dialog.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/overlays/dialog.c)
+  - [dialog.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/overlays/dialog.h)
+- `tests/Fixtures/gui-host/`
+  - [DialogContract.fpas](../../../../tests/Fixtures/gui-host/DialogContract.fpas)
+  - [ModalCompositionContract.fpas](../../../../tests/Fixtures/gui-host/ModalCompositionContract.fpas)
+  - [ModalPreflightContract.fpas](../../../../tests/Fixtures/gui-host/ModalPreflightContract.fpas)

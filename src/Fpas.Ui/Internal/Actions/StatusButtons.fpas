@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/actions/status-button.md)
+
 unit Fpas.Ui.Internal.Actions.StatusButtons;
 
 uses Fpas.Ui.Widgets.Actions.StatusButtons as B, System as Sys;

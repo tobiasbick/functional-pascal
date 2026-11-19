@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/charts/README.md)
 /* Only representation conversion; layout, animation and input remain native. */
 static cui_color fpas_chart_color(int palette, uint32_t rgba) {
     if (palette > 0) return CUI_TOKEN_COLOR(CUI_TOKEN_SERIES_1 + palette - 1);

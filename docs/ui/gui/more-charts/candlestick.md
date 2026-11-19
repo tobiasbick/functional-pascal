@@ -47,3 +47,10 @@ Use the wheel to zoom around the pointer. Drag or use Shift+wheel to pan. With f
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/Widgets/Market.fpas)
 - [Line chart](../charts/line-chart.md)
 - [More charts](README.md)
+
+## Source files
+
+- [Candlestick.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/Candlestick.fpas)
+- [CuiWindow.Candlestick.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.Candlestick.cs)
+- [candlestick.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/candlestick.c)
+- [candlestick.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/candlestick.h)

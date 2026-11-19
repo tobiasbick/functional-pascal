@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/smart-inputs/emoji-picker.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Pickers.EmojiPicker;
 
 uses

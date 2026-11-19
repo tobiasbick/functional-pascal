@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/files/path-bar.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Navigation.PathBar;
 
 uses

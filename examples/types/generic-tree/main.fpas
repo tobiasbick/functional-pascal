@@ -1,3 +1,5 @@
+// [Documentation](README.md)
+
 program GenericTree;
 
 uses Trees as Model, System.Console as Console;

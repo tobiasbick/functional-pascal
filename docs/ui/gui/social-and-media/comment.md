@@ -45,3 +45,15 @@ Persist the value from `Event.Like` for the correct comment. Handle
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Conversation/Comments.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/View.fpas)
 - [Social and media](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Conversation/`
+  - [Comment.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Conversation/Comment.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Conversation/`
+  - [NativeMethods.Comment.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Conversation/NativeMethods.Comment.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Conversation/`
+  - [CuiWindow.Comment.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Conversation/CuiWindow.Comment.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/conversation/`
+  - [comment.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/conversation/comment.c)
+  - [comment.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/conversation/comment.h)

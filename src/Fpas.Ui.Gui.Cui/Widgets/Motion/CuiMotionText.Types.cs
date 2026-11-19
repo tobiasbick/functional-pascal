@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/motion/README.md)
 using Fpas.Ui.Gui.Cui.Widgets.Charts;
 using System.Runtime.InteropServices;
 

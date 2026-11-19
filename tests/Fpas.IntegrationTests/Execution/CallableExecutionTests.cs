@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/functions/first-class.md)
 using Fpas.IntegrationTests.Support;
 namespace Fpas.IntegrationTests.Execution;
 

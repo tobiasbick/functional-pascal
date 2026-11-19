@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/feedback/badge.md)
 #ifndef FPAS_CUI_BADGE_H
 #define FPAS_CUI_BADGE_H
 

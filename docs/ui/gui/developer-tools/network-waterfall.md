@@ -50,3 +50,15 @@ or press Enter to activate a request. Map `Selection`, `Clicked` and
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Developer/View.fpas)
 - [HTTP request bar](../more-developer-tools/http-request-bar.md)
 - [Developer tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Developer/`
+  - [NetworkWaterfall.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Developer/NetworkWaterfall.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Developer/`
+  - [NativeMethods.NetworkWaterfall.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Developer/NativeMethods.NetworkWaterfall.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Developer/`
+  - [CuiWindow.NetworkWaterfall.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Developer/CuiWindow.NetworkWaterfall.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
+  - [network_waterfall.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/network_waterfall.c)
+  - [network_waterfall.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/network_waterfall.h)

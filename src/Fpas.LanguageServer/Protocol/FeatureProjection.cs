@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/language-server.md#navigation-and-edits)
 using Fpas.Compiler.Analysis;
 using Fpas.Workspaces.Editing;
 using Fpas.Workspaces.Queries;

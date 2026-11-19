@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/workspaces.md#source-queries)
 using Fpas.Compiler.Analysis;
 using Fpas.Workspaces.Analysis;
 using Fpas.Workspaces.Loading;

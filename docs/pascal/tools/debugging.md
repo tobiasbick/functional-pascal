@@ -17,7 +17,7 @@ Use `fpas env --json` to inspect packaged debugger/runtime requirements.
 
 ```sh
 fpas debug examples/numerics/mandelbrot/bin/Debug/net10.0/Mandelbrot.dll \
-  --cwd examples/numerics/mandelbrot --break main.fpas:13 --print Iteration
+  --cwd examples/numerics/mandelbrot --break main.fpas:15 --print Iteration
 fpas debug --protocol dap
 ```
 
@@ -141,3 +141,19 @@ by those tools; the passive policy above belongs to the FPAS debugger.
 - [Batch debugging](batch-debugging.md)
 - [Debugger core](../../architecture/debugger-core.md)
 - [Debug information](../../architecture/debug-information.md)
+
+## Source files
+
+- `src/Fpas.Cli/Debugging/`
+  - [DebugCommand.cs](../../../src/Fpas.Cli/Debugging/DebugCommand.cs)
+- `src/Fpas.Debugging/Dap/`
+  - [TerminalDisplay.cs](../../../src/Fpas.Debugging/Dap/TerminalDisplay.cs)
+  - [TuiController.cs](../../../src/Fpas.Debugging/Dap/TuiController.cs)
+- `src/Fpas.Debugging/Hosting/`
+  - [TerminalTarget.cs](../../../src/Fpas.Debugging/Hosting/TerminalTarget.cs)
+- `src/Fpas.Processes/Terminal/`
+  - [LinuxTerminal.cs](../../../src/Fpas.Processes/Terminal/LinuxTerminal.cs)
+  - [PseudoTerminal.cs](../../../src/Fpas.Processes/Terminal/PseudoTerminal.cs)
+  - [TuiControlConnection.cs](../../../src/Fpas.Processes/Terminal/TuiControlConnection.cs)
+  - [WindowsTerminal.Native.cs](../../../src/Fpas.Processes/Terminal/WindowsTerminal.Native.cs)
+  - [WindowsTerminal.cs](../../../src/Fpas.Processes/Terminal/WindowsTerminal.cs)

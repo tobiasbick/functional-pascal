@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/tools/api-documentation.md)
 using Fpas.Compiler.Binding.Declarations;
 using Fpas.Compiler.Binding.References;
 using Fpas.Compiler.Binding.Types;

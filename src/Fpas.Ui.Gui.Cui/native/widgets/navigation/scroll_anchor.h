@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/reader/scroll-anchor.md)
 #ifndef FPAS_CUI_SCROLL_ANCHOR_H
 #define FPAS_CUI_SCROLL_ANCHOR_H
 

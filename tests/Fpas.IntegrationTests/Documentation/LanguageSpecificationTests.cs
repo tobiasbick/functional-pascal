@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/documentation-examples.md)
 using System.Net;
 using System.Net.Sockets;
 using System.Text;

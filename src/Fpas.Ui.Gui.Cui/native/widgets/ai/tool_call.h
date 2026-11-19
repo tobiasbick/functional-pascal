@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/ai/tool-call.md)
 #ifndef FPAS_CUI_TOOL_CALL_H
 #define FPAS_CUI_TOOL_CALL_H
 CUI_API int fpas_cui_tool_call(cui_ctx *ui, const char *id, const char *name, int status, const char *icon,

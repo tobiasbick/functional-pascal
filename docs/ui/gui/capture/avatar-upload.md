@@ -65,3 +65,16 @@ handling the selection.
 - [Avatar](../disclosure/avatar.md)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Capture/View.fpas)
 - [Capture](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Files/`
+  - [AvatarUpload.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Files/AvatarUpload.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Files/`
+  - [NativeMethods.AvatarUpload.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Files/NativeMethods.AvatarUpload.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Files/`
+  - [CuiWindow.AvatarUpload.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Files/CuiWindow.AvatarUpload.Types.cs)
+  - [CuiWindow.AvatarUpload.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Files/CuiWindow.AvatarUpload.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/files/`
+  - [avatar_upload.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/files/avatar_upload.c)
+  - [avatar_upload.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/files/avatar_upload.h)

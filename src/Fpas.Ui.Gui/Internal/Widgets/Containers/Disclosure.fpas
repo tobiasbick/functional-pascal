@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/data-display/accordion.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Containers.Disclosure;
 
 uses

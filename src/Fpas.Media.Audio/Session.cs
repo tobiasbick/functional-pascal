@@ -1,3 +1,4 @@
+// [Documentation](../../docs/pascal/libraries/media/audio.md#playback)
 using System.Threading.Channels;
 using Fpas.Media.Audio.Output;
 using Fpas.Media.Audio.Decoding;

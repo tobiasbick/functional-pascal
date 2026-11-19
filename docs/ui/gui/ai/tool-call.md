@@ -49,3 +49,15 @@ call that the application supplies.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [Agent status](agent-status.md)
 - [AI](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Ai/`
+  - [ToolCall.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Ai/ToolCall.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Ai/`
+  - [NativeMethods.ToolCall.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Ai/NativeMethods.ToolCall.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Ai/`
+  - [CuiWindow.ToolCall.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Ai/CuiWindow.ToolCall.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/ai/`
+  - [tool_call.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/tool_call.c)
+  - [tool_call.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/ai/tool_call.h)

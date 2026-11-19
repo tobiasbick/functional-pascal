@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/cli-diagnostics.md#collect-and-summarize)
 using Microsoft.Diagnostics.Tracing.Etlx;
 
 namespace Fpas.Cli.Profiling;

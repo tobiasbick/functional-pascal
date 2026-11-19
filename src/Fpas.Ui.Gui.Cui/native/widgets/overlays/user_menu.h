@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/actions/user-menu.md)
 #ifndef FPAS_USER_MENU_H
 #define FPAS_USER_MENU_H
 

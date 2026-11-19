@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/instruments/dot-chart.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_dot_chart(cui_ctx *ui, const char *id, const float *samples, const int *accent,

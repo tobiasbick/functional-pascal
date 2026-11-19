@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#slider-and-range-slider)
+
 unit Fpas.Ui.Internal.Validation.SliderRules;
 
 uses

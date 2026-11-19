@@ -47,3 +47,15 @@ Drag either handle to change its endpoint. Focus the slider and press Space to s
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Pickers/Widgets/RulerAndHistogram.fpas)
 - [Range slider](../selection/range-slider.md)
 - [Pickers](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [HistogramSlider.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/HistogramSlider.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.HistogramSlider.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.HistogramSlider.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.HistogramSlider.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.HistogramSlider.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [histogram_slider.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/histogram_slider.c)
+  - [histogram_slider.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/histogram_slider.h)

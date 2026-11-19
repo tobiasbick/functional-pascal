@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/charts/pattern-meter.md)
 #ifndef FPAS_CUI_PATTERN_METER_H
 #define FPAS_CUI_PATTERN_METER_H
 #include "charts.h"

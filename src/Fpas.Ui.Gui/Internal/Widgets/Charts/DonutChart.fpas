@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/charts/donut-chart.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Charts.DonutChart;
 
 uses

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/charts/sparkline.md)
 #ifndef FPAS_CUI_SPARKLINE_H
 #define FPAS_CUI_SPARKLINE_H
 /** Draws a native sparkline and assigns its host inspection identity.

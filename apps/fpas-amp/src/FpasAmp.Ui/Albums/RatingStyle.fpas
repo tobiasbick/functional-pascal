@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/apps/fpas-amp/desktop.md#browsing-music-and-collections)
+
 unit FpasAmp.Ui.Albums.RatingStyle;
 
 // Logical star size for the album grid and track table, matching body text.

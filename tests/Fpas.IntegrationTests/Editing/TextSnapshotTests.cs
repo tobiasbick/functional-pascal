@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/diagnostics.md)
 using Fpas.Compiler;
 using Fpas.Tests.Support;
 using Fpas.Workspaces.Editing;

@@ -44,3 +44,15 @@ and update any detail text in the model.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Audio/ControlTiles.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/Controls.fpas)
 - [Motion](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Audio/`
+  - [ControlTile.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Audio/ControlTile.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Audio/`
+  - [NativeMethods.ControlTile.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Audio/NativeMethods.ControlTile.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Audio/`
+  - [CuiWindow.ControlTile.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Audio/CuiWindow.ControlTile.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/audio/`
+  - [control_tile.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/audio/control_tile.c)
+  - [control_tile.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/audio/control_tile.h)

@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/feedback/skeleton.md)
+
 unit Fpas.Ui.Widgets.Feedback.Skeletons;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;

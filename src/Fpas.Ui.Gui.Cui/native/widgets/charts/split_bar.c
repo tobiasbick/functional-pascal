@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/split-bar.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_split_bar(cui_ctx *ui, const char *id, const fpas_viz_item *items, int count,

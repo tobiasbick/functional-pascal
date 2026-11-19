@@ -16,7 +16,7 @@ run this example from the repository root.
 ```sh
 fpas build examples/numerics/mandelbrot/Mandelbrot.fpasproj
 fpas debug examples/numerics/mandelbrot/bin/Debug/net10.0/Mandelbrot.dll \
-  --cwd examples/numerics/mandelbrot --break main.fpas:13 --print Iteration
+  --cwd examples/numerics/mandelbrot --break main.fpas:15 --print Iteration
 fpas debug examples/numerics/mandelbrot/bin/Debug/net10.0/Mandelbrot.dll --timeout 10 -- first "two words"
 ```
 
@@ -115,3 +115,14 @@ complete JSON report.
 - [Debugging](debugging.md)
 - [Passive expressions](../../architecture/debugger-expressions.md)
 - [Toolchain environment](environment.md)
+
+## Source files
+
+- `src/Fpas.Debugging/Batch/`
+  - [BatchOptions.cs](../../../src/Fpas.Debugging/Batch/BatchOptions.cs)
+  - [BatchReport.cs](../../../src/Fpas.Debugging/Batch/BatchReport.cs)
+  - [BatchRunner.cs](../../../src/Fpas.Debugging/Batch/BatchRunner.cs)
+  - [SnapshotCapture.cs](../../../src/Fpas.Debugging/Batch/SnapshotCapture.cs)
+- `tests/Fpas.IntegrationTests/Debugging/`
+  - [BatchDebuggerTests.Execution.cs](../../../tests/Fpas.IntegrationTests/Debugging/BatchDebuggerTests.Execution.cs)
+  - [BatchDebuggerTests.cs](../../../tests/Fpas.IntegrationTests/Debugging/BatchDebuggerTests.cs)

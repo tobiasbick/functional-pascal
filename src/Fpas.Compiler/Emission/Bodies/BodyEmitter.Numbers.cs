@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/language/basics/primitive-types.md)
 using Fpas.Compiler.Binding.Types;
 using Fpas.Compiler.Binding.References;
 using System.Reflection.Metadata;

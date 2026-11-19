@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#bounds-and-shutdown)
 using System.Buffers;
 using System.Text;
 

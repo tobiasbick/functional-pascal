@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/editing-tools/curve-editor.md)
 using Fpas.Ui.Gui.Cui.Widgets.Charts;
 using Fpas.Ui.Gui.Cui.Widgets.Editors;
 using System.Runtime.InteropServices;

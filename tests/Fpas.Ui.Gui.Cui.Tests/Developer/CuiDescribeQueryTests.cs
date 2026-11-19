@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/developer-tools/query-builder.md)
 using Fpas.Ui.Gui.Cui.Widgets.Developer;
 
 namespace Fpas.Ui.Gui.Cui.Tests.Developer;

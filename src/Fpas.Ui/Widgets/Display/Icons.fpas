@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/text-and-display/icon.md)
+
 unit Fpas.Ui.Widgets.Display.Icons;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G;

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/social-and-media/card-stack.md)
 #ifndef FPAS_CUI_CARD_STACK_H
 #define FPAS_CUI_CARD_STACK_H
 CUI_API int fpas_cui_card_stack_begin(cui_ctx *ui, const char *id, int count,

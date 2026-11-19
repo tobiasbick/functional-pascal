@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-native.md#verification)
 using System.Diagnostics;
 using Fpas.Debugging.Native;
 using Fpas.Debugging.Hosting;

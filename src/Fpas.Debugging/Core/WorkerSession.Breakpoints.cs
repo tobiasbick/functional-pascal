@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#breakpoints-and-source-control)
 namespace Fpas.Debugging.Core;
 
 internal sealed partial class WorkerSession

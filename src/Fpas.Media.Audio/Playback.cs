@@ -1,3 +1,4 @@
+// [Documentation](../../docs/pascal/libraries/media/audio.md#playback)
 using System.Collections.Immutable;
 using System.Threading.Channels;
 

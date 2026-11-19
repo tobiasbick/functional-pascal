@@ -65,3 +65,18 @@ use the track's curve keys and apply curve edits to that same track.
 - [Gallery update function](../../../../examples/ui/gui/gallery/Pages/EditingTools/Update.fpas)
 - [Curve editor](curve-editor.md)
 - [Editing tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Editors/`
+  - [TimelineEditor.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Editors/TimelineEditor.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Editors/`
+  - [NativeMethods.TimelineEditor.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Editors/NativeMethods.TimelineEditor.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Editors/`
+  - [CuiWindow.TimelineEditor.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Editors/CuiWindow.TimelineEditor.Types.cs)
+  - [CuiWindow.TimelineEditor.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Editors/CuiWindow.TimelineEditor.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/editors/`
+  - [timeline_editor.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/editors/timeline_editor.c)
+  - [timeline_editor.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/editors/timeline_editor.h)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Display/`
+  - [CuiTimelineTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Display/CuiTimelineTests.cs)

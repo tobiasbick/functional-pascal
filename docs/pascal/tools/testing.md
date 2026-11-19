@@ -208,3 +208,19 @@ Native Windows console interruption and waiting-host cleanup are covered by the
 - [Attributes](../interop/attributes.md)
 - [MSBuild contract](../../build/msbuild.md)
 - [Test coverage](../../../tests/coverage.md#native-test-frameworks)
+
+## Source files
+
+- `apps/doc-examples/contexts/`
+  - [tests.fpas.txt](../../../apps/doc-examples/contexts/tests.fpas.txt)
+- `src/Fpas.Cli/Projects/`
+  - [TestTemplate.cs](../../../src/Fpas.Cli/Projects/TestTemplate.cs)
+- `src/Fpas.Cli/Testing/`
+  - [TestCommand.cs](../../../src/Fpas.Cli/Testing/TestCommand.cs)
+  - [TestReport.cs](../../../src/Fpas.Cli/Testing/TestReport.cs)
+- `src/Fpas.Workspaces/Testing/`
+  - [TestDriver.cs](../../../src/Fpas.Workspaces/Testing/TestDriver.cs)
+  - [TestOutput.cs](../../../src/Fpas.Workspaces/Testing/TestOutput.cs)
+  - [TestingPlatformDriver.cs](../../../src/Fpas.Workspaces/Testing/TestingPlatformDriver.cs)
+  - [TrxReport.cs](../../../src/Fpas.Workspaces/Testing/TrxReport.cs)
+  - [VstestDeployment.cs](../../../src/Fpas.Workspaces/Testing/VstestDeployment.cs)

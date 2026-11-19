@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/inputs/one-time-code.md)
 using Fpas.Ui.Gui.Cui.Widgets.Inputs;
 
 namespace Fpas.Ui.Gui.Cui.Tests.Inputs;

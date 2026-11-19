@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/motion/dock.md)
+
 unit Fpas.Ui.Widgets.Navigation.Docks;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C;

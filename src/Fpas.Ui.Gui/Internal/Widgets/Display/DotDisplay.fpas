@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/instruments/dot-display.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Display.DotDisplay;
 
 uses

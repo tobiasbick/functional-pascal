@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/disclosure/avatar.md)
 using Fpas.Tests.Support;
 using Fpas.Ui.Gui.Cui.Widgets.Canvas;
 

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/scatter-chart.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Charts.ScatterChart;
 
 uses

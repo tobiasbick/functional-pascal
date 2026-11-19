@@ -23,3 +23,12 @@ request per editor. A null find query closes the bar and restores editor focus.
 `CountFormat` uses CUI's integer format: `%d` and literal `%%` only. Tours accept
 up to two slots (step, total); selection bars accept one. This preserves native
 count animation. See the [GUI reference](../../../../docs/ui/gui/host.md).
+
+## Source files
+
+- `examples/ui/gui/editor-commands/`
+  - [EditorCommands.fpasproj](EditorCommands.fpasproj)
+  - [State.fpas](State.fpas)
+  - [Update.fpas](Update.fpas)
+  - [View.fpas](View.fpas)
+  - [main.fpas](main.fpas)

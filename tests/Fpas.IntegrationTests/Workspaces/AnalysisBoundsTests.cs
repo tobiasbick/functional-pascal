@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/workspaces.md)
 using Fpas.IntegrationTests.Build;
 using Fpas.Workspaces.Loading;
 using System.Xml.Linq;

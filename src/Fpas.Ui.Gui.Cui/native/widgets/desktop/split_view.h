@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/app-chrome/split-view.md)
 #ifndef FPAS_CUI_SPLIT_VIEW_H
 #define FPAS_CUI_SPLIT_VIEW_H
 

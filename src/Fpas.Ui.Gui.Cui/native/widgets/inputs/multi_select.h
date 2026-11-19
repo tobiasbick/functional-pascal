@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/pickers/multi-select.md)
 #ifndef FPAS_MULTI_SELECT_H
 #define FPAS_MULTI_SELECT_H
 

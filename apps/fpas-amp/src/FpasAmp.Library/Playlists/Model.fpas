@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/apps/fpas-amp/library.md#playlists)
+
 // Ordered playlists distinguish reconstructible source files from durable user lists.
 unit FpasAmp.Library.Playlists.Model;
 

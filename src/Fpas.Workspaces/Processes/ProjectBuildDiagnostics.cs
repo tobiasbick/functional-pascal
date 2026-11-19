@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/program-structure/project-commands.md#reports-and-exit-codes)
 using Fpas.Compiler;
 using System.Text;
 using System.Text.Json;

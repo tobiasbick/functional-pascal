@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/inputs/select.md)
 using Fpas.Ui.Gui.Cui.Widgets.Inputs;
 using Fpas.Ui.Gui.Cui.Interop;
 

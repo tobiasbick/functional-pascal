@@ -45,3 +45,18 @@ Enter or comma commits the draft. Backspace in an empty draft removes the last t
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/TagInputs.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/CredentialFields.fpas)
 - [Inputs](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [TagInput.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/TagInput.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.TagInput.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.TagInput.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.TagInput.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.TagInput.Types.cs)
+  - [CuiWindow.TagInput.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.TagInput.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [tag_input.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/tag_input.c)
+  - [tag_input.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/tag_input.h)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Inputs/`
+  - [CuiTagInputTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Inputs/CuiTagInputTests.cs)

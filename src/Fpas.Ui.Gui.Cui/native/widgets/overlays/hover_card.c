@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/disclosure/hover-card.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_hover_card_begin(cui_ctx *ui, const char *id, int placement,

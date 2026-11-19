@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/charts/gauge.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_gauge(cui_ctx *ui, const char *id, const char *label, float value, float size) {

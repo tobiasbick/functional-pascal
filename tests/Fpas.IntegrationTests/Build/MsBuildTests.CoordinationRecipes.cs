@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/libraries/task-coordination.md)
 using Fpas.IntegrationTests.Documentation;
 using Fpas.Tests.Support;
 

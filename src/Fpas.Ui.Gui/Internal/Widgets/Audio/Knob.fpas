@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/audio/knob.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Audio.Knob;
 
 uses

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/compiler.md#compiler-api-and-output)
 using Fpas.Compiler.Binding.Bodies;
 using Fpas.Compiler.Binding.Bound;
 using Fpas.Compiler.Binding.Declarations;

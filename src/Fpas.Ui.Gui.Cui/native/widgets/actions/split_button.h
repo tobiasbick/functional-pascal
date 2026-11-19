@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/actions/split-button.md)
 #ifndef FPAS_SPLIT_BUTTON_H
 #define FPAS_SPLIT_BUTTON_H
 

@@ -1,3 +1,4 @@
+// [Documentation](../../docs/build/distribution.md#extraction-and-ownership)
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Security.Cryptography;

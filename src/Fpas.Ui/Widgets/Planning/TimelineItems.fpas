@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/feedback/timeline-item.md)
+
 unit Fpas.Ui.Widgets.Planning.TimelineItems;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S;

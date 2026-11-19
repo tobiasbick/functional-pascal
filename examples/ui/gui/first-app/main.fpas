@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/README.md#first-window)
+
 program FirstGuiApp;
 
 uses

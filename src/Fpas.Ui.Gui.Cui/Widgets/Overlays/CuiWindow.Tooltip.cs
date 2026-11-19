@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/overlays/tooltip.md)
 using Fpas.Ui.Gui.Cui.Widgets.Overlays;
 using System.Runtime.InteropServices;
 using Fpas.Ui.Gui.Cui.Interop;

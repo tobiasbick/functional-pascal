@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/basics/operators.md)
 using Fpas.Compiler.Tests.Support;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#breakpoints-and-source-control)
 using System.Runtime.InteropServices;
 using Fpas.Debugging.Core;
 

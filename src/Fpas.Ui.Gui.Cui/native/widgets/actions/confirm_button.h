@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/actions/confirm-button.md)
 #ifndef FPAS_CONFIRM_BUTTON_H
 #define FPAS_CONFIRM_BUTTON_H
 

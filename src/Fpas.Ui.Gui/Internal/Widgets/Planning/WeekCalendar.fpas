@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/planning/week-calendar.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Planning.WeekCalendar;
 
 uses

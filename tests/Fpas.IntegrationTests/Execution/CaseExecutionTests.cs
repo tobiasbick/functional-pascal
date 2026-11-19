@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/pattern-matching/exhaustiveness.md)
 using Fpas.IntegrationTests.Support;
 namespace Fpas.IntegrationTests.Execution;
 

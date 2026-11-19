@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/cui.md#application-shortcuts)
 namespace Fpas.Ui.Gui.Cui;
 
 /// <summary>An application shortcut using native key/modifier ordinals.</summary>

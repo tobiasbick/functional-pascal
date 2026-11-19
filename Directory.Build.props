@@ -1,3 +1,4 @@
+<!-- [Documentation](docs/build/development.md#build-the-compiler-and-tests) -->
 <Project>
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>

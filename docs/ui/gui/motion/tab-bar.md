@@ -44,3 +44,15 @@ The bar animates the selection indicator.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/Controls.fpas)
 - [Tabs](../navigation/tabs.md)
 - [Motion](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Navigation/`
+  - [TabBar.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Navigation/TabBar.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Navigation/`
+  - [NativeMethods.TabBar.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Navigation/NativeMethods.TabBar.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Navigation/`
+  - [CuiWindow.TabBar.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Navigation/CuiWindow.TabBar.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/navigation/`
+  - [tab_bar.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/navigation/tab_bar.c)
+  - [tab_bar.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/navigation/tab_bar.h)

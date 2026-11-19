@@ -45,3 +45,15 @@ the model.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Containers/CardStacks.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/Media.fpas)
 - [Social and media](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Containers/`
+  - [CardStack.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Containers/CardStack.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Containers/`
+  - [NativeMethods.CardStack.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Containers/NativeMethods.CardStack.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Containers/`
+  - [CuiWindow.CardStack.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Containers/CuiWindow.CardStack.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/containers/`
+  - [card_stack.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/containers/card_stack.c)
+  - [card_stack.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/containers/card_stack.h)

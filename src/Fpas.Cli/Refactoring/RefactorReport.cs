@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/refactoring.md)
 using Fpas.Cli.Analysis;
 using Fpas.Cli.Diagnostics;
 using Fpas.Compiler;

@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/text-and-display/text.md)
+
 unit Fpas.Ui.Widgets.Display.Texts;
 
 uses Fpas.Ui.Elements as E;

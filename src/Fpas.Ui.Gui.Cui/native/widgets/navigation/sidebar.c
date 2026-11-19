@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/navigation/sidebar.md)
 #include "../../fpas_cui.h"
 
 void fpas_cui_sidebar_clear(cui_ctx *ui, const char *group) {

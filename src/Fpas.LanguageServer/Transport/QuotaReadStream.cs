@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/workspaces.md#language-server-adapter)
 using System.Globalization;
 using System.Text;
 

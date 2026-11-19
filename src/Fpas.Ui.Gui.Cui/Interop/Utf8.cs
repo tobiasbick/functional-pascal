@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/cui.md#data-and-marshalling)
 using System.Text;
 
 namespace Fpas.Ui.Gui.Cui.Interop;

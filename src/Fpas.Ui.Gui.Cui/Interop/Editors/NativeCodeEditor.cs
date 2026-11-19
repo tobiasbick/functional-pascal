@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/code/code-editor.md)
 using System.Runtime.InteropServices;
 
 namespace Fpas.Ui.Gui.Cui.Interop;

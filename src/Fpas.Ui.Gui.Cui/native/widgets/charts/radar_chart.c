@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/radar-chart.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_radar_chart(cui_ctx *ui, const char *id, const fpas_chart_series *series, int count,

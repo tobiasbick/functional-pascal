@@ -44,3 +44,15 @@ Place the group where the eventual content will appear. CUI shares an animation 
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/Widgets/Loading.fpas)
 - [Skeleton](skeleton.md)
 - [Feedback](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Feedback/`
+  - [SkeletonGroup.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Feedback/SkeletonGroup.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Feedback/`
+  - [NativeMethods.SkeletonGroup.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Feedback/NativeMethods.SkeletonGroup.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Feedback/`
+  - [CuiWindow.SkeletonGroup.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Feedback/CuiWindow.SkeletonGroup.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/feedback/`
+  - [skeleton_group.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/skeleton_group.c)
+  - [skeleton_group.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/skeleton_group.h)

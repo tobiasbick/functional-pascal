@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/api-documentation.md)
 namespace Fpas.Workspaces.Documentation;
 
 internal static class DocumentationMarkdown

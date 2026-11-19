@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/architecture/debugger-core.md#passive-scalar-bindings)
 using Fpas.Debugging.Core;
 
 namespace Fpas.Debugging.Native;

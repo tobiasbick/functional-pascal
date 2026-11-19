@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/terminal-testing.md)
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text.Json;

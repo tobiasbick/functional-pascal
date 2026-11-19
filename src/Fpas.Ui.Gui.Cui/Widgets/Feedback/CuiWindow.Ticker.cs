@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/social-and-media/ticker.md)
 using Fpas.Ui.Gui.Cui.Interop.Feedback;
 using Fpas.Ui.Gui.Cui.Widgets.Charts;
 using Fpas.Ui.Gui.Cui.Widgets.Feedback;

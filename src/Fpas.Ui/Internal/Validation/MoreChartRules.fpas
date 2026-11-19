@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/widgets.md#charts)
+
 unit Fpas.Ui.Internal.Validation.MoreChartRules;
 
 uses

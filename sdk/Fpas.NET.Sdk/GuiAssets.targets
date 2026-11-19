@@ -1,3 +1,4 @@
+<!-- [Documentation](../../docs/build/distribution.md#native-cui-assets) -->
 <Project>
   <ItemGroup Condition="'$(FpasCuiDistributionRid)' != ''">
     <ProjectReference Include="../../src/Fpas.Ui.Gui.Cui/Fpas.Ui.Gui.Cui.csproj" ReferenceOutputAssembly="false"

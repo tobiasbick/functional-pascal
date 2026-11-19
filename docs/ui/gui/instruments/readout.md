@@ -48,3 +48,15 @@ The readout is passive. Pass updated text when the underlying value changes.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Display/Readouts.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Instruments/View.fpas)
 - [Instruments](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Display/`
+  - [Readout.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Display/Readout.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Display/`
+  - [NativeMethods.Readout.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Display/NativeMethods.Readout.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Display/`
+  - [CuiWindow.Readout.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Display/CuiWindow.Readout.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/display/`
+  - [readout.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/display/readout.c)
+  - [readout.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/display/readout.h)

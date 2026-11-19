@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/program-structure/project-commands.md#save-the-original-failure)
 using Fpas.Debugging.Batch;
 using Fpas.Debugging.Core;
 using Fpas.Debugging.Hosting;

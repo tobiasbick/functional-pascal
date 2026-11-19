@@ -1,3 +1,4 @@
+// [Documentation](../../coverage.md#language-and-metadata)
 using Fpas.Tests.Support;
 
 namespace Fpas.Compiler.Tests.Support;

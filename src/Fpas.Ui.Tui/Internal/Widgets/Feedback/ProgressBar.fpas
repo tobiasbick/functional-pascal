@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/tui/feedback/progress-bar.md)
+
 unit Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar;
 
 uses

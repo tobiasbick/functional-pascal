@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/cli-diagnostics.md#collect-and-summarize)
 using Fpas.Workspaces.Processes;
 
 namespace Fpas.Cli.Profiling;

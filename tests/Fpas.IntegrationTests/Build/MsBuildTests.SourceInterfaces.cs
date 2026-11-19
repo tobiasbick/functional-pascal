@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/interop/interfaces.md)
 using System.Xml.Linq;
 using Fpas.Tests.Support;
 

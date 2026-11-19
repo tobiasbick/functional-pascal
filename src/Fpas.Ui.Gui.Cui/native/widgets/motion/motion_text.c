@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/motion/README.md)
 static cui_text_fx_opts fpas_motion_options(const fpas_motion_text *o) {
     return (cui_text_fx_opts){ .font = o->font, .size = o->size,
         .color = fpas_chart_color(o->palette, o->rgba), .width = fpas_extent(o->width_kind, o->width),

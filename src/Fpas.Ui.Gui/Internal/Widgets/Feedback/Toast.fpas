@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/overlays/toast.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Feedback.Toast;
 
 uses

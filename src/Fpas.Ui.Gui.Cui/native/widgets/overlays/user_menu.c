@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/actions/user-menu.md)
 #include "../../fpas_cui.h"
 
 static void fpas_user_menu_name(cui_ctx *ui, int row, const char *name, float size,

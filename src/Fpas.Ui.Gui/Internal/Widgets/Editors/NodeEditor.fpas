@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/node-editor.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Editors.NodeEditor;
 
 uses

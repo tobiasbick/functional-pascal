@@ -45,3 +45,10 @@ CUI allocates squares to each item in proportion to its share. Hover to inspect 
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/View.fpas)
 - [Split bar](split-bar.md)
 - [More charts](README.md)
+
+## Source files
+
+- [Waffle.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Charts/Waffle.fpas)
+- [CuiWindow.Waffle.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Charts/CuiWindow.Waffle.cs)
+- [waffle.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/waffle.c)
+- [waffle.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/charts/waffle.h)

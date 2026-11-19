@@ -1,3 +1,4 @@
+// [Documentation](../../coverage.md#native-test-frameworks)
 using System.Text.Json;
 using Fpas.IntegrationTests.Build;
 using Fpas.IntegrationTests.Projects;

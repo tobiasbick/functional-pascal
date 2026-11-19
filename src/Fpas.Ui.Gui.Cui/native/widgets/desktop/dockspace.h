@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/app-chrome/dockspace.md)
 #ifndef FPAS_CUI_DOCKSPACE_H
 #define FPAS_CUI_DOCKSPACE_H
 

@@ -93,3 +93,32 @@ Arithmetic overflow still throws an ordinary CLR OverflowException.
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+<details>
+<summary>Browse 11 source files</summary>
+
+- `src/Fpas.Compiler/Binding/Bodies/`
+  - [Binder.Variants.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.Variants.cs)
+- `src/Fpas.Compiler/Binding/Bound/`
+  - [Variants.cs](../../../../src/Fpas.Compiler/Binding/Bound/Variants.cs)
+- `src/Fpas.Compiler/Binding/Declarations/`
+  - [SourceCatalog.Variants.cs](../../../../src/Fpas.Compiler/Binding/Declarations/SourceCatalog.Variants.cs)
+- `src/Fpas.Compiler/Binding/References/`
+  - [ReferenceCatalog.OpenVariants.cs](../../../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.OpenVariants.cs)
+- `src/Fpas.Compiler/Binding/Symbols/`
+  - [Variants.cs](../../../../src/Fpas.Compiler/Binding/Symbols/Variants.cs)
+- `src/Fpas.Compiler/Syntax/Parsing/`
+  - [Parser.Variants.cs](../../../../src/Fpas.Compiler/Syntax/Parsing/Parser.Variants.cs)
+- `src/Fpas.Compiler/Syntax/`
+  - [Variants.cs](../../../../src/Fpas.Compiler/Syntax/Variants.cs)
+- `tests/Fpas.Compiler.Tests/Types/`
+  - [VariantMetadataTests.cs](../../../../tests/Fpas.Compiler.Tests/Types/VariantMetadataTests.cs)
+  - [VariantTests.cs](../../../../tests/Fpas.Compiler.Tests/Types/VariantTests.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.Variants.cs](../../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.Variants.cs)
+- `tests/Fpas.IntegrationTests/Execution/`
+  - [VariantExecutionTests.cs](../../../../tests/Fpas.IntegrationTests/Execution/VariantExecutionTests.cs)
+
+</details>

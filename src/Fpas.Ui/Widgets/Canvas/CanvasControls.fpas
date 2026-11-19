@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/canvas-and-bars/canvas-controls.md)
+
 unit Fpas.Ui.Widgets.Canvas.CanvasControls;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Editors.NodeEditors as N;

@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/build/publishing.md)
 using System.Text.Json;
 using System.Xml.Linq;
 using Fpas.IntegrationTests.Build;

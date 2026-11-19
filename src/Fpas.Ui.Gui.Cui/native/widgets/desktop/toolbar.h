@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/canvas-and-bars/toolbar.md)
 #ifndef FPAS_CUI_TOOLBAR_H
 #define FPAS_CUI_TOOLBAR_H
 

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/code/diff-viewer.md)
 #include "../../fpas_cui.h"
 
 typedef struct { int current, count, mode; bool initialized; } fpas_diff_observation;

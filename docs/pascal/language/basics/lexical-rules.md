@@ -81,3 +81,10 @@ scalar processing. A `char` holds one UTF-16 code unit, including surrogates.
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- [FpasIdentifiers.cs](../../../../src/Fpas.Compiler/FpasIdentifiers.cs)
+- [IdentifierFacts.cs](../../../../src/Fpas.Compiler/Syntax/IdentifierFacts.cs)
+- [Lexer.cs](../../../../src/Fpas.Compiler/Syntax/Lexer.cs)
+- [MultilineStringExecutionTests.cs](../../../../tests/Fpas.IntegrationTests/Execution/MultilineStringExecutionTests.cs)

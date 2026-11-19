@@ -36,3 +36,24 @@ emits one leave. Removing it retires its state. `Clicked` remains activation;
 `OnWheel` remains an explicit opt-in to native two-axis wheel ownership.
 
 Painting is GUI-only. It adds no native resource dependency to the TUI host.
+
+## Source files
+
+- `src/Fpas.Ui/Widgets/Canvas/`
+  - [Painting.fpas](../../../../src/Fpas.Ui/Widgets/Canvas/Painting.fpas)
+- `src/Fpas.Ui.Gui/Internal/Widgets/Canvas/`
+  - [PaintSurface.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Canvas/PaintSurface.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Canvas/`
+  - [NativeMethods.Painting.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Canvas/NativeMethods.Painting.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Canvas/`
+  - [CuiCanvasPainter.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Canvas/CuiCanvasPainter.cs)
+  - [CuiWindow.Painting.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Canvas/CuiWindow.Painting.cs)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [painting.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/painting.c)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/canvas/`
+  - [painting.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/canvas/painting.c)
+  - [painting.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/canvas/painting.h)
+- `tests/Fixtures/gui-host/`
+  - [DrawingResourcesContract.fpas](../../../../tests/Fixtures/gui-host/DrawingResourcesContract.fpas)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Display/`
+  - [CuiCanvasPaintingTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Display/CuiCanvasPaintingTests.cs)

@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/ui/mvu/runtime.md)
+
 unit Fpas.Tests.Support.Mvu.EffectRepliesTests;
 
 uses

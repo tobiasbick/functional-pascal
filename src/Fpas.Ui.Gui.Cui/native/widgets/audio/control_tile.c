@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/motion/control-tile.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_control_tile(cui_ctx *ui, const char *id, const char *label, const char *icon,

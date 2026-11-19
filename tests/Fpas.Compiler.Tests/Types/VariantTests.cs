@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/types/variants.md)
 using Fpas.Compiler.Tests.Support;
 namespace Fpas.Compiler.Tests.Types;
 

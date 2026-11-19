@@ -43,3 +43,15 @@ place and adjusts the width to it. The application supplies the phrases.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Motion/WordRotations.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/View.fpas)
 - [Motion](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Motion/`
+  - [WordRotate.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Motion/WordRotate.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Motion/`
+  - [NativeMethods.WordRotate.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Motion/NativeMethods.WordRotate.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Motion/`
+  - [CuiWindow.WordRotate.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Motion/CuiWindow.WordRotate.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/motion/`
+  - [word_rotate.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/motion/word_rotate.c)
+  - [word_rotate.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/motion/word_rotate.h)

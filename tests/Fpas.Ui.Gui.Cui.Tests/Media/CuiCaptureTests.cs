@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/capture/README.md)
 using Fpas.Ui.Gui.Cui.Widgets.Files;
 using Fpas.Tests.Support;
 

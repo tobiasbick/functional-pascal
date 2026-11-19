@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/build/distribution.md)
 using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;

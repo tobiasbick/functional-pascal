@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/code/code-editor.md)
 #ifndef FPAS_CUI_CODE_EDITOR_H
 #define FPAS_CUI_CODE_EDITOR_H
 /** Detached native editor observations; cursor and anchor are UTF-8 byte offsets. */

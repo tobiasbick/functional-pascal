@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/instruments/dot-display.md)
 #ifndef FPAS_CUI_DOT_DISPLAY_H
 #define FPAS_CUI_DOT_DISPLAY_H
 

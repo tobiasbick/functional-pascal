@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../docs/apps/fpas-amp/library.md#reconciliation-and-persistence)
+
 // Worker-owned progress bookkeeping; no full file list is copied for a progress tick.
 unit FpasAmp.Library.Inventory.Internal.Reporting;
 

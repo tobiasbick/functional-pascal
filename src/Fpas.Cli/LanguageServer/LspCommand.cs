@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/language-server.md)
 using Fpas.LanguageServer;
 using System.CommandLine;
 

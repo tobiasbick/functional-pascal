@@ -45,3 +45,17 @@ Drag the tape, scroll over it or use the arrow keys while it has focus. Shift wi
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/RulerSliders.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Pickers/Widgets/RulerAndHistogram.fpas)
 - [Pickers](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [RulerSlider.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/RulerSlider.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.RulerSlider.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.RulerSlider.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.RulerSlider.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.RulerSlider.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [ruler_slider.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/ruler_slider.c)
+  - [ruler_slider.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/ruler_slider.h)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Inputs/`
+  - [CuiRulerSliderTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Inputs/CuiRulerSliderTests.cs)

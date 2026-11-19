@@ -1,3 +1,5 @@
+// [Documentation](README.md)
+
 unit Dungeon.Model;
 
 public type Position = record

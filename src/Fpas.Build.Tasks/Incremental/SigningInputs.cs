@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/build/publishing.md#signing)
 using System.Security.Cryptography;
 
 namespace Fpas.Build.Tasks.Incremental;

@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/pascal/program-structure/imports.md)
 using Fpas.Compiler.Binding.Types;
 using Fpas.Compiler.Binding.Declarations;
 using Fpas.Compiler.Syntax;

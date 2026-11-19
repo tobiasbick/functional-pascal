@@ -42,3 +42,9 @@ CUI formats the percentage and interpolates the ring as the model changes. The r
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/View.fpas)
 - [Progress bar](progress-bar.md)
 - [Feedback](README.md)
+
+## Source files
+
+- [ProgressRing.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Feedback/ProgressRing.fpas)
+- [progress_ring.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/progress_ring.c)
+- [CuiProgressRingTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Feedback/CuiProgressRingTests.cs)

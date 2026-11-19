@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/cui.md#data-and-marshalling)
 namespace Fpas.Ui.Gui.Cui.Widgets.Developer;
 
 /// <summary>Values proposed by a native developer widget.</summary>

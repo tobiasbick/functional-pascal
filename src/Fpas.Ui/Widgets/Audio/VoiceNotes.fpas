@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/voice/voice-note.md)
+
 unit Fpas.Ui.Widgets.Audio.VoiceNotes;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Audio.Voice as Voice;

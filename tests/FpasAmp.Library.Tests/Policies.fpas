@@ -1,3 +1,5 @@
+// [Documentation](../../docs/apps/fpas-amp/library.md#lifetime-and-control)
+
 // Deterministic invalidation, source policy and reconciliation tests.
 unit FpasAmp.Library.Tests.Policies;
 

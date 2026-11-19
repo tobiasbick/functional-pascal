@@ -1,3 +1,4 @@
+// [Documentation](../verification.md#packaging-and-grammar)
 import { build } from 'esbuild';
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';

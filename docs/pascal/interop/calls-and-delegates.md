@@ -45,3 +45,9 @@ operation or reflection fallback replaces the selected accessor.
 - [Topic overview](README.md)
 - [Handbook](../README.md)
 - [Syntax grammar](../../specs/syntax.md)
+
+## Source files
+
+- [json-player.fpas.txt](../../../apps/doc-examples/contexts/json-player.fpas.txt)
+- [Binder.Calls.cs](../../../src/Fpas.Compiler/Binding/Bodies/Binder.Calls.cs)
+- [ReferenceCatalog.Callables.cs](../../../src/Fpas.Compiler/Binding/References/ReferenceCatalog.Callables.cs)

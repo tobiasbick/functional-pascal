@@ -51,3 +51,15 @@ the buttons.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/NumberFields.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/PickerFields.fpas)
 - [Inputs](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [NumberField.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/NumberField.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.NumberField.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.NumberField.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.NumberField.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.NumberField.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [number_field.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/number_field.c)
+  - [number_field.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/number_field.h)

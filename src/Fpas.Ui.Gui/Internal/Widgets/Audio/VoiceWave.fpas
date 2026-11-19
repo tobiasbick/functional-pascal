@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/voice/voice-waveform.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Audio.VoiceWave;
 
 uses Fpas.Ui.Widgets.Audio.VoiceWaves as VoiceWaves, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Widgets.Audio.Voice as Voice, System as Sys, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Internal.Data.ChartData as Colors;

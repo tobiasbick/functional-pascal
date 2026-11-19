@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/overlays/action-footer.md)
+
 unit Fpas.Ui.Widgets.Actions.ActionFooters;
 
 uses Fpas.Ui.Elements as E;

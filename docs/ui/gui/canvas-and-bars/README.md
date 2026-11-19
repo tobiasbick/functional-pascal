@@ -22,3 +22,16 @@ These widgets require the GUI host.
 - [UI handbook](../README.md)
 - [Creative controls](../creative-controls/README.md)
 - [Canvas and bars in the gallery](../../../../examples/ui/gui/gallery/Pages/Canvas/View.fpas)
+
+## Source files
+
+- `examples/ui/gui/gallery/Pages/Canvas/`
+  - [Picture.fpas](../../../../examples/ui/gui/gallery/Pages/Canvas/Picture.fpas)
+  - [State.fpas](../../../../examples/ui/gui/gallery/Pages/Canvas/State.fpas)
+  - [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Canvas/Update.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Canvas/`
+  - [NativeCanvasData.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Canvas/NativeCanvasData.cs)
+- `src/Fpas.Ui.Gui.Cui/native/tests/`
+  - [canvas_bars.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/canvas_bars.c)
+- `tests/Fixtures/gui-host/`
+  - [CanvasBarsContract.fpas](../../../../tests/Fixtures/gui-host/CanvasBarsContract.fpas)

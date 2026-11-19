@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/ui/tui/inputs/text-field.md)
+
 program TextFieldContract;
 
 uses

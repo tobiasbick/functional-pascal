@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/data-grid/filter-bar.md)
 #ifndef FPAS_CUI_FILTER_BAR_H
 #define FPAS_CUI_FILTER_BAR_H
 CUI_API int fpas_cui_filter_bar(cui_ctx *ui, const char *id, const char *const *names,

@@ -44,3 +44,7 @@ Click the header or focus it and press Enter or Space to propose a new flag. Com
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Lists/View.fpas)
 - [Expandable card](../disclosure/expandable-card.md)
 - [Data display](README.md)
+
+## Source files
+
+- [Disclosure.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Containers/Disclosure.fpas)

@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/creative-controls/seed-field.md)
 #ifndef FPAS_CUI_SEED_FIELD_H
 #define FPAS_CUI_SEED_FIELD_H
 CUI_API int fpas_cui_seed_field(cui_ctx *ui, const char *id,

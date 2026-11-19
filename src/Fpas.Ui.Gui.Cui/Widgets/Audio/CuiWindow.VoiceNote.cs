@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/voice/voice-note.md)
 using Fpas.Ui.Gui.Cui.Widgets.Audio;
 using Fpas.Ui.Gui.Cui.Interop;
 

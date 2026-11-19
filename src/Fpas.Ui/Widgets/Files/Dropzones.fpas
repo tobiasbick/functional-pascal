@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/capture/dropzone.md)
+
 unit Fpas.Ui.Widgets.Files.Dropzones;
 
 uses Fpas.Ui.Elements as E, System as Sys;

@@ -44,3 +44,15 @@ Activate the hour or minute selector and choose a point on the dial. Selecting a
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Pickers/Widgets/WheelsAndDial.fpas)
 - [Time picker](time-picker.md)
 - [Pickers](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Pickers/`
+  - [TimeDial.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Pickers/TimeDial.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Pickers/`
+  - [NativeMethods.TimeDial.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Pickers/NativeMethods.TimeDial.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Pickers/`
+  - [CuiWindow.TimeDial.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Pickers/CuiWindow.TimeDial.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/pickers/`
+  - [time_dial.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/time_dial.c)
+  - [time_dial.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/pickers/time_dial.h)

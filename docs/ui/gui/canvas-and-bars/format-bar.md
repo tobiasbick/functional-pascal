@@ -45,3 +45,16 @@ in the application. `Delete` is true after the user confirms deletion.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Canvas/FormatBars.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Canvas/View.fpas)
 - [Canvas and bars](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Canvas/`
+  - [FormatBar.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Canvas/FormatBar.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Canvas/`
+  - [NativeMethods.FormatBar.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Canvas/NativeMethods.FormatBar.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Canvas/`
+  - [CuiWindow.FormatBar.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Canvas/CuiWindow.FormatBar.Types.cs)
+  - [CuiWindow.FormatBar.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Canvas/CuiWindow.FormatBar.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/canvas/`
+  - [format_bar.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/canvas/format_bar.c)
+  - [format_bar.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/canvas/format_bar.h)

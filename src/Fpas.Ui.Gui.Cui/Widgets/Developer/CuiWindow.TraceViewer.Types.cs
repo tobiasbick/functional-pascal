@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/developer-tools/trace-viewer.md)
 namespace Fpas.Ui.Gui.Cui.Widgets.Developer;
 
 /// <summary>A native dependency between indices in the caller's sorted span array.</summary>

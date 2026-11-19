@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/editing-tools/gradient-editor.md)
 using Fpas.Ui.Gui.Cui.Widgets.Editors;
 using System.Runtime.InteropServices;
 using Fpas.Ui.Gui.Cui.Interop;

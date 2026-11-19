@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/waffle.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Charts.Waffle;
 
 uses

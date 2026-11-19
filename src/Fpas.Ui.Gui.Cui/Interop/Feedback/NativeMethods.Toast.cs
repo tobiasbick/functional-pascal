@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/host.md#toasts)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

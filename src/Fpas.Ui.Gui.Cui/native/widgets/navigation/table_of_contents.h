@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/reader/table-of-contents.md)
 #ifndef FPAS_CUI_TABLE_OF_CONTENTS_H
 #define FPAS_CUI_TABLE_OF_CONTENTS_H
 

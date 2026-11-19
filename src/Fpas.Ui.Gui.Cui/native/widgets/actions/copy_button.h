@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/actions/copy-button.md)
 #ifndef FPAS_COPY_BUTTON_H
 #define FPAS_COPY_BUTTON_H
 

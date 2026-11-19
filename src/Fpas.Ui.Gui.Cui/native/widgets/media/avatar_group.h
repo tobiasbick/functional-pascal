@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/feedback/avatar-group.md)
 #ifndef FPAS_CUI_AVATAR_GROUP_H
 #define FPAS_CUI_AVATAR_GROUP_H
 

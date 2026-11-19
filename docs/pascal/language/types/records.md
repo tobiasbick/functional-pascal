@@ -120,3 +120,21 @@ end program;
 - [Topic overview](README.md)
 - [Handbook](../../README.md)
 - [Syntax grammar](../../../specs/syntax.md)
+
+## Source files
+
+- `src/Fpas.Compiler/Binding/Bodies/`
+  - [Binder.Records.cs](../../../../src/Fpas.Compiler/Binding/Bodies/Binder.Records.cs)
+- `src/Fpas.Compiler/Binding/Declarations/`
+  - [SourceCatalog.Records.cs](../../../../src/Fpas.Compiler/Binding/Declarations/SourceCatalog.Records.cs)
+- `src/Fpas.Compiler/Binding/Symbols/`
+  - [Records.cs](../../../../src/Fpas.Compiler/Binding/Symbols/Records.cs)
+- `src/Fpas.Compiler/Syntax/Parsing/`
+  - [Parser.Records.cs](../../../../src/Fpas.Compiler/Syntax/Parsing/Parser.Records.cs)
+- `tests/Fpas.Compiler.Tests/Types/`
+  - [RecordMetadataTests.cs](../../../../tests/Fpas.Compiler.Tests/Types/RecordMetadataTests.cs)
+  - [RecordTests.cs](../../../../tests/Fpas.Compiler.Tests/Types/RecordTests.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.Records.cs](../../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.Records.cs)
+- `tests/Fpas.IntegrationTests/Execution/`
+  - [RecordExecutionTests.cs](../../../../tests/Fpas.IntegrationTests/Execution/RecordExecutionTests.cs)

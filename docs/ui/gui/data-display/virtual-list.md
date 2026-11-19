@@ -52,3 +52,16 @@ file pickers in its content. Rows outside the realized range remain unbuilt.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Lists/Widgets/Invoices.fpas)
 - [Table](table.md)
 - [Data display](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Collections/`
+  - [VirtualList.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Collections/VirtualList.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Collections/`
+  - [NativeMethods.VirtualList.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Collections/NativeMethods.VirtualList.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Collections/`
+  - [CuiWindow.VirtualList.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Collections/CuiWindow.VirtualList.Types.cs)
+  - [CuiWindow.VirtualList.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Collections/CuiWindow.VirtualList.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/collections/`
+  - [virtual_list.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/virtual_list.c)
+  - [virtual_list.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/virtual_list.h)

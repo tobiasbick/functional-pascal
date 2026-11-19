@@ -1,3 +1,4 @@
+// [Documentation](../../coverage.md#native-test-frameworks)
 using Fpas.IntegrationTests.Build;
 using Fpas.IntegrationTests.Processes.Support;
 using Fpas.IntegrationTests.Projects;

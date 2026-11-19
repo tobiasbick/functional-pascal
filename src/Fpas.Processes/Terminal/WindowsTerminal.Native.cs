@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/debugging.md#private-terminal-and-tui-control)
 using Microsoft.Win32.SafeHandles;
 using System.Runtime.InteropServices;
 using System.Text;

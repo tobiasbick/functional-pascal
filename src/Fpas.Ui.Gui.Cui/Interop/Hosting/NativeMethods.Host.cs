@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/cui.md#layout-and-control-inspection)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

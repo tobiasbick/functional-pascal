@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/pascal/interop/events.md)
+
 program Example;
 
 uses System.Console as Console, System.Timers as Timers;

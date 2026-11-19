@@ -1,3 +1,5 @@
+// [Documentation](../../../../docs/ui/gui/text-and-display/image.md)
+
 unit Fpas.Ui.Widgets.Media.MediaImages;
 
 // A CUI picture source. In-memory pixels are retained by reference and must

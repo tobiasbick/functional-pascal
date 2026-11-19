@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/diagnostics.md)
 using Fpas.IntegrationTests.Build;
 using Fpas.IntegrationTests.Refactoring;
 using Fpas.Tests.Support;

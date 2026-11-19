@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/app-chrome/README.md)
 /* Native input, saved state and exact rendering parity of desktop chrome. */
 #include "../fpas_cui.h"
 #include <math.h>

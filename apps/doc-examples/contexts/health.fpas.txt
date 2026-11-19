@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/pascal/language/control-flow/if-then-else.md)
+
 program Example;
 
 uses System.Console as Console;

@@ -1,3 +1,4 @@
+<!-- [Documentation](../../docs/build/msbuild.md#sdk-task-and-incremental-state) -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>

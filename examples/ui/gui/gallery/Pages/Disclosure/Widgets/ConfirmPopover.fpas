@@ -1,3 +1,5 @@
+// [Documentation](../../../../../../../docs/ui/gui/disclosure/confirm-popover.md)
+
 unit GuiGallery.Pages.Disclosure.Widgets.ConfirmPopover;
 
 uses

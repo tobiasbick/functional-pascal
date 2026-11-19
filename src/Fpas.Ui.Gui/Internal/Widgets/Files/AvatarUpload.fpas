@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/capture/avatar-upload.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Files.AvatarUpload;
 
 uses

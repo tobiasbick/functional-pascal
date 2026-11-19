@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/build/msbuild.md#verification)
 namespace Demo;
 
 public delegate string Formatter(int value);

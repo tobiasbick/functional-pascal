@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/feedback/avatar-group.md)
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;

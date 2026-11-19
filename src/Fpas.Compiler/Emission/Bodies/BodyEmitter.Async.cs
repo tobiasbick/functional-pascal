@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/architecture/async-and-cleanup.md)
 using Fpas.Compiler.Lowering.Async;
 using Fpas.Compiler.Emission.StateMachines;
 using Fpas.Compiler.Binding.Types;

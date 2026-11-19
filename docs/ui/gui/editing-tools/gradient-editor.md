@@ -58,3 +58,16 @@ accept edits.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/EditingTools/View.fpas)
 - [Color picker](../inputs/color-picker.md)
 - [Editing tools](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Editors/`
+  - [GradientEditor.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Editors/GradientEditor.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Editors/`
+  - [NativeMethods.GradientEditor.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Editors/NativeMethods.GradientEditor.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Editors/`
+  - [CuiWindow.GradientEditor.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Editors/CuiWindow.GradientEditor.Types.cs)
+  - [CuiWindow.GradientEditor.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Editors/CuiWindow.GradientEditor.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/editors/`
+  - [gradient_editor.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/editors/gradient_editor.c)
+  - [gradient_editor.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/editors/gradient_editor.h)

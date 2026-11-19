@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/ui/gui/actions/segmented-control.md)
 namespace Fpas.Ui.Gui.Cui.Tests.Actions;
 
 /// <summary>Checks native segments shared by public selectors and appearance controls.</summary>

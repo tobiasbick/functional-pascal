@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/language/concurrency/async-functions.md)
 using Fpas.IntegrationTests.Support;
 namespace Fpas.IntegrationTests.Execution;
 

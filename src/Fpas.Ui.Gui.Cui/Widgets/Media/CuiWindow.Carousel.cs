@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/social-and-media/carousel.md)
 using Fpas.Ui.Gui.Cui.Interop;
 
 namespace Fpas.Ui.Gui.Cui;

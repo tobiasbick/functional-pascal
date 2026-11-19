@@ -1,3 +1,4 @@
+// [Documentation](../../coverage.md#terminal-ui)
 using System.Text.Json;
 using Fpas.IntegrationTests.Debugging;
 using Fpas.Tests.Support;

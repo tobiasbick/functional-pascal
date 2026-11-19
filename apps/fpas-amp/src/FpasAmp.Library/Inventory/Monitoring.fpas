@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/apps/fpas-amp/library.md#lifetime-and-control)
+
 // UI-independent control and lifetime for presence discovery and storage.
 unit FpasAmp.Library.Inventory.Monitoring;
 

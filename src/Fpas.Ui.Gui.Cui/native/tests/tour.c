@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/overlays/guided-tour.md)
 /* The binding must preserve native tour painting and leave its base view's last node intact. */
 #include "../fpas_cui.h"
 #include <stdlib.h>

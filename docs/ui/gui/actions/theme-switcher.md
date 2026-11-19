@@ -66,3 +66,9 @@ appearance to Resolve.
 - [Gallery theme callback](../../../../examples/ui/gui/gallery/App/Update.fpas)
 - [Sidebar appearance controls](../navigation/sidebar.md#appearance-controls)
 - [Actions](README.md)
+
+## Source files
+
+- [ThemeSwitcher.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Theming/ThemeSwitcher.fpas)
+- [CuiWindow.ThemeSwitcher.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Theming/CuiWindow.ThemeSwitcher.cs)
+- [CuiThemeSwitcherTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Actions/CuiThemeSwitcherTests.cs)

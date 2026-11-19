@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/specs/clr-mapping.md#api-documentation-output)
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;

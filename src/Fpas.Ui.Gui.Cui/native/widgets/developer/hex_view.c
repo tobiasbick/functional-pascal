@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/code/hex-viewer.md)
 #include "../../fpas_cui.h"
 
 int fpas_cui_hex_view(cui_ctx *ui, const char *id, uint8_t *bytes, int count, int *start, int *length, int *cursor, const fpas_hex_mark *marks, int mark_count, uint64_t address, int go_to, int bytes_per_row, int width_kind, float width, float height, float size, int flags, int *edit_offset, int *edit_length) {

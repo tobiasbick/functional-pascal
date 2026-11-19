@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/ui/gui/smart-inputs/money-field.md)
+
 unit MoneyDecimalContract;
 
 uses

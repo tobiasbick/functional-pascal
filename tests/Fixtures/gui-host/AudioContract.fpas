@@ -1,3 +1,5 @@
+// [Documentation](../../../docs/ui/gui/audio/README.md)
+
 unit GalleryAudioContract;
 
 uses

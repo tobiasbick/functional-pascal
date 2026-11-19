@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/apps/fpas-amp/library.md#reconciliation-and-persistence)
+
 // Atomic, source-scoped directory checkpoints with safe membership deletion.
 unit FpasAmp.Library.Persistence.Checkpoints;
 

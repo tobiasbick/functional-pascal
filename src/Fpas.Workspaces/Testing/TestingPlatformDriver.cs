@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/tools/testing.md#self-hosted-microsofttestingplatform)
 using System.Text.Json;
 using Fpas.Workspaces.Loading;
 using Fpas.Workspaces.Processes;

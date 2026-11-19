@@ -1,3 +1,4 @@
+// [Documentation](../../../docs/pascal/program-structure/project-commands.md#create-files)
 using System.Text;
 
 namespace Fpas.Cli.Projects;

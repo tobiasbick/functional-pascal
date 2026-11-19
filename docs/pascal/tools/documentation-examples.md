@@ -142,3 +142,17 @@ on native Windows and Linux/WSL.
 - [Application and bootstrap](../../../apps/doc-examples/README.md)
 - [Agent reference maintenance](../agents/maintenance.md)
 - [Acceptance coverage](../../../tests/coverage.md#documentation-acceptance)
+
+## Source files
+
+- `apps/doc-examples/contexts/`
+  - [body.fpas.txt](../../../apps/doc-examples/contexts/body.fpas.txt)
+  - [declarations.fpas.txt](../../../apps/doc-examples/contexts/declarations.fpas.txt)
+- `tests/Fpas.IntegrationTests/Documentation/`
+  - [DocExamplesBehaviorTests.cs](../../../tests/Fpas.IntegrationTests/Documentation/DocExamplesBehaviorTests.cs)
+  - [DocumentationLinks.cs](../../../tests/Fpas.IntegrationTests/Documentation/DocumentationLinks.cs)
+  - [HandbookTests.cs](../../../tests/Fpas.IntegrationTests/Documentation/HandbookTests.cs)
+  - [LanguageSpecificationTests.cs](../../../tests/Fpas.IntegrationTests/Documentation/LanguageSpecificationTests.cs)
+  - [MarkdownExamples.cs](../../../tests/Fpas.IntegrationTests/Documentation/MarkdownExamples.cs)
+- `tests/Fpas.IntegrationTests/Documentation/Support/`
+  - [DocExamplesFixture.cs](../../../tests/Fpas.IntegrationTests/Documentation/Support/DocExamplesFixture.cs)

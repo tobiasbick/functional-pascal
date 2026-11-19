@@ -42,3 +42,17 @@ The ticker renders the supplied figures.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Feedback/Tickers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/View.fpas)
 - [Social and media](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Feedback/`
+  - [Ticker.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Feedback/Ticker.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Feedback/`
+  - [NativeMethods.Ticker.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Feedback/NativeMethods.Ticker.Types.cs)
+  - [NativeMethods.Ticker.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Feedback/NativeMethods.Ticker.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Feedback/`
+  - [CuiWindow.Ticker.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Feedback/CuiWindow.Ticker.Types.cs)
+  - [CuiWindow.Ticker.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Feedback/CuiWindow.Ticker.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/feedback/`
+  - [ticker.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/ticker.c)
+  - [ticker.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/feedback/ticker.h)

@@ -1,3 +1,5 @@
+// [Documentation](../../../../../docs/ui/gui/more-charts/sankey.md)
+
 unit Fpas.Ui.Gui.Internal.Widgets.Charts.Sankey;
 
 uses

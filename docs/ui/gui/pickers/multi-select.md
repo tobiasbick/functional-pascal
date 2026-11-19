@@ -48,3 +48,16 @@ Open the list and toggle checkboxes or use its bulk selection action. Remove a c
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Pickers/View.fpas)
 - [Select](../inputs/select.md)
 - [Pickers](README.md)
+
+## Source files
+
+- `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
+  - [MultiSelect.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/MultiSelect.fpas)
+- `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`
+  - [NativeMethods.MultiSelect.cs](../../../../src/Fpas.Ui.Gui.Cui/Interop/Inputs/NativeMethods.MultiSelect.cs)
+- `src/Fpas.Ui.Gui.Cui/Widgets/Inputs/`
+  - [CuiWindow.MultiSelect.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.MultiSelect.Types.cs)
+  - [CuiWindow.MultiSelect.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Inputs/CuiWindow.MultiSelect.cs)
+- `src/Fpas.Ui.Gui.Cui/native/widgets/inputs/`
+  - [multi_select.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/multi_select.c)
+  - [multi_select.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/inputs/multi_select.h)

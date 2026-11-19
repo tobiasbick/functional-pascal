@@ -1,3 +1,4 @@
+// [Documentation](../../../../../docs/ui/gui/developer-tools/keymap.md)
 #ifndef FPAS_CUI_KEYMAP_H
 #define FPAS_CUI_KEYMAP_H
 /** Draws keyboard bindings and proposes modifier changes or activation.

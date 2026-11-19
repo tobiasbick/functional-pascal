@@ -1,3 +1,5 @@
+// [Documentation](../../docs/ui/widgets.md#building-a-view)
+
 unit Fpas.Ui.Elements;
 
 uses

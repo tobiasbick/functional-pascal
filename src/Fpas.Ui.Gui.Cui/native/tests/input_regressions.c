@@ -1,3 +1,4 @@
+// [Documentation](../../../../docs/ui/gui/inputs/README.md)
 /* Exercise upstream input fixes through the FPAS adapters, without a window. */
 #include "../fpas_cui.h"
 #include <math.h>

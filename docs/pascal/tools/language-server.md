@@ -128,7 +128,8 @@ versioned document changes. `fpas/prepareRefactoring` takes `schemaVersion: 1`,
 and optional `projectUri` for linked ownership. Add Parameter also takes
 `name`, `type` and `argument`. For `remove-parameter`, use the same position
 for both endpoints on the parameter or its named argument. For `name-arguments`, place both endpoints at the call.
-Extract Variable takes `name`. For [`inline-variable`](refactoring.md#inline-a-local-variable),
+Extract Variable takes `name`. For [`extract-routine`](refactoring.md#extract-a-routine),
+give the statement range and the new `name`. For [`inline-variable`](refactoring.md#inline-a-local-variable),
 place both endpoints on the local declaration or one of its reads. For `change-signature`, select the parameter and
 supply `type`, `mode`, or both. An optional `arguments` array supplies a zero-based
 UTF-16 `position` at the called name and an `expression` for each call replacement.

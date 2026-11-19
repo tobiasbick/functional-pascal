@@ -2,7 +2,7 @@
 
 `fpas refactor` prepares checked JSON edit plans for rename, parameter addition,
 removal and signature changes, protocol implementation, argument labels,
-variable extraction and inlining, and import organization.
+variable extraction and inlining, routine extraction and import organization.
 Supply an explicit `.fpasproj` or `.slnx` context.
 `fpas refactor apply` validates and applies the selected plan.
 
@@ -259,6 +259,33 @@ that would be lost or duplicated prevents automatic inlining. The command is
 for ordinary local bindings. Resource declarations and initializers containing
 `await` or a routine remain explicit.
 
+## Extract a routine
+
+Select complete, consecutive statements from one block, including the final
+semicolon and any attached comments. Give the unescaped name of the nested
+helper and an exclusive end position.
+
+```sh
+fpas refactor extract-routine Example.fpasproj --file main.fpas --line 8 --column 3 \
+  --end-line 10 --end-column 19 --name UpdateTotal --plan .temp-data/routine.json --report json
+fpas refactor apply Example.fpasproj --plan .temp-data/routine.json
+```
+
+The helper runs at the original location. It uses FPAS lexical captures to
+read outer values and write the same outer variables in the original order.
+If one local declared in the selection is used afterward, select through its
+declaration as the final statement. The helper returns its initializer to the
+original caller binding. A selection ending in a synchronous return can move
+the return statements into the helper and return from the caller at the call
+site.
+
+Select the entire loop for its `break` or `continue`, the entire handler for
+a bare `raise`, and the owning block for a `using` declaration. The body being
+moved must stay synchronous and leave nested or anonymous routine declarations
+in their original scopes. The compiler checks captures, initialization, types,
+control flow and call targets in every owner. A use that depends on caller-only
+flow refinement or an outer managed reference parameter can prevent extraction.
+
 ## Organize imports in a file
 
 Use `organize-imports` with a source file. For a linked file, select an analysis
@@ -373,6 +400,7 @@ Plans expire after five minutes and each application consumes its preview.
 - `src/Fpas.Compiler/Analysis/`
   - [NamedCallArguments.cs](../../../src/Fpas.Compiler/Analysis/NamedCallArguments.cs)
   - [ProtocolImplementation.cs](../../../src/Fpas.Compiler/Analysis/ProtocolImplementation.cs)
+  - [RefactoringSyntax.Routine.cs](../../../src/Fpas.Compiler/Analysis/RefactoringSyntax.Routine.cs)
   - [RefactoringSyntax.Inline.cs](../../../src/Fpas.Compiler/Analysis/RefactoringSyntax.Inline.cs)
   - [RefactoringSyntax.cs](../../../src/Fpas.Compiler/Analysis/RefactoringSyntax.cs)
 - `src/Fpas.Workspaces/Refactoring/`
@@ -381,6 +409,7 @@ Plans expire after five minutes and each application consumes its preview.
   - [FileRefactorPlans.cs](../../../src/Fpas.Workspaces/Refactoring/FileRefactorPlans.cs)
   - [ImportRefactoring.cs](../../../src/Fpas.Workspaces/Refactoring/ImportRefactoring.cs)
   - [InlineRefactoring.cs](../../../src/Fpas.Workspaces/Refactoring/InlineRefactoring.cs)
+  - [MovedOperations.cs](../../../src/Fpas.Workspaces/Refactoring/MovedOperations.cs)
   - [NameArgumentsRefactoring.cs](../../../src/Fpas.Workspaces/Refactoring/NameArgumentsRefactoring.cs)
   - [ParameterOrder.cs](../../../src/Fpas.Workspaces/Refactoring/ParameterOrder.cs)
   - [ParameterRefactoring.cs](../../../src/Fpas.Workspaces/Refactoring/ParameterRefactoring.cs)
@@ -390,11 +419,13 @@ Plans expire after five minutes and each application consumes its preview.
   - [RenameBindings.cs](../../../src/Fpas.Workspaces/Refactoring/RenameBindings.cs)
   - [RenameOverlay.cs](../../../src/Fpas.Workspaces/Refactoring/RenameOverlay.cs)
   - [RenameService.cs](../../../src/Fpas.Workspaces/Refactoring/RenameService.cs)
+  - [RoutineExtraction.cs](../../../src/Fpas.Workspaces/Refactoring/RoutineExtraction.cs)
   - [SignatureRefactoring.cs](../../../src/Fpas.Workspaces/Refactoring/SignatureRefactoring.cs)
 - `tests/Fpas.IntegrationTests/Refactoring/`
   - [AddParameterTests.cs](../../../tests/Fpas.IntegrationTests/Refactoring/AddParameterTests.cs)
   - [ChangeSignatureTests.cs](../../../tests/Fpas.IntegrationTests/Refactoring/ChangeSignatureTests.cs)
   - [CliEditingRefactoringsTests.cs](../../../tests/Fpas.IntegrationTests/Refactoring/CliEditingRefactoringsTests.cs)
+  - [ExtractRoutineTests.cs](../../../tests/Fpas.IntegrationTests/Refactoring/ExtractRoutineTests.cs)
   - [InlineVariableTests.cs](../../../tests/Fpas.IntegrationTests/Refactoring/InlineVariableTests.cs)
   - [ImplementProtocolTests.cs](../../../tests/Fpas.IntegrationTests/Refactoring/ImplementProtocolTests.cs)
   - [NameArgumentsTests.cs](../../../tests/Fpas.IntegrationTests/Refactoring/NameArgumentsTests.cs)

@@ -10,23 +10,6 @@ until a concrete failure case justifies further work.
 
 ## Tooling and authoring
 
-### T2. Semantic refactorings beyond rename
-
-**Priority: highest**
-
-Extend the [checked refactoring workflow](../pascal/tools/refactoring.md).
-
-5. Add `extract-routine` with checked data and control flow.
-
-Operate on resolved symbols and bindings. Produce reviewable plans, reject stale
-inputs and validate resulting source against every affected owner/reference
-context. Keep CLI and editor clients on the same semantic core.
-
-Report semantic decisions explicitly, including values needed for new arguments
-and behavior needed by an implementation. Never invent application behavior or
-fill incomplete members with misleading defaults. This prevents missed callers
-and edits to unrelated same-named symbols.
-
 ### T4. Limited type inference for local constants
 
 **Priority: exploratory**

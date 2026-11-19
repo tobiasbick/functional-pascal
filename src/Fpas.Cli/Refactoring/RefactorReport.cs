@@ -36,6 +36,7 @@ internal sealed record RefactorReport(bool Success, string Status, string? PlanP
                 "change-signature" when plan.SignatureChange?.Order is not null => "Reorder parameters of " + plan.Targets[0].Name,
                 "change-signature" => "Change signature of " + plan.Targets[0].Name,
                 "inline-variable" => "Inline " + plan.Targets[0].Name,
+                "extract-routine" => "Extract routine " + plan.NewName,
                 "extract-variable" => "Extract variable " + plan.NewName,
                 "organize-imports" => "Organize imports",
                 "name-arguments" => "Name arguments",

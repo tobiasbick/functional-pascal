@@ -21,11 +21,11 @@ internal sealed class RefactorCommand
         internal Option<string> File { get; } = new("--file") { Required = true, Description = "Source file to refactor." };
         internal Option<int> Line { get; } = new("--line") { Required = true, Description = "One-based source line." };
         internal Option<int> Column { get; } = new("--column") { Required = true, Description = "One-based UTF-16 source column." };
-        internal Option<int> EndLine { get; } = new("--end-line") { Required = true, Description = "One-based line at the exclusive end of the selected expression." };
-        internal Option<int> EndColumn { get; } = new("--end-column") { Required = true, Description = "One-based UTF-16 column at the exclusive end of the selected expression." };
+        internal Option<int> EndLine { get; } = new("--end-line") { Required = true, Description = "One-based line at the exclusive end of the selected source range." };
+        internal Option<int> EndColumn { get; } = new("--end-column") { Required = true, Description = "One-based UTF-16 column at the exclusive end of the selected source range." };
         internal Option<string> Project { get; } = new("--project") { Description = "Owning FPAS project for a linked source selection." };
         internal Option<string> NewName { get; } = new("--new-name") { Required = true, Description = "Unescaped simple ASCII identifier; keyword escaping is chosen automatically." };
-        internal Option<string> Name { get; } = new("--name") { Required = true, Description = "Unescaped identifier for the new parameter or constant." };
+        internal Option<string> Name { get; } = new("--name") { Required = true, Description = "Unescaped identifier for the new declaration." };
         internal Option<string> ParameterType { get; } = new("--type") { Required = name == "add-parameter", Description = "Explicit FPAS parameter type." };
         internal Option<string> Argument { get; } = new("--argument") { Required = true, Description = "FPAS value expression inserted at each direct call." };
         internal Option<string> Mode { get; } = new("--mode") { Description = "New parameter mode: value, in, ref or out." };
@@ -95,6 +95,7 @@ internal sealed class RefactorCommand
                         Command.Options.Add(CallArguments);
                         Command.Options.Add(Order);
                         break;
+                    case "extract-routine":
                     case "extract-variable":
                         Command.Options.Add(Name);
                         AddCoordinate(EndLine);
@@ -113,7 +114,7 @@ internal sealed class RefactorCommand
     }
     private readonly Operation[] operations =
         [new("rename"), new("add-parameter"), new("remove-parameter"), new("change-signature"), new("implement-protocol"), new("name-arguments"),
-            new("extract-variable"), new("inline-variable"), new("organize-imports"), new("apply")];
+            new("extract-variable"), new("extract-routine"), new("inline-variable"), new("organize-imports"), new("apply")];
     internal Command Command { get; } = new("refactor", """
         Prepare and explicitly apply checked source refactorings in an FPAS project/solution.
         Rename follows resolved source symbols, including their source interface implementations.
@@ -125,6 +126,7 @@ internal sealed class RefactorCommand
         Name Arguments labels positional arguments at one checked call with repeated input types.
         Extract Variable moves a selected expression into a typed local constant.
         Inline Variable replaces checked local reads with the initializer.
+        Extract Routine moves complete statements into a checked nested routine.
         Organize Imports removes safely unused CLR aliases from one source file.
         Plans cover analyzed FPAS sources; C#/F# sources, strings and comments are not rewritten.
         Dependency preparation may restore/build. Source bindings are checked before publication.
@@ -153,7 +155,7 @@ internal sealed class RefactorCommand
             RefactorPlan? stored = null; byte[]? storedBytes = null;
             var signature = operation.Command.Name == "change-signature" ? ReadSignature(operation, result) : null;
             if (operation.Command.Name == "rename") _ = IdentifierFacts.Spell(result.GetValue(operation.NewName)!);
-            if (operation.Command.Name is "add-parameter" or "extract-variable") _ = IdentifierFacts.Spell(result.GetValue(operation.Name)!);
+            if (operation.Command.Name is "add-parameter" or "extract-variable" or "extract-routine") _ = IdentifierFacts.Spell(result.GetValue(operation.Name)!);
             if (!preparing)
             {
                 SourcePublication.ValidateRegularPath(planPath);
@@ -236,6 +238,8 @@ internal sealed class RefactorCommand
             "implement-protocol" => workspace.ImplementProtocol(selection, ReadProtocol(operation, result), token),
             "change-signature" => workspace.ChangeSignature(selection, signature!, token, closedContext),
             "inline-variable" => workspace.InlineVariable(selection, token),
+            "extract-routine" => workspace.ExtractRoutine(selection,
+                new(result.GetValue(operation.EndLine), result.GetValue(operation.EndColumn)), result.GetValue(operation.Name)!, token),
             "extract-variable" => workspace.ExtractVariable(selection,
                 new(result.GetValue(operation.EndLine), result.GetValue(operation.EndColumn)), result.GetValue(operation.Name)!, token),
             _ => throw new InvalidOperationException("Unknown refactoring operation.")

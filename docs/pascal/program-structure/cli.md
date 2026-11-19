@@ -15,7 +15,7 @@ text/JSON reports.
 
 Use [checked refactorings](../tools/refactoring.md) to prepare plans for
 `rename`, `add-parameter`, `remove-parameter`, `change-signature`, `implement-protocol`,
-`name-arguments`, `extract-variable`, `inline-variable` and `organize-imports` with `fpas refactor`.
+`name-arguments`, `extract-variable`, `extract-routine`, `inline-variable` and `organize-imports` with `fpas refactor`.
 `refactor apply` checks the input snapshot and validates bindings before writing.
 
 Use [create/build/run](project-commands.md) for `init project`, `init library`,

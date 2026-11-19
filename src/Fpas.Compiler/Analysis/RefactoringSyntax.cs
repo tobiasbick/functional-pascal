@@ -254,20 +254,31 @@ public sealed partial class RefactoringSyntax
     }
 
     private IEnumerable<IReadOnlyList<StatementSyntax>> StatementLists()
+        => StatementBlocks().Select(block => block.Statements);
+
+    private IEnumerable<(IReadOnlyList<StatementSyntax> Statements, RoutineSyntax? Routine, bool Outer)> StatementBlocks()
     {
-        var roots = unit.Routines.Concat(unit.Records.SelectMany(record => record.Methods)).Select(routine => routine.Statements)
-            .Prepend(unit.Statements);
-        foreach (var root in roots)
-            foreach (var block in Descend(root))
+        foreach (var block in Descend(unit.Statements, null, true)) yield return block;
+        foreach (var routine in unit.Routines.Concat(unit.Records.SelectMany(record => record.Methods)))
+            foreach (var block in Descend(routine.Statements, routine, true))
                 yield return block;
 
-        IEnumerable<IReadOnlyList<StatementSyntax>> Descend(IReadOnlyList<StatementSyntax> statements)
+        IEnumerable<(IReadOnlyList<StatementSyntax>, RoutineSyntax?, bool)> Descend(
+            IReadOnlyList<StatementSyntax> statements, RoutineSyntax? routine, bool outer)
         {
             token.ThrowIfCancellationRequested();
-            yield return statements;
-            foreach (var child in statements.SelectMany(Children))
-                foreach (var block in Descend(child))
-                    yield return block;
+            yield return (statements, routine, outer);
+            foreach (var statement in statements)
+            {
+                if (statement is NestedRoutineSyntax nested)
+                {
+                    foreach (var block in Descend(nested.Routine.Statements, nested.Routine, true)) yield return block;
+                    continue;
+                }
+                foreach (var child in Children(statement))
+                    foreach (var block in Descend(child, routine, false))
+                        yield return block;
+            }
         }
     }
 

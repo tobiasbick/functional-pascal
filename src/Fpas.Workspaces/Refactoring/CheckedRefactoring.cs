@@ -67,6 +67,7 @@ public static partial class CheckedRefactoring
             "change-signature" => ChangeSignature(draft, request.SignatureChange, selection),
             "name-arguments" => NameArguments(draft, syntax, start),
             "inline-variable" => InlineVariable(draft, selection),
+            "extract-routine" => ExtractRoutine(draft, request, syntax, start, end),
             "extract-variable" => ExtractVariable(draft, request, syntax, start, end),
             "organize-imports" => OrganizeImports(draft, syntax),
             _ => throw Refuse("Unknown FPAS refactoring.")
@@ -107,6 +108,7 @@ public static partial class CheckedRefactoring
         internal List<SourceMove> Moves { get; } = [];
         internal (SourceSpan Span, int Insertion, string Name)? Extracted { get; set; }
         internal InlineVariableEdit? Inlined { get; set; }
+        internal RoutineExtractionEdit? RoutineExtraction { get; set; }
         internal IEnumerable<(string Project, SemanticSnapshot Snapshot)> Projects => analysis.Projects.Select(project => (project.Project, project.Result!.Snapshot!));
 
         internal RefactoringSyntax Syntax(SourceDocument document)
@@ -131,11 +133,24 @@ public static partial class CheckedRefactoring
         {
             var files = edits.Documents.ToDictionary(document => document.Original.Path, Paths);
             var offsetMap = new OffsetMap(files);
+            var moves = Moves.GroupBy(move => move.Original.Path, Paths).ToDictionary(group => group.Key,
+                group => group.OrderBy(move => move.Original.Offset).Select(move =>
+                    (move.Original, Offset: offsetMap.Before(move.Original.Path, move.Destination) + move.Relative)).ToArray(), Paths);
             int Map(string path, int offset)
             {
-                foreach (var move in Moves)
-                    if (Paths.Equals(path, move.Original.Path) && move.Original.Contains(offset))
-                        return offsetMap.Before(path, move.Destination) + move.Relative + offset - move.Original.Offset;
+                if (moves.TryGetValue(path, out var ranges))
+                {
+                    var first = 0;
+                    var last = ranges.Length - 1;
+                    while (first <= last)
+                    {
+                        var index = first + (last - first) / 2;
+                        var (original, destination) = ranges[index];
+                        if (original.Contains(offset)) return destination + offset - original.Offset;
+                        if (offset < original.Offset) last = index - 1;
+                        else first = index + 1;
+                    }
+                }
                 return offsetMap.After(path, offset);
             }
             var updated = RenameOverlay.Analyze(analysis.Context, files.ToDictionary(pair => pair.Key, pair => pair.Value.NewText, Paths),
@@ -154,6 +169,8 @@ public static partial class CheckedRefactoring
 
             if (Extracted is { } extraction)
                 VerifyExtraction(updated, extraction, offsetMap.Before(extraction.Span.Path, extraction.Insertion), Moves.Single().Relative);
+            if (RoutineExtraction is { } routine)
+                VerifyRoutineExtraction(updated, oldBindings, newBindings, offsetMap, Map, routine);
             if (Inlined is { } inlined) VerifyInlining(updated, oldBindings, newBindings, offsetMap, inlined);
             foreach (var call in Calls) VerifyCall(updated, call, offsetMap, oldBindings, newBindings);
             if (CheckOverloads) VerifyOverloads(updated, offsetMap, Map);

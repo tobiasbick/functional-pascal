@@ -116,16 +116,8 @@ public static partial class CheckedRefactoring
                     throw Conflict("The initializer changes type when inserted at a read.");
             }
 
-            var previous = before.Operations.Where(InFile).ToLookup(operation => (Map(operation.Span), operation.Kind));
-            var current = after.Operations.Where(InFile).ToLookup(operation => ((operation.Span.Offset, End(operation.Span)), operation.Kind));
-            if (previous.Count != current.Count || previous.Any(group =>
-            {
-                var matches = current[group.Key].ToArray();
-                return group.Count() != matches.Length || !group.Zip(matches).All(pair => SameOperation(pair.First, pair.Second));
-            }))
-                throw Conflict("Inlining changes an operation's binding, dispatch or generic substitution.");
+            VerifyMovedOperations(project.Project, path, before, after, oldBindings, newBindings, Map);
 
-            bool InFile(SourceOperation operation) => Paths.Equals(operation.Span.Path, path);
             (int Start, int End) Map(SourceSpan span)
             {
                 if (inline.Initializer.Contains(span.Offset) && End(span) <= End(inline.Initializer) && inline.Reads is [var read])
@@ -136,23 +128,6 @@ public static partial class CheckedRefactoring
                 return (offsets.After(path, span.Offset), offsets.Before(path, End(span)));
             }
 
-            bool SameOperation(SourceOperation left, SourceOperation right)
-            {
-                if (!left.HasSameDispatch(right) || !TypesMatch(left.OwnerType, right.OwnerType) ||
-                    !TypesMatch(left.ResultType, right.ResultType) ||
-                    (left.Target is { } old ? oldBindings.Key(project.Project, old) : null) !=
-                    (right.Target is { } edited ? newBindings.Key(project.Project, edited) : null))
-                    return false;
-                if (left.Signature is not { } prior || right.Signature is not { } next)
-                    return left.Signature is null && right.Signature is null;
-                return TypesMatch(prior.Result, next.Result) && prior.TypeParameters.Count == next.TypeParameters.Count &&
-                    prior.TypeParameters.Zip(next.TypeParameters).All(pair => TypesMatch(pair.First, pair.Second)) &&
-                    prior.Parameters.Count == next.Parameters.Count && prior.Parameters.Zip(next.Parameters).All(pair =>
-                        pair.First.Name == pair.Second.Name && pair.First.Mode == pair.Second.Mode && TypesMatch(pair.First.Type, pair.Second.Type));
-            }
-
-            bool TypesMatch(string? left, string? right) => left is null || right is null ? left == right :
-                SameType(before.Types.Single(type => type.Id == left), after.Types.Single(type => type.Id == right));
         }
     }
 

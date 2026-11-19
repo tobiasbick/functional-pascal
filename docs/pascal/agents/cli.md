@@ -80,6 +80,7 @@ for enclosing generic types and then the method. [API lookup and usage](../tools
 | `fpas refactor implement-protocol` | Select a record and pass `--protocol TYPE`. Repeat `--member MEMBER=STATEMENTS` (initializer for a getter) or `--forward MEMBER=METHOD`. Missing behavior reports member keys. |
 | `fpas refactor name-arguments` | Insert labels at a checked call with repeated input types while preserving evaluation order. |
 | `fpas refactor extract-variable` | Move a selected expression into a typed local `const`. Give the exclusive end with `--end-line` and `--end-column`, and the new `--name`. |
+| `fpas refactor extract-routine` | Move consecutive statements into a nested helper. Include the final semicolon and give `--end-line`, `--end-column` and `--name`. |
 | `fpas refactor inline-variable` | Select a local declaration or read. Replace literal reads or move a single initializer to the next statement when evaluation order is safe. |
 | `fpas refactor organize-imports` | Use `--file` to remove unused CLR aliases when all owners agree. Preserve source-unit imports, comments and entry order. |
 | `fpas refactor apply` | Recheck the snapshot and regenerate the plan before publishing its edits. |

@@ -43,12 +43,13 @@ internal sealed partial class Parser
         while (At("function") || At("procedure") || At("async") || At("["))
         {
             layout?.Line(position);
+            var helperStart = Current.Position;
             var helper = At("[")
                 ? ReadAttributedRoutine(Current.Documentation) ?? throw Expected(["function", "procedure"], "Expected a local routine after attributes.")
                 : new NestedRoutineSyntax(ReadRoutine(false, nested: true));
             Expect(";");
             declarations[helper.Routine.Name.Position].End = LastEnd;
-            helpers.Add(helper);
+            helpers.Add(helper with { SpanStart = helperStart, SpanEnd = LastEnd });
         }
         if (helpers.Count != 0) layout?.Body(start, position);
         return helpers;

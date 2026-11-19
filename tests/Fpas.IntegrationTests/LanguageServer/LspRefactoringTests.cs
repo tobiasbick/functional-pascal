@@ -238,6 +238,20 @@ public sealed class LspRefactoringTests(SdkPackageFixture sdk) : IClassFixture<S
         Assert.Equal(7, changes.GetProperty("textDocument").GetProperty("version").GetInt32());
         Assert.All(changes.GetProperty("edits").EnumerateArray(), edit => Assert.Equal("", edit.GetProperty("newText").GetString()));
 
+        var statement = Position(original, "return Sum(2");
+        var extraction = Result(await client.Request("fpas/prepareRefactoring", new {
+            schemaVersion = 1, kind = "extract-routine", planRequest.textDocument, position = statement,
+            end = Position(original, "\r\nend function;", last: true), planRequest.projectUri, name = "Calculate"
+        }));
+        var extracted = Result(await client.Request("fpas/applyRefactoring", new {
+            schemaVersion = 1, id = extraction.GetProperty("id").GetString()
+        }));
+        var extractedFile = Assert.Single(extracted.GetProperty("edit").GetProperty("documentChanges").EnumerateArray());
+        Assert.Equal(7, extractedFile.GetProperty("textDocument").GetProperty("version").GetInt32());
+        var extractedEdits = extractedFile.GetProperty("edits").EnumerateArray().Select(edit => edit.GetProperty("newText").GetString()).ToArray();
+        Assert.StartsWith("  function Calculate(): int;\r\n", extractedEdits[0]);
+        Assert.Equal("return Calculate();", extractedEdits[1]);
+
         preview = Result(await client.Request("fpas/prepareRefactoring", planRequest));
         await client.Close(path);
         Error(await client.Request("fpas/applyRefactoring", new { schemaVersion = 1, id = preview.GetProperty("id").GetString() }), -32801);

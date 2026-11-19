@@ -95,6 +95,14 @@ public sealed class FileWorkspace
     /// <returns>A checked plan and detached edits.</returns>
     public PreparedFileRefactoring ExtractVariable(SourceSelection selection, RefactorPosition end, string name, CancellationToken token = default)
         => FileRefactorPlans.Prepare(Checked(), new("extract-variable", selection, end.Line, end.Column, name), token);
+    /// <summary>Prepares extracting complete statements into a checked nested routine.</summary>
+    /// <param name="selection">Start of the statement range and optional project owner.</param>
+    /// <param name="end">Exclusive end of the range.</param>
+    /// <param name="name">Unescaped name of the nested routine.</param>
+    /// <param name="token">Cancels planning and overlay verification.</param>
+    /// <returns>A checked plan and detached edits.</returns>
+    public PreparedFileRefactoring ExtractRoutine(SourceSelection selection, RefactorPosition end, string name, CancellationToken token = default)
+        => FileRefactorPlans.Prepare(Checked(), new("extract-routine", selection, end.Line, end.Column, name), token);
     /// <summary>Prepares replacing the reads of a local binding with its initializer.</summary>
     /// <param name="selection">The local declaration or a read of it.</param>
     /// <param name="token">Cancels planning and overlay verification.</param>

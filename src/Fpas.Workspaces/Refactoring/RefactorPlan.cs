@@ -95,7 +95,7 @@ public sealed record RefactorPlan(int Version, string Kind, string Context, stri
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public RefactorParameter? AddedParameter { get; init; }
 
-    /// <summary>Gets the exclusive end of the selected expression for extraction.</summary>
+    /// <summary>Gets the exclusive end of the source selected for extraction.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public RefactorPosition? SelectionEnd { get; init; }
 
@@ -115,7 +115,7 @@ public sealed record RefactorPlan(int Version, string Kind, string Context, stri
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public RefactorProtocol? Protocol { get; init; }
 
-    internal bool HasValidOperation => Version == 1 && (Kind == "extract-variable" || SelectionEnd is null) &&
+    internal bool HasValidOperation => Version == 1 && (Kind is "extract-variable" or "extract-routine" || SelectionEnd is null) &&
         (!ClosedContext || Kind is "add-parameter" or "remove-parameter" or "change-signature") &&
         (Kind == "change-signature" || SignatureChange is null) && (Kind == "implement-protocol" || Protocol is null) && Kind switch
     {
@@ -126,7 +126,7 @@ public sealed record RefactorPlan(int Version, string Kind, string Context, stri
             !string.IsNullOrWhiteSpace(parameter.Name) && !string.IsNullOrWhiteSpace(parameter.Type) &&
             !string.IsNullOrWhiteSpace(parameter.Argument),
         "inline-variable" => AddedParameter is null && NewName is null && Targets is { Count: > 0 },
-        "extract-variable" => AddedParameter is null && !string.IsNullOrWhiteSpace(NewName) && Targets is { Count: 0 } &&
+        "extract-variable" or "extract-routine" => AddedParameter is null && !string.IsNullOrWhiteSpace(NewName) && Targets is { Count: 0 } &&
             SelectionEnd is { Line: > 0, Column: > 0 },
         "change-signature" => AddedParameter is null && NewName is null && Targets is { Count: > 0 } &&
             SignatureChange is { IsValid: true },

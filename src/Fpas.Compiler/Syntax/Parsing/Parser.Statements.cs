@@ -33,6 +33,7 @@ internal sealed partial class Parser
                 }
                 statements.Add(statement);
                 Expect(";");
+                statements[^1] = statement with { SpanStart = tokens[start].Position, SpanEnd = LastEnd };
                 var name = statement switch { BindingSyntax binding => binding.Name, UsingSyntax use => use.Binding.Name, NestedRoutineSyntax nested => nested.Routine.Name, _ => null };
                 if (name is not null) declarations[name.Position].End = LastEnd;
             }

@@ -39,14 +39,14 @@ public static class FileRefactorPlans
         var prepared = CheckedRefactoring.Prepare(analysis, request with { Selection = selection }, token);
         var files = prepared.Edits.Documents.Select(document => new RefactorPlanFile(document.Original.Path, document.OriginalHash,
             document.ReplacementHash, document.Edits)).ToArray();
-        var extraction = request.Kind == "extract-variable";
+        var extraction = request.Kind is "extract-variable" or "extract-routine";
         var plan = new RefactorPlan(1, request.Kind, analysis.Context.Path, analysis.Context.Configuration, prepared.SnapshotId,
             selection, extraction ? request.Name : null, prepared.Targets, files,
             analysis.Projects.Select(project => project.Project).Order(StringComparer.Ordinal).ToArray(), prepared.BinaryBoundaries)
         {
             AddedParameter = request.Kind == "add-parameter" ? new(request.Name!, request.Type!, request.Argument!) : null,
             SelectionEnd = extraction ? new(request.EndLine, request.EndColumn) : null,
-            Notes = request.Kind is "extract-variable" or "inline-variable" or "organize-imports" or "change-signature" or "implement-protocol" || prepared.Targets.Any(target => target.PublicApi)
+            Notes = request.Kind is "extract-variable" or "extract-routine" or "inline-variable" or "organize-imports" or "change-signature" or "implement-protocol" || prepared.Targets.Any(target => target.PublicApi)
                 ? prepared.Notes : null,
             SignatureChange = request.SignatureChange is { } change ? change with
             {

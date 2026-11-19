@@ -4,7 +4,7 @@ unit Fpas.Ui.Widgets.Overlays.Menus;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S;
 
-// Native CUI popup placement relative to its trigger. Hosts fit it to the viewport.
+// Popup placement relative to its trigger. Hosts fit it to the viewport.
 public type Placement = enum: byte
   // Below, aligned with the leading edge.
   BottomStart;
@@ -62,7 +62,7 @@ public type Entry<TMsg> = variant
   Separator;
 end variant;
 
-// Native trigger and popup options.
+// Trigger and popup options.
 public type Options = record
   // CUI trigger variant; Default resolves to secondary, or ghost for icon-only.
   public Variant: S.ButtonVariant := S.ButtonVariant.Default;
@@ -91,7 +91,7 @@ begin
   return Id + '/' + Key;
 end function;
 
-// Creates a button that opens a host-owned CUI command menu.
+// Creates a button that opens a host-owned command menu.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters

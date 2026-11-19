@@ -1,0 +1,324 @@
+// [Documentation](../../../../../docs/ui/tui/host.md#popup-input)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup;
+
+uses
+  Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as P, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupPlacement as Placement,
+  Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Widgets.Overlays.Menus as M,
+  Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F,
+  Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Rendering.Themes as Th,
+  Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Application as App, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Styles as Styles,
+  System as Sys, System.Collections.Generic as C, System.Globalization as Global;
+
+// An interactive command or choice within the popup.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Item<TMsg> = record
+  // Stable input identity.
+  public Id: string;
+  // Accessible caption and search text.
+  public Label: string;
+  // Display caption, including any check mark.
+  public Caption: string;
+  // Snapshot role.
+  public Role: string;
+  // Activation that proposes an application message.
+  public Handler: Actions.IActivatable<TMsg>;
+  // Explicit snapshot value. Null reports the highlight.
+  public Value: string? := null;
+  // Right-aligned display-only shortcut text.
+  public Hint: string := '';
+  // Ability to activate this row.
+  public Enabled: bool := true;
+  // Use the semantic danger color.
+  public Danger: bool := false;
+end record;
+
+// One displayed popup row.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Row<TMsg> = variant
+  // Interactive command or option.
+  Choice(Value: Item<TMsg>);
+  // Static section label.
+  Section(Text: string);
+  // Static rule.
+  Rule;
+end variant;
+
+// Presentation shared by menus and select fields.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Content<TMsg> = record
+  // Rows in display order.
+  public Rows: array of Row<TMsg>;
+  // Preferred panel width in cells.
+  public Width: int;
+  // Placement relative to the trigger.
+  public Position: M.Placement := M.Placement.BottomStart;
+  // Allow substring filtering.
+  public Searchable: bool := false;
+end record;
+
+type Selection<TMsg> = record implements Actions.IActivatable<TMsg>
+  public Popup: P.State<TMsg>;
+  public Handler: Actions.IActivatable<TMsg>;
+
+  public function Activate(): Actions.Result<TMsg>;
+  begin
+    self.Popup.Write(new P.Cursor());
+    return self.Handler.Activate();
+  end function;
+end record;
+
+// Draws the shared popup and binds its input scope.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Popup`: Owning session state.
+// - `Content`: Rows and presentation options.
+// - `Anchor`: Visible trigger bounds.
+// - `Screen`: Terminal bounds.
+// - `Theme`: Active terminal palette.
+// - `Operations`: Ordered paint operations.
+// - `Controls`: Visible controls of the frame.
+// ## Returns
+// Local input scope for the open popup.
+public function Draw<TMsg>(
+  Popup: P.State<TMsg>; Content: Content<TMsg>; Anchor: F.Rect; Screen: F.Rect; Theme: Th.Theme;
+  Operations: C.List<D.Operation>; Controls: C.List<A.Control<TMsg>>
+): A.Scope<TMsg>;
+  procedure Line(Value: string; Area: F.Rect; Color: T.Style);
+  begin
+    Operations.Add(new D.Operation(Value, Area, Area, Color, false));
+  end procedure;
+
+  function Route(Event: App.Input): bool;
+    procedure MoveTo(Position: long);
+    begin
+      if Enabled.Count > 0 then
+        const Index: int := cast<int>(Sys.Math.Clamp(Position, 0L, cast<long>(Enabled.Count - 1)));
+        Popup.Write(
+          Cursor with
+            Highlight := Enabled[Index].Id;
+          end with
+        );
+      end if;
+    end procedure;
+    procedure Filter(Query: string);
+    begin
+      Popup.Write(new P.Cursor(Cursor.Id, Query := Query));
+    end procedure;
+  begin
+    case Event of
+      when App.Input.KeyPress(const Key: K.Key, const Modifiers: K.KeyModifiers):
+        if Modifiers = K.KeyModifiers.None then
+          case Key of
+            when K.Key.Escape, K.Key.Tab:
+              Popup.Write(new P.Cursor());
+            when K.Key.Up:
+              MoveTo(At - 1);
+            when K.Key.Down:
+              MoveTo(At + 1);
+            when K.Key.PageUp:
+              MoveTo(At - Capacity);
+            when K.Key.PageDown:
+              MoveTo(At + Capacity);
+            when K.Key.Home:
+              MoveTo(0);
+            when K.Key.End:
+              MoveTo(Enabled.Count - 1);
+            when K.Key.Enter:
+              if At >= 0 then
+                const Choice: Selection<TMsg> := new Selection<TMsg>(Popup, Enabled[At].Handler);
+                case Choice.Activate() of
+                  when Actions.Result.Send(const Message: TMsg):
+                    Popup.Apply(Message);
+                  else
+                end case;
+              end if;
+            when K.Key.Backspace:
+              if Content.Searchable and Cursor.Query <> '' then
+                const Starts: array of int := Global.StringInfo.ParseCombiningCharacters(
+                  Cursor.Query
+                );
+                Filter(Cursor.Query.Substring(0, Starts[Starts.Length - 1]));
+              end if;
+            else
+          end case;
+        elsif Key = K.Key.Tab and Modifiers = K.KeyModifiers.Shift then
+          Popup.Write(new P.Cursor());
+        end if;
+      when App.Input.Character(
+        const Text: string
+      ), App.Input.TextInput(const Text: string), App.Input.Paste(const Text: string):
+        if Content.Searchable and Text <> '' then
+          Filter(Cursor.Query + G.SingleLine(Text));
+        end if;
+      when App.Input.Scroll(const X: int, const Y: int, const Delta: int):
+        if Panel.Contains(X, Y) then
+          MoveTo(cast<long>(At) + Delta);
+        end if;
+      when App.Input.Focus(const Id: string):
+        const Index: int := Enabled.FindIndex(function(Item: Item<TMsg>): bool => Item.Id = Id);
+        if Index >= 0 then
+          MoveTo(Index);
+        end if;
+      else
+        return false;
+    end case;
+
+    return true;
+  end function;
+
+  procedure DrawRow(LineSpec: Row<TMsg>; Area: F.Rect);
+  begin
+    case LineSpec of
+      when Row.Section(const Label: string):
+        Line(' ' + G.SingleLine(Label), Area, Muted);
+      when Row.Rule:
+        D.HorizontalRule(Operations, Area, Area, Colors, Theme.Widgets);
+      when Row.Choice(const Entry: Item<TMsg>):
+        const Style: T.Style := if not Entry.Enabled then
+          Muted
+        elsif Entry.Danger then
+          Danger
+        else
+          Colors
+        end if;
+        const Hint: string := G.SingleLine(Entry.Hint);
+        const HintWidth: int := G.Measure(Hint);
+        const HintFits: bool := HintWidth > 0 and G.Measure(
+          Entry.Caption
+        ) + HintWidth + 2 <= Area.Width;
+        const Width: int := if HintFits then
+          Area.Width - HintWidth - 1
+        else
+          Area.Width
+        end if;
+        Line(G.SingleLine(Entry.Caption), new F.Rect(Area.X, Area.Y, Width, 1), Style);
+        if HintFits then
+          Line(Hint, new F.Rect(Area.X + Width, Area.Y, HintWidth, 1), Muted);
+        end if;
+        const Value: string := Entry.Value ?? (if Entry.Id = Cursor.Highlight then
+          'true'
+        else
+          'false'
+        end if);
+        Controls.Add(
+          new A.Control<TMsg>(
+            Entry.Id,
+            Entry.Label,
+            Entry.Role,
+            Value,
+            Area,
+            Cursor.Id,
+            Cursor.Id,
+            Entry.Enabled,
+            A.Binding<TMsg>.Invoke(new Selection<TMsg>(Popup, Entry.Handler)),
+            Styles.ButtonVariant.Ghost
+          )
+        );
+    end case;
+  end procedure;
+begin
+  const Current: P.Cursor := Popup.Read();
+  const Query: string := if Content.Searchable then
+    Current.Query
+  else
+    ''
+  end if;
+  const Rows: C.List<Row<TMsg>> := new C.List<Row<TMsg>>();
+  const Enabled: C.List<Item<TMsg>> := new C.List<Item<TMsg>>();
+  const Indices: C.List<int> := new C.List<int>();
+  for LineSpec: Row<TMsg> in Content.Rows do
+    case LineSpec of
+      when Row.Choice(const Entry: Item<TMsg>):
+        if not Entry.Label.Contains(Query, Sys.StringComparison.OrdinalIgnoreCase) then
+          continue;
+        end if;
+
+        if Entry.Enabled then
+          Enabled.Add(Entry);
+          Indices.Add(Rows.Count);
+        end if;
+      else
+    end case;
+
+    Rows.Add(LineSpec);
+  end for;
+  const At: int := if Enabled.Count = 0 then
+    -1
+  else
+    Sys.Math.Max(
+      0,
+      Enabled.FindIndex(function(Item: Item<TMsg>): bool => Item.Id = Current.Highlight)
+    )
+  end if;
+  const Wanted: int := Sys.Math.Clamp(Rows.Count, 1, 8) + (if Content.Searchable then
+    1
+  else
+    0
+  end if);
+  const Panel: F.Rect := Placement.Place(Anchor, Screen, Wanted, Content.Width, Content.Position);
+  const Header: int := if Content.Searchable and Panel.Height > 1 then
+    1
+  else
+    0
+  end if;
+  const Capacity: int := Panel.Height - Header;
+  const First: int := if At >= 0 then
+    Indices[At]
+  else
+    0
+  end if;
+  const Top: int := Sys.Math.Clamp(
+    Current.Top, Sys.Math.Max(0, First - Capacity + 1),
+    Sys.Math.Max(0, Sys.Math.Min(First, Rows.Count - Capacity))
+  );
+  const Cursor: P.Cursor := new P.Cursor(
+    Current.Id, if At >= 0 then
+      Enabled[At].Id
+    else
+      ''
+    end if, Query, Top
+  );
+  Popup.Write(Cursor);
+  const Surface: int := Th.Rgb(Theme.Colors.SurfaceRaised, Theme.Text.Background ?? 0);
+  const Colors: T.Style := new T.Style(Th.Rgb(Theme.Colors.Foreground, Surface), Surface);
+  const Muted: T.Style := new T.Style(Th.Rgb(Theme.Colors.TextMuted, Surface), Surface);
+  const Danger: T.Style := new T.Style(Th.Rgb(Theme.Colors.Danger, Surface), Surface);
+  D.Fill(Operations, Panel, Colors);
+  if Header > 0 then
+    const Prefix: string := if Panel.Width >= 12 then
+      'Search: '
+    else
+      ''
+    end if;
+    const Caret: Edit.Cursor := Edit.Fit(Query, null, Sys.Math.Max(1, Panel.Width - Prefix.Length));
+    Line(
+      Prefix + Query.Substring(Caret.Start) + '▏',
+      new F.Rect(Panel.X, Panel.Y, Panel.Width, 1),
+      Colors
+    );
+  end if;
+
+  if Rows.Count = 0 then
+    Line(
+      if Content.Searchable then
+        'No results'
+      else
+        'No commands'
+      end if,
+      new F.Rect(Panel.X, Panel.Y + Header, Panel.Width, 1), Muted
+    );
+  end if;
+
+  for Index: int := 0 to Sys.Math.Min(Capacity, Rows.Count - Top) - 1 do
+    DrawRow(Rows[Top + Index], new F.Rect(Panel.X, Panel.Y + Header + Index, Panel.Width, 1));
+  end for;
+
+  return new A.Scope<TMsg>(Cursor.Id, Cursor.Highlight, null, [], Panel, Route);
+end function;
+
+end unit;

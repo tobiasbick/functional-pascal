@@ -1,0 +1,83 @@
+// [Documentation](../../../../../docs/ui/tui/host.md#popup-input)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupPlacement;
+
+uses Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System as Sys;
+
+// Places a popup at its trigger and flips it when the opposite side has more room.
+// ## Parameters
+// - `Anchor`: Visible trigger bounds.
+// - `Screen`: Full terminal bounds.
+// - `Wanted`: Preferred row count.
+// - `Columns`: Preferred width in cells.
+// - `Position`: Preferred placement relative to the trigger.
+// ## Returns
+// A nonempty panel within the terminal.
+public function Place(Anchor: F.Rect; Screen: F.Rect; Wanted: int; Columns: int; Position: M.Placement): F.Rect;
+begin
+  const Width: int := Sys.Math.Min(Screen.Width, Columns);
+  const Left: int := Anchor.X;
+  const Right: int := Screen.Width - Anchor.X - Anchor.Width;
+  const Side: bool := Position = M.Placement.RightStart or Position = M.Placement.Right
+    or Position = M.Placement.LeftStart or Position = M.Placement.Left;
+  if Side and Sys.Math.Max(Left, Right) >= Width then
+    const PreferLeft: bool := Position = M.Placement.LeftStart or Position = M.Placement.Left;
+    const ToLeft: bool := if PreferLeft then
+      Left >= Width
+    else
+      Right < Width
+    end if;
+    const Height: int := Sys.Math.Min(Screen.Height, Wanted);
+    const Centered: bool := Position = M.Placement.Left or Position = M.Placement.Right;
+    const Y: int := Anchor.Y + (if Centered then
+      (Anchor.Height - Height) div 2
+    else
+      0
+    end if);
+    return new F.Rect(
+      if ToLeft then
+        Anchor.X - Width
+      else
+        Anchor.X + Anchor.Width
+      end if,
+      Sys.Math.Clamp(Y, 0, Screen.Height - Height), Width, Height
+    );
+  end if;
+
+  const Above: int := Anchor.Y;
+  const Below: int := Screen.Height - Anchor.Y - Anchor.Height;
+  const PreferAbove: bool := Position = M.Placement.TopStart or Position = M.Placement.Top
+    or Position = M.Placement.TopEnd;
+  const Up: bool := if PreferAbove then
+    Above >= Wanted or Above >= Below
+  else
+    Below < Wanted and Above > Below
+  end if;
+  const Height: int := Sys.Math.Max(
+    1, Sys.Math.Min(
+      Wanted, if Up then
+        Above
+      else
+        Below
+      end if
+    )
+  );
+  const X: int := case Position of
+    when M.Placement.TopEnd, M.Placement.BottomEnd: Anchor.X + Anchor.Width - Width;
+    when M.Placement.Top, M.Placement.Bottom: Anchor.X + (Anchor.Width - Width) div 2;
+    else Anchor.X;
+  end case;
+  const Y: int := if Up then
+    Anchor.Y - Height
+  else
+    Anchor.Y + Anchor.Height
+  end if;
+  return new F.Rect(
+    Sys.Math.Clamp(X, 0, Screen.Width - Width),
+    Sys.Math.Clamp(Y, 0, Screen.Height - Height),
+    Width,
+    Height
+  );
+end function;
+
+end unit;

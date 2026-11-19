@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Inputs.State;
 
 uses
+  Gallery.Shared.AboutField as AboutSample,
   Gallery.Shared.PickerChoices as Choices, GuiGallery.Shared.State as Demo, Fpas.Ui.Graphics as G, System as Sys;
 
 // State owned by this gallery feature.
@@ -10,7 +11,7 @@ public type Model = record
   // Current query in the Search projects example.
   public SearchQuery: string := '';
   // Current multiline value in the About example.
-  public About: string := 'Mathematician and writer. I like engines that compute and interfaces that stay out of the way.';
+  public About: string := AboutSample.Initial;
   // Current value of the password example.
   public Password: string := '';
   // Ordered topics in the tag input example.

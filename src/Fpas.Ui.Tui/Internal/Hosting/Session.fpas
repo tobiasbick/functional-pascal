@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Tui.Internal.Hosting.Session;
 
-uses Fpas.Ui.Tui.Internal.Widgets.Inputs.Select as Select, Fpas.Ui.Tui.Internal.Hosting.RowNavigation as Navigation, Fpas.Ui.Tui.Internal.Hosting.GridNotifications as Grids, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as Ui, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.View.Lowering as Lower, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Theming.Themes as SharedThemes, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Equivalence as Q, Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Rendering.Decoration as D, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as PopupState, Fpas.Ui.Tui.Internal.Hosting.InputDispatch as InputDispatch, Fpas.Ui.Tui.Internal.Hosting.RowNavigation as Navigation, Fpas.Ui.Tui.Internal.Hosting.GridNotifications as Grids, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as Ui, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.View.Lowering as Lower, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Theming.Themes as SharedThemes, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Equivalence as Q, Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Rendering.Decoration as D, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 type PendingInput = record
   // The input receipt ID exposed by the terminal host.
@@ -253,19 +253,20 @@ public function Start<TModel, TMsg>(
       Viewport.Rows,
       Current,
       ScrollOffsets,
-      Theme, Popup
+      Theme, Popup, PendingFocus ?? Routing.FocusId()
     );
     Routing.Reconcile(Layout, Current);
     const Target: string? := PendingFocus;
     PendingFocus := null;
     const Entry: string := Target ?? Routing.FocusId();
-    if Entry <> '' and A.FindControl<TMsg>(Layout, Entry) = null and Navigation.Reveal<TMsg>(
+    if Entry <> '' and A.FindControl<TMsg>(Layout, Entry) = null and (Navigation.Reveal<TMsg>(
       Layout,
       Entry,
       ScrollOffsets,
       Core.Dispatch,
       false
     )
+      or Navigation.CanFocusOffscreen<TMsg>(Layout, Entry, Routing.ScopeId()))
     then
       Layout := Arrangement.Arrange<TMsg>(
         Root,
@@ -273,7 +274,7 @@ public function Start<TModel, TMsg>(
         Viewport.Rows,
         Layout,
         ScrollOffsets,
-        Theme, Popup
+        Theme, Popup, Entry
       );
       Routing.Reconcile(Layout, Current);
     end if;
@@ -341,7 +342,7 @@ public function Start<TModel, TMsg>(
       when App.Input.Resize(const NewColumns: int, const NewRows: int):
         Viewport := new T.Viewport(NewColumns, NewRows);
       else
-        I.Dispatch<TMsg>(Routing, Layout, Entry.Event);
+        InputDispatch.Dispatch<TMsg>(Routing, Layout, Entry.Event);
     end case;
   end procedure;
 
@@ -453,7 +454,7 @@ begin
       end case;
     end procedure, 64
   );
-  const Popup: Select.State<TMsg> := Select.Start<TMsg>(Core.Dispatch);
+  const Popup: PopupState.State<TMsg> := PopupState.Start<TMsg>(Core.Dispatch);
   const Interaction: I.State<TMsg> := I.Create<TMsg>(Core.Dispatch, ScrollOffsets);
   CheckSize(Columns, Rows);
   try

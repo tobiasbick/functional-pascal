@@ -47,7 +47,7 @@ and input support. [GUI adapter](gui/host.md),
 | Property inspector, flame graph, curve editor, gradient editor and timeline editor | | | Yes |
 | Button variants, sizes, icons, busy state and content/fill/fixed width | Yes | Yes | Yes |
 | Button group with a shared outline | | | Yes |
-| Dropdown menus, command states, hints, sections and separators | | | Yes |
+| Dropdown menus, command states, hints, sections and separators | Yes | Yes | Yes |
 | Split button | | | Yes |
 | Context menu attached to a component | | | Yes |
 | Reactions and user menus | | | Yes |
@@ -58,7 +58,8 @@ and input support. [GUI adapter](gui/host.md),
 | Select with optional search and model-owned choice | Yes | Yes | Yes |
 | Single-line text field with label, placeholder, hint or error | Yes | Yes | Yes |
 | Field icons, affixes, clear and password buttons, and size variants | | | Yes |
-| Search field and wrapping multiline text area with affixes | | | Yes |
+| Wrapping multiline text area | Yes | Yes | Yes |
+| Search field and text area affixes, icons, clear button and size variants | | | Yes |
 | Inline editing, scrub and money fields, shortcut recording and native shortcut labels | | | Yes |
 | Single-selection segmented control, sizes, icons and full width | | | Yes |
 | Copy button with transient feedback | | | Yes |
@@ -68,7 +69,9 @@ and input support. [GUI adapter](gui/host.md),
 | Status bar with text, actions, progress and spacers | Yes | Yes | Yes |
 | Native table of contents and scroll anchors | | | Yes |
 | Native responsive grid, justification, cards, badges, metrics, avatar groups and empty states | | | Yes |
-| Tabs, breadcrumb, pagination and stepper | | | Yes |
+| Tabs | Yes | Yes | Yes |
+| Breadcrumb, pagination and stepper | | | Yes |
+| Expandable card with a model-owned open state | Yes | Yes | Yes |
 | Modal edge sheet with a pinned header and scrolling body | Yes | Yes | Yes |
 | Centered modal dialog | Yes | Yes | Yes |
 | Draggable or resizable dialog and native action footer | | | Yes |
@@ -581,10 +584,10 @@ operates the rating by pointer. Both widgets require the graphical profile.
 
 `Fpas.Ui.Widgets.Navigation.Tabs.Tabs` takes a stable ID, up to 32 positional tabs, a model-owned
 zero-based selection and an `OnChange` mapper. Native tabs support underline
-or pill indicators, optional icons and full-width allocation. Click or use
-Left and Right to change selection. CUI scrolls an overflowing strip
+or pill indicators, optional icons and full-width allocation. Click or use Left and Right to change selection. An overflowing strip scrolls
 horizontally. The application chooses the selected tab's content in its view.
-Use `Tabs.ItemId(Id, Index)` to focus a particular tab.
+Use `Tabs.ItemId(Id, Index)` to focus a particular tab. The [terminal strip](tui/navigation/tabs.md)
+visits its selected tab once during Tab traversal and displays text labels.
 
 `Fpas.Ui.Widgets.Navigation.Breadcrumbs.Breadcrumb` takes a stable trail ID, literal captions
 and an `OnNavigate` mapper. Activating an ancestor proposes its zero-based
@@ -750,7 +753,7 @@ for an icon-only trigger; the native ellipsis is its default icon.
 Down, Enter or pointer activation opens the focused trigger. Native CUI owns
 the GUI highlight; Up/Down move it and Enter chooses. Escape, an outside click
 or a choice closes the menu. Disabling or removing the trigger retires its
-open popup. Empty dynamic menus can still be dismissed.
+open popup. Empty dynamic menus can still be dismissed. The [terminal menu](tui/actions/dropdown-menu.md) shares the select popup host and renders icon-only triggers as an ellipsis.
 
 ## Context menu
 
@@ -777,20 +780,18 @@ harmless preview messages.
 ## Accordion and expandable card
 
 `Fpas.Ui.Widgets.Containers.Accordions.Accordion<TMsg>(Id, Title, Open, OnChange, Content, Enabled)`
-and `Fpas.Ui.Widgets.Containers.ExpandableCards.ExpandableCard<TMsg>(Id, Title, Open, OnChange,
-Content, Settings)` use CUI's native header, chevron, layout and height spring.
-`Open` belongs to the model; `OnChange` proposes the next boolean. Update may
-accept or decline it. Stable IDs are independent of literal titles, including
-`##` and `###`. Pointer activation, Enter and Space toggle the focused header.
-Escape leaves expansion unchanged.
+and `Fpas.Ui.Widgets.Containers.ExpandableCards.ExpandableCard<TMsg>(Id, Title, Open, OnChange, Content, Settings)`
+keep `Open` in the model. Pointer activation, Enter and Space propose the
+opposite state. Stable header IDs remain independent of literal titles, including
+`##` and `###`, and the body has its own control IDs.
 
-Card options add CUI's description, icon, badge and `Styles.Tone` badge color. `Enabled` gates
-the header and body. CUI still draws outgoing content while closing, with input
-disabled; the host omits those descendants from agent snapshots and focus
-selection. The body's own control IDs remain independent of the header.
-Snapshots use `accordion` and `expandable-card`, with the model's boolean in
-`Value` and the native header's bounds and focus. CUI draws and sizes the whole
-wrapper; no second disclosure layout or animation system is involved.
+`Enabled` gates input to the header and body. Snapshots use `accordion` and
+`expandable-card` as roles and report the model's open state in `Value`.
+In GUI, CUI draws the description, icon, badge color and height spring.
+It can paint the closing content after removing it from input and snapshots.
+The [terminal expandable card](tui/disclosure/expandable-card.md) displays the
+description and a text badge. When focus is inside a collapsing body, the
+terminal returns it to the header.
 
 ## Data display
 
@@ -1309,16 +1310,15 @@ validation text, prefix and suffix. The query excludes the displayed affixes.
 ## Text area
 
 `Fpas.Ui.Widgets.Inputs.TextAreas.TextArea<TMsg>(Id, Value, OnChange, Settings, OnSubmit)`
-uses CUI's wrapping editor for model text with LF line endings. Enter inserts
-LF. Ctrl+Enter submits the current text on Windows and Linux. Up and Down
-move between visual lines. The wheel scrolls the text area and then its
-enclosing viewport when the area reaches the end.
+wraps model text with LF line endings. Enter inserts LF and Up and Down move
+between visual lines. The wheel scrolls the text area and hands off to its
+enclosing viewport at an edge.
 
-`Height` is in logical points and defaults to 96. Zero uses the native default
-and a negative value fills the available height. The prefix and suffix
-remain outside the editable text. Both editors share the model reconciliation,
-submission ordering and UTF-8 capacity rules of the text field and require
-the Graphical profile.
+`Height` is in logical points and defaults to 96. Zero uses the host default
+and a negative value fills available space. A submit callback can receive the
+accepted text on Ctrl+Enter. Prefix and suffix stay outside the editable
+value on the GUI. The [terminal text area](tui/inputs/text-area.md) supports the
+shared byte limit, label, placeholder, hint, error and read-only mode.
 
 ## Tag input
 

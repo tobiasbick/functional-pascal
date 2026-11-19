@@ -1,0 +1,60 @@
+// [Documentation](../../../../docs/ui/tui/host.md#input-and-controlled-state)
+
+unit Fpas.Ui.Tui.Internal.Hosting.InputDispatch;
+
+uses
+  Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Layout.Scene as A,
+  Fpas.Ui.Tui.Application as App, Fpas.Ui.TerminalExtensions.Input as K, System as Sys;
+
+// Routes an admitted input against the currently presented layout.
+//
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Routing`: Session's input router.
+// - `Layout`: Presented controls and modal scope.
+// - `Event`: Input to route.
+public procedure Dispatch<TMsg>(Routing: I.State<TMsg>; Layout: A.Layout<TMsg>; Event: App.Input);
+begin
+  const Scope: A.Scope<TMsg>? := Layout.Active;
+  if Scope <> null then
+    case Scope.LocalInput of
+      when is Sys.Func<App.Input, bool> as Popup:
+        if Popup.Invoke(Event) then
+          return;
+        end if;
+      else
+    end case;
+  end if;
+
+  case Event of
+    when App.Input.Focus(const Id: string):
+      Routing.SetFocus(Layout, Id);
+    when App.Input.Activate(const Id: string):
+      Routing.Activate(Layout, Id);
+    when App.Input.Click(const Column: int, const Row: int):
+      Routing.Click(Layout, K.MouseButton.Left, Column, Row);
+    when App.Input.ButtonClick(const Button: K.MouseButton, const Column: int, const Row: int):
+      Routing.Click(Layout, Button, Column, Row);
+    when App.Input.Pointer(const Kind: K.PointerKind, const Column: int, const Row: int):
+      Routing.Pointer(Layout, Kind, K.MouseButton.Left, Column, Row);
+    when App.Input.ButtonPointer(
+      const Kind: K.PointerKind,
+      const Button: K.MouseButton,
+      const Column: int,
+      const Row: int
+    ):
+      Routing.Pointer(Layout, Kind, Button, Column, Row);
+    when App.Input.Scroll(const Column: int, const Row: int, const Delta: int):
+      Routing.Scroll(Layout, Column, Row, Delta);
+    when App.Input.KeyPress(const Key: K.Key, const Modifiers: K.KeyModifiers):
+      Routing.Key(Layout, Key, Modifiers);
+    when App.Input.Character(const Text: string):
+      Routing.Insert(Layout, Text, true);
+    when App.Input.TextInput(const Text: string), App.Input.Paste(const Text: string):
+      Routing.Insert(Layout, Text, false);
+    when App.Input.Resize(_, _):
+  end case;
+end procedure;
+
+end unit;

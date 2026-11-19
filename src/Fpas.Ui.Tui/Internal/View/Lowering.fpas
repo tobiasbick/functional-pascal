@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Tui.Internal.View.Lowering;
 
-uses Fpas.Ui.Tui.Internal.Widgets.Inputs.Select as Select, Fpas.Ui.Widgets.Inputs.Selects as Selects, Fpas.Ui.Tui.Internal.Widgets.Inputs.RadioGroup as Radios, Fpas.Ui.Widgets.Inputs.RadioGroups as R, Fpas.Ui.Tui.Internal.Widgets.Inputs.ToggleRows as Toggles, Fpas.Ui.Tui.Internal.Widgets.Collections.Table as TableWidget, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as FieldWidget, Fpas.Ui.Widgets.Inputs.TextFields as Fields, Fpas.Ui.Widgets.Desktop.StatusBars as StatusBars, Fpas.Ui.Tui.Internal.Widgets.Desktop.StatusBar as StatusLine, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Widgets.Feedback.ProgressBars as ProgressBars, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Tui.Internal.Widgets.Actions.Button as Button, Fpas.Ui.Elements as Ui, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Navigation.Navigation as N, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Navigation.Sidebar as Sidebar, Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Panel, Fpas.Ui.Tui.Internal.Layout.Flexible as Geometry, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as C;
+uses Fpas.Ui.Tui.Internal.Widgets.Containers.ExpandableCard as Card, Fpas.Ui.Widgets.Containers.ExpandableCards as Cards, Fpas.Ui.Tui.Internal.Widgets.Overlays.Dropdown as Dropdown, Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as PopupState, Fpas.Ui.Widgets.Inputs.TextAreas as Areas, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextArea as AreaWidget, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Widgets.Navigation.Tabs as TabSettings, Fpas.Ui.Tui.Internal.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Tui.Internal.Widgets.Inputs.Select as Select, Fpas.Ui.Widgets.Inputs.Selects as Selects, Fpas.Ui.Tui.Internal.Widgets.Inputs.RadioGroup as Radios, Fpas.Ui.Widgets.Inputs.RadioGroups as R, Fpas.Ui.Tui.Internal.Widgets.Inputs.ToggleRows as Toggles, Fpas.Ui.Tui.Internal.Widgets.Collections.Table as TableWidget, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as FieldWidget, Fpas.Ui.Widgets.Inputs.TextFields as Fields, Fpas.Ui.Widgets.Desktop.StatusBars as StatusBars, Fpas.Ui.Tui.Internal.Widgets.Desktop.StatusBar as StatusLine, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Widgets.Feedback.ProgressBars as ProgressBars, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Tui.Internal.Widgets.Actions.Button as Button, Fpas.Ui.Elements as Ui, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Navigation.Navigation as N, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Navigation.Sidebar as Sidebar, Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Panel, Fpas.Ui.Tui.Internal.Layout.Flexible as Geometry, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as C;
 
 // Converts shared flex rules into resolved cell constraints.
 //
@@ -117,13 +117,13 @@ end function;
 //
 // ## Parameters
 // - `Prepared`: Terminal-profile preflight result.
-// - `Popup`: Session-local select interactions.
+// - `Popup`: Session-local popup interactions.
 // - `Theme`: Current terminal theme.
 //
 // ## Returns
 // The resolved backend tree, with no application-facing constructors.
 public function Prepare<TMsg>(
-  Prepared: V.Prepared<TMsg>; Theme: Th.Theme; Popup: Select.State<TMsg>
+  Prepared: V.Prepared<TMsg>; Theme: Th.Theme; Popup: PopupState.State<TMsg>
 ): E.Element<TMsg>;
   function Children(Items: array of Ui.Element<TMsg>; Colors: T.Style; Horizontal: bool := false): array of E.Element<TMsg>;
   begin
@@ -160,6 +160,24 @@ public function Prepare<TMsg>(
         const Settings: B.Options
       ):
         return Button.Lower<TMsg>(Id, Text, Message, Settings);
+      when Ui.Element.ExpandableCard(
+        const Id: string, const Title: string, const Open: bool, const Change: function(bool): TMsg,
+        const Content: Ui.Element<TMsg>, const Settings: Cards.Options
+      ):
+        const Surface: T.Style := Role(Theme, UiStyle.Role.Panel, Colors);
+        return Card.Lower<TMsg>(
+          Id, Title, Open, Change, Settings, Surface,
+          function(): E.Element<TMsg> => Visit(Content, Surface)
+        );
+      when Ui.Element.Dropdown(
+        const Id: string,
+        const Label: string,
+        const Entries: array of Menus.Entry<TMsg>,
+        const Settings: Menus.Options
+      ):
+        return Dropdown.Lower<TMsg>(
+          new Dropdown.Trigger<TMsg>(Id, Label, Entries, Settings, Popup)
+        );
       when Ui.Element.SelectInput(
         const Id: string,
         const Items: array of Selects.Item,
@@ -170,6 +188,11 @@ public function Prepare<TMsg>(
         return Select.Lower<TMsg>(
           new Select.Trigger<TMsg>(Id, Items, Selected, Change, Settings, Popup)
         );
+      when Ui.Element.TabStrip(
+        const Id: string, const Items: array of TabSettings.Item, const Selected: int,
+        const Change: function(int): TMsg, const Settings: TabSettings.Options
+      ):
+        return Tabs.Lower<TMsg>(Id, Items, Selected, Change, Settings);
       when Ui.Element.Radios(
         const Id: string,
         const Items: array of R.Item,
@@ -208,12 +231,34 @@ public function Prepare<TMsg>(
         const Enabled: bool
       ):
         return Toggles.Switch<TMsg>(Id, Label, On, Change, Description, Enabled);
+      when Ui.Element.TextArea(
+        const Id: string, const Value: string, const Change: function(string): TMsg,
+        const Settings: Areas.Options, const Submit: Sys.Func<string, TMsg>?
+      ):
+        const Rows: int := Geometry.Cells(
+          L.Measure.Logical(
+            if Settings.Height > 0 then
+              Settings.Height
+            else
+              96
+            end if
+          ), false
+        );
+        return AreaWidget.Lower<TMsg>(
+          new AreaEdit.Field<TMsg>(Id, Value, Change, Settings, Submit, Rows),
+          Colors,
+          Theme
+        );
       when Ui.Element.TextField(
         const Id: string, const Value: string, const Change: function(string): TMsg,
         const Settings: Fields.Options, const Submit: Sys.Func<string, TMsg>?
       ):
-        return FieldWidget.Lower<TMsg>(
-          new Edit.Field<TMsg>(Id, Value, Change, Settings, Submit),
+        const Field: Edit.Field<TMsg> := new Edit.Field<TMsg>(Id, Value, Change, Settings, Submit);
+        return FieldWidget.WithLabels<TMsg>(
+          E.Element<TMsg>.TextField(Field),
+          Settings.Label,
+          Settings.Hint,
+          Settings.Error,
           Colors,
           Theme
         );

@@ -8,14 +8,18 @@ The sidebar follows the GUI gallery’s **Components** and **Extended** sections
 | --- | --- |
 | Components → Overview | Browse components or create a workspace with the shared name and email fields and an optional weekly summary. |
 | Components → Buttons | Variants, sizes and icons, then states. Choose **Save changes** to see **Saving**, or **Reset** to return to the initial state. |
+| Components → Buttons → Dropdown menu | Open Options to run a project command or confirm deletion. |
 | Components → Inputs | Edit the full name and email side by side or stacked on narrow terminals. Overview and the profile dialog show the same values. |
+| Components → Inputs → About | Edit the same multiline profile description as in the GUI. |
 | Components → Inputs → Pickers | Choose a country or filter languages by typing in the open list. |
 | Components → Selection → Checkbox | Email notifications, Marketing and a disabled option. Email notifications also controls Comments in the Notifications sheet. |
 | Components → Selection → Switch | Toggle Wi-Fi, Bluetooth or Airplane mode. Wi-Fi and Bluetooth also control the corresponding preferences in Overlays. |
 | Components → Selection → Radio group | Choose how often to save with the arrow keys or a click. |
+| Components → Navigation → Tabs | Switch the underline and pill tabs from the GUI example. |
 | Components → Overlays | Edit the profile, open the Notifications sheet, or confirm project deletion. The sheet has three editable notification switches and two recent events. |
 | Components → Feedback → Progress | Uploading assets at 68% and exporting a clip at 42%. |
 | Components → Data display → Table | The five people from the GUI example, with the same columns, sort order and initial selection. |
+| Extended → Disclosure → Expandable cards | Open Security to read the recovery-code details. |
 | Extended → Text and display → Text and inline code | Heading, body, label, secondary text, muted text and a command. |
 | Extended → App chrome | Editor excerpt and status bar. Activate the indentation, encoding or language to cycle its value. |
 | Terminal → Cell grid | Click the ripple field to move its center or use the wheel to change its spacing. |
@@ -24,7 +28,11 @@ The sidebar and preview share the terminal width in a 1:2 ratio. Use ↑/↓, Pa
 
 ![Gallery button variants, sizes, icons and states](buttons.png)
 
+![Open Options dropdown on Buttons](dropdown-menu.png)
+
 ![Editable full name and email on Inputs](text-field.png)
+
+![Multiline About field under Inputs](text-area.png)
 
 ![Searchable Language select under Inputs](select.png)
 
@@ -36,11 +44,15 @@ The sidebar and preview share the terminal width in a 1:2 ratio. Use ↑/↓, Pa
 
 ![Notification settings and recent events in a right-hand sheet](sheet.png)
 
+![Underline and pill tabs on Navigation](tabs.png)
+
 ![Delete project confirmation with Cancel focused](dialog.png)
 
 ![Upload and export progress under Feedback](panels.png)
 
 ![People table under Data display](table.png)
+
+![Open Security card on Disclosure](expandable-card.png)
 
 ![Editor and status bar under App chrome](statusbar.png)
 

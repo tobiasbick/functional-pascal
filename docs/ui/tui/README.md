@@ -42,12 +42,13 @@ dotnet run --project examples/ui/tui/gallery/TuiWidgetGallery.fpasproj
 | Category | Widgets and examples |
 | --- | --- |
 | [Layout](layout/README.md) | Panels, weighted rows and columns, scroll views |
-| [Navigation](navigation/README.md) | Sidebar with selectable destinations |
-| [Actions](actions/README.md) | Button |
-| [Inputs](inputs/README.md) | Single-line text field, select with optional search |
+| [Navigation](navigation/README.md) | Sidebar with selectable destinations and tabs |
+| [Actions](actions/README.md) | Button and dropdown menu |
+| [Inputs](inputs/README.md) | Text field, multiline text area, select with optional search |
 | [Selection](selection/README.md) | Checkbox, switch and radio group |
 | [Overlays](overlays/README.md) | Dialog and sheet |
 | [Data display](data-display/README.md) | Table with sortable headings and selectable rows |
+| [Disclosure](disclosure/README.md) | Expandable card |
 | [Feedback](feedback/README.md) | Determinate progress bar |
 | [App chrome](app-chrome/README.md) | Status bar |
 | [Text and display](text-and-display/README.md) | Text, semantic colors and cell grid |

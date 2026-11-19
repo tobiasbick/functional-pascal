@@ -1,0 +1,111 @@
+// [Documentation](../../../../../docs/ui/tui/inputs/text-area.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaRows;
+
+uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, System as Sys, System.Globalization as Global, System.Collections.Generic as C;
+
+// UTF-16 span of one displayed line, excluding the hard line separator.
+public type Line = record
+  // First text element.
+  public Start: int;
+  // Offset immediately after the last element.
+  public Stop: int;
+end record;
+
+// Wraps text at spaces when possible and at text element boundaries otherwise.
+// ## Parameters
+// - `Value`: LF-delimited editor text.
+// - `Width`: Positive number of editable terminal columns.
+// ## Returns
+// Display lines, including empty and trailing lines.
+public function Wrap(Value: string; Width: int): array of Line;
+requires Width > 0;
+begin
+  const Rows: C.List<Line> := new C.List<Line>();
+  const Starts: array of int := Global.StringInfo.ParseCombiningCharacters(Value);
+  var First: int := 0;
+  var At: int := 0;
+  var BreakAt: int := 0;
+  var Cells: int := 0;
+  while At < Starts.Length do
+    const Offset: int := Starts[At];
+    const Next: int := if At + 1 < Starts.Length then
+      Starts[At + 1]
+    else
+      Value.Length
+    end if;
+    const Glyph: string := Value.Substring(Offset, Next - Offset);
+    if G.LineBreak(Glyph) then
+      Rows.Add(new Line(Starts[First], Offset));
+      At := At + 1;
+      First := At;
+      BreakAt := At;
+      Cells := 0;
+    else
+      const Span: int := G.Width(Glyph);
+      if At > First and Cells + Span > Width then
+        At := if BreakAt > First then
+          BreakAt
+        else
+          At
+        end if;
+        Rows.Add(new Line(Starts[First], Starts[At]));
+        First := At;
+        BreakAt := At;
+        Cells := 0;
+      else
+        Cells := Cells + Span;
+        At := At + 1;
+        if Sys.Char.IsWhiteSpace(Glyph[0]) then
+          BreakAt := At;
+        end if;
+      end if;
+    end if;
+  end while;
+
+  Rows.Add(
+    new Line(
+      if First < Starts.Length then
+        Starts[First]
+      else
+        Value.Length
+      end if, Value.Length
+    )
+  );
+  return Rows.ToArray();
+end function;
+
+// Locates a caret in the wrapped document.
+// ## Parameters
+// - `Rows`: Nonempty displayed lines.
+// - `Offset`: Current insertion offset.
+// - `BeforeWrap`: Keep a shared boundary on the preceding line.
+// ## Returns
+// The zero-based visual row.
+public function Locate(Rows: array of Line; Offset: int; BeforeWrap: bool): int;
+begin
+  var Index: int := 0;
+  while Index + 1 < Rows.Length and Rows[Index + 1].Start <= Offset do
+    if BeforeWrap and Rows[Index].Stop = Offset and Rows[Index + 1].Start = Offset then
+      break;
+    end if;
+
+    Index := Index + 1;
+  end while;
+
+  return Index;
+end function;
+
+// Maps a cell position within a line to a text element boundary.
+// ## Parameters
+// - `Value`: Document text.
+// - `Row`: Target line.
+// - `Column`: Zero-based column.
+// ## Returns
+// Insertion offset clamped to the line.
+public function AtColumn(Value: string; Row: Line; Column: int): int;
+begin
+  return Row.Start + G.IndexAt(Value.Substring(Row.Start, Row.Stop - Row.Start), 0, Column);
+end function;
+
+end unit;

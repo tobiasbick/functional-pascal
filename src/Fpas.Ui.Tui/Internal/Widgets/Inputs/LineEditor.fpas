@@ -3,7 +3,7 @@
 unit Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor;
 
 uses
-  Fpas.Ui.Widgets.Inputs.TextFields as Fields, Fpas.Ui.TerminalExtensions.Input as K,
+  Fpas.Ui.Tui.Internal.Widgets.Inputs.EditText as TextEdit, Fpas.Ui.Widgets.Inputs.TextFields as Fields, Fpas.Ui.TerminalExtensions.Input as K,
   Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, System as Sys, System.Globalization as Global,
   System.Text as Text;
 
@@ -56,31 +56,6 @@ begin
   );
 end function;
 
-function Next(Value: string; Offset: int): int;
-begin
-  return if Offset < Value.Length then
-    Offset + Global.StringInfo.GetNextTextElementLength(Value, Offset)
-  else
-    Offset
-  end if;
-end function;
-
-function Previous(Value: string; Offset: int): int;
-begin
-  const Starts: array of int := Global.StringInfo.ParseCombiningCharacters(Value);
-  const Index: int := Sys.Array.BinarySearch<int>(Starts, Offset);
-  const Before: int := (if Index >= 0 then
-    Index
-  else
-    -Index - 1
-  end if) - 1;
-  return if Before >= 0 then
-    Starts[Before]
-  else
-    0
-  end if;
-end function;
-
 // Fits the caret and its display cell inside the current text viewport.
 // ## Parameters
 // - `Value`: Current model text.
@@ -98,7 +73,7 @@ begin
   // A deletion or insertion can join graphemes across the former viewport boundary.
   if Position.Start > 0 and Position.Start < Value.Length then
     Position := Position with
-      Start := Previous(Value, Position.Start + 1);
+      Start := TextEdit.Previous(Value, Position.Start + 1);
     end with;
   end if;
   const CaretWidth: int := if Position.Offset = Value.Length then
@@ -112,7 +87,7 @@ begin
   if Excess > 0 then
     const Cut: int := G.IndexAt(Before, 0, Excess - 1);
     Position := Position with
-      Start := Position.Start + Next(Before, Cut);
+      Start := Position.Start + TextEdit.Next(Before, Cut);
     end with;
   end if;
 
@@ -128,11 +103,7 @@ begin
   const EndOffset: int := Start + Added.Length;
   Position.Write(
     new Cursor(
-      Value, if EndOffset > 0 then
-        Next(Value, Previous(Value, EndOffset))
-      else
-        0
-      end if, Position.Read().Start
+      Value, TextEdit.AfterEdit(Value, EndOffset), Position.Read().Start
     )
   );
   Apply(Field.Change(Value));
@@ -151,29 +122,12 @@ begin
   if Field.Settings.ReadOnly then
     return;
   end if;
-  var Available: int := Field.Settings.MaxUtf8Bytes - Text.Encoding.UTF8.GetByteCount(Field.Value);
-  const Added: Text.StringBuilder := new Text.StringBuilder();
-  const Glyphs: Global.TextElementEnumerator := Global.StringInfo.GetTextElementEnumerator(
-    G.SingleLine(Input)
+  const Available: int := Field.Settings.MaxUtf8Bytes - Text.Encoding.UTF8.GetByteCount(
+    Field.Value
   );
-  while Glyphs.MoveNext() do
-    const Glyph: string := Glyphs.GetTextElement();
-    if not Sys.Char.IsControl(
-      Glyph[0]
-    ) and not (Sys.Char.IsSurrogate(Glyph[0]) and not Sys.Char.IsSurrogatePair(Glyph, 0))
-    then
-      const Bytes: int := Text.Encoding.UTF8.GetByteCount(Glyph);
-      if Bytes > Available then
-        break;
-      end if;
-
-      discard Added.Append(Glyph);
-      Available := Available - Bytes;
-    end if;
-  end while;
-
-  if Added.Length > 0 then
-    Replace<TMsg>(Field, Position, Position.Read().Offset, 0, Added.ToString(), Apply);
+  const Added: string := TextEdit.Insertable(Input, Available, false);
+  if Added <> '' then
+    Replace<TMsg>(Field, Position, Position.Read().Offset, 0, Added, Apply);
   end if;
 end procedure;
 
@@ -206,24 +160,24 @@ begin
     when K.Key.Left:
       Position.Write(
         Position.Read() with
-          Offset := Previous(Field.Value, At);
+          Offset := TextEdit.Previous(Field.Value, At);
         end with
       );
     when K.Key.Right:
       Position.Write(
         Position.Read() with
-          Offset := Next(Field.Value, At);
+          Offset := TextEdit.Next(Field.Value, At);
         end with
       );
     when K.Key.Backspace, K.Key.Delete:
       if not Field.Settings.ReadOnly then
         const Start: int := if Pressed = K.Key.Backspace then
-          Previous(Field.Value, At)
+          TextEdit.Previous(Field.Value, At)
         else
           At
         end if;
         const Stop: int := if Pressed = K.Key.Delete then
-          Next(Field.Value, At)
+          TextEdit.Next(Field.Value, At)
         else
           At
         end if;

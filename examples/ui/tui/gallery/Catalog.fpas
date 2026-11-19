@@ -9,9 +9,11 @@ public type Preview = enum
   Buttons;
   Inputs;
   Selection;
+  Navigation;
   Overlays;
   Feedback;
   DataDisplay;
+  Disclosure;
   AppChrome;
   Text;
   CellGrid;
@@ -33,7 +35,7 @@ public const Components: array of Entry := [
   new Entry('Buttons', 'Variants, sizes and states.', Preview.Buttons),
   new Entry('Inputs', 'Text fields', Preview.Inputs),
   new Entry('Selection', 'Controls for choosing one option or several.', Preview.Selection),
-  new Entry('Navigation', 'Sidebars, tabs and paths between views.'),
+  new Entry('Navigation', 'Sidebars, tabs and paths between views.', Preview.Navigation),
   new Entry(
     'Overlays',
     'Dialogs and sheets',
@@ -54,7 +56,7 @@ public const Extended: array of Entry := [
   new Entry('Smart inputs', 'Editors for structured values.'),
   new Entry('Pickers', 'Choose colors, dates and other values.'),
   new Entry('Capture', 'Controls for capturing user input.'),
-  new Entry('Disclosure', 'Expand and collapse related content.'),
+  new Entry('Disclosure', 'Expand and collapse related content.', Preview.Disclosure),
   new Entry('Reader', 'Outlines and anchors for navigating a document.'),
   new Entry('Data grid', 'Tabular data organized into rows and columns.'),
   new Entry('Code', 'Source listings and code presentation.'),

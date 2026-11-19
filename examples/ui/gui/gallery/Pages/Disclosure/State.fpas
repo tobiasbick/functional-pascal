@@ -2,7 +2,7 @@
 
 unit GuiGallery.Pages.Disclosure.State;
 
-uses Fpas.Ui.Widgets.Feedback.Checklists as K, System as Sys;
+uses Gallery.Shared.SecurityCard as Security, Fpas.Ui.Widgets.Feedback.Checklists as K, System as Sys;
 
 // Initial duration in the original Countdown example.
 public const InitialSeconds: double := 193338.0;
@@ -16,7 +16,7 @@ public type Model = record
   // Expansion of the Billing card.
   public BillingOpen: bool := true;
   // Expansion of the Security card.
-  public SecurityOpen: bool := false;
+  public SecurityOpen: bool := Security.Initial;
   // Visibility of the announcement.
   public BannerOpen: bool := true;
   // Whether the photo is revealed.

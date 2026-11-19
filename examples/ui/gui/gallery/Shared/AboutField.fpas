@@ -1,0 +1,31 @@
+// [Documentation](../../../../../docs/ui/gui/inputs/text-area.md)
+
+unit Gallery.Shared.AboutField;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.TextAreas as Area;
+
+// Starting profile description used by both galleries.
+public const Initial: string := 'Mathematician and writer. I like engines that compute and interfaces that stay out of the way.';
+
+// Builds the shared About example.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `About`: Current profile description.
+// - `Change`: Maps an edit to an application message.
+// ## Returns
+// The multiline field and its hint.
+public function View<TMsg>(About: string; Change: function(string): TMsg): E.Element<TMsg>;
+begin
+  return Area.TextArea<TMsg>(
+    'input-about', About, Change,
+    new Area.Options(
+      Label := 'About',
+      Hint := 'Markdown is supported.',
+      Height := 96,
+      MaxUtf8Bytes := 511
+    )
+  );
+end function;
+
+end unit;

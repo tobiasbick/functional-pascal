@@ -208,6 +208,10 @@ Inputs and Edit profile, checks both text-field layouts and exercises the button
 states, workspace and notification checkboxes, shared preferences across Selection and both overlays, deletion confirmation, focus and resize. It verifies
 the GUI’s progress values, sortable people table and editor status actions,
 along with the terminal cell grid, theme switching and Ctrl+Q.
+The terminal expandable card contract checks keyboard and pointer toggles, hidden and disabled content, and focus restoration when an offscreen header needs to be revealed. The gallery checks the shared Security example.
+The dropdown contract checks scoped input, disabled commands, keyboard selection, pointer dismissal, empty menus, constrained placement and focus across a confirmation dialog. The gallery verifies the shared Options commands.
+The terminal text area contract checks word wrapping, caret movement, model-declined edits, paste normalization, Unicode limits, read-only fields, height and scroll handoff. The gallery checks editing the shared About description.
+The terminal tabs contract checks one focus stop per strip, keyboard and pointer selection, model-declined changes, disabled strips, full-width pills and focus across both scroll axes. The gallery checks that the shared Navigation examples respond to input on wide and narrow terminals.
 The terminal select contract checks filtered original indices, focus return, pointer dismissal, disabled controls, Unicode backspace, constrained viewports and removing the open trigger. The gallery checks the shared Country and Language examples in wide and stacked layouts.
 The radio-group contract covers one tab stop per group, wrapping past disabled options, pointer selection, model-declined changes and focus across a scroll boundary. The gallery also checks that the save-frequency selection survives page navigation.
 The gallery DAP test sends the same shortcuts through the private terminal

@@ -40,8 +40,19 @@ end procedure;
 
 procedure Validate();
 begin
+  const Choices: array of Tabs.Item := [new Tabs.Item('First')];
+  const Change: function(int): int := function(Value: int): int => Value;
+  for Profile: V.Target in [V.Target.Graphical, V.Target.Terminal, V.Target.Portable] do
+    discard V.Prepare<int>(Tabs.Tabs<int>('tabs', Choices, 0, Change), Profile);
+    Reject(Tabs.Tabs<int>('tabs', Choices, 1, Change), Profile, 'selected index');
+    Reject(
+      E.Column<int>(
+        Tabs.Tabs<int>('tabs', Choices, 0, Change),
+        Tabs.Tabs<int>('tabs/0', Choices, 0, Change)
+      ), Profile, 'Duplicate'
+    );
+  end for;
   const Nodes: array of E.Element<int> := [
-    Tabs.Tabs<int>('tabs', [new Tabs.Item('First')], 0, function(Value: int): int => Value),
     Breadcrumbs.Breadcrumb<int>('trail', ['Root', 'Current'], function(Value: int): int => Value),
     Paginations.Pagination<int>('pager', 0, 12, function(Value: int): int => Value),
     Steppers.Stepper<int>('stepper', ['First', 'Second'], 2)

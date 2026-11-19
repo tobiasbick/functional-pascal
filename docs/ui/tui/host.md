@@ -64,6 +64,12 @@ Both dim the background, keep focus inside and scroll a long body. Escape or
 a backdrop click proposes dismissal. A persistent dialog stays open until an
 action closes it. Closing the overlay restores available focus.
 
+## Popup input
+
+Dropdown menus and select fields use the same anchored panel. The active panel
+receives keyboard and pointer input. Dismissal returns focus to the trigger
+when it is still available. A disabled, removed or covered trigger closes its panel.
+
 ## Terminal extensions
 
 - Elements.CellStyled and Terminal.Style supply optional RGB overrides.
@@ -120,6 +126,7 @@ terminal widgets and their behavior.
 - `src/Fpas.Ui.Tui/Internal/Hosting/`
   - [GridNotifications.fpas](../../../src/Fpas.Ui.Tui/Internal/Hosting/GridNotifications.fpas)
   - [Interaction.fpas](../../../src/Fpas.Ui.Tui/Internal/Hosting/Interaction.fpas)
+  - [InputDispatch.fpas](../../../src/Fpas.Ui.Tui/Internal/Hosting/InputDispatch.fpas)
   - [Session.fpas](../../../src/Fpas.Ui.Tui/Internal/Hosting/Session.fpas)
 - `src/Fpas.Ui.Tui/Internal/Layout/`
   - [Arrangement.fpas](../../../src/Fpas.Ui.Tui/Internal/Layout/Arrangement.fpas)
@@ -135,6 +142,11 @@ terminal widgets and their behavior.
   - [Themes.fpas](../../../src/Fpas.Ui.Tui/Internal/Rendering/Themes.fpas)
 - `src/Fpas.Ui.Tui/Internal/Terminal/`
   - [Inputs.fpas](../../../src/Fpas.Ui.Tui/Internal/Terminal/Inputs.fpas)
+- `src/Fpas.Ui.Tui/Internal/Widgets/Overlays/`
+  - [AnchoredPopup.fpas](../../../src/Fpas.Ui.Tui/Internal/Widgets/Overlays/AnchoredPopup.fpas)
+  - [PopupHost.fpas](../../../src/Fpas.Ui.Tui/Internal/Widgets/Overlays/PopupHost.fpas)
+  - [PopupPlacement.fpas](../../../src/Fpas.Ui.Tui/Internal/Widgets/Overlays/PopupPlacement.fpas)
+  - [PopupState.fpas](../../../src/Fpas.Ui.Tui/Internal/Widgets/Overlays/PopupState.fpas)
 - `src/Fpas.Ui.Tui/Internal/View/`
   - [Lowering.fpas](../../../src/Fpas.Ui.Tui/Internal/View/Lowering.fpas)
   - [Tree.fpas](../../../src/Fpas.Ui.Tui/Internal/View/Tree.fpas)

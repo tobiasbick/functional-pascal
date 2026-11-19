@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Tui.Internal.Layout.Measurement;
 
-uses Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System as Sys;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System as Sys;
 
 public function FlexRule<TMsg>(Node: E.Element<TMsg>): E.Flex;
 begin
@@ -11,7 +11,11 @@ begin
       return new E.Flex(Grow := 1);
     when E.Element.Sized(_, const Rule: E.Flex):
       return Rule;
-    when E.Element.Decorated(const Child: E.Element<TMsg>, _):
+    when E.Element.Decorated(const Child: E.Element<TMsg>, _), E.Element.DisclosureBody(
+      _,
+      const Child: E.Element<TMsg>,
+      _
+    ):
       return FlexRule<TMsg>(Child);
     else
       return new E.Flex();
@@ -33,7 +37,13 @@ end function;
 public function Minimum<TMsg>(Node: E.Element<TMsg>; Horizontal: bool; ParentHorizontal: bool? := null): int;
 begin
   case Node of
-    when E.Element.Table(_), E.Element.TextField(_):
+    when E.Element.TabStrip(_):
+      return if Horizontal then
+        1
+      else
+        Intrinsic<TMsg>(Node, false)
+      end if;
+    when E.Element.Table(_), E.Element.TextField(_), E.Element.TextArea(_):
       return 1;
     when E.Element.StatusBar(_, _):
       return if Horizontal then
@@ -73,7 +83,7 @@ begin
     when E.Element.Decorated(
       const Child: E.Element<TMsg>,
       _
-    ):
+    ), E.Element.DisclosureBody(_, const Child: E.Element<TMsg>, _):
       return Minimum<TMsg>(Child, Horizontal, ParentHorizontal);
     when E.Element.Stack(
       const Children: array of E.Element<TMsg>,
@@ -138,6 +148,10 @@ end function;
 public function AllocationRule<TMsg>(Node: E.Element<TMsg>; Horizontal: bool): E.Flex;
 begin
   case Node of
+    when E.Element.TextArea(const Area: AreaEdit.Field<TMsg>):
+      if not Horizontal and Area.Settings.Height < 0 then
+        return new E.Flex(Minimum := 1, Grow := 1);
+      end if;
     when E.Element.Table(const Table: E.TableView<TMsg>):
       if not Horizontal then
         case Table.Settings.Height of
@@ -153,8 +167,16 @@ begin
 
   if Horizontal then
     case Node of
-      when E.Element.TextField(_):
+      when E.Element.TextField(_), E.Element.TextArea(_):
         return new E.Flex(Grow := 1);
+      when E.Element.TabStrip(const Strip: E.TabView<TMsg>):
+        return new E.Flex(
+          Minimum := 1, Grow := if Strip.Settings.FullWidth then
+            1
+          else
+            0
+          end if
+        );
       when E.Element.Progress(_, _, _, const Width: int?, _):
         if Width <> null then
           return new E.Flex(Basis := Width.Value, Maximum := Width.Value);
@@ -170,7 +192,11 @@ begin
         if View.FillWidth then
           return new E.Flex(Grow := 1);
         end if;
-      when E.Element.Decorated(const Child: E.Element<TMsg>, _):
+      when E.Element.Decorated(const Child: E.Element<TMsg>, _), E.Element.DisclosureBody(
+        _,
+        const Child: E.Element<TMsg>,
+        _
+      ):
         return AllocationRule<TMsg>(Child, Horizontal);
       else
     end case;
@@ -204,12 +230,18 @@ end function;
 public function CanStretch<TMsg>(Node: E.Element<TMsg>; Horizontal: bool; Explicit: bool := false): bool;
 begin
   case Node of
+    when E.Element.TabStrip(const Strip: E.TabView<TMsg>):
+      return Horizontal and (Explicit or Strip.Settings.FullWidth);
     when E.Element.Action(_, _, _, const View: E.ActionView):
       return Horizontal and (View.FillWidth or (Explicit and View.FixedWidth = null));
     when E.Element.Sized(
       const Child: E.Element<TMsg>,
       _
-    ), E.Element.Decorated(const Child: E.Element<TMsg>, _):
+    ), E.Element.Decorated(const Child: E.Element<TMsg>, _), E.Element.DisclosureBody(
+      _,
+      const Child: E.Element<TMsg>,
+      _
+    ):
       return CanStretch<TMsg>(Child, Horizontal, Explicit);
     else
       return true;
@@ -270,6 +302,20 @@ end function;
 public function Intrinsic<TMsg>(Node: E.Element<TMsg>; Horizontal: bool; Columns: int := -1): int;
 begin
   case Node of
+    when E.Element.TabStrip(const Strip: E.TabView<TMsg>):
+      if not Horizontal then
+        return if Strip.Settings.Appearance = Tabs.Variant.Underline then
+          2
+        else
+          1
+        end if;
+      end if;
+      var Width: int := Strip.Widths.Length - 1;
+      for Item: int in Strip.Widths do
+        Width := Width + Item;
+      end for;
+
+      return Width;
     when E.Element.Table(const Table: E.TableView<TMsg>):
       if Horizontal then
         var Width: int := Sys.Math.Min(E.MaximumColumns, Table.Columns.Length - 1);
@@ -307,6 +353,12 @@ begin
         24
       else
         1
+      end if;
+    when E.Element.TextArea(const Field: AreaEdit.Field<TMsg>):
+      return if Horizontal then
+        24
+      else
+        Field.Rows
       end if;
     when E.Element.CellGrid(_, _, _):
       return 1;
@@ -368,6 +420,10 @@ begin
       const Child: E.Element<TMsg>,
       _
     ), E.Element.Decorated(
+      const Child: E.Element<TMsg>,
+      _
+    ), E.Element.DisclosureBody(
+      _,
       const Child: E.Element<TMsg>,
       _
     ), E.Element.Scrollable(_, const Child: E.Element<TMsg>, _), E.Element.ControlledScroll(

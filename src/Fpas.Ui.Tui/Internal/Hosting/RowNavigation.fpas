@@ -58,6 +58,23 @@ begin
   return Stops[(At + 1) mod Stops.Length].Id;
 end function;
 
+// Checks whether an offscreen destination belongs to the active scope.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Layout`: Presented keyboard destinations.
+// - `Id`: Requested control identity.
+// - `Scope`: Active input scope.
+// ## Returns
+// True when arranging with this focus can reveal the destination.
+public function CanFocusOffscreen<TMsg>(Layout: A.Layout<TMsg>; Id: string; Scope: string): bool;
+begin
+  return Sys.Array.Exists<A.NavigationStop>(
+    Layout.NavigationRows,
+    function(Stop: A.NavigationStop): bool => Stop.Id = Id and Stop.Scope = Scope
+  );
+end function;
+
 // Reveals an offscreen row requested by an application focus command.
 // ## Type parameters
 // - `TMsg`: Application message type.

@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation;
 
-uses Fpas.Ui.Layout as L, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, System as Sys;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.TerminalExtensions.CellGrids as Grids, System.Collections.Generic as C, Fpas.Ui.Layout as L, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, System as Sys;
 
 procedure Notify<TMsg>(View: V.Viewport<TMsg>; Position: L.ScrollPosition; Offset: int; Apply: procedure(TMsg));
 begin
@@ -59,5 +59,72 @@ begin
 
   return true;
 end function;
+
+// Moves an unmanaged viewport within its scroll bounds.
+// ## Parameters
+// - `Offsets`: Host-owned scroll offsets.
+// - `Region`: Viewport and its scroll limits.
+// - `Delta`: Signed row movement.
+public procedure MoveOffset(Offsets: C.Dictionary<string, int>; Region: A.ScrollRegion; Delta: int);
+begin
+  var Before: int := 0;
+  discard Offsets.TryGetValue(Region.Id, out Before);
+  Offsets[Region.Id] := cast<int>(Sys.Math.Clamp(
+    cast<long>(Before) + Delta,
+    0L,
+    cast<long>(Region.Maximum)
+  ));
+end procedure;
+
+// Routes the wheel to the active control or its enclosing viewport.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Layout`: Presented scroll regions and controls.
+// - `Hit`: Topmost enabled control under the pointer.
+// - `Scope`: Active focus scope.
+// - `Column`: Pointer column.
+// - `Row`: Pointer row.
+// - `Delta`: Signed row movement.
+// - `Offsets`: Host-owned scroll offsets.
+// - `Apply`: Dispatches a proposed application change.
+public procedure Wheel<TMsg>(
+  Layout: A.Layout<TMsg>; Hit: A.Control<TMsg>?; Scope: string; Column: int; Row: int; Delta: int;
+  Offsets: C.Dictionary<string, int>; Apply: procedure(TMsg)
+);
+begin
+  if Hit <> null then
+    case Hit.Action of
+      when A.Binding.EditArea(const Area: AreaEdit.View<TMsg>, _, _):
+        if AreaEdit.Scroll<TMsg>(Area, Delta) then
+          return;
+        end if;
+      when A.Binding.Grid(const Area: F.Rect, const Changed: function(Grids.Event): TMsg):
+        Apply(Changed(Grids.Event.Wheel(Column - Area.X, Row - Area.Y, Delta)));
+        return;
+      else
+    end case;
+  end if;
+
+  for Index: int := Layout.Regions.Length - 1 downto 0 do
+    const Region: A.ScrollRegion := Layout.Regions[Index];
+    if Region.Scope = Scope and Region.Bounds.Contains(Column, Row) then
+      if Region.Controlled then
+        const Target: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, Region.Id);
+        if Target <> null then
+          case Target.Action of
+            when A.Binding.Scroll(const View: V.Viewport<TMsg>):
+              Move<TMsg>(View, Delta, Apply);
+            else
+          end case;
+        end if;
+      else
+        MoveOffset(Offsets, Region, Delta);
+      end if;
+
+      return;
+    end if;
+  end for;
+end procedure;
 
 end unit;

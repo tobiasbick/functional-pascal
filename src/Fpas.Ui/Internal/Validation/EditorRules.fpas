@@ -106,7 +106,7 @@ begin
   );
 end procedure;
 
-// Validates a graphical text area and reserves its native action identities.
+// Validates a text area and reserves its native action identities.
 //
 // ## Parameters
 // - `Id`: Stable editor identity.
@@ -121,7 +121,11 @@ public procedure CheckTextArea(
 );
 begin
   const Path: string := Location + '/textArea';
-  R.RequireProfile(Profile, V.Target.Graphical, Path);
+  if Settings.Icon <> '' or Settings.Prefix <> '' or Settings.Suffix <> '' or Settings.Clearable
+    or Settings.ControlSize <> B.Size.Medium
+  then
+    R.RequireProfile(Profile, V.Target.Graphical, Path);
+  end if;
   const At: string := Identify(Id, Path);
   if Settings.Clearable then
     discard Identify(A.ClearId(Id), At + '/clear');

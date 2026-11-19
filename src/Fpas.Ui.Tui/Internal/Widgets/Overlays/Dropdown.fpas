@@ -1,0 +1,135 @@
+// [Documentation](../../../../../docs/ui/tui/actions/dropdown-menu.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Overlays.Dropdown;
+
+uses
+  Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as P,
+  Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup as Popup, Fpas.Ui.Tui.Internal.View.Tree as E,
+  Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G,
+  Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Styles as Styles, System as Sys, System.Collections.Generic as C;
+
+// Trigger and current model commands for an anchored menu.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Trigger<TMsg> = record implements Actions.IActivatable<TMsg>
+  // Stable control identity.
+  public Id: string;
+  // Accessible menu name.
+  public Label: string;
+  // Current commands, sections and separators.
+  public Entries: array of M.Entry<TMsg>;
+  // Shared menu appearance and input permission.
+  public Settings: M.Options;
+  // The owning terminal session.
+  public State: P.State<TMsg>;
+
+  // Opens the menu at its first available command.
+  // ## Returns
+  // Opening sends no application message.
+  public function Activate(): Actions.Result<TMsg>;
+  begin
+    self.State.Write(new P.Cursor(self.Id));
+    return Actions.Result<TMsg>.NoAction;
+  end function;
+end record;
+
+// Builds the collapsed menu button.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Menu`: Current menu binding.
+// ## Returns
+// Button with its accessible name and open state.
+public function Lower<TMsg>(Menu: Trigger<TMsg>): E.Element<TMsg>;
+begin
+  const Variant: Styles.ButtonVariant := if Menu.Settings.Variant <>
+    Styles.ButtonVariant.Default
+  then
+    Menu.Settings.Variant
+  elsif Menu.Settings.IconOnly then
+    Styles.ButtonVariant.Ghost
+  else
+    Styles.ButtonVariant.Secondary
+  end if;
+  const Open: bool := Menu.Settings.Enabled and Menu.State.Read().Id = Menu.Id;
+  const Caption: string := if Menu.Settings.IconOnly then
+    '⋯'
+  else
+    Menu.Label + ' ▾'
+  end if;
+  const Value: string := if Open then
+    'true'
+  else
+    'false'
+  end if;
+  const Button: E.Element<TMsg> := E.Element<TMsg>.Action(
+    Menu.Id, Menu, Menu.Settings.Enabled,
+    new E.ActionView(
+      Caption, Name := Menu.Label, Role := 'menu', Value := Value, Variant := Variant,
+      Hint := (if Menu.Settings.IconOnly then
+        Menu.Label
+      else
+        ''
+      end if), ArrowFocus := false
+    )
+  );
+  return E.Element<TMsg>.Stack([Button], false, new E.Flow());
+end function;
+
+// Resolves menu entries to shared popup rows.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Menu`: Current menu binding.
+// - `Anchor`: Visible trigger bounds.
+// - `Columns`: Terminal width used to cap the requested panel width.
+// ## Returns
+// The shared popup content.
+public function Content<TMsg>(Menu: Trigger<TMsg>; Anchor: F.Rect; Columns: int): Popup.Content<TMsg>;
+begin
+  const Rows: C.List<Popup.Row<TMsg>> := new C.List<Popup.Row<TMsg>>(Menu.Entries.Length);
+  var Width: int := Sys.Math.Max(18, Anchor.Width);
+  for Spec: M.Entry<TMsg> in Menu.Entries do
+    case Spec of
+      when M.Entry.Action(const Item: M.Item<TMsg>):
+        const Text: string := (if Item.Checked then
+          '✓ '
+        else
+          '  '
+        end if) + G.SingleLine(Item.Label);
+        Width := Sys.Math.Max(Width, G.Measure(Text) + G.Measure(Item.Shortcut) + 3);
+        Rows.Add(
+          Popup.Row<TMsg>.Choice(
+            new Popup.Item<TMsg>(
+              M.ItemId(Menu.Id, Item.Key),
+              Item.Label,
+              Text,
+              'menu-item',
+              new Actions.Direct<TMsg>(Item.Message),
+              Hint := Item.Shortcut,
+              Enabled := Item.Enabled,
+              Danger := Item.Danger
+            )
+          )
+        );
+      when M.Entry.Label(const Text: string):
+        Width := Sys.Math.Max(Width, G.Measure(Text) + 2);
+        Rows.Add(Popup.Row<TMsg>.Section(Text));
+      when M.Entry.Separator:
+        Rows.Add(Popup.Row<TMsg>.Rule);
+    end case;
+  end for;
+
+  if Menu.Settings.Width > 0.0F then
+    Width := Sys.Math.Max(
+      1,
+      cast<int>(Sys.Math.Ceiling(
+        Sys.Math.Min(cast<double>(Columns), cast<double>(Menu.Settings.Width) / 8.0)
+      ))
+    );
+  end if;
+
+  return new Popup.Content<TMsg>(Rows.ToArray(), Width, Menu.Settings.Position);
+end function;
+
+end unit;

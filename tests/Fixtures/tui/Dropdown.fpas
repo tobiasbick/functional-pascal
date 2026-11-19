@@ -1,0 +1,237 @@
+// [Documentation](../../../docs/ui/tui/actions/dropdown-menu.md)
+
+program DropdownContract;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Menus as Menu, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs,
+  Fpas.Ui.Widgets.Actions.Buttons as Buttons, Fpas.Ui.TerminalExtensions.Input as K,
+  Fpas.Ui.Tui.Application as T, Fpas.Ui.Mvu.Application as M, Fpas.Ui.Layout as L,
+  System as Sys, System.Console as Console;
+
+type Model = record
+  public Choice: string := '';
+  public PendingDelete: bool := false;
+end record;
+
+const Entries: array of Menu.Entry<string> := [
+  Menu.Entry<string>.Label('Project'),
+  Menu.Entry<string>.Action(new Menu.Item<string>('rename', 'Rename', 'rename', Shortcut := 'F2')),
+  Menu.Entry<string>.Action(
+    new Menu.Item<string>('off', 'Unavailable', 'unexpected', Enabled := false)
+  ),
+  Menu.Entry<string>.Separator,
+  Menu.Entry<string>.Action(new Menu.Item<string>('copy', 'Copy', 'copy', Checked := true)),
+  Menu.Entry<string>.Action(new Menu.Item<string>('delete', 'Delete', 'delete', Danger := true))
+];
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Update(State: Model; Message: string): M.Transition<Model, string>;
+begin
+  Check(Message <> 'unexpected', 'A disabled or covered command ran.');
+  return new M.Transition<Model, string>(
+    case Message of
+      when 'delete': State with
+        PendingDelete := true;
+      end with;
+      when 'cancel': State with
+        PendingDelete := false;
+      end with;
+      else State with
+        Choice := Message;
+      end with;
+    end case, []
+  );
+end function;
+
+function Options(Settings: Menu.Options): E.Element<string>;
+begin
+  return Menu.Menu<string>('options', 'Options', Entries, Settings);
+end function;
+
+function MainView(State: Model): E.Element<string>;
+begin
+  return Dialogs.Dialog<string>(
+    'confirm', E.Column<string>(
+      Buttons.Button<string>('outside', 'Outside', 'unexpected'),
+      Options(new Menu.Options()),
+      Menu.Menu<string>('empty', 'Empty', []),
+      Menu.Menu<string>('disabled', 'Disabled', Entries, new Menu.Options(Enabled := false)),
+      E.Size<string>(
+        E.Text<string>('Selected ' + State.Choice),
+        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(16)))
+      )
+    ), Buttons.Button<string>('cancel', 'Cancel', 'cancel'), State.PendingDelete,
+    new Dialogs.Options('Confirm delete', InitialFocus := 'cancel'), 'cancel'
+  );
+end function;
+
+function Side(State: Model): E.Element<string>;
+begin
+  return Options(new Menu.Options(Position := Menu.Placement.RightStart, Width := 96.0F));
+end function;
+
+function Responsive(State: Model; Size: L.Viewport): E.Element<string>;
+begin
+  return Options(new Menu.Options(Enabled := Size.Width <> L.SizeClass.Compact));
+end function;
+
+function Find(Session: T.HeadlessSession; Id: string): T.ControlSnapshot?;
+begin
+  for Item: T.ControlSnapshot in Session.Snapshot().Controls do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  return null;
+end function;
+
+function Control(Session: T.HeadlessSession; Id: string): T.ControlSnapshot;
+begin
+  const Item: T.ControlSnapshot? := Find(Session, Id);
+  if Item <> null then
+    return Item;
+  end if;
+
+  raise new Sys.InvalidOperationException('Missing menu control ' + Id);
+end function;
+
+procedure Send(Session: T.HeadlessSession; Event: T.Input);
+begin
+  discard Session.Send(Event);
+  case Session.Step() of
+    when T.StepResult.Failed(_, _, _, const Reason: string):
+      raise new Sys.InvalidOperationException(Reason);
+    else
+  end case;
+end procedure;
+
+procedure Key(Session: T.HeadlessSession; Value: K.Key);
+begin
+  Send(Session, T.Input.KeyPress(Value, K.KeyModifiers.None));
+end procedure;
+
+procedure Click(Session: T.HeadlessSession; Id: string);
+begin
+  const Item: T.ControlSnapshot := Control(Session, Id);
+  Send(Session, T.Input.Click(Item.Column, Item.Row));
+end procedure;
+
+begin
+  using const Session: T.HeadlessSession := T.StartHeadless<Model, string>(
+    new Model(),
+    Update,
+    MainView,
+    40,
+    16
+  );
+  Key(Session, K.Key.Tab);
+  Key(Session, K.Key.Down);
+  Check(
+    Control(Session, 'options').Value = 'true' and Control(Session, 'options/rename').Focused,
+    'Down opens the focused trigger at its first command.'
+  );
+  Check(
+    not Control(Session, 'outside').Enabled and not Control(Session, 'options/off').Enabled,
+    'The menu owns input and disabled commands stay disabled.'
+  );
+  const Frame: T.Frame := Session.Snapshot();
+  Check(
+    Sys.String.Join(
+      #10,
+      Frame.Lines
+    ).Contains('Project') and Sys.String.Join(#10, Frame.Lines).Contains('F2'),
+    'Section labels and shortcuts appear in the panel.'
+  );
+  Click(Session, 'options/off');
+  Send(Session, T.Input.Activate('options/off'));
+  Key(Session, K.Key.Down);
+  const Copy: T.ControlSnapshot := Control(Session, 'options/copy');
+  Check(
+    Copy.Focused and Session.Snapshot().Lines[Copy.Row].Contains('✓ Copy'),
+    'Navigation skips disabled rows and the separator.'
+  );
+  Key(Session, K.Key.Enter);
+  Check(
+    Control(Session, 'options').Focused and Control(Session, 'options').Value = 'false',
+    'Choosing a command closes the popup and restores trigger focus.'
+  );
+  Check(
+    Sys.String.Join(#10, Session.Snapshot().Lines).Contains('Selected copy'),
+    'The checked command still runs.'
+  );
+  Click(Session, 'options');
+  Click(Session, 'outside');
+  Check(
+    Control(Session, 'options').Focused and Find(Session, 'options/rename') = null,
+    'An outside click dismisses without triggering the covered action.'
+  );
+  Key(Session, K.Key.Enter);
+  Key(Session, K.Key.End);
+  Click(Session, 'options/delete');
+  Check(
+    Control(Session, 'cancel').Focused and Find(Session, 'options/delete') = null,
+    'Choosing Delete replaces the popup with the dialog.'
+  );
+  Key(Session, K.Key.Escape);
+  Check(
+    Control(Session, 'options').Focused,
+    'Closing the dialog returns focus to the original menu button.'
+  );
+  Click(Session, 'empty');
+  Key(Session, K.Key.Enter);
+  Check(Control(Session, 'empty').Value = 'true', 'Empty menus stay dismissible.');
+  Key(Session, K.Key.Escape);
+  Check(Control(Session, 'empty').Focused, 'Escape closes the empty menu.');
+  Click(Session, 'disabled');
+  Check(Control(Session, 'disabled').Value = 'false', 'Disabled triggers stay closed.');
+
+  using const Narrow: T.HeadlessSession := T.StartHeadless<Model, string>(
+    new Model(),
+    Update,
+    Side,
+    40,
+    10
+  );
+  Check(Control(Narrow, 'options').Height = 1, 'The standalone trigger occupies one row.');
+  Key(Narrow, K.Key.Enter);
+  const SideRow: T.ControlSnapshot := Control(Narrow, 'options/rename');
+  Check(
+    SideRow.Column >= Control(Narrow, 'options').Width and SideRow.Width = 12,
+    'Side placement and requested width are respected.'
+  );
+  Send(Narrow, T.Input.Resize(9, 3));
+  Key(Narrow, K.Key.End);
+  const Last: T.ControlSnapshot := Control(Narrow, 'options/delete');
+  Check(
+    Last.Focused and Last.Column + Last.Width <= 9 and Last.Row < 3,
+    'Narrow popups fit and reveal the final command.'
+  );
+  Key(Narrow, K.Key.Escape);
+  Check(Control(Narrow, 'options').Focused, 'Focus returns after resizing an open menu.');
+
+  using const Changes: T.HeadlessSession := T.StartHeadless<Model, string>(
+    new Model(),
+    Update,
+    Responsive,
+    90,
+    12
+  );
+  Key(Changes, K.Key.Enter);
+  Send(Changes, T.Input.Resize(40, 12));
+  Check(Find(Changes, 'options/rename') = null, 'Disabling a trigger retires its popup.');
+  Send(Changes, T.Input.Resize(90, 12));
+  Check(
+    Control(Changes, 'options').Value = 'false',
+    'Re-enabling the trigger keeps the menu closed.'
+  );
+  Console.WriteLine('Dropdown contracts verified');
+end;
+
+end program;

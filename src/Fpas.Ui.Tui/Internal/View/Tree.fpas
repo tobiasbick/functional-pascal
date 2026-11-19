@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Tui.Internal.View.Tree;
 
-uses Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Graphics as Color, System as Sys;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Graphics as Color, System as Sys;
 
 // Largest column count accepted by the terminal host.
 public const MaximumColumns: int := 500;
@@ -55,7 +55,7 @@ public type ActionView = record
   public ArrowFocus: bool := true;
   // Group identity for vertical keyboard navigation.
   public NavigationGroup: string := '';
-  // Shared tab-entry identity for rows inside one radio group.
+  // Shared tab-entry identity for a composite control.
   public TabTarget: string := '';
   // Minimum total width in cells, including button padding.
   public MinimumWidth: int := 0;
@@ -119,6 +119,24 @@ public type TableView<TMsg> = record
   public Preferred: array of int;
 end record;
 
+// Tab strip with measured caption widths and model-owned selection.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type TabView<TMsg> = record
+  // Stable group ID.
+  public Id: string;
+  // Options in their original order.
+  public Items: array of Tabs.Item;
+  // Current selected index.
+  public Selected: int;
+  // Maps a proposed selection to a message.
+  public Change: function(int): TMsg;
+  // Appearance and input settings.
+  public Settings: Tabs.Options;
+  // Intrinsic width of each label including padding.
+  public Widths: array of int;
+end record;
+
 // Terminal presentation data produced by Lowering from a prepared Fpas.Ui tree.
 // This is backend storage, not a second application widget API.
 //
@@ -129,8 +147,12 @@ public type Element<TMsg> = variant
   Label(Value: string);
   // Plain text table with a pinned header.
   Table(Value: TableView<TMsg>);
+  // Horizontally scrollable navigation strip.
+  TabStrip(Value: TabView<TMsg>);
   // Single editable row with its model-owned value.
   TextField(Field: Edit.Field<TMsg>);
+  // Multiline editor with model-owned text.
+  TextArea(Field: AreaEdit.Field<TMsg>);
   // Fill the allocated cell surface with an image and register its input mapper.
   CellGrid(Id: string; Content: Grids.Image?; Changed: function(Grids.Event): TMsg);
   // Paint a determinate progress track and optional caption.
@@ -145,6 +167,8 @@ public type Element<TMsg> = variant
   Sized(Child: Element<TMsg>; Settings: Flex);
   // Apply inherited, resolved terminal colors.
   Decorated(Child: Element<TMsg>; Settings: T.Style);
+  // An open card body that returns focus to its header when it closes.
+  DisclosureBody(Header: string; Child: Element<TMsg>; Enabled: bool);
   // Surround a child with a cell border.
   Framed(Child: Element<TMsg>; Title: string);
   // Scroll content using host-owned offsets.

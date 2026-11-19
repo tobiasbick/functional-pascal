@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Disclosure.View;
 
 uses
+  Gallery.Shared.SecurityCard as Security,
   GuiGallery.Pages.Disclosure.State as State,
   GuiGallery.Shared.Sections as G,
   GuiGallery.Pages.Disclosure.Widgets.Banner as Banner,
@@ -59,17 +60,7 @@ begin
         Icon := Sys.Char.ConvertFromUtf32($E0AA), Badge := 'Active', BadgeTone := S.Tone.Success
       )
     ),
-    C.ExpandableCard<State.Msg>(
-      'security', 'Security', Model.SecurityOpen, State.Msg.SetSecurity,
-      E.Styled<State.Msg>(
-        E.Text<State.Msg>('Recovery codes were generated 3 months ago.'),
-        S.Role.Secondary
-      ),
-      new C.Options(
-        Description := 'Two-factor authentication is on',
-        Icon := Sys.Char.ConvertFromUtf32($E158)
-      )
-    )
+    Security.View<State.Msg>(Model.SecurityOpen, State.Msg.SetSecurity)
   );
 end function;
 

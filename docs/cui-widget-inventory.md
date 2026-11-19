@@ -272,8 +272,7 @@ and widget options.
   Windows Software and OpenGL cover LF insertion, Unicode editing, visual-line
   movement, Ctrl+Enter submission with displayed affixes, and wheel routing
   inside an enclosing viewport. The native adapter regression also covers mixed
-  wheel axes and edge handoff using CUI's own routing.
-  TUI: deferred; graphical profile required.
+  wheel axes and edge handoff using CUI's own routing. The [terminal text area](ui/tui/inputs/text-area.md) uses the same About example, with wrapping and wheel handoff.
 - [x] Number field, including suffix (`cui_number`): [API][fpas-number-field].
   Inputs shows Seats with model-owned bounds, native step buttons and editable
   numeric text. CUI validates finite drafts and refreshes committed or blurred
@@ -443,8 +442,8 @@ editor bars, document tabs, docking and split panes.
   TUI: implemented; top-aligned cell rows, labels and badges. Icons are omitted.
   The [GUI gallery tests][gui-gallery-test] cover destinations and the responsive drawer.
 - [x] Tabs (`cui_tabs`): [API][fpas-navigation-controls]. Navigation shows the
-  original underline and icon pill strips with model-selected content.
-  TUI: graphical profile required.
+  original underline and icon pill strips with model-selected content. The
+  [terminal tabs](ui/tui/navigation/tabs.md) use the same labels and scroll horizontally to keep focus visible.
 - [x] Breadcrumb (`cui_breadcrumb`): [API][fpas-navigation-controls]. Navigation
   exercises ancestor activation and shows the selected caption in a native toast.
   TUI: graphical profile required.
@@ -506,7 +505,7 @@ for gallery screenshots, FPAS examples and widget options.
 
 - [x] Dropdown menu and its items (`cui_menu`, `cui_menu_item`, `cui_menu_label`,
   `cui_menu_separator`): [API][fpas-menu]. The GUI gallery shows the original
-  Options and More actions examples using native CUI.
+  Options and More actions examples using native CUI. The [terminal menu](ui/tui/actions/dropdown-menu.md) shares the Options example and shows the same commands and shortcut hints.
 - [x] Context menu (`cui_context_menu`): [API][fpas-context-menu]. GUI attaches
   native CUI menus to existing target components and shares dropdown commands,
   conversion and inspection. The Overlays gallery shows Cut/Copy/Paste/Delete.
@@ -561,6 +560,7 @@ for gallery screenshots, FPAS examples and widget options.
   shows Billing and Security with their native descriptions, icons and badge.
   CUI owns layout, chevrons and height springs. Software/OpenGL host tests cover
   model proposals, keyboard/pointer input, closing content and responsive views.
+  The [terminal card](ui/tui/disclosure/expandable-card.md) shares the Security example and restores header focus after collapse.
   Native pixel comparisons cover all three widgets in light/dark and narrow/wide
   configurations. Gallery captures cover Data display and Disclosure.
 - [x] Guided tour (`cui_tour`): [API][fpas-tour].

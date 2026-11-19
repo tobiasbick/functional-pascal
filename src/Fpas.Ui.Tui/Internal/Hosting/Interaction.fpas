@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Tui.Internal.Hosting.Interaction;
 
-uses Fpas.Ui.Tui.Internal.Widgets.Inputs.RadioGroup as Radios, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Hosting.RowNavigation as Navigation, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Internal.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Tui.Internal.Widgets.Inputs.RadioGroup as Radios, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Hosting.RowNavigation as Navigation, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling, System as Sys, System.Collections.Generic as Generic;
 
 public type State<TMsg> = record
   public FocusId: function(): string;
@@ -53,6 +53,8 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     const Control: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, Id);
     if Control <> null and Eligible(Control, FocusScope) then
       Focus := Control.Id;
+    elsif Control = null and Navigation.CanFocusOffscreen<TMsg>(Layout, Id, FocusScope) then
+      MoveFocus(Layout, Id);
     end if;
   end procedure;
 
@@ -63,7 +65,7 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
       return false;
     end if;
 
-    if Control.Role = 'select' then
+    if Control.Role = 'select' or Control.Role = 'menu' then
       Focus := Control.Id;
     end if;
 
@@ -89,7 +91,8 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
       end for;
     end if;
 
-    if Scope <> FocusScope then
+    const ChangedScope: bool := Scope <> FocusScope;
+    if ChangedScope then
       Captured := '';
       MiddleCaptured := '';
       CapturedScrim := false;
@@ -132,12 +135,19 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
       end if;
     end for;
 
+    if ChangedScope and Navigation.CanFocusOffscreen<TMsg>(Layout, Focus, Scope) then
+      return;
+    end if;
+
     var Old: A.Control<TMsg>? := A.FindControl<TMsg>(Previous, Focus);
     while Old <> null and Old.FocusReturn <> '' do
       const Parent: string := Old.FocusReturn;
       const Candidate: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, Parent);
       if Candidate <> null and Eligible(Candidate, Scope) then
         Focus := Candidate.Id;
+        return;
+      elsif Candidate = null and Navigation.CanFocusOffscreen<TMsg>(Layout, Parent, Scope) then
+        Focus := Parent;
         return;
       end if;
 
@@ -248,6 +258,10 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     end if;
 
     case Control.Action of
+      when A.Binding.EditArea(const Area: AreaEdit.View<TMsg>, _, _):
+        if Button = K.MouseButton.Left then
+          AreaEdit.Click<TMsg>(Area, Column, Row);
+        end if;
       when A.Binding.Edit(
         const Field: Edit.Field<TMsg>,
         const Position: Edit.Tracking,
@@ -336,8 +350,12 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     end if;
 
     if Control <> null then
-      if Control.Role = 'radio' and Modifiers = K.KeyModifiers.None then
-        const Next: string? := Radios.Move<TMsg>(A.Activatable<TMsg>(Control.Action), Key, Apply);
+      if Modifiers = K.KeyModifiers.None then
+        const Next: string? := case Control.Role of
+          when 'radio': Radios.Move<TMsg>(A.Activatable<TMsg>(Control.Action), Key, Apply);
+          when 'tab': Tabs.Move<TMsg>(A.Activatable<TMsg>(Control.Action), Key, Apply);
+          else null;
+        end case;
         if Next <> null then
           Focus := Next;
           discard Navigation.Reveal<TMsg>(Layout, Next, ScrollOffsets, Apply);
@@ -353,6 +371,11 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
           Focus := Id;
           return;
         end if;
+      end if;
+
+      if Control.Role = 'menu' and Key = K.Key.Down and Modifiers = K.KeyModifiers.None then
+        discard Invoke(Control);
+        return;
       end if;
 
       if Key = K.Key.Enter and Modifiers = K.KeyModifiers.None and Invoke(Control) then
@@ -371,6 +394,10 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
           if Scrolling.Key<TMsg>(View, Key, Modifiers, Apply) then
             return;
           end if;
+        when A.Binding.EditArea(const Area: AreaEdit.View<TMsg>, _, _):
+          if AreaEdit.Key<TMsg>(Area, Key, Modifiers, Apply) then
+            return;
+          end if;
         when A.Binding.Edit(const Field: Edit.Field<TMsg>, const Position: Edit.Tracking, _, _):
           if Modifiers = K.KeyModifiers.None and Edit.Key<TMsg>(Field, Position, Key, Apply) then
             return;
@@ -384,8 +411,8 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     then
       for Region: A.ScrollRegion in Layout.Regions do
         if Region.Id = Modal.Id and Region.Scope = Modal.Id then
-          MoveScroll(
-            Region,
+          Scrolling.MoveOffset(
+            ScrollOffsets, Region,
             if Key = K.Key.PageUp then
               -Region.Bounds.Height
             else
@@ -425,53 +452,21 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     end if;
   end procedure;
 
-  procedure MoveScroll(Region: A.ScrollRegion; Delta: int);
-  begin
-    const Before: int := if ScrollOffsets.ContainsKey(Region.Id) then
-      ScrollOffsets[Region.Id]
-    else
-      0
-    end if;
-    ScrollOffsets[Region.Id] := cast<int>(Sys.Math.Clamp(
-      cast<long>(Before) + cast<long>(Delta), 0L, cast<long>(Region.Maximum)
-    ));
-  end procedure;
-
   procedure ScrollAt(Layout: A.Layout<TMsg>; Column: int; Row: int; Delta: int);
   begin
     PointerKnown := true;
     PointerColumn := Column;
     PointerRow := Row;
-    const HitControl: A.Control<TMsg>? := Hit(Layout, Column, Row);
-    if HitControl <> null then
-      case HitControl.Action of
-        when A.Binding.Grid(const Area: F.Rect, const Changed: function(Grids.Event): TMsg):
-          Apply(Changed(Grids.Event.Wheel(Column - Area.X, Row - Area.Y, Delta)));
-          return;
-        else
-      end case;
-    end if;
-
-    for Index: int := Layout.Regions.Length - 1 downto 0 do
-      const Region: A.ScrollRegion := Layout.Regions[Index];
-      if Region.Scope = FocusScope and Region.Bounds.Contains(Column, Row) then
-        if Region.Controlled then
-          const Target: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, Region.Id);
-          if Target <> null then
-            case Target.Action of
-              when A.Binding.Scroll(const View: V.Viewport<TMsg>):
-                Scrolling.Move<TMsg>(View, Delta, Apply);
-              else
-            end case;
-          end if;
-
-          return;
-        end if;
-
-        MoveScroll(Region, Delta);
-        return;
-      end if;
-    end for;
+    Scrolling.Wheel<TMsg>(
+      Layout,
+      Hit(Layout, Column, Row),
+      FocusScope,
+      Column,
+      Row,
+      Delta,
+      ScrollOffsets,
+      Apply
+    );
   end procedure;
 
   procedure Insert(Layout: A.Layout<TMsg>; Text: string; Typed: bool);
@@ -479,6 +474,9 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     const Control: A.Control<TMsg>? := Focused(Layout);
     if Control <> null then
       case Control.Action of
+        when A.Binding.EditArea(const Area: AreaEdit.View<TMsg>, _, _):
+          AreaEdit.Insert<TMsg>(Area, Text, Apply);
+          return;
         when A.Binding.Edit(const Field: Edit.Field<TMsg>, const Position: Edit.Tracking, _, _):
           Edit.Insert<TMsg>(Field, Position, Text, Apply);
           return;
@@ -526,56 +524,5 @@ begin
     ReconcileFocus, SetFocus, Activate, ClickAt, Point, ScrollAt, RouteKey, Insert
   );
 end function;
-
-// Routes an admitted input against the currently presented layout.
-//
-// ## Type parameters
-// - `TMsg`: Application message type.
-// ## Parameters
-// - `Routing`: Session's input router.
-// - `Layout`: Presented controls and modal scope.
-// - `Event`: Input to route.
-public procedure Dispatch<TMsg>(Routing: State<TMsg>; Layout: A.Layout<TMsg>; Event: App.Input);
-begin
-  const Scope: A.Scope<TMsg>? := Layout.Active;
-  if Scope <> null then
-    case Scope.LocalInput of
-      when is Sys.Func<App.Input, bool> as Popup:
-        if Popup.Invoke(Event) then
-          return;
-        end if;
-      else
-    end case;
-  end if;
-
-  case Event of
-    when App.Input.Focus(const Id: string):
-      Routing.SetFocus(Layout, Id);
-    when App.Input.Activate(const Id: string):
-      Routing.Activate(Layout, Id);
-    when App.Input.Click(const Column: int, const Row: int):
-      Routing.Click(Layout, K.MouseButton.Left, Column, Row);
-    when App.Input.ButtonClick(const Button: K.MouseButton, const Column: int, const Row: int):
-      Routing.Click(Layout, Button, Column, Row);
-    when App.Input.Pointer(const Kind: K.PointerKind, const Column: int, const Row: int):
-      Routing.Pointer(Layout, Kind, K.MouseButton.Left, Column, Row);
-    when App.Input.ButtonPointer(
-      const Kind: K.PointerKind,
-      const Button: K.MouseButton,
-      const Column: int,
-      const Row: int
-    ):
-      Routing.Pointer(Layout, Kind, Button, Column, Row);
-    when App.Input.Scroll(const Column: int, const Row: int, const Delta: int):
-      Routing.Scroll(Layout, Column, Row, Delta);
-    when App.Input.KeyPress(const Key: K.Key, const Modifiers: K.KeyModifiers):
-      Routing.Key(Layout, Key, Modifiers);
-    when App.Input.Character(const Text: string):
-      Routing.Insert(Layout, Text, true);
-    when App.Input.TextInput(const Text: string), App.Input.Paste(const Text: string):
-      Routing.Insert(Layout, Text, false);
-    when App.Input.Resize(_, _):
-  end case;
-end procedure;
 
 end unit;

@@ -1,6 +1,6 @@
 # Tabs
 
-Use tabs to switch the content within one page. The gallery shows an underline strip and a pill strip with icons. Available in **GUI**.
+Use tabs to switch the content within one page. The gallery shows an underline strip and a pill strip with icons. Available in **GUI** and [TUI](../../tui/navigation/tabs.md).
 
 ![Tabs in the FPAS gallery](images/tabs.png)
 
@@ -46,6 +46,8 @@ Click a tab or move with Left and Right while the strip has focus. The callback 
 - [Navigation](README.md)
 
 ## Source files
+
+- [Shared Navigation gallery examples](../../../../examples/ui/gui/gallery/Shared/TabExamples.fpas)
 
 - `src/Fpas.Ui.Gui/Internal/Widgets/Navigation/`
   - [Tabs.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Navigation/Tabs.fpas)

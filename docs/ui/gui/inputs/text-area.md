@@ -1,6 +1,6 @@
 # Text area
 
-Use a text area for wrapping multiline text, such as a profile description. Available in **GUI**.
+Use a text area for wrapping multiline text, such as a profile description. Available in **GUI** and [TUI](../../tui/inputs/text-area.md).
 
 ![Text area in the FPAS gallery](images/text-area.png)
 
@@ -51,6 +51,8 @@ separately with the [Markdown widget](../code/markdown.md).
 - [Inputs](README.md)
 
 ## Source files
+
+- [Shared About example](../../../../examples/ui/gui/gallery/Shared/AboutField.fpas)
 
 - `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
   - [TextArea.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/TextArea.fpas)

@@ -376,9 +376,9 @@ begin
     ),
     Groups.ButtonGroup<int>(B.Button<int>('action', 'Run', 1)),
     Split.SplitButton<int>('split', 'Run', 1, [new Split.Item<int>('other', 'Other', 2)]),
-    Menus.Menu<int>(
-      'menu',
-      'Menu',
+    Menus.ContextMenu<int>(
+      'context',
+      B.Button<int>('context-target', 'Project', 1),
       [Menus.Entry<int>.Action(new Menus.Item<int>('open', 'Open', 1))]
     ),
     Toggles.ThemeToggle<int>('toggle', Themes.Mode.Dark, function(Mode: Themes.Mode): int => 1),

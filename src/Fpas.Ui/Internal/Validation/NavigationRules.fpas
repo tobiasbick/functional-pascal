@@ -14,23 +14,21 @@ begin
   end if;
 end procedure;
 
-// Validates a graphical tab strip and registers its focus identities.
+// Validates a tab strip and registers its focus identities.
 //
 // ## Parameters
 // - `Id`: Stable strip identity.
 // - `Items`: Positional tab captions and glyphs.
 // - `Selected`: Current zero-based index.
 // - `Settings`: Native variant and width options.
-// - `Profile`: Receiving host profile.
 // - `Location`: Control path for diagnostics.
 // - `Identify`: Validates and registers a unique view identity.
 public procedure CheckTabs(
   Id: string; Items: array of Tabs.Item; Selected: int; Settings: Tabs.Options;
-  Profile: V.Target; Location: string; Identify: function(string, string): string
+  Location: string; Identify: function(string, string): string
 );
 begin
   const At: string := Identify(Id, Location + '/tabs');
-  R.RequireProfile(Profile, V.Target.Graphical, At);
   if Items.Length < 1 or Items.Length > 32 or Selected < 0 or Selected >= Items.Length
     or not Sys.Enum.IsDefined<Tabs.Variant>(Settings.Appearance)
   then

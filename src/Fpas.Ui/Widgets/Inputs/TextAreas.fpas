@@ -4,7 +4,7 @@ unit Fpas.Ui.Widgets.Inputs.TextAreas;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B, System as Sys;
 
-// Native presentation and input options for a multiline editor.
+// Presentation and input options for a multiline editor.
 public type Options = record
   // Caption above the editor.
   public Label: string := '';
@@ -34,7 +34,7 @@ public type Options = record
   public MaxUtf8Bytes: int := 4095;
 end record;
 
-// Builds CUI's wrapping multiline editor.
+// Builds a wrapping multiline editor.
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -42,10 +42,10 @@ end record;
 // - `Id`: Stable editor identity.
 // - `Value`: Model-owned text with LF line endings.
 // - `OnChange`: Maps a proposed edit to a message.
-// - `Settings`: Optional native editor settings.
+// - `Settings`: Optional editor settings.
 // - `OnSubmit`: Optional Ctrl+Enter action receiving the value after the frame's edit.
 // ## Returns
-// A graphical text area.
+// A graphical or terminal text area.
 public function TextArea<TMsg>(
   Id: string; Value: string; OnChange: function(string): TMsg;
   Settings: Options? := null; OnSubmit: Sys.Func<string, TMsg>? := null

@@ -1,6 +1,6 @@
 # Dropdown menu
 
-Open a list of commands from a labeled or icon-only trigger. Available in **GUI**.
+Open a list of commands from a labeled or icon-only trigger. Available in **GUI** and [TUI](../../tui/actions/dropdown-menu.md).
 
 ![Dropdown menu in the FPAS gallery](images/dropdown-menu.png)
 
@@ -49,6 +49,8 @@ Section labels and separators have no action. Shortcut text displays a hint.
 - [Actions](README.md)
 
 ## Source files
+
+- [Shared Options example](../../../../examples/ui/gui/gallery/Shared/ProjectOptions.fpas)
 
 - [DropdownMenu.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Overlays/DropdownMenu.fpas)
 - [Menu.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Overlays/Menu.fpas)

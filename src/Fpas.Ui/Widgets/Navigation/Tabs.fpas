@@ -12,7 +12,7 @@ public type Item = record
   public Icon: string := '';
 end record;
 
-// Native tab-strip appearance.
+// Tab-strip appearance.
 public type Variant = enum: byte
   // An animated underline on a baseline.
   Underline;
@@ -20,7 +20,7 @@ public type Variant = enum: byte
   Pill;
 end enum;
 
-// Native tab-strip settings.
+// Tab-strip settings.
 public type Options = record
   // Underline or pill indicator.
   public Appearance: Variant := Variant.Underline;
@@ -30,7 +30,7 @@ public type Options = record
   public Enabled: bool := true;
 end record;
 
-// Creates a model-controlled graphical tab strip.
+// Creates a model-controlled tab strip.
 //
 // ## Type parameters
 // - `TMsg`: Application message type.

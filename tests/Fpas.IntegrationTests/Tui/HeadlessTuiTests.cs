@@ -28,8 +28,12 @@ public sealed class HeadlessTuiTests
     [InlineData("checkbox.fpas", "Checkbox contracts verified\n")]
     [InlineData("radio-group.fpas", "Radio group contracts verified\n")]
     [InlineData("select.fpas", "Select contracts verified\n")]
+    [InlineData("dropdown.fpas", "Dropdown contracts verified\n")]
+    [InlineData("expandable-card.fpas", "Expandable card contracts verified\n")]
+    [InlineData("tabs.fpas", "Tabs contracts verified\n")]
     [InlineData("cell-grid.fpas", "Cell grid contracts verified\n")]
     [InlineData("text-field.fpas", "Text field contracts verified\n")]
+    [InlineData("text-area.fpas", "Text area contracts verified\n")]
     public async Task Headless_host_preserves_scheduling_focus_frame_and_effect_contracts(string fixture, string expected)
     {
         using var program = new Debuggee("headless-tui");

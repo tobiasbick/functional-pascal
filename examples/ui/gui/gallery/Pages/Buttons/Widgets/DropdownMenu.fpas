@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Buttons.Widgets.DropdownMenu;
 
 uses
+  Gallery.Shared.ProjectOptions as Options,
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Buttons.State as State,
   Fpas.Ui.Widgets.Overlays.Menus as M,
@@ -22,46 +23,9 @@ public function View(): E.Element<State.Msg>;
 begin
   return E.Row<State.Msg>(
     new L.Flow(Gap := L.Spacing.Normal),
-    M.Menu<State.Msg>(
-      'options', 'Options', [
-        M.Entry<State.Msg>.Label('Project'),
-        M.Entry<State.Msg>.Action(
-          new M.Item<State.Msg>(
-            'rename',
-            'Rename',
-            State.Msg.Shared(Demo.Msg.MenuChoice('Rename')),
-            Icon($E1F9),
-            Shortcut := 'F2'
-          )
-        ),
-        M.Entry<State.Msg>.Action(
-          new M.Item<State.Msg>(
-            'duplicate',
-            'Duplicate',
-            State.Msg.Shared(Demo.Msg.MenuChoice('Duplicate')),
-            Icon($E09E),
-            Shortcut := 'Ctrl D'
-          )
-        ),
-        M.Entry<State.Msg>.Action(
-          new M.Item<State.Msg>(
-            'share',
-            'Share',
-            State.Msg.Shared(Demo.Msg.MenuChoice('Share')),
-            Icon($E156)
-          )
-        ),
-        M.Entry<State.Msg>.Separator,
-        M.Entry<State.Msg>.Action(
-          new M.Item<State.Msg>(
-            'delete',
-            'Delete',
-            State.Msg.OpenDeleteDialog,
-            Icon($E18E),
-            Danger := true
-          )
-        )
-      ], new M.Options(Icon := Icon($E154))
+    Options.View<State.Msg>(
+      function(Name: string): State.Msg => State.Msg.Shared(Demo.Msg.MenuChoice(Name)),
+      State.Msg.OpenDeleteDialog
     ),
     M.Menu<State.Msg>(
       'more-actions', 'More actions', [

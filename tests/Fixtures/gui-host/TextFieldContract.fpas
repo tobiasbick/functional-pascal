@@ -74,7 +74,11 @@ begin
     V.Target.Terminal,
     'Graphical profile'
   );
-  Reject(TextAreas.TextArea<string>('about', '', Identity), V.Target.Portable, 'Graphical profile');
+  discard V.Prepare<string>(TextAreas.TextArea<string>('about', '', Identity), V.Target.Portable);
+  Reject(
+    TextAreas.TextArea<string>('about', '', Identity, new TextAreas.Options(Prefix := 'About:')),
+    V.Target.Terminal, 'Graphical profile'
+  );
   Reject(
     TextAreas.TextArea<string>('about', 'line' + cast<char>(13), Identity),
     V.Target.Graphical,

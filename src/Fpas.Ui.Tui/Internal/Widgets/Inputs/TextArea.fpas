@@ -1,0 +1,156 @@
+// [Documentation](../../../../../docs/ui/tui/inputs/text-area.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Inputs.TextArea;
+
+uses
+  Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaRows as Lines,
+  Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as Chrome, Fpas.Ui.Tui.Internal.View.Tree as E,
+  Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F,
+  Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Rendering.Themes as Th,
+  Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Rendering.Drawing as D,
+  Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Styles as S, System as Sys, System.Collections.Generic as C;
+
+// Composes an editor and its optional caption and supporting text.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Field`: Shared field settings, value and callbacks.
+// - `Colors`: Inherited terminal text style.
+// - `Theme`: Terminal palette.
+// ## Returns
+// The terminal area and its text chrome.
+public function Lower<TMsg>(Field: Edit.Field<TMsg>; Colors: T.Style; Theme: Th.Theme): E.Element<TMsg>;
+begin
+  const View: E.Element<TMsg> := Chrome.WithLabels<TMsg>(
+    E.Element<TMsg>.TextArea(Field),
+    Field.Settings.Label, Field.Settings.Hint, Field.Settings.Error, Colors, Theme
+  );
+  return if Field.Settings.Height < 0 then
+    E.Element<TMsg>.Sized(View, new E.Flex(Grow := 1))
+  else
+    View
+  end if;
+end function;
+
+// Paints the visible lines and supplies matching keyboard and pointer geometry.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Field`: Current field binding.
+// - `Previous`: Previously presented layout.
+// - `Area`: Full editor allocation.
+// - `Clip`: Visible rectangle of the editor.
+// - `Scope`: Owning focus scope.
+// - `FocusReturn`: Fallback focus identity.
+// - `Colors`: Inherited terminal text style.
+// - `Theme`: Terminal palette.
+// - `Operations`: Paint commands for the frame.
+// ## Returns
+// Editor input binding and bounds.
+public function Arrange<TMsg>(
+  Field: Edit.Field<TMsg>; Previous: A.Layout<TMsg>?; Area: F.Rect; Clip: F.Rect;
+  Scope: string; FocusReturn: string; Colors: T.Style; Theme: Th.Theme; Operations: C.List<D.Operation>
+): A.Control<TMsg>;
+begin
+  var Old: Edit.Cursor := new Edit.Cursor(Field.Value);
+  const Before: A.Control<TMsg>? := A.FindControl<TMsg>(Previous, Field.Id);
+  if Before <> null then
+    case Before.Action of
+      when A.Binding.EditArea(const View: Edit.View<TMsg>, _, _):
+        Old := View.Position.Read(Field.Value);
+      else
+    end case;
+  end if;
+  const Pad: int := if Area.Width >= 3 then
+    1
+  else
+    0
+  end if;
+  const X: int := Area.X + Pad;
+  const Width: int := Area.Width - 2 * Pad;
+  const Height: int := Area.Height;
+  const Wrapped: array of Lines.Line := Lines.Wrap(Field.Value, Width);
+  const Index: int := Lines.Locate(Wrapped, Old.Offset, Old.BeforeWrap);
+  const Limit: int := Sys.Math.Max(0, Wrapped.Length - Height);
+  var Top: int := Sys.Math.Clamp(Old.Top, 0, Limit);
+  if Old.Follow then
+    Top := Sys.Math.Clamp(Top, Sys.Math.Max(0, Index - Height + 1), Index);
+  end if;
+  const Position: Edit.Cursor := Old with
+    Top := Top;
+  end with;
+
+  const Surface: int := Th.Rgb(Theme.Colors.SurfaceMuted, Colors.Background ?? 0);
+  const Ink: int := Th.Rgb(
+    if Field.Value = '' or not Field.Settings.Enabled then
+      Theme.Colors.TextMuted
+    else
+      Theme.Colors.Foreground
+    end if, Surface
+  );
+  const Style: T.Style := new T.Style(Ink, Surface);
+  D.Fill(Operations, Clip, Style);
+  const Display: string := if Field.Value = '' then
+    Field.Settings.Placeholder
+  else
+    Field.Value
+  end if;
+  const DisplayRows: array of Lines.Line := if Field.Value = '' and Display <> '' then
+    Lines.Wrap(Display, Width)
+  else
+    Wrapped
+  end if;
+  for Row: int := 0 to Sys.Math.Min(Height, DisplayRows.Length - Top) - 1 do
+    const Line: Lines.Line := DisplayRows[Top + Row];
+    const Box: F.Rect := new F.Rect(X, Area.Y + Row, Width, 1);
+    const Visible: F.Rect := F.Intersect(Box, Clip);
+    if Visible.Height > 0 then
+      Operations.Add(
+        new D.Operation(
+          Display.Substring(Line.Start, Line.Stop - Line.Start),
+          Box,
+          Visible,
+          Style,
+          false
+        )
+      );
+    end if;
+  end for;
+
+  if Pad > 0 and Limit > 0 then
+    V.DrawBar<TMsg>(
+      new V.Viewport<TMsg>(Top, Limit, Height, false, true, null),
+      Operations,
+      Area,
+      Clip,
+      Style,
+      Theme.Widgets
+    );
+  end if;
+
+  const CaretX: int := X + Sys.Math.Min(
+    Width - 1,
+    G.Measure(Field.Value.Substring(Wrapped[Index].Start, Position.Offset - Wrapped[Index].Start))
+  );
+  const CaretY: int := if Index >= Top and Index - Top < Height then
+    Area.Y + Index - Top
+  else
+    -1
+  end if;
+  const Label: string := if Field.Settings.Label <> '' then
+    Field.Settings.Label
+  else
+    Field.Id
+  end if;
+  return new A.Control<TMsg>(
+    Field.Id, Label, 'text-area', Field.Value, Clip, Scope, FocusReturn, Field.Settings.Enabled,
+    A.Binding<TMsg>.EditArea(
+      new Edit.View<TMsg>(Field, Wrapped, Edit.Track(Position), X, Area.Y, Height),
+      CaretX,
+      CaretY
+    ),
+    S.ButtonVariant.Default
+  );
+end function;
+
+end unit;

@@ -1,0 +1,57 @@
+// [Documentation](../../../../../docs/ui/gui/navigation/tabs.md)
+
+unit Gallery.Shared.TabExamples;
+
+uses Fpas.Ui.Widgets.Navigation.Tabs as T, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
+
+// Stable identity of the underline strip.
+public const UnderlineId: string := 'tabs';
+
+// Builds the Navigation page's original underline and pill examples.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Selected`: Index in the underline strip.
+// - `Pill`: Index in the pill strip.
+// - `Choose`: Maps an underline selection to a message.
+// - `ChoosePill`: Maps a pill selection to a message.
+// ## Returns
+// Both tab strips and the selected underline tab's content.
+public function Rows<TMsg>(Selected: int; Pill: int; Choose: function(int): TMsg; ChoosePill: function(int): TMsg): array of E.Element<TMsg>;
+begin
+  const Underline: array of T.Item := [
+    new T.Item('Overview'), new T.Item('Analytics'), new T.Item('Reports'), new T.Item('Settings')
+  ];
+  const Pills: array of T.Item := [
+    new T.Item('Account', Sys.Char.ConvertFromUtf32($E19F)),
+    new T.Item('Password', Sys.Char.ConvertFromUtf32($E10B)),
+    new T.Item('Billing', Sys.Char.ConvertFromUtf32($E0AA))
+  ];
+  const Inset: E.Element<TMsg> := E.Size<TMsg>(
+    E.Column<TMsg>(),
+    new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(4)))
+  );
+  return [
+    T.Tabs<TMsg>(UnderlineId, Underline, Selected, Choose),
+    E.Column<TMsg>(
+      Inset,
+      E.Column<TMsg>(
+        new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(6))),
+        E.Text<TMsg>(Underline[Selected].Label),
+        E.Styled<TMsg>(
+          E.Text<TMsg>(
+            'Tabs switch between views of the same thing. Content changes in place.'
+          ),
+          S.Role.Secondary
+        )
+      ),
+      Inset
+    ),
+    T.Tabs<TMsg>(
+      'pill-tabs', Pills, Pill, ChoosePill,
+      new T.Options(Appearance := T.Variant.Pill)
+    )
+  ];
+end function;
+
+end unit;

@@ -44,10 +44,10 @@ begin
     Accordions.Accordion<int>('a', 'Title', false, Change, Body),
     V.Target.Terminal, 'Graphical profile'
   );
-  Reject(
-    Cards.ExpandableCard<int>('c', 'Title', false, Change, Body),
-    V.Target.Portable, 'Graphical profile'
-  );
+  for Profile: V.Target in [V.Target.Terminal, V.Target.Portable] do
+    discard V.Prepare<int>(Cards.ExpandableCard<int>('c', 'Title', false, Change, Body), Profile);
+  end for;
+
   Reject(Texts.ExpandableText<int>('t', 'Text'), V.Target.Terminal, 'Graphical profile');
   Reject(
     Texts.ExpandableText<int>('t', 'Text', new Texts.Options(Lines := 0)),

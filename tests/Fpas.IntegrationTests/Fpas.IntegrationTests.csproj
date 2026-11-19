@@ -36,7 +36,7 @@
     <None Include="../../src/Fpas.Ui.Mvu/**/*.fpas;../../src/Fpas.Ui.Mvu/Fpas.Ui.Mvu.fpasproj" Exclude="../../src/Fpas.Ui.Mvu/bin/**/*;../../src/Fpas.Ui.Mvu/obj/**/*" Link="Fixtures/mvu/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../src/Fpas.Ui/**/*.fpas;../../src/Fpas.Ui/Fpas.Ui.fpasproj" Exclude="../../src/Fpas.Ui/bin/**/*;../../src/Fpas.Ui/obj/**/*" Link="Fixtures/ui/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../src/Fpas.Ui.Gui/**/*.fpas;../../src/Fpas.Ui.Gui/Fpas.Ui.Gui.fpasproj" Exclude="../../src/Fpas.Ui.Gui/bin/**/*;../../src/Fpas.Ui.Gui/obj/**/*" Link="Fixtures/gui/lib/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../examples/ui/gui/gallery/Shared/PeopleTable.fpas;../../examples/ui/gui/gallery/Shared/ButtonExamples.fpas;../../examples/ui/gui/gallery/Shared/EditorStatus.fpas;../../examples/ui/gui/gallery/Shared/Profile.fpas;../../examples/ui/gui/gallery/Shared/ProgressExample.fpas;../../examples/ui/gui/gallery/Shared/SwitchExamples.fpas;../../examples/ui/gui/gallery/Shared/CheckboxExamples.fpas;../../examples/ui/gui/gallery/Shared/SaveFrequency.fpas;../../examples/ui/gui/gallery/Shared/PickerChoices.fpas" Link="Fixtures/tui/gallery/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/ui/gui/gallery/Shared/PeopleTable.fpas;../../examples/ui/gui/gallery/Shared/ButtonExamples.fpas;../../examples/ui/gui/gallery/Shared/EditorStatus.fpas;../../examples/ui/gui/gallery/Shared/Profile.fpas;../../examples/ui/gui/gallery/Shared/ProgressExample.fpas;../../examples/ui/gui/gallery/Shared/SwitchExamples.fpas;../../examples/ui/gui/gallery/Shared/CheckboxExamples.fpas;../../examples/ui/gui/gallery/Shared/SaveFrequency.fpas;../../examples/ui/gui/gallery/Shared/PickerChoices.fpas;../../examples/ui/gui/gallery/Shared/TabExamples.fpas;../../examples/ui/gui/gallery/Shared/AboutField.fpas;../../examples/ui/gui/gallery/Shared/ProjectOptions.fpas;../../examples/ui/gui/gallery/Shared/SecurityCard.fpas" Link="Fixtures/tui/gallery/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/ui/tui/gallery/*.fpas" Link="Fixtures/tui/gallery/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/ui/tui/fractals/*.fpas" Link="Fixtures/tui/fractals/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../src/Fpas.Ui.Mvu.Testing/EffectReplies.fpas" Link="Fixtures/tui/fractals/EffectReplies.fpas" CopyToOutputDirectory="PreserveNewest" />
@@ -47,8 +47,12 @@
     <None Include="../Fixtures/tui/Checkbox.fpas" Link="Fixtures/tui/checkbox.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/RadioGroup.fpas" Link="Fixtures/tui/radio-group.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/Select.fpas" Link="Fixtures/tui/select.fpas" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Fixtures/tui/Dropdown.fpas" Link="Fixtures/tui/dropdown.fpas" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Fixtures/tui/ExpandableCard.fpas" Link="Fixtures/tui/expandable-card.fpas" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Fixtures/tui/Tabs.fpas" Link="Fixtures/tui/tabs.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/RenderingContract.fpas" Link="Fixtures/tui/rendering.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/TextField.fpas" Link="Fixtures/tui/text-field.fpas" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Fixtures/tui/TextArea.fpas" Link="Fixtures/tui/text-area.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/EffectContract.fpas" Link="Fixtures/tui/effects.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/CompositionContract.fpas" Link="Fixtures/tui/composition.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/TerminalModes.cs" Link="Fixtures/tui/TerminalModes.cs" CopyToOutputDirectory="PreserveNewest" />

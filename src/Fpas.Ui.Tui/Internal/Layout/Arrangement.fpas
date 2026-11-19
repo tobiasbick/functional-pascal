@@ -2,11 +2,11 @@
 
 unit Fpas.Ui.Tui.Internal.Layout.Arrangement;
 
-uses Fpas.Ui.Tui.Internal.Widgets.Inputs.Select as Select, Fpas.Ui.Tui.Internal.Widgets.Inputs.SelectPopup as SelectPopup, Fpas.Ui.Tui.Internal.Widgets.Collections.Table as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as FieldWidget, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Panel, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as PopupState, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextArea as AreaWidget, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Internal.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupHost as PopupHost, Fpas.Ui.Tui.Internal.Widgets.Collections.Table as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as FieldWidget, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Panel, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
 
 public function Arrange<TMsg>(
   Root: E.Element<TMsg>; Columns: int; Rows: int;
-  Previous: A.Layout<TMsg>?; Scroll: Generic.Dictionary<string, int>; Theme: Th.Theme; Popup: Select.State<TMsg>
+  Previous: A.Layout<TMsg>?; Scroll: Generic.Dictionary<string, int>; Theme: Th.Theme; Popup: PopupState.State<TMsg>; Focus: string
 ): A.Layout<TMsg>;
   procedure Draw(Value: string; Area: F.Rect; Clip: F.Rect; Style: T.Style; Wrap: bool);
   begin
@@ -57,10 +57,18 @@ public function Arrange<TMsg>(
   end procedure;
 
   procedure Visit(Node: E.Element<TMsg>; Area: F.Rect; Limit: F.Rect; ScopeId: string; Style: T.Style);
-    procedure HiddenTabStop(Id: string);
+    procedure HiddenTabStop(Id: string; Focusable: bool := false);
     begin
       TabStops.Add(new A.TabStop(Id, ScopeId));
-      NavigationRows.Add(new A.NavigationStop(Id, Area, '', ScrollId));
+      NavigationRows.Add(
+        new A.NavigationStop(
+          Id, Area, '', ScrollId, if Focusable then
+            ScopeId
+          else
+            null
+          end if
+        )
+      );
     end procedure;
   begin
     const Clip: F.Rect := F.Intersect(Area, Limit);
@@ -88,11 +96,17 @@ public function Arrange<TMsg>(
       case Node of
         when E.Element.Action(const Id: string, _, const Enabled: bool, const View: E.ActionView):
           if Enabled and View.NavigationGroup = '' then
-            HiddenTabStop(Id);
+            HiddenTabStop(Id, View.Role = 'expandable-card');
           end if;
 
           return;
         when E.Element.TextField(const Field: Edit.Field<TMsg>):
+          if Field.Settings.Enabled then
+            HiddenTabStop(Field.Id);
+          end if;
+
+          return;
+        when E.Element.TextArea(const Field: AreaEdit.Field<TMsg>):
           if Field.Settings.Enabled then
             HiddenTabStop(Field.Id);
           end if;
@@ -105,13 +119,25 @@ public function Arrange<TMsg>(
           _,
           _,
           _
-        ), E.Element.Sized(_, _), E.Element.Decorated(_, _), E.Element.Framed(_, _):
+        ), E.Element.Sized(
+          _,
+          _
+        ), E.Element.Decorated(_, _), E.Element.DisclosureBody(
+          _,
+          _,
+          _
+        ), E.Element.Framed(_, _), E.Element.TabStrip(_):
         else
           return;
       end case;
     end if;
 
     case Node of
+      when E.Element.TabStrip(const Strip: E.TabView<TMsg>):
+        Tabs.Arrange<TMsg>(
+          Strip, Area, Clip, Style, Theme, ScopeId, FocusReturn, ScrollId, Focus,
+          Scroll, Operations, NavigationRows, TabStops, AddControl
+        );
       when E.Element.Table(const Table: E.TableView<TMsg>):
         Tables.Arrange<TMsg>(
           Table, Area, Clip, Style, Theme, ScopeId, FocusReturn,
@@ -129,6 +155,20 @@ public function Arrange<TMsg>(
         end if;
 
         Register(Id, Id, 'cell-grid', '', Clip, ScopeId, true, A.Binding<TMsg>.Grid(Area, Changed));
+      when E.Element.TextArea(const Field: AreaEdit.Field<TMsg>):
+        AddControl(
+          AreaWidget.Arrange<TMsg>(
+            Field,
+            Previous,
+            Area,
+            Clip,
+            ScopeId,
+            FocusReturn,
+            Style,
+            Theme,
+            Operations
+          )
+        );
       when E.Element.TextField(const Field: Edit.Field<TMsg>):
         AddControl(
           FieldWidget.Arrange<TMsg>(
@@ -218,6 +258,31 @@ public function Arrange<TMsg>(
         );
       when E.Element.Sized(const Child: E.Element<TMsg>, _):
         Visit(Child, Area, Clip, ScopeId, Style);
+      when E.Element.DisclosureBody(
+        const Header: string,
+        const Child: E.Element<TMsg>,
+        const Enabled: bool
+      ):
+        const Parent: string := FocusReturn;
+        const ParentScroll: string := ScrollId;
+        const WasBlocked: bool := InputBlocked;
+        FocusReturn := Header;
+        InputBlocked := WasBlocked or not Enabled;
+        if not Enabled then
+          ScrollId := '';
+        end if;
+
+        // A disabled body still paints, with its controls in an inactive scope.
+        Visit(
+          Child, Area, Clip, if Enabled then
+            ScopeId
+          else
+            Header
+          end if, Style
+        );
+        FocusReturn := Parent;
+        ScrollId := ParentScroll;
+        InputBlocked := WasBlocked;
       when E.Element.Decorated(const Child: E.Element<TMsg>, const ChildStyle: T.Style):
         if Clip.Height > 0 and ChildStyle.Background <> null and ChildStyle.Background <>
           Style.Background
@@ -285,7 +350,7 @@ public function Arrange<TMsg>(
         const Content: E.Element<TMsg>, const Layers: array of E.Element<TMsg>,
         const Keys: array of K.ShortcutBinding<TMsg>
       ):
-        if Keys.Length > 0 then
+        if not InputBlocked and Keys.Length > 0 then
           GlobalKeys := Keys;
         end if;
 
@@ -297,6 +362,9 @@ public function Arrange<TMsg>(
         const Id: string, const Settings: E.ModalOptions, const Size: int,
         const Content: E.Element<TMsg>, const Dismiss: TMsg, const Colors: T.Style
       ):
+        if InputBlocked then
+          return;
+        end if;
         const Layer: Panel.Placement<TMsg> := Panel.Arrange<TMsg>(
           Operations, Screen, Id, Settings, Size, Content, Colors, Theme, Dismiss, FocusReturn
         );
@@ -368,11 +436,12 @@ begin
   const Ids: Generic.HashSet<string> := new Generic.HashSet<string>();
   var Active: A.Scope<TMsg>? := null;
   var FocusReturn: string := '';
+  var InputBlocked: bool := false;
   var WrapText: bool := false;
   var GlobalKeys: array of K.ShortcutBinding<TMsg> := [];
   const Screen: F.Rect := new F.Rect(0, 0, Columns, Rows);
   Visit(Root, Screen, Screen, '', Theme.Text);
-  const OpenSelect: A.Scope<TMsg>? := SelectPopup.Present<TMsg>(
+  const OpenPopup: A.Scope<TMsg>? := PopupHost.Present<TMsg>(
     Popup,
     Active,
     Screen,
@@ -380,9 +449,9 @@ begin
     Operations,
     Controls
   );
-  if OpenSelect <> null then
-    Active := OpenSelect;
-    Scopes.Add(OpenSelect.Id);
+  if OpenPopup <> null then
+    Active := OpenPopup;
+    Scopes.Add(OpenPopup.Id);
   end if;
   const PreviousRows: array of D.PaintedRow := if Previous = null then
     []

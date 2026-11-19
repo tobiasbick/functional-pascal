@@ -1,0 +1,65 @@
+// [Documentation](../../../../../docs/ui/gui/actions/dropdown-menu.md)
+
+unit Gallery.Shared.ProjectOptions;
+
+uses Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Elements as E, System as Sys;
+
+function Icon(Code: int): string;
+begin
+  return Sys.Char.ConvertFromUtf32(Code);
+end function;
+
+// Builds the Options dropdown used by both galleries.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Choose`: Maps a project command's name to a message.
+// - `Delete`: Opens the confirmation for project deletion.
+// ## Returns
+// The shared project options menu.
+public function View<TMsg>(Choose: function(string): TMsg; Delete: TMsg): E.Element<TMsg>;
+begin
+  return M.Menu<TMsg>(
+    'options', 'Options', [
+      M.Entry<TMsg>.Label('Project'),
+      M.Entry<TMsg>.Action(
+        new M.Item<TMsg>(
+          'rename',
+          'Rename',
+          Choose('Rename'),
+          Icon($E1F9),
+          Shortcut := 'F2'
+        )
+      ),
+      M.Entry<TMsg>.Action(
+        new M.Item<TMsg>(
+          'duplicate',
+          'Duplicate',
+          Choose('Duplicate'),
+          Icon($E09E),
+          Shortcut := 'Ctrl D'
+        )
+      ),
+      M.Entry<TMsg>.Action(
+        new M.Item<TMsg>(
+          'share',
+          'Share',
+          Choose('Share'),
+          Icon($E156)
+        )
+      ),
+      M.Entry<TMsg>.Separator,
+      M.Entry<TMsg>.Action(
+        new M.Item<TMsg>(
+          'delete',
+          'Delete',
+          Delete,
+          Icon($E18E),
+          Danger := true
+        )
+      )
+    ], new M.Options(Icon := Icon($E154))
+  );
+end function;
+
+end unit;

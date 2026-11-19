@@ -3,49 +3,10 @@
 unit Fpas.Ui.Tui.Internal.Widgets.Inputs.Select;
 
 uses
+  Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as P, Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup as Popup,
+  Fpas.Ui.Tui.Internal.Layout.Flexible as F, System as Sys, System.Collections.Generic as C,
   Fpas.Ui.Widgets.Inputs.Selects as S, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Controls.Activation as A,
   Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Styles as Styles;
-
-// Transient popup state. The application owns the committed selection.
-public type Cursor = record
-  // Open trigger, or empty when closed.
-  public Id: string := '';
-  // Case-insensitive option filter.
-  public Query: string := '';
-  // Highlighted original option index.
-  public Highlight: int := -1;
-  // First displayed position in the filtered list.
-  public Top: int := 0;
-end record;
-
-// Session-local popup access shared by successive views.
-// ## Type parameters
-// - `TMsg`: Application message type.
-public type State<TMsg> = record
-  // Reads the open popup.
-  public Read: function(): Cursor;
-  // Replaces transient state without sending an application message.
-  public Write: procedure(Cursor);
-  // Delivers a committed choice to the model.
-  public Apply: procedure(TMsg);
-end record;
-
-// Creates empty popup state for one terminal session.
-// ## Type parameters
-// - `TMsg`: Application message type.
-// ## Parameters
-// - `Apply`: The session dispatcher.
-// ## Returns
-// Independent state for this session.
-public function Start<TMsg>(Apply: procedure(TMsg)): State<TMsg>;
-begin
-  var Current: Cursor := new Cursor();
-  return new State<TMsg>(
-    function(): Cursor => Current, procedure(Value: Cursor) begin
-      Current := Value;
-    end procedure, Apply
-  );
-end function;
 
 // The select trigger and current model bindings.
 // ## Type parameters
@@ -62,32 +23,72 @@ public type Trigger<TMsg> = record implements A.IActivatable<TMsg>
   // Label, placeholder and input policy.
   public Settings: S.Options;
   // The owning terminal session.
-  public Popup: State<TMsg>;
+  public Popup: P.State<TMsg>;
 
   // Opens the popup at the model selection with a fresh query.
   // ## Returns
   // Opening does not send a message.
   public function Activate(): A.Result<TMsg>;
   begin
-    self.Popup.Write(new Cursor(self.Id, Highlight := self.Selected));
+    const Highlight: string := if self.Selected >= 0 then
+      S.OptionId(self.Id, self.Selected)
+    else
+      ''
+    end if;
+    self.Popup.Write(new P.Cursor(self.Id, Highlight));
     return A.Result<TMsg>.NoAction;
   end function;
+end record;
 
-  // Closes the popup and proposes a different option exactly once.
-  // ## Parameters
-  // - `Index`: Original position of the chosen option.
-  // ## Returns
-  // A model message if the choice changed.
-  public function Choose(Index: int): A.Result<TMsg>;
+type Option<TMsg> = record implements A.IActivatable<TMsg>
+  public Field: Trigger<TMsg>;
+  public Index: int;
+
+  public function Activate(): A.Result<TMsg>;
   begin
-    self.Popup.Write(new Cursor());
-    return if self.Selected = Index then
+    return if self.Index = self.Field.Selected then
       A.Result<TMsg>.NoAction
     else
-      A.Result<TMsg>.Send(self.Change(Index))
+      A.Result<TMsg>.Send(self.Field.Change(self.Index))
     end if;
   end function;
 end record;
+
+// Resolves the options to popup rows with their original index identities.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Field`: Current model binding.
+// - `Anchor`: Visible trigger bounds.
+// ## Returns
+// Popup content with optional search.
+public function Content<TMsg>(Field: Trigger<TMsg>; Anchor: F.Rect): Popup.Content<TMsg>;
+begin
+  const Rows: C.List<Popup.Row<TMsg>> := new C.List<Popup.Row<TMsg>>(Field.Items.Length);
+  for Index: int := 0 to Field.Items.Length - 1 do
+    const Label: string := Field.Items[Index].Label;
+    const Active: bool := Index = Field.Selected;
+    const Caption: string := (if Active then
+      '✓ '
+    else
+      '  '
+    end if) + G.SingleLine(Label);
+    Rows.Add(
+      Popup.Row<TMsg>.Choice(
+        new Popup.Item<TMsg>(
+          S.OptionId(Field.Id, Index), Label, Caption,
+          'select-option', new Option<TMsg>(Field, Index), Value := Active.ToString()
+        )
+      )
+    );
+  end for;
+
+  return new Popup.Content<TMsg>(
+    Rows.ToArray(),
+    Sys.Math.Max(18, Anchor.Width),
+    Searchable := Field.Settings.Searchable
+  );
+end function;
 
 // Builds the collapsed field with its optional label.
 // ## Type parameters

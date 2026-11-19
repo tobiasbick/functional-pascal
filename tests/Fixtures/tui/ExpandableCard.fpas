@@ -1,0 +1,232 @@
+// [Documentation](../../../docs/ui/tui/disclosure/expandable-card.md)
+
+program ExpandableCardContract;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Containers.ExpandableCards as Cards, Fpas.Ui.Widgets.Actions.Buttons as B,
+  Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Tui.Application as T,
+  Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.TerminalExtensions.Views as Views,
+  Fpas.Ui.Mvu.Application as M, Fpas.Ui.Layout as L, System as Sys, System.Console as Console;
+
+type Model = record
+  public Open: bool := false;
+  public Enabled: bool := true;
+end record;
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Update(State: Model; Message: string): M.Transition<Model, string>;
+begin
+  Check(Message <> 'unexpected', 'A disabled or hidden control sent a message.');
+  return new M.Transition<Model, string>(
+    case Message of
+      when 'open': State with
+        Open := true;
+      end with;
+      when 'close': State with
+        Open := false;
+      end with;
+      else State;
+    end case, []
+  );
+end function;
+
+function Toggle(Open: bool): string;
+begin
+  return if Open then
+    'open'
+  else
+    'close'
+  end if;
+end function;
+
+function Form(State: Model): E.Element<string>;
+begin
+  const Buttons: E.Element<string> := E.Column<string>(
+    E.Text<string>('Recovery instructions'),
+    B.Button<string>(
+      'child', 'Close card', if State.Enabled then
+        'close'
+      else
+        'unexpected'
+      end if
+    )
+  );
+  const Body: E.Element<string> := Views.Screen<string>(
+    Dialogs.Dialog<string>(
+      'inactive-modal', Buttons, B.Button<string>('never', 'Never', 'unexpected'),
+      not State.Enabled, new Dialogs.Options('Inactive dialog'), 'unexpected'
+    ),
+    [], [K.Shortcut<string>(K.Key.U, K.KeyModifiers.Ctrl, 'unexpected')]
+  );
+  return E.Column<string>(
+    B.Button<string>('before', 'Before', 'noop'),
+    Cards.ExpandableCard<string>(
+      'card', 'Security', State.Open,
+      if State.Enabled then
+        Toggle
+      else
+        function(Value: bool): string => 'unexpected'
+      end if,
+      Body, new Cards.Options(
+        Description := 'Two-factor authentication is on', Badge := 'Active',
+        Enabled := State.Enabled
+      )
+    ),
+    B.Button<string>('after', 'After', 'noop')
+  );
+end function;
+
+function Space(Rows: int): E.Element<string>;
+begin
+  return E.Size<string>(
+    E.Column<string>(),
+    new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(Rows * 16)))
+  );
+end function;
+
+function Scrolled(State: Model): E.Element<string>;
+begin
+  return E.ScrollView<string>(
+    'outer', E.Column<string>(
+      B.Button<string>('before', 'Before', 'noop'),
+      Cards.ExpandableCard<string>(
+        'card', 'Security', State.Open, Toggle,
+        E.Column<string>(Space(8), B.Button<string>('child', 'Close card', 'close'))
+      ),
+      Space(12), B.Button<string>('after', 'After', 'noop')
+    )
+  );
+end function;
+
+function Find(Session: T.HeadlessSession; Id: string): T.ControlSnapshot?;
+begin
+  for Item: T.ControlSnapshot in Session.Snapshot().Controls do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  return null;
+end function;
+
+function Control(Session: T.HeadlessSession; Id: string): T.ControlSnapshot;
+begin
+  const Item: T.ControlSnapshot? := Find(Session, Id);
+  if Item <> null then
+    return Item;
+  end if;
+
+  raise new Sys.InvalidOperationException('Missing card control ' + Id);
+end function;
+
+procedure Send(Session: T.HeadlessSession; Input: T.Input);
+begin
+  discard Session.Send(Input);
+  case Session.Step() of
+    when T.StepResult.Failed(_, _, _, const Reason: string):
+      raise new Sys.InvalidOperationException(Reason);
+    else
+  end case;
+end procedure;
+
+procedure Key(Session: T.HeadlessSession; Value: K.Key; Modifiers: K.KeyModifiers := K.KeyModifiers.None);
+begin
+  Send(Session, T.Input.KeyPress(Value, Modifiers));
+end procedure;
+
+begin
+  using const Main: T.HeadlessSession := T.StartHeadless<Model, string>(
+    new Model(),
+    Update,
+    Form,
+    40,
+    16
+  );
+  Key(Main, K.Key.Tab);
+  const Closed: T.ControlSnapshot := Control(Main, 'card');
+  Check(
+    Closed.Focused and Closed.Role = 'expandable-card' and Closed.Value = 'false',
+    'Closed card has one stable input identity.'
+  );
+  Check(
+    Main.Snapshot().Lines[
+      Closed.Row
+    ].Contains('▸ Security  [Active]') and Find(Main, 'child') = null,
+    'Closed header shows the badge and hides the body.'
+  );
+  Key(Main, K.Key.Tab);
+  Check(Control(Main, 'after').Focused, 'Tab skips the closed body.');
+  Key(Main, K.Key.Tab, K.KeyModifiers.Shift);
+  Key(Main, K.Key.Enter);
+  Check(
+    Control(
+      Main,
+      'card'
+    ).Focused and Control(Main, 'card').Value = 'true' and Find(Main, 'child') <> null,
+    'Enter shows the body while retaining header focus.'
+  );
+  Key(Main, K.Key.Tab);
+  Check(Control(Main, 'child').Focused, 'Open content becomes reachable by Tab.');
+  Key(Main, K.Key.Enter);
+  Check(
+    Control(Main, 'card').Focused and Find(Main, 'child') = null,
+    'Closing from the body restores header focus.'
+  );
+  Send(Main, T.Input.Character(' '));
+  Check(Control(Main, 'card').Value = 'true', 'Space opens the card.');
+  Send(Main, T.Input.Click(Closed.Column + 1, Closed.Row + 1));
+  Check(
+    Control(Main, 'card').Focused and Control(Main, 'card').Value = 'false',
+    'Clicking the description closes the card.'
+  );
+
+  using const Disabled: T.HeadlessSession := T.StartHeadless<Model, string>(
+    new Model(Open := true, Enabled := false),
+    Update, Form, 40, 16
+  );
+  Check(
+    Control(Disabled, 'card').Value = 'true' and not Control(Disabled, 'card').Enabled
+    and not Control(Disabled, 'child').Enabled,
+    'Disabled open cards keep their body visible and gate input.'
+  );
+  Check(
+    Find(Disabled, 'never') = null and Control(Disabled, 'before').Focused,
+    'A modal in disabled content does not seize focus.'
+  );
+  Send(Disabled, T.Input.Activate('card'));
+  Send(Disabled, T.Input.Activate('child'));
+  Key(Disabled, K.Key.U, K.KeyModifiers.Ctrl);
+  Key(Disabled, K.Key.Tab);
+  Check(
+    Control(Disabled, 'after').Focused,
+    'Disabled cards and their contents stay outside Tab traversal.'
+  );
+
+  using const Narrow: T.HeadlessSession := T.StartHeadless<Model, string>(
+    new Model(Open := true),
+    Update,
+    Scrolled,
+    19,
+    3
+  );
+  Key(Narrow, K.Key.Tab);
+  Key(Narrow, K.Key.Tab);
+  Check(
+    Control(Narrow, 'child').Focused and Find(Narrow, 'card') = null,
+    'The viewport follows focus into a distant part of the body.'
+  );
+  Key(Narrow, K.Key.Enter);
+  Check(
+    Control(Narrow, 'card').Focused and Control(Narrow, 'card').Value = 'false',
+    'Closing reveals an offscreen header again.'
+  );
+  Console.WriteLine('Expandable card contracts verified');
+end;
+
+end program;

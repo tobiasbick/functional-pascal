@@ -67,6 +67,23 @@ public sealed class TuiGalleryTests
             Assert.Equal("Saving", Control(await Request("snapshot"), "save").GetProperty("label").GetString());
             await Click("Reset");
 
+            await Turn(new() { ["kind"] = "scroll", ["column"] = 68, ["row"] = 4, ["delta"] = 30 });
+            await Click("Options");
+            var menu = await Request("snapshot");
+            Assert.Equal("Rename", Focused(menu));
+            Assert.Equal("menu-item", Control(menu, "options/rename").GetProperty("role").GetString());
+            await Key("Down");
+            await Key("Enter");
+            var chosen = await Request("snapshot");
+            Assert.Equal("Options", Focused(chosen));
+            Assert.Contains("Selected Duplicate", Preview(chosen, 48));
+            await Key("Down");
+            await Key("End");
+            await Key("Enter");
+            Assert.Equal("Cancel", Focused(await Request("snapshot")));
+            await Key("Escape");
+            Assert.Equal("Options", Focused(await Request("snapshot")));
+
             await Click("Inputs");
             await Key("Right");
             Assert.Equal("Full name", Focused(await Request("snapshot")));
@@ -84,14 +101,28 @@ public sealed class TuiGalleryTests
             var stacked = await Request("snapshot");
             Assert.True(Control(stacked, "input-name").GetProperty("row").GetInt32()
                 < Control(stacked, "input-email").GetProperty("row").GetInt32());
+            Assert.True(Control(stacked, "input-about").GetProperty("row").GetInt32()
+                > Control(stacked, "input-email").GetProperty("row").GetInt32());
+            await Turn(new() { ["kind"] = "scroll", ["column"] = 40, ["row"] = 3, ["delta"] = 30 });
+            var stackedPickers = await Request("snapshot");
+            Assert.True(Control(stackedPickers, "input-country").GetProperty("row").GetInt32()
+                < Control(stackedPickers, "input-language").GetProperty("row").GetInt32());
             await Resize(144, 36);
+
+            var about = Control(inputs, "input-about");
+            Assert.Equal("text-area", about.GetProperty("role").GetString());
+            Assert.StartsWith("Mathematician and writer.", about.GetProperty("value").GetString());
+            Assert.Equal(6, about.GetProperty("height").GetInt32());
+            await Click("About");
+            await Turn(new() { ["kind"] = "key", ["key"] = "End", ["modifiers"] = 4 });
+            await Key("Enter");
+            await Turn(new() { ["kind"] = "paste", ["text"] = "A second line." });
+            Assert.EndsWith("\nA second line.", Control(await Request("snapshot"), "input-about").GetProperty("value").GetString());
 
             Assert.Equal("Germany", Control(inputs, "input-country").GetProperty("value").GetString());
             Assert.Equal("Pick a language", Control(inputs, "input-language").GetProperty("value").GetString());
             Assert.Equal(Control(inputs, "input-country").GetProperty("row").GetInt32(),
                 Control(inputs, "input-language").GetProperty("row").GetInt32());
-            Assert.True(Control(stacked, "input-country").GetProperty("row").GetInt32()
-                < Control(stacked, "input-language").GetProperty("row").GetInt32());
             await Click("Country");
             Assert.Equal("Germany", Focused(await Request("snapshot")));
             await Key("Down");
@@ -102,6 +133,41 @@ public sealed class TuiGalleryTests
             Assert.Equal("Rust", Focused(await Request("snapshot")));
             await Key("Enter");
             Assert.Equal("Rust", Control(await Request("snapshot"), "input-language").GetProperty("value").GetString());
+
+            await Click("Disclosure");
+            var disclosure = await Request("snapshot");
+            Assert.Equal("false", Control(disclosure, "security").GetProperty("value").GetString());
+            Assert.Contains("Two-factor authentication is on", Preview(disclosure, 48));
+            await Key("Right");
+            await Key("Enter");
+            disclosure = await Request("snapshot");
+            Assert.Equal("Security", Focused(disclosure));
+            Assert.Equal("true", Control(disclosure, "security").GetProperty("value").GetString());
+            Assert.Contains("Recovery codes were generated 3 months ago.", Preview(disclosure, 48));
+            await Click("Security");
+            disclosure = await Request("snapshot");
+            Assert.Equal("Security", Focused(disclosure));
+            Assert.DoesNotContain("Recovery codes were generated", Preview(disclosure, 48));
+
+            await Click("Navigation");
+            await Key("Right");
+            Assert.Equal("Overview", Focused(await Request("snapshot")));
+            await Key("Right");
+            var navigation = await Request("snapshot");
+            Assert.Equal("Analytics", Focused(navigation));
+            Assert.Equal("true", Control(navigation, "tabs/1").GetProperty("value").GetString());
+            await Key("Tab");
+            Assert.Equal("Account", Focused(await Request("snapshot")));
+            await Click("Billing");
+            Assert.Equal("true", Control(await Request("snapshot"), "pill-tabs/2").GetProperty("value").GetString());
+            await Resize(44, 22);
+            await Key("Escape");
+            await Key("Right");
+            await Key("End");
+            navigation = await Request("snapshot");
+            Assert.Equal("Settings", Focused(navigation));
+            Assert.Equal("true", Control(navigation, "tabs/3").GetProperty("value").GetString());
+            await Resize(144, 36);
 
             await Click("Selection");
             await Key("Right");
@@ -336,7 +402,9 @@ public sealed class TuiGalleryTests
         async Task<string?> Turn(JsonObject input)
         {
             Assert.Equal("queued", Status(await Request("send", new() { ["input"] = input.DeepClone() })));
-            return Status(await Request("step"));
+            var step = await Request("step");
+            Assert.True(Status(step) != "failed", step.ToString());
+            return Status(step);
         }
 
         async Task<JsonElement> Request(string operation, JsonObject? arguments = null)

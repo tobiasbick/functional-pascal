@@ -9,39 +9,42 @@ uses
   Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Widgets.Developer.Terminal as T,
   Fpas.Ui.Styles as S, System as Sys, System.Collections.Generic as C;
 
-// Composes a field with its optional caption and supporting text.
+// Composes an editor with its optional caption and supporting text.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
-// - `Field`: Shared value, options and edit callbacks.
+// - `Content`: Editable area.
+// - `Label`: Caption above the editor.
+// - `Hint`: Optional supporting text.
+// - `Error`: Validation error replacing the hint.
 // - `Colors`: Inherited text style.
 // - `Theme`: Semantic colors for errors and hints.
 // ## Returns
-// A single editable row with any requested labels.
-public function Lower<TMsg>(Field: Edit.Field<TMsg>; Colors: T.Style; Theme: Th.Theme): E.Element<TMsg>;
+// A column of the editor and its optional surrounding text.
+public function WithLabels<TMsg>(Content: E.Element<TMsg>; Label: string; Hint: string; Error: string; Colors: T.Style; Theme: Th.Theme): E.Element<TMsg>;
 begin
   const Rows: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
-  if Field.Settings.Label <> '' then
-    Rows.Add(E.Element<TMsg>.Label(Field.Settings.Label));
+  if Label <> '' then
+    Rows.Add(E.Element<TMsg>.Label(Label));
   end if;
 
-  Rows.Add(E.Element<TMsg>.TextField(Field));
-  const Error: bool := Field.Settings.Error <> '';
-  const Hint: string := if Error then
-    Field.Settings.Error
+  Rows.Add(Content);
+  const HasError: bool := Error <> '';
+  const Detail: string := if HasError then
+    Error
   else
-    Field.Settings.Hint
+    Hint
   end if;
-  if Hint <> '' then
+  if Detail <> '' then
     const Ink: int := Th.Rgb(
-      if Error then
+      if HasError then
         Theme.Colors.Danger
       else
         Theme.Colors.TextMuted
       end if, Colors.Background ?? 0
     );
     Rows.Add(
-      E.Element<TMsg>.Decorated(E.Element<TMsg>.Label(Hint), new T.Style(Ink, Colors.Background))
+      E.Element<TMsg>.Decorated(E.Element<TMsg>.Label(Detail), new T.Style(Ink, Colors.Background))
     );
   end if;
 

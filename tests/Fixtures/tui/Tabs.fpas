@@ -1,0 +1,220 @@
+// [Documentation](../../../docs/ui/tui/navigation/tabs.md)
+
+program TabsContract;
+
+uses
+  Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs,
+  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Widgets.Actions.Buttons as B,
+  Fpas.Ui.Tui.Application as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Mvu.Application as M,
+  System as Sys, System.Console as Console;
+
+const Items: array of Tabs.Item := [
+  new Tabs.Item('Overview'), new Tabs.Item('Analytics'),
+  new Tabs.Item('Decline this tab'), new Tabs.Item('Settings')
+];
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Update(State: int; Proposed: int): M.Transition<int, int>;
+begin
+  Check(Proposed >= 0 and State <> Proposed, 'A disabled or already selected tab sent a message.');
+  return new M.Transition<int, int>(
+    if Proposed = 2 then
+      State
+    else
+      Proposed
+    end if, []
+  );
+end function;
+
+function Strip(State: int): E.Element<int>;
+begin
+  return Tabs.Tabs<int>('tabs', Items, State, function(Value: int): int => Value);
+end function;
+
+function View(State: int): E.Element<int>;
+begin
+  return E.Column<int>(
+    B.Button<int>('before', 'Before', -1),
+    Strip(State),
+    Tabs.Tabs<int>(
+      'disabled', [new Tabs.Item('Read only')], 0, function(Value: int): int => -1,
+      new Tabs.Options(Enabled := false)
+    ),
+    B.Button<int>('after', 'After', -1)
+  );
+end function;
+
+function Scrolled(State: int): E.Element<int>;
+begin
+  return E.ScrollView<int>(
+    'scroll',
+    E.Column<int>(
+      B.Button<int>('before', 'Before', -1), E.Text<int>('Filler'), E.Text<int>('Filler'),
+      Strip(State), B.Button<int>('after', 'After', -1)
+    )
+  );
+end function;
+
+function Pill(State: int): E.Element<int>;
+begin
+  return Tabs.Tabs<int>(
+    'pills',
+    [new Tabs.Item('A'), new Tabs.Item('B')],
+    State,
+    function(Value: int): int => Value,
+    new Tabs.Options(Appearance := Tabs.Variant.Pill, FullWidth := true)
+  );
+end function;
+
+function Dialog(State: int): E.Element<int>;
+begin
+  return Dialogs.Dialog<int>(
+    'dialog', E.Text<int>('Background'), Strip(State), true,
+    new Dialogs.Options('Tabs', InitialFocus := 'tabs/3'), -1
+  );
+end function;
+
+function Find(Session: T.HeadlessSession; Id: string): T.ControlSnapshot?;
+begin
+  for Control: T.ControlSnapshot in Session.Snapshot().Controls do
+    if Control.Id = Id then
+      return Control;
+    end if;
+  end for;
+
+  return null;
+end function;
+
+function Control(Session: T.HeadlessSession; Id: string): T.ControlSnapshot;
+begin
+  const Item: T.ControlSnapshot? := Find(Session, Id);
+  if Item <> null then
+    return Item;
+  end if;
+
+  raise new Sys.InvalidOperationException('Missing tab or control: ' + Id);
+end function;
+
+procedure Send(Session: T.HeadlessSession; Event: T.Input);
+begin
+  discard Session.Send(Event);
+  case Session.Step() of
+    when T.StepResult.Failed(_, _, _, const Reason: string):
+      raise new Sys.InvalidOperationException(Reason);
+    else
+  end case;
+end procedure;
+
+procedure Key(Session: T.HeadlessSession; Value: K.Key; Modifiers: K.KeyModifiers := K.KeyModifiers.None);
+begin
+  Send(Session, T.Input.KeyPress(Value, Modifiers));
+end procedure;
+
+procedure Click(Session: T.HeadlessSession; Id: string);
+begin
+  const Item: T.ControlSnapshot := Control(Session, Id);
+  Send(Session, T.Input.Click(Item.Column, Item.Row));
+end procedure;
+
+begin
+  using const Main: T.HeadlessSession := T.StartHeadless<int, int>(1, Update, View, 64, 10);
+  Key(Main, K.Key.Tab);
+  const First: T.ControlSnapshot := Control(Main, 'tabs/1');
+  Check(
+    First.Focused and First.Role = 'tab' and First.Value = 'true',
+    'Tab enters at the model selection.'
+  );
+  Check(
+    Main.Snapshot().Lines[First.Row + 1].Contains('━'),
+    'The selected tab paints an underline.'
+  );
+  Key(Main, K.Key.Right);
+  Check(
+    Control(Main, 'tabs/2').Focused and Control(Main, 'tabs/1').Value = 'true',
+    'Focus follows a declined selection.'
+  );
+  Key(Main, K.Key.Tab);
+  Check(
+    Control(Main, 'after').Focused,
+    'The strip is one Tab stop and the disabled strip is skipped.'
+  );
+  Key(Main, K.Key.Tab, K.KeyModifiers.Shift);
+  Check(Control(Main, 'tabs/1').Focused, 'Shift+Tab enters at the selected tab.');
+  Key(Main, K.Key.Enter);
+  Click(Main, 'disabled/0');
+  Send(Main, T.Input.Activate('disabled/0'));
+  Click(Main, 'tabs/3');
+  Check(
+    Control(Main, 'tabs/3').Value = 'true' and Control(Main, 'tabs/3').Focused,
+    'Click changes the selection.'
+  );
+  Key(Main, K.Key.Right);
+  Check(Control(Main, 'tabs/3').Focused, 'Right stops at the last tab.');
+
+  using const Narrow: T.HeadlessSession := T.StartHeadless<int, int>(1, Update, View, 11, 10);
+  Key(Narrow, K.Key.Tab);
+  Check(
+    Control(Narrow, 'tabs/1').Focused and Find(Narrow, 'tabs/3') = null,
+    'Narrow strips clip remote tabs.'
+  );
+  Key(Narrow, K.Key.Right);
+  Check(
+    Control(Narrow, 'tabs/2').Focused,
+    'A declined target is revealed even in a narrow viewport.'
+  );
+  Key(Narrow, K.Key.Tab);
+  Check(
+    Control(Narrow, 'after').Focused and Control(Narrow, 'tabs/1').Value = 'true',
+    'Leaving returns the strip to its selection.'
+  );
+  Key(Narrow, K.Key.Tab, K.KeyModifiers.Shift);
+  Key(Narrow, K.Key.End);
+  Check(
+    Control(Narrow, 'tabs/3').Focused and Control(Narrow, 'tabs/3').Value = 'true',
+    'End selects and reveals the last tab.'
+  );
+  Send(Narrow, T.Input.Focus('tabs/0'));
+  Check(
+    Control(Narrow, 'tabs/0').Focused,
+    'Explicit focus reveals an offscreen item without selecting it.'
+  );
+  Send(Narrow, T.Input.Character(' '));
+  Check(Control(Narrow, 'tabs/0').Value = 'true', 'Space commits a focused tab.');
+  Send(Narrow, T.Input.Resize(1, 10));
+  Key(Narrow, K.Key.End);
+  Check(
+    Control(Narrow, 'tabs/3').Focused and Control(Narrow, 'tabs/3').Width = 1,
+    'Even one column supports keyboard navigation.'
+  );
+
+  using const Vertical: T.HeadlessSession := T.StartHeadless<int, int>(3, Update, Scrolled, 14, 2);
+  Key(Vertical, K.Key.Tab);
+  Check(
+    Control(Vertical, 'tabs/3').Focused,
+    'Tab reveals the strip vertically and the choice horizontally.'
+  );
+  Key(Vertical, K.Key.Tab);
+  Check(Control(Vertical, 'after').Focused, 'Tab can leave the revealed strip.');
+
+  using const Pills: T.HeadlessSession := T.StartHeadless<int, int>(0, Update, Pill, 20, 4);
+  const Left: T.ControlSnapshot := Control(Pills, 'pills/0');
+  const Right: T.ControlSnapshot := Control(Pills, 'pills/1');
+  Check(
+    Left.Width > 3 and Right.Column + Right.Width = 20 and Left.Row = Right.Row,
+    'Full-width pill tabs share the complete row.'
+  );
+  Check(Pills.Snapshot().Lines[1].Trim() = '', 'The pill style has no baseline.');
+  using const Modal: T.HeadlessSession := T.StartHeadless<int, int>(0, Update, Dialog, 22, 9);
+  Check(Control(Modal, 'tabs/3').Focused, 'A modal can initially focus a hidden tab.');
+  Key(Modal, K.Key.Enter);
+  Check(Control(Modal, 'tabs/3').Value = 'true', 'Focus does not commit until activated.');
+  Console.WriteLine('Tabs contracts verified');
+end;
+
+end program;

@@ -1,0 +1,47 @@
+// [Documentation](../../../../../docs/ui/tui/host.md#popup-input)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState;
+
+// Transient state of the one open anchored popup in a terminal session.
+public type Cursor = record
+  // Open trigger identity, or empty when closed.
+  public Id: string := '';
+  // Highlighted command or option identity.
+  public Highlight: string := '';
+  // Filter for a searchable popup.
+  public Query: string := '';
+  // First displayed content row.
+  public Top: int := 0;
+end record;
+
+// Session-local popup state and the application dispatcher.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type State<TMsg> = record
+  // Reads the open popup.
+  public Read: function(): Cursor;
+  // Replaces transient state without sending an application message.
+  public Write: procedure(Cursor);
+  // Sends the chosen command or option to the application.
+  public Apply: procedure(TMsg);
+end record;
+
+// Starts a session with its popup closed.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Apply`: The session dispatcher.
+// ## Returns
+// Independent state for the session.
+public function Start<TMsg>(Apply: procedure(TMsg)): State<TMsg>;
+begin
+  var Current: Cursor := new Cursor();
+  return new State<TMsg>(
+    function(): Cursor => Current,
+    procedure(Value: Cursor) begin
+      Current := Value;
+    end procedure, Apply
+  );
+end function;
+
+end unit;

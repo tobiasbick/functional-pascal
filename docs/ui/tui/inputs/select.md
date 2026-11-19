@@ -38,10 +38,10 @@ The trigger exposes the snapshot role `select` and its visible value. Each visib
 ## See also
 
 - [Terminal inputs](README.md)
+- [Popup input and focus](../host.md#popup-input)
 - [Select API and GUI example](../../gui/inputs/select.md)
 
 ## Source files
 
 - [Select trigger and session state](../../../../src/Fpas.Ui.Tui/Internal/Widgets/Inputs/Select.fpas)
-- [Popup layout and input](../../../../src/Fpas.Ui.Tui/Internal/Widgets/Inputs/SelectPopup.fpas)
 - [Headless interaction contract](../../../../tests/Fixtures/tui/Select.fpas)

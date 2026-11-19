@@ -2,11 +2,13 @@
 
 unit Fpas.Ui.Tui.Internal.Layout.Scene;
 
-uses Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as Validation, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as Validation, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys;
 
 public type Binding<TMsg> = variant
   // Single-line editor with its insertion point and first editable column.
   Edit(Field: Edit.Field<TMsg>; Position: Edit.Tracking; Origin: int; Caret: int);
+  // Multiline editor and the caret cell chosen by layout.
+  EditArea(View: AreaEdit.View<TMsg>; CaretX: int; CaretY: int);
   Invoke(Action: Actions.IActivatable<TMsg>);
   Scroll(View: V.Viewport<TMsg>);
   // Unclipped allocation and event mapper for an interactive terminal image.
@@ -54,6 +56,8 @@ public type NavigationStop = record
   public NavigationGroup: string := '';
   // Nearest enclosing scroll viewport.
   public ScrollId: string := '';
+  // Non-null when the destination accepts direct focus before it is visible.
+  public Scope: string? := null;
 end record;
 
 public type Scope<TMsg> = record
@@ -90,7 +94,7 @@ public type Layout<TMsg> = record
   public Scopes: array of string := [];
   // Enabled navigation rows in display order, including rows outside a scroll viewport.
   public NavigationRows: array of NavigationStop := [];
-  // Enabled tab destinations in view order. A radio group contributes one entry.
+  // Enabled tab destinations in view order. A composite control contributes one entry.
   public TabStops: array of TabStop := [];
 end record;
 

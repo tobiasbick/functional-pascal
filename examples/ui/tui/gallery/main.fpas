@@ -3,6 +3,9 @@
 program TuiWidgetGallery;
 
 uses
+  Gallery.Shared.SecurityCard as Security,
+  Gallery.Shared.ProjectOptions as ProjectOptions,
+  Gallery.Shared.AboutField as AboutSample,
   Fpas.Ui.Tui.Application as App, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as E,
   TuiGallery.PeopleSample as People, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Theming.Themes as Themes,
   TuiGallery.CellGridSample as GridSample, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Composition as Composition,
@@ -10,18 +13,23 @@ uses
   Gallery.Shared.PickerChoices as Pickers, Gallery.Shared.SaveFrequency as Frequency, Gallery.Shared.CheckboxExamples as Checks, Gallery.Shared.EditorStatus as Status, Gallery.Shared.ButtonExamples as Buttons, Gallery.Shared.ProgressExample as Progress,
   Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Developer.Terminal as Term,
   TuiGallery.ProfileSample as Profile, TuiGallery.Catalog as Catalog, Fpas.Ui.Widgets.Navigation.Navigation as Nav,
-  System as Sys, System.Threading as Threads;
+  Gallery.Shared.TabExamples as TabExamples, Fpas.Ui.Widgets.Navigation.Tabs as Tabs, System as Sys, System.Threading as Threads;
 
 type Msg = variant
   SelectPage(Page: Catalog.Entry);
   Preview;
   SetSaving(Value: bool);
+  MenuChoice(Name: string);
   DesktopCommand(Id: string);
   CreateWorkspace;
   SetWeeklySummary(Value: bool);
   SetMarketing(Value: bool);
   SetSaveFrequency(Value: int);
   SetCountry(Value: int);
+  SetAbout(Value: string);
+  SetTab(Value: int);
+  SetPillTab(Value: int);
+  SetSecurity(Value: bool);
   SetPickerLanguage(Value: int);
   Grid(Event: Grids.Event);
   ProfileAction(Action: Profile.Msg);
@@ -36,8 +44,13 @@ type Model = record
   public Active: Catalog.Entry;
   public Mode: Themes.Mode := Themes.Mode.Dark;
   public Saving: bool := false;
+  public MenuChoice: string := '';
   public WeeklySummary: bool := false;
   public Marketing: bool := false;
+  public SecurityOpen: bool := Security.Initial;
+  public ActiveTab: int := 0;
+  public ActivePillTab: int := 0;
+  public About: string := AboutSample.Initial;
   public Country: int := Pickers.InitialCountry;
   public PickerLanguage: int := Pickers.InitialLanguage;
   public SaveFrequency: int := Frequency.Initial;
@@ -80,6 +93,10 @@ begin
         Grid := GridSample.Update(State.Grid, Event);
       end with;
     when Msg.Preview:
+    when Msg.MenuChoice(const Name: string):
+      Next := State with
+        MenuChoice := Name;
+      end with;
     when Msg.SetSaving(const Value: bool):
       Next := State with
         Saving := Value;
@@ -87,6 +104,22 @@ begin
     when Msg.SetWeeklySummary(const Value: bool):
       Next := State with
         WeeklySummary := Value;
+      end with;
+    when Msg.SetTab(const Value: int):
+      Next := State with
+        ActiveTab := Value;
+      end with;
+    when Msg.SetSecurity(const Value: bool):
+      Next := State with
+        SecurityOpen := Value;
+      end with;
+    when Msg.SetPillTab(const Value: int):
+      Next := State with
+        ActivePillTab := Value;
+      end with;
+    when Msg.SetAbout(const Value: string):
+      Next := State with
+        About := Value;
       end with;
     when Msg.SetCountry(const Value: int):
       Next := State with
@@ -280,7 +313,19 @@ begin
         E.Row<Msg>(new L.Flow(Gap := L.Spacing.Normal), Icons),
         Label('States', S.Role.Heading),
         E.Text<Msg>('Loading keeps the label so the layout does not jump.'),
-        Buttons.States<Msg>(Msg.Preview, Wide, State.Saving, Msg.SetSaving)
+        Buttons.States<Msg>(Msg.Preview, Wide, State.Saving, Msg.SetSaving),
+        Label('Dropdown menu', S.Role.Heading),
+        ProjectOptions.View<Msg>(
+          Msg.MenuChoice,
+          Msg.ProfileAction(Profile.Msg.Show(Profile.Layer.Delete))
+        ),
+        E.Text<Msg>(
+          if State.MenuChoice = '' then
+            ''
+          else
+            'Selected ' + State.MenuChoice
+          end if
+        )
       );
     when Catalog.Preview.Inputs:
       const Wide: bool := Columns >= 66;
@@ -306,10 +351,21 @@ begin
         Composition.Map<Profile.Msg, Msg>(
           Profile.Editors(State.ProfileState, 'input', Wide),
           Msg.ProfileAction
-        ), Label('Pickers', S.Role.Heading), Choices
+        ),
+        AboutSample.View<Msg>(State.About, Msg.SetAbout),
+        Label('Pickers', S.Role.Heading),
+        Choices
       );
     when Catalog.Preview.Selection:
       Example := Selection(State, Columns >= 66);
+    when Catalog.Preview.Navigation:
+      Example := E.Column<Msg>(
+        Flow, Label('Tabs', S.Role.Heading),
+        E.Column<Msg>(
+          Flow,
+          TabExamples.Rows<Msg>(State.ActiveTab, State.ActivePillTab, Msg.SetTab, Msg.SetPillTab)
+        )
+      );
     when Catalog.Preview.Overlays:
       Example := E.Column<Msg>(
         Flow, Label('Dialogs and sheets', S.Role.Heading),
@@ -329,6 +385,11 @@ begin
           ), new L.Flex(Basis := L.Extent.Fill, Grow := 1)
         ),
         Status.View<Msg>(State.Indent, State.Encoding, State.Language, Msg.DesktopCommand, Columns)
+      );
+    when Catalog.Preview.Disclosure:
+      Example := E.Column<Msg>(
+        Flow, Label('Expandable cards', S.Role.Heading),
+        Security.View<Msg>(State.SecurityOpen, Msg.SetSecurity)
       );
     when Catalog.Preview.CellGrid:
       return Composition.Map<Grids.Event, Msg>(GridSample.View(State.Grid), Msg.Grid);
@@ -372,8 +433,10 @@ begin
     when Catalog.Preview.Buttons: 'primary';
     when Catalog.Preview.Inputs: 'input-name';
     when Catalog.Preview.Selection: 'newsletter';
+    when Catalog.Preview.Navigation: Tabs.ItemId(TabExamples.UnderlineId, State.ActiveTab);
     when Catalog.Preview.Overlays: 'edit-profile-open';
     when Catalog.Preview.DataDisplay: State.Person;
+    when Catalog.Preview.Disclosure: 'security';
     when Catalog.Preview.AppChrome: 'desktop-status/encoding';
     else '';
   end case;

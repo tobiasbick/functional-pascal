@@ -15,20 +15,27 @@ public procedure Apply<TMsg>(
       Cells[Index] := new T.Cell(Cells[Index].Text, Style);
     end if;
   end procedure;
+  procedure Caret(Column: int; Row: int);
+  begin
+    if not Focused or not Bounds.Contains(Column, Row) then
+      return;
+    end if;
+    const Index: int := Row * Columns + Column;
+    Mark(Column, Row, Theme.Focus);
+    if Cells[Index].Text = '' then
+      Mark(Column - 1, Row, Theme.Focus);
+    elsif Bounds.Contains(Column + 1, Row) and Cells[Index + 1].Text = '' then
+      Mark(Column + 1, Row, Theme.Focus);
+    end if;
+  end procedure;
 begin
   const Bounds: F.Rect := Control.Bounds;
   case Control.Action of
-    when A.Binding.Edit(_, _, _, const Caret: int):
-      if Focused then
-        Mark(Caret, Bounds.Y, Theme.Focus);
-        if Bounds.Contains(Caret + 1, Bounds.Y) and Cells[
-          Bounds.Y * Columns + Caret + 1
-        ].Text = ''
-        then
-          Mark(Caret + 1, Bounds.Y, Theme.Focus);
-        end if;
-      end if;
-
+    when A.Binding.Edit(_, _, _, const X: int):
+      Caret(X, Bounds.Y);
+      return;
+    when A.Binding.EditArea(_, const X: int, const Y: int):
+      Caret(X, Y);
       return;
     when A.Binding.Grid(_, _):
       return;

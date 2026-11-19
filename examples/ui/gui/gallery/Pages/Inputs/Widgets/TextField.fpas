@@ -55,7 +55,7 @@ begin
     )
   );
   const Query: E.Element<State.Msg> := Search.View(Model, Data);
-  const About: E.Element<State.Msg> := Area.View(Model, Data);
+  const About: E.Element<State.Msg> := Area.View(Model);
   const Fields: array of E.Element<State.Msg> := [
     Grid.Grid<State.Msg>(
       new Grid.Options(Columns := 2, MinimumColumnWidth := 260.0F, Gap := G.Points(16)),

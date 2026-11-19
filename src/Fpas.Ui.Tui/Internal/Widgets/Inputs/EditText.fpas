@@ -1,0 +1,99 @@
+// [Documentation](../../../../../docs/ui/tui/inputs/text-area.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Inputs.EditText;
+
+uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, System as Sys, System.Globalization as Global, System.Text as Text;
+
+// Finds the end of the text element at a UTF-16 offset.
+// ## Parameters
+// - `Value`: Current model text.
+// - `Offset`: Text element start or end of the string.
+// ## Returns
+// The next insertion offset, clamped at the end.
+public function Next(Value: string; Offset: int): int;
+begin
+  return if Offset < Value.Length then
+    Offset + Global.StringInfo.GetNextTextElementLength(Value, Offset)
+  else
+    Offset
+  end if;
+end function;
+
+// Finds the nearest preceding text element boundary.
+// ## Parameters
+// - `Value`: Current model text.
+// - `Offset`: UTF-16 position in the string.
+// ## Returns
+// The preceding insertion offset, clamped at zero.
+public function Previous(Value: string; Offset: int): int;
+begin
+  const Starts: array of int := Global.StringInfo.ParseCombiningCharacters(Value);
+  const Index: int := Sys.Array.BinarySearch<int>(Starts, Offset);
+  const Before: int := (if Index >= 0 then
+    Index
+  else
+    -Index - 1
+  end if) - 1;
+  return if Before >= 0 then
+    Starts[Before]
+  else
+    0
+  end if;
+end function;
+
+// Places the caret after an edit that may join text elements across the insertion point.
+// ## Parameters
+// - `Value`: Text after the edit.
+// - `Offset`: End of the inserted span.
+// ## Returns
+// A valid insertion offset.
+public function AfterEdit(Value: string; Offset: int): int;
+begin
+  return if Offset > 0 then
+    Next(Value, Previous(Value, Offset))
+  else
+    0
+  end if;
+end function;
+
+// Normalizes input and takes the text elements that fit the UTF-8 budget.
+// ## Parameters
+// - `Input`: Typed or pasted text.
+// - `Available`: Remaining UTF-8 bytes.
+// - `Multiline`: Preserve line breaks as LF when enabled.
+// ## Returns
+// The insertable fragment, possibly empty.
+public function Insertable(Input: string; Available: int; Multiline: bool): string;
+begin
+  const Normalized: string := if Multiline then
+    Input.Replace(
+      new string([#13, #10]),
+      cast<char>(10).ToString()
+    ).Replace(#13, #10).Replace(#8232, #10).Replace(#8233, #10)
+  else
+    G.SingleLine(Input)
+  end if;
+  const Added: Text.StringBuilder := new Text.StringBuilder();
+  const Glyphs: Global.TextElementEnumerator := Global.StringInfo.GetTextElementEnumerator(
+    Normalized
+  );
+  var Remaining: int := Available;
+  while Glyphs.MoveNext() do
+    const Glyph: string := Glyphs.GetTextElement();
+    if (Multiline and Glyph[0] = #10) or (not Sys.Char.IsControl(Glyph[0])
+      and not (Sys.Char.IsSurrogate(Glyph[0]) and not Sys.Char.IsSurrogatePair(Glyph, 0)))
+    then
+      const Bytes: int := Text.Encoding.UTF8.GetByteCount(Glyph);
+      if Bytes > Remaining then
+        break;
+      end if;
+
+      discard Added.Append(Glyph);
+      Remaining := Remaining - Bytes;
+    end if;
+  end while;
+
+  return Added.ToString();
+end function;
+
+end unit;

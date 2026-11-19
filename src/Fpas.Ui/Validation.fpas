@@ -1136,7 +1136,6 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Content: E.Element<TMsg>,
         const Settings: ExpandableCards.Options
       ):
-        Rules.RequireProfile(Profile, Target.Graphical, Location + '/expandableCard');
         const At: string := Identify(Id, Location + '/expandableCard');
         DisclosureRules.Header(Title, Settings, At);
         Visit(Content, At + '/content');
@@ -1305,7 +1304,6 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Entries: array of Menus.Entry<TMsg>,
         const Settings: Menus.Options
       ):
-        Rules.RequireProfile(Profile, Target.Graphical, Location);
         MenuRules.Check<TMsg>(Id, Label, Entries, Settings, Location, Identify);
       when E.Element.FormattedText(
         const Value: string,
@@ -1573,7 +1571,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _,
         const Settings: Tabs.Options
       ):
-        NavigationRules.CheckTabs(Id, Items, Selected, Settings, Profile, Location, Identify);
+        NavigationRules.CheckTabs(Id, Items, Selected, Settings, Location, Identify);
       when E.Element.BreadcrumbTrail(const Id: string, const Items: array of string, _, _):
         NavigationRules.CheckBreadcrumb(Id, Items, Profile, Location, Identify);
       when E.Element.PaginationAction(const Id: string, const Page: int, const Count: int, _, _):

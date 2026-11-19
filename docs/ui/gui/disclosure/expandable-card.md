@@ -1,6 +1,6 @@
 # Expandable card
 
-Use an expandable card for a summary with details that can open beneath its header. Available in **GUI**.
+Use an expandable card for a summary with details that can open beneath its header. Available in **GUI** and [TUI](../../tui/disclosure/expandable-card.md).
 
 ![Expandable card in the FPAS gallery](images/expandable-card.png)
 
@@ -45,3 +45,7 @@ Click the header or activate it with Enter or Space to propose the opposite expa
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Disclosure/View.fpas)
 - [Expandable text](expandable-text.md)
 - [Disclosure](README.md)
+
+## Source files
+
+- [Shared Security example](../../../../examples/ui/gui/gallery/Shared/SecurityCard.fpas)

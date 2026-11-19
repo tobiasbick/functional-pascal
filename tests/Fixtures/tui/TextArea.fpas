@@ -1,0 +1,259 @@
+// [Documentation](../../../docs/ui/tui/inputs/text-area.md)
+
+program TextAreaContract;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.TextAreas as A, Fpas.Ui.Widgets.Actions.Buttons as B,
+  Fpas.Ui.Tui.Application as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Mvu.Application as M,
+  Fpas.Ui.Layout as L, System as Sys, System.Console as Console;
+
+type Msg = variant
+  Edit(Value: string);
+  Submit(Value: string);
+  Unexpected;
+end variant;
+
+type Model = record
+  public Text: string;
+  public Submitted: string := '';
+end record;
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Update(State: Model; Message: Msg): M.Transition<Model, Msg>;
+begin
+  case Message of
+    when Msg.Edit(const Value: string):
+      const Next: Model := if Value.Contains('?') then
+        State
+      else
+        State with
+          Text := Value;
+        end with
+      end if;
+      return new M.Transition<Model, Msg>(Next, []);
+    when Msg.Submit(const Value: string):
+      return new M.Transition<Model, Msg>(
+        State with
+          Submitted := Value;
+        end with, []
+      );
+    when Msg.Unexpected:
+      raise new Sys.InvalidOperationException('Inactive field sent a message.');
+  end case;
+end function;
+
+function Form(State: Model): E.Element<Msg>;
+begin
+  return E.Column<Msg>(
+    A.TextArea<Msg>(
+      'area', State.Text, Msg.Edit, new A.Options(
+        Label := 'About', Hint := 'Notes',
+        Error := 'Please review', Placeholder := 'Start here', Height := 32, MaxUtf8Bytes := 32
+      ), Msg.Submit
+    ),
+    A.TextArea<Msg>(
+      'readonly', State.Submitted, function(Value: string): Msg => Msg.Unexpected,
+      new A.Options(Height := 16, ReadOnly := true)
+    ),
+    A.TextArea<Msg>(
+      'disabled', 'Unavailable', function(Value: string): Msg => Msg.Unexpected,
+      new A.Options(Enabled := false, Height := 16)
+    ),
+    B.Button<Msg>('next', 'Next', Msg.Unexpected)
+  );
+end function;
+
+function Fill(State: Model): E.Element<Msg>;
+begin
+  return A.TextArea<Msg>('fill', State.Text, Msg.Edit, new A.Options(Height := -1));
+end function;
+
+function Scrolled(State: Model): E.Element<Msg>;
+begin
+  return E.ScrollView<Msg>(
+    'outer', E.Column<Msg>(
+      A.TextArea<Msg>('area', State.Text, Msg.Edit, new A.Options(Height := 32)),
+      E.Size<Msg>(E.Column<Msg>(), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(160)))),
+      E.Text<Msg>('Bottom')
+    )
+  );
+end function;
+
+function Control(Session: T.HeadlessSession; Id: string): T.ControlSnapshot;
+begin
+  for Item: T.ControlSnapshot in Session.Snapshot().Controls do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing editor ' + Id);
+end function;
+
+procedure Send(Session: T.HeadlessSession; Input: T.Input);
+begin
+  discard Session.Send(Input);
+  case Session.Step() of
+    when T.StepResult.Failed(_, _, _, const Reason: string):
+      raise new Sys.InvalidOperationException(Reason);
+    else
+  end case;
+end procedure;
+
+procedure Key(Session: T.HeadlessSession; Value: K.Key; Modifiers: K.KeyModifiers := K.KeyModifiers.None);
+begin
+  Send(Session, T.Input.KeyPress(Value, Modifiers));
+end procedure;
+
+begin
+  const Initial: string := 'abcd' + #10 + 'x' + #10 + 'wxyz' + #10 + 'end';
+  using const Session: T.HeadlessSession := T.StartHeadless<Model, Msg>(
+    new Model(Initial),
+    Update,
+    Form,
+    24,
+    12
+  );
+  const Area: T.ControlSnapshot := Control(Session, 'area');
+  Check(
+    Area.Role = 'text-area' and Area.Focused and Area.Height = 2,
+    'Text area has the requested editable height.'
+  );
+  Check(
+    Session.Snapshot().Lines[Area.Row + 2].StartsWith('Please review'),
+    'Error takes precedence over the hint.'
+  );
+  Send(Session, T.Input.Scroll(Area.Column + 1, Area.Row, 4));
+  Check(
+    Session.Snapshot().Lines[Area.Row].TrimEnd().StartsWith(' wxyz'),
+    'Wheel scrolls without moving the caret.'
+  );
+  Key(Session, K.Key.Home, K.KeyModifiers.Ctrl);
+  Key(Session, K.Key.End);
+  Key(Session, K.Key.Down);
+  Key(Session, K.Key.Down);
+  Send(Session, T.Input.Character('?'));
+  Send(Session, T.Input.Character('!'));
+  Check(
+    Control(Session, 'area').Value = Initial.Replace('wxyz', 'wxyz!'),
+    'Vertical movement keeps its column and a rejected edit keeps the caret.'
+  );
+  Key(Session, K.Key.Enter);
+  Check(Control(Session, 'area').Value.Contains('wxyz!' + #10 + #10 + 'end'), 'Enter inserts LF.');
+  Key(Session, K.Key.Backspace);
+  Key(Session, K.Key.Home, K.KeyModifiers.Ctrl);
+  Send(Session, T.Input.Click(Area.Column + 2, Area.Row));
+  Send(Session, T.Input.Character('>'));
+  Check(
+    Control(Session, 'area').Value.StartsWith('a>bcd'),
+    'A click moves the caret within the visible line.'
+  );
+  Key(Session, K.Key.End, K.KeyModifiers.Ctrl);
+  Send(Session, T.Input.Paste('' + #13 + #10 + 'é' + #13 + 'x'));
+  Check(
+    Control(Session, 'area').Value.EndsWith('end' + #10 + 'é' + #10 + 'x'),
+    'Paste normalizes CRLF and CR.'
+  );
+  Key(Session, K.Key.Enter, K.KeyModifiers.Ctrl);
+  Check(
+    Control(Session, 'readonly').Value = Control(Session, 'area').Value,
+    'Ctrl+Enter submits the accepted text.'
+  );
+  Key(Session, K.Key.Tab);
+  Check(Control(Session, 'readonly').Focused, 'Read-only editor accepts focus.');
+  Send(Session, T.Input.Paste('ignored'));
+  Key(Session, K.Key.Backspace);
+  Key(Session, K.Key.Tab);
+  Check(Control(Session, 'next').Focused, 'One tab stop per area and disabled areas are skipped.');
+
+  using const Wrapped: T.HeadlessSession := T.StartHeadless<Model, Msg>(
+    new Model('one two three'),
+    Update,
+    Form,
+    10,
+    12
+  );
+  const Row: int := Control(Wrapped, 'area').Row;
+  Check(
+    Wrapped.Snapshot().Lines[Row].Trim() = 'one two' and Wrapped.Snapshot().Lines[
+      Row + 1
+    ].Trim() = 'three',
+    'Wrap prefers word boundaries.'
+  );
+  Key(Wrapped, K.Key.End);
+  Send(Wrapped, T.Input.Character('!'));
+  Check(
+    Control(Wrapped, 'area').Value = 'one two !three',
+    'End at a soft wrap keeps the visual row boundary.'
+  );
+  Send(Wrapped, T.Input.Resize(1, 12));
+  Key(Wrapped, K.Key.End, K.KeyModifiers.Ctrl);
+  Send(Wrapped, T.Input.Character('+'));
+  Check(
+    Control(Wrapped, 'area').Value.EndsWith('+'),
+    'Resize keeps an editable caret in one column.'
+  );
+
+  using const Limit: T.HeadlessSession := T.StartHeadless<Model, Msg>(
+    new Model(new string(#97, 29)),
+    Update,
+    Form,
+    24,
+    12
+  );
+  Key(Limit, K.Key.End, K.KeyModifiers.Ctrl);
+  Send(Limit, T.Input.Paste('e' + #769 + '🌍'));
+  Check(
+    Control(Limit, 'area').Value.EndsWith('e' + #769),
+    'The UTF-8 limit never splits a text element.'
+  );
+  Key(Limit, K.Key.Backspace);
+  Check(Control(Limit, 'area').Value.Length = 29, 'Backspace removes a whole combining sequence.');
+
+  using const Nested: T.HeadlessSession := T.StartHeadless<Model, Msg>(
+    new Model(Initial),
+    Update,
+    Scrolled,
+    24,
+    5
+  );
+  Send(Nested, T.Input.Scroll(1, 0, 2));
+  Check(
+    Nested.Snapshot().Lines[0].TrimEnd().StartsWith(' wxyz'),
+    'Inner editor consumes scrolling first.'
+  );
+  Send(Nested, T.Input.Scroll(1, 0, 10));
+  Check(
+    Sys.String.Join(#10, Nested.Snapshot().Lines).Contains('Bottom'),
+    'Wheel goes to the parent at the editor edge.'
+  );
+
+  using const Empty: T.HeadlessSession := T.StartHeadless<Model, Msg>(
+    new Model(''),
+    Update,
+    Form,
+    24,
+    12
+  );
+  Check(
+    Empty.Snapshot().Lines[Control(Empty, 'area').Row].Contains('Start here'),
+    'Empty text shows the placeholder.'
+  );
+  using const Expanded: T.HeadlessSession := T.StartHeadless<Model, Msg>(
+    new Model(''),
+    Update,
+    Fill,
+    24,
+    9
+  );
+  Check(Control(Expanded, 'fill').Height = 9, 'A negative height fills the available space.');
+  Console.WriteLine('Text area contracts verified');
+end;
+
+end program;

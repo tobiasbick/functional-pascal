@@ -160,7 +160,8 @@ public static class WorkspaceLoader
             foreach (var output in outputs.Where(output => !resolved.ContainsKey(output.Project)).Distinct())
                 ForeignInputs.Capture(output, foreignSources.GetValueOrDefault(output.Project) ?? [], hashes, issues, token);
         var result = new WorkspaceContext(context, options.Configuration, !options.NoRestore && options.Preparation == ContextPreparation.BuildDependencies, projects, issues,
-            visited.Keys.Where(path => Path.GetExtension(path).Equals(".fpasproj", StringComparison.OrdinalIgnoreCase)), outputs, hashes, options.Preparation);
+            visited.Keys.Where(path => Path.GetExtension(path).Equals(".fpasproj", StringComparison.OrdinalIgnoreCase)), outputs, hashes, options.Preparation,
+            foreignDependencies: foreignSources.Keys.ToDictionary(path => path, Reachable, Paths));
         result.VerifyFiles(token);
         return result;
 

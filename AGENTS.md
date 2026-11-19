@@ -2,10 +2,9 @@
 
 FPAS is a function-first Pascal language with selected Ada conventions, targeting
 the CLR directly through CIL and assembly metadata.
-Start with the [agent reference](docs/pascal/agents/README.md). It explains the
-language with verified examples and routes to the relevant specifications,
-development workflow, build/test commands, and tooling. Load the topics needed
-for the task.
+Start with the [agent reference](docs/pascal/agents/README.md) for verified language
+examples, the full public CLI, and links to specifications and repository
+workflows. Load the topics needed for the task.
 
 ## Code
 
@@ -60,6 +59,7 @@ for the task.
 - Fix errors and code organization issues when you encounter them. Do not
   dismiss them as pre-existing.
 - Keep the agent reference aligned with implemented language and toolchain behavior.
+  Update its CLI index when a public command or subcommand changes.
 - Keep plans and open-work lists limited to pending work. Remove completed
   entries and delete finished plans. Keep acceptance checkmarks in the full CUI
   widget inventory. Document current contracts and usage in their owning references.

@@ -1,13 +1,13 @@
 # Maintaining the agent reference
 
-This directory teaches agents the implemented CLR language without requiring
-prior FPAS knowledge. README.md is the entrypoint; topics are loaded for a task.
-The [handbook](../README.md), [grammar](../../specs/syntax.md), and
+This directory teaches agents the implemented CLR language and the public CLI.
+`README.md` is the entrypoint. Load the topics needed for a task. The
+[handbook](../README.md), [grammar](../../specs/syntax.md), and
 [CLR mapping](../../specs/clr-mapping.md) own the detailed contracts.
 
 ## Budget and content
 
-Keep the combined Markdown content in this directory to **12,000 o200k_base
+Keep the combined Markdown content in this directory to **13,000 o200k_base
 tokens or fewer**, including examples, links, and this guide. Keep README.md below
 **1,000 tokens**. Leave room for future corrections instead of filling the budget.
 AgentReferenceTests measures actual token counts with Microsoft.ML.Tokenizers
@@ -23,6 +23,14 @@ Build/test commands belong in the [development workflow](../../build/development
 Keep AGENTS.md focused on repository policy and one link to this entrypoint;
 do not restore a list of language milestones or command blocks there. Keep the
 handbook/documentation hub linked to this reference.
+
+## CLI coverage
+
+Give every public command and subcommand one row in the [CLI index](cli.md),
+using its full invocation as the first cell. Explain its purpose and essential
+inputs. Link its detailed contract and use command help for the installed
+version's option list. Update the index with every command-tree change.
+AgentReferenceTests walks the actual CLI help tree and verifies the index.
 
 ## Examples and verification
 

@@ -90,7 +90,9 @@ path; TextDocumentSnapshot carries an optional document version and a content
 identity that preserves individual code units. Linked owners must agree on text
 and version. Content hashes cover sources, references, projects/imports,
 compiler/task assets and relevant restore/build proofs. Snapshot identity also
-includes target and semantic policies.
+includes target and semantic policies and the dependencies of selected C# and
+F# projects. Public parameter refactorings use those edges to identify
+non-editable consumers.
 
 Before a FPAS DLL is linked to checked source, its hash must match the successful
 build fingerprint for that dependency's current inputs. The same fingerprint

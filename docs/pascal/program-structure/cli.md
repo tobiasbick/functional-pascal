@@ -13,9 +13,10 @@ Use [API documentation lookup](../tools/api-documentation.md) for `fpas doc`:
 name-based FPAS/.NET lookup, overloads, source Markdown, reference XML and bounded
 text/JSON reports.
 
-Use [checked refactorings](../tools/refactoring.md) for `refactor rename`, `refactor remove-parameter`, `refactor name-arguments` and
-`refactor apply`: explicit source selection, binding-preserving validation,
-reviewable plans and stale-checked source publication.
+Use [checked refactorings](../tools/refactoring.md) to prepare plans for
+`rename`, `add-parameter`, `remove-parameter`, `change-signature`, `implement-protocol`,
+`name-arguments`, `extract-variable`, `inline-variable` and `organize-imports` with `fpas refactor`.
+`refactor apply` checks the input snapshot and validates bindings before writing.
 
 Use [create/build/run](project-commands.md) for `init project`, `init library`,
 `init solution`, `build`, `run` and the read-only `target` query. `compile`

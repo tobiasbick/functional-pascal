@@ -1,10 +1,9 @@
 # FPAS for agents
 
-FPAS is a function-first Pascal language with selected Ada conventions, compiling
-directly to CLR assemblies. Read this page before writing FPAS, then load the
-topics needed for the task. The [handbook](../README.md) owns detailed semantics;
-the [grammar](../../specs/syntax.md) defines syntax. This reference describes
-implemented behavior. Deferred proposals stay in [language gaps](../../future/language-gaps.md).
+FPAS is a function-first Pascal language with selected Ada conventions that
+compiles directly to CLR assemblies. Use the topic guides for FPAS and the
+[CLI reference](cli.md) for every public command. The [handbook](../README.md)
+owns detailed semantics and the [grammar](../../specs/syntax.md) defines syntax.
 
 ## A complete program
 
@@ -33,7 +32,7 @@ end program;
 ```
 
 Save sources as UTF-8 `.fpas`. Projects use `.fpasproj` and solutions `.slnx`.
-Read [tools](tools.md) for compilation, execution, and the development workflow.
+Read [CLI](cli.md) for compilation and execution.
 
 ## Rules before writing
 
@@ -73,7 +72,8 @@ Read [tools](tools.md) for compilation, execution, and the development workflow.
 | Matching, nullability, exceptions, and resource lifetime | [Patterns, errors, and resources](patterns-errors.md) |
 | .NET APIs, interfaces, events, attributes, and CLR representation | [Interop](interop.md) |
 | Async functions, cancellation, shared state, and composable effects | [Concurrency](concurrency.md) |
-| Build, test, inspect APIs, debug, profile, or change the compiler | [Tools](tools.md) |
+| Build, test, refactor, inspect APIs, debug, profile, or publish | [CLI](cli.md) |
+| Change the compiler or run repository tests | [Development workflows](tools.md) |
 | Update examples, check links, or verify the token budget | [Maintenance](maintenance.md) |
 | Change CUI integration or prepare an upstream contribution | [CUI workflow](../../cui-contributions.md) |
 

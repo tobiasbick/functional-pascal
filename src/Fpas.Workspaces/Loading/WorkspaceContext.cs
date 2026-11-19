@@ -50,15 +50,18 @@ public sealed class WorkspaceContext
     public IReadOnlyList<PreparationOutput> DependencyOutputs { get; }
     /// <summary>Gets one consistent captured text per physical source path.</summary>
     public WorkspaceTextSnapshot Texts { get; }
+    internal IReadOnlyDictionary<string, IReadOnlyList<string>> ForeignDependencies { get; }
     private readonly IReadOnlyDictionary<string, string> inputs;
 
     internal WorkspaceContext(string path, string configuration, bool restored, IEnumerable<ContextProject> projects,
         IEnumerable<ContextIssue> issues, IEnumerable<string> requestedProjects, IEnumerable<PreparationOutput> outputs, IReadOnlyDictionary<string, string> inputs,
-        ContextPreparation preparation = ContextPreparation.BuildDependencies, WorkspaceTextSnapshot? texts = null)
+        ContextPreparation preparation = ContextPreparation.BuildDependencies, WorkspaceTextSnapshot? texts = null,
+        IReadOnlyDictionary<string, IReadOnlyList<string>>? foreignDependencies = null)
     {
         Path = path; Configuration = configuration; RestorePerformed = restored; Preparation = preparation;
         Projects = Array.AsReadOnly(projects.ToArray()); Issues = Array.AsReadOnly(issues.ToArray()); this.inputs = inputs;
         Texts = texts ?? WorkspaceTextSnapshot.Capture(Projects.SelectMany(project => project.Request.Sources));
+        ForeignDependencies = foreignDependencies ?? new Dictionary<string, IReadOnlyList<string>>();
         RequestedProjects = Array.AsReadOnly(requestedProjects.Order(StringComparer.Ordinal).ToArray());
         DependencyOutputs = Array.AsReadOnly(outputs.Distinct().OrderBy(output => output.Project, StringComparer.Ordinal).ThenBy(output => output.Path, StringComparer.Ordinal).ToArray());
         var semantics = Projects.Select(project => project.Path + "\n" + project.Configuration + "\n" + project.Request.AssemblyName + "\n" + project.Request.Target + "\n" +
@@ -66,7 +69,8 @@ public sealed class WorkspaceContext
             string.Join(',', project.Request.DiagnosticOptions?.WarningsAsErrors ?? []) + "\n" +
             string.Join(',', project.Request.DiagnosticOptions?.WarningsNotAsErrors ?? []) + "\n" + string.Join(',', project.Request.DiagnosticOptions?.NoWarn ?? []));
         SnapshotId = HashText(string.Join('\n', inputs.OrderBy(item => item.Key, StringComparer.Ordinal).Select(item => item.Key + "=" + item.Value)) + "\n" +
-            configuration + "\n" + string.Join('\n', semantics) + "\n" + string.Join('\n', Issues.Select(issue => issue.Project + ":" + issue.Code)));
+            configuration + "\n" + string.Join('\n', semantics) + "\n" + string.Join('\n', Issues.Select(issue => issue.Project + ":" + issue.Code)) +
+            "\n" + ForeignIdentity());
     }
 
     /// <summary>Rechecks captured file contents and reevaluates project inputs using the retained preparation policy.</summary>
@@ -107,7 +111,7 @@ public sealed class WorkspaceContext
         var hashes = new Dictionary<string, string>(inputs, OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
         foreach (var document in texts.Documents) hashes[document.Path] = document.ContentHash;
         foreach (var image in captured.SelectMany(project => project.Request.ReferenceImages ?? [])) hashes[image.Path] = image.ContentHash;
-        return new(Path, Configuration, false, captured, Issues, RequestedProjects, DependencyOutputs, hashes, Preparation, texts);
+        return new(Path, Configuration, false, captured, Issues, RequestedProjects, DependencyOutputs, hashes, Preparation, texts, ForeignDependencies);
     }
 
     internal string InputIdentity(IEnumerable<string> ignoredSources)
@@ -116,8 +120,11 @@ public sealed class WorkspaceContext
         return HashText(string.Join('\n', inputs.OrderBy(pair => pair.Key, StringComparer.Ordinal).Select(pair => pair.Key + "=" + (ignored.Contains(pair.Key) ? "open" : pair.Value))) +
             "\n" + Configuration + "\n" + System.Text.Json.JsonSerializer.Serialize(Projects.Select(project => new
             { project.Path, project.Configuration, project.Request.AssemblyName, project.Request.Target, project.Request.ValidateDocumentation, project.Request.DiagnosticOptions, project.Dependencies })) +
-            "\n" + string.Join('\n', Issues.Select(issue => issue.Project + ":" + issue.Code)));
+            "\n" + string.Join('\n', Issues.Select(issue => issue.Project + ":" + issue.Code)) + "\n" + ForeignIdentity());
     }
+
+    private string ForeignIdentity() => string.Join('\n', ForeignDependencies.OrderBy(pair => pair.Key, StringComparer.Ordinal)
+        .Select(pair => pair.Key + "=" + string.Join('\0', pair.Value)));
 
     private HashSet<string> IgnoredSourcePaths(IEnumerable<string> paths)
     {

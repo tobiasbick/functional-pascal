@@ -31,5 +31,5 @@ Do not infer a compiler command from an IDE or another language toolchain.
 ## See also
 
 - [Compiled programs](../program-structure/compiled-programs.md)
-- [API discovery and agent workflows](../agents/tools.md)
+- [CLI reference for agents](../agents/cli.md)
 - [Language scope](../getting-started/overview.md#initial-language-scope)

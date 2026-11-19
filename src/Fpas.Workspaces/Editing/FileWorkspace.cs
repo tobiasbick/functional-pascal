@@ -46,18 +46,68 @@ public sealed class FileWorkspace
     /// <returns>A checked plan and detached edits.</returns>
     public PreparedFileRefactoring Rename(SourceSelection selection, string name, CancellationToken token = default)
         => RenameService.Prepare(Checked(), selection, name, token);
+    /// <summary>Prepares insertion of an explicitly typed parameter and a value expression at each direct call.</summary>
+    /// <param name="selection">Checked routine declaration or call.</param>
+    /// <param name="parameter">Explicit name, FPAS type and call argument.</param>
+    /// <param name="token">Cancels planning and overlay verification.</param>
+    /// <param name="closedContext">Confirms that all public signature consumers are in the context.</param>
+    /// <returns>A checked plan and detached edits.</returns>
+    public PreparedFileRefactoring AddParameter(SourceSelection selection, RefactorParameter parameter, CancellationToken token = default,
+        bool closedContext = false)
+        => FileRefactorPlans.Prepare(Checked(), new("add-parameter", selection, selection.Line, selection.Column,
+            parameter.Name, parameter.Type, parameter.Argument, ClosedContext: closedContext), token);
     /// <summary>Prepares removal of an unused parameter and the corresponding direct-call arguments.</summary>
     /// <param name="selection">Checked parameter declaration or named argument.</param>
     /// <param name="token">Cancels planning and overlay verification.</param>
+    /// <param name="closedContext">Confirms that all public signature consumers are in the context.</param>
     /// <returns>A checked plan and detached edits.</returns>
-    public PreparedFileRefactoring RemoveParameter(SourceSelection selection, CancellationToken token = default)
-        => FileRefactorPlans.RemoveParameter(Checked(), selection, token);
+    public PreparedFileRefactoring RemoveParameter(SourceSelection selection, CancellationToken token = default, bool closedContext = false)
+        => FileRefactorPlans.RemoveParameter(Checked(), selection, token, closedContext);
+    /// <summary>Prepares a checked type or mode change to a routine parameter.</summary>
+    /// <param name="selection">Parameter declaration, reference or argument label.</param>
+    /// <param name="change">Requested type, mode and explicit replacements.</param>
+    /// <param name="token">Cancels planning and overlay verification.</param>
+    /// <param name="closedContext">Confirms that all public signature consumers are in the context.</param>
+    /// <returns>A checked plan and detached edits.</returns>
+    public PreparedFileRefactoring ChangeSignature(SourceSelection selection, RefactorSignatureChange change, CancellationToken token = default,
+        bool closedContext = false)
+        => FileRefactorPlans.Prepare(Checked(), new("change-signature", selection, selection.Line, selection.Column,
+            SignatureChange: change, ClosedContext: closedContext), token);
+    /// <summary>Prepares checked conformance to a protocol or CLR interface on a record.</summary>
+    /// <param name="selection">Record declaration or reference.</param>
+    /// <param name="protocol">Protocol type and explicit implementations of missing members.</param>
+    /// <param name="token">Cancels planning and overlay verification.</param>
+    /// <returns>A checked plan and detached edits.</returns>
+    public PreparedFileRefactoring ImplementProtocol(SourceSelection selection, RefactorProtocol protocol, CancellationToken token = default)
+        => FileRefactorPlans.Prepare(Checked(), new("implement-protocol", selection, selection.Line, selection.Column,
+            Protocol: protocol), token);
     /// <summary>Prepares insertion of verified parameter labels at one call.</summary>
     /// <param name="selection">Position within the selected call and optional project owner.</param>
     /// <param name="token">Cancels planning and overlay verification.</param>
     /// <returns>The checked plan and detached insertion edits.</returns>
     public PreparedFileRefactoring NameArguments(SourceSelection selection, CancellationToken token = default)
-        => FileRefactorPlans.Prepare(Checked(), "name-arguments", selection, token);
+        => FileRefactorPlans.Prepare(Checked(), new("name-arguments", selection, selection.Line, selection.Column), token);
+    /// <summary>Prepares extraction of the selected expression to a typed local constant.</summary>
+    /// <param name="selection">Start of the expression and optional project owner.</param>
+    /// <param name="end">Exclusive end of the expression.</param>
+    /// <param name="name">Unescaped identifier for the new constant.</param>
+    /// <param name="token">Cancels planning and overlay verification.</param>
+    /// <returns>A checked plan and detached edits.</returns>
+    public PreparedFileRefactoring ExtractVariable(SourceSelection selection, RefactorPosition end, string name, CancellationToken token = default)
+        => FileRefactorPlans.Prepare(Checked(), new("extract-variable", selection, end.Line, end.Column, name), token);
+    /// <summary>Prepares replacing the reads of a local binding with its initializer.</summary>
+    /// <param name="selection">The local declaration or a read of it.</param>
+    /// <param name="token">Cancels planning and overlay verification.</param>
+    /// <returns>A checked plan and detached edits.</returns>
+    public PreparedFileRefactoring InlineVariable(SourceSelection selection, CancellationToken token = default)
+        => FileRefactorPlans.Prepare(Checked(), new("inline-variable", selection, selection.Line, selection.Column), token);
+    /// <summary>Prepares removal of safely unused CLR imports from a source file.</summary>
+    /// <param name="file">Source file with the imports.</param>
+    /// <param name="project">Optional owning project for a linked file.</param>
+    /// <param name="token">Cancels planning and overlay verification.</param>
+    /// <returns>A checked plan and detached edits.</returns>
+    public PreparedFileRefactoring OrganizeImports(string file, string? project, CancellationToken token = default)
+        => FileRefactorPlans.Prepare(Checked(), new("organize-imports", new(file, 1, 1, project), 1, 1), token);
     /// <summary>Regenerates a stored refactoring against the current context and snapshot.</summary>
     /// <param name="plan">Original checked plan to validate.</param>
     /// <param name="token">Cancels semantic revalidation.</param>

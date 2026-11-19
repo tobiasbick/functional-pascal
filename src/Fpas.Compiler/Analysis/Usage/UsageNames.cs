@@ -34,23 +34,27 @@ internal sealed class UsageNames
     }
 
     internal string Named(ImportedType definition, IReadOnlyList<TypeSymbol> arguments)
+        => Named(definition, arguments, Type, Alias);
+
+    internal static string Named(ImportedType definition, IReadOnlyList<TypeSymbol> arguments, Func<TypeSymbol, string> spellType,
+        Func<string, string> qualify)
     {
         var segments = new Stack<ImportedType>();
         for (var type = definition; type is not null; type = type.DeclaringType) segments.Push(type);
         var ns = segments.Peek().Namespace;
         var names = new List<string>();
-        if (ns.Length > 0) names.Add(Alias(ns));
+        if (ns.Length > 0) names.Add(qualify(ns));
         var index = 0;
         foreach (var type in segments)
         {
             var parts = type.Name.Split('`');
             var name = FpasIdentifiers.SpellQualified(parts[0]);
-            if (ns.Length == 0 && names.Count == 0) name = Alias(parts[0]);
+            if (ns.Length == 0 && names.Count == 0) name = qualify(parts[0]);
             if (parts.Length > 1)
             {
                 if (!int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out var count) || count > arguments.Count - index)
                     throw new ArgumentException("Missing concrete type arguments for " + type.FullName + ".");
-                name += "<" + string.Join(", ", arguments.Skip(index).Take(count).Select(Type)) + ">";
+                name += "<" + string.Join(", ", arguments.Skip(index).Take(count).Select(spellType)) + ">";
                 index += count;
             }
             names.Add(name);

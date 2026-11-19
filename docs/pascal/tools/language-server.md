@@ -128,7 +128,19 @@ versioned document changes. `fpas/prepareRefactoring` takes `schemaVersion: 1`,
 and optional `projectUri` for linked ownership. Add Parameter also takes
 `name`, `type` and `argument`. For `remove-parameter`, use the same position
 for both endpoints on the parameter or its named argument. For `name-arguments`, place both endpoints at the call.
-Extract Variable takes `name`.
+Extract Variable takes `name`. For [`inline-variable`](refactoring.md#inline-a-local-variable),
+place both endpoints on the local declaration or one of its reads. For `change-signature`, select the parameter and
+supply `type`, `mode`, or both. An optional `arguments` array supplies a zero-based
+UTF-16 `position` at the called name and an `expression` for each call replacement.
+Include `uri` for a caller outside the routine's own file. Public parameter
+changes require `closedContext: true` and a context with all consumers.
+The server uses the [same signature checks](refactoring.md#change-a-parameter-type-or-mode)
+as the CLI. To [reorder parameters](refactoring.md#reorder-parameters), select
+the routine or a direct call and supply the complete `order` array of parameter
+names as the signature change. For `implement-protocol`, select the record and supply `protocol`
+as a type string and optional `members` objects with `key`, `value` and optional
+`forward: true`. The values follow the
+[CLI implementation rules](refactoring.md#implement-a-protocol).
 
 The response identifies the selected project and input snapshot. It contains
 the preview ID, exact original ranges and text, replacements, notes and binary

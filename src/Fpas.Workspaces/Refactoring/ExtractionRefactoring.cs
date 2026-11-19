@@ -41,7 +41,7 @@ public static partial class CheckedRefactoring
         var prefix = "const " + name + ": " + spelling + " := ";
         draft.Edit(source, extraction.Statement, extraction.Statement, prefix + source.Text[start..end] + ";" + separator);
         draft.Edit(source, start, end, name);
-        draft.Move = (extraction.Expression, extraction.Statement, prefix.Length);
+        draft.Moves.Add(new(extraction.Expression, extraction.Statement, prefix.Length));
         draft.Extracted = (extraction.Expression, extraction.Statement, request.Name!);
         return ["The expression remains in the original statement's block and is evaluated once before that statement."];
     }

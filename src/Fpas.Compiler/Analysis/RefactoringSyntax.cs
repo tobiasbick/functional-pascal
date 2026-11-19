@@ -5,22 +5,41 @@ using Fpas.Compiler.Syntax.Parsing;
 
 namespace Fpas.Compiler.Analysis;
 
-/// <summary>Parameter extents of a private routine.</summary>
+/// <summary>Parameter extents of an editable routine.</summary>
 /// <param name="Insertion">The offset where a new required parameter is inserted: before the first optional parameter, or at the closing parenthesis.</param>
 /// <param name="FirstOptional">The index of the first parameter with a default, or the parameter count.</param>
 /// <param name="Parameters">Parameters in declaration order.</param>
 /// <param name="HasVariadicParameter">Whether the last parameter is a params parameter.</param>
-public sealed record RefactoringRoutine(int Insertion, int FirstOptional, IReadOnlyList<RefactoringListItem> Parameters, bool HasVariadicParameter);
+/// <param name="ParameterList">The extent inside the parameter list's parentheses, including trivia.</param>
+public sealed record RefactoringRoutine(int Insertion, int FirstOptional, IReadOnlyList<RefactoringListItem> Parameters,
+    bool HasVariadicParameter, SourceSpan ParameterList);
 
 /// <summary>Argument extents of one call.</summary>
 /// <param name="Close">The offset of the closing parenthesis.</param>
 /// <param name="Arguments">Arguments in written evaluation order.</param>
-public sealed record RefactoringCall(int Close, IReadOnlyList<RefactoringListItem> Arguments);
+public sealed record RefactoringCall(int Close, IReadOnlyList<RefactoringArgument> Arguments);
 
 /// <summary>One parameter or argument in its original source list.</summary>
 /// <param name="Name">Declared parameter name or supplied argument label, null for a positional argument.</param>
 /// <param name="Span">Exact source extent including the label or mode.</param>
-public sealed record RefactoringListItem(string? Name, SourceSpan Span);
+public record RefactoringListItem(string? Name, SourceSpan Span);
+
+/// <summary>Identifies the parts of a call argument that can be edited independently.</summary>
+/// <param name="Name">The argument label, or null for a positional argument.</param>
+/// <param name="Span">The entire written argument.</param>
+/// <param name="Value">The argument expression without its label or mode.</param>
+/// <param name="Modifier">The exact mode token, or null for a value argument.</param>
+/// <param name="Storage">The name token of a simple storage expression, when it has one.</param>
+public sealed record RefactoringArgument(string? Name, SourceSpan Span, SourceSpan Value, SourceSpan? Modifier, int? Storage)
+    : RefactoringListItem(Name, Span);
+
+/// <summary>Identifies the editable parts of a routine parameter.</summary>
+/// <param name="Owner">The routine name offset.</param>
+/// <param name="Index">The parameter slot in declaration order.</param>
+/// <param name="Mode">The written mode, or the empty string for a value parameter.</param>
+/// <param name="Modifier">The exact mode token, if present.</param>
+/// <param name="Type">The complete parameter type annotation.</param>
+public sealed record RefactoringParameter(int Owner, int Index, string Mode, SourceSpan? Modifier, SourceSpan Type);
 
 /// <summary>Extents of one import in a uses clause.</summary>
 /// <param name="Start">The offset of the imported name.</param>
@@ -44,8 +63,14 @@ public sealed record RefactoringImports(int Start, int End, IReadOnlyList<Refact
 /// <param name="PriorCallTargets">The name offsets of enclosing calls whose first argument contains the expression.</param>
 public sealed record RefactoringExtraction(SourceSpan Expression, int Statement, IReadOnlyList<int> PriorCallTargets);
 
+/// <summary>Insertion offsets for adding a protocol and its members to a record.</summary>
+/// <param name="HeaderEnd">The end of the record keyword or the last implemented interface.</param>
+/// <param name="BodyEnd">The start of the closing end record tokens.</param>
+/// <param name="HasInterfaces">Whether the header already has an implements clause.</param>
+public sealed record RefactoringRecord(int HeaderEnd, int BodyEnd, bool HasInterfaces);
+
 /// <summary>Source extents for edits that must follow FPAS grammar and evaluation order.</summary>
-public sealed class RefactoringSyntax
+public sealed partial class RefactoringSyntax
 {
     private readonly SourceDocument document;
     private readonly SourceText source;
@@ -65,14 +90,29 @@ public sealed class RefactoringSyntax
         unit = new Parser(source, tokens).ParseCompilationUnit();
     }
 
-    /// <summary>Finds the parameter extents of a private routine without attributes.</summary>
+    /// <summary>Finds insertion points for an editable record named at the given offset.</summary>
+    /// <param name="offset">Start of the record's name token.</param>
+    /// <returns>The original header and body offsets, or null for another declaration.</returns>
+    public RefactoringRecord? Record(int offset)
+    {
+        var record = unit.Records.SingleOrDefault(item => item.Name.Position == offset);
+        if (record is null) return null;
+        var declaration = unit.Declarations[offset];
+        var lastInterface = record.Interfaces?.LastOrDefault();
+        var headerEnd = lastInterface?.SpanEnd ?? End(tokens.Last(item => item.Position > offset &&
+            item.Position < declaration.BodyStart && item.Kind == TokenKind.Keyword && item.Text == "record"));
+        return new(headerEnd, declaration.BodyEnd!.Value, lastInterface is not null);
+    }
+
+    /// <summary>Gets the offset after the program or unit header's semicolon.</summary>
+    public int ContainerHeaderEnd => End(tokens[FindIndex(item => item.Position == unit.Name.Parts[^1].Position) + 1]);
+
+    /// <summary>Finds the parameter extents of a source routine without attributes.</summary>
     /// <param name="offset">The offset of the routine name.</param>
     /// <returns>The extents, or <see langword="null"/> when no such routine is declared there.</returns>
-    public RefactoringRoutine? PrivateRoutine(int offset)
+    public RefactoringRoutine? EditableRoutine(int offset)
     {
-        var routine = unit.Routines.Concat(unit.Records.SelectMany(record => record.Methods))
-            .SingleOrDefault(item => item.Name.Position == offset && !item.IsPublic &&
-            item.Attributes is not { Count: > 0 });
+        var routine = FindRoutine(offset);
         if (routine is null) return null;
         var open = FindIndex(item => item.Position >= End(routine.TypeParameters?.LastOrDefault() ?? routine.Name) && Symbol(item, "("));
         var close = Close(open);
@@ -86,7 +126,8 @@ public sealed class RefactoringSyntax
             var declaration = unit.Declarations[parameter.Name.Position];
             return new RefactoringListItem(parameter.Name.Text, document.Span(declaration.Start, declaration.End - declaration.Start));
         }).ToArray(),
-            routine.Parameters.LastOrDefault()?.Mode == "params");
+            routine.Parameters.LastOrDefault()?.Mode == "params",
+            document.Span(End(tokens[open]), tokens[close].Position - End(tokens[open])));
     }
 
     /// <summary>Finds the declaring routine of an ordinary value parameter selected by name.</summary>
@@ -95,6 +136,30 @@ public sealed class RefactoringSyntax
     public int? ValueParameterOwner(int offset) =>
         unit.Declarations.TryGetValue(offset, out var declaration) && declaration.Kind == "parameter" && declaration.Start == offset
             ? declaration.Owner : null;
+
+    /// <summary>Finds one parameter by name in a source routine without attributes or variadic parameters.</summary>
+    /// <param name="offset">Start of the parameter name token.</param>
+    /// <returns>The editable parameter parts, or null when the declaration is outside that scope.</returns>
+    public RefactoringParameter? EditableParameter(int offset)
+    {
+        if (!unit.Declarations.TryGetValue(offset, out var declaration) || declaration.Kind != "parameter" ||
+            declaration.Owner is not int owner || FindRoutine(owner) is not { } routine ||
+            routine.Parameters.LastOrDefault()?.Mode == "params") return null;
+        for (var index = 0; index < routine.Parameters.Count; index++)
+        {
+            var parameter = routine.Parameters[index];
+            if (parameter.Name.Position != offset) continue;
+            var type = parameter.Type;
+            return new(owner, index, parameter.Mode,
+                parameter.Mode.Length == 0 ? null : document.Span(declaration.Start, parameter.Mode.Length),
+                document.Span(type.Position, type.SpanEnd - type.Position));
+        }
+        return null;
+    }
+
+    private RoutineSyntax? FindRoutine(int offset)
+        => unit.Routines.Concat(unit.Records.SelectMany(record => record.Methods))
+            .SingleOrDefault(item => item.Name.Position == offset && item.Attributes is not { Count: > 0 });
 
     /// <summary>Selects one item and an adjacent separator for deletion without erasing comments.</summary>
     /// <param name="items">Parameters or arguments in source order.</param>
@@ -107,8 +172,15 @@ public sealed class RefactoringSyntax
         var end = start + span.Length;
         if (index + 1 < items.Count) end = items[index + 1].Span.Offset;
         else if (index > 0) start = items[index - 1].Span.Offset + items[index - 1].Span.Length;
-        return comments.Any(comment => comment.Start < end && start < comment.End) ? null : document.Span(start, end - start);
+        var range = document.Span(start, end - start);
+        return ContainsComment(range) ? null : range;
     }
+
+    /// <summary>Checks whether replacing the given source span would erase a comment.</summary>
+    /// <param name="span">The range within this source document.</param>
+    /// <returns>True when a comment overlaps the range.</returns>
+    public bool ContainsComment(SourceSpan span)
+        => comments.Any(comment => comment.Start < span.Offset + span.Length && span.Offset < comment.End);
 
     /// <summary>Finds the argument extents of a call expression.</summary>
     /// <param name="span">The whole call expression, ending at its closing parenthesis.</param>
@@ -122,9 +194,27 @@ public sealed class RefactoringSyntax
         var fragment = tokens.Skip(first).Take(close - first + 1).Append(tokens[^1]).ToArray();
         var parsed = new Parser(source, fragment).ParseExpressionFragment();
         return parsed is CallSyntax call && call.SpanEnd == span.Offset + span.Length
-            ? new(tokens[close].Position, call.Arguments.Select(argument => new RefactoringListItem(
-                (argument as NamedArgumentSyntax)?.Name.Text, document.Span(argument.SpanStart, argument.SpanEnd - argument.SpanStart))).ToArray())
+            ? new(tokens[close].Position, call.Arguments.Select(Argument).ToArray())
             : null;
+
+        RefactoringArgument Argument(ExpressionSyntax expression)
+        {
+            var named = expression as NamedArgumentSyntax;
+            var value = named?.Value ?? expression;
+            var modifier = value as ArgumentModeSyntax;
+            value = modifier?.Value ?? value;
+            var storage = value switch
+            {
+                NameExpressionSyntax name => name.Name.Position,
+                MemberSyntax member => member.Name.Position,
+                _ => (int?)null
+            };
+            return new(named?.Name.Text, Extent(expression), Extent(value),
+                modifier is null ? null : document.Span(modifier.Position, modifier.Mode.Length), storage);
+        }
+
+        SourceSpan Extent(ExpressionSyntax expression)
+            => document.Span(expression.SpanStart, expression.SpanEnd - expression.SpanStart);
     }
 
     /// <summary>Finds the extents of the uses clause.</summary>
@@ -146,58 +236,71 @@ public sealed class RefactoringSyntax
     /// <returns>The extraction, or <see langword="null"/> when the selection cannot move before its statement.</returns>
     public RefactoringExtraction? Extract(int start, int end)
     {
-        foreach (var statements in unit.Routines.Concat(unit.Records.SelectMany(record => record.Methods)).Select(routine => routine.Statements)
-            .Prepend(unit.Statements))
-            if (Search(statements) is { } match) return match;
-        return null;
-
-        RefactoringExtraction? Search(IReadOnlyList<StatementSyntax> statements)
+        if (tokens.Any(item => item.Position >= start && item.Position < end && item.Kind is not (TokenKind.String or TokenKind.Character) &&
+            item.Text is "await" or "ref" or "out" or "in" or "function" or "procedure"))
+            return null;
+        foreach (var statements in StatementLists())
         {
             foreach (var statement in statements)
             {
                 token.ThrowIfCancellationRequested();
-                var (expression, anchor) = statement switch
-                {
-                    BindingSyntax binding => (binding.Initializer, unit.Declarations[binding.Name.Position].Start),
-                    ReturnSyntax returned => (returned.Expression, returned.Position),
-                    RaiseSyntax raised => (raised.Exception, raised.Position),
-                    IfSyntax conditional => (conditional.Arms[0].Condition, conditional.Position),
-                    CaseStatementSyntax match => (match.Selector, match.Position),
-                    _ => (null, -1)
-                };
-                if (expression is not null && First(expression, anchor, []) is { } selection) return selection;
-                foreach (var block in Children(statement))
-                    if (Search(block) is { } nested) return nested;
+                var anchor = statement is BindingSyntax binding ? unit.Declarations[binding.Name.Position].Start : statement.Position;
+                List<(int Offset, bool RequiresStatic)> calls = [];
+                if (FirstExpression(statement) is { } expression && EvaluatedFirst(expression, start, end, calls, allowQualified: false))
+                    return new(document.Span(start, end - start), anchor, calls.Select(call => call.Offset).ToArray());
             }
-            return null;
         }
+        return null;
+    }
 
-        RefactoringExtraction? First(ExpressionSyntax expression, int anchor, List<int> priorCalls)
+    private IEnumerable<IReadOnlyList<StatementSyntax>> StatementLists()
+    {
+        var roots = unit.Routines.Concat(unit.Records.SelectMany(record => record.Methods)).Select(routine => routine.Statements)
+            .Prepend(unit.Statements);
+        foreach (var root in roots)
+            foreach (var block in Descend(root))
+                yield return block;
+
+        IEnumerable<IReadOnlyList<StatementSyntax>> Descend(IReadOnlyList<StatementSyntax> statements)
         {
-            if (expression.SpanStart <= start && expression.SpanEnd >= end)
-            {
-                if (expression.SpanStart == start && expression.SpanEnd == end)
-                {
-                    if (tokens.Any(item => item.Position >= start && item.Position < end &&
-                        item.Kind is not (TokenKind.String or TokenKind.Character) &&
-                        item.Text is "await" or "ref" or "out" or "in" or "function" or "procedure"))
-                        return null;
-                    return new(document.Span(start, end - start), anchor, priorCalls);
-                }
-                switch (expression)
-                {
-                    case ParenthesizedSyntax parent: return First(parent.Expression, anchor, priorCalls);
-                    case UnarySyntax unary: return First(unary.Operand, anchor, priorCalls);
-                    case BinarySyntax binary: return First(binary.Left, anchor, priorCalls);
-                    case CastSyntax cast: return First(cast.Operand, anchor, priorCalls);
-                    case CallSyntax { Arguments.Count: > 0 } call when CallName(call.Target) is { } name:
-                        priorCalls.Add(name.Position);
-                        var argument = call.Arguments[0] is NamedArgumentSyntax named ? named.Value : call.Arguments[0];
-                        return First(argument, anchor, priorCalls);
-                }
-            }
-            return null;
+            token.ThrowIfCancellationRequested();
+            yield return statements;
+            foreach (var child in statements.SelectMany(Children))
+                foreach (var block in Descend(child))
+                    yield return block;
         }
+    }
+
+    private static ExpressionSyntax? FirstExpression(StatementSyntax statement) => statement switch
+    {
+        BindingSyntax binding => binding.Initializer,
+        ReturnSyntax returned => returned.Expression,
+        RaiseSyntax raised => raised.Exception,
+        IfSyntax conditional => conditional.Arms[0].Condition,
+        CaseStatementSyntax match => match.Selector,
+        _ => null
+    };
+
+    private static bool EvaluatedFirst(ExpressionSyntax expression, int start, int end,
+        List<(int Offset, bool RequiresStatic)> calls, bool allowQualified)
+    {
+        while (expression.SpanStart <= start && expression.SpanEnd >= end)
+        {
+            if (expression.SpanStart == start && expression.SpanEnd == end) return true;
+            switch (expression)
+            {
+                case ParenthesizedSyntax parent: expression = parent.Expression; break;
+                case UnarySyntax unary: expression = unary.Operand; break;
+                case BinarySyntax binary: expression = binary.Left; break;
+                case CastSyntax cast: expression = cast.Operand; break;
+                case CallSyntax { Arguments.Count: > 0 } call when CallName(call.Target, allowQualified) is { } target:
+                    calls.Add(target);
+                    expression = call.Arguments[0] is NamedArgumentSyntax named ? named.Value : call.Arguments[0];
+                    break;
+                default: return false;
+            }
+        }
+        return false;
     }
 
     /// <summary>Tests whether texts parse exactly as one parameter type and one positional argument.</summary>
@@ -255,10 +358,11 @@ public sealed class RefactoringSyntax
         return -1;
     }
 
-    private static Token? CallName(ExpressionSyntax expression) => expression switch
+    private static (int Offset, bool RequiresStatic)? CallName(ExpressionSyntax expression, bool allowQualified) => expression switch
     {
-        NameExpressionSyntax name => name.Name,
-        GenericNameSyntax generic => CallName(generic.Name),
+        NameExpressionSyntax name => (name.Name.Position, false),
+        GenericNameSyntax generic => CallName(generic.Name, allowQualified),
+        MemberSyntax member when allowQualified => (member.Name.Position, true),
         _ => null
     };
 

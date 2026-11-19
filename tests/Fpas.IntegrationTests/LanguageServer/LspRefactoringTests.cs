@@ -6,6 +6,52 @@ namespace Fpas.IntegrationTests.LanguageServer;
 
 public sealed class LspRefactoringTests(SdkPackageFixture sdk) : IClassFixture<SdkPackageFixture>
 {
+    /// <summary>Uses the shared protocol implementation workflow against an unsaved document.</summary>
+    [Fact]
+    public async Task Protocol_implementation_previews_an_unsaved_record_and_returns_versioned_edits()
+    {
+        using var directory = sdk.CreateProject();
+        var project = directory.File("Game/Game.fpasproj");
+        File.WriteAllText(project, $"<Project Sdk=\"Fpas.NET.Sdk/{sdk.Version}\"><PropertyGroup><OutputType>Library</OutputType></PropertyGroup></Project>");
+        var path = directory.File("Game/Bridge.fpas");
+        var original = "unit Adapter; end unit;";
+        File.WriteAllText(path, original);
+        const string unsaved = """
+            unit Adapter;
+            type IRead = protocol
+              function Read(): int;
+            end protocol;
+            type Reader = record
+            end record;
+            end unit;
+            """;
+        var restored = await sdk.Run(directory, "restore", "Game/Game.fpasproj");
+        Assert.True(restored.ExitCode == 0, restored.Output + restored.Error);
+        await using var client = new LspProbe();
+        await client.Initialize(project);
+        await client.Notify("initialized", new { });
+        await client.Open(path, unsaved, version: 5);
+        var at = Position(unsaved, "Reader =");
+        var preview = Result(await client.Request("fpas/prepareRefactoring", new
+        {
+            schemaVersion = 1, kind = "implement-protocol", textDocument = new { uri = new Uri(path).AbsoluteUri, version = 5 },
+            position = at, end = at, protocol = "IRead", members = new[] { new { key = "Read", value = "return 42;" } }
+        }));
+        Assert.True(preview.GetProperty("canApply").GetBoolean());
+        var applied = Result(await client.Request("fpas/applyRefactoring", new
+        {
+            schemaVersion = 1, id = preview.GetProperty("id").GetString()
+        }));
+        var change = Assert.Single(applied.GetProperty("edit").GetProperty("documentChanges").EnumerateArray());
+        Assert.Equal(5, change.GetProperty("textDocument").GetProperty("version").GetInt32());
+        Assert.Contains(change.GetProperty("edits").EnumerateArray(),
+            edit => edit.GetProperty("newText").GetString() == " implements IRead");
+        Assert.Contains(change.GetProperty("edits").EnumerateArray(),
+            edit => edit.GetProperty("newText").GetString()!.Contains("return 42;", StringComparison.Ordinal));
+        Assert.Equal(original, File.ReadAllText(path));
+        await client.Stop();
+    }
+
     [Fact]
     public async Task Extraction_spells_a_closed_CLR_type_and_import_cleanup_preserves_comments_and_CRLF()
     {
@@ -89,13 +135,15 @@ public sealed class LspRefactoringTests(SdkPackageFixture sdk) : IClassFixture<S
             unit Shared;
             uses Options as Opt;
             function Ignore(Dead: int): int; begin return 5; end function;
+            function Pair(First: int; Second: int): int; begin return First - Second; end function;
             function Sum(Value: int; Extra: int := 4): int;
             begin
               return Value + Extra;
             end function;
             public function Run(): int;
             begin
-              const Text: string := '😀'; return Sum(2, 3) + Ignore(1) + Opt.Map(1, 2);
+              const Offset: int := 7;
+              const Text: string := '😀'; return Sum(2, 3) + Ignore(1) + Opt.Map(1, 2) + Pair(5, 2) + Offset;
             end function;
             end unit;
             """.ReplaceLineEndings("\r\n");
@@ -142,6 +190,43 @@ public sealed class LspRefactoringTests(SdkPackageFixture sdk) : IClassFixture<S
         Assert.Contains("Different owners", rejected.GetProperty("error").GetProperty("message").GetString());
 
         var removed = Position(original, "Dead: int");
+        var signature = Result(await client.Request("fpas/prepareRefactoring", new {
+            schemaVersion = 1, kind = "change-signature", planRequest.textDocument, position = removed, end = removed,
+            planRequest.projectUri, type = "long",
+            arguments = new[] { new { position = Position(original, "Ignore(1)"), expression = "99" } }
+        }));
+        var signatureEdit = Result(await client.Request("fpas/applyRefactoring", new {
+            schemaVersion = 1, id = signature.GetProperty("id").GetString()
+        }));
+        var signatureFile = Assert.Single(signatureEdit.GetProperty("edit").GetProperty("documentChanges").EnumerateArray());
+        Assert.Equal(new[] { "long", "99" }, signatureFile.GetProperty("edits").EnumerateArray()
+            .Select(edit => edit.GetProperty("newText").GetString()));
+
+        var pair = Position(original, "Pair(5, 2)");
+        var permutation = Result(await client.Request("fpas/prepareRefactoring", new {
+            schemaVersion = 1, kind = "change-signature", planRequest.textDocument, position = pair, end = pair,
+            planRequest.projectUri, order = new[] { "Second", "First" }
+        }));
+        var reordered = Result(await client.Request("fpas/applyRefactoring", new {
+            schemaVersion = 1, id = permutation.GetProperty("id").GetString()
+        }));
+        var reorderFile = Assert.Single(reordered.GetProperty("edit").GetProperty("documentChanges").EnumerateArray());
+        Assert.Equal(7, reorderFile.GetProperty("textDocument").GetProperty("version").GetInt32());
+        Assert.Equal(new[] { "Second: int", "First: int", "First := ", "Second := " },
+            reorderFile.GetProperty("edits").EnumerateArray().Select(edit => edit.GetProperty("newText").GetString()));
+
+        var local = Position(original, "Offset: int");
+        var inline = Result(await client.Request("fpas/prepareRefactoring", new {
+            schemaVersion = 1, kind = "inline-variable", planRequest.textDocument, position = local, end = local, planRequest.projectUri
+        }));
+        var inlined = Result(await client.Request("fpas/applyRefactoring", new {
+            schemaVersion = 1, id = inline.GetProperty("id").GetString()
+        }));
+        var inlineFile = Assert.Single(inlined.GetProperty("edit").GetProperty("documentChanges").EnumerateArray());
+        Assert.Equal(7, inlineFile.GetProperty("textDocument").GetProperty("version").GetInt32());
+        Assert.Equal(new[] { "", "(7)" }, inlineFile.GetProperty("edits").EnumerateArray()
+            .Select(edit => edit.GetProperty("newText").GetString()));
+
         var removal = Result(await client.Request("fpas/prepareRefactoring", new {
             schemaVersion = 1, kind = "remove-parameter", planRequest.textDocument, position = removed, end = removed, planRequest.projectUri
         }));

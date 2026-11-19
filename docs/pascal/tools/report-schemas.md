@@ -23,7 +23,7 @@ fpas schema test
 | `debug` | Batch, tracepoints, runtime-failure observations and `run --failure-report` files |
 | `format` | Source formatting |
 | `doc` | API documentation lookup |
-| `refactor` | Checked rename, remove-parameter and name-arguments plans and application |
+| `refactor` | Checked refactoring plans and application reports |
 | `environment` | Toolchain identity/availability |
 
 Schema identifiers are `urn:fpas:cli:NAME:1`. They describe the selected command's

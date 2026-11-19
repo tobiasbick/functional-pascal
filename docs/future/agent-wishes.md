@@ -14,11 +14,9 @@ until a concrete failure case justifies further work.
 
 **Priority: highest**
 
-Extend the [checked refactoring workflow](../pascal/tools/refactoring.md) to
-change parameter types or modes, update affected call sites and generate
-required protocol members. Broaden parameter refactorings beyond private routines
-where the editable context covers all consumers. Expose Add Parameter on the CLI
-with an explicit argument expression.
+Extend the [checked refactoring workflow](../pascal/tools/refactoring.md).
+
+5. Add `extract-routine` with checked data and control flow.
 
 Operate on resolved symbols and bindings. Produce reviewable plans, reject stale
 inputs and validate resulting source against every affected owner/reference
@@ -52,7 +50,7 @@ semantic refactorings.
 
 ### T5. Small, discoverable, executable recipes
 
-**Priority: high**
+**Status: Deferred.**
 
 Connect the handbook, agent reference, compiler tests and examples into directly
 discoverable minimal recipes: generic callbacks, nullable CLR results,
@@ -77,13 +75,18 @@ multiple reference sections or borrowing another language's syntax.
 - Structured diagnostics and machine-readable tool results.
 - Explicit distinctions between verified facts, incomplete information and
   unsupported features.
+- Maintain the [agent reference](../pascal/agents/README.md) as the entrypoint
+  for the language and the [entire public CLI](../pascal/agents/cli.md).
+  Update the command index when a command or subcommand changes. Include its
+  purpose and link the detailed contract. Keep the entrypoint short and measure
+  the combined reference with the [token budget check](../pascal/agents/maintenance.md#budget-and-content).
 
 These properties support work on small source excerpts without requiring the
 whole project in context.
 
 ## Implementation order and evaluation
 
-Connect [API usage templates](../pascal/tools/api-documentation.md#generate-checked-fpas-usage)
+When T5 resumes, connect the [API usage templates](../pascal/tools/api-documentation.md#generate-checked-fpas-usage)
 to checked recipes. Local inference remains a separate syntax
 proposal requiring evaluation and user approval.
 

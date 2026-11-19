@@ -26,19 +26,36 @@ public static class FileRefactorPlans
     /// <param name="analysis">Checked project or solution context.</param>
     /// <param name="selection">One-based parameter selection and optional project owner.</param>
     /// <param name="token">Cancels plan preparation.</param>
+    /// <param name="closedContext">Confirms that all public signature consumers are in the context.</param>
     /// <returns>The portable plan and its validated source edits.</returns>
-    public static PreparedFileRefactoring RemoveParameter(WorkspaceAnalysis analysis, SourceSelection selection, CancellationToken token)
-        => Prepare(analysis, "remove-parameter", selection, token);
+    public static PreparedFileRefactoring RemoveParameter(WorkspaceAnalysis analysis, SourceSelection selection, CancellationToken token,
+        bool closedContext = false)
+        => Prepare(analysis, new("remove-parameter", selection, selection.Line, selection.Column, ClosedContext: closedContext), token);
 
-    internal static PreparedFileRefactoring Prepare(WorkspaceAnalysis analysis, string kind, SourceSelection selection, CancellationToken token)
+    internal static PreparedFileRefactoring Prepare(WorkspaceAnalysis analysis, RefactoringRequest request, CancellationToken token)
     {
+        var selection = request.Selection;
         selection = selection with { File = Path.GetFullPath(selection.File), Project = selection.Project is null ? null : Path.GetFullPath(selection.Project) };
-        var prepared = CheckedRefactoring.Prepare(analysis, new(kind, selection, selection.Line, selection.Column), token);
+        var prepared = CheckedRefactoring.Prepare(analysis, request with { Selection = selection }, token);
         var files = prepared.Edits.Documents.Select(document => new RefactorPlanFile(document.Original.Path, document.OriginalHash,
             document.ReplacementHash, document.Edits)).ToArray();
-        var plan = new RefactorPlan(1, kind, analysis.Context.Path, analysis.Context.Configuration, prepared.SnapshotId,
-            selection, null, prepared.Targets, files,
-            analysis.Projects.Select(project => project.Project).Order(StringComparer.Ordinal).ToArray(), prepared.BinaryBoundaries);
+        var extraction = request.Kind == "extract-variable";
+        var plan = new RefactorPlan(1, request.Kind, analysis.Context.Path, analysis.Context.Configuration, prepared.SnapshotId,
+            selection, extraction ? request.Name : null, prepared.Targets, files,
+            analysis.Projects.Select(project => project.Project).Order(StringComparer.Ordinal).ToArray(), prepared.BinaryBoundaries)
+        {
+            AddedParameter = request.Kind == "add-parameter" ? new(request.Name!, request.Type!, request.Argument!) : null,
+            SelectionEnd = extraction ? new(request.EndLine, request.EndColumn) : null,
+            Notes = request.Kind is "extract-variable" or "inline-variable" or "organize-imports" or "change-signature" or "implement-protocol" || prepared.Targets.Any(target => target.PublicApi)
+                ? prepared.Notes : null,
+            SignatureChange = request.SignatureChange is { } change ? change with
+            {
+                Arguments = change.Arguments.Select(argument => argument.File is null ? argument :
+                    argument with { File = Path.GetFullPath(argument.File) }).ToArray()
+            } : null,
+            ClosedContext = request.ClosedContext,
+            Protocol = request.Protocol
+        };
         return Seal(plan, prepared.Edits);
     }
 
@@ -55,7 +72,10 @@ public static class FileRefactorPlans
         if (plan.InputSnapshotId != analysis.Context.SnapshotId)
             throw new ContextFailure("stale_plan", "Project inputs changed after refactoring planning.");
         var prepared = plan.Kind == "rename" ? RenameService.Prepare(analysis, plan.Selection, plan.NewName!, token)
-            : Prepare(analysis, plan.Kind, plan.Selection, token);
+            : Prepare(analysis, new(plan.Kind, plan.Selection,
+                plan.SelectionEnd?.Line ?? plan.Selection.Line, plan.SelectionEnd?.Column ?? plan.Selection.Column,
+                plan.AddedParameter?.Name ?? plan.NewName, plan.AddedParameter?.Type, plan.AddedParameter?.Argument,
+                plan.SignatureChange, plan.ClosedContext, plan.Protocol), token);
         if (prepared.Plan.Id != plan.Id) throw new ContextFailure("invalid_plan", "Plan does not match the regenerated checked refactoring.");
         return prepared;
     }

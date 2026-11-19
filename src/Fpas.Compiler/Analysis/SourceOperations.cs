@@ -51,6 +51,11 @@ public sealed record SourceOperation(string Id, string Body, SourceSpan Span, So
         Operation?.DefinitionToken == other.Operation?.DefinitionToken &&
         Operation?.GetKey(includeAssemblyHash: false) == other.Operation?.GetKey(includeAssemblyHash: false);
 
+    /// <summary>Gets whether a direct invocation has no instance receiver to evaluate.</summary>
+    public bool IsStaticInvocation() => StaticInvocation;
+
+    internal bool StaticInvocation { get; init; }
+
     internal bool[]? InertArguments { get; init; }
 
     /// <summary>Checks whether omitting this evaluated argument preserves side effects and exceptions.</summary>

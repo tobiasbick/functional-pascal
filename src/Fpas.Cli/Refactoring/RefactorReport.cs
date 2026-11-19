@@ -30,14 +30,23 @@ internal sealed record RefactorReport(bool Success, string Status, string? PlanP
             var operation = plan.Kind switch
             {
                 "rename" => "Rename to " + plan.NewName,
+                "add-parameter" => "Add parameter " + plan.AddedParameter!.Name,
                 "remove-parameter" => "Remove parameter " + plan.Targets[0].Name,
-                _ => "Name arguments"
+                "implement-protocol" => "Implement " + plan.Protocol!.Type + " on " + plan.Targets[0].Name,
+                "change-signature" when plan.SignatureChange?.Order is not null => "Reorder parameters of " + plan.Targets[0].Name,
+                "change-signature" => "Change signature of " + plan.Targets[0].Name,
+                "inline-variable" => "Inline " + plan.Targets[0].Name,
+                "extract-variable" => "Extract variable " + plan.NewName,
+                "organize-imports" => "Organize imports",
+                "name-arguments" => "Name arguments",
+                _ => plan.Kind
             };
             Console.WriteLine(DiagnosticRenderer.Safe($"{operation}: {Status}; {plan.EditCount} edits in {plan.Files.Count} files. Plan: {PlanPath}"));
             foreach (var file in plan.Files)
                 foreach (var edit in file.Edits)
                     Console.WriteLine(DiagnosticRenderer.Safe($"  {file.Path}({edit.Location.Line},{edit.Location.Column}): {edit.ExpectedText} -> {edit.NewText}"));
-            if (plan.ChangesPublicApi) Console.WriteLine("Public API changes: only the analyzed FPAS sources are renamed; external consumers are outside this plan.");
+            foreach (var note in plan.Notes ?? []) Console.WriteLine(DiagnosticRenderer.Safe(note));
+            if (plan.ChangesPublicApi) Console.WriteLine("Public API changes affect the analyzed FPAS sources.");
         }
         foreach (var backup in RecoveryBackups ?? []) Console.Error.WriteLine("Recovery file: " + DiagnosticRenderer.Safe(backup));
         return true;

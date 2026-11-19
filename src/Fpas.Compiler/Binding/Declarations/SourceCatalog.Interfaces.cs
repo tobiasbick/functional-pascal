@@ -1,5 +1,6 @@
 // [Documentation](../../../../docs/pascal/interop/interfaces.md)
 using Fpas.Compiler.Binding.Types;
+using Fpas.Compiler.Binding.Symbols;
 using Fpas.Compiler.Binding.References;
 
 namespace Fpas.Compiler.Binding.Declarations;
@@ -33,19 +34,31 @@ internal sealed partial class SourceCatalog
                 references.ValidateGenericType(record.Interfaces[index], source, record.Syntax.Interfaces![index].Position);
             foreach (var requirement in references.InterfaceRequirements(record.Interfaces, source, record.Syntax.Name.Position))
             {
-                var required = requirement.Method;
-                var implementations = record.Methods.Where(method => method.Name == required.Name && references.InterfaceSignature(method, record.Type, required)).ToArray();
-                if (implementations.Length == 0 && references.Methods(TypeSymbol.Object, required.Name, false, required.MethodArguments).Any(method =>
-                    method.Result.Erased == required.Result.Erased && method.DelegateParameters.Select(parameter => parameter.Erased).SequenceEqual(required.DelegateParameters.Select(parameter => parameter.Erased)))) continue;
-                if (implementations.Length == 0 && !requirement.Required) continue;
-                if (implementations.Length != 1)
-                    throw source.Error("FP3029", $"Record '{record.Name}' must implement '{required.Owner}.{required.Name}' with a public instance member matching the exact CLR result, parameter types, generic arity, and modes.", record.Syntax.Name.Position);
-                var body = implementations[0];
-                if (body.GenericParameters.Count != 0 && !references.InterfaceConstraints(body, required))
-                    throw source.Error("FP3029", "Generic implementation constraints must match the interface method constraints.", record.Syntax.Name.Position);
-                record.InterfaceMethods.Add((required, body));
+                var (body, _) = MatchInterfaceMember(record, references, requirement.Method, requirement.Required);
+                if (body is not null) record.InterfaceMethods.Add((requirement.Method, body));
             }
         }
     }
 
+    internal static (RoutineSymbol? Body, bool Missing) MatchInterfaceMember(RecordSymbol record, ReferenceCatalog references,
+        ImportedMethod required, bool isRequired, bool allowMissing = false)
+    {
+        var source = record.Owner.Source;
+        var position = record.Syntax.Name.Position;
+        var implementations = record.Methods.Where(method => method.Name == required.Name && references.InterfaceSignature(method, record.Type, required)).ToArray();
+        if (implementations.Length == 0)
+        {
+            var inherited = references.Methods(TypeSymbol.Object, required.Name, false, required.MethodArguments).Any(method =>
+                method.Result.Erased == required.Result.Erased && method.DelegateParameters.Select(parameter => parameter.Erased)
+                    .SequenceEqual(required.DelegateParameters.Select(parameter => parameter.Erased)));
+            if (inherited || !isRequired) return (null, false);
+            if (allowMissing) return (null, true);
+        }
+        if (implementations.Length != 1)
+            throw source.Error("FP3029", $"Record '{record.Name}' must implement '{required.Owner}.{required.Name}' with a public instance member matching the exact CLR result, parameter types, generic arity, and modes.", position);
+        var body = implementations[0];
+        if (body.GenericParameters.Count != 0 && !references.InterfaceConstraints(body, required))
+            throw source.Error("FP3029", "Generic implementation constraints must match the interface method constraints.", position);
+        return (body, false);
+    }
 }

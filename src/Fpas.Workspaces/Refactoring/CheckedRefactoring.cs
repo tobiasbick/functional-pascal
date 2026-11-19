@@ -10,15 +10,19 @@ using Fpas.Workspaces.Snapshots;
 namespace Fpas.Workspaces.Refactoring;
 
 /// <summary>Requests a checked refactoring over an exact source selection.</summary>
-/// <param name="Kind">add-parameter, remove-parameter, name-arguments, extract-variable or organize-imports.</param>
+/// <param name="Kind">Name of the checked refactoring operation.</param>
 /// <param name="Selection">One-based UTF-16 selection start and optional project owner.</param>
 /// <param name="EndLine">One-based exclusive end line.</param>
 /// <param name="EndColumn">One-based UTF-16 exclusive end column.</param>
 /// <param name="Name">New unescaped identifier for extraction or parameter addition.</param>
 /// <param name="Type">Explicit FPAS type for parameter addition.</param>
 /// <param name="Argument">FPAS value expression appended at each affected call.</param>
+/// <param name="SignatureChange">Requested type or mode and explicit call replacements.</param>
+/// <param name="ClosedContext">Whether the caller confirms all consumers of an edited public signature belong to this context.</param>
+/// <param name="Protocol">Requested protocol type and explicit member implementations.</param>
 public sealed record RefactoringRequest(string Kind, SourceSelection Selection, int EndLine, int EndColumn,
-    string? Name = null, string? Type = null, string? Argument = null);
+    string? Name = null, string? Type = null, string? Argument = null, RefactorSignatureChange? SignatureChange = null,
+    bool ClosedContext = false, RefactorProtocol? Protocol = null);
 
 /// <summary>Contains a proposed edit batch checked in a private semantic overlay.</summary>
 /// <param name="Request">Normalized originating request.</param>
@@ -54,18 +58,23 @@ public static partial class CheckedRefactoring
         var start = syntax.Offset(selection.Line, selection.Column);
         var end = syntax.Offset(request.EndLine, request.EndColumn);
         if (end < start) throw Refuse("The selection end precedes its start.");
-        var draft = new Draft(analysis, before, token);
+        var draft = new Draft(analysis, before, token, request.ClosedContext);
         var details = request.Kind switch
         {
             "add-parameter" => AddParameter(draft, request, selection, syntax),
             "remove-parameter" => RemoveParameter(draft, selection),
+            "implement-protocol" => ImplementProtocol(draft, request.Protocol, selection),
+            "change-signature" => ChangeSignature(draft, request.SignatureChange, selection),
             "name-arguments" => NameArguments(draft, syntax, start),
+            "inline-variable" => InlineVariable(draft, selection),
             "extract-variable" => ExtractVariable(draft, request, syntax, start, end),
             "organize-imports" => OrganizeImports(draft, syntax),
             _ => throw Refuse("Unknown FPAS refactoring.")
         };
         var edits = TextEditSet.Create(analysis.Context.Texts, draft.Edits, token);
         if (edits.EditCount != 0) draft.Verify(edits);
+        if (request.Kind != "implement-protocol" && draft.Targets.Any(target => target.PublicApi))
+            details = [.. details, "Public signature change. Every consumer must be editable in the confirmed context."];
         return new(request with { Selection = selection }, project, syntax.Span(start, end - start),
             analysis.Context.SnapshotId, edits, details, before.Query.Boundaries()) { Targets = draft.Targets };
     }
@@ -75,20 +84,29 @@ public static partial class CheckedRefactoring
     private static bool In(SourceSpan span, string file, int start, int end)
         => Paths.Equals(span.Path, file) && start <= span.Offset && span.Offset < end;
 
-    private sealed record ParameterCall(string Project, SemanticSnapshot Snapshot, SourceOperation Call, int ParameterCountChange, int ParameterIndex = -1);
+    private sealed record ParameterCall(string Project, SemanticSnapshot Snapshot, SourceOperation Call, int ParameterCountChange,
+        int ParameterIndex = -1, string? ChangedMode = null, IReadOnlyList<int>? NewSlots = null);
 
-    private sealed class Draft(WorkspaceAnalysis analysis, RenameBindings before, CancellationToken token)
+    private sealed record SourceMove(SourceSpan Original, int Destination, int Relative = 0);
+
+    private sealed class Draft(WorkspaceAnalysis analysis, RenameBindings before, CancellationToken token, bool closedContext)
     {
         private readonly Dictionary<string, RefactoringSyntax> syntax = new(Paths);
         internal WorkspaceAnalysis Analysis => analysis;
         internal RenameBindings Before => before;
         internal CancellationToken Token => token;
+        internal bool ClosedContext => closedContext;
         internal List<DiagnosticEdit> Edits { get; } = [];
         internal List<SourceSpan> Removed { get; } = [];
         internal List<RefactorTarget> Targets { get; } = [];
         internal List<ParameterCall> Calls { get; } = [];
-        internal (SourceSpan Original, int Insertion, int Relative)? Move { get; set; }
+        internal bool CheckOverloads { get; set; }
+        internal SourceSpan? ImplementedRecord { get; set; }
+        internal List<(string Name, int Insertion, int Relative)> ForwardedMethods { get; } = [];
+        internal HashSet<(string Path, int Offset)> ChangedStorageAccess { get; } = [];
+        internal List<SourceMove> Moves { get; } = [];
         internal (SourceSpan Span, int Insertion, string Name)? Extracted { get; set; }
+        internal InlineVariableEdit? Inlined { get; set; }
         internal IEnumerable<(string Project, SemanticSnapshot Snapshot)> Projects => analysis.Projects.Select(project => (project.Project, project.Result!.Snapshot!));
 
         internal RefactoringSyntax Syntax(SourceDocument document)
@@ -115,25 +133,110 @@ public static partial class CheckedRefactoring
             var offsetMap = new OffsetMap(files);
             int Map(string path, int offset)
             {
-                if (Move is { } move && Paths.Equals(path, move.Original.Path) && move.Original.Contains(offset))
-                    return offsetMap.Before(path, move.Insertion) + move.Relative + offset - move.Original.Offset;
+                foreach (var move in Moves)
+                    if (Paths.Equals(path, move.Original.Path) && move.Original.Contains(offset))
+                        return offsetMap.Before(path, move.Destination) + move.Relative + offset - move.Original.Offset;
                 return offsetMap.After(path, offset);
             }
             var updated = RenameOverlay.Analyze(analysis.Context, files.ToDictionary(pair => pair.Key, pair => pair.Value.NewText, Paths),
                 token, "refactor_conflict");
             var oldBindings = new RenameBindings(analysis, Map);
             var newBindings = new RenameBindings(updated);
+            var newStorageAccess = ChangedStorageAccess.Select(site => (site.Path, Map(site.Path, site.Offset))).ToHashSet();
             var expected = oldBindings.Occurrences(token, span => !Removed.Any(removed =>
-                In(span, removed.Path, removed.Offset, removed.Offset + removed.Length)));
-            var actual = newBindings.Occurrences(token);
+                In(span, removed.Path, removed.Offset, removed.Offset + removed.Length)),
+                (span, role) => StorageRole(span, role, ChangedStorageAccess));
+            var actual = newBindings.Occurrences(token, roleAt: (span, role) => StorageRole(span, role, newStorageAccess));
             if (expected.Any(item => !actual.TryGetValue(item.Key, out var value) || value != item.Value) ||
                 actual.Keys.Any(key => !expected.ContainsKey(key) && !offsetMap.Generated(key.Path, key.Offset)) ||
-                !oldBindings.Relations(token).SetEquals(newBindings.Relations(token)))
+                !PreservedRelations(newBindings, oldBindings.Relations(token), offsetMap))
                 throw Conflict("The edit changes a source binding, overload selection or declaration relationship.");
 
             if (Extracted is { } extraction)
-                VerifyExtraction(updated, extraction, offsetMap.Before(extraction.Span.Path, extraction.Insertion), Move!.Value.Relative);
+                VerifyExtraction(updated, extraction, offsetMap.Before(extraction.Span.Path, extraction.Insertion), Moves.Single().Relative);
+            if (Inlined is { } inlined) VerifyInlining(updated, oldBindings, newBindings, offsetMap, inlined);
             foreach (var call in Calls) VerifyCall(updated, call, offsetMap, oldBindings, newBindings);
+            if (CheckOverloads) VerifyOverloads(updated, offsetMap, Map);
+            if (ForwardedMethods.Count != 0) VerifyForwarding(updated, offsetMap, newBindings);
+
+            static string StorageRole(SourceSpan span, string role, HashSet<(string Path, int Offset)> changed)
+                => role is "read" or "write" or "read_write" && changed.Contains((span.Path, span.Offset)) ? "storage" : role;
+        }
+
+        private bool PreservedRelations(RenameBindings updated, HashSet<(string Project, string Implementation, string Contract)> old,
+            OffsetMap offsets)
+        {
+            var current = updated.Relations(token);
+            if (ImplementedRecord is not { } record) return old.SetEquals(current);
+            if (!old.IsSubsetOf(current)) return false;
+            current.ExceptWith(old);
+            foreach (var project in updated.Analysis.Projects)
+            {
+                var snapshot = project.Result!.Snapshot!;
+                foreach (var relation in snapshot.Relations)
+                {
+                    var key = (project.Project, updated.Key(project.Project, relation.Implementation), updated.Key(project.Project, relation.Contract));
+                    if (current.Contains(key) && !RecordMember(updated.Resolve(project.Project, relation.Implementation), snapshot, record, offsets))
+                        return false;
+                }
+            }
+            return true;
+        }
+
+        private void VerifyForwarding(WorkspaceAnalysis updated, OffsetMap offsets, RenameBindings bindings)
+        {
+            var record = ImplementedRecord!;
+            foreach (var project in updated.Projects)
+            {
+                var snapshot = project.Result!.Snapshot!;
+                if (!snapshot.Documents.Any(document => Paths.Equals(document.Path, record.Path))) continue;
+                foreach (var (name, insertion, relative) in ForwardedMethods)
+                {
+                    var calls = snapshot.Operations.Where(operation => operation.Kind == "invoke" &&
+                        operation.Anchor is { } anchor && Paths.Equals(anchor.Path, record.Path) &&
+                        anchor.Offset == offsets.Before(record.Path, insertion) + relative &&
+                        operation.Target is { } target && snapshot.Symbol(target).Name == name).ToArray();
+                    if (calls.Length != 1 || calls[0].Target is not { } called ||
+                        !RecordMember(bindings.Resolve(project.Project, called), snapshot, record, offsets) ||
+                        bindings.Resolve(project.Project, called).Symbol.Declaration is not { } declaration ||
+                        offsets.Generated(declaration.Path, declaration.Offset))
+                        throw Conflict($"Forwarding must call an existing instance method named '{name}' on the selected record.");
+                }
+            }
+        }
+
+        private static bool RecordMember(DefinitionResult definition, SemanticSnapshot snapshot, SourceSpan record, OffsetMap offsets)
+            => definition.Origin == "source" && definition.Symbol.Context?.Owner is { } owner &&
+                snapshot.Symbols.FirstOrDefault(symbol => symbol.Id == owner) is { Kind: "record", Declaration: { } declaration } &&
+                Paths.Equals(declaration.Path, record.Path) && declaration.Offset == offsets.After(record.Path, record.Offset);
+
+        private void VerifyOverloads(WorkspaceAnalysis updated, OffsetMap offsets, Func<string, int, int> map)
+        {
+            foreach (var (project, snapshot) in Projects)
+            {
+                token.ThrowIfCancellationRequested();
+                var after = updated.Projects.Single(item => Paths.Equals(item.Project, project)).Result!.Snapshot!;
+                var expected = Overloads(snapshot)
+                    .Where(item => !Removed.Any(range => In(item.Anchor, range.Path, range.Offset, range.Offset + range.Length)))
+                    .ToLookup(item => (item.Anchor.Path, Offset: map(item.Anchor.Path, item.Anchor.Offset), item.Call.Kind));
+                var actual = Overloads(after).Where(item => !offsets.Generated(item.Anchor.Path, item.Anchor.Offset) ||
+                    expected.Contains((item.Anchor.Path, item.Anchor.Offset, item.Call.Kind)))
+                    .ToLookup(item => (item.Anchor.Path, item.Anchor.Offset, item.Call.Kind));
+                if (expected.Count != actual.Count || expected.Any(group =>
+                {
+                    var matches = actual[group.Key].ToArray();
+                    return group.Count() != matches.Length ||
+                        !group.Zip(matches).All(pair => ImplementedRecord is null
+                            ? pair.First.Call.HasSameDispatch(pair.Second.Call)
+                            : pair.First.Call.Dispatch == pair.Second.Call.Dispatch &&
+                                pair.First.Call.Operation?.GetKey(includeAssemblyHash: false) == pair.Second.Call.Operation?.GetKey(includeAssemblyHash: false));
+                }))
+                    throw Conflict("The refactoring alters an existing constructor or operator overload.");
+            }
+
+            static IEnumerable<(SourceSpan Anchor, SourceOperation Call)> Overloads(SemanticSnapshot snapshot)
+                => snapshot.Operations.Where(call => call.Kind is "construct" or "operator")
+                    .Select(call => (call.Anchor ?? call.Span, call));
         }
 
         private void VerifyExtraction(WorkspaceAnalysis updated, (SourceSpan Span, int Insertion, string Name) extraction, int insertion, int expressionOffset)
@@ -167,13 +270,20 @@ public static partial class CheckedRefactoring
                 !TypesMatch(before.Result, after.Result) ||
                 !before.TypeParameters.Zip(after.TypeParameters).All(pair => TypesMatch(pair.First, pair.Second)))
                 throw Conflict("The proposed argument changes the selected call's types or generic substitution.");
-            if (original.ParameterCountChange == 0 && (!original.Call.HasSameDispatch(call) ||
+            var changed = original.ChangedMode is not null;
+            var signatureChanged = changed || original.ParameterCountChange != 0 || original.NewSlots is not null;
+            if (!(signatureChanged ? original.Call.Dispatch == call.Dispatch : original.Call.HasSameDispatch(call)) ||
                 (original.Call.Target is { } oldTarget ? oldBindings.Key(original.Project, oldTarget) : null) !=
                 (call.Target is { } newTarget ? newBindings.Key(original.Project, newTarget) : null) ||
-                !TypesMatch(original.Call.OwnerType, call.OwnerType)))
-                throw Conflict("Naming arguments changes the selected call target.");
-            var retainedBefore = before.Parameters.Where((_, index) => original.ParameterCountChange >= 0 || index != original.ParameterIndex);
-            var retainedAfter = after.Parameters.Where((_, index) => original.ParameterCountChange <= 0 || index != original.ParameterIndex);
+                !TypesMatch(original.Call.OwnerType, call.OwnerType))
+                throw Conflict("The edit changes the selected call target.");
+            if (changed && (after.Parameters[original.ParameterIndex].Name != before.Parameters[original.ParameterIndex].Name ||
+                after.Parameters[original.ParameterIndex].Mode != original.ChangedMode))
+                throw Conflict("The changed parameter does not retain its slot and requested mode.");
+            var retainedBefore = before.Parameters.Where((_, index) => index != original.ParameterIndex || !changed && original.ParameterCountChange >= 0);
+            var retainedAfter = original.NewSlots is { } slots
+                ? slots.Select(slot => after.Parameters[slot])
+                : after.Parameters.Where((_, index) => index != original.ParameterIndex || !changed && original.ParameterCountChange <= 0);
             if (!retainedBefore.Zip(retainedAfter).All(pair =>
                 pair.First.Name == pair.Second.Name && pair.First.Mode == pair.Second.Mode && TypesMatch(pair.First.Type, pair.Second.Type)))
                 throw Conflict("The proposed argument changes an existing parameter binding or mode.");

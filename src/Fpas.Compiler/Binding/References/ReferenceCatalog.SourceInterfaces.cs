@@ -66,9 +66,16 @@ internal sealed partial class ReferenceCatalog
             return type.Erased with { Element = type.Element is null ? null : Normalize(type.Element),
                 Arguments = type.Arguments is null ? null : new(type.Arguments.Select(Normalize)) };
         }
+        return InterfaceGenericConstraints(method).Select(parameter => Shape(parameter.Primary, parameter.Constructor, parameter.Bounds)).ToArray();
+    }
+
+    internal sealed record InterfaceGenericParameter(string Name, string? Primary, bool Constructor, IReadOnlyList<TypeSymbol> Bounds);
+
+    internal IReadOnlyList<InterfaceGenericParameter> InterfaceGenericConstraints(ImportedMethod method)
+    {
         if (method.SourceMethod is { } source)
-            return source.GenericParameters.Select(parameter => Shape(parameter.Primary, parameter.HasConstructor,
-                parameter.Constraints.Select(type => SubstituteSource(type, SourceParameters(method.Owner), method.Owner.TypeArguments)))).ToArray();
+            return source.GenericParameters.Select(parameter => new InterfaceGenericParameter(parameter.Name, parameter.Primary, parameter.HasConstructor,
+                parameter.Constraints.Select(type => SubstituteSource(type, SourceParameters(method.Owner), method.Owner.TypeArguments)).ToArray())).ToArray();
         var owner = Definition(method.Owner);
         var definition = owner.Assembly.Reader.GetMethodDefinition(method.DefinitionHandle);
         return definition.GetGenericParameters().Select(handle =>
@@ -79,7 +86,8 @@ internal sealed partial class ReferenceCatalog
                 flags.HasFlag(GenericParameterAttributes.ReferenceTypeConstraint) ? NullabilityMetadata.GenericNotNull(owner, parameter, definition) ? "class" : "class?" : null;
             var bounds = parameter.GetConstraints().Select(constraint => Decode(owner, owner.Assembly.Reader.GetGenericParameterConstraint(constraint).Type,
                 method.Owner, method.MethodArguments)).Where(type => type.Definition?.FullName != "System.ValueType");
-            return Shape(primary, flags.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint) && primary != "struct", bounds);
+            return new InterfaceGenericParameter(owner.Assembly.Reader.GetString(parameter.Name), primary,
+                flags.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint) && primary != "struct", bounds.ToArray());
         }).ToArray();
     }
 }

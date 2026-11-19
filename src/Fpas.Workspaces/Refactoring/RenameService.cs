@@ -88,7 +88,8 @@ public static class RenameService
         var files = editPlan.Documents.Select(document => new RefactorPlanFile(document.Original.Path, document.OriginalHash,
             document.ReplacementHash, grouped[document.Original.Path])).ToArray();
         var descriptors = targets.Select(key => definitions[key]).Select(item => new RefactorTarget(item.Project!, item.Symbol.Kind, Token(item),
-            item.Symbol.Declaration!, Public(item))).OrderBy(item => item.Project, StringComparer.Ordinal).ThenBy(item => item.Declaration.Path, StringComparer.Ordinal)
+            item.Symbol.Declaration!, RenameBindings.IsPublic(snapshots[item.Project!], item.Symbol)))
+            .OrderBy(item => item.Project, StringComparer.Ordinal).ThenBy(item => item.Declaration.Path, StringComparer.Ordinal)
             .ThenBy(item => item.Declaration.Offset).ToArray();
         var plan = new RefactorPlan(1, "rename", analysis.Context.Path, analysis.Context.Configuration, analysis.Context.SnapshotId,
             selection with { File = Path.GetFullPath(selection.File), Project = selection.Project is null ? null : Path.GetFullPath(selection.Project) }, newName,
@@ -96,18 +97,6 @@ public static class RenameService
         return FileRefactorPlans.Seal(plan, editPlan);
 
         string Token(DefinitionResult item) => documents[item.Symbol.Declaration!.Path].Substring(item.Symbol.Declaration.Offset, item.Symbol.Declaration.Length).TrimStart('@');
-        bool Public(DefinitionResult item)
-        {
-            var symbol = item.Symbol; var seenPublic = false;
-            while (true)
-            {
-                if (symbol.Context?.Accessibility == "private") return false;
-                seenPublic |= symbol.Context?.Accessibility == "public";
-                if (symbol.Context?.Owner is not { } owner) break;
-                symbol = snapshots[item.Project!].Symbol(owner);
-            }
-            return seenPublic || item.Symbol.Kind == "container";
-        }
     }
 
 }

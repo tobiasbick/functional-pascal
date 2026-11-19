@@ -98,10 +98,11 @@ internal sealed partial class SemanticRecorder
             var unknown = dispatch == "direct" ? null : "runtime_dispatch_target";
             Store(span, location, kind, logical ?? Method(method), null, method.Owner.Kind == TypeKind.Generated ? null : MethodMetadata(method), dispatch, unknown, Signature(method),
                 method.Owner, kind == "callable_reference" ? bound.Type : method.Result,
-                inertArguments: kind == "invoke" && method.SourceMethod is { IsPublic: false } && value is BoundCall direct
+                inertArguments: kind == "invoke" && value is BoundCall direct
                     ? InertArguments(bound, direct) : null,
                 labels: syntax is CallSyntax callSyntax && value is BoundCall callValue
-                    ? NamedCallArguments.Suggestions(method, callSyntax.Arguments, callValue.ExpandedParams) : null);
+                    ? NamedCallArguments.Suggestions(method, callSyntax.Arguments, callValue.ExpandedParams) : null,
+                staticInvocation: kind == "invoke" && method.IsStatic);
         }
     }
 
@@ -147,13 +148,13 @@ internal sealed partial class SemanticRecorder
     private void Store(SourceSpan span, SourceSpan? anchor, string kind, SymbolEntry? target, string? targetBody,
         MetadataIdentity? operation, string dispatch, string? unknown, CallableSignature? signature,
         TypeSymbol? owner = null, TypeSymbol? result = null, OperationReceiver? receiver = null, bool[]? inertArguments = null,
-        IReadOnlyList<(int Offset, string Label)>? labels = null)
+        IReadOnlyList<(int Offset, string Label)>? labels = null, bool staticInvocation = false)
     {
         if (activeBody is null) return;
         var key = (activeBody.Body.Id, span.Offset, span.Length, kind);
         var id = operations.TryGetValue(key, out var previous) ? previous.Fact.Id : snapshotId + ":o" + operations.Count.ToString(System.Globalization.CultureInfo.InvariantCulture);
         operations[key] = new(new(id, activeBody.Body.Id, span, anchor, kind, operationPhase, target?.Id, targetBody, operation, dispatch, unknown, signature,
-            owner is null || owner.Kind == TypeKind.Generated ? null : Type(owner), result is null ? null : Type(result), receiver) { InertArguments = inertArguments, Labels = labels ?? [] }, target);
+            owner is null || owner.Kind == TypeKind.Generated ? null : Type(owner), result is null ? null : Type(result), receiver) { InertArguments = inertArguments, Labels = labels ?? [], StaticInvocation = staticInvocation }, target);
     }
 
     private void RetargetOperation(BoundMethodGroup group, ImportedMethod method)

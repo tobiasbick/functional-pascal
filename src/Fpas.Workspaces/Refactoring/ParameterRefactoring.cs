@@ -1,4 +1,4 @@
-// [Documentation](../../../docs/pascal/tools/refactoring.md#remove-an-unused-parameter)
+// [Documentation](../../../docs/pascal/tools/refactoring.md#add-a-parameter)
 using Fpas.Compiler.Analysis;
 using Fpas.Compiler.Syntax;
 using Fpas.Workspaces.Queries;
@@ -19,19 +19,21 @@ public static partial class CheckedRefactoring
 
         var definition = draft.Before.Query.Execute("definition", selection, cancellationToken: draft.Token).Definition;
         if (definition is not { Origin: "source", Symbol: { Kind: "routine", Declaration: { } declaration } })
-            throw Refuse("Select a private FPAS routine or a checked call to it.");
+            throw Refuse("Select a source FPAS routine or a checked call to it.");
         var declarationSource = Paths.Equals(source.Path, declaration.Path) ? source : draft.Source(declaration.Path);
-        var routine = draft.Syntax(declarationSource).PrivateRoutine(declaration.Offset);
+        var routine = draft.Syntax(declarationSource).EditableRoutine(declaration.Offset);
         if (routine is null)
-            throw Refuse("Add Parameter requires a private FPAS routine without attributes or an external contract.");
+            throw Refuse("Add Parameter requires an editable FPAS routine without attributes.");
         if (routine.HasVariadicParameter) throw Refuse("A routine with a params parameter requires a manual signature change.");
         if (routine.Parameters.Any(parameter => parameter.Name == request.Name)) throw Refuse("The routine already declares that parameter.");
+        var (sites, owners) = DirectCalls(draft, declarationSource, declaration.Offset);
+        draft.Targets.AddRange(owners);
 
         var parameter = name + ": " + type;
         var insertion = routine.FirstOptional < routine.Parameters.Count ? parameter + "; " :
             (routine.Parameters.Count == 0 ? "" : "; ") + parameter;
         draft.Edit(declarationSource, routine.Insertion, routine.Insertion, insertion);
-        foreach (var site in DirectCalls(draft, declarationSource, declaration.Offset))
+        foreach (var site in sites)
         {
             var call = site.Syntax;
             for (var index = routine.FirstOptional; index < call.Arguments.Count && call.Arguments[index].Name is null; index++)
@@ -49,22 +51,24 @@ public static partial class CheckedRefactoring
     {
         var definition = draft.Before.Query.Execute("definition", selection, cancellationToken: draft.Token).Definition;
         if (definition is not { Origin: "source", Symbol: { Kind: "parameter", Declaration: { } declaration } })
-            throw Refuse("Select the unused value parameter of a private FPAS routine.");
+            throw Refuse("Select the unused value parameter of an editable FPAS routine.");
         var source = draft.Source(declaration.Path);
         var syntax = draft.Syntax(source);
-        if (syntax.ValueParameterOwner(declaration.Offset) is not int owner || syntax.PrivateRoutine(owner) is not { } routine || routine.HasVariadicParameter)
-            throw Refuse("Remove Parameter requires an ordinary value parameter of a private routine without attributes or params.");
+        if (syntax.ValueParameterOwner(declaration.Offset) is not int owner || syntax.EditableRoutine(owner) is not { } routine || routine.HasVariadicParameter)
+            throw Refuse("Remove Parameter requires an ordinary value parameter of an editable routine without attributes or params.");
         int slot = Enumerable.Range(0, routine.Parameters.Count).Single(index => routine.Parameters[index].Span.Offset == declaration.Offset);
+        var (sites, owners) = DirectCalls(draft, source, owner);
         foreach (var (project, snapshot) in draft.Owners(source.Path).OrderBy(owner => owner.Project, StringComparer.Ordinal))
         {
             var parameter = snapshot.OccurrenceAt(source.Path, declaration.Offset);
             if (parameter?.Role != "declaration" || snapshot.Symbol(parameter.Symbol).Kind != "parameter" ||
                 snapshot.Occurrences.Any(site => site.Symbol == parameter.Symbol && site.Role is not ("declaration" or "argument")))
                 throw Refuse("The parameter is used by the routine, a contract or a nested body.");
-            draft.Targets.Add(new(project, "parameter", definition.Symbol.Name, declaration, false));
+            draft.Targets.Add(new(project, "parameter", definition.Symbol.Name, declaration,
+                owners.Single(routineOwner => Paths.Equals(routineOwner.Project, project)).PublicApi));
         }
         Remove(source, routine.Parameters, slot);
-        foreach (var site in DirectCalls(draft, source, owner))
+        foreach (var site in sites)
         {
             if (!site.Operation.CanOmitArgument(slot))
                 throw Refuse($"Cannot omit argument '{definition.Symbol.Name}' at {site.Source.Path}:{site.Operation.Span.Line}. Its evaluation or conversion may have effects or throw.");
@@ -89,20 +93,24 @@ public static partial class CheckedRefactoring
 
     private sealed record DirectCall(string Project, SemanticSnapshot Snapshot, SourceOperation Operation, SourceDocument Source, RefactoringCall Syntax);
 
-    private static List<DirectCall> DirectCalls(Draft draft, SourceDocument declarationSource, int routineOffset)
+    private static (List<DirectCall> Sites, List<RefactorTarget> Owners) DirectCalls(Draft draft, SourceDocument declarationSource, int routineOffset)
     {
         var targets = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var (project, snapshot) in draft.Owners(declarationSource.Path))
+        var owners = new List<RefactorTarget>();
+        foreach (var (project, snapshot) in draft.Owners(declarationSource.Path).OrderBy(owner => owner.Project, StringComparer.Ordinal))
         {
             var owner = snapshot.Symbols.SingleOrDefault(symbol => symbol.Kind == "routine" &&
                 symbol.Declaration is { } at && Paths.Equals(at.Path, declarationSource.Path) && at.Offset == routineOffset);
-            if (owner is null || owner.Context?.Accessibility != "private")
-                throw Refuse("The routine is not private in every linked owner.");
+            if (owner?.Declaration is not { } declaration || owner.Context?.Accessibility is not ("private" or "public"))
+                throw Refuse("Every linked owner must provide an editable routine declaration.");
             targets.Add(draft.Before.Key(project, owner.Id));
+            owners.Add(new(project, owner.Kind, owner.Name, declaration, RenameBindings.IsPublic(snapshot, owner)));
         }
         if (targets.Count == 0 || draft.Before.Relations(draft.Token).Any(relation =>
             targets.Contains(relation.Implementation) || targets.Contains(relation.Contract)))
             throw Refuse("The selected signature participates in an interface or external contract.");
+        if (owners.Any(owner => owner.PublicApi))
+            VerifyPublicParameterContext(draft, owners);
 
         var sites = new List<DirectCall>();
         foreach (var (project, snapshot) in draft.Projects)
@@ -134,6 +142,6 @@ public static partial class CheckedRefactoring
         foreach (var group in sites.GroupBy(site => (site.Source.Path, site.Operation.Anchor!.Offset)))
             if (group.Count() != draft.Owners(group.Key.Path).Count())
                 throw Refuse("A call binds to a different routine in another owner of the shared file.");
-        return sites;
+        return (sites, owners);
     }
 }

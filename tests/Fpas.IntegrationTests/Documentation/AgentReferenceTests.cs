@@ -28,7 +28,36 @@ public sealed class AgentReferenceTests(ITestOutputHelper output)
             if (Path.GetFileName(path) == "README.md") Assert.InRange(count, 1, 999);
         }
         output.WriteLine("Total: {0} o200k_base tokens", total);
-        Assert.InRange(total, 1, 12_000);
+        Assert.InRange(total, 1, 13_000);
+    }
+
+    [Fact]
+    public async Task Cli_index_matches_the_public_command_tree()
+    {
+        var index = File.ReadAllText(Path.Combine(Root, "cli.md"));
+        var documented = Regex.Matches(index, @"(?m)^\| `fpas ([a-z][a-z0-9-]*(?: [a-z][a-z0-9-]*)*)` \|")
+            .Select(match => match.Groups[1].Value).Order(StringComparer.Ordinal);
+        var cli = TestEnvironment.Metadata("FpasCliPath");
+        var registered = new List<string>();
+        await ReadCommands([]);
+        Assert.Equal(registered.Order(StringComparer.Ordinal), documented);
+        output.WriteLine("Public CLI commands and subcommands: {0}", registered.Count);
+
+        async Task ReadCommands(string[] path)
+        {
+            var help = await ProcessRunner.RunAsync([cli, .. path, "--help"]);
+            Assert.True(help.ExitCode == 0, help.Output + help.Error);
+            var lines = help.Output.ReplaceLineEndings("\n").Split('\n');
+            var commands = lines.SkipWhile(line => line != "Commands:").Skip(1);
+            foreach (var line in commands)
+            {
+                var entry = Regex.Match(line, @"^  ([a-z][a-z0-9-]*) ");
+                if (!entry.Success) continue;
+                string[] child = [.. path, entry.Groups[1].Value];
+                registered.Add(string.Join(' ', child));
+                await ReadCommands(child);
+            }
+        }
     }
 
     [Fact]

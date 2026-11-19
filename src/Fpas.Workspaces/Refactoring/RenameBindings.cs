@@ -30,6 +30,18 @@ internal sealed class RenameBindings
     private string SourceKey(DefinitionResult definition)
         => Address(definition.Project!, definition.Symbol.Declaration!.Path, position(definition.Symbol.Declaration.Path, definition.Symbol.Declaration.Offset), definition.Symbol.Kind);
     internal DefinitionResult Resolve(string project, string symbol) => query.Resolve(project, symbol);
+    internal static bool IsPublic(SemanticSnapshot snapshot, SemanticSymbol symbol)
+    {
+        var publicDeclaration = symbol.Kind == "container";
+        while (true)
+        {
+            if (symbol.Context?.Accessibility == "private") return false;
+            publicDeclaration |= symbol.Context?.Accessibility == "public";
+            if (symbol.Context?.Owner is not { } owner) return publicDeclaration;
+            symbol = snapshot.Symbol(owner);
+        }
+    }
+
     internal string Key(string project, string symbol)
     {
         if (keys.TryGetValue((project, symbol), out var key)) return key;
@@ -58,7 +70,7 @@ internal sealed class RenameBindings
     }
 
     internal Dictionary<(string Project, string Path, int Offset, string Role), string> Occurrences(CancellationToken token,
-        Func<SourceSpan, bool>? include = null)
+        Func<SourceSpan, bool>? include = null, Func<SourceSpan, string, string>? roleAt = null)
     {
         var result = new Dictionary<(string, string, int, string), string>();
         foreach (var project in Analysis.Projects)
@@ -67,7 +79,8 @@ internal sealed class RenameBindings
                 token.ThrowIfCancellationRequested();
                 if (include?.Invoke(occurrence.Span) == false) continue;
                 if (result.Count >= 100_000) throw new ContextFailure("rename_limit", "Rename validation exceeds 100,000 source occurrences.");
-                result.Add((project.Project, occurrence.Span.Path, position(occurrence.Span.Path, occurrence.Span.Offset), occurrence.Role), Key(project.Project, occurrence.Symbol));
+                var role = roleAt?.Invoke(occurrence.Span, occurrence.Role) ?? occurrence.Role;
+                result.Add((project.Project, occurrence.Span.Path, position(occurrence.Span.Path, occurrence.Span.Offset), role), Key(project.Project, occurrence.Symbol));
             }
         return result;
     }

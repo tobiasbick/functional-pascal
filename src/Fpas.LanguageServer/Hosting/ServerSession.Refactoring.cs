@@ -20,9 +20,14 @@ internal sealed partial class ServerSession
         {
             var selection = EditorSelection(parameters, snapshot, position: true);
             var end = Object(parameters["end"], "end");
-            var request = new RefactoringRequest(RequiredString(parameters, "kind"), selection,
+            var kind = RequiredString(parameters, "kind");
+            var request = new RefactoringRequest(kind, selection,
                 checked(RequiredInteger(end, "line") + 1), checked(RequiredInteger(end, "character") + 1),
-                Optional("name"), Optional("type"), Optional("argument"));
+                Optional("name"), Optional("type"), Optional("argument"),
+                kind == "change-signature" ? new(Optional("type"), Optional("mode"), SignatureArguments(parameters["arguments"]),
+                    ParameterOrder(parameters["order"])) : null,
+                parameters["closedContext"] is not null && Boolean(parameters, "closedContext"),
+                kind == "implement-protocol" ? new(RequiredString(parameters, "protocol"), ProtocolMembers(parameters["members"])) : null);
             var plan = CheckedRefactoring.Prepare(snapshot.Analysis, request, token);
             var id = Guid.NewGuid().ToString("N");
             var now = Environment.TickCount64;
@@ -69,6 +74,45 @@ internal sealed partial class ServerSession
         return new { schemaVersion = 1, id = selected, edit = FeatureProjection.WorkspaceEdits(refreshed.Edits) };
 
         string? Optional(string property) => parameters[property] is null ? null : RequiredString(parameters, property);
+    }
+
+    private static IReadOnlyList<string>? ParameterOrder(JToken? token)
+    {
+        if (token is null) return null;
+        if (token is not JArray { Count: > 0 and <= 1000 } names || names.Any(name => name.Type != JTokenType.String))
+            throw Invalid("order must be a non-empty array of parameter names.");
+        return names.Values<string>().Select(name => name!).ToArray();
+    }
+
+    private static IReadOnlyList<RefactorProtocolMember> ProtocolMembers(JToken? token)
+    {
+        if (token is null) return [];
+        if (token is not JArray { Count: <= 1000 } members)
+            throw Invalid("members must be an array of at most 1000 member implementations.");
+        return members.Select(member =>
+        {
+            var item = Object(member, "member");
+            return new RefactorProtocolMember(RequiredString(item, "key"), RequiredString(item, "value"),
+                item["forward"] is not null && Boolean(item, "forward"));
+        }).ToArray();
+    }
+
+    private static IReadOnlyList<RefactorArgumentOverride> SignatureArguments(JToken? token)
+    {
+        if (token is null) return [];
+        if (token is not JArray { Count: <= 1000 } arguments)
+            throw Invalid("arguments must be an array of at most 1000 call replacements.");
+        return arguments.Select(argument =>
+        {
+            var item = Object(argument, "argument");
+            var position = Object(item["position"], "position");
+            var line = RequiredInteger(position, "line");
+            var column = RequiredInteger(position, "character");
+            if (line is < 0 or int.MaxValue || column is < 0 or int.MaxValue)
+                throw Invalid("Invalid call position.");
+            var file = item["uri"] is null ? null : FileUris.Path(new Uri(RequiredString(item, "uri"), UriKind.RelativeOrAbsolute));
+            return new RefactorArgumentOverride(new(line + 1, column + 1), RequiredString(item, "expression"), file);
+        }).ToArray();
     }
 
     private static bool SameEdits(PreparedRefactoring before, PreparedRefactoring after)

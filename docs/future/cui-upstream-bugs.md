@@ -28,6 +28,10 @@ tests cover rejection, stacked overflow and the explicit-range alternative.
 
 ## CUI-033 — Planning drag resumes after editing or its target disappears
 
+- Upstream: [Issue #109](https://github.com/yappologistic/CUI/issues/109) and
+  [PR #110](https://github.com/yappologistic/CUI/pull/110). The PR includes
+  regression test `0d6fac6` and fix `407870d`.
+
 Reproduced on Windows using direct `cui_gantt` and `cui_week_calendar` calls
 with the vendored snapshot at `a5c9ef5`.
 

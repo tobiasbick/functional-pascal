@@ -75,7 +75,7 @@ begin
   return Current with
     Searching := false;
     Scanning := false;
-    Provider := MB.Availability();
+    Provider := MB.Live.Availability();
     AcoustId := Acoust.Availability();
   end with;
 end function;
@@ -186,7 +186,7 @@ begin
           Track,
           Query := SearchText(Track),
           CanScan := not Sys.String.IsNullOrWhiteSpace(ApplicationKey),
-          Provider := MB.Availability(),
+          Provider := MB.Live.Availability(),
           AcoustId := Acoust.Availability()
         ),
         [
@@ -296,7 +296,7 @@ begin
       end with;
     when M.Msg.Search:
       const Query: string := Current.Query.Trim();
-      if not Blocked(Current, Current.Provider, MB.Availability()) and Query <> '' then
+      if not Blocked(Current, Current.Provider, MB.Live.Availability()) and Query <> '' then
         return BeginRequest(Current, Requests.Search(Query));
       end if;
     when M.Msg.Scan:
@@ -326,7 +326,7 @@ begin
       if not Blocked(
         Current,
         Current.Provider,
-        MB.Availability()
+        MB.Live.Availability()
       ) and Index >= 0 and Index < Current.Matches.Length
       then
         return BeginRequest(Current, Requests.Lookup(Current.Matches[Index]), Index);

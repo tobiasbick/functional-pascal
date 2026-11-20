@@ -37,14 +37,21 @@ recording and release from the results, then select proposals individually or
 with **Select all** and **Select none**. Editing a local field clears its
 proposal selection. The heading identifies values that include saved library
 edits. A process-wide gate for each connected provider enforces the interval
-between requests and honors longer `Retry-After` values. MusicBrainz uses
-at least one second between starts and retries HTTP 429 and 503 up to five times,
+between requests and honors longer `Retry-After` values. The
+[MetaBrainz.MusicBrainz](https://github.com/Zastai/MetaBrainz.MusicBrainz) client
+handles MusicBrainz searches and lookups. MusicBrainz uses at least one second
+between starts. Microsoft HTTP Resilience retries HTTP 429 and 503 up to five times,
 with delays of 2, 4, 8, 16 and 32 seconds. The search button and release picker
 are disabled while a request or cooldown is active, even across dialog reopening.
 Track and recording credits appear as soon as the recording is available. If the
 release lookup fails, these values stay available for selection and saving.
 For testing, the alert reports the HTTP status, reason, endpoint, attempt and
 retry hint when available. [MusicBrainz API](https://musicbrainz.org/doc/MusicBrainz_API)
+
+Native AOT publishing enables the .NET JSON reflection setting for
+MetaBrainz's registered converters. The provider's search, recording and
+release paths can run with this setting. The linker still reports trimming
+and AOT analysis warnings for MetaBrainz and other app dependencies.
 
 **Scan AcoustID** identifies the selected track by audio. It needs the application
 key from **Settings → Metadata**. It reuses the cached Chromaprint and full file
@@ -239,6 +246,7 @@ Run them with the local SDK and native GUI prerequisites described in the
   - [CustomTags.fpas](../src/FpasAmp.Ui/TagEditor/CustomTags.fpas)
   - [Model.fpas](../src/FpasAmp.Ui/TagEditor/Model.fpas)
   - [MusicBrainz.fpas](../src/FpasAmp.Ui/TagEditor/MusicBrainz.fpas)
+  - [MusicBrainzTags.fpas](../src/FpasAmp.Ui/TagEditor/MusicBrainzTags.fpas)
   - [Requests.fpas](../src/FpasAmp.Ui/TagEditor/Requests.fpas)
   - [ResponseJson.fpas](../src/FpasAmp.Ui/TagEditor/ResponseJson.fpas)
   - [SearchView.fpas](../src/FpasAmp.Ui/TagEditor/SearchView.fpas)
@@ -255,6 +263,7 @@ Run them with the local SDK and native GUI prerequisites described in the
   - [NativeMetadataSettings.fpas](../tests/FpasAmp.Ui.Tests/NativeMetadataSettings.fpas)
   - [NativeTagEditor.fpas](../tests/FpasAmp.Ui.Tests/NativeTagEditor.fpas)
   - [MusicBrainz.fpas](../tests/FpasAmp.Ui.Tests/MusicBrainz.fpas)
+  - [ProviderHttp.fpas](../tests/FpasAmp.Ui.Tests/ProviderHttp.fpas)
   - [NativeAlbumToolbar.fpas](../tests/FpasAmp.Ui.Tests/NativeAlbumToolbar.fpas)
   - [NativeAlbums.fpas](../tests/FpasAmp.Ui.Tests/NativeAlbums.fpas)
   - [NativeCollections.fpas](../tests/FpasAmp.Ui.Tests/NativeCollections.fpas)

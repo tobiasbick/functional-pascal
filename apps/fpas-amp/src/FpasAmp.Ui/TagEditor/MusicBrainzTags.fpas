@@ -1,0 +1,195 @@
+// [Documentation](../../../doc/desktop.md#editing-track-tags)
+
+unit FpasAmp.Ui.TagEditor.MusicBrainzTags;
+
+uses
+  MetaBrainz.MusicBrainz as B, MetaBrainz.MusicBrainz.Interfaces.Entities as E,
+  FpasAmp.Library.TagEditing.Fields as F,
+  System as Sys, System.Collections.Generic as C, System.Collections.Immutable as I;
+
+type Builder = I.ImmutableDictionary<string, string>.Builder;
+
+procedure Put(Fields: Builder; Key: string; Value: string?);
+begin
+  if Value <> null and Value <> '' then
+    Fields[Key] := Value;
+  end if;
+end procedure;
+
+// Joins the credited artist names for the tag editor.
+public function Artists(Credits: C.IReadOnlyList<E.INameCredit?>): string;
+begin
+  const Names: C.List<string> := new C.List<string>();
+  for Credit: E.INameCredit? in Credits do
+    if Credit = null then
+      continue;
+    end if;
+    const Artist: E.IArtist? := Credit.Artist;
+    const Name: string := Credit.Name ?? if Artist <> null then
+      Artist.Name
+    else
+      ''
+    end if;
+    if Name <> '' then
+      Names.Add(Name);
+    end if;
+  end for;
+
+  return Sys.String.Join('; ', Names);
+end function;
+
+function ArtistIds(Credits: C.IReadOnlyList<E.INameCredit?>): string;
+begin
+  const Ids: C.List<string> := new C.List<string>();
+  for Credit: E.INameCredit? in Credits do
+    const Artist: E.IArtist? := if Credit <> null then
+      Credit.Artist
+    else
+      null
+    end if;
+    if Artist <> null then
+      Ids.Add(Artist.Id.ToString('D'));
+    end if;
+  end for;
+
+  return Sys.String.Join('; ', Ids);
+end function;
+
+procedure Append(Fields: Builder; Key: string; Name: string);
+begin
+  Put(
+    Fields, Key, if Fields.ContainsKey(Key) then
+      Fields[Key] + '; ' + Name
+    else
+      Name
+    end if
+  );
+end procedure;
+
+procedure Credits(Fields: Builder; Parent: E.IRelatableEntity);
+begin
+  for Relation: E.IRelationship? in Parent.Relationships do
+    if Relation = null then
+      continue;
+    end if;
+    const TypeName: string := Relation.@Type ?? '';
+    const Artist: E.IArtist? := Relation.Artist;
+    if Artist <> null then
+      if TypeName = 'composer' or TypeName = 'lyricist' or TypeName = 'producer' then
+        Append(Fields, TypeName, Artist.Name);
+      elsif TypeName = 'instrument' then
+        for Attribute: string? in Relation.Attributes do
+          if Attribute = 'piano' then
+            Append(Fields, 'piano', Artist.Name);
+          end if;
+        end for;
+      end if;
+    end if;
+    const Work: E.IWork? := Relation.Work;
+    if Work <> null then
+      Put(Fields, F.Custom + 'MusicBrainz Work Id', Work.Id.ToString('D'));
+      Credits(Fields, Work);
+    end if;
+  end for;
+end procedure;
+
+procedure ReleaseTags(Fields: Builder; Release: E.IRelease);
+begin
+  Put(Fields, 'album', Release.Title);
+  Put(Fields, 'album-artist', Artists(Release.ArtistCredit));
+  Put(Fields, F.Custom + 'ASIN', Release.Asin);
+  Put(Fields, F.Custom + 'BARCODE', Release.Barcode);
+  Put(Fields, F.Custom + 'MusicBrainz Album Id', Release.Id.ToString('D'));
+  Put(Fields, F.Custom + 'MusicBrainz Album Artist Id', ArtistIds(Release.ArtistCredit));
+  Put(Fields, F.Custom + 'MusicBrainz Album Release Country', Release.Country);
+  Put(Fields, F.Custom + 'MusicBrainz Album Status', (Release.Status ?? '').ToLowerInvariant());
+
+  const Representation: E.ITextRepresentation? := Release.TextRepresentation;
+  if Representation <> null then
+    Put(Fields, F.Custom + 'SCRIPT', Representation.Script);
+    Put(Fields, F.Custom + 'LANGUAGE', Representation.Language);
+  end if;
+  const Group: E.IReleaseGroup? := Release.ReleaseGroup;
+  if Group <> null then
+    Put(Fields, F.Custom + 'MusicBrainz Release Group Id', Group.Id.ToString('D'));
+    Put(Fields, F.Custom + 'MusicBrainz Album Type', (Group.PrimaryType ?? '').ToLowerInvariant());
+  end if;
+  const Date: B.PartialDate? := Release.Date;
+  const Year: int? := case Date of
+    when is B.PartialDate as Value: Value.Year;
+    else null;
+  end case;
+  if Year <> null then
+    Put(Fields, 'year', Year.Value.ToString());
+  end if;
+
+  for Label: E.ILabelInfo? in Release.LabelInfo do
+    if Label = null then
+      continue;
+    end if;
+
+    Put(Fields, F.Custom + 'CATALOGNUMBER', Label.CatalogNumber);
+    const Entry: E.ILabel? := Label.Label;
+    if Entry <> null then
+      Put(Fields, 'label', Entry.Name);
+      break;
+    end if;
+  end for;
+end procedure;
+
+procedure TrackTags(Fields: Builder; Id: Sys.Guid; Release: E.IRelease);
+begin
+  for Medium: E.IMedium? in Release.Media do
+    if Medium = null then
+      continue;
+    end if;
+
+    for Track: E.ITrack? in Medium.Tracks do
+      if Track = null then
+        continue;
+      end if;
+      const Recording: E.IRecording? := Track.Recording;
+      if Recording <> null and Recording.Id = Id then
+        Put(Fields, 'title', Track.Title);
+        Put(Fields, 'artist', Artists(Track.ArtistCredit));
+        Put(Fields, F.Custom + 'MusicBrainz Artist Id', ArtistIds(Track.ArtistCredit));
+        Put(Fields, F.Custom + 'MusicBrainz Release Track Id', Track.Id.ToString('D'));
+        Put(Fields, F.Custom + 'TMED', Medium.Format);
+        const Position: int? := Track.Position;
+        if Position <> null then
+          Put(Fields, 'track', Position.Value.ToString() + ' / ' + Medium.TrackCount.ToString());
+        end if;
+
+        Put(Fields, 'disc', Medium.Position.ToString() + ' / ' + Release.Media.Count.ToString());
+        return;
+      end if;
+    end for;
+  end for;
+end procedure;
+
+// Builds selectable recording tags, enriched with Release when it was retrieved.
+public function Proposals(Recording: E.IRecording; Release: E.IRelease?): I.ImmutableDictionary<string, string>;
+begin
+  const Fields: Builder := I.ImmutableDictionary.CreateBuilder<string, string>();
+  Put(Fields, 'recording', Recording.Id.ToString('D'));
+  Put(Fields, 'title', Recording.Title);
+  Put(Fields, 'artist', Artists(Recording.ArtistCredit));
+  Put(Fields, F.Custom + 'MusicBrainz Artist Id', ArtistIds(Recording.ArtistCredit));
+  const Genres: C.List<string> := new C.List<string>();
+  for Genre: E.IGenre? in Recording.Genres do
+    if Genre <> null then
+      Genres.Add(Genre.Name);
+    end if;
+  end for;
+
+  Put(Fields, 'genre', Sys.String.Join('; ', Genres));
+  Credits(Fields, Recording);
+  if Release <> null then
+    ReleaseTags(Fields, Release);
+    TrackTags(Fields, Recording.Id, Release);
+  end if;
+
+  return Fields.ToImmutable();
+end function;
+
+end unit;

@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>WinExe</OutputType>
+    <!-- MetaBrainz uses System.Text.Json options with registered converters. -->
+    <JsonSerializerIsReflectionEnabledByDefault Condition="'$(PublishAot)' == 'true'">true</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../FpasAmp.Library/FpasAmp.Library.fpasproj" />

@@ -4,6 +4,7 @@ unit FpasAmp.Ui.TagEditor.Requests;
 
 uses
   FpasAmp.Ui.TagEditor.Model as M, FpasAmp.Ui.TagEditor.MusicBrainz as MB,
+  FpasAmp.Ui.TagEditor.MusicBrainzTags as Tags, MetaBrainz.MusicBrainz.Interfaces.Entities as E,
   FpasAmp.Ui.TagEditor.AcoustId as Acoust, FpasAmp.Ui.Providers.RequestPacing as Pacing,
   FpasAmp.Library.Metadata.Monitoring as Metadata, FpasAmp.Library.Metadata.Model as Tracks,
   FpasAmp.Library.Metadata.Fingerprints.Calculator as Fingerprint,
@@ -28,7 +29,7 @@ begin
       var PreviousAudio: Pacing.Status := PreviousMusic;
       while true do
         Stop.ThrowIfCancellationRequested();
-        const Music: Pacing.Status := MB.Availability();
+        const Music: Pacing.Status := MB.Live.Availability();
         const Audio: Pacing.Status := Acoust.Availability();
         if Music <> PreviousMusic or Audio <> PreviousAudio then
           await Post(M.Msg.Timer(Music, Audio));
@@ -48,7 +49,7 @@ begin
   return A.StartBackground<M.Msg>(
     Slot,
     async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
-      await Post(M.Msg.Found(await MB.Search(Query, Stop)));
+      await Post(M.Msg.Found(await MB.Live.Search(Query, Stop)));
     end function, Failed
   );
 end function;
@@ -59,8 +60,8 @@ begin
   return A.StartBackground<M.Msg>(
     Slot,
     async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
-      const Recording: string := await MB.Recording(Choice.Recording, Stop);
-      const Values: I.ImmutableDictionary<string, string> := MB.DecodeTags(Recording, '{}');
+      const Recording: E.IRecording := await MB.Live.Recording(Choice.Recording, Stop);
+      const Values: I.ImmutableDictionary<string, string> := Tags.Proposals(Recording, null);
       if Choice.Release = '' then
         await Post(M.Msg.Proposed(Values));
         return;
@@ -68,8 +69,8 @@ begin
 
       await Post(M.Msg.RecordingReady(Values));
       try
-        const Release: string := await MB.Release(Choice.Release, Stop);
-        await Post(M.Msg.Proposed(MB.DecodeTags(Recording, Release)));
+        const Release: E.IRelease := await MB.Live.Release(Choice.Release, Stop);
+        await Post(M.Msg.Proposed(Tags.Proposals(Recording, Release)));
       catch Error: Sys.Exception when not Stop.IsCancellationRequested do
         await Post(M.Msg.ReleaseFailed(Error.Message));
       end try;

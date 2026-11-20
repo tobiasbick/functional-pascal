@@ -51,10 +51,12 @@ begin
           await Post(
             App.Msg.TagEditor(
               Editor.Msg.RecordingReady(
-                MB.DecodeTags(
-                  '{"id":"11111111-1111-1111-1111-111111111111","title":"A corrected recording",' +
-                  '"artist-credit":[{"name":"Mara Vale","artist":{"id":"33333333-3333-3333-3333-333333333333"}}]}',
-                  '{}'
+                I.ImmutableDictionary<string, string>.Empty.Add(
+                  'recording',
+                  '11111111-1111-1111-1111-111111111111'
+                ).Add('title', 'A corrected recording').Add('artist', 'Mara Vale').Add(
+                  Fields.Custom + 'MusicBrainz Artist Id',
+                  '33333333-3333-3333-3333-333333333333'
                 )
               )
             )

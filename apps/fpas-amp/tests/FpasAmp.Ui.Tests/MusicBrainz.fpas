@@ -4,39 +4,95 @@ unit FpasAmp.Ui.Tests.MusicBrainz;
 
 uses
   FpasAmp.Ui.TagEditor.MusicBrainz as MB, FpasAmp.Library.TagEditing.Fields as Fields,
+  FpasAmp.Ui.TagEditor.MusicBrainzTags as Tags, MetaBrainz.MusicBrainz.Interfaces.Entities as E,
   FpasAmp.Ui.TagEditor.CustomTags as Custom, FpasAmp.Ui.TagEditor.Model as Editor,
   FpasAmp.Ui.TagEditor.Changes as Changes, FpasAmp.Ui.Providers.RequestPacing as Pacing,
   FpasAmp.Library.TagEditing.Files as Files, FpasAmp.Library.Metadata.Model as Tracks,
-  System as Sys, System.Net as Net, System.Net.Http as Http, System.Net.Http.Headers as Headers,
+  FpasAmp.Ui.Tests.ProviderHttp as Server,
+  System as Sys, System.Net as Net, System.Net.Http as Http, System.Net.Sockets as Sockets,
   System.Collections.Immutable as I, System.Threading as T, System.Threading.Tasks as Tasks, Xunit as X;
 
-// Checks the provider contract with detached MusicBrainz JSON fixtures.
+// Checks the provider and tag editor contract against scripted MusicBrainz HTTP responses.
 public type MusicBrainzTests = record
   // A recording can be paired with each release. Lookups prefer the selected release track.
   [X.FactAttribute]
-  public procedure SearchAndLookupKeepReleaseAndWorkCredits();
+  public async function SearchAndLookupKeepReleaseAndWorkCredits(): Tasks.Task;
   begin
     const RecordingId: string := '11111111-1111-1111-1111-111111111111';
     const ReleaseId: string := '22222222-2222-2222-2222-222222222222';
-    const Matches: array of MB.Match := MB.DecodeSearch(
-      '{"recordings":[{"id":"' + RecordingId +
-      '","title":"Search title","artist-credit":[{"name":"Mara Vale"}],' +
-      '"releases":[{"id":"' + ReleaseId + '","title":"Chosen edition","date":"2024-07-03"},' +
-      '{"id":"33333333-3333-3333-3333-333333333333","title":"First edition"}]}]}'
+    const ArtistId: string := '44444444-4444-4444-4444-444444444444';
+    const OtherId: string := '33333333-3333-3333-3333-333333333333';
+    const Replies: array of Server.Reply := [
+      new Server.Reply(
+        '503 Service Temporarily Unavailable', '{"error":"Try again"}',
+        'Retry-After: 3' + Sys.Char.ConvertFromUtf32(13) + Sys.Char.ConvertFromUtf32(10)
+      ),
+      new Server.Reply(
+        '200 OK',
+        '{"count":1,"offset":0,"created":"2026-01-01T12:00:00Z","recordings":[{"score":100,"id":"' +
+        RecordingId +
+        '","title":"Search title","artist-credit":[{"name":"Mara Vale","artist":{"id":"' +
+        ArtistId + '","name":"Mara Vale"}}],' +
+        '"releases":[{"id":"' + ReleaseId + '","title":"Chosen edition","date":"2024-07-03"},' +
+        '{"id":"' + OtherId + '","title":"First edition"}]}]}'
+      ),
+      new Server.Reply(
+        '200 OK',
+        '{"id":"' + RecordingId + '","title":"Recording title","genres":[{"id":"' + OtherId +
+        '","name":"indie folk"}],"relations":[{"type":"producer","target-type":"artist","artist":{"id":"' +
+        OtherId +
+        '","name":"Elias Hart"}},{"type":"performance","target-type":"work","work":{"id":"' +
+        OtherId + '","relations":[{"type":"composer","target-type":"artist","artist":{"id":"' +
+        ArtistId + '","name":"Mara Vale"}}]}}]}'
+      ),
+      new Server.Reply(
+        '200 OK',
+        '{"id":"' + ReleaseId + '","title":"Chosen edition","date":"2024-07-03",' +
+        '"asin":"B0000TEST0","barcode":"1234567890123","country":"US","status":"Official",' +
+        '"text-representation":{"script":"Latn"},"label-info":[{"label":{"id":"' + OtherId +
+        '","name":"Tidehouse"}}],"media":[{"position":1,"track-count":2,"tracks":[{"id":"' +
+        OtherId +
+        '","title":"Other","position":1,"recording":{"id":"' + OtherId + '"}},{"id":"' + ArtistId +
+        '","title":"Printed track title","position":2,"recording":{"id":"' + RecordingId + '"}}]}]}'
+      ),
+      new Server.Reply('404 Not Found', '{"error":"No matching recording"}')
+    ];
+    using const Listener: Sockets.TcpListener := new Sockets.TcpListener(Net.IPAddress.Loopback, 0);
+    Listener.Start();
+    const Address: Net.IPEndPoint := cast<Net.IPEndPoint>(Listener.LocalEndpoint);
+    using const Provider: MB.Service := MB.Service.Connect(
+      new Sys.Uri('http://127.0.0.1:' + Address.Port.ToString())
+    );
+    using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(20000);
+    const Serving: Tasks.Task := Server.Serve(Listener, Replies, Stop.Token);
+    const Matches: array of MB.Match := await Provider.Search(
+      'Search title · Mara Vale',
+      Stop.Token
     );
     X.Assert.Equal<int>(2, Matches.Length);
-    X.Assert.Contains('Chosen edition', Matches[0].Label);
+    X.Assert.Contains('Chosen edition · 2024-07-03 — Search title · Mara Vale', Matches[0].Label);
     X.Assert.Equal<string>(ReleaseId, Matches[0].Release);
-    const Values: I.ImmutableDictionary<string, string> := MB.DecodeTags(
-      '{"id":"' + RecordingId + '","title":"Recording title","genres":[{"name":"indie folk"}],' +
-      '"relations":[{"type":"producer","artist":{"name":"Elias Hart"}},' +
-      '{"type":"performance","work":{"relations":[{"type":"composer","artist":{"name":"Mara Vale"}}]}}]}',
-      '{"id":"' + ReleaseId + '","title":"Chosen edition","date":"2024-07-03",' +
-      '"asin":"B0000TEST0","barcode":"1234567890123","country":"US","status":"Official",' +
-      '"text-representation":{"script":"Latn"},"label-info":[{"label":{"name":"Tidehouse"}}],' +
-      '"media":[{"position":1,"track-count":2,"tracks":[{"title":"Other","position":1,"recording":{"id":"other"}},' +
-      '{"title":"Printed track title","position":2,"recording":{"id":"' + RecordingId + '"}}]}]}'
-    );
+    X.Assert.Equal<string>(Replies[0].Request, Replies[1].Request);
+    X.Assert.Contains('GET /ws/2/recording/?', Replies[1].Request);
+    X.Assert.True(Replies[1].Arrived - Replies[0].Arrived >= 3000L);
+
+    const Recording: E.IRecording := await Provider.Recording(Matches[0].Recording, Stop.Token);
+    const Release: E.IRelease := await Provider.Release(Matches[0].Release, Stop.Token);
+    const Values: I.ImmutableDictionary<string, string> := Tags.Proposals(Recording, Release);
+    try
+      discard await Provider.Search('fixture-private-search', Stop.Token);
+      raise new Sys.InvalidOperationException('Expected the provider to report the failed search.');
+    catch Error: Http.HttpRequestException do
+      X.Assert.Contains('HTTP/1.1 404 Not Found', Error.Message);
+      X.Assert.Contains('GET /ws/2/recording', Error.Message);
+      X.Assert.Contains('attempt 1/6', Error.Message);
+      X.Assert.DoesNotContain('fixture-private-search', Error.Message);
+    end try;
+
+    await Serving;
+    X.Assert.Contains('work-level-rels', Replies[2].Request);
+    X.Assert.Contains(ReleaseId, Replies[3].Request);
+    X.Assert.True(Replies[3].Arrived - Replies[2].Arrived >= 1000L);
     X.Assert.Equal<string>('Printed track title', Fields.Value(Values, 'title'));
     X.Assert.Equal<string>('Chosen edition', Fields.Value(Values, 'album'));
     X.Assert.Equal<string>('2 / 2', Fields.Value(Values, 'track'));
@@ -72,26 +128,7 @@ public type MusicBrainzTests = record
     X.Assert.Equal<int>(2, Selected.Count);
     X.Assert.Equal<string?>(ReleaseId, Selected[Existing]);
     X.Assert.Equal<string?>('B0000TEST0', Selected[Fields.Custom + 'ASIN']);
-  end procedure;
-
-  // Reports the HTTP response and Retry-After without exposing the search terms.
-  [X.FactAttribute]
-  public procedure DiagnosticsReportProviderStatus();
-  begin
-    using const Reply: Http.HttpResponseMessage := new Http.HttpResponseMessage(
-      Net.HttpStatusCode.ServiceUnavailable
-    );
-    Reply.ReasonPhrase := 'Service Temporarily Unavailable';
-    Reply.Headers.RetryAfter := new Headers.RetryConditionHeaderValue(
-      Sys.TimeSpan.FromSeconds(5.0)
-    );
-    const Details: string := MB.Diagnostics(Reply, 'recording?query=fixture-private-search', 2);
-    X.Assert.Contains('503 Service Temporarily Unavailable', Details);
-    X.Assert.Contains('GET /ws/2/recording', Details);
-    X.Assert.Contains('attempt 2/6', Details);
-    X.Assert.Contains('Retry-After: 5', Details);
-    X.Assert.DoesNotContain('fixture-private-search', Details);
-  end procedure;
+  end function;
 
   // The shared deadline remains in force after a slot owner exits.
   [X.FactAttribute]

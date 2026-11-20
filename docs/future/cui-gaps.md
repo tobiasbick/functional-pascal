@@ -62,24 +62,3 @@ publishing a report or fix.
   viewport illustration and frame, and the boundary pixels of Split view.
   The direct native widget comparison is exact. Keep the assembled examples
   open until their corresponding regions also match.
-
-## Terminal icon experiment (deferred)
-
-The [CUI icon set][icons] uses Lucide glyphs in a bundled font. FPAS currently
-passes CUI glyphs to GUI widgets. TUI buttons use explicit terminal glyphs or
-text fallbacks. Its sidebar omits icons while showing labels and badges.
-
-- [ ] Try a small semantic icon mapping to Unicode symbols and optional emoji
-  for the TUI. Share the icon identifier across hosts and supply a text or
-  ASCII fallback. Keep labels or accessible names on actionable icons. Check
-  display, cell width, truncation, clipping, redraws, and alignment in Windows
-  Terminal and at least one Linux terminal. The current
-  [grapheme width code][glyphs] handles common wide characters, flags, and emoji
-  presentation selectors with heuristics. Verify the actual terminal widths
-  before choosing emoji defaults. See
-  [Unicode emoji presentation][emoji] and [East Asian Width][width].
-
-[icons]: https://github.com/yappologistic/CUI/blob/86d9781bbc3c35c264ec46287ad89c1d86a4c4de/docs/icons.md
-[emoji]: https://www.unicode.org/reports/tr51/
-[width]: https://www.unicode.org/reports/tr11/
-[glyphs]: ../../src/Fpas.Ui.Tui/Internal/Rendering/Glyphs.fpas

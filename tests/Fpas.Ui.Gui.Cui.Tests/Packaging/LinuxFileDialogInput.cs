@@ -14,6 +14,7 @@ internal static class LinuxFileDialogInput
 
     internal static async Task Respond(string title, string? path, bool folder)
     {
+        string titlePattern = "^" + title + "$";
         string? id = null;
         Process? clipboard = null;
         try
@@ -21,18 +22,19 @@ internal static class LinuxFileDialogInput
             var deadline = Stopwatch.StartNew();
             while (deadline.Elapsed < TimeSpan.FromSeconds(10))
             {
-                var found = await Run("search", "--onlyvisible", "--name", "^" + title + "$");
+                var found = await Run("search", "--onlyvisible", "--name", titlePattern);
                 if (found.ExitCode == 0) { id = found.Output.Trim().Split('\n')[0]; break; }
                 await Task.Delay(50);
             }
             Assert.False(string.IsNullOrEmpty(id), "The native chooser did not open.");
             await Checked("windowfocus", "--sync", id!);
             await Task.Delay(150);
-            if (path is null) { await Checked("key", "Escape"); return; }
-            if (path.Length == 0) await Checked("key", "Return");
+            if (path is null) await Checked("key", "Escape");
+            else if (path.Length == 0) await Checked("key", "Return");
             else
             {
                 await Checked("key", "ctrl+l");
+                await Task.Delay(150);
                 await Checked("key", "ctrl+a");
                 // A real UTF-8 clipboard owner avoids transient Unicode keyboard remapping.
                 var start = new ProcessStartInfo("xclip") { RedirectStandardInput = true, UseShellExecute = false };
@@ -42,14 +44,14 @@ internal static class LinuxFileDialogInput
                 clipboard.StandardInput.Close();
                 await Task.Delay(100);
                 await Checked("key", "ctrl+v");
-                await Task.Delay(150);
+                await Task.Delay(200);
                 await Checked("key", "Return");
             }
             // Folder selection first navigates into the directory; confirm with the dialog's footer.
-            if (folder)
+            if (folder && path is not null)
             {
                 await Task.Delay(200);
-                var visible = await Run("search", "--onlyvisible", "--name", "^" + title + "$");
+                var visible = await Run("search", "--onlyvisible", "--name", titlePattern);
                 if (visible.ExitCode == 0)
                 {
                     var geometry = await Run("getwindowgeometry", "--shell", id!);
@@ -64,7 +66,7 @@ internal static class LinuxFileDialogInput
             deadline.Restart();
             while (deadline.Elapsed < TimeSpan.FromSeconds(10))
             {
-                var found = await Run("search", "--onlyvisible", "--name", "^" + title + "$");
+                var found = await Run("search", "--onlyvisible", "--name", titlePattern);
                 if (found.ExitCode != 0) { id = null; return; }
                 await Task.Delay(50);
             }
@@ -72,16 +74,18 @@ internal static class LinuxFileDialogInput
         }
         finally
         {
+            if (id is not null)
+            {
+                // Escape may only dismiss the location entry. Close the test chooser so the native call returns.
+                var visible = await Run("search", "--onlyvisible", "--name", titlePattern);
+                if (visible.ExitCode == 0 && visible.Output.Split('\n').Contains(id))
+                    await Run("windowkill", id);
+            }
             if (clipboard is not null)
             {
                 if (!clipboard.HasExited) clipboard.Kill(entireProcessTree: true);
                 await clipboard.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5));
                 clipboard.Dispose();
-            }
-            if (id is not null)
-            {
-                await Run("windowfocus", id);
-                await Run("key", "Escape");
             }
         }
     }

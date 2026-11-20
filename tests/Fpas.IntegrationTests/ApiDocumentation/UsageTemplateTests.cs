@@ -185,7 +185,10 @@ public sealed class UsageTemplateTests(SdkPackageFixture sdk) : IClassFixture<Sd
         Assert.Contains("Receiver: Lookup.Api<Text.StringBuilder>.Nested<int>", nested.Source);
         Assert.Contains("Receiver.Combine<string>(", nested.Source);
         Assert.Contains("declaring type (1) and method (1)", Select(member, list).Reason);
-        Assert.Contains("constraints", Select(member, "int", "int").Reason);
+        var invalidOwner = Select(member, "int", "int");
+        Assert.Equal("unavailable", invalidOwner.Status);
+        Assert.StartsWith("FP3018:", invalidOwner.Reason);
+        Assert.Contains("'class'", invalidOwner.Reason);
         Assert.Contains("constraints", Select(member, list, "string").Reason);
         Assert.Contains("FP3001", Select(member, "Unknown.Library", "int").Reason);
         Assert.Contains("Unexpected content", Select(member, list + ";", "int").Reason);

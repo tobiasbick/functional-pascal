@@ -16,8 +16,12 @@ public sealed partial class LocalDeploymentTests
         var checkout = directory.File("checkout");
         Directory.CreateDirectory(checkout);
         foreach (var name in new[] { "src", "sdk", "third-party" }) Copy(Path.Combine(repository, name), Path.Combine(checkout, name));
-        foreach (var name in new[] { "Directory.Build.props", "Directory.Packages.props", "global.json", "NuGet.Config", "dist.ps1", "dist.sh" })
-            File.Copy(Path.Combine(repository, name), Path.Combine(checkout, name));
+        foreach (var name in new[] { "Directory.Build.props", "Directory.Packages.props", "global.json", "NuGet.Config", "dist.ps1", "dist.sh", "docs/ui/gui/cui.md" })
+        {
+            var destination = Path.Combine(checkout, name);
+            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+            File.Copy(Path.Combine(repository, name), destination);
+        }
         var sdkProject = Path.Combine(checkout, "sdk", "Fpas.NET.Sdk", "Fpas.NET.Sdk.csproj");
         var version = "0.1.0-dist.g" + Guid.NewGuid().ToString("N");
         var xml = XDocument.Load(sdkProject); xml.Root!.Element("PropertyGroup")!.Element("Version")!.Value = version; xml.Save(sdkProject);

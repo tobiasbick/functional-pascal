@@ -94,7 +94,8 @@ public sealed class LspEditorTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
     {
         using var directory = sdk.CreateProject();
         var (project, path) = await Prepare(directory);
-        var source = Library.Replace("Value.Value;", "Value.;", StringComparison.Ordinal);
+        var library = Library.ReplaceLineEndings("\n");
+        var source = library.Replace("Value.Value;", "Value.;", StringComparison.Ordinal);
         await using var client = new LspProbe();
         await client.Initialize(project);
         await client.Notify("initialized", new { });
@@ -104,7 +105,7 @@ public sealed class LspEditorTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
             { textDocument = document, position = Position(source, ";\n  const Label") })).GetProperty("items");
         var field = Assert.Single(completion.EnumerateArray(), item => item.GetProperty("label").GetString() == "Value");
         Assert.DoesNotContain(completion.EnumerateArray(), item => item.GetProperty("label").GetString() == "Secret");
-        var incomplete = Library.Replace("Echo(@type)", "Echo(Value := @type", StringComparison.Ordinal);
+        var incomplete = library.Replace("Echo(@type)", "Echo(Value := @type", StringComparison.Ordinal);
         await client.FullChange(path, incomplete, 2);
         Error(await client.Request("completionItem/resolve", field), -32801);
         var signature = Result(await client.Request("textDocument/signatureHelp", new { textDocument = document, position = Position(incomplete, ";\nend function;", true) }));

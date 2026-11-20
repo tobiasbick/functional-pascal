@@ -94,7 +94,7 @@ public sealed class ImplementProtocolTests(SdkPackageFixture sdk) : IClassFixtur
     [Fact]
     public async Task Adds_an_explicit_property_and_reuses_the_existing_implementation()
     {
-        const string source = """
+        var source = """
             unit Demo.Adapters;
             uses System as Sys;
             type IBase = protocol
@@ -108,7 +108,7 @@ public sealed class ImplementProtocolTests(SdkPackageFixture sdk) : IClassFixtur
               end procedure;
             end record;
             end unit;
-            """;
+            """.ReplaceLineEndings("\n");
         using var directory = RenameFixture.Create(sdk, source);
         var analysis = await RenameFixture.Analyze(directory);
         var at = RenameFixture.Select(directory, source, "Reader = record");

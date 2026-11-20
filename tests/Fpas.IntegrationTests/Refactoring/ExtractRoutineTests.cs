@@ -14,7 +14,7 @@ public sealed class ExtractRoutineTests(SdkPackageFixture sdk) : IClassFixture<S
     [Fact]
     public async Task Cli_extracts_a_result_and_preserves_capture_mutation_and_order_at_runtime()
     {
-        const string source = """
+        var source = """
             program Demo.Main;
             uses System.Console as Console;
             var Trace: int := 0;
@@ -38,7 +38,7 @@ public sealed class ExtractRoutineTests(SdkPackageFixture sdk) : IClassFixture<S
               Console.WriteLine(Trace);
             end;
             end program;
-            """;
+            """.ReplaceLineEndings("\n");
         using var directory = RenameFixture.Create(sdk, source);
         const string project = "Game/Game.fpasproj";
         File.WriteAllText(directory.File(project), $"""
@@ -120,7 +120,7 @@ public sealed class ExtractRoutineTests(SdkPackageFixture sdk) : IClassFixture<S
     [Fact]
     public async Task Handles_complete_tail_returns_and_refuses_boundary_changes()
     {
-        const string source = """
+        var source = """
             unit Demo.Bridge;
             uses System.IO as IO;
             function Choose(Value: int): int;
@@ -150,7 +150,7 @@ public sealed class ExtractRoutineTests(SdkPackageFixture sdk) : IClassFixture<S
               return 1;
             end function;
             end unit;
-            """;
+            """.ReplaceLineEndings("\n");
         using var directory = RenameFixture.Create(sdk, source);
         var analysis = await RenameFixture.Analyze(directory);
         var tail = Assert.Single(Prepare("if Value", "return Value;").Edits.Documents).NewText;

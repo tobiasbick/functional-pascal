@@ -14,7 +14,7 @@ public sealed class InlineVariableTests(SdkPackageFixture sdk) : IClassFixture<S
     [Fact]
     public async Task Cli_inlines_one_effectful_read_in_the_next_statement()
     {
-        const string source = """
+        var source = """
             program Demo.Main;
             uses System.Console as Console;
             var Trace: int := 0;
@@ -37,7 +37,7 @@ public sealed class InlineVariableTests(SdkPackageFixture sdk) : IClassFixture<S
             end;
 
             end program;
-            """;
+            """.ReplaceLineEndings("\n");
         using var directory = RenameFixture.Create(sdk, source);
         const string project = "Game/Game.fpasproj";
         File.WriteAllText(directory.File(project), $"""

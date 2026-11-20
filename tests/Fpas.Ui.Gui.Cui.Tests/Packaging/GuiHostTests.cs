@@ -64,11 +64,13 @@ public sealed class GuiHostTests
             "-p:BuildProjectReferences=false", "-p:RestoreRecursive=false", "-warnaserror"],
             workingDirectory: directory.Path, environment: environment, timeLimit: TimeSpan.FromMinutes(2));
         Assert.True(galleryBuild.ExitCode == 0, galleryBuild.Output + galleryBuild.Error);
+        // Use the same deadline as the packaged gallery for rendering and encoding all captures.
+        var galleryDeadline = TimeSpan.FromMinutes(3);
         foreach (string renderer in new[] { "software", "opengl" })
         {
             string galleryCapture = directory.File("gallery-" + renderer + ".png");
             var gallery = await ProcessRunner.RunAsync([directory.File($"examples/ui/gui/gallery/bin/{configuration}/net10.0/GuiWidgetGallery.dll"), renderer, galleryCapture],
-                workingDirectory: directory.Path, environment: environment, timeLimit: TimeSpan.FromSeconds(90));
+                workingDirectory: directory.Path, environment: environment, timeLimit: galleryDeadline);
             Assert.True(gallery.ExitCode == 0, gallery.Output + gallery.Error);
             Assert.Equal("GUI gallery verified: " + renderer + Environment.NewLine, gallery.Output);
             PngAssertions.HasRenderedContent(galleryCapture, 1000, 760);

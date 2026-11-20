@@ -28,8 +28,6 @@ VM keeps the builds, the diagnostic programs and the raw outputs of every run.
 - [ ] X11 under XWayland: CUI rounds the 130 % desktop scale to 125 %
   (`Xft.dpi` 124). This is the existing X11 scale handling, not part of this
   change; decide separately whether to report it.
-- [ ] Windows: placement across monitors with different scales. Only one
-  monitor was available; a taskbar on the left is verified.
 - [ ] macOS: local interactive verification remains unavailable. The maintainer
   reports the window-state test passing in macOS CI in
   [PR #95](https://github.com/yappologistic/CUI/pull/95#issuecomment-6907824603).

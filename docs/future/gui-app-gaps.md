@@ -9,25 +9,6 @@ The source review covers CUI's [Building an app][apps], [Recipes][recipes],
 [Getting started][getting-started] and [Theming][theming] at the
 [vendored revision](../../third-party/cui/UPSTREAM.md).
 
-## Document commands and window close
-
-The [desktop command API](../ui/gui/host.md#file-selection) and the
-[runnable example](../../examples/ui/gui/desktop-commands/README.md) cover native
-file selection and window-close decisions.
-[CUI file dialogs][file-dialogs] · [CUI keyboard shortcuts][shortcuts]
-
-- [ ] Run the focused desktop command acceptance on Windows: native Open,
-  Save and Choose Folder, Unicode/default names/filters/cancellation, repeated
-  close decisions, worker cleanup, title/size options and idle frame deadlines.
-  Include [application shortcuts](../ui/gui/host.md#application-shortcuts) and
-  native editor find/navigation/Unicode selection and focus return on Windows.
-  Linux X11 automation does not establish Windows behavior.
-
-## Desktop publishing and window configuration
-
-- [ ] Run [Windows executable publishing acceptance](../build/publishing.md#verification)
-  including Native AOT and check the configured icon and version in Explorer.
-
 ## Appearance and accessibility
 
 Use the [font and native caption commands](../ui/gui/host.md#fonts-and-native-captions)
@@ -50,13 +31,11 @@ Font coverage and bidirectional editing are separate concerns.
 
 The [optional title bar](cui-titlebar.md) has a separate plan. The local CUI
 prototype at `00eddec` adds an experimental title bar on Win32 and X11.
-The vendored CUI revision lacks that API. Revisit it after desktop publishing.
+The vendored CUI revision lacks that API.
 
 [apps]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/apps.md
 [recipes]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/recipes.md
 [getting-started]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/getting-started.md
 [theming]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/theming.md
-[file-dialogs]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/getting-started.md#7-files-and-links
-[shortcuts]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/apps.md#your-own-shortcuts-and-input
 [app-options]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/apps.md#two-ways-to-run
 [limitations]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/faq.md#what-can-it-not-do

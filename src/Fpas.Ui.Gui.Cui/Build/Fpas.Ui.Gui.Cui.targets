@@ -31,7 +31,7 @@
     <ItemGroup Condition="'$(PublishAot)' == 'true'">
       <DirectPInvoke Include="fpas_cui" />
       <NativeLibrary Include="$(_FpasCuiAsset)" />
-      <NativeLibrary Include="user32.lib;gdi32.lib;opengl32.lib;shell32.lib;imm32.lib;dwmapi.lib;comdlg32.lib;ole32.lib"
+      <NativeLibrary Include="user32.lib;gdi32.lib;opengl32.lib;shell32.lib;imm32.lib;dwmapi.lib;comdlg32.lib;ole32.lib;uuid.lib"
                      Condition="'$(_FpasCuiPackageRid)' == 'win-x64'" />
       <NativeLibrary Include="-l:libX11.so.6" Condition="'$(_FpasCuiPackageRid)' == 'linux-x64'" />
     </ItemGroup>

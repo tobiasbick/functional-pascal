@@ -119,3 +119,53 @@ The [PNG capture bridge](../../src/Fpas.Ui.Gui.Cui/native/host/bridge.c)
 invalidates the previous software buffer address before each screenshot.
 The [gallery capture tests](../../apps/gui-doc-captures/tests/test_capture.py)
 exercise consecutive screenshots and check the cropped results.
+
+<a id="cui-046"></a>
+
+## CUI-046 — Windows Save can lose the suggested directory
+
+The vendored Windows chooser passes the whole suggestion to
+`GetSaveFileNameW` and allows the dialog to probe whether a file can be
+created. In a test directory that denies file creation it returned the
+test host's working directory instead of the proposed directory. Turning
+off the creation probe alone still returned the wrong directory.
+
+The [Windows chooser adapter](../../src/Fpas.Ui.Gui.Cui/native/widgets/files/win32_file_dialog.c)
+uses the Common Item Dialog, sets the proposed folder separately and disables
+file creation probes. [The regression](../../tests/Fpas.Ui.Gui.Cui.Tests/Windowing/CuiFileDialogTests.cs)
+accepts the default Unicode destination in a folder that denies new files.
+
+<a id="cui-047"></a>
+
+## CUI-047 — Windows Choose Folder can hang on an MTA thread
+
+The vendored Windows chooser calls `SHBrowseForFolderW` even when requesting
+STA initialization fails on a host thread that already uses MTA. The native
+folder regression reproduced the hang with the vendored chooser. Calling the
+Common Item Dialog's `Show` on the same MTA thread also hung.
+
+The [Windows chooser adapter](../../src/Fpas.Ui.Gui.Cui/native/widgets/files/win32_file_dialog.c)
+uses the Common Item Dialog in folder mode on an STA thread. On an MTA owner
+thread, the adapter joins the dialog thread while dispatching synchronous
+window messages. [The regression](../../tests/Fpas.Ui.Gui.Cui.Tests/Windowing/CuiFileDialogTests.cs)
+selects a Unicode directory, cancels the next dialog and presents another frame.
+
+<a id="cui-048"></a>
+
+## CUI-048 — Wheel regions stay at their old position after a dialog moves
+
+[Upstream issue #100](https://github.com/yappologistic/CUI/issues/100) reports
+the same routing defect with an image viewer inside a carousel.
+
+At the vendored revision `71c383f`, register a wheel region in a canvas in a
+draggable dialog. Scroll over it, drag the header 112 logical points right
+and scroll at both positions. The software renderer confirms that the
+marked region has moved. The canvas receives the wheel before the drag and
+continues receiving it at the old position after the drag. It misses the
+wheel at the visible position.
+
+`cui__paint_wheel_hit` intersects the region's layout rectangle with a clip
+in paint coordinates. Applying the node transformation before clipping
+corrects both hit positions in an isolated source copy. The baseline and
+the change produced the same results in three runs each under Windows/MSVC
+and WSL/GCC. The vendored implementation still needs the upstream fix.

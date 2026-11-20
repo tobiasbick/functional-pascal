@@ -11,13 +11,6 @@ The following findings were checked against `a5c9ef5`. CUI-033 also reproduces
 at `71c383f`. Follow the [contribution workflow](../cui-contributions.md) before
 publishing a report or fix.
 
-- [ ] Wheel regions ignore paint transforms. `cui__paint_wheel_hit`
-  (`src/cui_layout.c:1076`) registers the rectangle in layout coordinates, but
-  intersects it with a transformed clip. This affects `cui_wheel_region` and
-  nine built-in callers (dials, emoji, flame, graph, photo, terminal, viz). A
-  chart in a dragged `.draggable` dialog would take the wheel at its old place.
-  Inferred from code; reproduce it with a canvas in a moved dialog before
-  reporting. The fix belongs in `cui__paint_wheel_hit`.
 - [ ] Custom axis labels lose small values. `cui__ins_label`
   (`src/cui_instrument.c:38`, from `731a4c6`) passes 0 to the label function
   for any value below `1e-9`, so a callback that scales seconds to nanoseconds

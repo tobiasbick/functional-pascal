@@ -71,3 +71,4 @@ a path to use in the application's save operation.
   - [LinuxFileDialogInput.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Packaging/LinuxFileDialogInput.cs)
 - `tests/Fpas.Ui.Gui.Cui.Tests/Windowing/`
   - [CuiFileDialogTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Windowing/CuiFileDialogTests.cs)
+  - [WindowsFileDialogInput.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Windowing/WindowsFileDialogInput.cs)

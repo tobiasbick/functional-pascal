@@ -43,7 +43,7 @@ endif()
 if(WIN32)
     # Capture passes UTF-8 output paths to the bundled PNG writer.
     target_compile_definitions(cui PRIVATE STBIW_WINDOWS_UTF8)
-    target_link_libraries(cui PUBLIC user32 gdi32 opengl32 shell32 imm32 dwmapi comdlg32 ole32)
+    target_link_libraries(cui PUBLIC user32 gdi32 opengl32 shell32 imm32 dwmapi comdlg32 ole32 uuid)
 else()
     find_package(X11 REQUIRED)
     target_include_directories(cui PRIVATE ${X11_INCLUDE_DIR})

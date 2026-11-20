@@ -1,6 +1,7 @@
 // [Documentation](../../../docs/ui/gui/capture/README.md)
 using Fpas.Ui.Gui.Cui.Widgets.Files;
 using Fpas.Tests.Support;
+using Fpas.Ui.Gui.Cui.Tests.Windowing;
 
 namespace Fpas.Ui.Gui.Cui.Tests.Media;
 
@@ -136,7 +137,7 @@ public sealed class CuiCaptureTests
 
         string? Choose(string? path)
         {
-            Task driver = Task.Run(() => WindowsCaptureInput.RespondToDialog(handle, path));
+            Task driver = Task.Run(() => WindowsFileDialogInput.Respond(handle, path));
             string? result = window.OpenFile("Select test image", "Images", "png");
             driver.GetAwaiter().GetResult();
             return result;

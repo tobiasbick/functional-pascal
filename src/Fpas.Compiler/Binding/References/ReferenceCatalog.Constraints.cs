@@ -7,39 +7,49 @@ namespace Fpas.Compiler.Binding.References;
 
 internal sealed partial class ReferenceCatalog
 {
-    internal bool ValidMethodArguments(ImportedMethod method)
+    internal readonly record struct GenericConstraintFailure(string Parameter, TypeSymbol Argument, string Requirement);
+
+    internal bool ValidMethodArguments(ImportedMethod method) => MethodConstraintFailure(method) is null;
+
+    internal GenericConstraintFailure? MethodConstraintFailure(ImportedMethod method)
     {
-        if (method.SourceMethod is { } source) return ValidSourceArguments(source, method.MethodArguments, method.Owner);
-        if (method.MethodArguments is null) return true;
+        if (method.SourceMethod is { } source)
+            return SourceConstraintFailure(source.GenericParameters, method.MethodArguments ?? TypeList.Empty, method.Owner);
+        if (method.MethodArguments is null) return null;
         var definition = Definition(method.Owner);
         var declaration = definition.Assembly.Reader.GetMethodDefinition(method.DefinitionHandle);
-        return ConstraintsSatisfied(method.Owner, declaration.GetGenericParameters(), method.MethodArguments, method.MethodArguments, declaration);
+        return ConstraintFailure(method.Owner, declaration.GetGenericParameters(), method.MethodArguments, method.MethodArguments, declaration);
     }
 
-    private bool ConstraintsSatisfied(TypeSymbol owner, GenericParameterHandleCollection parameters, IReadOnlyList<TypeSymbol> arguments,
+    private GenericConstraintFailure? ConstraintFailure(TypeSymbol owner, GenericParameterHandleCollection parameters, IReadOnlyList<TypeSymbol> arguments,
         TypeList? methodArguments, MethodDefinition? method = null)
     {
         var definition = Definition(owner);
+        var reader = definition.Assembly.Reader;
         foreach (var handle in parameters)
         {
-            var parameter = definition.Assembly.Reader.GetGenericParameter(handle);
+            var parameter = reader.GetGenericParameter(handle);
             var argument = arguments[parameter.Index];
-            if (!Usable(argument) || argument.Kind is TypeKind.Void or TypeKind.Null) return false;
+            GenericConstraintFailure Fail(string requirement) => new(reader.GetString(parameter.Name), argument, requirement);
+            if (!Usable(argument) || argument.Kind is TypeKind.Void or TypeKind.Null) return Fail("supported type");
             var flags = parameter.Attributes;
-            if (flags.HasFlag(GenericParameterAttributes.ReferenceTypeConstraint) && !argument.IsReference ||
-                flags.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint) && (!argument.IsValue || argument.NullableValue) ||
-                NullabilityMetadata.GenericNotNull(definition, parameter, method) && argument.NeedsNullCheck) return false;
-            if (MetadataAttributes.Has(definition.Assembly.Reader, parameter.GetCustomAttributes(), "System.Runtime.CompilerServices.IsUnmanagedAttribute") &&
-                !Unmanaged(argument, [])) return false;
-            if (flags.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint) && !HasDefaultConstructor(argument)) return false;
+            if (flags.HasFlag(GenericParameterAttributes.ReferenceTypeConstraint) && !argument.IsReference) return Fail("class");
+            var unmanaged = MetadataAttributes.Has(reader, parameter.GetCustomAttributes(), "System.Runtime.CompilerServices.IsUnmanagedAttribute");
+            if (flags.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint) && (!argument.IsValue || argument.NullableValue))
+                return Fail(unmanaged ? "unmanaged" : "struct");
+            if (NullabilityMetadata.GenericNotNull(definition, parameter, method) && argument.NeedsNullCheck) return Fail("notnull");
+            if (unmanaged && !Unmanaged(argument, [])) return Fail("unmanaged");
+            if (flags.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint) && !HasDefaultConstructor(argument)) return Fail("new()");
             foreach (var constraintHandle in parameter.GetConstraints())
             {
-                var constraint = definition.Assembly.Reader.GetGenericParameterConstraint(constraintHandle);
+                var constraint = reader.GetGenericParameterConstraint(constraintHandle);
                 var required = Decode(definition, constraint.Type, owner, methodArguments);
-                if (required == TypeSymbol.Unsupported || !Derives(argument, required) || required.IsReference && !required.IsNullable && argument.NeedsNullCheck) return false;
+                if (required == TypeSymbol.Unsupported) return Fail("supported CLR constraint type");
+                if (!Derives(argument, required) || required.IsReference && !required.IsNullable && argument.NeedsNullCheck)
+                    return Fail(TypeFacts.Display(required));
             }
         }
-        return true;
+        return null;
     }
 
     // Mirrors C#'s unmanaged constraint for concrete arguments: primitives, enums,

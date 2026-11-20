@@ -21,6 +21,10 @@ outside patterns is a Boolean type test without introducing a binding.
 Coverage preserves relationships between payload columns: all four combinations
 of two bool payloads cover a case, while any missing combination leaves a gap.
 Analysis has a bounded work limit and requests simpler nested patterns if exceeded.
+When possible, `FP3025` names one missing pattern, such as
+`Pair.Make(true, false)`. The pattern covers values left out by all unguarded
+arms. Add the appropriate arm and check again for any remaining cases. Open
+selectors may require a fallback even after the listed patterns are covered.
 The selector's declared type governs coverage even when flow knows it non-null.
 If foreign code violates the static assumptions and no arm matches, execution
 throws InvalidOperationException rather than inventing a payload.

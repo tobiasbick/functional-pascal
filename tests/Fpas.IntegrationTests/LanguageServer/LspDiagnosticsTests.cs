@@ -128,6 +128,41 @@ public sealed class LspDiagnosticsTests(SdkPackageFixture sdk) : IClassFixture<S
     private static JsonElement Values(JsonElement message) => message.GetProperty("params").GetProperty("diagnostics");
 
     [Fact]
+    public async Task An_argument_mismatch_keeps_structured_modes_and_the_precise_range()
+    {
+        using var project = sdk.CreateProject();
+        await Prepare(project);
+        var path = project.File("Game/Bridge.fpas");
+        const string source = """
+            unit Demo.Bridge;
+            procedure Parse(Text: string);
+            begin
+              var Number: int := 0;
+              discard int.TryParse(Text, Number);
+            end procedure;
+            end unit;
+            """;
+        await using var client = new LspProbe();
+        await client.Initialize(project.File("Game/Game.fpasproj"));
+        await client.Notify("initialized", new { });
+        await client.Open(path, source);
+        var diagnostic = Assert.Single(Values(await client.Diagnostics(path, 1)).EnumerateArray());
+        Assert.Equal("FP3003", diagnostic.GetProperty("code").GetString());
+        var range = diagnostic.GetProperty("range");
+        var start = range.GetProperty("start");
+        var end = range.GetProperty("end");
+        Assert.Equal(4, start.GetProperty("line").GetInt32());
+        Assert.Equal(6, end.GetProperty("character").GetInt32() - start.GetProperty("character").GetInt32());
+        var argument = diagnostic.GetProperty("data").GetProperty("argument");
+        Assert.Equal(2, argument.GetProperty("index").GetInt32());
+        Assert.Equal("value", argument.GetProperty("mode").GetString());
+        var parameter = Assert.Single(argument.GetProperty("parameters").EnumerateArray());
+        Assert.Equal("out", parameter.GetProperty("mode").GetString());
+        Assert.Equal("int", parameter.GetProperty("type").GetString());
+        await client.Stop();
+    }
+
+    [Fact]
     public async Task Syntax_errors_preserve_independent_body_diagnostics_and_repairs_replace_the_current_version()
     {
         using var project = sdk.CreateProject(); await Prepare(project); var path = project.File("Game/Bridge.fpas"); var original = File.ReadAllBytes(path);
@@ -141,6 +176,40 @@ public sealed class LspDiagnosticsTests(SdkPackageFixture sdk) : IClassFixture<S
         Assert.Equal("FP3001", Values(await client.Diagnostics(path, 2)).EnumerateArray().Single().GetProperty("code").GetString());
         await client.FullChange(path, syntaxFixed.Replace("Unknown", "42", StringComparison.Ordinal), 3);
         Assert.Empty(Values(await client.Diagnostics(path, 3)).EnumerateArray()); Assert.Equal(original, File.ReadAllBytes(path)); await client.Stop();
+    }
+
+    [Fact]
+    public async Task Independent_errors_in_one_routine_are_published_and_cleared_per_edit()
+    {
+        using var project = sdk.CreateProject();
+        await Prepare(project);
+        var path = project.File("Game/Bridge.fpas");
+        const string broken = """
+            unit Demo.Bridge;
+            public function Read(): int;
+            begin
+              const Value: int := MissingFirst;
+              discard Value.ToString();
+              return MissingSecond;
+            end function;
+            end unit;
+            """;
+        await using var client = new LspProbe();
+        await client.Initialize(project.File("Game/Game.fpasproj"));
+        await client.Notify("initialized", new { });
+        await client.Open(path, broken);
+        var diagnostics = Values(await client.Diagnostics(path, 1)).EnumerateArray().ToArray();
+        Assert.Equal(2, diagnostics.Length);
+        Assert.Contains(diagnostics, item => item.GetProperty("message").GetString()!.Contains("MissingFirst", StringComparison.Ordinal));
+        Assert.Contains(diagnostics, item => item.GetProperty("message").GetString()!.Contains("MissingSecond", StringComparison.Ordinal));
+
+        var firstFixed = broken.Replace("MissingFirst", "1", StringComparison.Ordinal);
+        await client.FullChange(path, firstFixed, 2);
+        var remaining = Assert.Single(Values(await client.Diagnostics(path, 2)).EnumerateArray());
+        Assert.Contains("MissingSecond", remaining.GetProperty("message").GetString());
+        await client.FullChange(path, firstFixed.Replace("MissingSecond", "2", StringComparison.Ordinal), 3);
+        Assert.Empty(Values(await client.Diagnostics(path, 3)).EnumerateArray());
+        await client.Stop();
     }
 
     [Fact]

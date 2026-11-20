@@ -21,15 +21,19 @@ internal sealed partial class Binder
         if (local.Type.CanHaveNull && local.Type.NeedsNullCheck && !value.Type.NeedsNullCheck && value.Type != TypeSymbol.Null) nonNull.Add(local);
     }
 
-    private object? StableSymbol(ExpressionSyntax syntax) => syntax switch
+    private object? StableSymbol(ExpressionSyntax syntax)
     {
-        ParenthesizedSyntax parenthesized => StableSymbol(parenthesized.Expression),
-        NameExpressionSyntax name when HasValue(name.Name.Text) => Value(name.Name.Text, name.Position) switch
+        if (syntax is ParenthesizedSyntax parenthesized) return StableSymbol(parenthesized.Expression);
+        if (syntax is not NameExpressionSyntax name || !HasValue(name.Name.Text)) return null;
+        try
         {
-            BoundLocal local => local.Local, BoundParameter parameter => parameter.Parameter, BoundCapture capture => capture.Capture, _ => null
-        },
-        _ => null
-    };
+            return Value(name.Name.Text, name.Position) switch
+            {
+                BoundLocal local => local.Local, BoundParameter parameter => parameter.Parameter, BoundCapture capture => capture.Capture, _ => null
+            };
+        }
+        catch (UnavailableBinding) { return null; }
+    }
 
     private HashSet<object> Refine(ExpressionSyntax syntax, bool truth, HashSet<object> input)
     {

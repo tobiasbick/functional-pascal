@@ -22,10 +22,15 @@ internal static class DiagnosticProjection
                 Fpas.Compiler.DiagnosticSeverity.Warning => OmniSharp.Extensions.LanguageServer.Protocol.Models.DiagnosticSeverity.Warning,
                 _ => OmniSharp.Extensions.LanguageServer.Protocol.Models.DiagnosticSeverity.Information },
             RelatedInformation = related.Length == 0 ? null : new Container<DiagnosticRelatedInformation>(related),
-            Data = diagnostic.Explanation is null && diagnostic.Help is null && diagnostic.Expectation is null ? null : JObject.FromObject(new
+            Data = diagnostic.Explanation is null && diagnostic.Help is null && diagnostic.Expectation is null && diagnostic.Argument is null ? null : JObject.FromObject(new
             {
                 explanation = diagnostic.Explanation, help = diagnostic.Help,
-                expectation = diagnostic.Expectation is not { } expectation ? null : new { kind = expectation.Kind, expected = expectation.Expected, found = expectation.Found }
+                expectation = diagnostic.Expectation is not { } expectation ? null : new { kind = expectation.Kind, expected = expectation.Expected, found = expectation.Found },
+                argument = diagnostic.Argument is not { } argument ? null : new
+                {
+                    index = argument.Index, name = argument.Name, type = argument.Type, mode = argument.Mode,
+                    parameters = argument.Parameters.Select(parameter => new { name = parameter.Name, type = parameter.Type, mode = parameter.Mode, requirement = parameter.Requirement })
+                }
             })
         };
     }

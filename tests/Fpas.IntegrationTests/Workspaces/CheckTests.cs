@@ -55,6 +55,34 @@ public sealed class CheckTests(SdkPackageFixture sdk) : IClassFixture<SdkPackage
     }
 
     [Fact]
+    public async Task Check_reports_independent_statement_errors_in_one_routine()
+    {
+        using var project = sdk.CreateProject();
+        File.WriteAllText(project.File("Game/Bridge.fpas"), """
+            unit Demo.Bridge;
+            function Read(Value: int): int;
+            begin return Value; end function;
+            public function Answer(): int;
+            begin
+              const First: int := Read('first');
+              discard First.ToString();
+              const Second: int := Read('second');
+              return Second;
+            end function;
+            end unit;
+            """);
+        var result = await Check(project, "Game/Game.fpasproj", "--diagnostics", "json");
+        Assert.Equal(1, result.ExitCode);
+        Assert.Equal("", result.Error);
+        using var json = JsonDocument.Parse(result.Output);
+        var diagnostics = json.RootElement.GetProperty("diagnostics").EnumerateArray().ToArray();
+        Assert.Equal(2, diagnostics.Length);
+        Assert.All(diagnostics, item => Assert.Equal("FP3003", item.GetProperty("code").GetString()));
+        Assert.Equal(new[] { 6, 8 }, diagnostics.Select(item => item.GetProperty("location").GetProperty("line").GetInt32()));
+        Assert.False(File.Exists(project.File("Game/bin/Debug/net10.0/Game.dll")));
+    }
+
+    [Fact]
     public async Task Check_collects_independent_diagnostics_and_marks_failed_dependents_blocked()
     {
         using var project = sdk.CreateProject();

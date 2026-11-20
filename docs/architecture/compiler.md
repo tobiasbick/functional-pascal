@@ -54,6 +54,13 @@ retains distinct identities for shadowed declarations and for the selected
 overload. Control-flow checks run over the typed body, and the bound tree is
 shared by analysis and emission.
 
+Statement binding recovers at block boundaries. Failed declarations reserve
+their lexical names for the rest of the scope, allowing the binder to suppress
+diagnostics that depend on those declarations. Failed statements contribute
+neither nullable facts nor control-flow exits to the remainder of the block.
+Routines with binding errors are marked unavailable for the semantic snapshot
+and skipped by whole-body flow validation.
+
 ## Compiler API and output
 
 [Compilation.cs](../../src/Fpas.Compiler/Compilation.cs) defines the public API:
@@ -290,6 +297,7 @@ documentation copying. See the [build contract](../build/msbuild.md) and
   - [SyntaxStructure.cs](../../src/Fpas.Compiler/Analysis/SyntaxStructure.cs)
 - `src/Fpas.Compiler/Binding/Bodies/`
   - [Binder.Expressions.cs](../../src/Fpas.Compiler/Binding/Bodies/Binder.Expressions.cs)
+  - [Binder.Recovery.cs](../../src/Fpas.Compiler/Binding/Bodies/Binder.Recovery.cs)
   - [Binder.Statements.cs](../../src/Fpas.Compiler/Binding/Bodies/Binder.Statements.cs)
   - [Binder.cs](../../src/Fpas.Compiler/Binding/Bodies/Binder.cs)
 - `src/Fpas.Compiler/Binding/Bound/`

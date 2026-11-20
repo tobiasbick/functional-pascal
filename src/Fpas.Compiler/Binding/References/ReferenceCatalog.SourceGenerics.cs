@@ -37,26 +37,27 @@ internal sealed partial class ReferenceCatalog
         method.InterfaceOwner is not null || method.Generated is GeneratedMethodKind.EqualsTyped or GeneratedMethodKind.EqualsObject or GeneratedMethodKind.Hash or GeneratedMethodKind.Tag,
         SourceMethod: method, ParameterInfo: method.Parameters);
 
-    internal bool ValidSourceArguments(RoutineSymbol method, TypeList? arguments, TypeSymbol? owner = null)
-        => ValidSourceArguments(method.GenericParameters, arguments ?? TypeList.Empty, owner);
-
-    private bool ValidSourceArguments(IReadOnlyList<GenericParameterSymbol> parameters, IReadOnlyList<TypeSymbol> supplied, TypeSymbol? owner = null)
+    private GenericConstraintFailure? SourceConstraintFailure(IReadOnlyList<GenericParameterSymbol> parameters, IReadOnlyList<TypeSymbol> supplied, TypeSymbol? owner = null)
     {
-        if (parameters.Count != supplied.Count) return false;
+        if (parameters.Count != supplied.Count) return new("type arguments", TypeSymbol.Unsupported, $"{parameters.Count} type arguments");
         foreach (var parameter in parameters)
         {
             var argument = supplied[parameter.Index];
-            if (!Usable(argument) || argument.Kind is TypeKind.Void or TypeKind.Null) return false;
-            if (parameter.IsReference && !argument.IsReference || parameter.Primary == "struct" && (!argument.IsValue || argument.NullableValue) ||
-                parameter.IsNotNull && argument.NeedsNullCheck || parameter.HasConstructor && !HasDefaultConstructor(argument)) return false;
+            GenericConstraintFailure Fail(string requirement) => new(parameter.Name, argument, requirement);
+            if (!Usable(argument) || argument.Kind is TypeKind.Void or TypeKind.Null) return Fail("supported type");
+            if (parameter.IsReference && !argument.IsReference) return Fail("class");
+            if (parameter.Primary == "struct" && (!argument.IsValue || argument.NullableValue)) return Fail("struct");
+            if (parameter.IsNotNull && argument.NeedsNullCheck) return Fail("notnull");
+            if (parameter.HasConstructor && !HasDefaultConstructor(argument)) return Fail("new()");
             foreach (var bound in parameter.Constraints)
             {
                 var required = SubstituteSource(bound, parameters, supplied);
                 if (owner is not null) required = SubstituteSource(required, SourceParameters(owner), owner.TypeArguments);
-                if (!Derives(argument, required) || required.IsReference && !required.IsNullable && argument.NeedsNullCheck) return false;
+                if (!Derives(argument, required) || required.IsReference && !required.IsNullable && argument.NeedsNullCheck)
+                    return Fail(TypeFacts.Display(required));
             }
         }
-        return true;
+        return null;
     }
 
     private bool HasDefaultConstructor(TypeSymbol type)
@@ -76,10 +77,10 @@ internal sealed partial class ReferenceCatalog
             throw source.Error("FP3026", "T? requires a reference or struct constraint.", position);
         if (type.Element is not null) ValidateGenericType(type.Element, source, position);
         foreach (var argument in type.TypeArguments) if (argument != type) ValidateGenericType(argument, source, position);
-        if (type.Definition is not null && !ConstraintsSatisfied(type, type.Definition.Definition.GetGenericParameters(), type.TypeArguments, null))
-            throw source.Error("FP3018", "A constructed constraint type violates CLR generic constraints.", position);
-        if (type.Kind is TypeKind.Record or TypeKind.Variant or TypeKind.Interface && !ValidSourceArguments(SourceParameters(type), type.TypeArguments))
-            throw source.Error("FP3018", "A constructed source type violates generic constraints.", position);
+        if (type.Definition is not null && ConstraintFailure(type, type.Definition.Definition.GetGenericParameters(), type.TypeArguments, null) is { } clr)
+            throw ConstraintError(source, position, clr);
+        if (type.Kind is TypeKind.Record or TypeKind.Variant or TypeKind.Interface && SourceConstraintFailure(SourceParameters(type), type.TypeArguments) is { } sourceType)
+            throw ConstraintError(source, position, sourceType);
     }
 
 }

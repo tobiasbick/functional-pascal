@@ -33,7 +33,10 @@ identify an affected input/output file without claiming source coordinates.
 
 `expectation` contains a `kind`, an `expected` string array and a `found` string.
 It is supplied for parser expectations, type conversions, invalid numeric values
-and supported correction hints. Consumers must not parse the primary message to recover that data.
+and supported correction hints. A non-exhaustive `case` with a concrete example
+reports kind `pattern` and one uncovered pattern in `expected`. An example can
+include nested variant cases and identifies one gap in coverage. Consumers use
+the structured expectation to read the example.
 Each related note has a message and an optional location.
 
 Each fix contains `title`, `applicability` (`automatic` or `review`) and `edits`.
@@ -63,6 +66,26 @@ and program entry bodies do not receive a return-value hint.
 Comment and operator spellings inside strings or `//` comments remain data.
 Console I/O and `exit` hints describe the supported API or statement without
 fabricating edits that require unknown imports or values.
+
+## Call diagnostics
+
+`FP3003` reports the argument rejected by the closest signatures, or explains
+why the supplied argument layout cannot bind. An ambiguous call lists the
+equally applicable signatures. Candidate signatures include parameter names,
+types and passing modes. Generic diagnostics identify missing type information,
+the required type argument count or a violated constraint. `FP3028` describes
+the storage required for managed arguments, and `FP3022` identifies unknown,
+duplicate, and missing fields during record or variant construction.
+
+A call diagnostic with a specific type or passing-mode mismatch includes
+`argument` in CLI JSON and `data.argument` in the language server. The object
+contains `index` (one-based position in written order), `name` (the supplied
+label or null), `type` (the actual type or null), `mode` (`value`, `ref`, `out`,
+or `in`), and `parameters` (the expected alternatives). Each parameter has
+`name`, `type`, `mode` and an optional `requirement` for rules such as exact
+element types when passing arrays to mutable spans. The primary range covers
+the rejected argument. Compare the structured types and modes to the candidate
+signatures before editing the call.
 
 ## Apply automatic corrections
 
@@ -119,11 +142,14 @@ deadline failures, 2 for arguments and 130 for cancellation.
 ## Recovery and limits
 
 The parser continues at safe statement boundaries and checks other source files.
-The binder isolates routine bodies, record methods and source units, so a failed
-routine does not contaminate another routine's flow state. It abandons the rest
-of a failed local body to avoid dependent name/type errors. Invalid declarations,
+In a parsed routine or program entry, the binder resumes at the next statement
+after a binding error. Both `fpas check` and the language server report independent
+errors in the same body. A failed local declaration reserves its name in that
+scope and suppresses errors that depend on the binding. A block whose header
+cannot be bound is skipped. A failed routine's signature remains available when
+valid, and its body is unavailable to semantic queries. Invalid declarations,
 imports or lexical structure can stop their owning file or compilation phase.
-Metadata/emission checks are reached only after the preceding phase succeeds.
+Metadata and emission checks require a successful preceding phase.
 
 At most 50 errors are returned; the final `FP0003` diagnostic reports when that
 limit prevents further analysis. Any error prevents output publication and a
@@ -195,6 +221,9 @@ and the [compiler CLI](../program-structure/cli.md) for direct invocation.
 
 ## Source files
 
+- [Binder.CallDiagnostics.cs](../../../src/Fpas.Compiler/Binding/Bodies/Binder.CallDiagnostics.cs)
+- [CallDiagnosticsTests.cs](../../../tests/Fpas.Compiler.Tests/Routines/CallDiagnosticsTests.cs)
+
 <details>
 <summary>Browse 22 source files</summary>
 
@@ -220,6 +249,7 @@ and the [compiler CLI](../program-structure/cli.md) for direct invocation.
 - `tests/Fpas.Compiler.Tests/Diagnostics/`
   - [ForeignHabitDiagnosticsTests.cs](../../../tests/Fpas.Compiler.Tests/Diagnostics/ForeignHabitDiagnosticsTests.cs)
   - [RichDiagnosticsTests.cs](../../../tests/Fpas.Compiler.Tests/Diagnostics/RichDiagnosticsTests.cs)
+  - [StatementRecoveryTests.cs](../../../tests/Fpas.Compiler.Tests/Diagnostics/StatementRecoveryTests.cs)
 - `tests/Fpas.IntegrationTests/Diagnostics/`
   - [DiagnosticBuildLogger.cs](../../../tests/Fpas.IntegrationTests/Diagnostics/DiagnosticBuildLogger.cs)
   - [DiagnosticCliTests.cs](../../../tests/Fpas.IntegrationTests/Diagnostics/DiagnosticCliTests.cs)

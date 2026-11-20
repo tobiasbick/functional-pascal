@@ -12,7 +12,11 @@ internal sealed partial class Binder
     private sealed record CallShape(ImportedMethod Method, int[] Slots, bool Expanded, IReadOnlyList<TypeSymbol> Types, int Omitted);
 
     private CallShape? Shape(ImportedMethod method, IReadOnlyList<ExpressionSyntax> syntax, bool expanded, bool allowMissing = false)
+        => Shape(method, syntax, expanded, allowMissing, out _);
+
+    private CallShape? Shape(ImportedMethod method, IReadOnlyList<ExpressionSyntax> syntax, bool expanded, bool allowMissing, out ShapeRejection rejection)
     {
+        rejection = default;
         var count = method.Parameters.Count;
         var variadic = count > 0 && method.Parameter(count - 1).Mode == "params";
         if (expanded && (!variadic || method.Parameters[^1].Kind != TypeKind.Array || method.Parameters[^1].Rank != 1)) return null;
@@ -27,18 +31,22 @@ internal sealed partial class Binder
             {
                 named = true;
                 slot = Enumerable.Range(0, count).FirstOrDefault(candidate => method.Parameter(candidate).Name == argument.Name.Text, -1);
-                if (slot < 0 || expanded && slot == count - 1) return null;
+                if (slot < 0) { rejection = new("parameter_name", index); return null; }
+                if (expanded && slot == count - 1) { rejection = new("named_params", index, slot); return null; }
             }
             else
             {
-                if (named) return null;
+                if (named) { rejection = new("argument_order", index); return null; }
                 slot = expanded && next >= count - 1 ? count - 1 : next++;
             }
-            if (slot < 0 || slot >= count || !used.Add(slot) && !(expanded && slot == count - 1)) return null;
+            if (slot >= count) { rejection = new("argument_count", index); return null; }
+            if (!used.Add(slot) && !(expanded && slot == count - 1))
+            { rejection = new("duplicate_argument", index, slot); return null; }
             slots[index] = slot;
         }
         var missing = Enumerable.Range(0, count).Where(slot => !used.Contains(slot) && !(expanded && slot == count - 1)).ToArray();
-        if (!allowMissing && missing.Any(slot => method.Parameter(slot).Default is null)) return null;
+        if (!allowMissing && missing.FirstOrDefault(slot => method.Parameter(slot).Default is null, -1) is var required && required >= 0)
+        { rejection = new("missing_argument", syntax.Count, required); return null; }
         var types = slots.Select(slot => expanded && slot == count - 1 ? method.Parameters[slot].Element! : method.Parameters[slot]).ToArray();
         return new(method, slots, expanded, types, missing.Length);
     }
@@ -55,38 +63,32 @@ internal sealed partial class Binder
         var inference = only?.Method.MethodArguments is { Count: > 0 } variables ? new TypeInference(references, variables) : null;
         var values = BindInferenceValues(arguments, check, out var argumentFacts, only?.Types.Select(SpanSource).ToArray(), inference);
         var matches = new List<CallShape>();
-        var inferenceFailed = false;
-        var constraintsFailed = false;
         foreach (var shape in shapes)
         {
-            var method = shape.Method;
-            if (inferGenerics && method.MethodArguments is { Count: > 0 } generic)
-            {
-                var solver = new TypeInference(references, generic);
-                for (var index = 0; index < values.Length; index++)
-                    if (values[index] is BoundAddress address) solver.Add(shape.Types[index], address.Target.Type, InferenceBound.Exact);
-                    else if (values[index] is { } value) solver.Add(shape.Types[index], value);
-                var fixedTypes = solver.Fix();
-                if (fixedTypes is null) { inferenceFailed = true; continue; }
-                method = references.CloseMethod(method, fixedTypes);
-            }
-            if (!references.ValidMethodArguments(method)) { constraintsFailed = true; continue; }
-            var closed = Shape(method, syntax, shape.Expanded, incomplete)!;
+            var method = InferCallMethod(shape, values, inferGenerics);
+            if (method is null || !references.ValidMethodArguments(method)) continue;
+            var closed = ReferenceEquals(method, shape.Method) ? shape : Shape(method, syntax, shape.Expanded, incomplete)!;
             if (values.Where((value, index) => !AcceptsArgument(value, arguments[index], closed, index)).Any()) continue;
             matches.Add(closed);
         }
         var best = matches.Where(candidate => !matches.Any(other => BetterCall(other, candidate, values))).ToArray();
         if (source.Editor is not null) EditorSignatures(templates, syntax, position, matches, best.Length == 1 ? best[0] : null);
         if (incomplete) throw source.Error("FP3003", "Editor signature recovery stops at the incomplete call.", position);
-        if (best.Length == 0 && !constraintsFailed && !inferenceFailed) noApplicable?.Invoke();
-        if (best.Length != 1)
-            throw source.Error(best.Length == 0 && constraintsFailed ? "FP3018" : best.Length == 0 && inferenceFailed && matches.Count == 0 ? "FP3026" : "FP3003",
-                (best.Length == 0 && constraintsFailed && matches.Count == 0 ? "The type arguments violate the CLR constraints (such as unmanaged, struct, class or new()) of every candidate."
-                    : best.Length == 0 ? "No applicable overload for the supplied names, argument modes, types, and optional parameters." : "Ambiguous overloads for the supplied arguments.") +
-                " Candidates: " + string.Join("; ", templates.Select(method => method.Name + (method.MethodArguments is null ? "" : "<" + string.Join(',', method.MethodArguments) + ">") +
-                    "(" + string.Join(", ", method.Parameters.Select((type, index) => method.Parameter(index).Mode + " " + TypeFacts.Display(type))) + ")").Distinct().Take(20)), position);
+        if (best.Length > 1) throw AmbiguousCall(best, position);
+        if (best.Length == 0) throw DiagnoseCall(templates, shapes, syntax, arguments, values, inferGenerics, position, noApplicable);
         var selected = best[0];
         return (selected, BindDeferredArguments(arguments, values, selected.Types.Select(SpanSource).ToArray(), check, argumentFacts));
+    }
+
+    private ImportedMethod? InferCallMethod(CallShape shape, IReadOnlyList<BoundExpression?> values, bool inferGenerics)
+    {
+        var method = shape.Method;
+        if (!inferGenerics || method.MethodArguments is not { Count: > 0 } generic) return method;
+        var solver = new TypeInference(references, generic);
+        for (var index = 0; index < values.Count; index++)
+            if (values[index] is BoundAddress address) solver.Add(shape.Types[index], address.Target.Type, InferenceBound.Exact);
+            else if (values[index] is { } value) solver.Add(shape.Types[index], value);
+        return solver.Fix() is { } types ? references.CloseMethod(method, types) : null;
     }
 
     private BoundExpression BindInvocation(IReadOnlyList<ImportedMethod> templates, IReadOnlyList<ExpressionSyntax> syntax,
@@ -138,7 +140,7 @@ internal sealed partial class Binder
 
     private bool AcceptsArgument(BoundExpression? value, ExpressionSyntax syntax, CallShape shape, int index)
     {
-        var mode = shape.Expanded && shape.Slots[index] == shape.Method.Parameters.Count - 1 ? "" : shape.Method.Parameter(shape.Slots[index]).Mode;
+        var mode = CallArgumentMode(shape, index);
         if (mode is "ref" or "out" or "in")
             return value is BoundAddress address && address.Mode == mode && address.Target.Type == shape.Types[index];
         var target = shape.Types[index];
@@ -146,6 +148,9 @@ internal sealed partial class Binder
             return value is not BoundAddress && (value is null ? AcceptsDeferred(syntax, SpanSource(target)) : AcceptsSpan(value, target));
         return value is not BoundAddress && (value is null ? AcceptsDeferred(syntax, target) : Accepts(value, target));
     }
+
+    private static string CallArgumentMode(CallShape shape, int index)
+        => shape.Expanded && shape.Slots[index] == shape.Method.Parameters.Count - 1 ? "" : shape.Method.Parameter(shape.Slots[index]).Mode;
 
     // An array argument stands in for Span<T> or ReadOnlySpan<T>. Span<T> requires the exact
     // element type, because array covariance would fail when the span is created.
@@ -219,13 +224,13 @@ internal sealed partial class Binder
             NameExpressionSyntax name => Value(name.Name.Text, name.Position),
             MemberSyntax member => BindMember(member, writing: syntax.Mode != "in", check: check),
             IndexSyntax index => BindIndex(index, check, writing: syntax.Mode != "in"),
-            _ => throw source.Error("FP3028", "A managed argument requires addressable storage.", syntax.Position)
+            _ => throw AddressError(syntax, addressable: false)
         };
         value = value switch { BoundLocal local => new BoundLocal(local.Local), BoundParameter parameter => new BoundParameter(parameter.Parameter), BoundCapture capture => new BoundCapture(capture.Capture), _ => value };
         catalog.Analysis?.Expression(source, syntax.Value, value, syntax.Mode == "out" ? "write" : syntax.Mode == "ref" ? "read_write" : "read");
         var addressable = value is BoundLocal or BoundParameter or BoundCapture or BoundArrayIndex or BoundField;
         if (!addressable || syntax.Mode != "in" && !Writable(value))
-            throw source.Error("FP3028", "ref/out arguments require writable storage; ordinary properties are not addressable.", syntax.Position);
+            throw AddressError(syntax, addressable);
         return new BoundAddress(value, syntax.Mode);
     }
 

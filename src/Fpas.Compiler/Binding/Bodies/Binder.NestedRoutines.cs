@@ -25,7 +25,11 @@ internal sealed partial class Binder
     {
         foreach (var scope in scopes)
         {
-            if (scope.ContainsKey(name)) return null;
+            if (scope.TryGetValue(name, out var local))
+            {
+                if (local.Unavailable) throw new UnavailableBinding();
+                return null;
+            }
             if (ScopeRoutines(scope) is { } nested && nested.Methods.TryGetValue(name, out var methods)) return (nested, methods);
         }
         return parameters.ContainsKey(name) ? null : parent?.FindNested(name);
@@ -38,21 +42,31 @@ internal sealed partial class Binder
         var environment = new ClosureSymbol(catalog.ClosureCount++, recordContext, TypeParameters.Values.ToArray());
         closures.Add(environment);
         var scope = new NestedScope(environment); nestedScopes.Add(scopes.Peek(), scope);
+        List<Token>? failed = null;
         foreach (var declaration in declarations)
         {
             var syntax = declaration.Routine;
-            if (imports.ContainsKey(syntax.Name.Text) || scopes.Peek().ContainsKey(syntax.Name.Text) ||
-                scopes.Count == 1 && parameters.ContainsKey(syntax.Name.Text) ||
-                currentRoutine.IsEntryPoint && syntax.Name.Text == "args" || recordContext is not null && syntax.Name.Text == "self")
-                throw source.Error("FP3004", "A nested routine name conflicts with a binding or reserved name.", syntax.Name.Position);
-            var method = catalog.DeclareRoutine(unit, syntax, references, -1 - environment.Id, enclosing: environment.GenericParameters) with { IsInstance = true };
-            if (recordContext is not null && method.Parameters.Any(parameter => parameter.Name == "self"))
-                throw source.Error("FP3004", "Nested parameters cannot shadow the enclosing record's self.", syntax.Name.Position);
-            SourceCatalog.AddOverload(scope.Methods, method, source, syntax.Name.Position);
-            var binder = Child(environment);
-            binder.BindDefaults(method, syntax.Parameters);
+            if (Attempt(() => DeclareNestedRoutine(scope, syntax)) is null)
+                (failed ??= []).Add(syntax.Name);
         }
+        if (failed is not null)
+            foreach (var name in failed) ReserveFailedBinding(name);
         return scope;
+    }
+
+    private RoutineSymbol DeclareNestedRoutine(NestedScope scope, RoutineSyntax syntax)
+    {
+        if (imports.ContainsKey(syntax.Name.Text) || scopes.Peek().ContainsKey(syntax.Name.Text) ||
+            scopes.Count == 1 && parameters.ContainsKey(syntax.Name.Text) ||
+            currentRoutine.IsEntryPoint && syntax.Name.Text == "args" || recordContext is not null && syntax.Name.Text == "self")
+            throw source.Error("FP3004", "A nested routine name conflicts with a binding or reserved name.", syntax.Name.Position);
+        var environment = scope.Environment;
+        var method = catalog.DeclareRoutine(unit, syntax, references, -1 - environment.Id, enclosing: environment.GenericParameters) with { IsInstance = true };
+        if (recordContext is not null && method.Parameters.Any(parameter => parameter.Name == "self"))
+            throw source.Error("FP3004", "Nested parameters cannot shadow the enclosing record's self.", syntax.Name.Position);
+        Child(environment).BindDefaults(method, syntax.Parameters);
+        SourceCatalog.AddOverload(scope.Methods, method, source, syntax.Name.Position);
+        return method;
     }
 
     private Binder Child(ClosureSymbol environment)
@@ -70,9 +84,12 @@ internal sealed partial class Binder
             foreach (var method in scope.Methods.Values.SelectMany(group => group))
             {
                 var syntax = method.Declaration!;
-                var body = Child(scope.Environment).BindRoutine(method, syntax.Statements, syntax.Name.Position, syntax.Contracts);
-                scope.Environment.NestedBodies.Add(body);
-                scope.Environment.Body ??= body;
+                var binder = Child(scope.Environment);
+                if (Attempt(() => binder.BindRoutine(method, syntax.Statements, syntax.Name.Position, syntax.Contracts)) is { } body)
+                {
+                    scope.Environment.NestedBodies.Add(body);
+                    scope.Environment.Body ??= body;
+                }
             }
         }
         finally { SetFacts(facts); }

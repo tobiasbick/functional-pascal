@@ -1,4 +1,6 @@
 // [Documentation](../../docs/pascal/tools/diagnostics.md)
+using System.Text.Json.Serialization;
+
 namespace Fpas.Compiler;
 
 /// <summary>One-based UTF-16 coordinates with an exclusive end and zero-based offset.</summary>
@@ -26,6 +28,38 @@ public sealed record DiagnosticExpectation(string Kind, IReadOnlyList<string> Ex
     /// <summary>Returns a hash code consistent with value equality.</summary>
     /// <returns>The hash code.</returns>
     public override int GetHashCode() => HashCode.Combine(Kind, Found, string.Join('\0', Expected));
+}
+
+/// <summary>A parameter offered by one of the closest signatures.</summary>
+/// <param name="Name">The parameter name, when available.</param>
+/// <param name="Type">The required argument type.</param>
+/// <param name="Mode">The passing mode: value, ref, out, or in.</param>
+/// <param name="Requirement">An additional rule for the argument, when applicable.</param>
+public sealed record DiagnosticParameter(string? Name, string Type, string Mode, string? Requirement = null);
+
+/// <summary>The argument rejected by the closest callable signatures.</summary>
+/// <param name="Index">The one-based position in written argument order.</param>
+/// <param name="Name">The explicit argument label, if supplied.</param>
+/// <param name="Type">The actual type, when known.</param>
+/// <param name="Mode">The supplied passing mode: value, ref, out, or in.</param>
+/// <param name="Parameters">The parameters those signatures map to this argument.</param>
+public sealed record DiagnosticArgument(int Index, string? Name, string? Type, string Mode, IReadOnlyList<DiagnosticParameter> Parameters)
+{
+    /// <summary>Compares all members, including parameter alternatives by sequence.</summary>
+    /// <param name="other">The argument diagnostic to compare with.</param>
+    /// <returns>Whether both argument diagnostics are equal.</returns>
+    public bool Equals(DiagnosticArgument? other) => other is not null && Index == other.Index && Name == other.Name &&
+        Type == other.Type && Mode == other.Mode && Parameters.SequenceEqual(other.Parameters);
+
+    /// <summary>Returns a hash code consistent with value equality.</summary>
+    /// <returns>The hash code.</returns>
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        hash.Add(Index); hash.Add(Name); hash.Add(Type); hash.Add(Mode);
+        foreach (var parameter in Parameters) hash.Add(parameter);
+        return hash.ToHashCode();
+    }
 }
 
 /// <summary>A related message attached to a diagnostic.</summary>
@@ -86,6 +120,9 @@ public record CompilerDiagnostic(string Code, string Message, SourceLocation? Lo
     public string? HelpLink { get; init; }
     /// <summary>What was expected and found, when the diagnostic describes a mismatch.</summary>
     public DiagnosticExpectation? Expectation { get; init; }
+    /// <summary>Structured details for an argument mismatch, when the compiler can identify the argument.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public DiagnosticArgument? Argument { get; init; }
     /// <summary>Related notes, such as the location of an earlier conflicting declaration.</summary>
     public IReadOnlyList<DiagnosticNote> Related { get; init; } = [];
     /// <summary>Checked fixes that resolve the diagnostic.</summary>
@@ -96,7 +133,7 @@ public record CompilerDiagnostic(string Code, string Message, SourceLocation? Lo
     /// <returns>Whether both diagnostics are equal.</returns>
     public virtual bool Equals(CompilerDiagnostic? other) => other is not null && EqualityContract == other.EqualityContract &&
         Code == other.Code && Message == other.Message && Location == other.Location && Severity == other.Severity && InputPath == other.InputPath &&
-        Explanation == other.Explanation && Help == other.Help && HelpLink == other.HelpLink && Expectation == other.Expectation &&
+        Explanation == other.Explanation && Help == other.Help && HelpLink == other.HelpLink && Expectation == other.Expectation && Argument == other.Argument &&
         Related.SequenceEqual(other.Related) && Fixes.SequenceEqual(other.Fixes);
 
     /// <summary>Returns a hash code consistent with value equality.</summary>
@@ -104,7 +141,7 @@ public record CompilerDiagnostic(string Code, string Message, SourceLocation? Lo
     public override int GetHashCode()
     {
         var hash = new HashCode(); hash.Add(EqualityContract); hash.Add(Code); hash.Add(Message); hash.Add(Location); hash.Add(Severity);
-        hash.Add(InputPath); hash.Add(Explanation); hash.Add(Help); hash.Add(HelpLink); hash.Add(Expectation);
+        hash.Add(InputPath); hash.Add(Explanation); hash.Add(Help); hash.Add(HelpLink); hash.Add(Expectation); hash.Add(Argument);
         foreach (var note in Related) hash.Add(note);
         foreach (var fix in Fixes) hash.Add(fix);
         return hash.ToHashCode();

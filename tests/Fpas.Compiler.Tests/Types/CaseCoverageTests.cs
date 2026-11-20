@@ -30,7 +30,66 @@ public sealed class CaseCoverageTests
             var result = TestCompilation.Compile("program TruthTable; type Pair = variant Make(Left: bool; Right: bool); end variant; function Read(P: Pair): int; begin case P of " +
                 string.Join(' ', arms) + " end case; end function; begin end; end program;");
             Assert.True(result.Success == (!unreachable && covered == 15), $"Selection {selection}: {string.Join(';', result.Diagnostics)}");
+            if (unreachable || covered == 15) continue;
+            var expectation = Assert.IsType<DiagnosticExpectation>(Assert.Single(result.Diagnostics).Expectation);
+            var witness = Assert.Single(expectation.Expected);
+            var matches = patterns.Single(pattern => pattern.Text == witness).Values;
+            Assert.NotEqual(0, matches);
+            Assert.Equal(0, covered & matches);
         }
+    }
+
+    [Theory]
+    [InlineData("Choice", "when Choice.A: return 0;", "Choice.B(_, _)")]
+    [InlineData("Choice", "when Choice.A: return 0; when Choice.B(_, _) if false: return 1;", "Choice.B(_, _)")]
+    [InlineData("Choice", "when Choice.A: return 0; when Choice.B(Bit.Off, _): return 1; when Choice.B(Bit.On, true): return 2;", "Choice.B(Bit.On, false)")]
+    [InlineData("Choice?", "when Choice.A: return 0; when Choice.B(_, _): return 1;", "null")]
+    [InlineData("Flag", "when 1..2: return 0;", "cast<byte>(3)")]
+    [InlineData("bool", "when true: return 0;", "false")]
+    public void Missing_patterns_are_disjoint_from_covered_arms(string selector, string arms, string expected)
+    {
+        var prefix = """
+            program Choices;
+            type Bit = variant Off; On; end variant;
+            type Choice = variant A; B(Value: Bit; Valid: bool); end variant;
+            type Flag = byte range 1..3;
+            """;
+        var body = $" function Read(Value: {selector}): int; begin case Value of {arms}";
+        const string suffix = " end case; end function; begin end; end program;";
+        var diagnostic = Assert.Single(TestCompilation.Compile(prefix + body + suffix).Diagnostics);
+        Assert.Equal("FP3025", diagnostic.Code);
+        Assert.Contains($"Missing pattern: {expected}.", diagnostic.Message);
+        var expectation = Assert.IsType<DiagnosticExpectation>(diagnostic.Expectation);
+        Assert.Equal("pattern", expectation.Kind);
+        Assert.Equal(expected, Assert.Single(expectation.Expected));
+        var repaired = TestCompilation.Compile(prefix + body + $" when {expected}: return 3;" + suffix);
+        Assert.True(repaired.Success, string.Join(";", repaired.Diagnostics));
+    }
+
+    [Fact]
+    public void A_missing_case_is_found_after_an_open_payload_and_uses_escaped_names()
+    {
+        var result = TestCompilation.Compile("""
+            program Example;
+            type @record = variant Text(Value: string); @end; end variant;
+            function Read(Value: @record): int;
+            begin
+              return case Value of when @record.Text('first'): 0; end case;
+            end function;
+            begin end;
+            end program;
+            """);
+        var expectation = Assert.IsType<DiagnosticExpectation>(Assert.Single(result.Diagnostics).Expectation);
+        Assert.Equal("@record.@end", Assert.Single(expectation.Expected));
+    }
+
+    [Fact]
+    public void An_open_selector_reports_the_need_for_a_fallback_without_a_guessed_pattern()
+    {
+        var result = TestCompilation.Compile("program Example; begin discard case 'a' of when 'a': 1; end case; end; end program;");
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("FP3025", diagnostic.Code);
+        Assert.Null(diagnostic.Expectation);
     }
 
     [Theory]

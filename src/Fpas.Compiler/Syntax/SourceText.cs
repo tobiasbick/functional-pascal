@@ -60,7 +60,7 @@ internal sealed class SourceText(string path, string text, CancellationToken can
 
     internal CompilationFailure Error(string code, string message, int position, int length = 1,
         string? help = null, DiagnosticExpectation? expectation = null, IReadOnlyList<DiagnosticNote>? related = null,
-        IReadOnlyList<DiagnosticFix>? fixes = null)
+        IReadOnlyList<DiagnosticFix>? fixes = null, DiagnosticArgument? argument = null)
         => new(DiagnosticHints.Enrich(new(code, message, Location(position, length))
-            { Help = help, Expectation = expectation, Related = related ?? [], Fixes = fixes ?? [] }, this, position));
+            { Help = help, Expectation = expectation, Argument = argument, Related = related ?? [], Fixes = fixes ?? [] }, this, position));
 }

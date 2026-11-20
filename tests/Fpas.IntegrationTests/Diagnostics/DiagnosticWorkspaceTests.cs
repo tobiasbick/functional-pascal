@@ -8,6 +8,69 @@ namespace Fpas.IntegrationTests.Diagnostics;
 public sealed class DiagnosticWorkspaceTests(SdkPackageFixture sdk) : IClassFixture<SdkPackageFixture>
 {
     [Fact]
+    public async Task Check_json_projects_the_argument_type_and_passing_mode()
+    {
+        using var project = sdk.CreateProject();
+        File.WriteAllText(project.File("Game/Bridge.fpas"), """
+            unit Demo.Bridge;
+            procedure Parse(Text: string);
+            begin
+              var Number: int := 0;
+              discard int.TryParse(Text, Number);
+            end procedure;
+            end unit;
+            """);
+        var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "check",
+            project.File("Game/Game.fpasproj"), "--diagnostics", "json"], timeLimit: TimeSpan.FromMinutes(2));
+        Assert.Equal(1, result.ExitCode);
+        Assert.Empty(result.Error);
+        using var json = JsonDocument.Parse(result.Output);
+        var diagnostic = Assert.Single(json.RootElement.GetProperty("diagnostics").EnumerateArray());
+        Assert.Equal("FP3003", diagnostic.GetProperty("code").GetString());
+        Assert.Equal(6, diagnostic.GetProperty("location").GetProperty("length").GetInt32());
+        var argument = diagnostic.GetProperty("argument");
+        Assert.Equal(2, argument.GetProperty("index").GetInt32());
+        Assert.Equal("int", argument.GetProperty("type").GetString());
+        Assert.Equal("value", argument.GetProperty("mode").GetString());
+        var parameter = Assert.Single(argument.GetProperty("parameters").EnumerateArray());
+        Assert.Equal("result", parameter.GetProperty("name").GetString());
+        Assert.Equal("int", parameter.GetProperty("type").GetString());
+        Assert.Equal("out", parameter.GetProperty("mode").GetString());
+    }
+
+    [Fact]
+    public async Task Check_json_includes_a_missing_nested_variant_pattern()
+    {
+        using var project = sdk.CreateProject();
+        var source = project.File("Game/Bridge.fpas");
+        const string text = """
+            unit Demo.Bridge;
+            type Light = variant Off; On; end variant;
+            type Switch = variant Disabled; Active(State: Light); end variant;
+            function Read(Value: Switch): int;
+            begin
+              return case Value of
+                when Switch.Disabled: 0;
+                when Switch.Active(Light.Off): 1;
+              end case;
+            end function;
+            end unit;
+            """;
+        File.WriteAllText(source, text);
+        var check = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "check",
+            project.File("Game/Game.fpasproj"), "--diagnostics", "json"], timeLimit: TimeSpan.FromMinutes(3));
+        Assert.Equal(1, check.ExitCode);
+        Assert.Empty(check.Error);
+        using var json = JsonDocument.Parse(check.Output);
+        var diagnostic = Assert.Single(json.RootElement.GetProperty("diagnostics").EnumerateArray());
+        Assert.Equal("FP3025", diagnostic.GetProperty("code").GetString());
+        Assert.Contains("Missing pattern: Switch.Active(Light.On).", diagnostic.GetProperty("message").GetString());
+        var expectation = diagnostic.GetProperty("expectation");
+        Assert.Equal("pattern", expectation.GetProperty("kind").GetString());
+        Assert.Equal("Switch.Active(Light.On)", Assert.Single(expectation.GetProperty("expected").EnumerateArray()).GetString());
+    }
+
+    [Fact]
     public async Task Analysis_commands_preserve_the_same_compiler_diagnostic_payload()
     {
         using var project = sdk.CreateProject();

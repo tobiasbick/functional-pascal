@@ -86,10 +86,13 @@ internal sealed partial class Binder
         if (!invoke.Flexible && arguments.All(argument => argument is not (NamedArgumentSyntax or ArgumentModeSyntax)))
         {
             if (source.Editor is not null) EditorSignatures([invoke], arguments, position);
-            if (arguments.Count != invoke.Parameters.Count) throw source.Error("FP3003", "The delegate argument count does not match.", position);
+            if (arguments.Count != invoke.Parameters.Count)
+                throw source.Error("FP3003", $"This delegate expects {invoke.Parameters.Count} arguments. Received {arguments.Count}.", position,
+                    expectation: new("argument_count", [invoke.Parameters.Count.ToString(System.Globalization.CultureInfo.InvariantCulture)],
+                        arguments.Count.ToString(System.Globalization.CultureInfo.InvariantCulture)));
             var values = arguments.Select((argument, index) => BindExpression(argument, check, invoke.Parameters[index])).ToArray();
             ForgetCapturedFacts();
-            return new BoundCall(invoke, ConvertArguments(values, invoke.Parameters, position), target);
+            return new BoundCall(invoke, values.Select((value, index) => Convert(value, invoke.Parameters[index], arguments[index].Position)).ToArray(), target);
         }
         return BindInvocation([invoke], arguments, target, check, position);
     }
@@ -118,12 +121,21 @@ internal sealed partial class Binder
         var signature = expected is null ? null : references.DelegateSignature(expected);
         var methods = references.Methods(owner, name, receiver is null, arguments, recordContext);
         if (methods.Count == 0) references.DiagnoseUnsupportedMethod(owner, name, receiver is null, source, position);
-        var candidates = methods.Where(method =>
-            references.ValidMethodArguments(method) && (signature is null || references.DelegateCompatible(expected!, method.DelegateParameters, method.Result, method.ParameterInfo))).ToArray();
+        var candidates = methods.Where(method => references.ValidMethodArguments(method) &&
+            (signature is null || references.DelegateCompatible(expected!, method.DelegateParameters, method.Result, method.ParameterInfo))).ToArray();
         if (candidates.Length > 1 && signature is null) return new BoundMethodGroup(candidates, receiver);
         var method = signature is not null ? references.DelegateMethod(expected!, candidates) : candidates.SingleOrDefault();
-        if (method is null) throw source.Error("FP3019", $"Method group '{owner}.{name}' requires a unique supported delegate signature.", position);
-        if (!references.ValidMethodArguments(method)) throw source.Error("FP3018", "Method type arguments violate CLR constraints.", position);
+        if (method is null)
+        {
+            var constraint = methods.Count == 1 ? references.MethodConstraintFailure(methods[0]) : null;
+            if (constraint is { } failure)
+                throw source.Error("FP3018", ConstraintDescription(failure), position,
+                    expectation: new("generic_constraint", [failure.Requirement], TypeFacts.Display(failure.Argument)));
+            var signatures = Signatures(candidates.Length == 0 ? methods : candidates);
+            throw source.Error("FP3019", $"Method group '{owner}.{name}' requires a unique supported delegate signature.", position,
+                expectation: new("delegate_signature", signatures, expected is null ? "no expected delegate type" : TypeFacts.Display(expected)),
+                related: CandidateNotes(signatures));
+        }
         var natural = expected is null || signature is null ? references.Callable(method.DelegateParameters, method.Result, source, position) : expected.NonNullable;
         return new BoundMethodDelegate(method, receiver, natural);
     }

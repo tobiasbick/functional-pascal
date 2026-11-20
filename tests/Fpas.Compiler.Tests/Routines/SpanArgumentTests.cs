@@ -58,7 +58,7 @@ public sealed class SpanArgumentTests
     [InlineData("discard Sys.MemoryExtensions.AsSpan<int>(new int[2]);", "FP3005", "byref-like type")]
     [InlineData("const S: Sys.Span<int> := new Sys.Span<int>();", "FP3005", "Pass an array")]
     [InlineData("const F: function(array of byte): uint := Binary.BinaryPrimitives.ReadUInt32BigEndian;", "FP3005", "byref-like type")]
-    [InlineData("const Items: array of string := ['a']; Sys.MemoryExtensions.Reverse<object>(Items);", "FP3003", "No applicable overload")]
+    [InlineData("const Items: array of string := ['a']; Sys.MemoryExtensions.Reverse<object>(Items);", "FP3003", "exact array element type")]
     public void Spans_stay_limited_to_call_arguments(string body, string code, string message)
     {
         var result = TestCompilation.CompileAgainstFramework(

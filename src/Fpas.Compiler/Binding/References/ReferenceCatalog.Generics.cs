@@ -14,10 +14,14 @@ internal sealed partial class ReferenceCatalog
         if (parameters.Count != arguments.Count || arguments.Any(argument => !Usable(argument) || argument.Kind is TypeKind.Void or TypeKind.Null))
             throw source.Error("FP3018", $"Invalid type arguments for '{definition.FullName}'.", position);
         var result = Symbol(definition) with { Arguments = new(arguments) };
-        if (validate && !ConstraintsSatisfied(result, parameters, arguments, null))
-            throw source.Error("FP3018", $"Type arguments violate constraints on '{definition.FullName}'.", position);
+        if (validate && ConstraintFailure(result, parameters, arguments, null) is { } failure)
+            throw ConstraintError(source, position, failure);
         return Canonical(result);
     }
+
+    private static CompilationFailure ConstraintError(SourceText source, int position, GenericConstraintFailure failure)
+        => source.Error("FP3018", $"Type argument '{failure.Argument}' for '{failure.Parameter}' must satisfy '{failure.Requirement}'.", position,
+            expectation: new("generic_constraint", [failure.Requirement], TypeFacts.Display(failure.Argument)));
 
     private static TypeSymbol Canonical(TypeSymbol type)
         => type.Definition?.FullName == "System.Nullable`1" && type.Arguments is { Count: 1 } args && args[0].IsValue && !args[0].IsNullable

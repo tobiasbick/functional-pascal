@@ -18,11 +18,11 @@ internal sealed partial class Binder
         var disposable = references.Symbol(references.Required(syntax.IsAsync ? "System.IAsyncDisposable" : "System.IDisposable"));
         if (!references.Derives(type, disposable))
             throw source.Error("FP3016", $"A using resource must implement {(syntax.IsAsync ? "System.IAsyncDisposable" : "System.IDisposable")}.", syntax.Position);
+        var dispose = references.FindMethod(disposable, syntax.IsAsync ? "DisposeAsync" : "Dispose", [], syntax.Position, source, isStatic: false);
         var local = Allocate(syntax.Binding.Name.Text, type);
         local.Documentation = syntax.Binding.Documentation;
         Declare(local, syntax.Position);
         UpdateFact(local, value);
-        var dispose = references.FindMethod(disposable, syntax.IsAsync ? "DisposeAsync" : "Dispose", [], syntax.Position, source, isStatic: false);
         var body = BindBlock(remainder, newScope: false);
         ForgetCapturedFacts();
         return new(local, initializer, dispose, body, IsAsync: syntax.IsAsync);

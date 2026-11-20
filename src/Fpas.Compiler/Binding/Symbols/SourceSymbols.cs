@@ -10,6 +10,7 @@ internal sealed class LocalSymbol(string name, TypeSymbol type, int slot, bool m
     internal TypeSymbol Type { get; } = type;
     internal int Slot { get; } = slot;
     internal bool Mutable { get; } = mutable;
+    internal bool Unavailable { get; init; }
     internal bool Captured { get; set; }
     internal Syntax.DocumentationComment? Documentation { get; set; }
 }

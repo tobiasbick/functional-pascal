@@ -197,6 +197,7 @@ public static class EditorAnalysis
 internal sealed class EditorProbe(string context, string prefix, int position)
 {
     private readonly Dictionary<string, EditorCandidate> candidates = new(StringComparer.Ordinal);
+    private HashSet<string>? hidden;
     internal string Context { get; } = context;
     internal int Position { get; set; } = position;
     internal int Slot { get; init; }
@@ -209,6 +210,7 @@ internal sealed class EditorProbe(string context, string prefix, int position)
     internal int? ActiveSignature { get; set; }
     internal bool Matches(Token name) => name.Position == Position && name.Text == EditorAnalysis.Marker;
     internal bool Accepts(string name) => name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
+    internal void Hide(string name) => (hidden ??= new(StringComparer.Ordinal)).Add(name);
 
     internal void ProjectDeclarations(EditorSourceProjection projection)
     {
@@ -220,7 +222,7 @@ internal sealed class EditorProbe(string context, string prefix, int position)
     internal void Add(EditorCandidate candidate)
     {
         Reached = true;
-        if (!Accepts(candidate.Name) || candidates.ContainsKey(candidate.Name)) return;
+        if (!Accepts(candidate.Name) || hidden?.Contains(candidate.Name) == true || candidates.ContainsKey(candidate.Name)) return;
         if (candidates.Count >= 200) { Incomplete = true; return; }
         candidates.Add(candidate.Name, candidate);
     }

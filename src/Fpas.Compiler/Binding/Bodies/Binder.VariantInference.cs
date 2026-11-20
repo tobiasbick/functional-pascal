@@ -42,10 +42,21 @@ internal sealed partial class Binder
         {
             var slot = positional++; var expression = argument;
             if (argument is NamedArgumentSyntax supplied)
-            { named = true; slot = names.ToList().IndexOf(supplied.Name.Text); expression = supplied.Value; }
-            else if (named) throw source.Error("FP3022", "Positional arguments must precede named data-construction arguments.", argument.Position);
-            if (slot < 0 || slot >= names.Count || !slots.Add(slot))
-                throw source.Error("FP3022", "Unknown, duplicate, or excess data-construction argument.", argument.Position);
+            {
+                named = true; slot = names.ToList().IndexOf(supplied.Name.Text); expression = supplied.Value;
+                if (slot < 0) throw source.Error("FP3022", $"Unknown field '{supplied.Name.Text}'.", supplied.Name.Position, supplied.Name.Length,
+                    expectation: new("field_name", names, supplied.Name.Text));
+            }
+            else if (named) throw source.Error("FP3022", "Positional arguments must precede named data-construction arguments.", argument.SpanStart,
+                ExpressionLength(argument), expectation: new("argument_order", ["named argument"], "positional argument"));
+            if (slot >= names.Count)
+                throw source.Error("FP3022", $"This construction accepts at most {names.Count} field arguments.", argument.SpanStart, ExpressionLength(argument),
+                    expectation: new("argument_count", [names.Count.ToString(System.Globalization.CultureInfo.InvariantCulture)],
+                        arguments.Count.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+            if (!slots.Add(slot))
+                throw source.Error("FP3022", $"Field '{names[slot]}' was already supplied.", argument.SpanStart,
+                    (argument as NamedArgumentSyntax)?.Name.Length ?? ExpressionLength(argument),
+                    expectation: new("duplicate_argument", names.Where((_, index) => !slots.Contains(index)).ToArray(), names[slot]));
             result.Add((slot, expression));
         }
         return result;

@@ -80,7 +80,10 @@ internal sealed partial class Binder
         foreach (var scope in scopes)
         {
             foreach (var local in scope.Values)
-                probe.Add(new(local.Name, "variable", local.Name + ": " + TypeFacts.Display(local.Type)));
+            {
+                if (local.Unavailable) probe.Hide(local.Name);
+                else probe.Add(new(local.Name, "variable", local.Name + ": " + TypeFacts.Display(local.Type)));
+            }
             if (ScopeRoutines(scope) is { } nested)
                 foreach (var (name, group) in nested.Methods)
                     foreach (var method in NestedMethods(nested, group, null, false))

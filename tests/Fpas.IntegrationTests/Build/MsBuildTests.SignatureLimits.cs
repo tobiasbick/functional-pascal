@@ -81,7 +81,10 @@ public sealed partial class MsBuildTests
             using var document = JsonDocument.Parse(result.Output);
             var diagnostic = Assert.Single(document.RootElement.GetProperty("diagnostics").EnumerateArray());
             Assert.Equal("FP3018", diagnostic.GetProperty("code").GetString());
-            Assert.Contains("CLR constraints", diagnostic.GetProperty("message").GetString());
+            Assert.Contains("must satisfy 'unmanaged'", diagnostic.GetProperty("message").GetString());
+            var expectation = diagnostic.GetProperty("expectation");
+            Assert.Equal("generic_constraint", expectation.GetProperty("kind").GetString());
+            Assert.Equal("unmanaged", expectation.GetProperty("expected")[0].GetString());
         }
         var run = await RunInterop(project, """
             program Supported;

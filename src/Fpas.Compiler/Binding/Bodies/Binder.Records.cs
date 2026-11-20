@@ -45,7 +45,12 @@ internal sealed partial class Binder
         foreach (var update in syntax.Updates)
         {
             var field = info.Fields.FirstOrDefault(field => field.Name == update.Name.Text);
-            if (field is null || !names.Add(update.Name.Text)) throw source.Error("FP3022", "Unknown or duplicate record update.", update.Name.Position);
+            if (field is null)
+                throw source.Error("FP3022", $"Unknown record field '{update.Name.Text}'.", update.Name.Position, update.Name.Length,
+                    expectation: new("field_name", info.Fields.Where(item => item.IsPublic || info.Type.Record == recordContext).Select(item => item.Name).ToArray(), update.Name.Text));
+            if (!names.Add(update.Name.Text))
+                throw source.Error("FP3022", $"Record field '{update.Name.Text}' was already updated.", update.Name.Position, update.Name.Length,
+                    expectation: new("duplicate_argument", [], update.Name.Text));
             if (!field.IsPublic && (info.Type.Record is null || info.Type.Record != recordContext))
                 throw source.Error("FP3011", $"Record field '{field.Name}' is private.", update.Name.Position);
             catalog.Analysis?.NamedProperty(source, update.Name, field.Getter, "write");
@@ -69,8 +74,8 @@ internal sealed partial class Binder
         {
             var symbol = record.UserMethods[syntax.Name.Text].Single(symbol => ReferenceEquals(symbol.Declaration, syntax));
             if (catalog.Analysis?.CanBind(source, symbol) == false) continue;
-            try { record.Bodies.Add(symbol, Context().BindRoutine(symbol, syntax.Statements, syntax.Name.Position, syntax.Contracts)); }
-            catch (CompilationFailure failure) { catalog.Analysis?.UnavailableBody(source, symbol); source.Diagnostics.Add(failure.Diagnostic); }
+            if (Context().BindCheckedRoutine(symbol, syntax.Statements, syntax.Name.Position, syntax.Contracts) is { } body)
+                record.Bodies.Add(symbol, body);
         }
         foreach (var field in record.Fields.Where(field => field.Default is not null))
         {

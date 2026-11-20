@@ -9,7 +9,7 @@ public sealed class InteropDiagnosticsTests
     [InlineData("const X: string? := null; Console.WriteLine(X.Length);", "FP3013")]
     [InlineData("const X: string? := Console.ReadLine(); const Y: string := cast<string>(X);", "FP3013")]
     [InlineData("const N: int? := null; const X: int := N;", "FP3013")]
-    [InlineData("const X: string? := Console.ReadLine(); while true do Console.WriteLine(X.Length); X := null; end while;", "FP3013")]
+    [InlineData("const X: string? := Console.ReadLine(); while true do Console.WriteLine(X.Length); end while;", "FP3013")]
     [InlineData("var X: string? := 'known'; while true do Console.WriteLine(X.Length); X := null; end while;", "FP3013")]
     [InlineData("var X: string? := 'known'; for I: int := 1 to 2 do Console.WriteLine(X.Length); X := null; end for;", "FP3013")]
     [InlineData("var X: string? := 'known'; if Console.ReadLine() = null then X := null; end if; Console.WriteLine(X.Length);", "FP3013")]

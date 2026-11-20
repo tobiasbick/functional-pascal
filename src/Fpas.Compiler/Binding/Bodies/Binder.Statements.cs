@@ -23,11 +23,23 @@ internal sealed partial class Binder
                 var statement = statements[index];
                 if (statement is NestedRoutineSyntax) continue;
                 if (!flow.HasFlag(ExitFlow.Next))
-                    throw source.Error("FP3008", "This statement is unreachable.", statement.Position);
-                var item = statement is UsingSyntax resource
-                    ? BindUsing(resource, statements.Skip(index + 1).ToArray()) : BindStatement(statement);
+                {
+                    Attempt<BoundStatement>(() => throw source.Error("FP3008", "This statement is unreachable.", statement.Position));
+                    break;
+                }
+                var facts = recoverStatements && nonNull.Count != 0 ? nonNull.ToArray() : [];
+                var faults = bindingFaults;
+                var item = Attempt<BoundStatement>(() => statement is UsingSyntax resource
+                    ? BindUsing(resource, statements.Skip(index + 1).ToArray()) : BindStatement(statement));
+                if (bindingFaults != faults) SetFacts(facts);
+                if (item is null)
+                {
+                    if (statement is BindingSyntax binding) ReserveFailedBinding(binding.Name);
+                    if (statement is UsingSyntax failedResource) ReserveFailedBinding(failedResource.Binding.Name);
+                    continue;
+                }
                 bound.Add(new BoundSequencePoint(source.StatementLocation(statement.Position), item));
-                flow = flow & ~ExitFlow.Next | FlowAnalysis.Of(item);
+                if (bindingFaults == faults) flow = flow & ~ExitFlow.Next | FlowAnalysis.Of(item);
                 if (statement is UsingSyntax) break;
             }
             if (nested is not null) BindNestedBodies(nested);
@@ -83,8 +95,16 @@ internal sealed partial class Binder
             case ExpressionStatementSyntax expression:
                 var value = BindExpression(expression.Expression);
                 if (value is BoundMethodGroup) throw source.Error("FP3019", "An overloaded method group needs a delegate target.", expression.Position);
-                if (!expression.Discard && value.Type != TypeSymbol.Void || expression.Discard && value.Type == TypeSymbol.Void)
-                    throw source.Error("FP3006", "Consume a returned value or use discard; an ordinary expression statement must be a void call.", expression.Position);
+                if (expression.Discard && value.Type == TypeSymbol.Void)
+                    throw source.Error("FP3006", "This call returns no value to discard.", expression.Expression.SpanStart, ExpressionLength(expression.Expression),
+                        help: "Call the procedure directly.", expectation: new("expression_result", ["value"], "void"));
+                if (!expression.Discard && value.Type != TypeSymbol.Void)
+                {
+                    var resultType = TypeFacts.Display(value.Type);
+                    throw source.Error("FP3006", $"The expression returns '{resultType}' and its result must be consumed.", expression.Expression.SpanStart,
+                        ExpressionLength(expression.Expression), help: "Use the result in a typed binding, or write 'discard' to ignore it explicitly.",
+                        expectation: new("expression_result", ["void"], resultType));
+                }
                 return new BoundExpressionStatement(value, expression.Discard);
             case ReturnSyntax returned:
                 if (finallyBoundaries.Count != 0) throw source.Error("FP3017", "return cannot leave a finally body.", returned.Position);

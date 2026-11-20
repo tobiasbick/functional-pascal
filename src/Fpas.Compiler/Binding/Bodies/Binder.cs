@@ -48,8 +48,7 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
             if (catalog.Analysis?.CanBind(source, symbol) == false) return;
             var binder = new Binder(unit, catalog, references, unitClosures: closures);
             foreach (var import in imports) binder.imports.Add(import.Key, import.Value);
-            try { methods.Add(binder.BindRoutine(symbol, body, position, contracts)); }
-            catch (CompilationFailure failure) { catalog.Analysis?.UnavailableBody(source, symbol); source.Diagnostics.Add(failure.Diagnostic); }
+            if (binder.BindCheckedRoutine(symbol, body, position, contracts) is { } bound) methods.Add(bound);
         }
     }
 
@@ -88,6 +87,7 @@ internal sealed partial class Binder(SourceUnit unit, SourceCatalog catalog, Ref
             throw source.Error("FP3035", "The compiler owns an async routine's state-machine attribute.", position);
         var requires = BindContracts(contracts, ensures: false, out _);
         var block = ReferenceEquals(symbol, unit.Initializer) ? BindGlobalInitializers() : BindBlock(body);
+        if (bindingFaults != 0) throw new UnavailableBinding();
         if (symbol.BodyResult != TypeSymbol.Void && FlowAnalysis.Of(block).HasFlag(ExitFlow.Next))
             throw source.Error("FP3007", $"Function '{symbol.Name}' must return a value on every normal path.", position);
         nonNull.Clear();

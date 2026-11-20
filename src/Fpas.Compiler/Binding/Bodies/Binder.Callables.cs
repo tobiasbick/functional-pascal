@@ -27,7 +27,11 @@ internal sealed partial class Binder
             catalog.Analysis?.EnumMemberUse(source, position, enumMember);
             return BoundNumber.Create(enumInitializer.Base, enumMember.Value);
         }
-        if (FindLocal(name) is { } local) return new BoundLocal(local, nonNull.Contains(local) ? local.Type.NonNullable : null);
+        if (FindLocal(name) is { } local)
+        {
+            if (local.Unavailable) throw new UnavailableBinding();
+            return new BoundLocal(local, nonNull.Contains(local) ? local.Type.NonNullable : null);
+        }
         if (FindNested(name) is { } nested) return NestedDelegate(nested, expected, position);
         if (parameters.TryGetValue(name, out var parameter)) return new BoundParameter(parameter, nonNull.Contains(parameter) ? parameter.Type.NonNullable : null);
         if (parent?.HasLexicalValue(name) == true)

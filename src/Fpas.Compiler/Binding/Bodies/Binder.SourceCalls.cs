@@ -1,4 +1,5 @@
 // [Documentation](../../../../docs/pascal/language/functions/overloads.md)
+using System.Globalization;
 using Fpas.Compiler.Binding.Types;
 using Fpas.Compiler.Binding.Symbols;
 using Fpas.Compiler.Binding.References;
@@ -16,7 +17,12 @@ internal sealed partial class Binder
                 arguments ?? (method.GenericParameters.Count == 0 ? null : new(method.GenericParameters.Select(parameter => parameter.Type)))))
             .ToArray();
         if (methods.Length == 0 && group.Any(method => method.GenericParameters.Count != 0))
-            throw source.Error("FP3026", "Generic routine groups require matching explicit type arguments when used as delegates.", position);
+        {
+            var counts = group.Select(method => method.GenericParameters.Count).Distinct().Order().Select(count => count.ToString(CultureInfo.InvariantCulture)).ToArray();
+            throw source.Error("FP3026", arguments is null ? "A generic routine used as a delegate requires explicit type arguments." :
+                $"No overload accepts {arguments.Count} explicit type arguments.", position,
+                expectation: new("type_argument_count", counts, arguments?.Count.ToString(CultureInfo.InvariantCulture) ?? "omitted"));
+        }
         return methods;
     }
 

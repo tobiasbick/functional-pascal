@@ -17,9 +17,11 @@ internal sealed partial class ReferenceCatalog
     {
         var parameters = SourceParameters(definition);
         if (parameters.Count != arguments.Count)
-            throw source.Error("FP3026", "A source type requires the exact number of explicit type arguments.", position);
-        if (validate && !ValidSourceArguments(parameters, arguments))
-            throw source.Error("FP3018", "Type arguments violate source type constraints.", position);
+            throw source.Error("FP3026", $"Type '{definition}' requires {parameters.Count} explicit type arguments. Received {arguments.Count}.", position,
+                expectation: new("type_argument_count", [parameters.Count.ToString(System.Globalization.CultureInfo.InvariantCulture)],
+                    arguments.Count.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+        if (validate && SourceConstraintFailure(parameters, arguments) is { } failure)
+            throw ConstraintError(source, position, failure);
         return definition with { Arguments = arguments.Count == 0 ? null : new(arguments) };
     }
 

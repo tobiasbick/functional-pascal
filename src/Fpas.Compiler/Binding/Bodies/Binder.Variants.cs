@@ -57,7 +57,8 @@ internal sealed partial class Binder
         {
             if (values[index] is not null) continue;
             var provider = fields[index].Default;
-            if (provider is null) throw source.Error("FP3022", $"Missing required field '{fields[index].Name}'.", position);
+            if (provider is null) throw source.Error("FP3022", $"Missing required field '{fields[index].Name}'.", position,
+                expectation: new("missing_argument", [fields[index].Name], "omitted"));
             values[index] = Save(new BoundCall(provider, []), bindings);
         }
         return (bindings, values.Select(value => value!).ToArray());

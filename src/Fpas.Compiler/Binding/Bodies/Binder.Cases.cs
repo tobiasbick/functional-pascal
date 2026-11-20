@@ -87,7 +87,7 @@ internal sealed partial class Binder
             }
             catch { PopCaseScope(); throw; }
         }
-        if (coverage.Useful(covered, new AnyMatch(), selector.Value.Type)) throw source.Error("FP3025", "Case matching is not exhaustive; add the missing cases or a fallback.", syntax.Position);
+        coverage.RequireExhaustive(covered, selector.Value.Type, CoverageCaseName);
         SetFacts(Merge(exits));
         var exception = references.Symbol(references.Required("System.InvalidOperationException"));
         return new BoundBlock([selector.Saved, new BoundIf(arms, new([new BoundThrow(new BoundNew(exception,
@@ -119,7 +119,7 @@ internal sealed partial class Binder
             }
             catch { PopCaseScope(); throw; }
         }
-        if (coverage.Useful(covered, new AnyMatch(), selector.Value.Type)) throw source.Error("FP3025", "Case matching is not exhaustive; add the missing cases or a fallback.", syntax.Position);
+        coverage.RequireExhaustive(covered, selector.Value.Type, CoverageCaseName);
         SetFacts(Merge(exits));
         var result = arms.Select(arm => arm.Value.Type).Aggregate(references.Common);
         if (result.Kind is TypeKind.Void or TypeKind.Unsupported) throw source.Error("FP3002", "Case expression arms require a common value type.", syntax.Position);

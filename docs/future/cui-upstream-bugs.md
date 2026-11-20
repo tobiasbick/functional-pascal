@@ -52,8 +52,9 @@ successful move.
 
 ## CUI-043 — Idle X11 OpenGL windows present continuously
 
-- Upstream: not reported. Fixed on the fork branch `codex/cui-titlebar-testing`
-  by `6ddb1ef`; not in the vendored snapshot.
+- Upstream: [Issue #104](https://github.com/yappologistic/CUI/issues/104) and
+  [PR #105](https://github.com/yappologistic/CUI/pull/105). The PR includes
+  regression test `6924c7c` and fix `c13264f` (from `6ddb1ef` on the title bar branch).
 
 Reproduced at `71c383f` and later with the X11 backend and the OpenGL renderer
 under Mesa DRI3: Debian, KDE KWin 6.7 X11, VMware SVGA3D. An idle window, with
@@ -76,8 +77,9 @@ cost while idle.
 
 ## CUI-044 — Transitions that start after an idle pause end in one frame
 
-- Upstream: not reported. Fixed on the fork branch `codex/cui-titlebar-testing`
-  by `b019f9e` and `762fbb9`; not in the vendored snapshot.
+- Upstream: [Issue #106](https://github.com/yappologistic/CUI/issues/106) and
+  [PR #107](https://github.com/yappologistic/CUI/pull/107). The PR includes
+  regression test `ce8fbae` and fix `bfdae63` (from `b019f9e` and `762fbb9` on the title bar branch).
 
 Reproduced at `71c383f` and later on Windows (OpenGL and software) and on Linux
 X11 (software, and OpenGL once CUI-043 is fixed). Rest the pointer for a second,

@@ -39,7 +39,19 @@ CUI_API cui_app *fpas_cui_window_create(const char *title, int width, int height
         .fixed_size = fixed_size != 0, .app_id = app_id,
         .placement = placed ? &placement : NULL
     };
-    return cui_app_create(&options);
+    cui_app *app = cui_app_create(&options);
+#ifdef _WIN32
+    if (app) {
+        /* The FPAS Windows executable stores ApplicationIcon under IDI_APPLICATION. */
+        HICON icon = LoadIconW(GetModuleHandleW(NULL), (LPCWSTR)IDI_APPLICATION);
+        if (icon) {
+            HWND window = (HWND)cui_app_native_window(app);
+            SendMessageW(window, WM_SETICON, ICON_SMALL, (LPARAM)icon);
+            SendMessageW(window, WM_SETICON, ICON_BIG, (LPARAM)icon);
+        }
+    }
+#endif
+    return app;
 }
 
 void fpas_cui_finish_frame_for_destroy(cui_app *app) {

@@ -27,7 +27,8 @@ OpenGL CUI window can own a thread's OpenGL context. Opening another window in
 Auto mode selects software, and requesting a second OpenGL window explicitly
 fails. Creation accepts minimum dimensions, fixed size and Linux application
 identity. [Window placement](app-chrome/window.md) describes restoring saved
-dimensions and position.
+dimensions and position. On Windows, an FPAS executable with `ApplicationIcon`
+uses its embedded icon for the window caption and Alt+Tab.
 
 `NextFrame` pumps events, presents an open view if needed and starts the next
 frame. Close layout scopes in reverse order before ending a frame.

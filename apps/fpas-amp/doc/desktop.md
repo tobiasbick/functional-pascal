@@ -119,6 +119,14 @@ usable fields, falls back to defaults where necessary and backs up the original
 bytes before publishing repaired data. See the [file locations and
 fields](../README.md#user-files).
 
+## Windows desktop launch
+
+Local `dotnet build` and `dotnet run` use the Windows GUI apphost. To open the
+app without a terminal window, launch `FpasAmp.exe` from the build directory.
+The executable embeds the [Windows icon](../packaging/windows/FpasAmp.ico),
+rendered from the [desktop SVG](../packaging/linux/io.github.tobiasbick.FpasAmp.svg).
+The native GUI uses the embedded icon for the window caption.
+
 ## Linux desktop installation
 
 Linux x64 publication with an executable includes an application-menu entry and

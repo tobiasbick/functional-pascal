@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>WinExe</OutputType>
+    <UseAppHost Condition="'$(OS)' == 'Windows_NT' and '$(RuntimeIdentifier)' == ''">true</UseAppHost>
+    <ApplicationIcon>../../packaging/windows/FpasAmp.ico</ApplicationIcon>
     <!-- MetaBrainz uses System.Text.Json options with registered converters. -->
     <JsonSerializerIsReflectionEnabledByDefault Condition="'$(PublishAot)' == 'true'">true</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>

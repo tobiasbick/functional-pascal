@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Capture.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Capture.State as C, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Files.Dropzones as D, Fpas.Ui.Widgets.Files.AvatarUploads as A, Fpas.Ui.Widgets.Files.SignaturePads as P,
@@ -25,7 +26,7 @@ public function View(Model: C.Model): E.Element<C.Msg>;
 begin
   const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
   const Children: array of E.Element<C.Msg> := [
-    G.Heading<C.Msg>('Dropzone', 'Drop files from your desktop, or click to browse.'),
+    G.Heading<C.Msg>(Strings.Get('Heading.Dropzone'), Strings.Get('Heading.DropzoneHint')),
     Target(
       'capture-files',
       new D.Options(Description := 'PNG, JPG or PDF, up to 25 MB', Accept := C.Files)
@@ -54,7 +55,7 @@ begin
     )
   ];
   const Remaining: array of E.Element<C.Msg> := [
-    G.Heading<C.Msg>('Avatar upload', 'Drop an image on the avatar.'),
+    G.Heading<C.Msg>(Strings.Get('Heading.AvatarUpload'), Strings.Get('Heading.AvatarUploadHint')),
     E.Row<C.Msg>(
       new L.Flow(Gap := G.Points(20), Align := L.Alignment.Center, Clip := false),
       A.AvatarUpload<C.Msg>(
@@ -71,8 +72,8 @@ begin
       )
     ),
     G.Heading<C.Msg>(
-      'Signature',
-      'Draw with the mouse or a pen. Faster strokes are thinner, like ink.'
+      Strings.Get('Heading.Signature'),
+      Strings.Get('Heading.SignatureHint')
     ),
     E.Row<C.Msg>(
       new L.Flow(Align := L.Alignment.Start),

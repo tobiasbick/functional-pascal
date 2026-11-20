@@ -2,12 +2,22 @@
 
 unit Gallery.Shared.PickerChoices;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Selects as S;
+uses
+  Gallery.Shared.Strings as Strings,
+  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Selects as S;
 
 const Countries: array of S.Item := [
-  new S.Item('Canada'), new S.Item('Denmark'), new S.Item('Germany'), new S.Item('Iran'),
-  new S.Item('Japan'), new S.Item('Kenya'), new S.Item('Netherlands'), new S.Item('Portugal'),
-  new S.Item('United States')
+  new S.Item(Strings.Get('Text.Canada')),
+  new S.Item(Strings.Get('Text.Denmark')),
+  new S.Item(Strings.Get('Text.Germany')),
+  new S.Item(Strings.Get('Text.Iran')),
+  new S.Item(
+    Strings.Get('Text.Japan')
+  ),
+  new S.Item(Strings.Get('Text.Kenya')),
+  new S.Item(Strings.Get('Text.Netherlands')),
+  new S.Item(Strings.Get('Text.Portugal')),
+  new S.Item(Strings.Get('Text.UnitedStates'))
 ];
 const Languages: array of S.Item := [
   new S.Item('C99'),
@@ -41,7 +51,7 @@ begin
     Countries,
     Index,
     Change,
-    new S.Options(Label := 'Country')
+    new S.Options(Label := Strings.Get('Text.Country'))
   );
 end function;
 
@@ -60,7 +70,11 @@ begin
     Languages,
     Index,
     Change,
-    new S.Options(Label := 'Language', Placeholder := 'Pick a language', Searchable := true)
+    new S.Options(
+      Label := Strings.Get('Text.Language'),
+      Placeholder := Strings.Get('Text.PickLanguage'),
+      Searchable := true
+    )
   );
 end function;
 

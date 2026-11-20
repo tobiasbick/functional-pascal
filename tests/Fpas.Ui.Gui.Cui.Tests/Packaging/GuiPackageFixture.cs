@@ -76,7 +76,8 @@ internal sealed class GuiPackageFixture : IDisposable
 
         Directory.CreateDirectory(File("consumer"));
         string gallerySources = Path.Combine(inputs, "examples", "ui", "gui", "gallery");
-        foreach (string file in Directory.GetFiles(gallerySources, "*.fpas", SearchOption.AllDirectories))
+        foreach (string file in Directory.EnumerateFiles(gallerySources, "*", SearchOption.AllDirectories)
+            .Where(file => Path.GetExtension(file) is ".fpas" or ".resx"))
         {
             string relative = Path.GetRelativePath(gallerySources, file);
             if (relative == "main.fpas") continue;
@@ -93,6 +94,7 @@ internal sealed class GuiPackageFixture : IDisposable
         Assert.True(sample.Success, "The GUI handbook must contain its complete project.");
         var consumer = XDocument.Parse(sample.Groups["project"].Value);
         consumer.Root!.SetAttributeValue("Sdk", "Fpas.NET.Sdk/" + Version);
+        consumer.Root.Add(new XElement("PropertyGroup", new XElement("RootNamespace", "Gallery")));
         Assert.Single(consumer.Descendants("PackageReference"), item => item.Attribute("Include")?.Value == "Fpas.Ui.Gui")
             .SetAttributeValue("Version", "[" + Version + "]");
         consumer.Save(Project);

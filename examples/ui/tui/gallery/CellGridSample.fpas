@@ -3,6 +3,7 @@
 unit TuiGallery.CellGridSample;
 
 uses
+  Gallery.Shared.Strings as Strings,
   Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.TerminalExtensions.Input as K,
   Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys, System.Collections.Generic as C;
 
@@ -87,11 +88,15 @@ begin
     ): Current with
       X := Column;
       Y := Row;
-      Last := Button.ToString() + ' click (' + Column.ToString() + ', ' + Row.ToString() + ')';
+      Last := Button.ToString() + Strings.Get(
+        'Text.GridClick'
+      ) + Column.ToString() + ', ' + Row.ToString() + ')';
     end with;
     when Grids.Event.Wheel(const Column: int, const Row: int, const Delta: int): Current with
       Spacing := Sys.Math.Clamp(Current.Spacing - Sys.Math.Sign(Delta), 2, 16);
-      Last := 'Wheel (' + Column.ToString() + ', ' + Row.ToString() + ') ' + Delta.ToString();
+      Last := Strings.Get(
+        'Text.GridWheel'
+      ) + Column.ToString() + ', ' + Row.ToString() + ') ' + Delta.ToString();
     end with;
   end case;
   return Next with
@@ -104,8 +109,8 @@ public function View(Current: State): E.Element<Grids.Event>;
 begin
   return E.Column<Grids.Event>(
     new L.Flow(Padding := L.Spacing.Normal, Gap := L.Spacing.Tight),
-    E.Text<Grids.Event>('Cell grid'),
-    E.Text<Grids.Event>('Click to center · Wheel to change spacing'),
+    E.Text<Grids.Event>(Strings.Get('Page.CellGrid')),
+    E.Text<Grids.Event>(Strings.Get('Text.CellGridHint')),
     Grids.CellGrid<Grids.Event>(
       'sample-cell-grid',
       Current.Image,

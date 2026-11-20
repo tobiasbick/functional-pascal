@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Overlays.Widgets.Toast;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Overlays.State as State,
   GuiGallery.Shared.Sections as G,
@@ -59,7 +60,7 @@ begin
   );
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(20)),
-    G.Heading<State.Msg>('Toasts', 'They stack, expand on hover and pause while you read.'),
+    G.Heading<State.Msg>(Strings.Get('Heading.Toasts'), Strings.Get('Heading.ToastsHint')),
     G.Card<State.Msg>(12, [Buttons])
   );
 end function;

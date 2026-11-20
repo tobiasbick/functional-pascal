@@ -1,7 +1,9 @@
 // [Documentation](../../coverage.md#terminal-ui)
 using Fpas.IntegrationTests.Debugging;
 using Fpas.Tests.Support;
+using System.Resources;
 using System.Text.Json;
+using System.Xml.Linq;
 
 namespace Fpas.IntegrationTests.Tui;
 
@@ -23,9 +25,19 @@ internal static class TuiFixture
         var folder = Path.Combine(Fixtures, example);
         var main = Path.Combine(folder, "main.fpas");
         var entry = fixture is null ? main : Path.Combine(Fixtures, fixture);
+        var catalog = Path.Combine(folder, "Strings.resx");
+        var resources = Array.Empty<string>();
+        if (File.Exists(catalog))
+        {
+            var compiled = program.FilePath("Gallery.Shared.Strings.resources");
+            using (var writer = new ResourceWriter(compiled))
+                foreach (var item in XDocument.Load(catalog).Root!.Elements("data"))
+                    writer.AddResource(item.Attribute("name")!.Value, item.Element("value")!.Value);
+            resources = ["--embedded-resource", JsonSerializer.Serialize(new[] { "Gallery.Shared.Strings.resources", compiled })];
+        }
         await program.Compile(await File.ReadAllTextAsync(entry),
             [.. Directory.GetFiles(folder, "*.fpas").Where(path => path != main),
-             .. References(program, library)]);
+             .. References(program, library), .. resources]);
     }
 
     internal static async Task<string> BuildLibrary(Debuggee program)

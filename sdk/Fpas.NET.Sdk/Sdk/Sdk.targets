@@ -56,12 +56,12 @@
     <_FpasAnalysisInputs Condition="'$(FpasAnalysisPrepare)' == 'true'">FpasPrepareCompilation</_FpasAnalysisInputs>
     <_FpasAnalysisInputs Condition="'$(FpasAnalysisPrepare)' != 'true'">ResolveReferences</_FpasAnalysisInputs>
   </PropertyGroup>
-  <Target Name="FpasExportAnalysisContext" DependsOnTargets="$(_FpasAnalysisInputs)">
+  <Target Name="FpasExportAnalysisContext" DependsOnTargets="$(_FpasAnalysisInputs);FpasCollectResources">
     <Fpas.Build.Tasks.Analysis.FpasExportAnalysisContext ManifestFile="$(FpasAnalysisManifest)" Phase="resolved"
         UseSourceReferences="$(FpasAnalysisSourceReferences)"
         ProjectPath="$(MSBuildProjectFullPath)" CompilerPath="$(FpasCompilerPath)" CompilerAssemblyPath="$(FpasCompilerAssemblyPath)" Configuration="$(Configuration)"
         Platform="$(PlatformTarget)" TargetFramework="$(TargetFramework)" AssemblyName="$(TargetName)" OutputType="$(OutputType)"
-        Sources="@(Compile)" References="@(ReferencePath)" Projects="@(_MSBuildProjectReferenceExistent)" ProjectOutputs="@(_ResolvedProjectReferencePaths)"
+        Sources="@(Compile)" References="@(ReferencePath)" Resources="@(_FpasManagedResource)" Projects="@(_MSBuildProjectReferenceExistent)" ProjectOutputs="@(_ResolvedProjectReferencePaths)"
         ProjectAssetsFile="$(ProjectAssetsFile)" GenerateDocumentationFile="$(GenerateDocumentationFile)"
         TreatWarningsAsErrors="$(TreatWarningsAsErrors)" WarningsAsErrors="$(WarningsAsErrors)"
         WarningsNotAsErrors="$(WarningsNotAsErrors)" NoWarn="$(NoWarn)" OutputAssembly="@(IntermediateAssembly)" BuildCache="$(IntermediateOutputPath)fpas.compile.json"
@@ -71,13 +71,41 @@
   <Target Name="FpasCleanDocumentation" BeforeTargets="CoreClean">
     <FpasCleanDocumentation CacheFile="$(IntermediateOutputPath)fpas.compile.json" />
   </Target>
-  <Target Name="CreateManifestResourceNames">
-    <Error Condition="'@(EmbeddedResource)' != ''" Code="FP5001" Text="FPAS embedded resources are not implemented yet." />
+  <Target Name="CreateManifestResourceNames" Condition="'@(EmbeddedResource)' != ''"
+          DependsOnTargets="$(CreateManifestResourceNamesDependsOn)">
+    <CreateCSharpManifestResourceName ResourceFiles="@(EmbeddedResource)" RootNamespace="$(RootNamespace)"
+        UseDependentUponConvention="false" EnableCustomCulture="$(EnableCustomCulture)"
+        Condition="'%(EmbeddedResource.ManifestResourceName)' == '' and ('%(EmbeddedResource.WithCulture)' == 'false' or '%(EmbeddedResource.Type)' == 'Resx')">
+      <Output TaskParameter="ResourceFilesWithManifestResourceNames" ItemName="_FpasNamedResource" />
+    </CreateCSharpManifestResourceName>
+    <CreateCSharpManifestResourceName ResourceFiles="@(EmbeddedResource)" RootNamespace="$(RootNamespace)"
+        UseDependentUponConvention="false" PrependCultureAsDirectory="false"
+        Condition="'%(EmbeddedResource.ManifestResourceName)' == '' and '%(EmbeddedResource.WithCulture)' == 'true' and '%(EmbeddedResource.Type)' == 'Non-Resx'">
+      <Output TaskParameter="ResourceFilesWithManifestResourceNames" ItemName="_FpasNamedResource" />
+    </CreateCSharpManifestResourceName>
+    <ItemGroup>
+      <EmbeddedResource Remove="@(EmbeddedResource)" Condition="'%(EmbeddedResource.ManifestResourceName)' == ''" />
+      <EmbeddedResource Include="@(_FpasNamedResource)" />
+    </ItemGroup>
   </Target>
-  <Target Name="CoreCompile" DependsOnTargets="FpasPrepareCompilation" Returns="@(IntermediateAssembly)">
+  <Target Name="FpasCollectResources" DependsOnTargets="PrepareResourceNames" Condition="'@(EmbeddedResource)' != ''">
+    <ItemGroup>
+      <_FpasManagedResource Include="@(EmbeddedResource->'$(IntermediateOutputPath)%(ManifestResourceName).resources')"
+          Condition="'%(EmbeddedResource.WithCulture)' == 'false' and '%(EmbeddedResource.Type)' == 'Resx' and '%(EmbeddedResource.GenerateResource)' != 'false'">
+        <LogicalName Condition="'%(EmbeddedResource.LogicalName)' == ''">%(EmbeddedResource.ManifestResourceName).resources</LogicalName>
+        <SourcePath>%(EmbeddedResource.FullPath)</SourcePath>
+      </_FpasManagedResource>
+      <_FpasManagedResource Include="@(EmbeddedResource)"
+          Condition="'%(EmbeddedResource.WithCulture)' == 'false' and '%(EmbeddedResource.Type)' == 'Non-Resx'">
+        <LogicalName Condition="'%(EmbeddedResource.LogicalName)' == ''">%(EmbeddedResource.ManifestResourceName)</LogicalName>
+        <SourcePath>%(EmbeddedResource.FullPath)</SourcePath>
+      </_FpasManagedResource>
+    </ItemGroup>
+  </Target>
+  <Target Name="CoreCompile" DependsOnTargets="FpasPrepareCompilation;PrepareResources;FpasCollectResources" Returns="@(IntermediateAssembly)">
     <Error Condition="'$(PlatformTarget)' != '' and '$(PlatformTarget)' != 'AnyCPU'" Code="FP5001" Text="The initial FPAS compiler supports AnyCPU only." />
     <Error Condition="'$(DebugType)' != 'none' and '$(DebugType)' != 'portable'" Code="FP5001" Text="FPAS DebugType must be portable or none." />
-    <FpasCompile Sources="@(Compile)" References="@(ReferencePath)" CompilerPath="$(FpasCompilerPath)" CompilerAssemblyPath="$(FpasCompilerAssemblyPath)"
+    <FpasCompile Sources="@(Compile)" References="@(ReferencePath)" Resources="@(_FpasManagedResource)" CompilerPath="$(FpasCompilerPath)" CompilerAssemblyPath="$(FpasCompilerAssemblyPath)"
                  OutputAssembly="@(IntermediateAssembly)" CacheFile="$(IntermediateOutputPath)fpas.compile.json"
                  DotnetHostPath="$(DotNetHostPath)" OutputType="$(OutputType)"
                  Configuration="$(Configuration)" TargetFramework="$(TargetFramework)" DebugType="$(DebugType)" Optimize="$(Optimize)"

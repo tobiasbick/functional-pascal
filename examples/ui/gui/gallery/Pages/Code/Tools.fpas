@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Code.Tools;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Code.State as M, GuiGallery.Pages.Code.Samples as Sample,
   GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Motion.Motion as F,
@@ -231,16 +232,16 @@ end function;
 public function View(Model: M.Model; Colors: Theme.Palette): array of E.Element<M.Msg>;
 begin
   return [
-    G.Heading<M.Msg>('Markdown'), ReleaseNotes(Model, Colors),
-    G.Heading<M.Msg>('Code editor'), EditCode(Model, Colors),
-    G.Heading<M.Msg>('SQL editor'),
+    G.Heading<M.Msg>(Strings.Get('Heading.Markdown')), ReleaseNotes(Model, Colors),
+    G.Heading<M.Msg>(Strings.Get('Heading.CodeEditor')), EditCode(Model, Colors),
+    G.Heading<M.Msg>(Strings.Get('Heading.SqlEditor')),
     Editor.CodeEditor<M.Msg>(
       'sql-editor', Model.Sql, M.Msg.Sql,
       new Editor.Options(Language := 'sql', Height := 128.0F)
     ),
-    G.Heading<M.Msg>('Diff viewer'), CompareFiles(Model, Colors),
-    G.Heading<M.Msg>('Hex viewer'), InspectBytes(Model, Colors),
-    G.Heading<M.Msg>('Log console'),
+    G.Heading<M.Msg>(Strings.Get('Heading.DiffViewer')), CompareFiles(Model, Colors),
+    G.Heading<M.Msg>(Strings.Get('Heading.HexViewer')), InspectBytes(Model, Colors),
+    G.Heading<M.Msg>(Strings.Get('Heading.LogConsole')),
     Log.LogConsole<M.Msg>(
       'log-console',
       Model.Entries,

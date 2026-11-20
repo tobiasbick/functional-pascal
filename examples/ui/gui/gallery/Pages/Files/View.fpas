@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Files.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Files.State as M, GuiGallery.Pages.Files.Folders as Directory, Fpas.Ui.Widgets.Developer.Terminals as Terminal, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Actions.Buttons as B,
   Fpas.Ui.Widgets.Files.FileBrowsers as Browser, Fpas.Ui.Widgets.Files.FilePickers as Picker, Fpas.Ui.Widgets.Navigation.PathBars as Paths,
@@ -37,7 +38,7 @@ function Original(Model: M.Model): E.Element<M.Msg>;
 begin
   return E.Column<M.Msg>(
     new L.Flow(Gap := G.Points(20), Clip := false),
-    G.Heading<M.Msg>('File browser', 'Double-click to open; type to jump; Backspace goes up.'),
+    G.Heading<M.Msg>(Strings.Get('Heading.FileBrowser'), Strings.Get('Heading.FileBrowserHint')),
     Browser.FileBrowser<M.Msg>(
       'files-browser', Model.Folder, M.Msg.Browse, new Browser.Options(
         Height := L.Extent.Fixed(L.Measure.Logical(380)), Source := Directory.ReadFolder
@@ -144,14 +145,14 @@ begin
     new L.Flow(Gap := G.Points(20), Clip := false),
     Original(Model),
     G.Heading<M.Msg>(
-      'Terminal',
-      'Colors, \r progress, history on Up and Down, Ctrl+C, Ctrl+L, drag to select.'
+      Strings.Get('Text.SectionTerminal'),
+      Strings.Get('Heading.TerminalHint')
     ),
     Terminal.Terminal<M.Msg>(
       'files-terminal', Model.Output, Model.TerminalRevision, M.Msg.Terminal,
       new Terminal.Options(Height := 300.0F, Prompt := '> ')
     ),
-    G.Heading<M.Msg>('Path bar', 'Open a segment or its menu, or type a folder path.'),
+    G.Heading<M.Msg>(Strings.Get('Heading.PathBar'), Strings.Get('Heading.PathBarHint')),
     Paths.PathBar<M.Msg>(
       'files-path-bar', new Paths.Value(Path, Model.Folder, Children(Path)),
       M.Msg.Path, new Paths.Options(Icon := Sys.Char.ConvertFromUtf32($E0D7))

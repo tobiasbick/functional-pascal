@@ -18,6 +18,11 @@ public enum CompilationTarget
 /// <param name="Text">The complete source text.</param>
 public sealed record CompilationSource(string Path, string Text);
 
+/// <summary>One named, embedded CLR manifest resource.</summary>
+/// <param name="Name">The exact manifest resource name, unique in the assembly.</param>
+/// <param name="Content">The bytes stored in the resource.</param>
+public sealed record CompilationResource(string Name, byte[] Content);
+
 /// <summary>Explicit inputs and output options for one assembly compilation.</summary>
 /// <param name="Sources">The FPAS sources forming the assembly.</param>
 /// <param name="AssemblyName">The simple name of the produced assembly.</param>
@@ -31,11 +36,13 @@ public sealed record CompilationSource(string Path, string Text);
 /// <param name="StrongNameKey">A strong-name key blob, or <see langword="null"/> for an unsigned assembly.</param>
 /// <param name="PublicSign">Whether to public-sign with the public key in <paramref name="StrongNameKey"/>.</param>
 /// <param name="DelaySign">Whether to reserve the signature for later delay signing.</param>
+/// <param name="Resources">Optional binary resources embedded in the output assembly.</param>
 public sealed record CompilationRequest(
     IReadOnlyList<CompilationSource> Sources, string AssemblyName, IReadOnlyList<string> References,
     CompilationTarget Target = CompilationTarget.Exe, bool EmitDebugInformation = false, bool EmitDocumentation = false, DiagnosticOptions? DiagnosticOptions = null,
     bool Optimize = false, IReadOnlyList<MetadataImage>? ReferenceImages = null,
-    byte[]? StrongNameKey = null, bool PublicSign = false, bool DelaySign = false);
+    byte[]? StrongNameKey = null, bool PublicSign = false, bool DelaySign = false,
+    IReadOnlyList<CompilationResource>? Resources = null);
 
 /// <summary>The generated outputs of a successful compilation.</summary>
 /// <param name="AssemblyImage">The PE image of the produced assembly.</param>
@@ -76,7 +83,7 @@ public static class FpasCompiler
             if (!prepared.Success) return new(null, prepared.Diagnostics);
             var documentation = prepared.Documentation?.Serialize(request.AssemblyName);
             var output = AssemblyEmitter.Emit(prepared, request.AssemblyName, request.EmitDebugInformation, request.Optimize,
-                request.StrongNameKey, request.PublicSign, request.DelaySign);
+                request.StrongNameKey, request.PublicSign, request.DelaySign, request.Resources ?? [], cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
             return new(output with { XmlDocumentation = documentation }, prepared.Diagnostics);
         }

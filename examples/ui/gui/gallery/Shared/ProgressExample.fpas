@@ -2,7 +2,9 @@
 
 unit Gallery.Shared.ProgressExample;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.ProgressBars as P;
+uses
+  Gallery.Shared.Strings as Strings,
+  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.ProgressBars as P;
 
 // Builds the determinate upload indicator.
 // ## Type parameters
@@ -14,7 +16,7 @@ begin
   return P.ProgressBar<TMsg>(
     'upload',
     0.68F,
-    new P.Options(Label := 'Uploading assets', ShowValue := true)
+    new P.Options(Label := Strings.Get('Text.UploadingAssets'), ShowValue := true)
   );
 end function;
 
@@ -30,7 +32,7 @@ begin
   return P.ProgressBar<TMsg>(
     'export',
     0.42F,
-    new P.Options(Label := 'Exporting clip.mp4', ShowValue := true, Dither := Dither)
+    new P.Options(Label := Strings.Get('Text.ExportingClip'), ShowValue := true, Dither := Dither)
   );
 end function;
 

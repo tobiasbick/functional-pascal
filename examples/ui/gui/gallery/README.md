@@ -39,6 +39,19 @@ and translates their transitions with `Fpas.Ui.Mvu.Composition.MapTransition`.
 Each feature receives a stable background-effect scope. Shared values have one
 owner, so the profile dialog and Inputs, or Filters and Selection, stay in sync.
 
+## Localization
+
+The GUI and TUI galleries share [English](Shared/Strings.resx) and
+[German](Shared/Strings.de.resx) catalogs. The app uses the system UI culture
+and falls back to English. On Linux, start a new process with
+`LANG=de_DE.UTF-8` to see the German text. The catalogs cover navigation,
+page headings, section descriptions, the overview and shared example controls.
+Example data and per-widget demo text can retain their original wording.
+
+Use [Strings.fpas](Shared/Strings.fpas) for captions. Keep resource keys and
+widget IDs stable. See the [SDK localization guide](../../../../docs/build/msbuild.md#embedded-resources-and-localization)
+for how the assemblies are built and loaded.
+
 ## Pages
 
 - **Overview** shows the original Components, Frame time and Dependencies

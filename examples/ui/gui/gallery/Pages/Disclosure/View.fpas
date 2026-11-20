@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Disclosure.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   Gallery.Shared.SecurityCard as Security,
   GuiGallery.Pages.Disclosure.State as State,
   GuiGallery.Shared.Sections as G,
@@ -78,7 +79,10 @@ begin
     Banner.View(Model),
     Hover.View(),
     Confirm.View(Model),
-    G.Heading<State.Msg>('Expandable text', 'Long text clamps to a few lines with a fade.'),
+    G.Heading<State.Msg>(
+      Strings.Get('Heading.ExpandableText'),
+      Strings.Get('Heading.ExpandableTextHint')
+    ),
     T.ExpandableText<State.Msg>(
       'about-cui',
       'CUI is a component library for C. It draws everything itself, so an app looks the same on Windows, macOS and Linux, and it ' +
@@ -87,16 +91,22 @@ begin
       'renders through OpenGL or a built-in software rasterizer, so it also runs in virtual machines and over remote desktop.',
       new T.Options(Lines := 2)
     ),
-    G.Heading<State.Msg>('Expandable cards', 'A header that opens a body with a spring.'),
+    G.Heading<State.Msg>(
+      Strings.Get('Text.ExpandableCards'),
+      Strings.Get('Heading.ExpandableCardsHint')
+    ),
     Cards(Model),
-    G.Heading<State.Msg>('Countdown', 'Digits roll as the time passes.'),
+    G.Heading<State.Msg>(Strings.Get('Heading.Countdown'), Strings.Get('Heading.CountdownHint')),
     Countdown.View(Model),
-    G.Heading<State.Msg>('Onboarding checklist', 'Progress, with the next step open.'),
+    G.Heading<State.Msg>(
+      Strings.Get('Heading.OnboardingChecklist'),
+      Strings.Get('Heading.OnboardingChecklistHint')
+    ),
     Checklist.View(Model),
     UndoToast.View(),
     G.Heading<State.Msg>(
-      'Veil',
-      'Covers a picture, a secret or a spoiler with moving dots, and dissolves when clicked.'
+      Strings.Get('Heading.Veil'),
+      Strings.Get('Heading.VeilHint')
     ),
     Veil.View(Model, Colors)
   );

@@ -102,8 +102,9 @@ Handbook/agent-reference checks validate current copied sources, complete exampl
 behavior, local links/anchors and the exact o200k_base token budget. The source
 graph regression is additionally checked against the unchanged compiler.
 
-See [language gaps](future/language-gaps.md) for confirmed compiler and SDK
-omissions, including statement-level diagnostic recovery and embedded resources.
+See [language gaps](future/language-gaps.md) for the agreed language scope and
+[embedded resources](build/msbuild.md#embedded-resources-and-localization) for
+resource and localization behavior.
 Source events, class hierarchies, unsafe/byref-like features (except arrays
 passed to imported span parameters), custom awaiters, async iterators and
 extension discovery retain their documented separate scope. Application

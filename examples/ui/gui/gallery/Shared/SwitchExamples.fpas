@@ -2,7 +2,9 @@
 
 unit Gallery.Shared.SwitchExamples;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Switches as S;
+uses
+  Gallery.Shared.Strings as Strings,
+  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Switches as S;
 
 // Identity and copy for one switch used by both galleries.
 public type Sample = record
@@ -15,30 +17,37 @@ public type Sample = record
 end record;
 
 // Wi-Fi setting on Selection.
-public const Wifi: Sample := new Sample('wifi', 'Wi-Fi');
+public const Wifi: Sample := new Sample('wifi', Strings.Get('Text.Wifi'));
 // Bluetooth setting on Selection.
-public const Bluetooth: Sample := new Sample('bluetooth', 'Bluetooth');
+public const Bluetooth: Sample := new Sample('bluetooth', Strings.Get('Text.Bluetooth'));
 // Independent airplane mode setting on Selection.
-public const Airplane: Sample := new Sample('airplane', 'Airplane mode', 'Turns off all radios.');
+public const Airplane: Sample := new Sample(
+  'airplane',
+  Strings.Get('Text.AirplaneMode'),
+  Strings.Get('Text.AirplaneModeHint')
+);
 // Profile visibility in the Edit profile dialog.
-public const PublicProfile: Sample := new Sample('edit-profile-public', 'Public profile');
+public const PublicProfile: Sample := new Sample(
+  'edit-profile-public',
+  Strings.Get('Text.PublicProfile')
+);
 // Reply notifications in the sheet.
 public const Comments: Sample := new Sample(
   'notifications-comments',
-  'Comments',
-  'When someone replies to you.'
+  Strings.Get('Text.Comments'),
+  Strings.Get('Text.CommentsHint')
 );
 // Mention notifications in the sheet.
 public const Mentions: Sample := new Sample(
   'notifications-mentions',
-  'Mentions',
-  'When someone mentions you.'
+  Strings.Get('Text.Mentions'),
+  Strings.Get('Text.MentionsHint')
 );
 // Weekly notifications in the sheet.
 public const WeeklyDigest: Sample := new Sample(
   'notifications-weekly',
-  'Weekly digest',
-  'A summary every Monday.'
+  Strings.Get('Text.WeeklyDigest'),
+  Strings.Get('Text.WeeklyDigestHint')
 );
 
 // Connects the gallery example to its owning model.

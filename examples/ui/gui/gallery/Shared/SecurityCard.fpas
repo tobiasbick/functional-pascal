@@ -2,7 +2,9 @@
 
 unit Gallery.Shared.SecurityCard;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Containers.ExpandableCards as Cards, System as Sys;
+uses
+  Gallery.Shared.Strings as Strings,
+  Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Containers.ExpandableCards as Cards, System as Sys;
 
 // Security starts closed in both galleries.
 public const Initial: bool := false;
@@ -18,10 +20,10 @@ public const Initial: bool := false;
 public function View<TMsg>(Open: bool; Change: function(bool): TMsg): E.Element<TMsg>;
 begin
   return Cards.ExpandableCard<TMsg>(
-    'security', 'Security', Open, Change,
-    E.Styled<TMsg>(E.Text<TMsg>('Recovery codes were generated 3 months ago.'), S.Role.Secondary),
+    'security', Strings.Get('Text.Security'), Open, Change,
+    E.Styled<TMsg>(E.Text<TMsg>(Strings.Get('Text.RecoveryCodesAge')), S.Role.Secondary),
     new Cards.Options(
-      Description := 'Two-factor authentication is on',
+      Description := Strings.Get('Text.TwoFactorEnabled'),
       Icon := Sys.Char.ConvertFromUtf32($E158)
     )
   );

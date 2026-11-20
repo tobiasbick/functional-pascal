@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Ai.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Ai.State as S, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Theme, Fpas.Ui.Widgets.Motion.Motion as Motion,
   Fpas.Ui.Widgets.Conversation.ChatMessages as Chat, Fpas.Ui.Widgets.Ai.Reasonings as Reason, Fpas.Ui.Widgets.Ai.ToolCalls as Tools,
@@ -54,8 +55,8 @@ begin
   const Views: Generic.List<E.Element<S.Msg>> := new Generic.List<E.Element<S.Msg>>(
     [
       G.Heading<S.Msg>(
-        'Conversation',
-        'Reasoning, tool calls, an answer with sources, and the composer.'
+        Strings.Get('Heading.Conversation'),
+        Strings.Get('Heading.ConversationHint')
       ),
       Chat.ChatMessage<S.Msg>(
         'ai-question',
@@ -170,7 +171,7 @@ begin
   const Busy: bool := Model.Editor.Busy;
   return E.Column<S.Msg>(
     new L.Flow(Gap := G.Points(14), Clip := false),
-    G.Heading<S.Msg>('Agent plan', 'Steps and their status.'),
+    G.Heading<S.Msg>(Strings.Get('Heading.AgentPlan'), Strings.Get('Heading.AgentPlanHint')),
     Plan.AgentPlan<S.Msg>(
       'ai-plan', [
         new Plan.Step('Search for sources', '3 results', Task.Status.Done),
@@ -203,7 +204,7 @@ begin
         new Plan.Step('Check the citations')
       ], null, new Plan.Options(Title := 'Research plan')
     ),
-    G.Heading<S.Msg>('Suggestions', 'Ways to start.'),
+    G.Heading<S.Msg>(Strings.Get('Heading.Suggestions'), Strings.Get('Heading.SuggestionsHint')),
     Suggestions.PromptSuggestions<S.Msg>(
       'ai-suggestions',
       Prompts,
@@ -227,7 +228,7 @@ begin
       E.Size<S.Msg>(Conversation(Model, Colors), new L.Flex(Grow := 1.6F)),
       E.Size<S.Msg>(Agent(Model), new L.Flex(Grow := 1.0F))
     ),
-    G.Heading<S.Msg>('Model picker', 'Choose a model using the same menu as the composer.'),
+    G.Heading<S.Msg>(Strings.Get('Heading.ModelPicker'), Strings.Get('Heading.ModelPickerHint')),
     Picker.ModelPicker<S.Msg>('ai-model', Models, Model.Editor.Selected, S.Msg.ModelChoice)
   ];
 end function;

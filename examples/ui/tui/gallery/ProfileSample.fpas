@@ -3,6 +3,7 @@
 unit TuiGallery.ProfileSample;
 
 uses
+  Gallery.Shared.Strings as Strings,
   Gallery.Shared.SwitchExamples as Switches,
   Gallery.Shared.Profile as Demo, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
   Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Inputs.TextFields as Fields, Fpas.Ui.Widgets.Actions.Buttons as B,
@@ -100,14 +101,14 @@ begin
     Prefix + '-name', Model.Name, Msg.SetName,
     new Fields.Options(
       Label := if Inputs then
-        'Full name'
+        Strings.Get('Text.FullName')
       else
-        'Name'
+        Strings.Get('Text.Name')
       end if,
       Placeholder := if Inputs then
         Demo.Name
       elsif Workspace then
-        'Your name'
+        Strings.Get('Text.YourName')
       else
         ''
       end if, MaxUtf8Bytes := 63
@@ -116,8 +117,8 @@ begin
   const Email: E.Element<Msg> := Fields.TextField<Msg>(
     Prefix + '-email', Model.Email, Msg.SetEmail,
     new Fields.Options(
-      Label := 'Email', Hint := if Inputs then
-        'We never share your email.'
+      Label := Strings.Get('Text.Email'), Hint := if Inputs then
+        Strings.Get('Text.EmailPrivacy')
       else
         ''
       end if,
@@ -161,10 +162,10 @@ public function Openers(Wide: bool): E.Element<Msg>;
 begin
   const Flow: L.Flow := new L.Flow(Gap := L.Spacing.Tight);
   const Triggers: array of E.Element<Msg> := [
-    B.Button<Msg>('edit-profile-open', 'Edit profile', Msg.Show(Layer.Profile)),
-    B.Button<Msg>('sheet-open', 'Open sheet', Msg.Show(Layer.Notifications)),
+    B.Button<Msg>('edit-profile-open', Strings.Get('Text.EditProfile'), Msg.Show(Layer.Profile)),
+    B.Button<Msg>('sheet-open', Strings.Get('Text.OpenSheet'), Msg.Show(Layer.Notifications)),
     B.Button<Msg>(
-      'delete-project-open', 'Delete project', Msg.Show(Layer.Delete),
+      'delete-project-open', Strings.Get('Text.DeleteProject'), Msg.Show(Layer.Delete),
       new B.Options(Variant := S.ButtonVariant.Destructive)
     )
   ];
@@ -203,10 +204,10 @@ begin
           ),
           E.Row<TMsg>(
             new L.Flow(Gap := L.Spacing.Tight),
-            B.Button<TMsg>('edit-profile-cancel', 'Cancel', Close),
+            B.Button<TMsg>('edit-profile-cancel', Strings.Get('Text.Cancel'), Close),
             B.Button<TMsg>(
               'edit-profile-save',
-              'Save changes',
+              Strings.Get('Text.SaveChanges'),
               Close,
               new B.Options(Variant := S.ButtonVariant.Primary)
             )
@@ -214,8 +215,8 @@ begin
         ),
         true,
         new Dialogs.Options(
-          'Edit profile',
-          Description := 'Changes are visible to your team.',
+          Strings.Get('Text.EditProfile'),
+          Description := Strings.Get('Text.TeamChanges'),
           InitialFocus := 'edit-profile-name'
         ),
         Close
@@ -241,12 +242,19 @@ begin
             Model.Bluetooth,
             function(Value: bool): TMsg => Lift(Msg.SetBluetooth(Value))
           ),
-          E.Styled<TMsg>(E.Text<TMsg>('Recent'), S.Role.Heading),
-          E.Text<TMsg>('Jonas commented on Release 1.0'), E.Text<TMsg>('2 minutes ago'),
-          E.Text<TMsg>('Priya invited you to Engines'), E.Text<TMsg>('1 hour ago')
+          E.Styled<TMsg>(E.Text<TMsg>(Strings.Get('Text.Recent')), S.Role.Heading),
+          E.Text<TMsg>(Strings.Get('Text.RecentComment')),
+          E.Text<TMsg>(Strings.Get('Text.MinutesAgo')),
+          E.Text<TMsg>(
+            Strings.Get('Text.RecentInvitation')
+          ),
+          E.Text<TMsg>(Strings.Get('Text.HourAgo'))
         ),
         true,
-        new Sheets.Options('Notifications', Description := 'Choose what we tell you about.'),
+        new Sheets.Options(
+          Strings.Get('Text.Notifications'),
+          Description := Strings.Get('Text.NotificationsHint')
+        ),
         Close
       );
     when Layer.Delete:
@@ -256,14 +264,14 @@ begin
         E.Column<TMsg>(
           Flow,
           E.Text<TMsg>(
-            'This removes the project and its history for everyone. You cannot undo this.'
+            Strings.Get('Text.DeleteProjectWarning')
           ),
           E.Row<TMsg>(
             new L.Flow(Gap := L.Spacing.Tight),
-            B.Button<TMsg>('delete-project-cancel', 'Cancel', Close),
+            B.Button<TMsg>('delete-project-cancel', Strings.Get('Text.Cancel'), Close),
             B.Button<TMsg>(
               'delete-project-confirm',
-              'Delete project',
+              Strings.Get('Text.DeleteProject'),
               Close,
               new B.Options(Variant := S.ButtonVariant.Destructive)
             )
@@ -271,7 +279,7 @@ begin
         ),
         true,
         new Dialogs.Options(
-          'Delete this project?',
+          Strings.Get('Text.DeleteProjectQuestion'),
           Width := 400,
           InitialFocus := 'delete-project-cancel'
         ),

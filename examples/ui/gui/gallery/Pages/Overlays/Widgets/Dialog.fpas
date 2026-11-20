@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Overlays.Widgets.Dialog;
 
 uses
+  Gallery.Shared.Strings as Strings,
   Fpas.Ui.Composition as U,
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Overlays.State as State,
@@ -26,33 +27,35 @@ begin
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(20)),
     G.Heading<State.Msg>(
-      'Dialogs and sheets',
-      'Esc or a click outside closes them. Focus stays inside.'
+      Strings.Get('Text.DialogsAndSheets'),
+      Strings.Get('Text.OverlayHint')
     ),
     G.Card<State.Msg>(
       12, [
         E.Row<State.Msg>(
           new L.Flow(Gap := G.Points(8), Wrap := true),
           B.Button<State.Msg>(
-            'edit-profile-open', 'Edit profile', State.Msg.SetProfileDialog(true),
+            'edit-profile-open', Strings.Get('Text.EditProfile'), State.Msg.SetProfileDialog(true),
             new B.Options(Icon := Sys.Char.ConvertFromUtf32($E1F9))
           ),
           B.Button<State.Msg>(
-            'sheet-open', 'Open sheet', State.Msg.SetSheet(true),
+            'sheet-open', Strings.Get('Text.OpenSheet'), State.Msg.SetSheet(true),
             new B.Options(Icon := Sys.Char.ConvertFromUtf32($E12A))
           ),
           B.Button<State.Msg>(
-            'delete-project-open', 'Delete project', State.Msg.SetDeleteDialog(true),
+            'delete-project-open',
+            Strings.Get('Text.DeleteProject'),
+            State.Msg.SetDeleteDialog(true),
             new B.Options(
               Variant := S.ButtonVariant.Destructive,
               Icon := Sys.Char.ConvertFromUtf32($E18E)
             )
           ),
           B.Button<State.Msg>(
-            'overlay-palette', 'Command palette', State.Msg.SetPalette(true),
+            'overlay-palette', Strings.Get('Text.CommandPalette'), State.Msg.SetPalette(true),
             new B.Options(
               Variant := S.ButtonVariant.Outline, Icon := Sys.Char.ConvertFromUtf32($E09A),
-              Tooltip := 'Search everything', Shortcut := 'Ctrl K'
+              Tooltip := Strings.Get('Text.SearchEverything'), Shortcut := 'Ctrl K'
             )
           )
         )
@@ -80,14 +83,14 @@ begin
       'edit-profile-name',
       Data.Name,
       function(SharedValue: string): State.Msg => State.Msg.Shared(Demo.Msg.SetName(SharedValue)),
-      new TextFields.Options(Label := 'Name', MaxUtf8Bytes := 63)
+      new TextFields.Options(Label := Strings.Get('Text.Name'), MaxUtf8Bytes := 63)
     ),
     TextFields.TextField<State.Msg>(
       'edit-profile-email',
       Data.Email,
       function(SharedValue: string): State.Msg => State.Msg.Shared(Demo.Msg.SetEmail(SharedValue)),
       new TextFields.Options(
-        Label := 'Email',
+        Label := Strings.Get('Text.Email'),
         Icon := Sys.Char.ConvertFromUtf32($E10F),
         MaxUtf8Bytes := 95
       )
@@ -98,9 +101,13 @@ begin
       function(SharedValue: bool): State.Msg => State.Msg.Shared(Demo.Msg.SetWifi(SharedValue))
     ),
     F.ActionFooter<State.Msg>(
-      B.Button<State.Msg>('edit-profile-cancel', 'Cancel', State.Msg.SetProfileDialog(false)),
       B.Button<State.Msg>(
-        'edit-profile-save', 'Save changes', State.Msg.SaveProfile,
+        'edit-profile-cancel',
+        Strings.Get('Text.Cancel'),
+        State.Msg.SetProfileDialog(false)
+      ),
+      B.Button<State.Msg>(
+        'edit-profile-save', Strings.Get('Text.SaveChanges'), State.Msg.SaveProfile,
         new B.Options(Variant := S.ButtonVariant.Primary)
       )
     )
@@ -111,8 +118,8 @@ begin
       Messages
     ), Model.ProfileDialog,
     new D.Options(
-      'Edit profile',
-      Description := 'Changes are visible to your team.',
+      Strings.Get('Text.EditProfile'),
+      Description := Strings.Get('Text.ProfileVisibility'),
       Draggable := true,
       Resizable := true
     ),

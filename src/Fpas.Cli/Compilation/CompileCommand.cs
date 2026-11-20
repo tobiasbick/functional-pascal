@@ -1,5 +1,6 @@
 // [Documentation](../../../docs/pascal/program-structure/cli.md#inspect-and-invoke-the-compiler)
 using System.CommandLine;
+using System.Text.Json;
 using Fpas.Compiler;
 
 namespace Fpas.Cli.Compilation;
@@ -14,6 +15,7 @@ internal sealed class CompileCommand
     private readonly Option<string> output = new("--output") { Description = "Managed assembly output (.dll).", Required = true };
     private readonly Option<string[]> references = Repeated("--reference", "Supply an assembly reference; repeatable.");
     private readonly Option<string[]> referenceDirectories = Repeated("--reference-dir", "Supply all DLLs in a directory; repeatable.");
+    private readonly Option<string[]> resources = Repeated("--embedded-resource", "Supply a compiled embedded resource from the FPAS SDK.");
     private readonly Option<string> target = Choice("--target", "Output kind.", "exe", "library");
     private readonly Option<string> debug = Choice("--debug", "Debug symbol format.", "portable", "none");
     private readonly Option<bool> optimize = new("--optimize") { Description = "Allow JIT optimization while retaining the selected debug symbols." };
@@ -47,9 +49,10 @@ internal sealed class CompileCommand
 
     internal CompileCommand()
     {
+        resources.Hidden = true;
         diagnostics.AcceptOnlyFromAmong("json");
         Command.Arguments.Add(sources);
-        foreach (var option in new Option[] { output, references, referenceDirectories, target, debug, optimize, generateDocumentation,
+        foreach (var option in new Option[] { output, references, referenceDirectories, resources, target, debug, optimize, generateDocumentation,
             documentation, warnAsError, warningsAsErrors, warningsNotAsErrors, noWarn, diagnostics, expectedCompiler, keyFile, publicSign, delaySign, ResponseFile })
             Command.Options.Add(option);
         Command.Validators.Add(result =>
@@ -86,7 +89,23 @@ internal sealed class CompileCommand
             result.GetValue(debug) == "portable", documentationPath,
             new(result.GetValue(warnAsError), Codes(result.GetValue(warningsAsErrors)!),
                 Codes(result.GetValue(warningsNotAsErrors)!), Codes(result.GetValue(noWarn)!)), result.GetValue(optimize),
-                result.GetValue(keyFile), result.GetValue(publicSign), result.GetValue(delaySign)).Validate();
+                result.GetValue(keyFile), result.GetValue(publicSign), result.GetValue(delaySign),
+                result.GetValue(resources)!.Select(ReadResource).ToArray()).Validate();
+    }
+
+    private static (string Name, string Path) ReadResource(string value)
+    {
+        try
+        {
+            if (JsonSerializer.Deserialize(value, Diagnostics.CompileJson.Default.StringArray) is [string name, string path]
+                && !string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(path))
+                return (name, Path.GetFullPath(path));
+        }
+        catch (JsonException exception)
+        {
+            throw new ArgumentException("Invalid embedded resource descriptor in the compiler arguments.", exception);
+        }
+        throw new ArgumentException("An embedded resource descriptor requires a manifest name and file path.");
     }
 
     private static string[] Codes(string[] values) => values.SelectMany(value =>

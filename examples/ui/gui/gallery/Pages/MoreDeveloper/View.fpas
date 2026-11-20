@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.MoreDeveloper.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.MoreDeveloper.State as M, GuiGallery.Pages.MoreDeveloper.Samples as D, GuiGallery.Shared.Sections as Section,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
   Fpas.Ui.Widgets.Developer.TestExplorers as T, Fpas.Ui.Widgets.Developer.StackTraces as S, Fpas.Ui.Widgets.Developer.Blames as B, Fpas.Ui.Widgets.Developer.Coverages as C, Fpas.Ui.Widgets.Developer.RegexTesters as R, Fpas.Ui.Widgets.Developer.RequestBars as H, Fpas.Ui.Widgets.Developer.KeyValueEditors as K, Fpas.Ui.Widgets.Developer.ResponseStatuses as Status, Fpas.Ui.Widgets.Developer.ApiExplorers as A, Fpas.Ui.Widgets.Developer.FeatureFlagEditors as F, Fpas.Ui.Widgets.Developer.Uptimes as U, Fpas.Ui.Widgets.Charts.TimeHistograms as G, System as Sys;
@@ -26,16 +27,16 @@ public function View(Model: M.Model): array of E.Element<M.Msg>;
 begin
   return [
     Section.Heading<M.Msg>(
-      'Test explorer',
-      'Suites fold; hover a row to run it; filter by status or name.'
+      Strings.Get('Heading.TestExplorer'),
+      Strings.Get('Heading.TestExplorerHint')
     ),
     Limit(
       760, 10,
       T.TestExplorer<M.Msg>('dev-tests', D.Tests, M.Msg.Tests, new T.Options(Height := 500.0F))
     ),
     Section.Heading<M.Msg>(
-      'Stack trace',
-      'Library frames fold; a frame with source opens; copy the trace.'
+      Strings.Get('Heading.StackTrace'),
+      Strings.Get('Heading.StackTraceHint')
     ),
     Limit(
       760, 10,
@@ -51,8 +52,8 @@ begin
       )
     ),
     Section.Heading<M.Msg>(
-      'Blame',
-      'Hover the gutter to mark a commit''s lines; click it to open the commit.'
+      Strings.Get('Heading.Blame'),
+      Strings.Get('Heading.BlameHint')
     ),
     Limit(
       900, 10,
@@ -65,12 +66,15 @@ begin
         new B.Options(Language := 'c', Now := 1794211200L, Height := 320.0F, FirstLine := 120)
       )
     ),
-    Section.Heading<M.Msg>('Coverage', 'Folders sum up their files; click a column to sort.'),
+    Section.Heading<M.Msg>(Strings.Get('Heading.Coverage'), Strings.Get('Heading.CoverageHint')),
     Limit(
       820, 10,
       C.Coverage<M.Msg>('dev-coverage', D.Coverage, M.Msg.Coverage, new C.Options(Height := 372.0F))
     ),
-    Section.Heading<M.Msg>('Regex tester', 'Matches and groups are marked as you type.'),
+    Section.Heading<M.Msg>(
+      Strings.Get('Heading.RegexTester'),
+      Strings.Get('Heading.RegexTesterHint')
+    ),
     Limit(
       760, 10,
       R.RegexTester<M.Msg>(
@@ -82,7 +86,10 @@ begin
         new R.Options(Height := 110.0F)
       )
     ),
-    Section.Heading<M.Msg>('HTTP request bar', 'The parameters table and the URL stay in step.'),
+    Section.Heading<M.Msg>(
+      Strings.Get('Heading.HttpRequestBar'),
+      Strings.Get('Heading.HttpRequestBarHint')
+    ),
     Limit(
       760, 12,
       H.RequestBar<M.Msg>('dev-request', Model.Method, Model.Url, M.Msg.Request),
@@ -94,25 +101,31 @@ begin
       ),
       Status.ResponseStatus<M.Msg>('dev-response', 201, 0.142, 18400.0)
     ),
-    Section.Heading<M.Msg>('API explorer', 'Click an endpoint for its parameters.'),
+    Section.Heading<M.Msg>(
+      Strings.Get('Heading.ApiExplorer'),
+      Strings.Get('Heading.ApiExplorerHint')
+    ),
     Limit(
       820, 10,
       A.ApiExplorer<M.Msg>('dev-api', D.Endpoints, Model.Endpoint, M.Msg.Endpoint)
     ),
     Section.Heading<M.Msg>(
-      'Feature flags',
-      'A switch per environment; click a share to change it.'
+      Strings.Get('Heading.FeatureFlags'),
+      Strings.Get('Heading.FeatureFlagsHint')
     ),
     Limit(
       860, 10,
       F.FeatureFlags<M.Msg>('dev-flags', Model.Flags, D.Environments, M.Msg.Flag)
     ),
-    Section.Heading<M.Msg>('Uptime', 'One bar per day; hover for the day.'),
+    Section.Heading<M.Msg>(Strings.Get('Heading.Uptime'), Strings.Get('Heading.UptimeHint')),
     Limit(
       860, 10,
       U.Uptime<M.Msg>('dev-uptime', D.Services, new Sys.DateOnly(2026, 11, 9))
     ),
-    Section.Heading<M.Msg>('Time histogram', 'Drag to select a range; click to clear it.'),
+    Section.Heading<M.Msg>(
+      Strings.Get('Heading.TimeHistogram'),
+      Strings.Get('Heading.TimeHistogramHint')
+    ),
     Limit(
       900, 10,
       G.TimeHistogram<M.Msg>(

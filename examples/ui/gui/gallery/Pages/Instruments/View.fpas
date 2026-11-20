@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Instruments.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Instruments.State as S, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Display.Readouts as R, Fpas.Ui.Widgets.Charts.DotCharts as D,
   Fpas.Ui.Widgets.Display.DotDisplays as Display, Fpas.Ui.Widgets.Charts.EventTracks as T, Fpas.Ui.Widgets.Charts.Charts as C,
@@ -95,8 +96,8 @@ begin
   end if;
   return [
     G.Heading<S.Msg>(
-      'Readouts',
-      'A label, a value with its unit, and a line of context, in the monospaced font.'
+      Strings.Get('Heading.Readouts'),
+      Strings.Get('Heading.ReadoutsHint')
     ),
     E.Row<S.Msg>(
       new L.Flow(Gap := G.Points(40), Wrap := true, Align := L.Alignment.End),
@@ -120,8 +121,8 @@ begin
       )
     ),
     G.Heading<S.Msg>(
-      'Dot-matrix chart and event track',
-      'Drag a cup along the axis, click the chart to add one, double-click a cup to remove it.'
+      Strings.Get('Heading.DotMatrixChartAndEventTrack'),
+      Strings.Get('Heading.DotMatrixChartAndEventTrackHint')
     ),
     E.Column<S.Msg>(
       new L.Flow(Clip := false),
@@ -140,7 +141,10 @@ begin
         )
       )
     ),
-    G.Heading<S.Msg>('Dot-matrix display', 'Text in a 5 by 7 dot font; a long line can scroll.'),
+    G.Heading<S.Msg>(
+      Strings.Get('Heading.DotMatrixDisplay'),
+      Strings.Get('Heading.DotMatrixDisplayHint')
+    ),
     Display.DotDisplay<S.Msg>(
       'bed-display',
       State + ' THE LINE AT BEDTIME',

@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Planning.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Planning.State as M, GuiGallery.Pages.Planning.Board as Board,
   GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
   Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Planning.WeekCalendars as W, Fpas.Ui.Widgets.Planning.Gantts as Timeline,
@@ -51,13 +52,13 @@ begin
   const Monday: Sys.DateOnly := Model.Today.AddDays(-Day);
   return [
     G.Heading<M.Msg>(
-      'Kanban',
-      'Drag cards within and between columns. Columns can carry a work-in-progress limit.'
+      Strings.Get('Heading.Kanban'),
+      Strings.Get('Heading.KanbanHint')
     ),
     Board.View(Model),
     G.Heading<M.Msg>(
-      'Week calendar',
-      'Drag events to move them in 15 minute steps, or pull the bottom edge to resize.'
+      Strings.Get('Heading.WeekCalendar'),
+      Strings.Get('Heading.WeekCalendarHint')
     ),
     W.WeekCalendar<M.Msg>(
       'planning-week', new W.Value(Monday, Model.Events), M.Msg.Week,
@@ -68,16 +69,16 @@ begin
       )
     ),
     G.Heading<M.Msg>(
-      'Gantt',
-      'Drag bars to reschedule, pull either end to change the length. Curves follow dependencies.'
+      Strings.Get('Heading.Gantt'),
+      Strings.Get('Heading.GanttHint')
     ),
     Timeline.Gantt<M.Msg>(
       'planning-gantt', new Timeline.Value(Monday.AddDays(-7), 42, Model.Tasks),
       M.Msg.Timeline, new Timeline.Options(Today := 7 + Day)
     ),
     G.Heading<M.Msg>(
-      'Month calendar',
-      'Bars for days off and trips, timed events in time order, +N more when a day is full.'
+      Strings.Get('Heading.MonthCalendar'),
+      Strings.Get('Heading.MonthCalendarHint')
     ),
     Month.MonthCalendar<M.Msg>(
       'planning-month',

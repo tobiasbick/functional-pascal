@@ -31,15 +31,15 @@ internal sealed partial class AssemblyEmitter
     private PortableDebugInfo? debug;
 
     internal static CompiledProgram Emit(PreparedCompilation prepared, string assemblyName, bool emitDebug, bool optimize,
-        byte[]? key, bool publicSign, bool delaySign)
+        byte[]? key, bool publicSign, bool delaySign, IReadOnlyList<CompilationResource> resources, CancellationToken cancellationToken)
     {
         if (publicSign && delaySign || key is null && (publicSign || delaySign)) throw new CryptographicException("Invalid signing mode.");
         using var signing = key is null ? null : new StrongNameKey(key, publicSign || delaySign);
-        return new AssemblyEmitter().Build(prepared, assemblyName, emitDebug, optimize, signing, publicSign, delaySign);
+        return new AssemblyEmitter().Build(prepared, assemblyName, emitDebug, optimize, signing, publicSign, delaySign, resources, cancellationToken);
     }
 
     private CompiledProgram Build(PreparedCompilation prepared, string assemblyName, bool emitDebug, bool optimize,
-        StrongNameKey? signing, bool publicSign, bool delaySign)
+        StrongNameKey? signing, bool publicSign, bool delaySign, IReadOnlyList<CompilationResource> resources, CancellationToken cancellationToken)
     {
         var program = prepared.Program;
         var sources = prepared.Catalog.Units.Select(unit => unit.Source);
@@ -53,6 +53,7 @@ internal sealed partial class AssemblyEmitter
             signing is null ? default : metadata.GetOrAddBlob(signing.PublicKey), signing is null ? 0 : AssemblyFlags.PublicKey,
             signing is null ? AssemblyHashAlgorithm.None : AssemblyHashAlgorithm.Sha1);
         AddDebuggableAttribute(optimize);
+        var managedResources = EmbedResources(resources, cancellationToken);
         var objectType = metadata.AddTypeReference(Reference(program.Runtime), metadata.GetOrAddString("System"), metadata.GetOrAddString("Object"));
         var bodies = new BlobBuilder();
         var bodyEncoder = new MethodBodyStreamEncoder(bodies);
@@ -117,7 +118,7 @@ internal sealed partial class AssemblyEmitter
         }
         var pe = new ManagedPEBuilder(
             new PEHeaderBuilder(imageCharacteristics: Characteristics.ExecutableImage | (program.IsExecutable ? 0 : Characteristics.Dll)),
-            new MetadataRootBuilder(metadata), bodies, debugDirectoryBuilder: directory, entryPoint: entry,
+            new MetadataRootBuilder(metadata), bodies, managedResources: managedResources, debugDirectoryBuilder: directory, entryPoint: entry,
             strongNameSignatureSize: signing?.SignatureSize ?? 0,
             flags: CorFlags.ILOnly | (signing is not null && !delaySign ? CorFlags.StrongNameSigned : 0),
             deterministicIdProvider: HashContent);
@@ -137,6 +138,26 @@ internal sealed partial class AssemblyEmitter
         return new(identified, program.IsExecutable ? """
             {"runtimeOptions":{"tfm":"net10.0","framework":{"name":"Microsoft.NETCore.App","version":"10.0.0"}}}
             """ + "\n" : null, symbols?.Image);
+    }
+
+    private BlobBuilder? EmbedResources(IReadOnlyList<CompilationResource> resources, CancellationToken cancellationToken)
+    {
+        if (resources.Count == 0) return null;
+        var names = new HashSet<string>(StringComparer.Ordinal);
+        var blobs = new BlobBuilder();
+        foreach (var resource in resources.OrderBy(resource => resource.Name, StringComparer.Ordinal))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (string.IsNullOrWhiteSpace(resource.Name) || resource.Name.Contains('\0') || resource.Content is null)
+                throw new CompilationFailure(new("FP4004", "An embedded resource requires a nonempty manifest name and binary content.", null));
+            if (!names.Add(resource.Name))
+                throw new CompilationFailure(new("FP4004", $"Duplicate embedded resource name '{resource.Name}'.", null));
+            blobs.Align(8);
+            metadata.AddManifestResource(ManifestResourceAttributes.Public, metadata.GetOrAddString(resource.Name), default, (uint)blobs.Count);
+            blobs.WriteInt32(resource.Content.Length);
+            blobs.WriteBytes(resource.Content);
+        }
+        return blobs;
     }
 
     private int EmitBody(BoundRoutine routine, MethodBodyStreamEncoder bodies)

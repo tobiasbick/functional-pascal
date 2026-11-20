@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Motion.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Motion.State as M, GuiGallery.Pages.Motion.Controls as Controls,
   GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Styles as S,
   Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Motion.Motion as Motion, Fpas.Ui.Widgets.Containers.Cards as Cards,
@@ -81,13 +82,13 @@ public function View(Model: M.Model): array of E.Element<M.Msg>;
 begin
   return [
     G.Heading<M.Msg>(
-      'Text effects',
-      'A shimmer for pending work, a typewriter for streamed text, words that settle into place.'
+      Strings.Get('Heading.TextEffects'),
+      Strings.Get('Heading.TextEffectsHint')
     ),
     TextEffects(Model.Revision),
     G.Heading<M.Msg>(
-      'Gradient text and spotlight cards',
-      'A light follows the pointer across a card and along its edge. A beam marks the one card that is live.'
+      Strings.Get('Heading.GradientTextAndSpotlightCards'),
+      Strings.Get('Heading.GradientTextAndSpotlightCardsHint')
     ),
     Gradient.GradientText<M.Msg>(
       'motion-gradient',
@@ -100,7 +101,7 @@ begin
       Card('opengl', 'OpenGL 3.3', 'The default on desktop. Deploying now.', true),
       Card('custom', 'Your own', 'The core emits triangles; bring any GPU API.', false)
     ),
-    G.Heading<M.Msg>('Loaders', 'Dots, bars, pulse, orbit and grid.'),
+    G.Heading<M.Msg>(Strings.Get('Heading.Loaders'), Strings.Get('Heading.LoadersHint')),
     E.Row<M.Msg>(
       new L.Flow(Gap := G.Points(36), Align := L.Alignment.Center, Clip := false),
       Loader('motion-dots', Loaders.Animation.Dots),
@@ -109,10 +110,13 @@ begin
       Loader('motion-orbit', Loaders.Animation.Orbit),
       Loader('motion-grid-loader', Loaders.Animation.Grid)
     ),
-    G.Heading<M.Msg>('Dock', 'Icons grow as the pointer passes.'),
+    G.Heading<M.Msg>(Strings.Get('Heading.Dock'), Strings.Get('Heading.DockHint')),
     Controls.Dock(),
     Controls.Compact(Model),
-    G.Heading<M.Msg>('Rolling number', 'Change the value to animate its digits.'),
+    G.Heading<M.Msg>(
+      Strings.Get('Heading.RollingNumber'),
+      Strings.Get('Heading.RollingNumberHint')
+    ),
     E.Row<M.Msg>(
       new L.Flow(Gap := G.Points(14), Align := L.Alignment.Center, Clip := false),
       Number.NumberRoll<M.Msg>(

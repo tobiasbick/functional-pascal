@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Inputs.Widgets.PickerFields;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Inputs.State as State,
   GuiGallery.Pages.Inputs.Widgets.BrandColor as BrandColor,
   GuiGallery.Shared.Sections as G,
@@ -43,7 +44,9 @@ begin
     Brand
   ];
   return E.Column<State.Msg>(
-    new L.Flow(Gap := G.Points(20)), G.Heading<State.Msg>('Pickers'), G.Card<State.Msg>(16, Fields)
+    new L.Flow(Gap := G.Points(20)),
+    G.Heading<State.Msg>(Strings.Get('Page.Pickers')),
+    G.Card<State.Msg>(16, Fields)
   );
 end function;
 

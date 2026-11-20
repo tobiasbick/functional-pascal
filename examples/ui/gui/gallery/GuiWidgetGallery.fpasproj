@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>WinExe</OutputType>
+    <RootNamespace>Gallery</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../../src/Fpas.Ui.Gui/Fpas.Ui.Gui.fpasproj" />

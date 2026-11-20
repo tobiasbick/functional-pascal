@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.SmartInputs.Widgets.Editors;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.SmartInputs.State as S, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Inputs.InlineEdits as I,
   Fpas.Ui.Widgets.Inputs.ScrubFields as Scrubs, Fpas.Ui.Widgets.Inputs.MoneyFields as M;
@@ -16,8 +17,8 @@ public function Inline(Model: S.Model): array of E.Element<S.Msg>;
 begin
   return [
     G.Heading<S.Msg>(
-      'Inline edit',
-      'Click the text to edit it in place. Enter saves, Esc cancels.'
+      Strings.Get('Heading.InlineEdit'),
+      Strings.Get('Heading.InlineEditHint')
     ),
     E.Column<S.Msg>(
       new L.Flow(Gap := G.Points(6), Clip := false),
@@ -42,8 +43,8 @@ public function Scrub(Model: S.Model): array of E.Element<S.Msg>;
 begin
   return [
     G.Heading<S.Msg>(
-      'Scrub fields',
-      'Drag sideways to change the value, Shift for fine steps, click to type.'
+      Strings.Get('Heading.ScrubFields'),
+      Strings.Get('Heading.ScrubFieldsHint')
     ),
     E.Row<S.Msg>(
       new L.Flow(Gap := G.Points(12), Wrap := true),
@@ -71,7 +72,7 @@ end function;
 public function Money(Model: S.Model): array of E.Element<S.Msg>;
 begin
   return [
-    G.Heading<S.Msg>('Money', 'Exact decimal amounts with native text editing.'),
+    G.Heading<S.Msg>(Strings.Get('Heading.Money'), Strings.Get('Heading.MoneyHint')),
     E.Row<S.Msg>(
       new L.Flow(Gap := G.Points(12), Align := L.Alignment.Start),
       E.Size<S.Msg>(

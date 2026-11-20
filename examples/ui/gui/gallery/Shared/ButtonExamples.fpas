@@ -2,7 +2,9 @@
 
 unit Gallery.Shared.ButtonExamples;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Actions.Buttons as B, System as Sys;
+uses
+  Gallery.Shared.Strings as Strings,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Actions.Buttons as B, System as Sys;
 
 const Row: L.Flow := new L.Flow(Gap := L.Spacing.Normal, Align := L.Alignment.Center);
 const Stack: L.Flow := new L.Flow(Gap := L.Spacing.Loose);
@@ -30,24 +32,38 @@ begin
   const Primary: E.Element<TMsg> := Sample<TMsg>(
     Preview,
     'primary',
-    'Primary',
+    Strings.Get('Text.Primary'),
     S.ButtonVariant.Primary
   );
-  const Secondary: E.Element<TMsg> := Sample<TMsg>(Preview, 'secondary', 'Secondary');
+  const Secondary: E.Element<TMsg> := Sample<TMsg>(
+    Preview,
+    'secondary',
+    Strings.Get('Text.Secondary')
+  );
   const Outline: E.Element<TMsg> := Sample<TMsg>(
     Preview,
     'outline',
-    'Outline',
+    Strings.Get('Text.Outline'),
     S.ButtonVariant.Outline
   );
-  const Ghost: E.Element<TMsg> := Sample<TMsg>(Preview, 'ghost', 'Ghost', S.ButtonVariant.Ghost);
+  const Ghost: E.Element<TMsg> := Sample<TMsg>(
+    Preview,
+    'ghost',
+    Strings.Get('Text.Ghost'),
+    S.ButtonVariant.Ghost
+  );
   const Danger: E.Element<TMsg> := Sample<TMsg>(
     Preview,
     'danger',
-    'Danger',
+    Strings.Get('Text.Danger'),
     S.ButtonVariant.Destructive
   );
-  const Link: E.Element<TMsg> := Sample<TMsg>(Preview, 'link', 'Link', S.ButtonVariant.Link);
+  const Link: E.Element<TMsg> := Sample<TMsg>(
+    Preview,
+    'link',
+    Strings.Get('Text.Link'),
+    S.ButtonVariant.Link
+  );
 
   return if Wide then
     E.Row<TMsg>(
@@ -79,9 +95,9 @@ public function Sizes<TMsg>(Preview: TMsg): E.Element<TMsg>;
 begin
   return E.Row<TMsg>(
     Row,
-    Sample<TMsg>(Preview, 'small', 'Small', Size := B.Size.Small),
-    Sample<TMsg>(Preview, 'medium', 'Medium'),
-    Sample<TMsg>(Preview, 'large', 'Large', Size := B.Size.Large)
+    Sample<TMsg>(Preview, 'small', Strings.Get('Text.Small'), Size := B.Size.Small),
+    Sample<TMsg>(Preview, 'medium', Strings.Get('Text.Medium')),
+    Sample<TMsg>(Preview, 'large', Strings.Get('Text.Large'), Size := B.Size.Large)
   );
 end function;
 
@@ -95,7 +111,7 @@ end function;
 public function Icons<TMsg>(Preview: TMsg): array of E.Element<TMsg>;
 begin
   const Project: E.Element<TMsg> := B.Button<TMsg>(
-    'new-project', 'New project', Preview,
+    'new-project', Strings.Get('Text.NewProject'), Preview,
     new B.Options(
       Variant := S.ButtonVariant.Primary,
       Icon := Sys.Char.ConvertFromUtf32($E13D),
@@ -104,12 +120,12 @@ begin
   );
   const Download: E.Element<TMsg> := B.Button<TMsg>(
     'download',
-    'Download',
+    Strings.Get('Text.Download'),
     Preview,
     new B.Options(Icon := Sys.Char.ConvertFromUtf32($E0B2), TerminalIcon := '↓')
   );
   const Continue: E.Element<TMsg> := B.Button<TMsg>(
-    'continue', 'Continue', Preview,
+    'continue', Strings.Get('Text.Continue'), Preview,
     new B.Options(
       Variant := S.ButtonVariant.Outline,
       IconRight := Sys.Char.ConvertFromUtf32($E049),
@@ -134,23 +150,23 @@ begin
   const Save: E.Element<TMsg> := B.Button<TMsg>(
     'save',
     if Loading then
-      'Saving'
+      Strings.Get('Text.Saving')
     else
-      'Save changes'
+      Strings.Get('Text.SaveChanges')
     end if,
     Toggle(true),
     new B.Options(Loading := Loading, Variant := S.ButtonVariant.Primary)
   );
   const Reset: E.Element<TMsg> := B.Button<TMsg>(
     'finish-save',
-    'Reset',
+    Strings.Get('Text.Reset'),
     Toggle(false)
   );
   const Disabled: E.Element<TMsg> := B.Button<TMsg>(
-    'disabled', 'Disabled', Preview, new B.Options(Enabled := false)
+    'disabled', Strings.Get('Text.Disabled'), Preview, new B.Options(Enabled := false)
   );
   const Selected: E.Element<TMsg> := B.Button<TMsg>(
-    'selected', 'Selected', Preview,
+    'selected', Strings.Get('Text.Selected'), Preview,
     new B.Options(
       Variant := S.ButtonVariant.Ghost,
       Selected := true,

@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Overview.Widgets.Team;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Overview.State as State, GuiGallery.Shared.State as Demo, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Widgets.Feedback.Badges as Badges, Fpas.Ui.Widgets.Media.Avatars as Avatars,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Actions.Buttons as B,
@@ -33,13 +34,13 @@ begin
       E.Size<State.Msg>(
         E.Column<State.Msg>(
           new L.Flow(Gap := G.Points(4)),
-          E.Styled<State.Msg>(E.Text<State.Msg>('Team'), S.Role.Heading),
-          E.Styled<State.Msg>(E.Text<State.Msg>('Four people, one owner.'), S.Role.Secondary)
+          E.Styled<State.Msg>(E.Text<State.Msg>(Strings.Get('Text.Team')), S.Role.Heading),
+          E.Styled<State.Msg>(E.Text<State.Msg>(Strings.Get('Text.TeamSummary')), S.Role.Secondary)
         ),
         Fill
       ),
       B.Button<State.Msg>(
-        'team-invite', 'Invite', State.Msg.Shared(Demo.Msg.Preview),
+        'team-invite', Strings.Get('Text.Invite'), State.Msg.Shared(Demo.Msg.Preview),
         new B.Options(Icon := Sys.Char.ConvertFromUtf32($E1A2), ControlSize := B.Size.Small)
       )
     )
@@ -73,7 +74,11 @@ begin
             ),
             Fill
           ),
-          Badges.Badge<State.Msg>(Key + '-badge', Item.Role, new Badges.Options(Tone := Tone))
+          Badges.Badge<State.Msg>(
+            Key + '-badge',
+            Strings.Get('Text.' + Item.Role),
+            new Badges.Options(Tone := Tone)
+          )
         ),
         G.Space<State.Msg>(4)
       )

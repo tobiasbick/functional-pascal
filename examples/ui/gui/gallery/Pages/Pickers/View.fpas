@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Pickers.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Pickers.State as State, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Widgets.Inputs.MultiSelects as Multi, Fpas.Ui.Widgets.Inputs.Selects as S, Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L, GuiGallery.Pages.Pickers.Widgets.DateRange as DateRange,
@@ -26,7 +27,10 @@ begin
   );
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(20)),
-    G.Heading<State.Msg>('Multi-select', 'Chips for the chosen items, checkboxes in the list.'),
+    G.Heading<State.Msg>(
+      Strings.Get('Heading.MultiSelect'),
+      Strings.Get('Heading.MultiSelectHint')
+    ),
     E.Row<State.Msg>(
       new L.Flow(Gap := G.Points(12), Align := L.Alignment.Start),
       E.Size<State.Msg>(
@@ -34,20 +38,20 @@ begin
       )
     ),
     G.Heading<State.Msg>(
-      'Date range',
-      'Presets on the left, two months to pick a start and an end.'
+      Strings.Get('Heading.DateRange'),
+      Strings.Get('Heading.DateRangeHint')
     ),
     DateRange.View(Model),
-    G.Heading<State.Msg>('Time', 'A field with hour and minute columns, 24 hour or 12 hour.'),
+    G.Heading<State.Msg>(Strings.Get('Heading.Time'), Strings.Get('Heading.TimeHint')),
     Time.View(Model),
     G.Heading<State.Msg>(
-      'Wheels and dial',
-      'Drag, scroll or use the arrow keys. Several wheels make a date reel.'
+      Strings.Get('Heading.WheelsAndDial'),
+      Strings.Get('Heading.WheelsAndDialHint')
     ),
     WheelsAndDial.View(Model),
     G.Heading<State.Msg>(
-      'Ruler and histogram',
-      'A tape that slides under a fixed marker, and a range over its data.'
+      Strings.Get('Heading.RulerAndHistogram'),
+      Strings.Get('Heading.RulerAndHistogramHint')
     ),
     RulerAndHistogram.View(Model)
   );

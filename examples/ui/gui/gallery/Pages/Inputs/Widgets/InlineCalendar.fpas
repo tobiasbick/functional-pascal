@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Inputs.Widgets.InlineCalendar;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Inputs.State as State, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Widgets.Pickers.Calendars as C, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
 
@@ -15,7 +16,7 @@ public function View(Model: State.Model): E.Element<State.Msg>;
 begin
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(20)),
-    G.Heading<State.Msg>('Calendar'),
+    G.Heading<State.Msg>(Strings.Get('Heading.Calendar')),
     E.Row<State.Msg>(
       E.Styled<State.Msg>(
         E.Column<State.Msg>(

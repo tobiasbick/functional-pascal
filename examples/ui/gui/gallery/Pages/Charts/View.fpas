@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Charts.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   Fpas.Ui.Widgets.Charts.Sparklines as Sparklines,
   GuiGallery.Pages.Charts.State as State, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Widgets.Charts.LineCharts as Lines,
@@ -56,7 +57,7 @@ function Visits(): E.Element<State.Msg>;
 begin
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(12), Clip := false),
-    G.Heading<State.Msg>('Bar chart'),
+    G.Heading<State.Msg>(Strings.Get('Heading.BarChart')),
     Card(
       'visits-card', new Cards.Options(),
       Bars.BarChart<State.Msg>(
@@ -73,7 +74,7 @@ function Platforms(): E.Element<State.Msg>;
 begin
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(12), Clip := false),
-    G.Heading<State.Msg>('Donut chart'),
+    G.Heading<State.Msg>(Strings.Get('Heading.DonutChart')),
     Card(
       'platforms-card', new Cards.Options(Align := L.Alignment.Center),
       Donuts.DonutChart<State.Msg>(
@@ -183,22 +184,22 @@ begin
   );
   return [
     G.Heading<State.Msg>(
-      'Line chart',
-      'Hover to inspect values. The crosshair glides between points.'
+      Strings.Get('Heading.LineChart'),
+      Strings.Get('Heading.LineChartHint')
     ),
     Line(),
     Grids.Grid<State.Msg>(Grid, Visits(), Platforms()),
     G.Heading<State.Msg>(
-      'Dither area chart',
-      'Fills made of dots that thin out toward the base; stacked bands keep their own color.'
+      Strings.Get('Heading.DitherAreaChart'),
+      Strings.Get('Heading.DitherAreaChartHint')
     ),
     Requests(),
     G.Heading<State.Msg>(
-      'Pattern meter',
-      'Each part has a color and a density, so it reads in grayscale too. Hover a part or a legend entry.'
+      Strings.Get('Heading.PatternMeter'),
+      Strings.Get('Heading.PatternMeterHint')
     ),
     Storage(Model),
-    G.Heading<State.Msg>('Stacked bars and gauges'),
+    G.Heading<State.Msg>(Strings.Get('Heading.StackedBarsAndGauges')),
     Grids.Grid<State.Msg>(
       Grid, Runs(),
       Card(
@@ -208,7 +209,7 @@ begin
         Gauges.Gauge<State.Msg>('memory', 'Memory', 0.81F, 130.0F)
       )
     ),
-    G.Heading<State.Msg>('Sparkline'),
+    G.Heading<State.Msg>(Strings.Get('Heading.Sparkline')),
     Sparklines.Sparkline<State.Msg>('chart-sparkline', [3.0F, 5.0F, 4.0F, 8.0F, 6.0F, 9.0F, 8.0F])
   ];
 end function;

@@ -107,9 +107,9 @@ manifests use that same SDK assembly identity.
 
 Reuse language-neutral .NET SDK/NuGet infrastructure for restore, framework
 references, project-reference negotiation, and application assets where possible.
-Supply FPAS language targets and replace the compile stage. Simply importing the
-.NET SDK and renaming a C# project is not sufficient: no Csc/Vbc/Fsc compilation
-or generated C# source belongs in the FPAS compile path.
+Supply FPAS language targets and replace the compile stage. The main assembly
+compiles directly from FPAS sources. The .NET SDK uses its own resource-only
+assembly generation step for culture-specific satellites.
 
 Configure PackageReference-style restore explicitly for the custom extension,
 including the appropriate RestoreProjectStyle property. Do not rely on NuGet
@@ -207,6 +207,34 @@ Resolve a compatible support assembly with the selected compiler/SDK; propagate
 its runtime dependency to consuming applications through normal asset handling.
 Do not require users to manually copy it or package dependencies beside outputs.
 
+## Embedded resources and localization
+
+Place neutral strings in `Strings.resx` and translations in culture-suffixed files
+such as `Strings.de.resx`. The .NET SDK discovers `.resx` files automatically.
+Set `RootNamespace` explicitly for a stable base name. For example, with
+`RootNamespace=MyApp`, the files `Text/Strings.resx` and `Text/Strings.de.resx`
+share the base name `MyApp.Text.Strings`. To control the full manifest names,
+set `LogicalName` on the corresponding `EmbeddedResource` items, including
+the culture segment and the `.resources` extension where applicable. Names
+default to the project namespace and resource path.
+
+Instantiate `System.Resources.ResourceManager` with that base name and the
+assembly that owns the resources. Its ordinary `GetString` uses
+`CultureInfo.CurrentUICulture`. It can also accept an explicit culture.
+The CLR tries the requested culture, then its parents, then the neutral
+resources. A missing key in a translation falls back too. The neutral resources
+are embedded in the FPAS assembly. Build and publish copy culture-specific
+`<assembly>.resources.dll` files into their culture directories, including
+resources supplied by project references.
+
+For an ordinary binary file, add an `EmbeddedResource` item with a
+`LogicalName` and read it with `Assembly.GetManifestResourceStream`.
+Manifest names must be unique within each assembly. Build tracks neutral
+resource contents and names in the FPAS compile cache. The .NET SDK tracks
+satellite outputs and removes project-owned resource outputs during `clean`.
+Analysis prepares resource names to verify existing dependency build proofs.
+It leaves the selected root's resource files and assemblies on disk untouched.
+
 ## Documentation output
 
 Support the ordinary GenerateDocumentationFile and DocumentationFile properties.
@@ -246,6 +274,7 @@ The task uses the host SDK's MSBuild assemblies rather than bundling private
 copies. Project/configuration/framework intermediates remain independent.
 
 The compiler fingerprint hashes selected source/reference paths and contents,
+neutral resource names and their source and compiled contents,
 compiler/task assets, runtime version, and relevant build/documentation/warning
 options. Missing or altered requested assemblies, symbols, or documentation
 invalidate the fingerprint. Cached documentation warnings are reported on
@@ -312,6 +341,8 @@ Commands belong in the [development workflow](development.md).
   - [FpasCompile.cs](../../src/Fpas.Build.Tasks/FpasCompile.cs)
 - `src/Fpas.Build.Tasks/Incremental/`
   - [CompileFingerprint.cs](../../src/Fpas.Build.Tasks/Incremental/CompileFingerprint.cs)
+- `tests/Fpas.IntegrationTests/Build/`
+  - [MsBuildTests.Resources.cs](../../tests/Fpas.IntegrationTests/Build/MsBuildTests.Resources.cs)
 - `src/Fpas.Workspaces/Solutions/`
   - [SolutionScope.cs](../../src/Fpas.Workspaces/Solutions/SolutionScope.cs)
 - `tests/Fixtures/msbuild/`

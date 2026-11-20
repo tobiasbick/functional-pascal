@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Overview.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Overview.State as State,
   GuiGallery.Pages.Overview.Widgets.Workspace as Workspace, GuiGallery.Pages.Overview.Widgets.Team as Team,
   GuiGallery.Shared.State as Demo, Fpas.Ui.Widgets.Containers.Grids as Grid, Fpas.Ui.Widgets.Charts.Metrics as Metrics,
@@ -30,24 +31,24 @@ public function View<TMsg>(
 begin
   const Hero: E.Element<TMsg> := E.Column<TMsg>(
     new L.Flow(Gap := G.Points(14), Clip := false),
-    E.Styled<TMsg>(E.Text<TMsg>('Components for FPas'), S.Role.DisplayTitle),
+    E.Styled<TMsg>(E.Text<TMsg>(Strings.Get('Text.ComponentsForFpas')), S.Role.DisplayTitle),
     E.Styled<TMsg>(
       E.Text<TMsg>(
-        'Forms, tables, charts, planning boards and chat pieces with native rendering on Windows and Linux.'
+        Strings.Get('Text.GalleryIntro')
       ),
       S.Role.Introduction
     ),
     E.Row<TMsg>(
       new L.Flow(Gap := G.Points(8), PaddingTop := G.Points(6), Wrap := true),
       B.Button<TMsg>(
-        'browse', 'Browse components', Browse,
+        'browse', Strings.Get('Text.BrowseComponents'), Browse,
         new B.Options(
           Variant := S.ButtonVariant.Primary,
           IconRight := Sys.Char.ConvertFromUtf32($E049)
         )
       ),
       B.Button<TMsg>(
-        'overview-palette', 'Open command palette', OpenPalette,
+        'overview-palette', Strings.Get('Text.OpenCommandPalette'), OpenPalette,
         new B.Options(Variant := S.ButtonVariant.Outline, Icon := Sys.Char.ConvertFromUtf32($E09A))
       )
     )
@@ -59,12 +60,12 @@ begin
       new Grid.Options(Columns := 3, MinimumColumnWidth := 200.0F, Gap := G.Points(16)),
       Metrics.Metric<TMsg>(
         'overview-components',
-        'Components',
+        Strings.Get('Text.SectionComponents'),
         '150',
         new Metrics.Options(Icon := Sys.Char.ConvertFromUtf32($E061))
       ),
       Metrics.Metric<TMsg>(
-        'overview-frame-time', 'Frame time', '0.4 ms',
+        'overview-frame-time', Strings.Get('Text.FrameTime'), '0.4 ms',
         new Metrics.Options(
           Delta := -18.0F, DeltaLabel := '-18% vs v0.9', LowerIsBetter := true,
           Spark := [9.0F, 7.0F, 8.0F, 6.0F, 5.0F, 6.0F, 4.0F, 4.0F, 3.0F],
@@ -73,7 +74,7 @@ begin
       ),
       Metrics.Metric<TMsg>(
         'overview-dependencies',
-        'Dependencies',
+        Strings.Get('Text.Dependencies'),
         '0',
         new Metrics.Options(Icon := Sys.Char.ConvertFromUtf32($E129))
       )

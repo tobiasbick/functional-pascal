@@ -2,7 +2,9 @@
 
 unit Gallery.Shared.CheckboxExamples;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Checkboxes as C;
+uses
+  Gallery.Shared.Strings as Strings,
+  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Checkboxes as C;
 
 // Builds the notification checkboxes in gallery order.
 // ## Type parameters
@@ -20,21 +22,21 @@ begin
   return [
     C.Checkbox<TMsg>(
       'newsletter',
-      'Email notifications',
+      Strings.Get('Text.EmailNotifications'),
       Newsletter,
       SetNewsletter,
-      Description := 'Product news, at most once a month.'
+      Description := Strings.Get('Text.EmailNotificationsHint')
     ),
     C.Checkbox<TMsg>(
       'marketing',
-      'Marketing',
+      Strings.Get('Text.Marketing'),
       Marketing,
       SetMarketing,
-      Description := 'Offers from our partners.'
+      Description := Strings.Get('Text.MarketingHint')
     ),
     C.Checkbox<TMsg>(
       'disabled-option',
-      'Disabled option',
+      Strings.Get('Text.DisabledOption'),
       false,
       function(Value: bool): TMsg => Preview,
       Enabled := false
@@ -52,7 +54,12 @@ end function;
 // The workspace summary checkbox.
 public function WeeklySummary<TMsg>(Checked: bool; Change: function(bool): TMsg): E.Element<TMsg>;
 begin
-  return C.Checkbox<TMsg>('workspace-summary', 'Email me a weekly summary', Checked, Change);
+  return C.Checkbox<TMsg>(
+    'workspace-summary',
+    Strings.Get('Text.SendWeeklySummary'),
+    Checked,
+    Change
+  );
 end function;
 
 end unit;

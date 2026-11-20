@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Overview.Widgets.Workspace;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Overview.State as State, GuiGallery.Shared.State as Demo,
   GuiGallery.Shared.Sections as G, Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
   Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Inputs.TextFields as T, Gallery.Shared.CheckboxExamples as C,
@@ -20,22 +21,29 @@ begin
     'workspace-card', [
       E.Column<State.Msg>(
         new L.Flow(Gap := G.Points(4)),
-        E.Styled<State.Msg>(E.Text<State.Msg>('Create a workspace'), S.Role.Heading),
         E.Styled<State.Msg>(
-          E.Text<State.Msg>('You can invite people once it exists.'),
+          E.Text<State.Msg>(Strings.Get('Text.CreateWorkspaceHeading')),
+          S.Role.Heading
+        ),
+        E.Styled<State.Msg>(
+          E.Text<State.Msg>(Strings.Get('Text.WorkspaceInviteHint')),
           S.Role.Secondary
         )
       ),
       T.TextField<State.Msg>(
         'workspace-name', Data.Name,
         function(Value: string): State.Msg => State.Msg.Shared(Demo.Msg.SetName(Value)),
-        new T.Options(Label := 'Name', Placeholder := 'Your name', MaxUtf8Bytes := 63)
+        new T.Options(
+          Label := Strings.Get('Text.Name'),
+          Placeholder := Strings.Get('Text.YourName'),
+          MaxUtf8Bytes := 63
+        )
       ),
       T.TextField<State.Msg>(
         'workspace-email', Data.Email,
         function(Value: string): State.Msg => State.Msg.Shared(Demo.Msg.SetEmail(Value)),
         new T.Options(
-          Label := 'Email',
+          Label := Strings.Get('Text.Email'),
           Icon := Sys.Char.ConvertFromUtf32($E10F),
           Placeholder := 'you@example.com',
           MaxUtf8Bytes := 95
@@ -43,7 +51,7 @@ begin
       ),
       C.WeeklySummary<State.Msg>(Model.WeeklySummary, State.Msg.SetWeeklySummary),
       B.Button<State.Msg>(
-        'workspace-create', 'Create workspace', State.Msg.CreateWorkspace,
+        'workspace-create', Strings.Get('Text.CreateWorkspace'), State.Msg.CreateWorkspace,
         new B.Options(Variant := S.ButtonVariant.Primary, Width := L.Extent.Fill)
       )
     ], new Cards.Options(Gap := 16.0F)

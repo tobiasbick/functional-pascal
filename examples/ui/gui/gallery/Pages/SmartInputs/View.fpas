@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.SmartInputs.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   System.Collections.Generic as Lists,
   GuiGallery.Pages.SmartInputs.Widgets.Editors as Editors,
   Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys,
@@ -28,8 +29,8 @@ begin
   Parts.AddRange(
     [
       G.Heading<State.Msg>(
-        'Prefix and suffix',
-        'Any text field can carry muted text before and after the value.'
+        Strings.Get('Heading.PrefixAndSuffix'),
+        Strings.Get('Heading.PrefixAndSuffixHint')
       ),
       E.Row<State.Msg>(
         new L.Flow(Gap := G.Points(12), Wrap := true),
@@ -53,8 +54,8 @@ begin
         )
       ),
       G.Heading<State.Msg>(
-        'Shortcut recorder',
-        'Click, then press a combination. Backspace clears.'
+        Strings.Get('Heading.ShortcutRecorder'),
+        Strings.Get('Heading.ShortcutRecorderHint')
       ),
       E.Row<State.Msg>(
         new L.Flow(Gap := G.Points(12), Wrap := true),

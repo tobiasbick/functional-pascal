@@ -3,6 +3,7 @@
 unit GuiGallery.App.Update;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Desktop.State as Desktop, GuiGallery.Pages.Desktop.Update as DesktopUpdate,
   GuiGallery.Pages.EditingTools.State as Editing, GuiGallery.Pages.EditingTools.Update as EditUpdate,
   Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Widgets.Developer.Terminals as TerminalWidget,
@@ -168,7 +169,10 @@ begin
         end with, Child.Commands
       );
     when G.Msg.Files(Files.Msg.Terminal(TerminalWidget.Event.Interrupt)):
-      return new Mvu.Transition<G.Model, G.Msg>(State, [Toasts.Show<G.Msg>('Interrupted')]);
+      return new Mvu.Transition<G.Model, G.Msg>(
+        State,
+        [Toasts.Show<G.Msg>(Strings.Get('Text.Interrupted'))]
+      );
     when G.Msg.Files(const Value: Files.Msg):
       return new Mvu.Transition<G.Model, G.Msg>(
         State with

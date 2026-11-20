@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Desktop.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Desktop.State as S, GuiGallery.Pages.Desktop.Editor as Editor,
   GuiGallery.Pages.Desktop.Workspace as Workspace, GuiGallery.Pages.Desktop.HostActions as HostActions, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Theme, Fpas.Ui.Widgets.Desktop.SplitViews as Split;
@@ -18,13 +19,13 @@ public function View(Model: S.Model; Colors: Theme.Palette; Width: int): array o
 begin
   return [
     G.Heading<S.Msg>(
-      'App chrome',
-      'Menu bar, toolbar, document tabs and status bar around an editor.'
+      Strings.Get('Page.Desktop'),
+      Strings.Get('Text.AppChromeIntro')
     ),
     Editor.View(Model, Colors),
-    G.Heading<S.Msg>('Docking', 'Drag a tab to dock it, or drag a divider to resize its pane.'),
+    G.Heading<S.Msg>(Strings.Get('Heading.Docking'), Strings.Get('Heading.DockingHint')),
     Workspace.View(Model, Colors, Width < 620),
-    G.Heading<S.Msg>('Split view', 'Drag the divider between the two panes.'),
+    G.Heading<S.Msg>(Strings.Get('Heading.SplitView'), Strings.Get('Heading.SplitViewHint')),
     Split.SplitView<S.Msg>(
       'desktop-split', Model.Ratio,
       E.Column<S.Msg>(
@@ -40,7 +41,7 @@ begin
         MinimumFirst := 96.0F, MinimumSecond := 120.0F, Vertical := Width < 440
       )
     ),
-    G.Heading<S.Msg>('Window and clipboard'),
+    G.Heading<S.Msg>(Strings.Get('Heading.WindowAndClipboard')),
     HostActions.View(Model)
   ];
 end function;

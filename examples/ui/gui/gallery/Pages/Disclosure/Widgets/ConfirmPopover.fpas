@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Disclosure.Widgets.ConfirmPopover;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Disclosure.State as State,
   GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E,
@@ -42,7 +43,10 @@ begin
   end if;
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(20)),
-    G.Heading<State.Msg>('Confirm popover', 'Ask right where the action is.'),
+    G.Heading<State.Msg>(
+      Strings.Get('Heading.ConfirmPopover'),
+      Strings.Get('Heading.ConfirmPopoverHint')
+    ),
     Row
   );
 end function;

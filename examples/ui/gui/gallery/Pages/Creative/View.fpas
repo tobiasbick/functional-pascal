@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Creative.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Creative.State as M, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Graphics as Colors,
   Fpas.Ui.Widgets.Charts.Charts as Chart, Fpas.Ui.Widgets.Actions.Buttons as Buttons, Fpas.Ui.Widgets.Containers.Grids as Grid, Fpas.Ui.Widgets.Audio.ControlWells as W,
@@ -150,14 +151,14 @@ public function View(Model: M.Model): array of E.Element<M.Msg>;
 begin
   return [
     G.Heading<M.Msg>(
-      'Status tag',
-      'An icon, a label and a tinted fill for each state. Click a small tag to remove it.'
+      Strings.Get('Heading.StatusTag'),
+      Strings.Get('Heading.StatusTagHint')
     ),
     TagRow(Model, false),
     TagRow(Model, true),
     G.Heading<M.Msg>(
-      'Ratio slider',
-      'Two named parts with a bar between them. Drag it or use the arrow keys (Shift for steps of ten).'
+      Strings.Get('Heading.RatioSlider'),
+      Strings.Get('Heading.RatioSliderHint')
     ),
     E.Column<M.Msg>(
       new L.Flow(Gap := G.Points(12), Clip := false),
@@ -171,19 +172,19 @@ begin
       )
     ),
     G.Heading<M.Msg>(
-      'Gradient and step sliders',
-      'The track is the value: a hue, a white balance, an opacity. Step sliders snap to a few stops.'
+      Strings.Get('Heading.GradientAndStepSliders'),
+      Strings.Get('Heading.GradientAndStepSlidersHint')
     ),
     GradientAndSteps(Model),
-    G.Heading<M.Msg>('Palette strip', 'Click a swatch to lock it, then shuffle the rest.'),
+    G.Heading<M.Msg>(Strings.Get('Heading.PaletteStrip'), Strings.Get('Heading.PaletteStripHint')),
     Palette.PaletteStrip<M.Msg>(
       'creative-palette',
       new Palette.Value('Color palette', Model.Swatches, Model.PaletteSeed), M.Msg.PaletteChanged,
       new Palette.Options(Display := 'Click a swatch to lock it')
     ),
     G.Heading<M.Msg>(
-      'Aspect ratio, options and seed',
-      'Each ratio drawn as its own shape, a choice with the action it feeds, and a seed that rolls.'
+      Strings.Get('Heading.AspectRatioOptionsAndSeed'),
+      Strings.Get('Heading.AspectRatioOptionsAndSeedHint')
     ),
     LastControls(Model)
   ];

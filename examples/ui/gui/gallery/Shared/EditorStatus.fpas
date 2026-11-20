@@ -2,7 +2,9 @@
 
 unit Gallery.Shared.EditorStatus;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Styles as Style, System.Collections.Generic as C;
+uses
+  Gallery.Shared.Strings as Strings,
+  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Styles as Style, System.Collections.Generic as C;
 
 // Source excerpt shown above the editor status bar.
 public const CodeLines: array of string := [
@@ -44,27 +46,29 @@ requires Indent >= 0 and Indent < 3 and Encoding >= 0 and Encoding < 2 and Langu
 begin
   const Spaces: array of string := ['2', '4', '8'];
   const Encodings: array of string := ['UTF-8', 'UTF-16'];
-  const Languages: array of string := ['Markdown', 'C', 'Plain text'];
+  const Languages: array of string := ['Markdown', 'C', Strings.Get('Text.PlainText')];
   const Items: C.List<Status.Item<TMsg>> := new C.List<Status.Item<TMsg>>();
   if Columns >= 12 then
-    Items.Add(Item('branch', 'main', 'Switch branch', ''));
+    Items.Add(Item('branch', 'main', Strings.Get('Text.SwitchBranch'), ''));
   end if;
 
   if Columns >= 18 then
-    Items.Add(Status.Item<TMsg>.Text(new Status.Label('Saved', '', Style.Tone.Success)));
+    Items.Add(
+      Status.Item<TMsg>.Text(new Status.Label(Strings.Get('Text.Saved'), '', Style.Tone.Success))
+    );
   end if;
 
   if Columns >= 40 then
-    Items.Add(Status.Item<TMsg>.Progress(0.62F, 'Indexing 62%', 0.0F, false));
+    Items.Add(Status.Item<TMsg>.Progress(0.62F, Strings.Get('Text.IndexingProgress'), 0.0F, false));
   end if;
 
   Items.Add(Status.Item<TMsg>.Spacer);
   if Columns >= 55 then
-    Items.Add(Item('line', 'Ln 48, Col 17', 'Go to line'));
+    Items.Add(Item('line', Strings.Get('Text.LineColumn'), Strings.Get('Text.GoToLine')));
   end if;
 
   if Columns >= 65 then
-    Items.Add(Item('spaces', 'Spaces: ' + Spaces[Indent]));
+    Items.Add(Item('spaces', Strings.Get('Text.SpacesPrefix') + Spaces[Indent]));
   end if;
 
   Items.Add(Item('encoding', Encodings[Encoding]));
@@ -73,7 +77,7 @@ begin
   end if;
 
   if Columns >= 90 then
-    Items.Add(Item('notifications', '', 'Notifications', ''));
+    Items.Add(Item('notifications', '', Strings.Get('Text.Notifications'), ''));
   end if;
 
   return Status.StatusBar<TMsg>('desktop-status', Items.ToArray());

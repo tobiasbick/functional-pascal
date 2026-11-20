@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Voice.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Voice.State as S, GuiGallery.Pages.Voice.Script as Script, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Widgets.Audio.Voice as V,
   Fpas.Ui.Widgets.Audio.VoiceNotes as Notes, Fpas.Ui.Widgets.Audio.VoiceSessions as Calls, Fpas.Ui.Widgets.Audio.VoiceWaves as Waves, Fpas.Ui.Widgets.Audio.VoiceOrbs as Orbs,
@@ -53,13 +54,13 @@ begin
   const Moment: Script.Moment := Script.At(Model.Time - Model.Started, Model.Muted);
   return [
     G.Heading<S.Msg>(
-      'Voice messages',
-      'Press the microphone to record: the strip scrolls with the level. Cancel throws the take away, send adds it below.'
+      Strings.Get('Heading.VoiceMessages'),
+      Strings.Get('Heading.VoiceMessagesHint')
     ),
     Messages(Model),
     G.Heading<S.Msg>(
-      'Voice session',
-      'Both voices on one timeline, with the live transcript. While it thinks there is no sound, so the strip stays flat.'
+      Strings.Get('Heading.VoiceSession'),
+      Strings.Get('Heading.VoiceSessionHint')
     ),
     Limit(
       Cards.Card<S.Msg>(
@@ -76,8 +77,8 @@ begin
       )
     ),
     G.Heading<S.Msg>(
-      'Voice waveform',
-      'The strip on its own: the newest levels scroll in from the right, a finished clip fits the width and seeks.'
+      Strings.Get('Heading.VoiceWaveform'),
+      Strings.Get('Heading.VoiceWaveformHint')
     ),
     Limit(
       E.Column<S.Msg>(
@@ -90,8 +91,8 @@ begin
       )
     ),
     G.Heading<S.Msg>(
-      'Voice orb',
-      'Click the legacy voice orb to switch between idle and listening.'
+      Strings.Get('Heading.VoiceOrb'),
+      Strings.Get('Heading.VoiceOrbHint')
     ),
     Orbs.VoiceOrb<S.Msg>(
       'voice-orb', if Model.OrbListening then

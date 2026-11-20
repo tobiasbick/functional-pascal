@@ -1,0 +1,24 @@
+// [Documentation](../README.md#localization)
+
+unit Gallery.Shared.Strings;
+
+uses
+  System.Reflection as Reflection,
+  System.Resources as Resources;
+
+const Catalog: Resources.ResourceManager := new Resources.ResourceManager(
+  'Gallery.Shared.Strings', Reflection.Assembly.GetExecutingAssembly()
+);
+
+// Reads a gallery string using the current UI culture and neutral fallback.
+// ## Parameters
+// - `Key`: The nonempty resource key.
+// ## Returns
+// The localized text, or the key if the catalogs have no entry.
+public function Get(Key: string): string;
+requires Key <> '';
+begin
+  return Catalog.GetString(Key) ?? Key;
+end function;
+
+end unit;

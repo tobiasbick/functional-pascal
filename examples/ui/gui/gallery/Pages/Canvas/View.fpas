@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Canvas.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Canvas.State as State, GuiGallery.Pages.Canvas.Picture as Picture,
   GuiGallery.Pages.Canvas.SampleBounds as SampleBounds, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Motion.Motion as M,
@@ -306,29 +307,29 @@ begin
   end if;
   return [
     G.Heading<State.Msg>(
-      'Grouped toolbar',
-      'Raised groups in one pill, an inset set of modes and a primary action. Narrow the window and the end folds into the “more” menu.'
+      Strings.Get('Heading.GroupedToolbar'),
+      Strings.Get('Heading.GroupedToolbarHint')
     ),
     Grouped(Model),
     G.Heading<State.Msg>(
-      'Format bar',
-      'Color, bold, underline, link, the text style (each previewed at its size), alignment and lists. Delete asks first.'
+      Strings.Get('Heading.FormatBar'),
+      Strings.Get('Heading.FormatBarHint')
     ),
     F.FormatBar<State.Msg>('canvas-format', Model.Format, State.Msg.Format),
     E.Styled<State.Msg>(E.Text<State.Msg>(Note), S.Role.Caption),
     G.Heading<State.Msg>(
-      'Live cursors and canvas controls',
-      'Three people on one canvas: their pointers glide to where they move, one talks, one has a node selected. The rail zooms in steps; click the percentage to reset.'
+      Strings.Get('Heading.LiveCursorsAndCanvasControls'),
+      Strings.Get('Heading.LiveCursorsAndCanvasControlsHint')
     ),
     Canvas(Model, Colors),
     G.Heading<State.Msg>(
-      'Result card and selection bar',
-      'A picture with its status and caption, and its actions in a floating toolbar. Tick files and a bar slides up; Esc clears.'
+      Strings.Get('Heading.ResultCardAndSelectionBar'),
+      Strings.Get('Heading.ResultCardAndSelectionBarHint')
     ),
     Results(Model, Colors),
     G.Heading<State.Msg>(
-      'Presence avatars',
-      'Choose a PNG or JPEG for Paul. Other collaborators use their initials.'
+      Strings.Get('Heading.PresenceAvatars'),
+      Strings.Get('Heading.PresenceAvatarsHint')
     ),
     G.Card<State.Msg>(
       12, [

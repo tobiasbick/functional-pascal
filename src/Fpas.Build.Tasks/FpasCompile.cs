@@ -14,6 +14,8 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
     [Required] public ITaskItem[] Sources { get; set; } = [];
     /// <summary>Gets or sets the resolved CLR assembly references.</summary>
     [Required] public ITaskItem[] References { get; set; } = [];
+    /// <summary>Gets or sets neutral manifest resources and their original source paths.</summary>
+    public ITaskItem[] Resources { get; set; } = [];
     /// <summary>Gets or sets the compiler executable or managed entry assembly.</summary>
     [Required] public string CompilerPath { get; set; } = "";
     /// <summary>Gets or sets the compiler assembly used to verify toolchain identity.</summary>
@@ -82,6 +84,7 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
         {
             var sources = Sources.Select(item => item.GetMetadata("FullPath")).ToArray();
             var references = References.Select(item => item.GetMetadata("FullPath")).ToArray();
+            var resources = ResourceInput.Read(Resources);
             var output = Path.GetFullPath(OutputAssembly);
             var cache = Path.GetFullPath(CacheFile);
             var symbols = DebugType == "portable" ? Path.ChangeExtension(output, ".pdb") : null;
@@ -90,14 +93,15 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
             {
                 Error("FP5001", "DocumentationFile must name an .xml file."); return false;
             }
-            if (documents.Any(path => sources.Concat(references).Append(output).Append(cache).Append(cache + ".arguments.json").Contains(path, DocumentationOutputs.Comparer)))
+            if (documents.Any(path => sources.Concat(references).Concat(resources.SelectMany(resource => new[] { resource.Path, resource.SourcePath }))
+                .Append(output).Append(cache).Append(cache + ".arguments.json").Contains(path, DocumentationOutputs.Comparer)))
             {
-                Error("FP5001", "XML documentation output paths must differ from source, reference, assembly, and compiler-cache paths."); return false;
+                Error("FP5001", "XML documentation output paths must differ from source, reference, resource, assembly, and compiler-cache paths."); return false;
             }
             var previous = CompileFingerprint.Read(cache);
             var fingerprint = CompileFingerprint.Compute(sources, references, CompilerPath,
                 CompileFingerprint.Options(OutputType, Configuration, TargetFramework, output, DebugType, Optimize, documents,
-                    TreatWarningsAsErrors, WarningsAsErrors, WarningsNotAsErrors, NoWarn) + SigningInputs.Identity(SigningKey, PublicSign, DelaySign), CompilerAssemblyPath);
+                    TreatWarningsAsErrors, WarningsAsErrors, WarningsNotAsErrors, NoWarn) + SigningInputs.Identity(SigningKey, PublicSign, DelaySign), CompilerAssemblyPath, resources);
             if (previous?.IsCurrent(fingerprint, output, symbols, documents) == true &&
                 (OutputType == "Library" || File.Exists(Path.ChangeExtension(output, ".runtimeconfig.json"))))
             {
@@ -126,6 +130,8 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
             if (!string.IsNullOrWhiteSpace(NoWarn)) arguments.AddRange(["--no-warn", NoWarn]);
             foreach (var reference in references)
                 arguments.AddRange(["--reference", reference]);
+            foreach (var resource in resources)
+                arguments.AddRange(["--embedded-resource", JsonSerializer.Serialize(new[] { resource.Name, resource.Path })]);
             var response = cache + ".arguments.json";
             File.WriteAllText(response, JsonSerializer.Serialize(arguments));
             Log.LogMessage(MessageImportance.High, "FPAS: compiling {0} source file(s)", sources.Length);

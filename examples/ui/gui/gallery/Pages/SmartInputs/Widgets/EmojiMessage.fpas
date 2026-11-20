@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.SmartInputs.Widgets.EmojiMessage;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.SmartInputs.State as State, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Inputs.TextFields as F,
   Fpas.Ui.Widgets.Pickers.EmojiPickers as Emoji, Fpas.Ui.Widgets.Actions.IconButtons as B, Fpas.Ui.Widgets.Overlays.Popovers as P,
@@ -32,7 +33,7 @@ begin
   );
   return [
     G.Heading<State.Msg>(
-      'Emoji picker', 'Search by name, jump by group, pick a skin tone. Recent emoji come first.'
+      Strings.Get('Heading.EmojiPicker'), Strings.Get('Heading.EmojiPickerHint')
     ),
     E.Row<State.Msg>(
       E.Size<State.Msg>(

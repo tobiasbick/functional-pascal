@@ -2,8 +2,18 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Build.Framework;
 
 namespace Fpas.Build.Tasks.Incremental;
+
+internal sealed record ResourceInput(string Name, string Path, string SourcePath)
+{
+    internal static ResourceInput[] Read(ITaskItem[] items)
+        => items.Select(item => new ResourceInput(item.GetMetadata("LogicalName"), item.GetMetadata("FullPath"),
+            System.IO.Path.GetFullPath(item.GetMetadata("SourcePath"))))
+            .OrderBy(item => item.Name, StringComparer.Ordinal).ThenBy(item => item.Path, StringComparer.Ordinal)
+            .ThenBy(item => item.SourcePath, StringComparer.Ordinal).ToArray();
+}
 
 internal sealed record CompileFingerprint(string Inputs, string AssemblyHash, string? PdbHash = null, string? XmlHash = null,
     string[]? DocumentationFiles = null, JsonElement[]? Diagnostics = null)
@@ -21,7 +31,8 @@ internal sealed record CompileFingerprint(string Inputs, string AssemblyHash, st
         return siblings.Append(path).Append(typeof(CompileFingerprint).Assembly.Location).Distinct(StringComparer.Ordinal);
     }
 
-    internal static string Compute(IEnumerable<string> sources, IEnumerable<string> references, string compiler, string options, string compilerAssembly = "")
+    internal static string Compute(IEnumerable<string> sources, IEnumerable<string> references, string compiler, string options, string compilerAssembly = "",
+        IReadOnlyList<ResourceInput>? resources = null)
     {
         using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
         hash.AppendData(Encoding.UTF8.GetBytes(options + "\0" + Environment.Version + "\0" + Path.GetFullPath(compiler) + "\0"));
@@ -29,6 +40,14 @@ internal sealed record CompileFingerprint(string Inputs, string AssemblyHash, st
         AddPaths("references", references);
         AddPaths("tools", Tools(compiler));
         AddPaths("compiler assembly", compilerAssembly.Length == 0 ? [] : [compilerAssembly]);
+        foreach (var resource in resources ?? [])
+        {
+            hash.AppendData(Encoding.UTF8.GetBytes("resource\0" + resource.Name + "\0"));
+            AddPaths("source", [resource.SourcePath]);
+            if (resource.Path == resource.SourcePath) continue;
+            if (File.Exists(resource.Path)) AddPaths("compiled", [resource.Path]);
+            else hash.AppendData(Encoding.UTF8.GetBytes("missing compiled\0" + resource.Path + "\0"));
+        }
         return Convert.ToHexString(hash.GetHashAndReset());
 
         void AddPaths(string kind, IEnumerable<string> paths)

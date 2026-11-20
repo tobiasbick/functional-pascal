@@ -1,0 +1,529 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- [Documentation](../README.md#localization) -->
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="Accent.Amber" xml:space="preserve"><value>amber</value></data>
+  <data name="Accent.Blue" xml:space="preserve"><value>blue</value></data>
+  <data name="Accent.Coral" xml:space="preserve"><value>coral</value></data>
+  <data name="Accent.Green" xml:space="preserve"><value>green</value></data>
+  <data name="Accent.Neutral" xml:space="preserve"><value>neutral</value></data>
+  <data name="Accent.Orange" xml:space="preserve"><value>orange</value></data>
+  <data name="Accent.Rose" xml:space="preserve"><value>rose</value></data>
+  <data name="Accent.Violet" xml:space="preserve"><value>violet</value></data>
+  <data name="Description.AI" xml:space="preserve"><value>Conversations, sources and tool activity.</value></data>
+  <data name="Description.Actions" xml:space="preserve"><value>Commands with confirmation, menus or status feedback.</value></data>
+  <data name="Description.Audio" xml:space="preserve"><value>Audio levels, waveforms and playback controls.</value></data>
+  <data name="Description.Buttons" xml:space="preserve"><value>Variants, sizes and states.</value></data>
+  <data name="Description.CanvasAndBars" xml:space="preserve"><value>Drawing surfaces and contextual actions.</value></data>
+  <data name="Description.Capture" xml:space="preserve"><value>Controls for capturing user input.</value></data>
+  <data name="Description.CellGrid" xml:space="preserve"><value>Explore a colored ripple field.</value></data>
+  <data name="Description.Charts" xml:space="preserve"><value>Visual summaries of values and trends.</value></data>
+  <data name="Description.Code" xml:space="preserve"><value>Source listings and code presentation.</value></data>
+  <data name="Description.CreativeControls" xml:space="preserve"><value>Controls for creative editing.</value></data>
+  <data name="Description.DataGrid" xml:space="preserve"><value>Tabular data organized into rows and columns.</value></data>
+  <data name="Description.Desktop" xml:space="preserve"><value>The panels and bars that frame an application.</value></data>
+  <data name="Description.DeveloperTools" xml:space="preserve"><value>Diagnostic views and developer controls.</value></data>
+  <data name="Description.Disclosure" xml:space="preserve"><value>Expand and collapse related content.</value></data>
+  <data name="Description.Display" xml:space="preserve"><value>Typography and secondary information.</value></data>
+  <data name="Description.EditingTools" xml:space="preserve"><value>Actions for editing and formatting content.</value></data>
+  <data name="Description.Feedback" xml:space="preserve"><value>Show how far a task has progressed.</value></data>
+  <data name="Description.Files" xml:space="preserve"><value>File listings and file operations.</value></data>
+  <data name="Description.Instruments" xml:space="preserve"><value>Indicators for measurements and signals.</value></data>
+  <data name="Description.Layout" xml:space="preserve"><value>Containers that arrange and size their children.</value></data>
+  <data name="Description.Lists" xml:space="preserve"><value>Rows and lists for presenting structured information.</value></data>
+  <data name="Description.MoreCharts" xml:space="preserve"><value>Additional views of series and distributions.</value></data>
+  <data name="Description.MoreDeveloperTools" xml:space="preserve"><value>Additional developer and inspection tools.</value></data>
+  <data name="Description.Motion" xml:space="preserve"><value>Transitions and animated feedback.</value></data>
+  <data name="Description.Navigation" xml:space="preserve"><value>Sidebars, tabs and paths between views.</value></data>
+  <data name="Description.Pickers" xml:space="preserve"><value>Choose colors, dates and other values.</value></data>
+  <data name="Description.Planning" xml:space="preserve"><value>Calendars, schedules and timelines.</value></data>
+  <data name="Description.Reader" xml:space="preserve"><value>Outlines and anchors for navigating a document.</value></data>
+  <data name="Description.Selection" xml:space="preserve"><value>Controls for choosing one option or several.</value></data>
+  <data name="Description.SmartInputs" xml:space="preserve"><value>Editors for structured values.</value></data>
+  <data name="Description.Social" xml:space="preserve"><value>Profiles, conversations and media content.</value></data>
+  <data name="Description.Voice" xml:space="preserve"><value>Voice input and conversation controls.</value></data>
+  <data name="Heading.Accordion" xml:space="preserve"><value>Accordion</value></data>
+  <data name="Heading.ActivityRings" xml:space="preserve"><value>Activity rings</value></data>
+  <data name="Heading.ActivityRingsHint" xml:space="preserve"><value>Past one, a ring keeps winding.</value></data>
+  <data name="Heading.AgentPlan" xml:space="preserve"><value>Agent plan</value></data>
+  <data name="Heading.AgentPlanHint" xml:space="preserve"><value>Steps and their status.</value></data>
+  <data name="Heading.Alerts" xml:space="preserve"><value>Alerts</value></data>
+  <data name="Heading.AlertsHint" xml:space="preserve"><value>Color only when something succeeded, needs attention or failed.</value></data>
+  <data name="Heading.ApiExplorer" xml:space="preserve"><value>API explorer</value></data>
+  <data name="Heading.ApiExplorerHint" xml:space="preserve"><value>Click an endpoint for its parameters.</value></data>
+  <data name="Heading.AspectRatioOptionsAndSeed" xml:space="preserve"><value>Aspect ratio, options and seed</value></data>
+  <data name="Heading.AspectRatioOptionsAndSeedHint" xml:space="preserve"><value>Each ratio drawn as its own shape, a choice with the action it feeds, and a seed that rolls.</value></data>
+  <data name="Heading.AvatarUpload" xml:space="preserve"><value>Avatar upload</value></data>
+  <data name="Heading.AvatarUploadHint" xml:space="preserve"><value>Drop an image on the avatar.</value></data>
+  <data name="Heading.BadgesAndAvatars" xml:space="preserve"><value>Badges and avatars</value></data>
+  <data name="Heading.BarChart" xml:space="preserve"><value>Bar chart</value></data>
+  <data name="Heading.BarList" xml:space="preserve"><value>Bar list</value></data>
+  <data name="Heading.BarListHint" xml:space="preserve"><value>Ranked, keyed by label: press Shuffle and the rows slide to their new rank.</value></data>
+  <data name="Heading.Blame" xml:space="preserve"><value>Blame</value></data>
+  <data name="Heading.BlameHint" xml:space="preserve"><value>Hover the gutter to mark a commit's lines; click it to open the commit.</value></data>
+  <data name="Heading.BreadcrumbAndPagination" xml:space="preserve"><value>Breadcrumb and pagination</value></data>
+  <data name="Heading.Calendar" xml:space="preserve"><value>Calendar</value></data>
+  <data name="Heading.CalendarHeatmap" xml:space="preserve"><value>Calendar heatmap</value></data>
+  <data name="Heading.CalendarHeatmapHint" xml:space="preserve"><value>A year of activity, one square a day.</value></data>
+  <data name="Heading.Carousel" xml:space="preserve"><value>Carousel</value></data>
+  <data name="Heading.CarouselHint" xml:space="preserve"><value>Drag, flick, scroll sideways or use the arrows and dots.</value></data>
+  <data name="Heading.Chat" xml:space="preserve"><value>Chat</value></data>
+  <data name="Heading.ChatHint" xml:space="preserve"><value>Grouped bubbles, read receipts and a typing indicator.</value></data>
+  <data name="Heading.ChipsAndRating" xml:space="preserve"><value>Chips and rating</value></data>
+  <data name="Heading.CodeBlock" xml:space="preserve"><value>Code block</value></data>
+  <data name="Heading.CodeBlockHint" xml:space="preserve"><value>Highlighting for C, C++, JavaScript, TypeScript, Python, Rust, Go, JSON and shell.</value></data>
+  <data name="Heading.CodeEditor" xml:space="preserve"><value>Code editor</value></data>
+  <data name="Heading.CommentsHint" xml:space="preserve"><value>Threads with replies, likes and badges.</value></data>
+  <data name="Heading.CommitGraph" xml:space="preserve"><value>Commit graph</value></data>
+  <data name="Heading.CommitGraphHint" xml:space="preserve"><value>Branch lanes, merges and refs; only the rows in view are built.</value></data>
+  <data name="Heading.ConfirmPopover" xml:space="preserve"><value>Confirm popover</value></data>
+  <data name="Heading.ConfirmPopoverHint" xml:space="preserve"><value>Ask right where the action is.</value></data>
+  <data name="Heading.ControlTiles" xml:space="preserve"><value>Control tiles</value></data>
+  <data name="Heading.ControlTilesHint" xml:space="preserve"><value>Big toggles for quick settings.</value></data>
+  <data name="Heading.Conversation" xml:space="preserve"><value>Conversation</value></data>
+  <data name="Heading.ConversationHint" xml:space="preserve"><value>Reasoning, tool calls, an answer with sources, and the composer.</value></data>
+  <data name="Heading.Countdown" xml:space="preserve"><value>Countdown</value></data>
+  <data name="Heading.CountdownHint" xml:space="preserve"><value>Digits roll as the time passes.</value></data>
+  <data name="Heading.Coverage" xml:space="preserve"><value>Coverage</value></data>
+  <data name="Heading.CoverageHint" xml:space="preserve"><value>Folders sum up their files; click a column to sort.</value></data>
+  <data name="Heading.CurveEditor" xml:space="preserve"><value>Curve editor</value></data>
+  <data name="Heading.DataGridHint" xml:space="preserve"><value>2,000 rows, virtualized. Sort, resize columns, select with Shift and Ctrl, edit names with a double click.</value></data>
+  <data name="Heading.DateRange" xml:space="preserve"><value>Date range</value></data>
+  <data name="Heading.DateRangeHint" xml:space="preserve"><value>Presets on the left, two months to pick a start and an end.</value></data>
+  <data name="Heading.DependencyGraph" xml:space="preserve"><value>Dependency graph</value></data>
+  <data name="Heading.DependencyGraphHint" xml:space="preserve"><value>Hover a node to light up its neighbours; wheel zooms, F fits.</value></data>
+  <data name="Heading.DiffViewer" xml:space="preserve"><value>Diff viewer</value></data>
+  <data name="Heading.DitherAreaChart" xml:space="preserve"><value>Dither area chart</value></data>
+  <data name="Heading.DitherAreaChartHint" xml:space="preserve"><value>Fills made of dots that thin out toward the base; stacked bands keep their own color.</value></data>
+  <data name="Heading.Dock" xml:space="preserve"><value>Dock</value></data>
+  <data name="Heading.DockHint" xml:space="preserve"><value>Icons grow as the pointer passes.</value></data>
+  <data name="Heading.Docking" xml:space="preserve"><value>Docking</value></data>
+  <data name="Heading.DockingHint" xml:space="preserve"><value>Drag a tab to dock it, or drag a divider to resize its pane.</value></data>
+  <data name="Heading.DonutChart" xml:space="preserve"><value>Donut chart</value></data>
+  <data name="Heading.DotMatrixChartAndEventTrack" xml:space="preserve"><value>Dot-matrix chart and event track</value></data>
+  <data name="Heading.DotMatrixChartAndEventTrackHint" xml:space="preserve"><value>Drag a cup along the axis, click the chart to add one, double-click a cup to remove it.</value></data>
+  <data name="Heading.DotMatrixDisplay" xml:space="preserve"><value>Dot-matrix display</value></data>
+  <data name="Heading.DotMatrixDisplayHint" xml:space="preserve"><value>Text in a 5 by 7 dot font; a long line can scroll.</value></data>
+  <data name="Heading.Dropzone" xml:space="preserve"><value>Dropzone</value></data>
+  <data name="Heading.DropzoneHint" xml:space="preserve"><value>Drop files from your desktop, or click to browse.</value></data>
+  <data name="Heading.EmojiPicker" xml:space="preserve"><value>Emoji picker</value></data>
+  <data name="Heading.EmojiPickerHint" xml:space="preserve"><value>Search by name, jump by group, pick a skin tone. Recent emoji come first.</value></data>
+  <data name="Heading.ExpandableCardsHint" xml:space="preserve"><value>A header that opens a body with a spring.</value></data>
+  <data name="Heading.ExpandableText" xml:space="preserve"><value>Expandable text</value></data>
+  <data name="Heading.ExpandableTextHint" xml:space="preserve"><value>Long text clamps to a few lines with a fade.</value></data>
+  <data name="Heading.FeatureFlags" xml:space="preserve"><value>Feature flags</value></data>
+  <data name="Heading.FeatureFlagsHint" xml:space="preserve"><value>A switch per environment; click a share to change it.</value></data>
+  <data name="Heading.FileBrowser" xml:space="preserve"><value>File browser</value></data>
+  <data name="Heading.FileBrowserHint" xml:space="preserve"><value>Double-click to open; type to jump; Backspace goes up.</value></data>
+  <data name="Heading.FilterBar" xml:space="preserve"><value>Filter bar</value></data>
+  <data name="Heading.FilterBarHint" xml:space="preserve"><value>Chips for active filters, values in a list, and a search.</value></data>
+  <data name="Heading.FlameGraph" xml:space="preserve"><value>Flame graph</value></data>
+  <data name="Heading.FormatBar" xml:space="preserve"><value>Format bar</value></data>
+  <data name="Heading.FormatBarHint" xml:space="preserve"><value>Color, bold, underline, link, the text style (each previewed at its size), alignment and lists. Delete asks first.</value></data>
+  <data name="Heading.Funnel" xml:space="preserve"><value>Funnel</value></data>
+  <data name="Heading.FunnelHint" xml:space="preserve"><value>Sign up conversion.</value></data>
+  <data name="Heading.Gantt" xml:space="preserve"><value>Gantt</value></data>
+  <data name="Heading.GanttHint" xml:space="preserve"><value>Drag bars to reschedule, pull either end to change the length. Curves follow dependencies.</value></data>
+  <data name="Heading.GradientAndStepSliders" xml:space="preserve"><value>Gradient and step sliders</value></data>
+  <data name="Heading.GradientAndStepSlidersHint" xml:space="preserve"><value>The track is the value: a hue, a white balance, an opacity. Step sliders snap to a few stops.</value></data>
+  <data name="Heading.GradientEditor" xml:space="preserve"><value>Gradient editor</value></data>
+  <data name="Heading.GradientTextAndSpotlightCards" xml:space="preserve"><value>Gradient text and spotlight cards</value></data>
+  <data name="Heading.GradientTextAndSpotlightCardsHint" xml:space="preserve"><value>A light follows the pointer across a card and along its edge. A beam marks the one card that is live.</value></data>
+  <data name="Heading.GroupedToolbar" xml:space="preserve"><value>Grouped toolbar</value></data>
+  <data name="Heading.GroupedToolbarHint" xml:space="preserve"><value>Raised groups in one pill, an inset set of modes and a primary action. Narrow the window and the end folds into the “more” menu.</value></data>
+  <data name="Heading.Heatmap" xml:space="preserve"><value>Heatmap</value></data>
+  <data name="Heading.HeatmapHint" xml:space="preserve"><value>Requests by weekday and hour.</value></data>
+  <data name="Heading.HexViewer" xml:space="preserve"><value>Hex viewer</value></data>
+  <data name="Heading.HorizontalScrolling" xml:space="preserve"><value>Horizontal scrolling</value></data>
+  <data name="Heading.HorizontalScrollingHint" xml:space="preserve"><value>Scroll sideways or hold Shift while using the mouse wheel.</value></data>
+  <data name="Heading.HoverCard" xml:space="preserve"><value>Hover card</value></data>
+  <data name="Heading.HoverCardHint" xml:space="preserve"><value>Rest the pointer on a name.</value></data>
+  <data name="Heading.HttpRequestBar" xml:space="preserve"><value>HTTP request bar</value></data>
+  <data name="Heading.HttpRequestBarHint" xml:space="preserve"><value>The parameters table and the URL stay in step.</value></data>
+  <data name="Heading.IconEmojiAndKeycap" xml:space="preserve"><value>Icon, emoji and keycap</value></data>
+  <data name="Heading.Image" xml:space="preserve"><value>Image</value></data>
+  <data name="Heading.InlineEdit" xml:space="preserve"><value>Inline edit</value></data>
+  <data name="Heading.InlineEditHint" xml:space="preserve"><value>Click the text to edit it in place. Enter saves, Esc cancels.</value></data>
+  <data name="Heading.InteractiveCanvas" xml:space="preserve"><value>Interactive canvas</value></data>
+  <data name="Heading.JsonViewer" xml:space="preserve"><value>JSON viewer</value></data>
+  <data name="Heading.JsonViewerHint" xml:space="preserve"><value>Collapsible, with counts. Click a brace to fold it.</value></data>
+  <data name="Heading.Kanban" xml:space="preserve"><value>Kanban</value></data>
+  <data name="Heading.KanbanHint" xml:space="preserve"><value>Drag cards within and between columns. Columns can carry a work-in-progress limit.</value></data>
+  <data name="Heading.KeyValueEditor" xml:space="preserve"><value>Key-value editor</value></data>
+  <data name="Heading.KeyValueEditorHint" xml:space="preserve"><value>Type in the empty row to add a pair; the lock hides a value.</value></data>
+  <data name="Heading.Keymap" xml:space="preserve"><value>Keymap</value></data>
+  <data name="Heading.KeymapHint" xml:space="preserve"><value>Shortcuts on a keyboard; keys bound twice are marked.</value></data>
+  <data name="Heading.LayeredStack" xml:space="preserve"><value>Layered stack</value></data>
+  <data name="Heading.LayeredStackHint" xml:space="preserve"><value>CUI places both children in the same native container.</value></data>
+  <data name="Heading.LineChart" xml:space="preserve"><value>Line chart</value></data>
+  <data name="Heading.LineChartHint" xml:space="preserve"><value>Hover to inspect values. The crosshair glides between points.</value></data>
+  <data name="Heading.List" xml:space="preserve"><value>List</value></data>
+  <data name="Heading.LiveCursorsAndCanvasControls" xml:space="preserve"><value>Live cursors and canvas controls</value></data>
+  <data name="Heading.LiveCursorsAndCanvasControlsHint" xml:space="preserve"><value>Three people on one canvas: their pointers glide to where they move, one talks, one has a node selected. The rail zooms in steps; click the percentage to reset.</value></data>
+  <data name="Heading.Loaders" xml:space="preserve"><value>Loaders</value></data>
+  <data name="Heading.LoadersHint" xml:space="preserve"><value>Dots, bars, pulse, orbit and grid.</value></data>
+  <data name="Heading.LogConsole" xml:space="preserve"><value>Log console</value></data>
+  <data name="Heading.Markdown" xml:space="preserve"><value>Markdown</value></data>
+  <data name="Heading.ModelPicker" xml:space="preserve"><value>Model picker</value></data>
+  <data name="Heading.ModelPickerHint" xml:space="preserve"><value>Choose a model using the same menu as the composer.</value></data>
+  <data name="Heading.Money" xml:space="preserve"><value>Money</value></data>
+  <data name="Heading.MoneyHint" xml:space="preserve"><value>Exact decimal amounts with native text editing.</value></data>
+  <data name="Heading.MonthCalendar" xml:space="preserve"><value>Month calendar</value></data>
+  <data name="Heading.MonthCalendarHint" xml:space="preserve"><value>Bars for days off and trips, timed events in time order, +N more when a day is full.</value></data>
+  <data name="Heading.MorphingButtons" xml:space="preserve"><value>Morphing buttons</value></data>
+  <data name="Heading.MorphingButtonsHint" xml:space="preserve"><value>Confirm before destroying, and show the result of work in place.</value></data>
+  <data name="Heading.MultiSelect" xml:space="preserve"><value>Multi-select</value></data>
+  <data name="Heading.MultiSelectHint" xml:space="preserve"><value>Chips for the chosen items, checkboxes in the list.</value></data>
+  <data name="Heading.NetworkWaterfall" xml:space="preserve"><value>Network waterfall</value></data>
+  <data name="Heading.NetworkWaterfallHint" xml:space="preserve"><value>Hover a bar for its timing; Up and Down move the selection.</value></data>
+  <data name="Heading.NowPlaying" xml:space="preserve"><value>Now playing</value></data>
+  <data name="Heading.NowPlayingHint" xml:space="preserve"><value>Artwork, a scrubber and transport.</value></data>
+  <data name="Heading.OnboardingChecklist" xml:space="preserve"><value>Onboarding checklist</value></data>
+  <data name="Heading.OnboardingChecklistHint" xml:space="preserve"><value>Progress, with the next step open.</value></data>
+  <data name="Heading.PaletteStrip" xml:space="preserve"><value>Palette strip</value></data>
+  <data name="Heading.PaletteStripHint" xml:space="preserve"><value>Click a swatch to lock it, then shuffle the rest.</value></data>
+  <data name="Heading.PathBar" xml:space="preserve"><value>Path bar</value></data>
+  <data name="Heading.PathBarHint" xml:space="preserve"><value>Open a segment or its menu, or type a folder path.</value></data>
+  <data name="Heading.PatternMeter" xml:space="preserve"><value>Pattern meter</value></data>
+  <data name="Heading.PatternMeterHint" xml:space="preserve"><value>Each part has a color and a density, so it reads in grayscale too. Hover a part or a legend entry.</value></data>
+  <data name="Heading.Pipeline" xml:space="preserve"><value>Pipeline</value></data>
+  <data name="Heading.PipelineHint" xml:space="preserve"><value>Stages of jobs; a stage sums up its jobs.</value></data>
+  <data name="Heading.PrefixAndSuffix" xml:space="preserve"><value>Prefix and suffix</value></data>
+  <data name="Heading.PrefixAndSuffixHint" xml:space="preserve"><value>Any text field can carry muted text before and after the value.</value></data>
+  <data name="Heading.Presence" xml:space="preserve"><value>Presence</value></data>
+  <data name="Heading.PresenceAvatars" xml:space="preserve"><value>Presence avatars</value></data>
+  <data name="Heading.PresenceAvatarsHint" xml:space="preserve"><value>Choose a PNG or JPEG for Paul. Other collaborators use their initials.</value></data>
+  <data name="Heading.PresenceHint" xml:space="preserve"><value>Who is here now. Hover to spread them out.</value></data>
+  <data name="Heading.Problems" xml:space="preserve"><value>Problems</value></data>
+  <data name="Heading.ProblemsHint" xml:space="preserve"><value>Grouped by file; filter by severity or text, Enter opens.</value></data>
+  <data name="Heading.PropertyInspector" xml:space="preserve"><value>Property inspector</value></data>
+  <data name="Heading.QueryBuilder" xml:space="preserve"><value>Query builder</value></data>
+  <data name="Heading.QueryBuilderHint" xml:space="preserve"><value>Nested all and any groups.</value></data>
+  <data name="Heading.Radar" xml:space="preserve"><value>Radar</value></data>
+  <data name="Heading.RadarHint" xml:space="preserve"><value>Two releases across six qualities.</value></data>
+  <data name="Heading.RadioCards" xml:space="preserve"><value>Radio cards</value></data>
+  <data name="Heading.RadioCardsHint" xml:space="preserve"><value>For choices that need a sentence of explanation.</value></data>
+  <data name="Heading.RatioSlider" xml:space="preserve"><value>Ratio slider</value></data>
+  <data name="Heading.RatioSliderHint" xml:space="preserve"><value>Two named parts with a bar between them. Drag it or use the arrow keys (Shift for steps of ten).</value></data>
+  <data name="Heading.Reactions" xml:space="preserve"><value>Reactions</value></data>
+  <data name="Heading.ReactionsHint" xml:space="preserve"><value>Counts roll when they change.</value></data>
+  <data name="Heading.ReadingDirection" xml:space="preserve"><value>Reading direction</value></data>
+  <data name="Heading.ReadingDirectionHint" xml:space="preserve"><value>Start/end padding and native spacing mirror with the container.</value></data>
+  <data name="Heading.Readouts" xml:space="preserve"><value>Readouts</value></data>
+  <data name="Heading.ReadoutsHint" xml:space="preserve"><value>A label, a value with its unit, and a line of context, in the monospaced font.</value></data>
+  <data name="Heading.RegexTester" xml:space="preserve"><value>Regex tester</value></data>
+  <data name="Heading.RegexTesterHint" xml:space="preserve"><value>Matches and groups are marked as you type.</value></data>
+  <data name="Heading.ReorderableList" xml:space="preserve"><value>Reorderable list</value></data>
+  <data name="Heading.ReorderableListHint" xml:space="preserve"><value>Drag a row. The others make room as you go.</value></data>
+  <data name="Heading.ResultCardAndSelectionBar" xml:space="preserve"><value>Result card and selection bar</value></data>
+  <data name="Heading.ResultCardAndSelectionBarHint" xml:space="preserve"><value>A picture with its status and caption, and its actions in a floating toolbar. Tick files and a bar slides up; Esc clears.</value></data>
+  <data name="Heading.RollingNumber" xml:space="preserve"><value>Rolling number</value></data>
+  <data name="Heading.RollingNumberHint" xml:space="preserve"><value>Change the value to animate its digits.</value></data>
+  <data name="Heading.RulerAndHistogram" xml:space="preserve"><value>Ruler and histogram</value></data>
+  <data name="Heading.RulerAndHistogramHint" xml:space="preserve"><value>A tape that slides under a fixed marker, and a range over its data.</value></data>
+  <data name="Heading.Sankey" xml:space="preserve"><value>Sankey</value></data>
+  <data name="Heading.SankeyHint" xml:space="preserve"><value>Where sign ups come from and where they end up.</value></data>
+  <data name="Heading.Scatter" xml:space="preserve"><value>Scatter</value></data>
+  <data name="Heading.ScatterHint" xml:space="preserve"><value>Frame time against node count, sized by draw calls.</value></data>
+  <data name="Heading.SchedulePicker" xml:space="preserve"><value>Schedule picker</value></data>
+  <data name="Heading.SchedulePickerHint" xml:space="preserve"><value>Writes a cron expression and shows the next runs.</value></data>
+  <data name="Heading.ScrubFields" xml:space="preserve"><value>Scrub fields</value></data>
+  <data name="Heading.ScrubFieldsHint" xml:space="preserve"><value>Drag sideways to change the value, Shift for fine steps, click to type.</value></data>
+  <data name="Heading.ShortcutRecorder" xml:space="preserve"><value>Shortcut recorder</value></data>
+  <data name="Heading.ShortcutRecorderHint" xml:space="preserve"><value>Click, then press a combination. Backspace clears.</value></data>
+  <data name="Heading.Signature" xml:space="preserve"><value>Signature</value></data>
+  <data name="Heading.SignatureHint" xml:space="preserve"><value>Draw with the mouse or a pen. Faster strokes are thinner, like ink.</value></data>
+  <data name="Heading.Sliders" xml:space="preserve"><value>Sliders</value></data>
+  <data name="Heading.SlidersHint" xml:space="preserve"><value>Drag past either end: the track stretches like rubber.</value></data>
+  <data name="Heading.Sparkline" xml:space="preserve"><value>Sparkline</value></data>
+  <data name="Heading.SpeedDial" xml:space="preserve"><value>Speed dial</value></data>
+  <data name="Heading.SpeedDialHint" xml:space="preserve"><value>A floating action button that fans out related actions.</value></data>
+  <data name="Heading.SplitBar" xml:space="preserve"><value>Split bar</value></data>
+  <data name="Heading.SplitBarHint" xml:space="preserve"><value>Where the time goes.</value></data>
+  <data name="Heading.SplitButton" xml:space="preserve"><value>Split button</value></data>
+  <data name="Heading.SplitButtonHint" xml:space="preserve"><value>A main action with related actions one click away.</value></data>
+  <data name="Heading.SplitView" xml:space="preserve"><value>Split view</value></data>
+  <data name="Heading.SplitViewHint" xml:space="preserve"><value>Drag the divider between the two panes.</value></data>
+  <data name="Heading.Sql" xml:space="preserve"><value>SQL</value></data>
+  <data name="Heading.SqlEditor" xml:space="preserve"><value>SQL editor</value></data>
+  <data name="Heading.StackTrace" xml:space="preserve"><value>Stack trace</value></data>
+  <data name="Heading.StackTraceHint" xml:space="preserve"><value>Library frames fold; a frame with source opens; copy the trace.</value></data>
+  <data name="Heading.StackedBarsAndGauges" xml:space="preserve"><value>Stacked bars and gauges</value></data>
+  <data name="Heading.StatusTag" xml:space="preserve"><value>Status tag</value></data>
+  <data name="Heading.StatusTagHint" xml:space="preserve"><value>An icon, a label and a tinted fill for each state. Click a small tag to remove it.</value></data>
+  <data name="Heading.Stepper" xml:space="preserve"><value>Stepper</value></data>
+  <data name="Heading.Suggestions" xml:space="preserve"><value>Suggestions</value></data>
+  <data name="Heading.SuggestionsHint" xml:space="preserve"><value>Ways to start.</value></data>
+  <data name="Heading.SwipeActions" xml:space="preserve"><value>Swipe actions</value></data>
+  <data name="Heading.SwipeActionsHint" xml:space="preserve"><value>Drag a row sideways or swipe with two fingers.</value></data>
+  <data name="Heading.TabBar" xml:space="preserve"><value>Tab bar</value></data>
+  <data name="Heading.TabBarHint" xml:space="preserve"><value>For compact layouts.</value></data>
+  <data name="Heading.TableHint" xml:space="preserve"><value>Sortable columns, row selection and components in cells.</value></data>
+  <data name="Heading.TabsHint" xml:space="preserve"><value>The indicator slides to the active tab.</value></data>
+  <data name="Heading.TagsCodesAndPasswordStrength" xml:space="preserve"><value>Tags, codes and password strength</value></data>
+  <data name="Heading.TerminalHint" xml:space="preserve"><value>Colors, \r progress, history on Up and Down, Ctrl+C, Ctrl+L, drag to select.</value></data>
+  <data name="Heading.TestExplorer" xml:space="preserve"><value>Test explorer</value></data>
+  <data name="Heading.TestExplorerHint" xml:space="preserve"><value>Suites fold; hover a row to run it; filter by status or name.</value></data>
+  <data name="Heading.TextEffects" xml:space="preserve"><value>Text effects</value></data>
+  <data name="Heading.TextEffectsHint" xml:space="preserve"><value>A shimmer for pending work, a typewriter for streamed text, words that settle into place.</value></data>
+  <data name="Heading.Theme" xml:space="preserve"><value>Theme</value></data>
+  <data name="Heading.ThemeHint" xml:space="preserve"><value>A compact switcher and a single toggle that morphs between sun and moon.</value></data>
+  <data name="Heading.Ticker" xml:space="preserve"><value>Ticker</value></data>
+  <data name="Heading.TickerHint" xml:space="preserve"><value>A continuous strip of figures. It pauses under the pointer.</value></data>
+  <data name="Heading.Time" xml:space="preserve"><value>Time</value></data>
+  <data name="Heading.TimeHint" xml:space="preserve"><value>A field with hour and minute columns, 24 hour or 12 hour.</value></data>
+  <data name="Heading.TimeHistogram" xml:space="preserve"><value>Time histogram</value></data>
+  <data name="Heading.TimeHistogramHint" xml:space="preserve"><value>Drag to select a range; click to clear it.</value></data>
+  <data name="Heading.TimelineEditor" xml:space="preserve"><value>Timeline editor</value></data>
+  <data name="Heading.Toasts" xml:space="preserve"><value>Toasts</value></data>
+  <data name="Heading.ToastsHint" xml:space="preserve"><value>They stack, expand on hover and pause while you read.</value></data>
+  <data name="Heading.ToggleGroup" xml:space="preserve"><value>Toggle group</value></data>
+  <data name="Heading.ToggleGroupHint" xml:space="preserve"><value>Independent toggles for toolbars, or exclusive like radio buttons.</value></data>
+  <data name="Heading.Tooltips" xml:space="preserve"><value>Tooltips</value></data>
+  <data name="Heading.TraceViewer" xml:space="preserve"><value>Trace viewer</value></data>
+  <data name="Heading.TraceViewerHint" xml:space="preserve"><value>Wheel zooms, drag pans, Shift+drag measures, a lane's name folds it.</value></data>
+  <data name="Heading.TreeTable" xml:space="preserve"><value>Tree table</value></data>
+  <data name="Heading.TreeTableHint" xml:space="preserve"><value>Tree cells inside a table: disclosure, indentation, totals.</value></data>
+  <data name="Heading.TreeView" xml:space="preserve"><value>Tree view</value></data>
+  <data name="Heading.Treemap" xml:space="preserve"><value>Treemap</value></data>
+  <data name="Heading.TreemapHint" xml:space="preserve"><value>Bundle size by module.</value></data>
+  <data name="Heading.UndoToast" xml:space="preserve"><value>Undo toast</value></data>
+  <data name="Heading.UndoToastHint" xml:space="preserve"><value>A draining line shows how long Undo stays.</value></data>
+  <data name="Heading.Uptime" xml:space="preserve"><value>Uptime</value></data>
+  <data name="Heading.UptimeHint" xml:space="preserve"><value>One bar per day; hover for the day.</value></data>
+  <data name="Heading.UserMenu" xml:space="preserve"><value>User menu</value></data>
+  <data name="Heading.UserMenuHint" xml:space="preserve"><value>Account trigger for sidebars and headers.</value></data>
+  <data name="Heading.Veil" xml:space="preserve"><value>Veil</value></data>
+  <data name="Heading.VeilHint" xml:space="preserve"><value>Covers a picture, a secret or a spoiler with moving dots, and dissolves when clicked.</value></data>
+  <data name="Heading.VirtualList" xml:space="preserve"><value>Virtual list</value></data>
+  <data name="Heading.VirtualListHint" xml:space="preserve"><value>Ten thousand rows. Only the visible ones are built.</value></data>
+  <data name="Heading.VirtualTreeTable" xml:space="preserve"><value>Virtual tree table</value></data>
+  <data name="Heading.VirtualTreeTableHint" xml:space="preserve"><value>Use the arrow keys to navigate and expand. Opening ui loads its children.</value></data>
+  <data name="Heading.VoiceMessages" xml:space="preserve"><value>Voice messages</value></data>
+  <data name="Heading.VoiceMessagesHint" xml:space="preserve"><value>Press the microphone to record: the strip scrolls with the level. Cancel throws the take away, send adds it below.</value></data>
+  <data name="Heading.VoiceOrb" xml:space="preserve"><value>Voice orb</value></data>
+  <data name="Heading.VoiceOrbHint" xml:space="preserve"><value>Click the legacy voice orb to switch between idle and listening.</value></data>
+  <data name="Heading.VoiceSession" xml:space="preserve"><value>Voice session</value></data>
+  <data name="Heading.VoiceSessionHint" xml:space="preserve"><value>Both voices on one timeline, with the live transcript. While it thinks there is no sound, so the strip stays flat.</value></data>
+  <data name="Heading.VoiceWaveform" xml:space="preserve"><value>Voice waveform</value></data>
+  <data name="Heading.VoiceWaveformHint" xml:space="preserve"><value>The strip on its own: the newest levels scroll in from the right, a finished clip fits the width and seeks.</value></data>
+  <data name="Heading.Waffle" xml:space="preserve"><value>Waffle</value></data>
+  <data name="Heading.WaffleHint" xml:space="preserve"><value>Platforms of the last 100 installs.</value></data>
+  <data name="Heading.Waveform" xml:space="preserve"><value>Waveform</value></data>
+  <data name="Heading.WaveformHint" xml:space="preserve"><value>Click or drag to seek.</value></data>
+  <data name="Heading.WeekCalendar" xml:space="preserve"><value>Week calendar</value></data>
+  <data name="Heading.WeekCalendarHint" xml:space="preserve"><value>Drag events to move them in 15 minute steps, or pull the bottom edge to resize.</value></data>
+  <data name="Heading.WheelsAndDial" xml:space="preserve"><value>Wheels and dial</value></data>
+  <data name="Heading.WheelsAndDialHint" xml:space="preserve"><value>Drag, scroll or use the arrow keys. Several wheels make a date reel.</value></data>
+  <data name="Heading.WindowAndClipboard" xml:space="preserve"><value>Window and clipboard</value></data>
+  <data name="Page.AI" xml:space="preserve"><value>AI</value></data>
+  <data name="Page.Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Page.Audio" xml:space="preserve"><value>Audio</value></data>
+  <data name="Page.Buttons" xml:space="preserve"><value>Buttons</value></data>
+  <data name="Page.CanvasAndBars" xml:space="preserve"><value>Canvas and bars</value></data>
+  <data name="Page.Capture" xml:space="preserve"><value>Capture</value></data>
+  <data name="Page.CellGrid" xml:space="preserve"><value>Cell grid</value></data>
+  <data name="Page.Charts" xml:space="preserve"><value>Charts</value></data>
+  <data name="Page.Code" xml:space="preserve"><value>Code</value></data>
+  <data name="Page.CreativeControls" xml:space="preserve"><value>Creative controls</value></data>
+  <data name="Page.DataGrid" xml:space="preserve"><value>Data grid</value></data>
+  <data name="Page.Desktop" xml:space="preserve"><value>App chrome</value></data>
+  <data name="Page.DeveloperTools" xml:space="preserve"><value>Developer tools</value></data>
+  <data name="Page.Disclosure" xml:space="preserve"><value>Disclosure</value></data>
+  <data name="Page.Display" xml:space="preserve"><value>Text and display</value></data>
+  <data name="Page.EditingTools" xml:space="preserve"><value>Editing tools</value></data>
+  <data name="Page.Feedback" xml:space="preserve"><value>Feedback</value></data>
+  <data name="Page.Files" xml:space="preserve"><value>Files</value></data>
+  <data name="Page.Inputs" xml:space="preserve"><value>Inputs</value></data>
+  <data name="Page.Instruments" xml:space="preserve"><value>Instruments</value></data>
+  <data name="Page.Layout" xml:space="preserve"><value>Layout</value></data>
+  <data name="Page.Lists" xml:space="preserve"><value>Data display</value></data>
+  <data name="Page.MoreCharts" xml:space="preserve"><value>More charts</value></data>
+  <data name="Page.MoreDeveloperTools" xml:space="preserve"><value>More developer tools</value></data>
+  <data name="Page.Motion" xml:space="preserve"><value>Motion</value></data>
+  <data name="Page.Navigation" xml:space="preserve"><value>Navigation</value></data>
+  <data name="Page.Overlays" xml:space="preserve"><value>Overlays</value></data>
+  <data name="Page.Overview" xml:space="preserve"><value>Overview</value></data>
+  <data name="Page.Pickers" xml:space="preserve"><value>Pickers</value></data>
+  <data name="Page.Planning" xml:space="preserve"><value>Planning</value></data>
+  <data name="Page.Reader" xml:space="preserve"><value>Reader</value></data>
+  <data name="Page.Selection" xml:space="preserve"><value>Selection</value></data>
+  <data name="Page.SmartInputs" xml:space="preserve"><value>Smart inputs</value></data>
+  <data name="Page.Social" xml:space="preserve"><value>Social and media</value></data>
+  <data name="Page.Voice" xml:space="preserve"><value>Voice</value></data>
+  <data name="Palette.Buttons" xml:space="preserve"><value>Go to Buttons</value></data>
+  <data name="Palette.ChangeAccent" xml:space="preserve"><value>Change accent color</value></data>
+  <data name="Palette.Charts" xml:space="preserve"><value>Go to Charts</value></data>
+  <data name="Palette.Inputs" xml:space="preserve"><value>Go to Inputs</value></data>
+  <data name="Palette.InviteTeammate" xml:space="preserve"><value>Invite teammate</value></data>
+  <data name="Palette.OpenSettings" xml:space="preserve"><value>Open settings</value></data>
+  <data name="Palette.Overview" xml:space="preserve"><value>Go to Overview</value></data>
+  <data name="Palette.Preferences" xml:space="preserve"><value>Preferences</value></data>
+  <data name="Palette.ToggleDark" xml:space="preserve"><value>Toggle dark mode</value></data>
+  <data name="Text.About" xml:space="preserve"><value>About</value></data>
+  <data name="Text.AboutHint" xml:space="preserve"><value>Markdown is supported.</value></data>
+  <data name="Text.Account" xml:space="preserve"><value>Account</value></data>
+  <data name="Text.Active" xml:space="preserve"><value>Active</value></data>
+  <data name="Text.Admin" xml:space="preserve"><value>Admin</value></data>
+  <data name="Text.AirplaneMode" xml:space="preserve"><value>Airplane mode</value></data>
+  <data name="Text.AirplaneModeHint" xml:space="preserve"><value>Turns off all radios.</value></data>
+  <data name="Text.Analytics" xml:space="preserve"><value>Analytics</value></data>
+  <data name="Text.AppChromeIntro" xml:space="preserve"><value>Menu bar, toolbar, document tabs and status bar around an editor.</value></data>
+  <data name="Text.Billing" xml:space="preserve"><value>Billing</value></data>
+  <data name="Text.Bluetooth" xml:space="preserve"><value>Bluetooth</value></data>
+  <data name="Text.BrowseComponents" xml:space="preserve"><value>Browse components</value></data>
+  <data name="Text.Canada" xml:space="preserve"><value>Canada</value></data>
+  <data name="Text.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Text.CellGridHint" xml:space="preserve"><value>Click to center · Wheel to change spacing</value></data>
+  <data name="Text.Checkbox" xml:space="preserve"><value>Checkbox</value></data>
+  <data name="Text.CommandPalette" xml:space="preserve"><value>Command palette</value></data>
+  <data name="Text.Comments" xml:space="preserve"><value>Comments</value></data>
+  <data name="Text.CommentsHint" xml:space="preserve"><value>When someone replies to you.</value></data>
+  <data name="Text.ComponentsAreFunctions" xml:space="preserve"><value>Components are functions.</value></data>
+  <data name="Text.ComponentsForFpas" xml:space="preserve"><value>Components for FPas</value></data>
+  <data name="Text.Continue" xml:space="preserve"><value>Continue</value></data>
+  <data name="Text.Country" xml:space="preserve"><value>Country</value></data>
+  <data name="Text.CreateWorkspace" xml:space="preserve"><value>Create workspace</value></data>
+  <data name="Text.CreateWorkspaceHeading" xml:space="preserve"><value>Create a workspace</value></data>
+  <data name="Text.Danger" xml:space="preserve"><value>Danger</value></data>
+  <data name="Text.Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Text.DeleteProject" xml:space="preserve"><value>Delete project</value></data>
+  <data name="Text.DeleteProjectQuestion" xml:space="preserve"><value>Delete this project?</value></data>
+  <data name="Text.DeleteProjectWarning" xml:space="preserve"><value>This removes the project and its history for everyone. You cannot undo this.</value></data>
+  <data name="Text.Denmark" xml:space="preserve"><value>Denmark</value></data>
+  <data name="Text.Dependencies" xml:space="preserve"><value>Dependencies</value></data>
+  <data name="Text.DialogsAndSheets" xml:space="preserve"><value>Dialogs and sheets</value></data>
+  <data name="Text.Disabled" xml:space="preserve"><value>Disabled</value></data>
+  <data name="Text.DisabledOption" xml:space="preserve"><value>Disabled option</value></data>
+  <data name="Text.Download" xml:space="preserve"><value>Download</value></data>
+  <data name="Text.DropdownMenu" xml:space="preserve"><value>Dropdown menu</value></data>
+  <data name="Text.Duplicate" xml:space="preserve"><value>Duplicate</value></data>
+  <data name="Text.EditProfile" xml:space="preserve"><value>Edit profile</value></data>
+  <data name="Text.Editor" xml:space="preserve"><value>Editor</value></data>
+  <data name="Text.Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Text.EmailNotifications" xml:space="preserve"><value>Email notifications</value></data>
+  <data name="Text.EmailNotificationsHint" xml:space="preserve"><value>Product news, at most once a month.</value></data>
+  <data name="Text.EmailPrivacy" xml:space="preserve"><value>We never share your email.</value></data>
+  <data name="Text.EveryChange" xml:space="preserve"><value>Every change</value></data>
+  <data name="Text.EveryChangeHint" xml:space="preserve"><value>Save as you type. Uses the most disk.</value></data>
+  <data name="Text.EveryFiveMinutes" xml:space="preserve"><value>Every 5 minutes</value></data>
+  <data name="Text.EveryFiveMinutesHint" xml:space="preserve"><value>A good balance for most projects.</value></data>
+  <data name="Text.ExpandableCards" xml:space="preserve"><value>Expandable cards</value></data>
+  <data name="Text.ExportingClip" xml:space="preserve"><value>Exporting clip.mp4</value></data>
+  <data name="Text.FieldHints" xml:space="preserve"><value>Labels above, hints and errors below.</value></data>
+  <data name="Text.FrameTime" xml:space="preserve"><value>Frame time</value></data>
+  <data name="Text.FullName" xml:space="preserve"><value>Full name</value></data>
+  <data name="Text.GalleryIntro" xml:space="preserve"><value>Forms, tables, charts, planning boards and chat pieces with native rendering on Windows and Linux.</value></data>
+  <data name="Text.GalleryTitle" xml:space="preserve"><value>FPas GUI based on CUI</value></data>
+  <data name="Text.Germany" xml:space="preserve"><value>Germany</value></data>
+  <data name="Text.Ghost" xml:space="preserve"><value>Ghost</value></data>
+  <data name="Text.GoToLine" xml:space="preserve"><value>Go to line</value></data>
+  <data name="Text.GridClick" xml:space="preserve"><value> click (</value></data>
+  <data name="Text.GridWheel" xml:space="preserve"><value>Wheel (</value></data>
+  <data name="Text.HourAgo" xml:space="preserve"><value>1 hour ago</value></data>
+  <data name="Text.IndexingProgress" xml:space="preserve"><value>Indexing 62%</value></data>
+  <data name="Text.Interrupted" xml:space="preserve"><value>Interrupted</value></data>
+  <data name="Text.Invite" xml:space="preserve"><value>Invite</value></data>
+  <data name="Text.Invited" xml:space="preserve"><value>Invited</value></data>
+  <data name="Text.Iran" xml:space="preserve"><value>Iran</value></data>
+  <data name="Text.Japan" xml:space="preserve"><value>Japan</value></data>
+  <data name="Text.Kenya" xml:space="preserve"><value>Kenya</value></data>
+  <data name="Text.Label" xml:space="preserve"><value>Label</value></data>
+  <data name="Text.Language" xml:space="preserve"><value>Language</value></data>
+  <data name="Text.Large" xml:space="preserve"><value>Large</value></data>
+  <data name="Text.LineColumn" xml:space="preserve"><value>Ln 48, Col 17</value></data>
+  <data name="Text.Link" xml:space="preserve"><value>Link</value></data>
+  <data name="Text.LoadingLabelHint" xml:space="preserve"><value>Loading keeps the label so the layout does not jump.</value></data>
+  <data name="Text.Marketing" xml:space="preserve"><value>Marketing</value></data>
+  <data name="Text.MarketingHint" xml:space="preserve"><value>Offers from our partners.</value></data>
+  <data name="Text.Medium" xml:space="preserve"><value>Medium</value></data>
+  <data name="Text.Mentions" xml:space="preserve"><value>Mentions</value></data>
+  <data name="Text.MentionsHint" xml:space="preserve"><value>When someone mentions you.</value></data>
+  <data name="Text.MinimumPasswordLength" xml:space="preserve"><value>At least 8 characters</value></data>
+  <data name="Text.MinutesAgo" xml:space="preserve"><value>2 minutes ago</value></data>
+  <data name="Text.MutedText" xml:space="preserve"><value>Muted text</value></data>
+  <data name="Text.Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Text.Netherlands" xml:space="preserve"><value>Netherlands</value></data>
+  <data name="Text.NewProject" xml:space="preserve"><value>New project</value></data>
+  <data name="Text.Notifications" xml:space="preserve"><value>Notifications</value></data>
+  <data name="Text.NotificationsHint" xml:space="preserve"><value>Choose what we tell you about.</value></data>
+  <data name="Text.OnlyManualSave" xml:space="preserve"><value>Only when I save</value></data>
+  <data name="Text.OnlyManualSaveHint" xml:space="preserve"><value>Nothing is written until you press Ctrl S.</value></data>
+  <data name="Text.OpenCommandPalette" xml:space="preserve"><value>Open command palette</value></data>
+  <data name="Text.OpenSheet" xml:space="preserve"><value>Open sheet</value></data>
+  <data name="Text.Options" xml:space="preserve"><value>Options</value></data>
+  <data name="Text.Outline" xml:space="preserve"><value>Outline</value></data>
+  <data name="Text.OverlayHint" xml:space="preserve"><value>Esc or a click outside closes them. Focus stays inside.</value></data>
+  <data name="Text.Owner" xml:space="preserve"><value>Owner</value></data>
+  <data name="Text.Password" xml:space="preserve"><value>Password</value></data>
+  <data name="Text.PickLanguage" xml:space="preserve"><value>Pick a language</value></data>
+  <data name="Text.PlainText" xml:space="preserve"><value>Plain text</value></data>
+  <data name="Text.Portugal" xml:space="preserve"><value>Portugal</value></data>
+  <data name="Text.Primary" xml:space="preserve"><value>Primary</value></data>
+  <data name="Text.ProfileVisibility" xml:space="preserve"><value>Changes are visible to your team.</value></data>
+  <data name="Text.Progress" xml:space="preserve"><value>Progress</value></data>
+  <data name="Text.Project" xml:space="preserve"><value>Project</value></data>
+  <data name="Text.ProjectCreated" xml:space="preserve"><value>Project created</value></data>
+  <data name="Text.PublicProfile" xml:space="preserve"><value>Public profile</value></data>
+  <data name="Text.RadioGroup" xml:space="preserve"><value>Radio group</value></data>
+  <data name="Text.Recent" xml:space="preserve"><value>Recent</value></data>
+  <data name="Text.RecentComment" xml:space="preserve"><value>Jonas commented on Release 1.0</value></data>
+  <data name="Text.RecentInvitation" xml:space="preserve"><value>Priya invited you to Engines</value></data>
+  <data name="Text.RecoveryCodesAge" xml:space="preserve"><value>Recovery codes were generated 3 months ago.</value></data>
+  <data name="Text.Rename" xml:space="preserve"><value>Rename</value></data>
+  <data name="Text.Reports" xml:space="preserve"><value>Reports</value></data>
+  <data name="Text.Reset" xml:space="preserve"><value>Reset</value></data>
+  <data name="Text.RunGallery" xml:space="preserve"><value>Run the gallery with  fpas run</value></data>
+  <data name="Text.SaveChanges" xml:space="preserve"><value>Save changes</value></data>
+  <data name="Text.Saved" xml:space="preserve"><value>Saved</value></data>
+  <data name="Text.Saving" xml:space="preserve"><value>Saving</value></data>
+  <data name="Text.Search" xml:space="preserve"><value>Search</value></data>
+  <data name="Text.SearchEverything" xml:space="preserve"><value>Search everything</value></data>
+  <data name="Text.SearchProjects" xml:space="preserve"><value>Search projects</value></data>
+  <data name="Text.Secondary" xml:space="preserve"><value>Secondary</value></data>
+  <data name="Text.SecondaryText" xml:space="preserve"><value>Secondary text</value></data>
+  <data name="Text.SectionComponents" xml:space="preserve"><value>Components</value></data>
+  <data name="Text.SectionExtended" xml:space="preserve"><value>Extended</value></data>
+  <data name="Text.SectionTerminal" xml:space="preserve"><value>Terminal</value></data>
+  <data name="Text.Security" xml:space="preserve"><value>Security</value></data>
+  <data name="Text.Selected" xml:space="preserve"><value>Selected</value></data>
+  <data name="Text.SelectedPrefix" xml:space="preserve"><value>Selected </value></data>
+  <data name="Text.SendWeeklySummary" xml:space="preserve"><value>Email me a weekly summary</value></data>
+  <data name="Text.Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="Text.Share" xml:space="preserve"><value>Share</value></data>
+  <data name="Text.ShortPassword" xml:space="preserve"><value>Use 8 or more characters.</value></data>
+  <data name="Text.SizesAndIcons" xml:space="preserve"><value>Sizes and icons</value></data>
+  <data name="Text.Small" xml:space="preserve"><value>Small</value></data>
+  <data name="Text.SpacesPrefix" xml:space="preserve"><value>Spaces: </value></data>
+  <data name="Text.States" xml:space="preserve"><value>States</value></data>
+  <data name="Text.Suspended" xml:space="preserve"><value>Suspended</value></data>
+  <data name="Text.Switch" xml:space="preserve"><value>Switch</value></data>
+  <data name="Text.SwitchBranch" xml:space="preserve"><value>Switch branch</value></data>
+  <data name="Text.Table" xml:space="preserve"><value>Table</value></data>
+  <data name="Text.TableRevenue" xml:space="preserve"><value>Revenue</value></data>
+  <data name="Text.TableRole" xml:space="preserve"><value>Role</value></data>
+  <data name="Text.TableStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="Text.Tabs" xml:space="preserve"><value>Tabs</value></data>
+  <data name="Text.TabsHint" xml:space="preserve"><value>Tabs switch between views of the same thing. Content changes in place.</value></data>
+  <data name="Text.Team" xml:space="preserve"><value>Team</value></data>
+  <data name="Text.TeamChanges" xml:space="preserve"><value>Changes are visible to your team.</value></data>
+  <data name="Text.TeamSummary" xml:space="preserve"><value>Four people, one owner.</value></data>
+  <data name="Text.TextAndInlineCode" xml:space="preserve"><value>Text and inline code</value></data>
+  <data name="Text.TextFields" xml:space="preserve"><value>Text fields</value></data>
+  <data name="Text.ThemeDark" xml:space="preserve"><value>Dark</value></data>
+  <data name="Text.ThemeLight" xml:space="preserve"><value>Light</value></data>
+  <data name="Text.TwoFactorEnabled" xml:space="preserve"><value>Two-factor authentication is on</value></data>
+  <data name="Text.UnitedStates" xml:space="preserve"><value>United States</value></data>
+  <data name="Text.UploadingAssets" xml:space="preserve"><value>Uploading assets</value></data>
+  <data name="Text.Variants" xml:space="preserve"><value>Variants</value></data>
+  <data name="Text.VariantsHint" xml:space="preserve"><value>One primary action per view. Secondary for everything else.</value></data>
+  <data name="Text.Viewer" xml:space="preserve"><value>Viewer</value></data>
+  <data name="Text.WeeklyDigest" xml:space="preserve"><value>Weekly digest</value></data>
+  <data name="Text.WeeklyDigestHint" xml:space="preserve"><value>A summary every Monday.</value></data>
+  <data name="Text.Wifi" xml:space="preserve"><value>Wi-Fi</value></data>
+  <data name="Text.WorkspaceCreated" xml:space="preserve"><value>Workspace created</value></data>
+  <data name="Text.WorkspaceEmpty" xml:space="preserve"><value>It is empty for now. Start with a project.</value></data>
+  <data name="Text.WorkspaceInviteHint" xml:space="preserve"><value>You can invite people once it exists.</value></data>
+  <data name="Text.YourName" xml:space="preserve"><value>Your name</value></data>
+</root>

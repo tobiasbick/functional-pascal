@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Disclosure.Widgets.UndoToast;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Disclosure.State as State, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Actions.Buttons as B, System as Sys;
 
@@ -13,7 +14,7 @@ public function View(): E.Element<State.Msg>;
 begin
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(20)),
-    G.Heading<State.Msg>('Undo toast', 'A draining line shows how long Undo stays.'),
+    G.Heading<State.Msg>(Strings.Get('Heading.UndoToast'), Strings.Get('Heading.UndoToastHint')),
     B.Button<State.Msg>(
       'archive-conversations', 'Archive 3 conversations', State.Msg.ArchiveConversations,
       new B.Options(Icon := Sys.Char.ConvertFromUtf32($E041))

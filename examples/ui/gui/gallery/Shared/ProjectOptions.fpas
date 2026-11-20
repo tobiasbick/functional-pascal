@@ -2,7 +2,9 @@
 
 unit Gallery.Shared.ProjectOptions;
 
-uses Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Elements as E, System as Sys;
+uses
+  Gallery.Shared.Strings as Strings,
+  Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Elements as E, System as Sys;
 
 function Icon(Code: int): string;
 begin
@@ -20,13 +22,13 @@ end function;
 public function View<TMsg>(Choose: function(string): TMsg; Delete: TMsg): E.Element<TMsg>;
 begin
   return M.Menu<TMsg>(
-    'options', 'Options', [
-      M.Entry<TMsg>.Label('Project'),
+    'options', Strings.Get('Text.Options'), [
+      M.Entry<TMsg>.Label(Strings.Get('Text.Project')),
       M.Entry<TMsg>.Action(
         new M.Item<TMsg>(
           'rename',
-          'Rename',
-          Choose('Rename'),
+          Strings.Get('Text.Rename'),
+          Choose(Strings.Get('Text.Rename')),
           Icon($E1F9),
           Shortcut := 'F2'
         )
@@ -34,8 +36,8 @@ begin
       M.Entry<TMsg>.Action(
         new M.Item<TMsg>(
           'duplicate',
-          'Duplicate',
-          Choose('Duplicate'),
+          Strings.Get('Text.Duplicate'),
+          Choose(Strings.Get('Text.Duplicate')),
           Icon($E09E),
           Shortcut := 'Ctrl D'
         )
@@ -43,8 +45,8 @@ begin
       M.Entry<TMsg>.Action(
         new M.Item<TMsg>(
           'share',
-          'Share',
-          Choose('Share'),
+          Strings.Get('Text.Share'),
+          Choose(Strings.Get('Text.Share')),
           Icon($E156)
         )
       ),
@@ -52,7 +54,7 @@ begin
       M.Entry<TMsg>.Action(
         new M.Item<TMsg>(
           'delete',
-          'Delete',
+          Strings.Get('Text.Delete'),
           Delete,
           Icon($E18E),
           Danger := true

@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Disclosure.Widgets.HoverCard;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Disclosure.State as State, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Widgets.Media.Avatars as A, Fpas.Ui.Widgets.Display.Links as Link, Fpas.Ui.Widgets.Overlays.HoverCards as H,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
@@ -43,7 +44,7 @@ public function View(): E.Element<State.Msg>;
 begin
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(20), Clip := false),
-    G.Heading<State.Msg>('Hover card', 'Rest the pointer on a name.'),
+    G.Heading<State.Msg>(Strings.Get('Heading.HoverCard'), Strings.Get('Heading.HoverCardHint')),
     E.Row<State.Msg>(
       new L.Flow(Gap := G.Points(6), Wrap := true),
       E.Text<State.Msg>('Assigned to'),

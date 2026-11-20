@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Lists.Widgets.TreeAndList;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Lists.State as State, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Widgets.Collections.Trees as T, Fpas.Ui.Widgets.Collections.ListItems as I, Fpas.Ui.Widgets.Containers.Grids as Grid, Fpas.Ui.Widgets.Containers.Cards as Cards,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;
@@ -26,7 +27,7 @@ begin
     new Grid.Options(Columns := 2, MinimumColumnWidth := 260.0F, Gap := G.Points(16)),
     E.Column<State.Msg>(
       new L.Flow(Gap := G.Points(12), Clip := false),
-      G.Heading<State.Msg>('Tree view'),
+      G.Heading<State.Msg>(Strings.Get('Heading.TreeView')),
       Cards.Card<State.Msg>(
         'tree-card', [
           T.Branch<State.Msg>(
@@ -52,7 +53,7 @@ begin
     ),
     E.Column<State.Msg>(
       new L.Flow(Gap := G.Points(12), Clip := false),
-      G.Heading<State.Msg>('List'),
+      G.Heading<State.Msg>(Strings.Get('Heading.List')),
       Cards.Card<State.Msg>(
         'list-card', [
           I.ListItem<State.Msg>(

@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Navigation.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Navigation.State as State,
   GuiGallery.Shared.Sections as G,
   GuiGallery.Pages.Navigation.Widgets.Tabs as Tabs,
@@ -24,11 +25,11 @@ begin
   const Pager: E.Element<State.Msg> := Pagination.View(Model);
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(20)),
-    G.Heading<State.Msg>('Tabs', 'The indicator slides to the active tab.'),
+    G.Heading<State.Msg>(Strings.Get('Text.Tabs'), Strings.Get('Heading.TabsHint')),
     G.Card<State.Msg>(16, Tabs.Rows(Model)),
-    G.Heading<State.Msg>('Breadcrumb and pagination'),
+    G.Heading<State.Msg>(Strings.Get('Heading.BreadcrumbAndPagination')),
     G.Card<State.Msg>(18, [Trail, Pager]),
-    G.Heading<State.Msg>('Stepper'),
+    G.Heading<State.Msg>(Strings.Get('Heading.Stepper')),
     G.Card<State.Msg>(18, Stepper.Rows(Model))
   );
 end function;

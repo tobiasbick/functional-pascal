@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Lists.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Lists.State as State,
   GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E,
@@ -46,14 +47,20 @@ begin
     )
   ];
   return [
-    G.Heading<State.Msg>('Table', 'Sortable columns, row selection and components in cells.'),
+    G.Heading<State.Msg>(Strings.Get('Text.Table'), Strings.Get('Heading.TableHint')),
     People.View(Model),
     TreeAndList.View(Model),
-    G.Heading<State.Msg>('Reorderable list', 'Drag a row. The others make room as you go.'),
+    G.Heading<State.Msg>(
+      Strings.Get('Heading.ReorderableList'),
+      Strings.Get('Heading.ReorderableListHint')
+    ),
     Tasks.View(Model),
-    G.Heading<State.Msg>('Accordion'),
+    G.Heading<State.Msg>(Strings.Get('Heading.Accordion')),
     Cards.Card<State.Msg>('accordion-card', Items, new Cards.Options(PaddingY := 4.0F)),
-    G.Heading<State.Msg>('Virtual list', 'Ten thousand rows. Only the visible ones are built.'),
+    G.Heading<State.Msg>(
+      Strings.Get('Heading.VirtualList'),
+      Strings.Get('Heading.VirtualListHint')
+    ),
     Invoices.View()
   ];
 end function;

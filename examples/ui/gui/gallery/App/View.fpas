@@ -3,6 +3,7 @@
 unit GuiGallery.App.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Desktop.State as DesktopState, GuiGallery.Pages.Desktop.View as DesktopView,
   GuiGallery.Pages.EditingTools.State as EditState, GuiGallery.Pages.EditingTools.View as EditView,
   GuiGallery.Pages.Ai.State as AiState, GuiGallery.Pages.Ai.View as Ai,
@@ -235,7 +236,7 @@ begin
         Feedback.View<State.Msg>(
           State.Msg.Shared(
             Demo.Msg.Notify(
-              'Project created',
+              Strings.Get('Text.ProjectCreated'),
               new Toasts.Options(Appearance := Toasts.Tone.Success)
             )
           ),
@@ -338,7 +339,7 @@ begin
         Icons.IconButton<State.Msg>(
           'drawer-open',
           Sys.Char.ConvertFromUtf32($E115),
-          'Components',
+          Strings.Get('Text.SectionComponents'),
           State.Msg.SetDrawer(true)
         ),
         Sidebar.HeaderText(Model)

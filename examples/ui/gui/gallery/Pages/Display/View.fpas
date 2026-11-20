@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Display.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.App.State as State, GuiGallery.Shared.Sections as G,
   GuiGallery.Pages.Canvas.Picture as Picture,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Theme,
@@ -67,7 +68,7 @@ end function;
 public function View(Selected: int; Colors: Theme.Palette): array of E.Element<State.Msg>;
 begin
   return [
-    G.Heading<State.Msg>('Text and inline code'),
+    G.Heading<State.Msg>(Strings.Get('Text.TextAndInlineCode')),
     T.Text<State.Msg>('Components for FPas', T.Appearance.HeadingOne),
     T.Text<State.Msg>('Components are functions.', T.Appearance.Body),
     T.Text<State.Msg>('Label', T.Appearance.Label),
@@ -78,7 +79,7 @@ begin
       T.Text<State.Msg>('Run the gallery with', T.Appearance.Body),
       T.Text<State.Msg>('fpas run', T.Appearance.Code)
     ),
-    G.Heading<State.Msg>('Icon, emoji and keycap'),
+    G.Heading<State.Msg>(Strings.Get('Heading.IconEmojiAndKeycap')),
     E.Row<State.Msg>(
       new L.Flow(Gap := G.Points(10), Align := L.Alignment.Center, Clip := false),
       I.Icon<State.Msg>(Sys.Char.ConvertFromUtf32($E0CC), 18.0F),
@@ -86,7 +87,7 @@ begin
     ),
     EmojiRow(Colors),
     K.Keycap<State.Msg>('Ctrl Shift P'),
-    G.Heading<State.Msg>('Image'),
+    G.Heading<State.Msg>(Strings.Get('Heading.Image')),
     Image.Image<State.Msg>(
       'picture', Picture.Result,
       new Image.Options(
@@ -94,7 +95,7 @@ begin
         Height := L.Extent.Fixed(L.Measure.Logical(150)), Radius := 10.0F
       )
     ),
-    G.Heading<State.Msg>('Interactive canvas'),
+    G.Heading<State.Msg>(Strings.Get('Heading.InteractiveCanvas')),
     E.Size<State.Msg>(
       E.Row<State.Msg>(
         new L.Flow(Justify := L.Justification.Between, Clip := false),

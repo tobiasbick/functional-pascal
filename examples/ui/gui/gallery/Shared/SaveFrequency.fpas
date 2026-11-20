@@ -3,6 +3,7 @@
 unit Gallery.Shared.SaveFrequency;
 
 uses
+  Gallery.Shared.Strings as Strings,
   Fpas.Ui.Widgets.Inputs.RadioGroups as R,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L;
@@ -23,9 +24,9 @@ public function View<TMsg>(Selected: int; Change: function(int): TMsg): E.Elemen
 begin
   return R.RadioGroup<TMsg>(
     'save-frequency', [
-      new R.Item('Every change', 'Save as you type. Uses the most disk.'),
-      new R.Item('Every 5 minutes', 'A good balance for most projects.'),
-      new R.Item('Only when I save', 'Nothing is written until you press Ctrl S.')
+      new R.Item(Strings.Get('Text.EveryChange'), Strings.Get('Text.EveryChangeHint')),
+      new R.Item(Strings.Get('Text.EveryFiveMinutes'), Strings.Get('Text.EveryFiveMinutesHint')),
+      new R.Item(Strings.Get('Text.OnlyManualSave'), Strings.Get('Text.OnlyManualSaveHint'))
     ], Selected, Change,
     Gap := L.Spacing.Fixed(L.Measure.Logical(12))
   );

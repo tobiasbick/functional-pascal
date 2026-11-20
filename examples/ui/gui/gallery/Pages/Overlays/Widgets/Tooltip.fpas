@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Overlays.Widgets.Tooltip;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Overlays.State as State,
   GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E,
@@ -27,7 +28,7 @@ public function View(): E.Element<State.Msg>;
 begin
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(20)),
-    G.Heading<State.Msg>('Tooltips'),
+    G.Heading<State.Msg>(Strings.Get('Heading.Tooltips')),
     G.Card<State.Msg>(
       12, [
         E.Row<State.Msg>(

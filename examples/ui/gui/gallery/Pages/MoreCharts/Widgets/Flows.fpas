@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.MoreCharts.Widgets.Flows;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.MoreCharts.Data as Data, GuiGallery.Pages.MoreCharts.Layout as Layout,
   GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Sankeys as Sk,
   Fpas.Ui.Widgets.Charts.BarLists as Bars, Fpas.Ui.Widgets.Charts.ActivityRings as Rings, Fpas.Ui.Widgets.Charts.Charts as C,
@@ -52,8 +53,8 @@ begin
     Layout.Column<TMsg>(
       1.4F, false,
       G.Heading<TMsg>(
-        'Bar list',
-        'Ranked, keyed by label: press Shuffle and the rows slide to their new rank.'
+        Strings.Get('Heading.BarList'),
+        Strings.Get('Heading.BarListHint')
       ),
       Bars.BarList<TMsg>('pages', Samples.Pages),
       B.Button<TMsg>(
@@ -65,7 +66,10 @@ begin
     ),
     Layout.Column<TMsg>(
       1.0F, true,
-      G.Heading<TMsg>('Activity rings', 'Past one, a ring keeps winding.'),
+      G.Heading<TMsg>(
+        Strings.Get('Heading.ActivityRings'),
+        Strings.Get('Heading.ActivityRingsHint')
+      ),
       Rings.ActivityRings<TMsg>(
         'rings',
         [new C.Item('Move', 0.82F), new C.Item('Exercise', 1.24F), new C.Item('Stand', 0.58F)],

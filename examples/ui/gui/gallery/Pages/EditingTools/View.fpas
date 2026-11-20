@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.EditingTools.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.EditingTools.State as M, GuiGallery.Pages.EditingTools.Samples as Sample,
   GuiGallery.Pages.EditingTools.Capture as Capture, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Motion.Motion as Text,
@@ -135,7 +136,7 @@ end function;
 public function View(Model: M.Model; Colors: Theme.Palette): array of E.Element<M.Msg>;
 begin
   return [
-    G.Heading<M.Msg>('Property inspector'),
+    G.Heading<M.Msg>(Strings.Get('Heading.PropertyInspector')),
     Card.Card<M.Msg>(
       'crate-material', [I.PropertyInspector<M.Msg>('props', Model.Inspector, M.Msg.Inspector)],
       new Card.Options(
@@ -145,8 +146,8 @@ begin
         PaddingY := 6.0F
       )
     ),
-    G.Heading<M.Msg>('Flame graph'), Flame(Model, Colors),
-    G.Heading<M.Msg>('Curve editor'),
+    G.Heading<M.Msg>(Strings.Get('Heading.FlameGraph')), Flame(Model, Colors),
+    G.Heading<M.Msg>(Strings.Get('Heading.CurveEditor')),
     Limited(
       E.Column<M.Msg>(
         new L.Flow(Clip := false),
@@ -162,7 +163,7 @@ begin
         )
       ), 620
     ),
-    G.Heading<M.Msg>('Gradient editor'),
+    G.Heading<M.Msg>(Strings.Get('Heading.GradientEditor')),
     Limited(
       E.Column<M.Msg>(
         new L.Flow(Gap := G.Points(10), Clip := false),
@@ -178,7 +179,7 @@ begin
         )
       ), 560
     ),
-    G.Heading<M.Msg>('Timeline editor'), Shot(Model, Colors)
+    G.Heading<M.Msg>(Strings.Get('Heading.TimelineEditor')), Shot(Model, Colors)
   ];
 end function;
 

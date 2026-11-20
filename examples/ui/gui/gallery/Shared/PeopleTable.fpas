@@ -2,7 +2,9 @@
 
 unit Gallery.Shared.PeopleTable;
 
-uses Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
+uses
+  Gallery.Shared.Strings as Strings,
+  Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
 
 // One person in the GUI and terminal Data display examples.
 public type Person = record
@@ -43,8 +45,8 @@ begin
       'person-0',
       'Jonas Berg',
       'jonas@example.com',
-      'Owner',
-      'Active',
+      Strings.Get('Text.Owner'),
+      Strings.Get('Text.Active'),
       S.Tone.Success,
       '$12,384'
     ),
@@ -52,8 +54,8 @@ begin
       'person-1',
       'Priya Nair',
       'priya@example.com',
-      'Admin',
-      'Active',
+      Strings.Get('Text.Admin'),
+      Strings.Get('Text.Active'),
       S.Tone.Success,
       '$9,846'
     ),
@@ -61,8 +63,8 @@ begin
       'person-2',
       'Tomas Rivera',
       'tomas@example.com',
-      'Editor',
-      'Invited',
+      Strings.Get('Text.Editor'),
+      Strings.Get('Text.Invited'),
       S.Tone.Warning,
       '$7,215'
     ),
@@ -70,8 +72,8 @@ begin
       'person-3',
       'Lena Fischer',
       'lena@example.com',
-      'Viewer',
-      'Active',
+      Strings.Get('Text.Viewer'),
+      Strings.Get('Text.Active'),
       S.Tone.Success,
       '$3,127'
     ),
@@ -79,8 +81,8 @@ begin
       'person-4',
       'Aiko Tanaka',
       'aiko@example.com',
-      'Editor',
-      'Suspended',
+      Strings.Get('Text.Editor'),
+      Strings.Get('Text.Suspended'),
       S.Tone.Danger,
       '$1,962'
     )
@@ -120,11 +122,11 @@ end function;
 public function Columns(RoleWidth: L.Extent; StatusWidth: L.Extent; RevenueWidth: L.Extent): array of T.Column;
 begin
   return [
-    new T.Column('Name', Sortable := true),
-    new T.Column('Email', Grow := 1.2F),
-    new T.Column('Role', RoleWidth, Sortable := true),
-    new T.Column('Status', StatusWidth, Sortable := true),
-    new T.Column('Revenue', RevenueWidth, Align := T.Alignment.Right)
+    new T.Column(Strings.Get('Text.Name'), Sortable := true),
+    new T.Column(Strings.Get('Text.Email'), Grow := 1.2F),
+    new T.Column(Strings.Get('Text.TableRole'), RoleWidth, Sortable := true),
+    new T.Column(Strings.Get('Text.TableStatus'), StatusWidth, Sortable := true),
+    new T.Column(Strings.Get('Text.TableRevenue'), RevenueWidth, Align := T.Alignment.Right)
   ];
 end function;
 

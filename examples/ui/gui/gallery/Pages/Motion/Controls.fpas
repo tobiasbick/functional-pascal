@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Motion.Controls;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Motion.State as M, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Navigation.Docks as Docking,
   Fpas.Ui.Widgets.Audio.ControlTiles as Tiles, Fpas.Ui.Widgets.Containers.Grids as Grids, Fpas.Ui.Widgets.Charts.Charts as Colors, Fpas.Ui.Graphics as Graphics,
@@ -114,7 +115,7 @@ function ControlTiles(Model: M.Model): E.Element<M.Msg>;
 begin
   return E.Column<M.Msg>(
     new L.Flow(Gap := G.Points(10), Clip := false),
-    G.Heading<M.Msg>('Control tiles', 'Big toggles for quick settings.'),
+    G.Heading<M.Msg>(Strings.Get('Heading.ControlTiles'), Strings.Get('Heading.ControlTilesHint')),
     E.Size<M.Msg>(
       Grids.Grid<M.Msg>(
         new Grids.Options(Columns := 2, Gap := G.Points(10)),
@@ -184,9 +185,9 @@ function Media(Model: M.Model): E.Element<M.Msg>;
 begin
   return E.Column<M.Msg>(
     new L.Flow(Gap := G.Points(10), Clip := false),
-    G.Heading<M.Msg>('Now playing', 'Artwork, a scrubber and transport.'),
+    G.Heading<M.Msg>(Strings.Get('Heading.NowPlaying'), Strings.Get('Heading.NowPlayingHint')),
     Player.NowPlaying<M.Msg>('motion-player', Model.Track, M.Msg.Track),
-    G.Heading<M.Msg>('Waveform', 'Click or drag to seek.'),
+    G.Heading<M.Msg>(Strings.Get('Heading.Waveform'), Strings.Get('Heading.WaveformHint')),
     Cards.Card<M.Msg>(
       'motion-wave-card',
       [
@@ -217,7 +218,7 @@ begin
       ],
       new Cards.Options(Padding := 14.0F, Gap := 8.0F, Width := Width(360))
     ),
-    G.Heading<M.Msg>('Tab bar', 'For compact layouts.'),
+    G.Heading<M.Msg>(Strings.Get('Heading.TabBar'), Strings.Get('Heading.TabBarHint')),
     Tabs.TabBar<M.Msg>(
       'motion-tabs',
       [

@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Developer.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Developer.State as M, GuiGallery.Pages.Developer.Samples as D, GuiGallery.Shared.Sections as Section,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
   Fpas.Ui.Widgets.Developer.TraceViewers as T, Fpas.Ui.Widgets.Developer.NetworkWaterfalls as W, Fpas.Ui.Widgets.Developer.DependencyGraphs as G, Fpas.Ui.Widgets.Developer.CommitGraphs as C, Fpas.Ui.Widgets.Developer.Pipelines as J, Fpas.Ui.Widgets.Developer.ProblemsPanels as P, Fpas.Ui.Widgets.Developer.KeyValueEditors as K, Fpas.Ui.Widgets.Developer.QueryBuilders as Q, Fpas.Ui.Widgets.Pickers.SchedulePickers as S, Fpas.Ui.Widgets.Developer.Keymaps as Keys, Fpas.Ui.Widgets.Motion.Motion as Font, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Gui.Internal.Widgets.Developer.QueryBuilder as NativeQuery;
@@ -27,8 +28,8 @@ public function View(Model: M.Model; Palette: Themes.Palette): array of E.Elemen
 begin
   return [
     Section.Heading<M.Msg>(
-      'Trace viewer',
-      'Wheel zooms, drag pans, Shift+drag measures, a lane''s name folds it.'
+      Strings.Get('Heading.TraceViewer'),
+      Strings.Get('Heading.TraceViewerHint')
     ),
     Limit(
       1000, 10,
@@ -44,8 +45,8 @@ begin
       )
     ),
     Section.Heading<M.Msg>(
-      'Network waterfall',
-      'Hover a bar for its timing; Up and Down move the selection.'
+      Strings.Get('Heading.NetworkWaterfall'),
+      Strings.Get('Heading.NetworkWaterfallHint')
     ),
     Limit(
       1000, 10,
@@ -58,8 +59,8 @@ begin
       )
     ),
     Section.Heading<M.Msg>(
-      'Dependency graph',
-      'Hover a node to light up its neighbours; wheel zooms, F fits.'
+      Strings.Get('Heading.DependencyGraph'),
+      Strings.Get('Heading.DependencyGraphHint')
     ),
     Limit(
       1000, 10,
@@ -73,8 +74,8 @@ begin
       )
     ),
     Section.Heading<M.Msg>(
-      'Commit graph',
-      'Branch lanes, merges and refs; only the rows in view are built.'
+      Strings.Get('Heading.CommitGraph'),
+      Strings.Get('Heading.CommitGraphHint')
     ),
     Limit(
       920, 10,
@@ -86,12 +87,12 @@ begin
         new C.Options(Height := 320.0F)
       )
     ),
-    Section.Heading<M.Msg>('Pipeline', 'Stages of jobs; a stage sums up its jobs.'),
+    Section.Heading<M.Msg>(Strings.Get('Heading.Pipeline'), Strings.Get('Heading.PipelineHint')),
     Limit(
       920, 10,
       J.Pipeline<M.Msg>('dev-pipeline', D.Stages, D.Jobs, Model.Pipeline, M.Msg.Pipeline)
     ),
-    Section.Heading<M.Msg>('Problems', 'Grouped by file; filter by severity or text, Enter opens.'),
+    Section.Heading<M.Msg>(Strings.Get('Heading.Problems'), Strings.Get('Heading.ProblemsHint')),
     Limit(
       760, 10,
       P.Problems<M.Msg>(
@@ -102,8 +103,8 @@ begin
       )
     ),
     Section.Heading<M.Msg>(
-      'Key-value editor',
-      'Type in the empty row to add a pair; the lock hides a value.'
+      Strings.Get('Heading.KeyValueEditor'),
+      Strings.Get('Heading.KeyValueEditorHint')
     ),
     Limit(
       680, 10,
@@ -115,7 +116,10 @@ begin
         new K.Options(Capacity := 12)
       )
     ),
-    Section.Heading<M.Msg>('Query builder', 'Nested all and any groups.'),
+    Section.Heading<M.Msg>(
+      Strings.Get('Heading.QueryBuilder'),
+      Strings.Get('Heading.QueryBuilderHint')
+    ),
     Limit(
       720, 10,
       Q.QueryBuilder<M.Msg>(
@@ -132,7 +136,10 @@ begin
         Palette.TextMuted
       )
     ),
-    Section.Heading<M.Msg>('Schedule picker', 'Writes a cron expression and shows the next runs.'),
+    Section.Heading<M.Msg>(
+      Strings.Get('Heading.SchedulePicker'),
+      Strings.Get('Heading.SchedulePickerHint')
+    ),
     Limit(
       560, 10,
       S.SchedulePicker<M.Msg>(
@@ -142,7 +149,7 @@ begin
         new S.Options(Now := 1794211200L, Utc := true)
       )
     ),
-    Section.Heading<M.Msg>('Keymap', 'Shortcuts on a keyboard; keys bound twice are marked.'),
+    Section.Heading<M.Msg>(Strings.Get('Heading.Keymap'), Strings.Get('Heading.KeymapHint')),
     Limit(
       900, 10,
       Keys.Keymap<M.Msg>('dev-keys', D.Bindings, D.Categories, Model.Modifiers, M.Msg.Keys)

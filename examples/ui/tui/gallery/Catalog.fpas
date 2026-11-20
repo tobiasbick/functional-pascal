@@ -2,6 +2,8 @@
 
 unit TuiGallery.Catalog;
 
+uses Gallery.Shared.Strings as Strings;
+
 // Terminal preview associated with a catalog entry.
 public type Preview = enum
   Description;
@@ -21,7 +23,9 @@ end enum;
 
 // One destination in the terminal gallery.
 public type Entry = record
-  // Visible destination name, also used as the sidebar key.
+  // Stable sidebar and preview key.
+  public Id: string;
+  // Visible localized destination name.
   public Title: string;
   // Short introduction shown in the preview panel.
   public Description: string;
@@ -31,57 +35,124 @@ end record;
 
 // Core destinations in GUI gallery order.
 public const Components: array of Entry := [
-  new Entry('Overview', 'Components for FPas', Preview.Overview),
-  new Entry('Buttons', 'Variants, sizes and states.', Preview.Buttons),
-  new Entry('Inputs', 'Text fields', Preview.Inputs),
-  new Entry('Selection', 'Controls for choosing one option or several.', Preview.Selection),
-  new Entry('Navigation', 'Sidebars, tabs and paths between views.', Preview.Navigation),
   new Entry(
-    'Overlays',
-    'Dialogs and sheets',
+    'Overview',
+    Strings.Get('Page.Overview'),
+    Strings.Get('Text.ComponentsForFpas'),
+    Preview.Overview
+  ),
+  new Entry(
+    'Buttons',
+    Strings.Get('Page.Buttons'),
+    Strings.Get('Description.Buttons'),
+    Preview.Buttons
+  ),
+  new Entry('Inputs', Strings.Get('Page.Inputs'), Strings.Get('Text.TextFields'), Preview.Inputs),
+  new Entry(
+    'Selection',
+    Strings.Get('Page.Selection'),
+    Strings.Get('Description.Selection'),
+    Preview.Selection
+  ),
+  new Entry(
+    'Navigation',
+    Strings.Get('Page.Navigation'),
+    Strings.Get('Description.Navigation'),
+    Preview.Navigation
+  ),
+  new Entry(
+    'Overlays', Strings.Get('Page.Overlays'), Strings.Get('Text.DialogsAndSheets'),
     Preview.Overlays
   ),
-  new Entry('Feedback', 'Show how far a task has progressed.', Preview.Feedback),
   new Entry(
-    'Data display',
-    'Rows and lists for presenting structured information.',
+    'Feedback',
+    Strings.Get('Page.Feedback'),
+    Strings.Get('Description.Feedback'),
+    Preview.Feedback
+  ),
+  new Entry(
+    'Data display', Strings.Get('Page.Lists'), Strings.Get('Description.Lists'),
     Preview.DataDisplay
   ),
-  new Entry('Charts', 'Visual summaries of values and trends.')
+  new Entry('Charts', Strings.Get('Page.Charts'), Strings.Get('Description.Charts'))
 ];
 
 // Supplementary destinations in GUI gallery order.
 public const Extended: array of Entry := [
-  new Entry('Actions', 'Commands with confirmation, menus or status feedback.'),
-  new Entry('Smart inputs', 'Editors for structured values.'),
-  new Entry('Pickers', 'Choose colors, dates and other values.'),
-  new Entry('Capture', 'Controls for capturing user input.'),
-  new Entry('Disclosure', 'Expand and collapse related content.', Preview.Disclosure),
-  new Entry('Reader', 'Outlines and anchors for navigating a document.'),
-  new Entry('Data grid', 'Tabular data organized into rows and columns.'),
-  new Entry('Code', 'Source listings and code presentation.'),
-  new Entry('Social and media', 'Profiles, conversations and media content.'),
-  new Entry('Planning', 'Calendars, schedules and timelines.'),
-  new Entry('More charts', 'Additional views of series and distributions.'),
-  new Entry('Motion', 'Transitions and animated feedback.'),
-  new Entry('AI', 'Conversations, sources and tool activity.'),
-  new Entry('Audio', 'Audio levels, waveforms and playback controls.'),
-  new Entry('Files', 'File listings and file operations.'),
-  new Entry('Developer tools', 'Diagnostic views and developer controls.'),
-  new Entry('More developer tools', 'Additional developer and inspection tools.'),
-  new Entry('Instruments', 'Indicators for measurements and signals.'),
-  new Entry('Creative controls', 'Controls for creative editing.'),
-  new Entry('Canvas and bars', 'Drawing surfaces and contextual actions.'),
-  new Entry('Voice', 'Voice input and conversation controls.'),
-  new Entry('Layout', 'Containers that arrange and size their children.'),
-  new Entry('Text and display', 'Typography and secondary information.', Preview.Text),
-  new Entry('Editing tools', 'Actions for editing and formatting content.'),
-  new Entry('App chrome', 'The panels and bars that frame an application.', Preview.AppChrome)
+  new Entry('Actions', Strings.Get('Page.Actions'), Strings.Get('Description.Actions')),
+  new Entry(
+    'Smart inputs',
+    Strings.Get('Page.SmartInputs'),
+    Strings.Get('Description.SmartInputs')
+  ),
+  new Entry('Pickers', Strings.Get('Page.Pickers'), Strings.Get('Description.Pickers')),
+  new Entry('Capture', Strings.Get('Page.Capture'), Strings.Get('Description.Capture')),
+  new Entry(
+    'Disclosure',
+    Strings.Get('Page.Disclosure'),
+    Strings.Get('Description.Disclosure'),
+    Preview.Disclosure
+  ),
+  new Entry('Reader', Strings.Get('Page.Reader'), Strings.Get('Description.Reader')),
+  new Entry('Data grid', Strings.Get('Page.DataGrid'), Strings.Get('Description.DataGrid')),
+  new Entry('Code', Strings.Get('Page.Code'), Strings.Get('Description.Code')),
+  new Entry('Social and media', Strings.Get('Page.Social'), Strings.Get('Description.Social')),
+  new Entry('Planning', Strings.Get('Page.Planning'), Strings.Get('Description.Planning')),
+  new Entry('More charts', Strings.Get('Page.MoreCharts'), Strings.Get('Description.MoreCharts')),
+  new Entry('Motion', Strings.Get('Page.Motion'), Strings.Get('Description.Motion')),
+  new Entry('AI', Strings.Get('Page.AI'), Strings.Get('Description.AI')),
+  new Entry('Audio', Strings.Get('Page.Audio'), Strings.Get('Description.Audio')),
+  new Entry('Files', Strings.Get('Page.Files'), Strings.Get('Description.Files')),
+  new Entry(
+    'Developer tools',
+    Strings.Get('Page.DeveloperTools'),
+    Strings.Get('Description.DeveloperTools')
+  ),
+  new Entry(
+    'More developer tools',
+    Strings.Get('Page.MoreDeveloperTools'),
+    Strings.Get('Description.MoreDeveloperTools')
+  ),
+  new Entry('Instruments', Strings.Get('Page.Instruments'), Strings.Get('Description.Instruments')),
+  new Entry(
+    'Creative controls',
+    Strings.Get('Page.CreativeControls'),
+    Strings.Get('Description.CreativeControls')
+  ),
+  new Entry(
+    'Canvas and bars',
+    Strings.Get('Page.CanvasAndBars'),
+    Strings.Get('Description.CanvasAndBars')
+  ),
+  new Entry('Voice', Strings.Get('Page.Voice'), Strings.Get('Description.Voice')),
+  new Entry('Layout', Strings.Get('Page.Layout'), Strings.Get('Description.Layout')),
+  new Entry(
+    'Text and display',
+    Strings.Get('Page.Display'),
+    Strings.Get('Description.Display'),
+    Preview.Text
+  ),
+  new Entry(
+    'Editing tools',
+    Strings.Get('Page.EditingTools'),
+    Strings.Get('Description.EditingTools')
+  ),
+  new Entry(
+    'App chrome',
+    Strings.Get('Page.Desktop'),
+    Strings.Get('Description.Desktop'),
+    Preview.AppChrome
+  )
 ];
 
 // Additional widgets specific to terminal applications.
 public const Terminal: array of Entry := [
-  new Entry('Cell grid', 'Explore a colored ripple field.', Preview.CellGrid)
+  new Entry(
+    'Cell grid',
+    Strings.Get('Page.CellGrid'),
+    Strings.Get('Description.CellGrid'),
+    Preview.CellGrid
+  )
 ];
 
 end unit;

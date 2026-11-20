@@ -3,6 +3,7 @@
 unit GuiGallery.App.Sidebar;
 
 uses
+  Gallery.Shared.Strings as Strings,
   Fpas.Ui.Elements as E,
   Fpas.Ui.Layout as L,
   Fpas.Ui.Graphics as G,
@@ -25,7 +26,7 @@ uses
   System.Collections.Generic as Collections;
 
 // The gallery brand used by the window, compact bar and drawer.
-public const Title: string := 'FPas GUI based on CUI';
+public const Title: string := Strings.Get('Text.GalleryTitle');
 
 // Width of the desktop sidebar in logical points.
 public const Width: int := 240;
@@ -45,33 +46,7 @@ const AccentColors: array of G.Color := [
 // The title used by the sidebar and the page header.
 public function PageTitle(Page: State.Page): string;
 begin
-  return if Page = State.Page.Lists then
-    'Data display'
-  elsif Page = State.Page.Social then
-    'Social and media'
-  elsif Page = State.Page.DeveloperTools then
-    'Developer tools'
-  elsif Page = State.Page.MoreDeveloperTools then
-    'More developer tools'
-  elsif Page = State.Page.MoreCharts then
-    'More charts'
-  elsif Page = State.Page.CanvasAndBars then
-    'Canvas and bars'
-  elsif Page = State.Page.CreativeControls then
-    'Creative controls'
-  elsif Page = State.Page.DataGrid then
-    'Data grid'
-  elsif Page = State.Page.Desktop then
-    'App chrome'
-  elsif Page = State.Page.EditingTools then
-    'Editing tools'
-  elsif Page = State.Page.Display then
-    'Text and display'
-  elsif Page = State.Page.SmartInputs then
-    'Smart inputs'
-  else
-    Page.ToString()
-  end if;
+  return Strings.Get('Page.' + Page.ToString());
 end function;
 
 function Destination(Page: State.Page; Icon: int): N.Item<State.Msg>;
@@ -90,7 +65,7 @@ begin
     'navigation',
     [
       new N.Section<State.Msg>(
-        'Components', [
+        Strings.Get('Text.SectionComponents'), [
           Destination(State.Page.Overview, $E1C1),
           Destination(State.Page.Buttons, $E1B4),
           Destination(State.Page.Inputs, $E198),
@@ -103,7 +78,7 @@ begin
         ]
       ),
       new N.Section<State.Msg>(
-        'Extended',
+        Strings.Get('Text.SectionExtended'),
         [
           Destination(State.Page.Actions, $E09A),
           Destination(State.Page.SmartInputs, $E172),
@@ -162,7 +137,7 @@ function ThemeControl(Model: Shared.Model; Colors: Themes.Palette): E.Element<St
         ),
         new Canvases.Options(Width := Extent, Height := Extent)
       ),
-      Name
+      Strings.Get('Accent.' + Accent.ToString())
     );
   end function;
 begin
@@ -176,8 +151,8 @@ begin
     Segments.SegmentedControl<State.Msg>(
       'theme',
       [
-        new Segments.Item('Light', Icon := Sys.Char.ConvertFromUtf32($E178)),
-        new Segments.Item('Dark', Icon := Sys.Char.ConvertFromUtf32($E11E))
+        new Segments.Item(Strings.Get('Text.ThemeLight'), Icon := Sys.Char.ConvertFromUtf32($E178)),
+        new Segments.Item(Strings.Get('Text.ThemeDark'), Icon := Sys.Char.ConvertFromUtf32($E11E))
       ],
       cast<int>(Switchers.Resolve(Model.Appearance, Model.SystemAppearance)),
       function(Index: int): State.Msg => State.Msg.Shared(

@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.DataGrid.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.DataGrid.State as S, GuiGallery.Pages.DataGrid.People as P,
   GuiGallery.Shared.Sections as H, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
   Fpas.Ui.Widgets.Collections.FilterBars as F, Fpas.Ui.Widgets.Collections.DataGrids as D, Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Widgets.Collections.TreeTables as TT,
@@ -127,11 +128,11 @@ begin
   end for;
 
   return [
-    H.Heading<S.Msg>('Filter bar', 'Chips for active filters, values in a list, and a search.'),
+    H.Heading<S.Msg>(Strings.Get('Heading.FilterBar'), Strings.Get('Heading.FilterBarHint')),
     Filter(Model),
     H.Heading<S.Msg>(
-      'Data grid',
-      '2,000 rows, virtualized. Sort, resize columns, select with Shift and Ctrl, edit names with a double click.'
+      Strings.Get('Page.DataGrid'),
+      Strings.Get('Heading.DataGridHint')
     ),
     D.DataGrid<S.Msg>(
       'people-grid', [
@@ -155,11 +156,11 @@ begin
         end if
       ), Style.Role.Caption
     ),
-    H.Heading<S.Msg>('Tree table', 'Tree cells inside a table: disclosure, indentation, totals.'),
+    H.Heading<S.Msg>(Strings.Get('Heading.TreeTable'), Strings.Get('Heading.TreeTableHint')),
     OriginalTree(Model),
     H.Heading<S.Msg>(
-      'Virtual tree table',
-      'Use the arrow keys to navigate and expand. Opening ui loads its children.'
+      Strings.Get('Heading.VirtualTreeTable'),
+      Strings.Get('Heading.VirtualTreeTableHint')
     ),
     TT.TreeTable<S.Msg>(
       'virtual-tree',

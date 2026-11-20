@@ -66,8 +66,9 @@ and skipped by whole-body flow validation.
 [Compilation.cs](../../src/Fpas.Compiler/Compilation.cs) defines the public API:
 
 - CompilationRequest supplies CompilationSource values, assembly name, reference
-  paths, target kind, debug/documentation switches, diagnostic policy, and optional
-  strong-name key bytes with public/delay-signing switches.
+  paths, target kind, debug/documentation switches, diagnostic policy, optional
+  strong-name key bytes with public/delay-signing switches, and optional named
+  binary manifest resources.
 - FpasCompiler.Compile returns a CompilationResult with diagnostics and, on
   success, a CompiledProgram. A successful compilation may still have warnings.
   Its CancellationToken overload permits owned speculative dependency compilation;

@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Inputs.Widgets.TextField;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Inputs.Widgets.SearchField as Search,
   GuiGallery.Pages.Inputs.Widgets.TextArea as Area,
@@ -28,30 +29,37 @@ begin
     'input-name',
     Data.Name,
     function(SharedValue: string): State.Msg => State.Msg.Shared(Demo.Msg.SetName(SharedValue)),
-    new F.Options(Label := 'Full name', Placeholder := 'Maya Okafor', MaxUtf8Bytes := 63)
+    new F.Options(
+      Label := Strings.Get('Text.FullName'),
+      Placeholder := 'Maya Okafor',
+      MaxUtf8Bytes := 63
+    )
   );
   const Email: E.Element<State.Msg> := F.TextField<State.Msg>(
     'input-email',
     Data.Email,
     function(SharedValue: string): State.Msg => State.Msg.Shared(Demo.Msg.SetEmail(SharedValue)),
     new F.Options(
-      Label := 'Email', Icon := Sys.Char.ConvertFromUtf32($E04E),
-      Hint := 'We never share your email.', MaxUtf8Bytes := 95
+      Label := Strings.Get('Text.Email'), Icon := Sys.Char.ConvertFromUtf32($E04E),
+      Hint := Strings.Get('Text.EmailPrivacy'), MaxUtf8Bytes := 95
     )
   );
   const Error: string := if Model.Password <> '' and Text.Encoding.UTF8.GetByteCount(
     Model.Password
   ) < 8
   then
-    'Use 8 or more characters.'
+    Strings.Get('Text.ShortPassword')
   else
     ''
   end if;
   const Password: E.Element<State.Msg> := F.TextField<State.Msg>(
     'input-password', Model.Password, State.Msg.SetPassword,
     new F.Options(
-      Label := 'Password', Placeholder := 'At least 8 characters', Password := true,
-      Error := Error, MaxUtf8Bytes := 63
+      Label := Strings.Get('Text.Password'),
+      Placeholder := Strings.Get('Text.MinimumPasswordLength'),
+      Password := true,
+      Error := Error,
+      MaxUtf8Bytes := 63
     )
   );
   const Query: E.Element<State.Msg> := Search.View(Model, Data);
@@ -65,7 +73,7 @@ begin
   ];
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(20)),
-    G.Heading<State.Msg>('Text fields', 'Labels above, hints and errors below.'),
+    G.Heading<State.Msg>(Strings.Get('Text.TextFields'), Strings.Get('Text.FieldHints')),
     G.Card<State.Msg>(16, Fields)
   );
 end function;

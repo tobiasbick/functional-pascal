@@ -2,7 +2,9 @@
 
 unit Gallery.Shared.AboutField;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.TextAreas as Area;
+uses
+  Gallery.Shared.Strings as Strings,
+  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.TextAreas as Area;
 
 // Starting profile description used by both galleries.
 public const Initial: string := 'Mathematician and writer. I like engines that compute and interfaces that stay out of the way.';
@@ -20,8 +22,8 @@ begin
   return Area.TextArea<TMsg>(
     'input-about', About, Change,
     new Area.Options(
-      Label := 'About',
-      Hint := 'Markdown is supported.',
+      Label := Strings.Get('Text.About'),
+      Hint := Strings.Get('Text.AboutHint'),
       Height := 96,
       MaxUtf8Bytes := 511
     )

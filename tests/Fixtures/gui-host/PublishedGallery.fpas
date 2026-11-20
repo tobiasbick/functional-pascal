@@ -65,6 +65,7 @@ uses
   Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
   Fpas.Ui.Widgets.Theming.Themes as Themes,
   System as Sys,
+  System.Globalization as Culture,
   System.IO as IO,
   System.Console as Console,
   System.Text as Text,
@@ -360,6 +361,7 @@ begin
 end procedure;
 
 begin
+  Culture.CultureInfo.CurrentUICulture := Culture.CultureInfo.InvariantCulture;
   Run(Sys.Environment.GetCommandLineArgs());
 end;
 

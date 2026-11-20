@@ -3,6 +3,7 @@
 unit GuiGallery.App.Palette;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.App.State as G, GuiGallery.Pages.Overlays.State as O, GuiGallery.Shared.State as S,
   Fpas.Ui.Widgets.Overlays.CommandPalettes as P, Fpas.Ui.Elements as E, System as Sys;
 
@@ -21,21 +22,63 @@ public function Wrap(Open: bool; Base: E.Element<G.Msg>): E.Element<G.Msg>;
 begin
   return P.CommandPalette<G.Msg>(
     'gallery-palette', Base, Open, [
-      Command('Go to Overview', G.Msg.Show(G.Page.Overview), $E1C1, 'Navigation'),
-      Command('Go to Buttons', G.Msg.Show(G.Page.Buttons), $E1B4, 'Navigation'),
-      Command('Go to Inputs', G.Msg.Show(G.Page.Inputs), $E198, 'Navigation'),
-      Command('Go to Charts', G.Msg.Show(G.Page.Charts), $E2A5, 'Navigation'),
       Command(
-        'Toggle dark mode',
+        Strings.Get('Palette.Overview'),
+        G.Msg.Show(G.Page.Overview),
+        $E1C1,
+        Strings.Get('Page.Navigation')
+      ),
+      Command(
+        Strings.Get('Palette.Buttons'),
+        G.Msg.Show(G.Page.Buttons),
+        $E1B4,
+        Strings.Get('Page.Navigation')
+      ),
+      Command(
+        Strings.Get('Palette.Inputs'),
+        G.Msg.Show(G.Page.Inputs),
+        $E198,
+        Strings.Get('Page.Navigation')
+      ),
+      Command(
+        Strings.Get('Palette.Charts'),
+        G.Msg.Show(G.Page.Charts),
+        $E2A5,
+        Strings.Get('Page.Navigation')
+      ),
+      Command(
+        Strings.Get('Palette.ToggleDark'),
         G.Msg.Shared(S.Msg.ToggleAppearance),
         $E11E,
-        'Preferences',
+        Strings.Get('Palette.Preferences'),
         'Ctrl J'
       ),
-      Command('Change accent color', G.Msg.Shared(S.Msg.NextAccent), $E1DD, 'Preferences'),
-      Command('New project', G.Msg.Show(G.Page.Feedback), $E13D, 'Actions', 'Ctrl N'),
-      Command('Invite teammate', G.Msg.Overlays(O.Msg.SetProfileDialog(true)), $E1A2, 'Actions'),
-      Command('Open settings', G.Msg.Overlays(O.Msg.SetSheet(true)), $E154, 'Actions', 'Ctrl ,')
+      Command(
+        Strings.Get('Palette.ChangeAccent'),
+        G.Msg.Shared(S.Msg.NextAccent),
+        $E1DD,
+        Strings.Get('Palette.Preferences')
+      ),
+      Command(
+        Strings.Get('Text.NewProject'),
+        G.Msg.Show(G.Page.Feedback),
+        $E13D,
+        Strings.Get('Page.Actions'),
+        'Ctrl N'
+      ),
+      Command(
+        Strings.Get('Palette.InviteTeammate'),
+        G.Msg.Overlays(O.Msg.SetProfileDialog(true)),
+        $E1A2,
+        Strings.Get('Page.Actions')
+      ),
+      Command(
+        Strings.Get('Palette.OpenSettings'),
+        G.Msg.Overlays(O.Msg.SetSheet(true)),
+        $E154,
+        Strings.Get('Page.Actions'),
+        'Ctrl ,'
+      )
     ], function(Visible: bool): G.Msg => G.Msg.Overlays(O.Msg.SetPalette(Visible))
   );
 end function;

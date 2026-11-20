@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Actions.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Actions.Widgets.ToggleGroup as ToggleGroup,
   GuiGallery.Pages.Actions.Widgets.SpeedDial as SpeedDial,
@@ -39,30 +40,36 @@ begin
   end if;
   return E.Column<State.Msg>(
     new L.Flow(Gap := G.Points(20)),
-    G.Heading<State.Msg>('Split button', 'A main action with related actions one click away.'),
+    G.Heading<State.Msg>(
+      Strings.Get('Heading.SplitButton'),
+      Strings.Get('Heading.SplitButtonHint')
+    ),
     Split.View(Model, Data),
     G.Heading<State.Msg>(
-      'Toggle group',
-      'Independent toggles for toolbars, or exclusive like radio buttons.'
+      Strings.Get('Heading.ToggleGroup'),
+      Strings.Get('Heading.ToggleGroupHint')
     ),
     ToggleGroup.View(Model, Data),
     G.Heading<State.Msg>(
-      'Morphing buttons',
-      'Confirm before destroying, and show the result of work in place.'
+      Strings.Get('Heading.MorphingButtons'),
+      Strings.Get('Heading.MorphingButtonsHint')
     ),
     E.Row<State.Msg>(new L.Flow(Gap := G.Points(12), Wrap := true), Morphing),
-    G.Heading<State.Msg>('Reactions', 'Counts roll when they change.'),
+    G.Heading<State.Msg>(Strings.Get('Heading.Reactions'), Strings.Get('Heading.ReactionsHint')),
     Reactions.View(Model, Data),
     G.Heading<State.Msg>(
-      'Theme',
-      'A compact switcher and a single toggle that morphs between sun and moon.'
+      Strings.Get('Heading.Theme'),
+      Strings.Get('Heading.ThemeHint')
     ),
     Theme.View(Model, Data),
-    G.Heading<State.Msg>('User menu', 'Account trigger for sidebars and headers.'),
+    G.Heading<State.Msg>(Strings.Get('Heading.UserMenu'), Strings.Get('Heading.UserMenuHint')),
     UserMenu.View(),
-    G.Heading<State.Msg>('Swipe actions', 'Drag a row sideways or swipe with two fingers.'),
+    G.Heading<State.Msg>(
+      Strings.Get('Heading.SwipeActions'),
+      Strings.Get('Heading.SwipeActionsHint')
+    ),
     SwipeActions.View(),
-    G.Heading<State.Msg>('Speed dial', 'A floating action button that fans out related actions.'),
+    G.Heading<State.Msg>(Strings.Get('Heading.SpeedDial'), Strings.Get('Heading.SpeedDialHint')),
     SpeedDial.View(Model)
   );
 end function;

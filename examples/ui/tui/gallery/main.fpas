@@ -3,6 +3,7 @@
 program TuiWidgetGallery;
 
 uses
+  Gallery.Shared.Strings as Strings,
   Gallery.Shared.SecurityCard as Security,
   Gallery.Shared.ProjectOptions as ProjectOptions,
   Gallery.Shared.AboutField as AboutSample,
@@ -190,7 +191,7 @@ begin
     Title, Sys.Array.ConvertAll<Catalog.Entry, Nav.Item<Msg>>(
       Pages,
       function(Page: Catalog.Entry): Nav.Item<Msg> => new Nav.Item<Msg>(
-        Page.Title,
+        Page.Id,
         Page.Title,
         Msg.SelectPage(Page)
       )
@@ -215,7 +216,7 @@ function Selection(State: Model; Wide: bool): E.Element<Msg>;
 begin
   const Flow: L.Flow := new L.Flow(Gap := L.Spacing.Normal);
   const Boxes: E.Element<Msg> := E.Column<Msg>(
-    Flow, Label('Checkbox', S.Role.Heading),
+    Flow, Label(Strings.Get('Text.Checkbox'), S.Role.Heading),
     E.Column<Msg>(
       Flow, Checks.Rows<Msg>(
         State.ProfileState.Newsletter,
@@ -227,7 +228,7 @@ begin
     )
   );
   const Switches: E.Element<Msg> := E.Column<Msg>(
-    Flow, Label('Switch', S.Role.Heading),
+    Flow, Label(Strings.Get('Text.Switch'), S.Role.Heading),
     Composition.Map<Profile.Msg, Msg>(Profile.Selection(State.ProfileState), Msg.ProfileAction)
   );
   const Half: L.Flex := new L.Flex(Basis := L.Extent.Fill, Grow := 1);
@@ -243,7 +244,7 @@ begin
   return E.Column<Msg>(
     Flow,
     Toggles,
-    Label('Radio group', S.Role.Heading),
+    Label(Strings.Get('Text.RadioGroup'), S.Role.Heading),
     Frequency.View<Msg>(State.SaveFrequency, Msg.SetSaveFrequency)
   );
 end function;
@@ -256,18 +257,18 @@ begin
     when Catalog.Preview.Overview:
       Example := E.Column<Msg>(
         Flow,
-        Label('Components for FPas', S.Role.Heading),
+        Label(Strings.Get('Text.ComponentsForFpas'), S.Role.Heading),
         E.Text<Msg>(
-          'Forms, tables, charts, planning boards and chat pieces with native rendering on Windows and Linux.'
+          Strings.Get('Text.GalleryIntro')
         ),
         B.Button<Msg>(
           'browse',
-          'Browse components',
+          Strings.Get('Text.BrowseComponents'),
           Msg.SelectPage(Catalog.Components[1]),
           new B.Options(Variant := S.ButtonVariant.Primary, TerminalIconRight := '→')
         ),
-        Label('Create a workspace', S.Role.Heading),
-        E.Text<Msg>('You can invite people once it exists.'),
+        Label(Strings.Get('Text.CreateWorkspaceHeading'), S.Role.Heading),
+        E.Text<Msg>(Strings.Get('Text.WorkspaceInviteHint')),
         Composition.Map<Profile.Msg, Msg>(
           Profile.Editors(State.ProfileState, 'workspace'),
           Msg.ProfileAction
@@ -275,13 +276,13 @@ begin
         Checks.WeeklySummary<Msg>(State.WeeklySummary, Msg.SetWeeklySummary),
         B.Button<Msg>(
           'workspace-create',
-          'Create workspace',
+          Strings.Get('Text.CreateWorkspace'),
           Msg.CreateWorkspace,
           new B.Options(Variant := S.ButtonVariant.Primary)
         ),
         E.Text<Msg>(
           if State.WorkspaceCreated then
-            'Workspace created'
+            Strings.Get('Text.WorkspaceCreated')
           else
             ''
           end if
@@ -290,13 +291,13 @@ begin
     when Catalog.Preview.DataDisplay:
       return E.Column<Msg>(
         new L.Flow(Gap := L.Spacing.Normal, Padding := L.Spacing.Normal),
-        Label(State.Active.Title, S.Role.Heading), Label('Table', S.Role.Heading),
+        Label(State.Active.Title, S.Role.Heading), Label(Strings.Get('Text.Table'), S.Role.Heading),
         People.View<Msg>(State.PeopleOrder, State.Person, Msg.SortPeople, Msg.SelectPerson)
       );
     when Catalog.Preview.Feedback:
       Example := E.Column<Msg>(
         Flow,
-        Label('Progress', S.Role.Heading),
+        Label(Strings.Get('Text.Progress'), S.Role.Heading),
         Progress.Upload<Msg>(),
         Progress.ExportBar<Msg>(false)
       );
@@ -305,16 +306,16 @@ begin
       const Icons: array of E.Element<Msg> := Buttons.Icons<Msg>(Msg.Preview);
       Example := E.Column<Msg>(
         Flow,
-        Label('Variants', S.Role.Heading),
-        E.Text<Msg>('One primary action per view. Secondary for everything else.'),
+        Label(Strings.Get('Text.Variants'), S.Role.Heading),
+        E.Text<Msg>(Strings.Get('Text.VariantsHint')),
         Buttons.Variants<Msg>(Msg.Preview, Wide),
-        Label('Sizes and icons', S.Role.Heading),
+        Label(Strings.Get('Text.SizesAndIcons'), S.Role.Heading),
         Buttons.Sizes<Msg>(Msg.Preview),
         E.Row<Msg>(new L.Flow(Gap := L.Spacing.Normal), Icons),
-        Label('States', S.Role.Heading),
-        E.Text<Msg>('Loading keeps the label so the layout does not jump.'),
+        Label(Strings.Get('Text.States'), S.Role.Heading),
+        E.Text<Msg>(Strings.Get('Text.LoadingLabelHint')),
         Buttons.States<Msg>(Msg.Preview, Wide, State.Saving, Msg.SetSaving),
-        Label('Dropdown menu', S.Role.Heading),
+        Label(Strings.Get('Text.DropdownMenu'), S.Role.Heading),
         ProjectOptions.View<Msg>(
           Msg.MenuChoice,
           Msg.ProfileAction(Profile.Msg.Show(Profile.Layer.Delete))
@@ -323,7 +324,7 @@ begin
           if State.MenuChoice = '' then
             ''
           else
-            'Selected ' + State.MenuChoice
+            Strings.Get('Text.SelectedPrefix') + State.MenuChoice
           end if
         )
       );
@@ -346,21 +347,21 @@ begin
       end if;
       Example := E.Column<Msg>(
         Flow,
-        Label('Text fields', S.Role.Heading),
-        E.Text<Msg>('Labels above, hints and errors below.'),
+        Label(Strings.Get('Text.TextFields'), S.Role.Heading),
+        E.Text<Msg>(Strings.Get('Text.FieldHints')),
         Composition.Map<Profile.Msg, Msg>(
           Profile.Editors(State.ProfileState, 'input', Wide),
           Msg.ProfileAction
         ),
         AboutSample.View<Msg>(State.About, Msg.SetAbout),
-        Label('Pickers', S.Role.Heading),
+        Label(Strings.Get('Page.Pickers'), S.Role.Heading),
         Choices
       );
     when Catalog.Preview.Selection:
       Example := Selection(State, Columns >= 66);
     when Catalog.Preview.Navigation:
       Example := E.Column<Msg>(
-        Flow, Label('Tabs', S.Role.Heading),
+        Flow, Label(Strings.Get('Text.Tabs'), S.Role.Heading),
         E.Column<Msg>(
           Flow,
           TabExamples.Rows<Msg>(State.ActiveTab, State.ActivePillTab, Msg.SetTab, Msg.SetPillTab)
@@ -368,18 +369,18 @@ begin
       );
     when Catalog.Preview.Overlays:
       Example := E.Column<Msg>(
-        Flow, Label('Dialogs and sheets', S.Role.Heading),
-        E.Text<Msg>('Esc or a click outside closes them. Focus stays inside.'),
+        Flow, Label(Strings.Get('Text.DialogsAndSheets'), S.Role.Heading),
+        E.Text<Msg>(Strings.Get('Text.OverlayHint')),
         Composition.Map<Profile.Msg, Msg>(Profile.Openers(Columns >= 42), Msg.ProfileAction)
       );
     when Catalog.Preview.AppChrome:
       return E.Column<Msg>(
-        new L.Flow(Padding := L.Spacing.Normal), Label('App chrome', S.Role.Heading),
+        new L.Flow(Padding := L.Spacing.Normal), Label(Strings.Get('Page.Desktop'), S.Role.Heading),
         E.Size<Msg>(
           E.ScrollView<Msg>(
             'editor-code', E.Column<Msg>(
               Flow,
-              E.Text<Msg>('Menu bar, toolbar, document tabs and status bar around an editor.'),
+              E.Text<Msg>(Strings.Get('Text.AppChromeIntro')),
               E.Text<Msg>(Sys.String.Join(#10, Status.CodeLines))
             )
           ), new L.Flex(Basis := L.Extent.Fill, Grow := 1)
@@ -388,7 +389,7 @@ begin
       );
     when Catalog.Preview.Disclosure:
       Example := E.Column<Msg>(
-        Flow, Label('Expandable cards', S.Role.Heading),
+        Flow, Label(Strings.Get('Text.ExpandableCards'), S.Role.Heading),
         Security.View<Msg>(State.SecurityOpen, Msg.SetSecurity)
       );
     when Catalog.Preview.CellGrid:
@@ -396,13 +397,13 @@ begin
     when Catalog.Preview.Text:
       Example := E.Column<Msg>(
         Flow,
-        Label('Text and inline code', S.Role.Heading),
-        Label('Components for FPas', S.Role.Heading),
-        E.Text<Msg>('Components are functions.'),
-        E.Text<Msg>('Label'),
-        Label('Secondary text', S.Role.Secondary),
-        Label('Muted text', S.Role.Muted),
-        E.Text<Msg>('Run the gallery with  fpas run')
+        Label(Strings.Get('Text.TextAndInlineCode'), S.Role.Heading),
+        Label(Strings.Get('Text.ComponentsForFpas'), S.Role.Heading),
+        E.Text<Msg>(Strings.Get('Text.ComponentsAreFunctions')),
+        E.Text<Msg>(Strings.Get('Text.Label')),
+        Label(Strings.Get('Text.SecondaryText'), S.Role.Secondary),
+        Label(Strings.Get('Text.MutedText'), S.Role.Muted),
+        E.Text<Msg>(Strings.Get('Text.RunGallery'))
       );
     else
       Example := E.Text<Msg>(State.Active.Description);
@@ -414,7 +415,7 @@ begin
   else
     E.Column<Msg>(PageFlow, Label(State.Active.Title, S.Role.Heading), Example)
   end if;
-  return E.ScrollView<Msg>('preview-' + State.Active.Title, Content);
+  return E.ScrollView<Msg>('preview-' + State.Active.Id, Content);
 end function;
 
 function View(State: Model): E.Element<Msg>;
@@ -422,11 +423,11 @@ begin
   const List: E.Element<Msg> := Nav.Sidebar<Msg>(
     'navigation',
     [
-      Section('Components', Catalog.Components),
-      Section('Extended', Catalog.Extended),
-      Section('Terminal', Catalog.Terminal)
+      Section(Strings.Get('Text.SectionComponents'), Catalog.Components),
+      Section(Strings.Get('Text.SectionExtended'), Catalog.Extended),
+      Section(Strings.Get('Text.SectionTerminal'), Catalog.Terminal)
     ],
-    State.Active.Title
+    State.Active.Id
   );
   const FirstControl: string := case State.Active.Demo of
     when Catalog.Preview.Overview: 'browse';
@@ -440,7 +441,7 @@ begin
     when Catalog.Preview.AppChrome: 'desktop-status/encoding';
     else '';
   end case;
-  const SidebarFocus: Msg := Msg.Focus(Nav.ItemId('navigation', State.Active.Title));
+  const SidebarFocus: Msg := Msg.Focus(Nav.ItemId('navigation', State.Active.Id));
   const Screen: E.Element<Msg> := Views.Screen<Msg>(
     E.Row<Msg>(
       new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1)), Align := L.Alignment.Stretch),

@@ -58,4 +58,45 @@ public sealed class EmissionTests
         Assert.True(pe.HasMetadata);
         Assert.NotEqual(0, pe.PEHeaders.CorHeader!.EntryPointTokenOrRelativeVirtualAddress);
     }
+
+    [Fact]
+    public void Embedded_resources_have_distinct_offsets_and_contribute_to_image_identity()
+    {
+        CompilationResource[] resources = [new("Text.second", [1, 2, 3]), new("Text.first", [12, 13])];
+        var request = new CompilationRequest([new("hello.fpas", Hello)], "Hello", TestCompilation.References, Resources: resources);
+        byte[] Compile(CompilationRequest input)
+        {
+            var result = FpasCompiler.Compile(input);
+            Assert.True(result.Success, string.Join("; ", result.Diagnostics));
+            return result.Program!.AssemblyImage;
+        }
+
+        var image = Compile(request);
+        Assert.Equal(image, Compile(request with { Resources = resources.Reverse().ToArray() }));
+        using var pe = new PEReader(new MemoryStream(image));
+        var metadata = pe.GetMetadataReader();
+        var data = pe.GetSectionData(pe.PEHeaders.CorHeader!.ResourcesDirectory.RelativeVirtualAddress);
+        foreach (var resource in resources)
+        {
+            var entry = metadata.ManifestResources.Select(metadata.GetManifestResource)
+                .Single(entry => metadata.GetString(entry.Name) == resource.Name);
+            Assert.True(entry.Implementation.IsNil);
+            var blob = data.GetReader();
+            blob.Offset = checked((int)entry.Offset);
+            Assert.Equal(resource.Content, blob.ReadBytes(blob.ReadInt32()));
+        }
+        using var changed = new PEReader(new MemoryStream(Compile(request with { Resources = [resources[0], new("Text.first", [12, 14])] })));
+        var changedMetadata = changed.GetMetadataReader();
+        Assert.NotEqual(metadata.GetGuid(metadata.GetModuleDefinition().Mvid),
+            changedMetadata.GetGuid(changedMetadata.GetModuleDefinition().Mvid));
+    }
+
+    [Fact]
+    public void Duplicate_manifest_resource_names_fail_without_an_image()
+    {
+        var result = FpasCompiler.Compile(new([new("hello.fpas", Hello)], "Hello", TestCompilation.References,
+            Resources: [new("Duplicate", []), new("Duplicate", [42])]));
+        Assert.Null(result.Program);
+        Assert.Equal("FP4004", Assert.Single(result.Diagnostics).Code);
+    }
 }

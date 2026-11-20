@@ -11,5 +11,7 @@
     <ProjectReference Include="../../src/Fpas.Ui.Gui/Fpas.Ui.Gui.fpasproj" />
     <Compile Include="$(Gallery)/**/*.fpas"
              Exclude="$(Gallery)/main.fpas;$(Gallery)/bin/**;$(Gallery)/obj/**" />
+    <EmbeddedResource Include="$(Gallery)/Shared/Strings.resx" LogicalName="Gallery.Shared.Strings.resources" />
+    <EmbeddedResource Include="$(Gallery)/Shared/Strings.de.resx" LogicalName="Gallery.Shared.Strings.de.resources" />
   </ItemGroup>
 </Project>

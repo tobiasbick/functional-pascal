@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Inputs.Widgets.SearchField;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Shared.State as Demo,
   GuiGallery.Pages.Inputs.State as State,
   Fpas.Ui.Elements as E,
@@ -19,7 +20,11 @@ public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>
 begin
   return Search.SearchField<State.Msg>(
     'input-search', Model.SearchQuery, State.Msg.SetSearchQuery,
-    new Search.Options(Label := 'Search', Placeholder := 'Search projects', MaxUtf8Bytes := 63)
+    new Search.Options(
+      Label := Strings.Get('Text.Search'),
+      Placeholder := Strings.Get('Text.SearchProjects'),
+      MaxUtf8Bytes := 63
+    )
   );
 end function;
 

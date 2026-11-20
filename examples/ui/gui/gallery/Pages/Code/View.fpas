@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Code.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Shared.Sections as G, Fpas.Ui.Widgets.Developer.CodeBlocks as Code, Fpas.Ui.Widgets.Developer.JsonViews as Json,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys;
 
@@ -35,8 +36,8 @@ begin
   const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
   return [
     G.Heading<TMsg>(
-      'Code block',
-      'Highlighting for C, C++, JavaScript, TypeScript, Python, Rust, Go, JSON and shell.'
+      Strings.Get('Heading.CodeBlock'),
+      Strings.Get('Heading.CodeBlockHint')
     ),
     Code.CodeBlock<TMsg>('c-sample', Counter, new Code.Options('c', 'counter.c', true, 7)),
     E.Row<TMsg>(
@@ -54,10 +55,10 @@ begin
         ), Fill
       )
     ),
-    G.Heading<TMsg>('JSON viewer', 'Collapsible, with counts. Click a brace to fold it.'),
+    G.Heading<TMsg>(Strings.Get('Heading.JsonViewer'), Strings.Get('Heading.JsonViewerHint')),
     Json.JsonView<TMsg>('json', Document, new Json.Options(2)),
     Json.JsonView<TMsg>('broken', '{"ok": true, "oops": [1, 2,}'),
-    G.Heading<TMsg>('SQL'),
+    G.Heading<TMsg>(Strings.Get('Heading.Sql')),
     Code.CodeBlock<TMsg>(
       'sql-sample', 'SELECT team, COUNT(*) AS members' + Line +
         'FROM people' + Line + 'GROUP BY team' + Line + 'ORDER BY members DESC;' + Line,

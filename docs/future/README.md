@@ -5,7 +5,7 @@ Open gaps, proposals and deferred work. Implemented behavior belongs in the
 
 | Topic | Document |
 | --- | --- |
-| Baseline omissions and deferred language extensions | [Language gaps](language-gaps.md) |
+| Language scope and deferred extensions | [Language gaps](language-gaps.md) |
 | Deferred .NET 11 upgrade and native debugger blocker | [.NET 11 debugger gap](dotnet11-debugger-gap.md) |
 | Agent tooling, authoring proposals and deferred debugging wishes | [Agent wishes](agent-wishes.md) |
 | Upstream CUI reporting pause, open gallery pixel comparisons and the deferred TUI icon experiment | [CUI gaps](cui-gaps.md) |

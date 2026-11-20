@@ -26,6 +26,11 @@ The sidebar follows the GUI gallery’s **Components** and **Extended** sections
 
 The sidebar and preview share the terminal width in a 1:2 ratio. Use ↑/↓, Page Up/Page Down or Home/End to navigate. Enter, Space or a click opens a destination. → focuses the first preview control and Tab moves between controls. Escape closes the current overlay or returns focus to the sidebar. In the table, ↑/↓ moves between people and Enter selects the focused row. Click or activate a sortable heading to change the order. Ctrl+T switches themes and Ctrl+Q exits.
 
+The gallery uses the terminal process's UI culture. Its navigation, descriptions
+and controls use the GUI gallery's shared [English](../../gui/gallery/Shared/Strings.resx)
+and [German](../../gui/gallery/Shared/Strings.de.resx) catalogs. On Linux, launch
+it with `LANG=de_DE.UTF-8` for German.
+
 ![Gallery button variants, sizes, icons and states](buttons.png)
 
 ![Open Options dropdown on Buttons](dropdown-menu.png)

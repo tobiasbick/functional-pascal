@@ -2,7 +2,9 @@
 
 unit Gallery.Shared.TabExamples;
 
-uses Fpas.Ui.Widgets.Navigation.Tabs as T, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
+uses
+  Gallery.Shared.Strings as Strings,
+  Fpas.Ui.Widgets.Navigation.Tabs as T, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
 
 // Stable identity of the underline strip.
 public const UnderlineId: string := 'tabs';
@@ -20,12 +22,15 @@ public const UnderlineId: string := 'tabs';
 public function Rows<TMsg>(Selected: int; Pill: int; Choose: function(int): TMsg; ChoosePill: function(int): TMsg): array of E.Element<TMsg>;
 begin
   const Underline: array of T.Item := [
-    new T.Item('Overview'), new T.Item('Analytics'), new T.Item('Reports'), new T.Item('Settings')
+    new T.Item(Strings.Get('Page.Overview')),
+    new T.Item(Strings.Get('Text.Analytics')),
+    new T.Item(Strings.Get('Text.Reports')),
+    new T.Item(Strings.Get('Text.Settings'))
   ];
   const Pills: array of T.Item := [
-    new T.Item('Account', Sys.Char.ConvertFromUtf32($E19F)),
-    new T.Item('Password', Sys.Char.ConvertFromUtf32($E10B)),
-    new T.Item('Billing', Sys.Char.ConvertFromUtf32($E0AA))
+    new T.Item(Strings.Get('Text.Account'), Sys.Char.ConvertFromUtf32($E19F)),
+    new T.Item(Strings.Get('Text.Password'), Sys.Char.ConvertFromUtf32($E10B)),
+    new T.Item(Strings.Get('Text.Billing'), Sys.Char.ConvertFromUtf32($E0AA))
   ];
   const Inset: E.Element<TMsg> := E.Size<TMsg>(
     E.Column<TMsg>(),
@@ -40,7 +45,7 @@ begin
         E.Text<TMsg>(Underline[Selected].Label),
         E.Styled<TMsg>(
           E.Text<TMsg>(
-            'Tabs switch between views of the same thing. Content changes in place.'
+            Strings.Get('Text.TabsHint')
           ),
           S.Role.Secondary
         )

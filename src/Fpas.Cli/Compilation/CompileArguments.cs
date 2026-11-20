@@ -4,7 +4,8 @@ using Fpas.Compiler;
 namespace Fpas.Cli.Compilation;
 
 internal sealed record CompileArguments(IReadOnlyList<string> Sources, string Output, IReadOnlyList<string> References, bool Json, CompilationTarget Target, bool EmitDebug,
-    string? Documentation, DiagnosticOptions DiagnosticOptions, bool Optimize, string? KeyFile, bool PublicSign, bool DelaySign)
+    string? Documentation, DiagnosticOptions DiagnosticOptions, bool Optimize, string? KeyFile, bool PublicSign, bool DelaySign,
+    IReadOnlyList<(string Name, string Path)> Resources)
 {
     internal CompileArguments Validate()
     {
@@ -37,6 +38,8 @@ internal sealed record CompileArguments(IReadOnlyList<string> Sources, string Ou
             throw new ArgumentException("The signing key must differ from all output paths.");
         if (References.Any(reference => artifacts.Any(artifact => string.Equals(reference, artifact, comparison))))
             throw new ArgumentException("Reference paths must differ from assembly, runtime configuration, PDB, and XML documentation output paths.");
+        if (Resources.Any(resource => artifacts.Any(artifact => string.Equals(resource.Path, artifact, comparison))))
+            throw new ArgumentException("Embedded resource paths must differ from all output paths.");
         return this with { Output = output, Documentation = documentation };
     }
 }

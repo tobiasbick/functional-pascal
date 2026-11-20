@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Feedback.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   Gallery.Shared.ProgressExample as Samples,
   GuiGallery.Pages.Feedback.State as Model, GuiGallery.Pages.Feedback.Widgets.Loading as Loading,
   GuiGallery.Shared.Sections as G, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
@@ -30,7 +31,7 @@ begin
   );
   return E.Column<TMsg>(
     new L.Flow(Gap := G.Points(20), Clip := false),
-    G.Heading<TMsg>('Alerts', 'Color only when something succeeded, needs attention or failed.'),
+    G.Heading<TMsg>(Strings.Get('Heading.Alerts'), Strings.Get('Heading.AlertsHint')),
     E.Column<TMsg>(
       new L.Flow(Gap := G.Points(10)),
       A.Alert<TMsg>(
@@ -144,7 +145,7 @@ begin
         ], new Cards.Options(Gap := 14.0F)
       )
     ),
-    G.Heading<TMsg>('Badges and avatars'),
+    G.Heading<TMsg>(Strings.Get('Heading.BadgesAndAvatars')),
     BadgesAndAvatars.View<TMsg>(),
     Cards.Card<TMsg>(
       'no-projects-card', [

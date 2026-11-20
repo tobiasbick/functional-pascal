@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Social.View;
 
 uses
+  Gallery.Shared.Strings as Strings,
   GuiGallery.Pages.Social.State as S, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Containers.Cards as Cards,
   Fpas.Ui.Widgets.Conversation.ChatMessages as Chat, Fpas.Ui.Widgets.Conversation.ChatDividers as Divider, Fpas.Ui.Widgets.Conversation.TypingIndicators as Typing,
@@ -14,7 +15,7 @@ function ChatColumn(): E.Element<S.Msg>;
 begin
   return E.Column<S.Msg>(
     new L.Flow(Gap := G.Points(10), Clip := false),
-    G.Heading<S.Msg>('Chat', 'Grouped bubbles, read receipts and a typing indicator.'),
+    G.Heading<S.Msg>(Strings.Get('Heading.Chat'), Strings.Get('Heading.ChatHint')),
     Cards.Card<S.Msg>(
       'social-chat', [
         Divider.ChatDivider<S.Msg>('social-today', 'Today'),
@@ -50,7 +51,7 @@ function CommentColumn(Model: S.Model): E.Element<S.Msg>;
 begin
   return E.Column<S.Msg>(
     new L.Flow(Gap := G.Points(10), Clip := false),
-    G.Heading<S.Msg>('Comments', 'Threads with replies, likes and badges.'),
+    G.Heading<S.Msg>(Strings.Get('Text.Comments'), Strings.Get('Heading.CommentsHint')),
     Cards.Card<S.Msg>(
       'social-comments', [
         Comments.Comment<S.Msg>(
@@ -98,7 +99,7 @@ begin
         E.Size<S.Msg>(ChatColumn(), Column),
         E.Size<S.Msg>(CommentColumn(Model), Column)
       ),
-      G.Heading<S.Msg>('Presence', 'Who is here now. Hover to spread them out.'),
+      G.Heading<S.Msg>(Strings.Get('Heading.Presence'), Strings.Get('Heading.PresenceHint')),
       E.Row<S.Msg>(
         new L.Flow(Gap := G.Points(24), Align := L.Alignment.Center, Clip := false),
         Presence.Presence<S.Msg>(
@@ -122,7 +123,7 @@ begin
           new B.Options(ControlSize := B.Size.Small, Icon := Sys.Char.ConvertFromUtf32($E13D))
         )
       ),
-      G.Heading<S.Msg>('Ticker', 'A continuous strip of figures. It pauses under the pointer.'),
+      G.Heading<S.Msg>(Strings.Get('Heading.Ticker'), Strings.Get('Heading.TickerHint')),
       Ticker.Ticker<S.Msg>(
         'social-ticker', [
           new Ticker.Item('Revenue', '$48.2k', 6.9F),

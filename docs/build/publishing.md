@@ -96,6 +96,37 @@ Native/apphost/single-file publication requires OutputType Exe or WinExe.
 Managed libraries can be published without executable options. Direct `dotnet publish` retains
 normal .NET output-copy behavior; the directory transaction belongs to the FPAS CLI.
 
+## Windows icon and version metadata
+
+Set the standard MSBuild properties in the executable's `.fpasproj`.
+
+```xml
+<PropertyGroup>
+  <ApplicationIcon>assets/app.ico</ApplicationIcon>
+  <Version>2.5.8</Version>
+  <FileVersion>2.5.8.13</FileVersion>
+  <InformationalVersion>2.5.8-beta.3</InformationalVersion>
+  <AssemblyTitle>FPAS Desktop Example</AssemblyTitle>
+  <Product>FPAS Examples</Product>
+</PropertyGroup>
+```
+
+`ApplicationIcon` is optional and its path is relative to the project. The
+Windows executable carries all image sizes from the ICO. `FileVersion` supplies
+the numeric file version, using the SDK default derived from `Version` when
+omitted. `InformationalVersion` provides the product version text and can
+include a prerelease suffix. `AssemblyTitle`, `Product`, `Company` and
+`Copyright` supply the corresponding fields shown by Windows.
+
+The compiler writes these native resources into the managed PE for `win-x64`.
+The .NET SDK carries the resources into its Windows apphosts, single-file bundles
+and Native AOT output. Changing the icon bytes or version fields invalidates
+the FPAS build cache. Invalid ICO directories or version data report FP4005.
+
+```sh
+fpas publish App/App.fpasproj --runtime win-x64 --mode apphost --output artifacts/app
+```
+
 ## Signing
 
 Standard `SignAssembly`, `AssemblyOriginatorKeyFile`, `PublicSign` and `DelaySign`
@@ -140,6 +171,12 @@ failure preservation, deadline cleanup, solution/standalone selection, no-build
 reuse, independent RSA signature verification and incremental re-signing,
 public/delay signing, pinned CMS certificates and tampering controls for FPAS and
 C# hosts.
+
+The Windows apphost resource test reads the published PE directly on Linux
+and Windows. It checks both icon images, numeric and textual versions, updates
+after icon and metadata changes, and preservation after an invalid icon. The
+Windows-only GUI publishing test also checks the resources and runs the four
+executable delivery modes.
 
 The [packaged GUI fixture](../ui/gui/cui.md#packaged-publishing-fixture)
 publishes and signs all five modes with the CUI binding referenced transitively.

@@ -219,7 +219,10 @@ public type Session = record implements Sys.IDisposable
         return Next;
       end function,
       View,
-      new Gui.Options(Title := 'FPas-Amp', Theme := M.Theme(Initial, null), Placement := Window),
+      new Gui.Options(
+        Title := 'FPas-Amp', AppId := 'io.github.tobiasbick.FpasAmp',
+        Theme := M.Theme(Initial, null), Placement := Window
+      ),
       M.Theme,
       OnCloseRequested := function(): M.Msg => M.Msg.Closing(Playback.Stop(Last.Player, Port))
     );

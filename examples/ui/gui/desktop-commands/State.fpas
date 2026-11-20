@@ -2,13 +2,45 @@
 
 unit DesktopCommands.State;
 
-// Application-owned selection and close confirmation.
+uses
+  DesktopCommands.Preferences as Preferences,
+  Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
+  System as Sys;
+
+// Number of timed steps in the example background job.
+public const WorkSteps: int := 8;
+
+// Application-owned desktop selection, close confirmation, preferences and background progress.
 public type Model = record
   // Last confirmed native selection or cancellation notice.
   public Selection: string := 'Choose a file or folder.';
   // Whether the native close request is awaiting a decision.
   public Closing: bool := false;
+  // Per-user JSON file, or empty when the data directory is unavailable.
+  public SettingsPath: string := '';
+  // Appearance, accent and split applied to the current frame.
+  public Settings: Preferences.Settings := new Preferences.Settings();
+  // Whether a save must complete before another one can start.
+  public Saving: bool := false;
+  // Feedback on the last save attempt.
+  public SaveStatus: string := '';
+  // Number of background steps reported to the view.
+  public WorkProgress: int := 0;
+  // Whether the current job accepts cancellation.
+  public WorkRunning: bool := false;
+  // User-visible state of the current or most recent job.
+  public WorkStatus: string := 'Ready';
 end record;
+
+// Prepares the initial application model before starting the native host.
+// ## Parameters
+// - `Path`: Absolute settings path, or empty when unavailable.
+// ## Returns
+// The initial state with loaded or default preferences.
+public function Initialize(Path: string): Model;
+begin
+  return new Model(SettingsPath := Path, Settings := Preferences.Load(Path));
+end function;
 
 // Messages from native dialogs, buttons and the host close callback.
 public type Msg = variant
@@ -30,6 +62,26 @@ public type Msg = variant
   Quit;
   // Request a native repaint without a timer or model change.
   Redraw;
+  // Apply a different appearance to the current view.
+  SetAppearance(Value: Switchers.Selection);
+  // Apply a different accent to the current view.
+  SetAccent(Value: Themes.Accent);
+  // Set the first pane's share from the native divider.
+  ResizeSplit(Ratio: float);
+  // Write a snapshot of the selected preferences.
+  SaveSettings;
+  // The settings snapshot was written successfully.
+  SettingsSaved(Value: Preferences.Settings);
+  // The preferences could not be written.
+  SettingsSaveFailed(Error: Sys.Exception);
+  // Start a timed job, optionally simulating a worker failure.
+  StartWork(SimulateError: bool);
+  // Cancel the current timed job.
+  CancelWork;
+  // Report a completed step after a timer tick.
+  WorkTick(Completed: int);
+  // Report a failure from the current worker.
+  WorkFailed(Error: Sys.Exception);
 end variant;
 
 end unit;

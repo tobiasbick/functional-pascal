@@ -16,6 +16,8 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
     [Required] public ITaskItem[] References { get; set; } = [];
     /// <summary>Gets or sets neutral manifest resources and their original source paths.</summary>
     public ITaskItem[] Resources { get; set; } = [];
+    /// <summary>Gets or sets the optional Win32 executable icon and version inputs.</summary>
+    public ITaskItem? WindowsResources { get; set; }
     /// <summary>Gets or sets the compiler executable or managed entry assembly.</summary>
     [Required] public string CompilerPath { get; set; } = "";
     /// <summary>Gets or sets the compiler assembly used to verify toolchain identity.</summary>
@@ -85,6 +87,7 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
             var sources = Sources.Select(item => item.GetMetadata("FullPath")).ToArray();
             var references = References.Select(item => item.GetMetadata("FullPath")).ToArray();
             var resources = ResourceInput.Read(Resources);
+            var windowsResources = WindowsResourceInput.Read(WindowsResources);
             var output = Path.GetFullPath(OutputAssembly);
             var cache = Path.GetFullPath(CacheFile);
             var symbols = DebugType == "portable" ? Path.ChangeExtension(output, ".pdb") : null;
@@ -93,15 +96,22 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
             {
                 Error("FP5001", "DocumentationFile must name an .xml file."); return false;
             }
+            var icon = windowsResources?.Icon;
+            var buildPaths = new[] { output, cache, cache + ".arguments.json" };
+            if (!string.IsNullOrEmpty(icon) && buildPaths.Contains(icon, DocumentationOutputs.Comparer))
+            {
+                Error("FP5001", "ApplicationIcon must differ from the assembly and compiler-cache paths."); return false;
+            }
             if (documents.Any(path => sources.Concat(references).Concat(resources.SelectMany(resource => new[] { resource.Path, resource.SourcePath }))
-                .Append(output).Append(cache).Append(cache + ".arguments.json").Contains(path, DocumentationOutputs.Comparer)))
+                .Concat(buildPaths).Append(icon).Contains(path, DocumentationOutputs.Comparer)))
             {
                 Error("FP5001", "XML documentation output paths must differ from source, reference, resource, assembly, and compiler-cache paths."); return false;
             }
             var previous = CompileFingerprint.Read(cache);
             var fingerprint = CompileFingerprint.Compute(sources, references, CompilerPath,
                 CompileFingerprint.Options(OutputType, Configuration, TargetFramework, output, DebugType, Optimize, documents,
-                    TreatWarningsAsErrors, WarningsAsErrors, WarningsNotAsErrors, NoWarn) + SigningInputs.Identity(SigningKey, PublicSign, DelaySign), CompilerAssemblyPath, resources);
+                    TreatWarningsAsErrors, WarningsAsErrors, WarningsNotAsErrors, NoWarn) + SigningInputs.Identity(SigningKey, PublicSign, DelaySign),
+                    CompilerAssemblyPath, resources, windowsResources);
             if (previous?.IsCurrent(fingerprint, output, symbols, documents) == true &&
                 (OutputType == "Library" || File.Exists(Path.ChangeExtension(output, ".runtimeconfig.json"))))
             {
@@ -132,6 +142,7 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
                 arguments.AddRange(["--reference", reference]);
             foreach (var resource in resources)
                 arguments.AddRange(["--embedded-resource", JsonSerializer.Serialize(new[] { resource.Name, resource.Path })]);
+            if (windowsResources is not null) arguments.AddRange(["--windows-resources", windowsResources.Descriptor]);
             var response = cache + ".arguments.json";
             File.WriteAllText(response, JsonSerializer.Serialize(arguments));
             Log.LogMessage(MessageImportance.High, "FPAS: compiling {0} source file(s)", sources.Length);

@@ -1,0 +1,274 @@
+// [Documentation](../../../examples/ui/gui/desktop-commands/README.md)
+
+unit DesktopExampleContract;
+
+uses
+  DesktopCommands.State as S, DesktopCommands.Preferences as Preferences,
+  DesktopCommands.Update as Update, DesktopCommands.View as View, GalleryHostAssertions as A,
+  DesktopCommands.Background as Background,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Core,
+  Fpas.Ui.Mvu.Testing.EffectReplies as Replies, Fpas.Ui.Widgets.Theming.Themes as Themes,
+  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
+  System as Sys, System.Globalization as Culture, System.IO as IO,
+  System.Threading.Channels as Channels;
+
+const Timeout: Sys.TimeSpan := Sys.TimeSpan.FromSeconds(5);
+
+function Control(Frame: Gui.Frame; Id: string): Gui.Control;
+begin
+  for Item: Gui.Control in Frame.Controls do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing desktop example control: ' + Id);
+end function;
+
+function HasStatus(Frame: Gui.Frame; Status: string): bool;
+begin
+  for Item: string in Frame.Text do
+    if Item.StartsWith(Status, Sys.StringComparison.Ordinal) then
+      return true;
+    end if;
+  end for;
+
+  return false;
+end function;
+
+procedure VerifyFrame(Frame: Gui.Frame; Appearance: string; Accent: Themes.Accent; Ratio: float);
+begin
+  A.Check(
+    Control(Frame, 'appearance').Value = Appearance,
+    'The frame ignored the appearance preference.'
+  );
+  A.Check(Frame.Theme.AccentFamily = Accent, 'The frame ignored the accent preference.');
+  const Actual: float := Sys.Single.Parse(Control(Frame, 'desktop-split').Value);
+  A.Check(Sys.MathF.Abs(Actual - Ratio) < 0.001F, 'The frame ignored the saved split ratio.');
+end procedure;
+
+procedure Send(Session: Gui.Session<S.Msg>; Message: S.Msg);
+begin
+  A.Check(
+    Session.Post(Message) = Core.Admission.Queued,
+    'Desktop example rejected a test message.'
+  );
+  A.Check(Session.Step(), 'The desktop example closed unexpectedly.');
+end procedure;
+
+function Start(Path: string; Renderer: Cui.CuiRenderer; Effects: Replies.Effects<S.Msg>; Continuous: bool := true): Gui.Session<S.Msg>;
+  function Apply(Model: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+  begin
+    return Effects.Wrap<S.Model>(Update.Apply(Model, Message));
+  end function;
+begin
+  return Gui.StartThemed<S.Model, S.Msg>(
+    S.Initialize(Path), Apply, View.Build,
+    new Gui.Options(
+      Title := 'Desktop example', Width := 720, Height := 420, Renderer := Renderer,
+      Continuous := Continuous, NoVsync := true, Hidden := true
+    ),
+    View.ThemeFor
+  );
+end function;
+
+procedure SaveAndRestart(Path: string; Renderer: Cui.CuiRenderer);
+  procedure Save();
+  begin
+    const Effects: Replies.Effects<S.Msg> := Replies.Effects<S.Msg>.Create();
+    using const Session: Gui.Session<S.Msg> := Start(Path, Renderer, Effects);
+    A.Check(Session.Step(), 'The initial desktop frame was not presented.');
+    VerifyFrame(Session.Snapshot(), 'system', Themes.Accent.Neutral, 0.5F);
+    Send(Session, S.Msg.SetAppearance(Switchers.Selection.Dark));
+    Send(Session, S.Msg.SetAccent(Themes.Accent.Violet));
+    Send(Session, S.Msg.ResizeSplit(0.6F));
+    VerifyFrame(Session.Snapshot(), 'dark', Themes.Accent.Violet, 0.6F);
+    A.Check(not IO.File.Exists(Path), 'Editing preferences must wait for an explicit save.');
+    const Results: Channels.ChannelReader<Replies.Reply<S.Msg>> := Effects.Watch(Update.SaveEffect);
+    Send(Session, S.Msg.SaveSettings);
+    const Result: Replies.Reply<S.Msg> := Results.ReadAsync().AsTask().WaitAsync(
+      Timeout
+    ).GetAwaiter().GetResult();
+    A.Check(
+      not Control(Session.Snapshot(), 'save-settings').Enabled,
+      'Save must wait for the pending result.'
+    );
+    A.Check(
+      HasStatus(Session.Snapshot(), 'Saving settings'),
+      'The pending save status is missing.'
+    );
+    Send(Session, S.Msg.SetAccent(Themes.Accent.Rose));
+    Result.Release().WaitAsync(Timeout).GetAwaiter().GetResult();
+    A.Check(Session.Step(), 'The save result did not reach the desktop view.');
+    VerifyFrame(Session.Snapshot(), 'dark', Themes.Accent.Rose, 0.6F);
+    A.Check(
+      HasStatus(Session.Snapshot(), 'Settings saved. Newer changes are unsaved.'),
+      'Saving lost track of newer edits.'
+    );
+  end procedure;
+begin
+  Save();
+  using const Restarted: Gui.Session<S.Msg> := Start(
+    Path,
+    Renderer,
+    Replies.Effects<S.Msg>.Create()
+  );
+  A.Check(Restarted.Step(), 'The first frame after restart was not presented.');
+  const Frame: Gui.Frame := Restarted.Snapshot();
+  VerifyFrame(Frame, 'dark', Themes.Accent.Violet, 0.6F);
+  A.Check(
+    Frame.Theme.Appearance = Themes.Mode.Dark,
+    'The first frame did not use the saved dark palette.'
+  );
+end procedure;
+
+procedure InvalidFile(Path: string);
+begin
+  IO.File.WriteAllText(Path, '{');
+  const Damaged: Preferences.Settings := Preferences.Load(Path);
+  A.Check(
+    Damaged.Appearance = Switchers.Selection.System and Damaged.Accent = Themes.Accent.Neutral
+    and Damaged.Ratio = 0.5F, 'Malformed JSON must fall back to the defaults.'
+  );
+  IO.File.WriteAllText(Path, '{"appearance":"light","accent":3,"splitRatio":1e100}');
+  const Partial: Preferences.Settings := Preferences.Load(Path);
+  A.Check(
+    Partial.Appearance = Switchers.Selection.Light and Partial.Accent = Themes.Accent.Neutral
+    and Partial.Ratio = 0.5F, 'Invalid fields must fall back independently of valid settings.'
+  );
+  IO.File.WriteAllText(Path, '{"accent":"blue"}');
+  const Missing: Preferences.Settings := Preferences.Load(Path);
+  A.Check(
+    Missing.Appearance = Switchers.Selection.System and Missing.Accent = Themes.Accent.Blue
+    and Missing.Ratio = 0.5F, 'Missing fields must retain the defaults.'
+  );
+end procedure;
+
+procedure FailedWrite(Path: string; Renderer: Cui.CuiRenderer);
+begin
+  discard IO.Directory.CreateDirectory(Path);
+  const Effects: Replies.Effects<S.Msg> := Replies.Effects<S.Msg>.Create();
+  using const Session: Gui.Session<S.Msg> := Start(Path, Renderer, Effects);
+  A.Check(Session.Step(), 'An unreadable settings file prevented the first frame.');
+  VerifyFrame(Session.Snapshot(), 'system', Themes.Accent.Neutral, 0.5F);
+  Send(Session, S.Msg.SetAccent(Themes.Accent.Green));
+  const Results: Channels.ChannelReader<Replies.Reply<S.Msg>> := Effects.Watch(Update.SaveEffect);
+  Send(Session, S.Msg.SaveSettings);
+  const Result: Replies.Reply<S.Msg> := Results.ReadAsync().AsTask().WaitAsync(
+    Timeout
+  ).GetAwaiter().GetResult();
+  A.Check(
+    not HasStatus(Session.Snapshot(), 'Could not save settings.'),
+    'Failure appeared before its application message.'
+  );
+  Result.Release().WaitAsync(Timeout).GetAwaiter().GetResult();
+  A.Check(Session.Step(), 'A settings I/O failure closed the desktop example.');
+  const Frame: Gui.Frame := Session.Snapshot();
+  A.Check(
+    HasStatus(Frame, 'Could not save settings.'),
+    'The view must show failed settings writes.'
+  );
+  A.Check(Control(Frame, 'save-settings').Enabled, 'Save must be available after a failed write.');
+  VerifyFrame(Frame, 'system', Themes.Accent.Green, 0.5F);
+  A.Check(
+    IO.Directory.GetFiles(IO.Path.GetDirectoryName(Path) ?? '', '*.tmp').Length = 0,
+    'A failed replacement left a staging file.'
+  );
+end procedure;
+
+function ReadReply(Source: Channels.ChannelReader<Replies.Reply<S.Msg>>): Replies.Reply<S.Msg>;
+begin
+  return Source.ReadAsync().AsTask().WaitAsync(Timeout).GetAwaiter().GetResult();
+end function;
+
+procedure PresentReply(Session: Gui.Session<S.Msg>; Reply: Replies.Reply<S.Msg>);
+begin
+  Reply.Release().WaitAsync(Timeout).GetAwaiter().GetResult();
+  A.Check(Session.Step(), 'The background reply did not reach the desktop view.');
+end procedure;
+
+procedure CheckProgress(Session: Gui.Session<S.Msg>; Steps: int; Status: string; Running: bool);
+begin
+  const Frame: Gui.Frame := Session.Snapshot();
+  const Progress: Gui.Control := Control(Frame, 'background-progress');
+  const Ratio: float := cast<float>(Steps) / cast<float>(S.WorkSteps);
+  A.Check(
+    Progress.Role = 'progress' and Sys.Single.Parse(
+      Progress.Value,
+      Culture.CultureInfo.InvariantCulture
+    ) = Ratio,
+    'The progress bar must reflect ' + Steps.ToString() + ' completed steps.'
+  );
+  A.Check(HasStatus(Frame, Status), 'Missing background status ' + Status);
+  A.Check(
+    Control(Frame, 'start-work').Enabled = not Running,
+    'Start must be enabled only while idle.'
+  );
+  A.Check(
+    Control(Frame, 'cancel-work').Enabled = Running,
+    'Cancel must be enabled only while running.'
+  );
+end procedure;
+
+procedure VerifyBackground(Renderer: Cui.CuiRenderer);
+begin
+  const Effects: Replies.Effects<S.Msg> := Replies.Effects<S.Msg>.Create();
+  using const Session: Gui.Session<S.Msg> := Start('', Renderer, Effects, Continuous := false);
+  A.Check(Session.Step(), 'The initial desktop example frame was not presented.');
+  CheckProgress(Session, 0, 'Ready', false);
+
+  const Interrupted: Channels.ChannelReader<Replies.Reply<S.Msg>> := Effects.Watch(Background.Id);
+  Send(Session, S.Msg.StartWork(false));
+  const First: Replies.Reply<S.Msg> := ReadReply(Interrupted);
+  CheckProgress(Session, 0, 'Running', true);
+  PresentReply(Session, First);
+  CheckProgress(Session, 1, 'Running', true);
+  const Pending: Replies.Reply<S.Msg> := ReadReply(Interrupted);
+  Send(Session, S.Msg.CancelWork);
+  Interrupted.Completion.WaitAsync(Timeout).GetAwaiter().GetResult();
+  A.Check(Pending.Release().IsCanceled, 'Cancelling must invalidate a held timer tick.');
+  CheckProgress(Session, 1, 'Cancelled', false);
+
+  const Retried: Channels.ChannelReader<Replies.Reply<S.Msg>> := Effects.Watch(Background.Id);
+  Send(Session, S.Msg.StartWork(false));
+  for Step: int := 1 to S.WorkSteps do
+    const Tick: Replies.Reply<S.Msg> := ReadReply(Retried);
+    CheckProgress(Session, Step - 1, 'Running', true);
+    PresentReply(Session, Tick);
+  end for;
+
+  CheckProgress(Session, S.WorkSteps, 'Completed', false);
+
+  const Failed: Channels.ChannelReader<Replies.Reply<S.Msg>> := Effects.Watch(Background.Id);
+  Send(Session, S.Msg.StartWork(true));
+  for Step: int := 1 to 2 do
+    PresentReply(Session, ReadReply(Failed));
+  end for;
+  const Failure: Replies.Reply<S.Msg> := ReadReply(Failed);
+  CheckProgress(Session, 2, 'Running', true);
+  PresentReply(Session, Failure);
+  CheckProgress(Session, 2, 'Simulated background error.', false);
+end procedure;
+
+// Verifies the desktop example's preferences and timed background work on the native host.
+// ## Parameters
+// - `Renderer`: Native renderer used for the example windows.
+public procedure Verify(Renderer: Cui.CuiRenderer);
+begin
+  const Directory: IO.DirectoryInfo := IO.Directory.CreateTempSubdirectory(
+    'fpas-desktop-settings-'
+  );
+  try
+    const Path: string := IO.Path.Combine(Directory.FullName, 'preferences', 'settings.json');
+    SaveAndRestart(Path, Renderer);
+    InvalidFile(Path);
+    FailedWrite(IO.Path.Combine(Directory.FullName, 'unwritable', 'settings.json'), Renderer);
+  finally
+    Directory.Delete(true);
+  end try;
+
+  VerifyBackground(Renderer);
+end procedure;
+
+end unit;

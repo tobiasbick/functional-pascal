@@ -12,7 +12,6 @@ uses
   Fpas.Media.Images as Images,
   Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
   Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Mvu.Application as Mvu,
-  Fpas.Ui.Widgets.Collections.Tables as Tables,
   System as Sys, System.IO as IO, System.Collections.Immutable as I, System.Threading as T, System.Threading.Tasks as Tasks, Xunit as X;
 
 // Native pointer and keyboard navigation across virtual song rows.
@@ -326,16 +325,34 @@ public type TrackNavigationTests = record
     end for;
 
     X.Assert.True(FirstRow(Session) > 1, 'Down must advance past the first viewport.');
-    discard Session.Post(Song(M.Msg.Sort(new Tables.Sort(0, true))));
+    const BeforeSort: M.State := Page();
+    X.Assert.InRange<int>(BeforeSort.Cursor, 0, BeforeSort.Shown.Length - 1);
+    const FocusedFile: long := BeforeSort.Shown[BeforeSort.Cursor].FileId;
+    X.Assert.Equal<long>(25L, FocusedFile);
+    const TitleHeader: Cui.CuiRectangle := Control(Session, GridId + '/header/0').Bounds;
+    PointerX := TitleHeader.X + TitleHeader.Width / 2.0F;
+    PointerY := TitleHeader.Y + TitleHeader.Height / 2.0F;
     Frame(Session);
-    Frame(Session);
-    const FocusedRow: Cui.CuiRectangle := Control(Session, '25').Bounds;
-    const SortedGrid: Cui.CuiRectangle := Control(Session, GridId).Bounds;
-    X.Assert.True(
-      FocusedRow.Y >= Sys.MathF.Round(SortedGrid.Y)
-      and FocusedRow.Y + FocusedRow.Height <= Sys.MathF.Round(SortedGrid.Y + SortedGrid.Height),
-      'Sorting must keep the focused song in view.'
-    );
+    for Descending: bool in [false, true, false] do
+      Click(Session);
+      const Sorted: M.State := Page();
+      X.Assert.Equal<int>(0, Sorted.Order.Column);
+      X.Assert.Equal<bool>(Descending, Sorted.Order.Descending);
+      X.Assert.InRange<int>(Sorted.Cursor, 0, Sorted.Shown.Length - 1);
+      X.Assert.Equal<long>(FocusedFile, Sorted.Shown[Sorted.Cursor].FileId);
+      if Descending then
+        X.Assert.NotEqual<int>(BeforeSort.Cursor, Sorted.Cursor);
+      end if;
+
+      const FocusedRow: Cui.CuiRectangle := Control(Session, FocusedFile.ToString()).Bounds;
+      const SortedGrid: Cui.CuiRectangle := Control(Session, GridId).Bounds;
+      X.Assert.True(
+        FocusedRow.Y >= Sys.MathF.Round(SortedGrid.Y)
+        and FocusedRow.Y + FocusedRow.Height <= Sys.MathF.Round(SortedGrid.Y + SortedGrid.Height),
+        'Sorting must keep the focused song in view.'
+      );
+    end for;
+
     discard Session.Post(Song(M.Msg.Search('00000')));
     Frame(Session);
     Frame(Session);

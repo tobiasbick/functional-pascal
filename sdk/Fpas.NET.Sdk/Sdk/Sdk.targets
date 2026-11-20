@@ -56,12 +56,13 @@
     <_FpasAnalysisInputs Condition="'$(FpasAnalysisPrepare)' == 'true'">FpasPrepareCompilation</_FpasAnalysisInputs>
     <_FpasAnalysisInputs Condition="'$(FpasAnalysisPrepare)' != 'true'">ResolveReferences</_FpasAnalysisInputs>
   </PropertyGroup>
-  <Target Name="FpasExportAnalysisContext" DependsOnTargets="$(_FpasAnalysisInputs);FpasCollectResources">
+  <Target Name="FpasExportAnalysisContext" DependsOnTargets="$(_FpasAnalysisInputs);FpasCollectResources;FpasCollectWindowsResources">
     <Fpas.Build.Tasks.Analysis.FpasExportAnalysisContext ManifestFile="$(FpasAnalysisManifest)" Phase="resolved"
         UseSourceReferences="$(FpasAnalysisSourceReferences)"
         ProjectPath="$(MSBuildProjectFullPath)" CompilerPath="$(FpasCompilerPath)" CompilerAssemblyPath="$(FpasCompilerAssemblyPath)" Configuration="$(Configuration)"
         Platform="$(PlatformTarget)" TargetFramework="$(TargetFramework)" AssemblyName="$(TargetName)" OutputType="$(OutputType)"
-        Sources="@(Compile)" References="@(ReferencePath)" Resources="@(_FpasManagedResource)" Projects="@(_MSBuildProjectReferenceExistent)" ProjectOutputs="@(_ResolvedProjectReferencePaths)"
+        Sources="@(Compile)" References="@(ReferencePath)" Resources="@(_FpasManagedResource)" WindowsResources="@(_FpasWindowsResources)"
+        Projects="@(_MSBuildProjectReferenceExistent)" ProjectOutputs="@(_ResolvedProjectReferencePaths)"
         ProjectAssetsFile="$(ProjectAssetsFile)" GenerateDocumentationFile="$(GenerateDocumentationFile)"
         TreatWarningsAsErrors="$(TreatWarningsAsErrors)" WarningsAsErrors="$(WarningsAsErrors)"
         WarningsNotAsErrors="$(WarningsNotAsErrors)" NoWarn="$(NoWarn)" OutputAssembly="@(IntermediateAssembly)" BuildCache="$(IntermediateOutputPath)fpas.compile.json"
@@ -102,10 +103,11 @@
       </_FpasManagedResource>
     </ItemGroup>
   </Target>
-  <Target Name="CoreCompile" DependsOnTargets="FpasPrepareCompilation;PrepareResources;FpasCollectResources" Returns="@(IntermediateAssembly)">
+  <Target Name="CoreCompile" DependsOnTargets="FpasPrepareCompilation;PrepareResources;FpasCollectResources;FpasCollectWindowsResources" Returns="@(IntermediateAssembly)">
     <Error Condition="'$(PlatformTarget)' != '' and '$(PlatformTarget)' != 'AnyCPU'" Code="FP5001" Text="The initial FPAS compiler supports AnyCPU only." />
     <Error Condition="'$(DebugType)' != 'none' and '$(DebugType)' != 'portable'" Code="FP5001" Text="FPAS DebugType must be portable or none." />
-    <FpasCompile Sources="@(Compile)" References="@(ReferencePath)" Resources="@(_FpasManagedResource)" CompilerPath="$(FpasCompilerPath)" CompilerAssemblyPath="$(FpasCompilerAssemblyPath)"
+    <FpasCompile Sources="@(Compile)" References="@(ReferencePath)" Resources="@(_FpasManagedResource)" WindowsResources="@(_FpasWindowsResources)"
+                 CompilerPath="$(FpasCompilerPath)" CompilerAssemblyPath="$(FpasCompilerAssemblyPath)"
                  OutputAssembly="@(IntermediateAssembly)" CacheFile="$(IntermediateOutputPath)fpas.compile.json"
                  DotnetHostPath="$(DotNetHostPath)" OutputType="$(OutputType)"
                  Configuration="$(Configuration)" TargetFramework="$(TargetFramework)" DebugType="$(DebugType)" Optimize="$(Optimize)"

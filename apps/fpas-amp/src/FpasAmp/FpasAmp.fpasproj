@@ -8,4 +8,12 @@
     <ProjectReference Include="../FpasAmp.Library/FpasAmp.Library.fpasproj" />
     <ProjectReference Include="../FpasAmp.Ui/FpasAmp.Ui.fpasproj" />
   </ItemGroup>
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64' and ('$(UseAppHost)' != 'false' or '$(PublishAot)' == 'true')">
+    <Content Include="../../packaging/linux/io.github.tobiasbick.FpasAmp.desktop"
+             Link="share/applications/%(Filename)%(Extension)"
+             CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <Content Include="../../packaging/linux/io.github.tobiasbick.FpasAmp.svg"
+             Link="share/icons/hicolor/scalable/apps/%(Filename)%(Extension)"
+             CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+  </ItemGroup>
 </Project>

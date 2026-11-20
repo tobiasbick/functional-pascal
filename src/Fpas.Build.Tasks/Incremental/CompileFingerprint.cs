@@ -32,7 +32,7 @@ internal sealed record CompileFingerprint(string Inputs, string AssemblyHash, st
     }
 
     internal static string Compute(IEnumerable<string> sources, IEnumerable<string> references, string compiler, string options, string compilerAssembly = "",
-        IReadOnlyList<ResourceInput>? resources = null)
+        IReadOnlyList<ResourceInput>? resources = null, WindowsResourceInput? windowsResources = null)
     {
         using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
         hash.AppendData(Encoding.UTF8.GetBytes(options + "\0" + Environment.Version + "\0" + Path.GetFullPath(compiler) + "\0"));
@@ -47,6 +47,11 @@ internal sealed record CompileFingerprint(string Inputs, string AssemblyHash, st
             if (resource.Path == resource.SourcePath) continue;
             if (File.Exists(resource.Path)) AddPaths("compiled", [resource.Path]);
             else hash.AppendData(Encoding.UTF8.GetBytes("missing compiled\0" + resource.Path + "\0"));
+        }
+        if (windowsResources is not null)
+        {
+            hash.AppendData(Encoding.UTF8.GetBytes("Windows resources\0" + windowsResources.Descriptor + "\0"));
+            if (windowsResources.Icon.Length != 0) AddPaths("Windows application icon", [windowsResources.Icon]);
         }
         return Convert.ToHexString(hash.GetHashAndReset());
 

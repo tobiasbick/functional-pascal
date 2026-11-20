@@ -6,6 +6,7 @@ uses
   DesktopCommandMappingContract as Mapping,
   DesktopSchedulingContract as Scheduling,
   DesktopFocusContract as Focus,
+  DesktopExampleContract as Example,
   Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Gui.Closing as Closing,
   Fpas.Ui.Gui.Windows as Windows, Fpas.Ui.Gui.Frames as Frames, Fpas.Ui.Gui.Desktop as Desktop,
@@ -221,6 +222,7 @@ begin
   VerifyClose(Renderer);
   VerifyDefaultAndDispose(Renderer);
   VerifyFactoryFailure(Renderer);
+  Example.Verify(Renderer);
 end procedure;
 
 end unit;

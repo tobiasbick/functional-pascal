@@ -26,6 +26,8 @@
     <None Include="../../examples/ui/gui/gallery/**/*.fpas;../../examples/ui/gui/gallery/*.fpasproj;../../examples/ui/gui/gallery/**/*.resx"
           Exclude="../../examples/ui/gui/gallery/bin/**/*;../../examples/ui/gui/gallery/obj/**/*"
           Link="Fixtures/host/examples/ui/gui/gallery/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/ui/gui/desktop-commands/*.fpas" Exclude="../../examples/ui/gui/desktop-commands/main.fpas"
+          Link="Fixtures/host/DesktopCommands.%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/gui-host/*.fpas" Link="Fixtures/host/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../src/Fpas.Ui.Mvu.Testing/EffectReplies.fpas" Link="Fixtures/host/EffectReplies.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/ui/widgets.md" Link="Fixtures/host/docs/ui/widgets.md" CopyToOutputDirectory="PreserveNewest" />

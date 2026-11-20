@@ -7,6 +7,11 @@
     <Gallery>../../examples/ui/gui/gallery</Gallery>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="PhotoSauce.MagicScaler" GeneratePathProperty="true" />
+    <PackageReference Include="PhotoSauce.NativeCodecs.Libpng" GeneratePathProperty="true" />
+    <None Include="$(PkgPhotoSauce_MagicScaler)/license" Link="licenses/MagicScaler.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="$(PkgPhotoSauce_NativeCodecs_Libpng)/license" Link="licenses/PhotoSauce-Libpng.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="$(PkgPhotoSauce_NativeCodecs_Libpng)/third-party-notices" Link="licenses/libpng-notices.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Compile Include="src/**/*.fpas" />
     <ProjectReference Include="../../src/Fpas.Ui.Gui/Fpas.Ui.Gui.fpasproj" />
     <Compile Include="$(Gallery)/**/*.fpas"

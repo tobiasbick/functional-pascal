@@ -29,7 +29,7 @@ under **Source files**.
 | Desktop GUI, shared widgets and terminal UI | [UI handbook](ui/README.md), [shared MVU model](ui/mvu/README.md) |
 | Audio playback, metadata, playlists and cover decoding | [Media libraries](pascal/libraries/media/README.md) |
 | Implemented CUI widgets, gallery acceptance and terminal coverage | [CUI widget inventory](cui-widget-inventory.md) |
-| GUI host, desktop publishing and application tutorial gaps | [Desktop GUI application gaps](future/gui-app-gaps.md) |
+| GUI host, desktop publishing and application examples | [Desktop GUI application gaps](future/gui-app-gaps.md) |
 | Reproducible timing, traces, counters and failure dumps | [Measurements](pascal/tools/benchmarks.md), [diagnostic workflows](pascal/tools/diagnostic-workflows.md) |
 | Batch and DAP debugging | [Debug guide](pascal/tools/debugging.md), [batch reports](pascal/tools/batch-debugging.md), [core](architecture/debugger-core.md) |
 | Shared analysis and language server | [Language-server contract](pascal/tools/language-server.md), [workspace architecture](architecture/workspaces.md) |

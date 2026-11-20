@@ -31,15 +31,17 @@ internal sealed partial class AssemblyEmitter
     private PortableDebugInfo? debug;
 
     internal static CompiledProgram Emit(PreparedCompilation prepared, string assemblyName, bool emitDebug, bool optimize,
-        byte[]? key, bool publicSign, bool delaySign, IReadOnlyList<CompilationResource> resources, CancellationToken cancellationToken)
+        byte[]? key, bool publicSign, bool delaySign, IReadOnlyList<CompilationResource> resources,
+        WindowsApplicationResources? windowsResources, CancellationToken cancellationToken)
     {
         if (publicSign && delaySign || key is null && (publicSign || delaySign)) throw new CryptographicException("Invalid signing mode.");
         using var signing = key is null ? null : new StrongNameKey(key, publicSign || delaySign);
-        return new AssemblyEmitter().Build(prepared, assemblyName, emitDebug, optimize, signing, publicSign, delaySign, resources, cancellationToken);
+        return new AssemblyEmitter().Build(prepared, assemblyName, emitDebug, optimize, signing, publicSign, delaySign, resources, windowsResources, cancellationToken);
     }
 
     private CompiledProgram Build(PreparedCompilation prepared, string assemblyName, bool emitDebug, bool optimize,
-        StrongNameKey? signing, bool publicSign, bool delaySign, IReadOnlyList<CompilationResource> resources, CancellationToken cancellationToken)
+        StrongNameKey? signing, bool publicSign, bool delaySign, IReadOnlyList<CompilationResource> resources,
+        WindowsApplicationResources? windowsResources, CancellationToken cancellationToken)
     {
         var program = prepared.Program;
         var sources = prepared.Catalog.Units.Select(unit => unit.Source);
@@ -54,6 +56,9 @@ internal sealed partial class AssemblyEmitter
             signing is null ? AssemblyHashAlgorithm.None : AssemblyHashAlgorithm.Sha1);
         AddDebuggableAttribute(optimize);
         var managedResources = EmbedResources(resources, cancellationToken);
+        if (windowsResources is not null && !program.IsExecutable)
+            throw new CompilationFailure(new("FP4005", "Windows application resources require executable output.", null));
+        var nativeResources = windowsResources is null ? null : new WindowsResources(assemblyName, windowsResources);
         var objectType = metadata.AddTypeReference(Reference(program.Runtime), metadata.GetOrAddString("System"), metadata.GetOrAddString("Object"));
         var bodies = new BlobBuilder();
         var bodyEncoder = new MethodBodyStreamEncoder(bodies);
@@ -118,7 +123,8 @@ internal sealed partial class AssemblyEmitter
         }
         var pe = new ManagedPEBuilder(
             new PEHeaderBuilder(imageCharacteristics: Characteristics.ExecutableImage | (program.IsExecutable ? 0 : Characteristics.Dll)),
-            new MetadataRootBuilder(metadata), bodies, managedResources: managedResources, debugDirectoryBuilder: directory, entryPoint: entry,
+            new MetadataRootBuilder(metadata), bodies, managedResources: managedResources, nativeResources: nativeResources,
+            debugDirectoryBuilder: directory, entryPoint: entry,
             strongNameSignatureSize: signing?.SignatureSize ?? 0,
             flags: CorFlags.ILOnly | (signing is not null && !delaySign ? CorFlags.StrongNameSigned : 0),
             deterministicIdProvider: HashContent);

@@ -16,6 +16,21 @@
   <Target Name="FpasValidatePublish" BeforeTargets="PrepareForPublish">
     <Error Condition="'$(OutputType)' != 'Exe' and '$(OutputType)' != 'WinExe' and ('$(PublishAot)' == 'true' or '$(PublishSingleFile)' == 'true' or '$(UseAppHost)' == 'true')" Code="FP5001" Text="FPAS native/apphost/single-file publishing requires OutputType Exe or WinExe. Publish managed libraries without those options." />
   </Target>
+  <Target Name="FpasCollectWindowsResources" DependsOnTargets="GetAssemblyVersion"
+          Condition="'$(OutputType)' != 'Library' and ('$(RuntimeIdentifier)' == 'win-x64' or
+                     ('$(RuntimeIdentifier)' == '' and '$(DefaultAppHostRuntimeIdentifier)' == 'win-x64' and '$(UseAppHost)' == 'true'))">
+    <ItemGroup>
+      <_FpasWindowsResources Include="$(TargetName)">
+        <FileVersion>$(FileVersion)</FileVersion>
+        <ProductVersion>$(InformationalVersion)</ProductVersion>
+        <Title>$(AssemblyTitle)</Title>
+        <Product>$(Product)</Product>
+        <Company>$(Company)</Company>
+        <Copyright>$(Copyright)</Copyright>
+        <Icon Condition="'$(ApplicationIcon)' != ''">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(ApplicationIcon)'))</Icon>
+      </_FpasWindowsResources>
+    </ItemGroup>
+  </Target>
   <Target Name="FpasExcludeSigningKey" AfterTargets="ComputeResolvedFilesToPublishList">
     <ItemGroup>
       <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="('%(FullPath)' == '$(_FpasSigningKey)' and '$(_FpasSigningKey)' != '') or ('%(FullPath)' == '$(_FpasPublishCertificate)' and '$(_FpasPublishCertificate)' != '')" />

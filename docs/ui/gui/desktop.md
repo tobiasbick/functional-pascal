@@ -117,9 +117,15 @@ also shows native Open/Save/Choose Folder, optional cancellation messages and
 window-title updates. Save chooses a path; the application writes its own data.
 Linux dialogs require Zenity or KDialog.
 
+The same example [loads appearance, accent and split preferences](../../../examples/ui/gui/desktop-commands/README.md#appearance-and-layout)
+before the first frame and reports background save results through typed MVU
+messages. A [dockspace layout callback](../../../src/Fpas.Ui/Widgets/Desktop/Dockspaces.fpas)
+can also supply layout data to application storage.
+
 `Fpas.Ui.Gui.Frames.Redraw<TMsg>(DelaySeconds)` requests a native repaint now
-or within a finite positive delay. It neither emits a message nor rebuilds the
-model view. Use background work for timed application updates.
+or within a finite positive delay. It repaints the existing view. Use
+[cancellable background work](../../../examples/ui/gui/desktop-commands/README.md#background-progress)
+for timed application updates that change what the view displays.
 
 Use `BindingsFor(Model)` on Start/Run for model-owned application shortcuts.
 They reuse `ShortcutRecorders.Combination` and `PrimaryModifier`, respect

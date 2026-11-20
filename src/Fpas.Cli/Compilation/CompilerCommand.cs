@@ -37,11 +37,18 @@ internal static class CompilerCommand
                 affectedPath = resource.Path;
                 resources.Add(new(resource.Name, File.ReadAllBytes(resource.Path)));
             }
+            WindowsApplicationResources? windowsResources = null;
+            if (options.WindowsResources is { } windows)
+            {
+                affectedPath = windows.Icon;
+                windowsResources = new(windows.FileVersion, windows.ProductVersion, windows.Title, windows.Product,
+                    windows.Company, windows.Copyright, windows.Icon is null ? null : File.ReadAllBytes(windows.Icon));
+            }
             affectedPath = options.KeyFile;
             var result = FpasCompiler.Compile(new(sources,
                 Path.GetFileNameWithoutExtension(options.Output), references, options.Target, options.EmitDebug, options.Documentation is not null, options.DiagnosticOptions, options.Optimize,
                 StrongNameKey: options.KeyFile is null ? null : File.ReadAllBytes(options.KeyFile), PublicSign: options.PublicSign, DelaySign: options.DelaySign,
-                Resources: resources));
+                Resources: resources, WindowsResources: windowsResources));
             if (!result.Success)
             {
                 Report(options.Json, false, null, result.Diagnostics, sources);

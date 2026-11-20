@@ -1,0 +1,87 @@
+// [Documentation](../../../docs/ui/gui/data-display/table.md)
+
+unit GalleryTableContract;
+
+uses
+  GalleryHostAssertions as A,
+  GuiGallery.App.State as State, GuiGallery.App.Update as Update, GuiGallery.App.View as View,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Hosting.Session as Host,
+  Fpas.Ui.Widgets.Collections.Tables as Tables;
+
+// Selects a gallery row and checks its identity through both sort directions.
+// ## Parameters
+// - `Renderer`: Native renderer used for the presented gallery.
+public procedure Verify(Renderer: Cui.CuiRenderer);
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+  end procedure;
+  procedure Click(Session: Gui.Session<State.Msg>; Id: string);
+  begin
+    const Target: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
+    A.Check(Target.Width > 0.0F and Target.Height > 0.0F, 'Table control is not visible: ' + Id);
+    X := Target.X + Target.Width / 2;
+    Y := Target.Y + Target.Height / 2;
+    Button := 1;
+    A.Check(Session.Step(), 'Table gallery closed during press.');
+    Button := 0;
+    A.Check(Session.Step(), 'Table gallery closed during release.');
+    A.Check(Session.Step(), 'Table gallery closed before presenting the update.');
+  end procedure;
+  procedure CheckSelection(Session: Gui.Session<State.Msg>; Selected: string);
+  begin
+    const Frame: Gui.Frame := Session.Snapshot();
+    var Count: int := 0;
+    for Row: Gui.Control in Frame.Controls do
+      if Row.Role = 'table-row' and Row.Value = 'True' then
+        A.Check(Row.Id = Selected, 'Expected selected row ' + Selected + ', got ' + Row.Id + '.');
+        Count := Count + 1;
+      end if;
+    end for;
+
+    A.Check(Count = 1, 'The selected person must remain the only selected row.');
+  end procedure;
+begin
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Button: int := -1;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI Table', 1100, 760, Renderer, true);
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+    new State.Model(Active := State.Page.Lists), Update.Update, View.Build, Window, 32, Inject,
+    ThemeFor := Update.ThemeFor
+  );
+  A.Check(Session.Step(), 'The Data display gallery did not present.');
+  CheckSelection(Session, 'person-1');
+
+  const Aiko: string := 'person-4';
+  const Tomas: string := 'person-2';
+  const Header: string := Tables.HeaderId('people', 0);
+  A.Check(
+    A.Control(Session, Aiko).Bounds.Y < A.Control(Session, Tomas).Bounds.Y,
+    'The gallery must start in ascending name order.'
+  );
+  Click(Session, Aiko);
+  CheckSelection(Session, Aiko);
+
+  Click(Session, Header);
+  A.Check(
+    A.Control(Session, Aiko).Bounds.Y > A.Control(Session, Tomas).Bounds.Y,
+    'The name header must reverse the rendered row order.'
+  );
+  CheckSelection(Session, Aiko);
+
+  Click(Session, Header);
+  A.Check(
+    A.Control(Session, Aiko).Bounds.Y < A.Control(Session, Tomas).Bounds.Y,
+    'The next header click must restore ascending order.'
+  );
+  CheckSelection(Session, Aiko);
+end procedure;
+
+end unit;

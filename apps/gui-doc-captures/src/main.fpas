@@ -9,6 +9,7 @@ uses
   GuiDocCaptures.Pages.SelectionAndNavigation as Guides,
   GuiDocCaptures.Rendering.Presented as Presented, GuiDocCaptures.Pages.FeedbackAndDataDisplay as Collections,
   GuiDocCaptures.Chapters as Chapters, GuiDocCaptures.Pages.Charts as Charts,
+  GuiDocCaptures.Rendering.CropImages as CropImages,
   GuiDocCaptures.Pages.InstrumentsAndCapture as Devices,
   GuiDocCaptures.Pages.Workspaces as Workspaces,
   GuiDocCaptures.Pages.SourceTools as SourceTools,
@@ -251,8 +252,24 @@ begin
 end procedure;
 
 begin
-  const Request: Chapters.Request := Chapters.ReadRequest();
-  Run(Request.Destination, Request.Chapter);
+  const Arguments: array of string := Sys.Environment.GetCommandLineArgs();
+  if Arguments.Length >= 2 and Arguments[1] = '--crop' then
+    try
+      if Arguments.Length <> 4 or Arguments[2] = '' or Arguments[3] = '' then
+        raise new Sys.ArgumentException(
+          'Pass a capture directory and an output directory after --crop.'
+        );
+      end if;
+
+      CropImages.Run(Arguments[2], Arguments[3]);
+    catch Failure: Sys.Exception do
+      Sys.Console.Error.WriteLine(Failure.Message);
+      Sys.Environment.ExitCode := 1;
+    end try;
+  else
+    const Request: Chapters.Request := Chapters.ReadRequest(Arguments);
+    Run(Request.Destination, Request.Chapter);
+  end if;
 end;
 
 end program;

@@ -17,6 +17,7 @@ uses
   GalleryTourContract as TourContract,
   GalleryLayoutContract as LayoutContract,
   GalleryGridRenameContract as GridRenameContract,
+  GalleryTableContract as TableContract,
   GalleryActionsPickersContract as ActionsPickersContract,
   GalleryDateRangeContract as DateRangeContract,
   GalleryDateCalendarContract as DateCalendarContract,
@@ -242,6 +243,7 @@ begin
   VoiceAiContract.Verify(Renderer, Directory, Renderer.ToString());
   MediaContract.Verify(Renderer, Directory, Renderer.ToString());
   GridRenameContract.Verify();
+  TableContract.Verify(Renderer);
   TourContract.Verify();
   VerifyDesktop(Renderer, Capture);
   VerifyDrawer(Renderer);

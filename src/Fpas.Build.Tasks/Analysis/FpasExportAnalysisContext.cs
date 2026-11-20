@@ -41,6 +41,8 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
     public ITaskItem[] References { get; set; } = [];
     /// <summary>Gets or sets neutral resource inputs for compilation proof validation.</summary>
     public ITaskItem[] Resources { get; set; } = [];
+    /// <summary>Gets or sets optional native Windows resources for compilation proof validation.</summary>
+    public ITaskItem? WindowsResources { get; set; }
     public ITaskItem[] Projects { get; set; } = [];
     public ITaskItem[] ProjectOutputs { get; set; } = [];
     public bool UseSourceReferences { get; set; }
@@ -72,8 +74,12 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
             var inputs = Phase == "resolved" ? projectFiles.Concat(sources).Concat(references) : projectFiles;
             if (Phase == "resolved") inputs = inputs.Append(ProjectAssetsFile);
             var resources = ResourceInput.Read(Resources);
+            var windowsResources = WindowsResourceInput.Read(WindowsResources);
             if (Phase == "resolved" && !UseSourceReferences)
+            {
                 inputs = inputs.Concat(resources.Select(resource => resource.SourcePath)).Concat(resources.Select(resource => resource.Path).Where(File.Exists));
+                if (windowsResources is { Icon.Length: > 0 }) inputs = inputs.Append(windowsResources.Icon);
+            }
             inputs = inputs.Concat(CompileFingerprint.Tools(CompilerPath));
             if (SigningKey.Length > 0) inputs = inputs.Append(SigningKey);
             var hashes = inputs.Where(path => File.Exists(path) || !sourceReferences.Any(output => PathComparer.Equals(output.GetMetadata("FullPath"), path)))
@@ -86,7 +92,7 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
                 Codes(WarningsAsErrors), Codes(WarningsNotAsErrors), Codes(NoWarn), sources, references,
                 Projects.Select(Reference).ToArray(), References.Where(item => item.GetMetadata("ReferenceSourceTarget") == "ProjectReference").Concat(sourceOutputs)
                     .Select(item => new ExportedOutput(item.GetMetadata("MSBuildSourceProjectFile"), item.GetMetadata("FullPath"))).Distinct().ToArray(),
-                Path.GetFullPath(BuildCache), Phase == "resolved" && !UseSourceReferences ? BuildInputs(resources) : "", hashes);
+                Path.GetFullPath(BuildCache), Phase == "resolved" && !UseSourceReferences ? BuildInputs(resources, windowsResources) : "", hashes);
             using var stream = new FileStream(ManifestFile, FileMode.CreateNew, FileAccess.Write, FileShare.None);
             JsonSerializer.Serialize(stream, result, ExportedContextJson.Default.ExportedContext);
             return true;
@@ -99,13 +105,13 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
         }
     }
 
-    private string BuildInputs(IReadOnlyList<ResourceInput> resources)
+    private string BuildInputs(IReadOnlyList<ResourceInput> resources, WindowsResourceInput? windowsResources)
     {
         var documents = string.IsNullOrEmpty(DocumentationFile) ? [] : DocumentationOutputs.Paths(DocumentationFile, DocumentationDestination, DocumentationOutput);
         return CompileFingerprint.Compute(Sources.Select(item => item.GetMetadata("FullPath")), References.Select(item => item.GetMetadata("FullPath")),
             CompilerPath, CompileFingerprint.Options(OutputType, Configuration, TargetFramework,
             Path.GetFullPath(OutputAssembly), DebugType, Optimize, documents, TreatWarningsAsErrors, WarningsAsErrors, WarningsNotAsErrors, NoWarn) +
-            SigningInputs.Identity(SigningKey, PublicSign, DelaySign), CompilerAssemblyPath, resources);
+            SigningInputs.Identity(SigningKey, PublicSign, DelaySign), CompilerAssemblyPath, resources, windowsResources);
     }
 
     private static StringComparer PathComparer => OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;

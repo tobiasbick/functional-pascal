@@ -68,7 +68,7 @@ and skipped by whole-body flow validation.
 - CompilationRequest supplies CompilationSource values, assembly name, reference
   paths, target kind, debug/documentation switches, diagnostic policy, optional
   strong-name key bytes with public/delay-signing switches, and optional named
-  binary manifest resources.
+  binary manifest resources and native Windows application resources.
 - FpasCompiler.Compile returns a CompilationResult with diagnostics and, on
   success, a CompiledProgram. A successful compilation may still have warnings.
   Its CancellationToken overload permits owned speculative dependency compilation;
@@ -229,6 +229,12 @@ later. Assembly emission writes metadata and method bodies in that layout.
 Body emission also tracks the evaluation stack and local storage for the
 typed expressions and statements it emits.
 
+For Windows executable publication, the emitter adds native PE resources for
+icon images, the icon group and file version information. The standard .NET
+apphost and Native AOT targets consume the resources from the emitted image.
+See [Windows icon and version metadata](../build/publishing.md#windows-icon-and-version-metadata)
+for the project properties.
+
 Bound operations preserve exact receiver storage, evaluation order, and generic
 parameter identity. Writable value-type receivers use their actual address;
 read-only receivers use defensive copies. Generic dispatch uses constrained
@@ -281,7 +287,7 @@ documentation copying. See the [build contract](../build/msbuild.md) and
 ## Source files
 
 <details>
-<summary>Browse 53 source files</summary>
+<summary>Browse 55 source files</summary>
 
 - `src/Fpas.Compiler/Analysis/`
   - [AnalysisRequest.cs](../../src/Fpas.Compiler/Analysis/AnalysisRequest.cs)
@@ -341,6 +347,8 @@ documentation copying. See the [build contract](../build/msbuild.md) and
 - `src/Fpas.Compiler/Emission/Metadata/`
   - [AssemblyEmitter.Signatures.cs](../../src/Fpas.Compiler/Emission/Metadata/AssemblyEmitter.Signatures.cs)
   - [AssemblyEmitter.cs](../../src/Fpas.Compiler/Emission/Metadata/AssemblyEmitter.cs)
+  - [WindowsResources.cs](../../src/Fpas.Compiler/Emission/Metadata/WindowsResources.cs)
+  - [WindowsVersionResource.cs](../../src/Fpas.Compiler/Emission/Metadata/WindowsVersionResource.cs)
 - `src/Fpas.Compiler/`
   - [Fpas.Compiler.csproj](../../src/Fpas.Compiler/Fpas.Compiler.csproj)
 - `src/Fpas.Compiler/Properties/`

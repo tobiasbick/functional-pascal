@@ -190,6 +190,7 @@ reported problems and check again to reach later phases.
 | FP4001 / FP4002 | Invalid/missing reference metadata / ambiguous reference identity |
 | FP4003 | Invalid strong-name signing key or signing mode |
 | FP4004 | Invalid or duplicate embedded manifest resource name or content |
+| FP4005 | Invalid Windows application resource, version field, or output kind |
 | FP5001 | Invalid or unsupported SDK project configuration |
 | FP5002 | Build-adapter input/output or cleanup failure |
 | FP5003 | Compiler process failure or missing requested assembly |

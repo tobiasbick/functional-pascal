@@ -133,6 +133,8 @@ dotnet build fpas-amp.slnx
 dotnet run --project src/FpasAmp/FpasAmp.fpasproj --no-build
 ```
 
+For a Linux application-menu entry, follow the [desktop installation](doc/desktop.md#linux-desktop-installation).
+
 ## User files
 
 FPas-Amp reads two unversioned JSON files from the `fpas-amp` subdirectory of

@@ -19,27 +19,14 @@ public sealed class TestLifetimeTests(SdkPackageFixture sdk) : IClassFixture<Sdk
     private async Task WaitingHost(bool cancel)
     {
         using var directory = new TemporaryDirectory();
-        var project = await TestProjectFixture.Create(directory, sdk, "xunit");
         var ready = directory.File("ready.pid");
-        File.WriteAllText(directory.File("Tests/Tests.fpas"), """
-            unit Waiting;
-            uses Xunit as X, System as S, System.IO.File as File, System.Threading.Thread as Thread;
-            [X.FactAttribute]
-            public procedure Wait();
-            begin
-              const Ready: string := S.Environment.GetEnvironmentVariable('FPAS_TEST_READY') ?? 'ready.pid';
-              File.WriteAllText(Ready + '.tmp', S.Environment.ProcessId.ToString());
-              File.Move(Ready + '.tmp', Ready);
-              while true do Thread.Sleep(20); end while;
-            end procedure;
-            end unit;
-            """);
+        var project = await TestProjectFixture.CreateWaiting(directory, sdk, ready);
         var built = await ProjectCliFixture.Cli(directory, "build", project, "--report", "json");
         Assert.True(built.ExitCode == 0, built.Output + built.Error);
         using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(2));
         await using var process = InterruptibleProcess.Start(TestEnvironment.DotnetHost,
             [TestEnvironment.Metadata("FpasCliPath"), "test", project, "--no-build", "--timeout", "15", "--report", "json"],
-            directory.Path, new Dictionary<string, string> { ["FPAS_TEST_READY"] = ready });
+            directory.Path);
         process.Input.Dispose();
         using var stdout = new StreamReader(process.Output); using var stderr = new StreamReader(process.Error);
         var output = stdout.ReadToEndAsync(deadline.Token); var error = stderr.ReadToEndAsync(deadline.Token);

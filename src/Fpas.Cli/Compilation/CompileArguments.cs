@@ -3,9 +3,12 @@ using Fpas.Compiler;
 
 namespace Fpas.Cli.Compilation;
 
+internal sealed record WindowsResourceArguments(string FileVersion, string ProductVersion, string Title,
+    string Product, string Company, string Copyright, string? Icon);
+
 internal sealed record CompileArguments(IReadOnlyList<string> Sources, string Output, IReadOnlyList<string> References, bool Json, CompilationTarget Target, bool EmitDebug,
     string? Documentation, DiagnosticOptions DiagnosticOptions, bool Optimize, string? KeyFile, bool PublicSign, bool DelaySign,
-    IReadOnlyList<(string Name, string Path)> Resources)
+    IReadOnlyList<(string Name, string Path)> Resources, WindowsResourceArguments? WindowsResources)
 {
     internal CompileArguments Validate()
     {
@@ -40,6 +43,8 @@ internal sealed record CompileArguments(IReadOnlyList<string> Sources, string Ou
             throw new ArgumentException("Reference paths must differ from assembly, runtime configuration, PDB, and XML documentation output paths.");
         if (Resources.Any(resource => artifacts.Any(artifact => string.Equals(resource.Path, artifact, comparison))))
             throw new ArgumentException("Embedded resource paths must differ from all output paths.");
+        if (WindowsResources?.Icon is { } icon && artifacts.Any(artifact => string.Equals(icon, artifact, comparison)))
+            throw new ArgumentException("ApplicationIcon must differ from all output paths.");
         return this with { Output = output, Documentation = documentation };
     }
 }

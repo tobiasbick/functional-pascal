@@ -112,6 +112,37 @@ usable fields, falls back to defaults where necessary and backs up the original
 bytes before publishing repaired data. See the [file locations and
 fields](../README.md#user-files).
 
+## Linux desktop installation
+
+Linux x64 publication with an executable includes an application-menu entry and
+a scalable icon under `share/`. The launcher calls `FpasAmp` by name. Keep the
+published directory together and put its launcher on the desktop session's
+`PATH`, for example through a symlink in `~/.local/bin`. The `apphost` mode below
+requires the .NET 10 runtime.
+
+From the FPas-Amp directory, publish and install for the current user:
+
+```sh
+app_dir="$HOME/.local/opt/fpas-amp"
+data_dir="${XDG_DATA_HOME:-$HOME/.local/share}"
+app_id=io.github.tobiasbick.FpasAmp
+
+install -d "$HOME/.local/opt" "$HOME/.local/bin"
+fpas publish src/FpasAmp/FpasAmp.fpasproj --runtime linux-x64 --mode apphost --output "$app_dir"
+ln -s "$app_dir/FpasAmp" "$HOME/.local/bin/FpasAmp"
+install -Dm644 "$app_dir/share/applications/$app_id.desktop" "$data_dir/applications/$app_id.desktop"
+install -Dm644 "$app_dir/share/icons/hicolor/scalable/apps/$app_id.svg" "$data_dir/icons/hicolor/scalable/apps/$app_id.svg"
+```
+
+The desktop file's name, `StartupWMClass`, icon basename and GUI `AppId` use
+`io.github.tobiasbick.FpasAmp`. On X11, `xprop WM_CLASS` on a running window
+reports this identity. With grouping enabled, Xfce lists multiple FPas-Amp
+windows under one task button. Close a resized window normally to save its
+dimensions in `state.json` for the next launch.
+
+- [Application-menu entry](../packaging/linux/io.github.tobiasbick.FpasAmp.desktop)
+- [Scalable application icon](../packaging/linux/io.github.tobiasbick.FpasAmp.svg)
+
 ## Verification
 
 The [FPAS UI tests](../tests/FpasAmp.Ui.Tests) cover state transitions,

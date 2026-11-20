@@ -4,15 +4,17 @@ program DesktopCommandsExample;
 
 uses
   DesktopCommands.State as S, DesktopCommands.Update as Update,
-  DesktopCommands.View as View, Fpas.Ui.Gui.Application as Gui;
+  DesktopCommands.View as View, DesktopCommands.Preferences as Preferences,
+  Fpas.Ui.Gui.Application as Gui;
 
 begin
-  Gui.Run<S.Model, S.Msg>(
-    new S.Model(), Update.Apply, View.Build,
+  Gui.RunThemed<S.Model, S.Msg>(
+    S.Initialize(Preferences.DefaultPath()), Update.Apply, View.Build,
     new Gui.Options(
-      Title := 'Native desktop commands', Width := 640, Height := 420,
-      MinimumWidth := 420, MinimumHeight := 300, AppId := 'org.example.DesktopCommands'
+      Title := 'Native desktop commands', Width := 720, Height := 420,
+      MinimumWidth := 480, MinimumHeight := 340, AppId := 'org.example.DesktopCommands'
     ),
+    View.ThemeFor,
     OnCloseRequested := function(): S.Msg => S.Msg.CloseRequested
   );
 end;

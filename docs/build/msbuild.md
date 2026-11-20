@@ -197,6 +197,8 @@ Produce an implementation assembly and PDB plus standard runtime/dependency
 files needed by executable output. A framework-dependent `.dll` runnable through
 `dotnet` is the default build output. RID-specific apphosts and native AOT outputs
 use the [publishing workflow](publishing.md).
+Windows-targeted executables accept [application icon and version properties](publishing.md#windows-icon-and-version-metadata).
+The compiler fingerprint includes the evaluated settings and the icon file contents.
 
 The SDK exposes the implementation assembly rather than a separate reference
 assembly. C# consumers receive the actual metadata defined
@@ -326,7 +328,7 @@ Commands belong in the [development workflow](development.md).
 ## Source files
 
 <details>
-<summary>Browse 20 source files</summary>
+<summary>Browse 21 source files</summary>
 
 - `sdk/Fpas.NET.Sdk/Sdk/`
   - [Sdk.props](../../sdk/Fpas.NET.Sdk/Sdk/Sdk.props)
@@ -341,6 +343,7 @@ Commands belong in the [development workflow](development.md).
   - [FpasCompile.cs](../../src/Fpas.Build.Tasks/FpasCompile.cs)
 - `src/Fpas.Build.Tasks/Incremental/`
   - [CompileFingerprint.cs](../../src/Fpas.Build.Tasks/Incremental/CompileFingerprint.cs)
+  - [WindowsResourceInput.cs](../../src/Fpas.Build.Tasks/Incremental/WindowsResourceInput.cs)
 - `tests/Fpas.IntegrationTests/Build/`
   - [MsBuildTests.Resources.cs](../../tests/Fpas.IntegrationTests/Build/MsBuildTests.Resources.cs)
 - `src/Fpas.Workspaces/Solutions/`

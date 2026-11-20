@@ -16,6 +16,7 @@ internal sealed class CompileCommand
     private readonly Option<string[]> references = Repeated("--reference", "Supply an assembly reference; repeatable.");
     private readonly Option<string[]> referenceDirectories = Repeated("--reference-dir", "Supply all DLLs in a directory; repeatable.");
     private readonly Option<string[]> resources = Repeated("--embedded-resource", "Supply a compiled embedded resource from the FPAS SDK.");
+    private readonly Option<string> windowsResources = new("--windows-resources") { Hidden = true };
     private readonly Option<string> target = Choice("--target", "Output kind.", "exe", "library");
     private readonly Option<string> debug = Choice("--debug", "Debug symbol format.", "portable", "none");
     private readonly Option<bool> optimize = new("--optimize") { Description = "Allow JIT optimization while retaining the selected debug symbols." };
@@ -52,7 +53,7 @@ internal sealed class CompileCommand
         resources.Hidden = true;
         diagnostics.AcceptOnlyFromAmong("json");
         Command.Arguments.Add(sources);
-        foreach (var option in new Option[] { output, references, referenceDirectories, resources, target, debug, optimize, generateDocumentation,
+        foreach (var option in new Option[] { output, references, referenceDirectories, resources, windowsResources, target, debug, optimize, generateDocumentation,
             documentation, warnAsError, warningsAsErrors, warningsNotAsErrors, noWarn, diagnostics, expectedCompiler, keyFile, publicSign, delaySign, ResponseFile })
             Command.Options.Add(option);
         Command.Validators.Add(result =>
@@ -90,7 +91,8 @@ internal sealed class CompileCommand
             new(result.GetValue(warnAsError), Codes(result.GetValue(warningsAsErrors)!),
                 Codes(result.GetValue(warningsNotAsErrors)!), Codes(result.GetValue(noWarn)!)), result.GetValue(optimize),
                 result.GetValue(keyFile), result.GetValue(publicSign), result.GetValue(delaySign),
-                result.GetValue(resources)!.Select(ReadResource).ToArray()).Validate();
+                result.GetValue(resources)!.Select(ReadResource).ToArray(),
+                result.GetValue(windowsResources) is { } supplied ? ReadWindowsResources(supplied) : null).Validate();
     }
 
     private static (string Name, string Path) ReadResource(string value)
@@ -106,6 +108,21 @@ internal sealed class CompileCommand
             throw new ArgumentException("Invalid embedded resource descriptor in the compiler arguments.", exception);
         }
         throw new ArgumentException("An embedded resource descriptor requires a manifest name and file path.");
+    }
+
+    private static WindowsResourceArguments ReadWindowsResources(string value)
+    {
+        try
+        {
+            if (JsonSerializer.Deserialize(value, Diagnostics.CompileJson.Default.StringArray) is
+                [string fileVersion, string productVersion, string title, string product, string company, string copyright, string icon])
+                return new(fileVersion, productVersion, title, product, company, copyright, icon.Length == 0 ? null : Path.GetFullPath(icon));
+        }
+        catch (JsonException exception)
+        {
+            throw new ArgumentException("Invalid Windows resource descriptor in the compiler arguments.", exception);
+        }
+        throw new ArgumentException("Invalid Windows resource descriptor in the compiler arguments.");
     }
 
     private static string[] Codes(string[] values) => values.SelectMany(value =>

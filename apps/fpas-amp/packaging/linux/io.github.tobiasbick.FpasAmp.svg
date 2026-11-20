@@ -1,0 +1,6 @@
+<!-- [Documentation](../../doc/desktop.md#linux-desktop-installation) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect x="4" y="4" width="56" height="56" rx="14" fill="#353489"/>
+  <circle cx="31" cy="33" r="19" fill="#5756ac"/>
+  <path d="M31 21v20a6 6 0 1 1-4-5.65V22l15-4v7l-11 3z" fill="#fff"/>
+</svg>

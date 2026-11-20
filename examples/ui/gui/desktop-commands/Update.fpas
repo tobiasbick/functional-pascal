@@ -3,14 +3,56 @@
 unit DesktopCommands.Update;
 
 uses
-  DesktopCommands.State as S, Fpas.Ui.Mvu.Application as Mvu,
+  DesktopCommands.State as S, DesktopCommands.Preferences as Preferences,
+  DesktopCommands.Background as Background,
+  Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
   Fpas.Ui.Gui.FileDialogs as Files, Fpas.Ui.Gui.Closing as Closing,
-  Fpas.Ui.Gui.Windows as Windows, Fpas.Ui.Gui.Frames as Frames;
+  Fpas.Ui.Gui.Windows as Windows, Fpas.Ui.Gui.Frames as Frames,
+  System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
-// Converts application decisions into owner-thread CUI commands.
+// Stable ID for the single in-flight settings save.
+public const SaveEffect: string := 'save-settings';
+
+function SaveSettings(Model: S.Model): Mvu.Transition<S.Model, S.Msg>;
+  function Write(Post: function(S.Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+  begin
+    Token.ThrowIfCancellationRequested();
+    Preferences.Save(Model.SettingsPath, Model.Settings);
+    return Post(S.Msg.SettingsSaved(Model.Settings));
+  end function;
+begin
+  if Model.Saving then
+    return new Mvu.Transition<S.Model, S.Msg>(Model, []);
+  end if;
+
+  return new Mvu.Transition<S.Model, S.Msg>(
+    Model with
+      Saving := true;
+      SaveStatus := 'Saving settings…';
+    end with,
+    [Mvu.StartBackground<S.Msg>(SaveEffect, Write, S.Msg.SettingsSaveFailed)]
+  );
+end function;
+
+function ChangeSettings(Model: S.Model; Value: Preferences.Settings): Mvu.Transition<S.Model, S.Msg>;
+begin
+  return new Mvu.Transition<S.Model, S.Msg>(
+    Model with
+      Settings := Value;
+      SaveStatus := if Model.Saving then
+        Model.SaveStatus
+      else
+        ''
+      end if;
+    end with, []
+  );
+end function;
+
+// Updates the desktop model and issues native or background commands.
 // ## Parameters
-// - `Model`: Current selection and close decision.
-// - `Message`: Native or application proposal.
+// - `Model`: Current desktop application state.
+// - `Message`: Native input, application proposal or worker reply.
 // ## Returns
 // The next model and commands to apply between frames.
 public function Apply(Model: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
@@ -71,8 +113,89 @@ begin
         Closing := false;
       end with, [Closing.Cancel<S.Msg>()]
     );
-    when S.Msg.Quit: new Mvu.Transition<S.Model, S.Msg>(Model, [Mvu.Exit<S.Msg>()]);
+    when S.Msg.Quit: new Mvu.Transition<S.Model, S.Msg>(
+      Model, if Model.Saving then
+        []
+      else
+        [Mvu.Exit<S.Msg>()]
+      end if
+    );
     when S.Msg.Redraw: new Mvu.Transition<S.Model, S.Msg>(Model, [Frames.Redraw<S.Msg>(0.5F)]);
+    when S.Msg.SetAppearance(const Value: Switchers.Selection): ChangeSettings(
+      Model,
+      Model.Settings with
+        Appearance := Value;
+      end with
+    );
+    when S.Msg.SetAccent(const Value: Themes.Accent): ChangeSettings(
+      Model,
+      Model.Settings with
+        Accent := Value;
+      end with
+    );
+    when S.Msg.ResizeSplit(const Ratio: float): ChangeSettings(
+      Model,
+      Model.Settings with
+        Ratio := Ratio;
+      end with
+    );
+    when S.Msg.SaveSettings: SaveSettings(Model);
+    when S.Msg.SettingsSaved(const Value: Preferences.Settings): new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        Saving := false;
+        SaveStatus := if Value.Appearance = Model.Settings.Appearance
+          and Value.Accent = Model.Settings.Accent and Value.Ratio = Model.Settings.Ratio
+        then
+          'Settings saved.'
+        else
+          'Settings saved. Newer changes are unsaved.'
+        end if;
+      end with, []
+    );
+    when S.Msg.SettingsSaveFailed(const Error: Sys.Exception): new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        Saving := false;
+        SaveStatus := 'Could not save settings. ' + Error.Message;
+      end with, []
+    );
+    when S.Msg.StartWork(const SimulateError: bool): if Model.WorkRunning then
+        new Mvu.Transition<S.Model, S.Msg>(Model, [])
+      else
+        new Mvu.Transition<S.Model, S.Msg>(
+          Model with
+            WorkRunning := true;
+            WorkProgress := 0;
+            WorkStatus := 'Running…';
+          end with, [Background.Start(SimulateError)]
+        )
+      end if;
+    when S.Msg.CancelWork: if Model.WorkRunning then
+        new Mvu.Transition<S.Model, S.Msg>(
+          Model with
+            WorkRunning := false;
+            WorkStatus := 'Cancelled';
+          end with, [Mvu.CancelBackground<S.Msg>(Background.Id)]
+        )
+      else
+        new Mvu.Transition<S.Model, S.Msg>(Model, [])
+      end if;
+    when S.Msg.WorkTick(const Completed: int): new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        WorkProgress := Completed;
+        WorkRunning := Completed < S.WorkSteps;
+        WorkStatus := if Completed = S.WorkSteps then
+          'Completed'
+        else
+          Model.WorkStatus
+        end if;
+      end with, []
+    );
+    when S.Msg.WorkFailed(const Error: Sys.Exception): new Mvu.Transition<S.Model, S.Msg>(
+      Model with
+        WorkRunning := false;
+        WorkStatus := Error.Message;
+      end with, []
+    );
   end case;
 end function;
 

@@ -4,40 +4,141 @@ unit DesktopCommands.View;
 
 uses
   DesktopCommands.State as S, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Actions.Buttons as Buttons;
+  Fpas.Ui.Widgets.Actions.Buttons as Buttons, Fpas.Ui.Widgets.Desktop.SplitViews as Split,
+  Fpas.Ui.Widgets.Inputs.Selects as Selects, Fpas.Ui.Widgets.Theming.Themes as Themes,
+  Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
+  Fpas.Ui.Widgets.Feedback.ProgressBars as Progress, System as Sys, System.Collections.Generic as C;
 
-// Builds the native dialog controls and model-owned close confirmation.
+const Accents: array of Themes.Accent := Sys.Enum.GetValues<Themes.Accent>();
+
+function AccentItems(): array of Selects.Item;
+begin
+  const Items: C.List<Selects.Item> := new C.List<Selects.Item>();
+  for Accent: Themes.Accent in Accents do
+    Items.Add(new Selects.Item(Sys.Enum.GetName<Themes.Accent>(Accent) ?? ''));
+  end for;
+
+  return Items.ToArray();
+end function;
+
+const AccentChoices: array of Selects.Item := AccentItems();
+
+// Resolves the loaded appearance and accent before each frame.
 // ## Parameters
-// - `Model`: Current selection and close decision.
+// - `Model`: Current desktop preferences.
+// - `SystemAppearance`: The native appearance when the platform reports it.
+// ## Returns
+// The concrete palette for the native host.
+public function ThemeFor(Model: S.Model; SystemAppearance: Themes.Mode?): Themes.Theme;
+begin
+  return if Switchers.Resolve(Model.Settings.Appearance, SystemAppearance ?? Themes.Mode.Light) =
+    Themes.Mode.Dark
+  then
+    Themes.Dark(Model.Settings.Accent)
+  else
+    Themes.Light(Model.Settings.Accent)
+  end if;
+end function;
+
+function ConfirmClose(Model: S.Model): E.Element<S.Msg>;
+begin
+  return E.Column<S.Msg>(
+    new L.Flow(Gap := L.Spacing.Normal),
+    E.Text<S.Msg>('Close this window?'),
+    E.Row<S.Msg>(
+      new L.Flow(Gap := L.Spacing.Normal, Wrap := true),
+      Buttons.Button<S.Msg>('stay', 'Keep open', S.Msg.Stay),
+      Buttons.Button<S.Msg>(
+        'quit',
+        'Close',
+        S.Msg.Quit,
+        new Buttons.Options(Enabled := not Model.Saving)
+      )
+    )
+  );
+end function;
+
+function BackgroundControls(Model: S.Model): E.Element<S.Msg>;
+begin
+  const StartOptions: Buttons.Options := new Buttons.Options(
+    ControlSize := Buttons.Size.Small, Enabled := not Model.WorkRunning
+  );
+  return E.Column<S.Msg>(
+    new L.Flow(Gap := L.Spacing.Normal),
+    Progress.ProgressBar<S.Msg>(
+      'background-progress', cast<float>(Model.WorkProgress) / cast<float>(S.WorkSteps),
+      new Progress.Options(Label := 'Background progress', ShowValue := true)
+    ),
+    E.Text<S.Msg>(Model.WorkStatus),
+    E.Row<S.Msg>(
+      new L.Flow(Gap := L.Spacing.Normal, Wrap := true),
+      Buttons.Button<S.Msg>('start-work', 'Start', S.Msg.StartWork(false), StartOptions),
+      Buttons.Button<S.Msg>(
+        'cancel-work', 'Cancel', S.Msg.CancelWork, new Buttons.Options(
+          ControlSize := Buttons.Size.Small, Enabled := Model.WorkRunning
+        )
+      ),
+      Buttons.Button<S.Msg>('fail-work', 'Simulate error', S.Msg.StartWork(true), StartOptions)
+    )
+  );
+end function;
+
+// Builds the settings controls, native dialogs, progress and close confirmation.
+// ## Parameters
+// - `Model`: Current desktop application state.
 // - `Viewport`: Current logical viewport.
+// - `Theme`: Resolved palette for the panes.
 // ## Returns
 // The native CUI view.
-public function Build(Model: S.Model; Viewport: L.Viewport): E.Element<S.Msg>;
+public function Build(Model: S.Model; Viewport: L.Viewport; Theme: Themes.Theme): E.Element<S.Msg>;
 begin
   return E.Column<S.Msg>(
     new L.Flow(Padding := L.Spacing.Normal, Gap := L.Spacing.Normal),
     E.Text<S.Msg>('Native desktop commands'),
     E.Row<S.Msg>(
-      new L.Flow(Gap := L.Spacing.Normal),
-      Buttons.Button<S.Msg>('open', 'Open file', S.Msg.Open),
-      Buttons.Button<S.Msg>('save', 'Save destination', S.Msg.Save),
-      Buttons.Button<S.Msg>('folder', 'Choose folder', S.Msg.Folder)
-    ),
-    E.Text<S.Msg>(Model.Selection),
-    Buttons.Button<S.Msg>('redraw', 'Request native repaint', S.Msg.Redraw),
-    if Model.Closing then
-      E.Column<S.Msg>(
-        new L.Flow(Gap := L.Spacing.Normal),
-        E.Text<S.Msg>('Close this window?'),
-        E.Row<S.Msg>(
-          new L.Flow(Gap := L.Spacing.Normal),
-          Buttons.Button<S.Msg>('stay', 'Keep open', S.Msg.Stay),
-          Buttons.Button<S.Msg>('quit', 'Close', S.Msg.Quit)
-        )
+      new L.Flow(Gap := L.Spacing.Normal, Wrap := true),
+      Switchers.ThemeSwitcher<S.Msg>(
+        'appearance',
+        Model.Settings.Appearance,
+        S.Msg.SetAppearance,
+        new Switchers.Options(WithSystem := true)
+      ),
+      Selects.Select<S.Msg>(
+        'accent', AccentChoices, Sys.Array.IndexOf<Themes.Accent>(Accents, Model.Settings.Accent),
+        function(Index: int): S.Msg => S.Msg.SetAccent(Accents[Index])
+      ),
+      Buttons.Button<S.Msg>(
+        'save-settings',
+        'Save settings',
+        S.Msg.SaveSettings,
+        new Buttons.Options(Enabled := not Model.Saving)
       )
-    else
-      E.Text<S.Msg>('The native close button asks before exiting.')
-    end if
+    ),
+    E.Text<S.Msg>(Model.SaveStatus),
+    Split.SplitView<S.Msg>(
+      'desktop-split', Model.Settings.Ratio,
+      E.Column<S.Msg>(
+        new L.Flow(
+          Padding := L.Spacing.Normal,
+          Gap := L.Spacing.Normal,
+          Background := Theme.Colors.SurfaceMuted
+        ),
+        Buttons.Button<S.Msg>('open', 'Open file', S.Msg.Open),
+        Buttons.Button<S.Msg>('save', 'Save destination', S.Msg.Save),
+        Buttons.Button<S.Msg>('folder', 'Choose folder', S.Msg.Folder),
+        Buttons.Button<S.Msg>('redraw', 'Request native repaint', S.Msg.Redraw)
+      ),
+      E.Column<S.Msg>(
+        new L.Flow(Padding := L.Spacing.Normal, Gap := L.Spacing.Normal),
+        E.Text<S.Msg>(Model.Selection),
+        if Model.Closing then
+          ConfirmClose(Model)
+        else
+          BackgroundControls(Model)
+        end if
+      ),
+      S.Msg.ResizeSplit, new Split.Options(MinimumFirst := 184.0F, MinimumSecond := 160.0F)
+    )
   );
 end function;
 

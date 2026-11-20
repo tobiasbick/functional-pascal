@@ -30,7 +30,9 @@ cases check URI escaping, entry order, duplicates and round trips. See the
 rating receipts, stale replies and cancellation on a change of view. Source
 controls exercise save failures, progress, confirmation and background
 acknowledgements. Native checks drive the player strip, queue, transport,
-equalizer and compact layout.
+equalizer and compact layout. The track navigation test clicks the title
+header in both Music and album track lists and checks that the same file
+stays at the cursor and in view as the sort direction changes.
 
 Set `FPAS_AMP_UI_ARTIFACTS` to an ignored directory to capture screenshots
 of settings, album details and the player.

@@ -1,0 +1,132 @@
+// [Documentation](../../doc/captures.md#crop-and-check-the-images)
+
+unit GuiDocCaptures.Rendering.CropImages;
+
+uses
+  PhotoSauce.MagicScaler as Magic,
+  PhotoSauce.MagicScaler.Transforms as Transforms,
+  PhotoSauce.NativeCodecs.Libpng as Png,
+  System as Sys, System.Drawing as Drawing, System.IO as IO;
+
+function Bounds(Path: string; Width: int; Height: int): Drawing.Rectangle;
+begin
+  const Parts: array of string := IO.File.ReadAllText(Path).Split(',');
+  if Parts.Length <> 4 then
+    raise new IO.InvalidDataException('Invalid crop coordinates: ' + Path);
+  end if;
+
+  const Values: array of int := [0, 0, 0, 0];
+  for Index: int := 0 to 3 do
+    if not int.TryParse(Parts[Index], out Values[Index]) then
+      raise new IO.InvalidDataException('Invalid crop coordinates: ' + Path);
+    end if;
+  end for;
+
+  const Left: int := Values[0];
+  const Top: int := Values[1];
+  const Right: int := Values[2];
+  const Bottom: int := Values[3];
+  if Left < 0 or Top < 0 or Right <= Left or Bottom <= Top or Right > Width or Bottom > Height then
+    raise new IO.InvalidDataException('crop outside the frame: ' + Path);
+  end if;
+
+  return new Drawing.Rectangle(Left, Top, Right - Left, Bottom - Top);
+end function;
+
+function HasColorVariation(Image: Magic.IPixelSource): bool;
+begin
+  const Stride: int := Image.Width * 3;
+  const Pixels: array of byte := new byte[Stride * Image.Height];
+  Image.CopyPixels(new Drawing.Rectangle(0, 0, Image.Width, Image.Height), Stride, Pixels);
+  var Offset: int := 3;
+  while Offset < Pixels.Length do
+    if Pixels[Offset] <> Pixels[0] or Pixels[
+      Offset + 1
+    ] <> Pixels[1] or Pixels[Offset + 2] <> Pixels[2]
+    then
+      return true;
+    end if;
+
+    Offset := Offset + 3;
+  end while;
+
+  return false;
+end function;
+
+procedure Crop(Region: string; Output: string);
+begin
+  const Frame: string := IO.Path.ChangeExtension(Region, '.png') ?? '';
+  const Info: Magic.ImageFileInfo := Magic.ImageFileInfo.Load(Frame);
+  if Info.MimeType <> Magic.ImageMimeTypes.Png or Info.Frames.Count <> 1 then
+    raise new IO.InvalidDataException('Expected one PNG frame: ' + Frame);
+  end if;
+
+  const Settings: Magic.ProcessImageSettings := new Magic.ProcessImageSettings();
+  Settings.Crop := Bounds(Region, Info.Frames[0].Width, Info.Frames[0].Height);
+  Settings.OrientationMode := Magic.OrientationMode.Ignore;
+  Settings.ColorProfileMode := Magic.ColorProfileMode.Ignore;
+  discard Settings.TrySetEncoderFormat(Magic.ImageMimeTypes.Png);
+
+  using const Pipeline: Magic.ProcessingPipeline := Magic.MagicImageProcessor.BuildPipeline(
+    Frame,
+    Settings
+  );
+  discard Pipeline.AddTransform(
+    new Transforms.FormatConversionTransform(Magic.PixelFormats.Bgr24bpp)
+  );
+  if not HasColorVariation(Pipeline.PixelSource) then
+    raise new IO.InvalidDataException('blank widget capture: ' + Region);
+  end if;
+
+  using const Encoded: IO.MemoryStream := new IO.MemoryStream();
+  discard Pipeline.WriteOutput(Encoded);
+  const Destination: string := IO.Path.Combine(Output, IO.Path.GetFileName(Frame) ?? '');
+  const Temporary: string := IO.Path.Combine(Output, IO.Path.GetRandomFileName());
+  try
+    IO.File.WriteAllBytes(Temporary, Encoded.ToArray());
+    IO.File.Move(Temporary, Destination, true);
+  finally
+    IO.File.Delete(Temporary);
+  end try;
+end procedure;
+
+// Crops the PNG frames described by the capture directory's bounds files.
+// ## Parameters
+// - `Captures`: Directory containing paired PNG and crop bounds files.
+// - `Output`: Directory for the cropped RGB PNGs.
+public procedure Run(Captures: string; Output: string);
+requires Captures <> '' and Output <> '';
+begin
+  const SourceDirectory: string := IO.Path.TrimEndingDirectorySeparator(
+    IO.Path.GetFullPath(Captures)
+  );
+  const TargetDirectory: string := IO.Path.TrimEndingDirectorySeparator(
+    IO.Path.GetFullPath(Output)
+  );
+  const Comparison: Sys.StringComparison := if Sys.OperatingSystem.IsWindows() then
+    Sys.StringComparison.OrdinalIgnoreCase
+  else
+    Sys.StringComparison.Ordinal
+  end if;
+  if Sys.String.Equals(SourceDirectory, TargetDirectory, Comparison) then
+    raise new Sys.ArgumentException('Choose a different directory for cropped images.');
+  end if;
+
+  const Regions: array of string := IO.Directory.GetFiles(SourceDirectory, '*.crop');
+  if Regions.Length = 0 then
+    raise new IO.InvalidDataException('no crop files in ' + SourceDirectory);
+  end if;
+
+  Sys.Array.Sort<string>(Regions, Sys.StringComparer.Ordinal);
+  discard IO.Directory.CreateDirectory(TargetDirectory);
+  Magic.CodecManager.Configure(
+    procedure(Codecs: Magic.CodecCollection) begin
+      Png.CodecCollectionExtensions.UseLibpng(Codecs, true);
+    end procedure
+  );
+  for Region: string in Regions do
+    Crop(Region, TargetDirectory);
+  end for;
+end procedure;
+
+end unit;

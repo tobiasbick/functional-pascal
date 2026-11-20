@@ -13,11 +13,13 @@ from PIL import Image, ImageChops
 
 APP = Path(__file__).resolve().parents[1]
 PROJECT = APP / "GuiDocCaptures.fpasproj"
-CROP = APP / "src" / "crop.py"
 
 
 def run(*arguments):
-    return subprocess.run(arguments, capture_output=True, text=True, timeout=120)
+    return subprocess.run(
+        ("dotnet", "run", "--project", PROJECT, "--no-build", "--", *arguments),
+        capture_output=True, text=True, timeout=120,
+    )
 
 
 class CropTests(unittest.TestCase):
@@ -26,16 +28,20 @@ class CropTests(unittest.TestCase):
             frames = Path(directory)
             output = frames / "output"
             with Image.new("RGBA", (4, 3), "red") as frame:
-                frame.putpixel((2, 1), (1, 2, 3, 255))
+                frame.putpixel((2, 1), (1, 2, 3, 128))
+                frame.putpixel((3, 2), (31, 52, 73, 0))
                 frame.save(frames / "widget.png")
-            (frames / "widget.crop").write_text("1,1,3,2", encoding="utf-8")
+            (frames / "widget.crop").write_text("1,1,4,3", encoding="utf-8")
 
-            result = run(sys.executable, CROP, frames, output)
+            result = run("--crop", frames, output)
             self.assertEqual(result.returncode, 0, result.stderr)
             with Image.open(output / "widget.png") as image:
-                self.assertEqual((image.mode, image.size), ("RGB", (2, 1)))
+                self.assertEqual((image.mode, image.size), ("RGB", (3, 2)))
                 self.assertEqual(image.getpixel((0, 0)), (255, 0, 0))
                 self.assertEqual(image.getpixel((1, 0)), (1, 2, 3))
+                self.assertEqual(image.getpixel((2, 1)), (31, 52, 73))
+            with Image.open(frames / "widget.png") as source:
+                self.assertEqual((source.mode, source.size), ("RGBA", (4, 3)))
 
     def test_rejects_missing_out_of_frame_and_blank_regions(self):
         with TemporaryDirectory() as directory:
@@ -46,6 +52,7 @@ class CropTests(unittest.TestCase):
 
             for bounds, reason in [
                 (None, "no crop files"),
+                ("0,0,wrong,3", "Invalid crop coordinates"),
                 ("0,0,5,3", "crop outside the frame"),
                 ("1,0,1,2", "crop outside the frame"),
                 ("0,0,4,3", "blank widget capture"),
@@ -53,10 +60,14 @@ class CropTests(unittest.TestCase):
                 with self.subTest(bounds=bounds):
                     if bounds is not None:
                         (frames / "widget.crop").write_text(bounds, encoding="utf-8")
-                    result = run(sys.executable, CROP, frames, output)
+                    result = run("--crop", frames, output)
                     self.assertNotEqual(result.returncode, 0)
                     self.assertIn(reason, result.stderr)
                     self.assertFalse((output / "widget.png").exists())
+
+            result = run("--crop", frames, frames)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("different directory", result.stderr)
 
 
 class GalleryTests(unittest.TestCase):
@@ -67,7 +78,7 @@ class GalleryTests(unittest.TestCase):
             root = Path(directory)
             frames = root / "frames"
             output = root / "widgets"
-            result = run("dotnet", "run", "--project", PROJECT, "--no-build", "--", frames)
+            result = run(frames)
             self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
             regions = {file.stem for file in frames.glob("*.crop")}
             expected_widgets = {"button", "dropdown-menu", "confirm-button", "swipe-actions"}
@@ -80,7 +91,7 @@ class GalleryTests(unittest.TestCase):
                 self.assertTrue(first.convert("RGBA").tobytes() == later.convert("RGBA").tobytes(),
                                 "Consecutive captures of a static frame produced different pixels.")
 
-            result = run(sys.executable, CROP, frames, output)
+            result = run("--crop", frames, output)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(regions, {file.stem for file in output.glob("*.png")})
             for name in regions:

@@ -113,7 +113,19 @@ The [acceptance map](../../tests/coverage.md#native-windows-cli-acceptance) desc
 the observable contracts. Console tests use real ConPTY sessions on Windows 10
 version 1809 or newer, with no visible window or external terminal dependency.
 They check target exit before closing their console/job, so harness cleanup
-cannot satisfy a CLI cleanup assertion. Linux retains SIGINT/process-group tests.
+cannot satisfy a CLI cleanup assertion.
+
+### Native Linux CLI acceptance
+
+After building the toolchain, run the terminal and signal tests on Linux:
+
+```sh
+dotnet test tests/Fpas.IntegrationTests/Fpas.IntegrationTests.csproj --no-build --no-restore --filter 'FullyQualifiedName~LinuxConsoleTests|FullyQualifiedName~ProjectSignalTests|FullyQualifiedName~AnalysisSignalTests|FullyQualifiedName~TestLifetimeTests'
+```
+
+The [Linux acceptance tests](../../tests/coverage.md#native-linux-cli-acceptance)
+send Ctrl+C over a real PTY and verify the JSON report and child cleanup before
+disposing the terminal. The suite also exercises direct SIGINT delivery.
 
 ## Deploy the local Release compiler
 

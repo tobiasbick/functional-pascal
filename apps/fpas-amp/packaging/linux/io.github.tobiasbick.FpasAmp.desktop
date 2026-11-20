@@ -1,0 +1,11 @@
+# [Documentation](../../doc/desktop.md#linux-desktop-installation)
+[Desktop Entry]
+Type=Application
+Name=FPas-Amp
+Comment=Browse and play your music library
+Exec=FpasAmp
+TryExec=FpasAmp
+Icon=io.github.tobiasbick.FpasAmp
+Terminal=false
+Categories=AudioVideo;Audio;Player;
+StartupWMClass=io.github.tobiasbick.FpasAmp

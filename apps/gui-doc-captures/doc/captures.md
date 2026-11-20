@@ -79,15 +79,16 @@ reveals the swipe actions. The capture steps live in the following units.
 
 ## Crop and check the images
 
-Install Pillow for the Python interpreter used by the [crop command](../src/crop.py).
-Run the command on a completed capture directory:
+Run the [crop command](../src/Rendering/CropImages.fpas) on a completed capture
+directory. It runs headlessly and uses MagicScaler with its libpng codec.
 
 ```sh
-python apps/gui-doc-captures/src/crop.py .temp-data/ui-selection docs/ui/gui/selection/images
+dotnet run --project apps/gui-doc-captures/GuiDocCaptures.fpasproj -- --crop .temp-data/ui-selection docs/ui/gui/selection/images
 ```
 
-The cropper writes RGB PNGs into the chapter's `images` directory. It checks
-that each rectangle fits within its frame and rejects single-color crops.
+The cropper uses each `.crop` file to select pixels from its matching PNG.
+It writes RGB PNGs to a separate output directory, checks that each rectangle
+fits within its frame and rejects single-color crops.
 Review the results at their original size. If a frame is blank, rerun the
 capture with the gallery window visible.
 
@@ -103,13 +104,11 @@ corresponding handbook directory after cropping:
 | App chrome | `formatted-text.png` | Text and display |
 | Overview | `sidebar-appearance.png`, `sidebar-appearance-dark.png` | Navigation |
 
-The [GUI documentation gap](../../../docs/future/gui-app-gaps.md#widget-documentation-captures)
-tracks the portable FPAS crop operation.
-
 ## Verification
 
-The [application tests](../tests/test_capture.py) check bounds, blank frames,
-pixel preservation and the default Actions capture through both commands.
+The [application tests](../tests/test_capture.py) use Python and Pillow as
+an independent pixel comparison. They check bounds, blank frames, pixel
+preservation and the default Actions capture through both FPAS commands.
 Consecutive full-frame PNGs from the same presented frame must have identical pixels.
 Build the Debug project first. On headless Linux run the suite under Xvfb to
 include the native gallery test.

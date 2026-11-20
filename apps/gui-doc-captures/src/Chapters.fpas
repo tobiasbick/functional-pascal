@@ -13,11 +13,12 @@ public type Request = record
 end record;
 
 // Reads the output path and chapter from the capture command line.
+// ## Parameters
+// - `Arguments`: Command-line arguments, including the executable path.
 // ## Returns
 // The requested destination and chapter. The chapter defaults to Actions.
-public function ReadRequest(): Request;
+public function ReadRequest(Arguments: array of string): Request;
 begin
-  const Arguments: array of string := Sys.Environment.GetCommandLineArgs();
   if Arguments.Length < 2 or Arguments.Length > 3 or Arguments[1] = '' then
     raise new Sys.ArgumentException(
       'Pass an output directory and optionally a handbook chapter name.'

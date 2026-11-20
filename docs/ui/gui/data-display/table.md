@@ -54,10 +54,15 @@ across sorting so focus follows the row. Store selection by row ID in the model
 to preserve the selected record. Use `HeaderId(Id, Index)` to address a heading
 for focus.
 
+Use a [data grid](../data-grid/data-grid.md) for large collections whose rows
+should be built on demand. The row factory maps each display position to its
+record and returns a stable ID for that record.
+
 ## See also
 
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Collections/Tables.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Lists/Widgets/People.fpas)
+- [Gallery update](../../../../examples/ui/gui/gallery/Pages/Lists/Update.fpas)
 - [Virtual list](virtual-list.md)
 - [Data grid API](../../widgets.md#data-grid-filter-bar-and-tree-table)
 - [Data display](README.md)
@@ -76,3 +81,5 @@ for focus.
 - `src/Fpas.Ui.Gui.Cui/native/widgets/collections/`
   - [table.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/table.c)
   - [table.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/table.h)
+- `tests/Fixtures/gui-host/`
+  - [GalleryTableContract.fpas](../../../../tests/Fixtures/gui-host/GalleryTableContract.fpas)

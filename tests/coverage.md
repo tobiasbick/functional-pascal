@@ -77,6 +77,8 @@ checks pointer and keyboard selection in the radio cards, stepped slider
 input, preservation of a model value between steps, and pointer and keyboard
 adjustment of both range endpoints. The last section checks chip wrapping,
 independent pointer and keyboard toggles, and selecting and clearing a rating.
+Data display checks that clicking a table header moves the selected record
+in both sort directions while its stable row ID remains selected.
 Navigation checks independent tab selections, ancestor activation and the informational final
 breadcrumb, keyboard page selection, page boundaries and the compact pager.
 It also exercises Back, Next and Finish around the read-only stepper. The
@@ -186,7 +188,11 @@ to the gallery. Run GUI tests under Xvfb on headless Linux. Window tests skip
 on Linux without `DISPLAY`.
 
 The desktop commands contract checks that explicit focus, initial dialog focus
-and focus restoration survive frames with pending host results.
+and focus restoration survive frames with pending host results. The real desktop
+example also checks saved appearance, accent and split on the first frame,
+defaults for invalid settings, edits made during a save and visible write errors.
+It releases timed worker replies on the idle native host and checks the visible
+progress, cancellation of a held tick, restart, completion and failure feedback.
 
 The native suite also checks renderer and frame ownership, capture, weighted
 layout, scroll offsets, and native wakeup. The link-and-render test drives
@@ -639,6 +645,15 @@ redirected protocol streams; Linux sends SIGINT to an owned process group. They
 require one JSON response, exit 130 and child exit before test-harness cleanup,
 including cancellation after correction/rename publication. ConPTY tests require
 Windows 10 version 1809 or newer; they do not open a visible console window.
+
+## Native Linux CLI acceptance
+
+[LinuxConsoleTests](Fpas.IntegrationTests/Projects/LinuxConsoleTests.cs)
+sends Ctrl+C through a controlling Linux PTY while `build`, `check`, `run`
+and `test` have a live child. The test covers `run` with and without failure
+capture. Standard output and error are captured separately from terminal echo.
+Each command must exit with code 130, emit one JSON report with status
+`cancelled`, and reap the observed child before the terminal is disposed.
 
 ## See also
 

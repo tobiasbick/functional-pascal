@@ -1,0 +1,143 @@
+// [Documentation](README.md#appearance-and-layout)
+
+unit DesktopCommands.Preferences;
+
+uses
+  Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
+  System as Sys, System.IO as IO, System.Text.Json as Json;
+
+// User preferences stored in settings.json.
+public type Settings = record
+  // Model-owned appearance choice.
+  public Appearance: Switchers.Selection := Switchers.Selection.System;
+  // Color family for the chosen appearance.
+  public Accent: Themes.Accent := Themes.Accent.Neutral;
+  // Share of the first pane, between zero and one.
+  public Ratio: float := 0.5F;
+end record;
+
+// Resolves the example's settings file without creating directories.
+// ## Returns
+// The per-user local application data path, or an empty string if unavailable.
+public function DefaultPath(): string;
+begin
+  const Root: string := Sys.Environment.GetFolderPath(
+    Sys.Environment.SpecialFolder.LocalApplicationData,
+    Sys.Environment.SpecialFolderOption.DoNotVerify
+  );
+  return if not IO.Path.IsPathFullyQualified(Root) then
+    ''
+  else
+    IO.Path.Combine(Root, 'fpas-desktop-commands', 'settings.json')
+  end if;
+end function;
+
+function Field(Root: Json.JsonElement; Name: string): Json.JsonElement;
+begin
+  var Value: Json.JsonElement := new Json.JsonElement();
+  discard Root.TryGetProperty(Name, out Value);
+  return Value;
+end function;
+
+function NameOf<T>(Value: T): string;
+where T: struct, Sys.Enum;
+begin
+  return (Sys.Enum.GetName<T>(Value) ?? '').ToLowerInvariant();
+end function;
+
+function Choice<T>(Value: Json.JsonElement; Fallback: T): T;
+where T: struct, Sys.Enum;
+begin
+  if Value.ValueKind = Json.JsonValueKind.String then
+    const Name: string := Value.GetString() ?? '';
+    for Candidate: T in Sys.Enum.GetValues<T>() do
+      if Name = NameOf<T>(Candidate) then
+        return Candidate;
+      end if;
+    end for;
+  end if;
+
+  return Fallback;
+end function;
+
+function Decode(Root: Json.JsonElement): Settings;
+begin
+  const Default: Settings := new Settings();
+  if Root.ValueKind <> Json.JsonValueKind.Object then
+    return Default;
+  end if;
+
+  const Split: Json.JsonElement := Field(Root, 'splitRatio');
+  var Ratio: float := Default.Ratio;
+  var Candidate: float := 0.0F;
+  if Split.ValueKind = Json.JsonValueKind.Number and Split.TryGetSingle(out Candidate)
+    and Candidate >= 0.0F and Candidate <= 1.0F
+  then
+    Ratio := Candidate;
+  end if;
+
+  return new Settings(
+    Choice<Switchers.Selection>(Field(Root, 'appearance'), Default.Appearance),
+    Choice<Themes.Accent>(Field(Root, 'accent'), Default.Accent), Ratio
+  );
+end function;
+
+// Loads preferences before the first frame. Unavailable or damaged values use defaults.
+// ## Parameters
+// - `Path`: Absolute settings file path, or empty when app data is unavailable.
+// ## Returns
+// The usable settings, with each missing or invalid field defaulted independently.
+public function Load(Path: string): Settings;
+begin
+  if Path = '' then
+    return new Settings();
+  end if;
+
+  try
+    return Decode(Json.JsonElement.Parse(IO.File.ReadAllText(Path)));
+  catch Failure: Sys.Exception when Failure is IO.IOException or Failure is
+    Sys.UnauthorizedAccessException or Failure is Json.JsonException do
+    return new Settings();
+  end try;
+end function;
+
+procedure Write(Path: string; Value: Settings);
+begin
+  using const Stream: IO.FileStream := IO.File.Open(
+    Path,
+    IO.FileMode.CreateNew,
+    IO.FileAccess.Write
+  );
+  var Options: Json.JsonWriterOptions := new Json.JsonWriterOptions();
+  Options.Indented := true;
+  using const Writer: Json.Utf8JsonWriter := new Json.Utf8JsonWriter(Stream, Options);
+  Writer.WriteStartObject();
+  Writer.WriteString('appearance', NameOf<Switchers.Selection>(Value.Appearance));
+  Writer.WriteString('accent', NameOf<Themes.Accent>(Value.Accent));
+  Writer.WriteNumber('splitRatio', Value.Ratio);
+  Writer.WriteEndObject();
+  Writer.Flush();
+end procedure;
+
+// Writes the selected preferences and replaces the file after the JSON is complete.
+// ## Parameters
+// - `Path`: Absolute settings file path, or empty when app data is unavailable.
+// - `Value`: Preferences to persist.
+public procedure Save(Path: string; Value: Settings);
+requires Value.Ratio >= 0.0F and Value.Ratio <= 1.0F;
+begin
+  if Path = '' then
+    raise new IO.IOException('Local application data is unavailable.');
+  end if;
+
+  discard IO.Directory.CreateDirectory(IO.Path.GetDirectoryName(Path) ?? '');
+  const Temporary: string := Path + '.' + Sys.Guid.NewGuid().ToString('N') + '.tmp';
+  try
+    Write(Temporary, Value);
+    IO.File.Move(Temporary, Path, true);
+  finally
+    IO.File.Delete(Temporary);
+  end try;
+end procedure;
+
+end unit;

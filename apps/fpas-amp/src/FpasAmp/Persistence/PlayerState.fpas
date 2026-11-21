@@ -64,7 +64,8 @@ begin
     Sys.Math.Clamp(Column, -1, MaxColumn),
     Desc ?? false,
     Fields.StringValue(Fields.Field(Field, 'performer')) ?? '',
-    Fields.StringValue(Fields.Field(Field, 'releaseFilter')) ?? ''
+    Fields.StringValue(Fields.Field(Field, 'releaseFilter')) ?? '',
+    Fields.StringValue(Fields.Field(Field, 'playlist')) ?? ''
   );
 end function;
 

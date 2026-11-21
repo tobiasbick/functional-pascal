@@ -3,7 +3,9 @@
 // Playback queue, transport, volume and equalizer state for the player strip.
 unit FpasAmp.Ui.Player.Model;
 
-uses FpasAmp.Ui.Fingerprints as Fp, FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Ui.Player.Presets as Presets, Fpas.Media.Audio as Audio, System.Collections.Immutable as I, FpasAmp.Ui.Albums.Music.Model as Music;
+uses
+  FpasAmp.Ui.Fingerprints as Fp, FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Ui.Player.Presets as Presets, Fpas.Media.Audio as Audio, System.Collections.Immutable as I, FpasAmp.Ui.Albums.Music.Model as Music,
+  FpasAmp.Ui.Radio.Model as Radio;
 
 // Equalizer band captions in ascending frequency, in hertz.
 public const Bands: array of string := [
@@ -69,12 +71,20 @@ public type State = record
   public Gains: I.ImmutableArray<float> := Flat();
   // Local fingerprint request for the current track, after audio starts.
   public Fingerprint: Fp.State? := null;
+  // Selected live station, or null when the player is in local track mode.
+  public Station: Radio.Station? := null;
+  // The selected station is waiting for audio.
+  public Buffering: bool := false;
+  // Optional title reported by the live stream.
+  public NowPlaying: string := '';
 end record;
 
 // Transport, volume and equalizer proposals.
 public type Msg = variant
   // Start `Queue[Index]` and retain `Source` to reconstruct the selection.
   Play(Queue: I.ImmutableArray<Tracks.Entry>; Index: int; Source: Music.Selection);
+  // Play the given radio station, toggling playback if it is already selected.
+  PlayStation(Station: Radio.Station);
   // Drop an unavailable current track. Offline sources can advance to the next eligible entry.
   SourceLost(Advance: bool);
   // Pause or resume the current track.
@@ -111,6 +121,8 @@ public type Request = variant
   Unload;
   // Replace the active file and optionally start it.
   Load(Path: string; Playing: bool; Revision: long);
+  // Connect to a live radio stream and start rendering it.
+  Stream(Url: string; Revision: long);
   // Open a restored track, seek, then start playback.
   Resume(Path: string; Milliseconds: double; Revision: long);
   // Pause or resume the active file.

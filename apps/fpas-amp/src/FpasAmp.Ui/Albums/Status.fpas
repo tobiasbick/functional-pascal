@@ -57,7 +57,7 @@ begin
       LibraryTotal,
       'track',
       Current.Search,
-      Current.Album.Id <> '' or Current.Applied.Count() > 0
+      Current.Album.Id <> '' or Current.Applied.Count() > 0 or Current.Tracks.Length <> LibraryTotal
     )
   else
     'Loading tracks…'

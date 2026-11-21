@@ -5,6 +5,7 @@ unit FpasAmp.Ui.Settings.Model;
 
 uses
   FpasAmp.Library.Sources as Locations, Fpas.Media.Audio as Audio,
+  FpasAmp.Ui.Radio.Model as Radio,
   FpasAmp.Library.Inventory.Model as Inv, FpasAmp.Library.Inventory.Progress as Work,
   Fpas.Ui.Widgets.Files.FilePickers as Picker,
   Fpas.Ui.Widgets.Theming.Themes as Themes,
@@ -42,6 +43,8 @@ public type Preferences = record
   public Mixer: Audio.Settings := Audio.Settings.Flat;
   // Optional audio-identification and submission credentials.
   public AcoustId: AcoustIdKeys := new AcoustIdKeys();
+  // Favorite online stations, in the order they were saved.
+  public RadioFavorites: array of Radio.Station := [];
 end record;
 
 // Owner-thread settings state. The rest of the app reads `Saved`; only this

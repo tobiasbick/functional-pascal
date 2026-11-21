@@ -1,12 +1,29 @@
 # FPas-Amp documentation
 
-| Area | Guide |
-| --- | --- |
-| Navigation, playback, settings and startup | [Desktop application](desktop.md) |
-| Source monitoring, metadata, playlists and persistence | [Music library](library.md) |
-| Cover thumbnails, caching and eviction | [Imaging](imaging.md) |
-| Running the tests and checking native UI behavior | [Tests](../tests/README.md) |
-| Tag editing and MusicBrainz comparison previews | [Tag editor designs](future/tag-editor-designs.md) |
-| Pending work on recording identification and similar-track playback | [Dynamic playlists](future/dynamic-playlist.md) |
+For build, launch and FFmpeg requirements, see the [application README](../README.md).
 
-For build instructions and player controls, see the [application README](../README.md).
+## User guides
+
+- [Music library and playlists](browsing.md)
+- [Playback](playback.md)
+- [Internet radio](radio.md)
+- [Track details and tag editing](track-metadata.md)
+- [Settings and music sources](settings.md)
+- [User files and recovery](user-files.md)
+
+Screenshots show the running application with synthetic audio, sample sources
+and fixture metadata. The radio directory shows fictional stations and the
+tag editor uses simulated provider replies. See the [test guide](../tests/README.md#desktop-ui)
+to produce the captures.
+
+## Technical references
+
+- [Desktop application](desktop.md)
+- [Music library](library.md)
+- [Artwork cache](imaging.md)
+- [Tests](../tests/README.md)
+
+## Plans and design archive
+
+- [Dynamic playlists](future/dynamic-playlist.md)
+- [Tag editor design concepts](future/tag-editor-designs.md)

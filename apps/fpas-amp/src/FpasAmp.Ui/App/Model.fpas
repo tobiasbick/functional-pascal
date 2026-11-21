@@ -8,7 +8,7 @@ uses
   FpasAmp.Ui.Albums.Model as AlbumView,
   FpasAmp.Ui.Settings.Model as SettingsView,
   FpasAmp.Ui.Player.Model as Player,
-  FpasAmp.Ui.TagEditor.Model as Tags,
+  FpasAmp.Ui.TagEditor.Model as Tags, FpasAmp.Ui.Radio.Model as Radio,
   Fpas.Ui.Widgets.Theming.Themes as Themes,
   Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
 
@@ -27,6 +27,8 @@ public type State = record
   public Songs: LibrarySongs.State := new LibrarySongs.State();
   // The active tag editor, shared by both track tables.
   public TagEditor: Tags.State? := null;
+  // Radio directory search and manual station editor.
+  public Radio: Radio.State := new Radio.State();
 end record;
 
 // Typed proposals routed by the app controller.
@@ -43,6 +45,8 @@ public type Msg = variant
   Settings(Message: SettingsView.Msg);
   // Transport, volume and equalizer edits.
   Player(Message: Player.Msg);
+  // Radio search, favorites and editor actions.
+  Radio(Message: Radio.Msg);
   // Save the latest mixer after a burst of fader movement.
   SaveMixer;
   // Final paused transport captured by the native close gesture.

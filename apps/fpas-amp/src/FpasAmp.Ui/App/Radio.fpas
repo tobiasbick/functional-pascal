@@ -1,0 +1,124 @@
+// [Documentation](../../../doc/desktop.md#online-radio)
+
+unit FpasAmp.Ui.App.Radio;
+
+uses
+  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Radio.Model as M,
+  FpasAmp.Ui.Radio.Update as Search, FpasAmp.Ui.Navigation.Model as Nav,
+  FpasAmp.Ui.Settings.Model as Settings, FpasAmp.Ui.Settings.Editing as Editing,
+  Fpas.Ui.Mvu.Application as A, Fpas.Ui.Mvu.Composition as Composition,
+  System as Sys, System.Collections.Generic as C;
+
+function Update(Current: App.State; Action: M.Msg): A.Transition<App.State, App.Msg>;
+begin
+  const Result: A.Transition<M.State, App.Msg> := Composition.MapTransition<M.State, M.Msg, App.Msg>(
+    Search.Apply(Current.Radio, Action), App.Msg.Radio, 'radio'
+  );
+  return new A.Transition<App.State, App.Msg>(
+    Current with
+      Radio := Result.Model;
+    end with, Result.Commands
+  );
+end function;
+
+function Persist(Current: App.State; Item: M.Station; Remove: bool; Save: procedure(Settings.Preferences)): A.Transition<App.State, App.Msg>;
+begin
+  const Saved: Settings.Preferences := Current.Settings.Saved;
+  const Items: C.List<M.Station> := new C.List<M.Station>();
+  var Added: bool := false;
+  for Entry: M.Station in Saved.RadioFavorites do
+    if Entry.Id <> Item.Id then
+      Items.Add(Entry);
+    elsif not Remove then
+      Items.Add(Item);
+      Added := true;
+    end if;
+  end for;
+
+  if not Remove and not Added then
+    Items.Add(Item);
+  end if;
+  const Stored: Settings.State := Editing.Persist(
+    Current.Settings, Saved with
+      RadioFavorites := Items.ToArray();
+    end with, Save
+  );
+  const Next: App.State := Current with
+    Settings := Stored;
+  end with;
+  if Stored.SaveFailed then
+    const Draft: M.Draft? := Current.Radio.Editing;
+    const Text: string := 'Could not save radio favorites.';
+    const Page: M.State := if Draft <> null then
+      Current.Radio with
+        Editing := Draft with
+          Error := Text;
+        end with;
+      end with
+    else
+      Current.Radio with
+        Error := Text;
+      end with
+    end if;
+    return new A.Transition<App.State, App.Msg>(
+      Next with
+        Radio := Page;
+      end with, []
+    );
+  end if;
+  const Updated: App.State := Next with
+    Radio := Current.Radio with
+      Editing := null;
+      Error := null;
+    end with;
+  end with;
+  if Remove and Next.Navigation.Active = Nav.Route.Station(Item.Id) then
+    return Update(
+      Updated with
+        Navigation := Updated.Navigation with
+          Active := Nav.Route.Page(Nav.Page.Stations);
+        end with;
+      end with,
+      M.Msg.Refresh
+    );
+  end if;
+
+  return new A.Transition<App.State, App.Msg>(Updated, []);
+end function;
+
+// Maps radio actions into the app and saves favorites through the existing preferences writer.
+public function Apply(Current: App.State; Action: M.Msg; Save: procedure(Settings.Preferences)): A.Transition<App.State, App.Msg>;
+begin
+  case Action of
+    when M.Msg.Favorite(const Item: M.Station):
+      return Persist(
+        Current,
+        Item,
+        M.Find(Current.Settings.Saved.RadioFavorites, Item.Id) <> null,
+        Save
+      );
+    when M.Msg.Save:
+      const Draft: M.Draft? := Current.Radio.Editing;
+      if Draft <> null then
+        const Url: string := M.Address(Draft.Url);
+        if Url <> '' then
+          const Address: Sys.Uri := new Sys.Uri(Url);
+          const Name: string := Draft.Name.Trim();
+          const Item: M.Station := new M.Station(
+            M.ManualId(Url), if Name = '' then
+              Address.Host
+            else
+              Name
+            end if, Url,
+            Hls := Address.AbsolutePath.EndsWith('.m3u8', Sys.StringComparison.OrdinalIgnoreCase)
+          );
+          return Persist(Current, Item, false, Save);
+        end if;
+      end if;
+    else
+  end case;
+
+  return Update(Current, Action);
+end function;
+
+end unit;

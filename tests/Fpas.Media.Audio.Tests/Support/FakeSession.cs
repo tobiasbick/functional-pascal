@@ -16,6 +16,8 @@ internal sealed class FakeSession : ISession
     /// <inheritdoc />
     public void Open(string path, long requestId = 0) => Commands.Add((nameof(Open), path));
     /// <inheritdoc />
+    public void OpenStream(Uri address, long requestId = 0) => Commands.Add((nameof(OpenStream), address));
+    /// <inheritdoc />
     public void Play(long requestId = 0) => Commands.Add((nameof(Play), null));
     /// <inheritdoc />
     public void Pause(long requestId = 0) => Commands.Add((nameof(Pause), null));

@@ -1,0 +1,66 @@
+// [Documentation](../../../doc/desktop.md#online-radio)
+
+unit FpasAmp.Ui.Player.Live;
+
+uses
+  FpasAmp.Ui.Player.Model as M, FpasAmp.Ui.Radio.Model as R,
+  Fpas.Media.Audio as Audio, System as Sys;
+
+// Selects Station and switches the player from a remembered file queue to live mode.
+public function Start(Current: M.State; Station: R.Station): M.Transition;
+begin
+  const Revision: long := Current.Revision + 1L;
+  return new M.Transition(
+    new M.State(
+      Playing := true, Station := Station, Buffering := true, Revision := Revision,
+      Volume := Current.Volume, Gains := Current.Gains, PresetsOpen := Current.PresetsOpen
+    ),
+    M.Request.Stream(Station.Url, Revision)
+  );
+end function;
+
+// Stops the live connection, retaining the station for the next Play gesture.
+public function Stop(Current: M.State): M.Transition;
+begin
+  return new M.Transition(
+    Current with
+      Playing := false;
+      Buffering := false;
+      Revision := Current.Revision + 1L;
+      Levels := [0.0F, 0.0F];
+      NowPlaying := '';
+      Error := null;
+    end with, M.Request.Unload
+  );
+end function;
+
+// Applies decoder observations for the current live station and revision.
+public function Observe(Current: M.State; Station: R.Station; Value: Audio.PlaybackEvent): M.Transition;
+begin
+  if Current.Revision <> Value.RequestId or Station.Url <> Value.Path or not Current.Playing then
+    return new M.Transition(Current);
+  end if;
+
+  if Value.State = Audio.PlaybackState.Failed or Value.State = Audio.PlaybackState.Ended then
+    return new M.Transition(
+      Current with
+        Playing := false;
+        Buffering := false;
+        Error := Value.Error ?? 'The station disconnected. Press Play to reconnect.';
+        Levels := [0.0F, 0.0F];
+        NowPlaying := '';
+      end with, M.Request.Unload
+    );
+  end if;
+  const Levels: array of float := [0.0F, 0.0F];
+  Value.Peaks.CopyTo(0, Levels, 0, Sys.Math.Min(2, Value.Peaks.Length));
+  return new M.Transition(
+    Current with
+      Buffering := Value.Buffering;
+      Levels := Levels;
+      NowPlaying := Value.NowPlaying ?? '';
+    end with
+  );
+end function;
+
+end unit;

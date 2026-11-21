@@ -1,0 +1,110 @@
+// [Documentation](../../../doc/desktop.md#shell-and-navigation)
+
+unit FpasAmp.Ui.App.Subscriptions;
+
+uses
+  FpasAmp.Ui.App.Model as M, FpasAmp.Ui.Settings.Model as SettingsModel,
+  FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.App.Analysis as Analysis,
+  FpasAmp.Ui.Player.Model as PlayerModel, FpasAmp.Ui.Player.Playback as Playback,
+  FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Library.Inventory.Progress as Progress,
+  FpasAmp.Library.Inventory.Monitoring as Monitoring, FpasAmp.Library.Metadata.Monitoring as Metadata,
+  FpasAmp.Library.Playlists.Model as Playlists,
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Composition as Composition,
+  System as Sys, System.Collections.Generic as C, System.Collections.Immutable as I,
+  System.Threading as T, System.Threading.Tasks as Tasks;
+
+function Failure(Error: Sys.Exception): M.Msg;
+begin
+  return M.Msg.Settings(SettingsModel.Msg.LibraryFailed(Error.Message));
+end function;
+
+function Stopped(Error: Sys.Exception): M.Msg;
+begin
+  return M.Msg.Settings(SettingsModel.Msg.LibraryStopped(Error.Message));
+end function;
+
+// Returns subscriptions for Library and Port and resumes waveform analysis for Current.
+public function Watch(Library: Monitoring.Session; Port: Playback.Connection; Current: PlayerModel.State): array of Mvu.Command<M.Msg>;
+begin
+  const Commands: C.List<Mvu.Command<M.Msg>> := new C.List<Mvu.Command<M.Msg>>(
+    [
+      Mvu.StartBackground<M.Msg>(
+        'library-inventory',
+        async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+          while await Library.Changes.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
+            const Value: Inventory.Snapshot := await Library.Changes.ReadAsync(
+              Cancellation
+            ).ConfigureAwait(false);
+            await Post(
+              M.Msg.Settings(SettingsModel.Msg.InventoryReceived(Value))
+            ).ConfigureAwait(false);
+          end while;
+        end function,
+        Stopped
+      ),
+      Mvu.StartBackground<M.Msg>(
+        'library-progress',
+        async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+          while await Library.Progress.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
+            const Value: Progress.Snapshot := await Library.Progress.ReadAsync(
+              Cancellation
+            ).ConfigureAwait(false);
+            await Post(
+              M.Msg.Settings(SettingsModel.Msg.ProgressReceived(Value))
+            ).ConfigureAwait(false);
+          end while;
+        end function,
+        Stopped
+      )
+    ]
+  );
+  for Work: Mvu.Command<PlayerModel.Msg> in Playback.Watch(Port) do
+    Commands.Add(Composition.MapCommand<PlayerModel.Msg, M.Msg>(Work, M.Msg.Player, 'player'));
+  end for;
+  const Tags: Metadata.Session? := Library.Metadata;
+  if Current.WaveformKey <> '' then
+    Commands.Add(Analysis.Waveform(Current, Tags));
+  end if;
+
+  if Tags <> null then
+    Commands.Add(
+      Mvu.StartBackground<M.Msg>(
+        'navigation-playlists',
+        async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+          await Tags.Playlists.ObserveAsync(
+            function(Items: I.ImmutableArray<Playlists.Summary>): Tasks.Task => Post(
+              M.Msg.Navigation(Nav.Msg.Received(Items))
+            ),
+            Cancellation
+          ).ConfigureAwait(false);
+        end function,
+        function(Error: Sys.Exception): M.Msg => M.Msg.Navigation(Nav.Msg.Failed(Error.Message))
+      )
+    );
+    Commands.Add(
+      Mvu.StartBackground<M.Msg>(
+        'library-metadata',
+        async function(_Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+          await Tags.Completion.WaitAsync(Cancellation).ConfigureAwait(false);
+        end function, Stopped
+      )
+    );
+  end if;
+
+  if Tags = null then
+    Commands.Add(
+      Mvu.StartBackground<M.Msg>(
+        'navigation-playlists',
+        async function(Post: function(M.Msg): Tasks.Task; _Cancellation: T.CancellationToken): Tasks.Task begin
+          await Post(
+            M.Msg.Navigation(Nav.Msg.Received(I.ImmutableArray<Playlists.Summary>.Empty))
+          ).ConfigureAwait(false);
+        end function, Failure
+      )
+    );
+  end if;
+
+  return Commands.ToArray();
+end function;
+
+end unit;

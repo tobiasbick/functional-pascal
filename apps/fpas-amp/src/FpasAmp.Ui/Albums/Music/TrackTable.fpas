@@ -19,13 +19,13 @@ const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
 const SortKeys: array of int := [0, 3, 4];
 const LibraryKeys: array of int := [0, 1, 2, 5, 3, 4];
 
-function Play(Item: Tracks.Entry; Name: string; Playback: Player.State): E.Element<M.Msg>;
+function Play(Item: Tracks.Entry; Id: string; Name: string; Playback: Player.State; Action: M.Msg): E.Element<M.Msg>;
 begin
   const Track: Tracks.Entry? := Player.Track(Playback);
   const Active: bool := Track <> null and Track.FileId = Item.FileId;
   const Playing: bool := Active and Playback.Playing;
   return Icons.IconButton<M.Msg>(
-    'track-play-' + Item.FileId.ToString(),
+    'track-play-' + Id,
     Sys.Char.ConvertFromUtf32(
       if Playing then
         $E12E
@@ -40,7 +40,7 @@ begin
     else
       'Play '
     end if) + Name,
-    M.Msg.Play(Item.FileId), new Icons.Options(
+    Action, new Icons.Options(
       Variant := if Active then
         S.ButtonVariant.Primary
       else
@@ -116,7 +116,7 @@ begin
         [
           E.Row<M.Msg>(
             new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8)), Align := L.Alignment.Center),
-            Play(Item, Name, Playback),
+            Play(Item, Id, Name, Playback, M.Msg.Play(Item.FileId)),
             E.Size<M.Msg>(
               E.Column<M.Msg>(
                 new L.Flow(
@@ -138,10 +138,19 @@ begin
   );
 end function;
 
-function LibrarySong(Current: M.State; Index: int; Covers: I.ImmutableDictionary<string, Imaging.Bitmap?>; Playback: Player.State): Grid.Row<M.Msg>;
+function LibrarySong(Current: M.State; Index: int; Covers: I.ImmutableDictionary<string, Imaging.Bitmap?>; Playback: Player.State; Playlist: bool): Grid.Row<M.Msg>;
 begin
   const Item: Tracks.Entry := Current.Shown[Index];
-  const Id: string := Item.FileId.ToString();
+  const Id: string := Item.FileId.ToString() + if Playlist then
+    '-' + Index.ToString()
+  else
+    ''
+  end if;
+  const Action: M.Msg := if Playlist then
+    M.Msg.PlaySlot(Current.Shown, Index)
+  else
+    M.Msg.Play(Item.FileId)
+  end if;
   const Name: string := Browse.Title(Item);
   var Cover: Imaging.Bitmap? := null;
   discard Covers.TryGetValue(Item.AlbumId, out Cover);
@@ -151,7 +160,8 @@ begin
         [
           E.Row<M.Msg>(
             new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8)), Align := L.Alignment.Center),
-            Play(Item, Name, Playback), Artwork.Build<M.Msg>('track-cover-' + Id, Cover, 30),
+            Play(Item, Id, Name, Playback, Action),
+            Artwork.Build<M.Msg>('track-cover-' + Id, Cover, 30),
             E.Size<M.Msg>(
               E.Styled<M.Msg>(Texts.Text<M.Msg>(Name, Texts.Appearance.Label), S.Role.SingleLine),
               Fill
@@ -169,12 +179,17 @@ end function;
 // Builds the virtual track table for `Current` using the available `Width` in logical points.
 // Covers selects the whole-library layout and supplies realized album thumbnails.
 // Playback identifies the current file and its transport state in either layout.
+// Playlist gives repeated file rows distinct keys and activation slots.
 // Returns the virtual table or the appropriate empty state.
-public function Build(Current: M.State; Width: int; Playback: Player.State; Covers: I.ImmutableDictionary<string, Imaging.Bitmap?>? := null): E.Element<M.Msg>;
+public function Build(Current: M.State; Width: int; Playback: Player.State; Covers: I.ImmutableDictionary<string, Imaging.Bitmap?>? := null; Playlist: bool := false): E.Element<M.Msg>;
 requires Width > 0;
   function Activate(Index: int): M.Msg;
   begin
-    return M.Msg.Play(Current.Shown[Index].FileId);
+    return if Playlist then
+      M.Msg.PlaySlot(Current.Shown, Index)
+    else
+      M.Msg.Play(Current.Shown[Index].FileId)
+    end if;
   end function;
   function Change(Value: Grid.Value): M.Msg;
   begin
@@ -185,7 +200,7 @@ requires Width > 0;
     const Key: int := if Order.Column >= 0 and Order.Column < Keys.Length then
       Keys[Order.Column]
     else
-      if Covers = null then
+      if Covers = null or Playlist then
         -1
       else
         0
@@ -204,7 +219,11 @@ begin
         if Covers = null then
           'No tracks in this album'
         else
-          'No music in your library'
+          if Playlist then
+            'No indexed tracks in this playlist'
+          else
+            'No music in your library'
+          end if
         end if
       else
         'No matching tracks'
@@ -239,7 +258,13 @@ begin
         new Grid.Column('', 44.0F, Fixed := true)
       ],
       Current.Shown.Length,
-      function(Index: int): Grid.Row<M.Msg> => LibrarySong(Current, Index, Covers, Playback),
+      function(Index: int): Grid.Row<M.Msg> => LibrarySong(
+        Current,
+        Index,
+        Covers,
+        Playback,
+        Playlist
+      ),
       Value,
       Change,
       new Grid.Options(

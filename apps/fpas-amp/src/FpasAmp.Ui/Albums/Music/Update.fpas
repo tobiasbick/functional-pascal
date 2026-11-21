@@ -145,7 +145,7 @@ public function Apply(Current: M.State; Message: M.Msg; Library: Metadata.Sessio
 begin
   var Next: M.State := Current;
   case Message of
-    when M.Msg.Back, M.Msg.Play(_):
+    when M.Msg.Back, M.Msg.Play(_), M.Msg.PlaySlot(_, _):
       return new A.Transition<M.State, M.Msg>(Current, Empty);
     when M.Msg.Loaded(
       const Visit: long,

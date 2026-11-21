@@ -1,0 +1,148 @@
+// [Documentation](../../../doc/desktop.md#online-radio)
+
+unit FpasAmp.Ui.Radio.Update;
+
+uses
+  FpasAmp.Ui.Radio.Model as M, FpasAmp.Ui.Radio.Directory as Directory,
+  Fpas.Ui.Mvu.Application as A, System as Sys, System.Threading as T,
+  System.Threading.Tasks as Tasks, System.Diagnostics as D;
+
+function Search(Current: M.State; Filter: M.Query): A.Transition<M.State, M.Msg>;
+begin
+  const Revision: long := Current.Revision + 1L;
+  return new A.Transition<M.State, M.Msg>(
+    Current with
+      Filter := Filter;
+      Searching := true;
+      Error := null;
+      Revision := Revision;
+    end with,
+    [
+      A.StartBackground<M.Msg>(
+        'search',
+        async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
+          await Tasks.Task.Delay(275, Stop).ConfigureAwait(false);
+          const Items: array of M.Station := await Directory.Search(
+            Filter,
+            Stop
+          ).ConfigureAwait(false);
+          await Post(M.Msg.Found(Revision, Items)).ConfigureAwait(false);
+        end function,
+        function(Error: Sys.Exception): M.Msg => M.Msg.Failed(Revision, Error.Message)
+      )
+    ]
+  );
+end function;
+
+// Updates the radio search and editor and launches observable directory effects.
+public function Apply(Current: M.State; Action: M.Msg): A.Transition<M.State, M.Msg>;
+begin
+  var Next: M.State := Current;
+  const Draft: M.Draft? := Current.Editing;
+  case Action of
+    when M.Msg.Refresh:
+      return Search(Current, Current.Filter);
+    when M.Msg.Name(const Value: string):
+      return Search(
+        Current, Current.Filter with
+          Name := Value;
+        end with
+      );
+    when M.Msg.FilterPanel(const Key: string):
+      Next := Current with
+        FilterOpen := Key;
+      end with;
+    when M.Msg.Filter(const Key: string, const Value: string):
+      const Filter: M.Query := Current.Filter;
+      return Search(
+        Current, case Key of
+          when 'Country': Filter with
+            Country := Value;
+          end with;
+          when 'Language': Filter with
+            Language := Value;
+          end with;
+          else Filter with
+            Genre := Value;
+          end with;
+        end case
+      );
+    when M.Msg.Found(const Revision: long, const Items: array of M.Station):
+      if Revision = Current.Revision then
+        Next := Current with
+          Items := Items;
+          Loaded := true;
+          Searching := false;
+          Cursor := -1;
+          Anchor := -1;
+        end with;
+      end if;
+    when M.Msg.Failed(const Revision: long, const Message: string):
+      if Revision = Current.Revision then
+        Next := Current with
+          Error := Message;
+          Searching := false;
+        end with;
+      end if;
+    when M.Msg.Navigate(const Cursor: int, const Anchor: int):
+      Next := Current with
+        Cursor := Cursor;
+        Anchor := Anchor;
+      end with;
+    when M.Msg.Add:
+      Next := Current with
+        Editing := new M.Draft();
+      end with;
+    when M.Msg.EditName(const Value: string):
+      if Draft <> null then
+        Next := Current with
+          Editing := Draft with
+            Name := Value;
+            Error := null;
+          end with;
+        end with;
+      end if;
+    when M.Msg.EditUrl(const Value: string):
+      if Draft <> null then
+        Next := Current with
+          Editing := Draft with
+            Url := Value;
+            Error := null;
+          end with;
+        end with;
+      end if;
+    when M.Msg.Cancel:
+      Next := Current with
+        Editing := null;
+      end with;
+    when M.Msg.Website(const Value: string):
+      const Url: string := M.Address(Value);
+      if Url <> '' then
+        return new A.Transition<M.State, M.Msg>(
+          Current,
+          [
+            A.StartBackground<M.Msg>(
+              'website',
+              async function(_Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
+                Stop.ThrowIfCancellationRequested();
+                const Start: D.ProcessStartInfo := new D.ProcessStartInfo(Url);
+                Start.UseShellExecute := true;
+                using const Launched: D.Process? := D.Process.Start(Start);
+                await Tasks.Task.CompletedTask;
+              end function,
+              function(_Error: Sys.Exception): M.Msg => M.Msg.WebsiteFailed
+            )
+          ]
+        );
+      end if;
+    when M.Msg.WebsiteFailed:
+      Next := Current with
+        Error := 'Could not open the station website.';
+      end with;
+    when M.Msg.Favorite(_), M.Msg.Save:
+  end case;
+
+  return new A.Transition<M.State, M.Msg>(Next, []);
+end function;
+
+end unit;

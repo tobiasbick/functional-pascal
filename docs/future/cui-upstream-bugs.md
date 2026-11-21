@@ -30,7 +30,8 @@ tests cover rejection, stacked overflow and the explicit-range alternative.
 
 - Upstream: [Issue #109](https://github.com/yappologistic/CUI/issues/109) and
   [PR #110](https://github.com/yappologistic/CUI/pull/110). The PR includes
-  regression test `0d6fac6` and fix `407870d`.
+  regression test `0d6fac6`, fix `407870d` and review follow-up `3cbf6b2`,
+  which also ends the drag when an earlier item is removed.
 
 Reproduced on Windows using direct `cui_gantt` and `cui_week_calendar` calls
 with the vendored snapshot at `a5c9ef5`.
@@ -160,6 +161,9 @@ selects a Unicode directory, cancels the next dialog and presents another frame.
 
 [Upstream issue #100](https://github.com/yappologistic/CUI/issues/100) reports
 the same routing defect with an image viewer inside a carousel.
+[PR #108](https://github.com/yappologistic/CUI/pull/108) applies the node
+transformation in `cui__paint_wheel_hit`. A local dragged-dialog check at its
+head `608376a` takes the wheel at the moved canvas; `71c383f` misses it there.
 
 At the vendored revision `71c383f`, register a wheel region in a canvas in a
 draggable dialog. Scroll over it, drag the header 112 logical points right

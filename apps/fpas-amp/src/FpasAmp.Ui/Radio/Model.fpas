@@ -1,0 +1,147 @@
+// [Documentation](../../../doc/desktop.md#online-radio)
+
+unit FpasAmp.Ui.Radio.Model;
+
+uses System as Sys, System.Text as Text, System.Security.Cryptography as Crypto;
+
+// A station from the directory or a stream entered by the listener.
+public type Station = record
+  // Stable directory UUID or hash of a manually added URL.
+  public Id: string;
+  // Display name.
+  public Name: string;
+  // Resolved HTTP or HTTPS audio URL.
+  public Url: string;
+  // Country name, if supplied.
+  public Country: string := '';
+  // Languages listed by the station.
+  public Language: string := '';
+  // Genre tags listed by the station.
+  public Genre: string := '';
+  // Audio codec hint.
+  public Codec: string := '';
+  // Announced bitrate in kbps, or zero if unknown.
+  public Bitrate: int := 0;
+  // Whether the URL is an HLS playlist.
+  public Hls: bool := false;
+  // Public station website, if available.
+  public Website: string := '';
+end record;
+
+// Returns the normalized HTTP(S) address for Value, or an empty string.
+public function Address(Value: string): string;
+begin
+  var Uri: Sys.Uri? := null;
+  if Sys.Uri.TryCreate(Value.Trim(), Sys.UriKind.Absolute, out Uri) then
+    case Uri of
+      when is Sys.Uri as Parsed:
+        if (Parsed.Scheme = 'https' or Parsed.Scheme = 'http') and Parsed.Host <> ''
+          and Parsed.UserInfo = ''
+        then
+          return Parsed.AbsoluteUri;
+        end if;
+      else
+    end case;
+  end if;
+
+  return '';
+end function;
+
+// Returns a stable key for the normalized URL of a manually added station.
+public function ManualId(Url: string): string;
+begin
+  return Sys.Convert.ToHexString(Crypto.SHA256.HashData(Text.Encoding.UTF8.GetBytes(Url)));
+end function;
+
+// Looks for Id in the saved or browsed stations.
+public function Find(Items: array of Station; Id: string): Station?;
+begin
+  for Item: Station in Items do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  return null;
+end function;
+
+// A manual station draft.
+public type Draft = record
+  // Optional display name.
+  public Name: string := '';
+  // A failed attempt to save this station.
+  public Error: string? := null;
+  // Address currently entered.
+  public Url: string := '';
+end record;
+
+// Filters sent to the radio directory.
+public type Query = record
+  // Station name substring.
+  public Name: string := '';
+  // Country name.
+  public Country: string := '';
+  // Language name.
+  public Language: string := '';
+  // Genre or other station tag.
+  public Genre: string := '';
+end record;
+
+// Search and editor state for the radio section.
+public type State = record
+  // Current search criteria.
+  public Filter: Query := new Query();
+  // Incremented for each search, so late replies cannot replace a newer result.
+  public Revision: long := 0L;
+  // Latest successful search result.
+  public Items: array of Station := [];
+  // Whether the directory has delivered a result.
+  public Loaded: bool := false;
+  // Whether a search is in flight.
+  public Searching: bool := false;
+  // Open filter editor, or an empty string.
+  public FilterOpen: string := '';
+  // Manual station editor, or null when closed.
+  public Editing: Draft? := null;
+  // Last error for the visible radio page.
+  public Error: string? := null;
+  // Table cursor and range anchor within the current result.
+  public Cursor: int := -1;
+  public Anchor: int := -1;
+end record;
+
+// Radio page actions and asynchronous results.
+public type Msg = variant
+  // Re-run the current search.
+  Refresh;
+  // Edit the name search.
+  Name(Value: string);
+  // Open one filter editor, or dismiss it with an empty key.
+  FilterPanel(Key: string);
+  // Set a directory filter.
+  Filter(Key: string; Value: string);
+  // Replace the search results if Revision is current.
+  Found(Revision: long; Items: array of Station);
+  // Report directory failure for Revision.
+  Failed(Revision: long; Text: string);
+  // Retain the table cursor and range anchor across renders.
+  Navigate(Cursor: int; Anchor: int);
+  // Select or remove a favorite station.
+  Favorite(Item: Station);
+  // Open the manual stream editor.
+  Add;
+  // Edit the manual station label.
+  EditName(Value: string);
+  // Edit the manual stream address.
+  EditUrl(Value: string);
+  // Save the manual station as a favorite.
+  Save;
+  // Dismiss the manual editor.
+  Cancel;
+  // Open a station homepage.
+  Website(Url: string);
+  // Report that the station homepage could not open.
+  WebsiteFailed;
+end variant;
+
+end unit;

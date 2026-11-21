@@ -27,6 +27,15 @@ begin
   raise new Sys.InvalidOperationException('Missing tag editor control: ' + Id);
 end function;
 
+procedure Capture(Session: Gui.Session<App.Msg>; FileName: string);
+begin
+  const Directory: string? := Sys.Environment.GetEnvironmentVariable('FPAS_AMP_UI_ARTIFACTS');
+  if Directory <> null then
+    discard IO.Directory.CreateDirectory(Directory);
+    Session.CapturePng(IO.Path.Combine(Directory, FileName));
+  end if;
+end procedure;
+
 function ProviderFixture(Message: Editor.Msg; Id: string): Mvu.Command<App.Msg>;
 begin
   return Mvu.StartBackground<App.Msg>(
@@ -222,6 +231,13 @@ begin
   X.Assert.Equal<string>('A corrected recording', Control(Session, 'tag-take-title').Text);
   X.Assert.False(Control(Session, 'tag-match').Enabled);
   Click(Session, Control(Session, 'tag-take-title').Bounds);
+  Capture(Session, 'tag-editor-track.png');
+  if Sys.Environment.GetEnvironmentVariable('FPAS_AMP_UI_ARTIFACTS') <> null then
+    Click(Session, Control(Session, 'tag-tabs', '3').Bounds);
+    Capture(Session, 'tag-editor-custom.png');
+    Click(Session, Control(Session, 'tag-tabs', '0').Bounds);
+  end if;
+
   Deliver(Session, Lookup);
   X.Assert.Contains<string>('MusicBrainz · next request in 4 s', Session.Snapshot().Text);
   X.Assert.False(Control(Session, 'tag-search').Enabled);
@@ -305,6 +321,9 @@ public type NativeTagEditorTests = record
     const Path: string := IO.Path.Combine(Root.Path, 'editor.mp3');
     IO.File.Copy(IO.Path.Combine(Sys.AppContext.BaseDirectory, 'Fixtures', 'silence.mp3'), Path);
     const File: Atl.Track := new Atl.Track(Path);
+    File.Title := 'Blue Hour';
+    File.Artist := 'Mara Vale';
+    File.Album := 'North Pier Sessions';
     const Extra: C.IDictionary<string?, string?>? := File.AdditionalFields;
     if Extra = null then
       raise new Sys.InvalidOperationException('Missing fixture tags.');

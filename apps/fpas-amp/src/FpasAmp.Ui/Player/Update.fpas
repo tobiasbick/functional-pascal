@@ -6,7 +6,8 @@ unit FpasAmp.Ui.Player.Update;
 uses
   FpasAmp.Ui.Fingerprints as Fp, FpasAmp.Ui.Player.Model as M, FpasAmp.Library.Metadata.Model as Tracks,
   FpasAmp.Ui.Albums.Music.Browse as Browse, FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Player.Presets as Presets, Fpas.Media.Audio as Audio,
-  System as Sys, System.Collections.Immutable as I;
+  System as Sys, System.Collections.Immutable as I,
+  FpasAmp.Ui.Radio.Model as Radio, FpasAmp.Ui.Player.Live as Live;
 
 const RestartAfter: double := 3000.0;
 
@@ -51,6 +52,9 @@ begin
   const Track: Tracks.Entry := Current.Queue[Index];
   const Next: M.State := Current with
     Index := Index;
+    Station := null;
+    Buffering := false;
+    NowPlaying := '';
     Fingerprint := if Fp.Matches(Current.Fingerprint, Track) then
       Current.Fingerprint
     else
@@ -168,6 +172,7 @@ public function Apply(Current: M.State; Message: M.Msg; Allowed: function(Tracks
 requires Current.Index >= -1;
 begin
   const Track: Tracks.Entry? := M.Track(Current);
+  const Station: Radio.Station? := Current.Station;
   const Revision: long := Current.Revision + 1L;
   case Message of
     when M.Msg.Play(
@@ -189,6 +194,12 @@ begin
 
         return Idle(Current);
       end if;
+    when M.Msg.PlayStation(const Selected: Radio.Station):
+      if Station <> null and Station.Id = Selected.Id and Current.Playing then
+        return Live.Stop(Current);
+      end if;
+
+      return Live.Start(Current, Selected);
     when M.Msg.SourceLost(const Advance: bool):
       if Advance and Track <> null then
         const Slot: int := AvailableIndex(Current, Current.Index + 1, 1, Allowed);
@@ -209,6 +220,14 @@ begin
 
       return Idle(Current);
     when M.Msg.Toggle:
+      if Station <> null then
+        if Current.Playing then
+          return Live.Stop(Current);
+        end if;
+
+        return Live.Start(Current, Station);
+      end if;
+
       if Track <> null then
         const Next: M.State := Current with
           Playing := not Current.Playing;
@@ -314,6 +333,10 @@ begin
         );
       end if;
     when M.Msg.Observed(const Value: Audio.PlaybackEvent):
+      if Station <> null then
+        return Live.Observe(Current, Station, Value);
+      end if;
+
       return Observe(Current, Value, Allowed);
     when M.Msg.Measured(const Key: string, const Levels: array of float):
       if Key = Current.WaveformKey and Key <> '' then

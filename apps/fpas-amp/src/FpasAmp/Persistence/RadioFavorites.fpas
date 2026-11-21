@@ -1,0 +1,50 @@
+// [Documentation](../../../doc/desktop.md#online-radio)
+
+unit FpasAmp.Persistence.RadioFavorites;
+
+uses
+  FpasAmp.Persistence.JsonFields as Fields, FpasAmp.Ui.Radio.Model as Radio,
+  System as Sys, System.Collections.Generic as C, System.Text.Json as J;
+
+function Read(Item: J.JsonElement; Key: string): string;
+begin
+  return Fields.StringValue(Fields.Field(Item, Key)) ?? '';
+end function;
+
+// Decodes the saved array, keeping valid stations and marking damaged entries.
+public function Decode(Items: J.JsonElement; ref Valid: bool): array of Radio.Station;
+begin
+  if Items.ValueKind = J.JsonValueKind.Undefined then
+    return [];
+  end if;
+
+  if Items.ValueKind <> J.JsonValueKind.Array then
+    Valid := false;
+    return [];
+  end if;
+
+  const Result: C.List<Radio.Station> := new C.List<Radio.Station>();
+  const Ids: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+  for Item: J.JsonElement in Items.EnumerateArray() do
+    const Id: string := Read(Item, 'id');
+    const Name: string := Read(Item, 'name').Trim();
+    const Url: string := Radio.Address(Read(Item, 'url'));
+    const Bitrate: double? := Fields.Number(Fields.Field(Item, 'bitrate'), 0.0, 20000.0);
+    if Id = '' or Name = '' or Url = '' or not Ids.Add(Id) then
+      Valid := false;
+    else
+      Result.Add(
+        new Radio.Station(
+          Id, Name, Url, Read(Item, 'country'), Read(Item, 'language'),
+          Read(Item, 'genre'), Read(Item, 'codec'), cast<int>(Bitrate ?? 0.0),
+          Fields.BooleanValue(Fields.Field(Item, 'hls')) ?? false,
+          Radio.Address(Read(Item, 'website'))
+        )
+      );
+    end if;
+  end for;
+
+  return Result.ToArray();
+end function;
+
+end unit;

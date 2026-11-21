@@ -17,6 +17,8 @@ public type Page = enum
   Genres;
   // App preferences and music sources.
   Settings;
+  // Searchable online radio directory.
+  Stations;
 end enum;
 
 // Exactly one selected destination, including source and durable local playlists.
@@ -35,6 +37,8 @@ public type Route = variant
   GenreAlbum(GenreId: string; AlbumId: string);
   // A playlist identified independently of its display name.
   Playlist(Identity: Lists.Key);
+  // Details for one saved radio station.
+  Station(Id: string);
 end variant;
 
 // Owner-thread navigation state; background work publishes immutable summaries.
@@ -91,6 +95,8 @@ begin
       return 'genre:' + Id + ':' + AlbumId;
     when Route.Playlist(const Identity: Lists.Key):
       return 'playlist:' + Identity.Storage.ToString().ToLowerInvariant() + ':' + Identity.Id;
+    when Route.Station(const Id: string):
+      return 'station:' + Id;
   end case;
 end function;
 
@@ -116,6 +122,15 @@ begin
   return Section = 'albums' or Section = 'artists' or Section = 'genres';
 end function;
 
+// Whether Destination uses the full track-table layout.
+public function SongTable(Destination: Route): bool;
+begin
+  return case Destination of
+    when Route.Page(Page.Music), Route.Playlist(_): true;
+    else false;
+  end case;
+end function;
+
 function HexId(Value: string): bool;
 begin
   if Value.Length <> 64 then
@@ -139,13 +154,21 @@ begin
     Page.Albums,
     Page.Artists,
     Page.Genres,
-    Page.Settings
+    Page.Settings,
+    Page.Stations
   ] do
     if Value = Item.ToString().ToLowerInvariant() then
       return Route.Page(Item);
     end if;
   end for;
   const Parts: array of string := Value.Split(#58);
+  var StationId: Sys.Guid := Sys.Guid.Empty;
+  if Parts.Length = 2 and Parts[0] = 'station'
+    and (HexId(Parts[1]) or Sys.Guid.TryParseExact(Parts[1], 'N', out StationId))
+  then
+    return Route.Station(Parts[1]);
+  end if;
+
   if Parts.Length = 2 and Parts[0] = 'album' and HexId(Parts[1]) then
     return Route.Album(Parts[1].ToUpperInvariant());
   end if;

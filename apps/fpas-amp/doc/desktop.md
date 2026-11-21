@@ -4,7 +4,8 @@ The desktop executable loads user preferences, starts the library, restores the
 saved destination and queue, and runs the CUI shell. The executable owns the
 library session and awaits its disposal when the shell exits. The shell owns
 the audio session and its subscriptions, including a playback session supplied
-by a host or a test. For setup and user-facing behavior, see the [app README](../README.md).
+by a host or a test. For setup and user-facing behavior, see the
+[documentation index](README.md).
 
 ## Shell and navigation
 
@@ -16,17 +17,20 @@ publish inventory, scan progress, catalogue, playlist and playback changes.
 Navigation persists stable route identities. A playlist route is validated
 after the first successful summary snapshot, and falls back to Music if the
 playlist has disappeared. A snapshot failure keeps the previous destinations
-available. Playlist destinations currently show a summary heading and any read
-warning. A window last closed on the retired Ratings page reopens on Music.
+available. A window last closed on the retired Ratings page reopens on Music.
 
 ## Browsing music and collections
 
-Music and album track lists share the track table and details view. Activating
+Music, albums and playlists share the track table and details view. Activating
 a track uses the displayed selection and its order for the playback queue.
 Artist and genre navigation scope the shared album browser by group ID. The
 browser keeps grid state when entering a release and restores it when returning.
 The shell reads realized ranges from native layout and posts them to Music or
 the album browser, which schedule cover work for the current range.
+A playlist starts in its stored order and retains repeated tracks. Its table
+lists entries that resolve to indexed files. Missing files and remote playlist
+entries stay in storage and are counted in the total. The playback bookmark
+records the playlist key and selection so startup can rebuild its queue.
 
 ## Editing track tags
 
@@ -85,6 +89,25 @@ fingerprinting also runs on demand from track details. Work is associated with
 the current track and can be cancelled when it changes. The [library
 reference](library.md#on-demand-waveforms) describes the waveform cache.
 
+## Online radio
+
+**Radio → Stations** searches the public Radio Browser directory by name,
+country, language and genre. Searches are cancellable, try another mirror on
+failure and show up to 100 matching stations. Results arrive independently of
+the music library. [Radio Browser API](https://docs.radio-browser.info/)
+
+Star a directory result or use **Add stream URL** to save an HTTP or HTTPS
+station under Radio. Favorites are stored in order in `settings.json` and can
+be opened and played without querying the directory again. A favorite's page
+shows available station details and the on-air title when supplied by the
+stream. The sidebar lists local music playlists below Radio.
+
+Radio playback uses `ffmpeg` on PATH to decode direct audio and HLS streams.
+The player shares its equalizer, volume and stereo meters with local music.
+It shows the live or buffering state in place of the waveform. Stop closes the
+stream. Press Play after a disconnect to reconnect. Streams do not start
+automatically when the app opens.
+
 ## Settings and scan control
 
 Settings owns the source editor, appearance preferences and inventory progress
@@ -116,8 +139,7 @@ include a seek still in flight. The shell also saves pending mixer changes.
 The JSON store validates values before publishing a replacement and serializes
 file access with a per-user mutex. When reading a damaged document, it recovers
 usable fields, falls back to defaults where necessary and backs up the original
-bytes before publishing repaired data. See the [file locations and
-fields](../README.md#user-files).
+bytes before publishing repaired data. See [user files and recovery](user-files.md).
 
 ## Windows desktop launch
 
@@ -168,7 +190,7 @@ Run them with the local SDK and native GUI prerequisites described in the
 ## Source files
 
 <details>
-<summary>Browse 84 source files</summary>
+<summary>Browse source files</summary>
 
 - `./`
   - [fpas-amp.slnx](../fpas-amp.slnx)
@@ -181,6 +203,7 @@ Run them with the local SDK and native GUI prerequisites described in the
   - [JsonFields.fpas](../src/FpasAmp/Persistence/JsonFields.fpas)
   - [JsonRecovery.fpas](../src/FpasAmp/Persistence/JsonRecovery.fpas)
   - [PlayerState.fpas](../src/FpasAmp/Persistence/PlayerState.fpas)
+  - [RadioFavorites.fpas](../src/FpasAmp/Persistence/RadioFavorites.fpas)
   - [UserFiles.fpas](../src/FpasAmp/Persistence/UserFiles.fpas)
 - `src/FpasAmp.Ui/Albums/`
   - [Artwork.fpas](../src/FpasAmp.Ui/Albums/Artwork.fpas)
@@ -216,23 +239,32 @@ Run them with the local SDK and native GUI prerequisites described in the
   - [Browsing.fpas](../src/FpasAmp.Ui/App/Browsing.fpas)
   - [Controller.fpas](../src/FpasAmp.Ui/App/Controller.fpas)
   - [Model.fpas](../src/FpasAmp.Ui/App/Model.fpas)
+  - [Radio.fpas](../src/FpasAmp.Ui/App/Radio.fpas)
+  - [Subscriptions.fpas](../src/FpasAmp.Ui/App/Subscriptions.fpas)
 - `src/FpasAmp.Ui/`
   - [Fingerprints.fpas](../src/FpasAmp.Ui/Fingerprints.fpas)
   - [FpasAmp.Ui.fpasproj](../src/FpasAmp.Ui/FpasAmp.Ui.fpasproj)
   - [Shell.fpas](../src/FpasAmp.Ui/Shell.fpas)
 - `src/FpasAmp.Ui/Music/`
   - [LibraryPage.fpas](../src/FpasAmp.Ui/Music/LibraryPage.fpas)
+  - [Playlist.fpas](../src/FpasAmp.Ui/Music/Playlist.fpas)
 - `src/FpasAmp.Ui/Navigation/`
   - [Model.fpas](../src/FpasAmp.Ui/Navigation/Model.fpas)
   - [Update.fpas](../src/FpasAmp.Ui/Navigation/Update.fpas)
   - [View.fpas](../src/FpasAmp.Ui/Navigation/View.fpas)
 - `src/FpasAmp.Ui/Player/`
   - [Availability.fpas](../src/FpasAmp.Ui/Player/Availability.fpas)
+  - [Live.fpas](../src/FpasAmp.Ui/Player/Live.fpas)
   - [Model.fpas](../src/FpasAmp.Ui/Player/Model.fpas)
   - [Playback.fpas](../src/FpasAmp.Ui/Player/Playback.fpas)
   - [Presets.fpas](../src/FpasAmp.Ui/Player/Presets.fpas)
   - [Update.fpas](../src/FpasAmp.Ui/Player/Update.fpas)
   - [View.fpas](../src/FpasAmp.Ui/Player/View.fpas)
+- `src/FpasAmp.Ui/Radio/`
+  - [Directory.fpas](../src/FpasAmp.Ui/Radio/Directory.fpas)
+  - [Model.fpas](../src/FpasAmp.Ui/Radio/Model.fpas)
+  - [Update.fpas](../src/FpasAmp.Ui/Radio/Update.fpas)
+  - [View.fpas](../src/FpasAmp.Ui/Radio/View.fpas)
 - `src/FpasAmp.Ui/Settings/`
   - [DatabaseActions.fpas](../src/FpasAmp.Ui/Settings/DatabaseActions.fpas)
   - [Editing.fpas](../src/FpasAmp.Ui/Settings/Editing.fpas)
@@ -278,6 +310,7 @@ Run them with the local SDK and native GUI prerequisites described in the
   - [NativeMusic.fpas](../tests/FpasAmp.Ui.Tests/NativeMusic.fpas)
   - [NativeNavigation.fpas](../tests/FpasAmp.Ui.Tests/NativeNavigation.fpas)
   - [NativePlayback.fpas](../tests/FpasAmp.Ui.Tests/NativePlayback.fpas)
+  - [NativeRadio.fpas](../tests/FpasAmp.Ui.Tests/NativeRadio.fpas)
   - [NativeShell.fpas](../tests/FpasAmp.Ui.Tests/NativeShell.fpas)
   - [NativeTrackNavigation.fpas](../tests/FpasAmp.Ui.Tests/NativeTrackNavigation.fpas)
   - [NativeTrackRating.fpas](../tests/FpasAmp.Ui.Tests/NativeTrackRating.fpas)

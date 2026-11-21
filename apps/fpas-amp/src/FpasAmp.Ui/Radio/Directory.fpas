@@ -1,0 +1,124 @@
+// [Documentation](../../../doc/desktop.md#online-radio)
+
+unit FpasAmp.Ui.Radio.Directory;
+
+uses
+  FpasAmp.Ui.Radio.Model as M, System as Sys, System.Collections.Generic as C,
+  System.Net.Http as H, System.Text.Json as J, System.IO as IO,
+  System.Threading as T, System.Threading.Tasks as Tasks;
+
+const Mirrors: array of string := [
+  'https://de1.api.radio-browser.info',
+  'https://nl1.api.radio-browser.info',
+  'https://at1.api.radio-browser.info'
+];
+const Maximum: int := 100;
+
+function Create(): H.HttpClient;
+begin
+  const Client: H.HttpClient := new H.HttpClient();
+  Client.DefaultRequestHeaders.UserAgent.ParseAdd(
+    'FPas-Amp/1.0 (https://github.com/tobiasbick/functional-pascal)'
+  );
+  return Client;
+end function;
+
+const Client: H.HttpClient := Create();
+
+function Read(Item: J.JsonElement; Name: string): string;
+begin
+  var Value: J.JsonElement := new J.JsonElement();
+  if Item.TryGetProperty(Name, out Value) and Value.ValueKind = J.JsonValueKind.String then
+    return Value.GetString() ?? '';
+  end if;
+
+  return '';
+end function;
+
+function Number(Item: J.JsonElement; Name: string): int;
+begin
+  var Value: J.JsonElement := new J.JsonElement();
+  var Result: int := 0;
+  if Item.TryGetProperty(Name, out Value) and Value.ValueKind = J.JsonValueKind.Number then
+    discard Value.TryGetInt32(out Result);
+  end if;
+
+  return Result;
+end function;
+
+function Decode(Root: J.JsonElement): array of M.Station;
+begin
+  const Result: C.List<M.Station> := new C.List<M.Station>();
+  const Seen: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+  for Item: J.JsonElement in Root.EnumerateArray() do
+    if Item.ValueKind <> J.JsonValueKind.Object then
+      continue;
+    end if;
+    var Id: Sys.Guid := Sys.Guid.Empty;
+    if not Sys.Guid.TryParse(Read(Item, 'stationuuid'), out Id) then
+      continue;
+    end if;
+    const Key: string := Id.ToString('N');
+    const Name: string := Read(Item, 'name').Trim();
+    var Url: string := M.Address(Read(Item, 'url_resolved'));
+    if Url = '' then
+      Url := M.Address(Read(Item, 'url'));
+    end if;
+
+    if Url <> '' and Name <> '' and Seen.Add(Key) then
+      Result.Add(
+        new M.Station(
+          Key, Name, Url, Read(Item, 'country'), Read(Item, 'language'),
+          Read(Item, 'tags'), Read(Item, 'codec'), Number(Item, 'bitrate'),
+          Number(Item, 'hls') = 1, M.Address(Read(Item, 'homepage'))
+        )
+      );
+    end if;
+
+    if Result.Count >= Maximum then
+      break;
+    end if;
+  end for;
+
+  return Result.ToArray();
+end function;
+
+function Filter(Name: string; Value: string): string;
+begin
+  return if Value.Trim() = '' then
+    ''
+  else
+    '&' + Name + '=' + Sys.Uri.EscapeDataString(Value.Trim())
+  end if;
+end function;
+
+// Fetches up to 100 matching stations, falling back to another mirror on failure.
+public async function Search(Query: M.Query; Stop: T.CancellationToken): Tasks.Task<array of M.Station>;
+begin
+  const Path: string := '/json/stations/search?hidebroken=true&order=clickcount&reverse=true&limit=' +
+    Maximum.ToString() + Filter('name', Query.Name) + Filter('country', Query.Country) +
+    Filter('language', Query.Language) + Filter('tag', Query.Genre);
+  var Failure: Sys.Exception? := null;
+  for Mirror: string in Mirrors do
+    using const Limit: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+      Stop
+    );
+    Limit.CancelAfter(5000);
+    try
+      using const Stream: IO.Stream := await Client.GetStreamAsync(
+        Mirror + Path,
+        Limit.Token
+      ).ConfigureAwait(false);
+      using const Document: J.JsonDocument := await J.JsonDocument.ParseAsync(
+        Stream, new J.JsonDocumentOptions(), Limit.Token
+      ).ConfigureAwait(false);
+      return Decode(Document.RootElement);
+    catch Error: Sys.Exception when not Stop.IsCancellationRequested do
+      Failure := Error;
+    end try;
+  end for;
+
+  raise new IO.IOException('The radio directory is unavailable. Try again in a moment.', Failure);
+end function;
+
+end unit;

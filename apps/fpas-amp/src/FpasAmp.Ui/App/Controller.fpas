@@ -8,7 +8,6 @@ uses
   FpasAmp.Ui.Settings.Model as SettingsModel, FpasAmp.Ui.Settings.Update as SettingsUpdate,
   FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Navigation.Update as Navigation,
   FpasAmp.Library.Playlists.Model as Playlists, System.Collections.Immutable as I,
-  FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Library.Inventory.Progress as Progress,
   FpasAmp.Library.Inventory.Monitoring as Monitoring, Fpas.Ui.Mvu.Application as Mvu,
   FpasAmp.Library.Metadata.Monitoring as Metadata, System.Collections.Generic as C,
   FpasAmp.Ui.Albums.Model as AlbumModel, FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, FpasAmp.Library.Albums.Model as Releases, FpasAmp.Ui.Albums.Update as AlbumUpdate, FpasAmp.Ui.Albums.Grid as Grid,
@@ -19,16 +18,13 @@ uses
   FpasAmp.Ui.Settings.Editing as Editing, System.Linq as Linq,
   FpasAmp.Ui.App.Analysis as Analysis, Fpas.Media.Audio as Audio,
   FpasAmp.Ui.TagEditor.Model as TagModel, FpasAmp.Ui.TagEditor.Update as TagUpdate,
-  System as Sys, System.Threading as T, System.Threading.Tasks as Tasks;
+  System as Sys, System.Threading as T, System.Threading.Tasks as Tasks,
+  FpasAmp.Ui.App.Radio as Radio, FpasAmp.Ui.Radio.Model as RadioModel,
+  FpasAmp.Ui.App.Subscriptions as Subscriptions;
 
 function Failure(Error: Sys.Exception): M.Msg;
 begin
   return M.Msg.Settings(SettingsModel.Msg.LibraryFailed(Error.Message));
-end function;
-
-function Stopped(Error: Sys.Exception): M.Msg;
-begin
-  return M.Msg.Settings(SettingsModel.Msg.LibraryStopped(Error.Message));
 end function;
 
 function Settings(Current: M.State; Message: SettingsModel.Msg; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session): Mvu.Transition<M.State, M.Msg>;
@@ -203,89 +199,6 @@ begin
   );
 end function;
 
-function Watch(Library: Monitoring.Session; Port: Playback.Connection; Current: PlayerModel.State): array of Mvu.Command<M.Msg>;
-begin
-  const Commands: C.List<Mvu.Command<M.Msg>> := new C.List<Mvu.Command<M.Msg>>(
-    [
-      Mvu.StartBackground<M.Msg>(
-        'library-inventory',
-        async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-          while await Library.Changes.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
-            const Value: Inventory.Snapshot := await Library.Changes.ReadAsync(
-              Cancellation
-            ).ConfigureAwait(false);
-            await Post(
-              M.Msg.Settings(SettingsModel.Msg.InventoryReceived(Value))
-            ).ConfigureAwait(false);
-          end while;
-        end function,
-        Stopped
-      ),
-      Mvu.StartBackground<M.Msg>(
-        'library-progress',
-        async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-          while await Library.Progress.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
-            const Value: Progress.Snapshot := await Library.Progress.ReadAsync(
-              Cancellation
-            ).ConfigureAwait(false);
-            await Post(
-              M.Msg.Settings(SettingsModel.Msg.ProgressReceived(Value))
-            ).ConfigureAwait(false);
-          end while;
-        end function,
-        Stopped
-      )
-    ]
-  );
-  for Work: Mvu.Command<PlayerModel.Msg> in Playback.Watch(Port) do
-    Commands.Add(Composition.MapCommand<PlayerModel.Msg, M.Msg>(Work, M.Msg.Player, 'player'));
-  end for;
-  const Tags: Metadata.Session? := Library.Metadata;
-  if Current.WaveformKey <> '' then
-    Commands.Add(Analysis.Waveform(Current, Tags));
-  end if;
-
-  if Tags <> null then
-    Commands.Add(
-      Mvu.StartBackground<M.Msg>(
-        'navigation-playlists',
-        async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-          await Tags.Playlists.ObserveAsync(
-            function(Items: I.ImmutableArray<Playlists.Summary>): Tasks.Task => Post(
-              M.Msg.Navigation(Nav.Msg.Received(Items))
-            ),
-            Cancellation
-          ).ConfigureAwait(false);
-        end function,
-        function(Error: Sys.Exception): M.Msg => M.Msg.Navigation(Nav.Msg.Failed(Error.Message))
-      )
-    );
-    Commands.Add(
-      Mvu.StartBackground<M.Msg>(
-        'library-metadata',
-        async function(_Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-          await Tags.Completion.WaitAsync(Cancellation).ConfigureAwait(false);
-        end function, Stopped
-      )
-    );
-  end if;
-
-  if Tags = null then
-    Commands.Add(
-      Mvu.StartBackground<M.Msg>(
-        'navigation-playlists',
-        async function(Post: function(M.Msg): Tasks.Task; _Cancellation: T.CancellationToken): Tasks.Task begin
-          await Post(
-            M.Msg.Navigation(Nav.Msg.Received(I.ImmutableArray<Playlists.Summary>.Empty))
-          ).ConfigureAwait(false);
-        end function, Failure
-      )
-    );
-  end if;
-
-  return Commands.ToArray();
-end function;
-
 // Applies a typed UI proposal. Returned commands run outside the UI update
 // through the MVU runtime.
 //
@@ -298,19 +211,34 @@ end function;
 // ## Returns
 // The next app state and the slices' mapped commands.
 public function Apply(Current: M.State; Message: M.Msg; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session; Port: Playback.Connection): Mvu.Transition<M.State, M.Msg>;
-  function Activate(Page: Music.State; FileId: long): Mvu.Transition<M.State, M.Msg>;
+  function Activate(Page: Music.State; Index: int; Playlist: string := ''): Mvu.Transition<M.State, M.Msg>;
   begin
-    const Index: int := Browse.FindFile(Page.Shown, FileId);
-    if Index < 0 then
+    if Index < 0 or Index >= Page.Shown.Length then
       return new Mvu.Transition<M.State, M.Msg>(Current, []);
     end if;
+    const Source: Music.Selection := Browse.Selection(Page) with
+      Playlist := Playlist;
+    end with;
     const Track: Tracks.Entry? := PlayerModel.Track(Current.Player);
-    const Action: PlayerModel.Msg := if Track <> null and Track.FileId = FileId then
+    const Action: PlayerModel.Msg := if Track <> null and Track.FileId = Page.Shown[Index].FileId
+      and (Playlist = '' or (Playlist = Current.Player.Source.Playlist and Index =
+      Current.Player.Index))
+    then
       PlayerModel.Msg.Toggle
     else
-      PlayerModel.Msg.Play(Page.Shown, Index, Browse.Selection(Page))
+      PlayerModel.Msg.Play(Page.Shown, Index, Source)
     end if;
     return Transport(Current, Action, Port, Library);
+  end function;
+  function OpenSongs(Destination: Nav.Route): LibrarySongs.Msg;
+  begin
+    return case Destination of
+      when Nav.Route.Page(Nav.Page.Music): LibrarySongs.Msg.Open;
+      when Nav.Route.Playlist(
+        const Identity: Playlists.Key
+      ): LibrarySongs.Msg.OpenPlaylist(Identity);
+      else LibrarySongs.Msg.Close;
+    end case;
   end function;
 begin
   var Next: M.State := Current;
@@ -371,19 +299,37 @@ begin
         Work.AddRange(Transition.Commands);
         Commands := Work.ToArray();
       end if;
-      const MusicRoute: Nav.Route := Nav.Route.Page(Nav.Page.Music);
-      if Next.Navigation.Active <> Current.Navigation.Active then
-        if Next.Navigation.Active = MusicRoute then
-          return Songs(Next, LibrarySongs.Msg.Open, Library, Commands);
-        elsif Current.Navigation.Active = MusicRoute then
-          return Songs(Next, LibrarySongs.Msg.Close, Library, Commands);
-        end if;
+
+      if Next.Navigation.Active = Nav.Route.Page(Nav.Page.Stations)
+        and not Next.Radio.Loaded and not Next.Radio.Searching
+      then
+        const Result: Mvu.Transition<M.State, M.Msg> := Radio.Apply(
+          Next,
+          RadioModel.Msg.Refresh,
+          Save
+        );
+        const Work: C.List<Mvu.Command<M.Msg>> := new C.List<Mvu.Command<M.Msg>>(Commands);
+        Work.AddRange(Result.Commands);
+        Commands := Work.ToArray();
+        Next := Result.Model;
+      end if;
+
+      if Next.Navigation.Active <> Current.Navigation.Active
+        and (Nav.SongTable(Next.Navigation.Active) or Nav.SongTable(Current.Navigation.Active))
+      then
+        return Songs(Next, OpenSongs(Next.Navigation.Active), Library, Commands);
       end if;
     when M.Msg.Songs(const Action: LibrarySongs.Msg):
-      if Current.Navigation.Active = Nav.Route.Page(Nav.Page.Music) then
+      if Nav.SongTable(Current.Navigation.Active) then
         case Action of
           when LibrarySongs.Msg.Song(Music.Msg.Play(const FileId: long)):
-            return Activate(Current.Songs.Page, FileId);
+            return Activate(Current.Songs.Page, Browse.FindFile(Current.Songs.Page.Shown, FileId));
+          when LibrarySongs.Msg.Song(
+            Music.Msg.PlaySlot(const Rows: I.ImmutableArray<Tracks.Entry>, const Index: int)
+          ):
+            if Rows.Equals(Current.Songs.Page.Shown) then
+              return Activate(Current.Songs.Page, Index, Nav.Key(Current.Navigation.Active));
+            end if;
           when LibrarySongs.Msg.Song(Music.Msg.EditTags(const Track: Tracks.Entry)):
             return EditTags(Current, TagModel.Msg.Open(Track), Library);
           else
@@ -393,7 +339,7 @@ begin
     when M.Msg.Albums(AlbumModel.Msg.Music(Music.Msg.Play(const FileId: long))):
       const Page: Music.State? := Current.Albums.Music;
       if Page <> null and Nav.Browsing(Current.Navigation.Active) then
-        return Activate(Page, FileId);
+        return Activate(Page, Browse.FindFile(Page.Shown, FileId));
       end if;
     when M.Msg.Albums(AlbumModel.Msg.Music(Music.Msg.EditTags(const Track: Tracks.Entry))):
       if Nav.Browsing(Current.Navigation.Active) then
@@ -403,6 +349,8 @@ begin
       return EditTags(Current, Action, Library);
     when M.Msg.Player(const PlayerMessage: PlayerModel.Msg):
       return Transport(Current, PlayerMessage, Port, Library);
+    when M.Msg.Radio(const Action: RadioModel.Msg):
+      return Radio.Apply(Current, Action, Save);
     when M.Msg.Albums(const AlbumMessage: AlbumModel.Msg):
       if Nav.Browsing(Current.Navigation.Active) then
         return Album(Current, AlbumMessage, Library);
@@ -420,9 +368,21 @@ begin
         Next := Transport(Current, PlayerModel.Msg.SourceLost(true), Port, Library).Model;
       end if;
 
-      Commands := Watch(Library, Port, Next.Player);
-      if Current.Navigation.Active = Nav.Route.Page(Nav.Page.Music) then
-        return Songs(Next, LibrarySongs.Msg.Open, Library, Commands);
+      Commands := Subscriptions.Watch(Library, Port, Next.Player);
+      if Next.Navigation.Active = Nav.Route.Page(Nav.Page.Stations) then
+        const Result: Mvu.Transition<M.State, M.Msg> := Radio.Apply(
+          Next,
+          RadioModel.Msg.Refresh,
+          Save
+        );
+        const Work: C.List<Mvu.Command<M.Msg>> := new C.List<Mvu.Command<M.Msg>>(Commands);
+        Work.AddRange(Result.Commands);
+        Commands := Work.ToArray();
+        Next := Result.Model;
+      end if;
+
+      if Nav.SongTable(Current.Navigation.Active) then
+        return Songs(Next, OpenSongs(Current.Navigation.Active), Library, Commands);
       end if;
 
       if Nav.Browsing(Current.Navigation.Active) then

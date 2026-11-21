@@ -13,6 +13,9 @@ uses
   FpasAmp.AppState as State,
   FpasAmp.Persistence.PlayerState as Transport, FpasAmp.Ui.Player.Model as Player,
   FpasAmp.Library.Metadata.Monitoring as Metadata,
+  FpasAmp.Library.Metadata.Model as Tracks,
+  FpasAmp.Library.Playlists.Model as Lists, FpasAmp.Ui.Music.Playlist as Playlist,
+  FpasAmp.Ui.Radio.Model as Radio, System.Collections.Immutable as I,
   FpasAmp.Library.Inventory.Monitoring as Monitoring,
   FpasAmp.Library.Persistence.Paths as LibraryPaths,
   System as Sys,
@@ -38,20 +41,40 @@ begin
     const Tags: Metadata.Session? := Inventory.Metadata;
     if Tags <> null and Opened.Player.Index >= 0 then
       try
-        Restored := Transport.Restore(
-          Opened.Player,
-          Tags.QueueAsync(
-            Opened.Player.Source.AlbumId,
-            Threads.CancellationToken.None
-          ).GetAwaiter().GetResult()
-        );
+        var Items: I.ImmutableArray<Tracks.Entry> := Tags.QueueAsync(
+          Opened.Player.Source.AlbumId, Threads.CancellationToken.None
+        ).GetAwaiter().GetResult();
+        if Opened.Player.Source.Playlist <> '' then
+          case Nav.Parse(Opened.Player.Source.Playlist) of
+            when Nav.Route.Playlist(const Identity: Lists.Key):
+              Items := Playlist.Resolve(
+                Tags.Playlists.ReadAsync(
+                  Identity,
+                  Threads.CancellationToken.None
+                ).GetAwaiter().GetResult(),
+                Items
+              );
+            else
+              Items := I.ImmutableArray<Tracks.Entry>.Empty;
+          end case;
+        end if;
+
+        Restored := Transport.Restore(Opened.Player, Items);
       catch Failure: Sys.Exception do
         PreserveQueue := true;
         Console.Error.WriteLine('Could not restore the playback queue: ' + Failure.Message);
       end try;
     end if;
+    var Destination: Nav.Route := Nav.Parse(Opened.ActivePage) ?? Nav.Route.Page(Nav.Page.Music);
+    case Destination of
+      when Nav.Route.Station(const Id: string):
+        if Radio.Find(Preferences.RadioFavorites, Id) = null then
+          Destination := Nav.Route.Page(Nav.Page.Stations);
+        end if;
+      else
+    end case;
     var Navigation: Nav.State := new Nav.State(
-      Active := Nav.Parse(Opened.ActivePage) ?? Nav.Route.Page(Nav.Page.Music),
+      Active := Destination,
       SettingsTab := Opened.SettingsTab
     );
     const Closed: Cui.CuiWindowPlacement := Shell.Run(

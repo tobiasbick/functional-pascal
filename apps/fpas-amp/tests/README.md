@@ -34,5 +34,13 @@ equalizer and compact layout. The track navigation test clicks the title
 header in both Music and album track lists and checks that the same file
 stays at the cursor and in view as the sort direction changes.
 
-Set `FPAS_AMP_UI_ARTIFACTS` to an ignored directory to capture screenshots
-of settings, album details and the player.
+Set `FPAS_AMP_UI_ARTIFACTS` to an absolute path in an ignored directory, then
+run the native tests to capture the UI with test data:
+
+```sh
+FPAS_AMP_UI_ARTIFACTS="$PWD/../../.temp-data/fpas-amp-screenshots" dotnet test fpas-amp.slnx --filter 'Category=Gui'
+```
+
+In PowerShell, set `$env:FPAS_AMP_UI_ARTIFACTS` before running the test command.
+The examples in the [user guides](../doc/README.md#user-guides) use these
+captures. Use `radio-stations-fixture.png` for the directory screenshot.

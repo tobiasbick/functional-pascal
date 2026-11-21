@@ -37,6 +37,17 @@ Periodic progress is skipped while an earlier event remains unread.
 changes, natural ends and file or device failures. A failed session can open
 another file. Disposing the session completes the channel.
 
+## Live streams
+
+`ISession.OpenStream` accepts an absolute HTTP(S) URL. It requires the FFmpeg
+command-line program on PATH and decodes direct audio and HLS with the same
+output and mixer as local tracks. The decoder feeds a bounded PCM queue read by
+the audio callback. Empty reads while the connection is open emit buffering.
+The event duration is zero, and `NowPlaying` carries the ICY title when present.
+Seeking a live source has no effect. EOF or lost connections emit a failure
+after the available audio drains. Unload, switching source and disposal release
+the decoder and close the connection.
+
 ## Mixer settings
 
 `Apply(new Settings(volume, gains))` sets volume from −60 to 0 dB and ten
@@ -115,6 +126,8 @@ verify the public analysis call from FPAS.
   - [Settings.cs](../../../../src/Fpas.Media.Audio/Settings.cs)
 - `src/Fpas.Media.Audio/Decoding/`
   - [TrackSource.cs](../../../../src/Fpas.Media.Audio/Decoding/TrackSource.cs)
+  - [IPlaybackSource.cs](../../../../src/Fpas.Media.Audio/Decoding/IPlaybackSource.cs)
+  - [LiveSource.cs](../../../../src/Fpas.Media.Audio/Decoding/LiveSource.cs)
 - `src/Fpas.Media.Audio/Output/`
   - [Backend.cs](../../../../src/Fpas.Media.Audio/Output/Backend.cs)
   - [DeviceStream.cs](../../../../src/Fpas.Media.Audio/Output/DeviceStream.cs)
@@ -123,6 +136,7 @@ verify the public analysis call from FPAS.
 - `tests/Fpas.Media.Audio.Tests/`
   - [AnalysisTests.cs](../../../../tests/Fpas.Media.Audio.Tests/AnalysisTests.cs)
   - [EqualizerTests.cs](../../../../tests/Fpas.Media.Audio.Tests/EqualizerTests.cs)
+  - [LiveStreamsTests.cs](../../../../tests/Fpas.Media.Audio.Tests/LiveStreamsTests.cs)
   - [Fpas.Media.Audio.Tests.csproj](../../../../tests/Fpas.Media.Audio.Tests/Fpas.Media.Audio.Tests.csproj)
   - [PlaybackDeviceTests.cs](../../../../tests/Fpas.Media.Audio.Tests/PlaybackDeviceTests.cs)
   - [SessionTests.cs](../../../../tests/Fpas.Media.Audio.Tests/SessionTests.cs)

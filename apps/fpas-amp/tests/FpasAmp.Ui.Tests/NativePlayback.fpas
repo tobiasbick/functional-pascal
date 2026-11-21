@@ -103,8 +103,9 @@ public type NativePlaybackTests = record
       );
       WaitFor(
         Second,
-        function(S: Player.State): bool => S.Waveform.Length > 0,
-        'Missing restored waveform.'
+        function(S: Player.State): bool => S.Waveform.Length > 0
+          and Second.State().Songs.Page.Shown.Length = 2,
+        'Missing restored waveform or tracks.'
       );
       T.Thread.Sleep(180);
       discard Second.Window.Post(App.Msg.Settings(Settings.Msg.DismissError));
@@ -123,6 +124,11 @@ public type NativePlaybackTests = record
           and S.Position < Saved.Position + 800.0 and S.Levels[0] > 0.0F and S.Levels[0] < 0.035F,
         'Playback did not resume from the saved position at the saved gain.'
       );
+      const Artifacts: string? := Sys.Environment.GetEnvironmentVariable('FPAS_AMP_UI_ARTIFACTS');
+      if Artifacts <> null then
+        discard IO.Directory.CreateDirectory(Artifacts);
+        Second.Window.CapturePng(IO.Path.Combine(Artifacts, 'player-waveform.png'));
+      end if;
     finally
       Store.DisposeAsync().GetAwaiter().GetResult();
     end try;
@@ -323,6 +329,7 @@ public type NativePlaybackTests = record
         ] > 0.048F,
         'Resume lost the seek position.'
       );
+
       Send(Session, Player.Msg.Seek(0.98F));
       WaitFor(
         Session,

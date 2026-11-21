@@ -24,7 +24,7 @@ begin
   return L.Spacing.Fixed(L.Measure.Logical(Value));
 end function;
 
-function Sort(Current: M.State): E.Element<M.Msg>;
+function Sort(Current: M.State; Playlist: bool := false): E.Element<M.Msg>;
 begin
   const Whole: bool := Current.Album.Id = '';
   const Names: array of string := if Whole then
@@ -37,12 +37,17 @@ begin
       Menus.Entry<M.Msg>.Label('Sort by')
     ]
   );
-  if not Whole then
+  const Default: string := if Playlist then
+    'Playlist order'
+  else
+    'Disc and track'
+  end if;
+  if not Whole or Playlist then
     Entries.Add(
       Menus.Entry<M.Msg>.Action(
         new Menus.Item<M.Msg>(
           'release',
-          'Disc and track',
+          Default,
           M.Msg.Sort(new Tables.Sort(-1)),
           Checked := Current.Order.Column = -1
         )
@@ -64,7 +69,7 @@ begin
   end for;
 
   const Column: int := Current.Order.Column;
-  var Label: string := 'Disc and track';
+  var Label: string := Default;
   if Column >= 0 then
     const Direction: string := if Column <= 2 or Column = 5 then
       if Current.Order.Descending then
@@ -112,21 +117,31 @@ end function;
 // Builds the whole-library Music page for Current and its viewport-owned Covers.
 // Width and Padding are the available content width and inset in logical points.
 // Playback supplies the current song and transport state.
+// PlaylistName and PlaylistCount specify the displayed playlist when present.
+// PlaylistError is the last parse failure from the playlist source.
 // Returns the toolbar, virtual table, status bar and track-details overlay.
-public function LibraryPage(Current: M.State; Width: int; Padding: int; Covers: I.ImmutableDictionary<string, Imaging.Bitmap?>; Playback: Player.State): E.Element<M.Msg>;
+public function LibraryPage(Current: M.State; Width: int; Padding: int; Covers: I.ImmutableDictionary<string, Imaging.Bitmap?>; Playback: Player.State; PlaylistName: string? := null; PlaylistCount: long? := null; PlaylistError: string? := null): E.Element<M.Msg>;
 begin
   const Inner: int := Sys.Math.Max(1, Width - 2 * Padding);
   const Parts: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>(
     [
-      Texts.Text<M.Msg>('Music', Texts.Appearance.HeadingOne),
+      Texts.Text<M.Msg>(PlaylistName ?? 'Music', Texts.Appearance.HeadingOne),
       LibraryToolbar.Arrange<M.Msg>(
         Search.SearchField<M.Msg>(
           'track-search', Current.Search, M.Msg.Search,
           new Search.Options(Placeholder := 'Search titles, artists and albums…')
-        ), Filters.Build(Current, Inner), Sort(Current), Inner
+        ), Filters.Build(Current, Inner), Sort(Current, PlaylistName <> null), Inner
       )
     ]
   );
+  if PlaylistError <> null then
+    Parts.Add(
+      Alerts.Alert<M.Msg>(
+        'navigation-error', 'Playlist unavailable',
+        new Alerts.Options(Tone := S.Tone.Warning, Description := PlaylistError)
+      )
+    );
+  end if;
   const Error: string? := Current.Error;
   if Error <> null then
     Parts.Add(
@@ -138,7 +153,9 @@ begin
     );
   end if;
 
-  Parts.Add(E.Size<M.Msg>(TrackTable.Build(Current, Inner, Playback, Covers), Fill));
+  Parts.Add(
+    E.Size<M.Msg>(TrackTable.Build(Current, Inner, Playback, Covers, PlaylistName <> null), Fill)
+  );
   var Cover: Imaging.Bitmap? := null;
   const Item: Tracks.Entry? := Current.Details;
   if Item <> null then
@@ -155,7 +172,7 @@ begin
         ),
         Fill
       ),
-      Status.Tracks(Current, Current.Tracks.Length)
+      Status.Tracks(Current, PlaylistCount ?? cast<long>(Current.Tracks.Length))
     )
   );
 end function;

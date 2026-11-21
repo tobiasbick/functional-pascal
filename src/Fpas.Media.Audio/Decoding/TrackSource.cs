@@ -9,7 +9,7 @@ using SoundFlow.Structs;
 namespace Fpas.Media.Audio.Decoding;
 
 // One owner reads and positions this file. The mixer must use Format as its client format.
-internal sealed class TrackSource : ISoundDataProvider
+internal sealed class TrackSource : ISoundDataProvider, IPlaybackSource
 {
     private static readonly MiniAudioCodecFactory BuiltIn = new();
     private static readonly FFmpegCodecFactory FFmpeg = new();
@@ -61,6 +61,10 @@ internal sealed class TrackSource : ISoundDataProvider
     }
 
     internal AudioFormat Format { get; }
+    AudioFormat IPlaybackSource.Format => Format;
+    long IPlaybackSource.Position => Position;
+    bool IPlaybackSource.Live => false;
+    string? IPlaybackSource.NowPlaying => null;
     /// <inheritdoc />
     public int Length { get; }
     /// <inheritdoc />

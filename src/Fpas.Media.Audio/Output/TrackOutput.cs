@@ -7,12 +7,13 @@ namespace Fpas.Media.Audio.Output;
 internal sealed class TrackOutput : IDisposable
 {
     private readonly object render = new();
-    private readonly TrackSource source;
+    private readonly IPlaybackSource source;
     private readonly CancellationToken shutdown;
     private readonly int rampFrames;
     private int envelopeFrame;
     private bool retiring;
-    private int renderedPosition;
+    private long renderedPosition;
+    private bool buffering;
     internal long RequestId;
     private readonly Equalizer equalizer;
     private readonly float[] peaks;
@@ -21,16 +22,17 @@ internal sealed class TrackOutput : IDisposable
     private PlaybackState state = PlaybackState.Paused;
     private string? error;
 
-    internal TrackOutput(TrackSource source, string path, Settings settings, CancellationToken shutdown)
+    internal TrackOutput(IPlaybackSource source, string path, Settings settings, CancellationToken shutdown)
     {
         Path = path;
         this.settings = settings;
         this.source = source;
         this.shutdown = shutdown;
-        samplesPerSecond = checked(source.SampleRate * source.Format.Channels);
+        buffering = source.Live;
+        samplesPerSecond = checked(source.Format.SampleRate * source.Format.Channels);
         peaks = new float[source.Format.Channels];
-        equalizer = new Equalizer(source.SampleRate, peaks.Length, settings);
-        rampFrames = Math.Max(1, source.SampleRate / 200); // Five milliseconds.
+        equalizer = new Equalizer(source.Format.SampleRate, peaks.Length, settings);
+        rampFrames = Math.Max(1, source.Format.SampleRate / 200); // Five milliseconds.
     }
 
     internal string Path { get; }
@@ -68,6 +70,7 @@ internal sealed class TrackOutput : IDisposable
 
     internal void Seek(TimeSpan position)
     {
+        if (source.Live) return;
         bool resume = State == PlaybackState.Playing;
         if (resume) FadeOut();
         lock (render)
@@ -75,7 +78,7 @@ internal sealed class TrackOutput : IDisposable
             if (state == PlaybackState.Failed) return;
             state = PlaybackState.Paused;
         }
-        long frames = (long)Math.Round(Math.Clamp(position.TotalSeconds * source.SampleRate, 0,
+        long frames = (long)Math.Round(Math.Clamp(position.TotalSeconds * source.Format.SampleRate, 0,
             source.Length / source.Format.Channels));
         source.Seek((int)frames * source.Format.Channels);
         lock (render)
@@ -116,7 +119,8 @@ internal sealed class TrackOutput : IDisposable
         lock (render)
         {
             var result = new PlaybackEvent(Path, state, TimeSpan.FromSeconds((double)source.Position / samplesPerSecond),
-                TimeSpan.FromSeconds((double)source.Length / samplesPerSecond), [.. peaks], error);
+                TimeSpan.FromSeconds((double)source.Length / samplesPerSecond), [.. peaks], error,
+                Buffering: buffering, NowPlaying: source.NowPlaying);
             for (int i = 0; i < peaks.Length; i++) peaks[i] *= 0.75f;
             return result;
         }
@@ -138,11 +142,13 @@ internal sealed class TrackOutput : IDisposable
                         if (read == 0)
                         {
                             Array.Clear(peaks);
-                            state = PlaybackState.Ended;
+                            if (source.Live) buffering = true;
+                            else state = PlaybackState.Ended;
                             break;
                         }
                         equalizer.Process(output[..read], target);
-                        int framesLeft = (source.Length - source.Position + read) / peaks.Length;
+                        buffering = false;
+                        long framesLeft = source.Live ? long.MaxValue : (source.Length - source.Position + read) / peaks.Length;
                         for (int offset = 0; offset < read; offset += peaks.Length)
                         {
                             float gain = (float)Math.Min(envelopeFrame, framesLeft - 1) / rampFrames;

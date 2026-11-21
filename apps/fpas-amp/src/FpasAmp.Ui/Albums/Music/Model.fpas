@@ -58,6 +58,8 @@ public type Selection = record
   public Performer: string := '';
   // Stable release identity selected by the album filter, or empty for all.
   public ReleaseFilter: string := '';
+  // Stable playlist navigation key when the source is a playlist, otherwise empty.
+  public Playlist: string := '';
 end record;
 
 // A saved track rating protected from library reads that began before the write completed.
@@ -172,6 +174,8 @@ public type Msg = variant
   RatingFailed(Visit: long; Id: string; Text: string);
   // Toggle the current file or start FileId in the displayed queue.
   Play(FileId: long);
+  // Activate Index from the rendered playlist Rows, preserving duplicate positions.
+  PlaySlot(Rows: I.ImmutableArray<Tracks.Entry>; Index: int);
   // Show metadata for one track.
   Details(Item: Tracks.Entry);
   // Opens the tag editor for one indexed track.

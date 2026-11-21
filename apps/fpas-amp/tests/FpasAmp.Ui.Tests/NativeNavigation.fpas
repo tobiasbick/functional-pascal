@@ -7,7 +7,9 @@ uses
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Sources as Sources,
   FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Library.Inventory.Model as Inventory,
   FpasAmp.Library.Albums.Model as Releases, FpasAmp.Library.Tests.AlbumSupport as Fixtures, FpasAmp.Library.Tests.MetadataSupport as Metadata,
+  FpasAmp.Library.Metadata.Model as Tracks, System.Collections.Immutable as I,
   FpasAmp.Ui.Albums.Model as Albums, FpasAmp.Ui.Albums.Music.Model as Music,
+  FpasAmp.Ui.Music.LibraryPage as Songs,
   FpasAmp.Persistence.PlayerState as Bookmark, Fpas.Media.Audio as Audio,
   FpasAmp.Library.Playlists.Model as Lists, FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Settings.Model as SettingsModel,
   FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Shell as Shell, FpasAmp.AppState as Storage,
@@ -251,7 +253,13 @@ public type NativeNavigationTests = record
   begin
     using const Root: H.Folder := H.Folder.Create();
     using const Data: H.Folder := H.Folder.Create();
-    for Name: string in ['Evening mix', 'Favourites', 'Workout'] do
+    discard Metadata.Write(Root.Path, 'first.mp3', 'First song');
+    discard Metadata.Write(Root.Path, 'second.mp3', 'Second song');
+    IO.File.WriteAllText(
+      IO.Path.Combine(Root.Path, 'Evening mix.m3u8'),
+      'second.mp3' + #10 + 'first.mp3' + #10 + 'second.mp3' + #10 + 'missing.mp3' + #10
+    );
+    for Name: string in ['Favourites', 'Workout'] do
       IO.File.WriteAllText(IO.Path.Combine(Root.Path, Name + '.m3u8'), 'missing.mp3' + #10);
     end for;
     const Source: Sources.MusicSource := new Sources.MusicSource(
@@ -259,7 +267,7 @@ public type NativeNavigationTests = record
       'Music',
       Root.Path,
       false,
-      [],
+      ['.mp3'],
       ScanPlaylists := true
     );
     const Preferences: SettingsModel.Preferences := new SettingsModel.Preferences(
@@ -274,7 +282,7 @@ public type NativeNavigationTests = record
           Placement(1000),
           Preferences,
           Save,
-          Library
+          Library, Output := new Audio.Session(true)
         );
         Until(
           Session,
@@ -303,7 +311,7 @@ public type NativeNavigationTests = record
               Session, if Page = Nav.Page.Music then
                 'track-search'
               else
-                'albums-empty'
+                'album-search'
               end if
             )
           );
@@ -311,7 +319,23 @@ public type NativeNavigationTests = record
         end for;
         const Selected: Lists.Summary := Session.State().Navigation.Playlists[0];
         SetRoute(Session, Nav.Route.Playlist(Selected.Identity));
+        Until(
+          Session,
+          function(_State: Nav.State): bool => Session.State().Songs.Page.Shown.Length = 3
+        );
         X.Assert.Contains<string>('Evening mix', Session.Window.Snapshot().Text);
+        X.Assert.Equal<long>(4L, Selected.Count);
+        const Rows: I.ImmutableArray<Tracks.Entry> := Session.State().Songs.Page.Shown;
+        X.Assert.Equal<string>('second.mp3', IO.Path.GetFileName(Rows[0].Path));
+        X.Assert.Equal<string>('first.mp3', IO.Path.GetFileName(Rows[1].Path));
+        X.Assert.Equal<long>(Rows[0].FileId, Rows[2].FileId);
+        discard Session.Window.Post(App.Msg.Songs(Songs.Msg.Song(Music.Msg.PlaySlot(Rows, 2))));
+        Pump(Session);
+        X.Assert.Equal<int>(2, Session.State().Player.Index);
+        X.Assert.Equal<string>(
+          Nav.Key(Session.State().Navigation.Active),
+          Session.State().Player.Source.Playlist
+        );
         X.Assert.True(Has(Session, 'player-toggle'));
         Capture(Session, 'navigation-playlist');
         SetRoute(Session, Nav.Route.Page(Nav.Page.Settings));

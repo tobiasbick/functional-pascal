@@ -25,8 +25,10 @@ public enum PlaybackState
 /// <param name="Duration">Presentation length of the file.</param>
 /// <param name="Peaks">Post-EQ, post-volume linear peaks per channel, between zero and one.</param>
 /// <param name="Error">Failure description when State is Failed, otherwise null.</param>
+/// <param name="Buffering">A live stream needs more audio before rendering can continue.</param>
+/// <param name="NowPlaying">Optional live program or track text supplied by the stream.</param>
 public sealed record PlaybackEvent(string Path, PlaybackState State, TimeSpan Position, TimeSpan Duration,
-    ImmutableArray<float> Peaks, string? Error, long RequestId = 0);
+    ImmutableArray<float> Peaks, string? Error, long RequestId = 0, bool Buffering = false, string? NowPlaying = null);
 
 /// <summary>One transport and its event stream, consumed by the owning application.</summary>
 public interface ISession : IDisposable
@@ -37,6 +39,10 @@ public interface ISession : IDisposable
     /// <param name="path">Local file to decode.</param>
     /// <param name="requestId">Caller correlation ID for this action and subsequent progress.</param>
     void Open(string path, long requestId = 0);
+    /// <summary>Replace the active source with a live HTTP(S) radio stream.</summary>
+    /// <param name="address">Absolute endpoint of the stream or playlist.</param>
+    /// <param name="requestId">Caller correlation ID for the transport action.</param>
+    void OpenStream(Uri address, long requestId = 0);
     /// <summary>Starts or resumes the open track. Replays an ended track from its beginning.</summary>
     /// <param name="requestId">Caller correlation ID for this action and subsequent progress.</param>
     void Play(long requestId = 0);

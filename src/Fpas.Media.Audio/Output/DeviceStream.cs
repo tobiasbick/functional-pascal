@@ -18,7 +18,7 @@ internal sealed class DeviceStream : IDisposable
     private readonly CancellationTokenRegistration closeRegistration;
     private TrackOutput? voice;
 
-    internal DeviceStream(MiniAudioEngine engine, TrackSource source, CancellationToken shutdown)
+    internal DeviceStream(MiniAudioEngine engine, IPlaybackSource source, CancellationToken shutdown)
     {
         this.shutdown = shutdown;
         device = engine.InitializePlaybackDevice(null, source.Format, new MiniAudioDeviceConfig());
@@ -26,7 +26,7 @@ internal sealed class DeviceStream : IDisposable
         closeRegistration = shutdown.Register(Stop);
     }
 
-    internal bool Accepts(TrackSource source) => device.Format.SampleRate == source.Format.SampleRate
+    internal bool Accepts(IPlaybackSource source) => device.Format.SampleRate == source.Format.SampleRate
         && device.Format.Channels == source.Format.Channels && device.Format.Format == source.Format.Format;
 
     internal bool IsRunning => device.IsRunning;

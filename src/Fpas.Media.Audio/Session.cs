@@ -44,6 +44,20 @@ public sealed class Session : ISession
     public void Open(string path, long requestId = 0)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        OpenSource(path, requestId, () => new TrackSource(path, shutdown.Token));
+    }
+
+    /// <inheritdoc />
+    public void OpenStream(Uri address, long requestId = 0)
+    {
+        ArgumentNullException.ThrowIfNull(address);
+        if (!address.IsAbsoluteUri || address.Scheme is not ("http" or "https") || address.UserInfo.Length != 0)
+            throw new ArgumentException("Radio requires an HTTP or HTTPS address.", nameof(address));
+        OpenSource(address.AbsoluteUri, requestId, () => new LiveSource(address, shutdown.Token));
+    }
+
+    private void OpenSource(string path, long requestId, Func<IPlaybackSource> create)
+    {
         lock (commands)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
@@ -59,7 +73,7 @@ public sealed class Session : ISession
                 this.requestId = requestId;
                 failure = null;
                 engine ??= Backend.Open(silent);
-                var source = new TrackSource(path, shutdown.Token);
+                var source = create();
                 try
                 {
                     shutdown.Token.ThrowIfCancellationRequested();

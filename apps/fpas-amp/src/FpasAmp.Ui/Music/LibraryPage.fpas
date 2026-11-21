@@ -7,6 +7,7 @@ uses
   FpasAmp.Ui.Albums.Music.Model as Songs, FpasAmp.Ui.Albums.Music.Browse as Browse,
   FpasAmp.Ui.Albums.Music.Update as Edit, FpasAmp.Ui.Albums.Music.Ratings as Ratings, FpasAmp.Ui.Albums.Artwork as Artwork,
   FpasAmp.Library.Metadata.Monitoring as Metadata, FpasAmp.Library.Metadata.Model as Tracks,
+  FpasAmp.Ui.Music.Playlist as Playlist, FpasAmp.Library.Playlists.Model as Lists,
   FpasAmp.Library.Albums.Model as Albums, Fpas.Media.Tags.AudioFiles as Tags, Fpas.Media.Images as Imaging,
   Fpas.Ui.Mvu.Application as A, Fpas.Ui.Mvu.Composition as Composition, Fpas.Ui.Widgets.Collections.Tables as Tables,
   System as Sys, System.Collections.Generic as C, System.Collections.Immutable as I, System.Threading as T, System.Threading.Tasks as Tasks;
@@ -51,6 +52,8 @@ end record;
 public type Msg = variant
   // Begin observing the catalogue for this visit.
   Open;
+  // Observe the tracks belonging to the ordered playlist Identity.
+  OpenPlaylist(Identity: Lists.Key);
   // Release the catalogue observer and viewport images.
   Close;
   // Publish the catalogue read for Visit, with its monotonic start timestamp.
@@ -170,13 +173,22 @@ public function Apply(Current: State; Message: Msg; Library: Metadata.Session?):
 begin
   var Next: State := Current;
   case Message of
-    when Msg.Open, Msg.Close:
+    when Msg.Open, Msg.OpenPlaylist(_), Msg.Close:
+      const Identity: Lists.Key? := case Message of
+        when Msg.OpenPlaylist(const Key: Lists.Key): Key;
+        else null;
+      end case;
       const Blank: State := new State();
       const Visit: long := Current.Page.Visit + 1L;
       Next := Blank with
         Page := Blank.Page with
           Visit := Visit;
           Loaded := Library = null;
+          Order := if Identity <> null then
+            new Tables.Sort(-1)
+          else
+            Blank.Page.Order
+          end if;
         end with;
         Generation := Current.Generation + 1L;
       end with;
@@ -193,9 +205,19 @@ begin
             'observe',
             async function(Post: function(Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
               await Library.Albums.ObserveSongsAsync(
-                function(Started: long; Entries: I.ImmutableArray<Tracks.Entry>; Releases: I.ImmutableArray<Albums.Album>): Tasks.Task => Post(
-                  Msg.Received(Visit, Started, Prepare(Entries, Releases, Cancellation))
-                ),
+                async function(Started: long; Entries: I.ImmutableArray<Tracks.Entry>; Releases: I.ImmutableArray<Albums.Album>): Tasks.Task begin
+                  var Items: I.ImmutableArray<Tracks.Entry> := Entries;
+                  if Identity <> null then
+                    const List: Lists.Playlist? := await Library.Playlists.ReadAsync(
+                      Identity, Cancellation
+                    ).ConfigureAwait(false);
+                    Items := Playlist.Resolve(List, Entries);
+                  end if;
+
+                  await Post(
+                    Msg.Received(Visit, Started, Prepare(Items, Releases, Cancellation))
+                  ).ConfigureAwait(false);
+                end function,
                 Cancellation
               ).ConfigureAwait(false);
             end function,

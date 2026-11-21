@@ -9,6 +9,7 @@ uses
   FpasAmp.Persistence.JsonFields as Fields,
   FpasAmp.Persistence.UserFiles as Files,
   FpasAmp.Ui.Settings.Model as Model, Fpas.Media.Audio as Audio, FpasAmp.Ui.Player.Model as Player,
+  FpasAmp.Ui.Radio.Model as Radio, FpasAmp.Persistence.RadioFavorites as Favorites,
   Fpas.Ui.Widgets.Theming.Themes as Themes,
   Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
   System as Sys,
@@ -214,7 +215,8 @@ begin
       Appearance,
       Accent,
       Mixer(Root, ref Valid),
-      AcoustId(Root, ref Valid)
+      AcoustId(Root, ref Valid),
+      Favorites.Decode(Fields.Field(Root, 'radioFavorites'), ref Valid)
     ),
     Valid
   );

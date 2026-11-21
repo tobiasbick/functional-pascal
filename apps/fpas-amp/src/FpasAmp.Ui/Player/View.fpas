@@ -12,7 +12,8 @@ uses
   Fpas.Ui.Widgets.Actions.Buttons as Buttons, Fpas.Ui.Widgets.Actions.IconButtons as Icons,
   Fpas.Ui.Widgets.Audio.Faders as Faders,
   Fpas.Ui.Widgets.Audio.LevelMeters as Meters, Fpas.Ui.Widgets.Audio.Waveforms as Waves,
-  Fpas.Ui.Widgets.Display.Texts as Texts, System as Sys, System.Collections.Generic as C;
+  Fpas.Ui.Widgets.Display.Texts as Texts, System as Sys, System.Collections.Generic as C,
+  FpasAmp.Ui.Radio.Model as Radio;
 
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
 const FaderLength: int := 64;
@@ -38,34 +39,54 @@ begin
   return E.Size<M.Msg>(E.Styled<M.Msg>(E.Column<M.Msg>(), S.Role.Divider), Fixed(1));
 end function;
 
-function Artwork(): E.Element<M.Msg>;
+function Artwork(Live: bool): E.Element<M.Msg>;
 begin
   const Edge: L.AxisSize := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(40)));
   return E.Size<M.Msg>(
     E.Styled<M.Msg>(
       E.Column<M.Msg>(
         new L.Flow(Align := L.Alignment.Center, Justify := L.Justification.Center),
-        E.Styled<M.Msg>(E.Text<M.Msg>(Glyph($E122)), S.Role.MutedIcon)
+        E.Styled<M.Msg>(
+          E.Text<M.Msg>(
+            Glyph(
+              if Live then
+                $E142
+              else
+                $E122
+              end if
+            )
+          ), S.Role.MutedIcon
+        )
       ), S.Role.MutedPanel
     ), new L.Flex(Width := Edge, Height := Edge)
   );
 end function;
 
-function Transport(Current: M.State; Loaded: bool): E.Element<M.Msg>;
+function Transport(Current: M.State; Loaded: bool; Live: bool): E.Element<M.Msg>;
 begin
   return E.Row<M.Msg>(
     new L.Flow(Gap := Points(4), Align := L.Alignment.Center),
     Icons.IconButton<M.Msg>(
       'player-previous', Glyph($E15F), 'Previous', M.Msg.Previous,
-      new Icons.Options(ControlSize := Icons.Size.Small, Enabled := Loaded)
+      new Icons.Options(ControlSize := Icons.Size.Small, Enabled := Loaded and not Live)
     ),
     Icons.IconButton<M.Msg>(
       'player-toggle', if Current.Playing then
-        Glyph($E12E)
+        Glyph(
+          if Live then
+            $E167
+          else
+            $E12E
+          end if
+        )
       else
         Glyph($E13C)
       end if, if Current.Playing then
-        'Pause'
+        if Live then
+          'Stop'
+        else
+          'Pause'
+        end if
       else
         'Play'
       end if, M.Msg.Toggle,
@@ -75,7 +96,7 @@ begin
       'player-next', Glyph($E160), 'Next', M.Msg.Next,
       new Icons.Options(
         ControlSize := Icons.Size.Small,
-        Enabled := Loaded and Current.Index + 1 < Current.Queue.Length
+        Enabled := Loaded and not Live and Current.Index + 1 < Current.Queue.Length
       )
     )
   );
@@ -88,12 +109,21 @@ end function;
 
 function Info(Current: M.State; Track: Tracks.Entry?): E.Element<M.Msg>;
 begin
-  const Title: string := if Track = null then
+  const Station: Radio.Station? := Current.Station;
+  const Title: string := if Station <> null then
+    Station.Name
+  elsif Track = null then
     'Nothing playing'
   else
     Browse.Title(Track)
   end if;
-  const Artist: string := if Track = null then
+  const Artist: string := if Station <> null then
+    if Current.NowPlaying <> '' then
+      Current.NowPlaying
+    else
+      Station.Genre
+    end if
+  elsif Track = null then
     'Choose a track to play'
   else
     Browse.Artist(Track)
@@ -102,7 +132,7 @@ begin
     new L.Flow(Gap := Points(8), Justify := L.Justification.Center),
     E.Row<M.Msg>(
       new L.Flow(Gap := Points(10), Align := L.Alignment.Center),
-      Artwork(),
+      Artwork(Station <> null),
       E.Size<M.Msg>(
         E.Column<M.Msg>(
           new L.Flow(Gap := Points(2)),
@@ -119,8 +149,18 @@ begin
     ),
     E.Row<M.Msg>(
       new L.Flow(Gap := Points(10), Align := L.Alignment.Center),
-      Transport(Current, Track <> null),
-      Caption(Browse.Time(Current.Position) + ' / ' + Browse.Time(Current.Duration))
+      Transport(Current, Track <> null or Station <> null, Station <> null),
+      Caption(
+        if Station = null then
+          Browse.Time(Current.Position) + ' / ' + Browse.Time(Current.Duration)
+        elsif Current.Buffering then
+          'Buffering…'
+        elsif Current.Playing then
+          '● LIVE'
+        else
+          'Stopped'
+        end if
+      )
     )
   );
 end function;
@@ -274,7 +314,11 @@ begin
     E.Column<M.Msg>(
       new L.Flow(Padding := Points(12), Gap := Points(10), Align := L.Alignment.Stretch),
       Controls,
-      Position(Current)
+      if Current.Station = null then
+        Position(Current)
+      else
+        E.Row<M.Msg>()
+      end if
     )
   );
 end function;

@@ -53,6 +53,9 @@ begin
       if Playing then
         Device.Play(Revision);
       end if;
+    when M.Request.Stream(const Url: string, const Revision: long):
+      Device.OpenStream(new Sys.Uri(Url), Revision);
+      Device.Play(Revision);
     when M.Request.Transport(const Playing: bool, const Revision: long):
       if Playing then
         Device.Play(Revision);

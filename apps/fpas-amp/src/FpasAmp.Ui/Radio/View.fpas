@@ -1,0 +1,432 @@
+// [Documentation](../../../doc/desktop.md#online-radio)
+
+unit FpasAmp.Ui.Radio.View;
+
+uses
+  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Radio.Model as M,
+  FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Player.Model as Player,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Actions.IconButtons as Icons,
+  Fpas.Ui.Widgets.Inputs.SearchFields as Search, Fpas.Ui.Widgets.Inputs.TextFields as Fields,
+  Fpas.Ui.Widgets.Overlays.Popovers as Pop, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs,
+  Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Containers.EmptyStates as Empty,
+  Fpas.Ui.Widgets.Display.Icons as Artwork,
+  Fpas.Ui.Widgets.Containers.Cards as Cards,
+  Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Widgets.Collections.DataGrids as Grid,
+  Fpas.Ui.Widgets.Desktop.StatusBars as Status, System as Sys, System.Collections.Generic as C;
+
+const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
+
+function Points(Value: int): L.Spacing;
+begin
+  return L.Spacing.Fixed(L.Measure.Logical(Value));
+end function;
+
+function Action(Value: M.Msg): App.Msg;
+begin
+  return App.Msg.Radio(Value);
+end function;
+
+function Play(Current: App.State; Item: M.Station; Labeled: bool := false): E.Element<App.Msg>;
+begin
+  const Source: M.Station? := Current.Player.Station;
+  const Active: bool := Source <> null and Source.Id = Item.Id;
+  const Playing: bool := Active and Current.Player.Playing;
+  const Glyph: string := Sys.Char.ConvertFromUtf32(
+    if Playing then
+      $E167
+    else
+      $E13C
+    end if
+  );
+  const Key: string := 'radio-play-' + Item.Id;
+  const Message: App.Msg := App.Msg.Player(Player.Msg.PlayStation(Item));
+  if Labeled then
+    return B.Button<App.Msg>(
+      Key, if Playing then
+        'Stop'
+      else
+        'Play live'
+      end if, Message,
+      new B.Options(Icon := Glyph, Variant := S.ButtonVariant.Primary)
+    );
+  end if;
+
+  return Icons.IconButton<App.Msg>(
+    Key, Glyph,
+    (if Playing then
+      'Stop '
+    else
+      'Play '
+    end if) + Item.Name,
+    Message,
+    new Icons.Options(
+      ControlSize := Icons.Size.Small,
+      Variant := if Active then
+        S.ButtonVariant.Primary
+      else
+        S.ButtonVariant.Ghost
+      end if
+    )
+  );
+end function;
+
+function Favorite(Current: App.State; Item: M.Station; Labeled: bool): E.Element<App.Msg>;
+begin
+  const Saved: bool := M.Find(Current.Settings.Saved.RadioFavorites, Item.Id) <> null;
+  const Star: string := Sys.Char.ConvertFromUtf32($E176);
+  if Labeled then
+    return B.Button<App.Msg>(
+      'radio-favorite-' + Item.Id, if Saved then
+        'Favorited'
+      else
+        'Favorite'
+      end if,
+      Action(M.Msg.Favorite(Item)),
+      new B.Options(Icon := Star, Variant := S.ButtonVariant.Outline, Selected := Saved)
+    );
+  end if;
+
+  return Icons.IconButton<App.Msg>(
+    'radio-favorite-' + Item.Id, Star,
+    (if Saved then
+      'Remove favorite '
+    else
+      'Favorite '
+    end if) + Item.Name,
+    Action(M.Msg.Favorite(Item)),
+    new Icons.Options(
+      ControlSize := Icons.Size.Small,
+      Variant := if Saved then
+        S.ButtonVariant.Primary
+      else
+        S.ButtonVariant.Ghost
+      end if
+    )
+  );
+end function;
+
+function Filter(Current: M.State; Key: string; Value: string): E.Element<App.Msg>;
+begin
+  const Open: bool := Current.FilterOpen = Key;
+  const Trigger: E.Element<App.Msg> := B.Button<App.Msg>(
+    'radio-filter-' + Key, if Value = '' then
+      Key
+    else
+      Key + ' · ' + Value
+    end if,
+    Action(
+      M.Msg.FilterPanel(
+        if Open then
+          ''
+        else
+          Key
+        end if
+      )
+    ),
+    new B.Options(Variant := S.ButtonVariant.Outline, IconRight := Sys.Char.ConvertFromUtf32($E06D))
+  );
+  return Pop.Popover<App.Msg>(
+    'radio-filter-popup-' + Key, Trigger,
+    E.Column<App.Msg>(
+      new L.Flow(Gap := Points(8), Align := L.Alignment.Stretch),
+      Fields.TextField<App.Msg>(
+        'radio-filter-value-' + Key, Value,
+        function(Text: string): App.Msg => Action(M.Msg.Filter(Key, Text)),
+        new Fields.Options(Label := Key)
+      ),
+      B.Button<App.Msg>(
+        'radio-filter-done-' + Key, 'Done',
+        Action(M.Msg.FilterPanel('')), new B.Options(Variant := S.ButtonVariant.Outline)
+      )
+    ),
+    Open, Action(M.Msg.FilterPanel('')), new Pop.Options(Width := 230)
+  );
+end function;
+
+function Format(Item: M.Station): string;
+begin
+  const Codec: string := Item.Codec.ToUpperInvariant();
+  const Mode: string := if Item.Hls then
+    'HLS'
+  else
+    ''
+  end if;
+  const Details: C.List<string> := new C.List<string>();
+  if Codec <> '' then
+    Details.Add(Codec);
+  end if;
+
+  if Mode <> '' then
+    Details.Add(Mode);
+  end if;
+
+  if Item.Bitrate > 0 then
+    Details.Add(Item.Bitrate.ToString() + ' kbps');
+  end if;
+
+  return Sys.String.Join(' · ', Details);
+end function;
+
+function Row(Current: App.State; Item: M.Station): Grid.Row<App.Msg>;
+begin
+  return new Grid.Row<App.Msg>(
+    Item.Id, [
+      Grid.Cell<App.Msg>.Content(
+        [
+          E.Row<App.Msg>(
+            new L.Flow(Gap := Points(10), Align := L.Alignment.Center),
+            Play(Current, Item),
+            E.Styled<App.Msg>(
+              Texts.Text<App.Msg>(Item.Name, Texts.Appearance.Label),
+              S.Role.SingleLine
+            )
+          )
+        ]
+      ),
+      Grid.Cell<App.Msg>.Text(Item.Country), Grid.Cell<App.Msg>.Text(Item.Language),
+      Grid.Cell<App.Msg>.Text(Item.Genre), Grid.Cell<App.Msg>.Text(Format(Item)),
+      Grid.Cell<App.Msg>.Content([Favorite(Current, Item, false)])
+    ]
+  );
+end function;
+
+function GridView(Current: App.State; Width: int): E.Element<App.Msg>;
+begin
+  const Page: M.State := Current.Radio;
+  if Page.Items.Length = 0 then
+    return Empty.EmptyState<App.Msg>(
+      'radio-empty', if Page.Searching then
+        'Finding stations…'
+      elsif Page.Loaded then
+        'No matching stations'
+      else
+        'Station directory unavailable'
+      end if
+    );
+  end if;
+
+  return Grid.DataGrid<App.Msg>(
+    'radio-stations', [
+      new Grid.Column('Station', cast<float>(Sys.Math.Max(200, Width - 582))),
+      new Grid.Column('Country', 126.0F, Priority := 3),
+      new Grid.Column('Language', 112.0F, Priority := 4),
+      new Grid.Column('Genre', 162.0F, Priority := 5),
+      new Grid.Column('Stream', 136.0F, Priority := 1),
+      new Grid.Column('', 46.0F, Fixed := true)
+    ],
+    Page.Items.Length, function(Index: int): Grid.Row<App.Msg> => Row(Current, Page.Items[Index]),
+    new Grid.Value(Cursor := Page.Cursor, Anchor := Page.Anchor),
+    function(Value: Grid.Value): App.Msg => Action(M.Msg.Navigate(Value.Cursor, Value.Anchor)),
+    new Grid.Options(RowHeight := 38.0F, HideCheckboxes := true),
+    function(Index: int): App.Msg => App.Msg.Player(Player.Msg.PlayStation(Page.Items[Index]))
+  );
+end function;
+
+function Error(Message: string?; Id: string := 'radio-error'): E.Element<App.Msg>;
+begin
+  if Message = null then
+    return E.Row<App.Msg>();
+  end if;
+
+  return Alerts.Alert<App.Msg>(
+    Id, Message, new Alerts.Options(Tone := S.Tone.Warning)
+  );
+end function;
+
+function Edit(Base: E.Element<App.Msg>; Draft: M.Draft): E.Element<App.Msg>;
+begin
+  return Dialogs.Dialog<App.Msg>(
+    'radio-add-dialog',
+    Base,
+    E.Column<App.Msg>(
+      new L.Flow(Gap := Points(12), Align := L.Alignment.Stretch),
+      Fields.TextField<App.Msg>(
+        'radio-url', Draft.Url, function(Value: string): App.Msg => Action(M.Msg.EditUrl(Value)),
+        new Fields.Options(Label := 'Stream URL')
+      ),
+      Fields.TextField<App.Msg>(
+        'radio-name', Draft.Name, function(Value: string): App.Msg => Action(M.Msg.EditName(Value)),
+        new Fields.Options(Label := 'Name (optional)')
+      ),
+      Error(Draft.Error, 'radio-save-error'),
+      E.Row<App.Msg>(
+        new L.Flow(Gap := Points(8), Justify := L.Justification.End),
+        B.Button<App.Msg>('radio-cancel', 'Cancel', Action(M.Msg.Cancel)),
+        B.Button<App.Msg>(
+          'radio-save', 'Add station', Action(M.Msg.Save),
+          new B.Options(Variant := S.ButtonVariant.Primary, Enabled := M.Address(Draft.Url) <> '')
+        )
+      )
+    ),
+    true,
+    new Dialogs.Options('Add stream URL', InitialFocus := 'radio-url'),
+    Action(M.Msg.Cancel)
+  );
+end function;
+
+// Renders the station directory with search, filters and the manual URL dialog.
+public function Stations(Current: App.State; Width: int; Padding: int): E.Element<App.Msg>;
+begin
+  const Page: M.State := Current.Radio;
+  const SearchBar: E.Element<App.Msg> := Search.SearchField<App.Msg>(
+    'radio-search', Page.Filter.Name, function(Value: string): App.Msg => Action(M.Msg.Name(Value)),
+    new Search.Options(Placeholder := 'Search stations…')
+  );
+  const Filters: E.Element<App.Msg> := E.Row<App.Msg>(
+    new L.Flow(Gap := Points(8), Align := L.Alignment.Center, Wrap := true, Clip := false),
+    Filter(Page, 'Country', Page.Filter.Country), Filter(Page, 'Language', Page.Filter.Language),
+    Filter(Page, 'Genre', Page.Filter.Genre)
+  );
+  const Toolbar: E.Element<App.Msg> := if Width < 760 then
+    E.Column<App.Msg>(
+      new L.Flow(Gap := Points(8), Align := L.Alignment.Stretch, Clip := false),
+      SearchBar,
+      Filters
+    )
+  else
+    E.Row<App.Msg>(
+      new L.Flow(Gap := Points(8), Align := L.Alignment.Center, Clip := false),
+      E.Size<App.Msg>(SearchBar, Fill), Filters
+    )
+  end if;
+  const Info: string := if Page.Searching then
+    'Finding stations…'
+  else
+    Page.Items.Length.ToString() + if Page.Items.Length = 1 then
+      ' station'
+    else
+      ' stations'
+    end if
+  end if;
+  const Body: E.Element<App.Msg> := E.Column<App.Msg>(
+    new L.Flow(Align := L.Alignment.Stretch),
+    E.Size<App.Msg>(
+      E.Column<App.Msg>(
+        new L.Flow(Padding := Points(Padding), Gap := Points(16), Align := L.Alignment.Stretch),
+        E.Row<App.Msg>(
+          new L.Flow(Gap := Points(8), Align := L.Alignment.Center),
+          E.Size<App.Msg>(Texts.Text<App.Msg>('Stations', Texts.Appearance.HeadingOne), Fill),
+          B.Button<App.Msg>(
+            'radio-add', 'Add stream URL', Action(M.Msg.Add),
+            new B.Options(Variant := S.ButtonVariant.Outline)
+          )
+        ), Toolbar, Error(Page.Error),
+        if Page.Error <> null and Page.Editing = null then
+          B.Button<App.Msg>(
+            'radio-retry', 'Retry', Action(M.Msg.Refresh),
+            new B.Options(Variant := S.ButtonVariant.Outline)
+          )
+        else
+          E.Row<App.Msg>()
+        end if,
+        E.Size<App.Msg>(GridView(Current, Sys.Math.Max(1, Width - 2 * Padding)), Fill)
+      ), Fill
+    ),
+    Status.StatusBar<App.Msg>('radio-status', [Status.Item<App.Msg>.Text(new Status.Label(Info))])
+  );
+  const Draft: M.Draft? := Page.Editing;
+  return if Draft <> null then
+    Edit(Body, Draft)
+  else
+    Body
+  end if;
+end function;
+
+// Renders a saved station's information and its current live track, if available.
+// Current supplies player and favorite state. Item is the saved station.
+// Padding is the outer inset in logical points.
+public function Station(Current: App.State; Item: M.Station; Padding: int): E.Element<App.Msg>;
+begin
+  const Source: M.Station? := Current.Player.Station;
+  const Active: bool := Source <> null and Source.Id = Item.Id;
+  const Name: string := if Active and Current.Player.NowPlaying <> '' then
+    Current.Player.NowPlaying
+  elsif Active and Current.Player.Buffering then
+    'Connecting…'
+  elsif Active and Current.Player.Playing then
+    'LIVE'
+  else
+    'Stopped'
+  end if;
+  const Descriptors: C.List<string> := new C.List<string>();
+  for Value: string in [Item.Country, Item.Language, Item.Genre] do
+    if Value <> '' then
+      Descriptors.Add(Value);
+    end if;
+  end for;
+  const Back: App.Msg := App.Msg.Navigation(Nav.Msg.Select(Nav.Route.Page(Nav.Page.Stations)));
+  return E.ScrollView<App.Msg>(
+    'station-details-scroll', E.Column<App.Msg>(
+      new L.Flow(Padding := Points(Padding), Gap := Points(16), Align := L.Alignment.Stretch),
+      E.Row<App.Msg>(
+        new L.Flow(Gap := Points(8), Align := L.Alignment.Center),
+        Icons.IconButton<App.Msg>(
+          'radio-back',
+          Sys.Char.ConvertFromUtf32($E048),
+          'Back to stations',
+          Back
+        ),
+        Texts.Text<App.Msg>('Stations', Texts.Appearance.HeadingThree)
+      ),
+      E.Size<App.Msg>(
+        E.Styled<App.Msg>(E.Row<App.Msg>(), S.Role.Divider),
+        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(1)))
+      ),
+      E.Row<App.Msg>(
+        new L.Flow(Gap := Points(18), Align := L.Alignment.Center),
+        Cards.Card<App.Msg>(
+          'station-artwork', [
+            Artwork.Icon<App.Msg>(Sys.Char.ConvertFromUtf32($E142), 36.0F)
+          ], new Cards.Options(
+            Width := L.Extent.Fixed(L.Measure.Logical(88)),
+            Height := L.Extent.Fixed(L.Measure.Logical(88)),
+            Align := L.Alignment.Center,
+            Muted := true
+          )
+        ),
+        E.Size<App.Msg>(
+          E.Column<App.Msg>(
+            new L.Flow(Gap := Points(6)),
+            Texts.Text<App.Msg>(Item.Name, Texts.Appearance.HeadingOne),
+            Texts.Text<App.Msg>(Sys.String.Join(' · ', Descriptors), Texts.Appearance.Secondary),
+            E.Row<App.Msg>(
+              new L.Flow(Gap := Points(8), Align := L.Alignment.Center),
+              Play(Current, Item, true), Favorite(Current, Item, true)
+            )
+          ), Fill
+        )
+      ),
+      Error(Current.Radio.Error),
+      Cards.Card<App.Msg>(
+        'station-now-playing', [
+          Texts.Text<App.Msg>('Now playing', Texts.Appearance.HeadingThree),
+          Texts.Text<App.Msg>(Name, Texts.Appearance.Label)
+        ], new Cards.Options(Width := L.Extent.Fill)
+      ),
+      if Format(Item) <> '' or Item.Website <> '' then
+        Cards.Card<App.Msg>(
+          'station-stream-details', [
+            Texts.Text<App.Msg>('Station information', Texts.Appearance.HeadingThree),
+            Texts.Text<App.Msg>(Format(Item), Texts.Appearance.Secondary),
+            if Item.Website <> '' then
+              B.Button<App.Msg>(
+                'radio-website', 'Station website', Action(M.Msg.Website(Item.Website)),
+                new B.Options(
+                  Variant := S.ButtonVariant.Outline,
+                  Icon := Sys.Char.ConvertFromUtf32($E0B9)
+                )
+              )
+            else
+              E.Row<App.Msg>()
+            end if
+          ], new Cards.Options(Width := L.Extent.Fill)
+        )
+      else
+        E.Row<App.Msg>()
+      end if
+    )
+  );
+end function;
+
+end unit;

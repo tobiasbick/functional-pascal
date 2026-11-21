@@ -10,7 +10,7 @@ uses
   Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Containers.EmptyStates as Empty,
   Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Styles as Styles,
   Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys, System.IO as IO,
-  System.Collections.Generic as C;
+  System.Collections.Generic as C, FpasAmp.Ui.Radio.Model as Radio;
 
 // Desktop sidebar width, in logical units.
 public const Width: int := 224;
@@ -32,7 +32,7 @@ begin
       when M.Page.Artists: $E1A4;
       when M.Page.Genres: $E17F;
       when M.Page.Settings: $E154;
-      else $E0AD;
+      else $E142;
     end case
   );
 end function;
@@ -114,6 +114,18 @@ begin
       )
     );
   end if;
+  const Stations: C.List<Nav.Item<App.Msg>> := new C.List<Nav.Item<App.Msg>>(
+    [Destination(M.Page.Stations)]
+  );
+  for Item: Radio.Station in Current.Settings.Saved.RadioFavorites do
+    const Route: M.Route := M.Route.Station(Item.Id);
+    Stations.Add(
+      new Nav.Item<App.Msg>(
+        M.Key(Route), Item.Name, App.Msg.Navigation(M.Msg.Select(Route)),
+        Icon := Sys.Char.ConvertFromUtf32($E142)
+      )
+    );
+  end for;
 
   return Nav.Sidebar<App.Msg>(
     'navigation',
@@ -127,6 +139,7 @@ begin
           Destination(M.Page.Genres)
         ]
       ),
+      new Nav.Section<App.Msg>('Radio', Stations.ToArray(), GapBefore := 14),
       new Nav.Section<App.Msg>('Playlists', Playlists.ToArray(), GapBefore := 14)
     ],
     if Active = 'settings' or (not Current.Navigation.Loaded and Active.StartsWith(
@@ -223,6 +236,8 @@ begin
         Error
       end if;
       Glyph := Sys.Char.ConvertFromUtf32($E106);
+    when M.Route.Station(_):
+      Heading := 'Stations';
   end case;
   const Parts: C.List<E.Element<App.Msg>> := new C.List<E.Element<App.Msg>>(
     [Texts.Text<App.Msg>(Heading, Texts.Appearance.HeadingOne)]

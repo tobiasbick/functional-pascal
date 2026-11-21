@@ -220,6 +220,10 @@ The terminal text area contract checks word wrapping, caret movement, model-decl
 The terminal tabs contract checks one focus stop per strip, keyboard and pointer selection, model-declined changes, disabled strips, full-width pills and focus across both scroll axes. The gallery checks that the shared Navigation examples respond to input on wide and narrow terminals.
 The terminal select contract checks filtered original indices, focus return, pointer dismissal, disabled controls, Unicode backspace, constrained viewports and removing the open trigger. The gallery checks the shared Country and Language examples in wide and stacked layouts.
 The radio-group contract covers one tab stop per group, wrapping past disabled options, pointer selection, model-declined changes and focus across a scroll boundary. The gallery also checks that the save-frequency selection survives page navigation.
+The terminal selection-list contract checks validation, one tab stop, rejected selection proposals, keyboard and pointer selection, scrolling, and Enter activation. The gallery checks the original CUI list's initial selection, details, and activation independently of later selection changes.
+
+The [terminal filter-bar contract](Fixtures/tui/FilterBar.fpas) checks the UTF-8 search capacity, reserved IDs, keyboard and pointer selection, focus return, disabled controls and clearing all criteria.
+The [terminal widgets contract](Fixtures/tui/TerminalWidgets.fpas) checks appending while following and reading older log messages, palette filtering and focus return, tree expansion and file activation, and keyboard panning of wide tables. The text field and area contracts also check selection and replacing text.
 The gallery DAP test sends the same shortcuts through the private terminal
 and checks that resizing and changing themes produce the expected frames.
 

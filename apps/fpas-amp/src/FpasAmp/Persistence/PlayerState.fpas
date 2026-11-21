@@ -4,7 +4,8 @@
 unit FpasAmp.Persistence.PlayerState;
 
 uses
-  FpasAmp.Persistence.JsonFields as Fields, FpasAmp.Ui.Player.Model as M,
+  FpasAmp.Persistence.JsonFields as Fields, FpasAmp.Persistence.JsonOutput as Output,
+  FpasAmp.Ui.Player.Model as M,
   FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.Browse as Browse,
   FpasAmp.Library.Metadata.Model as Tracks, System as Sys, System.Collections.Generic as C,
   System.Collections.Immutable as I, System.Text.Json as J;
@@ -115,6 +116,29 @@ begin
 
   return new Saved(Source, Id ?? '', Slot ?? -1, Position ?? 0.0, Duration ?? 0.0);
 end function;
+
+// Writes the playback bookmark Value as an object to Writer.
+public procedure Encode(Writer: J.Utf8JsonWriter; Value: Saved);
+begin
+  const Source: Music.Selection := Value.Source;
+  Writer.WriteStartObject();
+  Writer.WriteStartObject('source');
+  Writer.WriteString('albumId', Source.AlbumId);
+  Writer.WriteString('search', Source.Search);
+  Output.Strings(Writer, 'genres', Source.Genres);
+  Writer.WriteNumber('minimumRating', Source.MinimumRating);
+  Writer.WriteNumber('column', Source.Column);
+  Writer.WriteBoolean('descending', Source.Descending);
+  Writer.WriteString('performer', Source.Performer);
+  Writer.WriteString('releaseFilter', Source.ReleaseFilter);
+  Writer.WriteString('playlist', Source.Playlist);
+  Writer.WriteEndObject();
+  Writer.WriteString('trackId', Value.TrackId);
+  Writer.WriteNumber('index', Value.Index);
+  Writer.WriteNumber('position', Value.Position);
+  Writer.WriteNumber('duration', Value.Duration);
+  Writer.WriteEndObject();
+end procedure;
 
 // Captures the playback source and selected title from `Current` in constant space.
 public function Capture(Current: M.State): Saved;

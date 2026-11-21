@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Tui.Internal.Hosting.Interaction;
 
-uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Internal.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Tui.Internal.Widgets.Inputs.RadioGroup as Radios, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Hosting.RowNavigation as Navigation, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.Widgets.Collections.TreeRows as TreeRows, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as SelectionList, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Internal.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Tui.Internal.Widgets.Inputs.RadioGroup as Radios, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Hosting.RowNavigation as Navigation, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling, System as Sys, System.Collections.Generic as Generic;
 
 public type State<TMsg> = record
   public FocusId: function(): string;
@@ -60,6 +60,13 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
 
   function Invoke(Control: A.Control<TMsg>): bool;
   begin
+    case Control.Action of
+      when A.Binding.SelectionList(const List: E.SelectionListView<TMsg>, _, _):
+        SelectionList.Activate<TMsg>(List, Apply);
+        return true;
+      else
+    end case;
+
     const Handler: Actions.IActivatable<TMsg>? := A.Activatable<TMsg>(Control.Action);
     if Handler = null then
       return false;
@@ -258,6 +265,14 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     end if;
 
     case Control.Action of
+      when A.Binding.SelectionList(
+        const List: E.SelectionListView<TMsg>,
+        const Body: F.Rect,
+        const View: V.Viewport<TMsg>
+      ):
+        if Button = K.MouseButton.Left then
+          SelectionList.Click<TMsg>(List, Body, View.Offset, Column, Row, Apply);
+        end if;
       when A.Binding.EditArea(const Area: AreaEdit.View<TMsg>, _, _):
         if Button = K.MouseButton.Left then
           AreaEdit.Click<TMsg>(Area, Column, Row);
@@ -269,7 +284,7 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
         _
       ):
         if Button = K.MouseButton.Left then
-          const Cursor: Edit.Cursor := Position.Read();
+          const Cursor: Edit.Cursor := Position.Read(Field.Value);
           const Clicked: int := Glyphs.IndexAt(
             Field.Value.Substring(Cursor.Start),
             0,
@@ -278,6 +293,7 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
           Position.Write(
             Cursor with
               Offset := Cursor.Start + Clicked;
+              Anchor := -1;
             end with
           );
         end if;
@@ -343,6 +359,15 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
   begin
     const Modal: A.Scope<TMsg>? := Layout.Active;
     const Control: A.Control<TMsg>? := Focused(Layout);
+    if Modal = null and Key = K.Key.K and Modifiers = K.KeyModifiers.Ctrl then
+      case Layout.OpenPalette of
+        when is Sys.Func<TMsg> as OpenPalette:
+          Apply(OpenPalette.Invoke());
+          return;
+        else
+      end case;
+    end if;
+
     if Key = K.Key.Escape then
       if Dismiss(Modal) then
         return;
@@ -350,7 +375,37 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     end if;
 
     if Control <> null then
+      const Pan: A.HorizontalViewport? := Control.Pan;
+      if Pan <> null and Modifiers = K.KeyModifiers.Ctrl and (Key = K.Key.Left or Key =
+        K.Key.Right)
+      then
+        Scrolling.MoveOffset(
+          ScrollOffsets,
+          new A.ScrollRegion(Pan.Id, Control.Scope, Control.Bounds, Pan.Maximum),
+          if Key = K.Key.Left then
+            -Pan.Step
+          else
+            Pan.Step
+          end if
+        );
+        return;
+      end if;
+
       if Modifiers = K.KeyModifiers.None then
+        if Control.Role = 'treeitem' then
+          const TreeTarget: string? := TreeRows.Navigate<TMsg>(
+            A.Activatable<TMsg>(Control.Action),
+            Key,
+            Apply
+          );
+          if TreeTarget <> null then
+            if TreeTarget <> '' then
+              SetFocus(Layout, TreeTarget);
+            end if;
+
+            return;
+          end if;
+        end if;
         const Next: string? := case Control.Role of
           when 'radio': Radios.Move<TMsg>(A.Activatable<TMsg>(Control.Action), Key, Apply);
           when 'tab': Tabs.Move<TMsg>(A.Activatable<TMsg>(Control.Action), Key, Apply);
@@ -363,7 +418,8 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
         end if;
       end if;
 
-      if (Control.Role = 'navigation' or Control.Role = 'table-row') and Modifiers =
+      if (Control.Role = 'navigation' or Control.Role = 'table-row' or Control.Role = 'treeitem')
+        and Modifiers =
         K.KeyModifiers.None
       then
         const Id: string? := Navigation.Move<TMsg>(Layout, Focus, Key, ScrollOffsets, Apply);
@@ -383,6 +439,21 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
       end if;
 
       case Control.Action of
+        when A.Binding.SelectionList(
+          const List: E.SelectionListView<TMsg>,
+          _,
+          const View: V.Viewport<TMsg>
+        ):
+          if Modifiers = K.KeyModifiers.None and SelectionList.Navigate<TMsg>(
+            List,
+            View,
+            Key,
+            ScrollOffsets,
+            Apply
+          )
+          then
+            return;
+          end if;
         when A.Binding.Invoke(_):
           if Control.ArrowFocus and Modifiers = K.KeyModifiers.None
             and (Key = K.Key.Up or Key = K.Key.Down)
@@ -391,6 +462,20 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
             return;
           end if;
         when A.Binding.Scroll(const View: V.Viewport<TMsg>):
+          if (Control.Role = 'log' or Control.Role = 'table') and Modifiers =
+            K.KeyModifiers.None
+          then
+            const Delta: int := Navigation.Delta(Key, View.Rows, int.MaxValue);
+            if Delta <> 0 then
+              Scrolling.MoveOffset(
+                ScrollOffsets,
+                new A.ScrollRegion(Control.Id, Control.Scope, Control.Bounds, View.Maximum),
+                Delta
+              );
+              return;
+            end if;
+          end if;
+
           if Scrolling.Key<TMsg>(View, Key, Modifiers, Apply) then
             return;
           end if;
@@ -399,7 +484,7 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
             return;
           end if;
         when A.Binding.Edit(const Field: Edit.Field<TMsg>, const Position: Edit.Tracking, _, _):
-          if Modifiers = K.KeyModifiers.None and Edit.Key<TMsg>(Field, Position, Key, Apply) then
+          if Edit.Key<TMsg>(Field, Position, Key, Modifiers, Apply) then
             return;
           end if;
         when A.Binding.Grid(_, _):

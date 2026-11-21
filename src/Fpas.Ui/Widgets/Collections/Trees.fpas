@@ -14,7 +14,7 @@ public type Options = record
   public Enabled: bool := true;
 end record;
 
-// Builds an expandable native tree branch.
+// Builds an expandable tree branch.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
@@ -25,7 +25,7 @@ end record;
 // - `OnChange`: Maps the proposed expansion to a message.
 // - `Settings`: Optional row appearance.
 // ## Returns
-// The graphical element.
+// The tree branch element.
 public function Branch<TMsg>(Id: string; Label: string; Open: bool; Children: array of E.Element<TMsg>; OnChange: function(bool): TMsg; Settings: Options? := null): E.Element<TMsg>;
 requires Id <> '';
 begin
@@ -40,7 +40,7 @@ begin
   );
 end function;
 
-// Builds a native tree leaf.
+// Builds a tree leaf.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
@@ -49,7 +49,7 @@ end function;
 // - `OnActivate`: Optional selection message factory.
 // - `Settings`: Optional row appearance.
 // ## Returns
-// The graphical element.
+// The tree leaf element.
 public function Leaf<TMsg>(Id: string; Label: string; OnActivate: Sys.Func<TMsg>? := null; Settings: Options? := null): E.Element<TMsg>;
 requires Id <> '';
 begin

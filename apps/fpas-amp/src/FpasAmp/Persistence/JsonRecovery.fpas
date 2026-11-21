@@ -4,7 +4,7 @@
 unit FpasAmp.Persistence.JsonRecovery;
 
 uses
-  FpasAmp.Persistence.JsonFields as Fields,
+  FpasAmp.Persistence.JsonFields as Fields, FpasAmp.Persistence.JsonOutput as Output,
   System as Sys,
   System.Collections.Generic as C,
   System.Text.Json as J,
@@ -79,7 +79,16 @@ begin
     end if;
   end for;
 
-  return J.JsonSerializer.SerializeToElement<C.List<J.JsonElement>>(Items);
+  return Output.Element(
+    procedure(Writer: J.Utf8JsonWriter) begin
+      Writer.WriteStartArray();
+      for Item: J.JsonElement in Items do
+        Item.WriteTo(Writer);
+      end for;
+
+      Writer.WriteEndArray();
+    end procedure
+  );
 end function;
 
 // Recovers independently parseable root properties. The named array can also
@@ -123,7 +132,17 @@ begin
     end if;
   end for;
 
-  return J.JsonSerializer.SerializeToElement<C.Dictionary<string, J.JsonElement>>(Values);
+  return Output.Element(
+    procedure(Writer: J.Utf8JsonWriter) begin
+      Writer.WriteStartObject();
+      for Value: C.KeyValuePair<string, J.JsonElement> in Values do
+        Writer.WritePropertyName(Value.Key);
+        Value.Value.WriteTo(Writer);
+      end for;
+
+      Writer.WriteEndObject();
+    end procedure
+  );
 end function;
 
 end unit;

@@ -35,6 +35,13 @@ begin
         else
           return false;
       end case;
+    when Tree.Binding.SelectionList(_, const Body: F.Rect, const View: V.Viewport<TMsg>):
+      case Right of
+        when Tree.Binding.SelectionList(_, const Other: F.Rect, const Offset: V.Viewport<TMsg>):
+          return Body = Other and V.Equivalent<TMsg>(View, Offset);
+        else
+          return false;
+      end case;
     when Tree.Binding.Scroll(const View: V.Viewport<TMsg>):
       case Right of
         when Tree.Binding.Scroll(const Other: V.Viewport<TMsg>):

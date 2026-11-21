@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Tui.Internal.Layout.Arrangement;
 
-uses Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as PopupState, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextArea as AreaWidget, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Internal.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupHost as PopupHost, Fpas.Ui.Tui.Internal.Widgets.Collections.Table as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as FieldWidget, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Panel, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Widgets.Developer.LogConsoles as Logs, Fpas.Ui.Tui.Internal.Widgets.Developer.LogConsole as Log, Fpas.Ui.Tui.Internal.Widgets.Overlays.CommandPalette as Palette, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes, Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as SelectionList, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as PopupState, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextArea as AreaWidget, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Internal.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupHost as PopupHost, Fpas.Ui.Tui.Internal.Widgets.Collections.Table as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as FieldWidget, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Panel, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
 
 public function Arrange<TMsg>(
   Root: E.Element<TMsg>; Columns: int; Rows: int;
@@ -115,6 +115,15 @@ public function Arrange<TMsg>(
         when E.Element.CellGrid(const Id: string, _, _):
           HiddenTabStop(Id);
           return;
+        when E.Element.SelectionList(const List: E.SelectionListView<TMsg>):
+          if List.Items.Length > 0 then
+            HiddenTabStop(List.Id, true);
+          end if;
+
+          return;
+        when E.Element.Log(const Id: string, _, _):
+          HiddenTabStop(Id, true);
+          return;
         when E.Element.Stack(
           _,
           _,
@@ -133,6 +142,53 @@ public function Arrange<TMsg>(
     end if;
 
     case Node of
+      when E.Element.Palette(
+        const Id: string,
+        const Base: E.Element<TMsg>,
+        const Open: bool,
+        const Commands: array of Palettes.Command<TMsg>,
+        const Change: function(bool): TMsg,
+        const Shortcut: bool
+      ):
+        Visit(Base, Area, Clip, ScopeId, Style);
+        if InputBlocked then
+          return;
+        end if;
+
+        if Open then
+          Scopes.Add(Id);
+          Active := Palette.Draw<TMsg>(
+            Id,
+            Commands,
+            Change,
+            Shortcut,
+            Popup,
+            Screen,
+            Theme,
+            Operations,
+            Controls
+          );
+          PaletteOpen := true;
+        else
+          if Popup.Read().Id = Id then
+            Popup.Write(new PopupState.Cursor());
+          end if;
+
+          if Shortcut then
+            OpenPalette := function(): TMsg => Change(true);
+          end if;
+        end if;
+      when E.Element.Log(
+        const Id: string,
+        const Entries: array of Logs.Entry,
+        const Timestamps: bool
+      ):
+        AddControl(
+          Log.Arrange<TMsg>(
+            Id, Entries, Timestamps, A.FindControl<TMsg>(Previous, Id), Clip, Style, Theme,
+            ScopeId, FocusReturn, Scroll, Regions, Operations
+          )
+        );
       when E.Element.TabStrip(const Strip: E.TabView<TMsg>):
         Tabs.Arrange<TMsg>(
           Strip, Area, Clip, Style, Theme, ScopeId, FocusReturn, ScrollId, Focus,
@@ -142,6 +198,12 @@ public function Arrange<TMsg>(
         Tables.Arrange<TMsg>(
           Table, Area, Clip, Style, Theme, ScopeId, FocusReturn,
           Scroll, Regions, NavigationRows, Operations, AddControl
+        );
+      when E.Element.SelectionList(const List: E.SelectionListView<TMsg>):
+        AddControl(
+          SelectionList.Arrange<TMsg>(
+            List, Previous, Clip, Style, Theme, ScopeId, FocusReturn, Scroll, Regions, Operations
+          )
         );
       when E.Element.CellGrid(
         const Id: string,
@@ -439,16 +501,22 @@ begin
   var InputBlocked: bool := false;
   var WrapText: bool := false;
   var GlobalKeys: array of K.ShortcutBinding<TMsg> := [];
+  var OpenPalette: Sys.Func<TMsg>? := null;
+  var PaletteOpen: bool := false;
   const Screen: F.Rect := new F.Rect(0, 0, Columns, Rows);
   Visit(Root, Screen, Screen, '', Theme.Text);
-  const OpenPopup: A.Scope<TMsg>? := PopupHost.Present<TMsg>(
-    Popup,
-    Active,
-    Screen,
-    Theme,
-    Operations,
-    Controls
-  );
+  const OpenPopup: A.Scope<TMsg>? := if PaletteOpen then
+    null
+  else
+    PopupHost.Present<TMsg>(
+      Popup,
+      Active,
+      Screen,
+      Theme,
+      Operations,
+      Controls
+    )
+  end if;
   if OpenPopup <> null then
     Active := OpenPopup;
     Scopes.Add(OpenPopup.Id);
@@ -469,7 +537,9 @@ begin
     Surface.Rows,
     Allocations.ToArray(),
     Scopes := Scopes.ToArray(),
-    NavigationRows := NavigationRows.ToArray(), TabStops := TabStops.ToArray()
+    NavigationRows := NavigationRows.ToArray(),
+    TabStops := TabStops.ToArray(),
+    OpenPalette := OpenPalette
   );
 end function;
 

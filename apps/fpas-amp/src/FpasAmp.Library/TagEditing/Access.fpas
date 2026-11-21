@@ -4,12 +4,13 @@
 unit FpasAmp.Library.TagEditing.Access;
 
 uses
+  FpasAmp.Library.Serialization.CatalogueJson as Codec,
   FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Metadata.Persistence.Store as Store,
   FpasAmp.Library.TagEditing.Fields as F, FpasAmp.Library.TagEditing.Files as Files,
   FpasAmp.Library.TagEditing.Overrides as Overrides, Fpas.Media.Tags.AudioFiles as Media,
   FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db, System as Sys,
   System.Collections.Generic as C, System.Collections.Immutable as I, System.IO as IO,
-  System.Text.Json as J, System.Threading as T;
+  System.Threading as T;
 
 function Attached(Database: string; Users: string): Db.SqliteConnection;
 begin
@@ -80,7 +81,7 @@ begin
   );
   const Cached: object? := Command.ExecuteScalar();
   if Cached is string then
-    const Tags: Media.Info? := J.JsonSerializer.Deserialize<Media.Info>(cast<string>(Cached));
+    const Tags: Media.Info? := Codec.ReadTrack(cast<string>(Cached));
     if Tags <> null then
       Store.Project(Connection, Transaction, Track.FileId, F.Project(Tags, Changes));
     end if;

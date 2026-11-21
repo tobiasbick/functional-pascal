@@ -325,6 +325,24 @@ public sealed class TuiGalleryTests
             Assert.Equal("Aiko Tanaka", Focused(await Request("snapshot")));
             await Key("Home");
             Assert.Equal("Tomas Rivera", Focused(await Request("snapshot")));
+            await Resize(120, 24);
+            var listFrame = await Request("snapshot");
+            var list = Control(listFrame, "sample-list");
+            Assert.Equal("listbox", list.GetProperty("role").GetString());
+            Assert.Equal("release", list.GetProperty("value").GetString());
+            Assert.Contains("Priya Nair · Ship it", Preview(listFrame, 40));
+            await Turn(new() { ["kind"] = "click", ["column"] = list.GetProperty("column").GetInt32() + 2,
+                ["row"] = list.GetProperty("row").GetInt32() });
+            var review = await Request("snapshot");
+            Assert.Equal("design-review", Control(review, "sample-list").GetProperty("value").GetString());
+            Assert.Contains("Jonas Berg · Tomorrow at 10:00", Preview(review, 40));
+            Assert.DoesNotContain("Opened ", Preview(review, 40));
+            await Key("Enter");
+            await Key("End");
+            var planning = await Request("snapshot");
+            Assert.Equal("planning", Control(planning, "sample-list").GetProperty("value").GetString());
+            Assert.Contains("Tomas Rivera · Q1 roadmap", Preview(planning, 40));
+            Assert.Contains("Opened Design review", Preview(planning, 40));
             await Resize(80, 24);
 
             await Key("Escape");

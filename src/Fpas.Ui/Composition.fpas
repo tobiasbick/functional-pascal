@@ -4,6 +4,7 @@ unit Fpas.Ui.Composition;
 
 uses
   Fpas.Ui.TerminalExtensions.CellGrids as CellGrids,
+  Fpas.Ui.TerminalExtensions.SelectionLists as SelectionLists,
   Fpas.Ui.Internal.Mapping.EditingTools as EditingTools,
   Fpas.Ui.Internal.Mapping.SourceTools as SourceTools,
   Fpas.Ui.Internal.Mapping.Display as Display,
@@ -1471,6 +1472,14 @@ begin
       Id,
       Content,
       function(Event: CellGrids.Event): TParent => Messages(Changed(Event))
+    );
+    when E.Element.TerminalSelectionList(
+      const Id: string, const Items: array of SelectionLists.Item, const Selected: string,
+      const OnSelect: function(string): TChild, const OnActivate: function(string): TChild
+    ): E.Element<TParent>.TerminalSelectionList(
+      Id, Items, Selected,
+      function(Key: string): TParent => Messages(OnSelect(Key)),
+      function(Key: string): TParent => Messages(OnActivate(Key))
     );
     when E.Element.TerminalStyle(
       const FChild: E.Element<TChild>,

@@ -1,0 +1,15 @@
+<!-- [Documentation](../../docs/build/distribution.md#windows-portable-launcher) -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <OutputType Condition="'$(PortableGui)' == 'true'">WinExe</OutputType>
+    <AssemblyName>$(PortableName)</AssemblyName>
+    <PublishAot>true</PublishAot>
+    <ApplicationIcon Condition="'$(PortableIcon)' != ''">$(PortableIcon)</ApplicationIcon>
+    <DefineConstants Condition="'$(PortableGui)' == 'true'">$(DefineConstants);PORTABLE_GUI</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="$(PortableArchive)" LogicalName="Fpas.Portable.Archive" />
+    <EmbeddedResource Include="$(PortableManifest)" LogicalName="Fpas.Portable.Manifest" />
+  </ItemGroup>
+</Project>

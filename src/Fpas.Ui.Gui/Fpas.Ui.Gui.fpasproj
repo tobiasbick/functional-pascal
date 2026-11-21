@@ -13,7 +13,8 @@
   <ItemGroup>
     <ProjectReference Include="../Fpas.Ui.Mvu/Fpas.Ui.Mvu.fpasproj" />
     <ProjectReference Include="../Fpas.Ui/Fpas.Ui.fpasproj" />
-    <ProjectReference Include="../Fpas.Ui.Gui.Cui/Fpas.Ui.Gui.Cui.csproj" />
+    <ProjectReference Include="../Fpas.Ui.Gui.Cui/Fpas.Ui.Gui.Cui.csproj" Condition="'$(PublishAot)' != 'true'" />
+    <PackageReference Include="Fpas.Ui.Gui.Cui" VersionOverride="$(FpasSdkVersion)" Condition="'$(PublishAot)' == 'true'" />
     <None Include="../../docs/ui/gui/host.md" Pack="true" PackagePath="README.md" />
   </ItemGroup>
 </Project>

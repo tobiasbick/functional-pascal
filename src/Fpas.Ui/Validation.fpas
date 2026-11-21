@@ -3,6 +3,7 @@
 unit Fpas.Ui.Validation;
 
 uses
+  Fpas.Ui.TerminalExtensions.SelectionLists as SelectionLists,
   Fpas.Ui.Internal.Validation.EditingToolValidation as EditingTools,
   Fpas.Ui.Internal.Validation.SourceToolValidation as SourceTools,
   Fpas.Ui.Internal.Validation.DisplayValidation as Display,
@@ -1855,7 +1856,6 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: Trees.Options
       ):
         const At: string := Identify(Id, Location + '/tree');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
         Rules.CheckText(Label, At + '/label');
         Rules.CheckText(Settings.Icon, At + '/icon');
         if (Open = null) <> (Change = null) or (Open = null and Children.Length <> 0) then
@@ -1863,6 +1863,14 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end if;
 
         for Child: E.Element<TMsg> in Children do
+          if Profile <> Target.Graphical then
+            case Child of
+              when E.Element.TreeNode(_, _, _, _, _, _, _):
+              else
+                Rules.Reject(At, 'A terminal tree branch needs tree nodes as children.');
+            end case;
+          end if;
+
           Visit(Child, At);
         end for;
       when E.Element.Table(
@@ -1880,6 +1888,10 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end if;
 
         CollectionRules.Table(Columns, Order, Profile, At);
+        if Settings.HorizontalScroll then
+          Rules.RequireProfile(Profile, Target.Terminal, At);
+        end if;
+
         Rules.CheckExtent(Settings.Height, Profile, At + '/height');
         for Index: int := 0 to Columns.Length - 1 do
           discard Identify(Tables.HeaderId(Id, Index), At + '/header');
@@ -1892,31 +1904,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Id: string, const Fields: array of Filters.Field, const Current: Filters.Value,
         _, const Capacity: int, _
       ):
-        const At: string := Identify(Id, Location + '/filterBar');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        if Fields.Length > 32 or Fields.Length <> Current.Selected.Length then
-          Rules.Reject(At, 'Supply at most 32 fields and one mask per field.');
-        end if;
-
-        const Search: string? := Current.Search;
-        if Search <> null then
-          GridRules.TextBuffer(Search, Capacity, 65536, At + '/search');
-        end if;
-
-        for Index: int := 0 to Fields.Length - 1 do
-          const Field: Filters.Field := Fields[Index];
-          Rules.CheckText(Field.Name, At + '/name');
-          Rules.CheckText(Field.Icon, At + '/icon');
-          if Field.Values.Length > 32 or (Field.Values.Length < 32
-            and cast<ulong>(Current.Selected[Index]) >= (1UL shl Field.Values.Length))
-          then
-            Rules.Reject(At, 'A filter mask must name available values.');
-          end if;
-
-          for Value: string in Field.Values do
-            Rules.CheckText(Value, At + '/value');
-          end for;
-        end for;
+        GridRules.FilterBar(Id, Fields, Current, Capacity, Profile, Location, Identify);
       when E.Element.DataGrid(
         const Id: string, const Columns: array of DataGrids.Column, const Count: int,
         _, const Current: DataGrids.Value, _, const Settings: DataGrids.Options, _
@@ -2415,7 +2403,6 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _
       ):
         const At: string := Identify(Id, Location + '/commandPalette');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
         discard Identify(Id + '/query', At);
         for Index: int := 0 to Commands.Length - 1 do
           const Item: Palettes.Command<TMsg> := Commands[Index];
@@ -2888,6 +2875,12 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         Visit(Current.Tree, At);
       when E.Element.TerminalCellGrid(const Id: string, _, _):
         Rules.RequireProfile(Profile, Target.Terminal, Identify(Id, Location + '/cellGrid'));
+      when E.Element.TerminalSelectionList(
+        const Id: string, const Items: array of SelectionLists.Item, const Selected: string, _, _
+      ):
+        const At: string := Identify(Id, Location + '/selectionList');
+        Rules.RequireProfile(Profile, Target.Terminal, At);
+        CollectionRules.SelectionList(Items, Selected, At);
       when E.Element.TerminalStyle(const Child: E.Element<TMsg>, const Colors: T.Style):
         const At: string := Location + '/cellStyle';
         Rules.RequireProfile(Profile, Target.Terminal, At);

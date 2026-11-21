@@ -29,6 +29,12 @@ end unit;
 
 Click to place the caret. Left/Right and Backspace/Delete move or delete by grapheme. Home/End reach the ends and the line scrolls to keep the caret visible. Paste turns line breaks into spaces and respects the UTF-8 byte limit. Enter invokes an optional `OnSubmit` with the current value. Read-only fields accept focus, disabled fields skip it. The terminal supports labels, hints, errors and the default size.
 
+Hold Shift with the navigation keys to select text. Ctrl+A selects the
+whole field. Typing or pasting replaces the selection. Backspace and Delete
+remove it.
+
+![Selected full name in the gallery text field](../../../../examples/ui/tui/gallery/text-selection.png)
+
 ## See also
 
 - [Inputs](README.md)

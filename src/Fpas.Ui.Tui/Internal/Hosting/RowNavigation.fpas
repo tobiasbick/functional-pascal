@@ -126,6 +126,26 @@ begin
   return false;
 end function;
 
+// Resolves unmodified vertical navigation to a signed row displacement.
+// ## Parameters
+// - `Key`: Terminal key.
+// - `Page`: Number of rows per page step.
+// - `Count`: Row count, used to reach the first or last row.
+// ## Returns
+// Signed movement, or zero for an unrelated key.
+public function Delta(Key: K.Key; Page: int; Count: int): int;
+begin
+  return case Key of
+    when K.Key.Up: -1;
+    when K.Key.Down: 1;
+    when K.Key.PageUp: -Page;
+    when K.Key.PageDown: Page;
+    when K.Key.Home: -Count;
+    when K.Key.End: Count;
+    else 0;
+  end case;
+end function;
+
 // Moves keyboard focus within one group of rows and reveals the target row.
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -160,21 +180,13 @@ begin
   else
     Sys.Math.Max(1, Region.Bounds.Height - 1)
   end if;
-  const Delta: int := case Key of
-    when K.Key.Up: -1;
-    when K.Key.Down: 1;
-    when K.Key.PageUp: -Page;
-    when K.Key.PageDown: Page;
-    when K.Key.Home: -Rows.Length;
-    when K.Key.End: Rows.Length;
-    else 0;
-  end case;
-  if Delta = 0 then
+  const Offset: int := Delta(Key, Page, Rows.Length);
+  if Offset = 0 then
     return null;
   end if;
-  const Direction: int := Sys.Math.Sign(Delta);
+  const Direction: int := Sys.Math.Sign(Offset);
   var Target: A.NavigationStop := Row;
-  for Step: int := 1 to Sys.Math.Abs(Delta) do
+  for Step: int := 1 to Sys.Math.Abs(Offset) do
     const Index: int := At + Step * Direction;
     if Index < 0 or Index >= Rows.Length or Rows[Index].NavigationGroup <> Row.NavigationGroup then
       break;

@@ -150,13 +150,50 @@ begin
   else
     0
   end if);
-  const Sizes: array of int := Widths<TMsg>(Value, Width);
-  var X: int := Area.X;
+  var PreferredWidth: long := Value.Columns.Length - 1;
+  for Size: int in Value.Preferred do
+    PreferredWidth := PreferredWidth + Size;
+  end for;
+  const Maximum: int := if Value.Settings.HorizontalScroll then
+    cast<int>(Sys.Math.Clamp(
+      PreferredWidth - Width,
+      0L,
+      cast<long>(int.MaxValue - E.MaximumColumns)
+    ))
+  else
+    0
+  end if;
+  const PanId: string := Value.Id + #0 + 'horizontal';
+  var Left: int := 0;
+  var Pan: Scene.HorizontalViewport? := null;
+  if Value.Settings.HorizontalScroll then
+    discard Offsets.TryGetValue(PanId, out Left);
+    Left := Sys.Math.Clamp(Left, 0, Maximum);
+    Offsets[PanId] := Left;
+    if Maximum > 0 then
+      Pan := new Scene.HorizontalViewport(PanId, Maximum, Sys.Math.Max(1, Width div 3));
+    end if;
+  end if;
+  const Sizes: array of int := if Maximum > 0 then
+    Value.Preferred
+  else
+    Widths<TMsg>(Value, Width)
+  end if;
+  const TableClip: F.Rect := F.Intersect(new F.Rect(Area.X, Area.Y, Width, Area.Height), Clip);
+  if Pan <> null and (Value.OnSelect = null or Limit.Height = 0 or Value.Rows.Length = 0) then
+    Register(
+      new Scene.Control<TMsg>(
+        Value.Id, Value.Id, 'table', '', TableClip, Scope, FocusReturn, Value.Settings.Enabled,
+        Scene.Binding<TMsg>.Scroll(View), S.ButtonVariant.Default, Pan := Pan
+      )
+    );
+  end if;
+  var X: int := Area.X - Left;
   for Index: int := 0 to Sizes.Length - 1 do
     const Col: T.Column := Value.Columns[Index];
     const Header: F.Rect := new F.Rect(X, Area.Y, Sizes[Index], 1);
-    PaintCell(Heading(Col, Value.Order, Index), Col.Align, Header, Clip, Style);
-    const Bounds: F.Rect := F.Intersect(Header, Clip);
+    PaintCell(Heading(Col, Value.Order, Index), Col.Align, Header, TableClip, Style);
+    const Bounds: F.Rect := F.Intersect(Header, TableClip);
     case Value.OnSort of
       when is Sys.Func<T.Sort, TMsg> as Notify:
         if Col.Sortable and Bounds.Width > 0 and Bounds.Height > 0 then
@@ -212,7 +249,7 @@ begin
       end if
     end if;
     D.Fill(Operations, Bounds, Colors);
-    X := Area.X;
+    X := Area.X - Left;
     for Column: int := 0 to Sizes.Length - 1 do
       PaintCell(
         Caption<TMsg>(Row.Cells[Column]),
@@ -239,12 +276,23 @@ begin
             Scene.Binding<TMsg>.Invoke(
               new Actions.Proposal<string, TMsg>(Notify, Row.Id)
             ),
-            S.ButtonVariant.Ghost
+            S.ButtonVariant.Ghost,
+            Pan := Pan
           )
         );
       else
     end case;
   end for;
+
+  if Left > 0 then
+    const Marker: F.Rect := new F.Rect(Area.X, Area.Y, 1, 1);
+    Operations.Add(new D.Operation('‹', Marker, TableClip, Theme.Buttons.Active.Normal, false));
+  end if;
+
+  if Left < Maximum then
+    const Marker: F.Rect := new F.Rect(Area.X + Width - 1, Area.Y, 1, 1);
+    Operations.Add(new D.Operation('›', Marker, TableClip, Theme.Buttons.Active.Normal, false));
+  end if;
 
   Scroll.DrawBar<TMsg>(View, Operations, Body, Limit, Style, Theme.Widgets);
 end procedure;

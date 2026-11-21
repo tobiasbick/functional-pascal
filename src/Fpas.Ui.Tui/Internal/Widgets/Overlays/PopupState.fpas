@@ -12,6 +12,8 @@ public type Cursor = record
   public Query: string := '';
   // First displayed content row.
   public Top: int := 0;
+  // Selected group of choices, or minus one at the root of the popup.
+  public Group: int := -1;
 end record;
 
 // Session-local popup state and the application dispatcher.

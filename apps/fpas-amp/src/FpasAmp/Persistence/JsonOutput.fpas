@@ -1,0 +1,46 @@
+// [Documentation](../../../doc/desktop.md#startup-and-user-files)
+
+unit FpasAmp.Persistence.JsonOutput;
+
+uses System.IO as IO, System.Text as Text, System.Text.Json as J;
+
+// Writes a JSON value using Encode and returns its UTF-8 bytes.
+public function Bytes(Encode: procedure(J.Utf8JsonWriter); Indented: bool := false): array of byte;
+begin
+  using const Stream: IO.MemoryStream := new IO.MemoryStream();
+  var Options: J.JsonWriterOptions := new J.JsonWriterOptions();
+  Options.Indented := Indented;
+  using const Writer: J.Utf8JsonWriter := new J.Utf8JsonWriter(Stream, Options);
+  Encode(Writer);
+  Writer.Flush();
+  return Stream.ToArray();
+end function;
+
+// Writes and parses the JSON value emitted by Encode.
+public function Element(Encode: procedure(J.Utf8JsonWriter)): J.JsonElement;
+begin
+  return J.JsonElement.Parse(Text.Encoding.UTF8.GetString(Bytes(Encode)));
+end function;
+
+// Writes Values as the named array of strings in the current object.
+public procedure Strings(Writer: J.Utf8JsonWriter; Name: string; Values: array of string);
+begin
+  Writer.WriteStartArray(Name);
+  for Value: string in Values do
+    Writer.WriteStringValue(Value);
+  end for;
+
+  Writer.WriteEndArray();
+end procedure;
+
+// Writes the named integer property or an explicit JSON null.
+public procedure Integer(Writer: J.Utf8JsonWriter; Name: string; Value: int?);
+begin
+  if Value <> null then
+    Writer.WriteNumber(Name, Value.Value);
+  else
+    Writer.WriteNull(Name);
+  end if;
+end procedure;
+
+end unit;

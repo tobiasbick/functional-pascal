@@ -1,0 +1,163 @@
+// [Documentation](../../../../../docs/ui/tui/data-display/tree.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Collections.TreeRows;
+
+uses
+  Fpas.Ui.Elements as Ui, Fpas.Ui.Widgets.Collections.Trees as Trees, Fpas.Ui.Styles as S,
+  Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.View.Tree as E,
+  Fpas.Ui.Tui.Internal.Controls.Activation as A, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G,
+  System as Sys, System.Collections.Generic as C;
+
+type Toggle<TMsg> = record implements A.IActivatable<TMsg>
+  // Whether this branch is expanded.
+  public Open: bool;
+  // Maps expansion requests to model messages.
+  public Change: Sys.Func<bool, TMsg>;
+  // Parent ID, or empty for the root.
+  public Parent: string;
+
+  // Proposes toggling the displayed branch.
+  // ## Returns
+  // Expansion message.
+  public function Activate(): A.Result<TMsg>;
+  begin
+    return A.Result<TMsg>.Send(self.Change.Invoke(not self.Open));
+  end function;
+end record;
+
+type Leaf<TMsg> = record implements A.IActivatable<TMsg>
+  // Optional action for this leaf.
+  public Choose: Sys.Func<TMsg>?;
+  // Parent ID, or empty for a standalone leaf.
+  public Parent: string;
+
+  // Invokes the optional leaf action.
+  // ## Returns
+  // Leaf message when one was configured.
+  public function Activate(): A.Result<TMsg>;
+  begin
+    case self.Choose of
+      when is Sys.Func<TMsg> as Choice:
+        return A.Result<TMsg>.Send(Choice.Invoke());
+      else
+        return A.Result<TMsg>.NoAction;
+    end case;
+  end function;
+end record;
+
+// Routes tree expansion and parent navigation.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Handler`: Focused tree row.
+// - `Key`: Unmodified terminal key.
+// - `Apply`: Dispatches the expansion message.
+// ## Returns
+// Focus destination, empty when handled in place, or null for an unrelated key.
+public function Navigate<TMsg>(Handler: A.IActivatable<TMsg>?; Key: K.Key; Apply: procedure(TMsg)): string?;
+begin
+  if Key <> K.Key.Left and Key <> K.Key.Right then
+    return null;
+  end if;
+
+  case Handler of
+    when is Toggle<TMsg> as Branch:
+      const Open: bool := Key = K.Key.Right;
+      if Open <> Branch.Open then
+        Apply(Branch.Change.Invoke(Open));
+        return '';
+      end if;
+
+      return if Open then
+        ''
+      else
+        Branch.Parent
+      end if;
+    when is Leaf<TMsg> as Item:
+      return if Key = K.Key.Left then
+        Item.Parent
+      else
+        ''
+      end if;
+    else
+      return null;
+  end case;
+end function;
+
+// Flattens visible tree nodes into an indented keyboard navigation group.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Root`: Validated tree root.
+// ## Returns
+// Vertical tree rows.
+public function Lower<TMsg>(Root: Ui.Element<TMsg>): E.Element<TMsg>;
+  procedure Visit(Value: Ui.Element<TMsg>; Depth: int; Parent: string);
+  begin
+    case Value of
+      when Ui.Element.TreeNode(
+        const Id: string,
+        const Label: string,
+        const Open: bool?,
+        const Children: array of Ui.Element<TMsg>,
+        const Change: Sys.Func<bool, TMsg>?,
+        const Choose: Sys.Func<TMsg>?,
+        const Settings: Trees.Options
+      ):
+        if Group = '' then
+          Group := Id;
+        end if;
+        var Handler: A.IActivatable<TMsg> := new Leaf<TMsg>(Choose, Parent);
+        case Change of
+          when is Sys.Func<bool, TMsg> as Notify:
+            Handler := new Toggle<TMsg>(Open ?? false, Notify, Parent);
+          else
+        end case;
+        const Marker: string := if Open = null then
+          '  '
+        elsif Open.Value then
+          '▾ '
+        else
+          '▸ '
+        end if;
+        if Entry = '' and Settings.Enabled then
+          Entry := Id;
+        end if;
+
+        Rows.Add(
+          E.Element<TMsg>.Action(
+            Id, Handler, Settings.Enabled,
+            new E.ActionView(
+              new string(#32, Depth * 2) + Marker + G.SingleLine(Label), Name := Label,
+              Role := 'treeitem', Value := if Open = null then
+                Settings.Selected.ToString()
+              else
+                Open.Value.ToString()
+              end if,
+              Variant := if Settings.Selected then
+                S.ButtonVariant.Active
+              else
+                S.ButtonVariant.Ghost
+              end if,
+              ArrowFocus := false, NavigationGroup := Group, TabTarget := Entry,
+              FillWidth := true, Padding := 0, Center := false, Joined := true
+            )
+          )
+        );
+        if Open ?? false then
+          for Child: Ui.Element<TMsg> in Children do
+            Visit(Child, Depth + 1, Id);
+          end for;
+        end if;
+      else
+    end case;
+  end procedure;
+begin
+  const Rows: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
+  var Group: string := '';
+  var Entry: string := '';
+  Visit(Root, 0, '');
+  return E.Element<TMsg>.Stack(Rows.ToArray(), false, new E.Flow());
+end function;
+
+end unit;

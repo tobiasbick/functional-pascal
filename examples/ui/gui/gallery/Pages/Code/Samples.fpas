@@ -2,7 +2,7 @@
 
 unit GuiGallery.Pages.Code.Samples;
 
-uses Fpas.Ui.Widgets.Developer.LogConsoles as Log, System as Sys;
+uses System as Sys;
 
 function Lines(Values: array of string): string;
 begin
@@ -257,49 +257,5 @@ public const Bytes: array of byte := Sys.Convert.FromBase64String(
   '+Gm56tw+t3akioSDwGZuHtsHj28VlTrWjFzmsgCE9g7SBEHId3O74K1nLoUk7nhdzN3whBzRsQ0jR1yrQ5KTP09Tjf' +
   'TKkpFy1VHW+HWo4AAAAASUVORK5CYII='
 );
-
-// Original deterministic build log.
-public const Entries: array of Log.Entry := [
-  new Log.Entry(Log.Level.Info, 50527.120, 'Loading project harbor_town (412 assets)'),
-  new Log.Entry(Log.Level.Debug, 50527.203, 'Asset cache hit rate 91.4% (376 of 412)'),
-  new Log.Entry(Log.Level.Trace, 50527.564, 'vfs: mounted /content/packs/base.pak (218 MB)'),
-  new Log.Entry(Log.Level.Info, 50528.203, 'Compiling shaders: 64 variants on 8 threads'),
-  new Log.Entry(Log.Level.Debug, 50528.937, 'terrain_blend.frag: 3 permutations, 1.8 ms each'),
-  new Log.Entry(
-    Log.Level.Warning,
-    50529.949,
-    'water_surface.frag:118: implicit float to half conversion'
-  ),
-  new Log.Entry(Log.Level.Info, 50530.154, 'Shaders compiled in 2.41 s'),
-  new Log.Entry(Log.Level.Trace, 50530.454, 'gpu: uploaded 37 textures, 148.2 MB resident'),
-  new Log.Entry(Log.Level.Info, 50531.032, 'Baking navmesh for 3 regions'),
-  new Log.Entry(Log.Level.Debug, 50531.888, 'navmesh: harbor 18,204 polys, market 9,377 polys'),
-  new Log.Entry(
-    Log.Level.Warning,
-    50532.839,
-    'Texture props/barrel_d.png is 4096x4096; streaming budget is 2048'
-  ),
-  new Log.Entry(Log.Level.Info, 50532.983, 'Lightmaps: 12 of 12 atlases up to date'),
-  new Log.Entry(
-    Log.Level.Error,
-    50533.405,
-    'Missing material ''dock_planks_wet'' on mesh pier_03.obj (using fallback)'
-  ),
-  new Log.Entry(Log.Level.Debug, 50533.922, 'audio: 96 voices, 48 kHz, latency 10.7 ms'),
-  new Log.Entry(Log.Level.Info, 50534.717, 'Entering play mode'),
-  new Log.Entry(
-    Log.Level.Trace,
-    50535.790,
-    'frame 1: 14.2 ms (update 3.1, render 9.8, present 1.3)'
-  ),
-  new Log.Entry(Log.Level.Info, 50535.873, 'Spawned 214 entities in harbor'),
-  new Log.Entry(
-    Log.Level.Warning,
-    50536.234,
-    'Physics step took 21.4 ms (budget 16.6 ms) after the crane collision'
-  ),
-  new Log.Entry(Log.Level.Debug, 50536.873, 'Streaming in market district, 31 cells'),
-  new Log.Entry(Log.Level.Info, 50537.607, 'Autosave written to saves/slot_2.sav (1.2 MB)')
-];
 
 end unit;

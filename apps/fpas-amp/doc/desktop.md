@@ -141,6 +141,22 @@ file access with a per-user mutex. When reading a damaged document, it recovers
 usable fields, falls back to defaults where necessary and backs up the original
 bytes before publishing repaired data. See [user files and recovery](user-files.md).
 
+## Windows portable build
+
+On Windows x64, run the [compiler distribution script](../../../dist.ps1)
+to prepare the matching SDK and CUI packages, then run
+[the FPas-Amp distribution script](../dist.ps1).
+It publishes the app with Native AOT and packages it as `bin/FpasAmp.exe`.
+Copy that one file to a writable directory. The launcher verifies and
+extracts the app, native DLLs, `fpcalc.exe` and the radio decoder to a
+versioned directory under `FPasAmp-runtime/` beside it.
+
+The [dependency packaging script](../packaging/windows/Dependencies.ps1)
+uses the pinned [Windows x64 LGPL build of FFmpeg](https://github.com/FFmpeg-Builds/FFmpeg-Builds/releases/tag/autobuild-2026-11-20-12-40).
+It includes the upstream license, matching FFmpeg source and build recipe,
+and the app-local Visual C++ runtime needed by the audio DLL. The portable
+app finds its bundled FFmpeg by its absolute path.
+
 ## Windows desktop launch
 
 Local `dotnet build` and `dotnet run` use the Windows GUI apphost. To open the
@@ -201,6 +217,7 @@ Run them with the local SDK and native GUI prerequisites described in the
   - [Settings.fpas](../src/FpasAmp/Settings.fpas)
 - `src/FpasAmp/Persistence/`
   - [JsonFields.fpas](../src/FpasAmp/Persistence/JsonFields.fpas)
+  - [JsonOutput.fpas](../src/FpasAmp/Persistence/JsonOutput.fpas)
   - [JsonRecovery.fpas](../src/FpasAmp/Persistence/JsonRecovery.fpas)
   - [PlayerState.fpas](../src/FpasAmp/Persistence/PlayerState.fpas)
   - [RadioFavorites.fpas](../src/FpasAmp/Persistence/RadioFavorites.fpas)

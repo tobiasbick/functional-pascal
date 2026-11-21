@@ -6,6 +6,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="Serialization/FpasAmp.Library.Serialization.csproj" />
     <ProjectReference Include="../FpasAmp.Imaging/FpasAmp.Imaging.csproj" />
     <ProjectReference Include="../../../../src/Fpas.Media.Tags/Fpas.Media.Tags.fpasproj" />
     <ProjectReference Include="../../../../src/Fpas.Media.Audio/Fpas.Media.Audio.csproj" />

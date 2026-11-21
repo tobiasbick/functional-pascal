@@ -66,7 +66,7 @@ action closes it. Closing the overlay restores available focus.
 
 ## Popup input
 
-Dropdown menus and select fields use the same anchored panel. The active panel
+Dropdown menus, select fields and the filter bar use the same anchored panel. The active panel
 receives keyboard and pointer input. Dismissal returns focus to the trigger
 when it is still available. A disabled, removed or covered trigger closes its panel.
 
@@ -88,6 +88,8 @@ when it is still available. A disabled, removed or covered trigger closes its pa
   view can clip the image without changing the reported allocation.
 - TerminalExtensions.Views.Viewport resolves a view from exact columns/rows.
 - TerminalExtensions.Views.Screen and typed Input shortcuts bind application keys.
+- [TerminalExtensions.SelectionLists](data-display/selection-list.md) displays
+  a scrollable list with separate selection and activation messages.
 - Application.Input/Frame support controlled input injection and cell snapshots.
 
 Snapshots expose visible control IDs, roles, values, bounds, focus and hover,

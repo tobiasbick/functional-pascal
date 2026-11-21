@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Tui.Internal.View.Tree;
 
-uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Graphics as Color, System as Sys;
+uses Fpas.Ui.Widgets.Developer.LogConsoles as Logs, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes, Fpas.Ui.TerminalExtensions.SelectionLists as Lists, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Graphics as Color, System as Sys;
 
 // Largest column count accepted by the terminal host.
 public const MaximumColumns: int := 500;
@@ -137,6 +137,24 @@ public type TabView<TMsg> = record
   public Widths: array of int;
 end record;
 
+// Terminal list data shared by measurement, painting and input routing.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type SelectionListView<TMsg> = record
+  // Stable control and viewport identity.
+  public Id: string;
+  // Rows in display order.
+  public Items: array of Lists.Item;
+  // Zero-based selected index, or minus one.
+  public Selected: int;
+  // Natural column count including the selection marker.
+  public Width: int;
+  // Maps a proposed row key to a message.
+  public OnSelect: function(string): TMsg;
+  // Maps activation of the current row to a message.
+  public OnActivate: function(string): TMsg;
+end record;
+
 // Terminal presentation data produced by Lowering from a prepared Fpas.Ui tree.
 // This is backend storage, not a second application widget API.
 //
@@ -145,8 +163,17 @@ end record;
 public type Element<TMsg> = variant
   // Paint literal text.
   Label(Value: string);
+  // Appended messages with a focusable terminal scrollback.
+  Log(Id: string; Entries: array of Logs.Entry; Timestamps: bool);
+  // Model-controlled searchable commands over a base view.
+  Palette(
+    Id: string; Base: Element<TMsg>; Open: bool; Commands: array of Palettes.Command<TMsg>;
+    Change: function(bool): TMsg; UseShortcut: bool
+  );
   // Plain text table with a pinned header.
   Table(Value: TableView<TMsg>);
+  // Scrollable rows with one focus stop and separate selection and activation.
+  SelectionList(Value: SelectionListView<TMsg>);
   // Horizontally scrollable navigation strip.
   TabStrip(Value: TabView<TMsg>);
   // Single editable row with its model-owned value.

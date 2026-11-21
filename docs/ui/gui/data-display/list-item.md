@@ -44,12 +44,14 @@ An enabled row with an action accepts a click, Enter or Space while focused. The
 
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Collections/ListItems.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Lists/Widgets/TreeAndList.fpas)
+- [Terminal example using the same list data](../../tui/data-display/selection-list.md)
 - [Tree](tree.md)
 - [Avatar](../disclosure/avatar.md)
 - [Data display](README.md)
 
 ## Source files
 
+- [Shared CUI list entries](../../../../examples/ui/gui/gallery/Shared/ListEntries.fpas)
 - `src/Fpas.Ui.Gui/Internal/Widgets/Collections/`
   - [ListItem.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Collections/ListItem.fpas)
 - `src/Fpas.Ui.Gui.Cui/Interop/Collections/`

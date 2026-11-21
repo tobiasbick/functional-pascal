@@ -4,7 +4,8 @@ unit Fpas.Ui.Internal.Validation.GridRules;
 
 uses
   Fpas.Ui.Internal.Validation.Rules as R, Fpas.Ui.Widgets.Collections.DataGrids as G, Fpas.Ui.Widgets.Collections.TreeTables as T,
-  Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, System as Sys;
+  Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Collections.FilterBars as Filters,
+  Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, System as Sys, System.Globalization as Culture;
 
 // Checks UTF-8 text and its native buffer capacity.
 // ## Parameters
@@ -21,6 +22,75 @@ begin
   then
     R.Reject(At, 'Text must fit its native UTF-8 buffer.');
   end if;
+end procedure;
+
+// Checks a filter bar and reserves its derived terminal control identities.
+// ## Parameters
+// - `Id`: Stable control identity.
+// - `Fields`: Available fields in mask order.
+// - `Current`: Model masks and optional search.
+// - `Capacity`: Search buffer size including the terminator.
+// - `Profile`: Requested capability profile.
+// - `Location`: Parent view path.
+// - `Identify`: Registers a stable ID at a diagnostic path.
+public procedure FilterBar(
+  Id: string; Fields: array of Filters.Field; Current: Filters.Value; Capacity: int;
+  Profile: V.Target; Location: string; Identify: function(string, string): string
+);
+begin
+  const At: string := Identify(Id, Location + '/filterBar');
+  if Fields.Length > 32 or Fields.Length <> Current.Selected.Length then
+    R.Reject(At, 'Supply at most 32 fields and one mask per field.');
+  end if;
+
+  const Terminal: bool := Profile <> V.Target.Graphical;
+  const Search: string? := Current.Search;
+  if Search <> null then
+    TextBuffer(Search, Capacity, 65536, At + '/search');
+    if Terminal then
+      if Search.Contains(#10) or Search.Contains(#13) then
+        R.Reject(At, 'A filter search requires a single-line value.');
+      end if;
+
+      discard Identify(Id + '/search', At + '/search');
+    end if;
+  end if;
+  const Add: string := Id + '/add';
+  const HasFields: bool := Sys.Array.Exists<Filters.Field>(
+    Fields, function(Field: Filters.Field): bool => Field.Values.Length > 0
+  );
+  if Terminal and HasFields then
+    discard Identify(Add, At + '/add');
+  end if;
+
+  if Terminal and (HasFields or Search <> null) then
+    discard Identify(Id + '/clear', At + '/clear');
+  end if;
+
+  for Index: int := 0 to Fields.Length - 1 do
+    const Field: Filters.Field := Fields[Index];
+    R.CheckText(Field.Name, At + '/name');
+    R.CheckText(Field.Icon, At + '/icon');
+    if Field.Values.Length > 32 or (Field.Values.Length < 32
+      and cast<ulong>(Current.Selected[Index]) >= (1UL shl Field.Values.Length))
+    then
+      R.Reject(At, 'A filter mask must name available values.');
+    end if;
+    const Path: string := Add + '/field/' + Index.ToString(Culture.CultureInfo.InvariantCulture);
+    if Terminal and Field.Values.Length > 0 then
+      discard Identify(Path, At + '/name');
+    end if;
+
+    for Option: int := 0 to Field.Values.Length - 1 do
+      R.CheckText(Field.Values[Option], At + '/value');
+      if Terminal then
+        discard Identify(
+          Path + '/value/' + Option.ToString(Culture.CultureInfo.InvariantCulture),
+          At + '/value'
+        );
+      end if;
+    end for;
+  end for;
 end procedure;
 
 // Validates columns, sort and viewport constraints before drawing.

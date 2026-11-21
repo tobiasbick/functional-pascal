@@ -4,6 +4,7 @@
 unit FpasAmp.Library.Metadata.Covers;
 
 uses
+  FpasAmp.Library.Serialization.CatalogueJson as Codec,
   Fpas.Media.Tags.Pictures as Pictures, FpasAmp.Library.Persistence.Sql as Sql,
   FpasAmp.Library.Metadata.Internal.Reading as Reading, Microsoft.Data.Sqlite as Db,
   System as Sys, System.IO as IO, System.Text.Json as J,
@@ -60,7 +61,7 @@ begin
   const Cache: string := IO.Path.Combine(CacheDirectory, Hash + '.json');
   if UseCache and IO.File.Exists(Cache) and new IO.FileInfo(Cache).Length <= 23000000L then
     try
-      const Cached: Pictures.Cover? := J.JsonSerializer.Deserialize<Pictures.Cover>(
+      const Cached: Pictures.Cover? := Codec.ReadCover(
         await IO.File.ReadAllTextAsync(Cache, Cancellation).ConfigureAwait(false)
       );
       if Cached = null then
@@ -95,7 +96,7 @@ begin
   try
     await IO.File.WriteAllTextAsync(
       Temporary,
-      J.JsonSerializer.Serialize<Pictures.Cover?>(Value),
+      Codec.WriteCover(Value),
       Cancellation
     ).ConfigureAwait(false);
     Cancellation.ThrowIfCancellationRequested();

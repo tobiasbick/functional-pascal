@@ -160,8 +160,9 @@ connecting a client. See the [language-server contract](../pascal/tools/language
 Distribution builds require the .NET 10 SDK and the
 [CUI native toolchain](../ui/gui/native-build.md#prerequisites).
 The delivered compiler contains its runtime. Copy `fpas.exe` on Windows x64 or
-`fpas` on Linux x64 with glibc. It uses compressed,
-untrimmed single-file deployment because the complete protocol dependency graph
+`fpas` on Linux x64 with glibc. The Windows launcher extracts its runtime
+beside the executable. The compiler itself uses compressed, untrimmed
+single-file deployment because the complete protocol dependency graph
 requires dynamic code. See [distribution](distribution.md) for Native AOT limits,
 offline SDK export, cache ownership, native assets and optional symbols.
 

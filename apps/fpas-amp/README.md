@@ -4,9 +4,9 @@ FPas-Amp is a desktop music player for Windows and Linux, written in
 Functional Pascal.
 
 > [!IMPORTANT]
-> **Internet radio requires FFmpeg.** Install FFmpeg and make sure the account
-> that launches FPas-Amp can run `ffmpeg -version`. The `ffmpeg` executable
-> must be on the app's `PATH`. Local music playback works without it.
+> **Internet radio uses FFmpeg.** The [portable Windows build](doc/desktop.md#windows-portable-build)
+> includes it. For other builds, install FFmpeg and make sure the account that
+> launches FPas-Amp can run `ffmpeg -version`. Local music playback works without it.
 
 ## Get started
 

@@ -46,8 +46,9 @@ dotnet run --project examples/ui/tui/gallery/TuiWidgetGallery.fpasproj
 | [Actions](actions/README.md) | Button and dropdown menu |
 | [Inputs](inputs/README.md) | Text field, multiline text area, select with optional search |
 | [Selection](selection/README.md) | Checkbox, switch and radio group |
-| [Overlays](overlays/README.md) | Dialog and sheet |
-| [Data display](data-display/README.md) | Table with sortable headings and selectable rows |
+| [Overlays](overlays/README.md) | Dialog, sheet and searchable command palette |
+| [Data display](data-display/README.md) | Sortable table, selection list, expandable tree and filter bar |
+| [Code](developer/README.md) | Scrollback for build and application messages |
 | [Disclosure](disclosure/README.md) | Expandable card |
 | [Feedback](feedback/README.md) | Determinate progress bar |
 | [App chrome](app-chrome/README.md) | Status bar |

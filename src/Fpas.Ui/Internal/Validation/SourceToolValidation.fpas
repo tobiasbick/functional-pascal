@@ -29,7 +29,12 @@ end procedure;
 // - `Identify`: Registers a widget identity.
 public procedure Check<TMsg>(Node: E.Element<TMsg>; Location: string; Profile: V.Target; Identify: function(string, string): string);
 begin
-  R.RequireProfile(Profile, V.Target.Graphical, Location);
+  case Node of
+    when E.Element.LogConsole(_, _, _, _):
+    else
+      R.RequireProfile(Profile, V.Target.Graphical, Location);
+  end case;
+
   case Node of
     when E.Element.Markdown(
       const Id: string,
@@ -147,6 +152,10 @@ begin
       const Settings: LogConsoles.Options
     ):
       const Path: string := Identify(Id, Location + '/LogConsole');
+      if Profile = V.Target.Terminal and Settings.Toolbar then
+        discard Identify(Id + '/clear', Path);
+      end if;
+
       R.CheckExtent(Settings.Width, Profile, Path);
       C.Distance(Settings.Size, Path);
       Height(Settings.Height, Path);

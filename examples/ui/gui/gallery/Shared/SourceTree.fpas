@@ -1,0 +1,53 @@
+// [Documentation](../../../../../docs/ui/gui/data-display/tree.md)
+
+unit Gallery.Shared.SourceTree;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Collections.Trees as T, System as Sys;
+
+// Builds the same sample source hierarchy in both galleries.
+// ## Type parameters
+// - `TMsg`: Gallery message type.
+// ## Parameters
+// - `Source`: Expansion of the source root.
+// - `Components`: Expansion of the components branch.
+// - `Assets`: Expansion of the assets branch.
+// - `Selected`: Name of the selected file.
+// - `SetSource`: Source expansion mapper.
+// - `SetComponents`: Components expansion mapper.
+// - `SetAssets`: Assets expansion mapper.
+// - `SelectFile`: File activation mapper.
+// ## Returns
+// The source tree.
+public function View<TMsg>(
+  Source: bool; Components: bool; Assets: bool; Selected: string;
+  SetSource: function(bool): TMsg; SetComponents: function(bool): TMsg;
+  SetAssets: function(bool): TMsg; SelectFile: function(string): TMsg
+): E.Element<TMsg>;
+  function File(Name: string; Icon: string := ''): E.Element<TMsg>;
+  begin
+    return T.Leaf<TMsg>(
+      'file-' + Name, Name, function(): TMsg => SelectFile(Name),
+      new T.Options(Icon := Icon, Selected := Selected = Name)
+    );
+  end function;
+begin
+  return T.Branch<TMsg>(
+    'tree-src', 'src', Source, [
+      T.Branch<TMsg>(
+        'tree-components', 'components', Components, [
+          File('button.c'), File('dialog.c'), File('slider.c'), File('table.c')
+        ], SetComponents
+      ),
+      T.Branch<TMsg>(
+        'tree-assets',
+        'assets',
+        Assets,
+        [File('logo.png', Sys.Char.ConvertFromUtf32($E0F6))],
+        SetAssets
+      ),
+      File('main.c')
+    ], SetSource
+  );
+end function;
+
+end unit;

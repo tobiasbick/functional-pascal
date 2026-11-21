@@ -24,8 +24,8 @@ try {
     if ($LASTEXITCODE -ne 0) {
         throw "Release publish failed (exit code $LASTEXITCODE)."
     }
-    New-Item -ItemType Directory -Force -Path bin | Out-Null
-    Copy-Item -LiteralPath "$artifacts/publish/Fpas.Cli.exe" -Destination bin/fpas.exe -Force
+    & 'src/Fpas.Deployment.WindowsPortable/Publish.ps1' -PayloadDirectory "$artifacts/publish" `
+        -EntryPoint 'Fpas.Cli.exe' -Output 'bin/fpas.exe' -ArtifactsPath "$artifacts/portable"
 
     $cacheInfo = (dotnet nuget locals global-packages --list --force-english-output).Trim()
     if ($LASTEXITCODE -ne 0 -or -not $cacheInfo.StartsWith('global-packages: ')) {
@@ -47,7 +47,7 @@ try {
             catch { throw "Another process still uses $versionCache, such as an editor's build server. Close it and run dist.ps1 again. $_" }
         }
     }
-    Write-Host "Deployed self-contained single-file bin/fpas.exe with embedded Fpas.NET.Sdk $sdkVersion."
+    Write-Host "Deployed portable bin/fpas.exe with embedded Fpas.NET.Sdk $sdkVersion."
     Write-Host "Refreshed the local Fpas.NET.Sdk and Fpas.Ui.Gui.Cui $sdkVersion caches; consumers restore from the feed."
 }
 finally {

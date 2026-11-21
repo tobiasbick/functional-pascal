@@ -4,6 +4,7 @@ unit Fpas.Ui.Elements;
 
 uses
   Fpas.Ui.TerminalExtensions.CellGrids as CellGrids,
+  Fpas.Ui.TerminalExtensions.SelectionLists as SelectionLists,
   Fpas.Ui.Widgets.Canvas.Painting as Painting,
   Fpas.Ui.Widgets.Editors.PropertyInspectors as PropertyInspectors,
   Fpas.Ui.Widgets.Editors.FlameGraphs as FlameGraphs,
@@ -619,6 +620,11 @@ public type Element<TMsg> = variant
   TerminalStyle(Child: Element<TMsg>; Colors: T.Style);
   // Display a cell image and route its local input and size changes.
   TerminalCellGrid(Id: string; Content: CellGrids.Image?; Changed: function(CellGrids.Event): TMsg);
+  // Show selectable rows with distinct selection and activation callbacks.
+  TerminalSelectionList(
+    Id: string; Items: array of SelectionLists.Item; SelectedKey: string;
+    OnSelect: function(string): TMsg; OnActivate: function(string): TMsg
+  );
   // Compose terminal content, floating layers and scoped shortcuts.
   TerminalScreen(Content: Element<TMsg>; Layers: array of Element<TMsg>; Shortcuts: array of Keys.ShortcutBinding<TMsg>);
   // Resolve a terminal-specific subtree using exact cell dimensions.

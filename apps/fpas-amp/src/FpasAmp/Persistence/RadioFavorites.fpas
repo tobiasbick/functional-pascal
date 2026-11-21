@@ -47,4 +47,26 @@ begin
   return Result.ToArray();
 end function;
 
+// Writes the supplied favorite stations as an array to Writer.
+public procedure Encode(Writer: J.Utf8JsonWriter; Items: array of Radio.Station);
+begin
+  Writer.WriteStartArray();
+  for Item: Radio.Station in Items do
+    Writer.WriteStartObject();
+    Writer.WriteString('id', Item.Id);
+    Writer.WriteString('name', Item.Name);
+    Writer.WriteString('url', Item.Url);
+    Writer.WriteString('country', Item.Country);
+    Writer.WriteString('language', Item.Language);
+    Writer.WriteString('genre', Item.Genre);
+    Writer.WriteString('codec', Item.Codec);
+    Writer.WriteNumber('bitrate', Item.Bitrate);
+    Writer.WriteBoolean('hls', Item.Hls);
+    Writer.WriteString('website', Item.Website);
+    Writer.WriteEndObject();
+  end for;
+
+  Writer.WriteEndArray();
+end procedure;
+
 end unit;

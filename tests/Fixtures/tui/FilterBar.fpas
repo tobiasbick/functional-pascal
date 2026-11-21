@@ -1,0 +1,167 @@
+// [Documentation](../../../docs/ui/tui/data-display/filter-bar.md)
+
+program FilterBarContract;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Tui.Application as T,
+  Fpas.Ui.Mvu.Application as M, Fpas.Ui.TerminalExtensions.Input as K,
+  Fpas.Ui.Widgets.Collections.FilterBars as F, Fpas.Ui.Widgets.Actions.Buttons as B,
+  System as Sys, System.Console as Console;
+
+const Fields: array of F.Field := [
+  new F.Field('Team', ['Engine', 'Design', 'Platform']),
+  new F.Field('Status', ['Active', 'Away', 'Invited'])
+];
+const InitialMasks: array of uint := [5u, 0u];
+
+function Update(State: F.Value; Proposed: F.Value): M.Transition<F.Value, F.Value>;
+begin
+  return new M.Transition<F.Value, F.Value>(Proposed, []);
+end function;
+
+function View(State: F.Value): E.Element<F.Value>;
+begin
+  return E.Column<F.Value>(
+    F.FilterBar<F.Value>('filters', Fields, State, function(Value: F.Value): F.Value => Value, 5),
+    F.FilterBar<F.Value>(
+      'disabled', Fields, new F.Value([0u, 0u], null),
+      function(Value: F.Value): F.Value => Value, Enabled := false
+    )
+  );
+end function;
+
+procedure Expect(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+procedure Send(Session: T.HeadlessSession; Input: T.Input);
+begin
+  discard Session.Send(Input);
+  case Session.Step() of
+    when T.StepResult.Failed(_, _, _, const Reason: string):
+      raise new Sys.InvalidOperationException(Reason);
+    else
+  end case;
+end procedure;
+
+procedure Key(Session: T.HeadlessSession; Pressed: K.Key);
+begin
+  Send(Session, T.Input.KeyPress(Pressed, K.KeyModifiers.None));
+end procedure;
+
+function Find(Session: T.HeadlessSession; Id: string): T.ControlSnapshot?;
+begin
+  return Sys.Array.Find<T.ControlSnapshot>(
+    Session.Snapshot().Controls, function(Control: T.ControlSnapshot): bool => Control.Id = Id
+  );
+end function;
+
+function Control(Session: T.HeadlessSession; Id: string): T.ControlSnapshot;
+begin
+  const Result: T.ControlSnapshot? := Find(Session, Id);
+  if Result = null then
+    raise new Sys.InvalidOperationException('Missing control ' + Id);
+  end if;
+
+  return Result;
+end function;
+
+function Shows(Session: T.HeadlessSession; Caption: string): bool;
+begin
+  return Sys.String.Join(#10, Session.Snapshot().Lines).Contains(Caption);
+end function;
+
+procedure DuplicateIds();
+begin
+  const State: F.Value := new F.Value(InitialMasks, '');
+  const Collides: E.Element<F.Value> := E.Column<F.Value>(
+    View(State), B.Button<F.Value>('filters/add/field/0/value/0', 'Duplicate', State)
+  );
+  try
+    discard V.Prepare<F.Value>(Collides, V.Target.Terminal);
+  catch Error: Sys.ArgumentException do
+    Expect(Error.Message.Contains('Duplicate ID'), Error.Message);
+    return;
+  end try;
+
+  raise new Sys.InvalidOperationException('Generated filter IDs must be reserved.');
+end procedure;
+
+begin
+  DuplicateIds();
+  using const Session: T.HeadlessSession := T.StartHeadless<F.Value, F.Value>(
+    new F.Value(InitialMasks, ''), Update, View, 48, 15
+  );
+  const Trigger: string := 'filters/add';
+  const Team: string := Trigger + '/field/0';
+  const Status: string := Trigger + '/field/1';
+  const Active: string := Status + '/value/0';
+  const Away: string := Status + '/value/1';
+  const Invited: string := Status + '/value/2';
+  Expect(Shows(Session, 'Team: Engine, Platform'), 'Initial choice summary is missing.');
+  Expect(Find(Session, 'disabled/search') = null, 'Null search should hide the editor.');
+  Expect(not Control(Session, 'disabled/add').Enabled, 'Disabled filter accepts input.');
+
+  Send(Session, T.Input.Focus('filters/search'));
+  Send(Session, T.Input.Paste('ééé'));
+  Expect(
+    Control(Session, 'filters/search').Value = 'éé',
+    'Search did not respect the UTF-8 buffer.'
+  );
+  Key(Session, K.Key.Tab);
+  Expect(Control(Session, Trigger).Focused, 'Tab did not move from search to Filter.');
+  Key(Session, K.Key.Enter);
+  Expect(Control(Session, Team).Focused, 'Enter did not open the field menu.');
+  Key(Session, K.Key.Down);
+  Expect(Control(Session, Status).Focused, 'Down did not highlight the next field.');
+  Key(Session, K.Key.Enter);
+  Expect(Control(Session, Active).Focused, 'Enter did not open the field values.');
+  Send(Session, T.Input.Character(' '));
+  Expect(
+    Control(Session, Active).Focused and Control(Session, Active).Value = 'true',
+    'Space must update a checked value and keep the option focused.'
+  );
+  Send(Session, T.Input.Resize(23, 13));
+  Key(Session, K.Key.Down);
+  Key(Session, K.Key.Enter);
+  Expect(
+    Control(Session, Away).Value = 'true',
+    'Enter did not toggle the second value after resize.'
+  );
+  const Pointer: T.ControlSnapshot := Control(Session, Invited);
+  Send(Session, T.Input.Click(Pointer.Column, Pointer.Row));
+  Expect(
+    Control(Session, Invited).Focused and Control(Session, Invited).Value = 'true',
+    'Click must toggle the clicked value and move the highlight.'
+  );
+  Send(Session, T.Input.Character(' '));
+  Expect(Control(Session, Invited).Value = 'false', 'Space did not toggle the clicked value back.');
+  Send(Session, T.Input.Resize(48, 15));
+  Key(Session, K.Key.Escape);
+  Expect(
+    Control(Session, Trigger).Focused and Find(Session, Active) = null,
+    'Escape did not dismiss the value menu and restore focus.'
+  );
+  Expect(Shows(Session, 'Status: Active, Away'), 'Multiple selected values are missing.');
+  Expect(Control(Session, 'filters/search').Value = 'éé', 'A mask change replaced the search.');
+  Send(Session, T.Input.Character(' '));
+  Expect(Control(Session, Team).Focused, 'Space did not reopen the field menu.');
+  Key(Session, K.Key.Escape);
+  Key(Session, K.Key.Tab);
+  Expect(Control(Session, 'filters/clear').Focused, 'Clear all is unreachable by keyboard.');
+  Key(Session, K.Key.Enter);
+  Expect(
+    Control(
+      Session,
+      'filters/search'
+    ).Value = '' and not Shows(Session, 'Team:') and not Shows(Session, 'Status:'),
+    'Clear all did not reset search and all masks.'
+  );
+  Expect(InitialMasks[0] = 5u and InitialMasks[1] = 0u, 'The widget mutated caller-owned masks.');
+  Console.WriteLine('Filter bar contracts verified');
+end;
+
+end program;

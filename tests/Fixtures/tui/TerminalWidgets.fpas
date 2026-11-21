@@ -1,0 +1,226 @@
+// [Documentation](../../coverage.md#terminal-ui)
+
+program TerminalWidgetsContract;
+
+uses
+  Fpas.Ui.Tui.Application as App, Fpas.Ui.Mvu.Application as M, Fpas.Ui.Elements as E,
+  Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Developer.LogConsoles as Logs,
+  Fpas.Ui.Widgets.Overlays.CommandPalettes as Palette, Fpas.Ui.Widgets.Collections.Trees as Tree,
+  Fpas.Ui.Widgets.Collections.Tables as Table, Fpas.Ui.Widgets.Actions.Buttons as Buttons,
+  System as Sys, System.Console as Console, System.Linq.Enumerable as Linq;
+
+type Model = record
+  public PaletteOpen: bool := false;
+  public Open: bool := false;
+  public Selection: string := '';
+  public Entries: array of Logs.Entry := [
+    new Logs.Entry(Logs.Level.Info, 1.0, 'First output'),
+    new Logs.Entry(Logs.Level.Warning, 2.0, 'Second output'),
+    new Logs.Entry(Logs.Level.Error, 3.0, 'Third output'),
+    new Logs.Entry(Logs.Level.Info, 4.0, 'Fourth output')
+  ];
+end record;
+
+type Msg = variant
+  Show(Visible: bool);
+  Expand(Open: bool);
+  Select(Id: string);
+  Append;
+  Clear;
+end variant;
+
+function Update(State: Model; Message: Msg): M.Transition<Model, Msg>;
+begin
+  const Next: Model := case Message of
+    when Msg.Show(const Visible: bool): State with
+      PaletteOpen := Visible;
+    end with;
+    when Msg.Expand(const Open: bool): State with
+      Open := Open;
+    end with;
+    when Msg.Select(const Id: string): State with
+      Selection := Id;
+    end with;
+    when Msg.Append: State with
+      Entries := Linq.ToArray<Logs.Entry>(
+        Linq.Append<Logs.Entry>(
+          State.Entries,
+          new Logs.Entry(Logs.Level.Info, 5.0, 'New output ' + State.Entries.Length.ToString())
+        )
+      );
+    end with;
+    when Msg.Clear: State with
+      Entries := [];
+    end with;
+  end case;
+  return new M.Transition<Model, Msg>(Next, []);
+end function;
+
+function View(State: Model): E.Element<Msg>;
+begin
+  const Base: E.Element<Msg> := E.Column<Msg>(
+    Buttons.Button<Msg>('open', 'Open palette', Msg.Show(true)),
+    Buttons.Button<Msg>('append', 'Append output', Msg.Append),
+    Logs.LogConsole<Msg>('log', State.Entries, Msg.Clear, new Logs.Options(Height := 32.0F)),
+    Tree.Branch<Msg>(
+      'branch', 'Source', State.Open, [
+        Tree.Leaf<Msg>(
+          'leaf', 'main.fpas', function(): Msg => Msg.Select('main.fpas'),
+          new Tree.Options(Selected := State.Selection = 'main.fpas')
+        )
+      ], Msg.Expand
+    ),
+    Table.Table<Msg>(
+      'table', [
+        new Table.Column('Column A', L.Extent.Fixed(L.Measure.Cells(30))),
+        new Table.Column('Column B', L.Extent.Fixed(L.Measure.Cells(28)))
+      ], [
+        new Table.Row<Msg>(
+          'row-a',
+          [Table.Cell<Msg>.Text('Beginning A'), Table.Cell<Msg>.Text('Hidden column A')]
+        ),
+        new Table.Row<Msg>(
+          'row-b',
+          [Table.Cell<Msg>.Text('Beginning B'), Table.Cell<Msg>.Text('Hidden column B')]
+        )
+      ], OnSelect := Msg.Select, Settings := new Table.Options(HorizontalScroll := true)
+    ),
+    E.Text<Msg>('Selected ' + State.Selection)
+  );
+  return Palette.CommandPalette<Msg>(
+    'palette', Base, State.PaletteOpen, [
+      new Palette.Command<Msg>('Build project', Msg.Select('build')),
+      new Palette.Command<Msg>('Open editor', Msg.Select('editor')),
+      new Palette.Command<Msg>('Open preview', Msg.Select('preview'))
+    ], Msg.Show
+  );
+end function;
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+procedure Send(Session: App.HeadlessSession; Input: App.Input);
+begin
+  discard Session.Send(Input);
+  case Session.Step() of
+    when App.StepResult.Failed(_, _, _, const Reason: string):
+      raise new Sys.InvalidOperationException(Reason);
+    else
+  end case;
+end procedure;
+
+procedure Key(Session: App.HeadlessSession; Pressed: K.Key; Modifiers: K.KeyModifiers := K.KeyModifiers.None);
+begin
+  Send(Session, App.Input.KeyPress(Pressed, Modifiers));
+end procedure;
+
+function Shows(Session: App.HeadlessSession; Text: string): bool;
+begin
+  return Sys.Array.Exists<string>(
+    Session.Snapshot().Lines,
+    function(Line: string): bool => Line.Contains(Text)
+  );
+end function;
+
+function Control(Session: App.HeadlessSession; Id: string): App.ControlSnapshot;
+begin
+  for Item: App.ControlSnapshot in Session.Snapshot().Controls do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing control ' + Id);
+end function;
+
+begin
+  using const Session: App.HeadlessSession := App.StartHeadless<Model, Msg>(
+    new Model(),
+    Update,
+    View,
+    30,
+    18
+  );
+  Check(
+    Shows(Session, 'Third output') and Shows(Session, 'Fourth output'),
+    'The log opens at the tail.'
+  );
+  Send(Session, App.Input.Activate('append'));
+  Check(Shows(Session, 'New output 4'), 'The log follows an append at the tail.');
+  Send(Session, App.Input.Focus('log'));
+  Key(Session, K.Key.Home);
+  Check(Shows(Session, 'First output'), 'Home scrolls to the first message.');
+  Send(Session, App.Input.Activate('append'));
+  Check(
+    Shows(Session, 'First output') and not Shows(Session, 'New output 5'),
+    'An append displaced older visible lines.'
+  );
+  Key(Session, K.Key.End);
+  Check(Shows(Session, 'New output 5'), 'End resumes tail following.');
+  Send(Session, App.Input.Activate('append'));
+  Check(Shows(Session, 'New output 6'), 'Following stays enabled after End.');
+  Send(Session, App.Input.Activate('log/clear'));
+  Check(not Shows(Session, 'New output'), 'Clear did not send the model message.');
+
+  Send(Session, App.Input.Focus('open'));
+  Key(Session, K.Key.K, K.KeyModifiers.Ctrl);
+  Check(
+    Control(Session, 'palette/command/0').Focused,
+    'The command shortcut did not open the palette.'
+  );
+  Send(Session, App.Input.TextInput('OPEN'));
+  Check(
+    Control(Session, 'palette/command/1').Focused,
+    'Filtering did not find the first matching command.'
+  );
+  Key(Session, K.Key.Down);
+  Key(Session, K.Key.Enter);
+  Check(
+    Shows(Session, 'Selected preview') and Control(Session, 'open').Focused,
+    'Enter did not run the command and restore focus.'
+  );
+  Key(Session, K.Key.Enter);
+  Key(Session, K.Key.Escape);
+  Check(Control(Session, 'open').Focused, 'Escape did not restore focus.');
+
+  Send(Session, App.Input.Focus('branch'));
+  Check(not Shows(Session, 'main.fpas'), 'A collapsed branch retained its child.');
+  Key(Session, K.Key.Right);
+  Check(Shows(Session, 'main.fpas'), 'Right did not expand the branch.');
+  Key(Session, K.Key.Down);
+  Key(Session, K.Key.Enter);
+  Check(
+    Control(Session, 'leaf').Focused and Shows(Session, 'Selected main.fpas'),
+    'The focused leaf did not activate.'
+  );
+  Key(Session, K.Key.Left);
+  Check(Control(Session, 'branch').Focused, 'Left from a leaf did not return to its parent.');
+  Key(Session, K.Key.Left);
+  Check(not Shows(Session, '    main.fpas'), 'Left did not collapse the branch.');
+
+  Send(Session, App.Input.Focus('row-a'));
+  Check(
+    Shows(Session, 'Column A') and not Shows(Session, 'Column B'),
+    'Wide columns shrank into the viewport.'
+  );
+  Key(Session, K.Key.Right, K.KeyModifiers.Ctrl);
+  Key(Session, K.Key.Right, K.KeyModifiers.Ctrl);
+  Key(Session, K.Key.Right, K.KeyModifiers.Ctrl);
+  Check(
+    Shows(Session, 'Column B') and Shows(Session, 'Hidden column A'),
+    'Header and body did not pan together.'
+  );
+  Key(Session, K.Key.Down);
+  Key(Session, K.Key.Enter);
+  Check(
+    Control(Session, 'row-b').Focused and Shows(Session, 'Selected row-b'),
+    'Panning broke row navigation.'
+  );
+  Console.WriteLine('Terminal widget contracts verified');
+end;
+
+end program;

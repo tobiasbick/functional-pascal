@@ -1,0 +1,220 @@
+// [Documentation](../../../docs/ui/tui/data-display/selection-list.md)
+
+program SelectionListContract;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V,
+  Fpas.Ui.TerminalExtensions.SelectionLists as Lists, Fpas.Ui.TerminalExtensions.Input as K,
+  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Tui.Application as T, Fpas.Ui.Mvu.Application as M,
+  System as Sys, System.Console as Console;
+
+type State = record
+  public Selected: string := 'one';
+  public LastProposal: string := '';
+  public LastActivation: string := '';
+end record;
+
+type Msg = variant
+  Choose(Key: string);
+  Activate(Key: string);
+  Clear;
+end variant;
+
+const Items: array of Lists.Item := [
+  new Lists.Item('one', 'First row'),
+  new Lists.Item('locked', 'Locked row', false),
+  new Lists.Item('three', 'Third row'),
+  new Lists.Item('reject', 'Rejected row'),
+  new Lists.Item('five', 'Fifth row'),
+  new Lists.Item('six', 'Sixth row'),
+  new Lists.Item('last', 'Last row')
+];
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Update(Current: State; Message: Msg): M.Transition<State, Msg>;
+begin
+  const Next: State := case Message of
+    when Msg.Choose(const Key: string): Current with
+      Selected := if Key = 'reject' then
+        Current.Selected
+      else
+        Key
+      end if;
+      LastProposal := Key;
+    end with;
+    when Msg.Activate(const Key: string): Current with
+      LastActivation := Key;
+    end with;
+    when Msg.Clear: new State(Selected := '');
+  end case;
+  return new M.Transition<State, Msg>(Next, []);
+end function;
+
+function View(Current: State): E.Element<Msg>;
+begin
+  return E.Column<Msg>(
+    B.Button<Msg>('clear', 'Clear', Msg.Clear),
+    E.Size<Msg>(
+      Lists.SelectionList<Msg>('list', Items, Current.Selected, Msg.Choose, Msg.Activate),
+      new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(3)))
+    ),
+    Lists.SelectionList<Msg>('empty', [], '', Msg.Choose, Msg.Activate),
+    B.Button<Msg>('after', 'After', Msg.Clear),
+    E.Text<Msg>('Proposed ' + Current.LastProposal),
+    E.Text<Msg>('Activated ' + Current.LastActivation)
+  );
+end function;
+
+function Control(Frame: T.Frame; Id: string): T.ControlSnapshot;
+begin
+  for Item: T.ControlSnapshot in Frame.Controls do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing control ' + Id);
+end function;
+
+function Shows(Frame: T.Frame; Text: string): bool;
+begin
+  return Sys.Array.Exists<string>(Frame.Lines, function(Line: string): bool => Line.Contains(Text));
+end function;
+
+procedure Send(Session: T.HeadlessSession; Input: T.Input);
+begin
+  discard Session.Send(Input);
+  case Session.Step() of
+    when T.StepResult.Failed(_, _, _, const Reason: string):
+      raise new Sys.InvalidOperationException(Reason);
+    else
+  end case;
+end procedure;
+
+procedure Key(Session: T.HeadlessSession; Pressed: K.Key; Modifiers: K.KeyModifiers := K.KeyModifiers.None);
+begin
+  Send(Session, T.Input.KeyPress(Pressed, Modifiers));
+end procedure;
+
+procedure Reject(Node: E.Element<Msg>; Profile: V.Target; Reason: string);
+begin
+  try
+    discard V.Prepare<Msg>(Node, Profile);
+  catch Error: Sys.ArgumentException do
+    Check(Error.Message.Contains(Reason), Error.Message);
+    return;
+  end try;
+
+  raise new Sys.InvalidOperationException('Validation accepted an invalid list.');
+end procedure;
+
+begin
+  const List: E.Element<Msg> := Lists.SelectionList<Msg>(
+    'list',
+    Items,
+    'one',
+    Msg.Choose,
+    Msg.Activate
+  );
+  Reject(List, V.Target.Graphical, 'Terminal profile');
+  Reject(List, V.Target.Portable, 'Terminal profile');
+  Reject(
+    Lists.SelectionList<Msg>('list', [Items[0], Items[0]], 'one', Msg.Choose, Msg.Activate),
+    V.Target.Terminal, 'nonempty and unique'
+  );
+  Reject(
+    Lists.SelectionList<Msg>('list', Items, 'missing', Msg.Choose, Msg.Activate),
+    V.Target.Terminal, 'selected key'
+  );
+  using const Session: T.HeadlessSession := T.StartHeadless<State, Msg>(
+    new State(),
+    Update,
+    View,
+    28,
+    10
+  );
+  Key(Session, K.Key.Tab);
+  const Box: T.ControlSnapshot := Control(Session.Snapshot(), 'list');
+  Check(
+    Box.Focused and Box.Role = 'listbox' and Box.Value = 'one',
+    'List did not receive one tab stop.'
+  );
+  Key(Session, K.Key.Tab);
+  Check(
+    Control(Session.Snapshot(), 'after').Focused,
+    'Tab should skip remaining rows and the empty list.'
+  );
+  Key(Session, K.Key.Tab, K.KeyModifiers.Shift);
+  Key(Session, K.Key.Down, K.KeyModifiers.Ctrl);
+  Check(
+    Control(Session.Snapshot(), 'list').Value = 'one',
+    'Modified navigation changed selection.'
+  );
+  Key(Session, K.Key.Down);
+  Check(
+    Control(Session.Snapshot(), 'list').Value = 'locked',
+    'Unactivatable entry should be selectable.'
+  );
+  Key(Session, K.Key.Enter);
+  Check(not Shows(Session.Snapshot(), 'Activated locked'), 'Enter activated an unavailable entry.');
+  Send(Session, T.Input.Click(Box.Column + 2, Box.Row + 2));
+  Check(Control(Session.Snapshot(), 'list').Value = 'three', 'Click did not select the row.');
+  Check(not Shows(Session.Snapshot(), 'Activated three'), 'Click activated the row.');
+  Key(Session, K.Key.Down);
+  const Declined: T.Frame := Session.Snapshot();
+  Check(
+    Control(Declined, 'list').Value = 'three' and Shows(Declined, 'Proposed reject'),
+    'Model must control selection.'
+  );
+  Send(Session, T.Input.Character(' '));
+  Check(not Shows(Session.Snapshot(), 'Activated three'), 'Space activated the row.');
+  Key(Session, K.Key.Enter);
+  Check(Shows(Session.Snapshot(), 'Activated three'), 'Enter ignored the accepted selection.');
+  Key(Session, K.Key.End);
+  Check(Shows(Session.Snapshot(), '> Last row'), 'End did not reveal the selected row.');
+  Send(Session, T.Input.Scroll(Box.Column, Box.Row, -20));
+  const Scrolled: T.Frame := Session.Snapshot();
+  Check(
+    Shows(Scrolled, 'First row') and not Shows(Scrolled, 'Last row'),
+    'Wheel did not scroll the list.'
+  );
+  Check(
+    Control(Scrolled, 'list').Focused and Control(Scrolled, 'list').Value = 'last',
+    'Wheel changed focus or selection.'
+  );
+  Key(Session, K.Key.End);
+  Check(Shows(Session.Snapshot(), '> Last row'), 'End did not recover the scrolled-out selection.');
+  Key(Session, K.Key.PageUp);
+  Check(
+    Control(Session.Snapshot(), 'list').Value = 'five',
+    'Page Up did not move by a viewport page.'
+  );
+  Key(Session, K.Key.PageDown);
+  Send(Session, T.Input.Activate('list'));
+  Check(
+    Shows(Session.Snapshot(), 'Activated last'),
+    'Headless activation did not use the current selection.'
+  );
+  Key(Session, K.Key.Home);
+  Check(Shows(Session.Snapshot(), '> First row'), 'Home did not reveal the first item.');
+  Send(Session, T.Input.Activate('clear'));
+  Key(Session, K.Key.Enter);
+  Check(
+    Control(
+      Session.Snapshot(),
+      'list'
+    ).Value = '' and not Shows(Session.Snapshot(), 'Activated one'),
+    'Empty selection activated an item.'
+  );
+  Key(Session, K.Key.Down);
+  Check(Control(Session.Snapshot(), 'list').Value = 'one', 'Down did not start a new selection.');
+  Console.WriteLine('Selection list contracts verified');
+end;
+
+end program;

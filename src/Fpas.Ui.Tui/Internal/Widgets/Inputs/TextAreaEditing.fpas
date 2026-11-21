@@ -39,6 +39,8 @@ public type Cursor = record
   public BeforeWrap: bool := false;
   // Column to restore after a short line, or minus one when unset.
   public Goal: int := -1;
+  // Selection origin, or minus one.
+  public Anchor: int := -1;
 end record;
 
 // Cursor state shared between input and layout.
@@ -106,10 +108,15 @@ begin
   const Field: Field<TMsg> := View.Field;
   const Position: Cursor := View.Position.Read(Field.Value);
   const Value: string := Field.Value.Remove(Start, Count).Insert(Start, Added);
-  if Value <> Field.Value then
-    View.Position.Propose(
-      new Cursor(Value, TextEdit.AfterEdit(Value, Start + Added.Length), Position.Top)
-    );
+  const Next: Cursor := new Cursor(
+    Value,
+    TextEdit.AfterEdit(Value, Start + Added.Length),
+    Position.Top
+  );
+  if Value = Field.Value then
+    View.Position.Move(Next);
+  else
+    View.Position.Propose(Next);
     Apply(Field.Change(Value));
   end if;
 end procedure;
@@ -127,25 +134,28 @@ begin
   if Field.Settings.ReadOnly then
     return;
   end if;
-  const Available: int := Field.Settings.MaxUtf8Bytes - Text.Encoding.UTF8.GetByteCount(
-    Field.Value
-  );
+  const Current: Cursor := View.Position.Read(Field.Value);
+  const Selected: TextEdit.Range := TextEdit.Selection(Current.Offset, Current.Anchor);
+  const Remaining: string := Field.Value.Remove(Selected.Start, Selected.Stop - Selected.Start);
+  const Available: int := Field.Settings.MaxUtf8Bytes - Text.Encoding.UTF8.GetByteCount(Remaining);
   const Added: string := TextEdit.Insertable(Input, Available, true);
   if Added <> '' then
-    Replace<TMsg>(View, View.Position.Read(Field.Value).Offset, 0, Added, Apply);
+    Replace<TMsg>(View, Selected.Start, Selected.Stop - Selected.Start, Added, Apply);
   end if;
 end procedure;
 
-procedure Place<TMsg>(View: View<TMsg>; Index: int; Offset: int; Goal: int);
+procedure Place<TMsg>(View: View<TMsg>; Index: int; Offset: int; Goal: int; Extend: bool := false);
 begin
   const BeforeWrap: bool := Index + 1 < View.Rows.Length and View.Rows[Index + 1].Start = Offset;
+  const Current: Cursor := View.Position.Read(View.Field.Value);
   View.Position.Move(
     new Cursor(
       View.Field.Value,
       Offset,
-      View.Position.Read(View.Field.Value).Top,
+      Current.Top,
       BeforeWrap := BeforeWrap,
-      Goal := Goal
+      Goal := Goal,
+      Anchor := TextEdit.ExtendAnchor(Current.Offset, Current.Anchor, Extend)
     )
   );
 end procedure;
@@ -166,8 +176,12 @@ begin
   const Value: string := Field.Value;
   const Position: Cursor := View.Position.Read(Value);
   const At: int := Position.Offset;
+  const Selected: TextEdit.Range := TextEdit.Selection(At, Position.Anchor);
+  const HasSelection: bool := Selected.Start <> Selected.Stop;
   if Modifiers = K.KeyModifiers.Ctrl then
     case Pressed of
+      when K.Key.A:
+        View.Position.Move(new Cursor(Value, Value.Length, Position.Top, Anchor := 0));
       when K.Key.Enter:
         case Field.Submit of
           when is Sys.Func<string, TMsg> as Submit:
@@ -191,7 +205,8 @@ begin
     return true;
   end if;
 
-  if Modifiers <> K.KeyModifiers.None then
+  const Extend: bool := Modifiers = K.KeyModifiers.Shift;
+  if Modifiers <> K.KeyModifiers.None and not Extend then
     return false;
   end if;
   const Index: int := Lines.Locate(View.Rows, At, Position.BeforeWrap);
@@ -199,18 +214,33 @@ begin
   case Pressed of
     when K.Key.Left, K.Key.Right:
       const Offset: int := if Pressed = K.Key.Left then
-        TextEdit.Previous(Value, At)
+        if HasSelection and not Extend then
+          Selected.Start
+        else
+          TextEdit.Previous(Value, At)
+        end if
       else
-        TextEdit.Next(Value, At)
+        if HasSelection and not Extend then
+          Selected.Stop
+        else
+          TextEdit.Next(Value, At)
+        end if
       end if;
-      View.Position.Move(new Cursor(Value, Offset, Position.Top));
+      View.Position.Move(
+        new Cursor(
+          Value,
+          Offset,
+          Position.Top,
+          Anchor := TextEdit.ExtendAnchor(At, Position.Anchor, Extend)
+        )
+      );
     when K.Key.Home, K.Key.End:
       Place<TMsg>(
         View, Index, if Pressed = K.Key.Home then
           Row.Start
         else
           Row.Stop
-        end if, -1
+        end if, -1, Extend
       );
     when K.Key.Up, K.Key.Down, K.Key.PageUp, K.Key.PageDown:
       const Delta: int := case Pressed of
@@ -225,15 +255,23 @@ begin
       else
         G.Measure(Value.Substring(Row.Start, At - Row.Start))
       end if;
-      Place<TMsg>(View, Target, Lines.AtColumn(Value, View.Rows[Target], Goal), Goal);
+      Place<TMsg>(View, Target, Lines.AtColumn(Value, View.Rows[Target], Goal), Goal, Extend);
     when K.Key.Backspace, K.Key.Delete:
+      if Extend then
+        return false;
+      end if;
+
       if not Field.Settings.ReadOnly then
-        const Start: int := if Pressed = K.Key.Backspace then
+        const Start: int := if HasSelection then
+          Selected.Start
+        elsif Pressed = K.Key.Backspace then
           TextEdit.Previous(Value, At)
         else
           At
         end if;
-        const Stop: int := if Pressed = K.Key.Delete then
+        const Stop: int := if HasSelection then
+          Selected.Stop
+        elsif Pressed = K.Key.Delete then
           TextEdit.Next(Value, At)
         else
           At
@@ -241,6 +279,10 @@ begin
         Replace<TMsg>(View, Start, Stop - Start, '', Apply);
       end if;
     when K.Key.Enter:
+      if Extend then
+        return false;
+      end if;
+
       Insert<TMsg>(View, cast<char>(10).ToString(), Apply);
     else
       return false;

@@ -1,0 +1,74 @@
+// [Documentation](../../../../../docs/ui/tui/overlays/command-palette.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Overlays.CommandPalette;
+
+uses
+  Fpas.Ui.Widgets.Overlays.CommandPalettes as P, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as State,
+  Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup as Popup, Fpas.Ui.Tui.Internal.Controls.Activation as Actions,
+  Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F,
+  Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Themes as Th,
+  System as Sys, System.Globalization as Global, System.Collections.Generic as C;
+
+// Presents the searchable palette in a centered modal scope.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable palette identity.
+// - `Commands`: Searchable commands in model order.
+// - `Change`: Maps a proposed visibility change to a message.
+// - `UseShortcut`: Ctrl+K also dismisses the open palette.
+// - `PopupState`: Input cursor and dispatcher.
+// - `Screen`: Available cells.
+// - `Theme`: Terminal palette.
+// - `Operations`: Ordered paint operations.
+// - `Controls`: Current visible controls.
+// ## Returns
+// The dialog input scope.
+public function Draw<TMsg>(
+  Id: string; Commands: array of P.Command<TMsg>; Change: function(bool): TMsg; UseShortcut: bool;
+  PopupState: State.State<TMsg>; Screen: F.Rect; Theme: Th.Theme;
+  Operations: C.List<D.Operation>; Controls: C.List<A.Control<TMsg>>
+): A.Scope<TMsg>;
+begin
+  if PopupState.Read().Id <> Id then
+    PopupState.Write(new State.Cursor(Id));
+  end if;
+  const Rows: C.List<Popup.Row<TMsg>> := new C.List<Popup.Row<TMsg>>(Commands.Length);
+  for Index: int := 0 to Commands.Length - 1 do
+    const Command: P.Command<TMsg> := Commands[Index];
+    const Key: string := Id + '/command/' + Index.ToString(Global.CultureInfo.InvariantCulture);
+    Rows.Add(
+      Popup.Row<TMsg>.Choice(
+        new Popup.Item<TMsg>(
+          Key,
+          Command.Title,
+          ' ' + Command.Title,
+          'command',
+          new Actions.Direct<TMsg>(Command.Message),
+          Hint := Command.Shortcut
+        )
+      )
+    );
+  end for;
+
+  return Popup.Draw<TMsg>(
+    PopupState,
+    new Popup.Content<TMsg>(
+      Rows.ToArray(),
+      54,
+      Searchable := true,
+      Centered := true,
+      ToggleShortcut := UseShortcut
+    ),
+    Screen,
+    Screen,
+    Theme,
+    Operations,
+    Controls,
+    procedure() begin
+      PopupState.Apply(Change(false));
+    end procedure
+  );
+end function;
+
+end unit;

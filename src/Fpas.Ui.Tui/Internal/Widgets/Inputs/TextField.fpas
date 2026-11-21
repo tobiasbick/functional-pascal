@@ -77,7 +77,7 @@ begin
   if Before <> null then
     case Before.Action of
       when A.Binding.Edit(_, const Cursor: Edit.Tracking, _, _):
-        Old := Cursor.Read();
+        Old := Cursor.Read(Field.Value);
       else
     end case;
   end if;

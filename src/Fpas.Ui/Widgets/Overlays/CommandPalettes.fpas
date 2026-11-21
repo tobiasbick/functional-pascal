@@ -20,7 +20,7 @@ public type Command<TMsg> = record
   public Shortcut: string := '';
 end record;
 
-// Presents CUI’s searchable command palette over a base view.
+// Presents a searchable command palette over a base view.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
@@ -29,9 +29,9 @@ end record;
 // - `Open`: Model-owned visibility.
 // - `Commands`: Commands in display order.
 // - `OnOpenChange`: Maps a proposed visibility change to a message.
-// - `UseShortcut`: Whether the native primary modifier plus K toggles the overlay.
+// - `UseShortcut`: Whether the primary modifier plus K toggles the overlay.
 // ## Returns
-// The graphical element.
+// The command palette element.
 public function CommandPalette<TMsg>(Id: string; Base: E.Element<TMsg>; Open: bool; Commands: array of Command<TMsg>; OnOpenChange: function(bool): TMsg; UseShortcut: bool := true): E.Element<TMsg>;
 requires Id <> '';
 begin

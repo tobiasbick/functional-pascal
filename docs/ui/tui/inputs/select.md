@@ -38,6 +38,7 @@ The trigger exposes the snapshot role `select` and its visible value. Each visib
 ## See also
 
 - [Terminal inputs](README.md)
+- [Selection list with separate selection and activation](../data-display/selection-list.md)
 - [Popup input and focus](../host.md#popup-input)
 - [Select API and GUI example](../../gui/inputs/select.md)
 

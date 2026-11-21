@@ -2,11 +2,13 @@
 
 unit Fpas.Ui.Tui.Internal.Layout.Measurement;
 
-uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System as Sys;
+uses Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System as Sys;
 
 public function FlexRule<TMsg>(Node: E.Element<TMsg>): E.Flex;
 begin
   case Node of
+    when E.Element.Palette(_, const Base: E.Element<TMsg>, _, _, _, _):
+      return FlexRule<TMsg>(Base);
     when E.Element.CellGrid(_, _, _):
       return new E.Flex(Grow := 1);
     when E.Element.Sized(_, const Rule: E.Flex):
@@ -37,13 +39,19 @@ end function;
 public function Minimum<TMsg>(Node: E.Element<TMsg>; Horizontal: bool; ParentHorizontal: bool? := null): int;
 begin
   case Node of
+    when E.Element.Log(_, _, _):
+      return 1;
+    when E.Element.Palette(_, const Base: E.Element<TMsg>, _, _, _, _):
+      return Minimum<TMsg>(Base, Horizontal, ParentHorizontal);
     when E.Element.TabStrip(_):
       return if Horizontal then
         1
       else
         Intrinsic<TMsg>(Node, false)
       end if;
-    when E.Element.Table(_), E.Element.TextField(_), E.Element.TextArea(_):
+    when E.Element.Table(
+      _
+    ), E.Element.SelectionList(_), E.Element.TextField(_), E.Element.TextArea(_):
       return 1;
     when E.Element.StatusBar(_, _):
       return if Horizontal then
@@ -302,6 +310,20 @@ end function;
 public function Intrinsic<TMsg>(Node: E.Element<TMsg>; Horizontal: bool; Columns: int := -1): int;
 begin
   case Node of
+    when E.Element.Log(_, _, _):
+      return if Horizontal then
+        32
+      else
+        8
+      end if;
+    when E.Element.Palette(_, const Base: E.Element<TMsg>, _, _, _, _):
+      return Intrinsic<TMsg>(Base, Horizontal, Columns);
+    when E.Element.SelectionList(const List: E.SelectionListView<TMsg>):
+      return if Horizontal then
+        List.Width
+      else
+        Sys.Math.Max(1, List.Items.Length)
+      end if;
     when E.Element.TabStrip(const Strip: E.TabView<TMsg>):
       if not Horizontal then
         return if Strip.Settings.Appearance = Tabs.Variant.Underline then

@@ -102,6 +102,18 @@ begin
   if not Session.Snapshot().Controls[0].Focused then
     raise new Sys.Exception('Disabled field received focus.');
   end if;
+
+  Send(Session, Tui.Input.Resize(14, 7));
+  Key(Session, K.Key.End);
+  Send(Session, Tui.Input.KeyPress(K.Key.Left, K.KeyModifiers.Shift));
+  Send(Session, Tui.Input.Character('?'));
+  Expect(Session, 'ok?');
+  Send(Session, Tui.Input.KeyPress(K.Key.A, K.KeyModifiers.Ctrl));
+  Send(Session, Tui.Input.Paste(Accent + '12345'));
+  Expect(Session, Accent + '12345');
+  Send(Session, Tui.Input.KeyPress(K.Key.A, K.KeyModifiers.Ctrl));
+  Key(Session, K.Key.Delete);
+  Expect(Session, '');
 end procedure;
 
 begin

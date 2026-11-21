@@ -1,0 +1,37 @@
+// [Documentation](../../../docs/ui/tui/data-display/selection-list.md)
+
+unit Fpas.Ui.TerminalExtensions.SelectionLists;
+
+uses Fpas.Ui.Elements as E;
+
+// One selectable row of a terminal list.
+public type Item = record
+  // Nonempty identity unique within this list.
+  public Key: string;
+  // Literal single-line caption.
+  public Label: string;
+  // Whether Enter can activate this item when selected.
+  public CanActivate: bool := true;
+end record;
+
+// Builds a terminal selection list with separate selection and activation events.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable control identity.
+// - `Items`: Rows in display order. Keep the array unchanged while the view is retained.
+// - `SelectedKey`: Model-owned selection, or an empty string for no selection.
+// - `OnSelect`: Maps a proposed selection to a message.
+// - `OnActivate`: Maps activation of the selected item to a message.
+// ## Returns
+// A terminal-only element with one keyboard focus stop when it has items.
+public function SelectionList<TMsg>(
+  Id: string; Items: array of Item; SelectedKey: string;
+  OnSelect: function(string): TMsg; OnActivate: function(string): TMsg
+): E.Element<TMsg>;
+requires Id <> '';
+begin
+  return E.Element<TMsg>.TerminalSelectionList(Id, Items, SelectedKey, OnSelect, OnActivate);
+end function;
+
+end unit;

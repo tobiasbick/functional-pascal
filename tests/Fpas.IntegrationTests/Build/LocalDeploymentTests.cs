@@ -34,7 +34,8 @@ public sealed partial class LocalDeploymentTests
         Directory.CreateDirectory(otherGuiVersion); File.WriteAllText(Path.Combine(otherGuiVersion, "keep"), "other GUI version");
         var unrelated = Path.Combine(packages, "unrelated", "1.0.0");
         Directory.CreateDirectory(unrelated); File.WriteAllText(Path.Combine(unrelated, "keep"), "other package");
-        var assets = directory.File(Path.Combine("delivery", "fpas-assets"));
+        var assets = directory.File(OperatingSystem.IsWindows()
+            ? Path.Combine("delivery", "fpas-runtime", "fpas-assets") : Path.Combine("delivery", "fpas-assets"));
         var environment = new Dictionary<string, string?> { ["NUGET_PACKAGES"] = packages,
             ["FPAS_ASSET_CACHE"] = null, ["DOTNET_BUNDLE_EXTRACT_BASE_DIR"] = directory.File("bundle") };
         var consumer = directory.File("consumer"); Directory.CreateDirectory(consumer);
@@ -101,7 +102,9 @@ public sealed partial class LocalDeploymentTests
                 await CheckSdkCompiler(consumer, launcher, sdkCache, environment);
                 await CheckDebugger(checkout, consumer, launcher, version, packages, environment);
             }
-            Assert.Equal(new[] { launcher, assets }.Order(), Directory.GetFileSystemEntries(delivery).Order());
+            string[] deliveryEntries = OperatingSystem.IsWindows()
+                ? [launcher, Path.Combine(delivery, "fpas-runtime")] : [launcher, assets];
+            Assert.Equal(deliveryEntries.Order(), Directory.GetFileSystemEntries(delivery).Order());
             Assert.False(Directory.Exists(Path.Combine(consumer, "fpas-assets")));
         }
 

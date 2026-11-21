@@ -1,0 +1,156 @@
+// [Documentation](../../../../../docs/ui/tui/developer/log-console.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Developer.LogConsole;
+
+uses
+  Fpas.Ui.Widgets.Developer.LogConsoles as Logs, Fpas.Ui.Widgets.Developer.Terminal as T,
+  Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Tui.Internal.View.Tree as E,
+  Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as A,
+  Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions,
+  Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G,
+  Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as C,
+  System.Globalization as Culture;
+
+function Timestamp(Seconds: double): string;
+begin
+  const Milliseconds: long := if Seconds > 1000000000000.0 then
+    0L
+  else
+    cast<long>(Seconds * 1000.0 + 0.5)
+  end if;
+  const Time: Sys.TimeSpan := new Sys.TimeSpan(
+    (Milliseconds mod 86400000L) * Sys.TimeSpan.TicksPerMillisecond
+  );
+  return Time.ToString('hh\:mm\:ss\.fff', Culture.CultureInfo.InvariantCulture);
+end function;
+
+// Builds a terminal log from the supplied entries, clear message and presentation settings.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable control identity.
+// - `Entries`: Log entries in arrival order.
+// - `Clear`: Model-owned clear action.
+// - `Settings`: Height, width, timestamp and toolbar options.
+// - `Horizontal`: Whether allocation runs along columns.
+// ## Returns
+// The scrollback and optional clear button.
+public function Lower<TMsg>(
+  Id: string; Entries: array of Logs.Entry; Clear: TMsg; Settings: Logs.Options; Horizontal: bool
+): E.Element<TMsg>;
+begin
+  const Content: E.Element<TMsg> := E.Element<TMsg>.Log(Id, Entries, Settings.Timestamps);
+  var View: E.Element<TMsg> := Content;
+  if Settings.Height > 0.0F then
+    View := E.Element<TMsg>.Sized(
+      Content,
+      new E.Flex(Basis := cast<int>(Sys.Math.Ceiling(Settings.Height / 16.0F)))
+    );
+  elsif Settings.Height = -1.0F then
+    View := E.Element<TMsg>.Sized(Content, new E.Flex(Minimum := 1, Grow := 1));
+  end if;
+
+  if Settings.Toolbar then
+    const Button: E.Element<TMsg> := E.Element<TMsg>.Action(
+      Id + '/clear', new Actions.Direct<TMsg>(Clear), true,
+      new E.ActionView('Clear', Variant := S.ButtonVariant.Secondary)
+    );
+    View := E.Element<TMsg>.Stack([View, Button], false, new E.Flow());
+  end if;
+
+  if Horizontal then
+    case Settings.Width of
+      when L.Extent.Fixed(const Width: L.Measure):
+        View := E.Element<TMsg>.Sized(View, new E.Flex(Basis := F.Cells(Width)));
+      when L.Extent.Fill:
+        View := E.Element<TMsg>.Sized(View, new E.Flex(Grow := 1));
+      else
+    end case;
+  end if;
+
+  return View;
+end function;
+
+// Paints the visible rows, following the tail only while it is already in view.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable scroll identity.
+// - `Entries`: Current ordered entries.
+// - `Timestamps`: Show elapsed seconds.
+// - `Before`: Previous control, if presented.
+// - `Area`: Visible terminal cells.
+// - `Style`: Inherited cell colors.
+// - `Theme`: Terminal palette.
+// - `Scope`: Owning input scope.
+// - `FocusReturn`: Fallback focus identity.
+// - `Offsets`: Session scroll positions.
+// - `Regions`: Wheel regions being collected.
+// - `Operations`: Paint commands.
+// ## Returns
+// The scrollback control.
+public function Arrange<TMsg>(
+  Id: string; Entries: array of Logs.Entry; Timestamps: bool; Before: A.Control<TMsg>?; Area: F.Rect;
+  Style: T.Style; Theme: Th.Theme; Scope: string; FocusReturn: string; Offsets: C.Dictionary<string, int>;
+  Regions: C.List<A.ScrollRegion>; Operations: C.List<D.Operation>
+): A.Control<TMsg>;
+begin
+  var Offset: int := 0;
+  discard Offsets.TryGetValue(Id, out Offset);
+  var Position: E.ScrollPosition := E.ScrollPosition.End;
+  if Before <> null then
+    case Before.Action of
+      when A.Binding.Scroll(const Old: V.Viewport<TMsg>):
+        if Offset < Old.Maximum then
+          Position := E.ScrollPosition.Offset(Offset);
+        end if;
+      else
+    end case;
+  end if;
+  const View: V.Viewport<TMsg> := V.Resolve<TMsg>(Position, Entries.Length, Area, true, null);
+  Offsets[Id] := View.Offset;
+  Regions.Add(new A.ScrollRegion(Id, Scope, Area, View.Maximum));
+  D.Fill(Operations, Area, Style);
+  const Width: int := if View.Bar then
+    Area.Width - 1
+  else
+    Area.Width
+  end if;
+  for Row: int := 0 to Sys.Math.Min(Area.Height, Entries.Length - View.Offset) - 1 do
+    const Entry: Logs.Entry := Entries[View.Offset + Row];
+    const Tone: T.Style := case Entry.Severity of
+      when Logs.Level.Warning: new T.Style(
+        Th.Rgb(Theme.Colors.Warning, Style.Background ?? 0),
+        Style.Background
+      );
+      when Logs.Level.Error: new T.Style(
+        Th.Rgb(Theme.Colors.Danger, Style.Background ?? 0),
+        Style.Background
+      );
+      else Style;
+    end case;
+    const Time: string := if Timestamps then
+      Timestamp(Entry.Time) + '  '
+    else
+      ''
+    end if;
+    const Line: F.Rect := new F.Rect(Area.X, Area.Y + Row, Width, 1);
+    Operations.Add(
+      new D.Operation(
+        Time + Entry.Severity.ToString().PadRight(7) + '  ' + G.SingleLine(Entry.Text),
+        Line,
+        Line,
+        Tone,
+        false
+      )
+    );
+  end for;
+
+  V.DrawBar<TMsg>(View, Operations, Area, Area, Style, Theme.Widgets);
+  return new A.Control<TMsg>(
+    Id, Id, 'log', View.Offset.ToString(), Area, Scope, FocusReturn, true,
+    A.Binding<TMsg>.Scroll(View), S.ButtonVariant.Default
+  );
+end function;
+
+end unit;

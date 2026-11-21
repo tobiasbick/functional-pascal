@@ -14,11 +14,12 @@ uses
 // - `Selected`: Selected person's stable ID.
 // - `SortBy`: Maps a header activation.
 // - `SelectPerson`: Maps a row activation.
+// - `Height`: Visible terminal rows including the header.
 // ## Returns
 // The Data display table.
 public function View<TMsg>(
   Order: T.Sort; Selected: string; SortBy: function(T.Sort): TMsg;
-  SelectPerson: function(string): TMsg
+  SelectPerson: function(string): TMsg; Height: int
 ): E.Element<TMsg>;
 begin
   const Rows: C.List<T.Row<TMsg>> := new C.List<T.Row<TMsg>>();
@@ -38,7 +39,8 @@ begin
 
   return T.Table<TMsg>(
     'people', People.Columns(L.Extent.Content, L.Extent.Content, L.Extent.Content),
-    Rows.ToArray(), Order, SortBy, SelectPerson
+    Rows.ToArray(), Order, SortBy, SelectPerson,
+    new T.Options(Height := L.Extent.Fixed(L.Measure.Cells(Height)), HorizontalScroll := true)
   );
 end function;
 

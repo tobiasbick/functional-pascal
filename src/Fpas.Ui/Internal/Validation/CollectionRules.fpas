@@ -2,7 +2,31 @@
 
 unit Fpas.Ui.Internal.Validation.CollectionRules;
 
-uses Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Layout as L, Fpas.Ui.Internal.Validation.Rules as R, Fpas.Ui.Validation as V, System as Sys;
+uses
+  Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Layout as L, Fpas.Ui.Internal.Validation.Rules as R,
+  Fpas.Ui.Validation as V, Fpas.Ui.TerminalExtensions.SelectionLists as Lists, System as Sys, System.Collections.Generic as C;
+
+// Checks item keys and the model-owned selection of a terminal list.
+// ## Parameters
+// - `Items`: Rows in display order.
+// - `Selected`: Selected item key, or empty.
+// - `At`: Diagnostic location.
+public procedure SelectionList(Items: array of Lists.Item; Selected: string; At: string);
+begin
+  const Keys: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+  for Item: Lists.Item in Items do
+    if Item.Key = '' or not Keys.Add(Item.Key) then
+      R.Reject(At, 'Selection list item keys must be nonempty and unique.');
+    end if;
+
+    R.CheckText(Item.Key, At + '/key');
+    R.CheckText(Item.Label, At + '/label');
+  end for;
+
+  if Selected <> '' and not Keys.Contains(Selected) then
+    R.Reject(At, 'The selected key must name a list item.');
+  end if;
+end procedure;
 
 // Checks the native column settings.
 // ## Parameters

@@ -5,7 +5,7 @@ unit FpasAmp.AppState;
 
 uses
   Fpas.Ui.Gui.Cui as Cui,
-  FpasAmp.Persistence.JsonFields as Fields,
+  FpasAmp.Persistence.JsonFields as Fields, FpasAmp.Persistence.JsonOutput as Output,
   FpasAmp.Persistence.UserFiles as Files,
   FpasAmp.Ui.Navigation.Model as Nav,
   FpasAmp.Persistence.PlayerState as Transport,
@@ -119,6 +119,21 @@ begin
   );
 end function;
 
+procedure Encode(Writer: J.Utf8JsonWriter; Value: Snapshot);
+begin
+  Writer.WriteStartObject();
+  Writer.WriteNumber('width', Value.Width);
+  Writer.WriteNumber('height', Value.Height);
+  Output.Integer(Writer, 'x', Value.X);
+  Output.Integer(Writer, 'y', Value.Y);
+  Writer.WriteBoolean('maximized', Value.Maximized);
+  Writer.WriteNumber('settingsTab', Value.SettingsTab);
+  Writer.WriteString('activePage', Value.ActivePage);
+  Writer.WritePropertyName('player');
+  Transport.Encode(Writer, Value.Player);
+  Writer.WriteEndObject();
+end procedure;
+
 // Loads the window and selected page, repairing a damaged state file when possible.
 //
 // ## Parameters
@@ -129,7 +144,7 @@ public function Load(Directory: string): Snapshot;
 requires Directory.Length > 0;
 ensures (Value: Snapshot): Value.Width > 0 and Value.Height > 0;
 begin
-  return Files.Load<Snapshot>(IO.Path.Combine(Directory, FileName), new Snapshot(), Decode);
+  return Files.Load<Snapshot>(IO.Path.Combine(Directory, FileName), new Snapshot(), Decode, Encode);
 end function;
 
 // Validates and saves the window and selected page.
@@ -147,7 +162,7 @@ begin
     raise new Sys.ArgumentException('Invalid navigation route.', 'Value');
   end if;
 
-  Files.Save<Snapshot>(IO.Path.Combine(Directory, FileName), Value, Decode);
+  Files.Save<Snapshot>(IO.Path.Combine(Directory, FileName), Value, Decode, Encode);
 end procedure;
 
 // Converts a stored placement for the GUI host.

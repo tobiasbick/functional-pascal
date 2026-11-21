@@ -15,8 +15,10 @@ public type Preview = enum
   Overlays;
   Feedback;
   DataDisplay;
+  DataGrid;
   Disclosure;
   AppChrome;
+  Code;
   Text;
   CellGrid;
 end enum;
@@ -94,8 +96,13 @@ public const Extended: array of Entry := [
     Preview.Disclosure
   ),
   new Entry('Reader', Strings.Get('Page.Reader'), Strings.Get('Description.Reader')),
-  new Entry('Data grid', Strings.Get('Page.DataGrid'), Strings.Get('Description.DataGrid')),
-  new Entry('Code', Strings.Get('Page.Code'), Strings.Get('Description.Code')),
+  new Entry(
+    'Data grid',
+    Strings.Get('Page.DataGrid'),
+    Strings.Get('Description.DataGrid'),
+    Preview.DataGrid
+  ),
+  new Entry('Code', Strings.Get('Page.Code'), Strings.Get('Description.Code'), Preview.Code),
   new Entry('Social and media', Strings.Get('Page.Social'), Strings.Get('Description.Social')),
   new Entry('Planning', Strings.Get('Page.Planning'), Strings.Get('Description.Planning')),
   new Entry('More charts', Strings.Get('Page.MoreCharts'), Strings.Get('Description.MoreCharts')),

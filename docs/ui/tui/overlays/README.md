@@ -4,6 +4,7 @@
 | --- | --- |
 | [Dialog](dialog.md) | Center a short decision over the current view. |
 | [Sheet and drawer](sheet.md) | Dock a secondary view to an edge while retaining the current page in the background. |
+| [Command palette](command-palette.md) | Search and run application commands by keyboard. |
 
 ## See also
 

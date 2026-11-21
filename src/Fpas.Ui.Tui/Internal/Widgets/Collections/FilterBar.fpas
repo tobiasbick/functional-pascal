@@ -1,0 +1,237 @@
+// [Documentation](../../../../../docs/ui/tui/data-display/filter-bar.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Collections.FilterBar;
+
+uses
+  Fpas.Ui.Widgets.Collections.FilterBars as Filters, Fpas.Ui.Widgets.Inputs.TextFields as TextFields,
+  Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.View.Tree as E,
+  Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as P,
+  Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup as Popup,
+  Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G,
+  Fpas.Ui.Styles as Style, Fpas.Ui.Layout as Layout, System as Sys, System.Globalization as Culture,
+  System.Collections.Generic as C;
+
+function Segment(Index: int): string;
+begin
+  return Index.ToString(Culture.CultureInfo.InvariantCulture);
+end function;
+
+// Opens the field menu and retains the current model bindings.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Trigger<TMsg> = record implements Actions.IActivatable<TMsg>
+  // Stable ID of the Filter button.
+  public Id: string;
+  // Model field definitions.
+  public Fields: array of Filters.Field;
+  // Model-owned masks and search text.
+  public Current: Filters.Value;
+  // Maps a proposed change to a message.
+  public Change: function(Filters.Value): TMsg;
+  // Session popup state.
+  public State: P.State<TMsg>;
+
+  // Opens the field menu.
+  // ## Returns
+  // Opening sends no application message.
+  public function Activate(): Actions.Result<TMsg>;
+  begin
+    self.State.Write(new P.Cursor(self.Id));
+    return Actions.Result<TMsg>.NoAction;
+  end function;
+end record;
+
+type OpenField<TMsg> = record implements Actions.IActivatable<TMsg>
+  public Bar: Trigger<TMsg>;
+  public Index: int;
+
+  public function Activate(): Actions.Result<TMsg>;
+  begin
+    self.Bar.State.Write(new P.Cursor(self.Bar.Id, Group := self.Index));
+    return Actions.Result<TMsg>.NoAction;
+  end function;
+end record;
+
+type Toggle<TMsg> = record implements Actions.IActivatable<TMsg>
+  public Bar: Trigger<TMsg>;
+  public FieldIndex: int;
+  public ValueIndex: int;
+
+  public function Activate(): Actions.Result<TMsg>;
+  begin
+    const Masks: array of uint := cast<array of uint>(self.Bar.Current.Selected.Clone());
+    Masks[self.FieldIndex] := Masks[self.FieldIndex] xor (1u shl self.ValueIndex);
+    return Actions.Result<TMsg>.Send(
+      self.Bar.Change(new Filters.Value(Masks, self.Bar.Current.Search))
+    );
+  end function;
+end record;
+
+// Creates the field menu or the selected field's checklist.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Bar`: The visible Filter trigger and current model bindings.
+// ## Returns
+// Keyboard and pointer rows for the open popup.
+public function Content<TMsg>(Bar: Trigger<TMsg>): Popup.Content<TMsg>;
+begin
+  const Index: int := Bar.State.Read().Group;
+  const Rows: C.List<Popup.Row<TMsg>> := new C.List<Popup.Row<TMsg>>();
+  var Width: int := 18;
+  if Index >= 0 and Index < Bar.Fields.Length and Bar.Fields[Index].Values.Length > 0 then
+    const Field: Filters.Field := Bar.Fields[Index];
+    const Prefix: string := Bar.Id + '/field/' + Segment(Index) + '/value/';
+    Rows.Add(Popup.Row<TMsg>.Section(Field.Name));
+    Width := Sys.Math.Max(Width, G.Measure(G.SingleLine(Field.Name)) + 2);
+    for Choice: int := 0 to Field.Values.Length - 1 do
+      const Label: string := Field.Values[Choice];
+      const Checked: bool := (Bar.Current.Selected[Index] and (1u shl Choice)) <> 0u;
+      const Caption: string := (if Checked then
+        '[x] '
+      else
+        '[ ] '
+      end if) + G.SingleLine(Label);
+      Width := Sys.Math.Max(Width, G.Measure(Caption) + 1);
+      Rows.Add(
+        Popup.Row<TMsg>.Choice(
+          new Popup.Item<TMsg>(
+            Prefix + Segment(Choice), Label, Caption, 'filter-value',
+            new Toggle<TMsg>(Bar, Index, Choice), Value := (if Checked then
+              'true'
+            else
+              'false'
+            end if), KeepOpen := true
+          )
+        )
+      );
+    end for;
+  else
+    for FieldIndex: int := 0 to Bar.Fields.Length - 1 do
+      const Field: Filters.Field := Bar.Fields[FieldIndex];
+      if Field.Values.Length = 0 then
+        continue;
+      end if;
+      const Caption: string := G.SingleLine(Field.Name);
+      Width := Sys.Math.Max(Width, G.Measure(Caption) + 1);
+      Rows.Add(
+        Popup.Row<TMsg>.Choice(
+          new Popup.Item<TMsg>(
+            Bar.Id + '/field/' + Segment(FieldIndex), Field.Name, Caption, 'filter-field',
+            new OpenField<TMsg>(Bar, FieldIndex), KeepOpen := true
+          )
+        )
+      );
+    end for;
+  end if;
+
+  return new Popup.Content<TMsg>(Rows.ToArray(), Width, SpaceActivates := true);
+end function;
+
+// Composes the search field, filter actions and a summary of active choices.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable bar identity.
+// - `Fields`: Available fields and their values in bit order.
+// - `Current`: Model-owned masks and search text.
+// - `Change`: Maps a proposed filter state to a message.
+// - `Capacity`: Search buffer size including the terminator.
+// - `Enabled`: Whether to accept input.
+// - `State`: Session popup state.
+// ## Returns
+// The terminal presentation of the shared bar.
+public function Lower<TMsg>(
+  Id: string; Fields: array of Filters.Field; Current: Filters.Value; Change: function(Filters.Value): TMsg;
+  Capacity: int; Enabled: bool; State: P.State<TMsg>
+): E.Element<TMsg>;
+begin
+  const Rows: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
+  const Commands: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
+  const Search: string? := Current.Search;
+  if Search <> null then
+    Rows.Add(
+      E.Element<TMsg>.TextField(
+        new Edit.Field<TMsg>(
+          Id + '/search', Search,
+          function(Text: string): TMsg => Change(
+            new Filters.Value(
+              cast<array of uint>(Current.Selected.Clone()), Text
+            )
+          ),
+          new TextFields.Options(
+            Label := 'Search',
+            Placeholder := 'Search',
+            MaxUtf8Bytes := Capacity - 1,
+            Enabled := Enabled
+          ),
+          null
+        )
+      )
+    );
+  end if;
+  const HasFields: bool := Sys.Array.Exists<Filters.Field>(
+    Fields, function(Field: Filters.Field): bool => Field.Values.Length > 0
+  );
+  if HasFields then
+    const Add: string := Id + '/add';
+    Commands.Add(
+      E.Element<TMsg>.Action(
+        Add, new Trigger<TMsg>(Add, Fields, Current, Change, State), Enabled,
+        new E.ActionView(
+          'Filter ▾',
+          Name := 'Filter',
+          Role := 'filter-trigger',
+          Variant := Style.ButtonVariant.Secondary,
+          ArrowFocus := false
+        )
+      )
+    );
+  end if;
+
+  if Search <> null or HasFields then
+    const Empty: string? := if Search = null then
+      null
+    else
+      ''
+    end if;
+    Commands.Add(
+      E.Element<TMsg>.Action(
+        Id + '/clear',
+        new Actions.Proposal<Filters.Value, TMsg>(
+          Change,
+          new Filters.Value(new uint[Fields.Length], Empty)
+        ),
+        Enabled,
+        new E.ActionView('Clear all', Variant := Style.ButtonVariant.Ghost, ArrowFocus := false)
+      )
+    );
+    Rows.Add(
+      E.Element<TMsg>.Stack(
+        [E.Element<TMsg>.Stack(Commands.ToArray(), true, new E.Flow(Gap := 1))],
+        false, new E.Flow(Align := Layout.Alignment.End)
+      )
+    );
+  end if;
+
+  for Index: int := 0 to Fields.Length - 1 do
+    if Current.Selected[Index] = 0u then
+      continue;
+    end if;
+    const Field: Filters.Field := Fields[Index];
+    const Active: C.List<string> := new C.List<string>();
+    for Choice: int := 0 to Field.Values.Length - 1 do
+      if (Current.Selected[Index] and (1u shl Choice)) <> 0u then
+        Active.Add(G.SingleLine(Field.Values[Choice]));
+      end if;
+    end for;
+
+    Rows.Add(
+      E.Element<TMsg>.Label(G.SingleLine(Field.Name) + ': ' + Sys.String.Join(', ', Active))
+    );
+  end for;
+
+  return E.Element<TMsg>.Stack(Rows.ToArray(), false, new E.Flow());
+end function;
+
+end unit;

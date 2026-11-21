@@ -1,0 +1,119 @@
+// [Documentation](README.md)
+
+unit TuiGallery.ToolSamples;
+
+uses
+  Gallery.Shared.BuildLog as BuildLog, Gallery.Shared.SourceTree as SourceTree, Gallery.Shared.Strings as Strings,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Actions.Buttons as B,
+  Fpas.Ui.Widgets.Developer.LogConsoles as Log, System as Sys, System.Linq.Enumerable as Linq;
+
+// State of the gallery's tree, command palette and build log.
+public type State = record
+  // Whether the source root is expanded.
+  public Source: bool := true;
+  // Whether the components branch is expanded.
+  public Components: bool := true;
+  // Whether the assets branch is expanded.
+  public Assets: bool := false;
+  // Selected source file.
+  public File: string := 'slider.c';
+  // Palette visibility owned by the gallery.
+  public Palette: bool := false;
+  // Number of entries shown from the original log.
+  public LogCount: int := BuildLog.Entries.Length - 1;
+end record;
+
+// Messages for the gallery tool examples.
+public type Msg = variant
+  // Proposes expansion of the source root.
+  Source(Open: bool);
+  // Proposes expansion of the components branch.
+  Components(Open: bool);
+  // Proposes expansion of the assets branch.
+  Assets(Open: bool);
+  // Activates a source file.
+  File(Name: string);
+  // Proposes a visibility change for the command palette.
+  Palette(Open: bool);
+  // Reveals the next original build message.
+  Append;
+  // Empties the build log.
+  Clear;
+end variant;
+
+// Applies a tool example action.
+// ## Parameters
+// - `Current`: Current gallery tool state.
+// - `Message`: Proposed action.
+// ## Returns
+// Updated state.
+public function Update(Current: State; Message: Msg): State;
+begin
+  case Message of
+    when Msg.Source(const Open: bool):
+      return Current with
+        Source := Open;
+      end with;
+    when Msg.Components(const Open: bool):
+      return Current with
+        Components := Open;
+      end with;
+    when Msg.Assets(const Open: bool):
+      return Current with
+        Assets := Open;
+      end with;
+    when Msg.File(const Name: string):
+      return Current with
+        File := Name;
+      end with;
+    when Msg.Palette(const Open: bool):
+      return Current with
+        Palette := Open;
+      end with;
+    when Msg.Clear:
+      return Current with
+        LogCount := 0;
+      end with;
+    when Msg.Append:
+      return Current with
+        LogCount := Sys.Math.Min(Current.LogCount + 1, BuildLog.Entries.Length);
+      end with;
+  end case;
+end function;
+
+// Presents the shared CUI source tree with model-owned expansion and selection.
+// ## Parameters
+// - `Current`: Current tree state.
+// ## Returns
+// The Data display tree example.
+public function Tree(Current: State): E.Element<Msg>;
+begin
+  return SourceTree.View<Msg>(
+    Current.Source, Current.Components, Current.Assets, Current.File,
+    Msg.Source, Msg.Components, Msg.Assets, Msg.File
+  );
+end function;
+
+// Presents the shared CUI build log and an action to reveal its next entry.
+// ## Parameters
+// - `Current`: Current log state.
+// ## Returns
+// The Code log example.
+public function Build(Current: State): E.Element<Msg>;
+begin
+  return E.Column<Msg>(
+    new L.Flow(Gap := L.Spacing.Normal),
+    B.Button<Msg>(
+      'log-append', Strings.Get('Tui.Log.Append'), Msg.Append,
+      new B.Options(Enabled := Current.LogCount < BuildLog.Entries.Length)
+    ),
+    Log.LogConsole<Msg>(
+      'log-console',
+      Linq.ToArray<Log.Entry>(Linq.Take<Log.Entry>(BuildLog.Entries, Current.LogCount)),
+      Msg.Clear,
+      new Log.Options(Height := 160.0F, Timestamps := true)
+    )
+  );
+end function;
+
+end unit;

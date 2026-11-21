@@ -1,6 +1,6 @@
 # Command palette
 
-Use a command palette for searchable actions across the application. Available in **GUI**.
+Use a command palette for searchable actions across the application. Available in **GUI** and [TUI](../../tui/overlays/command-palette.md).
 
 ![Command palette in the FPAS gallery](images/command-palette.png)
 

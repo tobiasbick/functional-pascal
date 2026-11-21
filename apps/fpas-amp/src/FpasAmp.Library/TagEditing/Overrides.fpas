@@ -4,8 +4,9 @@
 unit FpasAmp.Library.TagEditing.Overrides;
 
 uses
+  FpasAmp.Library.Serialization.CatalogueJson as Codec,
   FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db,
-  System as Sys, System.Collections.Immutable as I, System.Text.Json as J;
+  System as Sys, System.Collections.Immutable as I;
 
 // Reads the saved tag changes for Id from the attached users store.
 public function Read(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction?; Id: string): I.ImmutableDictionary<string, string?>;
@@ -15,9 +16,7 @@ begin
   );
   const Result: object? := Command.ExecuteScalar();
   if Result is string then
-    return J.JsonSerializer.Deserialize<I.ImmutableDictionary<string, string?>>(
-      cast<string>(Result)
-    ) ??
+    return Codec.ReadTagOverrides(cast<string>(Result)) ??
       I.ImmutableDictionary<string, string?>.Empty;
   end if;
 
@@ -32,7 +31,7 @@ begin
     'INSERT INTO users.tag_edits(track_id,edits) VALUES($id,$edits) ON CONFLICT(track_id) DO UPDATE SET edits=excluded.edits;',
     Transaction,
     ['$id', '$edits'],
-    [Id, J.JsonSerializer.Serialize<I.ImmutableDictionary<string, string?>>(Changes)]
+    [Id, Codec.WriteTagOverrides(Changes)]
   );
 end procedure;
 

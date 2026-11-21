@@ -4,12 +4,13 @@ unit GuiGallery.Pages.DataGrid.State;
 
 uses
   Fpas.Ui.Widgets.Collections.DataGrids as D, Fpas.Ui.Widgets.Collections.FilterBars as F, Fpas.Ui.Widgets.Collections.Tables as T,
-  Fpas.Ui.Widgets.Collections.TreeTables as Tree, GuiGallery.Pages.DataGrid.People as People, System.Collections.Generic as Lists;
+  Fpas.Ui.Widgets.Collections.TreeTables as Tree, GuiGallery.Pages.DataGrid.People as People,
+  Gallery.Shared.PeopleFilters as Filters, System.Collections.Generic as Lists;
 
 // Model for the original grid and supplemental native tree table.
 public type Model = record
   // Current search and option masks.
-  public Filter: F.Value := new F.Value([5u, 0u, 0u], '');
+  public Filter: F.Value := Filters.Initial();
   // Current sort and grid cursor.
   public Grid: D.Value := new D.Value(Order := new T.Sort(3, true));
   // Display positions mapped to stable person indices.

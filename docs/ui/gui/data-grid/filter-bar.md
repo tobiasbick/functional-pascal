@@ -1,7 +1,8 @@
 # Filter bar
 
 Use a filter bar for search and multiple choices organized by field. The
-gallery starts with Engine and Platform selected in Team. Available in **GUI**.
+gallery starts with Engine and Platform selected in Team. Available in
+**GUI** and [TUI](../../tui/data-display/filter-bar.md).
 
 ![Team filter chip and search field in the FPAS gallery](images/filter-bar.png)
 
@@ -54,6 +55,7 @@ For the example, `new W.Value([5u, 0u], '')` selects Engine and Platform.
 
 ## Source files
 
+- [Shared gallery filter fields and initial selection](../../../../examples/ui/gui/gallery/Shared/PeopleFilters.fpas)
 - `src/Fpas.Ui.Gui/Internal/Widgets/Collections/`
   - [FilterBar.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Collections/FilterBar.fpas)
 - `src/Fpas.Ui.Gui.Cui/Interop/Collections/`

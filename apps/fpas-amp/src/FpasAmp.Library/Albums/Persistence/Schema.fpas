@@ -4,8 +4,10 @@
 unit FpasAmp.Library.Albums.Persistence.Schema;
 
 uses
+  FpasAmp.Library.Serialization.CatalogueJson as Codec,
   Fpas.Media.Tags.AudioFiles as MediaTags,
-  FpasAmp.Library.Albums.Persistence.Store as Store, FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db, System.Text.Json as Json;
+  FpasAmp.Library.Albums.Persistence.Store as Store, FpasAmp.Library.Persistence.Sql as Sql,
+  Microsoft.Data.Sqlite as Db;
 
 // Creates membership/indexes in `Transaction`; `Populate` derives existing cached
 // tags without rehashing or reopening media. All state belongs to `Connection`.
@@ -33,9 +35,7 @@ begin
     );
     using const Rows: Db.SqliteDataReader := Query.ExecuteReader();
     while Rows.Read() do
-      const Tags: MediaTags.Info? := Json.JsonSerializer.Deserialize<MediaTags.Info>(
-        Rows.GetString(1)
-      );
+      const Tags: MediaTags.Info? := Codec.ReadTrack(Rows.GetString(1));
       if Tags <> null then
         Store.Save(Connection, Transaction, Rows.GetInt64(0), Tags);
       end if;

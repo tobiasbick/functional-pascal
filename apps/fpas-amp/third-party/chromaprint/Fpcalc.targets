@@ -2,7 +2,7 @@
   <PropertyGroup>
     <_FpcalcRid>$(RuntimeIdentifier)</_FpcalcRid>
     <_FpcalcRid Condition="'$(_FpcalcRid)' == ''">$(NETCoreSdkPortableRuntimeIdentifier)</_FpcalcRid>
-    <_FpcalcDir>$(MSBuildProjectDirectory)/$(BaseIntermediateOutputPath)fpcalc/1.6.2</_FpcalcDir>
+    <_FpcalcDir>$([System.IO.Path]::Combine('$(MSBuildProjectDirectory)', '$(BaseIntermediateOutputPath)', 'fpcalc', '1.6.2'))</_FpcalcDir>
     <_FpcalcRelease>https://github.com/acoustid/chromaprint/releases/download/v1.6.2</_FpcalcRelease>
     <_FpcalcPlatform Condition="'$(_FpcalcRid)' == 'win-x64'">windows-x86_64</_FpcalcPlatform>
     <_FpcalcPlatform Condition="'$(_FpcalcRid)' == 'linux-x64'">linux-x86_64</_FpcalcPlatform>

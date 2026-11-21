@@ -526,4 +526,7 @@
   <data name="Text.WorkspaceEmpty" xml:space="preserve"><value>Der Arbeitsbereich ist leer. Lege zunächst ein Projekt an.</value></data>
   <data name="Text.WorkspaceInviteHint" xml:space="preserve"><value>Danach kannst du Personen einladen.</value></data>
   <data name="Text.YourName" xml:space="preserve"><value>Dein Name</value></data>
+  <data name="Tui.List.Opened" xml:space="preserve"><value>Geöffnet: {0}</value></data>
+  <data name="Tui.Log.Append" xml:space="preserve"><value>Build-Meldung hinzufügen</value></data>
+  <data name="Tui.Table.Pan" xml:space="preserve"><value>Strg+Links / Rechts auf einer Zeile blendet Spalten ein</value></data>
 </root>

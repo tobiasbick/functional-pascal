@@ -4,7 +4,7 @@ unit Fpas.Ui.Widgets.Collections.FilterBars;
 
 uses Fpas.Ui.Elements as E;
 
-// One field in the native filter menu.
+// One field in the filter menu.
 public type Field = record
   // Literal field name.
   public Name: string;
@@ -14,7 +14,7 @@ public type Field = record
   public Icon: string := '';
 end record;
 
-// Current filter state and a native change proposal.
+// Current filter state and a change proposal.
 public type Value = record
   // One option mask per field.
   public Selected: array of uint;
@@ -22,18 +22,18 @@ public type Value = record
   public Search: string?;
 end record;
 
-// Draws CUI's filter search, chips and menus.
+// Displays search and filters with multiple selectable values per field.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable bar identity.
 // - `Fields`: Available filter fields in display order.
 // - `Current`: Model-owned option masks and search value.
-// - `OnChange`: Maps a native change to an application message.
+// - `OnChange`: Maps a proposed change to an application message.
 // - `SearchCapacity`: UTF-8 buffer size, including its terminator.
 // - `Enabled`: Whether the bar accepts input.
 // ## Returns
-// The graphical filter bar.
+// The filter bar for graphical or terminal presentation.
 public function FilterBar<TMsg>(Id: string; Fields: array of Field; Current: Value; OnChange: function(Value): TMsg; SearchCapacity: int := 256; Enabled: bool := true): E.Element<TMsg>;
 requires Id <> '';
 begin

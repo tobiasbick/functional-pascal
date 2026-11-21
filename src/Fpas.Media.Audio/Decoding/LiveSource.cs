@@ -22,9 +22,10 @@ internal sealed class LiveSource : IPlaybackSource
 
     internal LiveSource(Uri address, CancellationToken cancellation)
     {
+        var packaged = Path.Combine(AppContext.BaseDirectory, "tools", "ffmpeg", OperatingSystem.IsWindows() ? "ffmpeg.exe" : "ffmpeg");
         var info = new ProcessStartInfo
         {
-            FileName = "ffmpeg",
+            FileName = File.Exists(packaged) ? packaged : "ffmpeg",
             UseShellExecute = false,
             CreateNoWindow = true,
             RedirectStandardOutput = true,

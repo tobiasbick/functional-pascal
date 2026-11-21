@@ -4,7 +4,7 @@ unit Fpas.Ui.Widgets.Developer.LogConsoles;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
 
-// Native log severity.
+// Log severity.
 public type Level = enum: byte
   // Fine-grained diagnostic.
   Trace;
@@ -28,7 +28,7 @@ public type Entry = record
   public Text: string;
 end record;
 
-// Native LogConsole configuration.
+// Log console configuration.
 public type Options = record
   // Preferred width.
   public Width: L.Extent := L.Extent.Fill;
@@ -38,20 +38,20 @@ public type Options = record
   public Size: float := 0.0F;
   // Show timestamps.
   public Timestamps: bool := false;
-  // Show native filters and log actions.
+  // Show log actions in the host toolbar.
   public Toolbar: bool := true;
 end record;
 
-// Creates a graphical LogConsole.
+// Creates a scrollable log console.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable widget identity.
 // - `Entries`: Immutable log lines in arrival order.
-// - `Cleared`: Message proposed when the native Clear button is used.
-// - `Settings`: Native presentation options.
+// - `Cleared`: Message proposed when the Clear button is used.
+// - `Settings`: Presentation options.
 // ## Returns
-// A graphical view element.
+// A graphical or terminal view element.
 public function LogConsole<TMsg>(Id: string; Entries: array of Entry; Cleared: TMsg; Settings: Options? := null): E.Element<TMsg>;
 requires Id <> '';
 begin

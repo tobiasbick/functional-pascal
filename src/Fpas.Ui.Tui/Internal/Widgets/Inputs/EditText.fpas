@@ -4,6 +4,48 @@ unit Fpas.Ui.Tui.Internal.Widgets.Inputs.EditText;
 
 uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, System as Sys, System.Globalization as Global, System.Text as Text;
 
+// Selected UTF-16 range, with an exclusive end.
+public type Range = record
+  // First selected offset.
+  public Start: int;
+  // Offset following the selected text.
+  public Stop: int;
+end record;
+
+// Resolves a caret and optional selection anchor to an ordered range.
+// ## Parameters
+// - `Offset`: Current caret.
+// - `Anchor`: Beginning of the selection gesture, or minus one.
+// ## Returns
+// A range that is empty when no text is selected.
+public function Selection(Offset: int; Anchor: int): Range;
+begin
+  const Edge: int := if Anchor < 0 then
+    Offset
+  else
+    Anchor
+  end if;
+  return new Range(Sys.Math.Min(Offset, Edge), Sys.Math.Max(Offset, Edge));
+end function;
+
+// Retains a selection's origin across consecutive shifted moves.
+// ## Parameters
+// - `Offset`: Caret before the move.
+// - `Anchor`: Existing origin, or minus one.
+// - `Extend`: Whether the move extends the selection.
+// ## Returns
+// Origin after the move, or minus one for ordinary navigation.
+public function ExtendAnchor(Offset: int; Anchor: int; Extend: bool): int;
+begin
+  return if not Extend then
+    -1
+  elsif Anchor < 0 then
+    Offset
+  else
+    Anchor
+  end if;
+end function;
+
 // Finds the end of the text element at a UTF-16 offset.
 // ## Parameters
 // - `Value`: Current model text.

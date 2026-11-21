@@ -2,7 +2,7 @@
 
 Use a log console to inspect a stream of messages by severity or search
 text. The gallery shows a timestamped build log with warnings and errors.
-Available in **GUI**.
+Available in **GUI** and [TUI](../../tui/developer/log-console.md).
 
 ![Build log in the FPAS gallery](images/log-console.png)
 
@@ -60,3 +60,5 @@ apply it. Pass new entries as output arrives.
 - `src/Fpas.Ui.Gui.Cui/native/widgets/developer/`
   - [log_console.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/log_console.c)
   - [log_console.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/developer/log_console.h)
+
+- [Shared build log entries](../../../../examples/ui/gui/gallery/Shared/BuildLog.fpas)

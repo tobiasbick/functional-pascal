@@ -24,8 +24,10 @@ default SDK parallelism and separate `.temp-data/dist/windows` or
 
 Copy only `bin/fpas.exe` or `bin/fpas` to the destination. On Linux retain executable
 permissions. No companion DLL, helper executable or runtimeconfig file is needed.
-On demand, the executable creates `fpas-assets/` beside itself for embedded assets
-that require real files. Copying that directory to another installation is unnecessary.
+On Windows the first start extracts the compiler and its .NET runtime files
+under `fpas-runtime/` beside the executable. On demand, FPAS creates
+`fpas-assets/` within that directory for SDK and debugger assets that need real files.
+Copying these directories to another installation is unnecessary.
 The scripts preserve unrelated files in `bin/`. They write the matching SDK and
 GUI binding packages to `sdk/feed/` and evict those versions from the active
 NuGet cache. Before the eviction they stop the .NET build servers, whose reused
@@ -33,8 +35,8 @@ MSBuild nodes keep the cached build tasks loaded. A build server of another
 program, such as an editor, can still hold them on Windows; close it and run
 the script again.
 
-Publication uses compressed, self-contained .NET single-file deployment without
-trimming. Native AOT requires trimming and does not support the dynamic code used
+The compiler payload uses compressed, self-contained .NET single-file
+deployment without trimming. Native AOT requires trimming and does not support the dynamic code used
 by the complete protocol dependency graph, including Newtonsoft.Json and
 OmniSharp/StreamJsonRpc. The release profile therefore preserves those dependencies
 and their existing behavior. It uses ordinary in-memory managed bundling and native
@@ -44,6 +46,26 @@ and [single-file deployment](https://learn.microsoft.com/en-us/dotnet/core/deplo
 
 Optional compiler PDBs remain in the build artifacts, separate from the delivered
 file. Generated applications retain their own [symbol contract](../architecture/debug-information.md).
+
+## Windows portable launcher
+
+The Windows distribution wraps that compiler payload in a native launcher
+with an embedded archive. [FPas-Amp](../../apps/fpas-amp/doc/desktop.md#windows-portable-build)
+uses the same launcher with an AOT desktop payload.
+At launch, the wrapper creates a content-addressed directory under
+`<executable-name>-runtime/` beside the executable, verifies each payload
+file against its embedded SHA-256, and restores missing or damaged files.
+Concurrent launches coordinate extraction, and a completed file is moved
+into place atomically. The child receives the caller's working directory,
+arguments and standard streams, and the launcher returns its exit code.
+
+The [Windows packaging script](../../src/Fpas.Deployment.WindowsPortable/Publish.ps1)
+builds the archive and manifest. The [launcher project](../../src/Fpas.Deployment.WindowsPortable/Fpas.WindowsPortable.csproj)
+embeds those resources using the selected console or GUI subsystem.
+[Program.cs](../../src/Fpas.Deployment.WindowsPortable/Program.cs) starts the
+bundled executable, and [Payload.cs](../../src/Fpas.Deployment.WindowsPortable/Payload.cs)
+handles verification and extraction. The launcher requires a writeable
+installation directory for first start and repair.
 
 ## Export the matching SDK
 
@@ -114,29 +136,29 @@ Fpas.Ui and Fpas.Ui.Mvu independently of that native binding.
 
 ## Extraction and ownership
 
-The .NET host extracts bundled native runtime libraries to its per-bundle cache.
-`DOTNET_BUNDLE_EXTRACT_BASE_DIR` selects a different root; defaults are
-`%TEMP%/.net` on Windows and `$HOME/.net` on Linux. Use a directory owned by the
-account running FPAS. The host coordinates concurrent first starts.
+The Windows launcher sets the compiler payload's .NET extraction root to
+the `dotnet` subdirectory of its own versioned `fpas-runtime/` directory.
+On Linux, the .NET host uses `$HOME/.net` by default and honors
+`DOTNET_BUNDLE_EXTRACT_BASE_DIR`. Use installation and cache directories
+owned by the account running FPAS.
 
 FPAS materializes only file-based assets needed by metadata readers, MSBuild,
-the debugger or SDK export. Its default cache root is `fpas-assets/` beside the
-executable, independent of the working directory. A distribution in `bin/` therefore
-uses `bin/fpas-assets/<SHA-256>/`. The executable's directory must be writable;
-`FPAS_ASSET_CACHE` selects another writable root using an absolute path.
+the debugger or SDK export. In a Windows distribution in `bin/` it uses
+`bin/fpas-runtime/fpas-assets/<SHA-256>/`. On Linux, the default
+`fpas-assets/` is next to the executable. `FPAS_ASSET_CACHE` selects another
+writable root using an absolute path.
 Each asset has a SHA-256 directory; publication uses an atomic file move,
 concurrent starts converge, and content is verified and repaired from the embedded
 copy before reuse. These operations never download assets. Different versions
 can coexist without replacing each other's files.
 
-The FPAS cache can be deleted together with its installation directory. Old hash
-directories are retained until removed explicitly. The .NET host's native runtime
-cache is separate and still uses the location described above.
+Old hash directories are retained until removed explicitly. The Windows
+compiler and .NET runtime are both restored under the installation directory.
 
 Both caches belong to the running account. They can be removed after its compiler,
 debugger workers and MSBuild processes have exited; the next launch recreates
 needed content. Removing a cache during active use is unsupported. `fpas env --json`
-reports the actual executable, materialized assembly and selected shim paths/hashes.
+reports the running compiler executable, materialized assembly and selected shim paths/hashes.
 It still reports missing .NET SDK inputs when project tools are unavailable.
 
 The [debugger](../architecture/debugger-core.md) starts workers and target brokers

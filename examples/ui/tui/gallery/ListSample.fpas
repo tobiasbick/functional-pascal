@@ -1,0 +1,74 @@
+// [Documentation](../../../../docs/ui/tui/data-display/selection-list.md)
+
+unit TuiGallery.ListSample;
+
+uses
+  Gallery.Shared.ListEntries as Sample, Gallery.Shared.Strings as Strings,
+  Fpas.Ui.Elements as E, Fpas.Ui.TerminalExtensions.SelectionLists as Lists, System as Sys;
+
+// Current selection and most recently opened row.
+public type State = record
+  // ID of the row being inspected.
+  public Selected: string := Sample.Initial;
+  // ID of the opened row, or empty until activation.
+  public Opened: string := '';
+end record;
+
+// Terminal list actions handled by the gallery.
+public type Msg = variant
+  // Inspect the row with the given ID.
+  Select(Id: string);
+  // Open the row with the given ID.
+  Open(Id: string);
+end variant;
+
+// Applies a selection or opens an entry.
+// ## Parameters
+// - `Current`: Current selection and last opened row.
+// - `Message`: Select or open action.
+// ## Returns
+// Updated gallery state.
+public function Update(Current: State; Message: Msg): State;
+begin
+  return case Message of
+    when Msg.Select(const Id: string): Current with
+      Selected := Id;
+    end with;
+    when Msg.Open(const Id: string): Current with
+      Opened := Id;
+    end with;
+  end case;
+end function;
+
+// Displays the original CUI list entries and the details of the selected one.
+// ## Parameters
+// - `Current`: Current selection and last opened row.
+// ## Returns
+// Terminal selection list and detail text.
+public function View(Current: State): E.Element<Msg>;
+begin
+  const Rows: array of Lists.Item := Sys.Array.ConvertAll<Sample.Entry, Lists.Item>(
+    Sample.Entries,
+    function(Item: Sample.Entry): Lists.Item => new Lists.Item(
+      Item.Id, Item.Title + ' · ' + Item.Duration
+    )
+  );
+  var Details: string := '';
+  var Opened: string := '';
+  for Item: Sample.Entry in Sample.Entries do
+    if Item.Id = Current.Selected then
+      Details := Item.Person + ' · ' + Item.Subtitle;
+    end if;
+
+    if Item.Id = Current.Opened then
+      Opened := Sys.String.Format(Strings.Get('Tui.List.Opened'), Item.Title);
+    end if;
+  end for;
+
+  return E.Column<Msg>(
+    Lists.SelectionList<Msg>('sample-list', Rows, Current.Selected, Msg.Select, Msg.Open),
+    E.Text<Msg>(Details), E.Text<Msg>(Opened)
+  );
+end function;
+
+end unit;

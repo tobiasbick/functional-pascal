@@ -4,6 +4,7 @@
 unit FpasAmp.Library.Albums.Persistence.Queries;
 
 uses
+  FpasAmp.Library.Serialization.CatalogueJson as Codec,
   FpasAmp.Library.Albums.Model as M, FpasAmp.Library.Persistence.Sql as Sql,
   Microsoft.Data.Sqlite as Db, System as Sys, System.Collections.Generic as C,
   System.Collections.Immutable as I, System.Security.Cryptography as Crypto, System.Text as Text, System.Text.Json as Json,
@@ -64,9 +65,7 @@ begin
     const Revision: string := Sys.Convert.ToHexString(
       Crypto.SHA256.HashData(Text.Encoding.UTF8.GetBytes(Rows.GetString(4)))
     );
-    var Names: array of string := Json.JsonSerializer.Deserialize<array of string>(
-      Rows.GetString(7)
-    ) ?? Sys.Array.Empty<string>();
+    var Names: array of string := Codec.ReadNames(Rows.GetString(7)) ?? Sys.Array.Empty<string>();
     if Names.Length = 0 then
       Names := [''];
     end if;

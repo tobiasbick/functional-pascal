@@ -1,0 +1,227 @@
+// [Documentation](../../../../../docs/ui/tui/data-display/selection-list.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList;
+
+uses
+  Fpas.Ui.TerminalExtensions.SelectionLists as Lists, Fpas.Ui.TerminalExtensions.Input as K,
+  Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Layout.Scene as A,
+  Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V,
+  Fpas.Ui.Tui.Internal.Hosting.RowNavigation as Rows, Fpas.Ui.Tui.Internal.Rendering.Themes as Th,
+  Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Rendering.Drawing as D,
+  Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Styles as S, System as Sys, System.Collections.Generic as C;
+
+function Reveal(Top: int; Index: int; Height: int): int;
+begin
+  return if Index < 0 then
+    Top
+  else
+    Sys.Math.Clamp(Top, Sys.Math.Max(0, Index - Height + 1), Index)
+  end if;
+end function;
+
+// Resolves list text metrics and the current selection.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable list identity.
+// - `Items`: Validated choices.
+// - `Selected`: Selected key, or empty.
+// - `OnSelect`: Selection message mapper.
+// - `OnActivate`: Activation message mapper.
+// ## Returns
+// The list's terminal presentation data.
+public function Lower<TMsg>(
+  Id: string; Items: array of Lists.Item; Selected: string;
+  OnSelect: function(string): TMsg; OnActivate: function(string): TMsg
+): E.Element<TMsg>;
+begin
+  const Current: int := Sys.Array.FindIndex<Lists.Item>(
+    Items,
+    function(Item: Lists.Item): bool => Item.Key = Selected
+  );
+  var Width: int := 1;
+  for Item: Lists.Item in Items do
+    Width := Sys.Math.Max(
+      Width,
+      3 + Sys.Math.Min(E.MaximumColumns - 3, G.Measure(G.SingleLine(Item.Label)))
+    );
+  end for;
+
+  return E.Element<TMsg>.SelectionList(
+    new E.SelectionListView<TMsg>(Id, Items, Current, Width, OnSelect, OnActivate)
+  );
+end function;
+
+// Paints the list and registers its vertical viewport.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `List`: Current items and model-owned selection.
+// - `Previous`: Previously presented layout.
+// - `Clip`: Visible list bounds.
+// - `Style`: Inherited cell colors.
+// - `Theme`: Terminal theme.
+// - `Scope`: Owning input scope.
+// - `FocusReturn`: Fallback focus identity.
+// - `Offsets`: Host-owned scroll offsets.
+// - `Regions`: Destination for the list's wheel region.
+// - `Operations`: Paint commands for the frame.
+// ## Returns
+// The list's single focus and input binding.
+public function Arrange<TMsg>(
+  List: E.SelectionListView<TMsg>; Previous: A.Layout<TMsg>?; Clip: F.Rect;
+  Style: T.Style; Theme: Th.Theme; Scope: string; FocusReturn: string;
+  Offsets: C.Dictionary<string, int>; Regions: C.List<A.ScrollRegion>; Operations: C.List<D.Operation>
+): A.Control<TMsg>;
+begin
+  const Selected: string := if List.Selected < 0 then
+    ''
+  else
+    List.Items[List.Selected].Key
+  end if;
+  const Before: A.Control<TMsg>? := A.FindControl<TMsg>(Previous, List.Id);
+  var Offset: int := 0;
+  discard Offsets.TryGetValue(List.Id, out Offset);
+  var Follow: bool := true;
+  if Before <> null and Before.Value = Selected then
+    case Before.Action of
+      when A.Binding.SelectionList(
+        const Old: E.SelectionListView<TMsg>,
+        _,
+        const View: V.Viewport<TMsg>
+      ):
+        Follow := Old.Selected <> List.Selected or View.Rows <> Clip.Height;
+      else
+    end case;
+  end if;
+
+  if Follow then
+    Offset := Reveal(Offset, List.Selected, Clip.Height);
+  end if;
+
+  const View: V.Viewport<TMsg> := V.Resolve<TMsg>(
+    E.ScrollPosition.Offset(Offset),
+    List.Items.Length,
+    Clip,
+    true,
+    null
+  );
+  Offsets[List.Id] := View.Offset;
+  if View.Maximum > 0 then
+    Regions.Add(new A.ScrollRegion(List.Id, Scope, Clip, View.Maximum));
+  end if;
+  const Body: F.Rect := new F.Rect(
+    Clip.X, Clip.Y, Clip.Width - (if View.Bar then
+      1
+    else
+      0
+    end if), Clip.Height
+  );
+  D.Fill(Operations, Clip, Style);
+  const Visible: int := Sys.Math.Min(View.Rows, List.Items.Length - View.Offset);
+  for Row: int := 0 to Visible - 1 do
+    const Index: int := View.Offset + Row;
+    const Item: Lists.Item := List.Items[Index];
+    const Active: bool := Index = List.Selected;
+    const Colors: T.Style := if Active then
+      Theme.Buttons.Active.Normal
+    elsif Item.CanActivate then
+      Style
+    else
+      new T.Style(Th.Rgb(Theme.Colors.TextMuted, Style.Background ?? 0), Style.Background)
+    end if;
+    const Line: F.Rect := new F.Rect(Body.X, Body.Y + Row, Body.Width, 1);
+    D.Fill(Operations, Line, Colors);
+    const Caption: string := (if Active then
+      '> '
+    else
+      '  '
+    end if) + G.SingleLine(Item.Label);
+    Operations.Add(new D.Operation(Caption, Line, Line, Colors, false));
+  end for;
+
+  V.DrawBar<TMsg>(View, Operations, Clip, Clip, Style, Theme.Widgets);
+
+  return new A.Control<TMsg>(
+    List.Id, List.Id, 'listbox', Selected, Clip, Scope, FocusReturn, List.Items.Length > 0,
+    A.Binding<TMsg>.SelectionList(List, Body, View), S.ButtonVariant.Ghost
+  );
+end function;
+
+// Proposes a clicked item, including rows with unavailable activation.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `List`: Current list binding.
+// - `Body`: Item bounds excluding the scrollbar.
+// - `Offset`: Index of the first visible item.
+// - `Column`: Clicked terminal column.
+// - `Row`: Clicked terminal row.
+// - `Apply`: Dispatches the selection message.
+public procedure Click<TMsg>(
+  List: E.SelectionListView<TMsg>; Body: F.Rect; Offset: int; Column: int; Row: int; Apply: procedure(TMsg)
+);
+begin
+  if Body.Contains(Column, Row) then
+    const Index: int := Offset + (Row - Body.Y);
+    if Index < List.Items.Length and Index <> List.Selected then
+      Apply(List.OnSelect(List.Items[Index].Key));
+    end if;
+  end if;
+end procedure;
+
+// Routes a vertical navigation key to the model.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `List`: Current list binding.
+// - `View`: Visible viewport.
+// - `Key`: Unmodified terminal key.
+// - `Offsets`: Host-owned scroll offsets.
+// - `Apply`: Dispatches the selection message.
+// ## Returns
+// True when the list owns the key.
+public function Navigate<TMsg>(
+  List: E.SelectionListView<TMsg>; View: V.Viewport<TMsg>; Key: K.Key;
+  Offsets: C.Dictionary<string, int>; Apply: procedure(TMsg)
+): bool;
+begin
+  const Count: int := List.Items.Length;
+  const Delta: int := Rows.Delta(Key, Sys.Math.Max(1, View.Rows - 1), Count);
+  if Delta = 0 then
+    return false;
+  end if;
+
+  const Index: int := if List.Selected >= 0 then
+    cast<int>(Sys.Math.Clamp(cast<long>(List.Selected) + Delta, 0L, cast<long>(Count - 1)))
+  elsif Key = K.Key.Down or Key = K.Key.PageDown or Key = K.Key.Home then
+    0
+  else
+    Count - 1
+  end if;
+  if Index = List.Selected then
+    Offsets[List.Id] := Reveal(View.Offset, Index, View.Rows);
+  else
+    Apply(List.OnSelect(List.Items[Index].Key));
+  end if;
+
+  return true;
+end function;
+
+// Activates the current item if the model allows it.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `List`: Current list binding.
+// - `Apply`: Dispatches the activation message.
+public procedure Activate<TMsg>(List: E.SelectionListView<TMsg>; Apply: procedure(TMsg));
+begin
+  if List.Selected >= 0 then
+    const Item: Lists.Item := List.Items[List.Selected];
+    if Item.CanActivate then
+      Apply(List.OnActivate(Item.Key));
+    end if;
+  end if;
+end procedure;
+
+end unit;

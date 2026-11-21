@@ -3,67 +3,22 @@
 program TuiWidgetGallery;
 
 uses
+  Gallery.Shared.PeopleFilters as FilterSample,
+  TuiGallery.State as GalleryState, TuiGallery.State.Model as Model, TuiGallery.State.Msg as Msg,
   Gallery.Shared.Strings as Strings,
   Gallery.Shared.SecurityCard as Security,
   Gallery.Shared.ProjectOptions as ProjectOptions,
   Gallery.Shared.AboutField as AboutSample,
-  Fpas.Ui.Tui.Application as App, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as E,
-  TuiGallery.PeopleSample as People, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Theming.Themes as Themes,
+  TuiGallery.ListSample as ListSample,
+  TuiGallery.ToolSamples as Tools, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes,
+  Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E,
+  TuiGallery.PeopleSample as People, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Theming.Themes as Themes,
   TuiGallery.CellGridSample as GridSample, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Composition as Composition,
   Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.TerminalExtensions.Views as Views,
   Gallery.Shared.PickerChoices as Pickers, Gallery.Shared.SaveFrequency as Frequency, Gallery.Shared.CheckboxExamples as Checks, Gallery.Shared.EditorStatus as Status, Gallery.Shared.ButtonExamples as Buttons, Gallery.Shared.ProgressExample as Progress,
   Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Developer.Terminal as Term,
   TuiGallery.ProfileSample as Profile, TuiGallery.Catalog as Catalog, Fpas.Ui.Widgets.Navigation.Navigation as Nav,
   Gallery.Shared.TabExamples as TabExamples, Fpas.Ui.Widgets.Navigation.Tabs as Tabs, System as Sys, System.Threading as Threads;
-
-type Msg = variant
-  SelectPage(Page: Catalog.Entry);
-  Preview;
-  SetSaving(Value: bool);
-  MenuChoice(Name: string);
-  DesktopCommand(Id: string);
-  CreateWorkspace;
-  SetWeeklySummary(Value: bool);
-  SetMarketing(Value: bool);
-  SetSaveFrequency(Value: int);
-  SetCountry(Value: int);
-  SetAbout(Value: string);
-  SetTab(Value: int);
-  SetPillTab(Value: int);
-  SetSecurity(Value: bool);
-  SetPickerLanguage(Value: int);
-  Grid(Event: Grids.Event);
-  ProfileAction(Action: Profile.Msg);
-  Focus(Id: string);
-  SortPeople(Order: Tables.Sort);
-  SelectPerson(Id: string);
-  ToggleTheme;
-  Quit;
-end variant;
-
-type Model = record
-  public Active: Catalog.Entry;
-  public Mode: Themes.Mode := Themes.Mode.Dark;
-  public Saving: bool := false;
-  public MenuChoice: string := '';
-  public WeeklySummary: bool := false;
-  public Marketing: bool := false;
-  public SecurityOpen: bool := Security.Initial;
-  public ActiveTab: int := 0;
-  public ActivePillTab: int := 0;
-  public About: string := AboutSample.Initial;
-  public Country: int := Pickers.InitialCountry;
-  public PickerLanguage: int := Pickers.InitialLanguage;
-  public SaveFrequency: int := Frequency.Initial;
-  public WorkspaceCreated: bool := false;
-  public ProfileState: Profile.State := new Profile.State();
-  public PeopleOrder: Tables.Sort := new Tables.Sort(0);
-  public Person: string := 'person-1';
-  public Encoding: int := 0;
-  public Indent: int := 1;
-  public Language: int := 0;
-  public Grid: GridSample.State := new GridSample.State();
-end record;
 
 function ThemeFor(State: Model): Themes.Theme;
 begin
@@ -77,112 +32,6 @@ begin
       Border := Base.Colors.Info;
     end with;
   end with;
-end function;
-
-function Update(State: Model; Message: Msg): Mvu.Transition<Model, Msg>;
-begin
-  var Next: Model := State;
-  case Message of
-    when Msg.Quit:
-      return new Mvu.Transition<Model, Msg>(State, [Mvu.Exit<Msg>()]);
-    when Msg.SelectPage(const Page: Catalog.Entry):
-      Next := State with
-        Active := Page;
-      end with;
-    when Msg.Grid(const Event: Grids.Event):
-      Next := State with
-        Grid := GridSample.Update(State.Grid, Event);
-      end with;
-    when Msg.Preview:
-    when Msg.MenuChoice(const Name: string):
-      Next := State with
-        MenuChoice := Name;
-      end with;
-    when Msg.SetSaving(const Value: bool):
-      Next := State with
-        Saving := Value;
-      end with;
-    when Msg.SetWeeklySummary(const Value: bool):
-      Next := State with
-        WeeklySummary := Value;
-      end with;
-    when Msg.SetTab(const Value: int):
-      Next := State with
-        ActiveTab := Value;
-      end with;
-    when Msg.SetSecurity(const Value: bool):
-      Next := State with
-        SecurityOpen := Value;
-      end with;
-    when Msg.SetPillTab(const Value: int):
-      Next := State with
-        ActivePillTab := Value;
-      end with;
-    when Msg.SetAbout(const Value: string):
-      Next := State with
-        About := Value;
-      end with;
-    when Msg.SetCountry(const Value: int):
-      Next := State with
-        Country := Value;
-      end with;
-    when Msg.SetPickerLanguage(const Value: int):
-      Next := State with
-        PickerLanguage := Value;
-      end with;
-    when Msg.SetSaveFrequency(const Value: int):
-      Next := State with
-        SaveFrequency := Value;
-      end with;
-    when Msg.SetMarketing(const Value: bool):
-      Next := State with
-        Marketing := Value;
-      end with;
-    when Msg.CreateWorkspace:
-      Next := State with
-        WorkspaceCreated := true;
-      end with;
-    when Msg.Focus(const Id: string):
-      return new Mvu.Transition<Model, Msg>(State, [Mvu.Focus<Msg>(Id)]);
-    when Msg.ProfileAction(const Action: Profile.Msg):
-      Next := State with
-        ProfileState := Profile.Update(State.ProfileState, Action);
-      end with;
-    when Msg.DesktopCommand(const Id: string):
-      case Id of
-        when 'encoding':
-          Next := State with
-            Encoding := 1 - State.Encoding;
-          end with;
-        when 'spaces':
-          Next := State with
-            Indent := (State.Indent + 1) mod 3;
-          end with;
-        when 'language':
-          Next := State with
-            Language := (State.Language + 1) mod 3;
-          end with;
-        else
-      end case;
-    when Msg.SelectPerson(const Id: string):
-      Next := State with
-        Person := Id;
-      end with;
-    when Msg.SortPeople(const Order: Tables.Sort):
-      Next := State with
-        PeopleOrder := Order;
-      end with;
-    when Msg.ToggleTheme:
-      Next := State with
-        Mode := if State.Mode = Themes.Mode.Dark then
-          Themes.Mode.Light
-        else
-          Themes.Mode.Dark
-        end if;
-      end with;
-  end case;
-
-  return new Mvu.Transition<Model, Msg>(Next, []);
 end function;
 
 function Section(Title: string; Pages: array of Catalog.Entry): Nav.Section<Msg>;
@@ -249,7 +98,7 @@ begin
   );
 end function;
 
-function Detail(State: Model; Columns: int): E.Element<Msg>;
+function Detail(State: Model; Columns: int; Rows: int): E.Element<Msg>;
 begin
   const Flow: L.Flow := new L.Flow(Gap := L.Spacing.Tight);
   var Example: E.Element<Msg> := E.Column<Msg>();
@@ -289,10 +138,43 @@ begin
         )
       );
     when Catalog.Preview.DataDisplay:
-      return E.Column<Msg>(
-        new L.Flow(Gap := L.Spacing.Normal, Padding := L.Spacing.Normal),
-        Label(State.Active.Title, S.Role.Heading), Label(Strings.Get('Text.Table'), S.Role.Heading),
-        People.View<Msg>(State.PeopleOrder, State.Person, Msg.SortPeople, Msg.SelectPerson)
+      return E.ScrollView<Msg>(
+        'preview-data-display', E.Column<Msg>(
+          new L.Flow(Gap := L.Spacing.Normal, Padding := L.Spacing.Normal),
+          Label(State.Active.Title, S.Role.Heading),
+          Label(Strings.Get('Text.Table'), S.Role.Heading),
+          People.View<Msg>(
+            State.PeopleOrder,
+            State.Person,
+            Msg.SortPeople,
+            Msg.SelectPerson,
+            Sys.Math.Clamp(Rows - 7, 2, 6)
+          ),
+          E.Text<Msg>(
+            if Columns < 62 then
+              Strings.Get('Tui.Table.Pan')
+            else
+              ''
+            end if
+          ),
+          Label(Strings.Get('Heading.List'), S.Role.Heading),
+          Composition.Map<ListSample.Msg, Msg>(
+            ListSample.View(State.ListState),
+            Msg.ListAction
+          ),
+          Label(Strings.Get('Heading.TreeView'), S.Role.Heading),
+          Composition.Map<Tools.Msg, Msg>(Tools.Tree(State.ToolState), Msg.ToolAction)
+        )
+      );
+    when Catalog.Preview.Code:
+      Example := E.Column<Msg>(
+        Flow, Label(Strings.Get('Heading.LogConsole'), S.Role.Heading),
+        Composition.Map<Tools.Msg, Msg>(Tools.Build(State.ToolState), Msg.ToolAction)
+      );
+    when Catalog.Preview.DataGrid:
+      Example := E.Column<Msg>(
+        Flow, Label(Strings.Get('Heading.FilterBar'), S.Role.Heading),
+        FilterSample.View<Msg>(State.Filter, Msg.SetFilter)
       );
     when Catalog.Preview.Feedback:
       Example := E.Column<Msg>(
@@ -368,10 +250,16 @@ begin
         )
       );
     when Catalog.Preview.Overlays:
+      const OpenPalette: E.Element<Msg> := B.Button<Msg>(
+        'open-palette',
+        Strings.Get('Text.OpenCommandPalette'),
+        Msg.ToolAction(Tools.Msg.Palette(true))
+      );
       Example := E.Column<Msg>(
         Flow, Label(Strings.Get('Text.DialogsAndSheets'), S.Role.Heading),
         E.Text<Msg>(Strings.Get('Text.OverlayHint')),
-        Composition.Map<Profile.Msg, Msg>(Profile.Openers(Columns >= 42), Msg.ProfileAction)
+        Composition.Map<Profile.Msg, Msg>(Profile.Openers(Columns >= 42), Msg.ProfileAction),
+        Label(Strings.Get('Text.CommandPalette'), S.Role.Heading), OpenPalette
       );
     when Catalog.Preview.AppChrome:
       return E.Column<Msg>(
@@ -437,6 +325,8 @@ begin
     when Catalog.Preview.Navigation: Tabs.ItemId(TabExamples.UnderlineId, State.ActiveTab);
     when Catalog.Preview.Overlays: 'edit-profile-open';
     when Catalog.Preview.DataDisplay: State.Person;
+    when Catalog.Preview.DataGrid: 'filters/search';
+    when Catalog.Preview.Code: 'log-console';
     when Catalog.Preview.Disclosure: 'security';
     when Catalog.Preview.AppChrome: 'desktop-status/encoding';
     else '';
@@ -450,7 +340,8 @@ begin
           'gallery-preview',
           function(Size: Term.Viewport): E.Element<Msg> => Detail(
             State,
-            Size.Columns - (Size.Columns - 1) div 3 - 5
+            Size.Columns - (Size.Columns - 1) div 3 - 5,
+            Size.Rows
           )
         )
       )
@@ -470,7 +361,30 @@ begin
       Keys.Shortcut<Msg>(Keys.Key.Q, Keys.KeyModifiers.Ctrl, Msg.Quit)
     ]
   );
-  return Profile.Present<Msg>(Screen, State.ProfileState, Msg.ProfileAction);
+  const Commands: array of Palettes.Command<Msg> := [
+    new Palettes.Command<Msg>(
+      Strings.Get('Palette.Overview'),
+      Msg.SelectPage(Catalog.Components[0])
+    ),
+    new Palettes.Command<Msg>(
+      Strings.Get('Palette.Buttons'),
+      Msg.SelectPage(Catalog.Components[1])
+    ),
+    new Palettes.Command<Msg>(Strings.Get('Palette.Inputs'), Msg.SelectPage(Catalog.Components[2])),
+    new Palettes.Command<Msg>(Strings.Get('Palette.Charts'), Msg.SelectPage(Catalog.Components[8])),
+    new Palettes.Command<Msg>(
+      Strings.Get('Palette.ToggleDark'),
+      Msg.ToggleTheme,
+      Shortcut := 'Ctrl+T'
+    )
+  ];
+  return Palettes.CommandPalette<Msg>(
+    'gallery-palette',
+    Profile.Present<Msg>(Screen, State.ProfileState, Msg.ProfileAction),
+    State.ToolState.Palette,
+    Commands,
+    function(Open: bool): Msg => Msg.ToolAction(Tools.Msg.Palette(Open))
+  );
 end function;
 
 begin
@@ -485,13 +399,13 @@ begin
     end if;
 
     using const Session: App.HeadlessSession := App.StartHeadless<Model, Msg>(
-      Initial, Update, View, 80, 24, ThemeFor
+      Initial, GalleryState.Update, View, 80, 24, ThemeFor
     );
     while Session.IsOpen() do
       Threads.Thread.Sleep(20);
     end while;
   else
-    App.Run<Model, Msg>(Initial, Update, View, ThemeFor);
+    App.Run<Model, Msg>(Initial, GalleryState.Update, View, ThemeFor);
   end if;
 end;
 

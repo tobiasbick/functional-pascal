@@ -131,6 +131,12 @@ bit depth and ReplayGain. Dates use ATL's normalized representation, including
 its interpretation of year-only tags. MP3/ID3, Ogg/Vorbis and Ogg/Opus are tested
 with real synthetic containers; ATL also supports the app's FLAC/M4A locations.
 
+The [catalogue JSON codec](../src/FpasAmp.Library/Serialization/CatalogueJson.cs)
+uses generated System.Text.Json metadata for the stored track tags, covers,
+string arrays and tag overrides. The normal and Native AOT builds read and
+write the same JSON. The [serialization project](../src/FpasAmp.Library/Serialization/FpasAmp.Library.Serialization.csproj)
+compiles the generated metadata against the actual FPAS record types.
+
 `QueryAsync` combines source, album, performer, genre and minimum-rating filters,
 ordering by title/album/artist/album artist/genre/date/duration/rating/path, and
 pages of at most **500** rows. Results include path, index ID, durable UUID,

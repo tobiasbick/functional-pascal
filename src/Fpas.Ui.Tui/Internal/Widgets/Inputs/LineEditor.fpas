@@ -31,14 +31,18 @@ public type Cursor = record
   public Offset: int;
   // First visible UTF-16 offset.
   public Start: int := 0;
+  // Selection origin, or minus one.
+  public Anchor: int := -1;
 end record;
 
 // Access to the input router's cursor between layout passes.
 public type Tracking = record
   // Reads the current edit position.
-  public Read: function(): Cursor;
+  public Read: function(string): Cursor;
   // Records the expected position for the next layout.
   public Write: procedure(Cursor);
+  // Records the position to use if the model accepts an edit.
+  public Propose: procedure(Cursor);
 end record;
 
 // Retains an editor position for keyboard and pointer input.
@@ -47,13 +51,28 @@ end record;
 // ## Returns
 // Editor state owned by the presented control.
 public function Track(Initial: Cursor): Tracking;
+  function Read(Value: string): Cursor;
+  begin
+    const Draft: Cursor? := Pending;
+    return if Draft <> null and Draft.Expected = Value then
+      Draft
+    else
+      Current
+    end if;
+  end function;
+  procedure Move(Value: Cursor);
+  begin
+    Current := Value;
+    Pending := null;
+  end procedure;
+  procedure Propose(Value: Cursor);
+  begin
+    Pending := Value;
+  end procedure;
 begin
   var Current: Cursor := Initial;
-  return new Tracking(
-    function(): Cursor => Current, procedure(Value: Cursor) begin
-      Current := Value;
-    end procedure
-  );
+  var Pending: Cursor? := null;
+  return new Tracking(Read, Move, Propose);
 end function;
 
 // Fits the caret and its display cell inside the current text viewport.
@@ -67,7 +86,7 @@ public function Fit(Value: string; Old: Cursor?; Width: int): Cursor;
 begin
   var Position: Cursor := new Cursor(Value, Value.Length);
   if Old <> null and Old.Expected = Value then
-    Position := new Cursor(Value, Old.Offset, Sys.Math.Min(Old.Offset, Old.Start));
+    Position := new Cursor(Value, Old.Offset, Sys.Math.Min(Old.Offset, Old.Start), Old.Anchor);
   end if;
 
   // A deletion or insertion can join graphemes across the former viewport boundary.
@@ -97,16 +116,18 @@ end function;
 procedure Replace<TMsg>(Field: Field<TMsg>; Position: Tracking; Start: int; Count: int; Added: string; Apply: procedure(TMsg));
 begin
   const Value: string := Field.Value.Remove(Start, Count).Insert(Start, Added);
-  if Value = Field.Value then
-    return;
-  end if;
   const EndOffset: int := Start + Added.Length;
-  Position.Write(
-    new Cursor(
-      Value, TextEdit.AfterEdit(Value, EndOffset), Position.Read().Start
-    )
+  const Next: Cursor := new Cursor(
+    Value,
+    TextEdit.AfterEdit(Value, EndOffset),
+    Position.Read(Field.Value).Start
   );
-  Apply(Field.Change(Value));
+  if Value = Field.Value then
+    Position.Write(Next);
+  else
+    Position.Propose(Next);
+    Apply(Field.Change(Value));
+  end if;
 end procedure;
 
 // Inserts a single-line paste or typed text at the caret, up to the UTF-8 limit.
@@ -122,12 +143,13 @@ begin
   if Field.Settings.ReadOnly then
     return;
   end if;
-  const Available: int := Field.Settings.MaxUtf8Bytes - Text.Encoding.UTF8.GetByteCount(
-    Field.Value
-  );
+  const Cursor: Cursor := Position.Read(Field.Value);
+  const Selected: TextEdit.Range := TextEdit.Selection(Cursor.Offset, Cursor.Anchor);
+  const Remaining: string := Field.Value.Remove(Selected.Start, Selected.Stop - Selected.Start);
+  const Available: int := Field.Settings.MaxUtf8Bytes - Text.Encoding.UTF8.GetByteCount(Remaining);
   const Added: string := TextEdit.Insertable(Input, Available, false);
   if Added <> '' then
-    Replace<TMsg>(Field, Position, Position.Read().Offset, 0, Added, Apply);
+    Replace<TMsg>(Field, Position, Selected.Start, Selected.Stop - Selected.Start, Added, Apply);
   end if;
 end procedure;
 
@@ -137,46 +159,76 @@ end procedure;
 // ## Parameters
 // - `Field`: Current model value and callbacks.
 // - `Position`: Field's cursor.
-// - `Pressed`: Unmodified key.
+// - `Pressed`: Terminal key.
+// - `Modifiers`: Active modifiers.
 // - `Apply`: Dispatches an edit or submission.
 // ## Returns
 // Whether the field consumed this key.
-public function Key<TMsg>(Field: Field<TMsg>; Position: Tracking; Pressed: K.Key; Apply: procedure(TMsg)): bool;
+public function Key<TMsg>(Field: Field<TMsg>; Position: Tracking; Pressed: K.Key; Modifiers: K.KeyModifiers; Apply: procedure(TMsg)): bool;
+  procedure Move(Offset: int);
+  begin
+    Position.Write(
+      Current with
+        Offset := Offset;
+        Anchor := TextEdit.ExtendAnchor(Current.Offset, Current.Anchor, Extend);
+      end with
+    );
+  end procedure;
 begin
-  const At: int := Position.Read().Offset;
+  const Current: Cursor := Position.Read(Field.Value);
+  if Modifiers = K.KeyModifiers.Ctrl and Pressed = K.Key.A then
+    Position.Write(
+      Current with
+        Offset := Field.Value.Length;
+        Anchor := 0;
+      end with
+    );
+    return true;
+  end if;
+  const Extend: bool := Modifiers = K.KeyModifiers.Shift;
+  if Modifiers <> K.KeyModifiers.None and not Extend then
+    return false;
+  end if;
+  const At: int := Current.Offset;
+  const Selected: TextEdit.Range := TextEdit.Selection(At, Current.Anchor);
+  const HasSelection: bool := Selected.Start <> Selected.Stop;
   case Pressed of
     when K.Key.Home:
-      Position.Write(
-        Position.Read() with
-          Offset := 0;
-        end with
-      );
+      Move(0);
     when K.Key.End:
-      Position.Write(
-        Position.Read() with
-          Offset := Field.Value.Length;
-        end with
-      );
+      Move(Field.Value.Length);
     when K.Key.Left:
-      Position.Write(
-        Position.Read() with
-          Offset := TextEdit.Previous(Field.Value, At);
-        end with
+      Move(
+        if HasSelection and not Extend then
+          Selected.Start
+        else
+          TextEdit.Previous(Field.Value, At)
+        end if
       );
     when K.Key.Right:
-      Position.Write(
-        Position.Read() with
-          Offset := TextEdit.Next(Field.Value, At);
-        end with
+      Move(
+        if HasSelection and not Extend then
+          Selected.Stop
+        else
+          TextEdit.Next(Field.Value, At)
+        end if
       );
     when K.Key.Backspace, K.Key.Delete:
+      if Extend then
+        return false;
+      end if;
+
       if not Field.Settings.ReadOnly then
-        const Start: int := if Pressed = K.Key.Backspace then
+        const Start: int := if HasSelection then
+          Selected.Start
+        elsif Pressed = K.Key.Backspace then
           TextEdit.Previous(Field.Value, At)
         else
           At
         end if;
-        const Stop: int := if Pressed = K.Key.Delete then
+        const Stop: int := if HasSelection then
+          Selected.Stop
+        elsif Pressed = K.Key.Delete then
           TextEdit.Next(Field.Value, At)
         else
           At
@@ -184,6 +236,10 @@ begin
         Replace<TMsg>(Field, Position, Start, Stop - Start, '', Apply);
       end if;
     when K.Key.Enter:
+      if Extend then
+        return false;
+      end if;
+
       case Field.Submit of
         when is Sys.Func<string, TMsg> as Submit:
           Apply(Submit.Invoke(Field.Value));

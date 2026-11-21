@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Tui.Internal.Layout.Scene;
 
-uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as Validation, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys;
+uses Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as Validation, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys;
 
 public type Binding<TMsg> = variant
   // Single-line editor with its insertion point and first editable column.
@@ -11,6 +11,8 @@ public type Binding<TMsg> = variant
   EditArea(View: AreaEdit.View<TMsg>; CaretX: int; CaretY: int);
   Invoke(Action: Actions.IActivatable<TMsg>);
   Scroll(View: V.Viewport<TMsg>);
+  // Model-owned selection and the visible list body excluding the scrollbar.
+  SelectionList(List: E.SelectionListView<TMsg>; Body: F.Rect; View: V.Viewport<TMsg>);
   // Unclipped allocation and event mapper for an interactive terminal image.
   Grid(Area: F.Rect; Changed: function(Grids.Event): TMsg);
 end variant;
@@ -36,6 +38,18 @@ public type Control<TMsg> = record
   public Foreground: G.Color? := null;
   // Tab-entry identity for a composite control, or empty for an ordinary stop.
   public TabTarget: string := '';
+  // Horizontal viewport attached to a wide table's row controls.
+  public Pan: HorizontalViewport? := null;
+end record;
+
+// Keyboard panning limits for a table.
+public type HorizontalViewport = record
+  // Session offset key, separate from the vertical viewport.
+  public Id: string;
+  // Largest horizontal offset in cells.
+  public Maximum: int;
+  // Columns traversed by each key press.
+  public Step: int;
 end record;
 
 // One tab destination in traversal order.
@@ -96,6 +110,8 @@ public type Layout<TMsg> = record
   public NavigationRows: array of NavigationStop := [];
   // Enabled tab destinations in view order. A composite control contributes one entry.
   public TabStops: array of TabStop := [];
+  // Optional focus-independent shortcut to open the command palette.
+  public OpenPalette: Sys.Func<TMsg>? := null;
 end record;
 
 public function FindControl<TMsg>(Layout: Layout<TMsg>?; Id: string): Control<TMsg>?;

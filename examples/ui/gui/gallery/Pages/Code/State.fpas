@@ -3,7 +3,7 @@
 unit GuiGallery.Pages.Code.State;
 
 uses
-  GuiGallery.Pages.Code.Samples as Sample, Fpas.Ui.Widgets.Display.Markdowns as Markdown,
+  GuiGallery.Pages.Code.Samples as Sample, Gallery.Shared.BuildLog as BuildLog, Fpas.Ui.Widgets.Display.Markdowns as Markdown,
   Fpas.Ui.Widgets.Editors.CodeEditors as Editor, Fpas.Ui.Widgets.Developer.DiffViews as Diff,
   Fpas.Ui.Widgets.Developer.HexViews as Hex, Fpas.Ui.Widgets.Developer.LogConsoles as Log;
 
@@ -48,7 +48,7 @@ public type Model = record
   // Last hex overwrite status.
   public Edited: string := '';
   // Log console lines.
-  public Entries: array of Log.Entry := Sample.Entries;
+  public Entries: array of Log.Entry := BuildLog.Entries;
 end record;
 
 // Messages from the native source tools.

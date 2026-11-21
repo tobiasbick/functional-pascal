@@ -32,6 +32,13 @@ Use ↑/↓, Home/End or Page Up/Page Down on a focused row. Enter, Space or a c
 
 Each row occupies one terminal line. Columns support fixed, content and weighted fill widths, plus left, center and right alignment. Long cells clip at grapheme boundaries. A bounded table keeps its header in place while the wheel or row navigation scrolls the body. Use `Cell.Text` for terminal data. Composed cells such as avatars and badges require the GUI.
 
+Set `Tables.Options.HorizontalScroll := true` to retain natural widths on a
+narrow terminal. With a body row focused, Ctrl+Left and Ctrl+Right reveal
+columns. The header pans with the body. Arrows without modifiers keep their
+vertical navigation behavior.
+
+![Wide terminal table panned to the Revenue column](../../../../examples/ui/tui/gallery/wide-table.png)
+
 ## See also
 
 - [Data display](README.md)

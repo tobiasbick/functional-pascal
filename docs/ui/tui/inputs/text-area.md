@@ -36,9 +36,14 @@ The field wraps at word boundaries when possible. The wheel scrolls the field an
 
 `Height` sets the editable area in logical points, which the terminal converts to rows. Zero uses the default six rows. A negative height fills available space. A placeholder appears for empty text, and an error replaces the hint. Icons, affixes, the clear button and nondefault control sizes use the graphical profile.
 
+Hold Shift with the navigation keys to select text. Ctrl+A selects the
+whole field. Typing or pasting replaces the selection. Backspace and Delete
+remove it.
+
 ## See also
 
 - [Terminal inputs](README.md)
+- [Text field and selection screenshot](text-field.md)
 - [Shared API and GUI example](../../gui/inputs/text-area.md)
 
 ## Source files

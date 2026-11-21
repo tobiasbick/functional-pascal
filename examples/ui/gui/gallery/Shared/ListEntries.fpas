@@ -1,0 +1,29 @@
+// [Documentation](../../../../../docs/ui/gui/data-display/list-item.md)
+
+unit Gallery.Shared.ListEntries;
+
+// One row of the original CUI List example.
+public type Entry = record
+  // Stable identity used in both galleries.
+  public Id: string;
+  // Main caption.
+  public Title: string;
+  // Detail text beneath the title in CUI.
+  public Subtitle: string;
+  // Name used to draw initials in CUI.
+  public Person: string;
+  // Duration displayed beside the title.
+  public Duration: string;
+end record;
+
+// Selected row when the gallery opens.
+public const Initial: string := 'release';
+
+// Rows from the CUI gallery in display order.
+public const Entries: array of Entry := [
+  new Entry('design-review', 'Design review', 'Tomorrow at 10:00', 'Jonas Berg', '45m'),
+  new Entry('release', 'Release 1.0', 'Ship it', 'Priya Nair', '2h'),
+  new Entry('planning', 'Planning', 'Q1 roadmap', 'Tomas Rivera', '1h')
+];
+
+end unit;

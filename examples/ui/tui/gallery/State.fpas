@@ -1,0 +1,244 @@
+// [Documentation](README.md)
+
+unit TuiGallery.State;
+
+uses
+  TuiGallery.Catalog as Catalog, TuiGallery.CellGridSample as GridSample,
+  TuiGallery.ListSample as ListSample, TuiGallery.ProfileSample as Profile, TuiGallery.ToolSamples as Tools,
+  Gallery.Shared.SecurityCard as Security, Gallery.Shared.AboutField as AboutSample,
+  Gallery.Shared.PickerChoices as Pickers, Gallery.Shared.SaveFrequency as Frequency,
+  Gallery.Shared.PeopleFilters as FilterSample, Fpas.Ui.Widgets.Collections.FilterBars as Filters,
+  Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Theming.Themes as Themes,
+  Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Mvu.Application as Mvu;
+
+// Messages produced by the terminal gallery.
+public type Msg = variant
+  // Open a gallery destination.
+  SelectPage(Page: Catalog.Entry);
+  // Leave the current preview state unchanged.
+  Preview;
+  // Change the save button state.
+  SetSaving(Value: bool);
+  // Record the chosen project action.
+  MenuChoice(Name: string);
+  // Activate an editor status action.
+  DesktopCommand(Id: string);
+  // Create the example workspace.
+  CreateWorkspace;
+  // Change the workspace summary option.
+  SetWeeklySummary(Value: bool);
+  // Change the marketing option.
+  SetMarketing(Value: bool);
+  // Choose an automatic save interval.
+  SetSaveFrequency(Value: int);
+  // Choose the country option.
+  SetCountry(Value: int);
+  // Edit the profile description.
+  SetAbout(Value: string);
+  // Select an underline tab.
+  SetTab(Value: int);
+  // Select a pill tab.
+  SetPillTab(Value: int);
+  // Change whether the Security card is open.
+  SetSecurity(Value: bool);
+  // Choose the language option.
+  SetPickerLanguage(Value: int);
+  // Handle terminal cell grid input.
+  Grid(Event: Grids.Event);
+  // Handle an action from the profile example.
+  ProfileAction(Action: Profile.Msg);
+  // Focus a control by its stable ID.
+  Focus(Id: string);
+  // Change the table's sort order.
+  SortPeople(Order: Tables.Sort);
+  // Select a person by ID.
+  SelectPerson(Id: string);
+  // Handle an action from the list example.
+  ListAction(Action: ListSample.Msg);
+  // Handle an action from the tool examples.
+  ToolAction(Action: Tools.Msg);
+  // Adopt the proposed filter state.
+  SetFilter(Value: Filters.Value);
+  // Switch between the light and dark themes.
+  ToggleTheme;
+  // Exit the gallery.
+  Quit;
+end variant;
+
+// State of the terminal gallery and its examples.
+public type Model = record
+  // Current gallery destination.
+  public Active: Catalog.Entry;
+  // Current color scheme.
+  public Mode: Themes.Mode := Themes.Mode.Dark;
+  // Whether the save button is busy.
+  public Saving: bool := false;
+  // Most recently chosen project action.
+  public MenuChoice: string := '';
+  // Whether the workspace requests a weekly summary.
+  public WeeklySummary: bool := false;
+  // Whether marketing notifications are enabled.
+  public Marketing: bool := false;
+  // Whether the Security card is open.
+  public SecurityOpen: bool := Security.Initial;
+  // Current underline tab index.
+  public ActiveTab: int := 0;
+  // Current pill tab index.
+  public ActivePillTab: int := 0;
+  // Text in the profile description.
+  public About: string := AboutSample.Initial;
+  // Current country index.
+  public Country: int := Pickers.InitialCountry;
+  // Current language index.
+  public PickerLanguage: int := Pickers.InitialLanguage;
+  // Current save interval index.
+  public SaveFrequency: int := Frequency.Initial;
+  // Whether the sample workspace has been created.
+  public WorkspaceCreated: bool := false;
+  // State shared by the profile views.
+  public ProfileState: Profile.State := new Profile.State();
+  // Sort order of the People table.
+  public PeopleOrder: Tables.Sort := new Tables.Sort(0);
+  // ID of the selected person.
+  public Person: string := 'person-1';
+  // State of the list demonstration.
+  public ListState: ListSample.State := new ListSample.State();
+  // State of the source tree, command palette and log.
+  public ToolState: Tools.State := new Tools.State();
+  // Search and option masks for the filter bar.
+  public Filter: Filters.Value := FilterSample.Initial();
+  // Current encoding option.
+  public Encoding: int := 0;
+  // Current indentation option.
+  public Indent: int := 1;
+  // Current editor language option.
+  public Language: int := 0;
+  // State of the terminal cell grid.
+  public Grid: GridSample.State := new GridSample.State();
+end record;
+
+// Applies a gallery message and returns its state and requested effects.
+// ## Parameters
+// - `State`: Model before the action.
+// - `Message`: Action produced by the gallery or its host.
+// ## Returns
+// The next model and its effects.
+public function Update(State: Model; Message: Msg): Mvu.Transition<Model, Msg>;
+begin
+  var Next: Model := State;
+  case Message of
+    when Msg.Quit:
+      return new Mvu.Transition<Model, Msg>(State, [Mvu.Exit<Msg>()]);
+    when Msg.SelectPage(const Page: Catalog.Entry):
+      Next := State with
+        Active := Page;
+      end with;
+    when Msg.Grid(const Event: Grids.Event):
+      Next := State with
+        Grid := GridSample.Update(State.Grid, Event);
+      end with;
+    when Msg.Preview:
+    when Msg.MenuChoice(const Name: string):
+      Next := State with
+        MenuChoice := Name;
+      end with;
+    when Msg.SetSaving(const Value: bool):
+      Next := State with
+        Saving := Value;
+      end with;
+    when Msg.SetWeeklySummary(const Value: bool):
+      Next := State with
+        WeeklySummary := Value;
+      end with;
+    when Msg.SetTab(const Value: int):
+      Next := State with
+        ActiveTab := Value;
+      end with;
+    when Msg.SetSecurity(const Value: bool):
+      Next := State with
+        SecurityOpen := Value;
+      end with;
+    when Msg.SetPillTab(const Value: int):
+      Next := State with
+        ActivePillTab := Value;
+      end with;
+    when Msg.SetAbout(const Value: string):
+      Next := State with
+        About := Value;
+      end with;
+    when Msg.SetCountry(const Value: int):
+      Next := State with
+        Country := Value;
+      end with;
+    when Msg.SetPickerLanguage(const Value: int):
+      Next := State with
+        PickerLanguage := Value;
+      end with;
+    when Msg.SetSaveFrequency(const Value: int):
+      Next := State with
+        SaveFrequency := Value;
+      end with;
+    when Msg.SetMarketing(const Value: bool):
+      Next := State with
+        Marketing := Value;
+      end with;
+    when Msg.CreateWorkspace:
+      Next := State with
+        WorkspaceCreated := true;
+      end with;
+    when Msg.Focus(const Id: string):
+      return new Mvu.Transition<Model, Msg>(State, [Mvu.Focus<Msg>(Id)]);
+    when Msg.ProfileAction(const Action: Profile.Msg):
+      Next := State with
+        ProfileState := Profile.Update(State.ProfileState, Action);
+      end with;
+    when Msg.DesktopCommand(const Id: string):
+      case Id of
+        when 'encoding':
+          Next := State with
+            Encoding := 1 - State.Encoding;
+          end with;
+        when 'spaces':
+          Next := State with
+            Indent := (State.Indent + 1) mod 3;
+          end with;
+        when 'language':
+          Next := State with
+            Language := (State.Language + 1) mod 3;
+          end with;
+        else
+      end case;
+    when Msg.SelectPerson(const Id: string):
+      Next := State with
+        Person := Id;
+      end with;
+    when Msg.SortPeople(const Order: Tables.Sort):
+      Next := State with
+        PeopleOrder := Order;
+      end with;
+    when Msg.ListAction(const Action: ListSample.Msg):
+      Next := State with
+        ListState := ListSample.Update(State.ListState, Action);
+      end with;
+    when Msg.ToolAction(const Action: Tools.Msg):
+      Next := State with
+        ToolState := Tools.Update(State.ToolState, Action);
+      end with;
+    when Msg.SetFilter(const Value: Filters.Value):
+      Next := State with
+        Filter := Value;
+      end with;
+    when Msg.ToggleTheme:
+      Next := State with
+        Mode := if State.Mode = Themes.Mode.Dark then
+          Themes.Mode.Light
+        else
+          Themes.Mode.Dark
+        end if;
+      end with;
+  end case;
+
+  return new Mvu.Transition<Model, Msg>(Next, []);
+end function;
+
+end unit;

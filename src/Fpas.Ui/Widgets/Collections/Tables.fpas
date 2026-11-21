@@ -69,6 +69,8 @@ public type Options = record
   public Compact: bool := false;
   // Whether headers and rows accept activation.
   public Enabled: bool := true;
+  // Retain column widths and allow keyboard panning in the terminal.
+  public HorizontalScroll: bool := false;
 end record;
 
 // Derives a header identity for keyboard focus and inspection.

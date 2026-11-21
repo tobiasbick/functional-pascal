@@ -1,0 +1,6 @@
+<!-- [Documentation](../../../doc/library.md#metadata-and-queries) -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../../../../../src/Fpas.Media.Tags/Fpas.Media.Tags.fpasproj" />
+  </ItemGroup>
+</Project>

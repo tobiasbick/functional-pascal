@@ -4,7 +4,7 @@
 unit FpasAmp.Persistence.UserFiles;
 
 uses
-  FpasAmp.Persistence.JsonRecovery as Recovery,
+  FpasAmp.Persistence.JsonRecovery as Recovery, FpasAmp.Persistence.JsonOutput as Output,
   System as Sys,
   System.IO as IO,
   System.Text as Text,
@@ -44,14 +44,6 @@ begin
   end if;
 
   return IO.Path.Combine(Base, 'fpas-amp');
-end function;
-
-function Serialization(): J.JsonSerializerOptions;
-begin
-  const Options: J.JsonSerializerOptions := new J.JsonSerializerOptions();
-  Options.PropertyNamingPolicy := J.JsonNamingPolicy.CamelCase;
-  Options.WriteIndented := true;
-  return Options;
 end function;
 
 function LockFiles(): Threads.Mutex;
@@ -96,10 +88,14 @@ begin
   end try;
 end procedure;
 
-procedure Replace<T>(Path: string; Value: T);
+function EncodeFile<T>(Value: T; Encode: procedure(J.Utf8JsonWriter, T)): array of byte;
 begin
-  Publish(Path, J.JsonSerializer.SerializeToUtf8Bytes<T>(Value, Serialization()), true);
-end procedure;
+  return Output.Bytes(
+    procedure(Writer: J.Utf8JsonWriter) begin
+      Encode(Writer, Value);
+    end procedure, true
+  );
+end function;
 
 function Read(Path: string): (array of byte)?;
 begin
@@ -145,10 +141,11 @@ end procedure;
 // - `Path`: Absolute JSON file path.
 // - `Defaults`: Values returned for an absent or unreadable file.
 // - `Decode`: Validates a JSON value and returns the usable data.
+// - `Encode`: Writes the validated values for repairing a damaged file.
 // - `ArrayKey`: Root array property eligible for entry-by-entry recovery.
 // ## Returns
 // The loaded, recovered, or default values. I/O failures are reported to standard error.
-public function Load<T>(Path: string; Defaults: T; Decode: function(J.JsonElement): Decoded<T>; ArrayKey: string := ''): T;
+public function Load<T>(Path: string; Defaults: T; Decode: function(J.JsonElement): Decoded<T>; Encode: procedure(J.Utf8JsonWriter, T); ArrayKey: string := ''): T;
 requires Path.Length > 0;
 begin
   if not IO.Path.IsPathFullyQualified(Path) then
@@ -165,7 +162,7 @@ begin
     if not Result.Valid then
       try
         Backup(Path, Bytes);
-        Replace<T>(Path, Result.Value);
+        Publish(Path, EncodeFile<T>(Result.Value, Encode), true);
       catch Failure: IO.IOException do
         Sys.Console.Error.WriteLine(
           'FPas-Amp could not repair ' + IO.Path.GetFileName(Path) + ': ' + Failure.Message
@@ -201,14 +198,16 @@ end function;
 // - `Path`: Absolute JSON file path.
 // - `Value`: The values to save.
 // - `Decode`: The same validation used when loading.
-public procedure Save<T>(Path: string; Value: T; Decode: function(J.JsonElement): Decoded<T>);
+// - `Encode`: Writes the supplied values in the file's JSON format.
+public procedure Save<T>(Path: string; Value: T; Decode: function(J.JsonElement): Decoded<T>; Encode: procedure(J.Utf8JsonWriter, T));
 requires Path.Length > 0;
 begin
   if not IO.Path.IsPathFullyQualified(Path) then
     raise new Sys.ArgumentException('Expected an absolute FPas-Amp file path.');
   end if;
 
-  if not Decode(J.JsonSerializer.SerializeToElement<T>(Value, Serialization())).Valid then
+  const Bytes: array of byte := EncodeFile<T>(Value, Encode);
+  if not Decode(J.JsonElement.Parse(Utf8.GetString(Bytes))).Valid then
     raise new Sys.ArgumentException('Cannot save invalid FPas-Amp data.');
   end if;
 
@@ -219,7 +218,7 @@ begin
       Backup(Path, Original);
     end if;
 
-    Replace<T>(Path, Value);
+    Publish(Path, Bytes, true);
   finally
     Lock.ReleaseMutex();
   end try;

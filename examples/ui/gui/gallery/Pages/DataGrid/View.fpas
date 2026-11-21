@@ -3,27 +3,16 @@
 unit GuiGallery.Pages.DataGrid.View;
 
 uses
-  Gallery.Shared.Strings as Strings,
+  Gallery.Shared.Strings as Strings, Gallery.Shared.PeopleFilters as Filters,
   GuiGallery.Pages.DataGrid.State as S, GuiGallery.Pages.DataGrid.People as P,
   GuiGallery.Shared.Sections as H, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
-  Fpas.Ui.Widgets.Collections.FilterBars as F, Fpas.Ui.Widgets.Collections.DataGrids as D, Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Widgets.Collections.TreeTables as TT,
+  Fpas.Ui.Widgets.Collections.DataGrids as D, Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Widgets.Collections.TreeTables as TT,
   Fpas.Ui.Widgets.Media.Avatars as A, Fpas.Ui.Widgets.Feedback.Badges as B, Fpas.Ui.Widgets.Feedback.ProgressBars as Progress, Fpas.Ui.Styles as Style,
   System as Sys, System.Globalization as Culture, System.Collections.Generic as Lists;
 
 function Points(Value: int): L.Extent;
 begin
   return L.Extent.Fixed(L.Measure.Logical(Value));
-end function;
-
-function Filter(Model: S.Model): E.Element<S.Msg>;
-begin
-  return F.FilterBar<S.Msg>(
-    'filters', [
-      new F.Field('Team', ['Engine', 'Design', 'Platform', 'Docs', 'Growth'], P.Icon($E1A4)),
-      new F.Field('Status', ['Active', 'Away', 'Invited'], P.Icon($E345)),
-      new F.Field('Role', ['Owner', 'Admin', 'Member'], P.Icon($E4A3))
-    ], Model.Filter, S.Msg.SetFilter, 64
-  );
 end function;
 
 function GridRow(Model: S.Model; Position: int): D.Row<S.Msg>;
@@ -129,7 +118,7 @@ begin
 
   return [
     H.Heading<S.Msg>(Strings.Get('Heading.FilterBar'), Strings.Get('Heading.FilterBarHint')),
-    Filter(Model),
+    Filters.View<S.Msg>(Model.Filter, S.Msg.SetFilter),
     H.Heading<S.Msg>(
       Strings.Get('Page.DataGrid'),
       Strings.Get('Heading.DataGridHint')

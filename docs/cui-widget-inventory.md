@@ -534,6 +534,7 @@ for gallery screenshots, FPAS examples and widget options.
   shared with Selection and Edit profile. The sheet also shows the two original
   Recent rows. Its interior matches the Windows software reference.
 - [x] Command palette (`cui_command_palette`): [API][fpas-command-palette].
+  The [terminal palette](ui/tui/overlays/command-palette.md) uses the same keyboard search and command messages.
   Overview and Overlays launch the original grouped command list.
   Windows Software and OpenGL checks cover native search, Enter activation,
   Escape with focus return and Ctrl+K. The visible panel interior matches the
@@ -661,8 +662,10 @@ The [Data display chapter](ui/gui/data-display/README.md) covers the gallery's
 table, tree, list items, reorderable list, accordion and virtual list.
 
 - [x] List item (`cui_list_item`): [API][fpas-data-display]. Data display
-  shows the original file list. The Notifications sheet shows its Recent rows.
+  shows the original Design review, Release 1.0, and Planning rows. The
+  Notifications sheet shows its Recent rows.
 - [x] Tree (`cui_tree_begin`, `cui_tree_clicked`): [API][fpas-data-display].
+  The [terminal tree](ui/tui/data-display/tree.md) shares the source file hierarchy and supports keyboard expansion.
   Data display uses the original source tree. Windows Software and OpenGL
   checks cover expansion, collapse and selection.
 - [x] Virtual list (`cui_virtual_list`): [API][fpas-data-display]. The
@@ -676,6 +679,12 @@ table, tree, list items, reorderable list, accordion and virtual list.
   original People example. Windows checks cover reversing the sort, selecting a
   row and the focus rings on headers and rows. The [terminal table](ui/tui/data-display/table.md)
   shows the same people, sort and selection with text cells.
+
+The terminal table can preserve wide columns and pan its header and body together with Ctrl+Left and Ctrl+Right.
+
+The terminal profile includes a [selection list](ui/tui/data-display/selection-list.md)
+with separate selection and activation. The terminal gallery uses the original
+CUI List rows and shows the selected item's details below the list.
 
 Data display content and the Notifications sheet interior match the pinned
 Windows reference in Software and OpenGL at 1100×1800 and scale one. The
@@ -693,7 +702,9 @@ See [Data grid](ui/gui/data-grid/README.md) for screenshots and FPAS examples.
   scrolling, including shrinking while scrolled.
 - [x] Filter bar (`cui_filter_bar`): the original Team, Status and Role filters
   and Search field. Windows checks cover search, clearing and adding a filter.
-  CUI opens the newly added chip's value menu.
+  CUI opens the newly added chip's value menu. The
+  [terminal filter bar](ui/tui/data-display/filter-bar.md) shares these fields
+  and their initial selection, with keyboard-operated value checklists.
 - [x] Tree table (`cui_tree_table_begin`, `cui_tree_table_row`,
   `cui_tree_table_name`, `cui_tree_cell`): the original source-tree cells in a
   table and a supplementary virtual tree table with native selection, activation

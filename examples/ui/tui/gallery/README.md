@@ -4,6 +4,8 @@
 
 The sidebar follows the GUI gallery’s **Components** and **Extended** sections in the same order. The preview shows the examples supported by the terminal. Destinations without a terminal example show a short description.
 
+Use the CUI gallery's sample data when demonstrating a CUI widget in the terminal. Adapt the layout and input to suit the terminal.
+
 | Gallery destination | Terminal example |
 | --- | --- |
 | Components → Overview | Browse components or create a workspace with the shared name and email fields and an optional weekly summary. |
@@ -18,7 +20,12 @@ The sidebar follows the GUI gallery’s **Components** and **Extended** sections
 | Components → Navigation → Tabs | Switch the underline and pill tabs from the GUI example. |
 | Components → Overlays | Edit the profile, open the Notifications sheet, or confirm project deletion. The sheet has three editable notification switches and two recent events. |
 | Components → Feedback → Progress | Uploading assets at 68% and exporting a clip at 42%. |
-| Components → Data display → Table | The five people from the GUI example, with the same columns, sort order and initial selection. |
+| Components → Data display → [Table](../../../../docs/ui/tui/data-display/table.md) | Browse and sort the five people from the GUI example. Focus a row and press Ctrl+Left or Ctrl+Right to see hidden columns on a narrow terminal. |
+| Components → Data display → [List](../../../../docs/ui/tui/data-display/selection-list.md) | Browse Design review, Release 1.0, and Planning from the CUI gallery. Use Enter to open the selected row. |
+| Components → Data display → [Tree view](../../../../docs/ui/tui/data-display/tree.md) | Expand the same source folders and activate files from the CUI example. |
+| Components → Overlays → [Command palette](../../../../docs/ui/tui/overlays/command-palette.md) | Open with Ctrl+K, type to filter gallery actions, and press Enter to run the highlighted action. |
+| Extended → Data grid → [Filter bar](../../../../docs/ui/tui/data-display/filter-bar.md) | Search and choose several Team, Status or Role values using the original CUI fields. |
+| Extended → Code → [Log console](../../../../docs/ui/tui/developer/log-console.md) | Browse the CUI gallery's build log and reveal its next entry. Press End in the log to resume following new entries. |
 | Extended → Disclosure → Expandable cards | Open Security to read the recovery-code details. |
 | Extended → Text and display → Text and inline code | Heading, body, label, secondary text, muted text and a command. |
 | Extended → App chrome | Editor excerpt and status bar. Activate the indentation, encoding or language to cycle its value. |
@@ -57,6 +64,20 @@ it with `LANG=de_DE.UTF-8` for German.
 
 ![People table under Data display](table.png)
 
+![Keyboard-panned people table on a narrow terminal](wide-table.png)
+
+![Original CUI list rows with Design review opened](selection-list.png)
+
+![Expanded source tree under Data display](tree.png)
+
+![Team checklist on the Data grid page](filter-bar.png)
+
+![Filtered command palette over the Overlays page](command-palette.png)
+
+![Build log with a newly appended message](log-console.png)
+
+![Selected text on Inputs](text-selection.png)
+
 ![Open Security card on Disclosure](expandable-card.png)
 
 ![Editor and status bar under App chrome](statusbar.png)
@@ -77,5 +98,7 @@ For headless stepping, launch it with `--headless-control` and set
 ## Source files
 
 - [Catalog.fpas](Catalog.fpas)
+- [State.fpas](State.fpas)
+- [ToolSamples.fpas](ToolSamples.fpas)
 - [TuiWidgetGallery.fpasproj](TuiWidgetGallery.fpasproj)
 - [main.fpas](main.fpas)

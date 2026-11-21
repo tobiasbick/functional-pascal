@@ -1,6 +1,6 @@
 # Tree
 
-Use a tree for nested nodes such as files and folders. Compose each group with Branch and each final item with Leaf. Available in **GUI**.
+Use a tree for nested nodes such as files and folders. Compose each group with Branch and each final item with Leaf. Available in **GUI** and [TUI](../../tui/data-display/tree.md).
 
 ![Tree in the FPAS gallery](images/tree.png)
 
@@ -67,3 +67,5 @@ Expand or collapse a branch at its header. CUI draws the chevron and indents its
 - `src/Fpas.Ui.Gui.Cui/native/widgets/collections/`
   - [tree.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/tree.c)
   - [tree.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/tree.h)
+
+- [Shared source tree sample](../../../../examples/ui/gui/gallery/Shared/SourceTree.fpas)

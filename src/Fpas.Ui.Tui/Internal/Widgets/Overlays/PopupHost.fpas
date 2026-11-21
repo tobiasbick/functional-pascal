@@ -5,6 +5,7 @@ unit Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupHost;
 uses
   Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as P, Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup as Popup,
   Fpas.Ui.Tui.Internal.Widgets.Overlays.Dropdown as Menu, Fpas.Ui.Tui.Internal.Widgets.Inputs.Select as Select,
+  Fpas.Ui.Tui.Internal.Widgets.Collections.FilterBar as Filters,
   Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F,
   Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System.Collections.Generic as C;
 
@@ -53,6 +54,16 @@ begin
         return Popup.Draw<TMsg>(
           State,
           Menu.Content<TMsg>(Dropdown, Owner.Bounds, Screen.Width),
+          Owner.Bounds,
+          Screen,
+          Theme,
+          Operations,
+          Controls
+        );
+      when is Filters.Trigger<TMsg> as Filter:
+        return Popup.Draw<TMsg>(
+          State,
+          Filters.Content<TMsg>(Filter),
           Owner.Bounds,
           Screen,
           Theme,

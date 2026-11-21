@@ -526,4 +526,7 @@
   <data name="Text.WorkspaceEmpty" xml:space="preserve"><value>It is empty for now. Start with a project.</value></data>
   <data name="Text.WorkspaceInviteHint" xml:space="preserve"><value>You can invite people once it exists.</value></data>
   <data name="Text.YourName" xml:space="preserve"><value>Your name</value></data>
+  <data name="Tui.List.Opened" xml:space="preserve"><value>Opened {0}</value></data>
+  <data name="Tui.Log.Append" xml:space="preserve"><value>Append build message</value></data>
+  <data name="Tui.Table.Pan" xml:space="preserve"><value>Ctrl+Left / Right on a row to reveal columns</value></data>
 </root>

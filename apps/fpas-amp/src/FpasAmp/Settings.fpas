@@ -6,7 +6,7 @@ unit FpasAmp.Settings;
 uses
   FpasAmp.Library.Sources as Locations,
   Fpas.Media.Tags.Playlists as Playlists,
-  FpasAmp.Persistence.JsonFields as Fields,
+  FpasAmp.Persistence.JsonFields as Fields, FpasAmp.Persistence.JsonOutput as Output,
   FpasAmp.Persistence.UserFiles as Files,
   FpasAmp.Ui.Settings.Model as Model, Fpas.Media.Audio as Audio, FpasAmp.Ui.Player.Model as Player,
   FpasAmp.Ui.Radio.Model as Radio, FpasAmp.Persistence.RadioFavorites as Favorites,
@@ -222,6 +222,43 @@ begin
   );
 end function;
 
+procedure Encode(Writer: J.Utf8JsonWriter; Value: Model.Preferences);
+begin
+  Writer.WriteStartObject();
+  Writer.WriteStartArray(SourcesKey);
+  for Source: Locations.MusicSource in Value.MusicSources do
+    Writer.WriteStartObject();
+    Writer.WriteString('id', Source.Id);
+    Writer.WriteString('name', Source.Name);
+    Writer.WriteString('path', Source.Path);
+    Writer.WriteBoolean('offline', Source.Offline);
+    Output.Strings(Writer, 'extensions', Source.Extensions);
+    Writer.WriteBoolean('paused', Source.Paused);
+    Writer.WriteBoolean('scanPlaylists', Source.ScanPlaylists);
+    Writer.WriteEndObject();
+  end for;
+
+  Writer.WriteEndArray();
+  Writer.WriteString('appearance', Value.Appearance);
+  Writer.WriteString('accent', Value.Accent);
+  Writer.WriteStartObject('mixer');
+  Writer.WriteNumber('volume', Value.Mixer.Volume);
+  Writer.WriteStartArray('gains');
+  for Gain: float in Value.Mixer.Gains do
+    Writer.WriteNumberValue(Gain);
+  end for;
+
+  Writer.WriteEndArray();
+  Writer.WriteEndObject();
+  Writer.WriteStartObject('acoustId');
+  Writer.WriteString('applicationKey', Value.AcoustId.ApplicationKey);
+  Writer.WriteString('userApiKey', Value.AcoustId.UserApiKey);
+  Writer.WriteEndObject();
+  Writer.WritePropertyName('radioFavorites');
+  Favorites.Encode(Writer, Value.RadioFavorites);
+  Writer.WriteEndObject();
+end procedure;
+
 // Loads the preferences and repairs a damaged settings file when possible.
 //
 // ## Parameters
@@ -234,7 +271,7 @@ begin
   return Files.Load<Model.Preferences>(
     IO.Path.Combine(Directory, FileName),
     new Model.Preferences([]),
-    Decode,
+    Decode, Encode,
     SourcesKey
   );
 end function;
@@ -247,7 +284,7 @@ end function;
 public procedure Save(Directory: string; Value: Model.Preferences);
 requires Directory.Length > 0;
 begin
-  Files.Save<Model.Preferences>(IO.Path.Combine(Directory, FileName), Value, Decode);
+  Files.Save<Model.Preferences>(IO.Path.Combine(Directory, FileName), Value, Decode, Encode);
 end procedure;
 
 end unit;

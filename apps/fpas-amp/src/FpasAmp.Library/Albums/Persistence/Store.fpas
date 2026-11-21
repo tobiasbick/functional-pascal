@@ -4,10 +4,11 @@
 unit FpasAmp.Library.Albums.Persistence.Store;
 
 uses
+  FpasAmp.Library.Serialization.CatalogueJson as Codec,
   Fpas.Media.Tags.AudioFiles as MediaTags,
   FpasAmp.Library.Persistence.Sql as Sql,
   Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO,
-  System.Security.Cryptography as Crypto, System.Text as Text, System.Text.Json as Json,
+  System.Security.Cryptography as Crypto, System.Text as Text,
   System.Text.RegularExpressions as Regex;
 
 // Replaces album membership for tag `Value` at indexed `Id`, inside `Transaction`.
@@ -53,7 +54,7 @@ begin
   const Identity: string := if Sys.Guid.TryParse(Value.MusicBrainzReleaseId, out Release) then
     'release:' + Release.ToString('N')
   else
-    Json.JsonSerializer.Serialize<array of string>(
+    Codec.WriteNames(
       [Title.ToUpperInvariant(), Artist.ToUpperInvariant(), Value.ReleaseDate, Sql.Key(Root)]
     )
   end if;

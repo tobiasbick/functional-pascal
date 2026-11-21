@@ -215,6 +215,18 @@ begin
   );
   Key(Limit, K.Key.Backspace);
   Check(Control(Limit, 'area').Value.Length = 29, 'Backspace removes a whole combining sequence.');
+  Key(Limit, K.Key.A, K.KeyModifiers.Ctrl);
+  Send(Limit, T.Input.Paste('first' + #10 + 'second'));
+  Check(
+    Control(Limit, 'area').Value = 'first' + #10 + 'second',
+    'A paste replaces the selected multiline value.'
+  );
+  Key(Limit, K.Key.Home, K.KeyModifiers.Shift);
+  Send(Limit, T.Input.Character('last'));
+  Check(
+    Control(Limit, 'area').Value = 'first' + #10 + 'last',
+    'Shift+Home selects from the caret to the line start.'
+  );
 
   using const Nested: T.HeadlessSession := T.StartHeadless<Model, Msg>(
     new Model(Initial),

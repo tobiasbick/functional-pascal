@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Tui.Internal.Rendering.Decoration;
 
-uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.Widgets.Inputs.EditText as EditText, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaRows as Lines, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, System as Sys, System.Collections.Generic as Generic;
 
 public procedure Apply<TMsg>(
   Cells: array of T.Cell; Columns: int; Control: A.Control<TMsg>;
@@ -28,13 +28,77 @@ public procedure Apply<TMsg>(
       Mark(Column + 1, Row, Theme.Focus);
     end if;
   end procedure;
+  procedure PaintSelection(Value: string; Span: EditText.Range; Start: int; Stop: int; Column: int; Row: int; Right: int);
+  begin
+    if not Focused then
+      return;
+    end if;
+    const First: int := Sys.Math.Max(Start, Span.Start);
+    const Last: int := Sys.Math.Min(Stop, Span.Stop);
+    if First < Last then
+      const X: int := Column + Glyphs.Measure(Value.Substring(Start, First - Start));
+      const EndX: int := X + Glyphs.Measure(Value.Substring(First, Last - First));
+      for Cell: int := Sys.Math.Max(X, Bounds.X) to Sys.Math.Min(EndX, Right) - 1 do
+        Mark(Cell, Row, Theme.Buttons.Active.Normal);
+      end for;
+    end if;
+  end procedure;
 begin
   const Bounds: F.Rect := Control.Bounds;
   case Control.Action of
-    when A.Binding.Edit(_, _, _, const X: int):
+    when A.Binding.SelectionList(
+      const List: E.SelectionListView<TMsg>,
+      const Body: F.Rect,
+      const View: V.Viewport<TMsg>
+    ):
+      if Focused then
+        const Row: int := Body.Y + (List.Selected - View.Offset);
+        Mark(
+          Body.X, if Body.Contains(Body.X, Row) then
+            Row
+          else
+            Body.Y
+          end if, Theme.Focus
+        );
+      end if;
+
+      return;
+    when A.Binding.Edit(
+      const Field: Edit.Field<TMsg>,
+      const Position: Edit.Tracking,
+      const Origin: int,
+      const X: int
+    ):
+      const Cursor: Edit.Cursor := Position.Read(Field.Value);
+      const Span: EditText.Range := EditText.Selection(Cursor.Offset, Cursor.Anchor);
+      PaintSelection(
+        Field.Value,
+        Span,
+        Cursor.Start,
+        Field.Value.Length,
+        Origin,
+        Bounds.Y,
+        Bounds.X + Bounds.Width
+      );
       Caret(X, Bounds.Y);
       return;
-    when A.Binding.EditArea(_, const X: int, const Y: int):
+    when A.Binding.EditArea(const Area: AreaEdit.View<TMsg>, const X: int, const Y: int):
+      const Value: string := Area.Field.Value;
+      const Cursor: AreaEdit.Cursor := Area.Position.Read(Value);
+      const Span: EditText.Range := EditText.Selection(Cursor.Offset, Cursor.Anchor);
+      for Row: int := 0 to Sys.Math.Min(Area.Height, Area.Rows.Length - Cursor.Top) - 1 do
+        const Line: Lines.Line := Area.Rows[Cursor.Top + Row];
+        PaintSelection(
+          Value,
+          Span,
+          Line.Start,
+          Line.Stop,
+          Area.X,
+          Area.Y + Row,
+          Bounds.X + Bounds.Width
+        );
+      end for;
+
       Caret(X, Y);
       return;
     when A.Binding.Grid(_, _):

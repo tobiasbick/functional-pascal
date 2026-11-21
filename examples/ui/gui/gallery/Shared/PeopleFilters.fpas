@@ -1,0 +1,38 @@
+// [Documentation](../../../../../docs/ui/gui/data-grid/filter-bar.md)
+
+unit Gallery.Shared.PeopleFilters;
+
+uses Fpas.Ui.Widgets.Collections.FilterBars as F, Fpas.Ui.Elements as E, System as Sys;
+
+const Fields: array of F.Field := [
+  new F.Field(
+    'Team',
+    ['Engine', 'Design', 'Platform', 'Docs', 'Growth'],
+    Sys.Char.ConvertFromUtf32($E1A4)
+  ),
+  new F.Field('Status', ['Active', 'Away', 'Invited'], Sys.Char.ConvertFromUtf32($E345)),
+  new F.Field('Role', ['Owner', 'Admin', 'Member'], Sys.Char.ConvertFromUtf32($E4A3))
+];
+
+// Creates the original sample state with Engine and Platform selected.
+// ## Returns
+// Independent option masks and an empty search.
+public function Initial(): F.Value;
+begin
+  return new F.Value([5u, 0u, 0u], '');
+end function;
+
+// Presents the original CUI filter sample in either gallery.
+// ## Type parameters
+// - `TMsg`: Gallery message type.
+// ## Parameters
+// - `Current`: Model-owned masks and search text.
+// - `Change`: Maps a new filter state to the gallery message.
+// ## Returns
+// The shared filter bar.
+public function View<TMsg>(Current: F.Value; Change: function(F.Value): TMsg): E.Element<TMsg>;
+begin
+  return F.FilterBar<TMsg>('filters', Fields, Current, Change, 64);
+end function;
+
+end unit;

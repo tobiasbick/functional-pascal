@@ -43,7 +43,7 @@ and input support. [GUI adapter](gui/host.md),
 | Titled or plain divider | | | Yes |
 | Text | Yes | Yes | Yes |
 | Native text roles, inline code, icons, emoji, keycaps, images, canvas and veil | | | Yes |
-| Markdown, code editor, diff viewer, hex viewer, log console and terminal | | | Yes |
+| Markdown, code editor, diff viewer, hex viewer and terminal | | | Yes |
 | Property inspector, flame graph, curve editor, gradient editor and timeline editor | | | Yes |
 | Button variants, sizes, icons, busy state and content/fill/fixed width | Yes | Yes | Yes |
 | Button group with a shared outline | | | Yes |
@@ -65,6 +65,10 @@ and input support. [GUI adapter](gui/host.md),
 | Copy button with transient feedback | | | Yes |
 | Icon button with tooltip, shortcut hint and busy state | | | Yes |
 | Table with text cells, sortable headings and selectable rows | Yes | Yes | Yes |
+| Filter bar with search and multi-value fields | Yes | Yes | Yes |
+| Keyboard panning of wide text tables | | Yes | |
+| Tree branches and leaves, searchable command palette and log console | Yes | Yes | Yes |
+| Selection list with model-owned selection and separate activation | | Yes | |
 | Sidebar navigation | Yes | Yes | Yes |
 | Status bar with text, actions, progress and spacers | Yes | Yes | Yes |
 | Native table of contents and scroll anchors | | | Yes |
@@ -164,7 +168,9 @@ layout. `HexViews.HexView` accepts immutable bytes and proposes a replacement
 array on edit. Clear a hex GoTo request after handling its proposal.
 
 `LogConsoles.LogConsole` accepts timestamped entries and proposes a clear
-message. `Terminals.Terminal` accepts cumulative ANSI output. Append to the
+message. The [terminal log console](tui/developer/log-console.md) follows new
+entries at the end and preserves the reading position when scrolled back.
+`Terminals.Terminal` accepts cumulative ANSI output. Append to the
 same output to preserve the live scrollback, or change the revision to
 reset it. Route command and interrupt events through the application update.
 CUI manages command echo, input history and Ctrl+L for the mounted widget.
@@ -821,22 +827,30 @@ only the native visible range and overscan.
 
 The graphical gallery shows these controls on Data display and uses list items
 for Recent in the Notifications sheet. The [terminal table](tui/data-display/table.md)
-supports plain text cells. The other Data display widgets and composed table cells require the graphical profile.
+supports plain text cells and can pan across columns with `HorizontalScroll`.
+The [terminal tree](tui/data-display/tree.md) shares the branch and leaf API.
+`TerminalExtensions.SelectionLists.SelectionList` supplies a
+[terminal selection list](tui/data-display/selection-list.md) with separate
+selection and activation messages. List items, reorderable lists, virtual
+lists and composed table cells use the graphical profile.
 
 ## Command palette
 
-`CommandPalettes.CommandPalette` wraps a base view in CUI's searchable modal.
+`CommandPalettes.CommandPalette` wraps a base view in a searchable modal.
 Supply the current open flag and a message mapper for visibility proposals.
 Each command has a title, a message and optional icon, group and shortcut hint.
-CUI filters and ranks the titles, moves the highlight and handles activation and
-dismissal. Primary+K toggles the palette by default. The host restores focus to
-the preceding control when it closes. The graphical profile is required.
+The host filters titles, moves the highlight, handles activation and dismissal,
+and restores focus to the preceding control when available. The default
+shortcut is Primary+K in CUI and Ctrl+K in the
+[terminal](tui/overlays/command-palette.md).
 
 ## Data grid, filter bar and tree table
 
-- `FilterBars.FilterBar` draws CUI's search, filter chips and option menus.
+- `FilterBars.FilterBar` displays search and multiple selected values per field.
   Supply a mask per field and optional search text. Each mask bit names one
-  option. The model receives new masks and text when they change.
+  option. The model receives new masks and text when they change. The
+  [terminal filter bar](tui/data-display/filter-bar.md) uses keyboard-operated
+  checklists and a summary of active choices.
 - `DataGrids.DataGrid` accepts native column definitions, a row count and a
   pure row factory. CUI requests the visible range and overscan. Each row
   supplies a stable ID and a text, composed or editable cell per column.
@@ -855,8 +869,8 @@ the preceding control when it closes. The graphical profile is required.
   meaningful across updates, including when assigning a cursor.
 
 The GUI gallery's Data grid page shows the original three sections followed
-by a separate virtual tree example. All three widgets require the graphical
-profile.
+by a separate virtual tree example. The data grid and tree table require the
+graphical profile.
 
 ## Code blocks, JSON and instruments
 
@@ -1294,8 +1308,9 @@ The default is 255 bytes. Password fields support up to 341 bytes so CUI can
 measure the masked caret and selection. The native eye can reveal the value
 on screen. GUI snapshots omit password values even when revealed.
 
-The TUI supports labels, placeholders, hints, errors, read-only and disabled
-states, horizontal caret navigation, insertion, paste, deletion and Enter.
+The [terminal text field](tui/inputs/text-field.md) supports labels,
+placeholders, hints, errors, read-only and disabled states, horizontal caret
+navigation, selection, insertion, paste, deletion and Enter.
 Use the default control size. Icons, affixes, clear and password controls
 require the Graphical profile.
 
@@ -1317,8 +1332,9 @@ enclosing viewport at an edge.
 `Height` is in logical points and defaults to 96. Zero uses the host default
 and a negative value fills available space. A submit callback can receive the
 accepted text on Ctrl+Enter. Prefix and suffix stay outside the editable
-value on the GUI. The [terminal text area](tui/inputs/text-area.md) supports the
-shared byte limit, label, placeholder, hint, error and read-only mode.
+value on the GUI. The [terminal text area](tui/inputs/text-area.md) supports
+keyboard selection, the shared byte limit, label, placeholder, hint, error
+and read-only mode.
 
 ## Tag input
 

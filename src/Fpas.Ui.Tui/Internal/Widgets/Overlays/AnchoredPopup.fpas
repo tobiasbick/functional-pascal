@@ -32,6 +32,8 @@ public type Item<TMsg> = record
   public Enabled: bool := true;
   // Use the semantic danger color.
   public Danger: bool := false;
+  // Keep the popup open after activation and retain this row as its highlight.
+  public KeepOpen: bool := false;
 end record;
 
 // One displayed popup row.
@@ -58,15 +60,21 @@ public type Content<TMsg> = record
   public Position: M.Placement := M.Placement.BottomStart;
   // Allow substring filtering.
   public Searchable: bool := false;
+  // Center a modal palette and dim the screen behind it.
+  public Centered: bool := false;
+  // Permit Ctrl+K to close a command palette.
+  public ToggleShortcut: bool := false;
+  // Allow typed Space to activate the highlighted row.
+  public SpaceActivates: bool := false;
 end record;
 
 type Selection<TMsg> = record implements Actions.IActivatable<TMsg>
-  public Popup: P.State<TMsg>;
+  public Before: Sys.Action;
   public Handler: Actions.IActivatable<TMsg>;
 
   public function Activate(): Actions.Result<TMsg>;
   begin
-    self.Popup.Write(new P.Cursor());
+    self.Before.Invoke();
     return self.Handler.Activate();
   end function;
 end record;
@@ -82,12 +90,51 @@ end record;
 // - `Theme`: Active terminal palette.
 // - `Operations`: Ordered paint operations.
 // - `Controls`: Visible controls of the frame.
+// - `Dismiss`: Model-owned close action, or null for an anchored popup.
 // ## Returns
 // Local input scope for the open popup.
 public function Draw<TMsg>(
   Popup: P.State<TMsg>; Content: Content<TMsg>; Anchor: F.Rect; Screen: F.Rect; Theme: Th.Theme;
-  Operations: C.List<D.Operation>; Controls: C.List<A.Control<TMsg>>
+  Operations: C.List<D.Operation>; Controls: C.List<A.Control<TMsg>>; Dismiss: Sys.Action? := null
 ): A.Scope<TMsg>;
+  procedure Close();
+  begin
+    case Dismiss of
+      when is Sys.Action as Notify:
+        Notify.Invoke();
+      else
+        Popup.Write(new P.Cursor());
+    end case;
+  end procedure;
+
+  function Bind(Entry: Item<TMsg>): Selection<TMsg>;
+    procedure Before();
+    begin
+      if Entry.KeepOpen then
+        Popup.Write(
+          Cursor with
+            Highlight := Entry.Id;
+          end with
+        );
+      else
+        Close();
+      end if;
+    end procedure;
+  begin
+    return new Selection<TMsg>(Before, Entry.Handler);
+  end function;
+
+  procedure ActivateHighlight();
+  begin
+    if At >= 0 then
+      case Bind(Enabled[At]).Activate() of
+        when Actions.Result.Send(const Message: TMsg):
+          Popup.Apply(Message);
+        else
+      end case;
+    end if;
+  end procedure;
+
   procedure Line(Value: string; Area: F.Rect; Color: T.Style);
   begin
     Operations.Add(new D.Operation(Value, Area, Area, Color, false));
@@ -115,7 +162,7 @@ public function Draw<TMsg>(
         if Modifiers = K.KeyModifiers.None then
           case Key of
             when K.Key.Escape, K.Key.Tab:
-              Popup.Write(new P.Cursor());
+              Close();
             when K.Key.Up:
               MoveTo(At - 1);
             when K.Key.Down:
@@ -129,14 +176,7 @@ public function Draw<TMsg>(
             when K.Key.End:
               MoveTo(Enabled.Count - 1);
             when K.Key.Enter:
-              if At >= 0 then
-                const Choice: Selection<TMsg> := new Selection<TMsg>(Popup, Enabled[At].Handler);
-                case Choice.Activate() of
-                  when Actions.Result.Send(const Message: TMsg):
-                    Popup.Apply(Message);
-                  else
-                end case;
-              end if;
+              ActivateHighlight();
             when K.Key.Backspace:
               if Content.Searchable and Cursor.Query <> '' then
                 const Starts: array of int := Global.StringInfo.ParseCombiningCharacters(
@@ -147,11 +187,19 @@ public function Draw<TMsg>(
             else
           end case;
         elsif Key = K.Key.Tab and Modifiers = K.KeyModifiers.Shift then
-          Popup.Write(new P.Cursor());
+          Close();
+        elsif Content.ToggleShortcut and Key = K.Key.K and Modifiers = K.KeyModifiers.Ctrl then
+          Close();
+        elsif Content.Searchable and Key = K.Key.A and Modifiers = K.KeyModifiers.Ctrl then
+          Filter('');
         end if;
-      when App.Input.Character(
-        const Text: string
-      ), App.Input.TextInput(const Text: string), App.Input.Paste(const Text: string):
+      when App.Input.Character(const Text: string):
+        if Content.SpaceActivates and Text = ' ' then
+          ActivateHighlight();
+        elsif Content.Searchable and Text <> '' then
+          Filter(Cursor.Query + G.SingleLine(Text));
+        end if;
+      when App.Input.TextInput(const Text: string), App.Input.Paste(const Text: string):
         if Content.Searchable and Text <> '' then
           Filter(Cursor.Query + G.SingleLine(Text));
         end if;
@@ -215,7 +263,7 @@ public function Draw<TMsg>(
             Cursor.Id,
             Cursor.Id,
             Entry.Enabled,
-            A.Binding<TMsg>.Invoke(new Selection<TMsg>(Popup, Entry.Handler)),
+            A.Binding<TMsg>.Invoke(Bind(Entry)),
             Styles.ButtonVariant.Ghost
           )
         );
@@ -255,12 +303,35 @@ begin
       Enabled.FindIndex(function(Item: Item<TMsg>): bool => Item.Id = Current.Highlight)
     )
   end if;
-  const Wanted: int := Sys.Math.Clamp(Rows.Count, 1, 8) + (if Content.Searchable then
+  const Wanted: int := Sys.Math.Clamp(
+    if Content.Centered then
+      Content.Rows.Length
+    else
+      Rows.Count
+    end if, 1, 8
+  ) + (if Content.Searchable then
     1
   else
     0
   end if);
-  const Panel: F.Rect := Placement.Place(Anchor, Screen, Wanted, Content.Width, Content.Position);
+  const Framed: bool := Content.Centered and Screen.Width >= 5 and Screen.Height >= 5;
+  const Edge: int := if Framed then
+    1
+  else
+    0
+  end if;
+  const Width: int := Sys.Math.Min(Content.Width, Screen.Width - 2 * Edge);
+  const Height: int := Sys.Math.Min(Wanted, Screen.Height - 2 * Edge);
+  const Panel: F.Rect := if Content.Centered then
+    new F.Rect(
+      Screen.X + (Screen.Width - Width) div 2,
+      Screen.Y + (Screen.Height - Height) div 2,
+      Width,
+      Height
+    )
+  else
+    Placement.Place(Anchor, Screen, Wanted, Content.Width, Content.Position)
+  end if;
   const Header: int := if Content.Searchable and Panel.Height > 1 then
     1
   else
@@ -276,18 +347,35 @@ begin
     Current.Top, Sys.Math.Max(0, First - Capacity + 1),
     Sys.Math.Max(0, Sys.Math.Min(First, Rows.Count - Capacity))
   );
-  const Cursor: P.Cursor := new P.Cursor(
-    Current.Id, if At >= 0 then
+  const Cursor: P.Cursor := Current with
+    Highlight := if At >= 0 then
       Enabled[At].Id
     else
       ''
-    end if, Query, Top
-  );
+    end if;
+    Query := Query;
+    Top := Top;
+  end with;
   Popup.Write(Cursor);
   const Surface: int := Th.Rgb(Theme.Colors.SurfaceRaised, Theme.Text.Background ?? 0);
   const Colors: T.Style := new T.Style(Th.Rgb(Theme.Colors.Foreground, Surface), Surface);
   const Muted: T.Style := new T.Style(Th.Rgb(Theme.Colors.TextMuted, Surface), Surface);
   const Danger: T.Style := new T.Style(Th.Rgb(Theme.Colors.Danger, Surface), Surface);
+  const Outer: F.Rect := new F.Rect(
+    Panel.X - Edge,
+    Panel.Y - Edge,
+    Panel.Width + 2 * Edge,
+    Panel.Height + 2 * Edge
+  );
+  if Content.Centered then
+    Operations.Add(new D.Operation('', Screen, Screen, Colors, false, Tint := Theme.Colors.Scrim));
+  end if;
+
+  if Framed then
+    D.Fill(Operations, Outer, Colors);
+    D.Border(Operations, Outer, Screen, 'Command palette', Colors, Theme.Widgets);
+  end if;
+
   D.Fill(Operations, Panel, Colors);
   if Header > 0 then
     const Prefix: string := if Panel.Width >= 12 then
@@ -318,7 +406,7 @@ begin
     DrawRow(Rows[Top + Index], new F.Rect(Panel.X, Panel.Y + Header + Index, Panel.Width, 1));
   end for;
 
-  return new A.Scope<TMsg>(Cursor.Id, Cursor.Highlight, null, [], Panel, Route);
+  return new A.Scope<TMsg>(Cursor.Id, Cursor.Highlight, null, [], Outer, Route);
 end function;
 
 end unit;

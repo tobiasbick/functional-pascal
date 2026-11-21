@@ -24,6 +24,15 @@ public sealed partial class LocalDeploymentTests
             var compiled = await Task.WhenAll(Enumerable.Range(0, 8).Select(index => Compile("parallel-" + index)));
             foreach (var result in compiled)
             { Assert.True(result.ExitCode == 0, result.Output + result.Error); Assert.Empty(result.Error); }
+            if (firstRun && OperatingSystem.IsWindows())
+            {
+                var runtime = Path.Combine(Path.GetDirectoryName(launcher)!, "fpas-runtime");
+                var child = Assert.Single(Directory.GetFiles(runtime, "Fpas.Cli.exe", SearchOption.AllDirectories));
+                Assert.True(Directory.Exists(Path.Combine(Path.GetDirectoryName(child)!, "dotnet")));
+                Assert.False(Directory.Exists(isolated["DOTNET_BUNDLE_EXTRACT_BASE_DIR"]!));
+                File.WriteAllText(child, "damaged compiler payload");
+                Assert.Equal(0, (await Compile("repaired-payload")).ExitCode);
+            }
             var invalid = Path.Combine(output, "invalid.fpas"); File.WriteAllText(invalid, "unit Broken; function ; end unit;");
             var rejected = await ProcessRunner.RunExecutableAsync(launcher, ["compile", invalid, "--target", "library", "--output", Path.Combine(output, "invalid.dll"),
                 "--reference-dir", TestEnvironment.ReferenceDirectory, "--diagnostics", "json"], workingDirectory: consumer, environment: isolated);
@@ -48,7 +57,8 @@ public sealed partial class LocalDeploymentTests
             foreach (var result in exports) Assert.True(result.ExitCode == 0, result.Output + result.Error);
             var licenses = await ProcessRunner.RunExecutableAsync(launcher, ["licenses"], workingDirectory: consumer, environment: isolated);
             Assert.Equal(0, licenses.ExitCode); Assert.Contains("MIT License", licenses.Output);
-            var assets = Path.Combine(Path.GetDirectoryName(launcher)!, "fpas-assets");
+            var assets = Path.Combine(Path.GetDirectoryName(launcher)!,
+                OperatingSystem.IsWindows() ? Path.Combine("fpas-runtime", "fpas-assets") : "fpas-assets");
             var core = Assert.Single(Directory.GetFiles(assets, "Fpas.Core.dll", SearchOption.AllDirectories));
             var bytes = File.ReadAllBytes(core);
             Assert.Equal(Convert.ToHexString(SHA256.HashData(bytes)), Path.GetFileName(Path.GetDirectoryName(core)));

@@ -1,0 +1,289 @@
+// [Documentation](../../../../../docs/ui/tui/files/file-picker.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Files.FilePicker;
+
+uses
+  Fpas.Ui.Widgets.Files.FilePickers as Picker, Fpas.Ui.Widgets.Files.FileListings as F,
+  Fpas.Ui.Tui.Internal.Widgets.Files.FilePickerListing as Data,
+  Fpas.Ui.Tui.Internal.Widgets.Files.FilePickerState as S,
+  Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as List,
+  Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit,
+  Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Modal,
+  Fpas.Ui.Tui.Internal.Controls.Activation as A, Fpas.Ui.Tui.Internal.View.Tree as E,
+  Fpas.Ui.TerminalExtensions.SelectionLists as Rows, Fpas.Ui.Widgets.Inputs.TextFields as Field,
+  Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Developer.Terminal as T,
+  Fpas.Ui.Styles as Styles, Fpas.Ui.Layout as L, System as Sys, System.IO as IO,
+  System.Collections.Generic as C;
+
+function SaveAllowed(Current: S.Cursor; Value: string; Comparison: Sys.StringComparison): bool;
+begin
+  const Listing: F.Listing? := Current.Listing;
+  return Listing <> null and Data.IsChildName(Value)
+    and (Current.Source <> null or Value.IndexOfAny(IO.Path.GetInvalidFileNameChars()) < 0)
+    and not Sys.Array.Exists<F.Entry>(
+    Listing.Entries,
+    function(Item: F.Entry): bool => Item.Directory and Item.Name.Equals(Value, Comparison)
+  );
+end function;
+
+// Composes a shared file picker with the terminal modal, list and filename editor.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable picker identity.
+// - `Base`: Lowered view underneath the dialog.
+// - `Change`: Maps the chosen path or cancellation.
+// - `Settings`: Mode, defaults and provider from the shared picker.
+// - `State`: Session-local directory and filename state.
+// - `Size`: Current viewport.
+// - `Colors`: Inherited paint colors.
+// - `Theme`: Current terminal theme.
+// ## Returns
+// The underlying view with a modal layer.
+public function Lower<TMsg>(
+  Id: string; Base: E.Element<TMsg>; Change: function(Picker.Event): TMsg; Settings: Picker.Options;
+  State: S.State; Size: T.Viewport; Colors: T.Style; Theme: Th.Theme
+): E.Element<TMsg>;
+  function Select(Key: string): A.Result<TMsg>;
+  begin
+    State.Write(
+      Id, Current with
+        Selected := Key;
+        Name := if Save and ByName.ContainsKey(Key) and not ByName[Key].Directory then
+          Key
+        else
+          Current.Name
+        end if;
+      end with
+    );
+    return A.Result<TMsg>.NoAction;
+  end function;
+
+  function Chosen(Path: string): A.Result<TMsg>;
+  begin
+    return A.Result<TMsg>.Send(Change(new Picker.Event(Path)));
+  end function;
+
+  function Activate(Key: string): A.Result<TMsg>;
+  begin
+    if Key = '..' then
+      State.Write(Id, S.Move(Current, Parent));
+      return A.Result<TMsg>.NoAction;
+    end if;
+
+    const Entry: F.Entry := ByName[Key];
+    const Path: string := Data.Join(Current.Folder, Key);
+    if Entry.Directory then
+      State.Write(Id, S.Move(Current, Path));
+      return A.Result<TMsg>.NoAction;
+    end if;
+
+    if Save then
+      return Select(Key);
+    end if;
+
+    return Chosen(Path);
+  end function;
+
+  function EditName(Value: string): A.Result<TMsg>;
+  begin
+    State.Write(
+      Id, Current with
+        Name := Value;
+      end with
+    );
+    return A.Result<TMsg>.NoAction;
+  end function;
+
+  function SaveName(Value: string): A.Result<TMsg>;
+  begin
+    return if SaveAllowed(Current, Value, NameComparison) then
+      Chosen(Data.Join(Current.Folder, Value))
+    else
+      A.Result<TMsg>.NoAction
+    end if;
+  end function;
+
+  function Confirm(): A.Result<TMsg>;
+  begin
+    if Save then
+      return SaveName(Current.Name);
+    end if;
+
+    if Current.Selected = '..' then
+      return Activate(Current.Selected);
+    end if;
+
+    if Folder then
+      return Chosen(
+        if Current.Selected = '' then
+          Current.Folder
+        else
+          Data.Join(Current.Folder, Current.Selected)
+        end if
+      );
+    end if;
+
+    return Activate(Current.Selected);
+  end function;
+
+  function Cancel(): TMsg;
+  begin
+    return Change(new Picker.Event(null));
+  end function;
+
+  function Action(Key: string; Label: string; Handler: function(): A.Result<TMsg>; Enabled: bool; Primary: bool): E.Element<TMsg>;
+  begin
+    return E.Element<TMsg>.Action(
+      Id + '/' + Key, new A.Callback<TMsg>(Handler), Enabled,
+      new E.ActionView(
+        Label, Variant := if Primary then
+          Styles.ButtonVariant.Primary
+        else
+          Styles.ButtonVariant.Default
+        end if
+      )
+    );
+  end function;
+
+  function Body(PanelColors: T.Style): E.Element<TMsg>;
+  begin
+    const Content: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
+    if Status <> '' then
+      Content.Add(E.Element<TMsg>.Label(Status));
+    end if;
+
+    if Items.Count > 0 then
+      Content.Add(
+        List.Lower<TMsg>(
+          Id + '/list', Items.ToArray(), Current.Selected, Select, Activate,
+          Sys.Math.Clamp(
+            Size.Rows - (if Save then
+              8
+            else
+              6
+            end if), 1, 12
+          ), Current.Folder
+        )
+      );
+    end if;
+
+    if Save then
+      Content.Add(E.Element<TMsg>.Label('File name'));
+      Content.Add(
+        E.Element<TMsg>.TextField(
+          new Edit.Field<TMsg>(
+            Id + '/name', Current.Name, EditName,
+            new Field.Options(Label := 'File name', MaxUtf8Bytes := 255), SaveName
+          )
+        )
+      );
+    elsif Filter <> '' then
+      Content.Add(E.Element<TMsg>.Label(Filter));
+    end if;
+
+    Content.Add(
+      E.Element<TMsg>.Stack(
+        [
+          Action(
+            'cancel',
+            'Cancel',
+            function(): A.Result<TMsg> => A.Result<TMsg>.Send(Cancel()),
+            true,
+            false
+          ),
+          Action('confirm', Caption, Confirm, CanConfirm, true)
+        ],
+        Size.Columns >= 20, new E.Flow(Gap := 1, Align := L.Alignment.Start)
+      )
+    );
+    return E.Element<TMsg>.Stack(Content.ToArray(), false, new E.Flow());
+  end function;
+begin
+  var Current: S.Cursor := State.Open(Id, Settings);
+  const Parent: string := Data.Parent(Current.Folder);
+  const Save: bool := Settings.Kind = Picker.Mode.SaveFile;
+  const Folder: bool := Settings.Kind = Picker.Mode.Folder;
+  const NameComparison: Sys.StringComparison := if Settings.Source = null
+    and Sys.OperatingSystem.IsWindows()
+  then
+    Sys.StringComparison.OrdinalIgnoreCase
+  else
+    Sys.StringComparison.Ordinal
+  end if;
+  const Children: array of F.Entry := Data.Visible(Current.Listing, Settings);
+  const ByName: C.Dictionary<string, F.Entry> := new C.Dictionary<string, F.Entry>(
+    Sys.StringComparer.Ordinal
+  );
+  const Items: C.List<Rows.Item> := new C.List<Rows.Item>();
+  if Parent <> '' then
+    Items.Add(new Rows.Item('..', '../'));
+  end if;
+
+  for Entry: F.Entry in Children do
+    ByName.Add(Entry.Name, Entry);
+    Items.Add(
+      new Rows.Item(
+        Entry.Name, if Entry.Directory then
+          Entry.Name + '/'
+        else
+          Entry.Name
+        end if
+      )
+    );
+  end for;
+
+  if not ByName.ContainsKey(Current.Selected) and (Current.Selected <> '..' or Parent = '') then
+    Current := Current with
+      Selected := '';
+    end with;
+    State.Write(Id, Current);
+  end if;
+
+  const Caption: string := if Save then
+    'Save'
+  elsif Folder then
+    'Choose'
+  else
+    'Open'
+  end if;
+  const Title: string := if Settings.Title <> '' then
+    Settings.Title
+  elsif Folder then
+    'Choose a folder'
+  else
+    Caption
+  end if;
+  const Status: string := if Current.Listing = null then
+    'Unable to read folder'
+  elsif Children.Length = 0 then
+    'No matching entries'
+  else
+    ''
+  end if;
+  const Filter: string := if Folder then
+    ''
+  elsif Settings.FilterLabel <> '' then
+    Settings.FilterLabel
+  else
+    Settings.Filter
+  end if;
+  const CanConfirm: bool := if Save then
+    SaveAllowed(Current, Current.Name, NameComparison)
+  else
+    Current.Selected <> '' or (Folder and Current.Listing <> null)
+  end if;
+  const Initial: string := if Items.Count > 0 then
+    '/list'
+  elsif Save then
+    '/name'
+  else
+    '/cancel'
+  end if;
+  return Modal.Lower<TMsg>(
+    Id, Base, true, new E.ModalOptions(Title, Current.Folder, 512, null, Id + Initial, null),
+    Cancel, Colors, Theme, Body
+  );
+end function;
+
+end unit;

@@ -441,7 +441,7 @@ public function Arrange<TMsg>(
         end for;
       when E.Element.ModalPanel(
         const Id: string, const Settings: E.ModalOptions, const Size: int,
-        const Content: E.Element<TMsg>, const Dismiss: TMsg, const Colors: T.Style
+        const Content: E.Element<TMsg>, const Dismiss: Sys.Func<TMsg>, const Colors: T.Style
       ):
         if InputBlocked then
           return;

@@ -4,6 +4,7 @@ unit Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor;
 
 uses
   Fpas.Ui.Tui.Internal.Widgets.Inputs.EditText as TextEdit, Fpas.Ui.Widgets.Inputs.TextFields as Fields, Fpas.Ui.TerminalExtensions.Input as K,
+  Fpas.Ui.Tui.Internal.Controls.Activation as Actions,
   Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, System as Sys, System.Globalization as Global,
   System.Text as Text;
 
@@ -16,11 +17,11 @@ public type Field<TMsg> = record
   // Text supplied by the model.
   public Value: string;
   // Publishes a proposed replacement.
-  public Change: function(string): TMsg;
+  public Change: function(string): Actions.Result<TMsg>;
   // Shared field options.
   public Settings: Fields.Options;
   // Optional Enter action.
-  public Submit: Sys.Func<string, TMsg>?;
+  public Submit: Sys.Func<string, Actions.Result<TMsg>>?;
 end record;
 
 // Per-field edit position retained between presentations.
@@ -126,7 +127,7 @@ begin
     Position.Write(Next);
   else
     Position.Propose(Next);
-    Apply(Field.Change(Value));
+    Actions.Dispatch<TMsg>(Field.Change(Value), Apply);
   end if;
 end procedure;
 
@@ -241,8 +242,8 @@ begin
       end if;
 
       case Field.Submit of
-        when is Sys.Func<string, TMsg> as Submit:
-          Apply(Submit.Invoke(Field.Value));
+        when is Sys.Func<string, Actions.Result<TMsg>> as Submit:
+          Actions.Dispatch<TMsg>(Submit.Invoke(Field.Value), Apply);
         else
       end case;
     else

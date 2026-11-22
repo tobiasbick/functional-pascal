@@ -11,6 +11,37 @@ public type IActivatable<TMsg> = protocol
   function Activate(): Result<TMsg>;
 end protocol;
 
+// Runs a callback only when an action is activated.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Callback<TMsg> = record implements IActivatable<TMsg>
+  // Local action or application message proposal.
+  public Run: function(): Result<TMsg>;
+
+  // Invokes the delayed action.
+  // ## Returns
+  // The application message, when the action produces one.
+  public function Activate(): Result<TMsg>;
+  begin
+    return self.Run();
+  end function;
+end record;
+
+// Forwards a proposal when a control produces an application message.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Action`: Outcome of the control input.
+// - `Apply`: Application dispatcher.
+public procedure Dispatch<TMsg>(Action: Result<TMsg>; Apply: procedure(TMsg));
+begin
+  case Action of
+    when Result.Send(const Message: TMsg):
+      Apply(Message);
+    when Result.NoAction:
+  end case;
+end procedure;
+
 public type Direct<TMsg> = record implements IActivatable<TMsg>
   public Message: TMsg;
   // Whether activation is suspended while the widget is busy.

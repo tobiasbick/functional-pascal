@@ -13,6 +13,7 @@ uses
   Gallery.Shared.ProjectOptions as ProjectOptions,
   Gallery.Shared.AboutField as AboutSample,
   TuiGallery.ListSample as ListSample,
+  TuiGallery.FilePickerSample as Files,
   TuiGallery.ToolSamples as Tools, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes,
   Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E,
   TuiGallery.PeopleSample as People, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Theming.Themes as Themes,
@@ -298,6 +299,8 @@ begin
         Flow, Label(Strings.Get('Text.ExpandableCards'), S.Role.Heading),
         Security.View<Msg>(State.SecurityOpen, Msg.SetSecurity)
       );
+    when Catalog.Preview.Files:
+      Example := Composition.Map<Files.Msg, Msg>(Files.Controls(State.FileState), Msg.FilesAction);
     when Catalog.Preview.CellGrid:
       return Composition.Map<Grids.Event, Msg>(GridSample.View(State.Grid), Msg.Grid);
     when Catalog.Preview.Text:
@@ -346,6 +349,7 @@ begin
     when Catalog.Preview.DataDisplay: State.Person;
     when Catalog.Preview.DataGrid: 'filters/search';
     when Catalog.Preview.Code: 'log-console';
+    when Catalog.Preview.Files: 'files-open';
     when Catalog.Preview.Disclosure: 'security';
     when Catalog.Preview.AppChrome: 'desktop-status/encoding';
     else '';
@@ -397,13 +401,18 @@ begin
       Shortcut := 'Ctrl+T'
     )
   ];
-  return Palettes.CommandPalette<Msg>(
+  const Base: E.Element<Msg> := Palettes.CommandPalette<Msg>(
     'gallery-palette',
     Profile.Present<Msg>(Screen, State.ProfileState, Msg.ProfileAction),
     State.ToolState.Palette,
     Commands,
     function(Open: bool): Msg => Msg.ToolAction(Tools.Msg.Palette(Open))
   );
+  return if State.Active.Demo = Catalog.Preview.Files then
+    Files.Present<Msg>(Base, State.FileState, Msg.FilesAction)
+  else
+    Base
+  end if;
 end function;
 
 begin

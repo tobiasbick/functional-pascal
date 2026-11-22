@@ -3,7 +3,7 @@
 unit GuiGallery.Pages.Files.Folders;
 
 uses
-  Fpas.Ui.Widgets.Files.FileListings as Listings, System as Sys, System.IO as IO,
+  Gallery.Shared.FilePickerExample as Sample, Fpas.Ui.Widgets.Files.FileListings as Listings, System as Sys, System.IO as IO,
   System.Collections.Generic as Lists;
 
 function ExampleRoot(Path: string): Listings.Listing?;
@@ -12,16 +12,7 @@ begin
     return null;
   end if;
 
-  return new Listings.Listing(
-    [
-      new Listings.Entry('assets', true, 0UL, 1730000000L),
-      new Listings.Entry('src', true, 13100UL, 1730086400L),
-      new Listings.Entry('README.md', false, 26200UL, 1730172800L),
-      new Listings.Entry('notes.txt', false, 39300UL, 1730259200L),
-      new Listings.Entry('cover.png', false, 52400UL, 1730345600L),
-      new Listings.Entry('report.pdf', false, 65500UL, 1730432000L)
-    ]
-  );
+  return Sample.Root();
 end function;
 
 // Lists entries for the gallery browser and built-in ls command.

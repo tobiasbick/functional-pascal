@@ -2,7 +2,7 @@
 
 Use a file browser as part of a view and a file picker for a modal choice.
 The gallery adds a standalone path bar and a terminal with built-in demo
-commands. These widgets require the GUI host.
+commands. The file picker is available in both hosts. This chapter covers the GUI.
 
 | Widget | When to use it |
 | --- | --- |
@@ -17,6 +17,7 @@ provider. The screenshots use the gallery with a temporary sample workspace.
 ## See also
 
 - [UI handbook](../README.md)
+- [Terminal Files chapter](../../tui/files/README.md)
 - [Capture](../capture/README.md)
 - [Files in the gallery](../../../../examples/ui/gui/gallery/Pages/Files/View.fpas)
 

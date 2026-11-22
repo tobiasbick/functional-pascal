@@ -1,0 +1,273 @@
+// [Documentation](../../../docs/ui/tui/files/file-picker.md)
+
+program FilePickerContract;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B,
+  Fpas.Ui.Widgets.Files.FilePickers as Picker, Fpas.Ui.Widgets.Files.FileListings as F,
+  Fpas.Ui.Mvu.Application as M, Fpas.Ui.Tui.Application as T,
+  Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V,
+  System as Sys, System.Console as Console, System.IO as IO;
+
+type State = record
+  public Kind: Picker.Mode? := null;
+  public Result: string := '';
+  public Proposals: int := 0;
+end record;
+
+type Msg = variant
+  Open(Kind: Picker.Mode);
+  Close(Event: Picker.Event);
+end variant;
+
+function Read(Path: string; Hidden: bool): F.Listing?;
+begin
+  if Hidden then
+    raise new Sys.InvalidOperationException('The picker should start with hidden files off.');
+  end if;
+
+  case Path of
+    when '/project':
+      return new F.Listing(
+        [
+          new F.Entry('ignored.png'), new F.Entry('notes.TXT'), new F.Entry('docs', true),
+          new F.Entry('closed', true), new F.Entry('draft.md')
+        ]
+      );
+    when '/project/docs':
+      return new F.Listing([new F.Entry('manual.txt')]);
+    when '/project/closed':
+      raise new IO.IOException('Unreadable test folder.');
+    else
+      return null;
+  end case;
+end function;
+
+function Update(Current: State; Message: Msg): M.Transition<State, Msg>;
+begin
+  const Next: State := case Message of
+    when Msg.Open(const Kind: Picker.Mode): new State(Kind, Current.Result, Current.Proposals);
+    when Msg.Close(const Event: Picker.Event): new State(
+      null,
+      Event.Path ?? 'cancelled',
+      Current.Proposals + 1
+    );
+  end case;
+  return new M.Transition<State, Msg>(Next, []);
+end function;
+
+function View(Current: State): E.Element<Msg>;
+begin
+  const Base: E.Element<Msg> := E.Column<Msg>(
+    B.Button<Msg>('open', 'Open', Msg.Open(Picker.Mode.OpenFile)),
+    B.Button<Msg>('save', 'Save as', Msg.Open(Picker.Mode.SaveFile)),
+    B.Button<Msg>('folder', 'Choose a folder', Msg.Open(Picker.Mode.Folder)),
+    E.Text<Msg>('Result: ' + Current.Result),
+    E.Text<Msg>('Proposals: ' + Current.Proposals.ToString())
+  );
+  return Picker.FilePicker<Msg>(
+    'picker', Current.Kind <> null, Msg.Close,
+    new Picker.Options(
+      Kind := Current.Kind ?? Picker.Mode.OpenFile,
+      Start := '/project',
+      Name := 'untitled.txt',
+      Filter := '*.txt; d?aft.md',
+      FilterLabel := 'Documents',
+      Source := Read
+    ),
+    Base
+  );
+end function;
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+procedure Send(Session: T.HeadlessSession; Input: T.Input);
+begin
+  discard Session.Send(Input);
+  case Session.Step() of
+    when T.StepResult.Failed(_, _, _, const Reason: string):
+      raise new Sys.InvalidOperationException(Reason);
+    else
+  end case;
+end procedure;
+
+procedure Key(Session: T.HeadlessSession; Pressed: K.Key; Modifiers: K.KeyModifiers := K.KeyModifiers.None);
+begin
+  Send(Session, T.Input.KeyPress(Pressed, Modifiers));
+end procedure;
+
+function Control(Session: T.HeadlessSession; Id: string): T.ControlSnapshot;
+begin
+  for Item: T.ControlSnapshot in Session.Snapshot().Controls do
+    if Item.Id = Id then
+      return Item;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing control ' + Id);
+end function;
+
+function Shows(Session: T.HeadlessSession; Text: string): bool;
+begin
+  return Sys.Array.Exists<string>(
+    Session.Snapshot().Lines,
+    function(Line: string): bool => Line.Contains(Text)
+  );
+end function;
+
+procedure CheckResult(Session: T.HeadlessSession; Focus: string; Path: string; Count: int);
+begin
+  Check(Control(Session, Focus).Focused, 'Closing the picker did not restore focus to ' + Focus);
+  Check(
+    Shows(Session, 'Result: ' + Path) and Shows(Session, 'Proposals: ' + Count.ToString()),
+    'The picker produced an incorrect or repeated result.'
+  );
+end procedure;
+
+procedure CheckLocalDisk();
+  function ViewLocal(Current: State): E.Element<Msg>;
+  begin
+    return Picker.FilePicker<Msg>(
+      'local', Current.Kind <> null, Msg.Close,
+      new Picker.Options(Start := Scratch.FullName, Filter := '*.txt'),
+      E.Text<Msg>(
+        if Current.Result = IO.Path.Combine(Scratch.FullName, 'visible.txt') then
+          'Local file selected'
+        else
+          'Awaiting local selection'
+        end if
+      )
+    );
+  end function;
+begin
+  const Scratch: IO.DirectoryInfo := IO.Directory.CreateTempSubdirectory();
+  try
+    IO.File.WriteAllText(IO.Path.Combine(Scratch.FullName, 'visible.txt'), '');
+    IO.File.WriteAllText(IO.Path.Combine(Scratch.FullName, '.hidden.txt'), '');
+    using const Session: T.HeadlessSession := T.StartHeadless<State, Msg>(
+      new State(Picker.Mode.OpenFile), Update, ViewLocal, 104, 14
+    );
+    Check(
+      Shows(Session, 'visible.txt') and not Shows(Session, '.hidden.txt'),
+      'The default listing did not read visible local files.'
+    );
+    Key(Session, K.Key.End);
+    Check(
+      Control(Session, 'local/list').Value = 'visible.txt',
+      'Local file could not be selected.'
+    );
+    Key(Session, K.Key.Enter);
+    Check(
+      Shows(Session, 'Local file selected'),
+      'The default source did not return a full local file path.'
+    );
+  finally
+    Scratch.Delete(true);
+  end try;
+end procedure;
+
+begin
+  discard V.Prepare<Msg>(View(new State(Picker.Mode.OpenFile)), V.Target.Portable);
+  using const Session: T.HeadlessSession := T.StartHeadless<State, Msg>(
+    new State(),
+    Update,
+    View,
+    74,
+    18
+  );
+  Key(Session, K.Key.Enter);
+  Check(
+    Control(Session, 'picker/list').Focused and not Control(Session, 'picker/confirm').Enabled,
+    'Open picker did not focus the list with confirmation initially disabled.'
+  );
+  Check(
+    Shows(Session, 'closed/') and Shows(Session, 'docs/') and Shows(Session, 'draft.md')
+    and Shows(
+      Session,
+      'notes.TXT'
+    ) and Shows(Session, 'Documents') and not Shows(Session, 'ignored.png'),
+    'Open picker did not show directories, filter label and matching files.'
+  );
+  Send(Session, T.Input.Activate('save'));
+  Check(Shows(Session, 'Documents'), 'Inactive controls accepted activation behind the picker.');
+  Key(Session, K.Key.Down);
+  Key(Session, K.Key.Down);
+  Key(Session, K.Key.Enter);
+  Check(
+    Shows(Session, 'Unable to read folder'),
+    'A failing listing did not leave recovery available.'
+  );
+  Key(Session, K.Key.Home);
+  Key(Session, K.Key.Enter);
+  Check(Shows(Session, 'notes.TXT'), 'Entering the parent did not restore the previous listing.');
+  const OpenList: T.ControlSnapshot := Control(Session, 'picker/list');
+  Send(Session, T.Input.Click(OpenList.Column + 2, OpenList.Row + 2));
+  Check(
+    Control(Session, 'picker/list').Value = 'docs',
+    'Pointer selection did not reach the folder.'
+  );
+  Key(Session, K.Key.Enter);
+  Check(
+    Shows(Session, '/project/docs') and Control(Session, 'picker/list').Value = '',
+    'Entering a folder did not reset the selection.'
+  );
+  Key(Session, K.Key.End);
+  Key(Session, K.Key.Enter);
+  CheckResult(Session, 'open', '/project/docs/manual.txt', 1);
+
+  Send(Session, T.Input.Focus('save'));
+  Key(Session, K.Key.Enter);
+  Check(
+    Control(Session, 'picker/name').Value = 'untitled.txt',
+    'Save did not use its initial name.'
+  );
+  Key(Session, K.Key.End);
+  Check(
+    Control(Session, 'picker/name').Value = 'notes.TXT',
+    'A selected file did not fill the name.'
+  );
+  Key(Session, K.Key.Tab);
+  Check(Control(Session, 'picker/name').Focused, 'The save field is outside the modal tab order.');
+  Key(Session, K.Key.A, K.KeyModifiers.Ctrl);
+  Send(Session, T.Input.Paste('../invalid.txt'));
+  Key(Session, K.Key.Enter);
+  Check(
+    not Control(Session, 'picker/confirm').Enabled and Control(Session, 'picker/name').Focused,
+    'The picker accepted a value that is not a filename.'
+  );
+  Send(Session, T.Input.Resize(25, 9));
+  Check(Control(Session, 'picker/name').Focused, 'Resizing lost the name field focus.');
+  Key(Session, K.Key.A, K.KeyModifiers.Ctrl);
+  Send(Session, T.Input.Paste('neu.txt'));
+  Key(Session, K.Key.Enter);
+  CheckResult(Session, 'save', '/project/neu.txt', 2);
+
+  Send(Session, T.Input.Resize(74, 18));
+  Key(Session, K.Key.Enter);
+  Check(
+    Control(Session, 'picker/name').Value = 'untitled.txt',
+    'A reopened picker kept the old name.'
+  );
+  Key(Session, K.Key.Escape);
+  CheckResult(Session, 'save', 'cancelled', 3);
+
+  Send(Session, T.Input.Focus('folder'));
+  Key(Session, K.Key.Enter);
+  Check(
+    not Shows(Session, 'notes.TXT') and Shows(Session, 'docs/'),
+    'Folder mode displayed files.'
+  );
+  Key(Session, K.Key.End);
+  const Choose: T.ControlSnapshot := Control(Session, 'picker/confirm');
+  Send(Session, T.Input.Click(Choose.Column + 1, Choose.Row));
+  CheckResult(Session, 'folder', '/project/docs', 4);
+  CheckLocalDisk();
+  Console.WriteLine('File picker contracts verified');
+end;
+
+end program;

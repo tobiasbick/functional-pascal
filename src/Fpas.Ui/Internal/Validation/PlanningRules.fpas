@@ -90,9 +90,9 @@ begin
   end for;
 end procedure;
 
-// Validates the native file picker.
+// Validates the shared file picker.
 // ## Parameters
-// - `Settings`: Native settings.
+// - `Settings`: Picker settings.
 // - `At`: Diagnostic path.
 public procedure FilePicker(Settings: FilePickers.Options; At: string);
 begin

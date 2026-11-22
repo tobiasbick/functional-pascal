@@ -729,7 +729,9 @@ See [Files](ui/gui/files/README.md) for screenshots and FPAS examples.
 - [x] File browser (`cui_file_browser`): original Files browser with a listing
   provider, native folder history and keyboard navigation.
 - [x] File picker (`cui_file_picker`): the original Open and Save as examples
-  with native list navigation, filename entry and cancellation.
+  with native list navigation, filename entry and cancellation. The
+  [terminal picker](ui/tui/files/file-picker.md) shares the examples and provides
+  keyboard and pointer selection, directory navigation and focus return.
 
 The original Files browser, button row and the Open and Save as dialog
 panels match pixel for pixel in Windows Software and OpenGL at 1100×2200

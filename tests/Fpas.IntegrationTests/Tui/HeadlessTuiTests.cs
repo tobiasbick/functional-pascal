@@ -32,6 +32,7 @@ public sealed class HeadlessTuiTests
     [InlineData("filter-bar.fpas", "Filter bar contracts verified\n")]
     [InlineData("select.fpas", "Select contracts verified\n")]
     [InlineData("multi-select.fpas", "Multi-select contracts verified\n")]
+    [InlineData("file-picker.fpas", "File picker contracts verified\n")]
     [InlineData("dropdown.fpas", "Dropdown contracts verified\n")]
     [InlineData("expandable-card.fpas", "Expandable card contracts verified\n")]
     [InlineData("tabs.fpas", "Tabs contracts verified\n")]

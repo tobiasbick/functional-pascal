@@ -3,7 +3,7 @@
 unit GuiGallery.Pages.Files.View;
 
 uses
-  Gallery.Shared.Strings as Strings,
+  Gallery.Shared.Strings as Strings, Gallery.Shared.FilePickerExample as PickerSample,
   GuiGallery.Pages.Files.State as M, GuiGallery.Pages.Files.Folders as Directory, Fpas.Ui.Widgets.Developer.Terminals as Terminal, GuiGallery.Shared.Sections as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Actions.Buttons as B,
   Fpas.Ui.Widgets.Files.FileBrowsers as Browser, Fpas.Ui.Widgets.Files.FilePickers as Picker, Fpas.Ui.Widgets.Navigation.PathBars as Paths,
@@ -14,13 +14,13 @@ begin
   const Row: Lists.List<E.Element<M.Msg>> := new Lists.List<E.Element<M.Msg>>();
   Row.Add(
     B.Button<M.Msg>(
-      'files-open', 'Open…', M.Msg.Open,
+      'files-open', PickerSample.OpenLabel, M.Msg.Open,
       new B.Options(Icon := Sys.Char.ConvertFromUtf32($E247))
     )
   );
   Row.Add(
     B.Button<M.Msg>(
-      'files-save', 'Save as…', M.Msg.Save,
+      'files-save', PickerSample.SaveLabel, M.Msg.Save,
       new B.Options(Icon := Sys.Char.ConvertFromUtf32($E0B2))
     )
   );
@@ -161,15 +161,11 @@ begin
   return [
     Picker.FilePicker<M.Msg>(
       'files-open-picker', Model.Opening, M.Msg.Opened,
-      new Picker.Options(Source := Directory.ReadFolder), Base
+      PickerSample.Settings(false, Directory.ReadFolder), Base
     ),
     Picker.FilePicker<M.Msg>(
       'files-save-picker', Model.Saving, M.Msg.Saved,
-      new Picker.Options(
-        Kind := Picker.Mode.SaveFile,
-        Name := 'untitled.txt',
-        Source := Directory.ReadFolder
-      )
+      PickerSample.Settings(true, Directory.ReadFolder)
     )
   ];
 end function;

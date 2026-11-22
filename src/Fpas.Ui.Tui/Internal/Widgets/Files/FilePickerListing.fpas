@@ -1,0 +1,211 @@
+// [Documentation](../../../../../docs/ui/tui/files/file-picker.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Files.FilePickerListing;
+
+uses
+  Fpas.Ui.Widgets.Files.FileListings as F, Fpas.Ui.Widgets.Files.FilePickers as Picker,
+  System as Sys, System.Collections.Generic as C, System.IO as IO,
+  System.IO.Enumeration.FileSystemName as Glob;
+
+const Slash: char := #47;
+const Backslash: char := #92;
+const Separators: array of char := [Slash, Backslash];
+
+// Checks whether a name represents a single child of the current folder.
+// ## Parameters
+// - `Name`: Candidate entry or save name.
+// ## Returns
+// Whether the name can be joined without changing the parent folder.
+public function IsChildName(Name: string): bool;
+begin
+  return Name <> '' and Name <> '.' and Name <> '..' and Name.IndexOfAny(Separators) < 0
+    and not Name.Contains(cast<char>(0));
+end function;
+
+// Uses the separator already present in a path, as the CUI picker does.
+// ## Parameters
+// - `Folder`: Directory path from the listing source.
+// - `Name`: Single child name.
+// ## Returns
+// Child path using the source's separator.
+public function Join(Folder: string; Name: string): string;
+begin
+  if Folder.EndsWith(Slash) or Folder.EndsWith(Backslash) then
+    return Folder + Name;
+  end if;
+
+  const Separator: char := if Folder.Contains(Slash) then
+    Slash
+  elsif Folder.Contains(Backslash) then
+    Backslash
+  else
+    IO.Path.DirectorySeparatorChar
+  end if;
+  return Folder + Separator.ToString() + Name;
+end function;
+
+// Finds the lexical parent without converting a provider's folder to a local path.
+// ## Parameters
+// - `Folder`: Current directory path.
+// ## Returns
+// Parent path, or empty at a root.
+public function Parent(Folder: string): string;
+begin
+  const Root: string? := IO.Path.GetPathRoot(Folder);
+  const Path: string := Folder.TrimEnd(Separators);
+  if Root <> null and Root <> '' and Path = Root.TrimEnd(Separators) then
+    return '';
+  end if;
+
+  const At: int := Path.LastIndexOfAny(Separators);
+  if At < 0 then
+    return '';
+  end if;
+
+  return Path.Substring(
+    0, if At = 0 or (At = 2 and Path[1] = #58) then
+      At + 1
+    else
+      At
+    end if
+  );
+end function;
+
+// Finds the starting directory for a new picker.
+// ## Parameters
+// - `Settings`: Shared options with an optional provider.
+// ## Returns
+// A full local directory path or the provider's original path.
+public function StartFolder(Settings: Picker.Options): string;
+begin
+  const Path: string := if Settings.Start = '' then
+    '.'
+  else
+    Settings.Start
+  end if;
+  if Settings.Source <> null then
+    return Path;
+  end if;
+
+  try
+    return IO.Path.GetFullPath(Path);
+  catch Error: Sys.ArgumentException do
+    return Path;
+  catch Error: IO.IOException do
+    return Path;
+  end try;
+end function;
+
+function Disk(Folder: string): F.Listing;
+begin
+  const Entries: C.List<F.Entry> := new C.List<F.Entry>();
+  const Directory: IO.DirectoryInfo := new IO.DirectoryInfo(Folder);
+  for Item: IO.FileSystemInfo in Directory.EnumerateFileSystemInfos() do
+    if not Item.Name.StartsWith(
+      '.'
+    ) and (Item.Attributes and IO.FileAttributes.Hidden) = cast<IO.FileAttributes>(0)
+      and IsChildName(Item.Name)
+    then
+      Entries.Add(
+        new F.Entry(
+          Item.Name,
+          (Item.Attributes and IO.FileAttributes.Directory) <> cast<IO.FileAttributes>(0)
+        )
+      );
+    end if;
+  end for;
+
+  return new F.Listing(Entries.ToArray());
+end function;
+
+// Gets the visible children supplied by the configured listing source.
+// ## Parameters
+// - `Folder`: Directory path passed to the source.
+// - `Source`: Provider, or null to read local disk.
+// ## Returns
+// Readable folder listing, or null if the source fails or returns invalid child names.
+public function Read(Folder: string; Source: Sys.Func<string, bool, F.Listing?>?): F.Listing?;
+begin
+  try
+    const Value: F.Listing? := case Source of
+      when is Sys.Func<string, bool, F.Listing?> as Provider: Provider.Invoke(Folder, false);
+      else Disk(Folder);
+    end case;
+    if Value = null then
+      return null;
+    end if;
+
+    const Names: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+    for Item: F.Entry in Value.Entries do
+      if not IsChildName(Item.Name) or not Names.Add(Item.Name) then
+        return null;
+      end if;
+    end for;
+
+    return Value;
+  catch Error: Sys.Exception do
+    return null;
+  end try;
+end function;
+
+function Matches(Filter: array of string; Name: string): bool;
+begin
+  const Letters: array of char := Name.ToCharArray();
+  for Pattern: string in Filter do
+    if Glob.MatchesSimpleExpression(Pattern.ToCharArray(), Letters, true) then
+      return true;
+    end if;
+  end for;
+
+  return false;
+end function;
+
+function Compare(Left: F.Entry; Right: F.Entry): int;
+begin
+  if Left.Directory <> Right.Directory then
+    return if Left.Directory then
+      -1
+    else
+      1
+    end if;
+  end if;
+
+  const Order: int := Sys.StringComparer.OrdinalIgnoreCase.Compare(Left.Name, Right.Name);
+  return if Order = 0 then
+    Sys.StringComparer.Ordinal.Compare(Left.Name, Right.Name)
+  else
+    Order
+  end if;
+end function;
+
+// Projects the cached listing into the picker's current list.
+// ## Parameters
+// - `Listing`: Source listing, or null on failure.
+// - `Settings`: Selection mode and glob filter.
+// ## Returns
+// Visible, ordered children with directories before files.
+public function Visible(Listing: F.Listing?; Settings: Picker.Options): array of F.Entry;
+begin
+  if Listing = null then
+    return [];
+  end if;
+
+  const Filter: array of string := Settings.Filter.Split(
+    [#59, #44], Sys.StringSplitOptions.RemoveEmptyEntries or Sys.StringSplitOptions.TrimEntries
+  );
+  const Rows: C.List<F.Entry> := new C.List<F.Entry>();
+  for Item: F.Entry in Listing.Entries do
+    if Item.Directory or (Settings.Kind <> Picker.Mode.Folder and (Settings.Filter = '' or Matches(
+      Filter,
+      Item.Name
+    )))
+    then
+      Rows.Add(Item);
+    end if;
+  end for;
+  const Result: array of F.Entry := Rows.ToArray();
+  Sys.Array.Sort<F.Entry>(Result, Compare);
+  return Result;
+end function;
+
+end unit;

@@ -145,9 +145,9 @@ begin
       E.Element<TMsg>.TextField(
         new Edit.Field<TMsg>(
           Id + '/search', Search,
-          function(Text: string): TMsg => Change(
-            new Filters.Value(
-              cast<array of uint>(Current.Selected.Clone()), Text
+          function(Text: string): Actions.Result<TMsg> => Actions.Result<TMsg>.Send(
+            Change(
+              new Filters.Value(cast<array of uint>(Current.Selected.Clone()), Text)
             )
           ),
           new TextFields.Options(

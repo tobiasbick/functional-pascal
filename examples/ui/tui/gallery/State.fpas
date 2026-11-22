@@ -3,7 +3,7 @@
 unit TuiGallery.State;
 
 uses
-  TuiGallery.Catalog as Catalog, TuiGallery.CellGridSample as GridSample,
+  TuiGallery.Catalog as Catalog, TuiGallery.CellGridSample as GridSample, TuiGallery.FilePickerSample as Files,
   TuiGallery.ListSample as ListSample, TuiGallery.ProfileSample as Profile, TuiGallery.ToolSamples as Tools,
   Gallery.Shared.SecurityCard as Security, Gallery.Shared.AboutField as AboutSample,
   Gallery.Shared.PickerChoices as Pickers, Gallery.Shared.SaveFrequency as Frequency,
@@ -65,6 +65,8 @@ public type Msg = variant
   ListAction(Action: ListSample.Msg);
   // Handle an action from the tool examples.
   ToolAction(Action: Tools.Msg);
+  // Handle an action from the file picker example.
+  FilesAction(Action: Files.Msg);
   // Adopt the proposed filter state.
   SetFilter(Value: Filters.Value);
   // Switch between the light and dark themes.
@@ -119,6 +121,8 @@ public type Model = record
   public ListState: ListSample.State := new ListSample.State();
   // State of the source tree, command palette and log.
   public ToolState: Tools.State := new Tools.State();
+  // Visibility and last result of the file picker example.
+  public FileState: Files.State := new Files.State();
   // Search and option masks for the filter bar.
   public Filter: Filters.Value := FilterSample.Initial();
   // Current encoding option.
@@ -249,6 +253,10 @@ begin
     when Msg.ToolAction(const Action: Tools.Msg):
       Next := State with
         ToolState := Tools.Update(State.ToolState, Action);
+      end with;
+    when Msg.FilesAction(const Action: Files.Msg):
+      Next := State with
+        FileState := Files.Update(State.FileState, Action);
       end with;
     when Msg.SetFilter(const Value: Filters.Value):
       Next := State with

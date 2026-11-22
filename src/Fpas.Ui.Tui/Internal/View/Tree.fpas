@@ -151,10 +151,14 @@ public type SelectionListView<TMsg> = record
   public Selected: int;
   // Natural column count including the selection marker.
   public Width: int;
-  // Maps a proposed row key to a message.
-  public OnSelect: function(string): TMsg;
-  // Maps activation of the current row to a message.
-  public OnActivate: function(string): TMsg;
+  // Handles a proposed row selection.
+  public OnSelect: function(string): Actions.Result<TMsg>;
+  // Handles activation of the current row.
+  public OnActivate: function(string): Actions.Result<TMsg>;
+  // Maximum intrinsic row count before list scrolling.
+  public MaximumRows: int := int.MaxValue;
+  // Content identity for resetting the viewport when an entire listing changes.
+  public ContentKey: string := '';
 end record;
 
 // Terminal pagination with a model-owned page and dispatch binding.
@@ -250,7 +254,7 @@ public type Element<TMsg> = variant
   // Place a centered or docked modal with a pinned header and a scrolling body.
   ModalPanel(
     Id: string; Settings: ModalOptions; Size: int; Content: Element<TMsg>;
-    Dismiss: TMsg; Colors: T.Style
+    Dismiss: Sys.Func<TMsg>; Colors: T.Style
   );
 end variant;
 

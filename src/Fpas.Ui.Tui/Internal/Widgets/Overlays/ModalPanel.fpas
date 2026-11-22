@@ -149,7 +149,7 @@ end function;
 // The base and its modal layer when visible.
 public function Lower<TMsg>(
   Id: string; Base: E.Element<TMsg>; Open: bool; Settings: E.ModalOptions;
-  Dismiss: TMsg; Colors: T.Style; Theme: Th.Theme; LowerContent: function(T.Style): E.Element<TMsg>
+  Dismiss: Sys.Func<TMsg>; Colors: T.Style; Theme: Th.Theme; LowerContent: function(T.Style): E.Element<TMsg>
 ): E.Element<TMsg>;
 begin
   if not Open then
@@ -207,7 +207,7 @@ end record;
 // The panel's placement and input bindings.
 public function Arrange<TMsg>(
   Operations: Generic.List<D.Operation>; Screen: F.Rect; Id: string; Settings: E.ModalOptions;
-  Size: int; Content: E.Element<TMsg>; Colors: T.Style; Theme: Th.Theme; Dismiss: TMsg; FocusReturn: string
+  Size: int; Content: E.Element<TMsg>; Colors: T.Style; Theme: Th.Theme; Dismiss: Sys.Func<TMsg>; FocusReturn: string
 ): Placement<TMsg>;
 begin
   const Bounds: PanelBounds := PaintPanel<TMsg>(
@@ -220,7 +220,7 @@ begin
     Theme
   );
   const Escape: Sys.Func<TMsg>? := if Settings.Dismissible then
-    function(): TMsg => Dismiss
+    Dismiss
   else
     null
   end if;
@@ -232,7 +232,11 @@ begin
     when is string as Close:
       Control := new A.Control<TMsg>(
         Close, 'Close', 'button', '', Bounds.Close, Id, FocusReturn, true,
-        A.Binding<TMsg>.Invoke(new Actions.Direct<TMsg>(Dismiss)), S.ButtonVariant.Default,
+        A.Binding<TMsg>.Invoke(
+          new Actions.Callback<TMsg>(
+            function(): Actions.Result<TMsg> => Actions.Result<TMsg>.Send(Dismiss.Invoke())
+          )
+        ), S.ButtonVariant.Default,
         ButtonStyle := true, ArrowFocus := true
       );
     else

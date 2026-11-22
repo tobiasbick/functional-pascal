@@ -20,6 +20,7 @@ public type Preview = enum
   Disclosure;
   AppChrome;
   Code;
+  Files;
   Text;
   CellGrid;
 end enum;
@@ -115,7 +116,7 @@ public const Extended: array of Entry := [
   new Entry('Motion', Strings.Get('Page.Motion'), Strings.Get('Description.Motion')),
   new Entry('AI', Strings.Get('Page.AI'), Strings.Get('Description.AI')),
   new Entry('Audio', Strings.Get('Page.Audio'), Strings.Get('Description.Audio')),
-  new Entry('Files', Strings.Get('Page.Files'), Strings.Get('Description.Files')),
+  new Entry('Files', Strings.Get('Page.Files'), Strings.Get('Description.Files'), Preview.Files),
   new Entry(
     'Developer tools',
     Strings.Get('Page.DeveloperTools'),

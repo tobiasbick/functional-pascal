@@ -5,6 +5,7 @@ unit Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList;
 uses
   Fpas.Ui.TerminalExtensions.SelectionLists as Lists, Fpas.Ui.TerminalExtensions.Input as K,
   Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Layout.Scene as A,
+  Fpas.Ui.Tui.Internal.Controls.Activation as Actions,
   Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V,
   Fpas.Ui.Tui.Internal.Hosting.RowNavigation as Rows, Fpas.Ui.Tui.Internal.Rendering.Themes as Th,
   Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Rendering.Drawing as D,
@@ -26,13 +27,16 @@ end function;
 // - `Id`: Stable list identity.
 // - `Items`: Validated choices.
 // - `Selected`: Selected key, or empty.
-// - `OnSelect`: Selection message mapper.
-// - `OnActivate`: Activation message mapper.
+// - `OnSelect`: Selection handler.
+// - `OnActivate`: Activation handler.
+// - `MaximumRows`: Maximum intrinsic list height.
+// - `ContentKey`: Identity of the collection used to retain its scroll state.
 // ## Returns
 // The list's terminal presentation data.
 public function Lower<TMsg>(
   Id: string; Items: array of Lists.Item; Selected: string;
-  OnSelect: function(string): TMsg; OnActivate: function(string): TMsg
+  OnSelect: function(string): Actions.Result<TMsg>; OnActivate: function(string): Actions.Result<TMsg>;
+  MaximumRows: int := int.MaxValue; ContentKey: string := ''
 ): E.Element<TMsg>;
 begin
   const Current: int := Sys.Array.FindIndex<Lists.Item>(
@@ -48,7 +52,16 @@ begin
   end for;
 
   return E.Element<TMsg>.SelectionList(
-    new E.SelectionListView<TMsg>(Id, Items, Current, Width, OnSelect, OnActivate)
+    new E.SelectionListView<TMsg>(
+      Id,
+      Items,
+      Current,
+      Width,
+      OnSelect,
+      OnActivate,
+      MaximumRows,
+      ContentKey
+    )
   );
 end function;
 
@@ -83,14 +96,19 @@ begin
   var Offset: int := 0;
   discard Offsets.TryGetValue(List.Id, out Offset);
   var Follow: bool := true;
-  if Before <> null and Before.Value = Selected then
+  if Before <> null then
     case Before.Action of
       when A.Binding.SelectionList(
         const Old: E.SelectionListView<TMsg>,
         _,
         const View: V.Viewport<TMsg>
       ):
-        Follow := Old.Selected <> List.Selected or View.Rows <> Clip.Height;
+        if Old.ContentKey <> List.ContentKey then
+          Offset := 0;
+        end if;
+
+        Follow := Before.Value <> Selected or Old.Selected <> List.Selected or View.Rows <>
+          Clip.Height;
       else
     end case;
   end if;
@@ -165,7 +183,7 @@ begin
   if Body.Contains(Column, Row) then
     const Index: int := Offset + (Row - Body.Y);
     if Index < List.Items.Length and Index <> List.Selected then
-      Apply(List.OnSelect(List.Items[Index].Key));
+      Actions.Dispatch<TMsg>(List.OnSelect(List.Items[Index].Key), Apply);
     end if;
   end if;
 end procedure;
@@ -202,7 +220,7 @@ begin
   if Index = List.Selected then
     Offsets[List.Id] := Reveal(View.Offset, Index, View.Rows);
   else
-    Apply(List.OnSelect(List.Items[Index].Key));
+    Actions.Dispatch<TMsg>(List.OnSelect(List.Items[Index].Key), Apply);
   end if;
 
   return true;
@@ -219,7 +237,7 @@ begin
   if List.Selected >= 0 then
     const Item: Lists.Item := List.Items[List.Selected];
     if Item.CanActivate then
-      Apply(List.OnActivate(Item.Key));
+      Actions.Dispatch<TMsg>(List.OnActivate(Item.Key), Apply);
     end if;
   end if;
 end procedure;

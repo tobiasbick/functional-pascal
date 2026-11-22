@@ -14,7 +14,7 @@ public type Mode = enum: byte
   Folder;
 end enum;
 
-// Native picker options.
+// Shared file picker options.
 public type Options = record
   // Selection mode.
   public Kind: Mode := Mode.OpenFile;
@@ -38,17 +38,17 @@ public type Event = record
   public Path: string?;
 end record;
 
-// Presents the native file picker.
+// Presents a file picker in the current UI host.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable widget identity.
 // - `Open`: Model-owned input.
-// - `Change`: Maps a native proposal to an application message.
-// - `Settings`: Optional native settings.
+// - `Change`: Maps a chosen path or dismissal to an application message.
+// - `Settings`: Optional picker settings.
 // - `Base`: Optional underlying view. It is drawn before the modal.
 // ## Returns
-// The graphical widget.
+// The shared modal widget.
 public function FilePicker<TMsg>(Id: string; Open: bool; Change: function(Event): TMsg; Settings: Options? := null; Base: E.Element<TMsg>? := null): E.Element<TMsg>;
 requires Id <> '';
 begin

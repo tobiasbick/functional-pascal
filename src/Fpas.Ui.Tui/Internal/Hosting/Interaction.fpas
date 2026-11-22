@@ -76,11 +76,7 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
       Focus := Control.Id;
     end if;
 
-    case Handler.Activate() of
-      when Actions.Result.Send(const Message: TMsg):
-        Apply(Message);
-      when Actions.Result.NoAction:
-    end case;
+    Actions.Dispatch<TMsg>(Handler.Activate(), Apply);
 
     return true;
   end function;

@@ -2,7 +2,7 @@
 
 Use a file picker to open a file, name a save destination or choose a folder.
 The gallery opens Open and Save as dialogs over the file browser.
-Available in **GUI**.
+Available in **GUI** and [**TUI**](../../tui/files/file-picker.md).
 
 ![Open file picker in the FPAS gallery](images/file-picker.png)
 
@@ -35,7 +35,7 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Kind` | OpenFile. SaveFile adds the name field and Folder selects a directory. |
-| `Title / Start / Name` | All empty. The native title follows the mode and an empty Start uses the current directory. |
+| `Title / Start / Name` | All empty. The default title follows the mode and an empty Start uses the current directory. |
 | `Filter / FilterLabel` | Both empty. Use semicolon-separated glob patterns and an optional label. |
 | `Source / Base` | Both null. The default source lists local disk. Supply Base to draw a view under the modal. |
 
@@ -53,10 +53,13 @@ a path to use in the application's save operation.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Files/FilePickers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Files/View.fpas)
 - [Gallery update function](../../../../examples/ui/gui/gallery/Pages/Files/Update.fpas)
+- [Terminal file picker](../../tui/files/file-picker.md)
 - [Files](README.md)
 
 ## Source files
 
+- [Shared picker API](../../../../src/Fpas.Ui/Widgets/Files/FilePickers.fpas)
+- [Shared picker examples and data](../../../../examples/ui/gui/gallery/Shared/FilePickerExample.fpas)
 - `src/Fpas.Ui.Gui/Internal/Widgets/Files/`
   - [FilePicker.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Files/FilePicker.fpas)
 - `src/Fpas.Ui.Gui.Cui/Interop/Files/`

@@ -361,7 +361,7 @@ public type Element<TMsg> = variant
   PathBar(Id: string; Current: PathBars.Value; Change: function(PathBars.Event): TMsg; Settings: PathBars.Options);
   // Native CUI file browser.
   FileBrowser(Id: string; Folder: string; Change: function(FileBrowsers.Event): TMsg; Settings: FileBrowsers.Options);
-  // Native CUI file picker.
+  // Shared file selection modal with an optional underlying view.
   FilePicker(Id: string; Base: Element<TMsg>?; Open: bool; Change: function(FilePickers.Event): TMsg; Settings: FilePickers.Options);
   // Native CUI week calendar.
   WeekCalendar(Id: string; Current: WeekCalendars.Value; Change: function(WeekCalendars.Event): TMsg; Settings: WeekCalendars.Options);

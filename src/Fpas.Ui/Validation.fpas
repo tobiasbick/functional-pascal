@@ -417,8 +417,13 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: FilePickers.Options
       ):
         const At: string := Identify(Id, Location + '/FilePicker');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
         PlanningRules.FilePicker(Settings, At);
+        if Profile <> Target.Graphical then
+          for Part: string in ['list', 'name', 'cancel', 'confirm'] do
+            discard Identify(Id + '/' + Part, At + '/' + Part);
+          end for;
+        end if;
+
         if Base <> null then
           Visit(Base, At + '/base');
         end if;

@@ -389,6 +389,29 @@ public sealed class TuiGalleryTests
             await Key("Enter");
             Assert.Equal("UTF-8", Focused(await Request("snapshot")));
 
+            await Key("Escape");
+            await Key("Home");
+            foreach (var _ in destinations.Skip(1).TakeWhile(destination => destination != "Developer tools"))
+                await Key("Down");
+            await Key("Enter");
+            Assert.Equal("Files", Selected(await Request("snapshot")));
+            await Key("Right");
+            Assert.True(Control(await Request("snapshot"), "files-open").GetProperty("focused").GetBoolean());
+            await Key("Enter");
+            var filePicker = await Request("snapshot");
+            Assert.True(Control(filePicker, "files-open-picker/list").GetProperty("focused").GetBoolean());
+            foreach (var _ in Enumerable.Range(0, 4))
+                await Key("Down");
+            Assert.Equal("notes.txt", Control(await Request("snapshot"), "files-open-picker/list").GetProperty("value").GetString());
+            await Key("Enter");
+            Assert.Contains("notes.txt", Preview(await Request("snapshot"), 52));
+            await Key("Tab");
+            await Key("Enter");
+            var savePicker = await Request("snapshot");
+            Assert.Equal("untitled.txt", Control(savePicker, "files-save-picker/name").GetProperty("value").GetString());
+            await Key("Escape");
+            Assert.True(Control(await Request("snapshot"), "files-save").GetProperty("focused").GetBoolean());
+
             Assert.Equal("unchanged", await Turn(new() { ["kind"] = "key", ["key"] = "Q", ["modifiers"] = 4 }));
             await process.WaitForExitAsync(token);
             Assert.Equal(0, process.ExitCode);

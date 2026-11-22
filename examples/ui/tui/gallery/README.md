@@ -29,6 +29,7 @@ Use the CUI gallery's sample data when demonstrating a CUI widget in the termina
 | Extended → Pickers → [Multi-select](../../../../docs/ui/tui/inputs/multi-select.md) | Search and toggle languages in the original CUI checklist. |
 | Extended → Data grid → [Filter bar](../../../../docs/ui/tui/data-display/filter-bar.md) | Search and choose several Team, Status or Role values using the original CUI fields. |
 | Extended → Code → [Log console](../../../../docs/ui/tui/developer/log-console.md) | Browse the CUI gallery's build log and reveal its next entry. Press End in the log to resume following new entries. |
+| Extended → Files → [File picker](../../../../docs/ui/tui/files/file-picker.md) | Open a file or enter a save name using the original CUI examples. |
 | Extended → Disclosure → Expandable cards | Open Security to read the recovery-code details. |
 | Extended → Text and display → Text and inline code | Heading, body, label, secondary text, muted text and a command. |
 | Extended → App chrome | Editor excerpt and status bar. Activate the indentation, encoding or language to cycle its value. |
@@ -95,6 +96,18 @@ it with `LANG=de_DE.UTF-8` for German.
 
 ![Editor and status bar under App chrome](statusbar.png)
 
+## File picker
+
+Choose **Files** in **Extended**. Use **Open** to browse the sample entries
+or **Save as** to edit the original default filename `untitled.txt`.
+The view reports the confirmed path.
+
+![Open file picker with notes.txt selected](file-picker-open.png)
+
+![Save picker with the default filename focused](file-picker-save.png)
+
+## Run the gallery
+
 After the [local SDK bootstrap](../../../../docs/build/development.md#build-an-fpas-application),
 build and run the gallery from the repository root.
 
@@ -111,6 +124,7 @@ For headless stepping, launch it with `--headless-control` and set
 ## Source files
 
 - [Catalog.fpas](Catalog.fpas)
+- [FilePickerSample.fpas](FilePickerSample.fpas)
 - [State.fpas](State.fpas)
 - [ToolSamples.fpas](ToolSamples.fpas)
 - [TuiWidgetGallery.fpasproj](TuiWidgetGallery.fpasproj)

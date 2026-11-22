@@ -328,7 +328,7 @@ begin
       return if Horizontal then
         List.Width
       else
-        Sys.Math.Max(1, List.Items.Length)
+        Sys.Math.Max(1, Sys.Math.Min(List.MaximumRows, List.Items.Length))
       end if;
     when E.Element.Pager(const Pager: E.PagerView<TMsg>):
       return if Horizontal then

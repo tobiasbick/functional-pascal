@@ -43,6 +43,7 @@
     <None Include="../../examples/ui/gui/gallery/Shared/PaginationExample.fpas" Link="Fixtures/tui/gallery/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/ui/gui/gallery/Shared/BreadcrumbExample.fpas" Link="Fixtures/tui/gallery/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/ui/gui/gallery/Shared/LanguagesExample.fpas" Link="Fixtures/tui/gallery/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/ui/gui/gallery/Shared/FilePickerExample.fpas" Link="Fixtures/tui/gallery/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/ui/gui/gallery/Shared/Strings.fpas;../../examples/ui/gui/gallery/Shared/Strings.resx" Link="Fixtures/tui/gallery/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/ui/tui/fractals/*.fpas" Link="Fixtures/tui/fractals/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../src/Fpas.Ui.Mvu.Testing/EffectReplies.fpas" Link="Fixtures/tui/fractals/EffectReplies.fpas" CopyToOutputDirectory="PreserveNewest" />
@@ -57,6 +58,7 @@
     <None Include="../Fixtures/tui/FilterBar.fpas" Link="Fixtures/tui/filter-bar.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/Select.fpas" Link="Fixtures/tui/select.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/MultiSelect.fpas" Link="Fixtures/tui/multi-select.fpas" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Fixtures/tui/FilePicker.fpas" Link="Fixtures/tui/file-picker.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/Dropdown.fpas" Link="Fixtures/tui/dropdown.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/ExpandableCard.fpas" Link="Fixtures/tui/expandable-card.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/Tabs.fpas" Link="Fixtures/tui/tabs.fpas" CopyToOutputDirectory="PreserveNewest" />

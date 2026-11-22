@@ -225,6 +225,7 @@ The terminal selection-list contract checks validation, one tab stop, rejected s
 The [terminal filter-bar contract](Fixtures/tui/FilterBar.fpas) checks the UTF-8 search capacity, reserved IDs, keyboard and pointer selection, focus return, disabled controls and clearing all criteria.
 
 The [terminal multi-select contract](Fixtures/tui/MultiSelect.fpas) checks search and unfiltered IDs, independent toggles, bulk changes, focus return, and width-aware selection summaries.
+The [terminal file picker contract](Fixtures/tui/FilePicker.fpas) checks modal input and focus return, directory traversal, filters and unreadable folders, save-name editing after resize, folder selection, and local and custom listing sources.
 
 The [terminal pagination contract](Fixtures/tui/Pagination.fpas) checks numbered and compact layout, page proposals, boundary buttons, focus after resize or disabling, and scrolling a pager into view.
 

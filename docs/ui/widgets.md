@@ -1003,8 +1003,9 @@ their native examples.
 - `PathBars.PathBar` proposes a segment, a child from its dropdown, or a
   submitted path. The model supplies the visible segments and child labels.
 - `FileBrowsers.FileBrowser` proposes folder changes and file activation.
-  `FilePickers.FilePicker` opens a native CUI dialog for opening, saving, or
-  choosing a folder. Its event carries the chosen path or null on dismissal.
+  `FilePickers.FilePicker` opens a modal dialog for opening, saving, or choosing
+  a folder in the [GUI](gui/files/file-picker.md) or [TUI](tui/files/file-picker.md).
+  Its event carries the chosen path or null on dismissal.
   Set either widget's `Options.Source` to a
   `Sys.Func<string, bool, FileListings.Listing?>` to supply folder entries.
   It receives the folder path and hidden-file mode; null reports an unreadable folder.

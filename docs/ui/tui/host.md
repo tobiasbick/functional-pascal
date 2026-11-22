@@ -64,6 +64,10 @@ Both dim the background, keep focus inside and scroll a long body. Escape or
 a backdrop click proposes dismissal. A persistent dialog stays open until an
 action closes it. Closing the overlay restores available focus.
 
+The [file picker](files/file-picker.md) uses the same modal routing. Its
+directory, row selection and filename are local to each opening. The model
+receives the chosen path or dismissal and controls visibility.
+
 ## Popup input
 
 Dropdown menus, single and multiple selection fields, the filter bar and breadcrumb overflow use

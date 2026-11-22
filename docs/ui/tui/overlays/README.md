@@ -9,6 +9,7 @@
 ## See also
 
 - [Terminal UI handbook](../README.md)
+- [File picker](../files/file-picker.md)
 - [GUI chapter](../../gui/overlays/README.md)
 
 ## Source files

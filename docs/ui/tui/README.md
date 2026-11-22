@@ -45,6 +45,7 @@ dotnet run --project examples/ui/tui/gallery/TuiWidgetGallery.fpasproj
 | [Navigation](navigation/README.md) | Sidebar with selectable destinations, tabs, breadcrumbs and pagination |
 | [Actions](actions/README.md) | Button and dropdown menu |
 | [Inputs](inputs/README.md) | Text fields and searchable single and multiple selection |
+| [Files](files/README.md) | Open, save and folder selection dialogs |
 | [Selection](selection/README.md) | Checkbox, switch and radio group |
 | [Overlays](overlays/README.md) | Dialog, sheet and searchable command palette |
 | [Data display](data-display/README.md) | Sortable table, selection list, expandable tree and filter bar |

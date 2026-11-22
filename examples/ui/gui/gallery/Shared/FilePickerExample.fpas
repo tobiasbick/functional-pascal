@@ -1,0 +1,65 @@
+// [Documentation](../../../../../docs/ui/gui/files/file-picker.md)
+
+unit Gallery.Shared.FilePickerExample;
+
+uses
+  Fpas.Ui.Widgets.Files.FileListings as Files, Fpas.Ui.Widgets.Files.FilePickers as Picker,
+  System as Sys;
+
+// Original Open button caption.
+public const OpenLabel: string := 'Open…';
+
+// Original Save as button caption.
+public const SaveLabel: string := 'Save as…';
+
+// Returns the original gallery's fallback folder entries.
+// ## Returns
+// A fresh listing of the example root.
+public function Root(): Files.Listing;
+begin
+  return new Files.Listing(
+    [
+      new Files.Entry('assets', true, 0UL, 1730000000L),
+      new Files.Entry('src', true, 13100UL, 1730086400L),
+      new Files.Entry('README.md', false, 26200UL, 1730172800L),
+      new Files.Entry('notes.txt', false, 39300UL, 1730259200L),
+      new Files.Entry('cover.png', false, 52400UL, 1730345600L),
+      new Files.Entry('report.pdf', false, 65500UL, 1730432000L)
+    ]
+  );
+end function;
+
+// Reads the original fallback entries without consulting the working directory.
+// ## Parameters
+// - `Path`: Requested sample folder.
+// - `Hidden`: Whether hidden entries are requested. This sample has none.
+// ## Returns
+// The sample root, an empty sample subfolder, or null for an unknown path.
+public function Read(Path: string; Hidden: bool): Files.Listing?;
+begin
+  case Path.Replace('\', '/') of
+    when '.':
+      return Root();
+    when './assets', './src':
+      return new Files.Listing([]);
+    else
+      return null;
+  end case;
+end function;
+
+// Builds the original picker settings for either gallery.
+// ## Parameters
+// - `Save`: Use the Save as example when true.
+// - `Source`: Folder listing to use in the example.
+// ## Returns
+// Shared picker settings, including the original save name.
+public function Settings(Save: bool; Source: Sys.Func<string, bool, Files.Listing?>): Picker.Options;
+begin
+  return if Save then
+    new Picker.Options(Kind := Picker.Mode.SaveFile, Name := 'untitled.txt', Source := Source)
+  else
+    new Picker.Options(Source := Source)
+  end if;
+end function;
+
+end unit;

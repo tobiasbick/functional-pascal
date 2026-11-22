@@ -1,0 +1,89 @@
+// [Documentation](README.md#file-picker)
+
+unit TuiGallery.FilePickerSample;
+
+uses
+  Gallery.Shared.FilePickerExample as Sample, Fpas.Ui.Elements as E,
+  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Files.FilePickers as Picker,
+  Fpas.Ui.Layout as L, Fpas.Ui.Styles as Styles;
+
+// Visibility and last result for the gallery file dialogs.
+public type State = record
+  // Active dialog mode, or null.
+  public Mode: Picker.Mode? := null;
+  // Last confirmed selection, or empty.
+  public Chosen: string := '';
+end record;
+
+// File picker gallery messages.
+public type Msg = variant
+  // Open the original file picker example.
+  Open(Mode: Picker.Mode);
+  // Close the dialog and optionally adopt the chosen path.
+  Close(Event: Picker.Event);
+end variant;
+
+// Applies a dialog command.
+// ## Parameters
+// - `Before`: Current example state.
+// - `Message`: User action.
+// ## Returns
+// Updated visibility and last chosen path.
+public function Update(Before: State; Message: Msg): State;
+begin
+  case Message of
+    when Msg.Open(const Mode: Picker.Mode):
+      return new State(Mode, Before.Chosen);
+    when Msg.Close(const Event: Picker.Event):
+      return new State(null, Event.Path ?? Before.Chosen);
+  end case;
+end function;
+
+// Draws the original Open and Save as controls.
+// ## Parameters
+// - `Current`: Current example state.
+// ## Returns
+// Picker launchers and the last confirmed path.
+public function Controls(Current: State): E.Element<Msg>;
+begin
+  return E.Column<Msg>(
+    new L.Flow(Gap := L.Spacing.Normal),
+    E.Row<Msg>(
+      new L.Flow(Gap := L.Spacing.Normal),
+      B.Button<Msg>('files-open', Sample.OpenLabel, Msg.Open(Picker.Mode.OpenFile)),
+      B.Button<Msg>('files-save', Sample.SaveLabel, Msg.Open(Picker.Mode.SaveFile))
+    ),
+    E.Styled<Msg>(E.Text<Msg>(Current.Chosen), Styles.Role.Muted)
+  );
+end function;
+
+// Places the modal dialogs above the terminal gallery.
+// ## Type parameters
+// - `TMsg`: Gallery message type.
+// ## Parameters
+// - `Base`: Gallery screen underneath the dialogs.
+// - `Current`: Current example state.
+// - `Wrap`: Embeds a dialog action in a gallery message.
+// ## Returns
+// The gallery screen and its file picker layers.
+public function Present<TMsg>(Base: E.Element<TMsg>; Current: State; Wrap: function(Msg): TMsg): E.Element<TMsg>;
+begin
+  const Closed: function(Picker.Event): TMsg := function(Event: Picker.Event): TMsg => Wrap(
+    Msg.Close(Event)
+  );
+  return Picker.FilePicker<TMsg>(
+    'files-save-picker',
+    Current.Mode = Picker.Mode.SaveFile,
+    Closed,
+    Sample.Settings(true, Sample.Read),
+    Picker.FilePicker<TMsg>(
+      'files-open-picker',
+      Current.Mode = Picker.Mode.OpenFile,
+      Closed,
+      Sample.Settings(false, Sample.Read),
+      Base
+    )
+  );
+end function;
+
+end unit;

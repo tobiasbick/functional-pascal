@@ -2,7 +2,12 @@
 
 unit Fpas.Ui.Tui.Internal.View.Lowering;
 
-uses Fpas.Ui.Widgets.Inputs.MultiSelects as Multi, Fpas.Ui.Tui.Internal.Widgets.Inputs.MultiSelect as MultiSelect, Fpas.Ui.Tui.Internal.Widgets.Navigation.Breadcrumb as Breadcrumb, Fpas.Ui.Widgets.Collections.FilterBars as Filters, Fpas.Ui.Tui.Internal.Widgets.Collections.FilterBar as FilterWidget, Fpas.Ui.Widgets.Developer.LogConsoles as Logs, Fpas.Ui.Tui.Internal.Widgets.Developer.LogConsole as Log, Fpas.Ui.Widgets.Collections.Trees as Trees, Fpas.Ui.Tui.Internal.Widgets.Collections.TreeRows as TreeRows, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes, Fpas.Ui.TerminalExtensions.SelectionLists as Lists, Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as SelectionList, Fpas.Ui.Tui.Internal.Widgets.Containers.ExpandableCard as Card, Fpas.Ui.Widgets.Containers.ExpandableCards as Cards, Fpas.Ui.Tui.Internal.Widgets.Overlays.Dropdown as Dropdown, Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as PopupState, Fpas.Ui.Widgets.Inputs.TextAreas as Areas, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextArea as AreaWidget, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Widgets.Navigation.Tabs as TabSettings, Fpas.Ui.Tui.Internal.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Tui.Internal.Widgets.Inputs.Select as Select, Fpas.Ui.Widgets.Inputs.Selects as Selects, Fpas.Ui.Tui.Internal.Widgets.Inputs.RadioGroup as Radios, Fpas.Ui.Widgets.Inputs.RadioGroups as R, Fpas.Ui.Tui.Internal.Widgets.Inputs.ToggleRows as Toggles, Fpas.Ui.Tui.Internal.Widgets.Collections.Table as TableWidget, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as FieldWidget, Fpas.Ui.Widgets.Inputs.TextFields as Fields, Fpas.Ui.Widgets.Desktop.StatusBars as StatusBars, Fpas.Ui.Tui.Internal.Widgets.Desktop.StatusBar as StatusLine, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Widgets.Feedback.ProgressBars as ProgressBars, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Tui.Internal.Widgets.Actions.Button as Button, Fpas.Ui.Elements as Ui, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Navigation.Navigation as N, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Navigation.Sidebar as Sidebar, Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Panel, Fpas.Ui.Tui.Internal.Layout.Flexible as Geometry, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as C;
+uses
+  Fpas.Ui.Widgets.Files.FilePickers as Files,
+  Fpas.Ui.Tui.Internal.Widgets.Files.FilePicker as FilePicker,
+  Fpas.Ui.Tui.Internal.Widgets.Files.FilePickerState as PickerState,
+  Fpas.Ui.Tui.Internal.Controls.Activation as Actions,
+  Fpas.Ui.Widgets.Inputs.MultiSelects as Multi, Fpas.Ui.Tui.Internal.Widgets.Inputs.MultiSelect as MultiSelect, Fpas.Ui.Tui.Internal.Widgets.Navigation.Breadcrumb as Breadcrumb, Fpas.Ui.Widgets.Collections.FilterBars as Filters, Fpas.Ui.Tui.Internal.Widgets.Collections.FilterBar as FilterWidget, Fpas.Ui.Widgets.Developer.LogConsoles as Logs, Fpas.Ui.Tui.Internal.Widgets.Developer.LogConsole as Log, Fpas.Ui.Widgets.Collections.Trees as Trees, Fpas.Ui.Tui.Internal.Widgets.Collections.TreeRows as TreeRows, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes, Fpas.Ui.TerminalExtensions.SelectionLists as Lists, Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as SelectionList, Fpas.Ui.Tui.Internal.Widgets.Containers.ExpandableCard as Card, Fpas.Ui.Widgets.Containers.ExpandableCards as Cards, Fpas.Ui.Tui.Internal.Widgets.Overlays.Dropdown as Dropdown, Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as PopupState, Fpas.Ui.Widgets.Inputs.TextAreas as Areas, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextArea as AreaWidget, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Widgets.Navigation.Tabs as TabSettings, Fpas.Ui.Tui.Internal.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Tui.Internal.Widgets.Inputs.Select as Select, Fpas.Ui.Widgets.Inputs.Selects as Selects, Fpas.Ui.Tui.Internal.Widgets.Inputs.RadioGroup as Radios, Fpas.Ui.Widgets.Inputs.RadioGroups as R, Fpas.Ui.Tui.Internal.Widgets.Inputs.ToggleRows as Toggles, Fpas.Ui.Tui.Internal.Widgets.Collections.Table as TableWidget, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as FieldWidget, Fpas.Ui.Widgets.Inputs.TextFields as Fields, Fpas.Ui.Widgets.Desktop.StatusBars as StatusBars, Fpas.Ui.Tui.Internal.Widgets.Desktop.StatusBar as StatusLine, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Widgets.Feedback.ProgressBars as ProgressBars, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Tui.Internal.Widgets.Actions.Button as Button, Fpas.Ui.Elements as Ui, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Navigation.Navigation as N, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Navigation.Sidebar as Sidebar, Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Panel, Fpas.Ui.Tui.Internal.Layout.Flexible as Geometry, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as C;
 
 // Converts shared flex rules into resolved cell constraints.
 //
@@ -118,12 +123,15 @@ end function;
 // ## Parameters
 // - `Prepared`: Terminal-profile preflight result.
 // - `Popup`: Session-local popup interactions.
+// - `Pickers`: Session-local file picker interactions.
+// - `Size`: Current terminal viewport.
 // - `Theme`: Current terminal theme.
 //
 // ## Returns
 // The resolved backend tree, with no application-facing constructors.
 public function Prepare<TMsg>(
-  Prepared: V.Prepared<TMsg>; Theme: Th.Theme; Popup: PopupState.State<TMsg>
+  Prepared: V.Prepared<TMsg>; Theme: Th.Theme; Popup: PopupState.State<TMsg>;
+  Pickers: PickerState.State; Size: T.Viewport
 ): E.Element<TMsg>;
   function Children(Items: array of Ui.Element<TMsg>; Colors: T.Style; Horizontal: bool := false): array of E.Element<TMsg>;
   begin
@@ -147,7 +155,11 @@ public function Prepare<TMsg>(
         const Id: string, const Items: array of Lists.Item, const Selected: string,
         const OnSelect: function(string): TMsg, const OnActivate: function(string): TMsg
       ):
-        return SelectionList.Lower<TMsg>(Id, Items, Selected, OnSelect, OnActivate);
+        return SelectionList.Lower<TMsg>(
+          Id, Items, Selected,
+          function(Key: string): Actions.Result<TMsg> => Actions.Result<TMsg>.Send(OnSelect(Key)),
+          function(Key: string): Actions.Result<TMsg> => Actions.Result<TMsg>.Send(OnActivate(Key))
+        );
       when Ui.Element.FilterBar(
         const Id: string, const FilterFields: array of Filters.Field, const Current: Filters.Value,
         const Change: function(Filters.Value): TMsg, const Capacity: int, const Enabled: bool
@@ -313,7 +325,22 @@ public function Prepare<TMsg>(
         const Id: string, const Value: string, const Change: function(string): TMsg,
         const Settings: Fields.Options, const Submit: Sys.Func<string, TMsg>?
       ):
-        const Field: Edit.Field<TMsg> := new Edit.Field<TMsg>(Id, Value, Change, Settings, Submit);
+        const Send: function(string): Actions.Result<TMsg> := function(NewText: string): Actions.Result<TMsg> => Actions.Result<TMsg>.Send(
+          Change(NewText)
+        );
+        const SubmitAction: Sys.Func<string, Actions.Result<TMsg>>? := case Submit of
+          when is Sys.Func<string, TMsg> as Callback: function(Text: string): Actions.Result<TMsg> => Actions.Result<TMsg>.Send(
+            Callback.Invoke(Text)
+          );
+          else null;
+        end case;
+        const Field: Edit.Field<TMsg> := new Edit.Field<TMsg>(
+          Id,
+          Value,
+          Send,
+          Settings,
+          SubmitAction
+        );
         return FieldWidget.WithLabels<TMsg>(
           E.Element<TMsg>.TextField(Field),
           Settings.Label,
@@ -419,7 +446,7 @@ public function Prepare<TMsg>(
             Settings.InitialFocus,
             Sheets.CloseId(Id)
           ),
-          Dismiss, Colors, Theme,
+          function(): TMsg => Dismiss, Colors, Theme,
           function(PanelStyle: T.Style): E.Element<TMsg> => Visit(Content, PanelStyle)
         );
       when Ui.Element.Dialog(
@@ -436,9 +463,23 @@ public function Prepare<TMsg>(
               null
             end if, not Settings.Persistent
           ),
-          Dismiss, Colors, Theme,
+          function(): TMsg => Dismiss, Colors, Theme,
           function(PanelStyle: T.Style): E.Element<TMsg> => Visit(Content, PanelStyle)
         );
+      when Ui.Element.FilePicker(
+        const Id: string, const Base: Ui.Element<TMsg>?, const Open: bool,
+        const Change: function(Files.Event): TMsg, const Settings: Files.Options
+      ):
+        const Underneath: E.Element<TMsg> := if Base = null then
+          E.Element<TMsg>.Stack([], false, new E.Flow())
+        else
+          Visit(Base, Colors, ParentHorizontal)
+        end if;
+        return if Open then
+          FilePicker.Lower<TMsg>(Id, Underneath, Change, Settings, Pickers, Size, Colors, Theme)
+        else
+          Underneath
+        end if;
       when Ui.Element.Deferred(const Id: string, _):
         return Visit(Prepared.Subviews[Id].Tree, Colors, ParentHorizontal);
       when Ui.Element.TerminalViewport(const Id: string, _):
@@ -455,6 +496,7 @@ public function Prepare<TMsg>(
   end function;
 begin
   const Result: E.Element<TMsg> := Visit(Prepared.Tree, Theme.Text);
+  Pickers.Finish();
   return Result;
 end function;
 

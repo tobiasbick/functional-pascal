@@ -1,0 +1,223 @@
+// [Documentation](../../../../../docs/ui/tui/navigation/pagination.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Navigation.Pagination;
+
+uses
+  Fpas.Ui.Internal.Navigation.PaginationPages as Pages, Fpas.Ui.Tui.Internal.View.Tree as E,
+  Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as A,
+  Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G,
+  Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Rendering.Drawing as D,
+  Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Widgets.Developer.Terminal as Terminal,
+  Fpas.Ui.Styles as S, System as Sys, System.Collections.Generic as C, System.Globalization as Culture;
+
+const SideWidth: int := 3;
+const Gap: int := 1;
+
+function Number(Value: int): string;
+begin
+  return Value.ToString(Culture.CultureInfo.InvariantCulture);
+end function;
+
+// Measures the expanded pager, allowing space for both possible ellipses.
+// ## Parameters
+// - `Count`: Positive page count.
+// ## Returns
+// The width in terminal cells at which numbered buttons fit on every page.
+public function PreferredWidth(Count: int): int;
+begin
+  const Numbers: int := if Count <= 7 then
+    Count
+  else
+    5
+  end if;
+  const Ellipses: int := if Count <= 7 then
+    0
+  else
+    2
+  end if;
+  return 2 * SideWidth + Numbers * (Number(Count).Length + 2) + Ellipses +
+    (Numbers + Ellipses + 1) * Gap;
+end function;
+
+type Choice<TMsg> = record implements Actions.IActivatable<TMsg>
+  public Notify: function(int): TMsg;
+  public Target: int;
+  public Current: int;
+
+  public function Activate(): Actions.Result<TMsg>;
+  begin
+    return if self.Target = self.Current then
+      Actions.Result<TMsg>.NoAction
+    else
+      Actions.Result<TMsg>.Send(self.Notify(self.Target))
+    end if;
+  end function;
+end record;
+
+// Presents the pager using its own allocated width and registers each action.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Pager`: Current page and input bindings.
+// - `Area`: Full allocation.
+// - `Clip`: Visible portion of the allocation.
+// - `Style`: Inherited terminal colors.
+// - `Theme`: Active terminal palette.
+// - `Scope`: Owning input scope.
+// - `Parent`: Enclosing fallback focus identity.
+// - `ScrollId`: Enclosing scroll viewport, if any.
+// - `Operations`: Frame paint operations.
+// - `Navigation`: Keyboard destinations, including vertically clipped controls.
+// - `Stops`: Tab traversal order.
+// - `Register`: Registers a visible control.
+public procedure Arrange<TMsg>(
+  Pager: E.PagerView<TMsg>; Area: F.Rect; Clip: F.Rect; Style: Terminal.Style; Theme: Th.Theme;
+  Scope: string; Parent: string; ScrollId: string; Operations: C.List<D.Operation>;
+  Navigation: C.List<A.NavigationStop>; Stops: C.List<A.TabStop>; Register: procedure(A.Control<TMsg>)
+);
+  procedure Text(Value: string);
+  begin
+    const Width: int := G.Measure(Value);
+    if Clip.Height > 0 and Width > 0 then
+      const Bounds: F.Rect := new F.Rect(Column, Area.Y, Width, 1);
+      Operations.Add(new D.Operation(Value, Bounds, Clip, Style, false));
+    end if;
+
+    Column := Column + Width;
+  end procedure;
+
+  procedure Button(
+    Id: string; Caption: string; Label: string; Target: int; Width: int; Available: bool;
+    Role: string; Value: string; Variant: S.ButtonVariant; Fallback: string
+  );
+  begin
+    const Bounds: F.Rect := new F.Rect(Column, Area.Y, Width, 1);
+    const Hit: F.Rect := F.Intersect(Bounds, Clip);
+    const Enabled: bool := Pager.Enabled and Available;
+    Column := Column + Width;
+    if Hit.Width > 0 and Hit.Height > 0 then
+      Buttons.Paint(
+        Operations, Bounds, Hit, Style, Theme, Caption, true, Variant, Enabled,
+        Padding := if Width >= 3 then
+          1
+        else
+          0
+        end if, Center := true, Joined := true
+      );
+    end if;
+
+    A.RegisterRowAction<TMsg>(
+      new A.Control<TMsg>(
+        Id, Label, Role, Value, Bounds, Scope, Fallback, Enabled,
+        A.Binding<TMsg>.Invoke(new Choice<TMsg>(Pager.Change, Target, Pager.Page)),
+        Variant, ButtonStyle := true
+      ), Clip, ScrollId, Navigation, Stops, Register
+    );
+  end procedure;
+
+  procedure Previous(Width: int);
+  begin
+    Button(
+      PreviousId, '‹', 'Previous page', Pager.Page - 1, Width, Pager.Page > 0,
+      'page-arrow', '', S.ButtonVariant.Secondary, NextId
+    );
+  end procedure;
+
+  procedure Next(Width: int);
+  begin
+    Button(
+      NextId, '›', 'Next page', Pager.Page + 1, Width, Pager.Page < Last,
+      'page-arrow', '', S.ButtonVariant.Secondary, PreviousId
+    );
+  end procedure;
+begin
+  const Last: int := Pager.Count - 1;
+  const PreviousId: string := Pager.Id + '/previous';
+  const NextId: string := Pager.Id + '/next';
+  var Column: int := Area.X;
+  const IndexText: string := Number(Pager.Page + 1);
+  const CountText: string := Number(Pager.Count);
+  const Status: string := 'Page ' + IndexText + ' of ' + CountText;
+  if Clip.Height > 0 then
+    Register(
+      new A.Control<TMsg>(
+        Pager.Id, 'Pagination', 'pagination', Number(Pager.Page), F.Intersect(
+          new F.Rect(Area.X, Area.Y, Area.Width, 1), Clip
+        ), Scope, Parent, false,
+        A.Binding<TMsg>.Invoke(new Choice<TMsg>(Pager.Change, Pager.Page, Pager.Page)),
+        S.ButtonVariant.Default
+      )
+    );
+  end if;
+
+  if Area.Width >= PreferredWidth(Pager.Count) then
+    const Width: int := CountText.Length + 2;
+    const Fallback: string := if Pager.Page < Last then
+      NextId
+    else
+      PreviousId
+    end if;
+    Previous(SideWidth);
+    var Prior: int := -1;
+    for Index: int in Pages.Numbered(Pager.Page, Pager.Count) do
+      Column := Column + Gap;
+      if Index > Prior + 1 then
+        Text('…');
+        Column := Column + Gap;
+      end if;
+      const Caption: string := Number(Index + 1);
+      const Current: bool := Index = Pager.Page;
+      Button(
+        Pages.PageId(Pager.Id, Index), Caption, Caption, Index, Width, true,
+        'page', if Current then
+          'true'
+        else
+          'false'
+        end if,
+        if Current then
+          S.ButtonVariant.Active
+        else
+          S.ButtonVariant.Ghost
+        end if, Fallback
+      );
+      Prior := Index;
+    end for;
+
+    Column := Column + Gap;
+    Next(SideWidth);
+    return;
+  end if;
+
+  if Area.Width = 1 then
+    if Pager.Page < Last then
+      Next(1);
+    else
+      Previous(1);
+    end if;
+
+    return;
+  end if;
+
+  const Short: string := IndexText + '/' + CountText;
+  const CanPad: bool := Area.Width >= 2 * SideWidth + 2 * Gap + Status.Length;
+  const ArrowWidth: int := if CanPad then
+    SideWidth
+  else
+    1
+  end if;
+  Previous(ArrowWidth);
+  const Center: int := Area.Width - 2 * ArrowWidth;
+  if CanPad then
+    Column := Column + Gap;
+    Text(Status);
+    Column := Column + Gap;
+  elsif Status.Length <= Center then
+    Text(Status);
+  elsif Short.Length <= Center then
+    Text(Short);
+  end if;
+
+  Next(ArrowWidth);
+end procedure;
+
+end unit;

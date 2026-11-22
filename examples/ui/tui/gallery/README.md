@@ -18,12 +18,15 @@ Use the CUI gallery's sample data when demonstrating a CUI widget in the termina
 | Components → Selection → Switch | Toggle Wi-Fi, Bluetooth or Airplane mode. Wi-Fi and Bluetooth also control the corresponding preferences in Overlays. |
 | Components → Selection → Radio group | Choose how often to save with the arrow keys or a click. |
 | Components → Navigation → Tabs | Switch the underline and pill tabs from the GUI example. |
+| Components → Navigation → [Breadcrumb](../../../../docs/ui/tui/navigation/breadcrumb.md) | Open an ancestor from the original CUI path. The overflow menu keeps hidden ancestors reachable. |
+| Components → Navigation → [Pagination](../../../../docs/ui/tui/navigation/pagination.md) | Browse the original twelve-page example. Narrow previews keep Previous, the current page and Next. |
 | Components → Overlays | Edit the profile, open the Notifications sheet, or confirm project deletion. The sheet has three editable notification switches and two recent events. |
 | Components → Feedback → Progress | Uploading assets at 68% and exporting a clip at 42%. |
 | Components → Data display → [Table](../../../../docs/ui/tui/data-display/table.md) | Browse and sort the five people from the GUI example. Focus a row and press Ctrl+Left or Ctrl+Right to see hidden columns on a narrow terminal. |
 | Components → Data display → [List](../../../../docs/ui/tui/data-display/selection-list.md) | Browse Design review, Release 1.0, and Planning from the CUI gallery. Use Enter to open the selected row. |
 | Components → Data display → [Tree view](../../../../docs/ui/tui/data-display/tree.md) | Expand the same source folders and activate files from the CUI example. |
 | Components → Overlays → [Command palette](../../../../docs/ui/tui/overlays/command-palette.md) | Open with Ctrl+K, type to filter gallery actions, and press Enter to run the highlighted action. |
+| Extended → Pickers → [Multi-select](../../../../docs/ui/tui/inputs/multi-select.md) | Search and toggle languages in the original CUI checklist. |
 | Extended → Data grid → [Filter bar](../../../../docs/ui/tui/data-display/filter-bar.md) | Search and choose several Team, Status or Role values using the original CUI fields. |
 | Extended → Code → [Log console](../../../../docs/ui/tui/developer/log-console.md) | Browse the CUI gallery's build log and reveal its next entry. Press End in the log to resume following new entries. |
 | Extended → Disclosure → Expandable cards | Open Security to read the recovery-code details. |
@@ -48,6 +51,8 @@ it with `LANG=de_DE.UTF-8` for German.
 
 ![Searchable Language select under Inputs](select.png)
 
+![Searchable Languages multi-select under Extended Pickers](multi-select.png)
+
 ![Checkboxes and connectivity switches on Selection](checkbox.png)
 
 ![Save-frequency radio group on Selection](radio-group.png)
@@ -57,6 +62,14 @@ it with `LANG=de_DE.UTF-8` for German.
 ![Notification settings and recent events in a right-hand sheet](sheet.png)
 
 ![Underline and pill tabs on Navigation](tabs.png)
+
+![Original CUI breadcrumb path on Navigation](breadcrumb.png)
+
+![Open ancestor menu in a narrow preview](breadcrumb-compact.png)
+
+![Numbered pagination on Navigation](pagination.png)
+
+![Compact pagination on Navigation](pagination-compact.png)
 
 ![Delete project confirmation with Cancel focused](dialog.png)
 

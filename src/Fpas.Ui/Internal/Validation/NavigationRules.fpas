@@ -4,13 +4,40 @@ unit Fpas.Ui.Internal.Validation.NavigationRules;
 
 uses
   Fpas.Ui.Internal.Validation.Rules as R, Fpas.Ui.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Widgets.Navigation.Breadcrumbs as Breadcrumbs,
-  Fpas.Ui.Validation as V, System as Sys;
+  Fpas.Ui.Internal.Navigation.PaginationPages as Pages, Fpas.Ui.Validation as V, System as Sys;
 
 procedure Caption(Value: string; Location: string);
 begin
   R.CheckText(Value, Location);
   if Sys.String.IsNullOrWhiteSpace(Value) then
     R.Reject(Location, 'A navigation item needs a caption.');
+  end if;
+end procedure;
+
+// Validates pagination and reserves the identities of its terminal controls.
+// ## Parameters
+// - `Id`: Stable pager identity.
+// - `Page`: Current zero-based page index.
+// - `Count`: Positive number of pages.
+// - `Profile`: Receiving host profile.
+// - `Location`: Parent view path.
+// - `Identify`: Validates and registers a unique view identity.
+public procedure CheckPagination(
+  Id: string; Page: int; Count: int; Profile: V.Target; Location: string;
+  Identify: function(string, string): string
+);
+begin
+  const At: string := Identify(Id, Location + '/pagination');
+  if Count < 1 or Page < 0 or Page >= Count then
+    R.Reject(At, 'Pagination needs a positive page count and a valid page index.');
+  end if;
+
+  if Profile <> V.Target.Graphical then
+    discard Identify(Id + '/previous', At + '/previous');
+    discard Identify(Id + '/next', At + '/next');
+    for Index: int in Pages.Numbered(Page, Count) do
+      discard Identify(Pages.PageId(Id, Index), At + '/page');
+    end for;
   end if;
 end procedure;
 
@@ -42,7 +69,7 @@ begin
   end for;
 end procedure;
 
-// Validates a graphical breadcrumb trail and registers its positional identities.
+// Validates a breadcrumb trail and registers its positional identities.
 //
 // ## Parameters
 // - `Id`: Stable trail identity.
@@ -56,7 +83,6 @@ public procedure CheckBreadcrumb(
 );
 begin
   const At: string := Identify(Id, Location + '/breadcrumb');
-  R.RequireProfile(Profile, V.Target.Graphical, At);
   if Items.Length = 0 then
     R.Reject(At, 'A breadcrumb needs at least one path item.');
   end if;
@@ -65,6 +91,10 @@ begin
     const Part: string := Identify(Breadcrumbs.ItemId(Id, Index), At + '/item');
     Caption(Items[Index], Part + '/label');
   end for;
+
+  if Profile <> V.Target.Graphical and Items.Length > 1 then
+    discard Identify(Id + '/overflow', At + '/overflow');
+  end if;
 end procedure;
 
 // Validates a graphical stepper's captions and progress.

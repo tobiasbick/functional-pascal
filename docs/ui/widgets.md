@@ -56,6 +56,7 @@ and input support. [GUI adapter](gui/host.md),
 | Checkbox with checked, unchecked and mixed states, or a switch with an on/off state | Yes | Yes | Yes |
 | Radio group with one model-owned selection | Yes | Yes | Yes |
 | Select with optional search and model-owned choice | Yes | Yes | Yes |
+| Multi-select with optional search and model-owned flags | Yes | Yes | Yes |
 | Single-line text field with label, placeholder, hint or error | Yes | Yes | Yes |
 | Field icons, affixes, clear and password buttons, and size variants | | | Yes |
 | Wrapping multiline text area | Yes | Yes | Yes |
@@ -74,7 +75,9 @@ and input support. [GUI adapter](gui/host.md),
 | Native table of contents and scroll anchors | | | Yes |
 | Native responsive grid, justification, cards, badges, metrics, avatar groups and empty states | | | Yes |
 | Tabs | Yes | Yes | Yes |
-| Breadcrumb, pagination and stepper | | | Yes |
+| Pagination with model-owned page selection | Yes | Yes | Yes |
+| Breadcrumb with positional ancestor actions | Yes | Yes | Yes |
+| Stepper | | | Yes |
 | Expandable card with a model-owned open state | Yes | Yes | Yes |
 | Modal edge sheet with a pinned header and scrolling body | Yes | Yes | Yes |
 | Centered modal dialog | Yes | Yes | Yes |
@@ -599,14 +602,15 @@ visits its selected tab once during Tab traversal and displays text labels.
 and an `OnNavigate` mapper. Activating an ancestor proposes its zero-based
 position. The last caption names the current location. Positional IDs
 allow repeated captions. Use `Breadcrumbs.ItemId(Id, Index)` to focus an
-ancestor.
+ancestor. The [terminal breadcrumb](tui/navigation/breadcrumb.md) puts
+ancestors that do not fit into a keyboard-accessible menu.
 
 `Fpas.Ui.Widgets.Navigation.Paginations.Pagination` takes a stable pager ID, a zero-based
-selected page, a positive page count and an `OnChange` mapper. CUI displays
-one-based numbers and chooses which page buttons and ellipses fit.
-Previous and Next are disabled at the corresponding bounds. Tab focuses
-enabled breadcrumb links and page buttons, and Enter or Space activates
-them. These three controls require the graphical profile.
+selected page, a positive page count and an `OnChange` mapper. Both hosts
+display one-based numbers and disable Previous and Next at the corresponding
+bounds. CUI fits page buttons and ellipses to the width. The [terminal pager](tui/navigation/pagination.md)
+shows the current page between the arrows in compact mode. Tab focuses
+enabled page buttons, and Enter or Space activates them.
 
 ## Stepper
 
@@ -1366,10 +1370,10 @@ widgets require the Graphical profile.
 ## Multi-select
 
 `Fpas.Ui.Widgets.Inputs.MultiSelects.MultiSelect` takes `Selects.Item` choices and one
-model-owned flag per choice. The native popup supports checkboxes, optional
-search, and selecting or clearing the list. The field shows removable chips
-and a count of extra selections. The callback receives a fresh array of flags
-when CUI proposes a change. Multi-select requires the graphical profile.
+model-owned flag per choice. The popup supports checkboxes and optional
+search. CUI shows removable chips and a count of extra selections. The
+[terminal field](tui/inputs/multi-select.md) shows a summary that fits the
+available width. Both hosts propose changes as a fresh array of flags.
 
 ## Color and emoji pickers
 

@@ -4,6 +4,9 @@ program TuiWidgetGallery;
 
 uses
   Gallery.Shared.PeopleFilters as FilterSample,
+  Gallery.Shared.PaginationExample as Pagination,
+  Gallery.Shared.BreadcrumbExample as Breadcrumb,
+  Gallery.Shared.LanguagesExample as LanguageSample,
   TuiGallery.State as GalleryState, TuiGallery.State.Model as Model, TuiGallery.State.Msg as Msg,
   Gallery.Shared.Strings as Strings,
   Gallery.Shared.SecurityCard as Security,
@@ -239,6 +242,11 @@ begin
         Label(Strings.Get('Page.Pickers'), S.Role.Heading),
         Choices
       );
+    when Catalog.Preview.Pickers:
+      Example := E.Column<Msg>(
+        Flow, Label(Strings.Get('Heading.MultiSelect'), S.Role.Heading),
+        LanguageSample.View<Msg>(State.Languages, Msg.SetLanguages)
+      );
     when Catalog.Preview.Selection:
       Example := Selection(State, Columns >= 66);
     when Catalog.Preview.Navigation:
@@ -247,6 +255,16 @@ begin
         E.Column<Msg>(
           Flow,
           TabExamples.Rows<Msg>(State.ActiveTab, State.ActivePillTab, Msg.SetTab, Msg.SetPillTab)
+        ),
+        Label(Strings.Get('Heading.BreadcrumbAndPagination'), S.Role.Heading),
+        Breadcrumb.View<Msg>(Msg.SelectAncestor),
+        Pagination.View<Msg>(State.PageIndex, Msg.SetPageIndex),
+        E.Text<Msg>(
+          if State.Ancestor = '' then
+            ''
+          else
+            Strings.Get('Text.SelectedPrefix') + State.Ancestor
+          end if
         )
       );
     when Catalog.Preview.Overlays:
@@ -322,6 +340,7 @@ begin
     when Catalog.Preview.Buttons: 'primary';
     when Catalog.Preview.Inputs: 'input-name';
     when Catalog.Preview.Selection: 'newsletter';
+    when Catalog.Preview.Pickers: 'picker-languages';
     when Catalog.Preview.Navigation: Tabs.ItemId(TabExamples.UnderlineId, State.ActiveTab);
     when Catalog.Preview.Overlays: 'edit-profile-open';
     when Catalog.Preview.DataDisplay: State.Person;

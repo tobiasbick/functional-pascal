@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Tui.Internal.Layout.Scene;
 
-uses Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as Validation, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys;
+uses Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as Validation, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as C;
 
 public type Binding<TMsg> = variant
   // Single-line editor with its insertion point and first editable column.
@@ -40,6 +40,8 @@ public type Control<TMsg> = record
   public TabTarget: string := '';
   // Horizontal viewport attached to a wide table's row controls.
   public Pan: HorizontalViewport? := null;
+  // Preferred replacement when this control disappears within its group.
+  public FocusReplacement: string := '';
 end record;
 
 // Keyboard panning limits for a table.
@@ -113,6 +115,42 @@ public type Layout<TMsg> = record
   // Optional focus-independent shortcut to open the command palette.
   public OpenPalette: Sys.Func<TMsg>? := null;
 end record;
+
+// Registers an action in a horizontal row and keeps offscreen Tab destinations.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Action`: Control with unclipped bounds.
+// - `Clip`: Visible part of the row.
+// - `ScrollId`: Enclosing vertical scroll viewport, if any.
+// - `Navigation`: Keyboard destinations for that viewport.
+// - `Stops`: Tab traversal order.
+// - `Register`: Adds the visible control.
+public procedure RegisterRowAction<TMsg>(
+  Action: Control<TMsg>; Clip: F.Rect; ScrollId: string; Navigation: C.List<NavigationStop>;
+  Stops: C.List<TabStop>; Register: procedure(Control<TMsg>)
+);
+begin
+  const Visible: F.Rect := F.Intersect(Action.Bounds, Clip);
+  if Visible.Width = 0 then
+    return;
+  end if;
+
+  if Action.Enabled and ScrollId <> '' then
+    Navigation.Add(new NavigationStop(Action.Id, Action.Bounds, '', ScrollId, Action.Scope));
+    if Visible.Height = 0 then
+      Stops.Add(new TabStop(Action.Id, Action.Scope));
+    end if;
+  end if;
+
+  if Visible.Height > 0 then
+    Register(
+      Action with
+        Bounds := Visible;
+      end with
+    );
+  end if;
+end procedure;
 
 public function FindControl<TMsg>(Layout: Layout<TMsg>?; Id: string): Control<TMsg>?;
 begin

@@ -1,0 +1,39 @@
+// [Documentation](../../../../docs/ui/tui/navigation/pagination.md)
+
+unit Fpas.Ui.Internal.Navigation.PaginationPages;
+
+uses System as Sys, System.Globalization as Culture;
+
+// Finds the directly selectable pages in the expanded pager.
+// ## Parameters
+// - `Page`: Current zero-based page.
+// - `Count`: Positive number of pages.
+// ## Returns
+// The page indices in display order. Discontinuities are displayed as ellipses.
+public function Numbered(Page: int; Count: int): array of int;
+begin
+  if Count <= 7 then
+    const Indices: array of int := new int[Count];
+    for Index: int := 0 to Count - 1 do
+      Indices[Index] := Index;
+    end for;
+
+    return Indices;
+  end if;
+
+  const Start: int := Sys.Math.Clamp(Page - 1, 1, Count - 4);
+  return [0, Start, Start + 1, Start + 2, Count - 1];
+end function;
+
+// Identifies a numbered page in the terminal pager.
+// ## Parameters
+// - `Id`: Stable pager identity.
+// - `Index`: Zero-based page index.
+// ## Returns
+// The numbered control's stable ID.
+public function PageId(Id: string; Index: int): string;
+begin
+  return Id + '/' + Index.ToString(Culture.CultureInfo.InvariantCulture);
+end function;
+
+end unit;

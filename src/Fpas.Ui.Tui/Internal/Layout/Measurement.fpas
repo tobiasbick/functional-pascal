@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Tui.Internal.Layout.Measurement;
 
-uses Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System as Sys;
+uses Fpas.Ui.Tui.Internal.Widgets.Navigation.Pagination as Pagination, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System as Sys;
 
 public function FlexRule<TMsg>(Node: E.Element<TMsg>): E.Flex;
 begin
@@ -51,7 +51,9 @@ begin
       end if;
     when E.Element.Table(
       _
-    ), E.Element.SelectionList(_), E.Element.TextField(_), E.Element.TextArea(_):
+    ), E.Element.SelectionList(
+      _
+    ), E.Element.TextField(_), E.Element.TextArea(_), E.Element.Pager(_), E.Element.Breadcrumb(_):
       return 1;
     when E.Element.StatusBar(_, _):
       return if Horizontal then
@@ -177,6 +179,8 @@ begin
     case Node of
       when E.Element.TextField(_), E.Element.TextArea(_):
         return new E.Flex(Grow := 1);
+      when E.Element.Pager(_), E.Element.Breadcrumb(_):
+        return new E.Flex(Minimum := 1);
       when E.Element.TabStrip(const Strip: E.TabView<TMsg>):
         return new E.Flex(
           Minimum := 1, Grow := if Strip.Settings.FullWidth then
@@ -240,6 +244,8 @@ begin
   case Node of
     when E.Element.TabStrip(const Strip: E.TabView<TMsg>):
       return Horizontal and (Explicit or Strip.Settings.FullWidth);
+    when E.Element.Pager(_), E.Element.Breadcrumb(_):
+      return Horizontal;
     when E.Element.Action(_, _, _, const View: E.ActionView):
       return Horizontal and (View.FillWidth or (Explicit and View.FixedWidth = null));
     when E.Element.Sized(
@@ -323,6 +329,18 @@ begin
         List.Width
       else
         Sys.Math.Max(1, List.Items.Length)
+      end if;
+    when E.Element.Pager(const Pager: E.PagerView<TMsg>):
+      return if Horizontal then
+        Pagination.PreferredWidth(Pager.Count)
+      else
+        1
+      end if;
+    when E.Element.Breadcrumb(const Trail: E.BreadcrumbView<TMsg>):
+      return if Horizontal then
+        Trail.Width
+      else
+        1
       end if;
     when E.Element.TabStrip(const Strip: E.TabView<TMsg>):
       if not Horizontal then

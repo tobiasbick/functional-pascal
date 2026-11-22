@@ -77,6 +77,8 @@ public type ActionView = record
   public Center: bool := true;
   // Supporting text painted below the caption inside the same hit target.
   public Description: string := '';
+  // Optional caption resolver for the cell width left after button padding.
+  public CaptionForWidth: Sys.Func<int, string>? := null;
 end record;
 
 // Shared terminal geometry and input policy for dialogs and edge sheets.
@@ -155,6 +157,40 @@ public type SelectionListView<TMsg> = record
   public OnActivate: function(string): TMsg;
 end record;
 
+// Terminal pagination with a model-owned page and dispatch binding.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type PagerView<TMsg> = record
+  // Stable pager identity.
+  public Id: string;
+  // Current zero-based page.
+  public Page: int;
+  // Positive page count.
+  public Count: int;
+  // Maps a proposed zero-based page to a message.
+  public Change: function(int): TMsg;
+  // Whether navigation accepts input.
+  public Enabled: bool;
+end record;
+
+// Terminal breadcrumb captions and their measured widths.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type BreadcrumbView<TMsg> = record
+  // Stable trail identity.
+  public Id: string;
+  // Single-line captions in path order.
+  public Items: array of string;
+  // Caption widths in terminal cells.
+  public Widths: array of int;
+  // Preferred width of the complete path, capped just above the terminal maximum.
+  public Width: int;
+  // Maps an ancestor position to a message.
+  public Navigate: function(int): TMsg;
+  // Whether ancestor actions and the overflow menu accept input.
+  public Enabled: bool;
+end record;
+
 // Terminal presentation data produced by Lowering from a prepared Fpas.Ui tree.
 // This is backend storage, not a second application widget API.
 //
@@ -176,6 +212,10 @@ public type Element<TMsg> = variant
   SelectionList(Value: SelectionListView<TMsg>);
   // Horizontally scrollable navigation strip.
   TabStrip(Value: TabView<TMsg>);
+  // Responsive page navigation.
+  Pager(Value: PagerView<TMsg>);
+  // Responsive trail of ancestor links and a current location.
+  Breadcrumb(Value: BreadcrumbView<TMsg>);
   // Single editable row with its model-owned value.
   TextField(Field: Edit.Field<TMsg>);
   // Multiline editor with model-owned text.

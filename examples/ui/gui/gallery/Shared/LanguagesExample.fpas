@@ -1,0 +1,39 @@
+// [Documentation](../../../../../docs/ui/gui/pickers/multi-select.md)
+
+unit Gallery.Shared.LanguagesExample;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Selects as S, Fpas.Ui.Widgets.Inputs.MultiSelects as M;
+
+const Choices: array of S.Item := [
+  new S.Item('C'), new S.Item('C++'), new S.Item('Rust'), new S.Item('Zig'),
+  new S.Item('Go'), new S.Item('Swift'), new S.Item('Kotlin'), new S.Item('Odin')
+];
+
+// Creates the original selection independently for each gallery model.
+// ## Returns
+// Flags selecting C, Rust and Swift.
+public function Initial(): array of bool;
+begin
+  return [true, false, true, false, false, true, false, false];
+end function;
+
+// Builds the original searchable Languages example in either gallery.
+// ## Type parameters
+// - `TMsg`: Gallery message type.
+// ## Parameters
+// - `Selected`: Model-owned selection flags.
+// - `Change`: Maps an updated selection to a gallery message.
+// ## Returns
+// The shared multi-select example.
+public function View<TMsg>(Selected: array of bool; Change: function(array of bool): TMsg): E.Element<TMsg>;
+begin
+  return M.MultiSelect<TMsg>(
+    'picker-languages',
+    Choices,
+    Selected,
+    Change,
+    new M.Options(Label := 'Languages', Searchable := true)
+  );
+end function;
+
+end unit;

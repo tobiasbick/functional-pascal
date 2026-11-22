@@ -1,6 +1,7 @@
 # Breadcrumb
 
-Use a breadcrumb to show the current location and let the user go back to an ancestor. Available in **GUI**.
+Use a breadcrumb to show the current location and let the user go back to an
+ancestor. Available in **GUI** and [TUI](../../tui/navigation/breadcrumb.md).
 
 ![Breadcrumb in the FPAS gallery](images/breadcrumb.png)
 
@@ -43,6 +44,7 @@ Click an ancestor or focus it with Tab and press Enter or Space. Position identi
 
 ## Source files
 
+- [Shared gallery project trail](../../../../examples/ui/gui/gallery/Shared/BreadcrumbExample.fpas)
 - `src/Fpas.Ui.Gui/Internal/Widgets/Navigation/`
   - [Breadcrumb.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Navigation/Breadcrumb.fpas)
 - `src/Fpas.Ui.Gui.Cui/Interop/Navigation/`

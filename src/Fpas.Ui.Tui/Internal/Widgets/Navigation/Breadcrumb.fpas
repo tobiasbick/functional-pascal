@@ -1,0 +1,236 @@
+// [Documentation](../../../../../docs/ui/tui/navigation/breadcrumb.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Navigation.Breadcrumb;
+
+uses
+  Fpas.Ui.Widgets.Navigation.Breadcrumbs as B, Fpas.Ui.Tui.Internal.View.Tree as E,
+  Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as A,
+  Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G,
+  Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Rendering.Drawing as D,
+  Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Widgets.Developer.Terminal as Terminal,
+  Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as P,
+  Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup as Popup,
+  Fpas.Ui.Styles as S, System as Sys, System.Collections.Generic as C;
+
+const Separator: string := ' › ';
+const Ellipsis: string := '…';
+
+// Prepares the captions and complete trail width.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable trail identity.
+// - `Items`: Validated path captions.
+// - `Navigate`: Maps an ancestor position to a message.
+// - `Enabled`: Whether ancestor links accept input.
+// ## Returns
+// A terminal breadcrumb that chooses its visible suffix at layout time.
+public function Lower<TMsg>(
+  Id: string; Items: array of string; Navigate: function(int): TMsg; Enabled: bool
+): E.Element<TMsg>;
+begin
+  const Captions: array of string := Sys.Array.ConvertAll<string, string>(Items, G.SingleLine);
+  const Widths: array of int := Sys.Array.ConvertAll<string, int>(
+    Captions,
+    function(Caption: string): int => Sys.Math.Min(G.Measure(Caption), E.MaximumColumns + 1)
+  );
+  var Width: long := 3L * (Items.Length - 1);
+  for CaptionWidth: int in Widths do
+    Width := Width + CaptionWidth;
+  end for;
+
+  return E.Element<TMsg>.Breadcrumb(
+    new E.BreadcrumbView<TMsg>(
+      Id, Captions, Widths, cast<int>(Sys.Math.Min(Width, E.MaximumColumns + 1L)), Navigate, Enabled
+    )
+  );
+end function;
+
+// Opens the anchored menu for ancestors omitted from the row.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Trigger<TMsg> = record implements Actions.IActivatable<TMsg>
+  // Stable menu trigger identity.
+  public Id: string;
+  // Current breadcrumb captions and callback.
+  public Trail: E.BreadcrumbView<TMsg>;
+  // Number of hidden ancestors at the start of the path.
+  public Hidden: int;
+  // Session-owned popup state.
+  public State: P.State<TMsg>;
+
+  // Opens the first hidden ancestor without proposing navigation.
+  // ## Returns
+  // No application message.
+  public function Activate(): Actions.Result<TMsg>;
+  begin
+    self.State.Write(new P.Cursor(self.Id));
+    return Actions.Result<TMsg>.NoAction;
+  end function;
+end record;
+
+// Builds popup choices in original ancestor order.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Menu`: Active overflow button and its model bindings.
+// ## Returns
+// Menu content using the same positional IDs as the visible path.
+public function Content<TMsg>(Menu: Trigger<TMsg>): Popup.Content<TMsg>;
+begin
+  const Rows: C.List<Popup.Row<TMsg>> := new C.List<Popup.Row<TMsg>>(Menu.Hidden);
+  var Width: int := 18;
+  for Index: int := 0 to Menu.Hidden - 1 do
+    const Caption: string := Menu.Trail.Items[Index];
+    Width := Sys.Math.Max(Width, Sys.Math.Min(Menu.Trail.Widths[Index], E.MaximumColumns) + 2);
+    Rows.Add(
+      Popup.Row<TMsg>.Choice(
+        new Popup.Item<TMsg>(
+          B.ItemId(Menu.Trail.Id, Index), Caption, ' ' + Caption, 'crumb',
+          new Actions.Proposal<int, TMsg>(Menu.Trail.Navigate, Index), Value := ''
+        )
+      )
+    );
+  end for;
+
+  return new Popup.Content<TMsg>(Rows.ToArray(), Width, SpaceActivates := true);
+end function;
+
+function FirstVisible<TMsg>(Trail: E.BreadcrumbView<TMsg>; Width: int): int;
+begin
+  if Trail.Width <= Width then
+    return 0;
+  end if;
+  var Index: int := Trail.Items.Length - 1;
+  var Remaining: int := Width - Trail.Widths[Index] - 4;
+  while Index > 0 and Trail.Widths[Index - 1] <= Remaining - 3 do
+    Index := Index - 1;
+    Remaining := Remaining - Trail.Widths[Index] - 3;
+  end while;
+
+  return Index;
+end function;
+
+// Paints a breadcrumb and keeps hidden ancestors available through its menu.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Trail`: Current captions and input bindings.
+// - `Area`: Full allocation.
+// - `Clip`: Visible part of the allocation.
+// - `Style`: Inherited terminal colors.
+// - `Theme`: Active terminal palette.
+// - `State`: Session-local popup state.
+// - `Scope`: Owning input scope.
+// - `Parent`: Enclosing fallback focus identity.
+// - `ScrollId`: Enclosing vertical scroll viewport, if any.
+// - `Operations`: Frame paint operations.
+// - `Navigation`: Keyboard destinations, including vertically clipped controls.
+// - `Stops`: Tab traversal order.
+// - `Register`: Adds a visible control.
+public procedure Arrange<TMsg>(
+  Trail: E.BreadcrumbView<TMsg>; Area: F.Rect; Clip: F.Rect; Style: Terminal.Style; Theme: Th.Theme;
+  State: P.State<TMsg>; Scope: string; Parent: string; ScrollId: string; Operations: C.List<D.Operation>;
+  Navigation: C.List<A.NavigationStop>; Stops: C.List<A.TabStop>; Register: procedure(A.Control<TMsg>)
+);
+  procedure Text(Value: string; Width: int);
+  begin
+    if Width > 0 and Clip.Height > 0 then
+      const Bounds: F.Rect := new F.Rect(Column, Area.Y, Width, 1);
+      Operations.Add(new D.Operation(Value, Bounds, Clip, Style, false));
+    end if;
+
+    Column := Column + Width;
+  end procedure;
+
+  procedure Link(
+    Id: string; Label: string; Caption: string; Width: int; Role: string; Value: string;
+    Action: Actions.IActivatable<TMsg>; Fallback: string
+  );
+  begin
+    const Bounds: F.Rect := new F.Rect(Column, Area.Y, Width, 1);
+    const Hit: F.Rect := F.Intersect(Bounds, Clip);
+    if Hit.Width > 0 and Hit.Height > 0 then
+      Buttons.Paint(
+        Operations, Bounds, Hit, Style, Theme, Caption, true, S.ButtonVariant.Link,
+        Trail.Enabled, Padding := 0, Joined := true
+      );
+    end if;
+
+    A.RegisterRowAction<TMsg>(
+      new A.Control<TMsg>(
+        Id,
+        Label,
+        Role,
+        Value,
+        Bounds,
+        Scope,
+        Parent,
+        Trail.Enabled,
+        A.Binding<TMsg>.Invoke(Action),
+        S.ButtonVariant.Link,
+        ButtonStyle := true,
+        FocusReplacement := Fallback
+      ), Clip, ScrollId, Navigation, Stops, Register
+    );
+    Column := Column + Width;
+  end procedure;
+begin
+  const Last: int := Trail.Items.Length - 1;
+  const Width: int := Clip.X + Clip.Width - Area.X;
+  const First: int := FirstVisible<TMsg>(Trail, Width);
+  const Overflow: string := Trail.Id + '/overflow';
+  var Column: int := Area.X;
+  if First > 0 then
+    Link(
+      Overflow, 'More path levels', Ellipsis, 1, 'menu',
+      if State.Read().Id = Overflow then
+        'true'
+      else
+        'false'
+      end if,
+      new Trigger<TMsg>(Overflow, Trail, First, State), B.ItemId(Trail.Id, First - 1)
+    );
+    if Width >= 5 then
+      Text(Separator, 3);
+    elsif Width >= 3 then
+      Text(' ', 1);
+    end if;
+  end if;
+
+  for Index: int := First to Last - 1 do
+    const Caption: string := Trail.Items[Index];
+    Link(
+      B.ItemId(Trail.Id, Index), Caption, Caption, Trail.Widths[Index], 'crumb', '',
+      new Actions.Proposal<int, TMsg>(Trail.Navigate, Index), Overflow
+    );
+    Text(Separator, 3);
+  end for;
+  const CurrentWidth: int := Sys.Math.Min(Trail.Widths[Last], Area.X + Width - Column);
+  if CurrentWidth > 0 and Clip.Height > 0 then
+    const Label: string := Trail.Items[Last];
+    const Caption: string := if CurrentWidth = Trail.Widths[Last] then
+      Label
+    else
+      Label.Substring(0, G.IndexAt(Label, 0, CurrentWidth - 1)) + Ellipsis
+    end if;
+    const Bounds: F.Rect := F.Intersect(new F.Rect(Column, Area.Y, CurrentWidth, 1), Clip);
+    Text(Caption, CurrentWidth);
+    Register(
+      new A.Control<TMsg>(
+        B.ItemId(Trail.Id, Last),
+        Label,
+        'crumb',
+        'current',
+        Bounds,
+        Scope,
+        '',
+        false,
+        A.Binding<TMsg>.Invoke(new Actions.Proposal<int, TMsg>(Trail.Navigate, Last)),
+        S.ButtonVariant.Default
+      )
+    );
+  end if;
+end procedure;
+
+end unit;

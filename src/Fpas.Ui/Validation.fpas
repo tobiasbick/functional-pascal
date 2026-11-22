@@ -1021,9 +1021,12 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _, const Settings: Multi.Options
       ):
         const Path: string := Location + '/multiSelect';
-        Rules.RequireProfile(Profile, Target.Graphical, Path);
         const At: string := Identify(Id, Path);
         SelectRules.MultiSelect(Items, Selected, Settings, At);
+        if Profile <> Target.Graphical then
+          discard Identify(Id + '/bulk', At + '/bulk');
+        end if;
+
         for Index: int := 0 to Items.Length - 1 do
           discard Identify(Selects.OptionId(Id, Index), At + '/option');
         end for;
@@ -1576,11 +1579,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
       when E.Element.BreadcrumbTrail(const Id: string, const Items: array of string, _, _):
         NavigationRules.CheckBreadcrumb(Id, Items, Profile, Location, Identify);
       when E.Element.PaginationAction(const Id: string, const Page: int, const Count: int, _, _):
-        const At: string := Identify(Id, Location + '/pagination');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        if Count < 1 or Page < 0 or Page >= Count then
-          Rules.Reject(At, 'Pagination needs a positive page count and a valid page index.');
-        end if;
+        NavigationRules.CheckPagination(Id, Page, Count, Profile, Location, Identify);
       when E.Element.StepProgress(
         const Id: string,
         const Steps: array of string,

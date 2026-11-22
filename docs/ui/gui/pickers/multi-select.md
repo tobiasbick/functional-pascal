@@ -1,6 +1,8 @@
 # Multi-select
 
-Use multi-select for independent choices from a fixed list. The field shows the selected items as chips and the popup shows checkboxes. Available in **GUI**.
+Use multi-select for independent choices from a fixed list. In CUI, the field
+shows the selected items as chips and the popup shows checkboxes. Available in
+**GUI** and [TUI](../../tui/inputs/multi-select.md).
 
 ![Multi-select in the FPAS gallery](images/multi-select.png)
 
@@ -51,6 +53,7 @@ Open the list and toggle checkboxes or use its bulk selection action. Remove a c
 
 ## Source files
 
+- [Shared Languages example](../../../../examples/ui/gui/gallery/Shared/LanguagesExample.fpas)
 - `src/Fpas.Ui.Gui/Internal/Widgets/Inputs/`
   - [MultiSelect.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Inputs/MultiSelect.fpas)
 - `src/Fpas.Ui.Gui.Cui/Interop/Inputs/`

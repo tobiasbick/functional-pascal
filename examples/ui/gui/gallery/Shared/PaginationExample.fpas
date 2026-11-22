@@ -1,0 +1,23 @@
+// [Documentation](../../../../../docs/ui/gui/navigation/pagination.md)
+
+unit Gallery.Shared.PaginationExample;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Navigation.Paginations as P;
+
+// First page of the original CUI example.
+public const Initial: int := 0;
+
+// Builds the original twelve-page pager shared by the galleries.
+// ## Type parameters
+// - `TMsg`: Gallery message type.
+// ## Parameters
+// - `Page`: Current zero-based page.
+// - `Change`: Maps a page change to a gallery message.
+// ## Returns
+// The shared pager.
+public function View<TMsg>(Page: int; Change: function(int): TMsg): E.Element<TMsg>;
+begin
+  return P.Pagination<TMsg>('pages', Page, 12, Change);
+end function;
+
+end unit;

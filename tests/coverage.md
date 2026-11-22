@@ -223,6 +223,12 @@ The radio-group contract covers one tab stop per group, wrapping past disabled o
 The terminal selection-list contract checks validation, one tab stop, rejected selection proposals, keyboard and pointer selection, scrolling, and Enter activation. The gallery checks the original CUI list's initial selection, details, and activation independently of later selection changes.
 
 The [terminal filter-bar contract](Fixtures/tui/FilterBar.fpas) checks the UTF-8 search capacity, reserved IDs, keyboard and pointer selection, focus return, disabled controls and clearing all criteria.
+
+The [terminal multi-select contract](Fixtures/tui/MultiSelect.fpas) checks search and unfiltered IDs, independent toggles, bulk changes, focus return, and width-aware selection summaries.
+
+The [terminal pagination contract](Fixtures/tui/Pagination.fpas) checks numbered and compact layout, page proposals, boundary buttons, focus after resize or disabling, and scrolling a pager into view.
+
+The [terminal breadcrumb contract](Fixtures/tui/Breadcrumb.fpas) checks ancestor activation, passive current captions, overflow keyboard input, focus through resize and card collapse, and narrow and scrolled layouts.
 The [terminal widgets contract](Fixtures/tui/TerminalWidgets.fpas) checks appending while following and reading older log messages, palette filtering and focus return, tree expansion and file activation, and keyboard panning of wide tables. The text field and area contracts also check selection and replacing text.
 The gallery DAP test sends the same shortcuts through the private terminal
 and checks that resizing and changing themes produce the expected frames.

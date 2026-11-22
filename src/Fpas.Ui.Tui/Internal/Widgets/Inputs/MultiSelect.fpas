@@ -1,0 +1,238 @@
+// [Documentation](../../../../../docs/ui/tui/inputs/multi-select.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Inputs.MultiSelect;
+
+uses
+  Fpas.Ui.Widgets.Inputs.Selects as Selects, Fpas.Ui.Widgets.Inputs.MultiSelects as Multi,
+  Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Controls.Activation as Actions,
+  Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as P,
+  Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup as Popup,
+  Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Styles as Style,
+  System as Sys, System.Collections.Generic as C, System.Globalization as Culture, System.Linq.Enumerable as Linq;
+
+// Opens the checklist and holds its current model bindings.
+// ## Type parameters
+// - `TMsg`: Application message type.
+public type Trigger<TMsg> = record implements Actions.IActivatable<TMsg>
+  // Stable picker identity.
+  public Id: string;
+  // Choices in original index order.
+  public Items: array of Selects.Item;
+  // Model-owned selected flags.
+  public Selected: array of bool;
+  // Maps a proposed selection to a message.
+  public Change: function(array of bool): TMsg;
+  // Presentation and input options.
+  public Settings: Multi.Options;
+  // Session-local popup state.
+  public State: P.State<TMsg>;
+
+  // Opens with a fresh query and highlights the first selected choice when present.
+  // ## Returns
+  // No application message.
+  public function Activate(): Actions.Result<TMsg>;
+  begin
+    const Index: int := Sys.Array.IndexOf<bool>(self.Selected, true);
+    const Highlight: string := if Index >= 0 then
+      Selects.OptionId(self.Id, Index)
+    else
+      ''
+    end if;
+    self.State.Write(new P.Cursor(self.Id, Highlight));
+    return Actions.Result<TMsg>.NoAction;
+  end function;
+end record;
+
+type Toggle<TMsg> = record implements Actions.IActivatable<TMsg>
+  public Field: Trigger<TMsg>;
+  public Index: int;
+
+  public function Activate(): Actions.Result<TMsg>;
+  begin
+    const Selection: array of bool := cast<array of bool>(self.Field.Selected.Clone());
+    Selection[self.Index] := not Selection[self.Index];
+    return Actions.Result<TMsg>.Send(self.Field.Change(Selection));
+  end function;
+end record;
+
+type Bulk<TMsg> = record implements Actions.IActivatable<TMsg>
+  public Field: Trigger<TMsg>;
+  public SelectAll: bool;
+
+  public function Activate(): Actions.Result<TMsg>;
+  begin
+    const Selection: array of bool := new bool[self.Field.Selected.Length];
+    Sys.Array.Fill<bool>(Selection, self.SelectAll);
+    return Actions.Result<TMsg>.Send(self.Field.Change(Selection));
+  end function;
+end record;
+
+// Builds the searchable checklist using unfiltered option identities.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Field`: Current picker binding.
+// - `Width`: Visible trigger width.
+// ## Returns
+// Popup options that stay open while toggling choices.
+public function Content<TMsg>(Field: Trigger<TMsg>; Width: int): Popup.Content<TMsg>;
+begin
+  const Rows: C.List<Popup.Row<TMsg>> := new C.List<Popup.Row<TMsg>>();
+  var Columns: int := Sys.Math.Max(18, Width);
+  var All: bool := true;
+  for Index: int := 0 to Field.Items.Length - 1 do
+    const Caption: string := Field.Items[Index].Label;
+    const Checked: bool := Field.Selected[Index];
+    const Item: Popup.Item<TMsg> := Popup.Checkbox<TMsg>(
+      Selects.OptionId(Field.Id, Index),
+      Caption,
+      'multi-select-option',
+      Checked,
+      new Toggle<TMsg>(Field, Index)
+    );
+    Rows.Add(Popup.Row<TMsg>.Choice(Item));
+    Columns := Sys.Math.Max(Columns, G.Measure(Item.Caption) + 1);
+    All := All and Checked;
+  end for;
+
+  if not Field.Settings.Searchable or Field.State.Read().Query = '' then
+    const Label: string := if All then
+      'Clear all'
+    else
+      'Select all'
+    end if;
+    Rows.Add(
+      Popup.Row<TMsg>.Choice(
+        new Popup.Item<TMsg>(
+          Field.Id + '/bulk', Label, ' ' + Label, 'multi-select-bulk',
+          new Bulk<TMsg>(Field, not All), KeepOpen := true
+        )
+      )
+    );
+  end if;
+
+  return new Popup.Content<TMsg>(
+    Rows.ToArray(), Columns, Searchable := Field.Settings.Searchable, SpaceActivates := true
+  );
+end function;
+
+function CountBadge(Count: int): string;
+begin
+  return '+' + Count.ToString(Culture.CultureInfo.InvariantCulture);
+end function;
+
+function Caption(Names: array of string; Limit: int; Placeholder: string; Width: int): string;
+begin
+  const Count: int := Names.Length;
+  const Hidden: string := CountBadge(Count);
+  const Prefix: string := if Width >= Hidden.Length + 2 then
+    '▾ '
+  else
+    ''
+  end if;
+  const Available: int := Width - Prefix.Length;
+  if Count = 0 then
+    return Prefix + Placeholder.Substring(0, G.IndexAt(Placeholder, 0, Available));
+  end if;
+  var Used: int := 0;
+  var Shown: int := 0;
+  while Shown < Limit do
+    const Joined: int := Used + G.Measure(Names[Shown]) + (if Shown = 0 then
+      0
+    else
+      2
+    end if);
+    const Remaining: int := Count - Shown - 1;
+    const Suffix: int := if Remaining > 0 then
+      1 + CountBadge(Remaining).Length
+    else
+      0
+    end if;
+    if Joined + Suffix > Available then
+      break;
+    end if;
+
+    Used := Joined;
+    Shown := Shown + 1;
+  end while;
+
+  if Shown = 0 then
+    return if Hidden.Length <= Available then
+      Prefix + Hidden
+    else
+      Count.ToString(Culture.CultureInfo.InvariantCulture)
+    end if;
+  end if;
+
+  return Prefix + Sys.String.Join<string>(', ', Linq.Take<string>(Names, Shown)) +
+    (if Shown < Count then
+      ' ' + CountBadge(Count - Shown)
+    else
+      ''
+    end if);
+end function;
+
+// Composes the collapsed multi-select with a width-aware selection summary.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Field`: Current picker binding.
+// ## Returns
+// Optional field caption and its interactive trigger.
+public function Lower<TMsg>(Field: Trigger<TMsg>): E.Element<TMsg>;
+  function Resolve(Width: int): string;
+  begin
+    return Caption(Names, Limit, Placeholder, Width);
+  end function;
+begin
+  const Selected: C.List<string> := new C.List<string>();
+  for Index: int := 0 to Field.Items.Length - 1 do
+    if Field.Selected[Index] then
+      Selected.Add(G.SingleLine(Field.Items[Index].Label));
+    end if;
+  end for;
+  const Names: array of string := Selected.ToArray();
+  const Limit: int := Sys.Math.Min(
+    Names.Length, if Field.Settings.MaxChips = 0 then
+      3
+    else
+      Field.Settings.MaxChips
+    end if
+  );
+  const Placeholder: string := if Field.Settings.Placeholder = '' then
+    'Select'
+  else
+    G.SingleLine(Field.Settings.Placeholder)
+  end if;
+  const Name: string := if Field.Settings.Label = '' then
+    'Multi-select'
+  else
+    Field.Settings.Label
+  end if;
+  const Button: E.Element<TMsg> := E.Element<TMsg>.Action(
+    Field.Id, Field, Field.Settings.Enabled,
+    new E.ActionView(
+      Resolve(E.MaximumColumns),
+      Name := Name,
+      Role := 'multi-select',
+      Value := Sys.String.Join(', ', Names),
+      Variant := Style.ButtonVariant.Secondary,
+      ArrowFocus := false,
+      FillWidth := true,
+      Joined := true,
+      Center := false,
+      CaptionForWidth := Resolve
+    )
+  );
+  return if Field.Settings.Label = '' then
+    Button
+  else
+    E.Element<TMsg>.Stack(
+      [E.Element<TMsg>.Label(Field.Settings.Label), Button],
+      false,
+      new E.Flow()
+    )
+  end if;
+end function;
+
+end unit;

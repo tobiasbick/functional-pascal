@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Tui.Internal.Layout.Arrangement;
 
-uses Fpas.Ui.Widgets.Developer.LogConsoles as Logs, Fpas.Ui.Tui.Internal.Widgets.Developer.LogConsole as Log, Fpas.Ui.Tui.Internal.Widgets.Overlays.CommandPalette as Palette, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes, Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as SelectionList, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as PopupState, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextArea as AreaWidget, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Internal.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupHost as PopupHost, Fpas.Ui.Tui.Internal.Widgets.Collections.Table as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as FieldWidget, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Panel, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.Widgets.Navigation.Breadcrumb as Breadcrumb, Fpas.Ui.Tui.Internal.Widgets.Navigation.Pagination as Pagination, Fpas.Ui.Widgets.Developer.LogConsoles as Logs, Fpas.Ui.Tui.Internal.Widgets.Developer.LogConsole as Log, Fpas.Ui.Tui.Internal.Widgets.Overlays.CommandPalette as Palette, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes, Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as SelectionList, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as PopupState, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextArea as AreaWidget, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Internal.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupHost as PopupHost, Fpas.Ui.Tui.Internal.Widgets.Collections.Table as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as FieldWidget, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Panel, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
 
 public function Arrange<TMsg>(
   Root: E.Element<TMsg>; Columns: int; Rows: int;
@@ -135,7 +135,10 @@ public function Arrange<TMsg>(
           _,
           _,
           _
-        ), E.Element.Framed(_, _), E.Element.TabStrip(_):
+        ), E.Element.Framed(
+          _,
+          _
+        ), E.Element.TabStrip(_), E.Element.Pager(_), E.Element.Breadcrumb(_):
         else
           return;
       end case;
@@ -193,6 +196,16 @@ public function Arrange<TMsg>(
         Tabs.Arrange<TMsg>(
           Strip, Area, Clip, Style, Theme, ScopeId, FocusReturn, ScrollId, Focus,
           Scroll, Operations, NavigationRows, TabStops, AddControl
+        );
+      when E.Element.Pager(const Pager: E.PagerView<TMsg>):
+        Pagination.Arrange<TMsg>(
+          Pager, Area, Clip, Style, Theme, ScopeId, FocusReturn, ScrollId,
+          Operations, NavigationRows, TabStops, AddControl
+        );
+      when E.Element.Breadcrumb(const Trail: E.BreadcrumbView<TMsg>):
+        Breadcrumb.Arrange<TMsg>(
+          Trail, Area, Clip, Style, Theme, Popup, ScopeId, FocusReturn, ScrollId,
+          Operations, NavigationRows, TabStops, AddControl
         );
       when E.Element.Table(const Table: E.TableView<TMsg>):
         Tables.Arrange<TMsg>(
@@ -286,13 +299,19 @@ public function Arrange<TMsg>(
         const Enabled: bool,
         const View: E.ActionView
       ):
+        const Caption: string := case View.CaptionForWidth of
+          when is Sys.Func<int, string> as ResolveCaption: ResolveCaption.Invoke(
+            Sys.Math.Max(0, Clip.Width - 2 * View.Padding)
+          );
+          else View.Caption;
+        end case;
         Buttons.Paint(
           Operations,
           Area,
           Clip,
           Style,
           Theme,
-          View.Caption,
+          Caption,
           true,
           View.Variant,
           Enabled,

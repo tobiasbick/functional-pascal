@@ -1,0 +1,246 @@
+// [Documentation](../../../docs/ui/tui/navigation/pagination.md)
+
+program PaginationContract;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V,
+  Fpas.Ui.Widgets.Navigation.Paginations as P, Fpas.Ui.Widgets.Actions.Buttons as B,
+  Fpas.Ui.Tui.Application as T, Fpas.Ui.Mvu.Application as M,
+  Fpas.Ui.TerminalExtensions.Input as K, System as Sys, System.Console as Console;
+
+type Model = record
+  public Page: int := 0;
+  public Count: int := 12;
+  public DisableOnChange: bool := false;
+  public Enabled: bool := true;
+end record;
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Update(State: Model; Page: int): M.Transition<Model, int>;
+begin
+  Check(
+    Page >= 0 and Page < State.Count and Page <> State.Page and State.Enabled,
+    'The pager proposed an unavailable or unchanged page.'
+  );
+  const Next: Model := if Page = 3 then
+    State
+  else
+    State with
+      Page := Page;
+      Enabled := not State.DisableOnChange;
+    end with
+  end if;
+  return new M.Transition<Model, int>(Next, []);
+end function;
+
+function Pager(State: Model): E.Element<int>;
+begin
+  return P.Pagination<int>(
+    'pages',
+    State.Page,
+    State.Count,
+    function(Index: int): int => Index,
+    State.Enabled
+  );
+end function;
+
+function View(State: Model): E.Element<int>;
+begin
+  return E.Column<int>(
+    B.Button<int>('before', 'Before', -1),
+    Pager(State),
+    B.Button<int>('after', 'After', -1)
+  );
+end function;
+
+function Sized(State: Model): E.Element<int>;
+begin
+  return E.Row<int>(
+    E.Size<int>(Pager(State), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(22))))
+  );
+end function;
+
+function Scrolled(State: Model): E.Element<int>;
+begin
+  return E.ScrollView<int>(
+    'scroll', E.Column<int>(
+      B.Button<int>('before', 'Before', -1), E.Text<int>('One'), E.Text<int>('Two'), Pager(State)
+    )
+  );
+end function;
+
+function Find(Session: T.HeadlessSession; Id: string): T.ControlSnapshot?;
+begin
+  return Sys.Array.Find<T.ControlSnapshot>(
+    Session.Snapshot().Controls, function(Item: T.ControlSnapshot): bool => Item.Id = Id
+  );
+end function;
+
+function Control(Session: T.HeadlessSession; Id: string): T.ControlSnapshot;
+begin
+  const Item: T.ControlSnapshot? := Find(Session, Id);
+  if Item = null then
+    raise new Sys.InvalidOperationException('Missing pager control: ' + Id);
+  end if;
+
+  return Item;
+end function;
+
+procedure Send(Session: T.HeadlessSession; Input: T.Input);
+begin
+  discard Session.Send(Input);
+  case Session.Step() of
+    when T.StepResult.Failed(_, _, _, const Reason: string):
+      raise new Sys.InvalidOperationException(Reason);
+    else
+  end case;
+end procedure;
+
+procedure Key(Session: T.HeadlessSession; Pressed: K.Key);
+begin
+  Send(Session, T.Input.KeyPress(Pressed, K.KeyModifiers.None));
+end procedure;
+
+procedure Click(Session: T.HeadlessSession; Id: string);
+begin
+  const Item: T.ControlSnapshot := Control(Session, Id);
+  Send(Session, T.Input.Click(Item.Column, Item.Row));
+end procedure;
+
+function Shows(Session: T.HeadlessSession; Caption: string): bool;
+begin
+  return Sys.String.Join(#10, Session.Snapshot().Lines).Contains(Caption);
+end function;
+
+procedure Reject(Node: E.Element<int>; Diagnostic: string);
+begin
+  try
+    discard V.Prepare<int>(Node, V.Target.Terminal);
+  catch Error: Sys.ArgumentException do
+    Check(Error.Message.Contains(Diagnostic), Error.Message);
+    return;
+  end try;
+
+  raise new Sys.InvalidOperationException('Pagination accepted invalid input.');
+end procedure;
+
+begin
+  Reject(Pager(new Model(Count := 0)), 'positive page count');
+  Reject(Pager(new Model(Page := 12)), 'valid page index');
+  Reject(
+    E.Column<int>(Pager(new Model()), B.Button<int>('pages/11', 'Duplicate', -1)),
+    'Duplicate ID'
+  );
+
+  using const Session: T.HeadlessSession := T.StartHeadless<Model, int>(
+    new Model(),
+    Update,
+    View,
+    54,
+    10
+  );
+  Check(not Control(Session, 'pages/previous').Enabled, 'Previous is enabled on the first page.');
+  Check(
+    Control(Session, 'pages/0').Value = 'true' and Control(Session, 'pages/11').Label = '12',
+    'Wide mode did not expose numbered page buttons.'
+  );
+  Send(Session, T.Input.Activate('pages/previous'));
+  Key(Session, K.Key.Tab);
+  Check(Control(Session, 'pages/0').Focused, 'Tab did not skip the disabled previous arrow.');
+  Key(Session, K.Key.Enter);
+  Click(Session, 'pages/next');
+  Check(Control(Session, 'pages/1').Value = 'true', 'Click did not advance to page two.');
+  Send(Session, T.Input.Character(' '));
+  Check(Control(Session, 'pages/2').Value = 'true', 'Space did not advance to page three.');
+  Key(Session, K.Key.Enter);
+  Check(
+    Control(Session, 'pages/2').Value = 'true',
+    'Display did not retain the model page after rejection.'
+  );
+  Click(Session, 'pages/11');
+  Check(
+    Control(Session, 'pages/11').Value = 'true' and not Control(Session, 'pages/next').Enabled,
+    'Direct activation did not select the last page and disable Next.'
+  );
+  Send(Session, T.Input.Resize(24, 10));
+  Check(
+    Find(Session, 'pages/11') = null and Shows(Session, 'Page 12 of 12'),
+    'Narrow mode did not replace numbered choices with a page status.'
+  );
+  Check(
+    Control(Session, 'pages/previous').Focused,
+    'Resize lost focus when a numbered choice disappeared.'
+  );
+  Key(Session, K.Key.Enter);
+  Check(
+    Shows(Session, 'Page 11 of 12') and Control(Session, 'pages/next').Enabled,
+    'Previous did not work in compact mode.'
+  );
+  Send(Session, T.Input.Resize(54, 10));
+  Check(
+    Control(Session, 'pages/10').Value = 'true',
+    'Expanding did not restore the numbered page strip.'
+  );
+  Send(Session, T.Input.Resize(8, 10));
+  Check(Shows(Session, '11/12'), 'Tiny viewports did not show the shorter page status.');
+
+  using const Boundary: T.HeadlessSession := T.StartHeadless<Model, int>(
+    new Model(Page := 10),
+    Update,
+    View,
+    24,
+    8
+  );
+  Click(Boundary, 'pages/next');
+  Check(
+    Control(Boundary, 'pages/previous').Focused,
+    'Focus did not move when Next became disabled.'
+  );
+  using const Disabled: T.HeadlessSession := T.StartHeadless<Model, int>(
+    new Model(Page := 1, DisableOnChange := true), Update, View, 24, 8
+  );
+  Click(Disabled, 'pages/next');
+  Check(
+    Control(Disabled, 'before').Focused and not Control(Disabled, 'pages/previous').Enabled,
+    'Disabling a focused pager did not return focus to an available control.'
+  );
+
+  using const Constrained: T.HeadlessSession := T.StartHeadless<Model, int>(
+    new Model(),
+    Update,
+    Sized,
+    100,
+    6
+  );
+  Check(
+    Shows(Constrained, 'Page 1 of 12') and Find(Constrained, 'pages/0') = null,
+    'The pager used the terminal width instead of its allocated width.'
+  );
+  using const Many: T.HeadlessSession := T.StartHeadless<Model, int>(
+    new Model(Count := int.MaxValue), Update, View, 100, 6
+  );
+  Click(Many, 'pages/2147483646');
+  Check(
+    Control(Many, 'pages/2147483646').Value = 'true' and not Control(Many, 'pages/next').Enabled,
+    'A large page count broke the last-page control.'
+  );
+  using const Scroll: T.HeadlessSession := T.StartHeadless<Model, int>(
+    new Model(),
+    Update,
+    Scrolled,
+    54,
+    2
+  );
+  Check(Find(Scroll, 'pages/0') = null, 'Expected the pager to start below the fold.');
+  Key(Scroll, K.Key.Tab);
+  Check(Control(Scroll, 'pages/0').Focused, 'Tab could not reveal an offscreen pager.');
+  Console.WriteLine('Pagination contracts verified');
+end;
+
+end program;

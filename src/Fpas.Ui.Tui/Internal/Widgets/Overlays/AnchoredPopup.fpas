@@ -68,6 +68,36 @@ public type Content<TMsg> = record
   public SpaceActivates: bool := false;
 end record;
 
+// Builds a checkbox choice that keeps its popup open after activation.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable row identity.
+// - `Label`: Choice caption and matching text.
+// - `Role`: Snapshot role.
+// - `Checked`: Model-owned selection state.
+// - `Handler`: Action that proposes a new selection.
+// ## Returns
+// A popup item with checkbox presentation.
+public function Checkbox<TMsg>(
+  Id: string; Label: string; Role: string; Checked: bool; Handler: Actions.IActivatable<TMsg>
+): Item<TMsg>;
+begin
+  const Mark: string := if Checked then
+    '[x] '
+  else
+    '[ ] '
+  end if;
+  return new Item<TMsg>(
+    Id, Label, Mark + G.SingleLine(Label), Role, Handler,
+    Value := if Checked then
+      'true'
+    else
+      'false'
+    end if, KeepOpen := true
+  );
+end function;
+
 type Selection<TMsg> = record implements Actions.IActivatable<TMsg>
   public Before: Sys.Action;
   public Handler: Actions.IActivatable<TMsg>;

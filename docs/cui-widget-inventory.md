@@ -322,7 +322,9 @@ caption as an intentional FPAS adaptation.
   regressions cover Escape followed by Enter to reopen. The [terminal select](ui/tui/inputs/select.md) shares both examples, with keyboard and pointer selection and focus return.
 - [x] Multi-select (`cui_multi_select`): [API][fpas-multi-select]. Pickers
   shows the original searchable Languages example. Gallery tests cover
-  filtering, controlled selection, and dismissal with focus return.
+  filtering, controlled selection, and dismissal with focus return. The
+  [terminal multi-select](ui/tui/inputs/multi-select.md) shares the sample
+  and keeps its checklist open while options change.
 - [x] Calendar (`cui_calendar`): [API][fpas-calendar]. The supplementary
   Inputs example shares the Due date selection. The gallery verifies
   day selection and browsing across a year boundary. Its Windows capture
@@ -446,10 +448,12 @@ editor bars, document tabs, docking and split panes.
   [terminal tabs](ui/tui/navigation/tabs.md) use the same labels and scroll horizontally to keep focus visible.
 - [x] Breadcrumb (`cui_breadcrumb`): [API][fpas-navigation-controls]. Navigation
   exercises ancestor activation and shows the selected caption in a native toast.
-  TUI: graphical profile required.
+  The [terminal breadcrumb](ui/tui/navigation/breadcrumb.md) shares the
+  original path and opens hidden ancestors in a keyboard-accessible menu.
 - [x] Pagination (`cui_pagination`): [API][fpas-navigation-controls]. Navigation
   checks the original twelve-page pager, page boundaries and compact layout.
-  TUI: graphical profile required.
+  The [terminal pager](ui/tui/navigation/pagination.md) shares the sample
+  and uses an arrow-and-status control when numbers do not fit.
 - [x] Stepper (`cui_stepper`): [API][fpas-stepper]. Navigation shows the native
   workflow in desktop and compact layouts and exercises Back, Next and Finish.
   Finish shows the native completion toast. TUI: graphical profile required.

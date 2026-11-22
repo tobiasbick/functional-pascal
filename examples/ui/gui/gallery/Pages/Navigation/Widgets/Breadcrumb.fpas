@@ -4,7 +4,7 @@ unit GuiGallery.Pages.Navigation.Widgets.Breadcrumb;
 
 uses
   GuiGallery.Pages.Navigation.State as State,
-  Fpas.Ui.Widgets.Navigation.Breadcrumbs as B,
+  Gallery.Shared.BreadcrumbExample as Sample,
   Fpas.Ui.Elements as E;
 
 // Builds the sample path from the Navigation page.
@@ -13,10 +13,7 @@ uses
 // The project trail and its ancestor action.
 public function View(): E.Element<State.Msg>;
 begin
-  const Path: array of string := ['Home', 'Projects', 'FPas CUI', 'Settings'];
-  return B.Breadcrumb<State.Msg>(
-    'breadcrumbs', Path, function(Index: int): State.Msg => State.Msg.SelectAncestor(Path[Index])
-  );
+  return Sample.View<State.Msg>(State.Msg.SelectAncestor);
 end function;
 
 end unit;

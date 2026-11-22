@@ -4,7 +4,7 @@ unit Fpas.Ui.Widgets.Navigation.Paginations;
 
 uses Fpas.Ui.Elements as E;
 
-// Creates native graphical pagination with a model-owned page.
+// Creates pagination with a model-owned page.
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -15,7 +15,7 @@ uses Fpas.Ui.Elements as E;
 // - `OnChange`: Maps a proposed zero-based page to a message.
 // - `Enabled`: Whether the pager accepts input.
 // ## Returns
-// The native pager with one-based display labels.
+// The pager with one-based display labels.
 public function Pagination<TMsg>(
   Id: string; Page: int; PageCount: int; OnChange: function(int): TMsg; Enabled: bool := true
 ): E.Element<TMsg>;

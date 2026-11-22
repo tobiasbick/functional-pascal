@@ -66,7 +66,8 @@ action closes it. Closing the overlay restores available focus.
 
 ## Popup input
 
-Dropdown menus, select fields and the filter bar use the same anchored panel. The active panel
+Dropdown menus, single and multiple selection fields, the filter bar and breadcrumb overflow use
+the same anchored panel. The active panel
 receives keyboard and pointer input. Dismissal returns focus to the trigger
 when it is still available. A disabled, removed or covered trigger closes its panel.
 

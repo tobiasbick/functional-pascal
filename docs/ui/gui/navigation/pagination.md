@@ -1,6 +1,7 @@
 # Pagination
 
-Use pagination to change pages within a collection. Available in **GUI**.
+Use pagination to change pages within a collection. Available in **GUI** and
+[TUI](../../tui/navigation/pagination.md).
 
 ![Pagination in the FPAS gallery](images/pagination.png)
 
@@ -46,6 +47,7 @@ Click a page button or focus it with Tab and press Enter or Space. CUI displays 
 
 ## Source files
 
+- [Shared twelve-page gallery example](../../../../examples/ui/gui/gallery/Shared/PaginationExample.fpas)
 - `src/Fpas.Ui.Gui/Internal/Widgets/Navigation/`
   - [Pagination.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Navigation/Pagination.fpas)
 - `src/Fpas.Ui.Gui.Cui/Interop/Navigation/`

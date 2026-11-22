@@ -4,7 +4,7 @@ unit Fpas.Ui.Widgets.Navigation.Breadcrumbs;
 
 uses Fpas.Ui.Elements as E;
 
-// Creates a graphical breadcrumb trail. Its final item names the current location.
+// Creates a breadcrumb trail. Its final item names the current location.
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -14,7 +14,7 @@ uses Fpas.Ui.Elements as E;
 // - `OnNavigate`: Maps a clicked ancestor's zero-based position to a message.
 // - `Enabled`: Whether ancestor links accept input.
 // ## Returns
-// The native trail with an informational final item.
+// The trail with an informational final item.
 public function Breadcrumb<TMsg>(
   Id: string; Items: array of string; OnNavigate: function(int): TMsg; Enabled: bool := true
 ): E.Element<TMsg>;

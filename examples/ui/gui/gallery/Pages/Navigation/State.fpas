@@ -2,6 +2,8 @@
 
 unit GuiGallery.Pages.Navigation.State;
 
+uses Gallery.Shared.PaginationExample as Pagination;
+
 // State owned by this gallery feature.
 public type Model = record
   // Selected underline tab on the Navigation page.
@@ -9,7 +11,7 @@ public type Model = record
   // Selected pill tab on the Navigation page.
   public ActivePillTab: int := 0;
   // Current zero-based page in the pagination example.
-  public PageIndex: int := 0;
+  public PageIndex: int := Pagination.Initial;
   // Current zero-based step, starting at Workspace.
   public ActiveStep: int := 1;
 end record;

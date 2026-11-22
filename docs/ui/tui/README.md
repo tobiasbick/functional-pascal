@@ -42,9 +42,9 @@ dotnet run --project examples/ui/tui/gallery/TuiWidgetGallery.fpasproj
 | Category | Widgets and examples |
 | --- | --- |
 | [Layout](layout/README.md) | Panels, weighted rows and columns, scroll views |
-| [Navigation](navigation/README.md) | Sidebar with selectable destinations and tabs |
+| [Navigation](navigation/README.md) | Sidebar with selectable destinations, tabs, breadcrumbs and pagination |
 | [Actions](actions/README.md) | Button and dropdown menu |
-| [Inputs](inputs/README.md) | Text field, multiline text area, select with optional search |
+| [Inputs](inputs/README.md) | Text fields and searchable single and multiple selection |
 | [Selection](selection/README.md) | Checkbox, switch and radio group |
 | [Overlays](overlays/README.md) | Dialog, sheet and searchable command palette |
 | [Data display](data-display/README.md) | Sortable table, selection list, expandable tree and filter bar |

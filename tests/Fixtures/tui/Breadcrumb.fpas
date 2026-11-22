@@ -1,0 +1,256 @@
+// [Documentation](../../../docs/ui/tui/navigation/breadcrumb.md)
+
+program BreadcrumbContract;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V,
+  Fpas.Ui.Widgets.Navigation.Breadcrumbs as B, Fpas.Ui.Widgets.Actions.Buttons as Buttons,
+  Fpas.Ui.Widgets.Containers.ExpandableCards as Cards,
+  Fpas.Ui.Tui.Application as T, Fpas.Ui.Mvu.Application as M, Fpas.Ui.TerminalExtensions.Input as K,
+  System as Sys, System.Console as Console;
+
+const Path: array of string := ['Home', 'Projects', 'FPas CUI', 'Settings'];
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Update(State: int; Index: int): M.Transition<int, int>;
+begin
+  if Index = -2 then
+    return new M.Transition<int, int>(Index, []);
+  end if;
+
+  Check(Index >= 0 and Index < Path.Length - 1, 'Activated a passive or disabled item.');
+  return new M.Transition<int, int>(Index, []);
+end function;
+
+function Trail(Enabled: bool := true): E.Element<int>;
+begin
+  return B.Breadcrumb<int>('trail', Path, function(Index: int): int => Index, Enabled);
+end function;
+
+function View(State: int): E.Element<int>;
+begin
+  return E.Column<int>(
+    Buttons.Button<int>('before', 'Before', -1),
+    Trail(),
+    Buttons.Button<int>('after', 'After', -1),
+    E.Text<int>(
+      if State < 0 then
+        ''
+      else
+        'Opened ' + Path[State]
+      end if
+    )
+  );
+end function;
+
+function Disabled(State: int): E.Element<int>;
+begin
+  return E.Column<int>(Buttons.Button<int>('before', 'Before', -1), Trail(false));
+end function;
+
+function Constrained(State: int): E.Element<int>;
+begin
+  return E.Row<int>(E.Size<int>(Trail(), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(24)))));
+end function;
+
+function Scrolled(State: int): E.Element<int>;
+begin
+  return E.ScrollView<int>(
+    'scroll', E.Column<int>(
+      Buttons.Button<int>('before', 'Before', -1), E.Text<int>('One'), E.Text<int>('Two'), Trail()
+    )
+  );
+end function;
+
+function InCard(State: int): E.Element<int>;
+begin
+  return E.Column<int>(
+    Buttons.Button<int>('before', 'Before', -1),
+    Cards.ExpandableCard<int>('card', 'Path', State <> -2, function(Open: bool): int => -2, Trail())
+  );
+end function;
+
+function LongLocation(State: int): E.Element<int>;
+begin
+  return B.Breadcrumb<int>('single', ['界😀example'], function(Index: int): int => -1);
+end function;
+
+function Find(Session: T.HeadlessSession; Id: string): T.ControlSnapshot?;
+begin
+  return Sys.Array.Find<T.ControlSnapshot>(
+    Session.Snapshot().Controls, function(Item: T.ControlSnapshot): bool => Item.Id = Id
+  );
+end function;
+
+function Control(Session: T.HeadlessSession; Id: string): T.ControlSnapshot;
+begin
+  const Item: T.ControlSnapshot? := Find(Session, Id);
+  if Item = null then
+    raise new Sys.InvalidOperationException('Missing breadcrumb control: ' + Id);
+  end if;
+
+  return Item;
+end function;
+
+procedure Send(Session: T.HeadlessSession; Input: T.Input);
+begin
+  discard Session.Send(Input);
+  case Session.Step() of
+    when T.StepResult.Failed(_, _, _, const Reason: string):
+      raise new Sys.InvalidOperationException(Reason);
+    else
+  end case;
+end procedure;
+
+procedure Key(Session: T.HeadlessSession; Pressed: K.Key);
+begin
+  Send(Session, T.Input.KeyPress(Pressed, K.KeyModifiers.None));
+end procedure;
+
+procedure Click(Session: T.HeadlessSession; Id: string);
+begin
+  const Item: T.ControlSnapshot := Control(Session, Id);
+  Send(Session, T.Input.Click(Item.Column, Item.Row));
+end procedure;
+
+function Shows(Session: T.HeadlessSession; Caption: string): bool;
+begin
+  return Sys.String.Join(#10, Session.Snapshot().Lines).Contains(Caption);
+end function;
+
+procedure Reject(Node: E.Element<int>; Diagnostic: string);
+begin
+  try
+    discard V.Prepare<int>(Node, V.Target.Terminal);
+  catch Error: Sys.ArgumentException do
+    Check(Error.Message.Contains(Diagnostic), Error.Message);
+    return;
+  end try;
+
+  raise new Sys.InvalidOperationException('Breadcrumb accepted invalid input.');
+end procedure;
+
+begin
+  Reject(
+    B.Breadcrumb<int>('empty', [], function(Index: int): int => Index),
+    'at least one path item'
+  );
+  Reject(
+    E.Column<int>(Trail(), Buttons.Button<int>('trail/overflow', 'Duplicate', -1)),
+    'Duplicate ID'
+  );
+  discard V.Prepare<int>(Trail(), V.Target.Portable);
+
+  using const Session: T.HeadlessSession := T.StartHeadless<int, int>(-1, Update, View, 54, 10);
+  Check(
+    Find(Session, 'trail/overflow') = null and Control(Session, 'trail/2').Enabled,
+    'Wide trail did not expose the full path.'
+  );
+  Check(
+    Control(Session, 'trail/3').Value = 'current' and not Control(Session, 'trail/3').Enabled,
+    'The current location must be passive.'
+  );
+  Key(Session, K.Key.Tab);
+  Check(Control(Session, 'trail/0').Focused, 'Tab did not reach Home.');
+  Send(Session, T.Input.Character(' '));
+  Check(Shows(Session, 'Opened Home'), 'Space did not activate Home.');
+  Click(Session, 'trail/2');
+  Send(Session, T.Input.Activate('trail/3'));
+  Check(
+    Shows(Session, 'Opened FPas CUI'),
+    'Click did not navigate or the current item changed the selection.'
+  );
+  Key(Session, K.Key.Tab);
+  Check(Control(Session, 'after').Focused, 'Tab did not skip the current location.');
+
+  Send(Session, T.Input.Focus('trail/0'));
+  Send(Session, T.Input.Resize(24, 10));
+  Check(
+    Control(Session, 'trail/overflow').Focused and Find(Session, 'trail/0') = null,
+    'Shrinking did not move hidden focus to the overflow control.'
+  );
+  Check(
+    Shows(Session, 'FPas CUI') and Shows(Session, 'Settings'),
+    'Compact mode lost the path suffix.'
+  );
+  Key(Session, K.Key.Enter);
+  Check(
+    Control(Session, 'trail/0').Focused and not Control(Session, 'trail/2').Enabled,
+    'The overflow menu did not focus the first hidden ancestor and isolate menu input.'
+  );
+  Key(Session, K.Key.Down);
+  Send(Session, T.Input.Character(' '));
+  Check(
+    Shows(Session, 'Opened Projects') and Control(Session, 'trail/overflow').Focused,
+    'Selecting an overflow item did not navigate and restore focus.'
+  );
+  Click(Session, 'trail/overflow');
+  Key(Session, K.Key.Escape);
+  Check(
+    Find(Session, 'trail/0') = null and Control(Session, 'trail/overflow').Focused,
+    'Escape did not close the menu and restore focus.'
+  );
+  Click(Session, 'trail/overflow');
+  Send(Session, T.Input.Resize(54, 10));
+  Check(
+    Find(Session, 'trail/overflow') = null and Control(Session, 'trail/1').Focused,
+    'Expanding an open trail did not close the menu and restore visible ancestor focus.'
+  );
+  Send(Session, T.Input.Resize(10, 10));
+  Key(Session, K.Key.Enter);
+  Key(Session, K.Key.End);
+  Key(Session, K.Key.Enter);
+  Check(Control(Session, 'trail/overflow').Focused, 'Enter did not dismiss the tightest menu.');
+  Send(Session, T.Input.Resize(54, 10));
+  Check(
+    Shows(Session, 'Opened FPas CUI'),
+    'The tightest path did not let Enter select its last hidden ancestor.'
+  );
+
+  using const Off: T.HeadlessSession := T.StartHeadless<int, int>(-1, Update, Disabled, 24, 5);
+  Check(
+    not Control(Off, 'trail/overflow').Enabled and not Control(Off, 'trail/2').Enabled,
+    'A disabled trail exposed an enabled action.'
+  );
+  Send(Off, T.Input.Activate('trail/overflow'));
+  Check(
+    Find(Off, 'trail/0') = null and Control(Off, 'before').Focused,
+    'A disabled overflow control opened its menu.'
+  );
+  using const Sized: T.HeadlessSession := T.StartHeadless<int, int>(-1, Update, Constrained, 90, 6);
+  Check(
+    Find(Sized, 'trail/0') = null and Control(Sized, 'trail/overflow').Enabled,
+    'The breadcrumb used the terminal width instead of the allocated width.'
+  );
+  using const Unicode: T.HeadlessSession := T.StartHeadless<int, int>(
+    -1,
+    Update,
+    LongLocation,
+    3,
+    5
+  );
+  Check(
+    Shows(Unicode, '界…') and Find(Unicode, 'single/overflow') = null,
+    'Clipping broke a double-width current caption or introduced an empty menu.'
+  );
+  using const Scroll: T.HeadlessSession := T.StartHeadless<int, int>(-1, Update, Scrolled, 54, 2);
+  Check(Find(Scroll, 'trail/0') = null, 'Expected the breadcrumb to start below the fold.');
+  Key(Scroll, K.Key.Tab);
+  Check(Control(Scroll, 'trail/0').Focused, 'Tab could not reveal the offscreen breadcrumb.');
+  using const Card: T.HeadlessSession := T.StartHeadless<int, int>(-1, Update, InCard, 54, 8);
+  Send(Card, T.Input.Focus('trail/0'));
+  Send(Card, T.Input.Activate('card'));
+  Check(
+    Control(Card, 'card').Focused and Find(Card, 'trail/0') = null,
+    'Closing the enclosing card did not restore focus to its header.'
+  );
+  Console.WriteLine('Breadcrumb contracts verified');
+end;
+
+end program;

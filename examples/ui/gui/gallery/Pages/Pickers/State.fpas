@@ -2,12 +2,14 @@
 
 unit GuiGallery.Pages.Pickers.State;
 
-uses Fpas.Ui.Widgets.Pickers.DateRanges as R, Fpas.Ui.Widgets.Inputs.RangeSliders as Range, System as Sys;
+uses
+  Gallery.Shared.LanguagesExample as LanguageSample, Fpas.Ui.Widgets.Pickers.DateRanges as R,
+  Fpas.Ui.Widgets.Inputs.RangeSliders as Range, System as Sys;
 
 // State owned by the extended Pickers page.
 public type Model = record
   // Model-owned selections in the Languages example.
-  public Languages: array of bool := [true, false, true, false, false, true, false, false];
+  public Languages: array of bool := LanguageSample.Initial();
   // Selection in the field with relative presets.
   public DateRange: R.Value := R.Value.Complete(
     new Sys.DateOnly(2026, 11, 3),

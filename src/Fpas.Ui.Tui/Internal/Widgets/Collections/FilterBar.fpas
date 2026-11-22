@@ -87,24 +87,15 @@ begin
     for Choice: int := 0 to Field.Values.Length - 1 do
       const Label: string := Field.Values[Choice];
       const Checked: bool := (Bar.Current.Selected[Index] and (1u shl Choice)) <> 0u;
-      const Caption: string := (if Checked then
-        '[x] '
-      else
-        '[ ] '
-      end if) + G.SingleLine(Label);
-      Width := Sys.Math.Max(Width, G.Measure(Caption) + 1);
-      Rows.Add(
-        Popup.Row<TMsg>.Choice(
-          new Popup.Item<TMsg>(
-            Prefix + Segment(Choice), Label, Caption, 'filter-value',
-            new Toggle<TMsg>(Bar, Index, Choice), Value := (if Checked then
-              'true'
-            else
-              'false'
-            end if), KeepOpen := true
-          )
-        )
+      const Item: Popup.Item<TMsg> := Popup.Checkbox<TMsg>(
+        Prefix + Segment(Choice),
+        Label,
+        'filter-value',
+        Checked,
+        new Toggle<TMsg>(Bar, Index, Choice)
       );
+      Width := Sys.Math.Max(Width, G.Measure(Item.Caption) + 1);
+      Rows.Add(Popup.Row<TMsg>.Choice(Item));
     end for;
   else
     for FieldIndex: int := 0 to Bar.Fields.Length - 1 do

@@ -5,7 +5,9 @@ unit Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupHost;
 uses
   Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as P, Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup as Popup,
   Fpas.Ui.Tui.Internal.Widgets.Overlays.Dropdown as Menu, Fpas.Ui.Tui.Internal.Widgets.Inputs.Select as Select,
+  Fpas.Ui.Tui.Internal.Widgets.Inputs.MultiSelect as MultiSelect,
   Fpas.Ui.Tui.Internal.Widgets.Collections.FilterBar as Filters,
+  Fpas.Ui.Tui.Internal.Widgets.Navigation.Breadcrumb as Breadcrumb,
   Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F,
   Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System.Collections.Generic as C;
 
@@ -25,6 +27,23 @@ public function Present<TMsg>(
   State: P.State<TMsg>; Parent: A.Scope<TMsg>?; Screen: F.Rect; Theme: Th.Theme;
   Operations: C.List<D.Operation>; Controls: C.List<A.Control<TMsg>>
 ): A.Scope<TMsg>?;
+  function Content(Owner: A.Control<TMsg>): Popup.Content<TMsg>?;
+  begin
+    case A.Activatable<TMsg>(Owner.Action) of
+      when is Select.Trigger<TMsg> as Field:
+        return Select.Content<TMsg>(Field, Owner.Bounds);
+      when is MultiSelect.Trigger<TMsg> as Multi:
+        return MultiSelect.Content<TMsg>(Multi, Owner.Bounds.Width);
+      when is Menu.Trigger<TMsg> as Dropdown:
+        return Menu.Content<TMsg>(Dropdown, Owner.Bounds, Screen.Width);
+      when is Filters.Trigger<TMsg> as Filter:
+        return Filters.Content<TMsg>(Filter);
+      when is Breadcrumb.Trigger<TMsg> as Trail:
+        return Breadcrumb.Content<TMsg>(Trail);
+      else
+        return null;
+    end case;
+  end function;
 begin
   const Id: string := State.Read().Id;
   if Id = '' then
@@ -39,39 +58,10 @@ begin
     function(Control: A.Control<TMsg>): bool => Control.Id = Id
   );
   if Owner <> null and Owner.Enabled and Owner.Scope = Scope then
-    case A.Activatable<TMsg>(Owner.Action) of
-      when is Select.Trigger<TMsg> as Field:
-        return Popup.Draw<TMsg>(
-          State,
-          Select.Content<TMsg>(Field, Owner.Bounds),
-          Owner.Bounds,
-          Screen,
-          Theme,
-          Operations,
-          Controls
-        );
-      when is Menu.Trigger<TMsg> as Dropdown:
-        return Popup.Draw<TMsg>(
-          State,
-          Menu.Content<TMsg>(Dropdown, Owner.Bounds, Screen.Width),
-          Owner.Bounds,
-          Screen,
-          Theme,
-          Operations,
-          Controls
-        );
-      when is Filters.Trigger<TMsg> as Filter:
-        return Popup.Draw<TMsg>(
-          State,
-          Filters.Content<TMsg>(Filter),
-          Owner.Bounds,
-          Screen,
-          Theme,
-          Operations,
-          Controls
-        );
-      else
-    end case;
+    const Active: Popup.Content<TMsg>? := Content(Owner);
+    if Active <> null then
+      return Popup.Draw<TMsg>(State, Active, Owner.Bounds, Screen, Theme, Operations, Controls);
+    end if;
   end if;
 
   State.Write(new P.Cursor());

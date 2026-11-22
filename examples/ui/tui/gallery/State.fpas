@@ -8,6 +8,8 @@ uses
   Gallery.Shared.SecurityCard as Security, Gallery.Shared.AboutField as AboutSample,
   Gallery.Shared.PickerChoices as Pickers, Gallery.Shared.SaveFrequency as Frequency,
   Gallery.Shared.PeopleFilters as FilterSample, Fpas.Ui.Widgets.Collections.FilterBars as Filters,
+  Gallery.Shared.PaginationExample as Pagination,
+  Gallery.Shared.LanguagesExample as LanguageSample,
   Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Theming.Themes as Themes,
   Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Mvu.Application as Mvu;
 
@@ -39,10 +41,16 @@ public type Msg = variant
   SetTab(Value: int);
   // Select a pill tab.
   SetPillTab(Value: int);
+  // Set the current page of the pagination example.
+  SetPageIndex(Value: int);
+  // Record the ancestor selected in the breadcrumb example.
+  SelectAncestor(Label: string);
   // Change whether the Security card is open.
   SetSecurity(Value: bool);
   // Choose the language option.
   SetPickerLanguage(Value: int);
+  // Adopt the selected languages in the multi-select example.
+  SetLanguages(Value: array of bool);
   // Handle terminal cell grid input.
   Grid(Event: Grids.Event);
   // Handle an action from the profile example.
@@ -85,12 +93,18 @@ public type Model = record
   public ActiveTab: int := 0;
   // Current pill tab index.
   public ActivePillTab: int := 0;
+  // Current page of the pagination example.
+  public PageIndex: int := Pagination.Initial;
+  // Last activated ancestor, or empty before navigation.
+  public Ancestor: string := '';
   // Text in the profile description.
   public About: string := AboutSample.Initial;
   // Current country index.
   public Country: int := Pickers.InitialCountry;
   // Current language index.
   public PickerLanguage: int := Pickers.InitialLanguage;
+  // Current flags in the multi-select Languages example.
+  public Languages: array of bool := LanguageSample.Initial();
   // Current save interval index.
   public SaveFrequency: int := Frequency.Initial;
   // Whether the sample workspace has been created.
@@ -162,6 +176,14 @@ begin
       Next := State with
         ActivePillTab := Value;
       end with;
+    when Msg.SetPageIndex(const Value: int):
+      Next := State with
+        PageIndex := Value;
+      end with;
+    when Msg.SelectAncestor(const Label: string):
+      Next := State with
+        Ancestor := Label;
+      end with;
     when Msg.SetAbout(const Value: string):
       Next := State with
         About := Value;
@@ -173,6 +195,10 @@ begin
     when Msg.SetPickerLanguage(const Value: int):
       Next := State with
         PickerLanguage := Value;
+      end with;
+    when Msg.SetLanguages(const Value: array of bool):
+      Next := State with
+        Languages := Value;
       end with;
     when Msg.SetSaveFrequency(const Value: int):
       Next := State with

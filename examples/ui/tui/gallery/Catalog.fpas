@@ -10,6 +10,7 @@ public type Preview = enum
   Overview;
   Buttons;
   Inputs;
+  Pickers;
   Selection;
   Navigation;
   Overlays;
@@ -87,7 +88,12 @@ public const Extended: array of Entry := [
     Strings.Get('Page.SmartInputs'),
     Strings.Get('Description.SmartInputs')
   ),
-  new Entry('Pickers', Strings.Get('Page.Pickers'), Strings.Get('Description.Pickers')),
+  new Entry(
+    'Pickers',
+    Strings.Get('Page.Pickers'),
+    Strings.Get('Description.Pickers'),
+    Preview.Pickers
+  ),
   new Entry('Capture', Strings.Get('Page.Capture'), Strings.Get('Description.Capture')),
   new Entry(
     'Disclosure',

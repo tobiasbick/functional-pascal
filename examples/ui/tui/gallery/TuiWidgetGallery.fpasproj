@@ -8,6 +8,9 @@
     <Compile Include="../../gui/gallery/Shared/Strings.fpas" />
     <Compile Include="../../gui/gallery/Shared/ListEntries.fpas" />
     <Compile Include="../../gui/gallery/Shared/PeopleFilters.fpas" />
+    <Compile Include="../../gui/gallery/Shared/PaginationExample.fpas" />
+    <Compile Include="../../gui/gallery/Shared/BreadcrumbExample.fpas" />
+    <Compile Include="../../gui/gallery/Shared/LanguagesExample.fpas" />
     <EmbeddedResource Include="../../gui/gallery/Shared/Strings.resx" LogicalName="Gallery.Shared.Strings.resources" />
     <EmbeddedResource Include="../../gui/gallery/Shared/Strings.de.resx" LogicalName="Gallery.Shared.Strings.de.resources" />
     <Compile Include="../../gui/gallery/Shared/PeopleTable.fpas;../../gui/gallery/Shared/ButtonExamples.fpas;../../gui/gallery/Shared/EditorStatus.fpas;../../gui/gallery/Shared/Profile.fpas;../../gui/gallery/Shared/ProgressExample.fpas;../../gui/gallery/Shared/SwitchExamples.fpas;../../gui/gallery/Shared/CheckboxExamples.fpas;../../gui/gallery/Shared/SaveFrequency.fpas;../../gui/gallery/Shared/PickerChoices.fpas;../../gui/gallery/Shared/TabExamples.fpas;../../gui/gallery/Shared/AboutField.fpas;../../gui/gallery/Shared/ProjectOptions.fpas;../../gui/gallery/Shared/SecurityCard.fpas;../../gui/gallery/Shared/BuildLog.fpas;../../gui/gallery/Shared/SourceTree.fpas" />

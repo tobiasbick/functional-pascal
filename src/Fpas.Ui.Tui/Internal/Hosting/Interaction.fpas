@@ -72,7 +72,7 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
       return false;
     end if;
 
-    if Control.Role = 'select' or Control.Role = 'menu' then
+    if Control.Role = 'select' or Control.Role = 'multi-select' or Control.Role = 'menu' then
       Focus := Control.Id;
     end if;
 
@@ -86,6 +86,22 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
   end function;
 
   procedure ReconcileFocus(Layout: A.Layout<TMsg>; Previous: A.Layout<TMsg>?);
+    function Restore(Id: string; Scope: string): bool;
+    begin
+      if Id = '' then
+        return false;
+      end if;
+      const Candidate: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, Id);
+      if Candidate <> null and Eligible(Candidate, Scope) then
+        Focus := Id;
+        return true;
+      elsif Candidate = null and Navigation.CanFocusOffscreen<TMsg>(Layout, Id, Scope) then
+        Focus := Id;
+        return true;
+      end if;
+
+      return false;
+    end function;
   begin
     const Scope: string := ActiveId(Layout);
     Captured := RetainCapture(Layout, Captured, Scope);
@@ -147,18 +163,15 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     end if;
 
     var Old: A.Control<TMsg>? := A.FindControl<TMsg>(Previous, Focus);
-    while Old <> null and Old.FocusReturn <> '' do
-      const Parent: string := Old.FocusReturn;
-      const Candidate: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, Parent);
-      if Candidate <> null and Eligible(Candidate, Scope) then
-        Focus := Candidate.Id;
-        return;
-      elsif Candidate = null and Navigation.CanFocusOffscreen<TMsg>(Layout, Parent, Scope) then
-        Focus := Parent;
+    const Seen: Generic.HashSet<string> := new Generic.HashSet<string>();
+    while Old <> null and (Old.FocusReturn <> '' or Old.FocusReplacement <> '') and Seen.Add(
+      Old.Id
+    ) do
+      if Restore(Old.FocusReplacement, Scope) or Restore(Old.FocusReturn, Scope) then
         return;
       end if;
 
-      Old := A.FindControl<TMsg>(Previous, Parent);
+      Old := A.FindControl<TMsg>(Previous, Old.FocusReturn);
     end while;
 
     Focus := Navigation.NextTab<TMsg>(Layout, Scope, '', false);
@@ -429,7 +442,9 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
         end if;
       end if;
 
-      if Control.Role = 'menu' and Key = K.Key.Down and Modifiers = K.KeyModifiers.None then
+      if (Control.Role = 'menu' or Control.Role = 'multi-select')
+        and Key = K.Key.Down and Modifiers = K.KeyModifiers.None
+      then
         discard Invoke(Control);
         return;
       end if;

@@ -1,0 +1,25 @@
+// [Documentation](../../../../../docs/ui/gui/navigation/breadcrumb.md)
+
+unit Gallery.Shared.BreadcrumbExample;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Navigation.Breadcrumbs as B;
+
+const Path: array of string := ['Home', 'Projects', 'FPas CUI', 'Settings'];
+
+// Builds the original project trail in either gallery.
+// ## Type parameters
+// - `TMsg`: Gallery message type.
+// ## Parameters
+// - `Navigate`: Maps an activated ancestor caption to a message.
+// ## Returns
+// The shared breadcrumb trail.
+public function View<TMsg>(Navigate: function(string): TMsg): E.Element<TMsg>;
+begin
+  return B.Breadcrumb<TMsg>(
+    'breadcrumbs',
+    Path,
+    function(Index: int): TMsg => Navigate(Path[Index])
+  );
+end function;
+
+end unit;

@@ -1,0 +1,245 @@
+// [Documentation](../../../docs/ui/tui/inputs/multi-select.md)
+
+program MultiSelectContract;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V,
+  Fpas.Ui.Widgets.Inputs.MultiSelects as Multi, Fpas.Ui.Widgets.Inputs.Selects as S,
+  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Tui.Application as T,
+  Fpas.Ui.Mvu.Application as M, Fpas.Ui.TerminalExtensions.Input as K,
+  System as Sys, System.Console as Console;
+
+const Items: array of S.Item := [
+  new S.Item('C'), new S.Item('C++'), new S.Item('Rust'), new S.Item('Zig'),
+  new S.Item('Go'), new S.Item('Swift'), new S.Item('Kotlin'), new S.Item('Odin')
+];
+const Initial: array of bool := [true, false, true, false, false, true, false, false];
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+function Update(State: array of bool; Proposed: array of bool): M.Transition<array of bool, array of bool>;
+begin
+  Check(
+    Proposed.Length = Items.Length and not Sys.Object.ReferenceEquals(State, Proposed),
+    'The widget must propose fresh flags in original order.'
+  );
+  return new M.Transition<array of bool, array of bool>(Proposed, []);
+end function;
+
+function Picker(
+  Id: string; State: array of bool; Enabled: bool := true; Limit: int := 0
+): E.Element<array of bool>;
+begin
+  return Multi.MultiSelect<array of bool>(
+    Id, Items, State, function(Value: array of bool): array of bool => Value,
+    new Multi.Options(
+      Label := 'Languages', Placeholder := 'Choose languages',
+      Searchable := true, MaxChips := Limit, Enabled := Enabled
+    )
+  );
+end function;
+
+function View(State: array of bool): E.Element<array of bool>;
+begin
+  return E.Column<array of bool>(
+    B.Button<array of bool>('before', 'Before', []), Picker('picker', State),
+    B.Button<array of bool>('after', 'After', []), Picker('disabled', State, false)
+  );
+end function;
+
+function Narrow(State: array of bool): E.Element<array of bool>;
+begin
+  return E.Row<array of bool>(
+    E.Size<array of bool>(
+      Picker('picker', State),
+      new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(11)))
+    )
+  );
+end function;
+
+function Limited(State: array of bool): E.Element<array of bool>;
+begin
+  return Picker('picker', State, Limit := 1);
+end function;
+
+function Find(Session: T.HeadlessSession; Id: string): T.ControlSnapshot?;
+begin
+  return Sys.Array.Find<T.ControlSnapshot>(
+    Session.Snapshot().Controls, function(Item: T.ControlSnapshot): bool => Item.Id = Id
+  );
+end function;
+
+function Control(Session: T.HeadlessSession; Id: string): T.ControlSnapshot;
+begin
+  const Item: T.ControlSnapshot? := Find(Session, Id);
+  if Item = null then
+    raise new Sys.InvalidOperationException('Missing multi-select control: ' + Id);
+  end if;
+
+  return Item;
+end function;
+
+procedure Send(Session: T.HeadlessSession; Input: T.Input);
+begin
+  discard Session.Send(Input);
+  case Session.Step() of
+    when T.StepResult.Failed(_, _, _, const Reason: string):
+      raise new Sys.InvalidOperationException(Reason);
+    else
+  end case;
+end procedure;
+
+procedure Key(Session: T.HeadlessSession; Pressed: K.Key; Modifiers: K.KeyModifiers := K.KeyModifiers.None);
+begin
+  Send(Session, T.Input.KeyPress(Pressed, Modifiers));
+end procedure;
+
+procedure Click(Session: T.HeadlessSession; Id: string);
+begin
+  const Item: T.ControlSnapshot := Control(Session, Id);
+  Send(Session, T.Input.Click(Item.Column, Item.Row));
+end procedure;
+
+function Shows(Session: T.HeadlessSession; Caption: string): bool;
+begin
+  return Sys.String.Join(#10, Session.Snapshot().Lines).Contains(Caption);
+end function;
+
+procedure Reject(Node: E.Element<array of bool>; Diagnostic: string);
+begin
+  try
+    discard V.Prepare<array of bool>(Node, V.Target.Terminal);
+  catch Error: Sys.ArgumentException do
+    Check(Error.Message.Contains(Diagnostic), Error.Message);
+    return;
+  end try;
+
+  raise new Sys.InvalidOperationException('Multi-select accepted invalid input.');
+end procedure;
+
+begin
+  discard V.Prepare<array of bool>(Picker('picker', Initial), V.Target.Portable);
+  Reject(Picker('picker', []), 'matching flags');
+  Reject(
+    E.Column<array of bool>(
+      Picker('picker', Initial), B.Button<array of bool>('picker/bulk', 'Duplicate', [])
+    ), 'Duplicate ID'
+  );
+  using const Session: T.HeadlessSession := T.StartHeadless<array of bool, array of bool>(
+    Initial,
+    Update,
+    View,
+    52,
+    17
+  );
+  Check(Shows(Session, 'C, Rust, Swift'), 'The field did not display the initial selection.');
+  Key(Session, K.Key.Tab);
+  Check(Control(Session, 'picker').Focused, 'Tab did not reach the field.');
+  Key(Session, K.Key.Enter);
+  Check(
+    Control(Session, 'picker/option/0').Focused,
+    'Enter did not open at the first selected item.'
+  );
+  Send(Session, T.Input.TextInput('C'));
+  Check(
+    Find(Session, 'picker/option/2') = null and Find(Session, 'picker/bulk') = null,
+    'Filtering did not isolate matching rows.'
+  );
+  Key(Session, K.Key.Down);
+  Send(Session, T.Input.Character(' '));
+  Check(
+    Control(
+      Session,
+      'picker/option/1'
+    ).Value = 'true' and Control(Session, 'picker/option/1').Focused,
+    'Space did not toggle the filtered item and keep its original identity and focus.'
+  );
+  Check(
+    Control(Session, 'picker').Value = 'C, C++, Rust, Swift',
+    'Filtered toggling lost hidden selections.'
+  );
+  Key(Session, K.Key.Backspace);
+  Send(Session, T.Input.TextInput('rus'));
+  Key(Session, K.Key.Enter);
+  Check(
+    Control(
+      Session,
+      'picker/option/2'
+    ).Value = 'false' and Control(Session, 'picker/option/2').Focused,
+    'Enter did not toggle an item while keeping the list open.'
+  );
+  Click(Session, 'picker/option/2');
+  Check(Control(Session, 'picker/option/2').Value = 'true', 'Click did not toggle the checkbox.');
+  Key(Session, K.Key.A, K.KeyModifiers.Ctrl);
+  Send(Session, T.Input.Paste('no such language'));
+  Key(Session, K.Key.Enter);
+  Check(
+    Shows(Session, 'No results') and Control(Session, 'picker').Value = 'C, C++, Rust, Swift',
+    'An empty search result changed the selection.'
+  );
+  Key(Session, K.Key.Escape);
+  Check(
+    Control(Session, 'picker').Focused and Find(Session, 'picker/option/0') = null,
+    'Escape did not dismiss the popup and restore focus.'
+  );
+  Key(Session, K.Key.Tab);
+  Check(
+    Control(Session, 'after').Focused and not Control(Session, 'disabled').Enabled,
+    'Tab did not leave the picker or the disabled picker accepted input.'
+  );
+  Send(Session, T.Input.Activate('disabled'));
+  Check(Find(Session, 'disabled/option/0') = null, 'The disabled picker opened.');
+
+  Send(Session, T.Input.Focus('picker'));
+  Send(Session, T.Input.Character(' '));
+  Check(Control(Session, 'picker/option/0').Focused, 'Reopening with Space did not reset search.');
+  Key(Session, K.Key.End);
+  Check(Control(Session, 'picker/bulk').Focused, 'End did not reach Select all.');
+  Key(Session, K.Key.Enter);
+  Check(
+    Control(
+      Session,
+      'picker/bulk'
+    ).Label = 'Clear all' and Control(Session, 'picker/option/7').Value = 'true',
+    'Select all did not set every flag.'
+  );
+  Key(Session, K.Key.Enter);
+  Check(Control(Session, 'picker').Value = '', 'Clear all did not reset the selection.');
+  Key(Session, K.Key.Tab);
+  Check(
+    Shows(Session, 'Choose languages') and Control(Session, 'picker').Focused,
+    'Closing after clearing did not restore the placeholder and focus.'
+  );
+  Key(Session, K.Key.Down);
+  Check(Control(Session, 'picker/option/0').Focused, 'Down did not reopen the empty picker.');
+  Key(Session, K.Key.Escape);
+  Check(not Initial[1] and Initial[2] and Initial[5], 'A proposal mutated the input flags.');
+
+  using const Small: T.HeadlessSession := T.StartHeadless<array of bool, array of bool>(
+    Initial,
+    Update,
+    Narrow,
+    90,
+    8
+  );
+  Check(Shows(Small, 'C +2'), 'A narrow field did not fit the count to its allocated width.');
+  using const Cap: T.HeadlessSession := T.StartHeadless<array of bool, array of bool>(
+    Initial,
+    Update,
+    Limited,
+    54,
+    8
+  );
+  Check(
+    Shows(Cap, 'C +2') and Control(Cap, 'picker').Value = 'C, Rust, Swift',
+    'MaxChips did not limit the visible names while preserving all selections.'
+  );
+  Console.WriteLine('Multi-select contracts verified');
+end;
+
+end program;

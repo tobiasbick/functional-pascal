@@ -37,7 +37,8 @@ Connector. Verify that GitHub shows “with ChatGPT Codex Connector” next to
 the author. [Example confirmation](https://github.com/yappologistic/CUI/issues/39#issuecomment-6816324000)
 
 Include the tested CUI commit and the behavior you verified. If you removed a
-local workaround, say so. Omit the downstream project's name.
+local workaround, say so. Omit the downstream project's name. Leave issue
+closure to the upstream maintainers, including for issues we opened.
 
 ## Interaction and layout
 

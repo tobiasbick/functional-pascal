@@ -375,7 +375,10 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: Sparklines.Options
       ):
         const At: string := Identify(Id, Location + '/sparkline');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        if Profile = Target.Portable then
+          Rules.Reject(At, 'A sparkline requires the terminal or graphical profile.');
+        end if;
+
         Rules.CheckExtent(Settings.Width, Profile, At);
         ChartRules.Distance(Settings.Height, At);
         ChartRules.Color(Settings.Color, At);
@@ -830,7 +833,9 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: Alerts.Options,
         _
       ):
-        Rules.RequireProfile(Profile, Target.Graphical, Location + '/alert');
+        if Profile = Target.Portable then
+          Rules.Reject(Location + '/alert', 'An alert requires the terminal or graphical profile.');
+        end if;
         const At: string := Identify(Id, Location + '/alert');
         FeedbackRules.Alert(Title, Settings, At);
         if Settings.Dismissible then
@@ -852,7 +857,12 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Size: float,
         const Settings: Spinners.Options?
       ):
-        Rules.RequireProfile(Profile, Target.Graphical, Location + '/spinner');
+        if Profile = Target.Portable then
+          Rules.Reject(
+            Location + '/spinner',
+            'A spinner requires the terminal or graphical profile.'
+          );
+        end if;
         const At: string := Identify(Id, Location + '/spinner');
         FeedbackRules.Nonnegative(Size, At);
         if Settings <> null then
@@ -1098,7 +1108,9 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: NumberFields.Options
       ):
         const Path: string := Location + '/numberField';
-        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        if Profile = Target.Portable then
+          Rules.Reject(Path, 'A number field requires the terminal or graphical profile.');
+        end if;
         const At: string := Identify(Id, Path);
         NumberRules.Check(Value, Minimum, Maximum, Settings, At);
         discard Identify(NumberFields.DecreaseId(Id), At + '/decrease');
@@ -1709,7 +1721,10 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: Segmented.Options
       ):
         const At: string := Identify(Id, Location + '/segmented');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        if Profile = Target.Portable then
+          Rules.Reject(At, 'A segmented control requires the terminal or graphical profile.');
+        end if;
+
         if Items.Length < 1 or Items.Length > 32 or Selected < 0 or Selected >= Items.Length
           or not Sys.Enum.IsDefined<B.Size>(Settings.ControlSize)
         then
@@ -1738,7 +1753,10 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Selected: array of bool, _, const Settings: ToggleGroups.Options
       ):
         const At: string := Identify(Id, Location + '/toggleGroup');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        if Profile = Target.Portable then
+          Rules.Reject(At, 'A toggle group requires the terminal or graphical profile.');
+        end if;
+
         ToggleGroupRules.Check(Items, Selected, Settings, At);
         for Index: int := 0 to Items.Length - 1 do
           discard Identify(ToggleGroups.ItemId(Id, Index), At + '/item');

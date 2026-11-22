@@ -3,7 +3,7 @@
 unit Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar;
 
 uses
-  Fpas.Ui.Widgets.Feedback.ProgressBars as Bars, Fpas.Ui.Styles as S, Fpas.Ui.Layout as L,
+  Fpas.Ui.Widgets.Feedback.ProgressBars as Bars, Fpas.Ui.Layout as L,
   Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Tui.Internal.View.Tree as E,
   Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Rendering.Themes as Th,
   Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs,
@@ -30,18 +30,13 @@ begin
   else
     ''
   end if;
-  const Fill: G.Color := case Settings.Tone of
-    when S.Tone.Accent: Theme.Colors.Accent;
-    when S.Tone.Info: Theme.Colors.Info;
-    when S.Tone.Success: Theme.Colors.Success;
-    when S.Tone.Warning: Theme.Colors.Warning;
-    when S.Tone.Danger: Theme.Colors.Danger;
-    when S.Tone.Violet: Theme.Colors.Series4;
-    when S.Tone.Teal: Theme.Colors.Series3;
-    when S.Tone.Rose: Theme.Colors.Series6;
-    else Theme.Colors.ControlOn;
-  end case;
-  return E.Element<TMsg>.Progress(Fraction, Caption, Percent, Width, Fill);
+  return E.Element<TMsg>.Progress(
+    Fraction,
+    Caption,
+    Percent,
+    Width,
+    Th.ToneColor(Theme, Settings.Tone)
+  );
 end function;
 
 // Paints a single line between the optional caption and percentage.

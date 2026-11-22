@@ -1,0 +1,45 @@
+// [Documentation](../../../../docs/ui/tui/feedback/alert.md)
+
+unit TuiGallery.AlertSamples;
+
+uses
+  Gallery.Shared.Strings as Strings, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Feedback.Alerts as A;
+
+// Shows the CUI Feedback examples in a terminal column.
+// ## Type parameters
+// - `TMsg`: Gallery message type.
+// ## Returns
+// Neutral, success, warning, and danger alerts.
+public function View<TMsg>(): E.Element<TMsg>;
+begin
+  return E.Column<TMsg>(
+    new L.Flow(Gap := L.Spacing.Tight),
+    E.Styled<TMsg>(E.Text<TMsg>(Strings.Get('Heading.Alerts')), S.Role.Heading),
+    A.Alert<TMsg>(
+      'update', 'A new version is available',
+      new A.Options(Description := 'Restart to update to 1.1.')
+    ),
+    A.Alert<TMsg>(
+      'payment', 'Payment received',
+      new A.Options(Description := 'Your invoice was paid on November 5.', Tone := S.Tone.Success)
+    ),
+    A.Alert<TMsg>(
+      'storage', 'Storage almost full',
+      new A.Options(
+        Description := 'You have used 92% of your plan.',
+        Tone := S.Tone.Warning,
+        Dismissible := true
+      )
+    ),
+    A.Alert<TMsg>(
+      'build', 'Build failed',
+      new A.Options(
+        Description := 'Missing symbol cui_frame in main.c line 42.',
+        Tone := S.Tone.Danger
+      )
+    )
+  );
+end function;
+
+end unit;

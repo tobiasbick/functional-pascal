@@ -46,6 +46,10 @@ The interactive presenter compares cells with the last successful output and
 emits terminal escape sequences for changed cells. A size change or write error
 triggers a full repaint.
 
+Visible spinners can advance on idle steps in the interactive host. These
+frames reuse the prepared view and do not call the application's update or
+view. Manual headless sessions keep a deterministic phase.
+
 ## Input and controlled state
 
 Tab/Shift+Tab traverse enabled controls in the active scope. An explicit Tab
@@ -70,6 +74,15 @@ action closes it. Closing the overlay restores available focus.
 The [file picker](files/file-picker.md) uses the same modal routing. Its
 directory, row selection and filename are local to each opening. The model
 receives the chosen path or dismissal and controls visibility.
+
+### Horizontal choice strips
+
+[Tabs](navigation/tabs.md), [segmented controls](actions/segmented-control.md)
+and [toggle groups](actions/toggle-group.md) each occupy one tab stop. The
+host retains the horizontal offset and reveals the focused item, including
+when the group is inside a vertically scrolling view. Left and Right propose
+a selection for tabs and segments. Toggle groups reserve selection changes
+for activation.
 
 ## Popup input
 
@@ -100,6 +113,8 @@ when it is still available. A disabled, removed or covered trigger closes its pa
   a scrollable list with separate selection and activation messages.
 - Application.Input/Frame support controlled input injection and cell snapshots.
 
+### Control pipe
+
 Snapshots expose visible control IDs, roles, values, bounds, focus and hover,
 plus cell text and colors. The gallery's headless-control mode supports the
 [private terminal debugger](../../pascal/tools/debugging.md#private-terminal-and-tui-control).
@@ -120,7 +135,7 @@ terminal widgets and their behavior.
 ## Source files
 
 <details>
-<summary>Browse 24 source files</summary>
+<summary>Browse 26 source files</summary>
 
 - `src/Fpas.Processes/Terminal/`
   - [ConsoleTerminal.cs](../../../src/Fpas.Processes/Terminal/ConsoleTerminal.cs)
@@ -133,7 +148,9 @@ terminal widgets and their behavior.
   - [Fpas.Ui.Tui.fpasproj](../../../src/Fpas.Ui.Tui/Fpas.Ui.Tui.fpasproj)
 - `src/Fpas.Ui.Tui/Internal/Controls/`
   - [Activation.fpas](../../../src/Fpas.Ui.Tui/Internal/Controls/Activation.fpas)
+  - [ChoiceStrip.fpas](../../../src/Fpas.Ui.Tui/Internal/Controls/ChoiceStrip.fpas)
 - `src/Fpas.Ui.Tui/Internal/Hosting/`
+  - [ControlReplies.fpas](../../../src/Fpas.Ui.Tui/Internal/Hosting/ControlReplies.fpas)
   - [GridNotifications.fpas](../../../src/Fpas.Ui.Tui/Internal/Hosting/GridNotifications.fpas)
   - [Interaction.fpas](../../../src/Fpas.Ui.Tui/Internal/Hosting/Interaction.fpas)
   - [InputDispatch.fpas](../../../src/Fpas.Ui.Tui/Internal/Hosting/InputDispatch.fpas)

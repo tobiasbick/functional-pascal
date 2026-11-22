@@ -2,7 +2,9 @@
 
 unit Fpas.Ui.Tui.Internal.Rendering.Themes;
 
-uses Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Widgets.Theming.Themes as Shared, Fpas.Ui.Graphics as G;
+uses
+  Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Widgets.Theming.Themes as Shared, Fpas.Ui.Graphics as G, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Charts.Charts as Charts,
+  Fpas.Ui.Widgets.Theming.ThemeMetrics as Metrics;
 
 // Terminal colors for one semantic button variant.
 public type ButtonAppearance = record
@@ -58,6 +60,8 @@ public type Theme = record
   public Widgets: WidgetStyles;
   // Semantic action states.
   public Buttons: ButtonStyles;
+  // Whether animated widgets use a static frame.
+  public ReducedMotion: bool := false;
 end record;
 
 // Composites a semantic straight-alpha color onto an opaque terminal surface.
@@ -82,6 +86,112 @@ begin
   ) shl 8) or Channel(Value.Blue, Background and 255);
 end function;
 
+// Resolves a shared style role against the inherited terminal backdrop.
+// ## Parameters
+// - `Theme`: Active semantic palette.
+// - `Value`: Requested style role.
+// - `Inherited`: Parent style.
+// ## Returns
+// Cell colors supplied by the role.
+public function Role(Theme: Theme; Value: S.Role; Inherited: T.Style): T.Style;
+begin
+  const Backdrop: int := Inherited.Background ?? Theme.Text.Background ?? 0;
+  if Value = S.Role.Default then
+    return new T.Style();
+  end if;
+
+  if Value = S.Role.Panel or Value = S.Role.OutlinedPanel
+    or Value = S.Role.MutedPanel or Value = S.Role.Divider
+  then
+    const Surface: int := Rgb(
+      case Value of
+        when S.Role.MutedPanel: Theme.Colors.SurfaceMuted;
+        when S.Role.Divider: Theme.Colors.Border;
+        else Theme.Colors.Surface;
+      end case, Backdrop
+    );
+    return new T.Style(Rgb(Theme.Colors.Foreground, Surface), Surface);
+  end if;
+
+  return new T.Style(
+    Foreground := Rgb(
+      case Value of
+        when S.Role.Muted: Theme.Colors.TextMuted;
+        when S.Role.Primary: Theme.Colors.Accent;
+        when S.Role.Secondary: Theme.Colors.TextSecondary;
+        when S.Role.Error: Theme.Colors.Danger;
+        else Theme.Colors.Foreground;
+      end case, Backdrop
+    )
+  );
+end function;
+
+// Combines child color overrides with inherited terminal colors.
+// ## Parameters
+// - `Parent`: Inherited colors.
+// - `Child`: Optional foreground and background overrides.
+// ## Returns
+// Colors inherited by the styled subtree.
+public function Merge(Parent: T.Style; Child: T.Style): T.Style;
+begin
+  return new T.Style(
+    if Child.Foreground = null then
+      Parent.Foreground
+    else
+      Child.Foreground
+    end if,
+    if Child.Background = null then
+      Parent.Background
+    else
+      Child.Background
+    end if
+  );
+end function;
+
+// Resolves a chart color against the active palette.
+// ## Parameters
+// - `Theme`: Current terminal theme.
+// - `Value`: Validated chart color.
+// - `Automatic`: Default color for this widget.
+// ## Returns
+// Straight-alpha ink before compositing.
+public function ChartColor(Theme: Theme; Value: Charts.Color; Automatic: G.Color): G.Color;
+begin
+  return case Value of
+    when Charts.Color.Automatic: Automatic;
+    when Charts.Color.Rgba(const Explicit: G.Color): Explicit;
+    when Charts.Color.Palette(const Index: int): case Index of
+      when 1: Theme.Colors.Series1;
+      when 2: Theme.Colors.Series2;
+      when 3: Theme.Colors.Series3;
+      when 4: Theme.Colors.Series4;
+      when 5: Theme.Colors.Series5;
+      else Theme.Colors.Series6;
+    end case;
+  end case;
+end function;
+
+// Selects the palette color associated with a semantic widget tone.
+// ## Parameters
+// - `Theme`: Resolved terminal theme.
+// - `Tone`: Semantic widget tone.
+// ## Returns
+// The color before alpha compositing.
+public function ToneColor(Theme: Theme; Tone: S.Tone): G.Color;
+begin
+  return case Tone of
+    when S.Tone.Accent: Theme.Colors.Accent;
+    when S.Tone.Info: Theme.Colors.Info;
+    when S.Tone.Success: Theme.Colors.Success;
+    when S.Tone.Warning: Theme.Colors.Warning;
+    when S.Tone.Danger: Theme.Colors.Danger;
+    when S.Tone.Violet: Theme.Colors.Series4;
+    when S.Tone.Teal: Theme.Colors.Series3;
+    when S.Tone.Rose: Theme.Colors.Series6;
+    else Theme.Colors.ControlOn;
+  end case;
+end function;
+
 // Resolves the shared CUI palette into terminal rendering attributes.
 //
 // ## Parameters
@@ -95,6 +205,7 @@ requires cast<int>(Value.AccentFamily) >= 0 and cast<int>(Value.AccentFamily) <=
 requires Value.Colors.Background.Alpha = 255;
 begin
   const C: Shared.Palette := Value.Colors;
+  const Options: Metrics.Options? := Value.Metrics;
   const Canvas: int := Rgb(C.Background, 0);
   const Surface: int := Rgb(C.Surface, Canvas);
   const Accent: int := Rgb(C.Accent, Surface);
@@ -122,6 +233,7 @@ begin
       BorderColor := Rgb(C.Border, Surface),
       ScrollThumbColor := Accent, ScrollTrackColor := Rgb(C.ControlTrack, Surface)
     ),
+    ReducedMotion := Options <> null and Options.Motion = 0.0F,
     Buttons := new ButtonStyles(
       Default := new ButtonAppearance(Secondary, Focus, Hover),
       Secondary := new ButtonAppearance(Secondary, Focus, Hover),

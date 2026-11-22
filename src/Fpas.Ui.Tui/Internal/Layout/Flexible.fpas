@@ -27,6 +27,69 @@ begin
   end case;
 end function;
 
+// Converts shared flex rules into resolved cell constraints.
+//
+// ## Parameters
+// - `Value`: Validated shared rule.
+// - `Horizontal`: Parent main axis.
+//
+// ## Returns
+// Cell allocation constraints.
+public function Flex(Value: L.Flex; Horizontal: bool := true): E.Flex;
+begin
+  var Basis: int := -1;
+  var Grow: float := Value.Grow;
+  case Value.Basis of
+    when L.Extent.Fixed(const Distance: L.Measure):
+      Basis := Cells(Distance, Horizontal);
+    when L.Extent.Fill:
+      Grow := Sys.Math.Max(1.0F, Grow);
+    when L.Extent.Percent(_):
+      raise new Sys.NotSupportedException('Percentage extents require the graphical profile.');
+    else
+  end case;
+  const Minimum: L.Measure? := Value.Minimum;
+  const Maximum: L.Measure? := Value.Maximum;
+  return new E.Flex(
+    Basis, if Minimum = null then
+      0
+    else
+      Cells(Minimum, Horizontal)
+    end if,
+    if Maximum = null then
+      int.MaxValue
+    else
+      Cells(Maximum, Horizontal)
+    end if, Grow
+  );
+end function;
+
+// Resolves a shared spacing rule in terminal cells.
+// ## Parameters
+// - `Value`: Shared spacing rule.
+// - `Horizontal`: Whether the spacing is horizontal.
+// ## Returns
+// The number of terminal cells.
+public function Spacing(Value: L.Spacing; Horizontal: bool): int;
+begin
+  case Value of
+    when L.Spacing.None:
+      return 0;
+    when L.Spacing.Tight:
+      return 1;
+    when L.Spacing.Normal:
+      return 1;
+    when L.Spacing.Loose:
+      return if Horizontal then
+        2
+      else
+        1
+      end if;
+    when L.Spacing.Fixed(const Distance: L.Measure):
+      return Cells(Distance, Horizontal);
+  end case;
+end function;
+
 public type Rect = record
   public X: int;
   public Y: int;

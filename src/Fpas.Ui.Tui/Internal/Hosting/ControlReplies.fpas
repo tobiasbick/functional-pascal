@@ -1,0 +1,89 @@
+// [Documentation](../../../../docs/ui/tui/host.md#control-pipe)
+
+unit Fpas.Ui.Tui.Internal.Hosting.ControlReplies;
+
+uses
+  Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs,
+  Fpas.Processes.Terminal as Terminal, System as Sys, System.Threading.Tasks as Tasks;
+
+// Enqueues input from the terminal control pipe and returns its receipt.
+// ## Parameters
+// - `Event`: Wire input event.
+// - `Enqueue`: Session input queue.
+// ## Returns
+// Admission status and acknowledgement for queued input.
+public function Send(
+  Event: Terminal.TerminalInput; Enqueue: function(App.Input, Tasks.Task?): App.Admission
+): Terminal.TuiControlReply;
+begin
+  const Normalized: App.Input? := Inputs.Translate(Event);
+  if Normalized = null then
+    return new Terminal.TuiControlReply('invalid_input');
+  end if;
+  const Receipt: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+    Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+  );
+  case Enqueue(Normalized, Receipt.Task) of
+    when App.Admission.Queued(const Id: long):
+      return new Terminal.TuiControlReply('queued', Id, Acknowledgement := Receipt);
+    when App.Admission.QueueFull:
+      return new Terminal.TuiControlReply('QueueFull');
+    when App.Admission.Closed:
+      return new Terminal.TuiControlReply('closed');
+  end case;
+end function;
+
+// Maps a host step outcome to the wire reply.
+// ## Parameters
+// - `Outcome`: Result from the owning session.
+// ## Returns
+// Control pipe reply.
+public function Describe(Outcome: App.StepResult): Terminal.TuiControlReply;
+begin
+  case Outcome of
+    when App.StepResult.Processed(const Id: long, const Complete: long, const Published: bool):
+      return new Terminal.TuiControlReply(
+        if Published then
+          'presented'
+        else
+          'unchanged'
+        end if,
+        Id,
+        Complete
+      );
+    when App.StepResult.EffectProcessed(const Complete: long):
+      return new Terminal.TuiControlReply('processed', 0L, Complete);
+    when App.StepResult.Failed(
+      const Id: long,
+      const Complete: long,
+      const Stage: string,
+      const Reason: string
+    ):
+      return new Terminal.TuiControlReply('failed', Id, Complete, Stage, Reason);
+    when App.StepResult.Idle:
+      return new Terminal.TuiControlReply('idle');
+  end case;
+end function;
+
+// Reads an input receipt with a wire timeout.
+// ## Parameters
+// - `Id`: Input receipt identity.
+// - `Milliseconds`: Timeout in milliseconds.
+// - `Read`: Session receipt lookup.
+// ## Returns
+// Completed outcome or timeout.
+public async function Wait(
+  Id: long; Milliseconds: int; Read: function(long, Sys.TimeSpan): Tasks.Task<App.StepResult?>
+): Tasks.Task<Terminal.TuiControlReply>;
+begin
+  const Outcome: App.StepResult? := await Read(Id, Sys.TimeSpan.FromMilliseconds(Milliseconds));
+  return if Outcome = null then
+    new Terminal.TuiControlReply(
+      'timeout'
+    )
+  else
+    Describe(Outcome)
+  end if;
+end function;
+
+end unit;

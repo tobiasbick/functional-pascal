@@ -1,6 +1,6 @@
 # Number field
 
-Use a number field for a bounded numeric value that the user can type or step up and down. Available in **GUI**.
+Use a number field for a bounded numeric value that the user can type or step up and down. See also the [terminal number field](../../tui/inputs/number-field.md).
 
 ![Number field in the FPAS gallery](images/number-field.png)
 

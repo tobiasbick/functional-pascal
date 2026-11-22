@@ -51,6 +51,47 @@ begin
   return E.Element<TMsg>.Stack(Rows.ToArray(), false, new E.Flow());
 end function;
 
+// Places terminal adornments alongside the editable value.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Field`: Editor and its input handlers.
+// - `Prefix`: Text before the editable value.
+// - `Suffix`: Text after the editable value.
+// - `Actions`: Trailing controls.
+// - `Colors`: Inherited text colors.
+// - `Theme`: Semantic field colors.
+// ## Returns
+// A row that gives remaining width to the editor.
+public function WithAdornments<TMsg>(
+  Field: Edit.Field<TMsg>; Prefix: string; Suffix: string; Actions: array of E.Element<TMsg>;
+  Colors: T.Style; Theme: Th.Theme
+): E.Element<TMsg>;
+  function Affix(Value: string): E.Element<TMsg>;
+  begin
+    const Back: int := Colors.Background ?? Theme.Text.Background ?? 0;
+    return E.Element<TMsg>.Decorated(
+      E.Element<TMsg>.Label(G.SingleLine(Value)),
+      new T.Style(Th.Rgb(Theme.Colors.TextMuted, Back), Back)
+    );
+  end function;
+begin
+  const Items: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
+  if Prefix <> '' then
+    Items.Add(Affix(Prefix));
+  end if;
+
+  Items.Add(
+    E.Element<TMsg>.Sized(E.Element<TMsg>.TextField(Field), new E.Flex(Minimum := 1, Grow := 1))
+  );
+  if Suffix <> '' then
+    Items.Add(Affix(Suffix));
+  end if;
+
+  Items.AddRange(Actions);
+  return E.Element<TMsg>.Stack(Items.ToArray(), true, new E.Flow());
+end function;
+
 // Paints the displayed slice and binds it to its cursor and model callbacks.
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -116,7 +157,7 @@ begin
     else
       Field.Id
     end if,
-    'text-field', Field.Value, Row, Scope, FocusReturn, Field.Settings.Enabled,
+    Field.Role, Field.Value, Row, Scope, FocusReturn, Field.Settings.Enabled,
     A.Binding<TMsg>.Edit(Field, Edit.Track(Position), X, Caret), S.ButtonVariant.Default
   );
 end function;

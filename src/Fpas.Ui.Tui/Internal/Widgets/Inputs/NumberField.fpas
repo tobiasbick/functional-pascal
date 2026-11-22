@@ -1,0 +1,173 @@
+// [Documentation](../../../../../docs/ui/tui/inputs/number-field.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Inputs.NumberField;
+
+uses
+  Fpas.Ui.Widgets.Inputs.NumberFields as N, Fpas.Ui.Widgets.Inputs.TextFields as Fields,
+  Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as TextField,
+  Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.View.Tree as E,
+  Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Developer.Terminal as T,
+  Fpas.Ui.TerminalExtensions.Input as K, System as Sys, System.Globalization as Global;
+
+// In-progress text belonging to the focused number field.
+public type Draft = record
+  // Editor identity.
+  public Id: string;
+  // Numeric value the current model must supply for this text to remain valid.
+  public Expected: double;
+  // Precision used by the current editor.
+  public DecimalPlaces: int;
+  // Editable text, including incomplete values.
+  public Text: string;
+end record;
+
+// Retains a single draft for the terminal session.
+public type State = record
+  // Reads pending display text.
+  public Read: function(): Draft?;
+  // Replaces pending text or clears it.
+  public Write: procedure(Draft?);
+
+  // Drops a draft if focus has moved to a different control.
+  // ## Parameters
+  // - `Focused`: Current input focus.
+  public procedure Retain(Focused: string);
+  begin
+    const Value: Draft? := self.Read();
+    if Value <> null and Value.Id <> Focused then
+      self.Write(null);
+    end if;
+  end procedure;
+end record;
+
+// Creates number-field editing state for one terminal session.
+// ## Returns
+// Independent storage for the draft.
+public function Start(): State;
+begin
+  var Current: Draft? := null;
+  return new State(
+    function(): Draft? => Current,
+    procedure(Value: Draft?) begin
+      Current := Value;
+    end procedure
+  );
+end function;
+
+// Resolves a bounded number field into an editor and two step actions.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable control identity.
+// - `Value`: Model-owned number.
+// - `Minimum`: Inclusive lower bound.
+// - `Maximum`: Inclusive upper bound.
+// - `Change`: Maps a proposed number to a message.
+// - `Settings`: Number presentation, precision and step.
+// - `Session`: Current terminal editing state.
+// - `Colors`: Inherited text colors.
+// - `Theme`: Active palette.
+// ## Returns
+// A labeled number field with keyboard editing and step controls.
+public function Lower<TMsg>(
+  Id: string; Value: double; Minimum: double; Maximum: double; Change: function(double): TMsg;
+  Settings: N.Options; Session: State; Colors: T.Style; Theme: Th.Theme
+): E.Element<TMsg>;
+  function Propose(Number: double): Actions.Result<TMsg>;
+  begin
+    return if Number = Value then
+      Actions.Result<TMsg>.NoAction
+    else
+      Actions.Result<TMsg>.Send(Change(Number))
+    end if;
+  end function;
+
+  function UpdateText(Text: string): Actions.Result<TMsg>;
+  begin
+    var Proposed: double := Value;
+    var Parsed: double := 0.0;
+    if Sys.Double.TryParse(
+      Text,
+      Global.NumberStyles.Float,
+      Provider,
+      out Parsed
+    ) and Sys.Double.IsFinite(Parsed)
+    then
+      Proposed := Sys.Math.Clamp(Parsed, Minimum, Maximum);
+    end if;
+
+    Session.Write(new Draft(Id, Proposed, Settings.DecimalPlaces, Text));
+    return Propose(Proposed);
+  end function;
+
+  function Step(Amount: double; Scale: int): Actions.Result<TMsg>;
+  begin
+    Session.Write(null);
+    return Propose(Sys.Math.Clamp(Value + Amount * cast<double>(Scale), Minimum, Maximum));
+  end function;
+
+  function Key(Pressed: K.Key; Modifiers: K.KeyModifiers): Actions.Result<TMsg>?;
+  begin
+    if Modifiers = K.KeyModifiers.None and (Pressed = K.Key.Enter or Pressed = K.Key.Escape) then
+      if Pressed = K.Key.Enter or Session.Read() <> null then
+        Session.Write(null);
+        return Actions.Result<TMsg>.NoAction;
+      end if;
+    end if;
+
+    if Modifiers = K.KeyModifiers.None or Modifiers = K.KeyModifiers.Shift then
+      const Scale: int := if Modifiers = K.KeyModifiers.Shift then
+        10
+      else
+        1
+      end if;
+      case Pressed of
+        when K.Key.Up:
+          return Step(Settings.Step, Scale);
+        when K.Key.Down:
+          return Step(-Settings.Step, Scale);
+        else
+      end case;
+    end if;
+
+    return null;
+  end function;
+
+  function Button(Key: string; Caption: string; Name: string; Delta: double; CanStep: bool): E.Element<TMsg>;
+  begin
+    const Action: E.Element<TMsg> := E.Element<TMsg>.Action(
+      Key, new Actions.Callback<TMsg>(function(): Actions.Result<TMsg> => Step(Delta, 1)),
+      Settings.Enabled and CanStep,
+      new E.ActionView(Caption, Name := Name, ArrowFocus := false, FixedWidth := 3)
+    );
+    return E.Element<TMsg>.DisclosureBody(Id, Action, true);
+  end function;
+begin
+  const Provider: Global.CultureInfo := Global.CultureInfo.InvariantCulture;
+  const Format: string := 'F' + Settings.DecimalPlaces.ToString(Provider);
+  var Text: string := Value.ToString(Format, Provider);
+  const Draft: Draft? := Session.Read();
+  if Draft <> null and Draft.Id = Id then
+    if Settings.Enabled and Draft.Expected = Value and Draft.DecimalPlaces =
+      Settings.DecimalPlaces
+    then
+      Text := Draft.Text;
+    else
+      Session.Write(null);
+    end if;
+  end if;
+  const Field: Edit.Field<TMsg> := new Edit.Field<TMsg>(
+    Id, Text, UpdateText, new Fields.Options(Label := Settings.Label, Enabled := Settings.Enabled),
+    null, Role := 'number-field', KeyAction := Key
+  );
+  const Controls: array of E.Element<TMsg> := [
+    Button(N.DecreaseId(Id), '−', 'Decrease', -Settings.Step, Value > Minimum),
+    Button(N.IncreaseId(Id), '+', 'Increase', Settings.Step, Value < Maximum)
+  ];
+  return TextField.WithLabels<TMsg>(
+    TextField.WithAdornments<TMsg>(Field, '', Settings.Suffix, Controls, Colors, Theme),
+    Settings.Label, '', '', Colors, Theme
+  );
+end function;
+
+end unit;

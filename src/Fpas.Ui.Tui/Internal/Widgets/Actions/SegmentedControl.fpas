@@ -1,0 +1,65 @@
+// [Documentation](../../../../../docs/ui/tui/actions/segmented-control.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Actions.SegmentedControl;
+
+uses
+  Fpas.Ui.Widgets.Actions.SegmentedControls as S, Fpas.Ui.Widgets.Actions.Buttons as B,
+  Fpas.Ui.Tui.Internal.Controls.ChoiceStrip as Strip, Fpas.Ui.Tui.Internal.Controls.Activation as A,
+  Fpas.Ui.Tui.Internal.View.Tree as E, System.Collections.Generic as C;
+
+// Prepares a model-controlled segmented strip with visible terminal labels.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable group identity.
+// - `Items`: Positional choices.
+// - `Selected`: Selected index supplied by the model.
+// - `Change`: Maps a changed index to a message.
+// - `Settings`: Size, width and input permission.
+// ## Returns
+// Terminal strip with a single selected choice.
+public function Lower<TMsg>(
+  Id: string; Items: array of S.Item; Selected: int; Change: function(int): TMsg; Settings: S.Options
+): E.Element<TMsg>;
+  function Activate(Index: int): A.Result<TMsg>;
+  begin
+    return if Index = Selected then
+      A.Result<TMsg>.NoAction
+    else
+      A.Result<TMsg>.Send(Change(Index))
+    end if;
+  end function;
+begin
+  const Choices: C.List<E.ChoiceItem> := new C.List<E.ChoiceItem>(Items.Length);
+  for Index: int := 0 to Items.Length - 1 do
+    const Label: string := Items[Index].Label;
+    const Active: bool := Index = Selected;
+    Choices.Add(
+      new E.ChoiceItem(
+        Label, (if Active then
+          '● '
+        else
+          '○ '
+        end if) + Label, Active
+      )
+    );
+  end for;
+
+  return Strip.Lower<TMsg>(
+    Id, Choices.ToArray(), Selected, Activate,
+    new E.ChoiceStripOptions(
+      'segment',
+      Settings.Enabled,
+      FullWidth := Settings.FullWidth,
+      EqualWidth := Settings.FullWidth,
+      Padding := Strip.PaddingFor(Settings.ControlSize),
+      Height := if Settings.ControlSize = B.Size.Large then
+        2
+      else
+        1
+      end if
+    )
+  );
+end function;
+
+end unit;

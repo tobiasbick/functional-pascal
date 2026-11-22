@@ -4,7 +4,7 @@ unit Fpas.Ui.Widgets.Feedback.Spinners;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as Charts;
 
-// Native activity spinner styles.
+// Activity styles used by the graphical and terminal hosts.
 public type Style = enum: byte
   // Sweeping ring.
   Arc;
@@ -38,7 +38,7 @@ public type Style = enum: byte
   Plasma;
 end enum;
 
-// Native spinner presentation options.
+// Spinner presentation options.
 public type Options = record
   // Animation geometry.
   public Animation: Style := Style.Arc;
@@ -50,15 +50,15 @@ public type Options = record
   public Inverse: bool := false;
 end record;
 
-// Builds CUI's native activity spinner.
+// Builds an activity spinner for the graphical or terminal host.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable spinner identity.
 // - `Size`: Diameter in logical points; zero uses CUI's default.
-// - `Settings`: Optional native style and colors.
+// - `Settings`: Optional activity style and colors.
 // ## Returns
-// A GUI-only spinner whose drawing and animation belong to CUI.
+// A spinner drawn and animated by its host.
 public function Spinner<TMsg>(Id: string; Size: float := 0.0F; Settings: Options? := null): E.Element<TMsg>;
 requires Id <> '';
 requires Size >= 0.0F;

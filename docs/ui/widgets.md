@@ -61,9 +61,12 @@ and input support. [GUI adapter](gui/host.md),
 | Single-line text field with label, placeholder, hint or error | Yes | Yes | Yes |
 | Field icons, affixes, clear and password buttons, and size variants | | | Yes |
 | Wrapping multiline text area | Yes | Yes | Yes |
-| Search field and text area affixes, icons, clear button and size variants | | | Yes |
+| Search field with clear button, text affixes and optional submission | | Yes | Yes |
+| Number field with bounds, steps and unit suffix | | Yes | Yes |
+| Search field icons and control sizes, and specialized text area options | | | Yes |
 | Inline editing, scrub and money fields, shortcut recording and native shortcut labels | | | Yes |
-| Single-selection segmented control, sizes, icons and full width | | | Yes |
+| Segmented control and toggle group with sizes and keyboard navigation | | Yes | Yes |
+| Segmented and toggle items with CUI glyphs and icon-only presentation | | | Yes |
 | Copy button with transient feedback | | | Yes |
 | Icon button with tooltip, shortcut hint and busy state | | | Yes |
 | Table with text cells, sortable headings and selectable rows | Yes | Yes | Yes |
@@ -85,7 +88,9 @@ and input support. [GUI adapter](gui/host.md),
 | Draggable or resizable dialog and native action footer | | | Yes |
 | Banners, countdowns and onboarding checklists | | | Yes |
 | Determinate progress bar, label, percentage, tone and width | Yes | Yes | Yes |
-| Animated progress, alerts, spinners, meters, rings, skeletons and timeline entries | | | Yes |
+| Inline alerts with semantic tone and optional dismissal | | Yes | Yes |
+| Spinner and sparkline | | Yes | Yes |
+| Animated progress, meters, rings, skeletons and timeline entries | | | Yes |
 | Hold, confirmation, status, theme switcher and theme toggle actions | | | Yes |
 | Rows, columns and borders | Yes | Yes | Yes |
 | Inline links, avatars and hover cards | | | Yes |
@@ -402,12 +407,14 @@ Items can supply CUI icons. Set `IconOnly` to hide the visible caption.
 
 `Options` selects the three native control sizes, full-width allocation and
 input permission. Full-width choices share the horizontal allocation equally.
-Tab visits each choice without changing selection. Left/Right move focus and
+In the GUI, Tab visits each choice without changing selection. Left/Right move focus and
 propose the adjacent choice without wrapping. Pointer, Enter and Space propose
 a focused choice; activating the selected choice proposes nothing. The model
 may reject a proposal. Use `ItemId(Id, Index)` for individual focus requests.
 
 GUI delegates layout, drawing and animation to CUI's segmented primitive.
+The [terminal segmented control](tui/actions/segmented-control.md) has one
+tab stop and uses text labels, including for icon-only items.
 
 ## Toggle group
 
@@ -423,8 +430,9 @@ mode. Use `ItemId(Id, Index)` to focus an item, or the group ID to focus the
 first item. Pointer, Enter and Space activate an item. Tab moves focus, and
 each horizontal arrow press moves focus one item within the group.
 
-Toggle groups require the graphical profile. CUI draws and handles both
-groups on the GUI gallery's Actions page.
+CUI draws and handles both groups on the GUI gallery's Actions page. The
+[terminal toggle group](tui/actions/toggle-group.md) uses one tab stop and
+displays the labels with selection markers.
 
 ## Reactions
 
@@ -950,10 +958,8 @@ page shows the native wells and their model updates.
 - `Presences.Presence` shows the supplied users and their away state.
   `Counters.Counter` rolls to a model-owned value.
   `Tickers.Ticker` scrolls entries and pauses under the pointer.
-- `Spinners.Spinner` accepts the native activity styles, ink and track colors.
-  `StatusSpinners.StatusSpinner` renders the current work state.
+- `StatusSpinners.StatusSpinner` renders the current work state.
   `SkeletonGroups.SkeletonGroup` shares an animation across its placeholders.
-- `Sparklines.Sparkline` draws a compact line and its endpoint.
 
 These widgets use the graphical profile.
 
@@ -1126,6 +1132,8 @@ Removing it for a presented frame releases that state. `OnDismiss` optionally
 delivers one notification after the native action. Snapshots omit hidden alerts;
 visible ones have role `alert`. `Alerts.DismissId(Id)` identifies the optional
 `alert-dismiss` action for native pointer/Enter/Space input and explicit focus.
+The [terminal alert](tui/feedback/alert.md) uses a tone-colored text symbol
+and wraps its text. Its close action uses the same ID and notification.
 
 `Fpas.Ui.Widgets.Feedback.ProgressBars.ProgressBar<TMsg>(Id, Value, Settings)` displays a finite
 fraction from zero through one. Options map to CUI's `Label`, `ShowValue`,
@@ -1138,10 +1146,13 @@ The terminal puts the caption, a two-color `─` line and the rounded percentage
 on one row. Content and Fill use the available columns. Fixed caps the entire
 row. On narrow rows the caption shortens to leave room for progress.
 
-`Fpas.Ui.Widgets.Feedback.Spinners.Spinner<TMsg>(Id, Size := 0.0F)` uses CUI's activity animation,
-theme color and logical diameter; zero selects its default. It has a
-noninteractive `spinner` snapshot. Dimensions must be finite and nonnegative.
-Alerts, spinners, indeterminate progress, dither and explicit track height require the
+`Fpas.Ui.Widgets.Feedback.Spinners.Spinner<TMsg>(Id, Size := 0.0F)` takes an
+activity style, ink and track colors, and a finite nonnegative logical diameter.
+Zero selects the default. GUI uses CUI animation and reports a noninteractive
+`spinner` snapshot. The [terminal spinner](tui/feedback/spinner.md) animates
+glyphs in a cell footprint.
+
+Indeterminate progress, dither and explicit track height require the
 graphical profile. The Feedback gallery shows the original four alerts, upload and indexing bars, dithered export and sync
 bars, and 16/22/28-point spinners.
 
@@ -1327,6 +1338,8 @@ uses CUI's search icon, placeholder and clear button. The query is a model-owned
 single line. The native clear button empties it and returns focus to the field.
 Enter can submit the current query. Options allow a custom icon, placeholder,
 validation text, prefix and suffix. The query excludes the displayed affixes.
+The [terminal search field](tui/inputs/search-field.md) uses one row for its
+editor and adornments and supports the same query and clear action.
 
 ## Text area
 
@@ -1451,8 +1464,9 @@ finite number or adjust it with the native step buttons or arrow keys.
 Shift with an arrow applies ten steps. Input is clamped to the bounds and
 Enter or loss of focus displays the accepted value. `DecimalPlaces` sets
 display precision. `Suffix` adds unit text beside the editor. The buttons
-use `NumberFields.DecreaseId(Id)` and `NumberFields.IncreaseId(Id)` in GUI
-snapshots. The number field requires the Graphical profile.
+use `NumberFields.DecreaseId(Id)` and `NumberFields.IncreaseId(Id)` in both hosts'
+snapshots. The [terminal number field](tui/inputs/number-field.md) also uses
+Escape to return to the formatted value.
 
 ## Scrolling
 
@@ -1483,6 +1497,10 @@ hidden content. The [Reader page](../../examples/ui/gui/gallery/Pages/Reader/Vie
 combines the outline, anchors and edge fades.
 
 ## Charts
+
+`Sparklines.Sparkline` renders a compact trend of finite samples. CUI draws a
+line and endpoint. The [terminal sparkline](tui/charts/sparkline.md) scales the
+samples into fractional blocks and supports content, fixed and fill widths.
 
 The Graphical profile exposes `LineCharts.LineChart`, `BarCharts.BarChart`,
 `DonutCharts.DonutChart`, `Gauges.Gauge` and `PatternMeters.PatternMeter`.

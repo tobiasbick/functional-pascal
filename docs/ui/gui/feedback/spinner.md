@@ -1,6 +1,6 @@
 # Spinner
 
-Use a spinner to indicate work in progress when the total is unavailable. The gallery shows three sizes and several animation styles. Available in **GUI**.
+Use a spinner to indicate work in progress when the total is unavailable. The gallery shows three sizes and several animation styles. See the [terminal spinner](../../tui/feedback/spinner.md).
 
 ![Spinner in the FPAS gallery](images/spinner.png)
 

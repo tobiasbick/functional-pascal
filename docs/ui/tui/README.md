@@ -43,15 +43,16 @@ dotnet run --project examples/ui/tui/gallery/TuiWidgetGallery.fpasproj
 | --- | --- |
 | [Layout](layout/README.md) | Panels, weighted rows and columns, scroll views |
 | [Navigation](navigation/README.md) | Sidebar with selectable destinations, tabs, breadcrumbs and pagination |
-| [Actions](actions/README.md) | Button and dropdown menu |
-| [Inputs](inputs/README.md) | Text fields and searchable single and multiple selection |
+| [Actions](actions/README.md) | Button, dropdown menu, segmented control and toggle group |
+| [Inputs](inputs/README.md) | Text, search and number fields, text area, searchable single and multiple selection |
 | [Files](files/README.md) | Open, save and folder selection dialogs |
 | [Selection](selection/README.md) | Checkbox, switch and radio group |
 | [Overlays](overlays/README.md) | Dialog, sheet and searchable command palette |
 | [Data display](data-display/README.md) | Sortable table, selection list, expandable tree and filter bar |
 | [Code](developer/README.md) | Scrollback for build and application messages |
 | [Disclosure](disclosure/README.md) | Expandable card |
-| [Feedback](feedback/README.md) | Determinate progress bar |
+| [Feedback](feedback/README.md) | Inline alert, determinate progress bar and animated spinner |
+| [Charts](charts/sparkline.md) | Sparkline for a series of values |
 | [App chrome](app-chrome/README.md) | Status bar |
 | [Text and display](text-and-display/README.md) | Text, semantic colors and cell grid |
 

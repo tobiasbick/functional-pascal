@@ -1,6 +1,6 @@
 # Search field
 
-Use a search field for a single-line query with a search icon and a built-in clear button. Available in **GUI**.
+Use a search field for a single-line query with a search icon and a built-in clear button. See also the [terminal search field](../../tui/inputs/search-field.md).
 
 ![Search field in the FPAS gallery](images/search-field.png)
 

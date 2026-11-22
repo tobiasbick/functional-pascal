@@ -114,6 +114,8 @@ public type Layout<TMsg> = record
   public TabStops: array of TabStop := [];
   // Optional focus-independent shortcut to open the command palette.
   public OpenPalette: Sys.Func<TMsg>? := null;
+  // Whether the scene contains visible motion that needs another frame.
+  public Animated: bool := false;
 end record;
 
 // Registers an action in a horizontal row and keeps offscreen Tab destinations.

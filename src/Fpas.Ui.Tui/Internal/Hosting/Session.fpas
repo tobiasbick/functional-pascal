@@ -2,7 +2,10 @@
 
 unit Fpas.Ui.Tui.Internal.Hosting.Session;
 
-uses Fpas.Ui.Tui.Internal.Widgets.Files.FilePickerState as PickerState, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as PopupState, Fpas.Ui.Tui.Internal.Hosting.InputDispatch as InputDispatch, Fpas.Ui.Tui.Internal.Hosting.RowNavigation as Navigation, Fpas.Ui.Tui.Internal.Hosting.GridNotifications as Grids, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as Ui, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.View.Lowering as Lower, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Theming.Themes as SharedThemes, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Equivalence as Q, Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Rendering.Decoration as D, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs, Fpas.Processes.Terminal as Terminal, System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses
+  Fpas.Ui.Tui.Internal.Hosting.ControlReplies as Replies,
+  Fpas.Ui.Tui.Internal.Widgets.Inputs.NumberField as Number, Fpas.Ui.Tui.Internal.Widgets.Feedback.Alert as Alert,
+  Fpas.Ui.Tui.Internal.Widgets.Files.FilePickerState as PickerState, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as PopupState, Fpas.Ui.Tui.Internal.Hosting.InputDispatch as InputDispatch, Fpas.Ui.Tui.Internal.Hosting.RowNavigation as Navigation, Fpas.Ui.Tui.Internal.Hosting.GridNotifications as Grids, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as Ui, Fpas.Ui.Validation as Validation, Fpas.Ui.Tui.Internal.View.Lowering as Lower, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Theming.Themes as SharedThemes, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Arrangement as Arrangement, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Equivalence as Q, Fpas.Ui.Tui.Internal.Hosting.Interaction as I, Fpas.Ui.Tui.Internal.Rendering.Decoration as D, Fpas.Processes.Terminal as Terminal, System as Sys, System.Collections.Generic as Generic, System.Diagnostics as Diag, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 type PendingInput = record
   // The input receipt ID exposed by the terminal host.
@@ -11,6 +14,12 @@ type PendingInput = record
   public Event: App.Input;
   // The control pipe's acknowledgement when the event came from a debugger.
   public Acknowledgement: Tasks.Task?;
+end record;
+
+type ViewSource<TMsg> = record
+  public Prepared: Validation.Prepared<TMsg>;
+  public Root: E.Element<TMsg>;
+  public Theme: Th.Theme;
 end record;
 
 procedure CheckSize(Columns: int; Rows: int);
@@ -139,64 +148,6 @@ public function Start<TModel, TMsg>(
     end while;
   end function;
 
-  function SendControl(Event: Terminal.TerminalInput): Terminal.TuiControlReply;
-  begin
-    const Normalized: App.Input? := Inputs.Translate(Event);
-    if Normalized = null then
-      return new Terminal.TuiControlReply('invalid_input');
-    end if;
-    const Receipt: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
-      Tasks.TaskCreationOptions.RunContinuationsAsynchronously
-    );
-    case Enqueue(Normalized, Receipt.Task) of
-      when App.Admission.Queued(const Id: long):
-        return new Terminal.TuiControlReply('queued', Id, Acknowledgement := Receipt);
-      when App.Admission.QueueFull:
-        return new Terminal.TuiControlReply('QueueFull');
-      when App.Admission.Closed:
-        return new Terminal.TuiControlReply('closed');
-    end case;
-  end function;
-
-  function Describe(Outcome: App.StepResult): Terminal.TuiControlReply;
-  begin
-    case Outcome of
-      when App.StepResult.Processed(const Id: long, const Complete: long, const Published: bool):
-        return new Terminal.TuiControlReply(
-          if Published then
-            'presented'
-          else
-            'unchanged'
-          end if,
-          Id,
-          Complete
-        );
-      when App.StepResult.EffectProcessed(const Complete: long):
-        return new Terminal.TuiControlReply('processed', 0L, Complete);
-      when App.StepResult.Failed(
-        const Id: long,
-        const Complete: long,
-        const Stage: string,
-        const Reason: string
-      ):
-        return new Terminal.TuiControlReply('failed', Id, Complete, Stage, Reason);
-      when App.StepResult.Idle:
-        return new Terminal.TuiControlReply('idle');
-    end case;
-  end function;
-
-  async function WaitControl(Id: long; Milliseconds: int): Tasks.Task<Terminal.TuiControlReply>;
-  begin
-    const Outcome: App.StepResult? := await Wait(Id, Sys.TimeSpan.FromMilliseconds(Milliseconds));
-    return if Outcome = null then
-      new Terminal.TuiControlReply(
-        'timeout'
-      )
-    else
-      Describe(Outcome)
-    end if;
-  end function;
-
   procedure DisposeSession();
   begin
     try
@@ -209,13 +160,8 @@ public function Start<TModel, TMsg>(
     end try;
   end procedure;
 
-  procedure Paint();
+  function PrepareView(Routing: I.State<TMsg>): ViewSource<TMsg>;
   begin
-    const Routing: I.State<TMsg>? := Interaction;
-    if Routing = null then
-      raise new Sys.InvalidOperationException('Missing interaction state.');
-    end if;
-
     Phase := 'view';
     const Theme: Th.Theme := Th.Resolve(ThemeFor(Core.Model()));
     const Size: L.Viewport := new L.Viewport(
@@ -245,15 +191,53 @@ public function Start<TModel, TMsg>(
       end if,
       new T.Viewport(Viewport.Columns, Viewport.Rows)
     );
-    const Root: E.Element<TMsg> := Lower.Prepare<TMsg>(Candidate, Theme, Popup, Pickers, Viewport);
+    Numbers.Retain(PendingFocus ?? Routing.FocusId());
+    const Root: E.Element<TMsg> := Lower.Prepare<TMsg>(
+      Candidate,
+      Theme,
+      Popup,
+      Pickers,
+      Viewport,
+      Numbers,
+      Alerts
+    );
+    return new ViewSource<TMsg>(Candidate, Root, Theme);
+  end function;
+
+  function AnimationPhase(): long;
+  begin
+    return if Manual then
+      0L
+    else
+      AnimationClock.ElapsedMilliseconds div 100L
+    end if;
+  end function;
+
+  procedure Paint(AnimationOnly: bool := false);
+  begin
+    const Routing: I.State<TMsg>? := Interaction;
+    if Routing = null then
+      raise new Sys.InvalidOperationException('Missing interaction state.');
+    end if;
+
+    const Cached: ViewSource<TMsg>? := LastView;
+    const Source: ViewSource<TMsg> := if AnimationOnly and Cached <> null then
+      Cached
+    else
+      PrepareView(Routing)
+    end if;
+    LastView := Source;
+    const Theme: Th.Theme := Source.Theme;
+    const Tick: long := AnimationPhase();
+    LastAnimationPhase := Tick;
     Phase := 'layout_or_drawing';
     var Layout: A.Layout<TMsg> := Arrangement.Arrange<TMsg>(
-      Root,
+      Source.Root,
       Viewport.Columns,
       Viewport.Rows,
       Current,
       ScrollOffsets,
-      Theme, Popup, PendingFocus ?? Routing.FocusId()
+      Theme, Popup, PendingFocus ?? Routing.FocusId(), Tick
     );
     Routing.Reconcile(Layout, Current);
     const Target: string? := PendingFocus;
@@ -269,23 +253,24 @@ public function Start<TModel, TMsg>(
       or Navigation.CanFocusOffscreen<TMsg>(Layout, Entry, Routing.ScopeId()))
     then
       Layout := Arrangement.Arrange<TMsg>(
-        Root,
+        Source.Root,
         Viewport.Columns,
         Viewport.Rows,
         Layout,
         ScrollOffsets,
-        Theme, Popup, Entry
+        Theme, Popup, Entry, Tick
       );
       Routing.Reconcile(Layout, Current);
     end if;
 
     Layout := Layout with
-      Prepared := Candidate;
+      Prepared := Source.Prepared;
     end with;
     if Target <> null then
       Routing.SetFocus(Layout, Target);
     end if;
     const Focus: string := Routing.FocusId();
+    Numbers.Retain(Focus);
     const Hover: string := Routing.HoverId();
     const Controls: array of App.ControlSnapshot := D.Capture<TMsg>(
       Layout, Viewport.Columns, Theme, Focus, Hover, Routing.ScopeId()
@@ -351,7 +336,11 @@ public function Start<TModel, TMsg>(
     begin
       const Observer: Terminal.TuiControlConnection? := Connection;
       if Observer <> null then
-        Observer.PublishOutcome(Describe(Outcome), Core.QueueCount(), Core.PendingEffects());
+        Observer.PublishOutcome(
+          Replies.Describe(Outcome),
+          Core.QueueCount(),
+          Core.PendingEffects()
+        );
       end if;
 
       return Outcome;
@@ -379,6 +368,13 @@ public function Start<TModel, TMsg>(
       Grids.Flush<TMsg>(PendingSizes, Core.Post);
       case Advanced of
         when Runtime.Step.Idle:
+          const Layout: A.Layout<TMsg>? := Current;
+          if not Manual and Layout <> null and Layout.Animated and Core.IsOpen()
+            and AnimationPhase() <> LastAnimationPhase
+          then
+            Paint(true);
+          end if;
+
           return App.StepResult.Idle;
         when Runtime.Step.Input(const Entry: PendingInput):
           // A breakpoint in Update can stop every thread in the debuggee.
@@ -433,9 +429,14 @@ begin
   const OutcomeOrder: Generic.Queue<long> := new Generic.Queue<long>();
   const PendingSizes: Generic.Queue<TMsg> := new Generic.Queue<TMsg>();
   const ScrollOffsets: Generic.Dictionary<string, int> := new Generic.Dictionary<string, int>();
+  const Numbers: Number.State := Number.Start();
+  const Alerts: Alert.State := new Alert.State();
   var PendingFocus: string? := null;
   var Viewport: T.Viewport := new T.Viewport(Columns, Rows);
   var Current: A.Layout<TMsg>? := null;
+  var LastView: ViewSource<TMsg>? := null;
+  const AnimationClock: Diag.Stopwatch := Diag.Stopwatch.StartNew();
+  var LastAnimationPhase: long := 0L;
   var Published: App.Frame? := null;
   var FrameId: long := 0L;
   var InputId: long := 0L;
@@ -462,10 +463,17 @@ begin
     Paint();
     if Core.IsOpen() then
       Connection := Terminal.TuiControlConnection.Open(
-        SendControl,
+        function(Event: Terminal.TerminalInput): Terminal.TuiControlReply => Replies.Send(
+          Event,
+          Enqueue
+        ),
         function(): Sys.Object => ReadFrame(),
-        function(): Terminal.TuiControlReply => Describe(Step()),
-        WaitControl,
+        function(): Terminal.TuiControlReply => Replies.Describe(Step()),
+        function(Id: long; Milliseconds: int): Tasks.Task<Terminal.TuiControlReply> => Replies.Wait(
+          Id,
+          Milliseconds,
+          Wait
+        ),
         Core.WaitForWork,
         Core.WaitForSpace,
         Manual

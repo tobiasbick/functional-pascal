@@ -4,7 +4,7 @@ unit Fpas.Ui.Widgets.Inputs.NumberFields;
 
 uses Fpas.Ui.Elements as E;
 
-// Presentation and input settings for a graphical number field.
+// Presentation and input settings for a number field.
 public type Options = record
   // Caption above the editor.
   public Label: string := '';
@@ -18,7 +18,7 @@ public type Options = record
   public Enabled: bool := true;
 end record;
 
-// Builds CUI's numeric editor with increment and decrement buttons.
+// Builds a numeric editor with increment and decrement buttons.
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -30,7 +30,7 @@ end record;
 // - `OnChange`: Maps a proposed bounded value to a message.
 // - `Settings`: Optional caption, suffix, increment and precision.
 // ## Returns
-// A graphical number field with a model-owned value.
+// A graphical or terminal number field with a model-owned value.
 public function NumberField<TMsg>(
   Id: string; Value: double; Minimum: double; Maximum: double; OnChange: function(double): TMsg;
   Settings: Options? := null
@@ -47,7 +47,7 @@ begin
   );
 end function;
 
-// Gets the native decrease button's snapshot identity.
+// Gets the decrease button's snapshot identity.
 //
 // ## Parameters
 // - `Id`: Number field identity.
@@ -58,7 +58,7 @@ begin
   return Id + '/decrease';
 end function;
 
-// Gets the native increase button's snapshot identity.
+// Gets the increase button's snapshot identity.
 //
 // ## Parameters
 // - `Id`: Number field identity.

@@ -214,6 +214,16 @@ Inputs and Edit profile, checks both text-field layouts and exercises the button
 states, workspace and notification checkboxes, shared preferences across Selection and both overlays, deletion confirmation, focus and resize. It verifies
 the GUI’s progress values, sortable people table and editor status actions,
 along with the terminal cell grid, theme switching and Ctrl+Q.
+It clears the project search and checks focus return, edits and steps the Seats
+field through invalid input and bounds, and dismisses the storage alert across
+resize and page navigation.
+It also exercises both CUI segmented controls and toggle groups, including
+focus without activation, independent flags, exclusive replacement and
+horizontal reveal in a narrow preview.
+The shared terminal contract checks profile validation for both groups and
+equal allocation for large full-width segments.
+The rendering contract checks spinner ink and stable headless frames, and
+sparkline normalization, empty and flat series, and expanded plots.
 The terminal expandable card contract checks keyboard and pointer toggles, hidden and disabled content, and focus restoration when an offscreen header needs to be revealed. The gallery checks the shared Security example.
 The dropdown contract checks scoped input, disabled commands, keyboard selection, pointer dismissal, empty menus, constrained placement and focus across a confirmation dialog. The gallery verifies the shared Options commands.
 The terminal text area contract checks word wrapping, caret movement, model-declined edits, paste normalization, Unicode limits, read-only fields, height and scroll handoff. The gallery checks editing the shared About description.
@@ -732,6 +742,8 @@ Each command must exit with code 130, emit one JSON report with status
   - [TerminalModeTests.cs](Fpas.IntegrationTests/Tui/TerminalModeTests.cs)
   - [TuiFixture.cs](Fpas.IntegrationTests/Tui/TuiFixture.cs)
   - [TuiGalleryTests.cs](Fpas.IntegrationTests/Tui/TuiGalleryTests.cs)
+  - [TuiGalleryTests.Actions.cs](Fpas.IntegrationTests/Tui/TuiGalleryTests.Actions.cs)
+  - [TuiGallerySession.cs](Fpas.IntegrationTests/Tui/TuiGallerySession.cs)
 - `tests/Fpas.Ui.Gui.Cui.Tests/`
   - [DeferredPaint.cs](Fpas.Ui.Gui.Cui.Tests/DeferredPaint.cs)
   - [Fpas.Ui.Gui.Cui.Tests.csproj](Fpas.Ui.Gui.Cui.Tests/Fpas.Ui.Gui.Cui.Tests.csproj)

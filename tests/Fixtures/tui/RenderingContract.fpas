@@ -2,7 +2,10 @@
 
 program RenderingContract;
 
-uses Fpas.Ui.Widgets.Inputs.Switches as Switches, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, Fpas.Ui.Widgets.Feedback.ProgressBars as Bars, Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Developer.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as Scene, Fpas.Ui.Tui.Internal.Controls.Activation as Activation, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.Tui.Internal.Rendering.Presentation as Presentation, Fpas.Ui.Tui.Internal.Rendering.Decoration as Decoration, Fpas.Ui.Tui.Internal.Rendering.Themes as RenderThemes, System as Sys, System.Console as Console;
+uses
+  Fpas.Ui.Widgets.Feedback.Spinners as Spin, Fpas.Ui.Widgets.Charts.Sparklines as Sparks,
+  Fpas.Ui.Widgets.Charts.Charts as Charts,
+  Fpas.Ui.Widgets.Inputs.Switches as Switches, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, Fpas.Ui.Widgets.Feedback.ProgressBars as Bars, Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Developer.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as Scene, Fpas.Ui.Tui.Internal.Controls.Activation as Activation, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.Tui.Internal.Rendering.Presentation as Presentation, Fpas.Ui.Tui.Internal.Rendering.Decoration as Decoration, Fpas.Ui.Tui.Internal.Rendering.Themes as RenderThemes, System as Sys, System.Console as Console;
 
 procedure Check(Value: bool; Reason: string);
 begin
@@ -354,6 +357,42 @@ begin
   Check(Session.Snapshot().Controls[2].Value = 'false', 'A model can decline the proposed change.');
 end procedure;
 
+procedure ActivityAndPlots();
+  function View(State: int): E.Element<int>;
+  begin
+    return E.Column<int>(
+      Spin.Spinner<int>(
+        'activity', 8.0F,
+        new Spin.Options(Color := Charts.Color.Rgba(new G.Color(255, 0, 0, 255)))
+      ),
+      Sparks.Sparkline<int>('signed', [-3.0F, -1.0F, 0.0F]),
+      Sparks.Sparkline<int>('empty', []),
+      Sparks.Sparkline<int>('flat', [2.0F, 2.0F]),
+      Sparks.Sparkline<int>(
+        'expanded', [0.0F, 1.0F],
+        new Sparks.Options(Width := L.Extent.Fixed(L.Measure.Cells(5)), Height := 32.0F)
+      )
+    );
+  end function;
+begin
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 8, 7);
+  const Frame: Tui.Frame := Session.Snapshot();
+  Check(
+    Frame.Cells[0].Text = '◴' and Frame.Cells[0].Colors.Foreground = $FF0000,
+    'The spinner paints its deterministic initial glyph in the requested color.'
+  );
+  Check(Frame.Controls.Length = 0, 'Activity and plots do not take focus.');
+  Check(Frame.Lines[1].StartsWith('▁▆█'), 'Sparkline normalizes signed samples.');
+  Check(Frame.Lines[2].Trim() = '', 'Empty sparklines stay blank.');
+  Check(Frame.Lines[3].StartsWith('▅▅'), 'Constant samples use a common middle level.');
+  Check(
+    Frame.Lines[4].StartsWith('  ▁▄█') and Frame.Lines[5].StartsWith('▁▅███'),
+    'An expanded sparkline interpolates across columns and fills from the bottom.'
+  );
+  discard Session.Step();
+  Check(Session.Snapshot().Id = Frame.Id, 'Manual sessions retain the same spinner frame.');
+end procedure;
+
 procedure TextTable();
   function View(State: int): E.Element<int>;
   begin
@@ -391,6 +430,7 @@ end procedure;
 begin
   SwitchRows();
   TextTable();
+  ActivityAndPlots();
   BorderlessStatus();
   PersistentDialog();
   ProgressTracks();

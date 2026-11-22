@@ -3,6 +3,9 @@
 program TuiWidgetGallery;
 
 uses
+  TuiGallery.PlotSamples as PlotSamples,
+  TuiGallery.ChoiceSamples as ChoiceSamples,
+  TuiGallery.InputSamples as InputSamples, TuiGallery.AlertSamples as AlertSamples,
   Gallery.Shared.PeopleFilters as FilterSample,
   Gallery.Shared.PaginationExample as Pagination,
   Gallery.Shared.BreadcrumbExample as Breadcrumb,
@@ -185,8 +188,12 @@ begin
         Flow,
         Label(Strings.Get('Text.Progress'), S.Role.Heading),
         Progress.Upload<Msg>(),
-        Progress.ExportBar<Msg>(false)
+        Progress.ExportBar<Msg>(false),
+        AlertSamples.View<Msg>(),
+        PlotSamples.Spinners<Msg>(Columns)
       );
+    when Catalog.Preview.Charts:
+      Example := PlotSamples.Sparkline<Msg>();
     when Catalog.Preview.Buttons:
       const Wide: bool := Columns >= 62;
       const Icons: array of E.Element<Msg> := Buttons.Icons<Msg>(Msg.Preview);
@@ -212,7 +219,16 @@ begin
           else
             Strings.Get('Text.SelectedPrefix') + State.MenuChoice
           end if
+        ),
+        Composition.Map<ChoiceSamples.Msg, Msg>(
+          ChoiceSamples.Segments(State.ChoiceState),
+          Msg.SetChoice
         )
+      );
+    when Catalog.Preview.Actions:
+      Example := Composition.Map<ChoiceSamples.Msg, Msg>(
+        ChoiceSamples.Toggles(State.ChoiceState, Columns),
+        Msg.SetChoice
       );
     when Catalog.Preview.Inputs:
       const Wide: bool := Columns >= 66;
@@ -240,8 +256,10 @@ begin
           Msg.ProfileAction
         ),
         AboutSample.View<Msg>(State.About, Msg.SetAbout),
+        InputSamples.Projects<Msg>(State.SearchQuery, Msg.SetSearchQuery),
         Label(Strings.Get('Page.Pickers'), S.Role.Heading),
-        Choices
+        Choices,
+        InputSamples.Seats<Msg>(State.Seats, Msg.SetSeats)
       );
     when Catalog.Preview.Pickers:
       Example := E.Column<Msg>(
@@ -341,7 +359,9 @@ begin
   const FirstControl: string := case State.Active.Demo of
     when Catalog.Preview.Overview: 'browse';
     when Catalog.Preview.Buttons: 'primary';
+    when Catalog.Preview.Actions: 'action-format/0';
     when Catalog.Preview.Inputs: 'input-name';
+    when Catalog.Preview.Feedback: 'storage/dismiss';
     when Catalog.Preview.Selection: 'newsletter';
     when Catalog.Preview.Pickers: 'picker-languages';
     when Catalog.Preview.Navigation: Tabs.ItemId(TabExamples.UnderlineId, State.ActiveTab);

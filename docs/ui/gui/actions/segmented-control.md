@@ -1,6 +1,6 @@
 # Segmented control
 
-Choose one view or filter from a compact row of alternatives. Available in **GUI**.
+Choose one view or filter from a compact row of alternatives. See also the [terminal segmented control](../../tui/actions/segmented-control.md).
 
 ![Segmented control in the FPAS gallery](images/segmented-control.png)
 

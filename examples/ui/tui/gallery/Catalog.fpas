@@ -9,12 +9,14 @@ public type Preview = enum
   Description;
   Overview;
   Buttons;
+  Actions;
   Inputs;
   Pickers;
   Selection;
   Navigation;
   Overlays;
   Feedback;
+  Charts;
   DataDisplay;
   DataGrid;
   Disclosure;
@@ -78,12 +80,17 @@ public const Components: array of Entry := [
     'Data display', Strings.Get('Page.Lists'), Strings.Get('Description.Lists'),
     Preview.DataDisplay
   ),
-  new Entry('Charts', Strings.Get('Page.Charts'), Strings.Get('Description.Charts'))
+  new Entry('Charts', Strings.Get('Page.Charts'), Strings.Get('Description.Charts'), Preview.Charts)
 ];
 
 // Supplementary destinations in GUI gallery order.
 public const Extended: array of Entry := [
-  new Entry('Actions', Strings.Get('Page.Actions'), Strings.Get('Description.Actions')),
+  new Entry(
+    'Actions',
+    Strings.Get('Page.Actions'),
+    Strings.Get('Description.Actions'),
+    Preview.Actions
+  ),
   new Entry(
     'Smart inputs',
     Strings.Get('Page.SmartInputs'),

@@ -1,0 +1,43 @@
+// [Documentation](README.md)
+
+unit TuiGallery.InputSamples;
+
+uses
+  Gallery.Shared.Strings as Strings, Fpas.Ui.Elements as E,
+  Fpas.Ui.Widgets.Inputs.SearchFields as Search, Fpas.Ui.Widgets.Inputs.NumberFields as Number;
+
+// Shows the CUI gallery's project search.
+// ## Type parameters
+// - `TMsg`: Gallery message type.
+// ## Parameters
+// - `Query`: Current search query.
+// - `Change`: Maps edits to gallery messages.
+// ## Returns
+// The project search field.
+public function Projects<TMsg>(Query: string; Change: function(string): TMsg): E.Element<TMsg>;
+begin
+  return Search.SearchField<TMsg>(
+    'input-search', Query, Change,
+    new Search.Options(
+      Label := Strings.Get('Text.Search'), Placeholder := Strings.Get('Text.SearchProjects'),
+      MaxUtf8Bytes := 63
+    )
+  );
+end function;
+
+// Shows the CUI gallery's seat count.
+// ## Type parameters
+// - `TMsg`: Gallery message type.
+// ## Parameters
+// - `Value`: Current seat count.
+// - `Change`: Maps edits to gallery messages.
+// ## Returns
+// The seat count field with the original 0–99 range.
+public function Seats<TMsg>(Value: double; Change: function(double): TMsg): E.Element<TMsg>;
+begin
+  return Number.NumberField<TMsg>(
+    'input-seats', Value, 0.0, 99.0, Change, new Number.Options(Label := 'Seats')
+  );
+end function;
+
+end unit;

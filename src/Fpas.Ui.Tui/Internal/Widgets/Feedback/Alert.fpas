@@ -1,0 +1,114 @@
+// [Documentation](../../../../../docs/ui/tui/feedback/alert.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Feedback.Alert;
+
+uses
+  Fpas.Ui.Widgets.Feedback.Alerts as A, Fpas.Ui.Styles as S,
+  Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.View.Tree as E,
+  Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Developer.Terminal as T,
+  System as Sys, System.Collections.Generic as C;
+
+// Dismissal state retained for alerts that remain in the terminal view.
+public type State = record
+  // IDs dismissed by the user.
+  public Dismissed: C.HashSet<string> := new C.HashSet<string>();
+  // Dismissed IDs encountered while preparing the current view.
+  public Seen: C.HashSet<string> := new C.HashSet<string>();
+
+  // Checks visibility and retains dismissal for this presentation.
+  // ## Parameters
+  // - `Id`: Stable alert identity.
+  // ## Returns
+  // Whether to omit the alert from layout.
+  public function Hidden(Id: string): bool;
+  begin
+    if not self.Dismissed.Contains(Id) then
+      return false;
+    end if;
+
+    discard self.Seen.Add(Id);
+    return true;
+  end function;
+
+  // Releases dismissal state for alerts no longer present.
+  public procedure Finish();
+  begin
+    self.Dismissed.IntersectWith(self.Seen);
+    self.Seen.Clear();
+  end procedure;
+end record;
+
+// Resolves a visible alert into a semantic panel and optional dismiss action.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable alert identity.
+// - `Title`: Literal heading.
+// - `Settings`: Description, tone and dismissal options.
+// - `Notify`: Optional dismissal message factory.
+// - `Session`: Terminal dismissal state.
+// - `Colors`: Inherited text colors.
+// - `Theme`: Active terminal palette.
+// ## Returns
+// The alert panel.
+public function Lower<TMsg>(
+  Id: string; Title: string; Settings: A.Options; Notify: Sys.Func<TMsg>?;
+  Session: State; Colors: T.Style; Theme: Th.Theme
+): E.Element<TMsg>;
+  function Dismiss(): Actions.Result<TMsg>;
+  begin
+    if not Session.Dismissed.Add(Id) then
+      return Actions.Result<TMsg>.NoAction;
+    end if;
+
+    return case Notify of
+      when is Sys.Func<TMsg> as Callback: Actions.Result<TMsg>.Send(Callback.Invoke());
+      else Actions.Result<TMsg>.NoAction;
+    end case;
+  end function;
+begin
+  const Back: int := Th.Rgb(
+    Theme.Colors.SurfaceMuted,
+    Colors.Background ?? Theme.Text.Background ?? 0
+  );
+  const Mark: string := case Settings.Tone of
+    when S.Tone.Success: '✓';
+    when S.Tone.Warning: '!';
+    when S.Tone.Danger: '×';
+    else 'i';
+  end case;
+  const Ink: int := Th.Rgb(Th.ToneColor(Theme, Settings.Tone), Back);
+  const Heading: E.Element<TMsg> := E.Element<TMsg>.Stack(
+    [
+      E.Element<TMsg>.Decorated(E.Element<TMsg>.Label(Mark + ' '), new T.Style(Ink, Back)),
+      E.Element<TMsg>.Sized(E.Element<TMsg>.Label(Title), new E.Flex(Grow := 1))
+    ], true, new E.Flow()
+  );
+  var Header: E.Element<TMsg> := Heading;
+  if Settings.Dismissible then
+    const Close: E.Element<TMsg> := E.Element<TMsg>.Action(
+      A.DismissId(Id), new Actions.Callback<TMsg>(Dismiss), Settings.Enabled,
+      new E.ActionView(
+        '×',
+        Name := 'Dismiss ' + Title,
+        Role := 'alert-dismiss',
+        ArrowFocus := false,
+        FixedWidth := 3
+      )
+    );
+    Header := E.Element<TMsg>.Stack(
+      [E.Element<TMsg>.Sized(Heading, new E.Flex(Grow := 1)), Close], true, new E.Flow()
+    );
+  end if;
+  const Contents: array of E.Element<TMsg> := if Settings.Description = '' then
+    [Header]
+  else
+    [Header, E.Element<TMsg>.Label(Settings.Description)]
+  end if;
+  return E.Element<TMsg>.Decorated(
+    E.Element<TMsg>.Stack(Contents, false, new E.Flow(PaddingX := 1)),
+    new T.Style(Th.Rgb(Theme.Colors.Foreground, Back), Back)
+  );
+end function;
+
+end unit;

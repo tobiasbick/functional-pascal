@@ -4,28 +4,10 @@ unit Fpas.Ui.Tui.Internal.Widgets.Navigation.Tabs;
 
 uses
   Fpas.Ui.Widgets.Navigation.Tabs as T, Fpas.Ui.Tui.Internal.View.Tree as E,
-  Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as A,
-  Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G,
-  Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Rendering.Drawing as D,
-  Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Widgets.Developer.Terminal as Terminal,
-  Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Styles as S,
-  System as Sys, System.Collections.Generic as C;
+  Fpas.Ui.Tui.Internal.Controls.ChoiceStrip as Strip, Fpas.Ui.Tui.Internal.Controls.Activation as A,
+  System.Collections.Generic as C;
 
-type Choice<TMsg> = record implements Actions.IActivatable<TMsg>
-  public Strip: E.TabView<TMsg>;
-  public Index: int;
-
-  public function Activate(): Actions.Result<TMsg>;
-  begin
-    return if self.Index = self.Strip.Selected then
-      Actions.Result<TMsg>.NoAction
-    else
-      Actions.Result<TMsg>.Send(self.Strip.Change(self.Index))
-    end if;
-  end function;
-end record;
-
-// Measures each tab's text and padding once while resolving the view.
+// Prepares tabs with a model-owned selection for the terminal.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
@@ -35,210 +17,32 @@ end record;
 // - `Change`: Maps a new selection to a message.
 // - `Settings`: Shared appearance, width and input options.
 // ## Returns
-// The strip and its intrinsic cell widths.
-public function Lower<TMsg>(Id: string; Items: array of T.Item; Selected: int; Change: function(int): TMsg; Settings: T.Options): E.Element<TMsg>;
+// A horizontal strip of tabs.
+public function Lower<TMsg>(
+  Id: string; Items: array of T.Item; Selected: int; Change: function(int): TMsg; Settings: T.Options
+): E.Element<TMsg>;
+  function Activate(Index: int): A.Result<TMsg>;
+  begin
+    return if Index = Selected then
+      A.Result<TMsg>.NoAction
+    else
+      A.Result<TMsg>.Send(Change(Index))
+    end if;
+  end function;
 begin
-  const Widths: array of int := Sys.Array.ConvertAll<T.Item, int>(
-    Items,
-    function(Item: T.Item): int => Sys.Math.Min(
-      E.MaximumColumns,
-      G.Measure(G.SingleLine(Item.Label))
-    ) + 2
-  );
-  return E.Element<TMsg>.TabStrip(
-    new E.TabView<TMsg>(Id, Items, Selected, Change, Settings, Widths)
+  const Choices: C.List<E.ChoiceItem> := new C.List<E.ChoiceItem>(Items.Length);
+  for Index: int := 0 to Items.Length - 1 do
+    const Label: string := Items[Index].Label;
+    Choices.Add(new E.ChoiceItem(Label, Label, Index = Selected));
+  end for;
+
+  return Strip.Lower<TMsg>(
+    Id, Choices.ToArray(), Selected, Activate,
+    new E.ChoiceStripOptions(
+      'tab', Settings.Enabled, FullWidth := Settings.FullWidth,
+      Underline := Settings.Appearance = T.Variant.Underline
+    )
   );
 end function;
-
-// Changes the focused tab and proposes the new selection.
-// ## Type parameters
-// - `TMsg`: Application message type.
-// ## Parameters
-// - `Handler`: Activation binding for the focused tab.
-// - `Key`: Unmodified terminal key.
-// - `Apply`: Dispatches a changed selection to the application.
-// ## Returns
-// The new focus identity, or null for an unrelated control or key.
-public function Move<TMsg>(Handler: Actions.IActivatable<TMsg>?; Key: K.Key; Apply: procedure(TMsg)): string?;
-begin
-  case Handler of
-    when is Choice<TMsg> as Tab:
-      const Last: int := Tab.Strip.Items.Length - 1;
-      const Next: int := case Key of
-        when K.Key.Left: Sys.Math.Max(0, Tab.Index - 1);
-        when K.Key.Right: Sys.Math.Min(Last, Tab.Index + 1);
-        when K.Key.Home: 0;
-        when K.Key.End: Last;
-        else -1;
-      end case;
-      if Next >= 0 then
-        if Next <> Tab.Index and Next <> Tab.Strip.Selected then
-          Apply(Tab.Strip.Change(Next));
-        end if;
-
-        return T.ItemId(Tab.Strip.Id, Next);
-      end if;
-    else
-  end case;
-
-  return null;
-end function;
-
-// Paints a clipped horizontal strip and registers its tab controls.
-// ## Type parameters
-// - `TMsg`: Application message type.
-// ## Parameters
-// - `Strip`: Current model bindings.
-// - `Area`: Full strip allocation.
-// - `Clip`: Visible part of the allocation.
-// - `Style`: Inherited text colors.
-// - `Theme`: Terminal palette.
-// - `Scope`: Owning input scope.
-// - `Parent`: Fallback focus identity.
-// - `ScrollId`: Enclosing vertical scroll view.
-// - `Focus`: Focus requested for the next frame.
-// - `Offsets`: Host-owned horizontal offsets for strips.
-// - `Operations`: Frame paint operations.
-// - `Navigation`: Keyboard destinations, including clipped tabs.
-// - `Stops`: Tab traversal order.
-// - `Register`: Registers visible controls.
-public procedure Arrange<TMsg>(
-  Strip: E.TabView<TMsg>; Area: F.Rect; Clip: F.Rect; Style: Terminal.Style; Theme: Th.Theme;
-  Scope: string; Parent: string; ScrollId: string; Focus: string; Offsets: C.Dictionary<string, int>;
-  Operations: C.List<D.Operation>; Navigation: C.List<A.NavigationStop>; Stops: C.List<A.TabStop>;
-  Register: procedure(A.Control<TMsg>)
-);
-begin
-  if Area.Height = 0 or Clip.Width = 0 then
-    return;
-  end if;
-
-  const Count: int := Strip.Items.Length;
-  const Ids: C.List<string> := new C.List<string>(Count);
-  for Index: int := 0 to Count - 1 do
-    Ids.Add(T.ItemId(Strip.Id, Index));
-  end for;
-  const Entry: string := Ids[Strip.Selected];
-  const Row: F.Rect := new F.Rect(Clip.X, Area.Y, Clip.Width, 1);
-  if Strip.Settings.Enabled then
-    if F.Intersect(Row, Clip).Height > 0 or ScrollId <> '' then
-      Stops.Add(new A.TabStop(Entry, Scope));
-      for Id: string in Ids do
-        Navigation.Add(new A.NavigationStop(Id, Row, Strip.Id, ScrollId, Scope));
-      end for;
-    end if;
-  end if;
-  const Visible: F.Rect := F.Intersect(Row, Clip);
-  if Visible.Height = 0 then
-    return;
-  end if;
-
-  const Widths: array of int := Sys.Array.ConvertAll<int, int>(
-    Strip.Widths,
-    function(Width: int): int => Sys.Math.Min(Width, Visible.Width)
-  );
-  const Starts: array of int := new int[Count + 1];
-  var Natural: int := Count - 1;
-  for Width: int in Widths do
-    Natural := Natural + Width;
-  end for;
-  const Extra: int := if Strip.Settings.FullWidth then
-    Sys.Math.Max(0, Visible.Width - Natural)
-  else
-    0
-  end if;
-  for Index: int := 0 to Count - 1 do
-    Widths[Index] := Widths[Index] + Extra * (Index + 1) div Count - Extra * Index div Count;
-    Starts[Index + 1] := Starts[Index] + Widths[Index] + 1;
-  end for;
-  const Total: int := Starts[Count] - 1;
-  const Focused: int := if Strip.Settings.Enabled then
-    Ids.IndexOf(Focus)
-  else
-    -1
-  end if;
-  const Target: int := if Focused >= 0 then
-    Focused
-  else
-    Strip.Selected
-  end if;
-  var Offset: int := 0;
-  discard Offsets.TryGetValue(Strip.Id, out Offset);
-  Offset := Sys.Math.Clamp(Offset, 0, Sys.Math.Max(0, Total - Visible.Width));
-  Offset := Sys.Math.Clamp(Offset, Starts[Target] + Widths[Target] - Visible.Width, Starts[Target]);
-  Offsets[Strip.Id] := Offset;
-
-  const Underline: bool := Strip.Settings.Appearance = T.Variant.Underline;
-  const Baseline: F.Rect := new F.Rect(Row.X, Row.Y + 1, Row.Width, 1);
-  if Underline then
-    D.HorizontalRule(Operations, Baseline, Clip, Style, Theme.Widgets);
-  end if;
-
-  for Index: int := 0 to Count - 1 do
-    const Bounds: F.Rect := new F.Rect(Row.X + Starts[Index] - Offset, Row.Y, Widths[Index], 1);
-    const Hit: F.Rect := F.Intersect(Bounds, Visible);
-    if Hit.Width = 0 then
-      continue;
-    end if;
-    const Selected: bool := Index = Strip.Selected;
-    const Variant: S.ButtonVariant := if not Selected then
-      S.ButtonVariant.Ghost
-    elsif Underline then
-      S.ButtonVariant.Link
-    else
-      S.ButtonVariant.Active
-    end if;
-    const Item: T.Item := Strip.Items[Index];
-    Buttons.Paint(
-      Operations, Bounds, Hit, Style, Theme, G.SingleLine(Item.Label),
-      true, Variant, Strip.Settings.Enabled, Padding := (if Bounds.Width >= 3 then
-        1
-      else
-        0
-      end if),
-      Center := true, Joined := true
-    );
-    if Underline and Selected then
-      const Mark: F.Rect := F.Intersect(new F.Rect(Hit.X, Baseline.Y, Hit.Width, 1), Clip);
-      if Mark.Height > 0 then
-        const Accent: int := if Strip.Settings.Enabled then
-          Theme.Widgets.ScrollThumbColor
-        else
-          Theme.Widgets.BorderColor
-        end if;
-        Operations.Add(
-          new D.Operation(
-            new string(#9473, Mark.Width),
-            Mark,
-            Mark,
-            new Terminal.Style(Accent, Style.Background),
-            false
-          )
-        );
-      end if;
-    end if;
-
-    Register(
-      new A.Control<TMsg>(
-        Ids[Index],
-        Item.Label,
-        'tab',
-        (if Selected then
-          'true'
-        else
-          'false'
-        end if),
-        Hit,
-        Scope,
-        Parent,
-        Strip.Settings.Enabled,
-        A.Binding<TMsg>.Invoke(new Choice<TMsg>(Strip, Index)),
-        Variant,
-        ButtonStyle := true,
-        TabTarget := Entry
-      )
-    );
-  end for;
-end procedure;
 
 end unit;

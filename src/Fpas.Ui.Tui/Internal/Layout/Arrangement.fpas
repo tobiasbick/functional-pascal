@@ -2,11 +2,14 @@
 
 unit Fpas.Ui.Tui.Internal.Layout.Arrangement;
 
-uses Fpas.Ui.Tui.Internal.Widgets.Navigation.Breadcrumb as Breadcrumb, Fpas.Ui.Tui.Internal.Widgets.Navigation.Pagination as Pagination, Fpas.Ui.Widgets.Developer.LogConsoles as Logs, Fpas.Ui.Tui.Internal.Widgets.Developer.LogConsole as Log, Fpas.Ui.Tui.Internal.Widgets.Overlays.CommandPalette as Palette, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes, Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as SelectionList, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as PopupState, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextArea as AreaWidget, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Internal.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupHost as PopupHost, Fpas.Ui.Tui.Internal.Widgets.Collections.Table as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as FieldWidget, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Panel, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
+uses
+  Fpas.Ui.Tui.Internal.Widgets.Feedback.Spinner as Spinner, Fpas.Ui.Tui.Internal.Widgets.Charts.Sparkline as Sparkline,
+  Fpas.Ui.Tui.Internal.Widgets.Navigation.Breadcrumb as Breadcrumb, Fpas.Ui.Tui.Internal.Widgets.Navigation.Pagination as Pagination, Fpas.Ui.Widgets.Developer.LogConsoles as Logs, Fpas.Ui.Tui.Internal.Widgets.Developer.LogConsole as Log, Fpas.Ui.Tui.Internal.Widgets.Overlays.CommandPalette as Palette, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes, Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as SelectionList, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as PopupState, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextArea as AreaWidget, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Internal.Controls.ChoiceStrip as ChoiceStrip, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupHost as PopupHost, Fpas.Ui.Tui.Internal.Widgets.Collections.Table as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as FieldWidget, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Panel, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
 
 public function Arrange<TMsg>(
   Root: E.Element<TMsg>; Columns: int; Rows: int;
-  Previous: A.Layout<TMsg>?; Scroll: Generic.Dictionary<string, int>; Theme: Th.Theme; Popup: PopupState.State<TMsg>; Focus: string
+  Previous: A.Layout<TMsg>?; Scroll: Generic.Dictionary<string, int>; Theme: Th.Theme; Popup: PopupState.State<TMsg>; Focus: string;
+  AnimationPhase: long := 0L
 ): A.Layout<TMsg>;
   procedure Draw(Value: string; Area: F.Rect; Clip: F.Rect; Style: T.Style; Wrap: bool);
   begin
@@ -138,7 +141,7 @@ public function Arrange<TMsg>(
         ), E.Element.Framed(
           _,
           _
-        ), E.Element.TabStrip(_), E.Element.Pager(_), E.Element.Breadcrumb(_):
+        ), E.Element.ChoiceStrip(_), E.Element.Pager(_), E.Element.Breadcrumb(_):
         else
           return;
       end case;
@@ -192,8 +195,8 @@ public function Arrange<TMsg>(
             ScopeId, FocusReturn, Scroll, Regions, Operations
           )
         );
-      when E.Element.TabStrip(const Strip: E.TabView<TMsg>):
-        Tabs.Arrange<TMsg>(
+      when E.Element.ChoiceStrip(const Strip: E.ChoiceStripView<TMsg>):
+        ChoiceStrip.Arrange<TMsg>(
           Strip, Area, Clip, Style, Theme, ScopeId, FocusReturn, ScrollId, Focus,
           Scroll, Operations, NavigationRows, TabStops, AddControl
         );
@@ -260,6 +263,48 @@ public function Arrange<TMsg>(
         );
       when E.Element.Label(const Value: string):
         Draw(Value, Area, Clip, Style, true);
+      when E.Element.Spinner(
+        const Width: int, const Rows: int, const Frames: string, const Ink: G.Color,
+        const Track: G.Color, const Inverse: bool
+      ):
+        const Bounds: F.Rect := new F.Rect(
+          Area.X,
+          Area.Y,
+          Sys.Math.Min(Width, Area.Width),
+          Sys.Math.Min(Rows, Area.Height)
+        );
+        const AnimatedPhase: long := if Theme.ReducedMotion then
+          0L
+        else
+          AnimationPhase
+        end if;
+        const Visible: bool := Spinner.Paint(
+          Operations,
+          Bounds,
+          F.Intersect(Bounds, Clip),
+          Frames,
+          AnimatedPhase,
+          Ink,
+          Track,
+          Inverse,
+          Style,
+          Theme
+        );
+        Animated := Animated or (Visible and not Theme.ReducedMotion);
+      when E.Element.Sparkline(
+        const Values: array of float,
+        const Width: int,
+        const Rows: int,
+        const Fill: bool,
+        const Ink: G.Color
+      ):
+        const Span: int := if Fill then
+          Area.Width
+        else
+          Sys.Math.Min(Width, Area.Width)
+        end if;
+        const Bounds: F.Rect := new F.Rect(Area.X, Area.Y, Span, Sys.Math.Min(Rows, Area.Height));
+        Sparkline.Paint(Operations, Bounds, F.Intersect(Bounds, Clip), Values, Ink, Style, Theme);
       when E.Element.Progress(
         const Fraction: float,
         const Caption: string,
@@ -522,6 +567,7 @@ begin
   var GlobalKeys: array of K.ShortcutBinding<TMsg> := [];
   var OpenPalette: Sys.Func<TMsg>? := null;
   var PaletteOpen: bool := false;
+  var Animated: bool := false;
   const Screen: F.Rect := new F.Rect(0, 0, Columns, Rows);
   Visit(Root, Screen, Screen, '', Theme.Text);
   const OpenPopup: A.Scope<TMsg>? := if PaletteOpen then
@@ -558,7 +604,8 @@ begin
     Scopes := Scopes.ToArray(),
     NavigationRows := NavigationRows.ToArray(),
     TabStops := TabStops.ToArray(),
-    OpenPalette := OpenPalette
+    OpenPalette := OpenPalette,
+    Animated := Animated
   );
 end function;
 

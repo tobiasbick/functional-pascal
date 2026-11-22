@@ -228,9 +228,12 @@ See the illustrated [Actions](ui/gui/actions/README.md) and
   touchpads inside a vertical scroll view.
 - [x] Segmented control (`cui_segmented`): [API][fpas-segmented]. GUI uses native
   CUI; Buttons contains the upstream view and compact date-range examples.
+  The [terminal segmented control](ui/tui/actions/segmented-control.md) shows
+  both examples and keeps keyboard focus visible on narrow terminals.
 - [x] Toggle group (`cui_toggle_group`): [API][fpas-toggle-group]. The GUI
   Actions page shows the original independent formatting and exclusive
-  alignment examples. TUI: deferred; graphical profile required.
+  alignment examples. The [terminal toggle group](ui/tui/actions/toggle-group.md)
+  shares both sets of choices and supports keyboard and pointer activation.
 - [x] Checkbox (`cui_checkbox`): [API][fpas-selection]. Both galleries use the same notification choices under Selection and the weekly summary option in the workspace form. The [terminal checkbox](ui/tui/selection/checkbox.md) supports the mixed state, marker-only display and disabled rows.
 - [x] Switch (`cui_switch`): [API][fpas-selection]. Selection shows Wi-Fi,
   Bluetooth and airplane mode. The [terminal switch](ui/tui/selection/switch.md) uses the same options and accepts keyboard and pointer input.
@@ -266,7 +269,8 @@ and widget options.
   [API][fpas-search-field]. Inputs shows the original project search beside
   Password. Windows Software and OpenGL cover query editing, the native clear
   button and focus restoration, and submission with displayed affixes.
-  TUI: deferred; graphical profile required.
+  The [terminal search field](ui/tui/inputs/search-field.md) shares the original
+  project search, with keyboard editing, clearing and focus return.
 - [x] Text area, including prefix and suffix (`cui_textarea`):
   [API][fpas-text-area]. Inputs shows the full-width About field with its hint.
   Windows Software and OpenGL cover LF insertion, Unicode editing, visual-line
@@ -277,7 +281,8 @@ and widget options.
   Inputs shows Seats with model-owned bounds, native step buttons and editable
   numeric text. CUI validates finite drafts and refreshes committed or blurred
   text; native adapter regressions cover clamping, NaN and incomplete numbers.
-  TUI: deferred; graphical profile required.
+  The [terminal number field](ui/tui/inputs/number-field.md) shares the original
+  Seats example, with bounded input, step buttons and arrow keys.
 - [x] Inline edit (`cui_inline_edit`): [API][fpas-smart-inputs]. Smart inputs
   shows the original roadmap title and owner. CUI retains the draft; Enter or
   blur proposes a model commit and Escape cancels. Native state, undo offsets,
@@ -599,6 +604,8 @@ and widget options.
 - [x] Alert (`cui_alert`): [API][fpas-feedback]. Feedback shows the four original
   alerts. CUI owns dismissal; pointer, Enter/Space, disabled input, stable literal
   titles, once-only notification, removal and reinsertion are tested.
+  The [terminal alert](ui/tui/feedback/alert.md) shares all four examples and
+  supports keyboard and pointer dismissal.
 - [x] Progress bar (`cui_progress`): [API][fpas-feedback]. Feedback shows the
   labeled upload percentage, indeterminate indexing bar and native dithered
   export/sync examples. CUI owns animation;
@@ -617,7 +624,8 @@ and widget options.
   including determinate and indeterminate dither progress.
   Feedback captures cover both renderers in light, dark and narrow layouts.
   Feedback also shows the original dither styles and inline examples.
-  The API exposes native ink and track colors.
+  The API exposes native ink and track colors. The [terminal spinner](ui/tui/feedback/spinner.md)
+  shares the sizes, styles and inline examples with animated glyphs.
 - [x] Status spinner (`cui_status_spinner`): the original Feedback Upload
   example shows Busy and alternates Success and Error. Targeted checks cover
   the transitions, result expiry and retained results.
@@ -846,7 +854,8 @@ examples and widget options.
   (`cui_donut_chart`): [API](ui/widgets.md#charts).
   Charts reproduces their original data, labels, formatting and theme palette.
 - [x] Sparkline (`cui_sparkline`): a standalone example on Charts shows
-  the native compact line and endpoint.
+  the native compact line and endpoint. The [terminal sparkline](ui/tui/charts/sparkline.md)
+  uses the same seven values in a fractionally filled cell plot.
 - [x] Gauge (`cui_gauge`): original CPU and Memory examples in Charts.
 - [x] Pattern meter (`cui_pattern_meter`): original storage parts, free capacity,
   native hover/keyboard readout and Grayscale checkbox. CUI owns local selection;

@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Tui.Internal.View.Tree;
 
-uses Fpas.Ui.Widgets.Developer.LogConsoles as Logs, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes, Fpas.Ui.TerminalExtensions.SelectionLists as Lists, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Graphics as Color, System as Sys;
+uses Fpas.Ui.Widgets.Developer.LogConsoles as Logs, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes, Fpas.Ui.TerminalExtensions.SelectionLists as Lists, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Graphics as Color, System as Sys;
 
 // Largest column count accepted by the terminal host.
 public const MaximumColumns: int := 500;
@@ -121,20 +121,50 @@ public type TableView<TMsg> = record
   public Preferred: array of int;
 end record;
 
-// Tab strip with measured caption widths and model-owned selection.
+// One choice in a horizontal strip.
+public type ChoiceItem = record
+  // Accessible label without decoration.
+  public Label: string;
+  // Terminal caption, including any selection marker.
+  public Caption: string;
+  // Whether the model selects this choice.
+  public Selected: bool;
+end record;
+
+// Rendering and input policy for a horizontal choice strip.
+public type ChoiceStripOptions = record
+  // Snapshot role of each choice.
+  public Role: string;
+  // Whether the strip accepts input.
+  public Enabled: bool;
+  // Whether keyboard movement also activates the destination.
+  public FollowFocus: bool := true;
+  // Whether to consume spare columns.
+  public FullWidth: bool := false;
+  // Whether full-width choices use the same natural width.
+  public EqualWidth: bool := false;
+  // Whether to draw a baseline and an underline for the selected choice.
+  public Underline: bool := false;
+  // Cell padding on either side of each caption.
+  public Padding: int := 1;
+  // Height of a choice, excluding an optional underline.
+  public Height: int := 1;
+end record;
+
+// Tab, segment or toggle strip with measured caption widths.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type TabView<TMsg> = record
+public type ChoiceStripView<TMsg> = record
   // Stable group ID.
   public Id: string;
   // Options in their original order.
-  public Items: array of Tabs.Item;
-  // Current selected index.
-  public Selected: int;
-  // Maps a proposed selection to a message.
-  public Change: function(int): TMsg;
+  public Items: array of ChoiceItem;
+  // Choice that receives focus when Tab enters the group.
+  public Entry: int;
+  // Proposes activation of a positional choice.
+  public Activate: function(int): Actions.Result<TMsg>;
   // Appearance and input settings.
-  public Settings: Tabs.Options;
+  public Settings: ChoiceStripOptions;
   // Intrinsic width of each label including padding.
   public Widths: array of int;
 end record;
@@ -214,8 +244,8 @@ public type Element<TMsg> = variant
   Table(Value: TableView<TMsg>);
   // Scrollable rows with one focus stop and separate selection and activation.
   SelectionList(Value: SelectionListView<TMsg>);
-  // Horizontally scrollable navigation strip.
-  TabStrip(Value: TabView<TMsg>);
+  // Horizontally scrollable strip of choices.
+  ChoiceStrip(Value: ChoiceStripView<TMsg>);
   // Responsive page navigation.
   Pager(Value: PagerView<TMsg>);
   // Responsive trail of ancestor links and a current location.
@@ -226,6 +256,10 @@ public type Element<TMsg> = variant
   TextArea(Field: AreaEdit.Field<TMsg>);
   // Fill the allocated cell surface with an image and register its input mapper.
   CellGrid(Id: string; Content: Grids.Image?; Changed: function(Grids.Event): TMsg);
+  // Animated cell glyph with resolved dimensions and colors.
+  Spinner(Columns: int; Rows: int; Frames: string; Ink: Color.Color; Track: Color.Color; Inverse: bool);
+  // Compact plot with one sample per cell at its natural width.
+  Sparkline(Values: array of float; Width: int; Rows: int; Fill: bool; Ink: Color.Color);
   // Paint a determinate progress track and optional caption.
   Progress(Fraction: float; Caption: string; Percent: string; Width: int?; Fill: Color.Color);
   // Fit one status row to the viewport, with an optional divider above.

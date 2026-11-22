@@ -1,0 +1,83 @@
+// [Documentation](../../../../../docs/ui/tui/inputs/search-field.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Inputs.SearchField;
+
+uses
+  Fpas.Ui.Widgets.Inputs.SearchFields as Search, Fpas.Ui.Widgets.Inputs.TextFields as Fields,
+  Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as TextField,
+  Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.View.Tree as E,
+  Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Widgets.Developer.Terminal as T, System as Sys;
+
+// Resolves a search editor with an optional clear control.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable control identity.
+// - `Value`: Model-owned query.
+// - `Change`: Maps a proposed query to a message.
+// - `Settings`: Search presentation and input options.
+// - `Submit`: Optional Enter callback.
+// - `Colors`: Inherited text colors.
+// - `Theme`: Active terminal palette.
+// ## Returns
+// A labeled single-line editor with search adornments.
+public function Lower<TMsg>(
+  Id: string; Value: string; Change: function(string): TMsg; Settings: Search.Options;
+  Submit: Sys.Func<string, TMsg>?; Colors: T.Style; Theme: Th.Theme
+): E.Element<TMsg>;
+  function Propose(Text: string): Actions.Result<TMsg>;
+  begin
+    return Actions.Result<TMsg>.Send(Change(Text));
+  end function;
+begin
+  const OnSubmit: Sys.Func<string, Actions.Result<TMsg>>? := case Submit of
+    when is Sys.Func<string, TMsg> as Callback: function(Text: string): Actions.Result<TMsg> => Actions.Result<TMsg>.Send(
+      Callback.Invoke(Text)
+    );
+    else null;
+  end case;
+  const Field: Edit.Field<TMsg> := new Edit.Field<TMsg>(
+    Id, Value, Propose,
+    new Fields.Options(
+      Label := Settings.Label,
+      Placeholder := if Settings.Placeholder = '' then
+        'Search'
+      else
+        Settings.Placeholder
+      end if,
+      Enabled := Settings.Enabled,
+      ReadOnly := Settings.ReadOnly,
+      MaxUtf8Bytes := Settings.MaxUtf8Bytes
+    ),
+    OnSubmit, Role := 'search-field'
+  );
+  var Controls: array of E.Element<TMsg> := [];
+  if Value <> '' and not Settings.ReadOnly then
+    const Clear: E.Element<TMsg> := E.Element<TMsg>.Action(
+      Search.ClearId(Id),
+      new Actions.Callback<TMsg>(function(): Actions.Result<TMsg> => Propose('')),
+      Settings.Enabled,
+      new E.ActionView(
+        '×',
+        Name := 'Clear search',
+        ArrowFocus := false,
+        FixedWidth := 3
+      )
+    );
+    Controls := [E.Element<TMsg>.DisclosureBody(Id, Clear, true)];
+  end if;
+
+  return TextField.WithLabels<TMsg>(
+    TextField.WithAdornments<TMsg>(
+      Field,
+      Settings.Prefix,
+      Settings.Suffix,
+      Controls,
+      Colors,
+      Theme
+    ),
+    Settings.Label, Settings.Hint, Settings.Error, Colors, Theme
+  );
+end function;
+
+end unit;

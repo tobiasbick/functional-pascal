@@ -1,16 +1,16 @@
 // [Documentation](../../coverage.md#terminal-ui)
-using System.Buffers.Binary;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Fpas.IntegrationTests.Debugging;
 using Fpas.Workspaces.Processes;
+using static Fpas.IntegrationTests.Tui.TuiGallerySession;
 
 namespace Fpas.IntegrationTests.Tui;
 
 /// <summary>Verifies the public terminal gallery's panel layout and themes.</summary>
-public sealed class TuiGalleryTests
+public sealed partial class TuiGalleryTests
 {
     [Fact]
     public async Task Gallery_uses_GUI_sections_and_sample_data_and_keeps_terminal_navigation_working()
@@ -27,7 +27,7 @@ public sealed class TuiGalleryTests
         using var process = Process.Start(start)!;
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(20));
         var token = deadline.Token;
-        var sequence = 0;
+        var session = new TuiGallerySession(pipe, token);
         try
         {
             await pipe.WaitForConnectionAsync(token);
@@ -84,6 +84,7 @@ public sealed class TuiGalleryTests
             await Key("Escape");
             Assert.Equal("Options", Focused(await Request("snapshot")));
 
+            await CheckChoiceGroups(session);
             await Click("Inputs");
             await Key("Right");
             Assert.Equal("Full name", Focused(await Request("snapshot")));
@@ -134,6 +135,40 @@ public sealed class TuiGalleryTests
             await Key("Enter");
             Assert.Equal("Rust", Control(await Request("snapshot"), "input-language").GetProperty("value").GetString());
 
+            Assert.Contains("Search projects", Preview(inputs, 48));
+            await Click("Search");
+            await Turn(new() { ["kind"] = "paste", ["text"] = "roadmap" });
+            Assert.Equal("roadmap", Control(await Request("snapshot"), "input-search").GetProperty("value").GetString());
+            await Key("Tab");
+            Assert.Equal("Clear search", Focused(await Request("snapshot")));
+            await Key("Enter");
+            var cleared = await Request("snapshot");
+            Assert.Equal("Search", Focused(cleared));
+            Assert.Equal("", Control(cleared, "input-search").GetProperty("value").GetString());
+            Assert.DoesNotContain(Controls(cleared), c => c.GetProperty("id").GetString() == "input-search/clear");
+
+            await Click("Seats");
+            Assert.Equal("3", Seats(await Request("snapshot")));
+            await Turn(new() { ["kind"] = "key", ["key"] = "Up", ["modifiers"] = 1 });
+            Assert.Equal("13", Seats(await Request("snapshot")));
+            await Click("Decrease");
+            Assert.Equal("12", Seats(await Request("snapshot")));
+            await Click("Seats");
+            await Turn(new() { ["kind"] = "key", ["key"] = "A", ["modifiers"] = 4 });
+            await Turn(new() { ["kind"] = "paste", ["text"] = "-" });
+            Assert.Equal("-", Seats(await Request("snapshot")));
+            await Key("Tab");
+            Assert.Equal("12", Seats(await Request("snapshot")));
+            await Click("Seats");
+            await Turn(new() { ["kind"] = "key", ["key"] = "A", ["modifiers"] = 4 });
+            await Turn(new() { ["kind"] = "paste", ["text"] = "125" });
+            await Key("Enter");
+            var bounded = await Request("snapshot");
+            Assert.Equal("99", Seats(bounded));
+            Assert.False(Control(bounded, "input-seats/increase").GetProperty("enabled").GetBoolean());
+            await Click("Decrease");
+            await Click("Increase");
+            Assert.Equal("Seats", Focused(await Request("snapshot")));
             await Click("Disclosure");
             var disclosure = await Request("snapshot");
             Assert.Equal("false", Control(disclosure, "security").GetProperty("value").GetString());
@@ -289,8 +324,17 @@ public sealed class TuiGalleryTests
             Assert.Equal(dark, Colors(feedback));
             Assert.Matches(@"Uploading assets +─+ +68%", Preview(feedback, 26));
             Assert.Matches(@"Exporting clip\.mp4 +─+ +42%", Preview(feedback, 26));
-
+            foreach (string title in new[] { "A new version is available", "Payment received", "Storage almost full", "Build failed" })
+                Assert.Contains(title, Preview(feedback, 26));
+            await Click("Dismiss Storage almost full");
             await Resize(120, 24);
+            var dismissed = await Request("snapshot");
+            Assert.DoesNotContain("Storage almost full", Preview(dismissed, 40));
+            Assert.Contains("Build failed", Preview(dismissed, 40));
+            await Click("Inputs");
+            await Click("Feedback");
+            Assert.Contains("Storage almost full", Preview(await Request("snapshot"), 40));
+
             await Click("Data display");
             var people = await Request("snapshot");
             Assert.Contains("aiko@example.com", Preview(people, 40));
@@ -425,109 +469,14 @@ public sealed class TuiGalleryTests
             }
         }
 
-        Task<string?> Key(string key) => Turn(new() { ["kind"] = "key", ["key"] = key });
+        Task<string?> Key(string key) => session.Key(key);
+        Task Click(string label) => session.Click(label);
+        Task Resize(int columns, int rows) => session.Resize(columns, rows);
+        Task<string?> Turn(JsonObject input) => session.Turn(input);
+        Task<JsonElement> Request(string operation, JsonObject? arguments = null) =>
+            session.Request(operation, arguments);
 
-        async Task Click(string label)
-        {
-            var control = Controls(await Request("snapshot")).Single(c => c.GetProperty("label").GetString() == label);
-            await Turn(new() { ["kind"] = "click", ["button"] = "left",
-                ["column"] = control.GetProperty("column").GetInt32() + 1, ["row"] = control.GetProperty("row").GetInt32() });
-        }
+        static string? Seats(JsonElement frame) => Control(frame, "input-seats").GetProperty("value").GetString();
 
-        async Task Resize(int columns, int rows)
-        {
-            Assert.Equal("queued", Status(await Request("resize", new() { ["columns"] = columns, ["rows"] = rows })));
-            Assert.Equal("presented", Status(await Request("step")));
-        }
-
-        async Task<string?> Turn(JsonObject input)
-        {
-            Assert.Equal("queued", Status(await Request("send", new() { ["input"] = input.DeepClone() })));
-            var step = await Request("step");
-            Assert.True(Status(step) != "failed", step.ToString());
-            return Status(step);
-        }
-
-        async Task<JsonElement> Request(string operation, JsonObject? arguments = null)
-        {
-            var request = arguments?.DeepClone().AsObject() ?? new JsonObject();
-            request["operation"] = operation;
-            request["id"] = ++sequence;
-            var bytes = JsonSerializer.SerializeToUtf8Bytes(request);
-            var header = new byte[4];
-            BinaryPrimitives.WriteInt32BigEndian(header, bytes.Length);
-            await pipe.WriteAsync(header, token);
-            await pipe.WriteAsync(bytes, token);
-            while (true)
-            {
-                await pipe.ReadExactlyAsync(header, token);
-                var length = BinaryPrimitives.ReadInt32BigEndian(header);
-                Assert.InRange(length, 1, 16_777_216);
-                var body = new byte[length];
-                await pipe.ReadExactlyAsync(body, token);
-                using var message = JsonDocument.Parse(body);
-                if (message.RootElement.GetProperty("kind").GetString() != "reply") continue;
-                Assert.Equal(sequence, message.RootElement.GetProperty("id").GetInt32());
-                return message.RootElement.GetProperty("result").Clone();
-            }
-        }
-
-        static string? Status(JsonElement result) => result.GetProperty("status").GetString();
-    }
-
-    private static JsonElement.ArrayEnumerator Controls(JsonElement frame) => frame.GetProperty("controls").EnumerateArray();
-
-    private static JsonElement Control(JsonElement frame, string id) =>
-        Controls(frame).Single(c => c.GetProperty("id").GetString() == id);
-
-    private static void AssertCenteredDialog(JsonElement frame)
-    {
-        var rows = frame.GetProperty("lines").EnumerateArray().Select(row => row.GetString()!).ToArray();
-        var width = frame.GetProperty("columns").GetInt32();
-        var top = Array.FindIndex(rows, row => row.Contains("Delete this project?", StringComparison.Ordinal));
-        Assert.InRange(top, 0, rows.Length - 1);
-        var left = rows[top].LastIndexOf('╭', rows[top].IndexOf("Delete this project?", StringComparison.Ordinal));
-        var right = rows[top].IndexOf('╮', left + 1);
-        Assert.Equal((width - Math.Min(width - 2, 50)) / 2, left);
-        Assert.Equal(Math.Min(width - 2, 50), right - left + 1);
-        var bottom = Array.FindIndex(rows, top + 1, row => row[left] == '╰' && row[right] == '╯');
-        Assert.InRange(rows.Length - 1 - bottom - top, 0, 1);
-        Assert.DoesNotContain(Controls(frame), c => c.GetProperty("id").GetString() == "sheet-open"
-            && c.GetProperty("enabled").GetBoolean());
-    }
-
-    private static string? Focused(JsonElement frame) =>
-        Controls(frame).Single(c => c.GetProperty("focused").GetBoolean()).GetProperty("label").GetString();
-
-    private static string? Selected(JsonElement frame) =>
-        Controls(frame).Single(c => c.GetProperty("role").GetString() == "navigation" && c.GetProperty("value").GetString() == "true").GetProperty("label").GetString();
-
-    private static string Preview(JsonElement frame, int leftWidth) => string.Join("\n",
-        frame.GetProperty("lines").EnumerateArray().Select(line => line.GetString()![(leftWidth + 2)..^1]));
-
-    private static (int Border, int Surface) Colors(JsonElement frame)
-    {
-        var colors = frame.GetProperty("cells")[0].GetProperty("colors");
-        return (colors.GetProperty("foreground").GetInt32(), colors.GetProperty("background").GetInt32());
-    }
-
-    private static void AssertPanels(JsonElement frame, int columns, int rows, int leftWidth)
-    {
-        Assert.Equal(columns, frame.GetProperty("columns").GetInt32());
-        Assert.Equal(rows, frame.GetProperty("rows").GetInt32());
-        Assert.NotEmpty(Controls(frame));
-        var lines = frame.GetProperty("lines").EnumerateArray().Select(line => line.GetString()).ToArray();
-        Assert.Equal(rows, lines.Length);
-        int rightWidth = columns - leftWidth - 1;
-        string Row(char start, char fill, char end) =>
-            start + new string(fill, leftWidth - 2) + end + " " + start + new string(fill, rightWidth - 2) + end;
-        Assert.Equal(Row('╭', '─', '╮'), lines[0]);
-        Assert.All(lines[1..^1], line =>
-        {
-            Assert.Equal('│', line![0]);
-            Assert.Equal("│ │", line.Substring(leftWidth - 1, 3));
-            Assert.Equal('│', line[^1]);
-        });
-        Assert.Equal(Row('╰', '─', '╯'), lines[^1]);
     }
 }

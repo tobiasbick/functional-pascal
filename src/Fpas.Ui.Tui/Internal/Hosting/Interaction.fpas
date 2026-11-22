@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Tui.Internal.Hosting.Interaction;
 
-uses Fpas.Ui.Tui.Internal.Widgets.Collections.TreeRows as TreeRows, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as SelectionList, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Internal.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Tui.Internal.Widgets.Inputs.RadioGroup as Radios, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Hosting.RowNavigation as Navigation, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.Widgets.Collections.TreeRows as TreeRows, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as SelectionList, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Internal.Controls.ChoiceStrip as ChoiceStrip, Fpas.Ui.Tui.Internal.Widgets.Inputs.RadioGroup as Radios, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Hosting.RowNavigation as Navigation, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling, System as Sys, System.Collections.Generic as Generic;
 
 public type State<TMsg> = record
   public FocusId: function(): string;
@@ -417,7 +417,11 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
         end if;
         const Next: string? := case Control.Role of
           when 'radio': Radios.Move<TMsg>(A.Activatable<TMsg>(Control.Action), Key, Apply);
-          when 'tab': Tabs.Move<TMsg>(A.Activatable<TMsg>(Control.Action), Key, Apply);
+          when 'tab', 'segment', 'toggle-group-item': ChoiceStrip.Move<TMsg>(
+            A.Activatable<TMsg>(Control.Action),
+            Key,
+            Apply
+          );
           else null;
         end case;
         if Next <> null then

@@ -1,0 +1,124 @@
+// [Documentation](README.md)
+
+unit TuiGallery.PlotSamples;
+
+uses
+  Gallery.Shared.Strings as Strings, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  Fpas.Ui.Widgets.Feedback.Spinners as Spin, Fpas.Ui.Widgets.Charts.Sparklines as Charts,
+  System.Collections.Generic as C;
+
+function Activity<TMsg>(Id: string; Caption: string; Size: float; Style: Spin.Style; Inverse: bool := false): E.Element<TMsg>;
+begin
+  return E.Row<TMsg>(
+    new L.Flow(Gap := L.Spacing.Tight, Align := L.Alignment.Center),
+    Spin.Spinner<TMsg>(Id, Size, new Spin.Options(Animation := Style, Inverse := Inverse)),
+    E.Text<TMsg>(Caption)
+  );
+end function;
+
+function Examples<TMsg>(Samples: array of E.Element<TMsg>; PerRow: int): E.Element<TMsg>;
+begin
+  const Rows: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
+  const Row: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
+  for Sample: E.Element<TMsg> in Samples do
+    Row.Add(E.Size<TMsg>(Sample, new L.Flex(Basis := L.Extent.Fill, Grow := 1)));
+    if Row.Count = PerRow then
+      Rows.Add(
+        E.Row<TMsg>(new L.Flow(Gap := L.Spacing.Normal, Align := L.Alignment.Center), Row.ToArray())
+      );
+      Row.Clear();
+    end if;
+  end for;
+
+  if Row.Count > 0 then
+    Rows.Add(
+      E.Row<TMsg>(new L.Flow(Gap := L.Spacing.Normal, Align := L.Alignment.Center), Row.ToArray())
+    );
+  end if;
+
+  return E.Column<TMsg>(new L.Flow(Gap := L.Spacing.Tight), Rows.ToArray());
+end function;
+
+// Shows the CUI Feedback sizes, inline activity and spinner styles.
+// ## Type parameters
+// - `TMsg`: Gallery message type.
+// ## Parameters
+// - `Columns`: Available preview columns.
+// ## Returns
+// The terminal Feedback section for spinners.
+public function Spinners<TMsg>(Columns: int): E.Element<TMsg>;
+begin
+  const Styles: array of Spin.Style := [
+    Spin.Style.Comet, Spin.Style.DotMatrix, Spin.Style.FillDrain, Spin.Style.Radar,
+    Spin.Style.Ripple, Spin.Style.Transfer, Spin.Style.Orbit, Spin.Style.Bounce,
+    Spin.Style.Scan, Spin.Style.Pulse, Spin.Style.Spiral, Spin.Style.Plasma
+  ];
+  const Demos: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>(Styles.Length);
+  for Style: Spin.Style in Styles do
+    const Caption: string := case Style of
+      when Spin.Style.DotMatrix: 'Dot matrix';
+      when Spin.Style.FillDrain: 'Fill / drain';
+      else Style.ToString();
+    end case;
+    Demos.Add(Activity<TMsg>('dither-' + Style.ToString(), Caption, 40.0F, Style));
+  end for;
+  const ColumnsPerRow: int := if Columns >= 66 then
+    3
+  elsif Columns >= 40 then
+    2
+  else
+    1
+  end if;
+  const InlinePerRow: int := if Columns >= 60 then
+    3
+  else
+    1
+  end if;
+  return E.Column<TMsg>(
+    new L.Flow(Gap := L.Spacing.Tight),
+    E.Styled<TMsg>(E.Text<TMsg>('Spinners'), S.Role.Heading),
+    Examples<TMsg>(
+      [
+        Activity<TMsg>('spinner-small', '16 pt', 16.0F, Spin.Style.Arc),
+        Activity<TMsg>('spinner-medium', '22 pt', 22.0F, Spin.Style.Arc),
+        Activity<TMsg>('spinner-large', '28 pt', 28.0F, Spin.Style.Arc)
+      ], if Columns >= 32 then
+        3
+      else
+        1
+      end if
+    ),
+    Examples<TMsg>(
+      [
+        Activity<TMsg>('dither-saving', 'Saving…', 14.0F, Spin.Style.Comet, true),
+        Activity<TMsg>('dither-syncing', 'Syncing 24 files', 14.0F, Spin.Style.Orbit),
+        Activity<TMsg>('dither-connecting', 'Connecting', 14.0F, Spin.Style.Ripple)
+      ], InlinePerRow
+    ),
+    E.Styled<TMsg>(E.Text<TMsg>('Activity styles'), S.Role.Heading),
+    Examples<TMsg>(Demos.ToArray(), ColumnsPerRow)
+  );
+end function;
+
+// Shows the original CUI Charts series at natural and expanded widths.
+// ## Type parameters
+// - `TMsg`: Gallery message type.
+// ## Returns
+// A compact sparkline and a larger plot of the same data.
+public function Sparkline<TMsg>(): E.Element<TMsg>;
+begin
+  const Values: array of float := [3.0F, 5.0F, 4.0F, 8.0F, 6.0F, 9.0F, 8.0F];
+  return E.Column<TMsg>(
+    new L.Flow(Gap := L.Spacing.Tight),
+    E.Styled<TMsg>(E.Text<TMsg>(Strings.Get('Heading.Sparkline')), S.Role.Heading),
+    Charts.Sparkline<TMsg>('chart-sparkline', Values),
+    E.Styled<TMsg>(E.Text<TMsg>('3, 5, 4, 8, 6, 9, 8'), S.Role.Secondary),
+    E.Styled<TMsg>(E.Text<TMsg>('Expanded'), S.Role.Heading),
+    Charts.Sparkline<TMsg>(
+      'chart-sparkline-expanded', Values,
+      new Charts.Options(Width := L.Extent.Fixed(L.Measure.Logical(288)), Height := 48.0F)
+    )
+  );
+end function;
+
+end unit;

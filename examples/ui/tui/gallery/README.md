@@ -11,9 +11,11 @@ Use the CUI gallery's sample data when demonstrating a CUI widget in the termina
 | Components → Overview | Browse components or create a workspace with the shared name and email fields and an optional weekly summary. |
 | Components → Buttons | Variants, sizes and icons, then states. Choose **Save changes** to see **Saving**, or **Reset** to return to the initial state. |
 | Components → Buttons → Dropdown menu | Open Options to run a project command or confirm deletion. |
+| Components → Buttons → [Segmented control](../../../../docs/ui/tui/actions/segmented-control.md) | Choose a view or date range from the original CUI examples. |
 | Components → Inputs | Edit the full name and email side by side or stacked on narrow terminals. Overview and the profile dialog show the same values. |
 | Components → Inputs → About | Edit the same multiline profile description as in the GUI. |
-| Components → Inputs → Pickers | Choose a country or filter languages by typing in the open list. |
+| Components → Inputs → [Search field](../../../../docs/ui/tui/inputs/search-field.md) | Edit and clear the original Search projects query. |
+| Components → Inputs → Pickers | Choose a country, filter languages or adjust the original [Seats](../../../../docs/ui/tui/inputs/number-field.md) value. |
 | Components → Selection → Checkbox | Email notifications, Marketing and a disabled option. Email notifications also controls Comments in the Notifications sheet. |
 | Components → Selection → Switch | Toggle Wi-Fi, Bluetooth or Airplane mode. Wi-Fi and Bluetooth also control the corresponding preferences in Overlays. |
 | Components → Selection → Radio group | Choose how often to save with the arrow keys or a click. |
@@ -22,11 +24,15 @@ Use the CUI gallery's sample data when demonstrating a CUI widget in the termina
 | Components → Navigation → [Pagination](../../../../docs/ui/tui/navigation/pagination.md) | Browse the original twelve-page example. Narrow previews keep Previous, the current page and Next. |
 | Components → Overlays | Edit the profile, open the Notifications sheet, or confirm project deletion. The sheet has three editable notification switches and two recent events. |
 | Components → Feedback → Progress | Uploading assets at 68% and exporting a clip at 42%. |
+| Components → Feedback → [Alerts](../../../../docs/ui/tui/feedback/alert.md) | View the original four alerts and dismiss the storage warning. |
+| Components → Feedback → [Spinners](../../../../docs/ui/tui/feedback/spinner.md) | View the original sizes, activity styles and inline loading examples. |
+| Components → Charts → [Sparkline](../../../../docs/ui/tui/charts/sparkline.md) | Compare the original CUI sample values at natural and expanded widths. |
 | Components → Data display → [Table](../../../../docs/ui/tui/data-display/table.md) | Browse and sort the five people from the GUI example. Focus a row and press Ctrl+Left or Ctrl+Right to see hidden columns on a narrow terminal. |
 | Components → Data display → [List](../../../../docs/ui/tui/data-display/selection-list.md) | Browse Design review, Release 1.0, and Planning from the CUI gallery. Use Enter to open the selected row. |
 | Components → Data display → [Tree view](../../../../docs/ui/tui/data-display/tree.md) | Expand the same source folders and activate files from the CUI example. |
 | Components → Overlays → [Command palette](../../../../docs/ui/tui/overlays/command-palette.md) | Open with Ctrl+K, type to filter gallery actions, and press Enter to run the highlighted action. |
 | Extended → Pickers → [Multi-select](../../../../docs/ui/tui/inputs/multi-select.md) | Search and toggle languages in the original CUI checklist. |
+| Extended → Actions → [Toggle group](../../../../docs/ui/tui/actions/toggle-group.md) | Toggle independent formatting or choose a single alignment. |
 | Extended → Data grid → [Filter bar](../../../../docs/ui/tui/data-display/filter-bar.md) | Search and choose several Team, Status or Role values using the original CUI fields. |
 | Extended → Code → [Log console](../../../../docs/ui/tui/developer/log-console.md) | Browse the CUI gallery's build log and reveal its next entry. Press End in the log to resume following new entries. |
 | Extended → Files → [File picker](../../../../docs/ui/tui/files/file-picker.md) | Open a file or enter a save name using the original CUI examples. |
@@ -123,8 +129,12 @@ For headless stepping, launch it with `--headless-control` and set
 
 ## Source files
 
+- [AlertSamples.fpas](AlertSamples.fpas)
 - [Catalog.fpas](Catalog.fpas)
+- [ChoiceSamples.fpas](ChoiceSamples.fpas)
 - [FilePickerSample.fpas](FilePickerSample.fpas)
+- [InputSamples.fpas](InputSamples.fpas)
+- [PlotSamples.fpas](PlotSamples.fpas)
 - [State.fpas](State.fpas)
 - [ToolSamples.fpas](ToolSamples.fpas)
 - [TuiWidgetGallery.fpasproj](TuiWidgetGallery.fpasproj)

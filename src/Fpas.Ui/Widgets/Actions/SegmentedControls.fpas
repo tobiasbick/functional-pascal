@@ -10,11 +10,11 @@ public type Item = record
   public Label: string;
   // Optional CUI icon-font glyph.
   public Icon: string := '';
-  // Hide the GUI caption; requires an icon.
+  // Hide the GUI caption; requires an icon. The terminal displays the label.
   public IconOnly: bool := false;
 end record;
 
-// Native segment sizing and input permission.
+// Segment sizing and input permission.
 public type Options = record
   // Medium, small or large, matching CUI's control sizes.
   public ControlSize: B.Size := B.Size.Medium;
@@ -24,7 +24,7 @@ public type Options = record
   public Enabled: bool := true;
 end record;
 
-// Creates a controlled, single-selection CUI segment group.
+// Creates a controlled, single-selection segment group for GUI or terminal.
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -33,7 +33,7 @@ end record;
 // - `Items`: One through 32 choices, in stable positional order.
 // - `Selected`: Model-owned index into Items.
 // - `OnChange`: Maps a different user choice to an application message.
-// - `Settings`: Native size, horizontal fill and input permission.
+// - `Settings`: Control size, horizontal fill and input permission.
 // ## Returns
 // A selector which proposes changes without changing the model itself.
 public function SegmentedControl<TMsg>(Id: string; Items: array of Item; Selected: int; OnChange: function(int): TMsg; Settings: Options? := null): E.Element<TMsg>;

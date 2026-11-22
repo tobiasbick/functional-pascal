@@ -4,11 +4,11 @@ unit Fpas.Ui.Widgets.Inputs.SearchFields;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B, System as Sys;
 
-// Native presentation and input options for a search field.
+// Presentation and input options for a search field.
 public type Options = record
   // Caption above the field.
   public Label: string := '';
-  // Text displayed while empty. Empty uses CUI's Search placeholder.
+  // Text displayed while empty. Empty uses the host's Search placeholder.
   public Placeholder: string := '';
   // Optional leading CUI glyph. Empty uses the search icon.
   public Icon: string := '';
@@ -30,7 +30,7 @@ public type Options = record
   public MaxUtf8Bytes: int := 255;
 end record;
 
-// Builds CUI's search editor with its native clear action.
+// Builds a search editor with an embedded clear action.
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -38,10 +38,10 @@ end record;
 // - `Id`: Stable editor identity.
 // - `Value`: Model-owned single-line search query.
 // - `OnChange`: Maps a proposed edit to a message.
-// - `Settings`: Optional native search settings.
+// - `Settings`: Optional search settings.
 // - `OnSubmit`: Optional Enter action receiving the value after the frame's edit.
 // ## Returns
-// A graphical search field.
+// A search field for the graphical or terminal host.
 public function SearchField<TMsg>(
   Id: string; Value: string; OnChange: function(string): TMsg;
   Settings: Options? := null; OnSubmit: Sys.Func<string, TMsg>? := null
@@ -51,7 +51,7 @@ begin
   return E.Element<TMsg>.SearchField(Id, Value, OnChange, Settings ?? new Options(), OnSubmit);
 end function;
 
-// Derives the identity of the native clear button.
+// Derives the identity of the clear button.
 //
 // ## Parameters
 // - `Id`: Editor identity.

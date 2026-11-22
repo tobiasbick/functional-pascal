@@ -22,6 +22,10 @@ public type Field<TMsg> = record
   public Settings: Fields.Options;
   // Optional Enter action.
   public Submit: Sys.Func<string, Actions.Result<TMsg>>?;
+  // Snapshot role for the kind of field using the editor.
+  public Role: string := 'text-field';
+  // Optional widget-specific key action. Null leaves the key to the editor.
+  public KeyAction: Sys.Func<K.Key, K.KeyModifiers, Actions.Result<TMsg>?>? := null;
 end record;
 
 // Per-field edit position retained between presentations.
@@ -176,6 +180,15 @@ public function Key<TMsg>(Field: Field<TMsg>; Position: Tracking; Pressed: K.Key
     );
   end procedure;
 begin
+  case Field.KeyAction of
+    when is Sys.Func<K.Key, K.KeyModifiers, Actions.Result<TMsg>?> as Handler:
+      const Action: Actions.Result<TMsg>? := Handler.Invoke(Pressed, Modifiers);
+      if Action <> null then
+        Actions.Dispatch<TMsg>(Action, Apply);
+        return true;
+      end if;
+    else
+  end case;
   const Current: Cursor := Position.Read(Field.Value);
   if Modifiers = K.KeyModifiers.Ctrl and Pressed = K.Key.A then
     Position.Write(

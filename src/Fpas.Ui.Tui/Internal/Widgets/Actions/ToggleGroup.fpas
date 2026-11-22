@@ -1,0 +1,78 @@
+// [Documentation](../../../../../docs/ui/tui/actions/toggle-group.md)
+
+unit Fpas.Ui.Tui.Internal.Widgets.Actions.ToggleGroup;
+
+uses
+  Fpas.Ui.Widgets.Actions.ToggleGroups as T, Fpas.Ui.Widgets.Actions.Buttons as B,
+  Fpas.Ui.Tui.Internal.Controls.ChoiceStrip as Strip, Fpas.Ui.Tui.Internal.Controls.Activation as A,
+  Fpas.Ui.Tui.Internal.View.Tree as E, System as Sys, System.Collections.Generic as C;
+
+// Prepares independent or exclusive toggles with visible terminal labels.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable group identity.
+// - `Items`: Positional choices.
+// - `Selected`: Selection flags supplied by the model.
+// - `Change`: Maps a proposed array of flags to a message.
+// - `Settings`: Selection mode, size and input permission.
+// ## Returns
+// Terminal strip with separate focus and activation.
+public function Lower<TMsg>(
+  Id: string; Items: array of T.Item; Selected: array of bool;
+  Change: function(array of bool): TMsg; Settings: T.Options
+): E.Element<TMsg>;
+  function Activate(Index: int): A.Result<TMsg>;
+  begin
+    if Settings.Exclusive and Selected[Index] then
+      return A.Result<TMsg>.NoAction;
+    end if;
+    const Next: array of bool := if Settings.Exclusive then
+      new bool[Selected.Length]
+    else
+      cast<array of bool>(Selected.Clone())
+    end if;
+    Next[Index] := not Selected[Index];
+    return A.Result<TMsg>.Send(Change(Next));
+  end function;
+begin
+  const Entry: int := if Settings.Exclusive then
+    Sys.Array.IndexOf<bool>(Selected, true)
+  else
+    0
+  end if;
+  const Choices: C.List<E.ChoiceItem> := new C.List<E.ChoiceItem>(Items.Length);
+  for Index: int := 0 to Items.Length - 1 do
+    const Label: string := Items[Index].Label;
+    const Active: bool := Selected[Index];
+    const Mark: string := if Settings.Exclusive then
+      if Active then
+        '● '
+      else
+        '○ '
+      end if
+    else
+      if Active then
+        '[x] '
+      else
+        '[ ] '
+      end if
+    end if;
+    Choices.Add(new E.ChoiceItem(Label, Mark + Label, Active));
+  end for;
+
+  return Strip.Lower<TMsg>(
+    Id, Choices.ToArray(), Entry, Activate,
+    new E.ChoiceStripOptions(
+      'toggle-group-item', Settings.Enabled, FollowFocus := false,
+      Padding := Strip.PaddingFor(Settings.ControlSize),
+      Height := if Settings.ControlSize = B.Size.Large then
+        2
+      else
+        1
+      end if
+    )
+  );
+end function;
+
+end unit;

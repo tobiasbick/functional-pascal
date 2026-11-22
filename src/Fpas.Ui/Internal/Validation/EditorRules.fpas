@@ -81,7 +81,7 @@ begin
   );
 end procedure;
 
-// Validates a graphical search field and reserves its native action identities.
+// Validates a search field and reserves its clear action identity.
 //
 // ## Parameters
 // - `Id`: Stable editor identity.
@@ -96,7 +96,9 @@ public procedure CheckSearchField(
 );
 begin
   const Path: string := Location + '/searchField';
-  R.RequireProfile(Profile, V.Target.Graphical, Path);
+  if Profile = V.Target.Portable then
+    R.Reject(Path, 'A search field requires the terminal or graphical profile.');
+  end if;
   const At: string := Identify(Id, Path);
   discard Identify(S.ClearId(Id), At + '/clear');
   CheckValue(Value, Settings.MaxUtf8Bytes, Settings.ControlSize, false, false, At);

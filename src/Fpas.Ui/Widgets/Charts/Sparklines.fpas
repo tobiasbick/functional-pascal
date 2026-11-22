@@ -4,9 +4,9 @@ unit Fpas.Ui.Widgets.Charts.Sparklines;
 
 uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as Charts, Fpas.Ui.Layout as L;
 
-// Native sparkline options.
+// Options for a compact graphical or terminal plot.
 public type Options = record
-  // Preferred native width.
+  // Preferred plot width.
   public Width: L.Extent := L.Extent.Content;
   // Height in logical points.
   public Height: float := 0.0F;
@@ -14,15 +14,15 @@ public type Options = record
   public Color: Charts.Color := Charts.Color.Automatic;
 end record;
 
-// Draws a compact native chart for a series of values.
+// Draws a compact chart for a series of values.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Id`: Stable widget identity.
 // - `Values`: Finite samples in display order.
-// - `Settings`: Optional native settings.
+// - `Settings`: Optional width, height and ink.
 // ## Returns
-// The graphical element.
+// The graphical or terminal plot.
 public function Sparkline<TMsg>(Id: string; Values: array of float; Settings: Options? := null): E.Element<TMsg>;
 requires Id <> '';
 begin

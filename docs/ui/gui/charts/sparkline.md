@@ -2,7 +2,7 @@
 
 Use a sparkline for a compact trend, for example beside a metric.
 
-Available in **GUI**.
+See also the [terminal sparkline](../../tui/charts/sparkline.md).
 
 ![Sparkline in the FPAS gallery](images/sparkline.png)
 

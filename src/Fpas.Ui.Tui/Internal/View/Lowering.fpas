@@ -3,117 +3,18 @@
 unit Fpas.Ui.Tui.Internal.View.Lowering;
 
 uses
+  Fpas.Ui.Widgets.Feedback.Spinners as Spinners, Fpas.Ui.Tui.Internal.Widgets.Feedback.Spinner as Spinner,
+  Fpas.Ui.Widgets.Charts.Sparklines as Sparklines, Fpas.Ui.Tui.Internal.Widgets.Charts.Sparkline as Sparkline,
+  Fpas.Ui.Widgets.Actions.SegmentedControls as Segmented, Fpas.Ui.Tui.Internal.Widgets.Actions.SegmentedControl as Segments,
+  Fpas.Ui.Widgets.Actions.ToggleGroups as ToggleGroups, Fpas.Ui.Tui.Internal.Widgets.Actions.ToggleGroup as ToggleGroup,
+  Fpas.Ui.Widgets.Inputs.SearchFields as SearchFields, Fpas.Ui.Tui.Internal.Widgets.Inputs.SearchField as Search,
+  Fpas.Ui.Widgets.Inputs.NumberFields as NumberFields, Fpas.Ui.Tui.Internal.Widgets.Inputs.NumberField as Number,
+  Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Tui.Internal.Widgets.Feedback.Alert as Alert,
   Fpas.Ui.Widgets.Files.FilePickers as Files,
   Fpas.Ui.Tui.Internal.Widgets.Files.FilePicker as FilePicker,
   Fpas.Ui.Tui.Internal.Widgets.Files.FilePickerState as PickerState,
   Fpas.Ui.Tui.Internal.Controls.Activation as Actions,
   Fpas.Ui.Widgets.Inputs.MultiSelects as Multi, Fpas.Ui.Tui.Internal.Widgets.Inputs.MultiSelect as MultiSelect, Fpas.Ui.Tui.Internal.Widgets.Navigation.Breadcrumb as Breadcrumb, Fpas.Ui.Widgets.Collections.FilterBars as Filters, Fpas.Ui.Tui.Internal.Widgets.Collections.FilterBar as FilterWidget, Fpas.Ui.Widgets.Developer.LogConsoles as Logs, Fpas.Ui.Tui.Internal.Widgets.Developer.LogConsole as Log, Fpas.Ui.Widgets.Collections.Trees as Trees, Fpas.Ui.Tui.Internal.Widgets.Collections.TreeRows as TreeRows, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes, Fpas.Ui.TerminalExtensions.SelectionLists as Lists, Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as SelectionList, Fpas.Ui.Tui.Internal.Widgets.Containers.ExpandableCard as Card, Fpas.Ui.Widgets.Containers.ExpandableCards as Cards, Fpas.Ui.Tui.Internal.Widgets.Overlays.Dropdown as Dropdown, Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as PopupState, Fpas.Ui.Widgets.Inputs.TextAreas as Areas, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextArea as AreaWidget, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Widgets.Navigation.Tabs as TabSettings, Fpas.Ui.Tui.Internal.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Tui.Internal.Widgets.Inputs.Select as Select, Fpas.Ui.Widgets.Inputs.Selects as Selects, Fpas.Ui.Tui.Internal.Widgets.Inputs.RadioGroup as Radios, Fpas.Ui.Widgets.Inputs.RadioGroups as R, Fpas.Ui.Tui.Internal.Widgets.Inputs.ToggleRows as Toggles, Fpas.Ui.Tui.Internal.Widgets.Collections.Table as TableWidget, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as FieldWidget, Fpas.Ui.Widgets.Inputs.TextFields as Fields, Fpas.Ui.Widgets.Desktop.StatusBars as StatusBars, Fpas.Ui.Tui.Internal.Widgets.Desktop.StatusBar as StatusLine, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Widgets.Feedback.ProgressBars as ProgressBars, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Tui.Internal.Widgets.Actions.Button as Button, Fpas.Ui.Elements as Ui, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Navigation.Navigation as N, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Navigation.Sidebar as Sidebar, Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Panel, Fpas.Ui.Tui.Internal.Layout.Flexible as Geometry, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, System as Sys, System.Collections.Generic as C;
-
-// Converts shared flex rules into resolved cell constraints.
-//
-// ## Parameters
-// - `Value`: Validated shared rule.
-// - `Horizontal`: Parent main axis.
-//
-// ## Returns
-// Cell allocation constraints.
-public function Flex(Value: L.Flex; Horizontal: bool := true): E.Flex;
-begin
-  var Basis: int := -1;
-  var Grow: float := Value.Grow;
-  case Value.Basis of
-    when L.Extent.Fixed(const Distance: L.Measure):
-      Basis := Geometry.Cells(Distance, Horizontal);
-    when L.Extent.Fill:
-      Grow := Sys.Math.Max(1.0F, Grow);
-    when L.Extent.Percent(_):
-      raise new Sys.NotSupportedException('Percentage extents require the graphical profile.');
-    else
-  end case;
-  const Minimum: L.Measure? := Value.Minimum;
-  const Maximum: L.Measure? := Value.Maximum;
-  return new E.Flex(
-    Basis, if Minimum = null then
-      0
-    else
-      Geometry.Cells(Minimum, Horizontal)
-    end if,
-    if Maximum = null then
-      int.MaxValue
-    else
-      Geometry.Cells(Maximum, Horizontal)
-    end if, Grow
-  );
-end function;
-
-function Spacing(Value: L.Spacing; Horizontal: bool): int;
-begin
-  case Value of
-    when L.Spacing.None:
-      return 0;
-    when L.Spacing.Tight:
-      return 1;
-    when L.Spacing.Normal:
-      return 1;
-    when L.Spacing.Loose:
-      return if Horizontal then
-        2
-      else
-        1
-      end if;
-    when L.Spacing.Fixed(const Distance: L.Measure):
-      return Geometry.Cells(Distance, Horizontal);
-  end case;
-end function;
-
-function Role(Theme: Th.Theme; Value: UiStyle.Role; Inherited: T.Style): T.Style;
-begin
-  const Backdrop: int := Inherited.Background ?? Theme.Text.Background ?? 0;
-  if Value = UiStyle.Role.Default then
-    return new T.Style();
-  end if;
-
-  if Value = UiStyle.Role.Panel or Value = UiStyle.Role.OutlinedPanel
-    or Value = UiStyle.Role.MutedPanel or Value = UiStyle.Role.Divider
-  then
-    const Surface: int := Th.Rgb(
-      case Value of
-        when UiStyle.Role.MutedPanel: Theme.Colors.SurfaceMuted;
-        when UiStyle.Role.Divider: Theme.Colors.Border;
-        else Theme.Colors.Surface;
-      end case, Backdrop
-    );
-    return new T.Style(Th.Rgb(Theme.Colors.Foreground, Surface), Surface);
-  end if;
-
-  return new T.Style(
-    Foreground := Th.Rgb(
-      case Value of
-        when UiStyle.Role.Muted: Theme.Colors.TextMuted;
-        when UiStyle.Role.Primary: Theme.Colors.Accent;
-        when UiStyle.Role.Secondary: Theme.Colors.TextSecondary;
-        when UiStyle.Role.Error: Theme.Colors.Danger;
-        else Theme.Colors.Foreground;
-      end case, Backdrop
-    )
-  );
-end function;
-
-function Merge(Parent: T.Style; Child: T.Style): T.Style;
-begin
-  return new T.Style(
-    if Child.Foreground = null then
-      Parent.Foreground
-    else
-      Child.Foreground
-    end if,
-    if Child.Background = null then
-      Parent.Background
-    else
-      Child.Background
-    end if
-  );
-end function;
 
 // Lowers a validated shared tree into terminal measurement and painting data.
 //
@@ -125,18 +26,26 @@ end function;
 // - `Popup`: Session-local popup interactions.
 // - `Pickers`: Session-local file picker interactions.
 // - `Size`: Current terminal viewport.
+// - `Numbers`: Number field editing state.
+// - `AlertsState`: Alert dismissal state.
 // - `Theme`: Current terminal theme.
 //
 // ## Returns
 // The resolved backend tree, with no application-facing constructors.
 public function Prepare<TMsg>(
   Prepared: V.Prepared<TMsg>; Theme: Th.Theme; Popup: PopupState.State<TMsg>;
-  Pickers: PickerState.State; Size: T.Viewport
+  Pickers: PickerState.State; Size: T.Viewport; Numbers: Number.State; AlertsState: Alert.State
 ): E.Element<TMsg>;
   function Children(Items: array of Ui.Element<TMsg>; Colors: T.Style; Horizontal: bool := false): array of E.Element<TMsg>;
   begin
     const Values: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
     for Item: Ui.Element<TMsg> in Items do
+      case Item of
+        when Ui.Element.Alert(const Id: string, _, _, _) if AlertsState.Hidden(Id):
+          continue;
+        else
+      end case;
+
       Values.Add(Visit(Item, Colors, Horizontal));
     end for;
 
@@ -202,6 +111,25 @@ public function Prepare<TMsg>(
         return TreeRows.Lower<TMsg>(Node);
       when Ui.Element.ProgressBar(_, const Fraction: float, const Settings: ProgressBars.Options):
         return Progress.Lower<TMsg>(Fraction, Settings, Theme);
+      when Ui.Element.Spinner(_, const Diameter: float, const Settings: Spinners.Options?):
+        return Spinner.Lower<TMsg>(Diameter, Settings, Theme);
+      when Ui.Element.Sparkline(
+        _,
+        const Values: array of float,
+        const Settings: Sparklines.Options
+      ):
+        return Sparkline.Lower<TMsg>(Values, Settings, Theme);
+      when Ui.Element.Alert(
+        const Id: string,
+        const Title: string,
+        const Settings: Alerts.Options,
+        const Notify: Sys.Func<TMsg>?
+      ):
+        if AlertsState.Hidden(Id) then
+          return E.Element<TMsg>.Stack([], false, new E.Flow());
+        end if;
+
+        return Alert.Lower<TMsg>(Id, Title, Settings, Notify, AlertsState, Colors, Theme);
       when Ui.Element.StatusBar(
         const Id: string,
         const Items: array of StatusBars.Item<TMsg>,
@@ -219,7 +147,7 @@ public function Prepare<TMsg>(
         const Id: string, const Title: string, const Open: bool, const Change: function(bool): TMsg,
         const Content: Ui.Element<TMsg>, const Settings: Cards.Options
       ):
-        const Surface: T.Style := Role(Theme, UiStyle.Role.Panel, Colors);
+        const Surface: T.Style := Th.Role(Theme, UiStyle.Role.Panel, Colors);
         return Card.Lower<TMsg>(
           Id, Title, Open, Change, Settings, Surface,
           function(): E.Element<TMsg> => Visit(Content, Surface)
@@ -255,6 +183,16 @@ public function Prepare<TMsg>(
         const Change: function(int): TMsg, const Settings: TabSettings.Options
       ):
         return Tabs.Lower<TMsg>(Id, Items, Selected, Change, Settings);
+      when Ui.Element.Segments(
+        const Id: string, const Items: array of Segmented.Item, const Selected: int,
+        const Change: function(int): TMsg, const Settings: Segmented.Options
+      ):
+        return Segments.Lower<TMsg>(Id, Items, Selected, Change, Settings);
+      when Ui.Element.Toggles(
+        const Id: string, const Items: array of ToggleGroups.Item, const Selected: array of bool,
+        const Change: function(array of bool): TMsg, const Settings: ToggleGroups.Options
+      ):
+        return ToggleGroup.Lower<TMsg>(Id, Items, Selected, Change, Settings);
       when Ui.Element.PaginationAction(
         const Id: string, const Page: int, const Count: int,
         const Change: function(int): TMsg, const Enabled: bool
@@ -273,7 +211,14 @@ public function Prepare<TMsg>(
         const Enabled: bool,
         const Gap: L.Spacing
       ):
-        return Radios.Lower<TMsg>(Id, Items, Selected, Change, Enabled, Spacing(Gap, false));
+        return Radios.Lower<TMsg>(
+          Id,
+          Items,
+          Selected,
+          Change,
+          Enabled,
+          Geometry.Spacing(Gap, false)
+        );
       when Ui.Element.CheckboxAction(
         const Id: string,
         const Label: string,
@@ -349,6 +294,26 @@ public function Prepare<TMsg>(
           Colors,
           Theme
         );
+      when Ui.Element.SearchField(
+        const Id: string, const Value: string, const Change: function(string): TMsg,
+        const Settings: SearchFields.Options, const Submit: Sys.Func<string, TMsg>?
+      ):
+        return Search.Lower<TMsg>(Id, Value, Change, Settings, Submit, Colors, Theme);
+      when Ui.Element.NumberField(
+        const Id: string, const Value: double, const Minimum: double, const Maximum: double,
+        const Change: function(double): TMsg, const Settings: NumberFields.Options
+      ):
+        return Number.Lower<TMsg>(
+          Id,
+          Value,
+          Minimum,
+          Maximum,
+          Change,
+          Settings,
+          Numbers,
+          Colors,
+          Theme
+        );
       when Ui.Element.Table(
         const Id: string, const Columns: array of Tables.Column,
         const Rows: array of Tables.Row<TMsg>, const Order: Tables.Sort?,
@@ -383,22 +348,22 @@ public function Prepare<TMsg>(
           Children(Items, Colors, Horizontal),
           Horizontal,
           new E.Flow(
-            Spacing(Flow.Gap, Horizontal),
-            Spacing(Flow.Padding, true),
-            Spacing(Flow.Padding, false),
+            Geometry.Spacing(Flow.Gap, Horizontal),
+            Geometry.Spacing(Flow.Padding, true),
+            Geometry.Spacing(Flow.Padding, false),
             Flow.Align
           )
         );
       when Ui.Element.Sized(const Child: Ui.Element<TMsg>, const Rule: L.Flex):
         return E.Element<TMsg>.Sized(
           Visit(Child, Colors, ParentHorizontal),
-          Flex(Rule, ParentHorizontal)
+          Geometry.Flex(Rule, ParentHorizontal)
         );
       when Ui.Element.Styled(const Child: Ui.Element<TMsg>, const Value: UiStyle.Role):
-        const Next: T.Style := Merge(Colors, Role(Theme, Value, Colors));
+        const Next: T.Style := Th.Merge(Colors, Th.Role(Theme, Value, Colors));
         return E.Element<TMsg>.Decorated(Visit(Child, Next, ParentHorizontal), Next);
       when Ui.Element.TerminalStyle(const Child: Ui.Element<TMsg>, const Value: T.Style):
-        const Next: T.Style := Merge(Colors, Value);
+        const Next: T.Style := Th.Merge(Colors, Value);
         return E.Element<TMsg>.Decorated(Visit(Child, Next, ParentHorizontal), Next);
       when Ui.Element.Framed(const Child: Ui.Element<TMsg>, const Title: string):
         return E.Element<TMsg>.Framed(Visit(Child, Colors), Title);
@@ -497,6 +462,7 @@ public function Prepare<TMsg>(
 begin
   const Result: E.Element<TMsg> := Visit(Prepared.Tree, Theme.Text);
   Pickers.Finish();
+  AlertsState.Finish();
   return Result;
 end function;
 

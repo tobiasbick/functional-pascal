@@ -7,6 +7,7 @@ uses
   Fpas.Ui.Widgets.Actions.ConfirmButtons as Confirm, Fpas.Ui.Widgets.Actions.HoldButtons as Hold,
   Fpas.Ui.Widgets.Actions.SplitButtons as Split, Fpas.Ui.Widgets.Actions.StatusButtons as Status,
   Fpas.Ui.Widgets.Actions.SegmentedControls as Segments, Fpas.Ui.Widgets.Actions.ButtonGroups as Groups,
+  Fpas.Ui.Widgets.Actions.ToggleGroups as ToggleGroups,
   Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers, Fpas.Ui.Widgets.Theming.ThemeToggles as Toggles,
   Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Developer.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Validation as V, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Tui.Internal.View.Tree as Tree, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System as Sys, System.Console as Console;
 
@@ -350,17 +351,40 @@ begin
   Check(not Session.Snapshot().Controls[1].Enabled, 'Disabled buttons must suppress activation.');
 end procedure;
 
-procedure GraphicalWidgets();
-  procedure CheckProfile(Node: E.Element<int>; Profile: V.Target);
+procedure ChoiceStripSizing();
+  function View(State: int): E.Element<int>;
+  begin
+    return Segments.SegmentedControl<int>(
+      'fill', [new Segments.Item('One'), new Segments.Item('Longer label')], State,
+      function(Choice: int): int => Choice,
+      new Segments.Options(ControlSize := B.Size.Large, FullWidth := true)
+    );
+  end function;
+begin
+  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 41, 8);
+  const Frame: Tui.Frame := Session.Snapshot();
+  const First: Tui.ControlSnapshot := Frame.Controls[0];
+  const Second: Tui.ControlSnapshot := Frame.Controls[1];
+  Check(
+    First.Width = 20 and Second.Width = 20 and Second.Column + Second.Width = 41,
+    'Full-width segments must split the row evenly.'
+  );
+  Check(First.Height = 2 and Second.Height = 2, 'Large segments must occupy two rows.');
+end procedure;
+
+procedure WidgetProfiles();
+  procedure Rejects(Node: E.Element<int>; Profile: V.Target; Reason: string);
   begin
     try
       discard V.Prepare<int>(Node, Profile);
     catch Error: Sys.ArgumentException do
-      Check(Error.Message.Contains('Graphical'), Error.Message);
+      Check(Error.Message.Contains(Reason), Error.Message);
       return;
     end try;
 
-    raise new Sys.InvalidOperationException('Preflight accepted a graphical-only widget.');
+    raise new Sys.InvalidOperationException(
+      'Preflight accepted a widget outside its supported profiles.'
+    );
   end procedure;
 begin
   const Widgets: array of E.Element<int> := [
@@ -368,12 +392,6 @@ begin
     Copy.CopyButton<int>('copy', 'text'), Hold.HoldButton<int>('hold', 'Hold', 1),
     Confirm.ConfirmButton<int>('confirm', 'Confirm', 1),
     Status.StatusButton<int>('status', 'Save', Status.Status.Idle, 1),
-    Segments.SegmentedControl<int>(
-      'choice',
-      [new Segments.Item('One')],
-      0,
-      function(N: int): int => N
-    ),
     Groups.ButtonGroup<int>(B.Button<int>('action', 'Run', 1)),
     Split.SplitButton<int>('split', 'Run', 1, [new Split.Item<int>('other', 'Other', 2)]),
     Menus.ContextMenu<int>(
@@ -389,13 +407,34 @@ begin
   ];
   for Node: E.Element<int> in Widgets do
     discard V.Prepare<int>(Node, V.Target.Graphical);
-    CheckProfile(Node, V.Target.Terminal);
-    CheckProfile(Node, V.Target.Portable);
+    Rejects(Node, V.Target.Terminal, 'Graphical');
+    Rejects(Node, V.Target.Portable, 'Graphical');
+  end for;
+
+  const ChoiceGroups: array of E.Element<int> := [
+    Segments.SegmentedControl<int>(
+      'choice',
+      [new Segments.Item('One')],
+      0,
+      function(N: int): int => N
+    ),
+    ToggleGroups.ToggleGroup<int>(
+      'flags',
+      [new ToggleGroups.Item('One')],
+      [true],
+      function(Flags: array of bool): int => Flags.Length
+    )
+  ];
+  for Node: E.Element<int> in ChoiceGroups do
+    discard V.Prepare<int>(Node, V.Target.Graphical);
+    discard V.Prepare<int>(Node, V.Target.Terminal);
+    Rejects(Node, V.Target.Portable, 'terminal or graphical profile');
   end for;
 end procedure;
 
 begin
-  GraphicalWidgets();
+  WidgetProfiles();
+  ChoiceStripSizing();
   Allocation();
   SemanticColors();
   LogicalDistances();

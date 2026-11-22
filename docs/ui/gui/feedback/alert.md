@@ -1,6 +1,6 @@
 # Alert
 
-Use an inline alert for an update, result or warning that belongs in the page. Available in **GUI**.
+Use an inline alert for an update, result or warning that belongs in the page. See also the [terminal alert](../../tui/feedback/alert.md).
 
 ![Alert in the FPAS gallery](images/alert.png)
 

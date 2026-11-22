@@ -52,16 +52,19 @@ begin
       ), Profile, 'Duplicate'
     );
   end for;
-  const Nodes: array of E.Element<int> := [
+  const Shared: array of E.Element<int> := [
     Breadcrumbs.Breadcrumb<int>('trail', ['Root', 'Current'], function(Value: int): int => Value),
-    Paginations.Pagination<int>('pager', 0, 12, function(Value: int): int => Value),
-    Steppers.Stepper<int>('stepper', ['First', 'Second'], 2)
+    Paginations.Pagination<int>('pager', 0, 12, function(Value: int): int => Value)
   ];
-  for Node: E.Element<int> in Nodes do
-    discard V.Prepare<int>(Node, V.Target.Graphical);
-    Reject(Node, V.Target.Portable, 'Graphical profile');
-    Reject(Node, V.Target.Terminal, 'Graphical profile');
+  for Node: E.Element<int> in Shared do
+    for Profile: V.Target in [V.Target.Graphical, V.Target.Terminal, V.Target.Portable] do
+      discard V.Prepare<int>(Node, Profile);
+    end for;
   end for;
+  const Stepper: E.Element<int> := Steppers.Stepper<int>('stepper', ['First', 'Second'], 2);
+  discard V.Prepare<int>(Stepper, V.Target.Graphical);
+  Reject(Stepper, V.Target.Portable, 'Graphical profile');
+  Reject(Stepper, V.Target.Terminal, 'Graphical profile');
 
   Reject(
     Paginations.Pagination<int>('invalid', 12, 12, function(Value: int): int => Value),

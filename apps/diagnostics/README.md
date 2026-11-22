@@ -67,6 +67,7 @@ not the target command line or absolute paths.
 [Shared reporting code](Shared/samples.fpas) validates report destinations,
 calculates summaries and writes CSVs for both applications. CSV files contain
 raw milliseconds, workload rounds, warmup and runtime settings.
+The OS field is `windows`, `macos`, `linux`, or `other`.
 Stdout summarizes median, minimum, maximum, arithmetic mean and sample standard
 deviation. No performance threshold is imposed.
 

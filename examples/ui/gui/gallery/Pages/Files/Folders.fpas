@@ -46,6 +46,10 @@ begin
     return ExampleRoot(Path);
   catch Failure: Sys.UnauthorizedAccessException do
     return ExampleRoot(Path);
+  catch Failure: Sys.ArgumentException do
+    return null;
+  catch Failure: Sys.NotSupportedException do
+    return null;
   end try;
 end function;
 

@@ -6,10 +6,13 @@ services and does not load CUI or require a graphical display.
 
 ## Application lifecycle
 
-Run owns the interactive terminal loop. StartHeadless provides explicit Send,
-Step, Snapshot and Close operations. Update and View run on the owner;
-background work posts typed messages through shared MVU commands. Close cancels
-work and joins cleanup. Do not reenter owner operations from callbacks.
+`Run` owns the interactive terminal loop. `StartHeadless` provides `Send`,
+`Step`, `Snapshot` and `CloseAsync`. `Update` and `View` run on the owner.
+Background work posts typed messages through shared MVU commands. `CloseAsync`
+stops admission, requests cancellation and returns a task for cleanup.
+Await that task before releasing resources used by effects. `Dispose` joins
+outstanding cleanup and releases the host connection. Do not reenter owner
+operations from callbacks.
 The interactive host restores terminal modes on normal exit and failure.
 
 ## Views, layout and validation

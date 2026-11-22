@@ -171,6 +171,43 @@ begin
   end try;
 end procedure;
 
+procedure CheckUncProvider();
+  function ReadUnc(Path: string; Hidden: bool): F.Listing?;
+  begin
+    case Path of
+      when '\\server\share':
+        return new F.Listing([new F.Entry('docs', true)]);
+      when '\\server\share\docs':
+        return new F.Listing([new F.Entry('manual.txt')]);
+      else
+        return null;
+    end case;
+  end function;
+
+  function ViewUnc(Current: State): E.Element<Msg>;
+  begin
+    return Picker.FilePicker<Msg>(
+      'unc', Current.Kind <> null, Msg.Close,
+      new Picker.Options(Start := '\\server\share', Source := ReadUnc),
+      E.Text<Msg>('UNC provider')
+    );
+  end function;
+begin
+  using const Session: T.HeadlessSession := T.StartHeadless<State, Msg>(
+    new State(Picker.Mode.OpenFile), Update, ViewUnc, 74, 18
+  );
+  Check(Shows(Session, 'docs/') and not Shows(Session, '../'), 'UNC share exposed a parent.');
+  Key(Session, K.Key.Down);
+  Key(Session, K.Key.Enter);
+  Check(Shows(Session, 'manual.txt') and Shows(Session, '../'), 'UNC child was not entered.');
+  Key(Session, K.Key.Home);
+  Key(Session, K.Key.Enter);
+  Check(
+    Shows(Session, 'docs/') and not Shows(Session, '../'),
+    'Returning to the UNC share did not restore its root.'
+  );
+end procedure;
+
 begin
   discard V.Prepare<Msg>(View(new State(Picker.Mode.OpenFile)), V.Target.Portable);
   using const Session: T.HeadlessSession := T.StartHeadless<State, Msg>(
@@ -267,6 +304,7 @@ begin
   Send(Session, T.Input.Click(Choose.Column + 1, Choose.Row));
   CheckResult(Session, 'folder', '/project/docs', 4);
   CheckLocalDisk();
+  CheckUncProvider();
   Console.WriteLine('File picker contracts verified');
 end;
 

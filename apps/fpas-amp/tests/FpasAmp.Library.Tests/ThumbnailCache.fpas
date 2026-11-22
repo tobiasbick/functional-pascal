@@ -65,6 +65,9 @@ public type CacheTests = record
     X.Assert.NotNull(Reloaded.TryGet('album-one', 'revision-one'));
     X.Assert.Null(Reloaded.TryGet('album-one', 'revision-two'));
     IO.File.WriteAllBytes(IO.Directory.GetFiles(Root.Path, '*.rgba')[0], [0]);
+    discard Cache.Store('album-one', 'revision-one', Bytes, T.CancellationToken.None);
+    X.Assert.NotNull(new Thumbnails.ThumbnailStore(Root.Path).TryGet('album-one', 'revision-one'));
+    IO.File.WriteAllBytes(IO.Directory.GetFiles(Root.Path, '*.rgba')[0], [0]);
     const Damaged: Thumbnails.ThumbnailStore := new Thumbnails.ThumbnailStore(Root.Path);
     X.Assert.Null(Damaged.TryGet('album-one', 'revision-one'));
     discard Damaged.Store('album-one', 'revision-one', Bytes, T.CancellationToken.None);

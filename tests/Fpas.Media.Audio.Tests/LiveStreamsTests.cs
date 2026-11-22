@@ -57,6 +57,38 @@ public sealed class LiveStreamsTests
         }
     }
 
+    /// <summary>Stopping the session closes the radio connection before the session is disposed.</summary>
+    [RequiresFfmpeg]
+    public async Task StopPlaybackClosesRadioConnection()
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        byte[] mp3 = await File.ReadAllBytesAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "step.mp3"), timeout.Token);
+        var disconnect = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task serving = Serve(listener, mp3, disconnect.Task, timeout.Token);
+        using var session = new Session(true);
+        try
+        {
+            session.OpenStream(new Uri($"http://{listener.LocalEndpoint}/radio"));
+            session.Play();
+            await Find(session, e => e.State == PlaybackState.Playing && !e.Buffering
+                && e.Peaks.Any(peak => peak > 0), timeout.Token);
+            session.StopPlayback();
+            try { await serving.WaitAsync(timeout.Token); }
+            catch (IOException) { }
+            catch (SocketException) { }
+        }
+        finally
+        {
+            await timeout.CancelAsync();
+            try { await serving; }
+            catch (OperationCanceledException) { }
+            catch (IOException) { }
+            catch (SocketException) { }
+        }
+    }
+
     private static async Task<PlaybackEvent> Find(Session session, Func<PlaybackEvent, bool> check, CancellationToken cancellation)
     {
         await foreach (PlaybackEvent update in session.Events.ReadAllAsync(cancellation))

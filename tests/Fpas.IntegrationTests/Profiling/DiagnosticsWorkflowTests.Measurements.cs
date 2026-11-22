@@ -21,6 +21,8 @@ public sealed partial class DiagnosticsWorkflowTests(DiagnosticsFixture fixture)
             Assert.Contains("checksum=" + expected.ToString(CultureInfo.InvariantCulture), result.Output);
             var lines = File.ReadAllLines(path);
             Assert.Equal(4, lines.Length); Assert.Contains("milliseconds", lines[0]);
+            var os = OperatingSystem.IsWindows() ? "windows" : OperatingSystem.IsMacOS() ? "macos" : OperatingSystem.IsLinux() ? "linux" : "other";
+            Assert.All(lines.Skip(1), line => Assert.Equal(os, line.Split(',')[8]));
             Assert.All(lines.Skip(1), line => Assert.True(double.Parse(line.Split(',')[4], CultureInfo.InvariantCulture) >= 0));
             var previous = File.ReadAllBytes(path);
             var conflict = await fixture.Run(fixture.Workload, "bench", kind, "8", "1", "3", path, kind, "local");

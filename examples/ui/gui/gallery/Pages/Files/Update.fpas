@@ -5,7 +5,22 @@ unit GuiGallery.Pages.Files.Update;
 uses
   GuiGallery.Pages.Files.State as M, GuiGallery.Pages.Files.View as V,
   GuiGallery.Pages.Files.Terminal as Shell, Fpas.Ui.Widgets.Developer.Terminals as Terminal,
-  Fpas.Ui.Widgets.Files.FileBrowsers as Browser, Fpas.Ui.Widgets.Files.FilePickers as Picker, Fpas.Ui.Widgets.Navigation.PathBars as Paths;
+  Fpas.Ui.Widgets.Files.FileBrowsers as Browser, Fpas.Ui.Widgets.Files.FilePickers as Picker, Fpas.Ui.Widgets.Navigation.PathBars as Paths,
+  System as Sys, System.IO as IO;
+
+function ValidFolder(Current: string; Proposed: string): string;
+begin
+  try
+    discard IO.Path.GetFullPath(Proposed);
+    return Proposed;
+  catch Failure: Sys.ArgumentException do
+    return Current;
+  catch Failure: Sys.NotSupportedException do
+    return Current;
+  catch Failure: IO.PathTooLongException do
+    return Current;
+  end try;
+end function;
 
 // Applies native file navigation and picker results.
 // ## Parameters
@@ -17,7 +32,7 @@ public function Update(Model: M.Model; Message: M.Msg): M.Model;
 begin
   return case Message of
     when M.Msg.Browse(const Event: Browser.Event): Model with
-      Folder := Event.Folder;
+      Folder := ValidFolder(Model.Folder, Event.Folder);
       Chosen := Event.Picked ?? Model.Chosen;
     end with;
     when M.Msg.Open: Model with
@@ -47,7 +62,7 @@ begin
     when M.Msg.Terminal(Terminal.Event.Interrupt): Model;
     when M.Msg.Path(const Event: Paths.Event): Model with
       Folder := if Event.Text <> null then
-        Event.Text ?? Model.Folder
+        ValidFolder(Model.Folder, Event.Text ?? Model.Folder)
       elsif Event.Child >= 0 then
         V.MenuPath(Model.Folder, Event.MenuSegment, Event.Child)
       elsif Event.Segment >= 0 then

@@ -34,7 +34,8 @@ successful choices are full local paths. With `Options.Source`, the picker
 starts from the supplied path or `.` and uses the provider's directory
 structure. The terminal requests listings with hidden files off. A null
 listing or provider failure shows **Unable to read folder**. The parent
-remains reachable when the current path has one.
+remains reachable when the current path has one. Backslash UNC paths stop at
+the share root, including when the terminal runs on a non-Windows host.
 
 `Options.Filter` uses case-insensitive `*` and `?` glob patterns separated
 by semicolons or commas. It filters file rows while keeping directories

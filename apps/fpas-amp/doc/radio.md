@@ -1,8 +1,8 @@
 # Internet radio
 
 > [!IMPORTANT]
-> Radio playback requires **FFmpeg**. The app must be able to find
-> `ffmpeg` on its `PATH`. Check with `ffmpeg -version`.
+> Radio playback requires **FFmpeg**. The Windows portable build includes it.
+> For other installations, put `ffmpeg` on `PATH` and check with `ffmpeg -version`.
 
 ## Find a station
 

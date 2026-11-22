@@ -70,7 +70,7 @@ public sealed class ThumbnailStore
             string name = hash + ".rgba";
             string path = Path.Combine(directory, name);
             Bitmap? bitmap = Read(hash);
-            if (bitmap is null || !File.Exists(path))
+            if (bitmap is null || !ValidBlob(path))
             {
                 bitmap ??= CoverDecoder.Decode(encoded, Edge, cancellation);
                 var pixels = bitmap.Pixels;
@@ -98,16 +98,39 @@ public sealed class ThumbnailStore
         var path = Path.Combine(directory, hash + ".rgba");
         try
         {
-            if (!File.Exists(path) || new FileInfo(path).Length != Edge * Edge * 4 + 8) return null;
-            var bytes = File.ReadAllBytes(path);
-            if (BitConverter.ToInt32(bytes, 0) != Edge || BitConverter.ToInt32(bytes, 4) != Edge) return null;
-            var bitmap = new Bitmap(Edge, Edge, bytes[8..]);
+            byte[] pixels;
+            using (var file = File.OpenRead(path))
+            {
+                if (!HasBlobHeader(file)) return null;
+                pixels = new byte[Edge * Edge * 4];
+                file.ReadExactly(pixels);
+            }
+            var bitmap = new Bitmap(Edge, Edge, pixels);
             File.SetLastWriteTimeUtc(path, DateTime.UtcNow);
             Remember(hash, bitmap);
             return bitmap;
         }
         catch (IOException) { return null; }
         catch (UnauthorizedAccessException) { return null; }
+    }
+
+    private static bool ValidBlob(string path)
+    {
+        try
+        {
+            using var file = File.OpenRead(path);
+            return HasBlobHeader(file);
+        }
+        catch (IOException) { return false; }
+        catch (UnauthorizedAccessException) { return false; }
+    }
+
+    private static bool HasBlobHeader(FileStream file)
+    {
+        if (file.Length != Edge * Edge * 4 + 8) return false;
+        Span<byte> header = stackalloc byte[8];
+        file.ReadExactly(header);
+        return BitConverter.ToInt32(header[..4]) == Edge && BitConverter.ToInt32(header[4..]) == Edge;
     }
 
     private void Remember(string key, Bitmap bitmap)

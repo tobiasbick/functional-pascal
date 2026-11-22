@@ -102,7 +102,9 @@ be opened and played without querying the directory again. A favorite's page
 shows available station details and the on-air title when supplied by the
 stream. The sidebar lists local music playlists below Radio.
 
-Radio playback uses `ffmpeg` on PATH to decode direct audio and HLS streams.
+Radio playback uses FFmpeg to decode direct audio and HLS streams. The
+[Windows portable build](#windows-portable-build) includes FFmpeg. The app looks
+for `ffmpeg` on `PATH` when a bundled copy is unavailable.
 The player shares its equalizer, volume and stereo meters with local music.
 It shows the live or buffering state in place of the waveform. Stop closes the
 stream. Press Play after a disconnect to reconnect. Streams do not start

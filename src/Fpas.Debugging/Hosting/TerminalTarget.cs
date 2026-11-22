@@ -89,10 +89,9 @@ internal static class TerminalTarget
         }
     }
 
-    private static async Task ReadOutput(PseudoTerminal terminal, WorkerChannel controller, CancellationToken token)
+    internal static async Task ReadOutput(PseudoTerminal terminal, WorkerChannel controller, CancellationToken token)
     {
         var bytes = new byte[8192];
-        var forwarding = true;
         while (true)
         {
             int count;
@@ -100,17 +99,7 @@ internal static class TerminalTarget
             catch (IOException exception) when (OperatingSystem.IsLinux() && (exception.HResult & 0xffff) == 5)
             { return; } // Linux returns EIO after the last slave closes.
             if (count == 0) return;
-            if (forwarding)
-            {
-                try
-                {
-                    using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
-                    deadline.CancelAfter(TimeSpan.FromSeconds(2));
-                    await controller.Send(new(0, "event", "output", JsonSerializer.SerializeToElement(bytes[..count], WorkerJson.Default.ByteArray)), deadline.Token);
-                }
-                catch (Exception error) when (error is IOException or OperationCanceledException)
-                { forwarding = false; }
-            }
+            await controller.Send(new(0, "event", "output", JsonSerializer.SerializeToElement(bytes[..count], WorkerJson.Default.ByteArray)), token);
         }
     }
 }

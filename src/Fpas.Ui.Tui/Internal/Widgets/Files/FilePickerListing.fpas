@@ -53,6 +53,16 @@ public function Parent(Folder: string): string;
 begin
   const Root: string? := IO.Path.GetPathRoot(Folder);
   const Path: string := Folder.TrimEnd(Separators);
+  // Provider paths can use a Windows UNC share even on a non-Windows host.
+  if Path.StartsWith('\\') then
+    const ServerEnd: int := Path.IndexOfAny(Separators, 2);
+    if ServerEnd > 2 and ServerEnd < Path.Length - 1
+      and Path.IndexOfAny(Separators, ServerEnd + 1) < 0
+    then
+      return '';
+    end if;
+  end if;
+
   if Root <> null and Root <> '' and Path = Root.TrimEnd(Separators) then
     return '';
   end if;

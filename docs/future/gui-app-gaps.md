@@ -5,7 +5,7 @@ Use the [GUI handbook](../ui/gui/desktop.md) for the supported API and the
 for native rendering and input. Use FPAS MVU for application state, commands
 and typed messages. The acceptance targets are Windows x64 and Linux x64.
 
-The source review covers CUI's [Building an app][apps], [Recipes][recipes],
+See CUI's [Building an app][apps], [Recipes][recipes],
 [Getting started][getting-started] and [Theming][theming] at the
 [vendored revision](../../third-party/cui/UPSTREAM.md).
 
@@ -33,9 +33,9 @@ The [optional title bar](cui-titlebar.md) has a separate plan. The local CUI
 prototype at `00eddec` adds an experimental title bar on Win32 and X11.
 The vendored CUI revision lacks that API.
 
-[apps]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/apps.md
-[recipes]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/recipes.md
-[getting-started]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/getting-started.md
-[theming]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/theming.md
-[app-options]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/apps.md#two-ways-to-run
-[limitations]: https://github.com/yappologistic/CUI/blob/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441/docs/faq.md#what-can-it-not-do
+[apps]: https://github.com/yappologistic/CUI/blob/56c9bc2c985b21bacb79d34c842980071c52800a/docs/apps.md
+[recipes]: https://github.com/yappologistic/CUI/blob/56c9bc2c985b21bacb79d34c842980071c52800a/docs/recipes.md
+[getting-started]: https://github.com/yappologistic/CUI/blob/56c9bc2c985b21bacb79d34c842980071c52800a/docs/getting-started.md
+[theming]: https://github.com/yappologistic/CUI/blob/56c9bc2c985b21bacb79d34c842980071c52800a/docs/theming.md
+[app-options]: https://github.com/yappologistic/CUI/blob/56c9bc2c985b21bacb79d34c842980071c52800a/docs/apps.md#two-ways-to-run
+[limitations]: https://github.com/yappologistic/CUI/blob/56c9bc2c985b21bacb79d34c842980071c52800a/docs/faq.md#what-can-it-not-do

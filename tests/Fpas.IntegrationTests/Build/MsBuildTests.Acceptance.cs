@@ -7,6 +7,35 @@ namespace Fpas.IntegrationTests.Build;
 public sealed partial class MsBuildTests
 {
     [Fact]
+    public async Task Executable_incremental_build_restores_modified_intermediate_runtime_configuration()
+    {
+        using var project = sdk.CreateProject();
+        const string projectPath = "Game/Game.fpasproj";
+        File.WriteAllText(project.File(projectPath), $"""
+            <Project Sdk="Fpas.NET.Sdk/{sdk.Version}">
+              <PropertyGroup><TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType></PropertyGroup>
+            </Project>
+            """);
+        File.WriteAllText(project.File("Game/Bridge.fpas"), "program Game; begin end; end program;");
+
+        async Task<ProcessResult> Build()
+        {
+            var result = await sdk.Run(project, "build", projectPath);
+            Assert.True(result.ExitCode == 0, result.Output + result.Error);
+            return result;
+        }
+
+        await Build();
+        var runtimeConfig = project.File("Game/obj/Debug/net10.0/Game.runtimeconfig.json");
+        var original = File.ReadAllBytes(runtimeConfig);
+        Assert.DoesNotContain("FPAS: compiling", (await Build()).Output);
+        File.WriteAllText(runtimeConfig, "{}");
+        Assert.Contains("FPAS: compiling", (await Build()).Output);
+        Assert.Equal(original, File.ReadAllBytes(runtimeConfig));
+        Assert.DoesNotContain("FPAS: compiling", (await Build()).Output);
+    }
+
+    [Fact]
     public async Task Parallel_configurations_and_projects_isolate_outputs_and_match_clean_rebuilds()
     {
         using var project = sdk.CreateProject();

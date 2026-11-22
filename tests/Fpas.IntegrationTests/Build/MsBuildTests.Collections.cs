@@ -32,6 +32,10 @@ public sealed partial class MsBuildTests
         Assert.True(run.ExitCode == 0, run.Output + run.Error);
         Assert.Equal(string.Join(Environment.NewLine, "a.txt: 3", "empty.txt: 0", Path.Combine("nested", "ü.txt") + ": 1", "Files: 3", "Lines: 4", ""), run.Output);
         Assert.Equal(2, (await sdk.Run(project, executable)).ExitCode);
+        var emptyPath = await sdk.Run(project, executable, "");
+        Assert.Equal(2, emptyPath.ExitCode);
+        Assert.NotEmpty(emptyPath.Output);
+        Assert.Empty(emptyPath.Error);
         Assert.Equal(1, (await sdk.Run(project, executable, project.File("missing"))).ExitCode);
         if (OperatingSystem.IsWindows())
         {

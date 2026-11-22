@@ -6,7 +6,113 @@ uses
   Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Gui.Frames as Frames,
   Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  Fpas.Ui.Widgets.Desktop.Dockspaces as Dock, Fpas.Ui.Widgets.Overlays.Dialogs as Dialog,
+  Fpas.Ui.Widgets.Actions.Buttons as Buttons,
   System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
+
+procedure DockedModal(Renderer: Cui.CuiRenderer);
+  function View(Model: bool; Size: L.Viewport): E.Element<bool>;
+  begin
+    Builds := Builds + 1;
+    return E.Column<bool>(
+      new L.Flow(),
+      Buttons.Button<bool>('outside', 'Outside', true),
+      Dock.Dockspace<bool>(
+        'dock', [
+          new Dock.Panel<bool>(
+            'panel', 'Panel',
+            Dialog.Dialog<bool>(
+              'dialog',
+              E.Text<bool>('Base'),
+              Buttons.Button<bool>('inside', 'Inside', true),
+              true,
+              new Dialog.Options('Dialog'),
+              false
+            )
+          )
+        ], new Dock.Options(
+          Height := L.Extent.Fixed(L.Measure.Logical(190)), InitialLayout := 'dock1 [*panel]'
+        )
+      )
+    );
+  end function;
+  async function Guard(): Tasks.Task;
+  begin
+    await Tasks.Task.Delay(3000, Cancellation.Token).ConfigureAwait(false);
+    Threads.Volatile.Write(ref TimedOut[0], true);
+    discard Window.TryWake();
+  end function;
+begin
+  var Builds: int := 0;
+  const TimedOut: array of bool := [false];
+  using const Cancellation: Threads.CancellationTokenSource := new Threads.CancellationTokenSource();
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'Docked modal reconciliation',
+    420,
+    300,
+    Renderer
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<bool> := Host.Start<bool, bool>(
+    true,
+    function(Model: bool; Message: bool): Mvu.Transition<bool, bool> => new Mvu.Transition<bool, bool>(
+      Model,
+      []
+    ),
+    View,
+    Window,
+    16
+  );
+  const Watchdog: Tasks.Task := Guard();
+  try
+    var Visible: bool := false;
+    for Attempt: int := 1 to 8 do
+      if not Session.Step() or Threads.Volatile.Read(in TimedOut[0]) then
+        break;
+      end if;
+
+      for Control: Gui.Control in Session.Snapshot().Controls do
+        if Control.Id = 'dock/panel' and Control.Value = 'True' then
+          Visible := true;
+        end if;
+      end for;
+
+      if Visible then
+        break;
+      end if;
+    end for;
+
+    if not Visible then
+      raise new Sys.InvalidOperationException('The initial dock panel did not become visible.');
+    end if;
+
+    const Before: int := Builds;
+    if not Session.Step() or Threads.Volatile.Read(in TimedOut[0]) then
+      raise new Sys.InvalidOperationException('Dock visibility did not wake modal reconciliation.');
+    end if;
+    var Inside: bool := false;
+    var Outside: bool := true;
+    for Control: Gui.Control in Session.Snapshot().Controls do
+      if Control.Id = 'inside' then
+        Inside := Control.Enabled;
+      elsif Control.Id = 'outside' then
+        Outside := Control.Enabled;
+      end if;
+    end for;
+
+    if not Inside or Outside or Builds <> Before then
+      raise new Sys.InvalidOperationException(
+        'Docked modal input did not reconcile on the cached view.'
+      );
+    end if;
+  finally
+    Cancellation.Cancel();
+    try
+      Watchdog.GetAwaiter().GetResult();
+    catch Cancelled: Sys.OperationCanceledException do
+    end try;
+  end try;
+end procedure;
 
 // Checks that a queued MVU deadline survives frame construction and then permits idle waiting.
 // ## Parameters
@@ -31,6 +137,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer);
     discard Window.TryWake();
   end function;
 begin
+  DockedModal(Renderer);
   var Builds: int := 0;
   const TimedOut: array of bool := [false];
   using const Cancellation: Threads.CancellationTokenSource := new Threads.CancellationTokenSource();

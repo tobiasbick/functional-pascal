@@ -43,8 +43,12 @@ begin
   );
   const OS: string := if Sys.OperatingSystem.IsWindows() then
     'windows'
-  else
+  elsif Sys.OperatingSystem.IsMacOS() then
+    'macos'
+  elsif Sys.OperatingSystem.IsLinux() then
     'linux'
+  else
+    'other'
   end if;
   const Tiering: string := Sys.Environment.GetEnvironmentVariable(
     'DOTNET_TieredCompilation'

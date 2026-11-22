@@ -32,8 +32,10 @@ sources and invokes the direct CIL compiler. Follow
    toolchain, package its matching SDK before restoring the consumer. When
    repacking the same version, evict it from the target NuGet cache before
    restoring. Use isolated caches for concurrent tests.
-2. Set net10.0, AnyCPU, and OutputType Exe or Library. Executables contain exactly
-   one program plus optional units; libraries contain units without a program.
+2. Set net10.0 and AnyCPU. Use `Exe` for an executable, `WinExe` for a desktop
+   executable that opens without a console on Windows, or `Library` for a library.
+   Executables contain exactly one program plus optional units. Libraries
+   contain units without a program.
    Each source header defines its identity, independent of filename/order.
 3. Use the recursive `.fpas` Compile items or refine them with Include/Remove.
    Disable EnableDefaultFpasCompileItems when selecting all sources explicitly.

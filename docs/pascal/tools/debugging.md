@@ -83,7 +83,9 @@ controller can instead supply its own current-user pipe named
 `fpas-terminal-<32 hex digits>` through `fpasTerminal.pipe`. On that pipe,
 terminal messages use four-byte big-endian lengths and UTF-8 JSON. The worker
 emits `output` events with base64 payloads and replies to `resize` and `input`
-requests.
+requests. While the controller reads slowly, the worker waits for the pipe to
+accept more output. After target exit, the worker allows up to five seconds to
+drain the remaining terminal output.
 
 ## Passive values and expressions
 
@@ -157,3 +159,5 @@ by those tools; the passive policy above belongs to the FPAS debugger.
   - [TuiControlConnection.cs](../../../src/Fpas.Processes/Terminal/TuiControlConnection.cs)
   - [WindowsTerminal.Native.cs](../../../src/Fpas.Processes/Terminal/WindowsTerminal.Native.cs)
   - [WindowsTerminal.cs](../../../src/Fpas.Processes/Terminal/WindowsTerminal.cs)
+- `tests/Fpas.IntegrationTests/Debugging/`
+  - [TerminalOutputTests.cs](../../../tests/Fpas.IntegrationTests/Debugging/TerminalOutputTests.cs)

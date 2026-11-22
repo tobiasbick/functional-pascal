@@ -64,6 +64,12 @@ begin
     Console.WriteLine(Paths.Count);
     Console.Write('Lines: ');
     Console.WriteLine(Total);
+  catch Failure: Sys.ArgumentException do
+    Console.WriteLine(Failure.Message);
+    Sys.Environment.ExitCode := 2;
+  catch Failure: Sys.NotSupportedException do
+    Console.WriteLine(Failure.Message);
+    Sys.Environment.ExitCode := 2;
   catch Failure: IO.IOException do
     Console.WriteLine(Failure.Message);
     Sys.Environment.ExitCode := 1;

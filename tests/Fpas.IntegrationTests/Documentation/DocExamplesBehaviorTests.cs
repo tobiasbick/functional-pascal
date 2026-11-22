@@ -95,6 +95,18 @@ public sealed class DocExamplesBehaviorTests(DocExamplesFixture checker)
     }
 
     [Fact]
+    public async Task Project_companion_filename_uses_the_expanded_fragment_header()
+    {
+        using var root = new TemporaryDirectory(); Prepare(root);
+        File.WriteAllText(root.File("project.md"),
+            Fence("pascal project=demo file=main.fpas", "program Main; uses Values as V; begin discard V.Answer; end; end program;") +
+            Fence("pascal project=demo fragment context=values", "public const Answer: int := 42;"));
+        var result = await checker.Run(root.Path, "--document", "project.md", "--output", root.File("output"), "--json");
+        Assert.True(result.ExitCode == 0, result.Output + result.Error);
+        Assert.True(File.Exists(root.File("output/example-1/Values.fpas")));
+    }
+
+    [Fact]
     public async Task Existing_output_directories_are_refused_without_touching_their_contents()
     {
         using var root = new TemporaryDirectory(); Prepare(root);
@@ -220,6 +232,7 @@ public sealed class DocExamplesBehaviorTests(DocExamplesFixture checker)
         }
         const string header = "program Example;\nuses System as Sys;\n";
         Write("body", header + "begin\n// @example\nend; end program;\n");
+        Write("values", "unit Values;\n// @example\nend unit;\n");
         Write("broken", header + "const Broken: int := 'wrong';\nbegin\n// @example\nend; end program;\n");
         Write("slots", header + "begin\n// @example\n// @example\nend; end program;\n");
         Write("included", header + "// @include definitions.md#value\nbegin\n// @example\nend; end program;\n");

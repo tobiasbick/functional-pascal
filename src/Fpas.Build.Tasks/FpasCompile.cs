@@ -91,6 +91,7 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
             var output = Path.GetFullPath(OutputAssembly);
             var cache = Path.GetFullPath(CacheFile);
             var symbols = DebugType == "portable" ? Path.ChangeExtension(output, ".pdb") : null;
+            var runtimeConfig = OutputType == "Library" ? null : Path.ChangeExtension(output, ".runtimeconfig.json");
             var documents = string.IsNullOrEmpty(DocumentationFile) ? [] : DocumentationOutputs.Paths(DocumentationFile, DocumentationDestination, DocumentationOutput);
             if (documents.Any(path => !Path.GetExtension(path).Equals(".xml", StringComparison.OrdinalIgnoreCase)))
             {
@@ -112,8 +113,7 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
                 CompileFingerprint.Options(OutputType, Configuration, TargetFramework, output, DebugType, Optimize, documents,
                     TreatWarningsAsErrors, WarningsAsErrors, WarningsNotAsErrors, NoWarn) + SigningInputs.Identity(SigningKey, PublicSign, DelaySign),
                     CompilerAssemblyPath, resources, windowsResources);
-            if (previous?.IsCurrent(fingerprint, output, symbols, documents) == true &&
-                (OutputType == "Library" || File.Exists(Path.ChangeExtension(output, ".runtimeconfig.json"))))
+            if (previous?.IsCurrent(fingerprint, output, symbols, runtimeConfig, documents) == true)
             {
                 foreach (var diagnostic in previous.Diagnostics ?? []) ReportDiagnostic(diagnostic);
                 WrittenDocumentation = documents.Select(path => (ITaskItem)new Microsoft.Build.Utilities.TaskItem(path)).ToArray();
@@ -148,14 +148,15 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
             Log.LogMessage(MessageImportance.High, "FPAS: compiling {0} source file(s)", sources.Length);
             if (!RunCompiler(response))
                 return false;
-            if (!File.Exists(output) || symbols is not null && !File.Exists(symbols) || documents.Length != 0 && !File.Exists(documents[0]))
+            if (!File.Exists(output) || symbols is not null && !File.Exists(symbols) || runtimeConfig is not null && !File.Exists(runtimeConfig) ||
+                documents.Length != 0 && !File.Exists(documents[0]))
             {
                 Error("FP5003", "The compiler did not produce the requested assembly.");
                 return false;
             }
             DocumentationOutputs.Publish(documents, previous?.DocumentationFiles ?? []);
             WrittenDocumentation = documents.Select(path => (ITaskItem)new Microsoft.Build.Utilities.TaskItem(path)).ToArray();
-            CompileFingerprint.Save(cache, fingerprint, output, symbols, documents, compilerDiagnostics.ToArray());
+            CompileFingerprint.Save(cache, fingerprint, output, symbols, runtimeConfig, documents, compilerDiagnostics.ToArray());
             return true;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException or System.ComponentModel.Win32Exception)

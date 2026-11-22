@@ -184,8 +184,9 @@ begin
       and Item.Project.Length > 0 and Companion.Id <> Item.Id
     then
       var FileName: string := Companion.FileName;
+      const Expanded: M.Source := Wrap(Companion, Options, '', false);
       if FileName.Length = 0 and Companion.Language = 'pascal' then
-        const OtherHeader: R.Match := Header(Companion.Source);
+        const OtherHeader: R.Match := Header(Expanded.Text);
         if OtherHeader.Success then
           FileName := HeaderName(OtherHeader) + '.fpas';
         end if;
@@ -199,11 +200,8 @@ begin
         raise new IO.InvalidDataException('Duplicate project output file ' + FileName);
       end if;
 
-      const Other: M.Source := Wrap(
-        Companion,
-        Options,
-        IO.Path.Combine(Directory, FileName),
-        false
+      const Other: M.Source := new M.Source(
+        IO.Path.Combine(Directory, FileName), Expanded.Text, Expanded.Lines
       );
       if Companion.Language = 'pascal' then
         const OtherHeader: R.Match := Header(Other.Text);

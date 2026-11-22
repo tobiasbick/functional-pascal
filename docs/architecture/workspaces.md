@@ -35,7 +35,8 @@ WorkspaceLoader.LoadAsync accepts ContextOptions for an existing `.fpasproj` or
 `.slnx`, configuration and preparation policy. SolutionPersistence reads solution
 structure, build inclusion and configuration mappings. Owned dotnet/MSBuild
 processes evaluate project references, imported settings and actual compiler
-inputs. The supported FPAS baseline is net10.0/AnyCPU with Exe or Library output.
+inputs. The supported FPAS baseline is net10.0/AnyCPU with `Exe`, `WinExe`, or
+`Library` output.
 Foreign C#/F# edges may lead to other checked FPAS projects and supply metadata.
 
 The SDK exports a versioned typed JSON manifest through caller-owned scratch

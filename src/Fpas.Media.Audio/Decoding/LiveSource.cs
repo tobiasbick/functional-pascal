@@ -13,6 +13,7 @@ internal sealed class LiveSource : IPlaybackSource
     private const int Block = 2048;
     private readonly Process process;
     private readonly CancellationTokenSource stop;
+    private readonly CancellationTokenRegistration processStop;
     private readonly Channel<float[]> samples = Channel.CreateBounded<float[]>(12);
     private readonly Task reader;
     private float[]? current;
@@ -45,18 +46,15 @@ internal sealed class LiveSource : IPlaybackSource
         {
             stop.Token.ThrowIfCancellationRequested();
             process.ErrorDataReceived += ReceiveMetadata;
-            process.Start();
+            try { process.Start(); }
+            catch (System.ComponentModel.Win32Exception error) { throw new IOException("Radio requires FFmpeg on PATH.", error); }
+            processStop = stop.Token.Register(StopProcess);
             process.BeginErrorReadLine();
             reader = PumpAsync(stop.Token);
         }
-        catch (System.ComponentModel.Win32Exception error)
-        {
-            process.Dispose();
-            stop.Dispose();
-            throw new IOException("Radio requires FFmpeg on PATH.", error);
-        }
         catch
         {
+            processStop.Dispose();
             StopProcess();
             process.Dispose();
             stop.Dispose();
@@ -134,12 +132,13 @@ internal sealed class LiveSource : IPlaybackSource
     {
         try { if (!process.HasExited) process.Kill(); }
         catch (InvalidOperationException) { }
+        catch (System.ComponentModel.Win32Exception) when (process.HasExited) { }
     }
 
     public void Dispose()
     {
         stop.Cancel();
-        StopProcess();
+        processStop.Dispose();
         reader.GetAwaiter().GetResult();
         process.Dispose();
         stop.Dispose();

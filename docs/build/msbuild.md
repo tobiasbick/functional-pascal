@@ -278,7 +278,8 @@ copies. Project/configuration/framework intermediates remain independent.
 The compiler fingerprint hashes selected source/reference paths and contents,
 neutral resource names and their source and compiled contents,
 compiler/task assets, runtime version, and relevant build/documentation/warning
-options. Missing or altered requested assemblies, symbols, or documentation
+options. Missing or altered requested assemblies, symbols, compiler-generated
+intermediate executable runtime configurations, or documentation
 invalidate the fingerprint. Cached documentation warnings are reported on
 unchanged builds; suppressing recompilation must not hide those diagnostics.
 

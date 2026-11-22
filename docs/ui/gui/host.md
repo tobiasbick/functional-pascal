@@ -139,6 +139,10 @@ return focus to the last control focused before it opened. If that control
 is unavailable, focus goes to the first enabled control in the presented
 scope, when available. Native CUI supplies rendering and interaction.
 The host maps proposals to messages without applying application updates itself.
+Dock panel visibility is learned during presentation. When it changes which
+modal is active, the host requests another frame to reconcile input and focus.
+The first frame uses the previously observed panel visibility. Place a modal
+outside the dockspace when it must block all other controls immediately.
 
 Prepare validates the active view before drawing. GUI distances use logical
 units; terminal-specific elements and cell distances are rejected. View records,

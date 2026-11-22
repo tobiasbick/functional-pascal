@@ -26,8 +26,9 @@ model remain authoritative until an update supplies new values.
 
 Keep interactive control IDs, modal IDs and cached subview IDs nonempty,
 unique throughout the view, and stable between frames. Treat strings as
-case-sensitive. Sidebar, dropdown and split-menu keys are unique within their own group.
-An item key can repeat in another group. Keep view records,
+case-sensitive. Sidebar keys are unique across all sections of the sidebar.
+Dropdown and split-menu keys are unique within their menu. A key can repeat
+in a separate sidebar or menu. Keep view records,
 arrays and callbacks unchanged for as long as the host retains
 them. Replace changed data on a subsequent view.
 

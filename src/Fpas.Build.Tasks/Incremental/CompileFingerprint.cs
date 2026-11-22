@@ -16,7 +16,7 @@ internal sealed record ResourceInput(string Name, string Path, string SourcePath
 }
 
 internal sealed record CompileFingerprint(string Inputs, string AssemblyHash, string? PdbHash = null, string? XmlHash = null,
-    string[]? DocumentationFiles = null, JsonElement[]? Diagnostics = null)
+    string[]? DocumentationFiles = null, JsonElement[]? Diagnostics = null, string? RuntimeConfigHash = null)
 {
     internal static string Options(string target, string configuration, string framework, string output, string debug, bool optimize,
         IReadOnlyList<string> documents, bool warningsAsErrors, string promoted, string excluded, string suppressed)
@@ -74,18 +74,19 @@ internal sealed record CompileFingerprint(string Inputs, string AssemblyHash, st
         catch (JsonException) { return null; }
     }
 
-    internal bool IsCurrent(string inputs, string assembly, string? symbols, IReadOnlyList<string> documents)
+    internal bool IsCurrent(string inputs, string assembly, string? symbols, string? runtimeConfig, IReadOnlyList<string> documents)
         => Inputs == inputs && File.Exists(assembly) && AssemblyHash == HashAssembly(assembly) &&
             (symbols is null ? !File.Exists(Path.ChangeExtension(assembly, ".pdb")) : File.Exists(symbols) && PdbHash == HashAssembly(symbols)) &&
+            (runtimeConfig is null || File.Exists(runtimeConfig) && RuntimeConfigHash == HashAssembly(runtimeConfig)) &&
             (documents.Count == 0 ? DocumentationFiles is not { Length: > 0 } : documents.All(path => File.Exists(path) && XmlHash == HashAssembly(path)));
 
-    internal static void Save(string cache, string inputs, string assembly, string? symbols, string[] documents, JsonElement[] diagnostics)
+    internal static void Save(string cache, string inputs, string assembly, string? symbols, string? runtimeConfig, string[] documents, JsonElement[] diagnostics)
     {
         var temporary = cache + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
         {
             File.WriteAllText(temporary, JsonSerializer.Serialize(new CompileFingerprint(inputs, HashAssembly(assembly), symbols is null ? null : HashAssembly(symbols),
-                documents.Length == 0 ? null : HashAssembly(documents[0]), documents, diagnostics)));
+                documents.Length == 0 ? null : HashAssembly(documents[0]), documents, diagnostics, runtimeConfig is null ? null : HashAssembly(runtimeConfig))));
             File.Move(temporary, cache, overwrite: true);
         }
         finally { File.Delete(temporary); }

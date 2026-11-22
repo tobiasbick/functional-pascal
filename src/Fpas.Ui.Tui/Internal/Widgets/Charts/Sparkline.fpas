@@ -14,27 +14,23 @@ uses
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Values`: Finite samples in display order.
-// - `Settings`: Shared width, height and color.
+// - `Settings`: Shared width and color.
 // - `Theme`: Active terminal palette.
 // ## Returns
-// A plot measured in columns and rows.
+// A plot on one terminal row.
 public function Lower<TMsg>(Values: array of float; Settings: Chart.Options; Theme: Th.Theme): E.Element<TMsg>;
 begin
   const Width: int := case Settings.Width of
     when L.Extent.Fixed(const Distance: L.Measure): F.Cells(Distance);
     else Sys.Math.Clamp(Values.Length, 1, E.MaximumColumns);
   end case;
-  const Rows: int := Sys.Math.Max(
-    1,
-    cast<int>(Sys.Math.Min(300.0, Sys.Math.Ceiling(cast<double>(Settings.Height) / 16.0)))
-  );
   return E.Element<TMsg>.Sparkline(
-    Values, Width, Rows, Settings.Width = L.Extent.Fill,
+    Values, Width, Settings.Width = L.Extent.Fill,
     Th.ChartColor(Theme, Settings.Color, Theme.Colors.Series1)
   );
 end function;
 
-// Draws a relative plot with eight vertical levels per row.
+// Draws a relative plot with eight levels on one row.
 // ## Parameters
 // - `Operations`: Frame paint operations.
 // - `Area`: Plot bounds, before clipping.
@@ -61,9 +57,9 @@ begin
   const Range: double := cast<double>(Maximum) - cast<double>(Minimum);
   const Back: int := Style.Background ?? Theme.Text.Background ?? 0;
   const Color: T.Style := new T.Style(Th.Rgb(Ink, Back), Back);
-  const Levels: string := ' ▁▂▃▄▅▆▇█';
+  const Levels: string := '▁▂▃▄▅▆▇█';
   const Last: int := Values.Length - 1;
-  const Heights: array of int := new int[Clip.Width];
+  const Line: array of char := new char[Clip.Width];
   for Column: int := 0 to Clip.Width - 1 do
     const X: int := Clip.X + Column - Area.X;
     const Position: double := if Area.Width = 1 then
@@ -80,22 +76,14 @@ begin
     else
       (Value - Minimum) / Range
     end if;
-    Heights[Column] := 1 + cast<int>(Sys.Math.Round(
-      Fraction * cast<double>(Area.Height * 8 - 1), Sys.MidpointRounding.AwayFromZero
-    ));
+    Line[Column] := Levels[
+      cast<int>(Sys.Math.Round(
+        Fraction * 7.0, Sys.MidpointRounding.AwayFromZero
+      ))
+    ];
   end for;
 
-  for Row: int := Clip.Y to Clip.Y + Clip.Height - 1 do
-    const Below: int := (Area.Y + Area.Height - Row - 1) * 8;
-    const Line: array of char := new char[Clip.Width];
-    for Column: int := 0 to Clip.Width - 1 do
-      Line[Column] := Levels[Sys.Math.Clamp(Heights[Column] - Below, 0, 8)];
-    end for;
-
-    Operations.Add(
-      new D.Operation(new string(Line), new F.Rect(Clip.X, Row, Clip.Width, 1), Clip, Color, false)
-    );
-  end for;
+  Operations.Add(new D.Operation(new string(Line), Clip, Clip, Color, false));
 end procedure;
 
 end unit;

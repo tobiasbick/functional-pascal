@@ -226,7 +226,7 @@ begin
         'sheet',
         Base,
         E.Column<TMsg>(
-          Flow,
+          new L.Flow(Padding := L.Spacing.Normal, Gap := L.Spacing.Tight),
           Switches.View<TMsg>(
             Switches.Comments,
             Model.Newsletter,
@@ -243,12 +243,10 @@ begin
             function(Value: bool): TMsg => Lift(Msg.SetBluetooth(Value))
           ),
           E.Styled<TMsg>(E.Text<TMsg>(Strings.Get('Text.Recent')), S.Role.Heading),
-          E.Text<TMsg>(Strings.Get('Text.RecentComment')),
-          E.Text<TMsg>(Strings.Get('Text.MinutesAgo')),
+          E.Text<TMsg>(Strings.Get('Text.RecentComment') + ' · ' + Strings.Get('Text.MinutesAgo')),
           E.Text<TMsg>(
-            Strings.Get('Text.RecentInvitation')
-          ),
-          E.Text<TMsg>(Strings.Get('Text.HourAgo'))
+            Strings.Get('Text.RecentInvitation') + ' · ' + Strings.Get('Text.HourAgo')
+          )
         ),
         true,
         new Sheets.Options(

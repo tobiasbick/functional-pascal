@@ -236,8 +236,10 @@ public type Session = record implements Sys.IDisposable
     const Port: Playback.Connection := new Playback.Connection(Device);
     discard Port.Requests.Writer.TryWrite(PlayerModel.Request.Mixer(Settings.Mixer));
     const Player: PlayerModel.State := Restored ?? new PlayerModel.State();
+    const InitialNavigation: Nav.State := Navigation ?? new Nav.State();
     const Initial: M.State := new M.State(
-      new SettingsModel.State(Settings), Navigation := Navigation ?? new Nav.State(),
+      new SettingsModel.State(Settings), Navigation := InitialNavigation,
+      Albums := new AlbumModel.State(Offsets := InitialNavigation.CoverScroll),
       Player := Player with
         Playing := false;
         NeedsOpen := PlayerModel.Track(Player) <> null;
@@ -299,7 +301,7 @@ public type Session = record implements Sys.IDisposable
           const Id: string := if Music then
             'music-tracks'
           else
-            AlbumView.GridId
+            AlbumView.GridId(Last.Albums)
           end if;
           var Seen: bool := false;
           for Control: Gui.Control in Frame.Controls do
@@ -372,7 +374,9 @@ begin
   end while;
 
   const Last: M.State := Running.State();
-  Navigation := Last.Navigation;
+  Navigation := Last.Navigation with
+    CoverScroll := Last.Albums.Offsets;
+  end with;
   Player := Last.Player;
   if Updates.SaveMixer(Last, Save).SaveFailed then
     Sys.Console.Error.WriteLine('Could not save the final mixer settings.');

@@ -1,6 +1,6 @@
 # Toggle group
 
-Group independent flags such as text formatting or exclusive choices such as alignment. See also the [terminal toggle group](../../tui/actions/toggle-group.md).
+Group independent flags such as text formatting or exclusive choices such as alignment.
 
 ![Toggle group in the FPAS gallery](images/toggle-group.png)
 

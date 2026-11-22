@@ -6,9 +6,25 @@ namespace Fpas.IntegrationTests.Tui;
 
 public sealed partial class TuiGalleryTests
 {
-    private static async Task CheckChoiceGroups(TuiGallerySession session)
+    private static async Task CheckKeyboardPreview(TuiGallerySession session)
     {
-        await session.Click("Board");
+        await session.Key("Down");
+        await session.Key("Enter");
+        Assert.Equal("Buttons", Selected(await session.Request("snapshot")));
+        await session.Key("F6");
+        var top = await session.Request("snapshot");
+        Assert.True(Control(top, "preview-Buttons").GetProperty("focused").GetBoolean());
+        Assert.DoesNotContain("Segmented control", Preview(top));
+        await session.Key("End");
+        var bottom = await session.Request("snapshot");
+        Assert.True(Control(bottom, "preview-Buttons").GetProperty("focused").GetBoolean());
+        Assert.Contains("Segmented control", Preview(bottom));
+
+        await session.Key("Tab");
+        for (int step = 0; step < 30 && Focused(await session.Request("snapshot")) != "List"; step++)
+            await session.Key("Tab");
+        Assert.Equal("List", Focused(await session.Request("snapshot")));
+        await session.Key("Right");
         AssertChoice(await session.Request("snapshot"), "view/1", true);
         await session.Key("Right");
         var timeline = await session.Request("snapshot");
@@ -22,38 +38,9 @@ public sealed partial class TuiGalleryTests
         await session.Key("End");
         AssertChoice(await session.Request("snapshot"), "range/3", true);
 
-        await session.Click("Actions");
-        await session.Key("Right");
-        Assert.Equal("Bold", Focused(await session.Request("snapshot")));
-        await session.Key("Right");
-        var italic = await session.Request("snapshot");
-        Assert.Equal("Italic", Focused(italic));
-        AssertChoice(italic, "action-format/1", false);
-        await session.Turn(new() { ["kind"] = "character", ["text"] = " " });
-        var combined = await session.Request("snapshot");
-        AssertChoice(combined, "action-format/0", true);
-        AssertChoice(combined, "action-format/1", true);
-        await session.Click("Bold");
-        AssertChoice(await session.Request("snapshot"), "action-format/0", false);
-        await session.Key("Tab");
-        await session.Key("Right");
-        var center = await session.Request("snapshot");
-        Assert.Equal("Center", Focused(center));
-        AssertChoice(center, "action-align/0", true);
-        AssertChoice(center, "action-align/1", false);
+        await session.Key("Escape");
+        await session.Key("Home");
         await session.Key("Enter");
-        var aligned = await session.Request("snapshot");
-        AssertChoice(aligned, "action-align/0", false);
-        AssertChoice(aligned, "action-align/1", true);
-
-        await session.Resize(40, 17);
-        await session.Turn(new() { ["kind"] = "key", ["key"] = "Tab", ["modifiers"] = 1 });
-        await session.Key("End");
-        var narrow = await session.Request("snapshot");
-        Assert.Equal("Code", Focused(narrow));
-        Assert.Contains("Code", Preview(narrow, 13));
-        AssertChoice(narrow, "action-format/3", false);
-        await session.Resize(144, 36);
     }
 
     private static void AssertChoice(JsonElement frame, string id, bool selected) =>

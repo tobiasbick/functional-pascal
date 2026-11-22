@@ -1,13 +1,12 @@
 # Spinner
 
-The **Components → Feedback** page shows the CUI sizes, activity styles, and
-the inline examples **Saving…**, **Syncing 24 files**, and **Connecting**.
+The **Components → Feedback** page pairs a spinner with **Syncing 24 files**.
 
 Use `Spinners.Spinner` while work is in progress and the amount remaining is
-unknown. The terminal rounds the logical diameter to columns and rows. Each
-style has a sequence of terminal glyphs. `Color` and `Track` use the shared
-chart palette or explicit colors, and `Inverse` changes the background and
-default ink.
+unknown. Pair it with a short activity label. The terminal uses one cell and
+chooses its glyph sequence from the style. `Color` sets the ink and `Inverse`
+changes the background and default ink. The graphical host uses the diameter
+and track color.
 
 Visible spinners advance automatically in an interactive session, including
 while the application waits for input. Headless frames and themes with

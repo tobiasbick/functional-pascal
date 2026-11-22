@@ -6,7 +6,6 @@ uses
   Fpas.Ui.Widgets.Feedback.Spinners as Spinners, Fpas.Ui.Tui.Internal.Widgets.Feedback.Spinner as Spinner,
   Fpas.Ui.Widgets.Charts.Sparklines as Sparklines, Fpas.Ui.Tui.Internal.Widgets.Charts.Sparkline as Sparkline,
   Fpas.Ui.Widgets.Actions.SegmentedControls as Segmented, Fpas.Ui.Tui.Internal.Widgets.Actions.SegmentedControl as Segments,
-  Fpas.Ui.Widgets.Actions.ToggleGroups as ToggleGroups, Fpas.Ui.Tui.Internal.Widgets.Actions.ToggleGroup as ToggleGroup,
   Fpas.Ui.Widgets.Inputs.SearchFields as SearchFields, Fpas.Ui.Tui.Internal.Widgets.Inputs.SearchField as Search,
   Fpas.Ui.Widgets.Inputs.NumberFields as NumberFields, Fpas.Ui.Tui.Internal.Widgets.Inputs.NumberField as Number,
   Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Tui.Internal.Widgets.Feedback.Alert as Alert,
@@ -111,8 +110,8 @@ public function Prepare<TMsg>(
         return TreeRows.Lower<TMsg>(Node);
       when Ui.Element.ProgressBar(_, const Fraction: float, const Settings: ProgressBars.Options):
         return Progress.Lower<TMsg>(Fraction, Settings, Theme);
-      when Ui.Element.Spinner(_, const Diameter: float, const Settings: Spinners.Options?):
-        return Spinner.Lower<TMsg>(Diameter, Settings, Theme);
+      when Ui.Element.Spinner(_, _, const Settings: Spinners.Options?):
+        return Spinner.Lower<TMsg>(Settings, Theme);
       when Ui.Element.Sparkline(
         _,
         const Values: array of float,
@@ -188,11 +187,6 @@ public function Prepare<TMsg>(
         const Change: function(int): TMsg, const Settings: Segmented.Options
       ):
         return Segments.Lower<TMsg>(Id, Items, Selected, Change, Settings);
-      when Ui.Element.Toggles(
-        const Id: string, const Items: array of ToggleGroups.Item, const Selected: array of bool,
-        const Change: function(array of bool): TMsg, const Settings: ToggleGroups.Options
-      ):
-        return ToggleGroup.Lower<TMsg>(Id, Items, Selected, Change, Settings);
       when Ui.Element.PaginationAction(
         const Id: string, const Page: int, const Count: int,
         const Change: function(int): TMsg, const Enabled: bool

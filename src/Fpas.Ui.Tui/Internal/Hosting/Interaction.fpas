@@ -417,7 +417,7 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
         end if;
         const Next: string? := case Control.Role of
           when 'radio': Radios.Move<TMsg>(A.Activatable<TMsg>(Control.Action), Key, Apply);
-          when 'tab', 'segment', 'toggle-group-item': ChoiceStrip.Move<TMsg>(
+          when 'tab', 'segment': ChoiceStrip.Move<TMsg>(
             A.Activatable<TMsg>(Control.Action),
             Key,
             Apply

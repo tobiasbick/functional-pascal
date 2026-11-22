@@ -2,7 +2,7 @@
 
 program HeadlessContract;
 
-uses Fpas.Ui.Widgets.Navigation.Navigation as Nav, Fpas.Ui.Widgets.Actions.Buttons as UiButtons, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as Validation, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Graphics as G, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Widgets.Theming.Themes as TerminalThemes, System as Sys, System.Console as Console, Fpas.Ui.Tui.Internal.Rendering.Presentation as P, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System.IO as IO, System.Threading as Threads, System.Threading.Tasks as Tasks, Fpas.Ui.Tui.Internal.View.Lowering as Lower;
+uses Fpas.Ui.Widgets.Navigation.Navigation as Nav, Fpas.Ui.Widgets.Actions.Buttons as UiButtons, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as Validation, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Graphics as G, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Widgets.Theming.Themes as TerminalThemes, System as Sys, System.Console as Console, Fpas.Ui.Tui.Internal.Rendering.Presentation as P, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System.IO as IO, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 type Msg = variant
   Start;
@@ -347,8 +347,8 @@ begin
     new L.Flex(Minimum := L.Measure.Cells(2), Maximum := L.Measure.Cells(6), Grow := 1),
     new L.Flex(Minimum := L.Measure.Cells(3), Maximum := L.Measure.Cells(9), Grow := 1)
   ];
-  const Grown: array of int := F.Allocate([4, 4], [Lower.Flex(Rules[0]), Lower.Flex(Rules[1])], 11);
-  const Shrunk: array of int := F.Allocate([4, 4], [Lower.Flex(Rules[0]), Lower.Flex(Rules[1])], 4);
+  const Grown: array of int := F.Allocate([4, 4], [F.Flex(Rules[0]), F.Flex(Rules[1])], 11);
+  const Shrunk: array of int := F.Allocate([4, 4], [F.Flex(Rules[0]), F.Flex(Rules[1])], 4);
   if Grown[0] <> 6 or Grown[1] <> 5 or Shrunk[0] <> 2 or Shrunk[1] <> 3 then
     raise new Sys.InvalidOperationException('Unexpected bounded cell allocation.');
   end if;

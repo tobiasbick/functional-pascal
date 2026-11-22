@@ -3,10 +3,11 @@
 unit TuiGallery.PeopleSample;
 
 uses
-  Gallery.Shared.PeopleTable as People, Fpas.Ui.Widgets.Collections.Tables as T,
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys, System.Collections.Generic as C;
+  Gallery.Shared.PeopleTable as People, Gallery.Shared.Strings as Strings,
+  Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
+  System.Collections.Generic as C;
 
-// Displays the GUI gallery's people using terminal text cells.
+// Displays compact columns and the selected person's details.
 // ## Type parameters
 // - `TMsg`: Gallery message type.
 // ## Parameters
@@ -16,31 +17,48 @@ uses
 // - `SelectPerson`: Maps a row activation.
 // - `Height`: Visible terminal rows including the header.
 // ## Returns
-// The Data display table.
+// The Data display table and details.
 public function View<TMsg>(
   Order: T.Sort; Selected: string; SortBy: function(T.Sort): TMsg;
   SelectPerson: function(string): TMsg; Height: int
 ): E.Element<TMsg>;
 begin
   const Rows: C.List<T.Row<TMsg>> := new C.List<T.Row<TMsg>>();
-  for Item: People.Person in People.Ordered(Order) do
+  const Columns: array of T.Column := People.Columns(
+    L.Extent.Content,
+    L.Extent.Content,
+    L.Extent.Content
+  );
+  const SharedSortColumn: int := case Order.Column of
+    when 1: 2;
+    when 2: 3;
+    else Order.Column;
+  end case;
+  var Details: string := '';
+  for Item: People.Person in People.Ordered(
+    new T.Sort(SharedSortColumn, Order.Descending)
+  ) do
+    if Item.Id = Selected then
+      Details := Item.Email + '  ·  ' + Strings.Get('Text.TableRevenue') + ' ' + Item.Revenue;
+    end if;
+
     Rows.Add(
       new T.Row<TMsg>(
         Item.Id, [
           T.Cell<TMsg>.Text(Item.Name),
-          T.Cell<TMsg>.Text(Item.Email),
           T.Cell<TMsg>.Text(Item.Role),
-          T.Cell<TMsg>.Text(Item.Status),
-          T.Cell<TMsg>.Text(Item.Revenue)
+          T.Cell<TMsg>.Text(Item.Status)
         ], Item.Id = Selected
       )
     );
   end for;
 
-  return T.Table<TMsg>(
-    'people', People.Columns(L.Extent.Content, L.Extent.Content, L.Extent.Content),
-    Rows.ToArray(), Order, SortBy, SelectPerson,
-    new T.Options(Height := L.Extent.Fixed(L.Measure.Cells(Height)), HorizontalScroll := true)
+  return E.Column<TMsg>(
+    T.Table<TMsg>(
+      'people', [Columns[0], Columns[2], Columns[3]], Rows.ToArray(), Order, SortBy, SelectPerson,
+      new T.Options(Height := L.Extent.Fixed(L.Measure.Cells(Height)), HorizontalScroll := true)
+    ),
+    E.Text<TMsg>(Details)
   );
 end function;
 

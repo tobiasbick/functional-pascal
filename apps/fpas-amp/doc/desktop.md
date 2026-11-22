@@ -24,7 +24,10 @@ available. A window last closed on the retired Ratings page reopens on Music.
 Music, albums and playlists share the track table and details view. Activating
 a track uses the displayed selection and its order for the playback queue.
 Artist and genre navigation scope the shared album browser by group ID. The
-browser keeps grid state when entering a release and restores it when returning.
+browser keeps each cover grid's filters while navigating and records its own
+scroll position in `state.json`. This applies to Albums, Artists, Genres, and
+the albums within each artist or genre. The cover scroll area spans the main
+pane, including both gutters, while the cards line up with the search toolbar.
 The shell reads realized ranges from native layout and posts them to Music or
 the album browser, which schedule cover work for the current range.
 A playlist starts in its stored order and retains repeated tracks. Its table

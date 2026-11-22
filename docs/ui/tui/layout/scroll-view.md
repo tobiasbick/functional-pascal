@@ -27,7 +27,12 @@ end unit;
 
 ## Interaction
 
-The size in this example applies inside a column. The wheel scrolls the viewport beneath the pointer. A sidebar reveals the row reached by keyboard navigation. Use the controlled overload when the model needs to remember the vertical position; keep the scroll ID stable.
+The size in this example applies inside a column. The wheel scrolls the viewport
+beneath the pointer. A sidebar reveals the row reached by keyboard navigation.
+Use the controlled overload to let users page through passive content. Store
+the reported position in the model and keep the scroll ID stable. When it
+overflows, the viewport takes one tab stop and its scrollbar highlights focus.
+Up, Down, Page Up, Page Down, Home and End scroll it while it has focus.
 
 ## See also
 

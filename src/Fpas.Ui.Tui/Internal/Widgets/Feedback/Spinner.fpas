@@ -6,18 +6,17 @@ uses
   Fpas.Ui.Widgets.Feedback.Spinners as Spin, Fpas.Ui.Tui.Internal.View.Tree as E,
   Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Rendering.Drawing as D,
   Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Widgets.Developer.Terminal as T,
-  Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as C;
+  Fpas.Ui.Graphics as G, System.Collections.Generic as C;
 
 // Resolves shared spinner options to a terminal glyph sequence.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
-// - `Size`: Validated diameter in logical points, or zero for the default.
 // - `Settings`: Animation and color options.
 // - `Theme`: Active terminal palette.
 // ## Returns
-// A noninteractive spinner with measured dimensions and resolved colors.
-public function Lower<TMsg>(Size: float; Settings: Spin.Options?; Theme: Th.Theme): E.Element<TMsg>;
+// A single-cell spinner with resolved colors.
+public function Lower<TMsg>(Settings: Spin.Options?; Theme: Th.Theme): E.Element<TMsg>;
 begin
   const Options: Spin.Options := Settings ?? new Spin.Options();
   const Frames: string := case Options.Animation of
@@ -38,11 +37,6 @@ begin
     when Spin.Style.Plasma: '░▒▓▒';
     else '◴◷◶◵';
   end case;
-  const Diameter: double := if Size = 0.0F then
-    20.0
-  else
-    cast<double>(Size)
-  end if;
   const Ink: G.Color := Th.ChartColor(
     Theme, Options.Color, if Options.Inverse then
       Theme.Colors.Background
@@ -50,12 +44,7 @@ begin
       Theme.Colors.Accent
     end if
   );
-  const Track: G.Color := Th.ChartColor(Theme, Options.Track, Theme.Colors.TextMuted);
-  return E.Element<TMsg>.Spinner(
-    cast<int>(Sys.Math.Min(500.0, Sys.Math.Ceiling(Diameter / 8.0))),
-    cast<int>(Sys.Math.Min(300.0, Sys.Math.Ceiling(Diameter / 16.0))),
-    Frames, Ink, Track, Options.Inverse
-  );
+  return E.Element<TMsg>.Spinner(Frames, Ink, Options.Inverse);
 end function;
 
 // Paints one spinner frame in the allocated footprint.
@@ -66,7 +55,6 @@ end function;
 // - `Frames`: Sequence of terminal glyphs.
 // - `Phase`: Current host animation step.
 // - `Ink`: Color of the active glyph.
-// - `Track`: Color of the stationary track.
 // - `Inverse`: Use an inverse surface.
 // - `Style`: Inherited text colors.
 // - `Theme`: Active terminal palette.
@@ -74,34 +62,26 @@ end function;
 // Whether the animated glyph is visible.
 public function Paint(
   Operations: C.List<D.Operation>; Area: F.Rect; Clip: F.Rect; Frames: string; Phase: long;
-  Ink: G.Color; Track: G.Color; Inverse: bool; Style: T.Style; Theme: Th.Theme
+  Ink: G.Color; Inverse: bool; Style: T.Style; Theme: Th.Theme
 ): bool;
 begin
+  if Clip.Width = 0 or Clip.Height = 0 then
+    return false;
+  end if;
+
   const Background: int := Style.Background ?? Theme.Text.Background ?? 0;
   const Back: int := if Inverse then
     Th.Rgb(Theme.Colors.Foreground, Background)
   else
     Background
   end if;
-  if Inverse then
-    D.Fill(Operations, Clip, new T.Style(Background := Back));
-  end if;
-  const X: int := Area.X + (Area.Width - 1) div 2;
-  const Y: int := Area.Y + (Area.Height - 1) div 2;
-  const TrackLine: string := new string(#183, Clip.Width);
-  Operations.Add(
-    new D.Operation(
-      TrackLine, new F.Rect(Clip.X, Y, Clip.Width, 1), Clip,
-      new T.Style(Th.Rgb(Track, Back), Back), false
-    )
-  );
   Operations.Add(
     new D.Operation(
       Frames.Substring(cast<int>(Phase mod Frames.Length), 1),
-      new F.Rect(X, Y, 1, 1), Clip, new T.Style(Th.Rgb(Ink, Back), Back), false
+      Area, Clip, new T.Style(Th.Rgb(Ink, Back), Back), false
     )
   );
-  return Clip.Contains(X, Y);
+  return true;
 end function;
 
 end unit;

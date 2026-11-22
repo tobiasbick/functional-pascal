@@ -362,14 +362,14 @@ procedure ActivityAndPlots();
   begin
     return E.Column<int>(
       Spin.Spinner<int>(
-        'activity', 8.0F,
+        'activity', 40.0F,
         new Spin.Options(Color := Charts.Color.Rgba(new G.Color(255, 0, 0, 255)))
       ),
       Sparks.Sparkline<int>('signed', [-3.0F, -1.0F, 0.0F]),
       Sparks.Sparkline<int>('empty', []),
       Sparks.Sparkline<int>('flat', [2.0F, 2.0F]),
       Sparks.Sparkline<int>(
-        'expanded', [0.0F, 1.0F],
+        'fixed', [0.0F, 1.0F],
         new Sparks.Options(Width := L.Extent.Fixed(L.Measure.Cells(5)), Height := 32.0F)
       )
     );
@@ -386,8 +386,8 @@ begin
   Check(Frame.Lines[2].Trim() = '', 'Empty sparklines stay blank.');
   Check(Frame.Lines[3].StartsWith('▅▅'), 'Constant samples use a common middle level.');
   Check(
-    Frame.Lines[4].StartsWith('  ▁▄█') and Frame.Lines[5].StartsWith('▁▅███'),
-    'An expanded sparkline interpolates across columns and fills from the bottom.'
+    Frame.Lines[4].StartsWith('▁▃▅▆█') and Frame.Lines[5].Trim() = '',
+    'A fixed-width sparkline interpolates across columns and stays on one row.'
   );
   discard Session.Step();
   Check(Session.Snapshot().Id = Frame.Id, 'Manual sessions retain the same spinner frame.');

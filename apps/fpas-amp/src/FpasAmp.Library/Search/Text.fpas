@@ -68,6 +68,61 @@ begin
   return Result.ToArray();
 end function;
 
+// The folded words and literal phrases of a library search.
+public type QueryParts = record
+  // Folded words outside quotation marks.
+  public Words: array of string;
+  // Required substrings in their original spelling, spacing and punctuation.
+  public Phrases: array of string;
+end record;
+
+// Separates paired double quotes in `Value` from free text. An unmatched opening
+// quote stays part of free text until the user closes it. Empty quotes add no term.
+// Returns the folded free words and the original text of each nonempty phrase.
+public function ParseQuery(Value: string): QueryParts;
+begin
+  if not Value.Contains(#34) then
+    return new QueryParts(Words(Value), []);
+  end if;
+
+  const Parts: array of string := Value.Split(#34);
+  const FreeText: Text.StringBuilder := new Text.StringBuilder();
+  const Phrases: C.List<string> := new C.List<string>();
+  for Index: int := 0 to Parts.Length - 1 do
+    const Part: string := Parts[Index];
+    if Index mod 2 = 1 and Index < Parts.Length - 1 then
+      if not Sys.String.IsNullOrWhiteSpace(Part) then
+        Phrases.Add(Part);
+      end if;
+    else
+      discard FreeText.Append(Part).Append(' ');
+    end if;
+  end for;
+
+  return new QueryParts(Words(FreeText.ToString()), Phrases.ToArray());
+end function;
+
+// Checks that each of `Phrases` is a literal substring of a single field in
+// `Fields`, ignoring case. Returns true when every phrase is present.
+public function PhrasesMatch(Phrases: array of string; Fields: array of string): bool;
+begin
+  for Phrase: string in Phrases do
+    var Found: bool := false;
+    for Field: string in Fields do
+      if Field.Contains(Phrase, Sys.StringComparison.OrdinalIgnoreCase) then
+        Found := true;
+        break;
+      end if;
+    end for;
+
+    if not Found then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
+
 // True when every character of `Word` is a decimal digit.
 //
 // ## Parameters

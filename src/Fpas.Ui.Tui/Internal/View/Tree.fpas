@@ -137,8 +137,6 @@ public type ChoiceStripOptions = record
   public Role: string;
   // Whether the strip accepts input.
   public Enabled: bool;
-  // Whether keyboard movement also activates the destination.
-  public FollowFocus: bool := true;
   // Whether to consume spare columns.
   public FullWidth: bool := false;
   // Whether full-width choices use the same natural width.
@@ -151,7 +149,7 @@ public type ChoiceStripOptions = record
   public Height: int := 1;
 end record;
 
-// Tab, segment or toggle strip with measured caption widths.
+// Tab or segmented control with measured caption widths.
 // ## Type parameters
 // - `TMsg`: Application message type.
 public type ChoiceStripView<TMsg> = record
@@ -257,9 +255,9 @@ public type Element<TMsg> = variant
   // Fill the allocated cell surface with an image and register its input mapper.
   CellGrid(Id: string; Content: Grids.Image?; Changed: function(Grids.Event): TMsg);
   // Animated cell glyph with resolved dimensions and colors.
-  Spinner(Columns: int; Rows: int; Frames: string; Ink: Color.Color; Track: Color.Color; Inverse: bool);
+  Spinner(Frames: string; Ink: Color.Color; Inverse: bool);
   // Compact plot with one sample per cell at its natural width.
-  Sparkline(Values: array of float; Width: int; Rows: int; Fill: bool; Ink: Color.Color);
+  Sparkline(Values: array of float; Width: int; Fill: bool; Ink: Color.Color);
   // Paint a determinate progress track and optional caption.
   Progress(Fraction: float; Caption: string; Percent: string; Width: int?; Fill: Color.Color);
   // Fit one status row to the viewport, with an optional divider above.

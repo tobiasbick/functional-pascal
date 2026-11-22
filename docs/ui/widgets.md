@@ -65,7 +65,8 @@ and input support. [GUI adapter](gui/host.md),
 | Number field with bounds, steps and unit suffix | | Yes | Yes |
 | Search field icons and control sizes, and specialized text area options | | | Yes |
 | Inline editing, scrub and money fields, shortcut recording and native shortcut labels | | | Yes |
-| Segmented control and toggle group with sizes and keyboard navigation | | Yes | Yes |
+| Segmented control with keyboard navigation | | Yes | Yes |
+| Toggle group | | Yes | |
 | Segmented and toggle items with CUI glyphs and icon-only presentation | | | Yes |
 | Copy button with transient feedback | | | Yes |
 | Icon button with tooltip, shortcut hint and busy state | | | Yes |
@@ -430,9 +431,11 @@ mode. Use `ItemId(Id, Index)` to focus an item, or the group ID to focus the
 first item. Pointer, Enter and Space activate an item. Tab moves focus, and
 each horizontal arrow press moves focus one item within the group.
 
-CUI draws and handles both groups on the GUI gallery's Actions page. The
-[terminal toggle group](tui/actions/toggle-group.md) uses one tab stop and
-displays the labels with selection markers.
+CUI draws and handles both groups on the GUI gallery's Actions page. Terminal
+forms use [checkboxes](tui/selection/checkbox.md) or
+[multi-select](tui/inputs/multi-select.md) for independent
+options and [segmented controls](tui/actions/segmented-control.md) for short
+exclusive choices.
 
 ## Reactions
 

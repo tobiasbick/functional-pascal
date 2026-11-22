@@ -173,14 +173,14 @@ public type AlbumMusicTests = record
       const AlbumSearch: Cui.CuiRectangle := Control(Session, 'album-search').Bounds;
       const AlbumFilter: Cui.CuiRectangle := Control(Session, 'album-filters').Bounds;
       const AlbumSort: Cui.CuiRectangle := Control(Session, 'album-sort').Bounds;
-      const Grid: Cui.CuiRectangle := Control(Session, 'album-grid').Bounds;
+      const Grid: Cui.CuiRectangle := Control(Session, 'album-grid/albums').Bounds;
       XPos := Grid.X + Grid.Width / 2.0F;
       YPos := Grid.Y + Grid.Height / 2.0F;
       Step(Session);
       Wheel := -14.0F;
       Until(
         Session,
-        function(): bool => Last.Albums.Offset > 0.0F,
+        function(): bool => Last.Albums.Offsets.ContainsKey('albums'),
         'The album grid did not scroll.'
       );
       Step(Session);
@@ -446,7 +446,7 @@ public type AlbumMusicTests = record
       X.Assert.Equal<string>(Before.Toolbar.Search, Last.Albums.Toolbar.Search);
       X.Assert.Equal<string>(Before.Toolbar.Applied.Genre, Last.Albums.Toolbar.Applied.Genre);
       X.Assert.Equal<Toolbar.Order>(Before.Toolbar.Sort, Last.Albums.Toolbar.Sort);
-      X.Assert.Equal<float>(Before.Offset, Last.Albums.Offset);
+      X.Assert.Equal<float>(Before.Offsets['albums'], Last.Albums.Offsets['albums']);
       const Returned: Cui.CuiRectangle := Control(Session, Selected.Id).Bounds;
       X.Assert.True(
         Sys.Math.Abs(Returned.Y - Selected.Bounds.Y) < 1.0F,

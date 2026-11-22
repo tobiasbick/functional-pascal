@@ -29,10 +29,12 @@ public type Term = record
   public Weight: double;
 end record;
 
-// The prepared words of one item, built once whenever the item changes.
+// The prepared search data of one item, built once whenever the item changes.
 public type Document = record
   // The words of all fields, including adjacent pairs written together.
   public Terms: array of Term;
+  // Original field texts for literal phrase matching.
+  public Texts: array of string;
 
   // Prepares `Fields` for searching.
   //
@@ -55,28 +57,34 @@ public type Document = record
       end for;
     end for;
 
-    return new Document(Terms.ToArray());
+    const Texts: array of string := Sys.Array.ConvertAll<Field, string>(
+      Fields, function(Item: Field): string => Item.Text
+    );
+    return new Document(Terms.ToArray(), Texts);
   end function;
 end record;
 
-// A prepared query: its distinct folded words and their phonetic codes.
+// A prepared query with folded words and required literal phrases.
 public type Query = record
   // Distinct folded words in input order.
   public Words: array of string;
   // The phonetic code of each word.
   public Keys: array of string;
+  // Required phrases as typed between double quotes.
+  public Phrases: array of string;
 
-  // Prepares free text typed by a user. Order, case, accents and punctuation do
-  // not matter, and wildcard characters have no special meaning.
+  // Prepares free text and quoted phrases typed by a user. Free words are folded
+  // and ranked in any order. Quoted phrases retain spelling, spaces and punctuation.
   //
   // ## Parameters
   // - `Text`: The search text.
   // ## Returns
-  // The query; empty when `Text` contains no words.
+  // The query; empty when `Text` contains no words or phrases.
   public static function Parse(Text: string): Query;
   begin
     const Distinct: C.List<string> := new C.List<string>();
-    for Word: string in Tokens.Words(Text) do
+    const Parts: Tokens.QueryParts := Tokens.ParseQuery(Text);
+    for Word: string in Parts.Words do
       if not Distinct.Contains(Word) then
         Distinct.Add(Word);
       end if;
@@ -87,16 +95,16 @@ public type Query = record
       Codes.Add(Tokens.Phonetic(Word));
     end for;
 
-    return new Query(Distinct.ToArray(), Codes.ToArray());
+    return new Query(Distinct.ToArray(), Codes.ToArray(), Parts.Phrases);
   end function;
 
-  // Reports whether the query has no words.
+  // Reports whether the query has no words or phrases.
   //
   // ## Returns
-  // True for empty or punctuation-only search text.
+  // True for a query with no searchable input.
   public function IsEmpty(): bool;
   begin
-    return self.Words.Length = 0;
+    return self.Words.Length = 0 and self.Phrases.Length = 0;
   end function;
 end record;
 
@@ -156,16 +164,16 @@ begin
   return Best;
 end function;
 
-// Scores every document against `Search`. Each query word counts on its own, so
-// documents that contain more of the words, rarer words and closer spellings
-// rank higher, and a document needs only one of the words to match.
+// Scores each document that contains all quoted phrases. Free words contribute
+// independently, so more matches, rarer words and closer spellings rank higher.
 //
 // ## Parameters
 // - `Search`: The prepared query.
 // - `Documents`: The prepared documents.
 // ## Returns
 // One score per document, in the same order; zero means no match. Matches far
-// below the best one are dropped as noise. An empty query scores everything zero.
+// below the best one are dropped as noise in searches without quotes. An empty
+// query scores everything zero.
 public function Rank(Search: Query; Documents: I.ImmutableArray<Document>): array of double;
 begin
   const Scores: array of double := new double[Documents.Length];
@@ -173,11 +181,24 @@ begin
     return Scores;
   end if;
 
+  const HasPhrases: bool := Search.Phrases.Length > 0;
+  if HasPhrases then
+    for Index: int := 0 to Documents.Length - 1 do
+      if Tokens.PhrasesMatch(Search.Phrases, Documents[Index].Texts) then
+        Scores[Index] := 1.0;
+      end if;
+    end for;
+  end if;
+
   const Count: double := cast<double>(Documents.Length);
   const Found: array of double := new double[Documents.Length];
   for Position: int := 0 to Search.Words.Length - 1 do
     var Hits: int := 0;
     for Index: int := 0 to Documents.Length - 1 do
+      if HasPhrases and Scores[Index] = 0.0 then
+        continue;
+      end if;
+
       Found[Index] := Matches(Search.Words[Position], Search.Keys[Position], Documents[Index]);
       if Found[Index] > 0.0 then
         Hits := Hits + 1;
@@ -190,6 +211,10 @@ begin
       Scores[Index] := Scores[Index] + Found[Index] * Rarity;
     end for;
   end for;
+
+  if HasPhrases then
+    return Scores;
+  end if;
 
   var Top: double := 0.0;
   for Score: double in Scores do

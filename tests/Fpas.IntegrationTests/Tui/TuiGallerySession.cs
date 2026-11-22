@@ -86,8 +86,13 @@ internal sealed class TuiGallerySession(Stream pipe, CancellationToken token)
     internal static string? Selected(JsonElement frame) =>
         Controls(frame).Single(c => c.GetProperty("role").GetString() == "navigation" && c.GetProperty("value").GetString() == "true").GetProperty("label").GetString();
 
-    internal static string Preview(JsonElement frame, int leftWidth) => string.Join("\n",
-        frame.GetProperty("lines").EnumerateArray().Select(line => line.GetString()![(leftWidth + 2)..^1]));
+    internal static string Preview(JsonElement frame)
+    {
+        var lines = frame.GetProperty("lines");
+        int sidebarEdge = lines[0].GetString()!.IndexOf("╮ ╭", StringComparison.Ordinal);
+        Assert.True(sidebarEdge >= 0, "The sidebar must end before the preview.");
+        return string.Join("\n", lines.EnumerateArray().Select(line => line.GetString()![(sidebarEdge + 3)..^1]));
+    }
 
     internal static (int Border, int Surface) Colors(JsonElement frame)
     {

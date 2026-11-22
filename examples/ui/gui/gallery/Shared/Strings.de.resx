@@ -17,7 +17,6 @@
   <data name="Description.Buttons" xml:space="preserve"><value>Varianten, Größen und Zustände.</value></data>
   <data name="Description.CanvasAndBars" xml:space="preserve"><value>Zeichenflächen und kontextbezogene Aktionen.</value></data>
   <data name="Description.Capture" xml:space="preserve"><value>Steuerelemente zur Erfassung von Eingaben.</value></data>
-  <data name="Description.CellGrid" xml:space="preserve"><value>Ein farbiges Wellenfeld erkunden.</value></data>
   <data name="Description.Charts" xml:space="preserve"><value>Grafische Übersichten zu Werten und Trends.</value></data>
   <data name="Description.Code" xml:space="preserve"><value>Quelltext und Code-Darstellung.</value></data>
   <data name="Description.CreativeControls" xml:space="preserve"><value>Steuerelemente für kreative Bearbeitung.</value></data>
@@ -323,7 +322,6 @@
   <data name="Page.Buttons" xml:space="preserve"><value>Schaltflächen</value></data>
   <data name="Page.CanvasAndBars" xml:space="preserve"><value>Zeichenfläche und Leisten</value></data>
   <data name="Page.Capture" xml:space="preserve"><value>Erfassung</value></data>
-  <data name="Page.CellGrid" xml:space="preserve"><value>Zellenraster</value></data>
   <data name="Page.Charts" xml:space="preserve"><value>Diagramme</value></data>
   <data name="Page.Code" xml:space="preserve"><value>Code</value></data>
   <data name="Page.CreativeControls" xml:space="preserve"><value>Kreative Werkzeuge</value></data>
@@ -375,7 +373,6 @@
   <data name="Text.BrowseComponents" xml:space="preserve"><value>Komponenten ansehen</value></data>
   <data name="Text.Canada" xml:space="preserve"><value>Kanada</value></data>
   <data name="Text.Cancel" xml:space="preserve"><value>Abbrechen</value></data>
-  <data name="Text.CellGridHint" xml:space="preserve"><value>Klick setzt die Mitte · Mausrad ändert den Abstand</value></data>
   <data name="Text.Checkbox" xml:space="preserve"><value>Kontrollkästchen</value></data>
   <data name="Text.CommandPalette" xml:space="preserve"><value>Befehlspalette</value></data>
   <data name="Text.Comments" xml:space="preserve"><value>Kommentare</value></data>
@@ -528,5 +525,9 @@
   <data name="Text.YourName" xml:space="preserve"><value>Dein Name</value></data>
   <data name="Tui.List.Opened" xml:space="preserve"><value>Geöffnet: {0}</value></data>
   <data name="Tui.Log.Append" xml:space="preserve"><value>Build-Meldung hinzufügen</value></data>
-  <data name="Tui.Table.Pan" xml:space="preserve"><value>Strg+Links / Rechts auf einer Zeile blendet Spalten ein</value></data>
+  <data name="Tui.Log.Keys" xml:space="preserve"><value>Strg+Links / Rechts für lange Zeilen</value></data>
+  <data name="Tui.Preview.Keys" xml:space="preserve"><value>F6 Durchblättern</value></data>
+  <data name="Tui.Filter.Keys" xml:space="preserve"><value>Tab zu Filter · Leertaste zum Auswählen · Esc schließt</value></data>
+  <data name="Tui.Spinner.Sync" xml:space="preserve"><value>24 Dateien werden synchronisiert</value></data>
+  <data name="Tui.Sparkline.Latest" xml:space="preserve"><value>Letzter Wert: </value></data>
 </root>

@@ -97,19 +97,45 @@ begin
   return false;
 end function;
 
-function Matches(Entry: Tracks.Entry; Terms: array of string; Library: bool): bool;
+function Matches(Entry: Tracks.Entry; Query: Text.QueryParts; Library: bool): bool;
 begin
-  if Terms.Length = 0 then
+  if Query.Words.Length = 0 and Query.Phrases.Length = 0 then
     return true;
   end if;
-  const Fields: array of string := Text.Words(
-    Title(Entry) + ' ' + if Library then
-      Artist(Entry) + ' ' + AlbumTitle(Entry)
-    else
-      Sys.String.Join(' ', Genres(Entry))
-    end if
-  );
-  for Term: string in Terms do
+
+  const Caption: string := Title(Entry);
+  var Plain: string := Caption;
+  if Library then
+    const Performer: string := Artist(Entry);
+    const Release: string := AlbumTitle(Entry);
+    if Query.Phrases.Length > 0 and not Text.PhrasesMatch(
+      Query.Phrases,
+      [Caption, Performer, Release]
+    )
+    then
+      return false;
+    end if;
+
+    Plain := Caption + ' ' + Performer + ' ' + Release;
+  else
+    const Tags: array of string := Genres(Entry);
+    if Query.Phrases.Length > 0 then
+      const Values: C.List<string> := new C.List<string>([Caption]);
+      Values.AddRange(Tags);
+      if not Text.PhrasesMatch(Query.Phrases, Values.ToArray()) then
+        return false;
+      end if;
+    end if;
+
+    Plain := Caption + ' ' + Sys.String.Join(' ', Tags);
+  end if;
+
+  if Query.Words.Length = 0 then
+    return true;
+  end if;
+
+  const Fields: array of string := Text.Words(Plain);
+  for Term: string in Query.Words do
     var Found: bool := false;
     for Word: string in Fields do
       if Word.Contains(Term, Sys.StringComparison.Ordinal) then
@@ -176,7 +202,7 @@ public function Songs(TracksInOrder: I.ImmutableArray<Tracks.Entry>; Source: M.S
     end if;
   end function;
 begin
-  const Terms: array of string := Text.Words(Source.Search);
+  const Query: Text.QueryParts := Text.ParseQuery(Source.Search);
   const Keys: I.ImmutableHashSet<string>.Builder := I.ImmutableHashSet.CreateBuilder<string>();
   for Genre: string in Source.Genres do
     discard Keys.Add(Albums.TagKey(Genre));
@@ -200,7 +226,7 @@ begin
     if (Entry.Rating ?? 0) >= Source.MinimumRating
       and (GenresFilter.IsEmpty or Has(Genres(Entry), GenresFilter)) and Matches(
       Entry,
-      Terms,
+      Query,
       Source.AlbumId = ''
     )
       and (Source.Performer = '' or Has(

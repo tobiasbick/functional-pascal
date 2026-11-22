@@ -20,7 +20,7 @@ uses
   TuiGallery.ToolSamples as Tools, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes,
   Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E,
   TuiGallery.PeopleSample as People, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Theming.Themes as Themes,
-  TuiGallery.CellGridSample as GridSample, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Composition as Composition,
+  Fpas.Ui.Composition as Composition,
   Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.TerminalExtensions.Views as Views,
   Gallery.Shared.PickerChoices as Pickers, Gallery.Shared.SaveFrequency as Frequency, Gallery.Shared.CheckboxExamples as Checks, Gallery.Shared.EditorStatus as Status, Gallery.Shared.ButtonExamples as Buttons, Gallery.Shared.ProgressExample as Progress,
   Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Developer.Terminal as Term,
@@ -55,11 +55,11 @@ begin
   );
 end function;
 
-function Panel(Weight: float; Content: E.Element<Msg>): E.Element<Msg>;
+function Panel(Size: L.Flex; Content: E.Element<Msg>): E.Element<Msg>;
 begin
   return E.Size<Msg>(
     E.Styled<Msg>(E.Border<Msg>(Content), S.Role.Panel),
-    new L.Flex(Basis := L.Extent.Fill, Grow := Weight)
+    Size
   );
 end function;
 
@@ -124,54 +124,42 @@ begin
           new B.Options(Variant := S.ButtonVariant.Primary, TerminalIconRight := '→')
         ),
         Label(Strings.Get('Text.CreateWorkspaceHeading'), S.Role.Heading),
-        E.Text<Msg>(Strings.Get('Text.WorkspaceInviteHint')),
         Composition.Map<Profile.Msg, Msg>(
           Profile.Editors(State.ProfileState, 'workspace'),
           Msg.ProfileAction
         ),
         Checks.WeeklySummary<Msg>(State.WeeklySummary, Msg.SetWeeklySummary),
-        B.Button<Msg>(
-          'workspace-create',
-          Strings.Get('Text.CreateWorkspace'),
-          Msg.CreateWorkspace,
-          new B.Options(Variant := S.ButtonVariant.Primary)
-        ),
-        E.Text<Msg>(
+        E.Row<Msg>(
+          Flow,
+          B.Button<Msg>(
+            'workspace-create', Strings.Get('Text.CreateWorkspace'), Msg.CreateWorkspace,
+            new B.Options(Variant := S.ButtonVariant.Primary)
+          ),
           if State.WorkspaceCreated then
-            Strings.Get('Text.WorkspaceCreated')
+            E.Text<Msg>(Strings.Get('Text.WorkspaceCreated'))
           else
-            ''
+            E.Column<Msg>()
           end if
         )
       );
     when Catalog.Preview.DataDisplay:
-      return E.ScrollView<Msg>(
-        'preview-data-display', E.Column<Msg>(
-          new L.Flow(Gap := L.Spacing.Normal, Padding := L.Spacing.Normal),
-          Label(State.Active.Title, S.Role.Heading),
-          Label(Strings.Get('Text.Table'), S.Role.Heading),
-          People.View<Msg>(
-            State.PeopleOrder,
-            State.Person,
-            Msg.SortPeople,
-            Msg.SelectPerson,
-            Sys.Math.Clamp(Rows - 7, 2, 6)
-          ),
-          E.Text<Msg>(
-            if Columns < 62 then
-              Strings.Get('Tui.Table.Pan')
-            else
-              ''
-            end if
-          ),
-          Label(Strings.Get('Heading.List'), S.Role.Heading),
-          Composition.Map<ListSample.Msg, Msg>(
-            ListSample.View(State.ListState),
-            Msg.ListAction
-          ),
-          Label(Strings.Get('Heading.TreeView'), S.Role.Heading),
-          Composition.Map<Tools.Msg, Msg>(Tools.Tree(State.ToolState), Msg.ToolAction)
-        )
+      Example := E.Column<Msg>(
+        Flow,
+        Label(Strings.Get('Text.Table'), S.Role.Heading),
+        People.View<Msg>(
+          State.PeopleOrder,
+          State.Person,
+          Msg.SortPeople,
+          Msg.SelectPerson,
+          Sys.Math.Clamp(Rows - 7, 2, 6)
+        ),
+        Label(Strings.Get('Heading.List'), S.Role.Heading),
+        Composition.Map<ListSample.Msg, Msg>(
+          ListSample.View(State.ListState),
+          Msg.ListAction
+        ),
+        Label(Strings.Get('Heading.TreeView'), S.Role.Heading),
+        Composition.Map<Tools.Msg, Msg>(Tools.Tree(State.ToolState), Msg.ToolAction)
       );
     when Catalog.Preview.Code:
       Example := E.Column<Msg>(
@@ -180,7 +168,7 @@ begin
       );
     when Catalog.Preview.DataGrid:
       Example := E.Column<Msg>(
-        Flow, Label(Strings.Get('Heading.FilterBar'), S.Role.Heading),
+        Flow, E.Text<Msg>(Strings.Get('Tui.Filter.Keys')),
         FilterSample.View<Msg>(State.Filter, Msg.SetFilter)
       );
     when Catalog.Preview.Feedback:
@@ -189,8 +177,8 @@ begin
         Label(Strings.Get('Text.Progress'), S.Role.Heading),
         Progress.Upload<Msg>(),
         Progress.ExportBar<Msg>(false),
-        AlertSamples.View<Msg>(),
-        PlotSamples.Spinners<Msg>(Columns)
+        PlotSamples.Activity<Msg>(),
+        AlertSamples.View<Msg>()
       );
     when Catalog.Preview.Charts:
       Example := PlotSamples.Sparkline<Msg>();
@@ -209,26 +197,22 @@ begin
         E.Text<Msg>(Strings.Get('Text.LoadingLabelHint')),
         Buttons.States<Msg>(Msg.Preview, Wide, State.Saving, Msg.SetSaving),
         Label(Strings.Get('Text.DropdownMenu'), S.Role.Heading),
-        ProjectOptions.View<Msg>(
-          Msg.MenuChoice,
-          Msg.ProfileAction(Profile.Msg.Show(Profile.Layer.Delete))
-        ),
-        E.Text<Msg>(
-          if State.MenuChoice = '' then
-            ''
+        E.Row<Msg>(
+          Flow,
+          ProjectOptions.View<Msg>(
+            Msg.MenuChoice,
+            Msg.ProfileAction(Profile.Msg.Show(Profile.Layer.Delete))
+          ),
+          if State.MenuChoice <> '' then
+            E.Text<Msg>(Strings.Get('Text.SelectedPrefix') + State.MenuChoice)
           else
-            Strings.Get('Text.SelectedPrefix') + State.MenuChoice
+            E.Column<Msg>()
           end if
         ),
         Composition.Map<ChoiceSamples.Msg, Msg>(
           ChoiceSamples.Segments(State.ChoiceState),
           Msg.SetChoice
         )
-      );
-    when Catalog.Preview.Actions:
-      Example := Composition.Map<ChoiceSamples.Msg, Msg>(
-        ChoiceSamples.Toggles(State.ChoiceState, Columns),
-        Msg.SetChoice
       );
     when Catalog.Preview.Inputs:
       const Wide: bool := Columns >= 66;
@@ -277,13 +261,16 @@ begin
         ),
         Label(Strings.Get('Heading.BreadcrumbAndPagination'), S.Role.Heading),
         Breadcrumb.View<Msg>(Msg.SelectAncestor),
-        Pagination.View<Msg>(State.PageIndex, Msg.SetPageIndex),
-        E.Text<Msg>(
-          if State.Ancestor = '' then
-            ''
-          else
-            Strings.Get('Text.SelectedPrefix') + State.Ancestor
-          end if
+        if State.Ancestor <> '' then
+          E.Text<Msg>(Strings.Get('Text.SelectedPrefix') + State.Ancestor)
+        else
+          E.Column<Msg>()
+        end if,
+        E.Row<Msg>(
+          E.Size<Msg>(
+            Pagination.View<Msg>(State.PageIndex, Msg.SetPageIndex),
+            new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(22)))
+          )
         )
       );
     when Catalog.Preview.Overlays:
@@ -299,18 +286,10 @@ begin
         Label(Strings.Get('Text.CommandPalette'), S.Role.Heading), OpenPalette
       );
     when Catalog.Preview.AppChrome:
-      return E.Column<Msg>(
-        new L.Flow(Padding := L.Spacing.Normal), Label(Strings.Get('Page.Desktop'), S.Role.Heading),
-        E.Size<Msg>(
-          E.ScrollView<Msg>(
-            'editor-code', E.Column<Msg>(
-              Flow,
-              E.Text<Msg>(Strings.Get('Text.AppChromeIntro')),
-              E.Text<Msg>(Sys.String.Join(#10, Status.CodeLines))
-            )
-          ), new L.Flex(Basis := L.Extent.Fill, Grow := 1)
-        ),
-        Status.View<Msg>(State.Indent, State.Encoding, State.Language, Msg.DesktopCommand, Columns)
+      Example := E.Column<Msg>(
+        Flow,
+        E.Text<Msg>(Sys.String.Join(#10, Status.CodeLines)),
+        Tools.EditorStatus<Msg>(State.Indent, State.Encoding, State.Language, Msg.DesktopCommand)
       );
     when Catalog.Preview.Disclosure:
       Example := E.Column<Msg>(
@@ -319,8 +298,6 @@ begin
       );
     when Catalog.Preview.Files:
       Example := Composition.Map<Files.Msg, Msg>(Files.Controls(State.FileState), Msg.FilesAction);
-    when Catalog.Preview.CellGrid:
-      return Composition.Map<Grids.Event, Msg>(GridSample.View(State.Grid), Msg.Grid);
     when Catalog.Preview.Text:
       Example := E.Column<Msg>(
         Flow,
@@ -333,7 +310,7 @@ begin
         E.Text<Msg>(Strings.Get('Text.RunGallery'))
       );
     else
-      Example := E.Text<Msg>(State.Active.Description);
+      raise new Sys.InvalidOperationException('Unknown terminal gallery preview.');
   end case;
 
   const PageFlow: L.Flow := new L.Flow(Padding := L.Spacing.Normal, Gap := L.Spacing.Normal);
@@ -342,7 +319,15 @@ begin
   else
     E.Column<Msg>(PageFlow, Label(State.Active.Title, S.Role.Heading), Example)
   end if;
-  return E.ScrollView<Msg>('preview-' + State.Active.Id, Content);
+  return E.ScrollView<Msg>(
+    'preview-' + State.Active.Id, Content, State.PreviewPosition,
+    function(Change: L.ScrollChange): Msg => Msg.ScrollPreview(Change.Position)
+  );
+end function;
+
+function SidebarColumns(Total: int): int;
+begin
+  return Sys.Math.Clamp((Total - 1) div 4, 1, 24);
 end function;
 
 function View(State: Model): E.Element<Msg>;
@@ -351,15 +336,13 @@ begin
     'navigation',
     [
       Section(Strings.Get('Text.SectionComponents'), Catalog.Components),
-      Section(Strings.Get('Text.SectionExtended'), Catalog.Extended),
-      Section(Strings.Get('Text.SectionTerminal'), Catalog.Terminal)
+      Section(Strings.Get('Text.SectionExtended'), Catalog.Extended)
     ],
     State.Active.Id
   );
   const FirstControl: string := case State.Active.Demo of
     when Catalog.Preview.Overview: 'browse';
     when Catalog.Preview.Buttons: 'primary';
-    when Catalog.Preview.Actions: 'action-format/0';
     when Catalog.Preview.Inputs: 'input-name';
     when Catalog.Preview.Feedback: 'storage/dismiss';
     when Catalog.Preview.Selection: 'newsletter';
@@ -376,16 +359,23 @@ begin
   end case;
   const SidebarFocus: Msg := Msg.Focus(Nav.ItemId('navigation', State.Active.Id));
   const Screen: E.Element<Msg> := Views.Screen<Msg>(
-    E.Row<Msg>(
-      new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1)), Align := L.Alignment.Stretch),
-      Panel(1.0F, E.ScrollView<Msg>('navigation-scroll', List)), Panel(
-        2.0F, Views.Viewport<Msg>(
-          'gallery-preview',
-          function(Size: Term.Viewport): E.Element<Msg> => Detail(
-            State,
-            Size.Columns - (Size.Columns - 1) div 3 - 5,
-            Size.Rows
+    Views.Viewport<Msg>(
+      'gallery-viewport',
+      function(Size: Term.Viewport): E.Element<Msg> => E.Row<Msg>(
+        new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1)), Align := L.Alignment.Stretch),
+        Panel(
+          new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(SidebarColumns(Size.Columns)))),
+          E.Column<Msg>(
+            E.Size<Msg>(
+              E.ScrollView<Msg>('navigation-scroll', List),
+              new L.Flex(Basis := L.Extent.Fill, Grow := 1)
+            ),
+            Label(Strings.Get('Tui.Preview.Keys'), S.Role.Secondary)
           )
+        ),
+        Panel(
+          new L.Flex(Basis := L.Extent.Fill, Grow := 1),
+          Detail(State, Size.Columns - SidebarColumns(Size.Columns) - 6, Size.Rows)
         )
       )
     ),
@@ -398,6 +388,11 @@ begin
         else
           Msg.Focus(FirstControl)
         end if
+      ),
+      Keys.Shortcut<Msg>(
+        Keys.Key.F6,
+        Keys.KeyModifiers.None,
+        Msg.Focus('preview-' + State.Active.Id)
       ),
       Keys.Shortcut<Msg>(Keys.Key.Escape, Keys.KeyModifiers.None, SidebarFocus),
       Keys.Shortcut<Msg>(Keys.Key.T, Keys.KeyModifiers.Ctrl, Msg.ToggleTheme),
@@ -447,7 +442,7 @@ begin
     end if;
 
     using const Session: App.HeadlessSession := App.StartHeadless<Model, Msg>(
-      Initial, GalleryState.Update, View, 80, 24, ThemeFor
+      Initial, GalleryState.Update, View, 80, 25, ThemeFor
     );
     while Session.IsOpen() do
       Threads.Thread.Sleep(20);

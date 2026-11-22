@@ -4,12 +4,10 @@ unit TuiGallery.Catalog;
 
 uses Gallery.Shared.Strings as Strings;
 
-// Terminal preview associated with a catalog entry.
+// Live example associated with a catalog entry.
 public type Preview = enum
-  Description;
   Overview;
   Buttons;
-  Actions;
   Inputs;
   Pickers;
   Selection;
@@ -24,7 +22,6 @@ public type Preview = enum
   Code;
   Files;
   Text;
-  CellGrid;
 end enum;
 
 // One destination in the terminal gallery.
@@ -33,147 +30,32 @@ public type Entry = record
   public Id: string;
   // Visible localized destination name.
   public Title: string;
-  // Short introduction shown in the preview panel.
-  public Description: string;
-  // Live example to display below the introduction.
-  public Demo: Preview := Preview.Description;
+  // Live example displayed in the preview.
+  public Demo: Preview;
 end record;
 
-// Core destinations in GUI gallery order.
+// Core terminal examples.
 public const Components: array of Entry := [
-  new Entry(
-    'Overview',
-    Strings.Get('Page.Overview'),
-    Strings.Get('Text.ComponentsForFpas'),
-    Preview.Overview
-  ),
-  new Entry(
-    'Buttons',
-    Strings.Get('Page.Buttons'),
-    Strings.Get('Description.Buttons'),
-    Preview.Buttons
-  ),
-  new Entry('Inputs', Strings.Get('Page.Inputs'), Strings.Get('Text.TextFields'), Preview.Inputs),
-  new Entry(
-    'Selection',
-    Strings.Get('Page.Selection'),
-    Strings.Get('Description.Selection'),
-    Preview.Selection
-  ),
-  new Entry(
-    'Navigation',
-    Strings.Get('Page.Navigation'),
-    Strings.Get('Description.Navigation'),
-    Preview.Navigation
-  ),
-  new Entry(
-    'Overlays', Strings.Get('Page.Overlays'), Strings.Get('Text.DialogsAndSheets'),
-    Preview.Overlays
-  ),
-  new Entry(
-    'Feedback',
-    Strings.Get('Page.Feedback'),
-    Strings.Get('Description.Feedback'),
-    Preview.Feedback
-  ),
-  new Entry(
-    'Data display', Strings.Get('Page.Lists'), Strings.Get('Description.Lists'),
-    Preview.DataDisplay
-  ),
-  new Entry('Charts', Strings.Get('Page.Charts'), Strings.Get('Description.Charts'), Preview.Charts)
+  new Entry('Overview', Strings.Get('Page.Overview'), Preview.Overview),
+  new Entry('Buttons', Strings.Get('Page.Buttons'), Preview.Buttons),
+  new Entry('Inputs', Strings.Get('Page.Inputs'), Preview.Inputs),
+  new Entry('Selection', Strings.Get('Page.Selection'), Preview.Selection),
+  new Entry('Navigation', Strings.Get('Page.Navigation'), Preview.Navigation),
+  new Entry('Overlays', Strings.Get('Page.Overlays'), Preview.Overlays),
+  new Entry('Feedback', Strings.Get('Page.Feedback'), Preview.Feedback),
+  new Entry('Data display', Strings.Get('Page.Lists'), Preview.DataDisplay),
+  new Entry('Charts', Strings.Get('Page.Charts'), Preview.Charts)
 ];
 
-// Supplementary destinations in GUI gallery order.
+// Supplementary terminal examples.
 public const Extended: array of Entry := [
-  new Entry(
-    'Actions',
-    Strings.Get('Page.Actions'),
-    Strings.Get('Description.Actions'),
-    Preview.Actions
-  ),
-  new Entry(
-    'Smart inputs',
-    Strings.Get('Page.SmartInputs'),
-    Strings.Get('Description.SmartInputs')
-  ),
-  new Entry(
-    'Pickers',
-    Strings.Get('Page.Pickers'),
-    Strings.Get('Description.Pickers'),
-    Preview.Pickers
-  ),
-  new Entry('Capture', Strings.Get('Page.Capture'), Strings.Get('Description.Capture')),
-  new Entry(
-    'Disclosure',
-    Strings.Get('Page.Disclosure'),
-    Strings.Get('Description.Disclosure'),
-    Preview.Disclosure
-  ),
-  new Entry('Reader', Strings.Get('Page.Reader'), Strings.Get('Description.Reader')),
-  new Entry(
-    'Data grid',
-    Strings.Get('Page.DataGrid'),
-    Strings.Get('Description.DataGrid'),
-    Preview.DataGrid
-  ),
-  new Entry('Code', Strings.Get('Page.Code'), Strings.Get('Description.Code'), Preview.Code),
-  new Entry('Social and media', Strings.Get('Page.Social'), Strings.Get('Description.Social')),
-  new Entry('Planning', Strings.Get('Page.Planning'), Strings.Get('Description.Planning')),
-  new Entry('More charts', Strings.Get('Page.MoreCharts'), Strings.Get('Description.MoreCharts')),
-  new Entry('Motion', Strings.Get('Page.Motion'), Strings.Get('Description.Motion')),
-  new Entry('AI', Strings.Get('Page.AI'), Strings.Get('Description.AI')),
-  new Entry('Audio', Strings.Get('Page.Audio'), Strings.Get('Description.Audio')),
-  new Entry('Files', Strings.Get('Page.Files'), Strings.Get('Description.Files'), Preview.Files),
-  new Entry(
-    'Developer tools',
-    Strings.Get('Page.DeveloperTools'),
-    Strings.Get('Description.DeveloperTools')
-  ),
-  new Entry(
-    'More developer tools',
-    Strings.Get('Page.MoreDeveloperTools'),
-    Strings.Get('Description.MoreDeveloperTools')
-  ),
-  new Entry('Instruments', Strings.Get('Page.Instruments'), Strings.Get('Description.Instruments')),
-  new Entry(
-    'Creative controls',
-    Strings.Get('Page.CreativeControls'),
-    Strings.Get('Description.CreativeControls')
-  ),
-  new Entry(
-    'Canvas and bars',
-    Strings.Get('Page.CanvasAndBars'),
-    Strings.Get('Description.CanvasAndBars')
-  ),
-  new Entry('Voice', Strings.Get('Page.Voice'), Strings.Get('Description.Voice')),
-  new Entry('Layout', Strings.Get('Page.Layout'), Strings.Get('Description.Layout')),
-  new Entry(
-    'Text and display',
-    Strings.Get('Page.Display'),
-    Strings.Get('Description.Display'),
-    Preview.Text
-  ),
-  new Entry(
-    'Editing tools',
-    Strings.Get('Page.EditingTools'),
-    Strings.Get('Description.EditingTools')
-  ),
-  new Entry(
-    'App chrome',
-    Strings.Get('Page.Desktop'),
-    Strings.Get('Description.Desktop'),
-    Preview.AppChrome
-  )
-];
-
-// Additional widgets specific to terminal applications.
-public const Terminal: array of Entry := [
-  new Entry(
-    'Cell grid',
-    Strings.Get('Page.CellGrid'),
-    Strings.Get('Description.CellGrid'),
-    Preview.CellGrid
-  )
+  new Entry('Pickers', Strings.Get('Page.Pickers'), Preview.Pickers),
+  new Entry('Disclosure', Strings.Get('Page.Disclosure'), Preview.Disclosure),
+  new Entry('Data grid', Strings.Get('Page.DataGrid'), Preview.DataGrid),
+  new Entry('Code', Strings.Get('Page.Code'), Preview.Code),
+  new Entry('Files', Strings.Get('Page.Files'), Preview.Files),
+  new Entry('Text and display', Strings.Get('Page.Display'), Preview.Text),
+  new Entry('App chrome', Strings.Get('Page.Desktop'), Preview.AppChrome)
 ];
 
 end unit;

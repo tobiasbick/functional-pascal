@@ -77,7 +77,7 @@ begin
   );
 end function;
 
-// Moves focus within the strip and optionally activates the destination.
+// Moves focus within the strip and activates the new choice.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
@@ -99,7 +99,7 @@ begin
         else -1;
       end case;
       if Next >= 0 then
-        if Next <> Item.Index and Item.Strip.Settings.FollowFocus then
+        if Next <> Item.Index then
           Actions.Dispatch<TMsg>(Item.Strip.Activate(Next), Apply);
         end if;
 

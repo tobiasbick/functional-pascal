@@ -1753,10 +1753,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Selected: array of bool, _, const Settings: ToggleGroups.Options
       ):
         const At: string := Identify(Id, Location + '/toggleGroup');
-        if Profile = Target.Portable then
-          Rules.Reject(At, 'A toggle group requires the terminal or graphical profile.');
-        end if;
-
+        Rules.RequireProfile(Profile, Target.Graphical, At);
         ToggleGroupRules.Check(Items, Selected, Settings, At);
         for Index: int := 0 to Items.Length - 1 do
           discard Identify(ToggleGroups.ItemId(Id, Index), At + '/item');

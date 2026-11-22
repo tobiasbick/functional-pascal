@@ -5,6 +5,7 @@ unit TuiGallery.ToolSamples;
 uses
   Gallery.Shared.BuildLog as BuildLog, Gallery.Shared.SourceTree as SourceTree, Gallery.Shared.Strings as Strings,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Actions.Buttons as B,
+  Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Styles as Style,
   Fpas.Ui.Widgets.Developer.LogConsoles as Log, System as Sys, System.Linq.Enumerable as Linq;
 
 // State of the gallery's tree, command palette and build log.
@@ -102,7 +103,8 @@ end function;
 public function Build(Current: State): E.Element<Msg>;
 begin
   return E.Column<Msg>(
-    new L.Flow(Gap := L.Spacing.Normal),
+    new L.Flow(Gap := L.Spacing.Tight),
+    E.Text<Msg>(Strings.Get('Tui.Log.Keys')),
     B.Button<Msg>(
       'log-append', Strings.Get('Tui.Log.Append'), Msg.Append,
       new B.Options(Enabled := Current.LogCount < BuildLog.Entries.Length)
@@ -113,6 +115,54 @@ begin
       Msg.Clear,
       new Log.Options(Height := 160.0F, Timestamps := true)
     )
+  );
+end function;
+
+// Shows the editor's saved state and settings that can be changed from the keyboard.
+// ## Type parameters
+// - `TMsg`: Gallery message type.
+// ## Parameters
+// - `Indent`: Current spacing choice.
+// - `Encoding`: Current encoding choice.
+// - `Language`: Current language choice.
+// - `Command`: Maps an activated setting into a gallery message.
+// ## Returns
+// One terminal status row.
+public function EditorStatus<TMsg>(Indent: int; Encoding: int; Language: int; Command: function(string): TMsg): E.Element<TMsg>;
+requires Indent >= 0 and Indent < 3 and Encoding >= 0 and Encoding < 2 and Language >= 0
+  and Language < 3;
+begin
+  const Spacing: array of string := ['2', '4', '8'];
+  const Encodings: array of string := ['UTF-8', 'UTF-16'];
+  const Languages: array of string := ['Markdown', 'C', Strings.Get('Text.PlainText')];
+  return Status.StatusBar<TMsg>(
+    'desktop-status', [
+      Status.Item<TMsg>.Text(
+        new Status.Label(Strings.Get('Text.Saved'), Tone := Style.Tone.Success)
+      ),
+      Status.Item<TMsg>.Spacer,
+      Status.Item<TMsg>.Action(
+        'encoding',
+        new Status.Label(Encodings[Encoding]),
+        '',
+        true,
+        Command('encoding')
+      ),
+      Status.Item<TMsg>.Action(
+        'spaces',
+        new Status.Label(Strings.Get('Text.SpacesPrefix') + Spacing[Indent]),
+        '',
+        true,
+        Command('spaces')
+      ),
+      Status.Item<TMsg>.Action(
+        'language',
+        new Status.Label(Languages[Language]),
+        '',
+        true,
+        Command('language')
+      )
+    ]
   );
 end function;
 

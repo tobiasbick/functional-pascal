@@ -7,11 +7,12 @@ uses
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.AlbumSupport as Art,
   FpasAmp.Library.Albums.Model as Library, FpasAmp.Imaging as Thumbnails, Fpas.Media.Images as Imaging,
   FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Settings.Model as SettingsModel, FpasAmp.Ui.Shell as Shell,
-  FpasAmp.Ui.Albums.Model as Albums, FpasAmp.Ui.Albums.Update as Update,
+  FpasAmp.Ui.App.Browsing as Browse, FpasAmp.AppState as Storage,
+  FpasAmp.Ui.Albums.Model as Albums, FpasAmp.Ui.Albums.Update as Update, FpasAmp.Ui.Albums.View as View,
   FpasAmp.Ui.Navigation.Model as Nav,
   Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Mvu.Application as Mvu,
-  System as Sys, System.IO as IO, System.Collections.Immutable as I,
+  System as Sys, System.IO as IO, System.Collections.Immutable as I, System.Collections.Generic as C,
   System.Threading as T, Xunit as X;
 
 function Find(Session: Gui.Session<App.Msg>; Id: string): Gui.Control;
@@ -189,9 +190,12 @@ public type DetailTests = record
     Step(Session);
     Step(Session);
     const Footer: Cui.CuiRectangle := Find(Session, 'album-status').Bounds;
-    const Grid: Cui.CuiRectangle := Find(Session, 'album-grid').Bounds;
+    const GridId: string := View.GridId(Last.Albums);
+    const Grid: Cui.CuiRectangle := Find(Session, GridId).Bounds;
     X.Assert.True(Footer.Y + Footer.Height <= Find(Session, 'player-toggle').Bounds.Y);
     X.Assert.True(Grid.Y + Grid.Height <= Footer.Y);
+    X.Assert.Equal<float>(Footer.X, Grid.X);
+    X.Assert.Equal<float>(Footer.X + Footer.Width, Grid.X + Grid.Width);
     X.Assert.False(Find(Session, 'album-rating-album-0').Enabled);
     const FirstCard: Cui.CuiRectangle := Find(Session, 'album-album-0').Bounds;
     var FirstRow: int := 0;
@@ -284,7 +288,7 @@ public type DetailTests = record
     Step(Session);
     X.Assert.Equal<int>(1, RatingRequests);
     X.Assert.Equal<int>(2, RequestedRating);
-    PointerX := Grid.X + 2.0F;
+    PointerX := Footer.X + 4.0F;
     PointerY := Grid.Y + Grid.Height / 2.0F;
     // Cross several complete rows, including CUI's two-row overscan.
     Wheel := -64.0F;
@@ -294,8 +298,19 @@ public type DetailTests = record
     end for;
 
     X.Assert.False(
-      Find(Session, 'album-grid').Value.StartsWith('0:'),
-      'The native grid must actually scroll.'
+      Find(Session, GridId).Value.StartsWith('0:'),
+      'The native grid must scroll over the left gutter.'
+    );
+    PointerX := Footer.X + Footer.Width - 16.0F;
+    Wheel := 64.0F;
+    for Index: int := 0 to 19 do
+      Step(Session);
+      T.Thread.Sleep(10);
+    end for;
+
+    X.Assert.True(
+      Find(Session, GridId).Value.StartsWith('0:'),
+      'The native grid must scroll over the right gutter.'
     );
     X.Assert.Equal<Cui.CuiRectangle>(Footer, Find(Session, 'album-status').Bounds);
     X.Assert.Equal<int>(36, Last.Albums.Items.Length);
@@ -307,6 +322,151 @@ public type DetailTests = record
     X.Assert.True(Has(Session, 'albums-empty'));
     X.Assert.Equal<Cui.CuiRectangle>(Footer, Find(Session, 'album-status').Bounds);
     Capture(Session, 'albums-empty-' + Width.ToString());
+  end procedure;
+
+  // Direct switches between visible grids and a fresh window keep independent scroll positions.
+  [X.FactAttribute]
+  [X.TraitAttribute('Category', 'Gui')]
+  public procedure CollectionScrollPositions();
+    function Apply(Current: App.State; Message: App.Msg): Mvu.Transition<App.State, App.Msg>;
+    begin
+      case Message of
+        when App.Msg.Navigation(Nav.Msg.Select(const Route: Nav.Route)):
+          Last := Browse.Enter(
+            Current with
+              Navigation := Current.Navigation with
+                Active := Route;
+              end with;
+            end with
+          );
+        when App.Msg.Albums(const Child: Albums.Msg):
+          Last := Current with
+            Albums := Update.Apply(Current.Albums, Child, null).Model;
+          end with;
+        else
+          Last := Current;
+      end case;
+
+      return new Mvu.Transition<App.State, App.Msg>(Last, []);
+    end function;
+
+    function Start(): Gui.Session<App.Msg>;
+    begin
+      const Window: Cui.CuiWindow := new Cui.CuiWindow(
+        'Cover scroll',
+        1280,
+        820,
+        Cui.CuiRenderer.Software,
+        true
+      );
+      Window.SetReducedMotion(true);
+      return Host.StartThemed<App.State, App.Msg>(
+        Last, Apply, Shell.View, Window, 128,
+        procedure() begin
+          Window.MovePointer(PointerX, PointerY);
+          if Wheel <> 0.0F then
+            Window.Wheel(Wheel);
+            Wheel := 0.0F;
+          end if;
+        end procedure, App.Theme(Last, null), App.Theme, false
+      );
+    end function;
+
+    procedure Select(Session: Gui.Session<App.Msg>; Route: Nav.Route);
+    begin
+      discard Session.Post(App.Msg.Navigation(Nav.Msg.Select(Route)));
+      Step(Session);
+      Step(Session);
+    end procedure;
+
+    function Range(Session: Gui.Session<App.Msg>): string;
+    begin
+      return Find(Session, View.GridId(Last.Albums)).Value;
+    end function;
+  begin
+    const Shared: string := 'Shared';
+    const Person: Library.Membership := new Library.Membership(Library.ArtistId(Shared), Shared);
+    const Genre: Library.Membership := new Library.Membership(
+      Library.GenreId(Shared),
+      Shared,
+      Tracks := 1L
+    );
+    const Items: I.ImmutableArray<Library.Album>.Builder := I.ImmutableArray.CreateBuilder<Library.Album>(
+      64
+    );
+    for Index: int := 1 to 64 do
+      const Name: string := 'Fixture ' + Index.ToString('D2');
+      Items.Add(
+        new Library.Album(
+          Name, Name, Name, 1L, 'fixture', Genres := [Name, Shared],
+          Credits := [Person, new Library.Membership(Library.ArtistId(Name), Name)],
+          GenreMemberships := [
+            Genre,
+            new Library.Membership(Library.GenreId(Name), Name, Tracks := 1L)
+          ]
+        )
+      );
+    end for;
+
+    const First: Nav.Route := Nav.Route.Page(Nav.Page.Albums);
+    const Routes: array of Nav.Route := [
+      First, Nav.Route.Page(Nav.Page.Artists),
+      Nav.Route.Artist(Person.Id), Nav.Route.Page(Nav.Page.Genres), Nav.Route.Genre(Genre.Id)
+    ];
+    const Catalog: Albums.State := Update.Apply(
+      new Albums.State(),
+      Albums.Msg.Received(new Library.Snapshot(Items.MoveToImmutable(), 64L)),
+      null
+    ).Model;
+    const Initial: App.State := new App.State(
+      new SettingsModel.State(new SettingsModel.Preferences([], 'light')),
+      Navigation := new Nav.State(Active := First), Albums := Catalog
+    );
+    var Last: App.State := Initial;
+    var PointerX: float := -1.0F;
+    var PointerY: float := -1.0F;
+    var Wheel: float := 0.0F;
+    const Ranges: C.List<string> := new C.List<string>();
+    begin
+      using const Session: Gui.Session<App.Msg> := Start();
+      for Index: int := 0 to Routes.Length - 1 do
+        Select(Session, Routes[Index]);
+        X.Assert.StartsWith('0:', Range(Session));
+        const Grid: Cui.CuiRectangle := Find(Session, View.GridId(Last.Albums)).Bounds;
+        PointerX := Grid.X + 4.0F;
+        PointerY := Grid.Y + Grid.Height / 2.0F;
+        Step(Session);
+        Wheel := -cast<float>(24 + Index * 8);
+        for Frame: int := 1 to 4 do
+          Step(Session);
+        end for;
+
+        const Visible: string := Range(Session);
+        X.Assert.False(
+          Visible.StartsWith('0:'),
+          'Expected to scroll ' + Nav.Key(Routes[Index])
+        );
+        Ranges.Add(Visible);
+      end for;
+
+      for Index: int := 0 to Routes.Length - 1 do
+        Select(Session, Routes[Index]);
+        X.Assert.Equal<string>(Ranges[Index], Range(Session));
+      end for;
+    end;
+
+    using const Data: H.Folder := H.Folder.Create();
+    Storage.Save(Data.Path, new Storage.Snapshot(CoverScroll := Last.Albums.Offsets));
+    Last := Initial with
+      Albums := Catalog with
+        Offsets := Storage.Load(Data.Path).CoverScroll;
+      end with;
+    end with;
+    using const Reopened: Gui.Session<App.Msg> := Start();
+    for Index: int := 0 to Routes.Length - 1 do
+      Select(Reopened, Routes[Index]);
+      X.Assert.Equal<string>(Ranges[Index], Range(Reopened));
+    end for;
   end procedure;
 end record;
 

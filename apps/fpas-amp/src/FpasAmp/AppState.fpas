@@ -9,6 +9,7 @@ uses
   FpasAmp.Persistence.UserFiles as Files,
   FpasAmp.Ui.Navigation.Model as Nav,
   FpasAmp.Persistence.PlayerState as Transport,
+  System.Collections.Immutable as I, System.Collections.Generic as C,
   System.IO as IO,
   System as Sys,
   System.Text.Json as J;
@@ -25,12 +26,14 @@ public type Snapshot = record
   public Y: int? := null;
   // Whether the window was maximized.
   public Maximized: bool := false;
-  // Last settings tab: 0 for General or 1 for Library.
+  // Last settings tab: 0 for General, 1 for Library or 2 for Metadata.
   public SettingsTab: int := 0;
   // Current page, album release ID or playlist key, independent of playback.
   public ActivePage: string := 'music';
   // Playback queue and the position to restore in pause.
   public Player: Transport.Saved := new Transport.Saved();
+  // Vertical positions of visited cover grids, keyed by route.
+  public CoverScroll: I.ImmutableDictionary<string, float> := I.ImmutableDictionary<string, float>.Empty;
 end record;
 
 const FileName: string := 'state.json';
@@ -82,6 +85,36 @@ begin
   return 0;
 end function;
 
+function CoverScroll(Field: J.JsonElement; ref Valid: bool): I.ImmutableDictionary<string, float>;
+begin
+  const Offsets: I.ImmutableDictionary<string, float>.Builder := I.ImmutableDictionary.CreateBuilder<string, float>();
+  if Field.ValueKind = J.JsonValueKind.Object then
+    for Item: J.JsonProperty in Field.EnumerateObject() do
+      case Nav.Parse(Item.Name) of
+        when Nav.Route.Page(
+          Nav.Page.Albums
+        ), Nav.Route.Page(
+          Nav.Page.Artists
+        ), Nav.Route.Page(Nav.Page.Genres), Nav.Route.Artist(_), Nav.Route.Genre(_):
+          var Offset: float := 0.0F;
+          if Item.Value.ValueKind = J.JsonValueKind.Number and Item.Value.TryGetSingle(out Offset)
+            and Sys.Single.IsFinite(Offset) and Offset >= 0.0F
+          then
+            Offsets[Item.Name] := Offset;
+          else
+            Valid := false;
+          end if;
+        else
+          Valid := false;
+      end case;
+    end for;
+  elsif Field.ValueKind <> J.JsonValueKind.Undefined then
+    Valid := false;
+  end if;
+
+  return Offsets.ToImmutable();
+end function;
+
 function Decode(Root: J.JsonElement): Files.Decoded<Snapshot>;
 begin
   const Defaults: Snapshot := new Snapshot();
@@ -113,7 +146,8 @@ begin
         Nav.Key(Route)
       else
         'music'
-      end if, Transport.Decode(Fields.Field(Root, 'player'), ref Valid)
+      end if, Transport.Decode(Fields.Field(Root, 'player'), ref Valid),
+      CoverScroll(Fields.Field(Root, 'coverScroll'), ref Valid)
     ),
     Valid and Maximized <> null
   );
@@ -131,6 +165,12 @@ begin
   Writer.WriteString('activePage', Value.ActivePage);
   Writer.WritePropertyName('player');
   Transport.Encode(Writer, Value.Player);
+  Writer.WriteStartObject('coverScroll');
+  for Position: C.KeyValuePair<string, float> in Value.CoverScroll do
+    Writer.WriteNumber(Position.Key, Position.Value);
+  end for;
+
+  Writer.WriteEndObject();
   Writer.WriteEndObject();
 end procedure;
 
@@ -199,7 +239,7 @@ end function;
 //
 // ## Parameters
 // - `Value`: The placement the GUI host reported when the window closed.
-// - `Navigation`: Final selected route and independently retained settings tab.
+// - `Navigation`: Final selected route, settings tab and cover-grid positions.
 // - `Player`: Optional saved queue and position from this window.
 // ## Returns
 // The stored placement; coordinates are null where the system reports none.
@@ -230,7 +270,7 @@ begin
     end if,
     Value.State = Cui.CuiWindowState.Maximized,
     Navigation.SettingsTab,
-    Nav.Key(Navigation.Active), Player ?? new Transport.Saved()
+    Nav.Key(Navigation.Active), Player ?? new Transport.Saved(), Navigation.CoverScroll
   );
 end function;
 

@@ -3,9 +3,8 @@
 unit TuiGallery.ChoiceSamples;
 
 uses
-  Gallery.Shared.Strings as Strings, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as Style,
-  Fpas.Ui.Widgets.Actions.SegmentedControls as S, Fpas.Ui.Widgets.Actions.ToggleGroups as T,
-  Fpas.Ui.Widgets.Actions.Buttons as B, System as Sys;
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as Style,
+  Fpas.Ui.Widgets.Actions.SegmentedControls as S, Fpas.Ui.Widgets.Actions.Buttons as B;
 
 // User changes in the original CUI selection examples.
 public type Msg = variant
@@ -13,22 +12,14 @@ public type Msg = variant
   SetView(Index: int);
   // Selects a date range.
   SetRange(Index: int);
-  // Changes the independent formatting flags.
-  SetFormats(Flags: array of bool);
-  // Changes the exclusive alignment flags.
-  SetAlignment(Flags: array of bool);
 end variant;
 
-// Model for the view, range, formatting and alignment demonstrations.
+// Model for the view and range demonstrations.
 public type Model = record
   // Selected view, initially List.
   public View: int := 0;
   // Selected date range, initially Day.
   public Range: int := 0;
-  // Selected formats, initially Bold.
-  public Formats: array of bool := [true, false, false, false];
-  // Selected alignment, initially Left.
-  public Alignment: array of bool := [true, false, false];
 end record;
 
 // Accepts the proposal from one of the example controls.
@@ -46,12 +37,6 @@ begin
     when Msg.SetRange(const Index: int): State with
       Range := Index;
     end with;
-    when Msg.SetFormats(const Flags: array of bool): State with
-      Formats := Flags;
-    end with;
-    when Msg.SetAlignment(const Flags: array of bool): State with
-      Alignment := Flags;
-    end with;
   end case;
 end function;
 
@@ -66,54 +51,13 @@ begin
     new L.Flow(Gap := L.Spacing.Tight),
     E.Styled<Msg>(E.Text<Msg>('Segmented control'), Style.Role.Heading),
     S.SegmentedControl<Msg>(
-      'view', [
-        new S.Item('List', Sys.Char.ConvertFromUtf32($E106)),
-        new S.Item('Board', Sys.Char.ConvertFromUtf32($E1C1)),
-        new S.Item('Timeline', Sys.Char.ConvertFromUtf32($E1F5))
-      ],
+      'view', [new S.Item('List'), new S.Item('Board'), new S.Item('Timeline')],
       State.View, Msg.SetView
     ),
     S.SegmentedControl<Msg>(
       'range', [new S.Item('Day'), new S.Item('Week'), new S.Item('Month'), new S.Item('Year')],
       State.Range, Msg.SetRange, new S.Options(ControlSize := B.Size.Small)
     )
-  );
-end function;
-
-// Shows the CUI Actions examples for formatting and alignment.
-// ## Parameters
-// - `State`: Current formatting and alignment flags.
-// - `Columns`: Available preview columns.
-// ## Returns
-// Both toggle groups, with the second on a separate row when space is limited.
-public function Toggles(State: Model; Columns: int): E.Element<Msg>;
-begin
-  const Formats: E.Element<Msg> := T.ToggleGroup<Msg>(
-    'action-format', [
-      new T.Item('Bold', Sys.Char.ConvertFromUtf32($E05D)),
-      new T.Item('Italic', Sys.Char.ConvertFromUtf32($E0FB)),
-      new T.Item('Underline', Sys.Char.ConvertFromUtf32($E19A)),
-      new T.Item('Code', Sys.Char.ConvertFromUtf32($E093))
-    ],
-    State.Formats, Msg.SetFormats, new T.Options(IconOnly := true)
-  );
-  const Alignment: E.Element<Msg> := T.ToggleGroup<Msg>(
-    'action-align', [
-      new T.Item('Left', Sys.Char.ConvertFromUtf32($E185)),
-      new T.Item('Center', Sys.Char.ConvertFromUtf32($E106)),
-      new T.Item('Right', Sys.Char.ConvertFromUtf32($E115))
-    ],
-    State.Alignment, Msg.SetAlignment, new T.Options(Exclusive := true)
-  );
-  const Flow: L.Flow := new L.Flow(Gap := L.Spacing.Tight);
-  return E.Column<Msg>(
-    Flow,
-    E.Styled<Msg>(E.Text<Msg>(Strings.Get('Heading.ToggleGroup')), Style.Role.Heading),
-    if Columns >= 80 then
-      E.Row<Msg>(Flow, Formats, Alignment)
-    else
-      E.Column<Msg>(Flow, Formats, Alignment)
-    end if
   );
 end function;
 

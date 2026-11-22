@@ -208,22 +208,20 @@ and signing. The probe presents a button through both renderers.
 
 ## Terminal UI
 
-`TuiGalleryTests` checks the two rounded panels, their 1:2 width ratio and the
-sidebar’s destination order. It follows the shared profile through Overview,
+`TuiGalleryTests` checks the two rounded panels, the sidebar’s live examples
+and keyboard scrolling at 80 × 25. It follows the shared profile through Overview,
 Inputs and Edit profile, checks both text-field layouts and exercises the button
 states, workspace and notification checkboxes, shared preferences across Selection and both overlays, deletion confirmation, focus and resize. It verifies
-the GUI’s progress values, sortable people table and editor status actions,
-along with the terminal cell grid, theme switching and Ctrl+Q.
+the progress values, compact sortable table and editor status actions,
+along with theme switching and Ctrl+Q.
 It clears the project search and checks focus return, edits and steps the Seats
 field through invalid input and bounds, and dismisses the storage alert across
 resize and page navigation.
-It also exercises both CUI segmented controls and toggle groups, including
-focus without activation, independent flags, exclusive replacement and
-horizontal reveal in a narrow preview.
-The shared terminal contract checks profile validation for both groups and
-equal allocation for large full-width segments.
+It also exercises both segmented controls with keyboard selection and one tab
+stop per group. The shared terminal contract checks segment allocation and
+rejects GUI toggle groups in the terminal profile.
 The rendering contract checks spinner ink and stable headless frames, and
-sparkline normalization, empty and flat series, and expanded plots.
+sparkline normalization, empty and flat series, and fixed-width plots on one row.
 The terminal expandable card contract checks keyboard and pointer toggles, hidden and disabled content, and focus restoration when an offscreen header needs to be revealed. The gallery checks the shared Security example.
 The dropdown contract checks scoped input, disabled commands, keyboard selection, pointer dismissal, empty menus, constrained placement and focus across a confirmation dialog. The gallery verifies the shared Options commands.
 The terminal text area contract checks word wrapping, caret movement, model-declined edits, paste normalization, Unicode limits, read-only fields, height and scroll handoff. The gallery checks editing the shared About description.

@@ -116,7 +116,35 @@ begin
   else
     Area.Width
   end if;
-  for Row: int := 0 to Sys.Math.Min(Area.Height, Entries.Length - View.Offset) - 1 do
+  const Count: int := Sys.Math.Min(Area.Height, Entries.Length - View.Offset);
+  const Lines: C.List<string> := new C.List<string>(Count);
+  var Longest: int := Width;
+  for Row: int := 0 to Count - 1 do
+    const Entry: Logs.Entry := Entries[View.Offset + Row];
+    const Time: string := if Timestamps then
+      Timestamp(Entry.Time) + '  '
+    else
+      ''
+    end if;
+    const Text: string := Time + Entry.Severity.ToString().PadRight(7) + '  ' + G.SingleLine(
+      Entry.Text
+    );
+    Lines.Add(Text);
+    Longest := Sys.Math.Max(Longest, G.Measure(Text));
+  end for;
+
+  const PanId: string := Id + #0 + 'horizontal';
+  const Maximum: int := Longest - Width;
+  var Left: int := 0;
+  discard Offsets.TryGetValue(PanId, out Left);
+  Left := Sys.Math.Clamp(Left, 0, Maximum);
+  Offsets[PanId] := Left;
+  const Pan: A.HorizontalViewport? := if Maximum > 0 then
+    new A.HorizontalViewport(PanId, Maximum, Sys.Math.Max(1, Width div 2))
+  else
+    null
+  end if;
+  for Row: int := 0 to Count - 1 do
     const Entry: Logs.Entry := Entries[View.Offset + Row];
     const Tone: T.Style := case Entry.Severity of
       when Logs.Level.Warning: new T.Style(
@@ -129,16 +157,11 @@ begin
       );
       else Style;
     end case;
-    const Time: string := if Timestamps then
-      Timestamp(Entry.Time) + '  '
-    else
-      ''
-    end if;
     const Line: F.Rect := new F.Rect(Area.X, Area.Y + Row, Width, 1);
     Operations.Add(
       new D.Operation(
-        Time + Entry.Severity.ToString().PadRight(7) + '  ' + G.SingleLine(Entry.Text),
-        Line,
+        Lines[Row],
+        new F.Rect(Line.X - Left, Line.Y, Longest, 1),
         Line,
         Tone,
         false
@@ -149,7 +172,7 @@ begin
   V.DrawBar<TMsg>(View, Operations, Area, Area, Style, Theme.Widgets);
   return new A.Control<TMsg>(
     Id, Id, 'log', View.Offset.ToString(), Area, Scope, FocusReturn, true,
-    A.Binding<TMsg>.Scroll(View), S.ButtonVariant.Default
+    A.Binding<TMsg>.Scroll(View), S.ButtonVariant.Default, Pan := Pan
   );
 end function;
 

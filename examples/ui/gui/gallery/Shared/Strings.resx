@@ -17,7 +17,6 @@
   <data name="Description.Buttons" xml:space="preserve"><value>Variants, sizes and states.</value></data>
   <data name="Description.CanvasAndBars" xml:space="preserve"><value>Drawing surfaces and contextual actions.</value></data>
   <data name="Description.Capture" xml:space="preserve"><value>Controls for capturing user input.</value></data>
-  <data name="Description.CellGrid" xml:space="preserve"><value>Explore a colored ripple field.</value></data>
   <data name="Description.Charts" xml:space="preserve"><value>Visual summaries of values and trends.</value></data>
   <data name="Description.Code" xml:space="preserve"><value>Source listings and code presentation.</value></data>
   <data name="Description.CreativeControls" xml:space="preserve"><value>Controls for creative editing.</value></data>
@@ -323,7 +322,6 @@
   <data name="Page.Buttons" xml:space="preserve"><value>Buttons</value></data>
   <data name="Page.CanvasAndBars" xml:space="preserve"><value>Canvas and bars</value></data>
   <data name="Page.Capture" xml:space="preserve"><value>Capture</value></data>
-  <data name="Page.CellGrid" xml:space="preserve"><value>Cell grid</value></data>
   <data name="Page.Charts" xml:space="preserve"><value>Charts</value></data>
   <data name="Page.Code" xml:space="preserve"><value>Code</value></data>
   <data name="Page.CreativeControls" xml:space="preserve"><value>Creative controls</value></data>
@@ -375,7 +373,6 @@
   <data name="Text.BrowseComponents" xml:space="preserve"><value>Browse components</value></data>
   <data name="Text.Canada" xml:space="preserve"><value>Canada</value></data>
   <data name="Text.Cancel" xml:space="preserve"><value>Cancel</value></data>
-  <data name="Text.CellGridHint" xml:space="preserve"><value>Click to center · Wheel to change spacing</value></data>
   <data name="Text.Checkbox" xml:space="preserve"><value>Checkbox</value></data>
   <data name="Text.CommandPalette" xml:space="preserve"><value>Command palette</value></data>
   <data name="Text.Comments" xml:space="preserve"><value>Comments</value></data>
@@ -528,5 +525,9 @@
   <data name="Text.YourName" xml:space="preserve"><value>Your name</value></data>
   <data name="Tui.List.Opened" xml:space="preserve"><value>Opened {0}</value></data>
   <data name="Tui.Log.Append" xml:space="preserve"><value>Append build message</value></data>
-  <data name="Tui.Table.Pan" xml:space="preserve"><value>Ctrl+Left / Right on a row to reveal columns</value></data>
+  <data name="Tui.Log.Keys" xml:space="preserve"><value>Ctrl+Left / Right to read long lines</value></data>
+  <data name="Tui.Preview.Keys" xml:space="preserve"><value>F6 Scroll preview</value></data>
+  <data name="Tui.Filter.Keys" xml:space="preserve"><value>Tab to Filter · Space to toggle · Esc to close</value></data>
+  <data name="Tui.Spinner.Sync" xml:space="preserve"><value>Syncing 24 files</value></data>
+  <data name="Tui.Sparkline.Latest" xml:space="preserve"><value>Latest: </value></data>
 </root>

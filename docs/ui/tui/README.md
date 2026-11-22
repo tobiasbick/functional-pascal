@@ -1,8 +1,29 @@
 # Terminal UI handbook
 
-Build terminal applications with `Fpas.Ui.Tui`. The gallery uses the shared theme and layout rules to place a navigation panel beside a scrollable preview. Its panels share the available width in a 1:2 ratio. Shared examples appear under the same gallery destinations as in the GUI. The cell grid has a separate **Terminal** destination.
+Build terminal applications with `Fpas.Ui.Tui`. The gallery uses the shared
+theme and layout rules to place a narrow navigation panel beside a scrollable
+preview. The [fractal explorer](../../../examples/ui/tui/fractals/README.md)
+demonstrates a keyboard-controlled cell grid.
 
 ![Navigation and progress bars in the terminal gallery](../../../examples/ui/tui/gallery/panels.png)
+
+## Choosing terminal widgets
+
+Design for an SSH terminal with 80 columns and 25 rows and keyboard input.
+Start with a task that is useful in that environment. A CUI example can
+supply sample data and intent. Choose the layout and interaction that make
+the task practical in a terminal.
+
+Check the primary workflow from entry to completion at 80 × 25 using only
+the keyboard. The user needs to find the action, follow focus when the view
+scrolls, read the information needed to make a choice, and see the result.
+Display widgets need a readable representation at this size. Preserve the
+essential information with text or terminal glyphs.
+
+Keep desktop workflows in the GUI when they depend on precise pointer
+positioning, drag gestures or a large visual canvas. Add a terminal control
+when it solves a useful terminal task and meets the keyboard and space
+requirements.
 
 ## First terminal app
 
@@ -43,7 +64,7 @@ dotnet run --project examples/ui/tui/gallery/TuiWidgetGallery.fpasproj
 | --- | --- |
 | [Layout](layout/README.md) | Panels, weighted rows and columns, scroll views |
 | [Navigation](navigation/README.md) | Sidebar with selectable destinations, tabs, breadcrumbs and pagination |
-| [Actions](actions/README.md) | Button, dropdown menu, segmented control and toggle group |
+| [Actions](actions/README.md) | Button, dropdown menu and segmented control |
 | [Inputs](inputs/README.md) | Text, search and number fields, text area, searchable single and multiple selection |
 | [Files](files/README.md) | Open, save and folder selection dialogs |
 | [Selection](selection/README.md) | Checkbox, switch and radio group |

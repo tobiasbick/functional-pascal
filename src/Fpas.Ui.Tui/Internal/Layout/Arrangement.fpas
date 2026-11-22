@@ -264,14 +264,13 @@ public function Arrange<TMsg>(
       when E.Element.Label(const Value: string):
         Draw(Value, Area, Clip, Style, true);
       when E.Element.Spinner(
-        const Width: int, const Rows: int, const Frames: string, const Ink: G.Color,
-        const Track: G.Color, const Inverse: bool
+        const Frames: string, const Ink: G.Color, const Inverse: bool
       ):
         const Bounds: F.Rect := new F.Rect(
           Area.X,
           Area.Y,
-          Sys.Math.Min(Width, Area.Width),
-          Sys.Math.Min(Rows, Area.Height)
+          Sys.Math.Min(1, Area.Width),
+          Sys.Math.Min(1, Area.Height)
         );
         const AnimatedPhase: long := if Theme.ReducedMotion then
           0L
@@ -285,7 +284,6 @@ public function Arrange<TMsg>(
           Frames,
           AnimatedPhase,
           Ink,
-          Track,
           Inverse,
           Style,
           Theme
@@ -294,7 +292,6 @@ public function Arrange<TMsg>(
       when E.Element.Sparkline(
         const Values: array of float,
         const Width: int,
-        const Rows: int,
         const Fill: bool,
         const Ink: G.Color
       ):
@@ -303,7 +300,7 @@ public function Arrange<TMsg>(
         else
           Sys.Math.Min(Width, Area.Width)
         end if;
-        const Bounds: F.Rect := new F.Rect(Area.X, Area.Y, Span, Sys.Math.Min(Rows, Area.Height));
+        const Bounds: F.Rect := new F.Rect(Area.X, Area.Y, Span, Sys.Math.Min(1, Area.Height));
         Sparkline.Paint(Operations, Bounds, F.Intersect(Bounds, Clip), Values, Ink, Style, Theme);
       when E.Element.Progress(
         const Fraction: float,
@@ -471,7 +468,11 @@ public function Arrange<TMsg>(
         end if;
 
         VisitScrolled(Id, Child, Layout.Content, Layout.Clip, ScopeId, Style);
-        V.DrawBar<TMsg>(View, Operations, Area, Clip, Style, Widgets);
+        if Focus = Id and not InputBlocked then
+          V.DrawBar<TMsg>(View, Operations, Area, Clip, Theme.Focus, null);
+        else
+          V.DrawBar<TMsg>(View, Operations, Area, Clip, Style, Widgets);
+        end if;
       when E.Element.Desktop(
         const Content: E.Element<TMsg>, const Layers: array of E.Element<TMsg>,
         const Keys: array of K.ShortcutBinding<TMsg>

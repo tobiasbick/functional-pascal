@@ -4,7 +4,7 @@ unit TuiGallery.State;
 
 uses
   TuiGallery.ChoiceSamples as Choices,
-  TuiGallery.Catalog as Catalog, TuiGallery.CellGridSample as GridSample, TuiGallery.FilePickerSample as Files,
+  TuiGallery.Catalog as Catalog, TuiGallery.FilePickerSample as Files,
   TuiGallery.ListSample as ListSample, TuiGallery.ProfileSample as Profile, TuiGallery.ToolSamples as Tools,
   Gallery.Shared.SecurityCard as Security, Gallery.Shared.AboutField as AboutSample,
   Gallery.Shared.PickerChoices as Pickers, Gallery.Shared.SaveFrequency as Frequency,
@@ -12,17 +12,19 @@ uses
   Gallery.Shared.PaginationExample as Pagination,
   Gallery.Shared.LanguagesExample as LanguageSample,
   Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Theming.Themes as Themes,
-  Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Mvu.Application as Mvu;
+  Fpas.Ui.Layout as Layout, Fpas.Ui.Mvu.Application as Mvu;
 
 // Messages produced by the terminal gallery.
 public type Msg = variant
   // Open a gallery destination.
   SelectPage(Page: Catalog.Entry);
+  // Set the current preview's keyboard or pointer scroll position.
+  ScrollPreview(Position: Layout.ScrollPosition);
   // Leave the current preview state unchanged.
   Preview;
   // Change the save button state.
   SetSaving(Value: bool);
-  // Apply a segment or toggle proposal.
+  // Apply a segment proposal.
   SetChoice(Message: Choices.Msg);
   // Record the chosen project action.
   MenuChoice(Name: string);
@@ -58,8 +60,6 @@ public type Msg = variant
   SetPickerLanguage(Value: int);
   // Adopt the selected languages in the multi-select example.
   SetLanguages(Value: array of bool);
-  // Handle terminal cell grid input.
-  Grid(Event: Grids.Event);
   // Handle an action from the profile example.
   ProfileAction(Action: Profile.Msg);
   // Focus a control by its stable ID.
@@ -86,11 +86,15 @@ end variant;
 public type Model = record
   // Current gallery destination.
   public Active: Catalog.Entry;
+  // Current vertical position of the preview.
+  public PreviewPosition: Layout.ScrollPosition := Layout.ScrollPosition.Offset(
+    Layout.Measure.Cells(0)
+  );
   // Current color scheme.
   public Mode: Themes.Mode := Themes.Mode.Dark;
   // Whether the save button is busy.
   public Saving: bool := false;
-  // Selections in the segmented controls and toggle groups.
+  // Selections in the segmented controls.
   public ChoiceState: Choices.Model := new Choices.Model();
   // Most recently chosen project action.
   public MenuChoice: string := '';
@@ -144,8 +148,6 @@ public type Model = record
   public Indent: int := 1;
   // Current editor language option.
   public Language: int := 0;
-  // State of the terminal cell grid.
-  public Grid: GridSample.State := new GridSample.State();
 end record;
 
 // Applies a gallery message and returns its state and requested effects.
@@ -163,10 +165,11 @@ begin
     when Msg.SelectPage(const Page: Catalog.Entry):
       Next := State with
         Active := Page;
+        PreviewPosition := Layout.ScrollPosition.Offset(Layout.Measure.Cells(0));
       end with;
-    when Msg.Grid(const Event: Grids.Event):
+    when Msg.ScrollPreview(const Position: Layout.ScrollPosition):
       Next := State with
-        Grid := GridSample.Update(State.Grid, Event);
+        PreviewPosition := Position;
       end with;
     when Msg.Preview:
     when Msg.MenuChoice(const Name: string):

@@ -1,13 +1,33 @@
 // [Documentation](../../../doc/desktop.md#browsing-music-and-collections)
 
-// Selects visible headers and keeps each top-level grid’s filters and scroll position.
+// Selects visible headers and keeps each grid’s filters and scroll position.
 unit FpasAmp.Ui.Albums.Grid;
 
 uses
   FpasAmp.Ui.Albums.Model as M, FpasAmp.Library.Albums.Model as Albums,
   FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, FpasAmp.Ui.Albums.Toolbar.Update as ToolbarUpdate,
   FpasAmp.Ui.Albums.Browse as Browse, FpasAmp.Ui.Albums.Groups as Groups, Fpas.Media.Images as Images,
+  FpasAmp.Ui.Navigation.Model as Nav,
   System.Collections.Immutable as I, System.Collections.Generic as C, Fpas.Ui.Mvu.Application as A;
+
+function Key(Scope: Toolbar.Scope; Id: string): string;
+begin
+  return Nav.Key(
+    case Scope of
+      when Toolbar.Scope.Artists: Nav.Route.Page(Nav.Page.Artists);
+      when Toolbar.Scope.Genres: Nav.Route.Page(Nav.Page.Genres);
+      when Toolbar.Scope.ArtistAlbums: Nav.Route.Artist(Id);
+      when Toolbar.Scope.GenreAlbums: Nav.Route.Genre(Id);
+      else Nav.Route.Page(Nav.Page.Albums);
+    end case
+  );
+end function;
+
+// Returns the route key for the cover grid in Current, including behind a track list.
+public function Key(Current: M.State): string;
+begin
+  return Key(Current.Scope, Current.GroupId);
+end function;
 
 function SameArtwork(Left: I.ImmutableArray<Albums.Album>; Right: I.ImmutableArray<Albums.Album>): bool;
 begin
@@ -139,21 +159,11 @@ begin
   if Current.Scope = Scope and Current.GroupId = Id then
     return Current;
   end if;
-  var Positions: I.ImmutableDictionary<Toolbar.Scope, M.Position> := Current.Positions;
-  if Toolbar.Root(Current.Scope) = Current.Scope then
-    Positions := Positions.SetItem(
-      Current.Scope,
-      new M.Position(
-        ToolbarUpdate.Apply(Current.Toolbar, Toolbar.Msg.SetOpen(false)),
-        Current.Offset
-      )
-    );
-  end if;
-  const Position: M.Position := if Positions.ContainsKey(Scope) then
-    Positions[Scope]
-  else
-    new M.Position()
-  end if;
+  const Toolbars: I.ImmutableDictionary<string, Toolbar.State> := Current.Toolbars.SetItem(
+    Key(Current), ToolbarUpdate.Apply(Current.Toolbar, Toolbar.Msg.SetOpen(false))
+  );
+  var Saved: Toolbar.State := new Toolbar.State();
+  const HasToolbar: bool := Toolbars.TryGetValue(Key(Scope, Id), out Saved);
   const Collections: Groups.Catalog := if Toolbar.Root(Current.Scope) <> Toolbar.Root(Scope) then
     Groups.Build(Current.Library.Releases, Scope)
   else
@@ -165,9 +175,12 @@ begin
       GroupId := Id;
       Collections := Collections;
       Music := null;
-      Positions := Positions;
-      Toolbar := Position.ToolbarState;
-      Offset := Position.Offset;
+      Toolbars := Toolbars;
+      Toolbar := if HasToolbar then
+        Saved
+      else
+        new Toolbar.State()
+      end if;
       First := -1;
       Last := -1;
       Generation := Current.Generation + 1L;

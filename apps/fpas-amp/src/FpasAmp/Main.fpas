@@ -75,7 +75,8 @@ begin
     end case;
     var Navigation: Nav.State := new Nav.State(
       Active := Destination,
-      SettingsTab := Opened.SettingsTab
+      SettingsTab := Opened.SettingsTab,
+      CoverScroll := Opened.CoverScroll
     );
     const Closed: Cui.CuiWindowPlacement := Shell.Run(
       State.ToWindow(Opened), Preferences, ref Navigation, ref Restored,

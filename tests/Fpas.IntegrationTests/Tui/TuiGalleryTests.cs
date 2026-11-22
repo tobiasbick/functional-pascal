@@ -13,7 +13,7 @@ namespace Fpas.IntegrationTests.Tui;
 public sealed partial class TuiGalleryTests
 {
     [Fact]
-    public async Task Gallery_uses_GUI_sections_and_sample_data_and_keeps_terminal_navigation_working()
+    public async Task Gallery_shows_live_examples_and_keeps_terminal_navigation_working()
     {
         using var program = new Debuggee("tui-gallery");
         await TuiFixture.CompileExample(program, "gallery");
@@ -32,24 +32,24 @@ public sealed partial class TuiGalleryTests
         {
             await pipe.WaitForConnectionAsync(token);
             var initial = await Request("snapshot");
-            AssertPanels(initial, 80, 24, 26);
+            AssertPanels(initial, 80, 25, 19);
             Assert.Equal("Overview", Selected(initial));
-            Assert.Contains("Components for FPas", Preview(initial, 26));
+            Assert.Contains("Components for FPas", Preview(initial));
             Assert.Equal("Maya Okafor", Control(initial, "workspace-name").GetProperty("value").GetString());
             var dark = Colors(initial);
 
-            // Traverse the sidebar without changing the active page. The terminal extension follows both GUI groups.
+            await CheckKeyboardPreview(session);
+
+            // Traverse the sidebar without changing the active page.
             string[] destinations = ["Overview", "Buttons", "Inputs", "Selection", "Navigation", "Overlays", "Feedback",
-                "Data display", "Charts", "Actions", "Smart inputs", "Pickers", "Capture", "Disclosure", "Reader",
-                "Data grid", "Code", "Social and media", "Planning", "More charts", "Motion", "AI", "Audio", "Files",
-                "Developer tools", "More developer tools", "Instruments", "Creative controls", "Canvas and bars",
-                "Voice", "Layout", "Text and display", "Editing tools", "App chrome", "Cell grid"];
+                "Data display", "Charts", "Pickers", "Disclosure", "Data grid", "Code", "Files",
+                "Text and display", "App chrome"];
             foreach (var destination in destinations.Skip(1))
             {
                 await Key("Down");
                 Assert.Equal(destination, Focused(await Request("snapshot")));
             }
-            Assert.Contains("Components for FPas", Preview(await Request("snapshot"), 26));
+            Assert.Contains("Components for FPas", Preview(await Request("snapshot")));
             await Key("Home");
             Assert.Equal("Overview", Selected(await Request("snapshot")));
             await Resize(144, 36);
@@ -76,7 +76,7 @@ public sealed partial class TuiGalleryTests
             await Key("Enter");
             var chosen = await Request("snapshot");
             Assert.Equal("Options", Focused(chosen));
-            Assert.Contains("Selected Duplicate", Preview(chosen, 48));
+            Assert.Contains("Selected Duplicate", Preview(chosen));
             await Key("Down");
             await Key("End");
             await Key("Enter");
@@ -84,14 +84,13 @@ public sealed partial class TuiGalleryTests
             await Key("Escape");
             Assert.Equal("Options", Focused(await Request("snapshot")));
 
-            await CheckChoiceGroups(session);
             await Click("Inputs");
             await Key("Right");
             Assert.Equal("Full name", Focused(await Request("snapshot")));
             await Key("End");
             await Turn(new() { ["kind"] = "paste", ["text"] = "!" });
             var inputs = await Request("snapshot");
-            Assert.Contains("We never share your email.", Preview(inputs, 48));
+            Assert.Contains("We never share your email.", Preview(inputs));
             Assert.Equal("Maya Okafor!", Control(inputs, "input-name").GetProperty("value").GetString());
             var nameField = Control(inputs, "input-name");
             var emailField = Control(inputs, "input-email");
@@ -135,7 +134,7 @@ public sealed partial class TuiGalleryTests
             await Key("Enter");
             Assert.Equal("Rust", Control(await Request("snapshot"), "input-language").GetProperty("value").GetString());
 
-            Assert.Contains("Search projects", Preview(inputs, 48));
+            Assert.Contains("Search projects", Preview(inputs));
             await Click("Search");
             await Turn(new() { ["kind"] = "paste", ["text"] = "roadmap" });
             Assert.Equal("roadmap", Control(await Request("snapshot"), "input-search").GetProperty("value").GetString());
@@ -172,17 +171,17 @@ public sealed partial class TuiGalleryTests
             await Click("Disclosure");
             var disclosure = await Request("snapshot");
             Assert.Equal("false", Control(disclosure, "security").GetProperty("value").GetString());
-            Assert.Contains("Two-factor authentication is on", Preview(disclosure, 48));
+            Assert.Contains("Two-factor authentication is on", Preview(disclosure));
             await Key("Right");
             await Key("Enter");
             disclosure = await Request("snapshot");
             Assert.Equal("Security", Focused(disclosure));
             Assert.Equal("true", Control(disclosure, "security").GetProperty("value").GetString());
-            Assert.Contains("Recovery codes were generated 3 months ago.", Preview(disclosure, 48));
+            Assert.Contains("Recovery codes were generated 3 months ago.", Preview(disclosure));
             await Click("Security");
             disclosure = await Request("snapshot");
             Assert.Equal("Security", Focused(disclosure));
-            Assert.DoesNotContain("Recovery codes were generated", Preview(disclosure, 48));
+            Assert.DoesNotContain("Recovery codes were generated", Preview(disclosure));
 
             await Click("Navigation");
             await Key("Right");
@@ -227,7 +226,7 @@ public sealed partial class TuiGalleryTests
             await Resize(144, 36);
             Assert.Equal("true", Control(selection, "wifi").GetProperty("value").GetString());
             Assert.Equal("false", Control(selection, "bluetooth").GetProperty("value").GetString());
-            Assert.Contains("Turns off all radios.", Preview(selection, 48));
+            Assert.Contains("Turns off all radios.", Preview(selection));
             await Turn(new() { ["kind"] = "character", ["text"] = " " });
             await Key("Tab");
             Assert.Equal("Bluetooth", Focused(await Request("snapshot")));
@@ -254,8 +253,8 @@ public sealed partial class TuiGalleryTests
             await Click("Save changes");
             await Click("Open sheet");
             var sheet = await Request("snapshot");
-            Assert.Contains("Jonas commented on Release 1.0", Preview(sheet, 48));
-            Assert.Contains("Priya invited you to Engines", Preview(sheet, 48));
+            Assert.Contains("Jonas commented on Release 1.0", Preview(sheet));
+            Assert.Contains("Priya invited you to Engines", Preview(sheet));
             Assert.False(Control(sheet, "navigation/Overview").GetProperty("enabled").GetBoolean());
             Assert.Equal("true", Control(sheet, "notifications-mentions").GetProperty("value").GetString());
             Assert.Equal("true", Control(sheet, "notifications-weekly").GetProperty("value").GetString());
@@ -291,23 +290,21 @@ public sealed partial class TuiGalleryTests
             await Key("Enter");
             await Key("Escape");
             await Resize(100, 28);
-            AssertPanels(await Request("snapshot"), 100, 28, 33);
+            AssertPanels(await Request("snapshot"), 100, 28, 24);
             await Resize(40, 17);
             var narrow = await Request("snapshot");
-            AssertPanels(narrow, 40, 17, 13);
+            AssertPanels(narrow, 40, 17, 9);
             Assert.Equal(dark, Colors(narrow));
             await Key("End");
-            Assert.Equal("Cell grid", Focused(await Request("snapshot")));
+            Assert.Equal("App chrome", Focused(await Request("snapshot")));
             await Key("PageUp");
-            Assert.NotEqual("Cell grid", Focused(await Request("snapshot")));
+            Assert.NotEqual("App chrome", Focused(await Request("snapshot")));
             await Key("End");
-            await Key("Up");
-            await Key("Up");
             await Key("Up");
             await Key("Enter");
             Assert.Equal("Text and display", Selected(await Request("snapshot")));
             await Resize(100, 28);
-            Assert.Contains("Components are functions.", Preview(await Request("snapshot"), 33));
+            Assert.Contains("Components are functions.", Preview(await Request("snapshot")));
             await Resize(40, 17);
 
             await Key("Home");
@@ -318,26 +315,28 @@ public sealed partial class TuiGalleryTests
             Assert.Equal("presented", await Turn(new() { ["kind"] = "key", ["key"] = "T", ["modifiers"] = 4 }));
             Assert.NotEqual(dark, Colors(await Request("snapshot")));
             await Turn(new() { ["kind"] = "key", ["key"] = "T", ["modifiers"] = 4 });
-            await Resize(80, 24);
+            await Resize(80, 25);
             var feedback = await Request("snapshot");
-            AssertPanels(feedback, 80, 24, 26);
+            AssertPanels(feedback, 80, 25, 19);
             Assert.Equal(dark, Colors(feedback));
-            Assert.Matches(@"Uploading assets +─+ +68%", Preview(feedback, 26));
-            Assert.Matches(@"Exporting clip\.mp4 +─+ +42%", Preview(feedback, 26));
+            Assert.Matches(@"Uploading assets +─+ +68%", Preview(feedback));
+            Assert.Matches(@"Exporting clip\.mp4 +─+ +42%", Preview(feedback));
+            Assert.Contains("Syncing 24 files", Preview(feedback));
             foreach (string title in new[] { "A new version is available", "Payment received", "Storage almost full", "Build failed" })
-                Assert.Contains(title, Preview(feedback, 26));
+                Assert.Contains(title, Preview(feedback));
             await Click("Dismiss Storage almost full");
             await Resize(120, 24);
             var dismissed = await Request("snapshot");
-            Assert.DoesNotContain("Storage almost full", Preview(dismissed, 40));
-            Assert.Contains("Build failed", Preview(dismissed, 40));
+            Assert.DoesNotContain("Storage almost full", Preview(dismissed));
+            Assert.Contains("Build failed", Preview(dismissed));
             await Click("Inputs");
             await Click("Feedback");
-            Assert.Contains("Storage almost full", Preview(await Request("snapshot"), 40));
+            Assert.Contains("Storage almost full", Preview(await Request("snapshot")));
 
             await Click("Data display");
             var people = await Request("snapshot");
-            Assert.Contains("aiko@example.com", Preview(people, 40));
+            Assert.Contains("priya@example.com", Preview(people));
+            Assert.Contains("Status", Preview(people));
             Assert.Equal("True", Control(people, "person-1").GetProperty("value").GetString());
             await Key("Right");
             Assert.Equal("Priya Nair", Focused(await Request("snapshot")));
@@ -346,11 +345,13 @@ public sealed partial class TuiGalleryTests
             Assert.Equal("True", Control(await Request("snapshot"), "person-2").GetProperty("value").GetString());
             await Click("Name");
             people = await Request("snapshot");
-            Assert.Contains("Name ↓", Preview(people, 40));
+            Assert.Contains("Name ↓", Preview(people));
             Assert.True(Control(people, "person-2").GetProperty("row").GetInt32()
                 < Control(people, "person-4").GetProperty("row").GetInt32());
             await Click("Aiko Tanaka");
-            Assert.Equal("True", Control(await Request("snapshot"), "person-4").GetProperty("value").GetString());
+            var aiko = await Request("snapshot");
+            Assert.Equal("True", Control(aiko, "person-4").GetProperty("value").GetString());
+            Assert.Contains("aiko@example.com", Preview(aiko));
             await Resize(120, 10);
             people = await Request("snapshot");
             var headerRow = Control(people, "people/header/0").GetProperty("row").GetInt32();
@@ -374,57 +375,36 @@ public sealed partial class TuiGalleryTests
             var list = Control(listFrame, "sample-list");
             Assert.Equal("listbox", list.GetProperty("role").GetString());
             Assert.Equal("release", list.GetProperty("value").GetString());
-            Assert.Contains("Priya Nair · Ship it", Preview(listFrame, 40));
+            Assert.Contains("Priya Nair · Ship it", Preview(listFrame));
             await Turn(new() { ["kind"] = "click", ["column"] = list.GetProperty("column").GetInt32() + 2,
                 ["row"] = list.GetProperty("row").GetInt32() });
             var review = await Request("snapshot");
             Assert.Equal("design-review", Control(review, "sample-list").GetProperty("value").GetString());
-            Assert.Contains("Jonas Berg · Tomorrow at 10:00", Preview(review, 40));
-            Assert.DoesNotContain("Opened ", Preview(review, 40));
+            Assert.Contains("Jonas Berg · Tomorrow at 10:00", Preview(review));
+            Assert.DoesNotContain("Opened ", Preview(review));
             await Key("Enter");
             await Key("End");
             var planning = await Request("snapshot");
             Assert.Equal("planning", Control(planning, "sample-list").GetProperty("value").GetString());
-            Assert.Contains("Tomas Rivera · Q1 roadmap", Preview(planning, 40));
-            Assert.Contains("Opened Design review", Preview(planning, 40));
-            await Resize(80, 24);
+            Assert.Contains("Tomas Rivera · Q1 roadmap", Preview(planning));
+            Assert.Contains("Opened Design review", Preview(planning));
+            await Resize(80, 25);
 
             await Key("Escape");
             await Key("End");
-            await Key("Enter");
-            Assert.Equal("processed", Status(await Request("step")));
-            var gridFrame = await Request("snapshot");
-            var grid = Controls(gridFrame).Single(c => c.GetProperty("role").GetString() == "cell-grid");
-            int x = grid.GetProperty("column").GetInt32(), y = grid.GetProperty("row").GetInt32();
-            int width = grid.GetProperty("width").GetInt32(), height = grid.GetProperty("height").GetInt32();
-            Assert.True(width > 20 && height > 4);
-            Assert.Contains($"{width} × {height}", Preview(gridFrame, 26));
-            await Turn(new() { ["kind"] = "click", ["button"] = "left", ["column"] = x + 2, ["row"] = y + 1 });
-            var centered = await Request("snapshot");
-            Assert.Equal('+', centered.GetProperty("lines")[y + 1].GetString()![x + 2]);
-            await Turn(new() { ["kind"] = "scroll", ["column"] = x + 3, ["row"] = y, ["delta"] = -3 });
-            Assert.Contains("Wheel (3, 0) -3", Preview(await Request("snapshot"), 26));
-            await Resize(100, 30);
-            Assert.Equal("processed", Status(await Request("step")));
-            var resized = await Request("snapshot");
-            var bigger = Controls(resized).Single(c => c.GetProperty("role").GetString() == "cell-grid");
-            Assert.True(bigger.GetProperty("width").GetInt32() > width && bigger.GetProperty("height").GetInt32() > height);
-            Assert.Equal("idle", Status(await Request("step")));
-
-            await Key("Escape");
-            await Key("End");
-            await Key("Up");
             await Key("Enter");
             Assert.Equal("App chrome", Selected(await Request("snapshot")));
-            await Resize(156, 30);
             var chrome = await Request("snapshot");
             var encoding = Control(chrome, "desktop-status/encoding");
             var footerRow = encoding.GetProperty("row").GetInt32();
-            Assert.InRange(footerRow, 26, 28);
             var footer = chrome.GetProperty("lines")[footerRow].GetString()!;
-            Assert.Matches(@"main +Saved +Indexing 62% +─{8} +Ln 48, Col 17 +Spaces: 4 +UTF-8 +Markdown +Notifications", footer);
+            Assert.Matches(@"Saved +UTF-8 +Spaces: 4 +Markdown", footer);
+            Assert.DoesNotContain(Controls(chrome), c => c.GetProperty("id").GetString() == "desktop-status/branch");
             Assert.Contains("────────", chrome.GetProperty("lines")[footerRow - 1].GetString());
-            await Click("Spaces: 4");
+            await Key("Right");
+            Assert.Equal("UTF-8", Focused(await Request("snapshot")));
+            await Key("Tab");
+            await Key("Enter");
             Assert.Equal("Spaces: 8", Focused(await Request("snapshot")));
             await Click("Markdown");
             Assert.Equal("C", Focused(await Request("snapshot")));
@@ -434,9 +414,8 @@ public sealed partial class TuiGalleryTests
             Assert.Equal("UTF-8", Focused(await Request("snapshot")));
 
             await Key("Escape");
-            await Key("Home");
-            foreach (var _ in destinations.Skip(1).TakeWhile(destination => destination != "Developer tools"))
-                await Key("Down");
+            await Key("Up");
+            await Key("Up");
             await Key("Enter");
             Assert.Equal("Files", Selected(await Request("snapshot")));
             await Key("Right");
@@ -448,7 +427,7 @@ public sealed partial class TuiGalleryTests
                 await Key("Down");
             Assert.Equal("notes.txt", Control(await Request("snapshot"), "files-open-picker/list").GetProperty("value").GetString());
             await Key("Enter");
-            Assert.Contains("notes.txt", Preview(await Request("snapshot"), 52));
+            Assert.Contains("notes.txt", Preview(await Request("snapshot")));
             await Key("Tab");
             await Key("Enter");
             var savePicker = await Request("snapshot");

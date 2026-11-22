@@ -1,8 +1,6 @@
 # Table
 
-Use `Fpas.Ui.Widgets.Collections.Tables.Table` for rows with stable IDs and plain text cells. In **Components → Data display → Table**, the GUI and terminal galleries share the same five people, column headings, initial selection and sort order.
-
-![Terminal people table with Priya Nair selected and the Name column sorted ascending](../../../../examples/ui/tui/gallery/table.png)
+Use `Fpas.Ui.Widgets.Collections.Tables.Table` for rows with stable IDs and plain text cells. In **Components → Data display → Table**, the terminal gallery shows Name, Role and Status. Select a person to read their email address and revenue below the table.
 
 ## Example
 
@@ -36,8 +34,6 @@ Set `Tables.Options.HorizontalScroll := true` to retain natural widths on a
 narrow terminal. With a body row focused, Ctrl+Left and Ctrl+Right reveal
 columns. The header pans with the body. Arrows without modifiers keep their
 vertical navigation behavior.
-
-![Wide terminal table panned to the Revenue column](../../../../examples/ui/tui/gallery/wide-table.png)
 
 ## See also
 

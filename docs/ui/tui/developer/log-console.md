@@ -12,7 +12,8 @@ scroll back, it keeps the first visible entry in place as the application
 appends more entries.
 
 Use the wheel or focus the console and use Up, Down, Page Up, Page Down,
-Home and End. End returns to the newest message. With the toolbar enabled,
+Home and End. End returns to the newest message. Use Ctrl+Left and Ctrl+Right
+to read across long messages. With the toolbar enabled,
 Clear sends the supplied message so the application can clear its entries.
 
 ## Source files

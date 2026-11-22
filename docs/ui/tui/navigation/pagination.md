@@ -2,9 +2,8 @@
 
 Use `Fpas.Ui.Widgets.Navigation.Paginations.Pagination` to navigate a
 collection split into pages. **Components → Navigation → Pagination**
-shows the same twelve-page sample in the CUI and terminal galleries.
-
-![Numbered page buttons in the terminal gallery](../../../../examples/ui/tui/gallery/pagination.png)
+shows the same twelve-page sample in both galleries. The terminal gallery
+allocates a compact row for Previous, the current page and Next.
 
 ## Interaction
 

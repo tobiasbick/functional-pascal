@@ -1,6 +1,7 @@
 # Panels and weighted layout
 
-Compose a panel from a border, a semantic surface role and a size rule. The gallery splits its available columns in a 1:2 ratio.
+Compose a panel from a border, a semantic surface role and a size rule. The
+gallery caps the sidebar at 24 columns and gives the preview the remaining space.
 
 ![Two rounded, differently sized panels with a one-cell gap](../../../../examples/ui/tui/gallery/panels.png)
 
@@ -29,7 +30,10 @@ end unit;
 
 ## Interaction
 
-Place two panels in a row with weights 1 and 2. The gap is removed before the remaining width is shared. Use `L.Measure.Cells(1)` for a one-column terminal gap. Resize the terminal to see the panels share the new width. The panel is a container and adds no focus stop.
+Place two panels in a row with weights 1 and 2 to split the available width
+proportionally. A fixed sidebar beside a fill panel reserves more width for
+the main content. Use `L.Measure.Cells(1)` for a one-column terminal gap. The
+panel is a container and adds no focus stop.
 
 ## See also
 

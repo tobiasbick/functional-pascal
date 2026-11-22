@@ -1,5 +1,7 @@
 # TUI fractal explorer
 
+The keyboard workflow fits in an 80-column, 25-row terminal.
+
 Explore Mandelbrot, Julia, Burning Ship, Tricorn and the Newton basins of
 `z³ − 1`. The framed status panel shows the complex-plane center, palette,
 iteration limit, magnification and render state. Julia also shows its constant.

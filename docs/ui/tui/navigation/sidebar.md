@@ -1,6 +1,6 @@
 # Sidebar navigation
 
-Group destinations under headings. In the gallery, the selected destination determines what appears in the right panel. The sidebar follows the GUI gallery’s destination order and appends **Terminal** for the cell grid.
+Group destinations under headings. In the gallery, the selected destination determines which terminal example appears in the right panel.
 
 ![Scrollable Components and Extended navigation beside the selected preview](../../../../examples/ui/tui/gallery/panels.png)
 

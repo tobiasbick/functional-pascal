@@ -16,7 +16,9 @@ Do not build a second GUI widget or layout engine. Keep unavoidable knowledge
 of private CUI state and IDs inside the native bridge, not in C# or FPAS.
 
 The [terminal widget guide](ui/tui/README.md) lists the controls demonstrated in the TUI gallery.
-CUI widget ports target the GUI. Shared changes
+CUI widget ports target the GUI. The
+[terminal widget criteria](ui/tui/README.md#choosing-terminal-widgets)
+govern which workflows also receive terminal support. Shared changes
 must preserve the implemented terminal subset and reject unsupported GUI
 capabilities in TUI preflight.
 
@@ -232,8 +234,7 @@ See the illustrated [Actions](ui/gui/actions/README.md) and
   both examples and keeps keyboard focus visible on narrow terminals.
 - [x] Toggle group (`cui_toggle_group`): [API][fpas-toggle-group]. The GUI
   Actions page shows the original independent formatting and exclusive
-  alignment examples. The [terminal toggle group](ui/tui/actions/toggle-group.md)
-  shares both sets of choices and supports keyboard and pointer activation.
+  alignment examples.
 - [x] Checkbox (`cui_checkbox`): [API][fpas-selection]. Both galleries use the same notification choices under Selection and the weekly summary option in the workspace form. The [terminal checkbox](ui/tui/selection/checkbox.md) supports the mixed state, marker-only display and disabled rows.
 - [x] Switch (`cui_switch`): [API][fpas-selection]. Selection shows Wi-Fi,
   Bluetooth and airplane mode. The [terminal switch](ui/tui/selection/switch.md) uses the same options and accepts keyboard and pointer input.
@@ -625,7 +626,7 @@ and widget options.
   Feedback captures cover both renderers in light, dark and narrow layouts.
   Feedback also shows the original dither styles and inline examples.
   The API exposes native ink and track colors. The [terminal spinner](ui/tui/feedback/spinner.md)
-  shares the sizes, styles and inline examples with animated glyphs.
+  shows one animated cell alongside the activity label.
 - [x] Status spinner (`cui_status_spinner`): the original Feedback Upload
   example shows Busy and alternates Success and Error. Targeted checks cover
   the transitions, result expiry and retained results.

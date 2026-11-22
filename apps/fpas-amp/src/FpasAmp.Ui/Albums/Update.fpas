@@ -94,10 +94,14 @@ begin
         end with,
         [A.CancelBackground<M.Msg>('music/load'), A.Focus<M.Msg>('album-' + Selected.Album.Id)]
       );
-    when M.Msg.Scrolled(const Offset: float):
+    when M.Msg.Scrolled(const RouteKey: string, const Offset: float):
       return new A.Transition<M.State, M.Msg>(
         Current with
-          Offset := Offset;
+          Offsets := if Offset > 0.0F then
+            Current.Offsets.SetItem(RouteKey, Offset)
+          else
+            Current.Offsets.Remove(RouteKey)
+          end if;
         end with, []
       );
     when M.Msg.Music(const Value: Music.Msg):

@@ -400,6 +400,12 @@ begin
       [Menus.Entry<int>.Action(new Menus.Item<int>('open', 'Open', 1))]
     ),
     Toggles.ThemeToggle<int>('toggle', Themes.Mode.Dark, function(Mode: Themes.Mode): int => 1),
+    ToggleGroups.ToggleGroup<int>(
+      'flags',
+      [new ToggleGroups.Item('One')],
+      [true],
+      function(Flags: array of bool): int => Flags.Length
+    ),
     Switchers.ThemeSwitcher<int>(
       'theme', Switchers.Selection.Light,
       function(Choice: Switchers.Selection): int => 1
@@ -411,25 +417,15 @@ begin
     Rejects(Node, V.Target.Portable, 'Graphical');
   end for;
 
-  const ChoiceGroups: array of E.Element<int> := [
-    Segments.SegmentedControl<int>(
-      'choice',
-      [new Segments.Item('One')],
-      0,
-      function(N: int): int => N
-    ),
-    ToggleGroups.ToggleGroup<int>(
-      'flags',
-      [new ToggleGroups.Item('One')],
-      [true],
-      function(Flags: array of bool): int => Flags.Length
-    )
-  ];
-  for Node: E.Element<int> in ChoiceGroups do
-    discard V.Prepare<int>(Node, V.Target.Graphical);
-    discard V.Prepare<int>(Node, V.Target.Terminal);
-    Rejects(Node, V.Target.Portable, 'terminal or graphical profile');
-  end for;
+  const Choice: E.Element<int> := Segments.SegmentedControl<int>(
+    'choice',
+    [new Segments.Item('One')],
+    0,
+    function(N: int): int => N
+  );
+  discard V.Prepare<int>(Choice, V.Target.Graphical);
+  discard V.Prepare<int>(Choice, V.Target.Terminal);
+  Rejects(Choice, V.Target.Portable, 'terminal or graphical profile');
 end procedure;
 
 begin

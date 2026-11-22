@@ -135,21 +135,42 @@ begin
     function(State: X.Model; Message: X.Msg): Mvu.Transition<X.Model, X.Msg> => Effects.Wrap<X.Model>(
       X.Update(State, Message)
     ),
-    V.View, 90, 28, V.Theme()
+    V.View, 80, 25, V.Theme()
   );
   StepEffect(Session);
   const Initial: App.Frame := Ready();
   CheckFooter(Initial);
   const Plot: App.ControlSnapshot := Control(Initial, 'plot');
   Check(
-    Plot.Width > 65 and Plot.Height = 20 and Initial.Lines[22].Contains('Status')
-    and Initial.Lines[22].StartsWith('╭') and Initial.Lines[22].EndsWith('╮'),
+    Plot.Width = 62 and Plot.Height = 17 and Initial.Lines[19].Contains('Status')
+    and Initial.Lines[19].StartsWith('╭') and Initial.Lines[19].EndsWith('╮'),
     'Full-width status below both panes.'
   );
   Check(
     Control(Initial, 'Mandelbrot').Focused and RowWith(Initial, '160 / 2048') <> '',
     'Initial family and iterations.'
   );
+  Key(K.Key.Tab);
+  Check(Control(Session.Snapshot(), 'plot').Focused, 'Tab reaches Mandelbrot plot at 80 by 25.');
+  CharKey('+');
+  const Zoomed: App.Frame := Ready();
+  Check(RowWith(Zoomed, '1.25×') <> '', 'Plus zooms Mandelbrot.');
+  Key(K.Key.Right);
+  Check(RowWith(Ready(), 'Center') <> RowWith(Zoomed, 'Center'), 'Right pans Mandelbrot.');
+  Key(K.Key.PageUp);
+  Check(RowWith(Ready(), '192 / 2048') <> '', 'Page Up raises Mandelbrot iterations.');
+  CharKey('h');
+  Check(RowWith(Session.Snapshot(), 'Controls') <> '', 'Help opens at 80 by 25.');
+  Key(K.Key.PageDown);
+  Check(RowWith(Session.Snapshot(), 'Controls') <> '', 'Scrolling help keeps it open.');
+  Key(K.Key.Escape);
+  Check(Control(Session.Snapshot(), 'plot').Focused, 'Closing help restores focus to the image.');
+  Key(K.Key.PageDown);
+  Check(RowWith(Ready(), '160 / 2048') <> '', 'Page Down still controls iterations.');
+  CharKey('r');
+  Check(RowWith(Ready(), '1×') <> '', 'Reset restores Mandelbrot zoom.');
+  Send(Session, App.Input.KeyPress(K.Key.Tab, K.KeyModifiers.Shift));
+  Check(Control(Session.Snapshot(), 'Mandelbrot').Focused, 'Shift Tab returns to the family list.');
   Key(K.Key.Down);
   Check(
     Control(
@@ -210,7 +231,7 @@ begin
   CheckFooter(Small);
   const Grid: App.ControlSnapshot := Control(Small, 'plot');
   Check(
-    Grid.Width = Plot.Width - 16 and Grid.Height = Plot.Height - 6 and Small.Lines[
+    Grid.Width = Plot.Width - 6 and Grid.Height = Plot.Height - 3 and Small.Lines[
       16
     ].Contains('Status'),
     'Resize reallocates the plot and keeps the footer below it.'

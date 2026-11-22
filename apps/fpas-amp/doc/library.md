@@ -205,14 +205,19 @@ recording ID for MP3, and the editor uses that frame when writing the ID.
 
 ## Search
 
-`Search.Matching` ranks prepared documents for free text the way a modern search
-box does, without query syntax: `*`, `?` and regular expressions have no meaning.
-`Document.Create` takes weighted fields, `Query.Parse` the typed text, and `Rank`
-returns one score per document, zero for no match.
+Double quotes require a literal phrase in a single searchable field. For example,
+`"happy x-mas"` finds `Happy X-Mas (Live)` and requires the same spaces, hyphen
+and word order. Case is ignored. Every quoted phrase must match. An opening quote
+without a closing quote is treated as free text while typing.
 
-- Words match in any order, and a document needs only one of them. Documents with
-  more of the words rank higher, and words that many documents share, such as
-  "the", count less.
+`Search.Matching` ranks prepared documents for cover grids. `Document.Create`
+takes weighted fields, `Query.Parse` the typed text, and `Rank` returns one score
+per document, zero for no match. The track lists use the same phrase rules and
+require each free word. `*`, `?` and regular expressions have no special meaning.
+
+- Free words match in any order. For a cover search without quotes a document
+  needs only one of them. Documents with more of the words rank higher, and
+  words that many documents share, such as "the", count less.
 - Case, accents and apostrophes do not matter: "Björk" finds "bjork", "Straße"
   finds "strasse" and "Don't" finds "dont". Adjacent words are also indexed
   together, so "pinkfloyd" finds "Pink Floyd".
@@ -220,7 +225,7 @@ returns one score per document, zero for no match.
   more tolerate one typo, eight or more two, including swapped neighbors.
 - `Search.Text.Phonetic` gives the Kölner Phonetik code, so "Mayer" finds "Meier".
 - Numbers such as years match exactly or as a prefix, never as a near miss.
-- Matches far below the best one are dropped as noise.
+- Cover searches without quotes drop matches far below the best one as noise.
 
 ## Albums and artwork
 

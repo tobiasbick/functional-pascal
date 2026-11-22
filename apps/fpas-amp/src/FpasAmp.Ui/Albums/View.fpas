@@ -4,7 +4,7 @@
 unit FpasAmp.Ui.Albums.View;
 
 uses
-  FpasAmp.Ui.Albums.Model as M, FpasAmp.Library.Albums.Model as Library,
+  FpasAmp.Ui.Albums.Model as M, FpasAmp.Ui.Albums.Grid as Grid, FpasAmp.Library.Albums.Model as Library,
   FpasAmp.Ui.Albums.Artwork as Artwork, FpasAmp.Ui.Albums.Details as Details,
   FpasAmp.Ui.Albums.Status as Status, FpasAmp.Ui.Albums.RatingStyle as RatingStyle,
   FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.View as Songs,
@@ -19,8 +19,11 @@ uses
   Fpas.Ui.Widgets.Containers.EmptyStates as Empty, Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
   System as Sys, System.Collections.Generic as C;
 
-// Native virtual viewport identity, also used by post-layout range observation.
-public const GridId: string := 'album-grid';
+// Returns the native viewport identity for the cover grid in Current.
+public function GridId(Current: M.State): string;
+begin
+  return 'album-grid/' + Grid.Key(Current);
+end function;
 
 const TileGap: int := 20;
 const TilePadding: int := 2;
@@ -118,7 +121,10 @@ public function Build(Current: M.State; Width: int; Padding: int; Playback: Play
 
     // Leave room for the native card's lift on hover.
     return E.Row<M.Msg>(
-      new L.Flow(PaddingTop := Points(4), Gap := Points(TileGap)), Cells.ToArray()
+      new L.Flow(
+        PaddingTop := Points(4), PaddingStart := Points(Padding), PaddingEnd := Points(Padding),
+        Gap := Points(TileGap)
+      ), Cells.ToArray()
     );
   end function;
 begin
@@ -209,23 +215,40 @@ begin
         )
       )
     );
-  else
-    Parts.Add(
+  end if;
+
+  const Header: E.Element<M.Msg> := E.Column<M.Msg>(
+    new L.Flow(
+      PaddingStart := Points(Padding), PaddingEnd := Points(Padding), Gap := Points(20),
+      Align := L.Alignment.Stretch
+    ), Parts.ToArray()
+  );
+  const Key: string := Grid.Key(Current);
+  var Offset: float := 0.0F;
+  discard Current.Offsets.TryGetValue(Key, out Offset);
+  const Content: array of E.Element<M.Msg> := if Current.Shown.Length > 0 then
+    [
+      Header,
       E.Size<M.Msg>(
         Virtual.VirtualList<M.Msg>(
-          GridId, (Current.Shown.Length + Count - 1) div Count,
-          cast<float>(RowHeight), L.Extent.Fill, Row, Current.Offset, M.Msg.Scrolled
+          GridId(Current), (Current.Shown.Length + Count - 1) div Count,
+          cast<float>(RowHeight), L.Extent.Fill, Row, Offset,
+          function(Value: float): M.Msg => M.Msg.Scrolled(Key, Value)
         ), new L.Flex(Basis := L.Extent.Fill)
       )
-    );
+    ]
+  else
+    [Header]
   end if;
 
   return E.Column<M.Msg>(
     new L.Flow(Align := L.Alignment.Stretch),
     E.Size<M.Msg>(
       E.Column<M.Msg>(
-        new L.Flow(Padding := Points(Padding), Gap := Points(20), Align := L.Alignment.Stretch),
-        Parts.ToArray()
+        new L.Flow(
+          PaddingTop := Points(Padding), PaddingBottom := Points(Padding), Gap := Points(20),
+          Align := L.Alignment.Stretch
+        ), Content
       ), new L.Flex(Basis := L.Extent.Fill)
     ),
     Status.Build(Current)

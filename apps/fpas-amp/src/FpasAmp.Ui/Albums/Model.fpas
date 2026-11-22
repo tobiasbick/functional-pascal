@@ -9,14 +9,6 @@ uses
   FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Groups as Groups,
   System.Collections.Immutable as I;
 
-// Browse settings to restore on returning to a top-level grid.
-public type Position = record
-  // Applied search, filters and ordering.
-  public ToolbarState: Toolbar.State := new Toolbar.State();
-  // Vertical offset of the virtual grid.
-  public Offset: float := 0.0F;
-end record;
-
 // Owner-thread album view state; pixels are never mutated after publication.
 public type State = record
   // Complete library snapshot, independent of the active grid and its filters.
@@ -29,8 +21,10 @@ public type State = record
   public GroupId: string := '';
   // Name shown above the grouped albums.
   public GroupName: string := '';
-  // Independent toolbar and scroll positions for the three top-level grids.
-  public Positions: I.ImmutableDictionary<Toolbar.Scope, Position> := I.ImmutableDictionary<Toolbar.Scope, Position>.Empty;
+  // Applied filters and sort order to restore when returning to each grid route.
+  public Toolbars: I.ImmutableDictionary<string, Toolbar.State> := I.ImmutableDictionary<string, Toolbar.State>.Empty;
+  // Vertical positions in logical points, keyed by grid route.
+  public Offsets: I.ImmutableDictionary<string, float> := I.ImmutableDictionary<string, float>.Empty;
   // Lightweight headers for the active grid.
   public Items: I.ImmutableArray<Library.Album> := I.ImmutableArray<Library.Album>.Empty;
   // Search documents and filter choices prepared from Items.
@@ -53,8 +47,6 @@ public type State = record
   public Saving: I.ImmutableHashSet<string> := I.ImmutableHashSet<string>.Empty;
   // Search text, filters and order that select Shown from Items.
   public Toolbar: Toolbar.State := new Toolbar.State();
-  // Last scroll offset of the album grid in logical points.
-  public Offset: float := 0.0F;
   // Visit counter keeps detached results scoped to the album that requested them.
   public MusicVisit: long := 0L;
   // Album tracks currently shown inside the Albums destination.
@@ -91,8 +83,8 @@ public type Msg = variant
   OpenMusic(Id: string);
   // Return to the retained album grid.
   BackToAlbums;
-  // Remember the latest target offset before leaving the grid.
-  Scrolled(Offset: float);
+  // Remember the latest target offset for the grid identified by RouteKey.
+  Scrolled(RouteKey: string; Offset: float);
   // Route an input or background result to the selected release.
   Music(Value: Music.Msg);
 end variant;

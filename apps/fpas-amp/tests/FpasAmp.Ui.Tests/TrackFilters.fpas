@@ -73,6 +73,50 @@ public type TrackFilterTests = record
     X.Assert.Equal<int>(2, Browse.Songs(Items, new Music.Selection(Genres := ['électro'])).Length);
     X.Assert.Equal<int>(4, Browse.Songs(Items, new Music.Selection()).Length);
   end procedure;
+
+  // Track lists use literal phrases alongside their regular word filters.
+  [X.FactAttribute]
+  public procedure TracksMatchQuotedPhrasesInSingleFields();
+  begin
+    const First: Tracks.Entry := new Tracks.Entry(
+      1L, 'a', 'one.mp3', '', null,
+      new MediaTags.Info(Title := 'Happy X-Mas (Live)', Genres := ['Holiday Rock']), null
+    );
+    const Items: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray.CreateRange<Tracks.Entry>(
+      [
+        First,
+        First with
+          FileId := 2L;
+          Metadata := new MediaTags.Info(Title := 'Happy X Mas (Live)');
+        end with,
+        First with
+          FileId := 3L;
+          Metadata := new MediaTags.Info(Title := 'Happy', Artists := ['X-Mas Live']);
+        end with,
+        First with
+          FileId := 4L;
+          Metadata := new MediaTags.Info(Title := 'Happy X-Mas');
+        end with
+      ]
+    );
+    const Phrase: string := '"happy X-mas"';
+    const LibraryMatches: I.ImmutableArray<Tracks.Entry> := Browse.Songs(
+      Items,
+      new Music.Selection(Search := Phrase + ' live')
+    );
+    X.Assert.Equal<int>(1, LibraryMatches.Length);
+    X.Assert.Equal<long>(1L, LibraryMatches[0].FileId);
+    const AlbumMatches: I.ImmutableArray<Tracks.Entry> := Browse.Songs(
+      Items,
+      new Music.Selection(AlbumId := 'album', Search := '"holiday rock"')
+    );
+    X.Assert.Equal<int>(1, AlbumMatches.Length);
+    X.Assert.Equal<long>(1L, AlbumMatches[0].FileId);
+    X.Assert.Equal<int>(
+      4,
+      Browse.Songs(Items, new Music.Selection(Search := '"happy X-mas')).Length
+    );
+  end procedure;
 end record;
 
 end unit;

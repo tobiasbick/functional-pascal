@@ -77,12 +77,11 @@ receives the chosen path or dismissal and controls visibility.
 
 ### Horizontal choice strips
 
-[Tabs](navigation/tabs.md), [segmented controls](actions/segmented-control.md)
-and [toggle groups](actions/toggle-group.md) each occupy one tab stop. The
+[Tabs](navigation/tabs.md) and [segmented controls](actions/segmented-control.md)
+each occupy one tab stop. The
 host retains the horizontal offset and reveals the focused item, including
 when the group is inside a vertically scrolling view. Left and Right propose
-a selection for tabs and segments. Toggle groups reserve selection changes
-for activation.
+a selection.
 
 ## Popup input
 
@@ -126,7 +125,7 @@ styles derive from the shared palette, with alpha composited over cell
 backgrounds. Include relevant theme values in cached-subview dependencies.
 See [shared themes](../widgets.md#shared-themes). The
 [TUI gallery](../../../examples/ui/tui/gallery/README.md) applies them to two
-rounded panels with a 1:2 width ratio. Its scrollable sidebar opens a preview
+rounded panels with a narrow sidebar and a flexible preview. The sidebar opens a preview
 with the GUI’s upload and export examples under **Feedback** and the editor status bar under **App chrome**.
 
 The [CUI inventory](../../cui-widget-inventory.md) records the implemented

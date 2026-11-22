@@ -17,7 +17,7 @@ type Model = record
     new Logs.Entry(Logs.Level.Info, 1.0, 'First output'),
     new Logs.Entry(Logs.Level.Warning, 2.0, 'Second output'),
     new Logs.Entry(Logs.Level.Error, 3.0, 'Third output'),
-    new Logs.Entry(Logs.Level.Info, 4.0, 'Fourth output')
+    new Logs.Entry(Logs.Level.Info, 4.0, 'Fourth output writes a line with a visible tail')
   ];
 end record;
 
@@ -148,6 +148,21 @@ begin
   Check(
     Shows(Session, 'Third output') and Shows(Session, 'Fourth output'),
     'The log opens at the tail.'
+  );
+  Key(Session, K.Key.Tab);
+  Key(Session, K.Key.Tab);
+  Check(
+    Control(Session, 'log').Focused and not Shows(Session, 'visible tail'),
+    'The focused log starts at its left edge.'
+  );
+  Key(Session, K.Key.Right, K.KeyModifiers.Ctrl);
+  Key(Session, K.Key.Right, K.KeyModifiers.Ctrl);
+  Check(Shows(Session, 'visible tail'), 'Control Right reveals the clipped end of the message.');
+  Key(Session, K.Key.Left, K.KeyModifiers.Ctrl);
+  Key(Session, K.Key.Left, K.KeyModifiers.Ctrl);
+  Check(
+    Shows(Session, 'Fourth output') and not Shows(Session, 'visible tail'),
+    'Control Left returns to the start of the message.'
   );
   Send(Session, App.Input.Activate('append'));
   Check(Shows(Session, 'New output 4'), 'The log follows an append at the tail.');

@@ -25,7 +25,6 @@ int fpas_cui_confirm_popover(cui_ctx *ui, const char *id, const char *title,
     cui_pop_id(ui);
 
     const bool confirmed = cui_confirm_popover_ex(ui, id, &options);
-    fpas_popup_inherit_focus(ui, key);
     const int cancel_node = fpas_find(ui, cancel_key);
     const int confirm_node = fpas_find(ui, confirm_key);
     if (cancel_node >= 0) fpas_literal(ui, cancel_node, cancel, CUI_C(ui, FOREGROUND));

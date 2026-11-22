@@ -6,7 +6,7 @@ links the platform libraries.
 
 ## Bridge translation unit
 
-`fpas_cui.c` includes the generated `cui.c` and
+[`fpas_cui.c`](../../../src/Fpas.Ui.Gui.Cui/native/fpas_cui.c) includes the generated `cui.c` and
 the adapters that access its private types in the same translation unit.
 `host/bridge.c` handles window options, screenshots and Win32 live-resize callbacks.
 [`fpas_cui.h`](../../../src/Fpas.Ui.Gui.Cui/native/fpas_cui.h) declares the native adapters for layout, focus, text

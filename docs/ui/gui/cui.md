@@ -149,6 +149,11 @@ xvfb-run -a -s '-screen 0 1400x1000x24 -nolisten tcp -noreset' \
   -c Release --no-build --no-restore
 ```
 
+Under WSL, run the Linux suite from a clone in the WSL home directory with
+WSL's own .NET SDK, compilers and `xvfb-run`. WSL can clear `/tmp` between
+sessions. Building under `/mnt/` or through Windows executables makes the
+suite take hours.
+
 `FpasCuiCMakeCommand` selects a non-default CMake executable;
 `FpasCuiCMakeArguments` supplies local CMake configuration such as X11 paths.
 Build outputs stay in `obj/native/<rid>/<configuration>/shared/`. The source

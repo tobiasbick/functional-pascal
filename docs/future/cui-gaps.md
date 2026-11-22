@@ -7,9 +7,8 @@ workarounds are tracked in [CUI upstream bugs](cui-upstream-bugs.md).
 
 ## Findings awaiting upstream reporting
 
-The following findings were checked against `a5c9ef5`. CUI-033 also reproduces
-at `71c383f`. Follow the [contribution workflow](../cui-contributions.md) before
-publishing a report or fix.
+The following findings were checked against `a5c9ef5`. Follow the
+[contribution workflow](../cui-contributions.md) before publishing a report or fix.
 
 - [ ] Custom axis labels lose small values. `cui__ins_label`
   (`src/cui_instrument.c:38`, from `731a4c6`) passes 0 to the label function
@@ -24,8 +23,6 @@ publishing a report or fix.
 - [ ] SDL2 placement sizes under `CUI_SCALE` with the software renderer differ
   from `cui_app_size`. Deferred in the
   [#95 review](https://github.com/yappologistic/CUI/pull/95#discussion_r4580381315).
-- [ ] [CUI-033](cui-upstream-bugs.md#cui-033) has an FPAS workaround but no
-  upstream report yet.
 - Not to report: shared-library test linkage (`CUI_BUILD_SHARED=ON` with tests)
   affects five test programs that call private `cui__` functions through
   `cui::cui` (`cui_tests`, `cui_test_devtools`, `cui_test_dither`,

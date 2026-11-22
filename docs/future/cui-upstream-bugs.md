@@ -7,7 +7,7 @@ Keep the identifiers stable.
 
 ## CUI-019 — Large constant chart ranges produce non-finite geometry
 
-- Upstream: [PR #64](https://github.com/yappologistic/CUI/pull/64) proposes a fix for the same axis-scaling defect. The [maintainer's adoption report](https://github.com/yappologistic/CUI/pull/64#issuecomment-6883945781) excludes the logic and robustness fixes. The native regression still confirms non-finite geometry at `71c383f` on Windows and Linux under WSL.
+- Upstream: [PR #64](https://github.com/yappologistic/CUI/pull/64) proposes a fix for the same axis-scaling defect. The [maintainer's adoption report](https://github.com/yappologistic/CUI/pull/64#issuecomment-6883945781) excludes the logic and robustness fixes. The native regression still confirms non-finite geometry at `56c9bc2` on Windows and Linux under WSL.
 
 Reproduced on Linux with direct `cui_line_chart_ex` calls at `86d9781`.
 Use one series containing three `1e10f` samples with automatic bounds and reduced
@@ -24,44 +24,18 @@ the native scaling algorithm unchanged for representable ranges. The native
 chart test retains the direct NaN reproduction without rasterizing it; binding
 tests cover rejection, stacked overflow and the explicit-range alternative.
 
-<a id="cui-033"></a>
-
-## CUI-033 — Planning drag resumes after editing or its target disappears
-
-- Upstream: [Issue #109](https://github.com/yappologistic/CUI/issues/109) and
-  [PR #110](https://github.com/yappologistic/CUI/pull/110). The PR includes
-  regression test `0d6fac6`, fix `407870d` and review follow-up `3cbf6b2`,
-  which also ends the drag when an earlier item is removed.
-
-Reproduced on Windows using direct `cui_gantt` and `cui_week_calendar` calls
-with the vendored snapshot at `a5c9ef5`.
-
-Still reproduced at `71c383f` on Windows by removing only the adapter's drag
-guards in an isolated copy. All six read-only, disabled-input and removed-item
-cases resume the stale drag. The integration suite passes with the guards.
-
-Start moving the second task or appointment with the left mouse button held.
-Set `read_only` for a frame, then restore editing while the button is still
-held. In Gantt, temporarily reducing the task count from two to one has the
-same effect. Continue moving the pointer before releasing the button. CUI
-resumes the previous drag and changes the task dates or appointment times.
-Restoring editability or the task should require a new press to start a drag.
-
-The FPAS adapters clear the active drag when editability changes, input is
-disabled, or the dragged index is outside the current item count. A click
-still activates a task or appointment in steady read-only mode. The native
-planning regression checks all three transitions after first observing a
-successful move.
-
 <a id="cui-043"></a>
 
 ## CUI-043 — Idle X11 OpenGL windows present continuously
 
 - Upstream: [Issue #104](https://github.com/yappologistic/CUI/issues/104) and
-  [PR #105](https://github.com/yappologistic/CUI/pull/105). The PR includes
-  regression test `6924c7c` and fix `c13264f` (from `6ddb1ef` on the title bar branch).
+  [PR #105](https://github.com/yappologistic/CUI/pull/105), applied on master as
+  [`01f9c06`](https://github.com/yappologistic/CUI/commit/01f9c06) and
+  [`bcd918b`](https://github.com/yappologistic/CUI/commit/bcd918b). The vendored
+  snapshot `56c9bc2` contains the fix. The maintainer verified it under Xvfb;
+  the KWin and Mesa DRI3 reproduction below has not been rerun yet.
 
-Reproduced at `71c383f` and later with the X11 backend and the OpenGL renderer
+Reproduced at `71c383f` with the X11 backend and the OpenGL renderer
 under Mesa DRI3: Debian, KDE KWin 6.7 X11, VMware SVGA3D. An idle window, with
 nothing animating and the pointer outside, used about 25% CPU and swapped
 buffers at the swap rate, about 110 to 220 times a second. The software
@@ -75,55 +49,8 @@ counted 444 wakeups and 444 swaps with no `XNextEvent`. The fix keeps waiting
 until `XPending` reports an event or the timeout expires. The idle cost then
 drops to 0 with no lost caret blinks, input or live resizing.
 
-FPAS has no workaround: GUI applications on Linux with OpenGL pay this CPU
-cost while idle.
-
-<a id="cui-044"></a>
-
-## CUI-044 — Transitions that start after an idle pause end in one frame
-
-- Upstream: [Issue #106](https://github.com/yappologistic/CUI/issues/106) and
-  [PR #107](https://github.com/yappologistic/CUI/pull/107). The PR includes
-  regression test `ce8fbae` and fix `bfdae63` (from `b019f9e` and `762fbb9` on the title bar branch).
-
-Reproduced at `71c383f` and later on Windows (OpenGL and software) and on Linux
-X11 (software, and OpenGL once CUI-043 is fixed). Rest the pointer for a second,
-then move it onto a button: its hover fill switches to the end colour in one
-frame instead of fading over about 150 ms. The same applies to springs and other
-transitions that begin on the first frame after an idle wait.
-
-`cui__app_begin` passes the whole idle time as `dt`, and `cui_begin_frame`
-caps it only at 0.25 s. `cui__tween` and `cui__spring` then complete a
-0.14 s transition in that single frame. The fix gives transitions a separate
-step: one 60 Hz frame when the previous frame asked for no other and `dt`
-exceeds 50 ms, otherwise `dt`. `dt`, `cui_time` and `cui_delta_time` keep the
-real time, so timers, tooltip delays and the caret blink are unchanged.
-Capping without the 50 ms threshold slowed hosts that draw below 60 Hz without
-requesting frames; `cui_test_canvas` caught that in its 30 fps live-cursor
-case.
-
-FPAS has no workaround: hover and other transitions jump whenever the pointer
-rests before moving onto a control.
-
-<a id="cui-045"></a>
-
-## CUI-045 — Repeated software screenshots omit unchanged tiles
-
-- Upstream: [Issue #101](https://github.com/yappologistic/CUI/issues/101) and
-  [PR #102](https://github.com/yappologistic/CUI/pull/102). The PR includes a
-  regression test for capturing twice into the same cleared buffer.
-
-At the pinned revision `71c383f`, capture a static frame with
-`cui_app_screenshot`, clear the destination buffer and capture the same frame
-into it again. On Linux/X11 the second image differs from the first. The
-incremental software renderer recognizes the buffer address and skips tiles
-whose drawing commands are unchanged. A fresh allocation can reuse that
-address, so consecutive gallery captures can contain blank widgets.
-
-The [PNG capture bridge](../../src/Fpas.Ui.Gui.Cui/native/host/bridge.c)
-invalidates the previous software buffer address before each screenshot.
-The [gallery capture tests](../../apps/gui-doc-captures/tests/test_capture.py)
-exercise consecutive screenshots and check the cropped results.
+FPAS has no workaround. Remove this entry once the reproduction is idle with
+the vendored snapshot.
 
 <a id="cui-046"></a>
 
@@ -155,25 +82,20 @@ thread, the adapter joins the dialog thread while dispatching synchronous
 window messages. [The regression](../../tests/Fpas.Ui.Gui.Cui.Tests/Windowing/CuiFileDialogTests.cs)
 selects a Unicode directory, cancels the next dialog and presents another frame.
 
-<a id="cui-048"></a>
+<a id="cui-049"></a>
 
-## CUI-048 — Wheel regions stay at their old position after a dialog moves
+## CUI-049 — GCC reports a cleared frame allocation as out of bounds
 
-[Upstream issue #100](https://github.com/yappologistic/CUI/issues/100) reports
-the same routing defect with an image viewer inside a carousel.
-[PR #108](https://github.com/yappologistic/CUI/pull/108) applies the node
-transformation in `cui__paint_wheel_hit`. A local dragged-dialog check at its
-head `608376a` takes the wheel at the moved canvas; `71c383f` misses it there.
+At `56c9bc2`, GCC 15.2 on Ubuntu reports `-Warray-bounds` or
+`-Wstringop-overflow` for the `memset` in `cui__em_button` when it compiles
+the amalgamation with `-O3 -std=c99 -Wall`. `71c383f` compiles without warnings with the same flags.
+`cui__frame_alloc` can now return `NULL` when a size would overflow. The
+caller clears the returned pointer without checking it, so GCC sees a clear
+of an object of size 0. `cui__frame_alloc` already returns zeroed memory, so
+the clear is redundant. The FPAS Release build treats the warning as an error.
 
-At the vendored revision `71c383f`, register a wheel region in a canvas in a
-draggable dialog. Scroll over it, drag the header 112 logical points right
-and scroll at both positions. The software renderer confirms that the
-marked region has moved. The canvas receives the wheel before the drag and
-continues receiving it at the old position after the drag. It misses the
-wheel at the visible position.
-
-`cui__paint_wheel_hit` intersects the region's layout rectangle with a clip
-in paint coordinates. Applying the node transformation before clipping
-corrects both hit positions in an isolated source copy. The baseline and
-the change produced the same results in three runs each under Windows/MSVC
-and WSL/GCC. The vendored implementation still needs the upstream fix.
+The [native CMake configuration](../../src/Fpas.Ui.Gui.Cui/native/CMakeLists.txt)
+disables `-Warray-bounds` and `-Wstringop-overflow` for GCC. A push and pop
+around the `cui.c` include does not work because `cui.c` disables
+`-Wunused-function` for the rest of the file. Remove the options once the
+vendored source no longer warns.

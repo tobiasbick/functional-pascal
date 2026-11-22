@@ -159,7 +159,7 @@ static bool resources(void) {
         char month[]="Januar", today[]="Heute \xe6\x97\xa5";
         const char *table[46]={0}; table[0]=month; table[45]=today;
         captions=fpas_cui_strings(ui,captions,table);
-        memset(table,0,sizeof table);
+        memset((void *)table,0,sizeof table);
         memset(month,'X',sizeof month-1); memset(today,'X',sizeof today-1);
         if (!iteration) for (int frame=0;frame<640;frame++) { cui_begin_frame(ui,.016f);cui_end_frame(ui); }
         const cui_strings *copied=cui_get_strings(ui);

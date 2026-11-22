@@ -1,12 +1,6 @@
 // [Documentation](../../../../../docs/ui/gui/planning/week-calendar.md)
 #include "../../fpas_cui.h"
 
-static cui_id fpas_week_read_only_key(cui_id key) { return key ^ 0x7EE051u; }
-
-static void fpas_week_retire(cui_ctx *ui, cui_id key) {
-    fpas_forget_state(ui, fpas_week_read_only_key(key));
-}
-
 int fpas_cui_week_calendar(cui_ctx *ui, const char *id, int week, fpas_week_event *events, int count,
     float start, float finish, float hour_height, int height_kind, float height, int flags, int focus, int *parts) {
     const int node = ui->node_count;
@@ -21,11 +15,6 @@ int fpas_cui_week_calendar(cui_ctx *ui, const char *id, int week, fpas_week_even
     }
     const cui_week_opts options = { .start_hour = start, .end_hour = finish, .hour_height = hour_height,
         .height = fpas_extent(height_kind, height), .read_only = (flags & 2) != 0 || !enabled };
-    bool *read_only = cui_state(ui, fpas_week_read_only_key(key), sizeof *read_only);
-    cui__week_state *state = cui__state_lazy(ui, key, sizeof *state, false);
-    /* CUI-033 (docs/future/cui-upstream-bugs.md#cui-033): changing editability ends the active drag. */
-    if (state && (!enabled || *read_only != options.read_only || state->drag > count)) state->drag = 0;
-    *read_only = options.read_only;
     cui_push_disabled(ui, !enabled);
     int clicked = cui_week_calendar_ex(ui, id, fpas_date_from_number(week), native, count, &options);
     cui_pop_disabled(ui);
@@ -36,7 +25,6 @@ int fpas_cui_week_calendar(cui_ctx *ui, const char *id, int week, fpas_week_even
         parts[i] = fpas_find(ui, fpas_well_part(key ^ 0xE7u, i));
     }
     fpas_own(ui, key, key ^ 0x7EE4u, key ^ 0x6E1Du, 0);
-    fpas_on_forget(ui, key, fpas_week_retire);
     fpas_creative_node(ui, node, key);
     return enabled ? clicked : -1;
 }

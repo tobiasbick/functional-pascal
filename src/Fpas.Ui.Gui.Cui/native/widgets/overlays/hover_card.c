@@ -27,7 +27,6 @@ void fpas_cui_hover_card_end(cui_ctx *ui, int base) {
     const cui_popup *popup = cui__popup_get(ui, key, false);
     const cui_id anchor = popup ? popup->anchor : 0;
     cui_hover_card_end(ui);
-    fpas_popup_inherit_focus(ui, key);
     ui->last_node = base;
     ui->last_id = anchor;
 }

@@ -1601,8 +1601,6 @@ same index as their value. Keyboard inspection stays on its selected period
 when new data arrives. Retiring the chart releases its viewport and focus state.
 
 All interactive charts honor `Options.Enabled`. Radial gauges are passive.
-The local [CUI findings](../future/cui-upstream-bugs.md) describe guards
-for disabled candlestick wheels and omitted native Sankey link activations.
 
 ## Desktop chrome
 

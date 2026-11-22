@@ -21,14 +21,6 @@ static void fpas_return_popup_focus(cui_ctx *ui, cui_id popup, cui_id anchor) {
     }
 }
 
-static void fpas_popup_inherit_focus(cui_ctx *ui, cui_id popup) {
-    /* A floating panel inside a modal still belongs to its parent's Tab order. */
-    if (!ui->current_layer) return;
-    for (int i = 0; i < ui->focus_count; ++i) {
-        if (ui->focus_layers[i] == popup) ui->focus_layers[i] = ui->current_layer;
-    }
-}
-
 int fpas_cui_popover_begin(cui_ctx *ui, const char *id, int placement,
     float width, float padding, float gap, int open, int enabled, int *node, unsigned int *owner) {
     const cui_id key = cui_make_id(ui, id);
@@ -55,9 +47,7 @@ int fpas_cui_popover_begin(cui_ctx *ui, const char *id, int placement,
 }
 
 void fpas_cui_popover_end(cui_ctx *ui, int base) {
-    const cui_id popup = ui->current_layer;
     cui_popover_end(ui);
-    fpas_popup_inherit_focus(ui, popup);
     ui->last_node = base;
     ui->last_id = base >= 0 ? ui->nodes[base].id : 0;
 }

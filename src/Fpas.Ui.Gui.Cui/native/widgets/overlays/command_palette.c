@@ -29,8 +29,7 @@ int fpas_cui_command_palette(cui_ctx *ui, const char *id, int *open, int enabled
     const cui_key keys[] = { CUI_KEY_ESCAPE, CUI_KEY_ENTER, CUI_KEY_UP, CUI_KEY_DOWN };
     uint8_t presses[sizeof keys / sizeof *keys];
     const cui_id focus = ui->focus;
-    const cui_id modal_layer = ui->modal_layer;
-    const int modal_z = ui->modal_z;
+    const cui_modal_layer modal = ui->modal;
     /* A disabled open palette must leave Escape available to the host. */
     const bool disabled_open = was_open && !interactive;
     if (disabled_open) {
@@ -46,8 +45,7 @@ int fpas_cui_command_palette(cui_ctx *ui, const char *id, int *open, int enabled
         for (size_t index = 0; index < sizeof presses; ++index)
             ui->kpressed[keys[index]] = presses[index];
         ui->focus = focus;
-        ui->modal_layer = modal_layer;
-        ui->modal_z = modal_z;
+        ui->modal = modal;
     }
     if (was_open && rows) {
         *node = fpas_find(ui, key ^ 0x9A4Eu);

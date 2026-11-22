@@ -52,7 +52,7 @@ int fpas_cui_table_row(cui_ctx *ui, const char *id, int selected, int enabled, i
     *node = cui__current(ui);
     if (ui->nodes[*node].id == position) ui->nodes[*node].id = key;
     for (int part = first_focus; part < ui->focus_count; ++part)
-        if (ui->focus_order[part] == position) ui->focus_order[part] = key;
+        if (ui->focus_order[part].id == position) ui->focus_order[part].id = key;
     if (ui->focus_next_request == position) ui->focus_next_request = key;
     if (ui->focus == position) ui->focus = key;
     if (ui->hot == position) ui->hot = key;

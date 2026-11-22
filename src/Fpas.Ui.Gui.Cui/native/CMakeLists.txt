@@ -40,6 +40,11 @@ else()
     target_compile_options(cui PRIVATE -ffunction-sections -fdata-sections -Wall -Wextra
         -Wno-unused-parameter -Wno-missing-field-initializers)
 endif()
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    # CUI-049 (docs/future/cui-upstream-bugs.md#cui-049): GCC reports a redundant
+    # clear of a frame allocation that may now be NULL.
+    target_compile_options(cui PRIVATE -Wno-array-bounds -Wno-stringop-overflow)
+endif()
 if(WIN32)
     # Capture passes UTF-8 output paths to the bundled PNG writer.
     target_compile_definitions(cui PRIVATE STBIW_WINDOWS_UTF8)

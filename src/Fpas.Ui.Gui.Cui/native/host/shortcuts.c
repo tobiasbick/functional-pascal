@@ -3,7 +3,7 @@
 
 int fpas_cui_shortcut_owners(cui_ctx *ui) {
     int owners = cui_wants_keyboard(ui) ? 1 : 0;
-    if (ui->modal_layer || ui->prev_modal_layer) owners |= 2;
+    if (ui->modal.id || ui->prev_modal.id) owners |= 2;
     for (int index = 0; index < ui->popup_count; index++)
         if (ui->popups[index].open) owners |= 2;
     if (ui->focus) owners |= 4;

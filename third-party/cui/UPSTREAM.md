@@ -5,22 +5,24 @@
 | Repository | <https://github.com/yappologistic/CUI> |
 | Source fork | <https://github.com/tobiasbick/CUI> |
 | Revision | Upstream `master` after [v1.4.0](https://github.com/yappologistic/CUI/releases/tag/v1.4.0), mirrored in the source fork |
-| Commit | [`71c383fd3c20cfaf06adb2faf7dbbbdaa7074441`](https://github.com/yappologistic/CUI/commit/71c383fd3c20cfaf06adb2faf7dbbbdaa7074441) |
+| Commit | [`56c9bc2c985b21bacb79d34c842980071c52800a`](https://github.com/yappologistic/CUI/commit/56c9bc2c985b21bacb79d34c842980071c52800a) |
 | Build inputs | [`cui.c`](upstream/cui.c) and [`cui.h`](upstream/cui.h) |
 | Local source modifications | None |
 
 The amalgamated C source and public header are the unchanged output of
 `python3 tools/amalgamate.py` on Linux in the source fork at the pinned commit.
-This upstream snapshot includes window state and placement from
-[PR #95](https://github.com/yappologistic/CUI/pull/95), and the file-picker
-drive sidebar, filter-height, selection and double-click fixes from
-[PR #97](https://github.com/yappologistic/CUI/pull/97). No combined fork branch
-is needed.
+This upstream snapshot includes the fixes from
+[PR #102](https://github.com/yappologistic/CUI/pull/102),
+[PR #105](https://github.com/yappologistic/CUI/pull/105),
+[PR #107](https://github.com/yappologistic/CUI/pull/107),
+[PR #108](https://github.com/yappologistic/CUI/pull/108) and
+[PR #110](https://github.com/yappologistic/CUI/pull/110), which the maintainer
+applied to master by hand. No combined fork branch is needed.
 
 | Path under `upstream/` | SHA-256 |
 | --- | --- |
-| `cui.c` | `0f0bf605d82ade1209d206d6f0cd5b9d4c366f02ee36033a61c904a71ae009c3` |
-| `cui.h` | `63e6ecd1de3ff994f423f79385a59294c5ef580efdfbe8b434b8951e92e425e7` |
+| `cui.c` | `2d1190191f98f969cdcf5e986fed1e1dbd90ff78c48a0077cf7f03e39bb4dd87` |
+| `cui.h` | `6521fb914d75e2d67841ebd5385206edfcfa6a125e6def11a9c029e62ac69fae` |
 
 Project-owned integration belongs under `src/Fpas.Ui.Gui.Cui/`, with the C bridge
 and CMake configuration in its `native/` directory. Keep those files separate
@@ -28,34 +30,44 @@ from the unmodified upstream sources here.
 
 ## Snapshot verification
 
-The copied pair matches the generated files byte for byte. License inputs and
-the theme builder are unchanged from the previous pin; all 16 generated palettes
-match the prior reference. The upstream snapshot includes the GLFW normal-size
-follow-up to #95 and the container-mount exclusion follow-up to #97.
+The copied pair matches the generated files byte for byte. License inputs,
+fonts, `third_party/` and `tools/amalgamate.py` are unchanged from the previous
+pin. The theme tokens and palettes are unchanged; theme fades now advance with
+the transition step instead of the frame time. The Direct3D 12, Vulkan and
+Metal renderers are built only with `CUI_D3D12`, `CUI_VULKAN` or `CUI_METAL` and
+are not part of the amalgamation.
 
-The release-frame calendar fix from
-[PR #93](https://github.com/yappologistic/CUI/pull/93), applied as
-[`5830981`](https://github.com/yappologistic/CUI/commit/5830981), replaces the
-CUI-032 workaround. Both the direct-CUI and FPAS-adapter regression checks now
-require a drag ending in the release frame to return no activation.
+The fixes for CUI-033, CUI-044, CUI-045 and CUI-048 are in this snapshot:
+
+- The planning adapters no longer guard drags. The native planning regression
+  passes read-only, disabled-input and removed-item interruptions through CUI
+  itself.
+- The PNG capture bridge no longer invalidates the software buffer address
+  before each screenshot. Upstream `cui_test_app_screenshot` passes on Windows
+  and under WSL.
+- Upstream checks cover the first hover frame after an idle pause and wheel
+  areas in translated nodes. A local check also takes the wheel at a dragged
+  dialog's moved canvas.
+
+CUI-043 is fixed upstream as well; its KWin and Mesa DRI3 reproduction has not
+been rerun. The chart regression still reproduces CUI-019. GCC 15 reports a new
+array-bounds warning in `cui.c`, tracked as CUI-049 and suppressed for GCC in
+the native CMake configuration.
+
+Upstream checks at `56c9bc2`: `cui_tests` and ctest passed all 26 tests on
+Windows with MSVC. Under WSL, the clang ASan/UBSan build passed 27 of 28 tests;
+`cui_test_window_state` fails there exactly as it does at `71c383f`.
+`cui_test_x11_idle` was not built because the WSL image lacks `xcb-present`.
 
 The native integration suite passed all 57 tests on Windows x64 with MSVC and
-all 55 tests on Linux x64 under WSL with GCC. The planning checks exercise
-both direct CUI and the adapter, distinguishing movement before release from
-movement after a completed click.
+all 55 tests on Linux x64 under WSL with GCC 15.2 and Xvfb, including the
+planning checks against the adapters and against CUI directly.
 
-The upstream unit, file-place, no-home and window-state tests passed on
-Windows. The first three passed under WSL, and the window-state test passed
-with X11/Openbox under Xvfb with both software and OpenGL rendering.
-
-The chart regression still reproduces CUI-019. Removing the CUI-033 guards in
-an isolated copy fails all six interrupted-drag cases, so those guards remain.
-
-The managed binding suite passed 271 tests on Windows and 270 on Linux under
-WSL, with two and three platform or availability skips respectively. Both
-FPAS-consumer tests passed on each platform, including the gallery with the
-software and OpenGL renderers. The Windows build reports the existing upstream
-Gantt shadowing warning C4456.
+The managed binding suite passed 275 tests on Windows with five platform or
+publishing skips, and 273 tests on Linux under WSL with GCC 15.2 and Xvfb, with
+seven skips. The Linux binding build passed with `-warnaserror` from a clean
+tree. The Windows build reports the existing upstream Gantt shadowing warning
+C4456.
 
 Publishing, NativeAOT, macOS, and SDL2/GLFW runtime checks were not run for
 this update.
@@ -64,19 +76,26 @@ See [CUI upstream bugs](../../docs/future/cui-upstream-bugs.md) for remaining de
 
 ## Changes from the previous snapshot
 
-The seven commits after `a5c9ef5` leave the generated public header byte-identical.
-The public API and widget inventory are unchanged.
+The 28 commits after `71c383f` add public API without changing existing
+declarations or the widget inventory:
 
-- The week calendar measures movement between the recorded press and release
-  positions. Motion after release preserves a completed click. Focus loss
-  records a release position only while the left button is held.
-- GLFW restoration before the first frame cancels a queued initial maximize.
-  SDL2 retains a maximize or restore command until the next frame confirms it.
-- File-place tests now cover a missing home directory and disabled native
-  filesystem support.
+- Input capture and ordered dispatch (`cui_set_input_hook`,
+  `cui_dispatch_input`), focusable canvases (`cui_canvas_ex`,
+  `cui_request_component_focus`), focus scopes for pane-scoped Tab navigation,
+  `cui_set_cursor`, `cui_frame_alloc`, `cui_frame_strdup` and
+  `cui_image_update`.
+- Tab and Shift+Tab stay within a modal and its open popups. The adapters no
+  longer move popover focus entries into the parent layer.
+- Planning drags end when the item list shrinks, input is disabled or
+  `read_only` changes. Repeated software screenshots render the full frame.
+  Transitions that start after an idle pause take one frame step. Wheel areas
+  and zoom anchors follow their node's transform. Idle X11 windows ignore
+  private Present notifications.
+- Internally, the modal layer is a `cui_modal_layer` struct and the focus order
+  holds `cui__focus_entry` records. The command palette, shortcut ownership,
+  host frame start and table adapters use the new fields.
 
-The planning regression uses these event-order semantics. Existing bindings
-continue to use the same public declarations.
+The FPAS bindings do not expose the new public API yet.
 
 ## License inventory
 

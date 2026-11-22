@@ -29,6 +29,7 @@
  *   animation                        cui_core.c (springs, tweens) and the motion tokens
  *   fonts and text                   cui_text.c, cui_draw.c
  *   draw list                        cui_draw.c (and the ordered dither primitive)
+ *   software screenshots             render/cui_render_sw.c
  *   layout tree                      cui_layout.c (cui_node, building and laying out the tree)
  *   per id state                     cui_core.c (cui_state, garbage collection)
  *   interaction                      cui_core.c (hit testing, focus, cui__interact)
@@ -254,6 +255,11 @@ void cui__draw_dither_rect(cui_ctx *ui, const cui__dither *d, cui_rect r, float 
  * same density in a row is one quad, and cells at 0 draw nothing. */
 void cui__draw_dither_cells(cui_ctx *ui, const cui__dither *d, int i0, int j0, int cols, int rows, const float *density);
 
+/* ---- software screenshots ---- */
+struct cui_sw_renderer;
+void cui__sw_render_screenshot(struct cui_sw_renderer *r, const cui_draw_data *dd,
+                               void *rgba, int stride);
+
 /* ---- layout tree ---- */
 enum {
     CUI_NF_TEXT        = 1 << 0,
@@ -400,6 +406,8 @@ cui_rect cui__xform_rect(cui_ctx *ui, cui_rect r);
 void cui__paint_add_hit(cui_ctx *ui, cui_id id, cui_rect r, uint32_t flags);
 /* From a paint callback: the wheel over r (inside the current clip) goes to id, ahead of any scroll area under it. */
 void cui__paint_wheel_hit(cui_ctx *ui, cui_id id, cui_rect r);
+/* The screen pointer in the layout space of wheel area `id`, using its last paint transform. */
+cui_vec2 cui__wheel_point(cui_ctx *ui, cui_id id);
 
 /* ---- per id state ---- */
 typedef struct cui_state_entry {
@@ -429,6 +437,10 @@ typedef struct cui_hit {
     int order;
 } cui_hit;
 
+/* An inactive scope stays inactive through nested pushes. Outside any scope, both fields are zero. */
+typedef struct { cui_id id; bool inactive; } cui__focus_scope;
+typedef struct { cui_id id, layer; cui__focus_scope scope; bool component_input; } cui__focus_entry;   /* component_input: a canvas that routes its own keys */
+
 /* Hit-only flags for controls whose wheel range is separate from layout scroll.
  * They share cui_hit.flags with the CUI_NF_* node flags, so they sit above all of them. */
 enum { CUI_HIT_WHEEL_UP = 1 << 20, CUI_HIT_WHEEL_DOWN = 1 << 21 };
@@ -445,7 +457,11 @@ typedef struct cui_interact {
     bool keyboard_focused;    /* focused with no popup above this layer */
 } cui_interact;
 
-enum { CUI_IF_FOCUSABLE = 1, CUI_IF_DRAG = 2, CUI_IF_KEEP_FOCUS = 4, CUI_IF_TEXT = 8 };
+enum { CUI_IF_FOCUSABLE = 1, CUI_IF_DRAG = 2, CUI_IF_KEEP_FOCUS = 4, CUI_IF_TEXT = 8, CUI_IF_COMPONENT_INPUT = 16 };
+typedef struct cui_modal_layer {
+    cui_id id;
+    int z;
+} cui_modal_layer;
 cui_interact cui__interact(cui_ctx *ui, cui_id id, int flags);
 void cui__mark_interactive(cui_ctx *ui, int node, int flags);
 void cui__set_cursor(cui_ctx *ui, cui_cursor c);
@@ -455,6 +471,7 @@ bool cui__is_layer_open(cui_ctx *ui, cui_id layer);
 /* ---- popups ---- */
 typedef struct cui_popup {
     cui_id id;
+    cui_id parent_layer;       /* layer that submitted the popup */
     cui_id anchor;
     cui_rect anchor_rect;
     bool open;
@@ -510,6 +527,8 @@ struct cui_ctx {
     /* time */
     double time;
     float dt;
+    float step;                /* the step of transitions: dt, or at most one 60 Hz frame after a rest */
+    bool wanted_frame;         /* the last frame asked for the next one: the time since is no rest */
     uint64_t frame;
     bool in_frame;
     bool animating;
@@ -550,12 +569,11 @@ struct cui_ctx {
     bool focus_visible;             /* focus came from the keyboard */
     cui_id focus_next_request;
     int focus_move;                 /* +1/-1 tab navigation requested */
-    cui_id *focus_order; int focus_count, focus_cap;
-    cui_id *prev_focus_order; int prev_focus_count, prev_focus_cap;
-    cui_id *focus_layers; int focus_layers_cap;          /* layer of each focus entry */
-    cui_id *prev_focus_layers; int prev_focus_layers_cap;
-    cui_id modal_layer, prev_modal_layer;               /* topmost open modal */
-    int modal_z;
+    cui__focus_entry *focus_order; int focus_count, focus_cap;
+    cui__focus_entry *prev_focus_order; int prev_focus_count, prev_focus_cap;
+    cui__focus_scope *focus_scope_stack; int focus_scope_depth, focus_scope_cap;
+    cui_id active_focus_scope, prev_active_focus_scope;
+    cui_modal_layer modal, prev_modal;                  /* topmost open modal */
     bool edit_prev;                                     /* a text field had focus last frame */
     cui_id hover_id_for_tooltip;
     double hover_start;
@@ -564,6 +582,14 @@ struct cui_ctx {
     cui_cursor cursor;
 
     /* input */
+    struct {
+        cui_input_hook_fn capture;
+        void *user;
+        cui_id focus_request, focus_owner;
+        cui_id previous_tab_owner;     /* built-in editor's Tab owner during replay */
+        bool repeated;
+        bool blocked_keys[CUI_KEY_COUNT];
+    } component_input;
     float mx, my, pmx, pmy;
     bool mouse_inside;
     bool mdown[3], mpressed[3], mreleased[3];
@@ -661,6 +687,7 @@ struct cui_ctx {
      * noted, so a new begin/end component adds its pointer here and nowhere else. */
     struct {
         struct cui_table_build *table; int table_depth;   /* tables nest: depth counts them */
+        const cui_vec2 *screen_pointer; /* outermost saved pointer while node content remaps mouse input */
         struct cui_split_build *split;
         struct cui_reorder_build *reorder;
         struct cui_swipe_build *swipe;
@@ -9521,18 +9548,22 @@ void cui__free(cui_ctx *ui, void *p) { if (p) ui->alloc.free(p, ui->alloc.user);
 /* Frame arena: a main block that grows between frames, plus overflow blocks
  * for the current frame so pointers handed out stay valid. */
 void *cui__frame_alloc(cui_ctx *ui, size_t size) {
+    if (size > SIZE_MAX - 15) return NULL;
     size = (size + 15) & ~(size_t)15;
-    if (ui->arena_used + size <= ui->arena_cap) {
+    if (size > SIZE_MAX - ui->arena_used) return NULL;
+    size_t demand = ui->arena_used + size;
+    if (demand <= ui->arena_cap) {
         void *p = ui->arena + ui->arena_used;
-        ui->arena_used += size;
+        ui->arena_used = demand;
         memset(p, 0, size);
         return p;
     }
     /* overflow block, freed at next frame; arena grows for next frame */
+    if (size > SIZE_MAX - 32) return NULL;
     struct cui_arena_block *b = cui__alloc(ui, 32 + size);
     b->next = ui->arena_overflow;
     ui->arena_overflow = b;
-    ui->arena_used += size;  /* remember the demand so the arena grows */
+    ui->arena_used = demand;  /* remember the demand so the arena grows */
     void *p = (void *)(((uintptr_t)b + sizeof(*b) + 15) & ~(uintptr_t)15);
     memset(p, 0, size);
     return p;
@@ -9562,7 +9593,7 @@ static void cui__trim_buffers(cui_ctx *ui) {
     ui->dl.idx = cui__trim(ui, ui->dl.idx, &ui->dl.idx_cap, ui->peak_idx, sizeof *ui->dl.idx);
     ui->dl.cmd = cui__trim(ui, ui->dl.cmd, &ui->dl.cmd_cap, ui->peak_cmd, sizeof *ui->dl.cmd);
     ui->nodes = cui__trim(ui, ui->nodes, &ui->node_cap, ui->peak_nodes, sizeof *ui->nodes);
-    if (ui->arena_cap > 65536 && ui->arena_cap > ui->peak_arena * 4 && !ui->arena_overflow) {
+    if (ui->arena_cap > 65536 && ui->peak_arena <= (ui->arena_cap - 1) / 4 && !ui->arena_overflow) {
         size_t cap = 1 << 16;
         while (cap < ui->peak_arena * 2) cap *= 2;
         cui__free(ui, ui->arena);
@@ -9583,7 +9614,8 @@ static void cui__frame_arena_reset(cui_ctx *ui) {
     }
     if (demand > ui->arena_cap) {
         size_t cap = ui->arena_cap ? ui->arena_cap : 1 << 16;
-        while (cap < demand) cap *= 2;
+        while (cap < demand && cap <= SIZE_MAX / 2) cap *= 2;
+        if (cap < demand) cap = demand;  /* the next power of two would not fit */
         cui__free(ui, ui->arena);
         ui->arena = cui__alloc(ui, cap);
         ui->arena_cap = cap;
@@ -9593,11 +9625,22 @@ static void cui__frame_arena_reset(cui_ctx *ui) {
 
 char *cui__frame_strdup(cui_ctx *ui, const char *s, int len) {
     if (!s) return NULL;
-    if (len < 0) len = (int)strlen(s);
-    char *d = cui__frame_alloc(ui, (size_t)len + 1);
-    memcpy(d, s, (size_t)len);
-    d[len] = 0;
+    size_t n = len < 0 ? strlen(s) : (size_t)len;
+    char *d = cui__frame_alloc(ui, n + 1);
+    if (!d) return NULL;
+    memcpy(d, s, n);
+    d[n] = 0;
     return d;
+}
+
+void *cui_frame_alloc(cui_ctx *ui, size_t size) {
+    if (!ui || size == 0) return NULL;
+    return cui__frame_alloc(ui, size);
+}
+
+char *cui_frame_strdup(cui_ctx *ui, const char *s) {
+    if (!ui || !s) return NULL;
+    return cui__frame_strdup(ui, s, -1);
 }
 
 char *cui__frame_vprintf(cui_ctx *ui, const char *fmt, va_list ap) {
@@ -9750,8 +9793,7 @@ void cui_destroy(cui_ctx *ui) {
     cui__free(ui, ui->prev_hits);
     cui__free(ui, ui->focus_order);
     cui__free(ui, ui->prev_focus_order);
-    cui__free(ui, ui->focus_layers);
-    cui__free(ui, ui->prev_focus_layers);
+    cui__free(ui, ui->focus_scope_stack);
     cui__free(ui, ui->dl.vtx);
     cui__free(ui, ui->dl.idx);
     cui__free(ui, ui->dl.cmd);
@@ -9976,12 +10018,29 @@ void cui_pop_disabled(cui_ctx *ui) {
 
 static void cui__poke(cui_ctx *ui) { ui->settle_frames = CUI_MAX(ui->settle_frames, 2); ui->input_this_frame = true; }
 
+void cui_set_input_hook(cui_ctx *ui, cui_input_hook_fn hook, void *user) {
+    ui->component_input.capture = hook;
+    ui->component_input.user = hook ? user : NULL;
+}
+static bool cui__input_handled(cui_ctx *ui, const cui_input_event *event) {
+    if (!ui->component_input.capture || !ui->component_input.capture(ui, event, ui->component_input.user)) return false;
+    cui__poke(ui);
+    return true;
+}
 void cui_input_mouse_move(cui_ctx *ui, float x, float y) {
+    const cui_input_event event = { .kind = CUI_INPUT_MOUSE_MOVE, .position = {x, y} };
+    if (cui__input_handled(ui, &event)) return;
     if (x != ui->mx || y != ui->my || !ui->mouse_inside) cui__poke(ui);
     ui->mx = x; ui->my = y; ui->mouse_inside = true;
 }
 
-void cui_input_mouse_leave(cui_ctx *ui) { ui->mouse_inside = false; ui->mx = -1e6f; ui->my = -1e6f; cui__poke(ui); }
+void cui_input_mouse_leave(cui_ctx *ui) {
+    const cui_input_event event = { .kind = CUI_INPUT_MOUSE_LEAVE };
+    if (cui__input_handled(ui, &event)) return;
+    ui->mouse_inside = false;
+    ui->mx = ui->my = -1e6f;
+    cui__poke(ui);
+}
 
 /** Classify pending presses against the current frame's clock, including batched clicks. */
 static void cui__flush_clicks(cui_ctx *ui) {
@@ -10000,6 +10059,8 @@ static void cui__flush_clicks(cui_ctx *ui) {
 
 void cui_input_mouse_button(cui_ctx *ui, cui_mouse_button b, bool down) {
     if ((int)b < 0 || (int)b > 2) return;
+    const cui_input_event event = { .kind = CUI_INPUT_MOUSE_BUTTON, .button = b, .down = down };
+    if (cui__input_handled(ui, &event)) return;
     cui__poke(ui);
     if (down && !ui->mdown[b]) {
         ui->mpressed[b] = true;
@@ -10028,16 +10089,37 @@ void cui_input_mouse_button(cui_ctx *ui, cui_mouse_button b, bool down) {
     ui->mdown[b] = down;
 }
 
-void cui_input_scroll(cui_ctx *ui, float dx, float dy) { ui->scroll_dx += dx; ui->scroll_dy += dy; cui__poke(ui); }
-
-void cui_input_key(cui_ctx *ui, cui_key key, bool down, int mods) {
-    /* modifiers are sampled at key presses (and modifier-only changes), so a
-     * quick shortcut tap released before the next frame still registers */
-    if (down || key == CUI_KEY_NONE) ui->mods = mods;
+void cui_input_scroll(cui_ctx *ui, float dx, float dy) {
+    const cui_input_event event = { .kind = CUI_INPUT_SCROLL, .delta = {dx, dy} };
+    if (cui__input_handled(ui, &event)) return;
+    ui->scroll_dx += dx;
+    ui->scroll_dy += dy;
     cui__poke(ui);
-    if ((int)key <= 0 || key >= CUI_KEY_COUNT) return;
-    if (down && ui->kpressed[key] < 255) ui->kpressed[key]++;
-    ui->kdown[key] = down;
+}
+
+static bool cui__key_state(cui_ctx *ui, const cui_input_event *event) {
+    bool valid = event->key > 0 && event->key < CUI_KEY_COUNT;
+    bool repeat = valid && event->down && ui->kdown[event->key];
+    ui->mods = event->mods;
+    if (valid) {
+        ui->kdown[event->key] = event->down;
+        if (!event->down) ui->component_input.blocked_keys[event->key] = false;
+    }
+    cui__poke(ui);
+    return repeat;
+}
+static void cui__key_action(cui_ctx *ui, const cui_input_event *event) {
+    if (event->key > 0 && event->key < CUI_KEY_COUNT && event->down && ui->kpressed[event->key] < 255)
+        ui->kpressed[event->key]++;
+}
+void cui_input_key(cui_ctx *ui, cui_key key, bool down, int mods) {
+    const cui_input_event event = { .kind = CUI_INPUT_KEY, .key = key, .down = down, .mods = mods };
+    if (cui__input_handled(ui, &event)) return;
+    /* Keep legacy modifier sampling unchanged outside opt-in dispatch. */
+    int previous_mods = ui->mods;
+    cui__key_state(ui, &event);
+    if (!down && key != CUI_KEY_NONE) ui->mods = previous_mods;
+    cui__key_action(ui, &event);
 }
 
 void cui_input_file_hover(cui_ctx *ui, bool hovering, float x, float y) {
@@ -10077,6 +10159,8 @@ bool cui_file_drag_active(cui_ctx *ui) { return ui->drag_hover; }
 
 void cui_input_text(cui_ctx *ui, const char *utf8) {
     if (!utf8) return;
+    const cui_input_event event = { .kind = CUI_INPUT_TEXT, .text = utf8 };
+    if (cui__input_handled(ui, &event)) return;
     int n = (int)strlen(utf8);
     if (ui->text_in_len + n >= (int)sizeof(ui->text_in)) return;
     /* drop control characters; keys handle those */
@@ -10090,9 +10174,12 @@ void cui_input_text(cui_ctx *ui, const char *utf8) {
 }
 
 void cui_input_focus(cui_ctx *ui, bool focused) {
+    const cui_input_event event = { .kind = CUI_INPUT_FOCUS, .focused = focused };
+    if (cui__input_handled(ui, &event)) return;
     ui->window_focused = focused;
     if (!focused) {
         memset(ui->kdown, 0, sizeof ui->kdown);
+        memset(ui->component_input.blocked_keys, 0, sizeof ui->component_input.blocked_keys);
         /* a held left button counts as released where the pointer was last seen */
         if (ui->mdown[CUI_MOUSE_LEFT]) { ui->release_x = ui->mx; ui->release_y = ui->my; }
         for (int i = 0; i < 3; i++) { if (ui->mdown[i]) ui->mreleased[i] = true; ui->mdown[i] = false; }
@@ -10124,6 +10211,9 @@ bool cui_wants_keyboard(cui_ctx *ui) { return ui->edit != NULL; }
 bool cui_wants_mouse(cui_ctx *ui) { return ui->hot != 0 || ui->active != 0; }
 
 void cui__set_cursor(cui_ctx *ui, cui_cursor c) { ui->cursor = c; }
+void cui_set_cursor(cui_ctx *ui, cui_cursor c) {
+    if ((int)c >= 0 && c < CUI_CURSOR_COUNT) cui__set_cursor(ui, c);
+}
 
 /* ------------------------------------------------------------------------ */
 /* Interaction                                                              */
@@ -10188,6 +10278,95 @@ static void cui__compute_hot(cui_ctx *ui) {
     }
 }
 
+/* A popup has its own layer but stays in the Tab scope of its modal. */
+static bool cui__tab_layer_in_modal(cui_ctx *ui, cui_id layer, cui_id modal) {
+    for (int depth = 0; depth <= ui->popup_count; depth++) {
+        if (layer == modal) return true;
+        cui_popup *popup = cui__popup_get(ui, layer, false);
+        if (!popup || !popup->open) return false;
+        layer = popup->parent_layer;
+    }
+    return false;
+}
+
+static void cui__keyboard_tab(cui_ctx *ui, cui_id tab_owner) {
+    bool tab_kept = tab_owner && tab_owner == ui->focus;   /* a code editor types the Tab */
+    if (cui_key_pressed(ui, CUI_KEY_TAB) && !(ui->mods & CUI_MOD_CTRL) && ui->prev_focus_count > 0 && !tab_kept) {
+        int n = 0, cur = -1;
+        int *cand = cui__frame_alloc(ui, sizeof *cand * (size_t)ui->prev_focus_count);
+        for (int i = 0; i < ui->prev_focus_count; i++) {
+            const cui__focus_entry *entry = &ui->prev_focus_order[i];
+            if (ui->prev_modal.id) {
+                if (!cui__tab_layer_in_modal(ui, entry->layer, ui->prev_modal.id)) continue;
+            } else if (entry->scope.inactive || entry->scope.id != ui->prev_active_focus_scope) continue;
+            if (entry->id == ui->focus) cur = n;
+            cand[n++] = i;
+        }
+        if (n > 0) {
+            int dir = (ui->mods & CUI_MOD_SHIFT) ? -1 : 1;
+            int idx = cur < 0 ? (dir > 0 ? 0 : n - 1) : (cur + dir + n) % n;
+            const cui__focus_entry *entry = &ui->prev_focus_order[cand[idx]];
+            ui->focus = entry->id;
+            ui->component_input.focus_owner = entry->component_input ? entry->id : 0;
+            ui->focus_visible = true;
+        }
+        ui->kpressed[CUI_KEY_TAB] = 0;
+    }
+}
+
+/* Component requests commit against the complete submission. The routing
+ * query is used after end_frame or before components in the next frame. */
+void cui_request_component_focus(cui_ctx *ui, cui_id id) { ui->component_input.focus_request = id; }
+bool cui_component_has_input(cui_ctx *ui, cui_id id) {
+    if (!id || !ui->window_focused || ui->focus != id || ui->component_input.focus_owner != id) return false;
+    int count = ui->in_frame ? ui->prev_focus_count : ui->focus_count;
+    const cui__focus_entry *order = ui->in_frame ? ui->prev_focus_order : ui->focus_order;
+    cui_modal_layer modal = ui->in_frame ? ui->prev_modal : ui->modal;
+    for (int i = 0; i < count; i++) if (order[i].id == id && order[i].component_input) {
+        cui_id layer = order[i].layer;
+        if (modal.id && !cui__tab_layer_in_modal(ui, layer, modal.id)) return false;
+        int z = layer == modal.id ? modal.z : 0;
+        for (int p = 0; p < ui->popup_count; p++)
+            if (ui->popups[p].id == layer) z = ui->popups[p].z;
+        for (int p = 0; p < ui->popup_count; p++)
+            if (ui->popups[p].open && ui->popups[p].z > z) return false;
+        return true;
+    }
+    return false;
+}
+
+bool cui_input_repeated(cui_ctx *ui) { return ui->component_input.repeated; }
+bool cui_window_focused(cui_ctx *ui) { return ui->window_focused; }
+bool cui_key_action_down(cui_ctx *ui, cui_key key) {
+    return cui_key_down(ui, key) && !ui->component_input.blocked_keys[key];
+}
+cui_id cui_focused_id(cui_ctx *ui) { return ui->focus; }
+void cui_dispatch_input(cui_ctx *ui, const cui_input_event *event, cui_input_route_fn route, void *user) {
+    ui->component_input.repeated = false;
+    if (event->kind == CUI_INPUT_FOCUS) {
+        cui_input_focus(ui, event->focused);
+        if (route) route(ui, user, event); /* lifecycle only */
+        return;
+    }
+    if (event->kind == CUI_INPUT_KEY) ui->component_input.repeated = cui__key_state(ui, event);
+    if (!ui->window_focused) {
+        if (event->kind == CUI_INPUT_KEY && event->key > 0 && event->key < CUI_KEY_COUNT && event->down)
+            ui->component_input.blocked_keys[event->key] = true;
+        return;
+    }
+    bool handled = route && route(ui, user, event);
+    if (event->kind == CUI_INPUT_KEY) {
+        bool valid = event->key > 0 && event->key < CUI_KEY_COUNT;
+        if (handled && valid && event->down) ui->component_input.blocked_keys[event->key] = true;
+        if (!handled && (!valid || !ui->component_input.blocked_keys[event->key])) {
+            cui__key_action(ui, event);
+            /* A later modifier change must not turn an earlier Ctrl+Tab into Tab. */
+            if (event->key == CUI_KEY_TAB && event->down)
+                cui__keyboard_tab(ui, ui->component_input.previous_tab_owner);
+        }
+    } else if (!handled && event->kind == CUI_INPUT_TEXT) cui_input_text(ui, event->text);
+}
+
 /** Track focus independently from whether a popup covers keyboard input. */
 cui_interact cui__interact(cui_ctx *ui, cui_id id, int flags) {
     cui_interact r;
@@ -10199,9 +10378,11 @@ cui_interact cui__interact(cui_ctx *ui, cui_id id, int flags) {
     }
     if (flags & CUI_IF_FOCUSABLE) {
         CUI__GROW(ui, ui->focus_order, ui->focus_count, ui->focus_cap, 1);
-        CUI__GROW(ui, ui->focus_layers, ui->focus_count, ui->focus_layers_cap, 1);
-        ui->focus_layers[ui->focus_count] = ui->current_layer;
-        ui->focus_order[ui->focus_count++] = id;
+        cui__focus_scope scope = { 0 };
+        if (ui->focus_scope_depth) scope = ui->focus_scope_stack[ui->focus_scope_depth - 1];
+        ui->focus_order[ui->focus_count++] = (cui__focus_entry){
+            .id = id, .layer = ui->current_layer, .scope = scope, .component_input = (flags & CUI_IF_COMPONENT_INPUT) != 0
+        };
         if (ui->focus_next_request == id) { ui->focus = id; ui->focus_next_request = 0; }
     }
     bool hovered = ui->hot == id && (ui->active == 0 || ui->active == id);
@@ -10220,6 +10401,7 @@ cui_interact cui__interact(cui_ctx *ui, cui_id id, int flags) {
         if (hovered) r.clicked = true;
     }
     r.focused = ui->focus == id;
+    if (r.focused && (flags & CUI_IF_COMPONENT_INPUT)) ui->component_input.focus_owner = id;
     /* a click gives focus without a ring; using the keyboard next shows the
      * ring and the keys act on that control, as in a browser. A trigger whose
      * popup is open leaves the keys to the popup. */
@@ -10261,7 +10443,7 @@ float cui__spring(cui_ctx *ui, cui_spring *s, float target, float duration, floa
     float w = 2.0f * CUI_PI / duration;
     float k = w * w;
     float c = 2.0f * (1.0f - bounce) * w;
-    float dt = ui->dt;
+    float dt = ui->step;
     if (dt > 0.1f) dt = 0.1f;
     int steps = (int)ceilf(dt / (1.0f / 240.0f));
     if (steps < 1) steps = 1;
@@ -10281,7 +10463,7 @@ float cui__tween(cui_ctx *ui, float *x, float target, float duration) {
     float motion = ui->theme.motion;
     if (motion <= 0.0f || ui->frame <= 1) { *x = target; return target; }
     duration *= motion;
-    float a = 1.0f - expf(-ui->dt * 4.6f / duration);
+    float a = 1.0f - expf(-ui->step * 4.6f / duration);
     *x += (target - *x) * a;
     if (fabsf(*x - target) < 0.002f) *x = target;
     else ui->animating = true;
@@ -10314,6 +10496,12 @@ void cui_begin_frame(cui_ctx *ui, float dt) {
     if (dt > 3600.0f) dt = 3600.0f;
     ui->in_frame = true;
     ui->dt = CUI_MIN(dt, 0.25f);
+    /* After a frame that asked for no other the host could sleep until input came, and a dt
+     * longer than a frame at 20 Hz is that rest. A transition that starts now (a hover fade, a
+     * spring) takes one 60 Hz frame's step instead and runs its course. A host that draws on
+     * its own at a lower rate keeps its dt, and dt and the clock keep the real time for timers
+     * and cui_delta_time. */
+    ui->step = !ui->wanted_frame && ui->dt > 0.05f ? 1.0f / 60.0f : ui->dt;
     ui->time += dt;
     cui__flush_clicks(ui);
     ui->frame++;
@@ -10323,44 +10511,30 @@ void cui_begin_frame(cui_ctx *ui, float dt) {
     if (ui->settle_frames > 0) ui->settle_frames--;
 
     cui__trim_buffers(ui);   /* before anything of this frame is in them */
+    ui->building.screen_pointer = NULL;   /* saved positions belong to the previous frame */
     cui__frame_arena_reset(ui);
 
     /* swap hit lists and focus order */
     { cui_hit *t = ui->prev_hits; ui->prev_hits = ui->hits; ui->hits = t;
       int c = ui->prev_hit_cap; ui->prev_hit_cap = ui->hit_cap; ui->hit_cap = c;
       ui->prev_hit_count = ui->hit_count; ui->hit_count = 0; }
-    { cui_id *t = ui->prev_focus_order; ui->prev_focus_order = ui->focus_order; ui->focus_order = t;
+    { cui__focus_entry *t = ui->prev_focus_order; ui->prev_focus_order = ui->focus_order; ui->focus_order = t;
       int c = ui->prev_focus_cap; ui->prev_focus_cap = ui->focus_cap; ui->focus_cap = c;
-      cui_id *tl = ui->prev_focus_layers; ui->prev_focus_layers = ui->focus_layers; ui->focus_layers = tl;
-      int cl = ui->prev_focus_layers_cap; ui->prev_focus_layers_cap = ui->focus_layers_cap; ui->focus_layers_cap = cl;
       ui->prev_focus_count = ui->focus_count; ui->focus_count = 0; }
-    ui->prev_modal_layer = ui->modal_layer;
-    ui->modal_layer = 0;
-    ui->modal_z = 0;
+    ui->prev_modal = ui->modal;
+    ui->modal = (cui_modal_layer){0};
+    ui->prev_active_focus_scope = ui->active_focus_scope;
+    ui->active_focus_scope = 0;
+    ui->focus_scope_depth = 0;
 
     cui__compute_hot(ui);
     if (ui->active && !ui->mdown[0] && !ui->mreleased[0] && !ui->mpressed[0]) ui->active = 0;
 
     /* Tab navigation (uses last frame's focus order; stays inside an open modal).
      * Ctrl+Tab is left to the app: it switches documents, as in a browser. */
-    bool tab_kept = ui->tab_owner && ui->tab_owner == ui->focus;   /* a code editor types the Tab */
+    ui->component_input.previous_tab_owner = ui->tab_owner;
+    cui__keyboard_tab(ui, ui->tab_owner);
     ui->tab_owner = 0;
-    if (cui_key_pressed(ui, CUI_KEY_TAB) && !(ui->mods & CUI_MOD_CTRL) && ui->prev_focus_count > 0 && !tab_kept) {
-        int n = 0, cur = -1;
-        cui_id *cand = cui__frame_alloc(ui, sizeof(cui_id) * (size_t)ui->prev_focus_count);
-        for (int i = 0; i < ui->prev_focus_count; i++) {
-            if (ui->prev_modal_layer && ui->prev_focus_layers[i] != ui->prev_modal_layer) continue;
-            if (ui->prev_focus_order[i] == ui->focus) cur = n;
-            cand[n++] = ui->prev_focus_order[i];
-        }
-        if (n > 0) {
-            int dir = (ui->mods & CUI_MOD_SHIFT) ? -1 : 1;
-            int idx = cur < 0 ? (dir > 0 ? 0 : n - 1) : (cur + dir + n) % n;
-            ui->focus = cand[idx];
-            ui->focus_visible = true;
-        }
-        ui->kpressed[CUI_KEY_TAB] = 0;
-    }
     if (ui->mpressed[0] && ui->hot == 0) { ui->focus = 0; }
 
     cui__theme_update(ui);
@@ -10410,6 +10584,7 @@ void cui_end_frame(cui_ctx *ui) {
     for (int i = 0; i < 3; i++) { ui->mpressed[i] = false; ui->mreleased[i] = false; }
     ui->scroll_dx = ui->scroll_dy = 0;
     memset(ui->kpressed, 0, sizeof ui->kpressed);
+    ui->wanted_frame = cui_needs_redraw(ui);
     ui->text_in_len = 0;
     ui->text_in[0] = 0;
     ui->input_this_frame = false;
@@ -10433,6 +10608,25 @@ void cui_end_frame(cui_ctx *ui) {
     dd->height_px = (int)(ui->vh * ui->scale + 0.5f);
     dd->clear_color = ui->theme.colors[CUI_TOKEN_BACKGROUND];
     dd->font_atlas = ui->atlas_tex;
+    cui_id owner = ui->component_input.focus_owner;
+    cui_id request = ui->component_input.focus_request;
+    if (owner || request) {
+        bool owner_present = false, request_present = false;
+        for (int i = 0; i < ui->focus_count; i++) {
+            const cui__focus_entry *entry = &ui->focus_order[i];
+            if (!entry->component_input) continue;
+            if (entry->id == owner) owner_present = true;
+            if (entry->id == request) request_present = true;
+        }
+        if (!owner_present && ui->focus == owner) ui->focus = 0;
+        if (request_present) {
+            if (ui->focus != request) cui_request_redraw(ui);
+            ui->focus = request;
+            owner = request;
+        }
+        ui->component_input.focus_owner = ui->focus == owner ? owner : 0;
+        ui->component_input.focus_request = 0;
+    }
     ui->in_frame = false;
 }
 
@@ -10440,6 +10634,19 @@ const cui_draw_data *cui_get_draw_data(cui_ctx *ui) { return &ui->draw_data; }
 
 void cui__wakeup_after(cui_ctx *ui, float seconds) { cui__wake_in(ui, seconds); }
 void cui_request_wakeup(cui_ctx *ui, float seconds) { if (ui) cui__wake_in(ui, seconds); }
+
+void cui_push_focus_scope(cui_ctx *ui, cui_id id, bool active) {
+    if (!ui) return;
+    int depth = ui->focus_scope_depth;
+    bool inactive = !active || (depth && ui->focus_scope_stack[depth - 1].inactive);
+    CUI__GROW(ui, ui->focus_scope_stack, depth, ui->focus_scope_cap, 1);
+    ui->focus_scope_stack[ui->focus_scope_depth++] = (cui__focus_scope){ id, inactive };
+    if (!inactive && id) ui->active_focus_scope = id;
+}
+
+void cui_pop_focus_scope(cui_ctx *ui) {
+    if (ui && ui->focus_scope_depth) ui->focus_scope_depth--;
+}
 
 /* ==== src/cui_creative.c ==== */
 /* Creative controls: the status tag and the ratio slider, and the controls that sit in a
@@ -19897,7 +20104,7 @@ bool cui_veil_begin_ex(cui_ctx *ui, const char *id_str, bool *revealed, const cu
     float target = shown ? 1.0f : 0.0f;
     if (ui->theme.motion <= 0) st->q = target;
     else if (st->q != target) {
-        float step = ui->dt / (CUI__VEIL_T * CUI_MAX(1.0f, ui->theme.motion));
+        float step = ui->step / (CUI__VEIL_T * CUI_MAX(1.0f, ui->theme.motion));
         st->q = target > st->q ? CUI_MIN(target, st->q + step) : CUI_MAX(target, st->q - step);
         ui->animating = true;
     }
@@ -25865,7 +26072,7 @@ bool cui_hold_button_ex(cui_ctx *ui, const char *label, const cui_hold_opts *o) 
     cui_id id = cui_make_id(ui, label);
     cui__hold_state *st = cui_state(ui, id ^ 0x401Du, sizeof *st);
     bool held = ui->active == id && ui->mdown[0] && ui->hot == id;
-    if (ui->focus == id && ui->focus_visible && (cui_key_down(ui, CUI_KEY_SPACE) || cui_key_down(ui, CUI_KEY_ENTER))) held = true;
+    if (ui->focus == id && ui->focus_visible && (cui_key_action_down(ui, CUI_KEY_SPACE) || cui_key_action_down(ui, CUI_KEY_ENTER))) held = true;
     bool fire = false;
     if (held && !st->fired) {
         st->progress += ui->dt / duration;
@@ -28682,7 +28889,8 @@ static void cui__trf_wheel(cui__trf *f) {
     cui_trace_view *v = f->v;
     if (!(ui->scroll_target == f->wid && ui->hot_layer == ui->current_layer && (ui->scroll_dx != 0 || ui->scroll_dy != 0))) return;
     double range = v->end - v->start;
-    if (f->mx < f->R.x + f->c.gutter) v->scroll -= ui->scroll_dy * 40;
+    const float mx = cui__wheel_point(ui, f->wid).x;   /* the pointer in layout space */
+    if (mx < f->R.x + f->c.gutter) v->scroll -= ui->scroll_dy * 40;
     else if (ui->scroll_dx != 0 || (ui->mods & CUI_MOD_SHIFT)) {
         float dl = ui->scroll_dx != 0 ? ui->scroll_dx : ui->scroll_dy;
         double dt = (double)dl * 40.0 / f->c.plot_w * range;
@@ -28690,7 +28898,7 @@ static void cui__trf_wheel(cui__trf *f) {
     } else {
         double z = pow(1.12, (double)ui->scroll_dy);
         double nr = CUI_MIN(range / z, f->c.dmax - f->c.dmin);
-        double u = CUI_CLAMP((double)(f->mx - f->c.plot_x) / f->c.plot_w, 0.0, 1.0);
+        double u = CUI_CLAMP((double)(mx - f->c.plot_x) / f->c.plot_w, 0.0, 1.0);
         double tm = v->start + u * range;
         v->start = tm - u * nr; v->end = v->start + nr;
     }
@@ -34617,11 +34825,10 @@ cui_graph_result cui_graph_view_ex(cui_ctx *ui, const char *id_str, const cui_gr
     if (s->fit && has_rect && R.w > 0) { cui__gv_fit(s, R); s->fit = false; }
     if (!has_rect) ui->animating = true;   /* fit once the size is known */
     cui_interact bi = cui__interact(ui, id, CUI_IF_FOCUSABLE | CUI_IF_DRAG);
-    float mx = ui->mx - R.x, my = ui->my - R.y;
     if (has_rect) {
         if (ui->scroll_target == wid && (ui->scroll_dy != 0 || ui->scroll_dx != 0)) {
             if (ui->scroll_dx != 0 || (ui->mods & CUI_MOD_SHIFT)) { s->px += (ui->scroll_dx != 0 ? ui->scroll_dx : ui->scroll_dy) * 40; }
-            else cui__gv_zoom_at(s, s->zoom * powf(1.12f, ui->scroll_dy), mx, my);
+            else { cui_vec2 p = cui__wheel_point(ui, wid); cui__gv_zoom_at(s, s->zoom * powf(1.12f, ui->scroll_dy), p.x - R.x, p.y - R.y); }
             ui->scroll_dx = ui->scroll_dy = 0;
         }
         if (bi.hovered && ui->mpressed[0] && s->mode == 0) {
@@ -35897,7 +36104,7 @@ static void cui__hxf_scroll(cui__hxf *f) {
     float motion = ui->theme.motion;
     if (motion <= 0 || ui->frame <= 1) s->pos = s->target;
     else {
-        double a = 1.0 - exp(-(double)ui->dt * 4.6 / (0.14 * (double)motion));
+        double a = 1.0 - exp(-(double)ui->step * 4.6 / (0.14 * (double)motion));
         s->pos += (s->target - s->pos) * a;
         if (fabs(s->pos - s->target) < 0.01) s->pos = s->target;
         else ui->animating = true;
@@ -46215,6 +46422,8 @@ static void cui__paint_node(cui_ctx *ui, int i, cui_rect clip) {
 
 void cui__paint_add_hit(cui_ctx *ui, cui_id id, cui_rect r, uint32_t flags) { cui__add_hit(ui, id, r, flags); }
 
+#define CUI__WHEEL_XFORM 0x5E1F0A2Du   /* salts the id of a wheel area's recorded transform */
+
 void cui__paint_wheel_hit(cui_ctx *ui, cui_id id, cui_rect r) {
     cui_rect clip = ui->dl.clip_stack[ui->dl.clip_depth - 1];
     float s = ui->scale;
@@ -46223,7 +46432,18 @@ void cui__paint_wheel_hit(cui_ctx *ui, cui_id id, cui_rect r) {
     cui_scroll_state *ss = cui_state(ui, id, sizeof *ss);
     ss->view_w = r.w; ss->view_h = r.h;
     ss->content_w = r.w + 1e6f; ss->content_h = r.h + 1e6f;
-    cui__add_hit(ui, id, cui__rect_intersect(r, cp), CUI_NF_SCROLL_X | CUI_NF_SCROLL_Y);
+    cui__add_hit(ui, id, cui__rect_intersect(cui__xform_rect(ui, r), cp), CUI_NF_SCROLL_X | CUI_NF_SCROLL_Y);
+    /* the transform it was drawn with, for cui__wheel_point while the wheel is handled next frame */
+    cui_xform x = ui->dl.xform_stack[ui->dl.xform_depth - 1];
+    cui_xform *wx = cui_state(ui, id ^ CUI__WHEEL_XFORM, sizeof *wx);
+    *wx = (cui_xform){ .scale = x.scale, .ox = x.ox / s, .oy = x.oy / s };
+}
+
+cui_vec2 cui__wheel_point(cui_ctx *ui, cui_id id) {
+    cui_vec2 p = ui->building.screen_pointer ? *ui->building.screen_pointer : cui_mouse_pos(ui);
+    const cui_xform *wx = cui_state(ui, id ^ CUI__WHEEL_XFORM, sizeof *wx);
+    if (!(wx->scale > 0)) return p;   /* not painted yet: no transform known */
+    return (cui_vec2){ (p.x - wx->ox) / wx->scale, (p.y - wx->oy) / wx->scale };
 }
 
 void cui_wheel_region(cui_ctx *ui, cui_id id, cui_rect rect) {
@@ -50487,7 +50707,7 @@ typedef struct cui__ne_build {
     float nx, ny, nw, row_y, card_sx, card_sy;
     bool node_selected;
     struct cui__ne_card *card_paint;
-    int content_node; float c_sx, c_sy; float saved_mx, saved_my, saved_pmx, saved_pmy; bool in_content;
+    int content_node; float c_sx, c_sy; cui_vec2 saved_pointer; float saved_pmx, saved_pmy; bool in_content;
     cui_id content_id;
     int *cards; int card_n, card_cap;     /* card node indices (frame memory) */
     bool *raise;
@@ -51092,7 +51312,7 @@ static void cui__ne_build_canvas(cui_ctx *ui, cui__ne_build *b, const cui_node_e
     cui__mark_interactive(ui, en, CUI_IF_FOCUSABLE);
     b->bg_focus = focus_visible;
     b->editor_node = en;
-    if (hot_mine && b->st->mode == NE_IDLE && ui->kdown[CUI_KEY_SPACE]) cui__set_cursor(ui, CUI_CURSOR_MOVE);
+    if (hot_mine && b->st->mode == NE_IDLE && cui_key_action_down(ui, CUI_KEY_SPACE)) cui__set_cursor(ui, CUI_CURSOR_MOVE);
     cui__open(ui, en);
 }
 
@@ -51160,7 +51380,7 @@ bool cui_node_editor_begin_ex(cui_ctx *ui, const char *id_str, cui_node_view *vi
     /* pan: the middle button, or Space and drag, anywhere over the canvas */
     bool over = b->has_rect && cui__rect_contains(b->r, mx, my) && ui->hot_layer == ui->current_layer && (hot_mine || ui->hot != 0);
     if (!b->disabled && over && st->mode == NE_IDLE && !ui->edit_prev &&
-        (ui->mpressed[CUI_MOUSE_MIDDLE] || (ui->mpressed[0] && ui->kdown[CUI_KEY_SPACE]))) {
+        (ui->mpressed[CUI_MOUSE_MIDDLE] || (ui->mpressed[0] && cui_key_action_down(ui, CUI_KEY_SPACE)))) {
         st->mode = NE_PAN; st->last_x = mx; st->last_y = my;
         b->consumed = true;
     }
@@ -51451,7 +51671,9 @@ void cui_node_content_begin(cui_ctx *ui) {
     b->content_id = id;
     b->c_sx = b->card_sx + fx; b->c_sy = b->card_sy + fy;
     /* components inside see the pointer in their own (unscaled) space */
-    b->saved_mx = ui->mx; b->saved_my = ui->my; b->saved_pmx = ui->pmx; b->saved_pmy = ui->pmy;
+    b->saved_pointer = cui_mouse_pos(ui);
+    if (!ui->building.screen_pointer) ui->building.screen_pointer = &b->saved_pointer;
+    b->saved_pmx = ui->pmx; b->saved_pmy = ui->pmy;
     ui->mx = b->c_sx + (ui->mx - b->c_sx) / z; ui->my = b->c_sy + (ui->my - b->c_sy) / z;
     ui->pmx = b->c_sx + (ui->pmx - b->c_sx) / z; ui->pmy = b->c_sy + (ui->pmy - b->c_sy) / z;
     b->in_content = true;
@@ -51464,7 +51686,8 @@ void cui_node_content_end(cui_ctx *ui) {
     if (!b || b->inert_content > 0 || !b->in_content) { if (b && b->inert_content > 0) b->inert_content--; cui__close(ui); return; }
     cui_pop_id(ui);
     cui__close(ui);
-    ui->mx = b->saved_mx; ui->my = b->saved_my; ui->pmx = b->saved_pmx; ui->pmy = b->saved_pmy;
+    if (ui->building.screen_pointer == &b->saved_pointer) ui->building.screen_pointer = NULL;
+    ui->mx = b->saved_pointer.x; ui->my = b->saved_pointer.y; ui->pmx = b->saved_pmx; ui->pmy = b->saved_pmy;
     b->in_content = false;
     cui__ne_state *st = b->st;
     float ph = cui__has_prev_rect(ui, b->content_id) ? cui__prev_rect(ui, b->content_id).h : 30;
@@ -51612,6 +51835,7 @@ bool cui__popup_begin(cui_ctx *ui, cui_id id, cui_id anchor, int placement, floa
     cui_popup *p = cui__popup_get(ui, id, false);
     if (!p) return false;
     p->last_frame = ui->frame;
+    p->parent_layer = ui->current_layer;
     if (p->open) {
         bool top = cui__popup_is_topmost(ui, p);
         if (top && cui_key_pressed(ui, CUI_KEY_ESCAPE)) { p->open = false; ui->kpressed[CUI_KEY_ESCAPE] = 0; }
@@ -52215,16 +52439,15 @@ static bool cui__modal_begin(cui_ctx *ui, cui_id id, const char *title, bool *op
     int z = st->z ? st->z : 1000 + ++ui->layer_seq;
     st->z = z;
     /* Esc and click outside: only the topmost modal reacts, and only when no popup inside it is open */
-    bool topmost = ui->prev_modal_layer == 0 || ui->prev_modal_layer == id;
+    bool topmost = ui->prev_modal.id == 0 || ui->prev_modal.id == id;
     for (int i = 0; i < ui->popup_count; i++) if (ui->popups[i].open) topmost = false;
     if (is_open && !persistent && topmost) {
         /* while a text field has focus, the first Esc leaves the field */
         if (cui_key_pressed(ui, CUI_KEY_ESCAPE) && !ui->edit_prev) { *open = false; ui->kpressed[CUI_KEY_ESCAPE] = 0; }
         if (ui->mreleased[0] && ui->hot == scrim_id && ui->active == scrim_id) *open = false;
     }
-    if (is_open && (!ui->modal_layer || z > ui->modal_z)) {
-        ui->modal_layer = id;
-        ui->modal_z = z;
+    if (is_open && (!ui->modal.id || z > ui->modal.z)) {
+        ui->modal = (cui_modal_layer){ id, z };
         /* move keyboard focus into the dialog when it opens */
         if (st->opened == ui->frame && ui->focus_visible) ui->focus = 0;
     }
@@ -53150,7 +53373,7 @@ int cui_command_palette(cui_ctx *ui, bool *open, const cui_command *cmds, int co
     }
     is_open = open && *open && !cui_is_disabled(ui);
     cui__interact(ui, scrim_id, 0);
-    if (is_open) { ui->modal_layer = id; ui->modal_z = 0x7FFF0000; }
+    if (is_open) ui->modal = (cui_modal_layer){ id, 0x7FFF0000 };
     int root = cui__float_begin(ui, id, 0x7FFF0000, 0, CUI__PLACE_FULL, 0);
     cui_node *rn = &ui->nodes[root];
     rn->id = scrim_id;
@@ -53396,12 +53619,13 @@ bool cui_image_viewer_ex(cui_ctx *ui, const char *id_str, cui_texture tex, int i
 #define CUI__IV_ZOOM(nz, ax, ay) do { \
         float px_ = cx + ((ax) - mcx) / z, py_ = cy + ((ay) - mcy) / z; \
         z = cui__clampf((nz), zmin, zmax); cx = px_ - ((ax) - mcx) / z; cy = py_ - ((ay) - mcy) / z; fitted = false; } while (0)
+    const cui_vec2 at = cui__wheel_point(ui, wid);   /* the pointer in layout space */
     if (ui->scroll_target == wid && ui->scroll_dy != 0 && pr.w > 0) {
-        CUI__IV_ZOOM(z * powf(1.2f, ui->scroll_dy), ui->mx, ui->my);
+        CUI__IV_ZOOM(z * powf(1.2f, ui->scroll_dy), at.x, at.y);
         ui->scroll_dy = 0;
     }
     if (r.double_clicked && pr.w > 0) {
-        if (z < 0.999f || fitted) CUI__IV_ZOOM(1.0f, ui->mx, ui->my);
+        if (z < 0.999f || fitted) CUI__IV_ZOOM(1.0f, at.x, at.y);
         else fitted = true;
         st->dragging = false;
     } else if (r.active && ui->mdown[0] && pr.w > 0) {
@@ -55703,7 +55927,7 @@ bool cui_kanban_end(cui_ctx *ui, cui_kanban_move *move) {
 /* Week calendar                                                            */
 /* ------------------------------------------------------------------------ */
 
-typedef struct { int drag; int mode; float grab; bool moved; float press_x, press_y; } cui__week_state;   /* mode 1 move, 2 resize */
+typedef struct { int drag, last_count; int mode; float grab; bool moved, read_only; float press_x, press_y; } cui__week_state;   /* mode 1 move, 2 resize; read_only as it was at the press */
 
 typedef struct { float h0, h1, hh, gutter, dw; int today; float now; cui_color line, faint, label, now_c; } cui__week_paint;
 
@@ -55776,8 +56000,11 @@ static int cui__week_calendar_ex_body(cui_ctx *ui, const char *id_str, cui_date 
     localtime_r(&tn, &lt);
 #endif
     float now = lt.tm_hour + lt.tm_min / 60.0f;
+    /* When the list shrinks, the old index can now point to another event. */
+    if (st->drag > 0 && (count < st->last_count || cui_is_disabled(ui) || st->read_only != o->read_only)) st->drag = 0;
+    st->last_count = count;
     /* drag in progress */
-    if (st->drag > 0 && st->drag <= count) {
+    if (st->drag > 0) {
         cui_cal_event *e = &ev[st->drag - 1];
         /* Motion and release can arrive before the same frame: measure up to the release,
          * not motion after it */
@@ -55917,7 +56144,7 @@ static int cui__week_calendar_ex_body(cui_ctx *ui, const char *id_str, cui_date 
         cui_rect er = cui__prev_rect(ui, eid);
         if (r.hovered && ui->mpressed[0] && st->drag == 0) {
             /* the press event's position: the pointer may have moved on before this frame */
-            st->drag = k + 1; st->moved = false; st->press_x = ui->press_x; st->press_y = ui->press_y;
+            st->drag = k + 1; st->moved = false; st->read_only = o->read_only; st->press_x = ui->press_x; st->press_y = ui->press_y;
             st->mode = (!o->read_only && st->press_y > er.y + er.h - 7) ? 2 : 1;
             st->grab = st->press_y - er.y;
         }
@@ -55997,7 +56224,7 @@ static int cui__week_calendar_ex_body(cui_ctx *ui, const char *id_str, cui_date 
 /* Gantt                                                                    */
 /* ------------------------------------------------------------------------ */
 
-typedef struct { int drag; int mode; int grab_day; int orig_start, orig_end; float press_x; bool moved; } cui__gantt_state;   /* mode 1 move, 2 left, 3 right */
+typedef struct { int drag, last_count; int mode; int grab_day; int orig_start, orig_end; float press_x; bool moved, read_only; } cui__gantt_state;   /* mode 1 move, 2 left, 3 right; read_only as it was at the press */
 
 typedef struct {
     cui_gantt_task *tasks;
@@ -56156,7 +56383,10 @@ static int cui__gantt_ex_body(cui_ctx *ui, const char *id_str, cui_gantt_task *t
     cui__gantt_state *st = cui_state(ui, id, sizeof *st);
     int clicked = -1;
     cui_rect br = cui__prev_rect(ui, body_id);
-    if (st->drag > 0 && st->drag <= count) {
+    /* When the list shrinks, the old index can now point to another task. */
+    if (st->drag > 0 && (count < st->last_count || cui_is_disabled(ui) || st->read_only != o->read_only)) st->drag = 0;
+    st->last_count = count;
+    if (st->drag > 0) {
         cui_gantt_task *t = &tasks[st->drag - 1];
         if (ui->mdown[0]) {
             if (fabsf(ui->mx - st->press_x) > 3) st->moved = true;
@@ -56317,7 +56547,7 @@ static int cui__gantt_ex_body(cui_ctx *ui, const char *id_str, cui_gantt_task *t
         cui_rect tr = cui__prev_rect(ui, tid);
         bool near_l = r.hovered && ui->mx < tr.x + 7 && !t->milestone, near_r = r.hovered && ui->mx > tr.x + tr.w - 7 && !t->milestone;
         if (r.hovered && ui->mpressed[0] && st->drag == 0) {
-            st->drag = k + 1; st->moved = false; st->press_x = ui->mx;
+            st->drag = k + 1; st->moved = false; st->read_only = o->read_only; st->press_x = ui->mx;
             st->orig_start = t->start; st->orig_end = t->end;
             st->mode = near_l ? 2 : near_r ? 3 : 1;
         }
@@ -66719,7 +66949,7 @@ void cui_set_reduced_motion(cui_ctx *ui, bool reduced) {
 void cui__theme_update(cui_ctx *ui) {
     if (ui->theme_t >= 1) return;
     float dur = 0.32f * (ui->theme.motion > 0 ? ui->theme.motion : 0);
-    ui->theme_t = dur > 0 ? CUI_MIN(1.0f, ui->theme_t + ui->dt / dur) : 1.0f;
+    ui->theme_t = dur > 0 ? CUI_MIN(1.0f, ui->theme_t + ui->step / dur) : 1.0f;
     float t = ui->theme_t;
     t = 1 - (1 - t) * (1 - t) * (1 - t);   /* ease out */
     for (int i = 0; i < CUI_TOKEN_COUNT; i++)
@@ -72471,7 +72701,7 @@ int cui_candlestick_ex(cui_ctx *ui, const char *id_str, const cui_candle *candle
     /* zoom around a point (0..1 across the plot) */
 #define CUI__CS_ZOOM(f, at) do { double m_ = st->first + (at) * st->span; st->span = CUI_CLAMP(st->span * (f), min_span, max_span); st->first = m_ - (at) * st->span; } while (0)
     if (!cui_is_disabled(ui) && ui->scroll_target == wid && (ui->scroll_dy != 0 || ui->scroll_dx != 0) && pr.w > 0) {
-        float at = cui__clampf((ui->mx - g.plot.x) / g.plot.w, 0, 1);
+        float at = cui__clampf((cui__wheel_point(ui, wid).x - g.plot.x) / g.plot.w, 0, 1);
         if (ui->scroll_dx != 0 || (ui->mods & CUI_MOD_SHIFT)) st->first -= (ui->scroll_dx != 0 ? ui->scroll_dx : ui->scroll_dy) * st->span * 0.06;
         else CUI__CS_ZOOM(pow(1.18, -ui->scroll_dy), at);
         ui->scroll_dx = ui->scroll_dy = 0;
@@ -73041,6 +73271,7 @@ int cui_voice_session_ex(cui_ctx *ui, const char *id_str, cui_voice_state state,
 /* ==== src/cui_widgets.c ==== */
 /* Core components: text, buttons, badges, avatars, cards, feedback,
  * scroll areas, split views and custom canvases. */
+#include <limits.h>
 
 /* ------------------------------------------------------------------------ */
 /* Shared helpers                                                           */
@@ -74146,6 +74377,22 @@ cui_texture cui_image_create(cui_ctx *ui, int w, int h, const void *rgba) {
     return ui->renderer.texture_create(ui->renderer.user, w, h, CUI_TEXTURE_RGBA8, rgba);
 }
 
+void cui_image_update(cui_ctx *ui, cui_texture tex, int x, int y, int w, int h, const void *rgba, int stride) {
+    if (!ui || !tex || !rgba || w <= 0 || w > INT_MAX / 4 || h <= 0 || !ui->renderer.texture_update) return;
+    int packed = w * 4;
+    if (stride <= 0) stride = packed;
+    if (stride < packed) return;
+    if (stride % 4 == 0) {
+        ui->renderer.texture_update(ui->renderer.user, tex, x, y, w, h, rgba, stride);
+    } else {
+        /* GL unpack row length counts pixels, so start each byte-padded row explicitly. */
+        const uint8_t *src = rgba;
+        for (int row = 0; row < h; row++)
+            ui->renderer.texture_update(ui->renderer.user, tex, x, y + row, w, 1, src + (size_t)row * (size_t)stride, packed);
+    }
+    cui_request_redraw(ui);
+}
+
 void cui_image_destroy(cui_ctx *ui, cui_texture tex) {
     if (tex && ui->renderer.texture_destroy) ui->renderer.texture_destroy(ui->renderer.user, tex);
 }
@@ -74183,15 +74430,28 @@ static void cui__paint_canvas(cui_ctx *ui, cui_node *n, void *data) {
 }
 
 cui_canvas_result cui_canvas(cui_ctx *ui, const char *id_str, cui_size w, cui_size h, cui_paint_fn paint, const void *user, size_t user_size) {
+    return cui_canvas_ex(ui, id_str, w, h, paint, user, user_size, NULL);
+}
+
+bool cui_focus_visible(cui_ctx *ui, cui_id id) {
+    return id && ui->focus == id && ui->focus_visible;
+}
+
+cui_canvas_result cui_canvas_ex(cui_ctx *ui, const char *id_str, cui_size w, cui_size h, cui_paint_fn paint, const void *user, size_t user_size, const cui_canvas_opts *opts) {
     cui_canvas_result res;
     memset(&res, 0, sizeof res);
     cui_id id = cui_make_id(ui, id_str ? id_str : "canvas");
-    cui_interact r = cui__interact(ui, id, CUI_IF_DRAG);
+    int flags = CUI_IF_DRAG;
+    if (opts && opts->focusable) {
+        flags |= CUI_IF_FOCUSABLE;
+        if (opts->component_input) flags |= CUI_IF_COMPONENT_INPUT | CUI_IF_TEXT;
+    }
+    cui_interact r = cui__interact(ui, id, flags);
     res.rect = cui__prev_rect(ui, id);
     res.hovered = r.hovered; res.pressed = r.pressed; res.clicked = r.clicked;
     res.mouse.x = ui->mx - res.rect.x; res.mouse.y = ui->my - res.rect.y;
     int i = cui__leaf(ui, id, w, h);
-    cui__mark_interactive(ui, i, 0);
+    cui__mark_interactive(ui, i, flags);
     if (paint) {
         cui__canvas_paint *p = cui__frame_alloc(ui, sizeof *p);
         p->fn = paint;
@@ -75190,6 +75450,13 @@ static void cui__sw_tile_hashes(cui_sw_renderer *r, const cui_draw_data *dd, uin
                 }
         }
     }
+}
+
+/** Paints the entire screenshot without changing the window's incremental render state. */
+void cui__sw_render_screenshot(cui_sw_renderer *r, const cui_draw_data *dd, void *rgba, int stride) {
+    int width = dd->width_px, height = dd->height_px;
+    if (!r || width <= 0 || height <= 0) return;
+    cui__sw_paint_rect(r, dd, rgba, width, height, stride, CUI_SW_RGBA, 0, 0, width, height);
 }
 
 void cui_sw_render(cui_sw_renderer *r, const cui_draw_data *dd, void *pixels, int width, int height, int stride, cui_sw_format fmt) {
@@ -77443,6 +77710,7 @@ struct cui_app {
     char title[256];
     cui_gl_renderer *gl;
     cui_sw_renderer *sw;
+    struct cui_gpu_renderer *gpu;       /* the platform's GPU renderer (CUI_D3D12, CUI_VULKAN or CUI_METAL builds) */
     uint8_t *sw_pixels;
     int sw_w, sw_h;
     bool software;
@@ -77517,6 +77785,26 @@ static bool cui__env_is(const char *name, const char *value) {
     return v && strcmp(v, value) == 0;
 }
 
+/* The platform's GPU renderer (cui_gpu_*), in builds that have it */
+#if defined(CUI_D3D12) && defined(_WIN32)
+#define CUI__APP_GPU 1
+#define CUI__APP_GPU_NAME "d3d12"
+#elif defined(CUI_METAL) && defined(__APPLE__)
+#define CUI__APP_GPU 1
+#define CUI__APP_GPU_NAME "metal"
+#elif defined(CUI_VULKAN) && defined(__linux__)
+#define CUI__APP_GPU 1
+#define CUI__APP_GPU_NAME "vulkan"
+#else
+#define CUI__APP_GPU 0
+#endif
+
+#if CUI__APP_GPU && defined(__linux__)
+/* The X11 backend's window as cui_gpu_create takes it, with its current size; the
+ * other Linux backends (GLFW, SDL) do not have one. */
+extern cui_x11_window *cui__plat_x11_window(cui_app *app) __attribute__((weak));
+#endif
+
 static void cui__app_make_software(cui_app *app) {
     if (!app->sw) app->sw = cui_sw_create();
     cui_sw_set_incremental(app->sw, true);   /* only what changed is drawn again */
@@ -77576,7 +77864,22 @@ cui_app *cui_app_create(const cui_app_desc *desc) {
         free(app);
         return NULL;
     }
-    bool want_gl = d->renderer != CUI_RENDERER_SOFTWARE && !cui__env_is("CUI_RENDERER", "software");
+#if CUI__APP_GPU
+    /* the platform's GPU renderer (Direct3D 12, Vulkan or Metal), when asked for:
+     * CUI_RENDERER_GPU, or CUI_RENDERER=gpu or its name (d3d12, vulkan, metal) */
+    if (d->renderer == CUI_RENDERER_GPU || cui__env_is("CUI_RENDERER", "gpu") || cui__env_is("CUI_RENDERER", CUI__APP_GPU_NAME)) {
+#if defined(__linux__)
+        void *gpu_window = cui__plat_x11_window ? cui__plat_x11_window(app) : NULL;   /* only the X11 backend lends its window */
+#else
+        void *gpu_window = cui__plat_native(app);
+#endif
+        const char *plat = cui__plat_name();
+        if (gpu_window && (!strcmp(plat, "win32") || !strcmp(plat, "cocoa") || !strcmp(plat, "x11")))
+            app->gpu = cui_gpu_create(gpu_window, !d->no_vsync);
+        if (!app->gpu) fprintf(stderr, "cui: the %s renderer is unavailable\n", CUI__APP_GPU_NAME);
+    }
+#endif
+    bool want_gl = !app->gpu && d->renderer != CUI_RENDERER_SOFTWARE && !cui__env_is("CUI_RENDERER", "software");
     if (want_gl && cui__plat_gl_create(app, !d->no_vsync)) {
         app->gl = cui_gl_create(cui__plat_gl_proc);
         /* OpenGL drawn on the CPU (a virtual machine, a remote session) costs several times
@@ -77589,6 +77892,12 @@ cui_app *cui_app_create(const cui_app_desc *desc) {
             cui__plat_gl_release(app);
         }
     }
+#if CUI__APP_GPU
+    if (app->gpu) {
+        cui_renderer_iface iface = cui_gpu_iface(app->gpu);
+        cui_set_renderer(app->ui, &iface);
+    } else
+#endif
     if (app->gl) {
         cui_renderer_iface iface = cui_gl_iface(app->gl);
         cui_set_renderer(app->ui, &iface);
@@ -77625,6 +77934,10 @@ void cui_app_destroy(cui_app *app) {
     cui_set_renderer(app->ui, NULL);
     if (app->gl) cui_gl_destroy(app->gl);
     app->gl = NULL;
+#if CUI__APP_GPU
+    if (app->gpu) cui_gpu_destroy(app->gpu);   /* its textures went with cui_set_renderer above */
+    app->gpu = NULL;
+#endif
     /* close the window before the UI context goes away: the OS may still
      * deliver focus and size messages while the window is destroyed */
     cui__plat_shutdown(app);
@@ -77692,6 +78005,14 @@ void cui__app_render(cui_app *app) {
     const cui_draw_data *dd = cui_get_draw_data(app->ui);
     int w = dd->width_px, h = dd->height_px;
     if (w <= 0 || h <= 0) return;
+#if CUI__APP_GPU
+    if (app->gpu) {
+#if defined(__linux__)
+        cui__plat_x11_window(app);   /* the renderer reads the window's size from it */
+#endif
+        cui_gpu_render(app->gpu, dd);
+    } else
+#endif
     if (app->gl) {
         cui_gl_render(app->gl, dd, true);
         cui__plat_gl_swap(app);
@@ -77755,7 +78076,7 @@ bool cui_app_frame(cui_app *app) {
             app->hz = hz >= 24 && hz <= 1000 ? hz : 60;
             app->hz_checked = now;
         }
-        if (app->gl && !app->desc.no_vsync && !app->vsync_off) {
+        if ((app->gl || app->gpu) && !app->desc.no_vsync && !app->vsync_off) {
             /* two runs of 20 frames in a row faster than the display: the swap does not wait
              * (one is not enough: after a pause a driver may queue a few frames without waiting) */
             if (app->pace_frames++ == 0) app->pace_start = app->last_present;
@@ -77766,7 +78087,7 @@ bool cui_app_frame(cui_app *app) {
                 app->pace_frames = 0;
             }
         }
-        if (!app->gl || app->desc.no_vsync || app->vsync_off) {
+        if ((!app->gl && !app->gpu) || app->desc.no_vsync || app->vsync_off) {
             /* one frame per period, counted from when the last one began; events that come
              * in the meantime are taken in but do not start the frame early */
             double until = app->last_time + 1.0 / (app->desc.no_vsync && app->hz < 120 ? 120 : app->hz);
@@ -77814,9 +78135,26 @@ int cui_app_run(const cui_app_desc *desc, void (*frame)(cui_ctx *ui, void *user)
     return 0;
 }
 
+/** Renders a complete screenshot of the current UI. */
 bool cui_app_screenshot(cui_app *app, void *rgba, int width, int height) {
     const cui_draw_data *dd = cui_get_draw_data(app->ui);
     if (width < dd->width_px || height < dd->height_px || !rgba) return false;
+#if CUI__APP_GPU
+    if (app->gpu) {   /* the capture draws and presents the frame itself: once, not twice */
+        if (app->in_frame) {
+            cui_end_frame(app->ui);
+            app->in_frame = false;
+        }
+        dd = cui_get_draw_data(app->ui);
+#if defined(__linux__)
+        cui__plat_x11_window(app);   /* the renderer reads the window's size from it */
+#endif
+        if (dd->width_px <= 0 || dd->height_px <= 0 || !cui_gpu_render_capture(app->gpu, dd, rgba)) return false;
+        app->presented_once = true;
+        app->last_present = cui__plat_now();
+        return true;
+    }
+#endif
     if (app->in_frame) cui__app_render(app);
     dd = cui_get_draw_data(app->ui);
     int w = dd->width_px, h = dd->height_px;
@@ -77825,7 +78163,8 @@ bool cui_app_screenshot(cui_app *app, void *rgba, int width, int height) {
         cui_gl_render(app->gl, dd, true);
         cui_gl_read_pixels(app->gl, w, h, rgba);
     } else {
-        cui_sw_render(app->sw, dd, rgba, w, h, width * 4, CUI_SW_RGBA);
+        /* The caller may have cleared or reallocated the buffer at the same address. */
+        cui__sw_render_screenshot(app->sw, dd, rgba, width * 4);
     }
     return true;
 }
@@ -80175,6 +80514,7 @@ void cui__plat_maximize(cui_app *app) {
 #include <X11/cursorfont.h>
 #include <X11/Xresource.h>
 #include <dlfcn.h>
+#include <errno.h>
 #include <locale.h>
 #include <sys/select.h>
 #include <time.h>
@@ -80219,6 +80559,7 @@ typedef struct {
     Display *dpy;
     int screen;
     Window win;
+    cui_x11_window gpu_window;   /* the window as cui_gpu_create takes it (Vulkan) */
     Colormap cmap;
     Visual *visual;
     int depth;
@@ -80673,6 +81014,15 @@ void cui__plat_set_size(cui_app *app, int w, int h) {
 
 void *cui__plat_native(cui_app *app) { return (void *)(uintptr_t)cui__x(app)->win; }
 
+cui_x11_window *cui__plat_x11_window(cui_app *app) {
+    cui__x11 *x = cui__x(app);
+    x->gpu_window.display = x->dpy;
+    x->gpu_window.window = x->win;
+    x->gpu_window.width = x->width;
+    x->gpu_window.height = x->height;
+    return &x->gpu_window;
+}
+
 /* Where the content's top-left corner is on the root window. */
 static void cui__x11_content_origin(cui__x11 *x, int *px, int *py) {
     Window child;
@@ -81023,18 +81373,25 @@ static void cui__x11_event(cui_app *app, XEvent *ev) {
 void cui__plat_wait(cui_app *app, double timeout) {
     cui__x11 *x = cui__x(app);
     XFlush(x->dpy);
-    if (timeout != 0 && !XPending(x->dpy)) {
-        int fd = ConnectionNumber(x->dpy);
+    /* The connection also carries events that Xlib leaves to others: Mesa takes the Present
+     * events of each OpenGL swap. They wake select without an event for the app, and a frame
+     * for them would swap again and bring the next one, so the wait goes on until an event is
+     * the app's or the time is up. */
+    double until = timeout > 0 ? cui__plat_now() + timeout : 0;
+    int fd = ConnectionNumber(x->dpy);
+    while (timeout != 0 && !XPending(x->dpy)) {
+        struct timeval tv, *ptv = NULL;
+        if (timeout > 0) {
+            double left = until - cui__plat_now();
+            if (left <= 0) break;
+            tv.tv_sec = (long)left;
+            tv.tv_usec = (long)((left - (double)tv.tv_sec) * 1e6);
+            ptv = &tv;
+        }
         fd_set set;
         FD_ZERO(&set);
         FD_SET(fd, &set);
-        struct timeval tv, *ptv = NULL;
-        if (timeout > 0) {
-            tv.tv_sec = (long)timeout;
-            tv.tv_usec = (long)((timeout - (double)tv.tv_sec) * 1e6);
-            ptv = &tv;
-        }
-        select(fd + 1, &set, NULL, NULL, ptv);
+        if (select(fd + 1, &set, NULL, NULL, ptv) < 0 && errno != EINTR) break;
     }
     while (XPending(x->dpy)) {
         XEvent ev;

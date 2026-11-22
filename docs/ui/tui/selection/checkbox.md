@@ -2,7 +2,7 @@
 
 Use a checkbox for an independent option. **Components → Selection → Checkbox** shows Email notifications, Marketing and Disabled option. In **Overview → Create a workspace**, the weekly summary is a separate preference.
 
-![The three notification checkboxes beside the switches on Selection](../../../../examples/ui/tui/gallery/checkbox.png)
+![The notification, marketing and disabled checkboxes on Selection](../../../../examples/ui/tui/gallery/checkbox.png)
 
 ## Example
 

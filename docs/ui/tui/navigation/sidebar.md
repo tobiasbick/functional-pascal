@@ -2,7 +2,7 @@
 
 Group destinations under headings. In the gallery, the selected destination determines which terminal example appears in the right panel.
 
-![Scrollable Components and Extended navigation beside the selected preview](../../../../examples/ui/tui/gallery/panels.png)
+![Components and Extended destinations beside the selected preview at 80 × 25](../../../../examples/ui/tui/gallery/panels.png)
 
 ## Example
 

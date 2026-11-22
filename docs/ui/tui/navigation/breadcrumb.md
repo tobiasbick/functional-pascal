@@ -21,8 +21,6 @@ Space or a click to select it. Escape closes the menu and restores focus
 to **…**. Resizing moves focus from an omitted link to **…**, or back to a
 visible ancestor when the menu button disappears.
 
-![Open ancestor menu on the compact breadcrumb](../../../../examples/ui/tui/gallery/breadcrumb-compact.png)
-
 ## IDs and state
 
 Use `Breadcrumbs.ItemId(Id, Index)` to identify a visible ancestor or an

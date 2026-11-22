@@ -2,6 +2,8 @@
 
 Place short pieces of state and small actions along the bottom of a pane. A spacer pushes trailing items to the right.
 
+![Saved status with encoding, indentation and language on one row](../../../../examples/ui/tui/gallery/statusbar.png)
+
 ## Example
 
 ```pascal

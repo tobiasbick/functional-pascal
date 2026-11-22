@@ -5,7 +5,7 @@ theme and layout rules to place a narrow navigation panel beside a scrollable
 preview. The [fractal explorer](../../../examples/ui/tui/fractals/README.md)
 demonstrates a keyboard-controlled cell grid.
 
-![Navigation and progress bars in the terminal gallery](../../../examples/ui/tui/gallery/panels.png)
+![Keyboard-driven gallery at 80 × 25 showing navigation and progress](../../../examples/ui/tui/gallery/panels.png)
 
 ## Choosing terminal widgets
 

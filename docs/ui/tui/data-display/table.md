@@ -2,6 +2,8 @@
 
 Use `Fpas.Ui.Widgets.Collections.Tables.Table` for rows with stable IDs and plain text cells. In **Components → Data display → Table**, the terminal gallery shows Name, Role and Status. Select a person to read their email address and revenue below the table.
 
+![People table with Tomas Rivera selected and his details below the rows](../../../../examples/ui/tui/gallery/table.png)
+
 ## Example
 
 ```pascal

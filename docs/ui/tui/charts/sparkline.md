@@ -3,6 +3,8 @@
 The **Components → Charts** page plots the CUI sequence
 `3, 5, 4, 8, 6, 9, 8` and reports the latest value next to it.
 
+![Single-row sparkline beside the latest value of 8](../../../../examples/ui/tui/gallery/sparkline.png)
+
 Use `Sparklines.Sparkline` to show how a finite series changes over time or
 another ordered dimension. A single terminal row provides eight levels. The
 sparkline scales relative to the smallest and largest sample. Constant

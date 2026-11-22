@@ -4,7 +4,7 @@
 order. Under **Extended → Code**, both galleries use the same build messages.
 **Append build message** reveals the next entry from the same original log.
 
-![Build log in the terminal gallery](../../../../examples/ui/tui/gallery/log-console.png)
+![Build log scrolled horizontally to read the end of a long warning](../../../../examples/ui/tui/gallery/log-console.png)
 
 Each entry occupies one row, with a severity label and optional timestamp.
 The console follows new messages while the last entry is visible. When you

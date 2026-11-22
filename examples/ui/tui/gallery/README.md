@@ -54,9 +54,13 @@ and controls use the GUI gallery's shared [English](../../gui/gallery/Shared/Str
 and [German](../../gui/gallery/Shared/Strings.de.resx) catalogs. On Linux, launch
 it with `LANG=de_DE.UTF-8` for German.
 
-![Gallery button variants, sizes, icons and states](buttons.png)
+The screenshots below show the gallery at 80 × 25 using only keyboard input.
+
+![Gallery button variants, sizes and icons](buttons.png)
 
 ![Open Options dropdown on Buttons](dropdown-menu.png)
+
+![Keyboard-focused preview scrolled to the segmented controls](scroll-view.png)
 
 ![Editable full name and email on Inputs](text-field.png)
 
@@ -66,25 +70,27 @@ it with `LANG=de_DE.UTF-8` for German.
 
 ![Searchable Languages multi-select under Extended Pickers](multi-select.png)
 
-![Checkboxes and connectivity switches on Selection](checkbox.png)
+![Notification checkboxes on Selection](checkbox.png)
 
 ![Save-frequency radio group on Selection](radio-group.png)
 
-![Weekly summary checkbox in the workspace form](workspace.png)
+![Workspace form with the weekly summary selected and creation confirmed](workspace.png)
 
 ![Notification settings and recent events in a right-hand sheet](sheet.png)
 
 ![Underline and pill tabs on Navigation](tabs.png)
 
-![Original CUI breadcrumb path on Navigation](breadcrumb.png)
-
-![Open ancestor menu in a narrow preview](breadcrumb-compact.png)
+![Breadcrumb path with Projects selected on Navigation](breadcrumb.png)
 
 ![Compact pagination on Navigation](pagination-compact.png)
 
 ![Delete project confirmation with Cancel focused](dialog.png)
 
-![Upload and export progress under Feedback](panels.png)
+![Upload and export progress with a labeled spinner under Feedback](panels.png)
+
+![Compact sparkline with the latest sample value](sparkline.png)
+
+![People table with details for the selected person](table.png)
 
 ![Original CUI list rows with Design review opened](selection-list.png)
 
@@ -94,11 +100,13 @@ it with `LANG=de_DE.UTF-8` for German.
 
 ![Filtered command palette over the Overlays page](command-palette.png)
 
-![Build log with a newly appended message](log-console.png)
+![Build log scrolled horizontally to the end of a long message](log-console.png)
 
 ![Selected text on Inputs](text-selection.png)
 
 ![Open Security card on Disclosure](expandable-card.png)
+
+![Editor status row with UTF-16 focused](statusbar.png)
 
 ## File picker
 

@@ -77,7 +77,7 @@ static bool parity(bool dark, int scale) {
             cui_column(ui,.pad=8) {
                 if (pass) {
                     float x,y,w,h,dx,dy;
-                    fpas_cui_drawing_canvas(ui,"paint",1,0,2,190,NULL,0,1,&x,&y,&w,&h,0,&dx,&dy,paint,&s,0);
+                    fpas_cui_drawing_canvas(ui,"paint",1,0,2,190,NULL,0,1,&x,&y,&w,&h,0,&dx,&dy,paint,&s,0, 0, 0, 0, -1);
                 } else cui_canvas(ui,"paint",CUI_FILL,CUI_PX(190),direct,&s,sizeof s);
             }
             cui_end_frame(ui);
@@ -137,7 +137,7 @@ static bool image_lifetime(void) {
         cui_begin_frame(ui,.016f);
         key=cui_make_id(ui,"image-canvas");
         float x,y,w,h,dx,dy;
-        fpas_cui_drawing_canvas(ui,"image-canvas",2,80,2,60,NULL,0,1,&x,&y,&w,&h,0,&dx,&dy,image_paint,&s,0);
+        fpas_cui_drawing_canvas(ui,"image-canvas",2,80,2,60,NULL,0,1,&x,&y,&w,&h,0,&dx,&dy,image_paint,&s,0, 0, 0, 0, -1);
         cui_end_frame(ui);
         ok=ok&&tracking.live==(s.visible?1:0);
         if (frame==2) ok=ok&&tracking.created==1;

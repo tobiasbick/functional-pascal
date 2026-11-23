@@ -3,6 +3,7 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Canvas.Canvas;
 
 uses
+  Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys,
   Fpas.Ui.Widgets.Canvas.Painting as Painting, Fpas.Ui.Gui.Internal.Widgets.Canvas.PaintSurface as Surface,
   Fpas.Ui.Widgets.Canvas.Canvases as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P,
   Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Graphics as G, Fpas.Ui.Gui.Cui.Widgets.Canvas as CuiCanvas, System as Sys;
@@ -47,7 +48,8 @@ end function;
 // - `OnWheel`: Optional horizontal/vertical wheel mapper.
 // - `Paint`: Optional deferred drawing capability, scoped to one native callback.
 // - `OnPointer`: Optional changed-state pointer mapper.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Drawing: array of D.Shape; Clicked: function(D.Event): TMsg; Settings: D.Options; OnWheel: Sys.Func<D.Wheel, TMsg>?; Paint: Sys.Action<Painting.Surface>?; OnPointer: Sys.Func<D.Pointer, TMsg>?);
+// - `OnInput`: Optional ordered key, text and focus mapper.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Drawing: array of D.Shape; Clicked: function(D.Event): TMsg; Settings: D.Options; OnWheel: Sys.Func<D.Wheel, TMsg>?; Paint: Sys.Action<Painting.Surface>?; OnPointer: Sys.Func<D.Pointer, TMsg>?; OnInput: Sys.Func<D.Input, TMsg>?);
 begin
   const Role: string := 'canvas';
   const Width: S.NativeExtent := S.Extent(Settings.Width);
@@ -79,10 +81,40 @@ begin
     end procedure;
     else null;
   end case;
+  const InputHandler: Sys.Action<CuiCanvas.CuiCanvasInput>? := case OnInput of
+    when is Sys.Func<D.Input, TMsg> as Notify: procedure(Value: CuiCanvas.CuiCanvasInput) begin
+      const Event: D.Input := if Value.Kind = CuiCanvas.CuiCanvasInputKind.Key then
+        D.Input.Key(
+          cast<Keys.Key>(Value.Key),
+          cast<Keys.Modifier>(Value.Modifiers),
+          Value.Down,
+          Value.Repeated
+        )
+      elsif Value.Kind = CuiCanvas.CuiCanvasInputKind.Text then
+        D.Input.Text(Value.Text)
+      else
+        D.Input.WindowFocus(Value.Down)
+      end if;
+      Frame.Messages.Add(Notify.Invoke(Event));
+    end procedure;
+    else null;
+  end case;
+  const Token: string := C.Token(Role, Id);
+  const Focus: bool := C.WantsFocus<TMsg>(
+    Frame,
+    Id,
+    Token,
+    Enabled and (Settings.Focusable or OnInput <> null)
+  );
   if Frame.Window.DrawingCanvas(
-    C.Token(Role, Id), Width.Kind, Width.Value, Height.Kind, Height.Value,
+    Token, Width.Kind, Width.Value, Height.Kind, Height.Value,
     Shapes, Enabled, out X, out Y, out W, out H, OnWheel <> null,
-    out WheelX, out WheelY, NativePaint, NativePointer
+    out WheelX, out WheelY, NativePaint, NativePointer, Settings.Focusable, Focus,
+    if Settings.HoverCursor = null then
+      -1
+    else
+      cast<int>(Settings.HoverCursor ?? D.Cursor.Arrow)
+    end if, InputHandler
   )
   then
     Frame.Messages.Add(Clicked(new D.Event(X, Y, W, H)));

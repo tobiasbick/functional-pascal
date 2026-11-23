@@ -452,7 +452,7 @@ public type Element<TMsg> = variant
   // Native CUI Image element.
   Image(Id: string; Source: Media.Source; Settings: Images.Options);
   // Native CUI Canvas element.
-  Canvas(Id: string; Drawing: array of Canvases.Shape; Clicked: function(Canvases.Event): TMsg; Settings: Canvases.Options; OnWheel: Sys.Func<Canvases.Wheel, TMsg>?; Paint: Sys.Action<Painting.Surface>?; OnPointer: Sys.Func<Canvases.Pointer, TMsg>?);
+  Canvas(Id: string; Drawing: array of Canvases.Shape; Clicked: function(Canvases.Event): TMsg; Settings: Canvases.Options; OnWheel: Sys.Func<Canvases.Wheel, TMsg>?; Paint: Sys.Action<Painting.Surface>?; OnPointer: Sys.Func<Canvases.Pointer, TMsg>?; OnInput: Sys.Func<Canvases.Input, TMsg>?);
   // Native CUI Veil element.
   Veil(Id: string; Revealed: bool; Changed: function(bool): TMsg; Child: Element<TMsg>; Settings: Veils.Options);
   // Native CUI FormatBar element.

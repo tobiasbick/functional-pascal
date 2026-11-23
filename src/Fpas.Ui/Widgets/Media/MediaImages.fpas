@@ -2,6 +2,8 @@
 
 unit Fpas.Ui.Widgets.Media.MediaImages;
 
+uses System as Sys;
+
 // A CUI picture source. In-memory pixels are retained by reference and must
 // remain unchanged while a view uses them. Supply a new array to update it.
 public type Source = variant
@@ -9,6 +11,64 @@ public type Source = variant
   File(Path: string);
   // Upload tightly packed straight-alpha RGBA pixels, four bytes per pixel.
   Rgba(Width: int; Height: int; Pixels: array of byte);
+  // Full immutable snapshot with the dirty rectangle relative to Previous.
+  UpdatedRgba(Width: int; Height: int; Pixels: array of byte; Previous: array of byte; X: int; Y: int; RegionWidth: int; RegionHeight: int);
 end variant;
+
+// Replaces a rectangle in an immutable RGBA image and returns the new snapshot.
+// ## Parameters
+// - `Image`: Previous RGBA snapshot.
+// - `X`: Left destination column.
+// - `Y`: Top destination row.
+// - `Width`: Number of columns to replace.
+// - `Height`: Number of rows to replace.
+// - `Bytes`: Replacement RGBA8 rows.
+// - `Stride`: Byte spacing between replacement rows, or zero for tight packing.
+// ## Returns
+// A new image source that can be rendered independently of the original.
+public function Update(Image: Source; X: int; Y: int; Width: int; Height: int; Bytes: array of byte; Stride: int := 0): Source;
+requires X >= 0 and Y >= 0 and Width > 0 and Height > 0;
+begin
+  var W: int := 0;
+  var H: int := 0;
+  var Previous: array of byte := [];
+  case Image of
+    when Source.Rgba(const IW: int, const IH: int, const Data: array of byte):
+      W := IW;
+      H := IH;
+      Previous := Data;
+    when Source.UpdatedRgba(const IW: int, const IH: int, const Data: array of byte, _, _, _, _, _):
+      W := IW;
+      H := IH;
+      Previous := Data;
+    else
+      raise new Sys.ArgumentException('Only RGBA images accept pixel updates.');
+  end case;
+
+  if W <= 0 or H <= 0 or cast<long>(W) * H > int.MaxValue div 4
+    or Previous = null or Previous.Length <> cast<long>(W) * H * 4
+    or Width > W - X or Height > H - Y
+  then
+    raise new Sys.ArgumentException('The update must fit the RGBA image.');
+  end if;
+  const RowBytes: int := Width * 4;
+  const Pitch: int := if Stride = 0 then
+    RowBytes
+  else
+    Stride
+  end if;
+  if Pitch < RowBytes or Bytes = null or cast<long>(Height - 1) * Pitch + RowBytes >
+    Bytes.Length
+  then
+    raise new Sys.ArgumentException('The RGBA update does not contain every source row.');
+  end if;
+  const Next: array of byte := new byte[Previous.Length];
+  Sys.Array.Copy(Previous, Next, Previous.Length);
+  for Row: int := 0 to Height - 1 do
+    Sys.Array.Copy(Bytes, Row * Pitch, Next, ((Y + Row) * W + X) * 4, RowBytes);
+  end for;
+
+  return Source.UpdatedRgba(W, H, Next, Previous, X, Y, Width, Height);
+end function;
 
 end unit;

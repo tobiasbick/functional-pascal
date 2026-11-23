@@ -7,7 +7,7 @@ uses
   Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Gui.Windows as Windows,
   Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
   Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Overlays.Dialogs as D,
-  System as Sys;
+  Fpas.Ui.Widgets.Canvas.Canvases as Canvas, System as Sys;
 
 type Message = variant
   Focus;
@@ -60,12 +60,16 @@ public procedure Verify(Renderer: Cui.CuiRenderer);
     return D.Dialog<Message>(
       'dialog',
       E.Column<Message>(
-        new L.Flow(),
+        new L.Flow(Scope := new L.FocusScope('workspace', true)),
         B.Button<Message>('first', 'First', Message.Focus),
         B.Button<Message>('base-target', 'Base target', Message.Open)
       ),
       E.Column<Message>(
         new L.Flow(),
+        Canvas.Canvas<Message>(
+          'modal-canvas', [], function(Value: Canvas.Event): Message => Message.Close,
+          OnInput := function(Value: Canvas.Input): Message => Message.Placement
+        ),
         B.Button<Message>('other', 'Other', Message.Close),
         B.Button<Message>('modal-target', 'Modal target', Message.Close)
       ),
@@ -75,7 +79,16 @@ public procedure Verify(Renderer: Cui.CuiRenderer);
     );
   end function;
 
+  procedure Inject();
+  begin
+    if ReverseTab then
+      Window.SetKey(1, true, 1);
+      Window.SetKey(1, false, 1);
+      ReverseTab := false;
+    end if;
+  end procedure;
 begin
+  var ReverseTab: bool := false;
   const Window: Cui.CuiWindow := new Cui.CuiWindow(
     'Desktop deferred focus',
     420,
@@ -85,7 +98,7 @@ begin
   );
   Window.SetReducedMotion(true);
   using const Session: Gui.Session<Message> := Host.Start<bool, Message>(
-    false, Update, View, Window, 1
+    false, Update, View, Window, 1, Inject
   );
   Step(Session, Window);
   discard Session.Post(Message.Focus);
@@ -97,6 +110,9 @@ begin
   Step(Session, Window);
   Step(Session, Window);
   RequireFocus(Session, 'modal-target');
+  ReverseTab := true;
+  Step(Session, Window);
+  RequireFocus(Session, 'other');
 
   discard Session.Post(Message.Close);
   Step(Session, Window);

@@ -390,7 +390,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         _,
         _,
         _,
-        _
+        _, _
       ), E.Element.Veil(
         _,
         _,
@@ -1733,9 +1733,18 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
           Settings.Clip ?? false
         );
         Size.Container(Current.Window, Settings, true);
+        const Scope: L.FocusScope? := Settings.Scope;
+        if Scope <> null then
+          Current.Window.PushFocusScope(Scope.Id, Scope.Active);
+        end if;
+
         for Child: E.Element<TMsg> in Children do
           Visit(Child, Current, false, Settings.Align);
         end for;
+
+        if Scope <> null then
+          Current.Window.PopFocusScope();
+        end if;
 
         Current.Window.EndGroup();
       when E.Element.Stack(
@@ -1752,9 +1761,18 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
           Settings.Wrap, Settings.Clip ?? not Settings.Wrap, cast<int>(Settings.Justify)
         );
         Size.Container(Current.Window, Settings);
+        const Scope: L.FocusScope? := Settings.Scope;
+        if Scope <> null then
+          Current.Window.PushFocusScope(Scope.Id, Scope.Active);
+        end if;
+
         for Child: E.Element<TMsg> in Children do
           Visit(Child, Current, Row, Settings.Align);
         end for;
+
+        if Scope <> null then
+          Current.Window.PopFocusScope();
+        end if;
 
         Current.Window.EndGroup();
       when E.Element.Sized(const Child: E.Element<TMsg>, const Settings: L.Flex):

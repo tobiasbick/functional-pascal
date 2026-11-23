@@ -16,6 +16,22 @@ begin
       if Sys.String.IsNullOrWhiteSpace(Path) then
         R.Reject(At, 'The image file path is empty.');
       end if;
+    when M.Source.UpdatedRgba(
+      const W: int,
+      const H: int,
+      const Data: array of byte,
+      const Previous: array of byte,
+      const X: int,
+      const Y: int,
+      const RW: int,
+      const RH: int
+    ):
+      Image(M.Source.Rgba(W, H, Data), At);
+      if Previous = null or Previous.Length <> Data.Length or X < 0 or Y < 0 or RW <= 0 or RH <= 0
+        or RW > W - X or RH > H - Y
+      then
+        R.Reject(At, 'Invalid RGBA update rectangle or previous snapshot.');
+      end if;
     when M.Source.Rgba(const Width: int, const Height: int, const Pixels: array of byte):
       if Width <= 0 or Height <= 0 or cast<long>(Width) * Height > Sys.Int32.MaxValue div 4
         or Pixels = null or Pixels.Length <> cast<long>(Width) * Height * 4

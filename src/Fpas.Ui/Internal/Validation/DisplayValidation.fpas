@@ -91,13 +91,20 @@ begin
       const Drawing: array of Canvas.Shape,
       _,
       const Options: Canvas.Options,
-      _,
+      _, _,
       _,
       _
     ):
       const Path: string := Identify(Id, Location + '/canvas');
       R.CheckExtent(Options.Width, Profile, Path);
       R.CheckExtent(Options.Height, Profile, Path);
+      if Options.HoverCursor <> null and not Sys.Enum.IsDefined<Canvas.Cursor>(
+        Options.HoverCursor ?? Canvas.Cursor.Arrow
+      )
+      then
+        R.Reject(Path, 'Unknown canvas cursor.');
+      end if;
+
       Drawings(Drawing, Path);
     when E.Element.Veil(
       const Id: string,

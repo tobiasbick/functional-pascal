@@ -103,6 +103,14 @@ public type Direction = enum: byte
   RightToLeft;
 end enum;
 
+// A named native Tab-navigation scope for a pane. Inactive scopes remain clickable.
+public type FocusScope = record
+  // Stable nonempty pane identity.
+  public Id: string;
+  // Whether this pane participates in Tab navigation.
+  public Active: bool;
+end record;
+
 // Layout settings shared by rows, columns and graphical layered stacks.
 public type Flow = record
   // The separation between consecutive children.
@@ -131,6 +139,8 @@ public type Flow = record
   public Background: G.Color? := null;
   // Graphical corner radius in logical units.
   public CornerRadius: float := 0.0F;
+  // Optional GUI keyboard focus scope for the children.
+  public Scope: FocusScope? := null;
 end record;
 
 // An application-facing size class for responsive views.

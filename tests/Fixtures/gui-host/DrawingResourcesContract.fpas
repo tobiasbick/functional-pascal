@@ -6,7 +6,7 @@ uses
   Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Cui.Resources as Resources,
   Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Gui.Fonts as Fonts,
   Fpas.Ui.Gui.Localization as Localization, Fpas.Ui.Gui.Colors as Colors,
-  Fpas.Ui.Widgets.Canvas.Canvases as Canvas, Fpas.Ui.Widgets.Canvas.Painting as Painting,
+  Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys, Fpas.Ui.Widgets.Canvas.Canvases as Canvas, Fpas.Ui.Widgets.Canvas.Painting as Painting,
   Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Widgets.Theming.ThemeMetrics as Metrics,
   Fpas.Ui.Widgets.Media.MediaImages as Images, Fpas.Ui.Graphics as G,
   Fpas.Ui.Elements as E, Fpas.Ui.Composition as Composition, Fpas.Ui.Layout as L,
@@ -17,6 +17,7 @@ type Msg = variant
   Completed;
   Pointer(Value: bool);
   Scale;
+  RequestCanvas;
 end variant;
 
 procedure Check(Value: bool; Reason: string);
@@ -24,6 +25,96 @@ begin
   if not Value then
     raise new Sys.InvalidOperationException(Reason);
   end if;
+end procedure;
+
+procedure RejectUpdate(
+  Name: string; Source: Images.Source; X: int; Y: int; Width: int; Height: int;
+  Bytes: array of byte; Pitch: int; Precondition: bool := false
+);
+begin
+  try
+    discard Images.Update(Source, X, Y, Width, Height, Bytes, Pitch);
+  catch Error: Sys.ArgumentException do
+    if Precondition then
+      raise;
+    end if;
+
+    return;
+  catch Error: Sys.InvalidOperationException do
+    if not Precondition then
+      raise;
+    end if;
+
+    return;
+  end try;
+
+  raise new Sys.InvalidOperationException('Image update accepted ' + Name);
+end procedure;
+
+procedure ValidateImageUpdate();
+begin
+  const Pixels: array of byte := new byte[16];
+  const Region: array of byte := [1, 2, 3, 4, 99, 5, 6, 7, 8];
+  const Original: Images.Source := Images.Source.Rgba(2, 2, Pixels);
+  const Updated: Images.Source := Images.Update(Original, 1, 0, 1, 2, Region, 5);
+  Region[0] := 0;
+  case Updated of
+    when Images.Source.UpdatedRgba(
+      _,
+      _,
+      const Data: array of byte,
+      const Previous: array of byte,
+      _,
+      _,
+      _,
+      _
+    ):
+      Check(
+        Previous[4] = 0 and Data[4] = 1 and Data[12] = 5 and Data[15] = 8,
+        'The strided region or previous snapshot was overwritten.'
+      );
+    else
+      raise new Sys.InvalidOperationException('Expected an updated RGBA source.');
+  end case;
+  const Patch: array of byte := [11, 22, 33, 44];
+  RejectUpdate('file source', Images.Source.File('unused'), 0, 0, 1, 1, Patch, 0);
+  RejectUpdate('negative x', Original, -1, 0, 1, 1, Patch, 0, true);
+  RejectUpdate('zero width', Original, 0, 0, 0, 1, Patch, 0, true);
+  RejectUpdate('negative stride', Original, 0, 0, 1, 1, Patch, -1);
+  RejectUpdate('short stride', Original, 0, 0, 1, 1, Patch, 3);
+  RejectUpdate('incomplete final row', Original, 0, 0, 1, 2, new byte[8], 5);
+  RejectUpdate('short original', Images.Source.Rgba(2, 2, Patch), 0, 0, 1, 1, Patch, 0);
+  RejectUpdate(
+    'overflow dimensions',
+    Images.Source.Rgba(int.MaxValue, int.MaxValue, Patch),
+    0,
+    0,
+    1,
+    1,
+    Patch,
+    0
+  );
+  RejectUpdate('bottom edge', Original, 0, 1, 1, 2, new byte[8], 0);
+  RejectUpdate('right edge', Updated, 1, 0, 2, 1, Region, 0);
+  const Last: Images.Source := Images.Update(Updated, 0, 0, 1, 1, Patch);
+  case Last of
+    when Images.Source.UpdatedRgba(
+      _,
+      _,
+      const Data: array of byte,
+      const Previous: array of byte,
+      _,
+      _,
+      _,
+      _
+    ):
+      Check(
+        Data[0] = 11 and Previous[0] = 0 and Data[12] = 5 and Previous[12] = 5 and Pixels[12] = 0,
+        'Successive updates must preserve both previous revisions.'
+      );
+    else
+      raise new Sys.InvalidOperationException('Missing second revision.');
+  end case;
 end procedure;
 
 procedure ValidateMetrics();
@@ -93,6 +184,8 @@ public procedure Verify(Renderer: Cui.CuiRenderer; FontBytes: (array of byte)? :
       when Msg.Pointer(const Hovered: bool):
         PointerEvents := PointerEvents + 1;
         return new Mvu.Transition<bool, Msg>(Model, []);
+      when Msg.RequestCanvas:
+        return new Mvu.Transition<bool, Msg>(Model, [Mvu.Focus<Msg>('paint')]);
       when Msg.Scale:
         return new Mvu.Transition<bool, Msg>(not Model, []);
     end case;
@@ -135,7 +228,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; FontBytes: (array of byte)? :
       'Native Unicode measurement failed.'
     );
     Surface.Image(
-      Images.Source.Rgba(1, 1, Pixels),
+      Picture,
       20.0F,
       60.0F,
       20.0F,
@@ -148,17 +241,44 @@ public procedure Verify(Renderer: Cui.CuiRenderer; FontBytes: (array of byte)? :
   end procedure;
   function View(Model: bool; Size: L.Viewport; Theme: Themes.Theme): E.Element<Msg>;
   begin
-    return Composition.Map<bool, Msg>(
-      Canvas.Canvas<bool>(
-        'paint', [], function(_Event: Canvas.Event): bool => false,
-        new Canvas.Options(Height := L.Extent.Fixed(L.Measure.Logical(130))), Paint := Paint,
-        OnPointer := function(State: Canvas.Pointer): bool => State.Hovered
-      ), Msg.Pointer
+    return E.Column<Msg>(
+      new L.Flow(Scope := new L.FocusScope('art', true)),
+      Composition.Map<bool, Msg>(
+        Canvas.Canvas<bool>(
+          'paint', [], function(_Event: Canvas.Event): bool => false,
+          new Canvas.Options(Height := L.Extent.Fixed(L.Measure.Logical(130))), Paint := Paint,
+          OnPointer := function(State: Canvas.Pointer): bool => State.Hovered,
+          OnInput := function(Input: Canvas.Input): bool begin
+            case Input of
+              when Canvas.Input.Key(
+                const Code: Keys.Key,
+                const Mods: Keys.Modifier,
+                const Down: bool,
+                _
+              ):
+                if Down and Code = Keys.Key.A and Mods = Keys.Modifier.Shift then
+                  SawKey := true;
+                end if;
+              when Canvas.Input.Text(const Value: string):
+                Received := Value;
+              else
+            end case;
+
+            return false;
+          end function
+        ), Msg.Pointer
+      )
     );
   end function;
   procedure Inject();
   begin
     Window.MovePointer(20.0F, 20.0F);
+    if SendText then
+      SendText := false;
+      Window.SetKey(15, true, 1);
+      Window.SetKey(15, false, 1);
+      Window.InputText('Grüße 🎵');
+    end if;
   end procedure;
   procedure Steps(Value: Gui.Session<Msg>);
   begin
@@ -168,6 +288,10 @@ public procedure Verify(Renderer: Cui.CuiRenderer; FontBytes: (array of byte)? :
   end procedure;
 begin
   ValidateMetrics();
+  ValidateImageUpdate();
+  var SendText: bool := false;
+  var SawKey: bool := false;
+  var Received: string := '';
   var Loaded: Resources.CuiFontFace? := null;
   var Done: bool := false;
   var Paints: int := 0;
@@ -175,6 +299,14 @@ begin
   var LastScale: float := 0.0F;
   var Retained: Painting.Surface? := null;
   const Pixels: array of byte := [220, 80, 40, 255];
+  const Picture: Images.Source := Images.Update(
+    Images.Source.Rgba(1, 1, Pixels),
+    0,
+    0,
+    1,
+    1,
+    Pixels
+  );
   const Bytes: array of byte := FontBytes ?? new byte[0];
   const Expected: bool := Bytes.Length > 0;
   const Window: Cui.CuiWindow := new Cui.CuiWindow(
@@ -207,6 +339,14 @@ begin
   end try;
 
   Check(Rejected, 'A retained drawing capability remained active.');
+  discard Session.Post(Msg.RequestCanvas);
+  Steps(Session);
+  SendText := true;
+  Steps(Session);
+  Check(
+    SawKey and Received = 'Grüße 🎵',
+    'Mapped canvas lost committed text after an MVU focus request.'
+  );
   discard Session.Post(Msg.Load);
   Steps(Session);
   Check(Done and ((Loaded <> null) = Expected), 'A mapped font completion did not arrive.');

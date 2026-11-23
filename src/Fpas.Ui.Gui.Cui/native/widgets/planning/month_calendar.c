@@ -28,7 +28,14 @@ int fpas_cui_month_calendar(cui_ctx *ui, const char *id, int *month, int *select
         .cell_height = cell_height, .month_names = months, .day_names = days,
         .hour12 = (flags & 2) != 0, .today = fpas_date_from_number(today) };
     cui_push_disabled(ui, !enabled);
+    /* CUI-050 (docs/future/cui-upstream-bugs.md#cui-050): a keyboard click on
+       the grid also selects the hovered day. Preserve actual mouse clicks. */
+    const bool keyboard_grid = ui->hot == grid && (ui->focus == grid || ui->focus_next_request == grid)
+        && (cui_key_pressed(ui, CUI_KEY_ENTER) || cui_key_pressed(ui, CUI_KEY_SPACE))
+        && !ui->mpressed[CUI_MOUSE_LEFT] && !ui->mreleased[CUI_MOUSE_LEFT];
+    if (keyboard_grid) ui->hot = 0;
     const cui_month_result result = cui_month_calendar_ex(ui, id, &shown, native, count, &options);
+    if (keyboard_grid) ui->hot = grid;
     cui_pop_disabled(ui);
     shown.day = 1;
     if (enabled) {

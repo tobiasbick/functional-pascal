@@ -24,6 +24,11 @@ Set `Placement` to open at a saved place, maximized if it was; see
 `Hidden` creates the window without showing it, for example for off-screen tests.
 All three default to false.
 
+On Windows, CUI temporarily suspends OpenGL vertical sync while the desktop
+animates a maximize, minimize or restore command. Presentation returns to the
+configured interval after the transition. The bundled Linux host uses X11,
+including XWayland on desktops that provide it.
+
 `TraceGeometry.ReadSpanRectangle` reads a trace span's logical rectangle through
 an owner-thread MVU command after presentation. The native trace determines
 folding, visibility and geometry; a missing span returns an empty rectangle.

@@ -48,9 +48,20 @@ begin
       const Settings: Canvases.Options,
       const OnWheel: Sys.Func<Canvases.Wheel, TMsg>?,
       const Paint: Sys.Action<Painting.Surface>?,
-      const OnPointer: Sys.Func<Canvases.Pointer, TMsg>?
+      const OnPointer: Sys.Func<Canvases.Pointer, TMsg>?,
+      const OnInput: Sys.Func<Canvases.Input, TMsg>?
     ):
-      CanvasWidget.Draw<TMsg>(Frame, Id, Drawing, Clicked, Settings, OnWheel, Paint, OnPointer);
+      CanvasWidget.Draw<TMsg>(
+        Frame,
+        Id,
+        Drawing,
+        Clicked,
+        Settings,
+        OnWheel,
+        Paint,
+        OnPointer,
+        OnInput
+      );
     when E.Element.Veil(
       const Id: string,
       const Revealed: bool,

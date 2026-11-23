@@ -4,13 +4,13 @@
 | --- | --- |
 | Repository | <https://github.com/yappologistic/CUI> |
 | Source fork | <https://github.com/tobiasbick/CUI> |
-| Revision | Upstream `master` after [v1.4.0](https://github.com/yappologistic/CUI/releases/tag/v1.4.0), mirrored in the source fork |
-| Commit | [`56c9bc2c985b21bacb79d34c842980071c52800a`](https://github.com/yappologistic/CUI/commit/56c9bc2c985b21bacb79d34c842980071c52800a) |
+| Revision | Upstream `master` after [v1.4.0](https://github.com/yappologistic/CUI/releases/tag/v1.4.0) |
+| Commit | [`e0124eaef2a41f07c7d6f22aed9af48314f1b3f3`](https://github.com/yappologistic/CUI/commit/e0124eaef2a41f07c7d6f22aed9af48314f1b3f3) |
 | Build inputs | [`cui.c`](upstream/cui.c) and [`cui.h`](upstream/cui.h) |
 | Local source modifications | None |
 
 The amalgamated C source and public header are the unchanged output of
-`python3 tools/amalgamate.py` on Linux in the source fork at the pinned commit.
+`python3 tools/amalgamate.py` on Linux from the upstream tree at the pinned commit.
 This upstream snapshot includes the fixes from
 [PR #102](https://github.com/yappologistic/CUI/pull/102),
 [PR #105](https://github.com/yappologistic/CUI/pull/105),
@@ -21,14 +21,38 @@ applied to master by hand. No combined fork branch is needed.
 
 | Path under `upstream/` | SHA-256 |
 | --- | --- |
-| `cui.c` | `2d1190191f98f969cdcf5e986fed1e1dbd90ff78c48a0077cf7f03e39bb4dd87` |
+| `cui.c` | `1ac237a2f9d51afcb6023ebc63c1a072978f51413cc2870a51da3a1dbbacbfc0` |
 | `cui.h` | `6521fb914d75e2d67841ebd5385206edfcfa6a125e6def11a9c029e62ac69fae` |
 
 Project-owned integration belongs under `src/Fpas.Ui.Gui.Cui/`, with the C bridge
 and CMake configuration in its `native/` directory. Keep those files separate
 from the unmodified upstream sources here.
 
-## Snapshot verification
+## Changes since `56c9bc2`
+
+The five upstream commits change the Win32 OpenGL host and add an explicit
+SDL2 Wayland platform. Windows temporarily suspends vertical sync during
+maximize, minimize and restore, then resumes the configured swap interval.
+FPAS builds the native X11 host on Linux. The SDL2 build option is relevant
+to embedders that select that backend. The public header, widget inventory,
+theme palettes and license inputs are unchanged.
+
+The FPAS adapter now exposes [focusable canvases and keyboard input](../../docs/ui/gui/text-and-display/canvas.md),
+pane focus scopes and [RGBA region updates](../../docs/ui/gui/text-and-display/image.md).
+These use functions introduced in the preceding snapshot.
+
+The generated pair was compared byte for byte with the vendored files. Under
+Linux/X11, 55 native tests and 279 managed binding tests passed, including
+platform keyboard input and pixel comparisons between partial and full uploads
+with the software and OpenGL renderers. Five Windows binding tests were skipped.
+The FPAS gallery and its drawing contract passed with both renderers. The Windows x64 DLL and [WGL regression executable](../../src/Fpas.Ui.Gui.Cui/native/tests/window_transition.c)
+were cross-compiled and linked on Linux. Running that test requires a Windows
+desktop and a WGL driver with swap control.
+
+[Window transition fix](https://github.com/yappologistic/CUI/commit/0f9c2d1) ·
+[SDL2 Wayland backend](https://github.com/yappologistic/CUI/commit/cadb1d9)
+
+## Verification history for `56c9bc2`
 
 The copied pair matches the generated files byte for byte. License inputs,
 fonts, `third_party/` and `tools/amalgamate.py` are unchanged from the previous
@@ -74,7 +98,7 @@ this update.
 
 See [CUI upstream bugs](../../docs/future/cui-upstream-bugs.md) for remaining defects.
 
-## Changes from the previous snapshot
+## Changes between `71c383f` and `56c9bc2`
 
 The 28 commits after `71c383f` add public API without changing existing
 declarations or the widget inventory:
@@ -94,8 +118,6 @@ declarations or the widget inventory:
 - Internally, the modal layer is a `cui_modal_layer` struct and the focus order
   holds `cui__focus_entry` records. The command palette, shortcut ownership,
   host frame start and table adapters use the new fields.
-
-The FPAS bindings do not expose the new public API yet.
 
 ## License inventory
 

@@ -24,14 +24,18 @@ procedure Validate();
     raise new Sys.InvalidOperationException('Feedback preflight accepted an invalid view.');
   end procedure;
 begin
-  Reject(Alerts.Alert<int>('a', 'Title'), V.Target.Terminal, 'Graphical profile');
+  const Alert: E.Element<int> := Alerts.Alert<int>('a', 'Title');
+  discard V.Prepare<int>(Alert, V.Target.Terminal);
+  Reject(Alert, V.Target.Portable, 'terminal or graphical profile');
   discard V.Prepare<int>(P.ProgressBar<int>('p', 0.5F), V.Target.Portable);
   Reject(
     P.ProgressBar<int>('p', 0.5F, new P.Options(Indeterminate := true)),
     V.Target.Portable,
     'Graphical profile'
   );
-  Reject(Spin.Spinner<int>('s'), V.Target.Terminal, 'Graphical profile');
+  const Spinner: E.Element<int> := Spin.Spinner<int>('s');
+  discard V.Prepare<int>(Spinner, V.Target.Terminal);
+  Reject(Spinner, V.Target.Portable, 'terminal or graphical profile');
   Reject(Timeline.TimelineItem<int>('t', 'Entry'), V.Target.Terminal, 'Graphical profile');
   Reject(Timeline.TimelineItem<int>('t', 'Entry'), V.Target.Portable, 'Graphical profile');
   Reject(Timeline.TimelineItem<int>('t', ''), V.Target.Graphical, 'nonempty title');

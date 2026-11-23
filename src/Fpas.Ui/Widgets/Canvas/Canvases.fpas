@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Widgets.Canvas.Canvases;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L, System as Sys, Fpas.Ui.Widgets.Canvas.Painting as Painting;
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys, Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L, System as Sys, Fpas.Ui.Widgets.Canvas.Painting as Painting;
 
 // A drawing command in canvas-local logical points.
 public type Shape = variant
@@ -14,6 +14,34 @@ public type Shape = variant
   Line(X: float; Y: float; EndX: float; EndY: float; Thickness: float; Color: G.Color);
 end variant;
 
+// Cursor shown while the enabled canvas is hovered.
+public type Cursor = enum: byte
+  // Standard arrow.
+  Arrow;
+  // Actionable item.
+  Hand;
+  // Text entry.
+  Text;
+  // Horizontal resize.
+  ResizeHorizontal;
+  // Vertical resize.
+  ResizeVertical;
+  // Move.
+  Move;
+  // Unavailable action.
+  NotAllowed;
+end enum;
+
+// Ordered input for a canvas which owns native keyboard focus.
+public type Input = variant
+  // Physical key transition; modifiers use the CUI shortcut mask.
+  Key(Code: Keys.Key; Modifiers: Keys.Modifier; Down: bool; Repeated: bool);
+  // Committed Unicode text, copied during delivery.
+  Text(Value: string);
+  // Window focus changed while the canvas owned component input.
+  WindowFocus(Focused: bool);
+end variant;
+
 // Canvas layout and input settings.
 public type Options = record
   // Preferred width.
@@ -22,6 +50,10 @@ public type Options = record
   public Height: L.Extent := L.Extent.Fixed(L.Measure.Logical(120));
   // Whether the canvas accepts pointer input.
   public Enabled: bool := true;
+  // Include the canvas in Tab navigation. Enter and Space activate it.
+  public Focusable: bool := false;
+  // Optional cursor while the pointer hovers this canvas.
+  public HoverCursor: Cursor? := null;
 end record;
 
 // Button activation on a canvas.
@@ -71,9 +103,10 @@ end record;
 // - `OnWheel`: Optional wheel mapper. Null leaves scrolling to enclosing views.
 // - `Paint`: Optional direct CUI drawing after layout, following Drawing; owner-thread only.
 // - `OnPointer`: Optional changed-state hover/press mapper; disabling emits a final leave.
+// - `OnInput`: Optional ordered keyboard/text mapper. Enables component focus and leaves Tab navigation to CUI.
 // ## Returns
 // A graphical element.
-public function Canvas<TMsg>(Id: string; Drawing: array of Shape; Clicked: function(Event): TMsg; Settings: Options? := null; OnWheel: Sys.Func<Wheel, TMsg>? := null; Paint: Sys.Action<Painting.Surface>? := null; OnPointer: Sys.Func<Pointer, TMsg>? := null): E.Element<TMsg>;
+public function Canvas<TMsg>(Id: string; Drawing: array of Shape; Clicked: function(Event): TMsg; Settings: Options? := null; OnWheel: Sys.Func<Wheel, TMsg>? := null; Paint: Sys.Action<Painting.Surface>? := null; OnPointer: Sys.Func<Pointer, TMsg>? := null; OnInput: Sys.Func<Input, TMsg>? := null): E.Element<TMsg>;
 requires Id <> '';
 begin
   return E.Element<TMsg>.Canvas(
@@ -83,7 +116,7 @@ begin
     Settings ?? new Options(),
     OnWheel,
     Paint,
-    OnPointer
+    OnPointer, OnInput
   );
 end function;
 

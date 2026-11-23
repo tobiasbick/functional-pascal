@@ -77724,6 +77724,7 @@ struct cui_app {
     double pace_start;         /* vsync check: start of the current run of animation frames */
     int pace_frames, pace_fast;
     bool vsync_off;            /* vsync was asked for, but the swap does not wait: pace by the clock */
+    bool present_fast;         /* the backend presents without vsync for a window transition: pace by the clock */
     void (*frame_cb)(cui_ctx *ui, void *user);
     void *frame_user;
     bool in_live_resize;
@@ -78076,7 +78077,7 @@ bool cui_app_frame(cui_app *app) {
             app->hz = hz >= 24 && hz <= 1000 ? hz : 60;
             app->hz_checked = now;
         }
-        if ((app->gl || app->gpu) && !app->desc.no_vsync && !app->vsync_off) {
+        if ((app->gl || app->gpu) && !app->desc.no_vsync && !app->vsync_off && !app->present_fast) {
             /* two runs of 20 frames in a row faster than the display: the swap does not wait
              * (one is not enough: after a pause a driver may queue a few frames without waiting) */
             if (app->pace_frames++ == 0) app->pace_start = app->last_present;
@@ -78087,7 +78088,7 @@ bool cui_app_frame(cui_app *app) {
                 app->pace_frames = 0;
             }
         }
-        if ((!app->gl && !app->gpu) || app->desc.no_vsync || app->vsync_off) {
+        if ((!app->gl && !app->gpu) || app->desc.no_vsync || app->vsync_off || app->present_fast) {
             /* one frame per period, counted from when the last one began; events that come
              * in the meantime are taken in but do not start the frame early */
             double until = app->last_time + 1.0 / (app->desc.no_vsync && app->hz < 120 ? 120 : app->hz);
@@ -78544,6 +78545,14 @@ static bool cui__sdl_on_screen(int x, int y, int w) {
 }
 
 bool cui__plat_init(cui_app *app) {
+#ifdef CUI_SDL_WAYLAND_ONLY
+    /* Request one driver, not SDL's automatic list. A conflicting environment
+     * hint is an initialization failure, not permission to use XWayland. */
+    if (!SDL_SetHint(SDL_HINT_VIDEODRIVER, "wayland")) {
+        const char *hint = SDL_GetHint(SDL_HINT_VIDEODRIVER);
+        if (!hint || strcmp(hint, "wayland") != 0) return false;
+    }
+#endif
     /* The app ID becomes WM_CLASS (X11) and the app_id (Wayland). SDL2 reads it
      * from these variables in SDL_Init, Wayland falling back to the X11 one;
      * SDL3 under sdl2-compat reads the SDL_APP_ID hint, which SDL_Quit clears.
@@ -78565,6 +78574,14 @@ bool cui__plat_init(cui_app *app) {
     if (set_wayland) unsetenv("SDL_VIDEO_WAYLAND_WMCLASS");
 #endif
     if (init != 0) return false;
+#ifdef CUI_SDL_WAYLAND_ONLY
+    /* An embedding application may already have initialized SDL video. */
+    const char *driver = SDL_GetCurrentVideoDriver();
+    if (!driver || strcmp(driver, "wayland") != 0) {
+        SDL_QuitSubSystem(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
+        return false;
+    }
+#endif
     cui__sdl *s = calloc(1, sizeof *s);
     if (!s) return false;
     app->plat = s;
@@ -79259,6 +79276,9 @@ typedef struct {
     HCURSOR cursors[CUI_CURSOR_COUNT];
     cui_cursor cursor;
     bool in_size_move;
+    double transition_until;   /* a DWM maximize, minimize or restore animation runs until then */
+    bool swap_fast, vsync;     /* the swap interval is 0 for that animation; vsync as the app asked */
+    PFN_wglSwapIntervalEXT set_swap_interval;
     BITMAPINFO bmi;
     HANDLE timer;          /* timed waits: high resolution where Windows has it (10 1803 and later) */
 } cui__win32;
@@ -79482,6 +79502,17 @@ static void cui__win32_text_input_rect(void *user, cui_rect caret) {
     cui__win32_place_ime(w);
 }
 
+/* Maximize, minimize and restore play a DWM animation that holds the swap chain: a vsync swap
+ * inside it blocks the message loop for the whole animation, about a second. Present without
+ * vsync while it runs, so frames keep coming and DWM animates the latest one; the first swap
+ * after it puts vsync back (cui__plat_gl_swap). Reported in issue 117. */
+static void cui__win32_transition(cui_app *app) {
+    cui__win32 *w = cui__w(app);
+    if (!w || !w->vsync || !w->set_swap_interval) return;
+    w->transition_until = cui__plat_now() + 0.32;
+    if (!w->swap_fast) { w->set_swap_interval(0); w->swap_fast = true; app->present_fast = true; }
+}
+
 static LRESULT CALLBACK cui__win32_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     cui_app *app = (cui_app *)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
     if (!app) {
@@ -79507,6 +79538,11 @@ static LRESULT CALLBACK cui__win32_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
         }
         return 0;
     case WM_ENTERSIZEMOVE: if (w) w->in_size_move = true; return 0;
+    case WM_SYSCOMMAND: {   /* the title bar's buttons and double-click, the taskbar */
+        UINT cmd = (UINT)wp & 0xFFF0;
+        if (cmd == SC_MAXIMIZE || cmd == SC_MINIMIZE || cmd == SC_RESTORE) cui__win32_transition(app);
+        break;   /* DefWindowProc runs the command */
+    }
     case WM_EXITSIZEMOVE: if (w) w->in_size_move = false; return 0;
     case WM_PAINT: {
         PAINTSTRUCT ps;
@@ -79775,10 +79811,21 @@ bool cui__plat_gl_create(cui_app *app, bool vsync) {
     w->glrc = ctx;
     PFN_wglSwapIntervalEXT swap = (PFN_wglSwapIntervalEXT)(void *)wglGetProcAddress("wglSwapIntervalEXT");
     if (swap) swap(vsync ? 1 : 0);
+    w->set_swap_interval = swap;
+    w->vsync = vsync;
     return true;
 }
 
-void cui__plat_gl_swap(cui_app *app) { SwapBuffers(cui__w(app)->hdc); }
+void cui__plat_gl_swap(cui_app *app) {
+    cui__win32 *w = cui__w(app);
+    if (w->swap_fast && cui__plat_now() >= w->transition_until) {   /* the window animation is over */
+        w->set_swap_interval(1);
+        w->swap_fast = false;
+        app->present_fast = false;
+        cui_request_redraw(app->ui);
+    }
+    SwapBuffers(w->hdc);
+}
 
 void cui__plat_present(cui_app *app, const void *bgra, int width, int height, int stride) {
     cui__win32 *w = cui__w(app);
@@ -79859,11 +79906,11 @@ void cui__plat_gl_release(cui_app *app) {
 
 void cui__plat_maximize(cui_app *app) {
     cui__win32 *w = cui__w(app);
-    if (w && w->hwnd) ShowWindow(w->hwnd, SW_SHOWMAXIMIZED);
+    if (w && w->hwnd) { cui__win32_transition(app); ShowWindow(w->hwnd, SW_SHOWMAXIMIZED); }
 }
 
-void cui__plat_minimize(cui_app *app) { ShowWindow(cui__w(app)->hwnd, SW_MINIMIZE); }
-void cui__plat_restore(cui_app *app) { ShowWindow(cui__w(app)->hwnd, SW_RESTORE); }
+void cui__plat_minimize(cui_app *app) { cui__win32_transition(app); ShowWindow(cui__w(app)->hwnd, SW_MINIMIZE); }
+void cui__plat_restore(cui_app *app) { cui__win32_transition(app); ShowWindow(cui__w(app)->hwnd, SW_RESTORE); }
 
 cui_window_state cui__plat_window_state(cui_app *app) {
     HWND hwnd = cui__w(app)->hwnd;

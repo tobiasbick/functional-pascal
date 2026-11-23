@@ -220,6 +220,15 @@ end procedure;
 // - `Location`: Diagnostic path.
 public procedure CheckContainer(Settings: L.Flow; Profile: V.Target; Location: string);
 begin
+  const Scope: L.FocusScope? := Settings.Scope;
+  if Scope <> null then
+    RequireProfile(Profile, V.Target.Graphical, Location);
+    CheckText(Scope.Id, Location);
+    if Sys.String.IsNullOrWhiteSpace(Scope.Id) then
+      Reject(Location, 'A focus scope needs an ID.');
+    end if;
+  end if;
+
   if not Sys.Enum.IsDefined<L.Direction>(Settings.ReadingDirection) then
     Reject(Location, 'Unknown reading direction.');
   end if;

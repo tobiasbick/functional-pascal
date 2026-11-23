@@ -4,7 +4,13 @@ unit GalleryValidationBoundaryContract;
 
 uses
   Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Planning.Gantts as Gantts, System as Sys;
+  Fpas.Ui.Widgets.Charts.Sankeys as Sk, Fpas.Ui.Widgets.Charts.RadarCharts as Radar,
+  Fpas.Ui.Widgets.Charts.ScatterCharts as Scatter, Fpas.Ui.Widgets.Charts.BarLists as Bars,
+  Fpas.Ui.Widgets.Charts.ActivityRings as Rings, Fpas.Ui.Widgets.Charts.RadialGauges as Gauges,
+  Fpas.Ui.Widgets.Charts.Candlesticks as Candles, Fpas.Ui.Widgets.Charts.CalendarHeatmaps as CalendarHeat,
+  Fpas.Ui.Widgets.Charts.Heatmaps as Heat, Fpas.Ui.Widgets.Charts.Treemaps as Trees,
+  Fpas.Ui.Widgets.Charts.Funnels as Funnels, Fpas.Ui.Widgets.Charts.SplitBars as Splits,
+  Fpas.Ui.Widgets.Charts.Waffles as Waffles, Fpas.Ui.Widgets.Charts.Charts as Charts, Fpas.Ui.Widgets.Planning.Gantts as Gantts, System as Sys;
 
 procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);
 begin
@@ -49,11 +55,192 @@ begin
   Reject(Timeline(new Sys.DateOnly(9999, 12, 31), 2), V.Target.Graphical, 'day range');
 end procedure;
 
-// Checks target capabilities and inclusive timeline dates at the public preflight boundary.
+procedure ChartData();
+begin
+  const Nodes: array of Sk.Node := [new Sk.Node('source'), new Sk.Node('sink')];
+  discard V.Prepare<int>(
+    Sk.Sankey<int>('flow', Nodes, [new Sk.Link(0, 1, 0.0F)]),
+    V.Target.Graphical
+  );
+  for Edge: Sk.Link in [
+    new Sk.Link(-1, 1, 1.0F),
+    new Sk.Link(0, 2, 1.0F),
+    new Sk.Link(1, 1, 1.0F)
+  ] do
+    Reject(Sk.Sankey<int>('flow', Nodes, [Edge]), V.Target.Graphical, 'different valid');
+  end for;
+  const Axes: array of string := ['x', 'y', 'z'];
+  Reject(
+    E.Element<int>.RadarChart('radar', [], ['x', 'y'], new Radar.Options(), null),
+    V.Target.Graphical, 'at least three axes'
+  );
+  const Valid: Charts.Series := new Charts.Series('first', [0.0F, 1.0F, 2.0F]);
+  discard V.Prepare<int>(Radar.RadarChart<int>('radar', [Valid], Axes), V.Target.Graphical);
+  Reject(
+    Radar.RadarChart<int>('radar', [Valid, new Charts.Series('short', [1.0F, 2.0F])], Axes),
+    V.Target.Graphical, 'axis count'
+  );
+  Reject(
+    Radar.RadarChart<int>('radar', [new Charts.Series('invalid', [0.0F, float.NaN, 1.0F])], Axes),
+    V.Target.Graphical, 'finite visualization sample'
+  );
+end procedure;
+
+procedure Chart(Node: E.Element<int>; Error: string := '');
+begin
+  if Error = '' then
+    discard V.Prepare<int>(Node, V.Target.Graphical);
+  else
+    Reject(Node, V.Target.Graphical, Error);
+  end if;
+end procedure;
+
+procedure RankedAndScaledCharts();
+begin
+  const Item: Charts.Item := new Charts.Item('A', 1.0F);
+  Chart(Bars.BarList<int>('bars', [Item]));
+  Chart(Bars.BarList<int>('bars', [Item, Item]), 'unique');
+  Chart(Bars.BarList<int>('bars', [], new Bars.Options(MaximumRows := -1)), 'row limit');
+  Chart(Rings.ActivityRings<int>('rings', [Item, Item, Item, Item, Item, Item, Item, Item]));
+  Chart(
+    Rings.ActivityRings<int>('rings', [Item, Item, Item, Item, Item, Item, Item, Item, Item]),
+    'eight'
+  );
+  const Point: Scatter.Point := new Scatter.Point(-2.0F, 3.0F);
+  Chart(Scatter.ScatterChart<int>('scatter', [new Scatter.Series('a', [Point], [0.0F])]));
+  Chart(
+    Scatter.ScatterChart<int>('scatter', [new Scatter.Series('a', [Point], [0.0F, 1.0F])]),
+    'match'
+  );
+  Chart(
+    Scatter.ScatterChart<int>(
+      'scatter',
+      [new Scatter.Series('a', [new Scatter.Point(float.NaN, 0.0F)])]
+    ),
+    'finite'
+  );
+  const Band: Gauges.Band := new Gauges.Band(1.0F);
+  Chart(
+    Gauges.RadialGauge<int>(
+      'dial',
+      1.0F,
+      0.0F,
+      1.0F,
+      new Gauges.Options(Sweep := 300.0F, Bands := [Band])
+    )
+  );
+  Chart(Gauges.RadialGauge<int>('dial', 1.0F, -float.MaxValue, float.MaxValue), 'finite radial');
+  Chart(
+    Gauges.RadialGauge<int>('dial', 1.0F, 0.0F, 1.0F, new Gauges.Options(Sweep := 301.0F)),
+    'sweep'
+  );
+  Chart(
+    Gauges.RadialGauge<int>('dial', 1.0F, 0.0F, 1.0F, new Gauges.Options(Target := float.NaN)),
+    'target'
+  );
+  Chart(
+    Gauges.RadialGauge<int>('dial', 1.0F, 0.0F, 1.0F, new Gauges.Options(Bands := [Band, Band])),
+    'thresholds'
+  );
+end procedure;
+
+procedure CandleSeries();
+begin
+  const Period: Candles.Candle := new Candles.Candle(2.0F, 3.0F, 1.0F, 1.0F, 8.0F);
+  const Gap: Charts.Series := new Charts.Series('gap', [float.NaN]);
+  Chart(
+    Candles.Candlestick<int>(
+      'c',
+      [Period],
+      new Candles.Options(Labels := ['day'], Overlays := [Gap])
+    )
+  );
+  Chart(Candles.Candlestick<int>('c', [new Candles.Candle(2.0F, 1.0F, 1.0F, 1.0F)]), 'OHLC');
+  Chart(
+    Candles.Candlestick<int>('c', [Period], new Candles.Options(Labels := ['a', 'b'])),
+    'labels'
+  );
+  Chart(
+    Candles.Candlestick<int>(
+      'c',
+      [Period],
+      new Candles.Options(Overlays := [Gap, Gap, Gap, Gap, Gap])
+    ),
+    'four'
+  );
+  Chart(Candles.Candlestick<int>('c', [], new Candles.Options(Overlays := [Gap])), 'outgrow');
+  Chart(
+    Candles.Candlestick<int>(
+      'c', [Period], new Candles.Options(
+        Overlays := [
+          new Charts.Series('unbounded', [float.PositiveInfinity])
+        ]
+      )
+    ), 'NaN gaps'
+  );
+end procedure;
+
+procedure HeatAndPartToWholeCharts();
+begin
+  Chart(
+    Heat.Heatmap<int>(
+      'heat',
+      [-1.0F],
+      1,
+      1,
+      new Heat.Options(Range := new Charts.ValueRange(-1.0F, 0.0F))
+    )
+  );
+  Chart(Heat.Heatmap<int>('heat', [], int.MaxValue, int.MaxValue), 'rows times columns');
+  Chart(
+    Heat.Heatmap<int>('heat', [0.0F], 1, 1, new Heat.Options(RowLabels := ['a', 'b'])),
+    'match'
+  );
+  Chart(
+    Heat.Heatmap<int>(
+      'heat',
+      [0.0F],
+      1,
+      1,
+      new Heat.Options(Range := new Charts.ValueRange(0.0F, 0.0F))
+    ),
+    'increasing'
+  );
+  Chart(CalendarHeat.CalendarHeatmap<int>('days', Sys.DateOnly.MaxValue, [1.0F]));
+  Chart(
+    CalendarHeat.CalendarHeatmap<int>('days', Sys.DateOnly.MaxValue, [1.0F, 1.0F]),
+    'dates exceed'
+  );
+  const Items: array of Charts.Item := [
+    new Charts.Item('first', 0.0F),
+    new Charts.Item('next', 1.0F)
+  ];
+  Chart(
+    Trees.Treemap<int>('tree', Items, Selected := 1, OnSelect := function(Index: int): int => Index)
+  );
+  Chart(Trees.Treemap<int>('tree', Items, Selected := 0), 'callback');
+  Chart(Funnels.Funnel<int>('funnel', Items));
+  Chart(Splits.SplitBar<int>('split', Items));
+  Chart(Waffles.Waffle<int>('waffle', Items, new Waffles.Options(Rows := 1, Columns := 60)));
+  Chart(Waffles.Waffle<int>('waffle', Items, new Waffles.Options(Columns := 61)), 'one through 60');
+  Chart(
+    Splits.SplitBar<int>(
+      'split',
+      [new Charts.Item('a', float.MaxValue), new Charts.Item('b', float.MaxValue)]
+    ),
+    'finite'
+  );
+end procedure;
+
+// Checks public preflight for graphical styles, dates, chart data and native limits.
 public procedure Verify();
 begin
   GraphicalStyles();
   FinalTimelineDay();
+  ChartData();
+  RankedAndScaledCharts();
+  CandleSeries();
+  HeatAndPartToWholeCharts();
 end procedure;
 
 end unit;

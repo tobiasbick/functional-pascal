@@ -43,7 +43,8 @@ begin
       const Settings: Canvases.Options,
       const OnWheel: Sys.Func<Canvases.Wheel, TChild>?,
       const Paint: Sys.Action<Painting.Surface>?,
-      const OnPointer: Sys.Func<Canvases.Pointer, TChild>?
+      const OnPointer: Sys.Func<Canvases.Pointer, TChild>?,
+      const OnInput: Sys.Func<Canvases.Input, TChild>?
     ):
       const Wheel: Sys.Func<Canvases.Wheel, TParent>? := case OnWheel of
         when is Sys.Func<Canvases.Wheel, TChild> as Handler: function(Delta: Canvases.Wheel): TParent => Messages(
@@ -61,6 +62,12 @@ begin
         case OnPointer of
           when is Sys.Func<Canvases.Pointer, TChild> as Handler: function(State: Canvases.Pointer): TParent => Messages(
             Handler.Invoke(State)
+          );
+          else null;
+        end case,
+        case OnInput of
+          when is Sys.Func<Canvases.Input, TChild> as Handler: function(Value: Canvases.Input): TParent => Messages(
+            Handler.Invoke(Value)
           );
           else null;
         end case

@@ -51,6 +51,8 @@ Debug/Release acceptance runs the same contracts without platform skips.
 
 ## Native GUI
 
+The [upstream reference crops](Fixtures/gui-gallery-reference/README.md) check position, control shape and color on eight gallery pages. The [planning interaction contract](Fixtures/gui-host/PlanningInteractionContract.fpas) drives month and week calendars, Gantt and a reordered tree table through FPAS messages. The [preflight contract](Fixtures/gui-host/ValidationBoundaryContract.fpas) checks chart dimensions, Sankey and treemap indices, candle overlays, finite samples, and bounded scales before rendering. The [image contract](Fixtures/gui-host/DrawingResourcesContract.fpas) checks invalid regions and chained RGBA updates. The [canvas tests](Fpas.Ui.Gui.Cui.Tests/Display/CuiCanvasInputTests.cs) exercise recovery from input callback failures and X11 window focus.
+
 `GuiHostTests` builds the real GUI gallery with a fresh SDK and runs the
 gallery contract under software and OpenGL. It checks the desktop sidebar,
 the drawer at 740 logical points, the button examples, independent formatting

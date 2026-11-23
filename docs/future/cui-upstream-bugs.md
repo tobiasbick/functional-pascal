@@ -31,8 +31,8 @@ tests cover rejection, stacked overflow and the explicit-range alternative.
 - Upstream: [Issue #104](https://github.com/yappologistic/CUI/issues/104) and
   [PR #105](https://github.com/yappologistic/CUI/pull/105), applied on master as
   [`01f9c06`](https://github.com/yappologistic/CUI/commit/01f9c06) and
-  [`bcd918b`](https://github.com/yappologistic/CUI/commit/bcd918b). The vendored
-  snapshot `56c9bc2` contains the fix. The maintainer verified it under Xvfb;
+  [`bcd918b`](https://github.com/yappologistic/CUI/commit/bcd918b). FPAS included
+  the fix in its `56c9bc2` snapshot. The maintainer verified it under Xvfb;
   the KWin and Mesa DRI3 reproduction below has not been rerun yet.
 
 Reproduced at `71c383f` with the X11 backend and the OpenGL renderer
@@ -99,3 +99,17 @@ disables `-Warray-bounds` and `-Wstringop-overflow` for GCC. A push and pop
 around the `cui.c` include does not work because `cui.c` disables
 `-Wunused-function` for the rest of the file. Remove the options once the
 vendored source no longer warns.
+
+<a id="cui-050"></a>
+
+## CUI-050 — Month calendar keyboard activation selects the hovered day
+
+At `e0124ea`, click February 13, 2024 in `cui_month_calendar_ex`, leave the pointer
+there, and press Right. February 14 is selected. Enter then activates February 13.
+The grid processes the synthetic keyboard click as a pointer click before handling
+Enter or Space.
+
+The [month adapter](../../src/Fpas.Ui.Gui.Cui/native/widgets/planning/month_calendar.c)
+suppresses grid hover during keyboard activation. Physical clicks still select the day
+under the pointer. The [FPAS regression](../../tests/Fixtures/gui-host/PlanningInteractionContract.fpas)
+checks both keys and a subsequent mouse click.

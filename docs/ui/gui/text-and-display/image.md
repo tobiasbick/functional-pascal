@@ -42,7 +42,18 @@ end unit;
 
 For generated pixels, use `MediaImages.Source.Rgba` with four bytes per
 pixel. Keep the array unchanged while the view uses it and pass a new
-array when the image changes.
+array when replacing the entire image.
+
+For a changed rectangle, keep the returned source in your model. For example,
+`MediaImages.Update(Picture, 10, 20, 2, 3, Patch, 12)` replaces two pixels in
+each of three rows. Each row contributes eight RGBA bytes. The next source
+row starts twelve bytes later. Omit the stride for tightly packed input.
+Coordinates must fit the image, and the operation copies the supplied bytes.
+
+The result contains a complete immutable CPU snapshot. A widget displaying
+the preceding revision updates just that rectangle on its existing texture.
+A new widget, or one that skipped a revision, uploads the complete snapshot.
+The same source works in images, image viewers and custom canvas painting.
 
 ## See also
 
@@ -68,3 +79,4 @@ array when the image changes.
   - [image.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/media/image.h)
   - [media_image.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/media/media_image.c)
   - [media_image.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/media/media_image.h)
+- [Software and OpenGL image update tests](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Media/CuiImageUpdateTests.cs)

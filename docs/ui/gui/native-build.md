@@ -18,6 +18,11 @@ Reuse native CUI primitives before adding adapters. Group adapters by topic in
 private CUI types within the native bridge. Managed bindings are partial files
 on `CuiWindow` and `NativeMethods`. Compositions need no additional C entry point.
 
+The [Windows transition test](../../../src/Fpas.Ui.Gui.Cui/native/tests/window_transition.c)
+reads the WGL swap interval across native window-state changes. It requires a
+Windows desktop with OpenGL swap control. CTest reports a skip when the
+driver cannot expose the requested interval.
+
 ## Native input adapters
 
 Text areas retain CUI's own paint callback and direction-specific wheel routing.

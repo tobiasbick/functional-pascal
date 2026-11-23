@@ -13,3 +13,20 @@ namespace Fpas.Ui.Gui.Cui.Widgets.Canvas;
 /// <param name="Color">Packed straight-alpha RGBA.</param>
 [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
 public readonly record struct CuiDrawingShape(int Kind, float X, float Y, float A, float B, float Radius, uint Color);
+
+/// <summary>Events delivered to a canvas with component focus.</summary>
+public enum CuiCanvasInputKind
+{
+    /// <summary>A physical key transition.</summary>
+    Key = 4,
+    /// <summary>Committed Unicode text.</summary>
+    Text,
+    /// <summary>The window gained or lost keyboard focus.</summary>
+    WindowFocus
+}
+
+/// <summary>One copied native input event in delivery order.</summary>
+/// <param name="Kind">Key, text or window focus.</param><param name="Key">Native key ordinal.</param>
+/// <param name="Modifiers">Native modifier mask.</param><param name="Down">Key down or window focused.</param>
+/// <param name="Repeated">Whether a key-down repeats.</param><param name="Text">Committed text, otherwise empty.</param>
+public readonly record struct CuiCanvasInput(CuiCanvasInputKind Kind, int Key, int Modifiers, bool Down, bool Repeated, string Text);

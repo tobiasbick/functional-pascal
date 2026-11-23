@@ -1,5 +1,6 @@
 // [Documentation](../../../docs/ui/gui/cui.md#input-injection)
 using Fpas.Ui.Gui.Cui.Interop;
+using Fpas.Ui.Gui.Cui.Widgets.Canvas;
 
 namespace Fpas.Ui.Gui.Cui;
 
@@ -37,7 +38,11 @@ public sealed partial class CuiWindow
     /// <param name="down">Pressed state.</param>
     /// <param name="modifiers">Native modifier bits.</param>
     public void SetKey(int key, bool down, int modifiers = 0)
-    { CheckFrame(); NativeMethods.InputKey(context, key, down ? (byte)1 : (byte)0, modifiers); }
+    {
+        CheckFrame();
+        if (listenForCanvasInput) RouteCanvasInput(new(CuiCanvasInputKind.Key, key, modifiers, down, false, ""));
+        else NativeMethods.InputKey(context, key, down ? (byte)1 : (byte)0, modifiers);
+    }
 
     /// <summary>Supplies a committed text event to the native input queue.</summary>
     /// <param name="text">Text to deliver to the focused editor in the current frame.</param>
@@ -45,7 +50,8 @@ public sealed partial class CuiWindow
     {
         CheckFrame();
         Utf8.Validate(text, nameof(text));
-        NativeMethods.InputText(context, text);
+        if (listenForCanvasInput) RouteCanvasInput(new(CuiCanvasInputKind.Text, 0, 0, false, false, text));
+        else NativeMethods.InputText(context, text);
     }
 
     /// <summary>Injects wheel movement for integration tests.</summary>

@@ -72,11 +72,9 @@ begin
     V.Target.Graphical,
     'finite value'
   );
-  Reject(
-    N.NumberField<string>('number', 3.0, 0.0, 99.0, Edit),
-    V.Target.Terminal,
-    'Graphical profile'
-  );
+  const Number: E.Element<string> := N.NumberField<string>('number', 3.0, 0.0, 99.0, Edit);
+  discard V.Prepare<string>(Number, V.Target.Terminal);
+  Reject(Number, V.Target.Portable, 'terminal or graphical profile');
 end procedure;
 
 // Exercises native choice and number editing on the original Inputs page.

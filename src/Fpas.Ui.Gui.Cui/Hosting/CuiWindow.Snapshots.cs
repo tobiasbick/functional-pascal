@@ -23,6 +23,7 @@ public sealed partial class CuiWindow
         NativeMethods.FinishFrameForDestroy(app);
         SnapshotShortcutKeys();
         ReleaseFrameCallbacks();
+        DiscardCanvasInput();
         DiscardMoneyFields();
         editorRequests.Clear();
         layouts.Clear();

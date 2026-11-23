@@ -36,6 +36,10 @@ public type Surface = protocol
   function Height(): float;
   // Returns whether the canvas was built inside a disabled scope.
   function Disabled(): bool;
+  // Returns whether this canvas owns native focus.
+  function Focused(): bool;
+  // Returns whether the canvas should draw its keyboard focus indicator.
+  function FocusVisible(): bool;
   // Returns CUI's user font multiplier; apply it to explicit text sizes when desired.
   function FontScale(): float;
   // Returns CUI's monotonic frame time in seconds.

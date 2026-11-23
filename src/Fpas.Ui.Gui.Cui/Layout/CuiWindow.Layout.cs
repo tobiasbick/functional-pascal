@@ -7,6 +7,12 @@ public sealed partial class CuiWindow
 {
     private void ResolveHostLayout()
     {
+        try { FinishCanvasInput(); }
+        catch
+        {
+            DiscardFrame();
+            throw;
+        }
         if (scrollRequests.Count == 0) return;
         NativeMethods.ResolveLayout(context);
         foreach (var (id, request) in scrollRequests)

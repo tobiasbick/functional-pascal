@@ -16,6 +16,9 @@ C function or adding another spelling for an existing operation.
 | Native calendar/file-browser caption table | `Localization.Set`; native storage owns a copy |
 | OKLCH conversion, OKLab mixing and alpha multiplication | `Fpas.Ui.Gui.Colors` |
 | Drawing primitives, text measurement, image caching, clipping and native frame clock | `Canvases.Canvas` with callback-scoped `Painting.Surface` |
+| Focusable canvas, ordered key/text/window-focus dispatch, hover cursor and visible focus | `Canvases.Options.Focusable`, `HoverCursor`, `OnInput`, `Mvu.Focus` and `Painting.Surface.FocusVisible()` |
+| Pane-scoped Tab and Shift+Tab | `Layout.Flow.Scope` on graphical rows, columns and layers |
+| Rectangular texture updates | `MediaImages.Update` returns an immutable RGBA source with a dirty rectangle |
 | Canvas click, hover/press changes and optional two-axis wheel ownership | `Canvas` callbacks; unchanged pointer states emit no message |
 | Application shortcuts and editor navigation/find/selection | `BindingsFor`, `EditorCommands` |
 | Native open/save/folder dialogs, clipboard, file drops and URL activation | GUI commands and existing file/link widgets |

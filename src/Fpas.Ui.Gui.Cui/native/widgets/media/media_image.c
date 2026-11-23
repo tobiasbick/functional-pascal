@@ -18,7 +18,13 @@ static fpas_media_image *fpas_media_update(cui_ctx *ui, fpas_media_image *image,
     const bool same = source->path ? image->path && strcmp(image->path, source->path) == 0
         : !image->path && image->version == source->version
             && image->width == source->width && image->height == source->height;
-    if (!same) {
+    if (!same && ui->renderer.texture_update && image->texture && !image->path && !source->path && source->previous &&
+        image->version == source->previous && image->width == source->width && image->height == source->height) {
+        size_t offset = ((size_t)source->y * source->width + source->x) * 4;
+        cui_image_update(ui, image->texture, source->x, source->y, source->region_width, source->region_height,
+            source->pixels + offset, source->width * 4);
+        image->version = source->version;
+    } else if (!same) {
         fpas_media_release(ui, image);
         *image = (fpas_media_image){ .version = source->version };
         if (source->path) {

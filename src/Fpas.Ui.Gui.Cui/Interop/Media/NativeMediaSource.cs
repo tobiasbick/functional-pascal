@@ -9,5 +9,6 @@ internal unsafe struct NativeMediaSource
     internal byte* Path;
     internal byte* Pixels;
     internal int Width, Height;
-    internal long Version;
+    internal long Version, Previous;
+    internal int X, Y, RegionWidth, RegionHeight;
 }

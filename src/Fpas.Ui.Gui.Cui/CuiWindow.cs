@@ -16,7 +16,7 @@ public sealed partial class CuiWindow : IDisposable
         Column, Row, Scroll, Sheet, Group, ButtonGroup, Popover, HoverCard, Dialog, Card, ActionFooter,
         Accordion, ExpandableCard, SwipeItem, Tree, VirtualList, VirtualRow, Reorder, ReorderItem,
         Table, TableRow, DataGrid, TreeTable, Spotlight, Kanban, KanbanColumn, KanbanCard, SkeletonGroup,
-        Carousel, CarouselSlide, CardStack, CardStackItem, Reasoning, Toolbar, NodeEditor, Veil
+        Carousel, CarouselSlide, CardStack, CardStackItem, Reasoning, Toolbar, NodeEditor, Veil, FocusScope
     }
     private readonly record struct LayoutScope(Layout Kind, int Node = -1, object? Data = null);
 
@@ -130,7 +130,7 @@ public sealed partial class CuiWindow : IDisposable
         int resizeVersion = resizeRenderVersion;
         int result;
         ExceptionDispatchInfo? callbackFailure;
-        try { result = NativeMethods.Pump(app, DeferClose ? 1 : 0); }
+        try { result = PumpCanvasInput(); }
         finally { callbackFailure = ReleaseFrameCallbacks(); }
         if (presented) RetireMissingControls(retiredControls!, retiredModals!, resizeVersion != resizeRenderVersion);
         CloseRequested |= result == 2;
@@ -337,6 +337,7 @@ public sealed partial class CuiWindow : IDisposable
         editorRequests.Clear();
         NativeMethods.FinishFrameForDestroy(app);
         moneyFields.Clear(); moneyDrawn.Clear();
+        DiscardCanvasInput();
         ReleaseOwnedStrings();
         NativeMethods.Destroy(app);
         ReleaseFrameCallbacks();
@@ -362,6 +363,7 @@ public sealed partial class CuiWindow : IDisposable
             throw new InvalidOperationException("CUI must be accessed and disposed on its creating UI thread.");
         if (formattingAxisLabel)
             throw new InvalidOperationException("Axis label callbacks cannot reenter the native window.");
+        if (deliveringCanvasInput) throw new InvalidOperationException("Canvas input callbacks cannot reenter the window.");
         if (paintingCanvas)
             throw new InvalidOperationException("Canvas paint callbacks cannot reenter the native window.");
     }

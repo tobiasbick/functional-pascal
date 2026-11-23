@@ -40,6 +40,18 @@ public type Adapter = record implements D.Surface
     return self.Native.Disabled;
   end function;
 
+  // Returns whether this canvas owns native focus.
+  public function Focused(): bool;
+  begin
+    return self.Native.Focused;
+  end function;
+
+  // Returns whether CUI requests a keyboard focus indicator.
+  public function FocusVisible(): bool;
+  begin
+    return self.Native.FocusVisible;
+  end function;
+
   // Returns the native user font multiplier.
   public function FontScale(): float;
   begin

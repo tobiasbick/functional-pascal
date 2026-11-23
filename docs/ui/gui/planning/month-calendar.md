@@ -54,6 +54,11 @@ Adopt the proposed month and selected date in your update. Use
 to open the selected day. A nonnegative `Activated` indexes an appointment
 in the array supplied to the widget.
 
+With the grid focused, Page Up and Page Down keep the day of the month when
+possible and select the last available day in shorter months. Space selects
+the keyboard-focused date and Enter activates it, even when the pointer rests
+over a different date. Clicking selects the date under the pointer.
+
 ## See also
 
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Planning/MonthCalendars.fpas)

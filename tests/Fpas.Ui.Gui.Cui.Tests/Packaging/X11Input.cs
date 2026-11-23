@@ -17,8 +17,7 @@ internal sealed partial class X11Input : IDisposable
             Assert.NotEqual(0, XTestQueryExtension(display, out _, out _, out _, out _));
             window = Find(XDefaultRootWindow(display), title);
             Assert.NotEqual((nuint)0, window);
-            XSetInputFocus(display, window, 1, 0);
-            XSync(display, false);
+            Focus();
         }
         catch { Dispose(); throw; }
     }
@@ -41,6 +40,12 @@ internal sealed partial class X11Input : IDisposable
         }
         finally { if (children != 0) XFree(children); }
         return 0;
+    }
+
+    internal void Focus()
+    {
+        XSetInputFocus(display, window, 1, 0);
+        XSync(display, false);
     }
 
     internal void Move(int x, int y)

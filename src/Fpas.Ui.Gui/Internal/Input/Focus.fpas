@@ -3,6 +3,7 @@
 unit Fpas.Ui.Gui.Internal.Input.Focus;
 
 uses
+  Fpas.Ui.Widgets.Canvas.Canvases as Canvases,
   Fpas.Ui.Widgets.Desktop.StatusBars as StatusBar, Fpas.Ui.Widgets.Desktop.DocumentTabs as Docs,
   Fpas.Ui.Widgets.Overlays.Veils as Veil, Fpas.Ui.Widgets.Developer.Terminals as TerminalWidget,
   Fpas.Ui.Gui.Internal.Input.AiFocus as AiFocus, Fpas.Ui.Widgets.Canvas.ResultCards as ResultCards,
@@ -25,6 +26,21 @@ uses
 public function First<TMsg>(Node: E.Element<TMsg>; Prepared: V.Prepared<TMsg>; Preferred: string? := null): string?;
 begin
   case Node of
+    when E.Element.Canvas(
+      const Id: string,
+      _,
+      _,
+      const Options: Canvases.Options,
+      _,
+      _,
+      _,
+      const Handler: Sys.Func<Canvases.Input, TMsg>?
+    ):
+      if Options.Enabled and (Options.Focusable or Handler <> null) and (Preferred = null
+        or Preferred = Id)
+      then
+        return Id;
+      end if;
     when E.Element.VoiceWave(
       _,
       _,

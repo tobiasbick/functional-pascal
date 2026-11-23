@@ -2,12 +2,19 @@
 #include "../fpas_cui.h"
 #include <stdio.h>
 
-typedef struct { int created, destroyed; } image_probe;
+typedef struct { int created, destroyed, updates; bool valid_update; const uint8_t *expected; } image_probe;
 
 static cui_texture upload(void *user, int width, int height, cui_texture_format format, const void *pixels) {
     image_probe *probe = user;
     if (format != CUI_TEXTURE_RGBA8 || width * height != 2 || !pixels) return 0;
     return (cui_texture)++probe->created;
+}
+
+static void update(void *user, cui_texture texture, int x, int y, int w, int h, const void *pixels, int stride) {
+    image_probe *probe = user;
+    ++probe->updates;
+    probe->valid_update = texture == 1 && x == 1 && y == 0 && w == 1 && h == 1 &&
+        stride == 8 && pixels == probe->expected;
 }
 
 static void release(void *user, cui_texture texture) {
@@ -17,7 +24,7 @@ static void release(void *user, cui_texture texture) {
 
 static cui_ctx *create_context(image_probe *probe) {
     cui_ctx *ui = cui_create(&(cui_ctx_desc){ .no_default_fonts = true,
-        .renderer = { .user = probe, .texture_create = upload, .texture_destroy = release } });
+        .renderer = { .user = probe, .texture_create = upload, .texture_update = update, .texture_destroy = release } });
     if (ui) cui_set_viewport(ui, 320, 240, 1);
     return ui;
 }
@@ -85,8 +92,21 @@ int main(void) {
     draw_image(ui, source);
     bool passed = probe.created == 1 && probe.destroyed == 0;
 
-    source.version++;
+    static const uint8_t patched[] = { 0, 0, 0, 255, 13, 42, 70, 255 };
+    probe.expected = patched + 4;
+    source.pixels = patched;
+    source.previous = source.version++;
+    source.x = 1;
+    source.region_width = source.region_height = 1;
     draw_image(ui, source);
+    draw_image(ui, source);
+    passed = passed && probe.created == 1 && probe.destroyed == 0 && probe.updates == 1 && probe.valid_update;
+
+    /* Revision 3 was never submitted to this slot. Upload the full revision 4. */
+    source.previous = 3;
+    source.version = 4;
+    draw_image(ui, source);
+    source.previous = 0;
     source.width = 1;
     source.height = 2;
     draw_image(ui, source);

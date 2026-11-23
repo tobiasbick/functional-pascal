@@ -82,6 +82,7 @@ public sealed class GuiHostTests
             CheckChecklistFocus(galleryCapture);
             CheckHoverLinkFocus(galleryCapture);
             CheckReaderMarker(galleryCapture);
+            GalleryReferenceTests.Match(galleryCapture);
             foreach (string page in new[] { "developer", "more" })
                 for (int offset = 0; offset < 3; offset++)
                     PngAssertions.HasRenderedContent($"{galleryCapture}-{page}-{offset}.png", 1100, 1700);

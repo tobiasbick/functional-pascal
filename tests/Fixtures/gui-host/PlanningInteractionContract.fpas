@@ -1,0 +1,340 @@
+// [Documentation](../../../docs/ui/gui/planning/README.md)
+
+unit PlanningInteractionContract;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Hosting.Session as Host,
+  Fpas.Ui.Widgets.Planning.MonthCalendars as Month, Fpas.Ui.Widgets.Planning.WeekCalendars as Week,
+  Fpas.Ui.Widgets.Planning.Gantts as Gantt, Fpas.Ui.Widgets.Collections.TreeTables as Tree,
+  Fpas.Ui.Widgets.Collections.DataGrids as Grid, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys,
+  System as Sys;
+
+type Page = enum: byte
+  Calendar;
+  Schedule;
+  Timeline;
+  Outline;
+  Cells;
+end enum;
+
+type Model = record
+  public Shown: Page;
+  public Calendar: Month.Value;
+  public Appointments: array of Week.Appointment;
+  public Tasks: array of Gantt.Task;
+  public Nodes: array of Tree.Node;
+  public BranchOpen: bool := false;
+  public Locked: bool := false;
+  public Cursor: int := -1;
+end record;
+
+type Msg = variant
+  Show(Value: Page);
+  Lock(Value: bool);
+  Focus(Id: string);
+  Reorder;
+  ExpandCell(Value: bool);
+  Picked(Value: Month.Event);
+  Scheduled(Value: Week.Event);
+  Moved(Value: Gantt.Event);
+  Toggled(Value: Tree.Change);
+end variant;
+
+procedure Check(Condition: bool; Reason: string);
+begin
+  if not Condition then
+    raise new Sys.InvalidOperationException(Reason);
+  end if;
+end procedure;
+
+// Exercises model-owned planning and tree values through native input and the FPAS owner loop.
+// ## Parameters
+// - `Renderer`: Requested native backend.
+public procedure Verify(Renderer: Cui.CuiRenderer);
+requires Renderer = Cui.CuiRenderer.Software or Renderer = Cui.CuiRenderer.OpenGl;
+  function Update(Current: Model; Message: Msg): Mvu.Transition<Model, Msg>;
+  begin
+    var Next: Model := Current;
+    case Message of
+      when Msg.Show(const Value: Page):
+        Next := Current with
+          Shown := Value;
+          Locked := false;
+        end with;
+      when Msg.Lock(const Value: bool):
+        Next := Current with
+          Locked := Value;
+        end with;
+      when Msg.Focus(const Id: string):
+        return new Mvu.Transition<Model, Msg>(Current, [Mvu.Focus<Msg>(Id)]);
+      when Msg.ExpandCell(const Value: bool):
+        Next := Current with
+          BranchOpen := Value;
+        end with;
+      when Msg.Reorder:
+        Next := Current with
+          Nodes := [Current.Nodes[1], Current.Nodes[0]];
+        end with;
+      when Msg.Picked(const Value: Month.Event):
+        MonthChanged := Value.MonthChanged;
+        DayActivated := Value.DayActivated;
+        Check(Value.DayClicked, 'Calendar navigation lost its selection flag.');
+        Next := Current with
+          Calendar := new Month.Value(Value.Month, [], Value.Selected);
+        end with;
+      when Msg.Scheduled(const Value: Week.Event):
+        WeekMessages := WeekMessages + 1;
+        Activated := Value.Activated;
+        Next := Current with
+          Appointments := Value.Events;
+        end with;
+      when Msg.Moved(const Value: Gantt.Event):
+        GanttMessages := GanttMessages + 1;
+        Activated := Value.Activated;
+        Next := Current with
+          Tasks := Value.Tasks;
+        end with;
+      when Msg.Toggled(const Value: Tree.Change):
+        Next := Current with
+          Nodes := Value.Nodes;
+          Cursor := Value.Cursor;
+        end with;
+    end case;
+
+    return new Mvu.Transition<Model, Msg>(Next, []);
+  end function;
+  function View(Current: Model; Size: L.Viewport): E.Element<Msg>;
+  begin
+    Last := Current;
+    return case Current.Shown of
+      when Page.Calendar: Month.MonthCalendar<Msg>(
+        'month', Current.Calendar, Msg.Picked,
+        new Month.Options(Today := Origin)
+      );
+      when Page.Schedule: Week.WeekCalendar<Msg>(
+        'week',
+        new Week.Value(Origin, Current.Appointments),
+        Msg.Scheduled,
+        new Week.Options(
+          StartHour := 8.0F,
+          EndHour := 18.0F,
+          HourHeight := 32.0F,
+          ReadOnly := Current.Locked
+        )
+      );
+      when Page.Timeline: Gantt.Gantt<Msg>(
+        'timeline',
+        new Gantt.Value(Origin, 12, Current.Tasks),
+        Msg.Moved,
+        new Gantt.Options(DayWidth := 30.0F, RowHeight := 32.0F, ReadOnly := Current.Locked)
+      );
+      when Page.Outline: Tree.TreeTable<Msg>(
+        'tree', [new Grid.Column('Name'), new Grid.Column('Kind')], Current.Nodes, Current.Cursor,
+        null, Msg.Toggled, new Tree.Options(Enabled := not Current.Locked)
+      );
+      else Tables.Table<Msg>(
+        'cells', [new Tables.Column('Name')], [
+          new Tables.Row<Msg>(
+            'row', [
+              Tables.Cell<Msg>.Content(
+                [
+                  Tree.TreeCell<Msg>('cell', 'Folder', 0, Current.BranchOpen, Msg.ExpandCell)
+                ]
+              )
+            ]
+          )
+        ]
+      );
+    end case;
+  end function;
+  procedure Inject();
+  begin
+    if Pending <> Keys.Key.None then
+      Window.SetKey(cast<int>(Pending), true);
+      Window.SetKey(cast<int>(Pending), false);
+      Pending := Keys.Key.None;
+    end if;
+
+    if Move then
+      Window.MovePointer(X, Y);
+      Move := false;
+    end if;
+
+    if Button >= 0 then
+      Window.SetLeftButton(Button = 1);
+      Button := -1;
+    end if;
+  end procedure;
+  procedure Steps(Session: Gui.Session<Msg>);
+  begin
+    for Frame: int := 1 to 3 do
+      Check(Session.Step(), 'The interaction window closed.');
+    end for;
+  end procedure;
+  procedure Post(Session: Gui.Session<Msg>; Message: Msg);
+  begin
+    discard Session.Post(Message);
+    Steps(Session);
+  end procedure;
+  procedure Key(Session: Gui.Session<Msg>; Value: Keys.Key);
+  begin
+    Pending := Value;
+    Steps(Session);
+  end procedure;
+  procedure Point(Session: Gui.Session<Msg>; Id: string);
+  begin
+    for Item: Gui.Control in Session.Snapshot().Controls do
+      if Item.Id = Id then
+        Check(Item.Bounds.Width > 0 and Item.Bounds.Height > 0, 'Empty bounds: ' + Id);
+        X := Item.Bounds.X + Item.Bounds.Width / 2.0F;
+        Y := Item.Bounds.Y + Item.Bounds.Height / 2.0F;
+        Move := true;
+        Steps(Session);
+        return;
+      end if;
+    end for;
+
+    raise new Sys.InvalidOperationException('Missing control: ' + Id);
+  end procedure;
+begin
+  const Origin: Sys.DateOnly := new Sys.DateOnly(2024, 1, 29);
+  const January: Sys.DateOnly := new Sys.DateOnly(2024, 1, 31);
+  var Last: Model := new Model(
+    Page.Calendar, new Month.Value(January, [], January),
+    [
+      new Week.Appointment('plan', 0, 9.0F, 10.0F),
+      new Week.Appointment('review', 1, 9.0F, 11.0F, 'pair')
+    ],
+    [new Gantt.Task('plan', 1, 4), new Gantt.Task('review', 3, 6, Owner := 'pair')],
+    [
+      new Tree.Node('folder', Cells := ['branch'], HasChildren := true),
+      new Tree.Node('other', Cells := ['leaf'])
+    ]
+  );
+  var Pending: Keys.Key := Keys.Key.None;
+  var X: float := 0.0F;
+  var Y: float := 0.0F;
+  var Button: int := -1;
+  var Move: bool := false;
+  var MonthChanged: bool := false;
+  var DayActivated: bool := false;
+  var WeekMessages: int := 0;
+  var GanttMessages: int := 0;
+  var Activated: int := -1;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'Planning interactions',
+    940,
+    620,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session<Msg> := Host.Start<Model, Msg>(
+    Last,
+    Update,
+    View,
+    Window,
+    32,
+    Inject
+  );
+  Steps(Session);
+  Post(Session, Msg.Focus('month/grid'));
+  Key(Session, Keys.Key.PageDown);
+  Check(
+    MonthChanged and Last.Calendar.Month = new Sys.DateOnly(2024, 2, 1)
+    and Last.Calendar.Selected = new Sys.DateOnly(2024, 2, 29), 'PageDown must select leap day.'
+  );
+  Point(Session, 'month/grid');
+  Key(Session, Keys.Key.Space);
+  Check(
+    not DayActivated and not MonthChanged and Last.Calendar.Selected = new Sys.DateOnly(
+      2024,
+      2,
+      29
+    ),
+    'Space picked the day under the pointer.'
+  );
+  Key(Session, Keys.Key.Enter);
+  Check(
+    DayActivated and not MonthChanged and Last.Calendar.Selected = new Sys.DateOnly(2024, 2, 29),
+    'Enter must activate the selected day under keyboard navigation.'
+  );
+  Button := 1;
+  Steps(Session);
+  Button := 0;
+  Steps(Session);
+  Check(
+    Last.Calendar.Selected <> new Sys.DateOnly(2024, 2, 29),
+    'A real pointer click must select its own day.'
+  );
+
+  Post(Session, Msg.Show(Page.Schedule));
+  Point(Session, 'week/1');
+  Button := 1;
+  Steps(Session);
+  Y := Y + 32.0F;
+  Move := true;
+  Steps(Session);
+  Check(
+    WeekMessages > 0 and Last.Appointments[1].Start = 10.0F and Last.Appointments[1].Finish = 12.0F
+    and Last.Appointments[1].Detail = 'pair' and Last.Appointments[0].Start = 9.0F,
+    'Week drag proposed the wrong appointment.'
+  );
+  Post(Session, Msg.Lock(true));
+  const WeekCount: int := WeekMessages;
+  Y := Y + 32.0F;
+  Move := true;
+  Steps(Session);
+  Button := 0;
+  Steps(Session);
+  Check(
+    WeekMessages = WeekCount and Last.Appointments[1].Start = 10.0F,
+    'Interrupted week drag resumed.'
+  );
+
+  Post(Session, Msg.Show(Page.Timeline));
+  Post(Session, Msg.Focus('timeline/1'));
+  Key(Session, Keys.Key.Right);
+  Check(
+    GanttMessages > 0 and Last.Tasks[1].Start = 4 and Last.Tasks[1].Finish = 7
+    and Last.Tasks[1].Owner = 'pair' and Last.Tasks[0].Start = 1,
+    'Gantt edit lost task identity or duration.'
+  );
+  Post(Session, Msg.Lock(true));
+  const GanttCount: int := GanttMessages;
+  Key(Session, Keys.Key.Right);
+  Check(GanttMessages = GanttCount, 'Read-only Gantt proposed an edit.');
+  Key(Session, Keys.Key.Enter);
+  Check(Activated = 1 and GanttMessages = GanttCount + 1, 'Read-only Gantt lost activation.');
+
+  Post(Session, Msg.Show(Page.Outline));
+  Post(Session, Msg.Reorder);
+  Post(Session, Msg.Lock(true));
+  Point(Session, 'tree/node/1/toggle');
+  Button := 1;
+  Steps(Session);
+  Button := 0;
+  Steps(Session);
+  Check(not Last.Nodes[1].Open, 'The disabled branch changed expansion.');
+  Post(Session, Msg.Lock(false));
+  Point(Session, 'tree/node/1/toggle');
+  Button := 1;
+  Steps(Session);
+  Button := 0;
+  Steps(Session);
+  Check(
+    Last.Nodes[1].Label = 'folder' and Last.Nodes[1].Open and not Last.Nodes[0].Open,
+    'The chevron must toggle the branch at its new model index.'
+  );
+  Post(Session, Msg.Show(Page.Cells));
+  Point(Session, 'cell');
+  Button := 1;
+  Steps(Session);
+  Button := 0;
+  Steps(Session);
+  Check(Last.BranchOpen, 'The tree cell lost its expansion callback.');
+end procedure;
+
+end unit;

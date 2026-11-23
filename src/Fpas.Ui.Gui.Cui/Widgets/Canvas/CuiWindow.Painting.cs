@@ -45,11 +45,11 @@ public sealed partial class CuiWindow
         (nint)(delegate* unmanaged[Cdecl]<nint, nint, CuiRectangle, uint, int, void>)&PaintCanvas;
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
-    private static void PaintCanvas(nint user, nint context, CuiRectangle area, uint images, int disabled)
+    private static void PaintCanvas(nint user, nint context, CuiRectangle area, uint images, int state)
     {
         var callback = (CanvasPaint)GCHandle.FromIntPtr(user).Target!;
         if (callback.Failure is not null) return;
-        var painter = new CuiCanvasPainter(context, area, images, disabled != 0);
+        var painter = new CuiCanvasPainter(context, area, images, state);
         try
         {
             callback.Owner.paintingCanvas = true;

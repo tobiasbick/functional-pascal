@@ -69,11 +69,9 @@ begin
     V.Target.Terminal,
     'Graphical profile'
   );
-  Reject(
-    SearchFields.SearchField<string>('query', '', Identity),
-    V.Target.Terminal,
-    'Graphical profile'
-  );
+  const Search: E.Element<string> := SearchFields.SearchField<string>('query', '', Identity);
+  discard V.Prepare<string>(Search, V.Target.Terminal);
+  Reject(Search, V.Target.Portable, 'terminal or graphical profile');
   discard V.Prepare<string>(TextAreas.TextArea<string>('about', '', Identity), V.Target.Portable);
   Reject(
     TextAreas.TextArea<string>('about', '', Identity, new TextAreas.Options(Prefix := 'About:')),

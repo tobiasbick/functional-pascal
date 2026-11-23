@@ -8,6 +8,7 @@ uses
   EditorCommandsContract as EditorCommandsContract,
   DesktopCommandsContract as DesktopCommandsContract,
   GalleryValidationBoundaryContract as ValidationBoundaryContract,
+  PlanningInteractionContract as PlanningInteractions,
   GalleryModalCompositionContract as ModalCompositionContract,
   GalleryTypewriterObservationContract as TypewriterObservationContract,
   GalleryModalPreflightContract as ModalPreflightContract,
@@ -234,6 +235,7 @@ begin
   MoneyDecimalContract.Verify(Renderer);
   DesktopCommandsContract.Verify(Renderer);
   ValidationBoundaryContract.Verify();
+  PlanningInteractions.Verify(Renderer);
   ModelContract.Verify();
   ModelContract.VerifyDisplay(Renderer);
   ModalCompositionContract.Verify(Renderer);

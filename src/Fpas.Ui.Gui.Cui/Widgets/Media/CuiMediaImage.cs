@@ -27,8 +27,20 @@ public sealed partial class CuiWindow
             (long)image.Width * image.Height != image.Pixels.LongLength / 4 || image.Pixels.LongLength % 4 != 0)
             throw new ArgumentException("An RGBA image needs positive dimensions and four bytes per pixel.", nameof(image));
 
-        long version = imageRevisions.GetValue(image.Pixels,
-            static _ => new(Interlocked.Increment(ref nextImageRevision))).Value;
-        return new() { Pixels = pixels, Width = image.Width, Height = image.Height, Version = version };
+        var source = new NativeMediaSource { Pixels = pixels, Width = image.Width, Height = image.Height, Version = Revision(image.Pixels) };
+        if (image.Previous is { } previous)
+        {
+            if (previous.Length != image.Pixels.Length || image.X < 0 || image.Y < 0 ||
+                image.RegionWidth <= 0 || image.RegionHeight <= 0 ||
+                image.X > image.Width - image.RegionWidth || image.Y > image.Height - image.RegionHeight)
+                throw new ArgumentException("Invalid RGBA update rectangle or previous snapshot.", nameof(image));
+            source.Previous = Revision(previous);
+            (source.X, source.Y, source.RegionWidth, source.RegionHeight) = (image.X, image.Y, image.RegionWidth, image.RegionHeight);
+        }
+        return source;
     }
+
+    private static long Revision(byte[] pixels) => imageRevisions.GetValue(pixels,
+            static _ => new(Interlocked.Increment(ref nextImageRevision))).Value;
+
 }

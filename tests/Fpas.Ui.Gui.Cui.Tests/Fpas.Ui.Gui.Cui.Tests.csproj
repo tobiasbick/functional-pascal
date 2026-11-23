@@ -13,6 +13,7 @@
     <ProjectReference Include="../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" ReferenceOutputAssembly="false" />
     <Using Include="Xunit" />
     <None Include="../Fixtures/gui/*" Link="Fixtures/gui/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Fixtures/gui-gallery-reference/*.png" Link="Fixtures/gallery-reference/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../third-party/cui/upstream/cui.c" Link="Fixtures/CuiFonts.c" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../src/Fpas.Ui.Gui/**/*.fpas;../../src/Fpas.Ui.Gui/*.fpasproj"
           Exclude="../../src/**/bin/**/*;../../src/**/obj/**/*"

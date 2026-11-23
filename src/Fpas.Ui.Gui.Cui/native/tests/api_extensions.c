@@ -94,7 +94,7 @@ static bool wheel(bool adapter) {
         if (adapter) {
             float x, y, w, h;
             fpas_cui_drawing_canvas(ui, "canvas", 1, 0, 2, 140, NULL, 0, 1,
-                &x, &y, &w, &h, 1, &dx, &dy, NULL, NULL, 0);
+                &x, &y, &w, &h, 1, &dx, &dy, NULL, NULL, 0, 0, 0, 0, -1);
         } else {
             cui_vec2 delta = {0};
             cui_wheel_take(ui, wheel_key, &delta);

@@ -25,9 +25,9 @@ static bool check_canvas(bool covered, bool bridge) {
         cui_box(ui, .dir = CUI_STACK, .pad = 16) {
             float x, y, w, h;
             float dx, dy;
-            if (fpas_cui_drawing_canvas(ui, "canvas", 2, 80, 2, 60, &shape, 1, 1, &x, &y, &w, &h, 0, &dx, &dy, NULL, NULL, 0)) {
+            if (fpas_cui_drawing_canvas(ui, "canvas", 2, 80, 2, 60, &shape, 1, 1, &x, &y, &w, &h, 0, &dx, &dy, NULL, NULL, 0, 0, 0, 0, CUI_CURSOR_HAND) & 1) {
                 ++activations;
-                coordinates = close_to(x, 15) && close_to(y, 25) && close_to(w, 80) && close_to(h, 60);
+                coordinates = close_to(x, 15) && close_to(y, 25) && close_to(w, 80) && close_to(h, 60) && cui_get_cursor(ui) == CUI_CURSOR_HAND;
             }
             if (covered) {
                 if (bridge) {

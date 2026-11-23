@@ -36,19 +36,23 @@ public sealed class CuiCanvasPainter
     private readonly nint context;
     private readonly CuiRectangle area;
     private readonly uint images;
-    private readonly bool disabled;
+    private readonly int state;
     private bool active = true;
     private int clips, imageIndex;
 
-    internal CuiCanvasPainter(nint context, CuiRectangle area, uint images, bool disabled)
-        => (this.context, this.area, this.images, this.disabled) = (context, area, images, disabled);
+    internal CuiCanvasPainter(nint context, CuiRectangle area, uint images, int state)
+        => (this.context, this.area, this.images, this.state) = (context, area, images, state);
 
     /// <summary>Gets the final laid-out logical width.</summary>
     public float Width { get { Check(); return area.Width; } }
     /// <summary>Gets the final laid-out logical height.</summary>
     public float Height { get { Check(); return area.Height; } }
     /// <summary>Gets the disabled scope captured by CUI when constructing the canvas.</summary>
-    public bool Disabled { get { Check(); return disabled; } }
+    public bool Disabled { get { Check(); return (state & 1) != 0; } }
+    /// <summary>Gets whether this canvas has native focus.</summary>
+    public bool Focused { get { Check(); return (state & 2) != 0; } }
+    /// <summary>Gets whether CUI requests a visible keyboard-focus indicator.</summary>
+    public bool FocusVisible { get { Check(); return (state & 4) != 0; } }
     /// <summary>Gets CUI's user text multiplier. Explicit drawing sizes are logical points; apply this multiplier when desired.</summary>
     public float FontScale { get { Check(); return NativeMethods.CanvasFontScale(context); } }
     /// <summary>Gets CUI's monotonic frame time in seconds.</summary>

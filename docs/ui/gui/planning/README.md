@@ -25,3 +25,5 @@ A Gantt chart takes day offsets relative to its origin date.
 - [State.fpas](../../../../examples/ui/gui/gallery/Pages/Planning/State.fpas)
 - [CuiWindow.ScheduleParts.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Planning/CuiWindow.ScheduleParts.cs)
 - [planning.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/planning.c)
+
+The [FPAS interaction contract](../../../../tests/Fixtures/gui-host/PlanningInteractionContract.fpas) exercises leap-day navigation, interrupted appointment drags, read-only Gantt activation, and tree expansion after reordering.

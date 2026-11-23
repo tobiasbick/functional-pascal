@@ -10,7 +10,7 @@ uses
 public type Reply = record
   // HTTP status line after the protocol version.
   public Status: string;
-  // JSON returned to the client.
+  // UTF-8 text returned when the response has no binary body.
   public Json: string;
   // Extra headers including their trailing CRLF, or an empty string.
   public Headers: string := '';
@@ -18,6 +18,10 @@ public type Reply = record
   public Request: string := '';
   // Monotonic timestamp when the request arrived.
   public Arrived: long := 0L;
+  // Media type sent to the client.
+  public ContentType: string := 'application/json; charset=utf-8';
+  // Raw bytes used by audio and artwork responses.
+  public Body: (array of byte)? := null;
 end record;
 
 // Serves Replies in order on Listener until the script is finished or Stop is canceled.
@@ -47,9 +51,9 @@ begin
     end while;
 
     X.Assert.True(Agent);
-    const Body: array of byte := Text.Encoding.UTF8.GetBytes(Expected.Json);
+    const Body: array of byte := Expected.Body ?? Text.Encoding.UTF8.GetBytes(Expected.Json);
     const Head: array of byte := Text.Encoding.ASCII.GetBytes(
-      'HTTP/1.1 ' + Expected.Status + CRLF + 'Content-Type: application/json; charset=utf-8' +
+      'HTTP/1.1 ' + Expected.Status + CRLF + 'Content-Type: ' + Expected.ContentType +
       CRLF +
       'Content-Length: ' + Body.Length.ToString() + CRLF + 'Connection: close' + CRLF +
       Expected.Headers + CRLF

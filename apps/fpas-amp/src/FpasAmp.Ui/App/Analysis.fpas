@@ -22,8 +22,12 @@ begin
   return Mvu.StartBackground<M.Msg>(
     'player-waveform',
     async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-      const Measure: Tasks.Task<array of float> := if Service = null then
-        Audio.Analysis.LoudnessAsync(Track.Path, Waves.Buckets, Cancellation)
+      const Measure: Tasks.Task<array of float> := if Service = null or Current.Podcast then
+        Audio.Analysis.LoudnessAsync(
+          PlayerModel.AudioPath(Current, Track),
+          Waves.Buckets,
+          Cancellation
+        )
       else
         Service.WaveformAsync(Track, Cancellation)
       end if;

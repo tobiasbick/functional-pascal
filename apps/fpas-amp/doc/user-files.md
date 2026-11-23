@@ -9,7 +9,7 @@ honors `XDG_CONFIG_HOME`.
 
 | File | Contents |
 | --- | --- |
-| `settings.json` | Music sources, appearance, accent, mixer settings, AcoustID keys and radio favorites. |
+| `settings.json` | Music sources, appearance, accent, mixer settings, AcoustID keys, radio favorites and podcast subscriptions. |
 | `state.json` | Window size and position, maximized state, selected page, last Settings tab and local playback bookmark. |
 
 Each `musicSources` entry stores an ID, name, absolute path, enabled

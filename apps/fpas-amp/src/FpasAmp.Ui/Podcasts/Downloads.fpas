@@ -1,0 +1,99 @@
+// [Documentation](../../../doc/podcasts.md#implementation)
+
+unit FpasAmp.Ui.Podcasts.Downloads;
+
+uses
+  FpasAmp.Ui.Podcasts.Network as Network, System as Sys,
+  System.IO as IO, System.Net.Http as H, System.Net.Http.Headers as Headers, System.Text as Text,
+  System.Security.Cryptography as Crypto, System.Threading as T, System.Threading.Tasks as Tasks;
+
+const MaxAudio: long := 536870912L;
+
+// Creates a private temporary directory when the first episode needs a local file.
+public function Workspace(): IO.DirectoryInfo;
+begin
+  return IO.Directory.CreateTempSubdirectory('fpas-amp-podcasts-');
+end function;
+
+// Downloads one audio enclosure to the session Workspace for the existing file decoder.
+// Url is the media address, Codec an optional decoder hint, and Stop cancels the transfer.
+// Returns the complete file's path. Partial downloads are never opened by the decoder.
+public async function Prepare(Cache: IO.DirectoryInfo; Url: string; Codec: string; Stop: T.CancellationToken): Tasks.Task<string>;
+requires Url <> '';
+begin
+  const Key: string := Sys.Convert.ToHexString(
+    Crypto.SHA256.HashData(Text.Encoding.UTF8.GetBytes(Url))
+  );
+  const Hint: string := Network.Extension(Url, 'audio/' + Codec);
+  if Hint <> '' then
+    const Cached: string := IO.Path.Combine(Cache.FullName, Key + Hint);
+    if IO.File.Exists(Cached) then
+      return Cached;
+    end if;
+  end if;
+
+  using const Deadline: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+    Stop
+  );
+  Deadline.CancelAfter(Sys.TimeSpan.FromMinutes(5.0));
+  using const Reply: H.HttpResponseMessage := await Network.Client.GetAsync(
+    Url,
+    H.HttpCompletionOption.ResponseHeadersRead,
+    Deadline.Token
+  ).ConfigureAwait(false);
+  discard Reply.EnsureSuccessStatusCode();
+  if (Reply.Content.Headers.ContentLength ?? 0L) > MaxAudio then
+    raise new IO.InvalidDataException('The episode exceeds the 512 MiB download limit.');
+  end if;
+  const Header: Headers.MediaTypeHeaderValue? := Reply.Content.Headers.ContentType;
+  const ContentType: string := if Header <> null then
+    Header.MediaType ?? ''
+  else
+    ''
+  end if;
+  const Extension: string := Network.Extension(
+    Network.ResponseAddress(Reply, Url).AbsoluteUri,
+    ContentType
+  );
+  const Suffix: string := if Extension <> '' then
+    Extension
+  else
+    Hint
+  end if;
+  if Suffix = '' then
+    raise new IO.InvalidDataException('The episode uses an unsupported audio format.');
+  end if;
+  const Path: string := IO.Path.Combine(Cache.FullName, Key + Suffix);
+  const Partial: string := Path + '.' + Sys.Guid.NewGuid().ToString('N') + '.part';
+  try
+    begin
+      using const Input: IO.Stream := await Reply.Content.ReadAsStreamAsync(
+        Deadline.Token
+      ).ConfigureAwait(false);
+      using const Output: IO.FileStream := new IO.FileStream(
+        Partial,
+        IO.FileMode.CreateNew,
+        IO.FileAccess.Write,
+        IO.FileShare.Delete,
+        65536,
+        true
+      );
+      await Network.Copy(Input, Output, MaxAudio, Deadline.Token).ConfigureAwait(false);
+      if Output.Length = 0L then
+        raise new IO.InvalidDataException('The episode has no audio data.');
+      end if;
+    end;
+
+    Deadline.Token.ThrowIfCancellationRequested();
+    try
+      IO.File.Move(Partial, Path);
+    catch Exists: IO.IOException when IO.File.Exists(Path) do
+    end try;
+
+    return Path;
+  finally
+    IO.File.Delete(Partial);
+  end try;
+end function;
+
+end unit;

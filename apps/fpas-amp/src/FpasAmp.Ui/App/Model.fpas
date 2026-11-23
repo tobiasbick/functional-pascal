@@ -9,6 +9,7 @@ uses
   FpasAmp.Ui.Settings.Model as SettingsView,
   FpasAmp.Ui.Player.Model as Player,
   FpasAmp.Ui.TagEditor.Model as Tags, FpasAmp.Ui.Radio.Model as Radio,
+  FpasAmp.Ui.Podcasts.Model as Podcasts,
   Fpas.Ui.Widgets.Theming.Themes as Themes,
   Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
 
@@ -29,6 +30,8 @@ public type State = record
   public TagEditor: Tags.State? := null;
   // Radio directory search and manual station editor.
   public Radio: Radio.State := new Radio.State();
+  // Search results and the active podcast feed.
+  public Podcasts: Podcasts.State := new Podcasts.State();
 end record;
 
 // Typed proposals routed by the app controller.
@@ -47,6 +50,8 @@ public type Msg = variant
   Player(Message: Player.Msg);
   // Radio search, favorites and editor actions.
   Radio(Message: Radio.Msg);
+  // Podcast browsing, subscriptions and feed replies.
+  Podcasts(Message: Podcasts.Msg);
   // Save the latest mixer after a burst of fader movement.
   SaveMixer;
   // Final paused transport captured by the native close gesture.

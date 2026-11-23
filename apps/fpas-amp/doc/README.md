@@ -7,6 +7,7 @@ For build, launch and FFmpeg requirements, see the [application README](../READM
 - [Music library and playlists](browsing.md)
 - [Playback](playback.md)
 - [Internet radio](radio.md)
+- [Podcasts](podcasts.md)
 - [Track details and tag editing](track-metadata.md)
 - [Settings and music sources](settings.md)
 - [User files and recovery](user-files.md)

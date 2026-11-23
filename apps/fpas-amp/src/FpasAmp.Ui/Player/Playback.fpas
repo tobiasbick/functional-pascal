@@ -6,7 +6,7 @@ unit FpasAmp.Ui.Player.Playback;
 uses
   FpasAmp.Ui.Player.Model as M, FpasAmp.Library.Metadata.Model as Tracks, Fpas.Media.Audio as Audio, Fpas.Ui.Mvu.Application as A,
   System as Sys, System.Threading as T, System.Threading.Channels as Channels,
-  System.Threading.Tasks as Tasks;
+  System.Threading.Tasks as Tasks, System.IO as IO, FpasAmp.Ui.Podcasts.Downloads as Downloads;
 
 // Mailbox shared by the owner-thread controller and its lifetime subscriptions.
 public type Connection = record
@@ -14,6 +14,8 @@ public type Connection = record
   public Device: Audio.ISession;
   // FIFO carrying the commands returned by the player reducer.
   public Requests: Channels.Channel<M.Request> := Channels.Channel.CreateUnbounded<M.Request>();
+  // Private episode files for this shell, created on the first podcast play action.
+  public Cache: Sys.Lazy<IO.DirectoryInfo> := new Sys.Lazy<IO.DirectoryInfo>(Downloads.Workspace);
 end record;
 
 // Silences `Port` immediately and freezes `Current` at the last matching rendered frame.
@@ -27,7 +29,7 @@ begin
     Playing := false;
     Levels := [0.0F, 0.0F];
   end with;
-  if Final is Audio.PlaybackEvent and Track <> null and Final.Path = Track.Path
+  if Final is Audio.PlaybackEvent and Track <> null and Final.Path = M.AudioPath(Current, Track)
     and Final.RequestId = Current.Revision
   then
     return Paused with
@@ -39,11 +41,25 @@ begin
   return Paused;
 end function;
 
+// Removes Port's temporary episode files after the audio device has been closed.
+public procedure Clean(Port: Connection);
+begin
+  if Port.Cache.IsValueCreated then
+    try
+      Port.Cache.Value.Delete(true);
+    catch Error: IO.IOException do
+    catch Error: Sys.UnauthorizedAccessException do
+    end try;
+  end if;
+end procedure;
+
 procedure Execute(Device: Audio.ISession; Item: M.Request);
 begin
   case Item of
     when M.Request.Unload:
       Device.Unload();
+    when M.Request.Download(_, _, _):
+      // Download commands are owned by the app's cancellable effect runtime.
     when M.Request.Resume(const Path: string, const Milliseconds: double, const Revision: long):
       Device.Open(Path, Revision - 1L);
       Device.Seek(Sys.TimeSpan.FromMilliseconds(Milliseconds), Revision);

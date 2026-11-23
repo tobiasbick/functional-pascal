@@ -1,0 +1,115 @@
+// [Documentation](../../../doc/podcasts.md#implementation)
+
+unit FpasAmp.Ui.Podcasts.Network;
+
+uses
+  FpasAmp.Ui.Podcasts.Model as M, Fpas.Media.Images as Images, System as Sys,
+  System.IO as IO, System.Net as N, System.Net.Http as H, System.Threading as T, System.Threading.Tasks as Tasks;
+
+function Connect(): H.HttpClient;
+begin
+  const Handler: H.HttpClientHandler := new H.HttpClientHandler();
+  Handler.AutomaticDecompression := N.DecompressionMethods.All;
+  Handler.UseCookies := false;
+  const Result: H.HttpClient := new H.HttpClient(Handler);
+  Result.DefaultRequestHeaders.UserAgent.ParseAdd(
+    'FPas-Amp/1.0 (https://github.com/tobiasbick/functional-pascal)'
+  );
+  return Result;
+end function;
+
+// Shared HTTP transport for the podcast directory, publishers and media hosts.
+public const Client: H.HttpClient := Connect();
+
+// Returns the final request address of Reply, falling back to the original URL.
+public function ResponseAddress(Reply: H.HttpResponseMessage; Fallback: string): Sys.Uri;
+begin
+  const Request: H.HttpRequestMessage? := Reply.RequestMessage;
+  return if Request <> null then
+    Request.RequestUri ?? new Sys.Uri(Fallback)
+  else
+    new Sys.Uri(Fallback)
+  end if;
+end function;
+
+// Returns the decoder suffix for an enclosure URL or its declared media type.
+// Returns an empty string when neither identifies a supported format.
+public function Extension(Url: string; MediaType: string): string;
+begin
+  const Declared: string := case MediaType.ToLowerInvariant() of
+    when 'audio/mpeg', 'audio/mp3': '.mp3';
+    when 'audio/mp4', 'audio/x-m4a', 'audio/aac': '.m4a';
+    when 'audio/ogg', 'application/ogg': '.ogg';
+    when 'audio/opus': '.opus';
+    when 'audio/wav', 'audio/wave', 'audio/x-wav': '.wav';
+    when 'audio/flac', 'audio/x-flac': '.flac';
+    else '';
+  end case;
+  if Declared <> '' then
+    return Declared;
+  end if;
+
+  return case (IO.Path.GetExtension((new Sys.Uri(Url)).AbsolutePath) ?? '').ToLowerInvariant() of
+    when '.mp3': '.mp3';
+    when '.m4a': '.m4a';
+    when '.ogg': '.ogg';
+    when '.opus': '.opus';
+    when '.wav': '.wav';
+    when '.flac': '.flac';
+    else '';
+  end case;
+end function;
+
+// Copies at most Limit bytes from Input to Output and honors Stop while reading and writing.
+public async function Copy(Input: IO.Stream; Output: IO.Stream; Limit: long; Stop: T.CancellationToken): Tasks.Task;
+requires Limit > 0L;
+begin
+  const Buffer: array of byte := new byte[65536];
+  var Total: long := 0L;
+  while true do
+    const Count: int := await Input.ReadAsync(Buffer, 0, Buffer.Length, Stop).ConfigureAwait(false);
+    if Count = 0 then
+      return;
+    end if;
+
+    Total := Total + cast<long>(Count);
+    if Total > Limit then
+      raise new IO.InvalidDataException('The response exceeds the size limit.');
+    end if;
+
+    await Output.WriteAsync(Buffer, 0, Count, Stop).ConfigureAwait(false);
+  end while;
+end function;
+
+// Downloads and decodes a bounded artwork response. Url must be a valid HTTP address.
+// Returns a square thumbnail or null if the publisher's artwork is unavailable.
+public async function Cover(Url: string; Edge: int; Stop: T.CancellationToken): Tasks.Task<Images.Bitmap?>;
+requires Edge > 0;
+begin
+  if M.Address(Url) = '' then
+    return null;
+  end if;
+
+  using const Deadline: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+    Stop
+  );
+  Deadline.CancelAfter(8000);
+  try
+    using const Reply: H.HttpResponseMessage := await Client.GetAsync(
+      Url,
+      H.HttpCompletionOption.ResponseHeadersRead,
+      Deadline.Token
+    ).ConfigureAwait(false);
+    discard Reply.EnsureSuccessStatusCode();
+    using const Input: IO.Stream := await Reply.Content.ReadAsStreamAsync(
+      Deadline.Token
+    ).ConfigureAwait(false);
+    using const Content: IO.MemoryStream := new IO.MemoryStream();
+    await Copy(Input, Content, 5000000L, Deadline.Token).ConfigureAwait(false);
+    return Images.CoverDecoder.Decode(Content.ToArray(), Edge, Deadline.Token);
+  catch Error: Sys.Exception when not Stop.IsCancellationRequested do
+    return null;
+  end try;
+end function;
+
+end unit;

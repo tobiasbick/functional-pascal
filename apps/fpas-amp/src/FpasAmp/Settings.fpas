@@ -10,6 +10,7 @@ uses
   FpasAmp.Persistence.UserFiles as Files,
   FpasAmp.Ui.Settings.Model as Model, Fpas.Media.Audio as Audio, FpasAmp.Ui.Player.Model as Player,
   FpasAmp.Ui.Radio.Model as Radio, FpasAmp.Persistence.RadioFavorites as Favorites,
+  FpasAmp.Persistence.PodcastSubscriptions as Podcasts,
   Fpas.Ui.Widgets.Theming.Themes as Themes,
   Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
   System as Sys,
@@ -216,7 +217,8 @@ begin
       Accent,
       Mixer(Root, ref Valid),
       AcoustId(Root, ref Valid),
-      Favorites.Decode(Fields.Field(Root, 'radioFavorites'), ref Valid)
+      Favorites.Decode(Fields.Field(Root, 'radioFavorites'), ref Valid),
+      Podcasts.Decode(Fields.Field(Root, 'podcastSubscriptions'), ref Valid)
     ),
     Valid
   );
@@ -256,6 +258,8 @@ begin
   Writer.WriteEndObject();
   Writer.WritePropertyName('radioFavorites');
   Favorites.Encode(Writer, Value.RadioFavorites);
+  Writer.WritePropertyName('podcastSubscriptions');
+  Podcasts.Encode(Writer, Value.PodcastSubscriptions);
   Writer.WriteEndObject();
 end procedure;
 

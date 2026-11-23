@@ -1,0 +1,84 @@
+// [Documentation](../../../doc/podcasts.md#implementation)
+
+unit FpasAmp.Ui.Podcasts.DiscoveryView;
+
+uses
+  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Podcasts.Model as M, FpasAmp.Ui.Podcasts.Catalog as Catalog,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Inputs.SearchFields as Fields,
+  Fpas.Ui.Widgets.Inputs.Selects as Select, System.Collections.Generic as C;
+
+const Gap: L.Spacing := L.Spacing.Fixed(L.Measure.Logical(8));
+const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
+
+function Submit(Term: string): App.Msg;
+begin
+  return App.Msg.Podcasts(M.Msg.Search(Term));
+end function;
+
+function Picker(
+  Id: string; Items: array of Select.Item; Choices: array of Catalog.Choice;
+  Value: string; Change: function(string): M.Msg; Label: string
+): E.Element<App.Msg>;
+begin
+  return E.Size<App.Msg>(
+    Select.Select<App.Msg>(
+      Id, Items, Catalog.IndexOf(Choices, Value),
+      function(Index: int): App.Msg => App.Msg.Podcasts(Change(Choices[Index].Code)),
+      new Select.Options(Label := Label, Searchable := true)
+    ), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(180)))
+  );
+end function;
+
+function Labels(Choices: array of Catalog.Choice): array of Select.Item;
+begin
+  const Items: C.List<Select.Item> := new C.List<Select.Item>();
+  for Choice: Catalog.Choice in Choices do
+    Items.Add(new Select.Item(Choice.Label));
+  end for;
+
+  return Items.ToArray();
+end function;
+
+const Markets: array of Select.Item := Labels(Catalog.Markets);
+const Genres: array of Select.Item := Labels(Catalog.Genres);
+
+// Renders the podcast query and two directory filters for Page at Width logical points.
+public function Toolbar(Page: M.State; Width: int): E.Element<App.Msg>;
+begin
+  const Input: E.Element<App.Msg> := Fields.SearchField<App.Msg>(
+    'podcast-search-input', Page.Query,
+    function(Value: string): App.Msg => App.Msg.Podcasts(M.Msg.Query(Value)),
+    new Fields.Options(Placeholder := 'Search Apple Podcasts…'), Submit
+  );
+  const Search: E.Element<App.Msg> := B.Button<App.Msg>(
+    'podcast-search-submit', if Page.Query.Trim() = '' then
+      'Refresh'
+    else
+      'Search'
+    end if,
+    Submit(Page.Query), new B.Options(
+      Variant := S.ButtonVariant.Primary, Enabled := not Page.Searching, Loading := Page.Searching
+    )
+  );
+  const Market: E.Element<App.Msg> := Picker(
+    'podcast-market', Markets, Catalog.Markets, Page.Market, M.Msg.Market, 'Market'
+  );
+  const Genre: E.Element<App.Msg> := Picker(
+    'podcast-genre', Genres, Catalog.Genres, Page.Genre, M.Msg.Genre, 'Genre'
+  );
+  const Row: L.Flow := new L.Flow(Gap := Gap, Align := L.Alignment.End, Clip := false);
+  if Width < 700 then
+    return E.Column<App.Msg>(
+      new L.Flow(Gap := Gap, Align := L.Alignment.Stretch, Clip := false),
+      E.Row<App.Msg>(Row, E.Size<App.Msg>(Input, Fill), Search),
+      E.Row<App.Msg>(
+        new L.Flow(Gap := Gap, Wrap := true, Clip := false), Market, Genre
+      )
+    );
+  end if;
+
+  return E.Row<App.Msg>(Row, E.Size<App.Msg>(Input, Fill), Search, Market, Genre);
+end function;
+
+end unit;

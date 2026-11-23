@@ -1,0 +1,63 @@
+// [Documentation](../../../doc/podcasts.md#implementation)
+
+unit FpasAmp.Persistence.PodcastSubscriptions;
+
+uses
+  FpasAmp.Persistence.JsonFields as Fields, FpasAmp.Ui.Podcasts.Model as Podcasts,
+  System as Sys, System.Collections.Generic as C, System.Text.Json as J;
+
+function Read(Item: J.JsonElement; Name: string): string;
+begin
+  return Fields.StringValue(Fields.Field(Item, Name)) ?? '';
+end function;
+
+// Reads saved feeds from Items, preserving valid subscriptions when Valid becomes false.
+public function Decode(Items: J.JsonElement; ref Valid: bool): array of Podcasts.Show;
+begin
+  if Items.ValueKind = J.JsonValueKind.Undefined then
+    return [];
+  end if;
+
+  if Items.ValueKind <> J.JsonValueKind.Array then
+    Valid := false;
+    return [];
+  end if;
+  const Shows: C.List<Podcasts.Show> := new C.List<Podcasts.Show>();
+  const Seen: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+  for Item: J.JsonElement in Items.EnumerateArray() do
+    const Url: string := Podcasts.Address(Read(Item, 'url'));
+    const Title: string := Read(Item, 'title').Trim();
+    if Url = '' or Title = '' or not Seen.Add(Url) then
+      Valid := false;
+    else
+      Shows.Add(
+        new Podcasts.Show(
+          Url,
+          Title,
+          Read(Item, 'publisher'),
+          Podcasts.Address(Read(Item, 'artwork'))
+        )
+      );
+    end if;
+  end for;
+
+  return Shows.ToArray();
+end function;
+
+// Writes the subscriptions in Items to the user's settings Writer.
+public procedure Encode(Writer: J.Utf8JsonWriter; Items: array of Podcasts.Show);
+begin
+  Writer.WriteStartArray();
+  for Item: Podcasts.Show in Items do
+    Writer.WriteStartObject();
+    Writer.WriteString('url', Item.Url);
+    Writer.WriteString('title', Item.Title);
+    Writer.WriteString('publisher', Item.Publisher);
+    Writer.WriteString('artwork', Item.Artwork);
+    Writer.WriteEndObject();
+  end for;
+
+  Writer.WriteEndArray();
+end procedure;
+
+end unit;

@@ -16,6 +16,7 @@ uses
   FpasAmp.Library.Metadata.Model as Tracks,
   FpasAmp.Library.Playlists.Model as Lists, FpasAmp.Ui.Music.Playlist as Playlist,
   FpasAmp.Ui.Radio.Model as Radio, System.Collections.Immutable as I,
+  FpasAmp.Ui.Podcasts.Model as Podcasts,
   FpasAmp.Library.Inventory.Monitoring as Monitoring,
   FpasAmp.Library.Persistence.Paths as LibraryPaths,
   System as Sys,
@@ -70,6 +71,10 @@ begin
       when Nav.Route.Station(const Id: string):
         if Radio.Find(Preferences.RadioFavorites, Id) = null then
           Destination := Nav.Route.Page(Nav.Page.Stations);
+        end if;
+      when Nav.Route.Podcast(const Id: string):
+        if Podcasts.Find(Preferences.PodcastSubscriptions, Id) = null then
+          Destination := Nav.Route.Page(Nav.Page.Podcasts);
         end if;
       else
     end case;

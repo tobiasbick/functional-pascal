@@ -7,7 +7,8 @@ uses
   FpasAmp.Ui.Fingerprints as Fp, FpasAmp.Ui.Player.Model as M, FpasAmp.Library.Metadata.Model as Tracks,
   FpasAmp.Ui.Albums.Music.Browse as Browse, FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Player.Presets as Presets, Fpas.Media.Audio as Audio,
   System as Sys, System.Collections.Immutable as I,
-  FpasAmp.Ui.Radio.Model as Radio, FpasAmp.Ui.Player.Live as Live;
+  FpasAmp.Ui.Radio.Model as Radio, FpasAmp.Ui.Player.Live as Live,
+  Fpas.Media.Images as Images, Fpas.Media.Tags.AudioFiles as Tags;
 
 const RestartAfter: double := 3000.0;
 
@@ -53,7 +54,8 @@ begin
   const Next: M.State := Current with
     Index := Index;
     Station := null;
-    Buffering := false;
+    Buffering := Current.Podcast;
+    EpisodePath := '';
     NowPlaying := '';
     Fingerprint := if Fp.Matches(Current.Fingerprint, Track) then
       Current.Fingerprint
@@ -67,6 +69,24 @@ begin
     NeedsOpen := false;
     Levels := [0.0F, 0.0F];
   end with;
+  if Current.Podcast then
+    const Metadata: Tags.Info? := Track.Metadata;
+    return new M.Transition(
+      Next with
+        WaveformKey := '';
+        Waveform := [];
+        WaitingForAudio := false;
+      end with,
+      M.Request.Download(
+        Track.Path, if Metadata <> null then
+          Metadata.Codec
+        else
+          ''
+        end if, Next.Revision
+      )
+    );
+  end if;
+
   return new M.Transition(
     SelectWaveform(Next, Track),
     M.Request.Load(Track.Path, Next.Playing, Next.Revision)
@@ -84,7 +104,7 @@ function AvailableIndex(Current: M.State; Index: int; Direction: int; Allowed: f
 begin
   var Slot: int := Index;
   while Slot >= 0 and Slot < Current.Queue.Length do
-    if Allowed(Current.Queue[Slot]) then
+    if Current.Podcast or Allowed(Current.Queue[Slot]) then
       return Slot;
     end if;
 
@@ -107,7 +127,11 @@ end function;
 function Observe(Current: M.State; Value: Audio.PlaybackEvent; Allowed: function(Tracks.Entry): bool): M.Transition;
 begin
   const Track: Tracks.Entry? := M.Track(Current);
-  if Track = null or Value.RequestId <> Current.Revision or Value.Path <> Track.Path then
+  if Track = null or Value.RequestId <> Current.Revision or Value.Path <> M.AudioPath(
+    Current,
+    Track
+  )
+  then
     return new M.Transition(Current);
   end if;
   const Count: int := Sys.Math.Min(8, Value.Peaks.Length);
@@ -121,7 +145,8 @@ begin
   end if;
   const Next: M.State := Current with
     Position := Value.Position.TotalMilliseconds;
-    Fingerprint := if Current.Playing and Value.State = Audio.PlaybackState.Playing
+    Fingerprint := if not Current.Podcast and Current.Playing and Value.State =
+      Audio.PlaybackState.Playing
       and Value.Position.TotalMilliseconds > 0.0 and not Fp.Matches(
       Current.Fingerprint,
       Track
@@ -186,6 +211,8 @@ begin
           Source := Source;
           Playing := true;
           Error := null;
+          Podcast := false;
+          Cover := null;
         end with;
         const Slot: int := AvailableIndex(Selected, Index, 1, Allowed);
         if Slot >= 0 then
@@ -193,6 +220,46 @@ begin
         end if;
 
         return Idle(Current);
+      end if;
+    when M.Msg.PlayEpisodes(
+      const Queue: I.ImmutableArray<Tracks.Entry>,
+      const Index: int,
+      const Cover: Images.Bitmap?
+    ):
+      if Index >= 0 and Index < Queue.Length then
+        return Start(
+          Current with
+            Queue := Queue;
+            Source := new Music.Selection();
+            Playing := true;
+            Error := null;
+            Podcast := true;
+            Cover := Cover;
+            Fingerprint := null;
+          end with, Index
+        );
+      end if;
+    when M.Msg.EpisodeReady(const Token: long, const Path: string):
+      if Current.Podcast and Current.Buffering and Token = Current.Revision then
+        return new M.Transition(
+          Current with
+            EpisodePath := Path;
+            Buffering := false;
+            WaveformKey := Path;
+            WaitingForAudio := Current.Playing;
+          end with, M.Request.Load(Path, Current.Playing, Token)
+        );
+      end if;
+    when M.Msg.EpisodeFailed(const Token: long, const Reason: string):
+      if Current.Podcast and Current.Buffering and Token = Current.Revision then
+        return new M.Transition(
+          Current with
+            Error := Reason;
+            Buffering := false;
+            Playing := false;
+            Finished := true;
+          end with
+        );
       end if;
     when M.Msg.PlayStation(const Selected: Radio.Station):
       if Station <> null and Station.Id = Selected.Id and Current.Playing then
@@ -229,6 +296,24 @@ begin
       end if;
 
       if Track <> null then
+        if Current.Podcast and Current.EpisodePath = '' then
+          if Current.Buffering and Current.Playing then
+            return new M.Transition(
+              Current with
+                Playing := false;
+                Buffering := false;
+                Revision := Revision;
+              end with, M.Request.Unload
+            );
+          end if;
+
+          return Start(
+            Current with
+              Playing := true;
+              Error := null;
+            end with, Current.Index
+          );
+        end if;
         const Next: M.State := Current with
           Playing := not Current.Playing;
           Error := null;
@@ -247,7 +332,11 @@ begin
         end if;
 
         return new M.Transition(
-          SelectWaveform(Next, Track) with
+          (if Current.Podcast then
+            Next
+          else
+            SelectWaveform(Next, Track)
+          end if) with
             Revision := Revision;
           end with, M.Request.Transport(Next.Playing, Revision)
         );
@@ -278,7 +367,7 @@ begin
         );
       end if;
     when M.Msg.Seek(const Fraction: float):
-      if Track <> null then
+      if Track <> null and (not Current.Podcast or Current.EpisodePath <> '') then
         const Milliseconds: double := cast<double>(Clamp(Fraction, 0.0F, 1.0F)) * Current.Duration;
         return new M.Transition(
           Current with

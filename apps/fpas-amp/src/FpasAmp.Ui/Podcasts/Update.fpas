@@ -1,0 +1,263 @@
+// [Documentation](../../../doc/podcasts.md#implementation)
+
+unit FpasAmp.Ui.Podcasts.Update;
+
+uses
+  FpasAmp.Ui.Podcasts.Model as M, FpasAmp.Ui.Podcasts.Directory as Directory,
+  FpasAmp.Ui.Podcasts.Feeds as Feeds, FpasAmp.Ui.Podcasts.Network as Network,
+  Fpas.Media.Images as Images, Fpas.Ui.Mvu.Application as A,
+  System as Sys, System.Collections.Generic as C, System.Linq as Linq, System.Threading as T, System.Threading.Tasks as Tasks;
+
+function Search(Current: M.State; Term: string): A.Transition<M.State, M.Msg>;
+begin
+  const Revision: long := Current.SearchRevision + 1L;
+  const Market: string := Current.Market;
+  const Genre: string := Current.Genre;
+  return new A.Transition<M.State, M.Msg>(
+    Current with
+      Searching := true;
+      Searched := Term <> '';
+      SearchError := null;
+      SearchRevision := Revision;
+      SearchCursor := -1;
+      Results := [];
+      Covers := Current.Covers.Clear();
+    end with, [
+      A.StartBackground<M.Msg>(
+        'search',
+        async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
+          const Found: array of M.Show := if Term = '' then
+            await Directory.Discover(Market, Genre, Stop).ConfigureAwait(false)
+          else
+            await Directory.Search(Market, Term, Stop).ConfigureAwait(false)
+          end if;
+          await Post(M.Msg.Found(Revision, Found)).ConfigureAwait(false);
+          for Show: M.Show in Found do
+            const Image: Images.Bitmap? := await Network.Cover(
+              Show.Artwork,
+              96,
+              Stop
+            ).ConfigureAwait(false);
+            case Image of
+              when is Images.Bitmap as Bitmap:
+                await Post(M.Msg.Cover(true, Revision, Show.Artwork, Bitmap)).ConfigureAwait(false);
+              else
+            end case;
+          end for;
+        end function,
+        function(Failure: Sys.Exception): M.Msg => M.Msg.SearchFailed(Revision, Failure.Message)
+      )
+    ]
+  );
+end function;
+
+function Open(Current: M.State; Show: M.Show; Subscribe: bool): A.Transition<M.State, M.Msg>;
+begin
+  const Revision: long := Current.FeedRevision + 1L;
+  return new A.Transition<M.State, M.Msg>(
+    Current with
+      Show := Show;
+      Episodes := [];
+      FeedRevision := Revision;
+      Loading := true;
+      AddOnLoad := Subscribe;
+      FeedError := null;
+      EpisodeFilter := '';
+      OldestFirst := false;
+      EpisodeCursor := -1;
+      Draft := null;
+      Details := null;
+    end with, [
+      A.StartBackground<M.Msg>(
+        'feed',
+        async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
+          const Feed: M.Feed := await Feeds.Load(Show, Stop).ConfigureAwait(false);
+          await Post(M.Msg.Loaded(Revision, Feed)).ConfigureAwait(false);
+          const Image: Images.Bitmap? := await Network.Cover(
+            Feed.Show.Artwork,
+            320,
+            Stop
+          ).ConfigureAwait(false);
+          case Image of
+            when is Images.Bitmap as Bitmap:
+              await Post(
+                M.Msg.Cover(false, Revision, Feed.Show.Artwork, Bitmap)
+              ).ConfigureAwait(false);
+            else
+          end case;
+        end function,
+        function(Failure: Sys.Exception): M.Msg => M.Msg.FeedFailed(Revision, Failure.Message)
+      )
+    ]
+  );
+end function;
+
+// Filters and orders the currently shown feed for both the table and playback queue.
+// Current supplies the filter text and date order. Returns matching episodes in visible order.
+public function Visible(Current: M.State): array of M.Episode;
+begin
+  const Term: string := Current.EpisodeFilter.Trim();
+  const Rows: C.List<M.Episode> := new C.List<M.Episode>();
+  for Episode: M.Episode in Current.Episodes do
+    if Episode.Title.Contains(Term, Sys.StringComparison.OrdinalIgnoreCase) then
+      Rows.Add(Episode);
+    end if;
+  end for;
+  // LINQ's stable sort retains feed order when dates are equal or absent.
+  const Ordered: C.IEnumerable<M.Episode> := if Current.OldestFirst then
+    Linq.Enumerable.OrderBy<M.Episode, Sys.DateTimeOffset>(
+      Rows,
+      function(Item: M.Episode): Sys.DateTimeOffset => Item.Published ?? Sys.DateTimeOffset.MaxValue
+    )
+  else
+    Linq.Enumerable.OrderByDescending<M.Episode, Sys.DateTimeOffset>(
+      Rows,
+      function(Item: M.Episode): Sys.DateTimeOffset => Item.Published ?? Sys.DateTimeOffset.MinValue
+    )
+  end if;
+  return Linq.Enumerable.ToArray<M.Episode>(Ordered);
+end function;
+
+// Updates Current for an Action and returns any cancellable directory or feed work.
+public function Apply(Current: M.State; Action: M.Msg): A.Transition<M.State, M.Msg>;
+begin
+  var Next: M.State := Current;
+  case Action of
+    when M.Msg.Query(const Value: string):
+      Next := Current with
+        Query := Value;
+      end with;
+      if Value.Trim() = '' and Current.Searched then
+        return Search(Next, '');
+      end if;
+    when M.Msg.Search(const Value: string):
+      return Search(
+        Current with
+          Query := Value;
+        end with, Value.Trim()
+      );
+    when M.Msg.Market(const Value: string):
+      if Value <> Current.Market then
+        return Search(
+          Current with
+            Market := Value;
+          end with, Current.Query.Trim()
+        );
+      end if;
+    when M.Msg.Genre(const Value: string):
+      if Value <> Current.Genre then
+        Next := Current with
+          Genre := Value;
+          SearchCursor := -1;
+        end with;
+        if not Current.Searched then
+          return Search(Next, '');
+        end if;
+      end if;
+    when M.Msg.Found(const Revision: long, const Shows: array of M.Show):
+      if Revision = Current.SearchRevision then
+        Next := Current with
+          Results := Shows;
+          Searching := false;
+        end with;
+      end if;
+    when M.Msg.SearchFailed(const Revision: long, const Reason: string):
+      if Revision = Current.SearchRevision then
+        Next := Current with
+          SearchError := Reason;
+          Searching := false;
+        end with;
+      end if;
+    when M.Msg.SelectResult(const Index: int):
+      Next := Current with
+        SearchCursor := Index;
+      end with;
+    when M.Msg.Open(const Show: M.Show, const Subscribe: bool):
+      return Open(Current, Show, Subscribe);
+    when M.Msg.Back:
+      return new A.Transition<M.State, M.Msg>(
+        Current with
+          Show := null;
+          Episodes := [];
+          FeedRevision := Current.FeedRevision + 1L;
+          Loading := false;
+          AddOnLoad := false;
+          Details := null;
+          Draft := null;
+        end with, [A.CancelBackground<M.Msg>('feed')]
+      );
+    when M.Msg.Loaded(const Revision: long, const Value: M.Feed):
+      if Revision = Current.FeedRevision then
+        Next := Current with
+          Show := Value.Show;
+          Episodes := Value.Episodes;
+          Loading := false;
+          AddOnLoad := false;
+          FeedError := null;
+        end with;
+      end if;
+    when M.Msg.FeedFailed(const Revision: long, const Reason: string):
+      if Revision = Current.FeedRevision then
+        Next := Current with
+          FeedError := Reason;
+          Loading := false;
+        end with;
+      end if;
+    when M.Msg.Cover(
+      const SearchImage: bool,
+      const Revision: long,
+      const Url: string,
+      const Image: Images.Bitmap
+    ):
+      if (SearchImage and Revision = Current.SearchRevision) or (not SearchImage and Revision =
+        Current.FeedRevision)
+      then
+        var Previous: Images.Bitmap? := null;
+        discard Current.Covers.TryGetValue(Url, out Previous);
+        const Width: int := case Previous of
+          when is Images.Bitmap as Bitmap: Bitmap.Width;
+          else 0;
+        end case;
+        if Width < Image.Width then
+          Next := Current with
+            Covers := Current.Covers.SetItem(Url, Image);
+          end with;
+        end if;
+      end if;
+    when M.Msg.Add:
+      Next := Current with
+        Draft := '';
+      end with;
+    when M.Msg.EditUrl(const Url: string):
+      Next := Current with
+        Draft := Url;
+      end with;
+    when M.Msg.Cancel:
+      Next := Current with
+        Draft := null;
+      end with;
+    when M.Msg.Filter(const Value: string):
+      Next := Current with
+        EpisodeFilter := Value;
+        EpisodeCursor := -1;
+      end with;
+    when M.Msg.Sort(const Oldest: bool):
+      Next := Current with
+        OldestFirst := Oldest;
+        EpisodeCursor := -1;
+      end with;
+    when M.Msg.SelectEpisode(const Index: int):
+      Next := Current with
+        EpisodeCursor := Index;
+      end with;
+    when M.Msg.Details(const Item: M.Episode?):
+      Next := Current with
+        Details := Item;
+      end with;
+    else
+  end case;
+
+  return new A.Transition<M.State, M.Msg>(Next, []);
+end function;
+
+end unit;

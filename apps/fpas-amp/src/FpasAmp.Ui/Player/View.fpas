@@ -13,7 +13,7 @@ uses
   Fpas.Ui.Widgets.Audio.Faders as Faders,
   Fpas.Ui.Widgets.Audio.LevelMeters as Meters, Fpas.Ui.Widgets.Audio.Waveforms as Waves,
   Fpas.Ui.Widgets.Display.Texts as Texts, System as Sys, System.Collections.Generic as C,
-  FpasAmp.Ui.Radio.Model as Radio;
+  FpasAmp.Ui.Radio.Model as Radio, FpasAmp.Ui.Albums.Artwork as Covers;
 
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
 const FaderLength: int := 64;
@@ -132,7 +132,11 @@ begin
     new L.Flow(Gap := Points(8), Justify := L.Justification.Center),
     E.Row<M.Msg>(
       new L.Flow(Gap := Points(10), Align := L.Alignment.Center),
-      Artwork(Station <> null),
+      if Current.Cover <> null then
+        Covers.Build<M.Msg>('player-podcast-cover', Current.Cover, 40)
+      else
+        Artwork(Station <> null)
+      end if,
       E.Size<M.Msg>(
         E.Column<M.Msg>(
           new L.Flow(Gap := Points(2)),
@@ -151,7 +155,9 @@ begin
       new L.Flow(Gap := Points(10), Align := L.Alignment.Center),
       Transport(Current, Track <> null or Station <> null, Station <> null),
       Caption(
-        if Station = null then
+        if Current.Podcast and Current.Buffering then
+          'Preparing episode…'
+        elsif Station = null then
           Browse.Time(Current.Position) + ' / ' + Browse.Time(Current.Duration)
         elsif Current.Buffering then
           'Buffering…'
@@ -271,7 +277,10 @@ begin
       0.0F
     end if,
     M.Msg.Seek,
-    new Waves.Options(Height := 44.0F, Enabled := Length > 0.0, SeekOnRelease := true)
+    new Waves.Options(
+      Height := 44.0F, Enabled := Length > 0.0 and not Current.Buffering
+        and (not Current.Podcast or Current.EpisodePath <> ''), SeekOnRelease := true
+    )
   );
 end function;
 

@@ -20,6 +20,7 @@ uses
   FpasAmp.Ui.TagEditor.Model as TagModel, FpasAmp.Ui.TagEditor.Update as TagUpdate,
   System as Sys, System.Threading as T, System.Threading.Tasks as Tasks,
   FpasAmp.Ui.App.Radio as Radio, FpasAmp.Ui.Radio.Model as RadioModel,
+  FpasAmp.Ui.App.Podcasts as Podcasts, FpasAmp.Ui.Podcasts.Model as PodcastModel,
   FpasAmp.Ui.App.Subscriptions as Subscriptions;
 
 function Failure(Error: Sys.Exception): M.Msg;
@@ -160,9 +161,16 @@ begin
     Player := Child.Model;
   end with;
   if Work <> null then
-    discard Port.Requests.Writer.TryWrite(Work);
     case Work of
+      when PlayerModel.Request.Download(_, _, _):
+        return Podcasts.Prepare(
+          Current.Player,
+          Analysis.After(Current, Next, Library.Metadata),
+          Work,
+          Port
+        );
       when PlayerModel.Request.Mixer(_):
+        discard Port.Requests.Writer.TryWrite(Work);
         return new Mvu.Transition<M.State, M.Msg>(
           Next, [
             Mvu.StartBackground<M.Msg>(
@@ -175,10 +183,16 @@ begin
           ]
         );
       else
+        discard Port.Requests.Writer.TryWrite(Work);
     end case;
   end if;
 
-  return Analysis.After(Current, Next, Library.Metadata);
+  return Podcasts.Prepare(
+    Current.Player,
+    Analysis.After(Current, Next, Library.Metadata),
+    Work,
+    Port
+  );
 end function;
 
 function EditTags(Current: M.State; Message: TagModel.Msg; Library: Monitoring.Session): Mvu.Transition<M.State, M.Msg>;
@@ -240,6 +254,20 @@ public function Apply(Current: M.State; Message: M.Msg; Save: procedure(Settings
       else LibrarySongs.Msg.Close;
     end case;
   end function;
+  procedure BrowsePodcasts();
+  begin
+    const Result: Mvu.Transition<M.State, M.Msg> := Podcasts.Navigate(
+      Next,
+      Current.Navigation.Active
+    );
+    if Result.Commands.Length > 0 then
+      const Work: C.List<Mvu.Command<M.Msg>> := new C.List<Mvu.Command<M.Msg>>(Commands);
+      Work.AddRange(Result.Commands);
+      Commands := Work.ToArray();
+    end if;
+
+    Next := Result.Model;
+  end procedure;
 begin
   var Next: M.State := Current;
   var Commands: array of Mvu.Command<M.Msg> := [];
@@ -314,6 +342,10 @@ begin
         Next := Result.Model;
       end if;
 
+      if Next.Navigation.Active <> Current.Navigation.Active then
+        BrowsePodcasts();
+      end if;
+
       if Next.Navigation.Active <> Current.Navigation.Active
         and (Nav.SongTable(Next.Navigation.Active) or Nav.SongTable(Current.Navigation.Active))
       then
@@ -351,6 +383,13 @@ begin
       return Transport(Current, PlayerMessage, Port, Library);
     when M.Msg.Radio(const Action: RadioModel.Msg):
       return Radio.Apply(Current, Action, Save);
+    when M.Msg.Podcasts(PodcastModel.Msg.Play(const Episode: PodcastModel.Episode)):
+      const Action: PlayerModel.Msg? := Podcasts.Play(Current, Episode);
+      if Action <> null then
+        return Transport(Current, Action, Port, Library);
+      end if;
+    when M.Msg.Podcasts(const Action: PodcastModel.Msg):
+      return Podcasts.Apply(Current, Action, Save);
     when M.Msg.Albums(const AlbumMessage: AlbumModel.Msg):
       if Nav.Browsing(Current.Navigation.Active) then
         return Album(Current, AlbumMessage, Library);
@@ -369,6 +408,12 @@ begin
       end if;
 
       Commands := Subscriptions.Watch(Library, Port, Next.Player);
+      case Next.Navigation.Active of
+        when Nav.Route.Podcast(_), Nav.Route.Page(Nav.Page.Podcasts):
+          BrowsePodcasts();
+        else
+      end case;
+
       if Next.Navigation.Active = Nav.Route.Page(Nav.Page.Stations) then
         const Result: Mvu.Transition<M.State, M.Msg> := Radio.Apply(
           Next,
@@ -405,7 +450,7 @@ begin
         Library
       );
       const Track: Tracks.Entry? := PlayerModel.Track(Changed.Model.Player);
-      if Track <> null then
+      if Track <> null and not Changed.Model.Player.Podcast then
         var Advance: bool := false;
         case SettingsMessage of
           when SettingsModel.Msg.SetOffline(_, const Offline: bool):

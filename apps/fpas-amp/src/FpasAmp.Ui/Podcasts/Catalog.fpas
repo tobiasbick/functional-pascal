@@ -1,0 +1,94 @@
+// [Documentation](../../../doc/podcasts.md#implementation)
+
+unit FpasAmp.Ui.Podcasts.Catalog;
+
+uses System as Sys, System.Collections.Generic as C, System.Globalization as G, System.Linq as Linq;
+
+// A storefront or genre option in the podcast directory.
+public type Choice = record
+  // Identifier used by Apple's directory.
+  public Code: string;
+  // Caption shown in the filter.
+  public Label: string;
+end record;
+
+function MarketName(Code: string): string;
+begin
+  try
+    return (new G.RegionInfo(Code)).EnglishName;
+  catch Failure: Sys.ArgumentException do
+    return Code;
+  end try;
+end function;
+
+function Storefronts(): array of Choice;
+begin
+  // Country codes offered by Apple's Podcast RSS Feed Builder.
+  const Codes: string := 'AE AF AG AI AL AM AO AR AT AU AZ BA BB BE BF BG BH BJ BM BN BO BR BS BT BW BY BZ ' +
+    'CA CD CG CH CI CL CM CN CO CR CV CY CZ DE DK DM DO DZ EC EE EG ES FI FJ FM FR GA GB GD GE GH GM GR GT GW GY ' +
+    'HK HN HR HU ID IE IL IN IQ IS IT JM JO JP KE KG KH KN KR KW KY KZ LA LB LC LK LR LT LU LV LY MA MD ME MG MK ' +
+    'ML MM MN MO MR MS MT MU MV MW MX MY MZ NA NE NG NI NL NO NP NR NZ OM PA PE PG PH PK PL PT PW PY QA RO RS RU RW ' +
+    'SA SB SC SE SG SI SK SL SN SR ST SV SZ TC TD TH TJ TM TN TO TR TT TW TZ UA UG US UY UZ VC VE VG VN VU XK YE ZA ZM ZW';
+  const Items: C.List<Choice> := new C.List<Choice>();
+  for Code: string in Codes.Split(#32) do
+    Items.Add(new Choice(Code, MarketName(Code)));
+  end for;
+
+  return Linq.Enumerable.ToArray<Choice>(
+    Linq.Enumerable.OrderBy<Choice, string>(
+      Items, function(Item: Choice): string => Item.Label, Sys.StringComparer.OrdinalIgnoreCase
+    )
+  );
+end function;
+
+// The Apple storefronts offered by the podcast filter, sorted by English name.
+public const Markets: array of Choice := Storefronts();
+
+// Apple's top-level podcast genres, with an option for the unrestricted chart.
+public const Genres: array of Choice := [
+  new Choice('', 'All genres'),
+  new Choice('1301', 'Arts'),
+  new Choice('1321', 'Business'),
+  new Choice('1303', 'Comedy'),
+  new Choice('1304', 'Education'),
+  new Choice('1483', 'Fiction'),
+  new Choice('1511', 'Government'),
+  new Choice('1512', 'Health & Fitness'),
+  new Choice('1487', 'History'),
+  new Choice('1305', 'Kids & Family'),
+  new Choice('1502', 'Leisure'),
+  new Choice('1310', 'Music'),
+  new Choice('1489', 'News'),
+  new Choice('1314', 'Religion & Spirituality'),
+  new Choice('1533', 'Science'),
+  new Choice('1324', 'Society & Culture'),
+  new Choice('1545', 'Sports'),
+  new Choice('1318', 'Technology'),
+  new Choice('1488', 'True Crime'),
+  new Choice('1309', 'TV & Film')
+];
+
+// Finds Code in Items and returns its zero-based position, or -1 if absent.
+public function IndexOf(Items: array of Choice; Code: string): int;
+begin
+  for Index: int := 0 to Items.Length - 1 do
+    if Items[Index].Code = Code then
+      return Index;
+    end if;
+  end for;
+
+  return -1;
+end function;
+
+// Returns the system region's storefront code, with US as the fallback.
+public function DefaultMarket(): string;
+begin
+  const Code: string := G.RegionInfo.CurrentRegion.TwoLetterISORegionName;
+  return if IndexOf(Markets, Code) >= 0 then
+    Code
+  else
+    'US'
+  end if;
+end function;
+
+end unit;

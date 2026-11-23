@@ -19,7 +19,8 @@ uses
   Fpas.Ui.Widgets.Overlays.Sheets as Sheets,
   Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys,
   FpasAmp.Library.Playlists.Model as Lists,
-  FpasAmp.Ui.Radio.View as RadioView, FpasAmp.Ui.Radio.Model as RadioModel;
+  FpasAmp.Ui.Radio.View as RadioView, FpasAmp.Ui.Radio.Model as RadioModel,
+  FpasAmp.Ui.Podcasts.View as PodcastView;
 
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
 // Content width below which the player strip omits its equalizer and meters.
@@ -104,9 +105,12 @@ begin
     )
   elsif Current.Navigation.Active = Nav.Route.Page(Nav.Page.Stations) then
     RadioView.Stations(Current, Content, Padding)
+  elsif Current.Navigation.Active = Nav.Route.Page(Nav.Page.Podcasts) then
+    PodcastView.Search(Current, Content, Padding)
   else
     case Current.Navigation.Active of
       when Nav.Route.Station(const Id: string): Station(Current, Id, Content, Padding);
+      when Nav.Route.Podcast(_): PodcastView.Podcast(Current, Content, Padding);
       else NavView.Placeholder(Current, Padding);
     end case
   end if;
@@ -344,7 +348,11 @@ public type Session = record implements Sys.IDisposable
           discard Device.StopPlayback();
           Native.Dispose();
         finally
-          Device.Dispose();
+          try
+            Device.Dispose();
+          finally
+            Playback.Clean(Port);
+          end try;
         end try;
       end procedure,
       Native.CapturePng,

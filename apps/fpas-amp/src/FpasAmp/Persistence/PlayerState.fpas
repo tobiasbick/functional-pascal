@@ -143,6 +143,9 @@ end procedure;
 // Captures the playback source and selected title from `Current` in constant space.
 public function Capture(Current: M.State): Saved;
 begin
+  if Current.Podcast then
+    return new Saved();
+  end if;
   const Track: Tracks.Entry? := M.Track(Current);
   if Track = null then
     return new Saved();

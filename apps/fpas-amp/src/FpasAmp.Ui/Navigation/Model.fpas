@@ -19,6 +19,8 @@ public type Page = enum
   Settings;
   // Searchable online radio directory.
   Stations;
+  // Search for RSS-backed shows in the Apple Podcasts directory.
+  Podcasts;
 end enum;
 
 // Exactly one selected destination, including source and durable local playlists.
@@ -39,6 +41,8 @@ public type Route = variant
   Playlist(Identity: Lists.Key);
   // Details for one saved radio station.
   Station(Id: string);
+  // The episode list of one feed opened from search or saved subscriptions.
+  Podcast(Id: string);
 end variant;
 
 // Owner-thread navigation state; background work publishes immutable summaries.
@@ -99,6 +103,8 @@ begin
       return 'playlist:' + Identity.Storage.ToString().ToLowerInvariant() + ':' + Identity.Id;
     when Route.Station(const Id: string):
       return 'station:' + Id;
+    when Route.Podcast(const Id: string):
+      return 'podcast:' + Id;
   end case;
 end function;
 
@@ -157,7 +163,8 @@ begin
     Page.Artists,
     Page.Genres,
     Page.Settings,
-    Page.Stations
+    Page.Stations,
+    Page.Podcasts
   ] do
     if Value = Item.ToString().ToLowerInvariant() then
       return Route.Page(Item);
@@ -173,6 +180,10 @@ begin
 
   if Parts.Length = 2 and Parts[0] = 'album' and HexId(Parts[1]) then
     return Route.Album(Parts[1].ToUpperInvariant());
+  end if;
+
+  if Parts.Length = 2 and Parts[0] = 'podcast' and HexId(Parts[1]) then
+    return Route.Podcast(Parts[1].ToUpperInvariant());
   end if;
 
   if (Parts.Length = 2 or Parts.Length = 3) and (Parts[0] = 'artist' or Parts[0] = 'genre') then

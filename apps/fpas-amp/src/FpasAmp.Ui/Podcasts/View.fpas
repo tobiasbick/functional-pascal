@@ -1,0 +1,472 @@
+// [Documentation](../../../doc/podcasts.md#implementation)
+
+unit FpasAmp.Ui.Podcasts.View;
+
+uses
+  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Podcasts.Model as M, FpasAmp.Ui.Podcasts.Update as Update,
+  FpasAmp.Ui.Podcasts.DiscoveryView as DiscoveryView,
+  FpasAmp.Ui.Albums.Artwork as Artwork, FpasAmp.Ui.Albums.Music.Browse as Time,
+  FpasAmp.Ui.Player.Model as Player, FpasAmp.Library.Metadata.Model as Tracks, Fpas.Media.Images as Images,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Actions.IconButtons as Icons,
+  Fpas.Ui.Widgets.Collections.DataGrids as Grid, Fpas.Ui.Widgets.Containers.EmptyStates as Empty,
+  Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Widgets.Display.Texts as Texts,
+  Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Widgets.Inputs.SearchFields as SearchField,
+  Fpas.Ui.Widgets.Inputs.Selects as Select, Fpas.Ui.Widgets.Inputs.TextFields as Fields,
+  Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Overlays.Menus as Menus,
+  System as Sys, System.Collections.Generic as C;
+
+const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
+const Stretch: L.Flow := new L.Flow(Align := L.Alignment.Stretch);
+
+function Points(Value: int): L.Spacing;
+begin
+  return L.Spacing.Fixed(L.Measure.Logical(Value));
+end function;
+
+function Fixed(Value: int): L.Flex;
+begin
+  return new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(Value)));
+end function;
+
+function Action(Message: M.Msg): App.Msg;
+begin
+  return App.Msg.Podcasts(Message);
+end function;
+
+function Image(Page: M.State; Show: M.Show; Id: string; Edge: int): E.Element<App.Msg>;
+begin
+  var Cover: Images.Bitmap? := null;
+  discard Page.Covers.TryGetValue(Show.Artwork, out Cover);
+  return Artwork.Build<App.Msg>(Id, Cover, Edge);
+end function;
+
+function Error(Id: string; Message: string?): E.Element<App.Msg>;
+begin
+  return if Message <> null then
+    Alerts.Alert<App.Msg>(
+      Id,
+      'Podcast operation failed',
+      new Alerts.Options(Tone := S.Tone.Warning, Description := Message)
+    )
+  else
+    E.Row<App.Msg>()
+  end if;
+end function;
+
+function Result(Current: App.State; Show: M.Show): Grid.Row<App.Msg>;
+begin
+  const Key: string := Show.Id();
+  const Subscribed: bool := M.Find(Current.Settings.Saved.PodcastSubscriptions, Key) <> null;
+  return new Grid.Row<App.Msg>(
+    Key, [
+      Grid.Cell<App.Msg>.Content(
+        [
+          E.Row<App.Msg>(
+            new L.Flow(Gap := Points(6), Align := L.Alignment.Center),
+            Image(Current.Podcasts, Show, 'podcast-result-cover-' + Key, 38),
+            B.Button<App.Msg>(
+              'podcast-open-' + Key, Show.Title, Action(M.Msg.Open(Show, false)),
+              new B.Options(Variant := S.ButtonVariant.Ghost, Tooltip := Show.Title)
+            )
+          )
+        ]
+      ),
+      Grid.Cell<App.Msg>.Text(Show.Publisher),
+      if Subscribed then
+        Grid.Cell<App.Msg>.Text('Subscribed')
+      else
+        Grid.Cell<App.Msg>.Content(
+          [
+            B.Button<App.Msg>(
+              'podcast-subscribe-' + Key, 'Subscribe', Action(M.Msg.Subscribe(Show, true)),
+              new B.Options(Variant := S.ButtonVariant.Outline, ControlSize := B.Size.Small)
+            )
+          ]
+        )
+      end if
+    ]
+  );
+end function;
+
+function Results(Current: App.State; Shows: array of M.Show; Width: int): E.Element<App.Msg>;
+begin
+  const Page: M.State := Current.Podcasts;
+  if Shows.Length = 0 then
+    const Text: string := if Page.Searching and not Page.Searched then
+      'Loading top podcasts…'
+    elsif Page.Searching then
+      'Searching Apple Podcasts…'
+    elsif Page.SearchError <> null then
+      'Podcast directory unavailable'
+    elsif Page.Searched then
+      'No matching podcasts'
+    else
+      'No top podcasts available'
+    end if;
+    return Empty.EmptyState<App.Msg>('podcasts-empty', Text);
+  end if;
+  const Publisher: int := Sys.Math.Clamp(Width div 3, 120, 300);
+  return Grid.DataGrid<App.Msg>(
+    'podcast-results',
+    [
+      new Grid.Column('Podcast', cast<float>(Sys.Math.Max(112, Width - Publisher - 124))),
+      new Grid.Column('Publisher', cast<float>(Publisher), Priority := 1),
+      new Grid.Column('', 124.0F, Fixed := true)
+    ],
+    Shows.Length,
+    function(Index: int): Grid.Row<App.Msg> => Result(Current, Shows[Index]),
+    new Grid.Value(Cursor := Page.SearchCursor, Anchor := Page.SearchCursor),
+    function(Value: Grid.Value): App.Msg => Action(M.Msg.SelectResult(Value.Cursor)),
+    new Grid.Options(RowHeight := 52.0F, HideCheckboxes := true),
+    function(Index: int): App.Msg => Action(M.Msg.Open(Shows[Index], false))
+  );
+end function;
+
+function AddFeed(Base: E.Element<App.Msg>; Draft: string): E.Element<App.Msg>;
+begin
+  return Dialogs.Dialog<App.Msg>(
+    'podcast-add-dialog',
+    Base,
+    E.Column<App.Msg>(
+      new L.Flow(Align := L.Alignment.Stretch, Gap := Points(12)),
+      Fields.TextField<App.Msg>(
+        'podcast-feed-url', Draft, function(Value: string): App.Msg => Action(M.Msg.EditUrl(Value)),
+        new Fields.Options(Label := 'RSS feed URL', MaxUtf8Bytes := 2047)
+      ),
+      E.Row<App.Msg>(
+        new L.Flow(Gap := Points(8), Justify := L.Justification.End),
+        B.Button<App.Msg>('podcast-feed-cancel', 'Cancel', Action(M.Msg.Cancel)),
+        B.Button<App.Msg>(
+          'podcast-feed-add', 'Subscribe', Action(M.Msg.AddFeed),
+          new B.Options(Variant := S.ButtonVariant.Primary, Enabled := M.Address(Draft) <> '')
+        )
+      )
+    ),
+    true,
+    new Dialogs.Options('Add RSS feed', InitialFocus := 'podcast-feed-url'),
+    Action(M.Msg.Cancel)
+  );
+end function;
+
+// Shows Apple charts, search and subscription actions for Current, within Width and Padding.
+public function Search(Current: App.State; Width: int; Padding: int): E.Element<App.Msg>;
+begin
+  const Page: M.State := Current.Podcasts;
+  const Shows: array of M.Show := M.VisibleShows(Page);
+  const Count: string := if Shows.Length <> Page.Results.Length then
+    Shows.Length.ToString() + ' of ' + Page.Results.Length.ToString() + ' podcasts'
+  elsif Shows.Length = 1 then
+    '1 podcast'
+  else
+    Shows.Length.ToString() + ' podcasts'
+  end if;
+  const ContentWidth: int := Sys.Math.Max(1, Width - Padding * 2);
+  const Parts: C.List<E.Element<App.Msg>> := new C.List<E.Element<App.Msg>>(
+    [
+      E.Row<App.Msg>(
+        new L.Flow(Gap := Points(8), Align := L.Alignment.Center, Wrap := true),
+        E.Size<App.Msg>(Texts.Text<App.Msg>('Search podcasts', Texts.Appearance.HeadingOne), Fill),
+        B.Button<App.Msg>(
+          'podcast-add', 'Add RSS feed', Action(M.Msg.Add),
+          new B.Options(Variant := S.ButtonVariant.Outline)
+        )
+      ), DiscoveryView.Toolbar(Page, ContentWidth)
+    ]
+  );
+  if Page.SearchError <> null then
+    Parts.Add(Error('podcast-search-error', Page.SearchError));
+  end if;
+
+  if not Page.Searched then
+    Parts.Add(Texts.Text<App.Msg>('Top podcasts', Texts.Appearance.HeadingThree));
+  end if;
+
+  Parts.Add(E.Size<App.Msg>(Results(Current, Shows, ContentWidth), Fill));
+  const Body: E.Element<App.Msg> := E.Column<App.Msg>(
+    Stretch,
+    E.Size<App.Msg>(
+      E.Column<App.Msg>(
+        new L.Flow(Padding := Points(Padding), Gap := Points(16), Align := L.Alignment.Stretch),
+        Parts.ToArray()
+      ), Fill
+    ),
+    Status.StatusBar<App.Msg>(
+      'podcast-search-status',
+      [Status.Item<App.Msg>.Text(new Status.Label(Count))]
+    )
+  );
+  const Draft: string? := Page.Draft;
+  return if Draft <> null then
+    AddFeed(Body, Draft)
+  else
+    Body
+  end if;
+end function;
+
+function EpisodeRow(Current: App.State; ShowId: string; Item: M.Episode): Grid.Row<App.Msg>;
+begin
+  const Active: Tracks.Entry? := Player.Track(Current.Player);
+  const Selected: bool := Current.Player.Podcast and Active <> null and Active.TrackId = ShowId +
+    ':' + Item.Id;
+  const Playing: bool := Selected and Current.Player.Playing;
+  const Play: E.Element<App.Msg> := Icons.IconButton<App.Msg>(
+    'episode-play-' + Item.Id,
+    Sys.Char.ConvertFromUtf32(
+      if Playing then
+        $E12E
+      else
+        $E13C
+      end if
+    ),
+    if Playing then
+      'Pause ' + Item.Title
+    else
+      'Play ' + Item.Title
+    end if, Action(M.Msg.Play(Item)),
+    new Icons.Options(
+      Variant := if Selected then
+        S.ButtonVariant.Primary
+      else
+        S.ButtonVariant.Ghost
+      end if, ControlSize := Icons.Size.Small
+    )
+  );
+  const Date: Sys.DateTimeOffset? := Item.Published;
+  return new Grid.Row<App.Msg>(
+    Item.Id, [
+      Grid.Cell<App.Msg>.Content(
+        [
+          E.Row<App.Msg>(
+            new L.Flow(Gap := Points(8), Align := L.Alignment.Center), Play,
+            E.Styled<App.Msg>(
+              Texts.Text<App.Msg>(Item.Title, Texts.Appearance.Label),
+              S.Role.SingleLine
+            )
+          )
+        ]
+      ),
+      Grid.Cell<App.Msg>.Text(
+        if Date <> null then
+          Date.Value.ToString('d')
+        else
+          '—'
+        end if
+      ),
+      Grid.Cell<App.Msg>.Text(
+        if Item.Duration > 0.0 then
+          Time.Time(Item.Duration)
+        else
+          '—'
+        end if
+      ),
+      Grid.Cell<App.Msg>.Content(
+        [
+          Menus.Menu<App.Msg>(
+            'episode-menu-' + Item.Id, 'More actions for ' + Item.Title,
+            [
+              Menus.Entry<App.Msg>.Action(
+                new Menus.Item<App.Msg>('details', 'Episode details', Action(M.Msg.Details(Item)))
+              )
+            ],
+            new Menus.Options(IconOnly := true, Position := Menus.Placement.BottomEnd)
+          )
+        ]
+      )
+    ]
+  );
+end function;
+
+function EpisodeGrid(Current: App.State; Show: M.Show; Items: array of M.Episode; Width: int): E.Element<App.Msg>;
+begin
+  const Page: M.State := Current.Podcasts;
+  if Items.Length = 0 then
+    return Empty.EmptyState<App.Msg>(
+      'podcast-episodes-empty', if Page.Loading then
+        'Loading episodes…'
+      elsif Page.Episodes.Length > 0 then
+        'No matching episodes'
+      else
+        'No playable episodes'
+      end if
+    );
+  end if;
+  const Key: string := Show.Id();
+  return Grid.DataGrid<App.Msg>(
+    'podcast-episodes/' + Key,
+    [
+      new Grid.Column('Title', cast<float>(Sys.Math.Max(96, Width - 236))),
+      new Grid.Column('Published', 116.0F, Priority := 1),
+      new Grid.Column('Time', 76.0F, Priority := 2),
+      new Grid.Column('', 44.0F, Fixed := true)
+    ],
+    Items.Length, function(Index: int): Grid.Row<App.Msg> => EpisodeRow(Current, Key, Items[Index]),
+    new Grid.Value(Cursor := Page.EpisodeCursor, Anchor := Page.EpisodeCursor),
+    function(Value: Grid.Value): App.Msg => Action(M.Msg.SelectEpisode(Value.Cursor)),
+    new Grid.Options(RowHeight := 40.0F, HideCheckboxes := true),
+    function(Index: int): App.Msg => Action(M.Msg.Play(Items[Index]))
+  );
+end function;
+
+function Details(Body: E.Element<App.Msg>; Item: M.Episode): E.Element<App.Msg>;
+begin
+  return Dialogs.Dialog<App.Msg>(
+    'podcast-episode-info', Body,
+    E.Size<App.Msg>(
+      E.ScrollView<App.Msg>(
+        'podcast-episode-description', Texts.Text<App.Msg>(
+          if Item.Description = '' then
+            'No description provided.'
+          else
+            Item.Description
+          end if, Texts.Appearance.Body
+        )
+      ),
+      Fixed(210)
+    ),
+    true, new Dialogs.Options(Item.Title), Action(M.Msg.Details(null))
+  );
+end function;
+
+// Shows the selected podcast's artwork beside its episode table, within Width and Padding.
+public function Podcast(Current: App.State; Width: int; Padding: int): E.Element<App.Msg>;
+begin
+  const Page: M.State := Current.Podcasts;
+  const Show: M.Show? := Page.Show;
+  if Show = null then
+    return Search(Current, Width, Padding);
+  end if;
+  const Compact: bool := Width < 650;
+  const Edge: int := if Compact then
+    58
+  else
+    Sys.Math.Clamp((Width - 540) div 2, 112, 190)
+  end if;
+  const Subscribed: bool := M.Find(Current.Settings.Saved.PodcastSubscriptions, Show.Id()) <> null;
+  const Info: E.Element<App.Msg> := E.Column<App.Msg>(
+    new L.Flow(Gap := Points(6), Align := L.Alignment.Start),
+    E.Styled<App.Msg>(
+      Texts.Text<App.Msg>(Show.Title, Texts.Appearance.HeadingTwo),
+      S.Role.SingleLine
+    ),
+    E.Styled<App.Msg>(
+      Texts.Text<App.Msg>(Show.Publisher, Texts.Appearance.Secondary),
+      S.Role.SingleLine
+    ),
+    B.Button<App.Msg>(
+      'podcast-subscription',
+      if Subscribed then
+        'Unsubscribe'
+      else
+        'Subscribe'
+      end if,
+      Action(M.Msg.Subscribe(Show, not Subscribed)),
+      new B.Options(Variant := S.ButtonVariant.Outline, ControlSize := B.Size.Small)
+    )
+  );
+  const Cover: E.Element<App.Msg> := Image(Page, Show, 'podcast-cover', Edge);
+  const Items: array of M.Episode := Update.Visible(Page);
+  const Inset: int := Edge + Padding * 2;
+  const TableWidth: int := Width - Padding * 2 - if Compact then
+    0
+  else
+    Inset + 1
+  end if;
+  const Parts: C.List<E.Element<App.Msg>> := new C.List<E.Element<App.Msg>>(
+    [
+      E.Row<App.Msg>(
+        new L.Flow(Gap := Points(8), Align := L.Alignment.Center),
+        E.Size<App.Msg>(
+          SearchField.SearchField<App.Msg>(
+            'podcast-episode-search',
+            Page.EpisodeFilter,
+            function(Value: string): App.Msg => Action(M.Msg.Filter(Value)),
+            new SearchField.Options(Placeholder := 'Search episodes…')
+          ), Fill
+        ),
+        Select.Select<App.Msg>(
+          'podcast-episode-sort',
+          [new Select.Item('Newest first'), new Select.Item('Oldest first')],
+          if Page.OldestFirst then
+            1
+          else
+            0
+          end if,
+          function(Index: int): App.Msg => Action(M.Msg.Sort(Index = 1))
+        )
+      )
+    ]
+  );
+  if Page.FeedError <> null then
+    Parts.Add(Error('podcast-feed-error', Page.FeedError));
+    if Page.Episodes.Length = 0 then
+      Parts.Add(
+        B.Button<App.Msg>('podcast-feed-retry', 'Retry', Action(M.Msg.Open(Show, Page.AddOnLoad)))
+      );
+    end if;
+  end if;
+
+  Parts.Add(E.Size<App.Msg>(EpisodeGrid(Current, Show, Items, TableWidth), Fill));
+  const EpisodePane: E.Element<App.Msg> := E.Column<App.Msg>(
+    new L.Flow(Align := L.Alignment.Stretch, Padding := Points(Padding), Gap := Points(12)),
+    Parts.ToArray()
+  );
+  const Content: E.Element<App.Msg> := if Compact then
+    E.Column<App.Msg>(
+      Stretch,
+      E.Row<App.Msg>(
+        new L.Flow(Padding := Points(Padding), Gap := Points(12)),
+        Cover,
+        E.Size<App.Msg>(Info, Fill)
+      ),
+      E.Size<App.Msg>(EpisodePane, Fill)
+    )
+  else
+    E.Row<App.Msg>(
+      Stretch,
+      E.Size<App.Msg>(
+        E.Column<App.Msg>(new L.Flow(Padding := Points(Padding), Gap := Points(12)), Cover, Info),
+        Fixed(Inset)
+      ),
+      E.Size<App.Msg>(E.Styled<App.Msg>(E.Column<App.Msg>(), S.Role.Divider), Fixed(1)),
+      E.Size<App.Msg>(EpisodePane, Fill)
+    )
+  end if;
+  const Count: string := Items.Length.ToString() + (if Items.Length <> Page.Episodes.Length then
+    ' of ' + Page.Episodes.Length.ToString()
+  else
+    ''
+  end if) +
+    if Items.Length = 1 and Page.Episodes.Length = 1 then
+      ' episode'
+    else
+      ' episodes'
+    end if;
+  const Body: E.Element<App.Msg> := E.Column<App.Msg>(
+    Stretch,
+    E.Row<App.Msg>(
+      new L.Flow(Padding := Points(Padding), Gap := Points(6), Align := L.Alignment.Center),
+      Icons.IconButton<App.Msg>(
+        'podcast-back',
+        Sys.Char.ConvertFromUtf32($E048),
+        'Back to podcast search',
+        Action(M.Msg.Back)
+      ),
+      Texts.Text<App.Msg>('Podcasts', Texts.Appearance.HeadingThree)
+    ),
+    E.Size<App.Msg>(E.Styled<App.Msg>(E.Row<App.Msg>(), S.Role.Divider), Fixed(1)),
+    E.Size<App.Msg>(Content, Fill),
+    Status.StatusBar<App.Msg>(
+      'podcast-status',
+      [Status.Item<App.Msg>.Text(new Status.Label(Count))]
+    )
+  );
+  const Item: M.Episode? := Page.Details;
+  return if Item <> null then
+    Details(Body, Item)
+  else
+    Body
+  end if;
+end function;
+
+end unit;

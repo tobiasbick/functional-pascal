@@ -1,0 +1,219 @@
+// [Documentation](../../../doc/podcasts.md#implementation)
+
+unit FpasAmp.Ui.Podcasts.Feeds;
+
+uses
+  FpasAmp.Ui.Podcasts.Model as M, FpasAmp.Ui.Podcasts.Network as Network,
+  System as Sys, System.Collections.Generic as C, System.Globalization as G, System.IO as IO,
+  System.Net as N, System.Net.Http as H, System.Text.RegularExpressions as R,
+  System.Threading as T, System.Threading.Tasks as Tasks, System.Xml as Xml, System.Xml.Linq as X;
+
+const Itunes: string := 'http://www.itunes.com/dtds/podcast-1.0.dtd';
+
+function Field(Node: X.XElement; Name: string; Namespace: string := ''): string;
+begin
+  const Entry: X.XElement? := Node.Element(X.XName.Get(Name, Namespace));
+  return if Entry <> null then
+    Entry.Value.Trim()
+  else
+    ''
+  end if;
+end function;
+
+function Attribute(Node: X.XElement?; Name: string): string;
+begin
+  const Entry: X.XAttribute? := if Node <> null then
+    Node.Attribute(X.XName.Get(Name))
+  else
+    null
+  end if;
+  return if Entry <> null then
+    Entry.Value.Trim()
+  else
+    ''
+  end if;
+end function;
+
+function Relative(Base: Sys.Uri; Value: string): string;
+begin
+  var Result: Sys.Uri? := null;
+  if Value <> '' and Sys.Uri.TryCreate(Base, Value, out Result) then
+    case Result of
+      when is Sys.Uri as Resolved:
+        return M.Address(Resolved.AbsoluteUri);
+      else
+    end case;
+  end if;
+
+  return '';
+end function;
+
+function Published(Value: string): Sys.DateTimeOffset?;
+begin
+  var Date: Sys.DateTimeOffset := new Sys.DateTimeOffset();
+  return if Sys.DateTimeOffset.TryParse(
+    Value,
+    G.CultureInfo.InvariantCulture,
+    G.DateTimeStyles.AssumeUniversal,
+    out Date
+  )
+  then
+    Date
+  else
+    null
+  end if;
+end function;
+
+function Duration(Value: string): double;
+begin
+  const Parts: array of string := Value.Split(#58);
+  var Seconds: double := 0.0;
+  if Parts.Length > 3 then
+    return 0.0;
+  end if;
+
+  for Part: string in Parts do
+    var Count: double := 0.0;
+    if not double.TryParse(
+      Part,
+      G.NumberStyles.AllowDecimalPoint,
+      G.CultureInfo.InvariantCulture,
+      out Count
+    )
+      or not double.IsFinite(Count) or Count > 604800.0
+    then
+      return 0.0;
+    end if;
+
+    Seconds := Seconds * 60.0 + Count;
+  end for;
+
+  return if Seconds <= 604800.0 then
+    Seconds * 1000.0
+  else
+    0.0
+  end if;
+end function;
+
+function Enclosure(Item: X.XElement; Base: Sys.Uri): M.Episode?;
+begin
+  for Enclosure: X.XElement in Item.Elements(X.XName.Get('enclosure')) do
+    const Url: string := Relative(Base, Attribute(Enclosure, 'url'));
+    const Kind: string := Attribute(Enclosure, 'type').ToLowerInvariant();
+    if Url = '' or not (Kind.StartsWith(
+      'audio/',
+      Sys.StringComparison.Ordinal
+    ) or Network.Extension(Url, Kind) <> '')
+    then
+      continue;
+    end if;
+    const Guid: string := Field(Item, 'guid');
+    const Title: string := Field(Item, 'title');
+    const Notes: string := (N.WebUtility.HtmlDecode(
+      R.Regex.Replace(Field(Item, 'description'), '<[^>]+>', ' ')
+    ) ?? '').Trim();
+    return new M.Episode(
+      if Guid = '' then
+        Url
+      else
+        Guid
+      end if, if Title = '' then
+        'Untitled episode'
+      else
+        Title
+      end if,
+      Url, Kind, Published(Field(Item, 'pubDate')), Duration(Field(Item, 'duration', Itunes)), Notes
+    );
+  end for;
+
+  return null;
+end function;
+
+function Parse(Document: X.XDocument; Show: M.Show; Base: Sys.Uri): M.Feed;
+begin
+  const Root: X.XElement? := Document.Root;
+  const Channel: X.XElement? := if Root <> null then
+    Root.Element(X.XName.Get('channel'))
+  else
+    null
+  end if;
+  if Root = null or Root.Name.LocalName <> 'rss' or Channel = null then
+    raise new IO.InvalidDataException('This address does not contain an RSS podcast feed.');
+  end if;
+  const Title: string := Field(Channel, 'title');
+  const Author: string := Field(Channel, 'author', Itunes);
+  const Artwork: string := Relative(
+    Base,
+    Attribute(Channel.Element(X.XName.Get('image', Itunes)), 'href')
+  );
+  const Image: X.XElement? := Channel.Element(X.XName.Get('image'));
+  const Standard: string := if Image <> null then
+    Relative(Base, Field(Image, 'url'))
+  else
+    ''
+  end if;
+  const Items: C.List<M.Episode> := new C.List<M.Episode>();
+  const Seen: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+  for Node: X.XElement in Channel.Elements(X.XName.Get('item')) do
+    const Item: M.Episode? := Enclosure(Node, Base);
+    if Item <> null and Seen.Add(Item.Id) then
+      Items.Add(Item);
+    end if;
+  end for;
+
+  return new M.Feed(
+    new M.Show(
+      Show.Url,
+      if Title = '' then
+        Show.Title
+      else
+        Title
+      end if,
+      if Author = '' then
+        Show.Publisher
+      else
+        Author
+      end if,
+      if Artwork <> '' then
+        Artwork
+      elsif Standard <> '' then
+        Standard
+      else
+        Show.Artwork
+      end if
+    ), Items.ToArray()
+  );
+end function;
+
+// Opens Show's RSS feed and resolves enclosures and images against the final response URL.
+// Stop cancels the request. Returns the publisher's metadata and playable audio items.
+public async function Load(Show: M.Show; Stop: T.CancellationToken): Tasks.Task<M.Feed>;
+requires Show.Url <> '';
+begin
+  using const Deadline: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
+    Stop
+  );
+  Deadline.CancelAfter(15000);
+  using const Reply: H.HttpResponseMessage := await Network.Client.GetAsync(
+    Show.Url,
+    H.HttpCompletionOption.ResponseHeadersRead,
+    Deadline.Token
+  ).ConfigureAwait(false);
+  discard Reply.EnsureSuccessStatusCode();
+  using const Input: IO.Stream := await Reply.Content.ReadAsStreamAsync(
+    Deadline.Token
+  ).ConfigureAwait(false);
+  using const Data: IO.MemoryStream := new IO.MemoryStream();
+  await Network.Copy(Input, Data, 16000000L, Deadline.Token).ConfigureAwait(false);
+  Data.Position := 0L;
+  const Options: Xml.XmlReaderSettings := new Xml.XmlReaderSettings();
+  Options.DtdProcessing := Xml.DtdProcessing.Prohibit;
+  Options.XmlResolver := null;
+  Options.MaxCharactersInDocument := 16000000L;
+  using const Reader: Xml.XmlReader := Xml.XmlReader.Create(Data, Options);
+  const Document: X.XDocument := X.XDocument.Load(Reader, X.LoadOptions.None);
+  Deadline.Token.ThrowIfCancellationRequested();
+  return Parse(Document, Show, Network.ResponseAddress(Reply, Show.Url));
+end function;
+
+end unit;

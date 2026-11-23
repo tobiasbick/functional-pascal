@@ -1,0 +1,195 @@
+// [Documentation](../../../doc/podcasts.md#implementation)
+
+unit FpasAmp.Ui.Podcasts.Model;
+
+uses
+  Fpas.Media.Images as Images, FpasAmp.Ui.Radio.Model as Radio,
+  FpasAmp.Ui.Podcasts.Catalog as Catalog, System as Sys,
+  System.Collections.Generic as C, System.Collections.Immutable as I,
+  System.Security.Cryptography as Crypto, System.Text as Text;
+
+// A podcast identified by its canonical RSS address.
+public type Show = record
+  // Validated HTTP or HTTPS feed address.
+  public Url: string;
+  // Show name from the feed or the search directory.
+  public Title: string;
+  // Show publisher when supplied by the source.
+  public Publisher: string := '';
+  // Optional remote artwork address.
+  public Artwork: string := '';
+  // Apple genre identifiers from the directory, including parent genres.
+  public Genres: array of string := [];
+
+  // Returns a stable navigation key without exposing the feed address in a route.
+  public function Id(): string;
+  begin
+    return Sys.Convert.ToHexString(Crypto.SHA256.HashData(Text.Encoding.UTF8.GetBytes(self.Url)));
+  end function;
+end record;
+
+// One playable audio item from an RSS feed.
+public type Episode = record
+  // Feed-local identifier, falling back to the media address.
+  public Id: string;
+  // Episode title shown in the table and player.
+  public Title: string;
+  // Validated HTTP or HTTPS enclosure URL.
+  public Url: string;
+  // Audio MIME type when provided by the feed.
+  public MediaType: string := '';
+  // Publication time, or null when unavailable.
+  public Published: Sys.DateTimeOffset? := null;
+  // Duration in milliseconds, or zero until the decoder knows it.
+  public Duration: double := 0.0;
+  // Plain-text description when supplied by the publisher.
+  public Description: string := '';
+end record;
+
+// A feed's show metadata and playable episodes.
+public type Feed = record
+  // Show identity retained from the URL used to open it.
+  public Show: Show;
+  // Episodes in publisher order before applying the table sort.
+  public Episodes: array of Episode;
+end record;
+
+// Visible state for the search page, the selected show and the add-feed dialog.
+public type State = record
+  // Search term entered by the user.
+  public Query: string := '';
+  // Apple storefront used for charts and text search.
+  public Market: string := Catalog.DefaultMarket();
+  // Selected Apple genre identifier, or an empty string for all genres.
+  public Genre: string := '';
+  // Last accepted unfiltered Apple response, in provider order.
+  public Results: array of Show := [];
+  // Token of the most recently submitted search.
+  public SearchRevision: long := 0L;
+  // Whether the search is in progress.
+  public Searching: bool := false;
+  // Whether the result table is for a submitted search term.
+  public Searched: bool := false;
+  // Error for the search view, if any.
+  public SearchError: string? := null;
+  // Keyboard selection on the search table.
+  public SearchCursor: int := -1;
+  // Selected show, available from search or a persistent subscription.
+  public Show: Show? := null;
+  // Last accepted episodes for the selected show.
+  public Episodes: array of Episode := [];
+  // Show load token, also scopes artwork replies.
+  public FeedRevision: long := 0L;
+  // Whether the selected feed is loading.
+  public Loading: bool := false;
+  // Whether a loaded manual feed should be subscribed.
+  public AddOnLoad: bool := false;
+  // Error for the show view or subscription save.
+  public FeedError: string? := null;
+  // Filter text for the selected show's episode table.
+  public EpisodeFilter: string := '';
+  // Whether oldest episodes should be listed first.
+  public OldestFirst: bool := false;
+  // Keyboard selection in the current episode table.
+  public EpisodeCursor: int := -1;
+  // URL being edited in the RSS dialog, or null when closed.
+  public Draft: string? := null;
+  // Episode whose description is open, or null.
+  public Details: Episode? := null;
+  // Decoded images keyed by their validated remote address.
+  public Covers: I.ImmutableDictionary<string, Images.Bitmap?> := I.ImmutableDictionary<string, Images.Bitmap?>.Empty;
+end record;
+
+// Actions and detached podcast effect replies.
+public type Msg = variant
+  // Edit the query without sending a request.
+  Query(Value: string);
+  // Submit the current filter text to Apple.
+  Search(Value: string);
+  // Select the Apple storefront by country code.
+  Market(Value: string);
+  // Select an Apple genre identifier or clear the selection.
+  Genre(Value: string);
+  // Accept Apple matches for a specific request.
+  Found(Revision: long; Shows: array of Show);
+  // Report an Apple request failure.
+  SearchFailed(Revision: long; Reason: string);
+  // Track the selected row in the result table.
+  SelectResult(Index: int);
+  // Open the show and request its RSS feed.
+  Open(Show: Show; Subscribe: bool);
+  // Return to the search results.
+  Back;
+  // Accept the selected show's feed.
+  Loaded(Revision: long; Feed: Feed);
+  // Report a feed failure for the selected request.
+  FeedFailed(Revision: long; Reason: string);
+  // Cache one image unless the search or feed visit that requested it is obsolete.
+  Cover(Search: bool; Revision: long; Url: string; Image: Images.Bitmap);
+  // Subscribe the show or remove its subscription.
+  Subscribe(Show: Show; Enabled: bool);
+  // Open the manual RSS dialog.
+  Add;
+  // Edit the manual RSS address.
+  EditUrl(Url: string);
+  // Close the RSS dialog.
+  Cancel;
+  // Validate and open the manually entered feed.
+  AddFeed;
+  // Filter the episode list by its displayed titles.
+  Filter(Value: string);
+  // Set the date order of the episode list.
+  Sort(OldestFirst: bool);
+  // Change the focused episode row.
+  SelectEpisode(Index: int);
+  // Start or toggle the selected episode in the current queue.
+  Play(Episode: Episode);
+  // Open or dismiss the episode details dialog.
+  Details(Episode: Episode?);
+end variant;
+
+// Returns the visible shows for Current in provider order.
+// Category charts arrive filtered from Apple. Text matches are filtered locally.
+public function VisibleShows(Current: State): array of Show;
+begin
+  if not Current.Searched or Current.Genre = '' then
+    return Current.Results;
+  end if;
+
+  const Matches: C.List<Show> := new C.List<Show>();
+  for Item: Show in Current.Results do
+    if Sys.Array.IndexOf<string>(Item.Genres, Current.Genre) >= 0 then
+      Matches.Add(Item);
+    end if;
+  end for;
+
+  return Matches.ToArray();
+end function;
+
+// Finds a subscription or search result by its stable Id.
+public function Find(Items: array of Show; Id: string): Show?;
+begin
+  for Item: Show in Items do
+    if Item.Id() = Id then
+      return Item;
+    end if;
+  end for;
+
+  return null;
+end function;
+
+// Normalizes Value as a podcast HTTP address and strips its fragment.
+// Returns an empty string for unsupported or malformed input.
+public function Address(Value: string): string;
+begin
+  const Url: string := Radio.Address(Value);
+  if Url = '' then
+    return '';
+  end if;
+
+  const Builder: Sys.UriBuilder := new Sys.UriBuilder(Url);
+  Builder.Fragment := '';
+  return Builder.Uri.AbsoluteUri;
+end function;
+
+end unit;

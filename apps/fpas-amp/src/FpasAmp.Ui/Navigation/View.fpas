@@ -10,7 +10,7 @@ uses
   Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Containers.EmptyStates as Empty,
   Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Styles as Styles,
   Fpas.Ui.Widgets.Theming.Themes as Themes, System as Sys, System.IO as IO,
-  System.Collections.Generic as C, FpasAmp.Ui.Radio.Model as Radio;
+  System.Collections.Generic as C, FpasAmp.Ui.Radio.Model as Radio, FpasAmp.Ui.Podcasts.Model as Podcasts;
 
 // Desktop sidebar width, in logical units.
 public const Width: int := 224;
@@ -20,7 +20,11 @@ public const DrawerBreakpoint: int := 760;
 // Returns the visible label of static `Page`.
 public function Title(Page: M.Page): string;
 begin
-  return Page.ToString();
+  return if Page = M.Page.Podcasts then
+    'Search'
+  else
+    Page.ToString()
+  end if;
 end function;
 
 function Icon(Page: M.Page): string;
@@ -32,6 +36,7 @@ begin
       when M.Page.Artists: $E1A4;
       when M.Page.Genres: $E17F;
       when M.Page.Settings: $E154;
+      when M.Page.Podcasts: $E151;
       else $E142;
     end case
   );
@@ -74,7 +79,14 @@ end function;
 
 function Items(Current: App.State): E.Element<App.Msg>;
 begin
-  const Active: string := M.SectionKey(Current.Navigation.Active);
+  var Active: string := M.SectionKey(Current.Navigation.Active);
+  case Current.Navigation.Active of
+    when M.Route.Podcast(const Id: string):
+      if Podcasts.Find(Current.Settings.Saved.PodcastSubscriptions, Id) = null then
+        Active := M.Key(M.Route.Page(M.Page.Podcasts));
+      end if;
+    else
+  end case;
   const Playlists: C.List<Nav.Item<App.Msg>> := new C.List<Nav.Item<App.Msg>>();
   const Names: C.Dictionary<string, int> := new C.Dictionary<string, int>(
     Sys.StringComparer.OrdinalIgnoreCase
@@ -127,6 +139,21 @@ begin
     );
   end for;
 
+  const Shows: C.List<Nav.Item<App.Msg>> := new C.List<Nav.Item<App.Msg>>(
+    [Destination(M.Page.Podcasts)]
+  );
+  for Item: Podcasts.Show in Current.Settings.Saved.PodcastSubscriptions do
+    const Route: M.Route := M.Route.Podcast(Item.Id());
+    Shows.Add(
+      new Nav.Item<App.Msg>(
+        M.Key(Route),
+        Item.Title,
+        App.Msg.Navigation(M.Msg.Select(Route)),
+        Icon := Sys.Char.ConvertFromUtf32($E142)
+      )
+    );
+  end for;
+
   return Nav.Sidebar<App.Msg>(
     'navigation',
     [
@@ -140,6 +167,7 @@ begin
         ]
       ),
       new Nav.Section<App.Msg>('Radio', Stations.ToArray(), GapBefore := 14),
+      new Nav.Section<App.Msg>('Podcasts', Shows.ToArray(), GapBefore := 14),
       new Nav.Section<App.Msg>('Playlists', Playlists.ToArray(), GapBefore := 14)
     ],
     if Active = 'settings' or (not Current.Navigation.Loaded and Active.StartsWith(
@@ -238,6 +266,8 @@ begin
       Glyph := Sys.Char.ConvertFromUtf32($E106);
     when M.Route.Station(_):
       Heading := 'Stations';
+    when M.Route.Podcast(_):
+      Heading := 'Podcasts';
   end case;
   const Parts: C.List<E.Element<App.Msg>> := new C.List<E.Element<App.Msg>>(
     [Texts.Text<App.Msg>(Heading, Texts.Appearance.HeadingOne)]

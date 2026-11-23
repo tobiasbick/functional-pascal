@@ -92,12 +92,12 @@ unavailable to application bindings. See the
 
 ## Desktop services
 
-`OpenFile`, `SaveFile` and `ChooseFolder` open modal platform choosers outside
-active frames and return a Unicode path or null. Linux uses CUI with Zenity or
-KDialog. On Windows, Save and Choose Folder use the Common Item Dialog owned
-by the CUI window. A window thread already initialized for multithreaded COM
-uses an STA thread for the chooser. `SaveFile` selects the destination without
-probing file creation. The caller writes the data.
+`OpenFile`, `SaveFile` and `ChooseFolder` call CUI's modal platform choosers
+outside active frames and return a Unicode path or null. Linux uses Zenity or
+KDialog. On Windows, CUI preserves the process working directory across Open
+and Save. Save opens in the suggested directory and returns the destination
+without probing file creation. The caller writes the data. When a Windows
+host thread uses multithreaded COM, CUI runs the folder chooser on an STA thread.
 `CuiDesktop.TryOpen` dispatches a URL or absolute path to the registered
 desktop handler, which may finish asynchronously. Clipboard reads and writes
 run on the owner thread through CUI. See [file selection](host.md#file-selection)
@@ -320,6 +320,5 @@ x64 and Ubuntu x64 under WSL 2 with Xvfb.
 - `src/Fpas.Ui.Gui.Cui/native/widgets/files/`
   - [file_dialog.c](../../../src/Fpas.Ui.Gui.Cui/native/widgets/files/file_dialog.c)
   - [file_dialog.h](../../../src/Fpas.Ui.Gui.Cui/native/widgets/files/file_dialog.h)
-  - [win32_file_dialog.c](../../../src/Fpas.Ui.Gui.Cui/native/widgets/files/win32_file_dialog.c)
 
 </details>

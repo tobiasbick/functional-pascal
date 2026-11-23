@@ -29,7 +29,7 @@ public sealed class CuiFileDialogTests
         string? Choose(string? path)
         {
             nint owner = window.NativeWindow;
-            Task driver = Task.Run(() => WindowsFileDialogInput.Respond(owner, path));
+            Task driver = Task.Run(() => WindowsFileDialogInput.Respond(owner, path, folder: true));
             string? result = window.ChooseFolder("FPAS folder selection");
             driver.GetAwaiter().GetResult();
             return result;

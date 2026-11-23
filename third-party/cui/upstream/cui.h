@@ -1282,11 +1282,12 @@ typedef enum cui_annotation_kind {
 } cui_annotation_kind;
 typedef struct cui_chart_annotation {
     cui_annotation_kind kind;
-    double x;                  /* in the chart's x units: the point's index for line and bar charts, x_min to x_max for the dot chart */
+    double x;                  /* in the chart's x units: x_min to x_max, or the point's index in a line or bar chart that sets neither */
     double y;                  /* a value, in the chart's value units */
     const char *label;         /* first line, e.g. "PEAK 203 MG"; `NULL` for a line with no label */
     const char *detail;        /* second line, muted, e.g. "13:06"; `NULL` for none */
     bool accent;               /* the line, dot and label in the accent color */
+    cui_color color;           /* the line, dot and label in this color, e.g. CUI_COLOR_SUCCESS; default: `accent` decides */
 } cui_chart_annotation;
 
 typedef struct cui_chart_opts {
@@ -1306,6 +1307,8 @@ typedef struct cui_chart_opts {
     int annotation_count;      /* number of `annotations` */
     bool dither;               /* line chart: every series filled with dots that thin out from its line to the
                                 * bottom of its band (implies `area`); with `stacked`, bands never mix colors */
+    double x_min, x_max;       /* line and bar charts: what the first and last point stand for, in annotation x units;
+                                * equal: annotation x is the point's index */
 } cui_chart_opts;
 CUI_API void cui_line_chart_ex(cui_ctx *ui, const char *id, const cui_series *series, int count, const cui_chart_opts *opts);
 CUI_API void cui_bar_chart_ex(cui_ctx *ui, const char *id, const cui_series *series, int count, const cui_chart_opts *opts);
@@ -1690,13 +1693,23 @@ CUI_API bool cui_filter_bar(cui_ctx *ui, const char *id, const cui_filter_field 
  * child, Left closes it or moves to its parent, Home and End, Enter
  * activates, * opens every sibling, typing jumps to a name (with .label).
  * Selection is the data grid's: click, Shift for a range, Ctrl to toggle,
- * Ctrl+A, Esc. Columns hide by cui_grid_column.priority when narrow. */
+ * Ctrl+A, Esc. Columns hide by cui_grid_column.priority when narrow.
+ *
+ * With .draggable, rows drag to move nodes: the drag carries the selection
+ * (or the row you grab when it is not selected), a line or an outlined row
+ * shows where it would land, the list scrolls near its edges, a closed
+ * folder opens when you hold the drag over it, and Esc cancels. The table
+ * only reports the drop; move the nodes with cui_tree_move:
+ *
+ *     if (ev.drop_count > 0)
+ *         root = cui_tree_move(nodes, count, root, ev.dropped, ev.drop_count, ev.drop_target, ev.drop_where); */
 enum {
     CUI_TREE_HAS_CHILDREN = 1 << 0,   /* shows a chevron before its children are loaded */
     CUI_TREE_OPEN         = 1 << 1,   /* expanded (the table toggles it) */
     CUI_TREE_SELECTED     = 1 << 2,   /* the table sets and clears it */
     CUI_TREE_LOADING      = 1 << 3    /* children pending: an open node shows a spinner row; clear it when loaded */
 };
+enum { CUI_TREE_DROP_BEFORE, CUI_TREE_DROP_INSIDE, CUI_TREE_DROP_AFTER };   /* where dropped nodes go, next to a target node */
 typedef struct cui_tree_node {
     int parent;                /* -1 for a top level node */
     int first_child;           /* -1 when it has none, or none loaded yet */
@@ -1712,7 +1725,9 @@ typedef struct cui_tree_table_opts {
     int *cursor;               /* the keyboard node, optional (in and out) */
     bool guides;               /* quiet vertical lines for each indentation level */
     const char *(*label)(void *user, int node);   /* names for type-ahead, optional */
-    void *user;                /* passed to `label` as its first argument */
+    void *user;                /* passed to `label` and `can_drop` as their first argument */
+    bool draggable;            /* rows drag to move nodes; the drop arrives in cui_tree_table_events */
+    bool (*can_drop)(void *user, int target, int where);   /* optional: false refuses a drop of the dragged (selected) nodes there */
 } cui_tree_table_opts;
 typedef struct cui_tree_table_events {
     int activated;             /* node chosen with Enter or a double click, else -1 */
@@ -1721,6 +1736,9 @@ typedef struct cui_tree_table_events {
     int load_count;            /* number of nodes in `load`; at most 64 a frame */
     bool selection_changed;    /* a node's `CUI_TREE_SELECTED` flag changed this frame */
     bool sort_changed;         /* re-sort every sibling list by *sort */
+    const int *dropped;        /* nodes dropped this frame (.draggable), in tree order, none inside another; valid this frame */
+    int drop_count;            /* number of nodes in `dropped`, 0 without a drop */
+    int drop_target, drop_where;   /* they go CUI_TREE_DROP_BEFORE, _INSIDE (as the last children) or _AFTER this node, else -1 */
 } cui_tree_table_events;
 CUI_API void cui_tree_table_begin_ex(cui_ctx *ui, const char *id, const cui_grid_column *columns, int column_count,
                                      cui_tree_node *nodes, int node_count, const cui_tree_table_opts *opts);
@@ -1735,6 +1753,12 @@ CUI_API cui_tree_table_events cui_tree_table_end(cui_ctx *ui);
 /* Sorts every sibling list (stable) by cmp, relinking the nodes. Returns
  * the new first top level node. */
 CUI_API int cui_tree_sort(cui_tree_node *nodes, int node_count, int root, int (*cmp)(void *user, int a, int b), void *user);
+/* Moves nodes, each with its subtree, before, into (after the last child) or
+ * after target, keeping their order, and relinks the nodes. Returns the new
+ * first top level node. A target that is one of the nodes or inside one,
+ * or a node listed twice, moves nothing. Flags stay as they are: open the target yourself if you
+ * want the moved nodes in view. */
+CUI_API int cui_tree_move(cui_tree_node *nodes, int node_count, int root, const int *move, int move_count, int target, int where);
 
 /* Path bar: a breadcrumb for file and scene paths. Segments are clickable,
  * the last one is the current place. Middle segments that do not fit
@@ -2874,7 +2898,7 @@ CUI_API int cui_week_calendar_ex(cui_ctx *ui, const char *id, cui_date week_star
  *
  * With the grid focused the arrows move the selected day (into the next or
  * previous month), Page Up and Page Down change month, Home goes to today
- * and Enter activates the day. */
+ * and Enter activates the selected day even when the pointer rests on another day. */
 typedef struct cui_month_event {
     const char *title;         /* shown on the event's bar, or after the time of a timed event */
     cui_date start, end;       /* inclusive; an unset or earlier end means one day */
@@ -5749,14 +5773,15 @@ CUI_API const char *cui_app_backend(cui_app *app);
 /* Native file dialogs. Blocking; returns true and writes the chosen path
  * (UTF-8) to out when the user confirms. On Linux this uses zenity or
  * kdialog when installed. Pass NULL as app to use the current app (handy in
- * cui_app_run callbacks). */
+ * cui_app_run callbacks). On Windows the folder chooser also works when the
+ * calling thread already uses a multithreaded COM apartment. */
 typedef enum cui_file_dialog_kind { CUI_FILE_OPEN = 0, CUI_FILE_SAVE, CUI_FILE_FOLDER } cui_file_dialog_kind;
 typedef struct cui_file_dialog_opts {
     cui_file_dialog_kind kind;
     const char *title;
     const char *filter_name;    /* e.g. "Images" */
     const char *filter;         /* extensions separated by ';', e.g. "png;jpg" */
-    const char *default_name;   /* save dialogs */
+    const char *default_name;   /* save dialogs: suggested name, optionally with its directory on Windows */
 } cui_file_dialog_opts;
 CUI_API bool cui_app_file_dialog(cui_app *app, const cui_file_dialog_opts *opts, char *out, size_t cap);
 

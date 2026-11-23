@@ -6,10 +6,11 @@ namespace Fpas.Ui.Gui.Cui.Tests.Windowing;
 internal static partial class WindowsFileDialogInput
 {
     private const uint SetText = 0x000C;
+    private const uint BrowseSetSelectionW = 0x0467;
     private const uint ClickButton = 0x00F5;
     private const uint Close = 0x0010;
 
-    internal static void Respond(nint owner, string? path)
+    internal static void Respond(nint owner, string? path, bool folder = false)
     {
         nint dialog = 0;
         bool closed = false;
@@ -22,7 +23,11 @@ internal static partial class WindowsFileDialogInput
                 else Thread.Sleep(25);
             }
             Assert.NotEqual(0, dialog);
-            if (!string.IsNullOrEmpty(path))
+            if (folder && path is not null)
+            {
+                Assert.NotEqual(0, SendMessageTimeout(dialog, BrowseSetSelectionW, 1, path, 2, 1500, out _));
+            }
+            else if (!string.IsNullOrEmpty(path))
             {
                 // Explorer-style common dialogs put the file name in a nested edit control.
                 nint fileName = Descendant(Descendant(dialog, "ComboBoxEx32", 0x047C), "Edit");

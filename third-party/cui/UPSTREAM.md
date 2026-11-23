@@ -5,7 +5,7 @@
 | Repository | <https://github.com/yappologistic/CUI> |
 | Source fork | <https://github.com/tobiasbick/CUI> |
 | Revision | Upstream `master` after [v1.4.0](https://github.com/yappologistic/CUI/releases/tag/v1.4.0) |
-| Commit | [`e0124eaef2a41f07c7d6f22aed9af48314f1b3f3`](https://github.com/yappologistic/CUI/commit/e0124eaef2a41f07c7d6f22aed9af48314f1b3f3) |
+| Commit | [`e2a0ad2a493e22eb1d96beb4991f50dc2c4ac435`](https://github.com/yappologistic/CUI/commit/e2a0ad2a493e22eb1d96beb4991f50dc2c4ac435) |
 | Build inputs | [`cui.c`](upstream/cui.c) and [`cui.h`](upstream/cui.h) |
 | Local source modifications | None |
 
@@ -21,14 +21,57 @@ applied to master by hand. No combined fork branch is needed.
 
 | Path under `upstream/` | SHA-256 |
 | --- | --- |
-| `cui.c` | `1ac237a2f9d51afcb6023ebc63c1a072978f51413cc2870a51da3a1dbbacbfc0` |
-| `cui.h` | `6521fb914d75e2d67841ebd5385206edfcfa6a125e6def11a9c029e62ac69fae` |
+| `cui.c` | `fe7444e631d67c27499fb0e93ae72fd03575b5bb1fd14845b71710923ea8ff07` |
+| `cui.h` | `8057c2fdfb6e4d4797b4f3abb26b91387474e76d3173fb6294cbf783c3b62bc1` |
 
 Project-owned integration belongs under `src/Fpas.Ui.Gui.Cui/`, with the C bridge
 and CMake configuration in its `native/` directory. Keep those files separate
 from the unmodified upstream sources here.
 
-## Changes since `56c9bc2`
+## Changes from `e0124ea` to `e2a0ad2`
+
+- CUI-046. The Windows Save dialog keeps the suggested directory even when
+  file creation there is denied. Open and Save restore the process working
+  directory. [Issue #121](https://github.com/yappologistic/CUI/issues/121) ·
+  [PR #125](https://github.com/yappologistic/CUI/pull/125)
+- CUI-047. CUI runs the Windows folder chooser on an STA thread when the host
+  uses MTA. The binding now delegates both Save and Choose Folder to CUI.
+  [Issue #122](https://github.com/yappologistic/CUI/issues/122) ·
+  [PR #126](https://github.com/yappologistic/CUI/pull/126)
+- CUI-049. The frame allocator already clears its result. Removing a redundant
+  clear in `cui__em_button` lets the native build enable GCC's bounds and
+  string-overflow diagnostics again.
+  [Issue #123](https://github.com/yappologistic/CUI/issues/123) ·
+  [PR #127](https://github.com/yappologistic/CUI/pull/127)
+- CUI-050. With the pointer on a different day, Enter activates the
+  keyboard-selected day and Space preserves the selection. The month-calendar
+  adapter passes input directly to CUI. [Issue #124](https://github.com/yappologistic/CUI/issues/124) ·
+  [PR #128](https://github.com/yappologistic/CUI/pull/128)
+
+The public header adds optional chart X-axis bounds and annotation colors,
+tree-table drag and drop, and `cui_tree_move`. The existing adapters use the
+default values for the new options. The theme palettes, fonts and license
+inputs match the previous pin.
+
+| Release verification | Windows x64 | Linux x64 under WSL |
+| --- | --- | --- |
+| Native FPAS tests | 58 passed | 55 passed |
+| CUI binding tests | 282 passed, 7 skipped | 288 passed, 6 skipped |
+| Terminal CUI contract and dependency check | 2 passed | 2 passed |
+
+The bindings exercised the FPAS gallery and the month-calendar keyboard and
+pointer checks with both the software and OpenGL renderers. On Windows the
+upstream core, Save, MTA and STA tests passed. Under WSL the upstream core
+suite passed, GCC 15.2 compiled the amalgamation at `-O3` with
+`-Werror=array-bounds -Werror=stringop-overflow`, and Xvfb ran the Linux
+bindings, including all six Zenity selection and cancellation cases.
+
+An additional Xvfb run with Openbox failed 15 size or image checks and the
+gallery voice-orb interaction. All 16 failures also reproduced at the previous
+pin, `e0124ea`. The Linux results above use the
+[documented Xvfb configuration](../../docs/ui/gui/cui.md).
+
+## Changes from `56c9bc2` to `e0124ea`
 
 The five upstream commits change the Win32 OpenGL host and add an explicit
 SDL2 Wayland platform. Windows temporarily suspends vertical sync during

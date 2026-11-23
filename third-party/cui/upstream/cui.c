@@ -803,6 +803,13 @@ float cui__fl_tick_x(float px0, double k, double t0, double origin, double q, do
 const char *cui__fl_tick(cui_ctx *ui, double t, double step);
 const char *cui__fl_dur(cui_ctx *ui, double s);
 void cui__scroll_end_ex(cui_ctx *ui);
+/* the data grid's rows, for the tree table that drags over them (cui_grid.c): where grid `id`
+ * put its rows last frame (the area under the sticky header, and the top of row 0, which moves
+ * with the scroll), false before its first layout; a nudge of its scroll target; and whether
+ * the row cui_data_grid_row just began was pressed this frame */
+bool cui__grid_rows_at(cui_ctx *ui, cui_id id, cui_rect *view, float *row0_top);
+void cui__grid_scroll_by(cui_ctx *ui, cui_id id, float dy);
+bool cui__grid_row_pressed(cui_ctx *ui);
 cui_color cui__backdrop(cui_ctx *ui);
 
 void cui__paint_scrollbars(cui_ctx *ui, cui_node *n, cui_rect clip);
@@ -5477,6 +5484,21 @@ const char *cui__fmt_value(cui_ctx *ui, const char *fmt, float v) {
     return cui__frame_printf(ui, "%.0f", (double)v);
 }
 
+/* What the plot's left and right edges stand for in annotation x. A chart that sets x_min and
+ * x_max puts them at its first and last point, else x is the point's index. Bars sit in the
+ * middle of their slots, so their edges are half a step outside the first and last point;
+ * a single bar's slot spans x_min to x_max. */
+static void cui__chart_ann_x(const cui_chart_opts *o, int npts, bool bars, double *x0, double *x1) {
+    if (!(o->x_max > o->x_min)) {
+        *x0 = bars ? -0.5 : 0;
+        *x1 = bars ? npts - 0.5 : npts - 1;
+        return;
+    }
+    double half = bars && npts > 1 ? (o->x_max - o->x_min) / (npts - 1) * 0.5 : 0;
+    *x0 = o->x_min - half;
+    *x1 = o->x_max + half;
+}
+
 static cui_color cui__series_color(cui_ctx *ui, const cui_series *s, int k) {
     if (cui__color_set(s->color)) return cui_color_of(ui, s->color);
     return ui->theme.colors[CUI_TOKEN_SERIES_1 + (k % 6)];
@@ -5730,7 +5752,9 @@ static void cui__paint_xy_chart(cui_ctx *ui, cui_node *n, void *data) {
                 if (p->o.stacked) acc += s->values[i] * intro;
             }
         }
-        cui__paint_annotations(ui, p->o.annotations, p->o.annotation_count, plot, -0.5, npts - 0.5, lo, hi, plot.y, false);
+        double ax0, ax1;
+        cui__chart_ann_x(&p->o, npts, true, &ax0, &ax1);
+        cui__paint_annotations(ui, p->o.annotations, p->o.annotation_count, plot, ax0, ax1, lo, hi, plot.y, false);
         if (p->hover >= 0 && p->hover < npts) {
             float cx = plot.x + slot * (p->hover + 0.5f);
             if (!cui__chart_chip(ui, p, r, cx, col_top, p->hover))
@@ -5810,7 +5834,11 @@ static void cui__paint_xy_chart(cui_ctx *ui, cui_node *n, void *data) {
     for (int k = 0; k < p->count; k++)
         if (line_n[k] > 0) cui_draw_polyline(ui, lines[k], line_n[k], 2.0f, cui__series_color(ui, &p->series[k], k), false);
     cui_pop_clip(ui);
-    if (npts > 1) cui__paint_annotations(ui, p->o.annotations, p->o.annotation_count, plot, 0, npts - 1, lo, hi, plot.y, false);
+    if (npts > 1) {
+        double ax0, ax1;
+        cui__chart_ann_x(&p->o, npts, false, &ax0, &ax1);
+        cui__paint_annotations(ui, p->o.annotations, p->o.annotation_count, plot, ax0, ax1, lo, hi, plot.y, false);
+    }
     if (p->hover >= 0 && p->hover_t > 0.01f) {
         float hx = p->hx;
         cui_rect cl = { hx - 0.5f, plot.y, 1, plot.h };
@@ -25365,7 +25393,7 @@ static int cui__em_button(cui_ctx *ui, cui_id tid, cui_interact ti, cui_size w, 
     ui->nodes[b].radius = CUI_CORNERS(8);
     if (ti.focus_visible) cui__focus_ring(ui, b, 1);
     cui__em_tab_paint *tp = cui__frame_alloc(ui, sizeof *tp);
-    memset(tp, 0, sizeof *tp);
+    if (!tp) return b;
     tp->s = s; tp->len = (int)strlen(s); tp->alpha = 1; tp->icon = icon;
     ui->nodes[b].paint = cui__paint_emoji_tab; ui->nodes[b].paint_data = tp;
     return b;
@@ -34941,6 +34969,7 @@ cui_graph_result cui_graph_view_ex(cui_ctx *ui, const char *id_str, const cui_gr
 #define CUI__GRID_COLS 32
 #define CUI__GRID_HEAD 40.0f
 #define CUI__GRID_CHECK 44.0f
+#define CUI__GRID_SCROLL 0x5C011u   /* salt of the scroll area's id */
 
 typedef struct {
     float widths[CUI__GRID_COLS];
@@ -34969,6 +34998,7 @@ struct cui_grid_build {
     bool in_row;
     bool clicked_row;
     bool row_double;         /* the current row was double clicked this frame */
+    bool row_pressed;        /* the current row was pressed this frame */
     bool focused;
 };
 
@@ -35020,7 +35050,7 @@ bool cui_data_grid_begin_ex(cui_ctx *ui, const char *id_str, const cui_grid_colu
     struct cui_grid_build *b = cui__frame_alloc(ui, sizeof *b);
     memset(b, 0, sizeof *b);
     b->id = cui_make_id(ui, id_str);
-    b->sid = b->id ^ 0x5C011u;
+    b->sid = b->id ^ CUI__GRID_SCROLL;
     b->cols = cols; b->ncols = ncols; b->nrows = nrows; b->o = *o;
     b->row_h = o->row_height > 0 ? o->row_height : 40;
     b->row = -1;
@@ -35247,6 +35277,7 @@ bool cui_data_grid_row(cui_ctx *ui, int row) {
     bool sel = b->o.selected && b->o.selected[row];
     bool clicked = false;
     b->row_double = r.double_clicked || (r.clicked && ui->click_count >= 2);
+    b->row_pressed = r.hovered && ui->mpressed[0];
     if (r.clicked) {
         clicked = true;
         if (st->edit_row < 0) ui->focus = b->id;   /* a cell editor that just opened keeps the focus */
@@ -35424,6 +35455,26 @@ void cui_data_grid_end(cui_ctx *ui) {
     cui__close(ui);          /* frame */
     ui->last_id = b->id;
     ui->building.grid = NULL;
+}
+
+bool cui__grid_rows_at(cui_ctx *ui, cui_id id, cui_rect *view, float *row0_top) {
+    if (!cui__has_prev_rect(ui, id)) return false;
+    cui_rect r = cui__prev_rect(ui, id);
+    cui_scroll_state *ss = cui_state(ui, id ^ CUI__GRID_SCROLL, sizeof *ss);
+    *view = (cui_rect){ r.x, r.y + CUI__GRID_HEAD, r.w, CUI_MAX(0.0f, r.h - CUI__GRID_HEAD) };
+    *row0_top = r.y + CUI__GRID_HEAD - ss->y;
+    return true;
+}
+
+void cui__grid_scroll_by(cui_ctx *ui, cui_id id, float dy) {
+    cui_scroll_state *ss = cui_state(ui, id ^ CUI__GRID_SCROLL, sizeof *ss);
+    ss->ty = CUI_MAX(0.0f, ss->ty + dy);   /* the grid keeps it below the end */
+    ui->animating = true;
+}
+
+bool cui__grid_row_pressed(cui_ctx *ui) {
+    struct cui_grid_build *b = ui->building.grid;
+    return b && b->in_row && b->row_pressed;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -44656,6 +44707,12 @@ void cui__draw_hdash(cui_ctx *ui, float x0, float x1, float y, float dash, float
     for (float x = x0; x < x1; x += period) cui_draw_rect(ui, (cui_rect){ x, y, CUI_MIN(dash, x1 - x), 1 }, CUI_CORNERS(0), c);
 }
 
+/* an annotation's own color, else the emphasis color when it is an accent, else `plain` */
+static cui_color cui__ann_color(cui_ctx *ui, const cui_chart_annotation *an, cui_color em, cui_color plain) {
+    if (cui__color_set(an->color)) return cui_color_of(ui, an->color);
+    return an->accent ? em : plain;
+}
+
 /* Draws `a` over `plot`, mapping x from x0..x1 and values from y0..y1. Labels of vertical
  * lines start at `label_top` (headroom above the plot, or the plot's own top); labels of
  * horizontal lines go right of the plot when `gutter` is set, else inside its right end.
@@ -44700,11 +44757,11 @@ void cui__paint_annotations(cui_ctx *ui, const cui_chart_annotation *a, int n, c
     /* then the lines and dots, under every label */
     for (int i = 0; i < n; i++) {
         const cui_chart_annotation *an = &a[i];
-        cui_color line = an->accent ? em : CUI_C(ui, TEXT_MUTED);
+        cui_color line = cui__ann_color(ui, an, em, CUI_C(ui, TEXT_MUTED));
         if (an->kind == CUI_ANNOTATION_Y) {
             if (an->y < y0 || an->y > y1) continue;
             float yy = floorf(plot.y + plot.h - (float)((an->y - y0) / (y1 - y0)) * plot.h) + 0.5f;
-            cui__draw_hdash(ui, plot.x, plot.x + plot.w, yy - 0.5f, 3, 6, an->accent ? em : CUI_C(ui, BORDER_STRONG));
+            cui__draw_hdash(ui, plot.x, plot.x + plot.w, yy - 0.5f, 3, 6, cui__ann_color(ui, an, em, CUI_C(ui, BORDER_STRONG)));
             continue;
         }
         if (an->x < x0 || an->x > x1) continue;
@@ -44727,14 +44784,14 @@ void cui__paint_annotations(cui_ctx *ui, const cui_chart_annotation *a, int n, c
             float lx = out ? plot.x + plot.w + 6 : plot.x + plot.w - w1 - 2;
             float ly = out ? yy - lh * 0.5f : yy - lh - 2;
             if (!out) cui_draw_rect(ui, (cui_rect){ lx - 3, ly, w1 + 6, lh }, CUI_CORNERS(3), cui_alpha(CUI_C(ui, BACKGROUND), 0.86f));
-            cui__draw_text_line(ui, CUI_FONT_MONO, fs, lx, ly, an->accent ? em : CUI_C(ui, TEXT_MUTED), an->label, -1, true);
+            cui__draw_text_line(ui, CUI_FONT_MONO, fs, lx, ly, cui__ann_color(ui, an, em, CUI_C(ui, TEXT_MUTED)), an->label, -1, true);
             continue;
         }
         if (box[i].w <= 0) continue;
         float bx = box[i].x + 2, by = box[i].y;
         if (an->kind == CUI_ANNOTATION_POINT || by + box[i].h > plot.y + 1)
             cui_draw_rect(ui, (cui_rect){ bx - 3, by, box[i].w + 2, box[i].h }, CUI_CORNERS(3), cui_alpha(CUI_C(ui, BACKGROUND), 0.86f));
-        if (an->label) cui__draw_text_line(ui, CUI_FONT_MONO, fs, bx, by, an->accent ? em : CUI_C(ui, FOREGROUND), an->label, -1, true);
+        if (an->label) cui__draw_text_line(ui, CUI_FONT_MONO, fs, bx, by, cui__ann_color(ui, an, em, CUI_C(ui, FOREGROUND)), an->label, -1, true);
         if (an->detail) cui__draw_text_line(ui, CUI_FONT_MONO, fs, bx, by + (an->label ? lh : 0), CUI_C(ui, TEXT_MUTED), an->detail, -1, true);
     }
 }
@@ -49355,7 +49412,7 @@ cui_month_result cui_month_calendar_ex(cui_ctx *ui, const char *id_str, cui_date
             }
         if (hover_ev >= 0 || on_more) cui__set_cursor(ui, CUI_CURSOR_HAND);
     }
-    if (r.clicked && hover_day >= 0) {
+    if (r.released && hover_day >= 0) {
         if (hover_ev >= 0) res.event = hover_ev;
         else if (on_more) { st->more_day = hover_day; cui__popup_set(ui, pid, true); }
         else {
@@ -69749,6 +69806,15 @@ int cui_tour_ex(cui_ctx *ui, const char *id_str, const cui_tour_step *steps, int
 #define CUI__TT_LOAD_MAX 64       /* load requests per frame */
 #define CUI__TT_PAD 12.0f         /* the grid cell's side padding */
 #define CUI__TT_CHEV 20.0f        /* the chevron's box */
+#define CUI__TT_DRAG_START 4.0f   /* points a pressed row moves before it drags */
+#define CUI__TT_EDGE 28.0f        /* the band at the top and bottom that scrolls while dragging */
+#define CUI__TT_EDGE_SPEED 900.0f /* points a second with the pointer at the very edge */
+#define CUI__TT_HOLD_OPEN 0.6     /* seconds a drag rests on a closed folder before it opens */
+#define CUI__TT_DRAGGED_DIM 0.45f /* opacity of the rows being dragged */
+#define CUI__TT_GHOST 0x6057u     /* salt of the drag's id: the ghost, and the pointer capture */
+
+/* where the drop line or outline shows on its row */
+enum { CUI__TT_MARK_NONE, CUI__TT_MARK_TOP, CUI__TT_MARK_BOTTOM, CUI__TT_MARK_ROW };
 
 /* One visible row. node < 0 is the loading row of node -node - 2. */
 typedef struct { int node, depth; } cui__tt_row;
@@ -69759,6 +69825,17 @@ typedef struct {
     cui__tt_row *rows; int row_cap;
     bool *sel; int sel_cap;
     bool init;
+    /* dragging rows (.draggable) */
+    bool pending, dragging;
+    float press_x, press_y;
+    int press_node;
+    int *drag; int drag_n, drag_cap;   /* the dragged nodes, in tree order */
+    int target, where;                 /* the drop, target -1 for none */
+    int mark, mark_row, mark_depth;    /* CUI__TT_MARK_* on visible row mark_row */
+    int hold_node; double hold_time;   /* the closed folder under the drag, and since when */
+    char icon[16];                     /* the first dragged node's icon, for the ghost */
+    cui_spring lift;
+    uint64_t drag_frame;               /* the frame the drag input last ran */
 } cui__tt_state;
 
 typedef struct cui__tt_build {
@@ -69777,6 +69854,8 @@ typedef struct cui__tt_build {
     cui_table_sort sort_before;
     cui_tree_table_events ev;
     int loads[CUI__TT_LOAD_MAX];
+    bool *drag_mark;              /* per node: one of the dragged nodes, while dragging */
+    float view_w;                 /* the rows' visible width, while dragging */
 } cui__tt_build;
 
 typedef struct { cui__tt_build *b; uint64_t frame; } cui__tt_slot;
@@ -69791,7 +69870,8 @@ static void cui__tt_free(cui_ctx *ui, void *data) {
     cui__tt_state *st = data;
     cui__free(ui, st->rows);
     cui__free(ui, st->sel);
-    st->rows = NULL; st->sel = NULL; st->row_cap = st->sel_cap = 0;
+    cui__free(ui, st->drag);
+    st->rows = NULL; st->sel = NULL; st->drag = NULL; st->row_cap = st->sel_cap = st->drag_cap = 0;
 }
 
 static bool cui__tt_ok(const cui__tt_build *b, int n) { return n >= 0 && n < b->count; }
@@ -69952,6 +70032,263 @@ static void cui__tt_keys(cui_ctx *ui, cui__tt_build *b) {
     }
 }
 
+/* ---- dragging rows ---- */
+
+static float cui__tt_indent(const cui__tt_build *b, int depth, float keep);
+
+/* The selected nodes in tree order, leaving out those inside another selected
+ * node: they move with it. */
+static void cui__tt_collect_drag(cui_ctx *ui, cui__tt_build *b) {
+    cui__tt_state *st = b->st;
+    st->drag_n = 0;
+    int n = cui__tt_ok(b, b->o.root) ? b->o.root : -1;
+    for (int guard = 0; n >= 0 && guard <= b->count; guard++) {   /* bounded: bad links cannot loop */
+        bool sel = (b->nodes[n].flags & CUI_TREE_SELECTED) != 0;
+        if (sel) {
+            CUI__GROW(ui, st->drag, st->drag_n, st->drag_cap, 1);
+            st->drag[st->drag_n++] = n;
+        } else if (cui__tt_ok(b, b->nodes[n].first_child)) {
+            n = b->nodes[n].first_child;
+            continue;
+        }
+        int up = 0;
+        while (cui__tt_ok(b, n) && !cui__tt_ok(b, b->nodes[n].next_sibling) && up++ <= b->count) n = b->nodes[n].parent;
+        n = cui__tt_ok(b, n) && up <= b->count ? b->nodes[n].next_sibling : -1;
+    }
+}
+
+/* Whether node n is one of the dragged nodes or inside one. */
+static bool cui__tt_in_drag(const cui__tt_build *b, int n) {
+    for (int guard = 0; cui__tt_ok(b, n) && guard <= b->count; guard++) {
+        if (b->drag_mark[n]) return true;
+        n = b->nodes[n].parent;
+    }
+    return false;
+}
+
+/* A press that moved far enough: the drag carries the selection, or the
+ * pressed row alone when it is not selected (it becomes the selection). */
+static void cui__tt_start_drag(cui_ctx *ui, cui__tt_build *b) {
+    cui__tt_state *st = b->st;
+    int n = st->press_node;
+    if (!(b->nodes[n].flags & CUI_TREE_SELECTED)) {
+        for (int k = 0; k < b->count; k++) b->nodes[k].flags &= ~(uint32_t)CUI_TREE_SELECTED;
+        b->nodes[n].flags |= CUI_TREE_SELECTED;
+        st->anchor = n;
+        b->ev.selection_changed = true;
+    }
+    st->cursor = n;
+    cui__tt_collect_drag(ui, b);
+    st->dragging = st->drag_n > 0;
+    st->target = st->hold_node = -1;
+    st->mark = CUI__TT_MARK_NONE;
+    st->icon[0] = 0;
+    ui->focus = b->id;   /* Esc cancels, and the keys carry on from the tree after the drop */
+}
+
+/* The drop under the pointer: before or after a row, or inside a folder
+ * (its middle half). Below the last row is after the last top level node. */
+static void cui__tt_find_target(cui__tt_build *b, cui_rect view, float row0, float px, float py) {
+    cui__tt_state *st = b->st;
+    st->target = -1;
+    st->mark = CUI__TT_MARK_NONE;
+    if (!cui__rect_contains(view, px, py) || b->nrows == 0) return;
+    float rh = b->o.row_height;
+    int i = (int)floorf((py - row0) / rh);
+    if (i < 0) return;
+    int t, where, mark, mrow, mdepth;
+    if (i >= b->nrows) {
+        t = b->o.root;
+        for (int guard = 0; cui__tt_ok(b, t) && cui__tt_ok(b, b->nodes[t].next_sibling) && guard < b->count; guard++) t = b->nodes[t].next_sibling;
+        where = CUI_TREE_DROP_AFTER; mark = CUI__TT_MARK_BOTTOM; mrow = b->nrows - 1; mdepth = 0;
+    } else {
+        int n = b->rows[i].node;
+        if (n < 0) return;   /* a loading row */
+        float f = (py - (row0 + i * rh)) / rh;
+        if (cui__tt_has_kids(b, n)) where = f < 0.25f ? CUI_TREE_DROP_BEFORE : f > 0.75f ? CUI_TREE_DROP_AFTER : CUI_TREE_DROP_INSIDE;
+        else where = f < 0.5f ? CUI_TREE_DROP_BEFORE : CUI_TREE_DROP_AFTER;
+        t = n; mrow = i; mdepth = b->rows[i].depth;
+        mark = where == CUI_TREE_DROP_BEFORE ? CUI__TT_MARK_TOP : where == CUI_TREE_DROP_AFTER ? CUI__TT_MARK_BOTTOM : CUI__TT_MARK_ROW;
+        /* the line under an open folder is where its first child is */
+        const cui_tree_node *N = &b->nodes[n];
+        if (where == CUI_TREE_DROP_AFTER && (N->flags & CUI_TREE_OPEN) && !(N->flags & CUI_TREE_LOADING) && cui__tt_ok(b, N->first_child)) {
+            t = N->first_child; where = CUI_TREE_DROP_BEFORE; mdepth++;
+        }
+    }
+    if (!cui__tt_ok(b, t) || cui__tt_in_drag(b, t)) return;
+    if (b->o.can_drop && !b->o.can_drop(b->o.user, t, where)) return;
+    st->target = t; st->where = where;
+    st->mark = mark; st->mark_row = mrow; st->mark_depth = mdepth;
+}
+
+/* Near the top or bottom edge the rows scroll, faster closer to it. */
+static void cui__tt_edge_scroll(cui_ctx *ui, cui__tt_build *b, cui_rect view) {
+    if (ui->mx < view.x || ui->mx >= view.x + view.w) return;
+    float top = ui->my - view.y, bottom = view.y + view.h - ui->my;
+    float k = 0;
+    if (top < CUI__TT_EDGE && top <= bottom) k = -cui__clampf((CUI__TT_EDGE - top) / CUI__TT_EDGE, 0, 1);
+    else if (bottom < CUI__TT_EDGE) k = cui__clampf((CUI__TT_EDGE - bottom) / CUI__TT_EDGE, 0, 1);
+    if (k != 0) cui__grid_scroll_by(ui, b->id, k * CUI__TT_EDGE_SPEED * ui->dt);
+}
+
+/* Rows dragged to move nodes (.draggable): the drag starts once a pressed row
+ * moves a few points; then the drop target follows the pointer, the rows
+ * scroll near the edges, a closed folder held under the drag opens, Esc
+ * cancels, and the release reports the drop. Returns true when a folder
+ * opened (the rows need flattening again). */
+static bool cui__tt_drag_input(cui_ctx *ui, cui__tt_build *b) {
+    cui__tt_state *st = b->st;
+    cui_id did = b->id ^ CUI__TT_GHOST;
+    /* a table left out of a frame lost its press or drag: the button may have gone
+     * up meanwhile, and a release seen on its return would drop at a stale place */
+    bool gone = ui->frame - st->drag_frame > 1;
+    st->drag_frame = ui->frame;
+    if (gone || cui_is_disabled(ui)) {   /* a disabled table drops nothing: the drag ends */
+        st->pending = st->dragging = false;
+        st->mark = CUI__TT_MARK_NONE;
+        return false;
+    }
+    /* a release counts where it happened: the pointer may have moved on, or pressed
+     * again, before this frame (the second press then belongs to the drop) */
+    bool released = ui->mreleased[0] || !ui->mdown[0];
+    float px = ui->mreleased[0] ? ui->release_x : ui->mx, py = ui->mreleased[0] ? ui->release_y : ui->my;
+    cui_rect view;
+    float row0;
+    bool geo = cui__grid_rows_at(ui, b->id, &view, &row0);
+    if (st->pending) {
+        float dx = px - st->press_x, dy = py - st->press_y;
+        if (!cui__tt_ok(b, st->press_node)) st->pending = false;
+        else if (geo && dx * dx + dy * dy > CUI__TT_DRAG_START * CUI__TT_DRAG_START) {
+            st->pending = false;
+            cui__tt_start_drag(ui, b);   /* also when it moved and let go between two frames: that drops */
+        } else if (released) st->pending = false;   /* a click */
+    }
+    cui__spring(ui, &st->lift, st->dragging ? 1.0f : 0.0f, CUI__SPRING_ENTER);
+    if (!st->dragging) return false;
+    /* the drag carries the selection, also when the keys change it mid-drag (or the nodes change) */
+    int first = st->drag_n > 0 ? st->drag[0] : -1;
+    cui__tt_collect_drag(ui, b);
+    if (st->drag_n == 0) { st->dragging = false; return false; }
+    if (st->drag[0] != first) st->icon[0] = 0;   /* the ghost shows the new first node's icon once its row is built */
+    ui->active = did;   /* the pointer is the drag's: no row takes the release as a click */
+    if (cui_key_pressed(ui, CUI_KEY_ESCAPE)) {
+        ui->kpressed[CUI_KEY_ESCAPE] = 0;
+        st->dragging = false;
+        return false;
+    }
+    b->drag_mark = cui__frame_alloc(ui, (size_t)b->count + 1);
+    memset(b->drag_mark, 0, (size_t)b->count + 1);
+    for (int k = 0; k < st->drag_n; k++) b->drag_mark[st->drag[k]] = true;
+    if (!geo) return false;
+    b->view_w = view.w;
+    cui__tt_find_target(b, view, row0, px, py);
+    if (released) {
+        if (st->target >= 0) {
+            int *d = cui__frame_alloc(ui, sizeof(int) * (size_t)st->drag_n);
+            memcpy(d, st->drag, sizeof(int) * (size_t)st->drag_n);
+            b->ev.dropped = d;
+            b->ev.drop_count = st->drag_n;
+            b->ev.drop_target = st->target;
+            b->ev.drop_where = st->where;
+        }
+        st->dragging = false;
+        st->mark = CUI__TT_MARK_NONE;
+        return false;
+    }
+    ui->animating = true;
+    cui__set_cursor(ui, st->target >= 0 ? CUI_CURSOR_MOVE : CUI_CURSOR_NOT_ALLOWED);
+    cui__tt_edge_scroll(ui, b, view);
+    int hold = st->target >= 0 && st->where == CUI_TREE_DROP_INSIDE && !(b->nodes[st->target].flags & CUI_TREE_OPEN) ? st->target : -1;
+    if (hold != st->hold_node) {
+        st->hold_node = hold;
+        st->hold_time = ui->time;
+    } else if (hold >= 0 && ui->time - st->hold_time >= CUI__TT_HOLD_OPEN) {
+        cui__tt_expand(ui, b, hold);
+        return true;
+    }
+    return false;
+}
+
+/* The drop line (before or after a row, from its indentation on) or the
+ * outline of a folder the nodes would go into, on the row being built. */
+static void cui__tt_drop_mark(cui_ctx *ui, const cui__tt_build *b) {
+    const cui__tt_state *st = b->st;
+    float rh = b->o.row_height, w = b->view_w;
+    cui_color accent = CUI_C(ui, ACCENT);
+    if (st->mark == CUI__TT_MARK_ROW) {
+        int m = cui__absolute(ui, 0, 2, 1, CUI_MAX(0.0f, w - 4), rh - 2);
+        cui_node *mn = &ui->nodes[m];
+        mn->radius = CUI_CORNERS(CUI__R_SMALL);
+        mn->bg = cui_alpha(accent, 0.12f);
+        mn->border = 1;
+        mn->border_color = cui_alpha(accent, 0.55f);
+        return;
+    }
+    float x = CUI__TT_PAD + cui__tt_indent(b, st->mark_depth, CUI__TT_CHEV) + CUI__TT_CHEV * 0.5f;
+    float y = st->mark == CUI__TT_MARK_TOP ? 0 : rh - 2;
+    int m = cui__absolute(ui, 0, x, y, CUI_MAX(0.0f, w - x - CUI__TT_PAD), 2);
+    ui->nodes[m].radius = CUI_CORNERS(1);
+    ui->nodes[m].bg = accent;
+}
+
+/* The pressed row may start a drag; while dragging, the dragged rows dim and
+ * the drop mark goes on its row. */
+static void cui__tt_row_drag(cui_ctx *ui, cui__tt_build *b, int i, int node) {
+    cui__tt_state *st = b->st;
+    if (node >= 0 && !st->dragging && cui__grid_row_pressed(ui)) {
+        st->pending = true;
+        st->press_node = node;
+        st->press_x = ui->press_x; st->press_y = ui->press_y;   /* where the button went down */
+    }
+    if (!st->dragging || !b->drag_mark) return;
+    int row = cui__current(ui);
+    if (row < 0) return;
+    if (node >= 0 && cui__tt_in_drag(b, node)) ui->nodes[row].opacity = CUI__TT_DRAGGED_DIM;
+    if (st->mark != CUI__TT_MARK_NONE && st->mark_row == i) cui__tt_drop_mark(ui, b);
+}
+
+/* The dragged nodes under the pointer: the first one's icon and name, and
+ * how many there are when more than one. */
+static void cui__tt_ghost(cui_ctx *ui, cui__tt_build *b) {
+    cui__tt_state *st = b->st;
+    if (!st->dragging || st->drag_n == 0) return;
+    const char *name = b->o.label ? b->o.label(b->o.user, st->drag[0]) : NULL;
+    int g = cui__float_begin(ui, b->id ^ CUI__TT_GHOST, 1900, 0, CUI__PLACE_POINT, 0);
+    cui_node *n = &ui->nodes[g];
+    n->fx = ui->mx + 14;   /* beside the pointer, clear of the drop line */
+    n->fy = ui->my + 6;
+    n->dir = CUI_ROW; n->align = CUI_ALIGN_CENTER; n->gap = 8;
+    n->h = CUI_PX(30);
+    n->pad[1] = n->pad[3] = 10;
+    n->radius = CUI_CORNERS(CUI__R_ITEM(ui));
+    n->bg = CUI_C(ui, SURFACE_RAISED);
+    n->border = 1;
+    n->border_color = CUI_C(ui, BORDER);
+    n->elevation = CUI_ELEVATION_FLOATING;
+    n->elevation_alpha = st->lift.x;
+    n->opacity = CUI_MAX(0.001f, CUI_MIN(1.0f, st->lift.x)) * 0.96f;
+    if (st->icon[0]) cui__icon_node(ui, st->icon, 16, CUI_C(ui, TEXT_SECONDARY));
+    if (name) {
+        int t = cui__text_node(ui, name, cui__display_len(name), CUI_FONT_BODY, cui__fs(ui, ui->theme.text_body), CUI_C(ui, FOREGROUND), false);
+        ui->nodes[t].line_height = 1.3f;
+        ui->nodes[t].max_w = 220;
+    }
+    if (st->drag_n > 1 || !name) {
+        char num[16];
+        snprintf(num, sizeof num, "%d", st->drag_n);
+        int pill = cui__node_new(ui, 0);
+        cui_node *pn = &ui->nodes[pill];
+        pn->h = CUI_PX(20); pn->pad[1] = pn->pad[3] = 7;
+        pn->dir = CUI_ROW; pn->align = CUI_ALIGN_CENTER;
+        pn->radius = CUI_CORNERS(10);
+        pn->bg = CUI_C(ui, SURFACE_MUTED);
+        cui__open(ui, pill);
+        cui__text_node(ui, cui__frame_strdup(ui, num, -1), -1, CUI_FONT_MEDIUM, cui__fs(ui, ui->theme.text_sm), CUI_C(ui, TEXT_SECONDARY), false);
+        cui__close(ui);
+    }
+    cui__float_end(ui);
+}
+
 void cui_tree_table_begin_ex(cui_ctx *ui, const char *id_str, const cui_grid_column *cols, int ncols, cui_tree_node *nodes, int count,
                              const cui_tree_table_opts *o) {
     cui_tree_table_opts d;
@@ -69970,6 +70307,7 @@ void cui_tree_table_begin_ex(cui_ctx *ui, const char *id_str, const cui_grid_col
     b->o = *o;
     if (b->o.row_height <= 0) b->o.row_height = 32;
     b->ev.activated = b->ev.expanded = b->ev.collapsed = -1;
+    b->ev.drop_target = b->ev.drop_where = -1;
     b->ev.load = b->loads;
     b->cur = -1;
     if (o->cursor && cui__tt_ok(b, *o->cursor)) st->cursor = *o->cursor;
@@ -69977,10 +70315,14 @@ void cui_tree_table_begin_ex(cui_ctx *ui, const char *id_str, const cui_grid_col
     if (!cui__tt_ok(b, st->anchor)) st->anchor = -1;
     if (cui__has_prev_rect(ui, b->id ^ 0x4A3E5u)) b->name_w = cui__prev_rect(ui, b->id ^ 0x4A3E5u).w;
     cui__tt_flatten(ui, b);
+    bool reflatten = false;
+    if (b->o.draggable) reflatten = cui__tt_drag_input(ui, b);
+    else st->dragging = st->pending = false;
     if (ui->focus == b->id && b->nrows > 0) {
         cui__tt_keys(ui, b);
-        cui__tt_flatten(ui, b);   /* the keys may have opened or closed nodes */
+        reflatten = true;   /* the keys may have opened or closed nodes */
     }
+    if (reflatten) cui__tt_flatten(ui, b);
     /* a cursor inside a closed node moves up to it */
     b->vcursor = cui__tt_visible(b, st->cursor);
     if (b->vcursor >= 0) st->cursor = cui__tt_node_of(b, b->vcursor);
@@ -70079,6 +70421,7 @@ int cui_tree_table_row(cui_ctx *ui) {
         int i = b->next++;
         bool clicked = cui_data_grid_row(ui, i);
         cui__tt_row r = b->rows[i];
+        if (b->o.draggable) cui__tt_row_drag(ui, b, i, r.node);
         if (r.node < 0) { b->cur = -1; cui__tt_loading_cell(ui, b, r.depth); continue; }
         b->cur = i;
         if (clicked) {
@@ -70106,6 +70449,8 @@ void cui_tree_table_name(cui_ctx *ui, const char *label, const char *icon) {
     if (!b || b->cur < 0) { cui_data_grid_cell_text(ui, label); return; }
     int n = b->rows[b->cur].node, depth = b->rows[b->cur].depth;
     cui_tree_node *N = &b->nodes[n];
+    cui__tt_state *st = b->st;
+    if (st->dragging && st->drag_n > 0 && n == st->drag[0] && icon && strlen(icon) < sizeof st->icon) memcpy(st->icon, icon, strlen(icon) + 1);
     cui_data_grid_cell(ui);
     int cell = cui__current(ui);
     if (cell < 0) return;
@@ -70158,11 +70503,12 @@ cui_tree_table_events cui_tree_table_end(cui_ctx *ui) {
     if (!b) {
         cui_tree_table_events e;
         memset(&e, 0, sizeof e);
-        e.activated = e.expanded = e.collapsed = -1;
+        e.activated = e.expanded = e.collapsed = e.drop_target = e.drop_where = -1;
         return e;
     }
     cui_data_grid_end(ui);
     cui__tt_state *st = b->st;
+    if (b->o.draggable) cui__tt_ghost(ui, b);
     /* write the grid's selection back to the nodes */
     bool changed = b->ev.selection_changed;
     bool *was = cui__frame_alloc(ui, (size_t)b->nrows + 1);
@@ -70238,6 +70584,85 @@ int cui_tree_sort(cui_tree_node *nodes, int count, int root, int (*cmp)(void *us
     for (int k = 0; k < count; k++)
         if (nodes[k].first_child >= 0 && nodes[k].first_child < count) nodes[k].first_child = cui__tt_sort_list(&s, count, nodes[k].first_child);
     return root >= 0 && root < count ? cui__tt_sort_list(&s, count, root) : root;
+}
+
+/* ---- moving nodes: unlink from one sibling list, link into another ---- */
+
+/* The first node of the sibling list that holds n. */
+static int cui__tt_list_head(const cui_tree_node *nodes, int count, int root, int n) {
+    int p = nodes[n].parent;
+    return p >= 0 && p < count ? nodes[p].first_child : root;
+}
+
+/* Sets the head of parent p's child list (the top level when p is -1). */
+static void cui__tt_set_head(cui_tree_node *nodes, int count, int *root, int p, int head) {
+    if (p >= 0 && p < count) nodes[p].first_child = head;
+    else *root = head;
+}
+
+/* The node before n in its sibling list, -1 when n is first. */
+static int cui__tt_prev_sibling(const cui_tree_node *nodes, int count, int head, int n) {
+    for (int s = head, guard = 0; s >= 0 && s < count && guard < count; guard++) {   /* bounded: bad links cannot loop */
+        if (nodes[s].next_sibling == n) return s;
+        s = nodes[s].next_sibling;
+    }
+    return -1;
+}
+
+static void cui__tt_unlink(cui_tree_node *nodes, int count, int *root, int n) {
+    int head = cui__tt_list_head(nodes, count, *root, n);
+    if (head == n) cui__tt_set_head(nodes, count, root, nodes[n].parent, nodes[n].next_sibling);
+    else {
+        int prev = cui__tt_prev_sibling(nodes, count, head, n);
+        if (prev >= 0) nodes[prev].next_sibling = nodes[n].next_sibling;
+    }
+    nodes[n].parent = -1;
+    nodes[n].next_sibling = -1;
+}
+
+/* Links the unlinked node n next to t: before it, as its last child, or after it. */
+static void cui__tt_link(cui_tree_node *nodes, int count, int *root, int n, int t, int where) {
+    if (where == CUI_TREE_DROP_INSIDE) {
+        nodes[n].parent = t;
+        int last = nodes[t].first_child;
+        for (int guard = 0; last >= 0 && last < count && nodes[last].next_sibling >= 0 && nodes[last].next_sibling < count && guard < count; guard++)
+            last = nodes[last].next_sibling;
+        if (last >= 0 && last < count) nodes[last].next_sibling = n;
+        else nodes[t].first_child = n;
+        return;
+    }
+    nodes[n].parent = nodes[t].parent;
+    if (where == CUI_TREE_DROP_AFTER) {
+        nodes[n].next_sibling = nodes[t].next_sibling;
+        nodes[t].next_sibling = n;
+        return;
+    }
+    int head = cui__tt_list_head(nodes, count, *root, t);
+    nodes[n].next_sibling = t;
+    if (head == t) cui__tt_set_head(nodes, count, root, nodes[t].parent, n);
+    else {
+        int prev = cui__tt_prev_sibling(nodes, count, head, t);
+        if (prev >= 0) nodes[prev].next_sibling = n;
+    }
+}
+
+int cui_tree_move(cui_tree_node *nodes, int count, int root, const int *move, int move_count, int target, int where) {
+    if (!nodes || count <= 0 || !move || move_count <= 0 || target < 0 || target >= count) return root;
+    if (where != CUI_TREE_DROP_BEFORE && where != CUI_TREE_DROP_INSIDE && where != CUI_TREE_DROP_AFTER) return root;
+    for (int k = 0; k < move_count; k++) {
+        if (move[k] < 0 || move[k] >= count) return root;
+        for (int j = 0; j < k; j++) if (move[j] == move[k]) return root;   /* twice: it would link after itself */
+    }
+    /* the target may not be one of the nodes or inside one: that would make a loop */
+    for (int a = target, guard = 0; a >= 0 && a < count && guard <= count; guard++, a = nodes[a].parent)
+        for (int k = 0; k < move_count; k++) if (move[k] == a) return root;
+    int at = target, at_where = where;
+    for (int k = 0; k < move_count; k++) {
+        cui__tt_unlink(nodes, count, &root, move[k]);
+        cui__tt_link(nodes, count, &root, move[k], at, at_where);
+        if (at_where == CUI_TREE_DROP_AFTER) at = move[k];   /* the next one follows it, keeping the order */
+    }
+    return root;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -78226,6 +78651,7 @@ bool cui_app_placement(cui_app *app, cui_window_placement *out) {
 #include <commdlg.h>
 #include <shlobj.h>
 #include <shellapi.h>
+#include <wchar.h>
 
 /* UTF-8 to UTF-16; always terminated, empty on failure. */
 static bool cui__to_wide(const char *s, WCHAR *out, int cap) {
@@ -78245,6 +78671,49 @@ static bool cui__w_append(WCHAR *buf, int cap, int *n, const char *s) {
     return true;
 }
 
+typedef struct {
+    HWND owner;
+    const WCHAR *title;
+    WCHAR *path;
+} cui__folder_dialog;
+
+/* Return S_OK for a filesystem selection, S_FALSE on cancel, or the COM failure. */
+static DWORD WINAPI cui__browse_folder(void *data) {
+    cui__folder_dialog *dialog = data;
+    HRESULT com = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    if (FAILED(com)) return (DWORD)com;
+    BROWSEINFOW info = { 0 };
+    info.hwndOwner = dialog->owner;
+    info.lpszTitle = dialog->title;
+    info.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+    LPITEMIDLIST pidl = SHBrowseForFolderW(&info);
+    BOOL selected = FALSE;
+    if (pidl) {
+        selected = SHGetPathFromIDListW(pidl, dialog->path);
+        CoTaskMemFree(pidl);
+    }
+    CoUninitialize();
+    return selected ? S_OK : S_FALSE;
+}
+
+/* During the modal call the Shell sends synchronous messages to the owner.
+ * Dispatch those without consuming queued input or running the app's timers. */
+static bool cui__choose_folder(HWND owner, const WCHAR *title, WCHAR *path) {
+    cui__folder_dialog dialog = { owner, title, path };
+    DWORD result = cui__browse_folder(&dialog);
+    if (result != (DWORD)RPC_E_CHANGED_MODE) return result == S_OK;
+    HANDLE thread = CreateThread(NULL, 0, cui__browse_folder, &dialog, 0, NULL);
+    if (!thread) return false;
+    while (MsgWaitForMultipleObjects(1, &thread, FALSE, INFINITE, QS_SENDMESSAGE) == WAIT_OBJECT_0 + 1) {
+        MSG message;
+        PeekMessageW(&message, NULL, 0, 0, PM_NOREMOVE | PM_QS_SENDMESSAGE);
+    }
+    WaitForSingleObject(thread, INFINITE);
+    BOOL finished = GetExitCodeThread(thread, &result);
+    CloseHandle(thread);
+    return finished && result == S_OK;
+}
+
 bool cui__plat_file_dialog(cui_app *app, const cui_file_dialog_opts *o, char *out, size_t cap) {
     (void)app;
     HWND owner = GetActiveWindow();
@@ -78252,21 +78721,7 @@ bool cui__plat_file_dialog(cui_app *app, const cui_file_dialog_opts *o, char *ou
     cui__to_wide(o->title ? o->title : (o->kind == CUI_FILE_SAVE ? "Save" : "Open"), title, 256);
     WCHAR path[MAX_PATH * 4] = { 0 };
     if (o->kind == CUI_FILE_FOLDER) {
-        /* the new style folder dialog needs COM on this thread */
-        HRESULT com = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-        BROWSEINFOW bi;
-        memset(&bi, 0, sizeof bi);
-        bi.hwndOwner = owner;
-        bi.lpszTitle = title;
-        bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
-        LPITEMIDLIST pidl = SHBrowseForFolderW(&bi);
-        BOOL ok = FALSE;
-        if (pidl) {
-            ok = SHGetPathFromIDListW(pidl, path);
-            CoTaskMemFree(pidl);
-        }
-        if (SUCCEEDED(com)) CoUninitialize();
-        if (!ok) return false;
+        if (!cui__choose_folder(owner, title, path)) return false;
     } else {
         /* filter: "Images\0*.png;*.jpg\0All files\0*.*\0\0" */
         WCHAR filter[512];
@@ -78296,7 +78751,29 @@ bool cui__plat_file_dialog(cui_app *app, const cui_file_dialog_opts *o, char *ou
         ofn.nMaxFile = MAX_PATH * 4;
         ofn.lpstrTitle = title;
         ofn.Flags = OFN_EXPLORER | OFN_NOCHANGEDIR | (o->kind == CUI_FILE_SAVE ? OFN_OVERWRITEPROMPT : OFN_FILEMUSTEXIST);
+        WCHAR directory[MAX_PATH * 4];
+        if (o->kind == CUI_FILE_SAVE) {
+            ofn.Flags |= OFN_NOTESTFILECREATE;
+            if (wcspbrk(path, L"\\/")) {
+                WCHAR *name = NULL;
+                DWORD length = GetFullPathNameW(path, MAX_PATH * 4, directory, &name);
+                if (length && length < MAX_PATH * 4) {
+                    if (name) {
+                        wmemcpy(path, name, wcslen(name) + 1);
+                        *name = 0;
+                    } else {
+                        path[0] = 0;
+                    }
+                    ofn.lpstrInitialDir = directory;
+                }
+            }
+        }
+        /* OFN_NOCHANGEDIR does not hold for GetOpenFileName, and a Save dialog that
+         * opens in lpstrInitialDir can return with the current directory there. */
+        WCHAR cwd[MAX_PATH * 4];
+        DWORD cwd_len = GetCurrentDirectoryW(MAX_PATH * 4, cwd);
         BOOL ok = o->kind == CUI_FILE_SAVE ? GetSaveFileNameW(&ofn) : GetOpenFileNameW(&ofn);
+        if (cwd_len && cwd_len < MAX_PATH * 4) SetCurrentDirectoryW(cwd);
         if (!ok) return false;
     }
     return WideCharToMultiByte(CP_UTF8, 0, path, -1, out, (int)cap, NULL, NULL) > 0;

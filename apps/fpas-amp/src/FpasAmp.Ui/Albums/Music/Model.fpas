@@ -13,7 +13,7 @@ public type Filters = record
   public Genres: I.ImmutableHashSet<string> := I.ImmutableHashSet<string>.Empty.WithComparer(
     Sys.StringComparer.OrdinalIgnoreCase
   );
-  // Inclusive rating floor. Zero includes every rating.
+  // Inclusive rating floor, zero for any rating or -1 for unrated tracks.
   public MinimumRating: int := 0;
   // Individual performer credit, or empty for all.
   public Performer: string := '';
@@ -32,7 +32,7 @@ public type Filters = record
       Active := Active + 1;
     end if;
 
-    if self.MinimumRating > 0 then
+    if self.MinimumRating <> 0 then
       Active := Active + 1;
     end if;
 
@@ -48,7 +48,7 @@ public type Selection = record
   public Search: string := '';
   // Applied genre names.
   public Genres: array of string := [];
-  // Inclusive minimum user rating.
+  // Inclusive minimum user rating, zero for any rating or -1 for unrated tracks.
   public MinimumRating: int := 0;
   // Sort column, or -1 for source order.
   public Column: int := -1;
@@ -152,7 +152,7 @@ public type Msg = variant
   ShowFilters(Open: bool);
   // Replace the draft genre selection.
   Genres(Values: I.ImmutableHashSet<string>);
-  // Set the draft rating floor.
+  // Set the draft rating floor, or choose -1 for unrated tracks.
   Minimum(Value: int);
   // Select a performer in the draft filters.
   Performer(Name: string);

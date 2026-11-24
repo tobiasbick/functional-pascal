@@ -29,7 +29,7 @@ begin
   const Album: string? := Fields.StringValue(Fields.Field(Field, 'albumId'));
   const Search: string? := Fields.StringValue(Fields.Field(Field, 'search'));
   const Column: int := Fields.IntegerValue(Fields.Field(Field, 'column')) ?? -2;
-  const Rating: int := Fields.IntegerValue(Fields.Field(Field, 'minimumRating')) ?? -1;
+  const Rating: int := Fields.IntegerValue(Fields.Field(Field, 'minimumRating')) ?? -2;
   const Desc: bool? := Fields.BooleanValue(Fields.Field(Field, 'descending'));
   const Values: J.JsonElement := Fields.Field(Field, 'genres');
   const Genres: C.List<string> := new C.List<string>();
@@ -51,7 +51,8 @@ begin
   else
     4
   end if;
-  if Album = null or Search = null or Desc = null or Column < -1 or Column > MaxColumn or Rating < 0
+  if Album = null or Search = null or Desc = null or Column < -1 or Column > MaxColumn or Rating <
+    -1
     or Rating > 10
   then
     Valid := false;
@@ -61,7 +62,7 @@ begin
     Album ?? '',
     Search ?? '',
     Genres.ToArray(),
-    Sys.Math.Clamp(Rating, 0, 10),
+    Sys.Math.Clamp(Rating, -1, 10),
     Sys.Math.Clamp(Column, -1, MaxColumn),
     Desc ?? false,
     Fields.StringValue(Fields.Field(Field, 'performer')) ?? '',

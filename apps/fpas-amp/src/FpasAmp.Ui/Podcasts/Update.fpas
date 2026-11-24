@@ -5,8 +5,9 @@ unit FpasAmp.Ui.Podcasts.Update;
 uses
   FpasAmp.Ui.Podcasts.Model as M, FpasAmp.Ui.Podcasts.Directory as Directory,
   FpasAmp.Ui.Podcasts.Feeds as Feeds, FpasAmp.Ui.Podcasts.Network as Network,
+  FpasAmp.Ui.Podcasts.Browse as Browse, Fpas.Ui.Widgets.Collections.Tables as Tables,
   Fpas.Media.Images as Images, Fpas.Ui.Mvu.Application as A,
-  System as Sys, System.Collections.Generic as C, System.Linq as Linq, System.Threading as T, System.Threading.Tasks as Tasks;
+  System as Sys, System.Threading as T, System.Threading.Tasks as Tasks;
 
 function Search(Current: M.State; Term: string): A.Transition<M.State, M.Msg>;
 begin
@@ -21,6 +22,7 @@ begin
       SearchRevision := Revision;
       SearchCursor := -1;
       Results := [];
+      ShownResults := [];
       Covers := Current.Covers.Clear();
     end with, [
       A.StartBackground<M.Msg>(
@@ -58,12 +60,16 @@ begin
     Current with
       Show := Show;
       Episodes := [];
+      ShownEpisodes := [];
+      Years := [];
       FeedRevision := Revision;
       Loading := true;
       AddOnLoad := Subscribe;
       FeedError := null;
       EpisodeFilter := '';
-      OldestFirst := false;
+      AppliedEpisodes := new M.EpisodeFilters();
+      EpisodeDraft := null;
+      EpisodeOrder := new Tables.Sort(1, true);
       EpisodeCursor := -1;
       Draft := null;
       Details := null;
@@ -92,36 +98,13 @@ begin
   );
 end function;
 
-// Filters and orders the currently shown feed for both the table and playback queue.
-// Current supplies the filter text and date order. Returns matching episodes in visible order.
-public function Visible(Current: M.State): array of M.Episode;
-begin
-  const Term: string := Current.EpisodeFilter.Trim();
-  const Rows: C.List<M.Episode> := new C.List<M.Episode>();
-  for Episode: M.Episode in Current.Episodes do
-    if Episode.Title.Contains(Term, Sys.StringComparison.OrdinalIgnoreCase) then
-      Rows.Add(Episode);
-    end if;
-  end for;
-  // LINQ's stable sort retains feed order when dates are equal or absent.
-  const Ordered: C.IEnumerable<M.Episode> := if Current.OldestFirst then
-    Linq.Enumerable.OrderBy<M.Episode, Sys.DateTimeOffset>(
-      Rows,
-      function(Item: M.Episode): Sys.DateTimeOffset => Item.Published ?? Sys.DateTimeOffset.MaxValue
-    )
-  else
-    Linq.Enumerable.OrderByDescending<M.Episode, Sys.DateTimeOffset>(
-      Rows,
-      function(Item: M.Episode): Sys.DateTimeOffset => Item.Published ?? Sys.DateTimeOffset.MinValue
-    )
-  end if;
-  return Linq.Enumerable.ToArray<M.Episode>(Ordered);
-end function;
-
 // Updates Current for an Action and returns any cancellable directory or feed work.
-public function Apply(Current: M.State; Action: M.Msg): A.Transition<M.State, M.Msg>;
+// Subscriptions supplies the saved feeds for the local subscription filter.
+public function Apply(Current: M.State; Action: M.Msg; Subscriptions: array of M.Show): A.Transition<M.State, M.Msg>;
 begin
   var Next: M.State := Current;
+  const Discovery: M.DiscoveryFilters? := Current.DiscoveryDraft;
+  const Episodes: M.EpisodeFilters? := Current.EpisodeDraft;
   case Action of
     when M.Msg.Query(const Value: string):
       Next := Current with
@@ -136,30 +119,72 @@ begin
           Query := Value;
         end with, Value.Trim()
       );
+    when M.Msg.SetDiscoveryFilters(const Open: bool):
+      Next := Current with
+        DiscoveryDraft := if Open then
+          new M.DiscoveryFilters(Current.Market, Current.Genre, Current.Subscription)
+        else
+          null
+        end if;
+      end with;
     when M.Msg.Market(const Value: string):
-      if Value <> Current.Market then
-        return Search(
-          Current with
+      if Discovery <> null then
+        Next := Current with
+          DiscoveryDraft := Discovery with
             Market := Value;
-          end with, Current.Query.Trim()
-        );
+          end with;
+        end with;
       end if;
     when M.Msg.Genre(const Value: string):
-      if Value <> Current.Genre then
+      if Discovery <> null then
         Next := Current with
-          Genre := Value;
-          SearchCursor := -1;
+          DiscoveryDraft := Discovery with
+            Genre := Value;
+          end with;
         end with;
-        if not Current.Searched then
+      end if;
+    when M.Msg.Subscription(const Value: M.SubscriptionFilter):
+      if Discovery <> null then
+        Next := Current with
+          DiscoveryDraft := Discovery with
+            Subscription := Value;
+          end with;
+        end with;
+      end if;
+    when M.Msg.ResetDiscoveryFilters:
+      if Discovery <> null then
+        Next := Current with
+          DiscoveryDraft := new M.DiscoveryFilters();
+        end with;
+      end if;
+    when M.Msg.ApplyDiscoveryFilters:
+      if Discovery <> null then
+        Next := Current with
+          DiscoveryDraft := null;
+          Market := Discovery.Market;
+          Genre := Discovery.Genre;
+          Subscription := Discovery.Subscription;
+        end with;
+        if Discovery.Market <> Current.Market then
+          return Search(Next, Current.Query.Trim());
+        end if;
+
+        if Discovery.Genre <> Current.Genre and not Current.Searched then
           return Search(Next, '');
+        end if;
+
+        if Discovery.Genre <> Current.Genre or Discovery.Subscription <> Current.Subscription then
+          Next := Browse.SelectResults(Next, Subscriptions);
         end if;
       end if;
     when M.Msg.Found(const Revision: long, const Shows: array of M.Show):
       if Revision = Current.SearchRevision then
-        Next := Current with
-          Results := Shows;
-          Searching := false;
-        end with;
+        Next := Browse.SelectResults(
+          Current with
+            Results := Shows;
+            Searching := false;
+          end with, Subscriptions
+        );
       end if;
     when M.Msg.SearchFailed(const Revision: long, const Reason: string):
       if Revision = Current.SearchRevision then
@@ -172,6 +197,14 @@ begin
       Next := Current with
         SearchCursor := Index;
       end with;
+    when M.Msg.SortResults(const Order: Tables.Sort):
+      if Order <> Current.SearchOrder and Order.Column >= -1 and Order.Column < 2 then
+        Next := Browse.SelectResults(
+          Current with
+            SearchOrder := Order;
+          end with, Subscriptions
+        );
+      end if;
     when M.Msg.Open(const Show: M.Show, const Subscribe: bool):
       return Open(Current, Show, Subscribe);
     when M.Msg.Back:
@@ -179,6 +212,9 @@ begin
         Current with
           Show := null;
           Episodes := [];
+          ShownEpisodes := [];
+          Years := [];
+          EpisodeDraft := null;
           FeedRevision := Current.FeedRevision + 1L;
           Loading := false;
           AddOnLoad := false;
@@ -188,13 +224,18 @@ begin
       );
     when M.Msg.Loaded(const Revision: long, const Value: M.Feed):
       if Revision = Current.FeedRevision then
-        Next := Current with
-          Show := Value.Show;
-          Episodes := Value.Episodes;
-          Loading := false;
-          AddOnLoad := false;
-          FeedError := null;
-        end with;
+        Next := Browse.SelectEpisodes(
+          Browse.ReconcileEpisodeFilters(
+            Current with
+              Show := Value.Show;
+              Episodes := Value.Episodes;
+              Years := Browse.Years(Value.Episodes);
+              Loading := false;
+              AddOnLoad := false;
+              FeedError := null;
+            end with
+          )
+        );
       end if;
     when M.Msg.FeedFailed(const Revision: long, const Reason: string):
       if Revision = Current.FeedRevision then
@@ -237,15 +278,60 @@ begin
         Draft := null;
       end with;
     when M.Msg.Filter(const Value: string):
+      Next := Browse.SelectEpisodes(
+        Current with
+          EpisodeFilter := Value;
+        end with
+      );
+    when M.Msg.SetEpisodeFilters(const Open: bool):
       Next := Current with
-        EpisodeFilter := Value;
-        EpisodeCursor := -1;
+        EpisodeDraft := if Open then
+          Current.AppliedEpisodes
+        else
+          null
+        end if;
       end with;
-    when M.Msg.Sort(const Oldest: bool):
-      Next := Current with
-        OldestFirst := Oldest;
-        EpisodeCursor := -1;
-      end with;
+    when M.Msg.EpisodeYear(const Value: string):
+      if Episodes <> null then
+        Next := Current with
+          EpisodeDraft := Episodes with
+            Year := Value;
+          end with;
+        end with;
+      end if;
+    when M.Msg.EpisodeDuration(const Value: string):
+      if Episodes <> null then
+        Next := Current with
+          EpisodeDraft := Episodes with
+            Duration := Value;
+          end with;
+        end with;
+      end if;
+    when M.Msg.ResetEpisodeFilters:
+      if Episodes <> null then
+        Next := Current with
+          EpisodeDraft := new M.EpisodeFilters();
+        end with;
+      end if;
+    when M.Msg.ApplyEpisodeFilters:
+      if Episodes <> null then
+        Next := Browse.SelectEpisodes(
+          Browse.ReconcileEpisodeFilters(
+            Current with
+              AppliedEpisodes := Episodes;
+              EpisodeDraft := null;
+            end with
+          )
+        );
+      end if;
+    when M.Msg.SortEpisodes(const Order: Tables.Sort):
+      if Order <> Current.EpisodeOrder and Order.Column >= 0 and Order.Column < 3 then
+        Next := Browse.SelectEpisodes(
+          Current with
+            EpisodeOrder := Order;
+          end with
+        );
+      end if;
     when M.Msg.SelectEpisode(const Index: int):
       Next := Current with
         EpisodeCursor := Index;

@@ -1,0 +1,110 @@
+// [Documentation](../../../doc/desktop.md#browsing-music-and-collections)
+
+unit FpasAmp.Ui.Collections.TableSort;
+
+uses
+  FpasAmp.Ui.Albums.Toolbar.Sorting as Sorting, Fpas.Ui.Elements as E,
+  Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Overlays.Menus as Menus,
+  System.Collections.Generic as C;
+
+// Shows the active sort and maps selections to the same order used by the table.
+// ## Type parameters
+// - `TMsg`: The page's message type.
+// ## Parameters
+// - `Id`: Stable menu identity.
+// - `Names`: Labels indexed by model sort field.
+// - `Alphabetical`: True for text fields.
+// - `Order`: Active model sort.
+// - `Change`: Maps a chosen sort to a message.
+// - `Default`: Caption for the optional original order.
+// - `DefaultId`: Identity of the original-order menu item.
+// - `DateColumn`: Field with chronological direction labels, or -1.
+// ## Returns
+// The sort button with its native menu.
+public function Build<TMsg>(Id: string; Names: array of string; Alphabetical: array of bool; Order: Tables.Sort; Change: function(Tables.Sort): TMsg; Default: string := ''; DefaultId: string := 'default'; DateColumn: int := -1): E.Element<TMsg>;
+requires Names.Length = Alphabetical.Length;
+requires Order.Column >= -1 and Order.Column < Names.Length;
+begin
+  const Entries: C.List<Menus.Entry<TMsg>> := new C.List<Menus.Entry<TMsg>>(
+    [Menus.Entry<TMsg>.Label('Sort by')]
+  );
+  const Column: int := Order.Column;
+  if Default <> '' then
+    Entries.Add(
+      Menus.Entry<TMsg>.Action(
+        new Menus.Item<TMsg>(
+          DefaultId,
+          Default,
+          Change(new Tables.Sort(-1)),
+          Checked := Column = -1
+        )
+      )
+    );
+  end if;
+
+  for Index: int := 0 to Names.Length - 1 do
+    Entries.Add(
+      Menus.Entry<TMsg>.Action(
+        new Menus.Item<TMsg>(
+          Index.ToString(),
+          Names[Index],
+          Change(new Tables.Sort(Index, Order.Descending)),
+          Checked := Column = Index
+        )
+      )
+    );
+  end for;
+
+  var Label: string := if Default = '' then
+    'Sort'
+  else
+    Default
+  end if;
+  if Column >= 0 then
+    const Direction: string := if Alphabetical[Column] then
+      if Order.Descending then
+        'Z–A'
+      else
+        'A–Z'
+      end if
+    elsif Column = DateColumn then
+      if Order.Descending then
+        'Newest first'
+      else
+        'Oldest first'
+      end if
+    else
+      if Order.Descending then
+        'High–low'
+      else
+        'Low–high'
+      end if
+    end if;
+    Label := Names[Column] + ' · ' + Direction;
+    Entries.Add(Menus.Entry<TMsg>.Separator);
+    Entries.Add(
+      Menus.Entry<TMsg>.Action(
+        new Menus.Item<TMsg>(
+          'ascending',
+          'Ascending',
+          Change(new Tables.Sort(Column)),
+          Checked := not Order.Descending
+        )
+      )
+    );
+    Entries.Add(
+      Menus.Entry<TMsg>.Action(
+        new Menus.Item<TMsg>(
+          'descending',
+          'Descending',
+          Change(new Tables.Sort(Column, true)),
+          Checked := Order.Descending
+        )
+      )
+    );
+  end if;
+
+  return Sorting.Trigger<TMsg>(Id, Label, Entries.ToArray(), Order.Descending);
+end function;
+
+end unit;

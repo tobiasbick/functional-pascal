@@ -53,7 +53,7 @@ begin
     return Toolbar.Popup<M.Msg>('track', E.Column<M.Msg>(), Count, false, M.Msg.ShowFilters, Width);
   end if;
 
-  if Current.Album.Id = '' then
+  if Current.Album.Id = '' and Current.Performers.Length > 0 then
     Fields.Add(
       Toolbar.Choice<M.Msg>(
         'track-filter-artist',
@@ -64,6 +64,9 @@ begin
         M.Msg.Performer
       )
     );
+  end if;
+
+  if Current.Album.Id = '' and Current.ReleaseIds.Length > 0 then
     Fields.Add(
       Toolbar.Choice<M.Msg>(
         'track-filter-album',

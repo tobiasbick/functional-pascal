@@ -216,6 +216,30 @@ public type PlayerTests = record
     X.Assert.Equal<double>(0.0, Replaced.Position);
   end procedure;
 
+  // An unrated queue uses the same filter after saving and restoring its bookmark.
+  [X.FactAttribute]
+  public procedure UnratedQueueRestoresItsFilter();
+  begin
+    using const Folder: H.Folder := H.Folder.Create();
+    const Unrated: Tracks.Entry := Song(1L, 200.0);
+    const Rated: Tracks.Entry := Song(2L, 200.0) with
+      Rating := 7;
+    end with;
+    const Library: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray.CreateRange<Tracks.Entry>(
+      [Unrated, Rated]
+    );
+    const Source: Music.Selection := new Music.Selection(MinimumRating := -1);
+    const Queue: I.ImmutableArray<Tracks.Entry> := Browse.Songs(Library, Source);
+    X.Assert.Equal<int>(1, Queue.Length);
+    X.Assert.Equal<string>(Unrated.TrackId, Queue[0].TrackId);
+    const Playing: M.State := new M.State(Queue := Queue, Source := Source, Index := 0);
+    Storage.Save(Folder.Path, new Storage.Snapshot(Player := Bookmark.Capture(Playing)));
+    const Restored: M.State := Bookmark.Restore(Storage.Load(Folder.Path).Player, Library);
+    X.Assert.Equal<int>(-1, Restored.Source.MinimumRating);
+    X.Assert.Equal<int>(1, Restored.Queue.Length);
+    X.Assert.Equal<string>(Unrated.TrackId, Restored.Queue[0].TrackId);
+  end procedure;
+
   // Pausing and seeking keep the envelope. A result for the previous song cannot replace it.
   [X.FactAttribute]
   public procedure WaveformFollowsTheTrackAcrossTransportChanges();

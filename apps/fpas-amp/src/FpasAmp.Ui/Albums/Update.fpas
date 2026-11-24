@@ -7,6 +7,7 @@ uses
   FpasAmp.Ui.Albums.Model as M, FpasAmp.Library.Albums.Model as Albums,
   FpasAmp.Library.Albums.Access as Access, Fpas.Media.Images as Images,
   FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, FpasAmp.Ui.Albums.Toolbar.Update as ToolbarUpdate,
+  FpasAmp.Ui.Albums.Browse as Browse,
   FpasAmp.Ui.Albums.Grid as Grid, FpasAmp.Ui.Albums.Groups as Groups, FpasAmp.Ui.Albums.Artwork as Artwork,
   FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.Update as Songs,
   FpasAmp.Library.Metadata.Monitoring as Metadata, Fpas.Ui.Mvu.Composition as Composition,
@@ -351,7 +352,12 @@ begin
         end with, []
       );
     when M.Msg.Toolbar(const Value: Toolbar.Msg):
-      const Edited: Toolbar.State := ToolbarUpdate.Apply(Current.Toolbar, Value);
+      const Proposed: Toolbar.State := ToolbarUpdate.Apply(Current.Toolbar, Value);
+      const Edited: Toolbar.State := if Value = Toolbar.Msg.Apply and Current.Loaded then
+        Browse.ReconcileFilters(Proposed, Current.Catalog)
+      else
+        Proposed
+      end if;
       const Next: M.State := Current with
         Toolbar := Edited;
       end with;

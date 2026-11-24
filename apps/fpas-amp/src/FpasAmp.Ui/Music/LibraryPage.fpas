@@ -8,7 +8,7 @@ uses
   FpasAmp.Ui.Albums.Music.Update as Edit, FpasAmp.Ui.Albums.Music.Ratings as Ratings, FpasAmp.Ui.Albums.Artwork as Artwork,
   FpasAmp.Library.Metadata.Monitoring as Metadata, FpasAmp.Library.Metadata.Model as Tracks,
   FpasAmp.Ui.Music.Playlist as Playlist, FpasAmp.Library.Playlists.Model as Lists,
-  FpasAmp.Library.Albums.Model as Albums, Fpas.Media.Tags.AudioFiles as Tags, Fpas.Media.Images as Imaging,
+  FpasAmp.Library.Albums.Model as Albums, Fpas.Media.Images as Imaging,
   Fpas.Ui.Mvu.Application as A, Fpas.Ui.Mvu.Composition as Composition, Fpas.Ui.Widgets.Collections.Tables as Tables,
   System as Sys, System.Collections.Generic as C, System.Collections.Immutable as I, System.Threading as T, System.Threading.Tasks as Tasks;
 
@@ -68,52 +68,44 @@ end variant;
 
 function Prepare(Items: I.ImmutableArray<Tracks.Entry>; Headers: I.ImmutableArray<Albums.Album>; Cancellation: T.CancellationToken): Catalogue;
 begin
-  const People: C.SortedSet<string> := new C.SortedSet<string>(
-    Sys.StringComparer.OrdinalIgnoreCase
-  );
+  const Used: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+  for Item: Tracks.Entry in Items do
+    Cancellation.ThrowIfCancellationRequested();
+    discard Used.Add(Item.AlbumId);
+  end for;
   const Titles: C.List<string> := new C.List<string>(Headers.Length);
   const Ids: C.List<string> := new C.List<string>(Headers.Length);
   const Seen: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.OrdinalIgnoreCase);
   const Duplicate: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.OrdinalIgnoreCase);
-  const Genres: C.SortedSet<string> := new C.SortedSet<string>(
-    Sys.StringComparer.OrdinalIgnoreCase
-  );
   const Releases: I.ImmutableDictionary<string, Albums.Album>.Builder := I.ImmutableDictionary.CreateBuilder<string, Albums.Album>();
   for Item: Albums.Album in Headers do
     Releases[Item.Id] := Item;
-    if not Seen.Add(Item.Title) then
+    if Used.Contains(Item.Id) and not Seen.Add(Item.Title) then
       discard Duplicate.Add(Item.Title);
     end if;
   end for;
 
-  for Release: Albums.Album in Headers do
-    Ids.Add(Release.Id);
-    Titles.Add(
-      if Duplicate.Contains(Release.Title) and Release.Artist <> '' then
-        Release.Title + ' · ' + Release.Artist
-      else
-        Release.Title
-      end if
-    );
-  end for;
+  if Used.Count > 1 then
+    for Release: Albums.Album in Headers do
+      if Used.Contains(Release.Id) then
+        Ids.Add(Release.Id);
+        Titles.Add(
+          if Duplicate.Contains(Release.Title) and Release.Artist <> '' then
+            Release.Title + ' · ' + Release.Artist
+          else
+            Release.Title
+          end if
+        );
+      end if;
+    end for;
+  end if;
 
-  for Item: Tracks.Entry in Items do
-    Cancellation.ThrowIfCancellationRequested();
-    const Info: Tags.Info? := Item.Metadata;
-    if Info <> null then
-      People.UnionWith(Info.Artists);
-      Genres.UnionWith(Info.Genres);
-    end if;
-  end for;
-
-  discard People.Remove('');
-  discard Genres.Remove('');
   return new Catalogue(
     Items,
     Releases.ToImmutable(),
-    new C.List<string>(People).ToArray(),
+    Browse.PerformerChoices(Items, Cancellation),
     Titles.ToArray(), Ids.ToArray(),
-    new C.List<string>(Genres).ToArray()
+    Browse.GenreChoices(Items, Cancellation)
   );
 end function;
 
@@ -246,13 +238,15 @@ begin
           Last := -1;
           Generation := Current.Generation + 1L;
           Page := Browse.Select(
-            Ratings.Receive(Current.Page, Value.Tracks, Started) with
-              Loaded := true;
-              Performers := Value.Performers;
-              ReleaseTitles := Value.Titles;
-              ReleaseIds := Value.ReleaseIds;
-              GenreChoices := Value.Genres;
-            end with
+            Browse.ReconcileFilters(
+              Ratings.Receive(Current.Page, Value.Tracks, Started) with
+                Loaded := true;
+                Performers := Value.Performers;
+                ReleaseTitles := Value.Titles;
+                ReleaseIds := Value.ReleaseIds;
+                GenreChoices := Value.Genres;
+              end with
+            )
           );
         end with;
       end if;

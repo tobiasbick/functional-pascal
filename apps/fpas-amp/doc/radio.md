@@ -6,10 +6,15 @@
 
 ## Find a station
 
-Open **Radio → Stations** to search the public Radio Browser directory by name
-or filter by country, language and genre. The table shows up to 100 matching
+Open **Radio → Stations** to search the public Radio Browser directory by name.
+Use **Filters** to set country, language, genre or a stream codec such as MP3
+or AAC+, then click **Apply**.
+**Reset** clears the draft fields. The table shows up to 100 matching
 stations and displays the codec, bitrate and HLS indicator when available.
-Station search does not require an account. [Radio Browser API](https://docs.radio-browser.info/)
+The table builds rows as they come into view. Use the sort menu or a column
+heading to sort by station, country, language, genre or stream bitrate.
+**Popular first** restores the directory's ranking. Streams with an unknown
+bitrate appear last in either direction. [Radio Browser API](https://docs.radio-browser.info/)
 
 ![Stations table with fictional stations, a favorite and simulated live playback](screenshots/radio-stations.png)
 

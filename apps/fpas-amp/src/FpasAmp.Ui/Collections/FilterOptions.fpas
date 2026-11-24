@@ -1,0 +1,22 @@
+// [Documentation](../../../doc/desktop.md#browsing-music-and-collections)
+
+unit FpasAmp.Ui.Collections.FilterOptions;
+
+// Returns the current spelling in Choices for Value, or empty when it is unavailable.
+// Same defines equality for this filter's values.
+public function Retain(Value: string; Choices: array of string; Same: function(string, string): bool): string;
+begin
+  if Value = '' then
+    return '';
+  end if;
+
+  for Choice: string in Choices do
+    if Same(Value, Choice) then
+      return Choice;
+    end if;
+  end for;
+
+  return '';
+end function;
+
+end unit;

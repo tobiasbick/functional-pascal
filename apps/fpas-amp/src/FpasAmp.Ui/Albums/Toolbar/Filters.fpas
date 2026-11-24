@@ -7,6 +7,7 @@ uses
   FpasAmp.Ui.Albums.Toolbar.Model as M,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Inputs.Selects as Selects, Fpas.Ui.Widgets.Inputs.Sliders as Sliders,
+  Fpas.Ui.Widgets.Inputs.Checkboxes as Checks,
   Fpas.Ui.Widgets.Display.Texts as Texts,
   Fpas.Ui.Widgets.Overlays.Popovers as Popovers, Fpas.Ui.Widgets.Overlays.Menus as Menus,
   System as Sys, System.Collections.Generic as C;
@@ -56,48 +57,22 @@ begin
   );
 end function;
 
-// Builds the shared library filter form.
+// Builds a filter form from the supplied fields and confirmation messages.
 // ## Type parameters
 // - `TMsg`: The page's message type.
 // ## Parameters
-// - `Id`: Prefix for the form's controls.
-// - `Title`: The form heading.
-// - `Fields`: Choice controls above the rating slider.
-// - `Rating`: Draft minimum rating from zero to ten.
-// - `Change`: Maps a rating proposal to a message.
-// - `Reset`: Message to clear the draft.
-// - `RatingLabel`: Identifies the entity being rated.
-// - `Apply`: Message to confirm the draft.
+// - `Id`: Prefix for the form controls.
+// - `Title`: The heading.
+// - `Fields`: The draft controls.
+// - `Reset`: Clears the draft.
+// - `Apply`: Confirms the draft.
 // ## Returns
-// The title, choice controls, rating slider and form buttons.
-public function Form<TMsg>(Id: string; Title: string; Fields: array of E.Element<TMsg>; Rating: int; Change: function(int): TMsg; Reset: TMsg; Apply: TMsg; RatingLabel: string := 'Minimum rating'): E.Element<TMsg>;
+// The native form for the filter popup.
+public function Panel<TMsg>(Id: string; Title: string; Fields: array of E.Element<TMsg>; Reset: TMsg; Apply: TMsg): E.Element<TMsg>;
 begin
   const Parts: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
   Parts.Add(Texts.Text<TMsg>(Title, Texts.Appearance.HeadingThree));
   Parts.AddRange(Fields);
-  Parts.Add(
-    E.Row<TMsg>(
-      new L.Flow(Gap := Points(12), Align := L.Alignment.Start),
-      E.Size<TMsg>(
-        Sliders.Slider<TMsg>(
-          Id + '-filter-rating',
-          RatingLabel,
-          cast<float>(Rating),
-          0.0F,
-          10.0F,
-          function(Value: float): TMsg => Change(cast<int>(Sys.Math.Round(Value))),
-          new Sliders.Options(Step := 1.0F)
-        ), new L.Flex(Basis := L.Extent.Fill)
-      ),
-      Texts.Text<TMsg>(
-        if Rating = 0 then
-          'Any'
-        else
-          Rating.ToString() + ' / 10'
-        end if, Texts.Appearance.Secondary
-      )
-    )
-  );
   Parts.Add(
     E.Size<TMsg>(
       E.Styled<TMsg>(E.Column<TMsg>(), S.Role.Divider),
@@ -124,6 +99,64 @@ begin
   return E.Column<TMsg>(
     new L.Flow(Gap := Points(14), Align := L.Alignment.Stretch, Clip := false), Parts.ToArray()
   );
+end function;
+
+// Builds the shared library filter form.
+// ## Type parameters
+// - `TMsg`: The page's message type.
+// ## Parameters
+// - `Id`: Prefix for the form's controls.
+// - `Title`: The form heading.
+// - `Fields`: Choice controls above the rating slider.
+// - `Rating`: Draft minimum rating from zero to ten, or -1 for unrated items.
+// - `Change`: Maps a rating proposal to a message.
+// - `Reset`: Message to clear the draft.
+// - `RatingLabel`: Identifies the entity being rated.
+// - `Apply`: Message to confirm the draft.
+// ## Returns
+// The title, choice controls, rating slider and form buttons.
+public function Form<TMsg>(Id: string; Title: string; Fields: array of E.Element<TMsg>; Rating: int; Change: function(int): TMsg; Reset: TMsg; Apply: TMsg; RatingLabel: string := 'Minimum rating'): E.Element<TMsg>;
+begin
+  const Parts: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>(Fields);
+  const Unrated: bool := Rating = -1;
+  Parts.Add(
+    E.Row<TMsg>(
+      new L.Flow(Gap := Points(12), Align := L.Alignment.Start),
+      E.Size<TMsg>(
+        Sliders.Slider<TMsg>(
+          Id + '-filter-rating',
+          RatingLabel,
+          cast<float>(Sys.Math.Max(0, Rating)),
+          0.0F,
+          10.0F,
+          function(Value: float): TMsg => Change(cast<int>(Sys.Math.Round(Value))),
+          new Sliders.Options(Step := 1.0F, Enabled := not Unrated)
+        ), new L.Flex(Basis := L.Extent.Fill)
+      ),
+      Texts.Text<TMsg>(
+        if Unrated then
+          '—'
+        elsif Rating = 0 then
+          'Any'
+        else
+          Rating.ToString() + ' / 10'
+        end if, Texts.Appearance.Secondary
+      )
+    )
+  );
+  Parts.Add(
+    Checks.Checkbox<TMsg>(
+      Id + '-filter-unrated', 'Unrated only', Unrated,
+      function(Value: bool): TMsg => Change(
+        if Value then
+          -1
+        else
+          0
+        end if
+      )
+    )
+  );
+  return Panel<TMsg>(Id, Title, Parts.ToArray(), Reset, Apply);
 end function;
 
 // Builds the shared filter button and its anchored form.

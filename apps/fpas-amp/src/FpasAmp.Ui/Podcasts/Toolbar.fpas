@@ -1,0 +1,210 @@
+// [Documentation](../../../doc/podcasts.md#implementation)
+
+unit FpasAmp.Ui.Podcasts.Toolbar;
+
+uses
+  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Podcasts.Model as M, FpasAmp.Ui.Podcasts.Catalog as Catalog,
+  FpasAmp.Ui.Albums.Toolbar.View as Layout, FpasAmp.Ui.Albums.Toolbar.Filters as Filters,
+  FpasAmp.Ui.Collections.TableSort as Sort, Fpas.Ui.Widgets.Collections.Tables as Tables,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
+  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Inputs.SearchFields as Fields,
+  Fpas.Ui.Widgets.Inputs.Selects as Select, System.Collections.Generic as C;
+
+const Gap: L.Spacing := L.Spacing.Fixed(L.Measure.Logical(8));
+const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
+
+function Action(Message: M.Msg): App.Msg;
+begin
+  return App.Msg.Podcasts(Message);
+end function;
+
+function Submit(Term: string): App.Msg;
+begin
+  return App.Msg.Podcasts(M.Msg.Search(Term));
+end function;
+
+function Picker(
+  Id: string; Items: array of Select.Item; Choices: array of Catalog.Choice;
+  Value: string; Change: function(string): M.Msg; Label: string
+): E.Element<App.Msg>;
+begin
+  return Select.Select<App.Msg>(
+    Id, Items, Catalog.IndexOf(Choices, Value),
+    function(Index: int): App.Msg => Action(Change(Choices[Index].Code)),
+    new Select.Options(Label := Label, Searchable := true)
+  );
+end function;
+
+function Labels(Choices: array of Catalog.Choice): array of Select.Item;
+begin
+  const Items: C.List<Select.Item> := new C.List<Select.Item>();
+  for Choice: Catalog.Choice in Choices do
+    Items.Add(new Select.Item(Choice.Label));
+  end for;
+
+  return Items.ToArray();
+end function;
+
+const Markets: array of Select.Item := Labels(Catalog.Markets);
+const Genres: array of Select.Item := Labels(Catalog.Genres);
+
+function Subscription(Value: string): App.Msg;
+begin
+  return Action(
+    M.Msg.Subscription(
+      case Value of
+        when 'subscribed': M.SubscriptionFilter.Subscribed;
+        when 'unsubscribed': M.SubscriptionFilter.Unsubscribed;
+        else M.SubscriptionFilter.All;
+      end case
+    )
+  );
+end function;
+
+function SubscriptionChoice(Value: M.SubscriptionFilter): E.Element<App.Msg>;
+begin
+  const Key: string := case Value of
+    when M.SubscriptionFilter.Subscribed: 'subscribed';
+    when M.SubscriptionFilter.Unsubscribed: 'unsubscribed';
+    else '';
+  end case;
+  return Filters.Choice<App.Msg>(
+    'podcast-subscription-filter', 'Subscription', 'All podcasts', ['subscribed', 'unsubscribed'],
+    Key, Subscription, ['Subscribed', 'Unsubscribed']
+  );
+end function;
+
+// Renders the podcast query, directory filters and active sort for Page at Width logical points.
+public function Search(Page: M.State; Width: int): E.Element<App.Msg>;
+requires Width > 0;
+begin
+  const Input: E.Element<App.Msg> := Fields.SearchField<App.Msg>(
+    'podcast-search-input', Page.Query,
+    function(Value: string): App.Msg => App.Msg.Podcasts(M.Msg.Query(Value)),
+    new Fields.Options(Placeholder := 'Search Apple Podcasts…'), Submit
+  );
+  const SubmitButton: E.Element<App.Msg> := B.Button<App.Msg>(
+    'podcast-search-submit', if Page.Query.Trim() = '' then
+      'Refresh'
+    else
+      'Search'
+    end if,
+    Submit(Page.Query), new B.Options(
+      Variant := S.ButtonVariant.Primary, Enabled := not Page.Searching, Loading := Page.Searching
+    )
+  );
+  const Draft: M.DiscoveryFilters? := Page.DiscoveryDraft;
+  const Count: int := (if Page.Market <> Catalog.DefaultMarket() then
+    1
+  else
+    0
+  end if) +
+    (if Page.Genre <> '' then
+      1
+    else
+      0
+    end if) + (if Page.Subscription <> M.SubscriptionFilter.All then
+      1
+    else
+      0
+    end if);
+  const Panel: E.Element<App.Msg> := if Draft <> null then
+    Filters.Panel<App.Msg>(
+      'podcast', 'Filter podcasts', [
+        Picker('podcast-market', Markets, Catalog.Markets, Draft.Market, M.Msg.Market, 'Market'),
+        Picker('podcast-genre', Genres, Catalog.Genres, Draft.Genre, M.Msg.Genre, 'Genre'),
+        SubscriptionChoice(Draft.Subscription)
+      ], Action(M.Msg.ResetDiscoveryFilters), Action(M.Msg.ApplyDiscoveryFilters)
+    )
+  else
+    E.Column<App.Msg>()
+  end if;
+  return Layout.Arrange<App.Msg>(
+    E.Row<App.Msg>(
+      new L.Flow(Gap := Gap, Align := L.Alignment.Center, Clip := false),
+      E.Size<App.Msg>(Input, Fill),
+      SubmitButton
+    ),
+    Filters.Popup<App.Msg>(
+      'podcast',
+      Panel,
+      Count,
+      Draft <> null,
+      function(Open: bool): App.Msg => Action(M.Msg.SetDiscoveryFilters(Open)),
+      Width
+    ),
+    Sort.Build<App.Msg>(
+      'podcast-sort', ['Podcast', 'Publisher'], [true, true], Page.SearchOrder,
+      function(Order: Tables.Sort): App.Msg => Action(M.Msg.SortResults(Order)), 'Apple order'
+    ), Width
+  );
+end function;
+
+function EpisodePanel(Page: M.State; Draft: M.EpisodeFilters): E.Element<App.Msg>;
+begin
+  const Choices: C.List<E.Element<App.Msg>> := new C.List<E.Element<App.Msg>>();
+  if Page.Years.Length > 1 then
+    Choices.Add(
+      Filters.Choice<App.Msg>(
+        'episode-filter-year', 'Publication year', 'All years', Page.Years, Draft.Year,
+        function(Value: string): App.Msg => Action(M.Msg.EpisodeYear(Value))
+      )
+    );
+  end if;
+
+  Choices.Add(
+    Filters.Choice<App.Msg>(
+      'episode-filter-duration', 'Duration', 'Any duration', ['short', 'medium', 'long', 'unknown'],
+      Draft.Duration, function(Value: string): App.Msg => Action(M.Msg.EpisodeDuration(Value)),
+      ['Under 15 minutes', '15 to under 45 minutes', '45 minutes or longer', 'Unknown duration']
+    )
+  );
+  return Filters.Panel<App.Msg>(
+    'episode', 'Filter episodes', Choices.ToArray(),
+    Action(M.Msg.ResetEpisodeFilters), Action(M.Msg.ApplyEpisodeFilters)
+  );
+end function;
+
+// Renders the episode search, publication and duration filters and active sort for Page at Width logical points.
+public function Episodes(Page: M.State; Width: int): E.Element<App.Msg>;
+requires Width > 0;
+begin
+  const Applied: M.EpisodeFilters := Page.AppliedEpisodes;
+  const Count: int := (if Applied.Year <> '' then
+    1
+  else
+    0
+  end if) + (if Applied.Duration <> '' then
+    1
+  else
+    0
+  end if);
+  const Draft: M.EpisodeFilters? := Page.EpisodeDraft;
+  const Panel: E.Element<App.Msg> := if Draft <> null then
+    EpisodePanel(Page, Draft)
+  else
+    E.Column<App.Msg>()
+  end if;
+  return Layout.Arrange<App.Msg>(
+    Fields.SearchField<App.Msg>(
+      'podcast-episode-search',
+      Page.EpisodeFilter,
+      function(Value: string): App.Msg => Action(M.Msg.Filter(Value)),
+      new Fields.Options(Placeholder := 'Search episodes…')
+    ),
+    Filters.Popup<App.Msg>(
+      'episode',
+      Panel,
+      Count,
+      Draft <> null,
+      function(Open: bool): App.Msg => Action(M.Msg.SetEpisodeFilters(Open)),
+      Width
+    ),
+    Sort.Build<App.Msg>(
+      'episode-sort', ['Title', 'Published', 'Time'], [true, false, false], Page.EpisodeOrder,
+      function(Order: Tables.Sort): App.Msg => Action(M.Msg.SortEpisodes(Order)), DateColumn := 1
+    ), Width
+  );
+end function;
+
+end unit;

@@ -102,6 +102,7 @@ public type LibraryMusicTests = record
       X.Assert.True(Fixture.Has(Session, 'track-filter-artist'));
       X.Assert.True(Fixture.Has(Session, 'track-filter-album'));
       X.Assert.True(Fixture.Has(Session, 'track-filter-genre'));
+      X.Assert.True(Fixture.Has(Session, 'track-filter-unrated'));
       Fixture.Capture(Session, 'music-filters', 'music');
       Song(Session, Music.Msg.Performer('Aster Vale'));
       const Release: string := Session.State().Songs.Page.ReleaseIds[

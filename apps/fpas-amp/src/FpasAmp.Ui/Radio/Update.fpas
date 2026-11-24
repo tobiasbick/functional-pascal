@@ -4,8 +4,38 @@ unit FpasAmp.Ui.Radio.Update;
 
 uses
   FpasAmp.Ui.Radio.Model as M, FpasAmp.Ui.Radio.Directory as Directory,
+  FpasAmp.Ui.Collections.TableRows as Rows, Fpas.Ui.Widgets.Collections.Tables as Tables,
   Fpas.Ui.Mvu.Application as A, System as Sys, System.Threading as T,
   System.Threading.Tasks as Tasks, System.Diagnostics as D;
+
+function Ordered(Items: array of M.Station; Order: Tables.Sort): array of M.Station;
+  function Compare(Left: M.Station; Right: M.Station): int;
+  begin
+    const Names: Sys.StringComparer := Sys.StringComparer.CurrentCultureIgnoreCase;
+    if Order.Column = 4 and (Left.Bitrate = 0) <> (Right.Bitrate = 0) then
+      return (Left.Bitrate = 0).CompareTo(Right.Bitrate = 0);
+    end if;
+
+    const Value: int := case Order.Column of
+      when 0: Names.Compare(Left.Name, Right.Name);
+      when 1: Names.Compare(Left.Country, Right.Country);
+      when 2: Names.Compare(Left.Language, Right.Language);
+      when 3: Names.Compare(Left.Genre, Right.Genre);
+      else Left.Bitrate.CompareTo(Right.Bitrate);
+    end case;
+    return if Order.Descending then
+      -Value
+    else
+      Value
+    end if;
+  end function;
+begin
+  return if Order.Column < 0 then
+    Items
+  else
+    Rows.Sorted<M.Station>(Items, Compare)
+  end if;
+end function;
 
 function Search(Current: M.State; Filter: M.Query): A.Transition<M.State, M.Msg>;
 begin
@@ -48,29 +78,63 @@ begin
           Name := Value;
         end with
       );
-    when M.Msg.FilterPanel(const Key: string):
+    when M.Msg.SetFilters(const Open: bool):
       Next := Current with
-        FilterOpen := Key;
+        FilterDraft := if Open then
+          Current.Filter
+        else
+          null
+        end if;
       end with;
     when M.Msg.Filter(const Key: string, const Value: string):
-      const Filter: M.Query := Current.Filter;
-      return Search(
-        Current, case Key of
-          when 'Country': Filter with
-            Country := Value;
-          end with;
-          when 'Language': Filter with
-            Language := Value;
-          end with;
-          else Filter with
-            Genre := Value;
-          end with;
-        end case
-      );
+      const Filter: M.Query? := Current.FilterDraft;
+      if Filter <> null then
+        Next := Current with
+          FilterDraft := case Key of
+            when 'Country': Filter with
+              Country := Value;
+            end with;
+            when 'Language': Filter with
+              Language := Value;
+            end with;
+            when 'Genre': Filter with
+              Genre := Value;
+            end with;
+            when 'Codec': Filter with
+              Codec := Value;
+            end with;
+            else Filter;
+          end case;
+        end with;
+      end if;
+    when M.Msg.ResetFilters:
+      if Current.FilterDraft <> null then
+        Next := Current with
+          FilterDraft := new M.Query();
+        end with;
+      end if;
+    when M.Msg.ApplyFilters:
+      const Filter: M.Query? := Current.FilterDraft;
+      if Filter <> null then
+        Next := Current with
+          FilterDraft := null;
+        end with;
+        const Applied: M.Query := new M.Query(
+          Current.Filter.Name,
+          Filter.Country.Trim(),
+          Filter.Language.Trim(),
+          Filter.Genre.Trim(),
+          Filter.Codec.Trim().ToUpperInvariant()
+        );
+        if Applied <> Current.Filter then
+          return Search(Next, Applied);
+        end if;
+      end if;
     when M.Msg.Found(const Revision: long, const Items: array of M.Station):
       if Revision = Current.Revision then
         Next := Current with
-          Items := Items;
+          Items := Ordered(Items, Current.Order);
+          Results := Items;
           Loaded := true;
           Searching := false;
           Cursor := -1;
@@ -89,6 +153,17 @@ begin
         Cursor := Cursor;
         Anchor := Anchor;
       end with;
+    when M.Msg.Sort(const Order: Tables.Sort):
+      if Order <> Current.Order and Order.Column >= -1 and Order.Column < 5 then
+        const Items: array of M.Station := Ordered(Current.Results, Order);
+        const Key: function(M.Station): string := function(Item: M.Station): string => Item.Id;
+        Next := Current with
+          Items := Items;
+          Order := Order;
+          Cursor := Rows.Position<M.Station>(Current.Items, Current.Cursor, Items, Key);
+          Anchor := Rows.Position<M.Station>(Current.Items, Current.Anchor, Items, Key);
+        end with;
+      end if;
     when M.Msg.Add:
       Next := Current with
         Editing := new M.Draft();

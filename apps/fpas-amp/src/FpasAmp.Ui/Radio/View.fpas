@@ -3,16 +3,17 @@
 unit FpasAmp.Ui.Radio.View;
 
 uses
-  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Radio.Model as M,
+  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Radio.Model as M, FpasAmp.Ui.Radio.Toolbar as Controls,
   FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Player.Model as Player,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Actions.IconButtons as Icons,
-  Fpas.Ui.Widgets.Inputs.SearchFields as Search, Fpas.Ui.Widgets.Inputs.TextFields as Fields,
-  Fpas.Ui.Widgets.Overlays.Popovers as Pop, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs,
+  Fpas.Ui.Widgets.Inputs.TextFields as Fields,
+  Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs,
   Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Containers.EmptyStates as Empty,
   Fpas.Ui.Widgets.Display.Icons as Artwork,
   Fpas.Ui.Widgets.Containers.Cards as Cards,
   Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Widgets.Collections.DataGrids as Grid,
+  Fpas.Ui.Widgets.Collections.Tables as Tables,
   Fpas.Ui.Widgets.Desktop.StatusBars as Status, System as Sys, System.Collections.Generic as C;
 
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
@@ -106,44 +107,6 @@ begin
   );
 end function;
 
-function Filter(Current: M.State; Key: string; Value: string): E.Element<App.Msg>;
-begin
-  const Open: bool := Current.FilterOpen = Key;
-  const Trigger: E.Element<App.Msg> := B.Button<App.Msg>(
-    'radio-filter-' + Key, if Value = '' then
-      Key
-    else
-      Key + ' · ' + Value
-    end if,
-    Action(
-      M.Msg.FilterPanel(
-        if Open then
-          ''
-        else
-          Key
-        end if
-      )
-    ),
-    new B.Options(Variant := S.ButtonVariant.Outline, IconRight := Sys.Char.ConvertFromUtf32($E06D))
-  );
-  return Pop.Popover<App.Msg>(
-    'radio-filter-popup-' + Key, Trigger,
-    E.Column<App.Msg>(
-      new L.Flow(Gap := Points(8), Align := L.Alignment.Stretch),
-      Fields.TextField<App.Msg>(
-        'radio-filter-value-' + Key, Value,
-        function(Text: string): App.Msg => Action(M.Msg.Filter(Key, Text)),
-        new Fields.Options(Label := Key)
-      ),
-      B.Button<App.Msg>(
-        'radio-filter-done-' + Key, 'Done',
-        Action(M.Msg.FilterPanel('')), new B.Options(Variant := S.ButtonVariant.Outline)
-      )
-    ),
-    Open, Action(M.Msg.FilterPanel('')), new Pop.Options(Width := 230)
-  );
-end function;
-
 function Format(Item: M.Station): string;
 begin
   const Codec: string := Item.Codec.ToUpperInvariant();
@@ -192,6 +155,15 @@ begin
 end function;
 
 function GridView(Current: App.State; Width: int): E.Element<App.Msg>;
+  function Change(Value: Grid.Value): App.Msg;
+  begin
+    const Order: Tables.Sort? := Value.Order;
+    return if Order <> null and Order <> Current.Radio.Order then
+      Action(M.Msg.Sort(Order))
+    else
+      Action(M.Msg.Navigate(Value.Cursor, Value.Anchor))
+    end if;
+  end function;
 begin
   const Page: M.State := Current.Radio;
   if Page.Items.Length = 0 then
@@ -208,16 +180,15 @@ begin
 
   return Grid.DataGrid<App.Msg>(
     'radio-stations', [
-      new Grid.Column('Station', cast<float>(Sys.Math.Max(200, Width - 582))),
-      new Grid.Column('Country', 126.0F, Priority := 3),
-      new Grid.Column('Language', 112.0F, Priority := 4),
-      new Grid.Column('Genre', 162.0F, Priority := 5),
-      new Grid.Column('Stream', 136.0F, Priority := 1),
+      new Grid.Column('Station', cast<float>(Sys.Math.Max(200, Width - 582)), Sortable := true),
+      new Grid.Column('Country', 126.0F, Sortable := true, Priority := 3),
+      new Grid.Column('Language', 112.0F, Sortable := true, Priority := 4),
+      new Grid.Column('Genre', 162.0F, Sortable := true, Priority := 5),
+      new Grid.Column('Stream', 136.0F, Sortable := true, Priority := 1),
       new Grid.Column('', 46.0F, Fixed := true)
     ],
     Page.Items.Length, function(Index: int): Grid.Row<App.Msg> => Row(Current, Page.Items[Index]),
-    new Grid.Value(Cursor := Page.Cursor, Anchor := Page.Anchor),
-    function(Value: Grid.Value): App.Msg => Action(M.Msg.Navigate(Value.Cursor, Value.Anchor)),
+    new Grid.Value(Order := Page.Order, Cursor := Page.Cursor, Anchor := Page.Anchor), Change,
     new Grid.Options(RowHeight := 38.0F, HideCheckboxes := true),
     function(Index: int): App.Msg => App.Msg.Player(Player.Msg.PlayStation(Page.Items[Index]))
   );
@@ -269,27 +240,7 @@ end function;
 public function Stations(Current: App.State; Width: int; Padding: int): E.Element<App.Msg>;
 begin
   const Page: M.State := Current.Radio;
-  const SearchBar: E.Element<App.Msg> := Search.SearchField<App.Msg>(
-    'radio-search', Page.Filter.Name, function(Value: string): App.Msg => Action(M.Msg.Name(Value)),
-    new Search.Options(Placeholder := 'Search stations…')
-  );
-  const Filters: E.Element<App.Msg> := E.Row<App.Msg>(
-    new L.Flow(Gap := Points(8), Align := L.Alignment.Center, Wrap := true, Clip := false),
-    Filter(Page, 'Country', Page.Filter.Country), Filter(Page, 'Language', Page.Filter.Language),
-    Filter(Page, 'Genre', Page.Filter.Genre)
-  );
-  const Toolbar: E.Element<App.Msg> := if Width < 760 then
-    E.Column<App.Msg>(
-      new L.Flow(Gap := Points(8), Align := L.Alignment.Stretch, Clip := false),
-      SearchBar,
-      Filters
-    )
-  else
-    E.Row<App.Msg>(
-      new L.Flow(Gap := Points(8), Align := L.Alignment.Center, Clip := false),
-      E.Size<App.Msg>(SearchBar, Fill), Filters
-    )
-  end if;
+  const Inner: int := Sys.Math.Max(1, Width - 2 * Padding);
   const Info: string := if Page.Searching then
     'Finding stations…'
   else
@@ -311,7 +262,7 @@ begin
             'radio-add', 'Add stream URL', Action(M.Msg.Add),
             new B.Options(Variant := S.ButtonVariant.Outline)
           )
-        ), Toolbar, Error(Page.Error),
+        ), Controls.Build(Page, Inner), Error(Page.Error),
         if Page.Error <> null and Page.Editing = null then
           B.Button<App.Msg>(
             'radio-retry', 'Retry', Action(M.Msg.Refresh),
@@ -320,7 +271,7 @@ begin
         else
           E.Row<App.Msg>()
         end if,
-        E.Size<App.Msg>(GridView(Current, Sys.Math.Max(1, Width - 2 * Padding)), Fill)
+        E.Size<App.Msg>(GridView(Current, Inner), Fill)
       ), Fill
     ),
     Status.StatusBar<App.Msg>('radio-status', [Status.Item<App.Msg>.Text(new Status.Label(Info))])

@@ -131,11 +131,17 @@ begin
       end for;
     end if;
   end if;
+  const Catalog: Browse.Catalog := Browse.Prepare(Items, Current.Scope);
   const Next: M.State := Show(
     Current with
       Items := Items;
       GroupName := Name;
-      Catalog := Browse.Prepare(Items, Current.Scope);
+      Catalog := Catalog;
+      Toolbar := if Current.Loaded then
+        Browse.ReconcileFilters(Current.Toolbar, Catalog)
+      else
+        Current.Toolbar
+      end if;
     end with
   );
   if SameArtwork(Current.Items, Items) then

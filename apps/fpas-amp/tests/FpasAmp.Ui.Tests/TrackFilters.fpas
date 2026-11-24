@@ -5,7 +5,9 @@ unit FpasAmp.Ui.Tests.TrackFilters;
 uses
   Fpas.Media.Tags.AudioFiles as MediaTags,
   FpasAmp.Ui.Albums.Music.Browse as Browse, FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Library.Metadata.Model as Tracks,
-  System as Sys, System.Collections.Immutable as I, Xunit as X;
+  FpasAmp.Ui.Albums.Music.Update as Edit, FpasAmp.Ui.Music.LibraryPage as Songs,
+  FpasAmp.Library.Albums.Model as Albums,
+  System as Sys, System.Collections.Immutable as I, System.Threading as T, Xunit as X;
 
 function Track(Genres: string): Tracks.Entry;
 begin
@@ -27,6 +29,7 @@ public type TrackFilterTests = record
   [X.InlineDataAttribute('', '', '')]
   [X.InlineDataAttribute('Rock', 'rock', '')]
   [X.InlineDataAttribute('Rock|Jazz|Rock', 'JAZZ|rock', '')]
+  [X.InlineDataAttribute(' Rock |Jazz', 'rock', 'Jazz')]
   [X.InlineDataAttribute('Rock|Jazz', 'Rock', 'Jazz')]
   [X.InlineDataAttribute('Rock', '', 'Rock')]
   [X.InlineDataAttribute('', 'Rock', 'Rock')]
@@ -36,7 +39,92 @@ public type TrackFilterTests = record
     const Items: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray.CreateRange<Tracks.Entry>(
       [Track(First), Track(Second)]
     );
-    X.Assert.Equal<string>(Expected, Sys.String.Join('|', Browse.GenreChoices(Items)));
+    X.Assert.Equal<string>(
+      Expected,
+      Sys.String.Join('|', Browse.GenreChoices(Items, T.CancellationToken.None))
+    );
+  end procedure;
+
+  // Music and playlists share the catalogue reply that clears missing filter values.
+  [X.FactAttribute]
+  public procedure SongCatalogueRefreshKeepsSurvivingSelections();
+  begin
+    const Applied: Music.Filters := new Music.Filters(
+      Genres := I.ImmutableHashSet.CreateRange<string>(['rock', 'Missing genre']),
+      MinimumRating := 6, Performer := 'Missing artist', ReleaseFilter := 'missing-release'
+    );
+    const Draft: Music.Filters := new Music.Filters(
+      Genres := I.ImmutableHashSet.CreateRange<string>(['Pop', 'Missing genre']),
+      MinimumRating := 8, Performer := 'SOLOIST', ReleaseFilter := 'release-b'
+    );
+    const Page: Music.State := (new Songs.State()).Page with
+      Applied := Applied;
+      Draft := Draft;
+      FiltersOpen := true;
+    end with;
+    const Items: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray.CreateRange<Tracks.Entry>(
+      [
+        Track('Rock') with
+          FileId := 1L;
+          AlbumId := 'release-a';
+          Rating := 7;
+        end with,
+        Track('Pop') with
+          FileId := 2L;
+          AlbumId := 'release-b';
+          Rating := 9;
+          Metadata := new MediaTags.Info(Genres := ['Pop'], Artists := ['Soloist']);
+        end with
+      ]
+    );
+    const Snapshot: Songs.Catalogue := new Songs.Catalogue(
+      Items, I.ImmutableDictionary<string, Albums.Album>.Empty,
+      ['Soloist'], ['Release A', 'Release B'], ['release-a', 'release-b'], ['Pop', 'Rock']
+    );
+    const Updated: Songs.State := Songs.Apply(
+      new Songs.State(Page := Page),
+      Songs.Msg.Received(Page.Visit, 1L, Snapshot),
+      null
+    ).Model;
+    X.Assert.Equal<int>(1, Updated.Page.Shown.Length);
+    X.Assert.Equal<long>(1L, Updated.Page.Shown[0].FileId);
+    X.Assert.True(Updated.Page.Applied.Genres.SetEquals(['Rock']));
+    X.Assert.Equal<string>('', Updated.Page.Applied.Performer);
+    X.Assert.Equal<string>('', Updated.Page.Applied.ReleaseFilter);
+    X.Assert.Equal<int>(6, Updated.Page.Applied.MinimumRating);
+    X.Assert.Equal<int>(2, Updated.Page.Applied.Count());
+    X.Assert.True(Updated.Page.Draft.Genres.SetEquals(['Pop']));
+    X.Assert.Equal<string>('Soloist', Updated.Page.Draft.Performer);
+    X.Assert.Equal<string>('release-b', Updated.Page.Draft.ReleaseFilter);
+    X.Assert.True(Updated.Page.FiltersOpen);
+  end procedure;
+
+  // An album stops offering a genre filter when every track now has that genre.
+  [X.FactAttribute]
+  public procedure AlbumTrackRefreshClearsAChoiceThatNoLongerNarrows();
+  begin
+    const Applied: Music.Filters := new Music.Filters(
+      Genres := I.ImmutableHashSet.Create<string>('Rock')
+    );
+    const Album: Albums.Album := new Albums.Album('release-a', 'Studio', 'Artist', 2L, 'revision');
+    const Items: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray.CreateRange<Tracks.Entry>(
+      [Track('Rock'), Track('Rock')]
+    );
+    const Page: Music.State := new Music.State(
+      Album,
+      1L,
+      Applied := Applied,
+      Draft := Applied,
+      GenreChoices := ['Rock']
+    );
+    const Updated: Music.State := Edit.Apply(
+      Page,
+      Music.Msg.Loaded(Page.Visit, 1L, Items),
+      null
+    ).Model;
+    X.Assert.Equal<int>(2, Updated.Shown.Length);
+    X.Assert.True(Updated.Applied.Genres.IsEmpty);
+    X.Assert.True(Updated.Draft.Genres.IsEmpty);
   end procedure;
 
   // Equal album titles stay distinct and a performer filter matches an individual credit.

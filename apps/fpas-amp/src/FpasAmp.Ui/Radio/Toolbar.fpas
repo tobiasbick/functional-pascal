@@ -1,0 +1,92 @@
+// [Documentation](../../../doc/desktop.md#online-radio)
+
+unit FpasAmp.Ui.Radio.Toolbar;
+
+uses
+  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Radio.Model as M,
+  FpasAmp.Ui.Albums.Toolbar.View as Toolbar, FpasAmp.Ui.Albums.Toolbar.Filters as Filters,
+  FpasAmp.Ui.Collections.TableSort as Sort, Fpas.Ui.Elements as E,
+  Fpas.Ui.Widgets.Inputs.SearchFields as Search, Fpas.Ui.Widgets.Inputs.TextFields as Fields,
+  Fpas.Ui.Widgets.Collections.Tables as Tables;
+
+function Action(Message: M.Msg): App.Msg;
+begin
+  return App.Msg.Radio(Message);
+end function;
+
+function Field(Key: string; Value: string): E.Element<App.Msg>;
+begin
+  return Fields.TextField<App.Msg>(
+    'radio-filter-' + Key,
+    Value,
+    function(Text: string): App.Msg => Action(M.Msg.Filter(Key, Text)),
+    new Fields.Options(Label := Key)
+  );
+end function;
+
+// Shows search, the directory filter form and the active sort for Page at Width logical points.
+public function Build(Page: M.State; Width: int): E.Element<App.Msg>;
+requires Width > 0;
+begin
+  const Count: int := (if Page.Filter.Country <> '' then
+    1
+  else
+    0
+  end if) +
+    (if Page.Filter.Language <> '' then
+      1
+    else
+      0
+    end if) + (if Page.Filter.Genre <> '' then
+      1
+    else
+      0
+    end if) + (if Page.Filter.Codec <> '' then
+      1
+    else
+      0
+    end if);
+  const Draft: M.Query? := Page.FilterDraft;
+  const Panel: E.Element<App.Msg> := if Draft <> null then
+    Filters.Panel<App.Msg>(
+      'radio', 'Filter stations',
+      [
+        Field('Country', Draft.Country),
+        Field('Language', Draft.Language),
+        Field('Genre', Draft.Genre),
+        Field('Codec', Draft.Codec)
+      ],
+      Action(M.Msg.ResetFilters), Action(M.Msg.ApplyFilters)
+    )
+  else
+    E.Column<App.Msg>()
+  end if;
+  return Toolbar.Arrange<App.Msg>(
+    Search.SearchField<App.Msg>(
+      'radio-search',
+      Page.Filter.Name,
+      function(Value: string): App.Msg => Action(M.Msg.Name(Value)),
+      new Search.Options(Placeholder := 'Search stations…')
+    ),
+    Filters.Popup<App.Msg>(
+      'radio',
+      Panel,
+      Count,
+      Draft <> null,
+      function(Open: bool): App.Msg => Action(M.Msg.SetFilters(Open)),
+      Width
+    ),
+    Sort.Build<App.Msg>(
+      'radio-sort',
+      ['Station', 'Country', 'Language', 'Genre', 'Bitrate'],
+      [true, true, true, true, false],
+      Page.Order,
+      function(Order: Tables.Sort): App.Msg => Action(
+        M.Msg.Sort(Order)
+      ),
+      'Popular first'
+    ), Width
+  );
+end function;
+
+end unit;

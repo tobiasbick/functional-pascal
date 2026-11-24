@@ -4,8 +4,8 @@ unit FpasAmp.Ui.Podcasts.Model;
 
 uses
   Fpas.Media.Images as Images, FpasAmp.Ui.Radio.Model as Radio,
-  FpasAmp.Ui.Podcasts.Catalog as Catalog, System as Sys,
-  System.Collections.Generic as C, System.Collections.Immutable as I,
+  FpasAmp.Ui.Podcasts.Catalog as Catalog, Fpas.Ui.Widgets.Collections.Tables as Tables,
+  System as Sys, System.Collections.Immutable as I,
   System.Security.Cryptography as Crypto, System.Text as Text;
 
 // A podcast identified by its canonical RSS address.
@@ -54,6 +54,37 @@ public type Feed = record
   public Episodes: array of Episode;
 end record;
 
+// Which shows to include according to the user's saved subscriptions.
+public type SubscriptionFilter = enum
+  // Include every show.
+  All;
+  // Include saved shows only.
+  Subscribed;
+  // Include shows absent from saved subscriptions only.
+  Unsubscribed;
+end enum;
+
+// Directory filters for Apple charts and searches.
+public type DiscoveryFilters = record
+  // Apple storefront country code.
+  public Market: string := Catalog.DefaultMarket();
+  // Apple genre identifier, or empty for all genres.
+  public Genre: string := '';
+  // Local filter for saved subscriptions.
+  public Subscription: SubscriptionFilter := SubscriptionFilter.All;
+end record;
+
+// Filter choice for episodes with no publication date.
+public const UnknownYear: string := 'Unknown year';
+
+// Publication and duration filters for one feed.
+public type EpisodeFilters = record
+  // Publication year, UnknownYear for undated episodes or empty for all.
+  public Year: string := '';
+  // Duration bucket, or empty for any duration.
+  public Duration: string := '';
+end record;
+
 // Visible state for the search page, the selected show and the add-feed dialog.
 public type State = record
   // Search term entered by the user.
@@ -62,8 +93,14 @@ public type State = record
   public Market: string := Catalog.DefaultMarket();
   // Selected Apple genre identifier, or an empty string for all genres.
   public Genre: string := '';
+  // Subscription filter applied to the Apple result set.
+  public Subscription: SubscriptionFilter := SubscriptionFilter.All;
+  // Unapplied directory filters while the popup is open.
+  public DiscoveryDraft: DiscoveryFilters? := null;
   // Last accepted unfiltered Apple response, in provider order.
   public Results: array of Show := [];
+  // Search results after applying the genre filter and display order.
+  public ShownResults: array of Show := [];
   // Token of the most recently submitted search.
   public SearchRevision: long := 0L;
   // Whether the search is in progress.
@@ -72,12 +109,18 @@ public type State = record
   public Searched: bool := false;
   // Error for the search view, if any.
   public SearchError: string? := null;
+  // Sort for the result grid. Column -1 preserves Apple ranking.
+  public SearchOrder: Tables.Sort := new Tables.Sort(-1);
   // Keyboard selection on the search table.
   public SearchCursor: int := -1;
   // Selected show, available from search or a persistent subscription.
   public Show: Show? := null;
   // Last accepted episodes for the selected show.
   public Episodes: array of Episode := [];
+  // Episodes after applying the filters and display order.
+  public ShownEpisodes: array of Episode := [];
+  // Distinct publication years in the selected feed, plus UnknownYear when present.
+  public Years: array of string := [];
   // Show load token, also scopes artwork replies.
   public FeedRevision: long := 0L;
   // Whether the selected feed is loading.
@@ -88,8 +131,12 @@ public type State = record
   public FeedError: string? := null;
   // Filter text for the selected show's episode table.
   public EpisodeFilter: string := '';
-  // Whether oldest episodes should be listed first.
-  public OldestFirst: bool := false;
+  // Active publication and duration filters.
+  public AppliedEpisodes: EpisodeFilters := new EpisodeFilters();
+  // Unapplied episode filters while the popup is open.
+  public EpisodeDraft: EpisodeFilters? := null;
+  // Sort for the episode grid, initially newest first.
+  public EpisodeOrder: Tables.Sort := new Tables.Sort(1, true);
   // Keyboard selection in the current episode table.
   public EpisodeCursor: int := -1;
   // URL being edited in the RSS dialog, or null when closed.
@@ -106,16 +153,26 @@ public type Msg = variant
   Query(Value: string);
   // Submit the current filter text to Apple.
   Search(Value: string);
-  // Select the Apple storefront by country code.
+  // Open or dismiss the directory filter form.
+  SetDiscoveryFilters(Open: bool);
+  // Edit the draft Apple storefront by country code.
   Market(Value: string);
-  // Select an Apple genre identifier or clear the selection.
+  // Edit the draft Apple genre identifier.
   Genre(Value: string);
+  // Edit the draft subscription filter.
+  Subscription(Value: SubscriptionFilter);
+  // Reset the draft directory filters.
+  ResetDiscoveryFilters;
+  // Apply the draft directory filters.
+  ApplyDiscoveryFilters;
   // Accept Apple matches for a specific request.
   Found(Revision: long; Shows: array of Show);
   // Report an Apple request failure.
   SearchFailed(Revision: long; Reason: string);
   // Track the selected row in the result table.
   SelectResult(Index: int);
+  // Set the order of podcast search results.
+  SortResults(Order: Tables.Sort);
   // Open the show and request its RSS feed.
   Open(Show: Show; Subscribe: bool);
   // Return to the search results.
@@ -138,8 +195,18 @@ public type Msg = variant
   AddFeed;
   // Filter the episode list by its displayed titles.
   Filter(Value: string);
-  // Set the date order of the episode list.
-  Sort(OldestFirst: bool);
+  // Open or dismiss the episode filter form.
+  SetEpisodeFilters(Open: bool);
+  // Edit the draft publication year.
+  EpisodeYear(Value: string);
+  // Edit the draft duration bucket.
+  EpisodeDuration(Value: string);
+  // Reset the draft publication and duration filters.
+  ResetEpisodeFilters;
+  // Apply the draft publication and duration filters.
+  ApplyEpisodeFilters;
+  // Set the order of episodes.
+  SortEpisodes(Order: Tables.Sort);
   // Change the focused episode row.
   SelectEpisode(Index: int);
   // Start or toggle the selected episode in the current queue.
@@ -147,24 +214,6 @@ public type Msg = variant
   // Open or dismiss the episode details dialog.
   Details(Episode: Episode?);
 end variant;
-
-// Returns the visible shows for Current in provider order.
-// Category charts arrive filtered from Apple. Text matches are filtered locally.
-public function VisibleShows(Current: State): array of Show;
-begin
-  if not Current.Searched or Current.Genre = '' then
-    return Current.Results;
-  end if;
-
-  const Matches: C.List<Show> := new C.List<Show>();
-  for Item: Show in Current.Results do
-    if Sys.Array.IndexOf<string>(Item.Genres, Current.Genre) >= 0 then
-      Matches.Add(Item);
-    end if;
-  end for;
-
-  return Matches.ToArray();
-end function;
 
 // Finds a subscription or search result by its stable Id.
 public function Find(Items: array of Show; Id: string): Show?;

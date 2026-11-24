@@ -2,7 +2,9 @@
 
 unit FpasAmp.Ui.Radio.Model;
 
-uses System as Sys, System.Text as Text, System.Security.Cryptography as Crypto;
+uses
+  Fpas.Ui.Widgets.Collections.Tables as Tables,
+  System as Sys, System.Text as Text, System.Security.Cryptography as Crypto;
 
 // A station from the directory or a stream entered by the listener.
 public type Station = record
@@ -85,6 +87,8 @@ public type Query = record
   public Language: string := '';
   // Genre or other station tag.
   public Genre: string := '';
+  // Stream codec, or empty for all codecs.
+  public Codec: string := '';
 end record;
 
 // Search and editor state for the radio section.
@@ -93,18 +97,22 @@ public type State = record
   public Filter: Query := new Query();
   // Incremented for each search, so late replies cannot replace a newer result.
   public Revision: long := 0L;
-  // Latest successful search result.
+  // Latest successful search result in its displayed order.
   public Items: array of Station := [];
+  // Successful response in the directory's original ranking.
+  public Results: array of Station := [];
   // Whether the directory has delivered a result.
   public Loaded: bool := false;
   // Whether a search is in flight.
   public Searching: bool := false;
-  // Open filter editor, or an empty string.
-  public FilterOpen: string := '';
+  // Unapplied filters while the popup is open.
+  public FilterDraft: Query? := null;
   // Manual station editor, or null when closed.
   public Editing: Draft? := null;
   // Last error for the visible radio page.
   public Error: string? := null;
+  // Sort for the station grid. Column -1 preserves directory ranking.
+  public Order: Tables.Sort := new Tables.Sort(-1);
   // Table cursor and range anchor within the current result.
   public Cursor: int := -1;
   public Anchor: int := -1;
@@ -116,16 +124,22 @@ public type Msg = variant
   Refresh;
   // Edit the name search.
   Name(Value: string);
-  // Open one filter editor, or dismiss it with an empty key.
-  FilterPanel(Key: string);
-  // Set a directory filter.
+  // Open or dismiss the filter form.
+  SetFilters(Open: bool);
+  // Edit a draft directory filter.
   Filter(Key: string; Value: string);
+  // Clear the draft filters.
+  ResetFilters;
+  // Apply the draft and refresh the directory.
+  ApplyFilters;
   // Replace the search results if Revision is current.
   Found(Revision: long; Items: array of Station);
   // Report directory failure for Revision.
   Failed(Revision: long; Text: string);
   // Retain the table cursor and range anchor across renders.
   Navigate(Cursor: int; Anchor: int);
+  // Change the station table's sort order.
+  Sort(Order: Tables.Sort);
   // Select or remove a favorite station.
   Favorite(Item: Station);
   // Open the manual stream editor.

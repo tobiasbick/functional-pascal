@@ -97,7 +97,7 @@ public async function Search(Query: M.Query; Stop: T.CancellationToken): Tasks.T
 begin
   const Path: string := '/json/stations/search?hidebroken=true&order=clickcount&reverse=true&limit=' +
     Maximum.ToString() + Filter('name', Query.Name) + Filter('country', Query.Country) +
-    Filter('language', Query.Language) + Filter('tag', Query.Genre);
+    Filter('language', Query.Language) + Filter('tag', Query.Genre) + Filter('codec', Query.Codec);
   var Failure: Sys.Exception? := null;
   for Mirror: string in Mirrors do
     using const Limit: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(

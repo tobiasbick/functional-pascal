@@ -255,6 +255,7 @@ public type NativeNavigationTests = record
     using const Data: H.Folder := H.Folder.Create();
     discard Metadata.Write(Root.Path, 'first.mp3', 'First song');
     discard Metadata.Write(Root.Path, 'second.mp3', 'Second song');
+    discard Fixtures.Track(Root.Path, 'unrelated.mp3', 'Out of list', 'Another artist');
     IO.File.WriteAllText(
       IO.Path.Combine(Root.Path, 'Evening mix.m3u8'),
       'second.mp3' + #10 + 'first.mp3' + #10 + 'second.mp3' + #10 + 'missing.mp3' + #10
@@ -301,6 +302,14 @@ public type NativeNavigationTests = record
           Nav.Page.Genres
         ] do
           SetRoute(Session, Nav.Route.Page(Page));
+          if Page = Nav.Page.Music then
+            Until(
+              Session,
+              function(_State: Nav.State): bool => Session.State().Songs.Page.ReleaseTitles.Length =
+                2
+            );
+          end if;
+
           X.Assert.Equal<string>(
             Page.ToString().ToLowerInvariant(),
             Nav.Key(Session.State().Navigation.Active)
@@ -329,6 +338,9 @@ public type NativeNavigationTests = record
         X.Assert.Equal<string>('second.mp3', IO.Path.GetFileName(Rows[0].Path));
         X.Assert.Equal<string>('first.mp3', IO.Path.GetFileName(Rows[1].Path));
         X.Assert.Equal<long>(Rows[0].FileId, Rows[2].FileId);
+        X.Assert.Equal<int>(0, Session.State().Songs.Page.ReleaseIds.Length);
+        X.Assert.Equal<int>(0, Session.State().Songs.Page.Performers.Length);
+        X.Assert.Equal<int>(0, Session.State().Songs.Page.GenreChoices.Length);
         discard Session.Window.Post(App.Msg.Songs(Songs.Msg.Song(Music.Msg.PlaySlot(Rows, 2))));
         Pump(Session);
         X.Assert.Equal<int>(2, Session.State().Player.Index);

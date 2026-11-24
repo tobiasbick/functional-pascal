@@ -7,10 +7,14 @@ with the menu button, then choose a destination.
 ## Music
 
 **Music** lists indexed tracks across all sources, with artwork, artist, album,
-genre, duration and rating. Search by title, artist or album. **Filters** accepts
-an artist, album, genre and minimum rating. Album choices distinguish releases
-that share a title. Click a sortable column or use the sort menu to change the
-order. The table follows library updates during a scan.
+genre, duration and rating. Search by title, artist or album. **Filters** offers
+artist, album and genre choices that narrow the list. Album choices distinguish
+releases that share a title. Pick a minimum rating or **Unrated only**. Click a
+sortable column or use the sort menu to change the order. The table follows
+library updates during a scan.
+
+When a catalogue refresh removes a choice from a filter menu, that selection
+clears automatically. The other selections stay active.
 
 ![Music table with sample tracks, artwork and ratings](screenshots/music.png)
 
@@ -42,15 +46,17 @@ opens [track details or the tag editor](track-metadata.md).
 
 ![Album grid with synthetic covers and ratings](screenshots/albums.png)
 
-Album, artist and genre ratings are independent of track ratings. Click the
-selected star to clear a rating. Album cards show details on hover. Artwork
+Album, artist and genre ratings are independent of track ratings. Each grid's
+rating filter can select unrated items. Click the selected star to clear a
+rating. Album cards show details on hover. Artwork
 comes from embedded covers or recognized cover files in the album folder.
 Cached thumbnails remain available while a source is offline.
 
 An album opens with its artwork beside its tracks in disc and track order.
-Search by track title or genre. The album filter offers a minimum rating and
-shows genre choices when they distinguish tracks on the album. Back restores
-the parent view, including its search, filters, sort and scroll position. If a
+Search by track title or genre. The album filter offers a minimum rating or
+**Unrated only**. Genre choices appear when they distinguish tracks on the
+album. Back restores the parent view, including its search, filters, sort and
+scroll position. If a
 scan removes the open album, the app returns to that parent view.
 
 ## Playlists
@@ -63,7 +69,9 @@ Source playlists with the same name show their location.
 
 A playlist opens in its stored order and keeps repeated tracks. The table
 shows entries that resolve to indexed files. Missing files and remote entries
-still count toward its total. Start a track to play that selection in the
+still count toward its total. **Filters** offers artist, album and genre
+choices from the playlist's own tracks and filters them by rating. Start a
+track to play that selection in the
 [player queue](playback.md#transport-and-queue).
 
 The library discovers playlist formats including M3U/M3U8, PLS and XSPF.

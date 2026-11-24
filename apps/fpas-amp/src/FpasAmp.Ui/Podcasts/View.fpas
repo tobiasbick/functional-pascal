@@ -3,16 +3,17 @@
 unit FpasAmp.Ui.Podcasts.View;
 
 uses
-  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Podcasts.Model as M, FpasAmp.Ui.Podcasts.Update as Update,
-  FpasAmp.Ui.Podcasts.DiscoveryView as DiscoveryView,
+  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Podcasts.Model as M,
+  FpasAmp.Ui.Podcasts.Toolbar as Toolbar,
   FpasAmp.Ui.Albums.Artwork as Artwork, FpasAmp.Ui.Albums.Music.Browse as Time,
   FpasAmp.Ui.Player.Model as Player, FpasAmp.Library.Metadata.Model as Tracks, Fpas.Media.Images as Images,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Actions.IconButtons as Icons,
   Fpas.Ui.Widgets.Collections.DataGrids as Grid, Fpas.Ui.Widgets.Containers.EmptyStates as Empty,
+  Fpas.Ui.Widgets.Collections.Tables as Tables,
   Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Widgets.Display.Texts as Texts,
-  Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Widgets.Inputs.SearchFields as SearchField,
-  Fpas.Ui.Widgets.Inputs.Selects as Select, Fpas.Ui.Widgets.Inputs.TextFields as Fields,
+  Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
+  Fpas.Ui.Widgets.Inputs.TextFields as Fields,
   Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Overlays.Menus as Menus,
   System as Sys, System.Collections.Generic as C;
 
@@ -90,6 +91,15 @@ begin
 end function;
 
 function Results(Current: App.State; Shows: array of M.Show; Width: int): E.Element<App.Msg>;
+  function Change(Value: Grid.Value): App.Msg;
+  begin
+    const Order: Tables.Sort? := Value.Order;
+    return if Order <> null and Order <> Current.Podcasts.SearchOrder then
+      Action(M.Msg.SortResults(Order))
+    else
+      Action(M.Msg.SelectResult(Value.Cursor))
+    end if;
+  end function;
 begin
   const Page: M.State := Current.Podcasts;
   if Shows.Length = 0 then
@@ -110,14 +120,22 @@ begin
   return Grid.DataGrid<App.Msg>(
     'podcast-results',
     [
-      new Grid.Column('Podcast', cast<float>(Sys.Math.Max(112, Width - Publisher - 124))),
-      new Grid.Column('Publisher', cast<float>(Publisher), Priority := 1),
+      new Grid.Column(
+        'Podcast',
+        cast<float>(Sys.Math.Max(112, Width - Publisher - 124)),
+        Sortable := true
+      ),
+      new Grid.Column('Publisher', cast<float>(Publisher), Sortable := true, Priority := 1),
       new Grid.Column('', 124.0F, Fixed := true)
     ],
     Shows.Length,
     function(Index: int): Grid.Row<App.Msg> => Result(Current, Shows[Index]),
-    new Grid.Value(Cursor := Page.SearchCursor, Anchor := Page.SearchCursor),
-    function(Value: Grid.Value): App.Msg => Action(M.Msg.SelectResult(Value.Cursor)),
+    new Grid.Value(
+      Order := Page.SearchOrder,
+      Cursor := Page.SearchCursor,
+      Anchor := Page.SearchCursor
+    ),
+    Change,
     new Grid.Options(RowHeight := 52.0F, HideCheckboxes := true),
     function(Index: int): App.Msg => Action(M.Msg.Open(Shows[Index], false))
   );
@@ -153,7 +171,7 @@ end function;
 public function Search(Current: App.State; Width: int; Padding: int): E.Element<App.Msg>;
 begin
   const Page: M.State := Current.Podcasts;
-  const Shows: array of M.Show := M.VisibleShows(Page);
+  const Shows: array of M.Show := Page.ShownResults;
   const Count: string := if Shows.Length <> Page.Results.Length then
     Shows.Length.ToString() + ' of ' + Page.Results.Length.ToString() + ' podcasts'
   elsif Shows.Length = 1 then
@@ -171,7 +189,7 @@ begin
           'podcast-add', 'Add RSS feed', Action(M.Msg.Add),
           new B.Options(Variant := S.ButtonVariant.Outline)
         )
-      ), DiscoveryView.Toolbar(Page, ContentWidth)
+      ), Toolbar.Search(Page, ContentWidth)
     ]
   );
   if Page.SearchError <> null then
@@ -278,6 +296,15 @@ begin
 end function;
 
 function EpisodeGrid(Current: App.State; Show: M.Show; Items: array of M.Episode; Width: int): E.Element<App.Msg>;
+  function Change(Value: Grid.Value): App.Msg;
+  begin
+    const Order: Tables.Sort? := Value.Order;
+    return if Order <> null and Order <> Current.Podcasts.EpisodeOrder then
+      Action(M.Msg.SortEpisodes(Order))
+    else
+      Action(M.Msg.SelectEpisode(Value.Cursor))
+    end if;
+  end function;
 begin
   const Page: M.State := Current.Podcasts;
   if Items.Length = 0 then
@@ -295,14 +322,18 @@ begin
   return Grid.DataGrid<App.Msg>(
     'podcast-episodes/' + Key,
     [
-      new Grid.Column('Title', cast<float>(Sys.Math.Max(96, Width - 236))),
-      new Grid.Column('Published', 116.0F, Priority := 1),
-      new Grid.Column('Time', 76.0F, Priority := 2),
+      new Grid.Column('Title', cast<float>(Sys.Math.Max(96, Width - 236)), Sortable := true),
+      new Grid.Column('Published', 116.0F, Sortable := true, Priority := 1),
+      new Grid.Column('Time', 76.0F, Sortable := true, Priority := 2),
       new Grid.Column('', 44.0F, Fixed := true)
     ],
     Items.Length, function(Index: int): Grid.Row<App.Msg> => EpisodeRow(Current, Key, Items[Index]),
-    new Grid.Value(Cursor := Page.EpisodeCursor, Anchor := Page.EpisodeCursor),
-    function(Value: Grid.Value): App.Msg => Action(M.Msg.SelectEpisode(Value.Cursor)),
+    new Grid.Value(
+      Order := Page.EpisodeOrder,
+      Cursor := Page.EpisodeCursor,
+      Anchor := Page.EpisodeCursor
+    ),
+    Change,
     new Grid.Options(RowHeight := 40.0F, HideCheckboxes := true),
     function(Index: int): App.Msg => Action(M.Msg.Play(Items[Index]))
   );
@@ -365,7 +396,7 @@ begin
     )
   );
   const Cover: E.Element<App.Msg> := Image(Page, Show, 'podcast-cover', Edge);
-  const Items: array of M.Episode := Update.Visible(Page);
+  const Items: array of M.Episode := Page.ShownEpisodes;
   const Inset: int := Edge + Padding * 2;
   const TableWidth: int := Width - Padding * 2 - if Compact then
     0
@@ -374,27 +405,7 @@ begin
   end if;
   const Parts: C.List<E.Element<App.Msg>> := new C.List<E.Element<App.Msg>>(
     [
-      E.Row<App.Msg>(
-        new L.Flow(Gap := Points(8), Align := L.Alignment.Center),
-        E.Size<App.Msg>(
-          SearchField.SearchField<App.Msg>(
-            'podcast-episode-search',
-            Page.EpisodeFilter,
-            function(Value: string): App.Msg => Action(M.Msg.Filter(Value)),
-            new SearchField.Options(Placeholder := 'Search episodes…')
-          ), Fill
-        ),
-        Select.Select<App.Msg>(
-          'podcast-episode-sort',
-          [new Select.Item('Newest first'), new Select.Item('Oldest first')],
-          if Page.OldestFirst then
-            1
-          else
-            0
-          end if,
-          function(Index: int): App.Msg => Action(M.Msg.Sort(Index = 1))
-        )
-      )
+      Toolbar.Episodes(Page, Sys.Math.Max(1, TableWidth))
     ]
   );
   if Page.FeedError <> null then

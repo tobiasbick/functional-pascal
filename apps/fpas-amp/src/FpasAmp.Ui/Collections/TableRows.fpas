@@ -1,0 +1,37 @@
+// [Documentation](../../../doc/desktop.md#browsing-music-and-collections)
+
+unit FpasAmp.Ui.Collections.TableRows;
+
+uses System as Sys, System.Collections.Generic as C, System.Linq as Linq;
+
+// Returns Items ordered by Compare, preserving input order for equal rows.
+public function Sorted<T>(Items: array of T; Compare: Sys.Comparison<T>): array of T;
+begin
+  return Linq.Enumerable.ToArray<T>(
+    Linq.Enumerable.OrderBy<T, T>(
+      Items,
+      function(Item: T): T => Item,
+      C.Comparer<T>.Create(Compare)
+    )
+  );
+end function;
+
+// Returns the position in After of the row at Index in Before, using its stable Key.
+// Returns -1 when that row is absent or the original index was invalid.
+public function Position<T>(Before: array of T; Index: int; After: array of T; Key: function(T): string): int;
+begin
+  if Index < 0 or Index >= Before.Length then
+    return -1;
+  end if;
+
+  const Selected: string := Key(Before[Index]);
+  for Row: int := 0 to After.Length - 1 do
+    if Key(After[Row]) = Selected then
+      return Row;
+    end if;
+  end for;
+
+  return -1;
+end function;
+
+end unit;

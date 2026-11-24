@@ -5,6 +5,7 @@ unit FpasAmp.Ui.App.Podcasts;
 uses
   FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Podcasts.Model as M,
   FpasAmp.Ui.Podcasts.Update as Update, FpasAmp.Ui.Podcasts.Network as Network,
+  FpasAmp.Ui.Podcasts.Browse as Browse,
   FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Settings.Model as Settings,
   FpasAmp.Ui.Settings.Editing as Editing, FpasAmp.Ui.Player.Model as Player,
   FpasAmp.Library.Metadata.Model as Tracks, Fpas.Media.Tags.AudioFiles as Tags,
@@ -16,7 +17,9 @@ uses
 function Change(Current: App.State; Action: M.Msg): A.Transition<App.State, App.Msg>;
 begin
   const Result: A.Transition<M.State, App.Msg> := Composition.MapTransition<M.State, M.Msg, App.Msg>(
-    Update.Apply(Current.Podcasts, Action), App.Msg.Podcasts, 'podcasts'
+    Update.Apply(Current.Podcasts, Action, Current.Settings.Saved.PodcastSubscriptions),
+    App.Msg.Podcasts,
+    'podcasts'
   );
   return new A.Transition<App.State, App.Msg>(
     Current with
@@ -107,16 +110,21 @@ begin
   else
     null
   end if;
+  const Page: M.State := if Current.Navigation.Active = Nav.Route.Page(Nav.Page.Podcasts) then
+    Current.Podcasts with
+      SearchError := Error;
+    end with
+  else
+    Current.Podcasts with
+      FeedError := Error;
+    end with
+  end if;
   return Current with
     Settings := Stored;
-    Podcasts := if Current.Navigation.Active = Nav.Route.Page(Nav.Page.Podcasts) then
-      Current.Podcasts with
-        SearchError := Error;
-      end with
+    Podcasts := if not Stored.SaveFailed and Page.Subscription <> M.SubscriptionFilter.All then
+      Browse.SelectResults(Page, Stored.Saved.PodcastSubscriptions)
     else
-      Current.Podcasts with
-        FeedError := Error;
-      end with
+      Page
     end if;
   end with;
 end function;
@@ -184,7 +192,7 @@ begin
   if Current.Player.Podcast and Playing <> null and Playing.TrackId = Key then
     return Player.Msg.Toggle;
   end if;
-  const Rows: array of M.Episode := Update.Visible(Current.Podcasts);
+  const Rows: array of M.Episode := Current.Podcasts.ShownEpisodes;
   const Queue: I.ImmutableArray<Tracks.Entry>.Builder := I.ImmutableArray.CreateBuilder<Tracks.Entry>(
     Rows.Length
   );

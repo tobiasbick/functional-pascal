@@ -159,14 +159,16 @@ begin
           Browse.Songs(Items, new M.Selection(Genres := [Current.RequiredGenre]))
         end if;
         Next := Browse.Select(
-          Ratings.Receive(Current, Scoped, Started) with
-            GenreChoices := if Current.RequiredGenre = '' then
-              Browse.GenreChoices(Scoped)
-            else
-              Sys.Array.Empty<string>()
-            end if;
-            Loaded := true;
-          end with
+          Browse.ReconcileFilters(
+            Ratings.Receive(Current, Scoped, Started) with
+              GenreChoices := if Current.RequiredGenre = '' then
+                Browse.GenreChoices(Scoped, T.CancellationToken.None)
+              else
+                Sys.Array.Empty<string>()
+              end if;
+              Loaded := true;
+            end with
+          )
         );
       end if;
     when M.Msg.CoverLoaded(const Visit: long, const Image: Imaging.Bitmap?):
@@ -214,15 +216,20 @@ begin
     when M.Msg.Minimum(const Value: int):
       Next := Current with
         Draft := Current.Draft with
-          MinimumRating := Sys.Math.Clamp(Value, 0, 10);
+          MinimumRating := Sys.Math.Clamp(Value, -1, 10);
         end with;
       end with;
     when M.Msg.ApplyFilters:
+      const Confirmed: M.State := Current with
+        Applied := Current.Draft;
+        FiltersOpen := false;
+      end with;
       Next := Browse.Select(
-        Current with
-          Applied := Current.Draft;
-          FiltersOpen := false;
-        end with
+        if Current.Loaded then
+          Browse.ReconcileFilters(Confirmed)
+        else
+          Confirmed
+        end if
       );
     when M.Msg.Reset:
       Next := Current with

@@ -6,8 +6,10 @@ unit FpasAmp.Ui.Albums.Music.Browse;
 uses
   Fpas.Media.Tags.AudioFiles as MediaTags, FpasAmp.Library.Albums.Model as Albums,
   FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Library.Metadata.Model as Tracks,
+  FpasAmp.Ui.Albums.Toolbar.Model as Toolbar,
+  FpasAmp.Ui.Collections.FilterOptions as Options,
   FpasAmp.Library.Search.Text as Text, System as Sys, System.IO as IO,
-  System.Collections.Generic as C, System.Collections.Immutable as I;
+  System.Collections.Generic as C, System.Collections.Immutable as I, System.Threading as T;
 
 // Returns the title of `Track`, using its file name when no title is tagged.
 public function Title(Track: Tracks.Entry): string;
@@ -62,24 +64,98 @@ begin
   return Minutes.ToString() + ':' + (Seconds mod 60L).ToString('00');
 end function;
 
-// Returns the sorted genres that match some but not all tracks in `Items`.
-public function GenreChoices(Items: I.ImmutableArray<Tracks.Entry>): array of string;
+function TagChoices(Items: I.ImmutableArray<Tracks.Entry>; Values: function(Tracks.Entry): array of string; Stop: T.CancellationToken): array of string;
 begin
   if Items.Length < 2 then
     return [];
   end if;
-  const Comparer: Sys.StringComparer := Sys.StringComparer.OrdinalIgnoreCase;
-  const Names: C.SortedSet<string> := new C.SortedSet<string>(Comparer);
-  const Common: C.HashSet<string> := new C.HashSet<string>(Genres(Items[0]), Comparer);
+  const Names: C.Dictionary<string, string> := new C.Dictionary<string, string>(
+    Sys.StringComparer.Ordinal
+  );
+  const Common: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+  const Keys: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+  var First: bool := true;
   for Track: Tracks.Entry in Items do
-    const Tags: array of string := Genres(Track);
-    Names.UnionWith(Tags);
-    Common.IntersectWith(Tags);
+    Stop.ThrowIfCancellationRequested();
+    Keys.Clear();
+    for Name: string in Values(Track) do
+      const Key: string := Albums.TagKey(Name);
+      if Key <> '' then
+        discard Names.TryAdd(Key, Name.Trim());
+        discard Keys.Add(Key);
+      end if;
+    end for;
+
+    if First then
+      Common.UnionWith(Keys);
+      First := false;
+    elsif Common.Count > 0 then
+      Common.IntersectWith(Keys);
+    end if;
   end for;
 
-  Names.ExceptWith(Common);
-  discard Names.Remove('');
-  return (new C.List<string>(Names)).ToArray();
+  for Key: string in Common do
+    discard Names.Remove(Key);
+  end for;
+  const Result: C.List<string> := new C.List<string>(Names.Values);
+  Result.Sort(Sys.StringComparer.CurrentCultureIgnoreCase);
+  return Result.ToArray();
+end function;
+
+// Returns the genres that match some but not all Items. Stop cancels catalogue preparation.
+public function GenreChoices(Items: I.ImmutableArray<Tracks.Entry>; Stop: T.CancellationToken): array of string;
+begin
+  return TagChoices(Items, Genres, Stop);
+end function;
+
+// Returns the performers that match some but not all Items. Stop cancels catalogue preparation.
+public function PerformerChoices(Items: I.ImmutableArray<Tracks.Entry>; Stop: T.CancellationToken): array of string;
+  function Credits(Item: Tracks.Entry): array of string;
+  begin
+    const Info: MediaTags.Info? := Item.Metadata;
+    return if Info <> null then
+      Info.Artists
+    else
+      []
+    end if;
+  end function;
+begin
+  return TagChoices(Items, Credits, Stop);
+end function;
+
+function SameTag(Left: string; Right: string): bool;
+begin
+  return Albums.TagKey(Left) = Albums.TagKey(Right);
+end function;
+
+// Clears unavailable choices in Current's applied track filters and draft.
+// The current catalogue supplies genre names, performer names and release IDs.
+public function ReconcileFilters(Current: M.State): M.State;
+  function Retain(Value: M.Filters): M.Filters;
+  begin
+    var Genres: I.ImmutableHashSet<string> := Value.Genres.Clear();
+    for Selected: string in Value.Genres do
+      const Name: string := Options.Retain(Selected, Current.GenreChoices, SameTag);
+      if Name <> '' then
+        Genres := Genres.Add(Name);
+      end if;
+    end for;
+
+    return Value with
+      Genres := Genres;
+      Performer := Options.Retain(Value.Performer, Current.Performers, SameTag);
+      ReleaseFilter := Options.Retain(
+        Value.ReleaseFilter,
+        Current.ReleaseIds,
+        Sys.StringComparer.Ordinal.Equals
+      );
+    end with;
+  end function;
+begin
+  return Current with
+    Applied := Retain(Current.Applied);
+    Draft := Retain(Current.Draft);
+  end with;
 end function;
 
 function Has(Values: array of string; Selected: I.ImmutableHashSet<string>): bool;
@@ -223,7 +299,7 @@ begin
       end with;
     end if;
 
-    if (Entry.Rating ?? 0) >= Source.MinimumRating
+    if Toolbar.MatchesRating(Entry.Rating, Source.MinimumRating)
       and (GenresFilter.IsEmpty or Has(Genres(Entry), GenresFilter)) and Matches(
       Entry,
       Query,

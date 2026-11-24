@@ -63,7 +63,7 @@ public type Filters = record
   public Artist: string := '';
   // Genre to show, or empty for all genres.
   public Genre: string := '';
-  // Inclusive rating floor, or zero for any rating.
+  // Inclusive rating floor, zero for any rating or -1 for unrated items.
   public MinimumRating: int := 0;
 end record;
 
@@ -95,7 +95,7 @@ public type Msg = variant
   Artist(Value: string);
   // Choose a genre, or empty for all.
   Genre(Value: string);
-  // Edit the rating floor.
+  // Edit the rating floor, or choose -1 for unrated items.
   MinimumRating(Value: int);
   // Confirm the draft and close the popover.
   Apply;
@@ -124,11 +124,21 @@ begin
     Result := Result + 1;
   end if;
 
-  if Value.MinimumRating > 0 then
+  if Value.MinimumRating <> 0 then
     Result := Result + 1;
   end if;
 
   return Result;
+end function;
+
+// Tests a stored Rating against Minimum, with -1 selecting unrated items.
+public function MatchesRating(Rating: int?; Minimum: int): bool;
+begin
+  return if Minimum = -1 then
+    Rating = null
+  else
+    (Rating ?? 0) >= Minimum
+  end if;
 end function;
 
 end unit;

@@ -1,0 +1,191 @@
+// [Documentation](../../../doc/podcasts.md#implementation)
+
+unit FpasAmp.Ui.Podcasts.Browse;
+
+uses
+  FpasAmp.Ui.Podcasts.Model as M, FpasAmp.Ui.Collections.TableRows as Rows,
+  FpasAmp.Ui.Collections.FilterOptions as Options,
+  System as Sys, System.Collections.Generic as C;
+
+function Shows(Current: M.State; Subscriptions: array of M.Show): array of M.Show;
+begin
+  const ByGenre: bool := Current.Searched and Current.Genre <> '';
+  const BySubscription: bool := Current.Subscription <> M.SubscriptionFilter.All;
+  if not ByGenre and not BySubscription then
+    return Current.Results;
+  end if;
+
+  const Saved: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+  if BySubscription then
+    for Show: M.Show in Subscriptions do
+      discard Saved.Add(Show.Url);
+    end for;
+  end if;
+
+  const Matches: C.List<M.Show> := new C.List<M.Show>();
+  for Show: M.Show in Current.Results do
+    if (not ByGenre or Sys.Array.IndexOf<string>(Show.Genres, Current.Genre) >= 0)
+      and (not BySubscription or Saved.Contains(
+      Show.Url
+    ) = (Current.Subscription = M.SubscriptionFilter.Subscribed))
+    then
+      Matches.Add(Show);
+    end if;
+  end for;
+
+  return Matches.ToArray();
+end function;
+
+// Applies Current's filters and sort order and retains the focused show.
+// Subscriptions supplies the saved feeds for the local subscription filter.
+public function SelectResults(Current: M.State; Subscriptions: array of M.Show): M.State;
+  function Compare(Left: M.Show; Right: M.Show): int;
+  begin
+    const Names: Sys.StringComparer := Sys.StringComparer.CurrentCultureIgnoreCase;
+    const Value: int := if Current.SearchOrder.Column = 0 then
+      Names.Compare(Left.Title, Right.Title)
+    else
+      Names.Compare(Left.Publisher, Right.Publisher)
+    end if;
+    return if Current.SearchOrder.Descending then
+      -Value
+    else
+      Value
+    end if;
+  end function;
+begin
+  const Filtered: array of M.Show := Shows(Current, Subscriptions);
+  const Shown: array of M.Show := if Current.SearchOrder.Column < 0 then
+    Filtered
+  else
+    Rows.Sorted<M.Show>(Filtered, Compare)
+  end if;
+  return Current with
+    ShownResults := Shown;
+    SearchCursor := Rows.Position<M.Show>(
+      Current.ShownResults, Current.SearchCursor, Shown, function(Item: M.Show): string => Item.Url
+    );
+  end with;
+end function;
+
+function MatchesDuration(Duration: double; Bucket: string): bool;
+begin
+  return case Bucket of
+    when 'short': Duration > 0.0 and Duration < 900000.0;
+    when 'medium': Duration >= 900000.0 and Duration < 2700000.0;
+    when 'long': Duration >= 2700000.0;
+    when 'unknown': Duration <= 0.0;
+    else true;
+  end case;
+end function;
+
+// Returns the publication years of Episodes, newest first and undated last.
+public function Years(Episodes: array of M.Episode): array of string;
+begin
+  const Distinct: C.SortedSet<int> := new C.SortedSet<int>();
+  var Undated: bool := false;
+  for Episode: M.Episode in Episodes do
+    const Date: Sys.DateTimeOffset? := Episode.Published;
+    if Date <> null then
+      discard Distinct.Add(Date.Value.Year);
+    else
+      Undated := true;
+    end if;
+  end for;
+  const Result: C.List<string> := new C.List<string>(Distinct.Count);
+  for Year: int in Distinct do
+    Result.Add(Year.ToString());
+  end for;
+
+  Result.Reverse();
+  if Undated then
+    Result.Add(M.UnknownYear);
+  end if;
+
+  return Result.ToArray();
+end function;
+
+function MatchesYear(Date: Sys.DateTimeOffset?; Year: string): bool;
+begin
+  return Year = '' or (if Date = null then
+    Year = M.UnknownYear
+  else
+    Date.Value.Year.ToString() = Year
+  end if);
+end function;
+
+// Clears a year in Current's applied filters or draft when the current feed cannot offer that choice.
+public function ReconcileEpisodeFilters(Current: M.State): M.State;
+  function Retain(Value: M.EpisodeFilters): M.EpisodeFilters;
+  begin
+    return Value with
+      Year := if Current.Years.Length > 1 then
+        Options.Retain(Value.Year, Current.Years, Sys.StringComparer.Ordinal.Equals)
+      else
+        ''
+      end if;
+    end with;
+  end function;
+begin
+  const Draft: M.EpisodeFilters? := Current.EpisodeDraft;
+  return Current with
+    AppliedEpisodes := Retain(Current.AppliedEpisodes);
+    EpisodeDraft := if Draft <> null then
+      Retain(Draft)
+    else
+      null
+    end if;
+  end with;
+end function;
+
+// Applies Current's filters and sort order to the episode list and retains the focused episode.
+public function SelectEpisodes(Current: M.State): M.State;
+  function Compare(Left: M.Episode; Right: M.Episode): int;
+  begin
+    const Column: int := Current.EpisodeOrder.Column;
+    if Column = 1 and (Left.Published = null) <> (Right.Published = null) then
+      return (Left.Published = null).CompareTo(Right.Published = null);
+    end if;
+
+    if Column = 2 and (Left.Duration <= 0.0) <> (Right.Duration <= 0.0) then
+      return (Left.Duration <= 0.0).CompareTo(Right.Duration <= 0.0);
+    end if;
+
+    const Value: int := case Column of
+      when 0: Sys.StringComparer.CurrentCultureIgnoreCase.Compare(Left.Title, Right.Title);
+      when 1: (Left.Published ?? Sys.DateTimeOffset.MinValue).CompareTo(
+        Right.Published ?? Sys.DateTimeOffset.MinValue
+      );
+      else Left.Duration.CompareTo(Right.Duration);
+    end case;
+    return if Current.EpisodeOrder.Descending then
+      -Value
+    else
+      Value
+    end if;
+  end function;
+begin
+  const Term: string := Current.EpisodeFilter.Trim();
+  const Filters: M.EpisodeFilters := Current.AppliedEpisodes;
+  const Matches: C.List<M.Episode> := new C.List<M.Episode>();
+  for Episode: M.Episode in Current.Episodes do
+    if Episode.Title.Contains(Term, Sys.StringComparison.OrdinalIgnoreCase)
+      and MatchesYear(Episode.Published, Filters.Year)
+      and MatchesDuration(Episode.Duration, Filters.Duration)
+    then
+      Matches.Add(Episode);
+    end if;
+  end for;
+  const Shown: array of M.Episode := Rows.Sorted<M.Episode>(Matches.ToArray(), Compare);
+  return Current with
+    ShownEpisodes := Shown;
+    EpisodeCursor := Rows.Position<M.Episode>(
+      Current.ShownEpisodes,
+      Current.EpisodeCursor,
+      Shown,
+      function(Item: M.Episode): string => Item.Id
+    );
+  end with;
+end function;
+
+end unit;

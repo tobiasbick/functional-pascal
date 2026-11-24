@@ -21,8 +21,9 @@ available. A window last closed on the retired Ratings page reopens on Music.
 
 ## Browsing music and collections
 
-Music, albums and playlists share the track table and details view. Activating
-a track uses the displayed selection and its order for the playback queue.
+Music, albums and playlists share a virtual, sortable track table and the
+details view. Activating a track uses the displayed selection and its order
+for the playback queue.
 Artist and genre navigation scope the shared album browser by group ID. The
 browser keeps each cover grid's filters while navigating and records its own
 scroll position in `state.json`. This applies to Albums, Artists, Genres, and
@@ -267,6 +268,10 @@ Run them with the local SDK and native GUI prerequisites described in the
   - [Fingerprints.fpas](../src/FpasAmp.Ui/Fingerprints.fpas)
   - [FpasAmp.Ui.fpasproj](../src/FpasAmp.Ui/FpasAmp.Ui.fpasproj)
   - [Shell.fpas](../src/FpasAmp.Ui/Shell.fpas)
+- `src/FpasAmp.Ui/Collections/`
+  - [FilterOptions.fpas](../src/FpasAmp.Ui/Collections/FilterOptions.fpas)
+  - [TableRows.fpas](../src/FpasAmp.Ui/Collections/TableRows.fpas)
+  - [TableSort.fpas](../src/FpasAmp.Ui/Collections/TableSort.fpas)
 - `src/FpasAmp.Ui/Music/`
   - [LibraryPage.fpas](../src/FpasAmp.Ui/Music/LibraryPage.fpas)
   - [Playlist.fpas](../src/FpasAmp.Ui/Music/Playlist.fpas)
@@ -285,6 +290,7 @@ Run them with the local SDK and native GUI prerequisites described in the
 - `src/FpasAmp.Ui/Radio/`
   - [Directory.fpas](../src/FpasAmp.Ui/Radio/Directory.fpas)
   - [Model.fpas](../src/FpasAmp.Ui/Radio/Model.fpas)
+  - [Toolbar.fpas](../src/FpasAmp.Ui/Radio/Toolbar.fpas)
   - [Update.fpas](../src/FpasAmp.Ui/Radio/Update.fpas)
   - [View.fpas](../src/FpasAmp.Ui/Radio/View.fpas)
 - `src/FpasAmp.Ui/Settings/`

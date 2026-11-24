@@ -6,10 +6,14 @@ uses
   FpasAmp.Ui.Tests.ProviderHttp as Http, FpasAmp.Ui.Tests.PlaybackFixture as Tone,
   FpasAmp.Library.Tests.AlbumSupport as Art, FpasAmp.Library.Tests.Support as H,
   FpasAmp.Library.Tests.MetadataSupport as LibraryFixture, FpasAmp.Library.Inventory.Monitoring as Library,
+  FpasAmp.Library.Metadata.Model as Tracks, System.Collections.Immutable as I,
   FpasAmp.Ui.App.Model as App, FpasAmp.Ui.App.Controller as Controller, FpasAmp.Ui.Shell as Shell,
+  FpasAmp.Ui.App.Podcasts as Podcasts,
   FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Podcasts.Model as P,
+  FpasAmp.Ui.Podcasts.Browse as Browse,
+  FpasAmp.Ui.Podcasts.Update as Update,
   FpasAmp.Ui.Settings.Model as Settings, FpasAmp.Settings as Saved, FpasAmp.AppState as WindowState,
-  Fpas.Ui.Widgets.Inputs.Selects as Select,
+  Fpas.Ui.Widgets.Inputs.Selects as Select, Fpas.Ui.Widgets.Collections.Tables as Tables,
   FpasAmp.Ui.Player.Model as Player, FpasAmp.Ui.Player.Playback as Playback,
   Fpas.Media.Audio as Audio, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Mvu.Application as A,
@@ -19,7 +23,7 @@ uses
 
 const Feed: string := '<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"><channel>
   <title>Coastlines</title><itunes:author>North Pier Studio</itunes:author><itunes:image href="cover.png" />
-  <item><title>Low Tide</title><guid>old</guid><pubDate>Fri, 14 Feb 2025 12:00:00 GMT</pubDate>
+  <item><title>Low Tide</title><guid>old</guid><pubDate>Wed, 14 Feb 2024 12:00:00 GMT</pubDate>
   <enclosure url="old.wav" type="audio/wav" /></item>
   <item><title>The Night Ferry</title><guid>night</guid><pubDate>Fri, 14 Mar 2025 12:00:00 GMT</pubDate>
   <itunes:duration>0:05</itunes:duration><description><![CDATA[<p>A night crossing.</p>]]></description>
@@ -182,13 +186,19 @@ begin
     X.Assert.Equal<string>('Chart DE all', Control(Window, ShowButton).Text);
     X.Assert.Equal<string>('', Control(Window, 'podcast-search-input').Value);
     const Market: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('podcasts/search');
+    Click(Window, Control(Window, 'podcast-filters').Bounds);
     Send(Window, App.Msg.Podcasts(P.Msg.Market('US')));
+    X.Assert.Equal<string>('Chart DE all', Control(Window, ShowButton).Text);
+    Click(Window, Control(Window, 'podcast-filter-apply').Bounds);
     X.Assert.Equal<string>('Loading top podcasts…', Control(Window, 'podcasts-empty').Text);
     Deliver(Window, Market);
     X.Assert.Equal<string>('Chart US all', Control(Window, ShowButton).Text);
     const Genre: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('podcasts/search');
+    Click(Window, Control(Window, 'podcast-filters').Bounds);
     Click(Window, Control(Window, 'podcast-genre').Bounds);
     Click(Window, Control(Window, Select.OptionId('podcast-genre', 1)).Bounds);
+    X.Assert.Equal<string>('', Current.Podcasts.Genre);
+    Click(Window, Control(Window, 'podcast-filter-apply').Bounds);
     X.Assert.Equal<string>('Loading top podcasts…', Control(Window, 'podcasts-empty').Text);
     Deliver(Window, Genre);
     X.Assert.Equal<string>('Chart US 1301', Control(Window, ShowButton).Text);
@@ -200,9 +210,41 @@ begin
     Deliver(Window, Search);
     X.Assert.Equal<string>('Coastlines', Control(Window, ShowButton).Text);
     X.Assert.DoesNotContain<string>('Other podcast', Window.Snapshot().Text);
+    Click(Window, Control(Window, 'podcast-filters').Bounds);
     Send(Window, App.Msg.Podcasts(P.Msg.Genre('')));
-    X.Assert.Equal<string>('Other podcast', Control(Window, 'podcast-open-' + Other.Id()).Text);
+    Click(Window, Control(Window, 'podcast-filter-apply').Bounds);
+    const OtherButton: string := 'podcast-open-' + Other.Id();
+    X.Assert.Equal<string>('Other podcast', Control(Window, OtherButton).Text);
+    Send(Window, App.Msg.Podcasts(P.Msg.Subscribe(Other, true)));
+    Click(Window, Control(Window, 'podcast-filters').Bounds);
+    Click(Window, Control(Window, 'podcast-subscription-filter').Bounds);
+    Click(Window, Control(Window, Select.OptionId('podcast-subscription-filter', 2)).Bounds);
+    Click(Window, Control(Window, 'podcast-filter-apply').Bounds);
+    X.Assert.Equal<int>(1, Current.Podcasts.ShownResults.Length);
+    X.Assert.Equal<string>(Show.Url, Current.Podcasts.ShownResults[0].Url);
+    Send(Window, App.Msg.Podcasts(P.Msg.Subscribe(Other, false)));
+    X.Assert.Equal<string>('Other podcast', Control(Window, OtherButton).Text);
+    Click(Window, Control(Window, 'podcast-filters').Bounds);
+    Click(Window, Control(Window, 'podcast-subscription-filter').Bounds);
+    Click(Window, Control(Window, Select.OptionId('podcast-subscription-filter', 0)).Bounds);
+    Click(Window, Control(Window, 'podcast-filter-apply').Bounds);
+    const Publisher: Cui.CuiRectangle := Control(
+      Window,
+      Tables.HeaderId('podcast-results', 1)
+    ).Bounds;
+    Click(Window, Publisher);
+    X.Assert.Equal<Tables.Sort>(new Tables.Sort(1), Current.Podcasts.SearchOrder);
+    X.Assert.True(Control(Window, OtherButton).Bounds.Y < Control(Window, ShowButton).Bounds.Y);
+    Click(Window, Publisher);
+    X.Assert.Equal<Tables.Sort>(new Tables.Sort(1, true), Current.Podcasts.SearchOrder);
+    X.Assert.True(Control(Window, ShowButton).Bounds.Y < Control(Window, OtherButton).Bounds.Y);
+    X.Assert.Equal<string>('Publisher · Z–A', Control(Window, 'podcast-sort').Text);
+    Click(Window, Control(Window, 'podcast-sort').Bounds);
+    Click(Window, Control(Window, 'podcast-sort/default').Bounds);
+    X.Assert.Equal<Tables.Sort>(new Tables.Sort(-1), Current.Podcasts.SearchOrder);
+    Click(Window, Control(Window, 'podcast-filters').Bounds);
     Send(Window, App.Msg.Podcasts(P.Msg.Genre('1301')));
+    Click(Window, Control(Window, 'podcast-filter-apply').Bounds);
     X.Assert.DoesNotContain<string>('Other podcast', Window.Snapshot().Text);
     SaveImage(Window, 'podcast-search.png');
 
@@ -219,6 +261,59 @@ begin
     X.Assert.Equal<string>('A night crossing.', Night.Description);
     Deliver(Window, Open);
     discard Control(Window, 'podcast-cover');
+    Click(Window, Control(Window, 'episode-filters').Bounds);
+    Click(Window, Control(Window, 'episode-filter-year').Bounds);
+    Click(Window, Control(Window, Select.OptionId('episode-filter-year', 1)).Bounds);
+    X.Assert.Equal<int>(2, Current.Podcasts.ShownEpisodes.Length);
+    Click(Window, Control(Window, 'episode-filter-apply').Bounds);
+    X.Assert.Equal<int>(1, Current.Podcasts.ShownEpisodes.Length);
+    X.Assert.Equal<string>('night', Current.Podcasts.ShownEpisodes[0].Id);
+    Click(Window, Control(Window, 'episode-filters').Bounds);
+    Click(Window, Control(Window, 'episode-filter-reset').Bounds);
+    Click(Window, Control(Window, 'episode-filter-duration').Bounds);
+    Click(Window, Control(Window, Select.OptionId('episode-filter-duration', 4)).Bounds);
+    Click(Window, Control(Window, 'episode-filter-apply').Bounds);
+    X.Assert.Equal<int>(1, Current.Podcasts.ShownEpisodes.Length);
+    X.Assert.Equal<string>('old', Current.Podcasts.ShownEpisodes[0].Id);
+    Click(Window, Control(Window, 'episode-filters').Bounds);
+    Click(Window, Control(Window, 'episode-filter-reset').Bounds);
+    Click(Window, Control(Window, 'episode-filter-apply').Bounds);
+    X.Assert.Equal<int>(2, Current.Podcasts.ShownEpisodes.Length);
+    const Episodes: string := 'podcast-episodes/' + Show.Id();
+    const Published: Cui.CuiRectangle := Control(Window, Tables.HeaderId(Episodes, 1)).Bounds;
+    Send(Window, App.Msg.Podcasts(P.Msg.SelectEpisode(0)));
+    Click(Window, Published);
+    X.Assert.Equal<string>('old', Current.Podcasts.ShownEpisodes[0].Id);
+    X.Assert.Equal<string>('Published · Oldest first', Control(Window, 'episode-sort').Text);
+    X.Assert.Equal<string>(
+      'night',
+      Current.Podcasts.ShownEpisodes[Current.Podcasts.EpisodeCursor].Id
+    );
+    X.Assert.True(
+      Control(Window, 'episode-play-old').Bounds.Y < Control(Window, 'episode-play-night').Bounds.Y
+    );
+    case Podcasts.Play(Current, Night) of
+      when Player.Msg.PlayEpisodes(
+        const Queue: I.ImmutableArray<Tracks.Entry>,
+        const Index: int,
+        _
+      ):
+        X.Assert.True(Queue[0].TrackId.EndsWith(':old'));
+        X.Assert.Equal<int>(1, Index);
+      else
+        X.Assert.True(false, 'Playback must use the sorted episode row order.');
+    end case;
+
+    Click(Window, Control(Window, Tables.HeaderId(Episodes, 2)).Bounds);
+    X.Assert.Equal<string>('night', Current.Podcasts.ShownEpisodes[0].Id);
+    Click(Window, Control(Window, Tables.HeaderId(Episodes, 0)).Bounds);
+    X.Assert.Equal<string>('old', Current.Podcasts.ShownEpisodes[0].Id);
+    Click(Window, Control(Window, 'episode-sort').Bounds);
+    Click(Window, Control(Window, 'episode-sort/1').Bounds);
+    Click(Window, Control(Window, 'episode-sort').Bounds);
+    Click(Window, Control(Window, 'episode-sort/descending').Bounds);
+    X.Assert.Equal<Tables.Sort>(new Tables.Sort(1, true), Current.Podcasts.EpisodeOrder);
+    X.Assert.Equal<string>('night', Current.Podcasts.ShownEpisodes[0].Id);
     Click(Window, Control(Window, 'episode-menu-night').Bounds);
     Click(Window, Control(Window, 'episode-menu-night/details').Bounds);
     X.Assert.Contains<string>('A night crossing.', Window.Snapshot().Text);
@@ -285,6 +380,68 @@ end procedure;
 
 // Tests native podcast discovery, subscriptions and real finite RSS audio playback.
 public type NativePodcastTests = record
+  // A new feed drops missing years from the applied filters and retains a valid draft year.
+  [X.FactAttribute]
+  public procedure RefreshedFeedClearsUnavailableYear();
+  begin
+    const Show: P.Show := new P.Show('https://example.org/feed.xml', 'Example podcast');
+    const Current: P.State := new P.State(
+      Show := Show, FeedRevision := 2L, Years := ['2025', '2024'],
+      AppliedEpisodes := new P.EpisodeFilters('2024', 'short'),
+      EpisodeDraft := new P.EpisodeFilters('2025', 'long')
+    );
+    const Dated: P.Episode := new P.Episode(
+      'dated',
+      'Dated',
+      'https://example.org/dated.mp3',
+      Published := new Sys.DateTimeOffset(2025, 3, 1, 0, 0, 0, Sys.TimeSpan.Zero),
+      Duration := 60000.0
+    );
+    const Undated: P.Episode := new P.Episode(
+      'undated',
+      'Undated',
+      'https://example.org/undated.mp3'
+    );
+    const Updated: P.State := Update.Apply(
+      Current,
+      P.Msg.Loaded(2L, new P.Feed(Show, [Dated, Undated])),
+      []
+    ).Model;
+    X.Assert.Equal<string>('', Updated.AppliedEpisodes.Year);
+    X.Assert.Equal<string>('short', Updated.AppliedEpisodes.Duration);
+    X.Assert.Equal<string>('2025', (Updated.EpisodeDraft ?? new P.EpisodeFilters()).Year);
+    X.Assert.Equal<string>('long', (Updated.EpisodeDraft ?? new P.EpisodeFilters()).Duration);
+    X.Assert.Equal<int>(1, Updated.ShownEpisodes.Length);
+    X.Assert.Equal<string>('dated', Updated.ShownEpisodes[0].Id);
+    const SingleYear: P.State := Update.Apply(
+      Updated,
+      P.Msg.Loaded(2L, new P.Feed(Show, [Dated])),
+      []
+    ).Model;
+    X.Assert.Equal<string>('', (SingleYear.EpisodeDraft ?? new P.EpisodeFilters()).Year);
+  end procedure;
+
+  // Undated episodes appear as a filter choice and can be selected on their own.
+  [X.FactAttribute]
+  public procedure MissingPublicationYearCanBeSelected();
+  begin
+    const Items: array of P.Episode := [
+      new P.Episode('undated', 'Undated', 'https://example.org/undated.mp3'),
+      new P.Episode(
+        'dated', 'Dated', 'https://example.org/dated.mp3',
+        Published := new Sys.DateTimeOffset(2025, 3, 1, 0, 0, 0, Sys.TimeSpan.Zero)
+      )
+    ];
+    X.Assert.Equal<string>(['2025', P.UnknownYear], Browse.Years(Items));
+    const Filtered: P.State := Browse.SelectEpisodes(
+      new P.State(
+        Episodes := Items, AppliedEpisodes := new P.EpisodeFilters(Year := P.UnknownYear)
+      )
+    );
+    X.Assert.Equal<int>(1, Filtered.ShownEpisodes.Length);
+    X.Assert.Equal<string>('undated', Filtered.ShownEpisodes[0].Id);
+  end procedure;
+
   // Opens a simulated Apple match and drives two real enclosures from a loopback RSS feed.
   [X.FactAttribute]
   [X.TraitAttribute('Category', 'Gui')]

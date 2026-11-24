@@ -65,7 +65,7 @@ begin
     when M.Msg.MinimumRating(const Value: int):
       return Current with
         Draft := Current.Draft with
-          MinimumRating := Sys.Math.Clamp(Value, 0, 10);
+          MinimumRating := Sys.Math.Clamp(Value, -1, 10);
         end with;
       end with;
     when M.Msg.Apply:

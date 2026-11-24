@@ -5,6 +5,7 @@ unit FpasAmp.Ui.Albums.Browse;
 
 uses
   FpasAmp.Library.Albums.Model as Library, FpasAmp.Library.Search.Matching as Matching,
+  FpasAmp.Ui.Collections.FilterOptions as Options,
   FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, System as Sys, System.Collections.Generic as C,
   System.Collections.Immutable as I, System.Globalization as G;
 
@@ -99,7 +100,31 @@ begin
   Genres.ExceptWith(CommonGenres);
   Artists.ExceptWith(CommonArtists);
 
-  return new Catalog(Documents.MoveToImmutable(), Sorted(Artists), Sorted(Genres));
+  return new Catalog(
+    Documents.MoveToImmutable(), Sorted(Artists),
+    if Toolbar.Root(Scope) = Toolbar.Scope.Genres then
+      []
+    else
+      Sorted(Genres)
+    end if
+  );
+end function;
+
+// Clears unavailable selections in Current's applied filters and draft using Prepared's choices.
+public function ReconcileFilters(Current: Toolbar.State; Prepared: Catalog): Toolbar.State;
+  function Retain(Value: Toolbar.Filters): Toolbar.Filters;
+  begin
+    const Comparer: Sys.StringComparer := Names();
+    return Value with
+      Artist := Options.Retain(Value.Artist, Prepared.Artists, Comparer.Equals);
+      Genre := Options.Retain(Value.Genre, Prepared.Genres, Comparer.Equals);
+    end with;
+  end function;
+begin
+  return Current with
+    Applied := Retain(Current.Applied);
+    Draft := Retain(Current.Draft);
+  end with;
 end function;
 
 function Allowed(Album: Library.Album; Filters: Toolbar.Filters): bool;
@@ -121,7 +146,7 @@ begin
     end if;
   end if;
 
-  if (Album.Rating ?? 0) < Filters.MinimumRating then
+  if not Toolbar.MatchesRating(Album.Rating, Filters.MinimumRating) then
     return false;
   end if;
 

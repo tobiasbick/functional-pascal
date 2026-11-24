@@ -7,12 +7,11 @@ uses
   FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse,
   FpasAmp.Ui.Albums.Music.Details.View as Dialog, FpasAmp.Ui.Player.Model as Player,
   FpasAmp.Ui.Albums.Music.Filters as Filters, FpasAmp.Ui.Albums.Toolbar.View as LibraryToolbar,
-  FpasAmp.Ui.Albums.Toolbar.Sorting as LibrarySorting,
+  FpasAmp.Ui.Collections.TableSort as TableSort,
   FpasAmp.Ui.Albums.Status as Status, FpasAmp.Ui.Albums.Artwork as Artwork, FpasAmp.Ui.Albums.Music.TrackTable as TrackTable,
   FpasAmp.Library.Metadata.Model as Tracks, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Collections.Tables as Tables,
   Fpas.Ui.Widgets.Inputs.SearchFields as Search,
-  Fpas.Ui.Widgets.Overlays.Menus as Menus,
   Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Widgets.Display.Texts as Texts,
   Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
   Fpas.Media.Images as Imaging, System.Collections.Immutable as I, System as Sys, System.Collections.Generic as C;
@@ -32,80 +31,26 @@ begin
   else
     ['Title', 'Artist', 'Album', 'Time', 'Rating']
   end if;
-  const Entries: C.List<Menus.Entry<M.Msg>> := new C.List<Menus.Entry<M.Msg>>(
-    [
-      Menus.Entry<M.Msg>.Label('Sort by')
-    ]
-  );
+  const Alphabetical: array of bool := if Whole then
+    [true, true, true, false, false, true]
+  else
+    [true, true, true, false, false]
+  end if;
   const Default: string := if Playlist then
     'Playlist order'
-  else
+  elsif not Whole then
     'Disc and track'
+  else
+    ''
   end if;
-  if not Whole or Playlist then
-    Entries.Add(
-      Menus.Entry<M.Msg>.Action(
-        new Menus.Item<M.Msg>(
-          'release',
-          Default,
-          M.Msg.Sort(new Tables.Sort(-1)),
-          Checked := Current.Order.Column = -1
-        )
-      )
-    );
-  end if;
-
-  for Index: int := 0 to Names.Length - 1 do
-    Entries.Add(
-      Menus.Entry<M.Msg>.Action(
-        new Menus.Item<M.Msg>(
-          Index.ToString(),
-          Names[Index],
-          M.Msg.Sort(new Tables.Sort(Index, Current.Order.Descending)),
-          Checked := Current.Order.Column = Index
-        )
-      )
-    );
-  end for;
-
-  const Column: int := Current.Order.Column;
-  var Label: string := Default;
-  if Column >= 0 then
-    const Direction: string := if Column <= 2 or Column = 5 then
-      if Current.Order.Descending then
-        'Z–A'
-      else
-        'A–Z'
-      end if
-    else
-      if Current.Order.Descending then
-        'High–low'
-      else
-        'Low–high'
-      end if
-    end if;
-    Label := Names[Column] + ' · ' + Direction;
-    Entries.Add(Menus.Entry<M.Msg>.Separator);
-    Entries.Add(
-      Menus.Entry<M.Msg>.Action(
-        new Menus.Item<M.Msg>(
-          'ascending', 'Ascending', M.Msg.Sort(new Tables.Sort(Column)),
-          Checked := not Current.Order.Descending
-        )
-      )
-    );
-    Entries.Add(
-      Menus.Entry<M.Msg>.Action(
-        new Menus.Item<M.Msg>(
-          'descending', 'Descending', M.Msg.Sort(new Tables.Sort(Column, true)),
-          Checked := Current.Order.Descending
-        )
-      )
-    );
-  end if;
-
-  return LibrarySorting.Trigger<M.Msg>(
-    'track-sort', Label, Entries.ToArray(), Current.Order.Descending
+  return TableSort.Build<M.Msg>(
+    'track-sort',
+    Names,
+    Alphabetical,
+    Current.Order,
+    M.Msg.Sort,
+    Default,
+    'release'
   );
 end function;
 

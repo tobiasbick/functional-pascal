@@ -64,6 +64,43 @@ public type AlbumBrowseTests = record
     );
   end procedure;
 
+  // A catalogue refresh drops an unavailable genre and preserves each still-valid choice.
+  [X.FactAttribute]
+  public procedure RefreshClearsOnlyUnavailableAlbumChoices();
+  begin
+    var Current: M.State := Send(Loaded(), Toolbar.Msg.SetOpen(true));
+    Current := Send(Current, Toolbar.Msg.Artist('the beatles'));
+    Current := Send(Current, Toolbar.Msg.Genre('Rock'));
+    Current := Send(Current, Toolbar.Msg.MinimumRating(8));
+    Current := Send(Current, Toolbar.Msg.Apply);
+    X.Assert.Equal<string>('road', Ids(Current));
+    Current := Send(Current, Toolbar.Msg.SetOpen(true));
+    Current := Send(Current, Toolbar.Msg.Artist('Björk'));
+    const Items: I.ImmutableArray<Library.Album> := Catalogue();
+    const Refreshed: I.ImmutableArray<Library.Album> := Items.SetItem(
+      1, Items[1] with
+        Genres := ['Alternative'];
+      end with
+    ).SetItem(
+      3, Items[3] with
+        Genres := ['Electronic'];
+      end with
+    );
+    Current := Update.Apply(
+      Current,
+      M.Msg.Received(new Library.Snapshot(Refreshed, 65L)),
+      null
+    ).Model;
+    X.Assert.Equal<string>('road', Ids(Current));
+    X.Assert.Equal<string>('', Current.Toolbar.Applied.Genre);
+    X.Assert.Equal<string>('', Current.Toolbar.Draft.Genre);
+    X.Assert.Equal<string>('The Beatles', Current.Toolbar.Applied.Artist);
+    X.Assert.Equal<string>('Björk', Current.Toolbar.Draft.Artist);
+    X.Assert.Equal<int>(8, Current.Toolbar.Applied.MinimumRating);
+    X.Assert.Equal<int>(2, Toolbar.Count(Current.Toolbar.Applied));
+    X.Assert.True(Current.Toolbar.Open);
+  end procedure;
+
   // Searching switches to best matches and clearing returns to the order before.
   [X.FactAttribute]
   public procedure SearchRanksAndRestoresOrder();
@@ -100,6 +137,12 @@ public type AlbumBrowseTests = record
     Current := Send(Current, Toolbar.Msg.Artist('Pink Floyd'));
     Current := Send(Current, Toolbar.Msg.Apply);
     X.Assert.Equal<string>('wall', Ids(Current));
+    Current := Send(Current, Toolbar.Msg.SetOpen(true));
+    Current := Send(Current, Toolbar.Msg.Reset);
+    Current := Send(Current, Toolbar.Msg.MinimumRating(-1));
+    Current := Send(Current, Toolbar.Msg.Apply);
+    X.Assert.Equal<string>('date', Ids(Current));
+    X.Assert.Equal<int>(1, Toolbar.Count(Current.Toolbar.Applied));
   end procedure;
 
   // Each order sorts in both directions; unrated albums count as zero.

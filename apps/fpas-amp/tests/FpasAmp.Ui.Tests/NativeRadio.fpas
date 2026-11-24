@@ -6,7 +6,8 @@ uses
   FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.MetadataSupport as Fixtures,
   FpasAmp.Library.Inventory.Monitoring as Inventory, FpasAmp.Settings as Store,
   FpasAmp.Ui.App.Model as App, FpasAmp.Ui.Navigation.Model as Nav,
-  FpasAmp.Ui.Radio.Model as Radio, FpasAmp.Ui.Settings.Model as Settings,
+  FpasAmp.Ui.Radio.Model as Radio, FpasAmp.Ui.Radio.Update as RadioUpdate,
+  FpasAmp.Ui.Settings.Model as Settings, Fpas.Ui.Widgets.Collections.Tables as Tables,
   FpasAmp.Ui.Player.Model as Player, Fpas.Ui.Mvu.Application as Mvu,
   FpasAmp.Ui.Shell as Shell, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Application as Gui,
   Fpas.Media.Audio as Audio, System as Sys, System.IO as IO, Xunit as X;
@@ -60,7 +61,7 @@ begin
   const Fixture: App.State := new App.State(
     new Settings.State(new Settings.Preferences([], 'light', 'blue', RadioFavorites := [North])),
     Navigation := new Nav.State(Active := Nav.Route.Page(Nav.Page.Stations), Loaded := true),
-    Radio := new Radio.State(Items := Stations, Loaded := true),
+    Radio := new Radio.State(Items := Stations, Results := Stations, Loaded := true),
     Player := new Player.State(
       Station := North, Playing := true,
       NowPlaying := 'Mara Vale · Blue Hour', Levels := [0.46F, 0.57F]
@@ -82,6 +83,100 @@ end procedure;
 
 // Covers native radio navigation and its local preferences without depending on a public station.
 public type NativeRadioTests = record
+  // Sorting preserves focused stations, handles numeric bitrates and applies to fresh replies.
+  [X.FactAttribute]
+  public procedure StationSortSurvivesNewResults();
+  begin
+    const Unknown: Radio.Station := new Radio.Station(
+      'unknown',
+      'Central',
+      'https://example.org/c'
+    );
+    const Low: Radio.Station := new Radio.Station(
+      'low',
+      'North',
+      'https://example.org/n',
+      Bitrate := 64
+    );
+    const High: Radio.Station := new Radio.Station(
+      'high',
+      'Bay',
+      'https://example.org/b',
+      Bitrate := 192
+    );
+    const Initial: Radio.State := new Radio.State(
+      Items := [Unknown, Low, High],
+      Results := [Unknown, Low, High],
+      Cursor := 0,
+      Anchor := 1
+    );
+    const Name: Radio.State := RadioUpdate.Apply(Initial, Radio.Msg.Sort(new Tables.Sort(0))).Model;
+    X.Assert.Equal<string>('high', Name.Items[0].Id);
+    X.Assert.Equal<string>('unknown', Name.Items[Name.Cursor].Id);
+    X.Assert.Equal<string>('low', Name.Items[Name.Anchor].Id);
+    const Bitrate: Radio.State := RadioUpdate.Apply(Name, Radio.Msg.Sort(new Tables.Sort(4))).Model;
+    X.Assert.Equal<string>('low', Bitrate.Items[0].Id);
+    X.Assert.Equal<string>('unknown', Bitrate.Items[2].Id);
+    const Descending: Radio.State := RadioUpdate.Apply(
+      Bitrate,
+      Radio.Msg.Sort(new Tables.Sort(4, true))
+    ).Model;
+    const Updated: Radio.State := RadioUpdate.Apply(
+      Descending,
+      Radio.Msg.Found(0L, Initial.Items)
+    ).Model;
+    X.Assert.Equal<string>('high', Updated.Items[0].Id);
+    X.Assert.Equal<string>('low', Updated.Items[1].Id);
+    X.Assert.Equal<string>('unknown', Updated.Items[2].Id);
+    const Original: Radio.State := RadioUpdate.Apply(
+      Updated,
+      Radio.Msg.Sort(new Tables.Sort(-1))
+    ).Model;
+    X.Assert.Equal<string>('unknown', Original.Items[0].Id);
+    X.Assert.Equal<string>('low', Original.Items[1].Id);
+    X.Assert.Equal<string>('high', Original.Items[2].Id);
+    X.Assert.Equal<string>('unknown', Initial.Items[0].Id);
+  end procedure;
+
+  // The radio filter edits and resets a draft, preserving the name search on apply.
+  [X.FactAttribute]
+  public procedure StationFiltersUseADraft();
+  begin
+    const Initial: Radio.State := new Radio.State(
+      Filter := new Radio.Query('local', Country := 'France')
+    );
+    const Opened: Radio.State := RadioUpdate.Apply(Initial, Radio.Msg.SetFilters(true)).Model;
+    const Edited: Mvu.Transition<Radio.State, Radio.Msg> := RadioUpdate.Apply(
+      Opened,
+      Radio.Msg.Filter('Language', ' German ')
+    );
+    X.Assert.Empty(Edited.Commands);
+    X.Assert.Equal<string>('', Edited.Model.Filter.Language);
+    const Applied: Mvu.Transition<Radio.State, Radio.Msg> := RadioUpdate.Apply(
+      RadioUpdate.Apply(Edited.Model, Radio.Msg.Filter('Codec', ' aac+ ')).Model,
+      Radio.Msg.ApplyFilters
+    );
+    X.Assert.Equal<int>(1, Applied.Commands.Length);
+    X.Assert.Equal<string>('German', Applied.Model.Filter.Language);
+    X.Assert.Equal<string>('AAC+', Applied.Model.Filter.Codec);
+    X.Assert.Null(Applied.Model.FilterDraft);
+    const Empty: Radio.State := RadioUpdate.Apply(
+      Applied.Model,
+      Radio.Msg.Found(Applied.Model.Revision, [])
+    ).Model;
+    X.Assert.Equal<Radio.Query>(Applied.Model.Filter, Empty.Filter);
+    const Reset: Radio.State := RadioUpdate.Apply(
+      RadioUpdate.Apply(Applied.Model, Radio.Msg.SetFilters(true)).Model,
+      Radio.Msg.ResetFilters
+    ).Model;
+    X.Assert.Equal<string>('France', Reset.Filter.Country);
+    const Cleared: Radio.State := RadioUpdate.Apply(Reset, Radio.Msg.ApplyFilters).Model;
+    X.Assert.Equal<string>('local', Cleared.Filter.Name);
+    X.Assert.Equal<string>('', Cleared.Filter.Country);
+    X.Assert.Equal<string>('', Cleared.Filter.Language);
+    X.Assert.Equal<string>('', Cleared.Filter.Codec);
+  end procedure;
+
   // Adds a favorite through the dialog, reloads the settings and opens the station from the sidebar.
   [X.FactAttribute]
   [X.TraitAttribute('Category', 'Gui')]
@@ -108,6 +203,14 @@ public type NativeRadioTests = record
         Navigation := new Nav.State(Active := Nav.Route.Page(Nav.Page.Stations)),
         Output := new Audio.Session(true)
       );
+      Send(Session, App.Msg.Radio(Radio.Msg.SetFilters(true)));
+      X.Assert.True(Has(Session, 'radio-sort'));
+      X.Assert.True(Has(Session, 'radio-filters'));
+      X.Assert.True(Has(Session, 'radio-filter-Country'));
+      X.Assert.True(Has(Session, 'radio-filter-Language'));
+      X.Assert.True(Has(Session, 'radio-filter-Genre'));
+      X.Assert.True(Has(Session, 'radio-filter-Codec'));
+      Send(Session, App.Msg.Radio(Radio.Msg.SetFilters(false)));
       Send(Session, App.Msg.Radio(Radio.Msg.Add));
       X.Assert.True(Has(Session, 'radio-url'));
       Send(Session, App.Msg.Radio(Radio.Msg.EditUrl('file:///private/file.mp3')));

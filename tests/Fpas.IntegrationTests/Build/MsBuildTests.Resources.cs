@@ -38,7 +38,7 @@ public sealed partial class MsBuildTests
         WriteResx(german, ("Greeting", "Grüße"));
 
         var check = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "check",
-            project.File(projectPath), "--diagnostics", "json"], timeLimit: TimeSpan.FromMinutes(2));
+            project.File(projectPath), "--report", "json"], timeLimit: TimeSpan.FromMinutes(2));
         Assert.True(check.ExitCode == 0, check.Output + check.Error);
         Assert.Empty(Directory.GetFiles(project.File("Game"), "*.resources", SearchOption.AllDirectories));
         Assert.Empty(Directory.GetFiles(project.File("Game"), "*.resources.dll", SearchOption.AllDirectories));
@@ -139,7 +139,7 @@ public sealed partial class MsBuildTests
             end program;
             """);
         var check = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "check",
-            project.File(consumerProject), "--diagnostics", "json"], timeLimit: TimeSpan.FromMinutes(2));
+            project.File(consumerProject), "--report", "json"], timeLimit: TimeSpan.FromMinutes(2));
         Assert.True(check.ExitCode == 0, check.Output + check.Error);
         var result = await sdk.Run(project, "build", consumerProject, "--no-restore");
         Assert.True(result.ExitCode == 0, result.Output + result.Error);

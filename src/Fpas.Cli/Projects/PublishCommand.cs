@@ -40,8 +40,8 @@ internal sealed class PublishCommand
 
     internal PublishCommand()
     {
-        report.AcceptOnlyFromAmong("json"); Fpas.Cli.Analysis.ContextCommandOptions.Range(timeout, 1, 3600);
-        mode.AcceptOnlyFromAmong("aot", "single-file", "self-contained", "apphost", "framework-dependent");
+        report.AcceptValues("json"); Fpas.Cli.Analysis.ContextCommandOptions.Range(timeout, 1, 3600);
+        mode.AcceptValues("aot", "single-file", "self-contained", "apphost", "framework-dependent");
         Command.Arguments.Add(input);
         foreach (var option in new Option[] { output, project, configuration, mode, runtime, noRestore, noBuild, dryRun, key, publicSign, delaySign, certificate, passwordEnvironment, version, feed, timeout, report })
             Command.Options.Add(option);

@@ -32,7 +32,7 @@ internal sealed class ProjectAnalysisCache(long limit)
     }
 
     internal static long Measure(AnalysisResult result, MetadataImage? output)
-        => 4L * JsonSerializer.SerializeToUtf8Bytes(result).Length + (output?.Length ?? 0);
+        => 4L * JsonSerializer.SerializeToUtf8Bytes(result, SourceGraphJson.Default.AnalysisResult).Length + (output?.Length ?? 0);
 
     internal void Trim(long budget)
     {

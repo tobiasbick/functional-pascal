@@ -29,6 +29,7 @@ internal sealed record RefactorReport(bool Success, string Status, string? PlanP
         {
             var operation = plan.Kind switch
             {
+                "draft" => "Draft source changes",
                 "rename" => "Rename to " + plan.NewName,
                 "add-parameter" => "Add parameter " + plan.AddedParameter!.Name,
                 "remove-parameter" => "Remove parameter " + plan.Targets[0].Name,
@@ -44,10 +45,15 @@ internal sealed record RefactorReport(bool Success, string Status, string? PlanP
             };
             Console.WriteLine(DiagnosticRenderer.Safe($"{operation}: {Status}; {plan.EditCount} edits in {plan.Files.Count} files. Plan: {PlanPath}"));
             foreach (var file in plan.Files)
+            {
+                if (file.CreateInProject is not null)
+                    Console.WriteLine(DiagnosticRenderer.Safe($"  Create {file.Path} in {file.CreateInProject}"));
                 foreach (var edit in file.Edits)
                     Console.WriteLine(DiagnosticRenderer.Safe($"  {file.Path}({edit.Location.Line},{edit.Location.Column}): {edit.ExpectedText} -> {edit.NewText}"));
+            }
             foreach (var note in plan.Notes ?? []) Console.WriteLine(DiagnosticRenderer.Safe(note));
-            if (plan.ChangesPublicApi) Console.WriteLine("Public API changes affect the analyzed FPAS sources.");
+            if (plan.Kind == "draft") Console.WriteLine("Draft validation covers the selected context and its FPAS dependencies.");
+            else if (plan.ChangesPublicApi) Console.WriteLine("Public API changes affect the analyzed FPAS sources.");
         }
         foreach (var backup in RecoveryBackups ?? []) Console.Error.WriteLine("Recovery file: " + DiagnosticRenderer.Safe(backup));
         return true;

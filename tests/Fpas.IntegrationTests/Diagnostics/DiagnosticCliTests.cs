@@ -21,7 +21,7 @@ public sealed class DiagnosticCliTests
         using var directory = new TemporaryDirectory();
         var source = directory.File("Example.fpas"); var output = directory.File("Example.dll");
         File.WriteAllText(source, text); File.WriteAllText(output, "retained assembly");
-        var result = await Compile(source, output, "--diagnostics", "json");
+        var result = await Compile(source, output, "--report", "json");
         Assert.Equal(1, result.ExitCode); Assert.Empty(result.Error);
         using var json = JsonDocument.Parse(result.Output);
         Assert.False(json.RootElement.GetProperty("success").GetBoolean());
@@ -38,7 +38,7 @@ public sealed class DiagnosticCliTests
         var source = directory.File("Example.fpas"); var output = directory.File("Example.dll");
         File.WriteAllText(source, "program Example; begin const Value: integer := 1; end; end program;");
         File.WriteAllText(output, "retained assembly");
-        var result = await Compile(source, output, "--diagnostics", "json");
+        var result = await Compile(source, output, "--report", "json");
         Assert.Equal(1, result.ExitCode); Assert.Equal("", result.Error);
         using var json = JsonDocument.Parse(result.Output);
         var diagnostic = Assert.Single(json.RootElement.GetProperty("diagnostics").EnumerateArray());
@@ -89,7 +89,7 @@ public sealed class DiagnosticCliTests
     public async Task Non_source_failures_use_null_location_and_a_single_clean_json_result()
     {
         using var directory = new TemporaryDirectory();
-        var result = await Compile(directory.File("Missing.fpas"), directory.File("Example.dll"), "--diagnostics", "json");
+        var result = await Compile(directory.File("Missing.fpas"), directory.File("Example.dll"), "--report", "json");
         Assert.Equal(1, result.ExitCode); Assert.Equal("", result.Error);
         using var json = JsonDocument.Parse(result.Output);
         var diagnostic = Assert.Single(json.RootElement.GetProperty("diagnostics").EnumerateArray());

@@ -3,14 +3,14 @@ using Fpas.Workspaces.Loading;
 
 namespace Fpas.Workspaces.Editing;
 
-/// <summary>Supplies exact bytes for one checked filesystem replacement.</summary>
+/// <summary>Supplies exact bytes for one checked filesystem change.</summary>
 /// <param name="Path">Source file path.</param>
-/// <param name="Original">Expected current bytes; retain unchanged during publication.</param>
+/// <param name="Original">Expected current bytes, or null to require an unoccupied path.</param>
 /// <param name="Replacement">New bytes; retain unchanged during publication.</param>
-public sealed record SourceChange(string Path, byte[] Original, byte[] Replacement)
+public sealed record SourceChange(string Path, byte[]? Original, byte[] Replacement)
 {
     /// <summary>Gets whether replacement bytes differ from the expected original.</summary>
-    public bool Changed => !Original.AsSpan().SequenceEqual(Replacement);
+    public bool Changed => Original is null || !Original.AsSpan().SequenceEqual(Replacement);
 }
 
 /// <summary>Reports incomplete rollback or cleanup with explicit recovery locations.</summary>
@@ -45,25 +45,36 @@ public static class SourcePublication
     {
         foreach (var change in changes)
         {
-            token.ThrowIfCancellationRequested(); ValidateRegularPath(change.Path);
+            token.ThrowIfCancellationRequested();
+            if (change.Original is null) { VerifyUnoccupied(change.Path); continue; }
+            ValidateRegularPath(change.Path);
             var current = await File.ReadAllBytesAsync(change.Path, token);
             if (!current.AsSpan().SequenceEqual(change.Original))
-                throw new ContextFailure("inputs_changed", "Source changed before publication: " + change.Path);
+                throw new ContextFailure("inputs_changed", "Source changed before publication: " + change.Path, inputPath: change.Path);
         }
+    }
+
+    internal static void VerifyUnoccupied(string path)
+    {
+        ValidateRegularPath(Path.GetDirectoryName(path)!);
+        try { _ = File.GetAttributes(path); }
+        catch (FileNotFoundException) { return; }
+        throw new ContextFailure("inputs_changed", "The new source path is already occupied: " + path, inputPath: path);
     }
 
     /// <summary>Stages a batch, reverifies it and replaces files with rollback on failure.</summary>
     /// <param name="changes">Distinct source paths with authoritative original and replacement bytes.</param>
     /// <param name="verifyContext">Optional final project/input check after staging and before replacement.</param>
     /// <param name="token">Cancels staging and publication; rollback proceeds without cancellation.</param>
+    /// <param name="verifyPublished">Optional verification inside the transaction after writing all files.</param>
     /// <returns>A task completing after publication and staging cleanup.</returns>
     public static async Task ApplyAsync(IReadOnlyList<SourceChange> changes,
-        Func<CancellationToken, Task>? verifyContext = null, CancellationToken token = default)
+        Func<CancellationToken, Task>? verifyContext = null, CancellationToken token = default, Func<CancellationToken, Task>? verifyPublished = null)
     {
         var paths = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
         if (changes.Select(change => Path.GetFullPath(change.Path)).Distinct(paths).Count() != changes.Count)
             throw new ContextFailure("edit_conflict", "A publication batch contains duplicate source paths.");
-        var staged = new List<(SourceChange Change, string Temporary, string Backup)>();
+        var staged = new List<(SourceChange Change, string Temporary, string? Backup)>();
         var written = new List<SourceChange>(); var retained = new HashSet<string>(paths);
         try
         {
@@ -71,21 +82,24 @@ public static class SourcePublication
             foreach (var change in changes.Where(change => change.Changed))
             {
                 token.ThrowIfCancellationRequested();
-                if ((File.GetAttributes(change.Path) & FileAttributes.ReadOnly) != 0)
+                if (change.Original is not null && (File.GetAttributes(change.Path) & FileAttributes.ReadOnly) != 0)
                     throw new IOException("Source file is read-only: " + change.Path);
                 var stem = Path.Combine(Path.GetDirectoryName(change.Path)!, ".fpas-edit-" + Guid.NewGuid().ToString("N"));
-                staged.Add((change, stem + ".new", stem + ".bak"));
-                await Stage(stem + ".new", change.Replacement, change.Path, token);
-                await Stage(stem + ".bak", change.Original, change.Path, token);
+                var backup = change.Original is null ? null : stem + ".bak";
+                staged.Add((change, stem + ".new", backup));
+                await Stage(stem + ".new", change.Replacement, backup is null ? null : change.Path, token);
+                if (backup is not null) await Stage(backup, change.Original!, change.Path, token);
             }
             if (verifyContext is not null) await verifyContext(token);
             await VerifyAsync(changes, token);
             foreach (var item in staged)
             {
                 await VerifyAsync([item.Change], token);
-                Replace(item.Temporary, item.Change.Path);
+                if (item.Backup is null) File.Move(item.Temporary, item.Change.Path, overwrite: false);
+                else Replace(item.Temporary, item.Change.Path);
                 written.Add(item.Change);
             }
+            if (verifyPublished is not null) await verifyPublished(token);
         }
         catch (Exception failure)
         {
@@ -97,11 +111,12 @@ public static class SourcePublication
                 {
                     // Do not overwrite another writer's changes during rollback.
                     await VerifyAsync([change with { Original = change.Replacement }], CancellationToken.None);
-                    Replace(backup, change.Path);
+                    if (backup is null) File.Delete(change.Path);
+                    else Replace(backup, change.Path);
                     written.Remove(change);
                 }
                 catch (Exception rollback) when (rollback is IOException or UnauthorizedAccessException or ContextFailure)
-                { remaining.Add(change.Path); retained.Add(backup); }
+                { remaining.Add(change.Path); if (backup is not null) retained.Add(backup); }
             }
             if (remaining.Count != 0)
                 throw new SourcePublicationFailure("Source publication failed and rollback could not restore every file. " + failure.Message,
@@ -113,7 +128,7 @@ public static class SourcePublication
             var cleanupFailures = new List<string>();
             foreach (var item in staged)
                 foreach (var path in new[] { item.Temporary, item.Backup })
-                    if (!retained.Contains(path))
+                    if (path is not null && !retained.Contains(path))
                     {
                         try { File.Delete(path); }
                         catch (Exception cleanup) when (cleanup is IOException or UnauthorizedAccessException) { cleanupFailures.Add(path); }
@@ -124,11 +139,11 @@ public static class SourcePublication
         }
     }
 
-    private static async Task Stage(string path, byte[] bytes, string source, CancellationToken token)
+    private static async Task Stage(string path, byte[] bytes, string? source, CancellationToken token)
     {
         await using (var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             await stream.WriteAsync(bytes, token);
-        if (!OperatingSystem.IsWindows()) File.SetUnixFileMode(path, File.GetUnixFileMode(source));
+        if (source is not null && !OperatingSystem.IsWindows()) File.SetUnixFileMode(path, File.GetUnixFileMode(source));
     }
 
     private static void Replace(string replacement, string source)

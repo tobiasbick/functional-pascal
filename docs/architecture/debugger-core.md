@@ -93,10 +93,10 @@ Prefix capture never resumes retaining text after an omitted code point; a
 partial code point at the quota waits for continuation or EOF. Total received
 bytes and quota notification are independent of retained text. Programs requiring exact text
 capture must select UTF-8 output. Output and state survive worker failure.
-The run failure frontend instead inherits the console handles, or inherits stdin
-and captures bounded stdout/stderr for JSON runs. Editor-controlled captured runs
-keep stdin closed. These choices apply when launching the worker, whose target
-inherits the same handles; interactive input is not buffered through the protocol.
+For failure-report runs, text mode inherits stdout and stderr and ordinarily
+inherits stdin. JSON mode captures bounded stdout and stderr and supplies EOF.
+An explicit input file supplies bytes followed by EOF in either mode. The target
+inherits the worker's handles, and interactive input travels directly to it.
 
 Ordinary shutdown joins readers and releases owned/native resources before
 returning. An external OS kill of the supervisor, OOM or an uninterruptible

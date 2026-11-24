@@ -38,10 +38,14 @@ internal sealed class FormatCommand
 
     internal FormatCommand()
     {
-        report.AcceptOnlyFromAmong("json");
+        report.AcceptValues("json");
         ContextCommandOptions.Range(timeout, 1, 3600);
         Command.Arguments.Add(inputs);
         foreach (var option in new Option[] { check, list, stdout, report, configuration, timeout }) Command.Options.Add(option);
+        Command.Requires(list, check);
+        Command.Excludes(stdout, check, result => result.GetValue(check));
+        Command.Excludes(stdout, report, result => result.GetValue(report) == "json");
+        Command.Excludes(list, report, result => result.GetValue(report) == "json");
         Command.SetAction(Execute);
     }
 
@@ -57,8 +61,6 @@ internal sealed class FormatCommand
     private async Task<int> Execute(ParseResult result, CancellationToken cancellationToken)
     {
         var mode = Mode(result); var json = Json(result);
-        if (result.GetValue(list) && !result.GetValue(check) || mode == "stdout" && (result.GetValue(check) || json) || json && result.GetValue(list))
-        { ReportArgumentError(result, "--list requires --check; --stdout cannot combine with --check/--report, and --list cannot combine with --report."); return 2; }
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(result.GetValue(timeout)));
         using var combined = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, deadline.Token);
         var token = combined.Token;

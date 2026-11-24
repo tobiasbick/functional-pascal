@@ -217,8 +217,10 @@ the direct child has exited before timeout/cancellation returns.
 For tools that must clean up descendants, `Fpas.Processes.OwnedProcess.Start`
 takes an absolute executable path, separate arguments, a working directory and
 optional environment overrides. Choose `ProcessStdio.Capture` for three pipes,
-`Inherit` for the parent’s streams, or `CaptureOutput` to inherit input while
-reading output and error. Drain both redirected output streams concurrently.
+`Inherit` for the parent's streams, `CaptureOutput` to inherit input, or
+`CaptureInput` to inherit output and error. With redirected stdin,
+`SupplyInputAsync` sends bytes followed by EOF.
+Drain both redirected output streams concurrently.
 
 Await disposal to terminate the owned process tree and release its handles.
 Windows uses a job object. Linux uses `setsid` from util-linux and owns the

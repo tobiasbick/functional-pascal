@@ -31,18 +31,18 @@ public static class BuildProcess
     /// <param name="cwd">Process working directory.</param>
     /// <param name="arguments">Arguments passed without shell interpretation.</param>
     /// <param name="token">Cancels execution and terminates owned processes.</param>
-    /// <param name="inheritInput">Whether to inherit caller stdin; otherwise supplies EOF.</param>
     /// <param name="buildEnvironment">Whether to disable build servers and select the bundled compiler.</param>
     /// <param name="environment">Additional environment overrides.</param>
     /// <param name="captureCancellation">Whether cancellation returns exit 130 instead of throwing.</param>
     /// <param name="liveOutput">Optional writers receiving unbounded live output instead of capture.</param>
+    /// <param name="stdin">Optional bytes to send before closing standard input.</param>
     /// <returns>Exit status and at most 1 MiB of combined captured output.</returns>
-    public static Task<BuildResult> Run(string cwd, IReadOnlyList<string> arguments, CancellationToken token, bool inheritInput = false, bool buildEnvironment = true,
-        IReadOnlyDictionary<string, string>? environment = null, bool captureCancellation = false, ProcessOutput? liveOutput = null)
+    public static Task<BuildResult> Run(string cwd, IReadOnlyList<string> arguments, CancellationToken token, bool buildEnvironment = true,
+        IReadOnlyDictionary<string, string>? environment = null, bool captureCancellation = false, ProcessOutput? liveOutput = null, ReadOnlyMemory<byte> stdin = default)
     {
         token.ThrowIfCancellationRequested();
-        return Capture(DotnetHost(), cwd, arguments, token, inheritInput, buildEnvironment, environment,
-            captureCancellation: captureCancellation, liveOutput: liveOutput);
+        return Capture(DotnetHost(), cwd, arguments, token, buildEnvironment, environment,
+            captureCancellation: captureCancellation, liveOutput: liveOutput, stdin: stdin);
     }
 
     /// <summary>Runs an explicit executable without build-specific environment changes.</summary>
@@ -53,11 +53,11 @@ public static class BuildProcess
     /// <param name="outputLimit">Shared output byte budget, 1..4 MiB.</param>
     /// <returns>Exit status and bounded captured streams.</returns>
     public static Task<BuildResult> RunTool(string path, string cwd, IReadOnlyList<string> arguments, CancellationToken token, int outputLimit = 1_048_576)
-        => Capture(path, cwd, arguments, token, inheritInput: false, buildEnvironment: false, outputLimit: outputLimit);
+        => Capture(path, cwd, arguments, token, buildEnvironment: false, outputLimit: outputLimit);
 
-    private static async Task<BuildResult> Capture(string path, string cwd, IReadOnlyList<string> arguments, CancellationToken token, bool inheritInput, bool buildEnvironment,
+    private static async Task<BuildResult> Capture(string path, string cwd, IReadOnlyList<string> arguments, CancellationToken token, bool buildEnvironment,
         IReadOnlyDictionary<string, string>? environment = null, int outputLimit = 1_048_576, bool captureCancellation = false,
-        ProcessOutput? liveOutput = null)
+        ProcessOutput? liveOutput = null, ReadOnlyMemory<byte> stdin = default)
     {
         if (outputLimit is < 1 or > 4_194_304) throw new ArgumentOutOfRangeException(nameof(outputLimit));
         token.ThrowIfCancellationRequested();
@@ -65,8 +65,8 @@ public static class BuildProcess
         if (buildEnvironment) { variables["MSBUILDDISABLENODEREUSE"] = "1"; variables["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0"; }
         if (buildEnvironment && Fpas.Deployment.DistributionAssets.IsBundled)
             variables["FpasCompilerPath"] = Environment.ProcessPath!;
-        await using var process = OwnedProcess.Start(path, arguments, cwd, variables, inheritInput ? ProcessStdio.CaptureOutput : ProcessStdio.Capture);
-        process.Input.Dispose();
+        await using var process = OwnedProcess.Start(path, arguments, cwd, variables);
+        var input = process.SupplyInputAsync(stdin, token);
         using var stdout = new StreamReader(process.Output, Encoding.UTF8);
         using var stderr = new StreamReader(process.Error, Encoding.UTF8);
         long outputBytes = 0;
@@ -111,7 +111,7 @@ public static class BuildProcess
         finally
         {
             await process.DisposeAsync();
-            try { await Task.WhenAll(output, error); }
+            try { await Task.WhenAll(output, error, input); }
             catch (Exception exception) when (token.IsCancellationRequested && exception is OperationCanceledException or IOException or ObjectDisposedException) { }
         }
     }

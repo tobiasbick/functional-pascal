@@ -1,5 +1,6 @@
 // [Documentation](../../../docs/pascal/tools/language-server.md#navigation-and-edits)
 using Fpas.Compiler.Analysis;
+using Fpas.Workspaces.Analysis;
 using Fpas.Workspaces.Documentation;
 using Fpas.Workspaces.Loading;
 
@@ -106,19 +107,36 @@ public sealed partial class SourceQuery
     /// <param name="token">Cancels completion analysis.</param>
     /// <returns>Checked candidates and the exact replacement range.</returns>
     public EditorCompletion Complete(SourceSelection selection, CancellationToken token = default)
-    {
-        var (project, _, offset, position) = SelectPosition(selection, requireChecked: false);
-        return EditorAnalysis.Complete(projects[project].Input.Request, position.Span.Path, offset, token);
-    }
+        => Assist(analysis, "complete", selection, token).Complete!;
 
     /// <summary>Computes signature-help candidates at a call position.</summary>
     /// <param name="selection">Source position in the argument list.</param>
     /// <param name="token">Cancels signature analysis.</param>
     /// <returns>Compiler-owned signatures and active-argument information.</returns>
     public EditorCallSignatures Signatures(SourceSelection selection, CancellationToken token = default)
+        => Assist(analysis, "signature", selection, token).Signature!;
+
+    /// <summary>Requests compiler editor assistance even if the selected source contains incomplete syntax.</summary>
+    /// <param name="analysis">Workspace inputs and project availability.</param>
+    /// <param name="operation">complete or signature.</param>
+    /// <param name="selection">Source cursor and optional linked-file owner.</param>
+    /// <param name="token">Cancels compiler assistance.</param>
+    /// <returns>The editor result with its cursor and overall checked coverage.</returns>
+    public static SourceQueryResult Assist(WorkspaceAnalysis analysis, string operation, SourceSelection selection, CancellationToken token = default)
     {
-        var (project, _, offset, position) = SelectPosition(selection, requireChecked: false);
-        return EditorAnalysis.Signatures(projects[project].Input.Request, position.Span.Path, offset, token);
+        var (project, source) = SelectOwner(analysis, selection);
+        if (analysis.Projects.Any(item => Paths.Equals(item.Project, project.Path) && item.State == "blocked"))
+            throw new ContextFailure("analysis_unavailable", "The selected project has unavailable analysis inputs.", project: project.Path);
+        var document = new SourceDocument(source.Path, source.Text, token);
+        var offset = Offset(document, selection);
+        var result = new SourceQueryResult("ok", null, new(project.Path, document.Span(offset, 0)), null, null, null, false, [],
+            Coverage: analysis.SemanticCoverage);
+        return operation switch
+        {
+            "complete" => result with { Complete = EditorAnalysis.Complete(project.Request, source.Path, offset, token) },
+            "signature" => result with { Signature = EditorAnalysis.Signatures(project.Request, source.Path, offset, token) },
+            _ => throw new ContextFailure("invalid_argument", "Unknown editor query operation.")
+        };
     }
 
     /// <summary>Reads documentation for an editor candidate's checked metadata or source identity.</summary>

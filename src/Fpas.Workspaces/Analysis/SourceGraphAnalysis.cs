@@ -4,6 +4,7 @@ using Fpas.Compiler.Analysis;
 using Fpas.Workspaces.Loading;
 using Fpas.Workspaces.Snapshots;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Fpas.Workspaces.Analysis;
 
@@ -48,7 +49,7 @@ internal static class SourceGraphAnalysis
                 request = request with { ReferenceImages = Array.AsReadOnly(request.References.Select(reference => images[reference]).ToArray()) };
                 updated[path] = input with { Request = request };
                 var key = WorkspaceContext.HashText(path + "\n" + input.Configuration + "\n" + request.AssemblyName + "\n" + request.Target + "\n" +
-                    request.ValidateDocumentation + "\n" + JsonSerializer.Serialize(request.DiagnosticOptions) + "\n" +
+                    request.ValidateDocumentation + "\n" + JsonSerializer.Serialize(request.DiagnosticOptions, SourceGraphJson.Default.DiagnosticOptions) + "\n" +
                     string.Join('\n', request.Sources.Select(source => source.Path + "=" + texts.Document(source.Path).ContentHash)) + "\n" +
                     string.Join('\n', request.ReferenceImages.Select(image => image.Path + "=" + image.ContentHash)));
                 var required = context.DependencyOutputs.Where(output => paths.Equals(output.Project, path) &&
@@ -73,3 +74,7 @@ internal static class SourceGraphAnalysis
         }
     }
 }
+
+[JsonSerializable(typeof(DiagnosticOptions))]
+[JsonSerializable(typeof(AnalysisResult))]
+internal partial class SourceGraphJson : JsonSerializerContext;

@@ -157,7 +157,7 @@ compiler and .NET runtime are both restored under the installation directory.
 
 Both caches belong to the running account. They can be removed after its compiler,
 debugger workers and MSBuild processes have exited; the next launch recreates
-needed content. Removing a cache during active use is unsupported. `fpas env --json`
+needed content. Removing a cache during active use is unsupported. `fpas env --report json`
 reports the running compiler executable, materialized assembly and selected shim paths/hashes.
 It still reports missing .NET SDK inputs when project tools are unavailable.
 

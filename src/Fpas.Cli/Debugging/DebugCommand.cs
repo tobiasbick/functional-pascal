@@ -23,7 +23,7 @@ internal sealed class DebugCommand
 
     internal DebugCommand()
     {
-        protocol.AcceptOnlyFromAmong("batch", "dap");
+        protocol.AcceptValues("batch", "dap");
         Command = new("debug", """
             Debug a built .NET executable using the FPAS debugger core.
             Breakpoints capture once and terminate. Tracepoints capture repeatedly and continue until exit or a limit.

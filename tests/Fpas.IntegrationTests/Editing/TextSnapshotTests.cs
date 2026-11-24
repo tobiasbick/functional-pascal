@@ -26,7 +26,9 @@ public sealed class TextSnapshotTests
         Assert.Equal(text, result.Original.Text); Assert.Equal(12, result.Original.Version);
         Assert.Equal(text.Replace("integer", "int", StringComparison.Ordinal), result.NewText);
         Assert.Equal("int", Assert.Single(plan.Suggestions).Fix.Edits[0].NewText);
-        var bytes = Assert.Single(plan.Edits.ToSourceChanges()); bytes.Original[0] = 0; bytes.Replacement[0] = 0;
+        var bytes = Assert.Single(plan.Edits.ToSourceChanges());
+        Assert.NotNull(bytes.Original);
+        bytes.Original[0] = 0; bytes.Replacement[0] = 0;
         var independent = Assert.Single(plan.Edits.ToSourceChanges());
         Assert.Equal(Encoding.UTF8.GetBytes(text), independent.Original);
         Assert.Equal(Encoding.UTF8.GetBytes(result.NewText), independent.Replacement);

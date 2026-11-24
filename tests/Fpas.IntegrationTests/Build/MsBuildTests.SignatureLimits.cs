@@ -64,7 +64,7 @@ public sealed partial class MsBuildTests
         {
             var source = "program Invalid; uses Shared.Limits as L, Shared as S; begin " + body + " end; end program;";
             var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "compile", "-", "--output", project.File("Invalid.dll"),
-                "--reference-dir", TestEnvironment.ReferenceDirectory, "--reference", project.File("Shared/bin/Debug/net10.0/Shared.dll"), "--diagnostics", "json"], source);
+                "--reference-dir", TestEnvironment.ReferenceDirectory, "--reference", project.File("Shared/bin/Debug/net10.0/Shared.dll"), "--report", "json"], source);
             Assert.NotEqual(0, result.ExitCode);
             using var document = JsonDocument.Parse(result.Output);
             var diagnostic = Assert.Single(document.RootElement.GetProperty("diagnostics").EnumerateArray());
@@ -77,7 +77,7 @@ public sealed partial class MsBuildTests
         {
             var source = "program Invalid; uses Shared.Limits as L, Shared as S; begin " + body + " end; end program;";
             var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "compile", "-", "--output", project.File("Invalid.dll"),
-                "--reference-dir", TestEnvironment.ReferenceDirectory, "--reference", project.File("Shared/bin/Debug/net10.0/Shared.dll"), "--diagnostics", "json"], source);
+                "--reference-dir", TestEnvironment.ReferenceDirectory, "--reference", project.File("Shared/bin/Debug/net10.0/Shared.dll"), "--report", "json"], source);
             using var document = JsonDocument.Parse(result.Output);
             var diagnostic = Assert.Single(document.RootElement.GetProperty("diagnostics").EnumerateArray());
             Assert.Equal("FP3018", diagnostic.GetProperty("code").GetString());

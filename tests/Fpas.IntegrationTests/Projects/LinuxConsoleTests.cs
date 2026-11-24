@@ -23,7 +23,7 @@ public sealed class LinuxConsoleTests(SdkPackageFixture sdk) : IClassFixture<Sdk
             var restored = await ProjectCliFixture.Cli(directory, "restore", project);
             Assert.True(restored.ExitCode == 0, restored.Output + restored.Error);
             using var waiting = await WaitingBuild.Prepare(project);
-            string[] report = command == "check" ? ["--diagnostics", "json"] : ["--report", "json"];
+            string[] report = ["--report", "json"];
             await Cancel(directory, waiting.Ready, command, project, report);
         }
     }

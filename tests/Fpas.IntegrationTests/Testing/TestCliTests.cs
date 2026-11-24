@@ -22,7 +22,8 @@ public sealed class TestCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPacka
         Assert.True(result.ExitCode == 1, result.Output + result.Error); Assert.Empty(result.Error);
         using var report = JsonDocument.Parse(result.Output);
         Assert.Equal("test_failed", report.RootElement.GetProperty("status").GetString());
-        var native = Assert.Single(report.RootElement.GetProperty("projects").EnumerateArray()).GetProperty("result");
+        var projectResult = Assert.Single(report.RootElement.GetProperty("projects").EnumerateArray());
+        var native = projectResult.GetProperty("result");
         var counts = native.GetProperty("counts");
         Assert.Equal(2, counts.GetProperty("failed").GetInt32());
         Assert.Equal(1, counts.GetProperty("skipped").GetInt32());
@@ -32,6 +33,22 @@ public sealed class TestCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPacka
         var log = File.ReadAllLines(events);
         Assert.Equal(6, log.Count(line => line == "setup")); Assert.Equal(6, log.Count(line => line == "cleanup"));
         if (framework == "xunit") Assert.Equal("disposed", File.ReadAllText(events + ".fixture"));
+        var reruns = projectResult.GetProperty("reruns").EnumerateArray().ToArray();
+        Assert.Equal(2, reruns.Length);
+        var rerun = reruns[0];
+        Assert.Equal("method", rerun.GetProperty("scope").GetString());
+        var failedIndex = rerun.GetProperty("caseIndex").GetInt32();
+        var failedMethod = native.GetProperty("tests")[failedIndex].GetProperty("fullyQualifiedName").GetString();
+        var args = rerun.GetProperty("arguments").EnumerateArray().Select(item => item.GetString()!).ToArray();
+        var repeated = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), .. args],
+            workingDirectory: directory.Path, environment: new Dictionary<string, string?> { ["FPAS_TEST_EVENTS"] = events }, timeLimit: TimeSpan.FromMinutes(2));
+        Assert.True(repeated.ExitCode == 1, repeated.Output + repeated.Error);
+        using var repeatReport = JsonDocument.Parse(repeated.Output);
+        var repeatedProject = Assert.Single(repeatReport.RootElement.GetProperty("projects").EnumerateArray());
+        var repeatedCases = repeatedProject.GetProperty("result").GetProperty("tests").EnumerateArray().ToArray();
+        Assert.NotEmpty(repeatedCases);
+        Assert.All(repeatedCases, test => Assert.Equal(failedMethod, test.GetProperty("fullyQualifiedName").GetString()));
+
     }
 
     [Theory]
@@ -44,7 +61,7 @@ public sealed class TestCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPacka
         var project = await TestProjectFixture.Create(directory, sdk, framework);
         var first = await ProjectCliFixture.Cli(directory, "test", project, "--report", "json");
         Assert.True(first.ExitCode == 0, first.Output + first.Error);
-        var checkedProject = await ProjectCliFixture.Cli(directory, "check", project, "--no-restore", "--diagnostics", "json");
+        var checkedProject = await ProjectCliFixture.Cli(directory, "check", project, "--no-restore", "--report", "json");
         Assert.True(checkedProject.ExitCode == 0, checkedProject.Output + checkedProject.Error);
         var listed = await ProjectCliFixture.Cli(directory, "test", project, "--no-build", "--list", "--filter", "FullyQualifiedName~Addition", "--report", "json");
         Assert.True(listed.ExitCode == 0, listed.Output + listed.Error); Assert.Empty(listed.Error);

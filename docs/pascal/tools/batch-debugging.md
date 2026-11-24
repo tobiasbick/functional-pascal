@@ -5,10 +5,9 @@ matching portable PDB, recorded sources and runtime dependencies available.
 The command uses the packaged CLR debugger; it does not build, restore or
 download a backend.
 
-This page describes one-shot batch capture. Repeated
-[`--tracepoint` capture](cli-diagnostics.md#tracepoints) and
-[`diagnose failure`](cli-diagnostics.md#failure-reports-and-dumps) use the same
-core and report format. `fpas schema debug` exports the report's structural JSON Schema.
+One-shot capture and repeated [`--tracepoint` capture](cli-diagnostics.md#tracepoints)
+use the same debugger core and report format. `fpas schema debug` exports the
+report's structural JSON Schema.
 
 After the [local SDK setup](../../build/development.md#build-an-fpas-application),
 run this example from the repository root.

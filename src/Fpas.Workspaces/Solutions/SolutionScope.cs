@@ -4,10 +4,10 @@ using System.Xml.Linq;
 
 namespace Fpas.Workspaces.Solutions;
 
-internal sealed record ProjectSelection(string Path, string Configuration, string Platform);
+internal sealed record ProjectSelection(string Path, string Configuration, string Platform, bool Build = true);
 internal sealed record SolutionScope(IReadOnlyList<ProjectSelection> Projects, string? ConfigurationXml, string? Directory)
 {
-    internal static async Task<SolutionScope> Read(string context, string configuration, CancellationToken token)
+    internal static async Task<SolutionScope> Read(string context, string configuration, CancellationToken token, bool includeExcluded = false)
     {
         if (!Path.GetExtension(context).Equals(".slnx", StringComparison.OrdinalIgnoreCase))
             return new([new(context, configuration, "AnyCPU")], null, null);
@@ -27,7 +27,8 @@ internal sealed record SolutionScope(IReadOnlyList<ProjectSelection> Projects, s
             var projectPlatform = mapped.Platform ?? "AnyCPU";
             mappings.Add(new XElement("ProjectConfiguration", new XAttribute("Project", project.Id.ToString("B")),
                 new XAttribute("AbsolutePath", path), new XAttribute("BuildProjectInSolution", mapped.Build), buildType + "|" + projectPlatform));
-            if (mapped.Build && Path.GetExtension(path).ToLowerInvariant() is ".fpasproj" or ".csproj" or ".fsproj") selected.Add(new(path, buildType, projectPlatform));
+            if ((mapped.Build || includeExcluded) && Path.GetExtension(path).ToLowerInvariant() is ".fpasproj" or ".csproj" or ".fsproj")
+                selected.Add(new(path, buildType, projectPlatform, mapped.Build));
         }
         return new(selected, mappings.ToString(SaveOptions.DisableFormatting), directory + Path.DirectorySeparatorChar);
     }

@@ -153,7 +153,7 @@ public sealed class EnvironmentCommandTests(SdkPackageFixture sdk) : IClassFixtu
         environment["DOTNET_HOST_PATH"] = probe;
         using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(1));
         await using var process = InterruptibleProcess.Start(BuildProcess.DotnetHost(),
-            [Cli, "env", "--json", "--timeout", cancel ? "30" : "5"], root.Path,
+            [Cli, "env", "--report", "json", "--timeout", cancel ? "30" : "5"], root.Path,
             environment.ToDictionary(pair => pair.Key, pair => pair.Value!));
         process.Input.Dispose();
         using var stdout = new StreamReader(process.Output); using var stderr = new StreamReader(process.Error);
@@ -183,5 +183,5 @@ public sealed class EnvironmentCommandTests(SdkPackageFixture sdk) : IClassFixtu
     }
 
     private static Task<ProcessResult> Run(TemporaryDirectory root, IReadOnlyDictionary<string, string?> environment, string[]? arguments = null, string? cli = null)
-        => ProcessRunner.RunAsync([cli ?? Cli, "env", "--json", .. arguments ?? []], workingDirectory: root.Path, environment: environment, timeLimit: TimeSpan.FromSeconds(45));
+        => ProcessRunner.RunAsync([cli ?? Cli, "env", "--report", "json", .. arguments ?? []], workingDirectory: root.Path, environment: environment, timeLimit: TimeSpan.FromSeconds(45));
 }

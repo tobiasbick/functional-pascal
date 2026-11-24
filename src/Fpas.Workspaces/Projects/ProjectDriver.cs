@@ -18,6 +18,10 @@ public sealed record ProjectOutput(string Project, string Configuration, string 
 {
     /// <summary>Gets whether the output kind is Exe or WinExe.</summary>
     public bool Executable => OutputType.Equals("Exe", StringComparison.OrdinalIgnoreCase) || OutputType.Equals("WinExe", StringComparison.OrdinalIgnoreCase);
+    /// <summary>Gets whether the assembly and runtime configuration are present.</summary>
+    public bool HasRuntimeFiles() => File.Exists(Assembly) && File.Exists(Path.ChangeExtension(Assembly, ".runtimeconfig.json"));
+    /// <summary>Gets the optional fingerprint of the selected assembly and its companion files.</summary>
+    public string? OutputIdentity { get; init; }
 }
 
 /// <summary>Builds explicit contexts and selects evaluated executable outputs.</summary>
@@ -98,21 +102,17 @@ public static class ProjectDriver
         return await Describe(selected, scope, token);
     }
 
-    private static async Task<SolutionScope> Scope(string context, string configuration, CancellationToken token)
+    internal static async Task<SolutionScope> Scope(string context, string configuration, CancellationToken token, bool includeExcluded = false)
     {
         if (string.IsNullOrWhiteSpace(configuration)) throw new ContextFailure("invalid_argument", "Configuration must not be empty.");
-        try { return await SolutionScope.Read(context, configuration, token); }
+        try { return await SolutionScope.Read(context, configuration, token, includeExcluded); }
         catch (SolutionException exception) { throw new ContextFailure("invalid_argument", "Cannot read solution: " + exception.Message); }
     }
 
     private static async Task<ProjectOutput> Describe(ProjectSelection project, SolutionScope scope, CancellationToken token)
     {
-        var args = new List<string> { "msbuild", project.Path, "-nologo", "-nr:false", "-p:UseSharedCompilation=false",
-            "-p:Configuration=" + MsBuildSyntax.Escape(project.Configuration), "-p:Platform=" + MsBuildSyntax.Escape(project.Platform),
-            "-t:GetTargetPath", "-getProperty:OutputType,TargetPath,TargetFramework" };
-        if (scope.ConfigurationXml is not null)
-            args.AddRange(["-p:BuildingSolutionFile=true", "-p:SolutionDir=" + MsBuildSyntax.Escape(scope.Directory!),
-                "-p:CurrentSolutionConfigurationContents=" + MsBuildSyntax.Escape(scope.ConfigurationXml)]);
+        var args = EvaluationArguments(project, scope);
+        args.AddRange(["-t:GetTargetPath", "-getProperty:OutputType,TargetPath,TargetFramework"]);
         var result = await BuildProcess.Run(Path.GetDirectoryName(project.Path)!, args, token);
         if (result.ExitCode != 0 || result.Truncated) throw new ContextFailure("evaluation_failed", "Cannot evaluate project: " + result.Output + result.Error, result.Truncated);
         using var json = JsonDocument.Parse(result.Output);
@@ -123,5 +123,15 @@ public static class ProjectDriver
             throw new ContextFailure("invalid_argument", "Select a project with one explicit TargetFramework and TargetPath.");
         return new(project.Path, project.Configuration, project.Platform, framework, properties.GetProperty("OutputType").GetString() ?? "Library",
             Path.GetFullPath(target, Path.GetDirectoryName(project.Path)!));
+    }
+
+    internal static List<string> EvaluationArguments(ProjectSelection project, SolutionScope scope)
+    {
+        var args = new List<string> { "msbuild", project.Path, "-nologo", "-nr:false", "-p:UseSharedCompilation=false",
+            "-p:Configuration=" + MsBuildSyntax.Escape(project.Configuration), "-p:Platform=" + MsBuildSyntax.Escape(project.Platform) };
+        if (scope.ConfigurationXml is not null)
+            args.AddRange(["-p:BuildingSolutionFile=true", "-p:SolutionDir=" + MsBuildSyntax.Escape(scope.Directory!),
+                "-p:CurrentSolutionConfigurationContents=" + MsBuildSyntax.Escape(scope.ConfigurationXml)]);
+        return args;
     }
 }

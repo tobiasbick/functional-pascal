@@ -19,7 +19,7 @@ internal sealed record CheckFixes(string Mode, string State, string InputSnapsho
             foreach (var edit in suggestion.Fix.Edits)
             {
                 var action = suggestion.Fix.Applicability == DiagnosticApplicability.Automatic ? "automatic" : "review only";
-                Console.Error.WriteLine(DiagnosticRenderer.Safe($"  {edit.Location.Path}({edit.Location.Line},{edit.Location.Column}): {action}: {suggestion.Fix.Title}"));
+                Console.Error.WriteLine(DiagnosticRenderer.Safe($"  {edit.Location.Path}({edit.Location.Line},{edit.Location.Column}): {action}: {suggestion.Fix.Title} [{suggestion.Id}]"));
                 Console.Error.WriteLine("    " + DiagnosticRenderer.Safe(edit.ExpectedText) + " -> " + DiagnosticRenderer.Safe(edit.NewText));
             }
         foreach (var backup in RecoveryBackups ?? []) Console.Error.WriteLine("Recovery backup: " + DiagnosticRenderer.Safe(backup));

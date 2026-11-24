@@ -63,7 +63,7 @@ export async function run(): Promise<void> {
     assert.equal(vscode.workspace.workspaceFolders?.length, 2);
     await compiler(data, data.compiler);
     if (installed) {
-      const { stdout } = await execute(data.compiler, ['env', '--json'], {
+      const { stdout } = await execute(data.compiler, ['env', '--report', 'json'], {
         cwd: path.dirname(data.mainProject), encoding: 'utf8', windowsHide: true, timeout: 35_000,
       }).catch((failure: { stdout?: string }) => {
         if (!failure.stdout) throw failure;

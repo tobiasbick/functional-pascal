@@ -59,7 +59,7 @@ public sealed partial class MsBuildTests
         {
             var text = "program Invalid; uses Shared as S, System as Sys, System.Collections.Generic as C, System.Threading.Tasks as Tasks, System.Runtime.CompilerServices as Compiler; " + source + " begin end; end program;";
             var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "compile", "-", "--output", project.File("Invalid.dll"),
-                "--reference-dir", TestEnvironment.ReferenceDirectory, "--reference", project.File("Shared/bin/Debug/net10.0/Shared.dll"), "--diagnostics", "json"], text);
+                "--reference-dir", TestEnvironment.ReferenceDirectory, "--reference", project.File("Shared/bin/Debug/net10.0/Shared.dll"), "--report", "json"], text);
             Assert.True(result.ExitCode != 0, source);
             using var document = JsonDocument.Parse(result.Output);
             var diagnostic = Assert.Single(document.RootElement.GetProperty("diagnostics").EnumerateArray());

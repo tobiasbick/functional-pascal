@@ -20,8 +20,10 @@ internal sealed class ExecutionCommand
     private readonly Option<string> configuration = new("--configuration") { DefaultValueFactory = _ => "Debug", Description = "MSBuild configuration." };
     private readonly Option<bool> noRestore = new("--no-restore") { Description = "Build with existing restored assets." };
     private readonly Option<bool> noBuild = new("--no-build") { Description = "Run the project's existing output; implies --no-restore." };
+    private readonly Option<string> expectedOutput = new("--expected-output") { Description = "With --no-build, require the output identity reported by fpas target." };
     private readonly Option<string> project = new("--project") { Description = "Executable project in a solution; required when ambiguous." };
-    private readonly Option<string> workingDirectory = new("--working-directory") { Description = "Program working directory; defaults to the caller's directory." };
+    private readonly Option<string> workingDirectory = new("--cwd") { Description = "Program working directory; defaults to the caller's directory." };
+    private readonly Option<string> stdinFile = new("--stdin") { Description = "File relative to --cwd, at most 1 MiB, delivered to standard input followed by EOF." };
     private readonly Option<string> version = new("--sdk-version") { Description = "SDK version for standalone source input." };
     private readonly Option<string> feed = new("--sdk-feed") { Description = "SDK feed for standalone source input." };
     private readonly Option<int> timeout;
@@ -35,10 +37,12 @@ internal sealed class ExecutionCommand
     {
         this.run = run;
         this.editorControlled = editorControlled;
-        timeout = new("--timeout") { DefaultValueFactory = _ => run ? 0 : 120, Description = run ? "Overall deadline in seconds (0..3600; 0 means no deadline)." : "Overall deadline in seconds (1..3600)." };
+        timeout = new("--timeout") { Description = run ? "Overall deadline in seconds (0..3600). Defaults to 120 for JSON and unlimited for text; 0 disables it." : "Overall deadline in seconds (1..3600)." };
+        if (!run) timeout.DefaultValueFactory = _ => 120;
         Command = new(run ? "run" : "build", run ? """
             Build and run an explicit source, project or solution, or run an existing managed DLL.
             A solution needs one executable or --project. Program arguments follow --.
+            JSON runs close standard input by default. Use --stdin to pass file bytes.
             Exit codes preserve the program result; host failures use 1, arguments 2, cancellation 130.
 
             Examples:
@@ -54,13 +58,19 @@ internal sealed class ExecutionCommand
 
               fpas build App.slnx --configuration Release --report json
             """);
-        report.AcceptOnlyFromAmong("json"); ContextCommandOptions.Range(timeout, run ? 0 : 1, 3600);
+        report.AcceptValues("json"); ContextCommandOptions.Range(timeout, run ? 0 : 1, 3600);
         Command.Arguments.Add(input);
         foreach (var option in new Option[] { configuration, noRestore, version, feed, timeout, report }) Command.Options.Add(option);
         if (run)
         {
             Command.Arguments.Add(arguments);
-            foreach (var option in new Option[] { noBuild, project, workingDirectory, failureReport }) Command.Options.Add(option);
+            foreach (var option in new Option[] { noBuild, expectedOutput, project, workingDirectory, stdinFile, failureReport }) Command.Options.Add(option);
+            Command.Requires(expectedOutput, noBuild, parsed => parsed.GetValue(expectedOutput) is not null, parsed => parsed.GetValue(noBuild));
+            expectedOutput.Validators.Add(parsed =>
+            {
+                if (parsed.Tokens.Count == 1 && (parsed.Tokens[0].Value.Length != 64 || !parsed.Tokens[0].Value.All(char.IsAsciiHexDigit)))
+                    parsed.AddError("--expected-output requires a 64-digit hexadecimal output identity.");
+            });
         }
         Command.SetAction(Execute);
     }
@@ -81,9 +91,10 @@ internal sealed class ExecutionCommand
     private async Task<int> Execute(ParseResult result, CancellationToken cancellationToken)
     {
         var json = Json(result);
+        var seconds = run && json && result.GetResult(timeout) is not { IdentifierTokenCount: > 0 } ? 120 : result.GetValue(timeout);
         string? context = null; BuildResult? built = null;
         using var deadline = new CancellationTokenSource();
-        if (result.GetValue(timeout) > 0) deadline.CancelAfter(TimeSpan.FromSeconds(result.GetValue(timeout)));
+        if (seconds > 0) deadline.CancelAfter(TimeSpan.FromSeconds(seconds));
         using var combined = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, deadline.Token);
         try
         {
@@ -95,6 +106,9 @@ internal sealed class ExecutionCommand
             var skipBuild = run && result.GetValue(noBuild);
             var cwd = run && result.GetValue(workingDirectory) is { } selectedDirectory ? Path.GetFullPath(selectedDirectory) : Environment.CurrentDirectory;
             if (!Directory.Exists(cwd)) throw new ArgumentException("The working directory does not exist.");
+            ReadOnlyMemory<byte>? stdin = null;
+            if (run && result.GetValue(stdinFile) is { } inputFile)
+                stdin = await BoundedFile.ReadAsync(Path.GetFullPath(inputFile, cwd), 1_048_576, combined.Token);
             if (extension != ".fpas" && (result.GetValue(version) is not null || result.GetValue(feed) is not null))
                 throw new ArgumentException("--sdk-version and --sdk-feed apply only to standalone .fpas sources.");
             var buildContext = context;
@@ -135,7 +149,14 @@ internal sealed class ExecutionCommand
             {
                 new ProjectReport("build", true, "ok", context) { Build = built }.Write(json); return 0;
             }
-            if (!target!.Executable || !File.Exists(target.Assembly) || !File.Exists(Path.ChangeExtension(target.Assembly, ".runtimeconfig.json")))
+            if (result.GetValue(expectedOutput) is { } expected)
+            {
+                var actual = target!.HasRuntimeFiles() ? OutputFingerprint.Compute(target.Assembly, combined.Token) : null;
+                if (!expected.Equals(actual, StringComparison.OrdinalIgnoreCase))
+                    throw new ContextFailure("run_output_changed", "The selected output is missing or has changed. Refresh fpas target before retrying.");
+                target = target with { OutputIdentity = actual };
+            }
+            if (!target!.Executable || !target.HasRuntimeFiles())
                 throw new ContextFailure("not_executable", "The selected managed output and its runtimeconfig.json must exist. Build the executable first.");
             ProgramResult executed;
             string? savedFailure = null;
@@ -145,22 +166,32 @@ internal sealed class ExecutionCommand
                 if (string.IsNullOrWhiteSpace(destination)) throw new ArgumentException("The failure report path must not be empty.");
                 if (built is not null) ProjectProgress.Phase(json, "Running", target.Assembly);
                 var observed = await DebuggerApplication.RunWithFailureReportAsync(new(target.Assembly, cwd,
-                    result.GetValue(arguments) ?? [], Path.GetFullPath(destination), json, !editorControlled, result.GetValue(timeout)),
+                    result.GetValue(arguments) ?? [], Path.GetFullPath(destination), json, seconds, stdin),
                     BuildProcess.DotnetHost(), combined.Token);
                 executed = new(observed.ExitCode, observed.Output, observed.Error, observed.Truncated);
                 savedFailure = observed.ReportPath;
             }
             else if (json)
             {
-                var output = await BuildProcess.Run(cwd, programArguments, combined.Token, inheritInput: !editorControlled, buildEnvironment: false);
+                var output = await BuildProcess.Run(cwd, programArguments, combined.Token, buildEnvironment: false, stdin: stdin ?? ReadOnlyMemory<byte>.Empty);
                 executed = new(output.ExitCode, output.Output, output.Error, output.Truncated);
             }
             else
             {
                 if (built is not null) ProjectProgress.Phase(json, "Running", target.Assembly);
-                await using var process = OwnedProcess.Start(BuildProcess.DotnetHost(), programArguments, cwd, stdio: ProcessStdio.Inherit);
-                await process.WaitForExit(combined.Token);
-                executed = new(process.ExitCode, "", "", false);
+                await using var process = OwnedProcess.Start(BuildProcess.DotnetHost(), programArguments, cwd,
+                    stdio: stdin is null ? ProcessStdio.Inherit : ProcessStdio.CaptureInput);
+                var delivery = stdin is { } data ? process.SupplyInputAsync(data, combined.Token) : Task.CompletedTask;
+                try
+                {
+                    await process.WaitForExit(combined.Token);
+                    executed = new(process.ExitCode, "", "", false);
+                }
+                finally
+                {
+                    await process.DisposeAsync();
+                    await delivery;
+                }
             }
             new ProjectReport("run", executed.ExitCode == 0 && !executed.Truncated, executed.Truncated ? "output_limit" : executed.ExitCode == 0 ? "ok" : "program_failed", context)
                 { Target = target, Build = built, Program = executed, FailureReport = savedFailure }.Write(json);

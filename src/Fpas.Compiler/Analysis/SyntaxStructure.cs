@@ -19,7 +19,11 @@ public sealed record SyntaxDeclaration(string Name, string Kind, int? Owner, Sou
 /// <param name="Folds">Multi-line ranges that can be folded.</param>
 /// <param name="Selections">Syntactic ranges for expanding a selection.</param>
 public sealed record SyntaxStructure(SourceDocument Document, IReadOnlyList<SyntaxDeclaration> Declarations,
-    IReadOnlyList<SourceSpan> Folds, IReadOnlyList<SourceSpan> Selections);
+    IReadOnlyList<SourceSpan> Folds, IReadOnlyList<SourceSpan> Selections)
+{
+    /// <summary>Gets lexer and recovered parser diagnostics for the source.</summary>
+    public IReadOnlyList<CompilerDiagnostic> Diagnostics { get; init; } = [];
+}
 
 public static partial class SyntaxAnalysis
 {
@@ -35,11 +39,12 @@ public static partial class SyntaxAnalysis
         var comments = new List<SourceComment>();
         IReadOnlyList<Token> tokens;
         try { tokens = new Lexer(source, comments).ReadTokens(); }
-        catch (CompilationFailure) { return new(document, [], [], []); }
+        catch (CompilationFailure failure) { return new(document, [], [], []) { Diagnostics = failure.Diagnostics }; }
         var layout = new SyntaxLayout(tokens.Count);
         var parser = new Parser(source, tokens, layout, recover: true);
-        try { _ = parser.ParseCompilationUnit(); }
-        catch (CompilationFailure) { /* Keep declarations already parsed. */ }
+        IReadOnlyList<CompilerDiagnostic> diagnostics;
+        try { _ = parser.ParseCompilationUnit(); diagnostics = source.Diagnostics.Snapshot; }
+        catch (CompilationFailure failure) { diagnostics = failure.Diagnostics; }
 
         var declarations = parser.Declarations.Values.Where(item => item.End >= item.Name.Position + item.Name.Length)
             .Select(item => new SyntaxDeclaration(item.SourceName, item.Kind, item.Owner,
@@ -53,7 +58,7 @@ public static partial class SyntaxAnalysis
             .Concat(tokens.Where(item => item.Length > 0).Select(item => document.Span(item.Position, item.Length)))
             .Concat(comments.Select(comment => Span(comment.Start, comment.End))).Distinct().ToArray();
         token.ThrowIfCancellationRequested();
-        return new(document, Array.AsReadOnly(declarations), Array.AsReadOnly(folds), Array.AsReadOnly(selections));
+        return new(document, Array.AsReadOnly(declarations), Array.AsReadOnly(folds), Array.AsReadOnly(selections)) { Diagnostics = diagnostics };
 
         SourceSpan Span(int start, int end) => document.Span(start, Math.Max(0, end - start));
     }

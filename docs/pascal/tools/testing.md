@@ -165,6 +165,21 @@ matching portable symbols and source checksums. The VS Code Testing view uses
 selections. MTP UIDs come from native discovery and can be forwarded as
 `-- --filter-uid UID`. TRX cases preserve native test IDs and method names.
 
+## Repeat a failed case
+
+In JSON mode, `projects[].reruns` describes available reruns for failed cases.
+`caseIndex` is the zero-based index in that project's `result.tests` array.
+Pass `arguments` as individual arguments to the `fpas` executable in the same
+environment. The list preserves the context, configuration and runner settings.
+It uses existing outputs and verifies their identity before starting.
+
+A `method` selection uses the native fully qualified method filter and can run
+all data rows for that method. A `case` selection reuses a single native MTP UID
+already supplied for a run with one result. Reruns require verified outputs and
+a usable native selector. Reruns that match no tests report a failure.
+The JSON report size limit can also omit rerun arguments while preserving the
+test results.
+
 ## Results and process ownership
 
 The whole operation has a 120-second deadline; `--timeout` accepts 1..3600 seconds.
@@ -210,6 +225,8 @@ Native Windows console interruption and waiting-host cleanup are covered by the
 - [Test coverage](../../../tests/coverage.md#native-test-frameworks)
 
 ## Source files
+
+- [TestRerun.cs](../../../src/Fpas.Cli/Testing/TestRerun.cs)
 
 - `apps/doc-examples/contexts/`
   - [tests.fpas.txt](../../../apps/doc-examples/contexts/tests.fpas.txt)

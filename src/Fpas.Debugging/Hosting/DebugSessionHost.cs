@@ -48,7 +48,8 @@ internal sealed class DebugSessionHost : IAsyncDisposable
     {
         token.ThrowIfCancellationRequested();
         if (stdin?.Length > 1_048_576) throw new ArgumentException("Explicit target input is bounded at 1 MiB.");
-        if (stdin is not null && stdio != ProcessStdio.Capture) throw new ArgumentException("Explicit input requires captured stdin.");
+        var capturesInput = stdio is ProcessStdio.Capture or ProcessStdio.CaptureInput;
+        if (stdin is not null && !capturesInput) throw new ArgumentException("Explicit input requires captured stdin.");
         var grace = shutdownGrace ?? TimeSpan.FromSeconds(5);
         if (grace <= TimeSpan.Zero || grace > TimeSpan.FromSeconds(5)) throw new ArgumentOutOfRangeException(nameof(shutdownGrace));
         var host = new DebugSessionHost(outputLimit, retainOutputPrefix, grace);
@@ -57,7 +58,7 @@ internal sealed class DebugSessionHost : IAsyncDisposable
             using var startup = CancellationTokenSource.CreateLinkedTokenSource(token);
             startup.CancelAfter(TimeSpan.FromSeconds(30));
             host.worker = OwnedProcess.Start(launcher.Executable, launcher.Arguments(host.pipeName), cwd, stdio: stdio);
-            if (stdin is { } data) host.input = host.WriteInput(data); else if (stdio == ProcessStdio.Capture) host.worker.Input.Close();
+            if (capturesInput) host.input = host.WriteInput(stdin ?? ReadOnlyMemory<byte>.Empty);
             host.stdout = host.Capture(host.worker.Output, "stdout"); host.stderr = host.Capture(host.worker.Error, "stderr");
             var connection = host.pipe.WaitForConnectionAsync(startup.Token);
             var exited = host.worker.WaitForExit(startup.Token);
@@ -344,10 +345,11 @@ internal sealed class DebugSessionHost : IAsyncDisposable
 
     private async Task WriteInput(ReadOnlyMemory<byte> data)
     {
-        try { await worker!.Input.WriteAsync(data, lifetime.Token); await worker.Input.FlushAsync(lifetime.Token); }
+        try
+        {
+            if (!await worker!.SupplyInputAsync(data, lifetime.Token) && !stopping && !ending)
+                Failed(new("input_failure", "The target input pipe failed before input delivery completed."));
+        }
         catch (OperationCanceledException) when (lifetime.IsCancellationRequested || stopping) { }
-        catch (Exception exception) when (exception is IOException or ObjectDisposedException)
-        { if (!stopping && !ending) Failed(new("input_failure", "The target input pipe failed before input delivery completed.")); }
-        finally { worker!.Input.Close(); }
     }
 }

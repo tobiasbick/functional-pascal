@@ -11,7 +11,6 @@ internal static class FailureRunner
     internal static async Task<FailureRunResult> Run(FailureRunOptions options, string dotnet, CancellationToken cancellation)
     {
         if (options.Timeout is < 0 or > 3600) throw new ArgumentException("Use --timeout 0..3600.");
-        if (!options.CaptureOutput && !options.InheritInput) throw new ArgumentException("Closed input requires captured output.");
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
         if (options.Timeout > 0) deadline.CancelAfter(TimeSpan.FromSeconds(options.Timeout));
         var token = deadline.Token;
@@ -23,8 +22,8 @@ internal static class FailureRunner
         try
         {
             report.Toolchain = await BatchRunner.Toolchain(request.Program, token);
-            var stdio = !options.CaptureOutput ? ProcessStdio.Inherit : options.InheritInput ? ProcessStdio.CaptureOutput : ProcessStdio.Capture;
-            host = await DebugSessionHost.Start(WorkerLauncher.Current(), request.Cwd, token, retainOutputPrefix: true, stdio: stdio);
+            var stdio = options.CaptureOutput ? ProcessStdio.Capture : options.Stdin is null ? ProcessStdio.Inherit : ProcessStdio.CaptureInput;
+            host = await DebugSessionHost.Start(WorkerLauncher.Current(), request.Cwd, token, options.Stdin, retainOutputPrefix: true, stdio: stdio);
             await host.Prepare(new(dotnet, request.Program, request.Cwd, Arguments: request.Arguments), token);
             await host.Initialize(token);
             var stopped = await host.WaitForStop(token);

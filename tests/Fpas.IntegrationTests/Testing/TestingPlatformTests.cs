@@ -90,8 +90,30 @@ public sealed class TestingPlatformTests(SdkPackageFixture sdk) : IClassFixture<
         var protectedOption = await ProjectCliFixture.Cli(directory, "test", project, "--configuration", config, "--no-build", "--report", "json", "--", "--results-directory", directory.File("other"));
         Assert.Equal(2, protectedOption.ExitCode);
         File.WriteAllText(directory.File("Native/Native.fpas"), File.ReadAllText(directory.File("Native/Native.fpas")).Replace("4, 2 + 2", "5, 2 + 2", StringComparison.Ordinal));
-        var failing = await ProjectCliFixture.Cli(directory, "test", project, "--configuration", config, "--report", "json");
+        var failing = await ProjectCliFixture.Cli(directory, "test", project, "--configuration", config, "--report", "json", "--", "--filter", "FullyQualifiedName~Addition");
         Assert.Equal(1, failing.ExitCode);
         using var failure = JsonDocument.Parse(failing.Output); Assert.Equal(1, failure.RootElement.GetProperty("projects")[0].GetProperty("result").GetProperty("counts").GetProperty("failed").GetInt32());
+        var method = Assert.Single(failure.RootElement.GetProperty("projects")[0].GetProperty("reruns").EnumerateArray());
+        Assert.Equal("method", method.GetProperty("scope").GetString());
+        var repeated = await ProjectCliFixture.Cli(directory, method.GetProperty("arguments").EnumerateArray().Select(item => item.GetString()!).ToArray());
+        Assert.True(repeated.ExitCode == 1, repeated.Output + repeated.Error);
+        using (var replay = JsonDocument.Parse(repeated.Output))
+            Assert.Equal(1, replay.RootElement.GetProperty("projects")[0].GetProperty("result").GetProperty("counts").GetProperty("failed").GetInt32());
+
+        var discovery = await ProjectCliFixture.Cli(directory, "test", project, "--configuration", config, "--no-build", "--list", "--report", "json");
+        Assert.True(discovery.ExitCode == 0, discovery.Output + discovery.Error);
+        using var discoveryReport = JsonDocument.Parse(discovery.Output);
+        var uid = Assert.Single(discoveryReport.RootElement.GetProperty("projects")[0].GetProperty("discovery").EnumerateArray()).GetProperty("uid").GetString()!;
+        var selected = await ProjectCliFixture.Cli(directory, "test", project, "--configuration", config, "--no-build", "--report", "json", "--", "--filter-uid", uid);
+        Assert.True(selected.ExitCode == 1, selected.Output + selected.Error);
+        using var caseReport = JsonDocument.Parse(selected.Output);
+        var item = Assert.Single(caseReport.RootElement.GetProperty("projects")[0].GetProperty("reruns").EnumerateArray());
+        Assert.Equal("case", item.GetProperty("scope").GetString());
+        var args = item.GetProperty("arguments").EnumerateArray().Select(argument => argument.GetString()!).ToArray();
+        Assert.Equal(uid, args[Array.IndexOf(args, "--filter-uid") + 1]);
+        var exact = await ProjectCliFixture.Cli(directory, args);
+        Assert.True(exact.ExitCode == 1, exact.Output + exact.Error);
+        using var exactReport = JsonDocument.Parse(exact.Output);
+        Assert.Equal(1, exactReport.RootElement.GetProperty("projects")[0].GetProperty("result").GetProperty("counts").GetProperty("failed").GetInt32());
     }
 }

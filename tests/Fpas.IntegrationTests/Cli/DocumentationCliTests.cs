@@ -22,7 +22,7 @@ public sealed class DocumentationCliTests
             """;
         async Task<ProcessResult> Compile(params string[] options) => await ProcessRunner.RunAsync([
             TestEnvironment.Metadata("FpasCliPath"), "compile", "-", "--output", output, "--target", "library",
-            "--reference-dir", TestEnvironment.ReferenceDirectory, "--documentation", documentation, "--diagnostics", "json", .. options], source);
+            "--reference-dir", TestEnvironment.ReferenceDirectory, "--documentation", documentation, "--report", "json", .. options], source);
         var warning = await Compile(); Assert.True(warning.ExitCode == 0, warning.Output + warning.Error);
         using (var result = JsonDocument.Parse(warning.Output))
         {
@@ -50,7 +50,7 @@ public sealed class DocumentationCliTests
         File.WriteAllText(source, "// Original.\nunit Api; end unit;");
         async Task<ProcessResult> Compile(string destination) => await ProcessRunner.RunAsync([
             TestEnvironment.Metadata("FpasCliPath"), "compile", source, "--output", output, "--target", "library",
-            "--reference-dir", TestEnvironment.ReferenceDirectory, "--documentation", destination, "--diagnostics", "json"]);
+            "--reference-dir", TestEnvironment.ReferenceDirectory, "--documentation", destination, "--report", "json"]);
         var initial = await Compile(documentation); Assert.True(initial.ExitCode == 0, initial.Output + initial.Error);
         var assembly = File.ReadAllBytes(output); var pdb = File.ReadAllBytes(Path.ChangeExtension(output, ".pdb"));
         File.Delete(documentation); Directory.CreateDirectory(documentation);

@@ -47,13 +47,18 @@ publishing its own DLL, PDB, runtime configuration or XML documentation.
 Use an explicit `.fpasproj` or `.slnx`; source-level imports do not select projects.
 The selected SDK/compiler must match the CLI, and support the analysis targets.
 
-`fpas check examples/basics/units/Units.fpasproj --configuration Release --diagnostics json` produces one
+`fpas check examples/basics/units/Units.fpasproj --configuration Release --report json` produces one
 JSON document with project states (`checked`, `invalid`, `blocked`), diagnostics,
 coverage, snapshot identity and preparation side effects. Independent projects
 are checked even if another project fails.
 
 Preparation permits ordinary restore and dependency builds; those can write
 bin/obj artifacts and execute MSBuild tasks. `--no-restore` skips only restore.
+Use `--existing-inputs` to consume already prepared assets, generated sources
+and dependency outputs. It skips restore, dependency builds and preparation
+hooks. Prepare missing inputs explicitly with `fpas build`. See
+[context preparation](../../architecture/workspaces.md#context-preparation)
+for SDK resolution and evaluation behavior.
 The checked root's existing outputs and successful-build fingerprint are
 preserved. Documentation/warning policy comes from the evaluated project.
 Custom source generation uses the SDK's shared
@@ -71,7 +76,36 @@ Use `check --fix --dry-run` to preview automatic diagnostic corrections and
 `check --fix` to apply one batch and check again. JSON includes proposal/publication
 status; remaining errors still exit 1. See [automatic corrections](../tools/diagnostics.md#apply-automatic-corrections)
 for ownership, conflicts, recovery and limits. Check JSON responses are bounded
-to 4 MiB.
+to 4 MiB. Use [diagnostic filters and pagination](../tools/diagnostics.md#filter-and-page-analysis-reports)
+to focus on relevant files.
+
+### Check a draft in memory
+
+`fpas check Example.slnx --overlay draft.json --report json` checks full source
+texts for replacements and new files together. The JSON file contains up to 64
+unique entries. Paths resolve against the invocation directory. Input is bounded
+to 16 MiB and each source text to 4 MiB.
+
+```json
+[
+  {"file":"src/main.fpas","text":"program Example; uses Helper as H; begin H.Run(); end; end program;"},
+  {"file":"src/helper.fpas","project":"src/App.fpasproj","text":"unit Helper; public procedure Run(); begin end procedure; end unit;"}
+]
+```
+
+Include `project` on an entry for a new `.fpas` file. The path must be free and
+its parent directory must exist. MSBuild evaluates the prospective file against
+the current `Compile` rules and configuration. The file must have the declared
+FPAS project as its sole owner in the selected context. Keep project settings,
+imports and other evaluated items independent of the file's existence. Omit
+`project` for a replacement of an existing evaluated source.
+
+Draft analysis uses the same in-memory dependency graph as the language server.
+It checks FPAS project references against their draft metadata and uses existing
+inputs for external C# or F# dependencies. Restore and build those dependencies
+explicitly when missing. The report includes `overlayFiles` and a `snapshotId`
+that identifies the checked draft. `--overlay` and `--fix` are exclusive.
+Export the input contract with `fpas schema check-overlay-input`.
 
 ## Query checked sources
 
@@ -118,13 +152,106 @@ are deterministic and identify read, write, read_write, argument, type or namesp
 roles. The search covers analyzed FPAS projects in the explicit context; it does
 not promise unknown consumers, C#/F# source uses or runtime dispatch targets.
 Complete zero references differs from failed/incomplete analysis. The default
-limit is 100, range 1..1000; omitted results set truncated independently of coverage.
+limit is 100, range 1..1000. Use `--offset` to skip sorted references. The
+`refs` result returns `offset`, `totalCount`, `returnedCount` and `nextOffset`
+when another page exists. `truncated` means references exist outside this page,
+including earlier pages. Merge pages only
+when `snapshotId` matches.
 
 Use `--project <owning.fpasproj>` when a source is included in several compilations.
 An ambiguous selection returns candidate project paths. Selection does not narrow
-the refs search scope. Configuration, no-restore, timeout and exit codes match
-check. Query responses are bounded to 4 MiB; oversized output returns result_limit
+the refs search scope. Configuration, preparation options, timeout and exit codes
+match check. Query responses are bounded to 4 MiB; oversized output returns result_limit
 as complete JSON. Source/input changes invalidate results before publication.
+
+### Outline one file
+
+`fpas query outline src/main.fpas` returns the declarations recognized by the
+parser without loading a project. Each row contains the name, kind, name span
+and declaration span. `owner`, when present, is the UTF-16 offset of its
+parent declaration's name. Use `--limit` and `--offset` to page in source
+order. Syntax recovery returns a `partial` outline and parser diagnostics.
+The `snapshotId` identifies the captured file contents.
+
+### Completion and signature help
+
+`fpas query complete CONTEXT --file FILE --line N --column N` returns
+compiler candidates and their exact replacement range under `result.complete`.
+`fpas query signature` takes the same options and reports matching signatures
+under `result.signature`. `activeSignature` and `activeParameter` are
+zero-based when present. Both operations accept incomplete source and work
+in a checked batch. The result can be empty when the compiler cannot recover
+a candidate at the cursor. Incomplete results carry `incomplete` when the
+compiler knows that further edits can change the answer.
+
+### Require a snapshot
+
+Pass `--expected-snapshot ID` to checked queries or refactoring plan
+preparation when reusing positions or page offsets. Use the `snapshotId` from
+the earlier operation with the same context, configuration and preparation
+mode. With a draft, pass the same `--overlay` to the batch. A mismatch returns
+exit 1 with `inputs_changed`, `expectedSnapshotId` and `actualSnapshotId` before
+resolving source positions or writing a plan. Reload the query that produced the
+positions before retrying. Applying a saved refactoring plan checks its embedded
+snapshot.
+
+### Batch queries
+
+Send 1 to 64 query objects as a UTF-8 JSON array on stdin, up to 256 KiB.
+Set `operation` to one of the individual query names. Use `file`, `line` and
+`column` for position queries or `name` for `find`. Optional fields follow the
+same rules as their CLI flags. Use a `kinds` array for repeatable `--kind`.
+
+```sh
+fpas query batch examples/basics/units/Units.fpasproj --existing-inputs <<'JSON'
+[
+  {"operation":"find","name":"SumTo","match":"exact","kinds":["routine"]},
+  {"operation":"refs","file":"examples/basics/units/lib/calculations.fpas","line":10,"column":17,"limit":20}
+]
+JSON
+```
+
+Pass `--overlay draft.json` to query the same
+[replacement texts](#check-a-draft-in-memory) accepted by `check`. The request
+array still comes from stdin. The overlay can contain new sources and replacements.
+The report carries `overlayFiles` and the checked
+draft's `snapshotId`, which can also come from an earlier draft check.
+
+```sh
+fpas query batch App.slnx --overlay draft.json < queries.json
+```
+
+Use `from` on an `inspect` or `refs` request to select a declaration from an
+earlier `find` entry. The index is zero-based and replaces `file`, `line`,
+`column` and `project` on that request. The follow-up uses the exact symbol
+from the shared snapshot.
+
+```json
+[
+  {"operation":"find","name":"SumTo","match":"exact","kinds":["routine"]},
+  {"operation":"inspect","from":0},
+  {"operation":"refs","from":0,"limit":20}
+]
+```
+
+A chained request requires complete coverage for the earlier search and one
+returned declaration in total. An ambiguous result returns `ambiguous_symbol`
+on the dependent entry with `candidateCount` and `candidates` from the earlier
+page. An empty or failed search blocks only entries that depend on it.
+To pick an explicit prior hit, use its `symbol` and `project` together with the
+command's `--expected-snapshot`. These fields replace `from` and coordinates.
+
+The batch uses one analyzed context and verifies inputs before publishing.
+`snapshotId`, diagnostics and coverage belong to the entire batch. Indices in
+`results` match the input array. An entry contains its operation when readable,
+status and typed result or error. Exit 0 means the batch completed, including
+when individual entries fail. A batch with only invalid entries has no snapshot
+and skips workspace preparation. Invalid JSON or an invalid batch envelope exits 2.
+Context failures and cancellation follow the query contract. When the response
+budget is reached, individual entries report `result_limit` and independent
+answers that fit remain available. Shared diagnostics use the same filters and
+pagination as check. Export the stdin schema with `fpas schema query-batch-input` and the
+response schema with `fpas schema query-batch`.
 
 ### Find declarations
 
@@ -150,9 +277,21 @@ There is no position `selection` in a find response.
 `totalCount` counts filtered matches before paging; `returnedCount`, `offset`
 and optional `nextOffset` describe the page. Empty/past-end pages are `ok`.
 `truncated` means matches exist outside this page, including earlier pages.
-Combine pages only with equal `snapshotId`; restart when inputs change. Symbol
-IDs are snapshot-local and are not persistent selectors. Use a match's
-file/line/column with the position queries.
+Combine pages only with equal `snapshotId` and restart when inputs change.
+
+### Reuse a found symbol
+
+Pass the selected match's `symbol` and `project` and the report's `snapshotId`
+to `inspect` or `refs`. The selected overload or linked owner stays exact.
+
+```sh
+fpas query refs App.slnx --symbol "$SYMBOL" --project "$PROJECT" --expected-snapshot "$SNAPSHOT"
+```
+
+Use the same context, configuration and preparation mode. A changed snapshot
+requires a fresh search. An unknown ID or project is an argument error. Symbol
+selection replaces `--file`, `--line` and `--column`. It also works in supported
+[refactorings](../tools/refactoring.md#validation-and-plans).
 
 ### Inspect a declaration
 
@@ -307,7 +446,7 @@ reference assembly directory as described by the
 [development workflow](../../build/development.md#direct-compiler-invocation).
 
 ```sh
-dotnet src/Fpas.Cli/bin/Debug/net10.0/Fpas.Cli.dll compile examples/basics/hello/main.fpas --output .temp-data/hello/Hello.dll --reference-dir "$FPAS_REFERENCE_DIR" --diagnostics json
+dotnet src/Fpas.Cli/bin/Debug/net10.0/Fpas.Cli.dll compile examples/basics/hello/main.fpas --output .temp-data/hello/Hello.dll --reference-dir "$FPAS_REFERENCE_DIR" --report json
 dotnet .temp-data/hello/Hello.dll
 ```
 
@@ -334,7 +473,7 @@ does not bind whichever assemblies happen to be loaded in its process.
 | --optimize | Allow JIT optimization, independently of portable symbols |
 | --generate-documentation | Emit a conventional XML sidecar |
 | --documentation path.xml | Select an explicit XML documentation output |
-| --diagnostics json | Emit a structured success/output/diagnostics result |
+| --report json | Emit a structured success/output/diagnostics result |
 | --response-file path.json | Read a JSON string array of compile arguments |
 | `--key-file path.snk`, `--public-sign`, `--delay-sign` | Select [strong-name signing](../../build/publishing.md#signing) |
 | Warning policy options | Promote, exclude, or suppress documentation warnings |
@@ -376,9 +515,17 @@ project SDK for normal applications.
 <summary>Browse 21 source files</summary>
 
 - `src/Fpas.Cli/Analysis/`
+  - [BoundedFile.cs](../../../src/Fpas.Cli/Analysis/BoundedFile.cs)
+  - [SnapshotGuard.cs](../../../src/Fpas.Cli/Analysis/SnapshotGuard.cs)
+  - [AnalysisOverlay.cs](../../../src/Fpas.Cli/Analysis/AnalysisOverlay.cs)
+  - [OutlineCommand.cs](../../../src/Fpas.Cli/Analysis/OutlineCommand.cs)
+  - [OutlineCliTests.cs](../../../tests/Fpas.IntegrationTests/Workspaces/OutlineCliTests.cs)
   - [CheckCommand.cs](../../../src/Fpas.Cli/Analysis/CheckCommand.cs)
   - [CheckResult.cs](../../../src/Fpas.Cli/Analysis/CheckResult.cs)
   - [QueryCommand.cs](../../../src/Fpas.Cli/Analysis/QueryCommand.cs)
+  - [QueryBatchCommand.cs](../../../src/Fpas.Cli/Analysis/QueryBatchCommand.cs)
+  - [QueryRequest.cs](../../../src/Fpas.Cli/Analysis/QueryRequest.cs)
+  - [SourceSymbolOptions.cs](../../../src/Fpas.Cli/Analysis/SourceSymbolOptions.cs)
   - [QueryResult.cs](../../../src/Fpas.Cli/Analysis/QueryResult.cs)
 - `src/Fpas.Cli/`
   - [CliApplication.cs](../../../src/Fpas.Cli/CliApplication.cs)

@@ -223,6 +223,141 @@ public sealed class QueryCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
         Assert.False(File.Exists(project.File("Game/bin/Debug/net10.0/Game.dll")));
     }
 
+    [Fact]
+    public async Task Batch_chains_unique_declarations_and_keeps_other_results_after_an_ambiguous_match()
+    {
+        using var project = sdk.CreateProject();
+        const string context = "Game/Game.fpasproj";
+        const string file = "Game/Bridge.fpas";
+        const string source = """
+            unit Numbers;
+            public function Seed(): int; begin return 1; end function;
+            public function SeedOther(): int; begin return 2; end function;
+            public function Work(): int; begin return Seed() + Seed(); end function;
+            end unit;
+            """;
+        File.WriteAllText(project.File(file), source);
+        var prepared = await Query(project, "find", context, "--name", "Seed");
+        Assert.True(prepared.ExitCode == 0, prepared.Output + prepared.Error);
+        const string input = """
+            [
+              {"operation":"find","name":"Seed","match":"exact"},
+              {"operation":"refs","from":0,"limit":1},
+              {"operation":"type","file":"Game/Bridge.fpas","line":"bad","column":1},
+              {"operation":"find","name":"Seed","match":"prefix","limit":1},
+              {"operation":"inspect","from":3},
+              {"operation":"inspect","from":0},
+              {"operation":"refs","from":0,"limit":1,"offset":1},
+              {"operation":"refs","from":7}
+            ]
+            """;
+        var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "query", "batch", context, "--existing-inputs"], input,
+            workingDirectory: project.Path, timeLimit: TimeSpan.FromMinutes(2));
+        Assert.True(result.ExitCode == 0, result.Output + result.Error);
+        Assert.Empty(result.Error);
+        using var json = JsonDocument.Parse(result.Output);
+        var body = json.RootElement;
+        Assert.Equal(1, body.GetProperty("schemaVersion").GetInt32());
+        Assert.False(string.IsNullOrEmpty(body.GetProperty("snapshotId").GetString()));
+        Assert.True(body.GetProperty("coverage").GetProperty("complete").GetBoolean());
+        Assert.False(body.GetProperty("preparation").GetProperty("restorePerformed").GetBoolean());
+        Assert.False(body.GetProperty("preparation").GetProperty("dependencyBuildsAllowed").GetBoolean());
+        var items = body.GetProperty("results");
+        Assert.Equal(new[] { "find", "refs", "type", "find", "inspect", "inspect", "refs", "refs" },
+            items.EnumerateArray().Select(item => item.GetProperty("operation").GetString()));
+        Assert.Equal("invalid_argument", items[2].GetProperty("error").GetProperty("code").GetString());
+        Assert.Equal("invalid_argument", items[7].GetProperty("error").GetProperty("code").GetString());
+        Assert.Equal("ambiguous_symbol", items[4].GetProperty("error").GetProperty("code").GetString());
+        Assert.Equal(2, items[4].GetProperty("candidateCount").GetInt32());
+        Assert.Single(items[4].GetProperty("candidates").EnumerateArray());
+        var symbol = items[0].GetProperty("result").GetProperty("find").GetProperty("matches")[0].GetProperty("symbol").GetString();
+        var inspection = items[5].GetProperty("result").GetProperty("inspect");
+        Assert.Equal(symbol, inspection.GetProperty("definition").GetProperty("symbol").GetProperty("id").GetString());
+        var first = items[1].GetProperty("result").GetProperty("refs");
+        var second = items[6].GetProperty("result").GetProperty("refs");
+        Assert.Equal(symbol, first.GetProperty("definition").GetProperty("symbol").GetProperty("id").GetString());
+        Assert.Equal(2, first.GetProperty("totalCount").GetInt32());
+        Assert.Equal(1, first.GetProperty("nextOffset").GetInt32());
+        Assert.Equal(1, second.GetProperty("offset").GetInt32());
+        Assert.False(second.TryGetProperty("nextOffset", out _));
+        Assert.True(items[1].GetProperty("truncated").GetBoolean());
+        Assert.True(items[6].GetProperty("truncated").GetBoolean());
+        Assert.NotEqual(first.GetProperty("references")[0].GetProperty("span").GetProperty("offset").GetInt32(),
+            second.GetProperty("references")[0].GetProperty("span").GetProperty("offset").GetInt32());
+    }
+
+    [Fact]
+    public async Task Editor_queries_return_candidates_and_active_parameters_for_incomplete_source()
+    {
+        using var project = sdk.CreateProject();
+        const string context = "Game/Game.fpasproj";
+        const string file = "Game/Bridge.fpas";
+        const string member = """
+            unit Demo.Bridge;
+            public type Box = record public Value: int; end record;
+            public function Read(Item: Box): int;
+            begin
+              return Item.Va;
+            end function;
+            end unit;
+            """;
+        const string call = """
+            unit Demo.Bridge;
+            public function Echo<T>(Value: T): T; begin return Value; end function;
+            public function Read(): int;
+            begin
+              return Echo(Value := 42;
+            end function;
+            end unit;
+            """;
+        File.WriteAllText(project.File(file), member);
+        var completion = SourcePosition.Select(project, file, member, ";\nend function;");
+        var completed = await Query(project, "complete", context, "--file", file, "--line", completion.Line.ToString(), "--column", completion.Column.ToString());
+        Assert.True(completed.ExitCode == 0, completed.Output + completed.Error);
+        using var completionJson = JsonDocument.Parse(completed.Output);
+        var matches = completionJson.RootElement.GetProperty("result").GetProperty("complete");
+        Assert.True(matches.GetProperty("items").EnumerateArray().Any(item => item.GetProperty("name").GetString() == "Value"), matches.GetRawText());
+        Assert.Equal(2, matches.GetProperty("replacement").GetProperty("length").GetInt32());
+
+        File.WriteAllText(project.File(file), call);
+        var signature = SourcePosition.Select(project, file, call, ";\nend function;");
+        var input = JsonSerializer.Serialize(new[] { new { operation = "signature", file, line = signature.Line, column = signature.Column } });
+        var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "query", "batch", context, "--existing-inputs", "--diagnostic-limit", "0"],
+            input, workingDirectory: project.Path, timeLimit: TimeSpan.FromMinutes(2));
+        Assert.True(result.ExitCode == 0, result.Output + result.Error);
+        using var json = JsonDocument.Parse(result.Output);
+        var body = json.RootElement;
+        Assert.Empty(body.GetProperty("diagnostics").EnumerateArray());
+        Assert.True(body.GetProperty("diagnosticPage").GetProperty("totalCount").GetInt32() > 0);
+        Assert.False(body.GetProperty("coverage").GetProperty("complete").GetBoolean());
+        var signatures = body.GetProperty("results")[0].GetProperty("result").GetProperty("signature");
+        var active = signatures.GetProperty("items")[0];
+        Assert.Equal(0, active.GetProperty("activeParameter").GetInt32());
+        Assert.Contains("Echo<int>", active.GetProperty("label").GetString());
+    }
+
+    [Fact]
+    public async Task Oversized_batch_entries_leave_other_results_available()
+    {
+        using var project = sdk.CreateProject();
+        File.WriteAllText(project.File("Game/Bridge.fpas"), "unit Demo.Bridge;\n// " + new string('<', 13_000) +
+            "\npublic function Seed(): int; begin return 1; end function;\nend unit;");
+        var input = JsonSerializer.Serialize(new object[] { new { operation = "find", name = "Seed" } }
+            .Concat(Enumerable.Repeat<object>(new { operation = "inspect", from = 0 }, 62))
+            .Append(new { operation = "find", name = "Other" }));
+        var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "query", "batch", "Game/Game.fpasproj"], input,
+            workingDirectory: project.Path, timeLimit: TimeSpan.FromMinutes(2));
+        Assert.True(result.ExitCode == 0, result.Error);
+        using var json = JsonDocument.Parse(result.Output);
+        var items = json.RootElement.GetProperty("results");
+        Assert.Equal(64, items.GetArrayLength());
+        Assert.Equal("ok", items[1].GetProperty("status").GetString());
+        Assert.Contains(items.EnumerateArray(), item => item.TryGetProperty("error", out var error) &&
+            error.GetProperty("code").GetString() == "result_limit");
+        Assert.Equal("ok", items[63].GetProperty("status").GetString());
+        Assert.InRange(System.Text.Encoding.UTF8.GetByteCount(result.Output), 1, (4 * 1024 * 1024) + 2);
+    }
+
     private static Task<ProcessResult> Query(TemporaryDirectory project, params string[] arguments)
         => ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "query", .. arguments], workingDirectory: project.Path, timeLimit: TimeSpan.FromMinutes(3));
 }

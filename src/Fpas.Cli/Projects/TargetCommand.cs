@@ -40,6 +40,7 @@ internal sealed class TargetCommand
         {
             path = Path.GetFullPath(result.GetValue(context)!);
             var target = await ProjectDriver.SelectExecutableAsync(path, result.GetValue(configuration)!, result.GetValue(project), deadline.Token);
+            if (target.HasRuntimeFiles()) target = target with { OutputIdentity = OutputFingerprint.Compute(target.Assembly, deadline.Token) };
             new ProjectReport("target", true, "ok", path) { Target = target }.Write(json: true);
             return 0;
         }

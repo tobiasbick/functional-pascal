@@ -69,7 +69,7 @@ public sealed class RectangularInteropTests
         var library = directory.File("Shapes.dll"); File.WriteAllBytes(library, Library(shape));
         var assembly = directory.File("Consumer.dll");
         var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "compile", "-", "--output", assembly,
-            "--reference-dir", TestEnvironment.ReferenceDirectory, "--reference", library, "--diagnostics", "json"], """
+            "--reference-dir", TestEnvironment.ReferenceDirectory, "--reference", library, "--report", "json"], """
             program Consumer;
             uses ShapeFixture.Producer as Producer, System.Console as Console, System as Sys;
             begin

@@ -17,7 +17,11 @@ public sealed partial class SourceQuery
     public SourceQueryResult Inspect(SourceSelection selection, int limit = 20, CancellationToken cancellationToken = default, bool includeBody = false)
     {
         if (limit is < 1 or > 100) throw new ContextFailure("invalid_argument", "Related declaration limit must be 1..100.");
-        var selected = Execute("definition", selection, cancellationToken: cancellationToken);
+        return Inspect(selection, Execute("definition", selection, cancellationToken: cancellationToken), limit, cancellationToken, includeBody);
+    }
+
+    private SourceQueryResult Inspect(SourceSelection selection, SourceQueryResult selected, int limit, CancellationToken cancellationToken, bool includeBody)
+    {
         if (selected.Definition is not { } definition) return selected;
         var project = definition.Project ?? selected.Selection!.Project;
         var snapshot = projects[project].Snapshot;

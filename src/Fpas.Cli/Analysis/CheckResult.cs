@@ -11,25 +11,44 @@ namespace Fpas.Cli.Analysis;
 internal sealed record AnalysisDiagnostic : CompilerDiagnostic
 {
     public string Project { get; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public bool DetailsOmitted { get; init; }
     internal AnalysisDiagnostic(string project, CompilerDiagnostic diagnostic) : base(diagnostic) => Project = project;
 }
-internal sealed record AnalysisError(string Code, string Message, bool OutputTruncated = false, IReadOnlyList<string>? Candidates = null);
+internal sealed record AnalysisError(string Code, string Message, bool OutputTruncated = false, IReadOnlyList<string>? Candidates = null,
+    string? Project = null, string? InputPath = null, string? NextAction = null)
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? ExpectedSnapshotId { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? ActualSnapshotId { get; init; }
+
+    internal static AnalysisError From(ContextFailure failure)
+        => new(failure.Code, failure.Message, failure.OutputTruncated, failure.Candidates, failure.Project, failure.InputPath, failure.NextAction)
+        { ExpectedSnapshotId = failure.ExpectedSnapshotId, ActualSnapshotId = failure.ActualSnapshotId };
+}
 internal sealed record AnalysisCoverage(bool Complete, IReadOnlyList<string> Requested, IReadOnlyList<string> Analyzed, IReadOnlyList<string> Blocked, IReadOnlyList<string>? Searched = null,
     IReadOnlyList<ProjectSemanticCoverage>? Semantics = null);
 internal sealed record Preparation(bool RestorePerformed, bool DependencyBuildsAllowed, IReadOnlyList<PreparationOutput> DependencyOutputs, IReadOnlyList<ContextIssue> Issues);
-internal sealed record CheckedProject(string Project, string? Configuration, string State, IReadOnlyList<AnalysisDiagnostic> Diagnostics);
+internal sealed record CheckedProject(string Project, string? Configuration, string State, int DiagnosticCount);
 internal sealed record CheckResult(bool Success, string Status, string? Context, string Configuration, string? SnapshotId,
     IReadOnlyList<CheckedProject> Projects, IReadOnlyList<AnalysisDiagnostic> Diagnostics, AnalysisCoverage Coverage, Preparation? Preparation, AnalysisError? Error)
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public DiagnosticPage? DiagnosticPage { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public IReadOnlyList<string>? OverlayFiles { get; init; }
     [JsonIgnore] internal IReadOnlyList<CompilationSource> Sources { get; init; } = [];
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public CheckFixes? Fixes { get; init; }
     internal static CheckResult From(WorkspaceAnalysis analysis)
     {
         var context = analysis.Context;
         var projects = analysis.Projects.Select(project => new CheckedProject(project.Project, project.Configuration, project.State,
-            (project.Result?.Diagnostics ?? []).Select(diagnostic => new AnalysisDiagnostic(project.Project, diagnostic)).ToArray())).ToArray();
+            project.Result?.Diagnostics.Count ?? 0)).ToArray();
+        var diagnostics = analysis.Projects.SelectMany(project => (project.Result?.Diagnostics ?? [])
+            .Select(diagnostic => new AnalysisDiagnostic(project.Project, diagnostic)))
+            .OrderBy(diagnostic => diagnostic.Project, StringComparer.Ordinal)
+            .ThenBy(diagnostic => diagnostic.Location?.Path ?? diagnostic.InputPath, StringComparer.Ordinal)
+            .ThenBy(diagnostic => diagnostic.Location?.Offset)
+            .ThenBy(diagnostic => diagnostic.Code, StringComparer.Ordinal)
+            .ThenBy(diagnostic => diagnostic.Message, StringComparer.Ordinal).ToArray();
         return new(analysis.Success, analysis.Success ? "ok" : "failed", context.Path, context.Configuration,
-            context.SnapshotId, projects, projects.SelectMany(project => project.Diagnostics).ToArray(),
+            context.SnapshotId, projects, diagnostics,
             new(analysis.IsComplete, context.RequestedProjects, projects.Where(project => project.State != "blocked").Select(project => project.Project).ToArray(),
                 projects.Where(project => project.State == "blocked").Select(project => project.Project).ToArray(), Semantics: analysis.SemanticCoverage.Projects),
             new(context.RestorePerformed, context.DependencyBuildsAllowed, context.DependencyOutputs, context.Issues),
@@ -39,6 +58,12 @@ internal sealed record CheckResult(bool Success, string Status, string? Context,
 
     internal static CheckResult Failure(string? context, string configuration, string code, string message, bool truncated = false, IReadOnlyList<string>? candidates = null)
         => new(false, code == "cancelled" ? "cancelled" : "failed", context, configuration, null, [], [], new(false, [], [], []), null, new(code, message, truncated, candidates));
+
+    internal CheckResult PageDiagnostics(DiagnosticSelection selection)
+    {
+        var (diagnostics, page) = selection.Select(Diagnostics);
+        return this with { Diagnostics = diagnostics, DiagnosticPage = page };
+    }
 
     internal byte[] JsonBytes() => JsonSerializer.SerializeToUtf8Bytes(this, CheckJson.Default.CheckResult);
     internal bool Report(bool json)
@@ -51,6 +76,8 @@ internal sealed record CheckResult(bool Success, string Status, string? Context,
             using var output = Console.OpenStandardOutput(); output.Write(bytes); Console.WriteLine(); return !limited;
         }
         DiagnosticRenderer.Write(Diagnostics, Sources);
+        if (DiagnosticPage is { } page && page.ReturnedCount < page.TotalCount)
+            Console.Error.WriteLine($"Showing {page.ReturnedCount} of {page.TotalCount} diagnostics. {page.MatchedCount} match the filters.");
         foreach (var issue in Preparation?.Issues ?? []) Console.Error.WriteLine($"{issue.Project}: {issue.Code}: {issue.Message}");
         if (Error is not null) Console.Error.WriteLine(Error.Code + ": " + Error.Message);
         Fixes?.Write();
@@ -62,4 +89,5 @@ internal sealed record CheckResult(bool Success, string Status, string? Context,
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     Converters = [typeof(SeverityConverter), typeof(ApplicabilityConverter)])]
 [JsonSerializable(typeof(CheckResult))]
+[JsonSerializable(typeof(AnalysisDiagnostic))]
 internal partial class CheckJson : JsonSerializerContext;

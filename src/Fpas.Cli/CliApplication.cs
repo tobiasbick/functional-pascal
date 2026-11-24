@@ -30,6 +30,7 @@ internal static class CliApplication
         var query = new QueryCommand();
         var init = new InitCommand(); var build = new ExecutionCommand(run: false); var run = new ExecutionCommand(run: true, editorControlled);
         var target = new TargetCommand();
+        var workspace = new WorkspaceCommand();
         var fmt = new FormatCommand();
         var test = new TestCommand();
         var doc = new DocCommand();
@@ -40,7 +41,6 @@ internal static class CliApplication
         var publish = new PublishCommand();
         var clean = new MaintenanceCommand("clean"); var restore = new MaintenanceCommand("restore");
         var profile = new Profiling.ProfileCommand(); var terminal = new Terminal.TerminalCommand();
-        var schema = new Reporting.SchemaCommand();
         var diagnose = new DiagnoseCommand();
         var root = new Command("fpas", """
             FPAS compiler, project analysis, language server and agent debugger for .NET
@@ -62,6 +62,8 @@ internal static class CliApplication
 
               fpas target examples/basics/hello/Hello.fpasproj
 
+              fpas workspace Example.slnx
+
               fpas fmt --check examples
 
               fpas test Tests/Tests.fpasproj
@@ -70,7 +72,7 @@ internal static class CliApplication
 
               fpas refactor --help
 
-              fpas env --json
+              fpas env --report json
 
               fpas sdk export ./feed
 
@@ -90,11 +92,13 @@ internal static class CliApplication
 
               fpas diagnose --help
             """);
+        var schema = new Reporting.SchemaCommand(root);
         root.Options.Add(new HelpOption()); root.Options.Add(new VersionOption());
         root.Subcommands.Add(compile.Command); root.Subcommands.Add(debug.Command); root.Subcommands.Add(check.Command);
         root.Subcommands.Add(query.Command);
         root.Subcommands.Add(init.Command); root.Subcommands.Add(build.Command); root.Subcommands.Add(run.Command);
         root.Subcommands.Add(target.Command);
+        root.Subcommands.Add(workspace.Command);
         root.Subcommands.Add(fmt.Command);
         root.Subcommands.Add(test.Command);
         root.Subcommands.Add(doc.Command);
@@ -122,8 +126,9 @@ internal static class CliApplication
         MaintenanceCommand? maintenance = null;
         ParseResult? maintenanceResult = null;
         var profileSelected = false; var terminalSelected = false; var schemaSelected = false;
-        ParseResult? diagnoseResult = null;
+        var diagnoseSelected = false;
         var targetSelected = false;
+        ParseResult? workspaceResult = null;
         ExecutionCommand? execution = null;
         try
         {
@@ -142,10 +147,11 @@ internal static class CliApplication
             else if (parsed.CommandResult.Command == clean.Command || parsed.CommandResult.Command == restore.Command)
             { maintenance = parsed.CommandResult.Command == clean.Command ? clean : restore; maintenanceResult = parsed; }
             else if (profile.Owns(parsed.CommandResult.Command)) { profileSelected = true; profile.Validate(parsed, args); }
-            else if (diagnose.Owns(parsed.CommandResult.Command)) { diagnoseResult = parsed; diagnose.Validate(parsed, args); }
+            else if (diagnose.Owns(parsed.CommandResult.Command)) { diagnoseSelected = true; }
             else if (terminal.Owns(parsed.CommandResult.Command)) { terminalSelected = true; }
             else if (parsed.CommandResult.Command == schema.Command) { schemaSelected = true; }
             else if (parsed.CommandResult.Command == target.Command) { targetSelected = true; }
+            else if (parsed.CommandResult.Command == workspace.Command) { workspaceResult = parsed; }
             else if (parsed.CommandResult.Command == publish.Command) { help = "fpas publish --help"; publishResult = parsed; }
             else if (parsed.CommandResult.Command == debug.Command) { help = "fpas debug --help"; debugResult = parsed; debug.Validate(parsed, args); }
             else if (parsed.CommandResult.Command == lsp.Command) { help = "fpas lsp --help"; lspSelected = true; }
@@ -163,7 +169,7 @@ internal static class CliApplication
                 projectResult = parsed; help = "fpas " + execution.Command.Name + " --help";
                 execution.Validate(parsed, args);
             }
-            if (parsed.Errors.Count > 0) throw new ArgumentException(string.Join(" ", parsed.Errors.Select(error => error.Message)));
+            if (parsed.Errors.Count > 0) throw new ArgumentException(CommandArguments.ErrorMessage(parsed));
             if (parsed.Action is HelpAction helpAction) return await CliHelp.WriteAsync(parsed, helpAction);
             return await parsed.InvokeAsync(new InvocationConfiguration { EnableDefaultExceptionHandler = false }, cancellationToken);
         }
@@ -171,9 +177,10 @@ internal static class CliApplication
         {
             if (maintenanceResult is not null) { maintenance!.ArgumentError(maintenanceResult, exception.Message); return 2; }
             if (profileSelected) return profile.ArgumentError(exception.Message);
-            if (diagnoseResult is not null) return await diagnose.ArgumentError(diagnoseResult, exception.Message);
+            if (diagnoseSelected) return DiagnoseCommand.ArgumentError(exception.Message);
             if (terminalSelected) return terminal.ArgumentError(exception.Message);
             if (schemaSelected) return Reporting.OperationReport.Fail("schema", "invalid_argument", exception.Message + " See fpas schema --help.", 2);
+            if (workspaceResult is not null) return workspace.ArgumentError(workspaceResult, exception.Message);
             if (targetSelected) return TargetCommand.Fail(null, "invalid_argument", exception.Message, 2);
             if (publishResult is not null) { publish.ArgumentError(publishResult, exception.Message); return 2; }
             if (lspSelected) { LspCommand.ArgumentError(exception.Message); return 2; }

@@ -122,7 +122,7 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
             }
             Directory.CreateDirectory(Path.GetDirectoryName(cache)!);
             var arguments = new List<string>(sources);
-            arguments.AddRange(["--output", output, "--target", OutputType == "Library" ? "library" : "exe", "--diagnostics", "json"]);
+            arguments.AddRange(["--output", output, "--target", OutputType == "Library" ? "library" : "exe", "--report", "json"]);
             arguments.AddRange(["--debug", DebugType]);
             if (SigningKey.Length != 0) arguments.AddRange(["--key-file", SigningKey]);
             if (PublicSign) arguments.Add("--public-sign");

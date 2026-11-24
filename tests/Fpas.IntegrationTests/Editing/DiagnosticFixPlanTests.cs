@@ -120,6 +120,27 @@ public sealed class DiagnosticFixPlanTests
     }
 
     [Fact]
+    public async Task A_draft_verification_failure_rolls_back_creations_and_replacements()
+    {
+        using var directory = new TemporaryDirectory();
+        var original = directory.File("original.fpas");
+        var added = directory.File("added.fpas");
+        File.WriteAllText(original, "before");
+        var rejected = await Assert.ThrowsAsync<ContextFailure>(() => SourcePublication.ApplyAsync(
+            [new(original, "before"u8.ToArray(), "after"u8.ToArray()), new(added, null, "created"u8.ToArray())],
+            verifyPublished: _ =>
+            {
+                Assert.Equal("after", File.ReadAllText(original));
+                Assert.Equal("created", File.ReadAllText(added));
+                throw new ContextFailure("inputs_changed", "Evaluated ownership changed.");
+            }));
+        Assert.Equal("inputs_changed", rejected.Code);
+        Assert.Equal("before", File.ReadAllText(original));
+        Assert.False(File.Exists(added));
+        Assert.Empty(Directory.GetFiles(directory.Path, ".fpas-edit-*"));
+    }
+
+    [Fact]
     public async Task Failed_staging_cleanup_reports_actual_written_files_and_retained_paths()
     {
         using var directory = new TemporaryDirectory(); var path = directory.File("source.fpas"); File.WriteAllText(path, "integer");

@@ -21,7 +21,7 @@ public sealed class DiagnosticWorkspaceTests(SdkPackageFixture sdk) : IClassFixt
             end unit;
             """);
         var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "check",
-            project.File("Game/Game.fpasproj"), "--diagnostics", "json"], timeLimit: TimeSpan.FromMinutes(2));
+            project.File("Game/Game.fpasproj"), "--report", "json"], timeLimit: TimeSpan.FromMinutes(2));
         Assert.Equal(1, result.ExitCode);
         Assert.Empty(result.Error);
         using var json = JsonDocument.Parse(result.Output);
@@ -58,7 +58,7 @@ public sealed class DiagnosticWorkspaceTests(SdkPackageFixture sdk) : IClassFixt
             """;
         File.WriteAllText(source, text);
         var check = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "check",
-            project.File("Game/Game.fpasproj"), "--diagnostics", "json"], timeLimit: TimeSpan.FromMinutes(3));
+            project.File("Game/Game.fpasproj"), "--report", "json"], timeLimit: TimeSpan.FromMinutes(3));
         Assert.Equal(1, check.ExitCode);
         Assert.Empty(check.Error);
         using var json = JsonDocument.Parse(check.Output);
@@ -77,7 +77,7 @@ public sealed class DiagnosticWorkspaceTests(SdkPackageFixture sdk) : IClassFixt
         File.WriteAllText(project.File("Game/Bridge.fpas"), "unit Demo.Bridge; public function Message(Value: string): string; begin const Count: integer := 1; return Value; end function; end unit;");
         var cli = TestEnvironment.Metadata("FpasCliPath");
         Task<ProcessResult> Run(params string[] arguments) => ProcessRunner.RunAsync([cli, .. arguments], timeLimit: TimeSpan.FromMinutes(3));
-        var check = await Run("check", project.File("Game/Game.fpasproj"), "--diagnostics", "json");
+        var check = await Run("check", project.File("Game/Game.fpasproj"), "--report", "json");
         Assert.Equal(1, check.ExitCode); Assert.Equal("", check.Error);
         using var checkedJson = JsonDocument.Parse(check.Output);
         var diagnostic = Assert.Single(checkedJson.RootElement.GetProperty("diagnostics").EnumerateArray());

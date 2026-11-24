@@ -171,7 +171,7 @@ public sealed class CompilerCliTests
     [Fact]
     public async Task Invalid_arguments_have_a_distinct_exit_code_and_JSON_result()
     {
-        var result = await ProcessRunner.RunAsync([Cli, "compile", "--diagnostics", "json"]);
+        var result = await ProcessRunner.RunAsync([Cli, "compile", "--report", "json"]);
         Assert.Equal(2, result.ExitCode);
         using var report = JsonDocument.Parse(result.Output);
         Assert.False(report.RootElement.GetProperty("success").GetBoolean());
@@ -180,7 +180,7 @@ public sealed class CompilerCliTests
 
     private static Task<ProcessResult> CompileAsync(string source, string output, string? input = null)
         => ProcessRunner.RunAsync([Cli, "compile", source, "--output", output,
-            "--reference-dir", TestEnvironment.ReferenceDirectory, "--diagnostics", "json"], input);
+            "--reference-dir", TestEnvironment.ReferenceDirectory, "--report", "json"], input);
 
     [Fact]
     public async Task Input_cannot_be_overwritten_by_the_runtime_configuration()

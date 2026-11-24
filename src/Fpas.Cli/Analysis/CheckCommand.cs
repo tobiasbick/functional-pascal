@@ -9,13 +9,19 @@ namespace Fpas.Cli.Analysis;
 internal sealed class CheckCommand
 {
     private readonly ContextCommandOptions options = new();
-    private readonly Option<string> diagnostics = new("--diagnostics") { Description = "Write one JSON result to stdout." };
+    private readonly DiagnosticPageOptions diagnosticOptions = new();
+    private readonly Option<string> reportFormat = new("--report") { Description = "Write one JSON result to stdout." };
+    private readonly Option<string> overlay = AnalysisOverlay.FileOption();
+    private readonly Option<string> expectedSnapshot = SnapshotGuard.CreateOption();
+    private readonly Option<string[]> fixIds = new("--fix-id") { Description = "Select one automatic correction by its preview ID. Repeat for multiple corrections.",
+        Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false };
     private readonly Option<bool> fix = new("--fix") { Description = "Apply one batch of automatic diagnostic corrections, then reload and check again." };
     private readonly Option<bool> dryRun = new("--dry-run") { Description = "With --fix, show proposed edits without changing source files." };
     internal Command Command { get; } = new("check", """
         Check an FPAS project or solution without emitting its own outputs.
         Uses evaluated project inputs. Preparation may restore packages and build dependencies.
         Existing root outputs are preserved.
+        --overlay checks a draft with in-memory source inputs.
         --fix applies automatic proposals only; --fix --dry-run previews them.
         Refuses conflicting/stale corrections. Remaining errors still return exit 1.
         Exit codes: 0 success/help, 1 analysis/setup failure, 2 invalid arguments, 130 cancellation.
@@ -23,43 +29,66 @@ internal sealed class CheckCommand
         Examples:
           fpas check examples/numerics/mandelbrot/Mandelbrot.fpasproj
 
-          fpas check examples/numerics/mandelbrot/Mandelbrot.fpasproj --configuration Release --diagnostics json
+          fpas check examples/numerics/mandelbrot/Mandelbrot.fpasproj --configuration Release --report json
 
-          fpas check Example.fpasproj --fix --dry-run --diagnostics json
+          fpas check Example.fpasproj --fix --dry-run --report json
 
           fpas check Example.fpasproj --fix
         """);
 
     internal CheckCommand()
     {
-        diagnostics.AcceptOnlyFromAmong("json");
-        options.AddTo(Command); Command.Options.Add(diagnostics); Command.Options.Add(fix); Command.Options.Add(dryRun);
+        reportFormat.AcceptValues("json");
+        options.AddTo(Command); Command.Options.Add(reportFormat); Command.Options.Add(fix); Command.Options.Add(dryRun);
+        diagnosticOptions.AddTo(Command);
+        Command.Options.Add(overlay);
+        Command.Options.Add(expectedSnapshot);
+        Command.Options.Add(fixIds);
+        Command.Requires(fixIds, fix, result => result.GetResult(fixIds) is { IdentifierTokenCount: > 0 }, result => result.GetValue(fix));
+        Command.Excludes(fix, overlay, result => result.GetValue(overlay) is not null);
+        Command.Requires(dryRun, fix);
         Command.SetAction(async (result, token) => await Execute(result, token));
     }
 
-    internal bool JsonRequested(ParseResult result) => result.GetResult(diagnostics)?.Tokens.Any(token => token.Value == "json") == true;
+    internal bool JsonRequested(ParseResult result) => result.GetResult(reportFormat)?.Tokens.Any(token => token.Value == "json") == true;
 
     internal void ReportArgumentError(ParseResult result, string message)
-        => CheckResult.Failure(result.GetValue(options.Context), result.GetValue(options.Configuration) ?? "Debug", "invalid_argument", message + " See fpas check --help.").Report(JsonRequested(result));
+        => CheckResult.Failure(CommandArguments.Supplied(result, options.Context), CommandArguments.Supplied(result, options.Configuration) ?? "Debug", "invalid_argument", message + " See fpas check --help.").Report(JsonRequested(result));
 
     private async Task<int> Execute(ParseResult result, CancellationToken cancellationToken)
     {
-        if (result.GetValue(dryRun) && !result.GetValue(fix))
-        { ReportArgumentError(result, "--dry-run requires --fix."); return 2; }
         var input = options.Read(result); var selected = input.Context; var selectedConfiguration = input.Configuration;
-        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(result.GetValue(options.Timeout)));
+        var json = JsonRequested(result);
+        var diagnostics = json || diagnosticOptions.Requested(result) ? diagnosticOptions.Read(result) : null;
+        var timeout = TimeSpan.FromSeconds(result.GetValue(options.Timeout));
+        using var deadline = new CancellationTokenSource(timeout);
         using var combined = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, deadline.Token);
         CheckResult? current = null; CheckFixes? fixes = null; CheckResult report; int exit;
         FileWorkspace? operation = null;
         try
         {
+            if (result.GetValue(overlay) is { } manifest)
+            {
+                report = await AnalysisOverlay.RunAsync(input, manifest, timeout, (analysis, files, error) =>
+                {
+                    if (error is null) SnapshotGuard.Verify(result, expectedSnapshot, analysis.Context.SnapshotId);
+                    var draft = CheckResult.From(analysis) with { OverlayFiles = files };
+                    return error is null ? draft : draft with { Success = false, Status = "failed", SnapshotId = null,
+                        Diagnostics = [], Coverage = draft.Coverage with { Complete = false }, Error = AnalysisError.From(error) };
+                }, combined.Token);
+                if (diagnostics is not null) report = report.PageDiagnostics(diagnostics);
+                var draftExit = report.Success ? 0 : report.Error?.Code == "invalid_argument" ? 2 : 1;
+                return report.Report(json) ? draftExit : 1;
+            }
             operation = await FileWorkspace.OpenAsync(input, combined.Token);
+            SnapshotGuard.Verify(result, expectedSnapshot, operation.Context.SnapshotId);
             current = CheckResult.From(operation.Analysis!);
             if (result.GetValue(fix))
             {
-                var plan = operation.Corrections(combined.Token);
+                var plan = operation.Corrections(combined.Token, result.GetValue(fixIds));
                 fixes = CheckFixes.From(plan, operation.Context.SnapshotId, result.GetValue(dryRun));
-                if ((current with { Fixes = fixes }).JsonBytes().Length > 4_194_304)
+                var preview = (current with { Fixes = fixes }).PageDiagnostics(diagnostics ?? new(null, null, 100, 0));
+                if (preview.JsonBytes().Length > QueryResult.OutputLimit)
                     throw new ContextFailure("result_limit", "Correction preview exceeds 4 MiB; no sources were changed.");
                 if (!result.GetValue(dryRun) && plan.Edits.Documents.Count != 0)
                 {
@@ -88,14 +117,15 @@ internal sealed class CheckCommand
         }
         catch (ContextFailure failure)
         {
-            report = Failure(failure.Code, failure.Message, failure.OutputTruncated, failure.Candidates);
+            report = Failure(failure.Code, failure.Message) with { Error = AnalysisError.From(failure) };
             exit = failure.Code is "invalid_argument" or "ambiguous_project" ? 2 : 1;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or DecoderFallbackException or ArgumentException or PlatformNotSupportedException)
         {
             report = Failure("context_failed", exception.Message); exit = 1;
         }
-        return report.Report(JsonRequested(result)) ? exit : 1;
+        if (diagnostics is not null) report = report.PageDiagnostics(diagnostics);
+        return report.Report(json) ? exit : 1;
 
         CheckResult Failure(string code, string message, bool truncated = false, IReadOnlyList<string>? candidates = null)
         {

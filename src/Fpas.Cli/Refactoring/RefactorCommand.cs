@@ -17,6 +17,10 @@ internal sealed class RefactorCommand
     private sealed class Operation(string name)
     {
         internal ContextCommandOptions Context { get; } = new();
+        internal Option<string> ExpectedSnapshot { get; } = SnapshotGuard.CreateOption();
+        internal Option<string> Symbol { get; } = SourceSymbolOptions.Create();
+        internal bool AcceptsSymbol => name is "rename" or "add-parameter" or "remove-parameter" or "change-signature" or "implement-protocol" or "inline-variable";
+        internal Option<string> Overlay { get; } = new("--overlay") { Required = true, Description = "JSON draft source texts to validate and plan." };
         internal Option<string> Plan { get; } = new("--plan") { Required = true, Description = "Explicit .json plan path; preparation creates it without overwriting, apply reads it." };
         internal Option<string> File { get; } = new("--file") { Required = true, Description = "Source file to refactor." };
         internal Option<int> Line { get; } = new("--line") { Required = true, Description = "One-based source line." };
@@ -62,8 +66,10 @@ internal sealed class RefactorCommand
         internal bool Json(ParseResult result) => result.GetResult(Report)?.Tokens.Any(token => token.Value == "json") == true;
         internal void Bind(RefactorCommand owner)
         {
-            Context.AddTo(Command); Report.AcceptOnlyFromAmong("json"); Command.Options.Add(Plan); Command.Options.Add(Report);
-            if (name != "apply")
+            Context.AddTo(Command, preparationOptions: name != "draft"); Report.AcceptValues("json"); Command.Options.Add(Plan); Command.Options.Add(Report);
+            if (name != "apply") Command.Options.Add(ExpectedSnapshot);
+            if (name == "draft") Command.Options.Add(Overlay);
+            else if (name != "apply")
             {
                 Command.Options.Add(File);
                 Command.Options.Add(Project);
@@ -73,6 +79,7 @@ internal sealed class RefactorCommand
                     AddCoordinate(Line);
                     AddCoordinate(Column);
                 }
+                if (AcceptsSymbol) SourceSymbolOptions.Bind(Command, Symbol, Project, ExpectedSnapshot, File, Line, Column);
                 switch (name)
                 {
                     case "rename":
@@ -89,7 +96,7 @@ internal sealed class RefactorCommand
                         Command.Options.Add(Forward);
                         break;
                     case "change-signature":
-                        Mode.AcceptOnlyFromAmong("value", "in", "ref", "out");
+                        Mode.AcceptValues("value", "in", "ref", "out");
                         Command.Options.Add(ParameterType);
                         Command.Options.Add(Mode);
                         Command.Options.Add(CallArguments);
@@ -114,7 +121,7 @@ internal sealed class RefactorCommand
     }
     private readonly Operation[] operations =
         [new("rename"), new("add-parameter"), new("remove-parameter"), new("change-signature"), new("implement-protocol"), new("name-arguments"),
-            new("extract-variable"), new("extract-routine"), new("inline-variable"), new("organize-imports"), new("apply")];
+            new("extract-variable"), new("extract-routine"), new("inline-variable"), new("organize-imports"), new("draft"), new("apply")];
     internal Command Command { get; } = new("refactor", """
         Prepare and explicitly apply checked source refactorings in an FPAS project/solution.
         Rename follows resolved source symbols, including their source interface implementations.
@@ -128,12 +135,15 @@ internal sealed class RefactorCommand
         Inline Variable replaces checked local reads with the initializer.
         Extract Routine moves complete statements into a checked nested routine.
         Organize Imports removes safely unused CLR aliases from one source file.
+        Draft validates replacement and new source texts and binds them to the project inputs.
         Plans cover analyzed FPAS sources; C#/F# sources, strings and comments are not rewritten.
         Dependency preparation may restore/build. Source bindings are checked before publication.
         Exit codes: 0 success/help, 1 conflict/setup/stale plan, 2 arguments, 130 cancellation.
 
         Examples:
           fpas refactor rename Example.fpasproj --file main.fpas --line 5 --column 10 --new-name Calculate --plan .temp-data/rename.json
+
+          fpas refactor draft Example.fpasproj --overlay draft.json --plan .temp-data/draft-plan.json
 
           fpas refactor apply Example.fpasproj --plan .temp-data/rename.json --report json
         """);
@@ -164,13 +174,30 @@ internal sealed class RefactorCommand
                 catch (Exception error) when (error is JsonException or ArgumentException) { throw new ContextFailure("invalid_plan", error.Message); }
                 FileRefactorPlans.ValidateContext(stored, input.Context, input.Configuration);
             }
-            operationWorkspace = await FileWorkspace.OpenAsync(input, token);
-            var analysis = operationWorkspace.Analysis!;
-            current = new(false, "validating", planPath, null, [], false, CheckResult.From(analysis).Diagnostics);
-            var prepared = preparing ? Prepare(operationWorkspace, operation, result, signature, token)
-                : operationWorkspace.ValidateRefactoring(stored!, token);
+            var makingDraft = operation.Command.Name == "draft";
+            var manifest = makingDraft ? Path.GetFullPath(result.GetValue(operation.Overlay)!) : null;
+            var draft = manifest is null ? null : await AnalysisOverlay.ReadAsync(manifest, token);
+            var creations = draft?.Creations ?? stored?.Creations() ?? [];
+            operationWorkspace = makingDraft || stored?.Kind == "draft"
+                ? await FileWorkspace.OpenDraftAsync(input, token, creations) : await FileWorkspace.OpenAsync(input, token);
+            var diagnostics = operationWorkspace.Analysis is { } analysis ? CheckResult.From(analysis).Diagnostics : [];
+            current = new(false, "validating", planPath, null, [], false, diagnostics);
+            PreparedFileRefactoring prepared;
+            if (draft is not null)
+            {
+                prepared = operationWorkspace.PrepareDraft(draft.Files, creations, token);
+                SnapshotGuard.Verify(result, operation.ExpectedSnapshot, prepared.Plan.DraftSnapshotId!);
+                await AnalysisOverlay.VerifyAsync(manifest!, draft.Fingerprint, token);
+            }
+            else if (preparing)
+            {
+                SnapshotGuard.Verify(result, operation.ExpectedSnapshot, operationWorkspace.Context.SnapshotId);
+                prepared = Prepare(operationWorkspace, operation, result, signature, token);
+            }
+            else prepared = operationWorkspace.ValidateRefactoring(stored!, token);
+
             current = new(true, preparing ? "planned" : "applied", planPath, prepared.Plan,
-                prepared.Plan.Files.Select(file => new RefactorFile(file.Path, false)).ToArray(), false, CheckResult.From(analysis).Diagnostics);
+                prepared.Plan.Files.Select(file => new RefactorFile(file.Path, false)).ToArray(), false, diagnostics);
             if (current.Bytes().Length > RefactorPlanJson.MaximumBytes) throw new ContextFailure("result_limit", "Refactoring report exceeds 4 MiB; no sources were changed.");
             if (preparing)
             {
@@ -179,7 +206,7 @@ internal sealed class RefactorCommand
             }
             else
             {
-                await operationWorkspace.ApplyAsync(prepared.Edits, async check =>
+                await operationWorkspace.ApplyAsync(prepared, async check =>
                 {
                     SourcePublication.ValidateRegularPath(planPath);
                     if (!(await File.ReadAllBytesAsync(planPath, check)).AsSpan().SequenceEqual(storedBytes))
@@ -202,7 +229,11 @@ internal sealed class RefactorCommand
         { current = Fail(cancellation.IsCancellationRequested ? "cancelled" : "timeout", cancellation.IsCancellationRequested ? "Refactoring cancelled." : "Refactoring exceeded --timeout."); exit = cancellation.IsCancellationRequested ? 130 : 1; }
         catch (ContextFailure error)
         {
-            current = Fail(error.Code, error.Message) with { Error = new(error.Code, error.Message, error.OutputTruncated, error.Candidates) };
+            current = Fail(error.Code, error.Message);
+            var details = AnalysisError.From(error);
+            if (!preparing && details.NextAction == "refresh_snapshot")
+                details = details with { NextAction = current.Status == "applied" ? "check_sources" : "recreate_plan" };
+            current = current with { Error = details };
             exit = error.Code is "invalid_argument" or "ambiguous_project" ? 2 : 1;
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException or JsonException or BadImageFormatException or PlatformNotSupportedException)
@@ -226,7 +257,9 @@ internal sealed class RefactorCommand
         var project = result.GetValue(operation.Project);
         if (operation.Command.Name == "organize-imports") return workspace.OrganizeImports(file, project, token);
 
-        var selection = new SourceSelection(file, result.GetValue(operation.Line), result.GetValue(operation.Column), project);
+        var selection = operation.AcceptsSymbol && result.GetValue(operation.Symbol) is { } symbol
+            ? new SourceQuery(workspace.Analysis!).SelectDeclaration(project!, symbol)
+            : new SourceSelection(file, result.GetValue(operation.Line), result.GetValue(operation.Column), project);
         var closedContext = result.GetResult(operation.ClosedContext) is not null && result.GetValue(operation.ClosedContext);
         return operation.Command.Name switch
         {

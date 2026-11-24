@@ -12,7 +12,12 @@ internal static class PassiveEvaluation
         var expanded = Path.Combine(scratch, Guid.NewGuid().ToString("N") + ".xml");
         var result = await BuildProcess.Run(Path.GetDirectoryName(project)!, [.. arguments, "-preprocess:" + expanded], token, environment: environment);
         if (result.ExitCode != 0 || result.Truncated || !File.Exists(expanded))
-            throw new ContextFailure("preparation_required", "Cannot evaluate existing project inputs. Check project XML and restore/build missing SDK assets explicitly. " + result.Output + result.Error, result.Truncated);
+        {
+            var detail = result.Output + result.Error;
+            var missingSdk = detail.Contains("Package SDK is not installed", StringComparison.Ordinal);
+            throw new ContextFailure("preparation_required", "Cannot evaluate existing project inputs. " + detail, result.Truncated,
+                nextAction: missingSdk ? "restore_project" : "review_project");
+        }
         if (new FileInfo(expanded).Length > 16_777_216) throw new ContextFailure("context_failed", "Expanded project exceeds 16 MiB.");
         var xml = XDocument.Load(expanded);
         var imports = xml.DescendantNodes().OfType<XComment>().SelectMany(comment => comment.Value.Split('\n')).Select(line => line.Trim())

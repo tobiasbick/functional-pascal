@@ -17,7 +17,7 @@ public sealed class CompilerOutputOwnershipTests
         var cli = TestEnvironment.Metadata("FpasCliPath");
         var dependency = directory.File("Dependency.dll");
         var prepared = await ProcessRunner.RunAsync([cli, "compile", "-", "--output", dependency, "--target", "library",
-            "--reference-dir", TestEnvironment.ReferenceDirectory, "--diagnostics", "json"],
+            "--reference-dir", TestEnvironment.ReferenceDirectory, "--report", "json"],
             "unit Dependency; public function Value(): int; begin return 1; end function; end unit;");
         Assert.True(prepared.ExitCode == 0, prepared.Output + prepared.Error);
         var original = File.ReadAllBytes(dependency);
@@ -29,7 +29,7 @@ public sealed class CompilerOutputOwnershipTests
         File.WriteAllText(sourcePath, source);
         var result = await ProcessRunner.RunAsync([cli, "compile", sourcePath, "--output", output, "--target", target,
             "--debug", debug, "--reference-dir", TestEnvironment.ReferenceDirectory, "--reference", reference,
-            "--diagnostics", "json"]);
+            "--report", "json"]);
         Assert.Equal(2, result.ExitCode);
         Assert.Contains("Reference paths must differ", result.Output + result.Error);
         Assert.Equal(original, File.ReadAllBytes(reference));

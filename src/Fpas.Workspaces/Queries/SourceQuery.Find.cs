@@ -1,4 +1,7 @@
 // [Documentation](../../../docs/pascal/program-structure/cli.md#find-declarations)
+using Fpas.Compiler.Analysis;
+using Fpas.Workspaces.Loading;
+
 namespace Fpas.Workspaces.Queries;
 
 /// <summary>Filters explicit checked FPAS declarations by literal name and kind.</summary>
@@ -56,6 +59,55 @@ public sealed partial class SourceQuery
     /// <returns>A bounded page whose totals cover checked facts only.</returns>
     public SourceQueryResult Find(NameSearch search, CancellationToken cancellationToken = default)
         => FindCore(search, cancellationToken) with { Coverage = coverage };
+
+    /// <summary>Uses a declaration returned by a name search on this snapshot as the target of another query.</summary>
+    /// <param name="operation">inspect or refs.</param>
+    /// <param name="project">Owning project from the matching declaration.</param>
+    /// <param name="id">The selected snapshot-local symbol.</param>
+    /// <param name="limit">Maximum number of related declarations or references to return.</param>
+    /// <param name="offset">Number of sorted references to skip.</param>
+    /// <param name="token">Cancels query evaluation.</param>
+    /// <returns>Inspection or references for the exact snapshot-local symbol.</returns>
+    public SourceQueryResult Follow(string operation, string project, string id, int limit, int offset, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        var (selection, symbol) = ResolveSymbol(project, id);
+        var definition = Definition(selection.Project!, symbol);
+        var position = new QuerySelection(selection.Project!, symbol.Declaration!);
+        var boundaries = BinaryBoundaries();
+        return operation switch
+        {
+            "inspect" when limit is >= 1 and <= 100 && offset == 0 => Inspect(selection,
+                new("ok", null, position, definition, null, null, false, boundaries, Coverage: coverage),
+                limit, token, includeBody: false),
+            "refs" when limit is >= 1 and <= 1000 && offset >= 0 =>
+                References(symbol, definition, position, limit, offset, boundaries, token) with { Coverage = coverage },
+            _ => throw new Loading.ContextFailure("invalid_argument", "A declaration follow-up requires inspect or refs and valid pagination.")
+        };
+    }
+
+    /// <summary>Resolves an explicit symbol from a name search to its exact declaration selection.</summary>
+    /// <param name="project">Owning project from the matching declaration.</param>
+    /// <param name="id">Snapshot-local identity from the matching declaration.</param>
+    /// <returns>The declaration position and owner for checked editing operations.</returns>
+    public SourceSelection SelectDeclaration(string project, string id)
+    {
+        var (selection, symbol) = ResolveSymbol(project, id);
+        var span = symbol.Declaration!;
+        if (projects[selection.Project!].Snapshot.OccurrenceAt(span.Path, span.Offset)?.Symbol != id)
+            throw new ContextFailure("invalid_argument", "This symbol does not have a unique selectable declaration token.");
+        return selection;
+    }
+
+    private (SourceSelection Selection, SemanticSymbol Symbol) ResolveSymbol(string project, string id)
+    {
+        if (!projects.TryGetValue(Path.GetFullPath(project), out var owner))
+            throw new ContextFailure("invalid_argument", "The declaration's project does not belong to this checked snapshot.");
+        var symbol = owner.Snapshot.Symbol(id);
+        if (symbol is not { Declaration: { } span, Context: not null })
+            throw new ContextFailure("invalid_argument", "Select an explicit source symbol returned by query find.");
+        return (new(span.Path, span.Line, span.Column, owner.Input.Path), symbol);
+    }
 
     private SourceQueryResult FindCore(NameSearch search, CancellationToken cancellationToken)
     {

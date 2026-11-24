@@ -36,7 +36,11 @@ public sealed record ReferenceResult(string Project, SourceSpan Span, string Rol
 /// <param name="Definition">Canonical target declaration.</param>
 /// <param name="References">Ordered checked references.</param>
 /// <param name="ReturnedCount">Number of returned references.</param>
-public sealed record ReferencesResult(DefinitionResult Definition, IReadOnlyList<ReferenceResult> References, int ReturnedCount);
+/// <param name="TotalCount">Number of matching references before pagination.</param>
+/// <param name="Offset">Number of sorted references skipped.</param>
+/// <param name="NextOffset">Next page offset, or null at the end.</param>
+public sealed record ReferencesResult(DefinitionResult Definition, IReadOnlyList<ReferenceResult> References, int ReturnedCount, int TotalCount,
+    int Offset, int? NextOffset);
 /// <summary>Contains one source query's payload, scope and independent coverage/truncation states.</summary>
 /// <param name="Status">ok or not_found.</param>
 /// <param name="Reason">Explicit absence reason, when applicable.</param>
@@ -52,10 +56,13 @@ public sealed record ReferencesResult(DefinitionResult Definition, IReadOnlyList
 /// <param name="Callees">Outgoing-call payload.</param>
 /// <param name="Callers">Incoming-call payload.</param>
 /// <param name="Coverage">Checked semantic coverage independent of pagination.</param>
+/// <param name="Complete">Compiler-completion payload.</param>
+/// <param name="Signature">Compiler signature-help payload.</param>
 public sealed record SourceQueryResult(string Status, string? Reason, QuerySelection? Selection, DefinitionResult? Definition,
     TypeResult? Type, ReferencesResult? Refs, bool Truncated, IReadOnlyList<string> BinaryBoundaries,
     FindResult? Find = null, InspectResult? Inspect = null, IReadOnlyList<string>? Searched = null,
-    CalleesResult? Callees = null, CallersResult? Callers = null, WorkspaceSemanticCoverage? Coverage = null);
+    CalleesResult? Callees = null, CallersResult? Callers = null, WorkspaceSemanticCoverage? Coverage = null,
+    EditorCompletion? Complete = null, EditorCallSignatures? Signature = null);
 
 /// <summary>Queries detached checked facts without executing code or reading source files.</summary>
 public sealed partial class SourceQuery
@@ -82,14 +89,16 @@ public sealed partial class SourceQuery
     /// <param name="selection">Source position and optional linked-file owner.</param>
     /// <param name="limit">Maximum returned references, 1..1,000.</param>
     /// <param name="cancellationToken">Cancels semantic search.</param>
+    /// <param name="pageOffset">Number of sorted references to skip.</param>
     /// <returns>Checked facts or explicit absence, with coverage and binary boundaries.</returns>
-    public SourceQueryResult Execute(string operation, SourceSelection selection, int limit = 100, CancellationToken cancellationToken = default)
-        => ExecuteCore(operation, selection, limit, cancellationToken) with { Coverage = coverage };
+    public SourceQueryResult Execute(string operation, SourceSelection selection, int limit = 100, CancellationToken cancellationToken = default, int pageOffset = 0)
+        => ExecuteCore(operation, selection, limit, cancellationToken, pageOffset) with { Coverage = coverage };
 
-    private SourceQueryResult ExecuteCore(string operation, SourceSelection selection, int limit, CancellationToken cancellationToken)
+    private SourceQueryResult ExecuteCore(string operation, SourceSelection selection, int limit, CancellationToken cancellationToken, int pageOffset)
     {
         if (operation is not ("definition" or "type" or "refs")) throw new ContextFailure("invalid_argument", "Unknown source-query operation.");
         if (limit is < 1 or > 1000) throw new ContextFailure("invalid_argument", "Reference limit must be 1..1000.");
+        if (pageOffset < 0) throw new ContextFailure("invalid_argument", "Reference offset must be nonnegative.");
         cancellationToken.ThrowIfCancellationRequested();
         var (selectedProject, selectedSnapshot, offset, selectedPosition) = SelectPosition(selection);
         var owner = projects[selectedProject];
@@ -110,20 +119,29 @@ public sealed partial class SourceQuery
         }
         if (occurrence is null) return Missing("no_symbol");
         position = position with { Span = occurrence.Span };
-        var definition = Definition(owner.Input.Path, owner.Snapshot.Symbol(occurrence.Symbol));
+        var symbol = owner.Snapshot.Symbol(occurrence.Symbol);
+        var definition = Definition(owner.Input.Path, symbol);
         if (operation == "definition")
         {
             if (definition.Origin == "implicit") return Missing(definition.Symbol.Kind == "namespace" ? "no_definition" : "implicit_declaration");
             return new("ok", null, position, definition, null, null, false, boundaries);
         }
-        var canonical = Canonical(owner.Input.Path, owner.Snapshot.Symbol(occurrence.Symbol));
+        return References(symbol, definition, position, limit, pageOffset, boundaries, cancellationToken);
+
+        SourceQueryResult Missing(string reason) => new("not_found", reason, position, null, null, null, false, boundaries);
+    }
+
+    private SourceQueryResult References(SemanticSymbol symbol, DefinitionResult definition, QuerySelection position, int limit, int pageOffset,
+        IReadOnlyList<string> boundaries, CancellationToken cancellationToken)
+    {
+        var canonical = Canonical(position.Project, symbol);
         var references = new List<ReferenceResult>();
         foreach (var (project, (_, snapshot)) in projects.OrderBy(project => project.Key, StringComparer.Ordinal))
         {
             var identities = new Dictionary<string, string>(StringComparer.Ordinal);
-            foreach (var symbol in snapshot.Symbols)
+            foreach (var candidate in snapshot.Symbols)
             {
-                cancellationToken.ThrowIfCancellationRequested(); identities[symbol.Id] = Canonical(project, symbol);
+                cancellationToken.ThrowIfCancellationRequested(); identities[candidate.Id] = Canonical(project, candidate);
             }
             foreach (var reference in snapshot.Occurrences)
             {
@@ -133,10 +151,10 @@ public sealed partial class SourceQuery
         }
         var ordered = references.Distinct().OrderBy(reference => reference.Project, StringComparer.Ordinal).ThenBy(reference => reference.Span.Path, StringComparer.Ordinal)
             .ThenBy(reference => reference.Span.Offset).ThenBy(reference => reference.Role, StringComparer.Ordinal).ToArray();
-        var returned = Array.AsReadOnly(ordered.Take(limit).ToArray());
-        return new("ok", null, position, null, null, new(definition, returned, returned.Count), ordered.Length > limit, boundaries);
-
-        SourceQueryResult Missing(string reason) => new("not_found", reason, position, null, null, null, false, boundaries);
+        var returned = Array.AsReadOnly(ordered.Skip(pageOffset).Take(limit).ToArray());
+        var more = ordered.Length - pageOffset > returned.Count;
+        return new("ok", null, position, null, null,
+            new(definition, returned, returned.Count, ordered.Length, pageOffset, more ? pageOffset + returned.Count : null), returned.Count < ordered.Length, boundaries);
     }
 
     private string Canonical(string project, SemanticSymbol symbol)

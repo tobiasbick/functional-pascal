@@ -48,7 +48,7 @@
     <Fpas.Build.Tasks.Analysis.FpasExportAnalysisContext ManifestFile="$(FpasAnalysisManifest)" Phase="description"
         ProjectPath="$(MSBuildProjectFullPath)" CompilerPath="$(FpasCompilerPath)" CompilerAssemblyPath="$(FpasCompilerAssemblyPath)" Configuration="$(Configuration)"
         Platform="$(PlatformTarget)" TargetFramework="$(TargetFramework)" AssemblyName="$(TargetName)" OutputType="$(OutputType)"
-        Sources="@(Compile)" Projects="@(ProjectReferenceWithConfiguration)" BuildCache="$(IntermediateOutputPath)fpas.compile.json" />
+        Sources="@(Compile)" Projects="@(ProjectReferenceWithConfiguration)" ProjectAssetsFile="$(ProjectAssetsFile)" BuildCache="$(IntermediateOutputPath)fpas.compile.json" />
   </Target>
   <PropertyGroup>
     <FpasAnalysisPrepare Condition="'$(FpasAnalysisPrepare)' == ''">true</FpasAnalysisPrepare>

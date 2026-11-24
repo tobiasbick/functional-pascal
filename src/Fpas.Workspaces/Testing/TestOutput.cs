@@ -1,11 +1,11 @@
 // [Documentation](../../../docs/pascal/tools/testing.md#results-and-process-ownership)
 using Fpas.Compiler;
 using Fpas.Workspaces.Loading;
+using Fpas.Workspaces.Projects;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace Fpas.Workspaces.Testing;
 
@@ -23,7 +23,7 @@ public sealed class TestOutput
     {
         TestDriver.RequireOutput(project);
         var pdb = Path.ChangeExtension(project.Assembly, ".pdb");
-        var identity = Identity(project, token);
+        var identity = OutputFingerprint.Compute(project.Assembly, token);
         Project = project with { OutputIdentity = identity };
         if (!File.Exists(pdb)) return;
         try
@@ -93,20 +93,8 @@ public sealed class TestOutput
     /// <param name="token">Cancels output hashing.</param>
     public void Verify(CancellationToken token)
     {
-        if (Identity(Project, token) != Project.OutputIdentity)
+        if (OutputFingerprint.Compute(Project.Assembly, token) != Project.OutputIdentity)
             throw new ContextFailure("test_output_changed", "Test outputs changed during discovery or execution. Refresh the test view.");
     }
 
-    private static string Identity(TestProject project, CancellationToken token)
-    {
-        var paths = new[] { project.Assembly, Path.ChangeExtension(project.Assembly, ".pdb"),
-            Path.ChangeExtension(project.Assembly, ".deps.json"), Path.ChangeExtension(project.Assembly, ".runtimeconfig.json") };
-        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join(':', paths.Select(path =>
-        {
-            token.ThrowIfCancellationRequested();
-            if (!File.Exists(path)) return "-";
-            using var content = File.OpenRead(path);
-            return Convert.ToHexString(SHA256.HashData(content));
-        })))));
-    }
 }

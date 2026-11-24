@@ -12,7 +12,7 @@ public sealed class ArgumentParsingTests
     [InlineData("--unknown")]
     [InlineData("--debug", "invalid")]
     [InlineData("--target", "EXE")]
-    [InlineData("--diagnostics", "text")]
+    [InlineData("--report", "text")]
     [InlineData("--output")]
     [InlineData("--reference")]
     [InlineData("--output", "Other.dll")]
@@ -21,7 +21,7 @@ public sealed class ArgumentParsingTests
     {
         using var directory = new TemporaryDirectory();
         var result = await ProcessRunner.RunAsync([Cli, "compile", "missing.fpas", "--output", directory.File("App.dll"),
-            "--reference", "missing.dll", "--diagnostics=json", .. arguments]);
+            "--reference", "missing.dll", "--report=json", .. arguments]);
         Assert.Equal(2, result.ExitCode);
         Assert.Equal("", result.Error);
         using var report = JsonDocument.Parse(result.Output);
@@ -57,7 +57,7 @@ public sealed class ArgumentParsingTests
             "--reference", Path.Combine(TestEnvironment.ReferenceDirectory, "System.Runtime.dll"),
             "--reference", Path.Combine(TestEnvironment.ReferenceDirectory, "System.Console.dll"),
             "--reference-dir", emptyReferences, "--reference-dir", TestEnvironment.ReferenceDirectory,
-            "--diagnostics=json", "--", "--main.fpas", "@helper.fpas"], workingDirectory: sourceDirectory);
+            "--report=json", "--", "--main.fpas", "@helper.fpas"], workingDirectory: sourceDirectory);
         Assert.True(compiled.ExitCode == 0, compiled.Output + compiled.Error);
         Assert.Equal("", compiled.Error);
         using var report = JsonDocument.Parse(compiled.Output);
@@ -74,7 +74,7 @@ public sealed class ArgumentParsingTests
         using var directory = new TemporaryDirectory();
         var response = directory.File("compile arguments.json");
         var output = directory.File("output files/App.dll");
-        string[] arguments = ["-", "--output", output, "--reference-dir", TestEnvironment.ReferenceDirectory, "--diagnostics=json"];
+        string[] arguments = ["-", "--output", output, "--reference-dir", TestEnvironment.ReferenceDirectory, "--report=json"];
         File.WriteAllText(response, JsonSerializer.Serialize(arguments));
         var compiled = await ProcessRunner.RunAsync([Cli, "compile", "--response-file=" + response], "program App; begin end; end program;");
         Assert.True(compiled.ExitCode == 0, compiled.Output + compiled.Error);
@@ -102,7 +102,7 @@ public sealed class ArgumentParsingTests
     [Fact]
     public async Task Response_files_cannot_mix_with_inline_compile_arguments()
     {
-        var result = await ProcessRunner.RunAsync([Cli, "compile", "--response-file", "missing.json", "--diagnostics=json"]);
+        var result = await ProcessRunner.RunAsync([Cli, "compile", "--response-file", "missing.json", "--report=json"]);
         Assert.Equal(2, result.ExitCode);
         Assert.Equal("", result.Error);
         using var report = JsonDocument.Parse(result.Output);

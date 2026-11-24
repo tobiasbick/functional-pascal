@@ -41,7 +41,8 @@ public sealed class FailureReportTests
         Assert.NotEqual(0, baseline.ExitCode);
         File.Delete(program.FilePath("runs.txt"));
         var path = program.FilePath(Path.Combine("reports", "failure.json"));
-        var result = await Run(program, "Grüße 😀\n", ["--failure-report", path, .. json ? new[] { "--report", "json" } : []]);
+        File.WriteAllText(program.FilePath("input file.txt"), "Grüße 😀\n");
+        var result = await Run(program, "ignored ambient input\n", ["--failure-report", path, "--stdin", "input file.txt", .. json ? new[] { "--report", "json" } : []]);
         Assert.True(result.ExitCode == baseline.ExitCode, result.Output + result.Error);
         Assert.Equal("x", File.ReadAllText(program.FilePath("runs.txt")));
         var output = result.Output;
@@ -59,6 +60,7 @@ public sealed class FailureReportTests
         Assert.True(new FileInfo(path).Length < 8 * 1024 * 1024);
         using var report = JsonDocument.Parse(File.ReadAllText(path));
         var root = report.RootElement;
+        Assert.Equal(json ? 120 : 0, root.GetProperty("limits").GetProperty("timeoutSeconds").GetInt32());
         Assert.Equal("exception", root.GetProperty("outcome").GetString());
         Assert.Equal("natural", root.GetProperty("termination").GetString());
         Assert.Equal(result.ExitCode, root.GetProperty("targetExitCode").GetInt32());

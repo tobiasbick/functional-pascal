@@ -35,7 +35,7 @@ active FPAS extension per workspace. The CLR extension uses language ID `fpas`.
    settings for an absolute launcher path. Use **Show Language Server Output**
    for setup errors and **Restart Language Server** after changing the toolchain.
    If the compiler and SDK differ, export the SDK from the chosen launcher and
-   restore the project with that package. Run `fpas env --json` on the workspace
+   restore the project with that package. Run `fpas env --report json` on the workspace
    host to inspect the installed toolchain.
 4. Enable VS Code's `editor.formatOnSave` for `[fpas]` and select this extension
    as `editor.defaultFormatter` if several formatters are available. The server

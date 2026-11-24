@@ -18,18 +18,20 @@ invoke the same CLI from a source checkout. Keep scratch outputs under `.temp-da
 | `fpas restore` | Restore packages for an explicit project or solution through the selected SDK. |
 | `fpas build` | Build a source, project or solution through MSBuild. |
 | `fpas run` | Build and start a source, project or solution, or run a built DLL. Pass program arguments after `--`. |
-| `fpas target` | Report the selected executable and paths as JSON without restoring or building. Select an ambiguous solution target with `--project`. |
+| `fpas workspace` | Read roles and references. Use `--file` for source owners or repeat `--affected` for owners, dependent projects and tests. |
+| `fpas target` | Report the executable, paths and available output identity as JSON. Use the identity with `run --no-build --expected-output`. |
 | `fpas clean` | Run SDK clean for the selected project or solution and configuration. |
 | `fpas publish` | Deliver an executable or runtime files to `--output`. Native AOT is the default. Other modes include `single-file`, `self-contained`, `apphost` and `framework-dependent`. |
-| `fpas test` | Build and run .NET tests through VSTest or MTP. Discover with `--list`, reuse outputs with `--no-build`, and read JSON and TRX results. |
+| `fpas test` | Build and run .NET tests through VSTest or MTP. Discover with `--list`, reuse outputs with `--no-build`, and read JSON and TRX results. JSON gives rerun arguments for identifiable failed tests. |
 | `fpas terminal` | Select a private terminal workflow. |
 | `fpas terminal test` | Run a JSON script of literal send, expect, resize and exit steps in a private PTY or ConPTY. Read the JSON report. |
 | `fpas sdk` | Select the embedded SDK export operation. |
 | `fpas sdk export` | Write the matching SDK package to a local NuGet feed. Identical packages are kept. An explicit `--force` replaces a different package at the same path. |
 | `fpas licenses` | Print bundled debugger and .NET runtime notices. |
 
-`fpas run --report json` captures output and inherits stdin. Use `--timeout` for a
-bounded run. `--failure-report FILE` writes the first unhandled exception with the
+`fpas run --report json` captures output, supplies EOF and defaults to a 120-second
+deadline. Use `--stdin FILE` for explicit input and `--cwd` for the working
+directory. `--failure-report FILE` writes the first unhandled exception with the
 debugger's stack and available locals to a new file, then resumes the same
 process and preserves its exit code. Keep its DLL, portable PDB and matching sources together.
 [Project commands](../program-structure/project-commands.md) · [Run failure reports](../program-structure/project-commands.md#save-the-original-failure)
@@ -41,24 +43,33 @@ process and preserves its exit code. Keep its DLL, portable PDB and matching sou
 | Command | Use |
 | --- | --- |
 | `fpas compile` | Compile explicit sources to a CLR DLL. Supply `--output`, framework metadata via `--reference-dir`, and extra assemblies via repeated `--reference`. Use `--target library` for units-only output. |
-| `fpas check` | Validate an evaluated project or solution without analysis-owned output. Use `--diagnostics json`, `--fix --dry-run` to preview corrections and `--fix` to apply one checked batch. |
+| `fpas check` | Validate an evaluated project or solution without analysis-owned output. Use `--report json`, `--fix --dry-run` to preview corrections, `--fix-id` to select automatic proposals within a fix batch or `--overlay` to check draft content in memory. |
 | `fpas fmt` | Format sources, directories, projects or solutions. `--check --list` reports affected paths and `--stdout` previews one source. |
 | `fpas doc` | Look up FPAS and referenced CLR APIs with `--name`. Use `--usage` with the selected XML documentation ID for a compiler-checked FPAS template. |
 | `fpas query` | Select a checked source query. Results include a snapshot identity and coverage. |
+| `fpas query outline` | Read a syntax-only outline and spans from one file. |
+| `fpas query complete` | Get compiler completions and their replacement span at a cursor. |
+| `fpas query signature` | Get overload candidates and the active argument at a call cursor. |
 | `fpas query definition` | Resolve a symbol to its declaration. |
 | `fpas query type` | Get the checked type at a source position. |
-| `fpas query refs` | Find checked references across the declared FPAS scope. |
+| `fpas query refs` | Find checked references with `--limit`, `--offset` and `nextOffset`. |
 | `fpas query find` | Search declarations by `--name`, with `--match exact\|prefix\|contains` and repeatable `--kind`. |
 | `fpas query inspect` | Read the declaration, attached docs and directly related types for a symbol. |
 | `fpas query callees` | List outgoing operations for the resolved callable, or the enclosing body with `--body`. |
 | `fpas query callers` | Find incoming calls and callable references. Use `--body` for an enclosing routine or lambda. |
+| `fpas query batch` | Run JSON queries on one snapshot. Use `--overlay` for a draft and `from` to chain a unique `find` into `inspect` or `refs`. |
 
+Filter paged diagnostics with `--diagnostic-file` or `--diagnostic-project`.
 Use `--file`, `--line` and `--column` for positional queries. Lines and UTF-16
 columns are one-based. `--project` selects the owner of an ambiguous linked
 source. With paged queries, use `--limit` and `--offset` and combine pages only
-when their `snapshotId` matches. Check coverage and truncation before relying on
+when their `snapshotId` matches. Use `--expected-snapshot` when reusing
+positions or page offsets. `inspect` and `refs` can take `--symbol` and
+`--project` from a `find` match with `--expected-snapshot`. Check coverage and truncation before relying on
 the result as exhaustive. `check` and `query` can restore or build dependencies.
-`--no-restore` skips only restore. [Compiler and source query contracts](../program-structure/cli.md)
+`--no-restore` skips only restore. Use `--existing-inputs` with check, query, doc
+and symbol refactorings to reuse prepared sources and references without build
+or restore. Draft preparation always uses source snapshots. [Compiler and source query contracts](../program-structure/cli.md)
 
 Use an `M:` ID for a method or constructor, `P:` for a property or indexer,
 and `F:` for a field. `doc --usage` reports required inputs or explains why the
@@ -83,11 +94,14 @@ for enclosing generic types and then the method. [API lookup and usage](../tools
 | `fpas refactor extract-routine` | Move consecutive statements into a nested helper. Include the final semicolon and give `--end-line`, `--end-column` and `--name`. |
 | `fpas refactor inline-variable` | Select a local declaration or read. Replace literal reads or move a single initializer to the next statement when evaluation order is safe. |
 | `fpas refactor organize-imports` | Use `--file` to remove unused CLR aliases when all owners agree. Preserve source-unit imports, comments and entry order. |
+| `fpas refactor draft` | Check replacements and new sources from `--overlay` and save an edit plan bound to the context. |
 | `fpas refactor apply` | Recheck the snapshot and regenerate the plan before publishing its edits. |
 
 Prepare with `--plan FILE.json` and inspect the edits. Positional selection uses
 the same coordinates as `query`. Apply with the original project or solution,
-configuration and plan path. Use `--report json` for machine-readable results.
+configuration and plan path. Use `--expected-snapshot` during planning when
+reusing query coordinates. Symbol-based operations also accept a `find` match
+through `--symbol`, `--project` and `--expected-snapshot`. Use `--report json` for machine-readable results.
 The command refuses conflicting or stale plans and verifies the written sources.
 [Refactoring options and examples](../tools/refactoring.md)
 
@@ -99,18 +113,17 @@ binary boundaries block the change. [Public signatures](../tools/refactoring.md#
 
 | Command | Use |
 | --- | --- |
-| `fpas debug` | Debug a built CLR DLL. Use `--break` for a one-shot stop, `--tracepoint` with `--max-hits` for repeated observations, or `--protocol dap` for an editor session. |
-| `fpas diagnose` | Select runtime failure or dump inspection. |
-| `fpas diagnose failure` | Run a built DLL and report an unhandled managed exception with frames, source and passive bindings as JSON. |
+| `fpas debug` | Debug a built CLR DLL. The default captures an unhandled exception. Use `--break` for a one-shot stop, `--tracepoint` with `--max-hits` for repeated observations, or `--protocol dap` for an editor session. |
+| `fpas diagnose` | Select dump capture or inspection. |
 | `fpas diagnose dump` | Capture a heap dump from an explicit live .NET `--process-id` to a new `--output` file. |
 | `fpas diagnose inspect-dump` | Inspect a saved dump with bounded, repeatable SOS `--command` requests. |
 | `fpas profile` | Select a profiling workflow for a built target. |
 | `fpas profile setup` | Install pinned Microsoft diagnostic tools in an isolated directory. |
 | `fpas profile collect` | Record a target in `threads`, `gc` or `counters` mode to a new artifact. |
 | `fpas profile summary` | Decode EventPipe counts, per-thread samples and GC events from a saved trace. |
-| `fpas env` | Inspect the installed CLI, SDK/cache, .NET host, debugger and language server. Use `--json` for the report and `--directory` for SDK selection in another directory. |
+| `fpas env` | Inspect the installed CLI, SDK/cache, .NET host, debugger and language server. Use `--report json` for the report and `--directory` for SDK selection in another directory. |
 | `fpas lsp` | Start a stdio language server. Supply an absolute context path or file URI in `initializationOptions.context`. LSP coordinates are zero-based UTF-16. |
-| `fpas schema` | Export the named JSON Schema to stdout. Available names are `operation`, `terminal-script`, `project`, `compile`, `check`, `query`, `test`, `debug`, `format`, `doc`, `refactor` and `environment`. |
+| `fpas schema` | Use `fpas schema commands query find` to inspect one command and omit the path for the complete catalogue. Use `fpas schema NAME` to export a [JSON schema](../tools/report-schemas.md). |
 
 Keep matching DLLs, sources and portable PDBs for source debugging. Breakpoint
 paths resolve against `--cwd` or the DLL's directory. Batch inspection is passive.

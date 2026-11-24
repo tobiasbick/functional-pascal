@@ -25,7 +25,7 @@ internal sealed class ProfileCommand
 
     internal ProfileCommand()
     {
-        mode.AcceptOnlyFromAmong("threads", "gc", "counters"); ContextCommandOptions.Range(timeout, 1, 3600);
+        mode.AcceptValues("threads", "gc", "counters"); ContextCommandOptions.Range(timeout, 1, 3600);
         ContextCommandOptions.Range(duration, 1, 300); ContextCommandOptions.Range(limit, 1, 100);
         Command.Options.Add(tools); Command.Options.Add(timeout);
         foreach (var sub in new[] { setup, collect, summary }) { Command.Subcommands.Add(sub); sub.SetAction(Execute); }

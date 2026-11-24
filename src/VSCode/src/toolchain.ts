@@ -63,7 +63,7 @@ async function inspect(executable: string, cwd: string): Promise<Environment> {
   requireTrusted();
   let stdout: string;
   try {
-    ({ stdout } = await execute(executable, ['env', '--json', '--timeout', '20'], {
+    ({ stdout } = await execute(executable, ['env', '--report', 'json', '--timeout', '20'], {
       cwd, encoding: 'utf8', windowsHide: true, timeout: 24_000, maxBuffer: 1_100_000,
     }));
   } catch (failure) {

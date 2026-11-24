@@ -6,7 +6,7 @@ namespace Fpas.Cli.Toolchain;
 
 internal sealed class EnvironmentCommand
 {
-    private readonly Option<bool> json = new("--json") { Description = "Write one structured environment report to stdout." };
+    private readonly Option<string> reportFormat = new("--report") { Description = "Write one structured environment report to stdout." };
     private readonly Option<string> directory = new("--directory") { Description = "Working directory for .NET SDK selection; defaults to the current directory." };
     private readonly Option<int> timeout = new("--timeout") { Description = "Overall inspection deadline in seconds (1..3600).", DefaultValueFactory = _ => 30 };
     internal Command Command { get; } = new("env", """
@@ -18,22 +18,25 @@ internal sealed class EnvironmentCommand
         Examples:
           fpas env
 
-          fpas env --json
+          fpas env --report json
 
-          fpas env --directory examples/numerics/mandelbrot --json
+          fpas env --directory examples/numerics/mandelbrot --report json
 
         """);
 
     internal EnvironmentCommand()
     {
+        reportFormat.AcceptValues("json");
         ContextCommandOptions.Range(timeout, 1, 3600);
-        foreach (var option in new Option[] { json, directory, timeout }) Command.Options.Add(option);
+        foreach (var option in new Option[] { reportFormat, directory, timeout }) Command.Options.Add(option);
         Command.SetAction(Execute);
     }
 
     internal void ReportArgumentError(ParseResult result, string message)
         => new EnvironmentReport(false, "failed", Environment.CurrentDirectory)
-            { Issues = [new("error", "invalid_argument", message + " See fpas env --help.")] }.Write(result.GetValue(json));
+            { Issues = [new("error", "invalid_argument", message + " See fpas env --help.")] }.Write(JsonRequested(result));
+
+    private bool JsonRequested(ParseResult result) => result.GetResult(reportFormat)?.Tokens.Any(token => token.Value == "json") == true;
 
     private async Task<int> Execute(ParseResult result, CancellationToken cancellationToken)
     {
@@ -56,7 +59,7 @@ internal sealed class EnvironmentCommand
         }
         catch (ArgumentException exception) { report = Failure("invalid_argument", exception.Message); exit = 2; }
         catch (Exception exception) when (EnvironmentInspection.Recoverable(exception)) { report = Failure("inspection_failed", exception.Message); exit = 1; }
-        return report.Write(result.GetValue(json)) ? exit : 1;
+        return report.Write(JsonRequested(result)) ? exit : 1;
 
         EnvironmentReport Failure(string code, string message) => new(false, code is "cancelled" or "timeout" ? code : "failed", cwd)
             { Issues = [new("error", code, message)] };

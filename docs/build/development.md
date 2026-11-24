@@ -219,7 +219,7 @@ layout `<dotnet-install>/packs/Microsoft.NETCore.App.Ref/<version>/ref/net10.0`.
 Compile and execute one source:
 
 ```sh
-dotnet src/Fpas.Cli/bin/Debug/net10.0/Fpas.Cli.dll compile examples/basics/hello/main.fpas --output .temp-data/hello/Hello.dll --reference-dir "$FPAS_REFERENCE_DIR" --diagnostics json
+dotnet src/Fpas.Cli/bin/Debug/net10.0/Fpas.Cli.dll compile examples/basics/hello/main.fpas --output .temp-data/hello/Hello.dll --reference-dir "$FPAS_REFERENCE_DIR" --report json
 dotnet .temp-data/hello/Hello.dll
 ```
 

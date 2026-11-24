@@ -17,7 +17,7 @@ public sealed partial class LocalDeploymentTests
         var source = Path.Combine(consumer, "Probe.fpas");
         async Task<ProcessResult> Compile(string name, IReadOnlyDictionary<string, string?>? variables = null) => await ProcessRunner.RunExecutableAsync(launcher,
             ["compile", source, "--target", "library", "--output", Path.Combine(output, name + ".dll"),
-                "--reference-dir", TestEnvironment.ReferenceDirectory, "--diagnostics", "json"], workingDirectory: consumer, environment: variables ?? isolated);
+                "--reference-dir", TestEnvironment.ReferenceDirectory, "--report", "json"], workingDirectory: consumer, environment: variables ?? isolated);
         Directory.Move(checkout, checkout + ".offline");
         try
         {
@@ -35,7 +35,7 @@ public sealed partial class LocalDeploymentTests
             }
             var invalid = Path.Combine(output, "invalid.fpas"); File.WriteAllText(invalid, "unit Broken; function ; end unit;");
             var rejected = await ProcessRunner.RunExecutableAsync(launcher, ["compile", invalid, "--target", "library", "--output", Path.Combine(output, "invalid.dll"),
-                "--reference-dir", TestEnvironment.ReferenceDirectory, "--diagnostics", "json"], workingDirectory: consumer, environment: isolated);
+                "--reference-dir", TestEnvironment.ReferenceDirectory, "--report", "json"], workingDirectory: consumer, environment: isolated);
             Assert.Equal(1, rejected.ExitCode);
             using var diagnostics = JsonDocument.Parse(rejected.Output);
             Assert.False(diagnostics.RootElement.GetProperty("success").GetBoolean());

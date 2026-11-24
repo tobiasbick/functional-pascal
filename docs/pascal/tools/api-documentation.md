@@ -27,7 +27,8 @@ not part of name matching. Constructors have the simple name .ctor.
 project. `--assembly` selects an exact assembly simple name without .dll.
 Solution configuration/platform mappings and dependency preparation follow
 [check/query](../program-structure/cli.md). Configuration defaults to Debug;
-`--no-restore` skips restore only. The whole operation has a 120-second deadline;
+`--no-restore` skips restore only. `--existing-inputs` also skips dependency builds
+and preparation hooks, using existing build inputs. The operation has a 120-second deadline;
 `--timeout` accepts 1..3600 seconds. Cancellation joins owned preparation processes.
 
 Lookup uses checked regions of the selected FPAS scope. Inspect coverage.complete

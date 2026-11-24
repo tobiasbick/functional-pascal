@@ -13,7 +13,7 @@ original process after saving. See [run failure reports](../program-structure/pr
 Build the executable separately. Keep its DLL, matching portable PDB, runtime
 configuration, dependencies and recorded sources available. Source checksums and
 module identities must match. Debugging does not build or restore a project.
-Use `fpas env --json` to inspect packaged debugger/runtime requirements.
+Use `fpas env --report json` to inspect packaged debugger/runtime requirements.
 
 ```sh
 fpas debug examples/numerics/mandelbrot/bin/Debug/net10.0/Mandelbrot.dll \

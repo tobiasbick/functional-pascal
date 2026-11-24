@@ -1,5 +1,7 @@
 // [Documentation](../../../docs/pascal/tools/refactoring.md#validation-and-plans)
+using Fpas.Compiler;
 using Fpas.Workspaces.Analysis;
+using Fpas.Workspaces.Snapshots;
 using Fpas.Workspaces.Editing;
 using Fpas.Workspaces.Loading;
 using Fpas.Workspaces.Queries;
@@ -59,6 +61,39 @@ public static class FileRefactorPlans
         return Seal(plan, prepared.Edits);
     }
 
+    internal static PreparedFileRefactoring Draft(WorkspaceContext context, IReadOnlyDictionary<string, string> replacements,
+        IReadOnlyList<DraftCreation> creations, CancellationToken token)
+    {
+        var analyzed = DraftAnalysis.Analyze(context, replacements, creations, token);
+        if (!analyzed.Success || !analyzed.IsComplete)
+            throw new ContextFailure("draft_invalid", "Proposed sources fail dependency or semantic validation: " +
+                string.Join("; ", analyzed.Projects.SelectMany(project => project.Result?.Diagnostics ?? []).Take(10).Select(diagnostic => diagnostic.Code + ": " + diagnostic.Message)));
+        var edits = new List<DiagnosticEdit>();
+        foreach (var (file, replacement) in replacements)
+        {
+            token.ThrowIfCancellationRequested();
+            var original = context.Texts.Document(file);
+            if (original.Text != replacement)
+                edits.Add(new(new(original.Path, 1, 1, original.Text.Length, Offset: 0), original.Text, replacement));
+        }
+        var changes = TextEditSet.Create(context.Texts, edits, token);
+        var files = changes.Documents.Select(document => new RefactorPlanFile(document.Original.Path, document.OriginalHash,
+            document.ReplacementHash, document.Edits)).Concat(creations.Select(file => new RefactorPlanFile(file.Path, null,
+                Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(TextDocumentSnapshot.Utf8.GetBytes(file.Text))), [], file.Project, file.Text)))
+            .OrderBy(file => file.Path, StringComparer.Ordinal).ToArray();
+        return Seal(new RefactorPlan(1, "draft", context.Path, context.Configuration, context.SnapshotId, null, null, [], files,
+            analyzed.Projects.Select(project => project.Project).Order(StringComparer.Ordinal).ToArray(), [])
+            { DraftSnapshotId = analyzed.Context.SnapshotId }, changes);
+    }
+
+    internal static PreparedFileRefactoring ValidateDraft(WorkspaceContext context, RefactorPlan plan, CancellationToken token)
+    {
+        VerifyInputs(context, plan);
+        var changes = TextEditSet.Create(context.Texts, plan.Files.SelectMany(file => file.Edits), token);
+        var drafts = changes.Documents.ToDictionary(document => document.Original.Path, document => document.NewText, WorkspaceTextSnapshot.Paths);
+        return RequireMatchingPlan(plan, Draft(context, drafts, plan.Creations(), token));
+    }
+
     /// <summary>Regenerates a plan and requires its context, input snapshot and identity to match exactly.</summary>
     /// <param name="analysis">Current successful complete analysis.</param>
     /// <param name="plan">Original checked refactoring plan.</param>
@@ -66,17 +101,31 @@ public static class FileRefactorPlans
     /// <returns>The matching regenerated plan and edits.</returns>
     public static PreparedFileRefactoring Validate(WorkspaceAnalysis analysis, RefactorPlan plan, CancellationToken token = default)
     {
-        if (!plan.HasValidOperation || RefactorPlanJson.Identity(plan) != plan.Id)
-            throw new ContextFailure("invalid_plan", "Invalid or modified refactoring plan.");
-        ValidateContext(plan, analysis.Context.Path, analysis.Context.Configuration);
-        if (plan.InputSnapshotId != analysis.Context.SnapshotId)
-            throw new ContextFailure("stale_plan", "Project inputs changed after refactoring planning.");
-        var prepared = plan.Kind == "rename" ? RenameService.Prepare(analysis, plan.Selection, plan.NewName!, token)
-            : Prepare(analysis, new(plan.Kind, plan.Selection,
-                plan.SelectionEnd?.Line ?? plan.Selection.Line, plan.SelectionEnd?.Column ?? plan.Selection.Column,
+        if (plan.Kind == "draft")
+            throw new ContextFailure("invalid_plan", "Draft plans require a captured draft workspace.");
+        VerifyInputs(analysis.Context, plan);
+        var selection = plan.Selection!;
+        var prepared = plan.Kind == "rename" ? RenameService.Prepare(analysis, selection, plan.NewName!, token)
+            : Prepare(analysis, new(plan.Kind, selection,
+                plan.SelectionEnd?.Line ?? selection.Line, plan.SelectionEnd?.Column ?? selection.Column,
                 plan.AddedParameter?.Name ?? plan.NewName, plan.AddedParameter?.Type, plan.AddedParameter?.Argument,
                 plan.SignatureChange, plan.ClosedContext, plan.Protocol), token);
-        if (prepared.Plan.Id != plan.Id) throw new ContextFailure("invalid_plan", "Plan does not match the regenerated checked refactoring.");
+        return RequireMatchingPlan(plan, prepared);
+    }
+
+    private static void VerifyInputs(WorkspaceContext context, RefactorPlan plan)
+    {
+        if (!plan.HasValidOperation || RefactorPlanJson.Identity(plan) != plan.Id)
+            throw new ContextFailure("invalid_plan", "Invalid or modified refactoring plan.");
+        ValidateContext(plan, context.Path, context.Configuration);
+        if (plan.InputSnapshotId != context.SnapshotId)
+            throw new ContextFailure("stale_plan", "Project inputs changed after refactoring planning. Prepare and review a new plan.");
+    }
+
+    private static PreparedFileRefactoring RequireMatchingPlan(RefactorPlan plan, PreparedFileRefactoring prepared)
+    {
+        if (prepared.Plan.Id != plan.Id)
+            throw new ContextFailure("invalid_plan", "Plan does not match the regenerated checked refactoring.");
         return prepared;
     }
 

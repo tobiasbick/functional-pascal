@@ -15,8 +15,8 @@ public sealed partial class LocalDeploymentTests
         {
             var entry = executable ? launcher : Path.Combine(sdkCache, "tools", "compiler", "Fpas.Cli.dll");
             var inspected = executable
-                ? await ProcessRunner.RunExecutableAsync(entry, ["env", "--json"], workingDirectory: consumer, environment: environment)
-                : await ProcessRunner.RunAsync([entry, "env", "--json"], workingDirectory: consumer, environment: environment);
+                ? await ProcessRunner.RunExecutableAsync(entry, ["env", "--report", "json"], workingDirectory: consumer, environment: environment)
+                : await ProcessRunner.RunAsync([entry, "env", "--report", "json"], workingDirectory: consumer, environment: environment);
             Assert.True(inspected.ExitCode == 0, inspected.Output + inspected.Error); Assert.Empty(inspected.Error);
             using var env = JsonDocument.Parse(inspected.Output);
             Assert.Equal("available", env.RootElement.GetProperty("languageServer").GetProperty("status").GetString());

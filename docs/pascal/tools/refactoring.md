@@ -301,9 +301,38 @@ It preserves source-unit imports, comments, line endings and the order of
 surviving entries. Plan notes describe imports retained to preserve adjacent
 comments. A file with no safely removable imports produces an empty plan.
 
+## Plan and apply a checked draft
+
+Use the same source manifest accepted by
+[check and query](../program-structure/cli.md#check-a-draft-in-memory).
+Drafts can fix an invalid starting point. All source changes are analyzed together
+and FPAS dependencies are built as private in-memory metadata for that analysis.
+Draft planning always uses this preparation mode with already available external
+references and assets.
+
+```sh
+fpas refactor draft App.slnx --overlay draft.json --plan .temp-data/draft-plan.json --report json
+fpas refactor apply App.slnx --plan .temp-data/draft-plan.json --report json
+```
+
+When preparing from an earlier draft check, pass its ID as `--expected-snapshot`.
+The plan stores the original input snapshot, the checked `draftSnapshotId` and
+the exact replacements for changed owned `.fpas` files. Review the stored edits
+before applying. The shared 4 MiB plan limit includes the old and new texts.
+New sources record their expected owner and full text in `createInProject` and
+`createText`.
+
+Apply regenerates the validation from the plan and current inputs, rechecks the
+original bytes and publishes through the standard edit transaction. The manifest
+is needed only for planning. A changed original or a different context rejects
+the plan. When adding a source, application checks that the path is still free
+and re-evaluates ownership. It rolls back the batch if the actual compilation
+inputs or checked result differ from the planned draft. Draft validation covers
+the selected context and its FPAS dependencies.
+
 ## Validation and plans
 
-The original context must analyze successfully. Rename finds exact declaration
+For symbol refactorings, the original context must analyze successfully. Rename finds exact declaration
 and reference tokens, retains their original text and deduplicates linked edits.
 Proposed source is checked with the same compiler. FPAS dependencies are compiled
 to private in-memory metadata images for this validation, without writing their
@@ -320,6 +349,17 @@ The plan contains version/kind, context/configuration, input snapshot, original
 selection, operation inputs such as the added parameter or extraction range
 and name, affected declarations, exact edits, original/result file hashes,
 source projects, binary boundaries and a canonical SHA-256 identity.
+Use `--expected-snapshot` with the ID from a checked query when preparing a
+plan from its source coordinates. The precondition is checked before interpreting
+the coordinates or creating the plan. See
+[require a snapshot](../program-structure/cli.md#require-a-snapshot).
+
+For rename, add or remove parameter, change signature, implement protocol and
+inline variable, a [`query find` match](../program-structure/cli.md#reuse-a-found-symbol)
+can select the declaration. Supply `--symbol`, `--project` and
+`--expected-snapshot` in place of source coordinates. The plan retains the
+resolved declaration position and uses the ordinary validation when applied.
+
 The .json output is created without overwriting an existing file. Inspect the
 plan or the CLI's readable edit list before applying.
 
@@ -339,14 +379,16 @@ reporting. Symbolic links/reparse points and read-only edited sources are refuse
 Files not edited retain their timestamps. Replacement is atomic per file; the
 batch does not lock other applications.
 
-After application, the context is reloaded, dependencies prepared and sources
-checked again. Reports distinguish written files from successful rechecking.
+After application, the context is reloaded and sources are checked again. Drafts
+use the same in-memory dependency analysis for that check. Reports distinguish
+written files from successful rechecking.
 If cancellation/setup failure follows publication, status remains applied with
 success false, rechecked false and explicit written flags. Recovery failures list
 remaining written paths and retained files. Preparation can restore/build ordinary
 dependencies; it follows the [check contract](../program-structure/cli.md).
 
---configuration defaults to Debug; --no-restore skips restore only. --timeout
+`--configuration` defaults to Debug. `--no-restore` skips restore only.
+`--existing-inputs` also skips dependency builds and preparation hooks. `--timeout`
 covers the whole operation, defaults to 120 seconds and accepts 1..3600. Cancellation
 stops and joins owned build processes. Preview/apply work is bounded to 1,000 edit
 occurrences, 100,000 indexed occurrences, 64 MiB of changed original/replacement
@@ -407,6 +449,7 @@ Plans expire after five minutes and each application consumes its preview.
   - [CheckedRefactoring.cs](../../../src/Fpas.Workspaces/Refactoring/CheckedRefactoring.cs)
   - [ExtractionRefactoring.cs](../../../src/Fpas.Workspaces/Refactoring/ExtractionRefactoring.cs)
   - [FileRefactorPlans.cs](../../../src/Fpas.Workspaces/Refactoring/FileRefactorPlans.cs)
+  - [DraftCreation.cs](../../../src/Fpas.Workspaces/Editing/DraftCreation.cs)
   - [ImportRefactoring.cs](../../../src/Fpas.Workspaces/Refactoring/ImportRefactoring.cs)
   - [InlineRefactoring.cs](../../../src/Fpas.Workspaces/Refactoring/InlineRefactoring.cs)
   - [MovedOperations.cs](../../../src/Fpas.Workspaces/Refactoring/MovedOperations.cs)

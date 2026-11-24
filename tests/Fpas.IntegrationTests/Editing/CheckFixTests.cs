@@ -11,7 +11,7 @@ public sealed class CheckFixTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
 {
     private const string Source = "unit Demo.Bridge; public function Message(Value: integer): int; begin return Value; end function; end unit;\r\n";
     private static Task<ProcessResult> Run(TemporaryDirectory directory, params string[] options)
-        => ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "check", "Game/Game.fpasproj", "--diagnostics", "json", .. options],
+        => ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "check", "Game/Game.fpasproj", "--report", "json", .. options],
             workingDirectory: directory.Path, timeLimit: TimeSpan.FromMinutes(3));
 
     [Fact]
@@ -29,7 +29,7 @@ public sealed class CheckFixTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
         Assert.Equal(bytes, File.ReadAllBytes(path));
         var location = await sdk.Run(project, "msbuild", "Game/Game.fpasproj", "-nologo", "-getProperty:NuGetPackageRoot"); Assert.Equal(0, location.ExitCode);
         var packagedCli = Path.Combine(location.Output.Trim(), "fpas.net.sdk", sdk.Version.ToLowerInvariant(), "tools", "compiler", "Fpas.Cli.dll");
-        var applied = await ProcessRunner.RunAsync([packagedCli, "check", "Game/Game.fpasproj", "--fix", "--no-restore", "--diagnostics", "json"],
+        var applied = await ProcessRunner.RunAsync([packagedCli, "check", "Game/Game.fpasproj", "--fix", "--no-restore", "--report", "json"],
             workingDirectory: project.Path, timeLimit: TimeSpan.FromMinutes(3));
         Assert.True(applied.ExitCode == 0, applied.Output + applied.Error); Assert.Empty(applied.Error);
         using (var json = JsonDocument.Parse(applied.Output))
@@ -43,6 +43,52 @@ public sealed class CheckFixTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
         var stamp = File.GetLastWriteTimeUtc(path); var again = await Run(project, "--fix", "--no-restore"); Assert.Equal(0, again.ExitCode);
         Assert.Equal(stamp, File.GetLastWriteTimeUtc(path)); Assert.False(File.Exists(project.File("Game/bin/Debug/net10.0/Game.dll")));
         Assert.Empty(Directory.GetFiles(project.File("Game"), ".fpas-edit-*"));
+    }
+
+    [Fact]
+    public async Task Selected_fix_IDs_apply_only_the_previewed_corrections_to_the_matching_snapshot()
+    {
+        using var project = sdk.CreateProject();
+        var solution = XDocument.Load(project.File("Game.slnx"));
+        var paths = new[] { "Game/Bridge.fpas", "Other/Other.fpas", "Third/Third.fpas" };
+        foreach (var name in new[] { "Other", "Third" })
+        {
+            Directory.CreateDirectory(project.File(name));
+            File.WriteAllText(project.File($"{name}/{name}.fpasproj"), $"""
+                <Project Sdk="Fpas.NET.Sdk/{sdk.Version}"><PropertyGroup><OutputType>Library</OutputType></PropertyGroup></Project>
+                """);
+            solution.Root!.Add(new XElement("Project", new XAttribute("Path", $"{name}/{name}.fpasproj")));
+        }
+        solution.Save(project.File("Game.slnx"));
+        foreach (var path in paths) File.WriteAllText(project.File(path), Source);
+        var preview = await Check("--fix", "--dry-run");
+        Assert.Equal(1, preview.ExitCode);
+        using var report = JsonDocument.Parse(preview.Output);
+        var fixes = report.RootElement.GetProperty("fixes");
+        var snapshot = fixes.GetProperty("inputSnapshotId").GetString()!;
+        var ids = fixes.GetProperty("suggestions").EnumerateArray().ToDictionary(item => item.GetProperty("project").GetString()!,
+            item => item.GetProperty("id").GetString()!);
+        Assert.Equal(3, ids.Values.Distinct().Count());
+        var unknown = await Check("--existing-inputs", "--fix", "--expected-snapshot", snapshot, "--fix-id", new string('0', 64));
+        Assert.Equal(2, unknown.ExitCode);
+        Assert.All(paths, path => Assert.Equal(Source, File.ReadAllText(project.File(path))));
+        var selected = await Check("--existing-inputs", "--fix", "--expected-snapshot", snapshot,
+            "--fix-id", ids[project.File("Game/Game.fpasproj")], "--fix-id", ids[project.File("Third/Third.fpasproj")]);
+        Assert.Equal(1, selected.ExitCode);
+        using var applied = JsonDocument.Parse(selected.Output);
+        Assert.Equal(2, applied.RootElement.GetProperty("fixes").GetProperty("editCount").GetInt32());
+        Assert.DoesNotContain("integer", File.ReadAllText(project.File(paths[0])));
+        Assert.DoesNotContain("integer", File.ReadAllText(project.File(paths[2])));
+        Assert.Equal(Source, File.ReadAllText(project.File(paths[1])));
+        var stale = await Check("--existing-inputs", "--fix", "--expected-snapshot", snapshot, "--fix-id", ids[project.File("Other/Other.fpasproj")]);
+        Assert.Equal(1, stale.ExitCode);
+        using var rejected = JsonDocument.Parse(stale.Output);
+        Assert.Equal("inputs_changed", rejected.RootElement.GetProperty("error").GetProperty("code").GetString());
+        Assert.Equal(Source, File.ReadAllText(project.File(paths[1])));
+
+        Task<ProcessResult> Check(params string[] options)
+            => ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "check", "Game.slnx", "--report", "json", .. options],
+                workingDirectory: project.Path, timeLimit: TimeSpan.FromMinutes(3));
     }
 
     [Fact]
@@ -77,7 +123,7 @@ public sealed class CheckFixTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
         File.WriteAllText(project.File("Other/Other.fpasproj"), $"<Project Sdk=\"Fpas.NET.Sdk/{sdk.Version}\"><PropertyGroup><OutputType>Library</OutputType></PropertyGroup></Project>");
         File.WriteAllText(project.File("Other/Other.fpas"), "unit Other; public function Read(Value: integer): int; begin return Value; end function; end unit;");
         var solution = XDocument.Load(project.File("Game.slnx")); solution.Root!.Add(new XElement("Project", new XAttribute("Path", "Other/Other.fpasproj"))); solution.Save(project.File("Game.slnx"));
-        var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "check", "Game.slnx", "--fix", "--diagnostics", "json"],
+        var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "check", "Game.slnx", "--fix", "--report", "json"],
             workingDirectory: project.Path, timeLimit: TimeSpan.FromMinutes(3));
         Assert.True(result.ExitCode == 0, result.Output + result.Error); Assert.Empty(result.Error);
         using var report = JsonDocument.Parse(result.Output);

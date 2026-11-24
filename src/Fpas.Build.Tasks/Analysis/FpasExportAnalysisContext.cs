@@ -57,7 +57,7 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
                 throw new InvalidOperationException("Analysis requires net10.0/AnyCPU and OutputType Exe, WinExe or Library.");
             if (!Path.IsPathFullyQualified(ManifestFile)) throw new InvalidOperationException("The analysis manifest path must be absolute.");
             if (Phase == "resolved" && !File.Exists(ProjectAssetsFile))
-                throw new InvalidOperationException("Restore the project explicitly before analysis; restore assets are missing.");
+                return MissingInput(ProjectAssetsFile, "restore_project", "Restore assets are missing.");
             var globals = ((IBuildEngine6)BuildEngine).GetGlobalProperties();
             using var collection = new ProjectCollection(globals.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.OrdinalIgnoreCase));
             var evaluated = collection.LoadProject(ProjectPath);
@@ -65,8 +65,17 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
             CheckPreparationHooks(evaluated);
             foreach (var output in ProjectOutputs)
                 if (!File.Exists(output.GetMetadata("FullPath")) && !(UseSourceReferences && SourceOutput(output)))
-                    throw new InvalidOperationException("Build the referenced project before analysis; its metadata is missing: " + output.GetMetadata("FullPath"));
+                    return MissingInput(output.GetMetadata("FullPath"), "build_project", "Referenced project metadata is missing.",
+                        output.GetMetadata("MSBuildSourceProjectFile"));
             var sources = Paths(Sources); var references = Phase == "resolved" ? Paths(References) : [];
+            string[]? draftSources = null;
+            if (Phase == "resolved" && UseSourceReferences && globals.TryGetValue("FpasDraftPaths", out var draftManifest))
+            {
+                var virtualPaths = (JsonSerializer.Deserialize(File.ReadAllBytes(draftManifest), ExportedContextJson.Default.StringArray) ?? [])
+                    .ToHashSet(PathComparer);
+                draftSources = DraftFileEvaluation.Sources(evaluated, globals, virtualPaths);
+                sources = sources.Where(file => !virtualPaths.Contains(file)).ToArray();
+            }
             var sourceReferences = UseSourceReferences ? References.Concat(ProjectOutputs).Where(SourceOutput).ToArray() : [];
             var sourceOutputs = UseSourceReferences ? ProjectOutputs.Where(SourceOutput).Where(output => !References.Any(reference =>
                 PathComparer.Equals(reference.GetMetadata("MSBuildSourceProjectFile"), output.GetMetadata("MSBuildSourceProjectFile")))).ToArray() : [];
@@ -92,7 +101,8 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
                 Codes(WarningsAsErrors), Codes(WarningsNotAsErrors), Codes(NoWarn), sources, references,
                 Projects.Select(Reference).ToArray(), References.Where(item => item.GetMetadata("ReferenceSourceTarget") == "ProjectReference").Concat(sourceOutputs)
                     .Select(item => new ExportedOutput(item.GetMetadata("MSBuildSourceProjectFile"), item.GetMetadata("FullPath"))).Distinct().ToArray(),
-                Path.GetFullPath(BuildCache), Phase == "resolved" && !UseSourceReferences ? BuildInputs(resources, windowsResources) : "", hashes);
+                Path.GetFullPath(BuildCache), Phase == "resolved" && !UseSourceReferences ? BuildInputs(resources, windowsResources) : "", hashes,
+                string.IsNullOrWhiteSpace(ProjectAssetsFile) ? null : Path.GetFullPath(ProjectAssetsFile), draftSources);
             using var stream = new FileStream(ManifestFile, FileMode.CreateNew, FileAccess.Write, FileShare.None);
             JsonSerializer.Serialize(stream, result, ExportedContextJson.Default.ExportedContext);
             return true;
@@ -103,6 +113,15 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
             Log.LogError(null, "FP5005", null, ProjectPath, 0, 0, 0, 0, "Cannot export analysis context: " + exception.Message);
             return false;
         }
+    }
+
+    private bool MissingInput(string path, string action, string message, string? owner = null)
+    {
+        var issue = new ExportedPreparationIssue(string.IsNullOrWhiteSpace(owner) ? ProjectPath : owner, path, action, message);
+        using var stream = new FileStream(ManifestFile + ".issue", FileMode.CreateNew, FileAccess.Write, FileShare.None);
+        JsonSerializer.Serialize(stream, issue, ExportedContextJson.Default.ExportedPreparationIssue);
+        Log.LogError(null, "FP5005", null, ProjectPath, 0, 0, 0, 0, message + " " + path);
+        return false;
     }
 
     private string BuildInputs(IReadOnlyList<ResourceInput> resources, WindowsResourceInput? windowsResources)

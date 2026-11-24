@@ -29,13 +29,13 @@ internal static class WindowsProcess
         var environmentBlock = EnvironmentBlock(environment);
         try
         {
-            if (stdio == ProcessStdio.Capture)
+            if (stdio is ProcessStdio.Capture or ProcessStdio.CaptureInput)
             {
                 Check(CreatePipe(out inputRead, out inputWrite, ref security, 0));
                 Check(SetHandleInformation(inputWrite, 1, 0));
             }
             else inputRead = Inherit(-10);
-            if (stdio != ProcessStdio.Inherit)
+            if (stdio is ProcessStdio.Capture or ProcessStdio.CaptureOutput)
             {
                 Check(CreatePipe(out outputRead, out outputWrite, ref security, 0));
                 Check(CreatePipe(out errorRead, out errorWrite, ref security, 0));

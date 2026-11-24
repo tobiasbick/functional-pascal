@@ -23,7 +23,7 @@ internal sealed class InitCommand
             foreach (var option in new Option[] { Name, DryRun }) Command.Options.Add(option);
             if (kind == "solution") Command.Options.Add(Projects);
             else { Command.Options.Add(Version); Command.Options.Add(Feed); }
-            if (kind == "test") { Framework.AcceptOnlyFromAmong("xunit", "mstest", "nunit"); Runner.AcceptOnlyFromAmong("vstest", "mtp"); Command.Options.Add(Framework); Command.Options.Add(Runner); }
+            if (kind == "test") { Framework.AcceptValues("xunit", "mstest", "nunit"); Runner.AcceptValues("vstest", "mtp"); Command.Options.Add(Framework); Command.Options.Add(Runner); }
             Command.SetAction((result, _) =>
             {
                 var json = Json(result);
@@ -65,7 +65,7 @@ internal sealed class InitCommand
 
     internal InitCommand()
     {
-        report.AcceptOnlyFromAmong("json"); Command.Options.Add(report);
+        report.AcceptValues("json"); Command.Options.Add(report);
         templates = [new("project", report), new("library", report), new("test", report), new("solution", report)];
         foreach (var template in templates) { template.Bind(); Command.Subcommands.Add(template.Command); }
     }

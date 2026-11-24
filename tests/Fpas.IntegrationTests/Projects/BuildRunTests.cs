@@ -57,6 +57,7 @@ public sealed class BuildRunTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
               Console.InputEncoding := Encoding.UTF8;
               for Value: string in args do Console.WriteLine(Value); end for;
               Console.WriteLine(Console.ReadLine() ?? 'EOF');
+              Console.WriteLine(Console.ReadLine() ?? 'EOF');
               Console.WriteLine(File.ReadAllText('data.txt'));
               Console.Error.WriteLine('diagnostic');
               Env.ExitCode := 7;
@@ -66,15 +67,19 @@ public sealed class BuildRunTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
         var build = await ProjectCliFixture.Cli(directory, "build", project);
         Assert.True(build.ExitCode == 0, build.Output + build.Error);
         Directory.CreateDirectory(directory.File("working Grüße")); File.WriteAllText(directory.File("working Grüße/data.txt"), "file value");
-        foreach (var json in new[] { false, true })
+        File.WriteAllText(directory.File("working Grüße/input file.txt"), "input Grüße 😀\n");
+        foreach (var (json, file) in new[] { (false, false), (false, true), (true, false), (true, true) })
         {
-            var options = new List<string> { TestEnvironment.Metadata("FpasCliPath"), "run", project, "--no-build", "--working-directory", directory.File("working Grüße") };
+            var options = new List<string> { TestEnvironment.Metadata("FpasCliPath"), "run", project, "--no-build", "--cwd", directory.File("working Grüße") };
             if (json) options.AddRange(["--report", "json"]);
+            if (file) options.AddRange(["--stdin", "input file.txt"]);
             string[] arguments = ["a b; $(no-shell)", "Grüße 😀", "", "quoted \"value\"", "trailing\\", "two\\\\\"quotes", "--flag"];
             options.AddRange(["--", .. arguments]);
-            var result = await ProcessRunner.RunAsync(options, "input Grüße 😀\n", directory.Path, timeLimit: TimeSpan.FromMinutes(2));
+            var result = await ProcessRunner.RunAsync(options, file ? "ignored ambient input\n" : "input Grüße 😀\n",
+                directory.Path, timeLimit: TimeSpan.FromMinutes(2));
             Assert.Equal(7, result.ExitCode);
-            var expected = string.Join(Environment.NewLine, arguments) + Environment.NewLine + "input Grüße 😀" + Environment.NewLine + "file value" + Environment.NewLine;
+            var firstLine = json && !file ? "EOF" : "input Grüße 😀";
+            var expected = string.Join(Environment.NewLine, [.. arguments, firstLine, "EOF", "file value", ""]);
             if (!json) { Assert.Equal(expected, result.Output); Assert.Equal("diagnostic" + Environment.NewLine, result.Error); }
             else
             {
@@ -83,6 +88,38 @@ public sealed class BuildRunTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
                 Assert.Equal(expected, report.RootElement.GetProperty("program").GetProperty("output").GetString());
                 Assert.Equal("diagnostic" + Environment.NewLine, report.RootElement.GetProperty("program").GetProperty("error").GetString());
             }
+        }
+    }
+
+    [Fact]
+    public async Task Expected_run_output_pins_the_managed_output_and_its_companions()
+    {
+        using var directory = new TemporaryDirectory();
+        var project = await ProjectCliFixture.Init(directory, sdk);
+        using (var unavailable = await Target()) Assert.False(unavailable.RootElement.GetProperty("target").TryGetProperty("outputIdentity", out _));
+        var built = await ProjectCliFixture.Cli(directory, "build", project, "--report", "json");
+        Assert.True(built.ExitCode == 0, built.Output + built.Error);
+        using var available = await Target();
+        var selected = available.RootElement.GetProperty("target");
+        var identity = selected.GetProperty("outputIdentity").GetString()!;
+        var settings = Path.ChangeExtension(selected.GetProperty("assembly").GetString()!, ".runtimeconfig.json");
+        var success = await ProjectCliFixture.Cli(directory, "run", project, "--no-build", "--expected-output", identity, "--report", "json");
+        Assert.True(success.ExitCode == 0, success.Output + success.Error);
+        var implicitBuild = await ProjectCliFixture.Cli(directory, "run", project, "--expected-output", identity, "--report", "json");
+        Assert.Equal(2, implicitBuild.ExitCode);
+
+        File.AppendAllText(settings, "\n");
+        var stale = await ProjectCliFixture.Cli(directory, "run", project, "--no-build", "--expected-output", identity, "--report", "json");
+        Assert.Equal(1, stale.ExitCode);
+        using var report = JsonDocument.Parse(stale.Output);
+        Assert.Equal("run_output_changed", report.RootElement.GetProperty("error").GetProperty("code").GetString());
+        Assert.False(report.RootElement.TryGetProperty("program", out _));
+
+        async Task<JsonDocument> Target()
+        {
+            var result = await ProjectCliFixture.Cli(directory, "target", project);
+            Assert.True(result.ExitCode == 0, result.Output + result.Error);
+            return JsonDocument.Parse(result.Output);
         }
     }
 

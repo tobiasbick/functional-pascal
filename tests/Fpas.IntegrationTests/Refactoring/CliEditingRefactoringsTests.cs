@@ -39,7 +39,7 @@ public sealed class CliEditingRefactoringsTests(SdkPackageFixture sdk) : IClassF
         var plan = RefactorPlanJson.Read(File.ReadAllBytes(path));
         Assert.Equal("extract-variable", plan.Kind);
         Assert.Equal("Items", plan.NewName);
-        Assert.Equal(start.Column, plan.Selection.Column);
+        Assert.Equal(start.Column, plan.Selection!.Column);
         Assert.Equal(new RefactorPosition(end.Line, end.Column), plan.SelectionEnd);
         Assert.Equal(2, plan.EditCount);
 

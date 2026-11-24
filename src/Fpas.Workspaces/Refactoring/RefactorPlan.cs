@@ -1,6 +1,7 @@
 // [Documentation](../../../docs/pascal/tools/refactoring.md#validation-and-plans)
 using Fpas.Compiler;
 using Fpas.Compiler.Analysis;
+using Fpas.Workspaces.Editing;
 using Fpas.Workspaces.Queries;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -17,10 +18,14 @@ namespace Fpas.Workspaces.Refactoring;
 public sealed record RefactorTarget(string Project, string Kind, string Name, SourceSpan Declaration, bool PublicApi);
 /// <summary>Records exact original-offset edits and byte identities for one source file.</summary>
 /// <param name="Path">Source path.</param>
-/// <param name="OriginalHash">SHA-256 of original UTF-8 bytes.</param>
+/// <param name="OriginalHash">SHA-256 of original UTF-8 bytes, or null for a source creation.</param>
 /// <param name="ReplacementHash">SHA-256 of replacement UTF-8 bytes.</param>
 /// <param name="Edits">Ordered deduplicated edits.</param>
-public sealed record RefactorPlanFile(string Path, string OriginalHash, string ReplacementHash, IReadOnlyList<DiagnosticEdit> Edits);
+/// <param name="CreateInProject">Evaluated owner of a source creation.</param>
+/// <param name="CreateText">Complete source of a creation.</param>
+public sealed record RefactorPlanFile(string Path, string? OriginalHash, string ReplacementHash, IReadOnlyList<DiagnosticEdit> Edits,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? CreateInProject = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? CreateText = null);
 /// <summary>Captures the explicit inputs for adding a value parameter.</summary>
 /// <param name="Name">New unescaped identifier.</param>
 /// <param name="Type">FPAS type written in the declaration.</param>
@@ -80,7 +85,7 @@ public sealed record RefactorProtocol(string Type, IReadOnlyList<RefactorProtoco
 /// <param name="Context">Original absolute context path.</param>
 /// <param name="Configuration">Original context configuration.</param>
 /// <param name="InputSnapshotId">Captured input snapshot identity.</param>
-/// <param name="Selection">Original checked source selection.</param>
+/// <param name="Selection">Original checked source selection, or null for a draft batch.</param>
 /// <param name="NewName">New unescaped identifier for rename or extraction, otherwise null.</param>
 /// <param name="Targets">Grouped source declaration targets.</param>
 /// <param name="Files">Changed source files and exact edits.</param>
@@ -88,7 +93,7 @@ public sealed record RefactorProtocol(string Type, IReadOnlyList<RefactorProtoco
 /// <param name="BinaryBoundaries">References outside editable source ownership.</param>
 /// <param name="Id">Digest of canonical plan serialization with an empty identity field.</param>
 public sealed record RefactorPlan(int Version, string Kind, string Context, string Configuration, string InputSnapshotId,
-    SourceSelection Selection, string? NewName, IReadOnlyList<RefactorTarget> Targets, IReadOnlyList<RefactorPlanFile> Files,
+    SourceSelection? Selection, string? NewName, IReadOnlyList<RefactorTarget> Targets, IReadOnlyList<RefactorPlanFile> Files,
     IReadOnlyList<string> Projects, IReadOnlyList<string> BinaryBoundaries, string Id = "")
 {
     /// <summary>Gets the requested value parameter and call argument for an add-parameter plan.</summary>
@@ -115,10 +120,17 @@ public sealed record RefactorPlan(int Version, string Kind, string Context, stri
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public RefactorProtocol? Protocol { get; init; }
 
+    /// <summary>Gets the checked replacement snapshot for a draft plan.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? DraftSnapshotId { get; init; }
+
     internal bool HasValidOperation => Version == 1 && (Kind is "extract-variable" or "extract-routine" || SelectionEnd is null) &&
         (!ClosedContext || Kind is "add-parameter" or "remove-parameter" or "change-signature") &&
+        (Kind == "draft" ? Selection is null && DraftSnapshotId is { Length: 64 } && DraftSnapshotId.All(char.IsAsciiHexDigit) :
+            Selection is { File.Length: > 0 } && DraftSnapshotId is null) &&
         (Kind == "change-signature" || SignatureChange is null) && (Kind == "implement-protocol" || Protocol is null) && Kind switch
     {
+        "draft" => AddedParameter is null && NewName is null && Targets is { Count: 0 },
         "rename" => AddedParameter is null && !string.IsNullOrEmpty(NewName),
         "name-arguments" or "organize-imports" => AddedParameter is null && NewName is null && Targets is { Count: 0 },
         "remove-parameter" => AddedParameter is null && NewName is null && Targets is { Count: > 0 },
@@ -134,10 +146,15 @@ public sealed record RefactorPlan(int Version, string Kind, string Context, stri
         _ => false
     };
 
-    /// <summary>Gets whether any grouped target changes a public source API.</summary>
-    public bool ChangesPublicApi => Targets.Any(target => target.PublicApi);
+    /// <summary>Gets whether a plan may change a public source API. Drafts conservatively allow such changes.</summary>
+    public bool ChangesPublicApi => Kind == "draft" || Targets.Any(target => target.PublicApi);
     /// <summary>Gets the total number of source edits.</summary>
-    public int EditCount => Files.Sum(file => file.Edits.Count);
+    public int EditCount => Files.Sum(file => file.Edits.Count + (file.CreateInProject is null ? 0 : 1));
+
+    /// <summary>Returns the new source files in a draft plan.</summary>
+    /// <returns>The new source paths, owners and complete texts.</returns>
+    public IReadOnlyList<DraftCreation> Creations() => Files.Where(file => file.CreateInProject is not null)
+        .Select(file => new DraftCreation(file.Path, file.CreateInProject!, file.CreateText!)).ToArray();
 }
 
 /// <summary>Serializes bounded refactoring plans and validates their canonical identity.</summary>
@@ -160,15 +177,17 @@ public static class RefactorPlanJson
     {
         if (bytes.Length > MaximumBytes) throw new ArgumentException("Refactoring plan exceeds 4 MiB.");
         var plan = JsonSerializer.Deserialize(bytes, RefactorPlanContext.Default.RefactorPlan);
-        if (plan is null || !plan.HasValidOperation || plan.Selection is null || string.IsNullOrEmpty(plan.Selection.File) ||
+        if (plan is null || !plan.HasValidOperation ||
             string.IsNullOrEmpty(plan.Context) || string.IsNullOrEmpty(plan.Configuration) ||
             string.IsNullOrEmpty(plan.Id) || string.IsNullOrEmpty(plan.InputSnapshotId) || plan.Targets is null || plan.Files is null ||
             plan.Projects is null || plan.BinaryBoundaries is null || plan.Notes?.Any(note => note is null) == true ||
             plan.Targets.Any(target => target is null || target.Declaration is null ||
                 string.IsNullOrEmpty(target.Project) || string.IsNullOrEmpty(target.Kind) || string.IsNullOrEmpty(target.Name)) ||
-            plan.Files.Any(file => file is null || string.IsNullOrEmpty(file.Path) || string.IsNullOrEmpty(file.OriginalHash) ||
-                string.IsNullOrEmpty(file.ReplacementHash) || file.Edits is null || file.Edits.Any(edit => edit is null || edit.Location is null ||
-                    edit.ExpectedText is null || edit.NewText is null)) || Identity(plan) != plan.Id)
+            plan.Files.Any(file => file is null || !System.IO.Path.IsPathFullyQualified(file.Path) || string.IsNullOrEmpty(file.ReplacementHash) ||
+                file.Edits is null || file.Edits.Any(edit => edit is null || edit.Location is null || edit.ExpectedText is null || edit.NewText is null) ||
+                (file.CreateInProject is null ? string.IsNullOrEmpty(file.OriginalHash) || file.CreateText is not null : plan.Kind != "draft" ||
+                    !System.IO.Path.IsPathFullyQualified(file.CreateInProject) || file.OriginalHash is not null || file.CreateText is null || file.Edits.Count != 0)) ||
+            Identity(plan) != plan.Id)
             throw new ArgumentException("Invalid or modified refactoring plan.");
         using var document = JsonDocument.Parse(bytes);
         var root = document.RootElement;

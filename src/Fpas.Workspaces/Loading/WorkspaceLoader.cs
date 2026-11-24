@@ -1,6 +1,7 @@
 // [Documentation](../../../docs/architecture/workspaces.md#context-preparation)
 using Fpas.Compiler;
 using Fpas.Compiler.Analysis;
+using Fpas.Workspaces.Editing;
 using Fpas.Workspaces.Processes;
 using Fpas.Workspaces.Solutions;
 using System.Text;
@@ -18,7 +19,10 @@ public static class WorkspaceLoader
     /// <param name="options">Context path, configuration and allowed preparation policy.</param>
     /// <param name="cancellationToken">Cancels evaluation, preparation and input capture.</param>
     /// <returns>The checked projects, source inputs, dependency proofs and any project issues.</returns>
-    public static async Task<WorkspaceContext> LoadAsync(ContextOptions options, CancellationToken cancellationToken = default)
+    public static Task<WorkspaceContext> LoadAsync(ContextOptions options, CancellationToken cancellationToken = default)
+        => LoadAsync(options, [], cancellationToken);
+
+    internal static async Task<WorkspaceContext> LoadAsync(ContextOptions options, IReadOnlyList<string> additions, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var context = Path.GetFullPath(options.Context);
@@ -32,13 +36,13 @@ public static class WorkspaceLoader
         { throw new ContextFailure("context_failed", "Cannot read the solution: " + exception.Message); }
         var scratch = Path.Combine(Path.GetTempPath(), "fpas-analysis-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(scratch);
-        try { return await Load(options, context, scope, scratch, cancellationToken); }
+        try { return await Load(options, context, scope, scratch, additions, cancellationToken); }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException or System.Xml.XmlException or DecoderFallbackException or System.ComponentModel.Win32Exception)
         { throw new ContextFailure("context_failed", "Cannot read the selected context: " + exception.Message); }
         finally { await RemoveScratch(scratch); }
     }
 
-    private static async Task RemoveScratch(string scratch)
+    internal static async Task RemoveScratch(string scratch)
     {
         var deadline = Environment.TickCount64 + 5000;
         while (true)
@@ -52,8 +56,17 @@ public static class WorkspaceLoader
         }
     }
 
-    private static async Task<WorkspaceContext> Load(ContextOptions options, string context, SolutionScope scope, string scratch, CancellationToken token)
+    private static async Task<WorkspaceContext> Load(ContextOptions options, string context, SolutionScope scope, string scratch,
+        IReadOnlyList<string> additions, CancellationToken token)
     {
+        string? draftManifest = null;
+        var owners = additions.ToDictionary(path => path, _ => new List<string>(), Paths);
+        if (additions.Count != 0)
+        {
+            foreach (var file in additions) SourcePublication.VerifyUnoccupied(file);
+            draftManifest = Path.Combine(scratch, "draft-sources.json");
+            await File.WriteAllBytesAsync(draftManifest, JsonSerializer.SerializeToUtf8Bytes(additions.ToArray(), ProjectManifestJson.Default.StringArray), token);
+        }
         var compiler = Fpas.Deployment.DistributionAssets.Managed(typeof(FpasCompiler).Assembly);
         var compilerHash = WorkspaceContext.HashFile(compiler);
         var hashes = new Dictionary<string, string>(Paths) { [context] = WorkspaceContext.HashFile(context), [compiler] = compilerHash };
@@ -77,7 +90,7 @@ public static class WorkspaceLoader
                 if (environment is not null) await PassiveEvaluation.Check(pending.Path, Arguments(pending, scope, options.Preparation), scratch, environment, token);
                 selection = await ResolveSelection(pending, scope, options.Preparation, environment, token);
             }
-            catch (ContextFailure failure) { visited.TryAdd(pending.Path, pending); issues.Add(new(pending.Path, failure.Code, failure.Message, failure.OutputTruncated)); continue; }
+            catch (ContextFailure failure) { visited.TryAdd(pending.Path, pending); issues.Add(ContextIssue.From(pending.Path, failure)); continue; }
             if (visited.TryGetValue(selection.Path, out var previous))
             {
                 if (previous.Configuration != selection.Configuration || !previous.Platform.Replace(" ", "", StringComparison.Ordinal)
@@ -105,19 +118,30 @@ public static class WorkspaceLoader
                         queue.Enqueue(reference);
                 }
             }
-            catch (ContextFailure failure) { issues.Add(new(selection.Path, failure.Code, failure.Message, failure.OutputTruncated)); }
+            catch (ContextFailure failure) { issues.Add(ContextIssue.From(selection.Path, failure)); }
         }
-        foreach (var (_, (selection, _)) in described.OrderBy(item => item.Key, StringComparer.Ordinal))
+        foreach (var (_, (selection, description)) in described.OrderBy(item => item.Key, StringComparer.Ordinal))
         {
             try
             {
-                var manifest = await Export(selection, scope, scratch, "resolved", options.Preparation, environment, compilerHash, token);
+                if (options.Preparation == ContextPreparation.ExistingInputs)
+                {
+                    if (description.ProjectAssetsFile is { } assets && !File.Exists(assets))
+                        throw new ContextFailure("preparation_required", "Restore assets are missing. Restore this project explicitly.",
+                            inputPath: assets, nextAction: "restore_project");
+                    if (description.Sources.FirstOrDefault(source => !File.Exists(source)) is { } missing)
+                        throw new ContextFailure("preparation_required", "A declared source is missing. Generate it or correct the project source list.",
+                            inputPath: missing, nextAction: "prepare_source");
+                }
+                var manifest = await Export(selection, scope, scratch, "resolved", options.Preparation, environment, compilerHash, token, draftManifest);
+                if (draftManifest is not null && (manifest.DraftSources is null || manifest.DraftSources.Any(file => !owners.ContainsKey(file))))
+                    throw new ContextFailure("context_failed", "The installed FPAS SDK did not report valid draft source ownership.");
                 resolved.Add(selection.Path, manifest);
                 outputs.AddRange(manifest.Outputs.Select(output => new PreparationOutput(output.Project, output.Path)));
                 var sources = new List<CompilationSource>();
                 foreach (var (path, hash) in manifest.InputHashes)
                 {
-                    if (hashes.TryGetValue(path, out var previous) && hash != previous) throw new ContextFailure("inputs_changed", "Inputs differ between project contexts: " + path);
+                    if (hashes.TryGetValue(path, out var previous) && hash != previous) throw new ContextFailure("inputs_changed", "Inputs differ between project contexts: " + path, inputPath: path);
                     hashes[path] = hash;
                 }
                 foreach (var file in manifest.Sources)
@@ -131,7 +155,7 @@ public static class WorkspaceLoader
                     }
                     var content = await File.ReadAllBytesAsync(file, token);
                     if (Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(content)) != manifest.InputHashes[file])
-                        throw new ContextFailure("inputs_changed", "A source changed during context capture: " + file);
+                        throw new ContextFailure("inputs_changed", "A source changed during context capture: " + file, inputPath: file);
                     sources.Add(new(file, new UTF8Encoding(false, true).GetString(content)));
                 }
                 var id = WorkspaceContext.HashText(selection.Path + "\n" + manifest.Configuration);
@@ -140,8 +164,10 @@ public static class WorkspaceLoader
                 var request = new AnalysisRequest(sources.AsReadOnly(), manifest.AssemblyName, Array.AsReadOnly(manifest.References),
                     manifest.Target == "exe" ? CompilationTarget.Exe : CompilationTarget.Library, manifest.ValidateDocumentation, policy);
                 projects.Add(new(selection.Path, manifest.Configuration, id, request, Reachable(selection.Path)));
+                if (draftManifest is not null)
+                    foreach (var file in manifest.DraftSources!) owners[file].Add(selection.Path);
             }
-            catch (ContextFailure failure) { issues.Add(new(selection.Path, failure.Code, failure.Message, failure.OutputTruncated)); }
+            catch (ContextFailure failure) { issues.Add(ContextIssue.From(selection.Path, failure)); }
         }
         if (described.Count == 0 && issues.Count == 0) throw new ContextFailure("context_failed", "The selected context contains no FPAS compilation.");
         foreach (var output in outputs)
@@ -150,10 +176,12 @@ public static class WorkspaceLoader
             if (options.Preparation == ContextPreparation.SourceSnapshots) continue;
             if (!resolved.TryGetValue(output.Project, out var owner)) continue;
             if (!File.Exists(owner.BuildCache) || new FileInfo(owner.BuildCache).Length > 16_777_216)
-                throw new ContextFailure("inputs_changed", "Prepared FPAS reference has no valid build proof: " + output.Project);
+                throw new ContextFailure("inputs_changed", "Prepared FPAS reference has no valid build proof: " + output.Project,
+                    project: output.Project, inputPath: owner.BuildCache, nextAction: "build_project");
             var proof = JsonSerializer.Deserialize(await File.ReadAllBytesAsync(owner.BuildCache, token), ProjectManifestJson.Default.BuildProof);
             if (proof is null || proof.Inputs != owner.ExpectedBuildInputs || proof.AssemblyHash != WorkspaceContext.HashFile(output.Path))
-                throw new ContextFailure("inputs_changed", "Prepared reference does not match the checked dependency inputs/output: " + output.Project);
+                throw new ContextFailure("inputs_changed", "Prepared reference does not match the checked dependency inputs/output: " + output.Project,
+                    project: output.Project, inputPath: output.Path, nextAction: "build_project");
             hashes[owner.BuildCache] = WorkspaceContext.HashFile(owner.BuildCache);
         }
         if (options.Preparation == ContextPreparation.SourceSnapshots)
@@ -161,7 +189,8 @@ public static class WorkspaceLoader
                 ForeignInputs.Capture(output, foreignSources.GetValueOrDefault(output.Project) ?? [], hashes, issues, token);
         var result = new WorkspaceContext(context, options.Configuration, !options.NoRestore && options.Preparation == ContextPreparation.BuildDependencies, projects, issues,
             visited.Keys.Where(path => Path.GetExtension(path).Equals(".fpasproj", StringComparison.OrdinalIgnoreCase)), outputs, hashes, options.Preparation,
-            foreignDependencies: foreignSources.Keys.ToDictionary(path => path, Reachable, Paths));
+            foreignDependencies: foreignSources.Keys.ToDictionary(path => path, Reachable, Paths))
+            { DraftOwners = owners.ToDictionary(entry => entry.Key, entry => (IReadOnlyList<string>)entry.Value.AsReadOnly(), Paths) };
         result.VerifyFiles(token);
         return result;
 
@@ -186,15 +215,23 @@ public static class WorkspaceLoader
     }
 
     private static async Task<ProjectManifest> Export(ProjectSelection project, SolutionScope scope, string scratch, string phase, ContextPreparation preparation,
-        IReadOnlyDictionary<string, string>? environment, string compilerHash, CancellationToken token)
+        IReadOnlyDictionary<string, string>? environment, string compilerHash, CancellationToken token, string? draftManifest = null)
     {
         var path = Path.Combine(scratch, Guid.NewGuid().ToString("N") + ".json");
         var args = Arguments(project, scope, preparation);
         args.AddRange(["-t:" + (phase == "description" ? "FpasDescribeAnalysisContext" : "FpasExportAnalysisContext"), "-p:FpasAnalysisManifest=" + Escape(path)]);
+        if (draftManifest is not null) args.Add("-p:FpasDraftPaths=" + Escape(draftManifest));
         var result = await BuildProcess.Run(Path.GetDirectoryName(project.Path)!, args, token, environment: environment);
         if (result.ExitCode != 0 || !File.Exists(path) || result.Truncated)
+        {
+            var issuePath = path + ".issue";
+            if (File.Exists(issuePath) && new FileInfo(issuePath).Length <= 65_536 &&
+                JsonSerializer.Deserialize(await File.ReadAllBytesAsync(issuePath, token), ProjectManifestJson.Default.ManifestPreparationIssue) is { } issue)
+                throw new ContextFailure("preparation_required", issue.Message, result.Truncated,
+                    project: issue.Project, inputPath: issue.InputPath, nextAction: issue.NextAction);
             throw new ContextFailure((result.Output + result.Error).Contains("Package SDK is not installed", StringComparison.Ordinal) ? "preparation_required" :
                 phase == "resolved" ? "dependency_failed" : "context_failed", "MSBuild context export failed. Use a matching FPAS SDK with analysis targets. " + result.Output + result.Error, result.Truncated);
+        }
         if (new FileInfo(path).Length > 16_777_216) throw new ContextFailure("context_failed", "Context manifest exceeds 16 MiB.");
         var manifest = JsonSerializer.Deserialize(await File.ReadAllBytesAsync(path, token), ProjectManifestJson.Default.ProjectManifest)
             ?? throw new ContextFailure("context_failed", "Missing context manifest.");
@@ -213,7 +250,8 @@ public static class WorkspaceLoader
         bool SourceReference(string file) => preparation == ContextPreparation.SourceSnapshots && manifest.Outputs.Any(output => Paths.Equals(output.Path, file) &&
             Path.GetExtension(output.Project).Equals(".fpasproj", StringComparison.OrdinalIgnoreCase));
         foreach (var file in (phase == "resolved" ? manifest.Sources.Concat(manifest.References) : []).Concat(manifest.InputHashes.Keys))
-            if (!Path.IsPathFullyQualified(file) || !File.Exists(file) && !SourceReference(file)) throw new ContextFailure("context_failed", "Missing absolute context input: " + file);
+            if (!Path.IsPathFullyQualified(file) || !File.Exists(file) && !SourceReference(file)) throw new ContextFailure(preparation == ContextPreparation.ExistingInputs ? "preparation_required" : "context_failed",
+                "Missing absolute context input: " + file, inputPath: file, nextAction: "review_project");
         foreach (var file in phase == "resolved" ? manifest.Sources.Concat(manifest.References) : [])
             if (!manifest.InputHashes.ContainsKey(file) && !SourceReference(file)) throw new ContextFailure("context_failed", "Context input has no content fingerprint: " + file);
         return manifest;

@@ -7,10 +7,10 @@ namespace Fpas.Debugging.Failures;
 /// <param name="Arguments">Verbatim target arguments.</param>
 /// <param name="ReportPath">Absolute destination for the debug JSON report; must not already exist.</param>
 /// <param name="CaptureOutput">Capture bounded UTF-8 stdout/stderr instead of inheriting their handles.</param>
-/// <param name="InheritInput">Inherit stdin; otherwise deliver EOF for editor-controlled runs.</param>
 /// <param name="Timeout">Caller-selected overall deadline in seconds; zero denotes no deadline.</param>
+/// <param name="Stdin">Optional input bytes followed by EOF. With captured output, missing input supplies EOF.</param>
 public sealed record FailureRunOptions(string Program, string Cwd, string[] Arguments, string ReportPath,
-    bool CaptureOutput = false, bool InheritInput = true, int Timeout = 0);
+    bool CaptureOutput = false, int Timeout = 0, ReadOnlyMemory<byte>? Stdin = null);
 
 /// <summary>The natural target exit and any detached failure report saved during that run.</summary>
 /// <param name="ExitCode">Actual target exit code.</param>

@@ -34,9 +34,9 @@ public sealed class TracepointCliTests
     }
 
     [Fact]
-    public async Task Diagnose_failure_reports_the_real_unhandled_exception_and_source_frames()
+    public async Task Debug_without_breakpoints_reports_the_real_unhandled_exception_and_source_frames()
     {
-        using var target = new Debuggee("diagnose-failure");
+        using var target = new Debuggee("debug-failure");
         await target.Compile("""
             program FailureReport;
             uses System as Sys;
@@ -44,7 +44,7 @@ public sealed class TracepointCliTests
             begin Fail(); end;
             end program;
             """);
-        var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "diagnose", "failure", target.Assembly]);
+        var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "debug", target.Assembly]);
         Assert.True(result.ExitCode == 3, result.Output + result.Error);
         using var json = JsonDocument.Parse(result.Output);
         Assert.Equal("exception", json.RootElement.GetProperty("outcome").GetString());

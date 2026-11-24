@@ -3,6 +3,7 @@ using Fpas.Workspaces.Analysis;
 using Fpas.Workspaces.Loading;
 using Fpas.Workspaces.Refactoring;
 using Fpas.Workspaces.Queries;
+using Fpas.Workspaces.Snapshots;
 
 namespace Fpas.Workspaces.Editing;
 
@@ -22,7 +23,7 @@ public sealed class FileWorkspace
     /// <summary>Gets whether post-publication reload, analysis and input verification completed.</summary>
     public bool Rechecked { get; private set; }
 
-    private FileWorkspace(ContextOptions input, WorkspaceContext context, WorkspaceAnalysis analysis)
+    private FileWorkspace(ContextOptions input, WorkspaceContext context, WorkspaceAnalysis? analysis)
     { this.input = input; Context = context; Analysis = analysis; }
 
     /// <summary>Loads explicit project inputs and analyzes them without publishing edits.</summary>
@@ -35,10 +36,48 @@ public sealed class FileWorkspace
         return new(input, context, WorkspaceAnalysis.Analyze(context, token));
     }
 
+    /// <summary>Captures original filesystem inputs for planning or applying a checked draft.</summary>
+    /// <param name="input">Context path and configuration. Draft dependencies are analyzed from sources without restore.</param>
+    /// <param name="token">Cancels input capture.</param>
+    /// <param name="creations">Optional files whose prospective ownership must be evaluated.</param>
+    /// <returns>A workspace bound to the original files, which may have compilation errors.</returns>
+    public static async Task<FileWorkspace> OpenDraftAsync(ContextOptions input, CancellationToken token = default,
+        IReadOnlyList<DraftCreation>? creations = null)
+    {
+        input = input with { NoRestore = true, Preparation = ContextPreparation.SourceSnapshots };
+        var paths = (creations ?? []).Select(file => file.Path).ToArray();
+        if (paths.Distinct(WorkspaceTextSnapshot.Paths).Count() != paths.Length || (creations ?? []).Any(file =>
+                !Path.IsPathFullyQualified(file.Path) || Path.GetFullPath(file.Path) != file.Path ||
+                !Path.GetExtension(file.Path).Equals(".fpas", StringComparison.OrdinalIgnoreCase) ||
+                !Path.IsPathFullyQualified(file.Project) || !Path.GetExtension(file.Project).Equals(".fpasproj", StringComparison.OrdinalIgnoreCase)))
+            throw new ContextFailure("invalid_argument", "Supply unique normalized .fpas paths and absolute .fpasproj owners for draft creations.");
+        return new(input, await WorkspaceLoader.LoadAsync(input, paths, token), null);
+    }
+
+    /// <summary>Validates full-text draft replacements together and prepares a portable edit plan.</summary>
+    /// <param name="replacements">Proposed replacement texts keyed by owned FPAS source path.</param>
+    /// <param name="creations">New files paired with their declared owners.</param>
+    /// <param name="token">Cancels draft analysis and planning.</param>
+    /// <returns>A plan bound to captured original and checked replacement texts.</returns>
+    public PreparedFileRefactoring PrepareDraft(IReadOnlyDictionary<string, string> replacements, IReadOnlyList<DraftCreation> creations,
+        CancellationToken token = default)
+        => FileRefactorPlans.Draft(Context, replacements, creations, token);
+
+    /// <summary>Analyzes a draft with its replacement and prospective source texts.</summary>
+    /// <param name="replacements">Proposed replacement texts keyed by owned source path.</param>
+    /// <param name="creations">New files paired with their declared owners.</param>
+    /// <param name="token">Cancels semantic validation.</param>
+    /// <returns>The checked draft, including source diagnostics.</returns>
+    public WorkspaceAnalysis AnalyzeDraft(IReadOnlyDictionary<string, string> replacements, IReadOnlyList<DraftCreation> creations,
+        CancellationToken token = default)
+        => DraftAnalysis.Analyze(Context, replacements, creations, token);
+
     /// <summary>Collects automatic corrections and review-only proposals from current analysis.</summary>
     /// <param name="token">Cancels proposal validation.</param>
+    /// <param name="ids">Optional proposed correction IDs to select.</param>
     /// <returns>A detached correction plan.</returns>
-    public DiagnosticFixPlan Corrections(CancellationToken token = default) => DiagnosticFixPlan.Create(Checked(), token);
+    public DiagnosticFixPlan Corrections(CancellationToken token = default, IReadOnlyList<string>? ids = null)
+        => DiagnosticFixPlan.Create(Checked(), token, ids);
     /// <summary>Prepares and semantically validates a source rename.</summary>
     /// <param name="selection">Checked declaration or reference position.</param>
     /// <param name="name">New unescaped simple identifier.</param>
@@ -121,7 +160,7 @@ public sealed class FileWorkspace
     /// <param name="token">Cancels semantic revalidation.</param>
     /// <returns>The regenerated matching plan and edits.</returns>
     public PreparedFileRefactoring ValidateRefactoring(RefactorPlan plan, CancellationToken token = default)
-        => FileRefactorPlans.Validate(Checked(), plan, token);
+        => plan.Kind == "draft" ? FileRefactorPlans.ValidateDraft(Context, plan, token) : FileRefactorPlans.Validate(Checked(), plan, token);
 
     /// <summary>Rechecks disk bytes and evaluated context inputs before answers or edits are published.</summary>
     /// <param name="token">Cancels input verification.</param>
@@ -134,31 +173,43 @@ public sealed class FileWorkspace
     /// <param name="verifyPublicationInput">Optional final verification of adapter-owned inputs such as a plan file.</param>
     /// <param name="token">Cancels publication or reanalysis; written/recovery state remains observable.</param>
     /// <returns>A task completing after the post-publication check; inspect analysis for remaining errors.</returns>
-    public async Task ApplyAsync(TextEditSet edits, Func<CancellationToken, Task>? verifyPublicationInput = null, CancellationToken token = default)
+    public Task ApplyAsync(TextEditSet edits, Func<CancellationToken, Task>? verifyPublicationInput = null, CancellationToken token = default)
+        => ApplyAsync(edits, null, verifyPublicationInput, token);
+
+    /// <summary>Publishes a prepared refactoring and verifies that any added sources match the checked draft.</summary>
+    /// <param name="prepared">The regenerated edit plan and captured source edits.</param>
+    /// <param name="verifyPublicationInput">Optional final verification of adapter-owned inputs such as a plan file.</param>
+    /// <param name="token">Cancels staging or verification. Rollback proceeds independently.</param>
+    /// <returns>A task completing after publication and verification.</returns>
+    public Task ApplyAsync(PreparedFileRefactoring prepared, Func<CancellationToken, Task>? verifyPublicationInput = null, CancellationToken token = default)
+        => ApplyAsync(prepared.Edits, prepared.Plan, verifyPublicationInput, token);
+
+    private async Task ApplyAsync(TextEditSet edits, RefactorPlan? plan, Func<CancellationToken, Task>? verifyPublicationInput, CancellationToken token)
     {
         if (Interlocked.Exchange(ref applying, 1) != 0) throw new InvalidOperationException("An editing operation is already publishing changes.");
-        try { await ApplyBatchAsync(edits, verifyPublicationInput, token); }
+        try { await ApplyBatchAsync(edits, plan, verifyPublicationInput, token); }
         finally { Volatile.Write(ref applying, 0); }
     }
 
-    private async Task ApplyBatchAsync(TextEditSet edits, Func<CancellationToken, Task>? verifyPublicationInput, CancellationToken token)
+    private async Task ApplyBatchAsync(TextEditSet edits, RefactorPlan? plan, Func<CancellationToken, Task>? verifyPublicationInput, CancellationToken token)
     {
         if (Written.Count != 0) throw new InvalidOperationException("An editing operation has already published changes.");
         foreach (var document in edits.Documents)
             if (Context.Texts.Document(document.Original.Path) is var captured &&
                 (captured.ContentHash != document.Original.ContentHash || captured.Version != document.Original.Version))
                 throw new ContextFailure("inputs_changed", "Edits do not match the captured workspace: " + document.Original.Path);
-        var changes = edits.ToSourceChanges();
+        var creations = plan?.Creations() ?? [];
+        var changes = edits.ToSourceChanges().Concat(creations.Select(file => new SourceChange(file.Path, null, TextDocumentSnapshot.Utf8.GetBytes(file.Text)))).ToArray();
+        (WorkspaceContext Context, WorkspaceAnalysis Analysis)? checkedDraft = null;
         try
         {
             await SourcePublication.ApplyAsync(changes, async check =>
-            { await VerifyAsync(check); if (verifyPublicationInput is not null) await verifyPublicationInput(check); }, token);
+            { await VerifyAsync(check); if (verifyPublicationInput is not null) await verifyPublicationInput(check); }, token,
+                verifyPublished: creations.Count == 0 ? null : VerifyPublishedDraft);
             Written = Array.AsReadOnly(changes.Select(change => change.Path).ToArray());
             Analysis = null;
-            Context = await WorkspaceLoader.LoadAsync(input with { NoRestore = true }, token);
-            Analysis = WorkspaceAnalysis.Analyze(Context, token);
-            await SourcePublication.VerifyAsync(changes.Select(change => change with { Original = change.Replacement }), token);
-            await VerifyAsync(token); Rechecked = true;
+            (Context, Analysis) = checkedDraft ?? await CheckPublished(token);
+            Rechecked = true;
         }
         catch (SourcePublicationFailure failure)
         {
@@ -170,6 +221,25 @@ public sealed class FileWorkspace
         {
             if (Written.Count != 0) Analysis = null;
             throw;
+        }
+
+        async Task<(WorkspaceContext, WorkspaceAnalysis)> CheckPublished(CancellationToken check)
+        {
+            var current = await WorkspaceLoader.LoadAsync(input with { NoRestore = true }, check);
+            var analysis = input.Preparation == ContextPreparation.SourceSnapshots
+                ? SourceGraphAnalysis.Analyze(current, current.Texts, new(67_108_864), check)
+                : WorkspaceAnalysis.Analyze(current, check);
+            await SourcePublication.VerifyAsync(changes.Select(change => change with { Original = change.Replacement }), check);
+            await current.VerifyInputsAsync(check);
+            return (current, analysis);
+        }
+
+        async Task VerifyPublishedDraft(CancellationToken check)
+        {
+            var verified = await CheckPublished(check);
+            if (!verified.Item2.Success || !verified.Item2.IsComplete || verified.Item2.Context.SnapshotId != plan!.DraftSnapshotId)
+                throw new ContextFailure("inputs_changed", "Published sources or evaluated ownership differ from the checked draft.");
+            checkedDraft = verified;
         }
     }
 

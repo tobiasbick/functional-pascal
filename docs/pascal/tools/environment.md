@@ -8,11 +8,11 @@ packages or download tools. Missing components remain visible in the report.
 
 ```sh
 fpas env
-fpas env --json
-fpas env --directory examples/numerics/mandelbrot --json
+fpas env --report json
+fpas env --directory examples/numerics/mandelbrot --report json
 ```
 
-Without `--json`, output is an English summary. JSON owns stdout and contains one
+Without `--report json`, output is an English summary. JSON owns stdout and contains one
 report, including argument errors. `--directory` selects the working directory
 for .NET SDK discovery; it defaults to the current directory. Normal `global.json`
 selection applies. It does not select or analyze an FPAS project.

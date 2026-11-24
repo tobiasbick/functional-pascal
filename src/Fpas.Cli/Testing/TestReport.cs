@@ -8,9 +8,13 @@ using System.Text.Json.Serialization;
 namespace Fpas.Cli.Testing;
 
 internal sealed record TestError(string Code, string Message);
-internal sealed record ProjectTestResult(TestProject Project, BuildResult Runner, string? ResultsFile, TrxReport? Result, IReadOnlyList<DiscoveredTest>? Discovery);
+internal sealed record ProjectTestResult(TestProject Project, BuildResult Runner, string? ResultsFile, TrxReport? Result, IReadOnlyList<DiscoveredTest>? Discovery)
+{
+    public IReadOnlyList<TestRerun>? Reruns { get; init; }
+}
 internal sealed record TestReport(bool Success, string Status, string Mode, string? Context)
 {
+    internal const int MaximumBytes = 4_194_304;
     public string? ResultsDirectory { get; init; }
     public BuildResult? Build { get; init; }
     public IReadOnlyList<ProjectTestResult> Projects { get; init; } = [];
@@ -21,7 +25,12 @@ internal sealed record TestReport(bool Success, string Status, string Mode, stri
         if (json)
         {
             var text = JsonSerializer.Serialize(this, TestJson.Default.TestReport);
-            var limited = Encoding.UTF8.GetByteCount(text) > 4_194_304;
+            var limited = Encoding.UTF8.GetByteCount(text) > MaximumBytes;
+            if (limited && Projects.Any(project => project.Reruns is not null))
+            {
+                text = JsonSerializer.Serialize(this with { Projects = Projects.Select(project => project with { Reruns = null }).ToArray() }, TestJson.Default.TestReport);
+                limited = Encoding.UTF8.GetByteCount(text) > MaximumBytes;
+            }
             if (limited)
                 text = JsonSerializer.Serialize(this with { Success = false, Status = "failed", Build = null, Projects = [],
                     Error = new("report_limit", "The test report exceeds 4 MiB; inspect the native artifacts in resultsDirectory.") }, TestJson.Default.TestReport);
@@ -43,4 +52,5 @@ internal sealed record TestReport(bool Success, string Status, string Mode, stri
 
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(TestReport))]
+[JsonSerializable(typeof(TestRerun))]
 internal partial class TestJson : JsonSerializerContext;

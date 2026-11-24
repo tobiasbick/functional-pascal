@@ -98,22 +98,25 @@ restore/build selection flags.
 
 Pass program arguments after `--`; their values are forwarded verbatim without
 shell interpretation. The working directory defaults to the caller's current
-directory for every input form; `--working-directory` selects another existing
+directory for every input form and `--cwd` selects another existing
 directory. Runtime assembly lookup still belongs to .NET and the output's
 dependency files.
 
-Normal mode forwards build messages live to stderr. The program inherits
-stdin/stdout/stderr, preserving piped input and terminal handles. JSON mode
-inherits stdin and captures program stdout/stderr as UTF-8 text under a shared
-1 MiB limit. Only the JSON document goes to protocol stdout. Programs own their
+Text mode forwards build messages live to stderr and inherits the program's
+standard streams. JSON mode closes program stdin and captures stdout and stderr
+as UTF-8 text under a shared 1 MiB limit. In either mode, `--stdin FILE` sends at
+most 1 MiB of file bytes followed by EOF. Resolve relative input paths against
+`--cwd` or the caller's directory when omitted.
+Only the JSON document goes to protocol stdout. Programs own their
 stream encoding. Select UTF-8 explicitly when reading UTF-8 pipes through .NET
 Console APIs. An exceeded output limit is explicit. Each run terminates and
 joins remaining members of its Linux process group or Windows job when the main
 process exits, on cancellation or on a deadline. On Linux, children that enter
 another process group or session are outside this ownership boundary.
 
-Run has no implicit deadline. `--timeout` accepts 0..3600 seconds for the entire
-operation; zero disables the deadline. Cancellation remains available.
+The JSON deadline defaults to 120 seconds. Text mode runs without a deadline by
+default. `--timeout` accepts 0..3600 seconds for the entire operation. Zero
+disables the deadline.
 
 ### Save the original failure
 
@@ -131,7 +134,7 @@ The program is executed once. An ordinary nonzero return or handled exception
 does not create a report. Text mode prints a saved report's path to stderr;
 JSON mode includes it as `failureReport` alongside the ordinary program result.
 
-The path is relative to the CLI caller, independently of `--working-directory`.
+The path is relative to the CLI caller, independently of `--cwd`.
 Parent directories are created. The destination must not already exist; storage
 and debugger/symbol requirements are checked before target statements execute.
 This mode requires .NET 10, Windows x64 or Linux x64, matching portable PDBs and
@@ -152,6 +155,52 @@ invented target exit code. While the process has not yet ended, `termination` is
 `running`; final persistence records `natural` or `interrupted`.
 Reports use the existing 8 MiB ceiling and value limits.
 
+## Inspect the workspace
+
+`fpas workspace Example.slnx --configuration Debug` writes one versioned JSON
+report with the supported FPAS, C# and F# projects, their solution build
+selection, mapped configuration/platform, roles and direct evaluated project
+references per target framework. A project file is also a valid context.
+Project references are absolute paths and can point outside the supplied context.
+Evaluation uses installed SDKs and runs no build, restore or project targets.
+
+Use `fpas workspace Example.slnx --file src/View.fpas` to find solution members
+whose evaluated `Compile` items contain the source, including linked files.
+The report echoes the absolute `file` and shows matching projects and target
+frameworks. It retains evaluation issues even when ownership is unknown.
+A complete report with an empty `projects` array means no member owns the file.
+Build-disabled owners retain their `buildEnabled` value. Select such an owner
+as an explicit project context when its solution configuration excludes it.
+
+### Find affected projects and tests
+
+```sh
+fpas workspace Example.slnx --affected src/View.fpas --affected src/Model.fpas
+```
+
+Repeat `--affected` for up to 128 changed source paths. `impact.sources` gives
+the evaluated `Compile` owners of each path, including linked owners. An empty
+owner list means the current evaluation found no match. Files removed from
+evaluation can have no current owners.
+
+`impact.dependents` follows reverse `ProjectReference` edges transitively within
+the selected context. For multi-target projects it combines edges from all
+evaluated frameworks, so the selection can include extra projects. `impact.tests`
+lists affected owners and consumers with an evaluated test target. `projects`
+supplies their configuration, framework and build-enabled details, plus any
+evaluation issues. Use those details to choose `fpas test` targets.
+
+An evaluation failure or reference outside the context returns `partial` and
+`impact.complete: false`. The report retains known results and lists external
+reference paths in `impact.externalReferences`. Coverage is based on the
+evaluated project graph. Consumers connected only through metadata or runtime
+dependencies require separate verification.
+
+Success exits 0. A project evaluation failure exits 1 and retains the inventory
+and the other evaluated projects. A partial impact report also exits 1.
+Invalid inputs exit 2, cancellation exits
+130. The [workspace schema](../tools/report-schemas.md) describes the JSON report.
+
 ## Resolve a runnable target
 
 `fpas target CONTEXT` evaluates the selected executable without restoring or
@@ -160,6 +209,15 @@ mapped configuration. Use `--project` for an ambiguous solution and
 `--configuration` to choose a solution configuration. Ambiguity reports the
 included candidates. The evaluation deadline defaults to 30 seconds and can
 be changed with `--timeout`.
+
+When the selected executable already has an assembly and runtime configuration,
+`target.outputIdentity` identifies the contents of the DLL, `.pdb`, `.deps.json`
+and `.runtimeconfig.json`. The fingerprint records which companion files exist.
+Pass it to `run --no-build --expected-output ID` with the same context,
+configuration and executable project. A changed or missing output returns
+`run_output_changed` before launch. This checks the selected output files.
+Source freshness and the contents of separately loaded dependencies require
+their own checks.
 
 ## Reports and exit codes
 
@@ -230,7 +288,11 @@ Native Windows console, pipe and job behavior is covered by the
 - `src/Fpas.Workspaces/Processes/`
   - [ProjectBuildDiagnostics.cs](../../../src/Fpas.Workspaces/Processes/ProjectBuildDiagnostics.cs)
 - `src/Fpas.Workspaces/Projects/`
+  - [WorkspaceCommand.cs](../../../src/Fpas.Cli/Projects/WorkspaceCommand.cs)
+  - [WorkspaceInventory.cs](../../../src/Fpas.Workspaces/Projects/WorkspaceInventory.cs)
+  - [WorkspaceInventoryTests.cs](../../../tests/Fpas.IntegrationTests/Projects/WorkspaceInventoryTests.cs)
   - [ProjectDriver.cs](../../../src/Fpas.Workspaces/Projects/ProjectDriver.cs)
+  - [OutputFingerprint.cs](../../../src/Fpas.Workspaces/Projects/OutputFingerprint.cs)
 - `tests/Fpas.IntegrationTests/Projects/`
   - [BuildRunTests.cs](../../../tests/Fpas.IntegrationTests/Projects/BuildRunTests.cs)
   - [FailureReportTests.cs](../../../tests/Fpas.IntegrationTests/Projects/FailureReportTests.cs)

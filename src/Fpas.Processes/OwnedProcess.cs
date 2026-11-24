@@ -14,7 +14,9 @@ public enum ProcessStdio
     /// <summary>Inherit all standard streams from the current process.</summary>
     Inherit,
     /// <summary>Inherit input and redirect output and error through pipes.</summary>
-    CaptureOutput
+    CaptureOutput,
+    /// <summary>Redirect input through a pipe and inherit output and error.</summary>
+    CaptureInput
 }
 
 /// <summary>
@@ -68,7 +70,7 @@ public sealed class OwnedProcess : IAsyncDisposable
     public static OwnedProcess Start(string path, IReadOnlyList<string> arguments, string cwd, IReadOnlyDictionary<string, string>? environment = null, ProcessStdio stdio = ProcessStdio.Capture)
     {
         Validate(path);
-        if (stdio is not (ProcessStdio.Capture or ProcessStdio.Inherit or ProcessStdio.CaptureOutput)) throw new ArgumentOutOfRangeException(nameof(stdio));
+        if (stdio is not (ProcessStdio.Capture or ProcessStdio.Inherit or ProcessStdio.CaptureOutput or ProcessStdio.CaptureInput)) throw new ArgumentOutOfRangeException(nameof(stdio));
         if (arguments.Any(argument => argument is null || argument.Contains('\0'))) throw new ArgumentException("Invalid process argument.");
         if (OperatingSystem.IsWindows())
         {
@@ -80,8 +82,9 @@ public sealed class OwnedProcess : IAsyncDisposable
         var start = new ProcessStartInfo(File.Exists("/usr/bin/setsid") ? "/usr/bin/setsid" : "/bin/setsid")
         {
             UseShellExecute = false, WorkingDirectory = cwd,
-            RedirectStandardInput = stdio == ProcessStdio.Capture,
-            RedirectStandardOutput = stdio != ProcessStdio.Inherit, RedirectStandardError = stdio != ProcessStdio.Inherit
+            RedirectStandardInput = stdio is ProcessStdio.Capture or ProcessStdio.CaptureInput,
+            RedirectStandardOutput = stdio is ProcessStdio.Capture or ProcessStdio.CaptureOutput,
+            RedirectStandardError = stdio is ProcessStdio.Capture or ProcessStdio.CaptureOutput
         };
         start.ArgumentList.Add("--"); start.ArgumentList.Add(path);
         foreach (var argument in arguments) start.ArgumentList.Add(argument);
@@ -100,6 +103,26 @@ public sealed class OwnedProcess : IAsyncDisposable
     /// <summary>Waits until the root process exits.</summary>
     /// <param name="token">Cancels the wait without terminating the process.</param>
     public Task WaitForExit(CancellationToken token) => process.WaitForExitAsync(token);
+
+    /// <summary>Writes bytes to redirected stdin and closes it to signal EOF.</summary>
+    /// <param name="data">Verbatim input bytes.</param>
+    /// <param name="token">Cancels input delivery.</param>
+    /// <returns>Whether the bytes could be delivered before the pipe closed.</returns>
+    public async Task<bool> SupplyInputAsync(ReadOnlyMemory<byte> data, CancellationToken token)
+    {
+        if (ReferenceEquals(Input, Stream.Null)) return false;
+        try
+        {
+            using var input = Input;
+            if (!data.IsEmpty)
+            {
+                await input.WriteAsync(data, token);
+                await input.FlushAsync(token);
+            }
+            return true;
+        }
+        catch (Exception error) when (error is IOException or ObjectDisposedException) { return false; }
+    }
 
     /// <summary>Terminates all owned members and releases the streams and handles.</summary>
     public ValueTask DisposeAsync()

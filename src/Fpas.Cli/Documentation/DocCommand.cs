@@ -44,15 +44,16 @@ internal sealed class DocCommand
 
     internal DocCommand()
     {
-        options.AddTo(Command); match.AcceptOnlyFromAmong("exact", "prefix", "contains"); report.AcceptOnlyFromAmong("json");
+        options.AddTo(Command); match.AcceptValues("exact", "prefix", "contains"); report.AcceptValues("json");
         ContextCommandOptions.Range(limit, 1, 100); ContextCommandOptions.Range(offset, 0, int.MaxValue);
-        access.AcceptOnlyFromAmong("read", "write");
+        access.AcceptValues("read", "write");
         foreach (var option in new Option[] { name, usage, access, typeArguments, match, project, assembly, limit, offset, report }) Command.Options.Add(option);
+        Command.ExactlyOne(name, usage);
         Command.SetAction(Execute);
     }
     private bool Json(ParseResult result) => result.GetResult(report)?.Tokens.Any(token => token.Value == "json") == true;
     internal void ReportArgumentError(ParseResult result, string message)
-        => DocReport.Failure(result.GetValue(options.Context), result.GetValue(options.Configuration) ?? "Debug", "invalid_argument", message + " See fpas doc --help.").Write(Json(result));
+        => DocReport.Failure(CommandArguments.Supplied(result, options.Context), CommandArguments.Supplied(result, options.Configuration) ?? "Debug", "invalid_argument", message + " See fpas doc --help.").Write(Json(result));
 
     private async Task<int> Execute(ParseResult result, CancellationToken cancellationToken)
     {
@@ -64,8 +65,6 @@ internal sealed class DocCommand
         {
             var memberId = result.GetValue(usage);
             var lookup = result.GetValue(name);
-            if ((lookup is null) == (memberId is null))
-                throw new ContextFailure("invalid_argument", "Specify exactly one of --name and --usage.");
             var search = new DocumentationSearch(memberId ?? lookup!, result.GetValue(match)!, result.GetValue(project), result.GetValue(assembly), result.GetValue(limit), result.GetValue(offset),
                 Usage: memberId is not null, TypeArguments: result.GetValue(typeArguments), Access: result.GetValue(access));
             DocumentationQuery.Validate(search);
@@ -83,7 +82,7 @@ internal sealed class DocCommand
         }
         catch (ContextFailure failure)
         {
-            response = DocReport.Failure(input, configuration, failure.Code, failure.Message, check, failure.OutputTruncated, failure.Candidates);
+            response = DocReport.Failure(input, configuration, failure.Code, failure.Message, check) with { Error = AnalysisError.From(failure) };
             exit = failure.Code is "invalid_argument" or "ambiguous_project" ? 2 : 1;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or DecoderFallbackException or ArgumentException or BadImageFormatException or InvalidOperationException or PlatformNotSupportedException)

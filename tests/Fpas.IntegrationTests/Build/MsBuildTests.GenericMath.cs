@@ -218,7 +218,7 @@ public sealed partial class MsBuildTests
         {
             var source = "program Invalid; uses Shared as S, System.Numerics as N; " + declaration + " begin end; end program;";
             var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "compile", "-", "--output", project.File("Invalid.dll"),
-                "--reference-dir", TestEnvironment.ReferenceDirectory, "--reference", project.File("Shared/bin/Debug/net10.0/Shared.dll"), "--diagnostics", "json"], source);
+                "--reference-dir", TestEnvironment.ReferenceDirectory, "--reference", project.File("Shared/bin/Debug/net10.0/Shared.dll"), "--report", "json"], source);
             Assert.NotEqual(0, result.ExitCode);
             using var document = JsonDocument.Parse(result.Output);
             var diagnostic = Assert.Single(document.RootElement.GetProperty("diagnostics").EnumerateArray());

@@ -9,16 +9,24 @@ failure with exit 2. Help/version remain normal CLI text.
 fpas schema operation
 fpas schema terminal-script
 fpas schema test
+fpas schema commands
+fpas schema commands query find
+fpas schema query-batch-input
 ```
 
 | Name | Contract |
 | --- | --- |
 | `operation` | Profile, terminal, dump operations and schema argument failures |
 | `terminal-script` | Controlled terminal-test input |
+| `workspace` | Evaluated project inventory, project references and source impact |
 | `project` | Init, build, run, target, publish, clean and restore |
 | `compile` | Standalone compiler diagnostics |
-| `check` | Evaluated project/solution checking and corrections |
-| `query` | Checked source queries |
+| `check` | Evaluated project/solution checking, corrections and draft analysis |
+| `check-overlay-input` | New and replacement source texts supplied to `check`, `query batch` or `refactor draft` with `--overlay` |
+| `query` | Checked source queries, completion and signature help |
+| `query-outline` | Syntax-only file outline and parser diagnostics |
+| `query-batch` | Ordered source-query results from a shared snapshot |
+| `query-batch-input` | Requests accepted on stdin by `query batch` |
 | `test` | Native VSTest/MTP results and discovery |
 | `debug` | Batch, tracepoints, runtime-failure observations and `run --failure-report` files |
 | `format` | Source formatting |
@@ -48,6 +56,50 @@ schema/version contract. Existing JSON fields do not define future commands.
 Full command names are the public spelling; no additional short aliases are
 selected. Use each command's `--help` for examples and accepted options.
 
+`fpas schema commands` writes a versioned command catalogue as JSON. Its
+`commands` entries identify each registered public command by its full command
+path. Each entry lists positional arguments and options with their descriptions,
+types, required status, arity and registered defaults when available.
+`maxValues: null` indicates unbounded arity. Recursive options are included where
+accepted. `reportSchema` identifies the associated report contract.
+`reportOption` gives the JSON opt-in flag when available. The catalogue has
+`schemaVersion: 1`. Append a command path to return just that command in the
+same format. A command entry can list its immediate `subcommands`. Options
+with registered value restrictions include `allowedValues`, `minimum` and
+`maximum` as applicable. The `rules` array describes registered option
+relationships with a `kind` and ordered `options`. For `requires` the first
+option depends on the second. Other rule kinds are `excludes` and `exactlyOne`.
+`inputSchema` identifies input contracts such as `query-batch-input`.
+A file option for that contract is identified by `inputOption`.
+`optionInputSchemas` maps additional file options to their schemas when the
+command also accepts a stdin contract.
+
+`fpas query batch CONTEXT` reads a JSON array of queries from stdin. A batch
+report contains one `snapshotId` and one `results` array in request order.
+Each entry reports its operation, status and typed result or error. See
+[batch queries](../program-structure/cli.md#batch-queries) for the input contract.
+An `inspect` or `refs` entry with `symbol` and `project` additionally requires
+`--expected-snapshot` on the invoking command.
+
+## Recovery details
+
+Analysis errors and project preparation issues can expose `project`, the
+exact `inputPath` when available, and the machine-readable `nextAction`.
+An issue includes `inputProject` when the input belongs to another project.
+A failed snapshot precondition includes `expectedSnapshotId` and
+`actualSnapshotId`.
+Display the accompanying message to explain the particular failure.
+
+| Action | Follow-up |
+| --- | --- |
+| `restore_project` | Restore the indicated project to produce its assets file. |
+| `build_project` | Build the project that owns the missing or stale dependency output. |
+| `prepare_source` | Generate the named source or correct the evaluated source list. |
+| `review_project` | Inspect the reported project or SDK evaluation failure. |
+| `refresh_snapshot` | Repeat the read against current inputs and discard stale result coordinates. |
+| `recreate_plan` | Prepare and review a fresh edit plan. |
+| `check_sources` | Check the current sources after edits were already written. |
+
 ## See also
 
 - [Compiler CLI](../program-structure/cli.md)
@@ -58,5 +110,8 @@ selected. Use each command's `--help` for examples and accepted options.
 ## Source files
 
 - [OperationReport.cs](../../../src/Fpas.Cli/Reporting/OperationReport.cs)
+- [CommandConstraints.cs](../../../src/Fpas.Cli/CommandConstraints.cs)
+- [QueryBatchSchema.cs](../../../src/Fpas.Cli/Reporting/QueryBatchSchema.cs)
+- [CommandCatalogue.cs](../../../src/Fpas.Cli/Reporting/CommandCatalogue.cs)
 - [SchemaCommand.cs](../../../src/Fpas.Cli/Reporting/SchemaCommand.cs)
 - [ReportSchemaTests.cs](../../../tests/Fpas.IntegrationTests/Cli/ReportSchemaTests.cs)

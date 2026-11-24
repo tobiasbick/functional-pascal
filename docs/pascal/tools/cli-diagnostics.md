@@ -77,19 +77,20 @@ that worker and its owned process-group or job members exit.
 
 For automatic capture during a development run, use
 `fpas run CONTEXT --failure-report failure.json`. It captures the first unhandled
-managed exception before resuming the original process, keeps normal console
-input and preserves the actual program exit. The destination must be new.
+managed exception before resuming the original process and preserves the actual
+program exit. Input and output follow the selected run mode. The destination
+must be new.
 See [run failure reports](../program-structure/project-commands.md#save-the-original-failure)
 for symbols, platform requirements, capture limits and report persistence.
 
 ```sh
-fpas diagnose failure artifacts/App.dll --timeout 20 -- input.txt
+fpas debug artifacts/App.dll --timeout 20 -- input.txt
 fpas diagnose dump --process-id 1234 --output failure.dmp
 fpas diagnose inspect-dump failure.dmp --command "clrstack -all" --command "dumpheap -type System.InvalidOperationException -short"
 fpas diagnose inspect-dump failure.dmp --command "pe EXCEPTION_ADDRESS"
 ```
 
-Failure mode uses the [batch debugger](batch-debugging.md), stops at an unhandled
+The [batch debugger](batch-debugging.md) stops at an unhandled
 exception, and captures actual exception information, source locations, managed
 thread/frame context and passive bindings. `--print` requests additional passive
 expressions. `--stdin` provides a bounded input file; otherwise input is EOF.

@@ -46,7 +46,7 @@ internal sealed class TestCommand
 
     internal TestCommand()
     {
-        report.AcceptOnlyFromAmong("json"); ContextCommandOptions.Range(timeout, 1, 3600);
+        report.AcceptValues("json"); ContextCommandOptions.Range(timeout, 1, 3600);
         Command.Arguments.Add(context);
         Command.Arguments.Add(arguments);
         foreach (var option in new Option[] { configuration, project, noBuild, noRestore, list, filter, expectedOutput, settings, directory, report, timeout, adapters, collectors }) Command.Options.Add(option);
@@ -54,7 +54,7 @@ internal sealed class TestCommand
     }
 
     internal void ReportArgumentError(ParseResult result, string message)
-        => new TestReport(false, "failed", result.GetValue(list) ? "list" : "run", result.GetValue(context))
+        => new TestReport(false, "failed", result.GetValue(list) ? "list" : "run", CommandArguments.Supplied(result, context))
             { Error = new("invalid_argument", message + " See fpas test --help.") }.Write(Json(result));
     private bool Json(ParseResult result) => result.GetResult(report)?.Tokens.Any(token => token.Value == "json") == true;
     internal void Validate(ParseResult result, string[] raw)
@@ -84,7 +84,7 @@ internal sealed class TestCommand
             var paths = (result.GetValue(adapters) ?? []).Select(Path.GetFullPath).ToArray();
             if (paths.Any(path => !Directory.Exists(path) || path.Contains(';'))) throw new ContextFailure("invalid_argument", "Select existing adapter directories without semicolons.");
             var extra = result.GetValue(arguments) ?? [];
-            if (extra.Length > 256 || extra.Sum(item => (long)item.Length) > 65536 || extra.Any(item => item.Contains('\0'))) throw new ContextFailure("invalid_argument", "Native options require at most 256 arguments and 65536 code units without NUL.");
+            if (!AcceptsNativeArguments(extra)) throw new ContextFailure("invalid_argument", "Native options require at most 256 arguments and 65536 code units without NUL.");
             var options = new TestRunOptions(paths, result.GetValue(collectors) ?? [], extra);
             if (!result.GetValue(noBuild))
             {
@@ -94,8 +94,10 @@ internal sealed class TestCommand
             }
             var projects = await TestDriver.SelectAsync(input, config, result.GetValue(project), token);
             if (expected is not null && projects.Count != 1) throw new ContextFailure("invalid_argument", "--expected-output requires one selected test project.");
-            results = Path.Combine(Path.GetFullPath(result.GetValue(directory) ?? Path.Combine(Path.GetDirectoryName(input)!, "TestResults")), "fpas-" + Guid.NewGuid().ToString("N"));
+            var resultsRoot = Path.GetFullPath(result.GetValue(directory) ?? Path.Combine(Path.GetDirectoryName(input)!, "TestResults"));
+            results = Path.Combine(resultsRoot, "fpas-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(results);
+            var rerunBudget = TestReport.MaximumBytes;
             foreach (var candidate in projects)
             {
                 token.ThrowIfCancellationRequested();
@@ -122,6 +124,11 @@ internal sealed class TestCommand
                         throw new ContextFailure("results_missing", "The native test runner returned success without a TRX artifact.");
                 }
                 output.Verify(token);
+                if (json && completed[^1] is { Runner.Truncated: false, Result: { Counts.Failed: > 0 } nativeReport } checkedRun)
+                {
+                    var reruns = TestRerun.Create(nativeReport, selected, input, config, runsettings, resultsRoot, result.GetValue(timeout), options, ref rerunBudget);
+                    if (reruns.Count > 0) completed[^1] = checkedRun with { Reruns = reruns };
+                }
             }
             token.ThrowIfCancellationRequested();
             var success = completed.All(item => item.Runner.ExitCode == 0 && !item.Runner.Truncated && item.Result?.Success != false);
@@ -137,4 +144,7 @@ internal sealed class TestCommand
         { response = Failure("test_failed", exception.Message); exit = 1; }
         return response.Write(json) ? exit : 1;
     }
+
+    internal static bool AcceptsNativeArguments(IReadOnlyList<string> arguments)
+        => arguments.Count <= 256 && arguments.Sum(item => (long)item.Length) <= 65_536 && !arguments.Any(item => item.Contains('\0'));
 }

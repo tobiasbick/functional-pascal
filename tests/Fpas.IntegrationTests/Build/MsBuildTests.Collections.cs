@@ -75,7 +75,7 @@ public sealed partial class MsBuildTests
         foreach (var (body, error) in cases)
         {
             var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "compile", "-", "--output", project.File("Check.dll"),
-                "--reference-dir", TestEnvironment.ReferenceDirectory, "--reference", project.File("Shared/bin/Debug/net10.0/Shared.dll"), "--diagnostics", "json"],
+                "--reference-dir", TestEnvironment.ReferenceDirectory, "--reference", project.File("Shared/bin/Debug/net10.0/Shared.dll"), "--report", "json"],
                 "program Check; uses Demo as D; begin " + body + " end; end program;");
             if (error is null) Assert.True(result.ExitCode == 0, body + ": " + result.Output + result.Error);
             else

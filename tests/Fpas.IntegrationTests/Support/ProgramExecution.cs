@@ -10,7 +10,7 @@ internal static class ProgramExecution
         using var directory = new TemporaryDirectory();
         var output = directory.File("Program.dll");
         var compiled = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "compile", "-", "--output", output,
-            "--reference-dir", TestEnvironment.ReferenceDirectory, "--diagnostics", "json"], source);
+            "--reference-dir", TestEnvironment.ReferenceDirectory, "--report", "json"], source);
         Assert.True(compiled.ExitCode == 0, compiled.Output + compiled.Error);
         return await ProcessRunner.RunAsync([output, .. arguments], environment: new Dictionary<string, string?>
         {

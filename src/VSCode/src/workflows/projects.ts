@@ -159,7 +159,7 @@ export class Projects {
     await this.diskConsent(selection);
     if (token.isCancellationRequested) throw new vscode.CancellationError();
     let args = [operation === 'format' ? 'fmt' : operation, selection.context, '--configuration', selection.configuration,
-      operation === 'check' ? '--diagnostics' : '--report', 'json'];
+      '--report', 'json'];
     if (operation === 'run') {
       const target = await this.target(selection, options.project, token);
       const cwd = await workingDirectory(options.cwd, path.dirname(target.project));
@@ -198,7 +198,7 @@ export class Projects {
     const args = options.args ?? vscode.workspace.getConfiguration(settings).get('run.arguments', []);
     if (!Array.isArray(args) || args.some(item => typeof item !== 'string' || item.includes('\0'))) throw new Error('Run arguments must be an array of strings.');
     return ['run', selection.context, '--configuration', selection.configuration, ...projectArguments(target.project),
-      '--working-directory', cwd, ...(options.noBuild ? ['--no-build'] : []), ...(captured ? ['--report', 'json', '--timeout', '120'] : []), '--', ...args];
+      '--cwd', cwd, ...(options.noBuild ? ['--no-build'] : []), ...(captured ? ['--report', 'json', '--timeout', '120'] : []), '--', ...args];
   }
 }
 

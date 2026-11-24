@@ -3,6 +3,7 @@ using Fpas.IntegrationTests.Build;
 using Fpas.Tests.Support;
 using Fpas.Workspaces.Analysis;
 using Fpas.Workspaces.Loading;
+using System.Text.Json;
 using System.Xml.Linq;
 
 namespace Fpas.IntegrationTests.Workspaces;
@@ -61,6 +62,36 @@ public sealed class ExistingInputTests(SdkPackageFixture sdk) : IClassFixture<Sd
     }
 
     [Fact]
+    public async Task Check_report_identifies_missing_restore_assets_and_generated_source()
+    {
+        using var directory = sdk.CreateProject();
+        var path = directory.File("Game/Game.fpasproj");
+        var assets = directory.File("Game/obj/project.assets.json");
+        var restore = await sdk.Run(directory, "restore", path);
+        Assert.True(restore.ExitCode == 0, restore.Output + restore.Error);
+        var project = XDocument.Load(path);
+        project.Root!.Add(new XElement("ItemGroup", new XElement("Compile", new XAttribute("Include", "$(IntermediateOutputPath)Generated.fpas"))));
+        project.Save(path);
+        await AssertIssue(directory.File("Game/obj/Debug/net10.0/Generated.fpas"), "prepare_source");
+        File.Delete(assets);
+        await AssertIssue(assets, "restore_project");
+        Assert.False(File.Exists(assets));
+
+        async Task AssertIssue(string input, string action)
+        {
+            var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "check", path, "--existing-inputs", "--report", "json"],
+                workingDirectory: directory.Path, timeLimit: TimeSpan.FromMinutes(1));
+            Assert.Equal(1, result.ExitCode);
+            using var json = JsonDocument.Parse(result.Output);
+            var issue = Assert.Single(json.RootElement.GetProperty("preparation").GetProperty("issues").EnumerateArray());
+            Assert.Equal("preparation_required", issue.GetProperty("code").GetString());
+            Assert.Equal(path, issue.GetProperty("project").GetString());
+            Assert.Equal(input, issue.GetProperty("inputPath").GetString());
+            Assert.Equal(action, issue.GetProperty("nextAction").GetString());
+        }
+    }
+
+    [Fact]
     public async Task Missing_dependency_metadata_requires_explicit_preparation_and_is_not_rebuilt()
     {
         using var directory = sdk.CreateProject(); var path = directory.File("Game/Game.fpasproj");
@@ -68,7 +99,12 @@ public sealed class ExistingInputTests(SdkPackageFixture sdk) : IClassFixture<Sd
         var prepared = await WorkspaceLoader.LoadAsync(new(path), deadline.Token); Assert.Empty(prepared.Issues);
         var metadata = Assert.Single(prepared.DependencyOutputs).Path; Assert.True(File.Exists(metadata)); File.Delete(metadata);
         var evaluated = await WorkspaceLoader.LoadAsync(new(path, Preparation: ContextPreparation.ExistingInputs), deadline.Token);
-        Assert.Empty(evaluated.Projects); Assert.NotEmpty(evaluated.Issues);
+        Assert.Empty(evaluated.Projects);
+        var issue = Assert.Single(evaluated.Issues);
+        Assert.Equal("preparation_required", issue.Code);
+        Assert.Equal(metadata, issue.InputPath);
+        Assert.Equal("build_project", issue.NextAction);
+        Assert.Equal(directory.File("Shared/Shared.csproj"), issue.InputProject);
         Assert.False(File.Exists(metadata)); Assert.False(evaluated.RestorePerformed);
     }
 

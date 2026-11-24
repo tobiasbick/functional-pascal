@@ -3,6 +3,7 @@ using Fpas.Compiler;
 using Fpas.Compiler.Analysis;
 using Fpas.Workspaces.Snapshots;
 using System.Security.Cryptography;
+using System.Text.Json;
 using System.Text;
 
 namespace Fpas.Workspaces.Loading;
@@ -12,7 +13,16 @@ namespace Fpas.Workspaces.Loading;
 /// <param name="Code">Stable failure code.</param>
 /// <param name="Message">Failure explanation.</param>
 /// <param name="OutputTruncated">Whether supporting process output exceeded its budget.</param>
-public sealed record ContextIssue(string Project, string Code, string Message, bool OutputTruncated = false);
+/// <param name="InputPath">Exact missing or changed path, when known.</param>
+/// <param name="NextAction">Suggested recovery action, when available.</param>
+/// <param name="InputProject">Project that owns the affected input when it differs from the evaluated project.</param>
+public sealed record ContextIssue(string Project, string Code, string Message, bool OutputTruncated = false,
+    string? InputPath = null, string? NextAction = null, string? InputProject = null)
+{
+    internal static ContextIssue From(string project, ContextFailure error)
+        => new(project, error.Code, error.Message, error.OutputTruncated, error.InputPath, error.NextAction,
+            WorkspacePaths.Comparer.Equals(project, error.Project) ? null : error.Project);
+}
 /// <summary>Contains one evaluated FPAS compilation and its reachable dependencies.</summary>
 /// <param name="Path">Absolute project path.</param>
 /// <param name="Configuration">Evaluated project configuration.</param>
@@ -51,6 +61,7 @@ public sealed class WorkspaceContext
     /// <summary>Gets one consistent captured text per physical source path.</summary>
     public WorkspaceTextSnapshot Texts { get; }
     internal IReadOnlyDictionary<string, IReadOnlyList<string>> ForeignDependencies { get; }
+    internal IReadOnlyDictionary<string, IReadOnlyList<string>> DraftOwners { get; init; } = new Dictionary<string, IReadOnlyList<string>>();
     private readonly IReadOnlyDictionary<string, string> inputs;
 
     internal WorkspaceContext(string path, string configuration, bool restored, IEnumerable<ContextProject> projects,
@@ -67,9 +78,10 @@ public sealed class WorkspaceContext
         var semantics = Projects.Select(project => project.Path + "\n" + project.Configuration + "\n" + project.Request.AssemblyName + "\n" + project.Request.Target + "\n" +
             project.Request.ValidateDocumentation + "\n" + project.Request.DiagnosticOptions?.TreatWarningsAsErrors + "\n" +
             string.Join(',', project.Request.DiagnosticOptions?.WarningsAsErrors ?? []) + "\n" +
-            string.Join(',', project.Request.DiagnosticOptions?.WarningsNotAsErrors ?? []) + "\n" + string.Join(',', project.Request.DiagnosticOptions?.NoWarn ?? []));
+            string.Join(',', project.Request.DiagnosticOptions?.WarningsNotAsErrors ?? []) + "\n" + string.Join(',', project.Request.DiagnosticOptions?.NoWarn ?? []) + "\n" +
+            string.Join('\0', project.Request.Sources.Select(source => source.Path).Order(StringComparer.Ordinal)));
         SnapshotId = HashText(string.Join('\n', inputs.OrderBy(item => item.Key, StringComparer.Ordinal).Select(item => item.Key + "=" + item.Value)) + "\n" +
-            configuration + "\n" + string.Join('\n', semantics) + "\n" + string.Join('\n', Issues.Select(issue => issue.Project + ":" + issue.Code)) +
+            configuration + "\n" + string.Join('\n', semantics) + "\n" + string.Join('\n', Issues.Select(issue => issue.Project + ":" + issue.Code + ":" + issue.InputPath)) +
             "\n" + ForeignIdentity());
     }
 
@@ -79,8 +91,9 @@ public sealed class WorkspaceContext
     public async Task VerifyInputsAsync(CancellationToken cancellationToken = default)
     {
         VerifyFiles(cancellationToken);
-        var current = await WorkspaceLoader.LoadAsync(new(Path, Configuration, NoRestore: true, Preparation), cancellationToken);
-        if (current.SnapshotId != SnapshotId) throw new ContextFailure("inputs_changed", "Evaluated project inputs changed after context capture.");
+        var current = await WorkspaceLoader.LoadAsync(new(Path, Configuration, NoRestore: true, Preparation), DraftOwners.Keys.ToArray(), cancellationToken);
+        if (current.SnapshotId != SnapshotId || DraftOwners.Any(entry => !entry.Value.SequenceEqual(current.DraftOwners[entry.Key], WorkspacePaths.Comparer)))
+            throw new ContextFailure("inputs_changed", "Evaluated project inputs changed after context capture.");
     }
 
     internal void VerifyFiles(CancellationToken cancellationToken = default, IEnumerable<string>? ignoredSources = null)
@@ -90,7 +103,7 @@ public sealed class WorkspaceContext
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (ignored.Contains(path)) continue;
-            if (!File.Exists(path) || HashFile(path) != expected) throw new ContextFailure("inputs_changed", "An analysis input changed: " + path);
+            if (!File.Exists(path) || HashFile(path) != expected) throw new ContextFailure("inputs_changed", "An analysis input changed: " + path, inputPath: path);
         }
     }
 
@@ -101,7 +114,7 @@ public sealed class WorkspaceContext
     {
         var image = new MetadataImage(path, File.ReadAllBytes(path));
         if (inputs.TryGetValue(path, out var expected) && image.ContentHash != expected)
-            throw new ContextFailure("inputs_changed", "Reference changed during capture: " + path);
+            throw new ContextFailure("inputs_changed", "Reference changed during capture: " + path, inputPath: path);
         return image;
     }
 
@@ -117,10 +130,11 @@ public sealed class WorkspaceContext
     internal string InputIdentity(IEnumerable<string> ignoredSources)
     {
         var ignored = IgnoredSourcePaths(ignoredSources);
+        var projects = Projects.Select(project => new ProjectInputIdentity(project.Path, project.Configuration, project.Request.AssemblyName,
+            project.Request.Target, project.Request.ValidateDocumentation, project.Request.DiagnosticOptions, project.Dependencies)).ToArray();
         return HashText(string.Join('\n', inputs.OrderBy(pair => pair.Key, StringComparer.Ordinal).Select(pair => pair.Key + "=" + (ignored.Contains(pair.Key) ? "open" : pair.Value))) +
-            "\n" + Configuration + "\n" + System.Text.Json.JsonSerializer.Serialize(Projects.Select(project => new
-            { project.Path, project.Configuration, project.Request.AssemblyName, project.Request.Target, project.Request.ValidateDocumentation, project.Request.DiagnosticOptions, project.Dependencies })) +
-            "\n" + string.Join('\n', Issues.Select(issue => issue.Project + ":" + issue.Code)) + "\n" + ForeignIdentity());
+            "\n" + Configuration + "\n" + JsonSerializer.Serialize(projects, ProjectManifestJson.Default.ProjectInputIdentityArray) +
+            "\n" + string.Join('\n', Issues.Select(issue => issue.Project + ":" + issue.Code + ":" + issue.InputPath)) + "\n" + ForeignIdentity());
     }
 
     private string ForeignIdentity() => string.Join('\n', ForeignDependencies.OrderBy(pair => pair.Key, StringComparer.Ordinal)

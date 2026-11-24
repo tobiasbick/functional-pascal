@@ -64,7 +64,8 @@ or modify its successful-build cache. A checked library may also be built as
 another project's dependency; those outputs are declared separately.
 Ordinary bin/obj files and MSBuild task execution are preparation side effects.
 
-ContextPreparation.ExistingInputs skips restore, dependency builds and
+`ContextPreparation.ExistingInputs`, exposed by `--existing-inputs` on check,
+query, doc and refactor, skips restore, dependency builds and
 FpasPrepareCompilation hooks. It resolves references with BuildProjectReferences
 disabled and consumes existing generated files already declared as Compile items.
 Package SDK resolution uses the installed-only Fpas.SdkResolver inside MSBuild,
@@ -73,9 +74,11 @@ references follow the same rule. The resolver uses the requested package SDK
 version, or the version from the nearest `global.json` `msbuild-sdks` entry for
 an unversioned reference. The cache entry must contain both `.nupkg.metadata`
 and an `Sdk` directory. Missing restore assets, sources and foreign
-dependency metadata require explicit preparation. This library policy
-is separate from the CLI's NoRestore flag. Context verification retains the chosen
-policy instead of enabling preparation. MSBuild evaluation/reference-resolution
+dependency metadata require explicit preparation. Reports include the affected
+project, the exact input path when known and a
+[recovery action](../pascal/tools/report-schemas.md#recovery-details).
+Context verification retains
+the chosen preparation policy. MSBuild evaluation/reference-resolution
 caches may still use obj. A preprocessing-only pass inspects actual imports
 before targets run. Custom initial/analysis hooks, overridden SDK targets,
 analysis dependency changes and target-added Compile items are rejected.
@@ -281,6 +284,7 @@ the [language-server reference](../pascal/tools/language-server.md).
 - `src/Fpas.Build.Tasks/Analysis/`
   - [ExportedContext.cs](../../src/Fpas.Build.Tasks/Analysis/ExportedContext.cs)
   - [FpasExportAnalysisContext.cs](../../src/Fpas.Build.Tasks/Analysis/FpasExportAnalysisContext.cs)
+  - [DraftFileEvaluation.cs](../../src/Fpas.Build.Tasks/Analysis/DraftFileEvaluation.cs)
 - `src/Fpas.Cli/Analysis/`
   - [ContextCommandOptions.cs](../../src/Fpas.Cli/Analysis/ContextCommandOptions.cs)
 - `src/Fpas.LanguageServer/`

@@ -17,7 +17,7 @@ Control characters are escaped. Color is automatic for an interactive stderr;
 redirected output, `NO_COLOR` and `TERM=dumb` disable it.
 Successful compilation writes `Wrote path.dll` to stdout.
 
-Use `--diagnostics json` for automation. It writes one stdout object containing
+Use `--report json` for automation. It writes one stdout object containing
 `success`, `output`, and `diagnostics`; each diagnostic contains `code`, `message`,
 `severity`, `location`, `explanation`, `help`, `helpLink`, `expectation`, `related`
 and `fixes`. The output path is null when compilation fails. Optional data is null
@@ -67,6 +67,30 @@ Comment and operator spellings inside strings or `//` comments remain data.
 Console I/O and `exit` hints describe the supported API or statement without
 fabricating edits that require unknown imports or values.
 
+## Filter and page analysis reports
+
+`check --report json` and the checked queries, including `query batch`, use
+`--diagnostic-file` and `--diagnostic-project` to select diagnostics. Paths
+resolve against the invocation directory. The filters combine when supplied
+together. `--diagnostic-limit` defaults to 100 and accepts 0..1000. Use zero
+for counts alone. `--diagnostic-offset` skips matching diagnostics in stable
+project and source order. Combine pages when their `snapshotId` matches.
+
+```sh
+fpas check Example.slnx --report json --diagnostic-file src/main.fpas --diagnostic-limit 20
+```
+
+`diagnostics` contains the selected page. `diagnosticPage` reports
+`totalCount`, `matchedCount`, `returnedCount`, `offset` and `nextOffset`
+when another page is available. Each check project entry gives its total
+`diagnosticCount`. The page budget can shorten pages. A very large diagnostic
+retains its code, location, severity and a short message with
+`detailsOmitted: true`. `summarizedCount` counts these entries.
+
+Status, preparation issues, semantic coverage and automatic corrections reflect
+the entire context. Regular text check output uses a page when a diagnostic
+filter or page option is supplied.
+
 ## Call diagnostics
 
 `FP3003` reports the argument rejected by the closest signatures, or explains
@@ -92,16 +116,20 @@ signatures before editing the call.
 Use an explicit project or solution and the usual configuration/restore options:
 
 ```sh
-fpas check Example.fpasproj --fix --dry-run --diagnostics json
-fpas check Example.fpasproj --fix --diagnostics json
+fpas check Example.fpasproj --fix --dry-run --report json
+fpas check Example.fpasproj --fix --report json
+fpas check Example.fpasproj --fix --expected-snapshot "$SNAPSHOT" --fix-id "$FIX_ID" --report json
 ```
 
-`--fix --dry-run` previews one batch without source writes. `--dry-run` requires
-`--fix`. `--fix` applies only automatic proposals from the captured analysis;
-review proposals remain visible and untouched. No proposal is guessed from a
-diagnostic message. Each invocation prepares a fresh batch; previews are not
-persisted edit plans. New diagnostics exposed by a correction can need another
-invocation or a manual change.
+`--fix --dry-run` previews one batch. `--fix` applies automatic proposals
+from the captured analysis. Each invocation prepares a fresh batch. Each
+proposal has an `id` and the preview records `fixes.inputSnapshotId`.
+
+Repeat `--fix-id ID` with `--fix` to apply only the chosen automatic proposals.
+Use `--expected-snapshot ID` with the original preview snapshot to reject
+changed inputs before collecting corrections. Unknown IDs and review-only
+proposals are argument errors. After applying a fix, use the fresh diagnostics
+and snapshot for any subsequent selection.
 
 Only evaluated regular `.fpas` inputs are eligible, including linked sources
 explicitly owned by the project. Reparse points and read-only files are refused.
@@ -222,6 +250,8 @@ and the [compiler CLI](../program-structure/cli.md) for direct invocation.
 - [Syntax grammar](../../specs/syntax.md)
 
 ## Source files
+
+- [DiagnosticPage.cs](../../../src/Fpas.Cli/Analysis/DiagnosticPage.cs)
 
 - [Binder.CallDiagnostics.cs](../../../src/Fpas.Compiler/Binding/Bodies/Binder.CallDiagnostics.cs)
 - [CallDiagnosticsTests.cs](../../../tests/Fpas.Compiler.Tests/Routines/CallDiagnosticsTests.cs)

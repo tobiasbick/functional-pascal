@@ -118,5 +118,5 @@ public sealed class MultiSourceCliTests
 
     private static Task<ProcessResult> Compile(TemporaryDirectory directory, IEnumerable<string> sources, string? input = null)
         => ProcessRunner.RunAsync(new[] { TestEnvironment.Metadata("FpasCliPath"), "compile" }.Concat(sources)
-            .Concat(["--output", directory.File("Multiple.dll"), "--reference-dir", TestEnvironment.ReferenceDirectory, "--diagnostics", "json"]), input);
+            .Concat(["--output", directory.File("Multiple.dll"), "--reference-dir", TestEnvironment.ReferenceDirectory, "--report", "json"]), input);
 }

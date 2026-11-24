@@ -91,7 +91,7 @@ begin
         '--reference-dir',
         Options.References,
         '--generate-documentation',
-        '--diagnostics',
+        '--report',
         'json'
       ]
     );

@@ -23,31 +23,3 @@ as zero through `2e10f` renders the constant series using native CUI. This keeps
 the native scaling algorithm unchanged for representable ranges. The native
 chart test retains the direct NaN reproduction without rasterizing it; binding
 tests cover rejection, stacked overflow and the explicit-range alternative.
-
-<a id="cui-043"></a>
-
-## CUI-043 — Idle X11 OpenGL windows present continuously
-
-- Upstream: [Issue #104](https://github.com/yappologistic/CUI/issues/104) and
-  [PR #105](https://github.com/yappologistic/CUI/pull/105), applied on master as
-  [`01f9c06`](https://github.com/yappologistic/CUI/commit/01f9c06) and
-  [`bcd918b`](https://github.com/yappologistic/CUI/commit/bcd918b). FPAS included
-  the fix in its `56c9bc2` snapshot. The maintainer verified it under Xvfb;
-  the KWin and Mesa DRI3 reproduction below has not been rerun yet.
-
-Reproduced at `71c383f` with the X11 backend and the OpenGL renderer
-under Mesa DRI3: Debian, KDE KWin 6.7 X11, VMware SVGA3D. An idle window, with
-nothing animating and the pointer outside, used about 25% CPU and swapped
-buffers at the swap rate, about 110 to 220 times a second. The software
-renderer and Win32 OpenGL idle at 0.
-
-Each `glXSwapBuffers` brings Present events over the X connection, and Mesa
-consumes them itself. They wake `select` in `cui__plat_wait` without an Xlib
-event for the app. `cui_app_frame` still starts a frame after every wake, and
-that frame's swap brings the next event. A gdb trace over 4 idle seconds
-counted 444 wakeups and 444 swaps with no `XNextEvent`. The fix keeps waiting
-until `XPending` reports an event or the timeout expires. The idle cost then
-drops to 0 with no lost caret blinks, input or live resizing.
-
-FPAS has no workaround. Remove this entry once the reproduction is idle with
-the vendored snapshot.

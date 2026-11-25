@@ -16,6 +16,11 @@ the topics needed for the task.
   before extending the language.
 - Remove completed work from plans and gap lists. Preserve acceptance checkmarks
   in the CUI widget inventory.
+- Keep temporary data under the git-ignored `.temp-data/` in this checkout:
+  scripts, logs, patches, measurements, build trees, worktrees and clones. Do
+  not use the system temp directory or a session scratchpad; MSBuild rejects
+  intermediate directories below `%TEMP%`. Linux checks under WSL are the
+  exception and use a clone below `~/work/`, because builds on `/mnt/` are slow.
 
 ## Code
 
@@ -41,7 +46,7 @@ the topics needed for the task.
 - Use `fpas debug` in batch mode to capture a breakpoint or unhandled exception
   in one JSON report.
 - Use `fpas profile` or the documented .NET diagnostic tools before writing
-  samplers or benchmark variants. Store measurements under `.temp-data/`.
+  samplers or benchmark variants.
 - Record gaps found through use under `docs/future/`, including any fallback and
   its verification limits.
 

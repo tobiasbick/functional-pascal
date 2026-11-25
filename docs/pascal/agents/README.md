@@ -31,8 +31,9 @@ end;
 end program;
 ```
 
-Save sources as UTF-8 `.fpas`. Projects use `.fpasproj` and solutions `.slnx`.
-Read [CLI](cli.md) for compilation and execution.
+Save as UTF-8 `AgentStart.fpas` and run `fpas run AgentStart.fpas`. Use the same
+command for one-off repository helpers under `.temp-data/`. See [CLI](cli.md)
+for project inputs and options.
 
 ## Rules before writing
 

@@ -5,7 +5,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Canvas.PaintSurface;
 uses
   Fpas.Ui.Widgets.Canvas.Painting as D, Fpas.Ui.Graphics as G,
   Fpas.Ui.Widgets.Media.MediaImages as Images, Fpas.Ui.Gui.Cui.Widgets.Canvas as Native,
-  Fpas.Ui.Gui.Internal.Data.CreativeParts as Colors, Fpas.Ui.Gui.Internal.Data.MediaData as Media;
+  Fpas.Ui.Gui.Internal.Core.Values as Colors, Fpas.Ui.Gui.Internal.Data.MediaData as Media;
 
 function Points(Values: array of D.Point): array of Native.CuiPoint;
 begin

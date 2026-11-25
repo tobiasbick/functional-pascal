@@ -170,7 +170,7 @@ begin
           Port
         );
       when PlayerModel.Request.Mixer(_):
-        discard Port.Requests.Writer.TryWrite(Work);
+        Port.Send(Work);
         return new Mvu.Transition<M.State, M.Msg>(
           Next, [
             Mvu.StartBackground<M.Msg>(
@@ -185,7 +185,7 @@ begin
           ]
         );
       else
-        discard Port.Requests.Writer.TryWrite(Work);
+        Port.Send(Work);
     end case;
   end if;
 

@@ -5,7 +5,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Canvas.Canvas;
 uses
   Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys,
   Fpas.Ui.Widgets.Canvas.Painting as Painting, Fpas.Ui.Gui.Internal.Widgets.Canvas.PaintSurface as Surface,
-  Fpas.Ui.Widgets.Canvas.Canvases as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P,
+  Fpas.Ui.Widgets.Canvas.Canvases as D, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc,
   Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Graphics as G, Fpas.Ui.Gui.Cui.Widgets.Canvas as CuiCanvas, System as Sys;
 
 function Pack(Shape: D.Shape): CuiCanvas.CuiDrawingShape;
@@ -18,13 +18,13 @@ begin
       const H: float,
       const Radius: float,
       const Color: G.Color
-    ): new CuiCanvas.CuiDrawingShape(0, X, Y, W, H, Radius, P.Pack(Color));
+    ): new CuiCanvas.CuiDrawingShape(0, X, Y, W, H, Radius, Enc.Pack(Color));
     when D.Shape.Circle(
       const X: float,
       const Y: float,
       const Radius: float,
       const Color: G.Color
-    ): new CuiCanvas.CuiDrawingShape(1, X, Y, 0.0F, 0.0F, Radius, P.Pack(Color));
+    ): new CuiCanvas.CuiDrawingShape(1, X, Y, 0.0F, 0.0F, Radius, Enc.Pack(Color));
     when D.Shape.Line(
       const X: float,
       const Y: float,
@@ -32,7 +32,7 @@ begin
       const EndY: float,
       const Thickness: float,
       const Color: G.Color
-    ): new CuiCanvas.CuiDrawingShape(2, X, Y, EndX, EndY, Thickness, P.Pack(Color));
+    ): new CuiCanvas.CuiDrawingShape(2, X, Y, EndX, EndY, Thickness, Enc.Pack(Color));
   end case;
 end function;
 

@@ -25,6 +25,7 @@ internal sealed partial class SemanticRecorder
         if (declaration?.BodyStart is { } start)
         {
             start = Math.Min(start, syntax?.Contracts?.FirstOrDefault()?.Condition.SpanStart ?? start);
+            start = Math.Min(start, syntax?.Statements.OfType<NestedRoutineSyntax>().FirstOrDefault()?.SpanStart ?? start);
             Unavailable(source, start, declaration.BodyEnd!.Value, "binding_error");
             if (syntax?.Attributes is { Count: > 0 }) Unavailable(source, declaration.Start, syntax.Name.Position, "binding_error");
         }

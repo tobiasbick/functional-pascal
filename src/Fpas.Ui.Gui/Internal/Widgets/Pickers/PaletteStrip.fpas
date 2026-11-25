@@ -3,8 +3,8 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Pickers.PaletteStrip;
 
 uses
-  Fpas.Ui.Widgets.Pickers.PaletteStrips as A, Fpas.Ui.Gui.Internal.Hosting.Context as C,
-  Fpas.Ui.Gui.Internal.Data.CreativeParts as W, Fpas.Ui.Graphics as G, System.Collections.Generic as Lists;
+  Fpas.Ui.Widgets.Pickers.PaletteStrips as A, Fpas.Ui.Gui.Internal.Core.Context as C,
+  Fpas.Ui.Gui.Internal.Core.Parts as W, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Graphics as G, System.Collections.Generic as Lists;
 
 // Presents the native palette strip.
 // ## Type parameters
@@ -27,14 +27,14 @@ begin
   const Accept: array of bool := W.Inputs(Parts.Length, Enabled);
   Accept[Count] := Enabled and not Settings.NoShuffle;
   for Index: int := 0 to Count - 1 do
-    Colors[Index] := W.Pack(Current.Swatches[Index].Color);
-    Locks[Index] := W.Bits(Current.Swatches[Index].Locked, 1);
+    Colors[Index] := Enc.Pack(Current.Swatches[Index].Color);
+    Locks[Index] := Enc.Bits(Current.Swatches[Index].Locked, 1);
   end for;
   var Seed: uint := Current.Seed ?? 0U;
-  const Flags: int := W.Bits(Enabled, 1) + W.Bits(
+  const Flags: int := Enc.Bits(Enabled, 1) + Enc.Bits(
     Settings.NoShuffle,
     2
-  ) + W.Bits(Settings.Plain, 8);
+  ) + Enc.Bits(Settings.Plain, 8);
   const Result: int := Frame.Window.PaletteStrip(
     Token, Current.Label, Colors, Locks, ref Seed,
     Current.Seed <> null, Settings.Display, Settings.Height, Flags,
@@ -43,7 +43,7 @@ begin
   if Result <> 0 then
     const Swatches: Lists.List<A.Swatch> := new Lists.List<A.Swatch>(Count);
     for Index: int := 0 to Count - 1 do
-      Swatches.Add(new A.Swatch(W.Unpack(Colors[Index]), Locks[Index] <> 0));
+      Swatches.Add(new A.Swatch(Enc.Unpack(Colors[Index]), Locks[Index] <> 0));
     end for;
     const Proposed: uint? := if Current.Seed <> null then
       Seed
@@ -57,7 +57,7 @@ begin
 
   W.Root<TMsg>(Frame, Id, Role, Current.Label, false, '');
   for Index: int := 0 to Count - 1 do
-    const Color: G.Color := W.Unpack(Colors[Index]);
+    const Color: G.Color := Enc.Unpack(Colors[Index]);
     const Caption: string := '#' + Color.Red.ToString(
       'X2'
     ) + Color.Green.ToString('X2') + Color.Blue.ToString('X2');

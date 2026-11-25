@@ -97,9 +97,8 @@ single-file and NativeAOT application distributions.
    SHA-256 digests match the generated files. For a release, compare the assets.
 4. Refresh the revision, commit and digests. Check whether the new upstream
    tree changes the license inventory or notices.
-5. Check the semantic palettes exported by CUI's theme builder against
-   [`ThemePalettes.fpas`](../../src/Fpas.Ui/Internal/Theming/ThemePalettes.fpas) and the
-   neutral-light defaults in [`Themes.fpas`](../../src/Fpas.Ui/Widgets/Theming/Themes.fpas).
+5. Check the semantic palettes and neutral-light defaults exported by CUI's theme builder
+   against [`Themes.fpas`](../../src/Fpas.Ui/Widgets/Theming/Themes.fpas).
    These values supply both hosts without adding native dependencies to TUI.
    Keep token and accent order aligned with the header; the native bridge
    checks the token count at compile time.

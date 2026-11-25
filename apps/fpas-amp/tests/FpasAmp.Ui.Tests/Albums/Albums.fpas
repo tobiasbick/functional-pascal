@@ -1,0 +1,382 @@
+// [Documentation](../../../doc/desktop.md#browsing-music-and-collections)
+
+// Album updates keep browser state and release rating controls after durable writes.
+unit FpasAmp.UiTests.Albums;
+
+uses
+  Fpas.Ui.Mvu.Testing.EffectReplies as Replies, Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Session as Host, FpasAmp.Ui.Shell as Shell,
+  FpasAmp.Library.Tests.MetadataSupport as Sources, FpasAmp.Library.Tests.AlbumSupport as Fixtures,
+  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Albums.Persistence.Queries as Query,
+  System as Sys, System.IO as IO, System.Threading.Channels as Channels,
+  FpasAmp.Ui.Player.Playback as Playback, Fpas.Media.Audio as Media,
+  FpasAmp.Ui.Albums.Model as M, FpasAmp.Ui.Albums.Update as Update,
+  FpasAmp.Library.Albums.Model as Library, Fpas.Media.Images as Images,
+  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.App.Controller as Controller,
+  FpasAmp.Ui.Albums.Music.Model as Music,
+  FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Settings.Model as Settings,
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Inventory.Monitoring as Monitor,
+  System.Threading as T, System.Threading.Tasks as Tasks,
+  Fpas.Ui.Mvu.Application as A, System.Collections.Immutable as I, Xunit as X;
+
+function Rating(Session: Gui.Session<App.Msg>; AlbumId: string): Gui.Control;
+begin
+  for Item: Gui.Control in Session.Snapshot().Controls do
+    if Item.Id = 'album-rating-' + AlbumId then
+      return Item;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing album rating: ' + AlbumId);
+end function;
+
+// Album-slice updates and the lifetime of visible rating controls.
+public type AlbumTests = record
+  // Both save outcomes release the rating when the user returns to Albums.
+  // Failed selects a cached album whose identity is no longer in the catalogue.
+  [X.TheoryAttribute]
+  [X.InlineDataAttribute(false)]
+  [X.InlineDataAttribute(true)]
+  [X.TraitAttribute('Category', 'Gui')]
+  public procedure RatingFinishesWhileAnotherDestinationIsOpen(Failed: bool);
+    procedure Frame(Session: Gui.Session<App.Msg>; Window: Cui.CuiWindow);
+    begin
+      discard Window.TryWake();
+      X.Assert.True(Session.Step());
+    end procedure;
+    procedure Send(Session: Gui.Session<App.Msg>; Window: Cui.CuiWindow; Message: App.Msg);
+    begin
+      discard Session.Post(Message);
+      Frame(Session, Window);
+    end procedure;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    discard Fixtures.Track(Root.Path, 'track.mp3', 'Title');
+    const Store: Monitor.Session := Sources.Start([Sources.Source(Root.Path)], Data.Path);
+    try
+      discard Sources.Until(
+        Sources.Tags(Store),
+        function(Items: I.ImmutableArray<Tracks.Entry>): bool => Items.Length = 1
+      ).GetAwaiter().GetResult();
+      using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
+      const Albums: I.ImmutableArray<Library.Album> := Query.Read(
+        IO.Path.Combine(Data.Path, 'library.db'),
+        IO.Path.Combine(Data.Path, 'userdata.db'),
+        Stop.Token
+      ).Releases;
+      const Header: Library.Album := if Failed then
+        Albums[0] with
+          Id := 'missing-album';
+        end with
+      else
+        Albums[0]
+      end if;
+      using const Device: Media.Session := new Media.Session(true);
+      const Port: Playback.Connection := Playback.Connection.Create(Device);
+      const Browse: Nav.Route := Nav.Route.Page(Nav.Page.Albums);
+      const Other: Nav.Route := Nav.Route.Page(Nav.Page.Settings);
+      const Initial: App.State := new App.State(
+        new Settings.State(new Settings.Preferences([], 'light')),
+        Navigation := new Nav.State(Active := Browse),
+        Albums := Update.Apply(
+          new M.State(),
+          M.Msg.Received(
+            new Library.Snapshot(I.ImmutableArray.Create<Library.Album>(Header), Header.Tracks)
+          ),
+          null
+        ).Model
+      );
+      const Gate: Replies.Effects<App.Msg> := Replies.Effects<App.Msg>.Create();
+      const Saves: Channels.ChannelReader<Replies.Reply<App.Msg>> := Gate.Watch(
+        'albums/rating-' + Header.Id
+      );
+      using const Window: Cui.CuiWindow := new Cui.CuiWindow(
+        'Album rating', 1000, 820, Cui.CuiRenderer.Software, true
+      );
+      Window.SetReducedMotion(true);
+      using const Session: Gui.Session<App.Msg> := Host.StartThemed<App.State, App.Msg>(
+        Initial,
+        function(Current: App.State; Message: App.Msg): A.Transition<App.State, App.Msg> => Gate.Wrap<App.State>(
+          Controller.Apply(
+            Current, Message, procedure(_Value: Settings.Preferences) begin end procedure,
+            Store, Port
+          )
+        ),
+        Shell.View,
+        Window,
+        128,
+        procedure() begin end procedure,
+        App.Theme(Initial, null),
+        App.Theme,
+        false
+      );
+
+      Frame(Session, Window);
+      X.Assert.True(Rating(Session, Header.Id).Enabled);
+      Send(Session, Window, App.Msg.Albums(M.Msg.Rate(Header.Id, 8)));
+      const Reply: Replies.Reply<App.Msg> := Saves.ReadAsync(
+        Stop.Token
+      ).AsTask().GetAwaiter().GetResult();
+      X.Assert.False(Rating(Session, Header.Id).Enabled);
+      X.Assert.Equal<string>('0', Rating(Session, Header.Id).Value);
+
+      Send(Session, Window, App.Msg.Navigation(Nav.Msg.Select(Other)));
+      X.Assert.DoesNotContain<string>(Header.Title, Session.Snapshot().Text);
+      Reply.Release().WaitAsync(Stop.Token).GetAwaiter().GetResult();
+      Frame(Session, Window);
+      // Keep the restarted observer from replacing the cached control before we inspect it.
+      discard Gate.Watch('albums/observe');
+      Send(Session, Window, App.Msg.Navigation(Nav.Msg.Select(Browse)));
+      Frame(Session, Window);
+      X.Assert.True(Rating(Session, Header.Id).Enabled);
+      if Failed then
+        X.Assert.Equal<string>('0', Rating(Session, Header.Id).Value);
+        X.Assert.Contains<string>('Unknown album identity.', Session.Snapshot().Text);
+      else
+        X.Assert.Equal<string>('8', Rating(Session, Header.Id).Value);
+      end if;
+    finally
+      Store.DisposeAsync().GetAwaiter().GetResult();
+    end try;
+  end procedure;
+
+  // Late catalogue and image messages cannot change the retained browser while hidden.
+  [X.FactAttribute]
+  public async function HiddenAlbumsIgnoreCatalogueAndImages(): Tasks.Task;
+  begin
+    await using const LibrarySession: Monitor.Session := H.Start([], T.CancellationToken.None);
+    using const Device: Media.Session := new Media.Session(true);
+    const Port: Playback.Connection := Playback.Connection.Create(Device);
+    const Save: procedure(Settings.Preferences) := procedure(_Value: Settings.Preferences) begin end procedure;
+    const Header: Library.Album := new Library.Album('album', 'Title', 'Artist', 1L, 'revision');
+    const Hidden: App.State := new App.State(
+      new Settings.State(new Settings.Preferences([])),
+      Navigation := new Nav.State(Active := Nav.Route.Page(Nav.Page.Settings)),
+      Albums := Update.Apply(
+        new M.State(),
+        M.Msg.Received(
+          new Library.Snapshot(I.ImmutableArray.Create<Library.Album>(Header), Header.Tracks)
+        ),
+        null
+      ).Model
+    );
+    const Stale: App.State := Controller.Apply(
+      Hidden,
+      App.Msg.Albums(M.Msg.Received(new Library.Snapshot())),
+      Save,
+      LibrarySession, Port
+    ).Model;
+    X.Assert.Equal<int>(1, Stale.Albums.Items.Length);
+    const Image: App.State := Controller.Apply(
+      Stale,
+      App.Msg.Albums(M.Msg.Image(Stale.Albums.Generation, 'album', null)),
+      Save,
+      LibrarySession, Port
+    ).Model;
+    X.Assert.Empty(Image.Albums.Images);
+  end function;
+
+  // A confirmed rating changes just user state and keeps immutable image resources.
+  [X.FactAttribute]
+  public procedure RatingKeepsArtworkAndViewport();
+  begin
+    const Album: Library.Album := new Library.Album('album', 'Title', 'Artist', 12L, 'revision');
+    const Image: Images.Bitmap := new Images.Bitmap(1, 1, [100, 40, 30, 255]);
+    const Current: M.State := Update.Apply(
+      new M.State(),
+      M.Msg.Received(
+        new Library.Snapshot(I.ImmutableArray.Create<Library.Album>(Album), Album.Tracks)
+      ),
+      null
+    ).Model with
+      Images := I.ImmutableDictionary<string, Images.Bitmap?>.Empty.Add('album', Image);
+      Saving := I.ImmutableHashSet<string>.Empty.Add('album');
+      First := 0;
+      Last := 1;
+      Generation := 3L;
+    end with;
+    const Saved: A.Transition<M.State, M.Msg> := Update.Apply(
+      Current,
+      M.Msg.Rated('album', 8),
+      null
+    );
+    X.Assert.Equal<int?>(8, Saved.Model.Items[0].Rating);
+    X.Assert.Empty(Saved.Model.Saving);
+    const Received: A.Transition<M.State, M.Msg> := Update.Apply(
+      Saved.Model,
+      M.Msg.Received(
+        new Library.Snapshot(
+          I.ImmutableArray.Create<Library.Album>(
+            Album with
+              Rating := 8;
+            end with
+          ), Album.Tracks
+        )
+      ), null
+    );
+    X.Assert.Same(Image, Received.Model.Images['album']);
+    X.Assert.Equal<int>(0, Received.Model.First);
+    X.Assert.Equal<int>(1, Received.Model.Last);
+    X.Assert.Equal<long>(3L, Received.Model.Generation);
+    X.Assert.Empty(Received.Commands);
+    const Cleared: A.Transition<M.State, M.Msg> := Update.Apply(
+      Received.Model,
+      M.Msg.Rated('album', null),
+      null
+    );
+    X.Assert.Null(Cleared.Model.Items[0].Rating);
+  end procedure;
+
+  // A catalogue update keeps the covers of albums whose artwork did not change.
+  [X.FactAttribute]
+  public procedure UpdateKeepsCurrentCovers();
+  begin
+    const Same: Library.Album := new Library.Album('same', 'Same', 'Artist', 3L, 'r1');
+    const Changed: Library.Album := new Library.Album('changed', 'Changed', 'Artist', 4L, 'r1');
+    const Image: Images.Bitmap := new Images.Bitmap(1, 1, [100, 40, 30, 255]);
+    const Current: M.State := Update.Apply(
+      new M.State(),
+      M.Msg.Received(
+        new Library.Snapshot(
+          I.ImmutableArray.Create<Library.Album>(Same, Changed),
+          Same.Tracks + Changed.Tracks
+        )
+      ),
+      null
+    ).Model with
+      Images := I.ImmutableDictionary<string, Images.Bitmap?>.Empty.Add(
+        'same',
+        Image
+      ).Add('changed', Image);
+    end with;
+    const Next: M.State := Update.Apply(
+      Current,
+      M.Msg.Received(
+        new Library.Snapshot(
+          I.ImmutableArray.Create<Library.Album>(
+            Same,
+            Changed with
+              Revision := 'r2';
+            end with,
+            new Library.Album('added', 'Added', 'Artist', 5L, 'r1')
+          ), 12L
+        )
+      ),
+      null
+    ).Model;
+    X.Assert.Same(Image, Next.Images['same']);
+    X.Assert.False(Next.Images.ContainsKey('changed'));
+    X.Assert.Equal<int>(3, Next.Shown.Length);
+  end procedure;
+
+  // A catalogue refresh updates the open release while keeping its current search and visit.
+  [X.FactAttribute]
+  public procedure CatalogueRefreshUpdatesOpenRelease();
+  begin
+    const Album: Library.Album := new Library.Album('album', 'Title', 'Artist', 3L, 'r1');
+    const Cover: Images.Bitmap := new Images.Bitmap(1, 1, [100, 40, 30, 255]);
+    const Current: M.State := Update.Apply(
+      new M.State(),
+      M.Msg.Received(
+        new Library.Snapshot(I.ImmutableArray.Create<Library.Album>(Album), Album.Tracks)
+      ),
+      null
+    ).Model with
+      Music := new Music.State(Album, 1L, Search := 'song', Cover := Cover);
+    end with;
+    const Header: Library.Album := Album with
+      Rating := 7;
+    end with;
+    const Rated: M.State := Update.Apply(
+      Current,
+      M.Msg.Received(
+        new Library.Snapshot(I.ImmutableArray.Create<Library.Album>(Header), Header.Tracks)
+      ),
+      null
+    ).Model;
+    const RatedPage: Music.State := Rated.Music ?? new Music.State(Album, -1L);
+    X.Assert.Equal<int?>(7, RatedPage.Album.Rating);
+    X.Assert.Same(Cover, RatedPage.Cover);
+    const Reindexed: Library.Album := Header with
+      Revision := 'r2';
+      Tracks := 4L;
+    end with;
+    const Changed: M.State := Update.Apply(
+      Rated,
+      M.Msg.Received(
+        new Library.Snapshot(I.ImmutableArray.Create<Library.Album>(Reindexed), Reindexed.Tracks)
+      ),
+      null
+    ).Model;
+    const Page: Music.State := Changed.Music ?? new Music.State(Album, -1L);
+    X.Assert.Equal<long>(4L, Page.Album.Tracks);
+    X.Assert.Equal<long>(1L, Page.Visit);
+    X.Assert.Equal<string>('song', Page.Search);
+    X.Assert.Null(Page.Cover);
+
+    const Deleted: A.Transition<M.State, M.Msg> := Update.Apply(
+      Changed, M.Msg.Received(new Library.Snapshot()), null
+    );
+    X.Assert.Null(Deleted.Model.Music);
+    X.Assert.Contains<A.Command<M.Msg>>(A.CancelBackground<M.Msg>('music/load'), Deleted.Commands);
+  end procedure;
+
+  // Switching library sections releases the previous album's work and keeps the catalogue observer.
+  [X.FactAttribute]
+  public async function SwitchingBrowserSectionsCancelsPreviousLoaders(): Tasks.Task;
+  begin
+    await using const LibrarySession: Monitor.Session := H.Start([], T.CancellationToken.None);
+    using const Device: Media.Session := new Media.Session(true);
+    const Album: Library.Album := new Library.Album('album', 'Title', 'Artist', 3L, 'r1');
+    const Current: App.State := new App.State(
+      new Settings.State(new Settings.Preferences([])),
+      Navigation := new Nav.State(Active := Nav.Route.Album(Album.Id)),
+      Albums := Update.Apply(
+        new M.State(),
+        M.Msg.Received(
+          new Library.Snapshot(I.ImmutableArray.Create<Library.Album>(Album), Album.Tracks)
+        ),
+        null
+      ).Model with
+        Music := new Music.State(Album, 1L);
+      end with
+    );
+    const Artists: Nav.Route := Nav.Route.Page(Nav.Page.Artists);
+    const Changed: A.Transition<App.State, App.Msg> := Controller.Apply(
+      Current, App.Msg.Navigation(Nav.Msg.Select(Artists)),
+      procedure(_Value: Settings.Preferences) begin end procedure,
+      LibrarySession, Playback.Connection.Create(Device)
+    );
+    X.Assert.Equal<Nav.Route>(Artists, Changed.Model.Navigation.Active);
+    X.Assert.Null(Changed.Model.Albums.Music);
+    X.Assert.Contains<A.Command<App.Msg>>(
+      A.CancelBackground<App.Msg>('albums/images'),
+      Changed.Commands
+    );
+    X.Assert.Contains<A.Command<App.Msg>>(
+      A.CancelBackground<App.Msg>('albums/music/load'),
+      Changed.Commands
+    );
+    X.Assert.DoesNotContain<A.Command<App.Msg>>(
+      A.CancelBackground<App.Msg>('albums/observe'),
+      Changed.Commands
+    );
+  end function;
+
+  // A rejected background save releases the control and exposes a recoverable error.
+  [X.FactAttribute]
+  public procedure FailedRatingReleasesControl();
+  begin
+    const Current: M.State := new M.State(Saving := I.ImmutableHashSet<string>.Empty.Add('album'));
+    const Failed: A.Transition<M.State, M.Msg> := Update.Apply(
+      Current,
+      M.Msg.RatingFailed('album', 'Write failed'),
+      null
+    );
+    X.Assert.Empty(Failed.Model.Saving);
+    X.Assert.Equal<string?>('Write failed', Failed.Model.Error);
+  end procedure;
+end record;
+
+end unit;

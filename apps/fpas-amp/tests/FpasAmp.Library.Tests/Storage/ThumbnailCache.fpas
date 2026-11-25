@@ -1,0 +1,126 @@
+// [Documentation](../../../doc/library.md#albums-and-artwork)
+
+// Content addressing, invalidation and corruption recovery are independent of GUI state.
+unit FpasAmp.Library.Tests.ThumbnailCache;
+
+uses
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.AlbumSupport as Art,
+  PhotoSauce.MagicScaler as Magic,
+  FpasAmp.Imaging as Thumbnails, Fpas.Media.Images as Imaging, System as Sys, System.IO as IO, System.Threading as T, Xunit as X;
+
+// Detached thumbnails remain reusable across album IDs and cache sessions.
+public type CacheTests = record
+  // Both native codecs fit non-square covers without cropping or opaque padding.
+  [X.FactAttribute]
+  public procedure PngAndJpegFitTransparentSquare();
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    const Cache: Thumbnails.ThumbnailStore := new Thumbnails.ThumbnailStore(Root.Path);
+    const Encoded: array of byte := Art.Picture(220, 40, 30, 512, 128);
+    const Png: Imaging.Bitmap := Cache.Store('png', 'revision', Encoded, T.CancellationToken.None);
+    using const Input: IO.MemoryStream := new IO.MemoryStream(Encoded, false);
+    using const Output: IO.MemoryStream := new IO.MemoryStream();
+    const Settings: Magic.ProcessImageSettings := new Magic.ProcessImageSettings();
+    X.Assert.True(Settings.TrySetEncoderFormat(Magic.ImageMimeTypes.Jpeg));
+    discard Magic.MagicImageProcessor.ProcessImage(Input, Output, Settings);
+    const Jpeg: Imaging.Bitmap := Cache.Store(
+      'jpeg',
+      'revision',
+      Output.ToArray(),
+      T.CancellationToken.None
+    );
+    for Image: Imaging.Bitmap in [Png, Jpeg] do
+      X.Assert.Equal<int>(384, Image.Width);
+      X.Assert.Equal<int>(384, Image.Height);
+      X.Assert.Equal<byte>(0, Image.Pixels[3]);
+      const Center: int := (192 * 384 + 192) * 4;
+      X.Assert.Equal<byte>(255, Image.Pixels[Center + 3]);
+      X.Assert.True(Image.Pixels[Center] > Image.Pixels[Center + 2]);
+      X.Assert.Equal<byte>(0, Image.Pixels[(384 * 383 + 192) * 4 + 3]);
+    end for;
+  end procedure;
+
+  // Equal picture bytes share one blob; revisions and damaged blobs are revalidated.
+  [X.FactAttribute]
+  public procedure SharedPixelsRevisionsAndCorruption();
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    const Cache: Thumbnails.ThumbnailStore := new Thumbnails.ThumbnailStore(Root.Path);
+    const Bytes: array of byte := Art.Picture(220, 40, 30);
+    const One: Imaging.Bitmap := Cache.Store(
+      'album-one',
+      'revision-one',
+      Bytes,
+      T.CancellationToken.None
+    );
+    const Two: Imaging.Bitmap := Cache.Store(
+      'album-two',
+      'revision-one',
+      Bytes,
+      T.CancellationToken.None
+    );
+    X.Assert.Same(One, Two);
+    X.Assert.Equal<int>(1, IO.Directory.GetFiles(Root.Path, '*.rgba').Length);
+    const Reloaded: Thumbnails.ThumbnailStore := new Thumbnails.ThumbnailStore(Root.Path);
+    X.Assert.NotNull(Reloaded.TryGet('album-one', 'revision-one'));
+    X.Assert.Null(Reloaded.TryGet('album-one', 'revision-two'));
+    IO.File.WriteAllBytes(IO.Directory.GetFiles(Root.Path, '*.rgba')[0], [0]);
+    discard Cache.Store('album-one', 'revision-one', Bytes, T.CancellationToken.None);
+    X.Assert.NotNull(new Thumbnails.ThumbnailStore(Root.Path).TryGet('album-one', 'revision-one'));
+    IO.File.WriteAllBytes(IO.Directory.GetFiles(Root.Path, '*.rgba')[0], [0]);
+    const Damaged: Thumbnails.ThumbnailStore := new Thumbnails.ThumbnailStore(Root.Path);
+    X.Assert.Null(Damaged.TryGet('album-one', 'revision-one'));
+    discard Damaged.Store('album-one', 'revision-one', Bytes, T.CancellationToken.None);
+    X.Assert.NotNull(new Thumbnails.ThumbnailStore(Root.Path).TryGet('album-one', 'revision-one'));
+  end procedure;
+
+  // A memory-cached cover can be stored again after disk eviction and survives a restart.
+  [X.FactAttribute]
+  public procedure EvictedArtworkCanBeStoredAgain();
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    const Cache: Thumbnails.ThumbnailStore := new Thumbnails.ThumbnailStore(Root.Path);
+    const First: array of byte := Art.Picture(220, 40, 30);
+    discard Cache.Store('first', 'v1', First, T.CancellationToken.None);
+    const Oldest: string := IO.Directory.GetFiles(Root.Path, '*.rgba')[0];
+    IO.File.SetLastWriteTimeUtc(Oldest, Sys.DateTime.UnixEpoch);
+    using const Filler: IO.FileStream := IO.File.Create(IO.Path.Combine(Root.Path, 'filler.rgba'));
+    Filler.SetLength(256 * 1024 * 1024 - new IO.FileInfo(Oldest).Length);
+    Filler.Close();
+
+    discard Cache.Store('second', 'v1', Art.Picture(30, 40, 220), T.CancellationToken.None);
+    X.Assert.False(IO.File.Exists(Oldest));
+    X.Assert.Null(Cache.TryGet('first', 'v1'));
+    discard Cache.Store('first', 'v2', First, T.CancellationToken.None);
+    X.Assert.NotNull(new Thumbnails.ThumbnailStore(Root.Path).TryGet('first', 'v2'));
+  end procedure;
+
+  // Cancelled and unsupported images cannot publish cache associations.
+  [X.FactAttribute]
+  public procedure InvalidImagesAndCancellation();
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    const Cache: Thumbnails.ThumbnailStore := new Thumbnails.ThumbnailStore(Root.Path);
+    var Invalid: bool := false;
+    try
+      discard Cache.Store('album', 'revision', [0, 1, 2], T.CancellationToken.None);
+    catch Expected: IO.InvalidDataException do
+      Invalid := true;
+    end try;
+
+    X.Assert.True(Invalid);
+    using const Cancel: T.CancellationTokenSource := new T.CancellationTokenSource();
+    Cancel.Cancel();
+    var Cancelled: bool := false;
+    try
+      discard Cache.Store('album', 'revision', Art.Picture(20, 40, 80), Cancel.Token);
+    catch Expected: Sys.OperationCanceledException do
+      Cancelled := true;
+    end try;
+
+    X.Assert.True(Cancelled);
+    X.Assert.Empty(IO.Directory.GetFiles(Root.Path, '*.ref'));
+  end procedure;
+end record;
+
+end unit;

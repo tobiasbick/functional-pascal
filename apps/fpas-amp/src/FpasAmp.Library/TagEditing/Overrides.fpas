@@ -5,8 +5,7 @@ unit FpasAmp.Library.TagEditing.Overrides;
 
 uses
   FpasAmp.Library.Serialization.CatalogueJson as Codec,
-  FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db,
-  System as Sys, System.Collections.Immutable as I;
+  FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db, System.Collections.Immutable as I;
 
 // Reads the saved tag changes for Id from the attached users store.
 public function Read(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction?; Id: string): I.ImmutableDictionary<string, string?>;

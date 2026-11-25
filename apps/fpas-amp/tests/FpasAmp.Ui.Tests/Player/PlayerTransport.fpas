@@ -1,0 +1,163 @@
+// [Documentation](../../../doc/desktop.md#playback-and-analysis)
+
+// Player transport, waveform tracking and sound settings bounds.
+unit FpasAmp.UiTests.PlayerTransport;
+
+uses
+  Fpas.Media.Tags.AudioFiles as MediaTags,
+  FpasAmp.Ui.Player.Model as M, FpasAmp.Ui.Player.Update as Update,
+  Fpas.Media.Audio as Audio, System as Sys,
+  FpasAmp.Ui.Albums.Music.Model as Music,
+  FpasAmp.Library.Metadata.Model as Tracks, System.Collections.Immutable as I, Xunit as X;
+
+function Song(Id: long; Seconds: double): Tracks.Entry;
+begin
+  return new Tracks.Entry(
+    Id,
+    'track-' + Id.ToString(),
+    'song.mp3',
+    '',
+    null,
+    new MediaTags.Info(Title := 'Song ' + Id.ToString(), DurationMilliseconds := Seconds * 1000.0),
+    null
+  );
+end function;
+
+function Reduce(Current: M.State; Message: M.Msg): M.State;
+begin
+  return Update.Apply(Current, Message, function(_Entry: Tracks.Entry): bool => true).Model;
+end function;
+
+function Started(): M.State;
+begin
+  return Reduce(
+    new M.State(),
+    M.Msg.Play(
+      I.ImmutableArray.CreateRange<Tracks.Entry>([Song(1L, 200.0), Song(2L, 100.0)]),
+      0,
+      new Music.Selection()
+    )
+  );
+end function;
+
+// Transport state machine, seeking and sound settings.
+public type PlayerTransportTests = record
+  // Pausing and seeking keep the envelope. A result for the previous song cannot replace it.
+  [X.FactAttribute]
+  public procedure WaveformFollowsTheTrackAcrossTransportChanges();
+  begin
+    const First: Tracks.Entry := Song(1L, 40.0) with
+      Sha256 := 'first';
+    end with;
+    const Second: Tracks.Entry := Song(2L, 80.0) with
+      Sha256 := 'second';
+    end with;
+    const Playing: M.State := Reduce(
+      new M.State(), M.Msg.Play(
+        I.ImmutableArray.CreateRange<Tracks.Entry>([First, Second]), 0, new Music.Selection()
+      )
+    );
+    const Paused: M.State := Reduce(Reduce(Playing, M.Msg.Toggle), M.Msg.Seek(0.5F));
+    const Levels: array of float := [0.2F, 1.0F];
+    const Ready: M.State := Reduce(Paused, M.Msg.Measured('first', Levels));
+    X.Assert.Same(Levels, Ready.Waveform);
+    const Selected: M.State := Reduce(Ready, M.Msg.Next);
+    X.Assert.Equal<int>(0, Selected.Waveform.Length);
+    X.Assert.Equal<string>('', Selected.WaveformKey);
+    const Resumed: M.State := Reduce(Selected, M.Msg.Toggle);
+    X.Assert.Equal<string>('second', Resumed.WaveformKey);
+    X.Assert.Same(Resumed, Reduce(Resumed, M.Msg.Measured('first', Levels)));
+  end procedure;
+
+  // An old end event cannot skip a second queue entry that uses the same file.
+  [X.FactAttribute]
+  public procedure TerminalEventsBelongToTheirTransportRequest();
+  begin
+    const First: M.State := Started();
+    const Ended: M.Msg := M.Msg.Observed(
+      new Audio.PlaybackEvent(
+        'song.mp3', Audio.PlaybackState.Ended,
+        Sys.TimeSpan.FromSeconds(200), Sys.TimeSpan.FromSeconds(200), I.ImmutableArray<float>.Empty,
+        null, First.Revision
+      )
+    );
+    const Second: M.State := Reduce(First, Ended);
+    X.Assert.Equal<int>(1, Second.Index);
+    X.Assert.True(Second.Playing);
+    X.Assert.Same(Second, Reduce(Second, Ended));
+    const Failed: M.State := Reduce(
+      Second, M.Msg.Observed(
+        new Audio.PlaybackEvent(
+          'song.mp3',
+          Audio.PlaybackState.Failed,
+          Sys.TimeSpan.Zero,
+          Sys.TimeSpan.Zero,
+          I.ImmutableArray<float>.Empty,
+          'Could not open file',
+          Second.Revision
+        )
+      )
+    );
+    X.Assert.False(Failed.Playing);
+    X.Assert.True(Failed.Finished);
+    X.Assert.Contains('Could not open file', Failed.Error ?? '');
+    const Retry: M.State := Reduce(Failed, M.Msg.Toggle);
+    X.Assert.True(Retry.Playing);
+    X.Assert.True(Retry.Revision > Failed.Revision);
+  end procedure;
+
+  // Transport proposals without a track, or beyond the queue, change nothing.
+  [X.FactAttribute]
+  public procedure TransportStaysWithinTheQueue();
+  begin
+    const Idle: M.State := new M.State();
+    X.Assert.Same(Idle, Reduce(Idle, M.Msg.Toggle));
+    X.Assert.Same(Idle, Reduce(Idle, M.Msg.Seek(0.5F)));
+    X.Assert.Same(
+      Idle,
+      Reduce(Idle, M.Msg.Play(I.ImmutableArray<Tracks.Entry>.Empty, 0, new Music.Selection()))
+    );
+
+    const First: M.State := Started();
+    X.Assert.True(First.Playing);
+    X.Assert.Equal<long>(1L, (M.Track(First) ?? Song(0L, 0.0)).FileId);
+    const Last: M.State := Reduce(First, M.Msg.Next);
+    X.Assert.Equal<int>(1, Last.Index);
+    X.Assert.Same(Last, Reduce(Last, M.Msg.Next));
+    X.Assert.False(Reduce(Last, M.Msg.Toggle).Playing);
+  end procedure;
+
+  // Previous restarts a track after three seconds and otherwise goes back.
+  [X.FactAttribute]
+  public procedure PreviousRestartsOrGoesBack();
+  begin
+    const Second: M.State := Reduce(Started(), M.Msg.Next);
+    const Early: M.State := Reduce(Second, M.Msg.Previous);
+    X.Assert.Equal<int>(0, Early.Index);
+
+    const Late: M.State := Reduce(
+      Reduce(Second, M.Msg.Seek(0.5F)),
+      M.Msg.Previous
+    );
+    X.Assert.Equal<int>(1, Late.Index);
+    X.Assert.Equal<double>(0.0, Late.Position);
+  end procedure;
+
+  // Seeking, volume and equalizer gains are clamped to their ranges.
+  [X.FactAttribute]
+  public procedure SoundSettingsAreClamped();
+  begin
+    const Current: M.State := Started();
+    X.Assert.Equal<double>(200000.0, Reduce(Current, M.Msg.Seek(3.0F)).Position);
+    X.Assert.Equal<double>(50000.0, Reduce(Current, M.Msg.Seek(0.25F)).Position);
+    X.Assert.Equal<float>(M.Quietest, Reduce(Current, M.Msg.Volume(-90.0F)).Volume);
+    X.Assert.Equal<float>(0.0F, Reduce(Current, M.Msg.Volume(6.0F)).Volume);
+
+    const Boosted: M.State := Reduce(Current, M.Msg.Gain(9, 20.0F));
+    X.Assert.Equal<float>(M.Boost, Boosted.Gains[9]);
+    X.Assert.Same(Boosted, Reduce(Boosted, M.Msg.Gain(10, 1.0F)));
+    X.Assert.Equal<float>(0.0F, Reduce(Boosted, M.Msg.Flatten).Gains[9]);
+  end procedure;
+end record;
+
+end unit;

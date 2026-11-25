@@ -1,0 +1,355 @@
+// [Documentation](../../../doc/desktop.md#playback-and-analysis)
+
+// Real shell, transport mailbox, decoder, device callback and native meter.
+unit FpasAmp.UiTests.NativePlayback;
+
+uses
+  FpasAmp.UiTests.PlaybackFixture as Fixture, FpasAmp.Ui.Albums.Music.Model as Music,
+  FpasAmp.Ui.Shell as Shell, FpasAmp.Ui.App.Model as App,
+  FpasAmp.Ui.Player.Model as Player, FpasAmp.Ui.Settings.Model as Settings,
+  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Inventory.Monitoring as Monitor,
+  FpasAmp.Library.Tests.Support as H, Fpas.Media.Audio as Audio, Fpas.Ui.Gui.Cui as Cui,
+  FpasAmp.Library.Tests.MetadataSupport as Fixtures, FpasAmp.Library.Sources as Sources,
+  FpasAmp.AppState as Storage, FpasAmp.Persistence.PlayerState as Transport,
+  FpasAmp.Settings as Preferences, FpasAmp.Ui.Player.Presets as Presets,
+  Fpas.Ui.Gui.Application as Gui, System as Sys, System.IO as IO,
+  System.Collections.Immutable as I, System.Threading as T, Xunit as X;
+
+procedure WaitFor(Session: Shell.Session; Ready: function(Player.State): bool; Reason: string);
+begin
+  const Deadline: long := Sys.Environment.TickCount64 + 7000L;
+  while Sys.Environment.TickCount64 < Deadline do
+    discard Session.Window.Post(App.Msg.Settings(Settings.Msg.DismissError));
+    X.Assert.True(Session.Window.Step());
+    const Current: Player.State := Session.State().Player;
+    X.Assert.Null(Current.Error);
+    if Ready(Current) then
+      return;
+    end if;
+
+    T.Thread.Sleep(3);
+  end while;
+
+  X.Assert.True(false, Reason);
+end procedure;
+
+procedure Send(Session: Shell.Session; Message: Player.Msg);
+begin
+  discard Session.Window.Post(App.Msg.Player(Message));
+end procedure;
+
+// Tests the player strip across transports, callbacks and automatic queue changes.
+public type NativePlaybackTests = record
+  // Close a playing queue, resolve it from disk, and explicitly resume the saved slot.
+  [X.FactAttribute]
+  [X.TraitAttribute('Category', 'Gui')]
+  public procedure RestartKeepsQueuePositionAndMixerInPause();
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const Path: string := IO.Path.Combine(Root.Path, 'resume.wav');
+    Fixture.Tone(Path);
+    IO.File.Copy(Path, IO.Path.Combine(Root.Path, 'another.wav'));
+    const Source: Sources.MusicSource := Fixtures.Source(Root.Path) with
+      Extensions := ['.wav'];
+    end with;
+    const Store: Monitor.Session := Fixtures.Start([Source], Data.Path);
+    const Save: procedure(Settings.Preferences) := procedure(Value: Settings.Preferences) begin
+      Preferences.Save(Data.Path, Value);
+    end procedure;
+    try
+      const Entries: I.ImmutableArray<Tracks.Entry> := Fixtures.Until(
+        Fixtures.Tags(Store),
+        function(Items: I.ImmutableArray<Tracks.Entry>): bool => Items.Length = 2
+      ).GetAwaiter().GetResult();
+      var Placement: Cui.CuiWindowPlacement := new Cui.CuiWindowPlacement();
+      Placement.Width := 1320;
+      Placement.Height := 720;
+      begin
+        using const First: Shell.Session := Shell.Session.Start(
+          Placement, new Settings.Preferences([Source]), Save,
+          Store, Output := new Audio.Session(true)
+        );
+        Send(First, Player.Msg.Preset(1));
+        Send(First, Player.Msg.Volume(-14.0F));
+        Send(
+          First,
+          Player.Msg.Play(Entries, 1, new Music.Selection())
+        );
+        WaitFor(
+          First,
+          function(S: Player.State): bool => S.Position > 400.0 and S.Playing
+            and First.State().Settings.Saved.Mixer.Volume = -14.0F,
+          'Could not save the playing mixer.'
+        );
+        Storage.Save(
+          Data.Path, Storage.FromWindow(
+            First.Window.Placement(), First.State().Navigation,
+            Transport.Capture(First.State().Player)
+          )
+        );
+      end;
+      const Saved: Transport.Saved := Storage.Load(Data.Path).Player;
+      X.Assert.Equal<int>(1, Saved.Index);
+      X.Assert.Equal<string>(Entries[1].TrackId, Saved.TrackId);
+      const Found: I.ImmutableArray<Tracks.Entry> := Fixtures.Tags(Store).QueueAsync(
+        Saved.Source.AlbumId,
+        T.CancellationToken.None
+      ).GetAwaiter().GetResult();
+      const Restored: Player.State := Transport.Restore(Saved, Found);
+      using const Second: Shell.Session := Shell.Session.Start(
+        Placement, Preferences.Load(Data.Path), Save, Store,
+        Output := new Audio.Session(true), Restored := Restored
+      );
+      WaitFor(
+        Second,
+        function(S: Player.State): bool => S.Waveform.Length > 0
+          and Second.State().Songs.Page.Shown.Length = 2,
+        'Missing restored waveform or tracks.'
+      );
+      T.Thread.Sleep(180);
+      discard Second.Window.Post(App.Msg.Settings(Settings.Msg.DismissError));
+      X.Assert.True(Second.Window.Step());
+      const Paused: Player.State := Second.State().Player;
+      X.Assert.False(Paused.Playing);
+      X.Assert.True(Paused.NeedsOpen);
+      X.Assert.Equal<double>(Saved.Position, Paused.Position);
+      X.Assert.Equal<string>(Saved.TrackId, Paused.Queue[Paused.Index].TrackId);
+      X.Assert.Equal<int>(2, Paused.Queue.Length);
+      X.Assert.Equal<float>(-14.0F, Paused.Volume);
+      X.Assert.Equal<int>(1, Presets.Match(Paused.Gains));
+      Send(Second, Player.Msg.Toggle);
+      WaitFor(
+        Second, function(S: Player.State): bool => S.Playing and S.Position > Saved.Position
+          and S.Position < Saved.Position + 800.0 and S.Levels[0] > 0.0F and S.Levels[0] < 0.035F,
+        'Playback did not resume from the saved position at the saved gain.'
+      );
+      const Artifacts: string? := Sys.Environment.GetEnvironmentVariable('FPAS_AMP_UI_ARTIFACTS');
+      if Artifacts <> null then
+        discard IO.Directory.CreateDirectory(Artifacts);
+        Second.Window.CapturePng(IO.Path.Combine(Artifacts, 'player-waveform.png'));
+      end if;
+    finally
+      Store.DisposeAsync().GetAwaiter().GetResult();
+    end try;
+  end procedure;
+
+  // Offline skips a readable file. Removing or clearing the owner also invalidates a stale album queue.
+  [X.TheoryAttribute]
+  [X.InlineDataAttribute('offline')]
+  [X.InlineDataAttribute('remove')]
+  [X.InlineDataAttribute('reset')]
+  [X.InlineDataAttribute('clear')]
+  [X.TraitAttribute('Category', 'Gui')]
+  public procedure SourceActionsControlPlayback(Action: string);
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Other: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const A: Sources.MusicSource := Fixtures.Source(Root.Path, 'first') with
+      Extensions := ['.wav'];
+    end with;
+    const B: Sources.MusicSource := Fixtures.Source(Other.Path, 'second') with
+      Extensions := ['.wav'];
+    end with;
+    const First: string := IO.Path.Combine(Root.Path, 'a.wav');
+    const Second: string := IO.Path.Combine(Other.Path, 'b.wav');
+    Fixture.Tone(First);
+    IO.File.Copy(First, Second);
+    const Store: Monitor.Session := Fixtures.Start([A, B], Data.Path);
+    try
+      const Items: I.ImmutableArray<Tracks.Entry> := Fixtures.Until(
+        Fixtures.Tags(Store),
+        function(Rows: I.ImmutableArray<Tracks.Entry>): bool => Rows.Length = 2
+      ).GetAwaiter().GetResult();
+      const Queue: I.ImmutableArray<Tracks.Entry> := if Items[0].Path = First then
+        Items
+      else
+        I.ImmutableArray.CreateRange<Tracks.Entry>([Items[1], Items[0]])
+      end if;
+      var Placement: Cui.CuiWindowPlacement := new Cui.CuiWindowPlacement();
+      Placement.Width := 900;
+      Placement.Height := 640;
+      using const Session: Shell.Session := Shell.Session.Start(
+        Placement,
+        new Settings.Preferences([A, B]),
+        procedure(_Value: Settings.Preferences) begin end procedure,
+        Store,
+        Output := new Audio.Session(true)
+      );
+      Send(Session, Player.Msg.Play(Queue, 0, new Music.Selection()));
+      WaitFor(
+        Session,
+        function(S: Player.State): bool => S.Playing and S.Position > 0.0,
+        'First source did not play.'
+      );
+      discard Session.Window.Post(App.Msg.Settings(Settings.Msg.SetPaused(A.Id, true)));
+      discard Session.Window.Post(App.Msg.Settings(Settings.Msg.DismissError));
+      X.Assert.True(Session.Window.Step());
+      X.Assert.True(Session.State().Player.Playing);
+      if Action = 'offline' then
+        discard Session.Window.Post(App.Msg.Settings(Settings.Msg.SetOffline(A.Id, true)));
+      elsif Action = 'remove' then
+        discard Session.Window.Post(App.Msg.Settings(Settings.Msg.AskRemove(A.Id)));
+        discard Session.Window.Post(App.Msg.Settings(Settings.Msg.ConfirmRemove));
+      else
+        discard Session.Window.Post(
+          App.Msg.Settings(
+            Settings.Msg.AskClear(
+              if Action = 'clear' then
+                ''
+              else
+                A.Id
+              end if
+            )
+          )
+        );
+        discard Session.Window.Post(App.Msg.Settings(Settings.Msg.ConfirmClear));
+      end if;
+
+      if Action = 'offline' then
+        WaitFor(
+          Session,
+          function(S: Player.State): bool => S.Index = 1 and S.Position > 0.0,
+          'Offline source did not advance.'
+        );
+      else
+        WaitFor(
+          Session,
+          function(S: Player.State): bool => S.Queue.IsEmpty and not S.Playing,
+          'Clearing or removing the playing source did not stop playback.'
+        );
+      end if;
+
+      X.Assert.True(IO.File.Exists(First));
+      Send(Session, Player.Msg.Play(Queue, 0, new Music.Selection()));
+      if Action = 'clear' then
+        WaitFor(
+          Session,
+          function(S: Player.State): bool => S.Queue.IsEmpty,
+          'Cleared tracks could still play.'
+        );
+      else
+        WaitFor(
+          Session,
+          function(S: Player.State): bool => S.Index = 1 and S.Position > 0.0,
+          'The stale queue re-opened the first file or skipped the remaining source.'
+        );
+      end if;
+    finally
+      Store.DisposeAsync().GetAwaiter().GetResult();
+    end try;
+  end procedure;
+
+  // Plays a stereo tone twice to exercise same-path queue entries and the final end.
+  [X.FactAttribute]
+  [X.TraitAttribute('Category', 'Gui')]
+  public procedure PlayerFollowsDeviceAndAdvancesExactlyOnce();
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    const Path: string := IO.Path.Combine(Root.Path, 'tone.wav');
+    Fixture.Tone(Path, true);
+    const First: Tracks.Entry := new Tracks.Entry(1L, 'one', Path, '', null, null, null, ['music']);
+    const Second: Tracks.Entry := First with
+      FileId := 2L;
+    end with;
+    const Source: Sources.MusicSource := Fixtures.Source(Root.Path) with
+      Extensions := ['.wav'];
+    end with;
+    const Library: Monitor.Session := H.Start([Source], T.CancellationToken.None);
+    try
+      var Placement: Cui.CuiWindowPlacement := new Cui.CuiWindowPlacement();
+      Placement.Width := 1320;
+      Placement.Height := 720;
+      using const Session: Shell.Session := Shell.Session.Start(
+        Placement,
+        new Settings.Preferences([Source]),
+        procedure(_Value: Settings.Preferences) begin end procedure,
+        Library,
+        Output := new Audio.Session(
+          Sys.Environment.GetEnvironmentVariable('FPAS_TEST_SYSTEM_OUTPUT') <> '1'
+        )
+      );
+      Send(
+        Session,
+        Player.Msg.Play(
+          I.ImmutableArray.CreateRange<Tracks.Entry>([First, Second]),
+          0,
+          new Music.Selection()
+        )
+      );
+      WaitFor(
+        Session,
+        function(S: Player.State): bool => S.Position > 0.0 and S.Duration = 5000.0
+          and S.Levels.Length = 2 and S.Levels[0] > 0.095F and S.Levels[1] < 0.026F,
+        'No stereo levels from the decoder.'
+      );
+      var Meter: bool := false;
+      for Widget: Gui.Control in Session.Window.Snapshot().Controls do
+        if Widget.Id = 'player-levels' then
+          Meter := true;
+        end if;
+      end for;
+
+      X.Assert.True(Meter);
+      WaitFor(
+        Session, function(S: Player.State): bool => S.Waveform.Length > 0
+          and S.Waveform[0] > 0.9F and S.Waveform[S.Waveform.Length div 4] = 0.0F,
+        'The waveform did not show the silent passage.'
+      );
+      Send(Session, Player.Msg.Volume(-12.0F));
+      WaitFor(
+        Session,
+        function(S: Player.State): bool => S.Levels[0] > 0.024F and S.Levels[0] < 0.027F,
+        'Volume did not reach the device.'
+      );
+      Send(Session, Player.Msg.Gain(4, 6.0F));
+      WaitFor(
+        Session,
+        function(S: Player.State): bool => S.Levels[0] > 0.048F and S.Levels[0] < 0.053F,
+        'The 500 Hz band did not boost the tone.'
+      );
+      Send(Session, Player.Msg.Toggle);
+      WaitFor(
+        Session,
+        function(S: Player.State): bool => not S.Playing and S.Levels[0] = 0.0F,
+        'Pause did not silence the meter.'
+      );
+      Send(Session, Player.Msg.Seek(0.5F));
+      WaitFor(
+        Session,
+        function(S: Player.State): bool => not S.Playing and S.Position = 2500.0,
+        'Paused seek failed.'
+      );
+      Send(Session, Player.Msg.Toggle);
+      WaitFor(
+        Session,
+        function(S: Player.State): bool => S.Playing and S.Position > 2500.0 and S.Levels[
+          0
+        ] > 0.048F,
+        'Resume lost the seek position.'
+      );
+
+      Send(Session, Player.Msg.Seek(0.98F));
+      WaitFor(
+        Session,
+        function(S: Player.State): bool => S.Index = 1 and S.Playing and S.Position > 0.0
+          and S.Position < 1500.0 and S.Levels[
+          0
+        ] > 0.048F,
+        'Natural end did not start the second track.'
+      );
+      Send(Session, Player.Msg.Seek(0.98F));
+      WaitFor(
+        Session,
+        function(S: Player.State): bool => S.Index = 1 and S.Finished and not S.Playing
+          and S.Position = S.Duration,
+        'Playback did not stop at the end of the queue.'
+      );
+    finally
+      Library.DisposeAsync().GetAwaiter().GetResult();
+    end try;
+  end procedure;
+end record;
+
+end unit;

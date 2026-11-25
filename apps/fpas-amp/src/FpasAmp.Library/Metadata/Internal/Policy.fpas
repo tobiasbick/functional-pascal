@@ -5,6 +5,7 @@ unit FpasAmp.Library.Metadata.Internal.Policy;
 
 uses
   FpasAmp.Library.Sources as S, System as Sys, System.Threading as T,
+  System.Threading.Tasks as Tasks,
   System.Collections.Generic as C, System.Runtime.CompilerServices as R;
 
 // An isolated discovery policy with a monotonically increasing version.
@@ -20,7 +21,7 @@ public type Policy = record
   Gate: object;
   State: R.StrongBox<Configuration>;
   // Worker signal; repeated invalidations coalesce.
-  public Signal: T.SemaphoreSlim;
+  Signal: T.SemaphoreSlim;
 
   // Creates a mailbox from isolated normalized `Sources`.
   public static function Create(Sources: array of S.MusicSource): Policy;
@@ -55,6 +56,18 @@ public type Policy = record
       discard self.Signal.Release();
     catch Full: T.SemaphoreFullException do
     end try;
+  end procedure;
+
+  // Waits for a wake signal or timeout. `Milliseconds` is nonnegative; cancellation interrupts waiting.
+  public function Wait(Milliseconds: int; Cancellation: T.CancellationToken): Tasks.Task<bool>;
+  begin
+    return self.Signal.WaitAsync(Milliseconds, Cancellation);
+  end function;
+
+  // Releases the signal after the worker has finished.
+  public procedure Release();
+  begin
+    self.Signal.Dispose();
   end procedure;
 
   // Replaces normalized settings, invalidating reads only for actual policy changes.

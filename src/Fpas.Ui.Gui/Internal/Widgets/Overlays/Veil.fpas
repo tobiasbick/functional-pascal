@@ -3,7 +3,7 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Overlays.Veil;
 
 uses
-  Fpas.Ui.Widgets.Overlays.Veils as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P,
+  Fpas.Ui.Widgets.Overlays.Veils as D, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc,
   Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Graphics as G;
 
 function OptionalColor(Color: G.Color?): uint;
@@ -11,7 +11,7 @@ begin
   return if Color = null then
     0U
   else
-    P.Pack(Color)
+    Enc.Pack(Color)
   end if;
 end function;
 
@@ -36,7 +36,7 @@ begin
   const Result: int := Frame.Window.VeilBegin(
     Token, Revealed, Settings.Label, Settings.Hint, Settings.Radius,
     OptionalColor(Settings.Color), Width.Kind, Width.Value,
-    P.Bits(Enabled, 1) or P.Bits(Settings.Toggle, 2) or P.Bits(Focus, 4)
+    Enc.Bits(Enabled, 1) or Enc.Bits(Settings.Toggle, 2) or Enc.Bits(Focus, 4)
   );
   const Shown: bool := (Result and 1) <> 0;
   Visit(

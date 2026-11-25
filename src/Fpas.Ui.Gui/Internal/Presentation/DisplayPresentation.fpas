@@ -8,7 +8,7 @@ uses
   Fpas.Ui.Widgets.Media.Images as Images,
   Fpas.Ui.Widgets.Canvas.Canvases as Canvases,
   Fpas.Ui.Widgets.Overlays.Veils as Veils, Fpas.Ui.Elements as E, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Media.MediaImages as Media, Fpas.Ui.Layout as L,
-  Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Internal.Core.Context as C,
   Fpas.Ui.Gui.Internal.Widgets.Display.NativeText as NativeTextWidget,
   Fpas.Ui.Gui.Internal.Widgets.Display.Icon as IconWidget,
   Fpas.Ui.Gui.Internal.Widgets.Display.Emoji as EmojiWidget,

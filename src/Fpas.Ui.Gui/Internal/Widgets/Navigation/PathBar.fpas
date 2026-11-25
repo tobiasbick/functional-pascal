@@ -3,8 +3,8 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Navigation.PathBar;
 
 uses
-  Fpas.Ui.Widgets.Navigation.PathBars as A, Fpas.Ui.Gui.Internal.Hosting.Context as C,
-  Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Cui.Widgets.Navigation as CuiNavigation, Fpas.Ui.Gui.Internal.Layout.Sizing as S, System.Collections.Generic as Lists;
+  Fpas.Ui.Widgets.Navigation.PathBars as A, Fpas.Ui.Gui.Internal.Core.Context as C,
+  Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Gui.Cui.Widgets.Navigation as CuiNavigation, Fpas.Ui.Gui.Internal.Layout.Sizing as S, System.Collections.Generic as Lists;
 
 // Presents the native path bar.
 // ## Type parameters
@@ -33,7 +33,7 @@ begin
 
   Parts.Add('edit');
   const Width: S.NativeExtent := S.Extent(Settings.Width);
-  const Flags: int := P.Bits(Enabled, 1) + P.Bits(Settings.Editable, 2) + P.Bits(
+  const Flags: int := Enc.Bits(Enabled, 1) + Enc.Bits(Settings.Editable, 2) + Enc.Bits(
     Current.Children.Length > 0,
     4
   );

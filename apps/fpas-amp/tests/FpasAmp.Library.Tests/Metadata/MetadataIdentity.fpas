@@ -1,0 +1,174 @@
+// [Documentation](../../../doc/library.md#durable-identities-and-ratings)
+
+// Durable identities and ratings across moves, copies and index reconstruction.
+unit FpasAmp.Library.Tests.MetadataIdentity;
+
+uses
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.MetadataSupport as F,
+  FpasAmp.Library.Metadata.Model as M, FpasAmp.Library.Metadata.Monitoring as Metadata,
+  FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Library.Inventory.Model as Inventory,
+  FpasAmp.Library.Sources as S, System.IO as IO, System.Collections.Immutable as I,
+  System.Threading as T, System.Threading.Tasks as Tasks, Xunit as X;
+
+// Exercises persistent user identities through the actual two-stage lifetime.
+public type MetadataIdentityTests = record
+  // A rename or move into a subdirectory retains its UUID and user rating.
+  [X.TheoryAttribute]
+  [X.InlineDataAttribute(false)]
+  [X.InlineDataAttribute(true)]
+  public async function MovingRetainsRating(Subdirectory: bool): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const Path: string := F.Write(Root.Path, 'original.mp3');
+    await using const Session: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
+    const Tags: Metadata.Session := F.Tags(Session);
+    const Before: I.ImmutableArray<M.Entry> := await F.Until(
+      Tags,
+      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+    );
+    await Tags.SetRatingAsync(Before[0].TrackId, 8, T.CancellationToken.None);
+    const Target: string := IO.Path.Combine(
+      if Subdirectory then
+        IO.Directory.CreateDirectory(IO.Path.Combine(Root.Path, 'album')).FullName
+      else
+        Root.Path
+      end if, 'renamed.mp3'
+    );
+    IO.File.Move(Path, Target);
+    Session.Refresh();
+    const After: I.ImmutableArray<M.Entry> := await F.Until(
+      Tags,
+      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1 and Items[
+        0
+      ].Path = Target
+    );
+    X.Assert.Equal<string>(Before[0].TrackId, After[0].TrackId);
+    X.Assert.Equal<string>(Before[0].Sha256, After[0].Sha256);
+    X.Assert.Equal<int?>(8, After[0].Rating);
+  end function;
+
+  // A bit-identical copy remains a separate track while the original still exists.
+  [X.FactAttribute]
+  public async function CopyDoesNotInheritTheOriginalRating(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const Path: string := F.Write(Root.Path, 'original.ogg');
+    await using const Session: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
+    const Tags: Metadata.Session := F.Tags(Session);
+    const Before: I.ImmutableArray<M.Entry> := await F.Until(
+      Tags,
+      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+    );
+    await Tags.SetRatingAsync(Before[0].TrackId, 6, T.CancellationToken.None);
+    const Copy: string := IO.Path.Combine(Root.Path, 'copy.ogg');
+    IO.File.Copy(Path, Copy);
+    Session.Refresh();
+    const After: I.ImmutableArray<M.Entry> := await F.Until(
+      Tags,
+      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 2
+    );
+    for Entry: M.Entry in After do
+      X.Assert.Equal<string>(Before[0].Sha256, Entry.Sha256);
+      if Entry.Path = Copy then
+        X.Assert.NotEqual<string>(Before[0].TrackId, Entry.TrackId);
+        X.Assert.Null(Entry.Rating);
+      else
+        X.Assert.Equal<int?>(6, Entry.Rating);
+      end if;
+    end for;
+  end function;
+
+  // Clear removes cached rows, retains user data, and restores ratings after resume/restart.
+  [X.FactAttribute]
+  public async function ClearAndRestartRetainUserData(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const Path: string := F.Write(Root.Path, 'track.mp3');
+    const Source: S.MusicSource := F.Source(Root.Path);
+    var Id: string := '';
+    begin
+      await using const Session: Monitor.Session := F.Start([Source], Data.Path);
+      const Tags: Metadata.Session := F.Tags(Session);
+      const Before: I.ImmutableArray<M.Entry> := await F.Until(
+        Tags,
+        function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+      );
+      Id := Before[0].TrackId;
+      await Tags.SetRatingAsync(Id, 9, T.CancellationToken.None);
+      using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
+      discard await Session.ClearAsync('', Deadline.Token);
+      X.Assert.Equal<int>(0, (await Tags.QueryAsync(new M.Query(), Deadline.Token)).Length);
+      X.Assert.True(IO.File.Exists(Path));
+      Session.Configure([Source]);
+      const Restored: I.ImmutableArray<M.Entry> := await F.Until(
+        Tags,
+        function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+      );
+      X.Assert.Equal<string>(Id, Restored[0].TrackId);
+      X.Assert.Equal<int?>(9, Restored[0].Rating);
+    end;
+    const Renamed: string := IO.Path.Combine(Root.Path, 'offline-rename.mp3');
+    IO.File.Move(Path, Renamed);
+    await using const Restart: Monitor.Session := F.Start([Source], Data.Path);
+    const After: I.ImmutableArray<M.Entry> := await F.Until(
+      F.Tags(Restart),
+      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1 and Items[
+        0
+      ].Path = Renamed
+    );
+    X.Assert.Equal<string>(Id, After[0].TrackId);
+    X.Assert.Equal<int?>(9, After[0].Rating);
+  end function;
+
+  // Removal affects only the selected source; re-adding it recovers its durable rating.
+  [X.FactAttribute]
+  public async function RemovingASourceRetainsSharedEntriesAndRatings(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const Path: string := F.Write(Root.Path, 'track.ogg');
+    const A: S.MusicSource := F.Source(Root.Path, 'first');
+    const B: S.MusicSource := F.Source(Root.Path, 'second');
+    await using const Session: Monitor.Session := F.Start([A, B], Data.Path);
+    const Tags: Metadata.Session := F.Tags(Session);
+    const Before: I.ImmutableArray<M.Entry> := await F.Until(
+      Tags,
+      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+    );
+    await Tags.SetRatingAsync(Before[0].TrackId, 4, T.CancellationToken.None);
+    Session.Configure([B]);
+    discard await H.Until(
+      Session,
+      function(Value: Inventory.Snapshot): bool => Value.Sources.Length = 1 and Value.Sources[
+        0
+      ].Id = 'second'
+    );
+    X.Assert.Equal<int>(
+      0,
+      (await Tags.QueryAsync(new M.Query(SourceId := 'first'), T.CancellationToken.None)).Length
+    );
+    X.Assert.Equal<int>(
+      1,
+      (await Tags.QueryAsync(new M.Query(SourceId := 'second'), T.CancellationToken.None)).Length
+    );
+    Session.Configure([]);
+    discard await H.Until(
+      Session,
+      function(Value: Inventory.Snapshot): bool => Value.Sources.Length = 0
+    );
+    X.Assert.Equal<int>(0, (await Tags.QueryAsync(new M.Query(), T.CancellationToken.None)).Length);
+    X.Assert.True(IO.File.Exists(Path));
+    Session.Configure([A]);
+    const After: I.ImmutableArray<M.Entry> := await F.Until(
+      Tags,
+      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+    );
+    X.Assert.Equal<string>(Before[0].TrackId, After[0].TrackId);
+    X.Assert.Equal<int?>(4, After[0].Rating);
+  end function;
+end record;
+
+end unit;

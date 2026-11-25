@@ -3,8 +3,8 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Editors.CodeEditor;
 
 uses
-  Fpas.Ui.Widgets.Editors.CodeEditors as D, Fpas.Ui.Gui.Internal.Hosting.Context as C,
-  Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S,
+  Fpas.Ui.Widgets.Editors.CodeEditors as D, Fpas.Ui.Gui.Internal.Core.Context as C,
+  Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Gui.Internal.Layout.Sizing as S,
   Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors, System.Collections.Generic as Lists;
 
 // Renders the native CodeEditor and dispatches its proposals.
@@ -32,8 +32,8 @@ begin
   const Result: CuiEditors.CuiCodeEditorEvent? := Frame.Window.CodeEditor(
     Token, Text, Settings.Capacity, Settings.Language, Settings.Placeholder,
     Width.Kind, Width.Value, Settings.Height, Settings.Size, Settings.TabSize,
-    P.Bits(Enabled, 1) or P.Bits(Settings.ReadOnly, 2) or P.Bits(Settings.UseTabs, 4)
-    or P.Bits(not Settings.LineNumbers, 8) or P.Bits(Focus, 16), Marks.ToArray()
+    Enc.Bits(Enabled, 1) or Enc.Bits(Settings.ReadOnly, 2) or Enc.Bits(Settings.UseTabs, 4)
+    or Enc.Bits(not Settings.LineNumbers, 8) or Enc.Bits(Focus, 16), Marks.ToArray()
   );
   if Enabled then
     case Result of

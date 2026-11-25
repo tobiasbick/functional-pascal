@@ -3,8 +3,8 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Planning.WeekCalendar;
 
 uses
-  Fpas.Ui.Widgets.Planning.WeekCalendars as A, Fpas.Ui.Gui.Internal.Hosting.Context as C,
-  Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Cui.Widgets.Planning as CuiPlanning, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Internal.Data.ScheduleData as D, System as Sys;
+  Fpas.Ui.Widgets.Planning.WeekCalendars as A, Fpas.Ui.Gui.Internal.Core.Context as C,
+  Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Gui.Cui.Widgets.Planning as CuiPlanning, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Internal.Data.ScheduleData as D, System as Sys;
 
 // Presents the native week calendar.
 // ## Type parameters
@@ -32,7 +32,7 @@ begin
     Settings.HourHeight,
     Height.Kind,
     Height.Value,
-    P.Bits(Enabled, 1) + P.Bits(Settings.ReadOnly, 2),
+    Enc.Bits(Enabled, 1) + Enc.Bits(Settings.ReadOnly, 2),
     P.Focus<TMsg>(Frame, Id, Role, Keys, P.Inputs(Keys.Length, Enabled), 0),
     P.Tracker<TMsg>(Frame, Id, Role, Keys)
   );

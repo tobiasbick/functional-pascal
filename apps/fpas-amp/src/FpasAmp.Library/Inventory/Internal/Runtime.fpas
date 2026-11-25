@@ -136,7 +136,7 @@ begin
         Changed();
         const Cleared: M.Snapshot := Publish();
         Report(true);
-        discard Request.Completion.TrySetResult(Cleared);
+        Request.Succeed(Cleared);
       end for;
 
       ActiveClears := [];
@@ -225,19 +225,19 @@ begin
     end while;
   catch Failure: Sys.OperationCanceledException when Cancellation.IsCancellationRequested do
     for Request: Q.ClearRequest in ActiveClears do
-      discard Request.Completion.TrySetCanceled();
+      Request.Cancel();
     end for;
 
     raise;
   catch Failure: Sys.Exception do
     for Request: Q.ClearRequest in ActiveClears do
-      discard Request.Completion.TrySetException(Failure);
+      Request.Fail(Failure);
     end for;
 
     raise;
   finally
     for Request: Q.ClearRequest in ActiveClears do
-      discard Request.Completion.TrySetCanceled();
+      Request.Cancel();
     end for;
 
     Watchers.Dispose();

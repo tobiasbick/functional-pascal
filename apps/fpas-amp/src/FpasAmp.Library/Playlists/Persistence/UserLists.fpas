@@ -4,7 +4,7 @@
 unit FpasAmp.Library.Playlists.Persistence.UserLists;
 
 uses
-  FpasAmp.Library.Playlists.Model as M, FpasAmp.Library.Playlists.Internal.References as R,
+  FpasAmp.Library.Playlists.Model as M, FpasAmp.Library.Playlists.Formats.References as R,
   FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.UserData.Schema as Users,
   Microsoft.Data.Sqlite as Db, System as Sys, System.IO as IO, System.Threading as T;
 

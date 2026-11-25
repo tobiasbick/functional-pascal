@@ -3,7 +3,7 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Canvas.ResultCard;
 
 uses
-  Fpas.Ui.Widgets.Canvas.ResultCards as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P,
+  Fpas.Ui.Widgets.Canvas.ResultCards as D, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P,
   Fpas.Ui.Widgets.Media.MediaImages as Media, Fpas.Ui.Gui.Internal.Data.MediaData as Images, Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
 
 // Presents CUI's native ResultCard widget.

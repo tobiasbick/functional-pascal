@@ -4,7 +4,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Charts.BarChart;
 
 uses
   Fpas.Ui.Widgets.Charts.Charts as Ch, Fpas.Ui.Gui.Internal.Data.ChartData as Data,
-  Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui;
+  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui;
 
 // Draws the native CUI bar-chart.
 // ## Type parameters

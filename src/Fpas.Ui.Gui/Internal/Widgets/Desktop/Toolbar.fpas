@@ -3,7 +3,7 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Desktop.Toolbar;
 
 uses
-  Fpas.Ui.Widgets.Desktop.Toolbars as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P,
+  Fpas.Ui.Widgets.Desktop.Toolbars as D, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc,
   Fpas.Ui.Gui.Cui as Cui;
 
 function Button(Window: Cui.CuiWindow; Value: D.Button; Primary: bool): int;
@@ -12,11 +12,11 @@ begin
   const Toggle: int := if Pressed = null then
     -1
   else
-    P.Bits(Pressed = true, 1)
+    Enc.Bits(Pressed = true, 1)
   end if;
   return Window.ToolbarButton(
     Value.Icon, Value.Label, Value.Tooltip, Value.Shortcut, Toggle, cast<int>(Value.Tone),
-    P.Bits(Value.Disabled, 1) or P.Bits(Value.Flyout, 2) or P.Bits(Primary, 4)
+    Enc.Bits(Value.Disabled, 1) or Enc.Bits(Value.Flyout, 2) or Enc.Bits(Primary, 4)
   );
 end function;
 

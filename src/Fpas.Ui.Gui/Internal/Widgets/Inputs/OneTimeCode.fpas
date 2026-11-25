@@ -3,7 +3,7 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Inputs.OneTimeCode;
 
 uses
-  Fpas.Ui.Widgets.Inputs.OneTimeCodes as O, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Widgets.Inputs.OneTimeCodes as O, Fpas.Ui.Gui.Internal.Core.Context as C,
   Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Inputs as CuiInputs,
   Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Styles as S, System as Sys;
 

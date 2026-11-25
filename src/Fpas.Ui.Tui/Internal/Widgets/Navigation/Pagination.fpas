@@ -4,7 +4,8 @@ unit Fpas.Ui.Tui.Internal.Widgets.Navigation.Pagination;
 
 uses
   Fpas.Ui.Internal.Navigation.PaginationPages as Pages, Fpas.Ui.Tui.Internal.View.Tree as E,
-  Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as A,
+  Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Measurement as M,
+  Fpas.Ui.Tui.Internal.Layout.Scene as A,
   Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G,
   Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Rendering.Drawing as D,
   Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Widgets.Developer.Terminal as Terminal,
@@ -16,27 +17,6 @@ const Gap: int := 1;
 function Number(Value: int): string;
 begin
   return Value.ToString(Culture.CultureInfo.InvariantCulture);
-end function;
-
-// Measures the expanded pager, allowing space for both possible ellipses.
-// ## Parameters
-// - `Count`: Positive page count.
-// ## Returns
-// The width in terminal cells at which numbered buttons fit on every page.
-public function PreferredWidth(Count: int): int;
-begin
-  const Numbers: int := if Count <= 7 then
-    Count
-  else
-    5
-  end if;
-  const Ellipses: int := if Count <= 7 then
-    0
-  else
-    2
-  end if;
-  return 2 * SideWidth + Numbers * (Number(Count).Length + 2) + Ellipses +
-    (Numbers + Ellipses + 1) * Gap;
 end function;
 
 type Choice<TMsg> = record implements Actions.IActivatable<TMsg>
@@ -150,7 +130,7 @@ begin
     );
   end if;
 
-  if Area.Width >= PreferredWidth(Pager.Count) then
+  if Area.Width >= M.PagerWidth(Pager.Count) then
     const Width: int := CountText.Length + 2;
     const Fallback: string := if Pager.Page < Last then
       NextId

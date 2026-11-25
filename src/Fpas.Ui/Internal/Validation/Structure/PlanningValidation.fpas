@@ -1,0 +1,121 @@
+// [Documentation](../../../../../docs/ui/widgets.md#host-preflight)
+
+unit Fpas.Ui.Internal.Validation.Structure.PlanningValidation;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Core.Checks as R,
+  Fpas.Ui.Internal.Validation.Structure.PlanningRules as PlanningRules,
+  Fpas.Ui.Widgets.Navigation.PathBars as PathBars,
+  Fpas.Ui.Widgets.Files.FileBrowsers as FileBrowsers,
+  Fpas.Ui.Widgets.Files.FilePickers as FilePickers,
+  Fpas.Ui.Widgets.Planning.WeekCalendars as WeekCalendars,
+  Fpas.Ui.Widgets.Planning.MonthCalendars as MonthCalendars,
+  Fpas.Ui.Widgets.Planning.Gantts as Gantts, Fpas.Ui.Widgets.Planning.Kanbans as Kanbans;
+
+// Validates planning, file and path widgets when matched.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Node`: Element to inspect.
+// - `Location`: Parent diagnostic path.
+// - `Current`: Target capabilities.
+// - `Identify`: Registers a widget ID.
+// - `Visit`: Validates composed children.
+// - `VisitScoped`: Validates children inside a native ID scope.
+// ## Returns
+// True when this dispatcher handled the element.
+public function Check<TMsg>(Node: E.Element<TMsg>; Location: string; Current: R.Profile; Identify: function(string, string): string; Visit: procedure(E.Element<TMsg>?, string); VisitScoped: procedure(E.Element<TMsg>, string)): bool;
+begin
+  case Node of
+    when E.Element.PathBar(
+      const Id: string,
+      const Value: PathBars.Value,
+      _,
+      const Settings: PathBars.Options
+    ):
+      const At: string := Identify(Id, Location + '/PathBar');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      PlanningRules.PathBar(Value, Settings, At);
+      return true;
+    when E.Element.FileBrowser(
+      const Id: string,
+      const Folder: string,
+      _,
+      const Settings: FileBrowsers.Options
+    ):
+      const At: string := Identify(Id, Location + '/FileBrowser');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      PlanningRules.FileBrowser(Folder, Settings, At);
+      return true;
+    when E.Element.FilePicker(
+      const Id: string,
+      const Base: E.Element<TMsg>?,
+      _,
+      _,
+      const Settings: FilePickers.Options
+    ):
+      const At: string := Identify(Id, Location + '/FilePicker');
+      PlanningRules.FilePicker(Settings, At);
+      if Current <> R.Profile.Graphical then
+        for Part: string in ['list', 'name', 'cancel', 'confirm'] do
+          discard Identify(Id + '/' + Part, At + '/' + Part);
+        end for;
+      end if;
+
+      if Base <> null then
+        Visit(Base, At + '/base');
+      end if;
+
+      return true;
+    when E.Element.WeekCalendar(
+      const Id: string,
+      const Value: WeekCalendars.Value,
+      _,
+      const Settings: WeekCalendars.Options
+    ):
+      const At: string := Identify(Id, Location + '/WeekCalendar');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      PlanningRules.WeekCalendar(Value, Settings, At);
+      return true;
+    when E.Element.MonthCalendar(
+      const Id: string,
+      const Value: MonthCalendars.Value,
+      _,
+      const Settings: MonthCalendars.Options
+    ):
+      const At: string := Identify(Id, Location + '/MonthCalendar');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      PlanningRules.MonthCalendar(Value, Settings, At);
+      return true;
+    when E.Element.Gantt(
+      const Id: string,
+      const Value: Gantts.Value,
+      _,
+      const Settings: Gantts.Options
+    ):
+      const At: string := Identify(Id, Location + '/Gantt');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      PlanningRules.Gantt(Value, Settings, At);
+      return true;
+    when E.Element.Kanban(
+      const Id: string,
+      const Columns: array of Kanbans.Column<TMsg>,
+      _,
+      const Settings: Kanbans.Options
+    ):
+      const At: string := Identify(Id, Location + '/Kanban');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      PlanningRules.Kanban<TMsg>(Columns, Settings, At);
+      for Column: Kanbans.Column<TMsg> in Columns do
+        for Card: Kanbans.Card<TMsg> in Column.Cards do
+          VisitScoped(Card.Content, At);
+        end for;
+      end for;
+
+      return true;
+    else
+      return false;
+  end case;
+end function;
+
+end unit;

@@ -4,7 +4,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Pickers.TimeDial;
 
 uses
   Fpas.Ui.Widgets.Pickers.TimeDials as D, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Application as App,
-  Fpas.Ui.Gui.Internal.Hosting.Context as C, System as Sys, System.Globalization as Culture;
+  Fpas.Ui.Gui.Internal.Core.Context as C, System as Sys, System.Globalization as Culture;
 
 // Draws the native dial and publishes changes to its time.
 // ## Type parameters

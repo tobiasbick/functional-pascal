@@ -3,7 +3,7 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Inputs.TagInput;
 
 uses
-  Fpas.Ui.Widgets.Inputs.TagInputs as T, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Widgets.Inputs.TagInputs as T, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App,
   Fpas.Ui.Gui.Cui.Widgets.Inputs as CuiInputs,
   Fpas.Ui.Gui.Cui as Cui, System as Sys;
 

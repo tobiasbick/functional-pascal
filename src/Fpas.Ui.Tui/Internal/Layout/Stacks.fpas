@@ -2,7 +2,38 @@
 
 unit Fpas.Ui.Tui.Internal.Layout.Stacks;
 
-uses Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Measurement as M, System as Sys, System.Collections.Generic as Generic;
+uses Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Measurement as M, System as Sys, System.Collections.Generic as Generic, System.Text as Text;
+
+function AllocateCached(
+  Preferred: array of int; Rules: array of E.Flex; Available: int;
+  Previous: array of F.AllocationMemo; Next: Generic.List<F.AllocationMemo>
+): array of int;
+begin
+  const Signature: Text.StringBuilder := new Text.StringBuilder();
+  discard Signature.Append(Available);
+  for Index: int := 0 to Preferred.Length - 1 do
+    const Rule: E.Flex := Rules[Index];
+    discard Signature.Append('/').Append(
+      Preferred[Index]
+    ).Append('/').Append(
+      Rule.Basis
+    ).Append('/').Append(
+      Rule.Minimum
+    ).Append('/').Append(
+      Rule.Maximum
+    ).Append('/').Append(Rule.Grow);
+  end for;
+  const Key: string := Signature.ToString();
+  const Index: int := Next.Count;
+  if Index < Previous.Length and Previous[Index].Key = Key then
+    const Reused: F.AllocationMemo := Previous[Index];
+    Next.Add(Reused);
+    return Reused.Sizes;
+  end if;
+  const Sizes: array of int := F.Allocate(Preferred, Rules, Available);
+  Next.Add(new F.AllocationMemo(Key, Sizes));
+  return Sizes;
+end function;
 
 public function Bounds<TMsg>(
   Children: array of E.Element<TMsg>; Axis: bool; Flow: E.Flow; Area: F.Rect;
@@ -50,7 +81,7 @@ begin
     Sizes[Index] := M.Intrinsic<TMsg>(Child, Axis, Width);
     Rules.Add(M.AllocationRule<TMsg>(Child, Axis));
   end for;
-  const Allocation: array of int := F.AllocateCached(
+  const Allocation: array of int := AllocateCached(
     Sizes, Rules.ToArray(),
     Sys.Math.Max(0, Main - Sys.Math.Max(0, Children.Length - 1) * Flow.Gap),
     PreviousAllocations, Allocations

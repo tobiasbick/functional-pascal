@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Inputs.Switch;
 
-uses Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Context as C;
+uses Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Core.Context as C;
 
 // Presents native CUI's switch and queues its proposed change.
 //

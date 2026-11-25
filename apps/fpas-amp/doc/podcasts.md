@@ -85,6 +85,6 @@ genre, and after clearing the query. It also checks genre filtering on the
 loaded search results, the subscription entry, saved route, finite audio
 decoder, waveform, seek and next episode.
 
-- [NativePodcasts.fpas](../tests/FpasAmp.Ui.Tests/NativePodcasts.fpas)
-- [PodcastEffects.fpas](../tests/FpasAmp.Ui.Tests/PodcastEffects.fpas)
-- [ProviderHttp.fpas](../tests/FpasAmp.Ui.Tests/ProviderHttp.fpas)
+- [NativePodcasts.fpas](../tests/FpasAmp.Ui.Tests/Providers/NativePodcasts.fpas)
+- [PodcastEffects.fpas](../tests/FpasAmp.Ui.Tests/Providers/PodcastEffects.fpas)
+- [ProviderHttp.fpas](../tests/FpasAmp.Ui.Tests/Providers/ProviderHttp.fpas)

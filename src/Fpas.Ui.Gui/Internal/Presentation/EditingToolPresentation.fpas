@@ -13,7 +13,7 @@ uses
   Fpas.Ui.Gui.Internal.Widgets.Editors.CurveEditor as CurveEditor,
   Fpas.Ui.Gui.Internal.Widgets.Editors.GradientEditor as GradientEditor,
   Fpas.Ui.Gui.Internal.Widgets.Editors.TimelineEditor as TimelineEditor,
-  Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Elements as E;
+  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Elements as E;
 
 // Draws the native editing tools.
 // ## Type parameters

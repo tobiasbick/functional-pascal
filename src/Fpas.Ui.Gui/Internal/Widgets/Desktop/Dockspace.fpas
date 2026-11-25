@@ -4,8 +4,8 @@ unit Fpas.Ui.Gui.Internal.Widgets.Desktop.Dockspace;
 
 uses
   Fpas.Ui.Widgets.Desktop.Dockspaces as D, Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Layout as L, Fpas.Ui.Elements as E,
-  Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Layout.Sizing as Size,
-  Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Desktop as CuiDesktop,
+  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Layout.Sizing as Size,
+  Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Desktop as CuiDesktop,
   Fpas.Ui.Gui.Cui as Cui,
   System as Sys;
 

@@ -3,8 +3,8 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Inputs.SeedField;
 
 uses
-  Fpas.Ui.Widgets.Inputs.SeedFields as A, Fpas.Ui.Gui.Internal.Hosting.Context as C,
-  Fpas.Ui.Gui.Internal.Data.CreativeParts as W;
+  Fpas.Ui.Widgets.Inputs.SeedFields as A, Fpas.Ui.Gui.Internal.Core.Context as C,
+  Fpas.Ui.Gui.Internal.Core.Parts as W, Fpas.Ui.Gui.Internal.Core.Values as Enc;
 
 // Presents the native seed field.
 // ## Type parameters
@@ -23,10 +23,10 @@ begin
   const Locked: bool := Current.Locked ?? false;
   const Parts: array of string := ['dice', 'lock'];
   const Accept: array of bool := [Enabled and not Locked, Enabled and Current.Locked <> null];
-  const Focus: int := W.Focus<TMsg>(Frame, Id, Role, Parts, Accept, W.Bits(Locked, 1));
+  const Focus: int := W.Focus<TMsg>(Frame, Id, Role, Parts, Accept, Enc.Bits(Locked, 1));
   var Seed: uint := Current.Seed;
-  var Lock: int := W.Bits(Locked, 1);
-  const Flags: int := W.Bits(Enabled, 1) + W.Bits(Settings.Plain, 8);
+  var Lock: int := Enc.Bits(Locked, 1);
+  const Flags: int := Enc.Bits(Enabled, 1) + Enc.Bits(Settings.Plain, 8);
   const HasLock: bool := Current.Locked <> null;
   const Result: int := Frame.Window.SeedField(
     Token,

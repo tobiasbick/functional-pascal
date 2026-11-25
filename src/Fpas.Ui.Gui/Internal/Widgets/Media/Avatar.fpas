@@ -3,7 +3,7 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Media.Avatar;
 
 uses
-  Fpas.Ui.Widgets.Media.Avatars as A, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Widgets.Media.Avatars as A, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App,
   Fpas.Ui.Gui.Cui as Cui;
 
 // Draws native initials or a decoded image and optional presence.

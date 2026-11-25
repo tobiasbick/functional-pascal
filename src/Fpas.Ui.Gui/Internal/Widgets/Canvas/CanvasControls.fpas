@@ -3,7 +3,7 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Canvas.CanvasControls;
 
 uses
-  Fpas.Ui.Widgets.Canvas.CanvasControls as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P,
+  Fpas.Ui.Widgets.Canvas.CanvasControls as D, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Values as P,
   Fpas.Ui.Gui.Cui.Widgets.Canvas as CuiCanvas,
   Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors,
   Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Editors.NodeEditors as N, Fpas.Ui.Gui.Internal.Data.CanvasData as Data, System.Collections.Generic as Lists;

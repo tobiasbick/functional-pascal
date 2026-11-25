@@ -4,7 +4,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Audio.LevelMeter;
 
 uses
   Fpas.Ui.Widgets.Audio.LevelMeters as M, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Hosting.Context as C, System as Sys;
+  Fpas.Ui.Gui.Internal.Core.Context as C, System as Sys;
 
 // Draws the native level bars and forwards a clip reset if requested.
 // ## Type parameters

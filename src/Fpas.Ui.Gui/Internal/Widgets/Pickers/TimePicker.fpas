@@ -5,7 +5,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Pickers.TimePicker;
 uses
   Fpas.Ui.Widgets.Pickers.TimePickers as P, Fpas.Ui.Gui.Cui.Widgets.Pickers as CuiPickers,
   Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Application as App,
-  Fpas.Ui.Gui.Internal.Hosting.Context as C, System as Sys, System.Globalization as Culture;
+  Fpas.Ui.Gui.Internal.Core.Context as C, System as Sys, System.Globalization as Culture;
 
 function ChoiceId(Id: string; Choice: int): string;
 begin

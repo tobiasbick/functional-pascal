@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Actions.ButtonGroup;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Gui.Internal.Hosting.Context as C;
+uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Gui.Internal.Core.Context as C;
 
 // Draws existing buttons inside a native CUI button group.
 //

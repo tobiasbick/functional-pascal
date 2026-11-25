@@ -3,7 +3,7 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Collections.ListItem;
 
 uses
-  Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Widgets.Collections.ListItems as I, System as Sys;
 
 // Presents the native ListItem element.

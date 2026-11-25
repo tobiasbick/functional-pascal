@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Conversation.ChatMessage;
 
-uses Fpas.Ui.Widgets.Conversation.ChatMessages as W, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P;
+uses Fpas.Ui.Widgets.Conversation.ChatMessages as W, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc;
 
 // Draws a native conversation bubble.
 // ## Type parameters
@@ -16,8 +16,8 @@ public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Text: string; Sett
 begin
   const Role: string := 'chat-message';
   const Token: string := C.Token(Role, Id);
-  const Flags: int := P.Bits(Settings.Mine, 1) + P.Bits(Settings.Grouped, 2) +
-    P.Bits(Settings.LastInGroup, 4) + P.Bits(Settings.Markdown, 8);
+  const Flags: int := Enc.Bits(Settings.Mine, 1) + Enc.Bits(Settings.Grouped, 2) +
+    Enc.Bits(Settings.LastInGroup, 4) + Enc.Bits(Settings.Markdown, 8);
   Frame.Window.ChatMessage(
     Token, Text, Settings.Author, Settings.Time, Settings.Status,
     Settings.Avatar, Flags, Frame.AcceptInput

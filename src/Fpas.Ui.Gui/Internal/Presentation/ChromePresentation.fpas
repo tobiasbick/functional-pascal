@@ -3,7 +3,7 @@
 unit Fpas.Ui.Gui.Internal.Presentation.ChromePresentation;
 
 uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Gui.Internal.Core.Context as C,
   Fpas.Ui.Widgets.Desktop.MenuBars as M, Fpas.Ui.Widgets.Desktop.DocumentTabs as D, Fpas.Ui.Widgets.Desktop.StatusBars as S,
   Fpas.Ui.Widgets.Desktop.Dockspaces as Dock, Fpas.Ui.Widgets.Desktop.SplitViews as Split, System as Sys,
   Fpas.Ui.Gui.Internal.Widgets.Desktop.MenuBar as MenuBar, Fpas.Ui.Gui.Internal.Widgets.Desktop.DocumentTabs as DocumentTabs,

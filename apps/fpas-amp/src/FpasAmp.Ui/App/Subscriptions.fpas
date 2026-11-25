@@ -62,7 +62,7 @@ begin
       )
     ]
   );
-  for Work: Mvu.Command<PlayerModel.Msg> in Playback.Watch(Port) do
+  for Work: Mvu.Command<PlayerModel.Msg> in Port.Watch() do
     Commands.Add(Composition.MapCommand<PlayerModel.Msg, M.Msg>(Work, M.Msg.Player, 'player'));
   end for;
   const Tags: Metadata.Session? := Library.Metadata;

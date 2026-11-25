@@ -3,7 +3,7 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Files.Dropzone;
 
 uses
-  Fpas.Ui.Widgets.Files.Dropzones as D, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Widgets.Files.Dropzones as D, Fpas.Ui.Gui.Internal.Core.Context as C,
   Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Files as CuiFiles,
   Fpas.Ui.Gui.Cui as Cui, System as Sys;
 

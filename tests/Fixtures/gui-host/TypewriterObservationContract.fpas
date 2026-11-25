@@ -6,7 +6,7 @@ uses
   Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L,
   Fpas.Ui.Widgets.Motion.Typewriters as Typing, Fpas.Ui.Widgets.Motion.Motion as Motion,
   Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Gui.Internal.Core.Context as C,
   Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Mvu.Application as Mvu,
   Fpas.Ui.Gui.Internal.Presentation.Presentation as P,
   System as Sys, System.Collections.Generic as Lists;

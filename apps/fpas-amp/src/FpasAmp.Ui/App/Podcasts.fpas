@@ -293,7 +293,7 @@ begin
 
   case Request of
     when Player.Request.Download(_, _, _):
-      discard Port.Requests.Writer.TryWrite(Player.Request.Unload);
+      Port.Send(Player.Request.Unload);
     else
   end case;
   const Commands: C.List<A.Command<App.Msg>> := new C.List<A.Command<App.Msg>>(Result.Commands);

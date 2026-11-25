@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Audio.VoiceWave;
 
-uses Fpas.Ui.Widgets.Audio.VoiceWaves as VoiceWaves, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Widgets.Audio.Voice as Voice, System as Sys, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Internal.Data.ChartData as Colors;
+uses Fpas.Ui.Widgets.Audio.VoiceWaves as VoiceWaves, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Widgets.Audio.Voice as Voice, System as Sys, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Internal.Data.ChartData as Colors;
 
 // Presents CUI's native VoiceWave.
 // ## Type parameters
@@ -24,7 +24,7 @@ begin
   const Next: float := Frame.Window.VoiceWave(
     Token, Signal.Levels, Signal.Owners, Progress, Width.Kind, Width.Value,
     Settings.Pitch, Settings.Step, cast<int>(Settings.Owner), Colors.Color(Settings.Color),
-    P.Bits(Enabled, 1) or P.Bits(Focus, 2) or P.Bits(Settings.Clip, 4)
+    Enc.Bits(Enabled, 1) or Enc.Bits(Focus, 2) or Enc.Bits(Settings.Clip, 4)
   );
   P.Root<TMsg>(Frame, Id, Role, '', Enabled, (Progress ?? 0.0F).ToString());
   if Enabled and Next <> Progress then

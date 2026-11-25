@@ -1,0 +1,182 @@
+// [Documentation](../../../../../docs/ui/widgets.md#host-preflight)
+
+unit Fpas.Ui.Internal.Validation.Core.LayoutRules;
+
+uses Fpas.Ui.Internal.Validation.Core.Checks as R, Fpas.Ui.Layout as L, System as Sys;
+
+// Checks explicit units and a nonnegative distance.
+//
+// ## Parameters
+// - `Value`: Explicit distance.
+// - `Current`: Receiving host profile.
+// - `Location`: Diagnostic location.
+//
+// ## Returns
+// The validated distance in its declared units.
+public function CheckMeasure(Value: L.Measure; Current: R.Profile; Location: string): int;
+begin
+  var Amount: int := 0;
+  case Value of
+    when L.Measure.Cells(const Cells: int):
+      if Current <> R.Profile.Terminal then
+        R.Reject(Location, 'Cell units require the terminal profile.');
+      end if;
+
+      Amount := Cells;
+    when L.Measure.Logical(const Units: int):
+      Amount := Units;
+  end case;
+
+  if Amount < 0 then
+    R.Reject(Location, 'A distance must be nonnegative.');
+  end if;
+
+  return Amount;
+end function;
+
+// Validates an extent without calculating its resolved size.
+// ## Parameters
+// - `Value`: Content, fill, explicit distance or percentage.
+// - `Current`: Receiving host profile.
+// - `Location`: Diagnostic location.
+public procedure CheckExtent(Value: L.Extent; Current: R.Profile; Location: string);
+begin
+  case Value of
+    when L.Extent.Fixed(const Distance: L.Measure):
+      discard CheckMeasure(Distance, Current, Location);
+    when L.Extent.Percent(const Percent: float):
+      R.RequireProfile(Current, R.Profile.Graphical, Location);
+      if not Sys.Single.IsFinite(Percent) or Percent < 0.0F or Percent > 100.0F then
+        R.Reject(Location, 'A percentage must be finite and between zero and 100.');
+      end if;
+    else
+  end case;
+end procedure;
+
+// Checks size units, ordered bounds and nonnegative CUI growth weights.
+//
+// ## Parameters
+// - `Settings`: Size constraints.
+// - `Current`: Receiving host profile.
+// - `Location`: Diagnostic location.
+public procedure CheckFlex(Settings: L.Flex; Current: R.Profile; Location: string);
+begin
+  if Settings.Width <> null or Settings.Height <> null then
+    R.RequireProfile(Current, R.Profile.Graphical, Location);
+    case Settings.Basis of
+      when L.Extent.Content:
+      else
+        R.Reject(Location, 'Explicit axes cannot mix with main-axis constraints.');
+    end case;
+
+    if Settings.Minimum <> null or Settings.Maximum <> null or Settings.Grow <> 0 then
+      R.Reject(Location, 'Explicit axes cannot mix with main-axis constraints.');
+    end if;
+
+    case Settings.Width of
+      when is L.AxisSize as Axis:
+        CheckFlex(
+          new L.Flex(Basis := Axis.Basis, Minimum := Axis.Minimum, Maximum := Axis.Maximum),
+          Current,
+          Location + '/width'
+        );
+      else
+    end case;
+
+    case Settings.Height of
+      when is L.AxisSize as Axis:
+        CheckFlex(
+          new L.Flex(Basis := Axis.Basis, Minimum := Axis.Minimum, Maximum := Axis.Maximum),
+          Current,
+          Location + '/height'
+        );
+      else
+    end case;
+  end if;
+
+  if not Sys.Single.IsFinite(Settings.Grow) or Settings.Grow < 0.0F then
+    R.Reject(Location, 'Growth weights must be finite and nonnegative.');
+  end if;
+
+  CheckExtent(Settings.Basis, Current, Location + '/basis');
+  case Settings.Basis of
+    when L.Extent.Fixed(_), L.Extent.Percent(_):
+      if Settings.Grow <> 0 then
+        R.Reject(
+          Location,
+          'Fixed and percentage extents cannot grow. Use fill for weighted allocation.'
+        );
+      end if;
+    else
+  end case;
+  const Min: L.Measure? := Settings.Minimum;
+  const Max: L.Measure? := Settings.Maximum;
+  if Min <> null and Max <> null then
+    case Min of
+      when L.Measure.Cells(_):
+        case Max of
+          when L.Measure.Logical(_):
+            R.Reject(Location, 'Minimum and maximum must use the same measure units.');
+          else
+        end case;
+      when L.Measure.Logical(_):
+        case Max of
+          when L.Measure.Cells(_):
+            R.Reject(Location, 'Minimum and maximum must use the same measure units.');
+          else
+        end case;
+      else
+    end case;
+  end if;
+  const Minimum: int := if Min = null then
+    0
+  else
+    CheckMeasure(
+      Min,
+      Current,
+      Location + '/minimum'
+    )
+  end if;
+  const Maximum: int := if Max = null then
+    int.MaxValue
+  else
+    CheckMeasure(
+      Max,
+      Current,
+      Location + '/maximum'
+    )
+  end if;
+  if Minimum > Maximum then
+    R.Reject(Location, 'The minimum exceeds the maximum.');
+  end if;
+end procedure;
+
+// Checks the units of explicit spacing.
+//
+// ## Parameters
+// - `Value`: Semantic or explicit spacing.
+// - `Current`: Receiving host profile.
+// - `Location`: Diagnostic location.
+public procedure CheckSpacing(Value: L.Spacing; Current: R.Profile; Location: string);
+begin
+  case Value of
+    when L.Spacing.Fixed(const Amount: L.Measure):
+      discard CheckMeasure(Amount, Current, Location);
+    else
+  end case;
+end procedure;
+
+// Checks a positive logical drawing extent.
+//
+// ## Parameters
+// - `Width`: Logical width.
+// - `Height`: Logical height.
+// - `Location`: Diagnostic location.
+public procedure CheckViewport(Width: int; Height: int; Location: string);
+begin
+  if Width <= 0 or Height <= 0 then
+    R.Reject(Location, 'The graphical viewport needs positive dimensions.');
+  end if;
+end procedure;
+
+end unit;

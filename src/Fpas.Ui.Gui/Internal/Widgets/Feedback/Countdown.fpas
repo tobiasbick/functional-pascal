@@ -3,7 +3,7 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Feedback.Countdown;
 
 uses
-  Fpas.Ui.Widgets.Feedback.Countdowns as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Widgets.Feedback.Countdowns as D, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App,
   Fpas.Ui.Gui.Cui as Cui, System.Globalization as Culture;
 
 // Draws CUI's rolling digits for the supplied duration.

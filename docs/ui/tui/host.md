@@ -166,6 +166,7 @@ terminal widgets and their behavior.
   - [Equivalence.fpas](../../../src/Fpas.Ui.Tui/Internal/Layout/Equivalence.fpas)
   - [Flexible.fpas](../../../src/Fpas.Ui.Tui/Internal/Layout/Flexible.fpas)
   - [Measurement.fpas](../../../src/Fpas.Ui.Tui/Internal/Layout/Measurement.fpas)
+  - [PopupHost.fpas](../../../src/Fpas.Ui.Tui/Internal/Layout/PopupHost.fpas)
   - [Scene.fpas](../../../src/Fpas.Ui.Tui/Internal/Layout/Scene.fpas)
   - [Stacks.fpas](../../../src/Fpas.Ui.Tui/Internal/Layout/Stacks.fpas)
 - `src/Fpas.Ui.Tui/Internal/Rendering/`
@@ -177,7 +178,6 @@ terminal widgets and their behavior.
   - [Inputs.fpas](../../../src/Fpas.Ui.Tui/Internal/Terminal/Inputs.fpas)
 - `src/Fpas.Ui.Tui/Internal/Widgets/Overlays/`
   - [AnchoredPopup.fpas](../../../src/Fpas.Ui.Tui/Internal/Widgets/Overlays/AnchoredPopup.fpas)
-  - [PopupHost.fpas](../../../src/Fpas.Ui.Tui/Internal/Widgets/Overlays/PopupHost.fpas)
   - [PopupPlacement.fpas](../../../src/Fpas.Ui.Tui/Internal/Widgets/Overlays/PopupPlacement.fpas)
   - [PopupState.fpas](../../../src/Fpas.Ui.Tui/Internal/Widgets/Overlays/PopupState.fpas)
 - `src/Fpas.Ui.Tui/Internal/View/`

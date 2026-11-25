@@ -4,7 +4,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Inputs.Slider;
 
 uses
   Fpas.Ui.Widgets.Inputs.Sliders as S, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Hosting.Context as C, System.Globalization as Culture;
+  Fpas.Ui.Gui.Internal.Core.Context as C, System.Globalization as Culture;
 
 // Presents CUI's slider and forwards only input proposals.
 //

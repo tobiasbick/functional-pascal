@@ -9,7 +9,7 @@ uses
   FpasAmp.Library.Persistence.Sql as Sql, FpasAmp.Library.Persistence.Schema as Schema,
   FpasAmp.Library.UserData.Schema as Users, FpasAmp.Library.UserData.Identity as Identity,
   FpasAmp.Library.Metadata.Internal.Recovery as Recovery,
-  FpasAmp.Library.Playlists.Internal.Reading as Playlists,
+  FpasAmp.Library.Playlists.Formats.Reading as Playlists,
   FpasAmp.Library.Playlists.Persistence.Store as PlaylistStore,
   Microsoft.Data.Sqlite as Db, System as Sys, System.Threading as T, System.Threading.Tasks as Tasks;
 
@@ -112,7 +112,7 @@ begin
       const File: Pending.File? := Pending.Next(Connection);
       if File = null then
         if Playlist = null then
-          discard await Policy.Signal.WaitAsync(60000, Cancellation).ConfigureAwait(false);
+          discard await Policy.Wait(60000, Cancellation).ConfigureAwait(false);
         end if;
 
         continue;

@@ -1,0 +1,122 @@
+// [Documentation](../../../doc/library.md#search)
+
+// Search ranking: word order, prefixes, typo forgiveness and exact numbers.
+unit FpasAmp.Library.Tests.SearchRanking;
+
+uses
+  FpasAmp.Library.Search.Matching as Matching,
+  System.Collections.Immutable as I, Xunit as X;
+
+function Album(Title: string; Artist: string; Genre: string := ''): Matching.Document;
+begin
+  return Matching.Document.Create(
+    [
+      new Matching.Field(Title, 1.0),
+      new Matching.Field(Artist, 0.9),
+      new Matching.Field(Genre, 0.6)
+    ]
+  );
+end function;
+
+// A small catalogue with similar names, so ranking and noise are visible.
+function Catalogue(): I.ImmutableArray<Matching.Document>;
+begin
+  return I.ImmutableArray.CreateRange<Matching.Document>(
+    [
+      Album('The Wall', 'Pink Floyd', 'Progressive rock'),
+      Album('Funhouse', 'Pink', 'Pop'),
+      Album('Last Date', 'Floyd Cramer', 'Country'),
+      Album('Abbey Road', 'The Beatles', 'Rock'),
+      Album('Homogenic', 'Björk', 'Electronic'),
+      Album('Master of Puppets', 'Metallica', 'Metal'),
+      Album('1999', 'Prince', 'Funk'),
+      Album('Straßenmusik', 'Herbert Meier', 'Volksmusik')
+    ]
+  );
+end function;
+
+function Best(Text: string): int;
+begin
+  const Scores: array of double := Matching.Rank(Matching.Query.Parse(Text), Catalogue());
+  var Index: int := -1;
+  var Top: double := 0.0;
+  for Position: int := 0 to Scores.Length - 1 do
+    if Scores[Position] > Top then
+      Top := Scores[Position];
+      Index := Position;
+    end if;
+  end for;
+
+  return Index;
+end function;
+
+function Found(Text: string; Position: int): bool;
+begin
+  return Matching.Rank(Matching.Query.Parse(Text), Catalogue())[Position] > 0.0;
+end function;
+
+// Checks that search ranking matches words across order, prefixes and typos.
+public type SearchRankingTests = record
+  // Words match in any order, and the album with more of them ranks first.
+  [X.FactAttribute]
+  public procedure WordsMatchInAnyOrder();
+  begin
+    X.Assert.Equal<int>(0, Best('wall pink'));
+    X.Assert.Equal<int>(0, Best('pink floyd wall'));
+    X.Assert.True(Found('floyd', 0) and Found('floyd', 2));
+    X.Assert.False(Found('floyd', 3));
+  end procedure;
+
+  // One matching word is enough; an unknown second word does not hide the album.
+  [X.FactAttribute]
+  public procedure AnyWordIsEnough();
+  begin
+    X.Assert.Equal<int>(0, Best('wall xylophone'));
+    X.Assert.True(Found('puppets zzzz', 5));
+  end procedure;
+
+  // Typing the start of a word already finds it.
+  [X.FactAttribute]
+  public procedure PrefixesMatchWhileTyping();
+  begin
+    X.Assert.Equal<int>(4, Best('homo'));
+    X.Assert.Equal<int>(5, Best('mast pupp'));
+  end procedure;
+
+  // Typos, accents and sound-alike spellings still find the album.
+  [X.FactAttribute]
+  public procedure ForgivesSpelling();
+  begin
+    X.Assert.Equal<int>(3, Best('beatels'));
+    X.Assert.Equal<int>(5, Best('metalica'));
+    X.Assert.Equal<int>(4, Best('bjork'));
+    X.Assert.Equal<int>(7, Best('mayer'));
+    X.Assert.Equal<int>(7, Best('strassenmusik'));
+  end procedure;
+
+  // Words written together find names written apart.
+  [X.FactAttribute]
+  public procedure JoinedWordsMatch();
+  begin
+    X.Assert.Equal<int>(0, Best('pinkfloyd'));
+  end procedure;
+
+  // Numbers match exactly or as a prefix, never as a near miss.
+  [X.FactAttribute]
+  public procedure NumbersAreExact();
+  begin
+    X.Assert.Equal<int>(6, Best('1999'));
+    X.Assert.False(Found('1998', 6));
+  end procedure;
+
+  // Wildcards and empty text produce no search terms.
+  [X.FactAttribute]
+  public procedure WildcardsAreNotSearchTerms();
+  begin
+    X.Assert.True(Matching.Query.Parse('* ?').IsEmpty());
+    X.Assert.Equal<int>(-1, Best('*'));
+    X.Assert.Equal<int>(-1, Best(''));
+  end procedure;
+end record;
+
+end unit;

@@ -1,0 +1,231 @@
+// [Documentation](../../../../../docs/ui/widgets.md#host-preflight)
+
+unit Fpas.Ui.Internal.Validation.Dispatch.FeedbackAndAudioValidation;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Styles as S, Fpas.Ui.Internal.Validation.Core.Checks as R,
+  Fpas.Ui.Internal.Validation.Controls.AudioRules as AudioRules,
+  Fpas.Ui.Internal.Validation.Inputs.SliderRules as SliderRules,
+  Fpas.Ui.Internal.Validation.Inputs.SelectionRules as SelectionRules,
+  Fpas.Ui.Widgets.Feedback.Banners as Banners, Fpas.Ui.Widgets.Feedback.Countdowns as Countdowns,
+  Fpas.Ui.Widgets.Feedback.Checklists as Checklists, Fpas.Ui.Widgets.Files.Dropzones as Dropzones,
+  Fpas.Ui.Widgets.Files.SignaturePads as Signatures, Fpas.Ui.Widgets.Audio.Knobs as Knobs,
+  Fpas.Ui.Widgets.Audio.Faders as Faders, Fpas.Ui.Widgets.Inputs.RulerSliders as Rulers,
+  Fpas.Ui.Widgets.Inputs.HistogramSliders as Histograms,
+  Fpas.Ui.Widgets.Inputs.RangeSliders as RangeSliders, System as Sys;
+
+// Validates feedback, upload, audio dial and rating controls when matched.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Node`: Element to inspect.
+// - `Location`: Parent diagnostic path.
+// - `Current`: Target capabilities.
+// - `Identify`: Registers a widget ID.
+// ## Returns
+// True when this dispatcher handled the element.
+public function Check<TMsg>(Node: E.Element<TMsg>; Location: string; Current: R.Profile; Identify: function(string, string): string): bool;
+begin
+  case Node of
+    when E.Element.Banner(
+      const Id: string, const Announcement: string, _, const Dismiss: Sys.Func<TMsg>?,
+      const Action: Sys.Func<TMsg>?, const Settings: Banners.Options
+    ):
+      const At: string := Identify(Id, Location + '/banner');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      R.CheckText(Announcement, At + '/text');
+      R.CheckText(Settings.Icon, At + '/icon');
+      R.CheckText(Settings.ActionLabel, At + '/action');
+      if Sys.String.IsNullOrWhiteSpace(Announcement) or not Sys.Enum.IsDefined<S.Tone>(
+        Settings.Tone
+      )
+      then
+        R.Reject(At, 'A banner needs nonempty text and a valid tone.');
+      end if;
+
+      if (Settings.ActionLabel = '') <> (Action = null) then
+        R.Reject(At, 'A banner action needs a caption and a message factory.');
+      end if;
+
+      if Action <> null then
+        discard Identify(Banners.ActionId(Id), At);
+      end if;
+
+      if Dismiss <> null then
+        discard Identify(Banners.DismissId(Id), At);
+      end if;
+
+      return true;
+    when E.Element.Countdown(const Id: string, const Seconds: double, _):
+      const At: string := Identify(Id, Location + '/countdown');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      if not Sys.Double.IsFinite(Seconds) or Seconds > 7730941132799.0 then
+        R.Reject(At, 'Countdown seconds must be finite and fit the native hours tile.');
+      end if;
+
+      return true;
+    when E.Element.Checklist(
+      const Id: string,
+      const Steps: array of Checklists.Step,
+      _,
+      const Action: Sys.Func<int, TMsg>?,
+      const Settings: Checklists.Options
+    ):
+      const At: string := Identify(Id, Location + '/checklist');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      R.CheckText(Settings.Title, At + '/title');
+      R.CheckText(Settings.Description, At + '/description');
+      for Index: int := 0 to Steps.Length - 1 do
+        const Step: Checklists.Step := Steps[Index];
+        const StepAt: string := Identify(Checklists.StepId(Id, Index), At);
+        R.CheckText(Step.Title, StepAt + '/title');
+        R.CheckText(Step.Description, StepAt + '/description');
+        R.CheckText(Step.ActionLabel, StepAt + '/action');
+        if Sys.String.IsNullOrWhiteSpace(Step.Title) then
+          R.Reject(StepAt, 'A checklist step needs a title.');
+        end if;
+
+        if Step.ActionLabel <> '' then
+          if Action = null then
+            R.Reject(StepAt, 'A checklist action needs a message callback.');
+          end if;
+
+          discard Identify(Checklists.ActionId(Id, Index), StepAt);
+        end if;
+      end for;
+
+      return true;
+    when E.Element.Dropzone(const Id: string, _, _, const Settings: Dropzones.Options):
+      const At: string := Identify(Id, Location + '/dropzone');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      R.CheckText(Settings.Title, At + '/title');
+      R.CheckText(Settings.Description, At + '/description');
+      R.CheckText(Settings.Accept, At + '/accept');
+      R.CheckText(Settings.Icon, At + '/icon');
+      if not Sys.Single.IsFinite(Settings.Height) or Settings.Height < 0.0F then
+        R.Reject(At, 'Dropzone height must be finite and nonnegative.');
+      end if;
+
+      return true;
+    when E.Element.AvatarUpload(
+      const Id: string,
+      const Name: string,
+      const Path: string?,
+      _,
+      _,
+      const Size: float,
+      _
+    ):
+      const At: string := Identify(Id, Location + '/avatarUpload');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      R.CheckText(Name, At + '/name');
+      if Path <> null then
+        R.CheckText(Path, At + '/image');
+      end if;
+
+      if not Sys.Single.IsFinite(Size) or Size < 0.0F then
+        R.Reject(At, 'Avatar diameter must be finite and nonnegative.');
+      end if;
+
+      return true;
+    when E.Element.SignaturePad(const Id: string, _, const Settings: Signatures.Options):
+      const At: string := Identify(Id, Location + '/signaturePad');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      discard Identify(Signatures.ClearId(Id), At);
+      R.CheckText(Settings.Placeholder, At + '/placeholder');
+      if not Sys.Single.IsFinite(Settings.Height) or Settings.Height < 0.0F then
+        R.Reject(At, 'Signature pad height must be finite and nonnegative.');
+      end if;
+
+      return true;
+    when E.Element.Knob(
+      const Id: string, const Label: string, const Value: float, const Minimum: float,
+      const Maximum: float, _, const Settings: Knobs.Options
+    ):
+      const At: string := Identify(Id, Location + '/knob');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      SliderRules.Check(Label, Value, Value, Minimum, Maximum, At);
+      AudioRules.CheckDial(
+        Settings.Step,
+        Settings.Reset,
+        Settings.DecimalPlaces,
+        Settings.UnitLabel,
+        Maximum - Minimum,
+        At
+      );
+      AudioRules.CheckKnob(Settings.Size, Settings.LogScale, Minimum, Maximum, At);
+      return true;
+    when E.Element.Fader(
+      const Id: string, const Label: string, const Value: float, const Minimum: float,
+      const Maximum: float, _, const Settings: Faders.Options
+    ):
+      const At: string := Identify(Id, Location + '/fader');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      SliderRules.Check(Label, Value, Value, Minimum, Maximum, At);
+      AudioRules.CheckDial(
+        Settings.Step,
+        Settings.Reset,
+        Settings.DecimalPlaces,
+        Settings.UnitLabel,
+        Maximum - Minimum,
+        At
+      );
+      AudioRules.CheckFader(
+        Settings.Length,
+        Settings.Ticks,
+        Settings.Levels,
+        Minimum,
+        Maximum,
+        At
+      );
+      return true;
+    when E.Element.RulerSlider(
+      const Id: string, const Label: string, const Value: float, const Minimum: float,
+      const Maximum: float, _, const Settings: Rulers.Options
+    ):
+      const At: string := Identify(Id, Location + '/rulerSlider');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      SliderRules.Check(Label, Value, Value, Minimum, Maximum, At);
+      SliderRules.CheckRuler(Settings, Minimum, Maximum, At);
+      return true;
+    when E.Element.HistogramSlider(
+      const Id: string, const Label: string, const Bins: array of float,
+      const Value: RangeSliders.Interval, const Minimum: float, const Maximum: float,
+      _, const Settings: Histograms.Options
+    ):
+      const At: string := Identify(Id, Location + '/histogramSlider');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      SliderRules.Check(Label, Value.Lower, Value.Upper, Minimum, Maximum, At);
+      SliderRules.CheckHistogram(Bins, Settings, At);
+      return true;
+    when E.Element.ChipAction(const Id: string, const Label: string, _, _, const Icon: string, _):
+      SelectionRules.CheckRow(Id, Label, '', Current, Location + '/chip', Identify);
+      R.CheckText(Icon, Location + '/chip/icon');
+      return true;
+    when E.Element.RatingAction(
+      const Id: string,
+      const Label: string,
+      const Value: int,
+      _,
+      const Maximum: int,
+      _, const StarSize: float
+    ):
+      SelectionRules.CheckRow(Id, Label, '', Current, Location + '/rating', Identify);
+      if not Sys.Single.IsFinite(StarSize) or StarSize <= 0.0F then
+        R.Reject(Location + '/rating', 'Rating star size must be finite and positive.');
+      end if;
+
+      if Maximum < 1 or Maximum > 16 or Value < 0 or Value > Maximum then
+        R.Reject(
+          Location + '/rating',
+          'Rating needs one through sixteen stars and a value within that range or zero.'
+        );
+      end if;
+
+      return true;
+    else
+      return false;
+  end case;
+end function;
+
+end unit;

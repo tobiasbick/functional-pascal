@@ -1,0 +1,123 @@
+// [Documentation](../../../../../docs/ui/widgets.md#host-preflight)
+
+unit Fpas.Ui.Internal.Validation.Core.Checks;
+
+uses System as Sys, System.Text as Text, System.Collections.Generic as Generic;
+
+const StrictUtf8: Sys.Text.UTF8Encoding := new Sys.Text.UTF8Encoding(false, true);
+
+// Internal target profile mirrored from Fpas.Ui.Validation.Target to keep rule units acyclic.
+public type Profile = enum: byte
+  // Accepts only widgets and options shared by both hosts.
+  Portable;
+  // Allows cell units and terminal extension nodes.
+  Terminal;
+  // Allows logical units and graphical extension nodes.
+  Graphical;
+end enum;
+
+// Raises a diagnostic for a rejected view option.
+//
+// ## Parameters
+// - `Location`: Tree path or control identity.
+// - `Message`: Violated contract.
+public procedure Reject(Location: string; Message: string);
+begin
+  raise new Sys.ArgumentException(Location + ' — ' + Message);
+end procedure;
+
+// Checks that text can be passed to either host without truncation or invalid encoding.
+//
+// ## Parameters
+// - `Value`: Text to validate.
+// - `Location`: Diagnostic location.
+public procedure CheckText(Value: string; Location: string);
+begin
+  if Value.Contains(Sys.Char.MinValue) then
+    Reject(Location, 'Text contains an embedded zero character.');
+  end if;
+
+  try
+    discard StrictUtf8.GetByteCount(Value);
+  catch Error: Text.EncoderFallbackException do
+    Reject(Location, 'Text contains an invalid UTF-16 sequence.');
+  end try;
+end procedure;
+
+// Checks a native integer count format before rendering.
+// ## Parameters
+// - `Value`: Literal text with optional %d slots and escaped %% signs.
+// - `Arguments`: Maximum number of integer slots supplied by the widget.
+// - `Location`: Diagnostic path identifying the widget option.
+public procedure CheckCountFormat(Value: string; Arguments: int; Location: string);
+requires Arguments >= 0;
+begin
+  CheckText(Value, Location);
+  var Slots: int := 0;
+  var Index: int := 0;
+  while Index < Value.Length do
+    if Value[Index] = #37 then
+      Index := Index + 1;
+      if Index >= Value.Length then
+        Reject(Location, 'Count formats require %d slots or escaped %% signs.');
+      end if;
+
+      if Value[Index] = #100 then
+        Slots := Slots + 1;
+        if Slots > Arguments then
+          Reject(Location, 'The count format has more integer slots than the widget supplies.');
+        end if;
+      elsif Value[Index] <> #37 then
+        Reject(Location, 'Count formats require %d slots or escaped %% signs.');
+      end if;
+    end if;
+
+    Index := Index + 1;
+  end while;
+end procedure;
+
+// Adds a valid collection-local identity and rejects duplicates.
+//
+// ## Parameters
+// - `Keys`: Previously visited keys.
+// - `Key`: Item identity.
+// - `Location`: Diagnostic location.
+public procedure CheckKey(Keys: Generic.HashSet<string>; Key: string; Location: string);
+begin
+  if Sys.String.IsNullOrWhiteSpace(Key) then
+    Reject(Location, 'Item keys must be nonempty.');
+  end if;
+
+  CheckText(Key, Location);
+  if not Keys.Add(Key) then
+    Reject(Location, 'Duplicate item key ' + Key + '.');
+  end if;
+end procedure;
+
+// Checks that a supplied selection refers to an item in the collection.
+//
+// ## Parameters
+// - `Keys`: Permitted item identities.
+// - `Key`: Requested selection, or null.
+// - `Location`: Diagnostic location.
+public procedure CheckSelected(Keys: Generic.HashSet<string>; Key: string?; Location: string);
+begin
+  if Key <> null and not Keys.Contains(Key) then
+    Reject(Location, 'Unknown selected key ' + Key + '.');
+  end if;
+end procedure;
+
+// Rejects a backend extension on an incompatible target.
+//
+// ## Parameters
+// - `Current`: Receiving host profile.
+// - `Required`: Extension owner.
+// - `Location`: Diagnostic location.
+public procedure RequireProfile(Current: Profile; Required: Profile; Location: string);
+begin
+  if Current <> Required then
+    Reject(Location, 'This extension requires the ' + Required.ToString() + ' profile.');
+  end if;
+end procedure;
+
+end unit;

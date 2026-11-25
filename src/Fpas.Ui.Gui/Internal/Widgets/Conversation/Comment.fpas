@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Conversation.Comment;
 
-uses Fpas.Ui.Widgets.Conversation.Comments as W, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P;
+uses Fpas.Ui.Widgets.Conversation.Comments as W, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc;
 
 // Draws a threaded comment and reports native actions.
 // ## Type parameters
@@ -33,10 +33,10 @@ begin
     C.Token(Role, Id + '/reply')
   end if;
   var Likes: int := Current.Likes;
-  var Liked: int := P.Bits(Current.Liked, 1);
+  var Liked: int := Enc.Bits(Current.Liked, 1);
   const Result: int := Frame.Window.Comment(
     Token, Author, Text, Settings.Time, Settings.Depth, Settings.Badge,
-    P.Bits(Settings.Edited, 1) + P.Bits(Enabled, 2), Focus, ref Likes, ref Liked,
+    Enc.Bits(Settings.Edited, 1) + Enc.Bits(Enabled, 2), Focus, ref Likes, ref Liked,
     LikeId, ReplyId
   );
   if (Result and 1) <> 0 then

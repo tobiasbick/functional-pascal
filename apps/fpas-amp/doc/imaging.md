@@ -23,7 +23,7 @@ decodes the content blob before publishing the album reference. Concurrent
 calls on one store serialize cache access. Cancellation before updating the
 album reference can leave a reusable blob for a later call.
 
-The [FPAS thumbnail cache tests](../tests/FpasAmp.Library.Tests/ThumbnailCache.fpas)
+The [FPAS thumbnail cache tests](../tests/FpasAmp.Library.Tests/Storage/ThumbnailCache.fpas)
 exercise reuse, revision changes and recovery.
 
 ## Source files

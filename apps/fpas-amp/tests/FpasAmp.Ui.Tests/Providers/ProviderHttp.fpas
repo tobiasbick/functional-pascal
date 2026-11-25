@@ -1,0 +1,66 @@
+// [Documentation](../../../doc/desktop.md#editing-track-tags)
+
+unit FpasAmp.UiTests.ProviderHttp;
+
+uses
+  System as Sys, System.IO as IO, System.Net.Sockets as Sockets,
+  System.Text as Text, System.Threading as T, System.Threading.Tasks as Tasks, Xunit as X;
+
+// A scripted response and the request received for it.
+public type Reply = record
+  // HTTP status line after the protocol version.
+  public Status: string;
+  // UTF-8 text returned when the response has no binary body.
+  public Json: string;
+  // Extra headers including their trailing CRLF, or an empty string.
+  public Headers: string := '';
+  // The first line sent by the client.
+  public Request: string := '';
+  // Monotonic timestamp when the request arrived.
+  public Arrived: long := 0L;
+  // Media type sent to the client.
+  public ContentType: string := 'application/json; charset=utf-8';
+  // Raw bytes used by audio and artwork responses.
+  public Body: (array of byte)? := null;
+end record;
+
+// Serves Replies in order on Listener until the script is finished or Stop is canceled.
+public async function Serve(Listener: Sockets.TcpListener; Replies: array of Reply; Stop: T.CancellationToken): Tasks.Task;
+begin
+  const CRLF: string := Sys.Char.ConvertFromUtf32(13) + Sys.Char.ConvertFromUtf32(10);
+  for Index: int := 0 to Replies.Length - 1 do
+    const Expected: Reply := Replies[Index];
+    using const Client: Sockets.TcpClient := await Listener.AcceptTcpClientAsync(Stop);
+    using const Stream: Sockets.NetworkStream := Client.GetStream();
+    using const Reader: IO.StreamReader := new IO.StreamReader(
+      Stream, Text.Encoding.ASCII, false, 1024, true
+    );
+    const Request: string := await Reader.ReadLineAsync(Stop) ?? '';
+    Replies[Index] := Expected with
+      Request := Request;
+      Arrived := Sys.Environment.TickCount64;
+    end with;
+    var Header: string := await Reader.ReadLineAsync(Stop) ?? '';
+    var Agent: bool := false;
+    while Header <> '' do
+      if Header.StartsWith('User-Agent:', Sys.StringComparison.OrdinalIgnoreCase) then
+        Agent := Header.Contains('FPas-Amp/');
+      end if;
+
+      Header := await Reader.ReadLineAsync(Stop) ?? '';
+    end while;
+
+    X.Assert.True(Agent);
+    const Body: array of byte := Expected.Body ?? Text.Encoding.UTF8.GetBytes(Expected.Json);
+    const Head: array of byte := Text.Encoding.ASCII.GetBytes(
+      'HTTP/1.1 ' + Expected.Status + CRLF + 'Content-Type: ' + Expected.ContentType +
+      CRLF +
+      'Content-Length: ' + Body.Length.ToString() + CRLF + 'Connection: close' + CRLF +
+      Expected.Headers + CRLF
+    );
+    await Stream.WriteAsync(Head, 0, Head.Length, Stop);
+    await Stream.WriteAsync(Body, 0, Body.Length, Stop);
+  end for;
+end function;
+
+end unit;

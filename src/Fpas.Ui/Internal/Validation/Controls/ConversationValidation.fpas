@@ -1,0 +1,187 @@
+// [Documentation](../../../../../docs/ui/widgets.md#host-preflight)
+
+unit Fpas.Ui.Internal.Validation.Controls.ConversationValidation;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Core.Checks as R,
+  Fpas.Ui.Internal.Validation.Core.LayoutRules as LR,
+  Fpas.Ui.Internal.Validation.Core.ChartChecks as Chart,
+  Fpas.Ui.Widgets.Actions.StatusButtons as Status,
+  Fpas.Ui.Widgets.Conversation.ChatMessages as ChatMessages,
+  Fpas.Ui.Widgets.Conversation.Comments as Comments,
+  Fpas.Ui.Widgets.Conversation.Presences as Presences,
+  Fpas.Ui.Widgets.Feedback.Counters as Counters, Fpas.Ui.Widgets.Feedback.Tickers as Tickers,
+  Fpas.Ui.Widgets.Feedback.StatusSpinners as StatusSpinners,
+  Fpas.Ui.Widgets.Feedback.SkeletonGroups as SkeletonGroups,
+  Fpas.Ui.Widgets.Charts.Sparklines as Sparklines, System as Sys;
+
+// Validates conversation, counter, ticker, spinner and sparkline widgets when matched.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Node`: Element to inspect.
+// - `Location`: Parent diagnostic path.
+// - `Current`: Target capabilities.
+// - `Identify`: Registers a widget ID.
+// - `Visit`: Validates composed children.
+// ## Returns
+// True when this dispatcher handled the element.
+public function Check<TMsg>(Node: E.Element<TMsg>; Location: string; Current: R.Profile; Identify: function(string, string): string; Visit: procedure(E.Element<TMsg>?, string)): bool;
+begin
+  case Node of
+    when E.Element.ChatMessage(
+      const Id: string,
+      const Body: string,
+      const Settings: ChatMessages.Options
+    ):
+      const At: string := Identify(Id, Location + '/chat-message');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      R.CheckText(Body, At);
+      R.CheckText(Settings.Author, At);
+      R.CheckText(Settings.Time, At);
+      R.CheckText(Settings.Status, At);
+      R.CheckText(Settings.Avatar, At);
+      return true;
+    when E.Element.ChatDivider(const Id: string, const Label: string):
+      const At: string := Identify(Id, Location + '/chat-divider');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      R.CheckText(Label, At);
+      return true;
+    when E.Element.TypingIndicator(const Id: string, const Name: string):
+      const At: string := Identify(Id, Location + '/typing-indicator');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      R.CheckText(Name, At);
+      return true;
+    when E.Element.Comment(
+      const Id: string,
+      const Author: string,
+      const Body: string,
+      const Value: Comments.Value,
+      _,
+      const Settings: Comments.Options
+    ):
+      const At: string := Identify(Id, Location + '/comment');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      discard Identify(Id + '/like', At);
+      discard Identify(Id + '/reply', At);
+      R.CheckText(Author, At);
+      R.CheckText(Body, At);
+      R.CheckText(Settings.Time, At);
+      R.CheckText(Settings.Badge, At);
+      if Settings.Depth < 0 or Value.Likes < (if Value.Liked then
+        1
+      else
+        0
+      end if)
+        or Value.Likes = Sys.Int32.MaxValue
+      then
+        R.Reject(At, 'Invalid comment depth or like count.');
+      end if;
+
+      return true;
+    when E.Element.Presence(
+      const Id: string,
+      const Users: array of Presences.User,
+      const Settings: Presences.Options
+    ):
+      const At: string := Identify(Id, Location + '/presence');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      Chart.Distance(Settings.Size, At);
+      if Settings.MaximumVisible <= 0 then
+        R.Reject(At, 'A presence strip needs a positive visibility limit.');
+      end if;
+
+      for User: Presences.User in Users do
+        R.CheckText(User.Name, At);
+        R.CheckText(User.Avatar, At);
+        Chart.Color(User.Color, At);
+      end for;
+
+      return true;
+    when E.Element.Counter(
+      const Id: string,
+      const Value: double,
+      const Settings: Counters.Options
+    ):
+      const At: string := Identify(Id, Location + '/counter');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      Chart.Distance(Settings.Size, At);
+      Chart.Color(Settings.Color, At);
+      Chart.Format(Settings.Format, At);
+      if not Sys.Double.IsFinite(Value) then
+        R.Reject(At, 'A counter value must be finite.');
+      end if;
+
+      return true;
+    when E.Element.Ticker(
+      const Id: string,
+      const Items: array of Tickers.Item,
+      const Settings: Tickers.Options
+    ):
+      const At: string := Identify(Id, Location + '/ticker');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      Chart.Distance(Settings.Speed, At);
+      Chart.Distance(Settings.Height, At);
+      for Item: Tickers.Item in Items do
+        R.CheckText(Item.Label, At);
+        R.CheckText(Item.Value, At);
+        if not Sys.Single.IsFinite(Item.Delta) then
+          R.Reject(At, 'A ticker change must be finite.');
+        end if;
+      end for;
+
+      return true;
+    when E.Element.StatusSpinner(
+      const Id: string,
+      const CurrentStatus: Status.Status,
+      const Settings: StatusSpinners.Options
+    ):
+      const At: string := Identify(Id, Location + '/status-spinner');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      Chart.Distance(Settings.Size, At);
+      Chart.Color(Settings.Color, At);
+      if not Sys.Enum.IsDefined<Status.Status>(CurrentStatus) then
+        R.Reject(At, 'Unknown spinner status.');
+      end if;
+
+      return true;
+    when E.Element.SkeletonGroup(
+      const Id: string,
+      const Children: array of E.Element<TMsg>,
+      const Settings: SkeletonGroups.Options
+    ):
+      const At: string := Identify(Id, Location + '/skeleton-group');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      LR.CheckExtent(Settings.Width, Current, At);
+      Chart.Distance(Settings.Gap, At);
+      for Child: E.Element<TMsg> in Children do
+        Visit(Child, At);
+      end for;
+
+      return true;
+    when E.Element.Sparkline(
+      const Id: string,
+      const Values: array of float,
+      const Settings: Sparklines.Options
+    ):
+      const At: string := Identify(Id, Location + '/sparkline');
+      if Current = R.Profile.Portable then
+        R.Reject(At, 'A sparkline requires the terminal or graphical profile.');
+      end if;
+
+      LR.CheckExtent(Settings.Width, Current, At);
+      Chart.Distance(Settings.Height, At);
+      Chart.Color(Settings.Color, At);
+      for Value: float in Values do
+        if not Sys.Single.IsFinite(Value) then
+          R.Reject(At, 'Sparkline samples must be finite.');
+        end if;
+      end for;
+
+      return true;
+    else
+      return false;
+  end case;
+end function;
+
+end unit;

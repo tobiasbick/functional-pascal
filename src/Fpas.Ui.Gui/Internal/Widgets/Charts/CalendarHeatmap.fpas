@@ -5,7 +5,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Charts.CalendarHeatmap;
 uses
   Fpas.Ui.Widgets.Charts.CalendarHeatmaps as W, Fpas.Ui.Gui.Cui.Widgets.Charts as CuiCharts,
   Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.ChartData as Data,
+  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Data.ChartData as Data,
   Fpas.Ui.Gui.Internal.Layout.Sizing as Sizing, Fpas.Ui.Gui.Application as App, System as Sys;
 
 // Presents the native calendar-heatmap and forwards its activation.

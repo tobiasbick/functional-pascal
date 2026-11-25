@@ -4,11 +4,26 @@ unit Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup;
 
 uses
   Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as P, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupPlacement as Placement,
-  Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Widgets.Overlays.Menus as M,
+  Fpas.Ui.Widgets.Overlays.Menus as M,
   Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F,
   Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Rendering.Themes as Th,
   Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Application as App, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Styles as Styles,
   System as Sys, System.Collections.Generic as C, System.Globalization as Global;
+
+function FitTailStart(Value: string; Width: int): int;
+begin
+  const Budget: int := Sys.Math.Max(0, Width - 1);
+  const Excess: int := G.Measure(Value) - Budget;
+  if Excess <= 0 then
+    return 0;
+  end if;
+  const Cut: int := G.IndexAt(Value, 0, Excess - 1);
+  return if Cut < Value.Length then
+    Cut + Global.StringInfo.GetNextTextElementLength(Value, Cut)
+  else
+    Cut
+  end if;
+end function;
 
 // An interactive command or choice within the popup.
 // ## Type parameters
@@ -413,9 +428,9 @@ begin
     else
       ''
     end if;
-    const Caret: Edit.Cursor := Edit.Fit(Query, null, Sys.Math.Max(1, Panel.Width - Prefix.Length));
+    const Start: int := FitTailStart(Query, Sys.Math.Max(1, Panel.Width - Prefix.Length));
     Line(
-      Prefix + Query.Substring(Caret.Start) + '▏',
+      Prefix + Query.Substring(Start) + '▏',
       new F.Rect(Panel.X, Panel.Y, Panel.Width, 1),
       Colors
     );

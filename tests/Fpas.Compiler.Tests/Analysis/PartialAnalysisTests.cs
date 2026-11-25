@@ -93,11 +93,13 @@ public sealed class PartialAnalysisTests
     public void Failed_outer_bodies_remove_nested_routines_lambdas_and_generic_local_facts()
     {
         const string source = "unit Sample; function Target(): int; begin return 42; end function; " +
-            "function Broken(): int; begin function Inner<T>(Value: T): T; begin return Value; end function; " +
-            "const Callback: function(): int := function(): int => Target(); discard Inner<int>(1); return Missing; end function; " +
+            "function Broken(): int; function Inner<T>(Value: T): T; begin return Value; end function; " +
+            "function Capture(): int; begin return Captured; end function; " +
+            "begin var Captured: int := 1; const Callback: function(): int := function(): int => Target(); " +
+            "discard Inner<int>(1); discard Capture(); return Missing; end function; " +
             "function Healthy(): int; begin return Target(); end function; end unit;";
         var result = Analyze(new CompilationSource("input.fpas", source)); Assert.False(result.Success); var snapshot = Assert.IsType<SemanticSnapshot>(result.Snapshot);
-        Assert.DoesNotContain(snapshot.Symbols, symbol => symbol.Name is "Inner" or "Callback" or "Value");
+        Assert.DoesNotContain(snapshot.Symbols, symbol => symbol.Name is "Inner" or "Capture" or "Captured" or "Callback" or "Value");
         Assert.DoesNotContain(snapshot.Bodies, body => body.Kind == "lambda"); AssertConsistent(snapshot);
     }
 

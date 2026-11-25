@@ -1,0 +1,145 @@
+// [Documentation](../../../../../docs/ui/widgets.md#host-preflight)
+
+unit Fpas.Ui.Internal.Validation.Controls.MediaValidation;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Core.Checks as R,
+  Fpas.Ui.Internal.Validation.Core.LayoutRules as LR,
+  Fpas.Ui.Internal.Validation.Core.ChartChecks as Chart,
+  Fpas.Ui.Internal.Validation.Controls.MediaRules as MediaRules,
+  Fpas.Ui.Widgets.Media.MediaImages as Media, Fpas.Ui.Widgets.Media.Carousels as Carousels,
+  Fpas.Ui.Widgets.Containers.CardStacks as CardStacks,
+  Fpas.Ui.Widgets.Media.ImageViewers as ImageViewers,
+  Fpas.Ui.Widgets.Media.ImageCroppers as ImageCroppers,
+  Fpas.Ui.Widgets.Media.ImageComparisons as ImageComparisons, System as Sys;
+
+// Validates media and card-stack widgets when matched.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Node`: Element to inspect.
+// - `Location`: Parent diagnostic path.
+// - `Current`: Target capabilities.
+// - `Identify`: Registers a widget ID.
+// - `Visit`: Validates composed children.
+// ## Returns
+// True when this dispatcher handled the element.
+public function Check<TMsg>(Node: E.Element<TMsg>; Location: string; Current: R.Profile; Identify: function(string, string): string; Visit: procedure(E.Element<TMsg>?, string)): bool;
+begin
+  case Node of
+    when E.Element.Carousel(
+      const Id: string,
+      const Slides: array of E.Element<TMsg>,
+      const Index: int,
+      _,
+      const Settings: Carousels.Options
+    ):
+      const At: string := Identify(Id, Location + '/carousel');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      if Slides.Length < 1 or Slides.Length > 64 or Index < 0 or Index >= Slides.Length then
+        R.Reject(At, 'A carousel needs one to 64 slides and a valid selection.');
+      end if;
+
+      Chart.Distance(Settings.Height, At);
+      Chart.Distance(Settings.Gap, At);
+      Chart.Distance(Settings.AutoAdvance, At);
+      discard Identify(Id + '/viewport', At);
+      if not Settings.HideDots and Slides.Length > 1 then
+        for Part: int := 0 to Slides.Length - 1 do
+          discard Identify(
+            Id + '/dot-' + Part.ToString(Sys.Globalization.CultureInfo.InvariantCulture),
+            At
+          );
+        end for;
+      end if;
+
+      for Slide: E.Element<TMsg> in Slides do
+        Visit(Slide, At);
+      end for;
+
+      return true;
+    when E.Element.CardStack(
+      const Id: string,
+      const DeckItems: array of E.Element<TMsg>,
+      _,
+      const Settings: CardStacks.Options
+    ):
+      const At: string := Identify(Id, Location + '/card-stack');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      LR.CheckExtent(Settings.Width, Current, At);
+      Chart.Distance(Settings.Height, At);
+      if Settings.Visible < 0 then
+        R.Reject(At, 'The visible card count must be nonnegative.');
+      end if;
+
+      if DeckItems.Length > 0 then
+        discard Identify(Id + '/top', At);
+      end if;
+
+      for Card: E.Element<TMsg> in DeckItems do
+        Visit(Card, At);
+      end for;
+
+      return true;
+    when E.Element.ImageViewer(
+      const Id: string,
+      const Image: Media.Source,
+      const ViewValue: ImageViewers.Value,
+      _,
+      const Settings: ImageViewers.Options
+    ):
+      const At: string := Identify(Id, Location + '/image-viewer');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      MediaRules.Image(Image, At);
+      LR.CheckExtent(Settings.Width, Current, At);
+      LR.CheckExtent(Settings.Height, Current, At);
+      Chart.Distance(Settings.MaximumZoom, At);
+      Chart.Distance(ViewValue.Zoom, At);
+      MediaRules.Finite(ViewValue.CenterX, ViewValue.CenterY, At);
+      return true;
+    when E.Element.ImageCropper(
+      const Id: string,
+      const Image: Media.Source,
+      const Crop: ImageCroppers.Value,
+      _,
+      const Settings: ImageCroppers.Options
+    ):
+      const At: string := Identify(Id, Location + '/image-cropper');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      MediaRules.Image(Image, At);
+      LR.CheckExtent(Settings.Width, Current, At);
+      LR.CheckExtent(Settings.Height, Current, At);
+      Chart.Distance(Settings.Aspect, At);
+      Chart.Distance(Settings.MinimumSize, At);
+      MediaRules.Finite(Crop.X, Crop.Y, At);
+      Chart.Distance(Crop.Width, At);
+      Chart.Distance(Crop.Height, At);
+      return true;
+    when E.Element.ImageCompare(
+      const Id: string,
+      const Before: Media.Source,
+      const After: Media.Source,
+      const Position: float,
+      _,
+      const Settings: ImageComparisons.Options
+    ):
+      const At: string := Identify(Id, Location + '/image-compare');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      MediaRules.Image(Before, At);
+      MediaRules.Image(After, At);
+      LR.CheckExtent(Settings.Width, Current, At);
+      Chart.Distance(Settings.Height, At);
+      Chart.Distance(Settings.Aspect, At);
+      R.CheckText(Settings.BeforeLabel, At);
+      R.CheckText(Settings.AfterLabel, At);
+      if not Sys.Single.IsFinite(Position) or Position < 0.0F or Position > 1.0F then
+        R.Reject(At, 'The divider position must be between zero and one.');
+      end if;
+
+      return true;
+    else
+      return false;
+  end case;
+end function;
+
+end unit;

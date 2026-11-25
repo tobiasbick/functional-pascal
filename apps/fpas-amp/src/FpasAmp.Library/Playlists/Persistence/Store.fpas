@@ -4,7 +4,7 @@
 unit FpasAmp.Library.Playlists.Persistence.Store;
 
 uses
-  FpasAmp.Library.Playlists.Internal.Reading as Reading,
+  FpasAmp.Library.Playlists.Formats.Reading as Reading,
   FpasAmp.Library.Persistence.Sql as Sql, Microsoft.Data.Sqlite as Db,
   System as Sys, System.IO as IO, System.Collections.Generic as C, System.Threading as T;
 

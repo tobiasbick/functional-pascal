@@ -1,0 +1,44 @@
+// [Documentation](../../../doc/desktop.md#playback-and-analysis)
+
+// Synthetic stereo audio for playback and acoustic analysis tests.
+unit FpasAmp.UiTests.PlaybackFixture;
+
+uses System as Sys, System.IO as IO;
+
+// Writes a WAV file to Path. QuietPassage silences the second second; Seconds sets its duration
+// and Sweep selects a changing pitch to produce a nontrivial fingerprint.
+public procedure Tone(Path: string; QuietPassage: bool := false; Seconds: int := 5; Sweep: bool := false);
+begin
+  using const File: IO.BinaryWriter := new IO.BinaryWriter(IO.File.Create(Path));
+  const Frames: int := 44100 * Seconds;
+  File.Write($46464952);
+  File.Write(36 + Frames * 4);
+  File.Write($45564157);
+  File.Write($20746D66);
+  File.Write(16);
+  File.Write(cast<short>(1));
+  File.Write(cast<short>(2));
+  File.Write(44100);
+  File.Write(44100 * 4);
+  File.Write(cast<short>(4));
+  File.Write(cast<short>(16));
+  File.Write($61746164);
+  File.Write(Frames * 4);
+  for Frame: int := 0 to Frames - 1 do
+    const Sample: double := if QuietPassage and Frame >= 44100 and Frame < 88200 then
+      0.0
+    else
+      Sys.Math.Sin(
+        2.0 * Sys.Math.PI * (if Sweep then
+          150.0 + (Frame div 4096) mod 100 * 9.0
+        else
+          500.0
+        end if) * Frame / 44100.0
+      )
+    end if;
+    File.Write(cast<short>(3277.0 * Sample));
+    File.Write(cast<short>(819.0 * Sample));
+  end for;
+end procedure;
+
+end unit;

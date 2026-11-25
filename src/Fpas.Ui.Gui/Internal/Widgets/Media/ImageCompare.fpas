@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Media.ImageCompare;
 
-uses Fpas.Ui.Widgets.Media.ImageComparisons as ImageComparisons, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Widgets.Media.MediaImages as Media, Fpas.Ui.Gui.Internal.Data.MediaData as Data;
+uses Fpas.Ui.Widgets.Media.ImageComparisons as ImageComparisons, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Widgets.Media.MediaImages as Media, Fpas.Ui.Gui.Internal.Data.MediaData as Data;
 
 // Presents CUI's native ImageCompare widget.
 // ## Type parameters

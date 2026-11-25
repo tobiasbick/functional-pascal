@@ -3,7 +3,7 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Canvas.FormatBar;
 
 uses
-  Fpas.Ui.Widgets.Canvas.FormatBars as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P,
+  Fpas.Ui.Widgets.Canvas.FormatBars as D, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc,
   Fpas.Ui.Gui.Cui.Widgets.Canvas as CuiCanvas, Fpas.Ui.Styles as S, System.Collections.Generic as Lists;
 
 // Presents CUI's native FormatBar widget.
@@ -22,9 +22,9 @@ begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   var Value: CuiCanvas.CuiTextFormat := new CuiCanvas.CuiTextFormat(
     cast<int>(Format.Color),
-    cast<byte>(P.Bits(Format.Bold, 1)),
-    cast<byte>(P.Bits(Format.Underline, 1)),
-    cast<byte>(P.Bits(Format.Link, 1)),
+    cast<byte>(Enc.Bits(Format.Bold, 1)),
+    cast<byte>(Enc.Bits(Format.Underline, 1)),
+    cast<byte>(Enc.Bits(Format.Link, 1)),
     Format.Style,
     Format.Size,
     Format.Alignment,
@@ -45,7 +45,7 @@ begin
   const Event: int := Frame.Window.FormatBar(
     Token, ref Value, Styles.ToArray(), Tones.ToArray(),
     Settings.Footer, Settings.FooterKeys, Settings.DeleteQuestion,
-    P.Bits(Enabled, 1) or P.Bits(Settings.HideDelete, 2) or P.Bits(Settings.HideMore, 4)
+    Enc.Bits(Enabled, 1) or Enc.Bits(Settings.HideDelete, 2) or Enc.Bits(Settings.HideMore, 4)
   );
   P.Root<TMsg>(Frame, Id, Role, '', Enabled, Value.Size.ToString());
   if Event <> 0 then

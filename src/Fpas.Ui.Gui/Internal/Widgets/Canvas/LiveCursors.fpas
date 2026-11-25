@@ -3,7 +3,7 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Canvas.LiveCursors;
 
 uses
-  Fpas.Ui.Widgets.Canvas.LiveCursors as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P,
+  Fpas.Ui.Widgets.Canvas.LiveCursors as D, Fpas.Ui.Gui.Internal.Core.Context as C,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Editors.NodeEditors as N, Fpas.Ui.Gui.Internal.Data.CanvasData as Data;
 
 // Presents CUI's native LiveCursors widget.

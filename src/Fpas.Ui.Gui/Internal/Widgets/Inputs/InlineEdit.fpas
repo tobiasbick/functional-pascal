@@ -3,7 +3,7 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Inputs.InlineEdit;
 
 uses
-  Fpas.Ui.Widgets.Inputs.InlineEdits as I, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Widgets.Inputs.InlineEdits as I, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App,
   Fpas.Ui.Gui.Cui.Widgets.Inputs as CuiInputs,
   Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
 

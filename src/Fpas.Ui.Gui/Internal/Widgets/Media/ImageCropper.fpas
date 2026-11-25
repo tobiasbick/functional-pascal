@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Media.ImageCropper;
 
-uses Fpas.Ui.Widgets.Media.ImageCroppers as ImageCroppers, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Widgets.Media.MediaImages as Media, Fpas.Ui.Gui.Internal.Data.MediaData as Data, Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Widgets.Media.ImageCroppers as ImageCroppers, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Widgets.Media.MediaImages as Media, Fpas.Ui.Gui.Internal.Data.MediaData as Data, Fpas.Ui.Gui.Cui as Cui;
 
 // Presents CUI's native ImageCropper widget.
 // ## Type parameters
@@ -37,7 +37,7 @@ begin
     Height.Value,
     Settings.Aspect,
     Settings.MinimumSize,
-    P.Bits(Enabled, 1) or P.Bits(Settings.Round, 2),
+    Enc.Bits(Enabled, 1) or Enc.Bits(Settings.Round, 2),
     Focus
   );
   P.Root<TMsg>(Frame, Id, Role, '', Enabled, Crop.Width.ToString());

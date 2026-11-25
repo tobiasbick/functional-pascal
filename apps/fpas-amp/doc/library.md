@@ -160,7 +160,7 @@ measurement to proceed. If the file stamp changes during a cacheable
 measurement, the method returns an empty array and skips the write.
 
 See [audio analysis](../../../docs/pascal/libraries/media/audio.md#waveform-analysis)
-and the [waveform cache tests](../tests/FpasAmp.Library.Tests/Waveforms.fpas).
+and the [waveform cache tests](../tests/FpasAmp.Library.Tests/Storage/Waveforms.fpas).
 
 ## Durable identities and ratings
 
@@ -354,7 +354,7 @@ Run from the FPas-Amp directory after the [local SDK setup](../../../docs/build/
 ## Source files
 
 <details>
-<summary>Browse 89 source files</summary>
+<summary>Browse 90 source files</summary>
 
 - `src/FpasAmp.Library/Albums/`
   - [Access.fpas](../src/FpasAmp.Library/Albums/Access.fpas)
@@ -415,10 +415,11 @@ Run from the FPas-Amp directory after the [local SDK setup](../../../docs/build/
   - [Sql.fpas](../src/FpasAmp.Library/Persistence/Sql.fpas)
 - `src/FpasAmp.Library/Playlists/`
   - [Access.fpas](../src/FpasAmp.Library/Playlists/Access.fpas)
+- `src/FpasAmp.Library/Playlists/Formats/`
+  - [Reading.fpas](../src/FpasAmp.Library/Playlists/Formats/Reading.fpas)
+  - [References.fpas](../src/FpasAmp.Library/Playlists/Formats/References.fpas)
 - `src/FpasAmp.Library/Playlists/Internal/`
   - [Observing.fpas](../src/FpasAmp.Library/Playlists/Internal/Observing.fpas)
-  - [Reading.fpas](../src/FpasAmp.Library/Playlists/Internal/Reading.fpas)
-  - [References.fpas](../src/FpasAmp.Library/Playlists/Internal/References.fpas)
   - [Transfer.fpas](../src/FpasAmp.Library/Playlists/Internal/Transfer.fpas)
 - `src/FpasAmp.Library/Playlists/Persistence/`
   - [Queries.fpas](../src/FpasAmp.Library/Playlists/Persistence/Queries.fpas)
@@ -438,38 +439,44 @@ Run from the FPas-Amp directory after the [local SDK setup](../../../docs/build/
   - [Ratings.fpas](../src/FpasAmp.Library/UserData/Ratings.fpas)
   - [Schema.fpas](../src/FpasAmp.Library/UserData/Schema.fpas)
 - `tests/FpasAmp.Library.Tests/`
-  - [AlbumCatalogue.fpas](../tests/FpasAmp.Library.Tests/AlbumCatalogue.fpas)
-  - [AlbumRatings.fpas](../tests/FpasAmp.Library.Tests/AlbumRatings.fpas)
-  - [AlbumSupport.fpas](../tests/FpasAmp.Library.Tests/AlbumSupport.fpas)
-  - [Albums.fpas](../tests/FpasAmp.Library.Tests/Albums.fpas)
-  - [Controls.fpas](../tests/FpasAmp.Library.Tests/Controls.fpas)
-  - [Discovery.fpas](../tests/FpasAmp.Library.Tests/Discovery.fpas)
   - [FpasAmp.Library.Tests.fpasproj](../tests/FpasAmp.Library.Tests/FpasAmp.Library.Tests.fpasproj)
-  - [MetadataCovers.fpas](../tests/FpasAmp.Library.Tests/MetadataCovers.fpas)
-  - [MetadataIdentity.fpas](../tests/FpasAmp.Library.Tests/MetadataIdentity.fpas)
-  - [MetadataLocking.fpas](../tests/FpasAmp.Library.Tests/MetadataLocking.fpas)
-  - [MetadataReading.fpas](../tests/FpasAmp.Library.Tests/MetadataReading.fpas)
-  - [MetadataSafety.fpas](../tests/FpasAmp.Library.Tests/MetadataSafety.fpas)
-  - [MetadataStorage.fpas](../tests/FpasAmp.Library.Tests/MetadataStorage.fpas)
-  - [MetadataSupport.fpas](../tests/FpasAmp.Library.Tests/MetadataSupport.fpas)
-  - [Monitoring.fpas](../tests/FpasAmp.Library.Tests/Monitoring.fpas)
-  - [PlaylistDiscovery.fpas](../tests/FpasAmp.Library.Tests/PlaylistDiscovery.fpas)
-  - [PlaylistObservation.fpas](../tests/FpasAmp.Library.Tests/PlaylistObservation.fpas)
-  - [TagEditing.fpas](../tests/FpasAmp.Library.Tests/TagEditing.fpas)
-  - [PlaylistReaders.fpas](../tests/FpasAmp.Library.Tests/PlaylistReaders.fpas)
-  - [PlaylistStorage.fpas](../tests/FpasAmp.Library.Tests/PlaylistStorage.fpas)
-  - [PlaylistSupport.fpas](../tests/FpasAmp.Library.Tests/PlaylistSupport.fpas)
-  - [PlaylistTransfer.fpas](../tests/FpasAmp.Library.Tests/PlaylistTransfer.fpas)
-  - [PlaylistUserLists.fpas](../tests/FpasAmp.Library.Tests/PlaylistUserLists.fpas)
-  - [Policies.fpas](../tests/FpasAmp.Library.Tests/Policies.fpas)
-  - [Search.fpas](../tests/FpasAmp.Library.Tests/Search.fpas)
-  - [StorageCheckpoints.fpas](../tests/FpasAmp.Library.Tests/StorageCheckpoints.fpas)
-  - [StorageLifetime.fpas](../tests/FpasAmp.Library.Tests/StorageLifetime.fpas)
-  - [StorageLoading.fpas](../tests/FpasAmp.Library.Tests/StorageLoading.fpas)
-  - [StorageSupport.fpas](../tests/FpasAmp.Library.Tests/StorageSupport.fpas)
-  - [Support.fpas](../tests/FpasAmp.Library.Tests/Support.fpas)
-  - [ThumbnailCache.fpas](../tests/FpasAmp.Library.Tests/ThumbnailCache.fpas)
-- `tests/FpasAmp.Ui.Tests/`
-  - [Fingerprints.fpas](../tests/FpasAmp.Ui.Tests/Fingerprints.fpas)
+- `tests/FpasAmp.Library.Tests/Albums/`
+  - [AlbumCatalogue.fpas](../tests/FpasAmp.Library.Tests/Albums/AlbumCatalogue.fpas)
+  - [AlbumRatings.fpas](../tests/FpasAmp.Library.Tests/Albums/AlbumRatings.fpas)
+  - [AlbumSupport.fpas](../tests/FpasAmp.Library.Tests/Albums/AlbumSupport.fpas)
+  - [Albums.fpas](../tests/FpasAmp.Library.Tests/Albums/Albums.fpas)
+- `tests/FpasAmp.Library.Tests/Inventory/`
+  - [Controls.fpas](../tests/FpasAmp.Library.Tests/Inventory/Controls.fpas)
+  - [Discovery.fpas](../tests/FpasAmp.Library.Tests/Inventory/Discovery.fpas)
+  - [Monitoring.fpas](../tests/FpasAmp.Library.Tests/Inventory/Monitoring.fpas)
+  - [Policies.fpas](../tests/FpasAmp.Library.Tests/Inventory/Policies.fpas)
+  - [Support.fpas](../tests/FpasAmp.Library.Tests/Inventory/Support.fpas)
+- `tests/FpasAmp.Library.Tests/Metadata/`
+  - [MetadataCovers.fpas](../tests/FpasAmp.Library.Tests/Metadata/MetadataCovers.fpas)
+  - [MetadataIdentity.fpas](../tests/FpasAmp.Library.Tests/Metadata/MetadataIdentity.fpas)
+  - [MetadataLocking.fpas](../tests/FpasAmp.Library.Tests/Metadata/MetadataLocking.fpas)
+  - [MetadataReading.fpas](../tests/FpasAmp.Library.Tests/Metadata/MetadataReading.fpas)
+  - [MetadataSafety.fpas](../tests/FpasAmp.Library.Tests/Metadata/MetadataSafety.fpas)
+  - [MetadataStorage.fpas](../tests/FpasAmp.Library.Tests/Metadata/MetadataStorage.fpas)
+  - [MetadataSupport.fpas](../tests/FpasAmp.Library.Tests/Metadata/MetadataSupport.fpas)
+  - [TagEditing.fpas](../tests/FpasAmp.Library.Tests/Metadata/TagEditing.fpas)
+- `tests/FpasAmp.Library.Tests/Playlists/`
+  - [PlaylistDiscovery.fpas](../tests/FpasAmp.Library.Tests/Playlists/PlaylistDiscovery.fpas)
+  - [PlaylistObservation.fpas](../tests/FpasAmp.Library.Tests/Playlists/PlaylistObservation.fpas)
+  - [PlaylistReaders.fpas](../tests/FpasAmp.Library.Tests/Playlists/PlaylistReaders.fpas)
+  - [PlaylistStorage.fpas](../tests/FpasAmp.Library.Tests/Playlists/PlaylistStorage.fpas)
+  - [PlaylistSupport.fpas](../tests/FpasAmp.Library.Tests/Playlists/PlaylistSupport.fpas)
+  - [PlaylistTransfer.fpas](../tests/FpasAmp.Library.Tests/Playlists/PlaylistTransfer.fpas)
+  - [PlaylistUserLists.fpas](../tests/FpasAmp.Library.Tests/Playlists/PlaylistUserLists.fpas)
+- `tests/FpasAmp.Library.Tests/Storage/`
+  - [SearchRanking.fpas](../tests/FpasAmp.Library.Tests/Storage/SearchRanking.fpas)
+  - [SearchWords.fpas](../tests/FpasAmp.Library.Tests/Storage/SearchWords.fpas)
+  - [StorageCheckpoints.fpas](../tests/FpasAmp.Library.Tests/Storage/StorageCheckpoints.fpas)
+  - [StorageLifetime.fpas](../tests/FpasAmp.Library.Tests/Storage/StorageLifetime.fpas)
+  - [StorageLoading.fpas](../tests/FpasAmp.Library.Tests/Storage/StorageLoading.fpas)
+  - [StorageSupport.fpas](../tests/FpasAmp.Library.Tests/Storage/StorageSupport.fpas)
+  - [ThumbnailCache.fpas](../tests/FpasAmp.Library.Tests/Storage/ThumbnailCache.fpas)
+- `tests/FpasAmp.Ui.Tests/Providers/`
+  - [Fingerprints.fpas](../tests/FpasAmp.Ui.Tests/Providers/Fingerprints.fpas)
 
 </details>

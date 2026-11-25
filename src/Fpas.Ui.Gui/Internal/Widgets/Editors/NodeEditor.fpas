@@ -3,7 +3,7 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Editors.NodeEditor;
 
 uses
-  Fpas.Ui.Widgets.Editors.NodeEditors as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P,
+  Fpas.Ui.Widgets.Editors.NodeEditors as D, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc,
   Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Canvas.SelectionRings as Ring, Fpas.Ui.Gui.Internal.Widgets.Canvas.SelectionRing as NativeRing, Fpas.Ui.Gui.Internal.Layout.Sizing as Size, Fpas.Ui.Gui.Internal.Data.CanvasData as Data;
 
 // Presents CUI's native NodeEditor widget.
@@ -34,7 +34,7 @@ begin
     Height.Value,
     Settings.MinimumZoom,
     Settings.MaximumZoom,
-    P.Bits(Enabled, 1) or P.Bits(Settings.HideGrid, 2) or P.Bits(Settings.Minimap, 4)
+    Enc.Bits(Enabled, 1) or Enc.Bits(Settings.HideGrid, 2) or Enc.Bits(Settings.Minimap, 4)
   )
   then
     return;

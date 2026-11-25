@@ -1,0 +1,346 @@
+// [Documentation](../../../../../docs/ui/widgets.md#creative-controls)
+
+unit Fpas.Ui.Internal.Validation.Controls.CreativeValidation;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Core.Checks as R,
+  Fpas.Ui.Internal.Validation.Core.LayoutRules as LR,
+  Fpas.Ui.Internal.Validation.Core.ChartChecks as Chart, Fpas.Ui.Styles as S,
+  Fpas.Ui.Widgets.Audio.ControlWells as W, System as Sys,
+  Fpas.Ui.Widgets.Feedback.StatusTags as StatusTags,
+  Fpas.Ui.Widgets.Inputs.RatioSliders as RatioSliders,
+  Fpas.Ui.Widgets.Inputs.GradientSliders as GradientSliders,
+  Fpas.Ui.Widgets.Inputs.StepSliders as StepSliders,
+  Fpas.Ui.Widgets.Pickers.PaletteStrips as PaletteStrips,
+  Fpas.Ui.Widgets.Pickers.AspectPickers as AspectPickers,
+  Fpas.Ui.Widgets.Actions.OptionActions as OptionActions,
+  Fpas.Ui.Widgets.Inputs.SeedFields as SeedFields;
+
+procedure Tone(Value: S.Tone; At: string);
+begin
+  if not Sys.Enum.IsDefined<S.Tone>(Value) then
+    R.Reject(At, 'Unknown native tone.');
+  end if;
+end procedure;
+
+procedure Fraction(Value: float; At: string);
+begin
+  if not Sys.Single.IsFinite(Value) or Value < 0.0F or Value > 1.0F then
+    R.Reject(At, 'Expected a finite fraction between zero and one.');
+  end if;
+end procedure;
+
+procedure Texts(Values: array of string; At: string);
+begin
+  for Text: string in Values do
+    R.CheckText(Text, At);
+  end for;
+end procedure;
+
+procedure Tool(Value: W.Tool?; At: string);
+begin
+  if Value <> null then
+    R.CheckText(Value.Icon, At);
+    R.CheckText(Value.Tooltip, At);
+    if Value.Icon = '' then
+      R.Reject(At, 'A control well action needs an icon.');
+    end if;
+  end if;
+end procedure;
+
+procedure StatusTag(Current: StatusTags.Value; Settings: StatusTags.Options; At: string);
+begin
+  R.CheckText(Current.Label, At);
+  R.CheckText(Settings.Icon, At);
+  if not Sys.Enum.IsDefined<StatusTags.Status>(Current.Preset) then
+    R.Reject(At, 'Unknown native tag status.');
+  end if;
+
+  Tone(Settings.Tone, At);
+end procedure;
+
+procedure RatioSlider(Current: RatioSliders.Value; Settings: RatioSliders.Options; At: string);
+begin
+  R.CheckText(Current.First, At);
+  R.CheckText(Current.Second, At);
+  Fraction(Current.Ratio, At);
+  Fraction(Settings.Step, At);
+  Chart.Distance(Settings.Height, At);
+  LR.CheckExtent(Settings.Width, R.Profile.Graphical, At);
+  Tone(Settings.Tone, At);
+end procedure;
+
+procedure GradientSlider(Current: GradientSliders.Value; Settings: GradientSliders.Options; At: string);
+begin
+  R.CheckText(Current.Label, At);
+  R.CheckText(Settings.Display, At);
+  Tool(Settings.Tool, At);
+  Chart.Color(Settings.Color, At);
+  Chart.Distance(Settings.Step, At);
+  Chart.Format(Settings.Format, At);
+  if not Sys.Single.IsFinite(Current.Current) or not Sys.Single.IsFinite(Current.Minimum)
+    or not Sys.Single.IsFinite(
+    Current.Maximum - Current.Minimum
+  ) or Current.Maximum <= Current.Minimum
+    or Current.Current < Current.Minimum or Current.Current > Current.Maximum
+  then
+    R.Reject(At, 'The gradient value must be inside a finite increasing range.');
+  end if;
+
+  if not Sys.Enum.IsDefined<GradientSliders.Track>(Settings.Kind) then
+    R.Reject(At, 'Unknown gradient track.');
+  end if;
+  var Previous: float := -1.0F;
+  for Stop: GradientSliders.Stop in Settings.Stops do
+    Fraction(Stop.Position, At);
+    if Stop.Position < Previous then
+      R.Reject(At, 'Custom gradient stops must be sorted.');
+    end if;
+
+    Previous := Stop.Position;
+  end for;
+end procedure;
+
+procedure StepSlider(Current: StepSliders.Value; Settings: StepSliders.Options; At: string);
+begin
+  R.CheckText(Current.Label, At);
+  R.CheckText(Settings.Display, At);
+  Tool(Settings.Tool, At);
+  const Range: long := cast<long>(Current.Maximum) - Current.Minimum;
+  if Range < 1L or Range > 16777216L or Current.Current < Current.Minimum or Current.Current >
+    Current.Maximum
+  then
+    R.Reject(
+      At,
+      'A step slider needs an in-range value and stop indices representable as single-precision numbers.'
+    );
+  end if;
+
+  if Settings.Labels.Length <> 0 and Settings.Labels.Length <> Range + 1L then
+    R.Reject(At, 'A step slider needs one label per stop.');
+  end if;
+
+  Texts(Settings.Labels, At);
+  R.CheckText(Settings.Prefix, At);
+  R.CheckText(Settings.Suffix, At);
+end procedure;
+
+procedure PaletteStrip(Current: PaletteStrips.Value; Settings: PaletteStrips.Options; At: string);
+begin
+  R.CheckText(Current.Label, At);
+  R.CheckText(Settings.Display, At);
+  Chart.Distance(Settings.Height, At);
+  if Current.Swatches.Length < 1 or Current.Swatches.Length > 16 then
+    R.Reject(At, 'A palette strip needs one through sixteen swatches.');
+  end if;
+end procedure;
+
+procedure AspectPicker(Current: AspectPickers.Value; Settings: AspectPickers.Options; At: string);
+begin
+  R.CheckText(Current.Label, At);
+  R.CheckText(Settings.Display, At);
+  R.CheckText(Settings.CustomLabel, At);
+  const Count: int := if Settings.Ratios.Length = 0 then
+    6
+  else
+    Settings.Ratios.Length
+  end if;
+  const Total: int := Count + (if Settings.Custom then
+    1
+  else
+    0
+  end if);
+  if Count > 32 or Current.Index < 0 or Current.Index >= Total then
+    R.Reject(At, 'The aspect selection must name one of up to 32 ratios or Custom.');
+  end if;
+
+  for Ratio: AspectPickers.Ratio in Settings.Ratios do
+    R.CheckText(Ratio.Label, At);
+    const Base: double := if Settings.Base = 0 then
+      1080.0
+    else
+      cast<double>(Settings.Base)
+    end if;
+    if Ratio.Width <= 0 or Ratio.Height <= 0
+      or Base * Sys.Math.Max(
+      Ratio.Width,
+      Ratio.Height
+    ) / Sys.Math.Min(Ratio.Width, Ratio.Height) >= 2147483647.0
+    then
+      R.Reject(At, 'An aspect choice needs positive dimensions and a representable size.');
+    end if;
+  end for;
+end procedure;
+
+procedure OptionAction(Current: OptionActions.Value; Settings: OptionActions.Options; At: string);
+begin
+  R.CheckText(Current.Label, At);
+  R.CheckText(Settings.Display, At);
+  Tool(Current.Tool, At);
+  if Current.Items.Length < 1 or Current.Items.Length > 32 or Current.Index < 0 or Current.Index >=
+    Current.Items.Length
+  then
+    R.Reject(At, 'The option selection must name one of one through 32 choices.');
+  end if;
+
+  Texts(Current.Items, At);
+end procedure;
+
+procedure SeedField(Current: SeedFields.Value; Settings: SeedFields.Options; At: string);
+begin
+  R.CheckText(Current.Label, At);
+  R.CheckText(Settings.Display, At);
+  R.CheckText(Settings.RandomText, At);
+  R.CheckText(Settings.FixedText, At);
+end procedure;
+
+// Validates creative controls when matched.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Node`: Element to inspect.
+// - `Location`: Parent diagnostic path.
+// - `Current`: Target capabilities.
+// - `Identify`: Registers a widget ID.
+// ## Returns
+// True when this dispatcher handled the element.
+public function Check<TMsg>(Node: E.Element<TMsg>; Location: string; Current: R.Profile; Identify: function(string, string): string): bool;
+begin
+  case Node of
+    when E.Element.StatusTag(
+      const Id: string,
+      const Value: StatusTags.Value,
+      _,
+      const Settings: StatusTags.Options
+    ):
+      const At: string := Identify(Id, Location + '/StatusTag');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      StatusTag(Value, Settings, At);
+      return true;
+    when E.Element.RatioSlider(
+      const Id: string,
+      const Value: RatioSliders.Value,
+      _,
+      const Settings: RatioSliders.Options
+    ):
+      const At: string := Identify(Id, Location + '/RatioSlider');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      RatioSlider(Value, Settings, At);
+      return true;
+    when E.Element.GradientSlider(
+      const Id: string,
+      const Value: GradientSliders.Value,
+      _,
+      const Settings: GradientSliders.Options
+    ):
+      const At: string := Identify(Id, Location + '/GradientSlider');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      GradientSlider(Value, Settings, At);
+      discard Identify(Id + '/track', At);
+      if Settings.Tool <> null then
+        discard Identify(Id + '/tool', At);
+      end if;
+
+      return true;
+    when E.Element.StepSlider(
+      const Id: string,
+      const Value: StepSliders.Value,
+      _,
+      const Settings: StepSliders.Options
+    ):
+      const At: string := Identify(Id, Location + '/StepSlider');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      StepSlider(Value, Settings, At);
+      discard Identify(Id + '/track', At);
+      if Settings.Tool <> null then
+        discard Identify(Id + '/tool', At);
+      end if;
+
+      return true;
+    when E.Element.PaletteStrip(
+      const Id: string,
+      const Value: PaletteStrips.Value,
+      _,
+      const Settings: PaletteStrips.Options
+    ):
+      const At: string := Identify(Id, Location + '/PaletteStrip');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      PaletteStrip(Value, Settings, At);
+      for Index: int := 0 to Value.Swatches.Length - 1 do
+        discard Identify(
+          Id + '/' + Index.ToString(Sys.Globalization.CultureInfo.InvariantCulture),
+          At
+        );
+      end for;
+
+      if not Settings.NoShuffle then
+        discard Identify(Id + '/shuffle', At);
+      end if;
+
+      return true;
+    when E.Element.AspectPicker(
+      const Id: string,
+      const Value: AspectPickers.Value,
+      _,
+      const Settings: AspectPickers.Options
+    ):
+      const At: string := Identify(Id, Location + '/AspectPicker');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      AspectPicker(Value, Settings, At);
+      const Count: int := if Settings.Ratios.Length = 0 then
+        6
+      else
+        Settings.Ratios.Length
+      end if;
+      const Total: int := Count + (if Settings.Custom then
+        1
+      else
+        0
+      end if);
+      for Index: int := 0 to Total - 1 do
+        discard Identify(
+          Id + '/' + Index.ToString(Sys.Globalization.CultureInfo.InvariantCulture),
+          At
+        );
+      end for;
+
+      return true;
+    when E.Element.OptionAction(
+      const Id: string,
+      const Value: OptionActions.Value,
+      _,
+      const Settings: OptionActions.Options
+    ):
+      const At: string := Identify(Id, Location + '/OptionAction');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      OptionAction(Value, Settings, At);
+      for Index: int := 0 to Value.Items.Length - 1 do
+        discard Identify(
+          Id + '/' + Index.ToString(Sys.Globalization.CultureInfo.InvariantCulture),
+          At
+        );
+      end for;
+
+      discard Identify(Id + '/tool', At);
+      return true;
+    when E.Element.SeedField(
+      const Id: string,
+      const Value: SeedFields.Value,
+      _,
+      const Settings: SeedFields.Options
+    ):
+      const At: string := Identify(Id, Location + '/SeedField');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      SeedField(Value, Settings, At);
+      discard Identify(Id + '/dice', At);
+      if Value.Locked <> null then
+        discard Identify(Id + '/lock', At);
+      end if;
+
+      return true;
+    else
+      return false;
+  end case;
+end function;
+
+end unit;

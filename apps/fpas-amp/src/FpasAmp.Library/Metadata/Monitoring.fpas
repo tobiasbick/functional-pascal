@@ -279,7 +279,7 @@ public type Session = record implements Sys.IAsyncDisposable
           await Stop.CancelAsync().ConfigureAwait(false);
           await Running.ConfigureAwait(false);
         finally
-          Policy.Signal.Dispose();
+          Policy.Release();
           Stop.Dispose();
         end try;
       end function

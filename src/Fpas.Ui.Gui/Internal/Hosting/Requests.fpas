@@ -7,7 +7,7 @@ uses
   Fpas.Ui.Gui.Fonts as Fonts, Fpas.Ui.Gui.Internal.Hosting.FontRequests as FontRequests,
   Fpas.Ui.Gui.Clipboard as Clipboard, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.FileDialogs as Files,
   Fpas.Ui.Gui.Toasts as Toasts, Fpas.Ui.Gui.Windows as Windows, Fpas.Ui.Gui.TraceGeometry as Trace,
-  Fpas.Ui.Gui.Internal.Hosting.Context as Context, Fpas.Ui.Gui.Cui.Widgets.Developer as Developer, System as Sys,
+  Fpas.Ui.Gui.Internal.Core.Context as Context, Fpas.Ui.Gui.Cui.Widgets.Developer as Developer, System as Sys,
   Fpas.Ui.Gui.Closing as Closing, Fpas.Ui.Gui.Frames as Frames, System.Collections.Generic as Generic,
   System.Runtime.CompilerServices as Cells, Fpas.Ui.Gui.EditorCommands as Editors;
 

@@ -6,7 +6,7 @@ uses
   Fpas.Ui.Widgets.Charts.BarLists as W, Fpas.Ui.Widgets.Charts.Charts as Charts, Fpas.Ui.Gui.Cui.Widgets.Charts as CuiCharts,
   Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Gui.Internal.Data.ChartData as Common, Fpas.Ui.Gui.Internal.Data.MoreChartData as Data,
-  Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Layout.Sizing as Size, Fpas.Ui.Gui.Application as App, System as Sys;
+  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Layout.Sizing as Size, Fpas.Ui.Gui.Application as App, System as Sys;
 
 // Presents CUI's native bar-list.
 // ## Type parameters

@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Ai.ToolCall;
 
-uses Fpas.Ui.Widgets.Ai.ToolCalls as ToolCalls, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P;
+uses Fpas.Ui.Widgets.Ai.ToolCalls as ToolCalls, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc;
 
 // Presents CUI's native ToolCall.
 // ## Type parameters
@@ -27,7 +27,7 @@ begin
   ) or C.WantsFocus<TMsg>(Frame, Id, Header, Enabled);
   const Open: bool := Frame.Window.ToolCall(
     Token, Name, cast<int>(Settings.Status), Settings.Icon, Settings.Detail,
-    Settings.Input, Settings.Output, Settings.Seconds, P.Bits(Enabled, 1) or P.Bits(Focus, 2),
+    Settings.Input, Settings.Output, Settings.Seconds, Enc.Bits(Enabled, 1) or Enc.Bits(Focus, 2),
     if Frame.PaintingClosed then
       null
     else

@@ -1,0 +1,285 @@
+// [Documentation](../../../../../docs/ui/widgets.md#charts)
+
+unit Fpas.Ui.Internal.Validation.Charts.ChartValidation;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Core.Checks as R,
+  Fpas.Ui.Internal.Validation.Core.ChartChecks as Common,
+  Fpas.Ui.Internal.Validation.Charts.ChartRules as ChartRules,
+  Fpas.Ui.Internal.Validation.Charts.MoreChartRules as MoreRules,
+  Fpas.Ui.Internal.Validation.Charts.VisualizationRules as VizRules,
+  Fpas.Ui.Internal.Validation.Charts.InstrumentRules as InstrumentRules,
+  Fpas.Ui.Widgets.Charts.Charts as Charts, Fpas.Ui.Widgets.Charts.DonutCharts as Donuts,
+  Fpas.Ui.Widgets.Charts.PatternMeters as Patterns, Fpas.Ui.Widgets.Charts.Sankeys as Sankeys,
+  Fpas.Ui.Widgets.Charts.BarLists as BarLists,
+  Fpas.Ui.Widgets.Charts.ActivityRings as ActivityRings,
+  Fpas.Ui.Widgets.Charts.ScatterCharts as ScatterCharts,
+  Fpas.Ui.Widgets.Charts.RadialGauges as RadialGauges,
+  Fpas.Ui.Widgets.Charts.Candlesticks as Candlesticks,
+  Fpas.Ui.Widgets.Charts.Heatmaps as Heatmaps,
+  Fpas.Ui.Widgets.Charts.CalendarHeatmaps as CalendarHeatmaps,
+  Fpas.Ui.Widgets.Charts.Treemaps as Treemaps,
+  Fpas.Ui.Widgets.Charts.RadarCharts as RadarCharts, Fpas.Ui.Widgets.Charts.Funnels as Funnels,
+  Fpas.Ui.Widgets.Charts.SplitBars as SplitBars, Fpas.Ui.Widgets.Charts.Waffles as Waffles,
+  Fpas.Ui.Widgets.Developer.CodeBlocks as CodeBlocks,
+  Fpas.Ui.Widgets.Developer.JsonViews as JsonViews, Fpas.Ui.Widgets.Display.Readouts as Readouts,
+  Fpas.Ui.Widgets.Display.DotDisplays as DotDisplays, Fpas.Ui.Widgets.Charts.DotCharts as DotCharts,
+  Fpas.Ui.Widgets.Charts.EventTracks as EventTracks, System as Sys;
+
+// Validates charts, visualizations and instrument displays when matched.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Node`: Element to inspect.
+// - `Location`: Parent diagnostic path.
+// - `Current`: Target capabilities.
+// - `Identify`: Registers a widget ID.
+// ## Returns
+// True when this dispatcher handled the element.
+public function Check<TMsg>(Node: E.Element<TMsg>; Location: string; Current: R.Profile; Identify: function(string, string): string): bool;
+begin
+  case Node of
+    when E.Element.CodeBlock(
+      const Id: string,
+      const Code: string,
+      const Settings: CodeBlocks.Options
+    ):
+      const At: string := Identify(Id, Location + '/codeBlock');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      InstrumentRules.Code(Code, Settings, At);
+      discard Identify(Id + '/copy', At);
+      return true;
+    when E.Element.JsonView(
+      const Id: string,
+      const Json: string,
+      const Settings: JsonViews.Options
+    ):
+      const At: string := Identify(Id, Location + '/jsonView');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      InstrumentRules.Json(Json, Settings, At);
+      return true;
+    when E.Element.Readout(
+      const Id: string,
+      const Label: string,
+      const Value: string,
+      const Settings: Readouts.Options
+    ):
+      const At: string := Identify(Id, Location + '/readout');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      InstrumentRules.Readout(Label, Value, Settings, At);
+      return true;
+    when E.Element.DotDisplay(
+      const Id: string,
+      const Caption: string,
+      const Settings: DotDisplays.Options
+    ):
+      const At: string := Identify(Id, Location + '/dotDisplay');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      InstrumentRules.Display(Caption, Settings, At);
+      return true;
+    when E.Element.DotChart(
+      const Id: string, const Bands: array of DotCharts.Series, const Count: int,
+      _, const Settings: DotCharts.Options
+    ):
+      const At: string := Identify(Id, Location + '/dotChart');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      InstrumentRules.Chart(Bands, Count, Settings, At);
+      return true;
+    when E.Element.EventTrack(
+      const Id: string,
+      const Value: EventTracks.Value,
+      _,
+      const Settings: EventTracks.Options
+    ):
+      const At: string := Identify(Id, Location + '/eventTrack');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      InstrumentRules.Events(Value, Settings, At);
+      return true;
+    when E.Element.Sankey(
+      const Id: string,
+      const Nodes: array of Sankeys.Node,
+      const Links: array of Sankeys.Link,
+      const Settings: Sankeys.Options,
+      _
+    ):
+      const At: string := Identify(Id, Location + '/Sankey');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      MoreRules.Sankey(Nodes, Links, Settings, At);
+      return true;
+    when E.Element.BarList(
+      const Id: string,
+      const Items: array of Charts.Item,
+      const Settings: BarLists.Options,
+      _
+    ):
+      const At: string := Identify(Id, Location + '/BarList');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      MoreRules.BarList(Items, Settings, At);
+      return true;
+    when E.Element.ActivityRings(
+      const Id: string,
+      const Items: array of Charts.Item,
+      const Settings: ActivityRings.Options,
+      _
+    ):
+      const At: string := Identify(Id, Location + '/ActivityRings');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      MoreRules.ActivityRings(Items, Settings, At);
+      return true;
+    when E.Element.ScatterChart(
+      const Id: string,
+      const Series: array of ScatterCharts.Series,
+      const Settings: ScatterCharts.Options,
+      _
+    ):
+      const At: string := Identify(Id, Location + '/ScatterChart');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      MoreRules.Scatter(Series, Settings, At);
+      return true;
+    when E.Element.RadialGauge(
+      const Id: string,
+      const Value: float,
+      const Minimum: float,
+      const Maximum: float,
+      const Settings: RadialGauges.Options
+    ):
+      const At: string := Identify(Id, Location + '/RadialGauge');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      MoreRules.Radial(Value, Minimum, Maximum, Settings, At);
+      return true;
+    when E.Element.Candlestick(
+      const Id: string,
+      const Candles: array of Candlesticks.Candle,
+      const Settings: Candlesticks.Options,
+      _
+    ):
+      const At: string := Identify(Id, Location + '/Candlestick');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      MoreRules.Candles(Candles, Settings, At);
+      return true;
+    when E.Element.Heatmap(
+      const Id: string,
+      const Values: array of float,
+      const Rows: int,
+      const Columns: int,
+      const Settings: Heatmaps.Options,
+      _
+    ):
+      const At: string := Identify(Id, Location + '/Heatmap');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      VizRules.Heatmap(Values, Rows, Columns, Settings, At);
+      return true;
+    when E.Element.CalendarHeatmap(
+      const Id: string,
+      const Start: Sys.DateOnly,
+      const Values: array of float,
+      const Settings: CalendarHeatmaps.Options,
+      _
+    ):
+      const At: string := Identify(Id, Location + '/CalendarHeatmap');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      VizRules.CalendarHeatmap(Start, Values, Settings, At);
+      return true;
+    when E.Element.Treemap(
+      const Id: string,
+      const Items: array of Charts.Item,
+      const Selected: int,
+      const OnSelect: Sys.Func<int, TMsg>?,
+      const Settings: Treemaps.Options
+    ):
+      const At: string := Identify(Id, Location + '/Treemap');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      VizRules.Treemap(Items, Selected, OnSelect <> null, Settings, At);
+      return true;
+    when E.Element.RadarChart(
+      const Id: string,
+      const Series: array of Charts.Series,
+      const Axes: array of string,
+      const Settings: RadarCharts.Options,
+      _
+    ):
+      const At: string := Identify(Id, Location + '/RadarChart');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      VizRules.Radar(Series, Axes, Settings, At);
+      return true;
+    when E.Element.Funnel(
+      const Id: string,
+      const Items: array of Charts.Item,
+      const Settings: Funnels.Options,
+      _
+    ):
+      const At: string := Identify(Id, Location + '/Funnel');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      Common.Items(Items, At);
+      VizRules.Funnel(Settings, At);
+      return true;
+    when E.Element.SplitBar(
+      const Id: string,
+      const Items: array of Charts.Item,
+      const Settings: SplitBars.Options,
+      _
+    ):
+      const At: string := Identify(Id, Location + '/SplitBar');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      Common.Items(Items, At);
+      VizRules.SplitBar(Settings, At);
+      return true;
+    when E.Element.Waffle(
+      const Id: string,
+      const Items: array of Charts.Item,
+      const Settings: Waffles.Options,
+      _
+    ):
+      const At: string := Identify(Id, Location + '/Waffle');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      Common.Items(Items, At);
+      VizRules.Waffle(Settings, At);
+      return true;
+    when E.Element.LineChart(
+      const Id: string,
+      const Series: array of Charts.Series,
+      const Settings: Charts.Options
+    ), E.Element.BarChart(
+      const Id: string,
+      const Series: array of Charts.Series,
+      const Settings: Charts.Options
+    ):
+      const At: string := Identify(Id, Location + '/chart');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      ChartRules.Chart(Series, Settings, At);
+      return true;
+    when E.Element.DonutChart(
+      const Id: string,
+      const Values: array of float,
+      const Labels: array of string,
+      const Settings: Donuts.Options
+    ):
+      const At: string := Identify(Id, Location + '/donut');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      ChartRules.Donut(Values, Labels, Settings, At);
+      return true;
+    when E.Element.Gauge(
+      const Id: string,
+      const Label: string,
+      const Value: float,
+      const Size: float
+    ):
+      const At: string := Identify(Id, Location + '/gauge');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      ChartRules.Gauge(Label, Value, Size, At);
+      return true;
+    when E.Element.PatternMeter(
+      const Id: string,
+      const Parts: array of Patterns.Part,
+      const Settings: Patterns.Options
+    ):
+      const At: string := Identify(Id, Location + '/patternMeter');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      ChartRules.Pattern(Parts, Settings, At);
+      return true;
+    else
+      return false;
+  end case;
+end function;
+
+end unit;

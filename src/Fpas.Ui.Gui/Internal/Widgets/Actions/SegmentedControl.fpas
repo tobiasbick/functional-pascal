@@ -4,7 +4,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Actions.SegmentedControl;
 
 uses
   Fpas.Ui.Widgets.Actions.SegmentedControls as S, Fpas.Ui.Gui.Application as App,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Context as C, System.Collections.Generic as Lists;
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Core.Context as C, System.Collections.Generic as Lists;
 
 // Passes controlled choices to native CUI and publishes group/segment snapshots.
 //

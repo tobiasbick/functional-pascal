@@ -3,7 +3,7 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Media.Image;
 
 uses
-  Fpas.Ui.Widgets.Media.Images as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P,
+  Fpas.Ui.Widgets.Media.Images as D, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc,
   Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Internal.Data.MediaData as MediaData,
   Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Media.MediaImages as Media;
 
@@ -12,7 +12,7 @@ begin
   return if Color = null then
     0U
   else
-    P.Pack(Color)
+    Enc.Pack(Color)
   end if;
 end function;
 

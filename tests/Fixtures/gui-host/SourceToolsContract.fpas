@@ -7,7 +7,7 @@ uses
   GuiGallery.Pages.Files.State as Files, Fpas.Ui.Widgets.Developer.Terminals as Terminal,
   GalleryHostAssertions as A,
   Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Context as Context,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Core.Context as Context,
   Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
 
 procedure CapturePage(Page: State.Page; Renderer: Cui.CuiRenderer; Root: string; Width: int);

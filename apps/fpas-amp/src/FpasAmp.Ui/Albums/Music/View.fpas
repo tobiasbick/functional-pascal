@@ -10,7 +10,6 @@ uses
   FpasAmp.Ui.Collections.TableSort as TableSort,
   FpasAmp.Ui.Albums.Status as Status, FpasAmp.Ui.Albums.Artwork as Artwork, FpasAmp.Ui.Albums.Music.TrackTable as TrackTable,
   FpasAmp.Library.Metadata.Model as Tracks, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
-  Fpas.Ui.Widgets.Collections.Tables as Tables,
   Fpas.Ui.Widgets.Inputs.SearchFields as Search,
   Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Widgets.Display.Texts as Texts,
   Fpas.Ui.Widgets.Feedback.Alerts as Alerts,

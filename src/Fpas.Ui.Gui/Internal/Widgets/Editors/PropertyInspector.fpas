@@ -3,8 +3,8 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Editors.PropertyInspector;
 
 uses
-  Fpas.Ui.Widgets.Editors.PropertyInspectors as D, Fpas.Ui.Gui.Internal.Hosting.Context as C,
-  Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors,
+  Fpas.Ui.Widgets.Editors.PropertyInspectors as D, Fpas.Ui.Gui.Internal.Core.Context as C,
+  Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors,
   System.Collections.Generic as Lists, Fpas.Ui.Graphics as G;
 
 function Pack(Row: D.Property): CuiEditors.CuiProperty;
@@ -26,14 +26,14 @@ begin
       Text := Value;
     when D.Value.Boolean(const Value: bool):
       Kind := 3;
-      Integer := P.Bits(Value, 1);
+      Integer := Enc.Bits(Value, 1);
     when D.Value.Choice(const Items: array of string, const Selected: int):
       Kind := 4;
       Integer := Selected;
       Choices := Items;
     when D.Value.Color(const Value: G.Color):
       Kind := 5;
-      Color := P.Pack(Value);
+      Color := Enc.Pack(Value);
     when D.Value.Vector(const Value: array of float):
       Kind := 6;
       Values := Value;
@@ -42,7 +42,7 @@ begin
   return new CuiEditors.CuiProperty(
     Row.Label, Kind, Integer, Values, Text, Color, Choices, Row.Minimum, Row.Maximum,
     Row.Step, Row.Digits, Row.Suffix, Row.Placeholder, Row.Tooltip, Row.Capacity,
-    P.Bits(Row.Enabled, 1) or P.Bits(Row.Checkbox, 2)
+    Enc.Bits(Row.Enabled, 1) or Enc.Bits(Row.Checkbox, 2)
   );
 end function;
 
@@ -54,7 +54,7 @@ begin
     when D.Value.Text(_): D.Value.Text(Edit.Text ?? '');
     when D.Value.Boolean(_): D.Value.Boolean(Edit.Integer <> 0);
     when D.Value.Choice(const Items: array of string, _): D.Value.Choice(Items, Edit.Integer);
-    when D.Value.Color(_): D.Value.Color(P.Unpack(Edit.Color));
+    when D.Value.Color(_): D.Value.Color(Enc.Unpack(Edit.Color));
     when D.Value.Vector(_): D.Value.Vector(Edit.Values);
   end case;
 end function;

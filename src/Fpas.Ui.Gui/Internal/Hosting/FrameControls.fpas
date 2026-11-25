@@ -4,7 +4,7 @@ unit Fpas.Ui.Gui.Internal.Hosting.FrameControls;
 
 uses
   Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Hosting.Context as Context, System.Collections.Generic as Generic;
+  Fpas.Ui.Gui.Internal.Core.Context as Context, System.Collections.Generic as Generic;
 
 // Resolves native control state after presentation into detached snapshot records.
 // ## Parameters

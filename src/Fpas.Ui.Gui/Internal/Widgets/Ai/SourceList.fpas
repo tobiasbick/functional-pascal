@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Ai.SourceList;
 
-uses Fpas.Ui.Widgets.Ai.SourceLists as SourceLists, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Widgets.Ai.Sources as Sources, Fpas.Ui.Gui.Cui.Widgets.Ai as CuiAi, System as Sys, System.Collections.Generic as Lists, Fpas.Ui.Gui.Internal.Data.AiData as Data;
+uses Fpas.Ui.Widgets.Ai.SourceLists as SourceLists, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Widgets.Ai.Sources as Sources, Fpas.Ui.Gui.Cui.Widgets.Ai as CuiAi, System as Sys, System.Collections.Generic as Lists, Fpas.Ui.Gui.Internal.Data.AiData as Data;
 
 // Presents CUI's native SourceList.
 // ## Type parameters

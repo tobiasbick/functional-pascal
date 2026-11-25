@@ -4,7 +4,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Inputs.RangeSlider;
 
 uses
   Fpas.Ui.Widgets.Inputs.RangeSliders as R, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Hosting.Context as C, System.Globalization as Culture;
+  Fpas.Ui.Gui.Internal.Core.Context as C, System.Globalization as Culture;
 
 // Presents CUI's two-endpoint track and forwards pointer and keyboard proposals.
 //

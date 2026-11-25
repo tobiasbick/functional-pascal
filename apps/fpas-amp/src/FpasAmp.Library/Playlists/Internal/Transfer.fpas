@@ -4,7 +4,7 @@
 unit FpasAmp.Library.Playlists.Internal.Transfer;
 
 uses
-  FpasAmp.Library.Playlists.Model as M, FpasAmp.Library.Playlists.Internal.Reading as Reading,
+  FpasAmp.Library.Playlists.Model as M, FpasAmp.Library.Playlists.Formats.Reading as Reading,
   Fpas.Media.Tags.Playlists as Files,
   FpasAmp.Library.Playlists.Persistence.UserLists as Lists,
   FpasAmp.Library.Playlists.Persistence.Queries as Queries,

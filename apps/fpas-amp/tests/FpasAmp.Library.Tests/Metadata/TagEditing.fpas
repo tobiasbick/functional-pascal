@@ -1,0 +1,197 @@
+// [Documentation](../../../doc/library.md#tag-editing)
+
+unit FpasAmp.Library.Tests.TagEditing;
+
+uses
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.MetadataSupport as F,
+  FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Library.Metadata.Model as Tracks,
+  FpasAmp.Library.Metadata.Monitoring as Metadata, FpasAmp.Library.TagEditing.Files as Files,
+  FpasAmp.Library.TagEditing.Fields as Fields, Fpas.Media.Tags.AudioFiles as Media,
+  ATL as Atl, System as Sys, System.Collections.Generic as C,
+  System.Collections.Immutable as I, System.IO as IO, System.Threading as T,
+  System.Threading.Tasks as Tasks, System.Text as Text, Xunit as X;
+
+procedure Frame(Writer: IO.BinaryWriter; Kind: string; Owner: string; Bytes: array of byte);
+begin
+  const Name: array of byte := Text.Encoding.Latin1.GetBytes(Owner);
+  Writer.Write(Text.Encoding.ASCII.GetBytes(Kind));
+  const Header: array of byte := [0, 0, 0, cast<byte>(Name.Length + 1 + Bytes.Length), 0, 0];
+  Writer.Write(Header);
+  Writer.Write(Name);
+  Writer.Write(cast<byte>(0));
+  Writer.Write(Bytes);
+end procedure;
+
+// Exercises each destination with real media and both SQLite stores.
+public type TagEditingTests = record
+  // Raw ID3 frames keep their owners and exact bytes, including embedded and terminal zeros.
+  [X.FactAttribute]
+  public procedure BinaryId3FramesSurviveAnUnrelatedTagSave();
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    const Path: string := IO.Path.Combine(Root.Path, 'binary.mp3');
+    const Source: array of byte := IO.File.ReadAllBytes(
+      IO.Path.Combine(Sys.AppContext.BaseDirectory, 'Fixtures', 'silence.mp3')
+    );
+    const Owner: string := 'fixture.owner';
+    const Recording: string := '11111111-1111-1111-1111-111111111111';
+    const Unique: array of byte := [4, 0, 255, 3, 0];
+    const PrivateData: array of byte := [1, 0, 255, 59, 0];
+    begin
+      using const Payload: IO.MemoryStream := new IO.MemoryStream();
+      using const Frames: IO.BinaryWriter := new IO.BinaryWriter(Payload);
+      Frame(Frames, 'UFID', Owner, Unique);
+      Frame(Frames, 'UFID', 'http://musicbrainz.org', Text.Encoding.ASCII.GetBytes(Recording));
+      Frame(Frames, 'PRIV', Owner, PrivateData);
+      Frames.Flush();
+      const Size: int := cast<int>(Payload.Length);
+      using const Output: IO.BinaryWriter := new IO.BinaryWriter(IO.File.Create(Path));
+      const Header: array of byte := [
+        73,
+        68,
+        51,
+        3,
+        0,
+        0,
+        0,
+        0,
+        cast<byte>(Size div 128),
+        cast<byte>(Size mod 128)
+      ];
+      Output.Write(Header);
+      Output.Write(Payload.ToArray());
+      Output.Write(Source, 20, Source.Length - 20);
+    end;
+
+    const Initial: Files.Snapshot := Files.Read(Path);
+    const UniqueKey: string := Fields.Custom + 'UFID.' + Owner;
+    const PrivateKey: string := Fields.Custom + 'PRIV.' + Owner;
+    X.Assert.Equal<string>(
+      Sys.Convert.ToBase64String(Unique),
+      Fields.Value(Initial.Values, UniqueKey)
+    );
+    X.Assert.Equal<string>(
+      Sys.Convert.ToBase64String(PrivateData),
+      Fields.Value(Initial.Values, PrivateKey)
+    );
+    X.Assert.Equal<string>(Recording, Fields.Value(Initial.Values, 'recording'));
+    const Next: string := '22222222-2222-2222-2222-222222222222';
+    const Staged: string := Files.Stage(
+      Path,
+      Initial,
+      I.ImmutableDictionary<string, string?>.Empty.Add(
+        'title',
+        'Updated title'
+      ).Add('recording', Next)
+    );
+    try
+      Files.Install(Path, Initial, Staged);
+    finally
+      IO.File.Delete(Staged);
+    end try;
+    const After: Files.Snapshot := Files.Read(Path);
+    X.Assert.Equal<string>(
+      Fields.Value(Initial.Values, UniqueKey),
+      Fields.Value(After.Values, UniqueKey)
+    );
+    X.Assert.Equal<string>(
+      Fields.Value(Initial.Values, PrivateKey),
+      Fields.Value(After.Values, PrivateKey)
+    );
+    X.Assert.Equal<string>(Next, Fields.Value(After.Values, 'recording'));
+    const Raw: string := Text.Encoding.Latin1.GetString(IO.File.ReadAllBytes(Path));
+    X.Assert.Contains(Owner + #0 + Text.Encoding.Latin1.GetString(Unique), Raw);
+    X.Assert.Contains(Owner + #0 + Text.Encoding.Latin1.GetString(PrivateData), Raw);
+  end procedure;
+
+  // Saves standard and custom changes without losing untouched fields or durable overrides.
+  [X.TheoryAttribute]
+  [X.InlineDataAttribute(true, false)]
+  [X.InlineDataAttribute(false, true)]
+  [X.InlineDataAttribute(true, true)]
+  public async function DestinationsPreserveFiftyCustomTags(ToDatabase: bool; ToFile: bool): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const Path: string := F.Write(Root.Path, 'editor.mp3', 'Original title');
+    const Audio: Atl.Track := new Atl.Track(Path);
+    const Extra: C.IDictionary<string?, string?>? := Audio.AdditionalFields;
+    if Extra = null then
+      raise new Sys.InvalidOperationException('Missing fixture tags.');
+    end if;
+
+    for Index: int := 1 to 50 do
+      Extra['EDIT_' + Index.ToString('D3')] := 'Value ' + Index.ToString();
+    end for;
+
+    X.Assert.True(Audio.Save());
+    const Before: array of byte := IO.File.ReadAllBytes(Path);
+    using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
+    await using const Library: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
+    const Stage: Metadata.Session := F.Tags(Library);
+    const Indexed: I.ImmutableArray<Tracks.Entry> := await F.Until(
+      Stage,
+      function(Items: I.ImmutableArray<Tracks.Entry>): bool => Items.Length = 1 and Items[
+        0
+      ].TrackId <> ''
+    );
+    const Track: Tracks.Entry := Indexed[0];
+    const Original: Files.Snapshot := await Stage.ReadTags(Track, Stop.Token);
+    X.Assert.Equal<string>('Value 50', Fields.Value(Original.Values, Fields.Custom + 'EDIT_050'));
+    const Multiline: string := 'First line' + #10 + 'Second line';
+    const Patch: I.ImmutableDictionary<string, string?> := I.ImmutableDictionary<string, string?>.Empty.Add(
+      'title',
+      'Edited title'
+    ).Add('year', '2025').Add('track', '5 / 12').Add('disc', '1 / 3').Add(
+      Fields.Custom + 'EDIT_002',
+      null
+    ).Add(Fields.Custom + 'EDIT_050', Multiline).Add(Fields.Custom + 'EDIT_NEW', 'Added tag');
+    await Stage.WriteTags(Track, Original, Patch, ToDatabase, ToFile, Stop.Token);
+    const Disk: Files.Snapshot := Files.Read(Path);
+    const Reopened: Files.Snapshot := await Stage.ReadTags(Track, Stop.Token);
+    X.Assert.Equal<string>('Edited title', Fields.Value(Reopened.Values, 'title'));
+    X.Assert.Equal<string>('2025', Fields.Value(Reopened.Values, 'year'));
+    X.Assert.Equal<string>('5 / 12', Fields.Value(Reopened.Values, 'track'));
+    X.Assert.Equal<string>('1 / 3', Fields.Value(Reopened.Values, 'disc'));
+    X.Assert.Equal<string>('Added tag', Fields.Value(Reopened.Values, Fields.Custom + 'EDIT_NEW'));
+    X.Assert.Equal<string>(Multiline, Fields.Value(Reopened.Values, Fields.Custom + 'EDIT_050'));
+    X.Assert.False(Reopened.Values.ContainsKey(Fields.Custom + 'EDIT_002'));
+    for Index: int := 1 to 49 do
+      if Index <> 2 then
+        X.Assert.Equal<string>(
+          'Value ' + Index.ToString(),
+          Fields.Value(Reopened.Values, Fields.Custom + 'EDIT_' + Index.ToString('D3'))
+        );
+      end if;
+    end for;
+
+    if ToFile then
+      X.Assert.Equal<string>('Edited title', Fields.Value(Disk.Values, 'title'));
+      X.Assert.Equal<string>(Multiline, Fields.Value(Disk.Values, Fields.Custom + 'EDIT_050'));
+      X.Assert.False(Disk.Values.ContainsKey(Fields.Custom + 'EDIT_002'));
+    else
+      X.Assert.Equal<byte>(Before, IO.File.ReadAllBytes(Path));
+      // Rebuild a fresh catalogue against the same durable user database.
+      await Library.DisposeAsync();
+      await using const Rebuilt: Monitor.Session := Monitor.Session.Start(
+        [F.Source(Root.Path)], IO.Path.Combine(Data.Path, 'rebuilt.db'), Stop.Token,
+        UserDataPath := IO.Path.Combine(Data.Path, 'userdata.db')
+      );
+      const Rows: I.ImmutableArray<Tracks.Entry> := await F.Until(
+        F.Tags(Rebuilt),
+        function(Items: I.ImmutableArray<Tracks.Entry>): bool => Items.Length = 1 and Items[
+          0
+        ].TrackId <> ''
+      );
+      const Cached: Media.Info? := Rows[0].Metadata;
+      X.Assert.True(Cached <> null and Cached.Title = 'Edited title');
+      const Reloaded: Files.Snapshot := await F.Tags(Rebuilt).ReadTags(Rows[0], Stop.Token);
+      X.Assert.Equal<string>(
+        Multiline,
+        Fields.Value(Reloaded.Values, Fields.Custom + 'EDIT_050')
+      );
+    end if;
+  end function;
+end record;
+
+end unit;

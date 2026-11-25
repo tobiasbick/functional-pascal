@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Ai.ResponseActions;
 
-uses Fpas.Ui.Widgets.Ai.ResponseActions as ResponseActions, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Cui.Widgets.Ai as CuiAi, Fpas.Ui.Gui.Internal.Data.AiData as Data;
+uses Fpas.Ui.Widgets.Ai.ResponseActions as ResponseActions, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Gui.Cui.Widgets.Ai as CuiAi, Fpas.Ui.Gui.Internal.Data.AiData as Data;
 
 // Presents CUI's native ResponseActions.
 // ## Type parameters
@@ -21,7 +21,7 @@ begin
   const Keys: array of string := ['copy', 'regenerate', 'up', 'down', 'share'];
   const Result: CuiAi.CuiResponseResult := Frame.Window.ResponseActions(
     Token, Settings.CopyText, Vote,
-    P.Bits(Enabled, 1) or P.Bits(Settings.HideRegenerate, 2) or P.Bits(Settings.HideShare, 4),
+    Enc.Bits(Enabled, 1) or Enc.Bits(Settings.HideRegenerate, 2) or Enc.Bits(Settings.HideShare, 4),
     P.Tracker<TMsg>(Frame, Id, Role, Keys)
   );
   P.Root<TMsg>(Frame, Id, Role, '', false, (Vote ?? 0).ToString());

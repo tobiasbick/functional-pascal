@@ -3,8 +3,8 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Developer.LogConsole;
 
 uses
-  Fpas.Ui.Widgets.Developer.LogConsoles as D, Fpas.Ui.Gui.Internal.Hosting.Context as C,
-  Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S,
+  Fpas.Ui.Widgets.Developer.LogConsoles as D, Fpas.Ui.Gui.Internal.Core.Context as C,
+  Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Gui.Internal.Layout.Sizing as S,
   Fpas.Ui.Gui.Cui.Widgets.Developer as CuiDeveloper, System.Collections.Generic as Lists;
 
 // Renders the native LogConsole and dispatches its proposals.
@@ -32,7 +32,7 @@ begin
 
   if Frame.Window.LogConsole(
     Token, Rows.ToArray(), Width.Kind, Width.Value, Settings.Height, Settings.Size,
-    P.Bits(Enabled, 1) or P.Bits(Settings.Timestamps, 2) or P.Bits(not Settings.Toolbar, 4)
+    Enc.Bits(Enabled, 1) or Enc.Bits(Settings.Timestamps, 2) or Enc.Bits(not Settings.Toolbar, 4)
   )
   then
     Frame.Messages.Add(Cleared);

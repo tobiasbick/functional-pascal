@@ -13,7 +13,31 @@ public type ClearRequest = record
   // Source identity, or empty for the entire index.
   public Id: string;
   // Asynchronous acknowledgement with the post-clear snapshot.
-  public Completion: Tasks.TaskCompletionSource<M.Snapshot>;
+  Completion: Tasks.TaskCompletionSource<M.Snapshot>;
+
+  // Creates a clear request for `Id` backed by `Completion`.
+  public static function Create(Id: string; Completion: Tasks.TaskCompletionSource<M.Snapshot>): ClearRequest;
+  begin
+    return new ClearRequest(Id, Completion);
+  end function;
+
+  // Completes the clear request with the post-clear snapshot.
+  public procedure Succeed(Snapshot: M.Snapshot);
+  begin
+    discard self.Completion.TrySetResult(Snapshot);
+  end procedure;
+
+  // Fails the clear request with an error.
+  public procedure Fail(Error: Sys.Exception);
+  begin
+    discard self.Completion.TrySetException(Error);
+  end procedure;
+
+  // Cancels the clear request.
+  public procedure Cancel();
+  begin
+    discard self.Completion.TrySetCanceled();
+  end procedure;
 end record;
 
 // A detached batch of pending work.
@@ -255,7 +279,7 @@ public type Inbox = record
       const Value: Pending := self.ReadState();
       const Clears: C.List<ClearRequest> := new C.List<ClearRequest>();
       for Id: string in self.Clears.Keys do
-        Clears.Add(new ClearRequest(Id, self.Clears[Id]));
+        Clears.Add(ClearRequest.Create(Id, self.Clears[Id]));
       end for;
       const Result: Batch := new Batch(
         Value.Sources,

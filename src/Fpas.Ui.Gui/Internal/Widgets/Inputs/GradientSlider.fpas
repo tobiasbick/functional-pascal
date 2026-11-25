@@ -3,8 +3,8 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Inputs.GradientSlider;
 
 uses
-  Fpas.Ui.Widgets.Inputs.GradientSliders as A, Fpas.Ui.Gui.Internal.Hosting.Context as C,
-  Fpas.Ui.Gui.Internal.Data.CreativeParts as W, Fpas.Ui.Widgets.Audio.ControlWells as Wells, Fpas.Ui.Gui.Internal.Data.ChartData as Chart, System as Sys;
+  Fpas.Ui.Widgets.Inputs.GradientSliders as A, Fpas.Ui.Gui.Internal.Core.Context as C,
+  Fpas.Ui.Gui.Internal.Core.Parts as W, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Widgets.Audio.ControlWells as Wells, Fpas.Ui.Gui.Internal.Data.ChartData as Chart, System as Sys;
 
 // Presents the native gradient slider.
 // ## Type parameters
@@ -28,14 +28,14 @@ begin
   const Colors: array of uint := new uint[Settings.Stops.Length];
   for Index: int := 0 to Settings.Stops.Length - 1 do
     Positions[Index] := Settings.Stops[Index].Position;
-    Colors[Index] := W.Pack(Settings.Stops[Index].Color);
+    Colors[Index] := Enc.Pack(Settings.Stops[Index].Color);
   end for;
   var Next: float := Current.Current;
   var Sample: uint := 0U;
-  const Flags: int := W.Bits(Enabled, 1) + W.Bits(
+  const Flags: int := Enc.Bits(Enabled, 1) + Enc.Bits(
     Settings.Swatch,
     2
-  ) + W.ToolBits(Tool) + W.Bits(Settings.Plain, 8);
+  ) + Enc.ToolBits(Tool) + Enc.Bits(Settings.Plain, 8);
   const Result: int := Frame.Window.GradientSlider(
     Token,
     Current.Label,
@@ -49,8 +49,8 @@ begin
     Settings.Step,
     Chart.Format(Settings.Format),
     Settings.Display,
-    W.Icon(Tool),
-    W.Tooltip(Tool),
+    Enc.Icon(Tool),
+    Enc.Tooltip(Tool),
     Flags,
     Focus,
     W.Tracker<TMsg>(Frame, Id, Role, Parts),
@@ -58,7 +58,7 @@ begin
   );
   if Result <> 0 then
     Frame.Messages.Add(
-      Change(new A.Event(Next, W.Unpack(Sample), (Result and 1) <> 0, (Result and 2) <> 0))
+      Change(new A.Event(Next, Enc.Unpack(Sample), (Result and 1) <> 0, (Result and 2) <> 0))
     );
   end if;
   const Reading: string := Next.ToString(Sys.Globalization.CultureInfo.InvariantCulture);

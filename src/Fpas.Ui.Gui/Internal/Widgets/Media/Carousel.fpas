@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Media.Carousel;
 
-uses Fpas.Ui.Widgets.Media.Carousels as Carousels, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys, System.Collections.Generic as Lists;
+uses Fpas.Ui.Widgets.Media.Carousels as Carousels, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, System as Sys, System.Collections.Generic as Lists;
 
 // Presents CUI's native Carousel widget.
 // ## Type parameters
@@ -41,10 +41,10 @@ begin
     Settings.Height,
     Settings.Gap,
     Settings.AutoAdvance,
-    P.Bits(Enabled, 1) or P.Bits(
+    Enc.Bits(Enabled, 1) or Enc.Bits(
       Settings.HideArrows,
       2
-    ) or P.Bits(Settings.HideDots, 4) or P.Bits(Settings.Loop, 8),
+    ) or Enc.Bits(Settings.HideDots, 4) or Enc.Bits(Settings.Loop, 8),
     Focus
   );
   for Slide: int := 0 to Slides.Length - 1 do

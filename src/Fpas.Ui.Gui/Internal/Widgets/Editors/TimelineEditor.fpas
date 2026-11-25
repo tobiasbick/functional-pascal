@@ -3,8 +3,8 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Editors.TimelineEditor;
 
 uses
-  Fpas.Ui.Widgets.Editors.TimelineEditors as D, Fpas.Ui.Gui.Internal.Hosting.Context as C,
-  Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors,
+  Fpas.Ui.Widgets.Editors.TimelineEditors as D, Fpas.Ui.Gui.Internal.Core.Context as C,
+  Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors,
   Fpas.Ui.Gui.Internal.Data.CurveData as KeyData, System.Collections.Generic as Lists;
 
 function Pack(Track: D.Track): CuiEditors.CuiTimelineTrack;
@@ -96,10 +96,10 @@ begin
     cast<int>(Settings.Labels),
     Width.Kind,
     Width.Value,
-    P.Bits(Enabled, 1) or P.Bits(
+    Enc.Bits(Enabled, 1) or Enc.Bits(
       Settings.Toggles,
       2
-    ) or P.Bits(Settings.FreeDrag, 4) or P.Bits(Focus, 8)
+    ) or Enc.Bits(Settings.FreeDrag, 4) or Enc.Bits(Focus, 8)
   );
   case Result of
     when is CuiEditors.CuiTimelineEdit as Edit:

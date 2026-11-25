@@ -1,0 +1,84 @@
+// [Documentation](../../../../../docs/ui/widgets.md#charts)
+
+unit Fpas.Ui.Internal.Validation.Core.ChartChecks;
+
+uses Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Internal.Validation.Core.Checks as R, System as Sys;
+
+// Validates a finite nonnegative chart dimension.
+// ## Parameters
+// - `Value`: Logical distance.
+// - `At`: Diagnostic location.
+public procedure Distance(Value: float; At: string);
+begin
+  if not Sys.Single.IsFinite(Value) or Value < 0.0F then
+    R.Reject(At, 'Chart dimensions must be finite and nonnegative.');
+  end if;
+end procedure;
+
+// Validates a safe native number format.
+// ## Parameters
+// - `Value`: Optional format.
+// - `At`: Diagnostic location.
+public procedure Format(Value: C.ValueFormat?; At: string);
+begin
+  if Value = null then
+    return;
+  end if;
+
+  R.CheckText(Value.Prefix, At);
+  R.CheckText(Value.Suffix, At);
+  if Value.DecimalPlaces < 0 or Value.DecimalPlaces > 6 then
+    R.Reject(At, 'Chart decimal places must be between zero and six.');
+  end if;
+end procedure;
+
+// Validates a native chart palette reference.
+// ## Parameters
+// - `Value`: Chart color.
+// - `At`: Diagnostic location.
+public procedure Color(Value: C.Color; At: string);
+begin
+  case Value of
+    when C.Color.Palette(const Index: int):
+      if Index < 1 or Index > 6 then
+        R.Reject(At, 'A chart palette index is one through six.');
+      end if;
+    else
+      begin
+      end;
+  end case;
+end procedure;
+
+// Validates nonnegative shares with a finite total.
+// ## Parameters
+// - `Values`: Native shares.
+// - `At`: Diagnostic location.
+public procedure Shares(Values: array of float; At: string);
+begin
+  var Sum: float := 0.0F;
+  for Value: float in Values do
+    Distance(Value, At);
+    Sum := Sum + Value;
+  end for;
+
+  Distance(Sum, At);
+end procedure;
+
+// Validates named amounts shared by native visualizations.
+// ## Parameters
+// - `Items`: Named nonnegative amounts.
+// - `At`: Diagnostic location.
+public procedure Items(Items: array of C.Item; At: string);
+begin
+  var Total: float := 0.0F;
+  for Item: C.Item in Items do
+    R.CheckText(Item.Label, At);
+    Distance(Item.Value, At);
+    Color(Item.Color, At);
+    Total := Total + Item.Value;
+  end for;
+
+  Distance(Total, At);
+end procedure;
+
+end unit;

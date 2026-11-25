@@ -355,7 +355,7 @@ gallery acceptance and existing TUI coverage.
 ## Source files
 
 <details>
-<summary>Browse 61 source files</summary>
+<summary>Browse 62 source files</summary>
 
 - `examples/ui/gui/gallery/Pages/Desktop/`
   - [Editor.fpas](../../../examples/ui/gui/gallery/Pages/Desktop/Editor.fpas)
@@ -375,11 +375,14 @@ gallery acceptance and existing TUI coverage.
   - [Shortcuts.fpas](../../../src/Fpas.Ui.Gui/Shortcuts.fpas)
   - [Toasts.fpas](../../../src/Fpas.Ui.Gui/Toasts.fpas)
   - [Windows.fpas](../../../src/Fpas.Ui.Gui/Windows.fpas)
+- `src/Fpas.Ui.Gui/Internal/Core/`
+  - [Context.fpas](../../../src/Fpas.Ui.Gui/Internal/Core/Context.fpas)
+  - [Parts.fpas](../../../src/Fpas.Ui.Gui/Internal/Core/Parts.fpas)
+  - [Values.fpas](../../../src/Fpas.Ui.Gui/Internal/Core/Values.fpas)
 - `src/Fpas.Ui.Gui/Internal/Data/`
   - [AiData.fpas](../../../src/Fpas.Ui.Gui/Internal/Data/AiData.fpas)
   - [CanvasData.fpas](../../../src/Fpas.Ui.Gui/Internal/Data/CanvasData.fpas)
   - [ChartData.fpas](../../../src/Fpas.Ui.Gui/Internal/Data/ChartData.fpas)
-  - [CreativeParts.fpas](../../../src/Fpas.Ui.Gui/Internal/Data/CreativeParts.fpas)
   - [CurveData.fpas](../../../src/Fpas.Ui.Gui/Internal/Data/CurveData.fpas)
   - [FileData.fpas](../../../src/Fpas.Ui.Gui/Internal/Data/FileData.fpas)
   - [MediaData.fpas](../../../src/Fpas.Ui.Gui/Internal/Data/MediaData.fpas)
@@ -387,7 +390,6 @@ gallery acceptance and existing TUI coverage.
   - [MotionData.fpas](../../../src/Fpas.Ui.Gui/Internal/Data/MotionData.fpas)
   - [ScheduleData.fpas](../../../src/Fpas.Ui.Gui/Internal/Data/ScheduleData.fpas)
 - `src/Fpas.Ui.Gui/Internal/Hosting/`
-  - [Context.fpas](../../../src/Fpas.Ui.Gui/Internal/Hosting/Context.fpas)
   - [FontRequests.fpas](../../../src/Fpas.Ui.Gui/Internal/Hosting/FontRequests.fpas)
   - [FrameControls.fpas](../../../src/Fpas.Ui.Gui/Internal/Hosting/FrameControls.fpas)
   - [KeyBindings.fpas](../../../src/Fpas.Ui.Gui/Internal/Hosting/KeyBindings.fpas)

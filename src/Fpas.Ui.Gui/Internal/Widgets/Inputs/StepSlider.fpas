@@ -3,8 +3,8 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Inputs.StepSlider;
 
 uses
-  Fpas.Ui.Widgets.Inputs.StepSliders as A, Fpas.Ui.Gui.Internal.Hosting.Context as C,
-  Fpas.Ui.Gui.Internal.Data.CreativeParts as W, Fpas.Ui.Widgets.Audio.ControlWells as Wells;
+  Fpas.Ui.Widgets.Inputs.StepSliders as A, Fpas.Ui.Gui.Internal.Core.Context as C,
+  Fpas.Ui.Gui.Internal.Core.Parts as W, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Widgets.Audio.ControlWells as Wells;
 
 // Presents the native step slider.
 // ## Type parameters
@@ -24,7 +24,7 @@ begin
   const Parts: array of string := ['track', 'tool'];
   const Focus: int := W.Focus<TMsg>(Frame, Id, Role, Parts, [Enabled, Enabled and Tool <> null], 0);
   var Next: int := Current.Current;
-  const Flags: int := W.Bits(Enabled, 1) + W.ToolBits(Tool) + W.Bits(Settings.Plain, 8);
+  const Flags: int := Enc.Bits(Enabled, 1) + Enc.ToolBits(Tool) + Enc.Bits(Settings.Plain, 8);
   const Result: int := Frame.Window.StepSlider(
     Token,
     Current.Label,
@@ -35,8 +35,8 @@ begin
     Settings.Prefix,
     Settings.Suffix,
     Settings.Display,
-    W.Icon(Tool),
-    W.Tooltip(Tool),
+    Enc.Icon(Tool),
+    Enc.Tooltip(Tool),
     Flags,
     Focus,
     W.Tracker<TMsg>(Frame, Id, Role, Parts)

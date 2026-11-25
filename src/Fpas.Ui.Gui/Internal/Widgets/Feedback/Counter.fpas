@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Feedback.Counter;
 
-uses Fpas.Ui.Widgets.Feedback.Counters as W, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, System as Sys, Fpas.Ui.Gui.Internal.Data.ChartData as Colors;
+uses Fpas.Ui.Widgets.Feedback.Counters as W, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, System as Sys, Fpas.Ui.Gui.Internal.Data.ChartData as Colors;
 
 // Draws the native rolling numeric counter.
 // ## Type parameters

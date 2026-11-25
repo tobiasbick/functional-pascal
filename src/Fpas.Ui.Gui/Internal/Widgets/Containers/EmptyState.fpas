@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Containers.EmptyState;
 
-uses Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Containers.EmptyStates as E, System as Sys;
+uses Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Containers.EmptyStates as E, System as Sys;
 
 // Draws the native empty state and dispatches its optional action.
 // ## Type parameters

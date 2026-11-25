@@ -4,7 +4,7 @@ unit Fpas.Ui.Gui.Internal.Data.AiData;
 
 uses
   Fpas.Ui.Widgets.Ai.ModelPickers as M, Fpas.Ui.Widgets.Ai.Sources as S, Fpas.Ui.Gui.Cui.Widgets.Ai as CuiAi,
-  Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P,
+  Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P,
   System.Collections.Generic as Lists;
 
 // Converts the list of available models to CUI descriptors.

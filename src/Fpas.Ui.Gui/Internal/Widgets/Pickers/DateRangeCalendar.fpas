@@ -3,7 +3,7 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Pickers.DateRangeCalendar;
 
 uses
-  Fpas.Ui.Widgets.Pickers.DateRanges as R, Fpas.Ui.Gui.Cui.Widgets.Pickers as CuiPickers, Fpas.Ui.Gui.Internal.Hosting.Context as C,
+  Fpas.Ui.Widgets.Pickers.DateRanges as R, Fpas.Ui.Gui.Cui.Widgets.Pickers as CuiPickers, Fpas.Ui.Gui.Internal.Core.Context as C,
   Fpas.Ui.Gui.Internal.Widgets.Pickers.DateRangeParts as Parts, System as Sys;
 
 // Draws a native inline range calendar.

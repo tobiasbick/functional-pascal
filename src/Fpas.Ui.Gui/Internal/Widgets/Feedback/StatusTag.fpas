@@ -3,8 +3,8 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Feedback.StatusTag;
 
 uses
-  Fpas.Ui.Widgets.Feedback.StatusTags as A, Fpas.Ui.Gui.Internal.Hosting.Context as C,
-  Fpas.Ui.Gui.Internal.Data.CreativeParts as W, System as Sys;
+  Fpas.Ui.Widgets.Feedback.StatusTags as A, Fpas.Ui.Gui.Internal.Core.Context as C,
+  Fpas.Ui.Gui.Internal.Core.Parts as W, Fpas.Ui.Gui.Internal.Core.Values as Enc, System as Sys;
 
 const DefaultLabels: array of string := [
   'Pending',
@@ -31,7 +31,10 @@ begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled and Remove <> null;
   const Role: string := 'status-tag';
   const Token: string := C.Token(Role, Id);
-  const Flags: int := W.Bits(Settings.Small, 1) + W.Bits(Remove <> null, 2) + W.Bits(Enabled, 4);
+  const Flags: int := Enc.Bits(
+    Settings.Small,
+    1
+  ) + Enc.Bits(Remove <> null, 2) + Enc.Bits(Enabled, 4);
   const Focus: int := W.Focus<TMsg>(Frame, Id, Role, [''], [Enabled], 0);
   const Result: int := Frame.Window.StatusTag(
     Token, Current.Label, cast<int>(Current.Preset),

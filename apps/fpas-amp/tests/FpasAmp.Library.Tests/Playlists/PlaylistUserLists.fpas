@@ -1,0 +1,120 @@
+// [Documentation](../../../doc/library.md#playlists)
+
+// Durable lists retain user intent independently of rebuildable catalogue entries.
+unit FpasAmp.Library.Tests.PlaylistUserLists;
+
+uses
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.MetadataSupport as F,
+  FpasAmp.Library.Tests.PlaylistSupport as P, FpasAmp.Library.Playlists.Model as M,
+  FpasAmp.Library.Playlists.Access as Access, FpasAmp.Library.Sources as S,
+  FpasAmp.Library.Inventory.Monitoring as Monitor, FpasAmp.Library.Metadata.Model as Tags, System.IO as IO, System.Collections.Immutable as I,
+  System.Threading as T, System.Threading.Tasks as Tasks, Xunit as X;
+
+// Own lists can be ordered/duplicated and survive index/source changes and restart.
+public type UserListTests = record
+  // Durable UUID references follow moved audio, retaining order and missing entries.
+  [X.FactAttribute]
+  public async function OwnListsMovesResetAndRestart(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const Before: string := F.Write(Root.Path, 'before.mp3');
+    const After: string := IO.Path.Combine(Root.Path, 'after.mp3');
+    var Identity: M.Key := new M.Key(M.Origin.Local, '');
+    begin
+      await using const Session: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
+      const Lists: Access.Session := F.Tags(Session).Playlists;
+      const Audio: I.ImmutableArray<Tags.Entry> := await F.Until(
+        F.Tags(Session),
+        function(Items: I.ImmutableArray<Tags.Entry>): bool => Items.Length = 1
+      );
+      const Target: M.Input := new M.Input(M.Target.Track(Audio[0].TrackId), 'Track label');
+      Identity := await Lists.SaveAsync(
+        null,
+        'Favourites',
+        [Target, new M.Input(M.Target.Location('https://example.invalid/radio')), Target],
+        T.CancellationToken.None
+      );
+      const First: M.Playlist := await P.Read(Lists, Identity);
+      X.Assert.Equal<int>(3, First.Entries.Length);
+      X.Assert.Equal<M.Target>(First.Entries[0].Destination, First.Entries[2].Destination);
+      await F.Tags(Session).SetRatingAsync(Audio[0].TrackId, 8, T.CancellationToken.None);
+      IO.File.Move(Before, After);
+      Session.Refresh();
+      discard await F.Until(
+        F.Tags(Session),
+        function(Items: I.ImmutableArray<Tags.Entry>): bool => Items.Length = 1 and Items[
+          0
+        ].Path = After
+      );
+      const Moved: M.Playlist := await P.Read(Lists, Identity);
+      X.Assert.Equal<string>(Before, Moved.Entries[0].Reference);
+      X.Assert.Equal<string>(After, Moved.Entries[0].CurrentReference);
+      discard await Session.ClearAsync('', T.CancellationToken.None);
+      const Cleared: M.Playlist := await P.Read(Lists, Identity);
+      X.Assert.Equal<int>(3, Cleared.Entries.Length);
+      X.Assert.False(Cleared.Entries[0].Indexed);
+    end;
+
+    begin
+      await using const Session: Monitor.Session := F.Start([], Data.Path);
+      const Lists: Access.Session := F.Tags(Session).Playlists;
+      const Reloaded: M.Playlist := await P.Read(Lists, Identity);
+      X.Assert.Equal<string>(After, Reloaded.Entries[0].CurrentReference);
+      discard await Lists.SaveAsync(
+        Identity.Id,
+        'Reordered',
+        [
+          new M.Input(Reloaded.Entries[1].Destination),
+          new M.Input(Reloaded.Entries[0].Destination)
+        ],
+        T.CancellationToken.None
+      );
+      X.Assert.Equal<int>(2, (await P.Read(Lists, Identity)).Entries.Length);
+      await Lists.DeleteAsync(Identity.Id, T.CancellationToken.None);
+      X.Assert.Null(await Lists.ReadAsync(Identity, T.CancellationToken.None));
+      X.Assert.True(IO.File.Exists(After));
+    end;
+  end function;
+
+  // An unresolved saved location binds once its audio is first indexed, then follows moves.
+  [X.FactAttribute]
+  public async function LateResolution(): Tasks.Task;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const Path: string := IO.Path.Combine(Root.Path, 'later.mp3');
+    const Source: S.MusicSource := F.Source(Root.Path);
+    await using const Session: Monitor.Session := F.Start([Source], Data.Path);
+    const Lists: Access.Session := F.Tags(Session).Playlists;
+    const Key: M.Key := await Lists.SaveAsync(
+      null,
+      'Later',
+      [new M.Input(M.Target.Location(Path))],
+      T.CancellationToken.None
+    );
+    X.Assert.False((await P.Read(Lists, Key)).Entries[0].Indexed);
+    // Publish the finished fixture to the watched source after its tags have been saved.
+    IO.File.Move(F.Write(Data.Path, 'later.mp3'), Path);
+    const Audio: I.ImmutableArray<Tags.Entry> := await F.Until(
+      F.Tags(Session),
+      function(Items: I.ImmutableArray<Tags.Entry>): bool => Items.Length = 1 and Items[
+        0
+      ].TrackId <> ''
+    );
+    const Resolved: M.Playlist := await P.Read(Lists, Key);
+    X.Assert.Equal<M.Target>(M.Target.Track(Audio[0].TrackId), Resolved.Entries[0].Destination);
+    const Moved: string := IO.Path.Combine(Root.Path, 'moved.mp3');
+    IO.File.Move(Path, Moved);
+    Session.Refresh();
+    discard await F.Until(
+      F.Tags(Session),
+      function(Items: I.ImmutableArray<Tags.Entry>): bool => Items.Length = 1 and Items[
+        0
+      ].Path = Moved
+    );
+    X.Assert.Equal<string>(Moved, (await P.Read(Lists, Key)).Entries[0].CurrentReference);
+  end function;
+end record;
+
+end unit;

@@ -4,8 +4,7 @@
 unit FpasAmp.Ui.TagEditor.CustomTags;
 
 uses
-  FpasAmp.Ui.TagEditor.Model as M, FpasAmp.Library.TagEditing.Fields as F,
-  System as Sys, System.IO as IO, System.Collections.Generic as C, System.Collections.Immutable as I;
+  FpasAmp.Ui.TagEditor.Model as M, FpasAmp.Library.TagEditing.Fields as F, System.IO as IO, System.Collections.Generic as C, System.Collections.Immutable as I;
 
 function Key(Name: string): string;
 begin

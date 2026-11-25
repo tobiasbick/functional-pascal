@@ -3,7 +3,7 @@
 // One explicit sidecar convention, shared by discovery and artwork resolution.
 unit FpasAmp.Library.Albums.Artwork.Names;
 
-uses System as Sys, System.IO as IO;
+uses System.IO as IO;
 
 // Returns deterministic filename preference (cover, folder, front; JPEG then PNG).
 // `Path` is a filename or complete path; -1 means it is not a candidate.

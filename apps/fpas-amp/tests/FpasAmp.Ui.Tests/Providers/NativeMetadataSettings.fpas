@@ -1,0 +1,156 @@
+// [Documentation](../../../doc/desktop.md#settings-and-scan-control)
+
+unit FpasAmp.UiTests.NativeMetadataSettings;
+
+uses
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Inventory.Monitoring as Monitor,
+  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.App.Controller as Controller,
+  FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Settings.Model as Settings,
+  FpasAmp.Ui.Shell as Shell, FpasAmp.AppState as StateStorage, FpasAmp.Settings as Storage,
+  FpasAmp.Ui.Player.Playback as Playback, Fpas.Media.Audio as Audio,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Mvu.Application as Mvu,
+  System as Sys, System.IO as IO, System.Threading as T, Xunit as X;
+
+function Control(Session: Gui.Session<App.Msg>; Id: string; Key: string := ''): Gui.Control;
+begin
+  for Item: Gui.Control in Session.Snapshot().Controls do
+    if Item.Id = Id and Item.Key = Key then
+      return Item;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('Missing native control: ' + Id);
+end function;
+
+procedure Step(Session: Gui.Session<App.Msg>);
+begin
+  discard Session.Post(App.Msg.Navigation(Nav.Msg.SetDrawer(false)));
+  X.Assert.True(Session.Step());
+end procedure;
+
+// Checks that the Metadata controls save both keys and preserve the selected tab.
+public type NativeMetadataSettingsTests = record
+  // Exercises the real tab, masked fields, link buttons and save action with native input.
+  [X.FactAttribute]
+  [X.TraitAttribute('Category', 'Gui')]
+  public procedure MetadataKeysAreMaskedAndSaveTogether();
+    procedure Inject();
+    begin
+      Window.MovePointer(XPosition, YPosition);
+      if Left >= 0 then
+        Window.SetLeftButton(Left = 1);
+        Left := -1;
+      end if;
+
+      if Typed <> '' then
+        Window.InputText(Typed);
+        Typed := '';
+      end if;
+    end procedure;
+
+    function Apply(Current: App.State; Message: App.Msg): Mvu.Transition<App.State, App.Msg>;
+    begin
+      const Next: Mvu.Transition<App.State, App.Msg> := Controller.Apply(
+        Current, Message, procedure(Value: Settings.Preferences) begin
+          Storage.Save(Folder.Path, Value);
+        end procedure, Library, Port
+      );
+      Last := Next.Model;
+      case Message of
+        when App.Msg.Settings(Settings.Msg.OpenAcoustIdKeyPage(const Key: Settings.AcoustIdKey)):
+          Link := Key;
+          X.Assert.Equal<int>(1, Next.Commands.Length);
+          return new Mvu.Transition<App.State, App.Msg>(Next.Model, []);
+        else
+      end case;
+
+      return Next;
+    end function;
+
+    procedure Click(Session: Gui.Session<App.Msg>; Bounds: Cui.CuiRectangle);
+    begin
+      XPosition := Bounds.X + Bounds.Width / 2.0F;
+      YPosition := Bounds.Y + Bounds.Height / 2.0F;
+      Step(Session);
+      Left := 1;
+      Step(Session);
+      Left := 0;
+      Step(Session);
+      Step(Session);
+    end procedure;
+  begin
+    using const Folder: H.Folder := H.Folder.Create();
+    using const Device: Audio.Session := new Audio.Session(true);
+    const Port: Playback.Connection := Playback.Connection.Create(Device);
+    var Last: App.State := new App.State(
+      new Settings.State(new Settings.Preferences([], 'light', 'blue')),
+      Navigation := new Nav.State(Active := Nav.Route.Page(Nav.Page.Settings))
+    );
+    var XPosition: float := -1.0F;
+    var YPosition: float := -1.0F;
+    var Left: int := -1;
+    var Typed: string := '';
+    var Link: Settings.AcoustIdKey? := null;
+    using const Window: Cui.CuiWindow := new Cui.CuiWindow(
+      'FPas-Amp Metadata settings', 1120, 720, Cui.CuiRenderer.Software, true
+    );
+    const Library: Monitor.Session := H.Start([], T.CancellationToken.None);
+    try
+      Window.SetReducedMotion(true);
+      using const Session: Gui.Session<App.Msg> := Host.StartThemed<App.State, App.Msg>(
+        Last, Apply, Shell.View, Window, 128, Inject, App.Theme(Last, null), App.Theme, false
+      );
+      Step(Session);
+      Click(Session, Control(Session, 'settings-tabs', '2').Bounds);
+      X.Assert.Equal<int>(2, Last.Navigation.SettingsTab);
+      X.Assert.False(Control(Session, 'save-acoustid-keys').Enabled);
+      const AppLink: Cui.CuiRectangle := Control(Session, 'acoustid-application-key-setup').Bounds;
+      const UserLink: Cui.CuiRectangle := Control(Session, 'acoustid-user-key-setup').Bounds;
+      X.Assert.True(AppLink.Width < Control(Session, 'acoustid-application-key').Bounds.Width);
+      X.Assert.True(UserLink.Width < Control(Session, 'acoustid-user-key').Bounds.Width);
+      Click(Session, AppLink);
+      X.Assert.True(Link = Settings.AcoustIdKey.Application);
+      Click(Session, UserLink);
+      X.Assert.True(Link = Settings.AcoustIdKey.User);
+
+      Click(Session, Control(Session, 'acoustid-application-key').Bounds);
+      Typed := 'fixture-app-key';
+      Step(Session);
+      Step(Session);
+      X.Assert.True(Control(Session, 'save-acoustid-keys').Enabled);
+      X.Assert.DoesNotContain(
+        'fixture-app-key',
+        Control(Session, 'acoustid-application-key').Value
+      );
+      const Artifacts: string? := Sys.Environment.GetEnvironmentVariable('FPAS_AMP_UI_ARTIFACTS');
+      if Artifacts <> null then
+        XPosition := AppLink.X + AppLink.Width / 2.0F;
+        YPosition := AppLink.Y + AppLink.Height / 2.0F;
+        Step(Session);
+        discard IO.Directory.CreateDirectory(Artifacts);
+        Session.CapturePng(IO.Path.Combine(Artifacts, 'settings-metadata.png'));
+      end if;
+
+      Click(Session, Control(Session, 'acoustid-user-key').Bounds);
+      Typed := 'fixture-user-key';
+      Step(Session);
+      Step(Session);
+      X.Assert.DoesNotContain('fixture-user-key', Control(Session, 'acoustid-user-key').Value);
+      X.Assert.False(IO.File.Exists(IO.Path.Combine(Folder.Path, 'settings.json')));
+      Click(Session, Control(Session, 'save-acoustid-keys').Bounds);
+      X.Assert.False(Control(Session, 'save-acoustid-keys').Enabled);
+      const Saved: Settings.AcoustIdKeys := Storage.Load(Folder.Path).AcoustId;
+      X.Assert.Equal<string>('fixture-app-key', Saved.ApplicationKey);
+      X.Assert.Equal<string>('fixture-user-key', Saved.UserApiKey);
+      StateStorage.Save(Folder.Path, StateStorage.FromWindow(Session.Placement(), Last.Navigation));
+      const Restored: StateStorage.Snapshot := StateStorage.Load(Folder.Path);
+      X.Assert.Equal<string>('settings', Restored.ActivePage);
+      X.Assert.Equal<int>(2, Restored.SettingsTab);
+    finally
+      Library.DisposeAsync().GetAwaiter().GetResult();
+    end try;
+  end procedure;
+end record;
+
+end unit;

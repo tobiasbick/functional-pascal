@@ -10,7 +10,7 @@ uses
   Fpas.Ui.Widgets.Editors.NodeEditors as Nodes, Fpas.Ui.Widgets.Canvas.CanvasControls as Controls,
   Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
   Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys,
-  Fpas.Ui.Gui.Internal.Hosting.Context as Context;
+  Fpas.Ui.Gui.Internal.Core.Context as Context;
 
 procedure MovedSampleBounds();
 begin

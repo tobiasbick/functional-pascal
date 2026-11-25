@@ -5,7 +5,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Overlays.Menu;
 uses
   Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Overlays as CuiOverlays,
   Fpas.Ui.Gui.Cui as Cui,
-  Fpas.Ui.Gui.Internal.Hosting.Context as C, System.Collections.Generic as Lists, Fpas.Ui.Widgets.Overlays.UserMenus as U;
+  Fpas.Ui.Gui.Internal.Core.Context as C, System.Collections.Generic as Lists, Fpas.Ui.Widgets.Overlays.UserMenus as U;
 
 // Converted native menu rows and optional inspection identities.
 public type Rows = record

@@ -4,69 +4,75 @@ unit Fpas.Ui.Validation;
 
 uses
   Fpas.Ui.TerminalExtensions.SelectionLists as SelectionLists,
-  Fpas.Ui.Internal.Validation.EditingToolValidation as EditingTools,
-  Fpas.Ui.Internal.Validation.SourceToolValidation as SourceTools,
-  Fpas.Ui.Internal.Validation.DisplayValidation as Display,
-  Fpas.Ui.Internal.Validation.ChromeValidation as Chrome, Fpas.Ui.Internal.Validation.CanvasValidation as Canvas,
-  Fpas.Ui.Internal.Validation.DeveloperValidation as Developer,
-  Fpas.Ui.Internal.Validation.VoiceAndAiValidation as VoiceAndAi,
-  Fpas.Ui.Widgets.Media.MediaImages as Media, Fpas.Ui.Widgets.Media.Carousels as Carousels, Fpas.Ui.Widgets.Containers.CardStacks as CardStacks, Fpas.Ui.Widgets.Media.ImageViewers as ImageViewers, Fpas.Ui.Widgets.Media.ImageCroppers as ImageCroppers, Fpas.Ui.Widgets.Media.ImageComparisons as ImageComparisons,
-  Fpas.Ui.Internal.Validation.MediaRules as MediaRules,
-  Fpas.Ui.Widgets.Feedback.Spinners as Spinners,
-  Fpas.Ui.Widgets.Conversation.ChatMessages as ChatMessages, Fpas.Ui.Widgets.Conversation.Comments as Comments, Fpas.Ui.Widgets.Conversation.Presences as Presences, Fpas.Ui.Widgets.Feedback.Counters as Counters, Fpas.Ui.Widgets.Feedback.Tickers as Tickers, Fpas.Ui.Widgets.Feedback.StatusSpinners as StatusSpinners, Fpas.Ui.Widgets.Feedback.SkeletonGroups as SkeletonGroups, Fpas.Ui.Widgets.Charts.Sparklines as Sparklines,
-  Fpas.Ui.Widgets.Navigation.PathBars as PathBars, Fpas.Ui.Widgets.Files.FileBrowsers as FileBrowsers, Fpas.Ui.Widgets.Files.FilePickers as FilePickers, Fpas.Ui.Widgets.Planning.WeekCalendars as WeekCalendars, Fpas.Ui.Widgets.Planning.MonthCalendars as MonthCalendars, Fpas.Ui.Widgets.Planning.Gantts as Gantts, Fpas.Ui.Widgets.Planning.Kanbans as Kanbans,
-  Fpas.Ui.Internal.Validation.PlanningRules as PlanningRules,
-  Fpas.Ui.Widgets.Feedback.StatusTags as StatusTags, Fpas.Ui.Widgets.Inputs.RatioSliders as RatioSliders, Fpas.Ui.Widgets.Inputs.GradientSliders as GradientSliders, Fpas.Ui.Widgets.Inputs.StepSliders as StepSliders, Fpas.Ui.Widgets.Pickers.PaletteStrips as PaletteStrips, Fpas.Ui.Widgets.Pickers.AspectPickers as AspectPickers, Fpas.Ui.Widgets.Actions.OptionActions as OptionActions, Fpas.Ui.Widgets.Inputs.SeedFields as SeedFields,
-  Fpas.Ui.Internal.Validation.CreativeRules as CreativeRules,
-  Fpas.Ui.Widgets.Motion.Motion as Motion, Fpas.Ui.Widgets.Motion.ShimmerTexts as ShimmerTexts, Fpas.Ui.Widgets.Motion.Typewriters as Typewriters, Fpas.Ui.Widgets.Motion.TextReveals as TextReveals, Fpas.Ui.Widgets.Motion.WordRotations as WordRotations, Fpas.Ui.Widgets.Motion.NumberRolls as NumberRolls, Fpas.Ui.Widgets.Motion.GradientTexts as GradientTexts, Fpas.Ui.Widgets.Motion.Spotlights as Spotlights, Fpas.Ui.Widgets.Feedback.Loaders as Loaders, Fpas.Ui.Widgets.Navigation.Docks as Docks, Fpas.Ui.Widgets.Audio.ControlTiles as ControlTiles, Fpas.Ui.Widgets.Audio.NowPlaying as NowPlaying, Fpas.Ui.Widgets.Audio.Waveforms as Waveforms, Fpas.Ui.Widgets.Navigation.TabBars as TabBars,
-  Fpas.Ui.Internal.Validation.MotionRules as MotionRules,
-  Fpas.Ui.Widgets.Developer.CodeBlocks as CodeBlocks, Fpas.Ui.Widgets.Developer.JsonViews as JsonViews, Fpas.Ui.Widgets.Display.Readouts as Readouts, Fpas.Ui.Widgets.Display.DotDisplays as DotDisplays, Fpas.Ui.Widgets.Charts.DotCharts as DotCharts, Fpas.Ui.Widgets.Charts.EventTracks as EventTracks,
-  Fpas.Ui.Internal.Validation.InstrumentRules as InstrumentRules,
-  Fpas.Ui.Widgets.Collections.ListItems as ListItems, Fpas.Ui.Widgets.Collections.Trees as Trees, Fpas.Ui.Widgets.Collections.Tables as Tables,
-  Fpas.Ui.Widgets.Collections.FilterBars as Filters, Fpas.Ui.Widgets.Collections.DataGrids as DataGrids, Fpas.Ui.Widgets.Collections.TreeTables as TreeTables,
-  Fpas.Ui.Internal.Validation.GridRules as GridRules,
-  Fpas.Ui.Widgets.Collections.ReorderableLists as Reorders, Fpas.Ui.Widgets.Collections.VirtualLists as Virtuals, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes,
-  Fpas.Ui.Internal.Validation.CollectionRules as CollectionRules,
-  Fpas.Ui.Widgets.Charts.Sankeys as Sankeys,
-  Fpas.Ui.Widgets.Charts.BarLists as BarLists,
-  Fpas.Ui.Widgets.Charts.ActivityRings as ActivityRings,
-  Fpas.Ui.Widgets.Charts.ScatterCharts as ScatterCharts,
-  Fpas.Ui.Widgets.Charts.RadialGauges as RadialGauges,
-  Fpas.Ui.Widgets.Charts.Candlesticks as Candlesticks,
-  Fpas.Ui.Internal.Validation.MoreChartRules as MoreRules,
-  Fpas.Ui.Widgets.Charts.Heatmaps as Heatmaps,
-  Fpas.Ui.Widgets.Charts.CalendarHeatmaps as CalendarHeatmaps,
-  Fpas.Ui.Widgets.Charts.Treemaps as Treemaps,
-  Fpas.Ui.Widgets.Charts.RadarCharts as RadarCharts,
-  Fpas.Ui.Widgets.Charts.Funnels as Funnels,
-  Fpas.Ui.Widgets.Charts.SplitBars as SplitBars,
-  Fpas.Ui.Widgets.Charts.Waffles as Waffles,
-  Fpas.Ui.Internal.Validation.VisualizationRules as VizRules,
-  Fpas.Ui.Widgets.Charts.Charts as Charts, Fpas.Ui.Widgets.Charts.DonutCharts as Donuts, Fpas.Ui.Widgets.Charts.PatternMeters as Patterns,
-  Fpas.Ui.Internal.Validation.ChartRules as ChartRules,
-  Fpas.Ui.Widgets.Inputs.InlineEdits as InlineEdits, Fpas.Ui.Widgets.Inputs.ScrubFields as ScrubFields,
-  Fpas.Ui.Widgets.Inputs.MoneyFields as MoneyFields, Fpas.Ui.Widgets.Inputs.ShortcutRecorders as RecorderKeys,
-  Fpas.Ui.Internal.Validation.SmartInputRules as SmartRules,
-  Fpas.Ui.Widgets.Overlays.Tours as Tours,
-  Fpas.Ui.Widgets.Pickers.ColorPickers as ColorPickers, Fpas.Ui.Widgets.Pickers.EmojiPickers as Emojis,
-  Fpas.Ui.Widgets.Pickers.Calendars as Calendars, Fpas.Ui.Widgets.Pickers.DatePickers as DatePickers,
-  Fpas.Ui.Internal.Validation.AudioRules as AudioRules,
-  Fpas.Ui.Widgets.Containers.Grids as Grids, Fpas.Ui.Widgets.Containers.Cards as Cards, Fpas.Ui.Widgets.Feedback.Badges as Badges,
-  Fpas.Ui.Widgets.Charts.Metrics as Metrics, Fpas.Ui.Widgets.Media.AvatarGroups as AvatarGroups, Fpas.Ui.Widgets.Containers.EmptyStates as EmptyStates,
-  Fpas.Ui.Internal.Validation.SurfaceRules as SurfaceRules, Fpas.Ui.Widgets.Navigation.TableOfContents as Toc,
-  Fpas.Ui.Widgets.Feedback.Banners as Banners, Fpas.Ui.Widgets.Feedback.Countdowns as Countdowns, Fpas.Ui.Widgets.Feedback.Checklists as Checklists,
-  Fpas.Ui.Widgets.Files.Dropzones as Dropzones, Fpas.Ui.Widgets.Files.SignaturePads as Signatures,
-  Fpas.Ui.Widgets.Media.Avatars as Avatars, Fpas.Ui.Widgets.Overlays.HoverCards as HoverCards,
-  Fpas.Ui.Widgets.Audio.Knobs as Knobs, Fpas.Ui.Widgets.Audio.Faders as Faders, Fpas.Ui.Widgets.Audio.LevelMeters as Levels,
-  Fpas.Ui.Widgets.Inputs.RulerSliders as Rulers, Fpas.Ui.Widgets.Inputs.HistogramSliders as Histograms,
-  Fpas.Ui.Widgets.Pickers.TimePickers as TimePickers, Fpas.Ui.Widgets.Pickers.WheelPickers as WheelPickers,
-  Fpas.Ui.Widgets.Pickers.TimeDials as TimeDials, Fpas.Ui.Internal.Validation.PickerRules as PickerRules,
-  Fpas.Ui.Widgets.Pickers.DateRanges as Dates, Fpas.Ui.Widgets.Pickers.DateRangePickers as RangePickers,
-  Fpas.Ui.Internal.Validation.DateRangeRules as DateRangeRules,
-  Fpas.Ui.Widgets.Actions.SpeedDials as Speed, Fpas.Ui.Widgets.Actions.SwipeActions as Swipe, Fpas.Ui.Widgets.Inputs.MultiSelects as Multi,
-  Fpas.Ui.Internal.Validation.ActionRules as ActionRules,
-  Fpas.Ui.Widgets.Planning.TimelineItems as Timeline,
-  Fpas.Ui.Internal.Validation.FeedbackRules as FeedbackRules, Fpas.Ui.Widgets.Feedback.Alerts as Alerts, Fpas.Ui.Widgets.Feedback.ProgressBars as ProgressBars, Fpas.Ui.Widgets.Containers.ExpandableTexts as ExpandableTexts, Fpas.Ui.Widgets.Containers.ExpandableCards as ExpandableCards, Fpas.Ui.Internal.Validation.DisclosureRules as DisclosureRules, Fpas.Ui.Widgets.Conversation.Reactions as Reactions, Fpas.Ui.Widgets.Overlays.UserMenus as UserMenus, Fpas.Ui.Widgets.Inputs.Selects as Selects, Fpas.Ui.Widgets.Inputs.NumberFields as NumberFields, Fpas.Ui.Internal.Validation.SelectRules as SelectRules, Fpas.Ui.Internal.Validation.NumberFieldRules as NumberRules, Fpas.Ui.Widgets.Inputs.TagInputs as TagInputs, Fpas.Ui.Widgets.Inputs.OneTimeCodes as OneTimeCodes, Fpas.Ui.Internal.Validation.TagInputRules as TagRules, Fpas.Ui.Internal.Validation.OneTimeCodeRules as CodeRules, Fpas.Ui.Widgets.Inputs.SearchFields as SearchFields, Fpas.Ui.Widgets.Inputs.TextAreas as TextAreas, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Inputs.TextFields as TextFields, Fpas.Ui.Internal.Validation.EditorRules as EditorRules, Fpas.Ui.Internal.Validation.PopoverRules as PopupRules, Fpas.Ui.Widgets.Overlays.Popovers as Popovers, Fpas.Ui.Widgets.Overlays.ConfirmPopovers as ConfirmPopovers, Fpas.Ui.Internal.Validation.TooltipRules as TooltipRules, Fpas.Ui.Internal.Validation.NavigationRules as NavigationRules, Fpas.Ui.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Widgets.Inputs.RadioCards as RadioCards, Fpas.Ui.Widgets.Inputs.Sliders as Sliders, Fpas.Ui.Widgets.Inputs.RangeSliders as RangeSliders, Fpas.Ui.Internal.Validation.SliderRules as SliderRules, Fpas.Ui.Internal.Validation.SelectionRules as SelectionRules, Fpas.Ui.Widgets.Inputs.RadioGroups as RadioGroups, Fpas.Ui.Widgets.Actions.ToggleGroups as ToggleGroups, Fpas.Ui.Internal.Validation.ToggleGroupRules as ToggleGroupRules, Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Internal.Validation.MenuRules as MenuRules, Fpas.Ui.Widgets.Actions.SegmentedControls as Segmented, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Widgets.Theming.ThemeSwitchers as ThemeSwitchers, Fpas.Ui.Widgets.Actions.StatusButtons as Status, Fpas.Ui.Widgets.Actions.ConfirmButtons as Confirms, Fpas.Ui.Widgets.Actions.SplitButtons as Split, Fpas.Ui.Widgets.Actions.HoldButtons as Holds, Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Rules as Rules, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Navigation.Navigation as N, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Graphics as G, System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections;
+  Fpas.Ui.Internal.Validation.Core.Checks as Rules,
+  Fpas.Ui.Internal.Validation.Core.LayoutRules as LayoutRules,
+  Fpas.Ui.Internal.Validation.Core.ContainerRules as ContainerRules,
+  Fpas.Ui.Internal.Validation.Core.ChartChecks as ChartChecks,
+  Fpas.Ui.Internal.Validation.Controls.ActionRules as ActionRules,
+  Fpas.Ui.Internal.Validation.Controls.AudioRules as AudioRules,
+  Fpas.Ui.Internal.Validation.Controls.DisclosureRules as DisclosureRules,
+  Fpas.Ui.Internal.Validation.Controls.FeedbackRules as FeedbackRules,
+  Fpas.Ui.Internal.Validation.Controls.SurfaceRules as SurfaceRules,
+  Fpas.Ui.Internal.Validation.Controls.CreativeValidation as CreativeValidation,
+  Fpas.Ui.Internal.Validation.Controls.MotionValidation as MotionValidation,
+  Fpas.Ui.Internal.Validation.Controls.MediaValidation as MediaValidation,
+  Fpas.Ui.Internal.Validation.Controls.ConversationValidation as ConversationValidation,
+  Fpas.Ui.Internal.Validation.Charts.ChartValidation as ChartValidation,
+  Fpas.Ui.Internal.Validation.Inputs.EditorRules as EditorRules,
+  Fpas.Ui.Internal.Validation.Inputs.OneTimeCodeRules as CodeRules,
+  Fpas.Ui.Internal.Validation.Inputs.SelectionRules as SelectionRules,
+  Fpas.Ui.Internal.Validation.Inputs.SliderRules as SliderRules,
+  Fpas.Ui.Internal.Validation.Inputs.TagInputRules as TagRules,
+  Fpas.Ui.Internal.Validation.Inputs.ToggleGroupRules as ToggleGroupRules,
+  Fpas.Ui.Internal.Validation.Inputs.PickerValidation as PickerValidation,
+  Fpas.Ui.Internal.Validation.Structure.CollectionRules as CollectionRules,
+  Fpas.Ui.Internal.Validation.Structure.GridRules as GridRules,
+  Fpas.Ui.Internal.Validation.Structure.MenuRules as MenuRules,
+  Fpas.Ui.Internal.Validation.Structure.NavigationRules as NavigationRules,
+  Fpas.Ui.Internal.Validation.Structure.PlanningValidation as PlanningValidation,
+  Fpas.Ui.Internal.Validation.Structure.PopoverRules as PopupRules,
+  Fpas.Ui.Internal.Validation.Structure.TooltipRules as TooltipRules,
+  Fpas.Ui.Internal.Validation.Dispatch.CanvasValidation as Canvas,
+  Fpas.Ui.Internal.Validation.Dispatch.ChromeValidation as Chrome,
+  Fpas.Ui.Internal.Validation.Dispatch.DeveloperValidation as Developer,
+  Fpas.Ui.Internal.Validation.Dispatch.DisplayValidation as Display,
+  Fpas.Ui.Internal.Validation.Dispatch.EditingToolValidation as EditingTools,
+  Fpas.Ui.Internal.Validation.Dispatch.FeedbackAndAudioValidation as FeedbackAndAudio,
+  Fpas.Ui.Internal.Validation.Dispatch.SourceToolValidation as SourceTools,
+  Fpas.Ui.Internal.Validation.Dispatch.VoiceAndAiValidation as VoiceAndAi,
+  Fpas.Ui.Widgets.Feedback.Spinners as Spinners, Fpas.Ui.Widgets.Motion.Motion as Motion,
+  Fpas.Ui.Widgets.Collections.ListItems as ListItems, Fpas.Ui.Widgets.Collections.Trees as Trees,
+  Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Collections.FilterBars as Filters,
+  Fpas.Ui.Widgets.Collections.DataGrids as DataGrids, Fpas.Ui.Widgets.Collections.TreeTables as TreeTables,
+  Fpas.Ui.Widgets.Collections.ReorderableLists as Reorders, Fpas.Ui.Widgets.Collections.VirtualLists as Virtuals,
+  Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes, Fpas.Ui.Widgets.Overlays.Tours as Tours,
+  Fpas.Ui.Widgets.Containers.Grids as Grids, Fpas.Ui.Widgets.Containers.Cards as Cards,
+  Fpas.Ui.Widgets.Feedback.Badges as Badges, Fpas.Ui.Widgets.Charts.Metrics as Metrics,
+  Fpas.Ui.Widgets.Media.AvatarGroups as AvatarGroups, Fpas.Ui.Widgets.Containers.EmptyStates as EmptyStates,
+  Fpas.Ui.Widgets.Navigation.TableOfContents as Toc, Fpas.Ui.Widgets.Media.Avatars as Avatars,
+  Fpas.Ui.Widgets.Overlays.HoverCards as HoverCards, Fpas.Ui.Widgets.Audio.LevelMeters as Levels,
+  Fpas.Ui.Widgets.Actions.SpeedDials as Speed, Fpas.Ui.Widgets.Actions.SwipeActions as Swipe,
+  Fpas.Ui.Widgets.Planning.TimelineItems as Timeline, Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
+  Fpas.Ui.Widgets.Feedback.ProgressBars as ProgressBars,
+  Fpas.Ui.Widgets.Containers.ExpandableTexts as ExpandableTexts,
+  Fpas.Ui.Widgets.Containers.ExpandableCards as ExpandableCards,
+  Fpas.Ui.Widgets.Conversation.Reactions as Reactions, Fpas.Ui.Widgets.Overlays.UserMenus as UserMenus,
+  Fpas.Ui.Widgets.Inputs.TagInputs as TagInputs, Fpas.Ui.Widgets.Inputs.OneTimeCodes as OneTimeCodes,
+  Fpas.Ui.Widgets.Inputs.SearchFields as SearchFields, Fpas.Ui.Widgets.Inputs.TextAreas as TextAreas,
+  Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Inputs.TextFields as TextFields,
+  Fpas.Ui.Widgets.Overlays.Popovers as Popovers, Fpas.Ui.Widgets.Overlays.ConfirmPopovers as ConfirmPopovers,
+  Fpas.Ui.Widgets.Navigation.Tabs as Tabs, Fpas.Ui.Widgets.Inputs.RadioCards as RadioCards,
+  Fpas.Ui.Widgets.Inputs.Sliders as Sliders, Fpas.Ui.Widgets.Inputs.RangeSliders as RangeSliders,
+  Fpas.Ui.Widgets.Inputs.RadioGroups as RadioGroups, Fpas.Ui.Widgets.Actions.ToggleGroups as ToggleGroups,
+  Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Widgets.Actions.SegmentedControls as Segmented,
+  Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Widgets.Theming.ThemeSwitchers as ThemeSwitchers,
+  Fpas.Ui.Widgets.Actions.StatusButtons as Status, Fpas.Ui.Widgets.Actions.ConfirmButtons as Confirms,
+  Fpas.Ui.Widgets.Actions.SplitButtons as Split, Fpas.Ui.Widgets.Actions.HoldButtons as Holds,
+  Fpas.Ui.Elements as E, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L,
+  Fpas.Ui.Widgets.Navigation.Navigation as N, Fpas.Ui.Widgets.Overlays.Sheets as Sheets,
+  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Widgets.Actions.IconButtons as Icons,
+  Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Graphics as G,
+  System as Sys, System.Collections.Generic as Generic, System.Collections.ObjectModel as Collections;
 
 // The capability profile to check before a host presents a view.
 public type Target = enum: byte
@@ -142,602 +148,17 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
     return Named;
   end function;
 
-  procedure CheckMedia(Node: E.Element<TMsg>; Location: string);
+  procedure CheckTerminalColor(Value: int?; Location: string);
   begin
-    case Node of
-      when E.Element.Carousel(
-        const Id: string,
-        const Slides: array of E.Element<TMsg>,
-        const Index: int,
-        _,
-        const Settings: Carousels.Options
-      ):
-        const At: string := Identify(Id, Location + '/carousel');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        if Slides.Length < 1 or Slides.Length > 64 or Index < 0 or Index >= Slides.Length then
-          Rules.Reject(At, 'A carousel needs one to 64 slides and a valid selection.');
-        end if;
-
-        ChartRules.Distance(Settings.Height, At);
-        ChartRules.Distance(Settings.Gap, At);
-        ChartRules.Distance(Settings.AutoAdvance, At);
-        discard Identify(Id + '/viewport', At);
-        if not Settings.HideDots and Slides.Length > 1 then
-          for Part: int := 0 to Slides.Length - 1 do
-            discard Identify(
-              Id + '/dot-' + Part.ToString(Sys.Globalization.CultureInfo.InvariantCulture),
-              At
-            );
-          end for;
-        end if;
-
-        for Slide: E.Element<TMsg> in Slides do
-          Visit(Slide, At);
-        end for;
-      when E.Element.CardStack(
-        const Id: string,
-        const DeckItems: array of E.Element<TMsg>,
-        _,
-        const Settings: CardStacks.Options
-      ):
-        const At: string := Identify(Id, Location + '/card-stack');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        Rules.CheckExtent(Settings.Width, Profile, At);
-        ChartRules.Distance(Settings.Height, At);
-        if Settings.Visible < 0 then
-          Rules.Reject(At, 'The visible card count must be nonnegative.');
-        end if;
-
-        if DeckItems.Length > 0 then
-          discard Identify(Id + '/top', At);
-        end if;
-
-        for Card: E.Element<TMsg> in DeckItems do
-          Visit(Card, At);
-        end for;
-      when E.Element.ImageViewer(
-        const Id: string,
-        const Image: Media.Source,
-        const ViewValue: ImageViewers.Value,
-        _,
-        const Settings: ImageViewers.Options
-      ):
-        const At: string := Identify(Id, Location + '/image-viewer');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        MediaRules.Image(Image, At);
-        Rules.CheckExtent(Settings.Width, Profile, At);
-        Rules.CheckExtent(Settings.Height, Profile, At);
-        ChartRules.Distance(Settings.MaximumZoom, At);
-        ChartRules.Distance(ViewValue.Zoom, At);
-        MediaRules.Finite(ViewValue.CenterX, ViewValue.CenterY, At);
-      when E.Element.ImageCropper(
-        const Id: string,
-        const Image: Media.Source,
-        const Crop: ImageCroppers.Value,
-        _,
-        const Settings: ImageCroppers.Options
-      ):
-        const At: string := Identify(Id, Location + '/image-cropper');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        MediaRules.Image(Image, At);
-        Rules.CheckExtent(Settings.Width, Profile, At);
-        Rules.CheckExtent(Settings.Height, Profile, At);
-        ChartRules.Distance(Settings.Aspect, At);
-        ChartRules.Distance(Settings.MinimumSize, At);
-        MediaRules.Finite(Crop.X, Crop.Y, At);
-        ChartRules.Distance(Crop.Width, At);
-        ChartRules.Distance(Crop.Height, At);
-      when E.Element.ImageCompare(
-        const Id: string,
-        const Before: Media.Source,
-        const After: Media.Source,
-        const Position: float,
-        _,
-        const Settings: ImageComparisons.Options
-      ):
-        const At: string := Identify(Id, Location + '/image-compare');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        MediaRules.Image(Before, At);
-        MediaRules.Image(After, At);
-        Rules.CheckExtent(Settings.Width, Profile, At);
-        ChartRules.Distance(Settings.Height, At);
-        ChartRules.Distance(Settings.Aspect, At);
-        Rules.CheckText(Settings.BeforeLabel, At);
-        Rules.CheckText(Settings.AfterLabel, At);
-        if not Sys.Single.IsFinite(Position) or Position < 0.0F or Position > 1.0F then
-          Rules.Reject(At, 'The divider position must be between zero and one.');
-        end if;
-      else
-    end case;
+    if Value <> null and (Value < 0 or Value > 16777215) then
+      Rules.Reject(Location, 'Terminal colors must be 24-bit RGB values.');
+    end if;
   end procedure;
 
-  procedure CheckConversationAndFeedback(Node: E.Element<TMsg>; Location: string);
+  procedure VisitScoped(Node: E.Element<TMsg>; Location: string);
   begin
-    case Node of
-      when E.Element.ChatMessage(
-        const Id: string,
-        const Body: string,
-        const Settings: ChatMessages.Options
-      ):
-        const At: string := Identify(Id, Location + '/chat-message');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        Rules.CheckText(Body, At);
-        Rules.CheckText(Settings.Author, At);
-        Rules.CheckText(Settings.Time, At);
-        Rules.CheckText(Settings.Status, At);
-        Rules.CheckText(Settings.Avatar, At);
-      when E.Element.ChatDivider(const Id: string, const Label: string):
-        const At: string := Identify(Id, Location + '/chat-divider');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        Rules.CheckText(Label, At);
-      when E.Element.TypingIndicator(const Id: string, const Name: string):
-        const At: string := Identify(Id, Location + '/typing-indicator');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        Rules.CheckText(Name, At);
-      when E.Element.Comment(
-        const Id: string,
-        const Author: string,
-        const Body: string,
-        const Current: Comments.Value,
-        _,
-        const Settings: Comments.Options
-      ):
-        const At: string := Identify(Id, Location + '/comment');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        discard Identify(Id + '/like', At);
-        discard Identify(Id + '/reply', At);
-        Rules.CheckText(Author, At);
-        Rules.CheckText(Body, At);
-        Rules.CheckText(Settings.Time, At);
-        Rules.CheckText(Settings.Badge, At);
-        if Settings.Depth < 0 or Current.Likes < (if Current.Liked then
-          1
-        else
-          0
-        end if)
-          or Current.Likes = Sys.Int32.MaxValue
-        then
-          Rules.Reject(At, 'Invalid comment depth or like count.');
-        end if;
-      when E.Element.Presence(
-        const Id: string,
-        const Users: array of Presences.User,
-        const Settings: Presences.Options
-      ):
-        const At: string := Identify(Id, Location + '/presence');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        ChartRules.Distance(Settings.Size, At);
-        if Settings.MaximumVisible <= 0 then
-          Rules.Reject(At, 'A presence strip needs a positive visibility limit.');
-        end if;
-
-        for User: Presences.User in Users do
-          Rules.CheckText(User.Name, At);
-          Rules.CheckText(User.Avatar, At);
-          ChartRules.Color(User.Color, At);
-        end for;
-      when E.Element.Counter(
-        const Id: string,
-        const Value: double,
-        const Settings: Counters.Options
-      ):
-        const At: string := Identify(Id, Location + '/counter');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        ChartRules.Distance(Settings.Size, At);
-        ChartRules.Color(Settings.Color, At);
-        ChartRules.Format(Settings.Format, At);
-        if not Sys.Double.IsFinite(Value) then
-          Rules.Reject(At, 'A counter value must be finite.');
-        end if;
-      when E.Element.Ticker(
-        const Id: string,
-        const Items: array of Tickers.Item,
-        const Settings: Tickers.Options
-      ):
-        const At: string := Identify(Id, Location + '/ticker');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        ChartRules.Distance(Settings.Speed, At);
-        ChartRules.Distance(Settings.Height, At);
-        for Item: Tickers.Item in Items do
-          Rules.CheckText(Item.Label, At);
-          Rules.CheckText(Item.Value, At);
-          if not Sys.Single.IsFinite(Item.Delta) then
-            Rules.Reject(At, 'A ticker change must be finite.');
-          end if;
-        end for;
-      when E.Element.StatusSpinner(
-        const Id: string,
-        const CurrentStatus: Status.Status,
-        const Settings: StatusSpinners.Options
-      ):
-        const At: string := Identify(Id, Location + '/status-spinner');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        ChartRules.Distance(Settings.Size, At);
-        ChartRules.Color(Settings.Color, At);
-        if not Sys.Enum.IsDefined<Status.Status>(CurrentStatus) then
-          Rules.Reject(At, 'Unknown spinner status.');
-        end if;
-      when E.Element.SkeletonGroup(
-        const Id: string,
-        const Children: array of E.Element<TMsg>,
-        const Settings: SkeletonGroups.Options
-      ):
-        const At: string := Identify(Id, Location + '/skeleton-group');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        Rules.CheckExtent(Settings.Width, Profile, At);
-        ChartRules.Distance(Settings.Gap, At);
-        for Child: E.Element<TMsg> in Children do
-          Visit(Child, At);
-        end for;
-      when E.Element.Sparkline(
-        const Id: string,
-        const Values: array of float,
-        const Settings: Sparklines.Options
-      ):
-        const At: string := Identify(Id, Location + '/sparkline');
-        if Profile = Target.Portable then
-          Rules.Reject(At, 'A sparkline requires the terminal or graphical profile.');
-        end if;
-
-        Rules.CheckExtent(Settings.Width, Profile, At);
-        ChartRules.Distance(Settings.Height, At);
-        ChartRules.Color(Settings.Color, At);
-        for Value: float in Values do
-          if not Sys.Single.IsFinite(Value) then
-            Rules.Reject(At, 'Sparkline samples must be finite.');
-          end if;
-        end for;
-      else
-    end case;
+    VisitScopedContent(Node, Location);
   end procedure;
-
-  procedure CheckPlanning(Node: E.Element<TMsg>; Location: string);
-  begin
-    case Node of
-      when E.Element.PathBar(
-        const Id: string,
-        const Value: PathBars.Value,
-        _,
-        const Settings: PathBars.Options
-      ):
-        const At: string := Identify(Id, Location + '/PathBar');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        PlanningRules.PathBar(Value, Settings, At);
-      when E.Element.FileBrowser(
-        const Id: string,
-        const Folder: string,
-        _,
-        const Settings: FileBrowsers.Options
-      ):
-        const At: string := Identify(Id, Location + '/FileBrowser');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        PlanningRules.FileBrowser(Folder, Settings, At);
-      when E.Element.FilePicker(
-        const Id: string,
-        const Base: E.Element<TMsg>?,
-        const Open: bool,
-        _,
-        const Settings: FilePickers.Options
-      ):
-        const At: string := Identify(Id, Location + '/FilePicker');
-        PlanningRules.FilePicker(Settings, At);
-        if Profile <> Target.Graphical then
-          for Part: string in ['list', 'name', 'cancel', 'confirm'] do
-            discard Identify(Id + '/' + Part, At + '/' + Part);
-          end for;
-        end if;
-
-        if Base <> null then
-          Visit(Base, At + '/base');
-        end if;
-      when E.Element.WeekCalendar(
-        const Id: string,
-        const Value: WeekCalendars.Value,
-        _,
-        const Settings: WeekCalendars.Options
-      ):
-        const At: string := Identify(Id, Location + '/WeekCalendar');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        PlanningRules.WeekCalendar(Value, Settings, At);
-      when E.Element.MonthCalendar(
-        const Id: string,
-        const Value: MonthCalendars.Value,
-        _,
-        const Settings: MonthCalendars.Options
-      ):
-        const At: string := Identify(Id, Location + '/MonthCalendar');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        PlanningRules.MonthCalendar(Value, Settings, At);
-      when E.Element.Gantt(
-        const Id: string,
-        const Value: Gantts.Value,
-        _,
-        const Settings: Gantts.Options
-      ):
-        const At: string := Identify(Id, Location + '/Gantt');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        PlanningRules.Gantt(Value, Settings, At);
-      when E.Element.Kanban(
-        const Id: string,
-        const Columns: array of Kanbans.Column<TMsg>,
-        _,
-        const Settings: Kanbans.Options
-      ):
-        const At: string := Identify(Id, Location + '/Kanban');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        PlanningRules.Kanban<TMsg>(Columns, Settings, At);
-        for Column: Kanbans.Column<TMsg> in Columns do
-          for Card: Kanbans.Card<TMsg> in Column.Cards do
-            VisitScopedContent(Card.Content, At);
-          end for;
-        end for;
-      else
-    end case;
-  end procedure;
-
-  procedure CheckCreative(Node: E.Element<TMsg>; Location: string);
-  begin
-    case Node of
-      when E.Element.StatusTag(
-        const Id: string,
-        const Current: StatusTags.Value,
-        _,
-        const Settings: StatusTags.Options
-      ):
-        const At: string := Identify(Id, Location + '/StatusTag');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        CreativeRules.StatusTag(Current, Settings, At);
-      when E.Element.RatioSlider(
-        const Id: string,
-        const Current: RatioSliders.Value,
-        _,
-        const Settings: RatioSliders.Options
-      ):
-        const At: string := Identify(Id, Location + '/RatioSlider');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        CreativeRules.RatioSlider(Current, Settings, At);
-      when E.Element.GradientSlider(
-        const Id: string,
-        const Current: GradientSliders.Value,
-        _,
-        const Settings: GradientSliders.Options
-      ):
-        const At: string := Identify(Id, Location + '/GradientSlider');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        CreativeRules.GradientSlider(Current, Settings, At);
-        discard Identify(Id + '/track', At);
-        if Settings.Tool <> null then
-          discard Identify(Id + '/tool', At);
-        end if;
-      when E.Element.StepSlider(
-        const Id: string,
-        const Current: StepSliders.Value,
-        _,
-        const Settings: StepSliders.Options
-      ):
-        const At: string := Identify(Id, Location + '/StepSlider');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        CreativeRules.StepSlider(Current, Settings, At);
-        discard Identify(Id + '/track', At);
-        if Settings.Tool <> null then
-          discard Identify(Id + '/tool', At);
-        end if;
-      when E.Element.PaletteStrip(
-        const Id: string,
-        const Current: PaletteStrips.Value,
-        _,
-        const Settings: PaletteStrips.Options
-      ):
-        const At: string := Identify(Id, Location + '/PaletteStrip');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        CreativeRules.PaletteStrip(Current, Settings, At);
-        for Index: int := 0 to Current.Swatches.Length - 1 do
-          discard Identify(
-            Id + '/' + Index.ToString(Sys.Globalization.CultureInfo.InvariantCulture),
-            At
-          );
-        end for;
-
-        if not Settings.NoShuffle then
-          discard Identify(Id + '/shuffle', At);
-        end if;
-      when E.Element.AspectPicker(
-        const Id: string,
-        const Current: AspectPickers.Value,
-        _,
-        const Settings: AspectPickers.Options
-      ):
-        const At: string := Identify(Id, Location + '/AspectPicker');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        CreativeRules.AspectPicker(Current, Settings, At);
-        const Count: int := if Settings.Ratios.Length = 0 then
-          6
-        else
-          Settings.Ratios.Length
-        end if;
-        const Total: int := Count + (if Settings.Custom then
-          1
-        else
-          0
-        end if);
-        for Index: int := 0 to Total - 1 do
-          discard Identify(
-            Id + '/' + Index.ToString(Sys.Globalization.CultureInfo.InvariantCulture),
-            At
-          );
-        end for;
-      when E.Element.OptionAction(
-        const Id: string,
-        const Current: OptionActions.Value,
-        _,
-        const Settings: OptionActions.Options
-      ):
-        const At: string := Identify(Id, Location + '/OptionAction');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        CreativeRules.OptionAction(Current, Settings, At);
-        for Index: int := 0 to Current.Items.Length - 1 do
-          discard Identify(
-            Id + '/' + Index.ToString(Sys.Globalization.CultureInfo.InvariantCulture),
-            At
-          );
-        end for;
-
-        discard Identify(Id + '/tool', At);
-      when E.Element.SeedField(
-        const Id: string,
-        const Current: SeedFields.Value,
-        _,
-        const Settings: SeedFields.Options
-      ):
-        const At: string := Identify(Id, Location + '/SeedField');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        CreativeRules.SeedField(Current, Settings, At);
-        discard Identify(Id + '/dice', At);
-        if Current.Locked <> null then
-          discard Identify(Id + '/lock', At);
-        end if;
-      else
-    end case;
-  end procedure;
-
-  procedure CheckMotion(Node: E.Element<TMsg>; Location: string);
-  begin
-    case Node of
-      when E.Element.ShimmerText(
-        const Id: string,
-        const Caption: string,
-        const Settings: Motion.TextOptions
-      ):
-        const At: string := Identify(Id, Location + '/ShimmerText');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        MotionRules.TextEffect(Caption, Settings, At);
-      when E.Element.Typewriter(
-        const Id: string,
-        const Caption: string,
-        _,
-        const Settings: Motion.TextOptions,
-        _
-      ):
-        const At: string := Identify(Id, Location + '/Typewriter');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        MotionRules.TextEffect(Caption, Settings, At);
-      when E.Element.TextReveal(
-        const Id: string,
-        const Caption: string,
-        _,
-        const Settings: Motion.TextOptions
-      ):
-        const At: string := Identify(Id, Location + '/TextReveal');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        MotionRules.TextEffect(Caption, Settings, At);
-      when E.Element.WordRotate(
-        const Id: string,
-        const Words: array of string,
-        const Interval: float,
-        const Settings: Motion.TextOptions
-      ):
-        const At: string := Identify(Id, Location + '/WordRotate');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        MotionRules.Words(Words, Interval, Settings, At);
-      when E.Element.NumberRoll(
-        const Id: string,
-        const Caption: string,
-        const Settings: Motion.TextOptions
-      ):
-        const At: string := Identify(Id, Location + '/NumberRoll');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        MotionRules.TextEffect(Caption, Settings, At);
-      when E.Element.GradientText(
-        const Id: string,
-        const Caption: string,
-        const Settings: GradientTexts.Options
-      ):
-        const At: string := Identify(Id, Location + '/GradientText');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        MotionRules.Gradient(Caption, Settings, At);
-      when E.Element.Spotlight(
-        const Id: string,
-        const Children: array of E.Element<TMsg>,
-        const Settings: Spotlights.Options
-      ):
-        const At: string := Identify(Id, Location + '/Spotlight');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        MotionRules.Spotlight(Settings, At);
-        for Child: E.Element<TMsg> in Children do
-          Visit(Child, At);
-        end for;
-      when E.Element.Loader(
-        const Id: string,
-        const Style: Loaders.Animation,
-        const Settings: Loaders.Options
-      ):
-        const At: string := Identify(Id, Location + '/Loader');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        MotionRules.Loader(Style, Settings, At);
-      when E.Element.Dock(
-        const Id: string,
-        const Entries: array of Docks.Entry<TMsg>,
-        const Settings: Docks.Options
-      ):
-        const At: string := Identify(Id, Location + '/Dock');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        MotionRules.Dock<TMsg>(Entries, Settings, At);
-        for Index: int := 0 to Entries.Length - 1 do
-          case Entries[Index] of
-            when Docks.Entry.Item(_, _, _, _, _, _):
-              discard Identify(Id + '/' + Index.ToString(), At + '/item');
-            else
-          end case;
-        end for;
-      when E.Element.ControlTile(
-        const Id: string,
-        const Label: string,
-        _,
-        _,
-        const Settings: ControlTiles.Options
-      ):
-        const At: string := Identify(Id, Location + '/ControlTile');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        MotionRules.Tile(Label, Settings, At);
-      when E.Element.NowPlaying(
-        const Id: string,
-        const Current: NowPlaying.Value,
-        _,
-        const Settings: NowPlaying.Options
-      ):
-        const At: string := Identify(Id, Location + '/NowPlaying');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        MotionRules.Player(Current, Settings, At);
-        for Part: string in ['toggle', 'previous', 'next', 'seek'] do
-          discard Identify(Id + '/' + Part, At + '/' + Part);
-        end for;
-      when E.Element.Waveform(
-        const Id: string,
-        const Peaks: array of float,
-        const Progress: float?,
-        _,
-        const Settings: Waveforms.Options
-      ):
-        const At: string := Identify(Id, Location + '/Waveform');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        MotionRules.Wave(Peaks, Progress, Settings, At);
-      when E.Element.TabBar(
-        const Id: string,
-        const Items: array of TabBars.Item,
-        const Selected: int,
-        _,
-        const Settings: TabBars.Options
-      ):
-        const At: string := Identify(Id, Location + '/TabBar');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        MotionRules.Tabs(Items, Selected, Settings, At);
-        for Index: int := 0 to Items.Length - 1 do
-          discard Identify(Id + '/' + Index.ToString(), At + '/tab');
-        end for;
-      else
-    end case;
-  end procedure;
-
   procedure CheckNode(Node: E.Element<TMsg>; Location: string);
   begin
     case Node of
@@ -746,7 +167,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _, const Settings: Dialogs.Options, _
       ):
         if Settings.Draggable or Settings.Resizable then
-          Rules.RequireProfile(Profile, Target.Graphical, Location + '/dialog');
+          Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location + '/dialog');
         end if;
 
         if HoverDepth > 0 then
@@ -772,7 +193,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         VisitScopedContent(Content, At + '/content', Detached := true);
       when E.Element.ActionFooter(const Children: array of E.Element<TMsg>):
         const At: string := Location + '/actionFooter';
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         for Index: int := 0 to Children.Length - 1 do
           Visit(Children[Index], At + '[' + Index.ToString() + ']');
         end for;
@@ -783,7 +204,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: TextFields.Options,
         _
       ):
-        EditorRules.CheckTextField(Id, Value, Settings, Profile, Location, Identify);
+        EditorRules.CheckTextField(Id, Value, Settings, Mode, Location, Identify);
       when E.Element.SearchField(
         const Id: string,
         const Value: string,
@@ -791,7 +212,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: SearchFields.Options,
         _
       ):
-        EditorRules.CheckSearchField(Id, Value, Settings, Profile, Location, Identify);
+        EditorRules.CheckSearchField(Id, Value, Settings, Mode, Location, Identify);
       when E.Element.TextArea(
         const Id: string,
         const Value: string,
@@ -799,7 +220,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: TextAreas.Options,
         _
       ):
-        EditorRules.CheckTextArea(Id, Value, Settings, Profile, Location, Identify);
+        EditorRules.CheckTextArea(Id, Value, Settings, Mode, Location, Identify);
       when E.Element.TagInput(
         const Id: string,
         const Tags: array of string,
@@ -807,7 +228,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: TagInputs.Options
       ):
         const Path: string := Location + '/tagInput';
-        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Path);
         const At: string := Identify(Id, Path);
         TagRules.Check(Tags, Settings, At);
         for Index: int := 0 to Tags.Length - 1 do
@@ -821,11 +242,11 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _
       ):
         const Path: string := Location + '/oneTimeCode';
-        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Path);
         CodeRules.Check(Value, Settings, Identify(Id, Path));
       when E.Element.PasswordStrengthMeter(const Id: string, const Password: string):
         const Path: string := Location + '/passwordStrength';
-        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Path);
         Rules.CheckText(Password, Identify(Id, Path) + '/password');
       when E.Element.Alert(
         const Id: string,
@@ -833,7 +254,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: Alerts.Options,
         _
       ):
-        if Profile = Target.Portable then
+        if Mode = Rules.Profile.Portable then
           Rules.Reject(Location + '/alert', 'An alert requires the terminal or graphical profile.');
         end if;
         const At: string := Identify(Id, Location + '/alert');
@@ -847,17 +268,17 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: ProgressBars.Options
       ):
         if Settings.Indeterminate or Settings.Dither or Settings.Height <> 0.0F then
-          Rules.RequireProfile(Profile, Target.Graphical, Location + '/progress');
+          Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location + '/progress');
         end if;
         const At: string := Identify(Id, Location + '/progress');
         FeedbackRules.Progress(Value, Settings, At);
-        Rules.CheckExtent(Settings.Width, Profile, At + '/width');
+        LayoutRules.CheckExtent(Settings.Width, Mode, At + '/width');
       when E.Element.Spinner(
         const Id: string,
         const Size: float,
         const Settings: Spinners.Options?
       ):
-        if Profile = Target.Portable then
+        if Mode = Rules.Profile.Portable then
           Rules.Reject(
             Location + '/spinner',
             'A spinner requires the terminal or graphical profile.'
@@ -866,16 +287,16 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const At: string := Identify(Id, Location + '/spinner');
         FeedbackRules.Nonnegative(Size, At);
         if Settings <> null then
-          ChartRules.Color(Settings.Color, At);
-          ChartRules.Color(Settings.Track, At);
+          ChartChecks.Color(Settings.Color, At);
+          ChartChecks.Color(Settings.Track, At);
           if not Sys.Enum.IsDefined<Spinners.Style>(Settings.Animation) then
             Rules.Reject(At, 'Unknown spinner animation.');
           end if;
         end if;
       when E.Element.Skeleton(const Id: string, const Width: L.Extent, const Height: float):
-        Rules.RequireProfile(Profile, Target.Graphical, Location + '/skeleton');
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location + '/skeleton');
         const At: string := Identify(Id, Location + '/skeleton');
-        Rules.CheckExtent(Width, Profile, At + '/width');
+        LayoutRules.CheckExtent(Width, Mode, At + '/width');
         case Width of
           when L.Extent.Content:
             Rules.Reject(At, 'A skeleton has no content width; use fill.');
@@ -888,12 +309,12 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Title: string,
         const Settings: Timeline.Options
       ):
-        Rules.RequireProfile(Profile, Target.Graphical, Location + '/timeline-item');
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location + '/timeline-item');
         FeedbackRules.TimelineItem(Title, Settings, Identify(Id, Location + '/timeline-item'));
       when E.Element.ProgressRing(
         const Id: string, const Label: string, const Value: float, const Size: float
       ):
-        Rules.RequireProfile(Profile, Target.Graphical, Location + '/progress-ring');
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location + '/progress-ring');
         FeedbackRules.ProgressRing(Label, Value, Size, Identify(Id, Location + '/progress-ring'));
       when E.Element.LevelMeter(
         const Id: string,
@@ -902,226 +323,21 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _
       ):
         const At: string := Identify(Id, Location + '/levelMeter');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         AudioRules.CheckMeter(Peaks, Settings, At);
       when E.Element.Meter(
         const Id: string, const Label: string, const Used: float,
         const Total: float, const Unit: string
       ):
-        Rules.RequireProfile(Profile, Target.Graphical, Location + '/meter');
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location + '/meter');
         FeedbackRules.Meter(Label, Used, Total, Unit, Identify(Id, Location + '/meter'));
-      when E.Element.ColorPicker(const Id: string, _, _, _):
-        const At: string := Identify(Id, Location + '/colorPicker');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        discard Identify(ColorPickers.SurfaceId(Id), At);
-        discard Identify(ColorPickers.HueId(Id), At);
-        for Index: int := 0 to 7 do
-          discard Identify(ColorPickers.PresetId(Id, Index), At);
-        end for;
-      when E.Element.EmojiPicker(
-        const Id: string, const Value: Emojis.State, _, const Settings: Emojis.Options
-      ):
-        const At: string := Identify(Id, Location + '/emojiPicker');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        PickerRules.Emoji(Value, Settings, At);
-        discard Identify(Emojis.GridId(Id), At);
-        if Settings.Search then
-          discard Identify(Emojis.SearchId(Id), At);
-        end if;
-
-        if Settings.ToneSelector then
-          discard Identify(Emojis.ToneSelectorId(Id), At);
-          for Index: int := 0 to 5 do
-            discard Identify(Emojis.ToneId(Id, Index), At);
-          end for;
-        end if;
-
-        for Index: int := 0 to 9 do
-          discard Identify(Emojis.GroupId(Id, Index), At);
-        end for;
-      when E.Element.Calendar(const Id: string, _, _, _):
-        const At: string := Identify(Id, Location + '/calendar');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        discard Identify(Calendars.MonthId(Id, false), At);
-        discard Identify(Calendars.MonthId(Id, true), At);
-      when E.Element.DatePicker(const Id: string, _, _, const Settings: DatePickers.Options):
-        const At: string := Identify(Id, Location + '/datePicker');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        Rules.CheckText(Settings.Label, At + '/label');
-        Rules.CheckText(Settings.Placeholder, At + '/placeholder');
-        PickerRules.Size(Settings.Width, At + '/width');
-        discard Identify(Calendars.MonthId(Id, false), At);
-        discard Identify(Calendars.MonthId(Id, true), At);
-      when E.Element.RangeCalendar(
-        const Id: string,
-        const Value: Dates.Value,
-        _,
-        const Months: int,
-        _
-      ):
-        const Path: string := Location + '/rangeCalendar';
-        Rules.RequireProfile(Profile, Target.Graphical, Path);
-        const At: string := Identify(Id, Path);
-        DateRangeRules.Check(Value, At);
-        if Months < 1 or Months > 2 then
-          Rules.Reject(At, 'A range calendar shows one or two months.');
-        end if;
-
-        discard Identify(Dates.MonthId(Id, false), At);
-        discard Identify(Dates.MonthId(Id, true), At);
-      when E.Element.RangePicker(
-        const Id: string, const Value: Dates.Value, _, const Settings: RangePickers.Options
-      ):
-        const Path: string := Location + '/rangePicker';
-        Rules.RequireProfile(Profile, Target.Graphical, Path);
-        const At: string := Identify(Id, Path);
-        DateRangeRules.Check(Value, At);
-        DateRangeRules.Picker(Settings, At);
-        discard Identify(Dates.MonthId(Id, false), At);
-        discard Identify(Dates.MonthId(Id, true), At);
-        if Settings.Presets then
-          for Index: int := 0 to 6 do
-            discard Identify(RangePickers.PresetId(Id, Index), At);
-          end for;
-        end if;
-      when E.Element.TimePicker(
-        const Id: string, const Value: Sys.TimeOnly, _, const Settings: TimePickers.Options
-      ):
-        const Path: string := Location + '/timePicker';
-        Rules.RequireProfile(Profile, Target.Graphical, Path);
-        const At: string := Identify(Id, Path);
-        PickerRules.Time(Value, At);
-        PickerRules.TimePicker(Settings, At);
-
-        const LastHour: int := if Settings.TwelveHour then
-          11
-        else
-          23
-        end if;
-        for Hour: int := 0 to LastHour do
-          discard Identify(TimePickers.HourId(Id, Hour), At);
-        end for;
-
-        for Minute: int := 0 to 59 do
-          if Minute mod Settings.MinuteStep = 0 then
-            discard Identify(TimePickers.MinuteId(Id, Minute), At);
-          end if;
-        end for;
-
-        if Settings.TwelveHour then
-          discard Identify(TimePickers.PeriodId(Id, false), At);
-          discard Identify(TimePickers.PeriodId(Id, true), At);
-        end if;
-      when E.Element.WheelPicker(
-        const Id: string,
-        const Items: array of string,
-        const Selected: int,
-        _,
-        const Settings: WheelPickers.Options
-      ):
-        const Path: string := Location + '/wheelPicker';
-        Rules.RequireProfile(Profile, Target.Graphical, Path);
-        PickerRules.WheelPicker(Items, Selected, Settings, Identify(Id, Path));
-      when E.Element.TimeDial(const Id: string, const Value: Sys.TimeOnly, _, const Size: float, _):
-        const Path: string := Location + '/timeDial';
-        Rules.RequireProfile(Profile, Target.Graphical, Path);
-        const At: string := Identify(Id, Path);
-        PickerRules.Time(Value, At);
-        PickerRules.Size(Size, At + '/size');
-        discard Identify(TimeDials.SelectorId(Id, false), At);
-        discard Identify(TimeDials.SelectorId(Id, true), At);
-        discard Identify(TimeDials.FaceId(Id), At);
-      when E.Element.MultiSelectInput(
-        const Id: string, const Items: array of Selects.Item, const Selected: array of bool,
-        _, const Settings: Multi.Options
-      ):
-        const Path: string := Location + '/multiSelect';
-        const At: string := Identify(Id, Path);
-        SelectRules.MultiSelect(Items, Selected, Settings, At);
-        if Profile <> Target.Graphical then
-          discard Identify(Id + '/bulk', At + '/bulk');
-        end if;
-
-        for Index: int := 0 to Items.Length - 1 do
-          discard Identify(Selects.OptionId(Id, Index), At + '/option');
-        end for;
-      when E.Element.SelectInput(
-        const Id: string,
-        const Items: array of Selects.Item,
-        const Selected: int,
-        _,
-        const Settings: Selects.Options
-      ):
-        const Path: string := Location + '/select';
-        const At: string := Identify(Id, Path);
-        SelectRules.Check(Items, Selected, Settings, At);
-        for Index: int := 0 to Items.Length - 1 do
-          discard Identify(Selects.OptionId(Id, Index), At + '/option');
-        end for;
-      when E.Element.InlineEdit(
-        const Id: string,
-        const Current: string,
-        _,
-        const Settings: InlineEdits.Options
-      ):
-        const At: string := Identify(Id, Location + '/inline-edit');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        SmartRules.Inline(Current, Settings, At);
-      when E.Element.ScrubField(
-        const Id: string,
-        const Label: string,
-        const Current: float,
-        const Minimum: float,
-        const Maximum: float,
-        _,
-        const Settings: ScrubFields.Options
-      ):
-        const At: string := Identify(Id, Location + '/scrub-field');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        SmartRules.Scrub(Label, Current, Minimum, Maximum, Settings, At);
-      when E.Element.MoneyField(
-        const Id: string,
-        const Current: decimal,
-        _,
-        const Settings: MoneyFields.Options
-      ):
-        const At: string := Identify(Id, Location + '/money-field');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        SmartRules.Money(Current, Settings, At);
-      when E.Element.ShortcutRecorder(
-        const Id: string,
-        const Current: RecorderKeys.Combination,
-        _,
-        const Settings: RecorderKeys.Options
-      ):
-        const At: string := Identify(Id, Location + '/shortcut-recorder');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        SmartRules.Shortcut(Current, Settings, At);
-        if Current.Key <> RecorderKeys.Key.None then
-          discard Identify(RecorderKeys.ClearId(Id), At + '/clear');
-        end if;
-      when E.Element.ShortcutLabel(const Current: RecorderKeys.Combination):
-        Rules.RequireProfile(Profile, Target.Graphical, Location + '/shortcut-label');
-        SmartRules.Combination(Current, Location);
-      when E.Element.NumberField(
-        const Id: string, const Value: double, const Minimum: double, const Maximum: double, _,
-        const Settings: NumberFields.Options
-      ):
-        const Path: string := Location + '/numberField';
-        if Profile = Target.Portable then
-          Rules.Reject(Path, 'A number field requires the terminal or graphical profile.');
-        end if;
-        const At: string := Identify(Id, Path);
-        NumberRules.Check(Value, Minimum, Maximum, Settings, At);
-        discard Identify(NumberFields.DecreaseId(Id), At + '/decrease');
-        discard Identify(NumberFields.IncreaseId(Id), At + '/increase');
       when E.Element.Contextual(
         const Id: string,
         const Child: E.Element<TMsg>,
         const Entries: array of Menus.Entry<TMsg>,
         _
       ):
-        Rules.RequireProfile(Profile, Target.Graphical, Location + '/contextMenu');
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location + '/contextMenu');
         MenuRules.Check<TMsg>(Id, 'Context menu', Entries, null, Location, Identify);
         Visit(Child, Location + '/target');
       when E.Element.Hinted(
@@ -1130,7 +346,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Shortcut: string
       ):
         const At: string := Location + '/tooltip';
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         Visit(Child, At + '/target');
         After(
           procedure() begin
@@ -1145,7 +361,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Content: E.Element<TMsg>,
         _
       ):
-        Rules.RequireProfile(Profile, Target.Graphical, Location + '/accordion');
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location + '/accordion');
         const At: string := Identify(Id, Location + '/accordion');
         DisclosureRules.Header(Title, new ExpandableCards.Options(), At);
         Visit(Content, At + '/content');
@@ -1166,20 +382,20 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: ExpandableTexts.Options,
         _
       ):
-        Rules.RequireProfile(Profile, Target.Graphical, Location + '/expandableText');
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location + '/expandableText');
         const At: string := Identify(Id, Location + '/expandableText');
         discard Identify(ExpandableTexts.ToggleId(Id), At + '/toggle');
         DisclosureRules.Text(Value, Settings, At);
       when E.Element.LinkAction(const Id: string, const Label: string, _, _):
         const At: string := Identify(Id, Location + '/link');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         Rules.CheckText(Label, At + '/label');
         if Sys.String.IsNullOrWhiteSpace(Label) then
           Rules.Reject(At, 'A link needs a caption.');
         end if;
       when E.Element.Avatar(const Id: string, const Name: string, const Settings: Avatars.Options):
         const At: string := Identify(Id, Location + '/avatar');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         Rules.CheckText(Name, At + '/name');
         Rules.CheckText(Settings.Status, At + '/status');
         const Path: string? := Settings.ImagePath;
@@ -1197,7 +413,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: HoverCards.Options
       ):
         const At: string := Identify(Id, Location + '/hoverCard');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         if not Sys.Single.IsFinite(Settings.Width) or Settings.Width < 0.0F
           or not Sys.Single.IsFinite(Settings.Delay) or Settings.Delay < 0.0F
           or not Sys.Enum.IsDefined<Menus.Placement>(Settings.Position)
@@ -1228,7 +444,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Id: string, const Trigger: E.Element<TMsg>, const Content: E.Element<TMsg>, _, _,
         const Settings: Popovers.Options
       ):
-        Rules.RequireProfile(Profile, Target.Graphical, Location + '/popover');
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location + '/popover');
         const At: string := Identify(Id, Location + '/popover');
         PopupRules.CheckPanel(Settings, At);
         PopupRules.CheckTrigger<TMsg>(Trigger, At);
@@ -1242,7 +458,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _,
         _
       ):
-        Rules.RequireProfile(Profile, Target.Graphical, Location + '/confirmPopover');
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location + '/confirmPopover');
         const At: string := Identify(Id, Location + '/confirmPopover');
         discard Identify(ConfirmPopovers.CancelId(Id), At + '/cancel');
         discard Identify(ConfirmPopovers.ConfirmId(Id), At + '/confirm');
@@ -1251,7 +467,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         Visit(Trigger, At + '/trigger');
       when E.Element.ReactionGroup(const Id: string, const Items: array of Reactions.Item, _, _):
         const Path: string := Location + '/reactions';
-        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Path);
         const At: string := Identify(Id, Path);
         if Items.Length = 0 then
           Rules.Reject(At, 'A reaction group needs at least one item.');
@@ -1273,7 +489,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Id: string, const Items: array of Speed.Item, _, const Settings: Speed.Options
       ):
         const Path: string := Location + '/speedDial';
-        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Path);
         const At: string := Identify(Id, Path);
         ActionRules.SpeedDial(Items, Settings, At);
         for Index: int := 0 to Items.Length - 1 do
@@ -1284,7 +500,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Right: array of Swipe.Item, _, const Settings: Swipe.Options
       ):
         const Path: string := Location + '/swipeRow';
-        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Path);
         const At: string := Identify(Id, Path);
         ActionRules.SwipeRow(Left, Right, Settings, At);
         for Index: int := 0 to Left.Length - 1 do
@@ -1301,7 +517,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: UserMenus.Options
       ):
         const Path: string := Location + '/userMenu';
-        Rules.RequireProfile(Profile, Target.Graphical, Path);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Path);
         MenuRules.Check<TMsg>(Id, Name, Entries, null, Path, Identify);
         Rules.CheckText(Settings.Detail, Path + '/detail');
         Rules.CheckText(Settings.Status, Path + '/status');
@@ -1332,9 +548,9 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const FontSize: float,
         _
       ):
-        Rules.RequireProfile(Profile, Target.Graphical, Location);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location);
         Rules.CheckText(Value, Location);
-        ChartRules.Distance(FontSize, Location);
+        ChartChecks.Distance(FontSize, Location);
         if not Sys.Enum.IsDefined<Motion.Font>(Font) then
           Rules.Reject(Location, 'Unknown graphical text font.');
         end if;
@@ -1367,7 +583,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Description: string,
         _
       ):
-        SelectionRules.CheckRow(Id, Label, Description, Profile, Location + '/selection', Identify);
+        SelectionRules.CheckRow(Id, Label, Description, Mode, Location + '/selection', Identify);
       when E.Element.Radios(
         const Id: string,
         const Items: array of RadioGroups.Item,
@@ -1376,7 +592,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _,
         const Gap: L.Spacing
       ):
-        SelectionRules.CheckGroup(Id, Items, Selected, Gap, Profile, Location, Identify);
+        SelectionRules.CheckGroup(Id, Items, Selected, Gap, Mode, Location, Identify);
       when E.Element.Cards(
         const Id: string,
         const Items: array of RadioCards.Item,
@@ -1389,7 +605,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           Items,
           Selected,
           Settings.Columns,
-          Profile,
+          Mode,
           Location,
           Identify
         );
@@ -1398,7 +614,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Maximum: float, _, const Settings: Sliders.Options
       ):
         const At: string := Identify(Id, Location + '/slider');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         SliderRules.Check(Label, Value, Value, Minimum, Maximum, At);
         SliderRules.CheckOptions(Settings, Maximum - Minimum, At);
       when E.Element.RangeSliderAction(
@@ -1406,185 +622,8 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Minimum: float, const Maximum: float, _, _
       ):
         const At: string := Identify(Id, Location + '/rangeSlider');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         SliderRules.Check(Label, Value.Lower, Value.Upper, Minimum, Maximum, At);
-      when E.Element.Banner(
-        const Id: string, const Announcement: string, _, const Dismiss: Sys.Func<TMsg>?,
-        const Action: Sys.Func<TMsg>?, const Settings: Banners.Options
-      ):
-        const At: string := Identify(Id, Location + '/banner');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        Rules.CheckText(Announcement, At + '/text');
-        Rules.CheckText(Settings.Icon, At + '/icon');
-        Rules.CheckText(Settings.ActionLabel, At + '/action');
-        if Sys.String.IsNullOrWhiteSpace(Announcement) or not Sys.Enum.IsDefined<S.Tone>(
-          Settings.Tone
-        )
-        then
-          Rules.Reject(At, 'A banner needs nonempty text and a valid tone.');
-        end if;
-
-        if (Settings.ActionLabel = '') <> (Action = null) then
-          Rules.Reject(At, 'A banner action needs a caption and a message factory.');
-        end if;
-
-        if Action <> null then
-          discard Identify(Banners.ActionId(Id), At);
-        end if;
-
-        if Dismiss <> null then
-          discard Identify(Banners.DismissId(Id), At);
-        end if;
-      when E.Element.Countdown(const Id: string, const Seconds: double, _):
-        const At: string := Identify(Id, Location + '/countdown');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        if not Sys.Double.IsFinite(Seconds) or Seconds > 7730941132799.0 then
-          Rules.Reject(At, 'Countdown seconds must be finite and fit the native hours tile.');
-        end if;
-      when E.Element.Checklist(
-        const Id: string,
-        const Steps: array of Checklists.Step,
-        _,
-        const Action: Sys.Func<int, TMsg>?,
-        const Settings: Checklists.Options
-      ):
-        const At: string := Identify(Id, Location + '/checklist');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        Rules.CheckText(Settings.Title, At + '/title');
-        Rules.CheckText(Settings.Description, At + '/description');
-        for Index: int := 0 to Steps.Length - 1 do
-          const Step: Checklists.Step := Steps[Index];
-          const StepAt: string := Identify(Checklists.StepId(Id, Index), At);
-          Rules.CheckText(Step.Title, StepAt + '/title');
-          Rules.CheckText(Step.Description, StepAt + '/description');
-          Rules.CheckText(Step.ActionLabel, StepAt + '/action');
-          if Sys.String.IsNullOrWhiteSpace(Step.Title) then
-            Rules.Reject(StepAt, 'A checklist step needs a title.');
-          end if;
-
-          if Step.ActionLabel <> '' then
-            if Action = null then
-              Rules.Reject(StepAt, 'A checklist action needs a message callback.');
-            end if;
-
-            discard Identify(Checklists.ActionId(Id, Index), StepAt);
-          end if;
-        end for;
-      when E.Element.Dropzone(const Id: string, _, _, const Settings: Dropzones.Options):
-        const At: string := Identify(Id, Location + '/dropzone');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        Rules.CheckText(Settings.Title, At + '/title');
-        Rules.CheckText(Settings.Description, At + '/description');
-        Rules.CheckText(Settings.Accept, At + '/accept');
-        Rules.CheckText(Settings.Icon, At + '/icon');
-        if not Sys.Single.IsFinite(Settings.Height) or Settings.Height < 0.0F then
-          Rules.Reject(At, 'Dropzone height must be finite and nonnegative.');
-        end if;
-      when E.Element.AvatarUpload(
-        const Id: string,
-        const Name: string,
-        const Path: string?,
-        _,
-        _,
-        const Size: float,
-        _
-      ):
-        const At: string := Identify(Id, Location + '/avatarUpload');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        Rules.CheckText(Name, At + '/name');
-        if Path <> null then
-          Rules.CheckText(Path, At + '/image');
-        end if;
-
-        if not Sys.Single.IsFinite(Size) or Size < 0.0F then
-          Rules.Reject(At, 'Avatar diameter must be finite and nonnegative.');
-        end if;
-      when E.Element.SignaturePad(const Id: string, _, const Settings: Signatures.Options):
-        const At: string := Identify(Id, Location + '/signaturePad');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        discard Identify(Signatures.ClearId(Id), At);
-        Rules.CheckText(Settings.Placeholder, At + '/placeholder');
-        if not Sys.Single.IsFinite(Settings.Height) or Settings.Height < 0.0F then
-          Rules.Reject(At, 'Signature pad height must be finite and nonnegative.');
-        end if;
-      when E.Element.Knob(
-        const Id: string, const Label: string, const Value: float, const Minimum: float,
-        const Maximum: float, _, const Settings: Knobs.Options
-      ):
-        const At: string := Identify(Id, Location + '/knob');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        SliderRules.Check(Label, Value, Value, Minimum, Maximum, At);
-        AudioRules.CheckDial(
-          Settings.Step,
-          Settings.Reset,
-          Settings.DecimalPlaces,
-          Settings.UnitLabel,
-          Maximum - Minimum,
-          At
-        );
-        AudioRules.CheckKnob(Settings.Size, Settings.LogScale, Minimum, Maximum, At);
-      when E.Element.Fader(
-        const Id: string, const Label: string, const Value: float, const Minimum: float,
-        const Maximum: float, _, const Settings: Faders.Options
-      ):
-        const At: string := Identify(Id, Location + '/fader');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        SliderRules.Check(Label, Value, Value, Minimum, Maximum, At);
-        AudioRules.CheckDial(
-          Settings.Step,
-          Settings.Reset,
-          Settings.DecimalPlaces,
-          Settings.UnitLabel,
-          Maximum - Minimum,
-          At
-        );
-        AudioRules.CheckFader(
-          Settings.Length,
-          Settings.Ticks,
-          Settings.Levels,
-          Minimum,
-          Maximum,
-          At
-        );
-      when E.Element.RulerSlider(
-        const Id: string, const Label: string, const Value: float, const Minimum: float,
-        const Maximum: float, _, const Settings: Rulers.Options
-      ):
-        const At: string := Identify(Id, Location + '/rulerSlider');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        SliderRules.Check(Label, Value, Value, Minimum, Maximum, At);
-        SliderRules.CheckRuler(Settings, Minimum, Maximum, At);
-      when E.Element.HistogramSlider(
-        const Id: string, const Label: string, const Bins: array of float,
-        const Value: RangeSliders.Interval, const Minimum: float, const Maximum: float,
-        _, const Settings: Histograms.Options
-      ):
-        const At: string := Identify(Id, Location + '/histogramSlider');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        SliderRules.Check(Label, Value.Lower, Value.Upper, Minimum, Maximum, At);
-        SliderRules.CheckHistogram(Bins, Settings, At);
-      when E.Element.ChipAction(const Id: string, const Label: string, _, _, const Icon: string, _):
-        SelectionRules.CheckRow(Id, Label, '', Profile, Location + '/chip', Identify);
-        Rules.CheckText(Icon, Location + '/chip/icon');
-      when E.Element.RatingAction(
-        const Id: string,
-        const Label: string,
-        const Value: int,
-        _,
-        const Maximum: int,
-        _, const StarSize: float
-      ):
-        SelectionRules.CheckRow(Id, Label, '', Profile, Location + '/rating', Identify);
-        if not Sys.Single.IsFinite(StarSize) or StarSize <= 0.0F then
-          Rules.Reject(Location + '/rating', 'Rating star size must be finite and positive.');
-        end if;
-
-        if Maximum < 1 or Maximum > 16 or Value < 0 or Value > Maximum then
-          Rules.Reject(
-            Location + '/rating',
-            'Rating needs one through sixteen stars and a value within that range or zero.'
-          );
-        end if;
       when E.Element.TabStrip(
         const Id: string,
         const Items: array of Tabs.Item,
@@ -1594,17 +633,17 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
       ):
         NavigationRules.CheckTabs(Id, Items, Selected, Settings, Location, Identify);
       when E.Element.BreadcrumbTrail(const Id: string, const Items: array of string, _, _):
-        NavigationRules.CheckBreadcrumb(Id, Items, Profile, Location, Identify);
+        NavigationRules.CheckBreadcrumb(Id, Items, Mode, Location, Identify);
       when E.Element.PaginationAction(const Id: string, const Page: int, const Count: int, _, _):
-        NavigationRules.CheckPagination(Id, Page, Count, Profile, Location, Identify);
+        NavigationRules.CheckPagination(Id, Page, Count, Mode, Location, Identify);
       when E.Element.StepProgress(
         const Id: string,
         const Steps: array of string,
         const Current: int
       ):
-        NavigationRules.CheckStepper(Steps, Current, Profile, Identify(Id, Location + '/stepper'));
+        NavigationRules.CheckStepper(Steps, Current, Mode, Identify(Id, Location + '/stepper'));
       when E.Element.Separator(const Title: string):
-        Rules.RequireProfile(Profile, Target.Graphical, Location);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location);
         Rules.CheckText(Title, Location + '/divider');
       when E.Element.ButtonAction(
         const Id: string,
@@ -1626,7 +665,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           Rules.Reject(At, 'Unknown button variant or size.');
         end if;
 
-        Rules.CheckExtent(Settings.Width, Profile, At + '/width');
+        LayoutRules.CheckExtent(Settings.Width, Mode, At + '/width');
       when E.Element.IconAction(
         const Id: string,
         const Icon: string,
@@ -1635,7 +674,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: Icons.Options
       ):
         const At: string := Identify(Id, Location + '/iconButton');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         Rules.CheckText(Icon, At + '/icon');
         Rules.CheckText(Tooltip, At + '/tooltip');
         Rules.CheckText(Settings.Shortcut, At + '/shortcut');
@@ -1649,7 +688,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           Rules.Reject(At, 'Unknown icon button variant or size.');
         end if;
       when E.Element.CopyAction(const Id: string, const Value: string, _, _):
-        Rules.RequireProfile(Profile, Target.Graphical, Location);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location);
         Rules.CheckText(Value, Identify(Id, Location + '/copyButton') + '/text');
       when E.Element.HoldAction(
         const Id: string,
@@ -1658,7 +697,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: Holds.Options
       ):
         const At: string := Identify(Id, Location + '/holdButton');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         Rules.CheckText(Label, At);
         Rules.CheckText(Settings.Icon, At + '/icon');
         if Settings.DurationMilliseconds <= 0 or Settings.Variant = S.ButtonVariant.Active
@@ -1675,7 +714,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: Confirms.Options
       ):
         const At: string := Identify(Id, Location + '/confirmButton');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         Rules.CheckText(Label, At);
         Rules.CheckText(Settings.ConfirmLabel, At + '/confirmLabel');
         Rules.CheckText(Settings.Icon, At + '/icon');
@@ -1696,7 +735,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: Status.Options
       ):
         const At: string := Identify(Id, Location + '/statusButton');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         Rules.CheckText(Label, At);
         Rules.CheckText(Settings.SuccessLabel, At + '/successLabel');
         Rules.CheckText(Settings.ErrorLabel, At + '/errorLabel');
@@ -1721,7 +760,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: Segmented.Options
       ):
         const At: string := Identify(Id, Location + '/segmented');
-        if Profile = Target.Portable then
+        if Mode = Rules.Profile.Portable then
           Rules.Reject(At, 'A segmented control requires the terminal or graphical profile.');
         end if;
 
@@ -1753,14 +792,14 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Selected: array of bool, _, const Settings: ToggleGroups.Options
       ):
         const At: string := Identify(Id, Location + '/toggleGroup');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         ToggleGroupRules.Check(Items, Selected, Settings, At);
         for Index: int := 0 to Items.Length - 1 do
           discard Identify(ToggleGroups.ItemId(Id, Index), At + '/item');
         end for;
       when E.Element.ThemeFlip(const Id: string, const Appearance: Themes.Mode, _, _):
         const At: string := Identify(Id, Location + '/themeToggle');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         if not Sys.Enum.IsDefined<Themes.Mode>(Appearance) then
           Rules.Reject(At, 'A theme toggle needs a concrete Light or Dark appearance.');
         end if;
@@ -1771,7 +810,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: ThemeSwitchers.Options
       ):
         const At: string := Identify(Id, Location + '/themeSwitcher');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         if not Sys.Enum.IsDefined<ThemeSwitchers.Selection>(Selected)
           or (Selected = ThemeSwitchers.Selection.System and not Settings.WithSystem)
         then
@@ -1789,7 +828,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           );
         end for;
       when E.Element.ButtonGroup(const Children: array of E.Element<TMsg>):
-        Rules.RequireProfile(Profile, Target.Graphical, Location);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location);
         for Index: int := 0 to Children.Length - 1 do
           const Child: E.Element<TMsg> := Children[Index];
           const At: string := Location + '/buttonGroup[' + Index.ToString() + ']';
@@ -1803,7 +842,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: Split.Options
       ):
         const At: string := Identify(Id, Location + '/splitButton');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         Rules.CheckText(Label, At);
         Rules.CheckText(Settings.Icon, At + '/icon');
         discard Identify(Split.MenuId(Id), At + '/menu');
@@ -1834,10 +873,10 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         for Section: N.Section<TMsg> in Sections do
           Rules.CheckText(Section.Title, At + '/heading');
           if Section.GapBefore <> 0 then
-            Rules.RequireProfile(Profile, Target.Graphical, At + '/heading gap');
-            discard Rules.CheckMeasure(
+            Rules.RequireProfile(Mode, Rules.Profile.Graphical, At + '/heading gap');
+            discard LayoutRules.CheckMeasure(
               L.Measure.Logical(Section.GapBefore),
-              Profile,
+              Mode,
               At + '/heading gap'
             );
           end if;
@@ -1859,7 +898,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: ListItems.Options
       ):
         const At: string := Identify(Id, Location + '/listItem');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         Rules.CheckText(Title, At + '/title');
         Rules.CheckText(Settings.Subtitle, At + '/subtitle');
         Rules.CheckText(Settings.Trailing, At + '/trailing');
@@ -1882,7 +921,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end if;
 
         for Child: E.Element<TMsg> in Children do
-          if Profile <> Target.Graphical then
+          if Mode <> Rules.Profile.Graphical then
             case Child of
               when E.Element.TreeNode(_, _, _, _, _, _, _):
               else
@@ -1906,12 +945,12 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           Rules.Reject(At, 'Supply both the current sort and its callback.');
         end if;
 
-        CollectionRules.Table(Columns, Order, Profile, At);
+        CollectionRules.Table(Columns, Order, Mode, At);
         if Settings.HorizontalScroll then
-          Rules.RequireProfile(Profile, Target.Terminal, At);
+          Rules.RequireProfile(Mode, Rules.Profile.Terminal, At);
         end if;
 
-        Rules.CheckExtent(Settings.Height, Profile, At + '/height');
+        LayoutRules.CheckExtent(Settings.Height, Mode, At + '/height');
         for Index: int := 0 to Columns.Length - 1 do
           discard Identify(Tables.HeaderId(Id, Index), At + '/header');
         end for;
@@ -1923,13 +962,13 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Id: string, const Fields: array of Filters.Field, const Current: Filters.Value,
         _, const Capacity: int, _
       ):
-        GridRules.FilterBar(Id, Fields, Current, Capacity, Profile, Location, Identify);
+        GridRules.FilterBar(Id, Fields, Current, Capacity, Mode, Location, Identify);
       when E.Element.DataGrid(
         const Id: string, const Columns: array of DataGrids.Column, const Count: int,
         _, const Current: DataGrids.Value, _, const Settings: DataGrids.Options, _
       ):
         const At: string := Identify(Id, Location + '/dataGrid');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         GridRules.Grid(Columns, Count, Current.Order, Settings.Height, Settings.RowHeight, At);
         const Selected: (array of bool)? := Current.Selected;
         if (Selected <> null and Selected.Length <> Count)
@@ -1950,7 +989,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Open: bool?, const Change: Sys.Func<bool, TMsg>?, const Icon: string
       ):
         const At: string := Identify(Id, Location + '/treeCell');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         Rules.CheckText(Label, At + '/label');
         Rules.CheckText(Icon, At + '/icon');
         if Depth < 0 or (Open = null and Change <> null) then
@@ -1966,14 +1005,14 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: TreeTables.Options
       ):
         const At: string := Identify(Id, Location + '/treeTable');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         GridRules.Grid(Columns, Nodes.Length, Order, Settings.Height, Settings.RowHeight, At);
         GridRules.Tree(Nodes, Columns.Length, Cursor, At);
       when E.Element.ReorderableList(
         const Id: string, const Items: array of E.Element<TMsg>, const Order: array of int, _, _
       ):
         const At: string := Identify(Id, Location + '/reorder');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         CollectionRules.Reorder(Items.Length, Order, At);
         for Child: E.Element<TMsg> in Items do
           Visit(Child, At);
@@ -1986,8 +1025,8 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _, const Offset: float?, _
       ):
         const At: string := Identify(Id, Location + '/virtualList');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        Rules.CheckExtent(Height, Profile, At + '/height');
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
+        LayoutRules.CheckExtent(Height, Mode, At + '/height');
         if not Sys.Single.IsFinite(Offset ?? 0.0F) or (Offset ?? 0.0F) < 0.0F then
           Rules.Reject(At, 'The virtual list scroll offset must be finite and nonnegative.');
         end if;
@@ -2000,106 +1039,6 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
             'The virtual list needs a nonnegative count and a finite logical row height of at least one.'
           );
         end if;
-      when E.Element.CodeBlock(
-        const Id: string,
-        const Code: string,
-        const Settings: CodeBlocks.Options
-      ):
-        const At: string := Identify(Id, Location + '/codeBlock');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        InstrumentRules.Code(Code, Settings, At);
-        discard Identify(Id + '/copy', At);
-      when E.Element.JsonView(
-        const Id: string,
-        const Json: string,
-        const Settings: JsonViews.Options
-      ):
-        const At: string := Identify(Id, Location + '/jsonView');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        InstrumentRules.Json(Json, Settings, At);
-      when E.Element.Readout(
-        const Id: string,
-        const Label: string,
-        const Value: string,
-        const Settings: Readouts.Options
-      ):
-        const At: string := Identify(Id, Location + '/readout');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        InstrumentRules.Readout(Label, Value, Settings, At);
-      when E.Element.DotDisplay(
-        const Id: string,
-        const Caption: string,
-        const Settings: DotDisplays.Options
-      ):
-        const At: string := Identify(Id, Location + '/dotDisplay');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        InstrumentRules.Display(Caption, Settings, At);
-      when E.Element.DotChart(
-        const Id: string, const Bands: array of DotCharts.Series, const Count: int,
-        _, const Settings: DotCharts.Options
-      ):
-        const At: string := Identify(Id, Location + '/dotChart');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        InstrumentRules.Chart(Bands, Count, Settings, At);
-      when E.Element.EventTrack(
-        const Id: string,
-        const Current: EventTracks.Value,
-        _,
-        const Settings: EventTracks.Options
-      ):
-        const At: string := Identify(Id, Location + '/eventTrack');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        InstrumentRules.Events(Current, Settings, At);
-      when E.Element.ChatMessage(
-        _,
-        _,
-        _
-      ), E.Element.ChatDivider(_, _), E.Element.TypingIndicator(_, _), E.Element.Comment(
-        _,
-        _,
-        _,
-        _,
-        _,
-        _
-      ), E.Element.Presence(
-        _,
-        _,
-        _
-      ), E.Element.Counter(
-        _,
-        _,
-        _
-      ), E.Element.Ticker(
-        _,
-        _,
-        _
-      ), E.Element.StatusSpinner(
-        _,
-        _,
-        _
-      ), E.Element.SkeletonGroup(_, _, _), E.Element.Sparkline(_, _, _):
-        CheckConversationAndFeedback(Node, Location);
-      when E.Element.Carousel(
-        _,
-        _,
-        _,
-        _,
-        _
-      ), E.Element.CardStack(_, _, _, _), E.Element.ImageViewer(
-        _,
-        _,
-        _,
-        _,
-        _
-      ), E.Element.ImageCropper(_, _, _, _, _), E.Element.ImageCompare(
-        _,
-        _,
-        _,
-        _,
-        _,
-        _
-      ):
-        CheckMedia(Node, Location);
       when E.Element.Problems(_, _, _, _), E.Element.Pipeline(
         _,
         _,
@@ -2177,7 +1116,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _,
         _
       ), E.Element.RequestBar(_, _, _, _, _), E.Element.FeatureFlags(_, _, _, _, _):
-        Developer.Check<TMsg>(Node, Location, Profile, Identify);
+        Developer.Check<TMsg>(Node, Location, Mode, Identify);
       when E.Element.FormatBar(
         _,
         _,
@@ -2207,7 +1146,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _,
         _
       ), E.Element.Toolbar(_, _, _, _), E.Element.NodeEditor(_, _, _, _, _, _):
-        Canvas.Check<TMsg>(Node, Location, Profile, Identify, Visit);
+        Canvas.Check<TMsg>(Node, Location, Mode, Identify, Visit);
       when E.Element.MenuBar(_, _, _), E.Element.StatusBar(_, _, _), E.Element.DocumentTabs(
         _,
         _,
@@ -2222,7 +1161,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _,
         _
       ):
-        Chrome.Check<TMsg>(Node, Location, Profile, Identify, Visit);
+        Chrome.Check<TMsg>(Node, Location, Mode, Identify, Visit);
       when E.Element.Markdown(_, _, _, _), E.Element.CodeEditor(_, _, _, _), E.Element.DiffView(
         _,
         _,
@@ -2237,7 +1176,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _,
         _
       ), E.Element.LogConsole(_, _, _, _), E.Element.Terminal(_, _, _, _, _):
-        SourceTools.Check<TMsg>(Node, Location, Profile, Identify);
+        SourceTools.Check<TMsg>(Node, Location, Mode, Identify);
       when E.Element.PropertyInspector(_, _, _, _), E.Element.FlameGraph(
         _,
         _,
@@ -2251,7 +1190,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _,
         _
       ), E.Element.GradientEditor(_, _, _, _, _), E.Element.TimelineEditor(_, _, _, _, _):
-        EditingTools.Check<TMsg>(Node, Location, Profile, Identify);
+        EditingTools.Check<TMsg>(Node, Location, Mode, Identify);
       when E.Element.NativeText(_, _), E.Element.Icon(
         _,
         _,
@@ -2271,7 +1210,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _,
         _
       ):
-        Display.Check<TMsg>(Node, Location, Profile, Identify, Visit);
+        Display.Check<TMsg>(Node, Location, Mode, Identify, Visit);
       when E.Element.VoiceWave(
         _,
         _,
@@ -2320,99 +1259,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _,
         _
       ):
-        VoiceAndAi.Check<TMsg>(Node, Location, Profile, Identify, VisitReasoning);
-      when E.Element.PathBar(_, _, _, _), E.Element.FileBrowser(_, _, _, _), E.Element.FilePicker(
-        _,
-        _,
-        _,
-        _,
-        _
-      ), E.Element.WeekCalendar(
-        _,
-        _,
-        _,
-        _
-      ), E.Element.MonthCalendar(
-        _,
-        _,
-        _,
-        _
-      ), E.Element.Gantt(_, _, _, _), E.Element.Kanban(_, _, _, _):
-        CheckPlanning(Node, Location);
-      when E.Element.StatusTag(
-        _,
-        _,
-        _,
-        _
-      ), E.Element.RatioSlider(
-        _,
-        _,
-        _,
-        _
-      ), E.Element.GradientSlider(
-        _,
-        _,
-        _,
-        _
-      ), E.Element.StepSlider(
-        _,
-        _,
-        _,
-        _
-      ), E.Element.PaletteStrip(
-        _,
-        _,
-        _,
-        _
-      ), E.Element.AspectPicker(
-        _,
-        _,
-        _,
-        _
-      ), E.Element.OptionAction(_, _, _, _), E.Element.SeedField(_, _, _, _):
-        CheckCreative(Node, Location);
-      when E.Element.ShimmerText(_, _, _), E.Element.Typewriter(
-        _,
-        _,
-        _,
-        _,
-        _
-      ), E.Element.TextReveal(
-        _,
-        _,
-        _,
-        _
-      ), E.Element.WordRotate(
-        _,
-        _,
-        _,
-        _
-      ), E.Element.NumberRoll(
-        _,
-        _,
-        _
-      ), E.Element.GradientText(
-        _,
-        _,
-        _
-      ), E.Element.Spotlight(
-        _,
-        _,
-        _
-      ), E.Element.Loader(_, _, _), E.Element.Dock(_, _, _), E.Element.ControlTile(
-        _,
-        _,
-        _,
-        _,
-        _
-      ), E.Element.NowPlaying(_, _, _, _), E.Element.Waveform(
-        _,
-        _,
-        _,
-        _,
-        _
-      ), E.Element.TabBar(_, _, _, _, _):
-        CheckMotion(Node, Location);
+        VoiceAndAi.Check<TMsg>(Node, Location, Mode, Identify, VisitReasoning);
       when E.Element.CommandPalette(
         const Id: string,
         const Base: E.Element<TMsg>,
@@ -2438,7 +1285,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         Visit(Base, At);
       when E.Element.Grid(const Settings: Grids.Options, const Children: array of E.Element<TMsg>):
         const At: string := Location + '/grid';
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         SurfaceRules.Grid(Settings, At);
         for Index: int := 0 to Children.Length - 1 do
           Visit(Children[Index], At + '[' + Index.ToString() + ']');
@@ -2447,180 +1294,15 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Id: string, const Children: array of E.Element<TMsg>, const Settings: Cards.Options, _
       ):
         const At: string := Identify(Id, Location + '/card');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         SurfaceRules.Card(Settings, At);
         for Index: int := 0 to Children.Length - 1 do
           Visit(Children[Index], At + '[' + Index.ToString() + ']');
         end for;
       when E.Element.Badge(const Id: string, const Caption: string, const Settings: Badges.Options):
         const At: string := Identify(Id, Location + '/badge');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         SurfaceRules.Badge(Caption, Settings, At);
-      when E.Element.Sankey(
-        const Id: string,
-        const Nodes: array of Sankeys.Node,
-        const Links: array of Sankeys.Link,
-        const Settings: Sankeys.Options,
-        _
-      ):
-        const At: string := Identify(Id, Location + '/Sankey');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        MoreRules.Sankey(Nodes, Links, Settings, At);
-      when E.Element.BarList(
-        const Id: string,
-        const Items: array of Charts.Item,
-        const Settings: BarLists.Options,
-        _
-      ):
-        const At: string := Identify(Id, Location + '/BarList');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        MoreRules.BarList(Items, Settings, At);
-      when E.Element.ActivityRings(
-        const Id: string,
-        const Items: array of Charts.Item,
-        const Settings: ActivityRings.Options,
-        _
-      ):
-        const At: string := Identify(Id, Location + '/ActivityRings');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        MoreRules.ActivityRings(Items, Settings, At);
-      when E.Element.ScatterChart(
-        const Id: string,
-        const Series: array of ScatterCharts.Series,
-        const Settings: ScatterCharts.Options,
-        _
-      ):
-        const At: string := Identify(Id, Location + '/ScatterChart');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        MoreRules.Scatter(Series, Settings, At);
-      when E.Element.RadialGauge(
-        const Id: string,
-        const Value: float,
-        const Minimum: float,
-        const Maximum: float,
-        const Settings: RadialGauges.Options
-      ):
-        const At: string := Identify(Id, Location + '/RadialGauge');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        MoreRules.Radial(Value, Minimum, Maximum, Settings, At);
-      when E.Element.Candlestick(
-        const Id: string,
-        const Candles: array of Candlesticks.Candle,
-        const Settings: Candlesticks.Options,
-        _
-      ):
-        const At: string := Identify(Id, Location + '/Candlestick');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        MoreRules.Candles(Candles, Settings, At);
-      when E.Element.Heatmap(
-        const Id: string,
-        const Values: array of float,
-        const Rows: int,
-        const Columns: int,
-        const Settings: Heatmaps.Options,
-        _
-      ):
-        const At: string := Identify(Id, Location + '/Heatmap');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        VizRules.Heatmap(Values, Rows, Columns, Settings, At);
-      when E.Element.CalendarHeatmap(
-        const Id: string,
-        const Start: Sys.DateOnly,
-        const Values: array of float,
-        const Settings: CalendarHeatmaps.Options,
-        _
-      ):
-        const At: string := Identify(Id, Location + '/CalendarHeatmap');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        VizRules.CalendarHeatmap(Start, Values, Settings, At);
-      when E.Element.Treemap(
-        const Id: string,
-        const Items: array of Charts.Item,
-        const Selected: int,
-        const OnSelect: Sys.Func<int, TMsg>?,
-        const Settings: Treemaps.Options
-      ):
-        const At: string := Identify(Id, Location + '/Treemap');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        VizRules.Treemap(Items, Selected, OnSelect <> null, Settings, At);
-      when E.Element.RadarChart(
-        const Id: string,
-        const Series: array of Charts.Series,
-        const Axes: array of string,
-        const Settings: RadarCharts.Options,
-        _
-      ):
-        const At: string := Identify(Id, Location + '/RadarChart');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        VizRules.Radar(Series, Axes, Settings, At);
-      when E.Element.Funnel(
-        const Id: string,
-        const Items: array of Charts.Item,
-        const Settings: Funnels.Options,
-        _
-      ):
-        const At: string := Identify(Id, Location + '/Funnel');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        VizRules.Items(Items, At);
-        VizRules.Funnel(Settings, At);
-      when E.Element.SplitBar(
-        const Id: string,
-        const Items: array of Charts.Item,
-        const Settings: SplitBars.Options,
-        _
-      ):
-        const At: string := Identify(Id, Location + '/SplitBar');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        VizRules.Items(Items, At);
-        VizRules.SplitBar(Settings, At);
-      when E.Element.Waffle(
-        const Id: string,
-        const Items: array of Charts.Item,
-        const Settings: Waffles.Options,
-        _
-      ):
-        const At: string := Identify(Id, Location + '/Waffle');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        VizRules.Items(Items, At);
-        VizRules.Waffle(Settings, At);
-      when E.Element.LineChart(
-        const Id: string,
-        const Series: array of Charts.Series,
-        const Settings: Charts.Options
-      ), E.Element.BarChart(
-        const Id: string,
-        const Series: array of Charts.Series,
-        const Settings: Charts.Options
-      ):
-        const At: string := Identify(Id, Location + '/chart');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        ChartRules.Chart(Series, Settings, At);
-      when E.Element.DonutChart(
-        const Id: string,
-        const Values: array of float,
-        const Labels: array of string,
-        const Settings: Donuts.Options
-      ):
-        const At: string := Identify(Id, Location + '/donut');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        ChartRules.Donut(Values, Labels, Settings, At);
-      when E.Element.Gauge(
-        const Id: string,
-        const Label: string,
-        const Current: float,
-        const Size: float
-      ):
-        const At: string := Identify(Id, Location + '/gauge');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        ChartRules.Gauge(Label, Current, Size, At);
-      when E.Element.PatternMeter(
-        const Id: string,
-        const Parts: array of Patterns.Part,
-        const Settings: Patterns.Options
-      ):
-        const At: string := Identify(Id, Location + '/patternMeter');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
-        ChartRules.Pattern(Parts, Settings, At);
       when E.Element.Metric(
         const Id: string,
         const Label: string,
@@ -2628,7 +1310,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: Metrics.Options
       ):
         const At: string := Identify(Id, Location + '/metric');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         SurfaceRules.Metric(Label, Reading, Settings, At);
       when E.Element.AvatarGroup(
         const Id: string,
@@ -2636,7 +1318,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Settings: AvatarGroups.Options
       ):
         const At: string := Identify(Id, Location + '/avatarGroup');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         SurfaceRules.AvatarGroup(Names, Settings, At);
       when E.Element.EmptyState(
         const Id: string,
@@ -2645,7 +1327,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Action: Sys.Func<TMsg>?
       ):
         const At: string := Identify(Id, Location + '/emptyState');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         SurfaceRules.EmptyState(Title, Settings, Action <> null, At);
         if Action <> null then
           discard Identify(EmptyStates.ActionId(Id), At + '/action');
@@ -2655,7 +1337,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Current: int, _, const Settings: Tours.Options
       ):
         const At: string := Identify(Id, Location + '/tour');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         if Steps.Length = 0 or Current < -1 or Current >= Steps.Length then
           Rules.Reject(
             At,
@@ -2691,25 +1373,12 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           end procedure
         );
       when E.Element.Spacer:
-        Rules.RequireProfile(Profile, Target.Graphical, Location + '/spacer');
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location + '/spacer');
       when E.Element.Gap(const Distance: L.Measure):
-        Rules.RequireProfile(Profile, Target.Graphical, Location + '/gap');
-        discard Rules.CheckMeasure(Distance, Profile, Location + '/gap');
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location + '/gap');
+        discard LayoutRules.CheckMeasure(Distance, Mode, Location + '/gap');
       when E.Element.Layered(const Children: array of E.Element<TMsg>, const Flow: L.Flow):
-        Rules.RequireProfile(Profile, Target.Graphical, Location + '/layers');
-        Rules.CheckContainer(Flow, Profile, Location + '/layers');
-        Rules.CheckSpacing(Flow.Gap, Profile, Location + '/layers');
-        Rules.CheckSpacing(Flow.Padding, Profile, Location + '/layers');
-        if Flow.Wrap or not Sys.Enum.IsDefined<L.Alignment>(
-          Flow.Align
-        ) or not Sys.Enum.IsDefined<L.Justification>(Flow.Justify)
-        then
-          Rules.Reject(
-            Location,
-            'Layered stacks require valid alignment and justification without wrapping.'
-          );
-        end if;
-
+        ContainerRules.CheckLayered(Flow, Mode, Location);
         for Index: int := 0 to Children.Length - 1 do
           Visit(Children[Index], Location + '/layers[' + Index.ToString() + ']');
         end for;
@@ -2723,37 +1392,12 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         else
           '/column'
         end if);
-        Rules.CheckContainer(Flow, Profile, At);
-        if Flow.Clip <> null then
-          Rules.RequireProfile(Profile, Target.Graphical, Location + '/clip');
-        end if;
-
-        if Flow.Wrap then
-          Rules.RequireProfile(Profile, Target.Graphical, At);
-          if not Horizontal then
-            Rules.Reject(At, 'Wrapping requires a row.');
-          end if;
-        end if;
-
-        if not Sys.Enum.IsDefined<L.Alignment>(Flow.Align) then
-          Rules.Reject(At, 'Unknown cross-axis alignment.');
-        end if;
-
-        if not Sys.Enum.IsDefined<L.Justification>(Flow.Justify) then
-          Rules.Reject(At, 'Unknown main-axis justification.');
-        end if;
-
-        if Flow.Justify <> L.Justification.Start then
-          Rules.RequireProfile(Profile, Target.Graphical, At + '/justify');
-        end if;
-
-        Rules.CheckSpacing(Flow.Gap, Profile, At + '/gap');
-        Rules.CheckSpacing(Flow.Padding, Profile, At + '/padding');
+        ContainerRules.CheckStack(Flow, Horizontal, Mode, Location, At);
         for Index: int := 0 to Children.Length - 1 do
           Visit(Children[Index], At + '[' + Index.ToString() + ']');
         end for;
       when E.Element.Sized(const Child: E.Element<TMsg>, const Flex: L.Flex):
-        Rules.CheckFlex(Flex, Profile, Location + '/size');
+        LayoutRules.CheckFlex(Flex, Mode, Location + '/size');
         Visit(Child, Location + '/size');
       when E.Element.Styled(const Child: E.Element<TMsg>, const Role: S.Role):
         if not Sys.Enum.IsDefined<S.Role>(Role) then
@@ -2768,7 +1412,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           or Role = S.Role.CompactMutedIcon
           or Role = S.Role.InverseSurface or Role = S.Role.PillSurface or Role = S.Role.InverseLabel
         then
-          Rules.RequireProfile(Profile, Target.Graphical, Location + '/style');
+          Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location + '/style');
         end if;
 
         Visit(Child, Location + '/style');
@@ -2779,7 +1423,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Id: string, const ScrollId: string, const Items: array of Toc.Item, _, _
       ):
         const At: string := Identify(Id, Location + '/tableOfContents');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         Rules.CheckText(ScrollId, At + '/scrollId');
         if Items.Length < 1 or Items.Length > 64 then
           Rules.Reject(At, 'A table of contents needs one to 64 entries.');
@@ -2805,7 +1449,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end for;
       when E.Element.ScrollAnchor(const Id: string):
         const At: string := Identify(Id, Location + '/scrollAnchor');
-        Rules.RequireProfile(Profile, Target.Graphical, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         case ScrollOwner of
           when is string as Owner:
             AnchorPlacements.Add(Id, new AnchorPlacement(Owner, AnchorPlacements.Count));
@@ -2823,7 +1467,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
       ):
         const At: string := Identify(Id, Location + '/scroll');
         if FadeEdges or Horizontal then
-          Rules.RequireProfile(Profile, Target.Graphical, At);
+          Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         end if;
 
         if Position = null then
@@ -2837,7 +1481,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         if Position <> null then
           case Position of
             when L.ScrollPosition.Offset(const Offset: L.Measure):
-              discard Rules.CheckMeasure(Offset, Profile, At + '/offset');
+              discard LayoutRules.CheckMeasure(Offset, Mode, At + '/offset');
             else
           end case;
         end if;
@@ -2893,25 +1537,25 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         Subviews.Add(Id, Current);
         Visit(Current.Tree, At);
       when E.Element.TerminalCellGrid(const Id: string, _, _):
-        Rules.RequireProfile(Profile, Target.Terminal, Identify(Id, Location + '/cellGrid'));
+        Rules.RequireProfile(Mode, Rules.Profile.Terminal, Identify(Id, Location + '/cellGrid'));
       when E.Element.TerminalSelectionList(
         const Id: string, const Items: array of SelectionLists.Item, const Selected: string, _, _
       ):
         const At: string := Identify(Id, Location + '/selectionList');
-        Rules.RequireProfile(Profile, Target.Terminal, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Terminal, At);
         CollectionRules.SelectionList(Items, Selected, At);
       when E.Element.TerminalStyle(const Child: E.Element<TMsg>, const Colors: T.Style):
         const At: string := Location + '/cellStyle';
-        Rules.RequireProfile(Profile, Target.Terminal, At);
-        Rules.CheckColor(Colors.Foreground, At);
-        Rules.CheckColor(Colors.Background, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Terminal, At);
+        CheckTerminalColor(Colors.Foreground, At);
+        CheckTerminalColor(Colors.Background, At);
         Visit(Child, At);
       when E.Element.TerminalScreen(
         const Content: E.Element<TMsg>,
         const Layers: array of E.Element<TMsg>,
         const Shortcuts: array of K.ShortcutBinding<TMsg>
       ):
-        Rules.RequireProfile(Profile, Target.Terminal, Location + '/screen');
+        Rules.RequireProfile(Mode, Rules.Profile.Terminal, Location + '/screen');
         CheckShortcuts(Shortcuts, Location);
         Visit(Content, Location + '/content');
         for Layer: E.Element<TMsg> in Layers do
@@ -2922,7 +1566,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Build: function(T.Viewport): E.Element<TMsg>
       ):
         const At: string := Identify(Id, Location + '/terminalViewport');
-        Rules.RequireProfile(Profile, Target.Terminal, At);
+        Rules.RequireProfile(Mode, Rules.Profile.Terminal, At);
         const Size: T.Viewport? := TerminalSize;
         if Size = null then
           Rules.Reject(At, 'Terminal viewport context is required.');
@@ -2935,6 +1579,18 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Content: E.Element<TMsg> := Build(Size);
         Subviews.Add(Id, new E.CacheEntry<TMsg>(Size, Content));
         Visit(Content, At);
+      else
+        if MediaValidation.Check<TMsg>(Node, Location, Mode, Identify, Visit)
+          or ConversationValidation.Check<TMsg>(Node, Location, Mode, Identify, Visit)
+          or PlanningValidation.Check<TMsg>(Node, Location, Mode, Identify, Visit, VisitScoped)
+          or CreativeValidation.Check<TMsg>(Node, Location, Mode, Identify)
+          or MotionValidation.Check<TMsg>(Node, Location, Mode, Identify, Visit)
+          or ChartValidation.Check<TMsg>(Node, Location, Mode, Identify)
+          or PickerValidation.Check<TMsg>(Node, Location, Mode, Identify)
+          or FeedbackAndAudio.Check<TMsg>(Node, Location, Mode, Identify)
+        then
+          return;
+        end if;
     end case;
   end procedure;
 
@@ -2961,7 +1617,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           end procedure
         );
       when Tables.Cell.Content(const Nodes: array of E.Element<TMsg>):
-        Rules.RequireProfile(Profile, Target.Graphical, Location);
+        Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location);
         for Child: E.Element<TMsg> in Nodes do
           Visit(Child, Location);
         end for;
@@ -3165,6 +1821,11 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
     end for;
   end procedure;
 begin
+  const Mode: Rules.Profile := case Profile of
+    when Target.Portable: Rules.Profile.Portable;
+    when Target.Terminal: Rules.Profile.Terminal;
+    else Rules.Profile.Graphical;
+  end case;
   const Ids: Generic.HashSet<string> := new Generic.HashSet<string>();
   const Visiting: Generic.HashSet<Sys.Object> := new Generic.HashSet<Sys.Object>(
     Generic.ReferenceEqualityComparer.Instance

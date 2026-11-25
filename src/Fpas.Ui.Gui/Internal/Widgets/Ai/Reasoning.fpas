@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Ai.Reasoning;
 
-uses Fpas.Ui.Widgets.Ai.Reasonings as Reasonings, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Ai.Reasonings as Reasonings, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L;
 
 // Presents CUI's native Reasoning.
 // ## Type parameters
@@ -27,7 +27,7 @@ begin
   ) or C.WantsFocus<TMsg>(Frame, Id, Header, Enabled);
   const Status: int := Frame.Window.BeginReasoning(
     Token, Settings.Thinking, Settings.Seconds, Settings.Title,
-    P.Bits(Enabled, 1) or P.Bits(Focus, 2), if Frame.PaintingClosed then
+    Enc.Bits(Enabled, 1) or Enc.Bits(Focus, 2), if Frame.PaintingClosed then
       null
     else
       Header

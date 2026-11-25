@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Media.ImageViewer;
 
-uses Fpas.Ui.Widgets.Media.ImageViewers as ImageViewers, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Widgets.Media.MediaImages as Media, Fpas.Ui.Gui.Internal.Data.MediaData as Data, Fpas.Ui.Gui.Cui.Widgets.Media as CuiMedia;
+uses Fpas.Ui.Widgets.Media.ImageViewers as ImageViewers, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Widgets.Media.MediaImages as Media, Fpas.Ui.Gui.Internal.Data.MediaData as Data, Fpas.Ui.Gui.Cui.Widgets.Media as CuiMedia;
 
 // Presents CUI's native ImageViewer widget.
 // ## Type parameters
@@ -28,9 +28,16 @@ begin
     ViewValue.CenterY
   );
   const Proposed: bool := Frame.Window.ImageViewer(
-    Token, Data.Convert(Image), ref Next, Width.Kind, Width.Value,
-    Height.Kind, Height.Value, Settings.MaximumZoom,
-    P.Bits(Enabled, 1) or P.Bits(Settings.HideToolbar, 2) or P.Bits(Settings.Checkerboard, 4), Focus
+    Token,
+    Data.Convert(Image),
+    ref Next,
+    Width.Kind,
+    Width.Value,
+    Height.Kind,
+    Height.Value,
+    Settings.MaximumZoom,
+    Enc.Bits(Enabled, 1) or Enc.Bits(Settings.HideToolbar, 2) or Enc.Bits(Settings.Checkerboard, 4),
+    Focus
   );
   P.Root<TMsg>(Frame, Id, Role, '', Enabled, ViewValue.Zoom.ToString());
   if Enabled and Proposed then

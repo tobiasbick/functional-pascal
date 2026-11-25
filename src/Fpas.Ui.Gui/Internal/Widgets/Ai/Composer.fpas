@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Gui.Internal.Widgets.Ai.Composer;
 
-uses Fpas.Ui.Widgets.Ai.Composers as Composers, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Cui.Widgets.Ai as CuiAi, Fpas.Ui.Gui.Internal.Data.AiData as Data, Fpas.Ui.Gui.Internal.Layout.Sizing as S;
+uses Fpas.Ui.Widgets.Ai.Composers as Composers, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Gui.Cui.Widgets.Ai as CuiAi, Fpas.Ui.Gui.Internal.Data.AiData as Data, Fpas.Ui.Gui.Internal.Layout.Sizing as S;
 
 // Presents CUI's native Composer.
 // ## Type parameters
@@ -50,10 +50,10 @@ begin
     else
       Take.Levels
     end if, Layout,
-    P.Bits(Enabled, 1) or P.Bits(
+    Enc.Bits(Enabled, 1) or Enc.Bits(
       Content.Busy,
       2
-    ) or P.Bits(Settings.Microphone, 4) or P.Bits(Take <> null, 8),
+    ) or Enc.Bits(Settings.Microphone, 4) or Enc.Bits(Take <> null, 8),
     Focus, P.Tracker<TMsg>(Frame, Id, Role, Keys)
   );
   P.Root<TMsg>(Frame, Id, Role, '', false, Content.Draft);

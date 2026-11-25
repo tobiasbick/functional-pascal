@@ -5,7 +5,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Pickers.ColorPicker;
 uses
   Fpas.Ui.Widgets.Pickers.ColorPickers as P, Fpas.Ui.Graphics as G, Fpas.Ui.Gui.Application as App,
   Fpas.Ui.Gui.Cui.Widgets.Pickers as CuiPickers,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Context as C, System as Sys;
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Core.Context as C, System as Sys;
 
 function Pack(Value: G.Color): uint;
 begin

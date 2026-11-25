@@ -11,47 +11,104 @@ uses
 // Mailbox shared by the owner-thread controller and its lifetime subscriptions.
 public type Connection = record
   // Caller-owned playback device session.
-  public Device: Audio.ISession;
+  Device: Audio.ISession;
   // FIFO carrying the commands returned by the player reducer.
-  public Requests: Channels.Channel<M.Request> := Channels.Channel.CreateUnbounded<M.Request>();
+  Requests: Channels.Channel<M.Request>;
   // Private episode files for this shell, created on the first podcast play action.
-  public Cache: Sys.Lazy<IO.DirectoryInfo> := new Sys.Lazy<IO.DirectoryInfo>(Downloads.Workspace);
-end record;
+  public Cache: Sys.Lazy<IO.DirectoryInfo>;
 
-// Silences `Port` immediately and freezes `Current` at the last matching rendered frame.
-// ## Returns
-// A paused bookmark, retaining a pending seek or track change when the decoder is behind.
-public function Stop(Current: M.State; Port: Connection): M.State;
-begin
-  const Final: Audio.PlaybackEvent? := Port.Device.StopPlayback();
-  const Track: Tracks.Entry? := M.Track(Current);
-  const Paused: M.State := Current with
-    Playing := false;
-    Levels := [0.0F, 0.0F];
-  end with;
-  if Final is Audio.PlaybackEvent and Track <> null and Final.Path = M.AudioPath(Current, Track)
-    and Final.RequestId = Current.Revision
-  then
-    return Paused with
-      Position := Final.Position.TotalMilliseconds;
-      Duration := Final.Duration.TotalMilliseconds;
+  // Creates a playback connection around `Device`.
+  public static function Create(Device: Audio.ISession): Connection;
+  requires Device <> null;
+  begin
+    return new Connection(
+      Device,
+      Channels.Channel.CreateUnbounded<M.Request>(),
+      new Sys.Lazy<IO.DirectoryInfo>(Downloads.Workspace)
+    );
+  end function;
+
+  // Enqueues one transport request for ordered execution on the playback worker.
+  public procedure Send(Item: M.Request);
+  begin
+    discard self.Requests.Writer.TryWrite(Item);
+  end procedure;
+
+  // Silences the playback device immediately and freezes `Current` at the last matching rendered frame.
+  // ## Returns
+  // A paused bookmark, retaining a pending seek or track change when the decoder is behind.
+  public function Stop(Current: M.State): M.State;
+  begin
+    const Final: Audio.PlaybackEvent? := self.Device.StopPlayback();
+    const Track: Tracks.Entry? := M.Track(Current);
+    const Paused: M.State := Current with
+      Playing := false;
+      Levels := [0.0F, 0.0F];
     end with;
-  end if;
+    if Final is Audio.PlaybackEvent and Track <> null and Final.Path = M.AudioPath(Current, Track)
+      and Final.RequestId = Current.Revision
+    then
+      return Paused with
+        Position := Final.Position.TotalMilliseconds;
+        Duration := Final.Duration.TotalMilliseconds;
+      end with;
+    end if;
 
-  return Paused;
-end function;
+    return Paused;
+  end function;
 
-// Removes Port's temporary episode files after the audio device has been closed.
-public procedure Clean(Port: Connection);
-begin
-  if Port.Cache.IsValueCreated then
-    try
-      Port.Cache.Value.Delete(true);
-    catch Error: IO.IOException do
-    catch Error: Sys.UnauthorizedAccessException do
-    end try;
-  end if;
-end procedure;
+  // Removes temporary episode files after the audio device has been closed.
+  public procedure Clean();
+  begin
+    if self.Cache.IsValueCreated then
+      try
+        self.Cache.Value.Delete(true);
+      catch Error: IO.IOException do
+      catch Error: Sys.UnauthorizedAccessException do
+      end try;
+    end if;
+  end procedure;
+
+  // Starts ordered command execution and forwards session events to the GUI mailbox.
+  // ## Returns
+  // The two cancellable subscriptions for this shell.
+  public function Watch(): array of A.Command<M.Msg>;
+  begin
+    const Device: Audio.ISession := self.Device;
+    const Reader: Channels.ChannelReader<M.Request> := self.Requests.Reader;
+    return [
+      A.StartBackground<M.Msg>(
+        'audio-commands',
+        A.FromWorker<M.Msg>(
+          async function(_Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+            while await Reader.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
+              Cancellation.ThrowIfCancellationRequested();
+              const Item: M.Request := await Reader.ReadAsync(
+                Cancellation
+              ).ConfigureAwait(false);
+              Execute(Device, Item);
+            end while;
+          end function,
+          function(Error: Sys.Exception): M.Msg => M.Msg.Unavailable(Error.Message)
+        )
+      ),
+      A.StartBackground<M.Msg>(
+        'audio-events',
+        A.FromWorker<M.Msg>(
+          async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+            while await Device.Events.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
+              const Value: Audio.PlaybackEvent := await Device.Events.ReadAsync(
+                Cancellation
+              ).ConfigureAwait(false);
+              await Post(M.Msg.Observed(Value)).ConfigureAwait(false);
+            end while;
+          end function,
+          function(Error: Sys.Exception): M.Msg => M.Msg.Unavailable(Error.Message)
+        )
+      )
+    ];
+  end function;
+end record;
 
 procedure Execute(Device: Audio.ISession; Item: M.Request);
 begin
@@ -84,46 +141,5 @@ begin
       Device.Apply(Value);
   end case;
 end procedure;
-
-// Starts ordered command execution and forwards session events to the GUI mailbox.
-// ## Parameters
-// - `Port`: Connection whose device outlives both workers.
-// ## Returns
-// The two cancellable subscriptions for this shell.
-public function Watch(Port: Connection): array of A.Command<M.Msg>;
-requires Port.Device <> null;
-begin
-  return [
-    A.StartBackground<M.Msg>(
-      'audio-commands',
-      A.FromWorker<M.Msg>(
-        async function(_Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-          while await Port.Requests.Reader.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
-            Cancellation.ThrowIfCancellationRequested();
-            const Item: M.Request := await Port.Requests.Reader.ReadAsync(
-              Cancellation
-            ).ConfigureAwait(false);
-            Execute(Port.Device, Item);
-          end while;
-        end function,
-        function(Error: Sys.Exception): M.Msg => M.Msg.Unavailable(Error.Message)
-      )
-    ),
-    A.StartBackground<M.Msg>(
-      'audio-events',
-      A.FromWorker<M.Msg>(
-        async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-          while await Port.Device.Events.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
-            const Value: Audio.PlaybackEvent := await Port.Device.Events.ReadAsync(
-              Cancellation
-            ).ConfigureAwait(false);
-            await Post(M.Msg.Observed(Value)).ConfigureAwait(false);
-          end while;
-        end function,
-        function(Error: Sys.Exception): M.Msg => M.Msg.Unavailable(Error.Message)
-      )
-    )
-  ];
-end function;
 
 end unit;

@@ -1,0 +1,327 @@
+// [Documentation](../../../../../docs/ui/widgets.md#motion-and-compact-controls)
+
+unit Fpas.Ui.Internal.Validation.Controls.MotionValidation;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Core.Checks as R,
+  Fpas.Ui.Internal.Validation.Core.LayoutRules as LR,
+  Fpas.Ui.Internal.Validation.Core.ChartChecks as Chart,
+  Fpas.Ui.Widgets.Motion.Motion as M, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Layout as L,
+  Fpas.Ui.Widgets.Motion.GradientTexts as Grad, Fpas.Ui.Widgets.Motion.Spotlights as Spot,
+  Fpas.Ui.Widgets.Feedback.Loaders as Load, Fpas.Ui.Widgets.Navigation.Docks as D,
+  Fpas.Ui.Widgets.Audio.ControlTiles as Tiles, Fpas.Ui.Widgets.Audio.NowPlaying as P,
+  Fpas.Ui.Widgets.Audio.Waveforms as W, Fpas.Ui.Widgets.Navigation.TabBars as T, System as Sys;
+
+procedure Extent(Value: L.Extent; At: string);
+begin
+  LR.CheckExtent(Value, R.Profile.Graphical, At);
+end procedure;
+
+procedure Fraction(Value: float; At: string);
+begin
+  if not Sys.Single.IsFinite(Value) or Value < 0.0F or Value > 1.0F then
+    R.Reject(At, 'Waveform values must be finite fractions.');
+  end if;
+end procedure;
+
+procedure TextEffect(Text: string; Settings: M.TextOptions; At: string);
+begin
+  R.CheckText(Text, At);
+  Extent(Settings.Width, At);
+  Chart.Color(Settings.Color, At);
+  Chart.Distance(Settings.Size, At);
+  Chart.Distance(Settings.Speed, At);
+  Chart.Distance(Settings.Delay, At);
+  if not Sys.Enum.IsDefined<M.Font>(Settings.Font) then
+    R.Reject(At, 'Unknown native motion font.');
+  end if;
+end procedure;
+
+procedure Words(Words: array of string; Interval: float; Settings: M.TextOptions; At: string);
+begin
+  TextEffect('', Settings, At);
+  Chart.Distance(Interval, At);
+  for Word: string in Words do
+    R.CheckText(Word, At);
+  end for;
+end procedure;
+
+procedure Gradient(Text: string; Settings: Grad.Options; At: string);
+begin
+  TextEffect(
+    Text, new M.TextOptions(
+      Font := Settings.Font, Size := Settings.Size, Width := Settings.Width,
+      Color := Settings.From
+    ), At
+  );
+  Chart.Color(Settings.To, At);
+end procedure;
+
+procedure Spotlight(Settings: Spot.Options; At: string);
+begin
+  Extent(Settings.Width, At);
+  Extent(Settings.Height, At);
+  Chart.Distance(Settings.Padding, At);
+  Chart.Distance(Settings.Gap, At);
+  Chart.Color(Settings.Color, At);
+end procedure;
+
+procedure Loader(Style: Load.Animation; Settings: Load.Options; At: string);
+begin
+  Chart.Distance(Settings.Size, At);
+  Chart.Color(Settings.Color, At);
+  if not Sys.Enum.IsDefined<Load.Animation>(Style) then
+    R.Reject(At, 'Unknown loader style.');
+  end if;
+end procedure;
+
+procedure Dock<TMsg>(Entries: array of D.Entry<TMsg>; Settings: D.Options; At: string);
+begin
+  Chart.Distance(Settings.Size, At);
+  Chart.Distance(Settings.Magnify, At);
+  for Entry: D.Entry<TMsg> in Entries do
+    case Entry of
+      when D.Entry.Item(
+        const Icon: string,
+        const Label: string,
+        _,
+        const Color: C.Color,
+        _,
+        const Badge: int
+      ):
+        R.CheckText(Icon, At);
+        R.CheckText(Label, At);
+        Chart.Color(Color, At);
+        if Icon = '' or Badge < 0 then
+          R.Reject(At, 'A dock item needs a glyph and nonnegative badge.');
+        end if;
+      else
+    end case;
+  end for;
+end procedure;
+
+procedure Tile(Label: string; Settings: Tiles.Options; At: string);
+begin
+  R.CheckText(Label, At);
+  R.CheckText(Settings.Icon, At);
+  R.CheckText(Settings.Detail, At);
+  Extent(Settings.Width, At);
+  Chart.Color(Settings.Color, At);
+end procedure;
+
+procedure Player(Current: P.Value; Settings: P.Options; At: string);
+begin
+  R.CheckText(Current.Title, At);
+  R.CheckText(Current.Artist, At);
+  R.CheckText(Current.Artwork, At);
+  Extent(Settings.Width, At);
+  Chart.Color(Current.ArtColor, At);
+  Chart.Distance(Current.Duration, At);
+  Chart.Distance(Current.Position, At);
+  if Current.Position > Current.Duration then
+    R.Reject(At, 'Playback position exceeds track duration.');
+  end if;
+end procedure;
+
+procedure Wave(Peaks: array of float; Progress: float?; Settings: W.Options; At: string);
+begin
+  Extent(Settings.Width, At);
+  Chart.Color(Settings.Color, At);
+  Chart.Distance(Settings.Height, At);
+  Chart.Distance(Settings.Bar, At);
+  Chart.Distance(Settings.Gap, At);
+  for Peak: float in Peaks do
+    Fraction(Peak, At);
+  end for;
+
+  case Progress of
+    when is float as Value:
+      Fraction(Value, At);
+    else
+  end case;
+end procedure;
+
+procedure Tabs(Items: array of T.Item; Selected: int; Settings: T.Options; At: string);
+begin
+  Extent(Settings.Width, At);
+  if Selected < 0 or Selected >= Items.Length then
+    R.Reject(At, 'The selected tab must name an item.');
+  end if;
+
+  for Item: T.Item in Items do
+    R.CheckText(Item.Icon, At);
+    R.CheckText(Item.Label, At);
+    if Item.Badge < 0 then
+      R.Reject(At, 'A tab badge must be nonnegative.');
+    end if;
+  end for;
+end procedure;
+
+// Validates motion and compact controls when matched.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Node`: Element to inspect.
+// - `Location`: Parent diagnostic path.
+// - `Current`: Target capabilities.
+// - `Identify`: Registers a widget ID.
+// - `Visit`: Validates composed children.
+// ## Returns
+// True when this dispatcher handled the element.
+public function Check<TMsg>(Node: E.Element<TMsg>; Location: string; Current: R.Profile; Identify: function(string, string): string; Visit: procedure(E.Element<TMsg>?, string)): bool;
+begin
+  case Node of
+    when E.Element.ShimmerText(
+      const Id: string,
+      const Caption: string,
+      const Settings: M.TextOptions
+    ):
+      const At: string := Identify(Id, Location + '/ShimmerText');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      TextEffect(Caption, Settings, At);
+      return true;
+    when E.Element.Typewriter(
+      const Id: string,
+      const Caption: string,
+      _,
+      const Settings: M.TextOptions,
+      _
+    ):
+      const At: string := Identify(Id, Location + '/Typewriter');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      TextEffect(Caption, Settings, At);
+      return true;
+    when E.Element.TextReveal(
+      const Id: string,
+      const Caption: string,
+      _,
+      const Settings: M.TextOptions
+    ):
+      const At: string := Identify(Id, Location + '/TextReveal');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      TextEffect(Caption, Settings, At);
+      return true;
+    when E.Element.WordRotate(
+      const Id: string,
+      const TextWords: array of string,
+      const Interval: float,
+      const Settings: M.TextOptions
+    ):
+      const At: string := Identify(Id, Location + '/WordRotate');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      Words(TextWords, Interval, Settings, At);
+      return true;
+    when E.Element.NumberRoll(
+      const Id: string,
+      const Caption: string,
+      const Settings: M.TextOptions
+    ):
+      const At: string := Identify(Id, Location + '/NumberRoll');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      TextEffect(Caption, Settings, At);
+      return true;
+    when E.Element.GradientText(
+      const Id: string,
+      const Caption: string,
+      const Settings: Grad.Options
+    ):
+      const At: string := Identify(Id, Location + '/GradientText');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      Gradient(Caption, Settings, At);
+      return true;
+    when E.Element.Spotlight(
+      const Id: string,
+      const Children: array of E.Element<TMsg>,
+      const Settings: Spot.Options
+    ):
+      const At: string := Identify(Id, Location + '/Spotlight');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      Spotlight(Settings, At);
+      for Child: E.Element<TMsg> in Children do
+        Visit(Child, At);
+      end for;
+
+      return true;
+    when E.Element.Loader(
+      const Id: string,
+      const Style: Load.Animation,
+      const Settings: Load.Options
+    ):
+      const At: string := Identify(Id, Location + '/Loader');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      Loader(Style, Settings, At);
+      return true;
+    when E.Element.Dock(
+      const Id: string,
+      const Entries: array of D.Entry<TMsg>,
+      const Settings: D.Options
+    ):
+      const At: string := Identify(Id, Location + '/Dock');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      Dock<TMsg>(Entries, Settings, At);
+      for Index: int := 0 to Entries.Length - 1 do
+        case Entries[Index] of
+          when D.Entry.Item(_, _, _, _, _, _):
+            discard Identify(Id + '/' + Index.ToString(), At + '/item');
+          else
+        end case;
+      end for;
+
+      return true;
+    when E.Element.ControlTile(
+      const Id: string,
+      const Label: string,
+      _,
+      _,
+      const Settings: Tiles.Options
+    ):
+      const At: string := Identify(Id, Location + '/ControlTile');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      Tile(Label, Settings, At);
+      return true;
+    when E.Element.NowPlaying(
+      const Id: string,
+      const Value: P.Value,
+      _,
+      const Settings: P.Options
+    ):
+      const At: string := Identify(Id, Location + '/NowPlaying');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      Player(Value, Settings, At);
+      for Part: string in ['toggle', 'previous', 'next', 'seek'] do
+        discard Identify(Id + '/' + Part, At + '/' + Part);
+      end for;
+
+      return true;
+    when E.Element.Waveform(
+      const Id: string,
+      const Peaks: array of float,
+      const Progress: float?,
+      _,
+      const Settings: W.Options
+    ):
+      const At: string := Identify(Id, Location + '/Waveform');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      Wave(Peaks, Progress, Settings, At);
+      return true;
+    when E.Element.TabBar(
+      const Id: string,
+      const Items: array of T.Item,
+      const Selected: int,
+      _,
+      const Settings: T.Options
+    ):
+      const At: string := Identify(Id, Location + '/TabBar');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      Tabs(Items, Selected, Settings, At);
+      for Index: int := 0 to Items.Length - 1 do
+        discard Identify(Id + '/' + Index.ToString(), At + '/tab');
+      end for;
+
+      return true;
+    else
+      return false;
+  end case;
+end function;
+
+end unit;

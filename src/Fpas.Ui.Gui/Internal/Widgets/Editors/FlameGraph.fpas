@@ -3,8 +3,8 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Editors.FlameGraph;
 
 uses
-  Fpas.Ui.Widgets.Editors.FlameGraphs as D, Fpas.Ui.Gui.Internal.Hosting.Context as C,
-  Fpas.Ui.Gui.Internal.Data.CreativeParts as P, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors,
+  Fpas.Ui.Widgets.Editors.FlameGraphs as D, Fpas.Ui.Gui.Internal.Core.Context as C,
+  Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Cui.Widgets.Editors as CuiEditors,
   System.Collections.Generic as Lists;
 
 // Presents a native FlameGraph.
@@ -41,7 +41,7 @@ begin
     Settings.RowHeight,
     Width.Kind,
     Width.Value,
-    P.Bits(Enabled, 1) or P.Bits(Focus, 2)
+    Enc.Bits(Enabled, 1) or Enc.Bits(Focus, 2)
   );
   case Result of
     when is CuiEditors.CuiFlameRange as Range:

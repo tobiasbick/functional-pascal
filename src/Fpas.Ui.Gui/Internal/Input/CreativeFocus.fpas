@@ -3,7 +3,7 @@
 unit Fpas.Ui.Gui.Internal.Input.CreativeFocus;
 
 uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Gui.Internal.Data.CreativeParts as P, System as Sys,
+  Fpas.Ui.Elements as E, Fpas.Ui.Gui.Internal.Core.Parts as P, Fpas.Ui.Gui.Internal.Core.Values as Enc, System as Sys,
   Fpas.Ui.Widgets.Feedback.StatusTags as StatusTags, Fpas.Ui.Widgets.Inputs.RatioSliders as RatioSliders, Fpas.Ui.Widgets.Inputs.GradientSliders as GradientSliders, Fpas.Ui.Widgets.Inputs.StepSliders as StepSliders, Fpas.Ui.Widgets.Pickers.PaletteStrips as PaletteStrips, Fpas.Ui.Widgets.Pickers.AspectPickers as AspectPickers, Fpas.Ui.Widgets.Actions.OptionActions as OptionActions, Fpas.Ui.Widgets.Inputs.SeedFields as SeedFields;
 
 function Pick(Id: string; Preferred: string?; Keys: array of string; Accept: array of bool; Initial: int): string?;
@@ -82,7 +82,7 @@ begin
         else
           Settings.Ratios.Length
         end if;
-        const Total: int := Count + P.Bits(Settings.Custom, 1);
+        const Total: int := Count + Enc.Bits(Settings.Custom, 1);
         return Pick(Id, Preferred, P.Indexed(Total), P.Inputs(Total, true), Current.Index);
       end if;
     when E.Element.OptionAction(
@@ -110,7 +110,7 @@ begin
           Preferred,
           ['dice', 'lock'],
           [not Locked, Current.Locked <> null],
-          P.Bits(Locked, 1)
+          Enc.Bits(Locked, 1)
         );
       end if;
     else

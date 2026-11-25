@@ -1,0 +1,110 @@
+// [Documentation](../../../../../docs/ui/widgets.md#host-preflight)
+
+unit Fpas.Ui.Internal.Validation.Core.ContainerRules;
+
+uses
+  Fpas.Ui.Internal.Validation.Core.Checks as R,
+  Fpas.Ui.Internal.Validation.Core.LayoutRules as LR,
+  Fpas.Ui.Layout as L, System as Sys;
+
+procedure CheckContainer(Settings: L.Flow; Current: R.Profile; Location: string);
+begin
+  const Scope: L.FocusScope? := Settings.Scope;
+  if Scope <> null then
+    R.RequireProfile(Current, R.Profile.Graphical, Location);
+    if Sys.String.IsNullOrWhiteSpace(Scope.Id) then
+      R.Reject(Location, 'A focus scope needs an ID.');
+    end if;
+
+    R.CheckText(Scope.Id, Location + '/focusScope');
+  end if;
+
+  if not Sys.Enum.IsDefined<L.Direction>(Settings.ReadingDirection) then
+    R.Reject(Location, 'Unknown reading direction.');
+  end if;
+
+  if not Sys.Single.IsFinite(Settings.CornerRadius) or Settings.CornerRadius < 0.0F then
+    R.Reject(Location, 'The corner radius must be finite and nonnegative.');
+  end if;
+
+  if Settings.Background <> null or Settings.CornerRadius > 0.0F then
+    R.RequireProfile(Current, R.Profile.Graphical, Location);
+  end if;
+
+  if Settings.ReadingDirection <> L.Direction.Inherit then
+    R.RequireProfile(Current, R.Profile.Graphical, Location);
+  end if;
+
+  for Inset: L.Spacing? in [
+    Settings.PaddingTop,
+    Settings.PaddingEnd,
+    Settings.PaddingBottom,
+    Settings.PaddingStart
+  ] do
+    if Inset <> null then
+      R.RequireProfile(Current, R.Profile.Graphical, Location);
+      LR.CheckSpacing(Inset, Current, Location);
+    end if;
+  end for;
+end procedure;
+
+// Validates flow options for a layered stack.
+// ## Parameters
+// - `Flow`: Layered container options.
+// - `Current`: Receiving capability profile.
+// - `Location`: Diagnostic path.
+public procedure CheckLayered(Flow: L.Flow; Current: R.Profile; Location: string);
+begin
+  R.RequireProfile(Current, R.Profile.Graphical, Location + '/layers');
+  CheckContainer(Flow, Current, Location + '/layers');
+  LR.CheckSpacing(Flow.Gap, Current, Location + '/layers');
+  LR.CheckSpacing(Flow.Padding, Current, Location + '/layers');
+  if Flow.Wrap or not Sys.Enum.IsDefined<L.Alignment>(
+    Flow.Align
+  ) or not Sys.Enum.IsDefined<L.Justification>(Flow.Justify)
+  then
+    R.Reject(
+      Location,
+      'Layered stacks require valid alignment and justification without wrapping.'
+    );
+  end if;
+end procedure;
+
+// Validates flow options for a row or column stack.
+// ## Parameters
+// - `Flow`: Stack container options.
+// - `Horizontal`: True for a row, false for a column.
+// - `Current`: Receiving capability profile.
+// - `Location`: Parent diagnostic path.
+// - `At`: Stack diagnostic path.
+public procedure CheckStack(Flow: L.Flow; Horizontal: bool; Current: R.Profile; Location: string; At: string);
+begin
+  CheckContainer(Flow, Current, At);
+  if Flow.Clip <> null then
+    R.RequireProfile(Current, R.Profile.Graphical, Location + '/clip');
+  end if;
+
+  if Flow.Wrap then
+    R.RequireProfile(Current, R.Profile.Graphical, At);
+    if not Horizontal then
+      R.Reject(At, 'Wrapping requires a row.');
+    end if;
+  end if;
+
+  if not Sys.Enum.IsDefined<L.Alignment>(Flow.Align) then
+    R.Reject(At, 'Unknown cross-axis alignment.');
+  end if;
+
+  if not Sys.Enum.IsDefined<L.Justification>(Flow.Justify) then
+    R.Reject(At, 'Unknown main-axis justification.');
+  end if;
+
+  if Flow.Justify <> L.Justification.Start then
+    R.RequireProfile(Current, R.Profile.Graphical, At + '/justify');
+  end if;
+
+  LR.CheckSpacing(Flow.Gap, Current, At + '/gap');
+  LR.CheckSpacing(Flow.Padding, Current, At + '/padding');
+end procedure;
+
+end unit;

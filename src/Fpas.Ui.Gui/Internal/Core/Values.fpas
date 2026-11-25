@@ -1,0 +1,84 @@
+// [Documentation](../../../../docs/ui/gui/host.md#frame-preparation-and-presentation)
+
+unit Fpas.Ui.Gui.Internal.Core.Values;
+
+uses Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Audio.ControlWells as Wells;
+
+// Encodes a flag.
+// ## Parameters
+// - `Set`: Whether to set the flag.
+// - `Bit`: Native bit mask.
+// ## Returns
+// The mask or zero.
+public function Bits(Set: bool; Bit: int): int;
+begin
+  return if Set then
+    Bit
+  else
+    0
+  end if;
+end function;
+
+// Encodes an RGBA color.
+// ## Parameters
+// - `Color`: Straight-alpha color.
+// ## Returns
+// Packed native channels.
+public function Pack(Color: G.Color): uint;
+begin
+  return cast<uint>(Color.Red) or (cast<uint>(Color.Green) shl 8)
+    or (cast<uint>(Color.Blue) shl 16) or (cast<uint>(Color.Alpha) shl 24);
+end function;
+
+// Decodes an RGBA color.
+// ## Parameters
+// - `Value`: Packed native channels.
+// ## Returns
+// Straight-alpha color.
+public function Unpack(Value: uint): G.Color;
+begin
+  return new G.Color(
+    cast<byte>(Value and 255U), cast<byte>((Value shr 8) and 255U),
+    cast<byte>((Value shr 16) and 255U), cast<byte>(Value shr 24)
+  );
+end function;
+
+// Encodes the pressed appearance.
+// ## Parameters
+// - `Tool`: Optional action button.
+// ## Returns
+// The native active flag.
+public function ToolBits(Tool: Wells.Tool?): int;
+begin
+  return Bits(Tool <> null and Tool.Active, 4);
+end function;
+
+// Gets the action glyph.
+// ## Parameters
+// - `Tool`: Optional action button.
+// ## Returns
+// The glyph or an empty string.
+public function Icon(Tool: Wells.Tool?): string;
+begin
+  return if Tool = null then
+    ''
+  else
+    Tool.Icon
+  end if;
+end function;
+
+// Gets the action name.
+// ## Parameters
+// - `Tool`: Optional action button.
+// ## Returns
+// The tooltip or an empty string.
+public function Tooltip(Tool: Wells.Tool?): string;
+begin
+  return if Tool = null then
+    ''
+  else
+    Tool.Tooltip
+  end if;
+end function;
+
+end unit;

@@ -111,63 +111,6 @@ begin
   return Glyph[0] = #10 or Glyph[0] = #13;
 end function;
 
-// Measures the widest explicit line using sanitized terminal cell widths.
-// ## Parameters
-// - `Value`: Text whose CR and LF clusters delimit lines.
-// ## Returns
-// The widest line in cells, or zero for empty text.
-public function LineWidth(Value: string): int;
-begin
-  const Glyphs: Global.TextElementEnumerator := Global.StringInfo.GetTextElementEnumerator(Value);
-  var Longest: int := 0;
-  var Cells: int := 0;
-  while Glyphs.MoveNext() do
-    const Glyph: string := Glyphs.GetTextElement();
-    if LineBreak(Glyph) then
-      Longest := Sys.Math.Max(Longest, Cells);
-      Cells := 0;
-    else
-      Cells := Cells + Width(Glyph);
-    end if;
-  end while;
-
-  return Sys.Math.Max(Longest, Cells);
-end function;
-
-// Counts explicit lines and wraps at grapheme boundaries when a width is supplied.
-// ## Parameters
-// - `Value`: Text to measure; empty text still occupies one line.
-// - `Columns`: Positive wrapping width in cells, or a nonpositive value for explicit lines only.
-// ## Returns
-// The number of rows, including a final empty row after a line terminator.
-public function LineCount(Value: string; Columns: int): int;
-begin
-  const Glyphs: Global.TextElementEnumerator := Global.StringInfo.GetTextElementEnumerator(Value);
-  var Rows: int := 1;
-  var Cells: int := 0;
-  while Glyphs.MoveNext() do
-    const Glyph: string := Glyphs.GetTextElement();
-    if LineBreak(Glyph) then
-      Rows := Rows + 1;
-      Cells := 0;
-    else
-      if Columns > 0 then
-        const Span: int := Width(Glyph);
-        if Cells + Span > Columns then
-          Rows := Rows + 1;
-          Cells := 0;
-        end if;
-
-        if Span <= Columns then
-          Cells := Cells + Span;
-        end if;
-      end if;
-    end if;
-  end while;
-
-  return Rows;
-end function;
-
 // Replaces line terminators with spaces for single-line captions.
 // ## Parameters
 // - `Value`: Text containing optional CR, LF, Unicode line or paragraph separators.

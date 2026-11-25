@@ -4,7 +4,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Inputs.HistogramSlider;
 
 uses
   Fpas.Ui.Widgets.Inputs.HistogramSliders as H, Fpas.Ui.Widgets.Inputs.RangeSliders as R, Fpas.Ui.Gui.Application as App,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Hosting.Context as C, System.Globalization as Culture;
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Core.Context as C, System.Globalization as Culture;
 
 // Draws the native histogram and publishes interval proposals.
 // ## Type parameters

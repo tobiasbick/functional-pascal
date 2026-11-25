@@ -1,0 +1,276 @@
+// [Documentation](../../../../../docs/ui/widgets.md#host-preflight)
+
+unit Fpas.Ui.Internal.Validation.Inputs.PickerValidation;
+
+uses
+  Fpas.Ui.Elements as E, Fpas.Ui.Internal.Validation.Core.Checks as R,
+  Fpas.Ui.Internal.Validation.Inputs.PickerRules as PickerRules,
+  Fpas.Ui.Internal.Validation.Inputs.DateRangeRules as DateRangeRules,
+  Fpas.Ui.Internal.Validation.Inputs.SelectRules as SelectRules,
+  Fpas.Ui.Internal.Validation.Inputs.SmartInputRules as SmartRules,
+  Fpas.Ui.Internal.Validation.Inputs.NumberFieldRules as NumberRules,
+  Fpas.Ui.Widgets.Pickers.ColorPickers as ColorPickers,
+  Fpas.Ui.Widgets.Pickers.EmojiPickers as Emojis,
+  Fpas.Ui.Widgets.Pickers.Calendars as Calendars,
+  Fpas.Ui.Widgets.Pickers.DatePickers as DatePickers,
+  Fpas.Ui.Widgets.Pickers.DateRanges as Dates,
+  Fpas.Ui.Widgets.Pickers.DateRangePickers as RangePickers,
+  Fpas.Ui.Widgets.Pickers.TimePickers as TimePickers,
+  Fpas.Ui.Widgets.Pickers.WheelPickers as WheelPickers,
+  Fpas.Ui.Widgets.Pickers.TimeDials as TimeDials,
+  Fpas.Ui.Widgets.Inputs.Selects as Selects,
+  Fpas.Ui.Widgets.Inputs.MultiSelects as Multi,
+  Fpas.Ui.Widgets.Inputs.InlineEdits as InlineEdits,
+  Fpas.Ui.Widgets.Inputs.ScrubFields as ScrubFields,
+  Fpas.Ui.Widgets.Inputs.MoneyFields as MoneyFields,
+  Fpas.Ui.Widgets.Inputs.ShortcutRecorders as RecorderKeys,
+  Fpas.Ui.Widgets.Inputs.NumberFields as NumberFields, System as Sys;
+
+// Validates pickers, selects and smart input controls when matched.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Node`: Element to inspect.
+// - `Location`: Parent diagnostic path.
+// - `Current`: Target capabilities.
+// - `Identify`: Registers a widget ID.
+// ## Returns
+// True when this dispatcher handled the element.
+public function Check<TMsg>(Node: E.Element<TMsg>; Location: string; Current: R.Profile; Identify: function(string, string): string): bool;
+begin
+  case Node of
+    when E.Element.ColorPicker(const Id: string, _, _, _):
+      const At: string := Identify(Id, Location + '/colorPicker');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      discard Identify(ColorPickers.SurfaceId(Id), At);
+      discard Identify(ColorPickers.HueId(Id), At);
+      for Index: int := 0 to 7 do
+        discard Identify(ColorPickers.PresetId(Id, Index), At);
+      end for;
+
+      return true;
+    when E.Element.EmojiPicker(
+      const Id: string, const Value: Emojis.State, _, const Settings: Emojis.Options
+    ):
+      const At: string := Identify(Id, Location + '/emojiPicker');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      PickerRules.Emoji(Value, Settings, At);
+      discard Identify(Emojis.GridId(Id), At);
+      if Settings.Search then
+        discard Identify(Emojis.SearchId(Id), At);
+      end if;
+
+      if Settings.ToneSelector then
+        discard Identify(Emojis.ToneSelectorId(Id), At);
+        for Index: int := 0 to 5 do
+          discard Identify(Emojis.ToneId(Id, Index), At);
+        end for;
+      end if;
+
+      for Index: int := 0 to 9 do
+        discard Identify(Emojis.GroupId(Id, Index), At);
+      end for;
+
+      return true;
+    when E.Element.Calendar(const Id: string, _, _, _):
+      const At: string := Identify(Id, Location + '/calendar');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      discard Identify(Calendars.MonthId(Id, false), At);
+      discard Identify(Calendars.MonthId(Id, true), At);
+      return true;
+    when E.Element.DatePicker(const Id: string, _, _, const Settings: DatePickers.Options):
+      const At: string := Identify(Id, Location + '/datePicker');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      R.CheckText(Settings.Label, At + '/label');
+      R.CheckText(Settings.Placeholder, At + '/placeholder');
+      PickerRules.Size(Settings.Width, At + '/width');
+      discard Identify(Calendars.MonthId(Id, false), At);
+      discard Identify(Calendars.MonthId(Id, true), At);
+      return true;
+    when E.Element.RangeCalendar(
+      const Id: string,
+      const Value: Dates.Value,
+      _,
+      const Months: int,
+      _
+    ):
+      const Path: string := Location + '/rangeCalendar';
+      R.RequireProfile(Current, R.Profile.Graphical, Path);
+      const At: string := Identify(Id, Path);
+      DateRangeRules.Check(Value, At);
+      if Months < 1 or Months > 2 then
+        R.Reject(At, 'A range calendar shows one or two months.');
+      end if;
+
+      discard Identify(Dates.MonthId(Id, false), At);
+      discard Identify(Dates.MonthId(Id, true), At);
+      return true;
+    when E.Element.RangePicker(
+      const Id: string, const Value: Dates.Value, _, const Settings: RangePickers.Options
+    ):
+      const Path: string := Location + '/rangePicker';
+      R.RequireProfile(Current, R.Profile.Graphical, Path);
+      const At: string := Identify(Id, Path);
+      DateRangeRules.Check(Value, At);
+      DateRangeRules.Picker(Settings, At);
+      discard Identify(Dates.MonthId(Id, false), At);
+      discard Identify(Dates.MonthId(Id, true), At);
+      if Settings.Presets then
+        for Index: int := 0 to 6 do
+          discard Identify(RangePickers.PresetId(Id, Index), At);
+        end for;
+      end if;
+
+      return true;
+    when E.Element.TimePicker(
+      const Id: string, const Value: Sys.TimeOnly, _, const Settings: TimePickers.Options
+    ):
+      const Path: string := Location + '/timePicker';
+      R.RequireProfile(Current, R.Profile.Graphical, Path);
+      const At: string := Identify(Id, Path);
+      PickerRules.Time(Value, At);
+      PickerRules.TimePicker(Settings, At);
+
+      const LastHour: int := if Settings.TwelveHour then
+        11
+      else
+        23
+      end if;
+      for Hour: int := 0 to LastHour do
+        discard Identify(TimePickers.HourId(Id, Hour), At);
+      end for;
+
+      for Minute: int := 0 to 59 do
+        if Minute mod Settings.MinuteStep = 0 then
+          discard Identify(TimePickers.MinuteId(Id, Minute), At);
+        end if;
+      end for;
+
+      if Settings.TwelveHour then
+        discard Identify(TimePickers.PeriodId(Id, false), At);
+        discard Identify(TimePickers.PeriodId(Id, true), At);
+      end if;
+
+      return true;
+    when E.Element.WheelPicker(
+      const Id: string,
+      const Items: array of string,
+      const Selected: int,
+      _,
+      const Settings: WheelPickers.Options
+    ):
+      const Path: string := Location + '/wheelPicker';
+      R.RequireProfile(Current, R.Profile.Graphical, Path);
+      PickerRules.WheelPicker(Items, Selected, Settings, Identify(Id, Path));
+      return true;
+    when E.Element.TimeDial(const Id: string, const Value: Sys.TimeOnly, _, const Size: float, _):
+      const Path: string := Location + '/timeDial';
+      R.RequireProfile(Current, R.Profile.Graphical, Path);
+      const At: string := Identify(Id, Path);
+      PickerRules.Time(Value, At);
+      PickerRules.Size(Size, At + '/size');
+      discard Identify(TimeDials.SelectorId(Id, false), At);
+      discard Identify(TimeDials.SelectorId(Id, true), At);
+      discard Identify(TimeDials.FaceId(Id), At);
+      return true;
+    when E.Element.MultiSelectInput(
+      const Id: string, const Items: array of Selects.Item, const Selected: array of bool,
+      _, const Settings: Multi.Options
+    ):
+      const Path: string := Location + '/multiSelect';
+      const At: string := Identify(Id, Path);
+      SelectRules.MultiSelect(Items, Selected, Settings, At);
+      if Current <> R.Profile.Graphical then
+        discard Identify(Id + '/bulk', At + '/bulk');
+      end if;
+
+      for Index: int := 0 to Items.Length - 1 do
+        discard Identify(Selects.OptionId(Id, Index), At + '/option');
+      end for;
+
+      return true;
+    when E.Element.SelectInput(
+      const Id: string,
+      const Items: array of Selects.Item,
+      const Selected: int,
+      _,
+      const Settings: Selects.Options
+    ):
+      const Path: string := Location + '/select';
+      const At: string := Identify(Id, Path);
+      SelectRules.Check(Items, Selected, Settings, At);
+      for Index: int := 0 to Items.Length - 1 do
+        discard Identify(Selects.OptionId(Id, Index), At + '/option');
+      end for;
+
+      return true;
+    when E.Element.InlineEdit(
+      const Id: string,
+      const Value: string,
+      _,
+      const Settings: InlineEdits.Options
+    ):
+      const At: string := Identify(Id, Location + '/inline-edit');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      SmartRules.Inline(Value, Settings, At);
+      return true;
+    when E.Element.ScrubField(
+      const Id: string,
+      const Label: string,
+      const Value: float,
+      const Minimum: float,
+      const Maximum: float,
+      _,
+      const Settings: ScrubFields.Options
+    ):
+      const At: string := Identify(Id, Location + '/scrub-field');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      SmartRules.Scrub(Label, Value, Minimum, Maximum, Settings, At);
+      return true;
+    when E.Element.MoneyField(
+      const Id: string,
+      const Value: decimal,
+      _,
+      const Settings: MoneyFields.Options
+    ):
+      const At: string := Identify(Id, Location + '/money-field');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      SmartRules.Money(Value, Settings, At);
+      return true;
+    when E.Element.ShortcutRecorder(
+      const Id: string,
+      const Value: RecorderKeys.Combination,
+      _,
+      const Settings: RecorderKeys.Options
+    ):
+      const At: string := Identify(Id, Location + '/shortcut-recorder');
+      R.RequireProfile(Current, R.Profile.Graphical, At);
+      SmartRules.Shortcut(Value, Settings, At);
+      if Value.Key <> RecorderKeys.Key.None then
+        discard Identify(RecorderKeys.ClearId(Id), At + '/clear');
+      end if;
+
+      return true;
+    when E.Element.ShortcutLabel(const Value: RecorderKeys.Combination):
+      R.RequireProfile(Current, R.Profile.Graphical, Location + '/shortcut-label');
+      SmartRules.Combination(Value, Location);
+      return true;
+    when E.Element.NumberField(
+      const Id: string, const Value: double, const Minimum: double, const Maximum: double, _,
+      const Settings: NumberFields.Options
+    ):
+      const Path: string := Location + '/numberField';
+      if Current = R.Profile.Portable then
+        R.Reject(Path, 'A number field requires the terminal or graphical profile.');
+      end if;
+      const At: string := Identify(Id, Path);
+      NumberRules.Check(Value, Minimum, Maximum, Settings, At);
+      discard Identify(NumberFields.DecreaseId(Id), At + '/decrease');
+      discard Identify(NumberFields.IncreaseId(Id), At + '/increase');
+      return true;
+    else
+      return false;
+  end case;
+end function;
+
+end unit;

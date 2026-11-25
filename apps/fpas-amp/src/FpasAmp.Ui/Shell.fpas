@@ -211,6 +211,18 @@ public type Session = record implements Sys.IDisposable
     return self.Read();
   end function;
 
+  // Processes admitted messages and presents one frame on the owner thread.
+  public function Step(): bool;
+  begin
+    return self.Window.Step();
+  end function;
+
+  // Reads the window placement on the owner thread, or the final placement after close.
+  public function Placement(): Cui.CuiWindowPlacement;
+  begin
+    return self.Window.Placement();
+  end function;
+
   // Releases the GUI and its owned subscriptions, leaving the caller-owned library.
   public procedure Dispose();
   begin
@@ -237,8 +249,8 @@ public type Session = record implements Sys.IDisposable
 
   static function Connect(Window: Cui.CuiWindowPlacement; Settings: SettingsModel.Preferences; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session; Navigation: Nav.State?; Device: Audio.ISession; Restored: PlayerModel.State?): Session;
   begin
-    const Port: Playback.Connection := new Playback.Connection(Device);
-    discard Port.Requests.Writer.TryWrite(PlayerModel.Request.Mixer(Settings.Mixer));
+    const Port: Playback.Connection := Playback.Connection.Create(Device);
+    Port.Send(PlayerModel.Request.Mixer(Settings.Mixer));
     const Player: PlayerModel.State := Restored ?? new PlayerModel.State();
     const InitialNavigation: Nav.State := Navigation ?? new Nav.State();
     const Initial: M.State := new M.State(
@@ -273,7 +285,7 @@ public type Session = record implements Sys.IDisposable
         Theme := M.Theme(Initial, null), Placement := Window
       ),
       M.Theme,
-      OnCloseRequested := function(): M.Msg => M.Msg.Closing(Playback.Stop(Last.Player, Port))
+      OnCloseRequested := function(): M.Msg => M.Msg.Closing(Port.Stop(Last.Player))
     );
     discard Native.Post(M.Msg.WatchLibrary);
     const Observed: Gui.Session<M.Msg> := Gui.Session<M.Msg>.Create(
@@ -351,7 +363,7 @@ public type Session = record implements Sys.IDisposable
           try
             Device.Dispose();
           finally
-            Playback.Clean(Port);
+            Port.Clean();
           end try;
         end try;
       end procedure,
@@ -378,7 +390,7 @@ begin
     Navigation,
     Restored := Player
   );
-  while Running.Window.Step() do
+  while Running.Step() do
   end while;
 
   const Last: M.State := Running.State();
@@ -390,7 +402,7 @@ begin
     Sys.Console.Error.WriteLine('Could not save the final mixer settings.');
   end if;
 
-  return Running.Window.Placement();
+  return Running.Placement();
 end function;
 
 end unit;

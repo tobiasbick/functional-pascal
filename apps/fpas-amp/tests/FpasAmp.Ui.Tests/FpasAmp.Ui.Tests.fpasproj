@@ -11,9 +11,9 @@
     <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
     <ProjectReference Include="../../src/FpasAmp/FpasAmp.fpasproj" />
     <ProjectReference Include="../../../../src/Fpas.Ui.Mvu.Testing/Fpas.Ui.Mvu.Testing.fpasproj" />
-    <Compile Include="../FpasAmp.Library.Tests/Support.fpas" Link="Support.fpas" />
-    <Compile Include="../FpasAmp.Library.Tests/MetadataSupport.fpas" Link="MetadataSupport.fpas" />
-    <Compile Include="../FpasAmp.Library.Tests/AlbumSupport.fpas" Link="AlbumSupport.fpas" />
+    <Compile Include="../FpasAmp.Library.Tests/Inventory/Support.fpas" Link="Support.fpas" />
+    <Compile Include="../FpasAmp.Library.Tests/Metadata/MetadataSupport.fpas" Link="MetadataSupport.fpas" />
+    <Compile Include="../FpasAmp.Library.Tests/Albums/AlbumSupport.fpas" Link="AlbumSupport.fpas" />
     <Content Include="../FpasAmp.Library.Tests/Fixtures/*.mp3;../FpasAmp.Library.Tests/Fixtures/*.ogg" Link="Fixtures/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

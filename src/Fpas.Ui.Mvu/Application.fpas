@@ -30,13 +30,15 @@ public type HostRequest = variant
   Extension(Value: Sys.Object);
 end variant;
 
-// Supplies the message channel for a running background effect.
+// Supplies the message channel and clock for a running background effect.
 //
 // ## Type parameters
 // - `TMsg`: The session's message type.
 public type BackgroundContext<TMsg> = record
   // Posts a message and completes when the mailbox admits it.
   public Post: function(TMsg): Tasks.Task;
+  // Drives time-based waits and deadlines in the effect.
+  public Clock: Sys.TimeProvider;
 end record;
 
 // Work requested by an update.

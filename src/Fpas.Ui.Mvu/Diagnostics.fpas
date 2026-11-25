@@ -1,0 +1,43 @@
+// [Documentation](../../docs/ui/mvu/runtime.md#session-diagnostics)
+
+unit Fpas.Ui.Mvu.Diagnostics;
+
+uses System.Collections.Generic as Generic;
+
+// The session's admission and cleanup state.
+public type Lifecycle = enum
+  // The session accepts new work.
+  Open;
+  // Admission has stopped and cleanup is running.
+  Closing;
+  // The cleanup task has finished.
+  Closed;
+end enum;
+
+// Identifies a run whose work or cleanup is still in progress.
+public type EffectRun = record
+  // The application's stable effect ID, including any composition scope.
+  public Id: string;
+  // The generation assigned when the session started the run.
+  public Generation: long;
+  // Whether the owner still accepts messages from this run.
+  public IsCurrent: bool;
+  // Whether the session has requested cancellation for this run.
+  public CancellationRequested: bool;
+end record;
+
+// A point-in-time view of a session from its owner.
+public type SessionSnapshot = record
+  // The admission and cleanup state.
+  public State: Lifecycle;
+  // The number of items admitted to the mailbox.
+  public MailboxCount: int;
+  // The maximum number of items the mailbox can hold.
+  public MailboxCapacity: int;
+  // A read-only list of the runs observed in progress when the owner inspected the session.
+  public ActiveEffects: Generic.IReadOnlyList<EffectRun>;
+  // The number of invalidated effect messages discarded by Advance.
+  public StaleReplies: long;
+end record;
+
+end unit;

@@ -57,7 +57,10 @@ function Observe<TMsg>(
     end function;
   begin
     try
-      case await Work.Run(new A.BackgroundContext<TMsg>(Publish), Token).ConfigureAwait(false) of
+      case await Work.Run(
+        new A.BackgroundContext<TMsg>(Publish, Context.Clock),
+        Token
+      ).ConfigureAwait(false) of
         when Fx.Outcome.Success(_):
         when Fx.Outcome.Failure(const Message: TMsg):
           Token.ThrowIfCancellationRequested();

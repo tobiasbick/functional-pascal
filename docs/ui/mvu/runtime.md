@@ -34,6 +34,9 @@ An optional nonthrowing `Wake` callback runs on the producer after successful
 admission, including background results. Native hosts can wake their owner loop
 without polling or mutating UI state from a worker.
 
+The [session tests](../../../tests/Fpas.Ui.Mvu.Tests/SessionTests.fpas) cover FIFO
+order, backpressure, cancelled waits, and model visibility in host requests.
+
 ## Larger applications
 
 Split substantial applications into feature slices, each with its own model,
@@ -80,9 +83,17 @@ optimizations.
 
 `StartBackground` runs an SDK [effect](../../pascal/libraries/effects.md) on a
 worker, including the work before its first `await`. It provides a cancellation
-token and `BackgroundContext<TMsg>` with `Post`. Await `Post` to respect mailbox
+token and `BackgroundContext<TMsg>` with `Post` and `Clock`. Await `Post` to respect mailbox
 capacity. Its completion reports admission, and `Update` receives the message
 on a later owner turn.
+
+The optional `Clock` argument to `Session.Start` supplies a .NET `TimeProvider`.
+It defaults to `TimeProvider.System`. Pass `Context.Clock` and the worker token to
+`Task.Delay(Duration, Context.Clock, Token)` for timers and debounce. For a deadline,
+create a `CancellationTokenSource(Duration, Context.Clock)` and link its token
+to the worker token. Composition and reply interception forward the same clock.
+The [desktop progress example](../../../examples/ui/gui/desktop-commands/Background.fpas)
+uses the effect's clock for its timer.
 
 Use `FromEffect` to project the dependencies of an `Effect<A, E, R>` from the
 running context and translate `Outcome.Success` and `Outcome.Failure` into
@@ -121,6 +132,23 @@ drives the same update function directly and through the terminal adapter.
 The [GUI host](../gui/host.md) also uses this runtime for shared commands,
 native event wakeup and responsive asynchronous cleanup.
 
+## Session diagnostics
+
+Call `Session.Snapshot()` on the owner to inspect the lifecycle (`Open`,
+`Closing`, or `Closed`), mailbox count and capacity, active effects and
+discarded reply count. It leaves the model and queue untouched and returns a
+read-only copy of the active-run list. Each entry reports its scoped ID, generation,
+whether its replies still apply, and whether cancellation was requested.
+Replaced runs can still appear while their work or cleanup finishes.
+`Closed` means the cleanup task finished. Observe `Close()` to check its outcome.
+
+The count includes all admitted entries, including stale replies awaiting
+an owner turn. `StaleReplies` increases when `Advance` discards an invalidated
+effect message. Closing clears the mailbox without incrementing this counter.
+Producers and workers can progress while the owner reads a snapshot.
+The [snapshot test](../../../tests/Fpas.Ui.Mvu.Tests/SnapshotTests.fpas)
+drives replacement and shutdown with a full mailbox.
+
 ## Testing effect replies
 
 Reference [Fpas.Ui.Mvu.Testing](../../../src/Fpas.Ui.Mvu.Testing/Fpas.Ui.Mvu.Testing.fpasproj)
@@ -130,12 +158,18 @@ assert the intermediate model, then await `Release()` and advance the session.
 The [effect reply test](../../../tests/Fpas.Ui.Mvu.Tests/EffectRepliesTests.fpas)
 drives supersession and typed outcomes through a real mailbox. Run it through the
 [MVU test project](../../../tests/Fpas.Ui.Mvu.Tests/Fpas.Ui.Mvu.Tests.fpasproj).
+To test time-based effects, pass a `FakeTimeProvider` to the session. Wait for
+the worker to register its timer before advancing the clock, then release the
+result and advance the owner separately. The
+[clock tests](../../../tests/Fpas.Ui.Mvu.Tests/ClockTests.fpas) exercise both
+debounce in a composed effect and a deadline that produces an expected failure.
 
 ## Source files
 
 - `src/Fpas.Ui.Mvu/`
   - [Application.fpas](../../../src/Fpas.Ui.Mvu/Application.fpas)
   - [Composition.fpas](../../../src/Fpas.Ui.Mvu/Composition.fpas)
+  - [Diagnostics.fpas](../../../src/Fpas.Ui.Mvu/Diagnostics.fpas)
   - [Fpas.Ui.Mvu.fpasproj](../../../src/Fpas.Ui.Mvu/Fpas.Ui.Mvu.fpasproj)
   - [Session.fpas](../../../src/Fpas.Ui.Mvu/Session.fpas)
 - `src/Fpas.Ui.Mvu/Internal/`

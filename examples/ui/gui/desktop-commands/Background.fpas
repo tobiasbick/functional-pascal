@@ -18,7 +18,11 @@ public function Start(SimulateError: bool): Mvu.Command<S.Msg>;
   async function Run(Context: Mvu.BackgroundContext<S.Msg>; Token: Threads.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, S.Msg>>;
   begin
     for Completed: int := 1 to S.WorkSteps do
-      await Tasks.Task.Delay(250, Token).ConfigureAwait(false);
+      await Tasks.Task.Delay(
+        Sys.TimeSpan.FromMilliseconds(250),
+        Context.Clock,
+        Token
+      ).ConfigureAwait(false);
       if SimulateError and Completed = 3 then
         return Fx.Outcome.Failure(
           S.Msg.WorkFailed(new Sys.InvalidOperationException('Simulated background error.'))

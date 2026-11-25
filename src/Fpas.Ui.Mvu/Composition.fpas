@@ -41,7 +41,8 @@ public function MapCommand<TChild, TParent>(
     function Adapt(Parent: A.BackgroundContext<TParent>): A.BackgroundContext<TChild>;
     begin
       return new A.BackgroundContext<TChild>(
-        function(Message: TChild): Tasks.Task => Parent.Post(Messages(Message))
+        function(Message: TChild): Tasks.Task => Parent.Post(Messages(Message)),
+        Parent.Clock
       );
     end function;
   begin

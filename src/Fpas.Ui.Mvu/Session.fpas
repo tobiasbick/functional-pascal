@@ -3,7 +3,8 @@
 unit Fpas.Ui.Mvu.Session;
 
 uses
-  Fpas.Execution.Effects as Fx, Fpas.Ui.Mvu.Application as App, Fpas.Ui.Mvu.Internal.Effects as Effects, System as Sys,
+  Fpas.Execution.Effects as Fx, Fpas.Ui.Mvu.Application as App, Fpas.Ui.Mvu.Diagnostics as D,
+  Fpas.Ui.Mvu.Internal.Effects as Effects, System as Sys,
   System.Threading as Threads, System.Threading.Channels as Channels, System.Threading.Tasks as Tasks;
 
 // The outcome of posting to the session mailbox.
@@ -60,6 +61,8 @@ public type Runtime<TModel, TMsg, TInput> = record
   public PendingEffects: function(): int;
   // Stops admission on the owner and returns the same completion task on every call.
   public Close: function(): Tasks.Task;
+  // Reads the mailbox, effects and cleanup state without advancing the session.
+  public Snapshot: function(): D.SessionSnapshot;
 end record;
 
 type Entry<TMsg, TInput> = variant
@@ -110,12 +113,14 @@ end function;
 // - `NotifyHost`: Receives focus and close requests on the owner.
 // - `Capacity`: Positive bound for the shared mailbox.
 // - `Wake`: Optional nonthrowing producer-thread notification after admission.
+// - `Clock`: Clock for background effects. Defaults to the system time provider.
 //
 // ## Returns
 // The session. Serialize model reads, steps and close on the owner.
 public function Start<TModel, TMsg, TInput>(
   InitialModel: TModel; Update: function(TModel, TMsg): App.Transition<TModel, TMsg>;
-  NotifyHost: procedure(App.HostRequest); Capacity: int; Wake: Sys.Action? := null
+  NotifyHost: procedure(App.HostRequest); Capacity: int; Wake: Sys.Action? := null;
+  Clock: Sys.TimeProvider? := null
 ): Runtime<TModel, TMsg, TInput>;
 requires Capacity > 0;
   function Model(): TModel;
@@ -260,10 +265,32 @@ requires Capacity > 0;
           return Step<TInput>.Updated;
         end if;
 
+        StaleReplies := StaleReplies + 1L;
         return Step<TInput>.Stale;
       when Entry.Empty:
         return Step<TInput>.Idle;
     end case;
+  end function;
+
+  function Snapshot(): D.SessionSnapshot;
+  begin
+    const Closing: Tasks.Task? := Cleanup;
+    var State: D.Lifecycle := D.Lifecycle.Open;
+    if Closing <> null then
+      State := if Closing.IsCompleted then
+        D.Lifecycle.Closed
+      else
+        D.Lifecycle.Closing
+      end if;
+    end if;
+
+    return new D.SessionSnapshot(
+      State,
+      Queue.Reader.Count,
+      Capacity,
+      Workers.Active(),
+      StaleReplies
+    );
   end function;
 begin
   const Gate: Sys.Object := new Sys.Object();
@@ -278,13 +305,15 @@ begin
       Version,
       Message,
       Cancellation
-    )
+    ),
+    Clock ?? Sys.TimeProvider.System
   );
   var Current: TModel := InitialModel;
   var Cleanup: Tasks.Task? := null;
+  var StaleReplies: long := 0L;
   return new Runtime<TModel, TMsg, TInput>(
     Model, Send, Post, Dispatch, Advance, WaitForWork, WaitForSpace, IsOpen,
-    function(): int => Queue.Reader.Count, Workers.Pending, Close
+    function(): int => Queue.Reader.Count, Workers.Pending, Close, Snapshot
   );
 end function;
 

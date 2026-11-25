@@ -11,6 +11,7 @@ in the [development workflow](../docs/build/development.md).
 | --- | --- |
 | [Fpas.Compiler.Tests](Fpas.Compiler.Tests/) | Compiler API diagnostics, source locations, flow analysis, emitted metadata, and deterministic images |
 | [Fpas.IntegrationTests](Fpas.IntegrationTests/) | Actual CLI/host execution, handbook examples, and packaged SDK/mixed FPAS/C# projects |
+| [Fpas.Ui.Mvu.Tests](Fpas.Ui.Mvu.Tests/) | Shared MVU mailbox, virtual time, effect replies, diagnostics, and shutdown |
 | [Fpas.Ui.Gui.Cui.Tests](Fpas.Ui.Gui.Cui.Tests/) | Native CUI lifetime/input, packaged publishing and the FPAS MVU GUI host |
 | [Fixtures/gui-host](Fixtures/gui-host/) | FPAS host lifecycle, typed transitions, preflight, snapshots and native interaction contracts |
 | [Fixtures/gui](Fixtures/gui/) | Internal FPAS window/control fixture using the CLR binding through a project reference |

@@ -1,0 +1,153 @@
+// [Documentation](../../docs/ui/mvu/runtime.md#driving-a-session)
+
+unit Fpas.Ui.Mvu.Tests.SessionTests;
+
+uses
+  Fpas.Ui.Mvu.Application as A, Fpas.Ui.Mvu.Session as Runtime,
+  System as Sys, System.Collections.Generic as C, System.Threading as T,
+  System.Threading.Tasks as Tasks, Xunit as X;
+
+// Exercises owner turns and concurrent-producer admission without a UI host.
+public type SessionTests = record
+  // Messages and input share one FIFO. Waiting can be cancelled independently of the session.
+  [X.FactAttribute]
+  public procedure MailboxOrderAndWaits();
+    procedure Wake();
+    begin
+      Wakes := Wakes + 1;
+    end procedure;
+
+    function Update(Model: string; Message: string): A.Transition<string, string>;
+    begin
+      return new A.Transition<string, string>(Model + Message, []);
+    end function;
+  begin
+    var Wakes: int := 0;
+    using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
+    const Session: Runtime.Runtime<string, string, int> := Runtime.Start<string, string, int>(
+      '', Update, procedure(_Request: A.HostRequest) begin end procedure, 2, Wake
+    );
+    try
+      case Session.Advance() of
+        when Runtime.Step.Idle:
+        else
+          X.Assert.Fail('An empty mailbox must give an idle turn.');
+      end case;
+
+      using const Cancel: T.CancellationTokenSource := new T.CancellationTokenSource();
+      const Cancelled: Tasks.Task<bool> := Session.WaitForWork(Cancel.Token);
+      X.Assert.False(Cancelled.IsCompleted);
+      Cancel.Cancel();
+      try
+        discard Cancelled.WaitAsync(Stop.Token).GetAwaiter().GetResult();
+        X.Assert.Fail('Cancelling an empty mailbox wait must cancel its task.');
+      catch _Cancelled: Sys.OperationCanceledException when Cancelled.IsCanceled do
+      end try;
+
+      X.Assert.True(Session.IsOpen());
+
+      const Work: Tasks.Task<bool> := Session.WaitForWork(Stop.Token);
+      case Session.Send(42) of
+        when Runtime.Admission.Queued:
+        else
+          X.Assert.Fail('Expected raw input to be admitted.');
+      end case;
+
+      X.Assert.True(Work.GetAwaiter().GetResult());
+      case Session.Post('app') of
+        when Runtime.Admission.Queued:
+        else
+          X.Assert.Fail('Expected the application message to be admitted.');
+      end case;
+      const Space: Tasks.Task<bool> := Session.WaitForSpace(Stop.Token);
+      X.Assert.False(Space.IsCompleted);
+      case Session.Post('rejected') of
+        when Runtime.Admission.Full:
+        else
+          X.Assert.Fail('Expected a full mailbox to reject another message.');
+      end case;
+
+      X.Assert.Equal<int>(2, Wakes);
+
+      case Session.Advance() of
+        when Runtime.Step.Input(const Value: int):
+          X.Assert.Equal<int>(42, Value);
+        else
+          X.Assert.Fail('The first turn must deliver raw input.');
+      end case;
+
+      X.Assert.True(Space.GetAwaiter().GetResult());
+      X.Assert.Equal<string>('', Session.Model());
+      case Session.Advance() of
+        when Runtime.Step.Updated:
+        else
+          X.Assert.Fail('The second turn must apply the application message.');
+      end case;
+
+      X.Assert.Equal<string>('app', Session.Model());
+      const WorkAtClose: Tasks.Task<bool> := Session.WaitForWork(Stop.Token);
+      Session.Close().WaitAsync(Stop.Token).GetAwaiter().GetResult();
+      X.Assert.False(WorkAtClose.GetAwaiter().GetResult());
+      X.Assert.False(Session.WaitForSpace(Stop.Token).GetAwaiter().GetResult());
+      case Session.Send(43) of
+        when Runtime.Admission.Closed:
+        else
+          X.Assert.Fail('A closed session must reject raw input.');
+      end case;
+
+      X.Assert.Equal<int>(2, Wakes);
+    finally
+      Session.Close().WaitAsync(Sys.TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+    end try;
+  end procedure;
+
+  // Host requests see the committed model in order. Exit skips the rest and closes admission.
+  [X.FactAttribute]
+  public procedure HostRequestsSeeCommittedModel();
+    procedure Notify(Request: A.HostRequest);
+    begin
+      const Current: Runtime.Runtime<string, string, int>? := Owner;
+      if Current = null then
+        raise new Sys.InvalidOperationException(
+          'The host received a request before the session started.'
+        );
+      end if;
+
+      case Request of
+        when A.HostRequest.Focus(const Id: string):
+          Seen.Add(Id + ' ' + Current.Model());
+        when A.HostRequest.Close:
+          X.Assert.False(Current.IsOpen());
+          Seen.Add('close ' + Current.Model());
+        else
+          X.Assert.Fail('Unexpected host request.');
+      end case;
+    end procedure;
+
+    function Update(_Model: string; Message: string): A.Transition<string, string>;
+    begin
+      return new A.Transition<string, string>(
+        Message, [A.Focus<string>('first'), A.Exit<string>(), A.Focus<string>('skipped')]
+      );
+    end function;
+  begin
+    const Seen: C.List<string> := new C.List<string>();
+    var Owner: Runtime.Runtime<string, string, int>? := null;
+    const Session: Runtime.Runtime<string, string, int> := Runtime.Start<string, string, int>(
+      'before', Update, Notify, 1
+    );
+    Owner := Session;
+    try
+      Session.Dispatch('after');
+      X.Assert.Equal<int>(2, Seen.Count);
+      X.Assert.Equal<string>('first after', Seen[0]);
+      X.Assert.Equal<string>('close after', Seen[1]);
+      Session.Dispatch('ignored');
+      X.Assert.Equal<string>('after', Session.Model());
+    finally
+      Session.Close().WaitAsync(Sys.TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+    end try;
+  end procedure;
+end record;
+
+end unit;

@@ -1,53 +1,49 @@
 # Optional CUI title bar
 
-FPAS integration is open. The CUI fork branch `codex/cui-titlebar-testing`
-(`762fbb9`) implements the title bar on Win32 and X11. The vendored CUI
-revision lacks that API, and no upstream proposal has been made. See the
-[desktop GUI application gaps](gui-app-gaps.md) for priorities.
+CUI accepted an opt-in, app-drawn title bar in
+[#130](https://github.com/yappologistic/CUI/issues/130), which also answers
+[#21](https://github.com/yappologistic/CUI/issues/21). It arrives in two pull
+requests. FPAS integration starts once the vendored CUI revision contains both.
+See the [desktop GUI application gaps](gui-app-gaps.md) for priorities.
 
-## Goal and design
+## Upstream pull requests
 
-- Add an optional CUI title-bar component containing an icon, title, navigation,
-  search and actions, followed by the window controls.
-- Reuse existing CUI widgets. Keep native frame integration in the window
-  backends, with drag regions that exclude interactive controls.
-- On Windows, use existing Win32/DWM APIs and dynamically resolve optional OS
-  functions. Avoid Windows App SDK, WinUI/XAML and Windows App Runtime
-  dependencies. Microsoft's TitleBar control is a design reference, not a
-  component to embed. Keep effects such as Mica outside the initial scope.
-- On the branch, `cui_app_desc.custom_title_bar` drops the system title bar,
-  and the chrome component `cui_title_bar(ui, id, .icon, .title) { ... }` draws
-  the bar with CUI's own window buttons. Where the platform keeps its frame,
-  the same call renders a bar without window buttons, so FPAS needs one layout.
-  Platform layers report the frame through the optional
-  `cui_platform_iface.window_frame` and `.window_button` hooks. They ask
-  `cui_title_bar_hit_test` which points move the window.
-- Keep the system frame as the default. Failed activation must leave it intact,
-  and the title bar then renders as an ordinary bar.
-- Preserve existing CUI APIs, public struct layouts and default behavior. Add
-  separate functions/options if needed to retain binary compatibility.
-- Ordinary browser/WASM hosts can draw an application header but cannot provide
-  native browser-window title-bar integration.
+1. **PR1, [#134](https://github.com/yappologistic/CUI/pull/134), open.** Fork
+   branch `title-bar-platform` on top of the 1.5 pin. It adds
+   `cui_app_desc.custom_title_bar` with the Win32 frame, the optional
+   `cui_platform_iface.window_frame` and `.window_button` hooks and
+   `cui_title_bar_hit_test`, with a Win32 test. Until PR2 lands, a window with
+   `custom_title_bar` has no caption and cannot be dragged.
+2. **PR2, not opened.** The `cui_title_bar` chrome component in its own
+   component file, with its documentation page and images. Prepare it after
+   PR1 and ask the user before publishing it.
 
-## Delivery and validation
+Neither PR covers the X11 frame, the runtime toggle
+`cui_app_set_custom_title_bar`, `cui_split`'s `.fixed_first` or transparency
+effects such as Mica. The fork branch `codex/cui-titlebar-testing` keeps the
+prototype for these.
 
-1. Verified on the branch: Windows 11 with both renderers covers window
-   buttons, Snap layouts, dragging, double-click, edge resizing, dark mode,
-   the inactive look and the system-frame fallback. Debian KDE KWin X11 with
-   both renderers covers the same interactions, a 120-launch startup check
-   and a one-pixel edge for the undecorated window. Untested: DPI changes
-   while running, other X11 window managers and macOS.
-2. Proposing the feature upstream requires explicit user authorization; none
-   has been given. Expose the CUI feature through the FPAS binding only once
-   the vendored CUI revision contains it.
-3. Keep macOS on the system frame until a contributor can implement and validate
-   it on macOS. CI compilation alone does not verify native window interaction.
-   Validate frame behavior in native desktop sessions; WASM page screenshots do
-   not validate native window decorations.
+## Upstream requirements
+
+- Off by default: an app without `custom_title_bar` keeps today's window on
+  every backend.
+- Native Windows behavior: resize edges, the shadow, dragging, double-click to
+  maximize and Snap layouts on the maximize button (`HTMAXBUTTON`).
+- Where a backend keeps the system title bar, `cui_title_bar` draws the same
+  bar without window buttons, so one layout works everywhere.
+- The core stays decoupled: platform pieces go through the optional hooks.
+
+## FPAS integration
+
+- Expose the title bar through the binding and the GUI host once the vendored
+  revision contains it. Keep the system frame as the default; failed activation
+  leaves it intact and the bar renders as an ordinary bar.
+- Keep macOS on the system frame until it can be implemented and validated on
+  macOS. Validate frame behavior in native desktop sessions; CI compilation and
+  WASM screenshots do not cover native window decorations.
 
 ## References
 
 - [Windows title-bar customization](https://learn.microsoft.com/en-us/windows/apps/develop/title-bar)
-- [Microsoft TitleBar control](https://learn.microsoft.com/en-us/windows/apps/develop/ui/controls/title-bar)
 - [Win32 custom window frames](https://learn.microsoft.com/en-us/windows/win32/dwm/customframe)
 - [CUI contribution guidelines](https://github.com/yappologistic/CUI/blob/master/docs/CONTRIBUTING.md)

@@ -9,9 +9,8 @@ Open gaps, proposals and deferred work. Implemented behavior belongs in the
 | Deferred .NET 11 upgrade and native debugger blocker | [.NET 11 debugger gap](dotnet11-debugger-gap.md) |
 | Linux child adoption and process supervision | [Linux process ownership isolation](linux-process-ownership.md) |
 | Agent tooling, authoring proposals and deferred debugging wishes | [Agent wishes](agent-wishes.md) |
-| Upstream CUI reporting pause and open gallery pixel comparisons | [CUI gaps](cui-gaps.md) |
+| CUI drag and drop and open gallery pixel comparisons | [CUI gaps](cui-gaps.md) |
 | Desktop platform acceptance and accessibility | [Desktop GUI application gaps](gui-app-gaps.md) |
 | FPas-Amp recording identification and similar-track playback | [Dynamic playlists](../../apps/fpas-amp/doc/future/dynamic-playlist.md) |
 | Confirmed native defects and integration workarounds | [CUI upstream bugs](cui-upstream-bugs.md) |
-| Optional native title bar, upstream proposal and platform validation | [CUI title bar](cui-titlebar.md) |
-| Open platform checks and follow-ups for upstream window state and placement | [CUI window state](cui-window-state.md) |
+| Optional native title bar and its two upstream pull requests | [CUI title bar](cui-titlebar.md) |

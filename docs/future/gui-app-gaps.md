@@ -29,13 +29,12 @@ Font coverage and bidirectional editing are separate concerns.
 
 ## Deferred window chrome
 
-The [optional title bar](cui-titlebar.md) has a separate plan. The local CUI
-prototype at `00eddec` adds an experimental title bar on Win32 and X11.
-The vendored CUI revision lacks that API.
+The [optional title bar](cui-titlebar.md) arrives upstream in two pull
+requests. The vendored CUI revision lacks that API until both are merged.
 
-[apps]: https://github.com/yappologistic/CUI/blob/e2a0ad2a493e22eb1d96beb4991f50dc2c4ac435/docs/apps.md
-[recipes]: https://github.com/yappologistic/CUI/blob/e2a0ad2a493e22eb1d96beb4991f50dc2c4ac435/docs/recipes.md
-[getting-started]: https://github.com/yappologistic/CUI/blob/e2a0ad2a493e22eb1d96beb4991f50dc2c4ac435/docs/getting-started.md
-[theming]: https://github.com/yappologistic/CUI/blob/e2a0ad2a493e22eb1d96beb4991f50dc2c4ac435/docs/theming.md
-[app-options]: https://github.com/yappologistic/CUI/blob/e2a0ad2a493e22eb1d96beb4991f50dc2c4ac435/docs/apps.md#two-ways-to-run
-[limitations]: https://github.com/yappologistic/CUI/blob/e2a0ad2a493e22eb1d96beb4991f50dc2c4ac435/docs/faq.md#what-can-it-not-do
+[apps]: https://github.com/yappologistic/CUI/blob/f9597a30d3bba4f7ef3e0f918e31c28bdcd4d2a3/docs/apps.md
+[recipes]: https://github.com/yappologistic/CUI/blob/f9597a30d3bba4f7ef3e0f918e31c28bdcd4d2a3/docs/recipes.md
+[getting-started]: https://github.com/yappologistic/CUI/blob/f9597a30d3bba4f7ef3e0f918e31c28bdcd4d2a3/docs/getting-started.md
+[theming]: https://github.com/yappologistic/CUI/blob/f9597a30d3bba4f7ef3e0f918e31c28bdcd4d2a3/docs/theming.md
+[app-options]: https://github.com/yappologistic/CUI/blob/f9597a30d3bba4f7ef3e0f918e31c28bdcd4d2a3/docs/apps.md#two-ways-to-run
+[limitations]: https://github.com/yappologistic/CUI/blob/f9597a30d3bba4f7ef3e0f918e31c28bdcd4d2a3/docs/faq.md#what-can-it-not-do

@@ -33,15 +33,17 @@ requires Key <> '';
 begin
   return A.StartBackground<TMsg>(
     Key,
-    async function(Post: function(TMsg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-      const Value: string? := await Library.FingerprintAsync(
-        Track,
-        Generate,
-        Cancellation
-      ).ConfigureAwait(false);
-      await Post(Reply(new State(Track, false, Value))).ConfigureAwait(false);
-    end function,
-    function(Error: Sys.Exception): TMsg => Reply(new State(Track, false, Error := Error.Message))
+    A.FromWorker<TMsg>(
+      async function(Post: function(TMsg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+        const Value: string? := await Library.FingerprintAsync(
+          Track,
+          Generate,
+          Cancellation
+        ).ConfigureAwait(false);
+        await Post(Reply(new State(Track, false, Value))).ConfigureAwait(false);
+      end function,
+      function(Error: Sys.Exception): TMsg => Reply(new State(Track, false, Error := Error.Message))
+    )
   );
 end function;
 

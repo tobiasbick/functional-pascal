@@ -3,7 +3,7 @@
 async program CaptureEncoding;
 
 uses
-  Fpas.Processes.Workflows.Capture as Capture, Fpas.Workflows.Operations as W,
+  Fpas.Processes.Workflows.Capture as Capture, Fpas.Execution.Effects as Fx,
   System as Sys, System.IO as IO, System.Text as Text, System.Threading as T;
 
 procedure WriteChildOutput();
@@ -30,7 +30,7 @@ begin
       Host, [Arguments[0], 'child'], Sys.AppContext.BaseDirectory
     );
     case await Capture.Read(10, 64).Run(Request, T.CancellationToken.None) of
-      when W.Outcome.Success(const Result: Capture.Captured):
+      when Fx.Outcome.Success(const Result: Capture.Captured):
         if Result.ExitCode <> 0
           or Sys.Convert.ToHexString(
           Text.Encoding.UTF8.GetBytes(Result.Output)
@@ -41,7 +41,7 @@ begin
         then
           raise new Sys.InvalidOperationException('Capture did not decode both streams as UTF-8.');
         end if;
-      when W.Outcome.Failure(_):
+      when Fx.Outcome.Failure(_):
         raise new Sys.InvalidOperationException(
           'The capture child did not finish before the deadline.'
         );

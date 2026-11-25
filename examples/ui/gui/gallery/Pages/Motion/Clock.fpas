@@ -31,7 +31,7 @@ public function Start<TMsg>(Tick: function(float): TMsg; OnFailure: function(Sys
     end while;
   end function;
 begin
-  return A.StartBackground<TMsg>(Identity, Run, OnFailure);
+  return A.StartBackground<TMsg>(Identity, A.FromWorker<TMsg>(Run, OnFailure));
 end function;
 
 end unit;

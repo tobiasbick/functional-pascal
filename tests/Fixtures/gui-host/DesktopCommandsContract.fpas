@@ -57,7 +57,7 @@ procedure VerifyClose(Renderer: Cui.CuiRenderer);
       when Msg.Start:
         return new Mvu.Transition<int, Msg>(
           Model,
-          [Mvu.StartBackground<Msg>('work', Work, Msg.Failed)]
+          [Mvu.StartBackground<Msg>('work', Mvu.FromWorker<Msg>(Work, Msg.Failed))]
         );
       when Msg.Close:
         return new Mvu.Transition<int, Msg>(Model + 1, []);

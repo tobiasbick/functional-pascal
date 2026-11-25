@@ -21,20 +21,22 @@ begin
 
   return Mvu.StartBackground<M.Msg>(
     'player-waveform',
-    async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-      const Measure: Tasks.Task<array of float> := if Service = null or Current.Podcast then
-        Audio.Analysis.LoudnessAsync(
-          PlayerModel.AudioPath(Current, Track),
-          Waves.Buckets,
-          Cancellation
-        )
-      else
-        Service.WaveformAsync(Track, Cancellation)
-      end if;
-      const Levels: array of float := await Measure.ConfigureAwait(false);
-      await Post(M.Msg.Player(PlayerModel.Msg.Measured(Key, Levels))).ConfigureAwait(false);
-    end function,
-    function(_Failure: Sys.Exception): M.Msg => M.Msg.Player(PlayerModel.Msg.Measured(Key, []))
+    Mvu.FromWorker<M.Msg>(
+      async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+        const Measure: Tasks.Task<array of float> := if Service = null or Current.Podcast then
+          Audio.Analysis.LoudnessAsync(
+            PlayerModel.AudioPath(Current, Track),
+            Waves.Buckets,
+            Cancellation
+          )
+        else
+          Service.WaveformAsync(Track, Cancellation)
+        end if;
+        const Levels: array of float := await Measure.ConfigureAwait(false);
+        await Post(M.Msg.Player(PlayerModel.Msg.Measured(Key, Levels))).ConfigureAwait(false);
+      end function,
+      function(_Failure: Sys.Exception): M.Msg => M.Msg.Player(PlayerModel.Msg.Measured(Key, []))
+    )
   );
 end function;
 

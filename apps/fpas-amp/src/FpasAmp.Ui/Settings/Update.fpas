@@ -7,26 +7,39 @@ uses
   FpasAmp.Ui.Settings.Model as M, FpasAmp.Ui.Settings.Editing as Editing,
   FpasAmp.Ui.Settings.InventoryState as State, FpasAmp.Library.Sources as Sources,
   FpasAmp.Library.Inventory.Model as Inventory, FpasAmp.Library.Inventory.Progress as Progress,
-  FpasAmp.Library.Inventory.Monitoring as Monitoring, Fpas.Ui.Mvu.Application as Mvu,
-  Fpas.Ui.Gui.Cui.CuiDesktop as Desktop, System as Sys, System.IO as IO,
+  FpasAmp.Library.Inventory.Monitoring as Monitoring,
+  Fpas.Execution.Effects as Fx, Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Gui.Cui.CuiDesktop as Desktop, System as Sys,
   System.Threading as T, System.Threading.Tasks as Tasks;
 
 function Clear(Library: Monitoring.Session; Target: string): Mvu.Command<M.Msg>;
 begin
   return Mvu.StartBackground<M.Msg>(
     'library-clear',
-    async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-      const Value: Inventory.Snapshot := await Library.ClearAsync(
-        Target,
-        Cancellation
-      ).ConfigureAwait(false);
-      await Post(M.Msg.Cleared(Target, Value)).ConfigureAwait(false);
-    end function,
-    function(Error: Sys.Exception): M.Msg => M.Msg.LibraryFailed(Error.Message)
+    Mvu.FromWorker<M.Msg>(
+      async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+        const Value: Inventory.Snapshot := await Library.ClearAsync(
+          Target,
+          Cancellation
+        ).ConfigureAwait(false);
+        await Post(M.Msg.Cleared(Target, Value)).ConfigureAwait(false);
+      end function,
+      function(Error: Sys.Exception): M.Msg => M.Msg.LibraryFailed(Error.Message)
+    )
   );
 end function;
 
 function OpenKeyPage(Key: M.AcoustIdKey): Mvu.Command<M.Msg>;
+  function Open(_Context: Mvu.BackgroundContext<M.Msg>; _Cancellation: T.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, M.Msg>>;
+  begin
+    return Tasks.Task.FromResult<Fx.Outcome<Fx.Completion, M.Msg>>(
+      if Desktop.TryOpen(Url) then
+        Fx.Outcome.Success(Fx.Completion.Done)
+      else
+        Fx.Outcome.Failure(M.Msg.AcoustIdKeyPageFailed)
+      end if
+    );
+  end function;
 begin
   const Url: string := if Key = M.AcoustIdKey.Application then
     'https://acoustid.org/new-application'
@@ -34,16 +47,7 @@ begin
     'https://acoustid.org/api-key'
   end if;
   return Mvu.StartBackground<M.Msg>(
-    'acoustid-key-page',
-    function(_Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-      Cancellation.ThrowIfCancellationRequested();
-      if not Desktop.TryOpen(Url) then
-        raise new IO.IOException('Could not open the AcoustID setup page.');
-      end if;
-
-      return Tasks.Task.CompletedTask;
-    end function,
-    function(_Error: Sys.Exception): M.Msg => M.Msg.AcoustIdKeyPageFailed
+    'acoustid-key-page', Fx.Effect<Fx.Completion, M.Msg, Mvu.BackgroundContext<M.Msg>>.Defer(Open)
   );
 end function;
 

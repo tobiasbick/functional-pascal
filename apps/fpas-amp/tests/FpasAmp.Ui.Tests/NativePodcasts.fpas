@@ -136,7 +136,7 @@ begin
         Current := Next.Model;
         for Index: int := 0 to Next.Commands.Length - 1 do
           case Next.Commands[Index] of
-            when A.Command.Start(const Id: string, _, _):
+            when A.Command.Start(const Id: string, _):
               if Id = 'podcasts/search' then
                 const Revision: long := Current.Podcasts.SearchRevision;
                 const Matches: array of P.Show := if Current.Podcasts.Searched then
@@ -156,11 +156,13 @@ begin
                 // Only the external Apple response is simulated. RSS and audio use HTTP below.
                 Next.Commands[Index] := A.StartBackground<App.Msg>(
                   Id,
-                  function(Post: function(App.Msg): Tasks.Task; _Stop: T.CancellationToken): Tasks.Task => Post(
-                    App.Msg.Podcasts(P.Msg.Found(Revision, Matches))
-                  ),
-                  function(Error: Sys.Exception): App.Msg => App.Msg.Podcasts(
-                    P.Msg.SearchFailed(Revision, Error.Message)
+                  A.FromWorker<App.Msg>(
+                    function(Post: function(App.Msg): Tasks.Task; _Stop: T.CancellationToken): Tasks.Task => Post(
+                      App.Msg.Podcasts(P.Msg.Found(Revision, Matches))
+                    ),
+                    function(Error: Sys.Exception): App.Msg => App.Msg.Podcasts(
+                      P.Msg.SearchFailed(Revision, Error.Message)
+                    )
                   )
                 );
               end if;

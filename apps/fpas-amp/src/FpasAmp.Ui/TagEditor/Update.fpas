@@ -147,17 +147,19 @@ begin
         A.CancelBackground<M.Msg>(Requests.Slot),
         A.StartBackground<M.Msg>(
           'save',
-          async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
-            await Library.WriteTags(
-              Current.Track,
-              Original,
-              Patch,
-              Current.Database,
-              Current.AudioFile,
-              Stop
-            );
-            await Post(M.Msg.Saved);
-          end function, Failure
+          A.FromWorker<M.Msg>(
+            async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
+              await Library.WriteTags(
+                Current.Track,
+                Original,
+                Patch,
+                Current.Database,
+                Current.AudioFile,
+                Stop
+              );
+              await Post(M.Msg.Saved);
+            end function, Failure
+          )
         )
       ]
     );
@@ -194,9 +196,11 @@ begin
           Requests.Timer(),
           A.StartBackground<M.Msg>(
             'load',
-            async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
-              await Post(M.Msg.Loaded(await Library.ReadTags(Track, Stop)));
-            end function, Failure
+            A.FromWorker<M.Msg>(
+              async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
+                await Post(M.Msg.Loaded(await Library.ReadTags(Track, Stop)));
+              end function, Failure
+            )
           )
         ]
       );

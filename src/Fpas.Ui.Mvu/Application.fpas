@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Mvu.Application;
 
-uses System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses Fpas.Execution.Effects as Fx, System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 // A host-specific payload that can translate its message factories for a parent session.
 //
@@ -30,17 +30,22 @@ public type HostRequest = variant
   Extension(Value: Sys.Object);
 end variant;
 
+// Supplies the message channel for a running background effect.
+//
+// ## Type parameters
+// - `TMsg`: The session's message type.
+public type BackgroundContext<TMsg> = record
+  // Posts a message and completes when the mailbox admits it.
+  public Post: function(TMsg): Tasks.Task;
+end record;
+
 // Work requested by an update.
 //
 // ## Type parameters
 // - `TMsg`: The application's message type.
 public type Command<TMsg> = variant
-  // Start work under Id. Work receives a post function and cancellation token.
-  // OnFailure maps an exception from the work into an application message.
-  Start(
-    Id: string; Work: function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task;
-    OnFailure: function(Sys.Exception): TMsg
-  );
+  // Start an effect under Id, posting an expected failure as a message.
+  Start(Id: string; Work: Fx.Effect<Fx.Completion, TMsg, BackgroundContext<TMsg>>);
   // Cancel the current run of the supplied effect ID.
   Cancel(Id: string);
   // Forward a request to the host.
@@ -93,18 +98,80 @@ end function;
 //
 // ## Parameters
 // - `Id`: A nonempty ID. Starting it again replaces its previous run.
-// - `Work`: The work. Its post task completes when the mailbox admits the message.
-// - `OnFailure`: Maps a worker exception into an application message.
+// - `Work`: The effect with its message context supplied by the session.
 //
 // ## Returns
 // The command that starts the run.
-public function StartBackground<TMsg>(
-  Id: string; Work: function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task;
-  OnFailure: function(Sys.Exception): TMsg
-): Command<TMsg>;
+public function StartBackground<TMsg>(Id: string; Work: Fx.Effect<Fx.Completion, TMsg, BackgroundContext<TMsg>>): Command<TMsg>;
 requires Id.Length > 0;
 begin
-  return Command<TMsg>.Start(Id, Work, OnFailure);
+  return Command<TMsg>.Start(Id, Work);
+end function;
+
+// Adapts callback-based work that can post messages as it runs.
+//
+// ## Type parameters
+// - `TMsg`: The application's message type.
+//
+// ## Parameters
+// - `Work`: The callback receiving the session's post function and cancellation token.
+// - `OnFailure`: Maps a worker exception into an expected effect failure message.
+//
+// ## Returns
+// A deferred effect ready for `StartBackground`.
+public function FromWorker<TMsg>(
+  Work: function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task;
+  OnFailure: function(Sys.Exception): TMsg
+): Fx.Effect<Fx.Completion, TMsg, BackgroundContext<TMsg>>;
+  async function Run(Context: BackgroundContext<TMsg>; Token: Threads.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, TMsg>>;
+  begin
+    try
+      await Work(Context.Post, Token).ConfigureAwait(false);
+    catch Failure: Sys.Exception do
+      Token.ThrowIfCancellationRequested();
+      return Fx.Outcome.Failure(OnFailure(Failure));
+    end try;
+
+    return Fx.Outcome.Success(Fx.Completion.Done);
+  end function;
+begin
+  return Fx.Effect<Fx.Completion, TMsg, BackgroundContext<TMsg>>.Defer(Run);
+end function;
+
+// Adapts a typed effect by translating its outcome into session messages.
+//
+// ## Type parameters
+// - `A`: The effect's success type.
+// - `E`: The effect's expected failure type.
+// - `R`: The effect's required environment type.
+// - `TMsg`: The application's message type.
+//
+// ## Parameters
+// - `Work`: The typed effect to run.
+// - `Environment`: Supplies effect dependencies from the running session context.
+// - `OnSuccess`: Produces a message for a successful result.
+// - `OnFailure`: Produces a message for an expected failure.
+//
+// ## Returns
+// A deferred effect ready for `StartBackground`.
+public function FromEffect<A, E, R, TMsg>(
+  Work: Fx.Effect<A, E, R>; Environment: function(BackgroundContext<TMsg>): R;
+  OnSuccess: function(A): TMsg; OnFailure: function(E): TMsg
+): Fx.Effect<Fx.Completion, TMsg, BackgroundContext<TMsg>>;
+  async function Run(Context: BackgroundContext<TMsg>; Token: Threads.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, TMsg>>;
+  begin
+    case await Work.Run(Environment(Context), Token).ConfigureAwait(false) of
+      when Fx.Outcome.Success(const Value: A):
+        Token.ThrowIfCancellationRequested();
+        await Context.Post(OnSuccess(Value)).ConfigureAwait(false);
+        return Fx.Outcome.Success(Fx.Completion.Done);
+      when Fx.Outcome.Failure(const Reason: E):
+        Token.ThrowIfCancellationRequested();
+        return Fx.Outcome.Failure(OnFailure(Reason));
+    end case;
+  end function;
+begin
+  return Fx.Effect<Fx.Completion, TMsg, BackgroundContext<TMsg>>.Defer(Run);
 end function;
 
 // Requests cancellation and invalidates queued messages from the cancelled run.

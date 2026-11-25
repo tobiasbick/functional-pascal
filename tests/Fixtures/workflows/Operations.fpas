@@ -3,8 +3,8 @@
 async program WorkflowOperations;
 
 uses
-  Fpas.Workflows.Operations as W, Fpas.Workflows.Policies as Policy,
-  Fpas.Workflows.Parallel as Parallel, Fpas.Workflows.Tracing as Trace,
+  Fpas.Execution.Effects as Fx, Fpas.Execution.Workflows.Policies as Policy,
+  Fpas.Execution.Workflows.Parallel as Parallel, Fpas.Execution.Workflows.Tracing as Trace,
   System as Sys, System.Diagnostics as Diagnostics, System.Threading as T,
   System.Threading.Tasks as Tasks;
 
@@ -15,17 +15,17 @@ begin
   end if;
 end procedure;
 
-function Success(Value: int; Token: T.CancellationToken): Tasks.Task<W.Outcome<int, string>>;
+function Success(Value: int; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<int, string>>;
 begin
-  return Tasks.Task.FromResult<W.Outcome<int, string>>(W.Outcome.Success(Value));
+  return Tasks.Task.FromResult<Fx.Outcome<int, string>>(Fx.Outcome.Success(Value));
 end function;
 
 async function VerifyComposition(): Tasks.Task;
-  function Flaky(Value: int; Token: T.CancellationToken): Tasks.Task<W.Outcome<int, string>>;
+  function Flaky(Value: int; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<int, string>>;
   begin
     Starts := Starts + 1;
     if Starts = 1 then
-      return Tasks.Task.FromResult<W.Outcome<int, string>>(W.Outcome.Failure('again'));
+      return Tasks.Task.FromResult<Fx.Outcome<int, string>>(Fx.Outcome.Failure('again'));
     end if;
 
     return Success(Value, Token);
@@ -37,30 +37,30 @@ async function VerifyComposition(): Tasks.Task;
     return Sys.TimeSpan.Zero;
   end function;
 
-  function Continue(Value: int): W.Workflow<int, string, int>;
+  function Continue(Value: int): Fx.Effect<int, string, int>;
   begin
     Continued := Continued + 1;
-    return W.Map(
-      W.Workflow<int, string, int>.Defer(Success),
+    return Fx.Map(
+      Fx.Effect<int, string, int>.Defer(Success),
       function(Other: int): int => Value + Other
     );
   end function;
 begin
   var Starts: int := 0;
   var Continued: int := 0;
-  const Pipeline: W.Workflow<int, string, int> := W.AndThen(
-    W.Workflow<int, string, int>.Defer(Flaky),
+  const Pipeline: Fx.Effect<int, string, int> := Fx.AndThen(
+    Fx.Effect<int, string, int>.Defer(Flaky),
     Continue
   );
-  const Retried: W.Workflow<int, string, string> := W.FromEnvironment(
+  const Retried: Fx.Effect<int, string, string> := Fx.FromEnvironment(
     Policy.Retry(Pipeline, 2, Delay, Sys.TimeProvider.System),
     function(Text: string): int => int.Parse(Text)
   );
   Check((Starts = 0) and (Continued = 0), 'Composition executed work eagerly');
   case await Retried.Run('21', T.CancellationToken.None) of
-    when W.Outcome.Success(const Value: int):
+    when Fx.Outcome.Success(const Value: int):
       Check(Value = 42, 'Incorrect pipeline result');
-    when W.Outcome.Failure(_):
+    when Fx.Outcome.Failure(_):
       Check(false, 'Retry did not recover from the expected failure');
   end case;
 
@@ -82,7 +82,7 @@ begin
 end function;
 
 async function VerifyDeadline(CancelCaller: bool): Tasks.Task;
-  async function Wait(Value: int; Token: T.CancellationToken): Tasks.Task<W.Outcome<int, string>>;
+  async function Wait(Value: int; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<int, string>>;
   begin
     try
       await Tasks.Task.Delay(T.Timeout.Infinite, Token);
@@ -94,20 +94,20 @@ async function VerifyDeadline(CancelCaller: bool): Tasks.Task;
       end if;
     end try;
 
-    return W.Outcome.Success(Value);
+    return Fx.Outcome.Success(Value);
   end function;
 begin
   var Cleaned: bool := false;
   using const Caller: T.CancellationTokenSource := new T.CancellationTokenSource();
-  const Timed: W.Workflow<int, string, int> := Policy.WithDeadline(
-    W.Workflow<int, string, int>.Defer(Wait), Sys.TimeSpan.FromMilliseconds(100),
+  const Timed: Fx.Effect<int, string, int> := Policy.WithDeadline(
+    Fx.Effect<int, string, int>.Defer(Wait), Sys.TimeSpan.FromMilliseconds(100),
     function(): string => 'deadline', Sys.TimeProvider.System
   );
   try
     case await Timed.Run(7, Caller.Token) of
-      when W.Outcome.Success(_):
+      when Fx.Outcome.Success(_):
         Check(false, 'The deadline did not stop the wait');
-      when W.Outcome.Failure(const Reason: string):
+      when Fx.Outcome.Failure(const Reason: string):
         Check(
           not CancelCaller and Reason = 'deadline',
           'Deadline expiry replaced caller cancellation'
@@ -124,13 +124,13 @@ begin
 end function;
 
 async function VerifyDeadlineCancellation(): Tasks.Task;
-  function CancelCaller(Value: int; Token: T.CancellationToken): Tasks.Task<W.Outcome<int, string>>;
+  function CancelCaller(Value: int; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<int, string>>;
   begin
     Caller.Cancel();
     return Success(Value, Token);
   end function;
 
-  function CancelOther(Value: int; Token: T.CancellationToken): Tasks.Task<W.Outcome<int, string>>;
+  function CancelOther(Value: int; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<int, string>>;
   begin
     raise new Sys.OperationCanceledException(Other.Token);
   end function;
@@ -145,8 +145,8 @@ begin
   using const Caller: T.CancellationTokenSource := new T.CancellationTokenSource();
   using const Other: T.CancellationTokenSource := new T.CancellationTokenSource();
   Other.Cancel();
-  const Cancelled: W.Workflow<int, string, int> := Policy.WithDeadline(
-    W.Workflow<int, string, int>.Defer(CancelCaller), Sys.TimeSpan.FromDays(1),
+  const Cancelled: Fx.Effect<int, string, int> := Policy.WithDeadline(
+    Fx.Effect<int, string, int>.Defer(CancelCaller), Sys.TimeSpan.FromDays(1),
     Expired, Sys.TimeProvider.System
   );
   try
@@ -156,8 +156,8 @@ begin
     Check(Failure.CancellationToken = Caller.Token, 'The deadline policy lost the caller token');
   end try;
 
-  const Unrelated: W.Workflow<int, string, int> := Policy.WithDeadline(
-    W.Workflow<int, string, int>.Defer(CancelOther), Sys.TimeSpan.FromDays(1),
+  const Unrelated: Fx.Effect<int, string, int> := Policy.WithDeadline(
+    Fx.Effect<int, string, int>.Defer(CancelOther), Sys.TimeSpan.FromDays(1),
     Expired, Sys.TimeProvider.System
   );
   try
@@ -174,7 +174,7 @@ begin
 end function;
 
 async function VerifyTracing(): Tasks.Task;
-  async function Operation(Value: int; Token: T.CancellationToken): Tasks.Task<W.Outcome<int, string>>;
+  async function Operation(Value: int; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<int, string>>;
   begin
     await Tasks.Task.Delay(1, Token);
     const Current: Diagnostics.Activity? := Diagnostics.Activity.Current;
@@ -182,7 +182,7 @@ async function VerifyTracing(): Tasks.Task;
       (Current <> null) and (Current.OperationName = 'workflow test'),
       'Activity context did not flow across await'
     );
-    return W.Outcome.Failure('expected');
+    return Fx.Outcome.Failure('expected');
   end function;
 begin
   using const Source: Diagnostics.ActivitySource := new Diagnostics.ActivitySource(
@@ -199,8 +199,8 @@ begin
     Observed := Span;
   end procedure;
   Diagnostics.ActivitySource.AddActivityListener(Listener);
-  const Work: W.Workflow<int, string, int> := Trace.Trace(
-    W.Workflow<int, string, int>.Defer(Operation),
+  const Work: Fx.Effect<int, string, int> := Trace.Trace(
+    Fx.Effect<int, string, int>.Defer(Operation),
     Source,
     'workflow test'
   );
@@ -214,18 +214,18 @@ begin
 end function;
 
 async function VerifyParallel(): Tasks.Task;
-  async function First(Value: int; Token: T.CancellationToken): Tasks.Task<W.Outcome<int, string>>;
+  async function First(Value: int; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<int, string>>;
   begin
     SecondMayStart.SetResult();
     await FirstMayFinish.Task.WaitAsync(Token);
-    return W.Outcome.Success(Value);
+    return Fx.Outcome.Success(Value);
   end function;
 
-  async function Second(Value: int; Token: T.CancellationToken): Tasks.Task<W.Outcome<int, string>>;
+  async function Second(Value: int; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<int, string>>;
   begin
     await SecondMayStart.Task.WaitAsync(Token);
     FirstMayFinish.SetResult();
-    return W.Outcome.Success(Value + 1);
+    return Fx.Outcome.Success(Value + 1);
   end function;
 begin
   const FirstMayFinish: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
@@ -234,24 +234,24 @@ begin
   const SecondMayStart: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
     Tasks.TaskCreationOptions.RunContinuationsAsynchronously
   );
-  const Work: array of W.Workflow<int, string, int> := [
-    W.Workflow<int, string, int>.Defer(First),
-    W.Workflow<int, string, int>.Defer(Second),
-    W.Workflow<int, string, int>.Defer(Success)
+  const Work: array of Fx.Effect<int, string, int> := [
+    Fx.Effect<int, string, int>.Defer(First),
+    Fx.Effect<int, string, int>.Defer(Second),
+    Fx.Effect<int, string, int>.Defer(Success)
   ];
   case await Parallel.All(Work, 2).Run(21, T.CancellationToken.None) of
-    when W.Outcome.Success(const Values: array of int):
+    when Fx.Outcome.Success(const Values: array of int):
       Check(
         (Values.Length = 3) and (Values[0] = 21) and (Values[1] = 22) and (Values[2] = 21),
         'Parallel work returned values out of input order'
       );
-    when W.Outcome.Failure(_):
+    when Fx.Outcome.Failure(_):
       Check(false, 'Parallel work reported an unexpected failure');
   end case;
 end function;
 
 async function VerifyParallelFailure(): Tasks.Task;
-  async function Block(Value: int; Token: T.CancellationToken): Tasks.Task<W.Outcome<int, string>>;
+  async function Block(Value: int; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<int, string>>;
   begin
     Started.SetResult();
     try
@@ -260,16 +260,16 @@ async function VerifyParallelFailure(): Tasks.Task;
       Cleaned := true;
     end try;
 
-    return W.Outcome.Success(Value);
+    return Fx.Outcome.Success(Value);
   end function;
 
-  async function Fail(Value: int; Token: T.CancellationToken): Tasks.Task<W.Outcome<int, string>>;
+  async function Fail(Value: int; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<int, string>>;
   begin
     await Started.Task.WaitAsync(Token);
-    return W.Outcome.Failure('stop');
+    return Fx.Outcome.Failure('stop');
   end function;
 
-  function Extra(Value: int; Token: T.CancellationToken): Tasks.Task<W.Outcome<int, string>>;
+  function Extra(Value: int; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<int, string>>;
   begin
     raise new Sys.InvalidOperationException('Parallel work started outside the concurrency limit');
   end function;
@@ -278,15 +278,15 @@ begin
     Tasks.TaskCreationOptions.RunContinuationsAsynchronously
   );
   var Cleaned: bool := false;
-  const Work: array of W.Workflow<int, string, int> := [
-    W.Workflow<int, string, int>.Defer(Block),
-    W.Workflow<int, string, int>.Defer(Fail),
-    W.Workflow<int, string, int>.Defer(Extra)
+  const Work: array of Fx.Effect<int, string, int> := [
+    Fx.Effect<int, string, int>.Defer(Block),
+    Fx.Effect<int, string, int>.Defer(Fail),
+    Fx.Effect<int, string, int>.Defer(Extra)
   ];
   case await Parallel.All(Work, 2).Run(0, T.CancellationToken.None) of
-    when W.Outcome.Success(_):
+    when Fx.Outcome.Success(_):
       Check(false, 'Parallel work did not propagate failure');
-    when W.Outcome.Failure(const Reason: string):
+    when Fx.Outcome.Failure(const Reason: string):
       Check(Reason = 'stop', 'Wrong parallel failure');
   end case;
 

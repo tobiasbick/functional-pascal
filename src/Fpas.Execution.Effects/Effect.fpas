@@ -1,19 +1,19 @@
-// [Documentation](../../docs/pascal/libraries/workflows.md#describe-and-run-a-workflow)
+// [Documentation](../../docs/pascal/libraries/effects.md)
 
-// Deferred .NET task workflows with typed success, failure, and environment.
-unit Fpas.Workflows.Operations;
+// Deferred effects on .NET tasks with typed success, failure, and environment.
+unit Fpas.Execution.Effects;
 
 uses System.Threading as Threads, System.Threading.Tasks as Tasks;
 
-// The ordinary result of a workflow.
+// The ordinary result of an effect.
 //
 // ## Type parameters
 // - `A`: Success value type.
 // - `E`: Expected failure type.
 public type Outcome<A, E> = variant
-  // The workflow produced Value.
+  // The effect produced Value.
   Success(Value: A);
-  // The workflow reported Reason as data.
+  // The effect reported Reason as data.
   Failure(Reason: E);
 end variant;
 
@@ -29,7 +29,7 @@ end enum;
 // - `A`: Success value type.
 // - `E`: Expected failure type.
 // - `R`: Required environment type.
-public type Workflow<A, E, R> = record
+public type Effect<A, E, R> = record
   Body: function(R, Threads.CancellationToken): Tasks.Task<Outcome<A, E>>;
 
   // Stores a body for later execution.
@@ -38,13 +38,13 @@ public type Workflow<A, E, R> = record
   // - `Body`: Work invoked with the environment and cancellation token.
   //
   // ## Returns
-  // The deferred workflow.
-  public static function Defer(Body: function(R, Threads.CancellationToken): Tasks.Task<Outcome<A, E>>): Workflow<A, E, R>;
+  // The deferred effect.
+  public static function Defer(Body: function(R, Threads.CancellationToken): Tasks.Task<Outcome<A, E>>): Effect<A, E, R>;
   begin
-    return new Workflow<A, E, R>(Body);
+    return new Effect<A, E, R>(Body);
   end function;
 
-  // Runs the workflow. Expected failures are results. CLR faults and cancellation
+  // Runs the effect. Expected failures are results. CLR faults and cancellation
   // propagate through the task.
   //
   // ## Parameters
@@ -52,7 +52,7 @@ public type Workflow<A, E, R> = record
   // - `Cancellation`: Cancellation for this run.
   //
   // ## Returns
-  // A task that completes after the workflow and its cleanup finish.
+  // A task that completes after the effect and its cleanup finish.
   public async function Run(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<Outcome<A, E>>;
   begin
     Cancellation.ThrowIfCancellationRequested();
@@ -69,12 +69,12 @@ end record;
 // - `R`: Environment type.
 //
 // ## Parameters
-// - `Work`: The workflow to run first.
+// - `Work`: The effect to run first.
 // - `Transform`: Function called with a successful value.
 //
 // ## Returns
 // The deferred transformation.
-public function Map<A, B, E, R>(Work: Workflow<A, E, R>; Transform: function(A): B): Workflow<B, E, R>;
+public function Map<A, B, E, R>(Work: Effect<A, E, R>; Transform: function(A): B): Effect<B, E, R>;
   async function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<Outcome<B, E>>;
   begin
     return case await Work.Run(Environment, Cancellation).ConfigureAwait(false) of
@@ -83,10 +83,10 @@ public function Map<A, B, E, R>(Work: Workflow<A, E, R>; Transform: function(A):
     end case;
   end function;
 begin
-  return Workflow<B, E, R>.Defer(Execute);
+  return Effect<B, E, R>.Defer(Execute);
 end function;
 
-// Runs a second workflow after the first succeeds.
+// Runs a second effect after the first succeeds.
 //
 // ## Type parameters
 // - `A`: First success type.
@@ -95,12 +95,12 @@ end function;
 // - `R`: Shared environment type.
 //
 // ## Parameters
-// - `Work`: The workflow to run first.
+// - `Work`: The effect to run first.
 // - `Next`: Builds the next step from a successful value.
 //
 // ## Returns
 // The deferred sequence.
-public function AndThen<A, B, E, R>(Work: Workflow<A, E, R>; Next: function(A): Workflow<B, E, R>): Workflow<B, E, R>;
+public function AndThen<A, B, E, R>(Work: Effect<A, E, R>; Next: function(A): Effect<B, E, R>): Effect<B, E, R>;
   async function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<Outcome<B, E>>;
   begin
     case await Work.Run(Environment, Cancellation).ConfigureAwait(false) of
@@ -112,7 +112,7 @@ public function AndThen<A, B, E, R>(Work: Workflow<A, E, R>; Next: function(A): 
     end case;
   end function;
 begin
-  return Workflow<B, E, R>.Defer(Execute);
+  return Effect<B, E, R>.Defer(Execute);
 end function;
 
 // Transforms an expected failure.
@@ -124,12 +124,12 @@ end function;
 // - `R`: Environment type.
 //
 // ## Parameters
-// - `Work`: The workflow to run.
+// - `Work`: The effect to run.
 // - `Transform`: Function called with an expected failure.
 //
 // ## Returns
 // The deferred failure transformation.
-public function MapFailure<A, E, F, R>(Work: Workflow<A, E, R>; Transform: function(E): F): Workflow<A, F, R>;
+public function MapFailure<A, E, F, R>(Work: Effect<A, E, R>; Transform: function(E): F): Effect<A, F, R>;
   async function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<Outcome<A, F>>;
   begin
     return case await Work.Run(Environment, Cancellation).ConfigureAwait(false) of
@@ -138,10 +138,10 @@ public function MapFailure<A, E, F, R>(Work: Workflow<A, E, R>; Transform: funct
     end case;
   end function;
 begin
-  return Workflow<A, F, R>.Defer(Execute);
+  return Effect<A, F, R>.Defer(Execute);
 end function;
 
-// Recovers from an expected failure by choosing another workflow.
+// Recovers from an expected failure by choosing another effect.
 //
 // ## Type parameters
 // - `A`: Shared success type.
@@ -149,12 +149,12 @@ end function;
 // - `R`: Shared environment type.
 //
 // ## Parameters
-// - `Work`: The workflow to try.
+// - `Work`: The effect to try.
 // - `Recover`: Builds a fallback from an expected failure.
 //
 // ## Returns
 // The deferred recovery.
-public function OrElse<A, E, R>(Work: Workflow<A, E, R>; Recover: function(E): Workflow<A, E, R>): Workflow<A, E, R>;
+public function OrElse<A, E, R>(Work: Effect<A, E, R>; Recover: function(E): Effect<A, E, R>): Effect<A, E, R>;
   async function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<Outcome<A, E>>;
   begin
     const Result: Outcome<A, E> := await Work.Run(Environment, Cancellation).ConfigureAwait(false);
@@ -167,10 +167,10 @@ public function OrElse<A, E, R>(Work: Workflow<A, E, R>; Recover: function(E): W
     end case;
   end function;
 begin
-  return Workflow<A, E, R>.Defer(Execute);
+  return Effect<A, E, R>.Defer(Execute);
 end function;
 
-// Supplies part of a larger environment to a workflow.
+// Supplies part of a larger environment to an effect.
 //
 // ## Type parameters
 // - `A`: Success type.
@@ -184,13 +184,13 @@ end function;
 //
 // ## Returns
 // The workflow accepting the larger environment.
-public function FromEnvironment<A, E, R, S>(Work: Workflow<A, E, R>; Select: function(S): R): Workflow<A, E, S>;
+public function FromEnvironment<A, E, R, S>(Work: Effect<A, E, R>; Select: function(S): R): Effect<A, E, S>;
   function Execute(Environment: S; Cancellation: Threads.CancellationToken): Tasks.Task<Outcome<A, E>>;
   begin
     return Work.Run(Select(Environment), Cancellation);
   end function;
 begin
-  return Workflow<A, E, S>.Defer(Execute);
+  return Effect<A, E, S>.Defer(Execute);
 end function;
 
 end unit;

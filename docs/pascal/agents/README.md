@@ -59,8 +59,8 @@ Read [CLI](cli.md) for compilation and execution.
 - At entry routines, state caller obligations with `requires` and guarantees on
   successful return with `ensures`. Examples include a program's main routine
   and public library operations.
-- Use `Fpas.Workflows` for deferred composition of asynchronous work with typed
-  outcomes, dependencies, or shared execution policies.
+- Use SDK `Fpas.Execution.Effects` for deferred work with typed outcomes and dependencies.
+  Use `Fpas.Execution.Workflows` for shared execution policies and structured lifetimes.
 
 ## Read for the task
 

@@ -3,7 +3,7 @@
 program CompositionContract;
 
 uses
-  Fpas.Ui.Mvu.Application as A, Fpas.Ui.Mvu.Composition as M,
+  Fpas.Execution.Effects as Fx, Fpas.Ui.Mvu.Application as A, Fpas.Ui.Mvu.Composition as M,
   Fpas.Ui.Composition as U, Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B,
   Fpas.Ui.Widgets.Inputs.TextFields as F, Fpas.Ui.Validation as V, Fpas.Ui.Layout as L,
   Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.TerminalExtensions.Input as Keys,
@@ -47,6 +47,10 @@ procedure Commands();
   begin
     Runs := Runs + 1;
     Check(Token.Equals(Source.Token), 'Mapping changed the cancellation token.');
+    if Runs = 2 then
+      raise new Sys.InvalidOperationException('failure');
+    end if;
+
     return Post(7);
   end function;
 begin
@@ -54,36 +58,47 @@ begin
   using const Source: Threads.CancellationTokenSource := new Threads.CancellationTokenSource();
   const Gate: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource();
   const Original: A.Command<int> := A.StartBackground<int>(
-    'save', Work,
-    function(Error: Sys.Exception): int => -1
+    'save', A.FromWorker<int>(
+      Work,
+      function(Error: Sys.Exception): int => -1
+    )
   );
   const Mapped: A.Command<string> := M.MapCommand<int, string>(Original, Wrap, 'left');
   Check(Runs = 0, 'Mapping started an effect eagerly.');
   case Mapped of
     when A.Command.Start(
       const Id: string,
-      const Run: function(function(string): Tasks.Task, Threads.CancellationToken): Tasks.Task,
-      const Failure: function(Sys.Exception): string
+      const Effect: Fx.Effect<Fx.Completion, string, A.BackgroundContext<string>>
     ):
       Check(Id = 'left/save', 'The effect scope was lost.');
       var Delivered: string := '';
-      const Pending: Tasks.Task := Run(
+      const Context: A.BackgroundContext<string> := new A.BackgroundContext<string>(
         function(Message: string): Tasks.Task begin
           Delivered := Message;
           return Gate.Task;
-        end function, Source.Token
+        end function
+      );
+      const Pending: Tasks.Task<Fx.Outcome<Fx.Completion, string>> := Effect.Run(
+        Context,
+        Source.Token
       );
       Check(
-        Runs = 1 and Delivered = 'parent/7' and Sys.Object.ReferenceEquals(Pending, Gate.Task),
-        'Mapping lost delivery, task identity or posting backpressure.'
+        Runs = 1 and Delivered = 'parent/7', 'Mapping lost delivery.'
       );
       Check(not Pending.IsCompleted, 'Mapping bypassed the pending post.');
       Gate.SetResult();
-      Pending.GetAwaiter().GetResult();
-      Check(
-        Failure(new Sys.InvalidOperationException('failure')) = 'parent/-1',
-        'Failure messages were not mapped.'
-      );
+      case Pending.GetAwaiter().GetResult() of
+        when Fx.Outcome.Success(_):
+        else
+          raise new Sys.InvalidOperationException('Mapping lost completion.');
+      end case;
+
+      case Effect.Run(Context, Source.Token).GetAwaiter().GetResult() of
+        when Fx.Outcome.Failure(const Message: string):
+          Check(Message = 'parent/-1', 'Failure messages were not mapped.');
+        else
+          raise new Sys.InvalidOperationException('Mapping lost a failure.');
+      end case;
     else
       raise new Sys.InvalidOperationException('Mapping changed the command kind.');
   end case;

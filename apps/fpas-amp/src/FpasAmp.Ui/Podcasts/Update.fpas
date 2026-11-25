@@ -6,10 +6,47 @@ uses
   FpasAmp.Ui.Podcasts.Model as M, FpasAmp.Ui.Podcasts.Directory as Directory,
   FpasAmp.Ui.Podcasts.Feeds as Feeds, FpasAmp.Ui.Podcasts.Network as Network,
   FpasAmp.Ui.Podcasts.Browse as Browse, Fpas.Ui.Widgets.Collections.Tables as Tables,
-  Fpas.Media.Images as Images, Fpas.Ui.Mvu.Application as A,
-  System as Sys, System.Threading as T, System.Threading.Tasks as Tasks;
+  Fpas.Media.Images as Images, Fpas.Execution.Effects as Fx, Fpas.Ui.Mvu.Application as A,
+  System as Sys, System.IO as IO, System.Net.Http as H, System.Text.Json as Json,
+  System.Threading as T, System.Threading.Tasks as Tasks, System.Xml as Xml;
+
+function NetworkFailure(Error: Sys.Exception; Stop: T.CancellationToken): bool;
+begin
+  return Error is H.HttpRequestException or Error is IO.IOException or Error is
+    IO.InvalidDataException
+    or (Error is Sys.OperationCanceledException and not Stop.IsCancellationRequested);
+end function;
 
 function Search(Current: M.State; Term: string): A.Transition<M.State, M.Msg>;
+  async function Run(Context: A.BackgroundContext<M.Msg>; Stop: T.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, M.Msg>>;
+  begin
+    try
+      const Found: array of M.Show := if Term = '' then
+        await Directory.Discover(Market, Genre, Stop).ConfigureAwait(false)
+      else
+        await Directory.Search(Market, Term, Stop).ConfigureAwait(false)
+      end if;
+      await Context.Post(M.Msg.Found(Revision, Found)).ConfigureAwait(false);
+      for Show: M.Show in Found do
+        const Image: Images.Bitmap? := await Network.Cover(
+          Show.Artwork,
+          96,
+          Stop
+        ).ConfigureAwait(false);
+        case Image of
+          when is Images.Bitmap as Bitmap:
+            await Context.Post(
+              M.Msg.Cover(true, Revision, Show.Artwork, Bitmap)
+            ).ConfigureAwait(false);
+          else
+        end case;
+      end for;
+
+      return Fx.Outcome.Success(Fx.Completion.Done);
+    catch Error: Sys.Exception when NetworkFailure(Error, Stop) or Error is Json.JsonException do
+      return Fx.Outcome.Failure(M.Msg.SearchFailed(Revision, Error.Message));
+    end try;
+  end function;
 begin
   const Revision: long := Current.SearchRevision + 1L;
   const Market: string := Current.Market;
@@ -27,33 +64,36 @@ begin
     end with, [
       A.StartBackground<M.Msg>(
         'search',
-        async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
-          const Found: array of M.Show := if Term = '' then
-            await Directory.Discover(Market, Genre, Stop).ConfigureAwait(false)
-          else
-            await Directory.Search(Market, Term, Stop).ConfigureAwait(false)
-          end if;
-          await Post(M.Msg.Found(Revision, Found)).ConfigureAwait(false);
-          for Show: M.Show in Found do
-            const Image: Images.Bitmap? := await Network.Cover(
-              Show.Artwork,
-              96,
-              Stop
-            ).ConfigureAwait(false);
-            case Image of
-              when is Images.Bitmap as Bitmap:
-                await Post(M.Msg.Cover(true, Revision, Show.Artwork, Bitmap)).ConfigureAwait(false);
-              else
-            end case;
-          end for;
-        end function,
-        function(Failure: Sys.Exception): M.Msg => M.Msg.SearchFailed(Revision, Failure.Message)
+        Fx.Effect<Fx.Completion, M.Msg, A.BackgroundContext<M.Msg>>.Defer(Run)
       )
     ]
   );
 end function;
 
 function Open(Current: M.State; Show: M.Show; Subscribe: bool): A.Transition<M.State, M.Msg>;
+  async function Run(Context: A.BackgroundContext<M.Msg>; Stop: T.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, M.Msg>>;
+  begin
+    try
+      const Feed: M.Feed := await Feeds.Load(Show, Stop).ConfigureAwait(false);
+      await Context.Post(M.Msg.Loaded(Revision, Feed)).ConfigureAwait(false);
+      const Image: Images.Bitmap? := await Network.Cover(
+        Feed.Show.Artwork,
+        320,
+        Stop
+      ).ConfigureAwait(false);
+      case Image of
+        when is Images.Bitmap as Bitmap:
+          await Context.Post(
+            M.Msg.Cover(false, Revision, Feed.Show.Artwork, Bitmap)
+          ).ConfigureAwait(false);
+        else
+      end case;
+
+      return Fx.Outcome.Success(Fx.Completion.Done);
+    catch Error: Sys.Exception when NetworkFailure(Error, Stop) or Error is Xml.XmlException do
+      return Fx.Outcome.Failure(M.Msg.FeedFailed(Revision, Error.Message));
+    end try;
+  end function;
 begin
   const Revision: long := Current.FeedRevision + 1L;
   return new A.Transition<M.State, M.Msg>(
@@ -76,23 +116,7 @@ begin
     end with, [
       A.StartBackground<M.Msg>(
         'feed',
-        async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
-          const Feed: M.Feed := await Feeds.Load(Show, Stop).ConfigureAwait(false);
-          await Post(M.Msg.Loaded(Revision, Feed)).ConfigureAwait(false);
-          const Image: Images.Bitmap? := await Network.Cover(
-            Feed.Show.Artwork,
-            320,
-            Stop
-          ).ConfigureAwait(false);
-          case Image of
-            when is Images.Bitmap as Bitmap:
-              await Post(
-                M.Msg.Cover(false, Revision, Feed.Show.Artwork, Bitmap)
-              ).ConfigureAwait(false);
-            else
-          end case;
-        end function,
-        function(Failure: Sys.Exception): M.Msg => M.Msg.FeedFailed(Revision, Failure.Message)
+        Fx.Effect<Fx.Completion, M.Msg, A.BackgroundContext<M.Msg>>.Defer(Run)
       )
     ]
   );

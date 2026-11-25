@@ -127,27 +127,27 @@ begin
     when Msg.StartOriginal:
       return new Mvu.Transition<string, Msg>(
         State,
-        [Mvu.StartBackground<Msg>('job', Original, Failed)]
+        [Mvu.StartBackground<Msg>('job', Mvu.FromWorker<Msg>(Original, Failed))]
       );
     when Msg.Replace:
       return new Mvu.Transition<string, Msg>(
         State,
-        [Mvu.StartBackground<Msg>('job', Replacement, Failed)]
+        [Mvu.StartBackground<Msg>('job', Mvu.FromWorker<Msg>(Replacement, Failed))]
       );
     when Msg.StartFailure:
       return new Mvu.Transition<string, Msg>(
         State,
-        [Mvu.StartBackground<Msg>('failing', Failing, Failed)]
+        [Mvu.StartBackground<Msg>('failing', Mvu.FromWorker<Msg>(Failing, Failed))]
       );
     when Msg.StartUntilExit:
       return new Mvu.Transition<string, Msg>(
         State,
-        [Mvu.StartBackground<Msg>('until-exit', UntilExit, Failed)]
+        [Mvu.StartBackground<Msg>('until-exit', Mvu.FromWorker<Msg>(UntilExit, Failed))]
       );
     when Msg.StartBlocked:
       return new Mvu.Transition<string, Msg>(
         State,
-        [Mvu.StartBackground<Msg>('blocked', UntilMailboxCloses, Failed)]
+        [Mvu.StartBackground<Msg>('blocked', Mvu.FromWorker<Msg>(UntilMailboxCloses, Failed))]
       );
     when Msg.Cancel:
       return new Mvu.Transition<string, Msg>(State, [Mvu.CancelBackground<Msg>('until-exit')]);
@@ -378,10 +378,12 @@ procedure CheckCloseFromHostRequest();
         Mvu.Focus<Msg>('close-from-host'),
         Mvu.StartBackground<Msg>(
           'after-close',
-          function(Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task => Finish.Task.WaitAsync(
-            Deadline
-          ),
-          Failed
+          Mvu.FromWorker<Msg>(
+            function(Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task => Finish.Task.WaitAsync(
+              Deadline
+            ),
+            Failed
+          )
         )
       ]
     );

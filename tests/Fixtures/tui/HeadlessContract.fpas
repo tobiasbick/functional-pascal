@@ -26,7 +26,12 @@ begin
     when Msg.Start:
       return new Mvu.Transition<int, Msg>(
         State,
-        [Mvu.StartBackground<Msg>('task', Work, function(Error: Sys.Exception): Msg => Msg.Fail)]
+        [
+          Mvu.StartBackground<Msg>(
+            'task',
+            Mvu.FromWorker<Msg>(Work, function(Error: Sys.Exception): Msg => Msg.Fail)
+          )
+        ]
       );
     when Msg.Cancel:
       return new Mvu.Transition<int, Msg>(State, [Mvu.CancelBackground<Msg>('task')]);

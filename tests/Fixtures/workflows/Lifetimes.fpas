@@ -3,7 +3,7 @@
 async program WorkflowLifetimes;
 
 uses
-  Fpas.Workflows.Operations as W, Fpas.Workflows.Scopes as S, Fpas.Workflows.Layers as L,
+  Fpas.Execution.Effects as Fx, Fpas.Execution.Workflows.Scopes as S, Fpas.Execution.Workflows.Layers as L,
   System as Sys, System.Collections.Generic as C, System.Threading as T,
   System.Threading.Tasks as Tasks;
 
@@ -15,16 +15,16 @@ begin
 end procedure;
 
 async function VerifyLayers(): Tasks.Task;
-  function Acquire(Value: int; Token: T.CancellationToken): Tasks.Task<W.Outcome<int, string>>;
+  function Acquire(Value: int; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<int, string>>;
   begin
     Events.Add('acquire ' + Value.ToString());
-    return Tasks.Task.FromResult<W.Outcome<int, string>>(W.Outcome.Success(Value));
+    return Tasks.Task.FromResult<Fx.Outcome<int, string>>(Fx.Outcome.Success(Value));
   end function;
 
-  function AcquireDependent(Value: int; Token: T.CancellationToken): Tasks.Task<W.Outcome<int, string>>;
+  function AcquireDependent(Value: int; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<int, string>>;
   begin
     if Value < 0 then
-      return Tasks.Task.FromResult<W.Outcome<int, string>>(W.Outcome.Failure('unavailable'));
+      return Tasks.Task.FromResult<Fx.Outcome<int, string>>(Fx.Outcome.Failure('unavailable'));
     end if;
 
     return Acquire(Value + 1, Token);
@@ -36,31 +36,31 @@ async function VerifyLayers(): Tasks.Task;
     return Tasks.Task.CompletedTask;
   end function;
 
-  function Use(Value: int; Token: T.CancellationToken): Tasks.Task<W.Outcome<int, string>>;
+  function Use(Value: int; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<int, string>>;
   begin
     Events.Add('use ' + Value.ToString());
-    return Tasks.Task.FromResult<W.Outcome<int, string>>(W.Outcome.Success(Value));
+    return Tasks.Task.FromResult<Fx.Outcome<int, string>>(Fx.Outcome.Success(Value));
   end function;
 begin
   const Events: C.List<string> := new C.List<string>();
   const First: L.Layer<int, string, int> := L.Layer<int, string, int>.Create(
-    W.Workflow<int, string, int>.Defer(Acquire),
+    Fx.Effect<int, string, int>.Defer(Acquire),
     Release
   );
   const Next: L.Layer<int, string, int> := L.Layer<int, string, int>.Create(
-    W.Workflow<int, string, int>.Defer(AcquireDependent),
+    Fx.Effect<int, string, int>.Defer(AcquireDependent),
     Release
   );
-  const Program: W.Workflow<int, string, int> := L.Provide(
-    W.Workflow<int, string, int>.Defer(Use),
+  const Program: Fx.Effect<int, string, int> := L.Provide(
+    Fx.Effect<int, string, int>.Defer(Use),
     First.ThenBuild(Next)
   );
 
   Check(Events.Count = 0, 'Building layers acquired a dependency');
   case await Program.Run(1, T.CancellationToken.None) of
-    when W.Outcome.Success(const Value: int):
+    when Fx.Outcome.Success(const Value: int):
       Check(Value = 2, 'The workflow did not receive its dependency');
-    when W.Outcome.Failure(_):
+    when Fx.Outcome.Failure(_):
       Check(false, 'Composition failed unexpectedly');
   end case;
 
@@ -70,9 +70,9 @@ begin
   );
   Events.Clear();
   case await Program.Run(-1, T.CancellationToken.None) of
-    when W.Outcome.Success(_):
+    when Fx.Outcome.Success(_):
       Check(false, 'Partial acquisition unexpectedly succeeded');
-    when W.Outcome.Failure(const Reason: string):
+    when Fx.Outcome.Failure(const Reason: string):
       Check(Reason = 'unavailable', 'Acquisition failure was lost');
   end case;
 
@@ -168,7 +168,7 @@ begin
 end function;
 
 async function VerifyCompletedValue(Callback: bool): Tasks.Task;
-  function Use(Lifetime: S.Scope): Tasks.Task<W.Outcome<int, string>>;
+  function Use(Lifetime: S.Scope): Tasks.Task<Fx.Outcome<int, string>>;
   begin
     Lifetime.OnClose(
       function(): Tasks.Task begin
@@ -190,7 +190,7 @@ async function VerifyCompletedValue(Callback: bool): Tasks.Task;
       );
     end if;
 
-    return Tasks.Task.FromResult<W.Outcome<int, string>>(W.Outcome.Failure('expected outcome'));
+    return Tasks.Task.FromResult<Fx.Outcome<int, string>>(Fx.Outcome.Failure('expected outcome'));
   end function;
 begin
   var Released: int := 0;
@@ -198,7 +198,7 @@ begin
     'release failure'
   );
   try
-    discard await S.Scope.Use<W.Outcome<int, string>>(Use, T.CancellationToken.None);
+    discard await S.Scope.Use<Fx.Outcome<int, string>>(Use, T.CancellationToken.None);
     Check(false, 'Scope cleanup failure was swallowed');
   catch Failure: Sys.AggregateException do
     const Faults: Sys.AggregateException := Failure.Flatten();
@@ -208,17 +208,17 @@ begin
       'Cleanup lost its failure'
     );
     const Stored: object? := Failure.Data[
-      'Fpas.Workflows.CompletedValue'
+      'Fpas.Execution.Workflows.CompletedValue'
     ];
     if Stored = null then
       raise new Sys.InvalidOperationException('Cleanup lost the completed outcome');
     end if;
 
-    const Completed: W.Outcome<int, string> := cast<W.Outcome<int, string>>(Stored);
+    const Completed: Fx.Outcome<int, string> := cast<Fx.Outcome<int, string>>(Stored);
     case Completed of
-      when W.Outcome.Failure(const Reason: string):
+      when Fx.Outcome.Failure(const Reason: string):
         Check(Reason = 'expected outcome', 'Cleanup lost the completed expected outcome');
-      when W.Outcome.Success(_):
+      when Fx.Outcome.Success(_):
         Check(false, 'Cleanup changed the completed expected outcome');
     end case;
   end try;
@@ -227,7 +227,7 @@ begin
 end function;
 
 async function VerifyLateAcquisition(): Tasks.Task;
-  function Acquire(Value: int; Token: T.CancellationToken): Tasks.Task<W.Outcome<int, string>>;
+  function Acquire(Value: int; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<int, string>>;
   begin
     return Acquired.Task;
   end function;
@@ -239,22 +239,22 @@ async function VerifyLateAcquisition(): Tasks.Task;
     return Tasks.Task.CompletedTask;
   end function;
 
-  function Use(Lifetime: S.Scope): Tasks.Task<Tasks.Task<W.Outcome<int, string>>>;
+  function Use(Lifetime: S.Scope): Tasks.Task<Tasks.Task<Fx.Outcome<int, string>>>;
   begin
     const Dependency: L.Layer<int, string, int> := L.Layer<int, string, int>.Create(
-      W.Workflow<int, string, int>.Defer(Acquire), Release
+      Fx.Effect<int, string, int>.Defer(Acquire), Release
     );
     // Deliberately let acquisition escape so it finishes after its owner closes.
-    return Tasks.Task.FromResult<Tasks.Task<W.Outcome<int, string>>>(
+    return Tasks.Task.FromResult<Tasks.Task<Fx.Outcome<int, string>>>(
       Dependency.Build(42, Lifetime)
     );
   end function;
 begin
   var Released: int := 0;
-  const Acquired: Tasks.TaskCompletionSource<W.Outcome<int, string>> := new Tasks.TaskCompletionSource<W.Outcome<int, string>>(
+  const Acquired: Tasks.TaskCompletionSource<Fx.Outcome<int, string>> := new Tasks.TaskCompletionSource<Fx.Outcome<int, string>>(
     Tasks.TaskCreationOptions.RunContinuationsAsynchronously
   );
-  const Pending: Tasks.Task<W.Outcome<int, string>> := await S.Scope.Use<Tasks.Task<W.Outcome<int, string>>>(
+  const Pending: Tasks.Task<Fx.Outcome<int, string>> := await S.Scope.Use<Tasks.Task<Fx.Outcome<int, string>>>(
     Use,
     T.CancellationToken.None
   );
@@ -262,7 +262,7 @@ begin
     not Pending.IsCompleted and Released = 0,
     'Acquisition did not remain pending until its owner closed'
   );
-  Acquired.SetResult(W.Outcome.Success(42));
+  Acquired.SetResult(Fx.Outcome.Success(42));
   var Refused: bool := false;
   try
     discard await Pending;

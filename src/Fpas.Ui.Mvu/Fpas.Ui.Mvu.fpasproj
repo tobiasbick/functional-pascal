@@ -16,7 +16,7 @@
   </ItemGroup>
   <Target Name="IncludeMvuRuntime">
     <ItemGroup>
-      <BuildOutputInPackage Include="$(TargetDir)Fpas.Core.dll" />
+      <BuildOutputInPackage Include="$(TargetDir)Fpas.Core.dll;$(TargetDir)Fpas.Execution.Effects.dll" />
     </ItemGroup>
   </Target>
 </Project>

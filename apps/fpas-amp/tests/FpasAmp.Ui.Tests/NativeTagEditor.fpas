@@ -40,51 +40,53 @@ function ProviderFixture(Message: Editor.Msg; Id: string): Mvu.Command<App.Msg>;
 begin
   return Mvu.StartBackground<App.Msg>(
     Id,
-    async function(Post: function(App.Msg): Tasks.Task; _Stop: T.CancellationToken): Tasks.Task begin
-      case Message of
-        when Editor.Msg.Scan:
-          await Post(
-            App.Msg.TagEditor(
-              Editor.Msg.Found(
-                [
-                  new MB.Match(
-                    '11111111-1111-1111-1111-111111111111',
-                    '22222222-2222-2222-2222-222222222222',
-                    'Sample release · 98%'
-                  )
-                ]
-              )
-            )
-          );
-        when Editor.Msg.Lookup(_):
-          await Post(
-            App.Msg.TagEditor(
-              Editor.Msg.RecordingReady(
-                I.ImmutableDictionary<string, string>.Empty.Add(
-                  'recording',
-                  '11111111-1111-1111-1111-111111111111'
-                ).Add('title', 'A corrected recording').Add('artist', 'Mara Vale').Add(
-                  Fields.Custom + 'MusicBrainz Artist Id',
-                  '33333333-3333-3333-3333-333333333333'
+    Mvu.FromWorker<App.Msg>(
+      async function(Post: function(App.Msg): Tasks.Task; _Stop: T.CancellationToken): Tasks.Task begin
+        case Message of
+          when Editor.Msg.Scan:
+            await Post(
+              App.Msg.TagEditor(
+                Editor.Msg.Found(
+                  [
+                    new MB.Match(
+                      '11111111-1111-1111-1111-111111111111',
+                      '22222222-2222-2222-2222-222222222222',
+                      'Sample release · 98%'
+                    )
+                  ]
                 )
               )
-            )
-          );
-          await Post(
-            App.Msg.TagEditor(Editor.Msg.Timer(new Pacing.Status(true, 4L), new Pacing.Status()))
-          );
-          await Post(
-            App.Msg.TagEditor(
-              Editor.Msg.ReleaseFailed(
-                'HTTP/1.1 503 Service Unavailable · GET /ws/2/release/fixture · attempt 6/6'
+            );
+          when Editor.Msg.Lookup(_):
+            await Post(
+              App.Msg.TagEditor(
+                Editor.Msg.RecordingReady(
+                  I.ImmutableDictionary<string, string>.Empty.Add(
+                    'recording',
+                    '11111111-1111-1111-1111-111111111111'
+                  ).Add('title', 'A corrected recording').Add('artist', 'Mara Vale').Add(
+                    Fields.Custom + 'MusicBrainz Artist Id',
+                    '33333333-3333-3333-3333-333333333333'
+                  )
+                )
               )
-            )
-          );
-        else
-      end case;
-    end function,
-    function(Error: Sys.Exception): App.Msg => App.Msg.TagEditor(
-      Editor.Msg.RequestFailed(Error.Message)
+            );
+            await Post(
+              App.Msg.TagEditor(Editor.Msg.Timer(new Pacing.Status(true, 4L), new Pacing.Status()))
+            );
+            await Post(
+              App.Msg.TagEditor(
+                Editor.Msg.ReleaseFailed(
+                  'HTTP/1.1 503 Service Unavailable · GET /ws/2/release/fixture · attempt 6/6'
+                )
+              )
+            );
+          else
+        end case;
+      end function,
+      function(Error: Sys.Exception): App.Msg => App.Msg.TagEditor(
+        Editor.Msg.RequestFailed(Error.Message)
+      )
     )
   );
 end function;
@@ -189,7 +191,7 @@ begin
         when App.Msg.TagEditor(const Action: Editor.Msg):
           for Index: int := 0 to Next.Commands.Length - 1 do
             case Next.Commands[Index] of
-              when Mvu.Command.Start(const Id: string, _, _):
+              when Mvu.Command.Start(const Id: string, _):
                 if Id = 'tag-editor/provider' then
                   Next.Commands[Index] := ProviderFixture(Action, Id);
                 end if;

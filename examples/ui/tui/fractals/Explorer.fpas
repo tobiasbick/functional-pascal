@@ -72,8 +72,10 @@ begin
     [
       Mvu.StartBackground<Msg>(
         'render',
-        Work,
-        function(Error: Sys.Exception): Msg => Msg.Failed(Error.Message)
+        Mvu.FromWorker<Msg>(
+          Work,
+          function(Error: Sys.Exception): Msg => Msg.Failed(Error.Message)
+        )
       )
     ]
   );

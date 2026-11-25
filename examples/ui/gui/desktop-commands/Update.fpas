@@ -5,21 +5,27 @@ unit DesktopCommands.Update;
 uses
   DesktopCommands.State as S, DesktopCommands.Preferences as Preferences,
   DesktopCommands.Background as Background,
-  Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Execution.Effects as Fx, Fpas.Ui.Mvu.Application as Mvu,
   Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
   Fpas.Ui.Gui.FileDialogs as Files, Fpas.Ui.Gui.Closing as Closing,
   Fpas.Ui.Gui.Windows as Windows, Fpas.Ui.Gui.Frames as Frames,
-  System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
+  System as Sys, System.IO as IO, System.Threading as Threads,
+  System.Threading.Tasks as Tasks;
 
 // Stable ID for the single in-flight settings save.
 public const SaveEffect: string := 'save-settings';
 
 function SaveSettings(Model: S.Model): Mvu.Transition<S.Model, S.Msg>;
-  function Write(Post: function(S.Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+  async function Write(Value: Preferences.Settings; Token: Threads.CancellationToken): Tasks.Task<Fx.Outcome<Preferences.Settings, Sys.Exception>>;
   begin
     Token.ThrowIfCancellationRequested();
-    Preferences.Save(Model.SettingsPath, Model.Settings);
-    return Post(S.Msg.SettingsSaved(Model.Settings));
+    try
+      Preferences.Save(Model.SettingsPath, Value);
+      return Fx.Outcome.Success(Value);
+    catch Error: Sys.Exception when Error is IO.IOException or Error is
+      Sys.UnauthorizedAccessException do
+      return Fx.Outcome.Failure(Error);
+    end try;
   end function;
 begin
   if Model.Saving then
@@ -31,7 +37,16 @@ begin
       Saving := true;
       SaveStatus := 'Saving settings…';
     end with,
-    [Mvu.StartBackground<S.Msg>(SaveEffect, Write, S.Msg.SettingsSaveFailed)]
+    [
+      Mvu.StartBackground<S.Msg>(
+        SaveEffect,
+        Mvu.FromEffect<Preferences.Settings, Sys.Exception, Preferences.Settings, S.Msg>(
+          Fx.Effect<Preferences.Settings, Sys.Exception, Preferences.Settings>.Defer(Write),
+          function(_Context: Mvu.BackgroundContext<S.Msg>): Preferences.Settings => Model.Settings,
+          S.Msg.SettingsSaved, S.Msg.SettingsSaveFailed
+        )
+      )
+    ]
   );
 end function;
 

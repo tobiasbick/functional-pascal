@@ -4,9 +4,9 @@
 unit Fpas.Processes.Workflows.Capture;
 
 uses
-  Fpas.Processes.OwnedProcess as Owned, Fpas.Workflows.Operations as W,
-  Fpas.Workflows.Policies as Policies, Fpas.Workflows.Scopes as S,
-  Fpas.Workflows.Layers as Layers, System as Sys, System.Collections.Generic as C,
+  Fpas.Processes.OwnedProcess as Owned, Fpas.Execution.Effects as Fx,
+  Fpas.Execution.Workflows.Policies as Policies, Fpas.Execution.Workflows.Scopes as S,
+  Fpas.Execution.Workflows.Layers as Layers, System as Sys, System.Collections.Generic as C,
   System.IO as IO, System.Text as Text, System.Threading as Threads,
   System.Threading.Tasks as Tasks;
 
@@ -74,7 +74,7 @@ begin
   return Reader.ReadToEnd();
 end function;
 
-function Start(Request: Request; Cancellation: Threads.CancellationToken): Tasks.Task<W.Outcome<Owned, CaptureFailure>>;
+function Start(Request: Request; Cancellation: Threads.CancellationToken): Tasks.Task<Fx.Outcome<Owned, CaptureFailure>>;
 begin
   Cancellation.ThrowIfCancellationRequested();
   const Child: Owned := Owned.Start(
@@ -83,7 +83,7 @@ begin
     Request.Directory,
     Request.Environment
   );
-  return Tasks.Task.FromResult<W.Outcome<Owned, CaptureFailure>>(W.Outcome.Success(Child));
+  return Tasks.Task.FromResult<Fx.Outcome<Owned, CaptureFailure>>(Fx.Outcome.Success(Child));
 end function;
 
 // Builds a workflow that captures stdout, stderr, and exit status.
@@ -95,11 +95,11 @@ end function;
 // ## Returns
 // A deferred capture that joins the readers and terminates the owned tree
 // before returning. Launch and stream failures fault its task.
-public function Read(TimeoutSeconds: int; Limit: int): W.Workflow<Captured, CaptureFailure, Request>;
+public function Read(TimeoutSeconds: int; Limit: int): Fx.Effect<Captured, CaptureFailure, Request>;
 requires TimeoutSeconds > 0;
 requires Limit > 0;
-  function Capture(Child: Owned; Cancellation: Threads.CancellationToken): Tasks.Task<W.Outcome<Captured, CaptureFailure>>;
-    async function Collect(Lifetime: S.Scope): Tasks.Task<W.Outcome<Captured, CaptureFailure>>;
+  function Capture(Child: Owned; Cancellation: Threads.CancellationToken): Tasks.Task<Fx.Outcome<Captured, CaptureFailure>>;
+    async function Collect(Lifetime: S.Scope): Tasks.Task<Fx.Outcome<Captured, CaptureFailure>>;
       function Stdout(Reader: S.Scope): Tasks.Task<string>;
       begin
         return Drain(Child.Output, Limit, Reader.Token);
@@ -133,7 +133,7 @@ requires Limit > 0;
           discard Pending.Remove(Finished);
         end while;
 
-        return W.Outcome.Success(
+        return Fx.Outcome.Success(
           new Captured(await Exit.Join, await Output.Join, await Error.Join)
         );
       catch Failure: Sys.Exception do
@@ -150,15 +150,15 @@ requires Limit > 0;
       end try;
     end function;
   begin
-    return S.Scope.Use<W.Outcome<Captured, CaptureFailure>>(Collect, Cancellation);
+    return S.Scope.Use<Fx.Outcome<Captured, CaptureFailure>>(Collect, Cancellation);
   end function;
 begin
   const Dependency: Layers.Layer<Owned, CaptureFailure, Request> := Layers.Layer<Owned, CaptureFailure, Request>.Create(
-    W.Workflow<Owned, CaptureFailure, Request>.Defer(Start),
+    Fx.Effect<Owned, CaptureFailure, Request>.Defer(Start),
     function(Child: Owned): Tasks.Task => Child.DisposeAsync().AsTask()
   );
   return Policies.WithDeadline(
-    Layers.Provide(W.Workflow<Captured, CaptureFailure, Owned>.Defer(Capture), Dependency),
+    Layers.Provide(Fx.Effect<Captured, CaptureFailure, Owned>.Defer(Capture), Dependency),
     Sys.TimeSpan.FromSeconds(TimeoutSeconds),
     function(): CaptureFailure => CaptureFailure.Deadline,
     Sys.TimeProvider.System

@@ -130,12 +130,14 @@ begin
         [
           A.StartBackground<M.Msg>(
             'observe',
-            async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-              await Service.ObserveAsync(
-                function(Value: Albums.Snapshot): Tasks.Task => Post(M.Msg.Received(Value)),
-                Cancellation
-              ).ConfigureAwait(false);
-            end function, Failure
+            A.FromWorker<M.Msg>(
+              async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+                await Service.ObserveAsync(
+                  function(Value: Albums.Snapshot): Tasks.Task => Post(M.Msg.Received(Value)),
+                  Cancellation
+                ).ConfigureAwait(false);
+              end function, Failure
+            )
           )
         ]
       );
@@ -209,37 +211,43 @@ begin
         Next, [
           A.StartBackground<M.Msg>(
             'images',
-            async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task
-              async function Load(Offset: int): Tasks.Task;
-              begin
-                var Index: int := Offset;
-                while Index < Pending.Length do
-                  Cancellation.ThrowIfCancellationRequested();
-                  const Album: Albums.Album := Next.Shown[Pending[Index]];
-                  var Image: Images.Bitmap? := null;
-                  if Toolbar.IsGroup(Next.Scope) then
-                    for Release: Albums.Album in Next.Collections.Releases[Album.Id] do
-                      Cancellation.ThrowIfCancellationRequested();
+            A.FromWorker<M.Msg>(
+              async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task
+                async function Load(Offset: int): Tasks.Task;
+                begin
+                  var Index: int := Offset;
+                  while Index < Pending.Length do
+                    Cancellation.ThrowIfCancellationRequested();
+                    const Album: Albums.Album := Next.Shown[Pending[Index]];
+                    var Image: Images.Bitmap? := null;
+                    if Toolbar.IsGroup(Next.Scope) then
+                      for Release: Albums.Album in Next.Collections.Releases[Album.Id] do
+                        Cancellation.ThrowIfCancellationRequested();
+                        Image := await Artwork.Load(
+                          Service,
+                          Release,
+                          Cancellation
+                        ).ConfigureAwait(false);
+                        if Image <> null then
+                          break;
+                        end if;
+                      end for;
+                    else
                       Image := await Artwork.Load(
                         Service,
-                        Release,
+                        Album,
                         Cancellation
                       ).ConfigureAwait(false);
-                      if Image <> null then
-                        break;
-                      end if;
-                    end for;
-                  else
-                    Image := await Artwork.Load(Service, Album, Cancellation).ConfigureAwait(false);
-                  end if;
+                    end if;
 
-                  await Post(M.Msg.Image(Next.Generation, Album.Id, Image)).ConfigureAwait(false);
-                  Index := Index + 2;
-                end while;
-              end function;
-            begin
-              await Tasks.Task.WhenAll(Load(0), Load(1)).ConfigureAwait(false);
-            end function, Failure
+                    await Post(M.Msg.Image(Next.Generation, Album.Id, Image)).ConfigureAwait(false);
+                    Index := Index + 2;
+                  end while;
+                end function;
+              begin
+                await Tasks.Task.WhenAll(Load(0), Load(1)).ConfigureAwait(false);
+              end function, Failure
+            )
           )
         ]
       );
@@ -287,11 +295,13 @@ begin
         end with, [
           A.StartBackground<M.Msg>(
             'rating-' + Id,
-            async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-              await Service.SetRatingAsync(Id, Rating, Cancellation).ConfigureAwait(false);
-              await Post(M.Msg.Rated(Id, Rating)).ConfigureAwait(false);
-            end function,
-            function(Error: Sys.Exception): M.Msg => M.Msg.RatingFailed(Id, Error.Message)
+            A.FromWorker<M.Msg>(
+              async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+                await Service.SetRatingAsync(Id, Rating, Cancellation).ConfigureAwait(false);
+                await Post(M.Msg.Rated(Id, Rating)).ConfigureAwait(false);
+              end function,
+              function(Error: Sys.Exception): M.Msg => M.Msg.RatingFailed(Id, Error.Message)
+            )
           )
         ]
       );

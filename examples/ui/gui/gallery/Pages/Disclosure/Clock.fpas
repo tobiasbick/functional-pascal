@@ -41,7 +41,7 @@ public function Start<TMsg>(
     end while;
   end function;
 begin
-  return Mvu.StartBackground<TMsg>(Id, Run, OnFailure);
+  return Mvu.StartBackground<TMsg>(Id, Mvu.FromWorker<TMsg>(Run, OnFailure));
 end function;
 
 end unit;

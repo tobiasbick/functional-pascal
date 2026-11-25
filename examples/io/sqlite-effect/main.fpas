@@ -1,0 +1,74 @@
+// [Documentation](README.md)
+
+async program SqliteEffect;
+
+uses
+  Fpas.Execution.Effects as Fx, Microsoft.Data.Sqlite as Db, System as Sys,
+  System.Console as Console, System.Threading as T, System.Threading.Tasks as Tasks;
+
+type LookupFailure = variant
+  Missing(Id: int);
+  Database(Code: int);
+end variant;
+
+function FindTitle(Id: int): Fx.Effect<string, LookupFailure, string>;
+  async function Read(ConnectionString: string; Stop: T.CancellationToken): Tasks.Task<Fx.Outcome<string, LookupFailure>>;
+  begin
+    try
+      await using const Connection: Db.SqliteConnection := new Db.SqliteConnection(
+        ConnectionString
+      );
+      await Connection.OpenAsync(Stop).ConfigureAwait(false);
+      await using const Query: Db.SqliteCommand := Connection.CreateCommand();
+      Query.CommandText := 'select title from books where id = $id';
+      discard Query.Parameters.AddWithValue('$id', Id);
+      const Cell: Sys.Object? := await Query.ExecuteScalarAsync(Stop).ConfigureAwait(false);
+      Stop.ThrowIfCancellationRequested();
+      return case Cell of
+        when is string as Title: Fx.Outcome.Success(Title);
+        else Fx.Outcome.Failure(LookupFailure.Missing(Id));
+      end case;
+    catch Error: Db.SqliteException do
+      Stop.ThrowIfCancellationRequested();
+      return Fx.Outcome.Failure(LookupFailure.Database(Error.SqliteErrorCode));
+    end try;
+  end function;
+begin
+  return Fx.Effect<string, LookupFailure, string>.Defer(Read);
+end function;
+
+procedure Report(Result: Fx.Outcome<string, LookupFailure>);
+begin
+  case Result of
+    when Fx.Outcome.Success(const Title: string):
+      Console.WriteLine(Title);
+    when Fx.Outcome.Failure(const Reason: LookupFailure):
+      case Reason of
+        when LookupFailure.Missing(const Id: int):
+          Console.WriteLine('Missing book ' + Id.ToString());
+        when LookupFailure.Database(const Code: int):
+          Console.WriteLine('SQLite error ' + Code.ToString());
+          Sys.Environment.ExitCode := 1;
+      end case;
+  end case;
+end procedure;
+
+begin
+  const Catalog: string := 'Data Source=books;Mode=Memory;Cache=Shared;Pooling=False';
+  const Present: Fx.Effect<string, LookupFailure, string> := FindTitle(1);
+  const Missing: Fx.Effect<string, LookupFailure, string> := FindTitle(2);
+  using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
+  await using const Seed: Db.SqliteConnection := new Db.SqliteConnection(Catalog);
+  await Seed.OpenAsync(Deadline.Token).ConfigureAwait(false);
+  begin
+    await using const Command: Db.SqliteCommand := Seed.CreateCommand();
+    Command.CommandText := 'create table books (id integer primary key, title text not null);' +
+      'insert into books (id, title) values (1, ''Functional Pascal'')';
+    discard await Command.ExecuteNonQueryAsync(Deadline.Token).ConfigureAwait(false);
+  end;
+
+  Report(await Present.Run(Catalog, Deadline.Token).ConfigureAwait(false));
+  Report(await Missing.Run(Catalog, Deadline.Token).ConfigureAwait(false));
+end;
+
+end program;

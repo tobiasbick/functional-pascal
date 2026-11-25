@@ -3,7 +3,7 @@
 async program WorkflowStreams;
 
 uses
-  Fpas.Workflows.Operations as W, Fpas.Workflows.Layers as L, Fpas.Workflows.Streams as Streams,
+  Fpas.Execution.Effects as Fx, Fpas.Execution.Workflows.Layers as L, Fpas.Execution.Workflows.Streams as Streams,
   System as Sys, System.Collections.Generic as C, System.Threading as T,
   System.Threading.Tasks as Tasks;
 
@@ -15,9 +15,9 @@ begin
 end procedure;
 
 async function Verify(Fail: bool; CancelWhileWriting: bool; CancelWhileReading: bool): Tasks.Task;
-  function Acquire(Unused: bool; Token: T.CancellationToken): Tasks.Task<W.Outcome<C.List<int>, string>>;
+  function Acquire(Unused: bool; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<C.List<int>, string>>;
   begin
-    return Tasks.Task.FromResult<W.Outcome<C.List<int>, string>>(W.Outcome.Success(Events));
+    return Tasks.Task.FromResult<Fx.Outcome<C.List<int>, string>>(Fx.Outcome.Success(Events));
   end function;
 
   function Release(Resource: C.List<int>): Tasks.Task;
@@ -30,7 +30,7 @@ async function Verify(Fail: bool; CancelWhileWriting: bool; CancelWhileReading: 
 
   async function Produce(
     Resource: C.List<int>; Publish: function(int): Tasks.Task; Token: T.CancellationToken
-  ): Tasks.Task<W.Outcome<W.Completion, string>>;
+  ): Tasks.Task<Fx.Outcome<Fx.Completion, string>>;
   begin
     Check(
       Sys.Object.ReferenceEquals(Resource, Events),
@@ -52,10 +52,10 @@ async function Verify(Fail: bool; CancelWhileWriting: bool; CancelWhileReading: 
       end if;
 
       if Fail then
-        return W.Outcome.Failure('producer failure');
+        return Fx.Outcome.Failure('producer failure');
       end if;
 
-      return W.Outcome.Success(W.Completion.Done);
+      return Fx.Outcome.Success(Fx.Completion.Done);
     finally
       ProducerJoined := true;
     end try;
@@ -76,13 +76,13 @@ begin
   var ProducerJoined: bool := false;
   var Released: int := 0;
   const Dependency: L.Layer<C.List<int>, string, bool> := L.Layer<C.List<int>, string, bool>.Create(
-    W.Workflow<C.List<int>, string, bool>.Defer(Acquire), Release
+    Fx.Effect<C.List<int>, string, bool>.Defer(Acquire), Release
   );
-  const Plan: W.Workflow<W.Completion, string, bool> := L.Provide(
+  const Plan: Fx.Effect<Fx.Completion, string, bool> := L.Provide(
     Streams.Stream<int, string, C.List<int>>.Create(Produce).Consume(1, Receive), Dependency
   );
   using const Cancellation: T.CancellationTokenSource := new T.CancellationTokenSource();
-  const Run: Tasks.Task<W.Outcome<W.Completion, string>> := Plan.Run(false, Cancellation.Token);
+  const Run: Tasks.Task<Fx.Outcome<Fx.Completion, string>> := Plan.Run(false, Cancellation.Token);
   if CancelWhileWriting or CancelWhileReading then
     await Waiting.Task;
     Cancellation.Cancel();
@@ -105,9 +105,9 @@ begin
     );
   else
     case await Run of
-      when W.Outcome.Success(_):
+      when Fx.Outcome.Success(_):
         Check(not Fail, 'The producer failure was swallowed');
-      when W.Outcome.Failure(const Reason: string):
+      when Fx.Outcome.Failure(const Reason: string):
         Check(Fail and (Reason = 'producer failure'), 'Unexpected producer failure');
     end case;
 

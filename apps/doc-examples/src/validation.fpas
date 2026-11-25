@@ -5,7 +5,7 @@ unit DocExamples.Validation;
 uses
   DocExamples.Model as M, DocExamples.Preparation as Preparation,
   DocExamples.Diagnostics as Diagnostics, Fpas.Processes.Workflows.Capture as Capture,
-  Fpas.Workflows.Operations as W,
+  Fpas.Execution.Effects as Fx,
   System as S, System.IO as IO, System.Text.Json as J,
   System.Collections.Generic as C, System.Threading as T, System.Threading.Tasks as Tasks;
 
@@ -21,9 +21,9 @@ begin
     Environment
   );
   case await Capture.Read(Options.Timeout, 524288).Run(Request, Cancellation) of
-    when W.Outcome.Success(const Result: Capture.Captured):
+    when Fx.Outcome.Success(const Result: Capture.Captured):
       return Result;
-    when W.Outcome.Failure(_):
+    when Fx.Outcome.Failure(_):
       raise new S.TimeoutException('Process exceeded the example timeout');
   end case;
 end function;

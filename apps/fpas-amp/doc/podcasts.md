@@ -44,7 +44,9 @@ results. The requests use no API key. Requests to the iTunes host start at
 least 3.2 seconds apart. RSS 2.0 supplies
 the episode metadata and direct audio enclosure URLs. Larger media responses
 are limited to 512 MiB. Search and feed replies carry request identities, and
-changing shows cancels the previous feed request.
+changing shows cancels the previous feed request. The typed search and feed
+effects deliver metadata before artwork. The download effect reports either a
+complete path or an expected download failure.
 
 - [Apple Search API](https://performance-partners.apple.com/search-api)
 - [Apple Podcasts Charts](https://podcasters.apple.com/support/3146-apple-podcasts-charts)
@@ -69,6 +71,9 @@ Sources
 
 ## Verification
 
+The headless effect test holds a loopback feed's metadata, cover, and malformed
+XML failure separately and checks the model before and after each reply.
+
 The native test releases directory, RSS, cover and downloaded audio replies
 individually. It checks the charts before typing, after changing market and
 genre, and after clearing the query. It also checks genre filtering on the
@@ -76,4 +81,5 @@ loaded search results, the subscription entry, saved route, finite audio
 decoder, waveform, seek and next episode.
 
 - [NativePodcasts.fpas](../tests/FpasAmp.Ui.Tests/NativePodcasts.fpas)
+- [PodcastEffects.fpas](../tests/FpasAmp.Ui.Tests/PodcastEffects.fpas)
 - [ProviderHttp.fpas](../tests/FpasAmp.Ui.Tests/ProviderHttp.fpas)

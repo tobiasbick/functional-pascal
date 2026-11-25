@@ -4,7 +4,7 @@
 unit Fpas.Ui.Mvu.Testing.EffectReplies;
 
 uses
-  Fpas.Ui.Mvu.Application as A, System as Sys, System.Collections.Generic as C,
+  Fpas.Execution.Effects as Fx, Fpas.Ui.Mvu.Application as A, System.Collections.Generic as C,
   System.Threading as T, System.Threading.Channels as Channels, System.Threading.Tasks as Tasks;
 
 // One actual message from a background run, held just before mailbox admission.
@@ -46,30 +46,32 @@ begin
 end function;
 
 function Observe<TMsg>(
-  Id: string; Work: function(function(TMsg): Tasks.Task, T.CancellationToken): Tasks.Task;
-  Failure: function(Sys.Exception): TMsg; Writer: Channels.ChannelWriter<Reply<TMsg>>
+  Id: string; Work: Fx.Effect<Fx.Completion, TMsg, A.BackgroundContext<TMsg>>;
+  Writer: Channels.ChannelWriter<Reply<TMsg>>
 ): A.Command<TMsg>;
-  async function Run(Post: function(TMsg): Tasks.Task; Token: T.CancellationToken): Tasks.Task;
+  async function Run(Context: A.BackgroundContext<TMsg>; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, TMsg>>;
     function Publish(Message: TMsg): Tasks.Task;
     begin
-      return Hold<TMsg>(Writer, Message, Post, Token);
+      return Hold<TMsg>(Writer, Message, Context.Post, Token);
     end function;
   begin
     try
-      try
-        await Work(Publish, Token).ConfigureAwait(false);
-      catch Error: Sys.Exception when not Token.IsCancellationRequested do
-        await Publish(Failure(Error)).ConfigureAwait(false);
-      end try;
+      case await Work.Run(new A.BackgroundContext<TMsg>(Publish), Token).ConfigureAwait(false) of
+        when Fx.Outcome.Success(_):
+        when Fx.Outcome.Failure(const Message: TMsg):
+          Token.ThrowIfCancellationRequested();
+          await Publish(Message).ConfigureAwait(false);
+      end case;
+
+      return Fx.Outcome.Success(Fx.Completion.Done);
     finally
       discard Writer.TryComplete();
     end try;
   end function;
 begin
   return A.StartBackground<TMsg>(
-    Id, Run, function(Error: Sys.Exception): TMsg begin
-      raise Error;
-    end function
+    Id,
+    Fx.Effect<Fx.Completion, TMsg, A.BackgroundContext<TMsg>>.Defer(Run)
   );
 end function;
 
@@ -106,11 +108,10 @@ public type Effects<TMsg> = record
       case Commands[Index] of
         when A.Command.Start(
           const Id: string,
-          const Work: function(function(TMsg): Tasks.Task, T.CancellationToken): Tasks.Task,
-          const Failure: function(Sys.Exception): TMsg
+          const Work: Fx.Effect<Fx.Completion, TMsg, A.BackgroundContext<TMsg>>
         ):
           if self.Expected.ContainsKey(Id) then
-            Commands[Index] := Observe<TMsg>(Id, Work, Failure, self.Expected[Id].Writer);
+            Commands[Index] := Observe<TMsg>(Id, Work, self.Expected[Id].Writer);
             discard self.Expected.Remove(Id);
           end if;
         else

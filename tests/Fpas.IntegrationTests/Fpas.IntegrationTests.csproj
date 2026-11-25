@@ -8,7 +8,8 @@
     <PackageReference Include="JsonSchema.Net" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" />
     <None Include="../../apps/doc-examples/**/*" Exclude="../../apps/doc-examples/bin/**/*;../../apps/doc-examples/obj/**/*" Link="Fixtures/doc-examples/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../src/Fpas.Workflows/*.fpas" Link="Fixtures/workflows/lib/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Fpas.Execution.Workflows/*.fpas" Link="Fixtures/workflows/lib/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Fpas.Execution.Effects/Effect.fpas" Link="Fixtures/effects/Effect.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../src/Fpas.Processes.Workflows/Capture.fpas" Link="Fixtures/workflows/process/Capture.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/workflows/*.fpas" Link="Fixtures/workflows/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/pascal/**/*.md" Link="Fixtures/specification/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
@@ -92,7 +93,7 @@
     <AssemblyMetadata Include="FpasLinuxArmShim" Value="$(PkgMicrosoft_Diagnostics_DbgShim_linux-arm64)/runtimes/linux-arm64/native/libdbgshim.so" />
   </ItemGroup>
   <Target Name="RemoveStaleSpecificationFixtures" BeforeTargets="_CopyOutOfDateSourceItemsToOutputDirectory" Condition="'$(DesignTimeBuild)' != 'true'">
-    <RemoveDir Directories="$(OutputPath)Fixtures/specification;$(OutputPath)Fixtures/repository/docs/ui;$(OutputPath)Fixtures/tui/lib;$(OutputPath)Fixtures/tui/gallery;$(OutputPath)Fixtures/ui/lib;$(OutputPath)Fixtures/mvu/lib;$(OutputPath)Fixtures/gui/lib" />
+    <RemoveDir Directories="$(OutputPath)Fixtures/specification;$(OutputPath)Fixtures/repository/docs/ui;$(OutputPath)Fixtures/tui/lib;$(OutputPath)Fixtures/tui/gallery;$(OutputPath)Fixtures/ui/lib;$(OutputPath)Fixtures/mvu/lib;$(OutputPath)Fixtures/gui/lib;$(OutputPath)Fixtures/workflows/lib" />
   </Target>
   <Target Name="RecordFpasCliPath" BeforeTargets="GetAssemblyAttributes" DependsOnTargets="ResolveProjectReferences">
     <MSBuild Projects="../../src/Fpas.Cli/Fpas.Cli.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration);TargetFramework=$(TargetFramework)">

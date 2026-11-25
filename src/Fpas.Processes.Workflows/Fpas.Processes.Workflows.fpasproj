@@ -7,6 +7,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Fpas.Processes/Fpas.Processes.csproj" />
-    <ProjectReference Include="../Fpas.Workflows/Fpas.Workflows.fpasproj" />
+    <ProjectReference Include="../Fpas.Execution.Workflows/Fpas.Execution.Workflows.fpasproj" />
   </ItemGroup>
 </Project>

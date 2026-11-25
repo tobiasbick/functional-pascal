@@ -3,7 +3,7 @@
 unit DesktopCommands.Background;
 
 uses
-  DesktopCommands.State as S, Fpas.Ui.Mvu.Application as Mvu,
+  DesktopCommands.State as S, Fpas.Execution.Effects as Fx, Fpas.Ui.Mvu.Application as Mvu,
   System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 // Stable identity shared by start and cancel.
@@ -15,19 +15,26 @@ public const Id: string := 'desktop-background';
 // ## Returns
 // A cancellable background command whose replies update the application model.
 public function Start(SimulateError: bool): Mvu.Command<S.Msg>;
-  async function Run(Post: function(S.Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+  async function Run(Context: Mvu.BackgroundContext<S.Msg>; Token: Threads.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, S.Msg>>;
   begin
     for Completed: int := 1 to S.WorkSteps do
       await Tasks.Task.Delay(250, Token).ConfigureAwait(false);
       if SimulateError and Completed = 3 then
-        raise new Sys.InvalidOperationException('Simulated background error.');
+        return Fx.Outcome.Failure(
+          S.Msg.WorkFailed(new Sys.InvalidOperationException('Simulated background error.'))
+        );
       end if;
 
-      await Post(S.Msg.WorkTick(Completed)).ConfigureAwait(false);
+      await Context.Post(S.Msg.WorkTick(Completed)).ConfigureAwait(false);
     end for;
+
+    return Fx.Outcome.Success(Fx.Completion.Done);
   end function;
 begin
-  return Mvu.StartBackground<S.Msg>(Id, Run, S.Msg.WorkFailed);
+  return Mvu.StartBackground<S.Msg>(
+    Id,
+    Fx.Effect<Fx.Completion, S.Msg, Mvu.BackgroundContext<S.Msg>>.Defer(Run)
+  );
 end function;
 
 end unit;

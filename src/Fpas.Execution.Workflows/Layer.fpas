@@ -1,10 +1,10 @@
 // [Documentation](../../docs/pascal/libraries/workflows.md#scope-work-and-dependencies)
 
 // Acquisition and release of typed dependencies.
-unit Fpas.Workflows.Layers;
+unit Fpas.Execution.Workflows.Layers;
 
 uses
-  Fpas.Workflows.Operations as W, Fpas.Workflows.Scopes as S, System as Sys,
+  Fpas.Execution.Effects as Fx, Fpas.Execution.Workflows.Scopes as S, System as Sys,
   System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 // Builds a dependency for the lifetime of a scope.
@@ -14,7 +14,7 @@ uses
 // - `E`: Expected acquisition failure.
 // - `R`: Environment needed to acquire the dependency.
 public type Layer<A, E, R> = record
-  Acquire: function(R, S.Scope): Tasks.Task<W.Outcome<A, E>>;
+  Acquire: function(R, S.Scope): Tasks.Task<Fx.Outcome<A, E>>;
 
   // Couples an acquisition with its release.
   //
@@ -24,15 +24,15 @@ public type Layer<A, E, R> = record
   //
   // ## Returns
   // The deferred layer.
-  public static function Create(Work: W.Workflow<A, E, R>; Release: function(A): Tasks.Task): Layer<A, E, R>;
-    async function Build(Environment: R; Lifetime: S.Scope): Tasks.Task<W.Outcome<A, E>>;
+  public static function Create(Work: Fx.Effect<A, E, R>; Release: function(A): Tasks.Task): Layer<A, E, R>;
+    async function Build(Environment: R; Lifetime: S.Scope): Tasks.Task<Fx.Outcome<A, E>>;
     begin
-      const Result: W.Outcome<A, E> := await Work.Run(
+      const Result: Fx.Outcome<A, E> := await Work.Run(
         Environment,
         Lifetime.Token
       ).ConfigureAwait(false);
       case Result of
-        when W.Outcome.Success(const Value: A):
+        when Fx.Outcome.Success(const Value: A):
           try
             Lifetime.OnClose(function(): Tasks.Task => Release(Value));
           catch Registration: Sys.Exception do
@@ -47,7 +47,7 @@ public type Layer<A, E, R> = record
 
             raise;
           end try;
-        when W.Outcome.Failure(_):
+        when Fx.Outcome.Failure(_):
       end case;
 
       return Result;
@@ -64,7 +64,7 @@ public type Layer<A, E, R> = record
   //
   // ## Returns
   // A task containing the dependency or the expected acquisition failure.
-  public function Build(Environment: R; Lifetime: S.Scope): Tasks.Task<W.Outcome<A, E>>;
+  public function Build(Environment: R; Lifetime: S.Scope): Tasks.Task<Fx.Outcome<A, E>>;
   begin
     return self.Acquire(Environment, Lifetime);
   end function;
@@ -80,13 +80,13 @@ public type Layer<A, E, R> = record
   // ## Returns
   // The composed layer, with dependencies released in reverse acquisition order.
   public function ThenBuild<B>(Next: Layer<B, E, A>): Layer<B, E, R>;
-    async function Build(Environment: R; Lifetime: S.Scope): Tasks.Task<W.Outcome<B, E>>;
+    async function Build(Environment: R; Lifetime: S.Scope): Tasks.Task<Fx.Outcome<B, E>>;
     begin
       case await self.Build(Environment, Lifetime).ConfigureAwait(false) of
-        when W.Outcome.Success(const Value: A):
+        when Fx.Outcome.Success(const Value: A):
           return await Next.Build(Value, Lifetime).ConfigureAwait(false);
-        when W.Outcome.Failure(const Reason: E):
-          return W.Outcome.Failure(Reason);
+        when Fx.Outcome.Failure(const Reason: E):
+          return Fx.Outcome.Failure(Reason);
       end case;
     end function;
   begin
@@ -108,22 +108,22 @@ end record;
 //
 // ## Returns
 // A deferred workflow that releases the dependency before returning.
-public function Provide<A, B, E, R>(Work: W.Workflow<B, E, A>; Dependencies: Layer<A, E, R>): W.Workflow<B, E, R>;
-  function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<W.Outcome<B, E>>;
-    async function Use(Lifetime: S.Scope): Tasks.Task<W.Outcome<B, E>>;
+public function Provide<A, B, E, R>(Work: Fx.Effect<B, E, A>; Dependencies: Layer<A, E, R>): Fx.Effect<B, E, R>;
+  function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<Fx.Outcome<B, E>>;
+    async function Use(Lifetime: S.Scope): Tasks.Task<Fx.Outcome<B, E>>;
     begin
       case await Dependencies.Build(Environment, Lifetime).ConfigureAwait(false) of
-        when W.Outcome.Success(const Value: A):
+        when Fx.Outcome.Success(const Value: A):
           return await Work.Run(Value, Lifetime.Token).ConfigureAwait(false);
-        when W.Outcome.Failure(const Reason: E):
-          return W.Outcome.Failure(Reason);
+        when Fx.Outcome.Failure(const Reason: E):
+          return Fx.Outcome.Failure(Reason);
       end case;
     end function;
   begin
-    return S.Scope.Use<W.Outcome<B, E>>(Use, Cancellation);
+    return S.Scope.Use<Fx.Outcome<B, E>>(Use, Cancellation);
   end function;
 begin
-  return W.Workflow<B, E, R>.Defer(Execute);
+  return Fx.Effect<B, E, R>.Defer(Execute);
 end function;
 
 end unit;

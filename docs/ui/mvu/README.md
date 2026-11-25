@@ -26,7 +26,7 @@ end unit;
 
 ## Commands and effects
 
-Return an empty command array for a state-only change. Use `Focus` to request focus by widget ID and `Exit` to close. Start background work with `StartBackground` and post its result as a message. Apply that result in the update function so input stays responsive while the effect runs.
+Return an empty command array for a state-only change. Use `Focus` to request focus by widget ID and `Exit` to close. Run a [background effect](runtime.md#background-effects) with `StartBackground` and apply its messages in the update function.
 
 ## Composing larger views
 

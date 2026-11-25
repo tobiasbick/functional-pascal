@@ -151,6 +151,7 @@ is fixture infrastructure, not an FPAS server API.
 ## See also
 
 - [Library guides](README.md)
+- [HTTP with a deferred effect](../../../examples/io/http-effect/README.md)
 - [Cancellation and coordination](../language/concurrency/cancellation-and-coordination.md)
 - [Files and streams](files-and-streams.md)
 - [Project SDK setup](../../build/standalone-sdk.md)

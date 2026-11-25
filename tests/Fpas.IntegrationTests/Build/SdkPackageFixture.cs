@@ -20,6 +20,8 @@ public sealed class SdkPackageFixture : IAsyncLifetime
         Assert.True(result.ExitCode == 0, result.Output + result.Error);
         Assert.True(File.Exists(Path.Combine(Feed, $"Fpas.NET.Sdk.{Version}.nupkg")));
         using var archive = ZipFile.OpenRead(Path.Combine(Feed, $"Fpas.NET.Sdk.{Version}.nupkg"));
+        Assert.NotNull(archive.GetEntry("tools/runtime/Fpas.Execution.Effects.dll"));
+        Assert.NotNull(archive.GetEntry("tools/runtime/Fpas.Execution.Effects.xml"));
         foreach (var name in new[] { "Fpas.Cli.dll", "Fpas.Workspaces.dll", "Fpas.SdkResolver.dll", "Fpas.Processes.dll", "Microsoft.VisualStudio.SolutionPersistence.dll",
             "Fpas.LanguageServer.dll", "OmniSharp.Extensions.LanguageProtocol.dll", "StreamJsonRpc.dll", "Newtonsoft.Json.dll" })
             Assert.Single(archive.Entries, entry => Path.GetFileName(entry.FullName) == name);

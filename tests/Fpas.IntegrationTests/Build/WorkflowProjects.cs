@@ -9,7 +9,7 @@ internal static class WorkflowProjects
     // Build the FPAS dependencies with the same isolated SDK as the consumer.
     internal static void Copy(string repository, string destination, string sdkVersion)
     {
-        foreach (var name in new[] { "Fpas.Workflows", "Fpas.Processes.Workflows" })
+        foreach (var name in new[] { "Fpas.Execution.Workflows", "Fpas.Processes.Workflows" })
         {
             var source = Path.Combine(repository, "src", name);
             var target = Path.Combine(destination, name);

@@ -58,22 +58,24 @@ begin
     Current, [
       A.StartBackground<M.Msg>(
         'load',
-        async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-          const Started: long := D.Stopwatch.GetTimestamp();
-          const Items: I.ImmutableArray<Tracks.Entry> := await Library.Albums.TracksAsync(
-            Current.Album.Id, Cancellation
-          ).ConfigureAwait(false);
-          await Post(M.Msg.Loaded(Current.Visit, Started, Items)).ConfigureAwait(false);
-          if LoadCover then
-            const Image: Imaging.Bitmap? := await Artwork.Load(
-              Library.Albums,
-              Current.Album,
-              Cancellation
+        A.FromWorker<M.Msg>(
+          async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+            const Started: long := D.Stopwatch.GetTimestamp();
+            const Items: I.ImmutableArray<Tracks.Entry> := await Library.Albums.TracksAsync(
+              Current.Album.Id, Cancellation
             ).ConfigureAwait(false);
-            await Post(M.Msg.CoverLoaded(Current.Visit, Image)).ConfigureAwait(false);
-          end if;
-        end function,
-        function(Error: Sys.Exception): M.Msg => M.Msg.Failed(Current.Visit, Error.Message)
+            await Post(M.Msg.Loaded(Current.Visit, Started, Items)).ConfigureAwait(false);
+            if LoadCover then
+              const Image: Imaging.Bitmap? := await Artwork.Load(
+                Library.Albums,
+                Current.Album,
+                Cancellation
+              ).ConfigureAwait(false);
+              await Post(M.Msg.CoverLoaded(Current.Visit, Image)).ConfigureAwait(false);
+            end if;
+          end function,
+          function(Error: Sys.Exception): M.Msg => M.Msg.Failed(Current.Visit, Error.Message)
+        )
       )
     ]
   );
@@ -98,16 +100,18 @@ begin
     ), [
       A.StartBackground<M.Msg>(
         'rate/' + Id,
-        async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-          await Library.SetRatingAsync(Id, Selected, Cancellation).ConfigureAwait(false);
-          await Post(
-            M.Msg.Rated(Current.Visit, Id, Selected, D.Stopwatch.GetTimestamp())
-          ).ConfigureAwait(false);
-        end function,
-        function(Error: Sys.Exception): M.Msg => M.Msg.RatingFailed(
-          Current.Visit,
-          Id,
-          Error.Message
+        A.FromWorker<M.Msg>(
+          async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+            await Library.SetRatingAsync(Id, Selected, Cancellation).ConfigureAwait(false);
+            await Post(
+              M.Msg.Rated(Current.Visit, Id, Selected, D.Stopwatch.GetTimestamp())
+            ).ConfigureAwait(false);
+          end function,
+          function(Error: Sys.Exception): M.Msg => M.Msg.RatingFailed(
+            Current.Visit,
+            Id,
+            Error.Message
+          )
         )
       )
     ]
@@ -120,20 +124,22 @@ begin
     Current, [
       A.StartBackground<M.Msg>(
         'folder',
-        function(_Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-          Cancellation.ThrowIfCancellationRequested();
-          const Folder: string? := IO.Path.GetDirectoryName(Path);
-          if Folder = null or not IO.Directory.Exists(Folder) then
-            raise new IO.DirectoryNotFoundException('The track folder is unavailable.');
-          end if;
+        A.FromWorker<M.Msg>(
+          function(_Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+            Cancellation.ThrowIfCancellationRequested();
+            const Folder: string? := IO.Path.GetDirectoryName(Path);
+            if Folder = null or not IO.Directory.Exists(Folder) then
+              raise new IO.DirectoryNotFoundException('The track folder is unavailable.');
+            end if;
 
-          if not Desktop.TryOpen(Folder) then
-            raise new IO.IOException('The desktop could not open the track folder.');
-          end if;
+            if not Desktop.TryOpen(Folder) then
+              raise new IO.IOException('The desktop could not open the track folder.');
+            end if;
 
-          return Tasks.Task.CompletedTask;
-        end function,
-        function(Error: Sys.Exception): M.Msg => M.Msg.Failed(Current.Visit, Error.Message)
+            return Tasks.Task.CompletedTask;
+          end function,
+          function(Error: Sys.Exception): M.Msg => M.Msg.Failed(Current.Visit, Error.Message)
+        )
       )
     ]
   );

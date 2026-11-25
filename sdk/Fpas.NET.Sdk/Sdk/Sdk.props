@@ -27,6 +27,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Fpas.Core" HintPath="$(MSBuildThisFileDirectory)../tools/compiler/Fpas.Core.dll" Private="true" />
+    <Reference Include="Fpas.Execution.Effects" HintPath="$(MSBuildThisFileDirectory)../tools/runtime/Fpas.Execution.Effects.dll" Private="true" />
     <Compile Include="**/*.fpas" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" Condition="'$(EnableDefaultFpasCompileItems)' == 'true'" />
   </ItemGroup>
 </Project>

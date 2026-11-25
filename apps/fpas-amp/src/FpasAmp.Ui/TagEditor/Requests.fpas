@@ -24,22 +24,24 @@ public function Timer(): A.Command<M.Msg>;
 begin
   return A.StartBackground<M.Msg>(
     'timer',
-    async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
-      var PreviousMusic: Pacing.Status := new Pacing.Status(Seconds := -1L);
-      var PreviousAudio: Pacing.Status := PreviousMusic;
-      while true do
-        Stop.ThrowIfCancellationRequested();
-        const Music: Pacing.Status := MB.Live.Availability();
-        const Audio: Pacing.Status := Acoust.Availability();
-        if Music <> PreviousMusic or Audio <> PreviousAudio then
-          await Post(M.Msg.Timer(Music, Audio));
-          PreviousMusic := Music;
-          PreviousAudio := Audio;
-        end if;
+    A.FromWorker<M.Msg>(
+      async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
+        var PreviousMusic: Pacing.Status := new Pacing.Status(Seconds := -1L);
+        var PreviousAudio: Pacing.Status := PreviousMusic;
+        while true do
+          Stop.ThrowIfCancellationRequested();
+          const Music: Pacing.Status := MB.Live.Availability();
+          const Audio: Pacing.Status := Acoust.Availability();
+          if Music <> PreviousMusic or Audio <> PreviousAudio then
+            await Post(M.Msg.Timer(Music, Audio));
+            PreviousMusic := Music;
+            PreviousAudio := Audio;
+          end if;
 
-        await Tasks.Task.Delay(125, Stop).ConfigureAwait(false);
-      end while;
-    end function, function(Error: Sys.Exception): M.Msg => M.Msg.Failed(Error.Message)
+          await Tasks.Task.Delay(125, Stop).ConfigureAwait(false);
+        end while;
+      end function, function(Error: Sys.Exception): M.Msg => M.Msg.Failed(Error.Message)
+    )
   );
 end function;
 
@@ -48,9 +50,11 @@ public function Search(Query: string): A.Command<M.Msg>;
 begin
   return A.StartBackground<M.Msg>(
     Slot,
-    async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
-      await Post(M.Msg.Found(await MB.Live.Search(Query, Stop)));
-    end function, Failed
+    A.FromWorker<M.Msg>(
+      async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
+        await Post(M.Msg.Found(await MB.Live.Search(Query, Stop)));
+      end function, Failed
+    )
   );
 end function;
 
@@ -59,22 +63,24 @@ public function Lookup(Choice: MB.Match): A.Command<M.Msg>;
 begin
   return A.StartBackground<M.Msg>(
     Slot,
-    async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
-      const Recording: E.IRecording := await MB.Live.Recording(Choice.Recording, Stop);
-      const Values: I.ImmutableDictionary<string, string> := Tags.Proposals(Recording, null);
-      if Choice.Release = '' then
-        await Post(M.Msg.Proposed(Values));
-        return;
-      end if;
+    A.FromWorker<M.Msg>(
+      async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
+        const Recording: E.IRecording := await MB.Live.Recording(Choice.Recording, Stop);
+        const Values: I.ImmutableDictionary<string, string> := Tags.Proposals(Recording, null);
+        if Choice.Release = '' then
+          await Post(M.Msg.Proposed(Values));
+          return;
+        end if;
 
-      await Post(M.Msg.RecordingReady(Values));
-      try
-        const Release: E.IRelease := await MB.Live.Release(Choice.Release, Stop);
-        await Post(M.Msg.Proposed(Tags.Proposals(Recording, Release)));
-      catch Error: Sys.Exception when not Stop.IsCancellationRequested do
-        await Post(M.Msg.ReleaseFailed(Error.Message));
-      end try;
-    end function, Failed
+        await Post(M.Msg.RecordingReady(Values));
+        try
+          const Release: E.IRelease := await MB.Live.Release(Choice.Release, Stop);
+          await Post(M.Msg.Proposed(Tags.Proposals(Recording, Release)));
+        catch Error: Sys.Exception when not Stop.IsCancellationRequested do
+          await Post(M.Msg.ReleaseFailed(Error.Message));
+        end try;
+      end function, Failed
+    )
   );
 end function;
 
@@ -83,18 +89,22 @@ public function Scan(Library: Metadata.Session; Track: Tracks.Entry; Application
 begin
   return A.StartBackground<M.Msg>(
     Slot,
-    async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
-      const Audio: Fingerprint.Measurement? := await Library.MeasureFingerprintAsync(
-        Track,
-        true,
-        Stop
-      );
-      if Audio = null or Audio.Duration < 1.0 then
-        raise new Sys.InvalidOperationException('There is too little audio to look up this track.');
-      end if;
+    A.FromWorker<M.Msg>(
+      async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
+        const Audio: Fingerprint.Measurement? := await Library.MeasureFingerprintAsync(
+          Track,
+          true,
+          Stop
+        );
+        if Audio = null or Audio.Duration < 1.0 then
+          raise new Sys.InvalidOperationException(
+            'There is too little audio to look up this track.'
+          );
+        end if;
 
-      await Post(M.Msg.Found(await Acoust.Scan(ApplicationKey, Audio, Stop)));
-    end function, Failed
+        await Post(M.Msg.Found(await Acoust.Scan(ApplicationKey, Audio, Stop)));
+      end function, Failed
+    )
   );
 end function;
 

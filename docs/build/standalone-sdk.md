@@ -27,7 +27,7 @@ dotnet pack sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj --no-build --configuration Debu
 Create a separate directory outside the checkout, called `consumer` here.
 Copy `.temp-data/standalone-feed/Fpas.NET.Sdk.0.1.0-local.1.nupkg` into its
 `feed` subdirectory. This package includes the matching compiler, CLI, MSBuild
-task, and Fpas.Core support assembly. The consumer needs no compiler checkout
+task, Fpas.Core support assembly, and Fpas.Execution.Effects. The consumer needs no compiler checkout
 or separately installed FPAS tool.
 
 ## Create the consumer files

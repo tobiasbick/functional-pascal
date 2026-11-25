@@ -3,7 +3,7 @@
 unit Fpas.Ui.Mvu.Tests.EffectRepliesTests;
 
 uses
-  Fpas.Ui.Mvu.Testing.EffectReplies as Replies, Fpas.Ui.Mvu.Application as A,
+  Fpas.Execution.Effects as Fx, Fpas.Ui.Mvu.Testing.EffectReplies as Replies, Fpas.Ui.Mvu.Application as A,
   Fpas.Ui.Mvu.Session as Runtime, System as Sys, System.Threading as T,
   System.Threading.Channels as Channels, System.Threading.Tasks as Tasks, Xunit as X;
 
@@ -23,13 +23,15 @@ public type EffectRepliesTests = record
           Model, [
             A.StartBackground<string>(
               'load',
-              function(Post: function(string): Tasks.Task; Token: T.CancellationToken): Tasks.Task begin
-                if Message = 'replace' then
-                  raise new Sys.InvalidOperationException('Read failed');
-                end if;
+              A.FromWorker<string>(
+                function(Post: function(string): Tasks.Task; Token: T.CancellationToken): Tasks.Task begin
+                  if Message = 'replace' then
+                    raise new Sys.InvalidOperationException('Read failed');
+                  end if;
 
-                return Post('First result');
-              end function, function(Error: Sys.Exception): string => Error.Message
+                  return Post('First result');
+                end function, function(Error: Sys.Exception): string => Error.Message
+              )
             )
           ]
         )
@@ -62,6 +64,77 @@ public type EffectRepliesTests = record
       X.Assert.Equal<string>('Read failed', Session.Model());
     finally
       Session.Close().WaitAsync(Sys.TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+    end try;
+  end procedure;
+
+  // A typed effect gets its environment at execution and emits both kinds of outcome through the session.
+  [X.FactAttribute]
+  public procedure TypedEffectOutcomes();
+    function Load(Value: int; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<int, string>>;
+    begin
+      Token.ThrowIfCancellationRequested();
+      return Tasks.Task.FromResult<Fx.Outcome<int, string>>(
+        if Value > 0 then
+          Fx.Outcome.Success(Value * 2)
+        else
+          Fx.Outcome.Failure('invalid')
+        end if
+      );
+    end function;
+
+    function Update(Model: string; Message: string): A.Transition<string, string>;
+    begin
+      if Message <> 'load' and Message <> 'fail' then
+        return new A.Transition<string, string>(Message, []);
+      end if;
+
+      return Gate.Wrap<string>(
+        new A.Transition<string, string>(
+          Model, [
+            A.StartBackground<string>(
+              'typed', A.FromEffect<int, string, int, string>(
+                Fx.Effect<int, string, int>.Defer(Load),
+                function(_Context: A.BackgroundContext<string>): int => if Message = 'load' then
+                  21
+                else
+                  0
+                end if,
+                function(Value: int): string => 'loaded ' + Value.ToString(),
+                function(Reason: string): string => 'failed ' + Reason
+              )
+            )
+          ]
+        )
+      );
+    end function;
+  begin
+    const Gate: Replies.Effects<string> := Replies.Effects<string>.Create();
+    using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
+    const Session: Runtime.Runtime<string, string, int> := Runtime.Start<string, string, int>(
+      'waiting', Update, procedure(_Request: A.HostRequest) begin end procedure, 4
+    );
+    try
+      for Request: string in ['load', 'fail'] do
+        const Before: string := Session.Model();
+        const Reader: Channels.ChannelReader<Replies.Reply<string>> := Gate.Watch('typed');
+        Session.Dispatch(Request);
+        const Reply: Replies.Reply<string> := Reader.ReadAsync(
+          Stop.Token
+        ).AsTask().GetAwaiter().GetResult();
+        X.Assert.Equal<string>(Before, Session.Model());
+        X.Assert.Equal<int>(0, Session.QueueCount());
+        const Expected: string := if Request = 'load' then
+          'loaded 42'
+        else
+          'failed invalid'
+        end if;
+        X.Assert.Equal<string>(Expected, Reply.Message);
+        Reply.Release().WaitAsync(Stop.Token).GetAwaiter().GetResult();
+        discard Session.Advance();
+        X.Assert.Equal<string>(Expected, Session.Model());
+      end for;
+    finally
+      Session.Close().WaitAsync(Stop.Token).GetAwaiter().GetResult();
     end try;
   end procedure;
 end record;

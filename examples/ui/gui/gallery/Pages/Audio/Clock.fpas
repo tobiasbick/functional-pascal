@@ -26,7 +26,7 @@ public function Start<TMsg>(Tick: TMsg; OnFailure: function(Sys.Exception): TMsg
     end while;
   end function;
 begin
-  return Mvu.StartBackground<TMsg>(Id, Run, OnFailure);
+  return Mvu.StartBackground<TMsg>(Id, Mvu.FromWorker<TMsg>(Run, OnFailure));
 end function;
 
 end unit;

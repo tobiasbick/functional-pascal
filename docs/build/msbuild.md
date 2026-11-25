@@ -67,8 +67,10 @@ IDE project loaders need separate acceptance.
 ## FPAS Project SDK
 
 The SDK identifier is `Fpas.NET.Sdk`. It supplies Sdk.props, Sdk.targets,
-compiler invocation, and an assembly reference to the matching `Fpas.Core`
-assembly. FPAS emits a dependency on `Fpas.Core` when language features use it.
+compiler invocation, and references to the matching `Fpas.Core` and
+[`Fpas.Execution.Effects`](../pascal/libraries/effects.md) assemblies. FPAS emits a
+dependency on `Fpas.Core` when language features use it. Use an explicit source
+import for `Fpas.Execution.Effects`.
 The following project enables XML documentation:
 
 ```xml

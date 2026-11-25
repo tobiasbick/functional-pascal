@@ -20,8 +20,10 @@ function SaveAfter(Milliseconds: int; Status: Work.Status): Mvu.Command<S.Msg>;
 begin
   return Mvu.StartBackground<S.Msg>(
     'save',
-    Advance,
-    function(Error: Sys.Exception): S.Msg => S.Msg.SetSaveStatus(Work.Status.Idle)
+    Mvu.FromWorker<S.Msg>(
+      Advance,
+      function(Error: Sys.Exception): S.Msg => S.Msg.SetSaveStatus(Work.Status.Idle)
+    )
   );
 end function;
 

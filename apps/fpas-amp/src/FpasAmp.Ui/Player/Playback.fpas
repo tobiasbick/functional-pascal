@@ -96,28 +96,32 @@ begin
   return [
     A.StartBackground<M.Msg>(
       'audio-commands',
-      async function(_Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-        while await Port.Requests.Reader.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
-          Cancellation.ThrowIfCancellationRequested();
-          const Item: M.Request := await Port.Requests.Reader.ReadAsync(
-            Cancellation
-          ).ConfigureAwait(false);
-          Execute(Port.Device, Item);
-        end while;
-      end function,
-      function(Error: Sys.Exception): M.Msg => M.Msg.Unavailable(Error.Message)
+      A.FromWorker<M.Msg>(
+        async function(_Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+          while await Port.Requests.Reader.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
+            Cancellation.ThrowIfCancellationRequested();
+            const Item: M.Request := await Port.Requests.Reader.ReadAsync(
+              Cancellation
+            ).ConfigureAwait(false);
+            Execute(Port.Device, Item);
+          end while;
+        end function,
+        function(Error: Sys.Exception): M.Msg => M.Msg.Unavailable(Error.Message)
+      )
     ),
     A.StartBackground<M.Msg>(
       'audio-events',
-      async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-        while await Port.Device.Events.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
-          const Value: Audio.PlaybackEvent := await Port.Device.Events.ReadAsync(
-            Cancellation
-          ).ConfigureAwait(false);
-          await Post(M.Msg.Observed(Value)).ConfigureAwait(false);
-        end while;
-      end function,
-      function(Error: Sys.Exception): M.Msg => M.Msg.Unavailable(Error.Message)
+      A.FromWorker<M.Msg>(
+        async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+          while await Port.Device.Events.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
+            const Value: Audio.PlaybackEvent := await Port.Device.Events.ReadAsync(
+              Cancellation
+            ).ConfigureAwait(false);
+            await Post(M.Msg.Observed(Value)).ConfigureAwait(false);
+          end while;
+        end function,
+        function(Error: Sys.Exception): M.Msg => M.Msg.Unavailable(Error.Message)
+      )
     )
   ];
 end function;

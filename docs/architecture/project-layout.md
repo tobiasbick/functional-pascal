@@ -4,8 +4,8 @@ The C# projects and xUnit projects are grouped in one primary `Fpas.slnx` soluti
 Compiler and CLI follow the [direct compilation pipeline](compiler.md).
 Tests cover diagnostics, emitted metadata, actual CLI/program execution, and
 [mixed-project MSBuild builds](../../tests/coverage.md#build-acceptance).
-Fpas.Core supplies record/variant metadata attributes; the SDK packages Core, the compiler,
-and the implemented task.
+Fpas.Core supplies record and variant metadata attributes. The SDK packages Core,
+the compiler, the MSBuild task and Fpas.Execution.Effects.
 Fpas.Deployment owns file-based access to embedded distribution assets, their
 content-addressed cache beside the executable, and shared CMS delivery signatures.
 The CLI's Distribution directory owns bundling and offline SDK export;
@@ -94,7 +94,8 @@ src/
   Fpas.Processes/
     Terminal/
   Fpas.Processes.Workflows/
-  Fpas.Workflows/
+  Fpas.Execution.Effects/
+  Fpas.Execution.Workflows/
   Fpas.Deployment/
   Fpas.SdkResolver/
   Fpas.Debugging/
@@ -205,8 +206,8 @@ requires them. Common C#
 settings live in Directory.Build.props; Directory.Packages.props pins the shared
 xUnit/test dependencies. global.json selects a stable .NET 10 SDK.
 
-The SDK packaging project includes props/targets, compiler/CLI and Core assets,
-the task, and README. The [local bootstrap](../build/development.md#build-an-fpas-application)
+The SDK packaging project includes props and targets, compiler and CLI assets,
+Core, Effects, the task, and the README. The [local bootstrap](../build/development.md#build-an-fpas-application)
 packs it into sdk/feed before restoring FPAS consumers. No SDK package is publicly
 published. The SDK resolves and copies its matching Fpas.Core assembly for records and variants.
 
@@ -221,7 +222,8 @@ published. The SDK resolves and copies its matching Fpas.Core assembly for recor
 | `Fpas.LanguageServer` | Stdio LSP lifecycle, bounded protocol transport, document synchronization and diagnostics over the shared live workspace |
 | `Fpas.Processes` | Linux process-group/subreaper, Windows jobs and private native PTY/ConPTY ownership |
 | `Fpas.Processes.Workflows` | FPAS capture workflow for owned processes with deadlines and bounded output |
-| `Fpas.Workflows` | FPAS workflow composition, typed dependencies and outcomes, structured tasks and streams |
+| `Fpas.Execution.Effects` | SDK library for deferred work with typed outcomes and dependencies |
+| `Fpas.Execution.Workflows` | Policies, structured tasks and streams built on `Fpas.Execution.Effects` |
 | `Fpas.Build.Tasks` | Thin C# MSBuild adapter for inputs, compiler process invocation, structured diagnostics, and declared outputs |
 | `Fpas.NET.Sdk` | MSBuild props/targets and the SDK packaging project, selecting the matching task/compiler/support assets |
 | `Fpas.Core` | Small managed support library for emitted FPAS features, as defined by the CLR mapping |
@@ -271,16 +273,15 @@ src, sdk, and tests without introducing separate solutions for each component.
   installed cache without downloads. Its MSBuild framework reference is supplied
   by that host and is not shipped with the CLI.
 - The documentation checker and Measure use `Fpas.Processes.Workflows` for
-  process capture. The adapter depends on `Fpas.Workflows` and `Fpas.Processes`.
+  process capture. The adapter depends on `Fpas.Execution.Workflows` and `Fpas.Processes`.
 - Fpas.Debugging references process ownership and packaged DbgShim assets; it has
   no dependency on Fpas.Compiler or Fpas.Core. Native interfaces, symbols, values,
   evaluation, supervision and frontends have separate topic directories.
 - Fpas.Build.Tasks launches the matching Fpas.Cli in a separate process. Compiler
   dependencies stay outside the MSBuild host process. Resolve the compiler from
   the selected SDK's assets, with normal .NET host invocation where needed.
-- Fpas.NET.Sdk delivers the task and compiler together and supplies the matching
-  Fpas.Core reference/runtime asset to projects. Build/package ordering must
-  account for those inputs without creating a dependency cycle.
+- Fpas.NET.Sdk builds Fpas.Execution.Effects with the matching compiler and delivers the
+  task, compiler and both Fpas.Core and Fpas.Execution.Effects reference and runtime assets.
 - Generated FPAS assemblies reference Fpas.Core only for the language support
   they need. Fpas.Core has no dependency on compiler or MSBuild implementation.
 - Fpas.Ui.Gui.Cui owns the native CUI dependency without referencing the compiler,

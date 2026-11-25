@@ -9,10 +9,11 @@ uses
   FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Ui.Settings.Model as Settings,
   FpasAmp.Ui.Settings.Editing as Editing, FpasAmp.Ui.Player.Model as Player,
   FpasAmp.Library.Metadata.Model as Tracks, Fpas.Media.Tags.AudioFiles as Tags,
-  Fpas.Media.Images as Images, Fpas.Ui.Mvu.Application as A, Fpas.Ui.Mvu.Composition as Composition,
+  Fpas.Media.Images as Images, Fpas.Execution.Effects as Fx,
+  Fpas.Ui.Mvu.Application as A, Fpas.Ui.Mvu.Composition as Composition,
   FpasAmp.Ui.Podcasts.Downloads as Downloads, FpasAmp.Ui.Player.Playback as Playback,
   System as Sys, System.Collections.Generic as C, System.Collections.Immutable as I,
-  System.Threading as T, System.Threading.Tasks as Tasks;
+  System.IO as IO, System.Net.Http as H, System.Threading as T, System.Threading.Tasks as Tasks;
 
 function Change(Current: App.State; Action: M.Msg): A.Transition<App.State, App.Msg>;
 begin
@@ -222,6 +223,32 @@ begin
   return Player.Msg.PlayEpisodes(Queue.MoveToImmutable(), Slot, Cover);
 end function;
 
+function DownloadEpisode(Port: Playback.Connection; Url: string; Codec: string; Revision: long): A.Command<App.Msg>;
+  async function Fetch(Cache: Sys.Lazy<IO.DirectoryInfo>; Stop: T.CancellationToken): Tasks.Task<Fx.Outcome<string, string>>;
+  begin
+    try
+      return Fx.Outcome.Success(
+        await Downloads.Prepare(Cache.Value, Url, Codec, Stop).ConfigureAwait(false)
+      );
+    catch Error: Sys.Exception when Error is H.HttpRequestException or Error is IO.IOException
+      or Error is IO.InvalidDataException or Error is Sys.UnauthorizedAccessException
+      or (Error is Sys.OperationCanceledException and not Stop.IsCancellationRequested) do
+      return Fx.Outcome.Failure(Error.Message);
+    end try;
+  end function;
+begin
+  return A.StartBackground<App.Msg>(
+    'podcast-episode-media', A.FromEffect<string, string, Sys.Lazy<IO.DirectoryInfo>, App.Msg>(
+      Fx.Effect<string, string, Sys.Lazy<IO.DirectoryInfo>>.Defer(Fetch),
+      function(_Context: A.BackgroundContext<App.Msg>): Sys.Lazy<IO.DirectoryInfo> => Port.Cache,
+      function(Path: string): App.Msg => App.Msg.Player(Player.Msg.EpisodeReady(Revision, Path)),
+      function(Reason: string): App.Msg => App.Msg.Player(
+        Player.Msg.EpisodeFailed(Revision, Reason)
+      )
+    )
+  );
+end function;
+
 // Adds background download or cancellation to Result for the latest transport request.
 // Port supplies the file workspace and ordered audio commands. Before is the previous player state.
 public function Prepare(Before: Player.State; Result: A.Transition<App.State, App.Msg>; Request: Player.Request?; Port: Playback.Connection): A.Transition<App.State, App.Msg>;
@@ -231,22 +258,7 @@ begin
       const Url: string,
       const Codec: string,
       const Revision: long
-    ): A.StartBackground<App.Msg>(
-      'podcast-episode-media',
-      async function(Post: function(App.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
-        Stop.ThrowIfCancellationRequested();
-        const Path: string := await Downloads.Prepare(
-          Port.Cache.Value,
-          Url,
-          Codec,
-          Stop
-        ).ConfigureAwait(false);
-        await Post(App.Msg.Player(Player.Msg.EpisodeReady(Revision, Path))).ConfigureAwait(false);
-      end function,
-      function(Failure: Sys.Exception): App.Msg => App.Msg.Player(
-        Player.Msg.EpisodeFailed(Revision, Failure.Message)
-      )
-    );
+    ): DownloadEpisode(Port, Url, Codec, Revision);
     else if Before.Podcast and Before.Buffering and Before.Revision <>
       Result.Model.Player.Revision
     then

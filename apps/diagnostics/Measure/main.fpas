@@ -5,7 +5,7 @@ async program DiagnosticsMeasure;
 uses
   System as Sys, System.Diagnostics as Diag, System.Threading as Threading,
   Diagnostics.MeasureOptions as Arguments, Fpas.Processes.Workflows.Capture as Capture,
-  Fpas.Workflows.Operations as W, System.Threading.Tasks as Tasks,
+  Fpas.Execution.Effects as Fx, System.Threading.Tasks as Tasks,
   System.Collections.Generic as C,
   Diagnostics.Samples as Samples;
 
@@ -26,14 +26,14 @@ begin
 end procedure;
 
 async function Measure(
-  Target: W.Workflow<Capture.Captured, Capture.CaptureFailure, Capture.Request>;
+  Target: Fx.Effect<Capture.Captured, Capture.CaptureFailure, Capture.Request>;
   Request: Capture.Request; Cancellation: Threading.CancellationToken
 ): Tasks.Task<Capture.Captured>;
 begin
   case await Target.Run(Request, Cancellation) of
-    when W.Outcome.Success(const Captured: Capture.Captured):
+    when Fx.Outcome.Success(const Captured: Capture.Captured):
       return Captured;
-    when W.Outcome.Failure(_):
+    when Fx.Outcome.Failure(_):
       raise new Sys.TimeoutException('Measurement timed out');
   end case;
 end function;
@@ -58,7 +58,7 @@ begin
       const Request: Capture.Request := new Capture.Request(
         Options.Executable, Options.Arguments, Options.Directory, Environment
       );
-      const CaptureTarget: W.Workflow<Capture.Captured, Capture.CaptureFailure, Capture.Request> := Capture.Read(
+      const CaptureTarget: Fx.Effect<Capture.Captured, Capture.CaptureFailure, Capture.Request> := Capture.Read(
         Options.Timeout, 65536
       );
       const Values: array of double := new double[Options.Count];

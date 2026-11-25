@@ -18,7 +18,7 @@
     <None Update="Sdk/Publishing.targets" Pack="true" PackagePath="Sdk/Publishing.targets" />
     <None Update="README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
-  <Target Name="IncludeFpasToolAssets" BeforeTargets="_GetPackageFiles">
+  <Target Name="LocateFpasToolAssets">
     <MSBuild Projects="../../src/Fpas.Cli/Fpas.Cli.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration)">
       <Output TaskParameter="TargetOutputs" ItemName="_FpasCompilerAssembly" />
     </MSBuild>
@@ -29,6 +29,29 @@
       <_FpasCompilerDirectory>@(_FpasCompilerAssembly->'%(RootDir)%(Directory)')</_FpasCompilerDirectory>
       <_FpasTaskDirectory>@(_FpasTaskAssembly->'%(RootDir)%(Directory)')</_FpasTaskDirectory>
     </PropertyGroup>
+  </Target>
+  <Target Name="LocateFpasEffectsInputs" DependsOnTargets="LocateFpasToolAssets;ResolveReferences">
+    <ItemGroup>
+      <_FpasRuntimeReference Include="@(ReferencePath)" Condition="'%(ReferencePath.Filename)' == 'System.Runtime'" />
+      <_FpasEffectSource Include="../../src/Fpas.Execution.Effects/Effect.fpas" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_FpasEffectRuntimeReference>@(_FpasRuntimeReference->'%(FullPath)')</_FpasEffectRuntimeReference>
+      <_FpasEffectReferenceDirectory>$([System.IO.Path]::GetDirectoryName('$(_FpasEffectRuntimeReference)'))</_FpasEffectReferenceDirectory>
+      <_FpasDotNetHost Condition="'$(DOTNET_HOST_PATH)' != ''">$(DOTNET_HOST_PATH)</_FpasDotNetHost>
+      <_FpasDotNetHost Condition="'$(_FpasDotNetHost)' == ''">dotnet</_FpasDotNetHost>
+    </PropertyGroup>
+  </Target>
+  <Target Name="BuildFpasEffects" AfterTargets="CopyFilesToOutputDirectory" DependsOnTargets="LocateFpasEffectsInputs"
+      Inputs="$(MSBuildProjectFullPath);@(_FpasEffectSource);@(_FpasCompilerAssembly);$(_FpasCompilerDirectory)Fpas.Compiler.dll;$(_FpasCompilerDirectory)Fpas.Core.dll;@(ReferencePath)"
+      Outputs="$(TargetDir)Fpas.Execution.Effects.dll;$(TargetDir)Fpas.Execution.Effects.xml">
+    <Error Condition="'$(_FpasEffectReferenceDirectory)' == ''" Text="Cannot locate the .NET reference assemblies to build the SDK effect library." />
+    <Exec Command="&quot;$(_FpasDotNetHost)&quot; &quot;@(_FpasCompilerAssembly)&quot; compile &quot;@(_FpasEffectSource->'%(FullPath)')&quot; --target library --output &quot;$(TargetDir)Fpas.Execution.Effects.dll&quot; --reference-dir &quot;$(_FpasEffectReferenceDirectory)&quot; --debug none --generate-documentation" />
+    <ItemGroup>
+      <FileWrites Include="$(TargetDir)Fpas.Execution.Effects.dll;$(TargetDir)Fpas.Execution.Effects.xml" />
+    </ItemGroup>
+  </Target>
+  <Target Name="IncludeFpasToolAssets" BeforeTargets="_GetPackageFiles" DependsOnTargets="LocateFpasToolAssets">
     <ItemGroup>
       <_FpasLanguageServerAsset Include="$(_FpasCompilerDirectory)Fpas.LanguageServer.dll;$(_FpasCompilerDirectory)OmniSharp.Extensions.LanguageProtocol.dll;$(_FpasCompilerDirectory)StreamJsonRpc.dll;$(_FpasCompilerDirectory)Newtonsoft.Json.dll;$(_FpasCompilerDirectory)Fpas.SdkResolver.dll" />
       <_FpasCompilerManagedAsset Include="$(_FpasCompilerDirectory)**/*.dll" />
@@ -36,6 +59,7 @@
       <_FpasCompilerNativeAsset Include="$(_FpasCompilerDirectory)**/*.so;$(_FpasCompilerDirectory)debugger-notices.txt" />
       <None Include="@(_FpasCompilerNativeAsset)" Pack="true" PackagePath="tools/compiler/%(_FpasCompilerNativeAsset.RecursiveDir)%(_FpasCompilerNativeAsset.Filename)%(_FpasCompilerNativeAsset.Extension)" />
       <None Include="$(_FpasCompilerDirectory)Fpas.Cli.deps.json;$(_FpasCompilerDirectory)Fpas.Cli.runtimeconfig.json" Pack="true" PackagePath="tools/compiler/" />
+      <None Include="$(TargetDir)Fpas.Execution.Effects.dll;$(TargetDir)Fpas.Execution.Effects.xml" Pack="true" PackagePath="tools/runtime/" />
       <None Include="@(_FpasTaskAssembly)" Pack="true" PackagePath="tools/tasks/" />
       <None Include="$(_FpasTaskDirectory)Fpas.Deployment.dll;$(_FpasTaskDirectory)System.Security.Cryptography.Pkcs.dll;$(_FpasTaskDirectory)Fpas.Build.Tasks.deps.json" Pack="true" PackagePath="tools/tasks/" />
       <_FpasTaskRuntimeAsset Include="$(_FpasTaskDirectory)runtimes/**/*" />

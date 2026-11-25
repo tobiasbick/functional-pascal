@@ -46,21 +46,17 @@ in supported catch/finally bodies, but not exception filters.
 
 ## Composable effects
 
-Use [Fpas.Workflows](../libraries/workflows.md) when asynchronous work needs
-deferred composition, typed dependencies and failures, or shared policies such
-as retry and timeout. Use ordinary `async`, `await`, and `await using` for direct
-CLR calls and lexical resource lifetimes.
+Import SDK [Fpas.Execution.Effects](../libraries/effects.md) as `Fx`. `Effect<A, E, R>`
+describes a success value `A`, an expected failure `E`, and an environment `R`.
+Use `Fx.Effect<A, E, R>.Defer(Body)`, compose with `Fx.Map` or `Fx.AndThen`,
+then call `Run(Environment, Cancellation)`. Each run executes the body again.
+Use ordinary `async`, `await`, and `await using` inside the body for CLR I/O.
+Match `Fx.Outcome.Success` and `Fx.Outcome.Failure`. Unexpected CLR exceptions
+and cooperative cancellation propagate through the task.
 
-Add a project reference to
-[Fpas.Workflows.fpasproj](../../../src/Fpas.Workflows/Fpas.Workflows.fpasproj).
-`Workflow<A, E, R>` describes a success value `A`, an expected failure `E`,
-and a required environment `R`. Alias `Fpas.Workflows.Operations` as `W`.
-Use `W.Workflow<A, E, R>.Defer(Body)`, compose with `W.Map` or `W.AndThen`,
-then call the workflow's `Run(Environment, Cancellation)`. Each run executes the body again.
-Match `Outcome.Success` and `Outcome.Failure`. Unexpected CLR exceptions and
-cooperative cancellation propagate through the task.
-
-Use layers for scoped dependencies, `Scope.Use` and `Fork` for child tasks that
+Add a project reference to [Fpas.Execution.Workflows.fpasproj](../../../src/Fpas.Execution.Workflows/Fpas.Execution.Workflows.fpasproj)
+for [workflow policies](../libraries/workflows.md). Use layers for scoped dependencies,
+`Scope.Use` and `Fork` for child tasks that
 must be joined before cleanup, `Parallel.All` for bounded parallelism, and
 `Stream.Consume` for bounded event delivery with backpressure. Forward the
 scope token to its work. On expiry, `WithDeadline` requests cancellation and

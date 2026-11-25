@@ -49,8 +49,8 @@ their original order. The parent places that child model in its own model.
 The optional `Scope` prefixes background start and cancel IDs with `Scope/`.
 Use the same scope for a slice's lifetime so cancellation and supersession reach
 its own runs. Focus IDs stay unchanged: they identify controls in the complete
-view. Mapping does not start work or invoke action factories. Workers retain
-their cancellation token, awaited Post task and failure-to-message mapper.
+view. Mapping a command preserves deferred execution, the cancellation token,
+and backpressure while translating posts and expected failures to parent messages.
 
 Host-specific payloads implement `Application.HostExtension<TMsg>`. Its generic
 `Map<TNext>` method rebuilds the payload with translated message factories and
@@ -78,12 +78,22 @@ optimizations.
 
 ## Background effects
 
-`StartBackground` runs the entire effect body on a worker, including the work
-before its first `await`. The effect receives a cancellation token and a `Post`
-function. Await `Post` to respect mailbox capacity. Its completion reports
-admission, and `Update` receives the message on a later owner turn. The failure
-mapper runs on the worker and converts an ordinary effect failure into a
-message using the same delivery path.
+`StartBackground` runs an SDK [effect](../../pascal/libraries/effects.md) on a
+worker, including the work before its first `await`. It provides a cancellation
+token and `BackgroundContext<TMsg>` with `Post`. Await `Post` to respect mailbox
+capacity. Its completion reports admission, and `Update` receives the message
+on a later owner turn.
+
+Use `FromEffect` to project the dependencies of an `Effect<A, E, R>` from the
+running context and translate `Outcome.Success` and `Outcome.Failure` into
+messages. The dependency projection can pass `Post` through for progress.
+Unexpected CLR exceptions fault the worker. Use `FromWorker` to adapt a
+callback that posts its own replies and maps exceptions to expected failure
+messages. Both adapters produce the same effect type for `StartBackground`.
+The [desktop settings example](../../../examples/ui/gui/desktop-commands/README.md#appearance-and-layout)
+uses `FromEffect` for saving a value. The [podcast example](../../../apps/fpas-amp/doc/podcasts.md#implementation)
+posts search and feed results before loading their artwork, and returns expected
+network failures as typed messages.
 
 Use stable effect IDs. Starting another effect with the same ID supersedes
 the previous run. `CancelBackground` invalidates that run explicitly. Both
@@ -114,7 +124,7 @@ from a test project. Use `Effects<TMsg>.Watch(id)` before dispatching the operat
 and wrap the resulting transition with `Wrap`. Read a held reply from the watcher,
 assert the intermediate model, then await `Release()` and advance the session.
 The [effect reply test](../../../tests/Fpas.Ui.Mvu.Tests/EffectRepliesTests.fpas)
-drives supersession and failure through a real mailbox. Run it through the
+drives supersession and typed outcomes through a real mailbox. Run it through the
 [MVU test project](../../../tests/Fpas.Ui.Mvu.Tests/Fpas.Ui.Mvu.Tests.fpasproj).
 
 ## Source files

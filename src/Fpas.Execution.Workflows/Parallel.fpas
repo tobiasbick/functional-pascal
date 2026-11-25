@@ -1,10 +1,10 @@
 // [Documentation](../../docs/pascal/libraries/workflows.md#parallel-work-and-streams)
 
 // Bounded parallel execution of deferred workflows.
-unit Fpas.Workflows.Parallel;
+unit Fpas.Execution.Workflows.Parallel;
 
 uses
-  Fpas.Workflows.Operations as W, Fpas.Workflows.Scopes as S, System as Sys,
+  Fpas.Execution.Effects as Fx, Fpas.Execution.Workflows.Scopes as S, System as Sys,
   System.Collections.Generic as C,
   System.Threading as Threads, System.Threading.Tasks as Tasks;
 
@@ -22,11 +22,11 @@ uses
 // ## Returns
 // A deferred workflow. A failure stops admission, requests cancellation of the
 // other workers, and waits for them to finish. Unexpected faults remain task faults.
-public function All<A, E, R>(Work: array of W.Workflow<A, E, R>; Concurrency: int): W.Workflow<array of A, E, R>;
+public function All<A, E, R>(Work: array of Fx.Effect<A, E, R>; Concurrency: int): Fx.Effect<array of A, E, R>;
 requires Concurrency > 0;
-  function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<W.Outcome<array of A, E>>;
-    async function RunWorkers(Lifetime: S.Scope): Tasks.Task<W.Outcome<array of A, E>>;
-      async function Worker(Child: S.Scope): Tasks.Task<W.Completion>;
+  function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<Fx.Outcome<array of A, E>>;
+    async function RunWorkers(Lifetime: S.Scope): Tasks.Task<Fx.Outcome<array of A, E>>;
+      async function Worker(Child: S.Scope): Tasks.Task<Fx.Completion>;
       begin
         try
           await Ready.Task.WaitAsync(Child.Token).ConfigureAwait(false);
@@ -37,15 +37,15 @@ requires Concurrency > 0;
             end if;
 
             const Index: int := cast<int>(Slot);
-            const Result: W.Outcome<A, E> := await Inputs[Index].Run(
+            const Result: Fx.Outcome<A, E> := await Inputs[Index].Run(
               Environment,
               Child.Token
             ).ConfigureAwait(false);
             case Result of
-              when W.Outcome.Success(_):
+              when Fx.Outcome.Success(_):
                 Values[Index] := Result;
-              when W.Outcome.Failure(const Reason: E):
-                if Failure.TrySetResult(W.Outcome.Failure(Reason)) then
+              when Fx.Outcome.Failure(const Reason: E):
+                if Failure.TrySetResult(Fx.Outcome.Failure(Reason)) then
                   discard Lifetime.Cancel();
                 end if;
 
@@ -59,11 +59,11 @@ requires Concurrency > 0;
           raise;
         end try;
 
-        return W.Completion.Done;
+        return Fx.Completion.Done;
       end function;
     begin
-      const Values: array of W.Outcome<A, E>? := new W.Outcome<A, E>?[Inputs.Length];
-      const Failure: Tasks.TaskCompletionSource<W.Outcome<array of A, E>> := new Tasks.TaskCompletionSource<W.Outcome<array of A, E>>();
+      const Values: array of Fx.Outcome<A, E>? := new Fx.Outcome<A, E>?[Inputs.Length];
+      const Failure: Tasks.TaskCompletionSource<Fx.Outcome<array of A, E>> := new Tasks.TaskCompletionSource<Fx.Outcome<array of A, E>>();
       const Cursor: array of long := [-1L];
       // Let the workers wait until the parent has registered the full group.
       const Ready: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
@@ -71,7 +71,7 @@ requires Concurrency > 0;
       );
       const Workers: C.List<Tasks.Task> := new C.List<Tasks.Task>();
       for Index: int := 1 to Sys.Math.Min(Concurrency, Inputs.Length) do
-        Workers.Add(Lifetime.Fork<W.Completion>(Worker).Join);
+        Workers.Add(Lifetime.Fork<Fx.Completion>(Worker).Join);
       end for;
 
       Ready.SetResult();
@@ -82,9 +82,9 @@ requires Concurrency > 0;
         return await Failure.Task.ConfigureAwait(false);
       end if;
       const Ordered: C.List<A> := new C.List<A>(Inputs.Length);
-      for Result: W.Outcome<A, E>? in Values do
+      for Result: Fx.Outcome<A, E>? in Values do
         case Result of
-          when W.Outcome.Success(const Value: A):
+          when Fx.Outcome.Success(const Value: A):
             Ordered.Add(Value);
           else
             raise new Sys.InvalidOperationException(
@@ -93,14 +93,14 @@ requires Concurrency > 0;
         end case;
       end for;
 
-      return W.Outcome.Success(Ordered.ToArray());
+      return Fx.Outcome.Success(Ordered.ToArray());
     end function;
   begin
-    return S.Scope.Use<W.Outcome<array of A, E>>(RunWorkers, Cancellation);
+    return S.Scope.Use<Fx.Outcome<array of A, E>>(RunWorkers, Cancellation);
   end function;
 begin
-  const Inputs: array of W.Workflow<A, E, R> := cast<array of W.Workflow<A, E, R>>(Work.Clone());
-  return W.Workflow<array of A, E, R>.Defer(Execute);
+  const Inputs: array of Fx.Effect<A, E, R> := cast<array of Fx.Effect<A, E, R>>(Work.Clone());
+  return Fx.Effect<array of A, E, R>.Defer(Execute);
 end function;
 
 end unit;

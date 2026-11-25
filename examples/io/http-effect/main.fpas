@@ -1,0 +1,78 @@
+// [Documentation](README.md)
+
+async program HttpEffect;
+
+uses
+  Fpas.Execution.Effects as Fx, System as Sys, System.Console as Console,
+  System.Net as Net, System.Net.Http as Http, System.Threading as T,
+  System.Threading.Tasks as Tasks;
+
+type FetchFailure = variant
+  Rejected(Status: Net.HttpStatusCode);
+  RequestFailed(Reason: string);
+end variant;
+
+function Fetch(Address: Sys.Uri): Fx.Effect<string, FetchFailure, Http.HttpClient>;
+  async function Read(Client: Http.HttpClient; Stop: T.CancellationToken): Tasks.Task<Fx.Outcome<string, FetchFailure>>;
+  begin
+    try
+      using const Response: Http.HttpResponseMessage := await Client.GetAsync(
+        Address,
+        Stop
+      ).ConfigureAwait(false);
+      if not Response.IsSuccessStatusCode then
+        return Fx.Outcome.Failure(FetchFailure.Rejected(Response.StatusCode));
+      end if;
+
+      return Fx.Outcome.Success(
+        await Response.Content.ReadAsStringAsync(Stop).ConfigureAwait(false)
+      );
+    catch Error: Http.HttpRequestException do
+      Stop.ThrowIfCancellationRequested();
+      return Fx.Outcome.Failure(FetchFailure.RequestFailed(Error.Message));
+    end try;
+  end function;
+begin
+  return Fx.Effect<string, FetchFailure, Http.HttpClient>.Defer(Read);
+end function;
+
+procedure Report(Result: Fx.Outcome<string, FetchFailure>);
+begin
+  case Result of
+    when Fx.Outcome.Success(const Body: string):
+      Console.WriteLine(Body.TrimEnd());
+    when Fx.Outcome.Failure(const Reason: FetchFailure):
+      case Reason of
+        when FetchFailure.Rejected(const Status: Net.HttpStatusCode):
+          Console.WriteLine('HTTP status ' + cast<int>(Status).ToString());
+        when FetchFailure.RequestFailed(const Detail: string):
+          Console.WriteLine('Request failed: ' + Detail);
+      end case;
+
+      Sys.Environment.ExitCode := 1;
+  end case;
+end procedure;
+
+begin
+  const Arguments: array of string := Sys.Environment.GetCommandLineArgs();
+  if Arguments.Length <> 2 then
+    Console.WriteLine('Pass one absolute HTTP URL.');
+    Sys.Environment.ExitCode := 2;
+  else
+    const Work: Fx.Effect<string, FetchFailure, Http.HttpClient> := Fetch(
+      new Sys.Uri(Arguments[1])
+    );
+    using const Client: Http.HttpClient := new Http.HttpClient();
+    Client.MaxResponseContentBufferSize := 65536L;
+    Client.Timeout := T.Timeout.InfiniteTimeSpan;
+    using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
+    try
+      Report(await Work.Run(Client, Deadline.Token).ConfigureAwait(false));
+    catch _Error: Sys.OperationCanceledException when Deadline.IsCancellationRequested do
+      Console.WriteLine('Request canceled');
+      Sys.Environment.ExitCode := 1;
+    end try;
+  end if;
+end;
+
+end program;

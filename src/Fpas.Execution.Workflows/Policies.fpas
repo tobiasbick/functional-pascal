@@ -1,10 +1,10 @@
-// [Documentation](../../docs/pascal/libraries/workflows.md#describe-and-run-a-workflow)
+// [Documentation](../../docs/pascal/libraries/workflows.md#retry-and-deadlines)
 
 // Deadlines and retries for deferred operations.
-unit Fpas.Workflows.Policies;
+unit Fpas.Execution.Workflows.Policies;
 
 uses
-  Fpas.Workflows.Operations as W, System as Sys, System.Threading as Threads,
+  Fpas.Execution.Effects as Fx, System as Sys, System.Threading as Threads,
   System.Threading.Tasks as Tasks;
 
 // Applies a cooperative time limit to one workflow execution.
@@ -24,9 +24,9 @@ uses
 // The deferred workflow. It waits for work and cleanup to finish even after
 // expiry. Caller cancellation takes precedence over deadline expiry.
 public function WithDeadline<A, E, R>(
-  Work: W.Workflow<A, E, R>; Duration: Sys.TimeSpan; Expired: function(): E; Clock: Sys.TimeProvider
-): W.Workflow<A, E, R>;
-  async function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<W.Outcome<A, E>>;
+  Work: Fx.Effect<A, E, R>; Duration: Sys.TimeSpan; Expired: function(): E; Clock: Sys.TimeProvider
+): Fx.Effect<A, E, R>;
+  async function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<Fx.Outcome<A, E>>;
   begin
     using const Deadline: Threads.CancellationTokenSource := new Threads.CancellationTokenSource(
       Duration,
@@ -37,7 +37,7 @@ public function WithDeadline<A, E, R>(
       Deadline.Token
     );
     try
-      const Result: W.Outcome<A, E> := await Work.Run(
+      const Result: Fx.Outcome<A, E> := await Work.Run(
         Environment,
         Linked.Token
       ).ConfigureAwait(false);
@@ -49,7 +49,7 @@ public function WithDeadline<A, E, R>(
         raise;
       end if;
 
-      return W.Outcome.Failure(Expired());
+      return Fx.Outcome.Failure(Expired());
     end try;
   end function;
 begin
@@ -57,7 +57,7 @@ begin
     raise new Sys.ArgumentOutOfRangeException('Duration');
   end if;
 
-  return W.Workflow<A, E, R>.Defer(Execute);
+  return Fx.Effect<A, E, R>.Defer(Execute);
 end function;
 
 // Re-executes an operation after selected expected failures.
@@ -76,21 +76,21 @@ end function;
 // ## Returns
 // The deferred retry policy.
 public function Retry<A, E, R>(
-  Work: W.Workflow<A, E, R>; Attempts: int; Delay: function(E, int): Sys.TimeSpan?; Clock: Sys.TimeProvider
-): W.Workflow<A, E, R>;
+  Work: Fx.Effect<A, E, R>; Attempts: int; Delay: function(E, int): Sys.TimeSpan?; Clock: Sys.TimeProvider
+): Fx.Effect<A, E, R>;
 requires Attempts > 0;
-  async function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<W.Outcome<A, E>>;
+  async function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<Fx.Outcome<A, E>>;
   begin
     var Attempt: int := 1;
     while true do
-      const Result: W.Outcome<A, E> := await Work.Run(
+      const Result: Fx.Outcome<A, E> := await Work.Run(
         Environment,
         Cancellation
       ).ConfigureAwait(false);
       case Result of
-        when W.Outcome.Success(_):
+        when Fx.Outcome.Success(_):
           return Result;
-        when W.Outcome.Failure(const Reason: E):
+        when Fx.Outcome.Failure(const Reason: E):
           if Attempt = Attempts then
             return Result;
           end if;
@@ -111,7 +111,7 @@ requires Attempts > 0;
     end while;
   end function;
 begin
-  return W.Workflow<A, E, R>.Defer(Execute);
+  return Fx.Effect<A, E, R>.Defer(Execute);
 end function;
 
 end unit;

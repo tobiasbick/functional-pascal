@@ -3,7 +3,7 @@
 unit Fpas.Ui.Mvu.Session;
 
 uses
-  Fpas.Ui.Mvu.Application as App, Fpas.Ui.Mvu.Internal.Effects as Effects, System as Sys,
+  Fpas.Execution.Effects as Fx, Fpas.Ui.Mvu.Application as App, Fpas.Ui.Mvu.Internal.Effects as Effects, System as Sys,
   System.Threading as Threads, System.Threading.Channels as Channels, System.Threading.Tasks as Tasks;
 
 // The outcome of posting to the session mailbox.
@@ -219,10 +219,9 @@ requires Capacity > 0;
           Workers.Cancel(Id);
         when App.Command.Start(
           const Id: string,
-          const Work: function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task,
-          const OnFailure: function(Sys.Exception): TMsg
+          const Work: Fx.Effect<Fx.Completion, TMsg, App.BackgroundContext<TMsg>>
         ):
-          Workers.Start(Id, Work, OnFailure);
+          Workers.Start(Id, Work);
         when App.Command.Host(const Request: App.HostRequest):
           case Request of
             when App.HostRequest.Close:

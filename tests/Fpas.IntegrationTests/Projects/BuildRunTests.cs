@@ -9,6 +9,51 @@ namespace Fpas.IntegrationTests.Projects;
 public sealed class BuildRunTests(SdkPackageFixture sdk) : IClassFixture<SdkPackageFixture>
 {
     [Fact]
+    public async Task Sdk_supplies_the_effect_type_for_deferred_file_io()
+    {
+        using var directory = new TemporaryDirectory();
+        var project = await ProjectCliFixture.Init(directory, sdk);
+        File.WriteAllText(directory.File("App/main.fpas"), """
+            program EffectIo;
+
+            uses Fpas.Execution.Effects as Fx, System.Console as Console, System.IO as IO,
+              System.Threading as Threads, System.Threading.Tasks as Tasks;
+
+            async function Read(Path: string; Token: Threads.CancellationToken): Tasks.Task<Fx.Outcome<string, string>>;
+            begin
+              Console.WriteLine('reading');
+              try
+                return Fx.Outcome.Success(await IO.File.ReadAllTextAsync(Path, Token).ConfigureAwait(false));
+              catch _Error: IO.FileNotFoundException do
+                return Fx.Outcome.Failure('missing');
+              end try;
+            end function;
+
+            procedure Print(Result: Fx.Outcome<string, string>);
+            begin
+              case Result of
+                when Fx.Outcome.Success(const Text: string): Console.WriteLine(Text);
+                when Fx.Outcome.Failure(const Error: string): Console.WriteLine(Error);
+              end case;
+            end procedure;
+
+            begin
+              const Effect: Fx.Effect<string, string, string> := Fx.Effect<string, string, string>.Defer(Read);
+              Console.WriteLine('deferred');
+              Print(Effect.Run('absent.txt', Threads.CancellationToken.None).GetAwaiter().GetResult());
+              IO.File.WriteAllText('present.txt', 'from disk');
+              Print(Effect.Run('present.txt', Threads.CancellationToken.None).GetAwaiter().GetResult());
+            end;
+            end program;
+            """);
+        var run = await ProjectCliFixture.Cli(directory, "run", project, "--report", "json");
+        Assert.True(run.ExitCode == 0, run.Output + run.Error);
+        using var report = JsonDocument.Parse(run.Output);
+        Assert.Equal("deferred\nreading\nmissing\nreading\nfrom disk\n", report.RootElement.GetProperty("program")
+            .GetProperty("output").GetString()!.ReplaceLineEndings("\n"));
+    }
+
+    [Fact]
     public async Task Build_and_run_a_mixed_solution_selects_the_CSharp_host_and_honors_configuration()
     {
         using var project = sdk.CreateProject();

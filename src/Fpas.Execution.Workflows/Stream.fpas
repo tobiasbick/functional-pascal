@@ -1,10 +1,10 @@
 // [Documentation](../../docs/pascal/libraries/workflows.md#parallel-work-and-streams)
 
 // Bounded, ordered event streams with structured producer lifetime.
-unit Fpas.Workflows.Streams;
+unit Fpas.Execution.Workflows.Streams;
 
 uses
-  Fpas.Workflows.Operations as W, Fpas.Workflows.Scopes as S,
+  Fpas.Execution.Effects as Fx, Fpas.Execution.Workflows.Scopes as S,
   System.Threading as Threads, System.Threading.Channels as Channels,
   System.Threading.Tasks as Tasks;
 
@@ -15,7 +15,7 @@ uses
 // - `E`: Expected producer failure type.
 // - `R`: Environment required by the producer.
 public type Stream<A, E, R> = record
-  Produce: function(R, function(A): Tasks.Task, Threads.CancellationToken): Tasks.Task<W.Outcome<W.Completion, E>>;
+  Produce: function(R, function(A): Tasks.Task, Threads.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, E>>;
 
   // Stores a producer for later subscription.
   //
@@ -24,7 +24,7 @@ public type Stream<A, E, R> = record
   //
   // ## Returns
   // The deferred stream.
-  public static function Create(Produce: function(R, function(A): Tasks.Task, Threads.CancellationToken): Tasks.Task<W.Outcome<W.Completion, E>>): Stream<A, E, R>;
+  public static function Create(Produce: function(R, function(A): Tasks.Task, Threads.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, E>>): Stream<A, E, R>;
   begin
     return new Stream<A, E, R>(Produce);
   end function;
@@ -38,11 +38,11 @@ public type Stream<A, E, R> = record
   // ## Returns
   // A workflow returning the producer outcome after draining the channel and
   // joining the producer. Cancellation interrupts channel waits.
-  public function Consume(Capacity: int; Receive: function(A, Threads.CancellationToken): Tasks.Task): W.Workflow<W.Completion, E, R>;
+  public function Consume(Capacity: int; Receive: function(A, Threads.CancellationToken): Tasks.Task): Fx.Effect<Fx.Completion, E, R>;
   requires Capacity > 0;
-    function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<W.Outcome<W.Completion, E>>;
-      async function Read(Lifetime: S.Scope): Tasks.Task<W.Outcome<W.Completion, E>>;
-        async function Write(Producer: S.Scope): Tasks.Task<W.Outcome<W.Completion, E>>;
+    function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, E>>;
+      async function Read(Lifetime: S.Scope): Tasks.Task<Fx.Outcome<Fx.Completion, E>>;
+        async function Write(Producer: S.Scope): Tasks.Task<Fx.Outcome<Fx.Completion, E>>;
           function Publish(Value: A): Tasks.Task;
           begin
             return Pipe.Writer.WriteAsync(Value, Producer.Token).AsTask();
@@ -56,7 +56,7 @@ public type Stream<A, E, R> = record
         end function;
       begin
         const Pipe: Channels.Channel<A> := Channels.Channel.CreateBounded<A>(Capacity);
-        const Producer: S.Child<W.Outcome<W.Completion, E>> := Lifetime.Fork<W.Outcome<W.Completion, E>>(
+        const Producer: S.Child<Fx.Outcome<Fx.Completion, E>> := Lifetime.Fork<Fx.Outcome<Fx.Completion, E>>(
           Write
         );
         while await Pipe.Reader.WaitToReadAsync(Lifetime.Token).ConfigureAwait(false) do
@@ -67,10 +67,10 @@ public type Stream<A, E, R> = record
         return await Producer.Join.ConfigureAwait(false);
       end function;
     begin
-      return S.Scope.Use<W.Outcome<W.Completion, E>>(Read, Cancellation);
+      return S.Scope.Use<Fx.Outcome<Fx.Completion, E>>(Read, Cancellation);
     end function;
   begin
-    return W.Workflow<W.Completion, E, R>.Defer(Execute);
+    return Fx.Effect<Fx.Completion, E, R>.Defer(Execute);
   end function;
 end record;
 

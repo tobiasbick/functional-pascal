@@ -30,31 +30,35 @@ begin
     [
       Mvu.StartBackground<M.Msg>(
         'library-inventory',
-        async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-          while await Library.Changes.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
-            const Value: Inventory.Snapshot := await Library.Changes.ReadAsync(
-              Cancellation
-            ).ConfigureAwait(false);
-            await Post(
-              M.Msg.Settings(SettingsModel.Msg.InventoryReceived(Value))
-            ).ConfigureAwait(false);
-          end while;
-        end function,
-        Stopped
+        Mvu.FromWorker<M.Msg>(
+          async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+            while await Library.Changes.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
+              const Value: Inventory.Snapshot := await Library.Changes.ReadAsync(
+                Cancellation
+              ).ConfigureAwait(false);
+              await Post(
+                M.Msg.Settings(SettingsModel.Msg.InventoryReceived(Value))
+              ).ConfigureAwait(false);
+            end while;
+          end function,
+          Stopped
+        )
       ),
       Mvu.StartBackground<M.Msg>(
         'library-progress',
-        async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-          while await Library.Progress.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
-            const Value: Progress.Snapshot := await Library.Progress.ReadAsync(
-              Cancellation
-            ).ConfigureAwait(false);
-            await Post(
-              M.Msg.Settings(SettingsModel.Msg.ProgressReceived(Value))
-            ).ConfigureAwait(false);
-          end while;
-        end function,
-        Stopped
+        Mvu.FromWorker<M.Msg>(
+          async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+            while await Library.Progress.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
+              const Value: Progress.Snapshot := await Library.Progress.ReadAsync(
+                Cancellation
+              ).ConfigureAwait(false);
+              await Post(
+                M.Msg.Settings(SettingsModel.Msg.ProgressReceived(Value))
+              ).ConfigureAwait(false);
+            end while;
+          end function,
+          Stopped
+        )
       )
     ]
   );
@@ -70,23 +74,27 @@ begin
     Commands.Add(
       Mvu.StartBackground<M.Msg>(
         'navigation-playlists',
-        async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-          await Tags.Playlists.ObserveAsync(
-            function(Items: I.ImmutableArray<Playlists.Summary>): Tasks.Task => Post(
-              M.Msg.Navigation(Nav.Msg.Received(Items))
-            ),
-            Cancellation
-          ).ConfigureAwait(false);
-        end function,
-        function(Error: Sys.Exception): M.Msg => M.Msg.Navigation(Nav.Msg.Failed(Error.Message))
+        Mvu.FromWorker<M.Msg>(
+          async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+            await Tags.Playlists.ObserveAsync(
+              function(Items: I.ImmutableArray<Playlists.Summary>): Tasks.Task => Post(
+                M.Msg.Navigation(Nav.Msg.Received(Items))
+              ),
+              Cancellation
+            ).ConfigureAwait(false);
+          end function,
+          function(Error: Sys.Exception): M.Msg => M.Msg.Navigation(Nav.Msg.Failed(Error.Message))
+        )
       )
     );
     Commands.Add(
       Mvu.StartBackground<M.Msg>(
         'library-metadata',
-        async function(_Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-          await Tags.Completion.WaitAsync(Cancellation).ConfigureAwait(false);
-        end function, Stopped
+        Mvu.FromWorker<M.Msg>(
+          async function(_Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+            await Tags.Completion.WaitAsync(Cancellation).ConfigureAwait(false);
+          end function, Stopped
+        )
       )
     );
   end if;
@@ -95,11 +103,13 @@ begin
     Commands.Add(
       Mvu.StartBackground<M.Msg>(
         'navigation-playlists',
-        async function(Post: function(M.Msg): Tasks.Task; _Cancellation: T.CancellationToken): Tasks.Task begin
-          await Post(
-            M.Msg.Navigation(Nav.Msg.Received(I.ImmutableArray<Playlists.Summary>.Empty))
-          ).ConfigureAwait(false);
-        end function, Failure
+        Mvu.FromWorker<M.Msg>(
+          async function(Post: function(M.Msg): Tasks.Task; _Cancellation: T.CancellationToken): Tasks.Task begin
+            await Post(
+              M.Msg.Navigation(Nav.Msg.Received(I.ImmutableArray<Playlists.Summary>.Empty))
+            ).ConfigureAwait(false);
+          end function, Failure
+        )
       )
     );
   end if;

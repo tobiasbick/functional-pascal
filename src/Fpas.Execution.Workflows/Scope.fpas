@@ -1,7 +1,7 @@
 // [Documentation](../../docs/pascal/libraries/workflows.md#scope-work-and-dependencies)
 
 // Structured lifetime for child tasks and asynchronous cleanup.
-unit Fpas.Workflows.Scopes;
+unit Fpas.Execution.Workflows.Scopes;
 
 uses
   System as Sys, System.Collections.Generic as C,
@@ -143,7 +143,7 @@ public type Scope = record
         Faults
       );
       if Body.IsCompletedSuccessfully then
-        Combined.Data['Fpas.Workflows.CompletedValue'] := cast<object?>(Body.Result);
+        Combined.Data['Fpas.Execution.Workflows.CompletedValue'] := cast<object?>(Body.Result);
       end if;
 
       raise Combined;

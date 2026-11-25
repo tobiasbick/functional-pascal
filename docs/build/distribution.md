@@ -85,7 +85,8 @@ that version's `fpas.net.sdk` cache entry before restoring consumers. Other pack
 versions remain independent. The [standalone SDK walkthrough](standalone-sdk.md)
 describes a mixed-language consumer and isolated feed/cache configuration.
 
-The SDK includes its managed compiler for ordinary `dotnet build`. A distributed
+The SDK includes its managed compiler and [effect library](../pascal/libraries/effects.md)
+for ordinary `dotnet build`. A distributed
 `fpas build` selects its own executable for compiler subprocesses. To select it
 explicitly from MSBuild, pass `-p:FpasCompilerPath=<absolute-path-to-fpas>`.
 Both managed and executable invocations use the same JSON response contract.

@@ -1,32 +1,13 @@
 # Deferred workflows
 
-Use `Fpas.Workflows` when an application needs to configure, compose, or repeat
-asynchronous work before it runs. Add a project reference to
-[Fpas.Workflows.fpasproj](../../../src/Fpas.Workflows/Fpas.Workflows.fpasproj).
-The library uses FPAS records and variants and runs on .NET tasks.
+Use `Fpas.Execution.Workflows` for execution policies and resource lifetimes on top of
+the SDK's [`Effect<A, E, R>`](effects.md). Add a project reference to
+[Fpas.Execution.Workflows.fpasproj](../../../src/Fpas.Execution.Workflows/Fpas.Execution.Workflows.fpasproj).
 
-## Describe and run a workflow
+## Retry and deadlines
 
-`Workflow<A, E, R>` names the success type `A`, expected failure type `E`,
-and environment `R`. Use a record for several dependencies and a variant for
-different expected failures.
-These types check composition at the library interface. A workflow body can use
-ordinary FPAS operations and CLR APIs.
-
-1. Wrap a routine taking the environment and a cancellation token with
-   `Workflow<A, E, R>.Defer`.
-2. Compose it with `Map` to transform a success or `AndThen` to choose the next
-   step from a successful result. `MapFailure` adapts an error type.
-   `FromEnvironment` projects a smaller environment from the caller's record.
-3. Call `Run(Environment, Cancellation)` at the application boundary. Each call
-   invokes the workflow body again. Match `Outcome.Success(Value)` and
-   `Outcome.Failure(Reason)` to handle its result.
-
-`AndThen` skips the next step after an expected failure. Use `OrElse` for
-fallback and `Retry` for a bounded number of attempts with a delay chosen from
-the failure and attempt number. Retry repeats the operation, so reserve it for
-work that can safely run again. Unexpected CLR exceptions fault the task.
-Cancellation uses `OperationCanceledException` and is cooperative.
+`Retry` runs an effect with a bounded number of attempts and a delay chosen
+from the failure and attempt number. Apply it to work that can safely run again.
 `WithDeadline` requests cancellation, waits for cleanup, and can report expiry
 as a typed failure. Supply a .NET `TimeProvider` to time-based policies.
 
@@ -41,7 +22,7 @@ dependencies as valid only while the owning scope is open.
 
 An independent task fault and cleanup faults are reported in
 `AggregateException.InnerExceptions`. If the body completed and cleanup
-faulted, `Data['Fpas.Workflows.CompletedValue']` carries the completed value,
+faulted, `Data['Fpas.Execution.Workflows.CompletedValue']` carries the completed value,
 including an expected failure when the value is an `Outcome`.
 
 `Layer.Create` couples a dependency acquisition with its release. Compose
@@ -98,6 +79,7 @@ exercise composition, dependency cleanup, and bounded streams.
 ## See also
 
 - [Library guides](README.md)
+- [Deferred effects](effects.md)
 - [Function contracts](../language/functions/contracts.md)
 - [Task coordination](task-coordination.md)
 - [Bounded channels](channels.md)
@@ -105,19 +87,18 @@ exercise composition, dependency cleanup, and bounded streams.
 ## Source files
 
 <details>
-<summary>Browse 15 source files</summary>
+<summary>Browse 14 source files</summary>
 
 - `src/Fpas.Processes.Workflows/`
   - [Capture.fpas](../../../src/Fpas.Processes.Workflows/Capture.fpas)
   - [Fpas.Processes.Workflows.fpasproj](../../../src/Fpas.Processes.Workflows/Fpas.Processes.Workflows.fpasproj)
-- `src/Fpas.Workflows/`
-  - [Layer.fpas](../../../src/Fpas.Workflows/Layer.fpas)
-  - [Parallel.fpas](../../../src/Fpas.Workflows/Parallel.fpas)
-  - [Policies.fpas](../../../src/Fpas.Workflows/Policies.fpas)
-  - [Scope.fpas](../../../src/Fpas.Workflows/Scope.fpas)
-  - [Stream.fpas](../../../src/Fpas.Workflows/Stream.fpas)
-  - [Tracing.fpas](../../../src/Fpas.Workflows/Tracing.fpas)
-  - [Workflow.fpas](../../../src/Fpas.Workflows/Workflow.fpas)
+- `src/Fpas.Execution.Workflows/`
+  - [Layer.fpas](../../../src/Fpas.Execution.Workflows/Layer.fpas)
+  - [Parallel.fpas](../../../src/Fpas.Execution.Workflows/Parallel.fpas)
+  - [Policies.fpas](../../../src/Fpas.Execution.Workflows/Policies.fpas)
+  - [Scope.fpas](../../../src/Fpas.Execution.Workflows/Scope.fpas)
+  - [Stream.fpas](../../../src/Fpas.Execution.Workflows/Stream.fpas)
+  - [Tracing.fpas](../../../src/Fpas.Execution.Workflows/Tracing.fpas)
 - `tests/Fixtures/workflows/`
   - [CaptureEncoding.fpas](../../../tests/Fixtures/workflows/CaptureEncoding.fpas)
   - [Lifetimes.fpas](../../../tests/Fixtures/workflows/Lifetimes.fpas)

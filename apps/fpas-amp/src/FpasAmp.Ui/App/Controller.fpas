@@ -175,10 +175,12 @@ begin
           Next, [
             Mvu.StartBackground<M.Msg>(
               'save-mixer',
-              async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-                await Tasks.Task.Delay(350, Cancellation).ConfigureAwait(false);
-                await Post(M.Msg.SaveMixer).ConfigureAwait(false);
-              end function, Failure
+              Mvu.FromWorker<M.Msg>(
+                async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+                  await Tasks.Task.Delay(350, Cancellation).ConfigureAwait(false);
+                  await Post(M.Msg.SaveMixer).ConfigureAwait(false);
+                end function, Failure
+              )
             )
           ]
         );

@@ -1,7 +1,8 @@
 # FPAS Project SDK
 
 Fpas.NET.Sdk packages Sdk/Sdk.props, Sdk/Sdk.targets, the matching compiler/CLI,
-Fpas.Core metadata attributes, and the MSBuild task. The task runs the compiler in
+Fpas.Core metadata attributes, the Fpas.Execution.Effects library, and the MSBuild task.
+The task runs the compiler in
 a separate process. `FpasCompilerPath` accepts either the packaged managed CLI or
 an absolute path to the distributed single-file executable. The SDK checks the
 compiler content hash before compilation; a different compiler is rejected.
@@ -21,6 +22,7 @@ rejects embedded resources with `FP5001`. See the
 Records, variants, domains, and public aliases use Fpas.Core metadata attributes.
 The SDK supplies and copies its matching Core assembly. See the
 [CLR mapping](../../docs/specs/clr-mapping.md) for the metadata contracts.
+Import `Fpas.Execution.Effects` to use the SDK's [deferred effects](../../docs/pascal/libraries/effects.md).
 
 Application publishing supports Native AOT, self-contained/single-file outputs,
 native apphosts and framework-dependent DLLs on Windows x64 and Linux x64.

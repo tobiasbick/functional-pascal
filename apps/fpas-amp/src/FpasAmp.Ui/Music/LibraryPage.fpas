@@ -140,19 +140,21 @@ begin
     Next, [
       A.StartBackground<Msg>(
         'covers',
-        async function(Post: function(Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-          for Release: Albums.Album in Missing.Values do
-            Cancellation.ThrowIfCancellationRequested();
-            const Picture: Imaging.Bitmap? := await Artwork.Load(
-              Library.Albums,
-              Release,
-              Cancellation
-            ).ConfigureAwait(false);
-            await Post(Msg.Image(Next.Generation, Release.Id, Picture)).ConfigureAwait(false);
-          end for;
-        end function,
-        function(Error: Sys.Exception): Msg => Msg.Song(
-          Songs.Msg.Failed(Current.Page.Visit, Error.Message)
+        A.FromWorker<Msg>(
+          async function(Post: function(Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+            for Release: Albums.Album in Missing.Values do
+              Cancellation.ThrowIfCancellationRequested();
+              const Picture: Imaging.Bitmap? := await Artwork.Load(
+                Library.Albums,
+                Release,
+                Cancellation
+              ).ConfigureAwait(false);
+              await Post(Msg.Image(Next.Generation, Release.Id, Picture)).ConfigureAwait(false);
+            end for;
+          end function,
+          function(Error: Sys.Exception): Msg => Msg.Song(
+            Songs.Msg.Failed(Current.Page.Visit, Error.Message)
+          )
         )
       )
     ]
@@ -195,25 +197,29 @@ begin
         Next, [
           A.StartBackground<Msg>(
             'observe',
-            async function(Post: function(Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
-              await Library.Albums.ObserveSongsAsync(
-                async function(Started: long; Entries: I.ImmutableArray<Tracks.Entry>; Releases: I.ImmutableArray<Albums.Album>): Tasks.Task begin
-                  var Items: I.ImmutableArray<Tracks.Entry> := Entries;
-                  if Identity <> null then
-                    const List: Lists.Playlist? := await Library.Playlists.ReadAsync(
-                      Identity, Cancellation
-                    ).ConfigureAwait(false);
-                    Items := Playlist.Resolve(List, Entries);
-                  end if;
+            A.FromWorker<Msg>(
+              async function(Post: function(Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+                await Library.Albums.ObserveSongsAsync(
+                  async function(Started: long; Entries: I.ImmutableArray<Tracks.Entry>; Releases: I.ImmutableArray<Albums.Album>): Tasks.Task begin
+                    var Items: I.ImmutableArray<Tracks.Entry> := Entries;
+                    if Identity <> null then
+                      const List: Lists.Playlist? := await Library.Playlists.ReadAsync(
+                        Identity, Cancellation
+                      ).ConfigureAwait(false);
+                      Items := Playlist.Resolve(List, Entries);
+                    end if;
 
-                  await Post(
-                    Msg.Received(Visit, Started, Prepare(Items, Releases, Cancellation))
-                  ).ConfigureAwait(false);
-                end function,
-                Cancellation
-              ).ConfigureAwait(false);
-            end function,
-            function(Error: Sys.Exception): Msg => Msg.Song(Songs.Msg.Failed(Visit, Error.Message))
+                    await Post(
+                      Msg.Received(Visit, Started, Prepare(Items, Releases, Cancellation))
+                    ).ConfigureAwait(false);
+                  end function,
+                  Cancellation
+                ).ConfigureAwait(false);
+              end function,
+              function(Error: Sys.Exception): Msg => Msg.Song(
+                Songs.Msg.Failed(Visit, Error.Message)
+              )
+            )
           )
         ]
       );

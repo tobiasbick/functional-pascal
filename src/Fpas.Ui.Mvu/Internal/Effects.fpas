@@ -3,7 +3,8 @@
 unit Fpas.Ui.Mvu.Internal.Effects;
 
 uses
-  System as Sys, System.Collections.Generic as Generic, System.Threading as Threads,
+  Fpas.Execution.Effects as Fx, Fpas.Ui.Mvu.Application as App, System as Sys,
+  System.Collections.Generic as Generic, System.Threading as Threads,
   System.Threading.Tasks as Tasks;
 
 type Run = record
@@ -73,11 +74,8 @@ end record;
 // ## Type parameters
 // - `TMsg`: The application's message type.
 public type State<TMsg> = record
-  // Schedules work with the supplied ID, body and failure mapper.
-  public Start: procedure(
-    string, function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task,
-    function(Sys.Exception): TMsg
-  );
+  // Schedules an effect with the supplied ID.
+  public Start: procedure(string, Fx.Effect<Fx.Completion, TMsg, App.BackgroundContext<TMsg>>);
   // Invalidates a generation and starts cancellation.
   public Cancel: procedure(string);
   // Reports whether an effect message belongs to the current generation.
@@ -100,22 +98,20 @@ end record;
 // The effect owner.
 public function Create<TMsg>(Enqueue: function(string, long, TMsg, Threads.CancellationToken): Tasks.Task): State<TMsg>;
   async function Perform(
-    Id: string; Version: long; Work: function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task;
-    OnFailure: function(Sys.Exception): TMsg; Token: Threads.CancellationToken
+    Id: string; Version: long; Work: Fx.Effect<Fx.Completion, TMsg, App.BackgroundContext<TMsg>>;
+    Token: Threads.CancellationToken
   ): Tasks.Task;
     function Post(Message: TMsg): Tasks.Task;
     begin
       return Enqueue(Id, Version, Message, Token);
     end function;
   begin
-    try
-      Token.ThrowIfCancellationRequested();
-      await Work(Post, Token).ConfigureAwait(false);
-    catch Failure: Sys.Exception do
-      if not Token.IsCancellationRequested then
-        await Post(OnFailure(Failure)).ConfigureAwait(false);
-      end if;
-    end try;
+    case await Work.Run(new App.BackgroundContext<TMsg>(Post), Token).ConfigureAwait(false) of
+      when Fx.Outcome.Success(_):
+      when Fx.Outcome.Failure(const Message: TMsg):
+        Token.ThrowIfCancellationRequested();
+        await Post(Message).ConfigureAwait(false);
+    end case;
   end function;
 
   procedure Prune();
@@ -149,10 +145,7 @@ public function Create<TMsg>(Enqueue: function(string, long, TMsg, Threads.Cance
     end for;
   end procedure;
 
-  procedure Start(
-    Id: string; Work: function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task;
-    OnFailure: function(Sys.Exception): TMsg
-  );
+  procedure Start(Id: string; Work: Fx.Effect<Fx.Completion, TMsg, App.BackgroundContext<TMsg>>);
   begin
     Prune();
     Cancel(Id);
@@ -161,7 +154,7 @@ public function Create<TMsg>(Enqueue: function(string, long, TMsg, Threads.Cance
     const Source: Threads.CancellationTokenSource := new Threads.CancellationTokenSource();
     const Task: Tasks.Task := Tasks.TaskExtensions.Unwrap(
       Tasks.Task.Run<Tasks.Task>(
-        function(): Tasks.Task => Perform(Id, Version, Work, OnFailure, Source.Token)
+        function(): Tasks.Task => Perform(Id, Version, Work, Source.Token)
       )
     );
     Versions.Add(Id, Version);

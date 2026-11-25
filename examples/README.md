@@ -37,12 +37,14 @@ the local SDK first using the [development workflow](../docs/build/development.m
 | [Events](interop/events/README.md) | Actual .NET collection events and retained handler identity |
 | [Type inspection](interop/type-inspection/README.md) | Type tokens, nominal identity, and generic parameters |
 
-## Files and directories
+## I/O
 
 | Example | Demonstrates |
 | --- | --- |
 | [Read a file](io/read-file/README.md) | StreamReader, exceptions, and deterministic disposal |
 | [Directory inventory](io/directory-inventory/README.md) | Arguments, files, collections, static LINQ calls, and captured state |
+| [HTTP effect](io/http-effect/README.md) | Deferred HTTP GET, response lifetime, typed failures, and a request deadline |
+| [SQLite effect](io/sqlite-effect/README.md) | Deferred parameterized query with scoped database resources and a typed result |
 
 ## Numeric computation
 

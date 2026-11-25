@@ -1,4 +1,4 @@
-<!-- [Documentation](../../docs/pascal/libraries/workflows.md#describe-and-run-a-workflow) -->
+<!-- [Documentation](../../docs/pascal/libraries/workflows.md) -->
 <Project Sdk="Fpas.NET.Sdk/0.1.0-dev">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>

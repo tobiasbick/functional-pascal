@@ -97,9 +97,9 @@ Subview caching does not skip all host processing or virtualize large collection
 Use shared `Mvu.StartBackground`, `CancelBackground`, `Focus` and `Exit` commands.
 For menu and toolbar actions, the graphical host also provides
 [clipboard commands](host.md#clipboard).
-Background work receives a typed Post callback and cancellation token. Update
-and View stay on the creating UI thread. Do not block them while waiting for a
-worker; post its result and let the next owner turn apply it.
+Run [background effects](../mvu/runtime.md#background-effects) with a
+cancellation token and a typed message channel. `Update` and `View` stay on
+the creating UI thread. The worker posts its result for the next owner turn.
 
 For a manually driven application, own `Gui.Start` with `using const` and call
 Step on its creating thread until it returns false. Post can run on workers and

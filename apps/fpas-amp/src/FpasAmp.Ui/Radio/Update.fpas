@@ -50,15 +50,17 @@ begin
     [
       A.StartBackground<M.Msg>(
         'search',
-        async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
-          await Tasks.Task.Delay(275, Stop).ConfigureAwait(false);
-          const Items: array of M.Station := await Directory.Search(
-            Filter,
-            Stop
-          ).ConfigureAwait(false);
-          await Post(M.Msg.Found(Revision, Items)).ConfigureAwait(false);
-        end function,
-        function(Error: Sys.Exception): M.Msg => M.Msg.Failed(Revision, Error.Message)
+        A.FromWorker<M.Msg>(
+          async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
+            await Tasks.Task.Delay(275, Stop).ConfigureAwait(false);
+            const Items: array of M.Station := await Directory.Search(
+              Filter,
+              Stop
+            ).ConfigureAwait(false);
+            await Post(M.Msg.Found(Revision, Items)).ConfigureAwait(false);
+          end function,
+          function(Error: Sys.Exception): M.Msg => M.Msg.Failed(Revision, Error.Message)
+        )
       )
     ]
   );
@@ -198,14 +200,16 @@ begin
           [
             A.StartBackground<M.Msg>(
               'website',
-              async function(_Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
-                Stop.ThrowIfCancellationRequested();
-                const Start: D.ProcessStartInfo := new D.ProcessStartInfo(Url);
-                Start.UseShellExecute := true;
-                using const Launched: D.Process? := D.Process.Start(Start);
-                await Tasks.Task.CompletedTask;
-              end function,
-              function(_Error: Sys.Exception): M.Msg => M.Msg.WebsiteFailed
+              A.FromWorker<M.Msg>(
+                async function(_Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
+                  Stop.ThrowIfCancellationRequested();
+                  const Start: D.ProcessStartInfo := new D.ProcessStartInfo(Url);
+                  Start.UseShellExecute := true;
+                  using const Launched: D.Process? := D.Process.Start(Start);
+                  await Tasks.Task.CompletedTask;
+                end function,
+                function(_Error: Sys.Exception): M.Msg => M.Msg.WebsiteFailed
+              )
             )
           ]
         );

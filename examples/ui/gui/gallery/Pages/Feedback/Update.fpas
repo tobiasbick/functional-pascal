@@ -15,8 +15,10 @@ function Complete(Status: Work.Status): Mvu.Command<S.Msg>;
 begin
   return Mvu.StartBackground<S.Msg>(
     'upload',
-    Run,
-    function(Error: Sys.Exception): S.Msg => S.Msg.Finish(Work.Status.Error)
+    Mvu.FromWorker<S.Msg>(
+      Run,
+      function(Error: Sys.Exception): S.Msg => S.Msg.Finish(Work.Status.Error)
+    )
   );
 end function;
 

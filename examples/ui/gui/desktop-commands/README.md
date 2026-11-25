@@ -41,14 +41,15 @@ the view and **Save settings** becomes available for another attempt.
 ## Background progress
 
 **Start** runs a simulated job that updates the progress bar on eight timer
-ticks. The worker uses [Mvu.StartBackground](../../../../docs/ui/mvu/runtime.md#background-effects),
-waits with the cancellation token and posts a typed `WorkTick` after each
-delay. The updates wake the GUI even when there is no user input.
+ticks. [Mvu.StartBackground](../../../../docs/ui/mvu/runtime.md#background-effects)
+runs the effect on a worker. It waits with the cancellation token and posts a
+typed `WorkTick` after each delay. The updates wake the GUI even when there is
+no user input.
 
 **Cancel** keeps the last displayed value and invalidates any pending replies
 from that run. The next start resets progress to zero. **Simulate error** runs
-the same job and fails after two successful steps. The failure mapper posts
-`WorkFailed` so the view can show the error and offer another start.
+the same job and returns `Outcome.Failure` with `WorkFailed` after two successful
+steps. The session delivers the message so the view can offer another start.
 
 ## Source files
 

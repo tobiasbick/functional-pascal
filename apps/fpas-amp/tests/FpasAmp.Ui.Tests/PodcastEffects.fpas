@@ -1,0 +1,89 @@
+// [Documentation](../../doc/podcasts.md#verification)
+
+unit FpasAmp.Ui.Tests.PodcastEffects;
+
+uses
+  FpasAmp.Ui.Tests.ProviderHttp as Http, FpasAmp.Library.Tests.AlbumSupport as Art,
+  FpasAmp.Ui.Podcasts.Model as P, FpasAmp.Ui.Podcasts.Update as Podcasts,
+  Fpas.Ui.Mvu.Application as A, Fpas.Ui.Mvu.Session as Runtime,
+  Fpas.Ui.Mvu.Testing.EffectReplies as Replies, System as Sys, System.Net as N,
+  System.Net.Sockets as Sockets, System.Threading as T, System.Threading.Channels as Channels,
+  System.Threading.Tasks as Tasks, Xunit as X;
+
+// Exercises the podcast effects through a real mailbox and loopback HTTP.
+public type PodcastEffectTests = record
+  // Applies metadata, artwork, and a typed parse failure in separate owner turns.
+  [X.FactAttribute]
+  public procedure FeedRepliesRemainOrderedAndTyped();
+    function Update(Model: P.State; Message: P.Msg): A.Transition<P.State, P.Msg>;
+    begin
+      return Gate.Wrap<P.State>(Podcasts.Apply(Model, Message, []));
+    end function;
+    procedure Deliver(Session: Runtime.Runtime<P.State, P.Msg, int>; Reply: Replies.Reply<P.Msg>; Token: T.CancellationToken);
+    begin
+      Reply.Release().WaitAsync(Token).GetAwaiter().GetResult();
+      discard Session.Advance();
+    end procedure;
+  begin
+    using const Listener: Sockets.TcpListener := new Sockets.TcpListener(N.IPAddress.Loopback, 0);
+    using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
+    Listener.Start();
+    const Address: N.IPEndPoint := cast<N.IPEndPoint>(Listener.LocalEndpoint);
+    const Base: string := 'http://127.0.0.1:' + Address.Port.ToString();
+    const Cover: string := Base + '/cover.png';
+    const Feed: string := '<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"><channel>' +
+      '<title>Coastlines</title><itunes:image href="cover.png" /></channel></rss>';
+    const Server: Tasks.Task := Http.Serve(
+      Listener, [
+        new Http.Reply('200 OK', Feed, ContentType := 'application/rss+xml'),
+        new Http.Reply('200 OK', '', ContentType := 'image/png', Body := Art.Picture(34, 80, 130)),
+        new Http.Reply('200 OK', '<broken', ContentType := 'application/rss+xml')
+      ], Stop.Token
+    );
+    const Gate: Replies.Effects<P.Msg> := Replies.Effects<P.Msg>.Create();
+    const Session: Runtime.Runtime<P.State, P.Msg, int> := Runtime.Start<P.State, P.Msg, int>(
+      new P.State(), Update, procedure(_Request: A.HostRequest) begin end procedure, 4
+    );
+    try
+      const Reader: Channels.ChannelReader<Replies.Reply<P.Msg>> := Gate.Watch('feed');
+      Session.Dispatch(P.Msg.Open(new P.Show(Base + '/feed.xml', 'Opening'), false));
+      const Metadata: Replies.Reply<P.Msg> := Reader.ReadAsync(
+        Stop.Token
+      ).AsTask().GetAwaiter().GetResult();
+      X.Assert.True(Session.Model().Loading);
+      X.Assert.False(Session.Model().Covers.ContainsKey(Cover));
+      Deliver(Session, Metadata, Stop.Token);
+      X.Assert.False(Session.Model().Loading);
+      const Loaded: P.Show? := Session.Model().Show;
+      if Loaded = null then
+        raise new Sys.InvalidOperationException('Missing loaded podcast.');
+      end if;
+
+      X.Assert.Equal<string>('Coastlines', Loaded.Title);
+
+      const Image: Replies.Reply<P.Msg> := Reader.ReadAsync(
+        Stop.Token
+      ).AsTask().GetAwaiter().GetResult();
+      X.Assert.False(Session.Model().Covers.ContainsKey(Cover));
+      Deliver(Session, Image, Stop.Token);
+      X.Assert.True(Session.Model().Covers.ContainsKey(Cover));
+
+      const Broken: Channels.ChannelReader<Replies.Reply<P.Msg>> := Gate.Watch('feed');
+      Session.Dispatch(P.Msg.Open(new P.Show(Base + '/broken.xml', 'Broken'), false));
+      const Failure: Replies.Reply<P.Msg> := Broken.ReadAsync(
+        Stop.Token
+      ).AsTask().GetAwaiter().GetResult();
+      X.Assert.True(Session.Model().Loading);
+      X.Assert.Null(Session.Model().FeedError);
+      Deliver(Session, Failure, Stop.Token);
+      X.Assert.False(Session.Model().Loading);
+      X.Assert.NotNull(Session.Model().FeedError);
+      Server.WaitAsync(Stop.Token).GetAwaiter().GetResult();
+    finally
+      Stop.Cancel();
+      Session.Close().WaitAsync(Sys.TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+    end try;
+  end procedure;
+end record;
+
+end unit;

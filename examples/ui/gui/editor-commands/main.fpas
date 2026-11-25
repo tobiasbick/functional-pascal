@@ -4,7 +4,7 @@ program EditorCommandsExample;
 
 uses
   EditorCommands.State as S, EditorCommands.Update as Update, EditorCommands.View as View,
-  Fpas.Ui.Gui.Application as Gui, System as Sys;
+  Fpas.Ui.Gui.Desktop as Gui, System as Sys;
 
 begin
   const Args: array of string := Sys.Environment.GetCommandLineArgs();

@@ -5,7 +5,7 @@ program SelectionListContract;
 uses
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V,
   Fpas.Ui.TerminalExtensions.SelectionLists as Lists, Fpas.Ui.TerminalExtensions.Input as K,
-  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Tui.Application as T, Fpas.Ui.Mvu.Application as M,
+  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Tui.Application as T, Fpas.Ui.Tui.Headless as Headless, Fpas.Ui.Mvu.Application as M,
   System as Sys, System.Console as Console;
 
 type State = record
@@ -132,7 +132,7 @@ begin
     Lists.SelectionList<Msg>('list', Items, 'missing', Msg.Choose, Msg.Activate),
     V.Target.Terminal, 'selected key'
   );
-  using const Session: T.HeadlessSession := T.StartHeadless<State, Msg>(
+  using const Session: T.HeadlessSession := Headless.Start<State, Msg>(
     new State(),
     Update,
     View,

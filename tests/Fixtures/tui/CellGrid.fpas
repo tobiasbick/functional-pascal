@@ -5,7 +5,7 @@ program CellGridContract;
 uses
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.TerminalExtensions.CellGrids as G,
   Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.TerminalExtensions.Views as Views,
-  Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App,
+  Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Headless as Headless,
   System as Sys, System.Collections.Generic as C, System.Console as Console;
 
 procedure Check(Value: bool; Reason: string);
@@ -91,7 +91,7 @@ begin
   ];
   const Image: G.Image := G.Image.Create(2, 3, Cells);
   Cells[4] := Dot;
-  using const Session: App.HeadlessSession := App.StartHeadless<bool, Msg>(
+  using const Session: App.HeadlessSession := Headless.Start<bool, Msg>(
     true,
     Update,
     View,
@@ -154,7 +154,7 @@ procedure ManyVisibleGrids();
     return new Mvu.Transition<int, int>(State + 1, []);
   end function;
 begin
-  using const Session: App.HeadlessSession := App.StartHeadless<int, int>(0, Update, View, 4, 70);
+  using const Session: App.HeadlessSession := Headless.Start<int, int>(0, Update, View, 4, 70);
   for Index: int := 0 to 69 do
     case Session.Step() of
       when App.StepResult.EffectProcessed(_):

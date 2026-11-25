@@ -5,7 +5,7 @@ program PaginationContract;
 uses
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V,
   Fpas.Ui.Widgets.Navigation.Paginations as P, Fpas.Ui.Widgets.Actions.Buttons as B,
-  Fpas.Ui.Tui.Application as T, Fpas.Ui.Mvu.Application as M,
+  Fpas.Ui.Tui.Application as T, Fpas.Ui.Tui.Headless as Headless, Fpas.Ui.Mvu.Application as M,
   Fpas.Ui.TerminalExtensions.Input as K, System as Sys, System.Console as Console;
 
 type Model = record
@@ -138,7 +138,7 @@ begin
     'Duplicate ID'
   );
 
-  using const Session: T.HeadlessSession := T.StartHeadless<Model, int>(
+  using const Session: T.HeadlessSession := Headless.Start<Model, int>(
     new Model(),
     Update,
     View,
@@ -190,7 +190,7 @@ begin
   Send(Session, T.Input.Resize(8, 10));
   Check(Shows(Session, '11/12'), 'Tiny viewports did not show the shorter page status.');
 
-  using const Boundary: T.HeadlessSession := T.StartHeadless<Model, int>(
+  using const Boundary: T.HeadlessSession := Headless.Start<Model, int>(
     new Model(Page := 10),
     Update,
     View,
@@ -202,7 +202,7 @@ begin
     Control(Boundary, 'pages/previous').Focused,
     'Focus did not move when Next became disabled.'
   );
-  using const Disabled: T.HeadlessSession := T.StartHeadless<Model, int>(
+  using const Disabled: T.HeadlessSession := Headless.Start<Model, int>(
     new Model(Page := 1, DisableOnChange := true), Update, View, 24, 8
   );
   Click(Disabled, 'pages/next');
@@ -211,7 +211,7 @@ begin
     'Disabling a focused pager did not return focus to an available control.'
   );
 
-  using const Constrained: T.HeadlessSession := T.StartHeadless<Model, int>(
+  using const Constrained: T.HeadlessSession := Headless.Start<Model, int>(
     new Model(),
     Update,
     Sized,
@@ -222,7 +222,7 @@ begin
     Shows(Constrained, 'Page 1 of 12') and Find(Constrained, 'pages/0') = null,
     'The pager used the terminal width instead of its allocated width.'
   );
-  using const Many: T.HeadlessSession := T.StartHeadless<Model, int>(
+  using const Many: T.HeadlessSession := Headless.Start<Model, int>(
     new Model(Count := int.MaxValue), Update, View, 100, 6
   );
   Click(Many, 'pages/2147483646');
@@ -230,7 +230,7 @@ begin
     Control(Many, 'pages/2147483646').Value = 'true' and not Control(Many, 'pages/next').Enabled,
     'A large page count broke the last-page control.'
   );
-  using const Scroll: T.HeadlessSession := T.StartHeadless<Model, int>(
+  using const Scroll: T.HeadlessSession := Headless.Start<Model, int>(
     new Model(),
     Update,
     Scrolled,

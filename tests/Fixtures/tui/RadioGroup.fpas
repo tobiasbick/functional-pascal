@@ -4,7 +4,7 @@ program RadioGroupContract;
 
 uses
   Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.RadioGroups as R, Fpas.Ui.Widgets.Actions.Buttons as B,
-  Fpas.Ui.Tui.Application as T, Fpas.Ui.Mvu.Application as M, Fpas.Ui.TerminalExtensions.Input as K,
+  Fpas.Ui.Tui.Application as T, Fpas.Ui.Tui.Headless as Headless, Fpas.Ui.Mvu.Application as M, Fpas.Ui.TerminalExtensions.Input as K,
   System as Sys, System.Console as Console;
 
 procedure Check(Condition: bool; Reason: string);
@@ -99,7 +99,7 @@ begin
 end procedure;
 
 begin
-  using const Session: T.HeadlessSession := T.StartHeadless<int, int>(2, Update, View, 20, 24);
+  using const Session: T.HeadlessSession := Headless.Start<int, int>(2, Update, View, 20, 24);
   Key(Session, K.Key.Tab);
   const Chosen: T.ControlSnapshot := Row(Session.Snapshot(), 'speed/2');
   Check(
@@ -153,7 +153,7 @@ begin
   Check(Row(Session.Snapshot(), 'declined/0').Focused, 'Reverse entry uses the model selection.');
 
   for Selected: int in [-1, 1] do
-    using const Empty: T.HeadlessSession := T.StartHeadless<int, int>(
+    using const Empty: T.HeadlessSession := Headless.Start<int, int>(
       Selected,
       Update,
       Choices,
@@ -168,7 +168,7 @@ begin
     Check(Row(Empty.Snapshot(), 'speed/0').Value = 'true', 'Enter selects the focused choice.');
   end for;
 
-  using const Scrolled: T.HeadlessSession := T.StartHeadless<int, int>(
+  using const Scrolled: T.HeadlessSession := Headless.Start<int, int>(
     3,
     Update,
     ScrollView,
@@ -192,7 +192,7 @@ begin
     Row(Scrolled.Snapshot(), 'speed/3').Value = 'false',
     'The wheel can scroll away from the selected row without selecting another choice.'
   );
-  using const Small: T.HeadlessSession := T.StartHeadless<int, int>(3, Update, Form, 20, 2);
+  using const Small: T.HeadlessSession := Headless.Start<int, int>(3, Update, Form, 20, 2);
   Check(Row(Small.Snapshot(), 'before').Focused, 'Entry button is initially visible.');
   Key(Small, K.Key.Tab);
   Check(

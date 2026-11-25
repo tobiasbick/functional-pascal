@@ -4,7 +4,7 @@ program HeadlessContract;
 
 uses
   Fpas.Ui.Mvu.Testing.EffectReplies as Replies, System.Threading.Channels as Channels,
-  Fpas.Ui.Widgets.Navigation.Navigation as Nav, Fpas.Ui.Widgets.Actions.Buttons as UiButtons, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as Validation, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Graphics as G, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Widgets.Theming.Themes as TerminalThemes, System as Sys, System.Console as Console, Fpas.Ui.Tui.Internal.Rendering.Presentation as P, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System.IO as IO, System.Threading as Threads, System.Threading.Tasks as Tasks;
+  Fpas.Ui.Widgets.Navigation.Navigation as Nav, Fpas.Ui.Widgets.Actions.Buttons as UiButtons, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Headless as Headless, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as Validation, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Graphics as G, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Widgets.Theming.Themes as TerminalThemes, System as Sys, System.Console as Console, Fpas.Ui.Tui.Internal.Rendering.Presentation as P, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System.IO as IO, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 type Msg = variant
   Start;
@@ -73,7 +73,7 @@ procedure CheckCancellation();
 begin
   const Reader: Channels.ChannelReader<Replies.Reply<Msg>> := Effects.Watch('task');
   using const Limit: Threads.CancellationTokenSource := new Threads.CancellationTokenSource(5000);
-  using const Session: App.HeadlessSession := App.StartHeadless<int, Msg>(0, Update, View, 20, 5);
+  using const Session: App.HeadlessSession := Headless.Start<int, Msg>(0, Update, View, 20, 5);
   discard Send(Session, 'start');
   discard Send(Session, 'cancel');
   discard Session.Step();
@@ -99,7 +99,7 @@ end procedure;
 
 procedure CheckQueue();
 begin
-  using const Session: App.HeadlessSession := App.StartHeadless<int, Msg>(0, Update, View, 20, 5);
+  using const Session: App.HeadlessSession := Headless.Start<int, Msg>(0, Update, View, 20, 5);
   const First: long := Send(Session, 'missing');
   var Last: long := First;
   var Full: bool := false;
@@ -145,7 +145,7 @@ end procedure;
 
 procedure CheckFailure();
 begin
-  using const Session: App.HeadlessSession := App.StartHeadless<int, Msg>(0, Update, View, 20, 5);
+  using const Session: App.HeadlessSession := Headless.Start<int, Msg>(0, Update, View, 20, 5);
   const Complete: App.Frame := Session.Snapshot();
   const Id: long := Send(Session, 'fail');
   case Session.Step() of
@@ -205,7 +205,7 @@ begin
   end if;
 
   if not Valid then
-    using const Session: App.HeadlessSession := App.StartHeadless<bool, bool>(
+    using const Session: App.HeadlessSession := Headless.Start<bool, bool>(
       false,
       UpdateBounds,
       ViewBounds,
@@ -327,7 +327,7 @@ procedure CheckReuse();
   end function;
 begin
   var Builds: int := 0;
-  using const Resized: App.HeadlessSession := App.StartHeadless<int, int>(
+  using const Resized: App.HeadlessSession := Headless.Start<int, int>(
     0,
     UpdateValue,
     Cached,
@@ -339,7 +339,7 @@ begin
     raise new Sys.InvalidOperationException('Resize rebuilt an equivalent subview.');
   end if;
 
-  using const Fresh: App.HeadlessSession := App.StartHeadless<int, int>(
+  using const Fresh: App.HeadlessSession := Headless.Start<int, int>(
     0,
     UpdateValue,
     Cached,
@@ -406,7 +406,7 @@ procedure CheckLiveTheme();
     );
   end function;
 begin
-  using const Session: App.HeadlessSession := App.StartHeadless<bool, bool>(
+  using const Session: App.HeadlessSession := Headless.Start<bool, bool>(
     false, UpdateTheme, StableView, 20, 5, ThemeFor
   );
   const Original: App.Frame := Session.Snapshot();
@@ -438,7 +438,7 @@ procedure CheckModifiedArrowShortcuts();
     );
   end function;
 begin
-  using const Session: App.HeadlessSession := App.StartHeadless<int, Msg>(
+  using const Session: App.HeadlessSession := Headless.Start<int, Msg>(
     0, Update, Bindings, 20, 5
   );
   ExpectFocus(Session, 'start');
@@ -476,7 +476,7 @@ procedure CheckScrollableSidebar();
     return new Mvu.Transition<L.ScrollPosition, L.ScrollPosition>(Next, []);
   end function;
 begin
-  using const Session: App.HeadlessSession := App.StartHeadless<L.ScrollPosition, L.ScrollPosition>(
+  using const Session: App.HeadlessSession := Headless.Start<L.ScrollPosition, L.ScrollPosition>(
     L.ScrollPosition.Start, SetPosition, Viewport, 12, 2
   );
   const Top: App.Frame := Session.Snapshot();

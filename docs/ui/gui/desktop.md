@@ -63,7 +63,7 @@ Control IDs stay stable and unique; item keys are local to their collection.
 Theme selections, navigation, sheet visibility and action feedback belong to
 the model. Rejecting a proposal leaves the model value authoritative.
 
-Start the owner loop with
+Import `Fpas.Ui.Gui.Desktop` as `Gui` and start the owner loop with
 `Gui.Run<Model, Msg>(new Model(), Update, View, new Gui.Options())`.
 Use `Gui.Options` to set title, logical width and height, renderer and mailbox
 capacity. Set `Placement` to reopen a window where it was closed.

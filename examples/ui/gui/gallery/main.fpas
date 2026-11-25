@@ -7,7 +7,7 @@ uses
   GuiGallery.App.State as State,
   GuiGallery.App.Update as Update,
   GuiGallery.App.View as View,
-  Fpas.Ui.Gui.Application as Gui;
+  Fpas.Ui.Gui.Desktop as Gui;
 
 begin
   Gui.Run<State.Model, State.Msg>(

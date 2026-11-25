@@ -18,7 +18,7 @@ uses
   TuiGallery.ListSample as ListSample,
   TuiGallery.FilePickerSample as Files,
   TuiGallery.ToolSamples as Tools, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes,
-  Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E,
+  Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Headless as Headless, Fpas.Ui.Tui.Host as Host, Fpas.Ui.Elements as E,
   TuiGallery.PeopleSample as People, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, Fpas.Ui.Widgets.Theming.Themes as Themes,
   Fpas.Ui.Composition as Composition,
   Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.TerminalExtensions.Views as Views,
@@ -441,14 +441,14 @@ begin
       raise new Sys.InvalidOperationException('Set FPAS_TUI_CONTROL_PIPE for headless control.');
     end if;
 
-    using const Session: App.HeadlessSession := App.StartHeadless<Model, Msg>(
+    using const Session: App.HeadlessSession := Headless.Start<Model, Msg>(
       Initial, GalleryState.Update, View, 80, 25, ThemeFor
     );
     while Session.IsOpen() do
       Threads.Thread.Sleep(20);
     end while;
   else
-    App.Run<Model, Msg>(Initial, GalleryState.Update, View, ThemeFor);
+    Host.Run<Model, Msg>(Initial, GalleryState.Update, View, ThemeFor);
   end if;
 end;
 

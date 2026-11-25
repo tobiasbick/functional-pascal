@@ -3,7 +3,7 @@
 program FractalExplorerContract;
 
 uses
-  Fractals.Explorer as X, Fractals.View as V, Fpas.Ui.Tui.Application as App,
+  Fractals.Explorer as X, Fractals.View as V, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Headless as Headless,
   Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Widgets.Developer.Terminal as T,
   Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Testing.EffectReplies as Replies,
   System as Sys, System.Console as Console, System.Threading as Threads,
@@ -130,7 +130,7 @@ procedure Verify();
 begin
   const Effects: Replies.Effects<X.Msg> := Replies.Effects<X.Msg>.Create();
   var Render: Channels.ChannelReader<Replies.Reply<X.Msg>> := Effects.Watch('render');
-  using const Session: App.HeadlessSession := App.StartHeadless<X.Model, X.Msg>(
+  using const Session: App.HeadlessSession := Headless.Start<X.Model, X.Msg>(
     new X.Model(),
     function(State: X.Model; Message: X.Msg): Mvu.Transition<X.Model, X.Msg> => Effects.Wrap<X.Model>(
       X.Update(State, Message)

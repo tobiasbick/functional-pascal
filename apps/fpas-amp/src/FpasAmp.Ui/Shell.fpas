@@ -13,7 +13,7 @@ uses
   FpasAmp.Ui.TagEditor.Model as TagModel, FpasAmp.Ui.TagEditor.View as TagView,
   FpasAmp.Ui.Player.Model as PlayerModel, FpasAmp.Ui.Player.View as PlayerView,
   FpasAmp.Ui.Player.Playback as Playback, Fpas.Media.Audio as Audio,
-  Fpas.Ui.Elements as E, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Elements as E, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Desktop as GuiHost, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Layout as L, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Widgets.Display.Texts as Texts,
   Fpas.Ui.Widgets.Overlays.Sheets as Sheets,
@@ -255,7 +255,7 @@ public type Session = record implements Sys.IDisposable
       raise new Sys.ArgumentOutOfRangeException('Navigation');
     end if;
     var Last: M.State := Initial;
-    const Native: Gui.Session<M.Msg> := Gui.StartThemed<M.State, M.Msg>(
+    const Native: Gui.Session<M.Msg> := GuiHost.StartThemed<M.State, M.Msg>(
       Initial,
       function(Current: M.State; Message: M.Msg): Mvu.Transition<M.State, M.Msg> begin
         const Next: Mvu.Transition<M.State, M.Msg> := Updates.Apply(
@@ -268,7 +268,7 @@ public type Session = record implements Sys.IDisposable
         return Next;
       end function,
       View,
-      new Gui.Options(
+      new GuiHost.Options(
         Title := 'FPas-Amp', AppId := 'io.github.tobiasbick.FpasAmp',
         Theme := M.Theme(Initial, null), Placement := Window
       ),

@@ -5,7 +5,7 @@ program MultiSelectContract;
 uses
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V,
   Fpas.Ui.Widgets.Inputs.MultiSelects as Multi, Fpas.Ui.Widgets.Inputs.Selects as S,
-  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Tui.Application as T,
+  Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.Tui.Application as T, Fpas.Ui.Tui.Headless as Headless,
   Fpas.Ui.Mvu.Application as M, Fpas.Ui.TerminalExtensions.Input as K,
   System as Sys, System.Console as Console;
 
@@ -130,7 +130,7 @@ begin
       Picker('picker', Initial), B.Button<array of bool>('picker/bulk', 'Duplicate', [])
     ), 'Duplicate ID'
   );
-  using const Session: T.HeadlessSession := T.StartHeadless<array of bool, array of bool>(
+  using const Session: T.HeadlessSession := Headless.Start<array of bool, array of bool>(
     Initial,
     Update,
     View,
@@ -220,7 +220,7 @@ begin
   Key(Session, K.Key.Escape);
   Check(not Initial[1] and Initial[2] and Initial[5], 'A proposal mutated the input flags.');
 
-  using const Small: T.HeadlessSession := T.StartHeadless<array of bool, array of bool>(
+  using const Small: T.HeadlessSession := Headless.Start<array of bool, array of bool>(
     Initial,
     Update,
     Narrow,
@@ -228,7 +228,7 @@ begin
     8
   );
   Check(Shows(Small, 'C +2'), 'A narrow field did not fit the count to its allocated width.');
-  using const Cap: T.HeadlessSession := T.StartHeadless<array of bool, array of bool>(
+  using const Cap: T.HeadlessSession := Headless.Start<array of bool, array of bool>(
     Initial,
     Update,
     Limited,

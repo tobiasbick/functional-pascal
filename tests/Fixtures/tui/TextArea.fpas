@@ -4,7 +4,7 @@ program TextAreaContract;
 
 uses
   Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.TextAreas as A, Fpas.Ui.Widgets.Actions.Buttons as B,
-  Fpas.Ui.Tui.Application as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Mvu.Application as M,
+  Fpas.Ui.Tui.Application as T, Fpas.Ui.Tui.Headless as Headless, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Mvu.Application as M,
   Fpas.Ui.Layout as L, System as Sys, System.Console as Console;
 
 type Msg = variant
@@ -113,7 +113,7 @@ end procedure;
 
 begin
   const Initial: string := 'abcd' + #10 + 'x' + #10 + 'wxyz' + #10 + 'end';
-  using const Session: T.HeadlessSession := T.StartHeadless<Model, Msg>(
+  using const Session: T.HeadlessSession := Headless.Start<Model, Msg>(
     new Model(Initial),
     Update,
     Form,
@@ -172,7 +172,7 @@ begin
   Key(Session, K.Key.Tab);
   Check(Control(Session, 'next').Focused, 'One tab stop per area and disabled areas are skipped.');
 
-  using const Wrapped: T.HeadlessSession := T.StartHeadless<Model, Msg>(
+  using const Wrapped: T.HeadlessSession := Headless.Start<Model, Msg>(
     new Model('one two three'),
     Update,
     Form,
@@ -200,7 +200,7 @@ begin
     'Resize keeps an editable caret in one column.'
   );
 
-  using const Limit: T.HeadlessSession := T.StartHeadless<Model, Msg>(
+  using const Limit: T.HeadlessSession := Headless.Start<Model, Msg>(
     new Model(new string(#97, 29)),
     Update,
     Form,
@@ -228,7 +228,7 @@ begin
     'Shift+Home selects from the caret to the line start.'
   );
 
-  using const Nested: T.HeadlessSession := T.StartHeadless<Model, Msg>(
+  using const Nested: T.HeadlessSession := Headless.Start<Model, Msg>(
     new Model(Initial),
     Update,
     Scrolled,
@@ -246,7 +246,7 @@ begin
     'Wheel goes to the parent at the editor edge.'
   );
 
-  using const Empty: T.HeadlessSession := T.StartHeadless<Model, Msg>(
+  using const Empty: T.HeadlessSession := Headless.Start<Model, Msg>(
     new Model(''),
     Update,
     Form,
@@ -257,7 +257,7 @@ begin
     Empty.Snapshot().Lines[Control(Empty, 'area').Row].Contains('Start here'),
     'Empty text shows the placeholder.'
   );
-  using const Expanded: T.HeadlessSession := T.StartHeadless<Model, Msg>(
+  using const Expanded: T.HeadlessSession := Headless.Start<Model, Msg>(
     new Model(''),
     Update,
     Fill,

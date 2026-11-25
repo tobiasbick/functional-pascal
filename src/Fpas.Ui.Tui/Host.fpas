@@ -1,0 +1,197 @@
+// [Documentation](../../docs/ui/tui/host.md#application-lifecycle)
+
+unit Fpas.Ui.Tui.Host;
+
+uses
+  Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Hosting.Session as SessionHost,
+  Fpas.Ui.Tui.Internal.Rendering.Presentation as P, Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs,
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as Ui, Fpas.Ui.Widgets.Theming.Themes as Th,
+  Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Layout as L,
+  Fpas.Processes.Terminal as Terminal, System as Sys;
+
+// Runs the application on the current terminal and restores terminal modes on exit.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model.
+public procedure Run<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>; View: function(TModel): Ui.Element<TMsg>
+);
+begin
+  Run<TModel, TMsg>(InitialModel, Update, View, new Th.Theme());
+end procedure;
+
+function TerminalWriter(Device: Terminal.ConsoleTerminal): procedure(int, int, array of T.Cell);
+  procedure WriteOutput(Value: string);
+  begin
+    Device.Write(Value);
+  end procedure;
+begin
+  return P.Create(WriteOutput);
+end function;
+
+// Runs the application on the current terminal.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model.
+// - `Theme`: The fixed theme.
+public procedure Run<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>; View: function(TModel): Ui.Element<TMsg>; Theme: Th.Theme
+);
+begin
+  Run<TModel, TMsg>(InitialModel, Update, View, function(State: TModel): Th.Theme => Theme);
+end procedure;
+
+// Resolves the theme from the current model before drawing each terminal frame.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model.
+// - `ThemeFor`: Selects the theme for the current model.
+public procedure Run<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel): Ui.Element<TMsg>; ThemeFor: function(TModel): Th.Theme
+);
+begin
+  Run<TModel, TMsg>(
+    InitialModel,
+    Update,
+    function(State: TModel; Size: L.Viewport): Ui.Element<TMsg> => View(State),
+    ThemeFor
+  );
+end procedure;
+
+// Runs the application on the current terminal.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model and viewport.
+public procedure Run<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel, L.Viewport): Ui.Element<TMsg>
+);
+begin
+  Run<TModel, TMsg>(InitialModel, Update, View, new Th.Theme());
+end procedure;
+
+// Runs the application on the current terminal.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model and viewport.
+// - `Theme`: The fixed theme.
+public procedure Run<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel, L.Viewport): Ui.Element<TMsg>; Theme: Th.Theme
+);
+begin
+  Run<TModel, TMsg>(InitialModel, Update, View, function(State: TModel): Th.Theme => Theme);
+end procedure;
+
+// Gives the view portable size classes before laying out each frame.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model and viewport.
+// - `ThemeFor`: Selects the theme for the current model.
+public procedure Run<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel, L.Viewport): Ui.Element<TMsg>; ThemeFor: function(TModel): Th.Theme
+);
+  procedure Present(Value: App.Frame);
+  begin
+    Write(Value.Columns, Value.Rows, Value.Cells);
+  end procedure;
+begin
+  using const Device: Terminal.ConsoleTerminal := new Terminal.ConsoleTerminal();
+  const Write: procedure(int, int, array of T.Cell) := TerminalWriter(Device);
+  const Session: App.HeadlessSession := SessionHost.Start<TModel, TMsg>(
+    InitialModel,
+    Update,
+    View,
+    Device.Columns,
+    Device.Rows,
+    Present,
+    false,
+    ThemeFor
+  );
+  try
+    var Pending: App.Input? := null;
+    while Session.IsOpen() do
+      const Result: App.StepResult := Session.Step();
+      case Result of
+        when App.StepResult.Failed(_, _, const Stage: string, const Reason: string):
+          raise new Sys.InvalidOperationException('TUI ' + Stage + ' failed: ' + Reason);
+        else
+      end case;
+
+      if not Session.IsOpen() then
+        break;
+      end if;
+
+      if Pending = null then
+        const Delay: int := case Result of
+          when App.StepResult.Idle: 20;
+          else 0;
+        end case;
+        const Event: Terminal.TerminalInput? := Device.Poll(Delay);
+        case Event of
+          when is Terminal.TerminalInput as Value:
+            Pending := Inputs.Translate(Value);
+          else
+        end case;
+      end if;
+      const Event: App.Input? := Pending;
+      if Event <> null then
+        case Session.Send(Event) of
+          when App.Admission.Queued(_), App.Admission.Closed:
+            Pending := null;
+          when App.Admission.QueueFull:
+        end case;
+      end if;
+    end while;
+  catch Failure: Sys.Exception do
+    try
+      Session.Dispose();
+    catch Cleanup: Sys.Exception do
+      raise new Sys.AggregateException(Failure.Message + ' Cleanup failed.', [Failure, Cleanup]);
+    end try;
+
+    raise;
+  end try;
+
+  Session.Dispose();
+end procedure;
+
+end unit;

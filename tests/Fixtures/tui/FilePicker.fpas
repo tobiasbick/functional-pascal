@@ -5,7 +5,7 @@ program FilePickerContract;
 uses
   Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Actions.Buttons as B,
   Fpas.Ui.Widgets.Files.FilePickers as Picker, Fpas.Ui.Widgets.Files.FileListings as F,
-  Fpas.Ui.Mvu.Application as M, Fpas.Ui.Tui.Application as T,
+  Fpas.Ui.Mvu.Application as M, Fpas.Ui.Tui.Application as T, Fpas.Ui.Tui.Headless as Headless,
   Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as V,
   System as Sys, System.Console as Console, System.IO as IO;
 
@@ -149,7 +149,7 @@ begin
   try
     IO.File.WriteAllText(IO.Path.Combine(Scratch.FullName, 'visible.txt'), '');
     IO.File.WriteAllText(IO.Path.Combine(Scratch.FullName, '.hidden.txt'), '');
-    using const Session: T.HeadlessSession := T.StartHeadless<State, Msg>(
+    using const Session: T.HeadlessSession := Headless.Start<State, Msg>(
       new State(Picker.Mode.OpenFile), Update, ViewLocal, 104, 14
     );
     Check(
@@ -193,7 +193,7 @@ procedure CheckUncProvider();
     );
   end function;
 begin
-  using const Session: T.HeadlessSession := T.StartHeadless<State, Msg>(
+  using const Session: T.HeadlessSession := Headless.Start<State, Msg>(
     new State(Picker.Mode.OpenFile), Update, ViewUnc, 74, 18
   );
   Check(Shows(Session, 'docs/') and not Shows(Session, '../'), 'UNC share exposed a parent.');
@@ -210,7 +210,7 @@ end procedure;
 
 begin
   discard V.Prepare<Msg>(View(new State(Picker.Mode.OpenFile)), V.Target.Portable);
-  using const Session: T.HeadlessSession := T.StartHeadless<State, Msg>(
+  using const Session: T.HeadlessSession := Headless.Start<State, Msg>(
     new State(),
     Update,
     View,

@@ -3,7 +3,7 @@
 program FilterBarContract;
 
 uses
-  Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Tui.Application as T,
+  Fpas.Ui.Elements as E, Fpas.Ui.Validation as V, Fpas.Ui.Tui.Application as T, Fpas.Ui.Tui.Headless as Headless,
   Fpas.Ui.Mvu.Application as M, Fpas.Ui.TerminalExtensions.Input as K,
   Fpas.Ui.Widgets.Collections.FilterBars as F, Fpas.Ui.Widgets.Actions.Buttons as B,
   System as Sys, System.Console as Console;
@@ -92,7 +92,7 @@ end procedure;
 
 begin
   DuplicateIds();
-  using const Session: T.HeadlessSession := T.StartHeadless<F.Value, F.Value>(
+  using const Session: T.HeadlessSession := Headless.Start<F.Value, F.Value>(
     new F.Value(InitialMasks, ''), Update, View, 48, 15
   );
   const Trigger: string := 'filters/add';

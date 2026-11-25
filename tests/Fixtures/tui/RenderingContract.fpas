@@ -5,7 +5,7 @@ program RenderingContract;
 uses
   Fpas.Ui.Widgets.Feedback.Spinners as Spin, Fpas.Ui.Widgets.Charts.Sparklines as Sparks,
   Fpas.Ui.Widgets.Charts.Charts as Charts,
-  Fpas.Ui.Widgets.Inputs.Switches as Switches, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, Fpas.Ui.Widgets.Feedback.ProgressBars as Bars, Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Developer.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as Scene, Fpas.Ui.Tui.Internal.Controls.Activation as Activation, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.Tui.Internal.Rendering.Presentation as Presentation, Fpas.Ui.Tui.Internal.Rendering.Decoration as Decoration, Fpas.Ui.Tui.Internal.Rendering.Themes as RenderThemes, System as Sys, System.Console as Console;
+  Fpas.Ui.Widgets.Inputs.Switches as Switches, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Desktop.StatusBars as Status, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V, Fpas.Ui.Widgets.Feedback.ProgressBars as Bars, Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Developer.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Tui.Headless as Headless, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.Scene as Scene, Fpas.Ui.Tui.Internal.Controls.Activation as Activation, Fpas.Ui.Tui.Internal.Rendering.Glyphs as Glyphs, Fpas.Ui.Tui.Internal.Rendering.Presentation as Presentation, Fpas.Ui.Tui.Internal.Rendering.Decoration as Decoration, Fpas.Ui.Tui.Internal.Rendering.Themes as RenderThemes, System as Sys, System.Console as Console;
 
 procedure Check(Value: bool; Reason: string);
 begin
@@ -30,7 +30,7 @@ begin
   Check(Glyphs.Width(Sys.Char.ConvertFromUtf32($30000)) = 2, 'First plane-three wide boundary.');
   Check(Glyphs.Width(Sys.Char.ConvertFromUtf32($3FFFD)) = 2, 'Last plane-three wide boundary.');
   Check(Glyphs.Width(Sys.Char.ConvertFromUtf32($3FFFE)) = 1, 'Plane-three noncharacter boundary.');
-  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 4, 1);
+  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(0, Update, View, 4, 1);
   const Cells: array of Terminal.Cell := Session.Snapshot().Cells;
   Check(
     Cells[0].Text = Sys.Char.ConvertFromUtf32($30000) and Cells[1].Text = ''
@@ -59,7 +59,7 @@ procedure ZeroWidthClusters();
       return E.Text<int>(Value + 'A');
     end function;
   begin
-    using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 6, 1);
+    using const Session: Tui.HeadlessSession := Headless.Start<int, int>(0, Update, View, 6, 1);
     const Frame: Tui.Frame := Session.Snapshot();
     Check(
       Frame.Cells[0].Text = Painted and Frame.Cells[Span].Text = 'A',
@@ -114,7 +114,7 @@ procedure DisabledForeground();
 begin
   const Theme: Themes.Theme := Themes.Dark();
   const Resolved: RenderThemes.Theme := RenderThemes.Resolve(Theme);
-  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(
+  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(
     0,
     Update,
     View,
@@ -173,7 +173,7 @@ procedure BorderlessStatus();
     );
   end function;
 begin
-  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 24, 2);
+  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(0, Update, View, 24, 2);
   const Frame: Tui.Frame := Session.Snapshot();
   Check(
     Frame.Lines[0].StartsWith('Scanning …') and Frame.Lines[0].EndsWith('UTF-8'),
@@ -215,7 +215,7 @@ procedure PersistentDialog();
   end procedure;
 begin
   discard V.Prepare<int>(View(1), V.Target.Portable);
-  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 64, 16);
+  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(0, Update, View, 64, 16);
   Send(Session, Tui.Input.Activate('open'));
   const Opened: Tui.Frame := Session.Snapshot();
   Check(
@@ -273,7 +273,7 @@ procedure ProgressTracks();
     raise new Sys.InvalidOperationException('Animated progress or a custom height requires GUI.');
   end procedure;
 begin
-  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 12, 4);
+  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(0, Update, View, 12, 4);
   const Frame: Tui.Frame := Session.Snapshot();
   Check(Frame.Lines[0].TrimEnd() = '───────', 'Fixed-width continuous track.');
   const Filled: int? := Frame.Cells[0].Colors.Foreground;
@@ -324,7 +324,7 @@ procedure SwitchRows();
   end procedure;
 begin
   discard V.Prepare<int>(View(0), V.Target.Portable);
-  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 14, 8);
+  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(0, Update, View, 14, 8);
   const Initial: Tui.Frame := Session.Snapshot();
   const Row: Tui.ControlSnapshot := Initial.Controls[0];
   Check(
@@ -375,7 +375,7 @@ procedure ActivityAndPlots();
     );
   end function;
 begin
-  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 8, 7);
+  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(0, Update, View, 8, 7);
   const Frame: Tui.Frame := Session.Snapshot();
   Check(
     Frame.Cells[0].Text = '◴' and Frame.Cells[0].Colors.Foreground = $FF0000,
@@ -404,7 +404,7 @@ procedure TextTable();
     );
   end function;
 begin
-  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 9, 3);
+  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(0, Update, View, 9, 3);
   const Frame: Tui.Frame := Session.Snapshot();
   Check(Frame.Lines[0] = 'Key     N' and Frame.Controls.Length = 0, 'Read-only table headings.');
   Check(

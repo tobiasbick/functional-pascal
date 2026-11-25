@@ -5,7 +5,7 @@ program DesktopCommandsExample;
 uses
   DesktopCommands.State as S, DesktopCommands.Update as Update,
   DesktopCommands.View as View, DesktopCommands.Preferences as Preferences,
-  Fpas.Ui.Gui.Application as Gui;
+  Fpas.Ui.Gui.Desktop as Gui;
 
 begin
   Gui.RunThemed<S.Model, S.Msg>(

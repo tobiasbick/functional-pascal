@@ -2,7 +2,7 @@
 
 program FractalExplorer;
 
-uses Fractals.Explorer as X, Fractals.View as V, Fpas.Ui.Tui.Application as App;
+uses Fractals.Explorer as X, Fractals.View as V, Fpas.Ui.Tui.Host as App;
 
 begin
   App.Run<X.Model, X.Msg>(new X.Model(), X.Update, V.View, V.Theme());

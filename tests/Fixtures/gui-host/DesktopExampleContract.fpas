@@ -6,7 +6,7 @@ uses
   DesktopCommands.State as S, DesktopCommands.Preferences as Preferences,
   DesktopCommands.Update as Update, DesktopCommands.View as View, GalleryHostAssertions as A,
   DesktopCommands.Background as Background,
-  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Cui as Cui,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Desktop as GuiHost, Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Core,
   Fpas.Ui.Mvu.Testing.EffectReplies as Replies, Fpas.Ui.Widgets.Theming.Themes as Themes,
   Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
@@ -63,9 +63,9 @@ function Start(Path: string; Renderer: Cui.CuiRenderer; Effects: Replies.Effects
     return Effects.Wrap<S.Model>(Update.Apply(Model, Message));
   end function;
 begin
-  return Gui.StartThemed<S.Model, S.Msg>(
+  return GuiHost.StartThemed<S.Model, S.Msg>(
     S.Initialize(Path), Apply, View.Build,
-    new Gui.Options(
+    new GuiHost.Options(
       Title := 'Desktop example', Width := 720, Height := 420, Renderer := Renderer,
       Continuous := Continuous, NoVsync := true, Hidden := true
     ),

@@ -4,7 +4,7 @@ program NativeApiExample;
 
 uses
   NativeApi.State as S, NativeApi.View as View, NativeApi.Update as Update,
-  Fpas.Ui.Gui.Application as Gui;
+  Fpas.Ui.Gui.Desktop as Gui;
 
 begin
   Gui.Run<S.Model, S.Msg>(

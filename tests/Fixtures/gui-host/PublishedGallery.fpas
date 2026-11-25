@@ -62,7 +62,7 @@ uses
   GalleryDialogContract as DialogContract,
   GuiGallery.App.State as State,
   GuiGallery.App.View as View,
-  Fpas.Ui.Gui.Application as Gui,
+  Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Desktop as GuiHost,
   Fpas.Ui.Gui.Cui as Cui,
   Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers,
   Fpas.Ui.Widgets.Theming.Themes as Themes,
@@ -76,9 +76,9 @@ uses
 
 function Open(Renderer: Cui.CuiRenderer; Title: string; Width: int := 1000; Height: int := 760): Gui.Session<State.Msg>;
 begin
-  return Gui.Start<State.Model, State.Msg>(
+  return GuiHost.Start<State.Model, State.Msg>(
     new State.Model(), GalleryUpdate.Update, View.Build,
-    new Gui.Options(Title := Title, Width := Width, Height := Height, Renderer := Renderer),
+    new GuiHost.Options(Title := Title, Width := Width, Height := Height, Renderer := Renderer),
     GalleryUpdate.ThemeFor
   );
 end function;
@@ -217,9 +217,12 @@ procedure VerifySnapshotReentry(Renderer: Cui.CuiRenderer);
 begin
   var Current: Gui.Session<State.Msg>? := null;
   var Rejected: bool := false;
-  using const Session: Gui.Session<State.Msg> := Gui.Start<State.Model, State.Msg>(
-    new State.Model(), Update, View.Build,
-    new Gui.Options(Title := 'FPAS snapshot reentry', Renderer := Renderer), GalleryUpdate.ThemeFor
+  using const Session: Gui.Session<State.Msg> := GuiHost.Start<State.Model, State.Msg>(
+    new State.Model(),
+    Update,
+    View.Build,
+    new GuiHost.Options(Title := 'FPAS snapshot reentry', Renderer := Renderer),
+    GalleryUpdate.ThemeFor
   );
   Current := Session;
   A.Check(Session.Step(), 'The initial frame was not presented.');

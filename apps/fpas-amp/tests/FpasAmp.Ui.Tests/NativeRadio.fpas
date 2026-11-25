@@ -9,7 +9,7 @@ uses
   FpasAmp.Ui.Radio.Model as Radio, FpasAmp.Ui.Radio.Update as RadioUpdate,
   FpasAmp.Ui.Settings.Model as Settings, Fpas.Ui.Widgets.Collections.Tables as Tables,
   FpasAmp.Ui.Player.Model as Player, Fpas.Ui.Mvu.Application as Mvu,
-  FpasAmp.Ui.Shell as Shell, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Application as Gui,
+  FpasAmp.Ui.Shell as Shell, Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Desktop as GuiHost,
   Fpas.Media.Audio as Audio, System as Sys, System.IO as IO, Xunit as X;
 
 procedure Send(Session: Shell.Session; Message: App.Msg);
@@ -67,13 +67,14 @@ begin
       NowPlaying := 'Mara Vale · Blue Hour', Levels := [0.46F, 0.57F]
     )
   );
-  using const Window: Gui.Session<App.Msg> := Gui.StartThemed<App.State, App.Msg>(
+  using const Window: Gui.Session<App.Msg> := GuiHost.StartThemed<App.State, App.Msg>(
     Fixture,
     function(Current: App.State; _Message: App.Msg): Mvu.Transition<App.State, App.Msg> => new Mvu.Transition<App.State, App.Msg>(
       Current,
       []
     ),
-    Shell.View, new Gui.Options('FPas-Amp', 1280, 730, Cui.CuiRenderer.Software, Hidden := true),
+    Shell.View,
+    new GuiHost.Options('FPas-Amp', 1280, 730, Cui.CuiRenderer.Software, Hidden := true),
     App.Theme
   );
   X.Assert.True(Window.Step());

@@ -8,7 +8,10 @@ transitions and [Fpas.Ui](../widgets.md) declarative views. Start with the
 
 ## Application lifecycle
 
-Use Run for the owner loop or Start with using const for explicit Step calls.
+Import `Fpas.Ui.Gui.Desktop` for window `Options` and the `Run` and `Start` entry
+points. Use `Run` for the owner loop or `Start` with `using const` for explicit
+`Step` calls. `Fpas.Ui.Gui.Application` defines `Session<TMsg>`, `Frame`, and
+`Control`.
 Create, step, inspect and dispose sessions on their creating UI thread. Post
 admits typed messages from workers and reports Queued, Full or Closed.
 Use `Options` to set the title, logical width and height, renderer, mailbox

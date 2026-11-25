@@ -5,7 +5,7 @@ program SelectContract;
 uses
   Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs,
   Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Inputs.Selects as S, Fpas.Ui.Widgets.Actions.Buttons as B,
-  Fpas.Ui.Tui.Application as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Mvu.Application as M,
+  Fpas.Ui.Tui.Application as T, Fpas.Ui.Tui.Headless as Headless, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Mvu.Application as M,
   Fpas.Ui.Layout as L, System as Sys, System.Console as Console;
 
 const Items: array of S.Item := [
@@ -125,7 +125,7 @@ begin
 end procedure;
 
 begin
-  using const Session: T.HeadlessSession := T.StartHeadless<int, int>(-1, Update, Form, 32, 16);
+  using const Session: T.HeadlessSession := Headless.Start<int, int>(-1, Update, Form, 32, 16);
   Check(
     Row(Session, 'picker').Value = 'Choose' and Row(Session, 'disabled').Value = 'Select',
     'Custom and default placeholders.'
@@ -203,7 +203,7 @@ begin
   Key(Session, K.Key.End);
   Check(Row(Session, 'picker/option/9').Focused, 'Offscreen items remain reachable after resize.');
 
-  using const Responsive: T.HeadlessSession := T.StartHeadless<int, int>(
+  using const Responsive: T.HeadlessSession := Headless.Start<int, int>(
     -1,
     Update,
     Compact,
@@ -229,7 +229,7 @@ begin
     Find(Responsive, 'picker/option/0') = null,
     'A removed popup stays closed when its trigger returns.'
   );
-  using const Modal: T.HeadlessSession := T.StartHeadless<int, int>(1, Update, Dialog, 55, 16);
+  using const Modal: T.HeadlessSession := Headless.Start<int, int>(1, Update, Dialog, 55, 16);
   Key(Modal, K.Key.Enter);
   Check(
     Row(Modal, 'plain/option/1').Focused and not Row(Modal, 'modal/close').Enabled,

@@ -15,7 +15,7 @@ Modes? active = null;
 Exception? failure = null;
 try
 {
-    Application.Run<int, int>(0, Update, View);
+    Host.Run<int, int>(0, Update, View);
 }
 catch (Exception error)
 {

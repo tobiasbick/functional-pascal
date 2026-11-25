@@ -4,7 +4,7 @@ program NativePaintingExample;
 
 uses
   NativePainting.State as S, NativePainting.Update as Update, NativePainting.View as View,
-  Fpas.Ui.Gui.Application as Gui, System as Sys;
+  Fpas.Ui.Gui.Desktop as Gui, System as Sys;
 
 begin
   const Args: array of string := Sys.Environment.GetCommandLineArgs();

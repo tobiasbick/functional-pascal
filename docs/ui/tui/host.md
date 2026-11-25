@@ -6,8 +6,10 @@ services and does not load CUI or require a graphical display.
 
 ## Application lifecycle
 
-`Run` owns the interactive terminal loop. `StartHeadless` provides `Send`,
-`Step`, `Snapshot` and `CloseAsync`. `Update` and `View` run on the owner.
+`Fpas.Ui.Tui.Host.Run` owns the interactive terminal loop.
+`Fpas.Ui.Tui.Headless.Start` returns a session with `Send`, `Step`, `Snapshot`
+and `CloseAsync`. `Fpas.Ui.Tui.Application` defines the session, input and
+frame types. `Update` and `View` run on the owner.
 Background work posts typed messages through shared MVU commands. `CloseAsync`
 stops admission, requests cancellation and returns a task for cleanup.
 Await that task before releasing resources used by effects. `Dispose` joins
@@ -136,7 +138,7 @@ terminal widgets and their behavior.
 ## Source files
 
 <details>
-<summary>Browse 26 source files</summary>
+<summary>Browse 28 source files</summary>
 
 - `src/Fpas.Processes/Terminal/`
   - [ConsoleTerminal.cs](../../../src/Fpas.Processes/Terminal/ConsoleTerminal.cs)
@@ -147,6 +149,8 @@ terminal widgets and their behavior.
 - `src/Fpas.Ui.Tui/`
   - [Application.fpas](../../../src/Fpas.Ui.Tui/Application.fpas)
   - [Fpas.Ui.Tui.fpasproj](../../../src/Fpas.Ui.Tui/Fpas.Ui.Tui.fpasproj)
+  - [Headless.fpas](../../../src/Fpas.Ui.Tui/Headless.fpas)
+  - [Host.fpas](../../../src/Fpas.Ui.Tui/Host.fpas)
 - `src/Fpas.Ui.Tui/Internal/Controls/`
   - [Activation.fpas](../../../src/Fpas.Ui.Tui/Internal/Controls/Activation.fpas)
   - [ChoiceStrip.fpas](../../../src/Fpas.Ui.Tui/Internal/Controls/ChoiceStrip.fpas)

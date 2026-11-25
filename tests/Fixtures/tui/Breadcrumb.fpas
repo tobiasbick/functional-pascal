@@ -6,7 +6,7 @@ uses
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as V,
   Fpas.Ui.Widgets.Navigation.Breadcrumbs as B, Fpas.Ui.Widgets.Actions.Buttons as Buttons,
   Fpas.Ui.Widgets.Containers.ExpandableCards as Cards,
-  Fpas.Ui.Tui.Application as T, Fpas.Ui.Mvu.Application as M, Fpas.Ui.TerminalExtensions.Input as K,
+  Fpas.Ui.Tui.Application as T, Fpas.Ui.Tui.Headless as Headless, Fpas.Ui.Mvu.Application as M, Fpas.Ui.TerminalExtensions.Input as K,
   System as Sys, System.Console as Console;
 
 const Path: array of string := ['Home', 'Projects', 'FPas CUI', 'Settings'];
@@ -147,7 +147,7 @@ begin
   );
   discard V.Prepare<int>(Trail(), V.Target.Portable);
 
-  using const Session: T.HeadlessSession := T.StartHeadless<int, int>(-1, Update, View, 54, 10);
+  using const Session: T.HeadlessSession := Headless.Start<int, int>(-1, Update, View, 54, 10);
   Check(
     Find(Session, 'trail/overflow') = null and Control(Session, 'trail/2').Enabled,
     'Wide trail did not expose the full path.'
@@ -213,7 +213,7 @@ begin
     'The tightest path did not let Enter select its last hidden ancestor.'
   );
 
-  using const Off: T.HeadlessSession := T.StartHeadless<int, int>(-1, Update, Disabled, 24, 5);
+  using const Off: T.HeadlessSession := Headless.Start<int, int>(-1, Update, Disabled, 24, 5);
   Check(
     not Control(Off, 'trail/overflow').Enabled and not Control(Off, 'trail/2').Enabled,
     'A disabled trail exposed an enabled action.'
@@ -223,12 +223,12 @@ begin
     Find(Off, 'trail/0') = null and Control(Off, 'before').Focused,
     'A disabled overflow control opened its menu.'
   );
-  using const Sized: T.HeadlessSession := T.StartHeadless<int, int>(-1, Update, Constrained, 90, 6);
+  using const Sized: T.HeadlessSession := Headless.Start<int, int>(-1, Update, Constrained, 90, 6);
   Check(
     Find(Sized, 'trail/0') = null and Control(Sized, 'trail/overflow').Enabled,
     'The breadcrumb used the terminal width instead of the allocated width.'
   );
-  using const Unicode: T.HeadlessSession := T.StartHeadless<int, int>(
+  using const Unicode: T.HeadlessSession := Headless.Start<int, int>(
     -1,
     Update,
     LongLocation,
@@ -239,11 +239,11 @@ begin
     Shows(Unicode, '界…') and Find(Unicode, 'single/overflow') = null,
     'Clipping broke a double-width current caption or introduced an empty menu.'
   );
-  using const Scroll: T.HeadlessSession := T.StartHeadless<int, int>(-1, Update, Scrolled, 54, 2);
+  using const Scroll: T.HeadlessSession := Headless.Start<int, int>(-1, Update, Scrolled, 54, 2);
   Check(Find(Scroll, 'trail/0') = null, 'Expected the breadcrumb to start below the fold.');
   Key(Scroll, K.Key.Tab);
   Check(Control(Scroll, 'trail/0').Focused, 'Tab could not reveal the offscreen breadcrumb.');
-  using const Card: T.HeadlessSession := T.StartHeadless<int, int>(-1, Update, InCard, 54, 8);
+  using const Card: T.HeadlessSession := Headless.Start<int, int>(-1, Update, InCard, 54, 8);
   Send(Card, T.Input.Focus('trail/0'));
   Send(Card, T.Input.Activate('card'));
   Check(

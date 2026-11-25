@@ -3,7 +3,7 @@
 program TextFieldContract;
 
 uses
-  Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Elements as E, Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Tui.Headless as Headless, Fpas.Ui.Elements as E, Fpas.Ui.Mvu.Application as Mvu,
   Fpas.Ui.Widgets.Inputs.TextFields as F, Fpas.Ui.TerminalExtensions.Input as K,
   System as Sys, System.Console as Console;
 
@@ -53,7 +53,7 @@ procedure Verify();
     end if;
   end procedure;
 begin
-  using const Session: Tui.HeadlessSession := Tui.StartHeadless<string, string>(
+  using const Session: Tui.HeadlessSession := Headless.Start<string, string>(
     '',
     Update,
     View,

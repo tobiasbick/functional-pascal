@@ -4,7 +4,7 @@ program ExpandableCardContract;
 
 uses
   Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Containers.ExpandableCards as Cards, Fpas.Ui.Widgets.Actions.Buttons as B,
-  Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Tui.Application as T,
+  Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Tui.Application as T, Fpas.Ui.Tui.Headless as Headless,
   Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.TerminalExtensions.Views as Views,
   Fpas.Ui.Mvu.Application as M, Fpas.Ui.Layout as L, System as Sys, System.Console as Console;
 
@@ -141,7 +141,7 @@ begin
 end procedure;
 
 begin
-  using const Main: T.HeadlessSession := T.StartHeadless<Model, string>(
+  using const Main: T.HeadlessSession := Headless.Start<Model, string>(
     new Model(),
     Update,
     Form,
@@ -186,7 +186,7 @@ begin
     'Clicking the description closes the card.'
   );
 
-  using const Disabled: T.HeadlessSession := T.StartHeadless<Model, string>(
+  using const Disabled: T.HeadlessSession := Headless.Start<Model, string>(
     new Model(Open := true, Enabled := false),
     Update, Form, 40, 16
   );
@@ -208,7 +208,7 @@ begin
     'Disabled cards and their contents stay outside Tab traversal.'
   );
 
-  using const Narrow: T.HeadlessSession := T.StartHeadless<Model, string>(
+  using const Narrow: T.HeadlessSession := Headless.Start<Model, string>(
     new Model(Open := true),
     Update,
     Scrolled,

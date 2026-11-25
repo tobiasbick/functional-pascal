@@ -5,7 +5,7 @@ program DropdownContract;
 uses
   Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Overlays.Menus as Menu, Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs,
   Fpas.Ui.Widgets.Actions.Buttons as Buttons, Fpas.Ui.TerminalExtensions.Input as K,
-  Fpas.Ui.Tui.Application as T, Fpas.Ui.Mvu.Application as M, Fpas.Ui.Layout as L,
+  Fpas.Ui.Tui.Application as T, Fpas.Ui.Tui.Headless as Headless, Fpas.Ui.Mvu.Application as M, Fpas.Ui.Layout as L,
   System as Sys, System.Console as Console;
 
 type Model = record
@@ -124,7 +124,7 @@ begin
 end procedure;
 
 begin
-  using const Session: T.HeadlessSession := T.StartHeadless<Model, string>(
+  using const Session: T.HeadlessSession := Headless.Start<Model, string>(
     new Model(),
     Update,
     MainView,
@@ -192,7 +192,7 @@ begin
   Click(Session, 'disabled');
   Check(Control(Session, 'disabled').Value = 'false', 'Disabled triggers stay closed.');
 
-  using const Narrow: T.HeadlessSession := T.StartHeadless<Model, string>(
+  using const Narrow: T.HeadlessSession := Headless.Start<Model, string>(
     new Model(),
     Update,
     Side,
@@ -216,7 +216,7 @@ begin
   Key(Narrow, K.Key.Escape);
   Check(Control(Narrow, 'options').Focused, 'Focus returns after resizing an open menu.');
 
-  using const Changes: T.HeadlessSession := T.StartHeadless<Model, string>(
+  using const Changes: T.HeadlessSession := Headless.Start<Model, string>(
     new Model(),
     Update,
     Responsive,

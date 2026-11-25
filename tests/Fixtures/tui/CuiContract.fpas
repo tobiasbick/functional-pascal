@@ -9,7 +9,7 @@ uses
   Fpas.Ui.Widgets.Actions.SegmentedControls as Segments, Fpas.Ui.Widgets.Actions.ButtonGroups as Groups,
   Fpas.Ui.Widgets.Actions.ToggleGroups as ToggleGroups,
   Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers, Fpas.Ui.Widgets.Theming.ThemeToggles as Toggles,
-  Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Developer.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Validation as V, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Tui.Internal.View.Tree as Tree, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System as Sys, System.Console as Console;
+  Fpas.Ui.Widgets.Overlays.Menus as Menus, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Theming.Themes as Themes, Fpas.Ui.Graphics as G, Fpas.Ui.Widgets.Developer.Terminal as Terminal, Fpas.Ui.Styles as Styles, Fpas.Ui.Validation as V, Fpas.Ui.Widgets.Overlays.Sheets as Sheets, Fpas.Ui.Widgets.Actions.Buttons as B, Fpas.Ui.TerminalExtensions.Input as Keys, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as Tui, Fpas.Ui.Tui.Headless as Headless, Fpas.Ui.Tui.Internal.View.Tree as Tree, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System as Sys, System.Console as Console;
 
 procedure Check(Value: bool; Reason: string);
 begin
@@ -87,7 +87,7 @@ begin
       Accent := new G.Color(255, 0, 0, 128);
     end with;
   end with;
-  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(
+  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(
     0,
     Update,
     View,
@@ -126,7 +126,7 @@ procedure LogicalDistances();
   end function;
 begin
   discard V.Prepare<int>(View(0), V.Target.Portable);
-  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 12, 10);
+  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(0, Update, View, 12, 10);
   const Controls: array of Tui.ControlSnapshot := Session.Snapshot().Controls;
   Check(
     Controls[0].Column = 2 and Controls[0].Row = 1 and Controls[0].Height = 2,
@@ -162,7 +162,7 @@ begin
         Size := 64, InitialFocus := 'inside'
       ), 1
     );
-    using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(
+    using const Session: Tui.HeadlessSession := Headless.Start<int, int>(
       0,
       Update,
       View,
@@ -235,7 +235,7 @@ procedure SheetFocus();
     raise new Sys.InvalidOperationException('Expected sheet focus on ' + Expected + '.');
   end procedure;
 begin
-  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 64, 16);
+  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(0, Update, View, 64, 16);
   const Escape: Tui.Input := Tui.Input.KeyPress(Keys.Key.Escape, Keys.KeyModifiers.None);
   Send(Session, Tui.Input.Focus('open'), 'open');
   Send(Session, Tui.Input.Activate('open'), 'inside-first');
@@ -294,7 +294,7 @@ procedure ButtonAction();
     );
   end function;
 begin
-  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(
+  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(
     0, Update, View, 40, 12, ThemeFor := function(State: int): Themes.Theme => Themes.Dark()
   );
   discard Session.Send(Tui.Input.Focus('save'));
@@ -361,7 +361,7 @@ procedure ChoiceStripSizing();
     );
   end function;
 begin
-  using const Session: Tui.HeadlessSession := Tui.StartHeadless<int, int>(0, Update, View, 41, 8);
+  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(0, Update, View, 41, 8);
   const Frame: Tui.Frame := Session.Snapshot();
   const First: Tui.ControlSnapshot := Frame.Controls[0];
   const Second: Tui.ControlSnapshot := Frame.Controls[1];

@@ -3,7 +3,7 @@
 program TerminalWidgetsContract;
 
 uses
-  Fpas.Ui.Tui.Application as App, Fpas.Ui.Mvu.Application as M, Fpas.Ui.Elements as E,
+  Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Headless as Headless, Fpas.Ui.Mvu.Application as M, Fpas.Ui.Elements as E,
   Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Developer.LogConsoles as Logs,
   Fpas.Ui.Widgets.Overlays.CommandPalettes as Palette, Fpas.Ui.Widgets.Collections.Trees as Tree,
   Fpas.Ui.Widgets.Collections.Tables as Table, Fpas.Ui.Widgets.Actions.Buttons as Buttons,
@@ -153,7 +153,7 @@ procedure NumberDraftInDialog();
     );
   end function;
 begin
-  using const Session: App.HeadlessSession := App.StartHeadless<bool, bool>(
+  using const Session: App.HeadlessSession := Headless.Start<bool, bool>(
     true,
     Apply,
     DialogView,
@@ -178,7 +178,7 @@ end procedure;
 
 begin
   NumberDraftInDialog();
-  using const Session: App.HeadlessSession := App.StartHeadless<Model, Msg>(
+  using const Session: App.HeadlessSession := Headless.Start<Model, Msg>(
     new Model(),
     Update,
     View,

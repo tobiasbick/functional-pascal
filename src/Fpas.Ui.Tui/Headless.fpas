@@ -1,0 +1,173 @@
+// [Documentation](../../docs/ui/tui/host.md#application-lifecycle)
+
+unit Fpas.Ui.Tui.Headless;
+
+uses
+  Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Hosting.Session as SessionHost,
+  Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Elements as Ui, Fpas.Ui.Widgets.Theming.Themes as Th,
+  Fpas.Ui.Layout as L;
+
+// Publishes the initial frame and returns a manually stepped session.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model.
+// - `Columns`: Initial terminal width in cells.
+// - `Rows`: Initial terminal height in cells.
+//
+// ## Returns
+// The session with its initial frame published.
+public function Start<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel): Ui.Element<TMsg>; Columns: int; Rows: int
+): App.HeadlessSession;
+begin
+  return Start<TModel, TMsg>(InitialModel, Update, View, Columns, Rows, new Th.Theme());
+end function;
+
+// Starts a manually driven terminal session.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model.
+// - `Columns`: Initial terminal width in cells.
+// - `Rows`: Initial terminal height in cells.
+// - `Theme`: The fixed theme.
+//
+// ## Returns
+// The session with its initial frame published.
+public function Start<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel): Ui.Element<TMsg>; Columns: int; Rows: int; Theme: Th.Theme
+): App.HeadlessSession;
+begin
+  return Start<TModel, TMsg>(
+    InitialModel, Update, View, Columns, Rows, function(State: TModel): Th.Theme => Theme
+  );
+end function;
+
+// Resolves the theme from the current model before laying out each frame.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model.
+// - `Columns`: Initial terminal width in cells.
+// - `Rows`: Initial terminal height in cells.
+// - `ThemeFor`: Selects the theme for the current model.
+//
+// ## Returns
+// The session with its initial frame published.
+public function Start<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel): Ui.Element<TMsg>; Columns: int; Rows: int; ThemeFor: function(TModel): Th.Theme
+): App.HeadlessSession;
+begin
+  return Start<TModel, TMsg>(
+    InitialModel, Update,
+    function(State: TModel; Size: L.Viewport): Ui.Element<TMsg> => View(State),
+    Columns, Rows, ThemeFor
+  );
+end function;
+
+// Starts a manually driven terminal session.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model and viewport.
+// - `Columns`: Initial terminal width in cells.
+// - `Rows`: Initial terminal height in cells.
+//
+// ## Returns
+// The session with its initial frame published.
+public function Start<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel, L.Viewport): Ui.Element<TMsg>; Columns: int; Rows: int
+): App.HeadlessSession;
+begin
+  return Start<TModel, TMsg>(InitialModel, Update, View, Columns, Rows, new Th.Theme());
+end function;
+
+// Starts a manually driven terminal session.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model and viewport.
+// - `Columns`: Initial terminal width in cells.
+// - `Rows`: Initial terminal height in cells.
+// - `Theme`: The fixed theme.
+//
+// ## Returns
+// The session with its initial frame published.
+public function Start<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel, L.Viewport): Ui.Element<TMsg>; Columns: int; Rows: int; Theme: Th.Theme
+): App.HeadlessSession;
+begin
+  return Start<TModel, TMsg>(
+    InitialModel, Update, View, Columns, Rows, function(State: TModel): Th.Theme => Theme
+  );
+end function;
+
+// Gives the view the initial dimensions and the dimensions of each processed resize.
+//
+// ## Type parameters
+// - `TModel`: The application model type.
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `InitialModel`: The model before processing messages.
+// - `Update`: The application transition called for each message.
+// - `View`: Builds the terminal view from the current model and viewport.
+// - `Columns`: Initial terminal width in cells.
+// - `Rows`: Initial terminal height in cells.
+// - `ThemeFor`: Selects the theme for the current model.
+//
+// ## Returns
+// The session with its initial frame published.
+public function Start<TModel, TMsg>(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
+  View: function(TModel, L.Viewport): Ui.Element<TMsg>; Columns: int; Rows: int;
+  ThemeFor: function(TModel): Th.Theme
+): App.HeadlessSession;
+  procedure Present(Value: App.Frame);
+  begin
+  end procedure;
+begin
+  return SessionHost.Start<TModel, TMsg>(
+    InitialModel,
+    Update,
+    View,
+    Columns,
+    Rows,
+    Present,
+    true,
+    ThemeFor
+  );
+end function;
+
+end unit;

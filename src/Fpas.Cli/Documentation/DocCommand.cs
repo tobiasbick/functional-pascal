@@ -1,5 +1,6 @@
 // [Documentation](../../../docs/pascal/tools/api-documentation.md)
 using Fpas.Cli.Analysis;
+using Fpas.Cli.Toolchain;
 using Fpas.Workspaces.Analysis;
 using Fpas.Workspaces.Documentation;
 using Fpas.Workspaces.Loading;
@@ -26,13 +27,16 @@ internal sealed class DocCommand
     private readonly Option<int> offset = new("--offset") { DefaultValueFactory = _ => 0, Description = "Skip sorted entries; combine pages only with equal snapshotId." };
     private readonly Option<string> report = new("--report") { Description = "Write one structured JSON document to stdout." };
     internal Command Command { get; } = new("doc", """
-        Look up FPAS declarations and public APIs from the project's actual .NET references.
+        Look up FPAS declarations and public .NET APIs.
+        An explicit .fpas file searches the standalone .NET 10 references, even when the source has errors.
         Shows source Markdown or adjacent assembly XML documentation, with explicit missing-text states.
         Reads metadata without executing referenced code. Preparation may restore/build dependencies.
         Choose --name to look up declarations or --usage to check a selected call or member access.
         Exit codes: 0 success/not found/help, 1 analysis/setup/deadline failure, 2 arguments, 130 cancellation.
 
         Examples:
+          fpas doc examples/basics/hello/main.fpas --name System.IO.File.ReadAllText --report json
+
           fpas doc examples/numerics/mandelbrot/Mandelbrot.fpasproj --name EscapeIterations
 
           fpas doc examples/basics/hello/Hello.fpasproj --name System.Console.WriteLine --report json
@@ -44,6 +48,7 @@ internal sealed class DocCommand
 
     internal DocCommand()
     {
+        options.Context.Description = "Explicit .fpas, .fpasproj or .slnx path.";
         options.AddTo(Command); match.AcceptValues("exact", "prefix", "contains"); report.AcceptValues("json");
         ContextCommandOptions.Range(limit, 1, 100); ContextCommandOptions.Range(offset, 0, int.MaxValue);
         access.AcceptValues("read", "write");
@@ -68,11 +73,25 @@ internal sealed class DocCommand
             var search = new DocumentationSearch(memberId ?? lookup!, result.GetValue(match)!, result.GetValue(project), result.GetValue(assembly), result.GetValue(limit), result.GetValue(offset),
                 Usage: memberId is not null, TypeArguments: result.GetValue(typeArguments), Access: result.GetValue(access));
             DocumentationQuery.Validate(search);
-            var workspace = await WorkspaceLoader.LoadAsync(options.Read(result), combined.Token);
-            var analysis = WorkspaceAnalysis.Analyze(workspace, combined.Token); check = CheckResult.From(analysis);
-            var query = new DocumentationQuery(analysis); var found = query.Search(search, combined.Token);
-            await workspace.VerifyInputsAsync(combined.Token); query.VerifyInputs(combined.Token); combined.Token.ThrowIfCancellationRequested();
-            response = DocReport.From(check, found); exit = 0;
+            var context = options.Read(result);
+            if (Path.GetExtension(context.Context).Equals(".fpas", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!File.Exists(context.Context))
+                    throw new ContextFailure("invalid_argument", "Supply an existing .fpas source file.", inputPath: context.Context);
+                if (search.Project is not null || result.GetResult(options.Configuration) is { Implicit: false })
+                    throw new ContextFailure("invalid_argument", "Use a project or solution context with --project or --configuration.");
+                var found = DocumentationQuery.SearchReferences(FrameworkReferences.Resolve(), search, combined.Token);
+                response = DocReport.FromReferences(context.Context, configuration, found);
+            }
+            else
+            {
+                var workspace = await WorkspaceLoader.LoadAsync(context, combined.Token);
+                var analysis = WorkspaceAnalysis.Analyze(workspace, combined.Token); check = CheckResult.From(analysis);
+                var query = new DocumentationQuery(analysis); var found = query.Search(search, combined.Token);
+                await workspace.VerifyInputsAsync(combined.Token); query.VerifyInputs(combined.Token);
+                response = DocReport.From(check, found);
+            }
+            combined.Token.ThrowIfCancellationRequested(); exit = 0;
         }
         catch (OperationCanceledException) when (combined.IsCancellationRequested)
         {

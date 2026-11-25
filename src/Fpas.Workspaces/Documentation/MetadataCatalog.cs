@@ -10,7 +10,7 @@ namespace Fpas.Workspaces.Documentation;
 internal sealed class MetadataCatalog : IDisposable
 {
     private readonly Dictionary<(string Path, string? Hash), PEReader> images = [];
-    internal IEnumerable<DocumentationCandidate> Search(string project, string path, DocumentationSearch search, CancellationToken token,
+    internal IEnumerable<DocumentationCandidate> Search(string? project, string path, DocumentationSearch search, CancellationToken token,
         MetadataImage? captured = null, AnalysisRequest? usageContext = null)
     {
         var key = (path, captured?.ContentHash);

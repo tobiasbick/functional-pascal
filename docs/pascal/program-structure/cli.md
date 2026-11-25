@@ -40,6 +40,28 @@ Use [source formatting](../tools/fmt-style.md) for `fpas fmt`, its fixed style,
 explicit source/directory/project/solution inputs, check/list/stdout modes and
 JSON reports. Formatting is syntax-only and needs no assembly references.
 
+## Check one source file
+
+```sh
+fpas check examples/basics/hello/main.fpas --report json
+echo 'program Probe; begin end; end program;' | fpas check - --report json
+```
+
+Pass an explicit `.fpas` file or `-` for redirected standard input. Both take
+one complete UTF-8 program of up to 4 MiB. The deadline includes reading stdin.
+The checker uses the latest installed stable `net10.0` reference pack under the
+selected dotnet installation and includes `Fpas.Core`. It checks the file without
+MSBuild, restore or build outputs. Pass a project for units, additional sources,
+custom references, configuration, draft overlays or automatic fixes.
+
+The `check` JSON report identifies the source file as `context`, leaves `projects`
+empty and reports `project: null` for individual diagnostics. Source locations,
+diagnostic pagination, `--expected-snapshot` and exit codes follow the project
+check contract. A snapshot ID is available when the compiler produces a semantic
+snapshot. Use `--diagnostic-file` to select source locations.
+For a piped program, the context and diagnostic path are `<stdin>`. To select
+that path explicitly, pass `--diagnostic-file '<stdin>'`.
+
 ## Check a project or solution
 
 `fpas check examples/numerics/mandelbrot/Mandelbrot.fpasproj` validates evaluated on-disk sources without
@@ -623,6 +645,11 @@ project SDK for normal applications.
   - [OutlineCliTests.cs](../../../tests/Fpas.IntegrationTests/Workspaces/OutlineCliTests.cs)
   - [CheckCommand.cs](../../../src/Fpas.Cli/Analysis/CheckCommand.cs)
   - [CheckResult.cs](../../../src/Fpas.Cli/Analysis/CheckResult.cs)
+  - [StandaloneCheck.cs](../../../src/Fpas.Cli/Analysis/StandaloneCheck.cs)
+  - [PipedSource.cs](../../../src/Fpas.Cli/Compilation/PipedSource.cs)
+  - [PipedSourceTests.cs](../../../tests/Fpas.IntegrationTests/Cli/PipedSourceTests.cs)
+  - [FrameworkReferences.cs](../../../src/Fpas.Cli/Toolchain/FrameworkReferences.cs)
+  - [StandaloneCheckTests.cs](../../../tests/Fpas.IntegrationTests/Workspaces/StandaloneCheckTests.cs)
   - [QueryCommand.cs](../../../src/Fpas.Cli/Analysis/QueryCommand.cs)
   - [QueryBatchCommand.cs](../../../src/Fpas.Cli/Analysis/QueryBatchCommand.cs)
   - [QueryRequest.cs](../../../src/Fpas.Cli/Analysis/QueryRequest.cs)

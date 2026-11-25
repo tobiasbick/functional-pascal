@@ -33,6 +33,7 @@ public sealed class FailureReportTests
             end function;
             begin
               Console.InputEncoding := Encoding.UTF8;
+              Console.OutputEncoding := Encoding.UTF8;
               discard Crash(Console.ReadLine() ?? 'EOF');
             end;
             end program;

@@ -8,16 +8,19 @@ namespace Fpas.Cli.Projects;
 
 internal sealed class TargetCommand
 {
-    private readonly Argument<string> context = new("context") { Description = "An existing project or .slnx solution." };
+    private readonly Argument<string> context = new("context") { Description = "An existing .fpas source, project or .slnx solution." };
     private readonly Option<string> configuration = new("--configuration") { DefaultValueFactory = _ => "Debug", Description = "Build or solution configuration." };
     private readonly Option<string> project = new("--project") { Description = "Select an included executable project." };
     private readonly Option<int> timeout = new("--timeout") { DefaultValueFactory = _ => 30, Description = "Evaluation deadline in seconds (1..3600)." };
 
     internal Command Command { get; } = new("target", """
-        Describe the executable selected by a project or solution as JSON.
+        Describe the executable selected by a standalone source, project or solution as JSON.
+        A .fpas source uses the generated project from an earlier build or run.
         Uses the evaluated target path and mapped configuration. Does not restore or compile.
 
         Examples:
+          fpas target examples/basics/hello/main.fpas
+
           fpas target examples/basics/hello/Hello.fpasproj
 
           fpas target App.slnx --configuration Release --project Host/Host.csproj
@@ -39,7 +42,14 @@ internal sealed class TargetCommand
         try
         {
             path = Path.GetFullPath(result.GetValue(context)!);
-            var target = await ProjectDriver.SelectExecutableAsync(path, result.GetValue(configuration)!, result.GetValue(project), deadline.Token);
+            var selected = result.GetValue(project);
+            var evaluation = path;
+            if (Path.GetExtension(path).Equals(".fpas", StringComparison.OrdinalIgnoreCase))
+            {
+                if (selected is not null) throw new ContextFailure("invalid_argument", "Standalone sources cannot use --project.");
+                evaluation = SourceProject.ExistingProject(path);
+            }
+            var target = await ProjectDriver.SelectExecutableAsync(evaluation, result.GetValue(configuration)!, selected, deadline.Token);
             if (target.HasRuntimeFiles()) target = target with { OutputIdentity = OutputFingerprint.Compute(target.Assembly, deadline.Token) };
             new ProjectReport("target", true, "ok", path) { Target = target }.Write(json: true);
             return 0;

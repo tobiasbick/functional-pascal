@@ -17,9 +17,9 @@ invoke the same CLI from a source checkout. Keep scratch outputs under `.temp-da
 | `fpas init solution` | Create a solution and include existing projects with repeated `--project`. |
 | `fpas restore` | Restore packages for an explicit project or solution through the selected SDK. |
 | `fpas build` | Build a source, project or solution through MSBuild. |
-| `fpas run` | Build and start a source, project or solution, or run a built DLL. Pass program arguments after `--`. |
+| `fpas run` | Build and start a source, project or solution, or run a built DLL. `fpas run -` reads one UTF-8 program from stdin. Pass program arguments after `--`. |
 | `fpas workspace` | Read roles and references. Use `--file` for source owners or repeat `--affected` for owners, dependent projects and tests. |
-| `fpas target` | Report the executable, paths and available output identity as JSON. Use the identity with `run --no-build --expected-output`. |
+| `fpas target` | Report the executable and available output identity as JSON. Accepts previously built `.fpas` sources and explicit projects or solutions. Use the identity with `run --no-build --expected-output`. |
 | `fpas clean` | Run SDK clean for the selected project or solution and configuration. |
 | `fpas publish` | Deliver an executable or runtime files to `--output`. Native AOT is the default. Other modes include `single-file`, `self-contained`, `apphost` and `framework-dependent`. |
 | `fpas test` | Build and run .NET tests through VSTest or MTP. Discover with `--list`, reuse outputs with `--no-build`, and read JSON and TRX results. JSON gives rerun arguments for identifiable failed tests. |
@@ -30,8 +30,8 @@ invoke the same CLI from a source checkout. Keep scratch outputs under `.temp-da
 | `fpas licenses` | Print bundled debugger and .NET runtime notices. |
 
 `fpas run --report json` captures output, supplies EOF and defaults to a 120-second
-deadline. Use `--stdin FILE` for explicit input and `--cwd` for the working
-directory. `--failure-report FILE` writes the first unhandled exception with the
+deadline. Use `--stdin FILE` or `--stdin -` for explicit input and `--cwd` for the
+working directory. `--failure-report FILE` writes the first unhandled exception with the
 debugger's stack and available locals to a new file, then resumes the same
 process and preserves its exit code. Keep its DLL, portable PDB and matching sources together.
 [Project commands](../program-structure/project-commands.md) · [Run failure reports](../program-structure/project-commands.md#save-the-original-failure)
@@ -43,10 +43,10 @@ process and preserves its exit code. Keep its DLL, portable PDB and matching sou
 | Command | Use |
 | --- | --- |
 | `fpas compile` | Compile explicit sources to a CLR DLL. Supply `--output`, framework metadata via `--reference-dir`, and extra assemblies via repeated `--reference`. Use `--target library` for units-only output. |
-| `fpas check` | Validate an evaluated project or solution without analysis-owned output. Use `--report json`, `--fix --dry-run` to preview corrections, `--fix-id` to select automatic proposals within a fix batch or `--overlay` to check draft content in memory. |
+| `fpas check` | Validate a standalone program (`.fpas` or `-` for stdin), project or solution. Use `--report json` for diagnostics. Project contexts also support `--fix --dry-run`, `--fix-id` and `--overlay`. |
 | `fpas fmt` | Format sources, directories, projects or solutions. `--check --list` reports affected paths and `--stdout` previews one source. |
 | `fpas lint` | Check architecture, source layout and unused CLR aliases. Apply `--baseline FILE` or record current errors with `--write-baseline FILE`. Use `--report json` for stable rule keys and locations. |
-| `fpas doc` | Look up FPAS and referenced CLR APIs with `--name`. Use `--usage` with the selected XML documentation ID for a compiler-checked FPAS template. |
+| `fpas doc` | Look up FPAS and referenced CLR APIs with `--name`. A `.fpas` input searches standalone references. Use `--usage` with the selected XML documentation ID for a compiler-checked FPAS template. |
 | `fpas query` | Select a checked source query. Results include a snapshot identity and coverage. |
 | `fpas query outline` | Read a syntax-only outline and spans from one file. |
 | `fpas query complete` | Get compiler completions and their replacement span at a cursor. |

@@ -6,7 +6,11 @@ using System.Text.Json.Serialization;
 
 namespace Fpas.Cli.Projects;
 
-internal sealed record ProjectError(string Code, string Message, IReadOnlyList<string>? Candidates = null);
+internal sealed record ProjectError(string Code, string Message, IReadOnlyList<string>? Candidates = null)
+{
+    /// <summary>Gets arguments for a separate FPAS invocation that can prepare or inspect the selected output.</summary>
+    public IReadOnlyList<string>? NextArguments { get; init; }
+}
 internal sealed record ProgramResult(int ExitCode, string Output, string Error, bool Truncated);
 internal sealed record PlannedFile(string Path, string State, string Content);
 internal sealed record PublishedOutput(string Mode, string Runtime, string Directory, IReadOnlyList<PublishedFile> Files);

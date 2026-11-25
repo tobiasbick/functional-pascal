@@ -70,9 +70,10 @@ fabricating edits that require unknown imports or values.
 ## Filter and page analysis reports
 
 `check --report json` and the checked queries, including `query batch`, use
-`--diagnostic-file` and `--diagnostic-project` to select diagnostics. Paths
-resolve against the invocation directory. The filters combine when supplied
-together. `--diagnostic-limit` defaults to 100 and accepts 0..1000. Use zero
+`--diagnostic-file` to select source diagnostics. In a project context, use
+`--diagnostic-project` to select the owning project. Paths resolve against the
+invocation directory. The filters combine when supplied together.
+`--diagnostic-limit` defaults to 100 and accepts 0..1000. Use zero
 for counts alone. `--diagnostic-offset` skips matching diagnostics in stable
 project and source order. Combine pages when their `snapshotId` matches.
 

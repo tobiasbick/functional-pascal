@@ -101,6 +101,7 @@ public sealed class BuildRunTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
               System.Text.Encoding as Encoding;
             begin
               Console.InputEncoding := Encoding.UTF8;
+              Console.OutputEncoding := Encoding.UTF8;
               for Value: string in args do Console.WriteLine(Value); end for;
               Console.WriteLine(Console.ReadLine() ?? 'EOF');
               Console.WriteLine(Console.ReadLine() ?? 'EOF');
@@ -114,17 +115,18 @@ public sealed class BuildRunTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
         Assert.True(build.ExitCode == 0, build.Output + build.Error);
         Directory.CreateDirectory(directory.File("working Grüße")); File.WriteAllText(directory.File("working Grüße/data.txt"), "file value");
         File.WriteAllText(directory.File("working Grüße/input file.txt"), "input Grüße 😀\n");
-        foreach (var (json, file) in new[] { (false, false), (false, true), (true, false), (true, true) })
+        foreach (var json in new[] { false, true })
+        foreach (var input in new[] { null, "input file.txt", "-" })
         {
             var options = new List<string> { TestEnvironment.Metadata("FpasCliPath"), "run", project, "--no-build", "--cwd", directory.File("working Grüße") };
             if (json) options.AddRange(["--report", "json"]);
-            if (file) options.AddRange(["--stdin", "input file.txt"]);
+            if (input is not null) options.AddRange(["--stdin", input]);
             string[] arguments = ["a b; $(no-shell)", "Grüße 😀", "", "quoted \"value\"", "trailing\\", "two\\\\\"quotes", "--flag"];
             options.AddRange(["--", .. arguments]);
-            var result = await ProcessRunner.RunAsync(options, file ? "ignored ambient input\n" : "input Grüße 😀\n",
+            var result = await ProcessRunner.RunAsync(options, input == "input file.txt" ? "ignored ambient input\n" : "input Grüße 😀\n",
                 directory.Path, timeLimit: TimeSpan.FromMinutes(2));
             Assert.Equal(7, result.ExitCode);
-            var firstLine = json && !file ? "EOF" : "input Grüße 😀";
+            var firstLine = json && input is null ? "EOF" : "input Grüße 😀";
             var expected = string.Join(Environment.NewLine, [.. arguments, firstLine, "EOF", "file value", ""]);
             if (!json) { Assert.Equal(expected, result.Output); Assert.Equal("diagnostic" + Environment.NewLine, result.Error); }
             else
@@ -135,6 +137,12 @@ public sealed class BuildRunTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
                 Assert.Equal("diagnostic" + Environment.NewLine, report.RootElement.GetProperty("program").GetProperty("error").GetString());
             }
         }
+        var oversized = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "run", project, "--no-build", "--stdin", "-", "--report", "json"],
+            new string('x', 1_048_577), directory.Path);
+        Assert.Equal(2, oversized.ExitCode);
+        using var rejection = JsonDocument.Parse(oversized.Output);
+        Assert.Equal("invalid_argument", rejection.RootElement.GetProperty("error").GetProperty("code").GetString());
+        Assert.False(rejection.RootElement.TryGetProperty("program", out _));
     }
 
     /// <summary>Checks that guarded execution refuses changes to the output or its companion files.</summary>
@@ -161,6 +169,15 @@ public sealed class BuildRunTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
         using var report = JsonDocument.Parse(stale.Output);
         Assert.Equal("run_output_changed", report.RootElement.GetProperty("error").GetProperty("code").GetString());
         Assert.False(report.RootElement.TryGetProperty("program", out _));
+
+        File.Delete(settings);
+        var missing = await ProjectCliFixture.Cli(directory, "run", project, "--no-build", "--expected-output", identity, "--report", "json");
+        Assert.Equal(1, missing.ExitCode);
+        using var missingReport = JsonDocument.Parse(missing.Output);
+        var recovery = missingReport.RootElement.GetProperty("error");
+        Assert.Equal("run_output_changed", recovery.GetProperty("code").GetString());
+        Assert.Equal(new[] { "build", project, "--configuration", "Debug", "--report", "json" },
+            recovery.GetProperty("nextArguments").EnumerateArray().Select(item => item.GetString()));
 
         async Task<JsonDocument> Target()
         {

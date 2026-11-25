@@ -178,19 +178,10 @@ internal sealed class QueryBatchCommand
 
     private static async Task<JsonDocument> ReadRequestsAsync(CancellationToken token)
     {
-        using var stdin = Console.OpenStandardInput();
-        var bytes = new byte[InputLimit + 1];
-        var length = 0;
-        while (length < bytes.Length)
-        {
-            var read = await stdin.ReadAsync(bytes.AsMemory(length), token).AsTask().WaitAsync(token);
-            if (read == 0) break;
-            length += read;
-        }
-        if (length > InputLimit) throw new ContextFailure("invalid_argument", "Query batch input exceeds 256 KiB.");
-        try { _ = StrictUtf8.GetCharCount(bytes.AsSpan(0, length)); }
+        var bytes = await BoundedInput.ReadStandardInputAsync(InputLimit, "Query batch input exceeds 256 KiB.", token);
+        try { _ = StrictUtf8.GetCharCount(bytes.Span); }
         catch (DecoderFallbackException) { throw new ContextFailure("invalid_argument", "Expected UTF-8 JSON input."); }
-        var document = JsonDocument.Parse(bytes.AsMemory(0, length));
+        var document = JsonDocument.Parse(bytes);
         if (document.RootElement.ValueKind == JsonValueKind.Array && document.RootElement.GetArrayLength() is > 0 and <= RequestLimit)
             return document;
         document.Dispose();

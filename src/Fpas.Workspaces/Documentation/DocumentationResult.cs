@@ -22,7 +22,7 @@ public sealed record DocumentationSearch(string Name, string Match = "exact", st
 /// <param name="Content">Native documentation markup, or null when unavailable.</param>
 public sealed record DocumentationContent(string Availability, string Format, string? Path, string? Content);
 /// <summary>Describes one actual source or public CLR declaration and its documentation.</summary>
-/// <param name="Project">Compilation whose source or references supplied the entry.</param>
+/// <param name="Project">Owning project path, or null for standalone references.</param>
 /// <param name="Origin">source or metadata.</param>
 /// <param name="Kind">Declaration kind.</param>
 /// <param name="Name">Simple declaration name.</param>
@@ -34,7 +34,7 @@ public sealed record DocumentationContent(string Availability, string Format, st
 /// <param name="DocumentationId">Exact XML member ID for metadata, or null for source.</param>
 /// <param name="Span">Source navigation span, when available.</param>
 /// <param name="Documentation">Native documentation text or explicit absence state.</param>
-public sealed record DocumentationEntry(string Project, string Origin, string Kind, string Name, string QualifiedName,
+public sealed record DocumentationEntry(string? Project, string Origin, string Kind, string Name, string QualifiedName,
     string Signature, string SignatureFormat, string Assembly, string? AssemblyPath, string? DocumentationId,
     SourceSpan? Span, DocumentationContent Documentation)
 {
@@ -60,5 +60,5 @@ public sealed record DocumentationResult(string Status, string SnapshotId, IRead
     int TotalCount, int Offset, int? NextOffset, bool Truncated, int OmittedDocumentationCount,
     IReadOnlyList<string> SearchedProjects, IReadOnlyList<string> SearchedAssemblies, Fpas.Workspaces.Analysis.WorkspaceSemanticCoverage Coverage);
 
-internal sealed record DocumentationCandidate(string Project, string Origin, string QualifiedName,
+internal sealed record DocumentationCandidate(string? Project, string Origin, string QualifiedName,
     string SortKey, Func<DocumentationEntry> Read);

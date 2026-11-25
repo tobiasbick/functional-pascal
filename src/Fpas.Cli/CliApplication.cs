@@ -26,7 +26,7 @@ internal static class CliApplication
         var configuration = new ParserConfiguration { ResponseFileTokenReplacer = null };
         var compile = CompilerCommand.Create();
         var debug = new DebugCommand();
-        var check = new CheckCommand();
+        var check = new CheckCommand(editorControlled);
         var lint = new LintCommand();
         var query = new QueryCommand();
         var init = new InitCommand(); var build = new ExecutionCommand(run: false); var run = new ExecutionCommand(run: true, editorControlled);
@@ -47,53 +47,15 @@ internal static class CliApplication
             FPAS compiler, project analysis, language server and agent debugger for .NET
 
             Examples:
-              fpas compile --help
+              fpas run examples/basics/hello/main.fpas
 
-              fpas debug --help
-
-              fpas check examples/numerics/mandelbrot/Mandelbrot.fpasproj
-
-              fpas query --help
-
-              fpas init project Hello --name Hello
+              fpas check examples/basics/hello/main.fpas --report json
 
               fpas build examples/basics/hello/Hello.fpasproj
 
-              fpas run examples/basics/hello/Hello.fpasproj
+              fpas run --help
 
-              fpas target examples/basics/hello/Hello.fpasproj
-
-              fpas workspace Example.slnx
-
-              fpas fmt --check examples
-
-              fpas lint App.slnx
-
-              fpas test Tests/Tests.fpasproj
-
-              fpas doc examples/basics/hello/Hello.fpasproj --name System.Console.WriteLine
-
-              fpas refactor --help
-
-              fpas env --report json
-
-              fpas sdk export ./feed
-
-              fpas publish App/App.fpasproj --output artifacts/app
-
-              fpas lsp
-
-              fpas clean App/App.fpasproj
-
-              fpas restore App.slnx
-
-              fpas profile --help
-
-              fpas terminal --help
-
-              fpas schema operation
-
-              fpas diagnose --help
+              fpas schema commands check
             """);
         var schema = new Reporting.SchemaCommand(root);
         root.Options.Add(new HelpOption()); root.Options.Add(new VersionOption());

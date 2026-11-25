@@ -13,7 +13,7 @@ internal static class SnapshotGuard
         return option;
     }
 
-    internal static void Verify(ParseResult parse, Option<string> option, string actual)
+    internal static void Verify(ParseResult parse, Option<string> option, string? actual)
     {
         if (parse.GetValue(option) is { } expected && !expected.Equals(actual, StringComparison.OrdinalIgnoreCase))
             throw new ContextFailure("inputs_changed", "The current snapshot differs from --expected-snapshot. Refresh source positions before retrying.",

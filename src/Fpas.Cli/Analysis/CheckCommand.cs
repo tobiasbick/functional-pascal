@@ -1,4 +1,5 @@
 // [Documentation](../../../docs/pascal/program-structure/cli.md#check-a-project-or-solution)
+using Fpas.Cli.Compilation;
 using Fpas.Workspaces.Editing;
 using Fpas.Workspaces.Loading;
 using System.CommandLine;
@@ -8,6 +9,7 @@ namespace Fpas.Cli.Analysis;
 
 internal sealed class CheckCommand
 {
+    private readonly bool editorControlled;
     private readonly ContextCommandOptions options = new();
     private readonly DiagnosticPageOptions diagnosticOptions = new();
     private readonly Option<string> reportFormat = new("--report") { Description = "Write one JSON result to stdout." };
@@ -18,16 +20,18 @@ internal sealed class CheckCommand
     private readonly Option<bool> fix = new("--fix") { Description = "Apply one batch of automatic diagnostic corrections, then reload and check again." };
     private readonly Option<bool> dryRun = new("--dry-run") { Description = "With --fix, show proposed edits without changing source files." };
     internal Command Command { get; } = new("check", """
-        Check an FPAS project or solution without emitting its own outputs.
-        Uses evaluated project inputs. Preparation may restore packages and build dependencies.
-        Existing root outputs are preserved.
-        --overlay checks a draft with in-memory source inputs.
+        Check a standalone FPAS program, project or solution without emitting its own outputs.
+        Use a .fpas file or '-' for UTF-8 source on stdin. Both use installed .NET 10 references without restore or MSBuild.
+        Project preparation may restore packages and build dependencies. Existing root outputs are preserved.
+        --overlay checks a project draft with in-memory source inputs.
         --fix applies automatic proposals only; --fix --dry-run previews them.
         Refuses conflicting/stale corrections. Remaining errors still return exit 1.
         Exit codes: 0 success/help, 1 analysis/setup failure, 2 invalid arguments, 130 cancellation.
 
         Examples:
-          fpas check examples/numerics/mandelbrot/Mandelbrot.fpasproj
+          echo 'program Probe; begin end; end program;' | fpas check - --report json
+
+          fpas check examples/basics/hello/main.fpas --report json
 
           fpas check examples/numerics/mandelbrot/Mandelbrot.fpasproj --configuration Release --report json
 
@@ -36,8 +40,10 @@ internal sealed class CheckCommand
           fpas check Example.fpasproj --fix
         """);
 
-    internal CheckCommand()
+    internal CheckCommand(bool editorControlled)
     {
+        this.editorControlled = editorControlled;
+        options.Context.Description = "Explicit .fpas program, .fpasproj or .slnx path, or '-' for source on stdin.";
         reportFormat.AcceptValues("json");
         options.AddTo(Command); Command.Options.Add(reportFormat); Command.Options.Add(fix); Command.Options.Add(dryRun);
         diagnosticOptions.AddTo(Command);
@@ -57,7 +63,9 @@ internal sealed class CheckCommand
 
     private async Task<int> Execute(ParseResult result, CancellationToken cancellationToken)
     {
-        var input = options.Read(result); var selected = input.Context; var selectedConfiguration = input.Configuration;
+        var input = options.Read(result); var selectedConfiguration = input.Configuration;
+        var piped = result.GetValue(options.Context) == "-";
+        var selected = piped ? PipedSource.Path : input.Context;
         var json = JsonRequested(result);
         var diagnostics = json || diagnosticOptions.Requested(result) ? diagnosticOptions.Read(result) : null;
         var timeout = TimeSpan.FromSeconds(result.GetValue(options.Timeout));
@@ -67,6 +75,20 @@ internal sealed class CheckCommand
         FileWorkspace? operation = null;
         try
         {
+            if (piped || Path.GetExtension(selected).Equals(".fpas", StringComparison.OrdinalIgnoreCase))
+            {
+                if (piped && editorControlled)
+                    throw new ContextFailure("invalid_argument", "Editor-controlled checks use stdin for cancellation. Supply a source file.");
+                if (result.GetValue(fix) || result.GetValue(overlay) is not null || diagnostics?.Project is not null ||
+                    result.GetResult(options.Configuration) is { Implicit: false })
+                    throw new ContextFailure("invalid_argument", "Use a .fpasproj or .slnx with --fix, --overlay, --diagnostic-project or --configuration.");
+
+                var source = await StandaloneCheck.AnalyzeAsync(selected, selectedConfiguration, combined.Token);
+                SnapshotGuard.Verify(result, expectedSnapshot, source.SnapshotId);
+                if (diagnostics is not null) source = source.PageDiagnostics(diagnostics);
+                combined.Token.ThrowIfCancellationRequested();
+                return source.Report(json) && source.Success ? 0 : 1;
+            }
             if (result.GetValue(overlay) is { } manifest)
             {
                 report = await AnalysisOverlay.RunAsync(input, manifest, timeout, (analysis, files, error) =>

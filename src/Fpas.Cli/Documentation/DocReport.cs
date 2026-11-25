@@ -12,6 +12,8 @@ internal sealed record DocReport(bool Success, string Status, string? Context, s
 {
     internal static DocReport From(CheckResult check, DocumentationResult result) => new(true, result.Status, check.Context, check.Configuration,
         result.SnapshotId, check.Coverage with { Complete = result.Coverage.Complete, Searched = result.SearchedProjects, Semantics = result.Coverage.Projects }, check.Preparation, check.Diagnostics, result, null);
+    internal static DocReport FromReferences(string source, string configuration, DocumentationResult result) =>
+        new(true, result.Status, source, configuration, result.SnapshotId, new(true, [], [], [], [], []), null, [], result, null);
     internal static DocReport Failure(string? context, string configuration, string code, string message, CheckResult? check = null,
         bool truncated = false, IReadOnlyList<string>? candidates = null) => new(false, code == "cancelled" ? "cancelled" : "failed", context, configuration,
         null, check is null ? new(false, [], [], []) : check.Coverage with { Complete = false }, check?.Preparation, check?.Diagnostics ?? [], null, new(code, message, truncated, candidates));

@@ -13,6 +13,11 @@ public sealed class SourceRunTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
         using var directory = new TemporaryDirectory();
         var source = directory.File("Grüße sample.fpas");
         File.WriteAllText(source, "program Sample; uses System.Console as Console; begin Console.WriteLine(args[0]); end; end program;");
+        var unavailable = await ProjectCliFixture.Cli(directory, "target", source);
+        Assert.Equal(1, unavailable.ExitCode);
+        using (var report = JsonDocument.Parse(unavailable.Output))
+            Assert.Equal("source_project_missing", report.RootElement.GetProperty("error").GetProperty("code").GetString());
+        Assert.Equal(source, Assert.Single(Directory.EnumerateFileSystemEntries(directory.Path)));
         var build = await ProjectCliFixture.Cli(directory, "build", source, "--sdk-version", sdk.Version, "--sdk-feed", sdk.Feed, "--report", "json");
         Assert.True(build.ExitCode == 0, build.Output + build.Error);
         var assembly = directory.File("bin/Debug/net10.0/Grüße sample.dll");
@@ -27,11 +32,32 @@ public sealed class SourceRunTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
         Assert.Equal("source" + Environment.NewLine, json.RootElement.GetProperty("program").GetProperty("output").GetString());
         Assert.Equal(assembly, json.RootElement.GetProperty("target").GetProperty("assembly").GetString());
         Assert.True(File.Exists(assembly));
-        var noBuild = await ProjectCliFixture.Cli(directory, "run", source, "--sdk-version", sdk.Version, "--sdk-feed", sdk.Feed, "--no-build", "--report", "json", "--", "existing");
+        var described = await ProjectCliFixture.Cli(directory, "target", source);
+        Assert.True(described.ExitCode == 0, described.Output + described.Error);
+        using var target = JsonDocument.Parse(described.Output);
+        var identity = target.RootElement.GetProperty("target").GetProperty("outputIdentity").GetString()!;
+        File.AppendAllText(Path.ChangeExtension(assembly, ".runtimeconfig.json"), "\n");
+        var stale = await GuardedRun(identity);
+        Assert.Equal(1, stale.ExitCode);
+        using var rejection = JsonDocument.Parse(stale.Output);
+        var error = rejection.RootElement.GetProperty("error");
+        Assert.Equal("run_output_changed", error.GetProperty("code").GetString());
+        var next = error.GetProperty("nextArguments").EnumerateArray().Select(item => item.GetString()!).ToArray();
+        Assert.Equal(new[] { "target", source, "--configuration", "Debug" }, next);
+        var refreshed = await ProjectCliFixture.Cli(directory, next);
+        Assert.True(refreshed.ExitCode == 0, refreshed.Output + refreshed.Error);
+        using var current = JsonDocument.Parse(refreshed.Output);
+        var refreshedIdentity = current.RootElement.GetProperty("target").GetProperty("outputIdentity").GetString()!;
+        Assert.NotEqual(identity, refreshedIdentity);
+
+        var noBuild = await GuardedRun(refreshedIdentity);
         Assert.Equal(0, noBuild.ExitCode);
         using var existing = JsonDocument.Parse(noBuild.Output);
         Assert.Equal("existing" + Environment.NewLine, existing.RootElement.GetProperty("program").GetProperty("output").GetString());
         Assert.False(existing.RootElement.TryGetProperty("build", out _));
+
+        Task<ProcessResult> GuardedRun(string expected) => ProjectCliFixture.Cli(directory, "run", source,
+            "--no-build", "--expected-output", expected, "--report", "json", "--", "existing");
     }
 
     [Fact]

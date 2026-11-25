@@ -1,18 +1,27 @@
 # Look up declarations and API documentation
 
-`fpas doc` looks up FPAS declarations and public .NET APIs in an explicit project
-or solution context. It uses the evaluated reference assemblies and package
-versions, including APIs the FPAS source has not used yet.
+`fpas doc` looks up public .NET APIs for a standalone source, project or solution.
+Projects and solutions also provide checked FPAS declarations and evaluated
+reference assemblies, including APIs the FPAS source has yet to use.
 
 ```sh
 fpas doc examples/numerics/mandelbrot/Mandelbrot.fpasproj --name EscapeIterations
+fpas doc examples/basics/hello/main.fpas --name System.IO.File.OpenRead --report json
 fpas doc examples/basics/hello/Hello.fpasproj --name System.Console.WriteLine --report json
 fpas doc examples/basics/hello/Hello.fpasproj --name System.Collections.Generic.List --limit 50 --report json
 ```
 
 ## Names and scope
 
-Pass an existing `.fpasproj` or `.slnx`. Names are case-sensitive simple or qualified
+An existing `.fpas` path selects the same .NET 10 reference pack and `Fpas.Core`
+as [single-file check](../program-structure/cli.md#check-one-source-file). The
+lookup reads metadata and XML independently of the program's contents, so it
+also works while the program has errors. `--usage` checks the template against
+those same references. Coverage in this mode describes the searched metadata,
+and the result lists the searched assemblies with an empty `searchedProjects`.
+Narrow broad searches by name or assembly to stay within 1,000 matches.
+
+Names are case-sensitive simple or qualified
 declaration names. `--match exact` is the default; prefix and contains are literal
 alternatives. An exact type/container match also includes its directly declared
 members. Inherited members remain under their declaring types. A method name
@@ -86,7 +95,7 @@ a `P:` ID for properties and indexers, or an `F:` ID for fields.
 
 ```sh
 fpas doc examples/basics/hello/Hello.fpasproj --name System.IO.File.OpenRead
-fpas doc examples/basics/hello/Hello.fpasproj --usage 'M:System.IO.File.OpenRead(System.String)' --report json
+fpas doc examples/basics/hello/main.fpas --usage 'M:System.IO.File.OpenRead(System.String)' --report json
 ```
 
 For this overload the generated unit imports `System.IO as IO`, takes
@@ -125,7 +134,7 @@ the project's references and checks the constraints before verifying the call.
 fpas doc examples/basics/hello/Hello.fpasproj --usage 'M:System.Array.Empty``1' --type-arg int
 ```
 
-Each result belongs to the project and assembly shown on its entry. Use
+Each result identifies the assembly and its owning project when applicable. Use
 `--project` and `--assembly` to narrow a solution lookup. The compiler checks
 the generated unit in isolation against that project's references and verifies
 that the expression binds to the selected method, property accessor or field
@@ -207,6 +216,7 @@ documentation, setup, deadline or limit failures, 2 for invalid arguments and
 - `src/Fpas.Cli/Documentation/`
   - [DocCommand.cs](../../../src/Fpas.Cli/Documentation/DocCommand.cs)
   - [DocReport.cs](../../../src/Fpas.Cli/Documentation/DocReport.cs)
+  - [StandaloneDocumentationTests.cs](../../../tests/Fpas.IntegrationTests/ApiDocumentation/StandaloneDocumentationTests.cs)
 - `src/Fpas.Compiler/Analysis/Usage/`
   - [ApiUsageTemplates.cs](../../../src/Fpas.Compiler/Analysis/Usage/ApiUsageTemplates.cs)
   - [UsageNames.cs](../../../src/Fpas.Compiler/Analysis/Usage/UsageNames.cs)

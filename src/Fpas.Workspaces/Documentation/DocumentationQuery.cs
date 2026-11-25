@@ -1,4 +1,5 @@
 // [Documentation](../../../docs/pascal/tools/api-documentation.md)
+using Fpas.Compiler.Analysis;
 using Fpas.Workspaces.Analysis;
 using Fpas.Workspaces.Loading;
 using Fpas.Workspaces.Queries;
@@ -46,24 +47,71 @@ public sealed class DocumentationQuery
         if (projects.Length == 0) throw new ContextFailure("invalid_argument", "--project must name an analyzed FPAS project in the context.");
         var references = projects.SelectMany(project => project.Request.References).Distinct(Paths).Order(StringComparer.Ordinal).ToArray();
         inputs = new(analysis.Context.SnapshotId, references, token);
-        var xml = new XmlDocumentation(inputs, token);
         using var metadata = new MetadataCatalog();
         var candidates = metadataOnly || search.Usage ? [] : source.Documentation(search, token).ToList();
         var sourceProjects = projects.Select(project => project.Path).ToHashSet(Paths);
         var sourceOutputs = analysis.Context.DependencyOutputs.Where(output => sourceProjects.Contains(output.Project)).Select(output => output.Path).ToHashSet(Paths);
         foreach (var project in projects)
-            foreach (var path in project.Request.References.Distinct(Paths).Where(path => !sourceOutputs.Contains(path)))
+            AddMetadata(metadata, candidates, project.Path, project.Request, sourceOutputs, search, metadataOnly, token);
+        return Page(candidates, search, inputs, Array.AsReadOnly(projects.Select(project => project.Path).ToArray()),
+            Array.AsReadOnly(references), analysis.SemanticCoverage, token);
+    }
+
+    /// <summary>Searches standalone reference assemblies and checks usage against the captured reference set.</summary>
+    /// <param name="references">Absolute paths of the standalone compiler references.</param>
+    /// <param name="search">Metadata name or usage selector, with optional assembly filter and pagination.</param>
+    /// <param name="token">Cancels metadata capture, lookup and compiler verification.</param>
+    /// <returns>A verified page of metadata entries and its input identity.</returns>
+    public static DocumentationResult SearchReferences(IReadOnlyList<string> references, DocumentationSearch search, CancellationToken token = default)
+    {
+        Validate(search);
+        if (search.Project is not null) throw new ContextFailure("invalid_argument", "Use a project or solution context with --project.");
+        var images = new List<MetadataImage>();
+        foreach (var path in references.Distinct(Paths).Order(StringComparer.Ordinal))
+        {
+            token.ThrowIfCancellationRequested();
+            images.Add(new(path, File.ReadAllBytes(path)));
+        }
+        var paths = Array.AsReadOnly(images.Select(image => image.Path).ToArray());
+        var snapshot = WorkspaceContext.HashText(string.Join('\n', images.Select(image => image.Path + "=" + image.ContentHash)) +
+            "\n" + typeof(AnalysisRequest).Assembly.ManifestModule.ModuleVersionId);
+        var inputs = new DocumentationInputs(snapshot, paths, token);
+        var request = new AnalysisRequest([], "StandaloneDocumentation", paths, ReferenceImages: images);
+        using var metadata = new MetadataCatalog();
+        var candidates = new List<DocumentationCandidate>();
+        AddMetadata(metadata, candidates, null, request, new HashSet<string>(Paths), search, capturedOnly: true, token);
+        var result = Page(candidates, search, inputs, [], paths, new(true, []), token);
+        inputs.Verify(token);
+        foreach (var image in images)
+        {
+            token.ThrowIfCancellationRequested();
+            if (!File.Exists(image.Path) || WorkspaceContext.HashFile(image.Path) != image.ContentHash)
+                throw new ContextFailure("inputs_changed", "A reference changed during documentation lookup.", inputPath: image.Path);
+        }
+        return result;
+    }
+
+    private static void AddMetadata(MetadataCatalog metadata, List<DocumentationCandidate> candidates, string? project,
+        AnalysisRequest request, HashSet<string> sourceOutputs, DocumentationSearch search, bool capturedOnly, CancellationToken token)
+    {
+        foreach (var path in request.References.Distinct(Paths).Where(path => !sourceOutputs.Contains(path)))
+        {
+            token.ThrowIfCancellationRequested();
+            var image = capturedOnly || search.Usage ? request.ReferenceImages?.FirstOrDefault(item => Paths.Equals(item.Path, path)) : null;
+            if (capturedOnly && image is null) continue;
+            foreach (var candidate in metadata.Search(project, path, search, token, image, search.Usage ? request : null))
             {
-                token.ThrowIfCancellationRequested();
-                var image = metadataOnly || search.Usage ? project.Request.ReferenceImages?.FirstOrDefault(item => Paths.Equals(item.Path, path)) : null;
-                if (metadataOnly && image is null) continue;
-                foreach (var candidate in metadata.Search(project.Path, path, search, token, image, search.Usage ? project.Request : null))
-                {
-                    if (metadataOnly && candidates.Count == 1000)
-                        throw new ContextFailure("documentation_limit", "Metadata search exceeds 1,000 matches. Narrow the name or project.");
-                    candidates.Add(candidate);
-                }
+                if (capturedOnly && candidates.Count == 1000)
+                    throw new ContextFailure("documentation_limit", "Metadata search exceeds 1,000 matches. Narrow the name or assembly.");
+                candidates.Add(candidate);
             }
+        }
+    }
+
+    private static DocumentationResult Page(List<DocumentationCandidate> candidates, DocumentationSearch search, DocumentationInputs inputs,
+        IReadOnlyList<string> projects, IReadOnlyList<string> references, WorkspaceSemanticCoverage coverage, CancellationToken token)
+    {
+        var xml = new XmlDocumentation(inputs, token);
         var ordered = candidates.OrderBy(item => item.Project, StringComparer.Ordinal).ThenBy(item => item.Origin == "source" ? 0 : 1)
             .ThenBy(item => item.QualifiedName, StringComparer.Ordinal).ThenBy(item => item.SortKey, StringComparer.Ordinal).ToArray();
         var page = new List<DocumentationEntry>(); var remaining = 65_536; var omitted = 0;
@@ -81,9 +129,9 @@ public sealed class DocumentationQuery
             page.Add(entry with { Documentation = docs });
         }
         var next = (long)search.Offset + page.Count;
-        return new(ordered.Length == 0 && analysis.IsComplete ? "not_found" : "ok", inputs.SnapshotId, page.AsReadOnly(), ordered.Length, search.Offset,
-            next < ordered.Length ? (int)next : null, page.Count < ordered.Length || omitted != 0, omitted,
-            Array.AsReadOnly(projects.Select(project => project.Path).ToArray()), Array.AsReadOnly(references), analysis.SemanticCoverage);
+        return new(ordered.Length == 0 && coverage.Complete ? "not_found" : "ok", inputs.SnapshotId, page.AsReadOnly(), ordered.Length,
+            search.Offset, next < ordered.Length ? (int)next : null, page.Count < ordered.Length || omitted != 0, omitted,
+            projects, references, coverage);
     }
     /// <summary>Rechecks XML contents and absence captured by the latest search.</summary>
     /// <param name="token">Cancels documentation hashing.</param>

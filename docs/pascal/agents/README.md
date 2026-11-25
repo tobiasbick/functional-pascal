@@ -31,9 +31,9 @@ end;
 end program;
 ```
 
-Save as UTF-8 `AgentStart.fpas` and run `fpas run AgentStart.fpas`. Use the same
-command for one-off repository helpers under `.temp-data/`. See [CLI](cli.md)
-for project inputs and options.
+Save as UTF-8 `AgentStart.fpas`. Use `fpas check AgentStart.fpas` and
+`fpas run AgentStart.fpas`. Keep one-off repository helpers under `.temp-data/`.
+See [CLI](cli.md) for project inputs and options.
 
 ## Rules before writing
 

@@ -75,12 +75,13 @@ preserves prior compiler outputs.
 ## Run
 
 ```sh
+fpas run examples/basics/hello/main.fpas --report json
 fpas run examples/basics/hello/Hello.fpasproj --no-build -- first --second
 fpas run Demo/Demo.slnx --project Hello/Hello.fpasproj --configuration Release
 fpas run Hello/bin/Debug/net10.0/Hello.dll -- argument
 ```
 
-Run accepts the same source/project/solution inputs, plus existing managed DLLs
+Run also accepts `-` for source on stdin and existing managed DLLs
 with adjacent runtimeconfig.json files. A DLL is launched directly. An explicit
 project must be executable. For a solution, exactly one executable among its
 included build projects is selected automatically; ambiguity reports candidate
@@ -89,10 +90,11 @@ honors solution configuration/platform mappings. An outside or excluded project
 cannot be selected. Selection is resolved before building; the selected solution
 is then built with its ordinary dependency graph.
 
-By default run restores/builds before launching. A failed build never falls back
+By default project-based runs restore and build before launching. A failed build never falls back
 to an older executable. `--no-restore` only skips restore; `--no-build` explicitly
 runs existing project output and implies no restore. Standalone sources reuse
-their generated project's output with `--no-build`; they cannot use `--project`.
+their generated project's output with `--no-build`. Its stored SDK settings apply
+when both source-only SDK options are omitted. Use `--project` for solutions.
 DLL inputs do not accept project/
 restore/build selection flags.
 
@@ -107,6 +109,9 @@ standard streams. JSON mode closes program stdin and captures stdout and stderr
 as UTF-8 text under a shared 1 MiB limit. In either mode, `--stdin FILE` sends at
 most 1 MiB of file bytes followed by EOF. Resolve relative input paths against
 `--cwd` or the caller's directory when omitted.
+Use `--stdin -` to send bytes directly from redirected CLI stdin. FPAS reads up
+to 1 MiB through EOF before launching the program. Input over the limit returns
+`invalid_argument` before launch. The deadline includes reading the input.
 Only the JSON document goes to protocol stdout. Programs own their
 stream encoding. Select UTF-8 explicitly when reading UTF-8 pipes through .NET
 Console APIs. An exceeded output limit is explicit. Each run terminates and
@@ -117,6 +122,32 @@ another process group or session are outside this ownership boundary.
 The JSON deadline defaults to 120 seconds. Text mode runs without a deadline by
 default. `--timeout` accepts 0..3600 seconds for the entire operation. Zero
 disables the deadline.
+
+### Run source from stdin
+
+```sh
+echo 'program Probe; begin end; end program;' | fpas run - --report json
+fpas run - --stdin input.txt --report json < helper.fpas
+```
+
+`run -` compiles one complete UTF-8 program of up to 4 MiB with the same
+.NET 10 references as [single-file check](cli.md#check-one-source-file).
+It compiles directly, without MSBuild or restore, and uses an isolated temporary
+directory for managed output. In a Git checkout the directory is under
+`.temp-data/` when writable. Otherwise FPAS uses the system temporary directory.
+FPAS removes its temporary files after execution.
+
+The command reads source through EOF. The program receives EOF by default, or
+bytes from the file selected by `--stdin FILE`. Program arguments after `--` and
+the working directory selected by `--cwd` are handled as for file-based runs.
+Use a source file or project to select project options, reuse a built output,
+or save a debugger failure report.
+
+In JSON, the context and diagnostic source path are `<stdin>`. Compiler
+diagnostics are in `build.diagnostics` with `build.diagnosticsTruncated` set
+when their byte budget is exceeded. The program result is in `program`
+after a successful compilation. The temporary assembly has no reusable `target`
+entry. The deadline covers input reading, compilation and execution.
 
 ### Save the original failure
 
@@ -212,12 +243,19 @@ mapped configuration. Use `--project` for an ambiguous solution and
 included candidates. The evaluation deadline defaults to 30 seconds and can
 be changed with `--timeout`.
 
+`fpas target helper.fpas` evaluates the generated project from an earlier
+`build` or `run`, using its existing SDK settings. If that project is absent,
+the command reports `source_project_missing` without generating it.
+
 When the selected executable already has an assembly and runtime configuration,
 `target.outputIdentity` identifies the contents of the DLL, `.pdb`, `.deps.json`
 and `.runtimeconfig.json`. The fingerprint records which companion files exist.
 Pass it to `run --no-build --expected-output ID` with the same context,
 configuration and executable project. A changed or missing output returns
-`run_output_changed` before launch. This checks the selected output files.
+`run_output_changed` before launch. The JSON error includes `nextArguments`
+for a separate `fpas target` invocation when the output changed, or `fpas build`
+when the output is missing. Pass the array as individual arguments to `fpas`.
+This checks the selected output files.
 Source freshness and the contents of separately loaded dependencies require
 their own checks.
 
@@ -274,6 +312,8 @@ Native Windows console, pipe and job behavior is covered by the
 
 - `src/Fpas.Cli/Projects/`
   - [ExecutionCommand.cs](../../../src/Fpas.Cli/Projects/ExecutionCommand.cs)
+  - [PipedProgram.cs](../../../src/Fpas.Cli/Compilation/PipedProgram.cs)
+  - [BoundedInput.cs](../../../src/Fpas.Cli/Analysis/BoundedInput.cs)
   - [InitCommand.cs](../../../src/Fpas.Cli/Projects/InitCommand.cs)
   - [MaintenanceCommand.cs](../../../src/Fpas.Cli/Projects/MaintenanceCommand.cs)
   - [ProjectFiles.cs](../../../src/Fpas.Cli/Projects/ProjectFiles.cs)

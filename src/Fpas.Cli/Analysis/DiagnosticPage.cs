@@ -1,4 +1,5 @@
 // [Documentation](../../../docs/pascal/tools/diagnostics.md#filter-and-page-analysis-reports)
+using Fpas.Cli.Compilation;
 using Fpas.Compiler;
 using System.CommandLine;
 using System.Text.Json;
@@ -24,7 +25,8 @@ internal sealed class DiagnosticPageOptions
         parse.GetResult(limit) is { Implicit: false } || parse.GetResult(offset) is { Implicit: false };
 
     internal DiagnosticSelection Read(ParseResult parse)
-        => new(FullPath(parse.GetValue(file)), FullPath(parse.GetValue(project)), parse.GetValue(limit), parse.GetValue(offset));
+        => new(parse.GetValue(file) is PipedSource.Path ? PipedSource.Path : FullPath(parse.GetValue(file)),
+            FullPath(parse.GetValue(project)), parse.GetValue(limit), parse.GetValue(offset));
 
     private static string? FullPath(string? path) => path is null ? null : Path.GetFullPath(path);
 }

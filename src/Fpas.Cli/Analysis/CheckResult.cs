@@ -1,5 +1,7 @@
 // [Documentation](../../../docs/pascal/program-structure/cli.md#check-a-project-or-solution)
 using Fpas.Compiler;
+using Fpas.Compiler.Analysis;
+using Fpas.Cli.Compilation;
 using Fpas.Cli.Diagnostics;
 using Fpas.Workspaces.Analysis;
 using Fpas.Workspaces.Loading;
@@ -10,11 +12,11 @@ namespace Fpas.Cli.Analysis;
 
 internal sealed record AnalysisDiagnostic : CompilerDiagnostic
 {
-    /// <summary>Gets the project that produced the diagnostic.</summary>
-    public string Project { get; }
+    /// <summary>Gets the owning project, or null for standalone source analysis.</summary>
+    public string? Project { get; }
     /// <summary>Gets whether the diagnostic was summarized to fit the output budget.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public bool DetailsOmitted { get; init; }
-    internal AnalysisDiagnostic(string project, CompilerDiagnostic diagnostic) : base(diagnostic) => Project = project;
+    internal AnalysisDiagnostic(string? project, CompilerDiagnostic diagnostic) : base(diagnostic) => Project = project;
 }
 internal sealed record AnalysisError(string Code, string Message, bool OutputTruncated = false, IReadOnlyList<string>? Candidates = null,
     string? Project = null, string? InputPath = null, string? NextAction = null)
@@ -47,13 +49,8 @@ internal sealed record CheckResult(bool Success, string Status, string? Context,
         var context = analysis.Context;
         var projects = analysis.Projects.Select(project => new CheckedProject(project.Project, project.Configuration, project.State,
             project.Result?.Diagnostics.Count ?? 0)).ToArray();
-        var diagnostics = analysis.Projects.SelectMany(project => (project.Result?.Diagnostics ?? [])
-            .Select(diagnostic => new AnalysisDiagnostic(project.Project, diagnostic)))
-            .OrderBy(diagnostic => diagnostic.Project, StringComparer.Ordinal)
-            .ThenBy(diagnostic => diagnostic.Location?.Path ?? diagnostic.InputPath, StringComparer.Ordinal)
-            .ThenBy(diagnostic => diagnostic.Location?.Offset)
-            .ThenBy(diagnostic => diagnostic.Code, StringComparer.Ordinal)
-            .ThenBy(diagnostic => diagnostic.Message, StringComparer.Ordinal).ToArray();
+        var diagnostics = OrderDiagnostics(analysis.Projects.SelectMany(project => (project.Result?.Diagnostics ?? [])
+            .Select(diagnostic => new AnalysisDiagnostic(project.Project, diagnostic))));
         return new(analysis.Success, analysis.Success ? "ok" : "failed", context.Path, context.Configuration,
             context.SnapshotId, projects, diagnostics,
             new(analysis.IsComplete, context.RequestedProjects, projects.Where(project => project.State != "blocked").Select(project => project.Project).ToArray(),
@@ -62,6 +59,20 @@ internal sealed record CheckResult(bool Success, string Status, string? Context,
             analysis.Success ? null : new(context.Issues.Count != 0 ? "context_failed" : "analysis_failed", "The selected context could not be checked successfully."))
             { Sources = context.Projects.SelectMany(project => project.Request.Sources).Distinct().ToArray() };
     }
+
+    internal static CheckResult FromSource(CompilationSource source, string configuration, AnalysisResult analysis)
+        => new(analysis.Success, analysis.Success ? "ok" : "failed", source.Path, configuration, analysis.Snapshot?.Id,
+            [], OrderDiagnostics(analysis.Diagnostics.Select(diagnostic => new AnalysisDiagnostic(null, diagnostic))),
+            new(analysis.IsComplete, [], [], []), null,
+            analysis.Success ? null : new("analysis_failed", "The source file could not be checked successfully."))
+            { Sources = [source] };
+
+    private static AnalysisDiagnostic[] OrderDiagnostics(IEnumerable<AnalysisDiagnostic> diagnostics)
+        => diagnostics.OrderBy(diagnostic => diagnostic.Project, StringComparer.Ordinal)
+            .ThenBy(diagnostic => diagnostic.Location?.Path ?? diagnostic.InputPath, StringComparer.Ordinal)
+            .ThenBy(diagnostic => diagnostic.Location?.Offset)
+            .ThenBy(diagnostic => diagnostic.Code, StringComparer.Ordinal)
+            .ThenBy(diagnostic => diagnostic.Message, StringComparer.Ordinal).ToArray();
 
     internal static CheckResult Failure(string? context, string configuration, string code, string message, bool truncated = false, IReadOnlyList<string>? candidates = null)
         => new(false, code == "cancelled" ? "cancelled" : "failed", context, configuration, null, [], [], new(false, [], [], []), null, new(code, message, truncated, candidates));
@@ -88,7 +99,9 @@ internal sealed record CheckResult(bool Success, string Status, string? Context,
         foreach (var issue in Preparation?.Issues ?? []) Console.Error.WriteLine($"{issue.Project}: {issue.Code}: {issue.Message}");
         if (Error is not null) Console.Error.WriteLine(Error.Code + ": " + Error.Message);
         Fixes?.Write();
-        Console.Error.WriteLine($"Checked {Coverage.Analyzed.Count}/{Coverage.Requested.Count} FPAS projects; {Coverage.Blocked.Count} blocked. {(Success ? "Success." : "Failed.")}");
+        var summary = Context == PipedSource.Path || Context?.EndsWith(".fpas", StringComparison.OrdinalIgnoreCase) == true ? "Standalone source check." :
+            $"Checked {Coverage.Analyzed.Count}/{Coverage.Requested.Count} FPAS projects; {Coverage.Blocked.Count} blocked.";
+        Console.Error.WriteLine($"{summary} {(Success ? "Success." : "Failed.")}");
         return true;
     }
 }

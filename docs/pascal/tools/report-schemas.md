@@ -21,7 +21,7 @@ fpas schema query-batch-input
 | `workspace` | Evaluated project inventory, project references and source impact |
 | `project` | Init, build, run, target, publish, clean and restore |
 | `compile` | Standalone compiler diagnostics |
-| `check` | Evaluated project/solution checking, corrections and draft analysis |
+| `check` | Standalone source checking, evaluated project/solution checking, corrections and draft analysis |
 | `lint` | Semantic lint findings and source-analysis failures |
 | `lint-baseline` | Existing errors covered by an explicitly selected lint baseline |
 | `check-overlay-input` | New and replacement source texts supplied to `check`, `query batch` or `refactor draft` with `--overlay` |
@@ -100,6 +100,11 @@ An issue includes `inputProject` when the input belongs to another project.
 A failed snapshot precondition includes `expectedSnapshotId` and
 `actualSnapshotId`.
 Display the accompanying message to explain the particular failure.
+
+For `run_output_changed`, the project report's `error.nextArguments` contains
+the argument array for a separate FPAS invocation. The first element is the
+subcommand. A `target` follow-up refreshes the identity of an existing output.
+A `build` follow-up prepares a missing output before identity lookup.
 
 | Action | Follow-up |
 | --- | --- |

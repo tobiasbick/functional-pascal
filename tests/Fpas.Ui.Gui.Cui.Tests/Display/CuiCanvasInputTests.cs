@@ -74,6 +74,86 @@ public sealed class CuiCanvasInputTests
         }
     }
 
+    /// <summary>Changes canvas focus between inputs in the same native pump and keeps a later Tab move.</summary>
+    [X11GuiFact]
+    public void PlatformPressRetargetsFollowingText()
+    {
+        const string title = "Canvas pointer order";
+        using var window = new CuiWindow(title, 400, 240, CuiRenderer.Software, continuous: true);
+        var events = new List<(string Id, string Text)>();
+        Frame(request: true);
+        using var input = new X11Input(title);
+        input.Move(20, 60);
+        Frame();
+        SendKey("a");
+        input.Button(true);
+        input.Button(false);
+        SendKey("b");
+        SendKey("Tab");
+        SendKey("c");
+        input.Focus(); // Round trip to the X server after queuing the complete batch.
+        Frame();
+        SendKey("d");
+        input.Focus();
+        Frame();
+        Assert.Equal(new[] { ("first", "a"), ("second", "b"), ("first", "c"), ("first", "d") }, events);
+
+        void SendKey(string symbol)
+        {
+            input.Key(symbol, true);
+            input.Key(symbol, false);
+        }
+
+        void Frame(bool request = false)
+        {
+            Assert.True(window.NextFrame());
+            window.BeginColumn(0, 0);
+            Canvas("first", request);
+            Canvas("second", false);
+            window.EndColumn();
+            window.Present();
+        }
+
+        void Canvas(string id, bool request) =>
+            window.DrawingCanvas(id, 1, 0, 2, 40, [], true, out _, out _, out _, out _, false, out _, out _,
+                focus: request, onInput: item =>
+                {
+                    // X11 can report a tab character as text in addition to the key transition.
+                    if (item.Kind == CuiCanvasInputKind.Text && item.Text != "\t") events.Add((id, item.Text));
+                });
+    }
+
+    /// <summary>Only text before a press that clears focus reaches the previously focused canvas.</summary>
+    [GuiFact]
+    public void PressOnNonfocusableCanvasDropsFollowingText()
+    {
+        using var window = new CuiWindow("Canvas focus loss", 400, 240, CuiRenderer.Software, continuous: true);
+        var text = new List<string>();
+        Assert.True(window.NextFrame());
+        Draw(request: true);
+        Assert.True(window.NextFrame());
+        window.MovePointer(20, 60);
+        window.InputText("before");
+        window.SetLeftButton(true);
+        window.SetLeftButton(false);
+        window.InputText("after");
+        Draw(request: false);
+        Assert.Equal("before", Assert.Single(text));
+
+        void Draw(bool request)
+        {
+            window.BeginColumn(0, 0);
+            window.DrawingCanvas("input", 1, 0, 2, 40, [], true, out _, out _, out _, out _, false, out _, out _,
+                focus: request, onInput: item =>
+                {
+                    if (item.Kind == CuiCanvasInputKind.Text) text.Add(item.Text);
+                });
+            window.DrawingCanvas("decorative", 1, 0, 2, 40, [], true, out _, out _, out _, out _, false, out _, out _);
+            window.EndColumn();
+            window.Present();
+        }
+    }
+
     /// <summary>Opt-in activation handles Enter, while discarded component input has no effect.</summary>
     [GuiFact]
     public void ActivatesFocusableCanvasAndDropsDiscardedInput()

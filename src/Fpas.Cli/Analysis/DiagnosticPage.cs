@@ -31,6 +31,7 @@ internal sealed class DiagnosticPageOptions
 
 internal sealed record DiagnosticPage(string? File, string? Project, int TotalCount, int MatchedCount, int Offset, int ReturnedCount, int? NextOffset)
 {
+    /// <summary>Gets the number of returned diagnostics whose details exceeded the byte budget.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int SummarizedCount { get; init; }
 }

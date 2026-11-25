@@ -113,8 +113,9 @@ public type State = record
   public Error: string? := null;
   // Sort for the station grid. Column -1 preserves directory ranking.
   public Order: Tables.Sort := new Tables.Sort(-1);
-  // Table cursor and range anchor within the current result.
+  // Keyboard cursor within the current result, or -1 when unset.
   public Cursor: int := -1;
+  // Start of the selected row range, or -1 when unset.
   public Anchor: int := -1;
 end record;
 

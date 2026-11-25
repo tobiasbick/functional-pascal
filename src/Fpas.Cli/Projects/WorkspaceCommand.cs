@@ -87,8 +87,11 @@ internal sealed class WorkspaceCommand
 
 internal sealed record WorkspaceReport(string Status, string? Context, string Configuration, IReadOnlyList<WorkspaceProject> Projects, AnalysisError? Error)
 {
+    /// <summary>Gets the version of the workspace report layout.</summary>
     public int SchemaVersion { get; init; } = 1;
+    /// <summary>Gets the absolute source path used to filter project ownership, when selected.</summary>
     public string? File { get; init; }
+    /// <summary>Gets the impact summary when the command evaluates affected sources.</summary>
     public WorkspaceImpact? Impact { get; init; }
 
     internal int Write(int exit)

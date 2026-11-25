@@ -228,6 +228,14 @@ resulting process group. A descendant that moves to a different group leaves
 that boundary. For bounded text capture, use the
 [workflow adapter](workflows.md#capturing-a-child-process).
 
+## Reading files for tool input
+
+`Fpas.Processes.RegularFile.OpenRead` opens a read-only stream and verifies
+the type of the opened file on Linux and Windows. A symbolic link to a regular
+file is allowed. On Linux the initial open uses nonblocking mode, so inputs
+such as a pipe can be rejected without waiting for a producer. Callers own the
+stream and set the byte limit and cancellation policy for their operation.
+
 ## See also
 
 - [Library guides](README.md)
@@ -238,16 +246,18 @@ that boundary. For bounded text capture, use the
 ## Source files
 
 <details>
-<summary>Browse 13 source files</summary>
+<summary>Browse 15 source files</summary>
 
 - `src/Fpas.Processes/`
   - [Fpas.Processes.csproj](../../../src/Fpas.Processes/Fpas.Processes.csproj)
   - [OwnedProcess.cs](../../../src/Fpas.Processes/OwnedProcess.cs)
+  - [RegularFile.cs](../../../src/Fpas.Processes/RegularFile.cs)
   - [WindowsProcess.cs](../../../src/Fpas.Processes/WindowsProcess.cs)
 - `tests/Fpas.IntegrationTests/Processes/`
   - [BuildProcessTests.cs](../../../tests/Fpas.IntegrationTests/Processes/BuildProcessTests.cs)
   - [OwnedProcessTests.cs](../../../tests/Fpas.IntegrationTests/Processes/OwnedProcessTests.cs)
   - [PseudoTerminalTests.cs](../../../tests/Fpas.IntegrationTests/Processes/PseudoTerminalTests.cs)
+  - [RegularFileTests.cs](../../../tests/Fpas.IntegrationTests/Processes/RegularFileTests.cs)
 - `tests/Fpas.IntegrationTests/Processes/Support/`
   - [BlockedEvaluation.cs](../../../tests/Fpas.IntegrationTests/Processes/Support/BlockedEvaluation.cs)
   - [InterruptibleProcess.cs](../../../tests/Fpas.IntegrationTests/Processes/Support/InterruptibleProcess.cs)

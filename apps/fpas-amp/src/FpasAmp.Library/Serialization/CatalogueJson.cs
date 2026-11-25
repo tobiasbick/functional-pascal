@@ -8,38 +8,54 @@ using Fpas.Media.Tags;
 
 namespace FpasAmp.Library.Serialization;
 
-// Supplies generated JSON metadata for the values stored by the catalogue.
+/// <summary>Serializes catalogue values with generated JSON metadata.</summary>
 public static class CatalogueJson
 {
-    // Reads cached track metadata from the supplied JSON.
+    /// <summary>Reads cached track metadata.</summary>
+    /// <param name="json">The stored JSON representation.</param>
+    /// <returns>The track metadata, or null for a JSON null.</returns>
     public static AudioFiles.Info? ReadTrack(string json) =>
         JsonSerializer.Deserialize(json, CatalogueJsonContext.Default.Track);
 
-    // Writes the supplied track in the existing catalogue format.
+    /// <summary>Writes track metadata for the catalogue.</summary>
+    /// <param name="track">The track metadata to store.</param>
+    /// <returns>The track's serialized JSON.</returns>
     public static string WriteTrack(AudioFiles.Info track) =>
         JsonSerializer.Serialize(track, CatalogueJsonContext.Default.Track);
 
-    // Reads a cached cover from the supplied JSON.
+    /// <summary>Reads a cached cover, including a cached miss.</summary>
+    /// <param name="json">The stored JSON representation.</param>
+    /// <returns>The cover, or null for a cached miss.</returns>
     public static Pictures.Cover? ReadCover(string json) =>
         JsonSerializer.Deserialize(json, CatalogueJsonContext.Default.Cover);
 
-    // Writes the supplied cover or a JSON null for a cached miss.
+    /// <summary>Writes a cached cover, including a cached miss.</summary>
+    /// <param name="cover">The cover to store, or null for a cached miss.</param>
+    /// <returns>The cover's serialized JSON or a JSON null.</returns>
     public static string WriteCover(Pictures.Cover? cover) =>
         JsonSerializer.Serialize(cover, (JsonTypeInfo)CatalogueJsonContext.Default.Cover);
 
-    // Reads string arrays stored in or returned by the database.
+    /// <summary>Reads a string array returned by the database.</summary>
+    /// <param name="json">The stored or queried JSON representation.</param>
+    /// <returns>The strings in order, or null for a JSON null.</returns>
     public static string[]? ReadNames(string json) =>
         JsonSerializer.Deserialize(json, CatalogueJsonContext.Default.Names);
 
-    // Writes the supplied strings for catalogue keys and lookups.
+    /// <summary>Writes ordered strings for catalogue keys and lookups.</summary>
+    /// <param name="names">The strings to store.</param>
+    /// <returns>The serialized JSON array.</returns>
     public static string WriteNames(string[] names) =>
         JsonSerializer.Serialize(names, CatalogueJsonContext.Default.Names);
 
-    // Reads saved tag overrides from JSON, including null values for removed tags.
+    /// <summary>Reads saved tag overrides and explicit tag removals.</summary>
+    /// <param name="json">The stored JSON representation.</param>
+    /// <returns>The overrides, with null values marking removed tags, or null for a JSON null.</returns>
     public static ImmutableDictionary<string, string?>? ReadTagOverrides(string json) =>
         JsonSerializer.Deserialize(json, CatalogueJsonContext.Default.TagOverrides);
 
-    // Writes the supplied tag overrides, including explicit removals.
+    /// <summary>Writes tag overrides and explicit tag removals.</summary>
+    /// <param name="overrides">The overrides, with null values marking removed tags.</param>
+    /// <returns>The overrides' serialized JSON.</returns>
     public static string WriteTagOverrides(ImmutableDictionary<string, string?> overrides) =>
         JsonSerializer.Serialize(overrides, CatalogueJsonContext.Default.TagOverrides);
 }

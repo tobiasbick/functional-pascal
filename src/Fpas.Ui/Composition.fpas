@@ -48,7 +48,9 @@ uses
   System.Collections.Generic as Lists;
 
 type MappedCache<TChild, TParent> = record
+  // Child cache entry retained between mapped renders.
   public Source: E.CacheEntry<TChild>;
+  // Translator used to build the cached parent view.
   public Messages: function(TChild): TParent;
 end record;
 
@@ -257,6 +259,32 @@ begin
       _,
       _
     ), E.Element.Countdown(_, _, _), E.Element.Checklist(
+      _,
+      _,
+      _,
+      _,
+      _
+    ), E.Element.Alert(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.ProgressBar(
+      _,
+      _,
+      _
+    ), E.Element.Spinner(_, _, _), E.Element.Skeleton(
+      _,
+      _,
+      _
+    ), E.Element.TimelineItem(_, _, _), E.Element.ProgressRing(
+      _,
+      _,
+      _,
+      _
+    ), E.Element.LevelMeter(
+      _, _, _, _
+    ), E.Element.Meter(
       _,
       _,
       _,
@@ -1501,33 +1529,7 @@ begin
       FId,
       function(A0: T.Viewport): E.Element<TParent> => Map<TChild, TParent>(FBuild(A0), Messages)
     );
-    when E.Element.Alert(
-      _,
-      _,
-      _,
-      _
-    ), E.Element.ProgressBar(
-      _,
-      _,
-      _
-    ), E.Element.Spinner(_, _, _), E.Element.Skeleton(
-      _,
-      _,
-      _
-    ), E.Element.TimelineItem(_, _, _), E.Element.ProgressRing(
-      _,
-      _,
-      _,
-      _
-    ), E.Element.LevelMeter(
-      _, _, _, _
-    ), E.Element.Meter(
-      _,
-      _,
-      _,
-      _,
-      _
-    ), E.Element.ExpandableText(
+    when E.Element.ExpandableText(
       _,
       _,
       _,

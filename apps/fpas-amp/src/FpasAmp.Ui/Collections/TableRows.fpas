@@ -4,7 +4,14 @@ unit FpasAmp.Ui.Collections.TableRows;
 
 uses System as Sys, System.Collections.Generic as C, System.Linq as Linq;
 
-// Returns Items ordered by Compare, preserving input order for equal rows.
+// Sorts rows while retaining input order for equal keys.
+// ## Type parameters
+// - `T`: The row type.
+// ## Parameters
+// - `Items`: Rows in their original order.
+// - `Compare`: Compares two rows in the requested order.
+// ## Returns
+// A new array containing the sorted rows.
 public function Sorted<T>(Items: array of T; Compare: Sys.Comparison<T>): array of T;
 begin
   return Linq.Enumerable.ToArray<T>(
@@ -16,8 +23,16 @@ begin
   );
 end function;
 
-// Returns the position in After of the row at Index in Before, using its stable Key.
-// Returns -1 when that row is absent or the original index was invalid.
+// Relocates a highlighted row after filtering or sorting.
+// ## Type parameters
+// - `T`: The row type.
+// ## Parameters
+// - `Before`: Rows before the change.
+// - `Index`: The previously highlighted index, or -1 when unset.
+// - `After`: Rows after the change.
+// - `Key`: Returns the row's stable identity.
+// ## Returns
+// The matching row index in After, or -1 if the original selection is unavailable.
 public function Position<T>(Before: array of T; Index: int; After: array of T; Key: function(T): string): int;
 begin
   if Index < 0 or Index >= Before.Length then

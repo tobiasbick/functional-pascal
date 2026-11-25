@@ -67,9 +67,11 @@ move by grapheme, Home and End move to either end, and Enter submits the model
 value. Click to place the caret. Tab moves on.
 
 Sheets dock to any edge. Dialogs center a content-sized panel in the terminal.
-Both dim the background, keep focus inside and scroll a long body. Escape or
-a backdrop click proposes dismissal. A persistent dialog stays open until an
-action closes it. Closing the overlay restores available focus.
+Both dim the background, keep focus inside and scroll a long body. Escape
+first lets the focused editor cancel its draft, then proposes overlay dismissal
+if the key remains available. A backdrop click also proposes dismissal.
+A persistent dialog stays open until an action closes it. Closing the overlay
+restores available focus.
 
 The [file picker](files/file-picker.md) uses the same modal routing. Its
 directory, row selection and filename are local to each opening. The model
@@ -152,6 +154,7 @@ terminal widgets and their behavior.
   - [ControlReplies.fpas](../../../src/Fpas.Ui.Tui/Internal/Hosting/ControlReplies.fpas)
   - [GridNotifications.fpas](../../../src/Fpas.Ui.Tui/Internal/Hosting/GridNotifications.fpas)
   - [Interaction.fpas](../../../src/Fpas.Ui.Tui/Internal/Hosting/Interaction.fpas)
+  - [KeyRouting.fpas](../../../src/Fpas.Ui.Tui/Internal/Hosting/KeyRouting.fpas)
   - [InputDispatch.fpas](../../../src/Fpas.Ui.Tui/Internal/Hosting/InputDispatch.fpas)
   - [Session.fpas](../../../src/Fpas.Ui.Tui/Internal/Hosting/Session.fpas)
 - `src/Fpas.Ui.Tui/Internal/Layout/`

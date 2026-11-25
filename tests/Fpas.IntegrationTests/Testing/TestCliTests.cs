@@ -8,6 +8,8 @@ namespace Fpas.IntegrationTests.Testing;
 
 public sealed class TestCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPackageFixture>
 {
+    /// <summary>Checks native framework data and reruns a failing method by its verified output identity.</summary>
+    /// <param name="framework">Native .NET test framework used by the fixture.</param>
     [Theory]
     [InlineData("xunit")]
     [InlineData("mstest")]
@@ -40,6 +42,9 @@ public sealed class TestCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPacka
         var failedIndex = rerun.GetProperty("caseIndex").GetInt32();
         var failedMethod = native.GetProperty("tests")[failedIndex].GetProperty("fullyQualifiedName").GetString();
         var args = rerun.GetProperty("arguments").EnumerateArray().Select(item => item.GetString()!).ToArray();
+        var identityIndex = Array.IndexOf(args, "--expected-output") + 1;
+        Assert.True(identityIndex > 0);
+        args[identityIndex] = args[identityIndex].ToLowerInvariant();
         var repeated = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), .. args],
             workingDirectory: directory.Path, environment: new Dictionary<string, string?> { ["FPAS_TEST_EVENTS"] = events }, timeLimit: TimeSpan.FromMinutes(2));
         Assert.True(repeated.ExitCode == 1, repeated.Output + repeated.Error);
@@ -48,7 +53,14 @@ public sealed class TestCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPacka
         var repeatedCases = repeatedProject.GetProperty("result").GetProperty("tests").EnumerateArray().ToArray();
         Assert.NotEmpty(repeatedCases);
         Assert.All(repeatedCases, test => Assert.Equal(failedMethod, test.GetProperty("fullyQualifiedName").GetString()));
-
+        if (framework == "xunit")
+        {
+            args[identityIndex] = "invalid";
+            var invalid = await ProjectCliFixture.Cli(directory, args);
+            Assert.Equal(2, invalid.ExitCode);
+            using var invalidReport = JsonDocument.Parse(invalid.Output);
+            Assert.Equal("invalid_argument", invalidReport.RootElement.GetProperty("error").GetProperty("code").GetString());
+        }
     }
 
     [Theory]

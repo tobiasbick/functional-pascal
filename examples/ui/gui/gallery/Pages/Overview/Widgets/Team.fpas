@@ -10,9 +10,13 @@ uses
   System as Sys, System.Collections.Generic as Lists;
 
 type Person = record
+  // Display name for the team row and avatar initials.
   public Name: string;
+  // Contact caption in the team row.
   public Email: string;
+  // Team permission displayed as a badge.
   public Role: string;
+  // Avatar presence indicator, or empty for no explicit status.
   public Status: string := '';
 end record;
 

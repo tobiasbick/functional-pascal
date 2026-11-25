@@ -5,7 +5,9 @@ unit Fpas.Media.Tags.Playlists;
 
 uses ATL as Audio, ATL.Playlist as A, System as Sys, System.IO as IO, System.Text as Text, System.Threading as T, System.Collections.Generic as C;
 
-// Checks a dot-prefixed `Extension` against the supported playlist readers.
+// Checks an extension against the supported playlist readers.
+// ## Parameters
+// - `Extension`: The filename extension including its leading dot.
 // ## Returns
 // True for a supported extension, ignoring case.
 public function IsExtension(Extension: string): bool;
@@ -34,7 +36,9 @@ begin
   return false;
 end function;
 
-// Tests `Path` without opening or parsing the file.
+// Identifies a playlist by its extension without opening the file.
+// ## Parameters
+// - `Path`: Local filename or path to classify.
 // ## Returns
 // True when the path has a supported playlist extension.
 public function IsPlaylist(Path: string): bool;

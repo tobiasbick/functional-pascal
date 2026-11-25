@@ -13,8 +13,9 @@ fpas run examples/io/http-effect/HttpEffect.fpasproj -- https://example.com/
 ```
 
 The program prints the text from a successful response. A rejected response
-prints its numeric status and exits with code 1. The SDK test uses a local
-HTTP server for both cases and checks the request deadline.
+prints its numeric status and exits with code 1. Invalid or missing absolute
+HTTP and HTTPS URLs produce a usage message and exit code 2. The SDK test
+uses a local HTTP server and checks the request deadline.
 
 ## Source files
 

@@ -9,7 +9,7 @@ uses
 
 function Shows(Current: M.State; Subscriptions: array of M.Show): array of M.Show;
 begin
-  const ByGenre: bool := Current.Searched and Current.Genre <> '';
+  const ByGenre: bool := Current.Searched() and Current.Genre <> '';
   const BySubscription: bool := Current.Subscription <> M.SubscriptionFilter.All;
   if not ByGenre and not BySubscription then
     return Current.Results;
@@ -36,8 +36,12 @@ begin
   return Matches.ToArray();
 end function;
 
-// Applies Current's filters and sort order and retains the focused show.
-// Subscriptions supplies the saved feeds for the local subscription filter.
+// Applies the directory filters and sort order.
+// ## Parameters
+// - `Current`: State supplying Apple results, active filters, sort and focus.
+// - `Subscriptions`: Saved feeds used by the local subscription filter.
+// ## Returns
+// The state with matching results and the retained focused row, when available.
 public function SelectResults(Current: M.State; Subscriptions: array of M.Show): M.State;
   function Compare(Left: M.Show; Right: M.Show): int;
   begin
@@ -79,7 +83,11 @@ begin
   end case;
 end function;
 
-// Returns the publication years of Episodes, newest first and undated last.
+// Finds the distinct publication year choices for a feed.
+// ## Parameters
+// - `Episodes`: The feed's playable episodes.
+// ## Returns
+// Publication years newest first, followed by the undated choice when needed.
 public function Years(Episodes: array of M.Episode): array of string;
 begin
   const Distinct: C.SortedSet<int> := new C.SortedSet<int>();
@@ -114,7 +122,11 @@ begin
   end if);
 end function;
 
-// Clears a year in Current's applied filters or draft when the current feed cannot offer that choice.
+// Clears unavailable publication year choices.
+// ## Parameters
+// - `Current`: State containing the feed's year choices and current filters.
+// ## Returns
+// The state with unavailable years removed from the applied and draft filters.
 public function ReconcileEpisodeFilters(Current: M.State): M.State;
   function Retain(Value: M.EpisodeFilters): M.EpisodeFilters;
   begin
@@ -138,7 +150,11 @@ begin
   end with;
 end function;
 
-// Applies Current's filters and sort order to the episode list and retains the focused episode.
+// Applies the episode filters and sort order.
+// ## Parameters
+// - `Current`: State supplying episodes, active filters, sort and focus.
+// ## Returns
+// The state with matching episodes and the retained focused row, when available.
 public function SelectEpisodes(Current: M.State): M.State;
   function Compare(Left: M.Episode; Right: M.Episode): int;
   begin

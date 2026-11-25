@@ -187,6 +187,7 @@ public sealed class CheckTests(SdkPackageFixture sdk) : IClassFixture<SdkPackage
         finally { await checking; }
     }
 
+    /// <summary>Checks that diagnostic paging changes the view while retaining analysis status and coverage.</summary>
     [Fact]
     public async Task Diagnostic_pages_filter_output_without_changing_check_status_or_coverage()
     {
@@ -231,6 +232,7 @@ public sealed class CheckTests(SdkPackageFixture sdk) : IClassFixture<SdkPackage
         }
     }
 
+    /// <summary>Checks that dependent draft inputs can be analyzed together before publication.</summary>
     [Fact]
     public async Task Overlay_checks_draft_FPAS_dependencies_together_without_publishing_sources_or_assemblies()
     {
@@ -353,6 +355,7 @@ public sealed class CheckTests(SdkPackageFixture sdk) : IClassFixture<SdkPackage
         }
     }
 
+    /// <summary>Checks that a draft adds a unit only after verifying its compile ownership.</summary>
     [Fact]
     public async Task Draft_creates_a_new_unit_and_replaces_its_caller_after_checking_actual_ownership()
     {

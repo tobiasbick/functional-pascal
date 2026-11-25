@@ -48,9 +48,9 @@ public type Options = record
   public Width: L.Extent := L.Extent.Fill;
   // Preferred height.
   public Height: L.Extent := L.Extent.Fixed(L.Measure.Logical(120));
-  // Whether the canvas accepts pointer input.
+  // Whether the canvas accepts pointer and keyboard input.
   public Enabled: bool := true;
-  // Include the canvas in Tab navigation. Enter and Space activate it.
+  // Include the canvas in Tab navigation. Enter and Space activate it when OnInput is absent.
   public Focusable: bool := false;
   // Optional cursor while the pointer hovers this canvas.
   public HoverCursor: Cursor? := null;

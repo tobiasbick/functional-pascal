@@ -48,10 +48,13 @@ Use `Focusable := true` when Enter or Space should invoke the click action.
 For a custom editor, pass `OnInput` to receive `Input.Key(Code, Modifiers, Down, Repeated)`,
 `Input.Text(Value)` and `Input.WindowFocus(Focused)`. Use the text event for
 committed Unicode. Key codes and modifier flags use the shared
-`ShortcutRecorders.Key` and `ShortcutRecorders.Modifier` types. CUI routes key and text events in order. If Tab moves
-focus mid-batch, subsequent text goes to the new owner. A key handled by the
-canvas does not also activate its click action. Request focus from Update
-with `Mvu.Focus<TMsg>(Id)`. If a managed input callback throws, the window
+`ShortcutRecorders.Key` and `ShortcutRecorders.Modifier` types. When a click
+or Tab moves focus between canvases, subsequent text in that batch goes to the
+new owner. A key handled by the canvas does not also activate its click action.
+Request focus from Update with `Mvu.Focus<TMsg>(Id)`. A passive live-resize view
+preserves a canvas's focus eligibility and defers application input to the next
+interactive frame. When queued messages temporarily suspend input, the
+focused canvas keeps its native focus until input resumes. If a managed input callback throws, the window
 discards the current frame and its remaining input, then propagates the original
 exception. A subsequent `NextFrame()` starts a fresh view.
 

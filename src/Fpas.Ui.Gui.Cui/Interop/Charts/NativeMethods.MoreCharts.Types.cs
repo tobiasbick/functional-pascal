@@ -1,27 +1,57 @@
 // [Documentation](../../../../docs/ui/gui/more-charts/README.md)
 using Fpas.Ui.Gui.Cui.Widgets.Charts;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Fpas.Ui.Gui.Cui.Interop.Charts;
 
 [StructLayout(LayoutKind.Sequential)]
-internal unsafe struct NativeSankeyNode { public byte* Label; public int Palette; public uint Rgba; }
+internal unsafe struct NativeSankeyNode
+{
+    internal byte* Label;
+    internal int Palette;
+    internal uint Rgba;
+}
 [StructLayout(LayoutKind.Sequential)]
-internal unsafe struct NativeScatterSeries { public byte* Name; public CuiPlotPoint* Points; public float* Sizes; public int Count, Palette; public uint Rgba; }
+internal unsafe struct NativeScatterSeries
+{
+    internal byte* Name;
+    internal CuiPlotPoint* Points;
+    internal float* Sizes;
+    internal int Count, Palette;
+    internal uint Rgba;
+}
 [StructLayout(LayoutKind.Sequential)]
-internal unsafe struct NativeGaugeBand { public float To; public int Tone; public byte* Name; }
+internal unsafe struct NativeGaugeBand
+{
+    internal float To;
+    internal int Tone;
+    internal byte* Name;
+}
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct NativeRadialOptions
 {
-    public byte* Label; public byte* Unit; public byte* Format;
-    public float Size, Sweep; public NativeGaugeBand* Bands; public int BandCount, Flags;
-    public float Target; public int Style; public byte* Detail; public int Palette; public uint Rgba;
+    internal byte* Label;
+    internal byte* Unit;
+    internal byte* Format;
+    internal float Size, Sweep;
+    internal NativeGaugeBand* Bands;
+    internal int BandCount, Flags;
+    internal float Target;
+    internal int Style;
+    internal byte* Detail;
+    internal int Palette;
+    internal uint Rgba;
 }
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct NativeCandleOptions
 {
-    public int WidthKind; public float Width, Height; public byte** Labels; public byte* Format;
-    public NativeChartSeries* Overlays; public int OverlayCount, Flags, UpPalette; public uint UpRgba;
-    public int DownPalette; public uint DownRgba;
+    internal int WidthKind;
+    internal float Width, Height;
+    internal byte** Labels;
+    internal byte* Format;
+    internal NativeChartSeries* Overlays;
+    internal int OverlayCount, Flags, UpPalette;
+    internal uint UpRgba;
+    internal int DownPalette;
+    internal uint DownRgba;
 }

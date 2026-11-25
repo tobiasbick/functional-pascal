@@ -51,6 +51,8 @@ public type State<TMsg> = record
   public SeenAnimations: C.HashSet<string> := new C.HashSet<string>();
   // The native focus token from the preceding input-enabled presentation.
   public PreviousFocus: string := '';
+  // Preserve a focused canvas while this frame drains locally queued input.
+  public PreserveCanvasFocus: bool := false;
 end record;
 
 // Retires completion observations for animations removed from a successful owner frame.

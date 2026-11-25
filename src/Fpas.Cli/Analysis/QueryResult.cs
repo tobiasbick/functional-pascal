@@ -18,6 +18,7 @@ internal sealed record QueryResult(string Status, string? Reason, string? Contex
     IReadOnlyList<AnalysisDiagnostic> Diagnostics, AnalysisCoverage Coverage, Preparation? Preparation, bool Truncated,
     IReadOnlyList<string> BinaryBoundaries, QueryPayload? Result, AnalysisError? Error)
 {
+    /// <summary>Gets the requested diagnostic window and its counts.</summary>
     public DiagnosticPage? DiagnosticPage { get; init; }
 
     internal const int OutputLimit = 4 * 1024 * 1024;
@@ -56,7 +57,9 @@ internal partial class QueryJson : JsonSerializerContext;
 internal sealed record QueryBatchItem(string? Operation, string Status, string? Reason, QuerySelection? Selection, bool Truncated,
     IReadOnlyList<string> BinaryBoundaries, IReadOnlyList<string>? Searched, QueryPayload? Result, AnalysisError? Error)
 {
+    /// <summary>Gets the returned declarations from an ambiguous dependency.</summary>
     public IReadOnlyList<DeclarationMatch>? Candidates { get; init; }
+    /// <summary>Gets the total checked declarations from an ambiguous dependency.</summary>
     public int? CandidateCount { get; init; }
 
     internal static QueryBatchItem From(string operation, SourceQueryResult result)
@@ -71,8 +74,11 @@ internal sealed record QueryBatchReport(string Status, string? Context, string C
     IReadOnlyList<AnalysisDiagnostic> Diagnostics, AnalysisCoverage? Coverage, Preparation? Preparation,
     IReadOnlyList<QueryBatchItem> Results, AnalysisError? Error)
 {
+    /// <summary>Gets the version of the batch report layout.</summary>
     public int SchemaVersion { get; init; } = 1;
+    /// <summary>Gets the diagnostic window shared by every query in the batch.</summary>
     public DiagnosticPage? DiagnosticPage { get; init; }
+    /// <summary>Gets the draft source paths used for analysis, when supplied.</summary>
     public IReadOnlyList<string>? OverlayFiles { get; init; }
 
     internal static QueryBatchReport Failure(string? context, string configuration, AnalysisError error, CheckResult? check = null)

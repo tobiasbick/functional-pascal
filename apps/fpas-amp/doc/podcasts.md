@@ -7,7 +7,9 @@ shows available there. **Reset** restores the default market and all genres in
 the filter form. **Subscription** limits the returned shows to those you have
 subscribed to or those you have yet to subscribe to.
 
-Submit a name or publisher to search the selected market. **Genre** narrows
+Submit a name or publisher to search the selected market. Changing the market
+reruns the submitted search while preserving any edits in the search field.
+**Genre** narrows
 the loaded text matches and the status bar shows how many remain. Clear the
 search field to return to the charts with the same filters. Choose a show to
 open its episode list, or click **Subscribe** to add it below **Search** in the
@@ -46,7 +48,8 @@ the episode metadata and direct audio enclosure URLs. Larger media responses
 are limited to 512 MiB. Search and feed replies carry request identities, and
 changing shows cancels the previous feed request. The typed search and feed
 effects deliver metadata before artwork. The download effect reports either a
-complete path or an expected download failure.
+complete path or an expected download failure. Invalid directory response
+formats are reported as search failures. Unusable chart rows are skipped.
 
 - [Apple Search API](https://performance-partners.apple.com/search-api)
 - [Apple Podcasts Charts](https://podcasters.apple.com/support/3146-apple-podcasts-charts)
@@ -60,6 +63,7 @@ Sources
 - [Browse.fpas](../src/FpasAmp.Ui/Podcasts/Browse.fpas)
 - [Catalog.fpas](../src/FpasAmp.Ui/Podcasts/Catalog.fpas)
 - [Directory.fpas](../src/FpasAmp.Ui/Podcasts/Directory.fpas)
+- [DirectoryData.fpas](../src/FpasAmp.Ui/Podcasts/DirectoryData.fpas)
 - [Toolbar.fpas](../src/FpasAmp.Ui/Podcasts/Toolbar.fpas)
 - [Feeds.fpas](../src/FpasAmp.Ui/Podcasts/Feeds.fpas)
 - [Network.fpas](../src/FpasAmp.Ui/Podcasts/Network.fpas)
@@ -72,7 +76,8 @@ Sources
 ## Verification
 
 The headless effect test holds a loopback feed's metadata, cover, and malformed
-XML failure separately and checks the model before and after each reply.
+XML failure separately and checks the model before and after each reply. It
+also verifies the submitted search and the provider response parser.
 
 The native test releases directory, RSS, cover and downloaded audio replies
 individually. It checks the charts before typing, after changing market and

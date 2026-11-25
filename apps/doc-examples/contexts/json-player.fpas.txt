@@ -5,6 +5,7 @@ program Example;
 uses System.Text.Json as Json;
 
 type Player = record
+  // Name included in the serialized player object.
   public Name: string;
 end record;
 

@@ -191,6 +191,8 @@ begin
 end procedure;
 
 // Validates the native Kanban board.
+// ## Type parameters
+// - `TMsg`: Application message type.
 // ## Parameters
 // - `Columns`: Model-owned input.
 // - `Settings`: Native settings.

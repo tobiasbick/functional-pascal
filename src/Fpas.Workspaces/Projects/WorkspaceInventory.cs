@@ -107,17 +107,22 @@ public static class WorkspaceInventory
                     {
                         foreach (var framework in targets.Distinct(StringComparer.Ordinal))
                         {
-                            using var inner = await Evaluate(project, scope, environment, framework, includeSources, token);
-                            AddIfMatching(inner.RootElement);
+                            try
+                            {
+                                using var inner = await Evaluate(project, scope, environment, framework, includeSources, token);
+                                AddIfMatching(inner.RootElement);
+                            }
+                            catch (Exception error) when (EvaluationFailure(error)) { RecordIssue(error); }
                         }
                     }
                     else AddIfMatching(evaluation.RootElement);
                 }
-                catch (ContextFailure error) { issue = ContextIssue.From(project.Path, error); }
-                catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException or KeyNotFoundException or InvalidOperationException)
-                { issue = new(project.Path, "evaluation_failed", error.Message); }
+                catch (Exception error) when (EvaluationFailure(error)) { RecordIssue(error); }
                 if (sourceFile is null || frameworks.Count != 0 || issue is not null)
                     projects.Add(new(project.Path, project.Configuration, project.Platform, project.Build, frameworks.ToArray(), issue));
+
+                void RecordIssue(Exception error) => issue ??= error is ContextFailure failure
+                    ? ContextIssue.From(project.Path, failure) : new(project.Path, "evaluation_failed", error.Message);
 
                 void AddIfMatching(JsonElement evaluation)
                 {
@@ -133,6 +138,9 @@ public static class WorkspaceInventory
         }
         finally { await WorkspaceLoader.RemoveScratch(scratch); }
     }
+
+    private static bool EvaluationFailure(Exception error) => error is ContextFailure or IOException or UnauthorizedAccessException
+        or JsonException or KeyNotFoundException or InvalidOperationException;
 
     private static async Task<JsonDocument> Evaluate(ProjectSelection project, SolutionScope scope, IReadOnlyDictionary<string, string> environment,
         string? framework, bool includeSources, CancellationToken token)

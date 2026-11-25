@@ -13,7 +13,7 @@ internal static class TuiFixture
     {
         var library = await BuildLibrary(program);
         var source = await File.ReadAllTextAsync(Path.Combine(Fixtures, fixture));
-        await program.Compile(source, References(program, library));
+        await program.Compile(source, CompilationInputs(program, library));
         return source;
     }
 
@@ -37,7 +37,7 @@ internal static class TuiFixture
         }
         await program.Compile(await File.ReadAllTextAsync(entry),
             [.. Directory.GetFiles(folder, "*.fpas").Where(path => path != main),
-             .. References(program, library), .. resources]);
+             .. CompilationInputs(program, library), .. resources]);
     }
 
     internal static async Task<string> BuildLibrary(Debuggee program)
@@ -71,8 +71,8 @@ internal static class TuiFixture
         return library;
     }
 
-    private static string[] References(Debuggee program, string library) =>
-        ["--reference", library, "--reference", program.FilePath("Fpas.Ui.Mvu.dll"),
+    private static string[] CompilationInputs(Debuggee program, string library) =>
+        [Path.Combine(Fixtures, "EffectReplies.fpas"), "--reference", library, "--reference", program.FilePath("Fpas.Ui.Mvu.dll"),
          "--reference", program.FilePath("Fpas.Processes.dll"), "--reference", program.FilePath("Fpas.Ui.dll"),
          "--reference", program.FilePath("Fpas.Execution.Effects.dll")];
 

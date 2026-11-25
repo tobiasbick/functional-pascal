@@ -1,5 +1,6 @@
 // [Documentation](../../../docs/pascal/language/basics/lexical-rules.md)
 using System.Text;
+using Fpas.Compiler.Diagnostics;
 
 namespace Fpas.Compiler.Syntax;
 
@@ -34,9 +35,23 @@ internal sealed class Lexer(SourceText source, List<SourceComment>? comments = n
     }
     private char Peek => position + 1 < source.Text.Length ? source.Text[position + 1] : '\0';
 
-    internal IReadOnlyList<Token> ReadTokens()
+    internal IReadOnlyList<Token> ReadTokens() => ReadTokens(recover: false, out _);
+
+    internal IReadOnlyList<Token> ReadPrefix(out CompilerDiagnostic? diagnostic)
+        => ReadTokens(recover: true, out diagnostic);
+
+    private IReadOnlyList<Token> ReadTokens(bool recover, out CompilerDiagnostic? diagnostic)
     {
         var tokens = new List<Token>();
+        diagnostic = null;
+        try { CollectTokens(tokens); }
+        catch (CompilationFailure failure) when (recover) { diagnostic = failure.Diagnostic; }
+        tokens.Add(new(TokenKind.End, "<end of input>", diagnostic?.Location?.Offset ?? position, 0));
+        return tokens;
+    }
+
+    private void CollectTokens(List<Token> tokens)
+    {
         var documentation = new List<DocumentationLine>();
         var newlines = 0;
         if (Current == '\uFEFF')
@@ -104,8 +119,6 @@ internal sealed class Lexer(SourceText source, List<SourceComment>? comments = n
             if (documentation.Count != 0) tokens[^1] = tokens[^1] with { Documentation = new(documentation.ToArray()) };
             documentation.Clear(); newlines = 0;
         }
-        tokens.Add(new(TokenKind.End, "<end of input>", position, 0));
-        return tokens;
     }
 
     private Token ReadIdentifier()

@@ -9,12 +9,17 @@ namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
+    private const int PointerButtonEvent = 1;
+    private const int LeftButton = 0;
+    private readonly record struct CapturedCanvasInput(CuiCanvasInput Input, CuiPoint? Press = null);
+
     private readonly Dictionary<uint, Action<CuiCanvasInput>> canvasHandlers = [];
-    private readonly List<(uint Target, CuiCanvasInput Input)> routedCanvasInput = [];
-    private readonly List<CuiCanvasInput> capturedCanvasInput = [];
+    private readonly List<(uint Target, CuiCanvasInput Input, bool NeedsFocus)> routedCanvasInput = [];
+    private readonly List<CapturedCanvasInput> capturedCanvasInput = [];
     private ExceptionDispatchInfo? captureFailure;
     private bool listenForCanvasInput;
     private bool deliveringCanvasInput;
+    private bool pendingPointerFocus;
 
     /// <summary>Restricts native Tab traversal to the active pane. Nest scopes inside the layout they cover.</summary>
     /// <param name="id">Stable pane ID.</param><param name="active">Whether its descendants participate in Tab traversal.</param>
@@ -54,7 +59,9 @@ public sealed partial class CuiWindow
         {
             captureFailure?.Throw();
             if (result != 0)
-                foreach (var input in capturedCanvasInput) RouteCanvasInput(input);
+                foreach (var captured in capturedCanvasInput)
+                    if (captured.Press is { } press) RouteCanvasPointerFocus(press);
+                    else RouteCanvasInput(captured.Input);
         }
         finally { capturedCanvasInput.Clear(); captureFailure = null; }
         return result;
@@ -64,28 +71,40 @@ public sealed partial class CuiWindow
     private static unsafe byte CaptureCanvasInput(nint ui, NativeMethods.CanvasEvent* input, nint user)
     {
         var kind = (CuiCanvasInputKind)input->Kind;
-        if (kind is not (CuiCanvasInputKind.Key or CuiCanvasInputKind.Text or CuiCanvasInputKind.WindowFocus)) return 0;
+        bool leftPress = input->Kind == PointerButtonEvent && input->Button == LeftButton && input->Down != 0 &&
+            NativeMethods.CanvasButtonDown(ui, LeftButton) == 0;
+        if (!leftPress && kind is not (CuiCanvasInputKind.Key or CuiCanvasInputKind.Text or CuiCanvasInputKind.WindowFocus)) return 0;
         var window = (CuiWindow)GCHandle.FromIntPtr(user).Target!;
         try
         {
-            string text = kind == CuiCanvasInputKind.Text ? Marshal.PtrToStringUTF8(input->Text) ?? "" : "";
-            bool down = kind == CuiCanvasInputKind.WindowFocus ? input->Focused != 0 : input->Down != 0;
-            window.capturedCanvasInput.Add(new(kind, input->Key, input->Mods, down, false, text));
+            if (leftPress)
+                window.capturedCanvasInput.Add(new(default, NativeMethods.CanvasPointer(ui)));
+            else
+            {
+                string text = kind == CuiCanvasInputKind.Text ? Marshal.PtrToStringUTF8(input->Text) ?? "" : "";
+                bool down = kind == CuiCanvasInputKind.WindowFocus ? input->Focused != 0 : input->Down != 0;
+                window.capturedCanvasInput.Add(new(new(kind, input->Key, input->Mods, down, false, text)));
+            }
         }
         catch (Exception error) { window.captureFailure ??= ExceptionDispatchInfo.Capture(error); }
-        return 1;
+        return leftPress ? (byte)0 : (byte)1;
     }
+
+    // Nonfocusable hits decide during submission whether they retain focus.
+    private void RouteCanvasPointerFocus(CuiPoint press) =>
+        pendingPointerFocus = NativeMethods.CanvasPointerFocus(context, press.X, press.Y) != 0;
 
     private void RouteCanvasInput(CuiCanvasInput input)
     {
         uint id = NativeMethods.CanvasDispatch(context, (int)input.Kind, input.Key, input.Modifiers,
             input.Down ? 1 : 0, input.Text, out int repeated);
-        if (id != 0) routedCanvasInput.Add((id, input with { Repeated = repeated != 0 }));
+        if (id != 0) routedCanvasInput.Add((id, input with { Repeated = repeated != 0 }, pendingPointerFocus));
     }
 
     private void DiscardCanvasInput()
     {
         listenForCanvasInput = false;
+        pendingPointerFocus = false;
         routedCanvasInput.Clear();
         canvasHandlers.Clear();
     }
@@ -99,12 +118,14 @@ public sealed partial class CuiWindow
         try
         {
             deliveringCanvasInput = true;
-            foreach (var (target, input) in routedCanvasInput)
-                if (canvasHandlers.TryGetValue(target, out var handler)) handler(input);
+            foreach (var (target, input, needsFocus) in routedCanvasInput)
+                if ((!needsFocus || NativeMethods.CanvasFocusedId(context) != 0) &&
+                    canvasHandlers.TryGetValue(target, out var handler)) handler(input);
         }
         finally
         {
             deliveringCanvasInput = false;
+            pendingPointerFocus = false;
             routedCanvasInput.Clear();
             canvasHandlers.Clear();
         }

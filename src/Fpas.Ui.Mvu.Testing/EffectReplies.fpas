@@ -8,7 +8,8 @@ uses
   System.Threading as T, System.Threading.Channels as Channels, System.Threading.Tasks as Tasks;
 
 // One actual message from a background run, held just before mailbox admission.
-// TMsg is the application's message type.
+// ## Type parameters
+// - `TMsg`: The application's message type.
 public type Reply<TMsg> = record
   // The value produced by the worker.
   public Message: TMsg;
@@ -75,11 +76,15 @@ begin
   );
 end function;
 
-// Owner-thread test helper for real MVU transitions. TMsg is the host message type.
+// Owner-thread test helper for real MVU transitions.
+// ## Type parameters
+// - `TMsg`: The host message type.
 public type Effects<TMsg> = record
   Expected: C.Dictionary<string, Channels.Channel<Reply<TMsg>>> := new C.Dictionary<string, Channels.Channel<Reply<TMsg>>>();
 
   // Returns an empty set of expectations for a single test owner.
+  // ## Returns
+  // A new helper with no watched runs.
   public static function Create(): Effects<TMsg>;
   begin
     return new Effects<TMsg>();
@@ -88,6 +93,10 @@ public type Effects<TMsg> = record
   // Watches the next start of Id, including its mapped failure. Read a reply with
   // a test deadline and await its release before stepping the host. A later start
   // with the same Id needs its own call to Watch.
+  // ## Parameters
+  // - `Id`: The stable identifier of the next run to observe.
+  // ## Returns
+  // A channel of held replies for that run.
   public function Watch(Id: string): Channels.ChannelReader<Reply<TMsg>>;
   requires Id <> '';
   begin
@@ -96,8 +105,13 @@ public type Effects<TMsg> = record
     return Channel.Reader;
   end function;
 
-  // Returns Next with watched starts intercepted, preserving command order and model.
-  // TModel is the model type of the update being driven by the test.
+  // Intercepts watched starts while preserving command order and model.
+  // ## Type parameters
+  // - `TModel`: The model type of the update being driven by the test.
+  // ## Parameters
+  // - `Next`: The transition returned by the application update.
+  // ## Returns
+  // The transition with its watched effects wrapped for controlled admission.
   public function Wrap<TModel>(Next: A.Transition<TModel, TMsg>): A.Transition<TModel, TMsg>;
   begin
     if self.Expected.Count = 0 then

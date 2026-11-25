@@ -7,9 +7,9 @@ uses System as Sys, System.Collections.Generic as C, System.Globalization as G, 
 
 // Appends lower-case `Letter` to `Word`, spelling out letters that have no
 // accent-free decomposition.
-procedure Fold(Word: Text.StringBuilder; Letter: char);
+procedure Fold(Word: Text.StringBuilder; Letter: Text.Rune);
 begin
-  const Code: int := cast<int>(Letter);
+  const Code: int := Letter.Value;
   if Code = 223 then
     discard Word.Append('ss');
   elsif Code = 230 then
@@ -26,8 +26,10 @@ begin
     discard Word.Append('th');
   elsif Code = 305 then
     discard Word.Append('i');
+  elsif Letter.IsBmp then
+    discard Word.Append(cast<char>(Code));
   else
-    discard Word.Append(Letter);
+    discard Word.Append(Letter.ToString());
   end if;
 end procedure;
 
@@ -43,17 +45,17 @@ public function Words(Value: string): array of string;
 begin
   const Result: C.List<string> := new C.List<string>();
   const Word: Text.StringBuilder := new Text.StringBuilder();
-  for Letter: char in Value.Normalize(Text.NormalizationForm.FormKD) do
-    const Category: G.UnicodeCategory := G.CharUnicodeInfo.GetUnicodeCategory(Letter);
+  for Letter: Text.Rune in Value.Normalize(Text.NormalizationForm.FormKD).EnumerateRunes() do
+    const Category: G.UnicodeCategory := Text.Rune.GetUnicodeCategory(Letter);
     if Category = G.UnicodeCategory.NonSpacingMark or Category =
       G.UnicodeCategory.SpacingCombiningMark
     then
       continue;
     end if;
 
-    if Sys.Char.IsLetterOrDigit(Letter) then
-      Fold(Word, Sys.Char.ToLowerInvariant(Letter));
-    elsif cast<int>(Letter) = 39 or cast<int>(Letter) = 8217 then
+    if Text.Rune.IsLetterOrDigit(Letter) then
+      Fold(Word, Text.Rune.ToLowerInvariant(Letter));
+    elsif Letter.Value = 39 or Letter.Value = 8217 then
       continue;
     elsif Word.Length > 0 then
       Result.Add(Word.ToString());
@@ -78,7 +80,11 @@ end record;
 
 // Separates paired double quotes in `Value` from free text. An unmatched opening
 // quote stays part of free text until the user closes it. Empty quotes add no term.
-// Returns the folded free words and the original text of each nonempty phrase.
+//
+// ## Parameters
+// - `Value`: The complete search text.
+// ## Returns
+// Folded free words and the original text of each nonempty phrase.
 public function ParseQuery(Value: string): QueryParts;
 begin
   if not Value.Contains(#34) then
@@ -102,8 +108,13 @@ begin
   return new QueryParts(Words(FreeText.ToString()), Phrases.ToArray());
 end function;
 
-// Checks that each of `Phrases` is a literal substring of a single field in
-// `Fields`, ignoring case. Returns true when every phrase is present.
+// Checks that each phrase is a literal substring of a single field, ignoring case.
+//
+// ## Parameters
+// - `Phrases`: Required substrings, in their original spelling.
+// - `Fields`: Searchable field texts in their original spelling.
+// ## Returns
+// True when every phrase is present.
 public function PhrasesMatch(Phrases: array of string; Fields: array of string): bool;
 begin
   for Phrase: string in Phrases do
@@ -131,8 +142,8 @@ end function;
 // Whether `Word` is a number such as a year, which matches only exactly or as a prefix.
 public function Numeric(Word: string): bool;
 begin
-  for Letter: char in Word do
-    if not Sys.Char.IsDigit(Letter) then
+  for Letter: Text.Rune in Word.EnumerateRunes() do
+    if not Text.Rune.IsDigit(Letter) then
       return false;
     end if;
   end for;
@@ -301,7 +312,12 @@ begin
     Current := Spare;
   end for;
 
-  return Sys.Math.Min(Previous[Right.Length], Limit + 1);
+  const Result: int := Previous[Right.Length];
+  return if Result > Limit then
+    Limit + 1
+  else
+    Result
+  end if;
 end function;
 
 end unit;

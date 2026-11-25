@@ -1,8 +1,14 @@
-// Exposes an FPAS function that calls a referenced C# library. [Documentation](../../../coverage.md#build-acceptance)
+// [Documentation](../../../coverage.md#build-acceptance)
+
 unit Demo.Bridge;
 
 uses Demo.SharedApi as Shared;
 
+// Decorates text through the referenced C# library.
+// ## Parameters
+// - `Value`: The text to decorate.
+// ## Returns
+// The decorated text.
 public function Message(Value: string): string;
 begin
   return Shared.Decorate(Value);

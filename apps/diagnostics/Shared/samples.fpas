@@ -7,6 +7,11 @@ uses
   System.Globalization.CultureInfo as Culture,
   System.Runtime.InteropServices.RuntimeInformation as Runtime;
 
+// Formats a sample with invariant round-trip precision.
+// ## Parameters
+// - `Value`: Numeric value to serialize.
+// ## Returns
+// Text using an invariant decimal separator.
 public function Number(Value: double): string;
 begin
   return Value.ToString('R', Culture.InvariantCulture);
@@ -17,6 +22,11 @@ begin
   return '"' + Value.Replace('"', '""') + '"';
 end function;
 
+// Rejects an existing output path or invalid sample metadata.
+// ## Parameters
+// - `Output`: Destination for the new CSV file.
+// - `Label`: Sample label of one to eighty characters.
+// - `Environment`: The local or cloud environment label.
 public procedure Validate(Output: string; Label: string; Environment: string);
 begin
   if IO.File.Exists(Output) or IO.Directory.Exists(Output) then
@@ -32,10 +42,20 @@ begin
   end if;
 end procedure;
 
+// Writes the recorded samples and prints an aggregate summary.
+// ## Parameters
+// - `Output`: New destination CSV path.
+// - `Label`: Name of the measurement.
+// - `Boundary`: Operation timed by each sample.
+// - `Environment`: The local or cloud environment label.
+// - `Warmup`: Number of executions omitted as warmup.
+// - `Rounds`: Workload rounds per sample, or zero for a child invocation.
+// - `Values`: At least two elapsed times in milliseconds.
 public procedure Write(
   Output: string; Label: string; Boundary: string; Environment: string;
   Warmup: int; Rounds: int; Values: array of double
 );
+requires Values.Length >= 2;
 begin
   const TextOutput: Text.StringBuilder := new Text.StringBuilder();
   discard TextOutput.AppendLine(

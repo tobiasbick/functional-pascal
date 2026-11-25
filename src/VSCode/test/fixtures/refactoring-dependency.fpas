@@ -2,6 +2,10 @@
 
 unit RefactoringDependency;
 
+// Supplies the value used through the retained import.
+//
+// ## Returns
+// The fixture's constant value.
 public function Value(): int;
 begin
   return 17;

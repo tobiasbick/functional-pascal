@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using Fpas.Debugging.Core;
 using Fpas.Debugging.Hosting;
 using Fpas.Debugging.Symbols;
+using Fpas.Processes;
 
 namespace Fpas.Debugging.Batch;
 
@@ -30,11 +31,12 @@ internal static class BatchRunner
             byte[]? input = null;
             if (request.Stdin is not null)
             {
-                await using var file = File.OpenRead(request.Stdin);
-                if (file.Length > 1_048_576) throw new ArgumentException("--stdin accepts at most 1 MiB of file bytes.");
-                input = new byte[checked((int)file.Length)];
+                await using var file = RegularFile.OpenRead(request.Stdin);
+                var length = file.Length;
+                if (length > 1_048_576) throw new ArgumentException("--stdin accepts at most 1 MiB of file bytes.");
+                input = new byte[(int)length];
                 await file.ReadExactlyAsync(input, token);
-                if (file.ReadByte() != -1) throw new IOException("The input file changed during preparation.");
+                if (await file.ReadAsync(new byte[1], token) != 0) throw new IOException("The input file changed during preparation.");
             }
             report.Toolchain = await Toolchain(request.Program, token);
             host = await DebugSessionHost.Start(WorkerLauncher.Current(), request.Cwd, token, input, request.OutputLimit, retainOutputPrefix: true, shutdownGrace: reserve);
@@ -156,7 +158,8 @@ internal static class BatchRunner
 
     private static async Task<string> Hash(string path, CancellationToken token)
     {
-        await using var stream = File.OpenRead(path);
+        token.ThrowIfCancellationRequested();
+        await using var stream = RegularFile.OpenRead(path);
         return Convert.ToHexString(await SHA256.HashDataAsync(stream, token));
     }
 }

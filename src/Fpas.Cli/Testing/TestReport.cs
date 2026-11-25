@@ -10,6 +10,7 @@ namespace Fpas.Cli.Testing;
 internal sealed record TestError(string Code, string Message);
 internal sealed record ProjectTestResult(TestProject Project, BuildResult Runner, string? ResultsFile, TrxReport? Result, IReadOnlyList<DiscoveredTest>? Discovery)
 {
+    /// <summary>Gets replay arguments for failed cases with a verified output identity.</summary>
     public IReadOnlyList<TestRerun>? Reruns { get; init; }
 }
 internal sealed record TestReport(bool Success, string Status, string Mode, string? Context)

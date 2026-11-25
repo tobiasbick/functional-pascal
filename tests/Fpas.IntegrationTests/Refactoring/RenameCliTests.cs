@@ -77,6 +77,7 @@ public sealed class RenameCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
         }
     }
 
+    /// <summary>Checks that invalid plans leave source files unchanged and that a valid plan applies once.</summary>
     [Fact]
     public async Task Planning_is_read_only_apply_rechecks_and_stale_or_modified_plans_never_write()
     {
@@ -91,6 +92,11 @@ public sealed class RenameCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
         var mismatch = await RenameFixture.Cli(directory, "apply", "Missing.fpasproj", "--plan", path, "--report", "json");
         Assert.Equal(1, mismatch.ExitCode); Assert.False(File.Exists(directory.File("Missing.fpasproj")));
         using (var json = JsonDocument.Parse(mismatch.Output)) Assert.Equal("plan_context_mismatch", json.RootElement.GetProperty("error").GetProperty("code").GetString());
+        using (var stream = File.OpenWrite(path)) stream.SetLength(RefactorPlanJson.MaximumBytes + 1);
+        var oversized = await RenameFixture.Cli(directory, "apply", "Game/Game.fpasproj", "--plan", path, "--report", "json");
+        Assert.Equal(1, oversized.ExitCode);
+        using (var json = JsonDocument.Parse(oversized.Output)) Assert.Equal("invalid_plan", json.RootElement.GetProperty("error").GetProperty("code").GetString());
+        Assert.Equal(Source, File.ReadAllText(directory.File("Game/Bridge.fpas")));
         File.WriteAllText(path, System.Text.Encoding.UTF8.GetString(original).Replace("Fetch", "Broken", StringComparison.Ordinal));
         var modified = await RenameFixture.Cli(directory, "apply", "Game/Game.fpasproj", "--plan", path, "--report", "json");
         Assert.Equal(1, modified.ExitCode); using (var json = JsonDocument.Parse(modified.Output)) Assert.Equal("invalid_plan", json.RootElement.GetProperty("error").GetProperty("code").GetString());

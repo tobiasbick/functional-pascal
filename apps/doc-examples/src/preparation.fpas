@@ -152,6 +152,14 @@ begin
   IO.File.WriteAllText(Path, Source, new Text.UTF8Encoding(false));
 end procedure;
 
+// Materializes an example and its companions, keeping their source maps.
+// ## Parameters
+// - `Item`: The primary example to compile.
+// - `Options`: Context and repository paths for source expansion.
+// - `Items`: All fences available for project companions.
+// - `Directory`: Destination for the generated project files.
+// ## Returns
+// Compilation inputs, output paths, and the optional project manifest.
 public function Prepare(Item: M.Example; Options: M.Options; Items: array of M.Example; Directory: string): M.Prepared;
 begin
   discard IO.Directory.CreateDirectory(Directory);
@@ -222,8 +230,8 @@ begin
 
   const Companions: string := IO.Path.Combine(Options.Contexts, Item.Context);
   if Item.Context.Length > 0 and IO.Directory.Exists(Companions) then
-    for FileName: string in IO.Directory.GetFiles(Companions, '*.fpas') do
-      const Short: string := IO.Path.GetFileName(FileName) ?? '';
+    for FileName: string in IO.Directory.GetFiles(Companions, '*.fpas.txt') do
+      const Short: string := IO.Path.GetFileNameWithoutExtension(FileName) ?? '';
       if not Written.Add(Short) then
         raise new IO.InvalidDataException('Duplicate context output file ' + Short);
       end if;

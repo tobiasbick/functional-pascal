@@ -66,11 +66,7 @@ internal sealed class ExecutionCommand
             Command.Arguments.Add(arguments);
             foreach (var option in new Option[] { noBuild, expectedOutput, project, workingDirectory, stdinFile, failureReport }) Command.Options.Add(option);
             Command.Requires(expectedOutput, noBuild, parsed => parsed.GetValue(expectedOutput) is not null, parsed => parsed.GetValue(noBuild));
-            expectedOutput.Validators.Add(parsed =>
-            {
-                if (parsed.Tokens.Count == 1 && (parsed.Tokens[0].Value.Length != 64 || !parsed.Tokens[0].Value.All(char.IsAsciiHexDigit)))
-                    parsed.AddError("--expected-output requires a 64-digit hexadecimal output identity.");
-            });
+            expectedOutput.RequireSha256("output identity");
         }
         Command.SetAction(Execute);
     }

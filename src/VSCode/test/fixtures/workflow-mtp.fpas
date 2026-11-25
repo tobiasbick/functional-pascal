@@ -4,20 +4,24 @@ unit Native;
 
 uses Microsoft.VisualStudio.TestTools.UnitTesting as T;
 
+// Provides passing, failing and ignored cases for native test discovery.
 [T.TestClassAttribute]
 public type Cases = record
+  // Provides a passing case that shares its display name with the failing case.
   [T.TestMethodAttribute(DisplayName := 'Same display name')]
   public procedure Addition();
   begin
     T.Assert.AreEqual<int>(4, 2 + 2);
   end procedure;
 
+  // Provides a failing case that shares its display name with the passing case.
   [T.TestMethodAttribute(DisplayName := 'Same display name')]
   public procedure Failure();
   begin
     T.Assert.AreEqual<int>(1, 2);
   end procedure;
 
+  // Fails if the runner executes this deliberately ignored case.
   [T.TestMethodAttribute]
   [T.IgnoreAttribute]
   public procedure Skipped();

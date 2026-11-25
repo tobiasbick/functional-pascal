@@ -84,10 +84,16 @@ async function WriteBackground<TMsg, TInput>(
   Cancellation: Threads.CancellationToken
 ): Tasks.Task;
 begin
-  await Queue.Writer.WriteAsync(
-    Entry<TMsg, TInput>.Background(Id, Version, Message),
-    Cancellation
-  ).ConfigureAwait(false);
+  try
+    await Queue.Writer.WriteAsync(
+      Entry<TMsg, TInput>.Background(Id, Version, Message),
+      Cancellation
+    ).ConfigureAwait(false);
+  catch _Closed: Channels.ChannelClosedException when Cancellation.IsCancellationRequested do
+    // Close can reach a waiting post before its asynchronous cancellation callback.
+    raise new Sys.OperationCanceledException(Cancellation);
+  end try;
+
   Notify(Wake);
 end function;
 

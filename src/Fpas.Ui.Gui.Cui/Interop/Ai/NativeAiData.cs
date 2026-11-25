@@ -6,32 +6,32 @@ namespace Fpas.Ui.Gui.Cui.Interop.Ai;
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct NativePlanStep
 {
-    public byte* Title;
-    public byte* Detail;
-    public int Status;
+    internal byte* Title;
+    internal byte* Detail;
+    internal int Status;
 }
 
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct NativeSource
 {
-    public byte* Title;
-    public byte* Url;
-    public byte* Snippet;
+    internal byte* Title;
+    internal byte* Url;
+    internal byte* Snippet;
 }
 
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct NativeSuggestion
 {
-    public byte* Icon;
-    public byte* Title;
-    public byte* Detail;
+    internal byte* Icon;
+    internal byte* Title;
+    internal byte* Detail;
 }
 
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct NativeModel
 {
-    public byte* Name;
-    public byte* Detail;
-    public byte* Badge;
-    public byte* Icon;
+    internal byte* Name;
+    internal byte* Detail;
+    internal byte* Badge;
+    internal byte* Icon;
 }

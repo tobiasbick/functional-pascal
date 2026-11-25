@@ -4,8 +4,10 @@ using System.Text.Json;
 
 namespace Fpas.IntegrationTests.Workspaces;
 
+/// <summary>Checks declarations and diagnostics returned by the syntax outline CLI.</summary>
 public sealed class OutlineCliTests
 {
+    /// <summary>Checks nested ownership, stable paging, and recovery after a parser error.</summary>
     [Fact]
     public async Task Syntax_outline_pages_nested_declarations_and_retains_parser_diagnostics()
     {
@@ -48,5 +50,55 @@ public sealed class OutlineCliTests
             Assert.True(result.ExitCode == 0, result.Output + result.Error);
             return JsonDocument.Parse(result.Output);
         }
+    }
+
+    /// <summary>Checks that a lexical error preserves declarations from the valid prefix.</summary>
+    /// <param name="suffix">The invalid token appended to the unit.</param>
+    /// <param name="code">The lexer diagnostic expected in the outline.</param>
+    [Theory]
+    [InlineData("@", "FP1001")]
+    [InlineData("'unterminated", "FP1002")]
+    public async Task Outline_retains_declarations_before_a_lexical_error(string suffix, string code)
+    {
+        using var directory = new TemporaryDirectory();
+        var file = directory.File("Outline.fpas");
+        File.WriteAllText(file, "unit Outline; public const Before: int := 1; end unit;\n" + suffix);
+        var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "query", "outline", file],
+            workingDirectory: directory.Path);
+        Assert.True(result.ExitCode == 0, result.Output + result.Error);
+        using var report = JsonDocument.Parse(result.Output);
+        var outline = report.RootElement;
+        Assert.Equal("partial", outline.GetProperty("status").GetString());
+        Assert.Equal(["Outline", "Before"], outline.GetProperty("declarations").EnumerateArray()
+            .Select(item => item.GetProperty("name").GetString()));
+        var diagnostic = Assert.Single(outline.GetProperty("diagnostics").EnumerateArray());
+        Assert.Equal(code, diagnostic.GetProperty("code").GetString());
+    }
+
+    /// <summary>Checks that a later parser exception preserves earlier recovered diagnostics.</summary>
+    [Fact]
+    public async Task Outline_retains_recovered_diagnostics_before_a_later_parser_exception()
+    {
+        using var directory = new TemporaryDirectory();
+        var file = directory.File("Outline.fpas");
+        File.WriteAllText(file, """
+            unit Outline;
+            public procedure First();
+            begin
+            end procedure
+            public procedure Second();
+            begin
+            end procedure;
+            end unit;
+            ?
+            """);
+        var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "query", "outline", file],
+            workingDirectory: directory.Path);
+        Assert.True(result.ExitCode == 0, result.Output + result.Error);
+        using var report = JsonDocument.Parse(result.Output);
+        var outline = report.RootElement;
+        Assert.Equal("partial", outline.GetProperty("status").GetString());
+        Assert.Equal([5, 9], outline.GetProperty("diagnostics").EnumerateArray()
+            .Select(item => item.GetProperty("location").GetProperty("line").GetInt32()));
     }
 }

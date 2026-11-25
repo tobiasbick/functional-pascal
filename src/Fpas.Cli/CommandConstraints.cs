@@ -31,6 +31,15 @@ internal static class CommandConstraints
         });
     }
 
+    internal static void RequireSha256(this Option<string> option, string identity)
+    {
+        option.Validators.Add(result =>
+        {
+            if (result.Tokens.Count == 1 && (result.Tokens[0].Value.Length != 64 || !result.Tokens[0].Value.All(char.IsAsciiHexDigit)))
+                result.AddError($"{option.Name} requires a 64-digit hexadecimal {identity}.");
+        });
+    }
+
     internal static void Requires(this Command command, Option<bool> option, Option<bool> required)
         => command.Requires(option, required, result => result.GetValue(option), result => result.GetValue(required));
 

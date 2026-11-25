@@ -68,7 +68,12 @@ public const Genres: array of Choice := [
   new Choice('1309', 'TV & Film')
 ];
 
-// Finds Code in Items and returns its zero-based position, or -1 if absent.
+// Finds a directory choice by code.
+// ## Parameters
+// - `Items`: Available market or genre choices.
+// - `Code`: The requested provider code.
+// ## Returns
+// The choice's zero-based position, or -1 if absent.
 public function IndexOf(Items: array of Choice; Code: string): int;
 begin
   for Index: int := 0 to Items.Length - 1 do

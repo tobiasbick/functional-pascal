@@ -61,6 +61,7 @@ public sealed class ExistingInputTests(SdkPackageFixture sdk) : IClassFixture<Sd
         Assert.Equal(original, Directory.GetFiles(directory.Path, "*", SearchOption.AllDirectories).Order().ToArray());
     }
 
+    /// <summary>Checks that passive analysis reports the exact missing restore assets and generated source.</summary>
     [Fact]
     public async Task Check_report_identifies_missing_restore_assets_and_generated_source()
     {

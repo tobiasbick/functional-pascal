@@ -11,6 +11,7 @@ uses
   Fpas.Ui.Gui.Internal.Hosting.Session as Host, Fpas.Ui.Gui.Closing as Closing,
   Fpas.Ui.Gui.Windows as Windows, Fpas.Ui.Gui.Frames as Frames, Fpas.Ui.Gui.Desktop as Desktop,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Mvu.Application as Mvu,
+  Fpas.Ui.Widgets.Canvas.Canvases as Canvases, Fpas.Ui.Widgets.Canvas.Painting as Painting,
   System as Sys, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 type Msg = variant
@@ -211,6 +212,77 @@ begin
   Check(Caught and not Session.IsOpen(), 'A throwing close callback must clean up and propagate.');
 end procedure;
 
+procedure VerifyDisposalCallbacks(Renderer: Cui.CuiRenderer);
+  async function Work(_Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+  begin
+    Started.SetResult(true);
+    try
+      await Tasks.Task.Delay(-1, Token).ConfigureAwait(false);
+    finally
+      discard await ContinueCleanup.Task.WaitAsync(
+        Sys.TimeSpan.FromSeconds(5.0)
+      ).ConfigureAwait(false);
+    end try;
+  end function;
+
+  function Update(Model: int; Message: Msg): Mvu.Transition<int, Msg>;
+  begin
+    return new Mvu.Transition<int, Msg>(
+      Model,
+      [Mvu.StartBackground<Msg>('hold', Mvu.FromWorker<Msg>(Work, Msg.Failed))]
+    );
+  end function;
+
+  procedure Paint(Surface: Painting.Surface);
+  begin
+    const Current: Gui.Session<Msg>? := Disposing;
+    if Current <> null then
+      try
+        discard Current.Snapshot();
+      catch Error: Sys.InvalidOperationException do
+        Rejected := Error.Message.Contains('from its callbacks');
+      finally
+        discard ContinueCleanup.TrySetResult(true);
+      end try;
+    end if;
+  end procedure;
+
+  function View(Model: int; Size: L.Viewport): E.Element<Msg>;
+  begin
+    return Canvases.Canvas<Msg>(
+      'paint',
+      [],
+      function(Value: Canvases.Event): Msg => Msg.Reject,
+      Paint := Paint
+    );
+  end function;
+begin
+  var Disposing: Gui.Session<Msg>? := null;
+  var Rejected: bool := false;
+  const Started: Tasks.TaskCompletionSource<bool> := new Tasks.TaskCompletionSource<bool>(
+    Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+  );
+  const ContinueCleanup: Tasks.TaskCompletionSource<bool> := new Tasks.TaskCompletionSource<bool>(
+    Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+  );
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'Desktop disposal callbacks',
+    420,
+    300,
+    Renderer,
+    true
+  );
+  using const Session: Gui.Session<Msg> := Host.Start<int, Msg>(0, Update, View, Window, 8);
+  Steps(Session);
+  discard Session.Post(Msg.Start);
+  Steps(Session);
+  Check(Started.Task.Wait(3000), 'The cleanup fixture did not start its worker.');
+  Disposing := Session;
+  Session.Dispose();
+  Check(Rejected, 'Explicit disposal must reject snapshot reentry during a frozen paint.');
+  Check(not Session.IsOpen(), 'Explicit disposal must join the worker and close the session.');
+end procedure;
+
 // Exercises close decisions, worker lifetime, window commands and public creation options.
 // ## Parameters
 // - `Renderer`: Native renderer used for each owned window.
@@ -222,6 +294,7 @@ begin
   VerifyClose(Renderer);
   VerifyDefaultAndDispose(Renderer);
   VerifyFactoryFailure(Renderer);
+  VerifyDisposalCallbacks(Renderer);
   Example.Verify(Renderer);
 end procedure;
 

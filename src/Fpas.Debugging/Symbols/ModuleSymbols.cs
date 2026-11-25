@@ -4,6 +4,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
 using Fpas.Debugging.Core;
+using Fpas.Processes;
 
 namespace Fpas.Debugging.Symbols;
 
@@ -21,7 +22,7 @@ internal sealed partial class ModuleSymbols : MetadataImage
         {
             var pdbPath = System.IO.Path.ChangeExtension(Path, ".pdb");
             if (!File.Exists(pdbPath)) throw new DebugException("missing_symbols", "A matching portable PDB is required beside the target assembly.");
-            symbolStream = new FileStream(pdbPath, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete);
+            symbolStream = RegularFile.OpenRead(pdbPath, shareDelete: true);
             try
             {
                 symbols = MetadataReaderProvider.FromPortablePdbStream(symbolStream);
@@ -63,7 +64,7 @@ internal sealed partial class ModuleSymbols : MetadataImage
         var path = DocumentPath(handle);
         if (!System.IO.Path.IsPathFullyQualified(path) || !File.Exists(path)) return "missing_source";
         var algorithm = Pdb.GetGuid(document.HashAlgorithm);
-        using var stream = File.OpenRead(path);
+        using var stream = RegularFile.OpenRead(path);
         var hash = algorithm == new Guid("8829d00f-11b8-4213-878b-770e8597ac16") ? SHA256.HashData(stream)
             : algorithm == new Guid("ff1816ec-aa5e-4d10-87f7-6f4963833460") ? SHA1.HashData(stream) : null;
         return hash is null ? "unsupported_checksum" : hash.AsSpan().SequenceEqual(Pdb.GetBlobBytes(document.Hash)) ? "available" : "source_mismatch";

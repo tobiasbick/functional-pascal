@@ -55,6 +55,10 @@ begin
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   const Height: S.NativeExtent := S.Extent(Settings.Height);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
+  const Token: string := C.Token(Role, Id);
+  const Focusable: bool := Settings.Focusable or OnInput <> null;
+  const PreserveFocus: bool := Frame.PreserveCanvasFocus and Settings.Enabled and Focusable
+    and Frame.PreviousFocus = Token;
   const Shapes: array of CuiCanvas.CuiDrawingShape := new CuiCanvas.CuiDrawingShape[Drawing.Length];
   for Index: int := 0 to Drawing.Length - 1 do
     Shapes[Index] := Pack(Drawing[Index]);
@@ -73,50 +77,48 @@ begin
   end case;
   const NativePointer: Sys.Action<CuiCanvas.CuiCanvasPointer>? := case OnPointer of
     when is Sys.Func<D.Pointer, TMsg> as Notify: procedure(State: CuiCanvas.CuiCanvasPointer) begin
-      Frame.Messages.Add(
-        Notify.Invoke(
-          new D.Pointer(State.Hovered, State.Pressed, State.X, State.Y, State.Width, State.Height)
-        )
-      );
+      if Frame.AcceptInput then
+        Frame.Messages.Add(
+          Notify.Invoke(
+            new D.Pointer(State.Hovered, State.Pressed, State.X, State.Y, State.Width, State.Height)
+          )
+        );
+      end if;
     end procedure;
     else null;
   end case;
   const InputHandler: Sys.Action<CuiCanvas.CuiCanvasInput>? := case OnInput of
     when is Sys.Func<D.Input, TMsg> as Notify: procedure(Value: CuiCanvas.CuiCanvasInput) begin
-      const Event: D.Input := if Value.Kind = CuiCanvas.CuiCanvasInputKind.Key then
-        D.Input.Key(
-          cast<Keys.Key>(Value.Key),
-          cast<Keys.Modifier>(Value.Modifiers),
-          Value.Down,
-          Value.Repeated
-        )
-      elsif Value.Kind = CuiCanvas.CuiCanvasInputKind.Text then
-        D.Input.Text(Value.Text)
-      else
-        D.Input.WindowFocus(Value.Down)
+      if Enabled then
+        const Event: D.Input := if Value.Kind = CuiCanvas.CuiCanvasInputKind.Key then
+          D.Input.Key(
+            cast<Keys.Key>(Value.Key),
+            cast<Keys.Modifier>(Value.Modifiers),
+            Value.Down,
+            Value.Repeated
+          )
+        elsif Value.Kind = CuiCanvas.CuiCanvasInputKind.Text then
+          D.Input.Text(Value.Text)
+        else
+          D.Input.WindowFocus(Value.Down)
+        end if;
+        Frame.Messages.Add(Notify.Invoke(Event));
       end if;
-      Frame.Messages.Add(Notify.Invoke(Event));
     end procedure;
     else null;
   end case;
-  const Token: string := C.Token(Role, Id);
-  const Focus: bool := C.WantsFocus<TMsg>(
-    Frame,
-    Id,
-    Token,
-    Enabled and (Settings.Focusable or OnInput <> null)
-  );
-  if Frame.Window.DrawingCanvas(
+  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled and Focusable);
+  const Activated: bool := Frame.Window.DrawingCanvas(
     Token, Width.Kind, Width.Value, Height.Kind, Height.Value,
-    Shapes, Enabled, out X, out Y, out W, out H, OnWheel <> null,
+    Shapes, Enabled or PreserveFocus, out X, out Y, out W, out H, OnWheel <> null and Enabled,
     out WheelX, out WheelY, NativePaint, NativePointer, Settings.Focusable, Focus,
     if Settings.HoverCursor = null then
       -1
     else
       cast<int>(Settings.HoverCursor ?? D.Cursor.Arrow)
-    end if, InputHandler
-  )
-  then
+    end if, InputHandler, Settings.Enabled
+  );
+  if Enabled and Activated then
     Frame.Messages.Add(Clicked(new D.Event(X, Y, W, H)));
   end if;
 

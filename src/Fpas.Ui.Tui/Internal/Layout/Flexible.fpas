@@ -90,12 +90,23 @@ begin
   end case;
 end function;
 
+// A half-open cell rectangle within the terminal scene.
 public type Rect = record
+  // Column of the left edge.
   public X: int;
+  // Row of the top edge.
   public Y: int;
+  // Number of columns spanned.
   public Width: int;
+  // Number of rows spanned.
   public Height: int;
 
+  // Tests whether a terminal cell lies within the rectangle.
+  // ## Parameters
+  // - `Column`: Cell column in scene coordinates.
+  // - `Row`: Cell row in scene coordinates.
+  // ## Returns
+  // Whether the cell is covered by the rectangle.
   public function Contains(Column: int; Row: int): bool;
   begin
     return Column >= self.X and Column - self.X < self.Width and Row >= self.Y and Row - self.Y <
@@ -103,6 +114,12 @@ public type Rect = record
   end function;
 end record;
 
+// Clips two rectangles to their common cells.
+// ## Parameters
+// - `Left`: First rectangle.
+// - `Right`: Second rectangle.
+// ## Returns
+// Their overlap, with zero extent on any disjoint axis.
 public function Intersect(Left: Rect; Right: Rect): Rect;
 begin
   const X: int := Sys.Math.Max(Left.X, Right.X);
@@ -114,6 +131,12 @@ begin
   );
 end function;
 
+// Applies a resolved flex basis and size limits to an intrinsic measurement.
+// ## Parameters
+// - `Intrinsic`: Measured content extent in cells.
+// - `Rule`: Cell constraints for the allocated axis.
+// ## Returns
+// Preferred extent before distributing available space.
 public function PreferredSize(Intrinsic: int; Rule: E.Flex): int;
 begin
   if Rule.Minimum < 0 or Rule.Maximum < Rule.Minimum or Rule.Basis < -1
@@ -224,11 +247,23 @@ begin
   return Result;
 end function;
 
+// Reusable allocation for a previous set of sizes, rules and available space.
 public type AllocationMemo = record
+  // Structural identity of the allocation inputs.
   public Key: string;
+  // Allocated cell counts in child order.
   public Sizes: array of int;
 end record;
 
+// Reuses a matching row or column allocation or computes a new one.
+// ## Parameters
+// - `Preferred`: Preferred content sizes in child order.
+// - `Rules`: Resolved flex constraints in that same order.
+// - `Available`: Total available cell count on the main axis.
+// - `Previous`: Allocations from the previously presented scene.
+// - `Next`: Allocation entries retained for the scene being arranged.
+// ## Returns
+// Allocated extents in child order.
 public function AllocateCached(
   Preferred: array of int; Rules: array of E.Flex; Available: int;
   Previous: array of AllocationMemo; Next: Generic.List<AllocationMemo>

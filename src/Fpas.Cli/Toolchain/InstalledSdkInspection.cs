@@ -33,11 +33,15 @@ internal static class InstalledSdkInspection
                 }
                 catch (Exception exception) when (EnvironmentInspection.Recoverable(exception))
                 { issues.Add(new(expected ? "error" : "warning", "sdk_unreadable", exception.Message, path)); }
-                var compatibility = compilerHash is null || coreHash is null ? "incomplete" :
+                var effects = Path.Combine(path, "tools", "runtime", "Fpas.Execution.Effects.dll");
+                var effectsMissing = expected && !File.Exists(effects);
+                var compatibility = compilerHash is null || coreHash is null || effectsMissing ? "incomplete" :
                     compilerHash == compiler.Compiler.Sha256 && coreHash == compiler.Core.Sha256 ? "matching" : "different";
                 entries.Add(new(version, path, expected, compatibility, compilerHash, coreHash));
                 if (expected && compatibility != "matching") issues.Add(new("error", "sdk_mismatch",
-                    "The cached expected FPAS SDK has missing or different compiler/Core files. Deploy and resolve the matching SDK again.", path));
+                    effectsMissing ? "The cached expected FPAS SDK is missing its Effects runtime assembly. Resolve the matching SDK again." :
+                    "The cached expected FPAS SDK has missing or different compiler/Core files. Deploy and resolve the matching SDK again.",
+                    effectsMissing ? effects : path));
             }
             if (!entries.Any(entry => entry.Expected)) issues.Add(new("warning", "sdk_not_cached",
                 "The expected FPAS SDK is not cached. Resolve it from the matching distribution before building projects.", root));

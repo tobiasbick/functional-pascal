@@ -5,8 +5,11 @@ unit GuiGallery.Pages.Voice.Script;
 uses Fpas.Ui.Widgets.Audio.Voice as V, System as Sys;
 
 type Turn = record
+  // Side of the conversation represented by this turn.
   public Speaker: V.Owner;
+  // Duration before playback advances to the next turn.
   public Seconds: float;
+  // Spoken line, or empty for a pause.
   public Text: string;
 end record;
 

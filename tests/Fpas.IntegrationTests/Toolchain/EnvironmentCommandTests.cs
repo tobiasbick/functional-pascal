@@ -48,6 +48,7 @@ public sealed class EnvironmentCommandTests(SdkPackageFixture sdk) : IClassFixtu
         Assert.Equal("<invalid project", File.ReadAllText(root.File("Broken.fpasproj")));
     }
 
+    /// <summary>Detects missing runtime assets and mismatched compiler assemblies in the expected cached SDK.</summary>
     [Fact]
     public async Task Packaged_CLI_identifies_its_SDK_and_detects_same_version_cache_mismatch_even_in_a_large_cache()
     {
@@ -69,6 +70,19 @@ public sealed class EnvironmentCommandTests(SdkPackageFixture sdk) : IClassFixtu
             Assert.Equal("matching", entry.GetProperty("compatibility").GetString());
             Assert.Equal(cached, entry.GetProperty("path").GetString());
         }
+        var effects = Path.Combine(cached, "tools", "runtime", "Fpas.Execution.Effects.dll");
+        var removedEffects = effects + ".removed";
+        File.Move(effects, removedEffects);
+        var missingRuntime = await Run(root, environment, cli: cli);
+        Assert.Equal(1, missingRuntime.ExitCode); Assert.Empty(missingRuntime.Error);
+        using (var json = JsonDocument.Parse(missingRuntime.Output))
+        {
+            var entry = Assert.Single(json.RootElement.GetProperty("sdkCache").GetProperty("installations").EnumerateArray(), item => item.GetProperty("expected").GetBoolean());
+            Assert.Equal("incomplete", entry.GetProperty("compatibility").GetString());
+            Assert.Contains(json.RootElement.GetProperty("issues").EnumerateArray(), issue =>
+                issue.GetProperty("code").GetString() == "sdk_mismatch" && issue.GetProperty("path").GetString() == effects);
+        }
+        File.Move(removedEffects, effects);
         var compiler = Path.Combine(cached, "tools", "compiler", "Fpas.Compiler.dll");
         using (var stream = File.Open(compiler, FileMode.Append, FileAccess.Write)) stream.WriteByte(0);
         var stale = await Run(root, environment, cli: cli);

@@ -43,6 +43,38 @@ public sealed class CuiHostLifecycleReviewTests
     [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "resizeRoot")]
     private static extern ref GCHandle GetResizeRoot(CuiWindow window);
 
+    /// <summary>A passive resize view keeps the focused canvas eligible for later typing.</summary>
+    [GuiFact]
+    public unsafe void ResizeKeepsCanvasFocusWithoutDeliveringInput()
+    {
+        using var window = new CuiWindow("Canvas resize focus", renderer: CuiRenderer.Software, continuous: true);
+        var events = new List<string>();
+        Assert.True(window.NextFrame());
+        Draw(true, true, events.Add);
+        window.Present();
+
+        Assert.True(window.NextFrame());
+        window.InputText("before resize");
+        window.SetResizeRenderer(() => Draw(false, false, _ => throw new InvalidOperationException("Resize delivered input.")));
+        var method = typeof(CuiWindow).GetMethod("RenderResize", BindingFlags.NonPublic | BindingFlags.Static)!;
+        var render = (delegate* unmanaged[Cdecl]<nint, nint, void>)method.MethodHandle.GetFunctionPointer();
+        render(0, GCHandle.ToIntPtr(GetResizeRoot(window)));
+        // The native resize pump completes the passive frame before beginning a regular one.
+        Assert.True(window.NextFrame());
+        window.InputText("after resize");
+        Draw(true, false, events.Add);
+        window.Present();
+
+        Assert.Equal(new[] { "before resize", "after resize" }, events);
+
+        void Draw(bool enabled, bool focus, Action<string> onText) =>
+            window.DrawingCanvas("canvas", 1, 0, 2, 40, [], enabled, out _, out _, out _, out _, false, out _, out _,
+                focus: focus, onInput: item =>
+                {
+                    if (item.Kind == CuiCanvasInputKind.Text) onText(item.Text);
+                }, enabledDuringResize: true);
+    }
+
     /// <summary>Only tracked scroll containers can be used to read native scroll metrics.</summary>
     [GuiFact]
     public void ScrollMetricsRequireATrackedScrollContainer()

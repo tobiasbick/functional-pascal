@@ -4,6 +4,13 @@ unit Fpas.Ui.Tui.Internal.Layout.Measurement;
 
 uses Fpas.Ui.Tui.Internal.Widgets.Navigation.Pagination as Pagination, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System as Sys;
 
+// Gets an element's explicit flex sizing or its default constraints.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Node`: Prepared terminal element.
+// ## Returns
+// The element's resolved size constraints.
 public function FlexRule<TMsg>(Node: E.Element<TMsg>): E.Flex;
 begin
   case Node of
@@ -268,6 +275,15 @@ begin
   end case;
 end function;
 
+// Resolves the width of a child in a vertical stack.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Node`: Prepared terminal element.
+// - `Available`: Available columns in the stack.
+// - `Align`: Cross-axis alignment.
+// ## Returns
+// Columns assigned to the child for painting and text wrapping.
 public function CrossWidth<TMsg>(Node: E.Element<TMsg>; Available: int; Align: L.Alignment): int;
 begin
   return if (Align = L.Alignment.Stretch or Align = L.Alignment.Default) and CanStretch<TMsg>(
@@ -319,6 +335,15 @@ begin
   return Height;
 end function;
 
+// Measures the element's natural extent on one axis.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Node`: Prepared terminal element.
+// - `Horizontal`: Measure columns when true and rows otherwise.
+// - `Columns`: Wrapping width for a vertical measurement, or minus one for unwrapped content.
+// ## Returns
+// The preferred content extent in cells before applying the parent's allocation.
 public function Intrinsic<TMsg>(Node: E.Element<TMsg>; Horizontal: bool; Columns: int := -1): int;
 begin
   case Node of

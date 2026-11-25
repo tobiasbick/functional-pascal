@@ -104,7 +104,7 @@ public sealed partial class CuiWindow
     /// <param name="kind">Content=0, fill=1, fixed=2, percentage=3.</param>
     /// <param name="basis">Logical basis or percentage of the parent's inner extent.</param>
     /// <param name="minimum">Minimum extent.</param>
-    /// <param name="maximum">Maximum extent or -1.</param>
+    /// <param name="maximum">Maximum extent at least as large as the minimum, or -1 for no maximum.</param>
     /// <param name="grow">Growth weight.</param>
     /// <param name="alignment">Cross-axis placement.</param>
     public void SizeLast(bool horizontal, int kind, float basis, float minimum, float maximum, float grow, int alignment)
@@ -112,9 +112,10 @@ public sealed partial class CuiWindow
         CheckFrame();
         CheckExtent(kind, basis, nameof(basis));
         if (!float.IsFinite(minimum) || minimum < 0 ||
-            !float.IsFinite(maximum) || maximum < -1 || maximum >= 0 && maximum < minimum ||
             !float.IsFinite(grow) || grow < 0 || (kind is 2 or 3) && grow != 0 || alignment is < 0 or > 4)
             throw new ArgumentOutOfRangeException(nameof(basis), "Invalid shared layout constraints.");
+        if (!float.IsFinite(maximum) || maximum != -1 && maximum < minimum)
+            throw new ArgumentOutOfRangeException(nameof(maximum), "The maximum must be at least the minimum or -1.");
         int node = NativeMethods.LastNode(context);
         NativeMethods.NodeSize(context, node, horizontal ? 1 : 0, kind, basis, minimum, maximum, grow, alignment);
     }

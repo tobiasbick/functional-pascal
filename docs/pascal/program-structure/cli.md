@@ -170,7 +170,8 @@ as complete JSON. Source/input changes invalidate results before publication.
 parser without loading a project. Each row contains the name, kind, name span
 and declaration span. `owner`, when present, is the UTF-16 offset of its
 parent declaration's name. Use `--limit` and `--offset` to page in source
-order. Syntax recovery returns a `partial` outline and parser diagnostics.
+order. Syntax recovery returns a `partial` outline and diagnostics. If lexing
+stops at an invalid token, the outline retains declarations recognized before it.
 The `snapshotId` identifies the captured file contents.
 
 ### Completion and signature help

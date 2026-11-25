@@ -21,6 +21,14 @@ internal static partial class NativeMethods
     internal static unsafe partial void CanvasHook(nint ui, delegate* unmanaged[Cdecl]<nint, CanvasEvent*, nint, byte> hook, nint user);
     [LibraryImport(Library, EntryPoint = "fpas_cui_canvas_dispatch", StringMarshalling = StringMarshalling.Utf8)]
     internal static partial uint CanvasDispatch(nint ui, int kind, int key, int mods, int down, string? text, out int repeated);
+    [LibraryImport(Library, EntryPoint = "cui_mouse_pos")]
+    internal static partial CuiPoint CanvasPointer(nint ui);
+    [LibraryImport(Library, EntryPoint = "cui_mouse_down")]
+    internal static partial byte CanvasButtonDown(nint ui, int button);
+    [LibraryImport(Library, EntryPoint = "fpas_cui_canvas_pointer_focus")]
+    internal static partial int CanvasPointerFocus(nint ui, float x, float y);
+    [LibraryImport(Library, EntryPoint = "cui_focused_id")]
+    internal static partial uint CanvasFocusedId(nint ui);
     [LibraryImport(Library, EntryPoint = "cui_last_id")]
     internal static partial uint LastId(nint ui);
     [LibraryImport(Library, EntryPoint = "cui_make_id", StringMarshalling = StringMarshalling.Utf8)]

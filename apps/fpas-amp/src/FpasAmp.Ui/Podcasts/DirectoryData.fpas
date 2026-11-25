@@ -1,0 +1,175 @@
+// [Documentation](../../../doc/podcasts.md#implementation)
+
+unit FpasAmp.Ui.Podcasts.DirectoryData;
+
+uses
+  FpasAmp.Ui.Podcasts.Model as M, System as Sys, System.Collections.Generic as C,
+  System.Globalization as G, System.Text.Json as J;
+
+function Required(Item: J.JsonElement; Name: string; Kind: J.JsonValueKind): J.JsonElement;
+begin
+  var Field: J.JsonElement := new J.JsonElement();
+  if Item.ValueKind <> J.JsonValueKind.Object or not Item.TryGetProperty(Name, out Field)
+    or Field.ValueKind <> Kind
+  then
+    raise new J.JsonException('The Apple Podcasts response has no valid ' + Name + ' field.');
+  end if;
+
+  return Field;
+end function;
+
+function StringField(Item: J.JsonElement; Name: string): string;
+begin
+  var Value: J.JsonElement := new J.JsonElement();
+  return if Item.TryGetProperty(Name, out Value) and Value.ValueKind = J.JsonValueKind.String then
+    (Value.GetString() ?? '').Trim()
+  else
+    ''
+  end if;
+end function;
+
+function Show(Item: J.JsonElement): M.Show?;
+begin
+  if Item.ValueKind <> J.JsonValueKind.Object then
+    return null;
+  end if;
+  const Url: string := M.Address(StringField(Item, 'feedUrl'));
+  const Title: string := StringField(Item, 'collectionName');
+  if Url = '' or Title = '' then
+    return null;
+  end if;
+
+  const Genres: C.List<string> := new C.List<string>();
+  var Values: J.JsonElement := new J.JsonElement();
+  if Item.TryGetProperty('genreIds', out Values) and Values.ValueKind = J.JsonValueKind.Array then
+    for Value: J.JsonElement in Values.EnumerateArray() do
+      if Value.ValueKind = J.JsonValueKind.String then
+        Genres.Add(Value.GetString() ?? '');
+      end if;
+    end for;
+  end if;
+
+  return new M.Show(
+    Url, Title, StringField(Item, 'artistName'),
+    M.Address(StringField(Item, 'artworkUrl100')), Genres.ToArray()
+  );
+end function;
+
+// Reads the Apple directory search response. A malformed envelope raises JsonException.
+// ## Parameters
+// - `Response`: Root of the decoded provider response.
+// ## Returns
+// Unique RSS shows in provider order, excluding unusable rows.
+public function Search(Response: J.JsonElement): array of M.Show;
+begin
+  const Shows: C.List<M.Show> := new C.List<M.Show>();
+  const Seen: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+  for Item: J.JsonElement in Required(
+    Response,
+    'results',
+    J.JsonValueKind.Array
+  ).EnumerateArray() do
+    const Pick: M.Show? := Show(Item);
+    if Pick <> null and Seen.Add(Pick.Url) then
+      Shows.Add(Pick);
+    end if;
+  end for;
+
+  return Shows.ToArray();
+end function;
+
+function ChartId(Item: J.JsonElement; ByGenre: bool): string;
+begin
+  if not ByGenre then
+    return StringField(Item, 'id');
+  end if;
+  var Id: J.JsonElement := new J.JsonElement();
+  var Attributes: J.JsonElement := new J.JsonElement();
+  if Item.TryGetProperty('id', out Id) and Id.ValueKind = J.JsonValueKind.Object
+    and Id.TryGetProperty(
+    'attributes',
+    out Attributes
+  ) and Attributes.ValueKind = J.JsonValueKind.Object
+  then
+    return StringField(Attributes, 'im:id');
+  end if;
+
+  return '';
+end function;
+
+// Reads Apple chart placement. A malformed envelope raises JsonException.
+// ## Parameters
+// - `Response`: Root of the decoded chart response.
+// - `ByGenre`: Selects the genre chart format instead of the market chart format.
+// - `Limit`: Maximum number of valid chart IDs to retain.
+// ## Returns
+// Unique positive chart IDs in provider order.
+public function Chart(Response: J.JsonElement; ByGenre: bool; Limit: int): array of long;
+requires Limit > 0;
+begin
+  const Feed: J.JsonElement := Required(Response, 'feed', J.JsonValueKind.Object);
+  var Items: J.JsonElement := new J.JsonElement();
+  if ByGenre and not Feed.TryGetProperty('entry', out Items) then
+    return [];
+  end if;
+
+  if not ByGenre then
+    Items := Required(Feed, 'results', J.JsonValueKind.Array);
+  elsif Items.ValueKind <> J.JsonValueKind.Array then
+    raise new J.JsonException('The Apple Podcasts response has no valid entry field.');
+  end if;
+
+  const Ranked: C.List<long> := new C.List<long>();
+  const Seen: C.HashSet<long> := new C.HashSet<long>();
+  for Item: J.JsonElement in Items.EnumerateArray() do
+    var Id: long := 0L;
+    if Item.ValueKind = J.JsonValueKind.Object and Sys.Int64.TryParse(
+      ChartId(Item, ByGenre), G.NumberStyles.None, G.CultureInfo.InvariantCulture, out Id
+    ) and Id > 0L and Seen.Add(Id)
+    then
+      Ranked.Add(Id);
+      if Ranked.Count = Limit then
+        break;
+      end if;
+    end if;
+  end for;
+
+  return Ranked.ToArray();
+end function;
+
+// Resolves ranked Apple IDs using the lookup response. A malformed envelope raises JsonException.
+// ## Parameters
+// - `Response`: Root of the decoded lookup response.
+// - `Ranked`: Ordered chart IDs to resolve to RSS shows.
+// ## Returns
+// Unique RSS shows ordered by chart position.
+public function Lookup(Response: J.JsonElement; Ranked: array of long): array of M.Show;
+begin
+  const ById: C.Dictionary<long, M.Show?> := new C.Dictionary<long, M.Show?>();
+  for Item: J.JsonElement in Required(
+    Response,
+    'results',
+    J.JsonValueKind.Array
+  ).EnumerateArray() do
+    const Pick: M.Show? := Show(Item);
+    var Field: J.JsonElement := new J.JsonElement();
+    var Id: long := 0L;
+    if Pick <> null and Item.TryGetProperty('collectionId', out Field)
+      and Field.ValueKind = J.JsonValueKind.Number and Field.TryGetInt64(out Id)
+    then
+      discard ById.TryAdd(Id, Pick);
+    end if;
+  end for;
+  const Shows: C.List<M.Show> := new C.List<M.Show>();
+  const Seen: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+  for Id: long in Ranked do
+    var Pick: M.Show? := null;
+    if ById.TryGetValue(Id, out Pick) and Pick <> null and Seen.Add(Pick.Url) then
+      Shows.Add(Pick);
+    end if;
+  end for;
+
+  return Shows.ToArray();
+end function;
+
+end unit;

@@ -4,12 +4,17 @@ unit Fpas.Ui.Tui.Internal.Layout.Scene;
 
 uses Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Application as App, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Validation as Validation, Fpas.Ui.Graphics as G, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as C;
 
+// Input behavior installed by layout for a visible control.
+// ## Type parameters
+// - `TMsg`: Application message type.
 public type Binding<TMsg> = variant
   // Single-line editor with its insertion point and first editable column.
   Edit(Field: Edit.Field<TMsg>; Position: Edit.Tracking; Origin: int; Caret: int);
   // Multiline editor and the caret cell chosen by layout.
   EditArea(View: AreaEdit.View<TMsg>; CaretX: int; CaretY: int);
+  // Direct action invoked by pointer input or the activation key.
   Invoke(Action: Actions.IActivatable<TMsg>);
+  // Scroll viewport and its input policy.
   Scroll(View: V.Viewport<TMsg>);
   // Model-owned selection and the visible list body excluding the scrollbar.
   SelectionList(List: E.SelectionListView<TMsg>; Body: F.Rect; View: V.Viewport<TMsg>);
@@ -17,16 +22,29 @@ public type Binding<TMsg> = variant
   Grid(Area: F.Rect; Changed: function(Grids.Event): TMsg);
 end variant;
 
+// An interactive control in the arranged terminal scene.
+// ## Type parameters
+// - `TMsg`: Application message type.
 public type Control<TMsg> = record
+  // Stable identity used for input and focus requests.
   public Id: string;
+  // Accessible control name.
   public Label: string;
+  // Semantic role used by input routing and the snapshot.
   public Role: string;
+  // Current selection or edit text exposed by the snapshot.
   public Value: string;
+  // Visible interactive cells.
   public Bounds: F.Rect;
+  // Owning overlay identity, or empty for the base view.
   public Scope: string;
+  // Control to restore if this control leaves the scene.
   public FocusReturn: string;
+  // Whether the control can receive input and focus.
   public Enabled: bool;
+  // Pointer and keyboard behavior installed for the current model.
   public Action: Binding<TMsg>;
+  // Semantic colors used for an action's focus and hover state.
   public Variant: UiStyle.ButtonVariant;
   // Apply semantic button styling to keyboard focus and hover.
   public ButtonStyle: bool := false;
@@ -76,10 +94,17 @@ public type NavigationStop = record
   public Scope: string? := null;
 end record;
 
+// Interaction policy for the active modal or anchored overlay.
+// ## Type parameters
+// - `TMsg`: Application message type.
 public type Scope<TMsg> = record
+  // Stable overlay identity.
   public Id: string;
+  // Preferred control to focus when the overlay opens.
   public Initial: string;
+  // Optional message factory for dismissal.
   public Escape: Sys.Func<TMsg>?;
+  // Application shortcuts available inside the overlay.
   public Shortcuts: array of K.ShortcutBinding<TMsg>;
   // Panel bounds for dismissible scrim input.
   public Panel: F.Rect? := null;
@@ -87,22 +112,39 @@ public type Scope<TMsg> = record
   public LocalInput: Sys.Func<App.Input, bool>? := null;
 end record;
 
+// The visible bounds and offset limit for a scroll viewport.
 public type ScrollRegion = record
+  // Stable key for the viewport's offset.
   public Id: string;
+  // Owning overlay identity, or empty for the base view.
   public Scope: string;
+  // Cells that can receive scroll input.
   public Bounds: F.Rect;
+  // Largest allowed offset in cells.
   public Maximum: int;
+  // Whether input proposes an offset for the application to accept.
   public Controlled: bool := false;
 end record;
 
+// The arranged frame and the scene used to route input until the next frame.
+// ## Type parameters
+// - `TMsg`: Application message type.
 public type Layout<TMsg> = record
+  // Plain text for each presented terminal row.
   public Lines: array of string;
+  // Styled terminal cells in row-major order.
   public Cells: array of T.Cell;
+  // Visible controls in display order.
   public Controls: array of Control<TMsg>;
+  // Overlay that currently owns input.
   public Active: Scope<TMsg>?;
+  // Keyboard shortcuts for the base view.
   public GlobalKeys: array of K.ShortcutBinding<TMsg>;
+  // Viewports that can receive a scroll request.
   public Regions: array of ScrollRegion;
+  // Painted row cache retained for an equivalent region in the next frame.
   public Painted: array of D.PaintedRow;
+  // Cached row and column allocations.
   public Allocations: array of F.AllocationMemo;
   // Last successful shared preflight/cache, retained by the owner.
   public Prepared: Validation.Prepared<TMsg>? := null;
@@ -154,6 +196,14 @@ begin
   end if;
 end procedure;
 
+// Looks up a visible control by its stable identity.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Layout`: Arranged scene, if present.
+// - `Id`: Control identity to find.
+// ## Returns
+// The matching control, or null when it is absent.
 public function FindControl<TMsg>(Layout: Layout<TMsg>?; Id: string): Control<TMsg>?;
 begin
   if Layout <> null then
@@ -167,6 +217,13 @@ begin
   return null;
 end function;
 
+// Gets the direct activation handler from a binding.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Action`: Control input binding.
+// ## Returns
+// The command handler, or null for a different kind of input binding.
 public function Activatable<TMsg>(Action: Binding<TMsg>): Actions.IActivatable<TMsg>?;
 begin
   case Action of

@@ -180,7 +180,13 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
         timeout.CancelAfter(TimeSpan.FromMinutes(2));
         var stdout = process.StandardOutput.ReadToEndAsync(timeout.Token);
         var stderr = process.StandardError.ReadToEndAsync(timeout.Token);
-        try { process.WaitForExitAsync(timeout.Token).GetAwaiter().GetResult(); }
+        string text, error;
+        try
+        {
+            process.WaitForExitAsync(timeout.Token).GetAwaiter().GetResult();
+            text = stdout.GetAwaiter().GetResult();
+            error = stderr.GetAwaiter().GetResult();
+        }
         catch (OperationCanceledException)
         {
             if (!process.HasExited)
@@ -189,8 +195,6 @@ public sealed class FpasCompile : Microsoft.Build.Utilities.Task, ICancelableTas
             Error("FP5004", "FPAS compilation was canceled or exceeded its time limit.");
             return false;
         }
-        var text = stdout.GetAwaiter().GetResult();
-        var error = stderr.GetAwaiter().GetResult();
         JsonDocument result;
         try { result = JsonDocument.Parse(text); }
         catch (JsonException)

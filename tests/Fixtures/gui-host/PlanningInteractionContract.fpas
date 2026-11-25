@@ -20,13 +20,21 @@ type Page = enum: byte
 end enum;
 
 type Model = record
+  // Planning page whose native controls are currently exercised.
   public Shown: Page;
+  // Displayed month and selected calendar day.
   public Calendar: Month.Value;
+  // Scheduled week items after accepted native edits.
   public Appointments: array of Week.Appointment;
+  // Timeline task ranges after accepted native edits.
   public Tasks: array of Gantt.Task;
+  // Tree rows in the application's current order, with their expansion state.
   public Nodes: array of Tree.Node;
+  // Whether the standalone tree cell is expanded.
   public BranchOpen: bool := false;
+  // Whether the current page rejects editing or row interaction.
   public Locked: bool := false;
+  // Zero-based selected tree row, or -1 when none is selected.
   public Cursor: int := -1;
 end record;
 

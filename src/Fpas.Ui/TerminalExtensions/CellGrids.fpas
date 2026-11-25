@@ -10,8 +10,13 @@ public type Image = record
   Height: int;
   Pixels: array of T.Cell;
 
-  // Copies the row-major `Cells` of a `Columns` by `Rows` image.
-  // Returns a snapshot which may safely be published from a background worker.
+  // Copies a row-major cell image.
+  // ## Parameters
+  // - `Columns`: Nonnegative column count.
+  // - `Rows`: Nonnegative row count.
+  // - `Cells`: One styled cell per column and row, in row-major order.
+  // ## Returns
+  // An immutable snapshot which may be published from a background worker.
   public static function Create(Columns: int; Rows: int; Cells: array of T.Cell): Image;
   requires Columns >= 0 and Rows >= 0;
   requires cast<long>(Columns) * Rows = Cells.Length;
@@ -32,7 +37,12 @@ public type Image = record
     return new Image(Columns, Rows, Copy);
   end function;
 
-  // Returns the cell at zero-based `Column` and `Row`, or null outside the image.
+  // Reads a cell by its position.
+  // ## Parameters
+  // - `Column`: Zero-based column.
+  // - `Row`: Zero-based row.
+  // ## Returns
+  // The cell, or null outside the image.
   public function At(Column: int; Row: int): T.Cell?;
   begin
     if Column < 0 or Row < 0 or Column >= self.Stride or Row >= self.Height then
@@ -54,10 +64,14 @@ public type Event = variant
 end variant;
 
 // Builds a terminal cell grid, filling the available layout space.
-// `TMsg` is the application message type. `Id` identifies the grid across frames.
-// `Content` is the image to display, or null while waiting for its first frame.
-// `Changed` maps local input and allocated size notifications to application messages.
-// Returns a terminal-only element. Images are clipped or padded without rescaling.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Id`: Stable grid identity across frames.
+// - `Content`: Image to display, or null until the first image is available.
+// - `Changed`: Maps local input and allocation changes to messages.
+// ## Returns
+// A terminal-only element. Images are clipped or padded without rescaling.
 public function CellGrid<TMsg>(Id: string; Content: Image?; Changed: function(Event): TMsg): E.Element<TMsg>;
 requires Id <> '';
 begin

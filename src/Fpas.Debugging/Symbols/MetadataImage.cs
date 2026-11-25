@@ -2,6 +2,7 @@
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using Fpas.Processes;
 
 namespace Fpas.Debugging.Symbols;
 
@@ -17,7 +18,7 @@ internal partial class MetadataImage : IDisposable
     internal MetadataImage(string path)
     {
         Path = System.IO.Path.GetFullPath(path);
-        stream = new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete);
+        stream = RegularFile.OpenRead(Path, shareDelete: true);
         try { Image = new(stream); Metadata = Image.GetMetadataReader(); }
         catch { Image?.Dispose(); stream.Dispose(); throw; }
     }

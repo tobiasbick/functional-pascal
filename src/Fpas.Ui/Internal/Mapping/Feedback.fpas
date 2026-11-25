@@ -4,9 +4,12 @@ unit Fpas.Ui.Internal.Mapping.Feedback;
 
 uses
   Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Feedback.Banners as Banners, Fpas.Ui.Widgets.Feedback.Countdowns as Countdowns,
-  Fpas.Ui.Widgets.Feedback.Checklists as Checklists, Fpas.Ui.Internal.Mapping.MessageMapping as M, System as Sys;
+  Fpas.Ui.Widgets.Feedback.Checklists as Checklists, Fpas.Ui.Widgets.Feedback.Alerts as Alerts,
+  Fpas.Ui.Widgets.Feedback.ProgressBars as ProgressBars, Fpas.Ui.Widgets.Feedback.Spinners as Spinners,
+  Fpas.Ui.Widgets.Planning.TimelineItems as Timeline, Fpas.Ui.Widgets.Audio.LevelMeters as Levels,
+  Fpas.Ui.Layout as L, Fpas.Ui.Internal.Mapping.MessageMapping as M, System as Sys;
 
-// Maps native feedback widgets into the parent message space.
+// Maps feedback widgets into the parent message space.
 // ## Type parameters
 // - `TChild`: Source message type.
 // - `TParent`: Parent message type.
@@ -18,6 +21,53 @@ uses
 public function Map<TChild, TParent>(View: E.Element<TChild>; Messages: function(TChild): TParent): E.Element<TParent>;
 begin
   case View of
+    when E.Element.Alert(
+      const Id: string, const Title: string, const Settings: Alerts.Options,
+      const Notify: Sys.Func<TChild>?
+    ):
+      return E.Element<TParent>.Alert(
+        Id,
+        Title,
+        Settings,
+        M.Factory<TChild, TParent>(Notify, Messages)
+      );
+    when E.Element.ProgressBar(
+      const Id: string,
+      const Fraction: float,
+      const Settings: ProgressBars.Options
+    ):
+      return E.Element<TParent>.ProgressBar(Id, Fraction, Settings);
+    when E.Element.Spinner(const Id: string, const Size: float, const Settings: Spinners.Options?):
+      return E.Element<TParent>.Spinner(Id, Size, Settings);
+    when E.Element.Skeleton(const Id: string, const Width: L.Extent, const Height: float):
+      return E.Element<TParent>.Skeleton(Id, Width, Height);
+    when E.Element.TimelineItem(
+      const Id: string,
+      const Title: string,
+      const Settings: Timeline.Options
+    ):
+      return E.Element<TParent>.TimelineItem(Id, Title, Settings);
+    when E.Element.LevelMeter(
+      const Id: string,
+      const Peaks: array of float,
+      const Settings: Levels.Options,
+      const Notify: Sys.Func<TChild>?
+    ):
+      return E.Element<TParent>.LevelMeter(
+        Id,
+        Peaks,
+        Settings,
+        M.Factory<TChild, TParent>(Notify, Messages)
+      );
+    when E.Element.Meter(
+      const Id: string, const Label: string, const Used: float,
+      const Total: float, const Unit: string
+    ):
+      return E.Element<TParent>.Meter(Id, Label, Used, Total, Unit);
+    when E.Element.ProgressRing(
+      const Id: string, const Label: string, const Value: float, const Size: float
+    ):
+      return E.Element<TParent>.ProgressRing(Id, Label, Value, Size);
     when E.Element.Banner(
       const Id: string, const Text: string, const Open: bool, const Dismiss: Sys.Func<TChild>?,
       const Action: Sys.Func<TChild>?, const Settings: Banners.Options

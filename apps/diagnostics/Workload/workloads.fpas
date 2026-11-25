@@ -6,11 +6,17 @@ uses
   System as Sys, System.Diagnostics as Diag, System.Threading as Threading,
   System.Runtime.CompilerServices as Compiler, System.Collections.Generic as Collections;
 
+// Expected result of one CPU batch.
 public const CpuChecksum: long := 11727587164160L;
+// Expected result of one allocation batch.
 public const AllocationChecksum: long := 62795;
 
+// Exception retained by fault mode for debugger and dump inspection.
 public var CapturedFailure: Sys.Exception? := null;
 
+// Runs the arithmetic workload without allocations in its loop.
+// ## Returns
+// The sum of squared indices, used to verify execution.
 [Compiler.MethodImplAttribute(Compiler.MethodImplOptions.NoInlining)]
 public function CpuBatch(): long;
 begin
@@ -22,6 +28,9 @@ begin
   return Result;
 end function;
 
+// Allocates buffers while retaining a bounded queue across iterations.
+// ## Returns
+// The sum of the markers read back from the allocated buffers.
 [Compiler.MethodImplAttribute(Compiler.MethodImplOptions.NoInlining)]
 public function AllocationBatch(): long;
 begin
@@ -42,6 +51,12 @@ begin
   return Result;
 end function;
 
+// Runs a fixed number of batches.
+// ## Parameters
+// - `Kind`: CPU or allocation workload, selected by the command line.
+// - `Rounds`: Number of batches to run.
+// ## Returns
+// The sum of the batch results.
 public function RunBatch(Kind: string; Rounds: int): long;
 begin
   var Result: long := 0;
@@ -56,6 +71,11 @@ begin
   return Result;
 end function;
 
+// Checks the checksum of a timed workload run.
+// ## Parameters
+// - `Kind`: CPU or allocation workload.
+// - `Rounds`: Number of batches represented by the checksum.
+// - `Value`: Observed sum of the batch results.
 public procedure Verify(Kind: string; Rounds: int; Value: long);
 begin
   const Expected: long := if Kind = 'cpu' then
@@ -68,6 +88,12 @@ begin
   end if;
 end procedure;
 
+// Runs and verifies batches until the requested duration is reached.
+// ## Parameters
+// - `Kind`: CPU or allocation workload.
+// - `Milliseconds`: Target runtime in milliseconds.
+// ## Returns
+// The verified result of the last batch.
 public function RunFor(Kind: string; Milliseconds: int): long;
 begin
   const Clock: Diag.Stopwatch := Diag.Stopwatch.StartNew();
@@ -86,6 +112,10 @@ begin
   raise new Sys.InvalidOperationException('FPAS_DIAGNOSTIC_FAILURE');
 end procedure;
 
+// Holds a known exception alive while an external diagnostic tool inspects it.
+// ## Parameters
+// - `Ready`: Signal file that receives the process ID after the fault.
+// - `Release`: Signal file that ends the bounded wait.
 [Compiler.MethodImplAttribute(Compiler.MethodImplOptions.NoInlining)]
 public procedure HoldFailure(Ready: string; Release: string);
 begin

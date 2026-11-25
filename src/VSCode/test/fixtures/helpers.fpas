@@ -2,6 +2,10 @@
 
 unit Helpers;
 
+// Supplies the value resolved by the editor probe.
+//
+// ## Returns
+// The fixture's constant value.
 public function Answer(): int;
 begin
   return 21;

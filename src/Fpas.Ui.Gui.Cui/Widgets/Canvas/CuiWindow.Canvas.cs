@@ -6,18 +6,18 @@ namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
-    /// <summary>Invokes the native DrawingCanvas operation.</summary>
-    /// <param name="id">id for the native widget.</param>
-    /// <param name="widthKind">widthKind for the native widget.</param>
-    /// <param name="width">width for the native widget.</param>
-    /// <param name="heightKind">heightKind for the native widget.</param>
-    /// <param name="height">height for the native widget.</param>
-    /// <param name="shapes">shapes for the native widget.</param>
-    /// <param name="enabled">enabled for the native widget.</param>
-    /// <param name="x">x for the native widget.</param>
-    /// <param name="y">y for the native widget.</param>
-    /// <param name="w">w for the native widget.</param>
-    /// <param name="h">h for the native widget.</param>
+    /// <summary>Submits a canvas for native layout, drawing and input.</summary>
+    /// <param name="id">Stable, nonempty canvas identifier.</param>
+    /// <param name="widthKind">Width mode. Content=0, fill=1, logical points=2, percentage=3.</param>
+    /// <param name="width">Width in logical points or percentage. Ignored for content and fill modes.</param>
+    /// <param name="heightKind">Height mode using the same encoding as <paramref name="widthKind"/>.</param>
+    /// <param name="height">Height in logical points or percentage. Ignored for content and fill modes.</param>
+    /// <param name="shapes">Canvas-local primitives in paint order.</param>
+    /// <param name="enabled">Whether the canvas participates in pointer and keyboard input inside an enabled parent.</param>
+    /// <param name="x">Pointer X relative to the previously laid-out canvas.</param>
+    /// <param name="y">Pointer Y relative to the previously laid-out canvas.</param>
+    /// <param name="w">Canvas width from the previous layout in logical points.</param>
+    /// <param name="h">Canvas height from the previous layout in logical points.</param>
     /// <param name="wheel">Whether to register the canvas as a native wheel region.</param>
     /// <param name="wheelX">Consumed horizontal wheel delta, in lines.</param>
     /// <param name="wheelY">Consumed vertical wheel delta, in lines.</param>
@@ -27,9 +27,10 @@ public sealed partial class CuiWindow
     /// <param name="focus">Request focus for this submission.</param>
     /// <param name="cursor">Hover cursor ordinal, or -1 for the default.</param>
     /// <param name="onInput">Receives ordered component input after an enabled canvas is submitted.</param>
-    /// <returns>The native widget result.</returns>
+    /// <param name="enabledDuringResize">Keep an enabled canvas eligible for focus during passive resize if it was previously eligible.</param>
+    /// <returns>Whether the user activated this canvas by pointer or keyboard.</returns>
     public unsafe bool DrawingCanvas(string id, int widthKind, float width, int heightKind, float height, CuiDrawingShape[] shapes, bool enabled, out float x, out float y, out float w, out float h, bool wheel, out float wheelX, out float wheelY, Action<CuiCanvasPainter>? paint = null, Action<CuiCanvasPointer>? onPointer = null,
-        bool focusable = false, bool focus = false, int cursor = -1, Action<CuiCanvasInput>? onInput = null)
+        bool focusable = false, bool focus = false, int cursor = -1, Action<CuiCanvasInput>? onInput = null, bool enabledDuringResize = false)
     {
         CheckFrame();
         CheckExtent(widthKind, width, nameof(width));
@@ -43,13 +44,17 @@ public sealed partial class CuiWindow
         if (cursor is < -1 or > 6) throw new ArgumentOutOfRangeException(nameof(cursor));
         string key = Stable(id);
         nint user = RetainCanvasPaint(paint);
+        bool submittingInput = !renderingResize;
+        int inputState = renderingResize ? (enabled || enabledDuringResize ? 2 : 0) : (enabled ? 1 : 0);
         int flags;
         fixed (CuiDrawingShape* data = shapes)
             flags = NativeMethods.DrawingCanvas(context, key, widthKind, width, heightKind, height,
-                data, shapes.Length, enabled ? 1 : 0, out x, out y, out w, out h,
-                wheel ? 1 : 0, out wheelX, out wheelY, CanvasPaintFunction(user), user, onPointer is null ? 0 : 1,
-                focusable ? 1 : 0, onInput is null ? 0 : 1, focus ? 1 : 0, cursor);
-        if ((flags & 16) != 0 && onInput is not null && !renderingResize)
+                data, shapes.Length, inputState, out x, out y, out w, out h,
+                wheel && submittingInput ? 1 : 0, out wheelX, out wheelY, CanvasPaintFunction(user), user,
+                onPointer is not null && submittingInput ? 1 : 0,
+                focusable ? 1 : 0, onInput is null ? 0 : 1, focus && submittingInput ? 1 : 0, cursor);
+        if (!submittingInput) return false;
+        if ((flags & 16) != 0 && onInput is not null)
             canvasHandlers[NativeMethods.LastId(context)] = onInput;
         if ((flags & 2) != 0) onPointer!(new((flags & 4) != 0, (flags & 8) != 0, x, y, w, h));
         return (flags & 1) != 0;

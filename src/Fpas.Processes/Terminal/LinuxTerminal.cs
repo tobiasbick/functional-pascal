@@ -16,9 +16,13 @@ internal sealed class LinuxTerminal : PseudoTerminal
     private readonly Task<int> completion;
     private Task? termination;
     private bool suspended;
+    /// <inheritdoc/>
     public override Stream Input => input;
+    /// <inheritdoc/>
     public override Stream Output => output;
+    /// <inheritdoc/>
     public override int Id { get; }
+    /// <inheritdoc/>
     public override Task<int> Completion => completion;
 
     private LinuxTerminal(int pid, SafeFileHandle master, SafeFileHandle duplicate, bool suspended)
@@ -110,8 +114,10 @@ internal sealed class LinuxTerminal : PseudoTerminal
         Check(Kill(Id, 18)); // SIGCONT
         suspended = false;
     }
+    /// <inheritdoc/>
     public override void Resize(int columns, int rows)
     { Dimensions(columns, rows); var size = new WindowSize { Columns = (ushort)columns, Rows = (ushort)rows }; Check(Ioctl((int)master.DangerousGetHandle(), 0x5414, ref size)); }
+    /// <inheritdoc/>
     public override Task TerminateAsync() => termination ??= Terminate();
     private async Task Terminate()
     {
@@ -125,6 +131,7 @@ internal sealed class LinuxTerminal : PseudoTerminal
             deadline.Token.ThrowIfCancellationRequested(); await Task.Delay(10, deadline.Token);
         }
     }
+    /// <inheritdoc/>
     public override async ValueTask DisposeAsync()
     { try { await TerminateAsync(); } finally { input.Dispose(); output.Dispose(); } }
 

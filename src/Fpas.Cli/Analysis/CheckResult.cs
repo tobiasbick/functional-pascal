@@ -10,14 +10,18 @@ namespace Fpas.Cli.Analysis;
 
 internal sealed record AnalysisDiagnostic : CompilerDiagnostic
 {
+    /// <summary>Gets the project that produced the diagnostic.</summary>
     public string Project { get; }
+    /// <summary>Gets whether the diagnostic was summarized to fit the output budget.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public bool DetailsOmitted { get; init; }
     internal AnalysisDiagnostic(string project, CompilerDiagnostic diagnostic) : base(diagnostic) => Project = project;
 }
 internal sealed record AnalysisError(string Code, string Message, bool OutputTruncated = false, IReadOnlyList<string>? Candidates = null,
     string? Project = null, string? InputPath = null, string? NextAction = null)
 {
+    /// <summary>Gets the snapshot identity requested by the caller, if it did not match.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? ExpectedSnapshotId { get; init; }
+    /// <summary>Gets the snapshot identity captured during analysis, if it did not match.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? ActualSnapshotId { get; init; }
 
     internal static AnalysisError From(ContextFailure failure)
@@ -31,9 +35,12 @@ internal sealed record CheckedProject(string Project, string? Configuration, str
 internal sealed record CheckResult(bool Success, string Status, string? Context, string Configuration, string? SnapshotId,
     IReadOnlyList<CheckedProject> Projects, IReadOnlyList<AnalysisDiagnostic> Diagnostics, AnalysisCoverage Coverage, Preparation? Preparation, AnalysisError? Error)
 {
+    /// <summary>Gets the selected diagnostic filter, pagination and counts.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public DiagnosticPage? DiagnosticPage { get; init; }
+    /// <summary>Gets the source paths analyzed from the supplied draft.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public IReadOnlyList<string>? OverlayFiles { get; init; }
     [JsonIgnore] internal IReadOnlyList<CompilationSource> Sources { get; init; } = [];
+    /// <summary>Gets the correction plan and its publication status, if requested.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public CheckFixes? Fixes { get; init; }
     internal static CheckResult From(WorkspaceAnalysis analysis)
     {

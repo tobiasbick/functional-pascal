@@ -10,14 +10,21 @@ uses
 const MaxAudio: long := 536870912L;
 
 // Creates a private temporary directory when the first episode needs a local file.
+// ## Returns
+// The directory that owns the session's downloaded episode files.
 public function Workspace(): IO.DirectoryInfo;
 begin
   return IO.Directory.CreateTempSubdirectory('fpas-amp-podcasts-');
 end function;
 
-// Downloads one audio enclosure to the session Workspace for the existing file decoder.
-// Url is the media address, Codec an optional decoder hint, and Stop cancels the transfer.
-// Returns the complete file's path. Partial downloads are never opened by the decoder.
+// Downloads one audio enclosure for the finite file decoder.
+// ## Parameters
+// - `Cache`: Session directory owning downloaded episodes.
+// - `Url`: Nonempty absolute media address.
+// - `Codec`: Optional hint for choosing the file suffix.
+// - `Stop`: Cancels the media transfer.
+// ## Returns
+// The path of a complete downloaded or cached file.
 public async function Prepare(Cache: IO.DirectoryInfo; Url: string; Codec: string; Stop: T.CancellationToken): Tasks.Task<string>;
 requires Url <> '';
 begin

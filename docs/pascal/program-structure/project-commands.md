@@ -163,6 +163,8 @@ selection, mapped configuration/platform, roles and direct evaluated project
 references per target framework. A project file is also a valid context.
 Project references are absolute paths and can point outside the supplied context.
 Evaluation uses installed SDKs and runs no build, restore or project targets.
+When one target framework fails, the report retains the successfully evaluated
+frameworks from the same project and includes the evaluation issue.
 
 Use `fpas workspace Example.slnx --file src/View.fpas` to find solution members
 whose evaluated `Compile` items contain the source, including linked files.

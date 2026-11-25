@@ -1,0 +1,216 @@
+// [Documentation](../../../../docs/ui/tui/host.md#input-and-controlled-state)
+
+unit Fpas.Ui.Tui.Internal.Hosting.KeyRouting;
+
+uses
+  Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.TerminalExtensions.Input as K,
+  Fpas.Ui.Tui.Internal.Widgets.Collections.TreeRows as TreeRows,
+  Fpas.Ui.Tui.Internal.Controls.ChoiceStrip as ChoiceStrip,
+  Fpas.Ui.Tui.Internal.Widgets.Inputs.RadioGroup as Radios,
+  Fpas.Ui.Tui.Internal.Hosting.RowNavigation as Navigation,
+  Fpas.Ui.Tui.Internal.Hosting.ScrollNavigation as Scrolling,
+  Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as SelectionList,
+  Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V,
+  Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit,
+  Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit,
+  System as Sys, System.Collections.Generic as Generic;
+
+// Routes a key through the focused control before the active scope and shortcuts.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Layout`: Currently presented terminal scene.
+// - `Control`: Eligible focused control, when there is one.
+// - `Key`: Pressed terminal key.
+// - `Modifiers`: Active key modifiers.
+// - `ScrollOffsets`: Session scroll offsets by viewport.
+// - `Apply`: Dispatches a proposed application message.
+// - `SetFocus`: Focuses an eligible visible or offscreen control.
+// - `RememberFocus`: Stores a keyboard destination selected by this routing pass.
+// - `Invoke`: Runs a direct control action and reports whether it handled the key.
+// - `Dismiss`: Proposes dismissal of the active overlay.
+// - `Cycle`: Traverses tab stops, backwards when requested.
+public procedure Route<TMsg>(
+  Layout: A.Layout<TMsg>; Control: A.Control<TMsg>?; Key: K.Key; Modifiers: K.KeyModifiers;
+  ScrollOffsets: Generic.Dictionary<string, int>; Apply: procedure(TMsg);
+  SetFocus: procedure(A.Layout<TMsg>, string); RememberFocus: procedure(string);
+  Invoke: function(A.Control<TMsg>): bool; Dismiss: function(A.Scope<TMsg>?): bool;
+  Cycle: procedure(A.Layout<TMsg>, bool)
+);
+begin
+  const Modal: A.Scope<TMsg>? := Layout.Active;
+  if Modal = null and Key = K.Key.K and Modifiers = K.KeyModifiers.Ctrl then
+    case Layout.OpenPalette of
+      when is Sys.Func<TMsg> as OpenPalette:
+        Apply(OpenPalette.Invoke());
+        return;
+      else
+    end case;
+  end if;
+
+  if Control <> null then
+    const Pan: A.HorizontalViewport? := Control.Pan;
+    if Pan <> null and Modifiers = K.KeyModifiers.Ctrl and (Key = K.Key.Left or Key =
+      K.Key.Right)
+    then
+      Scrolling.MoveOffset(
+        ScrollOffsets,
+        new A.ScrollRegion(Pan.Id, Control.Scope, Control.Bounds, Pan.Maximum),
+        if Key = K.Key.Left then
+          -Pan.Step
+        else
+          Pan.Step
+        end if
+      );
+      return;
+    end if;
+
+    if Modifiers = K.KeyModifiers.None then
+      if Control.Role = 'treeitem' then
+        const TreeTarget: string? := TreeRows.Navigate<TMsg>(
+          A.Activatable<TMsg>(Control.Action),
+          Key,
+          Apply
+        );
+        if TreeTarget <> null then
+          if TreeTarget <> '' then
+            SetFocus(Layout, TreeTarget);
+          end if;
+
+          return;
+        end if;
+      end if;
+      const Next: string? := case Control.Role of
+        when 'radio': Radios.Move<TMsg>(A.Activatable<TMsg>(Control.Action), Key, Apply);
+        when 'tab', 'segment': ChoiceStrip.Move<TMsg>(
+          A.Activatable<TMsg>(Control.Action),
+          Key,
+          Apply
+        );
+        else null;
+      end case;
+      if Next <> null then
+        RememberFocus(Next);
+        discard Navigation.Reveal<TMsg>(Layout, Next, ScrollOffsets, Apply);
+        return;
+      end if;
+    end if;
+
+    if (Control.Role = 'navigation' or Control.Role = 'table-row' or Control.Role = 'treeitem')
+      and Modifiers =
+      K.KeyModifiers.None
+    then
+      const Id: string? := Navigation.Move<TMsg>(Layout, Control.Id, Key, ScrollOffsets, Apply);
+      if Id <> null then
+        RememberFocus(Id);
+        return;
+      end if;
+    end if;
+
+    if (Control.Role = 'menu' or Control.Role = 'multi-select')
+      and Key = K.Key.Down and Modifiers = K.KeyModifiers.None
+    then
+      discard Invoke(Control);
+      return;
+    end if;
+
+    if Key = K.Key.Enter and Modifiers = K.KeyModifiers.None and Invoke(Control) then
+      return;
+    end if;
+
+    case Control.Action of
+      when A.Binding.SelectionList(
+        const List: E.SelectionListView<TMsg>,
+        _,
+        const View: V.Viewport<TMsg>
+      ):
+        if Modifiers = K.KeyModifiers.None and SelectionList.Navigate<TMsg>(
+          List,
+          View,
+          Key,
+          ScrollOffsets,
+          Apply
+        )
+        then
+          return;
+        end if;
+      when A.Binding.Invoke(_):
+        if Control.ArrowFocus and Modifiers = K.KeyModifiers.None
+          and (Key = K.Key.Up or Key = K.Key.Down)
+        then
+          Cycle(Layout, Key = K.Key.Up);
+          return;
+        end if;
+      when A.Binding.Scroll(const View: V.Viewport<TMsg>):
+        if (Control.Role = 'log' or Control.Role = 'table') and Modifiers =
+          K.KeyModifiers.None
+        then
+          const Delta: int := Navigation.Delta(Key, View.Rows, int.MaxValue);
+          if Delta <> 0 then
+            Scrolling.MoveOffset(
+              ScrollOffsets,
+              new A.ScrollRegion(Control.Id, Control.Scope, Control.Bounds, View.Maximum),
+              Delta
+            );
+            return;
+          end if;
+        end if;
+
+        if Scrolling.Key<TMsg>(View, Key, Modifiers, Apply) then
+          return;
+        end if;
+      when A.Binding.EditArea(const Area: AreaEdit.View<TMsg>, _, _):
+        if AreaEdit.Key<TMsg>(Area, Key, Modifiers, Apply) then
+          return;
+        end if;
+      when A.Binding.Edit(const Field: Edit.Field<TMsg>, const Position: Edit.Tracking, _, _):
+        if Edit.Key<TMsg>(Field, Position, Key, Modifiers, Apply) then
+          return;
+        end if;
+      when A.Binding.Grid(_, _):
+    end case;
+  end if;
+
+  if Key = K.Key.Escape and Dismiss(Modal) then
+    return;
+  end if;
+
+  if Modal <> null and Modal.Panel <> null and Modifiers = K.KeyModifiers.None
+    and (Key = K.Key.PageUp or Key = K.Key.PageDown)
+  then
+    for Region: A.ScrollRegion in Layout.Regions do
+      if Region.Id = Modal.Id and Region.Scope = Modal.Id then
+        Scrolling.MoveOffset(
+          ScrollOffsets, Region,
+          if Key = K.Key.PageUp then
+            -Region.Bounds.Height
+          else
+            Region.Bounds.Height
+          end if
+        );
+        return;
+      end if;
+    end for;
+  end if;
+  const Keys: array of K.ShortcutBinding<TMsg> := if Modal = null then
+    Layout.GlobalKeys
+  else
+    Modal.Shortcuts
+  end if;
+  for Shortcut: K.ShortcutBinding<TMsg> in Keys do
+    if Shortcut.Character = '' and Shortcut.PressedKey = Key and Shortcut.Modifiers =
+      Modifiers
+    then
+      Apply(Shortcut.Message);
+      return;
+    end if;
+  end for;
+
+  if Key = K.Key.Tab and (Modifiers = K.KeyModifiers.None or Modifiers =
+    K.KeyModifiers.Shift)
+  then
+    Cycle(Layout, Modifiers = K.KeyModifiers.Shift);
+  end if;
+end procedure;
+
+end unit;

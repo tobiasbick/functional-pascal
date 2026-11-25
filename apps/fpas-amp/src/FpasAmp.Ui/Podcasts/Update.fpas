@@ -54,7 +54,7 @@ begin
   return new A.Transition<M.State, M.Msg>(
     Current with
       Searching := true;
-      Searched := Term <> '';
+      SearchTerm := Term;
       SearchError := null;
       SearchRevision := Revision;
       SearchCursor := -1;
@@ -122,8 +122,13 @@ begin
   );
 end function;
 
-// Updates Current for an Action and returns any cancellable directory or feed work.
-// Subscriptions supplies the saved feeds for the local subscription filter.
+// Advances the podcast directory or feed page.
+// ## Parameters
+// - `Current`: The current page model.
+// - `Action`: A user action or a detached reply from the directory or feed worker.
+// - `Subscriptions`: Saved feeds for the local subscription filter.
+// ## Returns
+// The new page model and any cancellable directory or feed commands.
 public function Apply(Current: M.State; Action: M.Msg; Subscriptions: array of M.Show): A.Transition<M.State, M.Msg>;
 begin
   var Next: M.State := Current;
@@ -134,7 +139,7 @@ begin
       Next := Current with
         Query := Value;
       end with;
-      if Value.Trim() = '' and Current.Searched then
+      if Value.Trim() = '' and Current.Searched() then
         return Search(Next, '');
       end if;
     when M.Msg.Search(const Value: string):
@@ -190,10 +195,10 @@ begin
           Subscription := Discovery.Subscription;
         end with;
         if Discovery.Market <> Current.Market then
-          return Search(Next, Current.Query.Trim());
+          return Search(Next, Current.SearchTerm);
         end if;
 
-        if Discovery.Genre <> Current.Genre and not Current.Searched then
+        if Discovery.Genre <> Current.Genre and not Current.Searched() then
           return Search(Next, '');
         end if;
 

@@ -9,21 +9,25 @@ using System.Xml.Linq;
 
 namespace Fpas.IntegrationTests.Workspaces;
 
+/// <summary>Exercises console interruption during analysis, preparation, and refactoring.</summary>
+/// <param name="sdk">Provides the packaged SDK and workspace fixture.</param>
 public sealed class AnalysisSignalTests(SdkPackageFixture sdk) : IClassFixture<SdkPackageFixture>
 {
+    /// <summary>Checks reports and process cleanup when the user interrupts an analysis command.</summary>
     [Fact]
     public async Task Console_interrupt_returns_exit_130_and_one_cancelled_JSON_document_after_joining_build_tasks()
     {
+        const string bridgeDeclarationLine = "12";
         foreach (var arguments in new[]
         {
             new[] { "check", "Game/Game.fpasproj", "--report", "json" },
             new[] { "check", "Game/Game.fpasproj", "--fix", "--report", "json" },
             new[] { "doc", "Game/Game.fpasproj", "--name", "System.Console", "--report", "json" },
-            new[] { "refactor", "rename", "Game/Game.fpasproj", "--file", "Game/Bridge.fpas", "--line", "6", "--column", "17", "--new-name", "Describe", "--plan", ".temp-data/rename.json", "--report", "json" },
+            new[] { "refactor", "rename", "Game/Game.fpasproj", "--file", "Game/Bridge.fpas", "--line", bridgeDeclarationLine, "--column", "17", "--new-name", "Describe", "--plan", ".temp-data/rename.json", "--report", "json" },
             new[] { "refactor", "apply", "Game/Game.fpasproj", "--plan", ".temp-data/rename.json", "--report", "json" },
-            new[] { "query", "refs", "Game/Game.fpasproj", "--file", "Game/Bridge.fpas", "--line", "6", "--column", "25" },
-            new[] { "query", "callees", "Game/Game.fpasproj", "--file", "Game/Bridge.fpas", "--line", "6", "--column", "25" },
-            new[] { "query", "callers", "Game/Game.fpasproj", "--file", "Game/Bridge.fpas", "--line", "6", "--column", "25" }
+            new[] { "query", "refs", "Game/Game.fpasproj", "--file", "Game/Bridge.fpas", "--line", bridgeDeclarationLine, "--column", "25" },
+            new[] { "query", "callees", "Game/Game.fpasproj", "--file", "Game/Bridge.fpas", "--line", bridgeDeclarationLine, "--column", "25" },
+            new[] { "query", "callers", "Game/Game.fpasproj", "--file", "Game/Bridge.fpas", "--line", bridgeDeclarationLine, "--column", "25" }
         })
         {
             using var project = sdk.CreateProject();
@@ -41,7 +45,7 @@ public sealed class AnalysisSignalTests(SdkPackageFixture sdk) : IClassFixture<S
             if (afterRename)
             {
                 var planned = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "refactor", "rename", "Game/Game.fpasproj", "--file", "Game/Bridge.fpas",
-                    "--line", "6", "--column", "17", "--new-name", "Describe", "--plan", ".temp-data/rename.json", "--report", "json"],
+                    "--line", bridgeDeclarationLine, "--column", "17", "--new-name", "Describe", "--plan", ".temp-data/rename.json", "--report", "json"],
                     workingDirectory: project.Path, timeLimit: TimeSpan.FromMinutes(2));
                 Assert.True(planned.ExitCode == 0, planned.Output + planned.Error);
             }

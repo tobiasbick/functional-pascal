@@ -11,40 +11,71 @@ namespace Fpas.Build.Tasks.Analysis;
 /// <summary>Exports the evaluated FPAS compilation inputs as a JSON analysis manifest for workspace loading.</summary>
 public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
 {
+    /// <summary>Gets or sets the absolute destination of the new analysis manifest.</summary>
     [Required] public string ManifestFile { get; set; } = "";
+    /// <summary>Gets or sets the path of the evaluated project.</summary>
     [Required] public string ProjectPath { get; set; } = "";
+    /// <summary>Gets or sets the compiler executable or managed entry assembly.</summary>
     [Required] public string CompilerPath { get; set; } = "";
+    /// <summary>Gets or sets the compiler assembly used to verify toolchain identity.</summary>
     public string CompilerAssemblyPath { get; set; } = "";
+    /// <summary>Gets or sets the description or resolved-input phase.</summary>
     public string Phase { get; set; } = "description";
+    /// <summary>Gets or sets the evaluated configuration.</summary>
     public string Configuration { get; set; } = "Debug";
+    /// <summary>Gets or sets the evaluated platform, which must resolve to AnyCPU.</summary>
     public string Platform { get; set; } = "AnyCPU";
+    /// <summary>Gets or sets the evaluated target framework, net10.0.</summary>
     public string TargetFramework { get; set; } = "";
+    /// <summary>Gets or sets the name of the emitted assembly.</summary>
     public string AssemblyName { get; set; } = "";
+    /// <summary>Gets or sets whether the project produces an Exe, WinExe or Library.</summary>
     public string OutputType { get; set; } = "Library";
+    /// <summary>Gets or sets the restore assets path required for resolved inputs.</summary>
     public string ProjectAssetsFile { get; set; } = "";
+    /// <summary>Gets or sets the destination assembly path used in the build proof.</summary>
     public string OutputAssembly { get; set; } = "";
+    /// <summary>Gets or sets the path of the incremental compilation proof.</summary>
     public string BuildCache { get; set; } = "";
+    /// <summary>Gets or sets the debug symbol format used in the build proof.</summary>
     public string DebugType { get; set; } = "portable";
+    /// <summary>Gets or sets whether compiler optimizations are enabled.</summary>
     public bool Optimize { get; set; }
+    /// <summary>Gets or sets the optional assembly signing key path.</summary>
     public string SigningKey { get; set; } = "";
+    /// <summary>Gets or sets public signing without a private-key signature.</summary>
     public bool PublicSign { get; set; }
+    /// <summary>Gets or sets whether signing reserves a signature for later completion.</summary>
     public bool DelaySign { get; set; }
+    /// <summary>Gets or sets the optional XML documentation path.</summary>
     public string DocumentationFile { get; set; } = "";
+    /// <summary>Gets or sets the optional documentation publication destination.</summary>
     public string DocumentationDestination { get; set; } = "";
+    /// <summary>Gets or sets the optional documentation output copy.</summary>
     public string DocumentationOutput { get; set; } = "";
+    /// <summary>Gets or sets whether analysis must validate source documentation.</summary>
     public bool GenerateDocumentationFile { get; set; }
+    /// <summary>Gets or sets whether all enabled warnings are errors.</summary>
     public bool TreatWarningsAsErrors { get; set; }
+    /// <summary>Gets or sets diagnostic codes promoted to errors.</summary>
     public string WarningsAsErrors { get; set; } = "";
+    /// <summary>Gets or sets diagnostic codes exempt from warning promotion.</summary>
     public string WarningsNotAsErrors { get; set; } = "";
+    /// <summary>Gets or sets diagnostic codes to suppress.</summary>
     public string NoWarn { get; set; } = "";
+    /// <summary>Gets or sets the FPAS sources in the evaluated context.</summary>
     public ITaskItem[] Sources { get; set; } = [];
+    /// <summary>Gets or sets the resolved CLR assembly references.</summary>
     public ITaskItem[] References { get; set; } = [];
     /// <summary>Gets or sets neutral resource inputs for compilation proof validation.</summary>
     public ITaskItem[] Resources { get; set; } = [];
     /// <summary>Gets or sets optional native Windows resources for compilation proof validation.</summary>
     public ITaskItem? WindowsResources { get; set; }
+    /// <summary>Gets or sets project references with their configuration and platform mappings.</summary>
     public ITaskItem[] Projects { get; set; } = [];
+    /// <summary>Gets or sets output assembly paths for referenced projects.</summary>
     public ITaskItem[] ProjectOutputs { get; set; } = [];
+    /// <summary>Gets or sets whether checked FPAS sources can supply dependency metadata.</summary>
     public bool UseSourceReferences { get; set; }
 
     /// <inheritdoc/>

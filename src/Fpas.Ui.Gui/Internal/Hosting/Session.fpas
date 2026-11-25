@@ -127,7 +127,7 @@ requires Capacity > 0;
     Window.CapturePng(Path);
   end procedure;
 
-  function Context(Candidate: V.Prepared<TMsg>; Accept: bool; ObserveTransitions: bool): C.State<TMsg>;
+  function Context(Candidate: V.Prepared<TMsg>; Accept: bool; ObserveTransitions: bool; PreserveCanvasFocus: bool := false): C.State<TMsg>;
   begin
     const Last: App.Frame? := Published;
     const Previous: array of App.Control := if Last = null then
@@ -151,7 +151,8 @@ requires Capacity > 0;
       Modal,
       ObserveTransitions := ObserveTransitions,
       CompletedAnimations := CompletedAnimations,
-      PreviousFocus := PreviousFocus
+      PreviousFocus := PreviousFocus,
+      PreserveCanvasFocus := PreserveCanvasFocus
     );
   end function;
 
@@ -178,7 +179,12 @@ requires Capacity > 0;
 
   procedure Paint(Candidate: V.Prepared<TMsg>; Accept: bool; Size: Cui.CuiSize);
   begin
-    const State: C.State<TMsg> := Context(Candidate, Accept, Cleanup = null);
+    const State: C.State<TMsg> := Context(
+      Candidate,
+      Accept,
+      Cleanup = null,
+      Cleanup = null and not Accept
+    );
     P.Draw<TMsg>(State);
     KeyBindings.Collect<TMsg>(Window, Bindings, Accept, State.Messages);
     if Accept then
@@ -229,11 +235,11 @@ requires Capacity > 0;
 
   procedure ClosingFrame();
   begin
-    if not Window.NextFrame() then
-      return;
-    end if;
-    const Cached: V.Prepared<TMsg>? := Prepared;
     try
+      if not Window.NextFrame() then
+        return;
+      end if;
+      const Cached: V.Prepared<TMsg>? := Prepared;
       if Cached <> null and not BrokenView then
         Paint(Cached, false, Window.Size);
       else
@@ -270,7 +276,12 @@ requires Capacity > 0;
       raise new Sys.InvalidOperationException('Do not dispose a GUI session from its callbacks.');
     end if;
 
-    Stop();
+    Driving := true;
+    try
+      Stop();
+    finally
+      Driving := false;
+    end try;
   end procedure;
 
   function Step(): bool;

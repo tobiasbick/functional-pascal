@@ -4,8 +4,10 @@ using System.Text.Json;
 
 namespace Fpas.IntegrationTests.Projects;
 
+/// <summary>Checks passive workspace inventory, source ownership and reverse dependency reporting.</summary>
 public sealed class WorkspaceInventoryTests
 {
+    /// <summary>Checks solution mappings and confirms inventory leaves restore and build untouched.</summary>
     [Fact]
     public async Task Reports_mapped_roles_and_references_without_running_targets_or_restoring()
     {
@@ -60,6 +62,7 @@ public sealed class WorkspaceInventoryTests
         Assert.False(File.Exists(directory.File("target.marker")));
         Assert.False(Directory.Exists(directory.File("obj")));
     }
+    /// <summary>Checks source ownership against evaluated conditional, linked and removed compile items.</summary>
     [Fact]
     public async Task File_filter_matches_conditional_and_linked_compile_items()
     {
@@ -108,6 +111,36 @@ public sealed class WorkspaceInventoryTests
         Assert.False(Directory.Exists(directory.File("App/obj")));
     }
 
+    /// <summary>Checks that affected source ownership survives a failure in an earlier target framework.</summary>
+    [Fact]
+    public async Task Partial_target_evaluation_retains_owners_from_later_frameworks()
+    {
+        using var directory = new TemporaryDirectory();
+        var project = directory.File("App.csproj");
+        File.WriteAllText(project, """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup><TargetFrameworks>net10.0;net9.0</TargetFrameworks></PropertyGroup>
+              <Import Project="Generated.props" Condition="'$(TargetFramework)' == 'net10.0'" />
+            </Project>
+            """);
+        File.WriteAllText(directory.File("Shared.cs"), "public sealed class Shared {}");
+        var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "workspace", project, "--affected", "Shared.cs"],
+            workingDirectory: directory.Path, timeLimit: TimeSpan.FromMinutes(1));
+        Assert.Equal(1, result.ExitCode);
+        Assert.Empty(result.Error);
+        using var document = JsonDocument.Parse(result.Output);
+        var report = document.RootElement;
+        Assert.Equal("partial", report.GetProperty("status").GetString());
+        var entry = Assert.Single(report.GetProperty("projects").EnumerateArray());
+        Assert.Equal("net9.0", Assert.Single(entry.GetProperty("frameworks").EnumerateArray()).GetProperty("framework").GetString());
+        Assert.Equal("evaluation_failed", entry.GetProperty("issue").GetProperty("code").GetString());
+        var impact = report.GetProperty("impact");
+        Assert.False(impact.GetProperty("complete").GetBoolean());
+        var source = Assert.Single(impact.GetProperty("sources").EnumerateArray());
+        Assert.Equal(project, Assert.Single(source.GetProperty("owners").EnumerateArray()).GetString());
+    }
+
+    /// <summary>Checks reverse dependencies, related test projects and partial graph reporting.</summary>
     [Fact]
     public async Task Affected_sources_include_linked_owners_and_transitive_tests_and_report_incomplete_graphs()
     {

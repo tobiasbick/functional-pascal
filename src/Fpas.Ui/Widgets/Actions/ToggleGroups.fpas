@@ -12,11 +12,11 @@ public type Item = record
   public Icon: string := '';
 end record;
 
-// Toggle group appearance and input settings.
+// Native toggle group appearance and input settings.
 public type Options = record
   // Require one selected item and clear the others when a different item is chosen.
   public Exclusive: bool := false;
-  // In the GUI, show items with icons as glyphs and their labels as tooltips.
+  // Show items with icons as glyphs and keep their labels as tooltips.
   public IconOnly: bool := false;
   // Medium, small or large CUI control size.
   public ControlSize: B.Size := B.Size.Medium;
@@ -24,7 +24,7 @@ public type Options = record
   public Enabled: bool := true;
 end record;
 
-// Creates a controlled toggle group for GUI or terminal.
+// Creates a controlled toggle group for the graphical profile.
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -33,7 +33,7 @@ end record;
 // - `Items`: One through 32 choices, in stable positional order.
 // - `Selected`: One model-owned flag per item. Exclusive groups require exactly one selected item.
 // - `OnChange`: Maps a changed set of flags to a message.
-// - `Settings`: Toggle mode, size, graphical icons and input permission.
+// - `Settings`: Native toggle mode, size, icons and input permission.
 // ## Returns
 // A group which proposes a new selection without mutating the supplied flags.
 public function ToggleGroup<TMsg>(

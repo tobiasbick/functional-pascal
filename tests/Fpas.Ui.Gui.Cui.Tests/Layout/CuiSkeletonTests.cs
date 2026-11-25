@@ -74,7 +74,7 @@ public sealed class CuiSkeletonTests
         Assert.Equal(50, window.GetControlRectangle("height").Height, precision: 1);
     }
 
-    /// <summary>Invalid modes, percentages, heights and growth combinations leave the frame usable.</summary>
+    /// <summary>Invalid modes, percentages, bounds, heights and growth combinations leave the frame usable.</summary>
     [GuiFact]
     public void InvalidSizesDoNotCorruptTheFrame()
     {
@@ -88,6 +88,8 @@ public sealed class CuiSkeletonTests
             Assert.Throws<ArgumentOutOfRangeException>(() => window.SizeLast(true, 3, value, 0, -1, 0, 0));
         }
         Assert.Throws<ArgumentOutOfRangeException>(() => window.SizeLast(true, 3, 50, 0, -1, 1, 0));
+        Assert.Throws<ArgumentOutOfRangeException>("maximum", () => window.SizeLast(true, 0, 0, 0, -.5f, 0, 0));
+        Assert.Throws<ArgumentOutOfRangeException>("maximum", () => window.SizeLast(true, 0, 0, 10, 5, 0, 0));
         foreach (float height in new[] { -1, float.NaN, float.PositiveInfinity })
             Assert.Throws<ArgumentOutOfRangeException>(() => window.Skeleton("bad", height: height));
         window.Skeleton("valid"); window.Present();

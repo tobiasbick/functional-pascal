@@ -114,11 +114,11 @@ public type Element<TMsg> = variant
   Countdown(Id: string; SecondsLeft: double; Settings: Countdowns.Options);
   // Display CUI's onboarding checklist and its native progress.
   Checklist(Id: string; Steps: array of Checklists.Step; OnToggle: function(int, bool): TMsg; OnAction: Sys.Func<int, TMsg>?; Settings: Checklists.Options);
-  // Display a native inline alert with CUI-owned dismissal.
+  // Display an inline alert with host-owned dismissal.
   Alert(Id: string; Title: string; Settings: Alerts.Options; OnDismiss: Sys.Func<TMsg>?);
-  // Display a native progress fraction or activity animation.
+  // Display a progress fraction or activity animation.
   ProgressBar(Id: string; Value: float; Settings: ProgressBars.Options);
-  // Display a native activity spinner.
+  // Display an activity spinner.
   Spinner(Id: string; Size: float; Settings: Spinners.Options?);
   // Display linear audio peaks on a native dBFS scale.
   LevelMeter(Id: string; Peaks: array of float; Settings: Levels.Options; OnClipCleared: Sys.Func<TMsg>?);
@@ -179,9 +179,9 @@ public type Element<TMsg> = variant
   CheckboxAction(Id: string; Label: string; Checked: bool; OnChange: function(bool): TMsg; Description: string; Enabled: bool; Indeterminate: bool; HideLabel: bool);
   // Propose a changed model-owned switch value.
   SwitchAction(Id: string; Label: string; On: bool; OnChange: function(bool): TMsg; Description: string; Enabled: bool);
-  // Propose selecting one native CUI radio row.
+  // Propose selecting one radio row.
   RadioAction(Id: string; Label: string; Selected: bool; OnSelect: function(): TMsg; Description: string; Enabled: bool);
-  // Select one of the native radio rows in positional order.
+  // Select one radio row in positional order.
   Radios(Id: string; Items: array of RadioGroups.Item; Selected: int; OnChange: function(int): TMsg; Enabled: bool; Gap: L.Spacing);
   // Select one card through the native CUI grid.
   Cards(Id: string; Items: array of RadioCards.Item; Selected: int; OnChange: function(int): TMsg; Settings: RadioCards.Options);
@@ -207,11 +207,11 @@ public type Element<TMsg> = variant
   ChipAction(Id: string; Label: string; Selected: bool; OnChange: function(bool): TMsg; Icon: string; Enabled: bool);
   // Select a graphical whole-star rating.
   RatingAction(Id: string; Label: string; Value: int; OnChange: function(int): TMsg; Maximum: int; Enabled: bool; StarSize: float);
-  // Select a tab in a native graphical strip.
+  // Select a tab in a strip.
   TabStrip(Id: string; Items: array of Tabs.Item; Selected: int; OnChange: function(int): TMsg; Settings: Tabs.Options);
-  // Navigate to an ancestor in a graphical breadcrumb trail.
+  // Navigate to an ancestor in a breadcrumb trail.
   BreadcrumbTrail(Id: string; Items: array of string; OnNavigate: function(int): TMsg; Enabled: bool);
-  // Select a page in a native graphical pager.
+  // Select a page in a pager.
   PaginationAction(Id: string; Page: int; PageCount: int; OnChange: function(int): TMsg; Enabled: bool);
   // Display model-owned progress through a graphical sequence of steps.
   StepProgress(Id: string; Steps: array of string; Current: int);
@@ -223,7 +223,7 @@ public type Element<TMsg> = variant
   Contextual(Id: string; Target: Element<TMsg>; Entries: array of Menus.Entry<TMsg>; Enabled: bool);
   // Attach graphical hover help to one interactive control.
   Hinted(Target: Element<TMsg>; Text: string; Shortcut: string);
-  // Edit one graphical line with a model-owned value.
+  // Edit one line with a model-owned value.
   TextField(Id: string; Value: string; OnChange: function(string): TMsg; Settings: TextFields.Options; OnSubmit: Sys.Func<string, TMsg>?);
   // Native inline text with a retained draft and model-owned commit.
   InlineEdit(Id: string; Value: string; OnChange: function(string): TMsg; Settings: InlineEdits.Options);
@@ -643,6 +643,7 @@ public type CacheEntry<TMsg> = record
 end record;
 
 type DependencyBox<TDeps> = record
+  // Original dependency value used by the subview's equality check.
   public Value: TDeps;
 end record;
 

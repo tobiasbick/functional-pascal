@@ -39,7 +39,8 @@ streams. Cancellation or a deadline terminates and joins those probes.
   directory. `NUGET_PACKAGES` takes precedence; otherwise the selected host
   queries NuGet's configured cache location. Compiler/Core content hashes
   distinguish `matching`, `different` and `incomplete` packages, including stale
-  files under an unchanged package version.
+  files under an unchanged package version. The expected SDK is also incomplete
+  when `tools/runtime/Fpas.Execution.Effects.dll` is missing.
 - `debugger`: passive deployment facts: status, managed/shim versions, selected
   RID and shim path/hash, required runtime and available `batch`/`dap` protocols.
   It does not load the native shim or start a worker/target.

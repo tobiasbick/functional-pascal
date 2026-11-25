@@ -4,6 +4,15 @@ unit Fpas.Ui.Internal.Validation.MediaRules;
 
 uses Fpas.Ui.Widgets.Media.MediaImages as M, Fpas.Ui.Internal.Validation.Rules as R, System as Sys;
 
+procedure Rgba(Width: int; Height: int; Pixels: array of byte; At: string);
+begin
+  if Width <= 0 or Height <= 0 or cast<long>(Width) * Height > Sys.Int32.MaxValue div 4
+    or Pixels = null or Pixels.Length <> cast<long>(Width) * Height * 4
+  then
+    R.Reject(At, 'The RGBA image must contain four bytes per pixel.');
+  end if;
+end procedure;
+
 // Checks a graphical image source before uploading it.
 // ## Parameters
 // - `Source`: Image file or tightly packed RGBA buffer.
@@ -26,18 +35,14 @@ begin
       const RW: int,
       const RH: int
     ):
-      Image(M.Source.Rgba(W, H, Data), At);
+      Rgba(W, H, Data, At);
       if Previous = null or Previous.Length <> Data.Length or X < 0 or Y < 0 or RW <= 0 or RH <= 0
         or RW > W - X or RH > H - Y
       then
         R.Reject(At, 'Invalid RGBA update rectangle or previous snapshot.');
       end if;
     when M.Source.Rgba(const Width: int, const Height: int, const Pixels: array of byte):
-      if Width <= 0 or Height <= 0 or cast<long>(Width) * Height > Sys.Int32.MaxValue div 4
-        or Pixels = null or Pixels.Length <> cast<long>(Width) * Height * 4
-      then
-        R.Reject(At, 'The RGBA image must contain four bytes per pixel.');
-      end if;
+      Rgba(Width, Height, Pixels, At);
   end case;
 end procedure;
 

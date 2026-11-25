@@ -2,94 +2,163 @@
 
 unit DocExamples.Model;
 
+// A Markdown fence and its validation instructions.
 public type Example = record
+  // Source Markdown path.
   public Document: string;
+  // One-based line of the fence opener.
   public Line: int;
+  // Fence language, such as pascal, text, XML, or JSON.
   public Language: string;
+  // Original fence contents.
   public Source: string;
+  // Identifier unique within the document.
   public Id: string;
+  // Whether a context supplies the surrounding program or unit.
   public Fragment: bool := false;
+  // Context template name when specified.
   public Context: string := '';
+  // Whether the program must also run successfully or fail as specified.
   public Execute: bool := false;
+  // Compiler diagnostic code expected from this fence.
   public ExpectedError: string := '';
+  // Name shared by this example and its supporting fences.
   public Project: string := '';
+  // Relative output name, when the fence declares one.
   public FileName: string := '';
+  // Relative project manifest selected for a build.
   public Manifest: string := '';
+  // Name of an expected-output fence or the literal empty.
   public ExpectedOutput: string := '';
+  // Expected exception type when the program must fail.
   public ExpectedException: string := '';
 end record;
 
+// The input, toolchain and execution options for one checker invocation.
 public type Options = record
+  // Repository root used to resolve includes and default paths.
   public Root: string;
+  // New directory for generated sources, assemblies and results.
   public Output: string;
+  // Compiler CLI assembly used for direct compilation.
   public Compiler: string;
+  // Directory of .NET reference assemblies.
   public References: string;
+  // Absolute executable path of the .NET host.
   public Dotnet: string;
+  // Directory containing reusable contexts and companions.
   public Contexts: string;
-
+  // Markdown inputs chosen for this invocation.
   public Documents: array of string;
+  // Assembly references supplied in addition to the reference directory.
   public ExtraReferences: array of string;
-
+  // Per-process deadline in seconds.
   public Timeout: int := 10;
+  // Maximum number of examples checked concurrently.
   public Jobs: int := 4;
+  // Whether to write the structured JSON report to stdout.
   public Json: bool := false;
 end record;
 
+// The source map entry for one generated source line.
 public type Origin = record
+  // Markdown or context file supplying this line.
   public Document: string;
+  // One-based line in the original file.
   public Line: int;
+  // Whether the line comes from the checked excerpt itself.
   public Primary: bool;
 end record;
 
+// Expanded source and its source map.
 public type Source = record
+  // Destination path in the generated project.
   public Path: string;
+  // Full source text submitted to the compiler.
   public Text: string;
+  // Original locations in generated line order.
   public Lines: array of Origin;
 end record;
 
+// Materialized sources and outputs for one example.
 public type Prepared = record
+  // Source path of the primary excerpt.
   public Primary: string;
+  // Destination path used for direct compilation.
   public Assembly: string;
+  // Whether the primary excerpt declares a unit.
   public Library: bool;
+  // The primary and companion source files compiled together.
   public Sources: array of Source;
+  // Generated project path when a manifest was selected.
   public Manifest: string;
 end record;
 
+// The result of checking one example.
 public type Outcome = record
+  // Original file associated with the outcome or its diagnostic.
   public Document: string;
+  // One-based line associated with the outcome.
   public Line: int;
+  // Identifier of the example within the document.
   public Id: string;
+  // Whether the outcome met every selected expectation.
   public Passed: bool;
+  // The last preparation, compilation, manifest or execution stage reached.
   public Stage: string;
+  // Human-readable explanation of the outcome.
   public Message: string;
+  // Direct compiler outcome, including intentional rejection.
   public Compile: string := 'not_run';
+  // Execution outcome when the fence requests a run.
   public Run: string := 'not_selected';
+  // Generated assembly path when prepared.
   public Assembly: string := '';
+  // Whether the prepared primary source is a unit.
   public Library: bool := false;
+  // Generated project path when the example selects one.
   public Manifest: string := '';
 end record;
 
+// An invocation report with detached results and toolchain identities.
 public type Report = record
+  // JSON report schema version.
   public Schema: int;
+  // Repository root used for document resolution.
   public Root: string;
+  // Compiler assembly selected for the invocation.
   public Compiler: string;
+  // SHA-256 hash of the selected compiler assembly.
   public CompilerHash: string;
+  // .NET reference assembly directory used for each compilation.
   public References: string;
+  // Additional assembly references used by the checker.
   public ExtraReferences: array of string;
+  // Compiler assembly recorded by the SDK bootstrap.
   public SdkCompiler: string;
+  // SHA-256 hash of the SDK compiler assembly.
   public SdkCompilerHash: string;
+  // Root directory of the generated outputs.
   public Output: string;
-
+  // Number of examples checked.
   public Total: int;
+  // Number of examples failing their expectations.
   public Failed: int;
+  // One outcome for each checked example.
   public Results: array of Outcome;
 end record;
 
+// A structured report for an invocation that fails outside example validation.
 public type FailureReport = record
+  // JSON report schema version.
   public Schema: int;
+  // Number of completed example checks included in Results.
   public Total: int;
+  // Number of failed example checks included in Results.
   public Failed: int;
+  // Example outcomes available when the invocation failed.
   public Results: array of Outcome;
+  // The invocation-level error.
   public Error: string;
 end record;
 

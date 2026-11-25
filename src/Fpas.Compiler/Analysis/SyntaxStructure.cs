@@ -37,14 +37,18 @@ public static partial class SyntaxAnalysis
         var source = new SourceText(input.Path, input.Text, token);
         var document = new SourceDocument(input.Path, input.Text, token);
         var comments = new List<SourceComment>();
-        IReadOnlyList<Token> tokens;
-        try { tokens = new Lexer(source, comments).ReadTokens(); }
-        catch (CompilationFailure failure) { return new(document, [], [], []) { Diagnostics = failure.Diagnostics }; }
+        var tokens = new Lexer(source, comments).ReadPrefix(out var lexicalError);
         var layout = new SyntaxLayout(tokens.Count);
         var parser = new Parser(source, tokens, layout, recover: true);
         IReadOnlyList<CompilerDiagnostic> diagnostics;
         try { _ = parser.ParseCompilationUnit(); diagnostics = source.Diagnostics.Snapshot; }
-        catch (CompilationFailure failure) { diagnostics = failure.Diagnostics; }
+        catch (CompilationFailure failure)
+        {
+            diagnostics = source.Diagnostics.Snapshot.Concat(failure.Diagnostics).Distinct().Take(DiagnosticBag.Limit).ToArray();
+        }
+        if (lexicalError is not null)
+            diagnostics = diagnostics.Where(item => item.Location?.Offset < tokens[^1].Position)
+                .Take(DiagnosticBag.Limit - 1).Append(lexicalError).ToArray();
 
         var declarations = parser.Declarations.Values.Where(item => item.End >= item.Name.Position + item.Name.Length)
             .Select(item => new SyntaxDeclaration(item.SourceName, item.Kind, item.Owner,

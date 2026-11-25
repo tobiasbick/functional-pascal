@@ -24,7 +24,12 @@ begin
   );
 end function;
 
-// Shows search, the directory filter form and the active sort for Page at Width logical points.
+// Renders the radio directory toolbar.
+// ## Parameters
+// - `Page`: Radio search, filter and sort state.
+// - `Width`: Available width in logical points.
+// ## Returns
+// The station search field, filter form and active sort menu.
 public function Build(Page: M.State; Width: int): E.Element<App.Msg>;
 requires Width > 0;
 begin

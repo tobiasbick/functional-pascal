@@ -6,6 +6,21 @@ uses
   Fpas.Ui.Tui.Internal.Widgets.Feedback.Spinner as Spinner, Fpas.Ui.Tui.Internal.Widgets.Charts.Sparkline as Sparkline,
   Fpas.Ui.Tui.Internal.Widgets.Navigation.Breadcrumb as Breadcrumb, Fpas.Ui.Tui.Internal.Widgets.Navigation.Pagination as Pagination, Fpas.Ui.Widgets.Developer.LogConsoles as Logs, Fpas.Ui.Tui.Internal.Widgets.Developer.LogConsole as Log, Fpas.Ui.Tui.Internal.Widgets.Overlays.CommandPalette as Palette, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes, Fpas.Ui.Tui.Internal.Widgets.Collections.SelectionList as SelectionList, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as PopupState, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextArea as AreaWidget, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Internal.Controls.ChoiceStrip as ChoiceStrip, Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupHost as PopupHost, Fpas.Ui.Tui.Internal.Widgets.Collections.Table as Tables, Fpas.Ui.Tui.Internal.Widgets.Inputs.LineEditor as Edit, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as FieldWidget, Fpas.Ui.TerminalExtensions.CellGrids as Grids, Fpas.Ui.Tui.Internal.Widgets.Feedback.ProgressBar as Progress, Fpas.Ui.Graphics as G, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Widgets.Overlays.ModalPanel as Panel, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Styles as UiStyle, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V, Fpas.Ui.Tui.Internal.Controls.Activation as Actions, Fpas.Ui.Tui.Internal.Layout.Stacks as Stacks, Fpas.Ui.Tui.Internal.Rendering.Buttons as Buttons, Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Rendering.Drawing as D, System as Sys, System.Collections.Generic as Generic;
 
+// Places and paints a terminal view and gathers the control scene used by input routing.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Root`: Prepared terminal view to arrange.
+// - `Columns`: Viewport width in cells.
+// - `Rows`: Viewport height in cells.
+// - `Previous`: Prior scene for retaining editor positions, allocations and unchanged rows.
+// - `Scroll`: Session scroll offsets by view identity.
+// - `Theme`: Resolved terminal style and motion settings.
+// - `Popup`: Session state for anchored overlays.
+// - `Focus`: Requested control identity, used to reveal focus within choice strips.
+// - `AnimationPhase`: Current motion step for the rendered frame.
+// ## Returns
+// Painted cells with control bounds, keyboard navigation and scroll regions.
 public function Arrange<TMsg>(
   Root: E.Element<TMsg>; Columns: int; Rows: int;
   Previous: A.Layout<TMsg>?; Scroll: Generic.Dictionary<string, int>; Theme: Th.Theme; Popup: PopupState.State<TMsg>; Focus: string;

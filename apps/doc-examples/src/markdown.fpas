@@ -6,16 +6,31 @@ uses
   DocExamples.Model as M, System as S, System.IO as IO,
   System.Text as Text, System.Text.RegularExpressions as R, System.Collections.Generic as C;
 
+// Raises a malformed-document error at the supplied location.
+// ## Parameters
+// - `Document`: Source Markdown path.
+// - `Line`: One-based Markdown source line.
+// - `Message`: Description of the invalid fence or instruction.
 public procedure Invalid(Document: string; Line: int; Message: string);
 begin
   raise new IO.InvalidDataException(Document + ':' + Line.ToString() + ': ' + Message);
 end procedure;
 
+// Checks the spelling accepted for identifiers and context or project names.
+// ## Parameters
+// - `Name`: Name to validate.
+// ## Returns
+// Whether the name contains only ASCII letters, digits, underscores or hyphens.
 public function ValidName(Name: string): bool;
 begin
   return R.Regex.IsMatch(Name, '^[A-Za-z0-9_-]+$');
 end function;
 
+// Checks the relative path syntax accepted for materialized fence outputs.
+// ## Parameters
+// - `Name`: Candidate slash-separated output path.
+// ## Returns
+// Whether each segment is nonempty and the spelling is relative without dot segments.
 public function SafePath(Name: string): bool;
 begin
   if Name.Length = 0 or IO.Path.IsPathRooted(

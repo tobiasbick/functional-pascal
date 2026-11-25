@@ -62,12 +62,12 @@ Two sources cannot declare the same qualified program/unit name.
 ## Source files
 
 - `apps/doc-examples/contexts/geometry/`
-  - [geometry.fpas](../../../apps/doc-examples/contexts/geometry/geometry.fpas)
+  - [geometry.fpas.txt](../../../apps/doc-examples/contexts/geometry/geometry.fpas.txt)
 - `apps/doc-examples/contexts/`
   - [geometry.fpas.txt](../../../apps/doc-examples/contexts/geometry.fpas.txt)
   - [imports.fpas.txt](../../../apps/doc-examples/contexts/imports.fpas.txt)
 - `apps/doc-examples/contexts/imports/`
-  - [geometry.fpas](../../../apps/doc-examples/contexts/imports/geometry.fpas)
+  - [geometry.fpas.txt](../../../apps/doc-examples/contexts/imports/geometry.fpas.txt)
 - `src/Fpas.Compiler/Binding/Declarations/`
   - [ImportTargets.cs](../../../src/Fpas.Compiler/Binding/Declarations/ImportTargets.cs)
   - [SourceCatalog.TypePaths.cs](../../../src/Fpas.Compiler/Binding/Declarations/SourceCatalog.TypePaths.cs)

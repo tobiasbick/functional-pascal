@@ -57,7 +57,11 @@ begin
 end function;
 
 // Loads podcast charts or opens a subscribed feed on navigation or startup.
-// Before is the previous route. Current supplies the newly selected route.
+// ## Parameters
+// - `Current`: Application state with the newly selected route.
+// - `Before`: The previous route.
+// ## Returns
+// The selected page and any commands that load or cancel its data.
 public function Navigate(Current: App.State; Before: Nav.Route): A.Transition<App.State, App.Msg>;
 begin
   case Current.Navigation.Active of
@@ -130,7 +134,13 @@ begin
   end with;
 end function;
 
-// Routes Action and commits subscription changes using the shared preferences writer Save.
+// Routes a podcast message and persists subscription changes.
+// ## Parameters
+// - `Current`: Application state before handling the message.
+// - `Action`: Podcast user action or detached effect reply.
+// - `Save`: Writes the updated preferences when subscriptions change.
+// ## Returns
+// The updated application state and its podcast commands.
 public function Apply(Current: App.State; Action: M.Msg; Save: procedure(Settings.Preferences)): A.Transition<App.State, App.Msg>;
 begin
   case Action of
@@ -179,8 +189,12 @@ begin
   return Change(Current, Action);
 end function;
 
-// Selects Episode in the visible page queue or toggles that same episode in the common player.
-// Returns null when the action no longer refers to the current page.
+// Selects an episode in the visible queue or toggles it in the common player.
+// ## Parameters
+// - `Current`: Application state with the displayed episodes and current playback.
+// - `Episode`: Episode whose playback was requested.
+// ## Returns
+// The player message, or null when the episode no longer belongs to the visible page.
 public function Play(Current: App.State; Episode: M.Episode): Player.Msg?;
 begin
   const Show: M.Show? := Current.Podcasts.Show;
@@ -249,8 +263,14 @@ begin
   );
 end function;
 
-// Adds background download or cancellation to Result for the latest transport request.
-// Port supplies the file workspace and ordered audio commands. Before is the previous player state.
+// Adds background download or cancellation for the latest transport request.
+// ## Parameters
+// - `Before`: The player state before the transport request.
+// - `Result`: Application transition containing the new player state.
+// - `Request`: The player's pending transport request, when present.
+// - `Port`: Playback connection supplying the file workspace.
+// ## Returns
+// The application transition, augmented with the required background command.
 public function Prepare(Before: Player.State; Result: A.Transition<App.State, App.Msg>; Request: Player.Request?; Port: Playback.Connection): A.Transition<App.State, App.Msg>;
 begin
   const Command: A.Command<App.Msg>? := case Request of

@@ -17,8 +17,11 @@ type PendingInput = record
 end record;
 
 type ViewSource<TMsg> = record
+  // Validated view and its shared cache for subsequent frames.
   public Prepared: Validation.Prepared<TMsg>;
+  // Lowered terminal view ready for arrangement.
   public Root: E.Element<TMsg>;
+  // Cell palette used to lower and paint this view.
   public Theme: Th.Theme;
 end record;
 

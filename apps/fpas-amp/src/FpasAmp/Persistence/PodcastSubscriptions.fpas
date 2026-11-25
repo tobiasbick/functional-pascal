@@ -11,7 +11,12 @@ begin
   return Fields.StringValue(Fields.Field(Item, Name)) ?? '';
 end function;
 
-// Reads saved feeds from Items, preserving valid subscriptions when Valid becomes false.
+// Reads saved feed subscriptions.
+// ## Parameters
+// - `Items`: The subscription array from preferences, or an undefined field when absent.
+// - `Valid`: Becomes false when an invalid or duplicate entry is encountered.
+// ## Returns
+// The valid unique subscriptions, in stored order.
 public function Decode(Items: J.JsonElement; ref Valid: bool): array of Podcasts.Show;
 begin
   if Items.ValueKind = J.JsonValueKind.Undefined then
@@ -44,7 +49,10 @@ begin
   return Shows.ToArray();
 end function;
 
-// Writes the subscriptions in Items to the user's settings Writer.
+// Writes the saved subscription array.
+// ## Parameters
+// - `Writer`: Settings writer positioned at the subscription field value.
+// - `Items`: Subscriptions to write, in display order.
 public procedure Encode(Writer: J.Utf8JsonWriter; Items: array of Podcasts.Show);
 begin
   Writer.WriteStartArray();

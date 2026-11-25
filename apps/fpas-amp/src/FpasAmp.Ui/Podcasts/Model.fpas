@@ -87,7 +87,7 @@ end record;
 
 // Visible state for the search page, the selected show and the add-feed dialog.
 public type State = record
-  // Search term entered by the user.
+  // Search text being edited by the user.
   public Query: string := '';
   // Apple storefront used for charts and text search.
   public Market: string := Catalog.DefaultMarket();
@@ -105,8 +105,8 @@ public type State = record
   public SearchRevision: long := 0L;
   // Whether the search is in progress.
   public Searching: bool := false;
-  // Whether the result table is for a submitted search term.
-  public Searched: bool := false;
+  // Active search term, or empty when showing charts.
+  public SearchTerm: string := '';
   // Error for the search view, if any.
   public SearchError: string? := null;
   // Sort for the result grid. Column -1 preserves Apple ranking.
@@ -145,11 +145,17 @@ public type State = record
   public Details: Episode? := null;
   // Decoded images keyed by their validated remote address.
   public Covers: I.ImmutableDictionary<string, Images.Bitmap?> := I.ImmutableDictionary<string, Images.Bitmap?>.Empty;
+
+  // Returns whether the result table is for a submitted search term.
+  public function Searched(): bool;
+  begin
+    return self.SearchTerm <> '';
+  end function;
 end record;
 
 // Actions and detached podcast effect replies.
 public type Msg = variant
-  // Edit the query without sending a request.
+  // Edit the query draft. Clearing a submitted term returns to the charts.
   Query(Value: string);
   // Submit the current filter text to Apple.
   Search(Value: string);
@@ -215,7 +221,12 @@ public type Msg = variant
   Details(Episode: Episode?);
 end variant;
 
-// Finds a subscription or search result by its stable Id.
+// Finds a subscription or search result by its stable identifier.
+// ## Parameters
+// - `Items`: Available podcast subscriptions or search results.
+// - `Id`: Stable key returned by Show.Id.
+// ## Returns
+// The matching show, or null if unavailable.
 public function Find(Items: array of Show; Id: string): Show?;
 begin
   for Item: Show in Items do
@@ -227,8 +238,11 @@ begin
   return null;
 end function;
 
-// Normalizes Value as a podcast HTTP address and strips its fragment.
-// Returns an empty string for unsupported or malformed input.
+// Normalizes a podcast HTTP address and strips its fragment.
+// ## Parameters
+// - `Value`: The candidate feed or artwork address.
+// ## Returns
+// An absolute HTTP or HTTPS URL, or an empty string for unsupported or malformed input.
 public function Address(Value: string): string;
 begin
   const Url: string := Radio.Address(Value);

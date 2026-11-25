@@ -36,8 +36,8 @@ the observation. A normal exit preserves output and the observed target exit
 code; runtime inspection after exit is unavailable. Missing all requested
 breakpoints fails the observation.
 
-Target stdin defaults to EOF. `--stdin file` delivers at most 1 MiB of file bytes
-and closes input. Writing runs independently of inspection/output; a target that
+Target stdin defaults to EOF. `--stdin file` delivers at most 1 MiB from a regular
+file and closes input. Writing runs independently of inspection/output; a target that
 does not read can still be stopped. Command stdin is never consumed. Programs
 perform their ordinary filesystem/network effects; retrying runs them again.
 There is no interactive input or rollback.

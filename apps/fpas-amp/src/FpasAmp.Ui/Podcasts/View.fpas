@@ -103,13 +103,13 @@ function Results(Current: App.State; Shows: array of M.Show; Width: int): E.Elem
 begin
   const Page: M.State := Current.Podcasts;
   if Shows.Length = 0 then
-    const Text: string := if Page.Searching and not Page.Searched then
+    const Text: string := if Page.Searching and not Page.Searched() then
       'Loading top podcasts…'
     elsif Page.Searching then
       'Searching Apple Podcasts…'
     elsif Page.SearchError <> null then
       'Podcast directory unavailable'
-    elsif Page.Searched then
+    elsif Page.Searched() then
       'No matching podcasts'
     else
       'No top podcasts available'
@@ -167,7 +167,13 @@ begin
   );
 end function;
 
-// Shows Apple charts, search and subscription actions for Current, within Width and Padding.
+// Shows Apple charts, text search and subscription actions.
+// ## Parameters
+// - `Current`: Application state containing directory results and preferences.
+// - `Width`: Available width in logical points.
+// - `Padding`: Inner content padding in logical points.
+// ## Returns
+// The podcast directory page.
 public function Search(Current: App.State; Width: int; Padding: int): E.Element<App.Msg>;
 begin
   const Page: M.State := Current.Podcasts;
@@ -196,7 +202,7 @@ begin
     Parts.Add(Error('podcast-search-error', Page.SearchError));
   end if;
 
-  if not Page.Searched then
+  if not Page.Searched() then
     Parts.Add(Texts.Text<App.Msg>('Top podcasts', Texts.Appearance.HeadingThree));
   end if;
 
@@ -359,7 +365,13 @@ begin
   );
 end function;
 
-// Shows the selected podcast's artwork beside its episode table, within Width and Padding.
+// Shows the selected podcast with its artwork and episode table.
+// ## Parameters
+// - `Current`: Application state containing the selected feed and playback.
+// - `Width`: Available width in logical points.
+// - `Padding`: Inner content padding in logical points.
+// ## Returns
+// The selected podcast page.
 public function Podcast(Current: App.State; Width: int; Padding: int): E.Element<App.Msg>;
 begin
   const Page: M.State := Current.Podcasts;

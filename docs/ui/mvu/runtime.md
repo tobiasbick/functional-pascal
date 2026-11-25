@@ -108,8 +108,12 @@ entries and request cancellation of active effects. If a host request closes
 the session during command dispatch, the remaining commands are skipped.
 Waiting producers are released. `Close` returns the same task on repeated calls. Observe that task
 before disposing resources used by effects. It completes after workers and
-cancellation callbacks finish and reports cleanup failures. Workers and
+cancellation callbacks finish. Waiting effect posts end as cancellation, and
+concurrent worker and callback faults are both available from the task. Workers and
 callbacks must finish cooperatively for shutdown to complete.
+
+The [lifetime test](../../../tests/Fpas.Ui.Mvu.Tests/LifetimeTests.fpas)
+checks closing while a typed reply is waiting for mailbox capacity.
 
 The [terminal host](../tui/host.md) uses this runtime for interactive
 and headless sessions. The [effect contract](../../../tests/Fixtures/tui/EffectContract.fpas)

@@ -185,8 +185,12 @@ begin
   );
 end function;
 
-// Opens Show's RSS feed and resolves enclosures and images against the final response URL.
-// Stop cancels the request. Returns the publisher's metadata and playable audio items.
+// Loads an RSS feed and resolves its addresses against the final response URL.
+// ## Parameters
+// - `Show`: Podcast whose nonempty feed address will be requested.
+// - `Stop`: Cancels the request and body read.
+// ## Returns
+// The publisher's show metadata and playable audio episodes.
 public async function Load(Show: M.Show; Stop: T.CancellationToken): Tasks.Task<M.Feed>;
 requires Show.Url <> '';
 begin

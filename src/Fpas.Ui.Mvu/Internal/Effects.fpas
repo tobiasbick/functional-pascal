@@ -55,14 +55,23 @@ type Run = record
   // Returns a task that observes the body and callbacks, then disposes the source.
   public async function Join(): Tasks.Task;
   begin
+    const Callback: Tasks.Task? := self.Cancellation;
+    const Completion: Tasks.Task := if Callback = null then
+      self.Work
+    else
+      Tasks.Task.WhenAll(self.Work, Callback)
+    end if;
     try
-      const Callback: Tasks.Task? := self.Cancellation;
-      if Callback = null then
-        await self.Work.ConfigureAwait(false);
-      else
-        await Tasks.Task.WhenAll(self.Work, Callback).ConfigureAwait(false);
+      await Completion.ConfigureAwait(false);
+    catch _Cancelled: Sys.OperationCanceledException when Completion.IsCanceled
+      and self.Source.IsCancellationRequested do
+    catch _Failure: Sys.Exception do
+      const Faults: Sys.AggregateException? := Completion.Exception;
+      if Faults <> null and Faults.InnerExceptions.Count > 1 then
+        raise Faults;
       end if;
-    catch Failure: Sys.OperationCanceledException when self.Source.IsCancellationRequested do
+
+      raise;
     finally
       self.Source.Dispose();
     end try;

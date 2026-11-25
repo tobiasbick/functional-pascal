@@ -311,7 +311,11 @@ internal sealed class DebugSessionHost : IAsyncDisposable
 
     private async Task DisposeCore()
     {
-        lock (gate) stopping = true;
+        lock (gate)
+        {
+            stopping = true;
+            if (cleanupStarted == 0) cleanupStarted = Stopwatch.GetTimestamp();
+        }
         Exception? failure = null;
         async Task Release(Func<Task> action)
         {

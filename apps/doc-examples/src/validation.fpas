@@ -54,6 +54,15 @@ begin
   );
 end function;
 
+// Compiles an example and checks its selected build or execution expectations.
+// ## Parameters
+// - `Item`: The primary example to validate.
+// - `Options`: Toolchain, reference, context and deadline settings.
+// - `Items`: Supporting fences available to the example.
+// - `Directory`: Destination for generated sources and reports.
+// - `Cancellation`: Cancels the checker and its owned child processes.
+// ## Returns
+// The last stage reached and whether the example met its expectations.
 public async function Check(Item: M.Example; Options: M.Options; Items: array of M.Example; Directory: string; Cancellation: T.CancellationToken): Tasks.Task<M.Outcome>;
 begin
   var Outcome: M.Outcome := new M.Outcome(Item.Document, Item.Line, Item.Id, false, 'prepare', '');

@@ -108,8 +108,9 @@ The body context supplies Sys, Console, IO, Math and Collections aliases.
 
 A whole line `// @include docs/pascal/PAGE.md#ID` inserts another current Pascal
 fence. Includes insert raw source without recursively applying its context.
-Optional contexts/NAME/*.fpas companions also support includes and must expand
-to units. The import recipe reuses the documented Geometry unit this way.
+Optional `contexts/NAME/*.fpas.txt` companions also support includes and must expand
+to units. The checker strips the final `.txt` suffix when writing generated
+source files. The import recipe reuses the documented Geometry unit this way.
 Every generated source line keeps its Markdown or context origin.
 
 Project companions share project=NAME within a document and distinct file paths.

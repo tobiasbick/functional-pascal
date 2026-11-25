@@ -7,6 +7,7 @@ uses
   Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Developer.LogConsoles as Logs,
   Fpas.Ui.Widgets.Overlays.CommandPalettes as Palette, Fpas.Ui.Widgets.Collections.Trees as Tree,
   Fpas.Ui.Widgets.Collections.Tables as Table, Fpas.Ui.Widgets.Actions.Buttons as Buttons,
+  Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs, Fpas.Ui.Widgets.Inputs.NumberFields as Numbers,
   System as Sys, System.Console as Console, System.Linq.Enumerable as Linq;
 
 type Model = record
@@ -137,7 +138,46 @@ begin
   raise new Sys.InvalidOperationException('Missing control ' + Id);
 end function;
 
+procedure NumberDraftInDialog();
+  function Apply(_State: bool; Message: bool): M.Transition<bool, bool>;
+  begin
+    return new M.Transition<bool, bool>(Message, []);
+  end function;
+
+  function DialogView(Open: bool): E.Element<bool>;
+  begin
+    return Dialogs.Dialog<bool>(
+      'dialog', E.Text<bool>('Outside the dialog'),
+      Numbers.NumberField<bool>('count', 3.0, 0.0, 10.0, function(_Value: double): bool => true),
+      Open, new Dialogs.Options('Edit count', InitialFocus := 'count'), false
+    );
+  end function;
 begin
+  using const Session: App.HeadlessSession := App.StartHeadless<bool, bool>(
+    true,
+    Apply,
+    DialogView,
+    36,
+    12
+  );
+  Check(Control(Session, 'count').Focused, 'The dialog focuses the number field.');
+  Key(Session, K.Key.A, K.KeyModifiers.Ctrl);
+  Send(Session, App.Input.TextInput('invalid'));
+  Check(
+    Control(Session, 'count').Value = 'invalid',
+    'An incomplete numeric draft remains visible.'
+  );
+  Key(Session, K.Key.Escape);
+  Check(
+    Control(Session, 'count').Value = '3' and Control(Session, 'count').Focused,
+    'Escape restores the accepted value and keeps the dialog open while editing a draft.'
+  );
+  Key(Session, K.Key.Escape);
+  Check(not Shows(Session, 'Edit count'), 'Escape closes the dialog once the draft is gone.');
+end procedure;
+
+begin
+  NumberDraftInDialog();
   using const Session: App.HeadlessSession := App.StartHeadless<Model, Msg>(
     new Model(),
     Update,

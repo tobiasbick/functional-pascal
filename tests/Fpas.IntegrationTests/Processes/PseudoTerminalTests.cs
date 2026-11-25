@@ -1,12 +1,36 @@
 // [Documentation](../../../docs/pascal/libraries/processes.md)
+using System.Reflection;
+using Fpas.IntegrationTests.Processes.Support;
 using Fpas.Processes.Terminal;
 using Fpas.Tests.Support;
+using Microsoft.Win32.SafeHandles;
 
 namespace Fpas.IntegrationTests.Processes;
 
-/// <summary>Checks isolation between private terminal sessions.</summary>
+/// <summary>Checks cleanup and isolation of private terminal sessions.</summary>
 public sealed class PseudoTerminalTests
 {
+    /// <summary>Verifies that a failed job wait still releases the Windows pseudoconsole.</summary>
+    [WindowsFact]
+    public async Task Windows_terminal_disposal_closes_the_console_after_termination_fails()
+    {
+        using var fixture = new TemporaryDirectory();
+        var terminal = PseudoTerminal.StartSuspended(TestEnvironment.DotnetHost, ["--version"], fixture.Path, 80, 24);
+        var type = terminal.GetType();
+        const BindingFlags Fields = BindingFlags.Instance | BindingFlags.NonPublic;
+        var job = Assert.IsType<SafeFileHandle>(type.GetField("job", Fields)?.GetValue(terminal));
+        var console = type.GetField("console", Fields)!;
+        Assert.NotEqual(nint.Zero, (nint)console.GetValue(terminal)!);
+
+        // The kill-on-close job stops the suspended child and makes the normal termination wait fail.
+        job.Dispose();
+        var disposal = terminal.DisposeAsync().AsTask();
+        Assert.Same(disposal, terminal.DisposeAsync().AsTask());
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => disposal.WaitAsync(TimeSpan.FromSeconds(20)));
+        Assert.True(terminal.Completion.IsCompletedSuccessfully);
+        Assert.Equal(nint.Zero, (nint)console.GetValue(terminal)!);
+    }
+
     /// <summary>Verifies that a new Linux target cannot access an earlier terminal's masters.</summary>
     [Fact]
     public async Task Linux_terminal_does_not_inherit_the_master_descriptors_of_another_session()

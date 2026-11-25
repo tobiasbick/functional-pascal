@@ -17,8 +17,10 @@ public abstract class PseudoTerminal : IAsyncDisposable
     /// <param name="rows">The row count, 1..300.</param>
     public abstract void Resize(int columns, int rows);
     /// <summary>Terminates the target and all owned descendants.</summary>
+    /// <returns>A task that completes after termination.</returns>
     public abstract Task TerminateAsync();
     /// <summary>Terminates the target and releases the terminal.</summary>
+    /// <returns>An operation that completes after terminal cleanup.</returns>
     public abstract ValueTask DisposeAsync();
     internal virtual void Resume() => throw new InvalidOperationException("This terminal has no suspended target.");
 

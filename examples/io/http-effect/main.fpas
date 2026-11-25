@@ -53,26 +53,45 @@ begin
   end case;
 end procedure;
 
+function HttpAddress(Value: string): Sys.Uri?;
+begin
+  var Parsed: Sys.Uri? := null;
+  discard Sys.Uri.TryCreate(Value, Sys.UriKind.Absolute, out Parsed);
+  case Parsed of
+    when is Sys.Uri as Address:
+      if Address.Scheme = 'http' or Address.Scheme = 'https' then
+        return Address;
+      end if;
+    else
+  end case;
+
+  return null;
+end function;
+
 begin
   const Arguments: array of string := Sys.Environment.GetCommandLineArgs();
-  if Arguments.Length <> 2 then
-    Console.WriteLine('Pass one absolute HTTP URL.');
-    Sys.Environment.ExitCode := 2;
+  const Address: Sys.Uri? := if Arguments.Length = 2 then
+    HttpAddress(Arguments[1])
   else
-    const Work: Fx.Effect<string, FetchFailure, Http.HttpClient> := Fetch(
-      new Sys.Uri(Arguments[1])
-    );
-    using const Client: Http.HttpClient := new Http.HttpClient();
-    Client.MaxResponseContentBufferSize := 65536L;
-    Client.Timeout := T.Timeout.InfiniteTimeSpan;
-    using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
-    try
-      Report(await Work.Run(Client, Deadline.Token).ConfigureAwait(false));
-    catch _Error: Sys.OperationCanceledException when Deadline.IsCancellationRequested do
-      Console.WriteLine('Request canceled');
-      Sys.Environment.ExitCode := 1;
-    end try;
+    null
   end if;
+  case Address of
+    when is Sys.Uri as Target:
+      const Work: Fx.Effect<string, FetchFailure, Http.HttpClient> := Fetch(Target);
+      using const Client: Http.HttpClient := new Http.HttpClient();
+      Client.MaxResponseContentBufferSize := 65536L;
+      Client.Timeout := T.Timeout.InfiniteTimeSpan;
+      using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
+      try
+        Report(await Work.Run(Client, Deadline.Token).ConfigureAwait(false));
+      catch _Error: Sys.OperationCanceledException when Deadline.IsCancellationRequested do
+        Console.WriteLine('Request canceled');
+        Sys.Environment.ExitCode := 1;
+      end try;
+    else
+      Console.WriteLine('Pass one absolute HTTP URL.');
+      Sys.Environment.ExitCode := 2;
+  end case;
 end;
 
 end program;

@@ -35,10 +35,15 @@ public type Batch = record
 end record;
 
 type Pending = record
+  // The latest isolated source configuration.
   public Sources: array of S.MusicSource;
+  // The generation that a scan must still match before committing.
   public Version: long;
+  // Whether the worker must replace its watchers.
   public Revised: bool;
+  // Whether pending work requires reconciliation of every active root.
   public Whole: bool;
+  // Whether the inbox rejects new work after shutdown.
   public Closed: bool;
 end record;
 

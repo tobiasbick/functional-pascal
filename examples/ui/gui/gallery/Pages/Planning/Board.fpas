@@ -9,12 +9,19 @@ uses
   Fpas.Ui.Widgets.Media.Avatars as Avatars, Fpas.Ui.Widgets.Feedback.ProgressBars as Progress, System as Sys, System.Collections.Generic as Lists;
 
 type Card = record
+  // Work item caption.
   public Title: string;
+  // Category shown on the card's badge.
   public Tag: string;
+  // Assignee shown in the card's footer.
   public Owner: string;
+  // Theme tone for the category badge.
   public Tone: S.Tone;
+  // Comment count, hidden when zero.
   public Comments: int;
+  // Attachment count, hidden when zero.
   public Files: int;
+  // Completion fraction from zero through one.
   public Progress: float;
 end record;
 

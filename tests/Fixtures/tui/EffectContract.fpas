@@ -2,7 +2,9 @@
 
 program EffectContract;
 
-uses Fpas.Ui.Widgets.Actions.Buttons as UiButtons, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, System as Sys, System.Console as Console, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses
+  Fpas.Ui.Mvu.Testing.EffectReplies as Replies, System.Threading.Channels as Channels,
+  Fpas.Ui.Widgets.Actions.Buttons as UiButtons, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Mvu.Session as Runtime, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, System as Sys, System.Console as Console, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 type Msg = variant
   StartOriginal;
@@ -21,9 +23,6 @@ const BodyStarted: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
   Tasks.TaskCreationOptions.RunContinuationsAsynchronously
 );
 const BodyRelease: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
-  Tasks.TaskCreationOptions.RunContinuationsAsynchronously
-);
-const Posted: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
   Tasks.TaskCreationOptions.RunContinuationsAsynchronously
 );
 const Replaced: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
@@ -78,7 +77,6 @@ begin
   BodyStarted.SetResult();
   BodyRelease.Task.WaitAsync(Deadline).GetAwaiter().GetResult();
   await Post(Msg.Changed('obsolete'));
-  Posted.SetResult();
   await Replaced.Task.WaitAsync(Deadline);
 end function;
 
@@ -204,9 +202,14 @@ end procedure;
 
 procedure CheckReplacementAndFailure();
 begin
+  const Effects: Replies.Effects<Msg> := Replies.Effects<Msg>.Create();
+  const Old: Channels.ChannelReader<Replies.Reply<Msg>> := Effects.Watch('job');
+  using const Limit: Threads.CancellationTokenSource := new Threads.CancellationTokenSource(15000);
   using const Session: App.HeadlessSession := App.StartHeadless<string, Msg>(
     'initial',
-    Update,
+    function(State: string; Message: Msg): Mvu.Transition<string, Msg> => Effects.Wrap<string>(
+      Update(State, Message)
+    ),
     View,
     30,
     8
@@ -224,7 +227,15 @@ begin
     Send(Session, 'replacement');
     Send(Session, 'touch');
     BodyRelease.SetResult();
-    Posted.Task.WaitAsync(Deadline).GetAwaiter().GetResult();
+    const Obsolete: Replies.Reply<Msg> := Old.ReadAsync(
+      Limit.Token
+    ).AsTask().GetAwaiter().GetResult();
+    if Session.Snapshot().Lines[0].TrimEnd() <> 'initial!' then
+      raise new Sys.InvalidOperationException('A held obsolete reply changed the model.');
+    end if;
+
+    Obsolete.Release().WaitAsync(Limit.Token).GetAwaiter().GetResult();
+    const Latest: Channels.ChannelReader<Replies.Reply<Msg>> := Effects.Watch('job');
     discard Session.Step();
     Replaced.Task.WaitAsync(Deadline).GetAwaiter().GetResult();
     discard Session.Step();
@@ -233,14 +244,27 @@ begin
     end if;
 
     StepEffect(Session, 'initial!!');
+    const Accepted: Replies.Reply<Msg> := Latest.ReadAsync(
+      Limit.Token
+    ).AsTask().GetAwaiter().GetResult();
+    if Session.Snapshot().Lines[0].TrimEnd() <> 'initial!!' then
+      raise new Sys.InvalidOperationException('A held replacement reply changed the model.');
+    end if;
+
+    Accepted.Release().WaitAsync(Limit.Token).GetAwaiter().GetResult();
     StepEffect(Session, 'replacement');
 
+    const Failure: Channels.ChannelReader<Replies.Reply<Msg>> := Effects.Watch('failing');
     Send(Session, 'failing');
     discard Session.Step();
+    const Rejected: Replies.Reply<Msg> := Failure.ReadAsync(
+      Limit.Token
+    ).AsTask().GetAwaiter().GetResult();
     if Session.Snapshot().Lines[0].TrimEnd() <> 'replacement' then
       raise new Sys.InvalidOperationException('The failure message ran in the starting step.');
     end if;
 
+    Rejected.Release().WaitAsync(Limit.Token).GetAwaiter().GetResult();
     StepEffect(Session, 'failed: worker boom');
   finally
     discard BodyRelease.TrySetResult();

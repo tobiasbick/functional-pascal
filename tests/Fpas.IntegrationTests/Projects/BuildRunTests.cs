@@ -8,6 +8,7 @@ namespace Fpas.IntegrationTests.Projects;
 
 public sealed class BuildRunTests(SdkPackageFixture sdk) : IClassFixture<SdkPackageFixture>
 {
+    /// <summary>Checks that the packaged SDK supplies a deferred effect with typed file I/O outcomes.</summary>
     [Fact]
     public async Task Sdk_supplies_the_effect_type_for_deferred_file_io()
     {
@@ -136,6 +137,7 @@ public sealed class BuildRunTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
         }
     }
 
+    /// <summary>Checks that guarded execution refuses changes to the output or its companion files.</summary>
     [Fact]
     public async Task Expected_run_output_pins_the_managed_output_and_its_companions()
     {

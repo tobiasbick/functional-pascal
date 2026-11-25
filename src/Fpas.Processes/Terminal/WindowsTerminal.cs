@@ -2,6 +2,7 @@
 using Microsoft.Win32.SafeHandles;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -12,12 +13,17 @@ internal sealed partial class WindowsTerminal : PseudoTerminal
     private readonly Process process;
     private readonly SafeFileHandle job;
     private readonly FileStream input, output;
+    private readonly object gate = new();
     private SafeFileHandle? startupThread;
     private IntPtr console;
-    private Task? termination;
+    private Task? termination, disposal;
+    /// <inheritdoc/>
     public override Stream Input => input;
+    /// <inheritdoc/>
     public override Stream Output => output;
+    /// <inheritdoc/>
     public override int Id => process.Id;
+    /// <inheritdoc/>
     public override Task<int> Completion { get; }
 
     private WindowsTerminal(Process process, SafeFileHandle job, IntPtr console, SafeFileHandle input, SafeFileHandle output, SafeFileHandle? startupThread)
@@ -71,18 +77,62 @@ internal sealed partial class WindowsTerminal : PseudoTerminal
             ?? throw new InvalidOperationException("The terminal target has already been released.");
         Check(ResumeThread(thread) != uint.MaxValue);
     }
+    /// <inheritdoc/>
     public override void Resize(int columns, int rows)
     { Dimensions(columns, rows); Marshal.ThrowExceptionForHR(ResizePseudoConsole(console, new() { X = (short)columns, Y = (short)rows })); }
-    public override Task TerminateAsync() => termination ??= Terminate();
+    /// <inheritdoc/>
+    public override Task TerminateAsync()
+    {
+        lock (gate) return termination ??= Terminate();
+    }
     private async Task Terminate()
     {
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         await WindowsProcess.TerminateAndWait(job, deadline.Token);
         await Completion.WaitAsync(deadline.Token);
+        await CloseConsole();
+    }
+
+    private async Task CloseConsole()
+    {
         var handle = Interlocked.Exchange(ref console, IntPtr.Zero);
         if (handle != IntPtr.Zero) await Task.Run(() => ClosePseudoConsole(handle)).WaitAsync(TimeSpan.FromSeconds(5));
     }
-    public override async ValueTask DisposeAsync()
-    { try { await TerminateAsync(); } finally { startupThread?.Dispose(); input.Dispose(); output.Dispose(); job.Dispose(); process.Dispose(); } }
+
+    /// <inheritdoc/>
+    public override ValueTask DisposeAsync()
+    {
+        lock (gate) return new(disposal ??= DisposeCore());
+    }
+
+    private async Task DisposeCore()
+    {
+        Exception? failure = null;
+        void Failed(Exception error) => failure = failure is null ? error : new AggregateException(failure, error);
+
+        try { await TerminateAsync(); }
+        catch (Exception error) { Failed(error); }
+
+        try
+        {
+            job.Dispose();
+            if (!Completion.IsCompleted) await Completion.WaitAsync(TimeSpan.FromSeconds(5));
+        }
+        catch (Exception error) { Failed(error); }
+
+        try
+        {
+            startupThread?.Dispose();
+            process.Dispose();
+            output.Dispose();
+            input.Dispose();
+        }
+        catch (Exception error) { Failed(error); }
+
+        // Closing the job and its pipe endpoints lets the native console close after a failed wait.
+        try { await CloseConsole(); }
+        catch (Exception error) { Failed(error); }
+        if (failure is not null) ExceptionDispatchInfo.Throw(failure);
+    }
     private static void Check(bool success) { if (!success) throw new Win32Exception(Marshal.GetLastPInvokeError()); }
 }

@@ -139,7 +139,7 @@ begin
             when A.Command.Start(const Id: string, _):
               if Id = 'podcasts/search' then
                 const Revision: long := Current.Podcasts.SearchRevision;
-                const Matches: array of P.Show := if Current.Podcasts.Searched then
+                const Matches: array of P.Show := if Current.Podcasts.Searched() then
                   [Show, Other]
                 else
                   [
@@ -349,11 +349,16 @@ begin
       Window, function(): bool => not Current.Player.Playing and Current.Player.Position >= 2490.0,
       'The paused episode must accept a seek.'
     );
-    Send(Window, App.Msg.Player(Player.Msg.Next));
-    Wait(
-      Window, function(): bool => Current.Player.Index = 1 and Current.Player.EpisodePath <> '',
-      'Next must open the second RSS audio enclosure.'
+    const NextMedia: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch(
+      'podcast-episode-media'
     );
+    Send(Window, App.Msg.Player(Player.Msg.Next));
+    X.Assert.Equal<int>(1, Current.Player.Index);
+    X.Assert.True(Current.Player.Buffering);
+    X.Assert.Equal<string>('', Current.Player.EpisodePath);
+    Deliver(Window, NextMedia);
+    X.Assert.False(Current.Player.Buffering);
+    X.Assert.NotEmpty(Current.Player.EpisodePath);
     Click(Window, Control(Window, 'podcast-subscription').Bounds);
     X.Assert.Equal<string>('Subscribe', Control(Window, 'podcast-subscription').Text);
     X.Assert.Empty(Saved.Load(Data).PodcastSubscriptions);

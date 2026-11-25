@@ -19,7 +19,13 @@ public sealed partial class CuiWindow
 
     /// <summary>Injects the left pointer button through CUI's input API.</summary>
     /// <param name="down">Whether the button is pressed.</param>
-    public void SetLeftButton(bool down) { CheckFrame(); NativeMethods.MouseButton(context, 0, down ? (byte)1 : (byte)0); }
+    public void SetLeftButton(bool down)
+    {
+        CheckFrame();
+        if (down && listenForCanvasInput && NativeMethods.CanvasButtonDown(context, LeftButton) == 0)
+            RouteCanvasPointerFocus(NativeMethods.CanvasPointer(context));
+        NativeMethods.MouseButton(context, LeftButton, down ? (byte)1 : (byte)0);
+    }
 
     /// <summary>Injects the right pointer button through CUI's input API.</summary>
     /// <param name="down">Whether the button is pressed.</param>

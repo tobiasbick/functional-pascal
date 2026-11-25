@@ -6,6 +6,16 @@ namespace Fpas.Media.Audio.Tests;
 /// <summary>Measures the ten filters independently at their specified centre frequencies.</summary>
 public sealed class EqualizerTests
 {
+    /// <summary>Rejects a trailing partial frame before modifying the buffer.</summary>
+    [Fact]
+    public void RejectsPartialInterleavedFrames()
+    {
+        var eq = new Equalizer(44100, 2, Settings.Flat);
+        float[] samples = [2f, 2f, 2f];
+        Assert.Throws<InvalidDataException>(() => eq.Process(samples, Settings.Flat));
+        Assert.Equal([2f, 2f, 2f], samples);
+    }
+
     /// <summary>Checks the amplitude continuity at a fader change on constant input.</summary>
     [Fact]
     public void VolumeChangesRampAcrossFrames()

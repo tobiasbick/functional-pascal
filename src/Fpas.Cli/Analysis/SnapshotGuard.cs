@@ -9,11 +9,7 @@ internal static class SnapshotGuard
     internal static Option<string> CreateOption()
     {
         var option = new Option<string>("--expected-snapshot") { Description = "Require the snapshotId from an earlier analysis of the same context." };
-        option.Validators.Add(result =>
-        {
-            if (result.Tokens.Count == 1 && (result.Tokens[0].Value.Length != 64 || !result.Tokens[0].Value.All(char.IsAsciiHexDigit)))
-                result.AddError("--expected-snapshot requires a 64-digit hexadecimal snapshotId.");
-        });
+        option.RequireSha256("snapshotId");
         return option;
     }
 

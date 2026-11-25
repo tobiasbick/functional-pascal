@@ -4,23 +4,14 @@ unit FpasAmp.Ui.Podcasts.Directory;
 
 uses
   FpasAmp.Ui.Podcasts.Model as M, FpasAmp.Ui.Podcasts.Network as Network,
-  System as Sys, System.Collections.Generic as C, System.Globalization as G, System.IO as IO,
-  System.Net.Http as H, System.Text.Json as J, System.Threading as T, System.Threading.Tasks as Tasks;
+  FpasAmp.Ui.Podcasts.DirectoryData as Payload, System as Sys, System.Globalization as G,
+  System.IO as IO, System.Net.Http as H, System.Text.Json as J, System.Threading as T,
+  System.Threading.Tasks as Tasks;
 
 const Gate: T.SemaphoreSlim := new T.SemaphoreSlim(1);
 const ChartSize: int := 100;
 
 var NextSearch: long := 0L;
-
-function StringField(Item: J.JsonElement; Name: string): string;
-begin
-  var Value: J.JsonElement := new J.JsonElement();
-  return if Item.TryGetProperty(Name, out Value) and Value.ValueKind = J.JsonValueKind.String then
-    (Value.GetString() ?? '').Trim()
-  else
-    ''
-  end if;
-end function;
 
 async function Read(Address: string; Stop: T.CancellationToken): Tasks.Task<J.JsonDocument>;
 begin
@@ -61,64 +52,20 @@ begin
   end try;
 end function;
 
-function Show(Item: J.JsonElement): M.Show?;
-begin
-  if Item.ValueKind <> J.JsonValueKind.Object then
-    return null;
-  end if;
-  const Url: string := M.Address(StringField(Item, 'feedUrl'));
-  const Title: string := StringField(Item, 'collectionName');
-  if Url = '' or Title = '' then
-    return null;
-  end if;
-
-  const Genres: C.List<string> := new C.List<string>();
-  var Values: J.JsonElement := new J.JsonElement();
-  if Item.TryGetProperty('genreIds', out Values) and Values.ValueKind = J.JsonValueKind.Array then
-    for Value: J.JsonElement in Values.EnumerateArray() do
-      if Value.ValueKind = J.JsonValueKind.String then
-        Genres.Add(Value.GetString() ?? '');
-      end if;
-    end for;
-  end if;
-
-  return new M.Show(
-    Url,
-    Title,
-    StringField(Item, 'artistName'),
-    M.Address(StringField(Item, 'artworkUrl100')),
-    Genres.ToArray()
-  );
-end function;
-
-// Searches the Apple storefront Market for public RSS-backed shows matching Term.
-// Stop cancels both the rate-limit wait and the request.
-// Returns up to 30 unique show results in Apple order.
+// Searches the Apple storefront for public RSS-backed shows.
+// ## Parameters
+// - `Market`: Nonempty Apple storefront country code.
+// - `Term`: Nonempty search text.
+// - `Stop`: Cancels both the rate-limit wait and the request.
+// ## Returns
+// Up to 30 unique show results in Apple order.
 public async function Search(Market: string; Term: string; Stop: T.CancellationToken): Tasks.Task<array of M.Show>;
 requires Market <> '' and Term <> '';
 begin
   const Address: string := 'https://itunes.apple.com/search?media=podcast&entity=podcast&limit=30&country=' +
     Sys.Uri.EscapeDataString(Market) + '&term=' + Sys.Uri.EscapeDataString(Term.Trim());
   using const Result: J.JsonDocument := await Store(Address, Stop).ConfigureAwait(false);
-  const Shows: C.List<M.Show> := new C.List<M.Show>();
-  const Seen: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
-  for Item: J.JsonElement in Result.RootElement.GetProperty('results').EnumerateArray() do
-    const Pick: M.Show? := Show(Item);
-    if Pick <> null and Seen.Add(Pick.Url) then
-      Shows.Add(Pick);
-    end if;
-  end for;
-
-  return Shows.ToArray();
-end function;
-
-function ChartId(Item: J.JsonElement; ByGenre: bool): string;
-begin
-  return if ByGenre then
-    StringField(Item.GetProperty('id').GetProperty('attributes'), 'im:id')
-  else
-    StringField(Item, 'id')
-  end if;
+  return Payload.Search(Result.RootElement);
 end function;
 
 async function Chart(Market: string; Genre: string; Stop: T.CancellationToken): Tasks.Task<array of long>;
@@ -126,7 +73,7 @@ begin
   const Country: string := Sys.Uri.EscapeDataString(Market.ToLowerInvariant());
   const Limit: string := ChartSize.ToString(G.CultureInfo.InvariantCulture);
   const ByGenre: bool := Genre <> '';
-  using const Data: J.JsonDocument := if ByGenre then
+  using const Response: J.JsonDocument := if ByGenre then
     await Store(
       'https://itunes.apple.com/' + Country + '/rss/toppodcasts/limit=' + Limit +
       '/genre=' + Sys.Uri.EscapeDataString(Genre) + '/json', Stop
@@ -137,36 +84,16 @@ begin
       Limit + '/podcasts.json', Stop
     ).ConfigureAwait(false)
   end if;
-  const Field: string := if ByGenre then
-    'entry'
-  else
-    'results'
-  end if;
-  var Items: J.JsonElement := new J.JsonElement();
-  const Ranked: C.List<long> := new C.List<long>();
-  if Data.RootElement.GetProperty('feed').TryGetProperty(Field, out Items)
-    and Items.ValueKind = J.JsonValueKind.Array
-  then
-    const Seen: C.HashSet<long> := new C.HashSet<long>();
-    for Item: J.JsonElement in Items.EnumerateArray() do
-      var Id: long := 0L;
-      if Item.ValueKind = J.JsonValueKind.Object and Sys.Int64.TryParse(
-        ChartId(Item, ByGenre), G.NumberStyles.None, G.CultureInfo.InvariantCulture, out Id
-      ) and Id > 0L and Seen.Add(Id)
-      then
-        Ranked.Add(Id);
-        if Ranked.Count = ChartSize then
-          break;
-        end if;
-      end if;
-    end for;
-  end if;
-
-  return Ranked.ToArray();
+  return Payload.Chart(Response.RootElement, ByGenre, ChartSize);
 end function;
 
-// Loads chart entries from Market for Genre, or all genres when Genre is empty.
-// Stop cancels chart and lookup work. Returns up to 100 RSS shows in chart order.
+// Loads Apple podcast chart entries and resolves their feed addresses.
+// ## Parameters
+// - `Market`: Nonempty Apple storefront country code.
+// - `Genre`: Apple genre identifier, or empty for all genres.
+// - `Stop`: Cancels the chart and lookup requests and rate-limit waits.
+// ## Returns
+// Up to 100 unique RSS shows in chart order.
 public async function Discover(Market: string; Genre: string; Stop: T.CancellationToken): Tasks.Task<array of M.Show>;
 requires Market <> '';
 begin
@@ -180,30 +107,7 @@ begin
     'https://itunes.apple.com/lookup?country=' +
     Sys.Uri.EscapeDataString(Market) + '&entity=podcast&id=' + Ids, Stop
   ).ConfigureAwait(false);
-  const ById: C.Dictionary<long, M.Show?> := new C.Dictionary<long, M.Show?>();
-  for Item: J.JsonElement in Result.RootElement.GetProperty('results').EnumerateArray() do
-    const Pick: M.Show? := Show(Item);
-    var Field: J.JsonElement := new J.JsonElement();
-    var Id: long := 0L;
-    if Pick <> null and Item.TryGetProperty(
-      'collectionId',
-      out Field
-    ) and Field.ValueKind = J.JsonValueKind.Number
-      and Field.TryGetInt64(out Id)
-    then
-      discard ById.TryAdd(Id, Pick);
-    end if;
-  end for;
-  const Shows: C.List<M.Show> := new C.List<M.Show>();
-  const Seen: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
-  for Id: long in Ranked do
-    var Pick: M.Show? := null;
-    if ById.TryGetValue(Id, out Pick) and Pick <> null and Seen.Add(Pick.Url) then
-      Shows.Add(Pick);
-    end if;
-  end for;
-
-  return Shows.ToArray();
+  return Payload.Lookup(Result.RootElement, Ranked);
 end function;
 
 end unit;

@@ -4,6 +4,12 @@ unit Vstest;
 
 uses System as Sys, Xunit as X;
 
+// Checks addition against inline test data.
+//
+// ## Parameters
+// - `Left`: The first addend.
+// - `Right`: The second addend.
+// - `Expected`: The expected sum.
 [X.TheoryAttribute]
 [X.InlineDataAttribute(1, 2, 3)]
 [X.InlineDataAttribute(2, 3, 5)]
@@ -12,18 +18,21 @@ begin
   X.Assert.Equal<int>(Expected, Left + Right);
 end procedure;
 
+// Produces a failing assertion for the runner to report.
 [X.FactAttribute]
 public procedure Failure();
 begin
   X.Assert.Equal<int>(1, 2);
 end procedure;
 
+// Fails if the runner executes this deliberately skipped case.
 [X.FactAttribute(Skip := 'intentional skip')]
 public procedure Skipped();
 begin
   X.Assert.True(false);
 end procedure;
 
+// Waits for the editor to cancel the run when the fixture enables the wait.
 [X.FactAttribute]
 public procedure CanCancel();
 begin

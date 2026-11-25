@@ -17,7 +17,7 @@ public sealed class QueryCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
         {
             var result = operation == "find"
                 ? await Query(project, operation, "Game/Game.fpasproj", "--name", "Message", "--kind", "routine", "--kind", "global", "--match", "prefix")
-                : await Query(project, operation, "Game/Game.fpasproj", "--file", "Game/Bridge.fpas", "--line", "8", "--column", "26");
+                : await Query(project, operation, "Game/Game.fpasproj", "--file", "Game/Bridge.fpas", "--line", "14", "--column", "26");
             Assert.True(result.ExitCode == 0, result.Output + result.Error); Assert.Equal("", result.Error);
             using var json = JsonDocument.Parse(result.Output);
             Assert.Equal("ok", json.RootElement.GetProperty("status").GetString());
@@ -56,7 +56,7 @@ public sealed class QueryCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
     public async Task Packaged_context_queries_return_typed_JSON_for_source_metadata_types_and_references()
     {
         using var project = sdk.CreateProject();
-        foreach (var (operation, line, column) in new[] { ("definition", 8, 26), ("definition", 8, 17), ("type", 8, 26), ("refs", 6, 25) })
+        foreach (var (operation, line, column) in new[] { ("definition", 14, 26), ("definition", 14, 17), ("type", 14, 26), ("refs", 12, 25) })
         {
             var result = await Query(project, operation, "Game/Game.fpasproj", "--file", "Game/Bridge.fpas", "--line", line.ToString(), "--column", column.ToString());
             Assert.True(result.ExitCode == 0, result.Output + result.Error); Assert.Equal("", result.Error);
@@ -74,9 +74,9 @@ public sealed class QueryCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
 
     [Theory]
     [InlineData("definition", 1, 1, 0, "not_found")]
-    [InlineData("definition", 8, 25, 0, "not_found")]
+    [InlineData("definition", 14, 25, 0, "not_found")]
     [InlineData("type", 1, 1, 0, "not_found")]
-    [InlineData("definition", 8, 999, 2, "failed")]
+    [InlineData("definition", 14, 999, 2, "failed")]
     public async Task Whitespace_comments_boundaries_and_invalid_coordinates_have_explicit_outcomes(string operation, int line, int column, int exit, string status)
     {
         using var project = sdk.CreateProject();
@@ -97,7 +97,7 @@ public sealed class QueryCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
     {
         using var project = sdk.CreateProject();
         var arguments = new List<string> { "refs", "Game/Game.fpasproj", "--file", "Game/Bridge.fpas" };
-        if (option != "--line") arguments.AddRange(["--line", "6"]);
+        if (option != "--line") arguments.AddRange(["--line", "12"]);
         if (option != "--column") arguments.AddRange(["--column", "25"]);
         arguments.AddRange([option, value]);
         var result = await Query(project, arguments.ToArray());
@@ -223,6 +223,7 @@ public sealed class QueryCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
         Assert.False(File.Exists(project.File("Game/bin/Debug/net10.0/Game.dll")));
     }
 
+    /// <summary>Checks that a batch chains unique matches and preserves independent query results after an ambiguity.</summary>
     [Fact]
     public async Task Batch_chains_unique_declarations_and_keeps_other_results_after_an_ambiguous_match()
     {
@@ -286,6 +287,7 @@ public sealed class QueryCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
             second.GetProperty("references")[0].GetProperty("span").GetProperty("offset").GetInt32());
     }
 
+    /// <summary>Checks completion and signature help against partially written source.</summary>
     [Fact]
     public async Task Editor_queries_return_candidates_and_active_parameters_for_incomplete_source()
     {
@@ -336,6 +338,7 @@ public sealed class QueryCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
         Assert.Contains("Echo<int>", active.GetProperty("label").GetString());
     }
 
+    /// <summary>Checks that bounded batch output retains independent answers after an oversized result.</summary>
     [Fact]
     public async Task Oversized_batch_entries_leave_other_results_available()
     {

@@ -36,6 +36,8 @@ internal sealed class Equalizer
 
     internal void Process(Span<float> buffer, Settings settings)
     {
+        if (buffer.Length % channels != 0)
+            throw new InvalidDataException("Audio samples do not contain complete frames.");
         float target = Linear(settings.Volume);
         while (!buffer.IsEmpty)
         {

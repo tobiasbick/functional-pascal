@@ -80,6 +80,7 @@ internal sealed class OutlineCommand
 internal sealed record OutlineReport(string Status, string? File, string? SnapshotId, bool Complete, int TotalCount, int Offset, int? NextOffset,
     IReadOnlyList<SyntaxDeclaration> Declarations, IReadOnlyList<CompilerDiagnostic> Diagnostics, AnalysisError? Error)
 {
+    /// <summary>Gets the version of the outline report layout.</summary>
     public int SchemaVersion { get; init; } = 1;
 
     internal static OutlineReport Failure(string? file, AnalysisError error)

@@ -168,9 +168,7 @@ internal sealed class RefactorCommand
             if (operation.Command.Name is "add-parameter" or "extract-variable" or "extract-routine") _ = IdentifierFacts.Spell(result.GetValue(operation.Name)!);
             if (!preparing)
             {
-                SourcePublication.ValidateRegularPath(planPath);
-                if (new FileInfo(planPath).Length > RefactorPlanJson.MaximumBytes) throw new ContextFailure("invalid_plan", "Plan exceeds 4 MiB.");
-                try { storedBytes = await File.ReadAllBytesAsync(planPath, token); stored = RefactorPlanJson.Read(storedBytes); }
+                try { storedBytes = await ReadPlanBytes(planPath, "invalid_plan", token); stored = RefactorPlanJson.Read(storedBytes); }
                 catch (Exception error) when (error is JsonException or ArgumentException) { throw new ContextFailure("invalid_plan", error.Message); }
                 FileRefactorPlans.ValidateContext(stored, input.Context, input.Configuration);
             }
@@ -187,7 +185,6 @@ internal sealed class RefactorCommand
             {
                 prepared = operationWorkspace.PrepareDraft(draft.Files, creations, token);
                 SnapshotGuard.Verify(result, operation.ExpectedSnapshot, prepared.Plan.DraftSnapshotId!);
-                await AnalysisOverlay.VerifyAsync(manifest!, draft.Fingerprint, token);
             }
             else if (preparing)
             {
@@ -202,14 +199,14 @@ internal sealed class RefactorCommand
             if (preparing)
             {
                 await operationWorkspace.VerifyAsync(token);
-                await WritePlan(planPath, RefactorPlanJson.Serialize(prepared.Plan), token);
+                await WritePlan(planPath, RefactorPlanJson.Serialize(prepared.Plan), token,
+                    draft is null ? null : check => AnalysisOverlay.VerifyAsync(manifest!, draft.Fingerprint, check));
             }
             else
             {
                 await operationWorkspace.ApplyAsync(prepared, async check =>
                 {
-                    SourcePublication.ValidateRegularPath(planPath);
-                    if (!(await File.ReadAllBytesAsync(planPath, check)).AsSpan().SequenceEqual(storedBytes))
+                    if (!(await ReadPlanBytes(planPath, "inputs_changed", check)).AsSpan().SequenceEqual(storedBytes))
                         throw new ContextFailure("inputs_changed", "Refactoring plan changed during application.");
                 }, token);
                 current = current with { Files = current.Files.Select(file => file with { Written = true }).ToArray(), Diagnostics = [] };
@@ -326,11 +323,25 @@ internal sealed class RefactorCommand
         }
     }
 
-    private static async Task WritePlan(string path, byte[] bytes, CancellationToken token)
+    private static async Task<byte[]> ReadPlanBytes(string path, string invalidCode, CancellationToken token)
+    {
+        SourcePublication.ValidateRegularPath(path);
+        try { return await BoundedFile.ReadAsync(path, RefactorPlanJson.MaximumBytes, token); }
+        catch (ContextFailure error) when (error.Code == "invalid_argument")
+        { throw new ContextFailure(invalidCode, error.Message, inputPath: path); }
+    }
+
+    private static async Task WritePlan(string path, byte[] bytes, CancellationToken token, Func<CancellationToken, Task>? verifyInput)
     {
         var directory = Path.GetDirectoryName(path)!; Directory.CreateDirectory(directory); SourcePublication.ValidateRegularPath(directory);
         var temporary = Path.Combine(directory, ".fpas-plan-" + Guid.NewGuid().ToString("N"));
-        try { await File.WriteAllBytesAsync(temporary, bytes, token); token.ThrowIfCancellationRequested(); File.Move(temporary, path, overwrite: false); }
+        try
+        {
+            await File.WriteAllBytesAsync(temporary, bytes, token);
+            if (verifyInput is not null) await verifyInput(token);
+            token.ThrowIfCancellationRequested();
+            File.Move(temporary, path, overwrite: false);
+        }
         finally { File.Delete(temporary); }
     }
 }

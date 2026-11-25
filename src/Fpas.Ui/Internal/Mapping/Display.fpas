@@ -3,6 +3,7 @@
 unit Fpas.Ui.Internal.Mapping.Display;
 
 uses
+  Fpas.Ui.Internal.Mapping.MessageMapping as Mapping,
   Fpas.Ui.Widgets.Canvas.Painting as Painting,
   Fpas.Ui.Widgets.Display.Texts as Texts,
   Fpas.Ui.Widgets.Media.Images as Images,
@@ -46,31 +47,15 @@ begin
       const OnPointer: Sys.Func<Canvases.Pointer, TChild>?,
       const OnInput: Sys.Func<Canvases.Input, TChild>?
     ):
-      const Wheel: Sys.Func<Canvases.Wheel, TParent>? := case OnWheel of
-        when is Sys.Func<Canvases.Wheel, TChild> as Handler: function(Delta: Canvases.Wheel): TParent => Messages(
-          Handler.Invoke(Delta)
-        );
-        else null;
-      end case;
       return E.Element<TParent>.Canvas(
         Id,
         Drawing,
         function(Event: Canvases.Event): TParent => Messages(Clicked(Event)),
         Settings,
-        Wheel,
+        Mapping.Callback<Canvases.Wheel, TChild, TParent>(OnWheel, Messages),
         Paint,
-        case OnPointer of
-          when is Sys.Func<Canvases.Pointer, TChild> as Handler: function(State: Canvases.Pointer): TParent => Messages(
-            Handler.Invoke(State)
-          );
-          else null;
-        end case,
-        case OnInput of
-          when is Sys.Func<Canvases.Input, TChild> as Handler: function(Value: Canvases.Input): TParent => Messages(
-            Handler.Invoke(Value)
-          );
-          else null;
-        end case
+        Mapping.Callback<Canvases.Pointer, TChild, TParent>(OnPointer, Messages),
+        Mapping.Callback<Canvases.Input, TChild, TParent>(OnInput, Messages)
       );
     when E.Element.Veil(
       const Id: string,

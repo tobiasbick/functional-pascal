@@ -74,7 +74,12 @@ begin
   );
 end function;
 
-// Renders the podcast query, directory filters and active sort for Page at Width logical points.
+// Renders the podcast directory toolbar.
+// ## Parameters
+// - `Page`: Podcast search, filter and sort state.
+// - `Width`: Available width in logical points.
+// ## Returns
+// Search controls, a directory filter form and a sort menu.
 public function Search(Page: M.State; Width: int): E.Element<App.Msg>;
 requires Width > 0;
 begin
@@ -165,7 +170,12 @@ begin
   );
 end function;
 
-// Renders the episode search, publication and duration filters and active sort for Page at Width logical points.
+// Renders the episode toolbar.
+// ## Parameters
+// - `Page`: Episode search, filter and sort state.
+// - `Width`: Available width in logical points.
+// ## Returns
+// Search controls, a publication and duration filter form, and a sort menu.
 public function Episodes(Page: M.State; Width: int): E.Element<App.Msg>;
 requires Width > 0;
 begin

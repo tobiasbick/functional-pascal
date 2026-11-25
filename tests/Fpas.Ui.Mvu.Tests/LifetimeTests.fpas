@@ -1,0 +1,142 @@
+// [Documentation](../../docs/ui/mvu/runtime.md#cancellation-and-shutdown)
+
+unit Fpas.Ui.Mvu.Tests.LifetimeTests;
+
+uses
+  Fpas.Execution.Effects as Fx, Fpas.Ui.Mvu.Application as A,
+  Fpas.Ui.Mvu.Session as Runtime, System as Sys, System.Collections.Generic as C,
+  System.Threading as T, System.Threading.Tasks as Tasks, Xunit as X;
+
+// Exercises mailbox and background worker ownership during shutdown.
+public type LifetimeTests = record
+  // Checks a typed post waiting for mailbox capacity when the session closes.
+  [X.FactAttribute]
+  public procedure ClosingCancelsTypedPostInFullMailbox();
+    async function Work(Context: A.BackgroundContext<string>; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, string>>;
+      procedure PauseCancellation();
+      begin
+        discard CallbackStarted.TrySetResult();
+        Permit.Task.WaitAsync(Stop.Token).GetAwaiter().GetResult();
+      end procedure;
+    begin
+      const Reply: Tasks.Task := Context.Post('late');
+      // Cancellation callbacks run in reverse registration order. Pause this
+      // one to let the mailbox close before the queued writer is notified.
+      using const Registration: T.CancellationTokenRegistration := Token.Register(
+        PauseCancellation
+      );
+      Announced.SetResult(Reply);
+      await Permit.Task.WaitAsync(Stop.Token).ConfigureAwait(false);
+      await Reply.ConfigureAwait(false);
+      return Fx.Outcome.Success(Fx.Completion.Done);
+    end function;
+    function Update(Model: string; _Message: string): A.Transition<string, string>;
+    begin
+      return new A.Transition<string, string>(
+        Model,
+        [
+          A.StartBackground<string>(
+            'full',
+            Fx.Effect<Fx.Completion, string, A.BackgroundContext<string>>.Defer(Work)
+          )
+        ]
+      );
+    end function;
+  begin
+    const Announced: Tasks.TaskCompletionSource<Tasks.Task> := new Tasks.TaskCompletionSource<Tasks.Task>(
+      Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+    );
+    const CallbackStarted: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+      Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+    );
+    const Permit: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+      Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+    );
+    using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
+    const Session: Runtime.Runtime<string, string, int> := Runtime.Start<string, string, int>(
+      'ready', Update, procedure(_Request: A.HostRequest) begin end procedure, 1
+    );
+    try
+      discard Session.Post('fill');
+      Session.Dispatch('start');
+      const Reply: Tasks.Task := Announced.Task.WaitAsync(Stop.Token).GetAwaiter().GetResult();
+      X.Assert.False(Reply.IsCompleted);
+      const Closing: Tasks.Task := Session.Close();
+      CallbackStarted.Task.WaitAsync(Stop.Token).GetAwaiter().GetResult();
+      X.Assert.False(Closing.IsCompleted);
+      discard Permit.TrySetResult();
+      Closing.WaitAsync(Stop.Token).GetAwaiter().GetResult();
+      X.Assert.True(Reply.IsCanceled);
+    finally
+      discard Permit.TrySetResult();
+      Session.Close().WaitAsync(Sys.TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+    end try;
+  end procedure;
+
+  // Reports both worker and cancellation callback faults from a closing run.
+  [X.FactAttribute]
+  public procedure ShutdownPreservesConcurrentFaults();
+    async function Work(_Context: A.BackgroundContext<string>; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, string>>;
+      procedure Cancel();
+      begin
+        Release.SetResult();
+        raise new Sys.InvalidOperationException('callback fault');
+      end procedure;
+    begin
+      using const Registration: T.CancellationTokenRegistration := Token.Register(Cancel);
+      Started.SetResult();
+      await Release.Task.WaitAsync(Stop.Token).ConfigureAwait(false);
+      raise new Sys.InvalidOperationException('worker fault');
+    end function;
+    function Update(Model: string; _Message: string): A.Transition<string, string>;
+    begin
+      return new A.Transition<string, string>(
+        Model,
+        [
+          A.StartBackground<string>(
+            'faults',
+            Fx.Effect<Fx.Completion, string, A.BackgroundContext<string>>.Defer(Work)
+          )
+        ]
+      );
+    end function;
+  begin
+    const Started: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+      Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+    );
+    const Release: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
+      Tasks.TaskCreationOptions.RunContinuationsAsynchronously
+    );
+    using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
+    const Session: Runtime.Runtime<string, string, int> := Runtime.Start<string, string, int>(
+      'ready', Update, procedure(_Request: A.HostRequest) begin end procedure, 1
+    );
+    try
+      Session.Dispatch('start');
+      Started.Task.WaitAsync(Stop.Token).GetAwaiter().GetResult();
+    finally
+      const Closing: Tasks.Task := Session.Close();
+      const Completed: array of Tasks.Task := [Closing];
+      discard Tasks.Task.WhenAny(Completed).WaitAsync(
+        Sys.TimeSpan.FromSeconds(5)
+      ).GetAwaiter().GetResult();
+      const Faults: Sys.AggregateException? := Closing.Exception;
+      if Faults = null then
+        raise new Sys.InvalidOperationException('Expected shutdown faults');
+      end if;
+
+      const All: array of string := ['callback fault', 'worker fault'];
+      const Actual: C.List<string> := new C.List<string>();
+      for Error: Sys.Exception in Faults.Flatten().InnerExceptions do
+        Actual.Add(Error.Message);
+      end for;
+
+      X.Assert.Equal<int>(All.Length, Actual.Count);
+      for Message: string in All do
+        X.Assert.True(Actual.Contains(Message), 'Missing fault: ' + Message);
+      end for;
+    end try;
+  end procedure;
+end record;
+
+end unit;

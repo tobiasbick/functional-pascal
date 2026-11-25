@@ -4,17 +4,29 @@ unit Diagnostics.MeasureOptions;
 
 uses System as Sys, System.IO as IO, System.Collections.Generic as Collections;
 
+// Inputs for an end-to-end measurement run.
 public type Options = record
+  // Absolute path of the child executable.
   public Executable: string;
+  // Child arguments in their original order.
   public Arguments: array of string;
+  // Working directory for the child.
   public Directory: string;
+  // New CSV file to write.
   public Output: string;
+  // Display label recorded on each sample.
   public Label: string;
+  // Selected startup, compiler or SDK-build timing boundary.
   public Boundary: string;
+  // Whether the run took place locally or in the cloud.
   public Environment: string;
+  // Number of unrecorded warmup executions.
   public Warmup: int;
+  // Number of recorded executions.
   public Count: int;
+  // Maximum child execution time in seconds.
   public Timeout: int;
+  // Text expected in the child's standard output.
   public Contains: string;
 end record;
 
@@ -30,6 +42,11 @@ begin
   return Parsed;
 end function;
 
+// Parses the measurement options and the command after the separator.
+// ## Parameters
+// - `Args`: Process arguments beginning with the executable name.
+// ## Returns
+// The validated command, measurement limits and output settings.
 public function Read(Args: array of string): Options;
 begin
   var Output: string := '';

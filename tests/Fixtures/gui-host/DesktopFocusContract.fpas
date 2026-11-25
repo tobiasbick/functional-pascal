@@ -16,7 +16,13 @@ type Message = variant
   Placement;
 end variant;
 
-procedure Step(Session: Gui.Session<Message>; Window: Cui.CuiWindow);
+type CanvasMessage = variant
+  Focus;
+  Input(Value: Canvas.Input);
+  Ignore;
+end variant;
+
+procedure Step<TMsg>(Session: Gui.Session<TMsg>; Window: Cui.CuiWindow);
 begin
   discard Window.TryWake();
   if not Session.Step() then
@@ -24,7 +30,7 @@ begin
   end if;
 end procedure;
 
-procedure RequireFocus(Session: Gui.Session<Message>; Id: string);
+procedure RequireFocus<TMsg>(Session: Gui.Session<TMsg>; Id: string);
 begin
   for Control: Gui.Control in Session.Snapshot().Controls do
     if Control.Id = Id and Control.Focused then
@@ -33,6 +39,87 @@ begin
   end for;
 
   raise new Sys.InvalidOperationException('Lost focus target ' + Id + ' across a host result.');
+end procedure;
+
+procedure CanvasBacklog(Renderer: Cui.CuiRenderer);
+  function Update(Model: string; Message: CanvasMessage): Mvu.Transition<string, CanvasMessage>;
+  begin
+    case Message of
+      when CanvasMessage.Focus:
+        return new Mvu.Transition<string, CanvasMessage>(
+          Model,
+          [Mvu.Focus<CanvasMessage>('canvas')]
+        );
+      when CanvasMessage.Input(const Value: Canvas.Input):
+        case Value of
+          when Canvas.Input.Text(const Text: string):
+            return new Mvu.Transition<string, CanvasMessage>(Model + Text, []);
+          else
+        end case;
+      else
+    end case;
+
+    return new Mvu.Transition<string, CanvasMessage>(Model, []);
+  end function;
+
+  function View(Model: string; Size: L.Viewport): E.Element<CanvasMessage>;
+  begin
+    return E.Column<CanvasMessage>(
+      new L.Flow(),
+      Canvas.Canvas<CanvasMessage>(
+        'canvas', [], function(Value: Canvas.Event): CanvasMessage => CanvasMessage.Ignore,
+        OnInput := CanvasMessage.Input
+      ),
+      E.Text<CanvasMessage>(Model)
+    );
+  end function;
+
+  procedure Inject();
+  begin
+    for Text: string in Input do
+      Window.InputText(Text);
+    end for;
+
+    Input := [];
+  end procedure;
+begin
+  var Input: array of string := [];
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'Canvas input backlog',
+    420,
+    300,
+    Renderer,
+    true
+  );
+  using const Session: Gui.Session<CanvasMessage> := Host.Start<string, CanvasMessage>(
+    'Text: ', Update, View, Window, 1, Inject
+  );
+  Step(Session, Window);
+  discard Session.Post(CanvasMessage.Focus);
+  Step(Session, Window);
+  Step(Session, Window);
+  RequireFocus(Session, 'canvas');
+
+  Input := ['first ', 'second '];
+  Step(Session, Window);
+  Input := ['discarded '];
+  Step(Session, Window);
+  RequireFocus(Session, 'canvas');
+  Step(Session, Window);
+
+  Input := ['third'];
+  Step(Session, Window);
+  Step(Session, Window);
+  RequireFocus(Session, 'canvas');
+  for Label: string in Session.Snapshot().Text do
+    if Label = 'Text: first second third' then
+      return;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException(
+    'Canvas text did not resume after the backlog in input order.'
+  );
 end procedure;
 
 // Checks that focus commands and modal focus survive a frame with pending host results.
@@ -119,6 +206,8 @@ begin
   Step(Session, Window);
   Step(Session, Window);
   RequireFocus(Session, 'base-target');
+  Session.Dispose();
+  CanvasBacklog(Renderer);
 end procedure;
 
 end unit;

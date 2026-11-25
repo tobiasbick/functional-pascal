@@ -1,4 +1,5 @@
 // [Documentation](../../../docs/pascal/program-structure/cli.md)
+using Fpas.Processes;
 using Fpas.Workspaces.Loading;
 
 namespace Fpas.Cli.Analysis;
@@ -7,7 +8,8 @@ internal static class BoundedFile
 {
     internal static async Task<byte[]> ReadAsync(string path, int maximum, CancellationToken token)
     {
-        await using var input = File.OpenRead(path);
+        token.ThrowIfCancellationRequested();
+        await using var input = RegularFile.OpenRead(path);
         var length = input.Length;
         if (length > maximum)
             throw new ContextFailure("invalid_argument", $"Input exceeds {maximum / (1024 * 1024)} MiB.", inputPath: path);

@@ -102,6 +102,7 @@ public sealed class OwnedProcess : IAsyncDisposable
     public int ExitCode => process.ExitCode;
     /// <summary>Waits until the root process exits.</summary>
     /// <param name="token">Cancels the wait without terminating the process.</param>
+    /// <returns>A task that completes when the root process exits.</returns>
     public Task WaitForExit(CancellationToken token) => process.WaitForExitAsync(token);
 
     /// <summary>Writes bytes to redirected stdin and closes it to signal EOF.</summary>
@@ -125,12 +126,14 @@ public sealed class OwnedProcess : IAsyncDisposable
     }
 
     /// <summary>Terminates all owned members and releases the streams and handles.</summary>
+    /// <returns>An operation that completes after process cleanup.</returns>
     public ValueTask DisposeAsync()
     {
         lock (gate) return new(disposal ??= DisposeCore());
     }
 
     /// <summary>Terminates all owned members and waits for them, at most five seconds.</summary>
+    /// <returns>A task that completes after the owned members exit.</returns>
     public Task TerminateAsync()
     {
         lock (gate) return termination ??= TerminateCore();

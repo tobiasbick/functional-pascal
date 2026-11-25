@@ -33,6 +33,34 @@ public sealed class CuiShortcutTests
         }
     }
 
+    /// <summary>A real key release preserves the preceding press modifiers with either input path.</summary>
+    /// <param name="canvas">Whether an unfocused input canvas is present alongside the ordinary content.</param>
+    [GuiTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void BatchedReleasePreservesApplicationShortcutModifiers(bool canvas)
+    {
+        using var window = new CuiWindow("Canvas shortcut modifiers", renderer: CuiRenderer.Software, continuous: true);
+        Assert.True(window.NextFrame());
+        DrawWidgets();
+        window.Present();
+
+        Assert.True(window.NextFrame());
+        window.SetKey(56, true, 2);
+        window.SetKey(56, false);
+        DrawWidgets();
+        Assert.Equal(new[] { 0 }, window.ReadShortcuts([new(56, 2)]));
+        window.Present();
+
+        void DrawWidgets()
+        {
+            window.Text("Native shortcuts");
+            if (canvas)
+                window.DrawingCanvas("canvas", 1, 0, 2, 40, [], true, out _, out _, out _, out _, false, out _, out _,
+                    onInput: _ => Assert.Fail("An unfocused canvas received application shortcut input."));
+        }
+    }
+
     /// <summary>Text editing yields only explicitly allowed combinations; native editor shortcuts stay first.</summary>
     [GuiFact]
     public void EditorsOwnTypingNavigationAndNativeFind()

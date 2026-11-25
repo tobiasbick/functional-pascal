@@ -162,7 +162,8 @@ when no tests match. FPAS does not reinterpret localized adapter messages.
 JSON discovery reports the build output identity. FPAS source locations require
 matching portable symbols and source checksums. The VS Code Testing view uses
 `--expected-output` with `--no-build` and one selected project to reject stale
-selections. MTP UIDs come from native discovery and can be forwarded as
+selections. The output identity accepts 64 hexadecimal digits in either case.
+MTP UIDs come from native discovery and can be forwarded as
 `-- --filter-uid UID`. TRX cases preserve native test IDs and method names.
 
 ## Repeat a failed case

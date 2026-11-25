@@ -2,7 +2,9 @@
 
 program HeadlessContract;
 
-uses Fpas.Ui.Widgets.Navigation.Navigation as Nav, Fpas.Ui.Widgets.Actions.Buttons as UiButtons, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as Validation, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Graphics as G, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Widgets.Theming.Themes as TerminalThemes, System as Sys, System.Console as Console, Fpas.Ui.Tui.Internal.Rendering.Presentation as P, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System.IO as IO, System.Threading as Threads, System.Threading.Tasks as Tasks;
+uses
+  Fpas.Ui.Mvu.Testing.EffectReplies as Replies, System.Threading.Channels as Channels,
+  Fpas.Ui.Widgets.Navigation.Navigation as Nav, Fpas.Ui.Widgets.Actions.Buttons as UiButtons, Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Tui.Application as App, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Validation as Validation, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.Graphics as G, Fpas.Ui.TerminalExtensions.Input as InputKeys, Fpas.Ui.TerminalExtensions.Views as Views, Fpas.Ui.Widgets.Theming.Themes as TerminalThemes, System as Sys, System.Console as Console, Fpas.Ui.Tui.Internal.Rendering.Presentation as P, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System.IO as IO, System.Threading as Threads, System.Threading.Tasks as Tasks;
 
 type Msg = variant
   Start;
@@ -11,27 +13,28 @@ type Msg = variant
   Fail;
 end variant;
 
-const Posted: Tasks.TaskCompletionSource<bool> := new Tasks.TaskCompletionSource<bool>();
+const Effects: Replies.Effects<Msg> := Replies.Effects<Msg>.Create();
 
-async function Work(Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+function Work(Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
 begin
   Token.ThrowIfCancellationRequested();
-  await Post(Msg.Progress);
-  discard Posted.TrySetResult(true);
+  return Post(Msg.Progress);
 end function;
 
 function Update(State: int; Message: Msg): Mvu.Transition<int, Msg>;
 begin
   case Message of
     when Msg.Start:
-      return new Mvu.Transition<int, Msg>(
-        State,
-        [
-          Mvu.StartBackground<Msg>(
-            'task',
-            Mvu.FromWorker<Msg>(Work, function(Error: Sys.Exception): Msg => Msg.Fail)
-          )
-        ]
+      return Effects.Wrap<int>(
+        new Mvu.Transition<int, Msg>(
+          State,
+          [
+            Mvu.StartBackground<Msg>(
+              'task',
+              Mvu.FromWorker<Msg>(Work, function(Error: Sys.Exception): Msg => Msg.Fail)
+            )
+          ]
+        )
       );
     when Msg.Cancel:
       return new Mvu.Transition<int, Msg>(State, [Mvu.CancelBackground<Msg>('task')]);
@@ -68,11 +71,20 @@ end function;
 
 procedure CheckCancellation();
 begin
+  const Reader: Channels.ChannelReader<Replies.Reply<Msg>> := Effects.Watch('task');
+  using const Limit: Threads.CancellationTokenSource := new Threads.CancellationTokenSource(5000);
   using const Session: App.HeadlessSession := App.StartHeadless<int, Msg>(0, Update, View, 20, 5);
   discard Send(Session, 'start');
   discard Send(Session, 'cancel');
   discard Session.Step();
-  discard Posted.Task.WaitAsync(Sys.TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+  const Reply: Replies.Reply<Msg> := Reader.ReadAsync(
+    Limit.Token
+  ).AsTask().GetAwaiter().GetResult();
+  if Session.Snapshot().Lines[0].TrimEnd() <> '0' then
+    raise new Sys.InvalidOperationException('A held progress reply changed the model.');
+  end if;
+
+  Reply.Release().WaitAsync(Limit.Token).GetAwaiter().GetResult();
   discard Session.Step();
   const Before: App.Frame := Session.Snapshot();
   case Session.Step() of

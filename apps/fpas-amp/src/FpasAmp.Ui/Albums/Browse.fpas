@@ -163,10 +163,13 @@ begin
   return false;
 end function;
 
-// One shown album with what it is sorted by.
+// One candidate album and its sort keys.
 type Entry = record
+  // Album presented by the browser.
   public Album: Library.Album;
+  // Search relevance score used by the best-match order.
   public Score: double;
+  // Original catalogue position used as the final tie-breaker.
   public Position: int;
 end record;
 
@@ -178,8 +181,8 @@ end record;
 // - `Settings`: The search text, applied filters and order.
 // ## Returns
 // The albums that pass the filters and, with search words, match at least one
-// of them. Best match lists the closest albums first; other orders apply to the
-// matches, and equal values keep the catalogue order.
+// of them. Best match lists the closest albums first. Equal sort keys use the
+// album title and then retain catalogue order.
 public function Select(Items: I.ImmutableArray<Library.Album>; Prepared: Catalog; Settings: Toolbar.State): I.ImmutableArray<Library.Album>;
   function Compare(Left: Entry; Right: Entry): int;
   begin

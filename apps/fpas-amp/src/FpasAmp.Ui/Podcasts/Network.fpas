@@ -21,7 +21,12 @@ end function;
 // Shared HTTP transport for the podcast directory, publishers and media hosts.
 public const Client: H.HttpClient := Connect();
 
-// Returns the final request address of Reply, falling back to the original URL.
+// Resolves an HTTP response's final request address after redirects.
+// ## Parameters
+// - `Reply`: The HTTP response.
+// - `Fallback`: Original absolute URL, used when request metadata is absent.
+// ## Returns
+// The response URI or the original URI.
 public function ResponseAddress(Reply: H.HttpResponseMessage; Fallback: string): Sys.Uri;
 begin
   const Request: H.HttpRequestMessage? := Reply.RequestMessage;
@@ -32,8 +37,12 @@ begin
   end if;
 end function;
 
-// Returns the decoder suffix for an enclosure URL or its declared media type.
-// Returns an empty string when neither identifies a supported format.
+// Chooses a decoder suffix for a media enclosure.
+// ## Parameters
+// - `Url`: Absolute enclosure address.
+// - `MediaType`: Declared media type, or an empty string when unknown.
+// ## Returns
+// A supported file suffix, or an empty string if the format is unknown.
 public function Extension(Url: string; MediaType: string): string;
 begin
   const Declared: string := case MediaType.ToLowerInvariant() of
@@ -60,7 +69,14 @@ begin
   end case;
 end function;
 
-// Copies at most Limit bytes from Input to Output and honors Stop while reading and writing.
+// Copies a bounded response body.
+// ## Parameters
+// - `Input`: Source stream.
+// - `Output`: Destination stream.
+// - `Limit`: Positive byte limit. A larger response raises InvalidDataException.
+// - `Stop`: Cancels reading or writing.
+// ## Returns
+// A task that completes at end of input, after copied bytes have been written.
 public async function Copy(Input: IO.Stream; Output: IO.Stream; Limit: long; Stop: T.CancellationToken): Tasks.Task;
 requires Limit > 0L;
 begin
@@ -81,8 +97,13 @@ begin
   end while;
 end function;
 
-// Downloads and decodes a bounded artwork response. Url must be a valid HTTP address.
-// Returns a square thumbnail or null if the publisher's artwork is unavailable.
+// Downloads and decodes a bounded artwork response.
+// ## Parameters
+// - `Url`: Candidate HTTP or HTTPS artwork address.
+// - `Edge`: Positive thumbnail edge size in pixels.
+// - `Stop`: Cancels the transfer and decoding.
+// ## Returns
+// A square thumbnail, or null if the address or artwork is unavailable.
 public async function Cover(Url: string; Edge: int; Stop: T.CancellationToken): Tasks.Task<Images.Bitmap?>;
 requires Edge > 0;
 begin

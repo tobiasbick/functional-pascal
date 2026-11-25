@@ -13,9 +13,14 @@ uses
   System as Sys, System.Collections.Generic as C;
 
 type Choice<TMsg> = record implements Actions.IActivatable<TMsg>
+  // Shared choices and selection callback for this item.
   public Strip: E.ChoiceStripView<TMsg>;
+  // Position of this enabled choice in the strip.
   public Index: int;
 
+  // Proposes this choice through the strip's selector.
+  // ## Returns
+  // The message or no-op resulting from invoking the choice.
   public function Activate(): Actions.Result<TMsg>;
   begin
     return self.Strip.Activate(self.Index);

@@ -47,7 +47,7 @@
     <None Include="../../examples/ui/gui/gallery/Shared/FilePickerExample.fpas" Link="Fixtures/tui/gallery/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/ui/gui/gallery/Shared/Strings.fpas;../../examples/ui/gui/gallery/Shared/Strings.resx" Link="Fixtures/tui/gallery/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/ui/tui/fractals/*.fpas" Link="Fixtures/tui/fractals/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../src/Fpas.Ui.Mvu.Testing/EffectReplies.fpas" Link="Fixtures/tui/fractals/EffectReplies.fpas" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Fpas.Ui.Mvu.Testing/EffectReplies.fpas" Link="Fixtures/tui/EffectReplies.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/FractalExplorer.fpas" Link="Fixtures/tui/fractal-explorer.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/HeadlessContract.fpas" Link="Fixtures/tui/headless.fpas" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/tui/CellGrid.fpas" Link="Fixtures/tui/cell-grid.fpas" CopyToOutputDirectory="PreserveNewest" />
@@ -93,7 +93,7 @@
     <AssemblyMetadata Include="FpasLinuxArmShim" Value="$(PkgMicrosoft_Diagnostics_DbgShim_linux-arm64)/runtimes/linux-arm64/native/libdbgshim.so" />
   </ItemGroup>
   <Target Name="RemoveStaleSpecificationFixtures" BeforeTargets="_CopyOutOfDateSourceItemsToOutputDirectory" Condition="'$(DesignTimeBuild)' != 'true'">
-    <RemoveDir Directories="$(OutputPath)Fixtures/specification;$(OutputPath)Fixtures/repository/docs/ui;$(OutputPath)Fixtures/tui/lib;$(OutputPath)Fixtures/tui/gallery;$(OutputPath)Fixtures/ui/lib;$(OutputPath)Fixtures/mvu/lib;$(OutputPath)Fixtures/gui/lib;$(OutputPath)Fixtures/workflows/lib" />
+    <RemoveDir Directories="$(OutputPath)Fixtures/specification;$(OutputPath)Fixtures/repository/docs/ui;$(OutputPath)Fixtures/tui/lib;$(OutputPath)Fixtures/tui/gallery;$(OutputPath)Fixtures/tui/fractals;$(OutputPath)Fixtures/ui/lib;$(OutputPath)Fixtures/mvu/lib;$(OutputPath)Fixtures/gui/lib;$(OutputPath)Fixtures/workflows/lib" />
   </Target>
   <Target Name="RecordFpasCliPath" BeforeTargets="GetAssemblyAttributes" DependsOnTargets="ResolveProjectReferences">
     <MSBuild Projects="../../src/Fpas.Cli/Fpas.Cli.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration);TargetFramework=$(TargetFramework)">

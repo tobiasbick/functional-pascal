@@ -12,7 +12,12 @@ var FixtureCount: int := 0;
 
 const Events: string := Sys.Environment.GetEnvironmentVariable('FPAS_TEST_EVENTS') ?? 'events.log';
 
+// Exercises xUnit asynchronous initialization, cleanup and test results.
 public type Lifetime = record implements X.IAsyncLifetime
+  // Marks the test active and records setup before the runner invokes it.
+  //
+  // ## Returns
+  // The completed lifecycle task.
   public function InitializeAsync(): Tasks.Task;
   begin
     Active := 1;
@@ -20,6 +25,10 @@ public type Lifetime = record implements X.IAsyncLifetime
     return Tasks.Task.CompletedTask;
   end function;
 
+  // Clears the active flag and records cleanup after the test.
+  //
+  // ## Returns
+  // The completed lifecycle task.
   public function DisposeAsync(): Tasks.Task;
   begin
     Active := 0;
@@ -27,12 +36,19 @@ public type Lifetime = record implements X.IAsyncLifetime
     return Tasks.Task.CompletedTask;
   end function;
 
+  // Checks that the runner completed setup before executing the test.
   [X.FactAttribute]
   public procedure SetupWasCalled();
   begin
     X.Assert.Equal<int>(1, Active);
   end procedure;
 
+  // Checks addition against inline test data.
+  //
+  // ## Parameters
+  // - `Left`: The first addend.
+  // - `Right`: The second addend.
+  // - `Expected`: The expected sum.
   [X.TheoryAttribute]
   [X.InlineDataAttribute(1, 2, 3)]
   [X.InlineDataAttribute(2, 3, 5)]
@@ -41,6 +57,10 @@ public type Lifetime = record implements X.IAsyncLifetime
     X.Assert.Equal<int>(Expected, Left + Right);
   end procedure;
 
+  // Checks that asynchronous tests complete while setup is active.
+  //
+  // ## Returns
+  // The task observed by the test runner.
   [X.FactAttribute]
   public async function AsyncTest(): Tasks.Task;
   begin
@@ -49,18 +69,21 @@ public type Lifetime = record implements X.IAsyncLifetime
     X.Assert.Equal<int>(1, Active);
   end function;
 
+  // Fails if the runner executes this deliberately skipped case.
   [X.FactAttribute(Skip := 'deliberate skip')]
   public procedure Skipped();
   begin
     raise new Sys.Exception('must not execute');
   end procedure;
 
+  // Produces a failing assertion for the runner to report.
   [X.FactAttribute]
   public procedure AssertionFailure();
   begin
     X.Assert.True(false);
   end procedure;
 
+  // Throws an exception for the runner to report.
   [X.FactAttribute]
   public procedure UserException();
   begin
@@ -68,13 +91,22 @@ public type Lifetime = record implements X.IAsyncLifetime
   end procedure;
 end record;
 
+// A class fixture that counts initialization and records its disposal.
 public type Shared = record implements X.IAsyncLifetime
+  // Counts how often the runner initializes the shared fixture.
+  //
+  // ## Returns
+  // The completed lifecycle task.
   public function InitializeAsync(): Tasks.Task;
   begin
     FixtureCount := FixtureCount + 1;
     return Tasks.Task.CompletedTask;
   end function;
 
+  // Writes the marker used to check disposal of the shared fixture.
+  //
+  // ## Returns
+  // The completed lifecycle task.
   public function DisposeAsync(): Tasks.Task;
   begin
     File.WriteAllText(Events + '.fixture', 'disposed');
@@ -82,10 +114,14 @@ public type Shared = record implements X.IAsyncLifetime
   end function;
 end record;
 
+// Exercises xUnit injection of class fixtures and test output.
 public type FixtureTests = record implements X.IClassFixture<Shared>
+  // The class fixture supplied by xUnit.
   public Fixture: Shared;
+  // The output helper supplied by xUnit.
   public Output: A.ITestOutputHelper;
 
+  // Checks that the shared fixture was initialized once and that output is available.
   [X.FactAttribute]
   public procedure Injected();
   begin
@@ -96,12 +132,22 @@ public type FixtureTests = record implements X.IClassFixture<Shared>
   end procedure;
 end record;
 
+// Supplies sample sums for the member-data test.
+//
+// ## Returns
+// The input rows and their expected sums.
 public function Rows(): C.IEnumerable<array of object>;
 begin
   const Values: array of array of object := [[1, 2, 3], [2, 3, 5]];
   return Values;
 end function;
 
+// Checks addition using rows supplied by the member-data provider.
+//
+// ## Parameters
+// - `Left`: The first addend.
+// - `Right`: The second addend.
+// - `Expected`: The expected sum.
 [X.TheoryAttribute]
 [X.MemberDataAttribute('Rows')]
 public procedure DataProvider(Left: int; Right: int; Expected: int);
@@ -109,6 +155,7 @@ begin
   X.Assert.Equal<int>(Expected, Left + Right);
 end procedure;
 
+// Checks that the test project can call the compiler formatter and see a syntax failure.
 [X.FactAttribute]
 public procedure InvalidSourceIsRejected();
 begin

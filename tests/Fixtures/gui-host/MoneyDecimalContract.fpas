@@ -10,7 +10,9 @@ uses
   System as Sys;
 
 type Model = record
+  // Exact decimal amount most recently accepted by the model.
   public Amount: decimal := 0.30M;
+  // Whether the next proposed edit updates the model.
   public Accept: bool := true;
 end record;
 

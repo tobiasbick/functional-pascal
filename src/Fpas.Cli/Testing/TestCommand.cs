@@ -47,6 +47,7 @@ internal sealed class TestCommand
     internal TestCommand()
     {
         report.AcceptValues("json"); ContextCommandOptions.Range(timeout, 1, 3600);
+        expectedOutput.RequireSha256("output identity");
         Command.Arguments.Add(context);
         Command.Arguments.Add(arguments);
         foreach (var option in new Option[] { configuration, project, noBuild, noRestore, list, filter, expectedOutput, settings, directory, report, timeout, adapters, collectors }) Command.Options.Add(option);
@@ -103,7 +104,7 @@ internal sealed class TestCommand
                 token.ThrowIfCancellationRequested();
                 var output = new TestOutput(candidate, token);
                 var selected = output.Project;
-                if (expected is not null && (expected != selected.OutputIdentity || selected.StaleSources))
+                if (expected is not null && (!expected.Equals(selected.OutputIdentity, StringComparison.OrdinalIgnoreCase) || selected.StaleSources))
                     throw new ContextFailure("test_output_changed", "The selected test output or its source is stale. Build and refresh before selecting tests.");
                 var folder = Path.Combine(results, completed.Count.ToString("D4", System.Globalization.CultureInfo.InvariantCulture)); Directory.CreateDirectory(folder);
                 if (mode == "list")

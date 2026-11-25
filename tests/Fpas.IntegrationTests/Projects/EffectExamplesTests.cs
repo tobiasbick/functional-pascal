@@ -9,8 +9,11 @@ using Fpas.Tests.Support;
 
 namespace Fpas.IntegrationTests.Projects;
 
+/// <summary>Builds and runs the documented effect examples with the packaged SDK.</summary>
+/// <param name="sdk">The matching SDK package for the example projects.</param>
 public sealed class EffectExamplesTests(SdkPackageFixture sdk) : IClassFixture<SdkPackageFixture>
 {
+    /// <summary>Checks an HTTP response body, a failed status and cancellation against a local listener.</summary>
     [Fact]
     public async Task Http_effect_handles_body_status_and_cancellation()
     {
@@ -65,6 +68,22 @@ public sealed class EffectExamplesTests(SdkPackageFixture sdk) : IClassFixture<S
         }
     }
 
+    /// <summary>Checks that invalid URI input receives the usage error before a request starts.</summary>
+    [Fact]
+    public async Task Http_effect_reports_invalid_addresses_as_usage_errors()
+    {
+        using var workspace = new TemporaryDirectory();
+        var program = await Build(workspace, "http-effect", "HttpEffect");
+        foreach (var address in new[] { "invalid address", "relative/path", "ftp://example.com/file" })
+        {
+            var run = await ProcessRunner.RunAsync([program, address], workingDirectory: workspace.Path);
+            Assert.Equal(2, run.ExitCode);
+            Assert.Equal("Pass one absolute HTTP URL." + Environment.NewLine, run.Output);
+            Assert.Empty(run.Error);
+        }
+    }
+
+    /// <summary>Checks the typed success and missing-row results of a parameterized SQLite query.</summary>
     [Fact]
     public async Task Sqlite_effect_reads_a_title_and_reports_a_missing_row()
     {

@@ -106,7 +106,8 @@ internal sealed class TerminalDisplay(int columns, int rows)
         if (arguments == "?7" && command is 'h' or 'l') { wrap = command == 'h'; return; }
         if (arguments == "?1049" && command is 'h' or 'l') { Array.Clear(cells); x = 0; y = 0; return; }
         var parts = arguments.Split(';');
-        int Value(int position, int fallback) => position < parts.Length && int.TryParse(parts[position], out var value) ? value : fallback;
+        int Value(int position, int fallback) => position < parts.Length && int.TryParse(parts[position], NumberStyles.None, CultureInfo.InvariantCulture, out var value) ? value : fallback;
+        int Distance(int extent) => Math.Clamp(Value(0, 1), 1, extent);
         var width = cells.GetLength(1);
         var height = cells.GetLength(0);
         switch (command)
@@ -115,10 +116,10 @@ internal sealed class TerminalDisplay(int columns, int rows)
                 y = Math.Clamp(Value(0, 1) - 1, 0, height - 1);
                 x = Math.Clamp(Value(1, 1) - 1, 0, width - 1);
                 break;
-            case 'A': y = Math.Max(0, y - Value(0, 1)); break;
-            case 'B': y = Math.Min(height - 1, y + Value(0, 1)); break;
-            case 'C': x = Math.Min(width - 1, x + Value(0, 1)); break;
-            case 'D': x = Math.Max(0, x - Value(0, 1)); break;
+            case 'A': y = Math.Max(0, y - Distance(height)); break;
+            case 'B': y = Math.Min(height - 1, y + Distance(height)); break;
+            case 'C': x = Math.Min(width - 1, x + Distance(width)); break;
+            case 'D': x = Math.Max(0, x - Distance(width)); break;
             case 'G': x = Math.Clamp(Value(0, 1) - 1, 0, width - 1); break;
             case 'd': y = Math.Clamp(Value(0, 1) - 1, 0, height - 1); break;
             case 'J' when Value(0, 0) is 2 or 3: Array.Clear(cells); break;

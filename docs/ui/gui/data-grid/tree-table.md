@@ -52,6 +52,54 @@ the load finishes.
 Use a [tree cell](tree-cell.md) inside an ordinary table when the
 application builds the visible rows itself.
 
+## Context menu
+
+Pass `Menu` to give each node a native context menu. A right click on a row
+opens it at the pointer, and Shift+F10 opens it for the cursor row. A row
+outside the selection becomes the proposed selection first, so a command can
+act on the whole selection or on the node it receives. CUI owns the keys while
+the menu is open. The menu closes when its node disappears or the table is
+disabled.
+
+```pascal
+unit Docs.Ui.DataGrid.TreeTableMenu;
+
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Collections.TreeTables as W,
+  Fpas.Ui.Widgets.Collections.DataGrids as D, Fpas.Ui.Widgets.Overlays.Menus as M;
+
+// Messages of the file tree.
+public type Msg = variant
+  // Store the proposed tree state.
+  Changed(Value: W.Change);
+  // Delete one node.
+  Delete(Node: int);
+end variant;
+
+// Builds the entries for one node.
+// ## Parameters
+// - `Node`: Model index of the node the menu is open for.
+// ## Returns
+// The commands for that node.
+function Commands(Node: int): array of M.Entry<Msg>;
+begin
+  return [M.Entry<Msg>.Action(new M.Item<Msg>('delete', 'Delete', Msg.Delete(Node), Danger := true))];
+end function;
+
+// Builds a file tree whose rows have a context menu.
+// ## Parameters
+// - `Nodes`: Nodes in sibling order, with parents before their children.
+// ## Returns
+// The tree table.
+public function View(Nodes: array of W.Node): E.Element<Msg>;
+begin
+  return W.TreeTable<Msg>('files', [new D.Column('Name', 320.0F)], Nodes, -1, null,
+    function(Change: W.Change): Msg => Msg.Changed(Change),
+    Menu := function(Node: int): array of M.Entry<Msg> => Commands(Node));
+end function;
+
+end unit;
+```
+
 ## See also
 
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Collections/TreeTables.fpas)
@@ -68,6 +116,12 @@ application builds the visible rows itself.
 - `src/Fpas.Ui.Gui.Cui/Widgets/Collections/`
   - [CuiWindow.TreeTable.Types.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Collections/CuiWindow.TreeTable.Types.cs)
   - [CuiWindow.TreeTable.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Collections/CuiWindow.TreeTable.cs)
+  - [CuiWindow.TreeTableMenu.cs](../../../../src/Fpas.Ui.Gui.Cui/Widgets/Collections/CuiWindow.TreeTableMenu.cs)
 - `src/Fpas.Ui.Gui.Cui/native/widgets/collections/`
   - [tree_table.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/tree_table.c)
   - [tree_table.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/tree_table.h)
+  - [tree_table_menu.c](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/collections/tree_table_menu.c)
+- `tests/Fixtures/gui-host/`
+  - [TreeTableMenuContract.fpas](../../../../tests/Fixtures/gui-host/TreeTableMenuContract.fpas)
+- `tests/Fpas.Ui.Gui.Cui.Tests/Overlays/`
+  - [CuiTreeTableMenuTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Overlays/CuiTreeTableMenuTests.cs)

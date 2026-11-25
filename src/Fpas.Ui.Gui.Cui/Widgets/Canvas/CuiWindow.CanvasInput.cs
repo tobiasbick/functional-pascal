@@ -43,6 +43,7 @@ public sealed partial class CuiWindow
     private unsafe int PumpCanvasInput()
     {
         if (!listenForCanvasInput) return NativeMethods.Pump(app, DeferClose ? 1 : 0);
+        CheckCanvasEventLayout();
         var root = GCHandle.Alloc(this);
         int result;
         try
@@ -88,6 +89,21 @@ public sealed partial class CuiWindow
         }
         catch (Exception error) { window.captureFailure ??= ExceptionDispatchInfo.Capture(error); }
         return leftPress ? (byte)0 : (byte)1;
+    }
+
+    private static bool canvasEventLayoutChecked;
+
+    // The hook reads CUI's event in place, so a changed cui_input_event must fail before delivery.
+    private static void CheckCanvasEventLayout()
+    {
+        if (canvasEventLayoutChecked) return;
+        NativeMethods.CanvasEventLayout(out int size, out int finger, out int down, out int text);
+        if (size != Marshal.SizeOf<NativeMethods.CanvasEvent>()
+            || finger != (int)Marshal.OffsetOf<NativeMethods.CanvasEvent>(nameof(NativeMethods.CanvasEvent.Finger))
+            || down != (int)Marshal.OffsetOf<NativeMethods.CanvasEvent>(nameof(NativeMethods.CanvasEvent.Down))
+            || text != (int)Marshal.OffsetOf<NativeMethods.CanvasEvent>(nameof(NativeMethods.CanvasEvent.Text)))
+            throw new InvalidOperationException("The managed copy of cui_input_event does not match the native layout.");
+        canvasEventLayoutChecked = true;
     }
 
     // Nonfocusable hits decide during submission whether they retain focus.

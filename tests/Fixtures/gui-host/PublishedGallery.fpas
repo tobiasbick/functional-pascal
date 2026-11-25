@@ -44,6 +44,7 @@ uses
   GalleryDisclosureContract as DisclosureContract,
   GalleryDisclosureFeedbackContract as DisclosureFeedbackContract,
   GalleryContextContract as ContextContract,
+  GalleryTreeTableMenuContract as TreeTableMenuContract,
   GalleryActionsContract as ActionsContract,
   GalleryHostAssertions as A,
   GalleryActionWidgetsContract as ActionWidgetsContract,
@@ -290,6 +291,7 @@ begin
   SkeletonContract.Verify(Renderer);
   DropdownContract.Verify(Renderer, Capture);
   ContextContract.Verify(Renderer, Capture);
+  TreeTableMenuContract.Verify(Renderer, Capture);
   Console.WriteLine(
     'GUI gallery verified: ' + if Renderer = Cui.CuiRenderer.Software then
       'software'

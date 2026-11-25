@@ -59,6 +59,10 @@ public type Msg = variant
   SetUi(Open: bool);
   // Apply native tree-table changes and satisfy demo loads.
   SetTree(Value: Tree.Change);
+  // Open a tree-table node from its context menu.
+  OpenNode(Index: int);
+  // Expand or collapse a tree-table node from its context menu.
+  ToggleNode(Index: int);
 end variant;
 
 end unit;

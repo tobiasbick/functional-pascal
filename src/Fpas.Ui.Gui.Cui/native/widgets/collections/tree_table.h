@@ -30,4 +30,18 @@ CUI_API int fpas_cui_tree_table_name(cui_ctx *ui, const char *label, const char 
  * Makes the root the last layout target; handle must be this frame's matching begin result. */
 CUI_API void fpas_cui_tree_table_end(cui_ctx *ui, void *handle, uint32_t *flags,
     int *state, int *events, int *load);
+/** Asks for table id's context menu after its end, in every frame the table offers one.
+ * A right click on a row or Shift+F10 opens it. Returns nonzero while it is open, with
+ * the model node it is for in node (otherwise -1). popup and table receive the menu's
+ * popup ID and the table root for the matching end in this frame. */
+CUI_API int fpas_cui_tree_table_menu_begin(cui_ctx *ui, const char *id, int enabled, int *node,
+    unsigned int *popup, int *table);
+/** Draws the open menu's rows when visible and ends it. Rows use menu.h's encoding.
+ * nodes[count + 1] receives the table root followed by the command nodes, open whether the popup
+ * accepts input, highlighted the highlighted entry and owner its lifecycle key.
+ * Makes the table root the last layout target again. Returns the chosen entry index, or -1. */
+CUI_API int fpas_cui_tree_table_menu_end(cui_ctx *ui, unsigned int popup, int table, int visible,
+    const char *const *keys, const char *const *labels, const char *const *icons,
+    const char *const *shortcuts, const int *flags, int count, int *nodes,
+    int *open, int *highlighted, unsigned int *owner);
 #endif

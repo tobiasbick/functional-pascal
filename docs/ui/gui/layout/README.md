@@ -22,3 +22,4 @@ content. Use layout constraints to give the containers the space they need.
 - [layout_parity.c](../../../../src/Fpas.Ui.Gui.Cui/native/tests/layout_parity.c)
 - [LayoutContract.fpas](../../../../tests/Fixtures/gui-host/LayoutContract.fpas)
 - [CuiContainerTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Layout/CuiContainerTests.cs)
+- [CuiScrollRevealTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Layout/CuiScrollRevealTests.cs)

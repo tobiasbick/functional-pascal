@@ -479,10 +479,12 @@ begin
     when E.Element.TreeTable(
       const Id: string, const Columns: array of DataGrids.Column,
       const Nodes: array of TreeTables.Node, const Cursor: int, const Order: Tables.Sort?,
-      const Change: function(TreeTables.Change): TChild, const Settings: TreeTables.Options
+      const Change: function(TreeTables.Change): TChild, const Settings: TreeTables.Options,
+      const Menu: Sys.Func<int, array of Menus.Entry<TChild>>?
     ): E.Element<TParent>.TreeTable(
       Id, Columns, Nodes, Cursor, Order,
-      function(Next: TreeTables.Change): TParent => Messages(Change(Next)), Settings
+      function(Next: TreeTables.Change): TParent => Messages(Change(Next)), Settings,
+      M.MenuSource<int, TChild, TParent>(Menu, Messages)
     );
     when E.Element.ReorderableList(
       const Id: string, const Items: array of E.Element<TChild>, const Order: array of int,

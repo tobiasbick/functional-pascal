@@ -12,11 +12,14 @@ internal static partial class NativeMethods
     {
         internal int Kind;
         internal float X, Y, Dx, Dy;
-        internal int Button, Key, Mods;
+        internal int Button, Key, Mods, Finger;
         internal byte Down, Focused;
         internal nint Text;
     }
 
+    [LibraryImport(Library, EntryPoint = "fpas_cui_input_event_layout")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void CanvasEventLayout(out int size, out int finger, out int down, out int text);
     [LibraryImport(Library, EntryPoint = "cui_set_input_hook")]
     internal static unsafe partial void CanvasHook(nint ui, delegate* unmanaged[Cdecl]<nint, CanvasEvent*, nint, byte> hook, nint user);
     [LibraryImport(Library, EntryPoint = "fpas_cui_canvas_dispatch", StringMarshalling = StringMarshalling.Utf8)]

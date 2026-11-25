@@ -118,6 +118,18 @@ begin
       end with;
     when S.Msg.SetTree(const Value: Tree.Change):
       return UpdateTree(State, Value);
+    when S.Msg.OpenNode(const Index: int):
+      return State with
+        Activated := State.TreeNodes[Index].Label;
+      end with;
+    when S.Msg.ToggleNode(const Index: int):
+      const Nodes: array of Tree.Node := cast<array of Tree.Node>(State.TreeNodes.Clone());
+      Nodes[Index] := Nodes[Index] with
+        Open := not Nodes[Index].Open;
+      end with;
+      return State with
+        TreeNodes := Nodes;
+      end with;
   end case;
 end function;
 

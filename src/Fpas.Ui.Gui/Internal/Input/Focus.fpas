@@ -218,7 +218,7 @@ begin
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
       end if;
-    when E.Element.TreeTable(const Id: string, _, _, _, _, _, const Settings: TreeTable.Options):
+    when E.Element.TreeTable(const Id: string, _, _, _, _, _, const Settings: TreeTable.Options, _):
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
       end if;

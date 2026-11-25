@@ -5,7 +5,8 @@ unit Fpas.Ui.Gui.Internal.Widgets.Collections.TreeTable;
 uses
   Fpas.Ui.Widgets.Collections.TreeTables as T, Fpas.Ui.Widgets.Collections.DataGrids as D, Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Gui.Internal.Core.Context as C, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Internal.Widgets.Collections.DataGrid as G,
   Fpas.Ui.Gui.Application as App, Fpas.Ui.Gui.Cui.Widgets.Collections as CuiCollections,
-  Fpas.Ui.Gui.Cui as Cui, System as Sys,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Cui.Widgets.Overlays as CuiOverlays, Fpas.Ui.Widgets.Overlays.Menus as M,
+  Fpas.Ui.Gui.Internal.Widgets.Overlays.Menu as MenuWidget, System as Sys,
   System.Collections.Generic as Lists;
 
 // Draws an indented native table cell.
@@ -76,6 +77,46 @@ begin
     end if);
 end function;
 
+// Offers the table's native context menu and forwards the chosen command.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `Frame`: Current host frame.
+// - `Id`: Stable table identity.
+// - `Token`: Native table identity.
+// - `Build`: Builds the entries for the node the menu is open for.
+// - `Enabled`: Whether the menu may open and accept input.
+procedure DrawMenu<TMsg>(Frame: C.State<TMsg>; Id: string; Token: string; Build: Sys.Func<int, array of M.Entry<TMsg>>; Enabled: bool);
+begin
+  const MenuId: string := Id + '/menu';
+  var Node: int := -1;
+  const Open: bool := Frame.Window.BeginTreeTableMenu(Token, Enabled, out Node);
+  const Entries: array of M.Entry<TMsg> := if Open and Node >= 0 then
+    Build.Invoke(Node)
+  else
+    []
+  end if;
+  const Prepared: MenuWidget.Rows := MenuWidget.Prepare<TMsg>(
+    'tree-table-menu',
+    MenuId,
+    Entries,
+    not Frame.PaintingClosed
+  );
+  const Result: CuiOverlays.CuiMenuResult := Frame.Window.EndTreeTableMenu(
+    Prepared.Entries,
+    Prepared.Tokens
+  );
+  MenuWidget.Report<TMsg>(
+    Frame,
+    'tree-table-menu',
+    MenuId,
+    'Context menu',
+    Entries,
+    Enabled,
+    Result
+  );
+end procedure;
+
 // Presents the standalone native tree table.
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -88,7 +129,8 @@ end function;
 // - `Order`: Current sort.
 // - `Change`: Maps a native result to a message.
 // - `Settings`: Viewport, guides and input settings.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Columns: array of D.Column; Nodes: array of T.Node; Cursor: int; Order: Tables.Sort?; Change: function(T.Change): TMsg; Settings: T.Options);
+// - `Menu`: Optional context menu builder for a node.
+public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Columns: array of D.Column; Nodes: array of T.Node; Cursor: int; Order: Tables.Sort?; Change: function(T.Change): TMsg; Settings: T.Options; Menu: Sys.Func<int, array of M.Entry<TMsg>>?);
   function Part(Index: int): string;
   begin
     return Id + '/node/' + Index.ToString(Sys.Globalization.CultureInfo.InvariantCulture);
@@ -173,6 +215,12 @@ begin
     Index := Frame.Window.NextTreeTableRow(Track);
   end while;
   const Result: CuiCollections.CuiTreeTableEvents := Frame.Window.EndTreeTable();
+  case Menu of
+    when is Sys.Func<int, array of M.Entry<TMsg>> as Build:
+      DrawMenu<TMsg>(Frame, Id, Token, Build, Enabled);
+    else
+  end case;
+
   C.Track<TMsg>(Frame, new App.Control(Id, '', 'tree-table', new Cui.CuiRectangle(), Enabled));
   if not Enabled then
     return;

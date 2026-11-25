@@ -721,7 +721,9 @@ See [Data grid](ui/gui/data-grid/README.md) for screenshots and FPAS examples.
 - [x] Tree table (`cui_tree_table_begin`, `cui_tree_table_row`,
   `cui_tree_table_name`, `cui_tree_cell`): the original source-tree cells in a
   table and a supplementary virtual tree table with native selection, activation
-  and lazy children. Windows checks cover both forms.
+  and lazy children. Windows checks cover both forms. The virtual tree table's
+  per-node context menu (`cui_tree_table_menu`) opens by right click and
+  Shift+F10; the gallery contract covers selection, commands and Escape.
 
 The original Data grid page content matches the Windows Software and OpenGL
 reference at 1100×1550 and scale one when both galleries use the same reserved

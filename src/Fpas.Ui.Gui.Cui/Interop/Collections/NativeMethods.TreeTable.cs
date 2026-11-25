@@ -31,4 +31,17 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "fpas_cui_tree_table_end")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial void TreeTableEnd(nint context, nint handle, uint* flags, int* state, int* events, int* load);
+
+    [LibraryImport(Library, EntryPoint = "fpas_cui_tree_table_menu_begin", StringMarshalling = StringMarshalling.Utf8)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial int TreeTableMenuBegin(nint context, string id, int enabled, out int node, out uint popup, out int table);
+
+    [LibraryImport(Library, EntryPoint = "fpas_cui_tree_table_menu_end", StringMarshalling = StringMarshalling.Utf8)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static unsafe partial int TreeTableMenuEnd(nint context, uint popup, int table, int visible,
+        [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] keys,
+        [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] labels,
+        [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] icons,
+        [MarshalUsing(typeof(Utf8StringMarshaller), ElementIndirectionDepth = 1)] string[] shortcuts,
+        int* flags, int count, int* nodes, out int open, out int highlighted, out uint owner);
 }

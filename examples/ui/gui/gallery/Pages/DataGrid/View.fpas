@@ -7,12 +7,43 @@ uses
   GuiGallery.Pages.DataGrid.State as S, GuiGallery.Pages.DataGrid.People as P,
   GuiGallery.Shared.Sections as H, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
   Fpas.Ui.Widgets.Collections.DataGrids as D, Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Widgets.Collections.TreeTables as TT,
-  Fpas.Ui.Widgets.Media.Avatars as A, Fpas.Ui.Widgets.Feedback.Badges as B, Fpas.Ui.Widgets.Feedback.ProgressBars as Progress, Fpas.Ui.Styles as Style,
+  Fpas.Ui.Widgets.Overlays.Menus as M, Fpas.Ui.Widgets.Media.Avatars as A, Fpas.Ui.Widgets.Feedback.Badges as B, Fpas.Ui.Widgets.Feedback.ProgressBars as Progress, Fpas.Ui.Styles as Style,
   System as Sys, System.Globalization as Culture, System.Collections.Generic as Lists;
 
 function Points(Value: int): L.Extent;
 begin
   return L.Extent.Fixed(L.Measure.Logical(Value));
+end function;
+
+// Builds the context menu for one node of the virtual tree table.
+function TreeMenu(Model: S.Model; Index: int): array of M.Entry<S.Msg>;
+begin
+  const Item: TT.Node := Model.TreeNodes[Index];
+  var Branch: bool := Item.HasChildren;
+  for Other: TT.Node in Model.TreeNodes do
+    Branch := Branch or Other.Parent = Index;
+  end for;
+
+  const Open: M.Entry<S.Msg> := M.Entry<S.Msg>.Action(
+    new M.Item<S.Msg>('open', 'Open', S.Msg.OpenNode(Index), Shortcut := 'Enter')
+  );
+  if not Branch then
+    return [Open];
+  end if;
+
+  return [
+    Open,
+    M.Entry<S.Msg>.Separator,
+    M.Entry<S.Msg>.Action(
+      new M.Item<S.Msg>(
+        'toggle', if Item.Open then
+          'Collapse'
+        else
+          'Expand'
+        end if, S.Msg.ToggleNode(Index)
+      )
+    )
+  ];
 end function;
 
 function GridRow(Model: S.Model; Position: int): D.Row<S.Msg>;
@@ -162,12 +193,13 @@ begin
       Model.TreeCursor,
       null,
       S.Msg.SetTree,
-      new TT.Options(Height := Points(240), Guides := true)
+      new TT.Options(Height := Points(240), Guides := true),
+      Menu := function(Index: int): array of M.Entry<S.Msg> => TreeMenu(Model, Index)
     ),
     E.Styled<S.Msg>(
       E.Text<S.Msg>(
         if Model.Activated = '' then
-          'Enter opens the selected item.'
+          'Enter opens the selected item. Right-click or Shift+F10 opens its menu.'
         else
           'Opened ' + Model.Activated
         end if

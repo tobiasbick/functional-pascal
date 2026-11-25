@@ -125,6 +125,14 @@ CUI_API int fpas_cui_canvas_pointer_focus(cui_ctx *ui, float x, float y) {
     return 0;
 }
 
+/* Reports the native input event layout that NativeMethods.CanvasEvent mirrors. */
+CUI_API void fpas_cui_input_event_layout(int *size, int *finger, int *down, int *text) {
+    *size = (int)sizeof(cui_input_event);
+    *finger = (int)offsetof(cui_input_event, finger);
+    *down = (int)offsetof(cui_input_event, down);
+    *text = (int)offsetof(cui_input_event, text);
+}
+
 typedef struct { cui_id target; int repeated; } fpas_canvas_route;
 
 static bool fpas_canvas_route_event(cui_ctx *ui, void *user, const cui_input_event *event) {

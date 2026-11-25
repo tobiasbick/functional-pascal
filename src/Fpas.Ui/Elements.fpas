@@ -340,7 +340,7 @@ public type Element<TMsg> = variant
   // Indented tree content for an existing table cell.
   TreeCell(Id: string; Label: string; Depth: int; Open: bool?; Change: Sys.Func<bool, TMsg>?; Icon: string);
   // Virtualized native tree table with model-owned nodes.
-  TreeTable(Id: string; Columns: array of DataGrids.Column; Nodes: array of TreeTables.Node; Cursor: int; Order: Tables.Sort?; Change: function(TreeTables.Change): TMsg; Settings: TreeTables.Options);
+  TreeTable(Id: string; Columns: array of DataGrids.Column; Nodes: array of TreeTables.Node; Cursor: int; Order: Tables.Sort?; Change: function(TreeTables.Change): TMsg; Settings: TreeTables.Options; Menu: Sys.Func<int, array of Menus.Entry<TMsg>>?);
   // Native drag-to-reorder list.
   ReorderableList(Id: string; Items: array of Element<TMsg>; Order: array of int; Change: function(array of int): TMsg; Enabled: bool);
   // Native viewport with lazily realized rows.

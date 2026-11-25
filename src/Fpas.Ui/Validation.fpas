@@ -1002,7 +1002,8 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Cursor: int,
         const Order: Tables.Sort?,
         _,
-        const Settings: TreeTables.Options
+        const Settings: TreeTables.Options,
+        _
       ):
         const At: string := Identify(Id, Location + '/treeTable');
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);

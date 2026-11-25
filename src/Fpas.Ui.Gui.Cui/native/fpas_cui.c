@@ -106,6 +106,7 @@
 #include "widgets/inputs/number_field.c"
 #include "widgets/actions/split_button.c"
 #include "widgets/overlays/menu.c"
+#include "widgets/collections/tree_table_menu.c"
 #include "widgets/conversation/reactions.c"
 #include "widgets/overlays/user_menu.c"
 #include "widgets/actions/speed_dial.c"

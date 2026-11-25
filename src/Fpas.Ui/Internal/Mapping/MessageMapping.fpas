@@ -51,6 +51,32 @@ begin
   end case;
 end function;
 
+// Wraps an optional menu builder without invoking it.
+// ## Type parameters
+// - `TArg`: Builder argument.
+// - `TChild`: Source messages.
+// - `TParent`: Destination messages.
+// ## Parameters
+// - `Value`: Optional builder of menu entries.
+// - `Messages`: Message translation.
+// ## Returns
+// A builder whose entries carry translated messages, retaining absence.
+public function MenuSource<TArg, TChild, TParent>(
+  Value: Sys.Func<TArg, array of M.Entry<TChild>>?;
+  Messages: function(TChild): TParent
+): Sys.Func<TArg, array of M.Entry<TParent>>?;
+begin
+  case Value of
+    when is Sys.Func<TArg, array of M.Entry<TChild>> as Original:
+      return function(Argument: TArg): array of M.Entry<TParent> => Menu<TChild, TParent>(
+        Original.Invoke(Argument),
+        Messages
+      );
+    else
+      return null;
+  end case;
+end function;
+
 // Translates menu actions while retaining their keys and all decoration.
 // ## Type parameters
 // - `TChild`: Source messages.

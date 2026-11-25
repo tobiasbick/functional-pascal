@@ -115,6 +115,10 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void ScrollTo(nint context, string id, float offset);
 
+    [LibraryImport(Library, EntryPoint = "cui_scroll_reveal", StringMarshalling = StringMarshalling.Utf8)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void ScrollReveal(nint context, string id, uint row);
+
     [LibraryImport(Library, EntryPoint = "fpas_cui_request_focus", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void RequestFocus(nint context, string id);

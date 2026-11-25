@@ -66,7 +66,9 @@ scopes require callers to balance native begin and end operations within the
 same frame. Managed layout-stack checks cover the other managed layout scopes.
 
 `TrackLastControl` and composite tracking register nodes for geometry, focus
-and hover. Header snapshots and outer layout nodes can be tracked separately.
+and hover. `ScrollTo` requests an offset, and `ScrollReveal` scrolls a container
+the least that shows a control tracked in an earlier frame; nothing moves while
+it is wholly visible. Header snapshots and outer layout nodes can be tracked separately.
 `ForgetControl` releases retained state and owned popup or feedback state for
 disappearing controls. Private state keys stay in the native bridge. Stable
 identities are separate from literal labels, and the FPAS host maps native
@@ -81,6 +83,18 @@ input can be injected during an active frame through the managed binding. These
 methods forward to CUI, which routes input according to its current layout and
 ownership. Tests using injection exercise the CUI path. Operating-system
 keyboard and pointer delivery require platform input tests.
+
+## Touch input
+
+`Touch`, `MoveTouch` and `CancelTouch` feed CUI's raw multi-touch input for up
+to `TouchSlots` fingers during a frame. `TouchCount` and `ReadTouch` return the
+frame's state; finger minus one reads the touch that landed first, and a lifted
+finger keeps its position for that frame. CUI's Windows and Linux desktop
+backends do not report touch yet, so the binding exposes it for injection and
+for drawing code that reads it.
+[CuiWindow.Touch.cs](../../../src/Fpas.Ui.Gui.Cui/Hosting/CuiWindow.Touch.cs) ·
+[NativeMethods.Touch.cs](../../../src/Fpas.Ui.Gui.Cui/Interop/Hosting/NativeMethods.Touch.cs) ·
+[CuiTouchTests.cs](../../../tests/Fpas.Ui.Gui.Cui.Tests/Windowing/CuiTouchTests.cs)
 
 ## Application shortcuts
 
@@ -123,7 +137,9 @@ The managed bridge validates UTF-8 inputs before passing them to CUI. Native
 text parameters use zero-terminated strings, so embedded zero characters and
 unpaired UTF-16 surrogates are invalid. Count formats allow bounded integer
 `%d` slots and literal `%%` for C varargs calls. Widget-specific marshalling
-pairs managed sequential records with native input and result structs. Check
+pairs managed sequential records with native input and result structs. The
+canvas input hook reads `cui_input_event` in place; the binding compares its
+managed copy with the native size and field offsets before installing the hook. Check
 each adapter's buffer lifetime when CUI paints after the call returns. User-menu
 avatars reuse native texture loading and lifetime. Guided-tour action identities
 stay stable across caption changes.

@@ -1249,9 +1249,20 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
       when E.Element.TreeTable(
         const Id: string, const Columns: array of DataGrids.Column,
         const Nodes: array of TreeTables.Node, const Cursor: int, const Order: Tables.Sort?,
-        const Change: function(TreeTables.Change): TMsg, const Settings: TreeTables.Options
+        const Change: function(TreeTables.Change): TMsg, const Settings: TreeTables.Options,
+        const Menu: Sys.Func<int, array of Menus.Entry<TMsg>>?
       ):
-        TreeTableWidget.Draw<TMsg>(Current, Id, Columns, Nodes, Cursor, Order, Change, Settings);
+        TreeTableWidget.Draw<TMsg>(
+          Current,
+          Id,
+          Columns,
+          Nodes,
+          Cursor,
+          Order,
+          Change,
+          Settings,
+          Menu
+        );
       when E.Element.ReorderableList(
         const Id: string, const Items: array of E.Element<TMsg>, const Order: array of int,
         const Change: function(array of int): TMsg, const Enabled: bool

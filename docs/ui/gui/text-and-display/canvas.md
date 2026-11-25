@@ -96,4 +96,5 @@ images and other drawing primitives, or to observe pointer and wheel input.
   - [canvas.h](../../../../src/Fpas.Ui.Gui.Cui/native/widgets/canvas/canvas.h)
 - `tests/Fpas.Ui.Gui.Cui.Tests/Display/`
   - [CuiCanvasInputTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Display/CuiCanvasInputTests.cs)
+  - [CuiCanvasWin32InputTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Display/CuiCanvasWin32InputTests.cs)
   - [CuiCanvasWheelTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Display/CuiCanvasWheelTests.cs)

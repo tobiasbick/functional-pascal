@@ -16,7 +16,8 @@ public sealed partial class CuiWindow : IDisposable
         Column, Row, Scroll, Sheet, Group, ButtonGroup, Popover, HoverCard, Dialog, Card, ActionFooter,
         Accordion, ExpandableCard, SwipeItem, Tree, VirtualList, VirtualRow, Reorder, ReorderItem,
         Table, TableRow, DataGrid, TreeTable, Spotlight, Kanban, KanbanColumn, KanbanCard, SkeletonGroup,
-        Carousel, CarouselSlide, CardStack, CardStackItem, Reasoning, Toolbar, NodeEditor, Veil, FocusScope
+        Carousel, CarouselSlide, CardStack, CardStackItem, Reasoning, Toolbar, NodeEditor, Veil, FocusScope,
+        TreeTableMenu
     }
     private readonly record struct LayoutScope(Layout Kind, int Node = -1, object? Data = null);
 
@@ -280,6 +281,21 @@ public sealed partial class CuiWindow : IDisposable
         ArgumentException.ThrowIfNullOrEmpty(id);
         if (!float.IsFinite(offset) || offset < 0) throw new ArgumentOutOfRangeException(nameof(offset));
         NativeMethods.ScrollTo(context, Stable(id), offset);
+    }
+
+    /// <summary>Scrolls a container the least that shows a control from the previous layout.</summary>
+    /// <param name="id">The identity passed to <see cref="BeginScroll"/> or <see cref="BeginViewport(string, bool, bool)"/>, in the same CUI ID scope.</param>
+    /// <param name="controlId">A control tracked in an earlier frame inside that container.</param>
+    /// <remarks>Nothing moves while the control is wholly visible. A control taller than the view gets its top at the top.</remarks>
+    public void ScrollReveal(string id, string controlId)
+    {
+        CheckFrame();
+        Utf8.Validate(id, nameof(id));
+        ArgumentException.ThrowIfNullOrEmpty(id);
+        ArgumentException.ThrowIfNullOrEmpty(controlId);
+        if (!controlKeys.TryGetValue(controlId, out uint key))
+            throw new ArgumentException("Track the control in an earlier frame.", nameof(controlId));
+        NativeMethods.ScrollReveal(context, Stable(id), key);
     }
 
     /// <summary>Requests focus for a control when CUI next draws it as focusable.</summary>

@@ -7,7 +7,7 @@ Keep the identifiers stable.
 
 ## CUI-019 — Large constant chart ranges produce non-finite geometry
 
-- Upstream: [PR #64](https://github.com/yappologistic/CUI/pull/64) proposes a fix for the same axis-scaling defect. The [maintainer's adoption report](https://github.com/yappologistic/CUI/pull/64#issuecomment-6883945781) excludes the logic and robustness fixes. The native regression still confirms non-finite geometry at `56c9bc2` on Windows and Linux under WSL.
+- Upstream: [PR #64](https://github.com/yappologistic/CUI/pull/64) proposes a fix for the same axis-scaling defect. The [maintainer's adoption report](https://github.com/yappologistic/CUI/pull/64#issuecomment-6883945781) excludes the logic and robustness fixes. The native regression still confirms non-finite geometry at `f9597a3` (v1.5.0) on Windows and Linux under WSL.
 
 Reproduced on Linux with direct `cui_line_chart_ex` calls at `86d9781`.
 Use one series containing three `1e10f` samples with automatic bounds and reduced

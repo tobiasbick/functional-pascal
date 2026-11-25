@@ -4,7 +4,7 @@ unit Fpas.Ui.Widgets.Collections.TreeTables;
 
 uses
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Widgets.Collections.Tables as T, Fpas.Ui.Widgets.Collections.DataGrids as G,
-  System as Sys;
+  Fpas.Ui.Widgets.Overlays.Menus as M, System as Sys;
 
 // A node in the tree table's model array.
 public type Node = record
@@ -63,9 +63,11 @@ end record;
 // - `Order`: Current sort or null to disable sorting.
 // - `OnChange`: Maps native interaction to an application message.
 // - `Settings`: Optional viewport and input configuration.
+// - `Menu`: Optional context menu for the node a right click or Shift+F10 opens it for. The table
+//   proposes that node as the selection first when it lies outside the selection.
 // ## Returns
 // The graphical tree table.
-public function TreeTable<TMsg>(Id: string; Columns: array of G.Column; Nodes: array of Node; Cursor: int; Order: T.Sort?; OnChange: function(Change): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function TreeTable<TMsg>(Id: string; Columns: array of G.Column; Nodes: array of Node; Cursor: int; Order: T.Sort?; OnChange: function(Change): TMsg; Settings: Options? := null; Menu: Sys.Func<int, array of M.Entry<TMsg>>? := null): E.Element<TMsg>;
 requires Id <> '';
 begin
   return E.Element<TMsg>.TreeTable(
@@ -75,7 +77,8 @@ begin
     Cursor,
     Order,
     OnChange,
-    Settings ?? new Options()
+    Settings ?? new Options(),
+    Menu
   );
 end function;
 

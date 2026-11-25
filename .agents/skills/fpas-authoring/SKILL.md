@@ -19,7 +19,7 @@ owns language behavior. Follow [AGENTS.md](../../../AGENTS.md) and the
 | Records, variants, domains, generics, units, and globals | [Types and units](../../../docs/pascal/agents/types.md) |
 | Matching, nullable flow, exceptions, and resource cleanup | [Patterns and resources](../../../docs/pascal/agents/patterns-errors.md) |
 | Tasks, await, cancellation, and shared state | [Concurrency](../../../docs/pascal/agents/concurrency.md) |
-| Composable effects, typed failures, scoped dependencies, and streams | [Workflows](../../../docs/pascal/agents/concurrency.md#composable-effects) |
+| Composable effects, typed failures, scoped dependencies, and streams | [Effects and workflows](../../../docs/pascal/agents/concurrency.md#composable-effects) |
 | Actual .NET APIs, events, attributes, and public signatures | [Interop](../../../docs/pascal/agents/interop.md) |
 | CLI commands, refactoring and API/runtime inspection | [CLI reference](../../../docs/pascal/agents/cli.md) |
 | Compiler development and repository testing | [Development workflows](../../../docs/pascal/agents/tools.md) |
@@ -44,11 +44,11 @@ owns language behavior. Follow [AGENTS.md](../../../AGENTS.md) and the
    return at entry routines, including a program's main routine and public library
    operations. Internal helpers rely on the conditions checked at entry.
 
-   Use `Fpas.Workflows` when asynchronous work benefits from deferred composition,
-   typed failures or dependencies, or shared retry, deadline, and cancellation
-   policies. `Workflow<A, E, R>` describes success, expected failure, and required
-   environment. Compose steps first, then call `Run` with the environment and caller
-   token. Use ordinary `async` and `await` for a direct .NET call.
+   Use `Fpas.Execution.Effects` for deferred work with typed outcomes and dependencies.
+   `Effect<A, E, R>` describes success, expected failure, and required environment.
+   Compose steps first, then call `Run` with the environment and caller token. Use
+   `Fpas.Execution.Workflows` for retry, deadlines, and scoped resource lifetimes.
+   Use ordinary `async` and `await` for a direct .NET call.
 
 4. Compile through the current CLR toolchain using the
    [development workflow](../../../docs/build/development.md). Use `fpas compile`

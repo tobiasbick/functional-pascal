@@ -9,7 +9,7 @@ internal sealed record ExportedContext(int Version, string Phase, string Project
     string Platform, string Framework, string AssemblyName, string Target, string CompilerHash,
     bool ValidateDocumentation, bool WarningsAsErrors, string[] WarningErrors, string[] WarningExceptions, string[] NoWarn,
     string[] Sources, string[] References, ExportedReference[] Projects, ExportedOutput[] Outputs, string BuildCache, string ExpectedBuildInputs, Dictionary<string, string> InputHashes, string? ProjectAssetsFile,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string[]? DraftSources);
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string[]? DraftSources, bool IsTestProject);
 internal sealed record ExportedPreparationIssue(string Project, string InputPath, string NextAction, string Message);
 
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]

@@ -30,6 +30,12 @@ public sealed record MetadataIdentity(string Assembly, string Version, string Cu
 /// <param name="Symbol">The snapshot symbol id.</param>
 public sealed record SymbolExport(MetadataIdentity Identity, string Symbol);
 
+/// <summary>A resolved import in the checked source.</summary>
+/// <param name="Alias">The alias declaration's symbol id.</param>
+/// <param name="Target">The imported unit, type, or namespace symbol id.</param>
+/// <param name="IsClr">Whether the target is an imported CLR type or namespace.</param>
+public sealed record SemanticImport(string Alias, string Target, bool IsClr);
+
 /// <summary>One parameter of a callable signature.</summary>
 /// <param name="Name">The parameter name.</param>
 /// <param name="Type">The snapshot type id.</param>
@@ -84,8 +90,11 @@ public sealed record SemanticSymbol(string Id, string Kind, string Name, string 
 /// <param name="Documentation">The span of the attached documentation comment.</param>
 /// <param name="SurfaceTypes">The type ids mentioned by the declaration's signature.</param>
 /// <param name="SurfaceSymbols">The symbol ids mentioned by the declaration's signature.</param>
+/// <param name="IsInstance">Whether the declaration is an instance routine.</param>
+/// <param name="HasProtocolBases">Whether the protocol extends any interfaces.</param>
 public sealed record DeclarationContext(string? Owner, string QualifiedName, string? Accessibility, SourceSpan Span,
-    SourceSpan? Body, SourceSpan? Documentation, IReadOnlyList<string> SurfaceTypes, IReadOnlyList<string> SurfaceSymbols);
+    SourceSpan? Body, SourceSpan? Documentation, IReadOnlyList<string> SurfaceTypes, IReadOnlyList<string> SurfaceSymbols,
+    bool IsInstance = false, bool HasProtocolBases = false);
 
 /// <summary>One source mention of a symbol.</summary>
 /// <param name="Symbol">The snapshot symbol id.</param>
@@ -96,6 +105,11 @@ public sealed record SymbolOccurrence(string Symbol, SourceSpan Span, string Rol
     // The actual FieldDef or accessor MethodDef for this access, including ordinary storage outside the call graph.
     internal int AccessToken { get; init; }
 }
+
+/// <summary>A property used as a receiver for a call, index, or write through its value.</summary>
+/// <param name="Property">The property symbol id.</param>
+/// <param name="Span">Source range of the property access.</param>
+public sealed record PropertyReach(string Property, SourceSpan Span);
 
 /// <summary>Records that a member implements a protocol member.</summary>
 /// <param name="Implementation">The symbol id of the implementing member.</param>
@@ -123,6 +137,10 @@ public sealed class SemanticSnapshot
     public IReadOnlyList<SemanticType> Types { get; }
     /// <summary>Symbol mentions in source order.</summary>
     public IReadOnlyList<SymbolOccurrence> Occurrences { get; }
+    /// <summary>Resolved import aliases and their targets.</summary>
+    public IReadOnlyList<SemanticImport> Imports { get; }
+    /// <summary>Direct access through property values used as receivers.</summary>
+    public IReadOnlyList<PropertyReach> PropertyReaches { get; }
     /// <summary>Checked expression types.</summary>
     public IReadOnlyList<ExpressionType> Expressions { get; }
     /// <summary>The CLR identities of emitted source symbols.</summary>
@@ -141,12 +159,15 @@ public sealed class SemanticSnapshot
     private readonly Dictionary<string, SemanticSymbol> symbolsById = new(StringComparer.Ordinal);
 
     internal SemanticSnapshot(string id, string assemblyName, IEnumerable<SourceDocument> documents, IEnumerable<SemanticSymbol> symbols,
-        IEnumerable<SemanticType> types, IEnumerable<SymbolOccurrence> occurrences, IEnumerable<ExpressionType> expressions, IEnumerable<SymbolExport> exports,
+        IEnumerable<SemanticType> types, IEnumerable<SymbolOccurrence> occurrences, IEnumerable<SemanticImport> imports, IEnumerable<PropertyReach> propertyReaches,
+        IEnumerable<ExpressionType> expressions, IEnumerable<SymbolExport> exports,
         IEnumerable<SourceBody> bodies, IEnumerable<SourceOperation> operations, IEnumerable<ExcludedOperation> excludedOperations,
         IEnumerable<SymbolRelation>? relations = null, IEnumerable<SemanticRegion>? invalid = null)
     {
         Id = id; AssemblyName = assemblyName; Documents = Array.AsReadOnly(documents.ToArray()); Symbols = Array.AsReadOnly(symbols.ToArray());
         Types = Array.AsReadOnly(types.ToArray()); Occurrences = Array.AsReadOnly(occurrences.ToArray()); Expressions = Array.AsReadOnly(expressions.ToArray());
+        Imports = Array.AsReadOnly(imports.ToArray());
+        PropertyReaches = Array.AsReadOnly(propertyReaches.ToArray());
         Exports = Array.AsReadOnly(exports.ToArray());
         Bodies = Array.AsReadOnly(bodies.ToArray()); Operations = Array.AsReadOnly(operations.ToArray());
         ExcludedOperations = Array.AsReadOnly(excludedOperations.ToArray());

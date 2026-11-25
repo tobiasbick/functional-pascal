@@ -107,6 +107,106 @@ explicitly when missing. The report includes `overlayFiles` and a `snapshotId`
 that identifies the checked draft. `--overlay` and `--fix` are exclusive.
 Export the input contract with `fpas schema check-overlay-input`.
 
+## Lint a project or solution
+
+`fpas lint` checks code structure for an explicit `.fpasproj` or `.slnx` using
+the same evaluated inputs as `check`. It preserves source files and the checked
+root's compiler outputs. The preparation options and deadline are the same
+as for [check](#check-a-project-or-solution).
+
+```sh
+fpas lint App.slnx
+fpas lint App.slnx --existing-inputs --report json
+fpas lint App.slnx --max-lines 500 --max-directory-entries 12
+```
+
+- `module-cycle` reports groups of mutually dependent FPAS units in an
+  evaluated compilation. Each dependency has a source location at a resolved use.
+  Unused imports do not create edges.
+- `namespace-cycle` reports cycles between sibling namespaces at their first
+  differing segment. It includes dependencies between evaluated FPAS projects
+  and reports the unit uses that connect the namespaces.
+- `tangle` reports cycles between declarations across units, or between more
+  than seven declarations in one unit. Fields, cases and methods belong to their
+  declaring type. Nested routines belong to their outer declaration.
+- `field-leak` reports code outside a record that calls through, indexes or
+  writes through one of its public reference fields. The record must keep a
+  private field and use its own fields in an instance routine. The rule uses
+  direct receiver chains in the same compilation. Plain reads and `with` copies
+  remain valid.
+- `exported-sync` reports public record fields that expose mutable coordination
+  objects such as channels and their writers, semaphores, locks, cancellation
+  sources and task completion sources. Channel readers and cancellation tokens
+  are valid result ports.
+- `lonely-protocol` issues a nonblocking warning for a private protocol with
+  one known implementing record in its unit. It uses checked member
+  implementations, skips test projects and skips protocols that extend other
+  interfaces.
+- `shallow-module` reports units that expose more than seven routines and at
+  least as many as they keep private, when they also expose more than seven
+  routine groups or a record with more than seven public methods. Each free
+  routine is a group, and each public record groups its methods. Protocol
+  implementations are excluded from the declaration check. A separate finding
+  points to a source that uses more than seven distinct exports of another unit,
+  even when that unit has a deep implementation. Repeated uses count once and
+  members count under their top-level type. The check includes resolved FPAS
+  project references in the evaluated context. Test projects are exempt from
+  this consumer check.
+- `wide-directory` reports directories with more than 15 immediate FPAS source
+  entries. It counts evaluated files and subdirectories containing evaluated
+  FPAS sources. `long-file` reports evaluated files longer than 2,000 lines,
+  including blank and comment lines. Linked files count once. The line limit
+  applies when at least one evaluated owner is a production project. Test
+  projects are identified by the evaluated MSBuild property `IsTestProject`.
+- `unused-clr-alias` reports unused CLR type and namespace aliases. A linked
+  source is reported only when all its analyzed owners agree. Use
+  [organize-imports](../tools/refactoring.md#organize-imports-in-a-file) to
+  preview and apply supported removals.
+
+Use `--held-in-mind` to set the local tangle size, interface list size and
+consumer export limit together. Use `--max-directory-entries` and `--max-lines`
+to tune the two layout rules independently. Thresholds are positive integers.
+
+The architecture rules draw from
+[deslop-please](https://github.com/deterministic-machines/deslop-please) and
+[its TypeScript port](https://github.com/graffhyrum/deslop-please-ts) and
+[its Go port](https://github.com/vasilvestre/deslop-please-go).
+The linter uses FPAS compiler facts and applies its rules only after complete,
+successful source analysis. Text reports go to stderr. `--report json`
+produces one bounded [lint report](../tools/report-schemas.md) with rule IDs,
+project and source locations, and related cycle edges.
+Exit 0 means no active errors. Exit 1 means active errors, analysis failure or timeout.
+Exit 2 means invalid arguments and exit 130 means cancellation.
+
+- [LintCommand.cs](../../../src/Fpas.Cli/Analysis/LintCommand.cs)
+- [LintReport.cs](../../../src/Fpas.Cli/Analysis/LintReport.cs)
+- [LintTests.cs](../../../tests/Fpas.IntegrationTests/Workspaces/LintTests.cs)
+- [LintGoRulesTests.cs](../../../tests/Fpas.IntegrationTests/Workspaces/LintGoRulesTests.cs)
+
+### Lint baseline
+
+```sh
+fpas lint App.slnx --write-baseline lint-baseline.json
+fpas lint App.slnx --baseline lint-baseline.json --report json
+fpas schema lint-baseline
+```
+
+`--write-baseline` creates or refreshes a versioned JSON file from a complete
+analysis. Use the same context, configuration and lint thresholds when applying
+or refreshing it. Refreshing replaces an existing baseline for those inputs.
+The two flags are mutually exclusive.
+
+`--baseline` covers existing errors by project and stable rule key. Keys use
+relative paths and symbol identities, so edits that move a finding to a new
+line preserve its identity. A cycle remains covered when its dependency edges
+are a subset of the recorded edges. A new edge can make the cycle active even
+with the same members. The report shows active findings, the covered count
+and resolved baseline entries. A recorded cycle is resolved when none of its
+edges still participates in a cycle of that rule. Nonblocking warnings remain
+visible. A failed analysis leaves the baseline file untouched.
+
+- [LintBaseline.cs](../../../src/Fpas.Cli/Analysis/LintBaseline.cs)
+
 ## Query checked sources
 
 Use an explicit context and source position:

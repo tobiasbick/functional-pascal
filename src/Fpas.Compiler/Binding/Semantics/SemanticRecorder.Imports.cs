@@ -1,4 +1,5 @@
 // [Documentation](../../../../docs/architecture/compiler.md#semantic-snapshots)
+using Fpas.Compiler.Analysis;
 using Fpas.Compiler.Binding.Declarations;
 using Fpas.Compiler.Binding.Symbols;
 using Fpas.Compiler.Binding.Types;
@@ -9,6 +10,7 @@ namespace Fpas.Compiler.Binding.Semantics;
 internal sealed partial class SemanticRecorder
 {
     private readonly Dictionary<string, object> namespaces = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, SemanticImport> imports = new(StringComparer.Ordinal);
 
     private SymbolEntry Namespace(string name)
     {
@@ -47,6 +49,9 @@ internal sealed partial class SemanticRecorder
         var type = ImportedType(target);
         Declare(syntax, "alias", syntax.Alias.Text, unit.Source, syntax.Alias, type);
         var symbol = ImportTargetSymbol(target);
+        var isClr = target is ClrImport or ClrTypeImport || target is NamespaceImport ns && references.HasNamespace(ns.Namespace);
+        var alias = symbols[syntax].Id;
+        imports.TryAdd(alias, new(alias, symbol.Id, isClr));
         Occurrence(unit.Source, syntax.Target.Parts[^1], symbol, type is null ? "namespace" : "type");
         for (var index = 0; index < syntax.Target.Parts.Count - 1; index++)
             Occurrence(unit.Source, syntax.Target.Parts[index], Prefix(string.Join('.', syntax.Target.Parts.Take(index + 1).Select(part => part.Text)), target), "namespace");

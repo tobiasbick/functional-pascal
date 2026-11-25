@@ -31,6 +31,8 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
     public string AssemblyName { get; set; } = "";
     /// <summary>Gets or sets whether the project produces an Exe, WinExe or Library.</summary>
     public string OutputType { get; set; } = "Library";
+    /// <summary>Gets or sets the evaluated test-project marker.</summary>
+    public bool IsTestProject { get; set; }
     /// <summary>Gets or sets the restore assets path required for resolved inputs.</summary>
     public string ProjectAssetsFile { get; set; } = "";
     /// <summary>Gets or sets the destination assembly path used in the build proof.</summary>
@@ -133,7 +135,7 @@ public sealed class FpasExportAnalysisContext : Microsoft.Build.Utilities.Task
                 Projects.Select(Reference).ToArray(), References.Where(item => item.GetMetadata("ReferenceSourceTarget") == "ProjectReference").Concat(sourceOutputs)
                     .Select(item => new ExportedOutput(item.GetMetadata("MSBuildSourceProjectFile"), item.GetMetadata("FullPath"))).Distinct().ToArray(),
                 Path.GetFullPath(BuildCache), Phase == "resolved" && !UseSourceReferences ? BuildInputs(resources, windowsResources) : "", hashes,
-                string.IsNullOrWhiteSpace(ProjectAssetsFile) ? null : Path.GetFullPath(ProjectAssetsFile), draftSources);
+                string.IsNullOrWhiteSpace(ProjectAssetsFile) ? null : Path.GetFullPath(ProjectAssetsFile), draftSources, IsTestProject);
             using var stream = new FileStream(ManifestFile, FileMode.CreateNew, FileAccess.Write, FileShare.None);
             JsonSerializer.Serialize(stream, result, ExportedContextJson.Default.ExportedContext);
             return true;

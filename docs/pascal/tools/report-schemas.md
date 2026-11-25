@@ -22,6 +22,8 @@ fpas schema query-batch-input
 | `project` | Init, build, run, target, publish, clean and restore |
 | `compile` | Standalone compiler diagnostics |
 | `check` | Evaluated project/solution checking, corrections and draft analysis |
+| `lint` | Semantic lint findings and source-analysis failures |
+| `lint-baseline` | Existing errors covered by an explicitly selected lint baseline |
 | `check-overlay-input` | New and replacement source texts supplied to `check`, `query batch` or `refactor draft` with `--overlay` |
 | `query` | Checked source queries, completion and signature help |
 | `query-outline` | Syntax-only file outline and parser diagnostics |
@@ -55,6 +57,15 @@ implementation. A new family or incompatible schema change needs an explicit
 schema/version contract. Existing JSON fields do not define future commands.
 Full command names are the public spelling; no additional short aliases are
 selected. Use each command's `--help` for examples and accepted options.
+
+The `lint` report has schema version 1. Its status is `ok`, `findings`, `failed`
+or `cancelled`. Findings carry `rule`, `key`, `severity`, `message`, `project`,
+`location` and `related` source locations. Cycle findings also record their
+dependency edges. The optional `baseline` contains the selected path, whether
+it was written, the number of covered findings and resolved entries.
+Compiler diagnostics and preparation issues accompany analysis failures.
+An operational failure has an `error` record. Responses above
+4 MiB produce a `result_limit` error. See the [lint command](../program-structure/cli.md#lint-a-project-or-solution).
 
 `fpas schema commands` writes a versioned command catalogue as JSON. Its
 `commands` entries identify each registered public command by its full command

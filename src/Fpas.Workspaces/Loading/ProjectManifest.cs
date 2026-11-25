@@ -10,12 +10,12 @@ internal sealed record ProjectManifest(int Version, string Phase, string Project
     string Platform, string Framework, string AssemblyName, string Target, string CompilerHash,
     bool ValidateDocumentation, bool WarningsAsErrors, string[] WarningErrors, string[] WarningExceptions, string[] NoWarn,
     string[] Sources, string[] References, ManifestReference[] Projects, ManifestOutput[] Outputs, string BuildCache, string ExpectedBuildInputs, Dictionary<string, string> InputHashes,
-    string? ProjectAssetsFile, string[]? DraftSources = null);
+    string? ProjectAssetsFile, string[]? DraftSources = null, bool IsTestProject = false);
 internal sealed record ManifestPreparationIssue(string Project, string InputPath, string NextAction, string Message);
 internal sealed record BuildProof([property: JsonPropertyName("Inputs")] string Inputs, [property: JsonPropertyName("AssemblyHash")] string AssemblyHash);
 
 internal sealed record ProjectInputIdentity(string Path, string Configuration, string AssemblyName, CompilationTarget Target,
-    bool ValidateDocumentation, DiagnosticOptions? DiagnosticOptions, IReadOnlyList<string> Dependencies);
+    bool ValidateDocumentation, DiagnosticOptions? DiagnosticOptions, IReadOnlyList<string> Dependencies, bool IsTestProject);
 
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 [JsonSerializable(typeof(ProjectManifest))]

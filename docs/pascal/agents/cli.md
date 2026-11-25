@@ -45,6 +45,7 @@ process and preserves its exit code. Keep its DLL, portable PDB and matching sou
 | `fpas compile` | Compile explicit sources to a CLR DLL. Supply `--output`, framework metadata via `--reference-dir`, and extra assemblies via repeated `--reference`. Use `--target library` for units-only output. |
 | `fpas check` | Validate an evaluated project or solution without analysis-owned output. Use `--report json`, `--fix --dry-run` to preview corrections, `--fix-id` to select automatic proposals within a fix batch or `--overlay` to check draft content in memory. |
 | `fpas fmt` | Format sources, directories, projects or solutions. `--check --list` reports affected paths and `--stdout` previews one source. |
+| `fpas lint` | Check architecture, source layout and unused CLR aliases. Apply `--baseline FILE` or record current errors with `--write-baseline FILE`. Use `--report json` for stable rule keys and locations. |
 | `fpas doc` | Look up FPAS and referenced CLR APIs with `--name`. Use `--usage` with the selected XML documentation ID for a compiler-checked FPAS template. |
 | `fpas query` | Select a checked source query. Results include a snapshot identity and coverage. |
 | `fpas query outline` | Read a syntax-only outline and spans from one file. |

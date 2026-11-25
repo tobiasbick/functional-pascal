@@ -47,6 +47,7 @@
   <Target Name="FpasDescribeAnalysisContext" DependsOnTargets="AssignProjectConfiguration">
     <Fpas.Build.Tasks.Analysis.FpasExportAnalysisContext ManifestFile="$(FpasAnalysisManifest)" Phase="description"
         ProjectPath="$(MSBuildProjectFullPath)" CompilerPath="$(FpasCompilerPath)" CompilerAssemblyPath="$(FpasCompilerAssemblyPath)" Configuration="$(Configuration)"
+        IsTestProject="$(IsTestProject)"
         Platform="$(PlatformTarget)" TargetFramework="$(TargetFramework)" AssemblyName="$(TargetName)" OutputType="$(OutputType)"
         Sources="@(Compile)" Projects="@(ProjectReferenceWithConfiguration)" ProjectAssetsFile="$(ProjectAssetsFile)" BuildCache="$(IntermediateOutputPath)fpas.compile.json" />
   </Target>
@@ -59,6 +60,7 @@
   <Target Name="FpasExportAnalysisContext" DependsOnTargets="$(_FpasAnalysisInputs);FpasCollectResources;FpasCollectWindowsResources">
     <Fpas.Build.Tasks.Analysis.FpasExportAnalysisContext ManifestFile="$(FpasAnalysisManifest)" Phase="resolved"
         UseSourceReferences="$(FpasAnalysisSourceReferences)"
+        IsTestProject="$(IsTestProject)"
         ProjectPath="$(MSBuildProjectFullPath)" CompilerPath="$(FpasCompilerPath)" CompilerAssemblyPath="$(FpasCompilerAssemblyPath)" Configuration="$(Configuration)"
         Platform="$(PlatformTarget)" TargetFramework="$(TargetFramework)" AssemblyName="$(TargetName)" OutputType="$(OutputType)"
         Sources="@(Compile)" References="@(ReferencePath)" Resources="@(_FpasManagedResource)" WindowsResources="@(_FpasWindowsResources)"

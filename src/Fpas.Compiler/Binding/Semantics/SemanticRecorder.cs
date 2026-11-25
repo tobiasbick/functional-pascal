@@ -133,6 +133,9 @@ internal sealed partial class SemanticRecorder(string assemblyName, ReferenceCat
             retained.Types.OrderBy(type => type.Id, StringComparer.Ordinal),
             occurrences.Select(item => new SymbolOccurrence(item.Value.Symbol.Id, item.Value.Span, item.Key.Role) { AccessToken = item.Value.AccessToken }).Distinct()
                 .OrderBy(item => item.Span.Path, StringComparer.Ordinal).ThenBy(item => item.Span.Offset).ThenBy(item => item.Role, StringComparer.Ordinal),
+            imports.Values.Where(import => ids.Contains(import.Alias) && ids.Contains(import.Target)),
+            propertyReaches.Where(reach => !Blocked(reach.Span) && ids.Contains(reach.Property))
+                .OrderBy(reach => reach.Span.Path, StringComparer.Ordinal).ThenBy(reach => reach.Span.Offset).ThenBy(reach => reach.Property, StringComparer.Ordinal),
             expressions.Values.OrderBy(item => item.Span.Path, StringComparer.Ordinal).ThenBy(item => item.Span.Offset).ThenBy(item => item.Span.Length),
             metadataIdentities.Where(item => ids.Contains(metadataSymbols[item.Key].Id)).OrderBy(item => item.Key, StringComparer.Ordinal).Select(item => new SymbolExport(item.Value, metadataSymbols[item.Key].Id)),
             bodies.Values.Select(entry => entry.Body with { Symbol = entry.Declaration?.Id }).OrderBy(body => body.Id, StringComparer.Ordinal),

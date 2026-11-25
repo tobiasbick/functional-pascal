@@ -48,7 +48,8 @@ internal sealed partial class SemanticRecorder
         return new(owner, string.Join('.', names), declaration.Accessibility, document.Span(declaration.Start, declaration.End - declaration.Start),
             declaration.BodyStart is { } body ? document.Span(body, declaration.BodyEnd!.Value - body) : null,
             doc is { Lines.Count: > 0 } ? document.Span(doc.Lines[0].Start, doc.Lines[^1].End - doc.Lines[0].Start) : null,
-            Array.AsReadOnly(roots.Order(StringComparer.Ordinal).ToArray()), Array.AsReadOnly(referenced.Order(StringComparer.Ordinal).ToArray()));
+            Array.AsReadOnly(roots.Order(StringComparer.Ordinal).ToArray()), Array.AsReadOnly(referenced.Order(StringComparer.Ordinal).ToArray()),
+            entry.Identity is RoutineSymbol { IsInstance: true }, entry.Identity is InterfaceSymbol { Bases.Count: > 0 });
 
         void Add(DeclarationSyntax item)
         {

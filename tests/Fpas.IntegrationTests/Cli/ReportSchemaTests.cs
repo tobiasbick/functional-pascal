@@ -20,6 +20,7 @@ public sealed class ReportSchemaTests
     [InlineData("environment", "env", "--report", "json", "--unknown")]
     [InlineData("compile", "compile", "--report", "json")]
     [InlineData("check", "check", "missing.csproj", "--report", "json")]
+    [InlineData("lint", "lint", "missing.fpasproj", "--report", "json")]
     [InlineData("query-batch", "query", "batch")]
     [InlineData("query-outline", "query", "outline", "missing.fpas")]
     [InlineData("query", "query", "definition", "missing.csproj", "--file", "missing.fpas", "--line", "1", "--column", "1")]
@@ -42,6 +43,7 @@ public sealed class ReportSchemaTests
 
     [Theory]
     [InlineData("check", "--report", "json")]
+    [InlineData("lint", "--report", "json")]
     [InlineData("doc", "--report", "json", "--name", "String")]
     [InlineData("test", "--report", "json")]
     [InlineData("query", "type")]
@@ -62,6 +64,8 @@ public sealed class ReportSchemaTests
     [InlineData("query-batch-input")]
     [InlineData("query-outline")]
     [InlineData("check-overlay-input")]
+    [InlineData("lint")]
+    [InlineData("lint-baseline")]
     [InlineData("workspace")]
     [InlineData("commands")]
     public async Task Schema_exports_work_without_JSON_reflection(string name)
@@ -154,6 +158,18 @@ public sealed class ReportSchemaTests
         Assert.True(Assert.Single(batch.GetProperty("arguments").EnumerateArray()).GetProperty("required").GetBoolean());
         Assert.False(batch.TryGetProperty("reportOption", out _));
         var refs = commands["fpas query refs"];
+        var lint = commands["fpas lint"];
+        Assert.Equal("urn:fpas:cli:lint:1", lint.GetProperty("reportSchema").GetString());
+        Assert.Equal("--report json", lint.GetProperty("reportOption").GetString());
+        Assert.Equal("urn:fpas:cli:lint-baseline:1", lint.GetProperty("optionInputSchemas").GetProperty("--baseline").GetString());
+        Assert.Contains(lint.GetProperty("rules").EnumerateArray(), rule => rule.GetProperty("kind").GetString() == "excludes" &&
+            rule.GetProperty("options").EnumerateArray().Select(option => option.GetString()).SequenceEqual(["--baseline", "--write-baseline"]));
+        foreach (var (name, expected) in new[] { ("--held-in-mind", 7), ("--max-directory-entries", 15), ("--max-lines", 2000) })
+        {
+            var option = Option(lint, name);
+            Assert.Equal(1, option.GetProperty("minimum").GetInt32());
+            Assert.Equal(expected, option.GetProperty("default").GetInt32());
+        }
         Assert.False(Option(refs, "--line").GetProperty("required").GetBoolean());
         Assert.Equal("string", Option(refs, "--symbol").GetProperty("type").GetString());
         Assert.Contains(refs.GetProperty("rules").EnumerateArray(), rule => rule.GetProperty("kind").GetString() == "requires" &&

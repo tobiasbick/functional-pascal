@@ -27,6 +27,7 @@ internal static class CliApplication
         var compile = CompilerCommand.Create();
         var debug = new DebugCommand();
         var check = new CheckCommand();
+        var lint = new LintCommand();
         var query = new QueryCommand();
         var init = new InitCommand(); var build = new ExecutionCommand(run: false); var run = new ExecutionCommand(run: true, editorControlled);
         var target = new TargetCommand();
@@ -66,6 +67,8 @@ internal static class CliApplication
 
               fpas fmt --check examples
 
+              fpas lint App.slnx
+
               fpas test Tests/Tests.fpasproj
 
               fpas doc examples/basics/hello/Hello.fpasproj --name System.Console.WriteLine
@@ -100,6 +103,7 @@ internal static class CliApplication
         root.Subcommands.Add(target.Command);
         root.Subcommands.Add(workspace.Command);
         root.Subcommands.Add(fmt.Command);
+        root.Subcommands.Add(lint.Command);
         root.Subcommands.Add(test.Command);
         root.Subcommands.Add(doc.Command);
         root.Subcommands.Add(refactor.Command);
@@ -113,6 +117,7 @@ internal static class CliApplication
         root.Subcommands.Add(diagnose.Command);
         var jsonRequested = false; var help = "fpas --help";
         ParseResult? checkResult = null;
+        ParseResult? lintResult = null;
         ParseResult? queryResult = null;
         ParseResult? projectResult = null;
         ParseResult? formatResult = null;
@@ -161,6 +166,7 @@ internal static class CliApplication
             else if (refactor.Owns(parsed.CommandResult.Command)) { help = "fpas refactor --help"; refactorResult = parsed; }
             else if (parsed.CommandResult.Command == fmt.Command) { help = "fpas fmt --help"; formatResult = parsed; fmt.Validate(parsed); }
             else if (parsed.CommandResult.Command == check.Command) { help = "fpas check --help"; checkResult = parsed; }
+            else if (parsed.CommandResult.Command == lint.Command) { lintResult = parsed; }
             else if (query.Owns(parsed.CommandResult.Command)) { help = "fpas query --help"; queryResult = parsed; }
             else if (init.Owns(parsed.CommandResult.Command)) { help = "fpas init --help"; projectResult = parsed; }
             else if (build.Owns(parsed.CommandResult.Command) || run.Owns(parsed.CommandResult.Command))
@@ -191,6 +197,7 @@ internal static class CliApplication
             if (refactorResult is not null) { refactor.ReportArgumentError(refactorResult, exception.Message); return 2; }
             if (formatResult is not null) { fmt.ReportArgumentError(formatResult, exception.Message); return 2; }
             if (checkResult is not null) { check.ReportArgumentError(checkResult, exception.Message); return 2; }
+            if (lintResult is not null) return lint.ReportArgumentError(lintResult, exception.Message);
             if (queryResult is not null) return await query.ReportArgumentError(queryResult, exception.Message);
             if (projectResult is not null)
             {

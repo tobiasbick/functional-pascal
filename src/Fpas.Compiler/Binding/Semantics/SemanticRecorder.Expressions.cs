@@ -86,6 +86,7 @@ internal sealed partial class SemanticRecorder
         if (policy.Operations is SemanticPolicy.OperationIndexing.Source or SemanticPolicy.OperationIndexing.Protocol) Operations(source, syntax, bound, role);
         var value = Unwrap(bound);
         var written = syntax is ArgumentModeSyntax argument ? argument.Value : syntax;
+        RecordPropertyReaches(source, written, value, role);
         if (value is BoundMethodGroup group)
         {
             if (!methodGroups.TryGetValue(group, out var selections)) methodGroups.Add(group, selections = []);

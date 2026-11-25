@@ -1,5 +1,6 @@
 // [Documentation](../../../docs/pascal/tools/refactoring.md#vs-code-refactorings)
 using Fpas.Compiler.Analysis;
+using Fpas.Workspaces.Analysis;
 
 namespace Fpas.Workspaces.Refactoring;
 
@@ -13,7 +14,11 @@ public static partial class CheckedRefactoring
         var owners = draft.Owners(source.Path).ToArray();
         var notes = new List<string>();
         var items = imports.Items;
-        var removable = items.Select(item => owners.All(owner => Unused(owner.Snapshot, item))).ToArray();
+        var unused = items.Select(item => item.Alias).ToHashSet();
+        foreach (var (_, snapshot) in owners)
+            unused.IntersectWith(ImportUsage.UnusedClrAliases(snapshot, draft.Token)
+                .Where(alias => Paths.Equals(alias.Declaration!.Path, source.Path)).Select(alias => alias.Declaration!.Offset));
+        var removable = items.Select(item => unused.Contains(item.Alias)).ToArray();
         if (removable.All(value => value) && !CommentIn(imports.Start, imports.End))
             Remove(imports.Start, imports.End);
         else
@@ -43,18 +48,6 @@ public static partial class CheckedRefactoring
         {
             draft.Removed.Add(source.Span(start, end - start));
             draft.Edit(source, start, end, "");
-        }
-
-        bool Unused(SemanticSnapshot snapshot, RefactoringImport item)
-        {
-            draft.Token.ThrowIfCancellationRequested();
-            var alias = snapshot.Occurrences.SingleOrDefault(occurrence => occurrence.Role == "declaration" &&
-                In(occurrence.Span, source.Path, item.Alias, item.Alias + 1));
-            if (alias is null || snapshot.Symbol(alias.Symbol).Kind != "alias") return false;
-            var target = snapshot.Occurrences.FirstOrDefault(occurrence =>
-                In(occurrence.Span, source.Path, item.Target, item.Target + 1) && occurrence.Role is "namespace" or "type");
-            return target is not null && snapshot.Symbol(target.Symbol) is ({ Kind: "namespace" } or { Kind: "type", Metadata: not null }) &&
-                !snapshot.Occurrences.Any(occurrence => occurrence.Role != "declaration" && occurrence.Symbol == alias.Symbol);
         }
     }
 }

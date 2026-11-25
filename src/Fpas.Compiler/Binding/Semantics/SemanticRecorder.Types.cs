@@ -23,9 +23,10 @@ internal sealed partial class SemanticRecorder
         };
         if (type.Kind == TypeKind.Named)
         {
+            var isOpenDefinition = type.Arguments is null && type.Definition?.Definition.GetGenericParameters().Count > 0;
             if (references.ScalarInfo(type) is { } scalar) kind = scalar.Category == Syntax.ScalarCategory.Enum ? "enum" : "domain";
             else if (references.RecordInfo(type) is not null) kind = "record";
-            else if (references.VariantInfo(type) is not null) kind = "variant";
+            else if (isOpenDefinition ? references.OpenVariant(type) is not null : references.VariantInfo(type) is not null) kind = "variant";
             else if (type.IsInterface) kind = "interface";
             else if (type.Definition?.IsEnum == true) kind = "enum";
         }

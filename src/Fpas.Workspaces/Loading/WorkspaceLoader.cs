@@ -163,7 +163,7 @@ public static class WorkspaceLoader
                     Array.AsReadOnly(manifest.WarningExceptions), Array.AsReadOnly(manifest.NoWarn));
                 var request = new AnalysisRequest(sources.AsReadOnly(), manifest.AssemblyName, Array.AsReadOnly(manifest.References),
                     manifest.Target == "exe" ? CompilationTarget.Exe : CompilationTarget.Library, manifest.ValidateDocumentation, policy);
-                projects.Add(new(selection.Path, manifest.Configuration, id, request, Reachable(selection.Path)));
+                projects.Add(new(selection.Path, manifest.Configuration, id, request, Reachable(selection.Path), manifest.IsTestProject));
                 if (draftManifest is not null)
                     foreach (var file in manifest.DraftSources!) owners[file].Add(selection.Path);
             }

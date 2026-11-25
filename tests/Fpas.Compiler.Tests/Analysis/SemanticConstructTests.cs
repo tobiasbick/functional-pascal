@@ -1,6 +1,7 @@
 // [Documentation](../../../docs/architecture/workspaces.md)
 using Fpas.Compiler.Analysis;
 using Fpas.Compiler.Tests.Analysis.Support;
+using Fpas.Compiler.Tests.Support;
 
 namespace Fpas.Compiler.Tests.Analysis;
 
@@ -130,6 +131,38 @@ public sealed class SemanticConstructTests
         var callback = Assert.Single(snapshot.Symbols, symbol => symbol.Kind == "property" && symbol.Name == "Callback");
         Assert.Equal(callback.Id, Select(snapshot, source, "Callback(42)").Id);
         Assert.True(TypeAt(snapshot, source, "Text);").Nullable);
+        AssertConsistent(snapshot);
+    }
+
+    [Fact]
+    public void Analysis_resolves_imported_variant_cases_with_inferred_type_arguments()
+    {
+        var library = TestCompilation.Compile("""
+            unit Model;
+            public type Outcome<A, E> = variant Success(Value: A); Failure(Reason: E); end variant;
+            end unit;
+            """, CompilationTarget.Library);
+        Assert.True(library.Success, string.Join(';', library.Diagnostics));
+        var image = new MetadataImage("Model.dll", library.Program!.AssemblyImage);
+        const string source = """
+            program Consumer;
+            uses Model as M;
+            begin
+              const Result: M.Outcome<int, string> := M.Outcome.Success(42);
+              discard case Result of
+                when M.Outcome.Success(const Value: int): Value;
+                when M.Outcome.Failure(_): 0;
+              end case;
+            end;
+            end program;
+            """;
+
+        var result = FpasCompiler.Analyze(new([new("input.fpas", source)], "Consumer", [.. TestCompilation.References, image.Path], ReferenceImages: [image]));
+        Assert.True(result.Success, string.Join(';', result.Diagnostics));
+        var snapshot = Assert.IsType<SemanticSnapshot>(result.Snapshot);
+        var owner = TypeAt(snapshot, source, "Outcome.Success(42)");
+        Assert.Equal("variant", owner.Kind);
+        Assert.Equal(["int", "string"], owner.Arguments.Select(id => snapshot.Types.Single(type => type.Id == id).Display));
         AssertConsistent(snapshot);
     }
 

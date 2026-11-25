@@ -10,7 +10,7 @@ namespace Fpas.Cli.Reporting;
 
 internal sealed class SchemaCommand
 {
-    private readonly Argument<string> name = new("name") { Description = "operation, terminal-script, workspace, project, test, debug, format, doc, refactor, environment, compile, check, check-overlay-input, query, query-outline, query-batch, query-batch-input or commands." };
+    private readonly Argument<string> name = new("name") { Description = "operation, terminal-script, workspace, project, test, debug, format, doc, refactor, environment, compile, check, lint, lint-baseline, check-overlay-input, query, query-outline, query-batch, query-batch-input or commands." };
     private readonly Argument<string[]> path = new("command-path") { Arity = ArgumentArity.ZeroOrMore, Description = "Optional command path for the commands catalogue." };
     internal Command Command { get; } = new("schema", "Write a JSON Schema for a CLI report or terminal input, or list registered commands. No files are written.\n\nExamples:\n  fpas schema operation\n\n  fpas schema terminal-script\n\n  fpas schema test\n\n  fpas schema commands\n\n  fpas schema commands query find\n\n  fpas schema query-batch-input\n");
     internal SchemaCommand(Command root)
@@ -61,6 +61,8 @@ internal sealed class SchemaCommand
                 "environment" => Toolchain.EnvironmentJson.Default.EnvironmentReport,
                 "compile" => Diagnostics.CompileJson.Default.CompileReport,
                 "check" => Analysis.CheckJson.Default.CheckResult,
+                "lint" => Analysis.LintJson.Default.LintReport,
+                "lint-baseline" => Analysis.LintBaselineJson.Default.LintBaselineDocument,
                 "query-outline" => Analysis.OutlineJson.Default.OutlineReport,
                 "query" => Analysis.QueryJson.Default.QueryResult,
                 "query-batch" => Analysis.QueryJson.Default.QueryBatchReport,
@@ -83,7 +85,8 @@ internal sealed class SchemaCommand
             schema["$schema"] = "https://json-schema.org/draft/2020-12/schema";
             schema["$id"] = "urn:fpas:cli:" + selected + ":1";
             if (selected == "terminal-script") TerminalContract(schema);
-            if (selected is "operation" or "debug" or "query-batch" or "query-outline" or "workspace")
+            if (selected == "lint-baseline") schema["properties"]!["kind"]!["const"] = "fpas-lint-baseline";
+            if (selected is "operation" or "debug" or "query-batch" or "query-outline" or "workspace" or "lint" or "lint-baseline")
             {
                 schema["properties"]!["schemaVersion"]!["const"] = 1;
                 if (schema["required"] is not JsonArray required) { required = new(); schema["required"] = required; }

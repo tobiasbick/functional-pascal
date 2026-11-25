@@ -55,6 +55,8 @@ internal static class CommandCatalogue
                 entry["optionInputSchemas"] = new JsonObject { ["--overlay"] = "urn:fpas:cli:check-overlay-input:1" };
             }
             if (currentPath == "fpas terminal test") entry["inputSchema"] = "urn:fpas:cli:terminal-script:1";
+            if (currentPath == "fpas lint")
+                entry["optionInputSchemas"] = new JsonObject { ["--baseline"] = "urn:fpas:cli:lint-baseline:1" };
             commands.Add(entry);
             if (!recursive) return;
             var recursiveOptions = options.Where(option => option.Recursive).ToArray();
@@ -127,7 +129,7 @@ internal static class CommandCatalogue
             "workspace" => "workspace",
             "env" => "environment",
             "fmt" => "format",
-            "compile" or "check" or "query" or "test" or "debug" or "doc" or "refactor" => command,
+            "compile" or "check" or "lint" or "query" or "test" or "debug" or "doc" or "refactor" => command,
             _ => null
         };
     }

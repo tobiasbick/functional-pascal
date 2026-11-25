@@ -168,25 +168,10 @@ public sealed partial class SourceQuery
     {
         if (definitions.TryGetValue((project, symbol.Id), out var cached)) return cached;
         var source = projects[project];
-        if (symbol.Declaration is not null) return Save(project, source.Snapshot, symbol, "source");
-        if (symbol.Metadata is { } metadata)
-        {
-            var matches = new List<(string Project, SemanticSnapshot Snapshot, SemanticSymbol Symbol)>();
-            foreach (var output in analysis.Context.DependencyOutputs.Where(output => projects.ContainsKey(output.Project) && source.Input.Request.References.Contains(output.Path, Paths)))
-            {
-                var candidate = projects[output.Project];
-                if (candidate.Snapshot.AssemblyName != metadata.Assembly) continue;
-                foreach (var export in candidate.Snapshot.Exports.Where(export => MetadataKey(export.Identity) == MetadataKey(metadata)))
-                {
-                    var declaration = candidate.Snapshot.Symbol(export.Symbol);
-                    if (declaration.Declaration is not null) matches.Add((output.Project, candidate.Snapshot, declaration));
-                }
-            }
-            var unique = matches.Distinct().ToArray();
-            if (unique.Length > 1) throw new ContextFailure("context_failed", "Reference metadata maps to conflicting source declarations.");
-            if (unique.Length == 1) return Save(unique[0].Project, unique[0].Snapshot, unique[0].Symbol, "source");
+        if (ResolveSource(project, symbol) is { } definition)
+            return Save(definition.Project, projects[definition.Project].Snapshot, definition.Symbol, "source");
+        if (symbol.Metadata is not null)
             return Save(null, source.Snapshot, symbol, "metadata");
-        }
         return Save(project, source.Snapshot, symbol, "implicit");
 
         DefinitionResult Save(string? targetProject, SemanticSnapshot snapshot, SemanticSymbol target, string origin)

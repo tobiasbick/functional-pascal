@@ -29,7 +29,8 @@ public sealed record ContextIssue(string Project, string Code, string Message, b
 /// <param name="Id">Identity of the project path/configuration pair.</param>
 /// <param name="Request">Captured compiler analysis inputs.</param>
 /// <param name="Dependencies">Transitively reachable project paths.</param>
-public sealed record ContextProject(string Path, string Configuration, string Id, AnalysisRequest Request, IReadOnlyList<string> Dependencies);
+/// <param name="IsTestProject">Whether evaluated MSBuild inputs identify a test project.</param>
+public sealed record ContextProject(string Path, string Configuration, string Id, AnalysisRequest Request, IReadOnlyList<string> Dependencies, bool IsTestProject = false);
 /// <summary>Maps a resolved dependency assembly to its owning project.</summary>
 /// <param name="Project">Producing project path.</param>
 /// <param name="Path">Logical assembly output path.</param>
@@ -76,7 +77,7 @@ public sealed class WorkspaceContext
         RequestedProjects = Array.AsReadOnly(requestedProjects.Order(StringComparer.Ordinal).ToArray());
         DependencyOutputs = Array.AsReadOnly(outputs.Distinct().OrderBy(output => output.Project, StringComparer.Ordinal).ThenBy(output => output.Path, StringComparer.Ordinal).ToArray());
         var semantics = Projects.Select(project => project.Path + "\n" + project.Configuration + "\n" + project.Request.AssemblyName + "\n" + project.Request.Target + "\n" +
-            project.Request.ValidateDocumentation + "\n" + project.Request.DiagnosticOptions?.TreatWarningsAsErrors + "\n" +
+            project.Request.ValidateDocumentation + "\n" + project.IsTestProject + "\n" + project.Request.DiagnosticOptions?.TreatWarningsAsErrors + "\n" +
             string.Join(',', project.Request.DiagnosticOptions?.WarningsAsErrors ?? []) + "\n" +
             string.Join(',', project.Request.DiagnosticOptions?.WarningsNotAsErrors ?? []) + "\n" + string.Join(',', project.Request.DiagnosticOptions?.NoWarn ?? []) + "\n" +
             string.Join('\0', project.Request.Sources.Select(source => source.Path).Order(StringComparer.Ordinal)));
@@ -131,7 +132,7 @@ public sealed class WorkspaceContext
     {
         var ignored = IgnoredSourcePaths(ignoredSources);
         var projects = Projects.Select(project => new ProjectInputIdentity(project.Path, project.Configuration, project.Request.AssemblyName,
-            project.Request.Target, project.Request.ValidateDocumentation, project.Request.DiagnosticOptions, project.Dependencies)).ToArray();
+            project.Request.Target, project.Request.ValidateDocumentation, project.Request.DiagnosticOptions, project.Dependencies, project.IsTestProject)).ToArray();
         return HashText(string.Join('\n', inputs.OrderBy(pair => pair.Key, StringComparer.Ordinal).Select(pair => pair.Key + "=" + (ignored.Contains(pair.Key) ? "open" : pair.Value))) +
             "\n" + Configuration + "\n" + JsonSerializer.Serialize(projects, ProjectManifestJson.Default.ProjectInputIdentityArray) +
             "\n" + string.Join('\n', Issues.Select(issue => issue.Project + ":" + issue.Code + ":" + issue.InputPath)) + "\n" + ForeignIdentity());

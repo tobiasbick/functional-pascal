@@ -189,6 +189,37 @@ inputs while open text remains authoritative, and rejects foreign/superseded
 snapshots. Verification failure invalidates Current. Consumers use common query,
 correction, rename and formatting APIs; the live workspace never applies edits.
 
+## Semantic lint
+
+WorkspaceLinter uses complete WorkspaceAnalysis snapshots. ModuleCycles and
+Tangles share resolved references and find mutually reachable groups of units or
+declarations. Each edge carries one source occurrence. FieldLeaks uses the
+compiler-recorded property receiver chains. ShallowModules measures declared
+public routines and distinct exports used by a consumer. Its cross-project
+lookup shares the source-query mapping from exact CLR identities to declarations.
+SourceLayout counts captured files and directory members across the selected
+context. Consumer width and the file-length limit use the evaluated test-project
+marker from the analysis manifest. A production owner makes a linked source
+eligible for the file-length rule. Unused CLR aliases share their
+semantic detection with import organization and require agreement across linked
+source owners. NamespaceCycles projects checked inter-unit edges onto sibling
+namespaces across the evaluated workspace. ExportedSynchronization checks resolved
+CLR field types. LonelyProtocols uses compiler-proven protocol member relations.
+See [fpas lint](../pascal/program-structure/cli.md#lint-a-project-or-solution).
+
+- [WorkspaceLinter.cs](../../src/Fpas.Workspaces/Lint/WorkspaceLinter.cs)
+- [ArchitectureGraph.cs](../../src/Fpas.Workspaces/Lint/ArchitectureGraph.cs)
+- [ArchitectureReferences.cs](../../src/Fpas.Workspaces/Lint/ArchitectureReferences.cs)
+- [ModuleCycles.cs](../../src/Fpas.Workspaces/Lint/ModuleCycles.cs)
+- [NamespaceCycles.cs](../../src/Fpas.Workspaces/Lint/NamespaceCycles.cs)
+- [Tangles.cs](../../src/Fpas.Workspaces/Lint/Tangles.cs)
+- [FieldLeaks.cs](../../src/Fpas.Workspaces/Lint/FieldLeaks.cs)
+- [ExportedSynchronization.cs](../../src/Fpas.Workspaces/Lint/ExportedSynchronization.cs)
+- [LonelyProtocols.cs](../../src/Fpas.Workspaces/Lint/LonelyProtocols.cs)
+- [ShallowModules.cs](../../src/Fpas.Workspaces/Lint/ShallowModules.cs)
+- [SourceLayout.cs](../../src/Fpas.Workspaces/Lint/SourceLayout.cs)
+- [ImportUsage.cs](../../src/Fpas.Workspaces/Analysis/ImportUsage.cs)
+
 ## Source queries
 
 SourceQuery consumes checked regions of the current WorkspaceAnalysis. Explicit source

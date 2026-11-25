@@ -150,8 +150,12 @@ SemanticSnapshot owns copied SourceDocument texts, source-local symbol IDs,
 SemanticSymbol/Type descriptors, SymbolOccurrence roles, ExpressionType facts and
 exact CLR exports. Collections are read-only and contain no syntax nodes, bound
 symbols, metadata readers or open files. SymbolRelation records resolved source
-implementation/contract pairs. Qualified import prefixes that name enclosing
-types/containers bind to those identities rather than fabricated namespaces.
+implementation/contract pairs. SemanticImport connects each alias declaration
+to its checked import target and identifies CLR aliases. Qualified import
+prefixes resolve to the identities of enclosing types and containers.
+DeclarationContext identifies instance routines and protocols with base interfaces.
+PropertyReach records checked
+properties used as receivers in a call, index or write, for structural lint.
 SemanticCoverage partitions captured texts into checked/unavailable regions,
 including reasons. Failed regions contain no binding occurrences, expression
 types or source operations. A routine's valid signature can remain available
@@ -327,6 +331,7 @@ documentation copying. See the [build contract](../build/msbuild.md) and
   - [SemanticRecorder.Imports.cs](../../src/Fpas.Compiler/Binding/Semantics/SemanticRecorder.Imports.cs)
   - [SemanticRecorder.Metadata.cs](../../src/Fpas.Compiler/Binding/Semantics/SemanticRecorder.Metadata.cs)
   - [SemanticRecorder.Operations.cs](../../src/Fpas.Compiler/Binding/Semantics/SemanticRecorder.Operations.cs)
+  - [SemanticRecorder.PropertyReaches.cs](../../src/Fpas.Compiler/Binding/Semantics/SemanticRecorder.PropertyReaches.cs)
   - [SemanticRecorder.Types.cs](../../src/Fpas.Compiler/Binding/Semantics/SemanticRecorder.Types.cs)
   - [SemanticRecorder.cs](../../src/Fpas.Compiler/Binding/Semantics/SemanticRecorder.cs)
 - `src/Fpas.Compiler/Binding/Symbols/`

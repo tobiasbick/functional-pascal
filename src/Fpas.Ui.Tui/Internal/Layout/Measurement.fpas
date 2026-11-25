@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Tui.Internal.Layout.Measurement;
 
-uses Fpas.Ui.Tui.Internal.Widgets.Navigation.Pagination as Pagination, Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System as Sys;
+uses Fpas.Ui.Tui.Internal.Widgets.Navigation.Pagination as Pagination, Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit, Fpas.Ui.Tui.Internal.View.Tree as E, Fpas.Ui.Layout as L, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G, Fpas.Ui.Tui.Internal.Layout.Flexible as F, System as Sys;
 
 // Gets an element's explicit flex sizing or its default constraints.
 // ## Type parameters

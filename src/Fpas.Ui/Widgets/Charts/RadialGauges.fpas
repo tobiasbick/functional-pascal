@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Widgets.Charts.RadialGauges;
 
-uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S, System as Sys;
+uses Fpas.Ui.Elements as E, Fpas.Ui.Widgets.Charts.Charts as C, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
 
 // CUI's instrument rendering styles.
 public type Style = enum: byte

@@ -5,7 +5,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Motion.GradientText;
 uses
   Fpas.Ui.Widgets.Motion.GradientTexts as W, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App,
   Fpas.Ui.Gui.Cui.Widgets.Motion as CuiMotion,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Internal.Data.ChartData as Colors, Fpas.Ui.Widgets.Motion.Motion as Motion;
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Layout.Sizing as S, Fpas.Ui.Gui.Internal.Data.ChartData as Colors;
 
 // Presents the native widget.
 // ## Type parameters

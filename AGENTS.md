@@ -1,98 +1,62 @@
 # AGENTS
 
 FPAS is a function-first Pascal language with selected Ada conventions, targeting
-the CLR directly through CIL and assembly metadata.
-Start with the [agent reference](docs/pascal/agents/README.md) for verified language
-examples, the full public CLI, and links to specifications and repository
-workflows. Load the topics needed for the task.
-
-## Code
-
-- Follow the repository layout and compiler boundaries described by the reference.
-- Keep files focused on one concern and usually below 500 lines.
-- Group related files by topic in subdirectories and matching namespaces.
-- On every code change, review affected files for size, cohesion, directory
-  placement, and namespaces. Split or reorganize them as needed in the same change.
-- Write all code comments in English.
-- Put a relative Markdown link labeled `Documentation` in the first-line
-  comment of each first-party source, including examples, tests and build
-  scripts. Link to the page or section that explains the file. Keep a required
-  shebang or XML declaration first. In FPAS, leave a blank line between the
-  wiki comment and any declaration documentation.
-- Link back to each exact source file from its owning Markdown page. Keep both
-  directions current when adding, moving or repurposing files.
-- In FPAS, use `//` comments and Markdown sections for API documentation.
-  Do not use C#-style `///` comments or source XML documentation tags.
-- Document every public declaration in source, including types, routines, and
-  members. Explain its purpose and document each parameter, type parameter, and
-  return value where applicable. Documentation for private declarations is
-  optional.
-- When writing FPAS, use `requires` and `ensures` to state caller obligations
-  and guarantees on successful return. Put these contracts only on entry
-  routines, such as the main routine called by a program's entry body or a
-  library operation exposed to callers. Let internal helpers rely on the
-  conditions checked at entry.
-- Before changing public CLR names, namespaces, signatures, or representations,
-  follow the owning interop and CLR mapping specifications. Update them in the
-  same change when revising a mapping. Consume actual .NET APIs.
-- When UI behavior depends on the timing or order of MVU effect replies, tests
-  must use `Fpas.Ui.Mvu.Testing.EffectReplies` to release
-  replies individually and verify what the user sees or can do before and after each release.
+the CLR. Start with the [agent reference](docs/pascal/agents/README.md) and load
+the topics needed for the task.
 
 ## Approach
 
-- Prefer clear rewrites over layers of patches.
-- Less is more: keep solutions small and simple. Remove unnecessary code.
-- This is a hobby project for fun. Backward compatibility and historical
-  implementation notes are not required.
-- Make architecture and implementation decisions autonomously throughout
-  the project. Internal APIs, data structures, and existing designs may be
-  rewritten, reorganized, or replaced.
-- Changes to FPAS syntax require the user's explicit approval before
-  implementation.
-- Prefer one canonical spelling per language construct. Justify deviations from
-  Pascal or Ada conventions, or explain the intended form with targeted
-  diagnostics.
-- Resolve confirmed gaps in the agreed language/build baseline before adding
-  extensions. Track them separately from deferred proposals in the language-gaps
-  document.
-- Fix errors and code organization issues when you encounter them. Do not
-  dismiss them as pre-existing.
-- Keep the agent reference aligned with implemented language and toolchain behavior.
-  Update its CLI index when a public command or subcommand changes.
-- Keep plans and open-work lists limited to pending work. Remove completed
-  entries and delete finished plans. Keep acceptance checkmarks in the full CUI
-  widget inventory. Document current contracts and usage in their owning references.
-- When replacing a build under the same `Fpas.NET.Sdk` version, evict that
-  version from the target NuGet cache. Use isolated caches for concurrent tests.
+- This is a hobby project. Avoid backward compatibility and omit
+  implementation history.
+- Prefer clear rewrites over layers of patches. Keep solutions small.
+- Make architecture and implementation decisions autonomously. Fix errors you
+  encounter.
+- Changes to FPAS syntax require the user's explicit approval before implementation.
+- Prefer one canonical spelling per construct. Close agreed baseline gaps
+  before extending the language.
+- Remove completed work from plans and gap lists. Preserve acceptance checkmarks
+  in the CUI widget inventory.
 
-## CUI contributions
+## Code
 
-- Support upstream CUI. When finding a defect or missing capability, establish
-  whether it belongs to CUI or the FPAS integration and explain its impact.
-- Read the CUI contribution workflow routed by the agent reference before
-  changing CUI interaction or layout code or preparing an upstream contribution.
-- For confirmed upstream findings, ask the user whether to open a CUI issue and
-  whether to prepare and contribute a fix. Obtain explicit approval before
-  publishing an upstream issue or pull request.
-
-## Before every commit
-
-- Before every commit, format all new or changed `.fpas` files included in that
-  commit with `fpas fmt`, then verify the final file contents with
-  `fpas fmt --check`. Repeat this after any further FPAS edits before committing.
-- Inspect the exact staged changes, file names and full contents of every file
-  being committed for secrets, credentials, personal data and machine-specific
-  information. Include API/private keys, tokens, passwords, personal contact
-  details, host/user names, private addresses and machine-specific paths or IDs.
-- If any such data is found, do not commit. Remove or anonymize it and repeat
-  the complete review before committing. Never print sensitive values in reports
-  or logs.
+- Keep files focused, usually below 500 lines. Group files by topic in matching
+  directories and namespaces, and review those boundaries when editing.
+- Write comments in English. Put a relative Markdown `Documentation` link in
+  each first-party source's first-line comment and link back from the owning
+  page. Keep required shebangs and XML declarations first. Leave a blank line
+  after the comment in FPAS.
+- Document public declarations, members, parameters, type parameters and
+  results. Use `//` and Markdown for FPAS API documentation.
+- Use `requires` and `ensures` only on FPAS entry routines. Use actual .NET APIs
+  and keep interop and CLR mapping specifications current for public CLR changes.
+- Use `Fpas.Ui.Mvu.Testing.EffectReplies` when UI behavior depends on reply order
+  or timing. Release replies individually and verify behavior before and after
+  each release.
+- Keep the agent reference and CLI index current. Evict repackaged SDK versions
+  from the target NuGet cache and isolate caches for concurrent tests.
 
 ## Dogfooding
 
-- Write repository maintenance helpers in FPAS when supported CLR APIs suffice.
-  When a missing feature forces a fallback to host tools, record the blocker
-  and verification limits under `docs/future/`.
-- Debug and profile implemented programs with supported .NET tools before
-  writing external samplers or benchmark variants.
+- Write repository helpers in FPAS whenever the required CLR APIs are supported.
+- Use `fpas debug` in batch mode to capture a breakpoint or unhandled exception
+  in one JSON report.
+- Use `fpas profile` or the documented .NET diagnostic tools before writing
+  samplers or benchmark variants. Store measurements under `.temp-data/`.
+- Record gaps found through use under `docs/future/`, including any fallback and
+  its verification limits.
+
+## CUI contributions
+
+- Follow the CUI workflow in the agent reference. Identify whether a defect or
+  gap belongs to CUI or its FPAS integration.
+- Ask whether to open an upstream issue and prepare a fix. Get explicit approval
+  before publishing an issue or pull request.
+
+## Before every commit
+
+- Run `fpas fmt` and `fpas fmt --check` on all new or changed FPAS files in the
+  commit. Repeat after further edits.
+- Review exact staged changes, file names and full contents for secrets,
+  credentials, personal data and machine-specific information. Remove or
+  anonymize findings and repeat the review before committing. Keep sensitive
+  values out of reports and logs.

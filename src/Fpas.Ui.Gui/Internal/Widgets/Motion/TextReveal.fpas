@@ -3,7 +3,7 @@
 unit Fpas.Ui.Gui.Internal.Widgets.Motion.TextReveal;
 
 uses
-  Fpas.Ui.Widgets.Motion.TextReveals as W, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App,
+  Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Application as App,
   Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Internal.Data.MotionData as Common, Fpas.Ui.Widgets.Motion.Motion as Motion;
 
 // Presents the native widget.

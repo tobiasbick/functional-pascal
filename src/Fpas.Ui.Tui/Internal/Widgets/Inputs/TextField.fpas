@@ -7,7 +7,7 @@ uses
   Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F,
   Fpas.Ui.Tui.Internal.Rendering.Themes as Th, Fpas.Ui.Tui.Internal.Rendering.Glyphs as G,
   Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Widgets.Developer.Terminal as T,
-  Fpas.Ui.Styles as S, System as Sys, System.Collections.Generic as C;
+  Fpas.Ui.Styles as S, System.Collections.Generic as C;
 
 // Composes an editor with its optional caption and supporting text.
 // ## Type parameters

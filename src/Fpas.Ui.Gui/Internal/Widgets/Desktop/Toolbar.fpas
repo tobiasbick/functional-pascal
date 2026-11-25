@@ -4,7 +4,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Desktop.Toolbar;
 
 uses
   Fpas.Ui.Widgets.Desktop.Toolbars as D, Fpas.Ui.Gui.Internal.Hosting.Context as C, Fpas.Ui.Gui.Internal.Data.CreativeParts as P,
-  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S;
+  Fpas.Ui.Gui.Cui as Cui;
 
 function Button(Window: Cui.CuiWindow; Value: D.Button; Primary: bool): int;
 begin

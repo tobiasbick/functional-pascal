@@ -4,7 +4,7 @@ unit Fpas.Ui.Gui.Fonts;
 
 uses
   Fpas.Ui.Mvu.Application as Mvu, Fpas.Ui.Graphics as G,
-  Fpas.Ui.Gui.Cui.Resources as Resources, System as Sys;
+  Fpas.Ui.Gui.Cui.Resources as Resources;
 
 // An owner-thread font operation. Faces and emoji data live until the window closes.
 // ## Type parameters

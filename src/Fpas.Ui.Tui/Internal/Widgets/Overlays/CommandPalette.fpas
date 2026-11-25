@@ -7,7 +7,7 @@ uses
   Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup as Popup, Fpas.Ui.Tui.Internal.Controls.Activation as Actions,
   Fpas.Ui.Tui.Internal.Layout.Scene as A, Fpas.Ui.Tui.Internal.Layout.Flexible as F,
   Fpas.Ui.Tui.Internal.Rendering.Drawing as D, Fpas.Ui.Tui.Internal.Rendering.Themes as Th,
-  System as Sys, System.Globalization as Global, System.Collections.Generic as C;
+  System.Globalization as Global, System.Collections.Generic as C;
 
 // Presents the searchable palette in a centered modal scope.
 // ## Type parameters

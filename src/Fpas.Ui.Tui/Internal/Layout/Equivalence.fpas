@@ -2,7 +2,7 @@
 
 unit Fpas.Ui.Tui.Internal.Layout.Equivalence;
 
-uses Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.Widgets.Developer.Terminal as T, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Scene as Tree, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V;
+uses Fpas.Ui.Tui.Internal.Layout.Flexible as F, Fpas.Ui.TerminalExtensions.Input as K, Fpas.Ui.Tui.Internal.Layout.Scene as Tree, Fpas.Ui.Tui.Internal.Layout.ScrollViews as V;
 
 function SameBinding<TMsg>(Left: Tree.Binding<TMsg>; Right: Tree.Binding<TMsg>): bool;
 begin

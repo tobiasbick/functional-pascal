@@ -2,8 +2,6 @@
 
 unit Fpas.Ui.Widgets.Developer.Terminal;
 
-uses System as Sys;
-
 // Exact dimensions for an explicitly terminal-specific responsive subtree.
 public type Viewport = record
   // Available terminal columns.

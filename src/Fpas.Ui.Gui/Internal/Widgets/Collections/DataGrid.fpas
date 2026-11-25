@@ -114,6 +114,9 @@ begin
     else
       0
     end if);
+  if Current.Scroll <> null then
+    discard Frame.Window.DataGridScroll(Token, Current.Scroll);
+  end if;
   const Native: CuiCollections.CuiGridFrame := Frame.Window.BeginDataGrid(
     Token,
     Columns(Defs),
@@ -179,6 +182,11 @@ begin
   end for;
 
   const Activated: int := Frame.Window.EndDataGrid();
+  const Offset: float? := if Current.Scroll <> null then
+    Frame.Window.DataGridScroll(Token)
+  else
+    null
+  end if;
   C.Track<TMsg>(
     Frame, new App.Control(
       Id, '', 'data-grid', new Cui.CuiRectangle(), Enabled,
@@ -187,7 +195,7 @@ begin
   );
 
   var Changed: bool := Order <> State[0] or Desc <> State[1] or Current.Cursor <> State[2]
-    or Current.Anchor <> State[3];
+    or Current.Anchor <> State[3] or Current.Scroll <> Offset;
   const Bytes: (array of byte)? := Native.Selected;
   const Before: (array of bool)? := Current.Selected;
   var Selected: (array of bool)? := null;
@@ -200,7 +208,7 @@ begin
   end if;
 
   if Enabled and Changed then
-    Frame.Messages.Add(Change(new D.Value(Selected, Sort(State), State[2], State[3])));
+    Frame.Messages.Add(Change(new D.Value(Selected, Sort(State), State[2], State[3], Offset)));
   end if;
 
   if Enabled and Activated >= 0 then

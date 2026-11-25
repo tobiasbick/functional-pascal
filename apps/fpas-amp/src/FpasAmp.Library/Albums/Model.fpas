@@ -28,7 +28,7 @@ begin
   return Sys.Convert.ToHexString(Crypto.SHA256.HashData(Text.Encoding.UTF8.GetBytes(TagKey(Name))));
 end function;
 
-// Returns the stable artist identity for the album credit `Name`.
+// Returns the stable artist identity for the credit or performer `Name`.
 public function ArtistId(Name: string): string;
 begin
   return 'artist-' + Digest(Name);
@@ -56,7 +56,7 @@ public type Album = record
   public Rating: int? := null;
   // Distinct genre tags of the album's tracks, in no particular order.
   public Genres: array of string := [];
-  // Individual album credits, retaining collaboration membership.
+  // Individual album credits and track performers, retaining collaboration membership.
   public Credits: array of Membership := [];
   // Per-genre song counts and independent genre ratings.
   public GenreMemberships: array of Membership := [];

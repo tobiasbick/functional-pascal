@@ -366,6 +366,14 @@ begin
             end if;
           when LibrarySongs.Msg.Song(Music.Msg.EditTags(const Track: Tracks.Entry)):
             return EditTags(Current, TagModel.Msg.Open(Track), Library);
+          when LibrarySongs.Msg.Song(Music.Msg.Follow(const Destination: Nav.Route)):
+            return Apply(
+              Current,
+              M.Msg.Navigation(Nav.Msg.Follow(Destination)),
+              Save,
+              Library,
+              Port
+            );
           else
             return Songs(Current, Action, Library, []);
         end case;

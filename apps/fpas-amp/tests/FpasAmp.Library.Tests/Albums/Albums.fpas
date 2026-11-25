@@ -66,6 +66,7 @@ public type AlbumTests = record
             new MediaTags.Info(
               Album := 'Cached release',
               AlbumArtists := ['Example', 'Echo; Lane', 'example'],
+              Artists := ['Guest performer'],
               Genres := ['Électro', ' e' + #769 + 'LECTRO ', 'Folk', '  ']
             )
           )
@@ -81,9 +82,10 @@ public type AlbumTests = record
     X.Assert.Equal<int>(1, Items.Length);
     X.Assert.Equal<string>('Cached release', Items[0].Title);
     X.Assert.Equal<string>('Example; Echo; Lane; example', Items[0].Artist);
-    X.Assert.Equal<int>(2, Items[0].Credits.Length);
+    X.Assert.Equal<int>(3, Items[0].Credits.Length);
     X.Assert.Equal<string>('Echo; Lane', Items[0].Credits[0].Name);
     X.Assert.Equal<string>(M.ArtistId('example'), Items[0].Credits[1].Id);
+    X.Assert.Equal<string>(M.ArtistId('Guest performer'), Items[0].Credits[2].Id);
     X.Assert.Equal<int>(2, Items[0].GenreMemberships.Length);
     var HasElectro: bool := false;
     for Group: M.Membership in Items[0].GenreMemberships do

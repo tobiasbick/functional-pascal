@@ -283,7 +283,7 @@ begin
     X.Assert.Equal<int>(2, Current.Podcasts.ShownEpisodes.Length);
     const Episodes: string := 'podcast-episodes/' + Show.Id();
     const Published: Cui.CuiRectangle := Control(Window, Tables.HeaderId(Episodes, 1)).Bounds;
-    Send(Window, App.Msg.Podcasts(P.Msg.SelectEpisode(0)));
+    Send(Window, App.Msg.Podcasts(P.Msg.SelectEpisode(0, 0.0F)));
     Click(Window, Published);
     X.Assert.Equal<string>('old', Current.Podcasts.ShownEpisodes[0].Id);
     X.Assert.Equal<string>('Published · Oldest first', Control(Window, 'episode-sort').Text);
@@ -363,6 +363,12 @@ begin
     X.Assert.Equal<string>('Subscribe', Control(Window, 'podcast-subscription').Text);
     X.Assert.Empty(Saved.Load(Data).PodcastSubscriptions);
     X.Assert.Equal<Nav.Route>(Route, Current.Navigation.Active);
+    Send(Window, App.Msg.Podcasts(P.Msg.Filter('Night')));
+    Send(Window, App.Msg.Podcasts(P.Msg.SortEpisodes(new Tables.Sort(1, false))));
+    Send(Window, App.Msg.Podcasts(P.Msg.SetEpisodeFilters(true)));
+    Send(Window, App.Msg.Podcasts(P.Msg.EpisodeDuration('short')));
+    Send(Window, App.Msg.Podcasts(P.Msg.ApplyEpisodeFilters));
+    Send(Window, App.Msg.Podcasts(P.Msg.SelectEpisode(0, 0.0F)));
     Click(Window, Control(Window, 'podcast-back').Bounds);
     discard Control(Window, ShowButton);
     const Cleared: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('podcasts/search');
@@ -375,9 +381,16 @@ begin
     const Manual: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('podcasts/feed');
     Click(Window, Control(Window, 'podcast-feed-add').Bounds);
     X.Assert.Empty(Saved.Load(Data).PodcastSubscriptions);
+    X.Assert.Equal<string>('Night', Control(Window, 'podcast-episode-search').Value);
     Deliver(Window, Manual);
     X.Assert.Equal<string>('Coastlines', Control(Window, 'navigation', Nav.Key(Route)).Text);
     X.Assert.Equal<string>(Show.Url, Saved.Load(Data).PodcastSubscriptions[0].Url);
+    X.Assert.Equal<string>('short', Current.Podcasts.AppliedEpisodes.Duration);
+    X.Assert.Equal<string>('Published · Oldest first', Control(Window, 'episode-sort').Text);
+    X.Assert.Equal<string>(
+      'night',
+      Current.Podcasts.ShownEpisodes[Current.Podcasts.EpisodeCursor].Id
+    );
     Deliver(Window, Manual);
   finally
     Device.Dispose();

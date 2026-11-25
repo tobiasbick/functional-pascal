@@ -139,13 +139,15 @@ begin
       end if;
     when M.Msg.Found(const Revision: long, const Items: array of M.Station):
       if Revision = Current.Revision then
+        const Shown: array of M.Station := Ordered(Items, Current.Order);
+        const Key: function(M.Station): string := function(Item: M.Station): string => Item.Id;
         Next := Current with
-          Items := Ordered(Items, Current.Order);
+          Items := Shown;
           Results := Items;
           Loaded := true;
           Searching := false;
-          Cursor := -1;
-          Anchor := -1;
+          Cursor := Rows.Position<M.Station>(Current.Items, Current.Cursor, Shown, Key);
+          Anchor := Rows.Position<M.Station>(Current.Items, Current.Anchor, Shown, Key);
         end with;
       end if;
     when M.Msg.Failed(const Revision: long, const Message: string):
@@ -155,10 +157,11 @@ begin
           Searching := false;
         end with;
       end if;
-    when M.Msg.Navigate(const Cursor: int, const Anchor: int):
+    when M.Msg.Navigate(const Cursor: int, const Anchor: int, const Scroll: float):
       Next := Current with
         Cursor := Cursor;
         Anchor := Anchor;
+        Scroll := Scroll;
       end with;
     when M.Msg.Sort(const Order: Tables.Sort):
       if Order <> Current.Order and Order.Column >= -1 and Order.Column < 5 then

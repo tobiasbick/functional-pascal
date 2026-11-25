@@ -335,6 +335,76 @@ begin
   return -1;
 end function;
 
+function Position(Rows: I.ImmutableArray<Tracks.Entry>; Index: int): M.RowPosition?;
+begin
+  if Index < 0 or Index >= Rows.Length then
+    return null;
+  end if;
+  const File: long := Rows[Index].FileId;
+  var Occurrence: int := 0;
+  for Row: int := 0 to Index - 1 do
+    if Rows[Row].FileId = File then
+      Occurrence := Occurrence + 1;
+    end if;
+  end for;
+
+  return new M.RowPosition(File, Occurrence);
+end function;
+
+function Locate(Rows: I.ImmutableArray<Tracks.Entry>; Key: M.RowPosition?): int;
+begin
+  if Key <> null then
+    var Remaining: int := Key.Occurrence;
+    for Index: int := 0 to Rows.Length - 1 do
+      if Rows[Index].FileId = Key.File then
+        if Remaining = 0 then
+          return Index;
+        end if;
+
+        Remaining := Remaining - 1;
+      end if;
+    end for;
+  end if;
+
+  return -1;
+end function;
+
+// Captures the visible controls and row identities in Current without retaining the catalogue.
+public function Remember(Current: M.State): M.Presentation;
+begin
+  const Resume: M.Presentation? := Current.Resume;
+  return new M.Presentation(
+    Current.Search, Current.Applied, Current.Order, Current.Scroll,
+    if Resume <> null then
+      Resume.Cursor
+    else
+      Position(Current.Shown, Current.Cursor)
+    end if,
+    if Resume <> null then
+      Resume.Anchor
+    else
+      Position(Current.Shown, Current.Anchor)
+    end if
+  );
+end function;
+
+// Seeds a new visit Current with the previously saved view, if any.
+public function Restore(Current: M.State; Saved: M.Presentation?): M.State;
+begin
+  if Saved = null then
+    return Current;
+  end if;
+
+  return Current with
+    Search := Saved.Search;
+    Applied := Saved.Applied;
+    Draft := Saved.Applied;
+    Order := Saved.Order;
+    Scroll := Saved.Scroll;
+    Resume := Saved;
+  end with;
+end function;
+
 // Returns the new position of the file at Index in Previous, or -1 when absent from Shown.
 public function RowIndex(Previous: I.ImmutableArray<Tracks.Entry>; Index: int; Shown: I.ImmutableArray<Tracks.Entry>): int;
 ensures (Position: int): Position >= -1;
@@ -353,6 +423,7 @@ end function;
 // Returns `Current` with its visible tracks rebuilt from search, filters and sort.
 public function Select(Current: M.State): M.State;
 begin
+  const Resume: M.Presentation? := Current.Resume;
   const Shown: I.ImmutableArray<Tracks.Entry> := Songs(
     Current.Tracks,
     Selection(Current),
@@ -365,8 +436,21 @@ begin
 
   return Current with
     Shown := Shown;
-    Cursor := RowIndex(Current.Shown, Current.Cursor, Shown);
-    Anchor := RowIndex(Current.Shown, Current.Anchor, Shown);
+    Cursor := if Resume <> null then
+      Locate(Shown, Resume.Cursor)
+    else
+      RowIndex(Current.Shown, Current.Cursor, Shown)
+    end if;
+    Anchor := if Resume <> null then
+      Locate(Shown, Resume.Anchor)
+    else
+      RowIndex(Current.Shown, Current.Anchor, Shown)
+    end if;
+    Resume := if Current.Loaded then
+      null
+    else
+      Current.Resume
+    end if;
     TotalMilliseconds := Total;
   end with;
 end function;

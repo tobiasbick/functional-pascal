@@ -44,6 +44,8 @@ public type Value = record
   public Cursor: int := -1;
   // Selection range origin or minus one.
   public Anchor: int := -1;
+  // Controlled vertical target in logical points, or null to leave scrolling native.
+  public Scroll: float? := null;
 end record;
 
 // A cell rendered by the native grid.

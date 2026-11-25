@@ -161,7 +161,7 @@ function GridView(Current: App.State; Width: int): E.Element<App.Msg>;
     return if Order <> null and Order <> Current.Radio.Order then
       Action(M.Msg.Sort(Order))
     else
-      Action(M.Msg.Navigate(Value.Cursor, Value.Anchor))
+      Action(M.Msg.Navigate(Value.Cursor, Value.Anchor, Value.Scroll ?? 0.0F))
     end if;
   end function;
 begin
@@ -179,7 +179,8 @@ begin
   end if;
 
   return Grid.DataGrid<App.Msg>(
-    'radio-stations', [
+    'radio-stations',
+    [
       new Grid.Column('Station', cast<float>(Sys.Math.Max(200, Width - 582)), Sortable := true),
       new Grid.Column('Country', 126.0F, Sortable := true, Priority := 3),
       new Grid.Column('Language', 112.0F, Sortable := true, Priority := 4),
@@ -187,8 +188,15 @@ begin
       new Grid.Column('Stream', 136.0F, Sortable := true, Priority := 1),
       new Grid.Column('', 46.0F, Fixed := true)
     ],
-    Page.Items.Length, function(Index: int): Grid.Row<App.Msg> => Row(Current, Page.Items[Index]),
-    new Grid.Value(Order := Page.Order, Cursor := Page.Cursor, Anchor := Page.Anchor), Change,
+    Page.Items.Length,
+    function(Index: int): Grid.Row<App.Msg> => Row(Current, Page.Items[Index]),
+    new Grid.Value(
+      Order := Page.Order,
+      Cursor := Page.Cursor,
+      Anchor := Page.Anchor,
+      Scroll := Page.Scroll
+    ),
+    Change,
     new Grid.Options(RowHeight := 38.0F, HideCheckboxes := true),
     function(Index: int): App.Msg => App.Msg.Player(Player.Msg.PlayStation(Page.Items[Index]))
   );

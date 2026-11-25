@@ -28,6 +28,9 @@ duration. Episodes start newest first. Unknown dates and durations sort last
 in either direction. Both tables build rows as they come into view. Open **Episode details**
 from the row's three-dot menu to see its description. **Unsubscribe** removes the sidebar
 entry. Subscriptions are saved locally in `settings.json`.
+During a session, the directory keeps its table controls. Each show keeps
+its episode search, applied filters, sort, selection and scroll position
+when its feed is reopened.
 
 Playback uses the main player with its usual controls, equalizer and waveform.
 The app downloads the selected enclosure to a private temporary directory

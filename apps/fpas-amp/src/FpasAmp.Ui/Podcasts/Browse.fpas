@@ -193,14 +193,29 @@ begin
     end if;
   end for;
   const Shown: array of M.Episode := Rows.Sorted<M.Episode>(Matches.ToArray(), Compare);
+  var Cursor: int := Rows.Position<M.Episode>(
+    Current.ShownEpisodes,
+    Current.EpisodeCursor,
+    Shown,
+    function(Item: M.Episode): string => Item.Id
+  );
+  if Current.ResumeEpisode <> '' and not Current.Loading then
+    for Index: int := 0 to Shown.Length - 1 do
+      if Shown[Index].Id = Current.ResumeEpisode then
+        Cursor := Index;
+        break;
+      end if;
+    end for;
+  end if;
+
   return Current with
     ShownEpisodes := Shown;
-    EpisodeCursor := Rows.Position<M.Episode>(
-      Current.ShownEpisodes,
-      Current.EpisodeCursor,
-      Shown,
-      function(Item: M.Episode): string => Item.Id
-    );
+    EpisodeCursor := Cursor;
+    ResumeEpisode := if Current.Loading then
+      Current.ResumeEpisode
+    else
+      ''
+    end if;
   end with;
 end function;
 

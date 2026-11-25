@@ -106,9 +106,10 @@ end function;
 // - `Width`: Available width of the main area.
 // - `Padding`: Shell viewport inset.
 // - `Playback`: Player state for the selected album's track buttons.
+// - `BackLabel`: Accessible label when the view was opened from a different section.
 // ## Returns
 // The current Albums view.
-public function Build(Current: M.State; Width: int; Padding: int; Playback: Player.State): E.Element<M.Msg>;
+public function Build(Current: M.State; Width: int; Padding: int; Playback: Player.State; BackLabel: string := ''): E.Element<M.Msg>;
   function Row(Index: int): E.Element<M.Msg>;
   begin
     const Cells: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
@@ -137,7 +138,7 @@ begin
         Sys.Math.Max(1, Width),
         Current.GroupName,
         Playback,
-        Current.Library.TrackCount
+        Current.Library.TrackCount, BackLabel
       ),
       function(Value: Music.Msg): M.Msg => case Value of
         when Music.Msg.Back: M.Msg.BackToAlbums;
@@ -159,7 +160,11 @@ begin
       Icons.IconButton<M.Msg>(
         Parent + '-back',
         Sys.Char.ConvertFromUtf32($E048),
-        'Back to ' + Parent,
+        if BackLabel <> '' then
+          BackLabel
+        else
+          'Back to ' + Parent
+        end if,
         M.Msg.BackToGroups
       ),
       Texts.Text<M.Msg>(Current.GroupName, Texts.Appearance.HeadingOne)

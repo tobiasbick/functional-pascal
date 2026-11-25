@@ -70,6 +70,32 @@ begin
   );
 end function;
 
+function RememberEpisodes(Current: M.State): M.State;
+begin
+  const Show: M.Show? := Current.Show;
+  if Show = null then
+    return Current;
+  end if;
+  const Selection: string := if Current.EpisodeCursor >= 0 and Current.EpisodeCursor <
+    Current.ShownEpisodes.Length
+  then
+    Current.ShownEpisodes[Current.EpisodeCursor].Id
+  else
+    Current.ResumeEpisode
+  end if;
+  return Current with
+    EpisodeViews := Current.EpisodeViews.SetItem(
+      Show.Id(), new M.EpisodeView(
+        Current.EpisodeFilter,
+        Current.AppliedEpisodes,
+        Current.EpisodeOrder,
+        Current.EpisodeScroll,
+        Selection
+      )
+    );
+  end with;
+end function;
+
 function Open(Current: M.State; Show: M.Show; Subscribe: bool): A.Transition<M.State, M.Msg>;
   async function Run(Context: A.BackgroundContext<M.Msg>; Stop: T.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, M.Msg>>;
   begin
@@ -96,8 +122,15 @@ function Open(Current: M.State; Show: M.Show; Subscribe: bool): A.Transition<M.S
   end function;
 begin
   const Revision: long := Current.FeedRevision + 1L;
+  const Previous: M.State := RememberEpisodes(Current);
+  const Id: string := Show.Id();
+  const Saved: M.EpisodeView := if Previous.EpisodeViews.ContainsKey(Id) then
+    Previous.EpisodeViews[Id]
+  else
+    new M.EpisodeView()
+  end if;
   return new A.Transition<M.State, M.Msg>(
-    Current with
+    Previous with
       Show := Show;
       Episodes := [];
       ShownEpisodes := [];
@@ -106,11 +139,13 @@ begin
       Loading := true;
       AddOnLoad := Subscribe;
       FeedError := null;
-      EpisodeFilter := '';
-      AppliedEpisodes := new M.EpisodeFilters();
+      EpisodeFilter := Saved.Query;
+      AppliedEpisodes := Saved.Filters;
       EpisodeDraft := null;
-      EpisodeOrder := new Tables.Sort(1, true);
+      EpisodeOrder := Saved.Order;
       EpisodeCursor := -1;
+      EpisodeScroll := Saved.Scroll;
+      ResumeEpisode := Saved.Selection;
       Draft := null;
       Details := null;
     end with, [
@@ -222,9 +257,10 @@ begin
           Searching := false;
         end with;
       end if;
-    when M.Msg.SelectResult(const Index: int):
+    when M.Msg.SelectResult(const Index: int, const Scroll: float):
       Next := Current with
         SearchCursor := Index;
+        SearchScroll := Scroll;
       end with;
     when M.Msg.SortResults(const Order: Tables.Sort):
       if Order <> Current.SearchOrder and Order.Column >= -1 and Order.Column < 2 then
@@ -238,7 +274,7 @@ begin
       return Open(Current, Show, Subscribe);
     when M.Msg.Back:
       return new A.Transition<M.State, M.Msg>(
-        Current with
+        RememberEpisodes(Current) with
           Show := null;
           Episodes := [];
           ShownEpisodes := [];
@@ -361,9 +397,10 @@ begin
           end with
         );
       end if;
-    when M.Msg.SelectEpisode(const Index: int):
+    when M.Msg.SelectEpisode(const Index: int, const Scroll: float):
       Next := Current with
         EpisodeCursor := Index;
+        EpisodeScroll := Scroll;
       end with;
     when M.Msg.Details(const Item: M.Episode?):
       Next := Current with

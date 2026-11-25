@@ -97,7 +97,7 @@ function Results(Current: App.State; Shows: array of M.Show; Width: int): E.Elem
     return if Order <> null and Order <> Current.Podcasts.SearchOrder then
       Action(M.Msg.SortResults(Order))
     else
-      Action(M.Msg.SelectResult(Value.Cursor))
+      Action(M.Msg.SelectResult(Value.Cursor, Value.Scroll ?? 0.0F))
     end if;
   end function;
 begin
@@ -133,7 +133,8 @@ begin
     new Grid.Value(
       Order := Page.SearchOrder,
       Cursor := Page.SearchCursor,
-      Anchor := Page.SearchCursor
+      Anchor := Page.SearchCursor,
+      Scroll := Page.SearchScroll
     ),
     Change,
     new Grid.Options(RowHeight := 52.0F, HideCheckboxes := true),
@@ -308,7 +309,7 @@ function EpisodeGrid(Current: App.State; Show: M.Show; Items: array of M.Episode
     return if Order <> null and Order <> Current.Podcasts.EpisodeOrder then
       Action(M.Msg.SortEpisodes(Order))
     else
-      Action(M.Msg.SelectEpisode(Value.Cursor))
+      Action(M.Msg.SelectEpisode(Value.Cursor, Value.Scroll ?? 0.0F))
     end if;
   end function;
 begin
@@ -337,7 +338,8 @@ begin
     new Grid.Value(
       Order := Page.EpisodeOrder,
       Cursor := Page.EpisodeCursor,
-      Anchor := Page.EpisodeCursor
+      Anchor := Page.EpisodeCursor,
+      Scroll := Page.EpisodeScroll
     ),
     Change,
     new Grid.Options(RowHeight := 40.0F, HideCheckboxes := true),

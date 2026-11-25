@@ -24,6 +24,15 @@ available. A window last closed on the retired Ratings page reopens on Music.
 Music, albums and playlists share a virtual, sortable track table and the
 details view. Activating a track uses the displayed selection and its order
 for the playback queue.
+In Music and playlists, the **Artist**, **Album** and **Genre** links open
+their catalogue pages. The Back button returns to the originating table.
+An album link opens the indexed release even if other albums share its name.
+Artist pages include releases that credit the artist as a track performer.
+
+During a session, Music, each playlist, and each album track view retain their
+search, applied filters, sort, row selection and vertical position. These
+controls are restored when the view is reopened and applied to the latest
+catalogue rows.
 Artist and genre navigation scope the shared album browser by group ID. The
 browser keeps each cover grid's filters while navigating and records its own
 scroll position in `state.json`. This applies to Albums, Artists, Genres, and
@@ -331,6 +340,7 @@ Run them with the local SDK and native GUI prerequisites described in the
   - [NativeAlbums.fpas](../tests/FpasAmp.Ui.Tests/Albums/NativeAlbums.fpas)
   - [NativeMusic.fpas](../tests/FpasAmp.Ui.Tests/Albums/NativeMusic.fpas)
   - [NativeTrackNavigation.fpas](../tests/FpasAmp.Ui.Tests/Albums/NativeTrackNavigation.fpas)
+  - [NativeTrackLinks.fpas](../tests/FpasAmp.Ui.Tests/Albums/NativeTrackLinks.fpas)
   - [NativeTrackRating.fpas](../tests/FpasAmp.Ui.Tests/Albums/NativeTrackRating.fpas)
   - [TrackFilters.fpas](../tests/FpasAmp.Ui.Tests/Albums/TrackFilters.fpas)
   - [TrackRating.fpas](../tests/FpasAmp.Ui.Tests/Albums/TrackRating.fpas)

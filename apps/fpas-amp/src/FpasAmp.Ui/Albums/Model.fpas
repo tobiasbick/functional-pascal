@@ -49,6 +49,8 @@ public type State = record
   public Toolbar: Toolbar.State := new Toolbar.State();
   // Visit counter keeps detached results scoped to the album that requested them.
   public MusicVisit: long := 0L;
+  // In-session table controls for albums opened under each catalogue route.
+  public MusicViews: I.ImmutableDictionary<string, Music.Presentation> := I.ImmutableDictionary<string, Music.Presentation>.Empty;
   // Album tracks currently shown inside the Albums destination.
   public Music: Music.State? := null;
 end record;

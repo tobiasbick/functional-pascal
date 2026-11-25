@@ -10,6 +10,7 @@ uses
   FpasAmp.Ui.Albums.Browse as Browse,
   FpasAmp.Ui.Albums.Grid as Grid, FpasAmp.Ui.Albums.Groups as Groups, FpasAmp.Ui.Albums.Artwork as Artwork,
   FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.Update as Songs,
+  FpasAmp.Ui.Albums.Music.Browse as TrackBrowse,
   FpasAmp.Library.Metadata.Monitoring as Metadata, Fpas.Ui.Mvu.Composition as Composition,
   Fpas.Ui.Mvu.Application as A, System as Sys, System.Collections.Generic as C, System.Collections.Immutable as I,
   System.Threading as T, System.Threading.Tasks as Tasks;
@@ -57,23 +58,26 @@ begin
 
       for Album: Albums.Album in Current.Items do
         if Album.Id = Id then
+          const Previous: M.State := Grid.LeaveMusic(Current);
           const Visit: long := Current.MusicVisit + 1L;
           var Cover: Images.Bitmap? := null;
           const Resolved: bool := Current.Images.TryGetValue(Id, out Cover);
           return MusicTransition(
-            Current with
+            Previous with
               MusicVisit := Visit;
             end with,
             Songs.Open(
-              new Music.State(
-                Album,
-                Visit,
-                Cover := Cover,
-                RequiredGenre := if Current.Scope = Toolbar.Scope.GenreAlbums then
-                  Current.GroupName
-                else
-                  ''
-                end if
+              TrackBrowse.Restore(
+                new Music.State(
+                  Album,
+                  Visit,
+                  Cover := Cover,
+                  RequiredGenre := if Current.Scope = Toolbar.Scope.GenreAlbums then
+                    Current.GroupName
+                  else
+                    ''
+                  end if
+                ), Grid.SavedMusic(Previous, Id)
               ),
               Library,
               LoadCover := not Resolved
@@ -90,9 +94,7 @@ begin
       end if;
 
       return new A.Transition<M.State, M.Msg>(
-        Current with
-          Music := null;
-        end with,
+        Grid.LeaveMusic(Current),
         [A.CancelBackground<M.Msg>('music/load'), A.Focus<M.Msg>('album-' + Selected.Album.Id)]
       );
     when M.Msg.Scrolled(const RouteKey: string, const Offset: float):
@@ -143,7 +145,7 @@ begin
       );
     when M.Msg.Close:
       return new A.Transition<M.State, M.Msg>(
-        Current with
+        Grid.LeaveMusic(Current) with
           Images := I.ImmutableDictionary<string, Images.Bitmap?>.Empty;
           First := -1;
           Last := -1;

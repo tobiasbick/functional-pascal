@@ -4,6 +4,7 @@
 unit FpasAmp.Ui.Albums.Music.Model;
 
 uses
+  FpasAmp.Ui.Navigation.Model as Nav,
   FpasAmp.Ui.Fingerprints as Fp, FpasAmp.Library.Albums.Model as Albums, FpasAmp.Library.Metadata.Model as Tracks,
   Fpas.Media.Images as Imaging, Fpas.Ui.Widgets.Collections.Tables as Tables, System as Sys, System.Collections.Immutable as I;
 
@@ -80,6 +81,30 @@ public type DetailTab = enum: byte
   Audio;
 end enum;
 
+// One row identity, including its occurrence in a playlist with repeated tracks.
+public type RowPosition = record
+  // Indexed file ID.
+  public File: long;
+  // Number of earlier occurrences of the same file.
+  public Occurrence: int;
+end record;
+
+// View values retained independently of a catalogue snapshot.
+public type Presentation = record
+  // The complete text currently in the search field.
+  public Search: string;
+  // Confirmed track filters.
+  public Applied: Filters;
+  // Selected table order.
+  public Order: Tables.Sort;
+  // Retained vertical target in logical points.
+  public Scroll: float;
+  // Named keyboard row, or null when no row is selected.
+  public Cursor: RowPosition?;
+  // Named selection anchor, or null when unset.
+  public Anchor: RowPosition?;
+end record;
+
 // The source tracks, confirmed selection and visible state of a song browser.
 public type State = record
   // The selected album header. An empty ID selects the whole library.
@@ -96,6 +121,10 @@ public type State = record
   public Cursor: int := -1;
   // Range anchor in Shown, or -1 when unset.
   public Anchor: int := -1;
+  // Vertical target of the revealed track viewport in logical points.
+  public Scroll: float := 0.0F;
+  // Row identities to restore after the first successful catalogue reply.
+  public Resume: Presentation? := null;
   // Whether the first query returned.
   public Loaded: bool := false;
   // Search text for this release.
@@ -165,7 +194,9 @@ public type Msg = variant
   // Set the song sort order.
   Sort(Order: Tables.Sort);
   // Cursor and anchor proposed against the rows presented in the input frame.
-  Navigate(Rows: I.ImmutableArray<Tracks.Entry>; Cursor: int; Anchor: int);
+  Navigate(Rows: I.ImmutableArray<Tracks.Entry>; Cursor: int; Anchor: int; Scroll: float);
+  // Open the catalogue destination linked from a composed track cell.
+  Follow(Destination: Nav.Route);
   // Propose a rating, with zero clearing it.
   Rate(Id: string; Value: int);
   // Confirm the rating for Id in Visit. Written timestamps completion of the durable write.

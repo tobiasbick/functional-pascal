@@ -66,6 +66,18 @@ begin
     NavView.Width + 1
   end if);
   const Selected: Lists.Summary? := SelectedPlaylist(Current.Navigation);
+  const Origin: Nav.Route? := if Current.Navigation.LinkTarget = Current.Navigation.Active then
+    Current.Navigation.LinkOrigin
+  else
+    null
+  end if;
+  const BackLabel: string := if Origin = null then
+    ''
+  elsif Origin = Nav.Route.Page(Nav.Page.Music) then
+    'Back to Music'
+  else
+    'Back to playlist'
+  end if;
   const Page: E.Element<M.Msg> := if Settings then
     SettingsView.Build<M.Msg>(
       Current.Settings, Current.Navigation.SettingsTab, Theme, Content, Padding, M.Msg.Settings,
@@ -101,7 +113,14 @@ begin
     )
   elsif Nav.Browsing(Current.Navigation.Active) then
     Composition.Map<AlbumModel.Msg, M.Msg>(
-      AlbumView.Build(Current.Albums, Content, Padding, Current.Player), M.Msg.Albums
+      AlbumView.Build(Current.Albums, Content, Padding, Current.Player, BackLabel),
+      function(Action: AlbumModel.Msg): M.Msg => if Origin <> null
+        and (Action = AlbumModel.Msg.BackToAlbums or Action = AlbumModel.Msg.BackToGroups)
+      then
+        M.Msg.Navigation(Nav.Msg.Select(Origin))
+      else
+        M.Msg.Albums(Action)
+      end if
     )
   elsif Current.Navigation.Active = Nav.Route.Page(Nav.Page.Stations) then
     RadioView.Stations(Current, Content, Padding)

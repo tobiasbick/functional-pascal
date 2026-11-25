@@ -16,6 +16,9 @@ heading to sort by station, country, language, genre or stream bitrate.
 **Popular first** restores the directory's ranking. Streams with an unknown
 bitrate appear last in either direction. [Radio Browser API](https://docs.radio-browser.info/)
 
+Returning to **Stations** during the same session restores the search, filters,
+sort, selected station and scroll position.
+
 ![Stations table with fictional stations, a favorite and simulated live playback](screenshots/radio-stations.png)
 
 Click Play next to a station or double-click its row to listen. The player

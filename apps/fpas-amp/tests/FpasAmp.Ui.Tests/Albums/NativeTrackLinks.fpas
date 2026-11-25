@@ -1,0 +1,254 @@
+// [Documentation](../../../doc/desktop.md#verification)
+
+unit FpasAmp.UiTests.NativeTrackLinks;
+
+uses
+  FpasAmp.Library.Tests.Support as H, FpasAmp.Library.Tests.MetadataSupport as Sources,
+  FpasAmp.Library.Tests.AlbumSupport as Art, FpasAmp.Library.Inventory.Monitoring as Inventory,
+  FpasAmp.Library.Metadata.Model as Tracks, FpasAmp.Library.Albums.Model as Albums, FpasAmp.Library.Sources as Input,
+  FpasAmp.Ui.App.Model as App, FpasAmp.Ui.App.Controller as Controller, FpasAmp.Ui.Shell as Shell,
+  FpasAmp.Ui.Settings.Model as Settings, FpasAmp.Ui.Navigation.Model as Nav,
+  FpasAmp.Ui.Music.LibraryPage as Music, FpasAmp.Ui.Albums.Music.Model as Songs, FpasAmp.Ui.Albums.Model as AlbumsPage,
+  FpasAmp.Ui.Player.Playback as Playback, Fpas.Media.Audio as Audio, ATL as Tags,
+  Fpas.Ui.Gui.Cui as Cui, Fpas.Ui.Gui.Application as Gui, Fpas.Ui.Gui.Internal.Hosting.Session as Host,
+  Fpas.Ui.Widgets.Collections.Tables as Tables, Fpas.Ui.Mvu.Application as A, Fpas.Ui.Mvu.Testing.EffectReplies as Effects,
+  System as Sys, System.IO as IO, System.Text as Text, System.Collections.Immutable as I, System.Threading as T,
+  System.Threading.Channels as Channels, System.Threading.Tasks as Tasks, Xunit as X;
+
+// Native presses open the exact indexed grouping, then restore the source table.
+public type TrackLinkTests = record
+  // Music stays filtered and sorted after Back from Artist, Album, and Genre.
+  [X.FactAttribute]
+  [X.TraitAttribute('Category', 'Gui')]
+  public async function TrackLinksReturnToMusic(): Tasks.Task;
+    procedure Frame();
+    begin
+      discard Session.Post(App.Msg.Settings(Settings.Msg.DismissError));
+      X.Assert.True(Session.Step());
+    end procedure;
+    procedure Send(Message: App.Msg);
+    begin
+      discard Session.Post(Message);
+      Frame();
+    end procedure;
+    function Control(Id: string): Gui.Control;
+    begin
+      for Item: Gui.Control in Session.Snapshot().Controls do
+        if Item.Id = Id then
+          return Item;
+        end if;
+      end for;
+
+      raise new Sys.InvalidOperationException('Missing control ' + Id);
+    end function;
+    procedure Click(Id: string);
+    begin
+      const Bounds: Cui.CuiRectangle := Control(Id).Bounds;
+      PointerX := Bounds.X + Bounds.Width / 2.0F;
+      PointerY := Bounds.Y + Bounds.Height / 2.0F;
+      Frame();
+      Button := 1;
+      Frame();
+      Button := 0;
+      Frame();
+      Frame();
+    end procedure;
+    procedure Release(Held: Channels.ChannelReader<Effects.Reply<App.Msg>>);
+    begin
+      using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(8000);
+      Held.ReadAsync(
+        Stop.Token
+      ).AsTask().GetAwaiter().GetResult().Release().WaitAsync(Stop.Token).GetAwaiter().GetResult();
+      Frame();
+    end procedure;
+  begin
+    using const Root: H.Folder := H.Folder.Create();
+    using const Data: H.Folder := H.Folder.Create();
+    const Guest: Tags.Track := new Tags.Track(
+      Art.Track(IO.Path.Combine(Root.Path, 'first'), 'one.mp3', 'Equal title', 'First album artist')
+    );
+    Guest.Artist := 'Guest performer';
+    Guest.Genre := 'Jazz';
+    X.Assert.True(Guest.Save());
+    const Other: Tags.Track := new Tags.Track(
+      Art.Track(
+        IO.Path.Combine(Root.Path, 'second'),
+        'two.mp3',
+        'Equal title',
+        'Second album artist'
+      )
+    );
+    Other.Genre := 'Rock';
+    X.Assert.True(Other.Save());
+    const Repeated: Text.StringBuilder := new Text.StringBuilder();
+    for Index: int := 1 to 60 do
+      discard Repeated.AppendLine('first/one.mp3');
+    end for;
+
+    IO.File.WriteAllText(IO.Path.Combine(Root.Path, 'First mix.m3u'), Repeated.ToString());
+    IO.File.WriteAllText(IO.Path.Combine(Root.Path, 'Second mix.m3u'), 'second/two.mp3' + #10);
+    const Source: Input.MusicSource := Sources.Source(Root.Path) with
+      ScanPlaylists := true;
+    end with;
+    await using const Library: Inventory.Session := Sources.Start([Source], Data.Path);
+    using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(10000);
+    var Indexed: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray<Tracks.Entry>.Empty;
+    while not Stop.IsCancellationRequested and Indexed.Length < 2 do
+      Indexed := Sources.Tags(Library).QueueAsync('', Stop.Token).GetAwaiter().GetResult();
+      if Indexed.Length < 2 then
+        T.Thread.Sleep(10);
+      end if;
+    end while;
+
+    X.Assert.Equal<int>(2, Indexed.Length);
+    using const Device: Audio.Session := new Audio.Session(true);
+    const Port: Playback.Connection := Playback.Connection.Create(Device);
+    const Gate: Effects.Effects<App.Msg> := Effects.Effects<App.Msg>.Create();
+    var Current: App.State := new App.State(new Settings.State(new Settings.Preferences([Source])));
+    const Window: Cui.CuiWindow := new Cui.CuiWindow(
+      'Track links',
+      1520,
+      800,
+      Cui.CuiRenderer.Software,
+      true
+    );
+    Window.SetReducedMotion(true);
+    var Button: int := -1;
+    var PointerX: float := -1.0F;
+    var PointerY: float := -1.0F;
+    var Wheel: float := 0.0F;
+    using const Session: Gui.Session<App.Msg> := Host.StartThemed<App.State, App.Msg>(
+      Current, function(State: App.State; Message: App.Msg): A.Transition<App.State, App.Msg> begin
+        const Next: A.Transition<App.State, App.Msg> := Controller.Apply(
+          State, Message, procedure(_Value: Settings.Preferences) begin end procedure, Library, Port
+        );
+        Current := Next.Model;
+        return Gate.Wrap<App.State>(Next);
+      end function, Shell.View, Window, 128,
+      procedure() begin
+        Window.MovePointer(PointerX, PointerY);
+        if Wheel <> 0.0F then
+          Window.Wheel(0.0F, Wheel);
+          Wheel := 0.0F;
+        end if;
+
+        if Button >= 0 then
+          Window.SetLeftButton(Button = 1);
+          Button := -1;
+        end if;
+      end procedure, App.Theme(Current, null), App.Theme, false
+    );
+    const Initial: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('songs/observe');
+    Send(App.Msg.WatchLibrary);
+    Release(Initial);
+    Send(App.Msg.Songs(Music.Msg.Song(Songs.Msg.Search('Guest'))));
+    Send(App.Msg.Songs(Music.Msg.Song(Songs.Msg.ShowFilters(true))));
+    Send(
+      App.Msg.Songs(Music.Msg.Song(Songs.Msg.Genres(I.ImmutableHashSet.Create<string>('Jazz'))))
+    );
+    Send(App.Msg.Songs(Music.Msg.Song(Songs.Msg.ApplyFilters)));
+    Send(App.Msg.Songs(Music.Msg.Song(Songs.Msg.Sort(new Tables.Sort(2, true)))));
+    X.Assert.Equal<int>(1, Current.Songs.Page.Shown.Length);
+    const Track: Tracks.Entry := Current.Songs.Page.Shown[0];
+    const TrackId: string := Track.FileId.ToString();
+    const Links: array of string := [
+      'track-artist-' + TrackId + '-0',
+      'track-album-' + TrackId,
+      'track-genre-' + TrackId + '-0',
+      'track-album-' + TrackId
+    ];
+    const Routes: array of Nav.Route := [
+      Nav.Route.Artist(Albums.ArtistId('Guest performer')),
+      Nav.Route.Album(Track.AlbumId),
+      Nav.Route.Genre(Albums.GenreId('Jazz')),
+      Nav.Route.Album(Track.AlbumId)
+    ];
+    const Backs: array of string := ['artists-back', 'tracks-back', 'genres-back', 'tracks-back'];
+    for Index: int := 0 to Links.Length - 1 do
+      const Headers: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('albums/observe');
+      const TracksReply: Channels.ChannelReader<Effects.Reply<App.Msg>>? := if Index mod 2 = 1 then
+        Gate.Watch('albums/music/load')
+      else
+        null
+      end if;
+      Click(Links[Index]);
+      X.Assert.Equal<Nav.Route>(Routes[Index], Current.Navigation.Active);
+      Release(Headers);
+      if TracksReply <> null then
+        const Page: Songs.State? := Current.Albums.Music;
+        X.Assert.NotNull(Page);
+        X.Assert.Equal<string>(Track.AlbumId, (Page ?? Current.Songs.Page).Album.Id);
+        X.Assert.Equal<string>(
+          if Index = 1 then
+            ''
+          else
+            'one'
+          end if, Control('track-search').Value
+        );
+        Release(TracksReply);
+        if Index = 1 then
+          Send(App.Msg.Albums(AlbumsPage.Msg.Music(Songs.Msg.Search('one'))));
+        else
+          X.Assert.Equal<string>('one', Control('track-search').Value);
+          X.Assert.Equal<int>(1, (Current.Albums.Music ?? Current.Songs.Page).Shown.Length);
+        end if;
+      else
+        X.Assert.Equal<int>(1, Current.Albums.Items.Length);
+      end if;
+
+      X.Assert.False(Current.Player.Playing);
+      const Back: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('songs/observe');
+      Click(Backs[Index]);
+      X.Assert.Equal<string>('Guest', Control('track-search').Value);
+      Release(Back);
+      X.Assert.Equal<int>(1, Current.Songs.Page.Shown.Length);
+      X.Assert.Equal<Tables.Sort>(new Tables.Sort(2, true), Current.Songs.Page.Order);
+      X.Assert.Contains<string>('Jazz', Current.Songs.Page.Applied.Genres);
+      X.Assert.Equal<string>('Guest performer', Control(Links[0]).Text);
+    end for;
+
+    const Deadline: long := Sys.Environment.TickCount64 + 8000L;
+    while Current.Navigation.Playlists.Length < 2 and Sys.Environment.TickCount64 < Deadline do
+      Frame();
+      T.Thread.Sleep(5);
+    end while;
+
+    X.Assert.Equal<int>(2, Current.Navigation.Playlists.Length);
+    const FirstMix: Nav.Route := Nav.Route.Playlist(Current.Navigation.Playlists[0].Identity);
+    const SecondMix: Nav.Route := Nav.Route.Playlist(Current.Navigation.Playlists[1].Identity);
+    const FirstReply: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('songs/observe');
+    Send(App.Msg.Navigation(Nav.Msg.Select(FirstMix)));
+    X.Assert.Equal<string>('', Control('track-search').Value);
+    Release(FirstReply);
+    Send(App.Msg.Songs(Music.Msg.Song(Songs.Msg.Search('one'))));
+    const Rows: I.ImmutableArray<Tracks.Entry> := Current.Songs.Page.Shown;
+    X.Assert.Equal<int>(60, Rows.Length);
+    Send(App.Msg.Songs(Music.Msg.Song(Songs.Msg.Navigate(Rows, 22, 22, 0.0F))));
+    const Grid: Cui.CuiRectangle := Control('music-tracks').Bounds;
+    PointerX := Grid.X + Grid.Width / 2.0F;
+    PointerY := Grid.Y + Grid.Height / 2.0F;
+    Frame();
+    Wheel := -8.0F;
+    Frame();
+    Frame();
+    X.Assert.True(Current.Songs.Page.Scroll > 0.0F);
+    const Visible: string := Control('music-tracks').Value;
+    const SecondReply: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch(
+      'songs/observe'
+    );
+    Send(App.Msg.Navigation(Nav.Msg.Select(SecondMix)));
+    X.Assert.Equal<string>('', Control('track-search').Value);
+    Release(SecondReply);
+    Send(App.Msg.Songs(Music.Msg.Song(Songs.Msg.Search('two'))));
+    const Returned: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('songs/observe');
+    Send(App.Msg.Navigation(Nav.Msg.Select(FirstMix)));
+    X.Assert.Equal<string>('one', Control('track-search').Value);
+    Release(Returned);
+    Frame();
+    X.Assert.Equal<int>(60, Current.Songs.Page.Shown.Length);
+    X.Assert.Equal<int>(22, Current.Songs.Page.Cursor);
+    X.Assert.Equal<string>(Visible, Control('music-tracks').Value);
+  end function;
+end record;
+
+end unit;

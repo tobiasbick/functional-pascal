@@ -236,7 +236,8 @@ audio count through `ObserveAsync`. The count includes tracks awaiting metadata.
 one to ten, or null to clear it. Ratings live in `userdata.db`, survive catalogue
 resets/rescans, and never change track ratings or source tags. Header observations
 include user-data changes without invalidating unchanged artwork.
-Headers also carry the distinct genre tags of the album's tracks.
+Headers also carry the distinct genre tags and performers of the album's
+tracks, alongside the album artist credits.
 Header observations run only while the Albums slice is open. They poll database
 commit versions and publish changed snapshots. The catalogue derives memberships
 without reopening audio when upgrading cached successful tags; discovery starts

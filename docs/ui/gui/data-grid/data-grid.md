@@ -18,7 +18,7 @@ uses Fpas.Ui.Elements as E, Fpas.Ui.Layout as L,
 // ## Parameters
 // - `Count`: Number of rows in model order.
 // - `BuildRow`: Pure factory supplying a stable row ID and two cells.
-// - `Current`: Selection, ordering, cursor and anchor in display order.
+// - `Current`: Selection, ordering, cursor, anchor and optional vertical target.
 // ## Returns
 // The grid with proposed state changes as application messages.
 public function View(Count: int; BuildRow: function(int): W.Row<W.Value>;
@@ -41,6 +41,7 @@ end unit;
 | `Cell` | Supply one Text, Content or Editable cell per column. Editable capacity is at most 256 UTF-8 bytes including the terminator. |
 | `Selected / Order` | Both null. Provide a selection mask or sort record to enable each feature. |
 | `Cursor / Anchor` | Both minus one. When set, they index the displayed order. |
+| `Scroll` | Null for native scrolling. Supply a nonnegative vertical target in logical points to restore it and receive changes through the grid's proposal mapper. |
 | `Height / RowHeight` | Fill / 40 logical points. |
 | `Striped / HideCheckboxes / Enabled` | false / false / true. |
 

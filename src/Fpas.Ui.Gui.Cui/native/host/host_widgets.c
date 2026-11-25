@@ -137,9 +137,17 @@ int fpas_cui_hovered(cui_ctx *ui, int node) { return node >= 0 && node < ui->nod
 unsigned int fpas_cui_node_key(cui_ctx *ui, int node) { return node >= 0 && node < ui->node_count ? ui->nodes[node].id : 0; }
 
 void fpas_cui_scroll_state(cui_ctx *ui, const char *id, int mode, float offset, float *current, float *maximum) {
-    cui_scroll_state *state = cui_state(ui, cui_make_id(ui, id), sizeof *state);
+    cui_id key = cui_make_id(ui, id);
+    const bool grid = mode == -2 || mode == 2;
+    if (grid) key ^= CUI__GRID_SCROLL;
+    cui_scroll_state *state = cui_state(ui, key, sizeof *state);
     *maximum = CUI_MAX(0, state->content_h - state->view_h);
     *current = state->ty;
+    if (grid) {
+        /* The grid clamps after it knows the current row count. Preserve an in-progress animation. */
+        if (mode == 2 && state->ty != offset) state->y = state->ty = offset;
+        return;
+    }
     if (mode >= 0) {
         state->ty = mode == 1 ? *maximum : cui__clampf(offset, 0, *maximum);
         state->y = state->ty;

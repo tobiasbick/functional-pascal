@@ -6,13 +6,14 @@ unit FpasAmp.Ui.Albums.Music.TrackTable;
 uses
   FpasAmp.Ui.Albums.Music.Model as M, FpasAmp.Ui.Albums.Music.Browse as Browse,
   FpasAmp.Ui.Albums.RatingStyle as RatingStyle, FpasAmp.Library.Metadata.Model as Tracks,
+  FpasAmp.Ui.Navigation.Model as Nav, FpasAmp.Library.Albums.Model as Albums, Fpas.Media.Tags.AudioFiles as Tags,
   FpasAmp.Ui.Player.Model as Player,
   FpasAmp.Ui.Albums.Artwork as Artwork, Fpas.Media.Images as Imaging, System.Collections.Immutable as I,
   Fpas.Ui.Elements as E, Fpas.Ui.Layout as L, Fpas.Ui.Styles as S,
   Fpas.Ui.Widgets.Collections.DataGrids as Grid, Fpas.Ui.Widgets.Collections.Tables as Tables,
-  Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Widgets.Display.Texts as Texts,
+  Fpas.Ui.Widgets.Actions.IconButtons as Icons, Fpas.Ui.Widgets.Display.Texts as Texts, Fpas.Ui.Widgets.Actions.Buttons as Buttons,
   Fpas.Ui.Widgets.Inputs.Ratings as Ratings, Fpas.Ui.Widgets.Overlays.Menus as Menus,
-  Fpas.Ui.Widgets.Containers.EmptyStates as Empty, System as Sys;
+  Fpas.Ui.Widgets.Containers.EmptyStates as Empty, System as Sys, System.Collections.Generic as C;
 
 const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
 // Persisted selection keys for the three sortable headers: title, time and rating.
@@ -138,6 +139,39 @@ begin
   );
 end function;
 
+function Link(Id: string; Label: string; Route: Nav.Route): E.Element<M.Msg>;
+begin
+  return Buttons.Button<M.Msg>(
+    Id, Label, M.Msg.Follow(Route),
+    new Buttons.Options(
+      Variant := S.ButtonVariant.Link,
+      ControlSize := Buttons.Size.Small,
+      Tooltip := Label
+    )
+  );
+end function;
+
+function TagsCell(Id: string; Names: array of string; Artist: bool): Grid.Cell<M.Msg>;
+begin
+  const Items: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  const Seen: C.HashSet<string> := new C.HashSet<string>();
+  for Name: string in Names do
+    const Key: string := Albums.TagKey(Name);
+    if Key <> '' and Seen.Add(Key) then
+      const Target: Nav.Route := if Artist then
+        Nav.Route.Artist(Albums.ArtistId(Name))
+      else
+        Nav.Route.Genre(Albums.GenreId(Name))
+      end if;
+      Items.Add(Link(Id + '-' + Items.Count.ToString(), Name, Target));
+    end if;
+  end for;
+
+  return Grid.Cell<M.Msg>.Content(
+    [E.Row<M.Msg>(new L.Flow(Align := L.Alignment.Center, Clip := true), Items.ToArray())]
+  );
+end function;
+
 function LibrarySong(Current: M.State; Index: int; Covers: I.ImmutableDictionary<string, Imaging.Bitmap?>; Playback: Player.State; Playlist: bool): Grid.Row<M.Msg>;
 begin
   const Item: Tracks.Entry := Current.Shown[Index];
@@ -152,6 +186,8 @@ begin
     M.Msg.Play(Item.FileId)
   end if;
   const Name: string := Browse.Title(Item);
+  const Album: string := Browse.AlbumTitle(Item);
+  const Credit: array of string := (Item.Metadata ?? new Tags.Info()).Artists;
   var Cover: Imaging.Bitmap? := null;
   discard Covers.TryGetValue(Item.AlbumId, out Cover);
   return new Grid.Row<M.Msg>(
@@ -169,8 +205,13 @@ begin
           )
         ]
       ),
-      Grid.Cell<M.Msg>.Text(Browse.Artist(Item)), Grid.Cell<M.Msg>.Text(Browse.AlbumTitle(Item)),
-      Grid.Cell<M.Msg>.Text(Sys.String.Join(', ', Browse.Genres(Item))),
+      TagsCell('track-artist-' + Id, Credit, true),
+      if Item.AlbumId <> '' and Album <> '' then
+        Grid.Cell<M.Msg>.Content([Link('track-album-' + Id, Album, Nav.Route.Album(Item.AlbumId))])
+      else
+        Grid.Cell<M.Msg>.Text(Album)
+      end if,
+      TagsCell('track-genre-' + Id, Browse.Genres(Item), false),
       TimeCell(Item), RatingCell(Current, Item, Id, Name), MenuCell(Item, Id, Name)
     ]
   );
@@ -195,7 +236,7 @@ requires Width > 0;
   begin
     const Order: Tables.Sort? := Value.Order;
     if Order = null or Order = Display then
-      return M.Msg.Navigate(Current.Shown, Value.Cursor, Value.Anchor);
+      return M.Msg.Navigate(Current.Shown, Value.Cursor, Value.Anchor, Value.Scroll ?? 0.0F);
     end if;
     const Key: int := if Order.Column >= 0 and Order.Column < Keys.Length then
       Keys[Order.Column]
@@ -243,7 +284,8 @@ begin
   const Value: Grid.Value := new Grid.Value(
     Order := Display,
     Cursor := Current.Cursor,
-    Anchor := Current.Anchor
+    Anchor := Current.Anchor,
+    Scroll := Current.Scroll
   );
   if Covers <> null then
     return Grid.DataGrid<M.Msg>(

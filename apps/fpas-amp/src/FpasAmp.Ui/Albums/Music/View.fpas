@@ -130,7 +130,7 @@ end function;
 // - `Playback`: Player state for the current track's button.
 // ## Returns
 // The album sleeve beside the searchable track list and its status bar.
-public function Build(Current: M.State; Width: int; GroupName: string; Playback: Player.State; LibraryTrackCount: long): E.Element<M.Msg>;
+public function Build(Current: M.State; Width: int; GroupName: string; Playback: Player.State; LibraryTrackCount: long; BackLabel: string := ''): E.Element<M.Msg>;
 requires Width > 0;
 begin
   const Narrow: bool := Width < 700;
@@ -154,7 +154,11 @@ begin
     Icons.IconButton<M.Msg>(
       'tracks-back',
       Sys.Char.ConvertFromUtf32($E048),
-      'Back to albums',
+      if BackLabel <> '' then
+        BackLabel
+      else
+        'Back to albums'
+      end if,
       M.Msg.Back
     ),
     Texts.Text<M.Msg>(

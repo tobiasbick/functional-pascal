@@ -8,6 +8,7 @@ uses
   FpasAmp.Ui.Albums.Toolbar.Model as Toolbar, FpasAmp.Ui.Albums.Toolbar.Update as ToolbarUpdate,
   FpasAmp.Ui.Albums.Browse as Browse, FpasAmp.Ui.Albums.Groups as Groups, Fpas.Media.Images as Images,
   FpasAmp.Ui.Navigation.Model as Nav,
+  FpasAmp.Ui.Albums.Music.Model as Music, FpasAmp.Ui.Albums.Music.Browse as TrackBrowse,
   System.Collections.Immutable as I, System.Collections.Generic as C, Fpas.Ui.Mvu.Application as A;
 
 function Key(Scope: Toolbar.Scope; Id: string): string;
@@ -27,6 +28,34 @@ end function;
 public function Key(Current: M.State): string;
 begin
   return Key(Current.Scope, Current.GroupId);
+end function;
+
+// Captures the controls of Current's open album before releasing its rows.
+public function LeaveMusic(Current: M.State): M.State;
+begin
+  const Page: Music.State? := Current.Music;
+  if Page = null then
+    return Current;
+  end if;
+
+  return Current with
+    MusicViews := Current.MusicViews.SetItem(
+      Key(Current) + '/' + Page.Album.Id,
+      TrackBrowse.Remember(Page)
+    );
+    Music := null;
+  end with;
+end function;
+
+// Returns the stored table controls for Id under Current's catalogue route, if visited.
+public function SavedMusic(Current: M.State; Id: string): Music.Presentation?;
+begin
+  const Route: string := Key(Current) + '/' + Id;
+  return if Current.MusicViews.ContainsKey(Route) then
+    Current.MusicViews[Route]
+  else
+    null
+  end if;
 end function;
 
 function SameArtwork(Left: I.ImmutableArray<Albums.Album>; Right: I.ImmutableArray<Albums.Album>): bool;
@@ -176,7 +205,7 @@ begin
     Current.Collections
   end if;
   return Project(
-    Current with
+    LeaveMusic(Current) with
       Scope := Scope;
       GroupId := Id;
       Collections := Collections;

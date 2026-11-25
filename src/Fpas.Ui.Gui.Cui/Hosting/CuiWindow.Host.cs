@@ -164,6 +164,19 @@ public sealed partial class CuiWindow
         if (mode >= 0) scrollRequests[id] = (mode, offset);
     }
 
+    /// <summary>Reads the grid's scroll target or requests an offset before building its rows.</summary>
+    /// <param name="id">Stable grid identity.</param>
+    /// <param name="offset">A requested logical offset, or null to read only.</param>
+    /// <returns>The target before applying the request.</returns>
+    public float DataGridScroll(string id, float? offset = null)
+    {
+        CheckFrame();
+        if (offset is float value && (!float.IsFinite(value) || value < 0))
+            throw new ArgumentOutOfRangeException(nameof(offset));
+        NativeMethods.ScrollState(context, Stable(id), offset.HasValue ? 2 : -2, offset ?? 0, out var current, out _);
+        return current;
+    }
+
     /// <summary>Opens a host-controlled scroll view.</summary>
     /// <param name="id">Stable identity.</param>
     /// <param name="showScrollbar">Whether to show its scrollbar.</param>

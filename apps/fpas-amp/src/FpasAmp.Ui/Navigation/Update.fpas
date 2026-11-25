@@ -27,6 +27,15 @@ begin
     when M.Msg.Select(const Destination: M.Route):
       return Current with
         Active := Valid(Current, Destination);
+        LinkTarget := null;
+        LinkOrigin := null;
+        Drawer := false;
+      end with;
+    when M.Msg.Follow(const Destination: M.Route):
+      return Current with
+        Active := Destination;
+        LinkTarget := Destination;
+        LinkOrigin := Current.Active;
         Drawer := false;
       end with;
     when M.Msg.SelectSettingsTab(const Index: int):

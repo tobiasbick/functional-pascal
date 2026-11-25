@@ -8,6 +8,7 @@ uses
   FpasAmp.Ui.Albums.Music.Update as Edit, FpasAmp.Ui.Albums.Music.Ratings as Ratings, FpasAmp.Ui.Albums.Artwork as Artwork,
   FpasAmp.Library.Metadata.Monitoring as Metadata, FpasAmp.Library.Metadata.Model as Tracks,
   FpasAmp.Ui.Music.Playlist as Playlist, FpasAmp.Library.Playlists.Model as Lists,
+  FpasAmp.Ui.Navigation.Model as Nav,
   FpasAmp.Library.Albums.Model as Albums, Fpas.Media.Images as Imaging,
   Fpas.Ui.Mvu.Application as A, Fpas.Ui.Mvu.Composition as Composition, Fpas.Ui.Widgets.Collections.Tables as Tables,
   System as Sys, System.Collections.Generic as C, System.Collections.Immutable as I, System.Threading as T, System.Threading.Tasks as Tasks;
@@ -30,6 +31,10 @@ end record;
 
 // Shared song selection plus the thumbnails for the current native viewport.
 public type State = record
+  // Current track list key, or empty while its observer is closed.
+  public ActiveKey: string := '';
+  // In-session controls keyed by Music or a particular playlist.
+  public Views: I.ImmutableDictionary<string, Songs.Presentation> := I.ImmutableDictionary<string, Songs.Presentation>.Empty;
   // Song selection for the whole library, whose persisted release ID is empty.
   public Page: Songs.State := new Songs.State(
     new Albums.Album('', '', '', 0L, ''),
@@ -174,16 +179,39 @@ begin
       end case;
       const Blank: State := new State();
       const Visit: long := Current.Page.Visit + 1L;
+      const Views: I.ImmutableDictionary<string, Songs.Presentation> := if Current.ActiveKey <>
+        ''
+      then
+        Current.Views.SetItem(Current.ActiveKey, Browse.Remember(Current.Page))
+      else
+        Current.Views
+      end if;
+      const Key: string := if Message = Msg.Close then
+        ''
+      elsif Identity <> null then
+        Nav.Key(Nav.Route.Playlist(Identity))
+      else
+        Nav.Key(Nav.Route.Page(Nav.Page.Music))
+      end if;
+      var Saved: Songs.Presentation? := null;
+      if Views.ContainsKey(Key) then
+        Saved := Views[Key];
+      end if;
+
       Next := Blank with
-        Page := Blank.Page with
-          Visit := Visit;
-          Loaded := Library = null;
-          Order := if Identity <> null then
-            new Tables.Sort(-1)
-          else
-            Blank.Page.Order
-          end if;
-        end with;
+        ActiveKey := Key;
+        Views := Views;
+        Page := Browse.Restore(
+          Blank.Page with
+            Visit := Visit;
+            Loaded := Library = null;
+            Order := if Identity <> null then
+              new Tables.Sort(-1)
+            else
+              Blank.Page.Order
+            end if;
+          end with, Saved
+        );
         Generation := Current.Generation + 1L;
       end with;
       if Message = Msg.Close or Library = null then

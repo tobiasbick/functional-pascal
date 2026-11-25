@@ -49,6 +49,10 @@ end variant;
 public type State = record
   // Active destination, initially all music.
   public Active: Route := Route.Page(Page.Music);
+  // Route opened by a track link and the table it came from.
+  public LinkTarget: Route? := null;
+  // Source to restore when Back is used from LinkTarget.
+  public LinkOrigin: Route? := null;
   // Last settings tab, independent of the active destination.
   public SettingsTab: int := 0;
   // Saved vertical positions of visited cover grids, keyed by route.
@@ -67,6 +71,8 @@ end record;
 public type Msg = variant
   // Select a destination and dismiss the compact drawer.
   Select(Destination: Route);
+  // Follow a catalogue link and allow Back to return to this table.
+  Follow(Destination: Route);
   // Open Settings and choose General (0), Library (1) or Metadata (2).
   SelectSettingsTab(Index: int);
   // Open or dismiss the compact drawer.

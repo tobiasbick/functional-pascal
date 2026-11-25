@@ -129,7 +129,13 @@ public type AlbumMusicTests = record
     for Index: int := 1 to 20 do
       const Folder: string := IO.Path.Combine(Root.Path, Index.ToString('D2'));
       const Artist: string := 'Artist ' + Index.ToString('D2');
-      discard Fixtures.Track(Folder, 'Intro.mp3', 'Demo Release', Artist);
+      const Intro: string := Fixtures.Track(Folder, 'Intro.mp3', 'Demo Release', Artist);
+      if Index = 20 then
+        // Keep Rock a meaningful filter once the entire scan has completed.
+        const Other: Audio.Track := new Audio.Track(Intro);
+        Other.Genre := 'Folk';
+        X.Assert.True(Other.Save());
+      end if;
       const Finale: Audio.Track := new Audio.Track(
         Fixtures.Track(Folder, 'Finale.mp3', 'Demo Release', Artist)
       );

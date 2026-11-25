@@ -46,12 +46,16 @@ begin
     'SELECT MIN(TRIM(g.value)) AS name,COUNT(DISTINCT t.file_id) AS tracks FROM album_tracks t' +
     ' JOIN metadata gm ON gm.file_id=t.file_id, json_each(gm.tags_json,''$.Genres'') g' +
     ' WHERE t.album_id=a.album_id AND g.type=''text'' GROUP BY amp_tag_key(g.value) HAVING amp_tag_key(g.value)<>'''')),' +
-    '(SELECT json_group_array(DISTINCT trim(c.value) ORDER BY trim(c.value)) FROM album_tracks t' +
+    '(SELECT json_group_array(name ORDER BY name) FROM (' +
+    ' SELECT trim(c.value) AS name FROM album_tracks t' +
     ' JOIN metadata cm ON cm.file_id=t.file_id, json_each(CASE' +
     ' WHEN json_array_length(cm.tags_json,''$.AlbumArtists'')>0 THEN json_extract(cm.tags_json,''$.AlbumArtists'')' +
     ' WHEN json_extract(cm.tags_json,''$.Compilation'')=1 THEN json_array(''Various artists'')' +
     ' ELSE json_extract(cm.tags_json,''$.Artists'') END) c' +
-    ' WHERE t.album_id=a.album_id AND trim(c.value)<>'''')' +
+    ' WHERE t.album_id=a.album_id AND c.type=''text'' AND trim(c.value)<>'''' ' +
+    ' UNION SELECT trim(p.value) FROM album_tracks t JOIN metadata pm ON pm.file_id=t.file_id,' +
+    ' json_each(pm.tags_json,''$.Artists'') p' +
+    ' WHERE t.album_id=a.album_id AND p.type=''text'' AND trim(p.value)<>''''))' +
     ' FROM album_tracks a JOIN metadata m ON m.file_id=a.file_id JOIN files f ON f.id=a.file_id' +
     ' GROUP BY a.album_id ORDER BY MIN(a.sort_title),MIN(a.sort_artist),a.album_id;',
     Transaction,

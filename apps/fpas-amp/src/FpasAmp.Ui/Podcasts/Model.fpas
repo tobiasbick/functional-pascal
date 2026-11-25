@@ -85,6 +85,20 @@ public type EpisodeFilters = record
   public Duration: string := '';
 end record;
 
+// Retained episode controls for one feed.
+public type EpisodeView = record
+  // Search text.
+  public Query: string := '';
+  // Applied publication and duration filters.
+  public Filters: EpisodeFilters := new EpisodeFilters();
+  // Selected sort order.
+  public Order: Tables.Sort := new Tables.Sort(1, true);
+  // Vertical target in logical points.
+  public Scroll: float := 0.0F;
+  // Feed-local identifier of the selected episode, or empty.
+  public Selection: string := '';
+end record;
+
 // Visible state for the search page, the selected show and the add-feed dialog.
 public type State = record
   // Search text being edited by the user.
@@ -113,6 +127,8 @@ public type State = record
   public SearchOrder: Tables.Sort := new Tables.Sort(-1);
   // Keyboard selection on the search table.
   public SearchCursor: int := -1;
+  // Vertical target of the directory grid.
+  public SearchScroll: float := 0.0F;
   // Selected show, available from search or a persistent subscription.
   public Show: Show? := null;
   // Last accepted episodes for the selected show.
@@ -139,6 +155,12 @@ public type State = record
   public EpisodeOrder: Tables.Sort := new Tables.Sort(1, true);
   // Keyboard selection in the current episode table.
   public EpisodeCursor: int := -1;
+  // Vertical target of the episode grid.
+  public EpisodeScroll: float := 0.0F;
+  // Selection identity waiting for the current feed to load.
+  public ResumeEpisode: string := '';
+  // In-session episode controls for each visited feed, keyed by its navigation ID.
+  public EpisodeViews: I.ImmutableDictionary<string, EpisodeView> := I.ImmutableDictionary<string, EpisodeView>.Empty;
   // URL being edited in the RSS dialog, or null when closed.
   public Draft: string? := null;
   // Episode whose description is open, or null.
@@ -176,7 +198,7 @@ public type Msg = variant
   // Report an Apple request failure.
   SearchFailed(Revision: long; Reason: string);
   // Track the selected row in the result table.
-  SelectResult(Index: int);
+  SelectResult(Index: int; Scroll: float);
   // Set the order of podcast search results.
   SortResults(Order: Tables.Sort);
   // Open the show and request its RSS feed.
@@ -214,7 +236,7 @@ public type Msg = variant
   // Set the order of episodes.
   SortEpisodes(Order: Tables.Sort);
   // Change the focused episode row.
-  SelectEpisode(Index: int);
+  SelectEpisode(Index: int; Scroll: float);
   // Start or toggle the selected episode in the current queue.
   Play(Episode: Episode);
   // Open or dismiss the episode details dialog.

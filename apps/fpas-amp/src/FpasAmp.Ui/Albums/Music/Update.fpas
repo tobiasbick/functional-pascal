@@ -151,7 +151,7 @@ public function Apply(Current: M.State; Message: M.Msg; Library: Metadata.Sessio
 begin
   var Next: M.State := Current;
   case Message of
-    when M.Msg.Back, M.Msg.Play(_), M.Msg.PlaySlot(_, _):
+    when M.Msg.Back, M.Msg.Follow(_), M.Msg.Play(_), M.Msg.PlaySlot(_, _):
       return new A.Transition<M.State, M.Msg>(Current, Empty);
     when M.Msg.Loaded(
       const Visit: long,
@@ -244,11 +244,17 @@ begin
     when M.Msg.Navigate(
       const Rows: I.ImmutableArray<Tracks.Entry>,
       const Cursor: int,
-      const Anchor: int
+      const Anchor: int,
+      const Scroll: float
     ):
       Next := Current with
         Cursor := Browse.RowIndex(Rows, Cursor, Current.Shown);
         Anchor := Browse.RowIndex(Rows, Anchor, Current.Shown);
+        Scroll := if Rows.Equals(Current.Shown) then
+          Scroll
+        else
+          Current.Scroll
+        end if;
       end with;
     when M.Msg.Sort(const Order: Tables.Sort):
       if Order = Current.Order then

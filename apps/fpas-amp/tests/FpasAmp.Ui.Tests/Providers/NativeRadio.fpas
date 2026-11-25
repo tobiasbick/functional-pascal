@@ -109,7 +109,8 @@ public type NativeRadioTests = record
       Items := [Unknown, Low, High],
       Results := [Unknown, Low, High],
       Cursor := 0,
-      Anchor := 1
+      Anchor := 1,
+      Scroll := 145.0F
     );
     const Name: Radio.State := RadioUpdate.Apply(Initial, Radio.Msg.Sort(new Tables.Sort(0))).Model;
     X.Assert.Equal<string>('high', Name.Items[0].Id);
@@ -129,6 +130,9 @@ public type NativeRadioTests = record
     X.Assert.Equal<string>('high', Updated.Items[0].Id);
     X.Assert.Equal<string>('low', Updated.Items[1].Id);
     X.Assert.Equal<string>('unknown', Updated.Items[2].Id);
+    X.Assert.Equal<string>('unknown', Updated.Items[Updated.Cursor].Id);
+    X.Assert.Equal<string>('low', Updated.Items[Updated.Anchor].Id);
+    X.Assert.Equal<float>(145.0F, Updated.Scroll);
     const Original: Radio.State := RadioUpdate.Apply(
       Updated,
       Radio.Msg.Sort(new Tables.Sort(-1))

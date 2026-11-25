@@ -117,6 +117,8 @@ public type State = record
   public Cursor: int := -1;
   // Start of the selected row range, or -1 when unset.
   public Anchor: int := -1;
+  // Vertical target of the station grid in logical points.
+  public Scroll: float := 0.0F;
 end record;
 
 // Radio page actions and asynchronous results.
@@ -138,7 +140,7 @@ public type Msg = variant
   // Report directory failure for Revision.
   Failed(Revision: long; Text: string);
   // Retain the table cursor and range anchor across renders.
-  Navigate(Cursor: int; Anchor: int);
+  Navigate(Cursor: int; Anchor: int; Scroll: float);
   // Change the station table's sort order.
   Sort(Order: Tables.Sort);
   // Select or remove a favorite station.

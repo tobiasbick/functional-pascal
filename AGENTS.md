@@ -32,6 +32,8 @@ the topics needed for the task.
   after the comment in FPAS.
 - Document public declarations, members, parameters, type parameters and
   results. Use `//` and Markdown for FPAS API documentation.
+- Use the `fpas-docs-ste` skill when creating, editing, or reviewing Markdown
+  files.
 - Use `requires` and `ensures` only on FPAS entry routines. Use actual .NET APIs
   and keep interop and CLR mapping specifications current for public CLR changes.
 - Use `Fpas.Ui.Mvu.Testing.EffectReplies` when UI behavior depends on reply order

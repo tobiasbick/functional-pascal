@@ -19,10 +19,10 @@ in topic files. Link to the owning detailed rule instead of copying API catalogs
 or implementation history. Only describe implemented behavior; deferred proposals
 belong in [language gaps](../../future/language-gaps.md). Keep this directory flat.
 
-Build/test commands belong in the [development workflow](../../build/development.md).
-Keep AGENTS.md focused on repository policy and one link to this entrypoint;
-do not restore a list of language milestones or command blocks there. Keep the
-handbook/documentation hub linked to this reference.
+Build/test commands belong in the [development workflow](../../build/development.md)
+and detailed rejection cases in the handbook and compiler tests. Keep AGENTS.md
+to repository policy and one link to this entrypoint, without language milestones
+or command blocks. Keep the handbook/documentation hub linked to this reference.
 
 ## CLI coverage
 
@@ -55,9 +55,6 @@ After changing language behavior or an authoring workflow:
 3. Check diagnostics, actual program output, companion projects, local links/
    fragments, token budgets, and git diff whitespace. Add an execution assertion
    for every new complete program.
-
-Detailed rejection cases belong in the handbook and compiler tests. Keep root
-repository policy in AGENTS.md and development instructions in their owning docs.
 
 ## Source files
 

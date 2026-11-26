@@ -30,7 +30,8 @@ Font coverage and bidirectional editing are separate concerns.
 ## Deferred window chrome
 
 The [optional title bar](cui-titlebar.md) arrives upstream in two pull
-requests. The vendored CUI revision lacks that API until both are merged.
+requests. The vendored CUI revision has the platform hooks but not yet the
+`cui_title_bar` component.
 
 [apps]: https://github.com/yappologistic/CUI/blob/f9597a30d3bba4f7ef3e0f918e31c28bdcd4d2a3/docs/apps.md
 [recipes]: https://github.com/yappologistic/CUI/blob/f9597a30d3bba4f7ef3e0f918e31c28bdcd4d2a3/docs/recipes.md

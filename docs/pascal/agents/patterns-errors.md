@@ -1,7 +1,5 @@
 # Matching, absence, errors, and resources
 
-Read this when handling variant cases, nullable values, exceptions, or cleanup.
-
 ## Patterns and coverage
 
 A variant has named cases, with optional immutable payloads. Construct with

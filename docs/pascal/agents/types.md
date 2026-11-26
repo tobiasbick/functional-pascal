@@ -1,12 +1,9 @@
 # Types, units, and state
 
-Read this when modeling data or sharing declarations across source files.
-
 ## Records and identity
 
 A source record is a sealed CLR reference type with read-only properties.
-Unmarked fields and methods are private to the record. Mark exposed members
-and interface implementations `public`. Construct with
+Interface implementations need `public` like other exposed members. Construct with
 new Point(X := 1, Y := 2), or positional arguments in field order. Explicit
 arguments evaluate in written order; omitted defaults run afterward in field
 order, once per construction. Defaults use declaration scope and cannot read self.
@@ -97,7 +94,7 @@ directly from a unit compiled alongside the program. Each import needs a unique
 alias. Supply dependencies as companion sources or assembly/project references.
 A library contains units. An executable also needs exactly one program.
 
-The following two sources share the documented project label and compile together:
+These two sources share a project label and compile together:
 
 ```pascal project=agent-units
 unit Agent.Values;

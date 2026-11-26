@@ -709,6 +709,8 @@ struct cui_ctx {
         void *veil;                /* veils nest: each keeps the one around it */
         struct cui__skel_group *skeleton;   /* skeleton groups nest: each keeps the one around it */
     } building;
+    /* the latest frame's cui_title_bar segments and maximize button, for cui_title_bar_hit_test */
+    struct { cui_id bars[4]; int count; cui_id maximize; uint64_t frame; } title_bar;
     cui__text_fx_fn text_fx;       /* set while a node with a text effect paints */
     void *text_fx_data;
     int text_fx_base;              /* byte offset of the line being drawn */
@@ -10313,6 +10315,27 @@ bool cui_wheel_take(cui_ctx *ui, cui_id id, cui_vec2 *delta) {
 }
 bool cui_wants_keyboard(cui_ctx *ui) { return ui->edit != NULL; }
 bool cui_wants_mouse(cui_ctx *ui) { return ui->hot != 0 || ui->active != 0; }
+
+/* In the core, not in a component file: the Win32 backend calls it from WM_NCHITTEST in every
+ * app, also in one that never draws cui_title_bar. */
+cui_title_bar_hit cui_title_bar_hit_test(cui_ctx *ui, float x, float y) {
+    /* between frames the lists hold the last frame; during one (a blocking file dialog keeps
+     * the window's messages coming) they hold the frame before */
+    const cui_hit *hits = ui->in_frame ? ui->prev_hits : ui->hits;
+    int count = ui->in_frame ? ui->prev_hit_count : ui->hit_count;
+    uint64_t last = ui->in_frame ? ui->frame - 1 : ui->frame;
+    if (ui->title_bar.frame < last || ui->active) return CUI_TITLE_BAR_NONE;
+    bool on_bar = false;
+    for (int i = 0; i < ui->title_bar.count && !on_bar; i++)
+        on_bar = cui__rect_contains(cui__prev_rect(ui, ui->title_bar.bars[i]), x, y);
+    if (!on_bar) return CUI_TITLE_BAR_NONE;
+    for (int i = count - 1; i >= 0; i--) {
+        const cui_hit *h = &hits[i];
+        if (!(h->flags & (CUI_NF_INTERACTIVE | CUI_NF_BLOCKER | CUI_NF_HIT_OPAQUE)) || !cui__rect_contains(h->rect, x, y)) continue;
+        return h->id && h->id == ui->title_bar.maximize ? CUI_TITLE_BAR_MAXIMIZE : CUI_TITLE_BAR_NONE;
+    }
+    return CUI_TITLE_BAR_CAPTION;
+}
 
 void cui__set_cursor(cui_ctx *ui, cui_cursor c) { ui->cursor = c; }
 void cui_set_cursor(cui_ctx *ui, cui_cursor c) {
@@ -78333,6 +78356,7 @@ struct cui_app {
     void *frame_user;
     bool in_live_resize;
     void *plat;                /* backend state */
+    bool title_bar;            /* desc.custom_title_bar took effect: the system's title bar is gone */
     char *clipboard;           /* last clipboard string handed to CUI */
     const char *screenshot_path;  /* CUI_SCREENSHOT: save a PNG and quit */
     int screenshot_frames;
@@ -78368,6 +78392,9 @@ bool cui__plat_open_url(const char *url);
 void cui__app_render(cui_app *app);                   /* end frame (if open), render, present */
 void cui__app_live_frame(cui_app *app);               /* run one frame from inside a resize loop */
 void cui__app_set_clipboard_cache(cui_app *app, const char *utf8);
+/* cui_platform_iface hooks of cui_title_bar, for backends that can drop the system's title bar */
+bool cui__app_window_frame(void *user, cui_window_frame *frame);
+void cui__app_window_button(void *user, cui_window_button button);
 
 void cui__plat_maximize(cui_app *app);
 void cui__plat_minimize(cui_app *app);
@@ -78521,6 +78548,8 @@ cui_app *cui_app_create(const cui_app_desc *desc) {
     if (ui->platform.set_cursor) pi.set_cursor = ui->platform.set_cursor;
     if (ui->platform.set_text_input_rect) pi.set_text_input_rect = ui->platform.set_text_input_rect;
     if (ui->platform.draw_emoji) pi.draw_emoji = ui->platform.draw_emoji;
+    if (ui->platform.window_frame) pi.window_frame = ui->platform.window_frame;
+    if (ui->platform.window_button) pi.window_button = ui->platform.window_button;
     cui_set_platform(ui, &pi);
     app->running = true;
     app->last_time = cui__plat_now();
@@ -78807,6 +78836,24 @@ void cui_app_maximize(cui_app *app) {
 void cui_app_minimize(cui_app *app) { app = cui__app_or_current(app); if (app) cui__plat_minimize(app); }
 void cui_app_restore(cui_app *app) { app = cui__app_or_current(app); if (app) cui__plat_restore(app); }
 void cui_app_set_position(cui_app *app, int x, int y) { app = cui__app_or_current(app); if (app) cui__plat_set_position(app, x, y); }
+
+bool cui__app_window_frame(void *user, cui_window_frame *frame) {
+    cui_app *app = user;
+    if (!app->title_bar) return false;
+    frame->maximized = cui__plat_window_state(app) == CUI_WINDOW_MAXIMIZED;
+    frame->resizable = !app->desc.fixed_size;
+    return true;
+}
+
+void cui__app_window_button(void *user, cui_window_button button) {
+    cui_app *app = user;
+    switch (button) {
+    case CUI_WINDOW_BUTTON_MINIMIZE: cui_app_minimize(app); break;
+    case CUI_WINDOW_BUTTON_MAXIMIZE: cui_app_maximize(app); break;
+    case CUI_WINDOW_BUTTON_RESTORE: cui_app_restore(app); break;
+    case CUI_WINDOW_BUTTON_CLOSE: cui_app_quit(app); break;   /* as the system's close button */
+    }
+}
 
 cui_window_state cui_app_window_state(cui_app *app) {
     app = cui__app_or_current(app);
@@ -79895,7 +79942,8 @@ void cui__plat_placement(cui_app *app, cui_window_placement *out) {
 /* ==== src/platform/cui_app_win32.c ==== */
 /* Win32 backend (Windows 7 and later). Per-monitor DPI awareness, WGL
  * OpenGL 3.3 with a GDI software fallback, UTF-16 text input with the IME
- * placed at the caret, clipboard, dark title bars and smooth live resizing. */
+ * placed at the caret, clipboard, dark title bars, a title bar drawn by the
+ * app (cui_title_bar) and smooth live resizing. */
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -79921,6 +79969,7 @@ typedef BOOL (WINAPI *PFN_SetProcessDpiAwarenessContext)(HANDLE);
 typedef HRESULT (WINAPI *PFN_SetProcessDpiAwareness)(int);
 typedef UINT (WINAPI *PFN_GetDpiForWindow)(HWND);
 typedef BOOL (WINAPI *PFN_AdjustWindowRectExForDpi)(LPRECT, DWORD, BOOL, DWORD, UINT);
+typedef int (WINAPI *PFN_GetSystemMetricsForDpi)(int, UINT);
 typedef HRESULT (WINAPI *PFN_DwmSetWindowAttribute)(HWND, DWORD, LPCVOID, DWORD);
 typedef HANDLE (WINAPI *PFN_CreateWaitableTimerExW)(LPSECURITY_ATTRIBUTES, LPCWSTR, DWORD, DWORD);
 
@@ -79953,6 +80002,7 @@ typedef struct {
 static HMODULE cui__opengl32;
 static PFN_GetDpiForWindow cui__GetDpiForWindow;
 static PFN_AdjustWindowRectExForDpi cui__AdjustWindowRectExForDpi;
+static PFN_GetSystemMetricsForDpi cui__GetSystemMetricsForDpi;
 
 static cui__win32 *cui__w(cui_app *app) { return app->plat; }
 
@@ -79983,6 +80033,7 @@ static void cui__win32_dpi_awareness(void) {
     if (user32) {
         cui__GetDpiForWindow = (PFN_GetDpiForWindow)(void *)GetProcAddress(user32, "GetDpiForWindow");
         cui__AdjustWindowRectExForDpi = (PFN_AdjustWindowRectExForDpi)(void *)GetProcAddress(user32, "AdjustWindowRectExForDpi");
+        cui__GetSystemMetricsForDpi = (PFN_GetSystemMetricsForDpi)(void *)GetProcAddress(user32, "GetSystemMetricsForDpi");
     }
     if (ctx && ctx((HANDLE)-4 /* PER_MONITOR_AWARE_V2 */)) return;
     HMODULE shcore = LoadLibraryW(L"shcore.dll");
@@ -80169,6 +80220,114 @@ static void cui__win32_text_input_rect(void *user, cui_rect caret) {
     cui__win32_place_ime(w);
 }
 
+/* A system metric at a DPI; 0 is the system DPI, for Windows before 10 1607. */
+static int cui__win32_metric(int metric, UINT dpi) {
+    return cui__GetSystemMetricsForDpi && dpi ? cui__GetSystemMetricsForDpi(metric, dpi) : GetSystemMetrics(metric);
+}
+
+static UINT cui__win32_dpi(HWND hwnd) { return cui__GetDpiForWindow ? cui__GetDpiForWindow(hwnd) : 0; }
+
+/* The frame around the content at a DPI (0: the system DPI); left and top are negative or zero.
+ * With a title bar drawn by the app the window keeps the sizing border on its sides and its
+ * bottom, and the top, where the system's title bar was, is content. */
+static RECT cui__win32_frame_at(bool title_bar, DWORD style, UINT dpi) {
+    RECT r = { 0, 0, 0, 0 };
+    if (title_bar) {
+        bool sizable = (style & WS_THICKFRAME) != 0;
+        int pad = cui__win32_metric(SM_CXPADDEDBORDER, dpi);
+        r.right = cui__win32_metric(sizable ? SM_CXSIZEFRAME : SM_CXFIXEDFRAME, dpi) + pad;
+        r.left = -r.right;
+        r.bottom = cui__win32_metric(sizable ? SM_CYSIZEFRAME : SM_CYFIXEDFRAME, dpi) + pad;
+    } else if (cui__AdjustWindowRectExForDpi && dpi) {
+        cui__AdjustWindowRectExForDpi(&r, style, FALSE, 0, dpi);
+    } else {
+        AdjustWindowRectEx(&r, style, FALSE, 0);
+    }
+    return r;
+}
+
+/* The frame around the window's content at its DPI. */
+static RECT cui__win32_frame(cui_app *app, HWND hwnd) {
+    return cui__win32_frame_at(app->title_bar, (DWORD)GetWindowLongW(hwnd, GWL_STYLE), cui__win32_dpi(hwnd));
+}
+
+static bool cui__win32_pointer_over(HWND hwnd) {
+    POINT p;
+    return GetCursorPos(&p) && WindowFromPoint(p) == hwnd;
+}
+
+/* The pointer at the point of a non-client message, which is in screen pixels. */
+static void cui__win32_nc_pointer(cui_app *app, HWND hwnd, LPARAM lp) {
+    POINT p = { GET_X_LPARAM(lp), GET_Y_LPARAM(lp) };
+    ScreenToClient(hwnd, &p);
+    cui_input_mouse_move(app->ui, (float)p.x / cui__w(app)->scale, (float)p.y / cui__w(app)->scale);
+}
+
+/* The messages that differ while the app draws the title bar (desc.custom_title_bar). Returns
+ * true with *out set when it handled msg. */
+static bool cui__win32_title_bar_message(cui_app *app, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, LRESULT *out) {
+    cui__win32 *w = cui__w(app);
+    if (!app->title_bar || !w || w->scale <= 0) return false;
+    switch (msg) {
+    case WM_NCCALCSIZE: {
+        RECT *r = wp ? &((NCCALCSIZE_PARAMS *)lp)->rgrc[0] : (RECT *)lp;
+        RECT f = cui__win32_frame(app, hwnd);
+        r->left -= f.left;
+        r->right -= f.right;
+        r->bottom -= f.bottom;
+        if (IsZoomed(hwnd)) r->top += f.bottom;   /* maximized, the border hangs off the screen */
+        *out = 0;
+        return true;
+    }
+    case WM_NCHITTEST: {
+        *out = DefWindowProcW(hwnd, msg, wp, lp);   /* the sizing border on the sides and the bottom */
+        if (*out != HTCLIENT) return true;
+        POINT p = { GET_X_LPARAM(lp), GET_Y_LPARAM(lp) };
+        ScreenToClient(hwnd, &p);
+        /* the top edge sizes the window, as the border above the system's title bar does */
+        if (!IsZoomed(hwnd) && (GetWindowLongW(hwnd, GWL_STYLE) & WS_THICKFRAME) &&
+            p.y < cui__win32_metric(SM_CYSIZEFRAME, cui__win32_dpi(hwnd))) {
+            *out = HTTOP;
+            return true;
+        }
+        cui_title_bar_hit hit = cui_title_bar_hit_test(app->ui, (float)p.x / w->scale, (float)p.y / w->scale);
+        *out = hit == CUI_TITLE_BAR_CAPTION ? HTCAPTION : hit == CUI_TITLE_BAR_MAXIMIZE ? HTMAXBUTTON : HTCLIENT;
+        return true;
+    }
+    /* Over the maximize button Windows 11 shows its snap layouts, and the pointer arrives as
+     * non-client messages. They go to the button as ordinary input; DefWindowProc, which would
+     * draw a classic button there, does not see them. */
+    case WM_NCMOUSEMOVE: {
+        if (wp != HTMAXBUTTON) {
+            if (app->ui->mouse_inside) cui_input_mouse_leave(app->ui);   /* over the caption or the border */
+            return false;
+        }
+        TRACKMOUSEEVENT tme = { sizeof tme, TME_LEAVE | TME_NONCLIENT, hwnd, 0 };
+        TrackMouseEvent(&tme);
+        cui__win32_nc_pointer(app, hwnd, lp);
+        *out = 0;
+        return true;
+    }
+    case WM_NCLBUTTONDOWN: case WM_NCLBUTTONDBLCLK: case WM_NCLBUTTONUP:
+        if (wp != HTMAXBUTTON) return false;
+        cui__win32_nc_pointer(app, hwnd, lp);
+        cui_input_mouse_button(app->ui, CUI_MOUSE_LEFT, msg != WM_NCLBUTTONUP);
+        if (msg != WM_NCLBUTTONUP) SetCapture(hwnd);   /* the release arrives as WM_LBUTTONUP */
+        *out = 0;
+        return true;
+    case WM_NCMOUSELEAVE:
+        if (!cui__win32_pointer_over(hwnd)) cui_input_mouse_leave(app->ui);
+        return false;
+    case WM_MOUSELEAVE:
+        if (!cui__win32_pointer_over(hwnd)) return false;
+        w->tracking = false;   /* onto the maximize button or the caption: their messages say so */
+        *out = 0;
+        return true;
+    default:
+        return false;
+    }
+}
+
 /* Maximize, minimize and restore play a DWM animation that holds the swap chain: a vsync swap
  * inside it blocks the message loop for the whole animation, about a second. Present without
  * vsync while it runs, so frames keep coming and DWM animates the latest one; the first swap
@@ -80192,6 +80351,8 @@ static LRESULT CALLBACK cui__win32_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
     cui__win32 *w = cui__w(app);
     cui_ctx *ui = app->ui;
     float s = w ? w->scale : 1.0f;
+    LRESULT title_bar_result;
+    if (cui__win32_title_bar_message(app, hwnd, msg, wp, lp, &title_bar_result)) return title_bar_result;
     switch (msg) {
     case WM_CLOSE:
         app->running = false;
@@ -80200,6 +80361,7 @@ static LRESULT CALLBACK cui__win32_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
         if (w) {
             w->width = LOWORD(lp);
             w->height = HIWORD(lp);
+            if (wp == SIZE_MINIMIZED && app->title_bar) cui_input_mouse_leave(ui);   /* minimized under the pointer, from the app's minimize button */
             cui_request_redraw(ui);
             if (w->in_size_move && w->width > 0 && w->height > 0) cui__app_live_frame(app);
         }
@@ -80230,6 +80392,13 @@ static LRESULT CALLBACK cui__win32_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
     }
     case WM_GETMINMAXINFO: {
         MINMAXINFO *mm = (MINMAXINFO *)lp;
+        if (app->title_bar) {   /* the frame without the system's caption */
+            float tsc = w && w->scale > 0 ? w->scale : cui__win32_window_scale(hwnd);
+            RECT f = cui__win32_frame(app, hwnd);
+            mm->ptMinTrackSize.x = (LONG)(app->desc.min_width * tsc) + (f.right - f.left);
+            mm->ptMinTrackSize.y = (LONG)(app->desc.min_height * tsc) + (f.bottom - f.top);
+            return 0;
+        }
         float sc = w ? w->scale : cui__win32_window_scale(hwnd);
         RECT r = { 0, 0, (LONG)(app->desc.min_width * sc), (LONG)(app->desc.min_height * sc) };
         AdjustWindowRectEx(&r, (DWORD)GetWindowLongW(hwnd, GWL_STYLE), FALSE, 0);
@@ -80348,15 +80517,6 @@ static LRESULT CALLBACK cui__win32_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
     return DefWindowProcW(hwnd, msg, wp, lp);
 }
 
-/* The frame around the content at the window's DPI; left and top are negative. */
-static RECT cui__win32_frame(HWND hwnd) {
-    RECT r = { 0, 0, 0, 0 };
-    DWORD style = (DWORD)GetWindowLongW(hwnd, GWL_STYLE);
-    if (cui__AdjustWindowRectExForDpi && cui__GetDpiForWindow) cui__AdjustWindowRectExForDpi(&r, style, FALSE, 0, cui__GetDpiForWindow(hwnd));
-    else AdjustWindowRectEx(&r, style, FALSE, 0);
-    return r;
-}
-
 bool cui__plat_init(cui_app *app) {
     cui__win32_dpi_awareness();
     cui__win32 *w = calloc(1, sizeof *w);
@@ -80376,16 +80536,19 @@ bool cui__plat_init(cui_app *app) {
     DWORD style = WS_OVERLAPPEDWINDOW;
     if (app->desc.fixed_size) style &= ~(DWORD)(WS_THICKFRAME | WS_MAXIMIZEBOX);
     float scale = cui__win32_window_scale(NULL);
-    RECT r = { 0, 0, (LONG)(app->desc.width * scale), (LONG)(app->desc.height * scale) };
-    AdjustWindowRectEx(&r, style, FALSE, 0);
+    app->title_bar = app->desc.custom_title_bar;   /* from the first WM_NCCALCSIZE on */
+    RECT f = cui__win32_frame_at(app->title_bar, style, 0);
+    RECT r = { f.left, f.top, (LONG)(app->desc.width * scale) + f.right, (LONG)(app->desc.height * scale) + f.bottom };
     WCHAR title[256];
     MultiByteToWideChar(CP_UTF8, 0, app->title, -1, title, 256);
     app->plat = w;
+    if (app->title_bar) w->scale = scale;   /* the first WM_NCCALCSIZE comes inside CreateWindowExW */
     const cui_window_placement *pl = app->desc.placement;
     int left = CW_USEDEFAULT, top = CW_USEDEFAULT;
     if (pl && pl->has_position) {
         /* only a place whose title bar is on a monitor: one that was unplugged leaves it to Windows */
         RECT caption = { pl->x + r.left, pl->y + r.top, pl->x + r.right, pl->y };
+        if (app->title_bar) caption.bottom = pl->y + GetSystemMetrics(SM_CYCAPTION);   /* the bar is the content's top */
         if (MonitorFromRect(&caption, MONITOR_DEFAULTTONULL)) { left = caption.left; top = caption.top; }
     }
     w->hwnd = CreateWindowExW(0, wc.lpszClassName, title, style, left, top, r.right - r.left, r.bottom - r.top,
@@ -80393,17 +80556,27 @@ bool cui__plat_init(cui_app *app) {
     if (!w->hwnd) { free(w); app->plat = NULL; return false; }
     DragAcceptFiles(w->hwnd, TRUE);   /* files dropped from Explorer arrive as WM_DROPFILES */
     w->scale = cui__win32_window_scale(w->hwnd);
-    if (w->scale != scale) {
+    RECT cr, outer;
+    if (app->title_bar) {
+        /* the frame without the caption was estimated from system metrics: measure the content
+         * the window got and correct the outer size by the difference */
+        if (GetClientRect(w->hwnd, &cr) && GetWindowRect(w->hwnd, &outer)) {
+            int dx = (int)(app->desc.width * w->scale) - cr.right;
+            int dy = (int)(app->desc.height * w->scale) - cr.bottom;
+            if (dx || dy)
+                SetWindowPos(w->hwnd, NULL, 0, 0, outer.right - outer.left + dx, outer.bottom - outer.top + dy,
+                             SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+        }
+    } else if (w->scale != scale) {
         /* the frame at the DPI of the monitor the window opened on, which a saved place can make
          * another than the primary one */
-        RECT f = cui__win32_frame(w->hwnd);
-        int fw = (int)(app->desc.width * w->scale) + (f.right - f.left);
-        int fh = (int)(app->desc.height * w->scale) + (f.bottom - f.top);
+        RECT fr = cui__win32_frame(app, w->hwnd);
+        int fw = (int)(app->desc.width * w->scale) + (fr.right - fr.left);
+        int fh = (int)(app->desc.height * w->scale) + (fr.bottom - fr.top);
         SetWindowPos(w->hwnd, NULL, 0, 0, fw, fh, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
     }
     /* the frame was measured at the primary monitor's DPI: place the content exactly */
     if (left != CW_USEDEFAULT) cui__plat_set_position(app, pl->x, pl->y);
-    RECT cr;
     GetClientRect(w->hwnd, &cr);
     w->width = cr.right; w->height = cr.bottom;
     w->hdc = GetDC(w->hwnd);
@@ -80418,6 +80591,8 @@ bool cui__plat_init(cui_app *app) {
     pi.get_clipboard = cui__win32_get_clip;
     pi.set_cursor = cui__win32_set_cursor;
     pi.set_text_input_rect = cui__win32_text_input_rect;
+    pi.window_frame = cui__app_window_frame;
+    pi.window_button = cui__app_window_button;
     cui_set_platform(app->ui, &pi);
     return true;
 }
@@ -80523,6 +80698,12 @@ void cui__plat_set_title(cui_app *app, const char *title) {
 
 void cui__plat_set_size(cui_app *app, int width, int height) {
     cui__win32 *w = cui__w(app);
+    if (app->title_bar) {   /* the frame without the system's caption */
+        RECT f = cui__win32_frame(app, w->hwnd);
+        int fw = (int)(width * w->scale) + (f.right - f.left), fh = (int)(height * w->scale) + (f.bottom - f.top);
+        SetWindowPos(w->hwnd, NULL, 0, 0, fw, fh, SWP_NOMOVE | SWP_NOZORDER);
+        return;
+    }
     RECT r = { 0, 0, (LONG)(width * w->scale), (LONG)(height * w->scale) };
     AdjustWindowRectEx(&r, (DWORD)GetWindowLongW(w->hwnd, GWL_STYLE), FALSE, 0);
     SetWindowPos(w->hwnd, NULL, 0, 0, r.right - r.left, r.bottom - r.top, SWP_NOMOVE | SWP_NOZORDER);
@@ -80628,7 +80809,7 @@ static POINT cui__win32_workspace_offset(const RECT *workspace) {
 
 void cui__plat_set_position(cui_app *app, int x, int y) {
     HWND hwnd = cui__w(app)->hwnd;
-    RECT f = cui__win32_frame(hwnd);
+    RECT f = cui__win32_frame(app, hwnd);
     if (!IsIconic(hwnd) && !IsZoomed(hwnd)) {
         SetWindowPos(hwnd, NULL, x + f.left, y + f.top, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
         return;
@@ -80653,7 +80834,7 @@ void cui__plat_placement(cui_app *app, cui_window_placement *out) {
     WINDOWPLACEMENT wp;
     wp.length = sizeof wp;
     if (!GetWindowPlacement(w->hwnd, &wp)) return;
-    RECT r = wp.rcNormalPosition, f = cui__win32_frame(w->hwnd);
+    RECT r = wp.rcNormalPosition, f = cui__win32_frame(app, w->hwnd);
     POINT o = cui__win32_workspace_offset(&r);
     out->x = r.left + o.x - f.left;
     out->y = r.top + o.y - f.top;

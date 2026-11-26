@@ -1,16 +1,11 @@
 # Routines, callables, generics, and contracts
 
-Read this when declaring functions/procedures, changing caller storage, or passing
-behavior as values.
-
 ## Parameters and calls
 
-Every routine has parentheses. Separate declared parameters with semicolons,
-supplied arguments with commas. Synchronous functions return a value on every
+Every routine has parentheses. Synchronous functions return a value on every
 normal path. Procedures and async functions returning non-generic `Task` may
-use `return;` or reach the end of the body.
-Consume returned values or explicitly use discard. Discarding a task does not
-wait, cancel, or supervise it.
+use `return;` or reach the end of the body. Discarding a task does not wait
+for, cancel, or supervise it.
 
 Positional arguments may precede named arguments; none may follow them. Labels
 match the selected declaration exactly. Receiver/arguments execute once in
@@ -20,8 +15,7 @@ must be legal CLR constants, not runtime const bindings. A final params Values:
 
 Value parameters are read-only bindings. Ref aliases writable storage; out must
 be assigned before reading and on every successful exit; in is a read-only managed
-reference. Both declarations and calls spell the mode: Increment(ref Count).
-Targets must be addressable storage of exactly the parameter type. Ordinary
+reference. Targets must be addressable storage of exactly the parameter type. Ordinary
 properties are not addressable, and const bindings cannot be ref/out targets.
 Managed references cannot be captured or used as async parameters.
 
@@ -63,10 +57,8 @@ constructor constraint. An unknown T needs a matching imported interface for
 numeric operators. For example, `where T: N.INumber of T;` permits `T.Zero`,
 T.CreateChecked(Value), and arithmetic through constrained static CLR dispatch.
 
-Use `requires` for caller obligations and `ensures` for guarantees on successful
-return. Put contracts on entry routines, such as a program's main routine or a
-public library operation. Let internal helpers rely on the conditions checked at
-entry. After where clauses, place requires clauses followed by ensures clauses,
+Contracts belong on [entry routines](README.md#rules-before-writing); internal
+helpers rely on the conditions checked there. After where clauses, place requires clauses followed by ensures clauses,
 then local routine declarations and begin. Conditions are read-only bool
 expressions over permitted inputs and captures using built-in operations.
 Arbitrary calls, CLR getters, foreign operators, and
@@ -76,7 +68,7 @@ result only in that clause. It must have exactly the result type.
 Requires runs before the body; ensures runs after successful body cleanup, on all
 normal returns. False conditions throw InvalidOperationException in every build.
 Body/cleanup faults skip ensures. Conditions do not snapshot old values or undo
-effects. For `Task of T`, async `ensures` binds `T`, and failures fault the returned task.
+effects. [Concurrency](concurrency.md#calling-and-awaiting) covers async contracts.
 
 ```pascal
 program AgentFunctions;

@@ -1,9 +1,7 @@
 # FPAS development and repository workflows
 
-Use the [agent CLI reference](cli.md) for public commands and checked refactorings.
-Use the [development workflow](../../build/development.md) to build the compiler,
-bootstrap the matching SDK and run the repository tests. Keep scratch sources,
-reports and measurements under `.temp-data/`.
+Build the compiler, bootstrap the matching SDK and run repository tests with the
+[development workflow](../../build/development.md). Public commands are in the [CLI reference](cli.md).
 
 ## Select the owning reference
 

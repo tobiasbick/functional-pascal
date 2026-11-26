@@ -32,9 +32,8 @@ end;
 end program;
 ```
 
-Save as UTF-8 `AgentStart.fpas`. Use `fpas check AgentStart.fpas` and
+Save as UTF-8 `AgentStart.fpas`, then use `fpas check AgentStart.fpas` and
 `fpas run AgentStart.fpas`. Keep one-off repository helpers under `.temp-data/`.
-See [CLI](cli.md) for project inputs and options.
 
 ## Rules before writing
 
@@ -58,11 +57,10 @@ See [CLI](cli.md) for project inputs and options.
   and exhaustive matching. Use CLR nullability and exceptions for absence/failure.
 - Tasks and cancellation use ordinary .NET APIs. Resources use `using const` or
   `await using const`; cleanup runs when the enclosing lexical scope exits.
-- At entry routines, state caller obligations with `requires` and guarantees on
-  successful return with `ensures`. Examples include a program's main routine
-  and public library operations.
-- Use SDK `Fpas.Execution.Effects` for deferred work with typed outcomes and dependencies.
-  Use `Fpas.Execution.Workflows` for shared execution policies and structured lifetimes.
+- State caller obligations with `requires` and successful-return guarantees with
+  `ensures` only on entry routines: a program's main routine and public library operations.
+- Use SDK `Fpas.Execution.Effects` for deferred work with typed outcomes and dependencies,
+  and `Fpas.Execution.Workflows` for execution policies and structured lifetimes.
 
 ## Read for the task
 
@@ -79,5 +77,4 @@ See [CLI](cli.md) for project inputs and options.
 | Update examples, check links, or verify the token budget | [Maintenance](maintenance.md) |
 | Change CUI integration or prepare an upstream contribution | [CUI workflow](../../cui-contributions.md) |
 
-Use the owning handbook/specification for details. Check implementation status
-before using a feature from a proposal.
+Check implementation status before using a feature from a proposal.

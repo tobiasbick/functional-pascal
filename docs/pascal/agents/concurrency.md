@@ -1,8 +1,5 @@
 # Async functions, tasks, and cancellation
 
-Read this before starting concurrent work, awaiting APIs, sharing state, or
-composing asynchronous effects.
-
 ## Calling and awaiting
 
 An async function explicitly returns `Task` or `Task of T` from System.Threading.Tasks.
@@ -35,13 +32,12 @@ for coordination, and System.Threading.Channels for channels.
 Explicitly await work whose completion belongs to your operation. Discarding or
 returning from a function does not automatically join/cancel child tasks or
 observe abandoned exceptions. Captured var cells and globals have CLR shared
-state behavior. Use normal synchronization or immutable data. Async methods
-cannot have ref/out/in parameters; live managed references cannot cross await.
+state behavior. Use normal synchronization or immutable data. Live managed
+references cannot cross await.
 
-Using const schedules IDisposable cleanup in an async body too. Await using
-const selects IAsyncDisposable and awaits each disposal before completing a
-scope exit. Sync/async resources share reverse acquisition order. Return, loop
-exit, failure, and cancellation all preserve applicable cleanup. Await is allowed
+In async bodies, using const and await using const share reverse acquisition
+order. Await using awaits each IAsyncDisposable disposal before the scope exit
+completes, also on return, loop exit, failure, and cancellation. Await is allowed
 in supported catch/finally bodies, but not exception filters.
 
 ## Composable effects
@@ -62,8 +58,7 @@ must be joined before cleanup, `Parallel.All` for bounded parallelism, and
 scope token to its work. On expiry, `WithDeadline` requests cancellation and
 waits for the work and cleanup. Work that ignores the token can outlast the deadline.
 
-Use `requires` and `ensures` at workflow entry routines. Report expected execution
-failures through `Outcome.Failure`. Returning that variant completes the task
+Report expected execution failures through `Outcome.Failure`. Returning that variant completes the task
 normally and runs applicable postconditions.
 
 ## Async example

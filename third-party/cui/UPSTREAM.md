@@ -4,8 +4,8 @@
 | --- | --- |
 | Repository | <https://github.com/yappologistic/CUI> |
 | Source fork | <https://github.com/tobiasbick/CUI> (`master` matches the pin) |
-| Revision | [v1.5.0](https://github.com/yappologistic/CUI/releases/tag/v1.5.0) |
-| Commit | [`f9597a30d3bba4f7ef3e0f918e31c28bdcd4d2a3`](https://github.com/yappologistic/CUI/commit/f9597a30d3bba4f7ef3e0f918e31c28bdcd4d2a3) |
+| Revision | Upstream `master` after [v1.5.0](https://github.com/yappologistic/CUI/releases/tag/v1.5.0) |
+| Commit | [`6864776f1a77b920a26f4ec51f5c4cf1be0b04a6`](https://github.com/yappologistic/CUI/commit/6864776f1a77b920a26f4ec51f5c4cf1be0b04a6) |
 | Build inputs | [`cui.c`](upstream/cui.c) and [`cui.h`](upstream/cui.h) |
 | Local source modifications | None |
 
@@ -15,8 +15,8 @@ endings.
 
 | Path under `upstream/` | SHA-256 |
 | --- | --- |
-| `cui.c` | `2d730b79c279567b619431b929c76845c366118085b833de4eabc518fa2d7c7a` |
-| `cui.h` | `4882d7d1c67edb53aa58eb9f842886154f6dfba55192b37e406846dab9247afc` |
+| `cui.c` | `4a0337f7292e3556b27eea76cd0ac1009a8fa7cea14d9faf004fa40f8babc0af` |
+| `cui.h` | `cc29733d48801e274710d4face22368b18865212783a74de5a3cd8602c882dd1` |
 
 Project-owned integration belongs under `src/Fpas.Ui.Gui.Cui/`, with the C bridge
 and CMake configuration in its `native/` directory. Keep those files separate

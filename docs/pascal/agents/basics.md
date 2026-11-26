@@ -1,19 +1,15 @@
 # Values, expressions, and control flow
 
-Read this when writing bindings, calculations, loops, arrays, or text processing.
-The [entrypoint](README.md) gives the complete source shape.
-
 ## Bindings and literals
 
-Every `const` or `var` binding has one name, an explicit type, and an initializer.
-For example, `const Limit: int := 10;` or `var Count: int := 0;`. Repeat the declaration
-keyword for each binding. A const initializer can run arbitrary code; const
-does not mean a compile-time constant. Assignment uses `:=`.
+Each `const` or `var` declares one name with an explicit type and initializer,
+as in `var Count: int := 0;`; repeat the keyword per binding. A const initializer
+can run arbitrary code; const is not a compile-time constant. Assignment uses `:=`.
 
 Primitive aliases denote real CLR types: bool; byte/sbyte; short/ushort; int/uint;
 long/ulong; nint/nuint; float/double/decimal; char; string; object. Signed int is
 32-bit, long is 64-bit, and native integers follow the execution architecture.
-Use an explicit conversion rather than guessing a different Pascal dialect's type.
+Convert explicitly instead of assuming another Pascal dialect's types.
 
 Strings use apostrophes: `'it''s ready'`. Numeric forms include `$FF`, `1_000`,
 `42L`, `42U`, `42UL`, `1.5`, `1e3`, `1.5F`, and `1.5M`. Unsuffixed integers must
@@ -52,10 +48,9 @@ and, or, xor per logical chain. Group mixed operators explicitly, as in
 `(A and B) or C`. Each operand of `??` has its own chain. String + accepts
 strings/chars. Use actual .NET formatting APIs for other values.
 
-If statements use if/then, optional elsif/then, optional else, and end if.
-An if expression requires else and one compatible expression per branch.
-Every statement ends with a semicolon, including the statement before else.
-Nested begin/end blocks, branches, and loop bodies introduce local scopes.
+If statements use if/then, optional elsif/then and else, and end if. An if
+expression requires else and one compatible expression per branch. Nested
+begin/end blocks, branches, and loop bodies introduce local scopes.
 
 ## Arrays, strings, and loops
 
@@ -121,5 +116,4 @@ end program;
 Read [basics](../language/basics/README.md) for literal/conversion/operator details,
 [control flow](../language/control-flow/README.md) for scopes and exit rules, and
 [types](../language/types/arrays.md) for CLR array contracts.
-For collection APIs, read [interop](interop.md); dictionaries/lists are ordinary
-.NET objects rather than built-in language collection wrappers.
+Lists and dictionaries are ordinary .NET objects; see [interop](interop.md).

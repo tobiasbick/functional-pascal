@@ -1,7 +1,5 @@
 # Calling and implementing .NET APIs
 
-Read this when using collections, libraries, interfaces, events, or attributes.
-
 ## Discover and consume actual APIs
 
 Import a CLR namespace for generic types, or alias a nongeneric CLR type directly.
@@ -10,7 +8,7 @@ Project/package references supply metadata. Use exact case-sensitive CLR names
 and generic arities. `new Type(Arguments)` constructs an
 accessible class/struct/record or constrained type. Fields, properties, indexers,
 and ordinary instance/static methods retain .NET meaning. Read-only accessors/
-storage cannot be assigned; a const reference can still point to a mutable collection.
+storage cannot be assigned.
 
 Use `List of T`, `Dictionary of (K, V)`, Stream, Regex, JsonSerializer, HttpClient, and
 other .NET APIs directly. Extension methods use static form: import
@@ -146,9 +144,8 @@ owner's arguments. Imported static abstract/virtual interface
 members dispatch through constrained type parameters, including generic operators,
 `T.Zero`, and `T.CreateChecked of int`. Read [generic constraints](../language/functions/generic-routines.md).
 
-Before changing public identities/signatures/representations, read the binding
+Before changing public identities, signatures or representations, read the
 [interop rules](../interop/README.md) and [CLR mapping](../../specs/clr-mapping.md).
-Read [attributes](../interop/attributes.md) and
-[events](../interop/events.md) for their precise supported contracts.
+[Attributes](../interop/attributes.md) and [events](../interop/events.md) own their contracts.
 
 For tag, image and audio project references and FPAS calls, see [media libraries](../libraries/media/README.md).

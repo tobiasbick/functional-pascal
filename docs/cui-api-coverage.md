@@ -49,6 +49,7 @@ retains its semantic palette and cell-based widget subset.
 | `cui_animate`, `cui_animate_spring` | CUI widget motion. Application model changes use MVU; custom drawing uses native frame time and explicit redraw requests. No parallel retained animation store. |
 | Raw image/texture handles, render data, software/OpenGL renderer creation, upload, threads, damage, readback and native window handles | Renderer/backend plumbing. Widgets and custom painting own cached image sources; screenshots and renderer selection have host operations. The custom-paint API uses full-image UVs and uniform corner radii. |
 | `cui_app_run`, software/backend status and raw screenshots/PNG writing | The existing GUI owner loop, renderer status and `CapturePng` provide these operations. |
+| `cui_app_desc.custom_title_bar`, `cui_platform_iface.window_frame`/`.window_button`, `cui_title_bar_hit_test` | Deferred. Without the `cui_title_bar` component such a window has no caption, so the GUI host keeps the system frame. See the [CUI title bar](future/cui-titlebar.md). |
 
 ## Numeric precision
 

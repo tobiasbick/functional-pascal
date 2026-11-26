@@ -3,13 +3,12 @@
 unit GuiGallery.Pages.Inputs.Widgets.PickerFields;
 
 uses Fpas.Ui.Elements as E;
-uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
 uses Fpas.Ui.Widgets.Containers.Grids as Grid;
 uses Fpas.Ui.Widgets.Inputs.NumberFields as N;
 uses Fpas.Ui.Widgets.Pickers.DatePickers as D;
 
 uses Gallery.Shared.PickerChoices as Choices;
-uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Inputs.State as State;
 uses GuiGallery.Pages.Inputs.Widgets.BrandColor as BrandColor;
 uses GuiGallery.Shared.Sections as G;
@@ -19,7 +18,7 @@ uses GuiGallery.Shared.Sections as G;
 // ## Parameters
 // - `Model`: Model-owned choices, due date, seat count and brand color.
 // ## Returns
-// The Pickers section of the Inputs page.
+// The Pickers card.
 public function View(Model: State.Model): E.Element of State.Msg;
 begin
   const Country: E.Element of State.Msg := Choices.Country of State.Msg(
@@ -44,11 +43,7 @@ begin
     ),
     Brand
   ];
-  return E.Column of State.Msg(
-    new L.Flow(Gap := G.Points(20)),
-    G.Heading of State.Msg(Strings.Get('Page.Pickers')),
-    G.Card of State.Msg(16, Fields)
-  );
+  return Cards.Card of State.Msg('input-pickers-card', Fields, new Cards.Options(Gap := 16.0F));
 end function;
 
 end unit;

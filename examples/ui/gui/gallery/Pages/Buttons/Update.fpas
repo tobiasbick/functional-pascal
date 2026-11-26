@@ -2,6 +2,7 @@
 
 unit GuiGallery.Pages.Buttons.Update;
 
+uses Fpas.Ui.Gui.Toasts as Toasts;
 uses Fpas.Ui.Mvu.Application as Mvu;
 
 uses GuiGallery.Pages.Buttons.State as S;
@@ -24,15 +25,16 @@ begin
     when S.Msg.SetSegmentedRange(const Value: int): State with
       SegmentedRange := Value;
     end with;
-    when S.Msg.ToggleFormat(const Style: S.TextFormat): State with
-      Formats := State.Formats xor cast Style as int;
-    end with;
-    when S.Msg.ConfirmHold: State with
-      HoldCount := State.HoldCount + 1;
-    end with;
     else State;
   end case;
-  return new Mvu.Transition of (S.Model, S.Msg)(Next, []);
+  return new Mvu.Transition of (S.Model, S.Msg)(
+    Next, case Message of
+      when S.Msg.ConfirmHold: [
+        Toasts.Show of S.Msg('Deleted', new Toasts.Options(Appearance := Toasts.Tone.Danger))
+      ];
+      else [];
+    end case
+  );
 end function;
 
 end unit;

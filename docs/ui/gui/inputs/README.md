@@ -1,9 +1,8 @@
 # Inputs
 
-The Inputs gallery page combines text editors, credentials and form fields.
 Keep each editable value in the model and apply proposals in the update
-function. The single-line text field also runs in the TUI. The other input
-widgets on this page require the GUI host.
+function. The [terminal input guide](../../tui/inputs/README.md) lists the
+widgets available in the TUI.
 
 | Widget | When to use it |
 | --- | --- |
@@ -17,20 +16,28 @@ widgets on this page require the GUI host.
 | [Number field](number-field.md) | Type or step through a bounded numeric value. |
 | [Date picker](date-picker.md) | Choose one date from a form field. |
 | [Color picker](color-picker.md) | Edit a swatch with a palette and presets. |
-| [Calendar](calendar.md) | Keep a single-date calendar visible. |
+
+## Inputs gallery page
+
+The three original sections use native cards.
+The Text fields and Pickers grids use two columns when both fit. About spans
+the first card. Password and New password share a value. The first field
+shows validation, and the second has a strength meter. Completing the
+verification code shows the Code entered toast.
 
 ## See also
 
 - [UI handbook](../README.md)
 - [Smart inputs](../smart-inputs/README.md)
 - [Pickers](../pickers/README.md)
-- [Inputs in the gallery](../../../../examples/ui/gui/gallery/Pages/Inputs/View.fpas)
+- [CUI Inputs comparison](../../../future/cui-compare/README.md#inputs-evidence)
 
 ## Source files
 
 - `examples/ui/gui/gallery/Pages/Inputs/`
   - [State.fpas](../../../../examples/ui/gui/gallery/Pages/Inputs/State.fpas)
   - [Update.fpas](../../../../examples/ui/gui/gallery/Pages/Inputs/Update.fpas)
+  - [View.fpas](../../../../examples/ui/gui/gallery/Pages/Inputs/View.fpas)
 - `examples/ui/gui/gallery/Pages/Inputs/Widgets/`
   - [CredentialFields.fpas](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/CredentialFields.fpas)
   - [PickerFields.fpas](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/PickerFields.fpas)

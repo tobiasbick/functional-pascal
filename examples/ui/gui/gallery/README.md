@@ -61,29 +61,27 @@ for how the assemblies are built and loaded.
   presence avatars and role badges. Name and email are shared with Inputs and
   Edit profile. Creating the demo workspace shows the success toast.
   Open command palette and Ctrl+K show the native searchable command list.
-- **Buttons** shows the variants, sizes, icons, and input states. Save changes
-  shows the busy state, and Reset enables it again. The formatting group toggles
-  three independent actions. The copy button copies the displayed command.
-  Hold to delete demonstrates confirmation without deleting anything.
+- [**Buttons**](../../../../docs/ui/gui/actions/README.md#buttons-gallery-page)
+  shows variants, sizes, icons, and input states in rows that wrap as needed.
+  Save changes shows the busy state, and Reset enables the button again. The
+  formatting group demonstrates three joined actions. The copy button copies
+  the displayed command. Hold to delete shows a danger toast after a full hold.
   Segmented control reproduces CUI's List/Board/Timeline icon choices and its
   small Day/Week/Month/Year selector, with independent model-owned selections.
   Dropdown menu clones CUI's Options and icon-only More actions examples,
   including section captions, separators, icons, shortcut hints and a danger
   action. Delete opens the same confirmation as the Overlays page.
-- **Inputs** shows the original responsive Text fields card with Full name,
+- [**Inputs**](../../../../docs/ui/gui/inputs/README.md#inputs-gallery-page)
+  shows the original responsive Text fields card with Full name,
   Email, Password, Search projects and About. The email example uses a
   reserved example domain. Typing a short password displays the validation
   error. The multiline About field spans the card and wraps on narrow screens.
   The next card shows Topics, the six-box Verification code starting with
-  418, and New password with its strength meter.
+  418, and New password with its strength meter. The two password fields share
+  one value.
   Pickers shows Country, searchable Language, Due date, and Seats in their
   original grid positions, stacked at narrow widths, with Brand color beneath
-  them. The supplementary
-  Calendar below the card shares the Due date selection. Its title opens CUI's
-  month and year choices; navigation and visible choices remain natively drawn.
-  The Text fields and Pickers cards use CUI's native responsive grids. Shared
-  section headings use native top padding, and card outlines are drawn without
-  an extra clipping pass.
+  them. Open Due date to choose a day from its calendar.
 - **Selection** shows native notification checkboxes, connectivity switches
   and the exclusive save-frequency radio group. The checkbox and switch
   cards share a row when both fit and stack at narrower widths. Radio cards

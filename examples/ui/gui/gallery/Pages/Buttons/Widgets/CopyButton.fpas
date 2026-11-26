@@ -4,25 +4,39 @@ unit GuiGallery.Pages.Buttons.Widgets.CopyButton;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
-uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Actions.CopyButtons as Copy;
+uses Fpas.Ui.Widgets.Motion.Motion as Motion;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses GuiGallery.Pages.Buttons.State as State;
+uses GuiGallery.Shared.Sections as G;
 
 // Displays a command with a copy action.
 //
+// ## Parameters
+// - `Colors`: Active gallery theme colors.
 // ## Returns
 // The gallery's copy-button example.
-public function View(): E.Element of State.Msg;
+public function View(Colors: Themes.Palette): E.Element of State.Msg;
 begin
   const Command: string := 'npm i cui';
-  return E.Styled of State.Msg(
-    E.Row of State.Msg(
-      new L.Flow(Gap := L.Spacing.Tight, Padding := L.Spacing.Tight, Align := L.Alignment.Center),
-      E.Text of State.Msg(Command),
-      Copy.CopyButton of State.Msg('copy-install', Command)
+  return E.Row of State.Msg(
+    new L.Flow(
+      Gap := G.Points(6),
+      PaddingStart := G.Points(14),
+      PaddingEnd := G.Points(4),
+      PaddingY := G.Points(2),
+      BackgroundTheme := Themes.ColorToken.SurfaceMuted,
+      CornerRadius := 18.0F
     ),
-    S.Role.MutedPanel
+    E.FormattedText of State.Msg(
+      Command,
+      Motion.Font.Mono,
+      0.0F,
+      Colors.Foreground,
+      NoWrap := true
+    ),
+    Copy.CopyButton of State.Msg('copy-install', Command)
   );
 end function;
 

@@ -62,7 +62,6 @@
   <data name="Heading.Blame" xml:space="preserve"><value>Zeilenverlauf</value></data>
   <data name="Heading.BlameHint" xml:space="preserve"><value>Fahre über den Rand, um die Zeilen eines Commits zu markieren. Ein Klick öffnet ihn.</value></data>
   <data name="Heading.BreadcrumbAndPagination" xml:space="preserve"><value>Pfadnavigation und Seitenwechsel</value></data>
-  <data name="Heading.Calendar" xml:space="preserve"><value>Kalender</value></data>
   <data name="Heading.CalendarHeatmap" xml:space="preserve"><value>Kalender-Heatmap</value></data>
   <data name="Heading.CalendarHeatmapHint" xml:space="preserve"><value>Ein Jahr voller Aktivitäten mit einem Quadrat pro Tag.</value></data>
   <data name="Heading.Carousel" xml:space="preserve"><value>Karussell</value></data>

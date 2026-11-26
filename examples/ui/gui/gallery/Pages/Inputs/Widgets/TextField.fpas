@@ -3,7 +3,7 @@
 unit GuiGallery.Pages.Inputs.Widgets.TextField;
 
 uses Fpas.Ui.Elements as E;
-uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
 uses Fpas.Ui.Widgets.Containers.Grids as Grid;
 uses Fpas.Ui.Widgets.Inputs.TextFields as F;
 
@@ -22,8 +22,8 @@ uses System.Text as Text;
 // - `Data`: Shared demo values owned by the application.
 // - `Model`: Current values.
 // ## Returns
-// The Text fields section of the Inputs page.
-public function Inputs(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
+// The Text fields card.
+public function View(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
 begin
   const Name: E.Element of State.Msg := F.TextField of State.Msg(
     'input-name',
@@ -62,7 +62,7 @@ begin
       MaxUtf8Bytes := 63
     )
   );
-  const Query: E.Element of State.Msg := Search.View(Model, Data);
+  const Query: E.Element of State.Msg := Search.View(Model);
   const About: E.Element of State.Msg := Area.View(Model);
   const Fields: array of E.Element of State.Msg := [
     Grid.Grid of State.Msg(
@@ -71,11 +71,7 @@ begin
     ),
     About
   ];
-  return E.Column of State.Msg(
-    new L.Flow(Gap := G.Points(20)),
-    G.Heading of State.Msg(Strings.Get('Text.TextFields'), Strings.Get('Text.FieldHints')),
-    G.Card of State.Msg(16, Fields)
-  );
+  return Cards.Card of State.Msg('input-text-card', Fields, new Cards.Options(Gap := 16.0F));
 end function;
 
 end unit;

@@ -267,19 +267,22 @@ begin
         )
       ];
     when State.Page.Buttons:
-      return [
-        U.Map of (ButtonsState.Msg, State.Msg)(
-          Buttons.View(Model.Buttons, Model.Shared, Width >= 600),
-          State.Msg.Buttons
-        )
-      ];
+      const Parts: Collections.List of E.Element of State.Msg := new Collections.List of E.Element of State.Msg();
+      for Part: E.Element of ButtonsState.Msg in Buttons.View(
+        Model.Buttons,
+        AppUpdate.ThemeFor(Model).Colors
+      ) do
+        Parts.Add(U.Map of (ButtonsState.Msg, State.Msg)(Part, State.Msg.Buttons));
+      end for;
+
+      return Parts.ToArray();
     when State.Page.Inputs:
-      return [
-        U.Map of (InputsState.Msg, State.Msg)(
-          Inputs.View(Model.Inputs, Model.Shared),
-          State.Msg.Inputs
-        )
-      ];
+      const Parts: Collections.List of E.Element of State.Msg := new Collections.List of E.Element of State.Msg();
+      for Part: E.Element of InputsState.Msg in Inputs.View(Model.Inputs, Model.Shared) do
+        Parts.Add(U.Map of (InputsState.Msg, State.Msg)(Part, State.Msg.Inputs));
+      end for;
+
+      return Parts.ToArray();
     when State.Page.Selection:
       return [
         U.Map of (SelectionState.Msg, State.Msg)(

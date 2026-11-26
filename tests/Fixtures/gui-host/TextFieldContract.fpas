@@ -246,6 +246,18 @@ procedure VerifyGallery(Renderer: Cui.CuiRenderer; Capture: string);
       'The eye must mask the password again.'
     );
 
+    Click('input-email');
+    Key(15, Primary);
+    TypeText('maya+inputs@example.com');
+    discard Session.Post(State.Msg.Show(State.Page.Overview));
+    Step();
+    Step();
+    Check(
+      Control of State.Msg(Session, 'workspace-name').Value = 'éZ!'
+      and Control of State.Msg(Session, 'workspace-email').Value = 'maya+inputs@example.com',
+      'Editing Full name and Email in Inputs must update the shared workspace fields.'
+    );
+
     discard Session.Post(State.Msg.Show(State.Page.SmartInputs));
     Step();
     Step();

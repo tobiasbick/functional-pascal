@@ -27,6 +27,16 @@ Use the same stable IDs across views. Widgets propose typed messages when
 the user acts. Store accepted changes in the model and apply them in the
 next view. In menu and button options, shortcut captions display a hint.
 
+## Buttons gallery page
+
+The six sections use native cards. Button rows wrap at the width available
+inside each card. The formatting group demonstrates joined actions. The copy
+button copies the command, and a completed hold shows a danger toast. The two
+segmented controls keep independent selections. Delete in the Options menu
+opens the shared [project confirmation dialog](../overlays/dialog.md).
+
+- [CUI Buttons comparison](../../../future/cui-compare/README.md#buttons-evidence)
+
 ## See also
 
 - [First window](../README.md#first-window)

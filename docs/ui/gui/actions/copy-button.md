@@ -41,6 +41,7 @@ reports submission.
 - [CUI widget inventory](../../../cui-widget-inventory.md#cui_copy_button)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/CopyButtons.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Buttons/Widgets/CopyButton.fpas)
+- [Formatted text](../text-and-display/formatted-text.md)
 - [Actions](README.md)
 
 ## Source files

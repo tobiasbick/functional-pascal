@@ -3,11 +3,10 @@
 unit GuiGallery.Pages.Inputs.View;
 
 uses Fpas.Ui.Elements as E;
-uses Fpas.Ui.Layout as L;
 
+uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Inputs.State as S;
 uses GuiGallery.Pages.Inputs.Widgets.CredentialFields as Credentials;
-uses GuiGallery.Pages.Inputs.Widgets.InlineCalendar as InlineCalendar;
 uses GuiGallery.Pages.Inputs.Widgets.PickerFields as Pickers;
 uses GuiGallery.Pages.Inputs.Widgets.TextField as Fields;
 uses GuiGallery.Shared.Sections as G;
@@ -18,16 +17,17 @@ uses GuiGallery.Shared.State as Demo;
 // - `Model`: Values owned by Inputs.
 // - `Data`: Shared name and email.
 // ## Returns
-// The Inputs page.
-public function View(Model: S.Model; Data: Demo.Model): E.Element of S.Msg;
+// Section headings and cards in gallery order.
+public function View(Model: S.Model; Data: Demo.Model): array of E.Element of S.Msg;
 begin
-  return E.Column of S.Msg(
-    new L.Flow(Gap := G.Points(20)),
-    Fields.Inputs(Model, Data),
-    Credentials.View(Model, Data),
-    Pickers.View(Model),
-    InlineCalendar.View(Model)
-  );
+  return [
+    G.Heading of S.Msg(Strings.Get('Text.TextFields'), Strings.Get('Text.FieldHints')),
+    Fields.View(Model, Data),
+    G.Heading of S.Msg(Strings.Get('Heading.TagsCodesAndPasswordStrength')),
+    Credentials.View(Model),
+    G.Heading of S.Msg(Strings.Get('Page.Pickers')),
+    Pickers.View(Model)
+  ];
 end function;
 
 end unit;

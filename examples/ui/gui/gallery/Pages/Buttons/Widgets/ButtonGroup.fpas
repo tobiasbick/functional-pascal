@@ -7,40 +7,25 @@ uses Fpas.Ui.Widgets.Actions.ButtonGroups as Groups;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
 
 uses GuiGallery.Pages.Buttons.State as State;
-uses GuiGallery.Shared.State as Demo;
 uses System as Sys;
 
-function FormatButton(
-  Model: State.Model;
-  Data: Demo.Model;
-  Id: string;
-  Label: string;
-  Style: State.TextFormat;
-  Icon: int
-): E.Element of State.Msg;
+function FormatButton(Id: string; Label: string; Icon: int): E.Element of State.Msg;
 begin
   return B.Button of State.Msg(
-    Id, Label, State.Msg.ToggleFormat(Style),
-    new B.Options(
-      Icon := Sys.Char.ConvertFromUtf32(Icon),
-      Selected := (Model.Formats and cast Style as int) <> 0
-    )
+    Id, Label, State.Msg.Preview, new B.Options(Icon := Sys.Char.ConvertFromUtf32(Icon))
   );
 end function;
 
-// Displays three independently selectable buttons inside one outline.
+// Displays three preview buttons inside one outline.
 //
-// ## Parameters
-// - `Data`: Shared demo values owned by the application.
-// - `Model`: Current formatting choices.
 // ## Returns
 // The gallery's formatting group.
-public function View(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
+public function View(): E.Element of State.Msg;
 begin
   return Groups.ButtonGroup of State.Msg(
-    FormatButton(Model, Data, 'format-bold', 'Bold', State.TextFormat.Bold, $E05D),
-    FormatButton(Model, Data, 'format-italic', 'Italic', State.TextFormat.Italic, $E0FB),
-    FormatButton(Model, Data, 'format-underline', 'Underline', State.TextFormat.Underline, $E19A)
+    FormatButton('format-bold', 'Bold', $E05D),
+    FormatButton('format-italic', 'Italic', $E0FB),
+    FormatButton('format-underline', 'Underline', $E19A)
   );
 end function;
 

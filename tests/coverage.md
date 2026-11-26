@@ -55,8 +55,10 @@ The [upstream reference crops](Fixtures/gui-gallery-reference/README.md) check p
 
 `GuiHostTests` builds the real GUI gallery with a fresh SDK and runs the
 gallery contract under software and OpenGL. It checks the desktop sidebar,
-the drawer at 740 logical points, the button examples, independent formatting
-choices, the copy control, and modal sheet focus. Native keyboard input drives
+the drawer at 740 logical points, and modal sheet focus. The
+[Buttons contract](Fixtures/gui-host/ButtonsContract.fpas) drives loading,
+reset, passive actions, both segmented controls and hold confirmation.
+Native keyboard input drives
 the split button's main action, menu highlight, selection, Escape and focus
 return. The Actions page also exercises both toggle group modes, including
 single-step arrow focus, model rejection and repeated activation of the
@@ -106,15 +108,17 @@ insertion and visual-line movement in About, and wheel routing between the
 text area and its viewport. Enter in Search and Ctrl+Enter in the text area
 submit the edited values with their affixes excluded.
 The next Inputs card checks committing Unicode tags, keyboard and pointer
-removal, filtering and completing verification codes, and updating the
-password meter without exposing either password field in the snapshot.
+removal, and filtering and completing verification codes. Edits in either
+password field update the validation and strength meter. Both password values
+stay redacted in snapshots. The workspace form reflects name and email edits
+from Inputs.
 The native tag input boundary test covers a comma-delimited event that
 would otherwise exceed the configured count.
 Pickers exercises country selection by mouse and keyboard, language filtering
 and focus return, numeric step buttons and Shift+Up, bounds, invalid input,
 and replacement of a focused numeric draft.
-The Inputs date contract checks the Due date cell, selection shared with
-the supplementary Calendar, a cleared selection, month navigation across
+The Inputs date contract checks the Due date cell, day selection,
+a cleared selection, month navigation across
 a year boundary, and popup dismissal and focus return. Captures cover the
 closed field, open popup and visible keyboard focus.
 The color and emoji gallery contract checks brand presets, hue edits after
@@ -689,6 +693,7 @@ Each command must exit with code 130, emit one JSON report with status
 <summary>Browse 53 source files</summary>
 
 - `tests/Fixtures/gui-host/`
+  - [ButtonsContract.fpas](Fixtures/gui-host/ButtonsContract.fpas)
   - [GalleryHostAssertions.fpas](Fixtures/gui-host/GalleryHostAssertions.fpas)
   - [GalleryModelContract.fpas](Fixtures/gui-host/GalleryModelContract.fpas)
   - [PublishedGallery.fpas](Fixtures/gui-host/PublishedGallery.fpas)

@@ -6,29 +6,17 @@ uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Widgets.Actions.HoldButtons as Holds;
 
 uses GuiGallery.Pages.Buttons.State as State;
-uses GuiGallery.Shared.State as Demo;
 uses System as Sys;
 
-// Shows the CUI hold-to-confirm demo with a harmless confirmation counter.
+// Shows the hold-to-confirm example.
 //
-// ## Parameters
-// - `Data`: Shared demo values owned by the application.
-// - `Model`: Retained gallery state.
 // ## Returns
-// A hold button and any completed confirmation count.
-public function View(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
+// The button that shows a confirmation toast after a completed hold.
+public function View(): E.Element of State.Msg;
 begin
-  const Button: E.Element of State.Msg := Holds.HoldButton of State.Msg(
+  return Holds.HoldButton of State.Msg(
     'hold-delete', 'Hold to delete', State.Msg.ConfirmHold,
     new Holds.Options(Icon := Sys.Char.ConvertFromUtf32($E18E))
-  );
-  if Model.HoldCount = 0 then
-    return Button;
-  end if;
-
-  return E.Column of State.Msg(
-    Button,
-    E.Text of State.Msg('Confirmed: ' + Model.HoldCount.ToString())
   );
 end function;
 

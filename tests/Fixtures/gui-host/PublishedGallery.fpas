@@ -17,6 +17,7 @@ uses GalleryActionWidgetsContract as ActionWidgetsContract;
 uses GalleryActionsContract as ActionsContract;
 uses GalleryActionsPickersContract as ActionsPickersContract;
 uses GalleryAudioContract as AudioContract;
+uses GalleryButtonsContract as ButtonsContract;
 uses GalleryCanvasBarsContract as CanvasBarsContract;
 uses GalleryCaptureContract as CaptureContract;
 uses GalleryColorEmojiContract as ColorEmojiContract;
@@ -67,7 +68,6 @@ uses GalleryVoiceAiContract as VoiceAiContract;
 uses GuiGallery.App.State as State;
 uses GuiGallery.App.Update as GalleryUpdate;
 uses GuiGallery.App.View as View;
-uses GuiGallery.Pages.Buttons.State as SliceButtons;
 uses GuiGallery.Pages.Overlays.State as SliceOverlays;
 uses GuiGallery.Shared.State as SliceShared;
 uses MoneyDecimalContract as MoneyDecimalContract;
@@ -152,18 +152,6 @@ begin
     'Icon actions are missing.'
   );
   A.Check(A.Control(Session, 'hold-delete').Enabled, 'The hold button is missing.');
-  A.Send(Session, State.Msg.Buttons(SliceButtons.Msg.SetButtonLoading(true)));
-  A.Check(A.Control(Session, 'save').Value = 'loading', 'The busy button did not update.');
-  A.Send(Session, State.Msg.Buttons(SliceButtons.Msg.SetButtonLoading(false)));
-  A.Send(Session, State.Msg.Buttons(SliceButtons.Msg.ToggleFormat(SliceButtons.TextFormat.Bold)));
-  A.Send(Session, State.Msg.Buttons(SliceButtons.Msg.ToggleFormat(SliceButtons.TextFormat.Italic)));
-  A.Check(
-    A.Control(
-      Session,
-      'format-bold'
-    ).Value = 'true' and A.Control(Session, 'format-italic').Value = 'true',
-    'The group keeps independent selections.'
-  );
   Session.CapturePng(Capture);
 
   A.Send(Session, State.Msg.Shared(SliceShared.Msg.SetAccent(Themes.Accent.Violet)));
@@ -178,11 +166,6 @@ begin
   A.Check(A.Control(Session, 'sheet/close').Focused, 'The sheet close action owns focus.');
   A.Check(not A.Control(Session, 'sheet-open').Enabled, 'The sheet did not disable the page.');
   A.Send(Session, State.Msg.Overlays(SliceOverlays.Msg.SetSheet(false)));
-  A.Send(Session, State.Msg.Show(State.Page.Buttons));
-  A.Check(
-    A.Control(Session, 'format-bold').Value = 'true',
-    'Navigation discarded the button group state.'
-  );
   A.Send(Session, State.Msg.Show(State.Page.Actions));
   A.Check(A.HasText(Session, 'Split button'), 'The actions page is missing.');
   A.Check(
@@ -263,6 +246,7 @@ begin
   TableContract.Verify(Renderer);
   TourContract.Verify();
   VerifyDesktop(Renderer, Capture);
+  ButtonsContract.Verify(Renderer);
   VerifyDrawer(Renderer);
   ActionsContract.Verify(Renderer, Capture);
   ActionWidgetsContract.Verify(Renderer, Capture);

@@ -7,16 +7,14 @@ uses Fpas.Ui.Widgets.Inputs.SearchFields as Search;
 
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Inputs.State as State;
-uses GuiGallery.Shared.State as Demo;
 
 // Builds the search box alongside the password field in the Inputs card.
 //
 // ## Parameters
-// - `Data`: Shared demo values owned by the application.
 // - `Model`: Current search query.
 // ## Returns
 // The original Search projects field.
-public function View(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
+public function View(Model: State.Model): E.Element of State.Msg;
 begin
   return Search.SearchField of State.Msg(
     'input-search', Model.SearchQuery, State.Msg.SetSearchQuery,

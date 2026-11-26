@@ -6,6 +6,8 @@ uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Actions.IconButtons as I;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses Gallery.Shared.ButtonExamples as Samples;
 uses GuiGallery.Pages.Buttons.State as State;
@@ -14,13 +16,10 @@ uses GuiGallery.Pages.Buttons.Widgets.CopyButton as Copy;
 uses GuiGallery.Pages.Buttons.Widgets.DropdownMenu as Dropdown;
 uses GuiGallery.Pages.Buttons.Widgets.HoldButton as Hold;
 uses GuiGallery.Pages.Buttons.Widgets.SegmentedControl as Segmented;
-uses GuiGallery.Shared.State as Demo;
+uses GuiGallery.Shared.Sections as G;
 uses System as Sys;
 
-const Row: L.Flow := new L.Flow(Gap := L.Spacing.Normal, Align := L.Alignment.Center);
-const Card: L.Flow := new L.Flow(Padding := L.Spacing.Fixed(L.Measure.Logical(24)));
-
-const Stack: L.Flow := new L.Flow(Gap := L.Spacing.Loose);
+const Row: L.Flow := new L.Flow(Gap := G.Points(8), Wrap := true);
 
 function Glyph(Code: int): string;
 begin
@@ -41,45 +40,19 @@ begin
   );
 end function;
 
-function Section(Title: string; Description: string := ''): E.Element of State.Msg;
-begin
-  const Padding: E.Element of State.Msg := E.Size of State.Msg(
-    E.Column of State.Msg(), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(18)))
-  );
-  const Heading: E.Element of State.Msg := E.Styled of State.Msg(
-    E.Text of State.Msg(Title),
-    S.Role.Heading
-  );
-  if Description = '' then
-    return E.Column of State.Msg(Padding, Heading);
-  end if;
-
-  return E.Column of State.Msg(
-    Padding,
-    E.Column of State.Msg(
-      new L.Flow(Gap := L.Spacing.Tight),
-      Heading,
-      E.Styled of State.Msg(E.Text of State.Msg(Description), S.Role.Secondary)
-    )
-  );
-end function;
-
-function Panel(Child: E.Element of State.Msg): E.Element of State.Msg;
-begin
-  return E.Styled of State.Msg(E.Column of State.Msg(Card, Child), S.Role.OutlinedPanel);
-end function;
-
-// Builds the accepted examples from the CUI Buttons page.
+// Builds the six sections of the CUI Buttons page.
 //
 // ## Parameters
-// - `Data`: Shared demo values owned by the application.
 // - `Model`: Current gallery model.
-// - `Wide`: Whether complete example rows fit side by side.
+// - `Colors`: Active gallery theme colors.
 // ## Returns
-// The button variants, sizes, states, group and copy action.
-public function View(Model: State.Model; Data: Demo.Model; Wide: bool): E.Element of State.Msg;
+// Section headings and cards in gallery order.
+public function View(Model: State.Model; Colors: Themes.Palette): array of E.Element of State.Msg;
 begin
-  const Sizes: E.Element of State.Msg := Samples.Sizes of State.Msg(State.Msg.Preview);
+  const Sizes: E.Element of State.Msg := Samples.Sizes of State.Msg(
+    State.Msg.Preview,
+    Wrap := true
+  );
   const Actions: array of E.Element of State.Msg := Samples.Icons of State.Msg(State.Msg.Preview);
   const CopyIcon: E.Element of State.Msg := IconSample(
     'icon-copy',
@@ -100,60 +73,52 @@ begin
     'Delete',
     S.ButtonVariant.Secondary
   );
-  const Variants: E.Element of State.Msg := Samples.Variants of State.Msg(State.Msg.Preview, Wide);
-  const Icons: E.Element of State.Msg := if Wide then
-    E.Row of State.Msg(
-      Row,
-      Actions[0],
-      Actions[1],
-      Actions[2],
-      CopyIcon,
-      Share,
-      Like,
-      Delete
-    )
-  else
-    E.Column of State.Msg(
-      Stack,
-      E.Row of State.Msg(Row, Actions[0], Actions[1]),
-      E.Row of State.Msg(Row, Actions[2], CopyIcon, Share, Like, Delete)
-    )
-  end if;
+  const Variants: E.Element of State.Msg := Samples.Variants of State.Msg(
+    State.Msg.Preview,
+    true,
+    Wrap := true
+  );
+  const Icons: E.Element of State.Msg := E.Row of State.Msg(
+    Row, Actions[0], Actions[1], Actions[2], CopyIcon, Share, Like, Delete
+  );
   const States: E.Element of State.Msg := Samples.States of State.Msg(
     State.Msg.Preview,
-    Wide,
+    true,
     Model.ButtonLoading,
-    State.Msg.SetButtonLoading
+    State.Msg.SetButtonLoading,
+    Wrap := true
   );
-  const GroupAndCopy: E.Element of State.Msg := if Wide then
-    E.Row of State.Msg(
-      new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(12))),
-      Group.View(Model, Data),
-      Copy.View(),
-      Hold.View(Model, Data)
-    )
-  else
-    E.Column of State.Msg(Stack, Group.View(Model, Data), Copy.View(), Hold.View(Model, Data))
-  end if;
+  const GroupAndCopy: E.Element of State.Msg := E.Row of State.Msg(
+    new L.Flow(Gap := G.Points(12), Wrap := true),
+    Group.View(),
+    Copy.View(Colors),
+    Hold.View()
+  );
 
-  return E.Column of State.Msg(
-    new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(20))),
-    Section('Variants', 'One primary action per view. Secondary for everything else.'),
-    Panel(Variants),
-    Section('Sizes and icons'),
-    Panel(E.Column of State.Msg(Stack, Sizes, Icons)),
-    Section('States', 'Loading keeps the label so the layout does not jump.'),
-    Panel(States),
-    Section(
+  return [
+    G.Heading of State.Msg(
+      'Variants',
+      'One primary action per view. Secondary for everything else.'
+    ),
+    Cards.Card of State.Msg('button-variants-card', [Variants]),
+    G.Heading of State.Msg('Sizes and icons'),
+    Cards.Card of State.Msg('button-sizes-card', [Sizes, Icons], new Cards.Options(Gap := 16.0F)),
+    G.Heading of State.Msg('States', 'Loading keeps the label so the layout does not jump.'),
+    Cards.Card of State.Msg('button-states-card', [States]),
+    G.Heading of State.Msg(
       'Groups, copy and hold to confirm',
       'Hold the button until it fills to confirm a destructive action.'
     ),
-    Panel(GroupAndCopy),
-    Section('Segmented control', 'A highlight glides to the selected option.'),
-    Panel(Segmented.View(Model, Data)),
-    Section('Dropdown menu'),
-    Panel(Dropdown.View())
-  );
+    Cards.Card of State.Msg('button-group-card', [GroupAndCopy]),
+    G.Heading of State.Msg('Segmented control', 'A highlight glides to the selected option.'),
+    Cards.Card of State.Msg(
+      'button-segments-card',
+      Segmented.View(Model),
+      new Cards.Options(Gap := 16.0F)
+    ),
+    G.Heading of State.Msg('Dropdown menu'),
+    Cards.Card of State.Msg('button-menus-card', [Dropdown.View()])
+  ];
 end function;
 
 end unit;

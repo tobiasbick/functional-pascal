@@ -25,7 +25,7 @@ public type Model = record
   public Country: int := Choices.InitialCountry;
   // Current language, or minus one before selection.
   public Language: int := Choices.InitialLanguage;
-  // Due date shared by the date field and standalone calendar.
+  // Value selected in the Due date field.
   public DueDate: Sys.DateOnly? := new Sys.DateOnly(2026, 11, 14);
   // Bounded seat count.
   public Seats: double := 3.0;
@@ -49,7 +49,7 @@ public type Msg = variant
   SetCountry(Index: int);
   // Select a language.
   SetLanguage(Index: int);
-  // Select the due date from either calendar.
+  // Select the due date from the field's popup.
   SetDueDate(Value: Sys.DateOnly);
   // Adjust the seat count.
   SetSeats(Value: double);

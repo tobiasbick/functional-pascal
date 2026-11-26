@@ -22,7 +22,7 @@ end function;
 public function View(): E.Element of State.Msg;
 begin
   return E.Row of State.Msg(
-    new L.Flow(Gap := L.Spacing.Normal),
+    new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8)), Wrap := true),
     Options.View of State.Msg(
       function(Name: string): State.Msg => State.Msg.Shared(Demo.Msg.MenuChoice(Name)),
       State.Msg.OpenDeleteDialog

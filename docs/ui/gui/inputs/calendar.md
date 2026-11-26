@@ -1,8 +1,8 @@
 # Calendar
 
-Use a calendar to leave single-date selection visible. The gallery shares its selection with the Due date field. Available in **GUI**.
+Use a calendar to keep single-date selection visible. Available in **GUI**.
 
-![Calendar in the FPAS gallery](images/calendar.png)
+![Single-date calendar](images/calendar.png)
 
 ## Example
 
@@ -41,7 +41,6 @@ Choose a day to propose a date. The title switches from days to twelve months an
 
 - [CUI widget inventory](../../../cui-widget-inventory.md#cui_calendar)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Pickers/Calendars.fpas)
-- [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/InlineCalendar.fpas)
 - [Date picker](date-picker.md)
 - [Inputs](README.md)
 

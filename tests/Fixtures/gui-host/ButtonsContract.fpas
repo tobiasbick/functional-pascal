@@ -1,0 +1,142 @@
+// [Documentation](../../coverage.md#native-gui)
+
+unit GalleryButtonsContract;
+
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+
+uses GalleryHostAssertions as A;
+uses GuiGallery.App.State as State;
+uses GuiGallery.App.Update as Update;
+uses GuiGallery.App.View as View;
+uses System.Diagnostics.Stopwatch as Clock;
+uses System.Threading.Thread as Thread;
+
+// Checks input and feedback on the Buttons page of the published gallery.
+// ## Parameters
+// - `Renderer`: Native renderer under test.
+public procedure Verify(Renderer: Cui.CuiRenderer);
+  procedure Inject();
+  begin
+    Window.MovePointer(X, Y);
+    if Left >= 0 then
+      Window.SetLeftButton(Left = 1);
+      Left := -1;
+    end if;
+  end procedure;
+
+  procedure Step(Session: Gui.Session of State.Msg);
+  begin
+    A.Check(Session.Step(), 'The gallery closed during the Buttons examples.');
+  end procedure;
+
+  procedure Press(Session: Gui.Session of State.Msg; Id: string; Key: string := '');
+  begin
+    const Box: Cui.CuiRectangle := A.Control(Session, Id, Key).Bounds;
+    A.Check(Box.Width > 0.0F and Box.Height > 0.0F, 'Missing hit area: ' + Id);
+    X := Box.X + Box.Width / 2.0F;
+    Y := Box.Y + Box.Height / 2.0F;
+    Left := 1;
+    Step(Session);
+  end procedure;
+
+  procedure Release(Session: Gui.Session of State.Msg);
+  begin
+    Left := 0;
+    Step(Session);
+    X := -1.0F;
+    Y := -1.0F;
+    Step(Session);
+    Step(Session);
+  end procedure;
+
+  procedure Click(Session: Gui.Session of State.Msg; Id: string; Key: string := '');
+  begin
+    Press(Session, Id, Key);
+    Release(Session);
+  end procedure;
+
+  function DeletedToasts(Session: Gui.Session of State.Msg): int;
+  begin
+    var Count: int := 0;
+    for Item: Gui.Control in Session.Snapshot().Controls do
+      if Item.Role = 'toast' and Item.Text = 'Deleted' then
+        Count := Count + 1;
+      end if;
+    end for;
+
+    return Count;
+  end function;
+begin
+  var X: float := -1.0F;
+  var Y: float := -1.0F;
+  var Left: int := -1;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow(
+    'FPas Buttons contract',
+    1240,
+    1400,
+    Renderer,
+    true
+  );
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
+    new State.Model(Active := State.Page.Buttons), Update.Update, View.Build, Window,
+    256, Inject, ThemeFor := Update.ThemeFor
+  );
+  Step(Session);
+  Step(Session);
+
+  A.Check(A.Control(Session, 'save').Text = 'Save changes', 'Save must start idle.');
+  Click(Session, 'save');
+  A.Check(
+    A.Control(Session, 'save').Text = 'Saving' and A.Control(Session, 'save').Value = 'loading',
+    'Save must show its loading state.'
+  );
+  Click(Session, 'finish-save');
+  A.Check(A.Control(Session, 'save').Text = 'Save changes', 'Reset must restore the save button.');
+  A.Check(not A.Control(Session, 'disabled').Enabled, 'Disabled must reject input.');
+  A.Check(A.Control(Session, 'selected').Value = 'true', 'Selected must start selected.');
+
+  const FormatButtons: array of string := ['format-bold', 'format-italic', 'format-underline'];
+  for Id: string in FormatButtons do
+    Click(Session, Id);
+    A.Check(A.Control(Session, Id).Value = '', 'The button group must remain a preview.');
+  end for;
+
+  A.Check(
+    A.Control(Session, 'copy-install').Enabled,
+    'The install command must have a copy action.'
+  );
+  A.Check(
+    A.Control(Session, 'view').Value = '0' and A.Control(Session, 'range').Value = '0',
+    'Both segmented examples must start at the first option.'
+  );
+  Click(Session, 'view', '1');
+  A.Check(
+    A.Control(Session, 'view').Value = '1' and A.Control(Session, 'range').Value = '0',
+    'Board must change only the view.'
+  );
+  Click(Session, 'range', '2');
+  A.Send(Session, State.Msg.Show(State.Page.Overview));
+  A.Send(Session, State.Msg.Show(State.Page.Buttons));
+  A.Check(
+    A.Control(Session, 'view').Value = '1' and A.Control(Session, 'range').Value = '2',
+    'Board and Month must remain selected after returning to Buttons.'
+  );
+
+  Click(Session, 'hold-delete');
+  A.Check(DeletedToasts(Session) = 0, 'A short click must leave the hold action unconfirmed.');
+  Press(Session, 'hold-delete');
+  const Hold: Clock := Clock.StartNew();
+  while DeletedToasts(Session) = 0 and Hold.ElapsedMilliseconds < 5000 do
+    Thread.Sleep(16);
+    Step(Session);
+  end while;
+
+  A.Check(DeletedToasts(Session) = 1, 'A continuous hold must show the original Deleted toast.');
+  Release(Session);
+  A.Check(DeletedToasts(Session) = 1, 'Releasing the button must keep one confirmation toast.');
+end procedure;
+
+end unit;

@@ -6,6 +6,7 @@ uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
 uses Fpas.Ui.Mvu.Application as App;
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
 uses Fpas.Ui.Widgets.Pickers.Calendars as C;
 
 uses GalleryHostAssertions as A;
@@ -15,7 +16,7 @@ uses GuiGallery.App.View as View;
 uses GuiGallery.Pages.Inputs.State as Inputs;
 uses System as Sys;
 
-// Verifies the native date field and the standalone calendar on Inputs.
+// Verifies the native Due date field and its popup on Inputs.
 // ## Parameters
 // - `Renderer`: Native renderer under test.
 // - `Capture`: Prefix for the closed and open captures.
@@ -116,9 +117,9 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     Step(Session);
   end procedure;
 
-  procedure Key(Session: Gui.Session of State.Msg; Value: int);
+  procedure Key(Session: Gui.Session of State.Msg; Value: Keys.Key);
   begin
-    PendingKey := Value;
+    PendingKey := cast Value as int;
     Step(Session);
     Step(Session);
   end procedure;
@@ -145,8 +146,8 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
   procedure CheckDate(Session: Gui.Session of State.Msg; Expected: string);
   begin
     A.Check(
-      A.Control(Session, Due).Value = Expected and A.Control(Session, Calendar).Value = Expected,
-      'The date picker and inline calendar must share the model selection.'
+      A.Control(Session, Due).Value = Expected,
+      'The Due date field must show the model selection.'
     );
   end procedure;
 begin
@@ -158,13 +159,11 @@ begin
   var ClearSelection: bool := false;
   var Scroll: float := 0.0F;
   const Due: string := 'input-due-date';
-  const Calendar: string := 'input-calendar';
   const Nov14: Sys.DateOnly := new Sys.DateOnly(2026, 11, 14);
   const Nov17: Sys.DateOnly := new Sys.DateOnly(2026, 11, 17);
-  const Nov20: Sys.DateOnly := new Sys.DateOnly(2026, 11, 20);
   const Jan17: Sys.DateOnly := new Sys.DateOnly(2027, 1, 17);
   const Window: Cui.CuiWindow := new Cui.CuiWindow(
-    'FPas CUI Due date and Calendar',
+    'FPas CUI Due date',
     1000,
     1700,
     Renderer,
@@ -193,12 +192,12 @@ begin
     'Due date must occupy the original Inputs grid cell.'
   );
   A.Check(
-    HasControl(Session, C.DayId(Calendar, Nov14)),
-    'The inline calendar must show the original date.'
+    not HasControl(Session, 'input-calendar') and not HasControl(Session, C.DayId(Due, Nov14)),
+    'Inputs must show the date field with its popup closed.'
   );
   Session.CapturePng(Capture + '.due-date.png');
   Focus(Session, Due);
-  Key(Session, 8);
+  Key(Session, Keys.Key.Up);
   Session.CapturePng(Capture + '.due-date-focused.png');
 
   Click(Session, Due);
@@ -214,36 +213,35 @@ begin
     'Selecting a date must close the popup and return focus to the field.'
   );
 
-  Click(Session, C.DayId(Calendar, Nov20));
-  CheckDate(Session, '2026-11-20');
   Focus(Session, Due);
-  Key(Session, 2);
+  Key(Session, Keys.Key.Enter);
   A.Check(
-    HasControl(Session, C.DayId(Due, Nov20)),
+    HasControl(Session, C.DayId(Due, Nov17)),
     'Enter must open the focused field with the new selection.'
   );
-  Key(Session, 3);
+  Key(Session, Keys.Key.Escape);
   A.Check(
-    A.Control(Session, Due).Focused and not HasControl(Session, C.DayId(Due, Nov20)),
+    A.Control(Session, Due).Focused and not HasControl(Session, C.DayId(Due, Nov17)),
     'Escape must dismiss the calendar and restore the field focus.'
   );
-  CheckDate(Session, '2026-11-20');
+  CheckDate(Session, '2026-11-17');
 
-  const Next: string := C.MonthId(Calendar, true);
-  Focus(Session, Next);
-  Key(Session, 2);
-  Key(Session, 2);
+  Key(Session, Keys.Key.Enter);
+  const Next: string := C.MonthId(Due, true);
+  Click(Session, Next);
+  Click(Session, Next);
   A.Check(
-    HasControl(Session, C.DayId(Calendar, Jan17)),
-    'The inline calendar must browse across the year boundary.'
+    HasControl(Session, C.DayId(Due, Jan17)),
+    'The popup must browse across the year boundary.'
   );
-  CheckDate(Session, '2026-11-20');
+  CheckDate(Session, '2026-11-17');
+  Click(Session, C.DayId(Due, Jan17));
+  CheckDate(Session, '2027-01-17');
+
   ClearSelection := true;
   A.Send(Session, State.Msg.Preview);
   ClearSelection := false;
   CheckDate(Session, '');
-  Click(Session, C.DayId(Calendar, Jan17));
-  CheckDate(Session, '2027-01-17');
 end procedure;
 
 end unit;

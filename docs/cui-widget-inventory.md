@@ -5,6 +5,8 @@ Each entry records the tested behavior and terminal coverage where available. Se
 [FPAS widget reference](ui/widgets.md) for public API contracts.
 The [CUI API coverage](cui-api-coverage.md) classifies native application services,
 custom painting and backend/helper functions outside the widget catalog.
+The [gallery comparison](future/cui-compare/README.md) records checks against
+the original CUI pages.
 
 ## Integration
 
@@ -332,10 +334,7 @@ caption as an intentional FPAS adaptation.
   filtering, controlled selection, and dismissal with focus return. The
   [terminal multi-select](ui/tui/inputs/multi-select.md) shares the sample
   and keeps its checklist open while options change.
-- [x] <a id="cui_calendar"></a>[Calendar](ui/gui/inputs/calendar.md) (`cui_calendar`): [API][fpas-calendar]. The supplementary
-  Inputs example shares the Due date selection. The gallery verifies
-  day selection and browsing across a year boundary. Its Windows capture
-  matches a standalone native CUI calendar. The binding tracks the title and
+- [x] <a id="cui_calendar"></a>[Calendar](ui/gui/inputs/calendar.md) (`cui_calendar`): [API][fpas-calendar]. The binding tracks the title and
   month/year choices in the current snapshot; native keyboard navigation and
   exact pixel comparisons cover all three views in light and dark themes.
 - [x] <a id="cui_date_picker"></a>[Date picker](ui/gui/inputs/date-picker.md) (`cui_date_picker`): [API][fpas-calendar]. Inputs shows the

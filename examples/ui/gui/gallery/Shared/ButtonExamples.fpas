@@ -11,6 +11,7 @@ uses Gallery.Shared.Strings as Strings;
 uses System as Sys;
 
 const Row: L.Flow := new L.Flow(Gap := L.Spacing.Normal, Align := L.Alignment.Center);
+const WrappedRow: L.Flow := new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8)), Wrap := true);
 const Stack: L.Flow := new L.Flow(Gap := L.Spacing.Loose);
 
 function Sample of TMsg(
@@ -34,10 +35,11 @@ end function;
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Preview`: Message for a harmless sample activation.
-// - `Wide`: Whether the samples fit on one row.
+// - `Wide`: Use one row if native wrapping is off and the samples fit.
+// - `Wrap`: Let the GUI host wrap the samples at the available width.
 // ## Returns
 // Variant buttons in gallery order.
-public function Variants of TMsg(Preview: TMsg; Wide: bool): E.Element of TMsg;
+public function Variants of TMsg(Preview: TMsg; Wide: bool; Wrap: bool := false): E.Element of TMsg;
 begin
   const Primary: E.Element of TMsg := Sample of TMsg(
     Preview,
@@ -75,9 +77,13 @@ begin
     S.ButtonVariant.Link
   );
 
-  return if Wide then
+  return if Wide or Wrap then
     E.Row of TMsg(
-      Row,
+      if Wrap then
+        WrappedRow
+      else
+        Row
+      end if,
       Primary,
       Secondary,
       Outline,
@@ -99,12 +105,17 @@ end function;
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Preview`: Message for a harmless sample activation.
+// - `Wrap`: Let the GUI host wrap the samples at the available width.
 // ## Returns
 // The small, medium and large buttons.
-public function Sizes of TMsg(Preview: TMsg): E.Element of TMsg;
+public function Sizes of TMsg(Preview: TMsg; Wrap: bool := false): E.Element of TMsg;
 begin
   return E.Row of TMsg(
-    Row,
+    if Wrap then
+      WrappedRow
+    else
+      Row
+    end if,
     Sample of TMsg(Preview, 'small', Strings.Get('Text.Small'), Size := B.Size.Small),
     Sample of TMsg(Preview, 'medium', Strings.Get('Text.Medium')),
     Sample of TMsg(Preview, 'large', Strings.Get('Text.Large'), Size := B.Size.Large)
@@ -150,16 +161,18 @@ end function;
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Preview`: Message for a harmless sample activation.
-// - `Wide`: Whether the samples fit on one row.
+// - `Wide`: Use one row if native wrapping is off and the samples fit.
 // - `Loading`: Current save state.
 // - `Toggle`: Maps a save or reset action.
+// - `Wrap`: Let the GUI host wrap the samples at the available width.
 // ## Returns
 // The four state examples.
 public function States of TMsg(
   Preview: TMsg;
   Wide: bool;
   Loading: bool;
-  Toggle: function(bool): TMsg
+  Toggle: function(bool): TMsg;
+  Wrap: bool := false
 ): E.Element of TMsg;
 begin
   const Save: E.Element of TMsg := B.Button of TMsg(
@@ -189,9 +202,13 @@ begin
       TerminalIcon := '✓'
     )
   );
-  return if Wide then
+  return if Wide or Wrap then
     E.Row of TMsg(
-      Row,
+      if Wrap then
+        WrappedRow
+      else
+        Row
+      end if,
       Save,
       Reset,
       Disabled,

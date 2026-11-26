@@ -10,16 +10,20 @@ See the [desktop GUI application gaps](gui-app-gaps.md) for priorities.
 ## Upstream pull requests
 
 1. **PR1, [#134](https://github.com/yappologistic/CUI/pull/134), on upstream
-   `master`.** GitHub still lists the pull request as open. It adds
+   `master`.** The maintainer took both commits and moved
+   `cui_title_bar_hit_test` to `cui_core.c`. We confirmed the title bar at
+   `f3ab64d`; closing the pull request is up to the maintainer. It adds
    `cui_app_desc.custom_title_bar` with the Win32 frame, the optional
    `cui_platform_iface.window_frame` and `.window_button` hooks and
-   `cui_title_bar_hit_test`, with a Win32 test. Until PR2 lands, a window with
+   `cui_title_bar_hit_test`. Until PR2 lands, a window with
    `custom_title_bar` has no caption and cannot be dragged.
-2. **PR2, not opened.** The `cui_title_bar` chrome component in its own
-   component file, with its documentation page and images. Base it on upstream
-   `master`, where `cui_title_bar_hit_test` lives in `cui_core.c`. Run
-   `tools/check_pr.py` and `tools/check_pr_description.py` from upstream's
-   `AGENTS.md` before opening it, and ask the user before publishing it.
+2. **PR2, [#140](https://github.com/yappologistic/CUI/pull/140), open for
+   review.** `cui_title_bar` in `cui_chrome.c` with unit and Win32 tests, its
+   documentation, images and `examples/titlebar.c`, from the fork branch
+   `title-bar-component`. CI passes and CodeRabbit's findings are fixed. The
+   description asks the maintainer whether the image scene may replace the web
+   host's platform hooks in the live docs. Answer review comments on the branch
+   and ask the user before each push.
 
 Neither PR covers the X11 frame, the runtime toggle
 `cui_app_set_custom_title_bar`, `cui_split`'s `.fixed_first` or transparency

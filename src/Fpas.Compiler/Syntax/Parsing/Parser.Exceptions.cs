@@ -5,6 +5,7 @@ internal sealed partial class Parser
 {
     private TrySyntax ReadTry()
     {
+        using var control = controlNesting?.EnterControl(Current);
         var start = Current.Position;
         position++;
         var body = ReadStatements("catch", "finally", "end");

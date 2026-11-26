@@ -198,7 +198,9 @@ compiler-recorded property receiver chains. ShallowModules measures declared
 public routines and distinct exports used by a consumer. Its cross-project
 lookup shares the source-query mapping from exact CLR identities to declarations.
 SourceLayout counts captured files and directory members across the selected
-context. Consumer width and the file-length limit use the evaluated test-project
+context. It checks control-flow nesting once per captured file, using the
+parser's control and routine scopes to locate the keywords crossing the limit.
+Consumer width and the file-length limit use the evaluated test-project
 marker from the analysis manifest. A production owner makes a linked source
 eligible for the file-length rule. Unused CLR aliases share their
 semantic detection with import organization and require agreement across linked
@@ -218,6 +220,7 @@ See [fpas lint](../pascal/program-structure/cli.md#lint-a-project-or-solution).
 - [LonelyProtocols.cs](../../src/Fpas.Workspaces/Lint/LonelyProtocols.cs)
 - [ShallowModules.cs](../../src/Fpas.Workspaces/Lint/ShallowModules.cs)
 - [SourceLayout.cs](../../src/Fpas.Workspaces/Lint/SourceLayout.cs)
+- [ControlNesting.cs](../../src/Fpas.Compiler/Syntax/Parsing/ControlNesting.cs)
 - [ImportUsage.cs](../../src/Fpas.Workspaces/Analysis/ImportUsage.cs)
 
 ## Source queries

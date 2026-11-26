@@ -131,7 +131,7 @@ public sealed partial class LintTests(SdkPackageFixture sdk) : IClassFixture<Sdk
             Assert.Contains(report.GetProperty("diagnostics").EnumerateArray(), diagnostic => diagnostic.GetProperty("code").GetString() == "FP3001");
         }
 
-        foreach (var option in new[] { "--timeout", "--held-in-mind", "--max-directory-entries", "--max-lines" })
+        foreach (var option in new[] { "--timeout", "--held-in-mind", "--max-directory-entries", "--max-lines", "--max-nesting" })
         {
             var invalid = await Lint(directory, "Invalid/Invalid.fpasproj", "--report", "json", option, "0");
             Assert.Equal(2, invalid.ExitCode);

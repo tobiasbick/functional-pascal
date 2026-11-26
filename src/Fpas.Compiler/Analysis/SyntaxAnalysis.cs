@@ -23,4 +23,26 @@ public static partial class SyntaxAnalysis
         }
         catch (CompilationFailure failure) { token.ThrowIfCancellationRequested(); return failure.Diagnostics; }
     }
+
+    /// <summary>Finds the first control-flow construct on each path that exceeds the allowed nesting depth.</summary>
+    /// <param name="document">The source to analyze.</param>
+    /// <param name="limit">The maximum allowed control-flow depth within a routine.</param>
+    /// <param name="token">Cancels the analysis with an <see cref="OperationCanceledException"/>.</param>
+    /// <returns>The keyword spans that cross the limit, or an empty list for invalid syntax.</returns>
+    public static IReadOnlyList<SourceSpan> FindDeepNesting(SourceDocument document, int limit, CancellationToken token = default)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(limit);
+        token.ThrowIfCancellationRequested();
+        var source = new SourceText(document.Path, document.Text, token);
+        var nesting = new ControlNesting(limit);
+        try
+        {
+            new Parser(source, new Lexer(source).ReadTokens(), controlNesting: nesting).ParseCompilationUnit();
+            source.Diagnostics.ThrowIfErrors();
+            token.ThrowIfCancellationRequested();
+            return nesting.Exceeded.Select(keyword => document.Span(keyword.Position, keyword.Length)).ToArray();
+        }
+        catch (CompilationFailure) { token.ThrowIfCancellationRequested(); return []; }
+    }
 }

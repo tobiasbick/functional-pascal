@@ -164,7 +164,7 @@ public sealed class ReportSchemaTests
         Assert.Equal("urn:fpas:cli:lint-baseline:1", lint.GetProperty("optionInputSchemas").GetProperty("--baseline").GetString());
         Assert.Contains(lint.GetProperty("rules").EnumerateArray(), rule => rule.GetProperty("kind").GetString() == "excludes" &&
             rule.GetProperty("options").EnumerateArray().Select(option => option.GetString()).SequenceEqual(["--baseline", "--write-baseline"]));
-        foreach (var (name, expected) in new[] { ("--held-in-mind", 7), ("--max-directory-entries", 15), ("--max-lines", 2000) })
+        foreach (var (name, expected) in new[] { ("--held-in-mind", 7), ("--max-directory-entries", 15), ("--max-lines", 2000), ("--max-nesting", 4) })
         {
             var option = Option(lint, name);
             Assert.Equal(1, option.GetProperty("minimum").GetInt32());

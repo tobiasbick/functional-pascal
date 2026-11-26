@@ -44,6 +44,7 @@ internal sealed partial class Parser
 
     private (int Start, ExpressionSyntax Selector, IReadOnlyList<CaseArmSyntax> Arms) ReadCase(bool expression)
     {
+        using var control = controlNesting?.EnterControl(Current);
         var start = Current.Position; Expect("case");
         var selector = ReadExpression(); Expect("of");
         var bodyIndex = position;

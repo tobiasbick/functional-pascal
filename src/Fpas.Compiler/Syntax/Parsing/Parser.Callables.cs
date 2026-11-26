@@ -14,6 +14,7 @@ internal sealed partial class Parser
 
     private LambdaSyntax ReadLambda()
     {
+        using var routineNesting = controlNesting?.EnterRoutine();
         var isAsync = At("async");
         if (isAsync) position++;
         var token = tokens[position++];

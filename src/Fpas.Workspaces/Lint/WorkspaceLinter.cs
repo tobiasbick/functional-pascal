@@ -29,7 +29,8 @@ public sealed record LintFinding(string Rule, string Message, string Project, So
 /// <param name="HeldInMind">Maximum declaration group, interface list, or exports learned by one consumer.</param>
 /// <param name="MaxDirectoryEntries">Maximum immediate FPAS source entries in a directory.</param>
 /// <param name="MaxLines">Maximum physical lines in a production source file.</param>
-public sealed record LintLimits(int HeldInMind = 7, int MaxDirectoryEntries = 15, int MaxLines = 2_000);
+/// <param name="MaxNesting">Maximum control-flow nesting depth within a routine.</param>
+public sealed record LintLimits(int HeldInMind = 7, int MaxDirectoryEntries = 15, int MaxLines = 2_000, int MaxNesting = 4);
 
 /// <summary>Runs semantic lint rules over checked FPAS workspaces.</summary>
 public static class WorkspaceLinter
@@ -46,7 +47,7 @@ public static class WorkspaceLinter
     {
         if (!analysis.Success || !analysis.IsComplete)
             throw new ArgumentException("Semantic lint requires complete, successful workspace analysis.", nameof(analysis));
-        if (limits.HeldInMind < 1 || limits.MaxDirectoryEntries < 1 || limits.MaxLines < 1)
+        if (limits.HeldInMind < 1 || limits.MaxDirectoryEntries < 1 || limits.MaxLines < 1 || limits.MaxNesting < 1)
             throw new ArgumentOutOfRangeException(nameof(limits), "Lint thresholds must be positive.");
 
         var findings = new List<LintFinding>();

@@ -108,6 +108,7 @@ internal sealed partial class Parser
             return ReadIfStatement();
         if (At("while"))
         {
+            using var control = controlNesting?.EnterControl(Current);
             position++;
             var condition = ReadExpression();
             Expect("do");
@@ -120,6 +121,7 @@ internal sealed partial class Parser
             return ReadFor();
         if (At("repeat"))
         {
+            using var control = controlNesting?.EnterControl(Current);
             position++;
             var body = ReadStatements("until");
             var until = Current; Expect("until");
@@ -155,6 +157,7 @@ internal sealed partial class Parser
 
     private IfSyntax ReadIfStatement()
     {
+        using var control = controlNesting?.EnterControl(Current);
         var start = Current.Position;
         var arms = new List<IfArmSyntax>();
         do
@@ -179,6 +182,7 @@ internal sealed partial class Parser
 
     private StatementSyntax ReadFor()
     {
+        using var control = controlNesting?.EnterControl(Current);
         var start = Current.Position;
         position++;
         var name = Identifier();

@@ -246,6 +246,67 @@ begin
   end if;
 end procedure;
 
+function MatchesCustomName(Key: string; Name: string): bool;
+begin
+  return Key.StartsWith(F.Custom) and Sys.String.Equals(
+    NativeName(Key.Substring(F.Custom.Length)), Name, Sys.StringComparison.OrdinalIgnoreCase
+  );
+end function;
+
+function ReadCustomValue(Values: I.ImmutableDictionary of (string, string); Name: string): string?;
+begin
+  for Pair: C.KeyValuePair of (string, string) in Values do
+    if MatchesCustomName(Pair.Key, Name) then
+      return Pair.Value;
+    end if;
+  end for;
+
+  return null;
+end function;
+
+function HasCustomReplacement(
+  Changes: I.ImmutableDictionary of (string, string?);
+  Name: string
+): bool;
+begin
+  for Change: C.KeyValuePair of (string, string?) in Changes do
+    if Change.Value <> null and MatchesCustomName(Change.Key, Name) then
+      return true;
+    end if;
+  end for;
+
+  return false;
+end function;
+
+procedure VerifySavedTags(Saved: Snapshot; Changes: I.ImmutableDictionary of (string, string?));
+begin
+  for Change: C.KeyValuePair of (string, string?) in Changes do
+    var Actual: string := F.Value(Saved.Values, Change.Key);
+    if Change.Key.StartsWith(F.Custom) then
+      const Name: string := NativeName(Change.Key.Substring(F.Custom.Length));
+      const NativeValue: string? := ReadCustomValue(Saved.Values, Name);
+      // A renamed key can be encoded with the same spelling by the tag format.
+      if Change.Value = null and NativeValue <> null and HasCustomReplacement(Changes, Name) then
+        continue;
+      end if;
+
+      if (NativeValue <> null) <> (Change.Value <> null) then
+        raise new IO.InvalidDataException(
+          'The audio format could not retain the tag change for ' + Name + '.'
+        );
+      end if;
+
+      Actual := NativeValue ?? Actual;
+    end if;
+
+    if Actual <> (Change.Value ?? '') then
+      raise new IO.InvalidDataException(
+        'The audio format could not retain the tag ' + Change.Key + '.'
+      );
+    end if;
+  end for;
+end procedure;
+
 // Creates a verified sibling of Path with Changes applied. Original is the
 // expected file stamp. Returns the staged path, which the caller owns.
 public function Stage(
@@ -282,61 +343,8 @@ begin
     if not Track.Save() then
       raise new IO.IOException('The audio format could not save these tags.');
     end if;
-    const Saved: Snapshot := Read(Temporary);
-    for Change: C.KeyValuePair of (string, string?) in Changes do
-      var Actual: string := F.Value(Saved.Values, Change.Key);
-      if Change.Key.StartsWith(F.Custom) then
-        const Name: string := NativeName(Change.Key.Substring(F.Custom.Length));
-        var Found: bool := false;
-        for Pair: C.KeyValuePair of (string, string) in Saved.Values do
-          if Pair.Key.StartsWith(F.Custom) and Sys.String.Equals(
-            NativeName(Pair.Key.Substring(F.Custom.Length)),
-            Name,
-            Sys.StringComparison.OrdinalIgnoreCase
-          )
-          then
-            Actual := Pair.Value;
-            Found := true;
-            break;
-          end if;
-        end for;
 
-        if Change.Value = null and Found then
-          // A renamed key can be encoded with the same spelling by the tag format.
-          var Renamed: bool := false;
-          for Replacement: C.KeyValuePair of (string, string?) in Changes do
-            if Replacement.Value <> null and Replacement.Key.StartsWith(
-              F.Custom
-            ) and Sys.String.Equals(
-              NativeName(Replacement.Key.Substring(F.Custom.Length)),
-              Name,
-              Sys.StringComparison.OrdinalIgnoreCase
-            )
-            then
-              Renamed := true;
-              break;
-            end if;
-          end for;
-
-          if Renamed then
-            continue;
-          end if;
-        end if;
-
-        if Found <> (Change.Value <> null) then
-          raise new IO.InvalidDataException(
-            'The audio format could not retain the tag change for ' + Name + '.'
-          );
-        end if;
-      end if;
-
-      if Actual <> (Change.Value ?? '') then
-        raise new IO.InvalidDataException(
-          'The audio format could not retain the tag ' + Change.Key + '.'
-        );
-      end if;
-    end for;
-
+    VerifySavedTags(Read(Temporary), Changes);
     return Temporary;
   catch do
     IO.File.Delete(Temporary);

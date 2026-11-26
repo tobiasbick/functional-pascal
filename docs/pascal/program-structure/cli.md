@@ -180,14 +180,21 @@ fpas lint App.slnx --max-lines 500 --max-directory-entries 12
   including blank and comment lines. Linked files count once. The line limit
   applies when at least one evaluated owner is a production project. Test
   projects are identified by the evaluated MSBuild property `IsTestProject`.
+- `deep-nesting` warns at the fifth level of control-flow nesting by default.
+  Each `if`, `case`, `for`, `while`, `repeat` and `try` adds one level.
+  Branches such as `elsif`, `else`, `when`, `catch` and `finally` share their
+  construct's level. Named and anonymous routines start at zero, and plain
+  blocks add no level. The warning points to the first construct over the limit
+  on each path and also applies to test sources.
 - `unused-clr-alias` reports unused CLR type and namespace aliases. A linked
   source is reported only when all its analyzed owners agree. Use
   [organize-imports](../tools/refactoring.md#organize-imports-in-a-file) to
   preview and apply supported removals.
 
 Use `--held-in-mind` to set the local tangle size, interface list size and
-consumer export limit together. Use `--max-directory-entries` and `--max-lines`
-to tune the two layout rules independently. Thresholds are positive integers.
+consumer export limit together. Use `--max-directory-entries`, `--max-lines`
+and `--max-nesting` to tune the layout and nesting rules independently.
+Thresholds are positive integers.
 
 The architecture rules draw from
 [deslop-please](https://github.com/deterministic-machines/deslop-please) and
@@ -203,6 +210,7 @@ Exit 2 means invalid arguments and exit 130 means cancellation.
 - [LintCommand.cs](../../../src/Fpas.Cli/Analysis/LintCommand.cs)
 - [LintReport.cs](../../../src/Fpas.Cli/Analysis/LintReport.cs)
 - [LintTests.cs](../../../tests/Fpas.IntegrationTests/Workspaces/LintTests.cs)
+- [LintNestingTests.cs](../../../tests/Fpas.IntegrationTests/Workspaces/LintNestingTests.cs)
 - [LintGoRulesTests.cs](../../../tests/Fpas.IntegrationTests/Workspaces/LintGoRulesTests.cs)
 
 ### Lint baseline

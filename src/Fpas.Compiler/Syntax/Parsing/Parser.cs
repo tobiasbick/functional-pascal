@@ -1,7 +1,8 @@
 // [Documentation](../../../../docs/architecture/compiler.md#syntax-and-binding-boundaries)
 namespace Fpas.Compiler.Syntax.Parsing;
 
-internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tokens, SyntaxLayout? layout = null, bool recover = false)
+internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tokens, SyntaxLayout? layout = null, bool recover = false,
+    ControlNesting? controlNesting = null)
 {
     private int position;
     internal string? ContainerName { get; private set; }
@@ -117,6 +118,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
 
     private RoutineSyntax ReadRoutine(bool isProgram, bool inRecord = false, bool nested = false, bool abstractMember = false)
     {
+        using var routineNesting = controlNesting?.EnterRoutine();
         using var nesting = EnterNesting();
         var start = Current.Position;
         var documentation = Current.Documentation;

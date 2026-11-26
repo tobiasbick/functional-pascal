@@ -20,11 +20,13 @@ internal sealed class LintCommand
     { Description = "Maximum immediate FPAS source entries per directory.", DefaultValueFactory = _ => Defaults.MaxDirectoryEntries };
     private readonly Option<int> maxLines = new("--max-lines")
     { Description = "Maximum physical lines per production source file.", DefaultValueFactory = _ => Defaults.MaxLines };
+    private readonly Option<int> maxNesting = new("--max-nesting")
+    { Description = "Maximum control-flow nesting depth before a warning (default 4).", DefaultValueFactory = _ => Defaults.MaxNesting };
 
     internal Command Command { get; } = new("lint", """
         Check FPAS source structure in an evaluated project or solution.
         Rules: module-cycle, namespace-cycle, tangle, field-leak, exported-sync, lonely-protocol,
-        shallow-module, wide-directory, long-file, unused-clr-alias.
+        shallow-module, wide-directory, long-file, deep-nesting, unused-clr-alias.
         Preparation may restore packages and build dependencies.
         Exit codes: 0 no active errors or help, 1 active errors or analysis failure, 2 invalid arguments, 130 cancellation.
 
@@ -46,7 +48,7 @@ internal sealed class LintCommand
         Command.Options.Add(baseline);
         Command.Options.Add(writeBaseline);
         Command.Excludes(baseline, writeBaseline, result => result.GetValue(baseline) is not null, result => result.GetValue(writeBaseline) is not null);
-        foreach (var limit in new[] { heldInMind, maxDirectoryEntries, maxLines })
+        foreach (var limit in new[] { heldInMind, maxDirectoryEntries, maxLines, maxNesting })
         {
             limit.Range(1, int.MaxValue);
             Command.Options.Add(limit);
@@ -77,7 +79,7 @@ internal sealed class LintCommand
             var analysis = workspace.Analysis!;
             var check = CheckResult.From(analysis);
             var ready = analysis.Success && analysis.IsComplete;
-            var limits = new LintLimits(result.GetValue(heldInMind), result.GetValue(maxDirectoryEntries), result.GetValue(maxLines));
+            var limits = new LintLimits(result.GetValue(heldInMind), result.GetValue(maxDirectoryEntries), result.GetValue(maxLines), result.GetValue(maxNesting));
             var findings = ready ? WorkspaceLinter.Analyze(analysis, limits, token) : [];
             var report = LintReport.From(check, findings, ready);
             var write = result.GetValue(writeBaseline);

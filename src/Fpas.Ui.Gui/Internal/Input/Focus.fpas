@@ -91,6 +91,42 @@ uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as ThemeSwitchers;
 
 uses System as Sys;
 
+function FirstInChildren of TMsg(
+  Children: array of E.Element of TMsg;
+  Prepared: V.Prepared of TMsg;
+  Preferred: string?
+): string?;
+begin
+  for Child: E.Element of TMsg in Children do
+    const Found: string? := First of TMsg(Child, Prepared, Preferred);
+    if Found <> null then
+      return Found;
+    end if;
+  end for;
+
+  return null;
+end function;
+
+function FirstInCells of TMsg(
+  Cells: array of Tables.Cell of TMsg;
+  Prepared: V.Prepared of TMsg;
+  Preferred: string?
+): string?;
+begin
+  for Cell: Tables.Cell of TMsg in Cells do
+    case Cell of
+      when Tables.Cell.Content(const Nodes: array of E.Element of TMsg):
+        const Found: string? := FirstInChildren of TMsg(Nodes, Prepared, Preferred);
+        if Found <> null then
+          return Found;
+        end if;
+      else
+    end case;
+  end for;
+
+  return null;
+end function;
+
 // Finds the first enabled focus stop in the active modal/view scope.
 //
 // ## Type parameters
@@ -255,18 +291,20 @@ begin
       const Entries: array of Docks.Entry of TMsg,
       const Settings: Docks.Options
     ):
-      if Settings.Enabled then
-        for Index: int := 0 to Entries.Length - 1 do
-          case Entries[Index] of
-            when Docks.Entry.Item(_, _, _, _, _, _):
-              const Part: string := Id + '/' + Index.ToString();
-              if Preferred = null or Preferred = Id or Preferred = Part then
-                return Part;
-              end if;
-            else
-          end case;
-        end for;
+      if not Settings.Enabled then
+        return null;
       end if;
+
+      for Index: int := 0 to Entries.Length - 1 do
+        case Entries[Index] of
+          when Docks.Entry.Item(_, _, _, _, _, _):
+            const Part: string := Id + '/' + Index.ToString();
+            if Preferred = null or Preferred = Id or Preferred = Part then
+              return Part;
+            end if;
+          else
+        end case;
+      end for;
     when E.Element.Candlestick(const Id: string, _, const Settings: Candlesticks.Options, _):
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
@@ -324,12 +362,7 @@ begin
       end if;
 
       if Open ?? false then
-        for Child: E.Element of TMsg in Children do
-          const Found: string? := First of TMsg(Child, Prepared, Preferred);
-          if Found <> null then
-            return Found;
-          end if;
-        end for;
+        return FirstInChildren of TMsg(Children, Prepared, Preferred);
       end if;
     when E.Element.Table(
       const Id: string,
@@ -354,18 +387,10 @@ begin
           return Row.Id;
         end if;
 
-        for Cell: Tables.Cell of TMsg in Row.Cells do
-          case Cell of
-            when Tables.Cell.Content(const Nodes: array of E.Element of TMsg):
-              for Child: E.Element of TMsg in Nodes do
-                const Found: string? := First of TMsg(Child, Prepared, Preferred);
-                if Found <> null then
-                  return Found;
-                end if;
-              end for;
-            else
-          end case;
-        end for;
+        const Found: string? := FirstInCells of TMsg(Row.Cells, Prepared, Preferred);
+        if Found <> null then
+          return Found;
+        end if;
       end for;
     when E.Element.ReorderableList(
       _,
@@ -702,23 +727,25 @@ begin
       _,
       const Settings: Checklists.Options
     ):
-      if Settings.Enabled then
-        var FirstPending: bool := true;
-        for Index: int := 0 to Steps.Length - 1 do
-          const Item: string := Checklists.StepId(Id, Index);
-          if Preferred = null or Preferred = Item then
-            return Item;
-          end if;
-
-          if FirstPending and not Steps[Index].Done then
-            FirstPending := false;
-            const Action: string := Checklists.ActionId(Id, Index);
-            if Steps[Index].ActionLabel <> '' and Preferred = Action then
-              return Action;
-            end if;
-          end if;
-        end for;
+      if not Settings.Enabled then
+        return null;
       end if;
+
+      var FirstPending: bool := true;
+      for Index: int := 0 to Steps.Length - 1 do
+        const Item: string := Checklists.StepId(Id, Index);
+        if Preferred = null or Preferred = Item then
+          return Item;
+        end if;
+
+        if FirstPending and not Steps[Index].Done then
+          FirstPending := false;
+          const Action: string := Checklists.ActionId(Id, Index);
+          if Steps[Index].ActionLabel <> '' and Preferred = Action then
+            return Action;
+          end if;
+        end if;
+      end for;
     when E.Element.Dropzone(const Id: string, _, _, const Settings: Dropzones.Options):
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
@@ -852,16 +879,18 @@ begin
       _,
       const Enabled: bool
     ):
-      if Enabled then
-        for Section: N.Section of TMsg in Sections do
-          for Item: N.Item of TMsg in Section.Items do
-            const ItemId: string := N.ItemId(Id, Item.Key);
-            if Item.Enabled and (Preferred = null or Preferred = ItemId) then
-              return ItemId;
-            end if;
-          end for;
-        end for;
+      if not Enabled then
+        return null;
       end if;
+
+      for Section: N.Section of TMsg in Sections do
+        for Item: N.Item of TMsg in Section.Items do
+          const ItemId: string := N.ItemId(Id, Item.Key);
+          if Item.Enabled and (Preferred = null or Preferred = ItemId) then
+            return ItemId;
+          end if;
+        end for;
+      end for;
     when E.Element.EmptyState(
       const Id: string,
       _,
@@ -880,12 +909,7 @@ begin
         return Id;
       end if;
 
-      for Child: E.Element of TMsg in Children do
-        const Found: string? := First of TMsg(Child, Prepared, Preferred);
-        if Found <> null then
-          return Found;
-        end if;
-      end for;
+      return FirstInChildren of TMsg(Children, Prepared, Preferred);
     when E.Element.Carousel(
       const Id: string,
       const Slides: array of E.Element of TMsg,
@@ -997,12 +1021,7 @@ begin
       const Children: array of E.Element of TMsg,
       _
     ):
-      for Child: E.Element of TMsg in Children do
-        const Found: string? := First of TMsg(Child, Prepared, Preferred);
-        if Found <> null then
-          return Found;
-        end if;
-      end for;
+      return FirstInChildren of TMsg(Children, Prepared, Preferred);
     when E.Element.Contextual(
       _,
       const Child: E.Element of TMsg,

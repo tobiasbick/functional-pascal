@@ -165,6 +165,7 @@ internal sealed partial class Parser
 
     private ConditionalSyntax ReadConditional()
     {
+        using var control = controlNesting?.EnterControl(Current);
         var expressionStart = position;
         var start = Current.Position;
         var arms = new List<ConditionalArmSyntax>();

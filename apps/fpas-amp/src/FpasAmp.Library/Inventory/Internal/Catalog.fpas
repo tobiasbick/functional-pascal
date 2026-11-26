@@ -142,6 +142,21 @@ public type Catalog = record
     Directories[Value.Path] := new C.HashSet of string(Value.Children, S.PathComparer());
   end procedure;
 
+  procedure ReplaceDirectoryFiles(Id: string; Directory: string; Found: C.HashSet of string);
+  begin
+    const Files: C.Dictionary of (string, C.HashSet of string) := self.ByDirectory[Id];
+    if Files.ContainsKey(Directory) then
+      for Path: string in Files[Directory] do
+        if not Found.Contains(Path) then
+          discard self.Members[Id].Remove(Path);
+        end if;
+      end for;
+    end if;
+
+    discard self.Errors[Id].Remove(Directory);
+    Files[Directory] := Found;
+  end procedure;
+
   // Applies a committed observation to active normalized `Sources` only.
   // Returns the disappeared directory paths to evict from the physical scan cache.
   public function Apply(
@@ -174,28 +189,11 @@ public type Catalog = record
       end for;
 
       if Value.Complete then
-        const Remove: C.List of string := new C.List of string();
-        if self.ByDirectory[Source.Id].ContainsKey(Value.Path) then
-          for Path: string in self.ByDirectory[Source.Id][Value.Path] do
-            if not Found.Contains(Path) then
-              Remove.Add(Path);
-            end if;
-          end for;
-        end if;
-
-        for Path: string in Remove do
-          discard self.Members[Source.Id].Remove(Path);
-        end for;
-
-        discard self.Errors[Source.Id].Remove(Value.Path);
-        self.ByDirectory[Source.Id][Value.Path] := Found;
+        self.ReplaceDirectoryFiles(Source.Id, Value.Path, Found);
       else
         self.Errors[
           Source.Id
         ][Value.Path] := Value.Failure ?? 'Directory enumeration did not complete.';
-      end if;
-
-      if not Value.Complete then
         if not self.ByDirectory[Source.Id].ContainsKey(Value.Path) then
           self.ByDirectory[Source.Id][Value.Path] := new C.HashSet of string(S.PathComparer());
         end if;
@@ -293,30 +291,28 @@ public type Catalog = record
     end for;
   end procedure;
 
+  function StatusOf(Source: S.MusicSource): M.Availability;
+  begin
+    if Source.Offline then
+      return M.Availability.Offline;
+    elsif Source.Paused then
+      return M.Availability.Paused;
+    end if;
+    const Issues: C.Dictionary of (string, string) := self.Errors[Source.Id];
+    if Issues.ContainsKey(Source.Path) then
+      return M.Availability.Unavailable;
+    elsif Issues.Count > 0 then
+      return M.Availability.Incomplete;
+    end if;
+
+    return M.Availability.Ready;
+  end function;
+
   // Returns availability and count in constant membership space, without a path-array copy.
   public function Summary(Source: S.MusicSource): P.Result;
   begin
     self.Bind(Source);
-    var Status: M.Availability := M.Availability.Ready;
-    if Source.Offline then
-      Status := M.Availability.Offline;
-    else
-      if Source.Paused then
-        Status := M.Availability.Paused;
-      else
-        for Directory: string in self.Errors[Source.Id].Keys do
-          if S.PathComparer().Equals(Directory, Source.Path) then
-            Status := M.Availability.Unavailable;
-          else
-            if Status <> M.Availability.Unavailable then
-              Status := M.Availability.Incomplete;
-            end if;
-          end if;
-        end for;
-      end if;
-    end if;
-
-    return new P.Result(Status, cast self.Members[Source.Id].Count as long);
+    return new P.Result(self.StatusOf(Source), cast self.Members[Source.Id].Count as long);
   end function;
 
   // Creates detached per-source views. `Watched` contains installed active roots.
@@ -328,26 +324,9 @@ public type Catalog = record
     const Views: C.List of M.SourceSnapshot := new C.List of M.SourceSnapshot();
     for Source: S.MusicSource in Sources do
       self.Bind(Source);
-      var Status: M.Availability := M.Availability.Ready;
-      if Source.Offline then
-        Status := M.Availability.Offline;
-      else
-        if Source.Paused then
-          Status := M.Availability.Paused;
-        end if;
-      end if;
       const Issues: C.List of M.ScanIssue := new C.List of M.ScanIssue();
-      for Directory: string in self.Errors[Source.Id].Keys do
-        Issues.Add(new M.ScanIssue(Directory, self.Errors[Source.Id][Directory]));
-        if not Source.Offline and not Source.Paused then
-          if S.PathComparer().Equals(Directory, Source.Path) then
-            Status := M.Availability.Unavailable;
-          else
-            if Status <> M.Availability.Unavailable then
-              Status := M.Availability.Incomplete;
-            end if;
-          end if;
-        end if;
+      for Issue: C.KeyValuePair of (string, string) in self.Errors[Source.Id] do
+        Issues.Add(new M.ScanIssue(Issue.Key, Issue.Value));
       end for;
       var Watching: bool := false;
       if not Source.Offline and not Source.Paused and S.HasWork(Source) then
@@ -363,7 +342,7 @@ public type Catalog = record
         new M.SourceSnapshot(
           Source.Id,
           Source.Path,
-          Status,
+          self.StatusOf(Source),
           I.ImmutableArray.CreateRange of string(self.Members[Source.Id]).Sort(S.PathComparer()),
           I.ImmutableArray.CreateRange of M.ScanIssue(Issues),
           Watching

@@ -58,6 +58,47 @@ begin
   end for;
 end procedure;
 
+procedure CheckProperty(Row: PropertyInspectors.Property; Path: string);
+begin
+  R.CheckText(Row.Label, Path);
+  R.CheckText(Row.Suffix, Path);
+  R.CheckText(Row.Placeholder, Path);
+  R.CheckText(Row.Tooltip, Path);
+  Finite(Row.Minimum, Path);
+  Finite(Row.Maximum, Path);
+  C.Distance(Row.Step, Path);
+  if Row.Digits < -1 or Row.Digits > 9 or Row.Capacity < 1 or Row.Capacity > 1048576 then
+    R.Reject(Path, 'Invalid property precision or capacity.');
+  end if;
+
+  case Row.Current of
+    when PropertyInspectors.Value.Number(const Amount: float):
+      Finite(Amount, Path);
+    when PropertyInspectors.Value.Text(const Value: string):
+      R.CheckText(Value, Path);
+      if Sys.Text.Encoding.UTF8.GetByteCount(Value) >= Row.Capacity then
+        R.Reject(Path, 'Property text exceeds its capacity.');
+      end if;
+    when PropertyInspectors.Value.Choice(const Items: array of string, const Selected: int):
+      if Items.Length = 0 or Selected < 0 or Selected >= Items.Length then
+        R.Reject(Path, 'Invalid property choice.');
+      end if;
+
+      for Item: string in Items do
+        R.CheckText(Item, Path);
+      end for;
+    when PropertyInspectors.Value.Vector(const Vector: array of float):
+      if Vector.Length < 2 or Vector.Length > 4 then
+        R.Reject(Path, 'Expected two to four components.');
+      end if;
+
+      for Part: float in Vector do
+        Finite(Part, Path);
+      end for;
+    else
+  end case;
+end procedure;
+
 // Validates a native editing tool and registers its identity.
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -86,43 +127,7 @@ begin
       for Group: PropertyInspectors.Group in Groups do
         R.CheckText(Group.Title, Path);
         for Row: PropertyInspectors.Property in Group.Properties do
-          R.CheckText(Row.Label, Path);
-          R.CheckText(Row.Suffix, Path);
-          R.CheckText(Row.Placeholder, Path);
-          R.CheckText(Row.Tooltip, Path);
-          Finite(Row.Minimum, Path);
-          Finite(Row.Maximum, Path);
-          C.Distance(Row.Step, Path);
-          if Row.Digits < -1 or Row.Digits > 9 or Row.Capacity < 1 or Row.Capacity > 1048576 then
-            R.Reject(Path, 'Invalid property precision or capacity.');
-          end if;
-
-          case Row.Current of
-            when PropertyInspectors.Value.Number(const Amount: float):
-              Finite(Amount, Path);
-            when PropertyInspectors.Value.Text(const Value: string):
-              R.CheckText(Value, Path);
-              if Sys.Text.Encoding.UTF8.GetByteCount(Value) >= Row.Capacity then
-                R.Reject(Path, 'Property text exceeds its capacity.');
-              end if;
-            when PropertyInspectors.Value.Choice(const Items: array of string, const Selected: int):
-              if Items.Length = 0 or Selected < 0 or Selected >= Items.Length then
-                R.Reject(Path, 'Invalid property choice.');
-              end if;
-
-              for Item: string in Items do
-                R.CheckText(Item, Path);
-              end for;
-            when PropertyInspectors.Value.Vector(const Vector: array of float):
-              if Vector.Length < 2 or Vector.Length > 4 then
-                R.Reject(Path, 'Expected two to four components.');
-              end if;
-
-              for Part: float in Vector do
-                Finite(Part, Path);
-              end for;
-            else
-          end case;
+          CheckProperty(Row, Path);
         end for;
       end for;
 

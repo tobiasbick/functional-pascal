@@ -1,4 +1,5 @@
 // [Documentation](../../../docs/architecture/workspaces.md#semantic-lint)
+using Fpas.Compiler;
 using Fpas.Compiler.Analysis;
 using Fpas.Workspaces.Analysis;
 using Fpas.Workspaces.Loading;
@@ -24,9 +25,14 @@ internal static class SourceLayout
             if (end > 0 && document.Text[end - 1] == '\n') end--;
             if (end > 0 && document.Text[end - 1] == '\r') end--;
             var lines = document.Span(end, 0).Line;
+            var sourceKey = LintFinding.Relative(analysis.Context.Path, document.Path);
             if (lines > limits.MaxLines && !testProjects.Contains(project))
-                yield return new("long-file", $"Source has {lines} lines. The limit is {limits.MaxLines}.", project, location, [],
-                    LintFinding.Relative(analysis.Context.Path, document.Path));
+                yield return new("long-file", $"Source has {lines} lines. The limit is {limits.MaxLines}.", project, location, [], sourceKey);
+
+            var nesting = SyntaxAnalysis.FindDeepNesting(document, limits.MaxNesting, token);
+            for (var index = 0; index < nesting.Count; index++)
+                yield return new("deep-nesting", $"Control-flow nesting reaches {limits.MaxNesting + 1} levels. The limit is {limits.MaxNesting}.",
+                    project, nesting[index], [], $"{sourceKey}::{index + 1}", DiagnosticSeverity.Warning);
 
             var entry = document.Path;
             var directory = Path.GetDirectoryName(entry);

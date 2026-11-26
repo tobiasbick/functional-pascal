@@ -46,10 +46,10 @@ process and preserves its exit code. Keep its DLL, portable PDB and matching sou
 | `fpas check` | Validate a standalone program (`.fpas` or `-` for stdin), project or solution. Use `--report json` for diagnostics. Project contexts also support `--fix --dry-run`, `--fix-id` and `--overlay`. |
 | `fpas fmt` | Format sources, directories, projects or solutions. `--check --list` reports affected paths and `--stdout` previews one source. |
 | `fpas lint` | Check architecture, source layout, control-flow nesting and unused CLR aliases. `--max-nesting N` sets the warning threshold (default 4). Apply `--baseline FILE` or record current errors with `--write-baseline FILE`. Use `--report json` for stable rule keys and locations. |
-| `fpas doc` | Look up FPAS and referenced CLR APIs with `--name`. A `.fpas` input searches standalone references. Use `--usage` with the selected XML documentation ID for a compiler-checked FPAS template. |
+| `fpas doc` | Look up APIs with `--name`. Use `--usage` with an exact FPAS declaration name in a project or an XML documentation ID for a checked template. Supply concrete generics with `--type-arg`. |
 | `fpas query` | Select a checked source query. Results include a snapshot identity and coverage. |
 | `fpas query outline` | Read a syntax-only outline and spans from one file. |
-| `fpas query complete` | Get compiler completions and their replacement span at a cursor. |
+| `fpas query complete` | Get compiler completions and replacement spans. Pass a standalone `.fpas` path with `--line` and `--column`. In a project or solution also supply `--file`. |
 | `fpas query signature` | Get overload candidates and the active argument at a call cursor. |
 | `fpas query definition` | Resolve a symbol to its declaration. |
 | `fpas query type` | Get the checked type at a source position. |

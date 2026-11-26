@@ -18,7 +18,7 @@ internal static partial class BoundDocumentation
         return content.Content is null ? null : DocumentationMarkdown.PlainText(DocumentationDisplay.Text(content));
     }
 
-    private static string? Id(MetadataIdentity identity)
+    internal static string? Id(MetadataIdentity identity)
     {
         var owner = identity.Type.Replace('+', '.');
         return identity.Kind switch

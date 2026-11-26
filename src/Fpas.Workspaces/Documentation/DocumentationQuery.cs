@@ -25,11 +25,13 @@ public sealed class DocumentationQuery
     {
         if (search.TypeArguments is { Count: > 0 } arguments && (!search.Usage || arguments.Any(string.IsNullOrWhiteSpace)))
             throw new ContextFailure("invalid_argument", "--type-arg requires --usage and a nonempty FPAS type.");
-        if (search.Usage && (search.Match != "exact" || search.Name is not { Length: > 2 } || search.Name[1] != ':' || search.Name[0] is not ('M' or 'P' or 'F')))
-            throw new ContextFailure("invalid_argument", "--usage requires an exact M:, P: or F: documentation ID from --name lookup.");
-        if (search.Access is not null && (search.Access is not ("read" or "write") || !search.Usage || search.Name[0] == 'M'))
-            throw new ContextFailure("invalid_argument", "--access read or write requires a property or field ID with --usage.");
         if (string.IsNullOrWhiteSpace(search.Name)) throw new ContextFailure("invalid_argument", "--name must not be empty.");
+        if (search.Usage && (search.Match != "exact" ||
+            !search.SourceUsage && (search.Name is not { Length: > 2 } || search.Name[1] != ':' || search.Name[0] is not ('M' or 'P' or 'F'))))
+            throw new ContextFailure("invalid_argument", "--usage requires an exact FPAS declaration name or M:, P: or F: documentation ID.");
+        if (search.Access is not null && (search.Access is not ("read" or "write") || !search.Usage ||
+            !search.SourceUsage && search.Name[0] == 'M'))
+            throw new ContextFailure("invalid_argument", "--access read or write requires a property or field with --usage.");
         if (search.Match is not ("exact" or "prefix" or "contains")) throw new ContextFailure("invalid_argument", "--match must be exact, prefix or contains.");
         if (search.Limit is < 1 or > 100 || search.Offset < 0) throw new ContextFailure("invalid_argument", "--limit must be 1..100 and --offset must be nonnegative.");
         if (search.Assembly is not null && string.IsNullOrWhiteSpace(search.Assembly)) throw new ContextFailure("invalid_argument", "--assembly must be an assembly's simple name.");
@@ -42,12 +44,22 @@ public sealed class DocumentationQuery
     public DocumentationResult Search(DocumentationSearch search, CancellationToken token = default, bool metadataOnly = false)
     {
         Validate(search); token.ThrowIfCancellationRequested();
+        if (metadataOnly && search.SourceUsage)
+            throw new ContextFailure("invalid_argument", "FPAS source usage requires checked FPAS sources.");
         var projects = analysis.Context.Projects.Where(project => search.Project is null || Paths.Equals(project.Path, Path.GetFullPath(search.Project)))
             .OrderBy(project => project.Path, StringComparer.Ordinal).ToArray();
         if (projects.Length == 0) throw new ContextFailure("invalid_argument", "--project must name an analyzed FPAS project in the context.");
         var references = projects.SelectMany(project => project.Request.References).Distinct(Paths).Order(StringComparer.Ordinal).ToArray();
         inputs = new(analysis.Context.SnapshotId, references, token);
         using var metadata = new MetadataCatalog();
+        if (search.SourceUsage)
+        {
+            var snapshots = analysis.Projects.Where(project => project.Result?.Snapshot is not null)
+                .ToDictionary(project => project.Project, project => project.Result!.Snapshot!, Paths);
+            var usage = new SourceUsage(projects, snapshots, metadata, search, token);
+            return Page(source.Documentation(search, token, usage.Create).ToList(), search, inputs,
+                Array.AsReadOnly(projects.Select(project => project.Path).ToArray()), Array.AsReadOnly(references), analysis.SemanticCoverage, token);
+        }
         var candidates = metadataOnly || search.Usage ? [] : source.Documentation(search, token).ToList();
         var sourceProjects = projects.Select(project => project.Path).ToHashSet(Paths);
         var sourceOutputs = analysis.Context.DependencyOutputs.Where(output => sourceProjects.Contains(output.Project)).Select(output => output.Path).ToHashSet(Paths);
@@ -65,6 +77,8 @@ public sealed class DocumentationQuery
     public static DocumentationResult SearchReferences(IReadOnlyList<string> references, DocumentationSearch search, CancellationToken token = default)
     {
         Validate(search);
+        if (search.SourceUsage)
+            throw new ContextFailure("invalid_argument", "Use an FPAS project or solution context to generate usage for a source declaration.");
         if (search.Project is not null) throw new ContextFailure("invalid_argument", "Use a project or solution context with --project.");
         var images = new List<MetadataImage>();
         foreach (var path in references.Distinct(Paths).Order(StringComparer.Ordinal))

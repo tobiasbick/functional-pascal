@@ -7,6 +7,19 @@ namespace Fpas.Compiler.Analysis;
 /// <summary>Syntax-only queries over one source, without references or binding.</summary>
 public static partial class SyntaxAnalysis
 {
+    /// <summary>Determines the compilation target for standalone source analysis from the first token.</summary>
+    /// <param name="input">The source to classify.</param>
+    /// <param name="token">Cancels tokenization.</param>
+    /// <returns>Library for a unit header, or executable otherwise.</returns>
+    public static CompilationTarget StandaloneTarget(CompilationSource input, CancellationToken token = default)
+    {
+        ArgumentNullException.ThrowIfNull(input);
+        token.ThrowIfCancellationRequested();
+        var source = new SourceText(input.Path, input.Text, token);
+        return new Lexer(source).ReadPrefix(out _)[0] is { Kind: TokenKind.Keyword, Text: "unit" }
+            ? CompilationTarget.Library : CompilationTarget.Exe;
+    }
+
     /// <summary>Lexes and parses one source.</summary>
     /// <param name="input">The source to check.</param>
     /// <param name="token">Cancels the check with an <see cref="OperationCanceledException"/>.</param>

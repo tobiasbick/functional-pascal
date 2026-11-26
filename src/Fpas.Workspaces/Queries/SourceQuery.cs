@@ -12,9 +12,9 @@ namespace Fpas.Workspaces.Queries;
 /// <param name="Project">Optional owning project path for a linked source.</param>
 public sealed record SourceSelection(string File, int Line, int Column, string? Project = null);
 /// <summary>Records the checked owner and exact span selected by a query.</summary>
-/// <param name="Project">Owning project path.</param>
+/// <param name="Project">Owning project path, or null for a standalone source.</param>
 /// <param name="Span">Selected source span.</param>
-public sealed record QuerySelection(string Project, SourceSpan Span);
+public sealed record QuerySelection(string? Project, SourceSpan Span);
 /// <summary>Describes a resolved source, metadata or implicit declaration.</summary>
 /// <param name="Project">Source owner, or null for external metadata.</param>
 /// <param name="Origin">source, metadata or implicit.</param>
@@ -134,7 +134,7 @@ public sealed partial class SourceQuery
     private SourceQueryResult References(SemanticSymbol symbol, DefinitionResult definition, QuerySelection position, int limit, int pageOffset,
         IReadOnlyList<string> boundaries, CancellationToken cancellationToken)
     {
-        var canonical = Canonical(position.Project, symbol);
+        var canonical = Canonical(position.Project!, symbol);
         var references = new List<ReferenceResult>();
         foreach (var (project, (_, snapshot)) in projects.OrderBy(project => project.Key, StringComparer.Ordinal))
         {

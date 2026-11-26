@@ -4,11 +4,11 @@ using Fpas.Compiler.Binding.Types;
 
 namespace Fpas.Compiler.Analysis;
 
-internal sealed class UsageUnit
+internal sealed class UsageUnit(IReadOnlySet<string>? sourceContainers)
 {
     private readonly List<string> inputs = [];
     private readonly List<string> parameters = [];
-    internal UsageNames Names { get; } = new();
+    internal UsageNames Names { get; } = new(sourceContainers);
     internal bool HasByRefInputs { get; private set; }
 
     internal string Receiver(ImportedType definition, TypeSymbol owner, bool isStatic, bool constructor = false)

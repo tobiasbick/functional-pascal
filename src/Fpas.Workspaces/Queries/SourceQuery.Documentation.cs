@@ -1,4 +1,5 @@
 // [Documentation](../../../docs/pascal/tools/api-documentation.md)
+using Fpas.Compiler.Analysis;
 using Fpas.Workspaces.Documentation;
 
 namespace Fpas.Workspaces.Queries;
@@ -6,7 +7,8 @@ namespace Fpas.Workspaces.Queries;
 /// <remarks>Documentation lookup reuses checked name search and bounded declaration inspection.</remarks>
 public sealed partial class SourceQuery
 {
-    internal IEnumerable<DocumentationCandidate> Documentation(DocumentationSearch search, CancellationToken token)
+    internal IEnumerable<DocumentationCandidate> Documentation(DocumentationSearch search, CancellationToken token,
+        Func<string, SemanticSymbol, ApiUsage>? usage = null)
     {
         var kinds = DeclarationKinds.Where(kind => kind is not ("local" or "parameter" or "type_parameter")).ToArray();
         var matches = new Dictionary<(string Project, string Symbol), DeclarationMatch>();
@@ -23,7 +25,7 @@ public sealed partial class SourceQuery
             }
         }
         Collect(new(search.Name, search.Match, kinds, search.Project));
-        if (search.Match == "exact")
+        if (search.Match == "exact" && !search.Usage)
             foreach (var owner in matches.Values.Where(item => item.Kind is "container" or "record" or "interface" or "variant" or "domain").ToArray())
                 Collect(new(owner.QualifiedName + ".", "prefix", kinds, owner.Project), member => projects[member.Project].Snapshot.Symbol(member.Symbol).Context?.Owner == owner.Symbol);
         foreach (var match in matches.Values)
@@ -37,8 +39,11 @@ public sealed partial class SourceQuery
                     var inspection = Inspect(new(match.Span.Path, match.Span.Line, match.Span.Column, match.Project), 1, token).Inspect!;
                     var docs = inspection.Source.Documentation;
                     var content = docs.Text is null ? null : DocumentationMarkdown.Source(docs.Text);
-                    return new(match.Project, "source", match.Kind, match.Name, match.QualifiedName, match.Signature, "fpas", snapshot.AssemblyName,
-                        null, null, match.Span, new(docs.Availability, "markdown", docs.Span?.Path, content));
+                    return new DocumentationEntry(match.Project, "source", match.Kind, match.Name, match.QualifiedName, match.Signature, "fpas", snapshot.AssemblyName,
+                        null, null, match.Span, new(docs.Availability, "markdown", docs.Span?.Path, content))
+                    {
+                        Usage = usage?.Invoke(match.Project, snapshot.Symbol(match.Symbol))
+                    };
                 });
         }
     }

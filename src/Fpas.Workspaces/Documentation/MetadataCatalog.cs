@@ -11,7 +11,7 @@ internal sealed class MetadataCatalog : IDisposable
 {
     private readonly Dictionary<(string Path, string? Hash), PEReader> images = [];
     internal IEnumerable<DocumentationCandidate> Search(string? project, string path, DocumentationSearch search, CancellationToken token,
-        MetadataImage? captured = null, AnalysisRequest? usageContext = null)
+        MetadataImage? captured = null, AnalysisRequest? usageContext = null, IReadOnlySet<string>? sourceContainers = null)
     {
         var key = (path, captured?.ContentHash);
         if (!images.TryGetValue(key, out var image))
@@ -97,7 +97,7 @@ internal sealed class MetadataCatalog : IDisposable
                         new("file_missing", "xml", Path.ChangeExtension(path, ".xml"), null))
                     {
                         Usage = usageContext is null ? null : ApiUsageTemplates.Create(usageContext, type.OwnerName,
-                            reader.GetGuid(reader.GetModuleDefinition().Mvid), MetadataTokens.GetToken(handle), search.TypeArguments ?? [], search.Access == "write", token),
+                            reader.GetGuid(reader.GetModuleDefinition().Mvid), MetadataTokens.GetToken(handle), search.TypeArguments ?? [], search.Access == "write", token, sourceContainers),
                         Identity = captured is null ? null : captured.ContentHash + ":" + MetadataTokens.GetToken(handle).ToString("X8", System.Globalization.CultureInfo.InvariantCulture)
                     };
                 });

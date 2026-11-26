@@ -308,8 +308,14 @@ The `snapshotId` identifies the captured file contents.
 
 `fpas query complete CONTEXT --file FILE --line N --column N` returns
 compiler candidates and their exact replacement range under `result.complete`.
+A standalone program or unit can be passed directly to completion with
+`fpas query complete main.fpas --line N --column N`. It uses the installed
+.NET 10 references and `Fpas.Core`, with no project preparation. The result uses
+the same cursor, replacement span and diagnostic fields. Project and solution
+completion still requires `--file`.
+
 `fpas query signature` takes the same options and reports matching signatures
-under `result.signature`. `activeSignature` and `activeParameter` are
+under `result.signature` in a project or solution. `activeSignature` and `activeParameter` are
 zero-based when present. Both operations accept incomplete source and work
 in a checked batch. The result can be empty when the compiler cannot recover
 a candidate at the cursor. Incomplete results carry `incomplete` when the
@@ -379,8 +385,8 @@ status and typed result or error. Exit 0 means the batch completed, including
 when individual entries fail. A batch with only invalid entries has no snapshot
 and skips workspace preparation. Invalid JSON or an invalid batch envelope exits 2.
 Context failures and cancellation follow the query contract. When the response
-budget is reached, individual entries report `result_limit` and independent
-answers that fit remain available. Shared diagnostics use the same filters and
+budget is reached, smaller answers get space first. Omitted entries report
+`result_limit` at their original indices. Shared diagnostics use the same filters and
 pagination as check. Export the stdin schema with `fpas schema query-batch-input` and the
 response schema with `fpas schema query-batch`.
 
@@ -653,11 +659,12 @@ project SDK for normal applications.
   - [OutlineCliTests.cs](../../../tests/Fpas.IntegrationTests/Workspaces/OutlineCliTests.cs)
   - [CheckCommand.cs](../../../src/Fpas.Cli/Analysis/CheckCommand.cs)
   - [CheckResult.cs](../../../src/Fpas.Cli/Analysis/CheckResult.cs)
-  - [StandaloneCheck.cs](../../../src/Fpas.Cli/Analysis/StandaloneCheck.cs)
+  - [StandaloneSource.cs](../../../src/Fpas.Cli/Analysis/StandaloneSource.cs)
   - [PipedSource.cs](../../../src/Fpas.Cli/Compilation/PipedSource.cs)
   - [PipedSourceTests.cs](../../../tests/Fpas.IntegrationTests/Cli/PipedSourceTests.cs)
   - [FrameworkReferences.cs](../../../src/Fpas.Cli/Toolchain/FrameworkReferences.cs)
   - [StandaloneCheckTests.cs](../../../tests/Fpas.IntegrationTests/Workspaces/StandaloneCheckTests.cs)
+  - [StandaloneCompletionTests.cs](../../../tests/Fpas.IntegrationTests/Workspaces/StandaloneCompletionTests.cs)
   - [QueryCommand.cs](../../../src/Fpas.Cli/Analysis/QueryCommand.cs)
   - [QueryBatchCommand.cs](../../../src/Fpas.Cli/Analysis/QueryBatchCommand.cs)
   - [QueryRequest.cs](../../../src/Fpas.Cli/Analysis/QueryRequest.cs)

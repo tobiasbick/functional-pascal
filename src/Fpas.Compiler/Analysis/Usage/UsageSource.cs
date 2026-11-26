@@ -7,9 +7,8 @@ namespace Fpas.Compiler.Analysis;
 
 internal static class UsageSource
 {
-    internal static ApiUsage Call(ReferenceCatalog catalog, ImportedType owner, ImportedMethod method, bool namedArguments)
+    internal static ApiUsage Call(UsageUnit unit, ReferenceCatalog catalog, ImportedType owner, ImportedMethod method, bool namedArguments)
     {
-        var unit = new UsageUnit();
         bool constructor = method.Name == ".ctor";
         var target = unit.Receiver(owner, method.Owner, method.IsStatic || constructor, constructor);
         if (constructor)
@@ -56,9 +55,8 @@ internal static class UsageSource
         return unit.Render(statement, signature, isAsync);
     }
 
-    internal static ApiUsage Property(ImportedType owner, string name, ImportedMethod accessor, bool write, TypeSymbol valueType)
+    internal static ApiUsage Property(UsageUnit unit, ImportedType owner, string name, ImportedMethod accessor, bool write, TypeSymbol valueType)
     {
-        var unit = new UsageUnit();
         var receiver = unit.Receiver(owner, accessor.Owner, accessor.IsStatic);
         var indexCount = accessor.Parameters.Count - (write ? 1 : 0);
         var indices = Enumerable.Range(0, indexCount).Select(i => unit.Input(accessor.Parameter(i).Name, accessor.Parameters[i]));
@@ -66,9 +64,8 @@ internal static class UsageSource
         return Access(unit, target, valueType, write);
     }
 
-    internal static ApiUsage Field(ImportedType owner, ImportedField field, bool write)
+    internal static ApiUsage Field(UsageUnit unit, ImportedType owner, ImportedField field, bool write)
     {
-        var unit = new UsageUnit();
         var receiver = unit.Receiver(owner, field.Owner, field.IsStatic);
         return Access(unit, receiver + "." + FpasIdentifiers.SpellQualified(field.Name), field.Type, write);
     }

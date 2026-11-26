@@ -1,4 +1,6 @@
 // [Documentation](../../../docs/pascal/program-structure/cli.md#query-checked-sources)
+using Fpas.Compiler;
+using Fpas.Compiler.Analysis;
 using Fpas.Workspaces.Editing;
 using Fpas.Workspaces.Loading;
 using Fpas.Workspaces.Queries;
@@ -11,11 +13,18 @@ internal sealed class QueryCommand
 {
     private sealed class Operation(string name)
     {
+        internal bool AcceptsStandalone => name == "complete";
         internal ContextCommandOptions Options { get; } = new();
         internal DiagnosticPageOptions Diagnostics { get; } = new();
         internal Option<string> ExpectedSnapshot { get; } = SnapshotGuard.CreateOption();
         internal Option<string> Symbol { get; } = SourceSymbolOptions.Create();
-        internal Option<string> File { get; } = new("--file") { Required = true, Description = "Source path in the evaluated context." };
+        internal Option<string> File { get; } = new("--file")
+        {
+            Required = name != "complete",
+            Description = name == "complete"
+                ? "Required source path for a project or solution. Defaults to the standalone context file."
+                : "Source path in the evaluated context."
+        };
         internal Option<int> Line { get; } = new("--line") { Required = true, Description = "One-based source line." };
         internal Option<int> Column { get; } = new("--column") { Required = true, Description = "One-based UTF-16 column; tabs count as one." };
         internal Option<string> Project { get; } = new("--project") { Description = "Owning .fpasproj when the selected source belongs to several compilations." };
@@ -33,7 +42,7 @@ internal sealed class QueryCommand
             Run these examples from examples/numerics/mandelbrot.
 
             Examples:
-              {(name == "find" ? "fpas query find Mandelbrot.fpasproj --name EscapeIterations --kind routine --limit 20" : $"fpas query {name} Mandelbrot.fpasproj --file main.fpas --line 7 --column 10")}
+              {(name == "find" ? "fpas query find Mandelbrot.fpasproj --name EscapeIterations --kind routine --limit 20" : $"fpas query {name} Mandelbrot.fpasproj --file main.fpas --line 7 --column 10")}{(name == "complete" ? "\n\n  fpas query complete main.fpas --line 7 --column 10" : "")}
             """);
 
         private static string Summary(string operation) => operation switch
@@ -52,6 +61,7 @@ internal sealed class QueryCommand
 
         internal void Bind()
         {
+            if (AcceptsStandalone) Options.Context.Description = "Explicit .fpas, .fpasproj or .slnx path.";
             Options.AddTo(Command);
             Diagnostics.AddTo(Command);
             Command.Options.Add(ExpectedSnapshot);
@@ -96,7 +106,7 @@ internal sealed class QueryCommand
 
     internal Command Command { get; } = new("query", """
         Inspect FPAS source structure, checked declarations, references and compiler candidates.
-        Return one JSON document. Checked operations use an explicit project context.
+        Return one JSON document. Complete also accepts a standalone FPAS file.
         Run these examples from examples/numerics/mandelbrot.
 
         Examples:
@@ -151,23 +161,46 @@ internal sealed class QueryCommand
         try
         {
             var name = operation.Command.Name;
+            var standalone = operation.AcceptsStandalone && Path.GetExtension(input.Context).Equals(".fpas", StringComparison.OrdinalIgnoreCase);
             var request = name == "find"
                 ? new QueryRequest(name, Project: result.GetValue(operation.Project), Name: result.GetValue(operation.Name),
                     Match: result.GetValue(operation.Match), Kinds: result.GetValue(operation.Kinds), Limit: result.GetValue(operation.Limit),
                     Offset: result.GetValue(operation.Offset))
-                : new QueryRequest(name, result.GetValue(operation.File), Position(operation.Line), Position(operation.Column),
+                : new QueryRequest(name, result.GetValue(operation.File) ?? (standalone ? input.Context : null), Position(operation.Line), Position(operation.Column),
                     result.GetValue(operation.Project), Limit: name is "refs" or "inspect" or "callers" or "callees" ? result.GetValue(operation.Limit) : null,
                     Offset: name is "refs" or "callers" or "callees" ? result.GetValue(operation.Offset) : null,
                     Body: name is "callers" or "callees" ? result.GetValue(operation.Body) : null,
                     Symbol: QueryRequest.AcceptsSourceResult(name) ? result.GetValue(operation.Symbol) : null);
             request.Validate(snapshotPinned: result.GetValue(operation.ExpectedSnapshot) is not null);
-            var workspace = await FileWorkspace.OpenAsync(input, combined.Token);
-            var analysis = workspace.Analysis!;
-            SnapshotGuard.Verify(result, operation.ExpectedSnapshot, analysis.Context.SnapshotId);
-            check = CheckResult.From(analysis).PageDiagnostics(diagnostics);
-            var query = request.Execute(analysis, new(() => new SourceQuery(analysis)), combined.Token);
-            await workspace.VerifyAsync(combined.Token);
-            report = QueryResult.From(check, query); exit = 0;
+            if (standalone)
+            {
+                if (request.Project is not null || diagnostics.Project is not null ||
+                    result.GetResult(operation.Options.Configuration) is { Implicit: false })
+                    throw new ContextFailure("invalid_argument", "Use a .fpasproj or .slnx with --project, --diagnostic-project or --configuration.");
+                if (!Path.GetFullPath(request.File!).Equals(input.Context, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
+                    throw new ContextFailure("invalid_argument", "--file must identify the standalone context file.");
+                var captured = await StandaloneSource.OpenAsync(input.Context, combined.Token);
+                var compilation = captured.Request(SyntaxAnalysis.StandaloneTarget(captured.Source, combined.Token));
+                var analysis = FpasCompiler.Analyze(compilation, combined.Token);
+                SnapshotGuard.Verify(result, operation.ExpectedSnapshot, analysis.Snapshot?.Id);
+                check = CheckResult.FromSource(captured.Source, input.Configuration, analysis).PageDiagnostics(diagnostics);
+                var document = new SourceDocument(captured.Source.Path, captured.Source.Text, combined.Token);
+                var offset = document.Offset(request.Line!.Value, request.Column!.Value);
+                var completion = EditorAnalysis.Complete(compilation, document.Path, offset, combined.Token);
+                await captured.VerifyAsync(combined.Token);
+                report = QueryResult.From(check, new("ok", null, new(null, document.Span(offset, 0)), null, null, null, false, [], Complete: completion));
+            }
+            else
+            {
+                var workspace = await FileWorkspace.OpenAsync(input, combined.Token);
+                var analysis = workspace.Analysis!;
+                SnapshotGuard.Verify(result, operation.ExpectedSnapshot, analysis.Context.SnapshotId);
+                check = CheckResult.From(analysis).PageDiagnostics(diagnostics);
+                var query = request.Execute(analysis, new(() => new SourceQuery(analysis)), combined.Token);
+                await workspace.VerifyAsync(combined.Token);
+                report = QueryResult.From(check, query);
+            }
+            exit = 0;
 
             int? Position(Option<int> coordinate) => result.GetResult(coordinate) is { IdentifierTokenCount: > 0 } ? result.GetValue(coordinate) : null;
         }

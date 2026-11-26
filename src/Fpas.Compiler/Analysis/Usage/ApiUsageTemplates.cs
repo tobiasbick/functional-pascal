@@ -8,7 +8,7 @@ using System.Reflection.Metadata.Ecma335;
 
 namespace Fpas.Compiler.Analysis;
 
-/// <summary>FPAS usage for one selected metadata member.</summary>
+/// <summary>FPAS usage for one selected member.</summary>
 /// <param name="Status">template for a checked unit with caller inputs, example for a checked unit without inputs, or unavailable.</param>
 /// <param name="Source">Complete checked FPAS unit, or null when the member cannot be demonstrated.</param>
 /// <param name="Inputs">Wrapper parameter names to supply at the call site, in declaration order.</param>
@@ -29,9 +29,10 @@ public static class ApiUsageTemplates
     /// <param name="typeArguments">Concrete FPAS types for enclosing types, then the method.</param>
     /// <param name="write">Generate an assignment for a property, indexer or field.</param>
     /// <param name="token">Cancels metadata inspection and binding.</param>
+    /// <param name="sourceContainers">FPAS units to import as units when spelling types and call targets.</param>
     /// <returns>A checked usage unit or an explanation.</returns>
     public static ApiUsage Create(AnalysisRequest project, string owner, Guid moduleId, int memberToken,
-        IReadOnlyList<string> typeArguments, bool write, CancellationToken token = default)
+        IReadOnlyList<string> typeArguments, bool write, CancellationToken token = default, IReadOnlySet<string>? sourceContainers = null)
     {
         var source = new SourceText("ApiUsage.fpas", "", token);
         try
@@ -59,7 +60,7 @@ public static class ApiUsageTemplates
 
             if (handle.Kind == HandleKind.FieldDefinition)
             {
-                var usage = FieldUsage(catalog, type, ownerType, (FieldDefinitionHandle)handle, write, source);
+                var usage = FieldUsage(catalog, type, ownerType, (FieldDefinitionHandle)handle, write, source, new(sourceContainers));
                 return Verify(project, usage, type, handle, write ? "write" : "read", token);
             }
 
@@ -101,7 +102,7 @@ public static class ApiUsageTemplates
                 return ApiUsage.Unavailable("The selected method's generic constraints reject the supplied type arguments.");
             if (propertyName is null)
             {
-                ApiUsage CheckedCall(bool namedArguments) => Verify(project, UsageSource.Call(catalog, type, method, namedArguments),
+                ApiUsage CheckedCall(bool namedArguments) => Verify(project, UsageSource.Call(new(sourceContainers), catalog, type, method, namedArguments),
                     type, methodHandle, constructor ? "construct" : "invoke", token);
                 // Overloads can use the same names in different positions. Verify the named form before offering it.
                 if (NamedCallArguments.Useful(method) && CheckedCall(true) is { Source: not null } named) return named;
@@ -115,7 +116,7 @@ public static class ApiUsageTemplates
             var valueType = write ? method.Parameters[^1] : method.Result;
             if (!write && method.Parameters.Count == 0 && catalog.Property(ownerType, propertyName, method.IsStatic) is { } imported)
                 valueType = imported.Type;
-            return Verify(project, UsageSource.Property(type, propertyName, method, write, valueType), type, methodHandle, write ? "write" : "read", token);
+            return Verify(project, UsageSource.Property(new(sourceContainers), type, propertyName, method, write, valueType), type, methodHandle, write ? "write" : "read", token);
         }
         catch (CompilationFailure failure)
         {
@@ -128,7 +129,7 @@ public static class ApiUsageTemplates
     }
 
     private static ApiUsage FieldUsage(ReferenceCatalog catalog, ImportedType owner, TypeSymbol ownerType,
-        FieldDefinitionHandle handle, bool write, SourceText source)
+        FieldDefinitionHandle handle, bool write, SourceText source, UsageUnit unit)
     {
         var reader = owner.Assembly.Reader;
         var definition = reader.GetFieldDefinition(handle);
@@ -140,7 +141,7 @@ public static class ApiUsageTemplates
         if (field is null || field.DefinitionHandle != handle || field.Owner != ownerType)
             return ApiUsage.Unavailable("The compiler cannot represent the selected field.");
         if (write && field.IsReadOnly) return ApiUsage.Unavailable("A read-only or constant field cannot be assigned.");
-        return UsageSource.Field(owner, field, write);
+        return UsageSource.Field(unit, owner, field, write);
     }
 
     private static ApiUsage Verify(AnalysisRequest project, ApiUsage usage, ImportedType owner, EntityHandle selected, string role, CancellationToken token)

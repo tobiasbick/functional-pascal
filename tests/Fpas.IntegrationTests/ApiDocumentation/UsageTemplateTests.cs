@@ -134,7 +134,7 @@ public sealed class UsageTemplateTests(SdkPackageFixture sdk) : IClassFixture<Sd
     }
 
     [Theory]
-    [InlineData("--usage", "System.IO.File.OpenRead")]
+    [InlineData("--usage", "M:")]
     [InlineData("--name", "System.String.Length", "--access", "read")]
     [InlineData("--usage", "M:System.Object.ToString", "--access", "write")]
     [InlineData("--usage", "E:Example.Changed")]

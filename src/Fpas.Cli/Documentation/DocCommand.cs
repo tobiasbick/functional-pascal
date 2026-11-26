@@ -13,7 +13,7 @@ internal sealed class DocCommand
 {
     private readonly ContextCommandOptions options = new();
     private readonly Option<string> name = new("--name") { Description = "Case-sensitive simple or qualified declaration name. A type also lists its directly declared members." };
-    private readonly Option<string> usage = new("--usage") { Description = "Generate checked FPAS usage for an exact M:, P: or F: .NET documentation ID." };
+    private readonly Option<string> usage = new("--usage") { Description = "Generate checked FPAS usage for an exact FPAS declaration name in a project or an M:, P: or F: .NET documentation ID." };
     private readonly Option<string> access = new("--access") { Description = "Select read (default) or write for property, indexer and field usage." };
     private readonly Option<string[]> typeArguments = new("--type-arg")
     {
@@ -42,6 +42,8 @@ internal sealed class DocCommand
           fpas doc examples/basics/hello/Hello.fpasproj --name System.Console.WriteLine --report json
 
           fpas doc Example.fpasproj --usage "M:System.IO.File.OpenRead(System.String)"
+
+          fpas doc Fpas.Ui.fpasproj --usage Fpas.Ui.Widgets.Actions.Buttons.Button --type-arg int
 
           fpas doc Example.slnx --name System.Collections.Generic.List --limit 50 --report json
         """);

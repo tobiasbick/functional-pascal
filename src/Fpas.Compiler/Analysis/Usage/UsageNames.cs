@@ -5,7 +5,7 @@ using System.Globalization;
 
 namespace Fpas.Compiler.Analysis;
 
-internal sealed class UsageNames
+internal sealed class UsageNames(IReadOnlySet<string>? sourceContainers)
 {
     private readonly Dictionary<string, string> imports = new(StringComparer.Ordinal);
     private readonly HashSet<string> used = new(StringComparer.Ordinal) { "ApiUsage", "Use", "Resource" };
@@ -35,15 +35,16 @@ internal sealed class UsageNames
     }
 
     internal string Named(ImportedType definition, IReadOnlyList<TypeSymbol> arguments, bool groupBeforeSuffix = false)
-        => Named(definition, arguments, Type, Alias, groupBeforeSuffix);
+        => Named(definition, arguments, Type, Alias, groupBeforeSuffix, sourceContainers);
 
     internal static string Named(ImportedType definition, IReadOnlyList<TypeSymbol> arguments, Func<TypeSymbol, string> spellType,
-        Func<string, string> qualify, bool groupBeforeSuffix = false)
+        Func<string, string> qualify, bool groupBeforeSuffix = false, IReadOnlySet<string>? sourceContainers = null)
     {
         var segments = new Stack<ImportedType>();
         for (var type = definition; type is not null; type = type.DeclaringType) segments.Push(type);
         var ns = segments.Peek().Namespace;
-        var spelling = ns.Length > 0 ? qualify(ns) : "";
+        var spelling = sourceContainers?.Contains(segments.Peek().FullName) == true ? qualify(segments.Pop().FullName) :
+            ns.Length > 0 ? qualify(ns) : "";
         var index = 0;
         foreach (var type in segments)
         {

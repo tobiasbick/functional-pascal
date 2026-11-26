@@ -23,7 +23,7 @@ public sealed partial class SourceQuery
     private SourceQueryResult Inspect(SourceSelection selection, SourceQueryResult selected, int limit, CancellationToken cancellationToken, bool includeBody)
     {
         if (selected.Definition is not { } definition) return selected;
-        var project = definition.Project ?? selected.Selection!.Project;
+        var project = definition.Project ?? selected.Selection!.Project!;
         var snapshot = projects[project].Snapshot;
         var symbol = definition.Symbol;
         var context = symbol.Context;

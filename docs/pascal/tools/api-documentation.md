@@ -46,9 +46,9 @@ Partial searches can return checked signatures and documentation despite errors
 elsewhere. An empty partial search is ok with incomplete coverage; not_found
 establishes absence only in a complete search. If no checked source scope is
 available, lookup fails explicitly. Text output identifies incomplete coverage;
-the shared library result also carries it. The command does not emit the selected
-root's assembly. Restore/dependency builds can write ordinary bin/obj files and
-execute build tasks.
+the shared library result also carries it. The command does not write the selected
+root's assembly to disk. Restore/dependency builds can write ordinary bin/obj
+files and execute build tasks.
 
 ## Signatures and documentation
 
@@ -89,8 +89,22 @@ Only the adjacent sidecar is searched; there is no network or package-wide scan.
 
 ## Generate checked FPAS usage
 
-Look up the declaration with `--name` and pass its exact documentation ID to
-`--usage`. Quote the ID in the shell. Use an `M:` ID for methods and constructors,
+For an FPAS declaration, pass its exact name to `--usage` in a project or
+solution context. A qualified name distinguishes declarations in different
+units. A name shared by several overloads returns one entry per overload.
+The tool compiles the owning project in memory, then checks the generated
+unit against that assembly and its references. Concrete generic types are
+supplied with repeated `--type-arg`, declaring type first and routine second.
+Public routines, variant factories and readable or writable members use
+their FPAS imports. A private member or unsupported declaration reports a
+reason with `usage.status` set to `unavailable`.
+
+```sh
+fpas doc src/Fpas.Ui/Fpas.Ui.fpasproj --usage Fpas.Ui.Widgets.Actions.Buttons.Button --type-arg int
+```
+
+For a metadata member, look up the declaration with `--name` and pass its exact
+documentation ID to `--usage`. Quote the ID in the shell. Use an `M:` ID for methods and constructors,
 a `P:` ID for properties and indexers, or an `F:` ID for fields.
 
 ```sh
@@ -211,7 +225,7 @@ documentation, setup, deadline or limit failures, 2 for invalid arguments and
 ## Source files
 
 <details>
-<summary>Browse 29 source files</summary>
+<summary>Browse 31 source files</summary>
 
 - `src/Fpas.Cli/Documentation/`
   - [DocCommand.cs](../../../src/Fpas.Cli/Documentation/DocCommand.cs)
@@ -232,6 +246,7 @@ documentation, setup, deadline or limit failures, 2 for invalid arguments and
   - [MetadataCatalog.cs](../../../src/Fpas.Workspaces/Documentation/MetadataCatalog.cs)
   - [MetadataSignatureTypes.cs](../../../src/Fpas.Workspaces/Documentation/MetadataSignatureTypes.cs)
   - [MetadataSignatures.cs](../../../src/Fpas.Workspaces/Documentation/MetadataSignatures.cs)
+  - [SourceUsage.cs](../../../src/Fpas.Workspaces/Documentation/SourceUsage.cs)
   - [XmlDocumentation.cs](../../../src/Fpas.Workspaces/Documentation/XmlDocumentation.cs)
 - `src/Fpas.Workspaces/Queries/`
   - [SourceQuery.Documentation.cs](../../../src/Fpas.Workspaces/Queries/SourceQuery.Documentation.cs)
@@ -245,6 +260,7 @@ documentation, setup, deadline or limit failures, 2 for invalid arguments and
   - [MemberAccessUsageTests.cs](../../../tests/Fpas.IntegrationTests/ApiDocumentation/MemberAccessUsageTests.cs)
   - [MetadataDocumentationTests.cs](../../../tests/Fpas.IntegrationTests/ApiDocumentation/MetadataDocumentationTests.cs)
   - [NamedArgumentUsageTests.cs](../../../tests/Fpas.IntegrationTests/ApiDocumentation/NamedArgumentUsageTests.cs)
+  - [SourceUsageTests.cs](../../../tests/Fpas.IntegrationTests/ApiDocumentation/SourceUsageTests.cs)
   - [UsageTemplateTests.cs](../../../tests/Fpas.IntegrationTests/ApiDocumentation/UsageTemplateTests.cs)
 - `tests/Fpas.IntegrationTests/Build/`
   - [MsBuildTests.Documentation.cs](../../../tests/Fpas.IntegrationTests/Build/MsBuildTests.Documentation.cs)

@@ -1,5 +1,6 @@
 // [Documentation](../../../docs/pascal/program-structure/cli.md#check-a-project-or-solution)
 using Fpas.Cli.Compilation;
+using Fpas.Compiler;
 using Fpas.Workspaces.Editing;
 using Fpas.Workspaces.Loading;
 using System.CommandLine;
@@ -83,7 +84,9 @@ internal sealed class CheckCommand
                     result.GetResult(options.Configuration) is { Implicit: false })
                     throw new ContextFailure("invalid_argument", "Use a .fpasproj or .slnx with --fix, --overlay, --diagnostic-project or --configuration.");
 
-                var source = await StandaloneCheck.AnalyzeAsync(selected, selectedConfiguration, combined.Token);
+                var captured = await StandaloneSource.OpenAsync(selected, combined.Token);
+                var source = CheckResult.FromSource(captured.Source, selectedConfiguration, FpasCompiler.Analyze(captured.Request(), combined.Token));
+                await captured.VerifyAsync(combined.Token);
                 SnapshotGuard.Verify(result, expectedSnapshot, source.SnapshotId);
                 if (diagnostics is not null) source = source.PageDiagnostics(diagnostics);
                 combined.Token.ThrowIfCancellationRequested();

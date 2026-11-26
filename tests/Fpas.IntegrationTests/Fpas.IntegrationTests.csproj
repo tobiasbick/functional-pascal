@@ -85,7 +85,8 @@
     <None Include="../../examples/interop/events/*.fpas;../../examples/interop/events/*.fpasproj" Link="Fixtures/events/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/interop/type-inspection/*.fpas;../../examples/interop/type-inspection/*.fpasproj" Link="Fixtures/type-inspection/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/interop/attributes/*.fpas;../../examples/interop/attributes/*.fpasproj" Link="Fixtures/attributes/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../Fixtures/msbuild/**/*" Link="Fixtures/msbuild/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Fixtures/msbuild/**/*" Exclude="../Fixtures/msbuild/**/bin/**/*;../Fixtures/msbuild/**/obj/**/*"
+          Link="Fixtures/msbuild/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Fixtures/testing/*.fpas" Link="Fixtures/testing/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <AssemblyMetadata Include="FpasSdkProject" Value="$(MSBuildThisFileDirectory)../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj" />
     <AssemblyMetadata Include="FpasBuildConfiguration" Value="$(Configuration)" />
@@ -93,7 +94,7 @@
     <AssemblyMetadata Include="FpasLinuxArmShim" Value="$(PkgMicrosoft_Diagnostics_DbgShim_linux-arm64)/runtimes/linux-arm64/native/libdbgshim.so" />
   </ItemGroup>
   <Target Name="RemoveStaleSpecificationFixtures" BeforeTargets="_CopyOutOfDateSourceItemsToOutputDirectory" Condition="'$(DesignTimeBuild)' != 'true'">
-    <RemoveDir Directories="$(OutputPath)Fixtures/specification;$(OutputPath)Fixtures/repository/docs/ui;$(OutputPath)Fixtures/tui/lib;$(OutputPath)Fixtures/tui/gallery;$(OutputPath)Fixtures/tui/fractals;$(OutputPath)Fixtures/ui/lib;$(OutputPath)Fixtures/mvu/lib;$(OutputPath)Fixtures/gui/lib;$(OutputPath)Fixtures/workflows/lib" />
+    <RemoveDir Directories="$(OutputPath)Fixtures/specification;$(OutputPath)Fixtures/repository/docs/ui;$(OutputPath)Fixtures/tui/lib;$(OutputPath)Fixtures/tui/gallery;$(OutputPath)Fixtures/tui/fractals;$(OutputPath)Fixtures/ui/lib;$(OutputPath)Fixtures/mvu/lib;$(OutputPath)Fixtures/gui/lib;$(OutputPath)Fixtures/workflows/lib;$(OutputPath)Fixtures/msbuild" />
   </Target>
   <Target Name="RecordFpasCliPath" BeforeTargets="GetAssemblyAttributes" DependsOnTargets="ResolveProjectReferences">
     <MSBuild Projects="../../src/Fpas.Cli/Fpas.Cli.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration);TargetFramework=$(TargetFramework)">

@@ -101,11 +101,12 @@ internal sealed record QueryBatchReport(string Status, string? Context, string C
         }
         else if (Results.Count > 0)
         {
-            // Reserve one error per entry so oversized items cannot crowd out later answers.
+            // Keep smaller answers within the budget before spending it on large entries.
             var retained = Results.ToArray();
-            for (var index = 0; index < retained.Length; index++)
+            var sizes = retained.Select((item, index) => Size(item) - reserved[index]).ToArray();
+            foreach (var index in Enumerable.Range(0, sizes.Length).OrderBy(index => sizes[index]))
             {
-                var size = Size(retained[index]) - reserved[index];
+                var size = sizes[index];
                 if (size <= remaining) remaining -= size;
                 else retained[index] = limited[index];
             }

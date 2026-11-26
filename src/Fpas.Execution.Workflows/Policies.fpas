@@ -26,9 +26,15 @@ uses System.Threading.Tasks as Tasks;
 // The deferred workflow. It waits for work and cleanup to finish even after
 // expiry. Caller cancellation takes precedence over deadline expiry.
 public function WithDeadline of (A, E, R)(
-  Work: Fx.Effect of (A, E, R); Duration: Sys.TimeSpan; Expired: function(): E; Clock: Sys.TimeProvider
+  Work: Fx.Effect of (A, E, R);
+  Duration: Sys.TimeSpan;
+  Expired: function(): E;
+  Clock: Sys.TimeProvider
 ): Fx.Effect of (A, E, R);
-  async function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task of Fx.Outcome of (A, E);
+  async function Execute(
+    Environment: R;
+    Cancellation: Threads.CancellationToken
+  ): Tasks.Task of Fx.Outcome of (A, E);
   begin
     using const Deadline: Threads.CancellationTokenSource := new Threads.CancellationTokenSource(
       Duration,
@@ -78,10 +84,16 @@ end function;
 // ## Returns
 // The deferred retry policy.
 public function Retry of (A, E, R)(
-  Work: Fx.Effect of (A, E, R); Attempts: int; Delay: function(E, int): Sys.TimeSpan?; Clock: Sys.TimeProvider
+  Work: Fx.Effect of (A, E, R);
+  Attempts: int;
+  Delay: function(E, int): Sys.TimeSpan?;
+  Clock: Sys.TimeProvider
 ): Fx.Effect of (A, E, R);
 requires Attempts > 0;
-  async function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task of Fx.Outcome of (A, E);
+  async function Execute(
+    Environment: R;
+    Cancellation: Threads.CancellationToken
+  ): Tasks.Task of Fx.Outcome of (A, E);
   begin
     var Attempt: int := 1;
     while true do

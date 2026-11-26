@@ -17,7 +17,13 @@ uses System.Threading as T;
 // Reads matching source IDs/roots into `Index` and isolated `Previous` views.
 // `Sources` are normalized settings; `Cancellation` interrupts row traversal.
 // Returns a startup snapshot view for every configured source, explicitly unverified.
-public function Restore(Connection: Db.SqliteConnection; Sources: array of S.MusicSource; Index: Trees.Tree; Previous: C.Dictionary of (string, M.SourceSnapshot); Cancellation: T.CancellationToken): I.ImmutableArray of M.SourceSnapshot;
+public function Restore(
+  Connection: Db.SqliteConnection;
+  Sources: array of S.MusicSource;
+  Index: Trees.Tree;
+  Previous: C.Dictionary of (string, M.SourceSnapshot);
+  Cancellation: T.CancellationToken
+): I.ImmutableArray of M.SourceSnapshot;
 begin
   const Result: C.List of M.SourceSnapshot := new C.List of M.SourceSnapshot();
   for Source: S.MusicSource in Sources do

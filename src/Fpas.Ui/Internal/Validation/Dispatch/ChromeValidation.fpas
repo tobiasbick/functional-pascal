@@ -62,7 +62,13 @@ end procedure;
 // - `Profile`: Current target capabilities.
 // - `Identify`: Registers unique element or part identities.
 // - `Visit`: Schedules validation of a child.
-public procedure Check of TMsg(Node: E.Element of TMsg; Path: string; Profile: R.Profile; Identify: function(string, string): string; Visit: procedure((E.Element of TMsg)?, string));
+public procedure Check of TMsg(
+  Node: E.Element of TMsg;
+  Path: string;
+  Profile: R.Profile;
+  Identify: function(string, string): string;
+  Visit: procedure((E.Element of TMsg)?, string)
+);
 begin
   case Node of
     when E.Element.StatusBar(_, _, _):

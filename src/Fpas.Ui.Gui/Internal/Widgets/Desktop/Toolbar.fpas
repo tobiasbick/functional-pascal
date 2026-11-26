@@ -22,7 +22,13 @@ begin
   );
 end function;
 
-procedure ItemsDraw of TMsg(Frame: C.State of TMsg; Items: array of D.Item; Changed: function(D.Event): TMsg; Enabled: bool; ref Index: int);
+procedure ItemsDraw of TMsg(
+  Frame: C.State of TMsg;
+  Items: array of D.Item;
+  Changed: function(D.Event): TMsg;
+  Enabled: bool;
+  ref Index: int
+);
 begin
   for Item: D.Item in Items do
     var Value: int := -1;
@@ -72,7 +78,13 @@ end procedure;
 // - `Items`: Buttons, choices and groups in display order.
 // - `Changed`: Maps native proposals to messages.
 // - `Settings`: Native widget settings.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Items: array of D.Item; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Items: array of D.Item;
+  Changed: function(D.Event): TMsg;
+  Settings: D.Options
+);
 begin
   const Role: string := 'toolbar';
   const Token: string := C.Token(Role, Id);

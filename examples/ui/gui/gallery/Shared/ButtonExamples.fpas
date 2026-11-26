@@ -13,7 +13,13 @@ uses System as Sys;
 const Row: L.Flow := new L.Flow(Gap := L.Spacing.Normal, Align := L.Alignment.Center);
 const Stack: L.Flow := new L.Flow(Gap := L.Spacing.Loose);
 
-function Sample of TMsg(Preview: TMsg; Id: string; Label: string; Style: S.ButtonVariant := S.ButtonVariant.Default; Size: B.Size := B.Size.Medium): E.Element of TMsg;
+function Sample of TMsg(
+  Preview: TMsg;
+  Id: string;
+  Label: string;
+  Style: S.ButtonVariant := S.ButtonVariant.Default;
+  Size: B.Size := B.Size.Medium
+): E.Element of TMsg;
 begin
   return B.Button of TMsg(
     Id,
@@ -149,7 +155,12 @@ end function;
 // - `Toggle`: Maps a save or reset action.
 // ## Returns
 // The four state examples.
-public function States of TMsg(Preview: TMsg; Wide: bool; Loading: bool; Toggle: function(bool): TMsg): E.Element of TMsg;
+public function States of TMsg(
+  Preview: TMsg;
+  Wide: bool;
+  Loading: bool;
+  Toggle: function(bool): TMsg
+): E.Element of TMsg;
 begin
   const Save: E.Element of TMsg := B.Button of TMsg(
     'save',

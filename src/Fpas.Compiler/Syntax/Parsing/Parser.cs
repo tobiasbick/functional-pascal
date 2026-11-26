@@ -138,6 +138,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         using var declaration = Declaration(name, start, nested ? null : isPublic ? "public" : "private", documentation);
         declaration.Info.Kind = "routine";
         var typeParameters = ReadTypeParameters();
+        var parametersOpen = position;
         var parameters = ReadList("(", ")", ";", ReadParameter, wrap: false);
         TypeSyntax? result = null;
         if (function)
@@ -146,6 +147,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
             result = SurfaceType();
         }
         Expect(";");
+        layout?.RoutineHeaderEnds.Add(parametersOpen, position - 1);
         var constraints = ReadConstraints();
         if (abstractMember)
             return new(name, true, parameters, result, [], false, typeParameters, constraints, Documentation: documentation);

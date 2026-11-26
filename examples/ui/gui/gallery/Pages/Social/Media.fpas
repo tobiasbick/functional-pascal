@@ -24,7 +24,12 @@ begin
   return L.Extent.Fixed(L.Measure.Logical(Amount));
 end function;
 
-function Tile(Title: string; Description: string; Background: Color.Color; Deck: bool): E.Element of S.Msg;
+function Tile(
+  Title: string;
+  Description: string;
+  Background: Color.Color;
+  Deck: bool
+): E.Element of S.Msg;
 begin
   return E.Size of S.Msg(
     E.Column of S.Msg(
@@ -141,8 +146,12 @@ begin
 end function;
 
 function Column(
-  Title: string; Description: string; Widget: E.Element of S.Msg; Weight: float := 1.0F;
-  Minimum: L.Measure? := null; Align: L.Alignment := L.Alignment.Default
+  Title: string;
+  Description: string;
+  Widget: E.Element of S.Msg;
+  Weight: float := 1.0F;
+  Minimum: L.Measure? := null;
+  Align: L.Alignment := L.Alignment.Default
 ): E.Element of S.Msg;
 begin
   return E.Size of S.Msg(

@@ -17,7 +17,12 @@ uses Fpas.Ui.Widgets.Feedback.Loaders as W;
 // - `Id`: Stable widget identity.
 // - `Style`: Loader style.
 // - `Settings`: Native appearance and input options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Style: W.Animation; Settings: W.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Style: W.Animation;
+  Settings: W.Options
+);
 begin
   Frame.Window.Loader(
     C.Token('loader', Id),

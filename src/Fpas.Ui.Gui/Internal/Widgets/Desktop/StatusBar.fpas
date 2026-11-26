@@ -18,7 +18,12 @@ uses Fpas.Ui.Widgets.Overlays.Menus as M;
 // - `Id`: Stable bar identity.
 // - `Items`: Status messages, actions and progress in order.
 // - `HideBorder`: Omit the top hairline.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Items: array of S.Item of TMsg; HideBorder: bool);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Items: array of S.Item of TMsg;
+  HideBorder: bool
+);
 begin
   Frame.Window.BeginStatusBar(C.Token('status-bar', Id), not HideBorder);
   for Item: S.Item of TMsg in Items do

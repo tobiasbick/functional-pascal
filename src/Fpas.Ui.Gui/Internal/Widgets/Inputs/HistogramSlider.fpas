@@ -24,8 +24,15 @@ uses System.Globalization as Culture;
 // - `OnChange`: Maps proposed endpoints to a message.
 // - `Settings`: Chart and input settings.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Label: string; Bins: array of float; Value: R.Interval;
-  Minimum: float; Maximum: float; OnChange: function(R.Interval): TMsg; Settings: H.Options
+  Frame: C.State of TMsg;
+  Id: string;
+  Label: string;
+  Bins: array of float;
+  Value: R.Interval;
+  Minimum: float;
+  Maximum: float;
+  OnChange: function(R.Interval): TMsg;
+  Settings: H.Options
 );
 begin
   const Enabled: bool := Settings.Enabled and Frame.AcceptInput;

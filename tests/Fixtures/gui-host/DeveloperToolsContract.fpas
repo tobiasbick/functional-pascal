@@ -46,7 +46,12 @@ begin
   );
 end procedure;
 
-procedure Page(Page: State.Page; Renderer: Cui.CuiRenderer; Capture: string; Controls: array of string);
+procedure Page(
+  Page: State.Page;
+  Renderer: Cui.CuiRenderer;
+  Capture: string;
+  Controls: array of string
+);
   procedure Inject();
   begin
     Window.MovePointer(-1.0F, -1.0F);

@@ -47,7 +47,14 @@ end function;
 // - `Names`: Native part keys.
 // - `Visible`: Presence flags in the same order.
 // - `Enabled`: Whether the parts accept input.
-public procedure Parts of TMsg(Frame: C.State of TMsg; Id: string; Role: string; Names: array of string; Visible: array of bool; Enabled: bool);
+public procedure Parts of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Role: string;
+  Names: array of string;
+  Visible: array of bool;
+  Enabled: bool
+);
 begin
   for Index: int := 0 to Names.Length - 1 do
     if Visible[Index] then

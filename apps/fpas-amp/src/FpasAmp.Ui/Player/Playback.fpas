@@ -87,7 +87,10 @@ public type Connection = record
       A.StartBackground of M.Msg(
         'audio-commands',
         A.FromWorker of M.Msg(
-          async function(_Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+          async function(
+            _Post: function(M.Msg): Tasks.Task;
+            Cancellation: T.CancellationToken
+          ): Tasks.Task begin
             while await Reader.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
               Cancellation.ThrowIfCancellationRequested();
               const Item: M.Request := await Reader.ReadAsync(
@@ -102,7 +105,10 @@ public type Connection = record
       A.StartBackground of M.Msg(
         'audio-events',
         A.FromWorker of M.Msg(
-          async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+          async function(
+            Post: function(M.Msg): Tasks.Task;
+            Cancellation: T.CancellationToken
+          ): Tasks.Task begin
             while await Device.Events.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
               const Value: Audio.PlaybackEvent := await Device.Events.ReadAsync(
                 Cancellation

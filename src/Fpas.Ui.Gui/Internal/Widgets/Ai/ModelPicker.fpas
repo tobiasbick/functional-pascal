@@ -18,7 +18,14 @@ uses Fpas.Ui.Widgets.Ai.ModelPickers as ModelPickers;
 // - `Selected`: Selected model index.
 // - `Changed`: Maps the proposed index.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Items: array of ModelPickers.Item; Selected: int; Changed: function(int): TMsg; Settings: ModelPickers.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Items: array of ModelPickers.Item;
+  Selected: int;
+  Changed: function(int): TMsg;
+  Settings: ModelPickers.Options
+);
 begin
   const Role: string := 'model-picker';
   const Token: string := C.Token(Role, Id);

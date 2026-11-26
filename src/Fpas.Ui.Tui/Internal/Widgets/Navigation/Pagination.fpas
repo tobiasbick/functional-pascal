@@ -58,9 +58,18 @@ end record;
 // - `Stops`: Tab traversal order.
 // - `Register`: Registers a visible control.
 public procedure Arrange of TMsg(
-  Pager: E.PagerView of TMsg; Area: F.Rect; Clip: F.Rect; Style: Terminal.Style; Theme: Th.Theme;
-  Scope: string; Parent: string; ScrollId: string; Operations: C.List of D.Operation;
-  Navigation: C.List of A.NavigationStop; Stops: C.List of A.TabStop; Register: procedure(A.Control of TMsg)
+  Pager: E.PagerView of TMsg;
+  Area: F.Rect;
+  Clip: F.Rect;
+  Style: Terminal.Style;
+  Theme: Th.Theme;
+  Scope: string;
+  Parent: string;
+  ScrollId: string;
+  Operations: C.List of D.Operation;
+  Navigation: C.List of A.NavigationStop;
+  Stops: C.List of A.TabStop;
+  Register: procedure(A.Control of TMsg)
 );
   procedure Text(Value: string);
   begin
@@ -74,8 +83,16 @@ public procedure Arrange of TMsg(
   end procedure;
 
   procedure Button(
-    Id: string; Caption: string; Label: string; Target: int; Width: int; Available: bool;
-    Role: string; Value: string; Variant: S.ButtonVariant; Fallback: string
+    Id: string;
+    Caption: string;
+    Label: string;
+    Target: int;
+    Width: int;
+    Available: bool;
+    Role: string;
+    Value: string;
+    Variant: S.ButtonVariant;
+    Fallback: string
   );
   begin
     const Bounds: F.Rect := new F.Rect(Column, Area.Y, Width, 1);

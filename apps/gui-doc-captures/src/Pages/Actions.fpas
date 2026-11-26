@@ -16,7 +16,11 @@ uses GuiGallery.Pages.Actions.State as Actions;
 // - `Session`: Open gallery session.
 // - `Output`: Directory for frame PNGs and crop bounds.
 // - `Input`: Native gestures for this session.
-public procedure CaptureActions(Session: Gui.Session of Gallery.Msg; Output: string; Input: Gestures.Controls);
+public procedure CaptureActions(
+  Session: Gui.Session of Gallery.Msg;
+  Output: string;
+  Input: Gestures.Controls
+);
 begin
   Regions.Shot(
     Session,

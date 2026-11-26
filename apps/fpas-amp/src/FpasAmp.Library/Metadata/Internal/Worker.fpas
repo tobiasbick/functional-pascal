@@ -23,7 +23,11 @@ const SqliteBusy: int := 5;
 
 // A busy attempt has already unwound its transaction. Retry from its beginning
 // with a bounded pause so a cancelled or superseded job can stop waiting.
-async function WhenWritable(Attempt: procedure(); Current: function(): bool; Cancellation: T.CancellationToken): Tasks.Task;
+async function WhenWritable(
+  Attempt: procedure();
+  Current: function(): bool;
+  Cancellation: T.CancellationToken
+): Tasks.Task;
 begin
   var Delay: int := 100;
   while Current() do
@@ -50,7 +54,13 @@ end function;
 // - `Cancellation`: Stops the worker and releases its connections.
 // ## Returns
 // The task for the worker's lifetime.
-public async function Run(Policy: P.Policy; Database: string; UserDatabase: string; Ready: Tasks.TaskCompletionSource of bool; Cancellation: T.CancellationToken): Tasks.Task;
+public async function Run(
+  Policy: P.Policy;
+  Database: string;
+  UserDatabase: string;
+  Ready: Tasks.TaskCompletionSource of bool;
+  Cancellation: T.CancellationToken
+): Tasks.Task;
 begin
   try
     Cancellation.ThrowIfCancellationRequested();

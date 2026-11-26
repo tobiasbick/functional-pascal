@@ -22,8 +22,10 @@ public type Reply of TMsg = record
 end record;
 
 function Hold of TMsg(
-  Writer: Channels.ChannelWriter of Reply of TMsg; Message: TMsg;
-  Post: function(TMsg): Tasks.Task; Token: T.CancellationToken
+  Writer: Channels.ChannelWriter of Reply of TMsg;
+  Message: TMsg;
+  Post: function(TMsg): Tasks.Task;
+  Token: T.CancellationToken
 ): Tasks.Task;
   async function Forward(): Tasks.Task;
   begin
@@ -51,10 +53,14 @@ begin
 end function;
 
 function Observe of TMsg(
-  Id: string; Work: Fx.Effect of (Fx.Completion, TMsg, A.BackgroundContext of TMsg);
+  Id: string;
+  Work: Fx.Effect of (Fx.Completion, TMsg, A.BackgroundContext of TMsg);
   Writer: Channels.ChannelWriter of Reply of TMsg
 ): A.Command of TMsg;
-  async function Run(Context: A.BackgroundContext of TMsg; Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, TMsg);
+  async function Run(
+    Context: A.BackgroundContext of TMsg;
+    Token: T.CancellationToken
+  ): Tasks.Task of Fx.Outcome of (Fx.Completion, TMsg);
     function Publish(Message: TMsg): Tasks.Task;
     begin
       return Hold of TMsg(Writer, Message, Context.Post, Token);
@@ -119,7 +125,9 @@ public type Effects of TMsg = record
   // - `Next`: The transition returned by the application update.
   // ## Returns
   // The transition with its watched effects wrapped for controlled admission.
-  public function Wrap of TModel(Next: A.Transition of (TModel, TMsg)): A.Transition of (TModel, TMsg);
+  public function Wrap of TModel(
+    Next: A.Transition of (TModel, TMsg)
+  ): A.Transition of (TModel, TMsg);
   begin
     if self.Expected.Count = 0 then
       return Next;

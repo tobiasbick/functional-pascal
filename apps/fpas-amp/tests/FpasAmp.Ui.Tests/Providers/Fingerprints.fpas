@@ -36,7 +36,10 @@ uses System.Threading as T;
 uses System.Threading.Channels as Channels;
 uses Xunit as X;
 
-function ClipboardText(Node: E.Element of Music.Msg; Id: string := 'track-copy-fingerprint'): string?;
+function ClipboardText(
+  Node: E.Element of Music.Msg;
+  Id: string := 'track-copy-fingerprint'
+): string?;
 begin
   case Node of
     when E.Element.Dialog(_, _, const Body: E.Element of Music.Msg, true, _, _):

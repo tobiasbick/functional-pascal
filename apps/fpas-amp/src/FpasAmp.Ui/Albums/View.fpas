@@ -58,7 +58,12 @@ begin
   return L.Spacing.Fixed(L.Measure.Logical(Value));
 end function;
 
-function Tile(Current: M.State; Album: Library.Album; Edge: int; RowHeight: int): E.Element of M.Msg;
+function Tile(
+  Current: M.State;
+  Album: Library.Album;
+  Edge: int;
+  RowHeight: int
+): E.Element of M.Msg;
 begin
   const Image: Imaging.Bitmap? := if Current.Images.ContainsKey(Album.Id) then
     Current.Images[Album.Id]
@@ -122,7 +127,13 @@ end function;
 // - `BackLabel`: Accessible label when the view was opened from a different section.
 // ## Returns
 // The current Albums view.
-public function Build(Current: M.State; Width: int; Padding: int; Playback: Player.State; BackLabel: string := ''): E.Element of M.Msg;
+public function Build(
+  Current: M.State;
+  Width: int;
+  Padding: int;
+  Playback: Player.State;
+  BackLabel: string := ''
+): E.Element of M.Msg;
   function Row(Index: int): E.Element of M.Msg;
   begin
     const Cells: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();

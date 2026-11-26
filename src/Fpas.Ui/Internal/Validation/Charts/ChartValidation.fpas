@@ -44,7 +44,12 @@ uses System as Sys;
 // - `Identify`: Registers a widget ID.
 // ## Returns
 // True when this dispatcher handled the element.
-public function Check of TMsg(Node: E.Element of TMsg; Location: string; Current: R.Profile; Identify: function(string, string): string): bool;
+public function Check of TMsg(
+  Node: E.Element of TMsg;
+  Location: string;
+  Current: R.Profile;
+  Identify: function(string, string): string
+): bool;
 begin
   case Node of
     when E.Element.CodeBlock(

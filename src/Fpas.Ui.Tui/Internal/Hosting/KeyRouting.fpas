@@ -34,10 +34,16 @@ uses System.Collections.Generic as Generic;
 // - `Dismiss`: Proposes dismissal of the active overlay.
 // - `Cycle`: Traverses tab stops, backwards when requested.
 public procedure Route of TMsg(
-  Layout: A.Layout of TMsg; Control: (A.Control of TMsg)?; Key: K.Key; Modifiers: K.KeyModifiers;
-  ScrollOffsets: Generic.Dictionary of (string, int); Apply: procedure(TMsg);
-  SetFocus: procedure(A.Layout of TMsg, string); RememberFocus: procedure(string);
-  Invoke: function(A.Control of TMsg): bool; Dismiss: function((A.Scope of TMsg)?): bool;
+  Layout: A.Layout of TMsg;
+  Control: (A.Control of TMsg)?;
+  Key: K.Key;
+  Modifiers: K.KeyModifiers;
+  ScrollOffsets: Generic.Dictionary of (string, int);
+  Apply: procedure(TMsg);
+  SetFocus: procedure(A.Layout of TMsg, string);
+  RememberFocus: procedure(string);
+  Invoke: function(A.Control of TMsg): bool;
+  Dismiss: function((A.Scope of TMsg)?): bool;
   Cycle: procedure(A.Layout of TMsg, bool)
 );
 begin

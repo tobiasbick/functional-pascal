@@ -19,7 +19,8 @@ uses Fpas.Ui.Widgets.Developer.Terminal as T;
 // ## Returns
 // A terminal-only screen.
 public function Screen of TMsg(
-  Content: E.Element of TMsg; Layers: array of E.Element of TMsg;
+  Content: E.Element of TMsg;
+  Layers: array of E.Element of TMsg;
   Shortcuts: array of K.ShortcutBinding of TMsg
 ): E.Element of TMsg;
 begin
@@ -37,7 +38,10 @@ end function;
 //
 // ## Returns
 // A terminal-only node, resolved and checked during preflight.
-public function Viewport of TMsg(Id: string; Build: function(T.Viewport): E.Element of TMsg): E.Element of TMsg;
+public function Viewport of TMsg(
+  Id: string;
+  Build: function(T.Viewport): E.Element of TMsg
+): E.Element of TMsg;
 begin
   return (E.Element of TMsg).TerminalViewport(Id, Build);
 end function;

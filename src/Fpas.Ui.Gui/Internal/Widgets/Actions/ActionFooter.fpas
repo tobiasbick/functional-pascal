@@ -15,7 +15,8 @@ uses Fpas.Ui.Layout as L;
 // - `Children`: Footer actions in display order.
 // - `Visit`: Host traversal for each action.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Children: array of E.Element of TMsg;
+  Frame: C.State of TMsg;
+  Children: array of E.Element of TMsg;
   Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
 );
 begin

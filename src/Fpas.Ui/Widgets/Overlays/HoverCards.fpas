@@ -28,7 +28,10 @@ end record;
 // ## Returns
 // The trigger in its original layout, with CUI-managed hover content.
 public function HoverCard of TMsg(
-  Id: string; Trigger: E.Element of TMsg; Content: E.Element of TMsg; Settings: Options? := null
+  Id: string;
+  Trigger: E.Element of TMsg;
+  Content: E.Element of TMsg;
+  Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin

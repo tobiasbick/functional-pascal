@@ -21,7 +21,14 @@ uses System as Sys;
 // - `Progress`: Optional seek position.
 // - `Change`: Maps a native proposal.
 // - `Settings`: Native appearance and input options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Peaks: array of float; Progress: float?; Change: Sys.Func of (float, TMsg)?; Settings: W.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Peaks: array of float;
+  Progress: float?;
+  Change: Sys.Func of (float, TMsg)?;
+  Settings: W.Options
+);
 begin
   const Token: string := C.Token('waveform', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled and Progress <> null and Change <>

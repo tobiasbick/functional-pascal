@@ -21,7 +21,11 @@ uses GuiGallery.Shared.Sections as G;
 // - `Width`: Window width in logical points.
 // ## Returns
 // Editor chrome, docking, split view, and host commands.
-public function View(Model: S.Model; Colors: Theme.Palette; Width: int): array of E.Element of S.Msg;
+public function View(
+  Model: S.Model;
+  Colors: Theme.Palette;
+  Width: int
+): array of E.Element of S.Msg;
 begin
   return [
     G.Heading of S.Msg(

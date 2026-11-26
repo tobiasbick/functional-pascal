@@ -21,7 +21,12 @@ uses System.Collections.Generic as C;
 // - `Enabled`: Input permission for the sidebar.
 // ## Returns
 // A stack of full-width terminal destinations.
-public function Lower of TMsg(Id: string; Sections: array of N.Section of TMsg; Active: string?; Enabled: bool): E.Element of TMsg;
+public function Lower of TMsg(
+  Id: string;
+  Sections: array of N.Section of TMsg;
+  Active: string?;
+  Enabled: bool
+): E.Element of TMsg;
 begin
   const Rows: C.List of E.Element of TMsg := new C.List of E.Element of TMsg();
   for Section: N.Section of TMsg in Sections do

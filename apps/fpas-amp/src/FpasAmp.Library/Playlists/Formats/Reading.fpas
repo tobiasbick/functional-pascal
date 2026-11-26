@@ -33,7 +33,13 @@ end record;
 // Expected `Size` and `Modified` reject stale files; cancellation bounds copying
 // and entry iteration. Files are limited to sixteen MiB and 100000 entries.
 // Optional `Current` rejects obsolete source policies between bounded copy blocks.
-public function Read(Path: string; Size: long; Modified: long; Cancellation: T.CancellationToken; Current: (Sys.Func of bool)? := null): Result;
+public function Read(
+  Path: string;
+  Size: long;
+  Modified: long;
+  Cancellation: T.CancellationToken;
+  Current: (Sys.Func of bool)? := null
+): Result;
   procedure Check();
   begin
     Cancellation.ThrowIfCancellationRequested();

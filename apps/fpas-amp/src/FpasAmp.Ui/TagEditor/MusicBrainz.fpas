@@ -66,7 +66,9 @@ function CreateQuery(Endpoint: Sys.Uri; Gate: Pacing.Gate; Failure: array of str
 begin
   const Options: R.HttpRetryStrategyOptions := new R.HttpRetryStrategyOptions();
   Options.MaxRetryAttempts := RetryCount;
-  Options.ShouldHandle := function(Args: Retry.RetryPredicateArguments of H.HttpResponseMessage): Tasks.ValueTask of bool begin
+  Options.ShouldHandle := function(
+    Args: Retry.RetryPredicateArguments of H.HttpResponseMessage
+  ): Tasks.ValueTask of bool begin
     const Reply: H.HttpResponseMessage? := Args.Outcome.Result;
     if Reply = null or Reply.IsSuccessStatusCode then
       Failure[0] := '';
@@ -85,7 +87,9 @@ begin
     );
     return new Tasks.ValueTask of bool(Transient);
   end function;
-  Options.DelayGenerator := function(Args: Retry.RetryDelayGeneratorArguments of H.HttpResponseMessage): Tasks.ValueTask of Sys.TimeSpan? begin
+  Options.DelayGenerator := function(
+    Args: Retry.RetryDelayGeneratorArguments of H.HttpResponseMessage
+  ): Tasks.ValueTask of Sys.TimeSpan? begin
     const Reply: H.HttpResponseMessage? := Args.Outcome.Result;
     const Delay: Sys.TimeSpan? := if Reply <> null then
       Sys.TimeSpan.FromMilliseconds(cast RetryDelay(Reply, Args.AttemptNumber) as double)
@@ -207,7 +211,10 @@ public type Service = record implements Sys.IDisposable
     return self.Gate.Read();
   end function;
 
-  async function Run of TResult(Request: function(): Tasks.Task of TResult; Stop: T.CancellationToken): Tasks.Task of TResult;
+  async function Run of TResult(
+    Request: function(): Tasks.Task of TResult;
+    Stop: T.CancellationToken
+  ): Tasks.Task of TResult;
   begin
     await self.Gate.Enter(Stop).ConfigureAwait(false);
     try
@@ -223,7 +230,10 @@ public type Service = record implements Sys.IDisposable
   end function;
 
   // Searches MusicBrainz for Input and returns selectable matches, honoring Stop.
-  public async function Search(Input: string; Stop: T.CancellationToken): Tasks.Task of array of Match;
+  public async function Search(
+    Input: string;
+    Stop: T.CancellationToken
+  ): Tasks.Task of array of Match;
   begin
     return Choices(
       await self.Run of S.ISearchResults of S.ISearchResult of E.IRecording(

@@ -29,7 +29,13 @@ uses System as Sys;
 // - `Visit`: Validates composed children.
 // ## Returns
 // True when this dispatcher handled the element.
-public function Check of TMsg(Node: E.Element of TMsg; Location: string; Current: R.Profile; Identify: function(string, string): string; Visit: procedure((E.Element of TMsg)?, string)): bool;
+public function Check of TMsg(
+  Node: E.Element of TMsg;
+  Location: string;
+  Current: R.Profile;
+  Identify: function(string, string): string;
+  Visit: procedure((E.Element of TMsg)?, string)
+): bool;
 begin
   case Node of
     when E.Element.ChatMessage(

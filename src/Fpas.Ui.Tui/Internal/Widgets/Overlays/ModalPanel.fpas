@@ -40,8 +40,13 @@ end record;
 // ## Returns
 // Bounds of the panel, close button and body.
 function PaintPanel of TMsg(
-  Operations: Generic.List of D.Operation; Area: F.Rect; Settings: E.ModalOptions;
-  Size: int; Content: E.Element of TMsg; Colors: T.Style; Theme: Th.Theme
+  Operations: Generic.List of D.Operation;
+  Area: F.Rect;
+  Settings: E.ModalOptions;
+  Size: int;
+  Content: E.Element of TMsg;
+  Colors: T.Style;
+  Theme: Th.Theme
 ): PanelBounds;
 begin
   const InsetX: int := if Area.Width >= 5 then
@@ -161,8 +166,14 @@ end function;
 // ## Returns
 // The base and its modal layer when visible.
 public function Lower of TMsg(
-  Id: string; Base: E.Element of TMsg; Open: bool; Settings: E.ModalOptions;
-  Dismiss: Sys.Func of TMsg; Colors: T.Style; Theme: Th.Theme; LowerContent: function(T.Style): E.Element of TMsg
+  Id: string;
+  Base: E.Element of TMsg;
+  Open: bool;
+  Settings: E.ModalOptions;
+  Dismiss: Sys.Func of TMsg;
+  Colors: T.Style;
+  Theme: Th.Theme;
+  LowerContent: function(T.Style): E.Element of TMsg
 ): E.Element of TMsg;
 begin
   if not Open then
@@ -219,8 +230,16 @@ end record;
 // ## Returns
 // The panel's placement and input bindings.
 public function Arrange of TMsg(
-  Operations: Generic.List of D.Operation; Screen: F.Rect; Id: string; Settings: E.ModalOptions;
-  Size: int; Content: E.Element of TMsg; Colors: T.Style; Theme: Th.Theme; Dismiss: Sys.Func of TMsg; FocusReturn: string
+  Operations: Generic.List of D.Operation;
+  Screen: F.Rect;
+  Id: string;
+  Settings: E.ModalOptions;
+  Size: int;
+  Content: E.Element of TMsg;
+  Colors: T.Style;
+  Theme: Th.Theme;
+  Dismiss: Sys.Func of TMsg;
+  FocusReturn: string
 ): Placement of TMsg;
 begin
   const Bounds: PanelBounds := PaintPanel of TMsg(

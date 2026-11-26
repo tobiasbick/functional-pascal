@@ -35,7 +35,15 @@ end function;
 // - `Revisions`: Revisions supplied to the widget.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Lines: array of string; LineCommits: array of int; Revisions: array of D.Revision; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Lines: array of string;
+  LineCommits: array of int;
+  Revisions: array of D.Revision;
+  Changed: function(D.Event): TMsg;
+  Settings: D.Options
+);
 begin
   const Role: string := 'blame';
   const Token: string := C.Token(Role, Id);

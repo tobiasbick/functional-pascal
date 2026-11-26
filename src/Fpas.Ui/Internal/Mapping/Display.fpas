@@ -24,7 +24,11 @@ uses System as Sys;
 // - `Content`: Maps a nested element.
 // ## Returns
 // The element in the parent message type.
-public function Map of (TChild, TParent)(Value: E.Element of TChild; Messages: function(TChild): TParent; Content: function(E.Element of TChild): E.Element of TParent): E.Element of TParent;
+public function Map of (TChild, TParent)(
+  Value: E.Element of TChild;
+  Messages: function(TChild): TParent;
+  Content: function(E.Element of TChild): E.Element of TParent
+): E.Element of TParent;
 begin
   case Value of
     when E.Element.NativeText(const Text: string, const Role: Texts.Appearance):

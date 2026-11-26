@@ -32,7 +32,11 @@ uses Fpas.Ui.Widgets.Media.MediaImages as Media;
 // - `Frame`: Current presentation frame.
 // - `Node`: Canvas element.
 // - `Visit`: Presents embedded content.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Node: E.Element of TMsg; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Node: E.Element of TMsg;
+  Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
+);
 begin
   case Node of
     when E.Element.FormatBar(

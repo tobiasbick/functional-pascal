@@ -19,7 +19,10 @@ public type ClearRequest = record
   Completion: Tasks.TaskCompletionSource of M.Snapshot;
 
   // Creates a clear request for `Id` backed by `Completion`.
-  public static function Create(Id: string; Completion: Tasks.TaskCompletionSource of M.Snapshot): ClearRequest;
+  public static function Create(
+    Id: string;
+    Completion: Tasks.TaskCompletionSource of M.Snapshot
+  ): ClearRequest;
   begin
     return new ClearRequest(Id, Completion);
   end function;

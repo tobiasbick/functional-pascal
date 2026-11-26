@@ -17,7 +17,10 @@ uses Fpas.Ui.Widgets.Media.MediaImages as Media;
 uses System as Sys;
 uses System.Collections.Generic as Lists;
 
-function MapNodes of (TChild, TParent)(Items: array of NodeEditors.Node of TChild; Child: function(E.Element of TChild): E.Element of TParent): array of NodeEditors.Node of TParent;
+function MapNodes of (TChild, TParent)(
+  Items: array of NodeEditors.Node of TChild;
+  Child: function(E.Element of TChild): E.Element of TParent
+): array of NodeEditors.Node of TParent;
 begin
   const Nodes: Lists.List of NodeEditors.Node of TParent := new Lists.List of NodeEditors.Node of TParent(
     Items.Length
@@ -58,7 +61,11 @@ end function;
 // - `Child`: Element conversion.
 // ## Returns
 // The corresponding parent element.
-public function Map of (TChild, TParent)(Value: E.Element of TChild; Messages: function(TChild): TParent; Child: function(E.Element of TChild): E.Element of TParent): E.Element of TParent;
+public function Map of (TChild, TParent)(
+  Value: E.Element of TChild;
+  Messages: function(TChild): TParent;
+  Child: function(E.Element of TChild): E.Element of TParent
+): E.Element of TParent;
 begin
   case Value of
     when E.Element.FormatBar(

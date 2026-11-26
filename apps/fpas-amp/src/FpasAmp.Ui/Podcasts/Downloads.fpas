@@ -30,7 +30,12 @@ end function;
 // - `Stop`: Cancels the media transfer.
 // ## Returns
 // The path of a complete downloaded or cached file.
-public async function Prepare(Cache: IO.DirectoryInfo; Url: string; Codec: string; Stop: T.CancellationToken): Tasks.Task of string;
+public async function Prepare(
+  Cache: IO.DirectoryInfo;
+  Url: string;
+  Codec: string;
+  Stop: T.CancellationToken
+): Tasks.Task of string;
 requires Url <> '';
 begin
   const Key: string := Sys.Convert.ToHexString(

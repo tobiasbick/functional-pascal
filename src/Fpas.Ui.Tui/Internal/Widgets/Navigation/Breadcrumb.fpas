@@ -33,7 +33,10 @@ const Ellipsis: string := '…';
 // ## Returns
 // A terminal breadcrumb that chooses its visible suffix at layout time.
 public function Lower of TMsg(
-  Id: string; Items: array of string; Navigate: function(int): TMsg; Enabled: bool
+  Id: string;
+  Items: array of string;
+  Navigate: function(int): TMsg;
+  Enabled: bool
 ): E.Element of TMsg;
 begin
   const Captions: array of string := Sys.Array.ConvertAll of (string, string)(Items, G.SingleLine);
@@ -141,9 +144,19 @@ end function;
 // - `Stops`: Tab traversal order.
 // - `Register`: Adds a visible control.
 public procedure Arrange of TMsg(
-  Trail: E.BreadcrumbView of TMsg; Area: F.Rect; Clip: F.Rect; Style: Terminal.Style; Theme: Th.Theme;
-  State: P.State of TMsg; Scope: string; Parent: string; ScrollId: string; Operations: C.List of D.Operation;
-  Navigation: C.List of A.NavigationStop; Stops: C.List of A.TabStop; Register: procedure(A.Control of TMsg)
+  Trail: E.BreadcrumbView of TMsg;
+  Area: F.Rect;
+  Clip: F.Rect;
+  Style: Terminal.Style;
+  Theme: Th.Theme;
+  State: P.State of TMsg;
+  Scope: string;
+  Parent: string;
+  ScrollId: string;
+  Operations: C.List of D.Operation;
+  Navigation: C.List of A.NavigationStop;
+  Stops: C.List of A.TabStop;
+  Register: procedure(A.Control of TMsg)
 );
   procedure Text(Value: string; Width: int);
   begin
@@ -156,8 +169,14 @@ public procedure Arrange of TMsg(
   end procedure;
 
   procedure Link(
-    Id: string; Label: string; Caption: string; Width: int; Role: string; Value: string;
-    Action: Actions.IActivatable of TMsg; Fallback: string
+    Id: string;
+    Label: string;
+    Caption: string;
+    Width: int;
+    Role: string;
+    Value: string;
+    Action: Actions.IActivatable of TMsg;
+    Fallback: string
   );
   begin
     const Bounds: F.Rect := new F.Rect(Column, Area.Y, Width, 1);

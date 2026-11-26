@@ -96,8 +96,14 @@ begin
 end function;
 
 function OriginalRow(
-  Id: string; Label: string; Depth: int; Files: string; Size: string; Icon: int;
-  Open: bool? := null; Toggle: Sys.Func of (bool, S.Msg)? := null
+  Id: string;
+  Label: string;
+  Depth: int;
+  Files: string;
+  Size: string;
+  Icon: int;
+  Open: bool? := null;
+  Toggle: Sys.Func of (bool, S.Msg)? := null
 ): T.Row of S.Msg;
 begin
   return new T.Row of S.Msg(

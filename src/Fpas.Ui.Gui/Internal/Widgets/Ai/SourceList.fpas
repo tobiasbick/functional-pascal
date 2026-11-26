@@ -21,7 +21,13 @@ uses System.Collections.Generic as Lists;
 // - `Documents`: Documents in display order.
 // - `Changed`: Optional source activation mapper.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Documents: array of Sources.Item; Changed: Sys.Func of (int, TMsg)?; Settings: SourceLists.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Documents: array of Sources.Item;
+  Changed: Sys.Func of (int, TMsg)?;
+  Settings: SourceLists.Options
+);
 begin
   const Role: string := 'source-list';
   const Token: string := C.Token(Role, Id);

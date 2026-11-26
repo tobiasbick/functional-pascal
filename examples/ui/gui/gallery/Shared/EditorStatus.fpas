@@ -32,10 +32,21 @@ public const CodeLines: array of string := [
 // - `Columns`: Available terminal cells, or unlimited for the full editor.
 // ## Returns
 // The shared status bar.
-public function View of TMsg(Indent: int; Encoding: int; Language: int; Command: function(string): TMsg; Columns: int := int.MaxValue): E.Element of TMsg;
+public function View of TMsg(
+  Indent: int;
+  Encoding: int;
+  Language: int;
+  Command: function(string): TMsg;
+  Columns: int := int.MaxValue
+): E.Element of TMsg;
 requires Indent >= 0 and Indent < 3 and Encoding >= 0 and Encoding < 2 and Language >= 0
   and Language < 3;
-  function Item(Key: string; Text: string; Tip: string := ''; Icon: string := ''): Status.Item of TMsg;
+  function Item(
+    Key: string;
+    Text: string;
+    Tip: string := '';
+    Icon: string := ''
+  ): Status.Item of TMsg;
   begin
     return (Status.Item of TMsg).Action(
       Key,

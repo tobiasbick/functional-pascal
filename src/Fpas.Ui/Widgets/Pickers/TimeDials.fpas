@@ -43,8 +43,11 @@ end function;
 // ## Returns
 // The graphical time dial.
 public function TimeDial of TMsg(
-  Id: string; Value: Sys.TimeOnly; OnChange: function(Sys.TimeOnly): TMsg;
-  Size: float := 0.0F; Enabled: bool := true
+  Id: string;
+  Value: Sys.TimeOnly;
+  OnChange: function(Sys.TimeOnly): TMsg;
+  Size: float := 0.0F;
+  Enabled: bool := true
 ): E.Element of TMsg;
 requires Id <> '';
 begin

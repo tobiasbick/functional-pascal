@@ -45,7 +45,10 @@ public type Session = record implements Sys.IAsyncDisposable
 
   // Pauses and clears `Id`, or every source when empty, then acknowledges its snapshot.
   // `Cancellation` cancels waiting; an accepted clear remains owned by the worker.
-  public function ClearAsync(Id: string; Cancellation: T.CancellationToken): Tasks.Task of M.Snapshot;
+  public function ClearAsync(
+    Id: string;
+    Cancellation: T.CancellationToken
+  ): Tasks.Task of M.Snapshot;
   begin
     return self.RequestClear(Id).WaitAsync(Cancellation);
   end function;
@@ -59,7 +62,13 @@ public type Session = record implements Sys.IAsyncDisposable
   // Starts background work after validation. `DatabasePath` is absolute or :memory:
   // for isolated tests; `Cancellation` owns the lifetime; `Settings` supplies scan bounds.
   // A distinct absolute `UserDataPath` enables the independently owned metadata stage.
-  public static function Start(Sources: array of S.MusicSource; DatabasePath: string; Cancellation: T.CancellationToken; Settings: M.Options? := null; UserDataPath: string? := null): Session;
+  public static function Start(
+    Sources: array of S.MusicSource;
+    DatabasePath: string;
+    Cancellation: T.CancellationToken;
+    Settings: M.Options? := null;
+    UserDataPath: string? := null
+  ): Session;
   requires Sources <> null;
   requires DatabasePath.Length > 0;
   begin

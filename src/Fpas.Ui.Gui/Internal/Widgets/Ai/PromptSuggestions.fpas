@@ -18,7 +18,13 @@ uses System.Collections.Generic as Lists;
 // - `Items`: Suggestions in display order.
 // - `Changed`: Maps the selected index.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Items: array of PromptSuggestions.Item; Changed: function(int): TMsg; Settings: PromptSuggestions.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Items: array of PromptSuggestions.Item;
+  Changed: function(int): TMsg;
+  Settings: PromptSuggestions.Options
+);
 begin
   const Role: string := 'prompt-suggestions';
   const Token: string := C.Token(Role, Id);

@@ -28,7 +28,11 @@ end procedure;
 // - `Key`: Optional part key.
 // ## Returns
 // The matching control.
-public function Control(Session: Gui.Session of State.Msg; Id: string; Key: string := ''): Gui.Control;
+public function Control(
+  Session: Gui.Session of State.Msg;
+  Id: string;
+  Key: string := ''
+): Gui.Control;
 begin
   for Value: Gui.Control in Session.Snapshot().Controls do
     if Value.Id = Id and Value.Key = Key then

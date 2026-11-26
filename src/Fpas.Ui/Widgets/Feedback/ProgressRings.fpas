@@ -15,7 +15,10 @@ uses Fpas.Ui.Elements as E;
 // ## Returns
 // A GUI-only progress ring; CUI owns its drawing, numeric formatting and animation.
 public function ProgressRing of TMsg(
-  Id: string; Label: string; Value: float; Size: float := 0.0F
+  Id: string;
+  Label: string;
+  Value: float;
+  Size: float := 0.0F
 ): E.Element of TMsg;
 requires Id <> '';
 requires Value >= 0.0F and Value <= 1.0F;

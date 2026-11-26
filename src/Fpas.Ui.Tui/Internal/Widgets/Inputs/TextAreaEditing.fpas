@@ -107,7 +107,13 @@ public type View of TMsg = record
   public Height: int;
 end record;
 
-procedure Replace of TMsg(View: View of TMsg; Start: int; Count: int; Added: string; Apply: procedure(TMsg));
+procedure Replace of TMsg(
+  View: View of TMsg;
+  Start: int;
+  Count: int;
+  Added: string;
+  Apply: procedure(TMsg)
+);
 begin
   const Field: Field of TMsg := View.Field;
   const Position: Cursor := View.Position.Read(Field.Value);
@@ -148,7 +154,13 @@ begin
   end if;
 end procedure;
 
-procedure Place of TMsg(View: View of TMsg; Index: int; Offset: int; Goal: int; Extend: bool := false);
+procedure Place of TMsg(
+  View: View of TMsg;
+  Index: int;
+  Offset: int;
+  Goal: int;
+  Extend: bool := false
+);
 begin
   const BeforeWrap: bool := Index + 1 < View.Rows.Length and View.Rows[Index + 1].Start = Offset;
   const Current: Cursor := View.Position.Read(View.Field.Value);
@@ -174,7 +186,12 @@ end procedure;
 // - `Apply`: Dispatches an edit or submission.
 // ## Returns
 // Whether the key was handled.
-public function Key of TMsg(View: View of TMsg; Pressed: K.Key; Modifiers: K.KeyModifiers; Apply: procedure(TMsg)): bool;
+public function Key of TMsg(
+  View: View of TMsg;
+  Pressed: K.Key;
+  Modifiers: K.KeyModifiers;
+  Apply: procedure(TMsg)
+): bool;
 begin
   const Field: Field of TMsg := View.Field;
   const Value: string := Field.Value;

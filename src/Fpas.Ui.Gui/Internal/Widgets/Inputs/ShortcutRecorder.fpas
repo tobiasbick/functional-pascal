@@ -24,7 +24,13 @@ end function;
 // - `OnChange`: Maps a native combination proposal.
 // - `Settings`: Native placeholder, width and input settings.
 
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Value: K.Combination; OnChange: function(K.Combination): TMsg; Settings: K.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Value: K.Combination;
+  OnChange: function(K.Combination): TMsg;
+  Settings: K.Options
+);
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('shortcut-recorder', Id);

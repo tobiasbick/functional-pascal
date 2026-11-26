@@ -34,7 +34,14 @@ end record;
 // - `Enabled`: Whether the bar accepts input.
 // ## Returns
 // The filter bar for graphical or terminal presentation.
-public function FilterBar of TMsg(Id: string; Fields: array of Field; Current: Value; OnChange: function(Value): TMsg; SearchCapacity: int := 256; Enabled: bool := true): E.Element of TMsg;
+public function FilterBar of TMsg(
+  Id: string;
+  Fields: array of Field;
+  Current: Value;
+  OnChange: function(Value): TMsg;
+  SearchCapacity: int := 256;
+  Enabled: bool := true
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).FilterBar(Id, Fields, Current, OnChange, SearchCapacity, Enabled);

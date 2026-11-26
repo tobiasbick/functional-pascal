@@ -28,7 +28,10 @@ begin
 end function;
 
 function Search(Current: M.State; Term: string): A.Transition of (M.State, M.Msg);
-  async function Run(Context: A.BackgroundContext of M.Msg; Stop: T.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, M.Msg);
+  async function Run(
+    Context: A.BackgroundContext of M.Msg;
+    Stop: T.CancellationToken
+  ): Tasks.Task of Fx.Outcome of (Fx.Completion, M.Msg);
   begin
     try
       const Found: array of M.Show := if Term = '' then
@@ -107,7 +110,10 @@ begin
 end function;
 
 function Open(Current: M.State; Show: M.Show; Subscribe: bool): A.Transition of (M.State, M.Msg);
-  async function Run(Context: A.BackgroundContext of M.Msg; Stop: T.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, M.Msg);
+  async function Run(
+    Context: A.BackgroundContext of M.Msg;
+    Stop: T.CancellationToken
+  ): Tasks.Task of Fx.Outcome of (Fx.Completion, M.Msg);
   begin
     try
       const Feed: M.Feed := await Feeds.Load(Show, Stop).ConfigureAwait(false);
@@ -174,7 +180,11 @@ end function;
 // - `Subscriptions`: Saved feeds for the local subscription filter.
 // ## Returns
 // The new page model and any cancellable directory or feed commands.
-public function Apply(Current: M.State; Action: M.Msg; Subscriptions: array of M.Show): A.Transition of (M.State, M.Msg);
+public function Apply(
+  Current: M.State;
+  Action: M.Msg;
+  Subscriptions: array of M.Show
+): A.Transition of (M.State, M.Msg);
 begin
   var Next: M.State := Current;
   const Discovery: M.DiscoveryFilters? := Current.DiscoveryDraft;

@@ -16,7 +16,10 @@ uses Fpas.Ui.Elements as E;
 // ## Returns
 // A GUI-only meter; CUI owns its track, interpolation and threshold colors.
 public function Meter of TMsg(
-  Id: string; Label: string; Used: float; Total: float;
+  Id: string;
+  Label: string;
+  Used: float;
+  Total: float;
   Unit: string := ''
 ): E.Element of TMsg;
 requires Id <> '';

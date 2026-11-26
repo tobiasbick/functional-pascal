@@ -117,7 +117,11 @@ end function;
 //
 // ## Returns
 // The subtree's minimum content extent in cells.
-public function Minimum of TMsg(Node: E.Element of TMsg; Horizontal: bool; ParentHorizontal: bool? := null): int;
+public function Minimum of TMsg(
+  Node: E.Element of TMsg;
+  Horizontal: bool;
+  ParentHorizontal: bool? := null
+): int;
 begin
   case Node of
     when E.Element.Log(_, _, _):
@@ -322,7 +326,11 @@ end function;
 //
 // ## Returns
 // True when the node can fill this cross-axis extent.
-public function CanStretch of TMsg(Node: E.Element of TMsg; Horizontal: bool; Explicit: bool := false): bool;
+public function CanStretch of TMsg(
+  Node: E.Element of TMsg;
+  Horizontal: bool;
+  Explicit: bool := false
+): bool;
 begin
   case Node of
     when E.Element.ChoiceStrip(const Strip: E.ChoiceStripView of TMsg):
@@ -358,7 +366,11 @@ end function;
 // - `Align`: Cross-axis alignment.
 // ## Returns
 // Columns assigned to the child for painting and text wrapping.
-public function CrossWidth of TMsg(Node: E.Element of TMsg; Available: int; Align: L.Alignment): int;
+public function CrossWidth of TMsg(
+  Node: E.Element of TMsg;
+  Available: int;
+  Align: L.Alignment
+): int;
 begin
   return if (Align = L.Alignment.Stretch or Align = L.Alignment.Default) and CanStretch of TMsg(
     Node,
@@ -372,7 +384,10 @@ begin
 end function;
 
 function WrappedStackHeight of TMsg(
-  Children: array of E.Element of TMsg; Axis: bool; Rule: E.Flow; Columns: int
+  Children: array of E.Element of TMsg;
+  Axis: bool;
+  Rule: E.Flow;
+  Columns: int
 ): int;
 begin
   const Width: int := Sys.Math.Max(0, Columns - 2 * Rule.PaddingX);
@@ -418,7 +433,11 @@ end function;
 // - `Columns`: Wrapping width for a vertical measurement, or minus one for unwrapped content.
 // ## Returns
 // The preferred content extent in cells before applying the parent's allocation.
-public function Intrinsic of TMsg(Node: E.Element of TMsg; Horizontal: bool; Columns: int := -1): int;
+public function Intrinsic of TMsg(
+  Node: E.Element of TMsg;
+  Horizontal: bool;
+  Columns: int := -1
+): int;
 begin
   case Node of
     when E.Element.Log(_, _, _):

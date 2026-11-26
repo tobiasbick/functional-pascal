@@ -29,7 +29,10 @@ end record;
 // ## Returns
 // A graphical date picker with a native calendar popup.
 public function DatePicker of TMsg(
-  Id: string; Value: Sys.DateOnly?; OnChange: function(Sys.DateOnly): TMsg; Settings: Options? := null
+  Id: string;
+  Value: Sys.DateOnly?;
+  OnChange: function(Sys.DateOnly): TMsg;
+  Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin

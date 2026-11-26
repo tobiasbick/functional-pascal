@@ -23,7 +23,11 @@ uses System.Collections.Generic as C;
 // - `Theme`: Active terminal palette.
 // ## Returns
 // A plot on one terminal row.
-public function Lower of TMsg(Values: array of float; Settings: Chart.Options; Theme: Th.Theme): E.Element of TMsg;
+public function Lower of TMsg(
+  Values: array of float;
+  Settings: Chart.Options;
+  Theme: Th.Theme
+): E.Element of TMsg;
 begin
   const Width: int := case Settings.Width of
     when L.Extent.Fixed(const Distance: L.Measure): F.Cells(Distance);
@@ -45,8 +49,13 @@ end function;
 // - `Style`: Inherited text colors.
 // - `Theme`: Active terminal palette.
 public procedure Paint(
-  Operations: C.List of D.Operation; Area: F.Rect; Clip: F.Rect; Values: array of float;
-  Ink: G.Color; Style: T.Style; Theme: Th.Theme
+  Operations: C.List of D.Operation;
+  Area: F.Rect;
+  Clip: F.Rect;
+  Values: array of float;
+  Ink: G.Color;
+  Style: T.Style;
+  Theme: Th.Theme
 );
 begin
   if Values.Length = 0 or Clip.Width = 0 or Clip.Height = 0 then

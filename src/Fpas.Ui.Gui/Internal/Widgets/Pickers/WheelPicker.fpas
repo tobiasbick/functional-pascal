@@ -18,8 +18,12 @@ uses Fpas.Ui.Widgets.Pickers.WheelPickers as W;
 // - `OnChange`: Maps a proposed index to a message.
 // - `Settings`: Wheel presentation and input settings.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Items: array of string; Selected: int;
-  OnChange: function(int): TMsg; Settings: W.Options
+  Frame: C.State of TMsg;
+  Id: string;
+  Items: array of string;
+  Selected: int;
+  OnChange: function(int): TMsg;
+  Settings: W.Options
 );
 begin
   const Enabled: bool := Settings.Enabled and Frame.AcceptInput;

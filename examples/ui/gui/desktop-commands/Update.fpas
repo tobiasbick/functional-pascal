@@ -23,7 +23,10 @@ uses System.Threading.Tasks as Tasks;
 public const SaveEffect: string := 'save-settings';
 
 function SaveSettings(Model: S.Model): Mvu.Transition of (S.Model, S.Msg);
-  async function Write(Value: Preferences.Settings; Token: Threads.CancellationToken): Tasks.Task of Fx.Outcome of (Preferences.Settings, Sys.Exception);
+  async function Write(
+    Value: Preferences.Settings;
+    Token: Threads.CancellationToken
+  ): Tasks.Task of Fx.Outcome of (Preferences.Settings, Sys.Exception);
   begin
     Token.ThrowIfCancellationRequested();
     try
@@ -57,7 +60,10 @@ begin
   );
 end function;
 
-function ChangeSettings(Model: S.Model; Value: Preferences.Settings): Mvu.Transition of (S.Model, S.Msg);
+function ChangeSettings(
+  Model: S.Model;
+  Value: Preferences.Settings
+): Mvu.Transition of (S.Model, S.Msg);
 begin
   return new Mvu.Transition of (S.Model, S.Msg)(
     Model with

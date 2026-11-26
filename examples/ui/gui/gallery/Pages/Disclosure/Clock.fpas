@@ -22,10 +22,14 @@ public const Id: string := 'disclosure-countdown';
 // ## Returns
 // The cancellable background command.
 public function Start of TMsg(
-  Deadline: Sys.DateTimeOffset?; Tick: function(Sys.DateTimeOffset, double): TMsg;
+  Deadline: Sys.DateTimeOffset?;
+  Tick: function(Sys.DateTimeOffset, double): TMsg;
   OnFailure: function(Sys.Exception): TMsg
 ): Mvu.Command of TMsg;
-  async function Run(Post: function(TMsg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+  async function Run(
+    Post: function(TMsg): Tasks.Task;
+    Token: Threads.CancellationToken
+  ): Tasks.Task;
   begin
     const Target: Sys.DateTimeOffset := Deadline ?? Sys.DateTimeOffset.UtcNow.AddSeconds(
       S.InitialSeconds

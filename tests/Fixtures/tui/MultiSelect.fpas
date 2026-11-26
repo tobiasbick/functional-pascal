@@ -29,7 +29,10 @@ begin
   end if;
 end procedure;
 
-function Update(State: array of bool; Proposed: array of bool): M.Transition of (array of bool, array of bool);
+function Update(
+  State: array of bool;
+  Proposed: array of bool
+): M.Transition of (array of bool, array of bool);
 begin
   Check(
     Proposed.Length = Items.Length and not Sys.Object.ReferenceEquals(State, Proposed),
@@ -39,7 +42,10 @@ begin
 end function;
 
 function Picker(
-  Id: string; State: array of bool; Enabled: bool := true; Limit: int := 0
+  Id: string;
+  State: array of bool;
+  Enabled: bool := true;
+  Limit: int := 0
 ): E.Element of array of bool;
 begin
   return Multi.MultiSelect of array of bool(
@@ -101,7 +107,11 @@ begin
   end case;
 end procedure;
 
-procedure Key(Session: T.HeadlessSession; Pressed: K.Key; Modifiers: K.KeyModifiers := K.KeyModifiers.None);
+procedure Key(
+  Session: T.HeadlessSession;
+  Pressed: K.Key;
+  Modifiers: K.KeyModifiers := K.KeyModifiers.None
+);
 begin
   Send(Session, T.Input.KeyPress(Pressed, Modifiers));
 end procedure;

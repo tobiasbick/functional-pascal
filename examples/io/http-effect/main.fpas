@@ -17,7 +17,10 @@ type FetchFailure = variant
 end variant;
 
 function Fetch(Address: Sys.Uri): Fx.Effect of (string, FetchFailure, Http.HttpClient);
-  async function Read(Client: Http.HttpClient; Stop: T.CancellationToken): Tasks.Task of Fx.Outcome of (string, FetchFailure);
+  async function Read(
+    Client: Http.HttpClient;
+    Stop: T.CancellationToken
+  ): Tasks.Task of Fx.Outcome of (string, FetchFailure);
   begin
     try
       using const Response: Http.HttpResponseMessage := await Client.GetAsync(

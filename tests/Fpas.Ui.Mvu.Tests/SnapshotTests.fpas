@@ -21,7 +21,10 @@ public type SnapshotTests = record
   [X.FactAttribute]
   public procedure FullMailboxReplacementAndClose();
     function Update(Model: string; Message: string): A.Transition of (string, string);
-      async function Work(Context: A.BackgroundContext of string; _Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, string);
+      async function Work(
+        Context: A.BackgroundContext of string;
+        _Token: T.CancellationToken
+      ): Tasks.Task of Fx.Outcome of (Fx.Completion, string);
       begin
         try
           await Context.Post(Message + ' reply').ConfigureAwait(false);

@@ -37,7 +37,10 @@ end record;
 // ## Returns
 // A select with model-owned selection.
 public function Select of TMsg(
-  Id: string; Items: array of Item; Selected: int; OnChange: function(int): TMsg;
+  Id: string;
+  Items: array of Item;
+  Selected: int;
+  OnChange: function(int): TMsg;
   Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';

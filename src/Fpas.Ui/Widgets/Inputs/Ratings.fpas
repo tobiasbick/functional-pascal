@@ -19,8 +19,13 @@ uses Fpas.Ui.Elements as E;
 // ## Returns
 // The whole-star rating for the graphical profile.
 public function Rating of TMsg(
-  Id: string; Label: string; Value: int; OnChange: function(int): TMsg;
-  Maximum: int := 5; Enabled: bool := true; StarSize: float := 22.0F
+  Id: string;
+  Label: string;
+  Value: int;
+  OnChange: function(int): TMsg;
+  Maximum: int := 5;
+  Enabled: bool := true;
+  StarSize: float := 22.0F
 ): E.Element of TMsg;
 requires Id <> '' and StarSize > 0.0F;
 begin

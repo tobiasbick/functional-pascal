@@ -20,7 +20,14 @@ uses Fpas.Ui.Widgets.Audio.VoiceNotes as VoiceNotes;
 // - `Playback`: Model-owned transport state.
 // - `Changed`: Maps a transport proposal.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Levels: array of float; Playback: VoiceNotes.Value; Changed: function(VoiceNotes.Event): TMsg; Settings: VoiceNotes.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Levels: array of float;
+  Playback: VoiceNotes.Value;
+  Changed: function(VoiceNotes.Event): TMsg;
+  Settings: VoiceNotes.Options
+);
 begin
   const Role: string := 'voice-note';
   const Token: string := C.Token(Role, Id);

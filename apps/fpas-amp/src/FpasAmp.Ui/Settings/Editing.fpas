@@ -22,7 +22,11 @@ uses System.IO as IO;
 // ## Returns
 // `Current` showing `Next`, or still showing the last saved preferences with
 // `SaveFailed` set when the write failed.
-public function Persist(Current: M.State; Next: M.Preferences; Save: procedure(M.Preferences)): M.State;
+public function Persist(
+  Current: M.State;
+  Next: M.Preferences;
+  Save: procedure(M.Preferences)
+): M.State;
 begin
   try
     Save(Next);
@@ -41,7 +45,10 @@ begin
   end try;
 end function;
 
-function Replace(Sources: array of Locations.MusicSource; Revised: Locations.MusicSource): array of Locations.MusicSource;
+function Replace(
+  Sources: array of Locations.MusicSource;
+  Revised: Locations.MusicSource
+): array of Locations.MusicSource;
 begin
   const Updated: C.List of Locations.MusicSource := new C.List of Locations.MusicSource(Sources);
   for Index: int := 0 to Updated.Count - 1 do

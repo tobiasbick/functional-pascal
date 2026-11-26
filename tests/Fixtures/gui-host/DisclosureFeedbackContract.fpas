@@ -26,7 +26,10 @@ uses System.Threading.Channels as Channels;
 // - `Renderer`: Native renderer under test.
 // - `Capture`: Prefix for the disclosure screenshots.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
-  function Update(Model: State.Model; Message: State.Msg): Mvu.Transition of (State.Model, State.Msg);
+  function Update(
+    Model: State.Model;
+    Message: State.Msg
+  ): Mvu.Transition of (State.Model, State.Msg);
   begin
     case Message of
       when State.Msg.Disclosure(D.Msg.Preview):

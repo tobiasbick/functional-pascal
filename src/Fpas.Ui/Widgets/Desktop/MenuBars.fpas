@@ -32,7 +32,11 @@ end record;
 // - `HideBorder`: Omit the native bottom hairline.
 // ## Returns
 // A graphical element.
-public function MenuBar of TMsg(Id: string; Menus: array of Menu of TMsg; HideBorder: bool := false): E.Element of TMsg;
+public function MenuBar of TMsg(
+  Id: string;
+  Menus: array of Menu of TMsg;
+  HideBorder: bool := false
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).MenuBar(Id, Menus, HideBorder);

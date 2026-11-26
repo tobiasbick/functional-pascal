@@ -23,7 +23,15 @@ uses System.Collections.Generic as Lists;
 // - `Changed`: Maps a native change to a message.
 // - `Settings`: Native widget options.
 // - `Visit`: Presents composed children.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Slides: array of E.Element of TMsg; Index: int; Changed: function(int): TMsg; Settings: Carousels.Options; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Slides: array of E.Element of TMsg;
+  Index: int;
+  Changed: function(int): TMsg;
+  Settings: Carousels.Options;
+  Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
+);
 begin
   const Role: string := 'carousel';
   const Token: string := C.Token(Role, Id);

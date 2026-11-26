@@ -171,7 +171,12 @@ end function;
 // - `Entries`: Ordered locations and optional display titles.
 // - `Overwrite`: Allows replacement of an existing file.
 // - `Cancellation`: Cancels before publication.
-public procedure WriteM3u8(Destination: string; Entries: array of Item; Overwrite: bool; Cancellation: T.CancellationToken);
+public procedure WriteM3u8(
+  Destination: string;
+  Entries: array of Item;
+  Overwrite: bool;
+  Cancellation: T.CancellationToken
+);
 requires Entries.Length <= 100000;
 begin
   Cancellation.ThrowIfCancellationRequested();

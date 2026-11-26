@@ -20,7 +20,8 @@ uses System.Collections.Generic as Lists;
 // - `Pending`: Requests emitted by model updates, in order.
 // - `Active`: Application data retained by native handle.
 public procedure Submit of TMsg(
-  Window: Cui.CuiWindow; Pending: Lists.Queue of T.Request of TMsg;
+  Window: Cui.CuiWindow;
+  Pending: Lists.Queue of T.Request of TMsg;
   Active: Lists.Dictionary of (int, T.Request of TMsg)
 );
 begin
@@ -42,8 +43,17 @@ end procedure;
 // ## Parameters
 // - `Frame`: Completed GUI frame awaiting publication.
 // - `Active`: Application data retained by native handle.
-public procedure Collect of TMsg(Frame: C.State of TMsg; Active: Lists.Dictionary of (int, T.Request of TMsg));
-  procedure Track(Id: string; Text: string; Role: string; Part: CuiFeedback.CuiToastPart?; Enabled: bool);
+public procedure Collect of TMsg(
+  Frame: C.State of TMsg;
+  Active: Lists.Dictionary of (int, T.Request of TMsg)
+);
+  procedure Track(
+    Id: string;
+    Text: string;
+    Role: string;
+    Part: CuiFeedback.CuiToastPart?;
+    Enabled: bool
+  );
   begin
     case Part of
       when is CuiFeedback.CuiToastPart as Visible:

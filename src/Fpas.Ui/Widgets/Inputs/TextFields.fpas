@@ -50,8 +50,11 @@ end record;
 // ## Returns
 // An editable field for the active host.
 public function TextField of TMsg(
-  Id: string; Value: string; OnChange: function(string): TMsg;
-  Settings: Options? := null; OnSubmit: Sys.Func of (string, TMsg)? := null
+  Id: string;
+  Value: string;
+  OnChange: function(string): TMsg;
+  Settings: Options? := null;
+  OnSubmit: Sys.Func of (string, TMsg)? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin

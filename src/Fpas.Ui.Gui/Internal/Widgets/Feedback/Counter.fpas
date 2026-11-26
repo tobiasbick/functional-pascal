@@ -17,7 +17,12 @@ uses System as Sys;
 // - `Id`: Stable widget identity.
 // - `Value`: Current numeric value.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Value: double; Settings: W.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Value: double;
+  Settings: W.Options
+);
 begin
   const Role: string := 'counter';
   const Token: string := C.Token(Role, Id);

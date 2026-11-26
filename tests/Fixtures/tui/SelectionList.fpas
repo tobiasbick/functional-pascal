@@ -107,7 +107,11 @@ begin
   end case;
 end procedure;
 
-procedure Key(Session: T.HeadlessSession; Pressed: K.Key; Modifiers: K.KeyModifiers := K.KeyModifiers.None);
+procedure Key(
+  Session: T.HeadlessSession;
+  Pressed: K.Key;
+  Modifiers: K.KeyModifiers := K.KeyModifiers.None
+);
 begin
   Send(Session, T.Input.KeyPress(Pressed, Modifiers));
 end procedure;

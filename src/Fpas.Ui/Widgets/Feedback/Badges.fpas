@@ -29,7 +29,11 @@ end record;
 // - `Settings`: Optional appearance.
 // ## Returns
 // The graphical element.
-public function Badge of TMsg(Id: string; Text: string; Settings: Options? := null): E.Element of TMsg;
+public function Badge of TMsg(
+  Id: string;
+  Text: string;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).Badge(Id, Text, Settings ?? new Options());

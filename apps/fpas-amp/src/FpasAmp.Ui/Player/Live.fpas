@@ -37,7 +37,11 @@ begin
 end function;
 
 // Applies decoder observations for the current live station and revision.
-public function Observe(Current: M.State; Station: R.Station; Value: Audio.PlaybackEvent): M.Transition;
+public function Observe(
+  Current: M.State;
+  Station: R.Station;
+  Value: Audio.PlaybackEvent
+): M.Transition;
 begin
   if Current.Revision <> Value.RequestId or Station.Url <> Value.Path or not Current.Playing then
     return new M.Transition(Current);

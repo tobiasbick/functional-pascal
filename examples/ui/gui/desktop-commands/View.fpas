@@ -96,7 +96,11 @@ end function;
 // - `Theme`: Resolved palette for the panes.
 // ## Returns
 // The native CUI view.
-public function Build(Model: S.Model; Viewport: L.Viewport; Theme: Themes.Theme): E.Element of S.Msg;
+public function Build(
+  Model: S.Model;
+  Viewport: L.Viewport;
+  Theme: Themes.Theme
+): E.Element of S.Msg;
 begin
   return E.Column of S.Msg(
     new L.Flow(Padding := L.Spacing.Normal, Gap := L.Spacing.Normal),

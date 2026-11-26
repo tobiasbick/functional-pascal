@@ -19,7 +19,13 @@ uses Fpas.Ui.Widgets.Ai.Composers as Composers;
 // - `Content`: The model-owned draft, attachments, selection and recording.
 // - `Changed`: Maps an edit or native action.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Content: Composers.Value; Changed: function(Composers.Event): TMsg; Settings: Composers.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Content: Composers.Value;
+  Changed: function(Composers.Event): TMsg;
+  Settings: Composers.Options
+);
 begin
   const Role: string := 'composer';
   const Token: string := C.Token(Role, Id);

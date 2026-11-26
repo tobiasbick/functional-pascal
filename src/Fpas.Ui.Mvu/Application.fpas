@@ -108,7 +108,10 @@ end function;
 //
 // ## Returns
 // The command that starts the run.
-public function StartBackground of TMsg(Id: string; Work: Fx.Effect of (Fx.Completion, TMsg, BackgroundContext of TMsg)): Command of TMsg;
+public function StartBackground of TMsg(
+  Id: string;
+  Work: Fx.Effect of (Fx.Completion, TMsg, BackgroundContext of TMsg)
+): Command of TMsg;
 requires Id.Length > 0;
 begin
   return (Command of TMsg).Start(Id, Work);
@@ -129,7 +132,10 @@ public function FromWorker of TMsg(
   Work: function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task;
   OnFailure: function(Sys.Exception): TMsg
 ): Fx.Effect of (Fx.Completion, TMsg, BackgroundContext of TMsg);
-  async function Run(Context: BackgroundContext of TMsg; Token: Threads.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, TMsg);
+  async function Run(
+    Context: BackgroundContext of TMsg;
+    Token: Threads.CancellationToken
+  ): Tasks.Task of Fx.Outcome of (Fx.Completion, TMsg);
   begin
     try
       await Work(Context.Post, Token).ConfigureAwait(false);
@@ -161,10 +167,15 @@ end function;
 // ## Returns
 // A deferred effect ready for `StartBackground`.
 public function FromEffect of (A, E, R, TMsg)(
-  Work: Fx.Effect of (A, E, R); Environment: function(BackgroundContext of TMsg): R;
-  OnSuccess: function(A): TMsg; OnFailure: function(E): TMsg
+  Work: Fx.Effect of (A, E, R);
+  Environment: function(BackgroundContext of TMsg): R;
+  OnSuccess: function(A): TMsg;
+  OnFailure: function(E): TMsg
 ): Fx.Effect of (Fx.Completion, TMsg, BackgroundContext of TMsg);
-  async function Run(Context: BackgroundContext of TMsg; Token: Threads.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, TMsg);
+  async function Run(
+    Context: BackgroundContext of TMsg;
+    Token: Threads.CancellationToken
+  ): Tasks.Task of Fx.Outcome of (Fx.Completion, TMsg);
   begin
     case await Work.Run(Environment(Context), Token).ConfigureAwait(false) of
       when Fx.Outcome.Success(const Value: A):

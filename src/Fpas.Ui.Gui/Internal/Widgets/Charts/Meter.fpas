@@ -19,8 +19,12 @@ uses System.Globalization as Culture;
 // - `Total`: Model-owned capacity.
 // - `Unit`: Literal value suffix.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Label: string; Used: float;
-  Total: float; Unit: string
+  Frame: C.State of TMsg;
+  Id: string;
+  Label: string;
+  Used: float;
+  Total: float;
+  Unit: string
 );
 begin
   Frame.Window.Meter(C.Token('meter', Id), Label, Used, Total, Unit);

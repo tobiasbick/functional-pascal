@@ -65,7 +65,10 @@ begin
   end if;
 end function;
 
-function SameArtwork(Left: I.ImmutableArray of Albums.Album; Right: I.ImmutableArray of Albums.Album): bool;
+function SameArtwork(
+  Left: I.ImmutableArray of Albums.Album;
+  Right: I.ImmutableArray of Albums.Album
+): bool;
 begin
   if Left.Length <> Right.Length then
     return false;
@@ -83,7 +86,8 @@ end function;
 // Keeps the covers of albums whose artwork revision did not change, so a catalogue
 // update does not blank covers that are still current.
 function Fresh(
-  Previous: I.ImmutableArray of Albums.Album; Items: I.ImmutableArray of Albums.Album;
+  Previous: I.ImmutableArray of Albums.Album;
+  Items: I.ImmutableArray of Albums.Album;
   Loaded: I.ImmutableDictionary of (string, Images.Bitmap?)
 ): I.ImmutableDictionary of (string, Images.Bitmap?);
 begin
@@ -110,7 +114,10 @@ begin
   return Kept;
 end function;
 
-function SameOrder(Left: I.ImmutableArray of Albums.Album; Right: I.ImmutableArray of Albums.Album): bool;
+function SameOrder(
+  Left: I.ImmutableArray of Albums.Album;
+  Right: I.ImmutableArray of Albums.Album
+): bool;
 begin
   if Left.Length <> Right.Length then
     return false;

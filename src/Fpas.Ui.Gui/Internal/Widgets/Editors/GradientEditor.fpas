@@ -21,7 +21,14 @@ uses System.Collections.Generic as Lists;
 // - `Selected`: Current stop selection.
 // - `Changed`: Maps a native proposal.
 // - `Settings`: Native layout and behavior options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Stops: array of D.Stop; Selected: int; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Stops: array of D.Stop;
+  Selected: int;
+  Changed: function(D.Event): TMsg;
+  Settings: D.Options
+);
 begin
   const Role: string := 'gradient-editor';
   const Token: string := C.Token(Role, Id);

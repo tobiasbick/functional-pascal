@@ -248,7 +248,11 @@ end procedure;
 
 // Creates a verified sibling of Path with Changes applied. Original is the
 // expected file stamp. Returns the staged path, which the caller owns.
-public function Stage(Path: string; Original: Snapshot; Changes: I.ImmutableDictionary of (string, string?)): string;
+public function Stage(
+  Path: string;
+  Original: Snapshot;
+  Changes: I.ImmutableDictionary of (string, string?)
+): string;
 begin
   VerifyStamp(Path, Original);
   const Temporary: string := IO.Path.Combine(

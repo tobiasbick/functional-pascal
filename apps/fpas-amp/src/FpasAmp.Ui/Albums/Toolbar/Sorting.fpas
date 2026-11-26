@@ -35,7 +35,12 @@ begin
   end case;
 end function;
 
-function Choice(Current: M.State; Key: string; Value: M.Order; Scope: M.Scope): Menus.Entry of M.Msg;
+function Choice(
+  Current: M.State;
+  Key: string;
+  Value: M.Order;
+  Scope: M.Scope
+): Menus.Entry of M.Msg;
 begin
   return (Menus.Entry of M.Msg).Action(
     new Menus.Item of M.Msg(
@@ -56,7 +61,11 @@ end function;
 // - `Searching`: Whether the search text contains words.
 // ## Returns
 // The sort menu.
-public function Build(Current: M.State; Searching: bool; Scope: M.Scope := M.Scope.Albums): E.Element of M.Msg;
+public function Build(
+  Current: M.State;
+  Searching: bool;
+  Scope: M.Scope := M.Scope.Albums
+): E.Element of M.Msg;
 begin
   const Relevance: bool := Current.Sort = M.Order.Relevance;
   const Alphabetic: bool := Current.Sort = M.Order.Title or Current.Sort = M.Order.Artist;
@@ -131,7 +140,12 @@ end function;
 // - `Descending`: Whether to show the descending icon.
 // ## Returns
 // The sort button and its menu.
-public function Trigger of TMsg(Id: string; Label: string; Entries: array of Menus.Entry of TMsg; Descending: bool): E.Element of TMsg;
+public function Trigger of TMsg(
+  Id: string;
+  Label: string;
+  Entries: array of Menus.Entry of TMsg;
+  Descending: bool
+): E.Element of TMsg;
 begin
   return Menus.Menu of TMsg(
     Id, Label, Entries,

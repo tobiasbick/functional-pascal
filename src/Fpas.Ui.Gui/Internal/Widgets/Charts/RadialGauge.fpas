@@ -21,7 +21,14 @@ uses Fpas.Ui.Widgets.Charts.RadialGauges as W;
 // - `Minimum`: Inclusive lower scale limit.
 // - `Maximum`: Increasing upper scale limit.
 // - `Settings`: Native presentation.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Value: float; Minimum: float; Maximum: float; Settings: W.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Value: float;
+  Minimum: float;
+  Maximum: float;
+  Settings: W.Options
+);
 begin
   const Token: string := C.Token('radial-gauge', Id);
 

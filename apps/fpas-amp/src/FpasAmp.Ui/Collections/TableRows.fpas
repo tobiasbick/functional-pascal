@@ -35,7 +35,12 @@ end function;
 // - `Key`: Returns the row's stable identity.
 // ## Returns
 // The matching row index in After, or -1 if the original selection is unavailable.
-public function Position of T(Before: array of T; Index: int; After: array of T; Key: function(T): string): int;
+public function Position of T(
+  Before: array of T;
+  Index: int;
+  After: array of T;
+  Key: function(T): string
+): int;
 begin
   if Index < 0 or Index >= Before.Length then
     return -1;

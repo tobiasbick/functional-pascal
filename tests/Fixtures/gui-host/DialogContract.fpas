@@ -354,7 +354,13 @@ procedure VerifyGeometry(Renderer: Cui.CuiRenderer);
   begin
     Check(Session.Step(), 'The dialog geometry fixture closed.');
   end procedure;
-  procedure Drag(Session: Gui.Session of State.Msg; FromX: float; FromY: float; ByX: float; ByY: float);
+  procedure Drag(
+    Session: Gui.Session of State.Msg;
+    FromX: float;
+    FromY: float;
+    ByX: float;
+    ByY: float
+  );
   begin
     X := FromX;
     Y := FromY;

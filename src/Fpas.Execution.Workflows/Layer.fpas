@@ -27,7 +27,10 @@ public type Layer of (A, E, R) = record
   //
   // ## Returns
   // The deferred layer.
-  public static function Create(Work: Fx.Effect of (A, E, R); Release: function(A): Tasks.Task): Layer of (A, E, R);
+  public static function Create(
+    Work: Fx.Effect of (A, E, R);
+    Release: function(A): Tasks.Task
+  ): Layer of (A, E, R);
     async function Build(Environment: R; Lifetime: S.Scope): Tasks.Task of Fx.Outcome of (A, E);
     begin
       const Result: Fx.Outcome of (A, E) := await Work.Run(
@@ -111,8 +114,14 @@ end record;
 //
 // ## Returns
 // A deferred workflow that releases the dependency before returning.
-public function Provide of (A, B, E, R)(Work: Fx.Effect of (B, E, A); Dependencies: Layer of (A, E, R)): Fx.Effect of (B, E, R);
-  function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task of Fx.Outcome of (B, E);
+public function Provide of (A, B, E, R)(
+  Work: Fx.Effect of (B, E, A);
+  Dependencies: Layer of (A, E, R)
+): Fx.Effect of (B, E, R);
+  function Execute(
+    Environment: R;
+    Cancellation: Threads.CancellationToken
+  ): Tasks.Task of Fx.Outcome of (B, E);
     async function Use(Lifetime: S.Scope): Tasks.Task of Fx.Outcome of (B, E);
     begin
       case await Dependencies.Build(Environment, Lifetime).ConfigureAwait(false) of

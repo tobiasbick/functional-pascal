@@ -170,7 +170,10 @@ begin
 end procedure;
 
 // Builds selectable recording tags, enriched with Release when it was retrieved.
-public function Proposals(Recording: E.IRecording; Release: E.IRelease?): I.ImmutableDictionary of (string, string);
+public function Proposals(
+  Recording: E.IRecording;
+  Release: E.IRelease?
+): I.ImmutableDictionary of (string, string);
 begin
   const Fields: Builder := I.ImmutableDictionary.CreateBuilder of (string, string)();
   Put(Fields, 'recording', Recording.Id.ToString('D'));

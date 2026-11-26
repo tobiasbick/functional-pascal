@@ -20,8 +20,11 @@ uses System.Collections.Generic as Lists;
 // - `OnChange`: Maps the changed index and proposed item to a message.
 // - `Enabled`: Whether the group accepts input.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Items: array of R.Item;
-  OnChange: function(int, R.Item): TMsg; Enabled: bool
+  Frame: C.State of TMsg;
+  Id: string;
+  Items: array of R.Item;
+  OnChange: function(int, R.Item): TMsg;
+  Enabled: bool
 );
 begin
   const Accept: bool := Enabled and Frame.AcceptInput;

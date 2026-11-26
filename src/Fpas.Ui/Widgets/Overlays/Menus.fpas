@@ -102,7 +102,12 @@ end function;
 // - `Settings`: Optional trigger and popup settings.
 // ## Returns
 // A menu that sends a command message and closes when that command is chosen.
-public function Menu of TMsg(Id: string; Label: string; Entries: array of Entry of TMsg; Settings: Options? := null): E.Element of TMsg;
+public function Menu of TMsg(
+  Id: string;
+  Label: string;
+  Entries: array of Entry of TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).Dropdown(Id, Label, Entries, Settings ?? new Options());
@@ -118,7 +123,12 @@ end function;
 // - `Enabled`: Whether this context menu accepts input; target behavior is unchanged.
 // ## Returns
 // The target with CUI's pointer-positioned context menu. Requires the graphical profile.
-public function ContextMenu of TMsg(Id: string; Target: E.Element of TMsg; Entries: array of Entry of TMsg; Enabled: bool := true): E.Element of TMsg;
+public function ContextMenu of TMsg(
+  Id: string;
+  Target: E.Element of TMsg;
+  Entries: array of Entry of TMsg;
+  Enabled: bool := true
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).Contextual(Id, Target, Entries, Enabled);

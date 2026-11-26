@@ -117,7 +117,13 @@ end procedure;
 // - `Profile`: Target capabilities.
 // - `Identify`: Registers the widget ID.
 // - `Visit`: Checks embedded content.
-public procedure Check of TMsg(Element: E.Element of TMsg; Location: string; Profile: R.Profile; Identify: function(string, string): string; Visit: procedure((E.Element of TMsg)?, string));
+public procedure Check of TMsg(
+  Element: E.Element of TMsg;
+  Location: string;
+  Profile: R.Profile;
+  Identify: function(string, string): string;
+  Visit: procedure((E.Element of TMsg)?, string)
+);
   function At(Id: string; Role: string): string;
   begin
     const Path: string := Identify(Id, Location + '/' + Role);

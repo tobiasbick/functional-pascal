@@ -33,7 +33,11 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // The graphical element.
-public function CodeBlock of TMsg(Id: string; Code: string; Settings: Options? := null): E.Element of TMsg;
+public function CodeBlock of TMsg(
+  Id: string;
+  Code: string;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).CodeBlock(Id, Code, Settings ?? new Options());

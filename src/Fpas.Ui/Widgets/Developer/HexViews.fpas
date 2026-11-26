@@ -75,7 +75,13 @@ end record;
 // - `Settings`: Native presentation options.
 // ## Returns
 // A graphical view element.
-public function HexView of TMsg(Id: string; Data: array of byte; Selected: Selection; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
+public function HexView of TMsg(
+  Id: string;
+  Data: array of byte;
+  Selected: Selection;
+  Changed: function(Event): TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).HexView(Id, Data, Selected, Changed, Settings ?? new Options());

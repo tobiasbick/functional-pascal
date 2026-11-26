@@ -9,7 +9,10 @@ uses System.Console as Console;
 begin
   const Values: Component.BindingList of int := new Component.BindingList of int();
   var Changes: int := 0;
-  const Handler: Component.ListChangedEventHandler := procedure(Sender: object?; Change: Component.ListChangedEventArgs) begin
+  const Handler: Component.ListChangedEventHandler := procedure(
+    Sender: object?;
+    Change: Component.ListChangedEventArgs
+  ) begin
     Changes := Changes + 1;
     Console.WriteLine(Change.ListChangedType);
   end procedure;

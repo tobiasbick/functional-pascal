@@ -19,7 +19,13 @@ uses Fpas.Ui.Widgets.Charts.EventTracks as W;
 // - `Current`: Model-owned times and selected event.
 // - `Change`: Maps a native edit to a message.
 // - `Settings`: Native presentation options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Current: W.Value; Change: function(W.Change): TMsg; Settings: W.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Current: W.Value;
+  Change: function(W.Change): TMsg;
+  Settings: W.Options
+);
 begin
   const Token: string := C.Token('event-track', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;

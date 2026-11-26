@@ -104,7 +104,9 @@ public type Scope = record
   end function;
 
   async function Execute of A(
-    Work: function(Scope): Tasks.Task of A; Source: Threads.CancellationTokenSource; Parent: Threads.CancellationToken
+    Work: function(Scope): Tasks.Task of A;
+    Source: Threads.CancellationTokenSource;
+    Parent: Threads.CancellationToken
   ): Tasks.Task of A;
     procedure CancelFromParent();
     begin
@@ -200,14 +202,21 @@ public type Scope = record
   //
   // ## Returns
   // The body result after all owned children and finalizers finish.
-  public static function Use of A(Work: function(Scope): Tasks.Task of A; Cancellation: Threads.CancellationToken): Tasks.Task of A;
+  public static function Use of A(
+    Work: function(Scope): Tasks.Task of A;
+    Cancellation: Threads.CancellationToken
+  ): Tasks.Task of A;
   begin
     const Source: Threads.CancellationTokenSource := new Threads.CancellationTokenSource();
     return Scope.Open(Source).Execute of A(Work, Source, Cancellation);
   end function;
 end record;
 
-async function Observe(Work: Tasks.Task; Faults: C.List of Sys.Exception; IgnoreCancellation: bool): Tasks.Task;
+async function Observe(
+  Work: Tasks.Task;
+  Faults: C.List of Sys.Exception;
+  IgnoreCancellation: bool
+): Tasks.Task;
 begin
   try
     await Work.ConfigureAwait(false);

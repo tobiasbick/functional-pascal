@@ -43,7 +43,10 @@ end record;
 // ## Returns
 // A tab strip that leaves the choice of content to the view.
 public function Tabs of TMsg(
-  Id: string; Items: array of Item; Selected: int; OnChange: function(int): TMsg;
+  Id: string;
+  Items: array of Item;
+  Selected: int;
+  OnChange: function(int): TMsg;
   Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';

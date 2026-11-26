@@ -22,7 +22,11 @@ uses System.Collections.Generic as C;
 // ## Returns
 // Terminal strip with a single selected choice.
 public function Lower of TMsg(
-  Id: string; Items: array of S.Item; Selected: int; Change: function(int): TMsg; Settings: S.Options
+  Id: string;
+  Items: array of S.Item;
+  Selected: int;
+  Change: function(int): TMsg;
+  Settings: S.Options
 ): E.Element of TMsg;
   function Activate(Index: int): A.Result of TMsg;
   begin

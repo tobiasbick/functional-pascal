@@ -59,7 +59,11 @@ end record;
 // - `Apply`: Dispatches the expansion message.
 // ## Returns
 // Focus destination, empty when handled in place, or null for an unrelated key.
-public function Navigate of TMsg(Handler: (A.IActivatable of TMsg)?; Key: K.Key; Apply: procedure(TMsg)): string?;
+public function Navigate of TMsg(
+  Handler: (A.IActivatable of TMsg)?;
+  Key: K.Key;
+  Apply: procedure(TMsg)
+): string?;
 begin
   if Key <> K.Key.Left and Key <> K.Key.Right then
     return null;

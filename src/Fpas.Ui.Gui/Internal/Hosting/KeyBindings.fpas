@@ -27,7 +27,10 @@ end record;
 // - `Select`: Optional model selector.
 // ## Returns
 // Retained bindings; an absent selector supplies no application shortcuts.
-public function Prepare of (TModel, TMsg)(Model: TModel; Select: Sys.Func of (TModel, array of S.Binding of TMsg)?): Prepared of TMsg;
+public function Prepare of (TModel, TMsg)(
+  Model: TModel;
+  Select: Sys.Func of (TModel, array of S.Binding of TMsg)?
+): Prepared of TMsg;
 begin
   const Entries: array of S.Binding of TMsg := case Select of
     when is Sys.Func of (TModel, array of S.Binding of TMsg) as Choose: Choose.Invoke(Model);
@@ -54,7 +57,12 @@ end function;
 // - `Bindings`: Retained bindings for this view.
 // - `Accept`: Whether application input is admitted.
 // - `Messages`: Typed proposals to enqueue after presentation.
-public procedure Collect of TMsg(Window: Cui.CuiWindow; Bindings: Prepared of TMsg; Accept: bool; Messages: Lists.List of TMsg);
+public procedure Collect of TMsg(
+  Window: Cui.CuiWindow;
+  Bindings: Prepared of TMsg;
+  Accept: bool;
+  Messages: Lists.List of TMsg
+);
 begin
   if not Accept then
     return;

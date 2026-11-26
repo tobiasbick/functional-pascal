@@ -108,7 +108,12 @@ begin
   return new M.Transition(Current, M.Request.Mixer(new Audio.Settings(Current.Volume, Gains)));
 end function;
 
-function AvailableIndex(Current: M.State; Index: int; Direction: int; Allowed: function(Tracks.Entry): bool): int;
+function AvailableIndex(
+  Current: M.State;
+  Index: int;
+  Direction: int;
+  Allowed: function(Tracks.Entry): bool
+): int;
 begin
   var Slot: int := Index;
   while Slot >= 0 and Slot < Current.Queue.Length do
@@ -132,7 +137,11 @@ begin
   );
 end function;
 
-function Observe(Current: M.State; Value: Audio.PlaybackEvent; Allowed: function(Tracks.Entry): bool): M.Transition;
+function Observe(
+  Current: M.State;
+  Value: Audio.PlaybackEvent;
+  Allowed: function(Tracks.Entry): bool
+): M.Transition;
 begin
   const Track: Tracks.Entry? := M.Track(Current);
   if Track = null or Value.RequestId <> Current.Revision or Value.Path <> M.AudioPath(
@@ -201,7 +210,11 @@ end function;
 // - `Allowed`: Current source membership predicate for queue navigation.
 // ## Returns
 // The updated strip state and optional ordered session request.
-public function Apply(Current: M.State; Message: M.Msg; Allowed: function(Tracks.Entry): bool): M.Transition;
+public function Apply(
+  Current: M.State;
+  Message: M.Msg;
+  Allowed: function(Tracks.Entry): bool
+): M.Transition;
 requires Current.Index >= -1;
 begin
   const Track: Tracks.Entry? := M.Track(Current);

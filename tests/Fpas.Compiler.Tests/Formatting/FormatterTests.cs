@@ -179,11 +179,60 @@ public sealed class FormatterTests
     }
 
     [Fact]
-    public void Retains_authored_argument_and_formal_parameter_groups()
+    public void Keeps_authored_call_groups_and_compacts_a_short_formal_list()
     {
         var output = Format("program Demo;function Add(\n A:int;B:int;\n C:int\n):int;begin return A+B+C;end function;begin discard Add(\n1,2,\n3\n);end;end program;");
-        Assert.Contains("Add(\n  A: int; B: int;\n  C: int\n): int;", output);
+        Assert.Contains("function Add(A: int; B: int; C: int): int;", output);
         Assert.Contains("discard Add(\n    1, 2,\n    3\n  );", output);
+    }
+
+    [Fact]
+    public void Long_routine_headers_use_one_parameter_per_line_and_compact_after_removal()
+    {
+        const string source = """
+            program Demo;
+            function FormatReport(
+              Title: string; Subtitle: string;
+              IncludeTotals: bool; IncludeDetails: bool
+            ): string;
+            begin return Title; end function;
+            begin end;
+            end program;
+            """;
+        var formatted = Format(source);
+        Assert.Contains("function FormatReport(\n  Title: string;\n  Subtitle: string;\n" +
+            "  IncludeTotals: bool;\n  IncludeDetails: bool\n): string;", formatted);
+        var shorter = Format(formatted.Replace("  Subtitle: string;\n", "", StringComparison.Ordinal));
+        Assert.Contains("function FormatReport(Title: string; IncludeTotals: bool; IncludeDetails: bool): string;", shorter);
+    }
+
+    [Theory]
+    [InlineData(100, false)]
+    [InlineData(101, true)]
+    public void Header_width_includes_the_return_type_and_terminator(int width, bool wraps)
+    {
+        const string signature = "function Fetch(Value: int): ";
+        var result = new string('T', width - signature.Length - 1);
+        var input = $"unit Demo; {signature}{result}; begin return Value; end function; end unit;";
+        var formatted = Format(input);
+        Assert.Contains(wraps ? $"function Fetch(\n  Value: int\n): {result};" : signature + result + ";", formatted);
+    }
+
+    [Theory]
+    [InlineData("First: string := 'first\nsecond';", "First: string := 'first\nsecond';")]
+    [InlineData("First: int; // Explain the first parameter.\n", "First: int; // Explain the first parameter.")]
+    public void Comments_and_multiline_defaults_keep_all_formals_expanded(string first, string expected)
+    {
+        var output = Format($"unit Demo; procedure Report({first} Next: int; Last: bool); begin end procedure; end unit;");
+        Assert.Contains($"procedure Report(\n  {expected}\n  Next: int;\n  Last: bool\n);", output);
+    }
+
+    [Fact]
+    public void A_long_lambda_body_does_not_expand_a_short_parameter_list()
+    {
+        const string input = "program Demo; begin discard function(\n A: int; B: int\n): int => " +
+            "SomeLongNameThatIsPartOfTheBody + AnotherLongNameThatIsPartOfTheBody; end; end program;";
+        Assert.Contains("function(A: int; B: int): int =>", Format(input));
     }
 
     [Fact]

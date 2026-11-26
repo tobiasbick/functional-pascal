@@ -14,7 +14,12 @@ uses Fpas.Ui.Widgets.Overlays.Menus as M;
 // - `Id`: Menu identity independent of its target.
 // - `Entries`: Shared keyed commands and decorations.
 // - `Enabled`: Whether the context menu accepts input.
-public procedure Draw of TMsg(State: C.State of TMsg; Id: string; Entries: array of M.Entry of TMsg; Enabled: bool);
+public procedure Draw of TMsg(
+  State: C.State of TMsg;
+  Id: string;
+  Entries: array of M.Entry of TMsg;
+  Enabled: bool
+);
 begin
   if not State.Window.HasLastWidget then
     return;

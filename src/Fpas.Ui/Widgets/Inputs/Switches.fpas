@@ -18,8 +18,12 @@ uses Fpas.Ui.Elements as E;
 // ## Returns
 // The control that proposes changes to the model.
 public function Switch of TMsg(
-  Id: string; Label: string; On: bool; OnChange: function(bool): TMsg;
-  Description: string := ''; Enabled: bool := true
+  Id: string;
+  Label: string;
+  On: bool;
+  OnChange: function(bool): TMsg;
+  Description: string := '';
+  Enabled: bool := true
 ): E.Element of TMsg;
 requires Id <> '';
 begin

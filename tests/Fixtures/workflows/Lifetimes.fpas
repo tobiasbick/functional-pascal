@@ -19,13 +19,19 @@ begin
 end procedure;
 
 async function VerifyLayers(): Tasks.Task;
-  function Acquire(Value: int; Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (int, string);
+  function Acquire(
+    Value: int;
+    Token: T.CancellationToken
+  ): Tasks.Task of Fx.Outcome of (int, string);
   begin
     Events.Add('acquire ' + Value.ToString());
     return Tasks.Task.FromResult of Fx.Outcome of (int, string)(Fx.Outcome.Success(Value));
   end function;
 
-  function AcquireDependent(Value: int; Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (int, string);
+  function AcquireDependent(
+    Value: int;
+    Token: T.CancellationToken
+  ): Tasks.Task of Fx.Outcome of (int, string);
   begin
     if Value < 0 then
       return Tasks.Task.FromResult of Fx.Outcome of (int, string)(
@@ -235,7 +241,10 @@ begin
 end function;
 
 async function VerifyLateAcquisition(): Tasks.Task;
-  function Acquire(Value: int; Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (int, string);
+  function Acquire(
+    Value: int;
+    Token: T.CancellationToken
+  ): Tasks.Task of Fx.Outcome of (int, string);
   begin
     return Acquired.Task;
   end function;

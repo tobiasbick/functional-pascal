@@ -64,7 +64,14 @@ end function;
 // - `Preferred`: Preferred part for a whole-widget request.
 // ## Returns
 // The native part index or minus one.
-public function Focus of TMsg(Frame: C.State of TMsg; Id: string; Role: string; Parts: array of string; Accept: array of bool; Preferred: int): int;
+public function Focus of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Role: string;
+  Parts: array of string;
+  Accept: array of bool;
+  Preferred: int
+): int;
 begin
   for Index: int := 0 to Parts.Length - 1 do
     const Part: string := PartId(Id, Parts[Index]);
@@ -89,7 +96,12 @@ end function;
 // - `Parts`: Part names in native order.
 // ## Returns
 // The tracking mapper, or null while painting a closing view.
-public function Tracker of TMsg(Frame: C.State of TMsg; Id: string; Role: string; Parts: array of string): Sys.Func of (int, string)?;
+public function Tracker of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Role: string;
+  Parts: array of string
+): Sys.Func of (int, string)?;
 begin
   if Frame.PaintingClosed then
     return null;
@@ -108,7 +120,14 @@ end function;
 // - `Caption`: Visible label.
 // - `Enabled`: Input permission.
 // - `Value`: Snapshot value.
-public procedure Root of TMsg(Frame: C.State of TMsg; Id: string; Role: string; Caption: string; Enabled: bool; Value: string);
+public procedure Root of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Role: string;
+  Caption: string;
+  Enabled: bool;
+  Value: string
+);
 begin
   C.Track of TMsg(
     Frame,
@@ -127,7 +146,15 @@ end procedure;
 // - `Caption`: Visible label.
 // - `Enabled`: Input permission.
 // - `Value`: Snapshot value.
-public procedure Part of TMsg(Frame: C.State of TMsg; Id: string; Role: string; Key: string; Caption: string; Enabled: bool; Value: string);
+public procedure Part of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Role: string;
+  Key: string;
+  Caption: string;
+  Enabled: bool;
+  Value: string
+);
 begin
   if not Frame.PaintingClosed then
     Frame.Controls.Add(

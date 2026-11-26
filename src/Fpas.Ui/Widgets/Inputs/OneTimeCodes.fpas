@@ -29,8 +29,11 @@ end record;
 // ## Returns
 // A graphical code input.
 public function OneTimeCodeInput of TMsg(
-  Id: string; Value: string; OnChange: function(string): TMsg;
-  Settings: Options? := null; OnComplete: Sys.Func of (string, TMsg)? := null
+  Id: string;
+  Value: string;
+  OnChange: function(string): TMsg;
+  Settings: Options? := null;
+  OnComplete: Sys.Func of (string, TMsg)? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin

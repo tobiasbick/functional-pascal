@@ -20,7 +20,12 @@ public type Watchers = record implements Sys.IDisposable
   // `Inbox` accepts nonblocking invalidations; failures fall back to control scans.
   // `DatabasePath` and its SQLite sidecars are excluded to avoid self-triggered scans.
   // Optional `UserDataPath` also excludes its sidecars and the adjacent cover cache.
-  public static function Open(Roots: array of string; Inbox: Q.Inbox; DatabasePath: string := ':memory:'; UserDataPath: string? := null): Watchers;
+  public static function Open(
+    Roots: array of string;
+    Inbox: Q.Inbox;
+    DatabasePath: string := ':memory:';
+    UserDataPath: string? := null
+  ): Watchers;
     function OwnFile(Path: string): bool;
     begin
       if DatabasePath = ':memory:' then

@@ -18,7 +18,13 @@ uses System as Sys;
 // - `OnComplete`: Optional message factory when the current text finishes.
 // ## Returns
 // The graphical widget.
-public function Typewriter of TMsg(Id: string; Text: string; Replay: int := 0; Settings: Motion.TextOptions? := null; OnComplete: (Sys.Func of TMsg)? := null): E.Element of TMsg;
+public function Typewriter of TMsg(
+  Id: string;
+  Text: string;
+  Replay: int := 0;
+  Settings: Motion.TextOptions? := null;
+  OnComplete: (Sys.Func of TMsg)? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).Typewriter(

@@ -33,7 +33,11 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // The graphical element.
-public function ChatMessage of TMsg(Id: string; Text: string; Settings: Options? := null): E.Element of TMsg;
+public function ChatMessage of TMsg(
+  Id: string;
+  Text: string;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).ChatMessage(Id, Text, Settings ?? new Options());

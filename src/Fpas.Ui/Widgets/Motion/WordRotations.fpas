@@ -15,7 +15,12 @@ uses Fpas.Ui.Widgets.Motion.Motion as Motion;
 // - `Settings`: Optional native options.
 // ## Returns
 // The graphical widget.
-public function WordRotate of TMsg(Id: string; Words: array of string; Interval: float := 0.0F; Settings: Motion.TextOptions? := null): E.Element of TMsg;
+public function WordRotate of TMsg(
+  Id: string;
+  Words: array of string;
+  Interval: float := 0.0F;
+  Settings: Motion.TextOptions? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).WordRotate(Id, Words, Interval, Settings ?? new Motion.TextOptions());

@@ -14,7 +14,11 @@ uses Fpas.Ui.Widgets.Motion.Motion as Motion;
 // - `Settings`: Optional native options.
 // ## Returns
 // The graphical widget.
-public function ShimmerText of TMsg(Id: string; Text: string; Settings: Motion.TextOptions? := null): E.Element of TMsg;
+public function ShimmerText of TMsg(
+  Id: string;
+  Text: string;
+  Settings: Motion.TextOptions? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).ShimmerText(Id, Text, Settings ?? new Motion.TextOptions());

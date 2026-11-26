@@ -10,7 +10,14 @@ uses GuiDocCaptures.Rendering.Regions as Regions;
 uses GuiGallery.App.State as Gallery;
 uses GuiGallery.Pages.Inputs.State as Inputs;
 
-procedure OpenAndCapture(Session: Gui.Session of Gallery.Msg; Output: string; Input: Gestures.Controls; Name: string; Id: string; Padding: Regions.Insets);
+procedure OpenAndCapture(
+  Session: Gui.Session of Gallery.Msg;
+  Output: string;
+  Input: Gestures.Controls;
+  Name: string;
+  Id: string;
+  Padding: Regions.Insets
+);
 begin
   Input.Activate(Id, Gestures.Enter);
   Regions.CaptureParts(Session, Output, Name, Id, Padding);
@@ -22,7 +29,11 @@ end procedure;
 // - `Session`: Open gallery session.
 // - `Output`: Directory for frame PNGs and crop bounds.
 // - `Input`: Native gestures for this session.
-public procedure CaptureInputs(Session: Gui.Session of Gallery.Msg; Output: string; Input: Gestures.Controls);
+public procedure CaptureInputs(
+  Session: Gui.Session of Gallery.Msg;
+  Output: string;
+  Input: Gestures.Controls
+);
 begin
   const Caption: Regions.Insets := new Regions.Insets(Top := 22);
   const Hint: Regions.Insets := new Regions.Insets(Top := 22, Bottom := 16);
@@ -62,7 +73,11 @@ end procedure;
 // - `Session`: Open gallery session.
 // - `Output`: Directory for frame PNGs and crop bounds.
 // - `Input`: Native gestures for this session.
-public procedure CapturePickers(Session: Gui.Session of Gallery.Msg; Output: string; Input: Gestures.Controls);
+public procedure CapturePickers(
+  Session: Gui.Session of Gallery.Msg;
+  Output: string;
+  Input: Gestures.Controls
+);
 begin
   Regions.CaptureParts(
     Session,

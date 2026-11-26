@@ -17,7 +17,13 @@ uses Fpas.Ui.Widgets.Motion.Motion as Motion;
 // - `Text`: Display text.
 // - `Replay`: Animation revision.
 // - `Settings`: Native appearance and input options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Text: string; Replay: int; Settings: Motion.TextOptions);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Text: string;
+  Replay: int;
+  Settings: Motion.TextOptions
+);
 begin
   const Token: string := C.Token('text-reveal', Id);
   Frame.Window.TextReveal(Token, Text, Replay, Common.Options(Settings));

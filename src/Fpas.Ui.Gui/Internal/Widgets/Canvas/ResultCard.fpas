@@ -19,7 +19,14 @@ uses Fpas.Ui.Widgets.Media.MediaImages as Media;
 // - `Title`: Caption title.
 // - `Activate`: Message on card activation.
 // - `Settings`: Native widget settings.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Image: Media.Source; Title: string; Activate: TMsg; Settings: D.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Image: Media.Source;
+  Title: string;
+  Activate: TMsg;
+  Settings: D.Options
+);
 begin
   const Role: string := 'result-card';
   const Token: string := C.Token(Role, Id);

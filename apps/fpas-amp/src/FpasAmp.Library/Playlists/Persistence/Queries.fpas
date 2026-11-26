@@ -59,7 +59,11 @@ begin
   end try;
 end function;
 
-function Summaries(Connection: Db.SqliteConnection; Request: M.Query; Cancellation: T.CancellationToken): I.ImmutableArray of M.Summary;
+function Summaries(
+  Connection: Db.SqliteConnection;
+  Request: M.Query;
+  Cancellation: T.CancellationToken
+): I.ImmutableArray of M.Summary;
 begin
   using const Query: Db.SqliteCommand := Sql.Command(
     Connection,
@@ -91,7 +95,12 @@ end function;
 
 // Lists a bounded page from `Database` and `Users` selected by `Request`.
 // `Cancellation` is checked during detached result construction.
-public function List(Database: string; Users: string; Request: M.Query; Cancellation: T.CancellationToken): I.ImmutableArray of M.Summary;
+public function List(
+  Database: string;
+  Users: string;
+  Request: M.Query;
+  Cancellation: T.CancellationToken
+): I.ImmutableArray of M.Summary;
 begin
   Cancellation.ThrowIfCancellationRequested();
   using const Connection: Db.SqliteConnection := OpenRead(Database, Users);
@@ -100,7 +109,10 @@ end function;
 
 // Reads a complete summary snapshot from both stores in one SQLite statement.
 // `Connection` has the user store attached. `Cancellation` interrupts the read.
-public function Snapshot(Connection: Db.SqliteConnection; Cancellation: T.CancellationToken): I.ImmutableArray of M.Summary;
+public function Snapshot(
+  Connection: Db.SqliteConnection;
+  Cancellation: T.CancellationToken
+): I.ImmutableArray of M.Summary;
 begin
   // SQLite treats a negative limit as unbounded.
   return Sql.Interruptible of I.ImmutableArray of M.Summary(
@@ -113,7 +125,12 @@ end function;
 
 // Loads ordered `Identity`, preserving unresolved/duplicate entries and following
 // durable UUID moves. Returns null when the requested list no longer exists.
-public function Read(Database: string; Users: string; Identity: M.Key; Cancellation: T.CancellationToken): M.Playlist?;
+public function Read(
+  Database: string;
+  Users: string;
+  Identity: M.Key;
+  Cancellation: T.CancellationToken
+): M.Playlist?;
 begin
   Cancellation.ThrowIfCancellationRequested();
   const Kind: int := Storage(Identity.Storage);

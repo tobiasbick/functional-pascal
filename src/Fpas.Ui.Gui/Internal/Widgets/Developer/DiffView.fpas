@@ -20,7 +20,15 @@ uses Fpas.Ui.Widgets.Developer.DiffViews as D;
 // - `Current`: Selected change, or minus one.
 // - `Changed`: Maps diff and selection updates.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Before: string; After: string; Current: int; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Before: string;
+  After: string;
+  Current: int;
+  Changed: function(D.Event): TMsg;
+  Settings: D.Options
+);
 begin
   const Role: string := 'diff-view';
   const Token: string := C.Token(Role, Id);

@@ -16,7 +16,12 @@ uses Fpas.Ui.Widgets.Motion.Motion as Motion;
 // - `Id`: Stable widget identity.
 // - `Text`: Display text.
 // - `Settings`: Native appearance and input options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Text: string; Settings: Motion.TextOptions);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Text: string;
+  Settings: Motion.TextOptions
+);
 begin
   const Token: string := C.Token('shimmer-text', Id);
   Frame.Window.ShimmerText(Token, Text, Common.Options(Settings));

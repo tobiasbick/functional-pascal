@@ -35,7 +35,9 @@ end record;
 // ## Returns
 // The graphical file dropzone.
 public function Dropzone of TMsg(
-  Id: string; OnDrop: function(array of string): TMsg; OnBrowse: (Sys.Func of TMsg)? := null;
+  Id: string;
+  OnDrop: function(array of string): TMsg;
+  OnBrowse: (Sys.Func of TMsg)? := null;
   Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';

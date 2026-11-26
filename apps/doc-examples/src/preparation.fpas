@@ -163,7 +163,12 @@ end procedure;
 // - `Directory`: Destination for the generated project files.
 // ## Returns
 // Compilation inputs, output paths, and the optional project manifest.
-public function Prepare(Item: M.Example; Options: M.Options; Items: array of M.Example; Directory: string): M.Prepared;
+public function Prepare(
+  Item: M.Example;
+  Options: M.Options;
+  Items: array of M.Example;
+  Directory: string
+): M.Prepared;
 begin
   discard IO.Directory.CreateDirectory(Directory);
   const Name: string := if Item.FileName.Length = 0 then

@@ -33,7 +33,11 @@ end function;
 // Builds the compact cover/details design from existing `Album` and cached `Image`.
 // `Kind` labels the rating for this album, artist or genre.
 // Content is informational; rating changes remain on the album tile itself.
-public function Build(Album: Library.Album; Image: Imaging.Bitmap?; Kind: string := 'Album'): E.Element of M.Msg;
+public function Build(
+  Album: Library.Album;
+  Image: Imaging.Bitmap?;
+  Kind: string := 'Album'
+): E.Element of M.Msg;
 requires Album.Id <> '';
 begin
   return E.Column of M.Msg(

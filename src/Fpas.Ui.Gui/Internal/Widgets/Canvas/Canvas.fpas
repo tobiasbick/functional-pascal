@@ -56,7 +56,17 @@ end function;
 // - `Paint`: Optional deferred drawing capability, scoped to one native callback.
 // - `OnPointer`: Optional changed-state pointer mapper.
 // - `OnInput`: Optional ordered key, text and focus mapper.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Drawing: array of D.Shape; Clicked: function(D.Event): TMsg; Settings: D.Options; OnWheel: Sys.Func of (D.Wheel, TMsg)?; Paint: (Sys.Action of Painting.Surface)?; OnPointer: Sys.Func of (D.Pointer, TMsg)?; OnInput: Sys.Func of (D.Input, TMsg)?);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Drawing: array of D.Shape;
+  Clicked: function(D.Event): TMsg;
+  Settings: D.Options;
+  OnWheel: Sys.Func of (D.Wheel, TMsg)?;
+  Paint: (Sys.Action of Painting.Surface)?;
+  OnPointer: Sys.Func of (D.Pointer, TMsg)?;
+  OnInput: Sys.Func of (D.Input, TMsg)?
+);
 begin
   const Role: string := 'canvas';
   const Width: S.NativeExtent := S.Extent(Settings.Width);

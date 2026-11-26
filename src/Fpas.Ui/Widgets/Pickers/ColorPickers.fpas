@@ -48,7 +48,10 @@ end function;
 // ## Returns
 // The graphical color picker.
 public function ColorPicker of TMsg(
-  Id: string; Value: G.Color; OnChange: function(G.Color): TMsg; Enabled: bool := true
+  Id: string;
+  Value: G.Color;
+  OnChange: function(G.Color): TMsg;
+  Enabled: bool := true
 ): E.Element of TMsg;
 requires Id <> '';
 begin

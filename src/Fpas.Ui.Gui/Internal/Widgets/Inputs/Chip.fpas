@@ -19,8 +19,13 @@ uses Fpas.Ui.Gui.Internal.Core.Context as C;
 // - `Icon`: Optional glyph in the unselected state.
 // - `Enabled`: Model-owned input permission.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Label: string; Selected: bool;
-  OnChange: function(bool): TMsg; Icon: string; Enabled: bool
+  Frame: C.State of TMsg;
+  Id: string;
+  Label: string;
+  Selected: bool;
+  OnChange: function(bool): TMsg;
+  Icon: string;
+  Enabled: bool
 );
 begin
   const Allowed: bool := Enabled and Frame.AcceptInput;

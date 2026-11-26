@@ -20,8 +20,14 @@ uses Fpas.Ui.Gui.Internal.Core.Context as C;
 // - `Enabled`: Model-owned input permission.
 // - `StarSize`: Logical edge length of the native star boxes.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Label: string; Value: int;
-  OnChange: function(int): TMsg; Maximum: int; Enabled: bool; StarSize: float
+  Frame: C.State of TMsg;
+  Id: string;
+  Label: string;
+  Value: int;
+  OnChange: function(int): TMsg;
+  Maximum: int;
+  Enabled: bool;
+  StarSize: float
 );
 begin
   const Allowed: bool := Enabled and Frame.AcceptInput;

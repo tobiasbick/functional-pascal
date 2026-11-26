@@ -16,7 +16,10 @@ uses System.Collections.Generic as Lists;
 // - `Message`: Requested model action.
 // ## Returns
 // Updated amounts and no commands.
-public function Update(Model: Data.Samples; Message: State.Msg): M.Transition of (Data.Samples, State.Msg);
+public function Update(
+  Model: Data.Samples;
+  Message: State.Msg
+): M.Transition of (Data.Samples, State.Msg);
 begin
   case Message of
     when State.Msg.Shuffle:

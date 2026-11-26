@@ -78,7 +78,9 @@ end record;
 // ## Returns
 // A graphical host command that shows one notification.
 public function Show of TMsg(
-  Title: string; Settings: Options? := null; OnAction: (Sys.Func of TMsg)? := null
+  Title: string;
+  Settings: Options? := null;
+  OnAction: (Sys.Func of TMsg)? := null
 ): Mvu.Command of TMsg;
 requires Title <> '';
 begin

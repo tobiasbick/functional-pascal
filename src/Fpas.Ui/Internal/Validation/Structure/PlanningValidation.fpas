@@ -25,7 +25,14 @@ uses Fpas.Ui.Widgets.Planning.WeekCalendars as WeekCalendars;
 // - `VisitScoped`: Validates children inside a native ID scope.
 // ## Returns
 // True when this dispatcher handled the element.
-public function Check of TMsg(Node: E.Element of TMsg; Location: string; Current: R.Profile; Identify: function(string, string): string; Visit: procedure((E.Element of TMsg)?, string); VisitScoped: procedure(E.Element of TMsg, string)): bool;
+public function Check of TMsg(
+  Node: E.Element of TMsg;
+  Location: string;
+  Current: R.Profile;
+  Identify: function(string, string): string;
+  Visit: procedure((E.Element of TMsg)?, string);
+  VisitScoped: procedure(E.Element of TMsg, string)
+): bool;
 begin
   case Node of
     when E.Element.PathBar(

@@ -72,7 +72,13 @@ begin
   end with;
 end function;
 
-procedure SaveDatabase(Database: string; Users: string; Track: Tracks.Entry; Changes: I.ImmutableDictionary of (string, string?); Cancellation: T.CancellationToken);
+procedure SaveDatabase(
+  Database: string;
+  Users: string;
+  Track: Tracks.Entry;
+  Changes: I.ImmutableDictionary of (string, string?);
+  Cancellation: T.CancellationToken
+);
 begin
   using const Connection: Db.SqliteConnection := Attached(Database, Users);
   using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
@@ -111,8 +117,14 @@ end procedure;
 // - `ToFile`: Whether to replace the audio file with verified tags.
 // - `Cancellation`: Stops before publishing pending changes when requested.
 public procedure Save(
-  Database: string; Users: string; Track: Tracks.Entry; Original: Files.Snapshot;
-  Changes: I.ImmutableDictionary of (string, string?); ToDatabase: bool; ToFile: bool; Cancellation: T.CancellationToken
+  Database: string;
+  Users: string;
+  Track: Tracks.Entry;
+  Original: Files.Snapshot;
+  Changes: I.ImmutableDictionary of (string, string?);
+  ToDatabase: bool;
+  ToFile: bool;
+  Cancellation: T.CancellationToken
 );
 requires ToDatabase or ToFile;
 begin

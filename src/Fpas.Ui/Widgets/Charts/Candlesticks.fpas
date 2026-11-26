@@ -57,7 +57,12 @@ end record;
 // - `OnCursorChange`: Optional crosshair-index change callback; minus one clears inspection.
 // ## Returns
 // A graphical element.
-public function Candlestick of TMsg(Id: string; Candles: array of Candle; Settings: Options? := null; OnCursorChange: Sys.Func of (int, TMsg)? := null): E.Element of TMsg;
+public function Candlestick of TMsg(
+  Id: string;
+  Candles: array of Candle;
+  Settings: Options? := null;
+  OnCursorChange: Sys.Func of (int, TMsg)? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).Candlestick(Id, Candles, Settings ?? new Options(), OnCursorChange);

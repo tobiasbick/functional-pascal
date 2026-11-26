@@ -34,7 +34,11 @@ end function;
 // - `Children`: Section content.
 // ## Returns
 // The native column.
-public function Column of TMsg(Weight: float; Centered: bool; params Children: array of E.Element of TMsg): E.Element of TMsg;
+public function Column of TMsg(
+  Weight: float;
+  Centered: bool;
+  params Children: array of E.Element of TMsg
+): E.Element of TMsg;
 begin
   return E.Size of TMsg(
     E.Column of TMsg(

@@ -26,8 +26,15 @@ uses Fpas.Ui.Widgets.Overlays.Dialogs as D;
 // - `Align`: Parent layout alignment.
 // - `Visit`: Host traversal for the base and dialog content.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Base: E.Element of TMsg; Content: E.Element of TMsg;
-  Open: bool; Settings: D.Options; Dismiss: TMsg; Horizontal: bool; Align: L.Alignment;
+  Frame: C.State of TMsg;
+  Id: string;
+  Base: E.Element of TMsg;
+  Content: E.Element of TMsg;
+  Open: bool;
+  Settings: D.Options;
+  Dismiss: TMsg;
+  Horizontal: bool;
+  Align: L.Alignment;
   Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
 );
   function BeginNative(Enabled: bool; FocusClose: bool; CloseToken: string): int;

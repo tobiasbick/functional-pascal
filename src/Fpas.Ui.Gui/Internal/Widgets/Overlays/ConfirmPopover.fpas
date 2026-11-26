@@ -25,8 +25,15 @@ uses Fpas.Ui.Widgets.Overlays.ConfirmPopovers as P;
 // - `Align`: Alignment of the trigger.
 // - `Visit`: Host traversal for the trigger.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Trigger: E.Element of TMsg; Open: bool; Settings: P.Options;
-  Confirm: TMsg; Dismiss: TMsg; Horizontal: bool; Align: L.Alignment;
+  Frame: C.State of TMsg;
+  Id: string;
+  Trigger: E.Element of TMsg;
+  Open: bool;
+  Settings: P.Options;
+  Confirm: TMsg;
+  Dismiss: TMsg;
+  Horizontal: bool;
+  Align: L.Alignment;
   Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
 );
 begin

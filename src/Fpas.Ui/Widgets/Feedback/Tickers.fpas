@@ -33,7 +33,11 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // The graphical element.
-public function Ticker of TMsg(Id: string; Items: array of Item; Settings: Options? := null): E.Element of TMsg;
+public function Ticker of TMsg(
+  Id: string;
+  Items: array of Item;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).Ticker(Id, Items, Settings ?? new Options());

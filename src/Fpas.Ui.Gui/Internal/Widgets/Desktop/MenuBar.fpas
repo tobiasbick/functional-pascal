@@ -18,7 +18,12 @@ uses Fpas.Ui.Widgets.Overlays.Menus as M;
 // - `Id`: Stable bar identity.
 // - `Menus`: Titles and their commands.
 // - `HideBorder`: Omit the bottom hairline.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Menus: array of B.Menu of TMsg; HideBorder: bool);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Menus: array of B.Menu of TMsg;
+  HideBorder: bool
+);
 begin
   Frame.Window.BeginMenuBar(C.Token('menu-bar', Id), not HideBorder, Frame.AcceptInput);
   for Item: B.Menu of TMsg in Menus do

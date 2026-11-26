@@ -18,7 +18,13 @@ uses System.IO as IO;
 uses System.Threading as T;
 uses System.Threading.Tasks as Tasks;
 
-function Store(Cache: Thumbnails.ThumbnailStore; Album: string; Revision: string; Value: Pictures.Cover?; Cancellation: T.CancellationToken): Imaging.Bitmap?;
+function Store(
+  Cache: Thumbnails.ThumbnailStore;
+  Album: string;
+  Revision: string;
+  Value: Pictures.Cover?;
+  Cancellation: T.CancellationToken
+): Imaging.Bitmap?;
 begin
   if Value = null then
     return null;
@@ -33,7 +39,10 @@ begin
   end try;
 end function;
 
-async function ReadFile(Path: string; Cancellation: T.CancellationToken): Tasks.Task of array of byte;
+async function ReadFile(
+  Path: string;
+  Cancellation: T.CancellationToken
+): Tasks.Task of array of byte;
 begin
   const Info: IO.FileInfo := new IO.FileInfo(Path);
   const Size: long := Info.Length;
@@ -78,7 +87,15 @@ end function;
 // Resolves embedded front/other images, then unambiguous cover/folder/front sidecars.
 // `MayRead` rejects paused/offline sources; cached `Album`/`Revision` works offline.
 // All I/O runs on the background caller; returned pixels are immutable by contract.
-public async function Read(Database: string; Users: string; Album: string; Revision: string; Cache: Thumbnails.ThumbnailStore; MayRead: function(string): bool; Cancellation: T.CancellationToken): Tasks.Task of Imaging.Bitmap?;
+public async function Read(
+  Database: string;
+  Users: string;
+  Album: string;
+  Revision: string;
+  Cache: Thumbnails.ThumbnailStore;
+  MayRead: function(string): bool;
+  Cancellation: T.CancellationToken
+): Tasks.Task of Imaging.Bitmap?;
 begin
   Cancellation.ThrowIfCancellationRequested();
   const Cached: Imaging.Bitmap? := Cache.TryGet(Album, Revision);

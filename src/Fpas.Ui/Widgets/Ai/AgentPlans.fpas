@@ -35,7 +35,12 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function AgentPlan of TMsg(Id: string; Steps: array of Step; Changed: Sys.Func of (int, TMsg)?; Settings: Options? := null): E.Element of TMsg;
+public function AgentPlan of TMsg(
+  Id: string;
+  Steps: array of Step;
+  Changed: Sys.Func of (int, TMsg)?;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).AgentPlan(Id, Steps, Changed, Settings ?? new Options());

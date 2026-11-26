@@ -28,7 +28,14 @@ end record;
 // - `Settings`: Optional row appearance.
 // ## Returns
 // The tree branch element.
-public function Branch of TMsg(Id: string; Label: string; Open: bool; Children: array of E.Element of TMsg; OnChange: function(bool): TMsg; Settings: Options? := null): E.Element of TMsg;
+public function Branch of TMsg(
+  Id: string;
+  Label: string;
+  Open: bool;
+  Children: array of E.Element of TMsg;
+  OnChange: function(bool): TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).TreeNode(
@@ -52,7 +59,12 @@ end function;
 // - `Settings`: Optional row appearance.
 // ## Returns
 // The tree leaf element.
-public function Leaf of TMsg(Id: string; Label: string; OnActivate: (Sys.Func of TMsg)? := null; Settings: Options? := null): E.Element of TMsg;
+public function Leaf of TMsg(
+  Id: string;
+  Label: string;
+  OnActivate: (Sys.Func of TMsg)? := null;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).TreeNode(

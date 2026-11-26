@@ -16,7 +16,13 @@ uses System as Sys;
 // - `Position`: Preferred placement relative to the trigger.
 // ## Returns
 // A nonempty panel within the terminal.
-public function Place(Anchor: F.Rect; Screen: F.Rect; Wanted: int; Columns: int; Position: M.Placement): F.Rect;
+public function Place(
+  Anchor: F.Rect;
+  Screen: F.Rect;
+  Wanted: int;
+  Columns: int;
+  Position: M.Placement
+): F.Rect;
 begin
   const Width: int := Sys.Math.Min(Screen.Width, Columns);
   const Left: int := Anchor.X;

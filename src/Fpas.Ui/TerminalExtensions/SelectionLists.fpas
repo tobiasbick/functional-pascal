@@ -26,8 +26,11 @@ end record;
 // ## Returns
 // A terminal-only element with one keyboard focus stop when it has items.
 public function SelectionList of TMsg(
-  Id: string; Items: array of Item; SelectedKey: string;
-  OnSelect: function(string): TMsg; OnActivate: function(string): TMsg
+  Id: string;
+  Items: array of Item;
+  SelectedKey: string;
+  OnSelect: function(string): TMsg;
+  OnActivate: function(string): TMsg
 ): E.Element of TMsg;
 requires Id <> '';
 begin

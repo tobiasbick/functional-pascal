@@ -35,7 +35,13 @@ public type Session = record
 
   // Creates a handle for validated `Database`/`Users` after `Ready`, sharing parent
   // `Lifetime` and normalized source `Configuration`. Creation starts no I/O.
-  public static function Create(Database: string; Users: string; Ready: Tasks.Task; Lifetime: T.CancellationToken; Configuration: Policy.Policy): Session;
+  public static function Create(
+    Database: string;
+    Users: string;
+    Ready: Tasks.Task;
+    Lifetime: T.CancellationToken;
+    Configuration: Policy.Policy
+  ): Session;
   begin
     return new Session(
       Database, Users, Ready, Lifetime, Configuration,
@@ -50,7 +56,10 @@ public type Session = record
   // - `Cancellation`: Cancels the query along with the parent lifetime.
   // ## Returns
   // The selected release's tracks in disc and track order.
-  public async function TracksAsync(Id: string; Cancellation: T.CancellationToken): Tasks.Task of I.ImmutableArray of Tracks.Entry;
+  public async function TracksAsync(
+    Id: string;
+    Cancellation: T.CancellationToken
+  ): Tasks.Task of I.ImmutableArray of Tracks.Entry;
   requires Id <> '';
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
@@ -71,7 +80,10 @@ public type Session = record
 
   // Publishes changed release headers and the library-wide indexed audio count through awaited `Publish` until
   // `Cancellation` or the parent lifetime ends. All database work is off the caller.
-  public async function ObserveAsync(Publish: function(M.Snapshot): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
+  public async function ObserveAsync(
+    Publish: function(M.Snapshot): Tasks.Task;
+    Cancellation: T.CancellationToken
+  ): Tasks.Task;
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
       self.Lifetime,
@@ -89,7 +101,10 @@ public type Session = record
   // Observes all library songs and their release headers off the UI thread.
   // Publish receives the monotonic Stopwatch timestamp from before the read, the songs,
   // and their headers. Cancellation ends observation. The returned task covers its lifetime.
-  public async function ObserveSongsAsync(Publish: function(long, I.ImmutableArray of Tracks.Entry, I.ImmutableArray of M.Album): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
+  public async function ObserveSongsAsync(
+    Publish: function(long, I.ImmutableArray of Tracks.Entry, I.ImmutableArray of M.Album): Tasks.Task;
+    Cancellation: T.CancellationToken
+  ): Tasks.Task;
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
       self.Lifetime,
@@ -120,7 +135,11 @@ public type Session = record
 
   // Saves an independent album, artist or genre `Value` (one through ten, or null to clear) for
   // `Id` in user data. All I/O is off the caller; `Cancellation` bounds the write.
-  public async function SetRatingAsync(Id: string; Value: int?; Cancellation: T.CancellationToken): Tasks.Task;
+  public async function SetRatingAsync(
+    Id: string;
+    Value: int?;
+    Cancellation: T.CancellationToken
+  ): Tasks.Task;
   requires Id <> '';
   requires Value = null or (Value >= 1 and Value <= 10);
   begin
@@ -142,7 +161,10 @@ public type Session = record
 
   // Loads a bounded cached thumbnail for `Album`; missing/invalid art returns null.
   // `Cancellation` owns this request. Paused/offline sources are never opened.
-  public async function ThumbnailAsync(Album: M.Album; Cancellation: T.CancellationToken): Tasks.Task of Imaging.Bitmap?;
+  public async function ThumbnailAsync(
+    Album: M.Album;
+    Cancellation: T.CancellationToken
+  ): Tasks.Task of Imaging.Bitmap?;
   requires Album.Id <> '';
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(

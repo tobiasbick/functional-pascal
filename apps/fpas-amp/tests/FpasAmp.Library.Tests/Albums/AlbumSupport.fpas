@@ -44,7 +44,13 @@ end procedure;
 // Creates a synthetic RGB PNG using only CLR compression; no user media is read.
 // `Red`, `Green` and `Blue` select its background, with a contrasting disc motif.
 // `Width` and `Height` allow non-square thumbnail tests.
-public function Picture(Red: byte; Green: byte; Blue: byte; Width: int := 128; Height: int := 128): array of byte;
+public function Picture(
+  Red: byte;
+  Green: byte;
+  Blue: byte;
+  Width: int := 128;
+  Height: int := 128
+): array of byte;
 requires Width > 0 and Height > 0;
 begin
   using const Png: IO.MemoryStream := new IO.MemoryStream();
@@ -99,7 +105,13 @@ end function;
 
 // Writes tagged synthetic MP3 `Name` under `Directory`; release identity is empty
 // by default so unrelated tests cannot accidentally share the fixture's MusicBrainz ID.
-public function Track(Directory: string; Name: string; Album: string; Artist: string := 'Example artist'; Release: string := ''): string;
+public function Track(
+  Directory: string;
+  Name: string;
+  Album: string;
+  Artist: string := 'Example artist';
+  Release: string := ''
+): string;
 begin
   discard IO.Directory.CreateDirectory(Directory);
   const Path: string := F.Write(Directory, Name, Name);
@@ -123,7 +135,11 @@ begin
 end function;
 
 // Embeds synthetic `Bytes` in `Path` with explicit `Kind`, retaining earlier pictures.
-public procedure Embed(Path: string; Bytes: array of byte; Kind: A.PictureInfo.PIC_TYPE := A.PictureInfo.PIC_TYPE.Front);
+public procedure Embed(
+  Path: string;
+  Bytes: array of byte;
+  Kind: A.PictureInfo.PIC_TYPE := A.PictureInfo.PIC_TYPE.Front
+);
 begin
   const Audio: A.Track := new A.Track(Path);
   const Pictures: (C.IList of A.PictureInfo?)? := Audio.EmbeddedPictures;

@@ -15,7 +15,9 @@ uses Fpas.Ui.Layout as L;
 // ## Returns
 // A noninteractive GUI-only placeholder with native shimmer and reduced-motion behavior.
 public function Skeleton of TMsg(
-  Id: string; Width: L.Extent? := null; Height: float := 0.0F
+  Id: string;
+  Width: L.Extent? := null;
+  Height: float := 0.0F
 ): E.Element of TMsg;
 requires Id <> '';
 requires Height >= 0.0F;

@@ -63,8 +63,11 @@ end function;
 // ## Returns
 // The graphical checklist.
 public function Checklist of TMsg(
-  Id: string; Steps: array of Step; OnToggle: function(int, bool): TMsg;
-  OnAction: Sys.Func of (int, TMsg)? := null; Settings: Options? := null
+  Id: string;
+  Steps: array of Step;
+  OnToggle: function(int, bool): TMsg;
+  OnAction: Sys.Func of (int, TMsg)? := null;
+  Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin

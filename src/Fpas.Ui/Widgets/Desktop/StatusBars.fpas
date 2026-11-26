@@ -38,7 +38,11 @@ end variant;
 // - `HideBorder`: Omit the top divider.
 // ## Returns
 // A shared status bar element.
-public function StatusBar of TMsg(Id: string; Items: array of Item of TMsg; HideBorder: bool := false): E.Element of TMsg;
+public function StatusBar of TMsg(
+  Id: string;
+  Items: array of Item of TMsg;
+  HideBorder: bool := false
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).StatusBar(Id, Items, HideBorder);

@@ -21,7 +21,14 @@ uses Fpas.Ui.Widgets.Media.MediaImages as Media;
 // - `Crop`: Current crop bounds.
 // - `Changed`: Maps a native change to a message.
 // - `Settings`: Native widget options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Image: Media.Source; Crop: ImageCroppers.Value; Changed: function(ImageCroppers.Value): TMsg; Settings: ImageCroppers.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Image: Media.Source;
+  Crop: ImageCroppers.Value;
+  Changed: function(ImageCroppers.Value): TMsg;
+  Settings: ImageCroppers.Options
+);
 begin
   const Role: string := 'image-cropper';
   const Token: string := C.Token(Role, Id);

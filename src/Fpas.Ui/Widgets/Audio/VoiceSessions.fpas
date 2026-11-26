@@ -48,7 +48,14 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function VoiceSession of TMsg(Id: string; Activity: Voice.Activity; Signal: Voice.Signal; Muted: bool?; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
+public function VoiceSession of TMsg(
+  Id: string;
+  Activity: Voice.Activity;
+  Signal: Voice.Signal;
+  Muted: bool?;
+  Changed: function(Event): TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).VoiceSession(

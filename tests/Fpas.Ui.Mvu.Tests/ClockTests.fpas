@@ -20,7 +20,10 @@ public type ClockTests = record
   // A scoped replacement cancels the first timer and debounces against virtual time.
   [X.FactAttribute]
   public procedure ComposedDebounceUsesSessionClock();
-    async function Wait(Context: A.BackgroundContext of int; Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, int);
+    async function Wait(
+      Context: A.BackgroundContext of int;
+      Token: T.CancellationToken
+    ): Tasks.Task of Fx.Outcome of (Fx.Completion, int);
     begin
       const Delay: Tasks.Task := Tasks.Task.Delay(
         Sys.TimeSpan.FromMilliseconds(250),
@@ -101,7 +104,10 @@ public type ClockTests = record
   // Reaching a deadline yields an expected failure on the next owner turn.
   [X.FactAttribute]
   public procedure DeadlineBecomesExpectedFailure();
-    async function Wait(Context: A.BackgroundContext of string; Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, string);
+    async function Wait(
+      Context: A.BackgroundContext of string;
+      Token: T.CancellationToken
+    ): Tasks.Task of Fx.Outcome of (Fx.Completion, string);
     begin
       using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(
         Sys.TimeSpan.FromSeconds(1), Context.Clock

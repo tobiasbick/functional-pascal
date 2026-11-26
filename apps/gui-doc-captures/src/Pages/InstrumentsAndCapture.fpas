@@ -57,7 +57,10 @@ begin
   );
 end procedure;
 
-procedure DrawSampleStroke(Session: Gui.Session of Gallery.Msg; Pointer: procedure(float, float, int));
+procedure DrawSampleStroke(
+  Session: Gui.Session of Gallery.Msg;
+  Pointer: procedure(float, float, int)
+);
 begin
   const Pad: Cui.CuiRectangle := Presented.Bounds(Session, 'capture-signature');
   const BaseX: float := Pad.X + 46.0F;
@@ -83,7 +86,9 @@ end procedure;
 // - `Pointer`: Advances a frame after moving the pointer and pressing (1),
 //   releasing (0) or preserving (-1) the left button.
 public procedure CaptureFileControls(
-  Session: Gui.Session of Gallery.Msg; Output: string; Pointer: procedure(float, float, int)
+  Session: Gui.Session of Gallery.Msg;
+  Output: string;
+  Pointer: procedure(float, float, int)
 );
 begin
   const Margin: Regions.Insets := new Regions.Insets();

@@ -26,7 +26,17 @@ uses System.Threading as T;
 uses System.Threading.Channels as Channels;
 uses System.Threading.Tasks as Tasks;
 
-async function Work(Connection: Db.SqliteConnection; Inbox: Q.Inbox; Output: Channels.ChannelWriter of M.Snapshot; Progress: Channels.ChannelWriter of P.Snapshot; DatabasePath: string; Options: M.Options; Cancellation: T.CancellationToken; Notify: Sys.Action?; UserDataPath: string?): Tasks.Task;
+async function Work(
+  Connection: Db.SqliteConnection;
+  Inbox: Q.Inbox;
+  Output: Channels.ChannelWriter of M.Snapshot;
+  Progress: Channels.ChannelWriter of P.Snapshot;
+  DatabasePath: string;
+  Options: M.Options;
+  Cancellation: T.CancellationToken;
+  Notify: Sys.Action?;
+  UserDataPath: string?
+): Tasks.Task;
   procedure Changed();
   begin
     case Notify of
@@ -259,7 +269,17 @@ end function;
 // All database and filesystem operations stay on this task; `Inbox` accepts controls only.
 // `Notify` wakes an optional metadata stage after commits; `UserDataPath` excludes its files from watchers.
 // Optional `Initialization` serializes potentially large schema upgrades with that stage.
-public async function Run(Inbox: Q.Inbox; Output: Channels.ChannelWriter of M.Snapshot; Progress: Channels.ChannelWriter of P.Snapshot; DatabasePath: string; Options: M.Options; Cancellation: T.CancellationToken; Notify: Sys.Action? := null; UserDataPath: string? := null; Initialization: Tasks.Task? := null): Tasks.Task;
+public async function Run(
+  Inbox: Q.Inbox;
+  Output: Channels.ChannelWriter of M.Snapshot;
+  Progress: Channels.ChannelWriter of P.Snapshot;
+  DatabasePath: string;
+  Options: M.Options;
+  Cancellation: T.CancellationToken;
+  Notify: Sys.Action? := null;
+  UserDataPath: string? := null;
+  Initialization: Tasks.Task? := null
+): Tasks.Task;
 begin
   try
     Cancellation.ThrowIfCancellationRequested();

@@ -19,7 +19,10 @@ uses System.Threading as T;
 uses System.Threading.Tasks as Tasks;
 
 // Returns the waveform command for Current, using Service when the catalogue is available.
-public function Waveform(Current: PlayerModel.State; Service: Metadata.Session?): Mvu.Command of M.Msg;
+public function Waveform(
+  Current: PlayerModel.State;
+  Service: Metadata.Session?
+): Mvu.Command of M.Msg;
 begin
   const Key: string := Current.WaveformKey;
   const Track: Tracks.Entry? := PlayerModel.Track(Current);
@@ -30,7 +33,10 @@ begin
   return Mvu.StartBackground of M.Msg(
     'player-waveform',
     Mvu.FromWorker of M.Msg(
-      async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+      async function(
+        Post: function(M.Msg): Tasks.Task;
+        Cancellation: T.CancellationToken
+      ): Tasks.Task begin
         const Measure: Tasks.Task of array of float := if Service = null or Current.Podcast then
           Audio.Analysis.LoudnessAsync(
             PlayerModel.AudioPath(Current, Track),
@@ -50,7 +56,11 @@ end function;
 
 // Applies analysis changes between Before and Next. Service provides the local fingerprint cache.
 // Returns the shell state and only the background commands needed by this transition.
-public function After(Before: M.State; Next: M.State; Service: Metadata.Session?): Mvu.Transition of (M.State, M.Msg);
+public function After(
+  Before: M.State;
+  Next: M.State;
+  Service: Metadata.Session?
+): Mvu.Transition of (M.State, M.Msg);
 begin
   const WaveChanged: bool := Before.Player.WaveformKey <> Next.Player.WaveformKey
     or Before.Player.WaitingForAudio <> Next.Player.WaitingForAudio;

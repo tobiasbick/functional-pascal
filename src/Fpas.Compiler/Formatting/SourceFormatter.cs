@@ -35,7 +35,8 @@ internal sealed class SourceFormatter
                 BreakBinary(binary);
         }
         foreach (var list in layout.Lists.OrderBy(value => value.Close - value.Open))
-            if (trivia.HasBreak(End(list.Open), tokens[list.Close].Position) && !CanCompactBranchArray(list))
+            if (!layout.RoutineHeaderEnds.ContainsKey(list.Open) &&
+                trivia.HasBreak(End(list.Open), tokens[list.Close].Position) && !CanCompactBranchArray(list))
                 Expand(list, allItems: false);
 
         // Layout only gains breaks. Each pass either makes progress or finishes.
@@ -47,12 +48,11 @@ internal sealed class SourceFormatter
                 if (Enumerable.Range(start + 1, clause - start - 1).Any(index => layout.Breaks[index] > 0) && layout.Breaks[clause] == 0)
                 { layout.Line(clause); changed = true; }
             var rendered = Render();
+            if (ExpandMultilineParameters(rendered)) continue;
             foreach (var line in rendered.Lines.Where(line => line.Width > TargetWidth))
             {
                 source.CheckCancellation();
-                var list = layout.Lists.Where(list => list.Wrap && list.Items.Count != 0 &&
-                    (!expanded.Contains(list) && rendered.Line[list.Open] == line.Number && rendered.Line[list.Close] == line.Number ||
-                     expanded.Contains(list) && list.Items.Skip(1).Any(item => rendered.Line[item] == line.Number && layout.Breaks[item] == 0)))
+                var list = layout.Lists.Where(list => CanWrap(list, rendered, line.Number))
                     .OrderByDescending(list => list.Close - list.Open).FirstOrDefault();
                 if (list is not null) { Expand(list, allItems: true); changed = true; continue; }
                 var candidates = layout.Binary.Where(binary =>
@@ -64,6 +64,34 @@ internal sealed class SourceFormatter
             }
             if (!changed) return rendered.Text;
         }
+    }
+
+    private bool ExpandMultilineParameters(RenderedSource rendered)
+    {
+        var changed = false;
+        foreach (var list in layout.Lists)
+        {
+            source.CheckCancellation();
+            if (!layout.RoutineHeaderEnds.ContainsKey(list.Open) || list.Items.Count == 0 ||
+                expanded.Contains(list) || rendered.Line[list.Open] == rendered.Line[list.Close]) continue;
+            // A comment or multiline literal can create a rendered break without a layout break.
+            Expand(list, allItems: true);
+            changed = true;
+        }
+        return changed;
+    }
+
+    private bool CanWrap(SyntaxList list, RenderedSource rendered, int line)
+    {
+        if (list.Items.Count == 0) return false;
+        if (expanded.Contains(list))
+            return list.Wrap && list.Items.Skip(1).Any(item => rendered.Line[item] == line && layout.Breaks[item] == 0);
+        if (rendered.Line[list.Open] != line || rendered.Line[list.Close] != line) return false;
+        if (!layout.RoutineHeaderEnds.TryGetValue(list.Open, out var headerEnd)) return list.Wrap;
+        var column = rendered.Column[headerEnd];
+        var token = tokens[headerEnd];
+        return rendered.Line[headerEnd] != line || column + TextColumns.Width(
+            source.Text.Substring(token.Position, token.Length), column, source.CancellationToken) > TargetWidth;
     }
 
     private void PreserveSections()
@@ -94,6 +122,7 @@ internal sealed class SourceFormatter
         if (list.Items.Count == 0) return;
         var first = expanded.Add(list);
         layout.Line(list.Items[0]);
+        allItems |= layout.RoutineHeaderEnds.ContainsKey(list.Open);
         foreach (var item in list.Items.Skip(1))
             if (allItems || trivia.HasBreak(End(item - 1), tokens[item].Position)) layout.Line(item);
         if (list.CloseLine) layout.Line(list.Close);

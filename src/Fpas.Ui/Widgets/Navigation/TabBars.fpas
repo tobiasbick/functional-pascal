@@ -37,7 +37,13 @@ end record;
 // - `Settings`: Optional native options.
 // ## Returns
 // The graphical widget.
-public function TabBar of TMsg(Id: string; Items: array of Item; Selected: int; Change: function(int): TMsg; Settings: Options? := null): E.Element of TMsg;
+public function TabBar of TMsg(
+  Id: string;
+  Items: array of Item;
+  Selected: int;
+  Change: function(int): TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).TabBar(Id, Items, Selected, Change, Settings ?? new Options());

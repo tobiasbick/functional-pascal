@@ -18,7 +18,15 @@ uses Fpas.Ui.Widgets.Conversation.Comments as W;
 // - `Current`: Current like state.
 // - `Change`: Maps the proposed like state or reply.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Author: string; Text: string; Current: W.Value; Change: function(W.Event): TMsg; Settings: W.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Author: string;
+  Text: string;
+  Current: W.Value;
+  Change: function(W.Event): TMsg;
+  Settings: W.Options
+);
 begin
   const Role: string := 'comment';
   const Token: string := C.Token(Role, Id);

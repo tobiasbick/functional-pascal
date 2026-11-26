@@ -148,7 +148,11 @@ end function;
 
 // Looks up Fingerprint with the saved ApplicationKey. Stop cancels waiting and the HTTP request.
 // Returns selectable MusicBrainz matches. The request body contains no user submission key.
-public async function Scan(ApplicationKey: string; Audio: Fingerprint.Measurement; Stop: T.CancellationToken): Tasks.Task of array of MB.Match;
+public async function Scan(
+  ApplicationKey: string;
+  Audio: Fingerprint.Measurement;
+  Stop: T.CancellationToken
+): Tasks.Task of array of MB.Match;
 requires ApplicationKey <> '';
 requires Audio.Value <> '' and Audio.Duration >= 1.0;
 begin

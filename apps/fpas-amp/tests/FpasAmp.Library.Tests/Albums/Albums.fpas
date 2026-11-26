@@ -36,7 +36,10 @@ begin
   ).Releases;
 end function;
 
-async function Until(Data: string; Accept: function(I.ImmutableArray of M.Album): bool): Tasks.Task of I.ImmutableArray of M.Album;
+async function Until(
+  Data: string;
+  Accept: function(I.ImmutableArray of M.Album): bool
+): Tasks.Task of I.ImmutableArray of M.Album;
 begin
   using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
   while true do

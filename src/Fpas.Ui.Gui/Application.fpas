@@ -76,9 +76,14 @@ public type Session of TMsg = record implements Sys.IDisposable
   // ## Returns
   // The owned session.
   public static function Create(
-    Process: function(): bool; Enqueue: function(TMsg): Core.Admission;
-    Read: function(): Frame; Status: function(): bool; Software: function(): bool;
-    Release: procedure(); Capture: procedure(string); Place: function(): Cui.CuiWindowPlacement;
+    Process: function(): bool;
+    Enqueue: function(TMsg): Core.Admission;
+    Read: function(): Frame;
+    Status: function(): bool;
+    Software: function(): bool;
+    Release: procedure();
+    Capture: procedure(string);
+    Place: function(): Cui.CuiWindowPlacement;
     Inspect: function(): Windows.Info
   ): Session of TMsg;
   begin

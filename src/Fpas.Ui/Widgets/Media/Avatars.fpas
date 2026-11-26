@@ -25,7 +25,11 @@ end record;
 // - `Settings`: Optional image, size, shape and presence.
 // ## Returns
 // The graphical avatar.
-public function Avatar of TMsg(Id: string; Name: string; Settings: Options? := null): E.Element of TMsg;
+public function Avatar of TMsg(
+  Id: string;
+  Name: string;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).Avatar(Id, Name, Settings ?? new Options());

@@ -58,7 +58,12 @@ begin
 end function;
 
 // Calls Read after committed changes to either database, including the initial read.
-public async function Changes(Database: string; Users: string; Read: function(): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
+public async function Changes(
+  Database: string;
+  Users: string;
+  Read: function(): Tasks.Task;
+  Cancellation: T.CancellationToken
+): Tasks.Task;
 begin
   using const Connection: Db.SqliteConnection := Sql.Open(Database);
   using const UserData: Db.SqliteConnection := Sql.Open(Users);
@@ -80,7 +85,12 @@ end function;
 
 // Observes committed album changes in `Database`/`Users`; `Publish` is awaited and only
 // receives changed complete snapshots. `Cancellation` closes the borrowed lifetime.
-public async function Run(Database: string; Users: string; Publish: function(M.Snapshot): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
+public async function Run(
+  Database: string;
+  Users: string;
+  Publish: function(M.Snapshot): Tasks.Task;
+  Cancellation: T.CancellationToken
+): Tasks.Task;
 begin
   var Published: bool := false;
   var Previous: M.Snapshot := new M.Snapshot();

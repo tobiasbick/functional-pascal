@@ -17,7 +17,13 @@ uses Fpas.Ui.Widgets.Inputs.StepSliders as A;
 // - `Current`: Model-owned value.
 // - `Change`: Maps a native proposal.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Current: A.Value; Change: function(A.Event): TMsg; Settings: A.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Current: A.Value;
+  Change: function(A.Event): TMsg;
+  Settings: A.Options
+);
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Role: string := 'step-slider';

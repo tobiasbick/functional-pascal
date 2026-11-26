@@ -24,8 +24,13 @@ uses System.Collections.Generic as Lists;
 // - `Align`: Parent cross-axis alignment.
 // - `Visit`: Host traversal for the trigger and body.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Trigger: E.Element of TMsg; Content: E.Element of TMsg;
-  Settings: H.Options; Horizontal: bool; Align: L.Alignment;
+  Frame: C.State of TMsg;
+  Id: string;
+  Trigger: E.Element of TMsg;
+  Content: E.Element of TMsg;
+  Settings: H.Options;
+  Horizontal: bool;
+  Align: L.Alignment;
   Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
 );
 begin

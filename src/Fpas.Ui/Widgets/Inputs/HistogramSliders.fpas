@@ -34,8 +34,14 @@ end record;
 // ## Returns
 // The graphical histogram slider.
 public function HistogramSlider of TMsg(
-  Id: string; Label: string; Bins: array of float; Value: R.Interval; Minimum: float;
-  Maximum: float; OnChange: function(R.Interval): TMsg; Settings: Options? := null
+  Id: string;
+  Label: string;
+  Bins: array of float;
+  Value: R.Interval;
+  Minimum: float;
+  Maximum: float;
+  OnChange: function(R.Interval): TMsg;
+  Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin

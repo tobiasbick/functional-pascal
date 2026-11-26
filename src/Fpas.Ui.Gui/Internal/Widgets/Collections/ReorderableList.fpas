@@ -19,7 +19,15 @@ uses Fpas.Ui.Layout as L;
 // - `Change`: Maps a proposed order to a message.
 // - `Enabled`: Whether the list accepts dragging.
 // - `Visit`: Host traversal for each reorder row.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Items: array of E.Element of TMsg; Order: array of int; Change: function(array of int): TMsg; Enabled: bool; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Items: array of E.Element of TMsg;
+  Order: array of int;
+  Change: function(array of int): TMsg;
+  Enabled: bool;
+  Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
+);
 begin
   const Accept: bool := Frame.AcceptInput and Enabled;
   const Proposed: array of int := Frame.Window.BeginReorder(

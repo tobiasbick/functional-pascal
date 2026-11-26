@@ -44,7 +44,11 @@ end record;
 // ## Returns
 // A graphical icon button.
 public function IconButton of TMsg(
-  Id: string; Icon: string; Tooltip: string; Message: TMsg; Settings: Options? := null
+  Id: string;
+  Icon: string;
+  Tooltip: string;
+  Message: TMsg;
+  Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';
 requires Icon <> '';

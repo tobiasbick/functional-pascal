@@ -26,8 +26,12 @@ end function;
 // - `Changed`: Optional active anchor change message.
 // - `Enabled`: Whether entries accept input.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; ScrollId: string; Items: array of T.Item;
-  Changed: Sys.Func of (string, TMsg)?; Enabled: bool
+  Frame: C.State of TMsg;
+  Id: string;
+  ScrollId: string;
+  Items: array of T.Item;
+  Changed: Sys.Func of (string, TMsg)?;
+  Enabled: bool
 );
 begin
   const Accept: bool := Frame.AcceptInput and Enabled;

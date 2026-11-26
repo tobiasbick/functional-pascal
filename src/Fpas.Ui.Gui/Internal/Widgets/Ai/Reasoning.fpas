@@ -18,7 +18,13 @@ uses Fpas.Ui.Widgets.Ai.Reasonings as Reasonings;
 // - `Bodies`: Composed reasoning body.
 // - `Settings`: Native options.
 // - `Visit`: Draws composed children.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Bodies: array of E.Element of TMsg; Settings: Reasonings.Options; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Bodies: array of E.Element of TMsg;
+  Settings: Reasonings.Options;
+  Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
+);
 begin
   const Role: string := 'reasoning';
   const Token: string := C.Token(Role, Id);

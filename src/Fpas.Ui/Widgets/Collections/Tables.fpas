@@ -101,7 +101,15 @@ end function;
 // - `Settings`: Optional table settings.
 // ## Returns
 // The shared table element.
-public function Table of TMsg(Id: string; Columns: array of Column; Rows: array of Row of TMsg; Order: Sort? := null; OnSort: Sys.Func of (Sort, TMsg)? := null; OnSelect: Sys.Func of (string, TMsg)? := null; Settings: Options? := null): E.Element of TMsg;
+public function Table of TMsg(
+  Id: string;
+  Columns: array of Column;
+  Rows: array of Row of TMsg;
+  Order: Sort? := null;
+  OnSort: Sys.Func of (Sort, TMsg)? := null;
+  OnSelect: Sys.Func of (string, TMsg)? := null;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).Table(

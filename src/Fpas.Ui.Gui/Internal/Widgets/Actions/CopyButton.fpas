@@ -18,7 +18,13 @@ uses System as Sys;
 // - `Text`: Literal clipboard text.
 // - `OnCopied`: Optional application notification.
 // - `Enabled`: Model-owned input permission.
-public procedure Draw of TMsg(State: C.State of TMsg; Id: string; Text: string; OnCopied: (Sys.Func of TMsg)?; Enabled: bool);
+public procedure Draw of TMsg(
+  State: C.State of TMsg;
+  Id: string;
+  Text: string;
+  OnCopied: (Sys.Func of TMsg)?;
+  Enabled: bool
+);
 begin
   const Allowed: bool := Enabled and State.AcceptInput;
   const Token: string := C.Token('copy-button', Id);

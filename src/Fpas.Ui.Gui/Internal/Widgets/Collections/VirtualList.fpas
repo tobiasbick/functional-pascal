@@ -27,7 +27,17 @@ uses System as Sys;
 // - `Offset`: Saved offset to restore when the list reappears.
 // - `OnScroll`: Optional observer for the latest native target offset.
 // - `Visit`: Host traversal for a realized row.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Count: int; RowHeight: float; Height: L.Extent; Build: function(int): E.Element of TMsg; Offset: float?; OnScroll: Sys.Func of (float, TMsg)?; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Count: int;
+  RowHeight: float;
+  Height: L.Extent;
+  Build: function(int): E.Element of TMsg;
+  Offset: float?;
+  OnScroll: Sys.Func of (float, TMsg)?;
+  Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
+);
 begin
   const Extent: S.NativeExtent := S.Extent(Height);
   const Token: string := C.Token('virtual-list', Id);

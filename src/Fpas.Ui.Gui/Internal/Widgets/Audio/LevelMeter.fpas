@@ -19,7 +19,11 @@ uses System as Sys;
 // - `Settings`: Native meter settings.
 // - `OnClipCleared`: Optional message on a clip reset.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Peaks: array of float; Settings: M.Options; OnClipCleared: (Sys.Func of TMsg)?
+  Frame: C.State of TMsg;
+  Id: string;
+  Peaks: array of float;
+  Settings: M.Options;
+  OnClipCleared: (Sys.Func of TMsg)?
 );
 begin
   const Role: string := 'level-meter';

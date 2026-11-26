@@ -36,10 +36,12 @@ end function;
 // Host extension payloads must implement Application.HostExtension<TChild>.
 public function MapCommand of (TChild, TParent)(
   Value: A.Command of TChild;
-  Messages: function(TChild): TParent; Scope: string := ''
+  Messages: function(TChild): TParent;
+  Scope: string := ''
 ): A.Command of TParent;
   function Start(
-    Id: string; Work: Fx.Effect of (Fx.Completion, TChild, A.BackgroundContext of TChild)
+    Id: string;
+    Work: Fx.Effect of (Fx.Completion, TChild, A.BackgroundContext of TChild)
   ): A.Command of TParent;
     function Adapt(Parent: A.BackgroundContext of TParent): A.BackgroundContext of TChild;
     begin
@@ -99,7 +101,8 @@ end function;
 // The child model and parent commands in their original order.
 public function MapTransition of (TModel, TChild, TParent)(
   Value: A.Transition of (TModel, TChild);
-  Messages: function(TChild): TParent; Scope: string := ''
+  Messages: function(TChild): TParent;
+  Scope: string := ''
 ): A.Transition of (TModel, TParent);
 begin
   const Commands: Lists.List of A.Command of TParent := new Lists.List of A.Command of TParent();

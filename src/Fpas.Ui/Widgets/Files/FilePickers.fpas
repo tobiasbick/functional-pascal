@@ -52,7 +52,13 @@ end record;
 // - `Base`: Optional underlying view. It is drawn before the modal.
 // ## Returns
 // The shared modal widget.
-public function FilePicker of TMsg(Id: string; Open: bool; Change: function(Event): TMsg; Settings: Options? := null; Base: (E.Element of TMsg)? := null): E.Element of TMsg;
+public function FilePicker of TMsg(
+  Id: string;
+  Open: bool;
+  Change: function(Event): TMsg;
+  Settings: Options? := null;
+  Base: (E.Element of TMsg)? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).FilePicker(Id, Base, Open, Change, Settings ?? new Options());

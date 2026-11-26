@@ -24,7 +24,15 @@ uses System as Sys;
 // - `Columns`: Nonnegative column count.
 // - `Settings`: Native presentation.
 // - `OnActivate`: Optional native click callback.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Values: array of float; Rows: int; Columns: int; Settings: W.Options; OnActivate: Sys.Func of (W.Cell, TMsg)?);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Values: array of float;
+  Rows: int;
+  Columns: int;
+  Settings: W.Options;
+  OnActivate: Sys.Func of (W.Cell, TMsg)?
+);
 begin
   const Token: string := C.Token('heatmap', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;

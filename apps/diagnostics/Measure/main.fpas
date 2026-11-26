@@ -31,7 +31,8 @@ end procedure;
 
 async function Measure(
   Target: Fx.Effect of (Capture.Captured, Capture.CaptureFailure, Capture.Request);
-  Request: Capture.Request; Cancellation: Threading.CancellationToken
+  Request: Capture.Request;
+  Cancellation: Threading.CancellationToken
 ): Tasks.Task of Capture.Captured;
 begin
   case await Target.Run(Request, Cancellation) of
@@ -45,7 +46,10 @@ end function;
 begin
   const Args: array of string := Sys.Environment.GetCommandLineArgs();
   using const Cancellation: Threading.CancellationTokenSource := new Threading.CancellationTokenSource();
-  const Handler: Sys.ConsoleCancelEventHandler := procedure(Sender: object?; Event: Sys.ConsoleCancelEventArgs) begin
+  const Handler: Sys.ConsoleCancelEventHandler := procedure(
+    Sender: object?;
+    Event: Sys.ConsoleCancelEventArgs
+  ) begin
     Event.Cancel := true;
     Cancellation.Cancel();
   end procedure;

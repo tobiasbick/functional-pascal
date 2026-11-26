@@ -22,7 +22,14 @@ uses System.Collections.Generic as Lists;
 // - `Selected`: Selected index.
 // - `Change`: Maps a native proposal.
 // - `Settings`: Native appearance and input options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Items: array of W.Item; Selected: int; Change: function(int): TMsg; Settings: W.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Items: array of W.Item;
+  Selected: int;
+  Change: function(int): TMsg;
+  Settings: W.Options
+);
 begin
   const Token: string := C.Token('tab-bar', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;

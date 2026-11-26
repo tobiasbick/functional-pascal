@@ -39,8 +39,12 @@ end function;
 // - `OnChange`: Maps native step proposals to messages.
 // - `Settings`: Native card and spotlight options.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Steps: array of T.Step;
-  Current: int; OnChange: function(T.Change): TMsg; Settings: T.Options
+  Frame: C.State of TMsg;
+  Id: string;
+  Steps: array of T.Step;
+  Current: int;
+  OnChange: function(T.Change): TMsg;
+  Settings: T.Options
 );
 begin
   if Current < 0 or Frame.PaintingClosed then

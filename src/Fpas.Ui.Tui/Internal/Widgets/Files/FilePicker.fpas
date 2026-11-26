@@ -48,8 +48,14 @@ end function;
 // ## Returns
 // The underlying view with a modal layer.
 public function Lower of TMsg(
-  Id: string; Base: E.Element of TMsg; Change: function(Picker.Event): TMsg; Settings: Picker.Options;
-  State: S.State; Size: T.Viewport; Colors: T.Style; Theme: Th.Theme
+  Id: string;
+  Base: E.Element of TMsg;
+  Change: function(Picker.Event): TMsg;
+  Settings: Picker.Options;
+  State: S.State;
+  Size: T.Viewport;
+  Colors: T.Style;
+  Theme: Th.Theme
 ): E.Element of TMsg;
   function Select(Key: string): A.Result of TMsg;
   begin
@@ -139,7 +145,13 @@ public function Lower of TMsg(
     return Change(new Picker.Event(null));
   end function;
 
-  function Action(Key: string; Label: string; Handler: function(): A.Result of TMsg; Enabled: bool; Primary: bool): E.Element of TMsg;
+  function Action(
+    Key: string;
+    Label: string;
+    Handler: function(): A.Result of TMsg;
+    Enabled: bool;
+    Primary: bool
+  ): E.Element of TMsg;
   begin
     return (E.Element of TMsg).Action(
       Id + '/' + Key, new A.Callback of TMsg(Handler), Enabled,

@@ -69,7 +69,11 @@ end function;
 // ## Returns
 // The graphical split button.
 public function SplitButton of TMsg(
-  Id: string; Label: string; Message: TMsg; Items: array of Item of TMsg; Settings: Options? := null
+  Id: string;
+  Label: string;
+  Message: TMsg;
+  Items: array of Item of TMsg;
+  Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';
 requires Items.Length > 0;

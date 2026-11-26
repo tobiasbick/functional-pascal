@@ -21,7 +21,11 @@ uses System.Collections.Generic as C;
 // ## Returns
 // A horizontal strip of tabs.
 public function Lower of TMsg(
-  Id: string; Items: array of T.Item; Selected: int; Change: function(int): TMsg; Settings: T.Options
+  Id: string;
+  Items: array of T.Item;
+  Selected: int;
+  Change: function(int): TMsg;
+  Settings: T.Options
 ): E.Element of TMsg;
   function Activate(Index: int): A.Result of TMsg;
   begin

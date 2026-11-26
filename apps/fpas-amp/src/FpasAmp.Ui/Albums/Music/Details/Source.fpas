@@ -25,7 +25,11 @@ begin
   return L.Spacing.Fixed(L.Measure.Logical(Value));
 end function;
 
-function Fingerprint(Current: M.State; Playback: Player.State; Item: Tracks.Entry): E.Element of M.Msg;
+function Fingerprint(
+  Current: M.State;
+  Playback: Player.State;
+  Item: Tracks.Entry
+): E.Element of M.Msg;
 begin
   const Local: Fp.State? := Current.Fingerprint;
   const Playing: Fp.State? := Playback.Fingerprint;
@@ -75,7 +79,11 @@ begin
 end function;
 
 // Builds the source card for Item. Current and Playback supply pending or completed fingerprint work.
-public function Build(Current: M.State; Playback: Player.State; Item: Tracks.Entry): E.Element of M.Msg;
+public function Build(
+  Current: M.State;
+  Playback: Player.State;
+  Item: Tracks.Entry
+): E.Element of M.Msg;
 requires Item.Path <> '';
 begin
   const Row: L.Flow := new L.Flow(Gap := Points(6), Align := L.Alignment.Center);

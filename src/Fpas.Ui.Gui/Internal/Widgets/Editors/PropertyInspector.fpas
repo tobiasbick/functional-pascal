@@ -73,7 +73,13 @@ end function;
 // - `Groups`: Groups and native property rows.
 // - `Changed`: Maps a native proposal.
 // - `Settings`: Native layout and behavior options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Groups: array of D.Group; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Groups: array of D.Group;
+  Changed: function(D.Event): TMsg;
+  Settings: D.Options
+);
 begin
   const Role: string := 'property-inspector';
   const Token: string := C.Token(Role, Id);

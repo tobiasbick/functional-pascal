@@ -19,7 +19,12 @@ uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
 // - `Message`: Proposed activation message.
 // - `Settings`: Model-owned input and appearance options.
 public procedure Draw of TMsg(
-  State: C.State of TMsg; Id: string; Icon: string; Tooltip: string; Message: TMsg; Settings: Icons.Options
+  State: C.State of TMsg;
+  Id: string;
+  Icon: string;
+  Tooltip: string;
+  Message: TMsg;
+  Settings: Icons.Options
 );
 begin
   const Enabled: bool := State.AcceptInput and Settings.Enabled;

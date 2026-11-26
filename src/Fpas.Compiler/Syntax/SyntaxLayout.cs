@@ -10,6 +10,7 @@ internal sealed class SyntaxLayout(int tokenCount)
     internal HashSet<int> Tight { get; } = [];
     internal HashSet<int> Unary { get; } = [];
     internal List<SyntaxList> Lists { get; } = [];
+    internal Dictionary<int, int> RoutineHeaderEnds { get; } = [];
     internal List<SyntaxBinary> Binary { get; } = [];
     internal List<(int Start, int Clause)> Conditions { get; } = [];
     internal Dictionary<int, int> ConditionalEnds { get; } = [];

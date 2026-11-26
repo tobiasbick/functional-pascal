@@ -15,7 +15,12 @@ uses Fpas.Ui.Gui.Internal.Core.Context as C;
 // - `Id`: Stable stepper identity.
 // - `Steps`: Validated literal captions.
 // - `Current`: Model-owned step index or the count when complete.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Steps: array of string; Current: int);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Steps: array of string;
+  Current: int
+);
 begin
   Frame.Window.Stepper(Steps, Current);
   const Caption: string := if Current = Steps.Length then

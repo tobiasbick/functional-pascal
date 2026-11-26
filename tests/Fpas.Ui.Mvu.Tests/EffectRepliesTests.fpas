@@ -76,7 +76,10 @@ public type EffectRepliesTests = record
   // A typed effect gets its environment at execution and emits both kinds of outcome through the session.
   [X.FactAttribute]
   public procedure TypedEffectOutcomes();
-    function Load(Value: int; Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (int, string);
+    function Load(
+      Value: int;
+      Token: T.CancellationToken
+    ): Tasks.Task of Fx.Outcome of (int, string);
     begin
       Token.ThrowIfCancellationRequested();
       return Tasks.Task.FromResult of Fx.Outcome of (int, string)(

@@ -67,7 +67,12 @@ end record;
 // - `OnActivate`: Optional native click callback.
 // ## Returns
 // A graphical element.
-public function ScatterChart of TMsg(Id: string; Series: array of Series; Settings: Options? := null; OnActivate: Sys.Func of (PointIndex, TMsg)? := null): E.Element of TMsg;
+public function ScatterChart of TMsg(
+  Id: string;
+  Series: array of Series;
+  Settings: Options? := null;
+  OnActivate: Sys.Func of (PointIndex, TMsg)? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).ScatterChart(Id, Series, Settings ?? new Options(), OnActivate);

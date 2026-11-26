@@ -25,7 +25,10 @@ end record;
 // - `Children`: Elements in reading order.
 // ## Returns
 // The graphical element.
-public function Grid of TMsg(Settings: Options; params Children: array of E.Element of TMsg): E.Element of TMsg;
+public function Grid of TMsg(
+  Settings: Options;
+  params Children: array of E.Element of TMsg
+): E.Element of TMsg;
 begin
   return (E.Element of TMsg).Grid(Settings, Children);
 end function;

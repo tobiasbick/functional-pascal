@@ -21,8 +21,12 @@ uses System as Sys;
 // - `Settings`: Presentation, capacity and input options.
 // - `OnSubmit`: Optional Ctrl+Enter action.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Value: string; OnChange: function(string): TMsg;
-  Settings: F.Options; OnSubmit: Sys.Func of (string, TMsg)?
+  Frame: C.State of TMsg;
+  Id: string;
+  Value: string;
+  OnChange: function(string): TMsg;
+  Settings: F.Options;
+  OnSubmit: Sys.Func of (string, TMsg)?
 );
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;

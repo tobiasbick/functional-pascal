@@ -60,7 +60,13 @@ end record;
 // - `OnActivate`: Optional native click callback.
 // ## Returns
 // A graphical element.
-public function Sankey of TMsg(Id: string; Nodes: array of Node; Links: array of Link; Settings: Options? := null; OnActivate: Sys.Func of (Selection, TMsg)? := null): E.Element of TMsg;
+public function Sankey of TMsg(
+  Id: string;
+  Nodes: array of Node;
+  Links: array of Link;
+  Settings: Options? := null;
+  OnActivate: Sys.Func of (Selection, TMsg)? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).Sankey(Id, Nodes, Links, Settings ?? new Options(), OnActivate);

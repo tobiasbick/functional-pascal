@@ -12,8 +12,11 @@ uses System.Collections.Generic as Generic;
 uses System.Text as Text;
 
 function AllocateCached(
-  Preferred: array of int; Rules: array of E.Flex; Available: int;
-  Previous: array of F.AllocationMemo; Next: Generic.List of F.AllocationMemo
+  Preferred: array of int;
+  Rules: array of E.Flex;
+  Available: int;
+  Previous: array of F.AllocationMemo;
+  Next: Generic.List of F.AllocationMemo
 ): array of int;
 begin
   const Signature: Text.StringBuilder := new Text.StringBuilder();
@@ -43,8 +46,12 @@ begin
 end function;
 
 public function Bounds of TMsg(
-  Children: array of E.Element of TMsg; Axis: bool; Flow: E.Flow; Area: F.Rect;
-  PreviousAllocations: array of F.AllocationMemo; Allocations: Generic.List of F.AllocationMemo;
+  Children: array of E.Element of TMsg;
+  Axis: bool;
+  Flow: E.Flow;
+  Area: F.Rect;
+  PreviousAllocations: array of F.AllocationMemo;
+  Allocations: Generic.List of F.AllocationMemo;
   WrapText: bool
 ): array of F.Rect;
 begin

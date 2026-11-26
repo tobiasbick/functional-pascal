@@ -22,7 +22,13 @@ uses System as Sys;
 // - `Series`: Finite points and optional matching bubble sizes.
 // - `Settings`: Native presentation.
 // - `OnActivate`: Optional native click callback.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Series: array of W.Series; Settings: W.Options; OnActivate: Sys.Func of (W.PointIndex, TMsg)?);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Series: array of W.Series;
+  Settings: W.Options;
+  OnActivate: Sys.Func of (W.PointIndex, TMsg)?
+);
 begin
   const Token: string := C.Token('scatter-chart', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;

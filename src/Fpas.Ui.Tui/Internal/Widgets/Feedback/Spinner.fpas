@@ -65,8 +65,15 @@ end function;
 // ## Returns
 // Whether the animated glyph is visible.
 public function Paint(
-  Operations: C.List of D.Operation; Area: F.Rect; Clip: F.Rect; Frames: string; Phase: long;
-  Ink: G.Color; Inverse: bool; Style: T.Style; Theme: Th.Theme
+  Operations: C.List of D.Operation;
+  Area: F.Rect;
+  Clip: F.Rect;
+  Frames: string;
+  Phase: long;
+  Ink: G.Color;
+  Inverse: bool;
+  Style: T.Style;
+  Theme: Th.Theme
 ): bool;
 begin
   if Clip.Width = 0 or Clip.Height = 0 then

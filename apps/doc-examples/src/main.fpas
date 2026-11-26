@@ -240,7 +240,10 @@ begin
   S.Globalization.CultureInfo.CurrentUICulture := S.Globalization.CultureInfo.InvariantCulture;
 
   using const Cancellation: T.CancellationTokenSource := new T.CancellationTokenSource();
-  const Handler: S.ConsoleCancelEventHandler := procedure(Sender: object?; Event: S.ConsoleCancelEventArgs) begin
+  const Handler: S.ConsoleCancelEventHandler := procedure(
+    Sender: object?;
+    Event: S.ConsoleCancelEventArgs
+  ) begin
     Event.Cancel := true;
     Cancellation.Cancel();
   end procedure;

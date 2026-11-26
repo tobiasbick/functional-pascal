@@ -51,7 +51,11 @@ end function;
 // - `Order`: Current sort indicator.
 // ## Returns
 // One preferred width in terminal cells per column.
-public function MeasureColumns of TMsg(Columns: array of T.Column; Rows: array of T.Row of TMsg; Order: T.Sort?): array of int;
+public function MeasureColumns of TMsg(
+  Columns: array of T.Column;
+  Rows: array of T.Row of TMsg;
+  Order: T.Sort?
+): array of int;
 begin
   const Preferred: array of int := new int[Columns.Length];
   for Index: int := 0 to Columns.Length - 1 do
@@ -110,12 +114,26 @@ end function;
 // - `Operations`: Cell paint operations.
 // - `Register`: Registers a visible input target.
 public procedure Arrange of TMsg(
-  Value: E.TableView of TMsg; Area: F.Rect; Clip: F.Rect; Style: Terminal.Style; Theme: Th.Theme;
-  Scope: string; FocusReturn: string; Offsets: C.Dictionary of (string, int);
-  Regions: C.List of Scene.ScrollRegion; Stops: C.List of Scene.NavigationStop; Operations: C.List of D.Operation;
+  Value: E.TableView of TMsg;
+  Area: F.Rect;
+  Clip: F.Rect;
+  Style: Terminal.Style;
+  Theme: Th.Theme;
+  Scope: string;
+  FocusReturn: string;
+  Offsets: C.Dictionary of (string, int);
+  Regions: C.List of Scene.ScrollRegion;
+  Stops: C.List of Scene.NavigationStop;
+  Operations: C.List of D.Operation;
   Register: procedure(Scene.Control of TMsg)
 );
-  procedure PaintCell(Text: string; Alignment: T.Alignment; Box: F.Rect; Limit: F.Rect; Colors: Terminal.Style);
+  procedure PaintCell(
+    Text: string;
+    Alignment: T.Alignment;
+    Box: F.Rect;
+    Limit: F.Rect;
+    Colors: Terminal.Style
+  );
   begin
     const Visible: F.Rect := F.Intersect(Box, Limit);
     if Visible.Width = 0 or Visible.Height = 0 then

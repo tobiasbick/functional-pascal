@@ -42,7 +42,10 @@ end function;
 // ## Returns
 // A graphical range picker with CUI-owned popup layout and interaction.
 public function DateRangePicker of TMsg(
-  Id: string; Value: R.Value; OnChange: function(R.Value): TMsg; Settings: Options? := null
+  Id: string;
+  Value: R.Value;
+  OnChange: function(R.Value): TMsg;
+  Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin

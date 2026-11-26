@@ -36,8 +36,13 @@ end record;
 // ## Returns
 // The graphical ruler slider.
 public function RulerSlider of TMsg(
-  Id: string; Label: string; Value: float; Minimum: float; Maximum: float;
-  OnChange: function(float): TMsg; Settings: Options? := null
+  Id: string;
+  Label: string;
+  Value: float;
+  Minimum: float;
+  Maximum: float;
+  OnChange: function(float): TMsg;
+  Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin

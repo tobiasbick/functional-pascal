@@ -23,8 +23,12 @@ uses System.Collections.Generic as Lists;
 // - `OnChange`: Maps a proposed selection to a message.
 // - `Settings`: Native columns and input permission.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Items: array of R.Item; Selected: int;
-  OnChange: function(int): TMsg; Settings: R.Options
+  Frame: C.State of TMsg;
+  Id: string;
+  Items: array of R.Item;
+  Selected: int;
+  OnChange: function(int): TMsg;
+  Settings: R.Options
 );
 begin
   const Enabled: bool := Settings.Enabled and Frame.AcceptInput;

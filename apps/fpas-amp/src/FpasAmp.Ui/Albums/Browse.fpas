@@ -46,7 +46,10 @@ end function;
 // - `Scope`: Determines whether individual artist credits are searchable and filterable.
 // ## Returns
 // The catalog; titles weigh most in searches, then artists, then genres.
-public function Prepare(Items: I.ImmutableArray of Library.Album; Scope: Toolbar.Scope := Toolbar.Scope.Albums): Catalog;
+public function Prepare(
+  Items: I.ImmutableArray of Library.Album;
+  Scope: Toolbar.Scope := Toolbar.Scope.Albums
+): Catalog;
 begin
   const Documents: (I.ImmutableArray of Matching.Document).Builder := I.ImmutableArray.CreateBuilder of Matching.Document(
     Items.Length
@@ -186,7 +189,11 @@ end record;
 // The albums that pass the filters and, with search words, match at least one
 // of them. Best match lists the closest albums first. Equal sort keys use the
 // album title and then retain catalogue order.
-public function Select(Items: I.ImmutableArray of Library.Album; Prepared: Catalog; Settings: Toolbar.State): I.ImmutableArray of Library.Album;
+public function Select(
+  Items: I.ImmutableArray of Library.Album;
+  Prepared: Catalog;
+  Settings: Toolbar.State
+): I.ImmutableArray of Library.Album;
   function Compare(Left: Entry; Right: Entry): int;
   begin
     var Result: int := 0;

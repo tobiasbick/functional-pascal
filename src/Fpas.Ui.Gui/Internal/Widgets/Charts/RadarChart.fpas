@@ -23,7 +23,14 @@ uses System as Sys;
 // - `Axes`: At least three literal captions.
 // - `Settings`: Native presentation.
 // - `OnActivate`: Optional native click callback.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Series: array of Ch.Series; Axes: array of string; Settings: W.Options; OnActivate: Sys.Func of (int, TMsg)?);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Series: array of Ch.Series;
+  Axes: array of string;
+  Settings: W.Options;
+  OnActivate: Sys.Func of (int, TMsg)?
+);
 begin
   const Token: string := C.Token('radar-chart', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;

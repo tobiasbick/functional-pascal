@@ -216,7 +216,10 @@ end function;
 // - `DrawerViewportHeight`: Window height for compact mode, or null for the desktop sidebar.
 // ## Returns
 // The gallery sidebar content.
-public function Build(Model: State.Model; DrawerViewportHeight: int? := null): E.Element of State.Msg;
+public function Build(
+  Model: State.Model;
+  DrawerViewportHeight: int? := null
+): E.Element of State.Msg;
 begin
   const Colors: Themes.Palette := Update.ThemeFor(Model).Colors;
   const Navigation: E.Element of State.Msg := E.Size of State.Msg(

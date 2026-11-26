@@ -36,7 +36,12 @@ begin
   );
 end procedure;
 
-async function HoldCatalogue(Session: Metadata.Session; Catalogue: Db.SqliteConnection; UserDatabase: string; Source: S.MusicSource): Tasks.Task of Db.SqliteTransaction;
+async function HoldCatalogue(
+  Session: Metadata.Session;
+  Catalogue: Db.SqliteConnection;
+  UserDatabase: string;
+  Source: S.MusicSource
+): Tasks.Task of Db.SqliteTransaction;
 begin
   using const Users: Db.SqliteConnection := Sql.Open(UserDatabase);
   // Hold identity writes until the target file is queued and the catalogue is locked.

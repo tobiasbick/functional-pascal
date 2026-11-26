@@ -64,8 +64,11 @@ end function;
 // ## Returns
 // The strip and its intrinsic cell widths.
 public function Lower of TMsg(
-  Id: string; Items: array of E.ChoiceItem; Entry: int;
-  Activate: function(int): Actions.Result of TMsg; Settings: E.ChoiceStripOptions
+  Id: string;
+  Items: array of E.ChoiceItem;
+  Entry: int;
+  Activate: function(int): Actions.Result of TMsg;
+  Settings: E.ChoiceStripOptions
 ): E.Element of TMsg;
 begin
   const Widths: array of int := Sys.Array.ConvertAll of (E.ChoiceItem, int)(
@@ -97,7 +100,11 @@ end function;
 // - `Apply`: Dispatches a changed selection to the application.
 // ## Returns
 // The new focus identity, or null for an unrelated control or key.
-public function Move of TMsg(Handler: (Actions.IActivatable of TMsg)?; Key: K.Key; Apply: procedure(TMsg)): string?;
+public function Move of TMsg(
+  Handler: (Actions.IActivatable of TMsg)?;
+  Key: K.Key;
+  Apply: procedure(TMsg)
+): string?;
 begin
   case Handler of
     when is Choice of TMsg as Item:
@@ -141,9 +148,19 @@ end function;
 // - `Stops`: Tab traversal order.
 // - `Register`: Registers visible controls.
 public procedure Arrange of TMsg(
-  Strip: E.ChoiceStripView of TMsg; Area: F.Rect; Clip: F.Rect; Style: Terminal.Style; Theme: Th.Theme;
-  Scope: string; Parent: string; ScrollId: string; Focus: string; Offsets: C.Dictionary of (string, int);
-  Operations: C.List of D.Operation; Navigation: C.List of A.NavigationStop; Stops: C.List of A.TabStop;
+  Strip: E.ChoiceStripView of TMsg;
+  Area: F.Rect;
+  Clip: F.Rect;
+  Style: Terminal.Style;
+  Theme: Th.Theme;
+  Scope: string;
+  Parent: string;
+  ScrollId: string;
+  Focus: string;
+  Offsets: C.Dictionary of (string, int);
+  Operations: C.List of D.Operation;
+  Navigation: C.List of A.NavigationStop;
+  Stops: C.List of A.TabStop;
   Register: procedure(A.Control of TMsg)
 );
 begin

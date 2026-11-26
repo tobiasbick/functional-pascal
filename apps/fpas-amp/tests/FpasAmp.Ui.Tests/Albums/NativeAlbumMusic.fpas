@@ -122,7 +122,11 @@ public type AlbumMusicTests = record
       Last := Next.Model;
       return Next;
     end function;
-    procedure Click(Session: Gui.Session of App.Msg; Bounds: Cui.CuiRectangle; XFraction: float := 0.6F);
+    procedure Click(
+      Session: Gui.Session of App.Msg;
+      Bounds: Cui.CuiRectangle;
+      XFraction: float := 0.6F
+    );
     begin
       XPos := Bounds.X + Bounds.Width * XFraction;
       YPos := Bounds.Y + Bounds.Height / 2.0F;

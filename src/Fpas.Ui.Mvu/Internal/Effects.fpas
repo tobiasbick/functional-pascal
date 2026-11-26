@@ -31,7 +31,10 @@ type Run = record
   // ## Returns
   // The run before any cancellation request.
   public static function Start(
-    Id: string; Version: long; Source: Threads.CancellationTokenSource; Work: Tasks.Task
+    Id: string;
+    Version: long;
+    Source: Threads.CancellationTokenSource;
+    Work: Tasks.Task
   ): Run;
   begin
     return new Run(Id, Version, Source, Work, null);
@@ -129,10 +132,13 @@ end record;
 // ## Returns
 // The effect owner.
 public function Create of TMsg(
-  Enqueue: function(string, long, TMsg, Threads.CancellationToken): Tasks.Task; Clock: Sys.TimeProvider
+  Enqueue: function(string, long, TMsg, Threads.CancellationToken): Tasks.Task;
+  Clock: Sys.TimeProvider
 ): State of TMsg;
   async function Perform(
-    Id: string; Version: long; Work: Fx.Effect of (Fx.Completion, TMsg, App.BackgroundContext of TMsg);
+    Id: string;
+    Version: long;
+    Work: Fx.Effect of (Fx.Completion, TMsg, App.BackgroundContext of TMsg);
     Token: Threads.CancellationToken
   ): Tasks.Task;
     function Post(Message: TMsg): Tasks.Task;
@@ -182,7 +188,10 @@ public function Create of TMsg(
     end for;
   end procedure;
 
-  procedure Start(Id: string; Work: Fx.Effect of (Fx.Completion, TMsg, App.BackgroundContext of TMsg));
+  procedure Start(
+    Id: string;
+    Work: Fx.Effect of (Fx.Completion, TMsg, App.BackgroundContext of TMsg)
+  );
   begin
     Prune();
     Cancel(Id);

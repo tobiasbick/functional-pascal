@@ -92,7 +92,11 @@ public type PodcastEffectTests = record
     begin
       return Gate.Wrap of P.State(Podcasts.Apply(Model, Message, []));
     end function;
-    procedure Deliver(Session: Runtime.Runtime of (P.State, P.Msg, int); Reply: Replies.Reply of P.Msg; Token: T.CancellationToken);
+    procedure Deliver(
+      Session: Runtime.Runtime of (P.State, P.Msg, int);
+      Reply: Replies.Reply of P.Msg;
+      Token: T.CancellationToken
+    );
     begin
       Reply.Release().WaitAsync(Token).GetAwaiter().GetResult();
       discard Session.Advance();

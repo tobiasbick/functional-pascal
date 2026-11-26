@@ -20,7 +20,13 @@ uses System.Globalization as Culture;
 // - `OnChange`: Maps a native amount proposal.
 // - `Settings`: Currency captions, precision and width.
 
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Value: decimal; OnChange: function(decimal): TMsg; Settings: M.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Value: decimal;
+  OnChange: function(decimal): TMsg;
+  Settings: M.Options
+);
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('money-field', Id);

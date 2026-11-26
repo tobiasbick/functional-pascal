@@ -109,7 +109,10 @@ end function;
 // ## Returns
 // The graphical emoji picker.
 public function EmojiPicker of TMsg(
-  Id: string; Value: State; OnChange: function(Change): TMsg; Settings: Options? := null
+  Id: string;
+  Value: State;
+  OnChange: function(Change): TMsg;
+  Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin

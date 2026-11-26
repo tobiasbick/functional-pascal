@@ -119,7 +119,10 @@ public type TagEditingTests = record
   [X.InlineDataAttribute(true, false)]
   [X.InlineDataAttribute(false, true)]
   [X.InlineDataAttribute(true, true)]
-  public async function DestinationsPreserveFiftyCustomTags(ToDatabase: bool; ToFile: bool): Tasks.Task;
+  public async function DestinationsPreserveFiftyCustomTags(
+    ToDatabase: bool;
+    ToFile: bool
+  ): Tasks.Task;
   begin
     using const Root: H.Folder := H.Folder.Create();
     using const Data: H.Folder := H.Folder.Create();

@@ -44,7 +44,11 @@ end function;
 // ## Returns
 // The scrollback and optional clear button.
 public function Lower of TMsg(
-  Id: string; Entries: array of Logs.Entry; Clear: TMsg; Settings: Logs.Options; Horizontal: bool
+  Id: string;
+  Entries: array of Logs.Entry;
+  Clear: TMsg;
+  Settings: Logs.Options;
+  Horizontal: bool
 ): E.Element of TMsg;
 begin
   const Content: E.Element of TMsg := (E.Element of TMsg).Log(Id, Entries, Settings.Timestamps);
@@ -98,9 +102,18 @@ end function;
 // ## Returns
 // The scrollback control.
 public function Arrange of TMsg(
-  Id: string; Entries: array of Logs.Entry; Timestamps: bool; Before: (A.Control of TMsg)?; Area: F.Rect;
-  Style: T.Style; Theme: Th.Theme; Scope: string; FocusReturn: string; Offsets: C.Dictionary of (string, int);
-  Regions: C.List of A.ScrollRegion; Operations: C.List of D.Operation
+  Id: string;
+  Entries: array of Logs.Entry;
+  Timestamps: bool;
+  Before: (A.Control of TMsg)?;
+  Area: F.Rect;
+  Style: T.Style;
+  Theme: Th.Theme;
+  Scope: string;
+  FocusReturn: string;
+  Offsets: C.Dictionary of (string, int);
+  Regions: C.List of A.ScrollRegion;
+  Operations: C.List of D.Operation
 ): A.Control of TMsg;
 begin
   var Offset: int := 0;

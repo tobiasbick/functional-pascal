@@ -10,7 +10,12 @@ uses Fpas.Ui.Widgets.Overlays.UserMenus as U;
 uses GuiGallery.Pages.Actions.State as State;
 uses System as Sys;
 
-function Command(Key: string; Name: string; Icon: int; Shortcut: string := ''): M.Entry of State.Msg;
+function Command(
+  Key: string;
+  Name: string;
+  Icon: int;
+  Shortcut: string := ''
+): M.Entry of State.Msg;
 begin
   return (M.Entry of State.Msg).Action(
     new M.Item of State.Msg(

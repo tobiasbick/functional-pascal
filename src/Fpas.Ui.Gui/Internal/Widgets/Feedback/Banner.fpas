@@ -22,8 +22,13 @@ uses System as Sys;
 // - `OnAction`: Optional activation message factory.
 // - `Settings`: Native presentation and input options.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Text: string; Open: bool;
-  OnDismiss: (Sys.Func of TMsg)?; OnAction: (Sys.Func of TMsg)?; Settings: B.Options
+  Frame: C.State of TMsg;
+  Id: string;
+  Text: string;
+  Open: bool;
+  OnDismiss: (Sys.Func of TMsg)?;
+  OnAction: (Sys.Func of TMsg)?;
+  Settings: B.Options
 );
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled and Open;

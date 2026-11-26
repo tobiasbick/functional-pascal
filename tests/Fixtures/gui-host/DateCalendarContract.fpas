@@ -20,7 +20,10 @@ uses System as Sys;
 // - `Renderer`: Native renderer under test.
 // - `Capture`: Prefix for the closed and open captures.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
-  function Update(Model: State.Model; Message: State.Msg): App.Transition of (State.Model, State.Msg);
+  function Update(
+    Model: State.Model;
+    Message: State.Msg
+  ): App.Transition of (State.Model, State.Msg);
   begin
     const Next: App.Transition of (State.Model, State.Msg) := G.Update(Model, Message);
     if ClearSelection then

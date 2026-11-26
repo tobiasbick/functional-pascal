@@ -32,8 +32,12 @@ begin
 end function;
 
 function Picker(
-  Id: string; Items: array of Select.Item; Choices: array of Catalog.Choice;
-  Value: string; Change: function(string): M.Msg; Label: string
+  Id: string;
+  Items: array of Select.Item;
+  Choices: array of Catalog.Choice;
+  Value: string;
+  Change: function(string): M.Msg;
+  Label: string
 ): E.Element of App.Msg;
 begin
   return Select.Select of App.Msg(

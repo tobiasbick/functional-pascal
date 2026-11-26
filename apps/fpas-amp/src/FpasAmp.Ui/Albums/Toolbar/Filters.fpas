@@ -28,8 +28,13 @@ end function;
 // Id identifies the native control, Label titles the field and All names the empty choice.
 // Change maps a selection to its TMsg message.
 public function Choice of TMsg(
-  Id: string; Label: string; All: string; Values: array of string; Chosen: string;
-  Change: function(string): TMsg; Captions: (array of string)? := null
+  Id: string;
+  Label: string;
+  All: string;
+  Values: array of string;
+  Chosen: string;
+  Change: function(string): TMsg;
+  Captions: (array of string)? := null
 ): E.Element of TMsg;
 requires Captions = null or Captions.Length = Values.Length;
 begin
@@ -74,7 +79,13 @@ end function;
 // - `Apply`: Confirms the draft.
 // ## Returns
 // The native form for the filter popup.
-public function Panel of TMsg(Id: string; Title: string; Fields: array of E.Element of TMsg; Reset: TMsg; Apply: TMsg): E.Element of TMsg;
+public function Panel of TMsg(
+  Id: string;
+  Title: string;
+  Fields: array of E.Element of TMsg;
+  Reset: TMsg;
+  Apply: TMsg
+): E.Element of TMsg;
 begin
   const Parts: C.List of E.Element of TMsg := new C.List of E.Element of TMsg();
   Parts.Add(Texts.Text of TMsg(Title, Texts.Appearance.HeadingThree));
@@ -121,7 +132,16 @@ end function;
 // - `Apply`: Message to confirm the draft.
 // ## Returns
 // The title, choice controls, rating slider and form buttons.
-public function Form of TMsg(Id: string; Title: string; Fields: array of E.Element of TMsg; Rating: int; Change: function(int): TMsg; Reset: TMsg; Apply: TMsg; RatingLabel: string := 'Minimum rating'): E.Element of TMsg;
+public function Form of TMsg(
+  Id: string;
+  Title: string;
+  Fields: array of E.Element of TMsg;
+  Rating: int;
+  Change: function(int): TMsg;
+  Reset: TMsg;
+  Apply: TMsg;
+  RatingLabel: string := 'Minimum rating'
+): E.Element of TMsg;
 begin
   const Parts: C.List of E.Element of TMsg := new C.List of E.Element of TMsg(Fields);
   const Unrated: bool := Rating = -1;
@@ -177,7 +197,14 @@ end function;
 // - `Width`: Maximum width in logical points.
 // ## Returns
 // The filter trigger and popup.
-public function Popup of TMsg(Id: string; Panel: E.Element of TMsg; Count: int; Open: bool; Toggle: function(bool): TMsg; Width: int): E.Element of TMsg;
+public function Popup of TMsg(
+  Id: string;
+  Panel: E.Element of TMsg;
+  Count: int;
+  Open: bool;
+  Toggle: function(bool): TMsg;
+  Width: int
+): E.Element of TMsg;
 requires Width > 0;
 begin
   const Trigger: E.Element of TMsg := B.Button of TMsg(
@@ -213,7 +240,11 @@ end function;
 // ## Returns
 // The button, labelled with the number of applied filters, and its popover.
 public function Build(
-  Current: M.State; Artists: array of string; Genres: array of string; Width: int; Scope: M.Scope := M.Scope.Albums
+  Current: M.State;
+  Artists: array of string;
+  Genres: array of string;
+  Width: int;
+  Scope: M.Scope := M.Scope.Albums
 ): E.Element of M.Msg;
 requires Width > 0;
 begin

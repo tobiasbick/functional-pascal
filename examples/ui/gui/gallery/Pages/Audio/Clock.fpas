@@ -19,8 +19,14 @@ public const Id: string := 'audio-meter-clock';
 // - `OnFailure`: Maps a worker failure into an application message.
 // ## Returns
 // The cancellable background command.
-public function Start of TMsg(Tick: TMsg; OnFailure: function(Sys.Exception): TMsg): Mvu.Command of TMsg;
-  async function Run(Post: function(TMsg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+public function Start of TMsg(
+  Tick: TMsg;
+  OnFailure: function(Sys.Exception): TMsg
+): Mvu.Command of TMsg;
+  async function Run(
+    Post: function(TMsg): Tasks.Task;
+    Token: Threads.CancellationToken
+  ): Tasks.Task;
   begin
     while not Token.IsCancellationRequested do
       await Tasks.Task.Delay(16, Token).ConfigureAwait(false);

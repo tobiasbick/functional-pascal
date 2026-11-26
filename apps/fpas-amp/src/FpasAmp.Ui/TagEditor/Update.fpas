@@ -59,7 +59,12 @@ begin
   );
 end function;
 
-function BeginRequest(Current: M.State; Command: A.Command of M.Msg; Index: int := -1; Scan: bool := false): A.Transition of (M.State?, M.Msg);
+function BeginRequest(
+  Current: M.State;
+  Command: A.Command of M.Msg;
+  Index: int := -1;
+  Scan: bool := false
+): A.Transition of (M.State?, M.Msg);
 begin
   return new A.Transition of (M.State?, M.Msg)(
     Current with
@@ -185,7 +190,12 @@ end function;
 // Applies Message to Current. Library owns the file and database effects, when present.
 // ApplicationKey is the saved AcoustID lookup credential, or empty when unconfigured.
 // Returns the next draft and any effects for the host.
-public function Apply(Current: M.State?; Message: M.Msg; Library: Metadata.Session?; ApplicationKey: string): A.Transition of (M.State?, M.Msg);
+public function Apply(
+  Current: M.State?;
+  Message: M.Msg;
+  Library: Metadata.Session?;
+  ApplicationKey: string
+): A.Transition of (M.State?, M.Msg);
 begin
   case Message of
     when M.Msg.Open(const Track: Tracks.Entry):
@@ -207,7 +217,10 @@ begin
           A.StartBackground of M.Msg(
             'load',
             A.FromWorker of M.Msg(
-              async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
+              async function(
+                Post: function(M.Msg): Tasks.Task;
+                Stop: T.CancellationToken
+              ): Tasks.Task begin
                 await Post(M.Msg.Loaded(await Library.ReadTags(Track, Stop)));
               end function, Failure
             )

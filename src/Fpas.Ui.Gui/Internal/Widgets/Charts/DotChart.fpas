@@ -22,7 +22,14 @@ uses System as Sys;
 // - `Count`: Samples per series.
 // - `Activate`: Optional activation mapper.
 // - `Settings`: Native presentation options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Bands: array of W.Series; Count: int; Activate: Sys.Func of (W.Hit, TMsg)?; Settings: W.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Bands: array of W.Series;
+  Count: int;
+  Activate: Sys.Func of (W.Hit, TMsg)?;
+  Settings: W.Options
+);
 begin
   const Token: string := C.Token('dot-chart', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;

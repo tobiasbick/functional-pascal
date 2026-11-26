@@ -14,7 +14,12 @@ uses Fpas.Ui.Elements as E;
 // - `Enabled`: Whether the link accepts input.
 // ## Returns
 // The graphical link.
-public function Link of TMsg(Id: string; Label: string; OnActivate: TMsg; Enabled: bool := true): E.Element of TMsg;
+public function Link of TMsg(
+  Id: string;
+  Label: string;
+  OnActivate: TMsg;
+  Enabled: bool := true
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).LinkAction(Id, Label, OnActivate, Enabled);

@@ -11,7 +11,12 @@ uses GuiGallery.Shared.State as Demo;
 uses System as Sys;
 
 function FormatButton(
-  Model: State.Model; Data: Demo.Model; Id: string; Label: string; Style: State.TextFormat; Icon: int
+  Model: State.Model;
+  Data: Demo.Model;
+  Id: string;
+  Label: string;
+  Style: State.TextFormat;
+  Icon: int
 ): E.Element of State.Msg;
 begin
   return B.Button of State.Msg(

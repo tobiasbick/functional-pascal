@@ -40,8 +40,15 @@ begin
 end procedure;
 
 procedure RejectUpdate(
-  Name: string; Source: Images.Source; X: int; Y: int; Width: int; Height: int;
-  Bytes: array of byte; Pitch: int; Precondition: bool := false
+  Name: string;
+  Source: Images.Source;
+  X: int;
+  Y: int;
+  Width: int;
+  Height: int;
+  Bytes: array of byte;
+  Pitch: int;
+  Precondition: bool := false
 );
 begin
   try

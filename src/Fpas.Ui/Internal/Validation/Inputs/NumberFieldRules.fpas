@@ -16,7 +16,13 @@ uses System.Globalization as Culture;
 // - `Maximum`: Inclusive upper bound.
 // - `Settings`: Presentation and step options.
 // - `At`: Diagnostic path.
-public procedure Check(Value: double; Minimum: double; Maximum: double; Settings: N.Options; At: string);
+public procedure Check(
+  Value: double;
+  Minimum: double;
+  Maximum: double;
+  Settings: N.Options;
+  At: string
+);
 begin
   R.CheckText(Settings.Label, At + '/label');
   R.CheckText(Settings.Suffix, At + '/suffix');

@@ -39,7 +39,9 @@ end record;
 // ## Returns
 // The graphical level meter.
 public function LevelMeter of TMsg(
-  Id: string; Levels: array of float; Settings: Options? := null;
+  Id: string;
+  Levels: array of float;
+  Settings: Options? := null;
   OnClipCleared: (Sys.Func of TMsg)? := null
 ): E.Element of TMsg;
 requires Id <> '';

@@ -21,8 +21,11 @@ uses System as Sys;
 uses System.Collections.Generic as Generic;
 
 public procedure Apply of TMsg(
-  Cells: array of T.Cell; Columns: int; Control: A.Control of TMsg;
-  Theme: Th.Theme; Focused: bool
+  Cells: array of T.Cell;
+  Columns: int;
+  Control: A.Control of TMsg;
+  Theme: Th.Theme;
+  Focused: bool
 );
   procedure Mark(Column: int; Row: int; Style: T.Style);
   begin
@@ -44,7 +47,15 @@ public procedure Apply of TMsg(
       Mark(Column + 1, Row, Theme.Focus);
     end if;
   end procedure;
-  procedure PaintSelection(Value: string; Span: EditText.Range; Start: int; Stop: int; Column: int; Row: int; Right: int);
+  procedure PaintSelection(
+    Value: string;
+    Span: EditText.Range;
+    Start: int;
+    Stop: int;
+    Column: int;
+    Row: int;
+    Right: int
+  );
   begin
     if not Focused then
       return;
@@ -167,7 +178,12 @@ begin
 end procedure;
 
 public function Capture of TMsg(
-  Layout: A.Layout of TMsg; Columns: int; Theme: Th.Theme; Focus: string; Hover: string; Scope: string
+  Layout: A.Layout of TMsg;
+  Columns: int;
+  Theme: Th.Theme;
+  Focus: string;
+  Hover: string;
+  Scope: string
 ): array of App.ControlSnapshot;
 begin
   const Controls: Generic.List of App.ControlSnapshot := new Generic.List of App.ControlSnapshot(
@@ -209,7 +225,13 @@ end function;
 // - `Theme`: Colors for the hint.
 // - `Hover`: Hovered control identity.
 // - `Scope`: Current input scope.
-public procedure ShowHint of TMsg(Layout: A.Layout of TMsg; Columns: int; Theme: Th.Theme; Hover: string; Scope: string);
+public procedure ShowHint of TMsg(
+  Layout: A.Layout of TMsg;
+  Columns: int;
+  Theme: Th.Theme;
+  Hover: string;
+  Scope: string
+);
 begin
   const Control: (A.Control of TMsg)? := A.FindControl of TMsg(Layout, Hover);
   if Control = null or Control.Hint = '' or Control.Scope <> Scope then

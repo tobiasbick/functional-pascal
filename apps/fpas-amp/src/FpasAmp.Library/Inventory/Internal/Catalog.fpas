@@ -101,7 +101,11 @@ public type Catalog = record
     discard self.ByDirectory[Id][Directory].Add(Path);
   end procedure;
 
-  procedure ReconcileChildren(Id: string; Value: O.DirectoryObservation; Removed: C.HashSet of string);
+  procedure ReconcileChildren(
+    Id: string;
+    Value: O.DirectoryObservation;
+    Removed: C.HashSet of string
+  );
   begin
     const Children: C.HashSet of string := self.ChildrenOf(Id, Value.Path);
     if not Value.Complete then
@@ -140,7 +144,10 @@ public type Catalog = record
 
   // Applies a committed observation to active normalized `Sources` only.
   // Returns the disappeared directory paths to evict from the physical scan cache.
-  public function Apply(Value: O.DirectoryObservation; Sources: array of S.MusicSource): C.HashSet of string;
+  public function Apply(
+    Value: O.DirectoryObservation;
+    Sources: array of S.MusicSource
+  ): C.HashSet of string;
   begin
     const Removed: C.HashSet of string := new C.HashSet of string(S.PathComparer());
     for Source: S.MusicSource in Sources do
@@ -313,7 +320,10 @@ public type Catalog = record
   end function;
 
   // Creates detached per-source views. `Watched` contains installed active roots.
-  public function Describe(Sources: array of S.MusicSource; Watched: array of string): I.ImmutableArray of M.SourceSnapshot;
+  public function Describe(
+    Sources: array of S.MusicSource;
+    Watched: array of string
+  ): I.ImmutableArray of M.SourceSnapshot;
   begin
     const Views: C.List of M.SourceSnapshot := new C.List of M.SourceSnapshot();
     for Source: S.MusicSource in Sources do

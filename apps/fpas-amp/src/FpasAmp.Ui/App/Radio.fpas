@@ -26,7 +26,12 @@ begin
   );
 end function;
 
-function Persist(Current: App.State; Item: M.Station; Remove: bool; Save: procedure(Settings.Preferences)): A.Transition of (App.State, App.Msg);
+function Persist(
+  Current: App.State;
+  Item: M.Station;
+  Remove: bool;
+  Save: procedure(Settings.Preferences)
+): A.Transition of (App.State, App.Msg);
 begin
   const Saved: Settings.Preferences := Current.Settings.Saved;
   const Items: C.List of M.Station := new C.List of M.Station();
@@ -92,7 +97,11 @@ begin
 end function;
 
 // Maps radio actions into the app and saves favorites through the existing preferences writer.
-public function Apply(Current: App.State; Action: M.Msg; Save: procedure(Settings.Preferences)): A.Transition of (App.State, App.Msg);
+public function Apply(
+  Current: App.State;
+  Action: M.Msg;
+  Save: procedure(Settings.Preferences)
+): A.Transition of (App.State, App.Msg);
 begin
   case Action of
     when M.Msg.Favorite(const Item: M.Station):

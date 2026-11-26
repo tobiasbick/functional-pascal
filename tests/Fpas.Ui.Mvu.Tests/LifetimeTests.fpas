@@ -18,7 +18,10 @@ public type LifetimeTests = record
   // Checks a typed post waiting for mailbox capacity when the session closes.
   [X.FactAttribute]
   public procedure ClosingCancelsTypedPostInFullMailbox();
-    async function Work(Context: A.BackgroundContext of string; Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, string);
+    async function Work(
+      Context: A.BackgroundContext of string;
+      Token: T.CancellationToken
+    ): Tasks.Task of Fx.Outcome of (Fx.Completion, string);
       procedure PauseCancellation();
       begin
         discard CallbackStarted.TrySetResult();
@@ -82,7 +85,10 @@ public type LifetimeTests = record
   // Reports both worker and cancellation callback faults from a closing run.
   [X.FactAttribute]
   public procedure ShutdownPreservesConcurrentFaults();
-    async function Work(_Context: A.BackgroundContext of string; Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, string);
+    async function Work(
+      _Context: A.BackgroundContext of string;
+      Token: T.CancellationToken
+    ): Tasks.Task of Fx.Outcome of (Fx.Completion, string);
       procedure Cancel();
       begin
         Release.SetResult();

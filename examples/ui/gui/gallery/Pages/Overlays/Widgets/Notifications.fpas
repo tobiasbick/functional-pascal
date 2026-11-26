@@ -24,7 +24,11 @@ uses GuiGallery.Shared.State as Demo;
 // ## Returns
 // The active page and its controlled Notifications sheet.
 public function Wrap of TMsg(
-  Base: E.Element of TMsg; Data: Demo.Model; Open: bool; Dismiss: TMsg; Messages: function(Demo.Msg): TMsg
+  Base: E.Element of TMsg;
+  Data: Demo.Model;
+  Open: bool;
+  Dismiss: TMsg;
+  Messages: function(Demo.Msg): TMsg
 ): E.Element of TMsg;
 begin
   return Sheet.Sheet of TMsg(

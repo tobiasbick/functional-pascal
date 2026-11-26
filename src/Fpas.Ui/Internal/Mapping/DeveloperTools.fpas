@@ -36,7 +36,10 @@ uses System as Sys;
 // - `Messages`: Maps each child proposal.
 // ## Returns
 // A widget retaining the original data and options.
-public function Map of (TChild, TParent)(Value: E.Element of TChild; Messages: function(TChild): TParent): E.Element of TParent;
+public function Map of (TChild, TParent)(
+  Value: E.Element of TChild;
+  Messages: function(TChild): TParent
+): E.Element of TParent;
 begin
   case Value of
     when E.Element.Problems(

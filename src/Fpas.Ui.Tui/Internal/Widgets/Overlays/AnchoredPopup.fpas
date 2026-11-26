@@ -105,7 +105,11 @@ end record;
 // ## Returns
 // A popup item with checkbox presentation.
 public function Checkbox of TMsg(
-  Id: string; Label: string; Role: string; Checked: bool; Handler: Actions.IActivatable of TMsg
+  Id: string;
+  Label: string;
+  Role: string;
+  Checked: bool;
+  Handler: Actions.IActivatable of TMsg
 ): Item of TMsg;
 begin
   const Mark: string := if Checked then
@@ -149,8 +153,14 @@ end record;
 // ## Returns
 // Local input scope for the open popup.
 public function Draw of TMsg(
-  Popup: P.State of TMsg; Content: Content of TMsg; Anchor: F.Rect; Screen: F.Rect; Theme: Th.Theme;
-  Operations: C.List of D.Operation; Controls: C.List of A.Control of TMsg; Dismiss: Sys.Action? := null
+  Popup: P.State of TMsg;
+  Content: Content of TMsg;
+  Anchor: F.Rect;
+  Screen: F.Rect;
+  Theme: Th.Theme;
+  Operations: C.List of D.Operation;
+  Controls: C.List of A.Control of TMsg;
+  Dismiss: Sys.Action? := null
 ): A.Scope of TMsg;
   procedure Close();
   begin

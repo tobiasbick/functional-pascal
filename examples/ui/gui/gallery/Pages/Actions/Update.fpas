@@ -9,7 +9,11 @@ uses Fpas.Ui.Widgets.Conversation.Reactions as React;
 uses GuiGallery.Pages.Actions.Commands as Commands;
 uses GuiGallery.Pages.Actions.State as S;
 
-function ChangeReaction(Items: array of React.Item; Index: int; Value: React.Item): array of React.Item;
+function ChangeReaction(
+  Items: array of React.Item;
+  Index: int;
+  Value: React.Item
+): array of React.Item;
 begin
   const Next: array of React.Item := cast Items.Clone() as array of React.Item;
   Next[Index] := Value;

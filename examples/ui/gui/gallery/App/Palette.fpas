@@ -11,7 +11,13 @@ uses GuiGallery.Pages.Overlays.State as O;
 uses GuiGallery.Shared.State as S;
 uses System as Sys;
 
-function Command(Title: string; Message: G.Msg; Icon: int; Group: string; Shortcut: string := ''): P.Command of G.Msg;
+function Command(
+  Title: string;
+  Message: G.Msg;
+  Icon: int;
+  Group: string;
+  Shortcut: string := ''
+): P.Command of G.Msg;
 begin
   return new P.Command of G.Msg(Title, Message, Sys.Char.ConvertFromUtf32(Icon), Group, Shortcut);
 end function;

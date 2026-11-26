@@ -15,7 +15,13 @@ uses Fpas.Ui.Elements as E;
 // - `Enabled`: Whether native dragging is allowed.
 // ## Returns
 // The graphical element.
-public function ReorderableList of TMsg(Id: string; Items: array of E.Element of TMsg; Order: array of int; OnChange: function(array of int): TMsg; Enabled: bool := true): E.Element of TMsg;
+public function ReorderableList of TMsg(
+  Id: string;
+  Items: array of E.Element of TMsg;
+  Order: array of int;
+  OnChange: function(array of int): TMsg;
+  Enabled: bool := true
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).ReorderableList(Id, Items, Order, OnChange, Enabled);

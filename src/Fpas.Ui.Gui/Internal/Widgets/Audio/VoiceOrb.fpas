@@ -21,7 +21,14 @@ uses System as Sys;
 // - `Level`: Current level from zero to one.
 // - `Activate`: Optional activation.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Mode: Voice.Activity; Level: float; Activate: (Sys.Func of TMsg)?; Settings: VoiceOrbs.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Mode: Voice.Activity;
+  Level: float;
+  Activate: (Sys.Func of TMsg)?;
+  Settings: VoiceOrbs.Options
+);
 begin
   const Role: string := 'voice-orb';
   const Token: string := C.Token(Role, Id);

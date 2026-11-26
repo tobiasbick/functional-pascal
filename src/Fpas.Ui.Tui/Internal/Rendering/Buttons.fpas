@@ -24,8 +24,11 @@ uses System.Collections.Generic as Generic;
 // ## Returns
 // The button style, or null when semantic button styles are unavailable.
 public function Resolve(
-  Theme: Th.Theme; Variant: UiStyle.ButtonVariant; Enabled: bool;
-  Focused: bool := false; Hovered: bool := false
+  Theme: Th.Theme;
+  Variant: UiStyle.ButtonVariant;
+  Enabled: bool;
+  Focused: bool := false;
+  Hovered: bool := false
 ): T.Style?;
 begin
   const Styles: Th.ButtonStyles? := Theme.Buttons;
@@ -96,10 +99,21 @@ end function;
 // - `Joined`: Whether a surrounding group supplies the outline.
 // - `Description`: Optional supporting text displayed below the caption.
 public procedure Paint(
-  Operations: Generic.List of D.Operation; Area: F.Rect; Clip: F.Rect; Style: T.Style;
-  Theme: Th.Theme; Caption: string; IsButton: bool; Variant: UiStyle.ButtonVariant; Enabled: bool;
-  MinimumWidth: int := 0; Padding: int := 1; Center: bool := false;
-  Foreground: Graphics.Color? := null; Joined: bool := false; Description: string := ''
+  Operations: Generic.List of D.Operation;
+  Area: F.Rect;
+  Clip: F.Rect;
+  Style: T.Style;
+  Theme: Th.Theme;
+  Caption: string;
+  IsButton: bool;
+  Variant: UiStyle.ButtonVariant;
+  Enabled: bool;
+  MinimumWidth: int := 0;
+  Padding: int := 1;
+  Center: bool := false;
+  Foreground: Graphics.Color? := null;
+  Joined: bool := false;
+  Description: string := ''
 );
 begin
   if not IsButton then

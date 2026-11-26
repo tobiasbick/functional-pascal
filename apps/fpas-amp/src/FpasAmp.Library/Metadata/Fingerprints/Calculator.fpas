@@ -23,7 +23,10 @@ end record;
 
 // Fingerprints the beginning of the local file at Path; Cancellation terminates the child.
 // Returns fpcalc's encoded fingerprint and whole-file duration.
-public async function Measure(Path: string; Cancellation: T.CancellationToken): Tasks.Task of Measurement;
+public async function Measure(
+  Path: string;
+  Cancellation: T.CancellationToken
+): Tasks.Task of Measurement;
 requires Path <> '';
 begin
   Cancellation.ThrowIfCancellationRequested();

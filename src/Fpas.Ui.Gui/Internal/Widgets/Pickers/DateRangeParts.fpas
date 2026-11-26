@@ -111,8 +111,14 @@ end function;
 // - `Result`: CUI proposal and visible parts.
 // - `OnChange`: Maps the proposal to an application message.
 public procedure Publish of TMsg(
-  Frame: C.State of TMsg; Id: string; Label: string; Role: string; Value: R.Value; Enabled: bool;
-  Result: CuiPickers.CuiDateRangeResult; OnChange: function(R.Value): TMsg
+  Frame: C.State of TMsg;
+  Id: string;
+  Label: string;
+  Role: string;
+  Value: R.Value;
+  Enabled: bool;
+  Result: CuiPickers.CuiDateRangeResult;
+  OnChange: function(R.Value): TMsg
 );
 begin
   if Result.Changed then

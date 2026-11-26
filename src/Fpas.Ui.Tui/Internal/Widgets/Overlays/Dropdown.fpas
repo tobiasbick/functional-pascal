@@ -91,7 +91,11 @@ end function;
 // - `Columns`: Terminal width used to cap the requested panel width.
 // ## Returns
 // The shared popup content.
-public function Content of TMsg(Menu: Trigger of TMsg; Anchor: F.Rect; Columns: int): Popup.Content of TMsg;
+public function Content of TMsg(
+  Menu: Trigger of TMsg;
+  Anchor: F.Rect;
+  Columns: int
+): Popup.Content of TMsg;
 begin
   const Rows: C.List of Popup.Row of TMsg := new C.List of Popup.Row of TMsg(Menu.Entries.Length);
   var Width: int := Sys.Math.Max(18, Anchor.Width);

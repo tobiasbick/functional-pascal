@@ -35,7 +35,11 @@ begin
   end with;
 end function;
 
-function Notify(Model: M.Model; Title: string; Detail: string := ''): A.Transition of (M.Model, M.Msg);
+function Notify(
+  Model: M.Model;
+  Title: string;
+  Detail: string := ''
+): A.Transition of (M.Model, M.Msg);
 begin
   return new A.Transition of (M.Model, M.Msg)(
     Model,

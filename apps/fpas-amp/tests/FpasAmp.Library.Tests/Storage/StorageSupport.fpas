@@ -43,7 +43,13 @@ end procedure;
 
 // Creates a borrowed enumeration result for a directory and its observed entries.
 // `Complete` controls deletion authority; `Failure` is the recorded error, if any.
-public function Observation(Path: string; Files: array of string; Children: array of string; Complete: bool := true; Failure: string? := null): O.DirectoryObservation;
+public function Observation(
+  Path: string;
+  Files: array of string;
+  Children: array of string;
+  Complete: bool := true;
+  Failure: string? := null
+): O.DirectoryObservation;
 begin
   return new O.DirectoryObservation(
     Path, new C.HashSet of string(Files, S.PathComparer()),
@@ -52,7 +58,11 @@ begin
 end function;
 
 // Saves an observation using an always-current generation; asserts successful commit.
-public procedure Save(Connection: Db.SqliteConnection; Sources: array of S.MusicSource; Value: O.DirectoryObservation);
+public procedure Save(
+  Connection: Db.SqliteConnection;
+  Sources: array of S.MusicSource;
+  Value: O.DirectoryObservation
+);
 begin
   X.Assert.True(
     Checkpoints.Save(

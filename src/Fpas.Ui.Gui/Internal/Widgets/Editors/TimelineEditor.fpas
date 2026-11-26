@@ -64,7 +64,14 @@ end function;
 // - `Current`: Playhead, range and selection.
 // - `Changed`: Maps a native proposal.
 // - `Settings`: Native layout and behavior options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Tracks: array of D.Track; Current: D.View; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Tracks: array of D.Track;
+  Current: D.View;
+  Changed: function(D.Event): TMsg;
+  Settings: D.Options
+);
 begin
   const Role: string := 'timeline-editor';
   const Token: string := C.Token(Role, Id);

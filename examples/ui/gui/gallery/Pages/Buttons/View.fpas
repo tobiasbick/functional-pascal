@@ -27,7 +27,13 @@ begin
   return Sys.Char.ConvertFromUtf32(Code);
 end function;
 
-function IconSample(Id: string; Code: int; Caption: string; Style: S.ButtonVariant := S.ButtonVariant.Default; Shortcut: string := ''): E.Element of State.Msg;
+function IconSample(
+  Id: string;
+  Code: int;
+  Caption: string;
+  Style: S.ButtonVariant := S.ButtonVariant.Default;
+  Shortcut: string := ''
+): E.Element of State.Msg;
 begin
   return I.IconButton of State.Msg(
     Id, Glyph(Code), Caption, State.Msg.Preview,

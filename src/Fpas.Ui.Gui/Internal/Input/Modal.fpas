@@ -32,10 +32,21 @@ uses System.Collections.Generic as Lists;
 // - `BeginNative`: Begins the native modal with input, focus and close tracking.
 // - `EndNative`: Finishes the native modal.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Base: E.Element of TMsg; Content: E.Element of TMsg;
-  Open: bool; Title: string; Description: string; Initial: string?; Close: string?; Dismiss: TMsg;
-  Horizontal: bool; Align: L.Alignment; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment);
-  BeginNative: function(bool, bool, string): int; EndNative: procedure()
+  Frame: C.State of TMsg;
+  Id: string;
+  Base: E.Element of TMsg;
+  Content: E.Element of TMsg;
+  Open: bool;
+  Title: string;
+  Description: string;
+  Initial: string?;
+  Close: string?;
+  Dismiss: TMsg;
+  Horizontal: bool;
+  Align: L.Alignment;
+  Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment);
+  BeginNative: function(bool, bool, string): int;
+  EndNative: procedure()
 );
 begin
   Visit(

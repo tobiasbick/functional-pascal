@@ -23,7 +23,14 @@ begin
   return L.Spacing.Fixed(L.Measure.Logical(Value));
 end function;
 
-function KeyRow(Key: M.AcoustIdKey; Id: string; Label: string; Value: string; Link: string; Width: int): E.Element of M.Msg;
+function KeyRow(
+  Key: M.AcoustIdKey;
+  Id: string;
+  Label: string;
+  Value: string;
+  Link: string;
+  Width: int
+): E.Element of M.Msg;
 begin
   const Caption: E.Element of M.Msg := Texts.Text of M.Msg(Label, Texts.Appearance.Label);
   const Field: E.Element of M.Msg := E.Column of M.Msg(

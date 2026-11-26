@@ -16,7 +16,12 @@ uses GuiGallery.Pages.Lists.Widgets.Tasks as Tasks;
 uses GuiGallery.Pages.Lists.Widgets.TreeAndList as TreeAndList;
 uses GuiGallery.Shared.Sections as G;
 
-function Question(Model: State.Model; Index: int; Title: string; Answer: string): E.Element of State.Msg;
+function Question(
+  Model: State.Model;
+  Index: int;
+  Title: string;
+  Answer: string
+): E.Element of State.Msg;
 begin
   return A.Accordion of State.Msg(
     'accordion/' + Index.ToString(), Title, Model.AccordionOpen[Index],

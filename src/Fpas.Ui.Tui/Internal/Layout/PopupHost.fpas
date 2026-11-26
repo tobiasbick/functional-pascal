@@ -29,8 +29,12 @@ uses System.Collections.Generic as C;
 // ## Returns
 // Open popup scope, or null when there is no eligible trigger.
 public function Present of TMsg(
-  State: P.State of TMsg; Parent: (A.Scope of TMsg)?; Screen: F.Rect; Theme: Th.Theme;
-  Operations: C.List of D.Operation; Controls: C.List of A.Control of TMsg
+  State: P.State of TMsg;
+  Parent: (A.Scope of TMsg)?;
+  Screen: F.Rect;
+  Theme: Th.Theme;
+  Operations: C.List of D.Operation;
+  Controls: C.List of A.Control of TMsg
 ): (A.Scope of TMsg)?;
   function Content(Owner: A.Control of TMsg): (Popup.Content of TMsg)?;
   begin

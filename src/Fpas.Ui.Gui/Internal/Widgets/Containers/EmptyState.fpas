@@ -18,7 +18,13 @@ uses System as Sys;
 // - `Title`: Literal heading.
 // - `Settings`: Appearance and optional action caption.
 // - `Action`: Optional action message factory.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Title: string; Settings: E.Options; Action: (Sys.Func of TMsg)?);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Title: string;
+  Settings: E.Options;
+  Action: (Sys.Func of TMsg)?
+);
 begin
   const Part: string := E.ActionId(Id);
   const Token: string := C.Token('empty-state-action', Part);

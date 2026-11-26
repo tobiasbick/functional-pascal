@@ -33,7 +33,13 @@ end record;
 // - `OnActivate`: Optional clicked input index callback; hover remains native.
 // ## Returns
 // A graphical element.
-public function RadarChart of TMsg(Id: string; Series: array of C.Series; Axes: array of string; Settings: Options? := null; OnActivate: Sys.Func of (int, TMsg)? := null): E.Element of TMsg;
+public function RadarChart of TMsg(
+  Id: string;
+  Series: array of C.Series;
+  Axes: array of string;
+  Settings: Options? := null;
+  OnActivate: Sys.Func of (int, TMsg)? := null
+): E.Element of TMsg;
 requires Id <> '';
 requires Axes.Length >= 3;
 begin

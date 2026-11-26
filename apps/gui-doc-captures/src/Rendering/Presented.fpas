@@ -83,7 +83,12 @@ end procedure;
 // - `Output`: Directory for the full-frame image and crop bounds.
 // - `Name`: Basename of the screenshot.
 // - `Title`: Gallery toast title.
-public procedure CaptureToast(Session: Gui.Session of Gallery.Msg; Output: string; Name: string; Title: string);
+public procedure CaptureToast(
+  Session: Gui.Session of Gallery.Msg;
+  Output: string;
+  Name: string;
+  Title: string
+);
 begin
   for Control: Gui.Control in Session.Snapshot().Controls do
     if Control.Role = 'toast' and Control.Text = Title then
@@ -103,8 +108,11 @@ end procedure;
 // - `Scroll`: Injects a vertical wheel delta over the page margin.
 // - `Ids`: The controls to include in the crop.
 public procedure CaptureInView(
-  Session: Gui.Session of Gallery.Msg; Output: string; Name: string;
-  Scroll: procedure(float); params Ids: array of string
+  Session: Gui.Session of Gallery.Msg;
+  Output: string;
+  Name: string;
+  Scroll: procedure(float);
+  params Ids: array of string
 );
 begin
   const Height: float := cast Session.Snapshot().Size.Height as float;

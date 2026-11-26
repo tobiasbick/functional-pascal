@@ -19,7 +19,10 @@ public const Id: string := 'desktop-background';
 // ## Returns
 // A cancellable background command whose replies update the application model.
 public function Start(SimulateError: bool): Mvu.Command of S.Msg;
-  async function Run(Context: Mvu.BackgroundContext of S.Msg; Token: Threads.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, S.Msg);
+  async function Run(
+    Context: Mvu.BackgroundContext of S.Msg;
+    Token: Threads.CancellationToken
+  ): Tasks.Task of Fx.Outcome of (Fx.Completion, S.Msg);
   begin
     for Completed: int := 1 to S.WorkSteps do
       await Tasks.Task.Delay(

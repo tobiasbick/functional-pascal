@@ -18,7 +18,11 @@ uses System.Globalization as Culture;
 // - `Value`: Model-owned progress fraction.
 // - `Size`: Logical diameter; zero selects the native default.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Label: string; Value: float; Size: float
+  Frame: C.State of TMsg;
+  Id: string;
+  Label: string;
+  Value: float;
+  Size: float
 );
 begin
   Frame.Window.ProgressRing(C.Token('progress-ring', Id), Label, Value, Size);

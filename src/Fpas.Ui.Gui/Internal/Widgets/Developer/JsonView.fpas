@@ -15,7 +15,12 @@ uses Fpas.Ui.Widgets.Developer.JsonViews as W;
 // - `Id`: Stable widget identity.
 // - `Json`: Literal JSON or parse-error example.
 // - `Settings`: Native presentation options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Json: string; Settings: W.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Json: string;
+  Settings: W.Options
+);
 begin
   const Valid: bool := Frame.Window.JsonView(
     C.Token('json-view', Id), Json, Settings.ExpandDepth,

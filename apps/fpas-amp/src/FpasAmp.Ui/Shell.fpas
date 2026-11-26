@@ -59,7 +59,11 @@ end function;
 
 // Builds the pure app view from `Current`, measured `Viewport` and resolved `Theme`.
 // The native session owns all input, layout and background effects separately.
-public function View(Current: M.State; Viewport: L.Viewport; Theme: Themes.Theme): E.Element of M.Msg;
+public function View(
+  Current: M.State;
+  Viewport: L.Viewport;
+  Theme: Themes.Theme
+): E.Element of M.Msg;
 begin
   const Width: int := Viewport.LogicalWidth ?? if Viewport.Width = L.SizeClass.Compact then
     600
@@ -272,7 +276,15 @@ public type Session = record implements Sys.IDisposable
   // Output transfers ownership of an optional playback session to the shell.
   // By default the shell opens the desktop's audio output on first playback.
   // Restored supplies the paused queue and playhead from the previous window.
-  public static function Start(Window: Cui.CuiWindowPlacement; Settings: SettingsModel.Preferences; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session; Navigation: Nav.State? := null; Output: Audio.ISession? := null; Restored: PlayerModel.State? := null): Session;
+  public static function Start(
+    Window: Cui.CuiWindowPlacement;
+    Settings: SettingsModel.Preferences;
+    Save: procedure(SettingsModel.Preferences);
+    Library: Monitoring.Session;
+    Navigation: Nav.State? := null;
+    Output: Audio.ISession? := null;
+    Restored: PlayerModel.State? := null
+  ): Session;
   requires Settings.MusicSources <> null;
   begin
     const Device: Audio.ISession := Output ?? new Audio.Session();
@@ -284,7 +296,15 @@ public type Session = record implements Sys.IDisposable
     end try;
   end function;
 
-  static function Connect(Window: Cui.CuiWindowPlacement; Settings: SettingsModel.Preferences; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session; Navigation: Nav.State?; Device: Audio.ISession; Restored: PlayerModel.State?): Session;
+  static function Connect(
+    Window: Cui.CuiWindowPlacement;
+    Settings: SettingsModel.Preferences;
+    Save: procedure(SettingsModel.Preferences);
+    Library: Monitoring.Session;
+    Navigation: Nav.State?;
+    Device: Audio.ISession;
+    Restored: PlayerModel.State?
+  ): Session;
   begin
     const Port: Playback.Connection := Playback.Connection.Create(Device);
     Port.Send(PlayerModel.Request.Mixer(Settings.Mixer));
@@ -416,7 +436,14 @@ end record;
 // returned by reference, Save persists preferences, and Library stays caller-owned.
 // Returns the final host placement for storage alongside the selected destination.
 // Player supplies the paused transport and receives the last observed state at close.
-public function Run(Window: Cui.CuiWindowPlacement; Settings: SettingsModel.Preferences; ref Navigation: Nav.State; ref Player: PlayerModel.State; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session): Cui.CuiWindowPlacement;
+public function Run(
+  Window: Cui.CuiWindowPlacement;
+  Settings: SettingsModel.Preferences;
+  ref Navigation: Nav.State;
+  ref Player: PlayerModel.State;
+  Save: procedure(SettingsModel.Preferences);
+  Library: Monitoring.Session
+): Cui.CuiWindowPlacement;
 requires Navigation.SettingsTab >= 0 and Navigation.SettingsTab <= 2;
 begin
   using const Running: Session := Session.Start(

@@ -54,7 +54,13 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function CommitGraph of TMsg(Id: string; Commits: array of Commit; Selection: int; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
+public function CommitGraph of TMsg(
+  Id: string;
+  Commits: array of Commit;
+  Selection: int;
+  Changed: function(Event): TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).CommitGraph(

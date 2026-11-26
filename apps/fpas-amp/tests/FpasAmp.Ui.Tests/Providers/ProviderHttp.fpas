@@ -29,7 +29,11 @@ public type Reply = record
 end record;
 
 // Serves Replies in order on Listener until the script is finished or Stop is canceled.
-public async function Serve(Listener: Sockets.TcpListener; Replies: array of Reply; Stop: T.CancellationToken): Tasks.Task;
+public async function Serve(
+  Listener: Sockets.TcpListener;
+  Replies: array of Reply;
+  Stop: T.CancellationToken
+): Tasks.Task;
 begin
   const CRLF: string := Sys.Char.ConvertFromUtf32(13) + Sys.Char.ConvertFromUtf32(10);
   for Index: int := 0 to Replies.Length - 1 do

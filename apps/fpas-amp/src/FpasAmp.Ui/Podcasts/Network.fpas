@@ -83,7 +83,12 @@ end function;
 // - `Stop`: Cancels reading or writing.
 // ## Returns
 // A task that completes at end of input, after copied bytes have been written.
-public async function Copy(Input: IO.Stream; Output: IO.Stream; Limit: long; Stop: T.CancellationToken): Tasks.Task;
+public async function Copy(
+  Input: IO.Stream;
+  Output: IO.Stream;
+  Limit: long;
+  Stop: T.CancellationToken
+): Tasks.Task;
 requires Limit > 0L;
 begin
   const Buffer: array of byte := new byte[65536];
@@ -110,7 +115,11 @@ end function;
 // - `Stop`: Cancels the transfer and decoding.
 // ## Returns
 // A square thumbnail, or null if the address or artwork is unavailable.
-public async function Cover(Url: string; Edge: int; Stop: T.CancellationToken): Tasks.Task of Images.Bitmap?;
+public async function Cover(
+  Url: string;
+  Edge: int;
+  Stop: T.CancellationToken
+): Tasks.Task of Images.Bitmap?;
 requires Edge > 0;
 begin
   if M.Address(Url) = '' then

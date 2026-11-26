@@ -49,7 +49,12 @@ end record;
 //
 // ## Returns
 // A view that can be sized or placed in a scroll viewport by the caller.
-public function Sidebar of TMsg(Id: string; Sections: array of Section of TMsg; ActiveKey: string?; Enabled: bool := true): E.Element of TMsg;
+public function Sidebar of TMsg(
+  Id: string;
+  Sections: array of Section of TMsg;
+  ActiveKey: string?;
+  Enabled: bool := true
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).Sidebar(Id, Sections, ActiveKey, Enabled);

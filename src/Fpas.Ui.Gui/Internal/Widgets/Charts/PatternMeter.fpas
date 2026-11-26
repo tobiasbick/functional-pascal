@@ -20,7 +20,12 @@ uses System.Collections.Generic as Lists;
 // - `Id`: Stable identity.
 // - `Parts`: Named nonnegative amounts.
 // - `Settings`: Native presentation.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Parts: array of P.Part; Settings: P.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Parts: array of P.Part;
+  Settings: P.Options
+);
 begin
   const Token: string := C.Token('pattern-meter', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;

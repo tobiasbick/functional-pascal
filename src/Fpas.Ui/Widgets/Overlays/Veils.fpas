@@ -35,7 +35,13 @@ end record;
 // - `Settings`: Native veil settings.
 // ## Returns
 // A graphical element.
-public function Veil of TMsg(Id: string; Revealed: bool; Changed: function(bool): TMsg; Child: E.Element of TMsg; Settings: Options? := null): E.Element of TMsg;
+public function Veil of TMsg(
+  Id: string;
+  Revealed: bool;
+  Changed: function(bool): TMsg;
+  Child: E.Element of TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).Veil(Id, Revealed, Changed, Child, Settings ?? new Options());

@@ -53,7 +53,12 @@ end record;
 // - `Settings`: Presentation options.
 // ## Returns
 // A graphical or terminal view element.
-public function LogConsole of TMsg(Id: string; Entries: array of Entry; Cleared: TMsg; Settings: Options? := null): E.Element of TMsg;
+public function LogConsole of TMsg(
+  Id: string;
+  Entries: array of Entry;
+  Cleared: TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).LogConsole(Id, Entries, Cleared, Settings ?? new Options());

@@ -30,7 +30,11 @@ uses System as Sys;
 // ## Returns
 // The Overview page.
 public function View of TMsg(
-  Model: State.Model; Data: Demo.Model; Browse: TMsg; OpenPalette: TMsg; Messages: function(State.Msg): TMsg
+  Model: State.Model;
+  Data: Demo.Model;
+  Browse: TMsg;
+  OpenPalette: TMsg;
+  Messages: function(State.Msg): TMsg
 ): E.Element of TMsg;
 begin
   const Hero: E.Element of TMsg := E.Column of TMsg(

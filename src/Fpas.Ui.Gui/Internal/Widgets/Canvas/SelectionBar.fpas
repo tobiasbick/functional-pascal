@@ -22,7 +22,16 @@ uses System.Collections.Generic as Lists;
 // - `Child`: Content that anchors the floating bar.
 // - `Settings`: Native widget settings.
 // - `Visit`: Presents embedded content.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Selected: D.Selection; Actions: array of D.Action; Changed: function(D.Event): TMsg; Child: E.Element of TMsg; Settings: D.Options; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Selected: D.Selection;
+  Actions: array of D.Action;
+  Changed: function(D.Event): TMsg;
+  Child: E.Element of TMsg;
+  Settings: D.Options;
+  Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
+);
 begin
   Visit(Child, Frame, false, L.Alignment.Default);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;

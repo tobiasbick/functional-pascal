@@ -27,7 +27,18 @@ uses System.Globalization as Culture;
 // - `Horizontal`: Parent layout axis.
 // - `Align`: Parent cross-axis alignment.
 // - `Visit`: Host traversal for the base view.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Base: E.Element of TMsg; Open: bool; Commands: array of P.Command of TMsg; Change: function(bool): TMsg; Shortcut: bool; Horizontal: bool; Align: L.Alignment; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Base: E.Element of TMsg;
+  Open: bool;
+  Commands: array of P.Command of TMsg;
+  Change: function(bool): TMsg;
+  Shortcut: bool;
+  Horizontal: bool;
+  Align: L.Alignment;
+  Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
+);
 begin
   const Enabled: bool := Frame.Interactive and (Frame.ActiveModal = null or Frame.ActiveModal = Id);
   const Toggle: bool := Shortcut and Enabled and not Frame.PaintingClosed

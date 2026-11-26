@@ -19,7 +19,14 @@ uses Fpas.Ui.Widgets.Developer.Terminals as D;
 // - `Revision`: Change to explicitly clear the scrollback before replaying the supplied output.
 // - `Received`: Maps submissions and interrupts.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Output: string; Revision: int; Received: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Output: string;
+  Revision: int;
+  Received: function(D.Event): TMsg;
+  Settings: D.Options
+);
 begin
   const Role: string := 'terminal';
   const Token: string := C.Token(Role, Id);

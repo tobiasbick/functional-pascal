@@ -40,7 +40,10 @@ end function;
 // ## Returns
 // A graphical group whose values are controlled by the application model.
 public function Reactions of TMsg(
-  Id: string; Items: array of Item; OnChange: function(int, Item): TMsg; Enabled: bool := true
+  Id: string;
+  Items: array of Item;
+  OnChange: function(int, Item): TMsg;
+  Enabled: bool := true
 ): E.Element of TMsg;
 requires Id <> '';
 requires Items.Length > 0;

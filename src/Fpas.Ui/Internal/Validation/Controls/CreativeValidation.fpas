@@ -73,7 +73,11 @@ begin
   Tone(Settings.Tone, At);
 end procedure;
 
-procedure GradientSlider(Current: GradientSliders.Value; Settings: GradientSliders.Options; At: string);
+procedure GradientSlider(
+  Current: GradientSliders.Value;
+  Settings: GradientSliders.Options;
+  At: string
+);
 begin
   R.CheckText(Current.Label, At);
   R.CheckText(Settings.Display, At);
@@ -207,7 +211,12 @@ end procedure;
 // - `Identify`: Registers a widget ID.
 // ## Returns
 // True when this dispatcher handled the element.
-public function Check of TMsg(Node: E.Element of TMsg; Location: string; Current: R.Profile; Identify: function(string, string): string): bool;
+public function Check of TMsg(
+  Node: E.Element of TMsg;
+  Location: string;
+  Current: R.Profile;
+  Identify: function(string, string): string
+): bool;
 begin
   case Node of
     when E.Element.StatusTag(

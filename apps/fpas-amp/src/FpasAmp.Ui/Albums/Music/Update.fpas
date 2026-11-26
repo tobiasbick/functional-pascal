@@ -24,7 +24,12 @@ uses System.Threading.Tasks as Tasks;
 
 const Empty: array of A.Command of M.Msg := [];
 
-function Fingerprint(Current: M.State; Track: Tracks.Entry; Generate: bool; Library: Metadata.Session?): A.Transition of (M.State, M.Msg);
+function Fingerprint(
+  Current: M.State;
+  Track: Tracks.Entry;
+  Generate: bool;
+  Library: Metadata.Session?
+): A.Transition of (M.State, M.Msg);
 begin
   const Next: M.State := Current with
     Details := Track;
@@ -57,7 +62,11 @@ end function;
 // Starts the selected release's query for `Current` through the borrowed `Library`.
 // `LoadCover` requests the thumbnail when the grid has not already resolved it.
 // Returns a transition whose visit key accompanies both results and errors.
-public function Open(Current: M.State; Library: Metadata.Session?; LoadCover: bool := true): A.Transition of (M.State, M.Msg);
+public function Open(
+  Current: M.State;
+  Library: Metadata.Session?;
+  LoadCover: bool := true
+): A.Transition of (M.State, M.Msg);
 begin
   if Library = null then
     return new A.Transition of (M.State, M.Msg)(
@@ -72,7 +81,10 @@ begin
       A.StartBackground of M.Msg(
         'load',
         A.FromWorker of M.Msg(
-          async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+          async function(
+            Post: function(M.Msg): Tasks.Task;
+            Cancellation: T.CancellationToken
+          ): Tasks.Task begin
             const Started: long := D.Stopwatch.GetTimestamp();
             const Items: I.ImmutableArray of Tracks.Entry := await Library.Albums.TracksAsync(
               Current.Album.Id, Cancellation
@@ -94,7 +106,12 @@ begin
   );
 end function;
 
-function Rating(Current: M.State; Library: Metadata.Session?; Id: string; Value: int): A.Transition of (M.State, M.Msg);
+function Rating(
+  Current: M.State;
+  Library: Metadata.Session?;
+  Id: string;
+  Value: int
+): A.Transition of (M.State, M.Msg);
 begin
   if Library = null or Id = '' or Current.Saving.ContainsKey(Id) or Value < 0 or Value > 10 then
     return new A.Transition of (M.State, M.Msg)(Current, Empty);
@@ -114,7 +131,10 @@ begin
       A.StartBackground of M.Msg(
         'rate/' + Id,
         A.FromWorker of M.Msg(
-          async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+          async function(
+            Post: function(M.Msg): Tasks.Task;
+            Cancellation: T.CancellationToken
+          ): Tasks.Task begin
             await Library.SetRatingAsync(Id, Selected, Cancellation).ConfigureAwait(false);
             await Post(
               M.Msg.Rated(Current.Visit, Id, Selected, D.Stopwatch.GetTimestamp())
@@ -138,7 +158,10 @@ begin
       A.StartBackground of M.Msg(
         'folder',
         A.FromWorker of M.Msg(
-          function(_Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+          function(
+            _Post: function(M.Msg): Tasks.Task;
+            Cancellation: T.CancellationToken
+          ): Tasks.Task begin
             Cancellation.ThrowIfCancellationRequested();
             const Folder: string? := IO.Path.GetDirectoryName(Path);
             if Folder = null or not IO.Directory.Exists(Folder) then
@@ -160,7 +183,11 @@ end function;
 
 // Applies `Message` to `Current`. `Library` saves ratings off the owner thread.
 // Returns the next view and any commands to run.
-public function Apply(Current: M.State; Message: M.Msg; Library: Metadata.Session?): A.Transition of (M.State, M.Msg);
+public function Apply(
+  Current: M.State;
+  Message: M.Msg;
+  Library: Metadata.Session?
+): A.Transition of (M.State, M.Msg);
 begin
   var Next: M.State := Current;
   case Message of

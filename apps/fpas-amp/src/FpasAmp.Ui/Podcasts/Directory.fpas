@@ -64,7 +64,11 @@ end function;
 // - `Stop`: Cancels both the rate-limit wait and the request.
 // ## Returns
 // Up to 30 unique show results in Apple order.
-public async function Search(Market: string; Term: string; Stop: T.CancellationToken): Tasks.Task of array of M.Show;
+public async function Search(
+  Market: string;
+  Term: string;
+  Stop: T.CancellationToken
+): Tasks.Task of array of M.Show;
 requires Market <> '' and Term <> '';
 begin
   const Address: string := 'https://itunes.apple.com/search?media=podcast&entity=podcast&limit=30&country=' +
@@ -73,7 +77,11 @@ begin
   return Payload.Search(Result.RootElement);
 end function;
 
-async function Chart(Market: string; Genre: string; Stop: T.CancellationToken): Tasks.Task of array of long;
+async function Chart(
+  Market: string;
+  Genre: string;
+  Stop: T.CancellationToken
+): Tasks.Task of array of long;
 begin
   const Country: string := Sys.Uri.EscapeDataString(Market.ToLowerInvariant());
   const Limit: string := ChartSize.ToString(G.CultureInfo.InvariantCulture);
@@ -99,7 +107,11 @@ end function;
 // - `Stop`: Cancels the chart and lookup requests and rate-limit waits.
 // ## Returns
 // Up to 100 unique RSS shows in chart order.
-public async function Discover(Market: string; Genre: string; Stop: T.CancellationToken): Tasks.Task of array of M.Show;
+public async function Discover(
+  Market: string;
+  Genre: string;
+  Stop: T.CancellationToken
+): Tasks.Task of array of M.Show;
 requires Market <> '';
 begin
   const Ranked: array of long := await Chart(Market, Genre, Stop).ConfigureAwait(false);

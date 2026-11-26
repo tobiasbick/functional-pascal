@@ -27,7 +27,11 @@ begin
   return L.Spacing.Fixed(L.Measure.Logical(Value));
 end function;
 
-function SourceCard(Current: M.State; Source: Locations.MusicSource; Theme: Themes.Theme): E.Element of M.Msg;
+function SourceCard(
+  Current: M.State;
+  Source: Locations.MusicSource;
+  Theme: Themes.Theme
+): E.Element of M.Msg;
 begin
   const Id: string := 'source-' + Source.Id;
   const Formats: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();

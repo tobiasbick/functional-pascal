@@ -32,8 +32,12 @@ end function;
 // - `OnAction`: Optional callback for an activated step action.
 // - `Settings`: Native presentation and input options.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Steps: array of K.Step; OnToggle: function(int, bool): TMsg;
-  OnAction: Sys.Func of (int, TMsg)?; Settings: K.Options
+  Frame: C.State of TMsg;
+  Id: string;
+  Steps: array of K.Step;
+  OnToggle: function(int, bool): TMsg;
+  OnAction: Sys.Func of (int, TMsg)?;
+  Settings: K.Options
 );
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;

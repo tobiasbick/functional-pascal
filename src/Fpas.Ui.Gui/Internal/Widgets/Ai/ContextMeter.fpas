@@ -21,7 +21,14 @@ uses System.Collections.Generic as Lists;
 // - `Limit`: Context capacity.
 // - `Breakdown`: Optional usage breakdown.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Used: float; Limit: float; Breakdown: array of ContextMeters.Part; Settings: ContextMeters.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Used: float;
+  Limit: float;
+  Breakdown: array of ContextMeters.Part;
+  Settings: ContextMeters.Options
+);
 begin
   const Role: string := 'context-meter';
   const Token: string := C.Token(Role, Id);

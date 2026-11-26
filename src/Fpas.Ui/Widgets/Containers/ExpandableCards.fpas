@@ -33,8 +33,12 @@ end record;
 // ## Returns
 // A graphical or terminal expandable card.
 public function ExpandableCard of TMsg(
-  Id: string; Title: string; Open: bool;
-  OnChange: function(bool): TMsg; Content: E.Element of TMsg; Settings: Options? := null
+  Id: string;
+  Title: string;
+  Open: bool;
+  OnChange: function(bool): TMsg;
+  Content: E.Element of TMsg;
+  Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin

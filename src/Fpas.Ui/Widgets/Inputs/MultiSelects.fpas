@@ -31,8 +31,11 @@ end record;
 // ## Returns
 // A multi-select with model-owned selection and host-owned popup state.
 public function MultiSelect of TMsg(
-  Id: string; Items: array of S.Item; Selected: array of bool;
-  OnChange: function(array of bool): TMsg; Settings: Options? := null
+  Id: string;
+  Items: array of S.Item;
+  Selected: array of bool;
+  OnChange: function(array of bool): TMsg;
+  Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin

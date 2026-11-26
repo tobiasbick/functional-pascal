@@ -29,7 +29,9 @@ end record;
 // ## Returns
 // A noninteractive GUI-only item; CUI owns its layout, wrapping and connector.
 public function TimelineItem of TMsg(
-  Id: string; Title: string; Settings: Options? := null
+  Id: string;
+  Title: string;
+  Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin

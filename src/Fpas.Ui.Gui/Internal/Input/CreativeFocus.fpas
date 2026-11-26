@@ -16,7 +16,13 @@ uses Fpas.Ui.Widgets.Pickers.PaletteStrips as PaletteStrips;
 
 uses System as Sys;
 
-function Pick(Id: string; Preferred: string?; Keys: array of string; Accept: array of bool; Initial: int): string?;
+function Pick(
+  Id: string;
+  Preferred: string?;
+  Keys: array of string;
+  Accept: array of bool;
+  Initial: int
+): string?;
 begin
   if Preferred = null or Preferred = Id then
     return if Accept[Initial] then

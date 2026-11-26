@@ -18,7 +18,10 @@ uses System as Sys;
 // - `Messages`: Application message translator.
 // ## Returns
 // The translated capture widget.
-public function Map of (TChild, TParent)(View: E.Element of TChild; Messages: function(TChild): TParent): E.Element of TParent;
+public function Map of (TChild, TParent)(
+  View: E.Element of TChild;
+  Messages: function(TChild): TParent
+): E.Element of TParent;
 begin
   case View of
     when E.Element.Dropzone(

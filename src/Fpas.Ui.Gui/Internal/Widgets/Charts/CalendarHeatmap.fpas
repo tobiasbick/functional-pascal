@@ -22,7 +22,14 @@ uses System as Sys;
 // - `Values`: One finite sample per day; nonpositive amounts leave empty squares.
 // - `Settings`: Native presentation.
 // - `OnActivate`: Optional native click callback.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Start: Sys.DateOnly; Values: array of float; Settings: W.Options; OnActivate: Sys.Func of (Sys.DateOnly, TMsg)?);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Start: Sys.DateOnly;
+  Values: array of float;
+  Settings: W.Options;
+  OnActivate: Sys.Func of (Sys.DateOnly, TMsg)?
+);
 begin
   const Token: string := C.Token('calendar-heatmap', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;

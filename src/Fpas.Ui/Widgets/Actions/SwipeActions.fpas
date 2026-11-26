@@ -62,8 +62,12 @@ end function;
 // ## Returns
 // A graphical swipe row that owns its gesture and reveal state in CUI.
 public function SwipeItem of TMsg(
-  Id: string; Content: E.Element of TMsg; Left: array of Item; Right: array of Item;
-  OnChoose: function(Side, int): TMsg; Settings: Options? := null
+  Id: string;
+  Content: E.Element of TMsg;
+  Left: array of Item;
+  Right: array of Item;
+  OnChoose: function(Side, int): TMsg;
+  Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin

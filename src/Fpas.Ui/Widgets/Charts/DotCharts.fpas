@@ -85,7 +85,13 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // The graphical element.
-public function DotChart of TMsg(Id: string; Bands: array of Series; Count: int; OnActivate: Sys.Func of (Hit, TMsg)? := null; Settings: Options? := null): E.Element of TMsg;
+public function DotChart of TMsg(
+  Id: string;
+  Bands: array of Series;
+  Count: int;
+  OnActivate: Sys.Func of (Hit, TMsg)? := null;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).DotChart(Id, Bands, Count, OnActivate, Settings ?? new Options());

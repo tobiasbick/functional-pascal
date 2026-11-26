@@ -224,7 +224,10 @@ procedure Notification(Renderer: Cui.CuiRenderer);
       function(Value: int): State.Msg => State.Msg.Preview
     );
   end function;
-  function Change(Model: State.Model; Message: State.Msg): Mvu.Transition of (State.Model, State.Msg);
+  function Change(
+    Model: State.Model;
+    Message: State.Msg
+  ): Mvu.Transition of (State.Model, State.Msg);
   begin
     case Message of
       when State.Msg.Preview:

@@ -13,7 +13,12 @@ uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit;
 uses System as Sys;
 uses System.Collections.Generic as C;
 
-procedure Notify of TMsg(View: V.Viewport of TMsg; Position: L.ScrollPosition; Offset: int; Apply: procedure(TMsg));
+procedure Notify of TMsg(
+  View: V.Viewport of TMsg;
+  Position: L.ScrollPosition;
+  Offset: int;
+  Apply: procedure(TMsg)
+);
 begin
   case View.OnScroll of
     when is Sys.Func of (L.ScrollChange, TMsg) as Callback:
@@ -39,7 +44,10 @@ begin
 end procedure;
 
 public function Key of TMsg(
-  View: V.Viewport of TMsg; Pressed: K.Key; Modifiers: K.KeyModifiers; Apply: procedure(TMsg)
+  View: V.Viewport of TMsg;
+  Pressed: K.Key;
+  Modifiers: K.KeyModifiers;
+  Apply: procedure(TMsg)
 ): bool;
 begin
 
@@ -74,7 +82,11 @@ end function;
 // - `Offsets`: Host-owned scroll offsets.
 // - `Region`: Viewport and its scroll limits.
 // - `Delta`: Signed row movement.
-public procedure MoveOffset(Offsets: C.Dictionary of (string, int); Region: A.ScrollRegion; Delta: int);
+public procedure MoveOffset(
+  Offsets: C.Dictionary of (string, int);
+  Region: A.ScrollRegion;
+  Delta: int
+);
 begin
   var Before: int := 0;
   discard Offsets.TryGetValue(Region.Id, out Before);
@@ -98,8 +110,14 @@ end procedure;
 // - `Offsets`: Host-owned scroll offsets.
 // - `Apply`: Dispatches a proposed application change.
 public procedure Wheel of TMsg(
-  Layout: A.Layout of TMsg; Hit: (A.Control of TMsg)?; Scope: string; Column: int; Row: int; Delta: int;
-  Offsets: C.Dictionary of (string, int); Apply: procedure(TMsg)
+  Layout: A.Layout of TMsg;
+  Hit: (A.Control of TMsg)?;
+  Scope: string;
+  Column: int;
+  Row: int;
+  Delta: int;
+  Offsets: C.Dictionary of (string, int);
+  Apply: procedure(TMsg)
 );
 begin
   if Hit <> null then

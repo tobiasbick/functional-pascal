@@ -16,7 +16,10 @@ uses Fpas.Ui.Elements as E;
 // ## Returns
 // The trail with an informational final item.
 public function Breadcrumb of TMsg(
-  Id: string; Items: array of string; OnNavigate: function(int): TMsg; Enabled: bool := true
+  Id: string;
+  Items: array of string;
+  OnNavigate: function(int): TMsg;
+  Enabled: bool := true
 ): E.Element of TMsg;
 requires Id <> '';
 begin

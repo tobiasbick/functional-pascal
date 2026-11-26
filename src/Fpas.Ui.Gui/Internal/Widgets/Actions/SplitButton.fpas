@@ -22,8 +22,12 @@ uses System.Collections.Generic as Lists;
 // - `Items`: Keyed menu actions.
 // - `Settings`: Shared appearance and input options.
 public procedure Draw of TMsg(
-  State: C.State of TMsg; Id: string; Label: string; Message: TMsg;
-  Items: array of Split.Item of TMsg; Settings: Split.Options
+  State: C.State of TMsg;
+  Id: string;
+  Label: string;
+  Message: TMsg;
+  Items: array of Split.Item of TMsg;
+  Settings: Split.Options
 );
 begin
   const Enabled: bool := Settings.Enabled and State.AcceptInput;

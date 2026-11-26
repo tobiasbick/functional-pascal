@@ -52,7 +52,11 @@ begin
   end with;
 end function;
 
-function Open(Current: App.State; Show: M.Show; Subscribe: bool): A.Transition of (App.State, App.Msg);
+function Open(
+  Current: App.State;
+  Show: M.Show;
+  Subscribe: bool
+): A.Transition of (App.State, App.Msg);
 begin
   return Change(Route(Current, Nav.Route.Podcast(Show.Id())), M.Msg.Open(Show, Subscribe));
 end function;
@@ -77,7 +81,10 @@ end function;
 // - `Before`: The previous route.
 // ## Returns
 // The selected page and any commands that load or cancel its data.
-public function Navigate(Current: App.State; Before: Nav.Route): A.Transition of (App.State, App.Msg);
+public function Navigate(
+  Current: App.State;
+  Before: Nav.Route
+): A.Transition of (App.State, App.Msg);
 begin
   case Current.Navigation.Active of
     when Nav.Route.Page(Nav.Page.Podcasts):
@@ -103,7 +110,12 @@ begin
   return new A.Transition of (App.State, App.Msg)(Current, []);
 end function;
 
-function Persist(Current: App.State; Show: M.Show; Enabled: bool; Save: procedure(Settings.Preferences)): App.State;
+function Persist(
+  Current: App.State;
+  Show: M.Show;
+  Enabled: bool;
+  Save: procedure(Settings.Preferences)
+): App.State;
 begin
   const Saved: Settings.Preferences := Current.Settings.Saved;
   const Old: array of M.Show := Saved.PodcastSubscriptions;
@@ -156,7 +168,11 @@ end function;
 // - `Save`: Writes the updated preferences when subscriptions change.
 // ## Returns
 // The updated application state and its podcast commands.
-public function Apply(Current: App.State; Action: M.Msg; Save: procedure(Settings.Preferences)): A.Transition of (App.State, App.Msg);
+public function Apply(
+  Current: App.State;
+  Action: M.Msg;
+  Save: procedure(Settings.Preferences)
+): A.Transition of (App.State, App.Msg);
 begin
   case Action of
     when M.Msg.Open(const Show: M.Show, const Subscribe: bool):
@@ -252,8 +268,16 @@ begin
   return Player.Msg.PlayEpisodes(Queue.MoveToImmutable(), Slot, Cover);
 end function;
 
-function DownloadEpisode(Port: Playback.Connection; Url: string; Codec: string; Revision: long): A.Command of App.Msg;
-  async function Fetch(Cache: Sys.Lazy of IO.DirectoryInfo; Stop: T.CancellationToken): Tasks.Task of Fx.Outcome of (string, string);
+function DownloadEpisode(
+  Port: Playback.Connection;
+  Url: string;
+  Codec: string;
+  Revision: long
+): A.Command of App.Msg;
+  async function Fetch(
+    Cache: Sys.Lazy of IO.DirectoryInfo;
+    Stop: T.CancellationToken
+  ): Tasks.Task of Fx.Outcome of (string, string);
   begin
     try
       return Fx.Outcome.Success(
@@ -287,7 +311,12 @@ end function;
 // - `Port`: Playback connection supplying the file workspace.
 // ## Returns
 // The application transition, augmented with the required background command.
-public function Prepare(Before: Player.State; Result: A.Transition of (App.State, App.Msg); Request: Player.Request?; Port: Playback.Connection): A.Transition of (App.State, App.Msg);
+public function Prepare(
+  Before: Player.State;
+  Result: A.Transition of (App.State, App.Msg);
+  Request: Player.Request?;
+  Port: Playback.Connection
+): A.Transition of (App.State, App.Msg);
 begin
   const Command: (A.Command of App.Msg)? := case Request of
     when Player.Request.Download(

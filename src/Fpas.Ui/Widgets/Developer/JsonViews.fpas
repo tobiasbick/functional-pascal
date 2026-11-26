@@ -21,7 +21,11 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // The graphical element.
-public function JsonView of TMsg(Id: string; Json: string; Settings: Options? := null): E.Element of TMsg;
+public function JsonView of TMsg(
+  Id: string;
+  Json: string;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).JsonView(Id, Json, Settings ?? new Options());

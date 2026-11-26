@@ -34,7 +34,10 @@ end record;
 // ## Returns
 // A graphical account menu that dispatches the chosen command message.
 public function UserMenu of TMsg(
-  Id: string; Name: string; Entries: array of M.Entry of TMsg; Settings: Options? := null
+  Id: string;
+  Name: string;
+  Entries: array of M.Entry of TMsg;
+  Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin

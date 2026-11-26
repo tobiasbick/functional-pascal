@@ -22,8 +22,11 @@ uses System.Collections.Generic as C;
 // ## Returns
 // The Data display table and details.
 public function View of TMsg(
-  Order: T.Sort; Selected: string; SortBy: function(T.Sort): TMsg;
-  SelectPerson: function(string): TMsg; Height: int
+  Order: T.Sort;
+  Selected: string;
+  SortBy: function(T.Sort): TMsg;
+  SelectPerson: function(string): TMsg;
+  Height: int
 ): E.Element of TMsg;
 begin
   const Rows: C.List of T.Row of TMsg := new C.List of T.Row of TMsg();

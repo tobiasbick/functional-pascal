@@ -24,7 +24,11 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // The graphical element.
-public function SkeletonGroup of TMsg(Id: string; Children: array of E.Element of TMsg; Settings: Options? := null): E.Element of TMsg;
+public function SkeletonGroup of TMsg(
+  Id: string;
+  Children: array of E.Element of TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).SkeletonGroup(Id, Children, Settings ?? new Options());

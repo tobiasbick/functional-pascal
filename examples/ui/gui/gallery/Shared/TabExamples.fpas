@@ -23,7 +23,12 @@ public const UnderlineId: string := 'tabs';
 // - `ChoosePill`: Maps a pill selection to a message.
 // ## Returns
 // Both tab strips and the selected underline tab's content.
-public function Rows of TMsg(Selected: int; Pill: int; Choose: function(int): TMsg; ChoosePill: function(int): TMsg): array of E.Element of TMsg;
+public function Rows of TMsg(
+  Selected: int;
+  Pill: int;
+  Choose: function(int): TMsg;
+  ChoosePill: function(int): TMsg
+): array of E.Element of TMsg;
 begin
   const Underline: array of T.Item := [
     new T.Item(Strings.Get('Page.Overview')),

@@ -33,7 +33,11 @@ uses System as Sys;
 // - `Upload`: Starts the status spinner example.
 // ## Returns
 // Native feedback widgets with their responsive card layout.
-public function View of TMsg(CreateProject: TMsg; State: Model.Model; Upload: TMsg): E.Element of TMsg;
+public function View of TMsg(
+  CreateProject: TMsg;
+  State: Model.Model;
+  Upload: TMsg
+): E.Element of TMsg;
 begin
   const Columns: Grid.Options := new Grid.Options(
     Columns := 2,

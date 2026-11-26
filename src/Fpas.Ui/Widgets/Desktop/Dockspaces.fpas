@@ -65,7 +65,12 @@ end record;
 // - `OnLayoutChanged`: Optional receiver for a new serialized layout.
 // ## Returns
 // A graphical element.
-public function Dockspace of TMsg(Id: string; Panels: array of Panel of TMsg; Settings: Options? := null; OnLayoutChanged: Sys.Func of (string, TMsg)? := null): E.Element of TMsg;
+public function Dockspace of TMsg(
+  Id: string;
+  Panels: array of Panel of TMsg;
+  Settings: Options? := null;
+  OnLayoutChanged: Sys.Func of (string, TMsg)? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).Dockspace(Id, Panels, Settings ?? new Options(), OnLayoutChanged);

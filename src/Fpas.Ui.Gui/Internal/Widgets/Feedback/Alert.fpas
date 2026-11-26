@@ -19,8 +19,11 @@ uses System as Sys;
 // - `Settings`: Native presentation and input permission.
 // - `Notify`: Optional dismissal notification.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Title: string;
-  Settings: A.Options; Notify: (Sys.Func of TMsg)?
+  Frame: C.State of TMsg;
+  Id: string;
+  Title: string;
+  Settings: A.Options;
+  Notify: (Sys.Func of TMsg)?
 );
 begin
   const Dismiss: string := A.DismissId(Id);

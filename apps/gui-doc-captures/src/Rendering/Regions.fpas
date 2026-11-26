@@ -29,7 +29,10 @@ end record;
 // - `Name`: Basename of the documented widget.
 // - `Rectangle`: Left, top, right and bottom pixel coordinates, in that order.
 public procedure CaptureRectangle(
-  Session: Gui.Session of Gallery.Msg; Output: string; Name: string; Rectangle: array of int
+  Session: Gui.Session of Gallery.Msg;
+  Output: string;
+  Name: string;
+  Rectangle: array of int
 );
 requires Rectangle.Length = 4;
 begin
@@ -53,8 +56,11 @@ end procedure;
 // - `Padding`: Adjustments to the crop margins for native captions or panel edges.
 // - `Ids`: Controls to include. Use `Id/Key` for a keyed part with a shared ID.
 public procedure Capture(
-  Session: Gui.Session of Gallery.Msg; Output: string; Name: string;
-  Padding: Insets; params Ids: array of string
+  Session: Gui.Session of Gallery.Msg;
+  Output: string;
+  Name: string;
+  Padding: Insets;
+  params Ids: array of string
 );
 begin
   const Frame: Gui.Frame := Session.Snapshot();
@@ -107,7 +113,12 @@ end procedure;
 // - `Output`: Directory for the full frame and crop bounds.
 // - `Name`: Basename for both files.
 // - `Ids`: Controls to include in the crop.
-public procedure Shot(Session: Gui.Session of Gallery.Msg; Output: string; Name: string; params Ids: array of string);
+public procedure Shot(
+  Session: Gui.Session of Gallery.Msg;
+  Output: string;
+  Name: string;
+  params Ids: array of string
+);
 begin
   Capture(Session, Output, Name, new Insets(), Ids);
 end procedure;
@@ -120,7 +131,11 @@ end procedure;
 // - `Id`: Identity shared by the root and descendant control IDs.
 // - `Padding`: Adjustments to the crop margins for native captions or panel edges.
 public procedure CaptureParts(
-  Session: Gui.Session of Gallery.Msg; Output: string; Name: string; Id: string; Padding: Insets
+  Session: Gui.Session of Gallery.Msg;
+  Output: string;
+  Name: string;
+  Id: string;
+  Padding: Insets
 );
 requires Id <> '';
 begin

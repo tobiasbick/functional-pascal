@@ -95,7 +95,7 @@ diagnostics go to stderr.
   Comments alone do not create a section. A blank after a comment still keeps
   that comment detached from the following declaration.
 - One space around binary operators and after commas/semicolons within lists.
-  No spaces around member dots, ranges, generic angle delimiters or nullable
+  No spaces around member dots, ranges or nullable
   suffixes. Type annotations use `Name: Type`; prefix signs attach to operands,
   and `not`/`await` use a space. Calls and indexes attach to their receivers.
 
@@ -111,13 +111,16 @@ using ordinal comparison. Put `Fpas` and `Fpas.*` first, then leave one blank
 line before the other imports when both groups are present. An import can
 exceed the width target. Comments attached to an import move with it.
 
-Formal parameter lists retain authored line groups. Expanded lists start
-their contents on a new line indented two spaces from the owning line.
-Closing delimiters return to the owning indentation. Calls, indexes and array
-literals also expand automatically when over the width target. Nested lists are
-measured at their structural indentation. A multiline element expands its parent;
-an overlong authored argument group gains additional breaks. No trailing separator
-is introduced.
+Keep formal parameters on one line when the routine header fits within 100
+display columns. Re-evaluate the width on every run, so a shortened header
+returns to one line. If the header exceeds the target or a comment or multiline
+default breaks the list, start each parameter on its own line. Indent two spaces
+and align the closing delimiter with the owning indentation.
+
+Calls, indexes and array literals retain authored line groups and expand when
+over the width target. Nested lists are measured at their structural indentation.
+A multiline element expands its parent. An overlong authored argument group
+gains additional breaks. The formatter preserves separators.
 
 Binary expressions retain authored operand breaks and gain breaks for the width
 target. Logical `and`, `or` and `xor` begin continuation lines; other operators

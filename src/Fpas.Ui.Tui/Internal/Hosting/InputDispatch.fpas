@@ -17,7 +17,11 @@ uses System as Sys;
 // - `Routing`: Session's input router.
 // - `Layout`: Presented controls and modal scope.
 // - `Event`: Input to route.
-public procedure Dispatch of TMsg(Routing: I.State of TMsg; Layout: A.Layout of TMsg; Event: App.Input);
+public procedure Dispatch of TMsg(
+  Routing: I.State of TMsg;
+  Layout: A.Layout of TMsg;
+  Event: App.Input
+);
 begin
   const Scope: (A.Scope of TMsg)? := Layout.Active;
   if Scope <> null then

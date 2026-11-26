@@ -31,8 +31,12 @@ end record;
 // ## Returns
 // A graphical view with the trigger's original layout.
 public function Popover of TMsg(
-  Id: string; Trigger: E.Element of TMsg; Content: E.Element of TMsg; Open: bool;
-  OnDismiss: TMsg; Settings: Options? := null
+  Id: string;
+  Trigger: E.Element of TMsg;
+  Content: E.Element of TMsg;
+  Open: bool;
+  OnDismiss: TMsg;
+  Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin

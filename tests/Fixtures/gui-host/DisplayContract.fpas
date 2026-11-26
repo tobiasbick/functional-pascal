@@ -42,7 +42,10 @@ procedure CheckPage(Page: State.Page; Renderer: Cui.CuiRenderer; Root: string; W
     end if;
   end procedure;
 
-  function Apply(Model: State.Model; Message: State.Msg): Mvu.Transition of (State.Model, State.Msg);
+  function Apply(
+    Model: State.Model;
+    Message: State.Msg
+  ): Mvu.Transition of (State.Model, State.Msg);
   begin
     const Next: Mvu.Transition of (State.Model, State.Msg) := Update.Update(Model, Message);
     Selected := Next.Model.DisplaySwatch;

@@ -22,7 +22,14 @@ uses System.Collections.Generic as Lists;
 // - `Selected`: Current key selection.
 // - `Changed`: Maps a native proposal.
 // - `Settings`: Native layout and behavior options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Keys: array of D.Key; Selected: int; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Keys: array of D.Key;
+  Selected: int;
+  Changed: function(D.Event): TMsg;
+  Settings: D.Options
+);
 begin
   const Role: string := 'curve-editor';
   const Token: string := C.Token(Role, Id);

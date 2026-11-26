@@ -57,7 +57,10 @@ end record;
 // - `ScrollOffsets`: Session scroll offsets keyed by viewport ID.
 // ## Returns
 // The handlers and queries backed by the new session state.
-public function Create of TMsg(Apply: procedure(TMsg); ScrollOffsets: Generic.Dictionary of (string, int)): State of TMsg;
+public function Create of TMsg(
+  Apply: procedure(TMsg);
+  ScrollOffsets: Generic.Dictionary of (string, int)
+): State of TMsg;
   function ActiveId(Layout: A.Layout of TMsg): string;
   begin
     const Active: (A.Scope of TMsg)? := Layout.Active;
@@ -353,7 +356,13 @@ public function Create of TMsg(Apply: procedure(TMsg); ScrollOffsets: Generic.Di
     end case;
   end procedure;
 
-  procedure Point(Layout: A.Layout of TMsg; Kind: K.PointerKind; Button: K.MouseButton; Column: int; Row: int);
+  procedure Point(
+    Layout: A.Layout of TMsg;
+    Kind: K.PointerKind;
+    Button: K.MouseButton;
+    Column: int;
+    Row: int
+  );
   begin
     PointerKnown := true;
     PointerColumn := Column;

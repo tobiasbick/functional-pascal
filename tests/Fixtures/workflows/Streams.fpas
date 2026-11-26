@@ -19,7 +19,10 @@ begin
 end procedure;
 
 async function Verify(Fail: bool; CancelWhileWriting: bool; CancelWhileReading: bool): Tasks.Task;
-  function Acquire(Unused: bool; Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (C.List of int, string);
+  function Acquire(
+    Unused: bool;
+    Token: T.CancellationToken
+  ): Tasks.Task of Fx.Outcome of (C.List of int, string);
   begin
     return Tasks.Task.FromResult of Fx.Outcome of (C.List of int, string)(
       Fx.Outcome.Success(Events)
@@ -35,7 +38,9 @@ async function Verify(Fail: bool; CancelWhileWriting: bool; CancelWhileReading: 
   end function;
 
   async function Produce(
-    Resource: C.List of int; Publish: function(int): Tasks.Task; Token: T.CancellationToken
+    Resource: C.List of int;
+    Publish: function(int): Tasks.Task;
+    Token: T.CancellationToken
   ): Tasks.Task of Fx.Outcome of (Fx.Completion, string);
   begin
     Check(

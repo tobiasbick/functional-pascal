@@ -316,7 +316,12 @@ begin
   );
 end function;
 
-function EpisodeGrid(Current: App.State; Show: M.Show; Items: array of M.Episode; Width: int): E.Element of App.Msg;
+function EpisodeGrid(
+  Current: App.State;
+  Show: M.Show;
+  Items: array of M.Episode;
+  Width: int
+): E.Element of App.Msg;
   function Change(Value: Grid.Value): App.Msg;
   begin
     const Order: Tables.Sort? := Value.Order;

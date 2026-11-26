@@ -15,7 +15,12 @@ uses Fpas.Ui.Widgets.Developer.CodeBlocks as W;
 // - `Id`: Stable widget identity.
 // - `Code`: Literal source.
 // - `Settings`: Native presentation options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Code: string; Settings: W.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Code: string;
+  Settings: W.Options
+);
 begin
   const Token: string := C.Token('code-block', Id);
   const CopyId: string := Id + '/copy';

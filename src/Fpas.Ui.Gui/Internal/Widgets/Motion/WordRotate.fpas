@@ -17,7 +17,13 @@ uses Fpas.Ui.Widgets.Motion.Motion as Motion;
 // - `Words`: Native rotation order.
 // - `Interval`: Seconds per word.
 // - `Settings`: Native appearance and input options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Words: array of string; Interval: float; Settings: Motion.TextOptions);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Words: array of string;
+  Interval: float;
+  Settings: Motion.TextOptions
+);
 begin
   const Token: string := C.Token('word-rotate', Id);
   Frame.Window.WordRotate(Token, Words, Interval, Common.Options(Settings));

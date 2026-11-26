@@ -32,7 +32,11 @@ end record;
 // ## Returns
 // A graphical or terminal number field with a model-owned value.
 public function NumberField of TMsg(
-  Id: string; Value: double; Minimum: double; Maximum: double; OnChange: function(double): TMsg;
+  Id: string;
+  Value: double;
+  Minimum: double;
+  Maximum: double;
+  OnChange: function(double): TMsg;
   Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';

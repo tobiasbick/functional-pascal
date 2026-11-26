@@ -10,7 +10,10 @@ uses System.Collections.Immutable as I;
 
 // Resolves List against the current catalogue, keeping its order and repeated tracks.
 // Entries without a catalogue match remain in storage and are omitted from this queue.
-public function Resolve(List: Lists.Playlist?; Catalogue: I.ImmutableArray of Tracks.Entry): I.ImmutableArray of Tracks.Entry;
+public function Resolve(
+  List: Lists.Playlist?;
+  Catalogue: I.ImmutableArray of Tracks.Entry
+): I.ImmutableArray of Tracks.Entry;
 begin
   if List = null or List.Entries.IsEmpty then
     return (I.ImmutableArray of Tracks.Entry).Empty;

@@ -14,7 +14,17 @@ uses System.Threading as T;
 // Saves `Value` for the same observed playlist ID/stamp while policy remains
 // `Current`. `Users` supplies durable track identities; failures preserve entries.
 // Returns false for stale/deleted files, leaving their queued work intact.
-public function Save(Connection: Db.SqliteConnection; Users: Db.SqliteConnection; Id: long; Path: string; Size: long; Modified: long; Value: Reading.Result; Current: function(): bool; Cancellation: T.CancellationToken): bool;
+public function Save(
+  Connection: Db.SqliteConnection;
+  Users: Db.SqliteConnection;
+  Id: long;
+  Path: string;
+  Size: long;
+  Modified: long;
+  Value: Reading.Result;
+  Current: function(): bool;
+  Cancellation: T.CancellationToken
+): bool;
 begin
   Cancellation.ThrowIfCancellationRequested();
   using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();

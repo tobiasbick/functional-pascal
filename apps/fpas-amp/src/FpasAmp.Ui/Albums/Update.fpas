@@ -39,7 +39,12 @@ end function;
 // - `Library`: The borrowed metadata session for loading and rating tracks.
 // ## Returns
 // The next state and any commands to run off the UI thread.
-public function Apply(Current: M.State; Message: M.Msg; Service: Access.Session?; Library: Metadata.Session? := null): A.Transition of (M.State, M.Msg);
+public function Apply(
+  Current: M.State;
+  Message: M.Msg;
+  Service: Access.Session?;
+  Library: Metadata.Session? := null
+): A.Transition of (M.State, M.Msg);
 begin
   case Message of
     when M.Msg.OpenGroup(const Id: string):
@@ -144,7 +149,10 @@ begin
           A.StartBackground of M.Msg(
             'observe',
             A.FromWorker of M.Msg(
-              async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+              async function(
+                Post: function(M.Msg): Tasks.Task;
+                Cancellation: T.CancellationToken
+              ): Tasks.Task begin
                 await Service.ObserveAsync(
                   function(Value: Albums.Snapshot): Tasks.Task => Post(M.Msg.Received(Value)),
                   Cancellation
@@ -225,7 +233,10 @@ begin
           A.StartBackground of M.Msg(
             'images',
             A.FromWorker of M.Msg(
-              async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task
+              async function(
+                Post: function(M.Msg): Tasks.Task;
+                Cancellation: T.CancellationToken
+              ): Tasks.Task
                 async function Load(Offset: int): Tasks.Task;
                 begin
                   var Index: int := Offset;
@@ -309,7 +320,10 @@ begin
           A.StartBackground of M.Msg(
             'rating-' + Id,
             A.FromWorker of M.Msg(
-              async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+              async function(
+                Post: function(M.Msg): Tasks.Task;
+                Cancellation: T.CancellationToken
+              ): Tasks.Task begin
                 await Service.SetRatingAsync(Id, Rating, Cancellation).ConfigureAwait(false);
                 await Post(M.Msg.Rated(Id, Rating)).ConfigureAwait(false);
               end function,
@@ -395,7 +409,10 @@ begin
   end case;
 end function;
 
-function RefreshMusic(Projection: A.Transition of (M.State, M.Msg); Library: Metadata.Session?): A.Transition of (M.State, M.Msg);
+function RefreshMusic(
+  Projection: A.Transition of (M.State, M.Msg);
+  Library: Metadata.Session?
+): A.Transition of (M.State, M.Msg);
 begin
   const Current: M.State := Projection.Model;
   const Page: Music.State? := Current.Music;
@@ -442,7 +459,10 @@ begin
   );
 end function;
 
-function MusicTransition(Current: M.State; Child: A.Transition of (Music.State, Music.Msg)): A.Transition of (M.State, M.Msg);
+function MusicTransition(
+  Current: M.State;
+  Child: A.Transition of (Music.State, Music.Msg)
+): A.Transition of (M.State, M.Msg);
 begin
   const Mapped: A.Transition of (Music.State, M.Msg) := Composition.MapTransition of (Music.State, Music.Msg, M.Msg)(
     Child,

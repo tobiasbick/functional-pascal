@@ -25,9 +25,14 @@ uses System.Threading.Tasks as Tasks;
 // ## Returns
 // The deferred workflow with a span when a listener requests one.
 public function Trace of (A, E, R)(
-  Work: Fx.Effect of (A, E, R); Source: Diagnostics.ActivitySource; Name: string
+  Work: Fx.Effect of (A, E, R);
+  Source: Diagnostics.ActivitySource;
+  Name: string
 ): Fx.Effect of (A, E, R);
-  async function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task of Fx.Outcome of (A, E);
+  async function Execute(
+    Environment: R;
+    Cancellation: Threads.CancellationToken
+  ): Tasks.Task of Fx.Outcome of (A, E);
   begin
     using const Span: Diagnostics.Activity? := Source.StartActivity(Name);
     try

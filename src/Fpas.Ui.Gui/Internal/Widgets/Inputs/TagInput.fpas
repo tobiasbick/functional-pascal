@@ -21,7 +21,10 @@ uses System as Sys;
 // - `OnChange`: Maps a proposed tag list to a message.
 // - `Settings`: Caption, bounds and input permission.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Tags: array of string; OnChange: function(array of string): TMsg;
+  Frame: C.State of TMsg;
+  Id: string;
+  Tags: array of string;
+  OnChange: function(array of string): TMsg;
   Settings: T.Options
 );
 begin

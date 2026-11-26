@@ -34,7 +34,13 @@ const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
 const SortKeys: array of int := [0, 3, 4];
 const LibraryKeys: array of int := [0, 1, 2, 5, 3, 4];
 
-function Play(Item: Tracks.Entry; Id: string; Name: string; Playback: Player.State; Action: M.Msg): E.Element of M.Msg;
+function Play(
+  Item: Tracks.Entry;
+  Id: string;
+  Name: string;
+  Playback: Player.State;
+  Action: M.Msg
+): E.Element of M.Msg;
 begin
   const Track: Tracks.Entry? := Player.Track(Playback);
   const Active: bool := Track <> null and Track.FileId = Item.FileId;
@@ -77,7 +83,12 @@ begin
   );
 end function;
 
-function RatingCell(Current: M.State; Item: Tracks.Entry; Id: string; Name: string): Grid.Cell of M.Msg;
+function RatingCell(
+  Current: M.State;
+  Item: Tracks.Entry;
+  Id: string;
+  Name: string
+): Grid.Cell of M.Msg;
 begin
   return (Grid.Cell of M.Msg).Content(
     [
@@ -189,7 +200,13 @@ begin
   );
 end function;
 
-function LibrarySong(Current: M.State; Index: int; Covers: I.ImmutableDictionary of (string, Imaging.Bitmap?); Playback: Player.State; Playlist: bool): Grid.Row of M.Msg;
+function LibrarySong(
+  Current: M.State;
+  Index: int;
+  Covers: I.ImmutableDictionary of (string, Imaging.Bitmap?);
+  Playback: Player.State;
+  Playlist: bool
+): Grid.Row of M.Msg;
 begin
   const Item: Tracks.Entry := Current.Shown[Index];
   const Id: string := Item.FileId.ToString() + if Playlist then
@@ -244,7 +261,13 @@ end function;
 // Playback identifies the current file and its transport state in either layout.
 // Playlist gives repeated file rows distinct keys and activation slots.
 // Returns the virtual table or the appropriate empty state.
-public function Build(Current: M.State; Width: int; Playback: Player.State; Covers: I.ImmutableDictionary of (string, Imaging.Bitmap?)? := null; Playlist: bool := false): E.Element of M.Msg;
+public function Build(
+  Current: M.State;
+  Width: int;
+  Playback: Player.State;
+  Covers: I.ImmutableDictionary of (string, Imaging.Bitmap?)? := null;
+  Playlist: bool := false
+): E.Element of M.Msg;
 requires Width > 0;
   function Activate(Index: int): M.Msg;
   begin

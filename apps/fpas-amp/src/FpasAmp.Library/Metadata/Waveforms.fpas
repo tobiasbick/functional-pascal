@@ -29,7 +29,11 @@ const Indexed: string := 'SELECT m.sha256 FROM metadata m JOIN files f ON f.id=m
 // - `Cancellation`: Stops work when another track takes its place.
 // ## Returns
 // Relative RMS values in time order. Each cached interval occupies one byte.
-public async function Read(Database: string; Track: M.Entry; Cancellation: T.CancellationToken): Tasks.Task of array of float;
+public async function Read(
+  Database: string;
+  Track: M.Entry;
+  Cancellation: T.CancellationToken
+): Tasks.Task of array of float;
 requires Database <> '';
 requires Track.Path <> '';
 begin

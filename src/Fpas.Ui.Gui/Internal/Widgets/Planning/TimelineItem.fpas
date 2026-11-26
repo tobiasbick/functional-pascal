@@ -15,7 +15,12 @@ uses Fpas.Ui.Widgets.Planning.TimelineItems as T;
 // - `Id`: Stable item identity.
 // - `Title`: Literal heading.
 // - `Settings`: Native text, icon, tone and final-item options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Title: string; Settings: T.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Title: string;
+  Settings: T.Options
+);
 begin
   Frame.Window.TimelineItem(
     C.Token('timeline-item', Id), Title, Settings.Time,

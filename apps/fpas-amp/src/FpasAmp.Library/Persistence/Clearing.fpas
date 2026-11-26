@@ -10,7 +10,11 @@ uses System.Threading as T;
 
 // Clears one source's memberships/checkpoints, or all source data when `Id` is empty.
 // `Connection` is worker-owned; cancellation rolls back the transaction before commit.
-public procedure Clear(Connection: Db.SqliteConnection; Id: string; Cancellation: T.CancellationToken);
+public procedure Clear(
+  Connection: Db.SqliteConnection;
+  Id: string;
+  Cancellation: T.CancellationToken
+);
 begin
   Cancellation.ThrowIfCancellationRequested();
   using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();

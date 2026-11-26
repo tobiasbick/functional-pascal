@@ -46,7 +46,12 @@ end function;
 // Observes summaries in `Database`/`Users` on a background owner. `Publish` is
 // awaited for changed complete snapshots; cancellation closes the read connection.
 // Database versions are polled twice per second; unchanged content is not republished.
-public async function Run(Database: string; Users: string; Publish: function(I.ImmutableArray of M.Summary): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
+public async function Run(
+  Database: string;
+  Users: string;
+  Publish: function(I.ImmutableArray of M.Summary): Tasks.Task;
+  Cancellation: T.CancellationToken
+): Tasks.Task;
 begin
   using const Connection: Db.SqliteConnection := Queries.OpenRead(Database, Users);
   var CatalogueVersion: long := -1L;

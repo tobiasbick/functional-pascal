@@ -139,8 +139,13 @@ end function;
 // ## Returns
 // The terminal presentation of the shared bar.
 public function Lower of TMsg(
-  Id: string; Fields: array of Filters.Field; Current: Filters.Value; Change: function(Filters.Value): TMsg;
-  Capacity: int; Enabled: bool; State: P.State of TMsg
+  Id: string;
+  Fields: array of Filters.Field;
+  Current: Filters.Value;
+  Change: function(Filters.Value): TMsg;
+  Capacity: int;
+  Enabled: bool;
+  State: P.State of TMsg
 ): E.Element of TMsg;
 begin
   const Rows: C.List of E.Element of TMsg := new C.List of E.Element of TMsg();

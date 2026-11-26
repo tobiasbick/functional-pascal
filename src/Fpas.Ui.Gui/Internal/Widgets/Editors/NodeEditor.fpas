@@ -26,7 +26,16 @@ uses Fpas.Ui.Widgets.Editors.NodeEditors as D;
 // - `Changed`: Maps native proposals to messages.
 // - `Settings`: Native widget settings.
 // - `Visit`: Presents embedded content.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Viewport: D.View; Nodes: array of D.Node of TMsg; Links: array of D.Link; Changed: function(D.Event): TMsg; Settings: D.Options; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Viewport: D.View;
+  Nodes: array of D.Node of TMsg;
+  Links: array of D.Link;
+  Changed: function(D.Event): TMsg;
+  Settings: D.Options;
+  Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
+);
 begin
   const Role: string := 'node-editor';
   const Token: string := C.Token(Role, Id);

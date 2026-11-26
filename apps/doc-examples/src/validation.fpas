@@ -15,7 +15,12 @@ uses System.Text.Json as J;
 uses System.Threading as T;
 uses System.Threading.Tasks as Tasks;
 
-async function Run(Options: M.Options; Arguments: array of string; Directory: string; Cancellation: T.CancellationToken): Tasks.Task of Capture.Captured;
+async function Run(
+  Options: M.Options;
+  Arguments: array of string;
+  Directory: string;
+  Cancellation: T.CancellationToken
+): Tasks.Task of Capture.Captured;
 begin
   const Environment: C.Dictionary of (string, string) := new C.Dictionary of (string, string)();
   Environment['MSBUILDDISABLENODEREUSE'] := '1';
@@ -69,7 +74,13 @@ end function;
 // - `Cancellation`: Cancels the checker and its owned child processes.
 // ## Returns
 // The last stage reached and whether the example met its expectations.
-public async function Check(Item: M.Example; Options: M.Options; Items: array of M.Example; Directory: string; Cancellation: T.CancellationToken): Tasks.Task of M.Outcome;
+public async function Check(
+  Item: M.Example;
+  Options: M.Options;
+  Items: array of M.Example;
+  Directory: string;
+  Cancellation: T.CancellationToken
+): Tasks.Task of M.Outcome;
 begin
   var Outcome: M.Outcome := new M.Outcome(Item.Document, Item.Line, Item.Id, false, 'prepare', '');
 

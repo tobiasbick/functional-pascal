@@ -85,7 +85,13 @@ end function;
 // Reuses or calculates the fingerprint for Track in Database. Configuration identifies available
 // sources; Gate serializes generators in this library. Cancellation interrupts waiting and fpcalc.
 // Returns the fingerprint and whole-file duration only after they have been stored.
-public async function Generate(Database: string; Track: M.Entry; Configuration: Policy.Policy; Gate: T.SemaphoreSlim; Cancellation: T.CancellationToken): Tasks.Task of Calc.Measurement?;
+public async function Generate(
+  Database: string;
+  Track: M.Entry;
+  Configuration: Policy.Policy;
+  Gate: T.SemaphoreSlim;
+  Cancellation: T.CancellationToken
+): Tasks.Task of Calc.Measurement?;
 requires Database <> '';
 begin
   await Gate.WaitAsync(Cancellation).ConfigureAwait(false);

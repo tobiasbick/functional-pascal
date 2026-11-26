@@ -57,7 +57,16 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function TimeHistogram of TMsg(Id: string; Start: double; Bucket: double; Buckets: int; Series: array of Series; Value: Range; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
+public function TimeHistogram of TMsg(
+  Id: string;
+  Start: double;
+  Bucket: double;
+  Buckets: int;
+  Series: array of Series;
+  Value: Range;
+  Changed: function(Event): TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).TimeHistogram(

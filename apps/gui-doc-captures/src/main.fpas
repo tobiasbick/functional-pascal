@@ -246,7 +246,10 @@ begin
   Window.SetReducedMotion(true);
   using const Session: Gui.Session of Gallery.Msg := Host.Start of (Gallery.Model, Gallery.Msg)(
     Workspaces.InitialModel(Page, Output),
-    function(Model: Gallery.Model; Message: Gallery.Msg): App.Transition of (Gallery.Model, Gallery.Msg) => if FocusId =
+    function(
+      Model: Gallery.Model;
+      Message: Gallery.Msg
+    ): App.Transition of (Gallery.Model, Gallery.Msg) => if FocusId =
       ''
     then
       Update.Update(Model, Message)

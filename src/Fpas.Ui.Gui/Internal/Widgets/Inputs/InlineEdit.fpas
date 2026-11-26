@@ -19,7 +19,13 @@ uses Fpas.Ui.Widgets.Inputs.InlineEdits as I;
 // - `OnChange`: Maps a committed proposal.
 // - `Settings`: Native presentation and capacity.
 
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Value: string; OnChange: function(string): TMsg; Settings: I.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Value: string;
+  OnChange: function(string): TMsg;
+  Settings: I.Options
+);
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('inline-edit', Id);

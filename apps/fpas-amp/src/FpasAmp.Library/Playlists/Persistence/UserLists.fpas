@@ -15,7 +15,13 @@ uses System.Threading as T;
 // Creates a local list, or replaces existing `Id`, in durable `Database`.
 // `Name` and `Items` are detached caller input. Unknown IDs/track UUIDs are rejected.
 // Cancellation rolls back the complete replacement; returned key owns the list.
-public function Save(Database: string; Id: string?; Name: string; Items: array of M.Input; Cancellation: T.CancellationToken): M.Key;
+public function Save(
+  Database: string;
+  Id: string?;
+  Name: string;
+  Items: array of M.Input;
+  Cancellation: T.CancellationToken
+): M.Key;
 begin
   R.Validate(Name, 'Name');
   if Items.Length > 100000 then

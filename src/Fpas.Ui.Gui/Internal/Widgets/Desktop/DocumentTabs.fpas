@@ -21,7 +21,14 @@ uses System.Collections.Generic as Lists;
 // - `Selected`: Current selected index.
 // - `Changed`: Maps native proposals to messages.
 // - `Settings`: Native behavior.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Tabs: array of D.Tab; Selected: int; Changed: function(D.Change): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Tabs: array of D.Tab;
+  Selected: int;
+  Changed: function(D.Change): TMsg;
+  Settings: D.Options
+);
 begin
   const Role: string := 'document-tabs';
   const Token: string := C.Token(Role, Id);

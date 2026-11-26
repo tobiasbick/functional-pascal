@@ -42,7 +42,12 @@ begin
   return false;
 end function;
 
-procedure Prune(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction; Source: string; Directory: string);
+procedure Prune(
+  Connection: Db.SqliteConnection;
+  Transaction: Db.SqliteTransaction;
+  Source: string;
+  Directory: string
+);
 begin
   const Names: array of string := ['$source', '$directory'];
   const Values: array of object? := [Source, Sql.Key(Directory)];
@@ -86,7 +91,13 @@ end procedure;
 // `Current` and `Cancellation` interrupt obsolete work and roll back before commit.
 // Only Complete observations remove absent entries; failures retain membership and timestamps.
 // Returns false when superseded. SQLite errors propagate without resetting the database.
-public function Save(Connection: Db.SqliteConnection; Observation: O.DirectoryObservation; Sources: array of S.MusicSource; Current: function(): bool; Cancellation: T.CancellationToken): bool;
+public function Save(
+  Connection: Db.SqliteConnection;
+  Observation: O.DirectoryObservation;
+  Sources: array of S.MusicSource;
+  Current: function(): bool;
+  Cancellation: T.CancellationToken
+): bool;
 begin
   Cancellation.ThrowIfCancellationRequested();
   if not Current() then

@@ -52,8 +52,12 @@ end function;
 // ## Returns
 // The graphical banner.
 public function Banner of TMsg(
-  Id: string; Text: string; Open: bool; OnDismiss: (Sys.Func of TMsg)? := null;
-  OnAction: (Sys.Func of TMsg)? := null; Settings: Options? := null
+  Id: string;
+  Text: string;
+  Open: bool;
+  OnDismiss: (Sys.Func of TMsg)? := null;
+  OnAction: (Sys.Func of TMsg)? := null;
+  Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin

@@ -76,8 +76,15 @@ end function;
 // ## Returns
 // A labeled number field with keyboard editing and step controls.
 public function Lower of TMsg(
-  Id: string; Value: double; Minimum: double; Maximum: double; Change: function(double): TMsg;
-  Settings: N.Options; Session: State; Colors: T.Style; Theme: Th.Theme
+  Id: string;
+  Value: double;
+  Minimum: double;
+  Maximum: double;
+  Change: function(double): TMsg;
+  Settings: N.Options;
+  Session: State;
+  Colors: T.Style;
+  Theme: Th.Theme
 ): E.Element of TMsg;
   function Propose(Number: double): Actions.Result of TMsg;
   begin
@@ -139,7 +146,13 @@ public function Lower of TMsg(
     return null;
   end function;
 
-  function Button(Key: string; Caption: string; Name: string; Delta: double; CanStep: bool): E.Element of TMsg;
+  function Button(
+    Key: string;
+    Caption: string;
+    Name: string;
+    Delta: double;
+    CanStep: bool
+  ): E.Element of TMsg;
   begin
     const Action: E.Element of TMsg := (E.Element of TMsg).Action(
       Key, new Actions.Callback of TMsg(function(): Actions.Result of TMsg => Step(Delta, 1)),

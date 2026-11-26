@@ -32,7 +32,13 @@ begin
   end if).ToUpperInvariant();
 end function;
 
-procedure People(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction; Id: long; Role: string; Values: array of string);
+procedure People(
+  Connection: Db.SqliteConnection;
+  Transaction: Db.SqliteTransaction;
+  Id: long;
+  Role: string;
+  Values: array of string
+);
 begin
   for Position: int := 0 to Values.Length - 1 do
     Sql.Execute(
@@ -45,7 +51,12 @@ begin
 end procedure;
 
 // Replaces the displayed metadata and its derived indexes for the file in the current transaction.
-public procedure Project(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction; Id: long; Tags: MediaTags.Info);
+public procedure Project(
+  Connection: Db.SqliteConnection;
+  Transaction: Db.SqliteTransaction;
+  Id: long;
+  Tags: MediaTags.Info
+);
 begin
   Albums.Save(Connection, Transaction, Id, Tags);
   Sql.Execute(
@@ -101,7 +112,18 @@ end procedure;
 // `Tags=null` records `Error` but preserves earlier tags/relationships. Empty `TrackId`
 // or `Hash` retain earlier values. Cancellation or `Current=false` rolls back the write.
 // Returns whether this attempt was committed.
-public function Save(Connection: Db.SqliteConnection; Id: long; Size: long; Modified: long; TrackId: string; Hash: string; Tags: MediaTags.Info?; Error: string?; Current: function(): bool; Cancellation: T.CancellationToken): bool;
+public function Save(
+  Connection: Db.SqliteConnection;
+  Id: long;
+  Size: long;
+  Modified: long;
+  TrackId: string;
+  Hash: string;
+  Tags: MediaTags.Info?;
+  Error: string?;
+  Current: function(): bool;
+  Cancellation: T.CancellationToken
+): bool;
 begin
   Cancellation.ThrowIfCancellationRequested();
   using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();

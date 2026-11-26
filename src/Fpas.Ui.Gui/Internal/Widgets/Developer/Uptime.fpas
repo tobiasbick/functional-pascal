@@ -32,7 +32,13 @@ end function;
 // - `Services`: Services supplied to the widget.
 // - `LastDay`: LastDay supplied to the widget.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Services: array of D.Service; LastDay: Sys.DateOnly; Settings: D.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Services: array of D.Service;
+  LastDay: Sys.DateOnly;
+  Settings: D.Options
+);
 begin
   const Role: string := 'uptime';
   const Token: string := C.Token(Role, Id);

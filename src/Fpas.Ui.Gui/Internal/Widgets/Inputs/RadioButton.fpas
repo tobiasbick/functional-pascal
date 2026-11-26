@@ -19,8 +19,13 @@ uses Fpas.Ui.Gui.Internal.Core.Context as C;
 // - `Description`: Optional secondary caption.
 // - `Enabled`: Model-owned input permission.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Label: string; Selected: bool; OnSelect: function(): TMsg;
-  Description: string; Enabled: bool
+  Frame: C.State of TMsg;
+  Id: string;
+  Label: string;
+  Selected: bool;
+  OnSelect: function(): TMsg;
+  Description: string;
+  Enabled: bool
 );
 begin
   const Allowed: bool := Enabled and Frame.AcceptInput;

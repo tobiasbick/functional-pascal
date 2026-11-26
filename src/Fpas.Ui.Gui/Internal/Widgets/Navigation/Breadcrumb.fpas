@@ -20,7 +20,11 @@ uses System.Collections.Generic as Lists;
 // - `OnNavigate`: Maps an activated ancestor to a message.
 // - `Enabled`: Model-owned input permission.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Items: array of string; OnNavigate: function(int): TMsg; Enabled: bool
+  Frame: C.State of TMsg;
+  Id: string;
+  Items: array of string;
+  OnNavigate: function(int): TMsg;
+  Enabled: bool
 );
 begin
   const Allowed: bool := Enabled and Frame.AcceptInput;

@@ -182,7 +182,13 @@ begin
   end if;
 end procedure;
 
-procedure CheckBounds(Minimum: L.Measure; Maximum: L.Measure; Horizontal: bool; Valid: bool; Mixed: bool);
+procedure CheckBounds(
+  Minimum: L.Measure;
+  Maximum: L.Measure;
+  Horizontal: bool;
+  Valid: bool;
+  Mixed: bool
+);
   function Bounded(): E.Element of bool;
   begin
     const Child: E.Element of bool := E.Size of bool(
@@ -491,7 +497,10 @@ procedure CheckScrollableSidebar();
       function(Change: L.ScrollChange): L.ScrollPosition => Change.Position
     );
   end function;
-  function SetPosition(State: L.ScrollPosition; Next: L.ScrollPosition): Mvu.Transition of (L.ScrollPosition, L.ScrollPosition);
+  function SetPosition(
+    State: L.ScrollPosition;
+    Next: L.ScrollPosition
+  ): Mvu.Transition of (L.ScrollPosition, L.ScrollPosition);
   begin
     return new Mvu.Transition of (L.ScrollPosition, L.ScrollPosition)(Next, []);
   end function;

@@ -19,7 +19,13 @@ uses System.Collections.Generic as Lists;
 // - `Steps`: Steps in order.
 // - `Changed`: Optional step activation mapper.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Steps: array of AgentPlans.Step; Changed: Sys.Func of (int, TMsg)?; Settings: AgentPlans.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Steps: array of AgentPlans.Step;
+  Changed: Sys.Func of (int, TMsg)?;
+  Settings: AgentPlans.Options
+);
 begin
   const Role: string := 'agent-plan';
   const Token: string := C.Token(Role, Id);

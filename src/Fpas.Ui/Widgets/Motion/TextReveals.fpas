@@ -15,7 +15,12 @@ uses Fpas.Ui.Widgets.Motion.Motion as Motion;
 // - `Settings`: Optional native options.
 // ## Returns
 // The graphical widget.
-public function TextReveal of TMsg(Id: string; Text: string; Replay: int := 0; Settings: Motion.TextOptions? := null): E.Element of TMsg;
+public function TextReveal of TMsg(
+  Id: string;
+  Text: string;
+  Replay: int := 0;
+  Settings: Motion.TextOptions? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).TextReveal(Id, Text, Replay, Settings ?? new Motion.TextOptions());

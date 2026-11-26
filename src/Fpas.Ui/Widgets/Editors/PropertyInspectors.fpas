@@ -90,7 +90,12 @@ end record;
 // - `Settings`: Native layout and behavior options.
 // ## Returns
 // A graphical element.
-public function PropertyInspector of TMsg(Id: string; Groups: array of Group; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
+public function PropertyInspector of TMsg(
+  Id: string;
+  Groups: array of Group;
+  Changed: function(Event): TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).PropertyInspector(Id, Groups, Changed, Settings ?? new Options());

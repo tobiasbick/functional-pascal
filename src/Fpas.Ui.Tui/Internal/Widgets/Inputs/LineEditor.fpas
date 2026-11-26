@@ -122,7 +122,14 @@ begin
   return Position;
 end function;
 
-procedure Replace of TMsg(Field: Field of TMsg; Position: Tracking; Start: int; Count: int; Added: string; Apply: procedure(TMsg));
+procedure Replace of TMsg(
+  Field: Field of TMsg;
+  Position: Tracking;
+  Start: int;
+  Count: int;
+  Added: string;
+  Apply: procedure(TMsg)
+);
 begin
   const Value: string := Field.Value.Remove(Start, Count).Insert(Start, Added);
   const EndOffset: int := Start + Added.Length;
@@ -147,7 +154,12 @@ end procedure;
 // - `Position`: Field's cursor.
 // - `Input`: Incoming text.
 // - `Apply`: Dispatches a proposed edit.
-public procedure Insert of TMsg(Field: Field of TMsg; Position: Tracking; Input: string; Apply: procedure(TMsg));
+public procedure Insert of TMsg(
+  Field: Field of TMsg;
+  Position: Tracking;
+  Input: string;
+  Apply: procedure(TMsg)
+);
 begin
   if Field.Settings.ReadOnly then
     return;
@@ -173,7 +185,13 @@ end procedure;
 // - `Apply`: Dispatches an edit or submission.
 // ## Returns
 // Whether the field consumed this key.
-public function Key of TMsg(Field: Field of TMsg; Position: Tracking; Pressed: K.Key; Modifiers: K.KeyModifiers; Apply: procedure(TMsg)): bool;
+public function Key of TMsg(
+  Field: Field of TMsg;
+  Position: Tracking;
+  Pressed: K.Key;
+  Modifiers: K.KeyModifiers;
+  Apply: procedure(TMsg)
+): bool;
   procedure Move(Offset: int);
   begin
     Position.Write(

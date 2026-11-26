@@ -29,7 +29,15 @@ uses System.Collections.Generic as Lists;
 // - `Open`: Current expansion or null for a leaf.
 // - `Change`: Optional expansion callback.
 // - `Icon`: Optional CUI glyph.
-public procedure Cell of TMsg(Frame: C.State of TMsg; Id: string; Label: string; Depth: int; Open: bool?; Change: Sys.Func of (bool, TMsg)?; Icon: string);
+public procedure Cell of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Label: string;
+  Depth: int;
+  Open: bool?;
+  Change: Sys.Func of (bool, TMsg)?;
+  Icon: string
+);
 begin
   const Enabled: bool := Frame.AcceptInput and Open <> null and Change <> null;
   var Expanded: int := if Open = null then
@@ -95,7 +103,13 @@ end function;
 // - `Token`: Native table identity.
 // - `Build`: Builds the entries for the node the menu is open for.
 // - `Enabled`: Whether the menu may open and accept input.
-procedure DrawMenu of TMsg(Frame: C.State of TMsg; Id: string; Token: string; Build: Sys.Func of (int, array of M.Entry of TMsg); Enabled: bool);
+procedure DrawMenu of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Token: string;
+  Build: Sys.Func of (int, array of M.Entry of TMsg);
+  Enabled: bool
+);
 begin
   const MenuId: string := Id + '/menu';
   var Node: int := -1;
@@ -139,7 +153,17 @@ end procedure;
 // - `Change`: Maps a native result to a message.
 // - `Settings`: Viewport, guides and input settings.
 // - `Menu`: Optional context menu builder for a node.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Columns: array of D.Column; Nodes: array of T.Node; Cursor: int; Order: Tables.Sort?; Change: function(T.Change): TMsg; Settings: T.Options; Menu: Sys.Func of (int, array of M.Entry of TMsg)?);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Columns: array of D.Column;
+  Nodes: array of T.Node;
+  Cursor: int;
+  Order: Tables.Sort?;
+  Change: function(T.Change): TMsg;
+  Settings: T.Options;
+  Menu: Sys.Func of (int, array of M.Entry of TMsg)?
+);
   function Part(Index: int): string;
   begin
     return Id + '/node/' + Index.ToString(Sys.Globalization.CultureInfo.InvariantCulture);

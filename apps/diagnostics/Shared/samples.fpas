@@ -53,8 +53,13 @@ end procedure;
 // - `Rounds`: Workload rounds per sample, or zero for a child invocation.
 // - `Values`: At least two elapsed times in milliseconds.
 public procedure Write(
-  Output: string; Label: string; Boundary: string; Environment: string;
-  Warmup: int; Rounds: int; Values: array of double
+  Output: string;
+  Label: string;
+  Boundary: string;
+  Environment: string;
+  Warmup: int;
+  Rounds: int;
+  Values: array of double
 );
 requires Values.Length >= 2;
 begin

@@ -55,7 +55,10 @@ begin
   end case;
 end function;
 
-function SameKeys of TMsg(Left: array of K.ShortcutBinding of TMsg; Right: array of K.ShortcutBinding of TMsg): bool;
+function SameKeys of TMsg(
+  Left: array of K.ShortcutBinding of TMsg;
+  Right: array of K.ShortcutBinding of TMsg
+): bool;
 begin
   if Left.Length <> Right.Length then
     return false;

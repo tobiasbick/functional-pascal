@@ -80,7 +80,12 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function FormatBar of TMsg(Id: string; Format: Value; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
+public function FormatBar of TMsg(
+  Id: string;
+  Format: Value;
+  Changed: function(Event): TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).FormatBar(Id, Format, Changed, Settings ?? new Options());

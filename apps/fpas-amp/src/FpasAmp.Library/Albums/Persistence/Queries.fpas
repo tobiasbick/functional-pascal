@@ -152,7 +152,10 @@ end function;
 // - `Cancellation`: Interrupts SQLite even before it can produce the first sorted row.
 // ## Returns
 // Release headers and the total number of indexed tracks in the same read transaction.
-public function ReadAttached(Connection: Db.SqliteConnection; Cancellation: T.CancellationToken): M.Snapshot;
+public function ReadAttached(
+  Connection: Db.SqliteConnection;
+  Cancellation: T.CancellationToken
+): M.Snapshot;
 requires Connection <> null;
 begin
   return Sql.Interruptible of M.Snapshot(
@@ -165,7 +168,11 @@ end function;
 // `Cancellation` also interrupts SQLite while it prepares the first sorted row.
 // ## Returns
 // Release headers and the total number of indexed tracks in the same read transaction.
-public function Read(Database: string; Users: string; Cancellation: T.CancellationToken): M.Snapshot;
+public function Read(
+  Database: string;
+  Users: string;
+  Cancellation: T.CancellationToken
+): M.Snapshot;
 requires Database.Length > 0;
 requires Users.Length > 0;
 begin

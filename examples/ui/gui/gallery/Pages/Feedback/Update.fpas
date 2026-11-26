@@ -11,7 +11,10 @@ uses System.Threading as Threads;
 uses System.Threading.Tasks as Tasks;
 
 function Complete(Status: Work.Status): Mvu.Command of S.Msg;
-  async function Run(Post: function(S.Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+  async function Run(
+    Post: function(S.Msg): Tasks.Task;
+    Token: Threads.CancellationToken
+  ): Tasks.Task;
   begin
     await Tasks.Task.Delay(2000, Token).ConfigureAwait(false);
     await Post(S.Msg.Finish(Status)).ConfigureAwait(false);

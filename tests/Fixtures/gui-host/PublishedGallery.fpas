@@ -76,7 +76,12 @@ uses System.Globalization as Culture;
 uses System.IO as IO;
 uses System.Text as Text;
 
-function Open(Renderer: Cui.CuiRenderer; Title: string; Width: int := 1000; Height: int := 760): Gui.Session of State.Msg;
+function Open(
+  Renderer: Cui.CuiRenderer;
+  Title: string;
+  Width: int := 1000;
+  Height: int := 760
+): Gui.Session of State.Msg;
 begin
   return GuiHost.Start of (State.Model, State.Msg)(
     new State.Model(), GalleryUpdate.Update, View.Build,
@@ -202,7 +207,10 @@ begin
 end procedure;
 
 procedure VerifySnapshotReentry(Renderer: Cui.CuiRenderer);
-  function Update(Model: State.Model; Message: State.Msg): App.Transition of (State.Model, State.Msg);
+  function Update(
+    Model: State.Model;
+    Message: State.Msg
+  ): App.Transition of (State.Model, State.Msg);
   begin
     case Current of
       when is Gui.Session of State.Msg as Session:

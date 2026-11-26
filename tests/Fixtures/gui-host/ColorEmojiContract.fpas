@@ -22,7 +22,10 @@ uses System as Sys;
 // - `Renderer`: Native renderer under test.
 // - `Capture`: Prefix for closed and open gallery captures.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
-  function Update(Model: State.Model; Message: State.Msg): App.Transition of (State.Model, State.Msg);
+  function Update(
+    Model: State.Model;
+    Message: State.Msg
+  ): App.Transition of (State.Model, State.Msg);
   begin
     case Message of
       when State.Msg.Inputs(Inputs.Msg.SetBrandColor(const Color: Graphics.Color)):

@@ -12,8 +12,14 @@ uses System as Sys;
 // - `Source`: Application listing callback or null for local disk.
 // ## Returns
 // The native binding's listing callback.
-public function Provider(Source: Sys.Func of (string, bool, F.Listing?)?): Sys.Func of (string, bool, (array of CuiFiles.CuiFileEntry)?)?;
-  function Read(List: Sys.Func of (string, bool, F.Listing?); Path: string; Hidden: bool): (array of CuiFiles.CuiFileEntry)?;
+public function Provider(
+  Source: Sys.Func of (string, bool, F.Listing?)?
+): Sys.Func of (string, bool, (array of CuiFiles.CuiFileEntry)?)?;
+  function Read(
+    List: Sys.Func of (string, bool, F.Listing?);
+    Path: string;
+    Hidden: bool
+  ): (array of CuiFiles.CuiFileEntry)?;
   begin
     const Listing: F.Listing? := List.Invoke(Path, Hidden);
     if Listing = null then

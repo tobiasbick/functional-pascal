@@ -51,7 +51,14 @@ end record;
 // - `Settings`: Native presentation options.
 // ## Returns
 // A graphical view element.
-public function DiffView of TMsg(Id: string; Before: string; After: string; Current: int; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
+public function DiffView of TMsg(
+  Id: string;
+  Before: string;
+  After: string;
+  Current: int;
+  Changed: function(Event): TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).DiffView(

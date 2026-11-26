@@ -20,7 +20,13 @@ uses Fpas.Ui.Widgets.Files.FileBrowsers as A;
 // - `Folder`: Model-owned input.
 // - `Change`: Maps a native proposal.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Folder: string; Change: function(A.Event): TMsg; Settings: A.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Folder: string;
+  Change: function(A.Event): TMsg;
+  Settings: A.Options
+);
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Role: string := 'file-browser';

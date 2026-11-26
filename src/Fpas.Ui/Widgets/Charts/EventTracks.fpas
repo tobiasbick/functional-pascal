@@ -69,7 +69,12 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // The graphical element.
-public function EventTrack of TMsg(Id: string; Current: Value; OnChange: function(Change): TMsg; Settings: Options? := null): E.Element of TMsg;
+public function EventTrack of TMsg(
+  Id: string;
+  Current: Value;
+  OnChange: function(Change): TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).EventTrack(Id, Current, OnChange, Settings ?? new Options());

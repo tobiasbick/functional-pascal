@@ -40,7 +40,9 @@ public type Effect of (A, E, R) = record
   //
   // ## Returns
   // The deferred effect.
-  public static function Defer(Body: function(R, Threads.CancellationToken): Tasks.Task of Outcome of (A, E)): Effect of (A, E, R);
+  public static function Defer(
+    Body: function(R, Threads.CancellationToken): Tasks.Task of Outcome of (A, E)
+  ): Effect of (A, E, R);
   begin
     return new Effect of (A, E, R)(Body);
   end function;
@@ -54,7 +56,10 @@ public type Effect of (A, E, R) = record
   //
   // ## Returns
   // A task that completes after the effect and its cleanup finish.
-  public async function Run(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task of Outcome of (A, E);
+  public async function Run(
+    Environment: R;
+    Cancellation: Threads.CancellationToken
+  ): Tasks.Task of Outcome of (A, E);
   begin
     Cancellation.ThrowIfCancellationRequested();
     return await self.Body(Environment, Cancellation).ConfigureAwait(false);
@@ -75,8 +80,14 @@ end record;
 //
 // ## Returns
 // The deferred transformation.
-public function Map of (A, B, E, R)(Work: Effect of (A, E, R); Transform: function(A): B): Effect of (B, E, R);
-  async function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task of Outcome of (B, E);
+public function Map of (A, B, E, R)(
+  Work: Effect of (A, E, R);
+  Transform: function(A): B
+): Effect of (B, E, R);
+  async function Execute(
+    Environment: R;
+    Cancellation: Threads.CancellationToken
+  ): Tasks.Task of Outcome of (B, E);
   begin
     return case await Work.Run(Environment, Cancellation).ConfigureAwait(false) of
       when Outcome.Success(const Value: A): Outcome.Success(Transform(Value));
@@ -101,8 +112,14 @@ end function;
 //
 // ## Returns
 // The deferred sequence.
-public function AndThen of (A, B, E, R)(Work: Effect of (A, E, R); Next: function(A): Effect of (B, E, R)): Effect of (B, E, R);
-  async function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task of Outcome of (B, E);
+public function AndThen of (A, B, E, R)(
+  Work: Effect of (A, E, R);
+  Next: function(A): Effect of (B, E, R)
+): Effect of (B, E, R);
+  async function Execute(
+    Environment: R;
+    Cancellation: Threads.CancellationToken
+  ): Tasks.Task of Outcome of (B, E);
   begin
     case await Work.Run(Environment, Cancellation).ConfigureAwait(false) of
       when Outcome.Success(const Value: A):
@@ -130,8 +147,14 @@ end function;
 //
 // ## Returns
 // The deferred failure transformation.
-public function MapFailure of (A, E, F, R)(Work: Effect of (A, E, R); Transform: function(E): F): Effect of (A, F, R);
-  async function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task of Outcome of (A, F);
+public function MapFailure of (A, E, F, R)(
+  Work: Effect of (A, E, R);
+  Transform: function(E): F
+): Effect of (A, F, R);
+  async function Execute(
+    Environment: R;
+    Cancellation: Threads.CancellationToken
+  ): Tasks.Task of Outcome of (A, F);
   begin
     return case await Work.Run(Environment, Cancellation).ConfigureAwait(false) of
       when Outcome.Success(const Value: A): Outcome.Success(Value);
@@ -155,8 +178,14 @@ end function;
 //
 // ## Returns
 // The deferred recovery.
-public function OrElse of (A, E, R)(Work: Effect of (A, E, R); Recover: function(E): Effect of (A, E, R)): Effect of (A, E, R);
-  async function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task of Outcome of (A, E);
+public function OrElse of (A, E, R)(
+  Work: Effect of (A, E, R);
+  Recover: function(E): Effect of (A, E, R)
+): Effect of (A, E, R);
+  async function Execute(
+    Environment: R;
+    Cancellation: Threads.CancellationToken
+  ): Tasks.Task of Outcome of (A, E);
   begin
     const Result: Outcome of (A, E) := await Work.Run(
       Environment,
@@ -188,8 +217,14 @@ end function;
 //
 // ## Returns
 // The workflow accepting the larger environment.
-public function FromEnvironment of (A, E, R, S)(Work: Effect of (A, E, R); Select: function(S): R): Effect of (A, E, S);
-  function Execute(Environment: S; Cancellation: Threads.CancellationToken): Tasks.Task of Outcome of (A, E);
+public function FromEnvironment of (A, E, R, S)(
+  Work: Effect of (A, E, R);
+  Select: function(S): R
+): Effect of (A, E, S);
+  function Execute(
+    Environment: S;
+    Cancellation: Threads.CancellationToken
+  ): Tasks.Task of Outcome of (A, E);
   begin
     return Work.Run(Select(Environment), Cancellation);
   end function;

@@ -31,7 +31,15 @@ end function;
 // - `Child`: Content underneath the cover.
 // - `Settings`: Native veil settings.
 // - `Visit`: Draws the covered child.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Revealed: bool; Changed: function(bool): TMsg; Child: E.Element of TMsg; Settings: D.Options; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Revealed: bool;
+  Changed: function(bool): TMsg;
+  Child: E.Element of TMsg;
+  Settings: D.Options;
+  Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
+);
 begin
   const Role: string := 'veil';
   const Token: string := C.Token(Role, Id);

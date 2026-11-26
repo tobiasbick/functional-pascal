@@ -42,9 +42,13 @@ end function;
 // ## Returns
 // The list's terminal presentation data.
 public function Lower of TMsg(
-  Id: string; Items: array of Lists.Item; Selected: string;
-  OnSelect: function(string): Actions.Result of TMsg; OnActivate: function(string): Actions.Result of TMsg;
-  MaximumRows: int := int.MaxValue; ContentKey: string := ''
+  Id: string;
+  Items: array of Lists.Item;
+  Selected: string;
+  OnSelect: function(string): Actions.Result of TMsg;
+  OnActivate: function(string): Actions.Result of TMsg;
+  MaximumRows: int := int.MaxValue;
+  ContentKey: string := ''
 ): E.Element of TMsg;
 begin
   const Current: int := Sys.Array.FindIndex of Lists.Item(
@@ -90,9 +94,16 @@ end function;
 // ## Returns
 // The list's single focus and input binding.
 public function Arrange of TMsg(
-  List: E.SelectionListView of TMsg; Previous: (A.Layout of TMsg)?; Clip: F.Rect;
-  Style: T.Style; Theme: Th.Theme; Scope: string; FocusReturn: string;
-  Offsets: C.Dictionary of (string, int); Regions: C.List of A.ScrollRegion; Operations: C.List of D.Operation
+  List: E.SelectionListView of TMsg;
+  Previous: (A.Layout of TMsg)?;
+  Clip: F.Rect;
+  Style: T.Style;
+  Theme: Th.Theme;
+  Scope: string;
+  FocusReturn: string;
+  Offsets: C.Dictionary of (string, int);
+  Regions: C.List of A.ScrollRegion;
+  Operations: C.List of D.Operation
 ): A.Control of TMsg;
 begin
   const Selected: string := if List.Selected < 0 then
@@ -185,7 +196,12 @@ end function;
 // - `Row`: Clicked terminal row.
 // - `Apply`: Dispatches the selection message.
 public procedure Click of TMsg(
-  List: E.SelectionListView of TMsg; Body: F.Rect; Offset: int; Column: int; Row: int; Apply: procedure(TMsg)
+  List: E.SelectionListView of TMsg;
+  Body: F.Rect;
+  Offset: int;
+  Column: int;
+  Row: int;
+  Apply: procedure(TMsg)
 );
 begin
   if Body.Contains(Column, Row) then
@@ -208,8 +224,11 @@ end procedure;
 // ## Returns
 // True when the list owns the key.
 public function Navigate of TMsg(
-  List: E.SelectionListView of TMsg; View: V.Viewport of TMsg; Key: K.Key;
-  Offsets: C.Dictionary of (string, int); Apply: procedure(TMsg)
+  List: E.SelectionListView of TMsg;
+  View: V.Viewport of TMsg;
+  Key: K.Key;
+  Offsets: C.Dictionary of (string, int);
+  Apply: procedure(TMsg)
 ): bool;
 begin
   const Count: int := List.Items.Length;

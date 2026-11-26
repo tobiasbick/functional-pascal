@@ -57,7 +57,10 @@ end function;
 // - `OnChange`: Maps a proposed time to a message.
 // - `Settings`: Field presentation and input settings.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Value: Sys.TimeOnly; OnChange: function(Sys.TimeOnly): TMsg;
+  Frame: C.State of TMsg;
+  Id: string;
+  Value: Sys.TimeOnly;
+  OnChange: function(Sys.TimeOnly): TMsg;
   Settings: P.Options
 );
 begin

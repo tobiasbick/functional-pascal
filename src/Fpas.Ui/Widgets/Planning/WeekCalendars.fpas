@@ -66,7 +66,12 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // The graphical widget.
-public function WeekCalendar of TMsg(Id: string; Current: Value; Change: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
+public function WeekCalendar of TMsg(
+  Id: string;
+  Current: Value;
+  Change: function(Event): TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).WeekCalendar(Id, Current, Change, Settings ?? new Options());

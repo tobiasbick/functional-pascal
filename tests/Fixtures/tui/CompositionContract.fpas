@@ -287,7 +287,10 @@ begin
 end procedure;
 
 procedure Outline();
-  function TableRow(Id: string; params Children: array of E.Element of string): Tables.Row of string;
+  function TableRow(
+    Id: string;
+    params Children: array of E.Element of string
+  ): Tables.Row of string;
   begin
     return new Tables.Row of string(Id, [(Tables.Cell of string).Content(Children)]);
   end function;

@@ -33,7 +33,10 @@ end function;
 // - `Settings`: Native options and input permission.
 // - `OnToggle`: Optional notification after native expansion changes.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Text: string; Settings: T.Options;
+  Frame: C.State of TMsg;
+  Id: string;
+  Text: string;
+  Settings: T.Options;
   OnToggle: (Sys.Func of TMsg)?
 );
 begin

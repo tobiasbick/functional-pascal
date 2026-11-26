@@ -39,7 +39,13 @@ end function;
 // - `Entries`: Entries supplied to the widget.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Entries: array of D.Item; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Entries: array of D.Item;
+  Changed: function(D.Event): TMsg;
+  Settings: D.Options
+);
 begin
   const Role: string := 'test-explorer';
   const Token: string := C.Token(Role, Id);

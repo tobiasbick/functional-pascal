@@ -65,7 +65,18 @@ end function;
 // - `Settings`: Viewport and input settings.
 // - `DoubleClick`: Optional action for a double-clicked row.
 // - `Visit`: Host traversal for composed cell content.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Defs: array of D.Column; Count: int; Build: function(int): D.Row of TMsg; Current: D.Value; Change: function(D.Value): TMsg; Settings: D.Options; DoubleClick: Sys.Func of (int, TMsg)?; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Defs: array of D.Column;
+  Count: int;
+  Build: function(int): D.Row of TMsg;
+  Current: D.Value;
+  Change: function(D.Value): TMsg;
+  Settings: D.Options;
+  DoubleClick: Sys.Func of (int, TMsg)?;
+  Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
+);
   procedure Children(Items: array of E.Element of TMsg);
   begin
     if Items.Length = 0 then

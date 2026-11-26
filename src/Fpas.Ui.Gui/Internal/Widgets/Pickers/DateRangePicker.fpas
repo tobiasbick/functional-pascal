@@ -20,7 +20,11 @@ uses System as Sys;
 // - `OnChange`: Maps a range proposal to a message.
 // - `Settings`: Field label, width, presets and input permission.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Value: R.Value; OnChange: function(R.Value): TMsg; Settings: P.Options
+  Frame: C.State of TMsg;
+  Id: string;
+  Value: R.Value;
+  OnChange: function(R.Value): TMsg;
+  Settings: P.Options
 );
 begin
   const Accept: bool := Settings.Enabled and Frame.AcceptInput;

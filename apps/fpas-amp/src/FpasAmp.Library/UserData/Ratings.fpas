@@ -10,7 +10,12 @@ uses System.Threading as T;
 
 // Persists `Value` (one through ten, or null to clear) for existing UUID `Id`.
 // `Connection` is an open user database. Unknown IDs fail instead of creating detached ratings.
-public procedure SetValue(Connection: Db.SqliteConnection; Id: string; Value: int?; Cancellation: T.CancellationToken);
+public procedure SetValue(
+  Connection: Db.SqliteConnection;
+  Id: string;
+  Value: int?;
+  Cancellation: T.CancellationToken
+);
 requires Id <> '';
 requires Value = null or (Value >= 1 and Value <= 10);
 begin

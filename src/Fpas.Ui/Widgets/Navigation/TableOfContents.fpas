@@ -40,8 +40,11 @@ end function;
 // ## Returns
 // The graphical table of contents.
 public function TableOfContents of TMsg(
-  Id: string; ScrollId: string; Items: array of Item;
-  OnActiveChange: Sys.Func of (string, TMsg)? := null; Enabled: bool := true
+  Id: string;
+  ScrollId: string;
+  Items: array of Item;
+  OnActiveChange: Sys.Func of (string, TMsg)? := null;
+  Enabled: bool := true
 ): E.Element of TMsg;
 requires Id <> '';
 begin

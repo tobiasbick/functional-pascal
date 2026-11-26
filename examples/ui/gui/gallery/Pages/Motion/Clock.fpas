@@ -22,8 +22,16 @@ public const Id: string := 'motion-playback-clock';
 // - `Identity`: Background effect identity.
 // ## Returns
 // The cancellable playback command.
-public function Start of TMsg(Tick: function(float): TMsg; OnFailure: function(Sys.Exception): TMsg; Interval: int := 100; Identity: string := 'motion-playback-clock'): A.Command of TMsg;
-  async function Run(Post: function(TMsg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+public function Start of TMsg(
+  Tick: function(float): TMsg;
+  OnFailure: function(Sys.Exception): TMsg;
+  Interval: int := 100;
+  Identity: string := 'motion-playback-clock'
+): A.Command of TMsg;
+  async function Run(
+    Post: function(TMsg): Tasks.Task;
+    Token: Threads.CancellationToken
+  ): Tasks.Task;
   begin
     const Clock: Diagnostics.Stopwatch := Diagnostics.Stopwatch.StartNew();
     while not Token.IsCancellationRequested do

@@ -55,7 +55,9 @@ end function;
 // ## Returns
 // The graphical signature pad.
 public function SignaturePad of TMsg(
-  Id: string; OnChange: Sys.Func of (Signature, TMsg)? := null; Settings: Options? := null
+  Id: string;
+  OnChange: Sys.Func of (Signature, TMsg)? := null;
+  Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin

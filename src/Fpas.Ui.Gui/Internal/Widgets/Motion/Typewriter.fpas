@@ -21,7 +21,14 @@ uses System as Sys;
 // - `Replay`: Animation revision.
 // - `Settings`: Native appearance and input options.
 // - `OnComplete`: Optional message factory for completion.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Text: string; Replay: int; Settings: Motion.TextOptions; OnComplete: (Sys.Func of TMsg)?);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Text: string;
+  Replay: int;
+  Settings: Motion.TextOptions;
+  OnComplete: (Sys.Func of TMsg)?
+);
 begin
   const Token: string := C.Token('typewriter', Id);
   const Progress: CuiMotion.CuiTypewriterResult := Frame.Window.Typewriter(

@@ -32,7 +32,10 @@ procedure Run(Renderer: Cui.CuiRenderer; Root: string; Width: int; Page: State.P
     end if;
   end procedure;
 
-  function Observe(Model: State.Model; Value: State.Msg): Mvu.Transition of (State.Model, State.Msg);
+  function Observe(
+    Model: State.Model;
+    Value: State.Msg
+  ): Mvu.Transition of (State.Model, State.Msg);
   begin
     const Next: Mvu.Transition of (State.Model, State.Msg) := Update.Update(Model, Value);
     Last := Next.Model.Desktop;

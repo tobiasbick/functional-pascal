@@ -33,7 +33,9 @@ end record;
 // ## Returns
 // A GUI-only native expandable text block.
 public function ExpandableText of TMsg(
-  Id: string; Text: string; Settings: Options? := null;
+  Id: string;
+  Text: string;
+  Settings: Options? := null;
   OnToggle: (Sys.Func of TMsg)? := null
 ): E.Element of TMsg;
 requires Id <> '';

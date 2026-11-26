@@ -70,7 +70,11 @@ begin
   return Minutes.ToString() + ':' + (Seconds mod 60L).ToString('00');
 end function;
 
-function TagChoices(Items: I.ImmutableArray of Tracks.Entry; Values: function(Tracks.Entry): array of string; Stop: T.CancellationToken): array of string;
+function TagChoices(
+  Items: I.ImmutableArray of Tracks.Entry;
+  Values: function(Tracks.Entry): array of string;
+  Stop: T.CancellationToken
+): array of string;
 begin
   if Items.Length < 2 then
     return [];
@@ -109,13 +113,19 @@ begin
 end function;
 
 // Returns the genres that match some but not all Items. Stop cancels catalogue preparation.
-public function GenreChoices(Items: I.ImmutableArray of Tracks.Entry; Stop: T.CancellationToken): array of string;
+public function GenreChoices(
+  Items: I.ImmutableArray of Tracks.Entry;
+  Stop: T.CancellationToken
+): array of string;
 begin
   return TagChoices(Items, Genres, Stop);
 end function;
 
 // Returns the performers that match some but not all Items. Stop cancels catalogue preparation.
-public function PerformerChoices(Items: I.ImmutableArray of Tracks.Entry; Stop: T.CancellationToken): array of string;
+public function PerformerChoices(
+  Items: I.ImmutableArray of Tracks.Entry;
+  Stop: T.CancellationToken
+): array of string;
   function Credits(Item: Tracks.Entry): array of string;
   begin
     const Info: MediaTags.Info? := Item.Metadata;
@@ -257,7 +267,11 @@ end function;
 // Pending supplies the local edits to use for filtering, sorting and displayed values.
 // ## Returns
 // The same track order for a freshly opened page and a restored session.
-public function Songs(TracksInOrder: I.ImmutableArray of Tracks.Entry; Source: M.Selection; Pending: I.ImmutableDictionary of (string, int?)? := null): I.ImmutableArray of Tracks.Entry;
+public function Songs(
+  TracksInOrder: I.ImmutableArray of Tracks.Entry;
+  Source: M.Selection;
+  Pending: I.ImmutableDictionary of (string, int?)? := null
+): I.ImmutableArray of Tracks.Entry;
   function Compare(Left: Tracks.Entry; Right: Tracks.Entry): int;
   begin
     const Names: Sys.StringComparer := Sys.StringComparer.CurrentCultureIgnoreCase;
@@ -412,7 +426,11 @@ begin
 end function;
 
 // Returns the new position of the file at Index in Previous, or -1 when absent from Shown.
-public function RowIndex(Previous: I.ImmutableArray of Tracks.Entry; Index: int; Shown: I.ImmutableArray of Tracks.Entry): int;
+public function RowIndex(
+  Previous: I.ImmutableArray of Tracks.Entry;
+  Index: int;
+  Shown: I.ImmutableArray of Tracks.Entry
+): int;
 ensures (Position: int): Position >= -1;
 begin
   if Index < 0 or Index >= Previous.Length then

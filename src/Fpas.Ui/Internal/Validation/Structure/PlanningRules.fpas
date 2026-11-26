@@ -122,7 +122,11 @@ end procedure;
 // - `Current`: Model-owned input.
 // - `Settings`: Native settings.
 // - `At`: Diagnostic path.
-public procedure WeekCalendar(Current: WeekCalendars.Value; Settings: WeekCalendars.Options; At: string);
+public procedure WeekCalendar(
+  Current: WeekCalendars.Value;
+  Settings: WeekCalendars.Options;
+  At: string
+);
 begin
   Hour(Settings.StartHour, At);
   Hour(Settings.EndHour, At);
@@ -149,7 +153,11 @@ end procedure;
 // - `Current`: Model-owned input.
 // - `Settings`: Native settings.
 // - `At`: Diagnostic path.
-public procedure MonthCalendar(Current: MonthCalendars.Value; Settings: MonthCalendars.Options; At: string);
+public procedure MonthCalendar(
+  Current: MonthCalendars.Value;
+  Settings: MonthCalendars.Options;
+  At: string
+);
 begin
   if Settings.FirstWeekday < 0 or Settings.FirstWeekday > 6
     or (Settings.MonthNames.Length <> 0 and Settings.MonthNames.Length <> 12)
@@ -208,7 +216,11 @@ end procedure;
 // - `Columns`: Model-owned input.
 // - `Settings`: Native settings.
 // - `At`: Diagnostic path.
-public procedure Kanban of TMsg(Columns: array of Kanbans.Column of TMsg; Settings: Kanbans.Options; At: string);
+public procedure Kanban of TMsg(
+  Columns: array of Kanbans.Column of TMsg;
+  Settings: Kanbans.Options;
+  At: string
+);
 begin
   const Keys: Lists.HashSet of int := new Lists.HashSet of int();
   for Column: Kanbans.Column of TMsg in Columns do

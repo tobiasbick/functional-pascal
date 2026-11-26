@@ -166,7 +166,11 @@ end function;
 //
 // ## Returns
 // Sizes rounded at shared boundaries; unsatisfied minimums may overflow the budget.
-public function Allocate(Preferred: array of int; Settings: array of E.Flex; Available: int): array of int;
+public function Allocate(
+  Preferred: array of int;
+  Settings: array of E.Flex;
+  Available: int
+): array of int;
 begin
   const Sizes: array of double := new double[Preferred.Length];
   const Frozen: array of bool := new bool[Preferred.Length];

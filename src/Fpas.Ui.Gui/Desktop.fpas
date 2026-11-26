@@ -85,8 +85,10 @@ end function;
 public function Start of (TModel, TMsg)(
   InitialModel: TModel;
   Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
-  View: function(TModel, L.Viewport): E.Element of TMsg; Settings: Options;
-  ThemeFor: Sys.Func of (TModel, Themes.Theme)? := null; OnCloseRequested: (Sys.Func of TMsg)? := null;
+  View: function(TModel, L.Viewport): E.Element of TMsg;
+  Settings: Options;
+  ThemeFor: Sys.Func of (TModel, Themes.Theme)? := null;
+  OnCloseRequested: (Sys.Func of TMsg)? := null;
   BindingsFor: Sys.Func of (TModel, array of Shortcuts.Binding of TMsg)? := null
 ): App.Session of TMsg;
 requires Settings.Width > 0;
@@ -120,8 +122,10 @@ end function;
 public procedure Run of (TModel, TMsg)(
   InitialModel: TModel;
   Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
-  View: function(TModel, L.Viewport): E.Element of TMsg; Settings: Options;
-  ThemeFor: Sys.Func of (TModel, Themes.Theme)? := null; OnCloseRequested: (Sys.Func of TMsg)? := null;
+  View: function(TModel, L.Viewport): E.Element of TMsg;
+  Settings: Options;
+  ThemeFor: Sys.Func of (TModel, Themes.Theme)? := null;
+  OnCloseRequested: (Sys.Func of TMsg)? := null;
   BindingsFor: Sys.Func of (TModel, array of Shortcuts.Binding of TMsg)? := null
 );
 requires Settings.Width > 0;
@@ -157,9 +161,12 @@ end procedure;
 // ## Returns
 // The owned session. Its first Step resolves the theme and presents the initial view.
 public function StartThemed of (TModel, TMsg)(
-  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
-  View: function(TModel, L.Viewport, Themes.Theme): E.Element of TMsg; Settings: Options;
-  ThemeFor: function(TModel, Themes.Mode?): Themes.Theme; OnCloseRequested: (Sys.Func of TMsg)? := null;
+  InitialModel: TModel;
+  Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
+  View: function(TModel, L.Viewport, Themes.Theme): E.Element of TMsg;
+  Settings: Options;
+  ThemeFor: function(TModel, Themes.Mode?): Themes.Theme;
+  OnCloseRequested: (Sys.Func of TMsg)? := null;
   BindingsFor: Sys.Func of (TModel, array of Shortcuts.Binding of TMsg)? := null
 ): App.Session of TMsg;
 requires Settings.Width > 0;
@@ -188,9 +195,12 @@ end function;
 // - `OnCloseRequested`: Optional native close message factory. Exit approves; Closing.Cancel rejects.
 // - `BindingsFor`: Optional model-owned application shortcuts, evaluated after native widgets.
 public procedure RunThemed of (TModel, TMsg)(
-  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
-  View: function(TModel, L.Viewport, Themes.Theme): E.Element of TMsg; Settings: Options;
-  ThemeFor: function(TModel, Themes.Mode?): Themes.Theme; OnCloseRequested: (Sys.Func of TMsg)? := null;
+  InitialModel: TModel;
+  Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
+  View: function(TModel, L.Viewport, Themes.Theme): E.Element of TMsg;
+  Settings: Options;
+  ThemeFor: function(TModel, Themes.Mode?): Themes.Theme;
+  OnCloseRequested: (Sys.Func of TMsg)? := null;
   BindingsFor: Sys.Func of (TModel, array of Shortcuts.Binding of TMsg)? := null
 );
 requires Settings.Width > 0;

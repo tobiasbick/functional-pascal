@@ -193,7 +193,11 @@ end function;
 
 // Builds scrollable Library/Playlists and pinned Settings for `Current`/`Theme`.
 // Optional `DrawerHeight` bounds the native sheet body at compact window sizes.
-public function Sidebar(Current: App.State; Theme: Themes.Theme; DrawerHeight: int? := null): E.Element of App.Msg;
+public function Sidebar(
+  Current: App.State;
+  Theme: Themes.Theme;
+  DrawerHeight: int? := null
+): E.Element of App.Msg;
 begin
   const Navigation: E.Element of App.Msg := E.Size of App.Msg(
     E.ScrollView of App.Msg('navigation-scroll', Items(Current)), new L.Flex(Basis := L.Extent.Fill)

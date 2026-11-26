@@ -22,7 +22,12 @@ uses System.Collections.Generic as Lists;
 // - `Id`: Stable widget identity.
 // - `Entries`: Native dock entries.
 // - `Settings`: Native appearance and input options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Entries: array of W.Entry of TMsg; Settings: W.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Entries: array of W.Entry of TMsg;
+  Settings: W.Options
+);
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('dock', Id);

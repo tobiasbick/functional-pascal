@@ -20,7 +20,13 @@ uses System.Collections.Generic as Lists;
 // - `Entries`: Immutable log lines in arrival order.
 // - `Cleared`: Message proposed when the native Clear button is used.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Entries: array of D.Entry; Cleared: TMsg; Settings: D.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Entries: array of D.Entry;
+  Cleared: TMsg;
+  Settings: D.Options
+);
 begin
   const Role: string := 'log-console';
   const Token: string := C.Token(Role, Id);

@@ -15,7 +15,8 @@ uses Fpas.Ui.Layout as L;
 // - `Children`: Validated buttons in drawing and focus order.
 // - `Visit`: Shared host traversal for an individual button.
 public procedure Draw of TMsg(
-  State: C.State of TMsg; Children: array of E.Element of TMsg;
+  State: C.State of TMsg;
+  Children: array of E.Element of TMsg;
   Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
 );
 begin

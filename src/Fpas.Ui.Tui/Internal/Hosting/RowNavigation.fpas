@@ -29,7 +29,12 @@ end function;
 // - `Backwards`: Traverse in reverse.
 // ## Returns
 // The entry row of the next control, or empty for a scope without stops.
-public function NextTab of TMsg(Layout: A.Layout of TMsg; Scope: string; Current: string; Backwards: bool): string;
+public function NextTab of TMsg(
+  Layout: A.Layout of TMsg;
+  Scope: string;
+  Current: string;
+  Backwards: bool
+): string;
 begin
   const Control: (A.Control of TMsg)? := A.FindControl of TMsg(Layout, Current);
   const From: string := if Control <> null and Control.TabTarget <> '' then
@@ -70,7 +75,11 @@ end function;
 // - `Scope`: Active input scope.
 // ## Returns
 // True when arranging with this focus can reveal the destination.
-public function CanFocusOffscreen of TMsg(Layout: A.Layout of TMsg; Id: string; Scope: string): bool;
+public function CanFocusOffscreen of TMsg(
+  Layout: A.Layout of TMsg;
+  Id: string;
+  Scope: string
+): bool;
 begin
   return Sys.Array.Exists of A.NavigationStop(
     Layout.NavigationRows,
@@ -89,7 +98,13 @@ end function;
 // - `RequestScroll`: Allow a controlled viewport to receive a scroll request during input.
 // ## Returns
 // Whether a host-owned scroll position changed. Controlled views can receive a request during input.
-public function Reveal of TMsg(Layout: A.Layout of TMsg; Id: string; Offsets: C.Dictionary of (string, int); Apply: procedure(TMsg); RequestScroll: bool := true): bool;
+public function Reveal of TMsg(
+  Layout: A.Layout of TMsg;
+  Id: string;
+  Offsets: C.Dictionary of (string, int);
+  Apply: procedure(TMsg);
+  RequestScroll: bool := true
+): bool;
 begin
   const Target: A.NavigationStop? := Sys.Array.Find of A.NavigationStop(
     Layout.NavigationRows,
@@ -161,8 +176,11 @@ end function;
 // ## Returns
 // The new focus identity, or null when the row does not own the key.
 public function Move of TMsg(
-  Layout: A.Layout of TMsg; Current: string; Key: K.Key;
-  Offsets: C.Dictionary of (string, int); Apply: procedure(TMsg)
+  Layout: A.Layout of TMsg;
+  Current: string;
+  Key: K.Key;
+  Offsets: C.Dictionary of (string, int);
+  Apply: procedure(TMsg)
 ): string?;
 begin
   const Rows: array of A.NavigationStop := Layout.NavigationRows;

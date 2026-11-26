@@ -15,7 +15,12 @@ uses Fpas.Ui.Widgets.Ai.ToolCalls as ToolCalls;
 // - `Id`: Stable widget identity.
 // - `Name`: Displayed tool name.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Name: string; Settings: ToolCalls.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Name: string;
+  Settings: ToolCalls.Options
+);
 begin
   const Role: string := 'tool-call';
   const Token: string := C.Token(Role, Id);

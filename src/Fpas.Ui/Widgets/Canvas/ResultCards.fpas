@@ -34,7 +34,13 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function ResultCard of TMsg(Id: string; Image: Media.Source; Title: string; Activate: TMsg; Settings: Options? := null): E.Element of TMsg;
+public function ResultCard of TMsg(
+  Id: string;
+  Image: Media.Source;
+  Title: string;
+  Activate: TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).ResultCard(Id, Image, Title, Activate, Settings ?? new Options());

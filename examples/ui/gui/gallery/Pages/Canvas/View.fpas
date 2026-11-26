@@ -32,7 +32,13 @@ begin
   return Sys.Char.ConvertFromUtf32(Code);
 end function;
 
-function Tool(Icon: string; Tooltip: string; Shortcut: string? := null; Toggle: bool? := null; Tone: S.Tone := S.Tone.Neutral): T.Item;
+function Tool(
+  Icon: string;
+  Tooltip: string;
+  Shortcut: string? := null;
+  Toggle: bool? := null;
+  Tone: S.Tone := S.Tone.Neutral
+): T.Item;
 begin
   return T.Item.Button(
     new T.Button(Icon, Tooltip := Tooltip, Shortcut := Shortcut, Toggle := Toggle, Tone := Tone)
@@ -197,7 +203,13 @@ begin
   );
 end function;
 
-function FileRow(Index: int; Picked: bool; Name: string; Bytes: string; Colors: Theme.Palette): E.Element of State.Msg;
+function FileRow(
+  Index: int;
+  Picked: bool;
+  Name: string;
+  Bytes: string;
+  Colors: Theme.Palette
+): E.Element of State.Msg;
 begin
   return E.Size of State.Msg(
     E.Row of State.Msg(

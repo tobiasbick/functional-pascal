@@ -31,7 +31,14 @@ function Generate(): array of F.Span;
     Items.Add(new F.Span(Name, Start * 0.001, Finish * 0.001, Depth, Color));
   end procedure;
 
-  procedure Split(Name: string; Start: double; Finish: double; Depth: int; Count: int; Fill: double);
+  procedure Split(
+    Name: string;
+    Start: double;
+    Finish: double;
+    Depth: int;
+    Count: int;
+    Fill: double
+  );
   begin
     const Slot: double := (Finish - Start) / cast Count as double;
     for Index: int := 0 to Count - 1 do
@@ -41,7 +48,14 @@ function Generate(): array of F.Span;
     end for;
   end procedure;
 
-  procedure Sequence(Start: double; Finish: double; Depth: int; Names: array of string; Weights: array of double; Bounds: array of double);
+  procedure Sequence(
+    Start: double;
+    Finish: double;
+    Depth: int;
+    Names: array of string;
+    Weights: array of double;
+    Bounds: array of double
+  );
   begin
     var Total: double := 0.0;
     var X: double := Start;

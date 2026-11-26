@@ -133,7 +133,13 @@ end record;
 // - `Settings`: Native layout and behavior options.
 // ## Returns
 // A graphical element.
-public function TimelineEditor of TMsg(Id: string; Tracks: array of Track; Current: View; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
+public function TimelineEditor of TMsg(
+  Id: string;
+  Tracks: array of Track;
+  Current: View;
+  Changed: function(Event): TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).TimelineEditor(

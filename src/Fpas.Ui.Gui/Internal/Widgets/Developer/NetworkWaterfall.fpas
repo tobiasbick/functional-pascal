@@ -47,7 +47,14 @@ end function;
 // - `Selection`: Selection supplied to the widget.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Requests: array of D.Request; Selection: int; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Requests: array of D.Request;
+  Selection: int;
+  Changed: function(D.Event): TMsg;
+  Settings: D.Options
+);
 begin
   const Role: string := 'network-waterfall';
   const Token: string := C.Token(Role, Id);

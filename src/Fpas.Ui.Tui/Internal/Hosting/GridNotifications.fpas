@@ -29,7 +29,12 @@ end procedure;
 // Compares the published `Layout` to `Before` by grid identity and allocation.
 // Queues first and changed sizes in `Pending` through `Post` for a later update.
 // `TMsg` is the application's message type.
-public procedure Presented of TMsg(Before: (A.Layout of TMsg)?; Layout: A.Layout of TMsg; Pending: C.Queue of TMsg; Post: function(TMsg): Runtime.Admission);
+public procedure Presented of TMsg(
+  Before: (A.Layout of TMsg)?;
+  Layout: A.Layout of TMsg;
+  Pending: C.Queue of TMsg;
+  Post: function(TMsg): Runtime.Admission
+);
 begin
   for Control: A.Control of TMsg in Layout.Controls do
     case Control.Action of

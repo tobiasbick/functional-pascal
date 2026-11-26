@@ -23,7 +23,11 @@ uses System.Collections.Generic as Lists;
 // - `Child`: Child-element translation.
 // ## Returns
 // Desktop chrome with mapped messages.
-public function Map of (TChild, TParent)(Node: E.Element of TChild; Messages: function(TChild): TParent; Child: function(E.Element of TChild): E.Element of TParent): E.Element of TParent;
+public function Map of (TChild, TParent)(
+  Node: E.Element of TChild;
+  Messages: function(TChild): TParent;
+  Child: function(E.Element of TChild): E.Element of TParent
+): E.Element of TParent;
 begin
   case Node of
     when E.Element.MenuBar(

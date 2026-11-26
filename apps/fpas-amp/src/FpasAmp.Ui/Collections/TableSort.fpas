@@ -23,7 +23,16 @@ uses System.Collections.Generic as C;
 // - `DateColumn`: Field with chronological direction labels, or -1.
 // ## Returns
 // The sort button with its native menu.
-public function Build of TMsg(Id: string; Names: array of string; Alphabetical: array of bool; Order: Tables.Sort; Change: function(Tables.Sort): TMsg; Default: string := ''; DefaultId: string := 'default'; DateColumn: int := -1): E.Element of TMsg;
+public function Build of TMsg(
+  Id: string;
+  Names: array of string;
+  Alphabetical: array of bool;
+  Order: Tables.Sort;
+  Change: function(Tables.Sort): TMsg;
+  Default: string := '';
+  DefaultId: string := 'default';
+  DateColumn: int := -1
+): E.Element of TMsg;
 requires Names.Length = Alphabetical.Length;
 requires Order.Column >= -1 and Order.Column < Names.Length;
 begin

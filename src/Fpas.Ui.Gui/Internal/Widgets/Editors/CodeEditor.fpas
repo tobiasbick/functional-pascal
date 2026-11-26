@@ -20,7 +20,13 @@ uses System.Collections.Generic as Lists;
 // - `Text`: Model-owned source code.
 // - `Changed`: Maps editing and caret proposals.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Text: string; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Text: string;
+  Changed: function(D.Event): TMsg;
+  Settings: D.Options
+);
 begin
   const Role: string := 'code-editor';
   const Token: string := C.Token(Role, Id);

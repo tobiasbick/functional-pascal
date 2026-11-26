@@ -68,7 +68,10 @@ end function;
 // - `Items`: Original events.
 // ## Returns
 // Appointments with the proposed times.
-public function WeekChanges(Values: array of CuiPlanning.CuiWeekEvent; Items: array of W.Appointment): array of W.Appointment;
+public function WeekChanges(
+  Values: array of CuiPlanning.CuiWeekEvent;
+  Items: array of W.Appointment
+): array of W.Appointment;
 begin
   const Result: Lists.List of W.Appointment := new Lists.List of W.Appointment(Items.Length);
   for Index: int := 0 to Items.Length - 1 do
@@ -132,7 +135,10 @@ end function;
 // - `Items`: Original tasks.
 // ## Returns
 // Tasks with the proposed schedule.
-public function GanttChanges(Values: array of CuiPlanning.CuiGanttTask; Items: array of G.Task): array of G.Task;
+public function GanttChanges(
+  Values: array of CuiPlanning.CuiGanttTask;
+  Items: array of G.Task
+): array of G.Task;
 begin
   const Result: Lists.List of G.Task := new Lists.List of G.Task(Items.Length);
   for Index: int := 0 to Items.Length - 1 do

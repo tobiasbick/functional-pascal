@@ -23,8 +23,12 @@ uses System.Collections.Generic as Lists;
 // - `OnChange`: Maps the native proposal to a message.
 // - `Settings`: Field appearance and input settings.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Items: array of S.Item; Selected: array of bool;
-  OnChange: function(array of bool): TMsg; Settings: M.Options
+  Frame: C.State of TMsg;
+  Id: string;
+  Items: array of S.Item;
+  Selected: array of bool;
+  OnChange: function(array of bool): TMsg;
+  Settings: M.Options
 );
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;

@@ -8,7 +8,12 @@ uses System.IO as IO;
 
 // Writes a WAV file to Path. QuietPassage silences the second second; Seconds sets its duration
 // and Sweep selects a changing pitch to produce a nontrivial fingerprint.
-public procedure Tone(Path: string; QuietPassage: bool := false; Seconds: int := 5; Sweep: bool := false);
+public procedure Tone(
+  Path: string;
+  QuietPassage: bool := false;
+  Seconds: int := 5;
+  Sweep: bool := false
+);
 begin
   using const File: IO.BinaryWriter := new IO.BinaryWriter(IO.File.Create(Path));
   const Frames: int := 44100 * Seconds;

@@ -45,8 +45,11 @@ end function;
 // ## Returns
 // The clamped viewport.
 public function Resolve of TMsg(
-  Position: E.ScrollPosition; ContentRows: int; Area: F.Rect;
-  ShowScrollbar: bool; OnScroll: Sys.Func of (L.ScrollChange, TMsg)?
+  Position: E.ScrollPosition;
+  ContentRows: int;
+  Area: F.Rect;
+  ShowScrollbar: bool;
+  OnScroll: Sys.Func of (L.ScrollChange, TMsg)?
 ): Viewport of TMsg;
 begin
   const Maximum: int := Sys.Math.Max(0, ContentRows - Area.Height);
@@ -66,8 +69,12 @@ begin
 end function;
 
 public function Arrange of TMsg(
-  Child: E.Element of TMsg; Position: E.ScrollPosition; Area: F.Rect; Clip: F.Rect;
-  ShowScrollbar: bool; OnScroll: Sys.Func of (L.ScrollChange, TMsg)?
+  Child: E.Element of TMsg;
+  Position: E.ScrollPosition;
+  Area: F.Rect;
+  Clip: F.Rect;
+  ShowScrollbar: bool;
+  OnScroll: Sys.Func of (L.ScrollChange, TMsg)?
 ): Geometry of TMsg;
 begin
   var Height: int := ContentHeight of TMsg(Child, Area);
@@ -89,8 +96,12 @@ begin
 end function;
 
 public procedure DrawBar of TMsg(
-  View: Viewport of TMsg; Operations: Generic.List of D.Operation; Area: F.Rect; Clip: F.Rect;
-  Style: T.Style; Widgets: Th.WidgetStyles?
+  View: Viewport of TMsg;
+  Operations: Generic.List of D.Operation;
+  Area: F.Rect;
+  Clip: F.Rect;
+  Style: T.Style;
+  Widgets: Th.WidgetStyles?
 );
 begin
   if not View.Bar then

@@ -191,7 +191,11 @@ end function;
 // - `Lift`: Maps an edit into the parent update.
 // ## Returns
 // The screen with its active dialog or sheet.
-public function Present of TMsg(Base: E.Element of TMsg; Model: State; Lift: function(Msg): TMsg): E.Element of TMsg;
+public function Present of TMsg(
+  Base: E.Element of TMsg;
+  Model: State;
+  Lift: function(Msg): TMsg
+): E.Element of TMsg;
 begin
   const Close: TMsg := Lift(Msg.Show(Layer.Closed));
   const Flow: L.Flow := new L.Flow(Padding := L.Spacing.Normal, Gap := L.Spacing.Normal);

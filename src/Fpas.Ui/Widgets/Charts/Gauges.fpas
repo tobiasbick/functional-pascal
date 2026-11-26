@@ -14,7 +14,12 @@ uses Fpas.Ui.Elements as E;
 // - `Size`: Logical diameter; zero selects CUI's default of 140.
 // ## Returns
 // A graphical element.
-public function Gauge of TMsg(Id: string; Label: string; Value: float; Size: float := 0.0F): E.Element of TMsg;
+public function Gauge of TMsg(
+  Id: string;
+  Label: string;
+  Value: float;
+  Size: float := 0.0F
+): E.Element of TMsg;
 requires Id <> '';
 requires Value >= 0.0F and Value <= 1.0F;
 requires Size >= 0.0F;

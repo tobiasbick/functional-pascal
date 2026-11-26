@@ -34,7 +34,14 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // The graphical element.
-public function ImageCompare of TMsg(Id: string; Before: Media.Source; After: Media.Source; Position: float; Change: function(float): TMsg; Settings: Options? := null): E.Element of TMsg;
+public function ImageCompare of TMsg(
+  Id: string;
+  Before: Media.Source;
+  After: Media.Source;
+  Position: float;
+  Change: function(float): TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).ImageCompare(

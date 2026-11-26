@@ -57,9 +57,7 @@ end function;
 // ## Parameters
 // - `Value`: The extension payload from a host command.
 // - `Services`: Window, result queues and close-decision service.
-public procedure Apply of TMsg(
-  Value: Sys.Object; Services: State of TMsg
-);
+public procedure Apply of TMsg(Value: Sys.Object; Services: State of TMsg);
 begin
   const Window: Cui.CuiWindow := Services.Window;
   const Pending: Generic.Queue of TMsg := Services.Pending;

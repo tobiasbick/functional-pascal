@@ -108,7 +108,11 @@ begin
   end try;
 end function;
 
-function DecodeFile of T(Bytes: array of byte; Decode: function(J.JsonElement): Decoded of T; ArrayKey: string): Decoded of T;
+function DecodeFile of T(
+  Bytes: array of byte;
+  Decode: function(J.JsonElement): Decoded of T;
+  ArrayKey: string
+): Decoded of T;
 begin
   var TextValue: string := '';
   var ValidEncoding: bool := true;
@@ -145,7 +149,13 @@ end procedure;
 // - `ArrayKey`: Root array property eligible for entry-by-entry recovery.
 // ## Returns
 // The loaded, recovered, or default values. I/O failures are reported to standard error.
-public function Load of T(Path: string; Defaults: T; Decode: function(J.JsonElement): Decoded of T; Encode: procedure(J.Utf8JsonWriter, T); ArrayKey: string := ''): T;
+public function Load of T(
+  Path: string;
+  Defaults: T;
+  Decode: function(J.JsonElement): Decoded of T;
+  Encode: procedure(J.Utf8JsonWriter, T);
+  ArrayKey: string := ''
+): T;
 requires Path.Length > 0;
 begin
   if not IO.Path.IsPathFullyQualified(Path) then
@@ -199,7 +209,12 @@ end function;
 // - `Value`: The values to save.
 // - `Decode`: The same validation used when loading.
 // - `Encode`: Writes the supplied values in the file's JSON format.
-public procedure Save of T(Path: string; Value: T; Decode: function(J.JsonElement): Decoded of T; Encode: procedure(J.Utf8JsonWriter, T));
+public procedure Save of T(
+  Path: string;
+  Value: T;
+  Decode: function(J.JsonElement): Decoded of T;
+  Encode: procedure(J.Utf8JsonWriter, T)
+);
 requires Path.Length > 0;
 begin
   if not IO.Path.IsPathFullyQualified(Path) then

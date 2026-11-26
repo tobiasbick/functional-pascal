@@ -36,7 +36,11 @@ begin
 end function;
 
 // Creates an isolated in-memory SQLite session. Arguments match the monitor policy/lifetime.
-public function Start(Sources: array of S.MusicSource; Cancellation: T.CancellationToken; Settings: M.Options? := null): Monitor.Session;
+public function Start(
+  Sources: array of S.MusicSource;
+  Cancellation: T.CancellationToken;
+  Settings: M.Options? := null
+): Monitor.Session;
 begin
   return Monitor.Session.Start(Sources, ':memory:', Cancellation, Settings);
 end function;
@@ -44,7 +48,11 @@ end function;
 // Waits up to 15 seconds for a completed snapshot satisfying `Accept`.
 // `Session` remains owned by the caller. Returns the matching detached snapshot.
 // `IncludeCached` permits unverified startup snapshots; completed scans are the default.
-public async function Until(Session: Monitor.Session; Accept: function(M.Snapshot): bool; IncludeCached: bool := false): Tasks.Task of M.Snapshot;
+public async function Until(
+  Session: Monitor.Session;
+  Accept: function(M.Snapshot): bool;
+  IncludeCached: bool := false
+): Tasks.Task of M.Snapshot;
 begin
   using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
   while true do

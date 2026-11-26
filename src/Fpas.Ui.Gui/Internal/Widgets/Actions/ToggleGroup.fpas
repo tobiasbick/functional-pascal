@@ -21,8 +21,12 @@ uses System.Collections.Generic as Lists;
 // - `OnChange`: Maps an actual change to a message.
 // - `Settings`: Native appearance and input permission.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Items: array of T.Item; Selected: array of bool;
-  OnChange: function(array of bool): TMsg; Settings: T.Options
+  Frame: C.State of TMsg;
+  Id: string;
+  Items: array of T.Item;
+  Selected: array of bool;
+  OnChange: function(array of bool): TMsg;
+  Settings: T.Options
 );
 begin
   const Enabled: bool := Settings.Enabled and Frame.AcceptInput;

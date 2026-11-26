@@ -23,7 +23,11 @@ uses GuiGallery.Pages.Developer.Samples as D;
 uses GuiGallery.Pages.Developer.State as M;
 uses GuiGallery.Shared.Sections as Section;
 
-function Limit(Maximum: int; Gap: int; params Children: array of E.Element of M.Msg): E.Element of M.Msg;
+function Limit(
+  Maximum: int;
+  Gap: int;
+  params Children: array of E.Element of M.Msg
+): E.Element of M.Msg;
 begin
   return E.Size of M.Msg(
     E.Column of M.Msg(new L.Flow(Gap := Section.Points(Gap), Clip := false), Children),

@@ -23,7 +23,15 @@ uses Fpas.Ui.Widgets.Audio.VoiceSessions as VoiceSessions;
 // - `Muted`: Microphone state, or null to omit the button.
 // - `Changed`: Maps a call action.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Mode: Voice.Activity; Signal: Voice.Signal; Muted: bool?; Changed: function(VoiceSessions.Event): TMsg; Settings: VoiceSessions.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Mode: Voice.Activity;
+  Signal: Voice.Signal;
+  Muted: bool?;
+  Changed: function(VoiceSessions.Event): TMsg;
+  Settings: VoiceSessions.Options
+);
 begin
   const Role: string := 'voice-session';
   const Token: string := C.Token(Role, Id);

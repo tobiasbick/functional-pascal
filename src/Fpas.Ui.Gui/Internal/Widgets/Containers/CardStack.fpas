@@ -19,7 +19,14 @@ uses Fpas.Ui.Widgets.Containers.CardStacks as CardStacks;
 // - `Changed`: Maps a native change to a message.
 // - `Settings`: Native widget options.
 // - `Visit`: Presents composed children.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Cards: array of E.Element of TMsg; Changed: function(CardStacks.Direction): TMsg; Settings: CardStacks.Options; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Cards: array of E.Element of TMsg;
+  Changed: function(CardStacks.Direction): TMsg;
+  Settings: CardStacks.Options;
+  Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
+);
 begin
   const Role: string := 'card-stack';
   const Token: string := C.Token(Role, Id);

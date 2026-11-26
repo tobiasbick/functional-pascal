@@ -78,7 +78,13 @@ end procedure;
 // - `Current`: Receiving capability profile.
 // - `Location`: Parent diagnostic path.
 // - `At`: Stack diagnostic path.
-public procedure CheckStack(Flow: L.Flow; Horizontal: bool; Current: R.Profile; Location: string; At: string);
+public procedure CheckStack(
+  Flow: L.Flow;
+  Horizontal: bool;
+  Current: R.Profile;
+  Location: string;
+  At: string
+);
 begin
   CheckContainer(Flow, Current, At);
   if Flow.Clip <> null then

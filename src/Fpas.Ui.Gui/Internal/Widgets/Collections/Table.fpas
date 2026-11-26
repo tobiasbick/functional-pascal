@@ -26,7 +26,17 @@ uses System as Sys;
 // - `OnSelect`: Maps row activation by identity.
 // - `Settings`: Table sizing, appearance and input settings.
 // - `Visit`: Host traversal for composed cells.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Columns: array of T.Column; Rows: array of T.Row of TMsg; Order: T.Sort?; OnSort: Sys.Func of (T.Sort, TMsg)?; OnSelect: Sys.Func of (string, TMsg)?; Settings: T.Options; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Columns: array of T.Column;
+  Rows: array of T.Row of TMsg;
+  Order: T.Sort?;
+  OnSort: Sys.Func of (T.Sort, TMsg)?;
+  OnSelect: Sys.Func of (string, TMsg)?;
+  Settings: T.Options;
+  Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
+);
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Height: S.NativeExtent := S.Extent(Settings.Height);

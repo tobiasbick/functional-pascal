@@ -21,7 +21,11 @@ end record;
 // - `Settings`: Optional diameter and display limit.
 // ## Returns
 // The graphical element.
-public function AvatarGroup of TMsg(Id: string; Names: array of string; Settings: Options? := null): E.Element of TMsg;
+public function AvatarGroup of TMsg(
+  Id: string;
+  Names: array of string;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).AvatarGroup(Id, Names, Settings ?? new Options());

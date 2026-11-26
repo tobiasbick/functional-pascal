@@ -15,7 +15,12 @@ uses System as Sys;
 // - `Selected`: Model-owned selection flags.
 // - `Settings`: Native size and selection mode.
 // - `Location`: Group identity or view path for diagnostics.
-public procedure Check(Items: array of Toggles.Item; Selected: array of bool; Settings: Toggles.Options; Location: string);
+public procedure Check(
+  Items: array of Toggles.Item;
+  Selected: array of bool;
+  Settings: Toggles.Options;
+  Location: string
+);
 begin
   if Items.Length < 1 or Items.Length > 32 or Selected.Length <> Items.Length
     or not Sys.Enum.IsDefined of B.Size(Settings.ControlSize)

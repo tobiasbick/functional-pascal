@@ -26,7 +26,9 @@ public type Stream of (A, E, R) = record
   //
   // ## Returns
   // The deferred stream.
-  public static function Create(Produce: function(R, function(A): Tasks.Task, Threads.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, E)): Stream of (A, E, R);
+  public static function Create(
+    Produce: function(R, function(A): Tasks.Task, Threads.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, E)
+  ): Stream of (A, E, R);
   begin
     return new Stream of (A, E, R)(Produce);
   end function;
@@ -40,9 +42,15 @@ public type Stream of (A, E, R) = record
   // ## Returns
   // A workflow returning the producer outcome after draining the channel and
   // joining the producer. Cancellation interrupts channel waits.
-  public function Consume(Capacity: int; Receive: function(A, Threads.CancellationToken): Tasks.Task): Fx.Effect of (Fx.Completion, E, R);
+  public function Consume(
+    Capacity: int;
+    Receive: function(A, Threads.CancellationToken): Tasks.Task
+  ): Fx.Effect of (Fx.Completion, E, R);
   requires Capacity > 0;
-    function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, E);
+    function Execute(
+      Environment: R;
+      Cancellation: Threads.CancellationToken
+    ): Tasks.Task of Fx.Outcome of (Fx.Completion, E);
       async function Read(Lifetime: S.Scope): Tasks.Task of Fx.Outcome of (Fx.Completion, E);
         async function Write(Producer: S.Scope): Tasks.Task of Fx.Outcome of (Fx.Completion, E);
           function Publish(Value: A): Tasks.Task;

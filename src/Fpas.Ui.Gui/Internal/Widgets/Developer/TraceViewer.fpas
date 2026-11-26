@@ -68,7 +68,17 @@ end function;
 // - `Selection`: Selection supplied to the widget.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Tracks: array of D.Track; Spans: array of D.Span; Markers: array of D.Marker; Value: D.View; Selection: int; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Tracks: array of D.Track;
+  Spans: array of D.Span;
+  Markers: array of D.Marker;
+  Value: D.View;
+  Selection: int;
+  Changed: function(D.Event): TMsg;
+  Settings: D.Options
+);
 begin
   const Role: string := 'trace-viewer';
   const Token: string := C.Token(Role, Id);

@@ -79,7 +79,10 @@ begin
   raise new Sys.InvalidOperationException('callback boom');
 end procedure;
 
-async function Original(Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+async function Original(
+  Post: function(Msg): Tasks.Task;
+  Token: Threads.CancellationToken
+): Tasks.Task;
 begin
   using const Registration: Threads.CancellationTokenRegistration := Token.Register(
     ObserveReplacement
@@ -101,7 +104,10 @@ begin
   raise new Sys.InvalidOperationException('worker boom');
 end function;
 
-async function UntilExit(Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+async function UntilExit(
+  Post: function(Msg): Tasks.Task;
+  Token: Threads.CancellationToken
+): Tasks.Task;
 begin
   discard Token.Register(ObserveStop);
   Started.SetResult();
@@ -116,7 +122,10 @@ begin
   Joined.SetResult();
 end function;
 
-async function UntilMailboxCloses(Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+async function UntilMailboxCloses(
+  Post: function(Msg): Tasks.Task;
+  Token: Threads.CancellationToken
+): Tasks.Task;
 begin
   await BeginBlockedPost.Task.WaitAsync(Deadline);
   const Pending: Tasks.Task := Post(Msg.Changed('blocked'));

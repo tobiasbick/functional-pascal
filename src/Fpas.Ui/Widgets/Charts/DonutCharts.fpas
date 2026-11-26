@@ -28,7 +28,12 @@ end record;
 // - `Settings`: Native presentation.
 // ## Returns
 // A graphical element.
-public function DonutChart of TMsg(Id: string; Values: array of float; Labels: array of string; Settings: Options? := null): E.Element of TMsg;
+public function DonutChart of TMsg(
+  Id: string;
+  Values: array of float;
+  Labels: array of string;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).DonutChart(Id, Values, Labels, Settings ?? new Options());

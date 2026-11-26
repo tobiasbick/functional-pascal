@@ -20,8 +20,11 @@ uses System as Sys;
 // - `OnBrowse`: Optional browse message factory.
 // - `Settings`: Native display and input settings.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; OnDrop: function(array of string): TMsg;
-  OnBrowse: (Sys.Func of TMsg)?; Settings: D.Options
+  Frame: C.State of TMsg;
+  Id: string;
+  OnDrop: function(array of string): TMsg;
+  OnBrowse: (Sys.Func of TMsg)?;
+  Settings: D.Options
 );
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;

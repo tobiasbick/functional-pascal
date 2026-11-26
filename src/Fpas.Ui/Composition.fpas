@@ -176,7 +176,9 @@ public function Map of (TChild, TParent)(
   Value: E.Element of TChild;
   Messages: function(TChild): TParent
 ): E.Element of TParent;
-  function KanbanColumns(Columns: array of Kanbans.Column of TChild): array of Kanbans.Column of TParent;
+  function KanbanColumns(
+    Columns: array of Kanbans.Column of TChild
+  ): array of Kanbans.Column of TParent;
   begin
     const Result: Lists.List of Kanbans.Column of TParent := new Lists.List of Kanbans.Column of TParent();
     for Column: Kanbans.Column of TChild in Columns do
@@ -286,7 +288,9 @@ public function Map of (TChild, TParent)(
     return Result.ToArray();
   end function;
 
-  function MapCommands(Commands: array of Palettes.Command of TChild): array of Palettes.Command of TParent;
+  function MapCommands(
+    Commands: array of Palettes.Command of TChild
+  ): array of Palettes.Command of TParent;
   begin
     const Result: Lists.List of Palettes.Command of TParent := new Lists.List of Palettes.Command of TParent(
       Commands.Length

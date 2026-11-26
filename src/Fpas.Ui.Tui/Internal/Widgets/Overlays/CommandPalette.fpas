@@ -30,9 +30,15 @@ uses System.Globalization as Global;
 // ## Returns
 // The dialog input scope.
 public function Draw of TMsg(
-  Id: string; Commands: array of P.Command of TMsg; Change: function(bool): TMsg; UseShortcut: bool;
-  PopupState: State.State of TMsg; Screen: F.Rect; Theme: Th.Theme;
-  Operations: C.List of D.Operation; Controls: C.List of A.Control of TMsg
+  Id: string;
+  Commands: array of P.Command of TMsg;
+  Change: function(bool): TMsg;
+  UseShortcut: bool;
+  PopupState: State.State of TMsg;
+  Screen: F.Rect;
+  Theme: Th.Theme;
+  Operations: C.List of D.Operation;
+  Controls: C.List of A.Control of TMsg
 ): A.Scope of TMsg;
 begin
   if PopupState.Read().Id <> Id then

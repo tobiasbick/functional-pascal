@@ -75,7 +75,14 @@ public type Tree = record
   // Reconciles a subtree for normalized active `Sources`. `Current` rejects obsolete
   // configurations; `Recursive` includes known descendants. `Checkpoint` atomically
   // saves each observation before publication. Cancellation interrupts between entries.
-  public procedure Scan(Scope: string; Sources: array of S.MusicSource; Current: function(): bool; Recursive: bool; Cancellation: T.CancellationToken; Checkpoint: Sys.Func of (O.DirectoryObservation, bool)? := null);
+  public procedure Scan(
+    Scope: string;
+    Sources: array of S.MusicSource;
+    Current: function(): bool;
+    Recursive: bool;
+    Cancellation: T.CancellationToken;
+    Checkpoint: Sys.Func of (O.DirectoryObservation, bool)? := null
+  );
     function SelectedPlaylist(Path: string): bool;
     begin
       if not PlaylistFormats.IsPlaylist(Path) then
@@ -255,7 +262,10 @@ public type Tree = record
   end procedure;
 
   // Creates source-owned views, preserving paused/offline memberships independently.
-  public function Describe(Sources: array of S.MusicSource; Watched: array of string): I.ImmutableArray of M.SourceSnapshot;
+  public function Describe(
+    Sources: array of S.MusicSource;
+    Watched: array of string
+  ): I.ImmutableArray of M.SourceSnapshot;
   begin
     return self.Catalog.Describe(Sources, Watched);
   end function;

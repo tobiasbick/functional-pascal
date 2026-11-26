@@ -34,7 +34,11 @@ end record;
 // - `Settings`: Optional native options.
 // ## Returns
 // The graphical widget.
-public function Dock of TMsg(Id: string; Entries: array of Entry of TMsg; Settings: Options? := null): E.Element of TMsg;
+public function Dock of TMsg(
+  Id: string;
+  Entries: array of Entry of TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).Dock(Id, Entries, Settings ?? new Options());

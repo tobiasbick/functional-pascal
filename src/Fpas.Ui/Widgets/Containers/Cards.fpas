@@ -51,7 +51,12 @@ end record;
 // - `OnActivate`: Optional message factory for pointer or keyboard activation.
 // ## Returns
 // The graphical element.
-public function Card of TMsg(Id: string; Children: array of E.Element of TMsg; Settings: Options? := null; OnActivate: (Sys.Func of TMsg)? := null): E.Element of TMsg;
+public function Card of TMsg(
+  Id: string;
+  Children: array of E.Element of TMsg;
+  Settings: Options? := null;
+  OnActivate: (Sys.Func of TMsg)? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).Card(Id, Children, Settings ?? new Options(), OnActivate);

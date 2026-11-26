@@ -45,7 +45,10 @@ public type Session = record implements Sys.IAsyncDisposable
   FingerprintGate: T.SemaphoreSlim;
 
   // Loads the editor's snapshot after the owned database schemas are ready.
-  public async function ReadTags(Track: M.Entry; Cancellation: T.CancellationToken): Tasks.Task of TagFiles.Snapshot;
+  public async function ReadTags(
+    Track: M.Entry;
+    Cancellation: T.CancellationToken
+  ): Tasks.Task of TagFiles.Snapshot;
   begin
     await self.Ready.WaitAsync(Cancellation).ConfigureAwait(false);
     return TagAccess.Load(self.Database, self.UserDatabase, Track);
@@ -53,8 +56,11 @@ public type Session = record implements Sys.IAsyncDisposable
 
   // Records the editor's explicit changes in the selected destinations.
   public async function WriteTags(
-    Track: M.Entry; Original: TagFiles.Snapshot;
-    Changes: I.ImmutableDictionary of (string, string?); ToDatabase: bool; ToFile: bool;
+    Track: M.Entry;
+    Original: TagFiles.Snapshot;
+    Changes: I.ImmutableDictionary of (string, string?);
+    ToDatabase: bool;
+    ToFile: bool;
     Cancellation: T.CancellationToken
   ): Tasks.Task;
   requires ToDatabase or ToFile;
@@ -92,7 +98,10 @@ public type Session = record implements Sys.IAsyncDisposable
   end procedure;
 
   // Reads a bounded page sorted/filtered by `Request`. Cancellation owns this query.
-  public async function QueryAsync(Request: M.Query; Cancellation: T.CancellationToken): Tasks.Task of I.ImmutableArray of M.Entry;
+  public async function QueryAsync(
+    Request: M.Query;
+    Cancellation: T.CancellationToken
+  ): Tasks.Task of I.ImmutableArray of M.Entry;
   requires Request.Limit >= 1 and Request.Limit <= 500;
   requires Request.Offset >= 0;
   requires Request.MinimumRating = null or (Request.MinimumRating >= 1 and Request.MinimumRating <=
@@ -120,7 +129,10 @@ public type Session = record implements Sys.IAsyncDisposable
   // - `Cancellation`: Cancels waiting and reading.
   // ## Returns
   // Current source entries in their default playback order.
-  public async function QueueAsync(AlbumId: string; Cancellation: T.CancellationToken): Tasks.Task of I.ImmutableArray of M.Entry;
+  public async function QueueAsync(
+    AlbumId: string;
+    Cancellation: T.CancellationToken
+  ): Tasks.Task of I.ImmutableArray of M.Entry;
   requires AlbumId <> null;
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
@@ -141,7 +153,10 @@ public type Session = record implements Sys.IAsyncDisposable
 
   // Loads embedded artwork only on request and caches it by content hash.
   // `FileId` is an indexed file; cancellation bounds waiting and cache I/O.
-  public async function CoverAsync(FileId: long; Cancellation: T.CancellationToken): Tasks.Task of Pictures.Cover?;
+  public async function CoverAsync(
+    FileId: long;
+    Cancellation: T.CancellationToken
+  ): Tasks.Task of Pictures.Cover?;
   requires FileId > 0L;
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
@@ -168,7 +183,10 @@ public type Session = record implements Sys.IAsyncDisposable
   // - `Cancellation`: Cancels this request independently of the session lifetime.
   // ## Returns
   // Normalized RMS levels in playback order.
-  public async function WaveformAsync(Track: M.Entry; Cancellation: T.CancellationToken): Tasks.Task of array of float;
+  public async function WaveformAsync(
+    Track: M.Entry;
+    Cancellation: T.CancellationToken
+  ): Tasks.Task of array of float;
   requires Track.Path <> '';
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
@@ -189,7 +207,11 @@ public type Session = record implements Sys.IAsyncDisposable
 
   // Looks up the fingerprint for Track and optionally generates a missing value.
   // Cancellation interrupts the request and its child process. Returns the full encoded value or null.
-  public async function FingerprintAsync(Track: M.Entry; Generate: bool; Cancellation: T.CancellationToken): Tasks.Task of string?;
+  public async function FingerprintAsync(
+    Track: M.Entry;
+    Generate: bool;
+    Cancellation: T.CancellationToken
+  ): Tasks.Task of string?;
   requires Track.Path <> '';
   begin
     const Result: FingerprintData.Measurement? := await self.MeasureFingerprintAsync(
@@ -206,7 +228,11 @@ public type Session = record implements Sys.IAsyncDisposable
 
   // Reads the fingerprint and whole-file duration for Track and generates them on a miss if Generate is true.
   // Cancellation interrupts the request and any child process. Returns null when no cached value exists and Generate is false.
-  public async function MeasureFingerprintAsync(Track: M.Entry; Generate: bool; Cancellation: T.CancellationToken): Tasks.Task of FingerprintData.Measurement?;
+  public async function MeasureFingerprintAsync(
+    Track: M.Entry;
+    Generate: bool;
+    Cancellation: T.CancellationToken
+  ): Tasks.Task of FingerprintData.Measurement?;
   requires Track.Path <> '';
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
@@ -237,7 +263,11 @@ public type Session = record implements Sys.IAsyncDisposable
 
   // Saves a user rating (one through ten, or null) for durable `TrackId`.
   // Imported tags and subsequent rescans never overwrite this value.
-  public async function SetRatingAsync(TrackId: string; Value: int?; Cancellation: T.CancellationToken): Tasks.Task;
+  public async function SetRatingAsync(
+    TrackId: string;
+    Value: int?;
+    Cancellation: T.CancellationToken
+  ): Tasks.Task;
   requires TrackId <> '';
   requires Value = null or (Value >= 1 and Value <= 10);
   begin
@@ -262,7 +292,12 @@ public type Session = record implements Sys.IAsyncDisposable
 
   // Starts a bounded stage for file-backed `Database` and a distinct `UserDatabase`.
   // Both paths are absolute; `Sources` are copied and `Cancellation` owns the lifetime.
-  public static function Start(Sources: array of S.MusicSource; Database: string; UserDatabase: string; Cancellation: T.CancellationToken): Session;
+  public static function Start(
+    Sources: array of S.MusicSource;
+    Database: string;
+    UserDatabase: string;
+    Cancellation: T.CancellationToken
+  ): Session;
   requires Sources <> null;
   begin
     if not IO.Path.IsPathFullyQualified(Database) or not IO.Path.IsPathFullyQualified(UserDatabase)

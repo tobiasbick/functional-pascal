@@ -24,7 +24,11 @@ uses System.Collections.Generic as C;
 // - `Theme`: Active shared palette.
 // ## Returns
 // A display-only progress track.
-public function Lower of TMsg(Fraction: float; Settings: Bars.Options; Theme: Th.Theme): E.Element of TMsg;
+public function Lower of TMsg(
+  Fraction: float;
+  Settings: Bars.Options;
+  Theme: Th.Theme
+): E.Element of TMsg;
 begin
   const Width: int? := case Settings.Width of
     when L.Extent.Fixed(const Distance: L.Measure): F.Cells(Distance);
@@ -58,8 +62,16 @@ end function;
 // - `Style`: Enclosing text style.
 // - `Theme`: Active track palette.
 public procedure Paint(
-  Operations: C.List of D.Operation; Area: F.Rect; Clip: F.Rect; Fraction: float;
-  Caption: string; Percent: string; Width: int?; Fill: G.Color; Style: T.Style; Theme: Th.Theme
+  Operations: C.List of D.Operation;
+  Area: F.Rect;
+  Clip: F.Rect;
+  Fraction: float;
+  Caption: string;
+  Percent: string;
+  Width: int?;
+  Fill: G.Color;
+  Style: T.Style;
+  Theme: Th.Theme
 );
 begin
   const Span: int := Sys.Math.Min(Area.Width, Width ?? Area.Width);

@@ -32,7 +32,14 @@ end record;
 // - `UseShortcut`: Whether the primary modifier plus K toggles the overlay.
 // ## Returns
 // The command palette element.
-public function CommandPalette of TMsg(Id: string; Base: E.Element of TMsg; Open: bool; Commands: array of Command of TMsg; OnOpenChange: function(bool): TMsg; UseShortcut: bool := true): E.Element of TMsg;
+public function CommandPalette of TMsg(
+  Id: string;
+  Base: E.Element of TMsg;
+  Open: bool;
+  Commands: array of Command of TMsg;
+  OnOpenChange: function(bool): TMsg;
+  UseShortcut: bool := true
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).CommandPalette(Id, Base, Open, Commands, OnOpenChange, UseShortcut);

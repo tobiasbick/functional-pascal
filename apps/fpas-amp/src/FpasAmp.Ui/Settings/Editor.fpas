@@ -83,7 +83,12 @@ end function;
 // - `Messages`: Wraps settings messages in parent messages.
 // ## Returns
 // `Base` with the editor open.
-public function View of TParent(Base: E.Element of TParent; Draft: Locations.MusicSource; SaveFailed: bool; Messages: function(M.Msg): TParent): E.Element of TParent;
+public function View of TParent(
+  Base: E.Element of TParent;
+  Draft: Locations.MusicSource;
+  SaveFailed: bool;
+  Messages: function(M.Msg): TParent
+): E.Element of TParent;
 begin
   const Content: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg(
     [

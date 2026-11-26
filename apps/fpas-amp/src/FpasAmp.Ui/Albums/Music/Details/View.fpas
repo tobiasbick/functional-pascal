@@ -47,7 +47,13 @@ begin
   end if;
 end procedure;
 
-function Summary(Current: M.State; Item: Tracks.Entry; Info: Tags.Info; Cover: Images.Bitmap?; Compact: bool): E.Element of M.Msg;
+function Summary(
+  Current: M.State;
+  Item: Tracks.Entry;
+  Info: Tags.Info;
+  Cover: Images.Bitmap?;
+  Compact: bool
+): E.Element of M.Msg;
 begin
   const Lines: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();
   Lines.Add(Texts.Text of M.Msg(Browse.Title(Item), Texts.Appearance.HeadingThree));
@@ -113,7 +119,13 @@ end function;
 
 // Overlays the selected track's details on Base. Current owns the selected tab and file.
 // Playback supplies ongoing analysis, Width is the available width, and Cover is the album image.
-public function Build(Current: M.State; Playback: Player.State; Width: int; Cover: Images.Bitmap?; Base: E.Element of M.Msg): E.Element of M.Msg;
+public function Build(
+  Current: M.State;
+  Playback: Player.State;
+  Width: int;
+  Cover: Images.Bitmap?;
+  Base: E.Element of M.Msg
+): E.Element of M.Msg;
 begin
   const Item: Tracks.Entry? := Current.Details;
   const Compact: bool := Width < 585;

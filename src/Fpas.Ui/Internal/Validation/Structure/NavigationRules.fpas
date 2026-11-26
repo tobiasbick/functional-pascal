@@ -26,7 +26,11 @@ end procedure;
 // - `Location`: Parent view path.
 // - `Identify`: Validates and registers a unique view identity.
 public procedure CheckPagination(
-  Id: string; Page: int; Count: int; Profile: R.Profile; Location: string;
+  Id: string;
+  Page: int;
+  Count: int;
+  Profile: R.Profile;
+  Location: string;
   Identify: function(string, string): string
 );
 begin
@@ -54,8 +58,12 @@ end procedure;
 // - `Location`: Control path for diagnostics.
 // - `Identify`: Validates and registers a unique view identity.
 public procedure CheckTabs(
-  Id: string; Items: array of Tabs.Item; Selected: int; Settings: Tabs.Options;
-  Location: string; Identify: function(string, string): string
+  Id: string;
+  Items: array of Tabs.Item;
+  Selected: int;
+  Settings: Tabs.Options;
+  Location: string;
+  Identify: function(string, string): string
 );
 begin
   const At: string := Identify(Id, Location + '/tabs');
@@ -81,8 +89,11 @@ end procedure;
 // - `Location`: Control path for diagnostics.
 // - `Identify`: Validates and registers a unique view identity.
 public procedure CheckBreadcrumb(
-  Id: string; Items: array of string; Profile: R.Profile;
-  Location: string; Identify: function(string, string): string
+  Id: string;
+  Items: array of string;
+  Profile: R.Profile;
+  Location: string;
+  Identify: function(string, string): string
 );
 begin
   const At: string := Identify(Id, Location + '/breadcrumb');
@@ -107,7 +118,12 @@ end procedure;
 // - `Current`: Current index, or the count when all steps are complete.
 // - `Profile`: Receiving host profile.
 // - `Location`: Control path for diagnostics.
-public procedure CheckStepper(Steps: array of string; Current: int; Profile: R.Profile; Location: string);
+public procedure CheckStepper(
+  Steps: array of string;
+  Current: int;
+  Profile: R.Profile;
+  Location: string
+);
 begin
   R.RequireProfile(Profile, R.Profile.Graphical, Location);
   if Steps.Length = 0 or Current < 0 or Current > Steps.Length then

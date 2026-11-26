@@ -29,7 +29,11 @@ const ExtensionPattern: R.Regex := new R.Regex('\A\.[A-Za-z0-9]+\z');
 
 const FileName: string := 'settings.json';
 
-function DecodeSource(Item: J.JsonElement; UsedIds: C.HashSet of string; ref Valid: bool): Locations.MusicSource?;
+function DecodeSource(
+  Item: J.JsonElement;
+  UsedIds: C.HashSet of string;
+  ref Valid: bool
+): Locations.MusicSource?;
 begin
   const Folder: string := Fields.StringValue(Fields.Field(Item, 'path')) ?? '';
   if not IO.Path.IsPathFullyQualified(Folder) or Folder.Contains(cast 0 as char) then
@@ -104,7 +108,12 @@ begin
   );
 end function;
 
-function DecodeChoice of T(Root: J.JsonElement; Name: string; Fallback: string; ref Valid: bool): string;
+function DecodeChoice of T(
+  Root: J.JsonElement;
+  Name: string;
+  Fallback: string;
+  ref Valid: bool
+): string;
 where T: struct, Sys.Enum;
 begin
   if Root.ValueKind <> J.JsonValueKind.Object then

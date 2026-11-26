@@ -18,7 +18,14 @@ uses System as Sys;
 // - `Settings`: Dropdown options, or null for a native context menu.
 // - `Location`: Owning view path.
 // - `Identify`: Registers a globally unique identity and returns its diagnostic path.
-public procedure Check of TMsg(Id: string; Label: string; Entries: array of M.Entry of TMsg; Settings: M.Options?; Location: string; Identify: function(string, string): string);
+public procedure Check of TMsg(
+  Id: string;
+  Label: string;
+  Entries: array of M.Entry of TMsg;
+  Settings: M.Options?;
+  Location: string;
+  Identify: function(string, string): string
+);
 begin
   const At: string := Identify(Id, Location + '/menu');
   Rules.CheckText(Label, At);

@@ -17,8 +17,11 @@ uses Fpas.Ui.Widgets.Pickers.DateRanges as R;
 // ## Returns
 // An inline graphical calendar with CUI-owned layout and browsing.
 public function DateRangeCalendar of TMsg(
-  Id: string; Value: R.Value; OnChange: function(R.Value): TMsg;
-  Months: int := 2; Enabled: bool := true
+  Id: string;
+  Value: R.Value;
+  OnChange: function(R.Value): TMsg;
+  Months: int := 2;
+  Enabled: bool := true
 ): E.Element of TMsg;
 requires Id <> '';
 requires Months = 1 or Months = 2;

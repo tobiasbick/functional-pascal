@@ -50,8 +50,11 @@ end record;
 // ## Returns
 // A graphical or terminal text area.
 public function TextArea of TMsg(
-  Id: string; Value: string; OnChange: function(string): TMsg;
-  Settings: Options? := null; OnSubmit: Sys.Func of (string, TMsg)? := null
+  Id: string;
+  Value: string;
+  OnChange: function(string): TMsg;
+  Settings: Options? := null;
+  OnSubmit: Sys.Func of (string, TMsg)? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin

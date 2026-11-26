@@ -20,7 +20,13 @@ uses Fpas.Ui.Widgets.Actions.Buttons as B;
 // - `Label`: Literal visible label.
 // - `Message`: Proposed activation message.
 // - `Settings`: Model-owned input and appearance options.
-public procedure Draw of TMsg(State: C.State of TMsg; Id: string; Label: string; Message: TMsg; Settings: B.Options);
+public procedure Draw of TMsg(
+  State: C.State of TMsg;
+  Id: string;
+  Label: string;
+  Message: TMsg;
+  Settings: B.Options
+);
 begin
   const Enabled: bool := Settings.Enabled and State.AcceptInput;
   const Token: string := C.Token('button', Id);

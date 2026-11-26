@@ -21,7 +21,14 @@ uses System as Sys;
 // - `Source`: Optional source and hover preview.
 // - `Activate`: Optional activation.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Number: int; Source: Sources.Item?; Activate: (Sys.Func of TMsg)?; Settings: Citations.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Number: int;
+  Source: Sources.Item?;
+  Activate: (Sys.Func of TMsg)?;
+  Settings: Citations.Options
+);
 begin
   const Role: string := 'citation';
   const Token: string := C.Token(Role, Id);

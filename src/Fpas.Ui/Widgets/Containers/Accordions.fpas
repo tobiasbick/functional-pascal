@@ -18,8 +18,12 @@ uses Fpas.Ui.Elements as E;
 // ## Returns
 // A GUI-only native accordion.
 public function Accordion of TMsg(
-  Id: string; Title: string; Open: bool;
-  OnChange: function(bool): TMsg; Content: E.Element of TMsg; Enabled: bool := true
+  Id: string;
+  Title: string;
+  Open: bool;
+  OnChange: function(bool): TMsg;
+  Content: E.Element of TMsg;
+  Enabled: bool := true
 ): E.Element of TMsg;
 requires Id <> '';
 begin

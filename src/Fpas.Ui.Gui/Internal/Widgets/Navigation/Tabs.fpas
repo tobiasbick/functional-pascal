@@ -21,8 +21,12 @@ uses System.Collections.Generic as Lists;
 // - `OnChange`: Maps a proposed index to a message.
 // - `Settings`: Native appearance, width and input permission.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Items: array of T.Item; Selected: int;
-  OnChange: function(int): TMsg; Settings: T.Options
+  Frame: C.State of TMsg;
+  Id: string;
+  Items: array of T.Item;
+  Selected: int;
+  OnChange: function(int): TMsg;
+  Settings: T.Options
 );
 begin
   const Enabled: bool := Settings.Enabled and Frame.AcceptInput;

@@ -18,7 +18,13 @@ uses System as Sys;
 // - `Title`: Literal primary text.
 // - `Activate`: Optional native activation mapper.
 // - `Settings`: Appearance and input settings.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Title: string; Activate: (Sys.Func of TMsg)?; Settings: I.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Title: string;
+  Activate: (Sys.Func of TMsg)?;
+  Settings: I.Options
+);
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('list-item', Id);

@@ -26,7 +26,15 @@ end variant;
 // - `Stride`: Byte spacing between replacement rows, or zero for tight packing.
 // ## Returns
 // A new image source that can be rendered independently of the original.
-public function Update(Image: Source; X: int; Y: int; Width: int; Height: int; Bytes: array of byte; Stride: int := 0): Source;
+public function Update(
+  Image: Source;
+  X: int;
+  Y: int;
+  Width: int;
+  Height: int;
+  Bytes: array of byte;
+  Stride: int := 0
+): Source;
 requires X >= 0 and Y >= 0 and Width > 0 and Height > 0;
 begin
   var W: int := 0;

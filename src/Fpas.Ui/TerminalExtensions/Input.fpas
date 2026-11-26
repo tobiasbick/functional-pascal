@@ -171,7 +171,11 @@ end record;
 //
 // ## Returns
 // A shortcut for a screen or modal layer.
-public function Shortcut of TMsg(PressedKey: Key; Modifiers: KeyModifiers; Message: TMsg): ShortcutBinding of TMsg;
+public function Shortcut of TMsg(
+  PressedKey: Key;
+  Modifiers: KeyModifiers;
+  Message: TMsg
+): ShortcutBinding of TMsg;
 begin
   return new ShortcutBinding of TMsg(PressedKey, Modifiers, Message);
 end function;
@@ -187,7 +191,10 @@ end function;
 //
 // ## Returns
 // A character shortcut for one terminal scope.
-public function CharacterShortcut of TMsg(Character: string; Message: TMsg): ShortcutBinding of TMsg;
+public function CharacterShortcut of TMsg(
+  Character: string;
+  Message: TMsg
+): ShortcutBinding of TMsg;
 begin
   var Rune: Sys.Text.Rune := new Sys.Text.Rune(0);
   if not Sys.Text.Rune.TryGetRuneAt(

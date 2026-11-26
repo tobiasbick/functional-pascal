@@ -75,7 +75,10 @@ begin
   Step(Window);
 end procedure;
 
-procedure Deliver(Window: Gui.Session of App.Msg; Held: Channels.ChannelReader of Effects.Reply of App.Msg);
+procedure Deliver(
+  Window: Gui.Session of App.Msg;
+  Held: Channels.ChannelReader of Effects.Reply of App.Msg
+);
 begin
   using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(10000);
   const Reply: Effects.Reply of App.Msg := Held.ReadAsync(
@@ -177,7 +180,10 @@ begin
                 Next.Commands[Index] := A.StartBackground of App.Msg(
                   Id,
                   A.FromWorker of App.Msg(
-                    function(Post: function(App.Msg): Tasks.Task; _Stop: T.CancellationToken): Tasks.Task => Post(
+                    function(
+                      Post: function(App.Msg): Tasks.Task;
+                      _Stop: T.CancellationToken
+                    ): Tasks.Task => Post(
                       App.Msg.Podcasts(P.Msg.Found(Revision, Matches))
                     ),
                     function(Error: Sys.Exception): App.Msg => App.Msg.Podcasts(

@@ -24,7 +24,12 @@ const NoFocus: int := -3;
 // - `OnChange`: Maps a proposed page to a message.
 // - `Enabled`: Model-owned input permission.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Page: int; Count: int; OnChange: function(int): TMsg; Enabled: bool
+  Frame: C.State of TMsg;
+  Id: string;
+  Page: int;
+  Count: int;
+  OnChange: function(int): TMsg;
+  Enabled: bool
 );
   function Token(Index: int): string;
   begin

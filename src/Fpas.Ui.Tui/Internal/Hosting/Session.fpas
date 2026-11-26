@@ -80,9 +80,13 @@ end procedure;
 // ## Returns
 // The host session.
 public function Start of (TModel, TMsg)(
-  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
-  View: function(TModel, L.Viewport): Ui.Element of TMsg; Columns: int; Rows: int;
-  Present: procedure(App.Frame); Manual: bool;
+  InitialModel: TModel;
+  Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
+  View: function(TModel, L.Viewport): Ui.Element of TMsg;
+  Columns: int;
+  Rows: int;
+  Present: procedure(App.Frame);
+  Manual: bool;
   ThemeFor: function(TModel): SharedThemes.Theme
 ): App.HeadlessSession;
   function Close(): Tasks.Task;

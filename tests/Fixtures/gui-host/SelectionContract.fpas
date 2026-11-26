@@ -173,7 +173,10 @@ end procedure;
 // - `Renderer`: Native renderer to exercise.
 // - `Capture`: Prefix for the full-page screenshot.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
-  function Update(Model: State.Model; Message: State.Msg): App.Transition of (State.Model, State.Msg);
+  function Update(
+    Model: State.Model;
+    Message: State.Msg
+  ): App.Transition of (State.Model, State.Msg);
   begin
     case Message of
       when State.Msg.Selection(SliceSelection.Msg.SetSaveFrequency(_)):

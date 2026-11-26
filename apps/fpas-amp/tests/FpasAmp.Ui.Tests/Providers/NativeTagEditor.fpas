@@ -153,7 +153,10 @@ procedure Exercise(Store: Library.Session; Path: string);
 
     return Draft;
   end function;
-  procedure Deliver(Session: Gui.Session of App.Msg; Replies: Channels.ChannelReader of Effects.Reply of App.Msg);
+  procedure Deliver(
+    Session: Gui.Session of App.Msg;
+    Replies: Channels.ChannelReader of Effects.Reply of App.Msg
+  );
   begin
     const Reply: Effects.Reply of App.Msg := Replies.ReadAsync(
       Stop.Token

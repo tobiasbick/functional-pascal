@@ -92,7 +92,11 @@ begin
 end function;
 
 // Measures Track through Library when needed and searches AcoustID with the saved ApplicationKey.
-public function Scan(Library: Metadata.Session; Track: Tracks.Entry; ApplicationKey: string): A.Command of M.Msg;
+public function Scan(
+  Library: Metadata.Session;
+  Track: Tracks.Entry;
+  ApplicationKey: string
+): A.Command of M.Msg;
 begin
   return A.StartBackground of M.Msg(
     Slot,

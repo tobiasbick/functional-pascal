@@ -37,7 +37,11 @@ end record;
 // - `Apply`: Dispatches a change when the target differs from the model.
 // ## Returns
 // Target focus identity, or null for an unrelated key or control.
-public function Move of TMsg(Handler: (A.IActivatable of TMsg)?; Key: K.Key; Apply: procedure(TMsg)): string?;
+public function Move of TMsg(
+  Handler: (A.IActivatable of TMsg)?;
+  Key: K.Key;
+  Apply: procedure(TMsg)
+): string?;
 begin
   const Delta: int := case Key of
     when K.Key.Left, K.Key.Up: -1;
@@ -82,7 +86,14 @@ end function;
 // - `Gap`: Terminal rows between choices.
 // ## Returns
 // A vertical group with one tab stop and individually addressable choices.
-public function Lower of TMsg(Id: string; Items: array of R.Item; Selected: int; Change: function(int): TMsg; Enabled: bool; Gap: int): E.Element of TMsg;
+public function Lower of TMsg(
+  Id: string;
+  Items: array of R.Item;
+  Selected: int;
+  Change: function(int): TMsg;
+  Enabled: bool;
+  Gap: int
+): E.Element of TMsg;
 begin
   const Entry: int := if Selected >= 0 and Items[Selected].Enabled then
     Selected

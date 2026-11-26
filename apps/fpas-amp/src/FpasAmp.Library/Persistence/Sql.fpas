@@ -22,7 +22,11 @@ end function;
 
 // Runs Operation on a dedicated Connection and interrupts SQLite sorting or scanning on Cancellation.
 // Returns the operation's TResult and always removes its connection-local progress handler.
-public function Interruptible of TResult(Connection: Db.SqliteConnection; Cancellation: T.CancellationToken; Operation: function(): TResult): TResult;
+public function Interruptible of TResult(
+  Connection: Db.SqliteConnection;
+  Cancellation: T.CancellationToken;
+  Operation: function(): TResult
+): TResult;
 begin
   Cancellation.ThrowIfCancellationRequested();
   if Cancellation.CanBeCanceled then
@@ -51,7 +55,13 @@ end function;
 // Creates a bound command. `Connection` is open and worker-owned, `Text` contains
 // named placeholders, and `Transaction` is the current write or null for reads.
 // `Names` and `Values` have equal lengths. The caller disposes the returned command.
-public function Command(Connection: Db.SqliteConnection; Text: string; Transaction: Db.SqliteTransaction?; Names: array of string; Values: array of object?): Db.SqliteCommand;
+public function Command(
+  Connection: Db.SqliteConnection;
+  Text: string;
+  Transaction: Db.SqliteTransaction?;
+  Names: array of string;
+  Values: array of object?
+): Db.SqliteCommand;
 begin
   const Result: Db.SqliteCommand := Connection.CreateCommand();
   Result.CommandText := Text;
@@ -64,7 +74,13 @@ begin
 end function;
 
 // Executes bound SQL. Arguments have the same ownership and shape as Command.
-public procedure Execute(Connection: Db.SqliteConnection; Text: string; Transaction: Db.SqliteTransaction?; Names: array of string; Values: array of object?);
+public procedure Execute(
+  Connection: Db.SqliteConnection;
+  Text: string;
+  Transaction: Db.SqliteTransaction?;
+  Names: array of string;
+  Values: array of object?
+);
 begin
   using const Query: Db.SqliteCommand := Command(Connection, Text, Transaction, Names, Values);
   discard Query.ExecuteNonQuery();

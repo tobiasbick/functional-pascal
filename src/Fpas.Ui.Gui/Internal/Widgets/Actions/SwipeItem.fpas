@@ -25,8 +25,13 @@ uses System.Collections.Generic as Lists;
 // - `Settings`: Decorations and input permission.
 // - `Visit`: GUI view traversal.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Content: E.Element of TMsg; Left: array of S.Item; Right: array of S.Item;
-  OnChoose: function(S.Side, int): TMsg; Settings: S.Options;
+  Frame: C.State of TMsg;
+  Id: string;
+  Content: E.Element of TMsg;
+  Left: array of S.Item;
+  Right: array of S.Item;
+  OnChoose: function(S.Side, int): TMsg;
+  Settings: S.Options;
   Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
 );
   function ActionId(Index: int): string;

@@ -88,7 +88,10 @@ end procedure;
 
 async function WriteBackground of (TMsg, TInput)(
   Queue: Channels.Channel of Entry of (TMsg, TInput);
-  Wake: Sys.Action?; Id: string; Version: long; Message: TMsg;
+  Wake: Sys.Action?;
+  Id: string;
+  Version: long;
+  Message: TMsg;
   Cancellation: Threads.CancellationToken
 ): Tasks.Task;
 begin
@@ -123,8 +126,11 @@ end function;
 // ## Returns
 // The session. Serialize model reads, steps and close on the owner.
 public function Start of (TModel, TMsg, TInput)(
-  InitialModel: TModel; Update: function(TModel, TMsg): App.Transition of (TModel, TMsg);
-  NotifyHost: procedure(App.HostRequest); Capacity: int; Wake: Sys.Action? := null;
+  InitialModel: TModel;
+  Update: function(TModel, TMsg): App.Transition of (TModel, TMsg);
+  NotifyHost: procedure(App.HostRequest);
+  Capacity: int;
+  Wake: Sys.Action? := null;
   Clock: Sys.TimeProvider? := null
 ): Runtime of (TModel, TMsg, TInput);
 requires Capacity > 0;
@@ -303,7 +309,12 @@ begin
     Capacity
   );
   const Workers: Effects.State of TMsg := Effects.Create of TMsg(
-    function(Id: string; Version: long; Message: TMsg; Cancellation: Threads.CancellationToken): Tasks.Task => WriteBackground of (TMsg, TInput)(
+    function(
+      Id: string;
+      Version: long;
+      Message: TMsg;
+      Cancellation: Threads.CancellationToken
+    ): Tasks.Task => WriteBackground of (TMsg, TInput)(
       Queue,
       Wake,
       Id,

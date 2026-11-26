@@ -22,8 +22,14 @@ uses System.Globalization as Culture;
 // - `OnChange`: Maps a proposed value to a message.
 // - `Settings`: Native display and input settings.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Label: string; Value: float; Minimum: float; Maximum: float;
-  OnChange: function(float): TMsg; Settings: W.Options
+  Frame: C.State of TMsg;
+  Id: string;
+  Label: string;
+  Value: float;
+  Minimum: float;
+  Maximum: float;
+  OnChange: function(float): TMsg;
+  Settings: W.Options
 );
 begin
   const Enabled: bool := Settings.Enabled and Frame.AcceptInput;

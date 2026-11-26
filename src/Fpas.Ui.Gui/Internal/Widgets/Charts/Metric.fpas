@@ -17,7 +17,13 @@ uses Fpas.Ui.Widgets.Charts.Metrics as M;
 // - `Label`: Literal caption.
 // - `Reading`: Formatted value.
 // - `Settings`: Native appearance and trend.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Label: string; Reading: string; Settings: M.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Label: string;
+  Reading: string;
+  Settings: M.Options
+);
 begin
   const Width: Size.NativeExtent := Size.Extent(Settings.Width);
   Frame.Window.Metric(

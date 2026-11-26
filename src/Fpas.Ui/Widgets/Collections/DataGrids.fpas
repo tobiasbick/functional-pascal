@@ -88,7 +88,16 @@ end record;
 // - `OnDoubleClick`: Optional action for a double-click on a row, with its display index.
 // ## Returns
 // The graphical grid.
-public function DataGrid of TMsg(Id: string; Columns: array of Column; Count: int; BuildRow: function(int): Row of TMsg; Current: Value; OnChange: function(Value): TMsg; Settings: Options? := null; OnDoubleClick: Sys.Func of (int, TMsg)? := null): E.Element of TMsg;
+public function DataGrid of TMsg(
+  Id: string;
+  Columns: array of Column;
+  Count: int;
+  BuildRow: function(int): Row of TMsg;
+  Current: Value;
+  OnChange: function(Value): TMsg;
+  Settings: Options? := null;
+  OnDoubleClick: Sys.Func of (int, TMsg)? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).DataGrid(

@@ -12,7 +12,11 @@ uses System.IO as IO;
 
 // Allows hash-based recovery only when known source policies/errors do not make
 // `Path` uncertain. `Connection` is the catalogue and `Sources` the current policy.
-public function Allowed(Connection: Db.SqliteConnection; Path: string; Sources: array of S.MusicSource): bool;
+public function Allowed(
+  Connection: Db.SqliteConnection;
+  Path: string;
+  Sources: array of S.MusicSource
+): bool;
 begin
   for Source: S.MusicSource in Sources do
     if not S.Within(Path, Source.Path) then

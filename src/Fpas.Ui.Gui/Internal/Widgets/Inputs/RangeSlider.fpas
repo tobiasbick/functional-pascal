@@ -23,8 +23,14 @@ uses System.Globalization as Culture;
 // - `OnChange`: Maps changed endpoints to a message.
 // - `Enabled`: Model-owned input permission.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Label: string; Value: R.Interval; Minimum: float; Maximum: float;
-  OnChange: function(R.Interval): TMsg; Enabled: bool
+  Frame: C.State of TMsg;
+  Id: string;
+  Label: string;
+  Value: R.Interval;
+  Minimum: float;
+  Maximum: float;
+  OnChange: function(R.Interval): TMsg;
+  Enabled: bool
 );
 begin
   const Allowed: bool := Enabled and Frame.AcceptInput;

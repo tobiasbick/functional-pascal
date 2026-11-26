@@ -47,7 +47,10 @@ end function;
 // ## Returns
 // A graphical speed dial with CUI-owned expansion.
 public function SpeedDial of TMsg(
-  Id: string; Items: array of Item; OnChoose: function(int): TMsg; Settings: Options? := null
+  Id: string;
+  Items: array of Item;
+  OnChoose: function(int): TMsg;
+  Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin

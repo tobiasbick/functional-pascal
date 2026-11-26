@@ -56,8 +56,14 @@ uses System.Collections.Generic as Generic;
 // ## Returns
 // Painted cells with control bounds, keyboard navigation and scroll regions.
 public function Arrange of TMsg(
-  Root: E.Element of TMsg; Columns: int; Rows: int;
-  Previous: (A.Layout of TMsg)?; Scroll: Generic.Dictionary of (string, int); Theme: Th.Theme; Popup: PopupState.State of TMsg; Focus: string;
+  Root: E.Element of TMsg;
+  Columns: int;
+  Rows: int;
+  Previous: (A.Layout of TMsg)?;
+  Scroll: Generic.Dictionary of (string, int);
+  Theme: Th.Theme;
+  Popup: PopupState.State of TMsg;
+  Focus: string;
   AnimationPhase: long := 0L
 ): A.Layout of TMsg;
   procedure Draw(Value: string; Area: F.Rect; Clip: F.Rect; Style: T.Style; Wrap: bool);
@@ -82,10 +88,20 @@ public function Arrange of TMsg(
   end procedure;
 
   procedure Register(
-    Id: string; Label: string; Role: string; Value: string;
-    Area: F.Rect; ScopeId: string; Enabled: bool; Action: A.Binding of TMsg;
+    Id: string;
+    Label: string;
+    Role: string;
+    Value: string;
+    Area: F.Rect;
+    ScopeId: string;
+    Enabled: bool;
+    Action: A.Binding of TMsg;
     Variant: UiStyle.ButtonVariant := UiStyle.ButtonVariant.Default;
-    ButtonStyle: bool := false; ArrowFocus: bool := false; Hint: string := ''; Foreground: G.Color? := null; TabTarget: string := ''
+    ButtonStyle: bool := false;
+    ArrowFocus: bool := false;
+    Hint: string := '';
+    Foreground: G.Color? := null;
+    TabTarget: string := ''
   );
   begin
     AddControl(
@@ -108,7 +124,13 @@ public function Arrange of TMsg(
     );
   end procedure;
 
-  procedure Visit(Node: E.Element of TMsg; Area: F.Rect; Limit: F.Rect; ScopeId: string; Style: T.Style);
+  procedure Visit(
+    Node: E.Element of TMsg;
+    Area: F.Rect;
+    Limit: F.Rect;
+    ScopeId: string;
+    Style: T.Style
+  );
     procedure HiddenTabStop(Id: string; Focusable: bool := false);
     begin
       TabStops.Add(new A.TabStop(Id, ScopeId));
@@ -565,7 +587,14 @@ public function Arrange of TMsg(
     end case;
   end procedure;
 
-  procedure VisitScrolled(Id: string; Child: E.Element of TMsg; Area: F.Rect; Clip: F.Rect; ScopeId: string; Style: T.Style);
+  procedure VisitScrolled(
+    Id: string;
+    Child: E.Element of TMsg;
+    Area: F.Rect;
+    Clip: F.Rect;
+    ScopeId: string;
+    Style: T.Style
+  );
   begin
     const PreviousWrap: bool := WrapText;
     const ParentScroll: string := ScrollId;
@@ -586,8 +615,13 @@ public function Arrange of TMsg(
   end function;
 
   procedure VisitStack(
-    Children: array of E.Element of TMsg; Axis: bool; Flow: E.Flow;
-    Area: F.Rect; Clip: F.Rect; ScopeId: string; Style: T.Style
+    Children: array of E.Element of TMsg;
+    Axis: bool;
+    Flow: E.Flow;
+    Area: F.Rect;
+    Clip: F.Rect;
+    ScopeId: string;
+    Style: T.Style
   );
   begin
     const Bounds: array of F.Rect := Stacks.Bounds of TMsg(

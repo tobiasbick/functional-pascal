@@ -46,7 +46,13 @@ end function;
 // - `Frames`: Frames supplied to the widget.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Frames: array of D.Frame; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Frames: array of D.Frame;
+  Changed: function(D.Event): TMsg;
+  Settings: D.Options
+);
 begin
   const Role: string := 'stack-trace';
   const Token: string := C.Token(Role, Id);

@@ -12,7 +12,11 @@ uses Microsoft.Data.Sqlite as Db;
 
 // Creates membership/indexes in `Transaction`; `Populate` derives existing cached
 // tags without rehashing or reopening media. All state belongs to `Connection`.
-public procedure Create(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction; Populate: bool);
+public procedure Create(
+  Connection: Db.SqliteConnection;
+  Transaction: Db.SqliteTransaction;
+  Populate: bool
+);
 begin
   Sql.Execute(
     Connection,

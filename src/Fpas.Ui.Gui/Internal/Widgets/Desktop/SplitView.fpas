@@ -22,7 +22,16 @@ uses Fpas.Ui.Widgets.Desktop.SplitViews as S;
 // - `Changed`: Maps a divider move to a message.
 // - `Settings`: Native layout and orientation.
 // - `Visit`: Presents a child in a pane.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Ratio: float; First: E.Element of TMsg; Second: E.Element of TMsg; Changed: function(float): TMsg; Settings: S.Options; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Ratio: float;
+  First: E.Element of TMsg;
+  Second: E.Element of TMsg;
+  Changed: function(float): TMsg;
+  Settings: S.Options;
+  Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
+);
 begin
   const Width: Size.NativeExtent := Size.Extent(Settings.Width);
   const Height: Size.NativeExtent := Size.Extent(Settings.Height);

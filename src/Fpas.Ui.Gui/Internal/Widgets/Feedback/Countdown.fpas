@@ -17,7 +17,12 @@ uses System.Globalization as Culture;
 // - `Id`: Stable countdown identity.
 // - `Seconds`: Model-owned remaining seconds.
 // - `Settings`: Native tile options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Seconds: double; Settings: D.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Seconds: double;
+  Settings: D.Options
+);
 begin
   const Role: string := 'countdown';
   Frame.Window.Countdown(

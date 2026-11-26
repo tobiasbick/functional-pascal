@@ -19,7 +19,10 @@ uses GuiGallery.App.View as View;
 // - `Renderer`: Native renderer under test.
 // - `Capture`: Prefix for the closed and open captures.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
-  function Update(Model: State.Model; Message: State.Msg): App.Transition of (State.Model, State.Msg);
+  function Update(
+    Model: State.Model;
+    Message: State.Msg
+  ): App.Transition of (State.Model, State.Msg);
   begin
     const Next: App.Transition of (State.Model, State.Msg) := G.Update(Model, Message);
     if Target <> '' then
@@ -57,7 +60,12 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     A.Check(Session.Step(), 'Time pickers gallery closed unexpectedly.');
   end procedure;
 
-  procedure Aim(Session: Gui.Session of State.Msg; Id: string; Horizontal: float := 0.5F; Vertical: float := 0.5F);
+  procedure Aim(
+    Session: Gui.Session of State.Msg;
+    Id: string;
+    Horizontal: float := 0.5F;
+    Vertical: float := 0.5F
+  );
   begin
     const Box: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
     A.Check(Box.Width > 0 and Box.Height > 0, 'Missing native geometry for ' + Id);
@@ -72,7 +80,12 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     Step(Session);
   end procedure;
 
-  procedure Click(Session: Gui.Session of State.Msg; Id: string; Horizontal: float := 0.5F; Vertical: float := 0.5F);
+  procedure Click(
+    Session: Gui.Session of State.Msg;
+    Id: string;
+    Horizontal: float := 0.5F;
+    Vertical: float := 0.5F
+  );
   begin
     Aim(Session, Id, Horizontal, Vertical);
     Button := 1;

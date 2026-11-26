@@ -23,7 +23,10 @@ begin
   return Mvu.StartBackground of M.Msg(
     'library-clear',
     Mvu.FromWorker of M.Msg(
-      async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+      async function(
+        Post: function(M.Msg): Tasks.Task;
+        Cancellation: T.CancellationToken
+      ): Tasks.Task begin
         const Value: Inventory.Snapshot := await Library.ClearAsync(
           Target,
           Cancellation
@@ -36,7 +39,10 @@ begin
 end function;
 
 function OpenKeyPage(Key: M.AcoustIdKey): Mvu.Command of M.Msg;
-  function Open(_Context: Mvu.BackgroundContext of M.Msg; _Cancellation: T.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, M.Msg);
+  function Open(
+    _Context: Mvu.BackgroundContext of M.Msg;
+    _Cancellation: T.CancellationToken
+  ): Tasks.Task of Fx.Outcome of (Fx.Completion, M.Msg);
   begin
     return Tasks.Task.FromResult of Fx.Outcome of (Fx.Completion, M.Msg)(
       if Desktop.TryOpen(Url) then
@@ -58,7 +64,12 @@ begin
   );
 end function;
 
-function Step(Current: M.State; Message: M.Msg; Save: procedure(M.Preferences); Library: Monitoring.Session): Mvu.Transition of (M.State, M.Msg);
+function Step(
+  Current: M.State;
+  Message: M.Msg;
+  Save: procedure(M.Preferences);
+  Library: Monitoring.Session
+): Mvu.Transition of (M.State, M.Msg);
 begin
   case Message of
     when M.Msg.OpenAcoustIdKeyPage(const Key: M.AcoustIdKey):
@@ -159,7 +170,12 @@ end function;
 // - `Library`: Owns scanning, storage and index clearing.
 // ## Returns
 // The next settings state and any background command requested by the action.
-public function Apply(Current: M.State; Message: M.Msg; Save: procedure(M.Preferences); Library: Monitoring.Session): Mvu.Transition of (M.State, M.Msg);
+public function Apply(
+  Current: M.State;
+  Message: M.Msg;
+  Save: procedure(M.Preferences);
+  Library: Monitoring.Session
+): Mvu.Transition of (M.State, M.Msg);
 begin
   const Next: Mvu.Transition of (M.State, M.Msg) := Step(Current, Message, Save, Library);
   if not Sources.SameDiscovery(Current.Saved.MusicSources, Next.Model.Saved.MusicSources) then

@@ -79,7 +79,11 @@ end function;
 // - `Original`: Original example name.
 // ## Returns
 // The name displayed by the grid.
-public function Name(Edits: Lists.Dictionary of (int, string); Index: int; Original: string): string;
+public function Name(
+  Edits: Lists.Dictionary of (int, string);
+  Index: int;
+  Original: string
+): string;
 begin
   var Edited: string := '';
   if Edits.TryGetValue(Index, out Edited) then

@@ -34,7 +34,14 @@ begin
   return Value.ToString(Format, Culture.CultureInfo.InvariantCulture);
 end function;
 
-function Gauge(Id: string; Caption: string; Keys: string; Value: string; Fraction: double; Tone: S.Tone): E.Element of X.Msg;
+function Gauge(
+  Id: string;
+  Caption: string;
+  Keys: string;
+  Value: string;
+  Fraction: double;
+  Tone: S.Tone
+): E.Element of X.Msg;
 begin
   return E.Row of X.Msg(
     new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),

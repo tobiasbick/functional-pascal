@@ -73,7 +73,14 @@ public type Adapter = record implements D.Surface
   end function;
 
   // Forwards X/Y/Width/Height/Radius and Color to CUI's filled rectangle.
-  public procedure Rectangle(X: float; Y: float; Width: float; Height: float; Radius: float; Color: G.Color);
+  public procedure Rectangle(
+    X: float;
+    Y: float;
+    Width: float;
+    Height: float;
+    Radius: float;
+    Color: G.Color
+  );
   begin
     self.Native.Rectangle(X, Y, Width, Height, Radius, Colors.Pack(Color));
   end procedure;
@@ -85,13 +92,29 @@ public type Adapter = record implements D.Surface
   end procedure;
 
   // Forwards the two endpoints, Thickness and Color to CUI's line.
-  public procedure Line(X: float; Y: float; EndX: float; EndY: float; Thickness: float; Color: G.Color);
+  public procedure Line(
+    X: float;
+    Y: float;
+    EndX: float;
+    EndY: float;
+    Thickness: float;
+    Color: G.Color
+  );
   begin
     self.Native.Line(X, Y, EndX, EndY, Thickness, Colors.Pack(Color));
   end procedure;
 
   // Forwards the rounded rectangle, Fill/Border and Thickness to CUI.
-  public procedure Border(X: float; Y: float; Width: float; Height: float; Radius: float; Fill: G.Color; Border: G.Color; Thickness: float);
+  public procedure Border(
+    X: float;
+    Y: float;
+    Width: float;
+    Height: float;
+    Radius: float;
+    Fill: G.Color;
+    Border: G.Color;
+    Thickness: float
+  );
   begin
     self.Native.Border(
       X,
@@ -106,13 +129,32 @@ public type Adapter = record implements D.Surface
   end procedure;
 
   // Forwards the rounded rectangle and Top/Bottom gradient colors to CUI.
-  public procedure Gradient(X: float; Y: float; Width: float; Height: float; Radius: float; Top: G.Color; Bottom: G.Color);
+  public procedure Gradient(
+    X: float;
+    Y: float;
+    Width: float;
+    Height: float;
+    Radius: float;
+    Top: G.Color;
+    Bottom: G.Color
+  );
   begin
     self.Native.Gradient(X, Y, Width, Height, Radius, Colors.Pack(Top), Colors.Pack(Bottom));
   end procedure;
 
   // Forwards the rectangle, Radius, Blur, Spread, offsets and Color to CUI.
-  public procedure Shadow(X: float; Y: float; Width: float; Height: float; Radius: float; Blur: float; Spread: float; OffsetX: float; OffsetY: float; Color: G.Color);
+  public procedure Shadow(
+    X: float;
+    Y: float;
+    Width: float;
+    Height: float;
+    Radius: float;
+    Blur: float;
+    Spread: float;
+    OffsetX: float;
+    OffsetY: float;
+    Color: G.Color
+  );
   begin
     self.Native.Shadow(
       X,
@@ -129,7 +171,12 @@ public type Adapter = record implements D.Surface
   end procedure;
 
   // Forwards Points, Thickness, Color and Closed to CUI's stroker.
-  public procedure Polyline(Values: array of D.Point; Thickness: float; Color: G.Color; Closed: bool);
+  public procedure Polyline(
+    Values: array of D.Point;
+    Thickness: float;
+    Color: G.Color;
+    Closed: bool
+  );
   begin
     self.Native.Polyline(Points(Values), Thickness, Colors.Pack(Color), Closed);
   end procedure;
@@ -141,13 +188,28 @@ public type Adapter = record implements D.Surface
   end procedure;
 
   // Forwards center, Radius, angle range, Thickness and Color to CUI.
-  public procedure Arc(X: float; Y: float; Radius: float; Start: float; Finish: float; Thickness: float; Color: G.Color);
+  public procedure Arc(
+    X: float;
+    Y: float;
+    Radius: float;
+    Start: float;
+    Finish: float;
+    Thickness: float;
+    Color: G.Color
+  );
   begin
     self.Native.Arc(X, Y, Radius, Start, Finish, Thickness, Colors.Pack(Color));
   end procedure;
 
   // Forwards X/Y, literal Text, Font, Size and Color to CUI.
-  public procedure Text(X: float; Y: float; Text: string; Font: G.Font; Size: float; Color: G.Color);
+  public procedure Text(
+    X: float;
+    Y: float;
+    Text: string;
+    Font: G.Font;
+    Size: float;
+    Color: G.Color
+  );
   begin
     self.Native.Text(X, Y, Text, cast Font as int, Size, Colors.Pack(Color));
   end procedure;
@@ -160,7 +222,15 @@ public type Adapter = record implements D.Surface
   end function;
 
   // Forwards the rectangle, Glyph, Size and Color to CUI's icon drawing.
-  public procedure Icon(X: float; Y: float; Width: float; Height: float; Glyph: string; Size: float; Color: G.Color);
+  public procedure Icon(
+    X: float;
+    Y: float;
+    Width: float;
+    Height: float;
+    Glyph: string;
+    Size: float;
+    Color: G.Color
+  );
   begin
     self.Native.Icon(X, Y, Width, Height, Glyph, Size, Colors.Pack(Color));
   end procedure;
@@ -172,7 +242,15 @@ public type Adapter = record implements D.Surface
   end procedure;
 
   // Forwards Source, the rectangle, Radius and Tint to the native image cache.
-  public procedure Image(Source: Images.Source; X: float; Y: float; Width: float; Height: float; Radius: float; Tint: G.Color);
+  public procedure Image(
+    Source: Images.Source;
+    X: float;
+    Y: float;
+    Width: float;
+    Height: float;
+    Radius: float;
+    Tint: G.Color
+  );
   begin
     self.Native.Image(Media.Convert(Source), X, Y, Width, Height, Radius, Colors.Pack(Tint));
   end procedure;

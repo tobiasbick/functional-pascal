@@ -75,7 +75,12 @@ end function;
 // - `Messages`: Embeds this page's messages in the application.
 // ## Returns
 // The view with the controlled native dialog and action footer.
-public function Wrap of TParent(Model: State.Model; Data: Demo.Model; Base: E.Element of TParent; Messages: function(State.Msg): TParent): E.Element of TParent;
+public function Wrap of TParent(
+  Model: State.Model;
+  Data: Demo.Model;
+  Base: E.Element of TParent;
+  Messages: function(State.Msg): TParent
+): E.Element of TParent;
 begin
   const Content: E.Element of State.Msg := E.Column of State.Msg(
     new L.Flow(Gap := G.Points(16), Align := L.Alignment.Stretch),

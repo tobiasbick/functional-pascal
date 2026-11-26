@@ -12,7 +12,11 @@ uses GuiGallery.App.State as Gallery;
 uses GuiGallery.Pages.Overlays.State as Overlays;
 uses System as Sys;
 
-procedure CaptureDisplay(Session: Gui.Session of Gallery.Msg; Output: string; Click: procedure(string));
+procedure CaptureDisplay(
+  Session: Gui.Session of Gallery.Msg;
+  Output: string;
+  Click: procedure(string)
+);
   procedure Specimen(Name: string; Above: int; Width: int; Height: int);
   begin
     const Top: int := ImageTop - Above;
@@ -34,7 +38,11 @@ begin
   Regions.Shot(Session, Output, 'canvas-selected', 'accent-0', 'accent-7');
 end procedure;
 
-procedure CaptureReader(Session: Gui.Session of Gallery.Msg; Output: string; Click: procedure(string));
+procedure CaptureReader(
+  Session: Gui.Session of Gallery.Msg;
+  Output: string;
+  Click: procedure(string)
+);
 begin
   Regions.Capture(
     Session, Output, 'table-of-contents', new Regions.Insets(Top := 20),
@@ -54,7 +62,10 @@ begin
 end procedure;
 
 procedure CaptureDesktop(
-  Session: Gui.Session of Gallery.Msg; Output: string; Click: procedure(string); Scroll: procedure(float)
+  Session: Gui.Session of Gallery.Msg;
+  Output: string;
+  Click: procedure(string);
+  Scroll: procedure(float)
 );
 begin
   Regions.Capture(Session, Output, 'menu-bar', new Regions.Insets(Bottom := -8), 'desktop-menu');
@@ -117,7 +128,10 @@ end procedure;
 // - `Click`: Activates a control by its rendered identity.
 // - `Scroll`: Injects a vertical wheel delta over the page margin.
 public procedure Capture(
-  Session: Gui.Session of Gallery.Msg; Output: string; Page: Gallery.Page; Click: procedure(string);
+  Session: Gui.Session of Gallery.Msg;
+  Output: string;
+  Page: Gallery.Page;
+  Click: procedure(string);
   Scroll: procedure(float)
 );
 begin

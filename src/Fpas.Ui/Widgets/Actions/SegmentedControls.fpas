@@ -37,7 +37,13 @@ end record;
 // - `Settings`: Control size, horizontal fill and input permission.
 // ## Returns
 // A selector which proposes changes without changing the model itself.
-public function SegmentedControl of TMsg(Id: string; Items: array of Item; Selected: int; OnChange: function(int): TMsg; Settings: Options? := null): E.Element of TMsg;
+public function SegmentedControl of TMsg(
+  Id: string;
+  Items: array of Item;
+  Selected: int;
+  OnChange: function(int): TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).Segments(Id, Items, Selected, OnChange, Settings ?? new Options());

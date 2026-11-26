@@ -46,7 +46,11 @@ end function;
 // - `OnChange`: Maps a new color to a message.
 // - `Enabled`: Whether the picker accepts input.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Value: G.Color; OnChange: function(G.Color): TMsg; Enabled: bool
+  Frame: C.State of TMsg;
+  Id: string;
+  Value: G.Color;
+  OnChange: function(G.Color): TMsg;
+  Enabled: bool
 );
 begin
   const Accept: bool := Enabled and Frame.AcceptInput;

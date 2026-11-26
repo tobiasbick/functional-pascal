@@ -40,8 +40,13 @@ end procedure;
 // - `Location`: Parent view path.
 // - `Identify`: Registers a stable ID at a diagnostic path.
 public procedure FilterBar(
-  Id: string; Fields: array of Filters.Field; Current: Filters.Value; Capacity: int;
-  Profile: R.Profile; Location: string; Identify: function(string, string): string
+  Id: string;
+  Fields: array of Filters.Field;
+  Current: Filters.Value;
+  Capacity: int;
+  Profile: R.Profile;
+  Location: string;
+  Identify: function(string, string): string
 );
 begin
   const At: string := Identify(Id, Location + '/filterBar');
@@ -107,7 +112,14 @@ end procedure;
 // - `Height`: Viewport extent.
 // - `RowHeight`: Row height in logical points.
 // - `At`: Diagnostic path.
-public procedure Grid(Columns: array of G.Column; Count: int; Order: Tables.Sort?; Height: L.Extent; RowHeight: float; At: string);
+public procedure Grid(
+  Columns: array of G.Column;
+  Count: int;
+  Order: Tables.Sort?;
+  Height: L.Extent;
+  RowHeight: float;
+  At: string
+);
 begin
   LR.CheckExtent(Height, R.Profile.Graphical, At + '/height');
   if Columns.Length < 1 or Columns.Length > 32 then

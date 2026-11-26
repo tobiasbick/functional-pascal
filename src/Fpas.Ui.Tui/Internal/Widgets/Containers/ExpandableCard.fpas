@@ -23,8 +23,13 @@ uses Fpas.Ui.Widgets.Developer.Terminal as T;
 // ## Returns
 // A terminal card whose header keeps a stable identity.
 public function Lower of TMsg(
-  Id: string; Title: string; Open: bool; Change: function(bool): TMsg; Settings: C.Options;
-  Colors: T.Style; Body: function(): E.Element of TMsg
+  Id: string;
+  Title: string;
+  Open: bool;
+  Change: function(bool): TMsg;
+  Settings: C.Options;
+  Colors: T.Style;
+  Body: function(): E.Element of TMsg
 ): E.Element of TMsg;
 begin
   const Chevron: string := if Open then

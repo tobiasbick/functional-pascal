@@ -77,7 +77,10 @@ end function;
 // ## Returns
 // A graphical calendar with CUI-owned day, month and year navigation.
 public function Calendar of TMsg(
-  Id: string; Value: Sys.DateOnly?; OnChange: function(Sys.DateOnly): TMsg; Enabled: bool := true
+  Id: string;
+  Value: Sys.DateOnly?;
+  OnChange: function(Sys.DateOnly): TMsg;
+  Enabled: bool := true
 ): E.Element of TMsg;
 requires Id <> '';
 begin

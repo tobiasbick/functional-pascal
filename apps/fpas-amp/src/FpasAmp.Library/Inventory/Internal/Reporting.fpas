@@ -174,7 +174,12 @@ public type Reporting = record
   end procedure;
 
   // Publishes detached counters to `Writer`; `Force` bypasses the 100 ms interval.
-  public procedure Publish(Sources: array of S.MusicSource; Generation: long; Writer: Channels.ChannelWriter of P.Snapshot; Force: bool);
+  public procedure Publish(
+    Sources: array of S.MusicSource;
+    Generation: long;
+    Writer: Channels.ChannelWriter of P.Snapshot;
+    Force: bool
+  );
   begin
     const Now: long := Sys.Environment.TickCount64;
     if not Force and Now - self.Last.Value < 100L then

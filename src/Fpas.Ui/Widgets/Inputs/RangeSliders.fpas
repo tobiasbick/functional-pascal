@@ -27,8 +27,13 @@ end record;
 // ## Returns
 // A graphical slider with a model-owned interval.
 public function RangeSlider of TMsg(
-  Id: string; Label: string; Value: Interval; Minimum: float; Maximum: float;
-  OnChange: function(Interval): TMsg; Enabled: bool := true
+  Id: string;
+  Label: string;
+  Value: Interval;
+  Minimum: float;
+  Maximum: float;
+  OnChange: function(Interval): TMsg;
+  Enabled: bool := true
 ): E.Element of TMsg;
 requires Id <> '';
 begin

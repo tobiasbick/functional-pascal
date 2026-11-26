@@ -18,7 +18,13 @@ uses Gallery.Shared.Strings as Strings;
 // - `Preview`: Inert message for the disabled example.
 // ## Returns
 // Email notifications, Marketing and Disabled option.
-public function Rows of TMsg(Newsletter: bool; Marketing: bool; SetNewsletter: function(bool): TMsg; SetMarketing: function(bool): TMsg; Preview: TMsg): array of E.Element of TMsg;
+public function Rows of TMsg(
+  Newsletter: bool;
+  Marketing: bool;
+  SetNewsletter: function(bool): TMsg;
+  SetMarketing: function(bool): TMsg;
+  Preview: TMsg
+): array of E.Element of TMsg;
 begin
   return [
     C.Checkbox of TMsg(
@@ -53,7 +59,10 @@ end function;
 // - `Change`: Maps changes to this workspace preference.
 // ## Returns
 // The workspace summary checkbox.
-public function WeeklySummary of TMsg(Checked: bool; Change: function(bool): TMsg): E.Element of TMsg;
+public function WeeklySummary of TMsg(
+  Checked: bool;
+  Change: function(bool): TMsg
+): E.Element of TMsg;
 begin
   return C.Checkbox of TMsg(
     'workspace-summary',

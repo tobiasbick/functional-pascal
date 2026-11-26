@@ -163,7 +163,10 @@ end record;
 // ## Returns
 // The view and the cache entries that its presenter should use.
 public function Prepare of TMsg(
-  Tree: E.Element of TMsg; Profile: Target; Previous: (Prepared of TMsg)? := null; TerminalSize: T.Viewport? := null;
+  Tree: E.Element of TMsg;
+  Profile: Target;
+  Previous: (Prepared of TMsg)? := null;
+  TerminalSize: T.Viewport? := null;
   AllowOpenModals: bool := true
 ): Prepared of TMsg;
 requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Target.Graphical;

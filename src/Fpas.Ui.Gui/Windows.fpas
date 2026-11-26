@@ -213,7 +213,9 @@ end function;
 // - `OnRead`: Maps the placement to one message.
 // ## Returns
 // The graphical window command.
-public function ReadPlacement of TMsg(OnRead: function(Cui.CuiWindowPlacement): TMsg): Mvu.Command of TMsg;
+public function ReadPlacement of TMsg(
+  OnRead: function(Cui.CuiWindowPlacement): TMsg
+): Mvu.Command of TMsg;
 begin
   return (Mvu.Command of TMsg).Host(
     Mvu.HostRequest.Extension(new PlacementRequest of TMsg(OnRead))

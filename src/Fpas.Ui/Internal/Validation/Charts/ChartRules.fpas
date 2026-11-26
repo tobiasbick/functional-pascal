@@ -61,7 +61,12 @@ end procedure;
 // - `Labels`: Captions or an empty array.
 // - `Settings`: Native presentation.
 // - `At`: Diagnostic location.
-public procedure Donut(Values: array of float; Labels: array of string; Settings: D.Options; At: string);
+public procedure Donut(
+  Values: array of float;
+  Labels: array of string;
+  Settings: D.Options;
+  At: string
+);
 begin
   Common.Shares(Values, At);
   if Labels.Length <> 0 and Labels.Length <> Values.Length then

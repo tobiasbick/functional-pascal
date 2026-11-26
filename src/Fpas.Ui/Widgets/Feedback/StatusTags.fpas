@@ -57,7 +57,12 @@ end record;
 // - `Settings`: Optional native appearance and input settings.
 // ## Returns
 // The graphical widget.
-public function StatusTag of TMsg(Id: string; Current: Value; Remove: (Sys.Func of TMsg)? := null; Settings: Options? := null): E.Element of TMsg;
+public function StatusTag of TMsg(
+  Id: string;
+  Current: Value;
+  Remove: (Sys.Func of TMsg)? := null;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).StatusTag(Id, Current, Remove, Settings ?? new Options());

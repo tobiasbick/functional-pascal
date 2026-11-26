@@ -44,8 +44,12 @@ end record;
 // ## Returns
 // A view that includes the base and the controlled sheet.
 public function Sheet of TMsg(
-  Id: string; Base: E.Element of TMsg; Content: E.Element of TMsg; Open: bool;
-  Settings: Options; OnDismiss: TMsg
+  Id: string;
+  Base: E.Element of TMsg;
+  Content: E.Element of TMsg;
+  Open: bool;
+  Settings: Options;
+  OnDismiss: TMsg
 ): E.Element of TMsg;
 requires Id <> '';
 requires Settings.Size > 0;

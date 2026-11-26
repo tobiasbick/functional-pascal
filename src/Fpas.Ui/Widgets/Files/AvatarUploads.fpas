@@ -23,8 +23,13 @@ public const ImageExtensions: string := 'png;jpg;jpeg;bmp;gif;tga';
 // ## Returns
 // The graphical uploadable avatar.
 public function AvatarUpload of TMsg(
-  Id: string; Name: string; Path: string?; OnDrop: function(string): TMsg;
-  OnBrowse: (Sys.Func of TMsg)? := null; Size: float := 88.0F; Enabled: bool := true
+  Id: string;
+  Name: string;
+  Path: string?;
+  OnDrop: function(string): TMsg;
+  OnBrowse: (Sys.Func of TMsg)? := null;
+  Size: float := 88.0F;
+  Enabled: bool := true
 ): E.Element of TMsg;
 requires Id <> '';
 begin

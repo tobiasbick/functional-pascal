@@ -33,7 +33,11 @@ uses System.Collections.Generic as Generic;
 //
 // ## Returns
 // The top modal identity or null.
-public function TopModal of TMsg(Node: E.Element of TMsg; Prepared: V.Prepared of TMsg; Previous: (array of App.Control)? := null): string?;
+public function TopModal of TMsg(
+  Node: E.Element of TMsg;
+  Prepared: V.Prepared of TMsg;
+  Previous: (array of App.Control)? := null
+): string?;
 begin
   case Node of
     when E.Element.NodeEditor(
@@ -321,7 +325,13 @@ end function;
 // - `Content`: Prepared modal subtree.
 // - `Initial`: Preferred focus request when opening.
 // - `Close`: Optional built-in close button and default focus.
-public procedure Enter of TMsg(State: C.State of TMsg; Id: string; Content: E.Element of TMsg; Initial: string?; Close: string? := null);
+public procedure Enter of TMsg(
+  State: C.State of TMsg;
+  Id: string;
+  Content: E.Element of TMsg;
+  Initial: string?;
+  Close: string? := null
+);
   function Resolve(Preferred: string?): string?;
   begin
     if Preferred = null or Preferred = Close then

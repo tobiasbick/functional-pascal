@@ -38,7 +38,12 @@ end function;
 // - `OnAction`: Optional message factory for the native action button.
 // ## Returns
 // The graphical element.
-public function EmptyState of TMsg(Id: string; Title: string; Settings: Options? := null; OnAction: (Sys.Func of TMsg)? := null): E.Element of TMsg;
+public function EmptyState of TMsg(
+  Id: string;
+  Title: string;
+  Settings: Options? := null;
+  OnAction: (Sys.Func of TMsg)? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).EmptyState(Id, Title, Settings ?? new Options(), OnAction);

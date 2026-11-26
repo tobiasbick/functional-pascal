@@ -11,7 +11,14 @@ uses Fpas.Ui.Widgets.Inputs.TextFields as F;
 uses System as Sys;
 uses System.Text as Text;
 
-procedure CheckValue(Value: string; Capacity: int; Size: B.Size; Password: bool; Multiline: bool; At: string);
+procedure CheckValue(
+  Value: string;
+  Capacity: int;
+  Size: B.Size;
+  Password: bool;
+  Multiline: bool;
+  At: string
+);
 begin
   R.CheckText(Value, At + '/value');
   if Multiline then
@@ -36,8 +43,14 @@ begin
 end procedure;
 
 procedure CheckChrome(
-  Label: string; Placeholder: string; Icon: string; Hint: string; Error: string;
-  Prefix: string; Suffix: string; At: string
+  Label: string;
+  Placeholder: string;
+  Icon: string;
+  Hint: string;
+  Error: string;
+  Prefix: string;
+  Suffix: string;
+  At: string
 );
 begin
   R.CheckText(Label, At + '/label');
@@ -59,8 +72,12 @@ end procedure;
 // - `Location`: Parent view path.
 // - `Identify`: Registers a stable ID at a diagnostic path.
 public procedure CheckTextField(
-  Id: string; Value: string; Settings: F.Options;
-  Profile: R.Profile; Location: string; Identify: function(string, string): string
+  Id: string;
+  Value: string;
+  Settings: F.Options;
+  Profile: R.Profile;
+  Location: string;
+  Identify: function(string, string): string
 );
 begin
   const Path: string := Location + '/textField';
@@ -95,8 +112,12 @@ end procedure;
 // - `Location`: Parent view path.
 // - `Identify`: Registers a stable ID at a diagnostic path.
 public procedure CheckSearchField(
-  Id: string; Value: string; Settings: S.Options;
-  Profile: R.Profile; Location: string; Identify: function(string, string): string
+  Id: string;
+  Value: string;
+  Settings: S.Options;
+  Profile: R.Profile;
+  Location: string;
+  Identify: function(string, string): string
 );
 begin
   const Path: string := Location + '/searchField';
@@ -122,8 +143,12 @@ end procedure;
 // - `Location`: Parent view path.
 // - `Identify`: Registers a stable ID at a diagnostic path.
 public procedure CheckTextArea(
-  Id: string; Value: string; Settings: A.Options;
-  Profile: R.Profile; Location: string; Identify: function(string, string): string
+  Id: string;
+  Value: string;
+  Settings: A.Options;
+  Profile: R.Profile;
+  Location: string;
+  Identify: function(string, string): string
 );
 begin
   const Path: string := Location + '/textArea';

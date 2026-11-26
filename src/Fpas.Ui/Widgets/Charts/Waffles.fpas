@@ -32,7 +32,12 @@ end record;
 // - `OnActivate`: Optional clicked input index callback; hover remains native.
 // ## Returns
 // A graphical element.
-public function Waffle of TMsg(Id: string; Items: array of C.Item; Settings: Options? := null; OnActivate: Sys.Func of (int, TMsg)? := null): E.Element of TMsg;
+public function Waffle of TMsg(
+  Id: string;
+  Items: array of C.Item;
+  Settings: Options? := null;
+  OnActivate: Sys.Func of (int, TMsg)? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).Waffle(Id, Items, Settings ?? new Options(), OnActivate);

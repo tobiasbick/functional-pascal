@@ -24,7 +24,10 @@ uses GuiGallery.Shared.Sections as G;
 uses System as Sys;
 uses System.Linq as Linq;
 
-function Join(First: array of E.Element of M.Msg; Second: array of E.Element of M.Msg): array of E.Element of M.Msg;
+function Join(
+  First: array of E.Element of M.Msg;
+  Second: array of E.Element of M.Msg
+): array of E.Element of M.Msg;
 begin
   return Linq.Enumerable.ToArray of E.Element of M.Msg(
     Linq.Enumerable.Concat of E.Element of M.Msg(First, Second)

@@ -22,7 +22,9 @@ end record;
 // ## Returns
 // The graphical countdown.
 public function Countdown of TMsg(
-  Id: string; SecondsLeft: double; Settings: Options? := null
+  Id: string;
+  SecondsLeft: double;
+  Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';
 begin

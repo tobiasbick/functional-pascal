@@ -22,7 +22,13 @@ uses System as Sys;
 // - `Candles`: Finite OHLC periods with nonnegative volume.
 // - `Settings`: Native presentation.
 // - `OnCursorChange`: Optional native crosshair change callback.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Candles: array of W.Candle; Settings: W.Options; OnCursorChange: Sys.Func of (int, TMsg)?);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Candles: array of W.Candle;
+  Settings: W.Options;
+  OnCursorChange: Sys.Func of (int, TMsg)?
+);
 begin
   const Token: string := C.Token('candlestick', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;

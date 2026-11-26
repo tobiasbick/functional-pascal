@@ -59,8 +59,12 @@ begin
 end function;
 
 function Button(
-  Id: string; Title: string; OnClick: M.Msg; Variant: S.ButtonVariant := S.ButtonVariant.Outline;
-  Enabled: bool := true; Size: B.Size := B.Size.Small
+  Id: string;
+  Title: string;
+  OnClick: M.Msg;
+  Variant: S.ButtonVariant := S.ButtonVariant.Outline;
+  Enabled: bool := true;
+  Size: B.Size := B.Size.Small
 ): E.Element of M.Msg;
 begin
   return B.Button of M.Msg(
@@ -71,7 +75,13 @@ begin
   );
 end function;
 
-function Input(Id: string; Value: string; Changed: function(string): M.Msg; Current: M.State; Placeholder: string := ''): E.Element of M.Msg;
+function Input(
+  Id: string;
+  Value: string;
+  Changed: function(string): M.Msg;
+  Current: M.State;
+  Placeholder: string := ''
+): E.Element of M.Msg;
 begin
   const Bytes: int := Encoding.Encoding.UTF8.GetByteCount(Value);
   if Value.Contains(#0) or Bytes > 65535 then
@@ -383,7 +393,10 @@ end function;
 // Width and Height are the viewport dimensions used to bound scrollable rows.
 // Returns the base view with the tag dialog on top.
 public function Build of TParent(
-  Current: M.State; Width: int; Height: int; Base: E.Element of TParent;
+  Current: M.State;
+  Width: int;
+  Height: int;
+  Base: E.Element of TParent;
   Message: function(M.Msg): TParent
 ): E.Element of TParent;
 begin

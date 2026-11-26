@@ -46,7 +46,14 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // The graphical element.
-public function Comment of TMsg(Id: string; Author: string; Text: string; Current: Value; Change: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
+public function Comment of TMsg(
+  Id: string;
+  Author: string;
+  Text: string;
+  Current: Value;
+  Change: function(Event): TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).Comment(Id, Author, Text, Current, Change, Settings ?? new Options());

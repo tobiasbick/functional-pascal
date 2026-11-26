@@ -44,7 +44,8 @@ end record;
 // ## Returns
 // An owner-thread graphical command. Reading before presentation is invalid.
 public function ReadSpanRectangle of TMsg(
-  Id: string; Span: Trace.Span;
+  Id: string;
+  Span: Trace.Span;
   OnRead: function(Cui.CuiRectangle): TMsg
 ): Mvu.Command of TMsg;
 requires Id <> '';

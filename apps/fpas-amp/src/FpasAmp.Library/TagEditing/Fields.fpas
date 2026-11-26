@@ -89,7 +89,10 @@ begin
 end function;
 
 // Applies only the supplied standard fields to Info, preserving its technical properties.
-public function Project(Info: Media.Info; Changes: I.ImmutableDictionary of (string, string?)): Media.Info;
+public function Project(
+  Info: Media.Info;
+  Changes: I.ImmutableDictionary of (string, string?)
+): Media.Info;
 begin
   var Result: Media.Info := Info;
   for Field: Sys.Collections.Generic.KeyValuePair of (string, string?) in Changes do

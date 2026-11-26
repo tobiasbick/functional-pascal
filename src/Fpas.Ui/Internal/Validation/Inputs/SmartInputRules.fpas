@@ -53,7 +53,14 @@ end procedure;
 // - `Maximum`: Inclusive upper bound.
 // - `Settings`: Step, precision and native width.
 // - `At`: Diagnostic path.
-public procedure Scrub(Label: string; Value: float; Minimum: float; Maximum: float; Settings: S.Options; At: string);
+public procedure Scrub(
+  Label: string;
+  Value: float;
+  Minimum: float;
+  Maximum: float;
+  Settings: S.Options;
+  At: string
+);
 begin
   R.CheckText(Label, At + '/label');
   R.CheckText(Settings.Suffix, At + '/suffix');

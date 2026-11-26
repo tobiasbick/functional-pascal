@@ -127,10 +127,14 @@ public type HeadlessSession = record implements Sys.IDisposable
   // ## Returns
   // The headless session.
   public static function Create(
-    SendInput: function(Input): Admission; Process: function(): StepResult;
-    ReadFrame: function(): Frame; ReadOutcome: function(long, Sys.TimeSpan): Tasks.Task of StepResult?;
-    ReadReady: function(Threads.CancellationToken): Tasks.Task of bool; Status: function(): bool;
-    BeginClose: function(): Tasks.Task; Release: procedure()
+    SendInput: function(Input): Admission;
+    Process: function(): StepResult;
+    ReadFrame: function(): Frame;
+    ReadOutcome: function(long, Sys.TimeSpan): Tasks.Task of StepResult?;
+    ReadReady: function(Threads.CancellationToken): Tasks.Task of bool;
+    Status: function(): bool;
+    BeginClose: function(): Tasks.Task;
+    Release: procedure()
   ): HeadlessSession;
   begin
     return new HeadlessSession(

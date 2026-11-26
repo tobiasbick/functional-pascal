@@ -103,7 +103,11 @@ uses System as Sys;
 //
 // ## Returns
 // Its application ID, or null.
-public function First of TMsg(Node: E.Element of TMsg; Prepared: V.Prepared of TMsg; Preferred: string? := null): string?;
+public function First of TMsg(
+  Node: E.Element of TMsg;
+  Prepared: V.Prepared of TMsg;
+  Preferred: string? := null
+): string?;
 begin
   case Node of
     when E.Element.Canvas(

@@ -40,7 +40,12 @@ begin
   end if;
 end procedure;
 
-procedure Sizes(Preferred: array of int; Rules: array of Tree.Flex; Available: int; Expected: array of int);
+procedure Sizes(
+  Preferred: array of int;
+  Rules: array of Tree.Flex;
+  Available: int;
+  Expected: array of int
+);
 begin
   const Actual: array of int := F.Allocate(Preferred, Rules, Available);
   Check(Actual.Length = Expected.Length, 'Allocation length.');

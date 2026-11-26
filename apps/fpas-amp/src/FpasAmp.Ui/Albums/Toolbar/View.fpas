@@ -29,7 +29,11 @@ end function;
 // ## Returns
 // The search field, the filter button and the sort menu.
 public function Build(
-  Current: M.State; Artists: array of string; Genres: array of string; Width: int; Scope: M.Scope := M.Scope.Albums
+  Current: M.State;
+  Artists: array of string;
+  Genres: array of string;
+  Width: int;
+  Scope: M.Scope := M.Scope.Albums
 ): E.Element of M.Msg;
 requires Width > 0;
 begin
@@ -61,7 +65,12 @@ end function;
 // - `Width`: Available width in logical points.
 // ## Returns
 // The toolbar with wrapped controls at narrow widths.
-public function Arrange of TMsg(Field: E.Element of TMsg; Filter: E.Element of TMsg; Sort: E.Element of TMsg; Width: int): E.Element of TMsg;
+public function Arrange of TMsg(
+  Field: E.Element of TMsg;
+  Filter: E.Element of TMsg;
+  Sort: E.Element of TMsg;
+  Width: int
+): E.Element of TMsg;
 requires Width > 0;
 begin
   const Actions: E.Element of TMsg := E.Row of TMsg(

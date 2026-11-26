@@ -72,7 +72,10 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       Pending := 0;
     end if;
   end procedure;
-  function Update(Model: State.Model; Message: State.Msg): App.Transition of (State.Model, State.Msg);
+  function Update(
+    Model: State.Model;
+    Message: State.Msg
+  ): App.Transition of (State.Model, State.Msg);
   begin
     case Message of
       when State.Msg.Disclosure(SliceDisclosure.Msg.PreviewBranchDeletion):

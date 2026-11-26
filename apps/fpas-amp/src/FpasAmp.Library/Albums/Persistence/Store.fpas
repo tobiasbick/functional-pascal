@@ -16,7 +16,12 @@ uses System.Text.RegularExpressions as Regex;
 
 // Replaces album membership for tag `Value` at indexed `Id`, inside `Transaction`.
 // Path/directory facts are read from `Connection`; no music/image file is opened.
-public procedure Save(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction; Id: long; Value: MediaTags.Info);
+public procedure Save(
+  Connection: Db.SqliteConnection;
+  Transaction: Db.SqliteTransaction;
+  Id: long;
+  Value: MediaTags.Info
+);
 begin
   using const Query: Db.SqliteCommand := Sql.Command(
     Connection,

@@ -17,7 +17,13 @@ uses Fpas.Ui.Widgets.Navigation.Navigation as N;
 // - `Sections`: Headings and destinations in focus order.
 // - `Active`: Model-owned active key.
 // - `Enabled`: Input permission for the sidebar.
-public procedure Draw of TMsg(State: C.State of TMsg; Id: string; Sections: array of N.Section of TMsg; Active: string?; Enabled: bool);
+public procedure Draw of TMsg(
+  State: C.State of TMsg;
+  Id: string;
+  Sections: array of N.Section of TMsg;
+  Active: string?;
+  Enabled: bool
+);
 begin
   const Group: string := C.Token('sidebar', Id);
   State.Window.BeginSidebar(Group, Active <> null);

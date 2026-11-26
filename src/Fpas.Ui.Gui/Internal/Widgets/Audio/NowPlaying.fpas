@@ -21,7 +21,13 @@ uses System as Sys;
 // - `Current`: Playback model.
 // - `Change`: Maps a native proposal.
 // - `Settings`: Native appearance and input options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Current: W.Value; Change: function(W.Event): TMsg; Settings: W.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Current: W.Value;
+  Change: function(W.Event): TMsg;
+  Settings: W.Options
+);
 begin
   const Token: string := C.Token('now-playing', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;

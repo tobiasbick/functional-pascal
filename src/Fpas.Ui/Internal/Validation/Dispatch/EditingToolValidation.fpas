@@ -66,7 +66,12 @@ end procedure;
 // - `Location`: Diagnostic path.
 // - `Profile`: Rendering target.
 // - `Identify`: Stable identity registrar.
-public procedure Check of TMsg(Node: E.Element of TMsg; Location: string; Profile: R.Profile; Identify: function(string, string): string);
+public procedure Check of TMsg(
+  Node: E.Element of TMsg;
+  Location: string;
+  Profile: R.Profile;
+  Identify: function(string, string): string
+);
 begin
   R.RequireProfile(Profile, R.Profile.Graphical, Location);
   case Node of

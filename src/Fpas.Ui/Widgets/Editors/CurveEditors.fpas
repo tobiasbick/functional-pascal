@@ -84,7 +84,13 @@ end record;
 // - `Settings`: Native layout and behavior options.
 // ## Returns
 // A graphical element.
-public function CurveEditor of TMsg(Id: string; Keys: array of Key; Selected: int; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
+public function CurveEditor of TMsg(
+  Id: string;
+  Keys: array of Key;
+  Selected: int;
+  Changed: function(Event): TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).CurveEditor(Id, Keys, Selected, Changed, Settings ?? new Options());

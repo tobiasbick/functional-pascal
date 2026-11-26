@@ -34,8 +34,12 @@ end procedure;
 // - `Location`: View path used for diagnostics.
 // - `Identify`: Validates and registers a unique view identity.
 public procedure CheckRow(
-  Id: string; Label: string; Description: string; Profile: Rules.Profile;
-  Location: string; Identify: function(string, string): string
+  Id: string;
+  Label: string;
+  Description: string;
+  Profile: Rules.Profile;
+  Location: string;
+  Identify: function(string, string): string
 );
 begin
   const At: string := Identify(Id, Location);
@@ -54,8 +58,13 @@ end procedure;
 // - `Location`: View path used for diagnostics.
 // - `Identify`: Validates and registers a unique view identity.
 public procedure CheckGroup(
-  Id: string; Items: array of R.Item; Selected: int; Gap: L.Spacing; Profile: Rules.Profile;
-  Location: string; Identify: function(string, string): string
+  Id: string;
+  Items: array of R.Item;
+  Selected: int;
+  Gap: L.Spacing;
+  Profile: Rules.Profile;
+  Location: string;
+  Identify: function(string, string): string
 );
 begin
   const At: string := Identify(Id, Location);
@@ -81,8 +90,13 @@ end procedure;
 // - `Location`: View path for diagnostics.
 // - `Identify`: Validates and registers a unique view identity.
 public procedure CheckCards(
-  Id: string; Items: array of Cards.Item; Selected: int; Columns: int; Profile: Rules.Profile;
-  Location: string; Identify: function(string, string): string
+  Id: string;
+  Items: array of Cards.Item;
+  Selected: int;
+  Columns: int;
+  Profile: Rules.Profile;
+  Location: string;
+  Identify: function(string, string): string
 );
 begin
   const At: string := Identify(Id, Location + '/radioCards');

@@ -34,7 +34,11 @@ const Months: array of string := [
   'Dec'
 ];
 
-function Card(Id: string; Settings: Cards.Options; params Children: array of E.Element of State.Msg): E.Element of State.Msg;
+function Card(
+  Id: string;
+  Settings: Cards.Options;
+  params Children: array of E.Element of State.Msg
+): E.Element of State.Msg;
 begin
   return Cards.Card of State.Msg(Id, Children, Settings);
 end function;

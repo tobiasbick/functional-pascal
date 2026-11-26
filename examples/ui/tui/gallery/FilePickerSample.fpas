@@ -69,7 +69,11 @@ end function;
 // - `Wrap`: Embeds a dialog action in a gallery message.
 // ## Returns
 // The gallery screen and its file picker layers.
-public function Present of TMsg(Base: E.Element of TMsg; Current: State; Wrap: function(Msg): TMsg): E.Element of TMsg;
+public function Present of TMsg(
+  Base: E.Element of TMsg;
+  Current: State;
+  Wrap: function(Msg): TMsg
+): E.Element of TMsg;
 begin
   const Closed: function(Picker.Event): TMsg := function(Event: Picker.Event): TMsg => Wrap(
     Msg.Close(Event)

@@ -17,7 +17,12 @@ uses System.Threading as T;
 // Imports supported absolute `Path` into durable `Database`, preserving ordered
 // targets without enrolling their folders as sources. `Name` defaults to the stem.
 // Returns the new independent local key; cancellation never leaves a partial list.
-public function Import(Database: string; Path: string; Name: string?; Cancellation: T.CancellationToken): M.Key;
+public function Import(
+  Database: string;
+  Path: string;
+  Name: string?;
+  Cancellation: T.CancellationToken
+): M.Key;
 begin
   if not IO.Path.IsPathFullyQualified(Path) then
     raise new Sys.ArgumentException('Expected an absolute playlist path.', 'Path');
@@ -49,7 +54,14 @@ end function;
 // Exports `Identity` from both stores to absolute `.m3u8` `Destination`.
 // `Overwrite` explicitly authorizes replacing an existing file. A same-directory
 // temporary write is renamed atomically only after success and cancellation checks.
-public procedure Export(Database: string; Users: string; Identity: M.Key; Destination: string; Overwrite: bool; Cancellation: T.CancellationToken);
+public procedure Export(
+  Database: string;
+  Users: string;
+  Identity: M.Key;
+  Destination: string;
+  Overwrite: bool;
+  Cancellation: T.CancellationToken
+);
 begin
   const Value: M.Playlist? := Queries.Read(Database, Users, Identity, Cancellation);
   if Value = null then

@@ -21,7 +21,12 @@ public type Session = record
 
   // Creates a borrowed handle for `Database`/`Users`. `Ready` validates schemas;
   // `Lifetime` belongs to the owning metadata stage, not to this handle.
-  public static function Create(Database: string; Users: string; Ready: Tasks.Task; Lifetime: T.CancellationToken): Session;
+  public static function Create(
+    Database: string;
+    Users: string;
+    Ready: Tasks.Task;
+    Lifetime: T.CancellationToken
+  ): Session;
   begin
     return new Session(Database, Users, Ready, Lifetime);
   end function;
@@ -29,7 +34,10 @@ public type Session = record
   // Publishes all changed playlist summaries through awaited `Publish`, including
   // the first empty snapshot. Cancellation closes the borrowed observation lifetime;
   // blocking database reads and polling stay off the caller's thread.
-  public async function ObserveAsync(Publish: function(I.ImmutableArray of M.Summary): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
+  public async function ObserveAsync(
+    Publish: function(I.ImmutableArray of M.Summary): Tasks.Task;
+    Cancellation: T.CancellationToken
+  ): Tasks.Task;
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
       self.Lifetime,
@@ -45,7 +53,10 @@ public type Session = record
   end function;
 
   // Lists a bounded summary page selected by `Request`; cancellation owns this call.
-  public async function ListAsync(Request: M.Query; Cancellation: T.CancellationToken): Tasks.Task of I.ImmutableArray of M.Summary;
+  public async function ListAsync(
+    Request: M.Query;
+    Cancellation: T.CancellationToken
+  ): Tasks.Task of I.ImmutableArray of M.Summary;
   requires Request.Limit >= 1 and Request.Limit <= 200;
   requires Request.Offset >= 0;
   begin
@@ -66,7 +77,10 @@ public type Session = record
   end function;
 
   // Reads ordered `Identity`, or null when absent; cancellation owns this call.
-  public async function ReadAsync(Identity: M.Key; Cancellation: T.CancellationToken): Tasks.Task of M.Playlist?;
+  public async function ReadAsync(
+    Identity: M.Key;
+    Cancellation: T.CancellationToken
+  ): Tasks.Task of M.Playlist?;
   requires Identity.Id <> '';
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
@@ -82,7 +96,12 @@ public type Session = record
 
   // Creates/replaces a local list by optional `Id`. `Items` retains duplicates/order;
   // locations must be absolute paths/URIs. Cancellation rolls back replacement.
-  public async function SaveAsync(Id: string?; Name: string; Items: array of M.Input; Cancellation: T.CancellationToken): Tasks.Task of M.Key;
+  public async function SaveAsync(
+    Id: string?;
+    Name: string;
+    Items: array of M.Input;
+    Cancellation: T.CancellationToken
+  ): Tasks.Task of M.Key;
   requires Name <> '';
   requires Items <> null and Items.Length <= 100000;
   begin
@@ -117,7 +136,11 @@ public type Session = record
 
   // Imports absolute `Path` as a new durable copy, optionally named `Name`.
   // Referenced media is never opened or enrolled; cancellation owns this call.
-  public async function ImportAsync(Path: string; Cancellation: T.CancellationToken; Name: string? := null): Tasks.Task of M.Key;
+  public async function ImportAsync(
+    Path: string;
+    Cancellation: T.CancellationToken;
+    Name: string? := null
+  ): Tasks.Task of M.Key;
   requires Path <> '';
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
@@ -133,7 +156,12 @@ public type Session = record
 
   // Exports `Identity` to absolute `.m3u8` `Destination`. Only explicit `Overwrite`
   // permits replacement; cancellation before the atomic rename preserves the target.
-  public async function ExportAsync(Identity: M.Key; Destination: string; Cancellation: T.CancellationToken; Overwrite: bool := false): Tasks.Task;
+  public async function ExportAsync(
+    Identity: M.Key;
+    Destination: string;
+    Cancellation: T.CancellationToken;
+    Overwrite: bool := false
+  ): Tasks.Task;
   requires Identity.Id <> '';
   requires Destination <> '';
   begin

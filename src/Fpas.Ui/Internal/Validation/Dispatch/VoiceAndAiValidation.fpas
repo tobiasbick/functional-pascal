@@ -39,7 +39,13 @@ uses System as Sys;
 // - `Profile`: Target capability profile.
 // - `Identify`: Registers widget and part identities.
 // - `Visit`: Queues a composed child for validation.
-public procedure Check of TMsg(Node: E.Element of TMsg; Location: string; Profile: Rules.Profile; Identify: function(string, string): string; Visit: procedure(E.Element of TMsg, string));
+public procedure Check of TMsg(
+  Node: E.Element of TMsg;
+  Location: string;
+  Profile: Rules.Profile;
+  Identify: function(string, string): string;
+  Visit: procedure(E.Element of TMsg, string)
+);
 begin
   case Node of
     when E.Element.VoiceWave(

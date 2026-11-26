@@ -29,7 +29,11 @@ uses System as Sys;
 // - `Frame`: Current GUI frame.
 // - `Node`: Native display element.
 // - `Visit`: Renders the veil's content.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Node: E.Element of TMsg; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Node: E.Element of TMsg;
+  Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
+);
 begin
   case Node of
     when E.Element.NativeText(const Text: string, const Role: Texts.Appearance):

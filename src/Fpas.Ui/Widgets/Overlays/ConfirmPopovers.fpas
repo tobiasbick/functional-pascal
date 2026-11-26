@@ -35,7 +35,12 @@ end record;
 // ## Returns
 // A graphical view with the trigger's original layout.
 public function ConfirmPopover of TMsg(
-  Id: string; Trigger: E.Element of TMsg; Open: bool; Settings: Options; OnConfirm: TMsg; OnDismiss: TMsg
+  Id: string;
+  Trigger: E.Element of TMsg;
+  Open: bool;
+  Settings: Options;
+  OnConfirm: TMsg;
+  OnDismiss: TMsg
 ): E.Element of TMsg;
 requires Id <> '';
 begin

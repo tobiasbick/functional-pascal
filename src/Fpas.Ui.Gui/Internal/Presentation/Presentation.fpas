@@ -365,12 +365,22 @@ uses System as Sys;
 // - `State`: Frame context and retained resources.
 public procedure Draw of TMsg(State: C.State of TMsg);
   // Keep recursive layout visits out of the large widget dispatch frames.
-  procedure Visit(Node: E.Element of TMsg; Current: C.State of TMsg; Horizontal: bool; Align: L.Alignment);
+  procedure Visit(
+    Node: E.Element of TMsg;
+    Current: C.State of TMsg;
+    Horizontal: bool;
+    Align: L.Alignment
+  );
   begin
     DrawTextAndEditors(Node, Current, Horizontal, Align);
   end procedure;
 
-  procedure DrawTextAndEditors(Node: E.Element of TMsg; Current: C.State of TMsg; Horizontal: bool; Align: L.Alignment);
+  procedure DrawTextAndEditors(
+    Node: E.Element of TMsg;
+    Current: C.State of TMsg;
+    Horizontal: bool;
+    Align: L.Alignment
+  );
   begin
     case Node of
       when E.Element.FormattedText(
@@ -663,7 +673,12 @@ public procedure Draw of TMsg(State: C.State of TMsg);
     Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
   end procedure;
 
-  procedure DrawDeveloperAndMedia(Node: E.Element of TMsg; Current: C.State of TMsg; Horizontal: bool; Align: L.Alignment);
+  procedure DrawDeveloperAndMedia(
+    Node: E.Element of TMsg;
+    Current: C.State of TMsg;
+    Horizontal: bool;
+    Align: L.Alignment
+  );
   begin
     case Node of
       when E.Element.VoiceOrb(
@@ -823,7 +838,12 @@ public procedure Draw of TMsg(State: C.State of TMsg);
     Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
   end procedure;
 
-  procedure DrawVoiceAndChat(Node: E.Element of TMsg; Current: C.State of TMsg; Horizontal: bool; Align: L.Alignment);
+  procedure DrawVoiceAndChat(
+    Node: E.Element of TMsg;
+    Current: C.State of TMsg;
+    Horizontal: bool;
+    Align: L.Alignment
+  );
   begin
     case Node of
       when E.Element.Ticker(
@@ -949,7 +969,12 @@ public procedure Draw of TMsg(State: C.State of TMsg);
     Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
   end procedure;
 
-  procedure DrawButtonsAndMenus(Node: E.Element of TMsg; Current: C.State of TMsg; Horizontal: bool; Align: L.Alignment);
+  procedure DrawButtonsAndMenus(
+    Node: E.Element of TMsg;
+    Current: C.State of TMsg;
+    Horizontal: bool;
+    Align: L.Alignment
+  );
   begin
     case Node of
       when E.Element.NumberField(
@@ -1105,7 +1130,12 @@ public procedure Draw of TMsg(State: C.State of TMsg);
     Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
   end procedure;
 
-  procedure DrawPickersAndSelection(Node: E.Element of TMsg; Current: C.State of TMsg; Horizontal: bool; Align: L.Alignment);
+  procedure DrawPickersAndSelection(
+    Node: E.Element of TMsg;
+    Current: C.State of TMsg;
+    Horizontal: bool;
+    Align: L.Alignment
+  );
   begin
     case Node of
       when E.Element.RangeSliderAction(
@@ -1295,7 +1325,12 @@ public procedure Draw of TMsg(State: C.State of TMsg);
     Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
   end procedure;
 
-  procedure DrawDisclosureAndData(Node: E.Element of TMsg; Current: C.State of TMsg; Horizontal: bool; Align: L.Alignment);
+  procedure DrawDisclosureAndData(
+    Node: E.Element of TMsg;
+    Current: C.State of TMsg;
+    Horizontal: bool;
+    Align: L.Alignment
+  );
   begin
     case Node of
       when E.Element.Popover(
@@ -1519,7 +1554,12 @@ public procedure Draw of TMsg(State: C.State of TMsg);
     Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
   end procedure;
 
-  procedure DrawChartsAndSections(Node: E.Element of TMsg; Current: C.State of TMsg; Horizontal: bool; Align: L.Alignment);
+  procedure DrawChartsAndSections(
+    Node: E.Element of TMsg;
+    Current: C.State of TMsg;
+    Horizontal: bool;
+    Align: L.Alignment
+  );
   begin
     case Node of
       when E.Element.DotDisplay(
@@ -1957,7 +1997,12 @@ public procedure Draw of TMsg(State: C.State of TMsg);
     Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
   end procedure;
 
-  procedure DrawLayout(Node: E.Element of TMsg; Current: C.State of TMsg; Horizontal: bool; Align: L.Alignment);
+  procedure DrawLayout(
+    Node: E.Element of TMsg;
+    Current: C.State of TMsg;
+    Horizontal: bool;
+    Align: L.Alignment
+  );
   begin
     case Node of
       when E.Element.Spacer:

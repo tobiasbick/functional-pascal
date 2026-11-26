@@ -122,7 +122,11 @@ end function;
 // - `RevenueWidth`: Width of the right-aligned revenue column.
 // ## Returns
 // The five columns in gallery order.
-public function Columns(RoleWidth: L.Extent; StatusWidth: L.Extent; RevenueWidth: L.Extent): array of T.Column;
+public function Columns(
+  RoleWidth: L.Extent;
+  StatusWidth: L.Extent;
+  RevenueWidth: L.Extent
+): array of T.Column;
 begin
   return [
     new T.Column(Strings.Get('Text.Name'), Sortable := true),

@@ -32,7 +32,10 @@ uses System as Sys;
 // - `Messages`: Pure message translation.
 // ## Returns
 // The same chart data, identities and options with translated callbacks.
-public function Map of (TChild, TParent)(Value: E.Element of TChild; Messages: function(TChild): TParent): E.Element of TParent;
+public function Map of (TChild, TParent)(
+  Value: E.Element of TChild;
+  Messages: function(TChild): TParent
+): E.Element of TParent;
 begin
   case Value of
     when E.Element.Sankey(

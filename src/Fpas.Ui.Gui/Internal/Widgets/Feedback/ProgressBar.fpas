@@ -18,7 +18,12 @@ uses System.Globalization as Culture;
 // - `Id`: Stable progress identity.
 // - `Value`: Model-owned fraction.
 // - `Settings`: Native presentation options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Value: float; Settings: P.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Value: float;
+  Settings: P.Options
+);
 begin
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   Frame.Window.Progress(

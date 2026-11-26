@@ -26,8 +26,14 @@ uses System.Collections.Generic as Lists;
 // - `Settings`: Header decoration and input permission.
 // - `Visit`: Host traversal for the native body.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Title: string; Open: bool;
-  OnChange: function(bool): TMsg; Content: E.Element of TMsg; Card: bool; Settings: Cards.Options;
+  Frame: C.State of TMsg;
+  Id: string;
+  Title: string;
+  Open: bool;
+  OnChange: function(bool): TMsg;
+  Content: E.Element of TMsg;
+  Card: bool;
+  Settings: Cards.Options;
   Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
 );
 begin

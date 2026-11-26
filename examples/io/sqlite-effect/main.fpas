@@ -16,7 +16,10 @@ type LookupFailure = variant
 end variant;
 
 function FindTitle(Id: int): Fx.Effect of (string, LookupFailure, string);
-  async function Read(ConnectionString: string; Stop: T.CancellationToken): Tasks.Task of Fx.Outcome of (string, LookupFailure);
+  async function Read(
+    ConnectionString: string;
+    Stop: T.CancellationToken
+  ): Tasks.Task of Fx.Outcome of (string, LookupFailure);
   begin
     try
       await using const Connection: Db.SqliteConnection := new Db.SqliteConnection(

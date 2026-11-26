@@ -65,7 +65,13 @@ end procedure;
 // - `Profile`: Target capabilities.
 // - `Identify`: Registers the widget ID.
 // - `Visit`: Validates composed children.
-public procedure Check of TMsg(Node: E.Element of TMsg; Location: string; Profile: R.Profile; Identify: function(string, string): string; Visit: procedure((E.Element of TMsg)?, string));
+public procedure Check of TMsg(
+  Node: E.Element of TMsg;
+  Location: string;
+  Profile: R.Profile;
+  Identify: function(string, string): string;
+  Visit: procedure((E.Element of TMsg)?, string)
+);
 begin
   R.RequireProfile(Profile, R.Profile.Graphical, Location);
   case Node of

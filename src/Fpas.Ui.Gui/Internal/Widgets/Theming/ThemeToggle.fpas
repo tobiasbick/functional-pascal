@@ -18,7 +18,13 @@ uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 // - `Appearance`: Model-owned concrete light/dark appearance.
 // - `OnChange`: Maps an activated proposal to a message.
 // - `Enabled`: Whether input and focus are permitted.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Appearance: Themes.Mode; OnChange: function(Themes.Mode): TMsg; Enabled: bool);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Appearance: Themes.Mode;
+  OnChange: function(Themes.Mode): TMsg;
+  Enabled: bool
+);
 begin
   const Accept: bool := Enabled and Frame.AcceptInput;
   const Token: string := C.Token('theme-toggle', Id);

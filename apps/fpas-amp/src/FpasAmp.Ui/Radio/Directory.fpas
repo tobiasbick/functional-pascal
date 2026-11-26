@@ -97,7 +97,10 @@ begin
 end function;
 
 // Fetches up to 100 matching stations, falling back to another mirror on failure.
-public async function Search(Query: M.Query; Stop: T.CancellationToken): Tasks.Task of array of M.Station;
+public async function Search(
+  Query: M.Query;
+  Stop: T.CancellationToken
+): Tasks.Task of array of M.Station;
 begin
   const Path: string := '/json/stations/search?hidebroken=true&order=clickcount&reverse=true&limit=' +
     Maximum.ToString() + Filter('name', Query.Name) + Filter('country', Query.Country) +

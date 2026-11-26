@@ -17,7 +17,12 @@ uses Fpas.Ui.Widgets.Display.DotDisplays as W;
 // - `Id`: Stable widget identity.
 // - `Text`: Text for the dot display.
 // - `Settings`: Native presentation options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Text: string; Settings: W.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Text: string;
+  Settings: W.Options
+);
 begin
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   const Flags: int := (if Settings.Accent then

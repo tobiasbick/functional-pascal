@@ -22,8 +22,13 @@ uses System.Globalization as Culture;
 // - `OnChange`: Maps an edit to a message.
 // - `Settings`: Caption, suffix, step and input options.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Value: double; Minimum: double; Maximum: double;
-  OnChange: function(double): TMsg; Settings: N.Options
+  Frame: C.State of TMsg;
+  Id: string;
+  Value: double;
+  Minimum: double;
+  Maximum: double;
+  OnChange: function(double): TMsg;
+  Settings: N.Options
 );
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;

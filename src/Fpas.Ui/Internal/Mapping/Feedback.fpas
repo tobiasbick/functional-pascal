@@ -25,7 +25,10 @@ uses System as Sys;
 // - `Messages`: Message translation.
 // ## Returns
 // The equivalent widget in the parent view.
-public function Map of (TChild, TParent)(View: E.Element of TChild; Messages: function(TChild): TParent): E.Element of TParent;
+public function Map of (TChild, TParent)(
+  View: E.Element of TChild;
+  Messages: function(TChild): TParent
+): E.Element of TParent;
 begin
   case View of
     when E.Element.Alert(

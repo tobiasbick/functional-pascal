@@ -37,7 +37,13 @@ end record;
 // - `Settings`: Optional native options.
 // ## Returns
 // The graphical widget.
-public function Waveform of TMsg(Id: string; Peaks: array of float; Progress: float?; Change: Sys.Func of (float, TMsg)?; Settings: Options? := null): E.Element of TMsg;
+public function Waveform of TMsg(
+  Id: string;
+  Peaks: array of float;
+  Progress: float?;
+  Change: Sys.Func of (float, TMsg)?;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).Waveform(Id, Peaks, Progress, Change, Settings ?? new Options());

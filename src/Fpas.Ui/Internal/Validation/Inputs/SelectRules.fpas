@@ -43,7 +43,12 @@ end procedure;
 // - `Selected`: Flags in the same order.
 // - `Settings`: Picker options.
 // - `At`: Diagnostic path.
-public procedure MultiSelect(Items: array of S.Item; Selected: array of bool; Settings: M.Options; At: string);
+public procedure MultiSelect(
+  Items: array of S.Item;
+  Selected: array of bool;
+  Settings: M.Options;
+  At: string
+);
 begin
   R.CheckText(Settings.Label, At + '/label');
   R.CheckText(Settings.Placeholder, At + '/placeholder');

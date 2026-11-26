@@ -9,7 +9,10 @@ begin
   return Value;
 end function;
 
-public function Map of (T, U)(Items: Collections.IEnumerable of T; Transform: function(T): U): array of U;
+public function Map of (T, U)(
+  Items: Collections.IEnumerable of T;
+  Transform: function(T): U
+): array of U;
 begin
   const Result: Collections.List of U := new Collections.List of U();
 

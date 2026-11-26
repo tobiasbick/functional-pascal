@@ -17,7 +17,11 @@ uses Fpas.Ui.Elements as E;
 // ## Returns
 // The pager with one-based display labels.
 public function Pagination of TMsg(
-  Id: string; Page: int; PageCount: int; OnChange: function(int): TMsg; Enabled: bool := true
+  Id: string;
+  Page: int;
+  PageCount: int;
+  OnChange: function(int): TMsg;
+  Enabled: bool := true
 ): E.Element of TMsg;
 requires Id <> '';
 begin

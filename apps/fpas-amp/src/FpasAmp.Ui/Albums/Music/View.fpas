@@ -76,7 +76,16 @@ end function;
 // PlaylistName and PlaylistCount specify the displayed playlist when present.
 // PlaylistError is the last parse failure from the playlist source.
 // Returns the toolbar, virtual table, status bar and track-details overlay.
-public function LibraryPage(Current: M.State; Width: int; Padding: int; Covers: I.ImmutableDictionary of (string, Imaging.Bitmap?); Playback: Player.State; PlaylistName: string? := null; PlaylistCount: long? := null; PlaylistError: string? := null): E.Element of M.Msg;
+public function LibraryPage(
+  Current: M.State;
+  Width: int;
+  Padding: int;
+  Covers: I.ImmutableDictionary of (string, Imaging.Bitmap?);
+  Playback: Player.State;
+  PlaylistName: string? := null;
+  PlaylistCount: long? := null;
+  PlaylistError: string? := null
+): E.Element of M.Msg;
 begin
   const Inner: int := Sys.Math.Max(1, Width - 2 * Padding);
   const Parts: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg(
@@ -142,7 +151,14 @@ end function;
 // - `Playback`: Player state for the current track's button.
 // ## Returns
 // The album sleeve beside the searchable track list and its status bar.
-public function Build(Current: M.State; Width: int; GroupName: string; Playback: Player.State; LibraryTrackCount: long; BackLabel: string := ''): E.Element of M.Msg;
+public function Build(
+  Current: M.State;
+  Width: int;
+  GroupName: string;
+  Playback: Player.State;
+  LibraryTrackCount: long;
+  BackLabel: string := ''
+): E.Element of M.Msg;
 requires Width > 0;
 begin
   const Narrow: bool := Width < 700;

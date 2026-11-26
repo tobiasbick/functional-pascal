@@ -33,7 +33,14 @@ end procedure;
 // - `UnitLabel`: Literal unit caption.
 // - `Span`: Distance between validated bounds.
 // - `At`: Diagnostic path.
-public procedure CheckDial(Step: float; Reset: float; DecimalPlaces: int; UnitLabel: string; Span: float; At: string);
+public procedure CheckDial(
+  Step: float;
+  Reset: float;
+  DecimalPlaces: int;
+  UnitLabel: string;
+  Span: float;
+  At: string
+);
 begin
   if not ValidSize(Step) or not Sys.Single.IsFinite(Reset)
     or (Step > 0.0F and not Sys.Single.IsFinite(Span / Step))
@@ -70,7 +77,14 @@ end procedure;
 // - `Minimum`: Validated lower bound.
 // - `Maximum`: Validated upper bound.
 // - `At`: Diagnostic path.
-public procedure CheckFader(Length: float; Ticks: array of float; Peaks: array of float; Minimum: float; Maximum: float; At: string);
+public procedure CheckFader(
+  Length: float;
+  Ticks: array of float;
+  Peaks: array of float;
+  Minimum: float;
+  Maximum: float;
+  At: string
+);
 begin
   if not ValidSize(Length) or Ticks.Length > 32 then
     R.Reject(At, 'A fader needs a finite length and at most 32 ticks.');

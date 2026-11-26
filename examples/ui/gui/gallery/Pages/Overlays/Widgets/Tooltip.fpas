@@ -12,7 +12,12 @@ uses GuiGallery.Pages.Overlays.State as State;
 uses GuiGallery.Shared.Sections as G;
 uses System as Sys;
 
-function Help(Id: string; Glyph: int; Label: string; Shortcut: string := ''): E.Element of State.Msg;
+function Help(
+  Id: string;
+  Glyph: int;
+  Label: string;
+  Shortcut: string := ''
+): E.Element of State.Msg;
 begin
   return Tips.Tooltip of State.Msg(
     Icons.IconButton of State.Msg(Id, Sys.Char.ConvertFromUtf32(Glyph), Label, State.Msg.Preview),

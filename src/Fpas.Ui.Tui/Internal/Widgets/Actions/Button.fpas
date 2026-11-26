@@ -22,7 +22,13 @@ uses Fpas.Ui.Widgets.Actions.Buttons as B;
 // - `Role`: Inspection role for this action or its owning composite widget.
 // ## Returns
 // A terminal action retaining the original label for inspection.
-public function Lower of TMsg(Id: string; Label: string; Message: TMsg; Settings: B.Options; Role: string := 'button'): E.Element of TMsg;
+public function Lower of TMsg(
+  Id: string;
+  Label: string;
+  Message: TMsg;
+  Settings: B.Options;
+  Role: string := 'button'
+): E.Element of TMsg;
 begin
   const Leading: string := if Settings.Loading then
     '…'

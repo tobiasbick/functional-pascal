@@ -23,8 +23,12 @@ uses System as Sys;
 // - `Settings`: Label, length and input permission.
 // - `OnComplete`: Optional action receiving the newly entered complete code.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Value: string; OnChange: function(string): TMsg;
-  Settings: O.Options; OnComplete: Sys.Func of (string, TMsg)?
+  Frame: C.State of TMsg;
+  Id: string;
+  Value: string;
+  OnChange: function(string): TMsg;
+  Settings: O.Options;
+  OnComplete: Sys.Func of (string, TMsg)?
 );
 begin
   const Allowed: bool := Frame.AcceptInput and Settings.Enabled;

@@ -22,9 +22,14 @@ uses System as Sys;
 // ## Returns
 // The source tree.
 public function View of TMsg(
-  Source: bool; Components: bool; Assets: bool; Selected: string;
-  SetSource: function(bool): TMsg; SetComponents: function(bool): TMsg;
-  SetAssets: function(bool): TMsg; SelectFile: function(string): TMsg
+  Source: bool;
+  Components: bool;
+  Assets: bool;
+  Selected: string;
+  SetSource: function(bool): TMsg;
+  SetComponents: function(bool): TMsg;
+  SetAssets: function(bool): TMsg;
+  SelectFile: function(string): TMsg
 ): E.Element of TMsg;
   function File(Name: string; Icon: string := ''): E.Element of TMsg;
   begin

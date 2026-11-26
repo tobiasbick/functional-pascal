@@ -31,7 +31,14 @@ end record;
 // - `Settings`: Optional native allocation.
 // ## Returns
 // A graphical element.
-public function SplitView of TMsg(Id: string; Ratio: float; First: E.Element of TMsg; Second: E.Element of TMsg; OnResize: function(float): TMsg; Settings: Options? := null): E.Element of TMsg;
+public function SplitView of TMsg(
+  Id: string;
+  Ratio: float;
+  First: E.Element of TMsg;
+  Second: E.Element of TMsg;
+  OnResize: function(float): TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).SplitView(

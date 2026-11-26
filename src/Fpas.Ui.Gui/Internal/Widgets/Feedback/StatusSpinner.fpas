@@ -16,7 +16,12 @@ uses Fpas.Ui.Widgets.Feedback.StatusSpinners as W;
 // - `Id`: Stable widget identity.
 // - `Status`: Current work state.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Status: Buttons.Status; Settings: W.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Status: Buttons.Status;
+  Settings: W.Options
+);
 begin
   const Role: string := 'status-spinner';
   const Token: string := C.Token(Role, Id);

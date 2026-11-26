@@ -16,7 +16,12 @@ uses Fpas.Ui.Widgets.Charts.Sparklines as W;
 // - `Id`: Stable widget identity.
 // - `Values`: Finite samples in display order.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Values: array of float; Settings: W.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Values: array of float;
+  Settings: W.Options
+);
 begin
   const Role: string := 'sparkline';
   const Token: string := C.Token(Role, Id);

@@ -12,7 +12,13 @@ uses System.Threading as T;
 // Saves `Value` (one through ten, or null to clear) for an existing album `Id`.
 // `Database` is the catalogue and `UserDatabase` owns durable ratings. Cancellation
 // before commit rolls back the write; scans and catalogue resets do not erase it.
-public procedure Save(Database: string; UserDatabase: string; Id: string; Value: int?; Cancellation: T.CancellationToken);
+public procedure Save(
+  Database: string;
+  UserDatabase: string;
+  Id: string;
+  Value: int?;
+  Cancellation: T.CancellationToken
+);
 requires Id <> '';
 requires Value = null or (Value >= 1 and Value <= 10);
 begin
@@ -50,7 +56,12 @@ end procedure;
 
 // Writes or clears the independent artist or genre rating in `UserDatabase`.
 // `Id` identifies a normalized group tag. `Cancellation` bounds the write.
-public procedure SaveGroup(UserDatabase: string; Id: string; Value: int?; Cancellation: T.CancellationToken);
+public procedure SaveGroup(
+  UserDatabase: string;
+  Id: string;
+  Value: int?;
+  Cancellation: T.CancellationToken
+);
 requires Id <> '';
 requires Value = null or (Value >= 1 and Value <= 10);
 begin

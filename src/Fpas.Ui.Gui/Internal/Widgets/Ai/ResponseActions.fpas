@@ -18,7 +18,13 @@ uses Fpas.Ui.Widgets.Ai.ResponseActions as ResponseActions;
 // - `Vote`: Current vote: minus one, zero or one. Null leaves votes momentary.
 // - `Changed`: Maps a native action.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Vote: int?; Changed: function(ResponseActions.Event): TMsg; Settings: ResponseActions.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Vote: int?;
+  Changed: function(ResponseActions.Event): TMsg;
+  Settings: ResponseActions.Options
+);
 begin
   const Role: string := 'response-actions';
   const Token: string := C.Token(Role, Id);

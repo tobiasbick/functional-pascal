@@ -21,7 +21,12 @@ uses Xunit as X;
 // Copies a synthetic fixture and writes selected tags with ATL itself.
 // `Directory` is test-owned; `Name` ends in .mp3 or .ogg and `Title` distinguishes entries.
 // `Fixture` selects synthetic Vorbis/MP3 silence or the additional Opus fixture.
-public function Write(Directory: string; Name: string; Title: string := 'Stück'; Fixture: string := 'silence'): string;
+public function Write(
+  Directory: string;
+  Name: string;
+  Title: string := 'Stück';
+  Fixture: string := 'silence'
+): string;
 begin
   const Path: string := IO.Path.Combine(Directory, Name);
   IO.File.Copy(
@@ -89,7 +94,10 @@ begin
 end function;
 
 // Waits at most fifteen seconds for a bounded page satisfying `Accept`.
-public async function Until(Session: Metadata.Session; Accept: function(I.ImmutableArray of M.Entry): bool): Tasks.Task of I.ImmutableArray of M.Entry;
+public async function Until(
+  Session: Metadata.Session;
+  Accept: function(I.ImmutableArray of M.Entry): bool
+): Tasks.Task of I.ImmutableArray of M.Entry;
 begin
   using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
   while true do

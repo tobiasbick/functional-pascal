@@ -20,7 +20,9 @@ uses GuiGallery.Pages.Overlays.State as State;
 // ## Returns
 // The active page and its controlled native confirmation.
 public function Wrap of TMsg(
-  Base: E.Element of TMsg; Open: bool; Messages: function(State.Msg): TMsg
+  Base: E.Element of TMsg;
+  Open: bool;
+  Messages: function(State.Msg): TMsg
 ): E.Element of TMsg;
 begin
   const Cancel: TMsg := Messages(State.Msg.SetDeleteDialog(false));

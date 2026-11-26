@@ -14,7 +14,12 @@ uses Fpas.Ui.Widgets.Ai.AgentStatuses as AgentStatuses;
 // - `Id`: Stable widget identity.
 // - `Label`: Status label.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Label: string; Settings: AgentStatuses.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Label: string;
+  Settings: AgentStatuses.Options
+);
 begin
   const Role: string := 'agent-status';
   const Token: string := C.Token(Role, Id);

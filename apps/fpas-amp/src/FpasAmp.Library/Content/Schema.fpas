@@ -8,7 +8,11 @@ uses Microsoft.Data.Sqlite as Db;
 
 // Creates the pending queue/triggers inside catalogue `Transaction` on `Connection`.
 // `Populate` initializes pending work when upgrading an existing index.
-public procedure Create(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction; Populate: bool);
+public procedure Create(
+  Connection: Db.SqliteConnection;
+  Transaction: Db.SqliteTransaction;
+  Populate: bool
+);
 begin
   Sql.Execute(
     Connection,

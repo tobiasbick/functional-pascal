@@ -54,9 +54,13 @@ public function StartThemed of (TModel, TMsg)(
   InitialModel: TModel;
   Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
   View: function(TModel, L.Viewport, Themes.Theme): E.Element of TMsg;
-  Window: Cui.CuiWindow; Capacity: int; BeforeDraw: Sys.Action?;
-  Theme: Themes.Theme; ThemeFor: function(TModel, Themes.Mode?): Themes.Theme;
-  ReadSystemAppearance: bool; OnCloseRequested: (Sys.Func of TMsg)? := null;
+  Window: Cui.CuiWindow;
+  Capacity: int;
+  BeforeDraw: Sys.Action?;
+  Theme: Themes.Theme;
+  ThemeFor: function(TModel, Themes.Mode?): Themes.Theme;
+  ReadSystemAppearance: bool;
+  OnCloseRequested: (Sys.Func of TMsg)? := null;
   BindingsFor: Sys.Func of (TModel, array of Shortcuts.Binding of TMsg)? := null
 ): App.Session of TMsg;
 requires Capacity > 0;
@@ -152,7 +156,12 @@ requires Capacity > 0;
     Window.CapturePng(Path);
   end procedure;
 
-  function Context(Candidate: V.Prepared of TMsg; Accept: bool; ObserveTransitions: bool; PreserveCanvasFocus: bool := false): C.State of TMsg;
+  function Context(
+    Candidate: V.Prepared of TMsg;
+    Accept: bool;
+    ObserveTransitions: bool;
+    PreserveCanvasFocus: bool := false
+  ): C.State of TMsg;
   begin
     const Last: App.Frame? := Published;
     const Previous: array of App.Control := if Last = null then
@@ -521,8 +530,12 @@ end function;
 public function Start of (TModel, TMsg)(
   InitialModel: TModel;
   Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
-  View: function(TModel, L.Viewport): E.Element of TMsg; Window: Cui.CuiWindow; Capacity: int;
-  BeforeDraw: Sys.Action? := null; Theme: Themes.Theme? := null; ThemeFor: Sys.Func of (TModel, Themes.Theme)? := null;
+  View: function(TModel, L.Viewport): E.Element of TMsg;
+  Window: Cui.CuiWindow;
+  Capacity: int;
+  BeforeDraw: Sys.Action? := null;
+  Theme: Themes.Theme? := null;
+  ThemeFor: Sys.Func of (TModel, Themes.Theme)? := null;
   OnCloseRequested: (Sys.Func of TMsg)? := null;
   BindingsFor: Sys.Func of (TModel, array of Shortcuts.Binding of TMsg)? := null
 ): App.Session of TMsg;

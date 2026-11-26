@@ -32,7 +32,10 @@ end record;
 // ## Returns
 // The graphical wheel picker.
 public function WheelPicker of TMsg(
-  Id: string; Items: array of string; Selected: int; OnChange: function(int): TMsg;
+  Id: string;
+  Items: array of string;
+  Selected: int;
+  OnChange: function(int): TMsg;
   Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '' and Selected >= 0 and Selected < Items.Length;

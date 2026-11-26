@@ -24,8 +24,15 @@ uses Fpas.Ui.Widgets.Overlays.Sheets as Sheets;
 // - `Align`: Parent layout alignment.
 // - `Visit`: Host traversal used to draw the two child views.
 public procedure Draw of TMsg(
-  Current: C.State of TMsg; Id: string; Base: E.Element of TMsg; Content: E.Element of TMsg;
-  Open: bool; Settings: Sheets.Options; Dismiss: TMsg; Horizontal: bool; Align: L.Alignment;
+  Current: C.State of TMsg;
+  Id: string;
+  Base: E.Element of TMsg;
+  Content: E.Element of TMsg;
+  Open: bool;
+  Settings: Sheets.Options;
+  Dismiss: TMsg;
+  Horizontal: bool;
+  Align: L.Alignment;
   Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
 );
   function BeginNative(Enabled: bool; FocusClose: bool; CloseToken: string): int;

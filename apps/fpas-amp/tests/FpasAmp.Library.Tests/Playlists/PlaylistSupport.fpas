@@ -12,7 +12,10 @@ uses System.Threading.Tasks as Tasks;
 
 // Waits at most fifteen seconds for a summary page satisfying `Accept`.
 // `Session` remains borrowed from its caller-owned inventory lifetime.
-public async function Until(Session: Access.Session; Accept: function(I.ImmutableArray of M.Summary): bool): Tasks.Task of I.ImmutableArray of M.Summary;
+public async function Until(
+  Session: Access.Session;
+  Accept: function(I.ImmutableArray of M.Summary): bool
+): Tasks.Task of I.ImmutableArray of M.Summary;
 begin
   using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
   while true do

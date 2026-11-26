@@ -12,7 +12,13 @@ uses System.Collections.Generic as C;
 uses System.IO as IO;
 uses System.Threading as T;
 
-function Filter(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction; Source: S.MusicSource; Current: function(): bool; Cancellation: T.CancellationToken): bool;
+function Filter(
+  Connection: Db.SqliteConnection;
+  Transaction: Db.SqliteTransaction;
+  Source: S.MusicSource;
+  Current: function(): bool;
+  Cancellation: T.CancellationToken
+): bool;
 begin
   if Source.Offline or Source.Paused then
     return true;
@@ -76,7 +82,12 @@ end function;
 // Atomically reconciles source IDs/roots. `Sources` are isolated normalized settings;
 // `Current` rejects obsolete generations and `Cancellation` interrupts between operations.
 // Returns false after a superseding configuration, rolling back the whole transaction.
-public function Configure(Connection: Db.SqliteConnection; Sources: array of S.MusicSource; Current: function(): bool; Cancellation: T.CancellationToken): bool;
+public function Configure(
+  Connection: Db.SqliteConnection;
+  Sources: array of S.MusicSource;
+  Current: function(): bool;
+  Cancellation: T.CancellationToken
+): bool;
 begin
   using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
   const Wanted: C.Dictionary of (string, string) := new C.Dictionary of (string, string)(

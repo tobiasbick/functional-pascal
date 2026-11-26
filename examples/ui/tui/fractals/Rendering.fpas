@@ -101,7 +101,12 @@ end function;
 
 // Renders `View` into an immutable `Columns` by `Rows` image.
 // Checks `Token` while sampling so a new camera can supersede this frame.
-public function Draw(View: C.Camera; Columns: int; Rows: int; Token: Threads.CancellationToken): Grids.Image;
+public function Draw(
+  View: C.Camera;
+  Columns: int;
+  Rows: int;
+  Token: Threads.CancellationToken
+): Grids.Image;
 requires Columns > 0 and Rows > 0;
 begin
   const Ramp: array of int := case View.Colors of

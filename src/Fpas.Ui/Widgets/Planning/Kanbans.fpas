@@ -59,7 +59,12 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // The graphical widget.
-public function Kanban of TMsg(Id: string; Columns: array of Column of TMsg; Change: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
+public function Kanban of TMsg(
+  Id: string;
+  Columns: array of Column of TMsg;
+  Change: function(Event): TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).Kanban(Id, Columns, Change, Settings ?? new Options());

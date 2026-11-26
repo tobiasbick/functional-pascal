@@ -18,7 +18,14 @@ uses System as Sys;
 // - `Minimum`: Lower bound.
 // - `Maximum`: Upper bound.
 // - `Location`: Control path for diagnostics.
-public procedure Check(Label: string; Lower: float; Upper: float; Minimum: float; Maximum: float; Location: string);
+public procedure Check(
+  Label: string;
+  Lower: float;
+  Upper: float;
+  Minimum: float;
+  Maximum: float;
+  Location: string
+);
 begin
   Rules.CheckText(Label, Location + '/label');
   if Sys.String.IsNullOrWhiteSpace(Label) then
@@ -59,7 +66,12 @@ end procedure;
 // - `Minimum`: Validated lower bound.
 // - `Maximum`: Validated upper bound.
 // - `Location`: Control path for diagnostics.
-public procedure CheckRuler(Settings: Rulers.Options; Minimum: float; Maximum: float; Location: string);
+public procedure CheckRuler(
+  Settings: Rulers.Options;
+  Minimum: float;
+  Maximum: float;
+  Location: string
+);
 begin
   const Step: float := Settings.Step;
   if not Sys.Single.IsFinite(Step * 60.0F) or Step <= 0.0F
@@ -90,7 +102,11 @@ end procedure;
 // - `Bins`: Ordered bin heights.
 // - `Settings`: Height, endpoint display and input settings.
 // - `Location`: Control path for diagnostics.
-public procedure CheckHistogram(Bins: array of float; Settings: Histograms.Options; Location: string);
+public procedure CheckHistogram(
+  Bins: array of float;
+  Settings: Histograms.Options;
+  Location: string
+);
 begin
   if Bins.Length = 0 then
     Rules.Reject(Location, 'A histogram needs at least one bin.');

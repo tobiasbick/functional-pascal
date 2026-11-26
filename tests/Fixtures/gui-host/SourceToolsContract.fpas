@@ -38,7 +38,10 @@ procedure CapturePage(Page: State.Page; Renderer: Cui.CuiRenderer; Root: string;
     end if;
   end procedure;
 
-  function Observe(Model: State.Model; Value: State.Msg): Mvu.Transition of (State.Model, State.Msg);
+  function Observe(
+    Model: State.Model;
+    Value: State.Msg
+  ): Mvu.Transition of (State.Model, State.Msg);
   begin
     const Next: Mvu.Transition of (State.Model, State.Msg) := Update.Update(Model, Value);
     if Focus <> '' then

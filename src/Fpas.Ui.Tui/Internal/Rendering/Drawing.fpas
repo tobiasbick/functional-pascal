@@ -72,8 +72,11 @@ end function;
 
 // Paints the horizontal border of the status bar in the visible cells.
 public procedure HorizontalRule(
-  Operations: Generic.List of Operation; Area: F.Rect; Clip: F.Rect;
-  Style: T.Style; Widgets: Th.WidgetStyles?
+  Operations: Generic.List of Operation;
+  Area: F.Rect;
+  Clip: F.Rect;
+  Style: T.Style;
+  Widgets: Th.WidgetStyles?
 );
 begin
   const Line: F.Rect := F.Intersect(Area, Clip);
@@ -91,8 +94,12 @@ begin
 end procedure;
 
 public procedure Border(
-  Operations: Generic.List of Operation; Area: F.Rect; Clip: F.Rect; Title: string;
-  Style: T.Style; Widgets: Th.WidgetStyles?
+  Operations: Generic.List of Operation;
+  Area: F.Rect;
+  Clip: F.Rect;
+  Title: string;
+  Style: T.Style;
+  Widgets: Th.WidgetStyles?
 );
   procedure Line(Value: string; Column: int; Row: int; Width: int);
   begin
@@ -159,7 +166,12 @@ begin
   return true;
 end function;
 
-function PaintRow(Operations: array of Operation; Columns: int; TargetRow: int; Blank: T.Cell): PaintedRow;
+function PaintRow(
+  Operations: array of Operation;
+  Columns: int;
+  TargetRow: int;
+  Blank: T.Cell
+): PaintedRow;
   procedure Erase(Column: int);
   begin
     const Old: string := Buffer[Column].Text;
@@ -279,8 +291,11 @@ begin
 end function;
 
 public function Render(
-  Operations: Generic.List of Operation; Columns: int; Rows: int;
-  Previous: array of PaintedRow; DefaultStyle: T.Style
+  Operations: Generic.List of Operation;
+  Columns: int;
+  Rows: int;
+  Previous: array of PaintedRow;
+  DefaultStyle: T.Style
 ): Surface;
 begin
   const Blank: T.Cell := new T.Cell(' ', DefaultStyle);

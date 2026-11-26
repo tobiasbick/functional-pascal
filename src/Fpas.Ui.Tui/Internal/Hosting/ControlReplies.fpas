@@ -16,7 +16,8 @@ uses System.Threading.Tasks as Tasks;
 // ## Returns
 // Admission status and acknowledgement for queued input.
 public function Send(
-  Event: Terminal.TerminalInput; Enqueue: function(App.Input, Tasks.Task?): App.Admission
+  Event: Terminal.TerminalInput;
+  Enqueue: function(App.Input, Tasks.Task?): App.Admission
 ): Terminal.TuiControlReply;
 begin
   const Normalized: App.Input? := Inputs.Translate(Event);
@@ -76,7 +77,9 @@ end function;
 // ## Returns
 // Completed outcome or timeout.
 public async function Wait(
-  Id: long; Milliseconds: int; Read: function(long, Sys.TimeSpan): Tasks.Task of App.StepResult?
+  Id: long;
+  Milliseconds: int;
+  Read: function(long, Sys.TimeSpan): Tasks.Task of App.StepResult?
 ): Tasks.Task of Terminal.TuiControlReply;
 begin
   const Outcome: App.StepResult? := await Read(Id, Sys.TimeSpan.FromMilliseconds(Milliseconds));

@@ -43,7 +43,13 @@ end procedure;
 // - `Columns`: Matrix columns.
 // - `Settings`: Native scale and labels.
 // - `At`: Diagnostic location.
-public procedure Heatmap(Values: array of float; Rows: int; Columns: int; Settings: H.Options; At: string);
+public procedure Heatmap(
+  Values: array of float;
+  Rows: int;
+  Columns: int;
+  Settings: H.Options;
+  At: string
+);
 begin
   if Rows < 0 or Columns < 0 or cast Rows as long * cast Columns as long <>
     cast Values.Length as long
@@ -74,7 +80,12 @@ end procedure;
 // - `Values`: Daily finite amounts.
 // - `Settings`: Native presentation.
 // - `At`: Diagnostic location.
-public procedure CalendarHeatmap(Start: Sys.DateOnly; Values: array of float; Settings: Calendar.Options; At: string);
+public procedure CalendarHeatmap(
+  Start: Sys.DateOnly;
+  Values: array of float;
+  Settings: Calendar.Options;
+  At: string
+);
 begin
   Samples(Values, false, At);
   if cast Start.DayNumber as long + cast Values.Length as long - 1 >
@@ -101,7 +112,13 @@ end procedure;
 // - `Selectable`: Whether a selection callback is present.
 // - `Settings`: Native dimensions.
 // - `At`: Diagnostic location.
-public procedure Treemap(Values: array of C.Item; Selected: int; Selectable: bool; Settings: T.Options; At: string);
+public procedure Treemap(
+  Values: array of C.Item;
+  Selected: int;
+  Selectable: bool;
+  Settings: T.Options;
+  At: string
+);
 begin
   Common.Items(Values, At);
   if Selected < -1 or Selected >= Values.Length or (not Selectable and Selected <> -1) then
@@ -119,7 +136,12 @@ end procedure;
 // - `Axes`: At least three captions.
 // - `Settings`: Native scale and presentation.
 // - `At`: Diagnostic location.
-public procedure Radar(Series: array of C.Series; Axes: array of string; Settings: Ra.Options; At: string);
+public procedure Radar(
+  Series: array of C.Series;
+  Axes: array of string;
+  Settings: Ra.Options;
+  At: string
+);
 begin
   if Axes.Length < 3 then
     R.Reject(At, 'A radar chart needs at least three axes.');

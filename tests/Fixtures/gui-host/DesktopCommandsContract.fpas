@@ -52,7 +52,10 @@ begin
 end procedure;
 
 procedure VerifyClose(Renderer: Cui.CuiRenderer);
-  async function Work(Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+  async function Work(
+    Post: function(Msg): Tasks.Task;
+    Token: Threads.CancellationToken
+  ): Tasks.Task;
   begin
     Started.SetResult(true);
     try
@@ -222,7 +225,10 @@ begin
 end procedure;
 
 procedure VerifyDisposalCallbacks(Renderer: Cui.CuiRenderer);
-  async function Work(_Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
+  async function Work(
+    _Post: function(Msg): Tasks.Task;
+    Token: Threads.CancellationToken
+  ): Tasks.Task;
   begin
     Started.SetResult(true);
     try

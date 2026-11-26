@@ -26,7 +26,14 @@ uses System.Collections.Generic as C;
 // - `Theme`: Semantic colors for errors and hints.
 // ## Returns
 // A column of the editor and its optional surrounding text.
-public function WithLabels of TMsg(Content: E.Element of TMsg; Label: string; Hint: string; Error: string; Colors: T.Style; Theme: Th.Theme): E.Element of TMsg;
+public function WithLabels of TMsg(
+  Content: E.Element of TMsg;
+  Label: string;
+  Hint: string;
+  Error: string;
+  Colors: T.Style;
+  Theme: Th.Theme
+): E.Element of TMsg;
 begin
   const Rows: C.List of E.Element of TMsg := new C.List of E.Element of TMsg();
   if Label <> '' then
@@ -72,8 +79,12 @@ end function;
 // ## Returns
 // A row that gives remaining width to the editor.
 public function WithAdornments of TMsg(
-  Field: Edit.Field of TMsg; Prefix: string; Suffix: string; Actions: array of E.Element of TMsg;
-  Colors: T.Style; Theme: Th.Theme
+  Field: Edit.Field of TMsg;
+  Prefix: string;
+  Suffix: string;
+  Actions: array of E.Element of TMsg;
+  Colors: T.Style;
+  Theme: Th.Theme
 ): E.Element of TMsg;
   function Affix(Value: string): E.Element of TMsg;
   begin
@@ -119,8 +130,14 @@ end function;
 // ## Returns
 // Interactive bounds of the input row.
 public function Arrange of TMsg(
-  Field: Edit.Field of TMsg; Previous: (A.Layout of TMsg)?; Area: F.Rect;
-  Clip: F.Rect; Scope: string; FocusReturn: string; Colors: T.Style; Theme: Th.Theme;
+  Field: Edit.Field of TMsg;
+  Previous: (A.Layout of TMsg)?;
+  Area: F.Rect;
+  Clip: F.Rect;
+  Scope: string;
+  FocusReturn: string;
+  Colors: T.Style;
+  Theme: Th.Theme;
   Operations: C.List of D.Operation
 ): A.Control of TMsg;
 begin

@@ -29,7 +29,13 @@ const DefaultLabels: array of string := [
 // - `Current`: Model-owned value.
 // - `Remove`: Optional removal message factory.
 // - `Settings`: Native options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Current: A.Value; Remove: (Sys.Func of TMsg)?; Settings: A.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Current: A.Value;
+  Remove: (Sys.Func of TMsg)?;
+  Settings: A.Options
+);
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled and Remove <> null;
   const Role: string := 'status-tag';

@@ -17,7 +17,11 @@ uses Fpas.Ui.Widgets.Overlays.UserMenus as U;
 // - `Entries`: Ordered commands and decorations.
 // - `Settings`: Account details and popup options.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Name: string; Entries: array of M.Entry of TMsg; Settings: U.Options
+  Frame: C.State of TMsg;
+  Id: string;
+  Name: string;
+  Entries: array of M.Entry of TMsg;
+  Settings: U.Options
 );
 begin
   Menu.Draw of TMsg(Frame, Id, Name, Entries, null, Settings.Enabled, Settings);

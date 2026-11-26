@@ -20,7 +20,13 @@ uses System.Collections.Generic as Lists;
 // - `Selected`: Model-owned choice.
 // - `OnChange`: Maps a different user choice to a message.
 // - `Settings`: System availability and input permission.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Selected: S.Selection; OnChange: function(S.Selection): TMsg; Settings: S.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Selected: S.Selection;
+  OnChange: function(S.Selection): TMsg;
+  Settings: S.Options
+);
 begin
   const Enabled: bool := Settings.Enabled and Frame.AcceptInput;
   const Count: int := if Settings.WithSystem then

@@ -22,8 +22,14 @@ uses System as Sys;
 // - `Size`: Logical diameter.
 // - `Enabled`: Whether the avatar accepts input.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Name: string; Path: string?;
-  OnDrop: function(string): TMsg; OnBrowse: (Sys.Func of TMsg)?; Size: float; Enabled: bool
+  Frame: C.State of TMsg;
+  Id: string;
+  Name: string;
+  Path: string?;
+  OnDrop: function(string): TMsg;
+  OnBrowse: (Sys.Func of TMsg)?;
+  Size: float;
+  Enabled: bool
 );
 begin
   const Accept: bool := Enabled and Frame.AcceptInput;

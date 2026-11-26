@@ -91,10 +91,19 @@ uses System.Collections.Generic as C;
 // ## Returns
 // The resolved backend tree, with no application-facing constructors.
 public function Prepare of TMsg(
-  Prepared: V.Prepared of TMsg; Theme: Th.Theme; Popup: PopupState.State of TMsg;
-  Pickers: PickerState.State; Size: T.Viewport; Numbers: Number.State; AlertsState: Alert.State
+  Prepared: V.Prepared of TMsg;
+  Theme: Th.Theme;
+  Popup: PopupState.State of TMsg;
+  Pickers: PickerState.State;
+  Size: T.Viewport;
+  Numbers: Number.State;
+  AlertsState: Alert.State
 ): E.Element of TMsg;
-  function Children(Items: array of Ui.Element of TMsg; Colors: T.Style; Horizontal: bool := false): array of E.Element of TMsg;
+  function Children(
+    Items: array of Ui.Element of TMsg;
+    Colors: T.Style;
+    Horizontal: bool := false
+  ): array of E.Element of TMsg;
   begin
     const Values: C.List of E.Element of TMsg := new C.List of E.Element of TMsg();
     for Item: Ui.Element of TMsg in Items do
@@ -109,7 +118,11 @@ public function Prepare of TMsg(
 
     return Values.ToArray();
   end function;
-  function Visit(Node: Ui.Element of TMsg; Colors: T.Style; ParentHorizontal: bool := false): E.Element of TMsg;
+  function Visit(
+    Node: Ui.Element of TMsg;
+    Colors: T.Style;
+    ParentHorizontal: bool := false
+  ): E.Element of TMsg;
   begin
     case Node of
       when Ui.Element.TerminalCellGrid(
@@ -327,11 +340,15 @@ public function Prepare of TMsg(
         const Id: string, const Value: string, const Change: function(string): TMsg,
         const Settings: Fields.Options, const Submit: Sys.Func of (string, TMsg)?
       ):
-        const Send: function(string): Actions.Result of TMsg := function(NewText: string): Actions.Result of TMsg => (Actions.Result of TMsg).Send(
+        const Send: function(string): Actions.Result of TMsg := function(
+          NewText: string
+        ): Actions.Result of TMsg => (Actions.Result of TMsg).Send(
           Change(NewText)
         );
         const SubmitAction: Sys.Func of (string, Actions.Result of TMsg)? := case Submit of
-          when is Sys.Func of (string, TMsg) as Callback: function(Text: string): Actions.Result of TMsg => (Actions.Result of TMsg).Send(
+          when is Sys.Func of (string, TMsg) as Callback: function(
+            Text: string
+          ): Actions.Result of TMsg => (Actions.Result of TMsg).Send(
             Callback.Invoke(Text)
           );
           else null;

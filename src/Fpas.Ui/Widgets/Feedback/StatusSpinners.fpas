@@ -25,7 +25,11 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // The graphical element.
-public function StatusSpinner of TMsg(Id: string; Status: Buttons.Status; Settings: Options? := null): E.Element of TMsg;
+public function StatusSpinner of TMsg(
+  Id: string;
+  Status: Buttons.Status;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).StatusSpinner(Id, Status, Settings ?? new Options());

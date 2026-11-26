@@ -50,7 +50,12 @@ end record;
 // - `Settings`: Optional native appearance and input settings.
 // ## Returns
 // The graphical widget.
-public function SeedField of TMsg(Id: string; Current: Value; Change: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
+public function SeedField of TMsg(
+  Id: string;
+  Current: Value;
+  Change: function(Event): TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).SeedField(Id, Current, Change, Settings ?? new Options());

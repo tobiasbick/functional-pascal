@@ -70,8 +70,12 @@ end record;
 // ## Returns
 // The base view with CUI-owned spotlight, card, buttons and navigation.
 public function Tour of TMsg(
-  Id: string; Base: E.Element of TMsg; Steps: array of Step;
-  Current: int; OnChange: function(Change): TMsg; Settings: Options? := null
+  Id: string;
+  Base: E.Element of TMsg;
+  Steps: array of Step;
+  Current: int;
+  OnChange: function(Change): TMsg;
+  Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';
 requires Steps.Length > 0;

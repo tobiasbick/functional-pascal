@@ -21,7 +21,15 @@ uses System as Sys;
 // - `Change`: Maps a proposed filter value.
 // - `Capacity`: UTF-8 search buffer size.
 // - `Enabled`: Whether the bar accepts input.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Fields: array of B.Field; Current: B.Value; Change: function(B.Value): TMsg; Capacity: int; Enabled: bool);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Fields: array of B.Field;
+  Current: B.Value;
+  Change: function(B.Value): TMsg;
+  Capacity: int;
+  Enabled: bool
+);
   function Part(Index: int): string;
   begin
     return case Index of

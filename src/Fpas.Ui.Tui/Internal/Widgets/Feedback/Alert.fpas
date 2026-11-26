@@ -56,8 +56,13 @@ end record;
 // ## Returns
 // The alert panel.
 public function Lower of TMsg(
-  Id: string; Title: string; Settings: A.Options; Notify: (Sys.Func of TMsg)?;
-  Session: State; Colors: T.Style; Theme: Th.Theme
+  Id: string;
+  Title: string;
+  Settings: A.Options;
+  Notify: (Sys.Func of TMsg)?;
+  Session: State;
+  Colors: T.Style;
+  Theme: Th.Theme
 ): E.Element of TMsg;
   function Dismiss(): Actions.Result of TMsg;
   begin

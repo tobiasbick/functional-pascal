@@ -15,7 +15,13 @@ uses Fpas.Ui.Widgets.Overlays.Menus as M;
 // - `Label`: Trigger caption and tooltip.
 // - `Entries`: Shared keyed commands and decorations.
 // - `Settings`: Trigger and popup options.
-public procedure Draw of TMsg(State: C.State of TMsg; Id: string; Label: string; Entries: array of M.Entry of TMsg; Settings: M.Options);
+public procedure Draw of TMsg(
+  State: C.State of TMsg;
+  Id: string;
+  Label: string;
+  Entries: array of M.Entry of TMsg;
+  Settings: M.Options
+);
 begin
   Menu.Draw of TMsg(State, Id, Label, Entries, Settings, Settings.Enabled);
 end procedure;

@@ -114,7 +114,10 @@ procedure Lifecycle(Renderer: Cui.CuiRenderer);
       )
     );
   end function;
-  function Update(Model: State.Model; Message: State.Msg): Mvu.Transition of (State.Model, State.Msg);
+  function Update(
+    Model: State.Model;
+    Message: State.Msg
+  ): Mvu.Transition of (State.Model, State.Msg);
   begin
     case Message of
       when State.Msg.Preview:

@@ -30,7 +30,9 @@ end record;
 // ## Returns
 // A graphical tag input.
 public function TagInput of TMsg(
-  Id: string; Tags: array of string; OnChange: function(array of string): TMsg;
+  Id: string;
+  Tags: array of string;
+  OnChange: function(array of string): TMsg;
   Settings: Options? := null
 ): E.Element of TMsg;
 requires Id <> '';

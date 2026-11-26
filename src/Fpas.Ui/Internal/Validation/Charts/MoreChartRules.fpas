@@ -23,7 +23,12 @@ uses System.Collections.Generic as Lists;
 // - `Links`: Directed flows.
 // - `Settings`: Native presentation.
 // - `At`: Diagnostic path.
-public procedure Sankey(Nodes: array of Sk.Node; Links: array of Sk.Link; Settings: Sk.Options; At: string);
+public procedure Sankey(
+  Nodes: array of Sk.Node;
+  Links: array of Sk.Link;
+  Settings: Sk.Options;
+  At: string
+);
 begin
   for Node: Sk.Node in Nodes do
     R.CheckText(Node.Label, At);
@@ -130,7 +135,13 @@ end procedure;
 // - `Maximum`: Upper scale bound.
 // - `Settings`: Native presentation.
 // - `At`: Diagnostic path.
-public procedure Radial(Value: float; Minimum: float; Maximum: float; Settings: G.Options; At: string);
+public procedure Radial(
+  Value: float;
+  Minimum: float;
+  Maximum: float;
+  Settings: G.Options;
+  At: string
+);
 begin
   if not Sys.Single.IsFinite(
     Value

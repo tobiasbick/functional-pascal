@@ -25,9 +25,15 @@ uses System.Threading.Tasks as Tasks;
 // ## Returns
 // A deferred workflow. A failure stops admission, requests cancellation of the
 // other workers, and waits for them to finish. Unexpected faults remain task faults.
-public function All of (A, E, R)(Work: array of Fx.Effect of (A, E, R); Concurrency: int): Fx.Effect of (array of A, E, R);
+public function All of (A, E, R)(
+  Work: array of Fx.Effect of (A, E, R);
+  Concurrency: int
+): Fx.Effect of (array of A, E, R);
 requires Concurrency > 0;
-  function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task of Fx.Outcome of (array of A, E);
+  function Execute(
+    Environment: R;
+    Cancellation: Threads.CancellationToken
+  ): Tasks.Task of Fx.Outcome of (array of A, E);
     async function RunWorkers(Lifetime: S.Scope): Tasks.Task of Fx.Outcome of (array of A, E);
       async function Worker(Child: S.Scope): Tasks.Task of Fx.Completion;
       begin

@@ -19,7 +19,14 @@ uses Fpas.Ui.Widgets.Audio.ControlTiles as W;
 // - `On`: Toggle value.
 // - `Change`: Maps a native proposal.
 // - `Settings`: Native appearance and input options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Label: string; On: bool; Change: function(bool): TMsg; Settings: W.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Label: string;
+  On: bool;
+  Change: function(bool): TMsg;
+  Settings: W.Options
+);
 begin
   const Token: string := C.Token('control-tile', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;

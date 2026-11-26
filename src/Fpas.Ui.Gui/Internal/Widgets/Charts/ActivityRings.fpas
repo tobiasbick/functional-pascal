@@ -23,7 +23,13 @@ uses System as Sys;
 // - `Items`: Up to eight named nonnegative progress fractions.
 // - `Settings`: Native presentation.
 // - `OnActivate`: Optional native click callback.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Items: array of Charts.Item; Settings: W.Options; OnActivate: Sys.Func of (int, TMsg)?);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Items: array of Charts.Item;
+  Settings: W.Options;
+  OnActivate: Sys.Func of (int, TMsg)?
+);
 begin
   const Token: string := C.Token('activity-rings', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;

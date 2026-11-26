@@ -187,8 +187,12 @@ end record;
 // - `Stops`: Tab traversal order.
 // - `Register`: Adds the visible control.
 public procedure RegisterRowAction of TMsg(
-  Action: Control of TMsg; Clip: F.Rect; ScrollId: string; Navigation: C.List of NavigationStop;
-  Stops: C.List of TabStop; Register: procedure(Control of TMsg)
+  Action: Control of TMsg;
+  Clip: F.Rect;
+  ScrollId: string;
+  Navigation: C.List of NavigationStop;
+  Stops: C.List of TabStop;
+  Register: procedure(Control of TMsg)
 );
 begin
   const Visible: F.Rect := F.Intersect(Action.Bounds, Clip);

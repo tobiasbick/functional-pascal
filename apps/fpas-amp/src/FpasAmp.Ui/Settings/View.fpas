@@ -74,7 +74,15 @@ end function;
 // - `Select`: Proposes another tab.
 // ## Returns
 // The scrollable settings page.
-public function Build of TParent(Current: M.State; Tab: int; Theme: Themes.Theme; Width: int; Padding: int; Messages: function(M.Msg): TParent; Select: function(int): TParent): E.Element of TParent;
+public function Build of TParent(
+  Current: M.State;
+  Tab: int;
+  Theme: Themes.Theme;
+  Width: int;
+  Padding: int;
+  Messages: function(M.Msg): TParent;
+  Select: function(int): TParent
+): E.Element of TParent;
 begin
   return E.ScrollView of TParent(
     'settings-scroll', E.Column of TParent(
@@ -105,7 +113,11 @@ end function;
 // - `Messages`: Wraps settings messages in parent messages.
 // ## Returns
 // `Base`, or `Base` behind the picker or editor.
-public function Overlay of TParent(Current: M.State; Base: E.Element of TParent; Messages: function(M.Msg): TParent): E.Element of TParent;
+public function Overlay of TParent(
+  Current: M.State;
+  Base: E.Element of TParent;
+  Messages: function(M.Msg): TParent
+): E.Element of TParent;
 begin
   if Current.PickingFolder then
     return Picker.FilePicker of TParent(

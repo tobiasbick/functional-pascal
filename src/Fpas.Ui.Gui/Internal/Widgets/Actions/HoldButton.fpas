@@ -17,7 +17,13 @@ uses Fpas.Ui.Widgets.Actions.HoldButtons as H;
 // - `Label`: Visible caption.
 // - `Message`: Message proposed once per completed hold.
 // - `Settings`: Hold duration and appearance.
-public procedure Draw of TMsg(State: C.State of TMsg; Id: string; Label: string; Message: TMsg; Settings: H.Options);
+public procedure Draw of TMsg(
+  State: C.State of TMsg;
+  Id: string;
+  Label: string;
+  Message: TMsg;
+  Settings: H.Options
+);
 begin
   const Enabled: bool := Settings.Enabled and State.AcceptInput;
   const Token: string := C.Token('hold-button', Id);

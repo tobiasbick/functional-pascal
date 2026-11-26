@@ -44,7 +44,11 @@ public type Request = record
   public Environment: C.IReadOnlyDictionary of (string, string)? := null;
 end record;
 
-async function Drain(Stream: IO.Stream; Limit: int; Cancellation: Threads.CancellationToken): Tasks.Task of string;
+async function Drain(
+  Stream: IO.Stream;
+  Limit: int;
+  Cancellation: Threads.CancellationToken
+): Tasks.Task of string;
 begin
   const Buffer: array of byte := new byte[4096];
   using const Bytes: IO.MemoryStream := new IO.MemoryStream();
@@ -80,7 +84,10 @@ begin
   return Reader.ReadToEnd();
 end function;
 
-function Start(Request: Request; Cancellation: Threads.CancellationToken): Tasks.Task of Fx.Outcome of (Owned, CaptureFailure);
+function Start(
+  Request: Request;
+  Cancellation: Threads.CancellationToken
+): Tasks.Task of Fx.Outcome of (Owned, CaptureFailure);
 begin
   Cancellation.ThrowIfCancellationRequested();
   const Child: Owned := Owned.Start(
@@ -101,11 +108,19 @@ end function;
 // ## Returns
 // A deferred capture that joins the readers and terminates the owned tree
 // before returning. Launch and stream failures fault its task.
-public function Read(TimeoutSeconds: int; Limit: int): Fx.Effect of (Captured, CaptureFailure, Request);
+public function Read(
+  TimeoutSeconds: int;
+  Limit: int
+): Fx.Effect of (Captured, CaptureFailure, Request);
 requires TimeoutSeconds > 0;
 requires Limit > 0;
-  function Capture(Child: Owned; Cancellation: Threads.CancellationToken): Tasks.Task of Fx.Outcome of (Captured, CaptureFailure);
-    async function Collect(Lifetime: S.Scope): Tasks.Task of Fx.Outcome of (Captured, CaptureFailure);
+  function Capture(
+    Child: Owned;
+    Cancellation: Threads.CancellationToken
+  ): Tasks.Task of Fx.Outcome of (Captured, CaptureFailure);
+    async function Collect(
+      Lifetime: S.Scope
+    ): Tasks.Task of Fx.Outcome of (Captured, CaptureFailure);
       function Stdout(Reader: S.Scope): Tasks.Task of string;
       begin
         return Drain(Child.Output, Limit, Reader.Token);

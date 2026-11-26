@@ -20,7 +20,14 @@ uses Fpas.Ui.Widgets.Planning.Kanbans as A;
 // - `Change`: Maps a native proposal.
 // - `Settings`: Native options.
 // - `Visit`: GUI traversal for composed content.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Columns: array of A.Column of TMsg; Change: function(A.Event): TMsg; Settings: A.Options; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Columns: array of A.Column of TMsg;
+  Change: function(A.Event): TMsg;
+  Settings: A.Options;
+  Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
+);
 begin
   const Role: string := 'kanban';
   const Token: string := C.Token(Role, Id);

@@ -33,7 +33,13 @@ end record;
 // - `OnActivate`: Optional clicked date callback; hover remains native.
 // ## Returns
 // A graphical element.
-public function CalendarHeatmap of TMsg(Id: string; Start: Sys.DateOnly; Values: array of float; Settings: Options? := null; OnActivate: Sys.Func of (Sys.DateOnly, TMsg)? := null): E.Element of TMsg;
+public function CalendarHeatmap of TMsg(
+  Id: string;
+  Start: Sys.DateOnly;
+  Values: array of float;
+  Settings: Options? := null;
+  OnActivate: Sys.Func of (Sys.DateOnly, TMsg)? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).CalendarHeatmap(

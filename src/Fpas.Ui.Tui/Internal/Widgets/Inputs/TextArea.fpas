@@ -27,7 +27,11 @@ uses System.Collections.Generic as C;
 // - `Theme`: Terminal palette.
 // ## Returns
 // The terminal area and its text chrome.
-public function Lower of TMsg(Field: Edit.Field of TMsg; Colors: T.Style; Theme: Th.Theme): E.Element of TMsg;
+public function Lower of TMsg(
+  Field: Edit.Field of TMsg;
+  Colors: T.Style;
+  Theme: Th.Theme
+): E.Element of TMsg;
 begin
   const View: E.Element of TMsg := Chrome.WithLabels of TMsg(
     (E.Element of TMsg).TextArea(Field),
@@ -56,8 +60,15 @@ end function;
 // ## Returns
 // Editor input binding and bounds.
 public function Arrange of TMsg(
-  Field: Edit.Field of TMsg; Previous: (A.Layout of TMsg)?; Area: F.Rect; Clip: F.Rect;
-  Scope: string; FocusReturn: string; Colors: T.Style; Theme: Th.Theme; Operations: C.List of D.Operation
+  Field: Edit.Field of TMsg;
+  Previous: (A.Layout of TMsg)?;
+  Area: F.Rect;
+  Clip: F.Rect;
+  Scope: string;
+  FocusReturn: string;
+  Colors: T.Style;
+  Theme: Th.Theme;
+  Operations: C.List of D.Operation
 ): A.Control of TMsg;
 begin
   var Old: Edit.Cursor := new Edit.Cursor(Field.Value);

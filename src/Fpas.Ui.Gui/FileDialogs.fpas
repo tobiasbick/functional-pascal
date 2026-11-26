@@ -63,7 +63,10 @@ end record;
 // ## Returns
 // The graphical host command.
 public function OpenFile of TMsg(
-  OnSelected: function(string): TMsg; Title: string := ''; FilterName: string := ''; Accept: string := '';
+  OnSelected: function(string): TMsg;
+  Title: string := '';
+  FilterName: string := '';
+  Accept: string := '';
   OnCancelled: (Sys.Func of TMsg)? := null
 ): Mvu.Command of TMsg;
 begin
@@ -90,8 +93,11 @@ end function;
 // ## Returns
 // The owner-thread graphical command.
 public function SaveFile of TMsg(
-  OnSelected: function(string): TMsg; DefaultName: string := '';
-  Title: string := ''; FilterName: string := ''; Accept: string := '';
+  OnSelected: function(string): TMsg;
+  DefaultName: string := '';
+  Title: string := '';
+  FilterName: string := '';
+  Accept: string := '';
   OnCancelled: (Sys.Func of TMsg)? := null
 ): Mvu.Command of TMsg;
 begin
@@ -115,7 +121,8 @@ end function;
 // ## Returns
 // The owner-thread graphical command.
 public function ChooseFolder of TMsg(
-  OnSelected: function(string): TMsg; Title: string := '';
+  OnSelected: function(string): TMsg;
+  Title: string := '';
   OnCancelled: (Sys.Func of TMsg)? := null
 ): Mvu.Command of TMsg;
 begin

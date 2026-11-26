@@ -18,7 +18,10 @@ uses System as Sys;
 // ## Returns
 // A graphical copy button.
 public function CopyButton of TMsg(
-  Id: string; Text: string; OnCopied: (Sys.Func of TMsg)? := null; Enabled: bool := true
+  Id: string;
+  Text: string;
+  OnCopied: (Sys.Func of TMsg)? := null;
+  Enabled: bool := true
 ): E.Element of TMsg;
 requires Id <> '';
 begin

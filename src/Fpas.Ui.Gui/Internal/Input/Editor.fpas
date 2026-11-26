@@ -30,9 +30,20 @@ uses System as Sys;
 // - `Suffix`: Muted text after the value.
 // - `Password`: Whether the snapshot must omit the value.
 public procedure Publish of TMsg(
-  Frame: C.State of TMsg; Id: string; Role: string; Value: string; Result: CuiInputs.CuiTextFieldResult;
-  OnChange: function(string): TMsg; OnSubmit: Sys.Func of (string, TMsg)?; Enabled: bool;
-  Label: string; Hint: string; Error: string; Prefix: string; Suffix: string; Password: bool := false
+  Frame: C.State of TMsg;
+  Id: string;
+  Role: string;
+  Value: string;
+  Result: CuiInputs.CuiTextFieldResult;
+  OnChange: function(string): TMsg;
+  OnSubmit: Sys.Func of (string, TMsg)?;
+  Enabled: bool;
+  Label: string;
+  Hint: string;
+  Error: string;
+  Prefix: string;
+  Suffix: string;
+  Password: bool := false
 );
 begin
   if Enabled and Result.Value <> Value then

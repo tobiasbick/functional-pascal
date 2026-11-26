@@ -41,7 +41,12 @@ end procedure;
 // - `Right`: Right-side actions.
 // - `Settings`: Row options.
 // - `At`: Diagnostic path.
-public procedure SwipeRow(Left: array of S.Item; Right: array of S.Item; Settings: S.Options; At: string);
+public procedure SwipeRow(
+  Left: array of S.Item;
+  Right: array of S.Item;
+  Settings: S.Options;
+  At: string
+);
   procedure Check(Items: array of S.Item);
   begin
     for Item: S.Item in Items do

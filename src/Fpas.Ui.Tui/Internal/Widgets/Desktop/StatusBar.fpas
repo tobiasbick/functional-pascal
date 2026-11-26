@@ -23,7 +23,12 @@ uses System.Collections.Generic as C;
 // - `Theme`: Palette for the inline progress track.
 // ## Returns
 // A compact terminal status bar.
-public function Lower of TMsg(Id: string; Items: array of Bars.Item of TMsg; HideBorder: bool; Theme: Th.Theme): E.Element of TMsg;
+public function Lower of TMsg(
+  Id: string;
+  Items: array of Bars.Item of TMsg;
+  HideBorder: bool;
+  Theme: Th.Theme
+): E.Element of TMsg;
 begin
   const Parts: C.List of E.Element of TMsg := new C.List of E.Element of TMsg();
   for Item: Bars.Item of TMsg in Items do

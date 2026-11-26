@@ -83,7 +83,11 @@ public type Msg = variant
   Song(Value: Songs.Msg);
 end variant;
 
-function Prepare(Items: I.ImmutableArray of Tracks.Entry; Headers: I.ImmutableArray of Albums.Album; Cancellation: T.CancellationToken): Catalogue;
+function Prepare(
+  Items: I.ImmutableArray of Tracks.Entry;
+  Headers: I.ImmutableArray of Albums.Album;
+  Cancellation: T.CancellationToken
+): Catalogue;
 begin
   const Used: C.HashSet of string := new C.HashSet of string(Sys.StringComparer.Ordinal);
   for Item: Tracks.Entry in Items do
@@ -128,7 +132,12 @@ begin
   );
 end function;
 
-function Visible(Current: State; First: int; Last: int; Library: Metadata.Session?): A.Transition of (State, Msg);
+function Visible(
+  Current: State;
+  First: int;
+  Last: int;
+  Library: Metadata.Session?
+): A.Transition of (State, Msg);
 begin
   const Start: int := Sys.Math.Clamp(First, 0, Current.Page.Shown.Length);
   const Finish: int := Sys.Math.Clamp(Last, Start, Current.Page.Shown.Length);
@@ -160,7 +169,10 @@ begin
       A.StartBackground of Msg(
         'covers',
         A.FromWorker of Msg(
-          async function(Post: function(Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+          async function(
+            Post: function(Msg): Tasks.Task;
+            Cancellation: T.CancellationToken
+          ): Tasks.Task begin
             for Release: Albums.Album in Missing.Values do
               Cancellation.ThrowIfCancellationRequested();
               const Picture: Imaging.Bitmap? := await Artwork.Load(
@@ -182,7 +194,11 @@ end function;
 
 // Applies Message to Current, borrowing Library for reads and durable rating writes.
 // Returns the updated Music state and its cancellable commands.
-public function Apply(Current: State; Message: Msg; Library: Metadata.Session?): A.Transition of (State, Msg);
+public function Apply(
+  Current: State;
+  Message: Msg;
+  Library: Metadata.Session?
+): A.Transition of (State, Msg);
 begin
   var Next: State := Current;
   case Message of
@@ -240,9 +256,16 @@ begin
           A.StartBackground of Msg(
             'observe',
             A.FromWorker of Msg(
-              async function(Post: function(Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+              async function(
+                Post: function(Msg): Tasks.Task;
+                Cancellation: T.CancellationToken
+              ): Tasks.Task begin
                 await Library.Albums.ObserveSongsAsync(
-                  async function(Started: long; Entries: I.ImmutableArray of Tracks.Entry; Releases: I.ImmutableArray of Albums.Album): Tasks.Task begin
+                  async function(
+                    Started: long;
+                    Entries: I.ImmutableArray of Tracks.Entry;
+                    Releases: I.ImmutableArray of Albums.Album
+                  ): Tasks.Task begin
                     var Items: I.ImmutableArray of Tracks.Entry := Entries;
                     if Identity <> null then
                       const List: Lists.Playlist? := await Library.Playlists.ReadAsync(

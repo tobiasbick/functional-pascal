@@ -32,7 +32,10 @@ end function;
 // - `OnChange`: Optional mapper for points and stroke boundaries.
 // - `Settings`: Native display and input settings.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; OnChange: Sys.Func of (S.Signature, TMsg)?; Settings: S.Options
+  Frame: C.State of TMsg;
+  Id: string;
+  OnChange: Sys.Func of (S.Signature, TMsg)?;
+  Settings: S.Options
 );
 begin
   const Enabled: bool := Settings.Enabled and Frame.AcceptInput;

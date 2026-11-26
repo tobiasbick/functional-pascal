@@ -41,7 +41,10 @@ begin
 end function;
 
 // Validates the draft and returns only changed fields and explicit custom removals.
-public function Build(Current: M.State; Original: Files.Snapshot): I.ImmutableDictionary of (string, string?);
+public function Build(
+  Current: M.State;
+  Original: Files.Snapshot
+): I.ImmutableDictionary of (string, string?);
 begin
   const Changes: I.ImmutableDictionary of (string, string?).Builder := I.ImmutableDictionary.CreateBuilder of (string, string?)();
   for Field: C.KeyValuePair of (string, string) in Current.Values do

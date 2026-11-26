@@ -36,7 +36,11 @@ end record;
 // - `Settings`: Optional native options.
 // ## Returns
 // The graphical widget.
-public function Loader of TMsg(Id: string; Style: Animation; Settings: Options? := null): E.Element of TMsg;
+public function Loader of TMsg(
+  Id: string;
+  Style: Animation;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).Loader(Id, Style, Settings ?? new Options());

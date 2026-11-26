@@ -51,7 +51,12 @@ begin
   return M.Msg.Settings(SettingsModel.Msg.LibraryFailed(Error.Message));
 end function;
 
-function Settings(Current: M.State; Message: SettingsModel.Msg; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session): Mvu.Transition of (M.State, M.Msg);
+function Settings(
+  Current: M.State;
+  Message: SettingsModel.Msg;
+  Save: procedure(SettingsModel.Preferences);
+  Library: Monitoring.Session
+): Mvu.Transition of (M.State, M.Msg);
 begin
   const Child: Mvu.Transition of (SettingsModel.State, M.Msg) := Composition.MapTransition of (SettingsModel.State, SettingsModel.Msg, M.Msg)(
     SettingsUpdate.Apply(Current.Settings, Message, Save, Library), M.Msg.Settings, 'settings'
@@ -63,7 +68,11 @@ begin
   );
 end function;
 
-function Album(Current: M.State; Message: AlbumModel.Msg; Library: Monitoring.Session): Mvu.Transition of (M.State, M.Msg);
+function Album(
+  Current: M.State;
+  Message: AlbumModel.Msg;
+  Library: Monitoring.Session
+): Mvu.Transition of (M.State, M.Msg);
 begin
   const Tags: Metadata.Session? := Library.Metadata;
   const Service: AlbumAccess.Session? := if Tags <> null then
@@ -134,7 +143,12 @@ begin
   return new Mvu.Transition of (M.State, M.Msg)(Next, Child.Commands);
 end function;
 
-function Songs(Current: M.State; Message: LibrarySongs.Msg; Library: Monitoring.Session; Commands: array of Mvu.Command of M.Msg): Mvu.Transition of (M.State, M.Msg);
+function Songs(
+  Current: M.State;
+  Message: LibrarySongs.Msg;
+  Library: Monitoring.Session;
+  Commands: array of Mvu.Command of M.Msg
+): Mvu.Transition of (M.State, M.Msg);
 begin
   const Child: Mvu.Transition of (LibrarySongs.State, M.Msg) := Composition.MapTransition of (LibrarySongs.State, LibrarySongs.Msg, M.Msg)(
     LibrarySongs.Apply(Current.Songs, Message, Library.Metadata), M.Msg.Songs, 'songs'
@@ -154,7 +168,10 @@ end function;
 // - `Save`: Atomic settings writer.
 // ## Returns
 // The updated settings state, including a save failure if one occurred.
-public function SaveMixer(Current: M.State; Save: procedure(SettingsModel.Preferences)): SettingsModel.State;
+public function SaveMixer(
+  Current: M.State;
+  Save: procedure(SettingsModel.Preferences)
+): SettingsModel.State;
 begin
   const Saved: SettingsModel.Preferences := Current.Settings.Saved;
   if Saved.Mixer.Volume = Current.Player.Volume and Linq.Enumerable.SequenceEqual of float(
@@ -173,7 +190,12 @@ begin
   );
 end function;
 
-function Transport(Current: M.State; Message: PlayerModel.Msg; Port: Playback.Connection; Library: Monitoring.Session): Mvu.Transition of (M.State, M.Msg);
+function Transport(
+  Current: M.State;
+  Message: PlayerModel.Msg;
+  Port: Playback.Connection;
+  Library: Monitoring.Session
+): Mvu.Transition of (M.State, M.Msg);
 begin
   const Child: PlayerModel.Transition := Player.Apply(
     Current.Player, Message,
@@ -199,7 +221,10 @@ begin
             Mvu.StartBackground of M.Msg(
               'save-mixer',
               Mvu.FromWorker of M.Msg(
-                async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
+                async function(
+                  Post: function(M.Msg): Tasks.Task;
+                  Cancellation: T.CancellationToken
+                ): Tasks.Task begin
                   await Tasks.Task.Delay(350, Cancellation).ConfigureAwait(false);
                   await Post(M.Msg.SaveMixer).ConfigureAwait(false);
                 end function, Failure
@@ -220,7 +245,11 @@ begin
   );
 end function;
 
-function EditTags(Current: M.State; Message: TagModel.Msg; Library: Monitoring.Session): Mvu.Transition of (M.State, M.Msg);
+function EditTags(
+  Current: M.State;
+  Message: TagModel.Msg;
+  Library: Monitoring.Session
+): Mvu.Transition of (M.State, M.Msg);
 begin
   const Child: Mvu.Transition of (TagModel.State?, M.Msg) := Composition.MapTransition of (TagModel.State?, TagModel.Msg, M.Msg)(
     TagUpdate.Apply(
@@ -249,8 +278,18 @@ end function;
 // - `Port`: Ordered output mailbox and device event stream.
 // ## Returns
 // The next app state and the slices' mapped commands.
-public function Apply(Current: M.State; Message: M.Msg; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session; Port: Playback.Connection): Mvu.Transition of (M.State, M.Msg);
-  function Activate(Page: Music.State; Index: int; Playlist: string := ''): Mvu.Transition of (M.State, M.Msg);
+public function Apply(
+  Current: M.State;
+  Message: M.Msg;
+  Save: procedure(SettingsModel.Preferences);
+  Library: Monitoring.Session;
+  Port: Playback.Connection
+): Mvu.Transition of (M.State, M.Msg);
+  function Activate(
+    Page: Music.State;
+    Index: int;
+    Playlist: string := ''
+  ): Mvu.Transition of (M.State, M.Msg);
   begin
     if Index < 0 or Index >= Page.Shown.Length then
       return new Mvu.Transition of (M.State, M.Msg)(Current, []);

@@ -66,7 +66,12 @@ begin
   A.Check(Session.Step(), 'The desktop example closed unexpectedly.');
 end procedure;
 
-function Start(Path: string; Renderer: Cui.CuiRenderer; Effects: Replies.Effects of S.Msg; Continuous: bool := true): Gui.Session of S.Msg;
+function Start(
+  Path: string;
+  Renderer: Cui.CuiRenderer;
+  Effects: Replies.Effects of S.Msg;
+  Continuous: bool := true
+): Gui.Session of S.Msg;
   function Apply(Model: S.Model; Message: S.Msg): Mvu.Transition of (S.Model, S.Msg);
   begin
     return Effects.Wrap of S.Model(Update.Apply(Model, Message));
@@ -190,7 +195,9 @@ begin
   );
 end procedure;
 
-function ReadReply(Source: Channels.ChannelReader of Replies.Reply of S.Msg): Replies.Reply of S.Msg;
+function ReadReply(
+  Source: Channels.ChannelReader of Replies.Reply of S.Msg
+): Replies.Reply of S.Msg;
 begin
   return Source.ReadAsync().AsTask().WaitAsync(Timeout).GetAwaiter().GetResult();
 end function;

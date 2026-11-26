@@ -135,7 +135,12 @@ end function;
 // - `Command`: Maps an activated setting into a gallery message.
 // ## Returns
 // One terminal status row.
-public function EditorStatus of TMsg(Indent: int; Encoding: int; Language: int; Command: function(string): TMsg): E.Element of TMsg;
+public function EditorStatus of TMsg(
+  Indent: int;
+  Encoding: int;
+  Language: int;
+  Command: function(string): TMsg
+): E.Element of TMsg;
 requires Indent >= 0 and Indent < 3 and Encoding >= 0 and Encoding < 2 and Language >= 0
   and Language < 3;
 begin

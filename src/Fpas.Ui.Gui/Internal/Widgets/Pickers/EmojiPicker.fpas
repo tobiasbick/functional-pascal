@@ -44,7 +44,10 @@ end function;
 // - `OnChange`: Maps native changes to a message.
 // - `Settings`: Layout, labels and input permission.
 public procedure Draw of TMsg(
-  Frame: C.State of TMsg; Id: string; Value: P.State; OnChange: function(P.Change): TMsg;
+  Frame: C.State of TMsg;
+  Id: string;
+  Value: P.State;
+  OnChange: function(P.Change): TMsg;
   Settings: P.Options
 );
 begin

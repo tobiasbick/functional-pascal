@@ -17,7 +17,13 @@ uses GuiGallery.Shared.Sections as G;
 uses System as Sys;
 uses System.Collections.Generic as Lists;
 
-function Action(Key: string; Label: string; Hint: string := ''; Enabled: bool := true; Checked: bool := false): M.Entry of S.Msg;
+function Action(
+  Key: string;
+  Label: string;
+  Hint: string := '';
+  Enabled: bool := true;
+  Checked: bool := false
+): M.Entry of S.Msg;
 begin
   return (M.Entry of S.Msg).Action(
     new M.Item of S.Msg(
@@ -85,8 +91,12 @@ begin
 end function;
 
 function Tool(
-  Icon: int; Tip: string := ''; Shortcut: string := ''; Toggle: bool? := null;
-  Disabled: bool := false; Label: string? := null
+  Icon: int;
+  Tip: string := '';
+  Shortcut: string := '';
+  Toggle: bool? := null;
+  Disabled: bool := false;
+  Label: string? := null
 ): Tools.Item;
 begin
   return Tools.Item.Button(

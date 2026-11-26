@@ -62,7 +62,13 @@ end record;
 // - `Settings`: Native layout and behavior options.
 // ## Returns
 // A graphical element.
-public function FlameGraph of TMsg(Id: string; Spans: array of Span; Current: View; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
+public function FlameGraph of TMsg(
+  Id: string;
+  Spans: array of Span;
+  Current: View;
+  Changed: function(Event): TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).FlameGraph(Id, Spans, Current, Changed, Settings ?? new Options());

@@ -38,8 +38,12 @@ end record;
 // ## Returns
 // The base view with a centered modal when open.
 public function Dialog of TMsg(
-  Id: string; Base: E.Element of TMsg; Content: E.Element of TMsg; Open: bool;
-  Settings: Options; OnDismiss: TMsg
+  Id: string;
+  Base: E.Element of TMsg;
+  Content: E.Element of TMsg;
+  Open: bool;
+  Settings: Options;
+  OnDismiss: TMsg
 ): E.Element of TMsg;
 requires Id <> '';
 requires Settings.Width > 0;

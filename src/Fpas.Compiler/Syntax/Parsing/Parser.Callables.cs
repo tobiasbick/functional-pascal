@@ -18,9 +18,11 @@ internal sealed partial class Parser
         if (isAsync) position++;
         var token = tokens[position++];
         if (isAsync && token.Text != "function") throw source.Error("FP2003", "There are no async procedures.", token.Position);
+        var parametersOpen = position;
         var parameters = ReadList("(", ")", ";", ReadParameter, wrap: false);
         TypeSyntax? result = null;
         if (token.Text == "function") { Expect(":"); result = ReadType(); }
+        layout?.RoutineHeaderEnds.Add(parametersOpen, position - 1);
         if (token.Text == "function" && At("=>"))
         {
             position++;

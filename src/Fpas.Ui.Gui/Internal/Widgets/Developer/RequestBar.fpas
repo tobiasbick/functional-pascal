@@ -18,7 +18,14 @@ uses Fpas.Ui.Widgets.Developer.RequestBars as D;
 // - `Url`: Url supplied to the widget.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Method: int; Url: string; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Id: string;
+  Method: int;
+  Url: string;
+  Changed: function(D.Event): TMsg;
+  Settings: D.Options
+);
 begin
   const Role: string := 'request-bar';
   const Token: string := C.Token(Role, Id);

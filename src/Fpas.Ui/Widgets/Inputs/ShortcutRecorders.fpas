@@ -190,7 +190,12 @@ end record;
 // - `Settings`: Optional placeholder, width and input settings.
 // ## Returns
 // A graphical native shortcut recorder.
-public function ShortcutRecorder of TMsg(Id: string; Value: Combination; OnChange: function(Combination): TMsg; Settings: Options? := null): E.Element of TMsg;
+public function ShortcutRecorder of TMsg(
+  Id: string;
+  Value: Combination;
+  OnChange: function(Combination): TMsg;
+  Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
   return (E.Element of TMsg).ShortcutRecorder(Id, Value, OnChange, Settings ?? new Options());

@@ -42,6 +42,7 @@ Type to filter commands, use Up or Down to move the highlight and press Enter to
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_command_palette)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Overlays/CommandPalettes.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/App/Palette.fpas)
 - [Overlays](README.md)

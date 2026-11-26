@@ -115,6 +115,7 @@ end unit;
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_tree_table_begin)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Collections/TreeTables.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/DataGrid/View.fpas)
 - [Gallery update function](../../../../examples/ui/gui/gallery/Pages/DataGrid/Update.fpas)

@@ -44,6 +44,7 @@ Handle the Custom selection in your application to offer custom dimensions.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_aspect_picker)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Pickers/AspectPickers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Creative/View.fpas)
 - [Creative controls](README.md)

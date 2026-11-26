@@ -47,6 +47,7 @@ Open the list and toggle checkboxes or use its bulk selection action. Remove a c
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_multi_select)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/MultiSelects.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Pickers/View.fpas)
 - [Select](../inputs/select.md)

@@ -52,6 +52,7 @@ frame can report a completion reached during cached resize painting.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_typewriter)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Motion/Typewriters.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/View.fpas)
 - [Text reveal](text-reveal.md)

@@ -13,6 +13,7 @@ uses Gallery.Shared.Strings as Strings;
 // ## Parameters
 // - `Newsletter`: Current email notification setting.
 // - `Marketing`: Current marketing setting.
+// - `WeeklySummary`: The workspace preference shown in the disabled example.
 // - `SetNewsletter`: Maps email notification changes.
 // - `SetMarketing`: Maps marketing changes.
 // - `Preview`: Inert message for the disabled example.
@@ -21,6 +22,7 @@ uses Gallery.Shared.Strings as Strings;
 public function Rows of TMsg(
   Newsletter: bool;
   Marketing: bool;
+  WeeklySummary: bool;
   SetNewsletter: function(bool): TMsg;
   SetMarketing: function(bool): TMsg;
   Preview: TMsg
@@ -44,7 +46,7 @@ begin
     C.Checkbox of TMsg(
       'disabled-option',
       Strings.Get('Text.DisabledOption'),
-      false,
+      WeeklySummary,
       function(Value: bool): TMsg => Preview,
       Enabled := false
     )

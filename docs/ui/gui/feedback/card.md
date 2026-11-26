@@ -52,6 +52,7 @@ Child controls retain their own actions.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_card)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Containers/Cards.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/Widgets/BadgesAndAvatars.fpas)
 - [Grid](grid.md)

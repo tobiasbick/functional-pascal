@@ -44,6 +44,7 @@ the proposed index to accept manual or timed movement.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_carousel)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Media/Carousels.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/Media.fpas)
 - [Social and media](README.md)

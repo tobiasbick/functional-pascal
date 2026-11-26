@@ -39,6 +39,12 @@ emits one leave. Removing it retires its state. `Clicked` remains activation;
 
 Painting is GUI-only. It adds no native resource dependency to the TUI host.
 
+## See also
+
+- [Canvas](../text-and-display/canvas.md)
+- [Canvas and bars](README.md)
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_canvas)
+
 ## Source files
 
 - `src/Fpas.Ui/Widgets/Canvas/`

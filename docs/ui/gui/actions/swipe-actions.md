@@ -45,6 +45,7 @@ the app needs keyboard-only operation.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_swipe_item_begin)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/SwipeActions.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Actions/Widgets/SwipeActions.fpas)
 - [Actions](README.md)

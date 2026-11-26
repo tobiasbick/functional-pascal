@@ -45,6 +45,7 @@ value on a change. Use that stop for the operation when `Action` is true.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_step_slider)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/StepSliders.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Creative/View.fpas)
 - [Creative controls](README.md)

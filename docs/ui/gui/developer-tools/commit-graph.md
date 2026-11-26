@@ -45,6 +45,7 @@ to resolve the supplied commit.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_commit_graph)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/CommitGraphs.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Developer/View.fpas)
 - [Blame](../more-developer-tools/blame.md)

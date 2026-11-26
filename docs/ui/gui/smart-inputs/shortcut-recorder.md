@@ -67,6 +67,7 @@ value with the action that handles the shortcut. For a passive preview,
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_shortcut_recorder)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/ShortcutRecorders.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/SmartInputs/View.fpas)
 - [Keycap](../text-and-display/keycap.md)

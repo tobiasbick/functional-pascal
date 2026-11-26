@@ -43,6 +43,7 @@ ItemId to focus or inspect a visible action.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_speed_dial)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/SpeedDials.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Actions/Widgets/SpeedDial.fpas)
 - [Actions](README.md)

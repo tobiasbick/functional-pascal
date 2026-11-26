@@ -47,6 +47,7 @@ the resulting graph. A zoom of one is 100 percent.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_node_editor_begin)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Editors/NodeEditors.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Canvas/View.fpas)
 - [Canvas controls](canvas-controls.md)

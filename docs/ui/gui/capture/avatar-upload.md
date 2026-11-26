@@ -63,6 +63,7 @@ handling the selection.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_avatar_upload)
 - [Widget API](../../../../src/Fpas.Ui/Widgets/Files/AvatarUploads.fpas)
 - [Avatar](../disclosure/avatar.md)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Capture/View.fpas)

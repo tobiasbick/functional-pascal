@@ -44,6 +44,7 @@ apply it. Pass new entries as output arrives.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_log_view)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/LogConsoles.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Code/Tools.fpas)
 - [Terminal](../files/terminal.md)

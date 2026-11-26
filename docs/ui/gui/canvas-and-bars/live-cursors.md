@@ -47,6 +47,7 @@ zoom together.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_live_cursors)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Canvas/LiveCursors.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Canvas/View.fpas)
 - [Presence pill](presence-pill.md)

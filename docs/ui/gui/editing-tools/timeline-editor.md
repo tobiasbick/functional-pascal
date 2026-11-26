@@ -61,6 +61,7 @@ use the track's curve keys and apply curve edits to that same track.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_timeline_editor)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Editors/TimelineEditors.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/EditingTools/View.fpas)
 - [Gallery update function](../../../../examples/ui/gui/gallery/Pages/EditingTools/Update.fpas)

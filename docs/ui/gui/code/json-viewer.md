@@ -42,6 +42,7 @@ the number of items. CUI keeps that expansion state for the mounted widget.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_json_view)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/JsonViews.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Code/View.fpas)
 - [Code](README.md)

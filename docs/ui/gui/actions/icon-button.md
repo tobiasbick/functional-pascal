@@ -41,6 +41,7 @@ Shortcut displays a hint.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_icon_button)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/IconButtons.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Buttons/View.fpas)
 - [Actions](README.md)

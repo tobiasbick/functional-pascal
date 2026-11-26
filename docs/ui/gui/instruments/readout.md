@@ -46,6 +46,7 @@ The readout is passive. Pass updated text when the underlying value changes.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_readout)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Display/Readouts.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Instruments/View.fpas)
 - [Instruments](README.md)

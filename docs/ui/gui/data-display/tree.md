@@ -51,6 +51,7 @@ Expand or collapse a branch at its header. CUI draws the chevron and indents its
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_tree_begin)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Collections/Trees.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Lists/Widgets/TreeAndList.fpas)
 - [List item](list-item.md)

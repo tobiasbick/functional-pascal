@@ -51,6 +51,7 @@ by an outline outside the dialog.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_toc)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Navigation/TableOfContents.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Reader/View.fpas)
 - [Scroll anchor](scroll-anchor.md)

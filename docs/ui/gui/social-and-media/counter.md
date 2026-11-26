@@ -45,6 +45,7 @@ to the application.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_counter)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Feedback/Counters.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/View.fpas)
 - [Countdown](../disclosure/countdown.md)

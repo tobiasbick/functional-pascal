@@ -74,6 +74,7 @@ the field's UTF-8 capacity.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_emoji_picker)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Pickers/EmojiPickers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/SmartInputs/Widgets/EmojiMessage.fpas)
 - [Gallery update](../../../../examples/ui/gui/gallery/Pages/SmartInputs/Update.fpas)

@@ -9,18 +9,20 @@ C function or adding another spelling for an existing operation.
 
 | Native capability | FPAS entry point |
 | --- | --- |
-| Window, placement, minimum/fixed dimensions, native title and size | `Gui.Options`, `Gui.Start`/`Run`, `Windows` commands |
+| Window, placement, minimum/fixed dimensions, native title and size | [`Gui.Options`, `Gui.Start`/`Run` and `Windows` commands](ui/gui/app-chrome/window.md) |
 | Native close decision, redraw and delayed wakeup | `OnCloseRequested`, `Closing.Cancel`, `Mvu.Exit`, `Frames.Redraw` |
 | System appearance, palette, typography, geometry, elevation and motion | `StartThemed`/`RunThemed`, `Themes.Theme`, `ThemeMetrics.Options` |
 | Font copying, role replacement, four direct fallback faces, emoji loading/support | `Fonts.Apply` and its typed operations |
 | Native calendar/file-browser caption table | `Localization.Set`; native storage owns a copy |
 | OKLCH conversion, OKLab mixing and alpha multiplication | `Fpas.Ui.Gui.Colors` |
-| Drawing primitives, text measurement, image caching, clipping and native frame clock | `Canvases.Canvas` with callback-scoped `Painting.Surface` |
+| Drawing primitives, text measurement, image caching, clipping and native frame clock | [`Canvases.Canvas`](ui/gui/text-and-display/canvas.md) with callback-scoped [`Painting.Surface`](ui/gui/canvas-and-bars/painting.md) |
 | Focusable canvas, ordered key/text/window-focus dispatch, hover cursor and visible focus | `Canvases.Options.Focusable`, `HoverCursor`, `OnInput`, `Mvu.Focus` and `Painting.Surface.FocusVisible()` |
-| Pane-scoped Tab and Shift+Tab | `Layout.Flow.Scope` on graphical rows, columns and layers |
-| `cui_box_begin` and `cui_box_end` | Rows, columns, layered stacks and responsive grids share `Layout.Flow` and `Elements.Size`. See [Layout](ui/gui/layout/README.md). |
+| Pane-scoped Tab and Shift+Tab | [`Layout.Flow.Scope`](ui/gui/layout/focus-scopes.md) on graphical rows, columns and layers |
+| `cui_box`, `cui_box_begin` and `cui_box_end` | [Containers](ui/gui/layout/container-options.md), [layered stacks](ui/gui/layout/stack.md) and [responsive grids](ui/gui/feedback/grid.md) share `Layout.Flow` and `Elements.Size`. |
+| `cui_column`, `cui_row` | [`Elements.Column`](ui/gui/layout/column.md) and [`Elements.Row`](ui/gui/layout/row.md) arrange children. |
+| `cui_gap`, `cui_spacer` | [`Elements.Gap` and `Elements.Spacer`](ui/gui/layout/spacing.md) add fixed or flexible space. |
 | `cui_separator` | [`Elements.Divider()`](ui/gui/layout/divider.md) uses CUI's direction and theme border color. |
-| `cui_viewport_size` | `CuiWindow.ViewportSize` supplies the logical drawable size for the graphical `View` and `Snapshot().Size`. |
+| `cui_viewport_size` | `CuiWindow.ViewportSize` supplies the logical drawable size for the graphical `View` and [`Snapshot().Size`](ui/gui/layout/layout-inspection.md#read-the-bounds). |
 | `cui_split` | [`SplitViews.SplitView`](ui/gui/app-chrome/split-view.md) exposes the orientation, minimum pane sizes and divider proposals. |
 | Finalized rectangles and stable layout identities | Named containers and controls expose bounds in [`Snapshot().Controls`](ui/gui/host.md#invalidation-and-inspection). |
 | `cui_scroll`, `cui_scroll_to`, `cui_scroll_reveal` | [`Elements.ScrollView`](ui/gui/layout/scroll-view.md) uses native viewport extents, padding, gap, edge fades and wheel routing. `Layout.ScrollPosition` sets a vertical offset or reveals a child. |
@@ -28,7 +30,7 @@ C function or adding another spelling for an existing operation.
 | Window and text reading direction | [`Desktop.Options`, `Layout.Flow`, and `Texts.Options`](ui/gui/layout/reading-direction.md) configure inheritance and overrides. |
 | Rectangular texture updates | `MediaImages.Update` returns an immutable RGBA source with a dirty rectangle |
 | Canvas click, hover/press changes and optional two-axis wheel ownership | `Canvas` callbacks; unchanged pointer states emit no message |
-| Application shortcuts and editor navigation/find/selection | `BindingsFor`, `EditorCommands` |
+| Application shortcuts and editor navigation/find/selection | [`BindingsFor`](ui/gui/host.md#application-shortcuts), [`EditorCommands`](ui/gui/host.md#code-editor-commands) |
 | Native open/save/folder dialogs, clipboard, file drops and URL activation | GUI commands and existing file/link widgets |
 | Deferred axis labels, native trace links/hover/geometry, avatars and captions | Existing widget options and `TraceGeometry` |
 

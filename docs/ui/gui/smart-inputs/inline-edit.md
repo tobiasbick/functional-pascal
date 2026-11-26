@@ -53,6 +53,7 @@ proposal in the update and return the accepted title to the view.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_inline_edit)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/InlineEdits.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/SmartInputs/Widgets/Editors.fpas)
 - [Text field](../inputs/text-field.md)

@@ -47,6 +47,7 @@ Resolve the close to a document key before changing the list.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_doc_tabs)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Desktop/DocumentTabs.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Desktop/Editor.fpas)
 - [Navigation tabs](../navigation/tabs.md)

@@ -42,6 +42,7 @@ Hover a segment or its legend entry to inspect the corresponding amount. Supply 
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_heatmap)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/SplitBars.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/View.fpas)
 - [Donut chart](../charts/donut-chart.md)

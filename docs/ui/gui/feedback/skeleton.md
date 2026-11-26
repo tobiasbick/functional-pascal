@@ -37,6 +37,7 @@ CUI draws and animates the placeholder. Replace it with the loaded content when 
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_skeleton)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Feedback/Skeletons.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/View.fpas)
 - [Skeleton group](skeleton-group.md)

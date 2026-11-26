@@ -55,6 +55,7 @@ heading in a column with no gap.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_toc)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Navigation/ScrollAnchors.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Reader/View.fpas)
 - [Table of contents](table-of-contents.md)

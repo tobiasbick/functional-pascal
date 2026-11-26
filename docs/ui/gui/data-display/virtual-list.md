@@ -60,6 +60,7 @@ leaving the enclosing list and row available for the rest of the frame.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_virtual_list)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Collections/VirtualLists.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Lists/Widgets/Invoices.fpas)
 - [Table](table.md)

@@ -46,6 +46,7 @@ Hover a tile to inspect it. With a selection callback, clicking proposes the til
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_heatmap)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/Treemaps.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/View.fpas)
 - [Shared chart types](../../../../src/Fpas.Ui/Widgets/Charts/Charts.fpas)

@@ -47,6 +47,7 @@ The underlying string is still part of the model.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_kv_editor)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/KeyValueEditors.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Developer/View.fpas)
 - [HTTP request bar](../more-developer-tools/http-request-bar.md)

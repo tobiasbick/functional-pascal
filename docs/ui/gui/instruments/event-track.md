@@ -58,6 +58,7 @@ Store `Change.Current` to accept a proposal, including selection changes.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_event_track)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/EventTracks.fpas)
 - [Gallery update function](../../../../examples/ui/gui/gallery/Pages/Instruments/Update.fpas)
 - [Dot-matrix chart](dot-chart.md)

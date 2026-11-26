@@ -42,6 +42,7 @@ Hover nodes and flows to inspect their amounts. A click can send `Selection.Node
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_sankey)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/Sankeys.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/Widgets/Flows.fpas)
 - [Funnel](funnel.md)

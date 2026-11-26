@@ -49,6 +49,7 @@ the model, and feed new peaks as the signal changes.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_fader)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Audio/Faders.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Audio/View.fpas)
 - [Level meter](level-meter.md)

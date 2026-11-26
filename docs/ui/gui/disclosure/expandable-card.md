@@ -41,6 +41,7 @@ Click the header or activate it with Enter or Space to propose the opposite expa
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_expandable_card)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Containers/ExpandableCards.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Disclosure/View.fpas)
 - [Expandable text](expandable-text.md)

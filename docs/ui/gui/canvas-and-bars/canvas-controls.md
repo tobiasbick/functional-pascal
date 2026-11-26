@@ -51,6 +51,7 @@ These are application-supplied extents, not measured node sizes.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_canvas_controls)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Canvas/CanvasControls.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Canvas/View.fpas)
 - [Node editor](node-editor.md)

@@ -47,6 +47,7 @@ or press Enter to activate a request. Map `Selection`, `Clicked` and
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_waterfall)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/NetworkWaterfalls.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Developer/View.fpas)
 - [HTTP request bar](../more-developer-tools/http-request-bar.md)

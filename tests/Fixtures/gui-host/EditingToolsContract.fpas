@@ -61,7 +61,7 @@ begin
   var Focus: bool := false;
   var Shot: float := 0.0F;
   var Rotation: float := 0.0F;
-  const Token: string := Context.Token('scroll', 'main-editingtools-0');
+  const Token: string := Context.Token('scroll', 'main-0');
   const Window: Cui.CuiWindow := new Cui.CuiWindow(
     'FPas CUI editing tools',
     Width,

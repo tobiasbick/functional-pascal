@@ -50,6 +50,7 @@ they are closed, because CUI owns its disclosure state.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_reasoning_begin)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Ai/Reasonings.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [AI](README.md)

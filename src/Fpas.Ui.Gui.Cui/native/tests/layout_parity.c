@@ -153,7 +153,7 @@ static bool check_text_alignment(void) {
         }
         if (pass) {
             fpas_cui_formatted_text(ui, "Formatted", CUI_FONT_MEDIUM, 15, 0xffd02010u,
-                                    CUI_DIRECTION_LTR, CUI_TEXT_END);
+                                    CUI_DIRECTION_LTR, CUI_TEXT_END, 0);
         } else {
             const cui_text_opts options = { .font = CUI_FONT_MEDIUM, .size = 15, .color = CUI_RGBA(0x1020d0ff),
                 .direction = CUI_DIRECTION_LTR, .align = CUI_TEXT_END };
@@ -169,8 +169,48 @@ static bool check_text_alignment(void) {
     return matched;
 }
 
+/** Compares the ellipsis and passive tooltip against a direct CUI text node. */
+static bool check_formatted_text_clipping(void) {
+    enum { WIDTH = 300, HEIGHT = 140, PIXELS = WIDTH * HEIGHT * 4 };
+    static unsigned char pixels[2][2][PIXELS];
+    const char *text = "A long team member name that must remain on a single line";
+    for (int pass = 0; pass < 2; ++pass) {
+        cui_sw_renderer *renderer = cui_sw_create();
+        const cui_ctx_desc settings = { .renderer = cui_sw_iface(renderer) };
+        cui_ctx *ui = cui_create(&settings);
+        if (!ui) { cui_sw_destroy(renderer); return false; }
+        cui_set_viewport(ui, WIDTH, HEIGHT, 1);
+        cui_set_reduced_motion(ui, true);
+        cui_input_mouse_move(ui, WIDTH - 1, HEIGHT - 1);
+        for (int frame = 0; frame <= 52; ++frame) {
+            if (frame == 1) cui_input_mouse_move(ui, 40, 48);
+            cui_begin_frame(ui, .016f);
+            cui_column(ui, .width = CUI_PX(100), .pad_top = 40) {
+                if (pass) {
+                    fpas_cui_formatted_text(ui, text, CUI_FONT_MEDIUM, 14, 0xffd02010u,
+                                            CUI_DIRECTION_LTR, CUI_TEXT_START, 1);
+                } else {
+                    cui_text(ui, text, .font = CUI_FONT_MEDIUM, .size = 14, .color = CUI_RGBA(0x1020d0ff),
+                             .direction = CUI_DIRECTION_LTR, .nowrap = true);
+                }
+            }
+            cui_end_frame(ui);
+            if (frame == 0 || frame == 52)
+                cui_sw_render(renderer, cui_get_draw_data(ui), pixels[pass][frame != 0],
+                              WIDTH, HEIGHT, WIDTH * 4, CUI_SW_RGBA);
+        }
+        cui_destroy(ui);
+        cui_sw_destroy(renderer);
+    }
+    const bool matched = memcmp(pixels[0], pixels[1], sizeof pixels[0]) == 0;
+    const bool tooltip_visible = memcmp(pixels[0][0], pixels[0][1], PIXELS) != 0;
+    if (!matched || !tooltip_visible)
+        fprintf(stderr, "Formatted text ellipsis or hover tooltip differs from direct CUI.\n");
+    return matched && tooltip_visible;
+}
+
 int main(void) {
-    bool valid = check_hover() && check_box_close() && check_text_alignment();
+    bool valid = check_hover() && check_box_close() && check_text_alignment() && check_formatted_text_clipping();
     for (int axis = 0; axis < 3; ++axis)
         for (int rtl = 0; rtl < 2; ++rtl)
             for (int dark = 0; dark < 2; ++dark)

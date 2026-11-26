@@ -5,8 +5,11 @@ unit GalleryCompletionContract;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses GalleryHostAssertions as A;
+uses GuiGallery.App.Palette as Palette;
 uses GuiGallery.App.State as State;
 uses GuiGallery.App.Update as Update;
 uses GuiGallery.App.View as View;
@@ -25,14 +28,19 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       Left := -1;
     end if;
 
+    if Wheel <> 0.0F then
+      Window.Wheel(Wheel);
+      Wheel := 0.0F;
+    end if;
+
     if Text <> '' then
       Window.InputText(Text);
       Text := '';
     end if;
 
     if Key <> 0 then
-      Window.SetKey(Key, true);
-      Window.SetKey(Key, false);
+      Window.SetKey(Key, true, Modifiers);
+      Window.SetKey(Key, false, Modifiers);
       Key := 0;
     end if;
   end procedure;
@@ -42,9 +50,17 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     A.Check(Session.Step(), 'The gallery closed during the original examples.');
   end procedure;
 
-  procedure Click(Session: Gui.Session of State.Msg; Id: string);
+  procedure Press(Session: Gui.Session of State.Msg; Value: Keys.Key; Mods: int := 0);
   begin
-    const Box: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
+    Key := cast Value as int;
+    Modifiers := Mods;
+    Step(Session);
+    Step(Session);
+  end procedure;
+
+  procedure Click(Session: Gui.Session of State.Msg; Id: string; Part: string := '');
+  begin
+    const Box: Cui.CuiRectangle := A.Control(Session, Id, Part).Bounds;
     A.Check(Box.Width > 0.0F and Box.Height > 0.0F, 'The gallery control has no hit area: ' + Id);
     X := Box.X + Box.Width / 2.0F;
     Y := Box.Y + Box.Height / 2.0F;
@@ -54,6 +70,64 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     Step(Session);
     X := -1.0F;
     Y := -1.0F;
+    Step(Session);
+    Step(Session);
+  end procedure;
+
+  function MainOffset(Session: Gui.Session of State.Msg): string;
+  begin
+    for Item: Gui.Control in Session.Snapshot().Controls do
+      if Item.Role = 'scroll' and Item.Id.StartsWith('main-', Sys.StringComparison.Ordinal) then
+        return Item.Value;
+      end if;
+    end for;
+
+    raise new Sys.InvalidOperationException('The gallery main viewport is missing.');
+  end function;
+
+  procedure VerifyPageNavigation(Session: Gui.Session of State.Msg);
+  begin
+    Window.Resize(500, 480);
+    Step(Session);
+    Step(Session);
+    X := 250.0F;
+    Y := 275.0F;
+    Wheel := -1.0F;
+    Step(Session);
+    Step(Session);
+    const Scrolled: string := MainOffset(Session);
+    A.Check(Scrolled <> '0', 'Compact Overview must scroll before navigation.');
+    Click(Session, 'browse');
+    A.Check(A.HasText(Session, 'Variants'), 'Browse components must open the Buttons page.');
+    A.Check(
+      MainOffset(Session) = Scrolled,
+      'Browse components must keep the main scroll position.'
+    );
+
+    Press(Session, Keys.Key.K, Primary);
+    Text := 'Go to Overview';
+    Step(Session);
+    Step(Session);
+    Press(Session, Keys.Key.Enter);
+    A.Check(A.Control(Session, 'browse').Enabled, 'The palette action must return to Overview.');
+    A.Check(
+      MainOffset(Session) = Scrolled,
+      'Palette navigation must keep the main scroll position.'
+    );
+
+    Window.Resize(1100, 480);
+    Step(Session);
+    Step(Session);
+    A.Check(
+      MainOffset(Session) <> '0',
+      'The wide Overview must be scrolled before sidebar activation.'
+    );
+    Click(Session, 'navigation', 'overview');
+    A.Check(
+      MainOffset(Session) = '0',
+      'Reselecting Overview in the sidebar must reset the scroll position.'
+    );
+    Window.Resize(1100, 1700);
     Step(Session);
     Step(Session);
   end procedure;
@@ -73,7 +147,10 @@ begin
   var Y: float := -1.0F;
   var Left: int := -1;
   var Key: int := 0;
+  var Modifiers: int := 0;
   var Text: string := '';
+  var Wheel: float := 0.0F;
+  const Primary: int := cast Keys.PrimaryModifier() as int;
   const Window: Cui.CuiWindow := new Cui.CuiWindow(
     'FPas CUI gallery examples',
     1100,
@@ -83,7 +160,8 @@ begin
   );
   Window.SetReducedMotion(true);
   using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
-    new State.Model(), Update.Update, View.Build, Window, 256, Inject, ThemeFor := Update.ThemeFor
+    new State.Model(), Update.Update, View.Build, Window, 256, Inject, ThemeFor := Update.ThemeFor,
+    BindingsFor := Palette.Bindings
   );
 
   Step(Session);
@@ -137,13 +215,54 @@ begin
     A.Control(Session, 'overview-dependencies').Bounds.Y = Components.Y,
     'Overview must restore three columns after widening.'
   );
+  VerifyPageNavigation(Session);
+
+  Click(Session, 'team-invite');
+  A.Check(
+    A.Control(Session, 'team-invite').Enabled and not A.HasText(Session, 'Edit profile'),
+    'Team Invite is a preview button without a dialog.'
+  );
+  Click(Session, 'overview-palette');
+  A.Check(
+    A.Control(Session, 'gallery-palette/query').Enabled,
+    'Overview must open the command palette.'
+  );
+  Press(Session, Keys.Key.Escape);
+  A.Check(A.Control(Session, 'overview-palette').Enabled, 'Escape must return to Overview.');
+  Press(Session, Keys.Key.K, Primary);
+  A.Check(
+    A.Control(Session, 'gallery-palette/query').Enabled,
+    'Primary+K must open the command palette.'
+  );
+  Press(Session, Keys.Key.K, Primary);
+  A.Check(
+    A.Control(Session, 'overview-palette').Enabled,
+    'Primary+K must close the open command palette.'
+  );
+  Press(Session, Keys.Key.J, Primary);
+  A.Check(
+    Session.Snapshot().Theme.Appearance = Themes.Mode.Dark,
+    'Primary+J must switch Overview to dark.'
+  );
+  Press(Session, Keys.Key.J, Primary);
+  A.Check(
+    Session.Snapshot().Theme.Appearance = Themes.Mode.Light,
+    'Primary+J must switch Overview back to light.'
+  );
+
   Click(Session, 'workspace-summary');
   A.Check(
     A.Control(Session, 'workspace-summary').Value = 'true',
     'The form must update the weekly summary.'
   );
   Click(Session, 'workspace-name');
-  Key := 12;
+  Press(Session, Keys.Key.J, Primary);
+  A.Check(
+    Session.Snapshot().Theme.Appearance = Themes.Mode.Light,
+    'Editing must retain primary+J.'
+  );
+  Key := cast Keys.Key.End as int;
+  Modifiers := 0;
   Step(Session);
   Text := '!';
   Step(Session);
@@ -155,7 +274,7 @@ begin
   A.Check(Created <> '', 'Create workspace must show the original success toast.');
   Click(Session, Created + '/dismiss');
 
-  A.Send(Session, State.Msg.Show(State.Page.Buttons));
+  Click(Session, 'browse');
   Click(Session, 'options');
   Click(Session, 'options/delete');
   const FromMenu: Cui.CuiRectangle := A.Control(Session, 'delete-project').Bounds;
@@ -212,6 +331,24 @@ begin
       'wifi'
     ).Value = 'false' and A.Control(Session, 'bluetooth').Value = 'true',
     'The notification preferences must reach Selection.'
+  );
+  A.Check(
+    A.Control(
+      Session,
+      'disabled-option'
+    ).Value = 'true' and not A.Control(Session, 'disabled-option').Enabled,
+    'Selection must show the workspace summary value in its disabled checkbox.'
+  );
+  A.Send(Session, State.Msg.Show(State.Page.Overview));
+  A.Check(
+    A.Control(Session, 'workspace-summary').Value = 'true',
+    'Overview must retain the summary preference.'
+  );
+  Click(Session, 'workspace-summary');
+  A.Send(Session, State.Msg.Show(State.Page.Selection));
+  A.Check(
+    A.Control(Session, 'disabled-option').Value = 'false',
+    'Clearing the summary must update Selection.'
   );
 
   Window.Resize(1100, 1800);

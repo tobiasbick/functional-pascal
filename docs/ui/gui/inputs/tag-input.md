@@ -43,6 +43,7 @@ Enter or comma commits the draft. Backspace in an empty draft removes the last t
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_tag_input)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/TagInputs.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/CredentialFields.fpas)
 - [Inputs](README.md)

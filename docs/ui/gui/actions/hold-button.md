@@ -39,6 +39,7 @@ completes.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_hold_button)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/HoldButtons.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Buttons/Widgets/HoldButton.fpas)
 - [Actions](README.md)

@@ -60,6 +60,7 @@ uses the coordinate to add a cup and updates the plotted bands in its model.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_dot_chart)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/DotCharts.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Instruments/View.fpas)
 - [Event track](event-track.md)

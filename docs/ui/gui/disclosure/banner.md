@@ -41,6 +41,7 @@ Keep visibility in the model. When the close button sends its message, set Open 
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_banner)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Feedback/Banners.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Disclosure/Widgets/Banner.fpas)
 - [Disclosure](README.md)

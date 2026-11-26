@@ -46,6 +46,7 @@ Hover a point to inspect its coordinates. A click can send a typed `PointIndex` 
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_sankey)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/ScatterCharts.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/Widgets/Market.fpas)
 - [Shared chart types](../../../../src/Fpas.Ui/Widgets/Charts/Charts.fpas)

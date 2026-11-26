@@ -584,7 +584,8 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Font: Motion.Font,
         const FontSize: float,
         _,
-        const Settings: Texts.Options
+        const Settings: Texts.Options,
+        _
       ):
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location);
         Rules.CheckText(Value, Location);

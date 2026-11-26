@@ -43,6 +43,7 @@ Hover to inspect values at an axis. Supply `OnActivate` to receive the zero-base
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_heatmap)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/RadarCharts.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/View.fpas)
 - [Shared chart types](../../../../src/Fpas.Ui/Widgets/Charts/Charts.fpas)

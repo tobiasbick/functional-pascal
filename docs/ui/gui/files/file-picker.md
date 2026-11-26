@@ -51,6 +51,7 @@ SaveFile supplies a path for the application's save operation.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_file_picker)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Files/FilePickers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Files/View.fpas)
 - [Gallery update function](../../../../examples/ui/gui/gallery/Pages/Files/Update.fpas)

@@ -46,6 +46,7 @@ application.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_api_explorer)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/ApiExplorers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/View.fpas)
 - [HTTP request bar](http-request-bar.md)

@@ -47,6 +47,7 @@ ends. Hover a bucket to see its time and counts.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_time_histogram)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/TimeHistograms.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/View.fpas)
 - [More charts](../more-charts/README.md)

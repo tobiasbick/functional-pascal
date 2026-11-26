@@ -43,6 +43,7 @@ the animation. Reduced motion keeps the gradient still.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_gradient_text)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Motion/GradientTexts.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/View.fpas)
 - [Motion](README.md)

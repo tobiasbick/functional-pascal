@@ -74,5 +74,7 @@ screenshots.
 - [CUI binding](cui.md) and [native build](native-build.md) cover the graphical backend.
 - [GUI widget gallery](../../../examples/ui/gui/gallery/README.md) shows the full
   collection in one application.
+- [CUI gallery comparison](../../future/cui-compare/README.md) records layout,
+  rendering, behavior and API coverage by page.
 - [TUI gallery](../../../examples/ui/tui/gallery/README.md) shows sidebar navigation, text and determinate progress
   in a weighted two-panel layout with shared light and dark themes.

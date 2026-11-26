@@ -42,6 +42,7 @@ CUI owns expansion and shows Show more or Show less when the text exceeds the li
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_expandable_text)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Containers/ExpandableTexts.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Disclosure/View.fpas)
 - [Expandable card](expandable-card.md)

@@ -47,6 +47,7 @@ call that the application supplies.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_tool_call)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Ai/ToolCalls.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [Agent status](agent-status.md)

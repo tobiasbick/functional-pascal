@@ -41,6 +41,7 @@ CUI draws the line and its endpoint without axes or a legend. The sparkline is p
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_sparkline)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/Sparklines.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Charts/View.fpas)
 - [Line chart](line-chart.md)

@@ -37,6 +37,7 @@ Click the link or focus it and press Enter or Space. Handle the destination in y
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_link)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Display/Links.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Disclosure/Widgets/HoverCard.fpas)
 - [Hover card](hover-card.md)

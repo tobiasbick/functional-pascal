@@ -41,6 +41,7 @@ requests in the application. Supply updated position as playback runs.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_now_playing)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Audio/NowPlaying.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/Controls.fpas)
 - [Waveform](waveform.md)

@@ -43,6 +43,7 @@ Drag to adjust the value. With focus, use arrow keys, Shift for larger adjustmen
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_slider)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/Sliders.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Selection/Widgets/Slider.fpas)
 - [Range slider](range-slider.md)

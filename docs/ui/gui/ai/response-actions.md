@@ -42,6 +42,7 @@ and handle regeneration or sharing in the application.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_response_actions)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Ai/ResponseActions.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [AI](README.md)

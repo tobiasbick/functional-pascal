@@ -41,6 +41,7 @@ Place items in the order the reader should see them. CUI wraps the text and alig
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_timeline_item)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Planning/TimelineItems.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/View.fpas)
 - [Feedback](README.md)

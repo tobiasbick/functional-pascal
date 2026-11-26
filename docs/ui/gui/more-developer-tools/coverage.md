@@ -46,6 +46,7 @@ covered lines in the whole report.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_coverage)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/Coverages.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/View.fpas)
 - [More developer tools](README.md)

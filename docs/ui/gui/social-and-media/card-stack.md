@@ -43,6 +43,7 @@ the model.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_card_stack_begin)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Containers/CardStacks.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/Media.fpas)
 - [Social and media](README.md)

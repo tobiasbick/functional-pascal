@@ -38,6 +38,7 @@ The meter is read-only. When the editor proposes a change, update the password i
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_password_strength)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/PasswordStrengthMeters.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/CredentialFields.fpas)
 - [Inputs](README.md)

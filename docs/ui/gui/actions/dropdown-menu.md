@@ -45,6 +45,7 @@ Section labels and separators have no action. Shortcut text displays a hint.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_menu)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Overlays/Menus.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Buttons/Widgets/DropdownMenu.fpas)
 - [Actions](README.md)

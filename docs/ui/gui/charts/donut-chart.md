@@ -46,6 +46,7 @@ For a percent suffix, pass values already expressed in percent.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_line_chart)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/DonutCharts.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Charts/View.fpas)
 - [Split bar](../more-charts/split-bar.md)

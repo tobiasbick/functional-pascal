@@ -43,6 +43,7 @@ An enabled row with an action accepts a click, Enter or Space while focused. The
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_list_item)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Collections/ListItems.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Lists/Widgets/TreeAndList.fpas)
 - [Terminal example using the same list data](../../tui/data-display/selection-list.md)

@@ -87,6 +87,7 @@ support ignores them. Wayland lets a window neither read nor choose its place.
 
 ## See also
 
+- [CUI API coverage](../../../cui-api-coverage.md#application-capabilities)
 - [Window commands](../../../../src/Fpas.Ui.Gui/Windows.fpas)
 - [Host reference](../host.md#window-state-and-placement)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Desktop/HostActions.fpas)

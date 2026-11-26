@@ -41,6 +41,7 @@ Activate the hour or minute selector and choose a point on the dial. Selecting a
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_time_dial)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Pickers/TimeDials.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Pickers/Widgets/WheelsAndDial.fpas)
 - [Time picker](time-picker.md)

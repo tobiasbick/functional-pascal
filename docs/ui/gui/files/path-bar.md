@@ -47,6 +47,7 @@ and pass the resulting segments and menus back to the view.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_path_bar)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Navigation/PathBars.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Files/View.fpas)
 - [File browser](file-browser.md)

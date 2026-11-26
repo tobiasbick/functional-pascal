@@ -41,6 +41,7 @@ Click a star to propose its number. Click the selected star again to propose zer
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_rating)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/Ratings.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Selection/Widgets/Rating.fpas)
 - [Selection](README.md)

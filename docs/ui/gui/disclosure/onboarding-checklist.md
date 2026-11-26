@@ -48,6 +48,7 @@ Click or activate a completion circle with the keyboard to propose a new flag. T
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_checklist)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Feedback/Checklists.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Disclosure/Widgets/Checklist.fpas)
 - [Disclosure](README.md)

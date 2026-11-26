@@ -44,6 +44,7 @@ revision to replay the same message. Reduced motion shows the full text.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_text_reveal)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Motion/TextReveals.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/View.fpas)
 - [Typewriter](typewriter.md)

@@ -40,6 +40,7 @@ Click the row or activate it with Space or Enter while focused. The callback run
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_radio)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/RadioButtons.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Shared/SaveFrequency.fpas)
 - [Radio group](radio-group.md)

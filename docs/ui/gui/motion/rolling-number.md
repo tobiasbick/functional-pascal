@@ -46,6 +46,7 @@ tabular text.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_number_roll)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Motion/NumberRolls.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/View.fpas)
 - [Counter](../social-and-media/counter.md)

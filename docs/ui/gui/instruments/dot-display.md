@@ -43,6 +43,7 @@ CUI performs the marquee animation when enabled.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_dot_display)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Display/DotDisplays.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Instruments/View.fpas)
 - [Instruments](README.md)

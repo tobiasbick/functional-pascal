@@ -14,6 +14,8 @@ swatches. The gallery shows the accepted widget examples from the
 [CUI inventory](../../../../docs/cui-widget-inventory.md).
 See the [UI handbook](../../../../docs/ui/README.md) for widget examples and
 screenshots.
+See the [CUI gallery comparison](../../../../docs/future/cui-compare/README.md)
+for the reviewed pages and their widget guides.
 
 The companion [native API example](../native-api/README.md) demonstrates canvas
 wheel handling, custom axis labels and trace links/geometry without changing

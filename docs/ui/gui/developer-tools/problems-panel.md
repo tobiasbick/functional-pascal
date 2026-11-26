@@ -45,6 +45,7 @@ the supplied array and open the source location in your application.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_problems)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/ProblemsPanels.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Developer/View.fpas)
 - [Developer tools](README.md)

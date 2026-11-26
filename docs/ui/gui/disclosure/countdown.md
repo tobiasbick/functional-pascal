@@ -38,6 +38,7 @@ Refresh the remaining time from a clock in your application. The control display
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_countdown)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Feedback/Countdowns.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Disclosure/Widgets/Countdown.fpas)
 - [Disclosure](README.md)

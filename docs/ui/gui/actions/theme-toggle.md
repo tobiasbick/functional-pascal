@@ -42,6 +42,7 @@ CUI shows a sun or moon icon for the target appearance.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_theme_toggle)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Theming/ThemeToggles.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Actions/Widgets/ThemeSwitcher.fpas)
 - [Actions](README.md)

@@ -51,6 +51,7 @@ step to minus one.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_tour)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Overlays/Tours.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Audio/View.fpas)
 - [Overlays](README.md)

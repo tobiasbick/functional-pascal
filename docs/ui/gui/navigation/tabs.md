@@ -41,6 +41,7 @@ Click a tab or move with Left and Right while the strip has focus. The callback 
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_tabs)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Navigation/Tabs.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Navigation/Widgets/Tabs.fpas)
 - [Sidebar navigation](sidebar.md)

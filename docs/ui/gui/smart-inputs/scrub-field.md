@@ -49,6 +49,7 @@ number at its original precision.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_scrub)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/ScrubFields.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/SmartInputs/Widgets/Editors.fpas)
 - [Number field](../inputs/number-field.md)

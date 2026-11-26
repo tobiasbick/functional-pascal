@@ -42,6 +42,7 @@ CUI keeps drawing beyond one revolution when a value exceeds 1, up to four turns
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_sankey)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/ActivityRings.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/Widgets/Flows.fpas)
 - [Progress ring](../feedback/progress-ring.md)

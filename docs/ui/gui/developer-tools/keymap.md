@@ -46,6 +46,7 @@ actions. Store `Event.Modifiers` and use `Event.Key` to open binding details.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_keymap)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/Keymaps.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Developer/View.fpas)
 - [Developer tools](README.md)

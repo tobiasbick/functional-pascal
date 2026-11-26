@@ -42,6 +42,7 @@ Place the group where the eventual content will appear. CUI shares an animation 
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_skeleton_group)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Feedback/SkeletonGroups.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/Widgets/Loading.fpas)
 - [Skeleton](skeleton.md)

@@ -521,16 +521,16 @@ begin
   Wheel := -20.0F;
   Step(Session);
   Step(Session);
-  A.Check(A.Control(Session, 'main-layout-0').Value <> '0', 'The layout page did not scroll.');
+  A.Check(A.Control(Session, 'main-0').Value <> '0', 'The layout page did not scroll.');
   A.Send(Session, State.Msg.Show(State.Page.Layout));
   A.Check(
-    A.Control(Session, 'main-layout-1').Value = '0',
+    A.Control(Session, 'main-1').Value = '0',
     'Reselecting the active page kept its old scroll position.'
   );
   A.Send(Session, State.Msg.Show(State.Page.Overview));
   A.Send(Session, State.Msg.Show(State.Page.Layout));
   A.Check(
-    A.Control(Session, 'main-layout-3').Value = '0',
+    A.Control(Session, 'main-3').Value = '0',
     'Returning to the page did not start at the top.'
   );
 end procedure;

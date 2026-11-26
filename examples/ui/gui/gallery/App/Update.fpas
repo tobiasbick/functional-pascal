@@ -417,7 +417,11 @@ begin
           Audio := AudioUpdate.Update(State.Audio, Value);
         end with, []
       );
-    when G.Msg.Show(const Value: G.Page):
+    when G.Msg.Show(const Value: G.Page), G.Msg.Jump(const Value: G.Page):
+      const Revision: int := case Message of
+        when G.Msg.Show(_): State.NavigationRevision + 1;
+        else State.NavigationRevision;
+      end case;
       const Commands: Collections.List of Mvu.Command of G.Msg := new Collections.List of Mvu.Command of G.Msg();
       if Value <> State.Active then
         if State.Active = G.Page.Audio then
@@ -484,7 +488,7 @@ begin
       return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Active := Value;
-          NavigationRevision := State.NavigationRevision + 1;
+          NavigationRevision := Revision;
           Code := if Value <> G.Page.Code then
             State.Code with
               Replay := -1;

@@ -5,6 +5,11 @@ metrics, a workspace form and a team card. Browse components opens Buttons.
 Open command palette opens the same searchable command list as on the
 Overlays page.
 
+Use the primary modifier with K to toggle the command palette. Use it with J
+to toggle the theme while the keyboard is outside a text editor.
+Browse components and palette navigation retain the scroll position. Sidebar
+navigation starts the page at the top.
+
 ![Overview with three metrics, the workspace form and the team card](images/overview.png)
 
 | Example | Widget pages |
@@ -17,6 +22,7 @@ Overlays page.
 The cards use two columns while both fit. When space runs out, Grid puts
 the Team card beneath the form. The Team card uses presence dots for the
 avatars and role badges for Owner, Admin, Editor and Viewer.
+Team names and emails use one line. Hover over truncated text to read it in full.
 
 ## See also
 

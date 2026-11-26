@@ -63,10 +63,7 @@ procedure CapturePage(Page: State.Page; Renderer: Cui.CuiRenderer; Root: string;
     end if;
   end procedure;
 begin
-  const Token: string := Context.Token(
-    'scroll',
-    'main-' + Page.ToString().ToLowerInvariant() + '-0'
-  );
+  const Token: string := Context.Token('scroll', 'main-0');
   var Offset: float := 0.0F;
   var X: float := -1.0F;
   var Y: float := -1.0F;

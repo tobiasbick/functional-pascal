@@ -45,6 +45,7 @@ in the application. Reported totals count tests.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_test_explorer)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/TestExplorers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/View.fpas)
 - [Pipeline](../developer-tools/pipeline.md)

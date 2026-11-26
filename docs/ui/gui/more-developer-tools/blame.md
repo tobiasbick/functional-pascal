@@ -48,6 +48,7 @@ Use it to open the commit in your application's history view.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_blame)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/Blames.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/View.fpas)
 - [Commit graph](../developer-tools/commit-graph.md)

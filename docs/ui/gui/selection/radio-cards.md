@@ -44,6 +44,7 @@ Click a card or select it with Enter or Space. Arrow keys move focus and propose
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_radio_cards)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/RadioCards.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Selection/Widgets/RadioCards.fpas)
 - [Radio group](radio-group.md)

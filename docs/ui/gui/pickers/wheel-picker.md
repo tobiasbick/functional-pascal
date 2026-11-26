@@ -44,6 +44,7 @@ Drag the list, use the mouse wheel or move with the arrow keys. The callback rec
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_wheel_picker)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Pickers/WheelPickers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Pickers/Widgets/WheelsAndDial.fpas)
 - [Pickers](README.md)

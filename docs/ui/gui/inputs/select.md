@@ -42,6 +42,7 @@ Open the popup with the pointer or Enter. Choosing a row reports its original in
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_select)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/Selects.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/PickerFields.fpas)
 - [Inputs](README.md)

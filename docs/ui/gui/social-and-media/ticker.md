@@ -40,6 +40,7 @@ The ticker renders the supplied figures.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_ticker)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Feedback/Tickers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/View.fpas)
 - [Social and media](README.md)

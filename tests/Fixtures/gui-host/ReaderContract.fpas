@@ -73,7 +73,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       Destination.Y.ToString()
     );
     A.Check(
-      A.Control(Session, 'main-reader-0').Value = '0',
+      A.Control(Session, 'main-0').Value = '0',
       'The surrounding page should stay in place.'
     );
   end procedure;
@@ -133,7 +133,7 @@ begin
     'Wheel input must move the inner article.'
   );
   A.Check(
-    A.Control(Session, 'main-reader-0').Value = '0',
+    A.Control(Session, 'main-0').Value = '0',
     'Wheel input moved the surrounding page.'
   );
   Window.CapturePng(Capture + '.reader-scrolled.png');

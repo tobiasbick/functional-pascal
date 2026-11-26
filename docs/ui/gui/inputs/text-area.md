@@ -47,6 +47,7 @@ separately with the [Markdown widget](../code/markdown.md).
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_textarea)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/TextAreas.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/TextArea.fpas)
 - [Inputs](README.md)

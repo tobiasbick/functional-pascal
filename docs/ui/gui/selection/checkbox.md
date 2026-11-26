@@ -42,6 +42,7 @@ Click the row or focus it with Tab and press Space or Enter. The callback receiv
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_checkbox)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/Checkboxes.fpas)
 - [Shared gallery examples](../../../../examples/ui/gui/gallery/Shared/CheckboxExamples.fpas)
 - [Terminal checkbox](../../tui/selection/checkbox.md)

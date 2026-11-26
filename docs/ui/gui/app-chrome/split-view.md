@@ -58,6 +58,7 @@ low-level CUI adapter. Close the second pane's child layouts before calling
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_split)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Desktop/SplitViews.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Desktop/View.fpas)
 - [Windowing tests](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Windowing/CuiWindowTests.cs)

@@ -50,6 +50,7 @@ In the GUI, keep the body available during the exit transition.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_dialog)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Overlays/Dialogs.fpas)
 - [Terminal gallery](../../../../examples/ui/tui/gallery/README.md)
 - [GUI gallery example](../../../../examples/ui/gui/gallery/Pages/Overlays/Widgets/Dialog.fpas)

@@ -44,6 +44,7 @@ The body scrolls beneath the pinned header while focus stays inside. The close b
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_sheet)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Overlays/Sheets.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Overlays/Widgets/Notifications.fpas)
 - [Sidebar navigation](../navigation/sidebar.md)

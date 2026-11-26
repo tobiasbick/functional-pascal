@@ -45,6 +45,7 @@ a result.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_seed_field)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/SeedFields.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Creative/View.fpas)
 - [Creative controls](README.md)

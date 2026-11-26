@@ -43,6 +43,7 @@ in the application. `Delete` is true after the user confirms deletion.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_format_bar)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Canvas/FormatBars.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Canvas/View.fpas)
 - [Canvas and bars](README.md)

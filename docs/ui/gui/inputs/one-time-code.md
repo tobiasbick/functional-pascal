@@ -45,6 +45,7 @@ expose only the entered length.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_otp_input)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/OneTimeCodes.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/CredentialFields.fpas)
 - [Inputs](README.md)

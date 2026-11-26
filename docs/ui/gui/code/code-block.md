@@ -45,6 +45,7 @@ available viewport.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_code_block)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/CodeBlocks.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Code/View.fpas)
 - [Code editor](code-editor.md)

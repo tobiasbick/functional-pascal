@@ -43,6 +43,7 @@ Store the proposed first share in the model.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_ratio_slider)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/RatioSliders.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Creative/View.fpas)
 - [Creative controls](README.md)

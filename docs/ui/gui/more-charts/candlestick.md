@@ -44,6 +44,7 @@ Use the wheel to zoom around the pointer. Drag or use Shift+wheel to pan. With f
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_sankey)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/Candlesticks.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/Widgets/Market.fpas)
 - [Line chart](../charts/line-chart.md)

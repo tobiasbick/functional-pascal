@@ -39,6 +39,7 @@ CUI formats the percentage and interpolates the ring as the model changes. The r
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_progress_ring)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Feedback/ProgressRings.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/View.fpas)
 - [Progress bar](progress-bar.md)

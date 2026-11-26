@@ -46,6 +46,7 @@ the proposal in the model if you want edits to persist.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_regex_tester)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/RegexTesters.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/View.fpas)
 - [More developer tools](README.md)

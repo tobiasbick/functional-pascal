@@ -50,6 +50,7 @@ indexes the new curve, and `Removed` indexes the previous curve.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_curve_editor)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Editors/CurveEditors.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/EditingTools/View.fpas)
 - [Timeline editor](timeline-editor.md)

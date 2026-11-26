@@ -58,6 +58,7 @@ The same source works in images, image viewers and custom canvas painting.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_image)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Media/Images.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Display/View.fpas)
 - [Media sources](../../../../src/Fpas.Ui/Widgets/Media/MediaImages.fpas)

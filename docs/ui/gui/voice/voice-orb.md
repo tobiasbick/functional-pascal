@@ -46,6 +46,7 @@ callback, use its message to handle the change in the application.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_voice_orb)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Audio/VoiceOrbs.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Voice/View.fpas)
 - [Voice](README.md)

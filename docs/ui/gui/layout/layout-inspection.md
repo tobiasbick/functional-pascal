@@ -27,6 +27,7 @@ the native frame.
 
 ## See also
 
+- [CUI API coverage](../../../cui-api-coverage.md#application-capabilities)
 - [Container options](container-options.md)
 - [Responsive layout](../../layout/responsive.md)
 - [Scroll view](scroll-view.md)

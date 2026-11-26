@@ -47,6 +47,7 @@ Backspace restores Reset. Store the proposed value to accept the change.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_knob)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Audio/Knobs.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Audio/View.fpas)
 - [Audio](README.md)

@@ -59,6 +59,7 @@ also shows global shortcuts and custom highlights.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_code_editor)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Editors/CodeEditors.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Code/Tools.fpas)
 - [Code block](code-block.md)

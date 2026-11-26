@@ -9,6 +9,7 @@ uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
 uses Fpas.Ui.Widgets.Charts.Metrics as Metrics;
 uses Fpas.Ui.Widgets.Containers.Grids as Grid;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Overview.State as State;
@@ -24,6 +25,7 @@ uses System as Sys;
 // ## Parameters
 // - `Model`: The workspace preview state.
 // - `Data`: Profile fields shared with other pages.
+// - `Colors`: Colors from the active gallery theme.
 // - `Browse`: Navigate to Buttons.
 // - `OpenPalette`: Opens the shared command palette.
 // - `Messages`: Wraps form messages for the application.
@@ -32,13 +34,14 @@ uses System as Sys;
 public function View of TMsg(
   Model: State.Model;
   Data: Demo.Model;
+  Colors: Themes.Palette;
   Browse: TMsg;
   OpenPalette: TMsg;
   Messages: function(State.Msg): TMsg
 ): E.Element of TMsg;
 begin
   const Hero: E.Element of TMsg := E.Column of TMsg(
-    new L.Flow(Gap := G.Points(14), Clip := false),
+    new L.Flow(Gap := G.Points(14), PaddingBottom := G.Points(8), Clip := false),
     E.Styled of TMsg(E.Text of TMsg(Strings.Get('Text.ComponentsForFpas')), S.Role.DisplayTitle),
     E.Styled of TMsg(
       E.Text of TMsg(
@@ -63,7 +66,7 @@ begin
   );
   return E.Column of TMsg(
     new L.Flow(Gap := G.Points(20), Clip := false),
-    E.Column of TMsg(Hero, G.Space of TMsg(8)),
+    Hero,
     Grid.Grid of TMsg(
       new Grid.Options(Columns := 3, MinimumColumnWidth := 200.0F, Gap := G.Points(16)),
       Metrics.Metric of TMsg(
@@ -90,7 +93,7 @@ begin
     Grid.Grid of TMsg(
       new Grid.Options(Columns := 2, MinimumColumnWidth := 260.0F, Gap := G.Points(16)),
       U.Map of (State.Msg, TMsg)(Workspace.View(Model, Data), Messages),
-      U.Map of (State.Msg, TMsg)(Team.View(), Messages)
+      U.Map of (State.Msg, TMsg)(Team.View(Colors), Messages)
     )
   );
 end function;

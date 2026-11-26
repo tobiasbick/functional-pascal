@@ -41,6 +41,7 @@ Click a page button or focus it with Tab and press Enter or Space. CUI displays 
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_pagination)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Navigation/Paginations.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Navigation/Widgets/Pagination.fpas)
 - [Tabs](tabs.md)

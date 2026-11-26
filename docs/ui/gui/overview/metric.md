@@ -51,6 +51,7 @@ them without emitting input events. Use a responsive Grid for several tiles.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_metric)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/Metrics.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Overview/View.fpas)
 - [Grid](../feedback/grid.md)

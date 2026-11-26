@@ -42,6 +42,7 @@ end unit;
 | `Size` | Logical font size. Zero uses the theme size. |
 | `Color` | Supply a straight-alpha color. Use the current palette to follow the host appearance. |
 | `Settings` | `Texts.Options` defaults to inherited reading direction and Start alignment. |
+| `NoWrap` | False. True keeps text on one line and shows the full text on hover if CUI truncates it. |
 
 ## Usage
 
@@ -51,6 +52,7 @@ Both APIs use the same [reading direction and alignment options](text.md).
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_text)
 - [Widget API and types](../../../../src/Fpas.Ui/Elements.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Desktop/Editor.fpas)
 - [Native font choices](../../../../src/Fpas.Ui/Widgets/Motion/Motion.fpas)

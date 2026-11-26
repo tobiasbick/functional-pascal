@@ -46,6 +46,7 @@ use the wheel to zoom and press F to fit. Save `Event.Selection` and use
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_graph_view)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/DependencyGraphs.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Developer/View.fpas)
 - [Developer tools](README.md)

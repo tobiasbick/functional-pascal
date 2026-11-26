@@ -44,6 +44,7 @@ Drag either handle to change its endpoint. Focus the slider and press Space to s
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_histogram_slider)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/HistogramSliders.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Pickers/Widgets/RulerAndHistogram.fpas)
 - [Range slider](../selection/range-slider.md)

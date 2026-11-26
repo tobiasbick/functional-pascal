@@ -41,6 +41,7 @@ inside a group.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_button_group)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/ButtonGroups.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Buttons/Widgets/ButtonGroup.fpas)
 - [Actions](README.md)

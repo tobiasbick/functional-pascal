@@ -3,6 +3,9 @@
 Low-level .NET 10 binding for the pinned [CUI dependency](../../../third-party/cui/UPSTREAM.md).
 It supports the FPAS GUI host and interop fixtures. Applications use the
 [Fpas.Ui.Gui](host.md) MVU/declarative host.
+The [widget inventory](../../cui-widget-inventory.md) links to each GUI guide.
+The [API coverage reference](../../cui-api-coverage.md) covers host services
+and layout primitives.
 
 Managed Veil, Kanban and NodeEditor drawing scopes restrict their native chrome
 independently from composed bodies. Callers supply each child control's input

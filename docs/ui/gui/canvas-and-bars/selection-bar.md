@@ -50,6 +50,7 @@ the model. Count mode needs no item-flag array and retains native count animatio
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_selection_bar)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Canvas/SelectionBars.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Canvas/View.fpas)
 - [Canvas and bars](README.md)

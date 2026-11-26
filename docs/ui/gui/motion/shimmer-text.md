@@ -42,6 +42,7 @@ movement.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_shimmer_text)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Motion/ShimmerTexts.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/View.fpas)
 - [Loader](loader.md)

@@ -52,6 +52,7 @@ actual layout and `Count` for the number of change blocks.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_diff_view)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/DiffViews.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Code/Tools.fpas)
 - [Code](README.md)

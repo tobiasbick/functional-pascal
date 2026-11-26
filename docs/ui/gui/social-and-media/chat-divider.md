@@ -40,6 +40,7 @@ in the application and use distinct IDs for multiple dividers.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_chat_divider)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Conversation/ChatDividers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/View.fpas)
 - [Chat message](chat-message.md)

@@ -41,6 +41,7 @@ Use the trigger message to open or close the panel in your model. Escape or a pr
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_popover)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Overlays/Popovers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Overlays/Widgets/Popover.fpas)
 - [Confirm popover](../disclosure/confirm-popover.md)

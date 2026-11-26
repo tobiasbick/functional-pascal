@@ -61,6 +61,7 @@ Scroll the timeline horizontally to see later dates.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_gantt)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Planning/Gantts.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Planning/View.fpas)
 - [Planning](README.md)

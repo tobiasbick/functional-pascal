@@ -44,6 +44,7 @@ Click or activate an enabled row with Space or Enter to propose its index. Activ
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_radio_group)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/RadioGroups.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Shared/SaveFrequency.fpas)
 - [Radio cards](radio-cards.md)

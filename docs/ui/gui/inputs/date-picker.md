@@ -42,6 +42,7 @@ Click the field or press Enter while it has focus. Choose a day to propose a dat
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_date_picker)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Pickers/DatePickers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/PickerFields.fpas)
 - [Calendar](calendar.md)

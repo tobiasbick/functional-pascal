@@ -45,6 +45,7 @@ execution.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_schedule_picker)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Pickers/SchedulePickers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Developer/View.fpas)
 - [Developer tools](README.md)

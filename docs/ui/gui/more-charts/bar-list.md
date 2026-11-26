@@ -43,6 +43,7 @@ CUI sorts by amount by default and uses labels as animation keys as rows change 
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_sankey)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/BarLists.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/Widgets/Flows.fpas)
 - [Bar chart](../charts/bar-chart.md)

@@ -47,6 +47,7 @@ sample data.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_request_bar)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/RequestBars.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/View.fpas)
 - [HTTP response status](http-response-status.md)

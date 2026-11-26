@@ -74,6 +74,7 @@ in the same CUI scope.
 
 ## See also
 
+- [CUI API coverage](../../../cui-api-coverage.md#application-capabilities)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Layout/View.fpas)
 - [Scroll anchor](../reader/scroll-anchor.md)
 - [Table of contents](../reader/table-of-contents.md)

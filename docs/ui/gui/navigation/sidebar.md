@@ -57,6 +57,7 @@ the shared model and drive both the sidebar and the narrow drawer.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_nav_item)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Navigation/Navigation.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/App/Sidebar.fpas)
 - [Tabs](tabs.md)

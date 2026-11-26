@@ -42,6 +42,7 @@ a request is a separate application action.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_prompt_suggestions)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Ai/PromptSuggestions.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [Composer](../voice/composer.md)

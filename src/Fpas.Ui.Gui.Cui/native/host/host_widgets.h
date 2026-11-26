@@ -34,9 +34,9 @@ CUI_API void fpas_cui_surface(cui_ctx *ui, int node, uint32_t rgba, float radius
 CUI_API void fpas_cui_group_style(cui_ctx *ui, int node, uint32_t background, int background_token,
                                   float tl, float tr, float br, float bl, float border,
                                   uint32_t border_rgba, int border_token, int elevation, float opacity);
-/** Draws text with explicit typography, reading direction and alignment. */
+/** Draws text with explicit typography, reading direction, alignment and wrapping. */
 CUI_API void fpas_cui_formatted_text(cui_ctx *ui, const char *text, int font, float size, uint32_t rgba,
-                                     int direction, int alignment);
+                                     int direction, int alignment, int nowrap);
 CUI_API void fpas_cui_box_details(cui_ctx *ui, int node, float top, float end, float bottom, float start, int direction);
 /** Applies node sizing on a parent axis.
  * @param ui Owner context.

@@ -40,6 +40,7 @@ work, and CUI animates the indicator.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_loader)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Feedback/Loaders.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/View.fpas)
 - [Shimmer text](shimmer-text.md)

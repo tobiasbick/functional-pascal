@@ -50,11 +50,11 @@ void fpas_cui_group_style(cui_ctx *ui, int node, uint32_t background, int backgr
     n->opacity = opacity;
 }
 
-/** Draws text with explicit typography, reading direction and alignment. */
+/** Draws text with explicit typography, reading direction, alignment and wrapping. */
 void fpas_cui_formatted_text(cui_ctx *ui, const char *text, int font, float size, uint32_t rgba,
-                             int direction, int alignment) {
+                             int direction, int alignment, int nowrap) {
     const cui_text_opts options = { .font = (cui_font)font, .size = size, .color = fpas_chart_color(-1, rgba),
-        .direction = (cui_direction)direction, .align = (cui_text_align)alignment };
+        .direction = (cui_direction)direction, .align = (cui_text_align)alignment, .nowrap = nowrap != 0 };
     cui_text_ex(ui, text, &options);
 }
 

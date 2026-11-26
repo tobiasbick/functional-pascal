@@ -41,6 +41,7 @@ The bar animates the selection indicator.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_tab_bar)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Navigation/TabBars.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/Controls.fpas)
 - [Tabs](../navigation/tabs.md)

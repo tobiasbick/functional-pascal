@@ -50,6 +50,7 @@ and active flag. Use ItemId to request focus for a particular reaction.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_reactions)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Conversation/Reactions.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Actions/Widgets/Reactions.fpas)
 - [Actions](README.md)

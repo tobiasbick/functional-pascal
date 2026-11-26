@@ -23,10 +23,16 @@ uses GuiGallery.Shared.State as Demo;
 // ## Parameters
 // - `Data`: Shared demo values owned by the application.
 // - `Model`: Current controlled values.
+// - `WeeklySummary`: The workspace preference shown in the disabled example.
 // - `Wide`: Whether two 260-point columns fit with the native gap.
 // ## Returns
 // The complete Selection page.
-public function View(Model: State.Model; Data: Demo.Model; Wide: bool): E.Element of State.Msg;
+public function View(
+  Model: State.Model;
+  Data: Demo.Model;
+  WeeklySummary: bool;
+  Wide: bool
+): E.Element of State.Msg;
 begin
   const SectionFlow: L.Flow := new L.Flow(Gap := G.Points(12));
   const Checkboxes: E.Element of State.Msg := E.Column of State.Msg(
@@ -34,6 +40,7 @@ begin
       14, Checkbox.Rows of State.Msg(
         Data.Newsletter,
         Data.Marketing,
+        WeeklySummary,
         function(Value: bool): State.Msg => State.Msg.Shared(Demo.Msg.SetNewsletter(Value)),
         function(Value: bool): State.Msg => State.Msg.Shared(
           Demo.Msg.SetMarketing(Value)

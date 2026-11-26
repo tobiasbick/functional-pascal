@@ -44,6 +44,7 @@ Indeterminate mode, dither and custom track height require the GUI.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_progress)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Feedback/ProgressBars.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/View.fpas)
 - [Progress ring](progress-ring.md)

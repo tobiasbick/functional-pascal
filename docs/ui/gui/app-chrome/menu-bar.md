@@ -49,6 +49,7 @@ model. The command's `Shortcut` string displays a hint.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_menu_bar)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Desktop/MenuBars.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Desktop/Editor.fpas)
 - [Command menu](../actions/dropdown-menu.md)

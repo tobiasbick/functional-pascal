@@ -40,6 +40,7 @@ Press the track to move the nearest endpoint and drag to adjust it. CUI keeps th
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_range_slider)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/RangeSliders.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Selection/Widgets/RangeSlider.fpas)
 - [Slider](slider.md)

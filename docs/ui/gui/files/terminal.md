@@ -46,6 +46,7 @@ update and append any resulting output to the model.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_terminal)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/Terminals.fpas)
 - [Gallery widget](../../../../examples/ui/gui/gallery/Pages/Files/View.fpas)
 - [Gallery command handling](../../../../examples/ui/gui/gallery/Pages/Files/Terminal.fpas)

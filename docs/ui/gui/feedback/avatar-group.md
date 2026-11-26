@@ -38,6 +38,7 @@ CUI draws the visible initials as overlapping avatars and shows the number of re
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_avatar_group)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Media/AvatarGroups.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/Widgets/BadgesAndAvatars.fpas)
 - [Avatar](../disclosure/avatar.md)

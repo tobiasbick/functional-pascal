@@ -61,6 +61,7 @@ edit left to right.
 
 ## See also
 
+- [CUI API coverage](../../../cui-api-coverage.md#application-capabilities)
 - [Window options](../host.md#application-lifecycle)
 - [Native text options](../text-and-display/text.md)
 - [Spacing and padding](spacing.md)

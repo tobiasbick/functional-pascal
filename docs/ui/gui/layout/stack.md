@@ -56,6 +56,7 @@ Use `Elements.Size` on the stack to set its own dimensions.
 
 ## See also
 
+- [CUI API coverage](../../../cui-api-coverage.md#application-capabilities)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Containers/Stacks.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Layout/View.fpas)
 - [Container options](container-options.md)

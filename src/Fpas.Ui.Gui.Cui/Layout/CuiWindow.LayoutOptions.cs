@@ -61,7 +61,9 @@ public sealed partial class CuiWindow
     /// <param name="rgba">Straight-alpha RGBA channels packed low to high.</param>
     /// <param name="direction">Inherit, left-to-right, right-to-left, or automatic, in native order.</param>
     /// <param name="alignment">Start, center, right, left, or end, in native order.</param>
-    public void FormattedText(string text, int font, float size, uint rgba, int direction = 0, int alignment = 0)
+    /// <param name="noWrap">Truncate to a single line and show the full text on hover.</param>
+    public void FormattedText(string text, int font, float size, uint rgba, int direction = 0, int alignment = 0,
+        bool noWrap = false)
     {
         CheckFrame();
         Utf8.Validate(text, nameof(text));
@@ -69,7 +71,7 @@ public sealed partial class CuiWindow
         if (!float.IsFinite(size) || size < 0) throw new ArgumentOutOfRangeException(nameof(size));
         if (direction is < 0 or > 3) throw new ArgumentOutOfRangeException(nameof(direction));
         if (alignment is < 0 or > 4) throw new ArgumentOutOfRangeException(nameof(alignment));
-        NativeMethods.FormattedText(context, text, font, size, rgba, direction, alignment);
+        NativeMethods.FormattedText(context, text, font, size, rgba, direction, alignment, noWrap ? 1 : 0);
     }
 
     /// <summary>Opens a native stack whose children paint over one another.</summary>

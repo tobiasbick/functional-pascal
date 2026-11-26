@@ -46,6 +46,7 @@ when the glyph needs to trigger an action.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_icon)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Display/Icons.fpas)
 - [Named CUI glyphs](../../../../src/Fpas.Ui/Widgets/Display/IconGlyphs.fpas)
 - [Semantic color tokens](../../../../src/Fpas.Ui/Widgets/Theming/Themes.fpas)

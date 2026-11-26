@@ -40,6 +40,7 @@ Choose a day for the first endpoint, then choose the second. The callback receiv
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_range_calendar)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Pickers/DateRangeCalendars.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Pickers/Widgets/DateRange.fpas)
 - [Date range picker](date-range-picker.md)

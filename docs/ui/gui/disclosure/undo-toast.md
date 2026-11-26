@@ -39,6 +39,7 @@ Hover pauses the timer. Click Undo or reach it with Tab and activate it with Ent
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_toast)
 - [Widget API and types](../../../../src/Fpas.Ui.Gui/Toasts.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Disclosure/Update.fpas)
 - [Toast](../overlays/toast.md)

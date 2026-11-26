@@ -42,6 +42,7 @@ Hover a stage to inspect its amount. An optional `OnActivate` callback receives 
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_heatmap)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/Funnels.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/View.fpas)
 - [Sankey](sankey.md)

@@ -39,6 +39,7 @@ Click an ancestor or focus it with Tab and press Enter or Space. Position identi
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_breadcrumb)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Navigation/Breadcrumbs.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Navigation/Widgets/Breadcrumb.fpas)
 - [Navigation](README.md)

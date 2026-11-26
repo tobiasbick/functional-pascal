@@ -40,6 +40,7 @@ The spinner draws a native activity animation and has no input. Choose when to i
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_spinner)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Feedback/Spinners.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/Widgets/Loading.fpas)
 - [Status spinner](status-spinner.md)

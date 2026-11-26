@@ -50,6 +50,7 @@ Reset a GoTo request to minus one after handling its proposal.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_hex_view)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/HexViews.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Code/Tools.fpas)
 - [Code](README.md)

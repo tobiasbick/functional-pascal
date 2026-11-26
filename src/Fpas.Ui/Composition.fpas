@@ -651,8 +651,9 @@ begin
       const Font: Motion.Font,
       const FontSize: float,
       const Tint: MediaColor.Color,
-      const Settings: Texts.Options
-    ): (E.Element of TParent).FormattedText(Text, Font, FontSize, Tint, Settings);
+      const Settings: Texts.Options,
+      const NoWrap: bool
+    ): (E.Element of TParent).FormattedText(Text, Font, FontSize, Tint, Settings, NoWrap);
     when E.Element.Problems(_, _, _, _), E.Element.Pipeline(
       _,
       _,

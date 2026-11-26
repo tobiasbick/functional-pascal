@@ -56,6 +56,7 @@ proposed choice or toggle value.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_toolbar)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Desktop/Toolbars.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Canvas/View.fpas)
 - [App chrome editor](../../../../examples/ui/gui/gallery/Pages/Desktop/Editor.fpas)

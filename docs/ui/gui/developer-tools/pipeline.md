@@ -46,6 +46,7 @@ application supplies updated statuses and durations as jobs progress.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_pipeline)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/Pipelines.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Developer/View.fpas)
 - [Test explorer](../more-developer-tools/test-explorer.md)

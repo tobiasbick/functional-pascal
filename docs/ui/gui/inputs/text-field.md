@@ -68,6 +68,7 @@ Build the full URL from the address in the update when you need it.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_input)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/TextFields.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/TextField.fpas)
 - [Smart inputs gallery example](../../../../examples/ui/gui/gallery/Pages/SmartInputs/View.fpas)

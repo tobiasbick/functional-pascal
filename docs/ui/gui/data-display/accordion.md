@@ -41,6 +41,7 @@ Click the header or focus it and press Enter or Space to propose a new flag. Com
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_accordion)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Containers/Accordions.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Lists/View.fpas)
 - [Expandable card](../disclosure/expandable-card.md)

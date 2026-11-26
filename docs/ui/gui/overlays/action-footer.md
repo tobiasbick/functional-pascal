@@ -40,6 +40,7 @@ The buttons retain their own activation messages and keyboard behavior. Apply th
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_dialog)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/ActionFooters.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Overlays/Widgets/Dialog.fpas)
 - [Dialog](dialog.md)

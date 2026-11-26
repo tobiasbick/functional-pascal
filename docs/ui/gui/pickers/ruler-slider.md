@@ -43,6 +43,7 @@ Drag the tape, scroll over it or use the arrow keys while it has focus. Shift wi
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_ruler_slider)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/RulerSliders.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Pickers/Widgets/RulerAndHistogram.fpas)
 - [Pickers](README.md)

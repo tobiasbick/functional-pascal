@@ -42,6 +42,7 @@ enabled, use the proposed zero-based index to open step details.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_agent_plan)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Ai/AgentPlans.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [AI](README.md)

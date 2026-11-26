@@ -45,6 +45,7 @@ and `Environment` to find the affected cell and store its `On` and
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_feature_flags)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/FeatureFlagEditors.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/View.fpas)
 - [More developer tools](README.md)

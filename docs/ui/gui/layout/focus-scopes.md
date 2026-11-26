@@ -23,6 +23,7 @@ Use a control ID with the `Mvu.Focus` host request to set focus explicitly.
 
 ## See also
 
+- [CUI API coverage](../../../cui-api-coverage.md#application-capabilities)
 - [Container options](container-options.md)
 - [Layout inspection](layout-inspection.md)
 - [Canvas keyboard input](../text-and-display/canvas.md)

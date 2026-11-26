@@ -44,6 +44,7 @@ The Notifications example adds its Recent heading below the line.
 
 ## See also
 
+- [CUI API coverage](../../../cui-api-coverage.md#application-capabilities)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Overlays/Widgets/Notifications.fpas)
 - [Spacing](spacing.md)
 - [Sheet and drawer](../overlays/sheet.md)

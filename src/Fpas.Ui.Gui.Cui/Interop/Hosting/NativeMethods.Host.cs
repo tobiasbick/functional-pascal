@@ -23,7 +23,7 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "fpas_cui_formatted_text", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void FormattedText(nint context, string text, int font, float size, uint rgba,
-        int direction, int alignment);
+        int direction, int alignment, int noWrap);
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_box_details")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

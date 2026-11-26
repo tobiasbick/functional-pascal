@@ -43,6 +43,7 @@ The trigger opens the question in the model. The confirm action receives focus a
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_confirm_popover)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Overlays/ConfirmPopovers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Disclosure/Widgets/ConfirmPopover.fpas)
 - [Popover](../overlays/popover.md)

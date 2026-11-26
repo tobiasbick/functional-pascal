@@ -65,6 +65,7 @@ heading and `Introduction` for the paragraph beneath it.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_text)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Display/Texts.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Display/View.fpas)
 - [Code block](../code/code-block.md)

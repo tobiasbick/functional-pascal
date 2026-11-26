@@ -44,6 +44,7 @@ toolbar.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_result_card)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Canvas/ResultCards.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Canvas/View.fpas)
 - [Toolbar](toolbar.md)

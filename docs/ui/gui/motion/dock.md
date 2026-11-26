@@ -46,6 +46,7 @@ to activate its destination and update running indicators or badges.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_dock)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Navigation/Docks.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/Controls.fpas)
 - [Tab bar](tab-bar.md)

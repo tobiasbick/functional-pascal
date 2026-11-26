@@ -37,6 +37,7 @@ widget or application action that handles it.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_kbd)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Display/Keycaps.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Display/View.fpas)
 - [Command palette](../overlays/command-palette.md)

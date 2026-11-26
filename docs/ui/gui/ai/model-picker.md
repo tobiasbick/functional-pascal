@@ -45,6 +45,7 @@ composer, set its Models and Selected fields.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_model_picker)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Ai/ModelPickers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [Composer](../voice/composer.md)

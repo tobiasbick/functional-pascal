@@ -52,6 +52,7 @@ The AI page supplies a model menu and attached file names in the same composer.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_chat_composer)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Ai/Composers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Voice/View.fpas)
 - [Voice note](voice-note.md)

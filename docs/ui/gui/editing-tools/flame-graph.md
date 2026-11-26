@@ -48,6 +48,7 @@ activation or returns minus one.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_flame_graph)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Editors/FlameGraphs.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/EditingTools/View.fpas)
 - [Gallery sample spans](../../../../examples/ui/gui/gallery/Pages/EditingTools/Capture.fpas)

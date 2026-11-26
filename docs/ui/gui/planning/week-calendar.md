@@ -59,6 +59,7 @@ resize. Adopt `Event.Events` to accept an edit. A nonnegative
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_week_calendar)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Planning/WeekCalendars.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Planning/View.fpas)
 - [Month calendar](month-calendar.md)

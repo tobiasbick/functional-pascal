@@ -77,6 +77,7 @@ factory maps each display position to its record and returns a stable row ID.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_table)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Collections/Tables.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Lists/Widgets/People.fpas)
 - [Gallery update](../../../../examples/ui/gui/gallery/Pages/Lists/Update.fpas)

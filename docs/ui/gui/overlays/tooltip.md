@@ -38,6 +38,7 @@ CUI opens the tooltip after about 550 ms of hover. Moving directly to another to
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_tooltip)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Overlays/Tooltips.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Overlays/Widgets/Tooltip.fpas)
 - [Overlays](README.md)

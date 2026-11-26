@@ -55,6 +55,7 @@ accept edits.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_gradient_editor)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Editors/GradientEditors.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/EditingTools/View.fpas)
 - [Color picker](../inputs/color-picker.md)

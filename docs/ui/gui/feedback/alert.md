@@ -42,6 +42,7 @@ Click the close button or focus it and press Enter or Space. CUI keeps the alert
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_alert)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Feedback/Alerts.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/View.fpas)
 - [Toast](../overlays/toast.md)

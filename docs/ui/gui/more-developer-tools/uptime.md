@@ -45,6 +45,7 @@ updates the service history.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_uptime)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/Uptimes.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/View.fpas)
 - [More developer tools](README.md)

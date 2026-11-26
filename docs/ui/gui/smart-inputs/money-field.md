@@ -71,6 +71,7 @@ which covers every formatted decimal amount at all supported precisions.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_input_ex)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/MoneyFields.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/SmartInputs/Widgets/Editors.fpas)
 - [Number field](../inputs/number-field.md)

@@ -83,6 +83,7 @@ rejects open dialogs, sheets, command palettes and file pickers there.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_data_grid_begin)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Collections/DataGrids.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/DataGrid/View.fpas)
 - [Gallery update function](../../../../examples/ui/gui/gallery/Pages/DataGrid/Update.fpas)

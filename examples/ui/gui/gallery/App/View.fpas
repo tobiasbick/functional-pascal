@@ -260,7 +260,8 @@ begin
         Overview.View of State.Msg(
           Model.Overview,
           Model.Shared,
-          State.Msg.Show(State.Page.Buttons),
+          AppUpdate.ThemeFor(Model).Colors,
+          State.Msg.Jump(State.Page.Buttons),
           State.Msg.Overlays(OverlaysState.Msg.SetPalette(true)),
           State.Msg.Overview
         )
@@ -282,7 +283,7 @@ begin
     when State.Page.Selection:
       return [
         U.Map of (SelectionState.Msg, State.Msg)(
-          Selection.View(Model.Selection, Model.Shared, Width >= 536),
+          Selection.View(Model.Selection, Model.Shared, Model.Overview.WeeklySummary, Width >= 536),
           State.Msg.Selection
         )
       ];
@@ -377,8 +378,7 @@ begin
 
   Parts.AddRange(Preview(Model, Width));
   return E.ScrollView of State.Msg(
-    'main-' + Model.Active.ToString().ToLowerInvariant() + '-' +
-    Model.NavigationRevision.ToString(),
+    'main-' + Model.NavigationRevision.ToString(),
     E.Row of State.Msg(
       new L.Flow(Align := L.Alignment.Start, Justify := L.Justification.Center, Clip := false),
       E.Size of State.Msg(

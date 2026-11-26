@@ -61,6 +61,7 @@ appearance to Resolve.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_theme_switcher)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Theming/ThemeSwitchers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Actions/Widgets/ThemeSwitcher.fpas)
 - [Gallery theme callback](../../../../examples/ui/gui/gallery/App/Update.fpas)

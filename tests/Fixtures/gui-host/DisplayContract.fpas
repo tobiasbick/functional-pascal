@@ -22,7 +22,7 @@ procedure CheckPage(Page: State.Page; Renderer: Cui.CuiRenderer; Root: string; W
       var Current: float := 0.0F;
       var Maximum: float := 0.0F;
       Window.ScrollState(
-        Context.Token('scroll', 'main-disclosure-0'),
+        Context.Token('scroll', 'main-0'),
         0,
         1500.0F,
         out Current,

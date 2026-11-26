@@ -52,6 +52,7 @@ caption. In GUI, this creates a vertical container around the child.
 
 ## See also
 
+- [CUI API coverage](../../../cui-api-coverage.md#application-capabilities)
 - [Spacing and padding](spacing.md)
 - [Reading direction](reading-direction.md)
 - [Focus scopes](focus-scopes.md)

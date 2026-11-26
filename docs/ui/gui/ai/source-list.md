@@ -42,6 +42,7 @@ in the application.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_source_list)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Ai/SourceLists.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [Citation](citation.md)

@@ -39,6 +39,7 @@ Choose a day to propose a date. The title switches from days to twelve months an
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_calendar)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Pickers/Calendars.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/InlineCalendar.fpas)
 - [Date picker](date-picker.md)

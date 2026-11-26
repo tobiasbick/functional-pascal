@@ -50,6 +50,7 @@ For the example, `new W.Value([5u, 0u], '')` selects Engine and Platform.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_filter_bar)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Collections/FilterBars.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/DataGrid/View.fpas)
 - [Data grid](README.md)

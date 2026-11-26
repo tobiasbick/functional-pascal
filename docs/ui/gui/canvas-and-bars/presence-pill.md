@@ -42,6 +42,7 @@ is passive.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_live_cursors)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Canvas/PresencePills.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Canvas/View.fpas)
 - [Live cursors](live-cursors.md)

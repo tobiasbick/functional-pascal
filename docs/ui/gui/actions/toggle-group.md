@@ -43,6 +43,7 @@ the array in the model after accepting a proposal.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_toggle_group)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/ToggleGroups.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Actions/Widgets/ToggleGroup.fpas)
 - [Actions](README.md)

@@ -46,6 +46,7 @@ operation when `Action` is true.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_option_action)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/OptionActions.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Creative/View.fpas)
 - [Creative controls](README.md)

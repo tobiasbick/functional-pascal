@@ -62,6 +62,7 @@ over a different date. Clicking selects the date under the pointer.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_month_calendar)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Planning/MonthCalendars.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Planning/View.fpas)
 - [Week calendar](week-calendar.md)

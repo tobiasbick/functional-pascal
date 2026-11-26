@@ -50,6 +50,7 @@ as a fraction and choose indeterminate progress for work without a known total.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_status_bar)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Desktop/StatusBars.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Desktop/Editor.fpas)
 - [Chapter index](README.md)

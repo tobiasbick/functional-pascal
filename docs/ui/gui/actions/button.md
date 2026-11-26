@@ -43,6 +43,7 @@ suppresses activation. GUI shows a spinner and TUI shows an ellipsis.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_button)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/Buttons.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Buttons/View.fpas)
 - [Actions](README.md)

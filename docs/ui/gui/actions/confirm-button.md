@@ -40,6 +40,7 @@ letting the limit expire disarms it.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_confirm_button)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/ConfirmButtons.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Actions/Widgets/ConfirmButton.fpas)
 - [Actions](README.md)

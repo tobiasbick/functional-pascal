@@ -42,6 +42,7 @@ CUI allocates squares to each item in proportion to its share. Hover to inspect 
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_heatmap)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/Waffles.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/View.fpas)
 - [Split bar](split-bar.md)

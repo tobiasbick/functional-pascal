@@ -48,6 +48,7 @@ Hover a part or its legend entry to inspect it. Tab focuses the bar. Arrow keys,
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_pattern_meter)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/PatternMeters.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Charts/View.fpas)
 - [Meter](../feedback/meter.md)

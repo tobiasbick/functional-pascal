@@ -75,6 +75,7 @@ images and other drawing primitives, or to observe pointer and wheel input.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_canvas)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Canvas/Canvases.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Display/View.fpas)
 - [Canvas and bars](../canvas-and-bars/README.md)

@@ -43,6 +43,7 @@ segment leaves the model alone.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_segmented)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/SegmentedControls.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Buttons/Widgets/SegmentedControl.fpas)
 - [Actions](README.md)

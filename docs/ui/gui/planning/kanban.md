@@ -56,6 +56,7 @@ horizontally to reach columns outside the visible area.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_kanban_begin)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Planning/Kanbans.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Planning/Board.fpas)
 - [Gallery update function](../../../../examples/ui/gui/gallery/Pages/Planning/Update.fpas)

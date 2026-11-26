@@ -43,6 +43,7 @@ Persist the value from `Event.Like` for the correct comment. Handle
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_comment)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Conversation/Comments.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/View.fpas)
 - [Social and media](README.md)

@@ -44,6 +44,7 @@ handle activation in the application and open the intended source.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_citation)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Ai/Citations.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [Source list](source-list.md)

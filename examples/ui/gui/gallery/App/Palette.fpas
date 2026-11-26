@@ -3,6 +3,8 @@
 unit GuiGallery.App.Palette;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Shortcuts as Shortcuts;
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
 uses Fpas.Ui.Widgets.Overlays.CommandPalettes as P;
 
 uses Gallery.Shared.Strings as Strings;
@@ -22,6 +24,21 @@ begin
   return new P.Command of G.Msg(Title, Message, Sys.Char.ConvertFromUtf32(Icon), Group, Shortcut);
 end function;
 
+// Selects the gallery's theme shortcut. Native editors keep keyboard ownership.
+// ## Parameters
+// - `Model`: Current gallery state.
+// ## Returns
+// The primary modifier plus J binding used by the gallery.
+public function Bindings(Model: G.Model): array of Shortcuts.Binding of G.Msg;
+begin
+  return [
+    new Shortcuts.Binding of G.Msg(
+      new Keys.Combination(Keys.Key.J, Keys.PrimaryModifier()),
+      G.Msg.Shared(S.Msg.ToggleAppearance)
+    )
+  ];
+end function;
+
 // Presents the original searchable gallery commands.
 // ## Parameters
 // - `Open`: Current palette visibility.
@@ -34,25 +51,25 @@ begin
     'gallery-palette', Base, Open, [
       Command(
         Strings.Get('Palette.Overview'),
-        G.Msg.Show(G.Page.Overview),
+        G.Msg.Jump(G.Page.Overview),
         $E1C1,
         Strings.Get('Page.Navigation')
       ),
       Command(
         Strings.Get('Palette.Buttons'),
-        G.Msg.Show(G.Page.Buttons),
+        G.Msg.Jump(G.Page.Buttons),
         $E1B4,
         Strings.Get('Page.Navigation')
       ),
       Command(
         Strings.Get('Palette.Inputs'),
-        G.Msg.Show(G.Page.Inputs),
+        G.Msg.Jump(G.Page.Inputs),
         $E198,
         Strings.Get('Page.Navigation')
       ),
       Command(
         Strings.Get('Palette.Charts'),
-        G.Msg.Show(G.Page.Charts),
+        G.Msg.Jump(G.Page.Charts),
         $E2A5,
         Strings.Get('Page.Navigation')
       ),
@@ -71,7 +88,7 @@ begin
       ),
       Command(
         Strings.Get('Text.NewProject'),
-        G.Msg.Show(G.Page.Feedback),
+        G.Msg.Jump(G.Page.Feedback),
         $E13D,
         Strings.Get('Page.Actions'),
         'Ctrl N'

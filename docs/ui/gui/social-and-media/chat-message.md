@@ -45,6 +45,7 @@ the standalone Markdown widget.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_chat_message)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Conversation/ChatMessages.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/View.fpas)
 - [Markdown](../code/markdown.md)

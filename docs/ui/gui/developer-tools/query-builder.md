@@ -46,6 +46,7 @@ filtering data in your application.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_query_builder)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/QueryBuilders.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Developer/View.fpas)
 - [Developer tools](README.md)

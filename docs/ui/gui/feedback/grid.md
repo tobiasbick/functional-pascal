@@ -59,6 +59,7 @@ its content.
 
 ## See also
 
+- [CUI API coverage](../../../cui-api-coverage.md#application-capabilities)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Containers/Grids.fpas)
 - [Common box options](../layout/column.md)
 - [Sizing](../../layout/sizing.md)

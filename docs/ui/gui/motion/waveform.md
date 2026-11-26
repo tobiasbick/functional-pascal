@@ -43,6 +43,7 @@ fraction and move playback to the corresponding position.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_waveform)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Audio/Waveforms.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/Controls.fpas)
 - [Voice waveform](../voice/voice-waveform.md)

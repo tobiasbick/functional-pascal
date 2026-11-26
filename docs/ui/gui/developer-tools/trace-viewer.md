@@ -69,6 +69,7 @@ rectangle. [Native API example](../../../../examples/ui/gui/native-api/README.md
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_trace_view)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/TraceViewers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Developer/View.fpas)
 - [Flame graph](../editing-tools/flame-graph.md)

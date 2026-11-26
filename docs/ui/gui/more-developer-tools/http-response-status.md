@@ -43,6 +43,7 @@ passive.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_response_status)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/ResponseStatuses.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/View.fpas)
 - [HTTP request bar](http-request-bar.md)

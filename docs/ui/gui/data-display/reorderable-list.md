@@ -43,6 +43,7 @@ Drag a row by its handle. CUI moves the surrounding rows and proposes a new perm
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_reorder_begin)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Collections/ReorderableLists.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Lists/Widgets/Tasks.fpas)
 - [Virtual list](virtual-list.md)

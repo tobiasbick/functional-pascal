@@ -61,6 +61,7 @@ the model value. Hidden or removed text rows release their editing state.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_inspector)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Editors/PropertyInspectors.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/EditingTools/View.fpas)
 - [Editing tools](README.md)

@@ -45,6 +45,7 @@ gallery simulates playback by advancing the position on its clock.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_voice_note)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Audio/VoiceNotes.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Voice/View.fpas)
 - [Composer](composer.md)

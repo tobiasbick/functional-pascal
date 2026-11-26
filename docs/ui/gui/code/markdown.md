@@ -44,6 +44,7 @@ a CLR string by UTF-16 position, then render the updated Markdown source.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_markdown)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Display/Markdowns.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Code/Tools.fpas)
 - [Gallery update function](../../../../examples/ui/gui/gallery/Pages/Code/Update.fpas)

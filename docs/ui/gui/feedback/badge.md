@@ -39,6 +39,7 @@ The badge displays a label and has no input action. Change the caption and tone 
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_badge)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Feedback/Badges.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/Widgets/BadgesAndAvatars.fpas)
 - [Chip](../selection/chip.md)

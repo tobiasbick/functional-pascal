@@ -42,6 +42,7 @@ is passive.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_agent_status)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Ai/AgentStatuses.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [Agent plan](agent-plan.md)

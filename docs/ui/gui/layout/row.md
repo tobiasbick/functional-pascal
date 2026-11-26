@@ -48,6 +48,8 @@ CUI then distributes the available width among the children on each line.
 
 ## See also
 
+- [CUI API coverage](../../../cui-api-coverage.md#application-capabilities)
+- [Overview example](../../../../examples/ui/gui/gallery/Pages/Overview/View.fpas)
 - [Container options](container-options.md)
 - [Spacing and padding](spacing.md)
 - [Reading direction](reading-direction.md)

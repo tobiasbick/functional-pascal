@@ -43,6 +43,7 @@ and update any detail text in the model.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_control_tile)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Audio/ControlTiles.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/Controls.fpas)
 - [Motion](README.md)

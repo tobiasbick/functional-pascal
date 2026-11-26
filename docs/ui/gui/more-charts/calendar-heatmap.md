@@ -44,6 +44,7 @@ Hover a day for its date and amount. A click can send the actual date through `O
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_heatmap)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/CalendarHeatmaps.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/View.fpas)
 - [Heatmap](heatmap.md)

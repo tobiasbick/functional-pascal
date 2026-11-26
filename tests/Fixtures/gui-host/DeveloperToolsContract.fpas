@@ -61,10 +61,7 @@ procedure Page(
   end procedure;
 begin
   var Offset: float := 0.0F;
-  const Token: string := Context.Token(
-    'scroll',
-    'main-' + Page.ToString().ToLowerInvariant() + '-0'
-  );
+  const Token: string := Context.Token('scroll', 'main-0');
   const Window: Cui.CuiWindow := new Cui.CuiWindow(
     'FPas CUI developer tools',
     1100,

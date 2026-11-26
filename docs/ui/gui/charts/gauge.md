@@ -41,6 +41,7 @@ Pass the current model reading. CUI draws and animates the gauge as it changes. 
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_gauge)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/Gauges.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Charts/View.fpas)
 - [Radial gauge](../more-charts/radial-gauge.md)

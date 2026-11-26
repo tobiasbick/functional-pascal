@@ -75,7 +75,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string; Suffix: stri
 
       // The desktop can constrain a requested tall window. Scroll over the
       // gallery gutter so image tools cannot consume the wheel as zoom input.
-      const Main: Cui.CuiRectangle := A.Control(Session, 'main-social-0').Bounds;
+      const Main: Cui.CuiRectangle := A.Control(Session, 'main-0').Bounds;
       X := Main.X + 4.0F;
       Y := Session.Snapshot().Size.Height * 0.5F;
       Step(Session, 1);

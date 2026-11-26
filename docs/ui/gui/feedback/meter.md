@@ -38,6 +38,7 @@ CUI formats the quantities and applies its warning and danger colors. A zero tot
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_meter)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/Meters.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/View.fpas)
 - [Progress bar](progress-bar.md)

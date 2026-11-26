@@ -44,6 +44,7 @@ Click the covered area or activate it with Enter when focused to propose a revea
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_veil)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Overlays/Veils.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Disclosure/Widgets/Veil.fpas)
 - [Disclosure](README.md)

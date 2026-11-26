@@ -48,6 +48,7 @@ Move the pointer across the chart to inspect values using its native crosshair. 
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_line_chart)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/LineCharts.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Charts/View.fpas)
 - [Shared chart types](../../../../src/Fpas.Ui/Widgets/Charts/Charts.fpas)

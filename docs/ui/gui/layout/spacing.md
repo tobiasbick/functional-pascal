@@ -42,6 +42,8 @@ still has a gap on each side when both neighboring children exist.
 
 ## See also
 
+- [CUI API coverage](../../../cui-api-coverage.md#application-capabilities)
+- [Layout gallery example](../../../../examples/ui/gui/gallery/Pages/Layout/View.fpas)
 - [Container options](container-options.md)
 - [Row](row.md)
 - [Column](column.md)

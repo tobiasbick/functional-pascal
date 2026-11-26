@@ -42,6 +42,7 @@ adds or removes context. The meter is passive.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_context_meter)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Ai/ContextMeters.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Ai/View.fpas)
 - [AI](README.md)

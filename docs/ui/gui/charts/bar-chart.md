@@ -47,6 +47,7 @@ Hover to inspect a category and see its native readout. CUI lays out the bars an
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_line_chart)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/BarCharts.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Charts/View.fpas)
 - [Shared chart types](../../../../src/Fpas.Ui/Widgets/Charts/Charts.fpas)

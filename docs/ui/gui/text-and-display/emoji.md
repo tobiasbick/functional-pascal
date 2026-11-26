@@ -45,6 +45,7 @@ it. Use Emoji picker when the user should choose a glyph.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_emoji)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Display/Emojis.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Display/View.fpas)
 - [Emoji picker](../smart-inputs/emoji-picker.md)

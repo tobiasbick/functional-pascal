@@ -43,6 +43,7 @@ model when appropriate.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_status_button)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/StatusButtons.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Actions/Widgets/StatusButton.fpas)
 - [Actions](README.md)

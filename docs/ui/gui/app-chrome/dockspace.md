@@ -68,6 +68,7 @@ recent accepted value as `KnownLayout` to avoid repeat notifications.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_dockspace)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Desktop/Dockspaces.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Desktop/Workspace.fpas)
 - [Split view](split-view.md)

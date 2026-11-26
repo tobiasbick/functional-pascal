@@ -44,6 +44,7 @@ the same keyed command entries as a dropdown menu.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_user_menu)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Overlays/UserMenus.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Actions/Widgets/UserMenu.fpas)
 - [Actions](README.md)

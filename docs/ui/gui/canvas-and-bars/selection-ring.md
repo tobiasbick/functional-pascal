@@ -45,6 +45,7 @@ the selected object.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_live_cursors)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Canvas/SelectionRings.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Canvas/View.fpas)
 - [Node editor](node-editor.md)

@@ -265,7 +265,7 @@ public type Element of TMsg = variant
   // Display text.
   Label(Text: string);
   // Static text with an explicit native typeface, size and color.
-  FormattedText(Text: string; Font: Motion.Font; Size: float; Color: G.Color; Settings: Texts.Options);
+  FormattedText(Text: string; Font: Motion.Font; Size: float; Color: G.Color; Settings: Texts.Options; NoWrap: bool);
   // Separate adjacent content, with an optional caption.
   Separator(Title: string);
   // Activate a button with model-owned presentation and input settings.
@@ -797,6 +797,7 @@ end function;
 // - `Size`: Logical font size, or zero to use the theme.
 // - `Color`: Straight-alpha text color.
 // - `Settings`: Native reading direction and text alignment.
+// - `NoWrap`: Use one line and show the full text on hover if it is truncated.
 // ## Returns
 // A label for the graphical profile.
 public function FormattedText of TMsg(
@@ -804,10 +805,13 @@ public function FormattedText of TMsg(
   Font: Motion.Font;
   Size: float;
   Color: G.Color;
-  Settings: Texts.Options? := null
+  Settings: Texts.Options? := null;
+  NoWrap: bool := false
 ): Element of TMsg;
 begin
-  return (Element of TMsg).FormattedText(Text, Font, Size, Color, Settings ?? new Texts.Options());
+  return (Element of TMsg).FormattedText(
+    Text, Font, Size, Color, Settings ?? new Texts.Options(), NoWrap
+  );
 end function;
 
 // Separates adjacent content with a native CUI hairline.

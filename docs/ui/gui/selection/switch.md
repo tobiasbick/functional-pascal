@@ -39,6 +39,7 @@ Click anywhere on the row, or press Space or Enter while it has focus. The callb
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_switch)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/Switches.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Selection/Widgets/Switch.fpas)
 - [Terminal switch](../../tui/selection/switch.md)

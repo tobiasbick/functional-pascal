@@ -39,6 +39,7 @@ The host shows the toast after committing the model and leaves focus in place. H
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_toast)
 - [Widget API and types](../../../../src/Fpas.Ui.Gui/Toasts.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Overlays/Widgets/Toast.fpas)
 - [Undo toast](../disclosure/undo-toast.md)

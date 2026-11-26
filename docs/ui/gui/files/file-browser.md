@@ -51,6 +51,7 @@ an unreadable folder, which the browser reports with `Event.Error`.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_file_browser)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Files/FileBrowsers.fpas)
 - [Listing types](../../../../src/Fpas.Ui/Widgets/Files/FileListings.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Files/View.fpas)

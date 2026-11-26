@@ -45,6 +45,7 @@ child widgets for any actions the card contains.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_spotlight)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Motion/Spotlights.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/View.fpas)
 - [Motion](README.md)

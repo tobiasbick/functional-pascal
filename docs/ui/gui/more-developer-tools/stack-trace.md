@@ -47,6 +47,7 @@ returns minus one. Use that index to open the source in your application.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_stack_trace)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Developer/StackTraces.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreDeveloper/View.fpas)
 - [More developer tools](README.md)

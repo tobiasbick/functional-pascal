@@ -9,6 +9,8 @@ uses Fpas.Ui.Widgets.Actions.Buttons as B;
 uses Fpas.Ui.Widgets.Containers.Cards as Cards;
 uses Fpas.Ui.Widgets.Feedback.Badges as Badges;
 uses Fpas.Ui.Widgets.Media.Avatars as Avatars;
+uses Fpas.Ui.Widgets.Motion.Motion as Motion;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Overview.State as State;
@@ -29,9 +31,11 @@ type Person = record
 end record;
 
 // Builds the original Team card with native presence avatars and role badges.
+// ## Parameters
+// - `Colors`: Colors from the active gallery theme.
 // ## Returns
 // The Overview team card.
-public function View(): E.Element of State.Msg;
+public function View(Colors: Themes.Palette): E.Element of State.Msg;
 begin
   const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
   const People: array of Person := [
@@ -68,34 +72,30 @@ begin
       S.Tone.Neutral
     end if;
     Rows.Add(
-      E.Column of State.Msg(
-        new L.Flow(Clip := false),
-        G.Space of State.Msg(4),
-        E.Row of State.Msg(
-          new L.Flow(Gap := G.Points(12), Clip := false),
-          Avatars.Avatar of State.Msg(
-            Key + '-avatar',
-            Item.Name,
-            new Avatars.Options(Size := 34.0F, Status := Item.Status)
-          ),
-          E.Size of State.Msg(
-            E.Column of State.Msg(
-              new L.Flow(Gap := G.Points(1)),
-              E.Styled of State.Msg(E.Text of State.Msg(Item.Name), S.Role.Strong),
-              E.Styled of State.Msg(
-                E.Styled of State.Msg(E.Text of State.Msg(Item.Email), S.Role.Caption),
-                S.Role.Secondary
-              )
-            ),
-            Fill
-          ),
-          Badges.Badge of State.Msg(
-            Key + '-badge',
-            Strings.Get('Text.' + Item.Role),
-            new Badges.Options(Tone := Tone)
-          )
+      E.Row of State.Msg(
+        new L.Flow(Gap := G.Points(12), PaddingY := G.Points(4), Clip := false),
+        Avatars.Avatar of State.Msg(
+          Key + '-avatar',
+          Item.Name,
+          new Avatars.Options(Size := 34.0F, Status := Item.Status)
         ),
-        G.Space of State.Msg(4)
+        E.Size of State.Msg(
+          E.Column of State.Msg(
+            new L.Flow(Gap := G.Points(1), Clip := false),
+            E.FormattedText of State.Msg(
+              Item.Name, Motion.Font.Medium, 0.0F, Colors.Foreground, NoWrap := true
+            ),
+            E.FormattedText of State.Msg(
+              Item.Email, Motion.Font.Body, 12.0F, Colors.TextSecondary, NoWrap := true
+            )
+          ),
+          Fill
+        ),
+        Badges.Badge of State.Msg(
+          Key + '-badge',
+          Strings.Get('Text.' + Item.Role),
+          new Badges.Options(Tone := Tone)
+        )
       )
     );
   end for;

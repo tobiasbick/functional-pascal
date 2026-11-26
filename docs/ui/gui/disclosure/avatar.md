@@ -38,6 +38,7 @@ The avatar is a display element. Use a link or another interactive control when 
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_avatar)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Media/Avatars.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Disclosure/Widgets/HoverCard.fpas)
 - [Hover card](hover-card.md)

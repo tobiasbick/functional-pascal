@@ -43,6 +43,7 @@ the nonempty set of commands.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_split_button)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Actions/SplitButtons.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Actions/Widgets/SplitButton.fpas)
 - [Actions](README.md)

@@ -99,6 +99,7 @@ begin
       Flow, Checks.Rows of Msg(
         State.ProfileState.Newsletter,
         State.Marketing,
+        State.WeeklySummary,
         function(Value: bool): Msg => Msg.ProfileAction(Profile.Msg.SetNewsletter(Value)),
         Msg.SetMarketing,
         Msg.Preview

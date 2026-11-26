@@ -40,6 +40,7 @@ Set Busy when work starts, then pass Success or Error when it finishes. Idle has
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_status_spinner)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Feedback/StatusSpinners.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/Widgets/Loading.fpas)
 - [Spinner](spinner.md)

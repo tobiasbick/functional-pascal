@@ -48,6 +48,7 @@ application, set Zoom to zero.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_image_viewer)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Media/ImageViewers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/Media.fpas)
 - [Image cropper](image-cropper.md)

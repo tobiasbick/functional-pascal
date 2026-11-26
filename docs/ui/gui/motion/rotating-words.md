@@ -42,6 +42,7 @@ place and adjusts the width to it. The application supplies the phrases.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_word_rotate)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Motion/WordRotations.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Motion/View.fpas)
 - [Motion](README.md)

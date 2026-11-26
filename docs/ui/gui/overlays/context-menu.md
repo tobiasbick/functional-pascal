@@ -42,6 +42,7 @@ Right-click the target to open the menu at the pointer. Use Up or Down and Enter
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_context_menu)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Overlays/Menus.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Overlays/Widgets/ContextMenu.fpas)
 - [Dropdown menu](../actions/dropdown-menu.md)

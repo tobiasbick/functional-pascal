@@ -48,6 +48,7 @@ and latches the clip indicators. Clicking a lit indicator clears it and calls
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_level_meter)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Audio/LevelMeters.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Audio/View.fpas)
 - [Audio](README.md)

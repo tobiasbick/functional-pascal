@@ -40,6 +40,7 @@ The optional button sends the supplied message. Apply it in the update and repla
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_empty_state)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Containers/EmptyStates.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/View.fpas)
 - [Feedback](README.md)

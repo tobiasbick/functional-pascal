@@ -44,6 +44,7 @@ Hover a square to inspect its value. A click can send its zero-based row and col
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_heatmap)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/Heatmaps.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/View.fpas)
 - [Calendar heatmap](calendar-heatmap.md)

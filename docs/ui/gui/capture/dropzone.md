@@ -66,6 +66,7 @@ the model as it was. Check file size and content in the application.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_dropzone)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Files/Dropzones.fpas)
 - [File chooser command](../../../../src/Fpas.Ui.Gui/FileDialogs.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Capture/View.fpas)

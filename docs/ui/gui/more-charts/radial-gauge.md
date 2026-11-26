@@ -43,6 +43,7 @@ The gauge is passive. Pass the current reading from the model. CUI chooses a ban
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_sankey)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Charts/RadialGauges.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/MoreCharts/Widgets/Market.fpas)
 - [Gauge](../charts/gauge.md)

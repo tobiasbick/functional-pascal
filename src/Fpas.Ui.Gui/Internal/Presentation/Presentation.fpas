@@ -389,11 +389,12 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         const Font: Motion.Font,
         const FontSize: float,
         const Tint: G.Color,
-        const Settings: Texts.Options
+        const Settings: Texts.Options,
+        const NoWrap: bool
       ):
         Current.Window.FormattedText(
           Value, cast Font as int, FontSize, CreativeParts.Pack(Tint),
-          cast Settings.ReadingDirection as int, cast Settings.Align as int
+          cast Settings.ReadingDirection as int, cast Settings.Align as int, NoWrap
         );
         Current.Labels.Add(Value);
       when E.Element.Label(const Value: string):

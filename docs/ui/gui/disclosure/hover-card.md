@@ -44,6 +44,7 @@ anchors, put them in a viewport inside that body.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_hover_card)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Overlays/HoverCards.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Disclosure/Widgets/HoverCard.fpas)
 - [Link](link.md)

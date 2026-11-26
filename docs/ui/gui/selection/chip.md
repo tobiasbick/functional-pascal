@@ -39,6 +39,7 @@ Click or press Enter or Space to propose toggling the chip. CUI draws a check ma
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_chip)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/Chips.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Selection/Widgets/Chip.fpas)
 - [Selection](README.md)

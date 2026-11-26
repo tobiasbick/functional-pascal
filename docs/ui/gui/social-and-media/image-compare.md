@@ -45,6 +45,7 @@ fraction to keep the selected comparison in the model.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_image_compare)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Media/ImageComparisons.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/Media.fpas)
 - [Social and media](README.md)

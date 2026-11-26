@@ -42,6 +42,7 @@ Choose the first day to propose `Started` and leave the popup open for the secon
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_date_range_picker)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Pickers/DateRangePickers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Pickers/Widgets/DateRange.fpas)
 - [Date range calendar](date-range-calendar.md)

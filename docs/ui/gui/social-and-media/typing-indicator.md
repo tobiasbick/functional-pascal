@@ -39,6 +39,7 @@ typing stops. CUI animates the dots. Reduced motion keeps them still.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_typing_indicator)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Conversation/TypingIndicators.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/View.fpas)
 - [Chat message](chat-message.md)

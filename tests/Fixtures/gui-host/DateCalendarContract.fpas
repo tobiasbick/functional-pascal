@@ -83,7 +83,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
 
       // The desktop can constrain the requested window height. Scroll the
       // gallery gutter, then reacquire the target's presented geometry.
-      const Main: Cui.CuiRectangle := A.Control(Session, 'main-inputs-0').Bounds;
+      const Main: Cui.CuiRectangle := A.Control(Session, 'main-0').Bounds;
       X := Main.X + 4.0F;
       Y := Height * 0.5F;
       Step(Session);

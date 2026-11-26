@@ -46,6 +46,7 @@ in the model if you need it after the pad is removed.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_signature_pad)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Files/SignaturePads.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Capture/View.fpas)
 - [Capture](README.md)

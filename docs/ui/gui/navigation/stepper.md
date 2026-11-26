@@ -38,6 +38,7 @@ The stepper marks preceding steps complete. In a narrow view it keeps the curren
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_stepper)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Navigation/Steppers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Navigation/Widgets/Stepper.fpas)
 - [Navigation](README.md)

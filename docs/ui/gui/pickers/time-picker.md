@@ -45,6 +45,7 @@ Click the field or press Enter while it has focus. Choose an hour, a minute or a
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_time_picker)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Pickers/TimePickers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Pickers/Widgets/Time.fpas)
 - [Time dial](time-dial.md)

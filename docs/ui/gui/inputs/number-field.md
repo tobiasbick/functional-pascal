@@ -49,6 +49,7 @@ the buttons.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_number)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/NumberFields.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/PickerFields.fpas)
 - [Inputs](README.md)

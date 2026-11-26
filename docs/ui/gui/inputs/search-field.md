@@ -42,6 +42,7 @@ Edit the query as a single line. The clear button proposes an empty string and r
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_search)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/SearchFields.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/SearchField.fpas)
 - [Inputs](README.md)

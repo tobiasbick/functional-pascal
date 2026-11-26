@@ -39,6 +39,7 @@ Activate the swatch to open CUI's palette. Use the hue strip, the saturation and
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_color_picker)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Pickers/ColorPickers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Inputs/Widgets/BrandColor.fpas)
 - [Inputs](README.md)

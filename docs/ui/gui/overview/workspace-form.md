@@ -58,7 +58,8 @@ end unit;
 ## Interaction
 
 Route name and email changes to the shared profile model. The weekly
-summary preference belongs to the Overview model. In the gallery,
+summary preference belongs to the Overview model. The disabled checkbox on
+Selection displays the same value. In the gallery,
 Create workspace displays a success toast as a preview.
 
 ## See also
@@ -71,3 +72,4 @@ Create workspace displays a success toast as a preview.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Overview/Widgets/Workspace.fpas)
 - [Gallery update](../../../../examples/ui/gui/gallery/Pages/Overview/Update.fpas)
 - [Overview](README.md)
+- [CUI Overview comparison](../../../future/cui-compare/README.md#overview-evidence)

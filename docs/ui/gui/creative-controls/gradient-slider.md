@@ -45,6 +45,7 @@ under the thumb. `Action` reports tool activation, such as the eyedropper.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_gradient_slider)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Inputs/GradientSliders.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Creative/View.fpas)
 - [Gradient editor](../editing-tools/gradient-editor.md)

@@ -43,6 +43,7 @@ swatches and new seed after shuffling. With a null seed, handle
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_palette_strip)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Pickers/PaletteStrips.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Creative/View.fpas)
 - [Creative controls](README.md)

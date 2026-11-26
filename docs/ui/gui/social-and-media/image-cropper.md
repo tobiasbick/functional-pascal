@@ -46,6 +46,7 @@ coordinates to crop or export the source in your application.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_cropper)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Media/ImageCroppers.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/Media.fpas)
 - [Social and media](README.md)

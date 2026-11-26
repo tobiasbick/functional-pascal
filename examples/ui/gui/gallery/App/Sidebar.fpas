@@ -188,7 +188,7 @@ begin
       E.Row of State.Msg(
         Badges.Badge of State.Msg(
           'cui-version',
-          'v1.4',
+          'v1.5',
           new Badges.Options(Size := Buttons.Size.Small)
         )
       ),

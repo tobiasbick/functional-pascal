@@ -42,6 +42,7 @@ leave or go idle.
 
 ## See also
 
+- [CUI widget inventory](../../../cui-widget-inventory.md#cui_presence)
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Conversation/Presences.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Social/View.fpas)
 - [Presence pill](../canvas-and-bars/presence-pill.md)

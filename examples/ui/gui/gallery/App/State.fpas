@@ -112,7 +112,7 @@ end enum;
 public type Model = record
   // Active gallery page.
   public Active: Page := Page.Overview;
-  // New viewport identity for every navigation selection, including the active page.
+  // Viewport identity changes when a navigation selection resets scroll.
   public NavigationRevision: int := 0;
   // Visibility of the compact navigation drawer.
   public Drawer: bool := false;
@@ -218,8 +218,10 @@ public type Msg = variant
   Planning(Value: Planning.Msg);
   // Route an input proposal to the data grid page.
   DataGrid(Value: Grid.Msg);
-  // Navigate to an accepted page.
+  // Open a page from the sidebar and reset the main scroll position.
   Show(Value: Page);
+  // Follow a page action or palette command and retain the main scroll position.
+  Jump(Value: Page);
   // Open or close the navigation drawer.
   SetDrawer(Open: bool);
   // Select a swatch in the interactive canvas example.

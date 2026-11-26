@@ -133,7 +133,8 @@ public sealed class SourceWikiTests
             }
         }
         foreach (var path in Directory.EnumerateFiles(repository))
-            if (Path.GetFileName(path) is "dist.sh" or "dist.ps1" || Path.GetExtension(path) is ".props" or ".slnx")
+            if (Path.GetFileName(path) is "dist.sh" or "dist.ps1" or "dist-small.sh" or "dist-small.ps1" ||
+                Path.GetExtension(path) is ".props" or ".slnx")
                 yield return path;
     }
 

@@ -1,6 +1,6 @@
-# Single-file compiler distribution
+# FPAS distribution
 
-FPAS delivers one self-contained executable per supported target: `fpas.exe` for
+The compiler distribution delivers one self-contained executable per supported target: `fpas.exe` for
 Windows x64 (`win-x64`) and `fpas` for Linux x64 with glibc (`linux-x64`). Windows
 and Ubuntu under WSL use their own native artifacts. Other operating systems and
 architectures are outside this distribution contract.
@@ -15,9 +15,10 @@ applications requires their own .NET runtime and application dependencies.
 
 ## Build and deliver
 
-Run [dist.ps1](../../dist.ps1) on Windows x64 or [dist.sh](../../dist.sh) on Linux
-x64, with the .NET 10 SDK installed. Each script builds and packages the Release
-SDK, including the [native CUI assets](#native-cui-assets), then publishes the CLI
+Run [dist-small.ps1](../../dist-small.ps1) on Windows x64 or
+[dist-small.sh](../../dist-small.sh) on Linux x64 to distribute the compiler.
+Install the .NET 10 SDK before running either script. The scripts package the
+Release SDK with the [native CUI assets](#native-cui-assets). They publish the CLI
 with its matching package embedded. Builds use the
 default SDK parallelism and separate `.temp-data/dist/windows` or
 `.temp-data/dist/unix` artifacts. Invocation works from another directory.
@@ -46,6 +47,27 @@ and [single-file deployment](https://learn.microsoft.com/en-us/dotnet/core/deplo
 
 Optional compiler PDBs remain in the build artifacts, separate from the delivered
 file. Generated applications retain their own [symbol contract](../architecture/debug-information.md).
+
+## Distribute the compiler and applications
+
+Run [dist.ps1](../../dist.ps1) on Windows x64 or [dist.sh](../../dist.sh) on Linux
+x64. The script builds the compiler distribution first. It then publishes the
+two widget galleries, FPas-Sweeper and FPas-Amp with Native AOT. Both galleries
+use their existing projects under `examples/ui/`.
+
+| Application | Windows output | Linux output |
+| --- | --- | --- |
+| GUI widget gallery | `bin/GuiWidgetGallery.exe` | `bin/GuiWidgetGallery` |
+| TUI widget gallery | `bin/TuiWidgetGallery.exe` | `bin/TuiWidgetGallery` |
+| FPas-Sweeper | `bin/FpasSweeper.exe` | `bin/FpasSweeper` |
+| FPas-Amp | `bin/FpasAmp.exe` | `bin/FpasAmp` |
+
+The full distribution includes the CUI notices in `bin/licenses/cui/`.
+For FPas-Amp on Windows, the portable launcher includes the AOT application and
+its dependencies. On Linux, copy the shared libraries and the `tools/`,
+`licenses/` and `share/` directories with `bin/FpasAmp`.
+Radio on Linux requires `ffmpeg` on PATH. See the
+[FPas-Amp distribution details](../../apps/fpas-amp/doc/desktop.md#windows-portable-build).
 
 ## Windows portable launcher
 
@@ -169,7 +191,7 @@ the exported SDK also contains `tools/compiler/debugger-notices.txt`.
 
 ## Acceptance
 
-`LocalDeploymentTests` runs the actual platform distribution script twice with an
+`LocalDeploymentTests` runs the platform's `dist-small` script twice with an
 isolated package cache. It copies only the executable into a fresh directory,
 hides the build checkout, removes .NET host search paths, and checks eight parallel
 first compilations, JSON failures, concurrent SDK export, conflict handling and asset-cache
@@ -182,7 +204,12 @@ debugging and DAP using the delivered executable. See [build acceptance](../../t
 ## Source files
 
 <details>
-<summary>Browse 14 source files</summary>
+<summary>Browse 18 source files</summary>
+
+- [dist-small.ps1](../../dist-small.ps1)
+- [dist-small.sh](../../dist-small.sh)
+- [dist.ps1](../../dist.ps1)
+- [dist.sh](../../dist.sh)
 
 - `sdk/Fpas.NET.Sdk/`
   - [Fpas.NET.Sdk.csproj](../../sdk/Fpas.NET.Sdk/Fpas.NET.Sdk.csproj)

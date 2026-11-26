@@ -129,14 +129,15 @@ disposing the terminal. The suite also exercises direct SIGINT delivery.
 
 ## Deploy the local Release compiler
 
-Run [dist.ps1](../../dist.ps1) on Windows or [dist.sh](../../dist.sh) on Unix:
+Run [dist-small.ps1](../../dist-small.ps1) on Windows or
+[dist-small.sh](../../dist-small.sh) on Linux.
 
 ```powershell
-.\dist.ps1
+.\dist-small.ps1
 ```
 
 ```sh
-./dist.sh
+./dist-small.sh
 ```
 
 Both scripts restore/build the CLI and project SDK together in Release, deliver
@@ -147,9 +148,12 @@ invocation also works from another working directory. Build artifacts stay under
 
 Add that `bin/` directory to PATH once, then use `fpas --version`, `fpas --help`,
 or `fpas compile --help` from any directory. The scripts do not change PATH.
-Windows uses `bin/fpas.exe`; Unix uses `bin/fpas`. `dist.sh` is executable in Git
-and makes the deployed launcher executable. Repeated deployment updates the
+Windows uses `bin/fpas.exe`. Linux uses `bin/fpas` and sets its executable bit.
+Repeated deployment updates the
 published files and preserves unrelated files in `bin/`.
+
+For the compiler and four applications, use the
+[full distribution](distribution.md#distribute-the-compiler-and-applications).
 
 The same launcher serves `fpas lsp`; its managed protocol dependencies and the
 passive SDK resolver are embedded in the executable and included in the matching

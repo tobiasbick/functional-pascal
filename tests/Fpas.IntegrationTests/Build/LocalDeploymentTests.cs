@@ -8,7 +8,7 @@ namespace Fpas.IntegrationTests.Build;
 public sealed partial class LocalDeploymentTests
 {
     [Fact]
-    public async Task Dist_delivers_one_offline_executable_with_matching_SDK_and_refreshes_only_its_cached_version()
+    public async Task Dist_small_delivers_one_offline_executable_with_matching_SDK_and_refreshes_only_its_cached_version()
     {
         var repository = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(TestEnvironment.Metadata("FpasSdkProject"))!, "..", ".."));
         // MSVC tracks native outputs incrementally and warns for builds inside the system temporary directory.
@@ -16,7 +16,7 @@ public sealed partial class LocalDeploymentTests
         var checkout = directory.File("checkout");
         Directory.CreateDirectory(checkout);
         foreach (var name in new[] { "src", "sdk", "third-party" }) Copy(Path.Combine(repository, name), Path.Combine(checkout, name));
-        foreach (var name in new[] { "Directory.Build.props", "Directory.Packages.props", "global.json", "NuGet.Config", "dist.ps1", "dist.sh", "docs/ui/gui/cui.md" })
+        foreach (var name in new[] { "Directory.Build.props", "Directory.Packages.props", "global.json", "NuGet.Config", "dist-small.ps1", "dist-small.sh", "docs/ui/gui/cui.md" })
         {
             var destination = Path.Combine(checkout, name);
             Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
@@ -51,7 +51,7 @@ public sealed partial class LocalDeploymentTests
         {
             Directory.CreateDirectory(sdkCache); File.WriteAllText(Path.Combine(sdkCache, "stale"), "cached previous tools");
             Directory.CreateDirectory(guiCache); File.WriteAllText(Path.Combine(guiCache, "stale"), "cached previous binding");
-            var script = Path.Combine(checkout, OperatingSystem.IsWindows() ? "dist.ps1" : "dist.sh");
+            var script = Path.Combine(checkout, OperatingSystem.IsWindows() ? "dist-small.ps1" : "dist-small.sh");
             var shell = OperatingSystem.IsWindows()
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "WindowsPowerShell", "v1.0", "powershell.exe") : "/bin/sh";
             string[] arguments = OperatingSystem.IsWindows() ? ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script] : [script];

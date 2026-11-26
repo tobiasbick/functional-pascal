@@ -88,7 +88,7 @@ It prints `Hello from FPAS`. The
 [development workflow](docs/build/development.md) describes Release builds,
 tests, direct compilation, and SDK version/cache handling after toolchain changes.
 
-For a Release compiler on PATH, run `./dist.ps1` on Windows x64 or `./dist.sh`
+For a Release compiler on PATH, run `./dist-small.ps1` on Windows x64 or `./dist-small.sh`
 on Linux x64, then add the repository's `bin/` directory to PATH. The scripts
 deliver one self-contained `fpas.exe` or `fpas`, including its .NET runtime and
 matching SDK package. Copy only that executable; `fpas sdk export ./feed` exports

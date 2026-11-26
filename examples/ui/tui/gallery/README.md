@@ -129,7 +129,7 @@ dotnet examples/ui/tui/gallery/bin/Debug/net10.0/TuiWidgetGallery.dll
 ```
 
 The gallery supports the [private debug terminal](../../../../docs/pascal/tools/debugging.md#private-terminal-and-tui-control).
-For headless stepping, launch it with `--headless-control` and set
+For headless stepping, launch the managed build with `--headless-control` and set
 `FPAS_TUI_CONTROL_PIPE` to the controller's current-user pipe named
 `fpas-tui-<32 hex digits>`. The initial frame is 80 × 25 cells.
 

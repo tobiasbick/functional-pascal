@@ -158,10 +158,12 @@ bytes before publishing repaired data. See [user files and recovery](user-files.
 
 ## Windows portable build
 
-On Windows x64, run the [compiler distribution script](../../../dist.ps1)
+On Windows x64, run the [compiler distribution script](../../../dist-small.ps1)
 to prepare the matching SDK and CUI packages, then run
 [the FPas-Amp distribution script](../dist.ps1).
 It publishes the app with Native AOT and packages it as `bin/FpasAmp.exe`.
+The [full distribution](../../../docs/build/distribution.md#distribute-the-compiler-and-applications)
+runs both steps.
 Copy that one file to a writable directory. The launcher verifies and
 extracts the app, native DLLs, `fpcalc.exe` and the radio decoder to a
 versioned directory under `FPasAmp-runtime/` beside it.

@@ -34,7 +34,9 @@ CUI_API void fpas_cui_surface(cui_ctx *ui, int node, uint32_t rgba, float radius
 CUI_API void fpas_cui_group_style(cui_ctx *ui, int node, uint32_t background, int background_token,
                                   float tl, float tr, float br, float bl, float border,
                                   uint32_t border_rgba, int border_token, int elevation, float opacity);
-CUI_API void fpas_cui_formatted_text(cui_ctx *ui, const char *text, int font, float size, uint32_t rgba);
+/** Draws text with explicit typography, reading direction and alignment. */
+CUI_API void fpas_cui_formatted_text(cui_ctx *ui, const char *text, int font, float size, uint32_t rgba,
+                                     int direction, int alignment);
 CUI_API void fpas_cui_box_details(cui_ctx *ui, int node, float top, float end, float bottom, float start, int direction);
 /** Applies node sizing on a parent axis.
  * @param ui Owner context.
@@ -72,6 +74,13 @@ CUI_API int fpas_cui_hovered(cui_ctx *ui, int node);
  * @param current Receives the native target offset before control reconciliation.
  * @param maximum Receives the current range. */
 CUI_API void fpas_cui_scroll_state(cui_ctx *ui, const char *id, int mode, float offset, float *current, float *maximum);
+
+/** Reveals a child of the current viewport using the previous layout.
+ * @param ui Owner context.
+ * @param viewport Frame-local scroll node.
+ * @param child Frame-local target node.
+ * @return One when evaluated, zero outside the viewport, or -1 until layout is available. */
+CUI_API int fpas_cui_scroll_reveal_child(cui_ctx *ui, int viewport, int child);
 
 /** Returns the current modal's native identity.
  * @param ui Owner context.

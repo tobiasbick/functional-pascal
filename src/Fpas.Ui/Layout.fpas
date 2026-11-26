@@ -1,4 +1,4 @@
-// [Documentation](../../docs/ui/widgets.md#layout-and-style)
+// [Documentation](../../docs/ui/layout/README.md)
 
 unit Fpas.Ui.Layout;
 
@@ -6,6 +6,7 @@ uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 // A portable distance or an explicit host distance.
+// See [Sizing and units](../../docs/ui/layout/sizing.md#measures).
 public type Measure = variant
   // A whole number of terminal cells.
   Cells(Value: int);
@@ -40,6 +41,7 @@ public type AxisSize = record
 end record;
 
 // Main-axis constraints and allocation weights.
+// See [Sizing and units](../../docs/ui/layout/sizing.md).
 public type Flex = record
   // The basis for allocation before distributing free space.
   public Basis: Extent := Extent.Content;
@@ -47,7 +49,7 @@ public type Flex = record
   public Minimum: Measure? := null;
   // An optional upper bound in explicit units; both bounds must use the same units.
   public Maximum: Measure? := null;
-  // CUI growth weight, allocated from zero. Fill uses at least one.
+  // CUI growth weight, allocated from zero. Fill uses one when no weight is given.
   // Fixed and percentage extents cannot grow; positive content weights become growing.
   public Grow: float := 0.0F;
   // Optional graphical width; explicit axes cannot mix with main-axis constraints.
@@ -85,6 +87,8 @@ public type Justification = enum: byte
 end enum;
 
 // CUI spacing levels adapted to the host, or an explicit distance.
+// See [GUI spacing](../../docs/ui/gui/layout/spacing.md) and
+// [TUI rows and columns](../../docs/ui/tui/layout/rows-and-columns.md).
 public type Spacing = variant
   // Zero space.
   None;
@@ -111,6 +115,7 @@ public type Direction = enum: byte
 end enum;
 
 // A named native Tab-navigation scope for a pane. Inactive scopes remain clickable.
+// See [Focus scopes](../../docs/ui/gui/layout/focus-scopes.md).
 public type FocusScope = record
   // Stable nonempty pane identity.
   public Id: string;
@@ -163,6 +168,8 @@ public type ScrollMode = enum: byte
 end enum;
 
 // Layout settings shared by rows, columns, layered stacks and grids.
+// See [Composition](../../docs/ui/layout/README.md#composition) and
+// [GUI container options](../../docs/ui/gui/layout/container-options.md).
 public type Flow = record
   // The separation between consecutive children.
   public Gap: Spacing := Spacing.None;
@@ -209,6 +216,7 @@ public type Flow = record
   // GUI scrolling managed by CUI. Use a stable Id when the column can move.
   public Scrolling: ScrollMode := ScrollMode.None;
   // Optional stable GUI identity. Anonymous scrolling uses CUI's automatic identity.
+  // See [Layout inspection](../../docs/ui/gui/layout/layout-inspection.md).
   public Id: string? := null;
 end record;
 
@@ -223,6 +231,7 @@ public type SizeClass = enum: byte
 end enum;
 
 // Responsive information in portable size classes.
+// See [Responsive views](../../docs/ui/layout/responsive.md).
 public type Viewport = record
   // The size class for available width.
   public Width: SizeClass;
@@ -235,6 +244,8 @@ public type Viewport = record
 end record;
 
 // Scroll view presentation and native CUI layout options.
+// See the [GUI scroll view](../../docs/ui/gui/layout/scroll-view.md) and
+// [TUI scroll view](../../docs/ui/tui/layout/scroll-view.md).
 public type ScrollOptions = record
   // Whether to show the scrollbar.
   public ShowScrollbar: bool := true;
@@ -255,6 +266,7 @@ public type ScrollOptions = record
 end record;
 
 // A model-owned vertical scroll request.
+// See [Scroll position](../../docs/ui/layout/scroll-position.md).
 public type ScrollPosition = variant
   // Keep the view at the start.
   Start;
@@ -262,6 +274,8 @@ public type ScrollPosition = variant
   End;
   // Request an explicit offset to clamp to the available range.
   Offset(Value: Measure);
+  // Keep a named descendant visible with the least vertical movement in the GUI.
+  Reveal(ControlId: string);
 end variant;
 
 // The request and resolution reported when the user scrolls.

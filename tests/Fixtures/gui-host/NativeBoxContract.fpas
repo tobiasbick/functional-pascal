@@ -3,11 +3,17 @@
 unit GalleryNativeBoxContract;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as Graphics;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Desktop as Desktop;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
 uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
+uses Fpas.Ui.Widgets.Containers.Cards as Cards;
 uses Fpas.Ui.Widgets.Containers.Stacks as Stacks;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
+uses Fpas.Ui.Widgets.Motion.Motion as Motion;
 
 uses GalleryHostAssertions as A;
 uses GuiGallery.App.State as State;
@@ -36,6 +42,17 @@ public procedure Verify(Renderer: Cui.CuiRenderer);
       E.Text of State.Msg(Caption),
       E.Size of State.Msg(Child(Id + '-first'), Marker),
       E.Size of State.Msg(Child(Id + '-second'), Marker)
+    );
+  end function;
+
+  function ResponsiveCard(Id: string): E.Element of State.Msg;
+  begin
+    return Cards.Card of State.Msg(
+      Id,
+      [],
+      new Cards.Options(
+        Width := L.Extent.Fill, MinimumWidth := 140.0F, MaximumWidth := 190.0F, Padding := 8.0F
+      )
     );
   end function;
 
@@ -78,6 +95,18 @@ public procedure Verify(Renderer: Cui.CuiRenderer);
       E.Row of State.Msg(
         E.Size of State.Msg(E.Size of State.Msg(Child('width-limit'), BoundedWidth), BoundedHeight)
       ),
+      E.Size of State.Msg(
+        E.Row of State.Msg(
+          new L.Flow(Wrap := true, Gap := L.Spacing.Tight),
+          ResponsiveCard('bounded-card-first'),
+          ResponsiveCard('bounded-card-second')
+        ),
+        new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(240))))
+      ),
+      E.Column of State.Msg(
+        new L.Flow(Id := 'stretch-column', Align := L.Alignment.Stretch),
+        Buttons.Button of State.Msg('intrinsic-button', 'Open', State.Msg.Preview)
+      ),
       E.Column of State.Msg(
         new L.Flow(ReadingDirection := L.Direction.LeftToRight),
         AutoRow('hebrew', '123 · שלום')
@@ -94,8 +123,53 @@ public procedure Verify(Renderer: Cui.CuiRenderer);
   begin
     return A.Control(Session, Id + '-first').Bounds.X > A.Control(Session, Id + '-second').Bounds.X;
   end function;
+
+  procedure VerifyReadingDirection();
+    function DirectionView(_Model: State.Model; _Viewport: L.Viewport): E.Element of State.Msg;
+    begin
+      return E.Column of State.Msg(
+        E.Row of State.Msg(
+          Buttons.Button of State.Msg('inherited-first', 'One', State.Msg.Preview),
+          Buttons.Button of State.Msg('inherited-second', 'Two', State.Msg.Preview)
+        ),
+        E.Row of State.Msg(
+          new L.Flow(ReadingDirection := L.Direction.Auto),
+          Texts.Text of State.Msg(
+            'שלום', Texts.Appearance.Body,
+            new Texts.Options(
+              ReadingDirection := L.Direction.RightToLeft,
+              Align := Texts.Alignment.Left
+            )
+          ),
+          E.FormattedText of State.Msg(
+            'שלום', Motion.Font.Body, 12.0F, new Graphics.Color(0, 0, 0),
+            new Texts.Options(ReadingDirection := L.Direction.RightToLeft)
+          ),
+          Texts.Text of State.Msg('Layout', Texts.Appearance.Body),
+          Buttons.Button of State.Msg('auto-first', 'One', State.Msg.Preview),
+          Buttons.Button of State.Msg('auto-second', 'Two', State.Msg.Preview)
+        )
+      );
+    end function;
+  begin
+    using const DirectionSession: Gui.Session of State.Msg := Desktop.Start of (State.Model, State.Msg)(
+      new State.Model(), Update.Update, DirectionView,
+      new Desktop.Options(Renderer := Renderer, ReadingDirection := L.Direction.RightToLeft)
+    );
+    A.Check(DirectionSession.Step(), 'The reading direction fixture did not open.');
+    A.Check(
+      IsMirrored(DirectionSession, 'inherited'),
+      'The window direction must mirror inherited layout.'
+    );
+    A.Check(
+      not IsMirrored(DirectionSession, 'auto'),
+      'Auto must skip explicitly directed text nodes.'
+    );
+  end procedure;
 begin
-  const Window: Cui.CuiWindow := new Cui.CuiWindow('Native boxes', 420, 400, Renderer, true);
+  VerifyReadingDirection();
+
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('Native boxes', 420, 520, Renderer, true);
   using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(), Update.Update, View, Window, 32
   );
@@ -124,6 +198,20 @@ begin
       'Nested width and height sizing must preserve both bounds.'
     );
   end for;
+
+  const First: Cui.CuiRectangle := A.Control(Session, 'bounded-card-first').Bounds;
+  const Second: Cui.CuiRectangle := A.Control(Session, 'bounded-card-second').Bounds;
+  A.Check(
+    Second.Y > First.Y and First.Width = 190.0F and Second.Width = 190.0F,
+    'The wrapping row must respect the native minimum and maximum card widths.'
+  );
+
+  const Column: Cui.CuiRectangle := A.Control(Session, 'stretch-column').Bounds;
+  const Button: Cui.CuiRectangle := A.Control(Session, 'intrinsic-button').Bounds;
+  A.Check(
+    Button.X = Column.X and Button.Width < Column.Width,
+    'An intrinsic button must stay at its natural width and start edge in a stretched column.'
+  );
 
   A.Check(IsMirrored(Session, 'hebrew'), 'Auto must mirror Hebrew text inside an LTR parent.');
   A.Check(

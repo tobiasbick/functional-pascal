@@ -22,10 +22,9 @@ static cui_grid_column *fpas_grid_columns(cui_ctx *ui, const char *const *titles
     const float *widths, const int *flags, int count) {
     cui_grid_column *columns = cui__frame_alloc(ui, (size_t)count * sizeof *columns);
     for (int k = 0; k < count; ++k) {
-        const int align = flags[k] & 7;
         columns[k] = (cui_grid_column){
             cui__frame_strdup(ui, titles[k], -1), widths[k],
-            align == 0 ? CUI_TEXT_LEFT : (cui_text_align)align,
+            (cui_text_align)(flags[k] & 7),
             (flags[k] & 8) != 0, (flags[k] & 16) != 0, flags[k] >> 5
         };
     }

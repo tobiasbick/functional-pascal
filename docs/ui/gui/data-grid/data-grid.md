@@ -39,12 +39,30 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Count / BuildRow` | Pass the total count and a pure row factory. Native layout asks for visible rows and some extra rows around them. |
+| `Columns` | Supply one to 32 columns. Each column has a heading, initial width, alignment, and options for sorting, resizing, and hiding. |
 | `Cell` | Supply one Text, Content or Editable cell per column. Editable capacity is at most 256 UTF-8 bytes including the terminator. |
 | `Selected / Order` | Both null. Provide a selection mask or sort record to enable each feature. |
 | `Cursor / Anchor` | Both minus one. When set, they index the displayed order. |
 | `Scroll` | Null for native scrolling. Supply a nonnegative vertical target in logical points to restore it and receive changes through the grid's proposal mapper. |
-| `Height / RowHeight` | Fill / 40 logical points. |
+| `Height / RowHeight` | Fill / 40 logical units. CUI treats `Content` as `Fill` for the viewport height. |
 | `Striped / HideCheckboxes / Enabled` | false / false / true. |
+
+## Column and viewport layout
+
+Give each column an initial `Width` in logical units. CUI uses 150 logical
+units when `Width` is zero. Drag a column divider to resize the column. Set
+`Fixed` to true to disable this drag. CUI gives any remaining width to the
+last visible column.
+
+Use a `Priority` from 1 through 255 for a column that can hide. If the
+viewport narrows, CUI hides the largest positive priorities first. A priority
+of zero keeps the column visible, and CUI keeps at least one column. Supply
+one cell for each column even when CUI hides some columns. If the visible
+columns still overflow, scroll horizontally to reach them.
+
+Column alignment defaults to `Start`. Use `End` for the trailing edge, or
+`Left` and `Right` for physical edges. CUI keeps the header visible when
+the rows scroll vertically.
 
 ## Interaction
 
@@ -68,6 +86,8 @@ rejects open dialogs, sheets, command palettes and file pickers there.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Collections/DataGrids.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/DataGrid/View.fpas)
 - [Gallery update function](../../../../examples/ui/gui/gallery/Pages/DataGrid/Update.fpas)
+- [Table](../data-display/table.md)
+- [Responsive layout](../../layout/responsive.md)
 - [Data grid](README.md)
 
 ## Source files

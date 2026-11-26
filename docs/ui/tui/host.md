@@ -19,12 +19,9 @@ The interactive host restores terminal modes on normal exit and failure.
 
 ## Views, layout and validation
 
-The [terminal widget guide](README.md) shows every gallery widget with its example. Views use the shared Element tree, themes, row and column sizing, borders, cached subviews and scrolling.
-
-Preflight validates the view before rendering. Logical distances map to cells:
-8 units per column and 16 per row. Measure.Cells explicitly requests cell
-distances. Content/fill allocation, weighted growth, shrinkage, size bounds and
-cross-axis alignment follow the shared CUI layout subset.
+Preflight validates the shared element tree before rendering. The TUI host
+resolves layout in cells. The terminal layout guide describes row and column
+allocation, borders, scrolling and responsive viewports. [Terminal layout](layout/README.md)
 
 Standalone zero-width format characters and combining marks without a visible
 base render as spaces. Combining marks, joiners and variation selectors within
@@ -110,8 +107,9 @@ when it is still available. A disabled, removed or covered trigger closes its pa
   `Wheel(column, row, delta)` retains the signed terminal scroll distance
   (negative is up) and consumes the wheel over the grid. An enclosing scroll
   view can clip the image without changing the reported allocation.
-- TerminalExtensions.Views.Viewport resolves a view from exact columns/rows.
-- TerminalExtensions.Views.Screen and typed Input shortcuts bind application keys.
+- `TerminalExtensions.Views.Viewport` resolves a subtree from exact terminal
+  dimensions. `Views.Screen` composes the base view, overlays and shortcuts.
+  [Terminal viewport](layout/viewport.md)
 - [TerminalExtensions.SelectionLists](data-display/selection-list.md) displays
   a scrollable list with separate selection and activation messages.
 - Application.Input/Frame support controlled input injection and cell snapshots.

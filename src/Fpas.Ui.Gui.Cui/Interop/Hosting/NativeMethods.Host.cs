@@ -22,7 +22,8 @@ internal static partial class NativeMethods
         uint borderColor, int borderToken, int elevation, float opacity);
     [LibraryImport(Library, EntryPoint = "fpas_cui_formatted_text", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void FormattedText(nint context, string text, int font, float size, uint rgba);
+    internal static partial void FormattedText(nint context, string text, int font, float size, uint rgba,
+        int direction, int alignment);
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_box_details")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
@@ -83,6 +84,9 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "fpas_cui_scroll_state", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void ScrollState(nint context, string id, int mode, float offset, out float current, out float maximum);
+    [LibraryImport(Library, EntryPoint = "fpas_cui_scroll_reveal_child")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial int ScrollRevealChild(nint context, int viewport, int child);
     [LibraryImport(Library, EntryPoint = "fpas_cui_theme")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe partial void SetTheme(nint context, int dark, int accent, uint* colors);

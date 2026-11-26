@@ -41,6 +41,7 @@ uses System as Sys;
 uses System.Collections.Generic as Generic;
 
 // Places and paints a terminal view and gathers the control scene used by input routing.
+// See [panels](../../../../docs/ui/tui/layout/panels.md) and [scroll views](../../../../docs/ui/tui/layout/scroll-view.md).
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters

@@ -14,7 +14,7 @@ uses GalleryHostAssertions as A;
 uses GuiGallery.App.State as State;
 uses GuiGallery.App.Update as Update;
 
-// Verifies scroll layout, composition and fractional scroll proposals through the GUI host.
+// Verifies scroll layout, reveal and fractional scroll proposals through the GUI host.
 // ## Parameters
 // - `Renderer`: Native renderer used by the gallery.
 public procedure Verify(Renderer: Cui.CuiRenderer);
@@ -36,7 +36,13 @@ public procedure Verify(Renderer: Cui.CuiRenderer);
       'scroll-options',
       [
         Skeletons.Skeleton of int('first', Height := 20.0F),
-        Skeletons.Skeleton of int('second', Height := 240.0F)
+        Skeletons.Skeleton of int('second', Height := 240.0F),
+        Skeletons.Skeleton of int('third', Height := 22.5F),
+        E.ScrollView of int(
+          'inner',
+          Skeletons.Skeleton of int('inner-child', Height := 180.0F),
+          new L.ScrollOptions(Height := L.Extent.Fixed(L.Measure.Points(40.0F)))
+        )
       ],
       new L.ScrollOptions(
         Width := L.Extent.Fixed(L.Measure.Points(240.5F)),
@@ -44,7 +50,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer);
         Padding := L.Spacing.Fixed(L.Measure.Points(8.5F)),
         Gap := L.Spacing.Fixed(L.Measure.Points(6.25F))
       ),
-      Position := L.ScrollPosition.Start,
+      Position := Position,
       OnScroll := Changed
     );
     return Composition.Map of (int, State.Msg)(
@@ -60,9 +66,17 @@ public procedure Verify(Renderer: Cui.CuiRenderer);
       Window.Wheel(-0.125F);
     end if;
   end procedure;
+
+  procedure SetPosition(CurrentSession: Gui.Session of State.Msg; Request: L.ScrollPosition);
+  begin
+    Position := Request;
+    discard CurrentSession.Post(State.Msg.Preview);
+    A.Check(CurrentSession.Step(), 'The viewport closed during a position request.');
+  end procedure;
 begin
   var Observed: float := 0.0F;
   var Wheel: bool := false;
+  var Position: L.ScrollPosition := L.ScrollPosition.Reveal('third');
   const Window: Cui.CuiWindow := new Cui.CuiWindow(
     'Native scroll options',
     420,
@@ -87,6 +101,32 @@ begin
     Second.Y = First.Y + First.Height + 6.25F,
     'Native gap between direct children was lost.'
   );
+  A.Check(Observed = 0.0F, 'Reveal changed an offset before a layout existed.');
+  A.Check(Session.Step(), 'The viewport closed during the first reveal.');
+  const Third: Cui.CuiRectangle := A.Control(Session, 'third').Bounds;
+  A.Check(
+    Third.Y + Third.Height = Box.Y + Box.Height and Observed > 0.0F,
+    'A reveal must scroll just enough to make the bottom edge visible.'
+  );
+
+  Observed := -1.0F;
+  A.Check(Session.Step(), 'The viewport closed after revealing a row.');
+  A.Check(
+    Observed = -1.0F and A.Control(Session, 'third').Bounds.Y = Third.Y,
+    'Revealing a fully visible row must not move it or report another change.'
+  );
+  SetPosition(Session, L.ScrollPosition.Reveal('inner-child'));
+  A.Check(
+    Observed = -1.0F and A.Control(Session, 'third').Bounds.Y = Third.Y,
+    'A row owned by a nested viewport must not move its enclosing viewport.'
+  );
+  SetPosition(Session, L.ScrollPosition.Reveal('second'));
+  A.Check(
+    A.Control(Session, 'second').Bounds.Y = Box.Y,
+    'Revealing a row taller than the viewport must align its top.'
+  );
+
+  SetPosition(Session, L.ScrollPosition.Start);
   Wheel := true;
   A.Check(Session.Step(), 'The viewport closed during wheel input.');
   A.Check(Observed = 5.5F, 'The wheel proposal did not preserve fractional logical points.');

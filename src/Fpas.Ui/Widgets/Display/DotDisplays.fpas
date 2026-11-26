@@ -20,7 +20,7 @@ public type Options = record
   // Scroll a line wider than its viewport.
   public Marquee: bool := false;
   // Alignment in a wider viewport.
-  public Align: T.Alignment := T.Alignment.Left;
+  public Align: T.Alignment := T.Alignment.Start;
   // Native width.
   public Width: L.Extent := L.Extent.Content;
 end record;

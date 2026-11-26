@@ -37,8 +37,12 @@ public procedure Draw of TMsg(
 );
 begin
   case Node of
-    when E.Element.NativeText(const Text: string, const Role: Texts.Appearance):
-      NativeTextWidget.Draw of TMsg(Frame, Text, Role);
+    when E.Element.NativeText(
+      const Text: string,
+      const Role: Texts.Appearance,
+      const Settings: Texts.Options
+    ):
+      NativeTextWidget.Draw of TMsg(Frame, Text, Role, Settings);
     when E.Element.Icon(
       const Glyph: string, const Size: float, const Color: G.Color?,
       const ThemeColor: Themes.ColorToken?

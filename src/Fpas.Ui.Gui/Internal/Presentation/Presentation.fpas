@@ -274,6 +274,7 @@ uses Fpas.Ui.Widgets.Developer.CodeBlocks as CodeBlocks;
 uses Fpas.Ui.Widgets.Developer.JsonViews as JsonViews;
 uses Fpas.Ui.Widgets.Display.DotDisplays as DotDisplays;
 uses Fpas.Ui.Widgets.Display.Readouts as Readouts;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Feedback.Alerts as Alerts;
 uses Fpas.Ui.Widgets.Feedback.Badges as Badges;
 uses Fpas.Ui.Widgets.Feedback.Banners as Banners;
@@ -387,9 +388,13 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         const Value: string,
         const Font: Motion.Font,
         const FontSize: float,
-        const Tint: G.Color
+        const Tint: G.Color,
+        const Settings: Texts.Options
       ):
-        Current.Window.FormattedText(Value, cast Font as int, FontSize, CreativeParts.Pack(Tint));
+        Current.Window.FormattedText(
+          Value, cast Font as int, FontSize, CreativeParts.Pack(Tint),
+          cast Settings.ReadingDirection as int, cast Settings.Align as int
+        );
         Current.Labels.Add(Value);
       when E.Element.Label(const Value: string):
         Current.Window.Text(Value);
@@ -613,7 +618,7 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         _
       ), E.Element.GradientEditor(_, _, _, _, _), E.Element.TimelineEditor(_, _, _, _, _):
         EditingTools.Draw of TMsg(Current, Node);
-      when E.Element.NativeText(_, _), E.Element.Icon(
+      when E.Element.NativeText(_, _, _), E.Element.Icon(
         _,
         _,
         _,
@@ -670,8 +675,6 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         DrawDeveloperAndMedia(Node, Current, Horizontal, Align);
         return;
     end case;
-
-    Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
   end procedure;
 
   procedure DrawDeveloperAndMedia(
@@ -835,8 +838,6 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         DrawVoiceAndChat(Node, Current, Horizontal, Align);
         return;
     end case;
-
-    Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
   end procedure;
 
   procedure DrawVoiceAndChat(
@@ -966,8 +967,6 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         DrawButtonsAndMenus(Node, Current, Horizontal, Align);
         return;
     end case;
-
-    Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
   end procedure;
 
   procedure DrawButtonsAndMenus(
@@ -1128,8 +1127,6 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         DrawPickersAndSelection(Node, Current, Horizontal, Align);
         return;
     end case;
-
-    Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
   end procedure;
 
   procedure DrawPickersAndSelection(
@@ -1323,8 +1320,6 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         DrawDisclosureAndData(Node, Current, Horizontal, Align);
         return;
     end case;
-
-    Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
   end procedure;
 
   procedure DrawDisclosureAndData(
@@ -1552,8 +1547,6 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         DrawChartsAndSections(Node, Current, Horizontal, Align);
         return;
     end case;
-
-    Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
   end procedure;
 
   procedure DrawChartsAndSections(
@@ -1996,8 +1989,6 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         DrawLayout(Node, Current, Horizontal, Align);
         return;
     end case;
-
-    Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
   end procedure;
 
   procedure DrawLayout(
@@ -2076,7 +2067,7 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         return;
       when E.Element.Sized(const Child: E.Element of TMsg, const Settings: L.Flex):
         Visit(Child, Current, Horizontal, Align);
-        // Sizing a child preserves the alignment chosen while drawing it.
+        // CUI owns default sizing and alignment. Apply only explicit constraints.
         Size.Apply(Current.Window, Settings, Horizontal, L.Alignment.Default);
         return;
       when E.Element.Styled(const Child: E.Element of TMsg, const Role: S.Role):
@@ -2109,9 +2100,9 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         const Token: string := C.Token('scroll', Id);
         var Before: float := 0;
         var Maximum: float := 0;
-        Current.Window.ScrollState(Token, -1, 0, out Before, out Maximum);
         var Mode: int := -1;
         var Offset: float := 0;
+        var RevealId: string? := null;
         case Position of
           when L.ScrollPosition.Start:
             Mode := 0;
@@ -2120,10 +2111,15 @@ public procedure Draw of TMsg(State: C.State of TMsg);
           when L.ScrollPosition.Offset(const Distance: L.Measure):
             Mode := 0;
             Offset := Size.Measure(Distance);
+          when L.ScrollPosition.Reveal(const ControlId: string):
+            RevealId := ControlId;
           else
         end case;
 
-        Current.Window.ScrollState(Token, Mode, Offset, out Before, out Maximum);
+        if Mode >= 0 then
+          Current.Window.ScrollState(Token, Mode, Offset, out Before, out Maximum);
+        end if;
+
         Current.Window.ScrollState(Token, -1, 0, out Before, out Maximum);
         const Width: Size.NativeExtent := Size.Extent(Settings.Width ?? L.Extent.Fill);
         const Height: Size.NativeExtent := Size.Extent(Settings.Height ?? L.Extent.Fill);
@@ -2148,6 +2144,7 @@ public procedure Draw of TMsg(State: C.State of TMsg);
             CreativeParts.Pack(Fade)
           end if
         );
+        const FirstControl: int := Current.Controls.Count;
         for Child: E.Element of TMsg in Children do
           Visit(Child, Current, false, L.Alignment.Stretch);
         end for;
@@ -2155,6 +2152,26 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         Current.Window.EndScroll();
         var After: float := 0;
         Current.Window.ScrollState(Token, -1, 0, out After, out Maximum);
+        if RevealId <> null then
+          for Index: int := FirstControl to Current.Controls.Count - 1 do
+            const Control: App.Control := Current.Controls[Index];
+            if Control.Id = RevealId and Current.Window.TryRevealViewportChild(
+              Token, C.Token(Control.Role, Control.Id, Control.Key)
+            )
+            then
+              const BeforeReveal: float := After;
+              Current.Window.ScrollState(Token, -1, 0, out After, out Maximum);
+              After := Sys.Math.Min(After, Maximum);
+              if After <> BeforeReveal then
+                var Prior: float := 0.0F;
+                Current.Window.ScrollState(Token, 0, After, out Prior, out Maximum);
+              end if;
+
+              break;
+            end if;
+          end for;
+        end if;
+
         if Current.AcceptInput and After <> Before then
           case Scroll of
             when is Sys.Func of (L.ScrollChange, TMsg) as Changed:
@@ -2223,8 +2240,6 @@ public procedure Draw of TMsg(State: C.State of TMsg);
       else
         raise new Sys.InvalidOperationException('An invalid target widget reached GUI drawing.');
     end case;
-
-    Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
   end procedure;
 begin
   State.Window.BeginHostView();

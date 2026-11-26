@@ -3,8 +3,8 @@
 #define FPAS_CUI_DATA_GRID_H
 /** Begins a virtual grid; pair with end in this frame, building rows in [range[0], range[1]).
  * titles, widths and flags contain columns entries (1..32); columns are copied to frame storage.
- * Column flags: low three bits are alignment (0=start, 1=center, 2=end), 8 sortable,
- * 16 fixed, remaining bits encode priority (0..255 shifted left five).
+ * Column flags: low three bits are a cui_text_align value (start, center, right, left, end).
+ * Bit value 8 is sortable, 16 is fixed, and remaining bits encode priority (0..255 shifted left five).
  * rows is nonnegative; selected is NULL or rows input bytes, copied for the frame.
  * state[4] is sort column (-2 disables sorting, -1 unsorted), descending, cursor and anchor
  * (cursor/anchor are -1 or valid row indices). State is copied back by end.

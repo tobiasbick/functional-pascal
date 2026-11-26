@@ -27,7 +27,8 @@ public sealed partial class CuiWindow
         Utf8.Validate(detail, nameof(detail));
         CheckExtent(kind, width, nameof(width));
         CheckTone(tone);
-        if (size is < 0 or > 2 || align is < 0 or > 2) throw new ArgumentOutOfRangeException(nameof(size));
+        if (size is < 0 or > 2) throw new ArgumentOutOfRangeException(nameof(size));
+        if (align is < 0 or > 4) throw new ArgumentOutOfRangeException(nameof(align));
         NativeMethods.Readout(context, Stable(id), label, value, Optional(unit), Optional(detail),
             size, tone, accent ? 1 : 0, align, kind, width);
     }

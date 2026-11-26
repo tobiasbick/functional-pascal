@@ -41,11 +41,28 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Columns` | Provide a heading per column. Width defaults to Fill, Grow to 1, alignment to Left and Sortable to false. |
+| `Columns` | Provide a heading per column. `Width` defaults to `Fill`, `Grow` to 1, `Align` to `Start`, and `Sortable` to false. |
 | `Rows` | Pass the rows in display order with stable IDs and one cell per column. Cell.Text is plain text. Cell.Content holds graphical children. |
 | `Order / OnSort` | Both default to null. Pair the current Sort with a callback when using sortable headings. Column -1 means unsorted. |
 | `OnSelect` | Optional callback receiving the row ID. The model sets each row's Selected flag. |
 | `Height / Striped / Compact / Enabled` | Content / false / false / true. Content fits all rows. |
+
+## Column layout
+
+Use a fixed `Width` to reserve logical units for a column. Use `Percent`
+to reserve a share of the inner width. Columns with `Fill` share the
+remaining width according to `Grow`. The GUI table treats `Content` as `Fill`
+for a column width.
+
+When the table is too narrow for its columns, CUI scrolls the columns
+horizontally. Use a horizontal wheel gesture or hold Shift while turning
+a vertical wheel. CUI fades an edge with more columns beyond it. If `Height`
+is `Content`, the table fits all rows. Set a viewport height to scroll the
+rows vertically while keeping the heading row visible.
+
+Column `Start` and `End` follow the surrounding reading direction. `Left`
+and `Right` select physical edges. `Right` also enables tabular digits in
+plain text cells. A cell with graphical children uses a row to lay them out.
 
 ## Interaction
 
@@ -55,9 +72,8 @@ across sorting so focus follows the row. Store selection by row ID in the model
 to preserve the selected record. Use `HeaderId(Id, Index)` to address a heading
 for focus.
 
-Use a [data grid](../data-grid/data-grid.md) for large collections whose rows
-should be built on demand. The row factory maps each display position to its
-record and returns a stable ID for that record.
+Use a data grid to build rows of a large collection on demand. The row
+factory maps each display position to its record and returns a stable row ID.
 
 ## See also
 
@@ -65,7 +81,9 @@ record and returns a stable ID for that record.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Lists/Widgets/People.fpas)
 - [Gallery update](../../../../examples/ui/gui/gallery/Pages/Lists/Update.fpas)
 - [Virtual list](virtual-list.md)
+- [Data grid](../data-grid/data-grid.md)
 - [Data grid API](../../widgets.md#data-grid-filter-bar-and-tree-table)
+- [Sizing](../../layout/sizing.md)
 - [Data display](README.md)
 
 ## Source files

@@ -1,8 +1,16 @@
 // [Documentation](../../../../../docs/ui/gui/data-display/virtual-list.md)
 #include "../../fpas_cui.h"
 
+/** Opens the native viewport and returns the rows this frame needs. */
 int fpas_cui_virtual_list_begin(cui_ctx *ui, const char *id, int count, float row_height,
     int kind, float height, int enabled, float restore_offset, int *first, int *last) {
+    const int list_capacity = (int)(sizeof ui->vl_stack / sizeof ui->vl_stack[0]);
+    /* CUI opens a viewport and a row column. FPAS adds a list scope and an index scope. */
+    if (ui->parent_depth > CUI_PARENT_STACK - 2 || ui->id_depth > CUI_ID_STACK - 2 ||
+        ui->vl_depth >= list_capacity) {
+        *first = *last = 0;
+        return -1;
+    }
     if (restore_offset >= 0) {
         cui_scroll_state *state = cui_state(ui, cui_make_id(ui, id), sizeof *state);
         state->y = state->ty = restore_offset;

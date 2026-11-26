@@ -64,7 +64,7 @@ dotnet run --project examples/ui/tui/gallery/TuiWidgetGallery.fpasproj
 
 | Category | Widgets and examples |
 | --- | --- |
-| [Layout](layout/README.md) | Panels, weighted rows and columns, scroll views |
+| [Layout](layout/README.md) | Rows, columns, panels, scroll views and terminal viewports |
 | [Navigation](navigation/README.md) | Sidebar with selectable destinations, tabs, breadcrumbs and pagination |
 | [Actions](actions/README.md) | Button, dropdown menu and segmented control |
 | [Inputs](inputs/README.md) | Text, search and number fields, text area, searchable single and multiple selection |

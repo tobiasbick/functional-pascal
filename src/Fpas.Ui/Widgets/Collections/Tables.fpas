@@ -4,19 +4,13 @@ unit Fpas.Ui.Widgets.Collections.Tables;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
 
 uses System as Sys;
 uses System.Globalization as Culture;
 
-// Text alignment within a table column.
-public type Alignment = enum: byte
-  // Align to the left.
-  Left;
-  // Center text.
-  Center;
-  // Align to the right and use tabular digits for plain cells.
-  Right;
-end enum;
+// Text alignment within a table column: logical Start and End or physical Left and Right.
+public type Alignment = Texts.Alignment;
 
 // Column heading and width.
 public type Column = record
@@ -27,7 +21,7 @@ public type Column = record
   // Relative width weight for fill columns.
   public Grow: float := 1.0F;
   // Text alignment in the header and cells.
-  public Align: Alignment := Alignment.Left;
+  public Align: Alignment := Alignment.Start;
   // Whether the heading proposes a sort change.
   public Sortable: bool := false;
 end record;

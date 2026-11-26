@@ -35,15 +35,21 @@ end unit;
 ## Usage
 
 Place the divider between adjacent groups. A plain divider is vertical in a
-row and horizontal elsewhere. CUI draws it one logical point thick in the
-theme's border color. In a row or column, it spans the available space on the
-cross axis. Pass a title to place a caption above a horizontal line.
+row and horizontal elsewhere. CUI draws the line one logical unit thick in
+the theme's border color. In a row or column, the line spans the available
+space on the cross axis. Pass a title to place a caption above a horizontal
+line.
 
 The Notifications example adds its Recent heading below the line.
 
 ## See also
 
-- [Widget API and types](../../../../src/Fpas.Ui/Elements.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Overlays/Widgets/Notifications.fpas)
+- [Spacing](spacing.md)
 - [Sheet and drawer](../overlays/sheet.md)
-- [Layout](README.md)
+- [GUI layout](README.md)
+
+## Source files
+
+- [Elements.fpas](../../../../src/Fpas.Ui/Elements.fpas)
+- [Divider presentation](../../../../src/Fpas.Ui.Gui/Internal/Presentation/Presentation.fpas)

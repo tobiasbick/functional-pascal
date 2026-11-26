@@ -42,7 +42,16 @@ end unit;
 | `Node.Parent` | Minus one for a root. For a child, use the index of a preceding parent. |
 | `Node.HasChildren / Open / Selected / Loading` | All false. A branch can advertise children before they are loaded. |
 | `Cursor / Order` | Use minus one for no cursor and null to disable sorting. |
-| `Height / RowHeight / Guides` | Fill / 32 logical points / false. |
+| `Height / RowHeight / Guides` | Fill / 32 logical units / false. |
+
+## Column and row layout
+
+The first column contains the label, chevron, and indentation for each node.
+`Guides` draws lines that show the depth. CUI derives the visible rows from
+the open branches. Each visible row uses `RowHeight`.
+
+Columns use the data grid's initial widths, resizing, priority hiding, and
+direction-aware alignment. See [data grid layout](data-grid.md#column-and-viewport-layout).
 
 ## Interaction
 

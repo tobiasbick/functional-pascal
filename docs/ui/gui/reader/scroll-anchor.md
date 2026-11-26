@@ -41,13 +41,17 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Id` | A nonempty, unique key that matches the corresponding outline entry. |
+| `Id` | A nonempty, unique ID that matches the anchor ID in the outline entry. |
 
 ## Usage
 
 Insert the marker immediately before the target content in an uncontrolled
-scroll view. The marker has zero height. Give the scroll view a finite
-height so the outline can move through its content.
+scroll view. Give the scroll view a finite height so the outline can move
+through its content.
+
+The anchor has zero height. A column still applies its normal gap before and
+after the anchor. If the heading must touch the anchor, place the anchor and
+heading in a column with no gap.
 
 ## See also
 

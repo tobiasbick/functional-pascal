@@ -15,6 +15,7 @@ public sealed partial class CuiWindow
     /// <param name="enabled">Whether the viewport accepts wheel input.</param>
     /// <param name="restoreOffset">Logical offset to restore, or -1 to keep the native position.</param>
     /// <returns>Indices CUI needs for this frame.</returns>
+    /// <exception cref="InvalidOperationException">Opening this list would exceed a native CUI nesting limit.</exception>
     public CuiVirtualRange BeginVirtualList(string id, int count, float rowHeight, int heightKind,
         float height, bool enabled, float restoreOffset = -1)
     {
@@ -27,6 +28,7 @@ public sealed partial class CuiWindow
             throw new ArgumentOutOfRangeException(nameof(restoreOffset));
         int node = NativeMethods.VirtualListBegin(context, Stable(id), count, rowHeight, heightKind,
             height, enabled ? 1 : 0, restoreOffset, out int first, out int last);
+        if (node < 0) throw new InvalidOperationException("The native CUI virtual list nesting limit was reached.");
         layouts.Add(new(Layout.VirtualList, Node: node));
         return new(first, last);
     }

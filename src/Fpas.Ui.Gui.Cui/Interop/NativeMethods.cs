@@ -13,7 +13,8 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial nint Create(string title, int width, int height, int renderer, int continuous,
         int placed, int x, int y, int hasPosition, int maximized,
-        int minimumWidth, int minimumHeight, int fixedSize, string? appId, int noVsync, int hidden);
+        int minimumWidth, int minimumHeight, int fixedSize, string? appId, int noVsync, int hidden,
+        int readingDirection);
 
     [LibraryImport(Library, EntryPoint = "cui_app_destroy")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

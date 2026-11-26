@@ -123,7 +123,7 @@ public sealed partial class CuiWindow
         {
             var column = columns[index];
             Utf8.Validate(column.Title, nameof(columns));
-            if (!float.IsFinite(column.Width) || column.Width < 0 || column.Alignment is < 0 or > 2 ||
+            if (!float.IsFinite(column.Width) || column.Width < 0 || column.Alignment is < 0 or > 4 ||
                 column.Priority is < 0 or > 255)
                 throw new ArgumentException("Invalid width, alignment or priority.", nameof(columns));
             titles[index] = column.Title;

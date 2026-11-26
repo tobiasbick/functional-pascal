@@ -93,6 +93,14 @@ begin
   end if;
 end procedure;
 
+// Draws the border of a [terminal panel](../../../../docs/ui/tui/layout/panels.md).
+// ## Parameters
+// - `Operations`: Destination for paint operations.
+// - `Area`: Outer panel bounds in cells.
+// - `Clip`: Visible area in cells.
+// - `Title`: Text on the top edge.
+// - `Style`: Panel style.
+// - `Widgets`: Optional widget theme styles.
 public procedure Border(
   Operations: Generic.List of Operation;
   Area: F.Rect;

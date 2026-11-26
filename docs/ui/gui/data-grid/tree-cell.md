@@ -48,9 +48,12 @@ end unit;
 
 ## Interaction
 
-Place the tree cell inside `Table.Cell.Content`. Use the branch's message
+Place the tree cell inside `Tables.Cell.Content`. Use the branch's message
 to set its expansion in the model. Build the visible rows from that model
 so collapsing a branch removes its descendant rows.
+
+Set `Depth` to zero for a root. Increase `Depth` for each level below the
+root. The cell adds the indentation inside the assigned column width.
 
 ## See also
 

@@ -13,9 +13,9 @@ public type Options = record
   public Height: L.Extent := L.Extent.Fill;
   // Stack the panes vertically.
   public Vertical: bool := false;
-  // Minimum first pane on the split axis. Zero uses the native default.
+  // Minimum first pane on the split axis. Zero uses 120 logical units.
   public MinimumFirst: float := 0.0F;
-  // Minimum second pane on the split axis. Zero uses the native default.
+  // Minimum second pane on the split axis. Zero uses 120 logical units.
   public MinimumSecond: float := 0.0F;
 end record;
 

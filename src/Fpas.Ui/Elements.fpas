@@ -265,7 +265,7 @@ public type Element of TMsg = variant
   // Display text.
   Label(Text: string);
   // Static text with an explicit native typeface, size and color.
-  FormattedText(Text: string; Font: Motion.Font; Size: float; Color: G.Color);
+  FormattedText(Text: string; Font: Motion.Font; Size: float; Color: G.Color; Settings: Texts.Options);
   // Separate adjacent content, with an optional caption.
   Separator(Title: string);
   // Activate a button with model-owned presentation and input settings.
@@ -546,7 +546,7 @@ public type Element of TMsg = variant
   // Native ModelPicker element.
   ModelPicker(Id: string; Items: array of ModelPickers.Item; Selected: int; Changed: function(int): TMsg; Settings: ModelPickers.Options);
   // Native text roles and inline code.
-  NativeText(Text: string; Role: Texts.Appearance);
+  NativeText(Text: string; Role: Texts.Appearance; Settings: Texts.Options);
   // Native PropertyInspector.
   PropertyInspector(Id: string; Groups: array of PropertyInspectors.Group; Changed: function(PropertyInspectors.Event): TMsg; Settings: PropertyInspectors.Options);
   // Native FlameGraph.
@@ -796,19 +796,22 @@ end function;
 // - `Font`: Native typeface.
 // - `Size`: Logical font size, or zero to use the theme.
 // - `Color`: Straight-alpha text color.
+// - `Settings`: Native reading direction and text alignment.
 // ## Returns
 // A label for the graphical profile.
 public function FormattedText of TMsg(
   Text: string;
   Font: Motion.Font;
   Size: float;
-  Color: G.Color
+  Color: G.Color;
+  Settings: Texts.Options? := null
 ): Element of TMsg;
 begin
-  return (Element of TMsg).FormattedText(Text, Font, Size, Color);
+  return (Element of TMsg).FormattedText(Text, Font, Size, Color, Settings ?? new Texts.Options());
 end function;
 
 // Separates adjacent content with a native CUI hairline.
+// See [Divider](../../docs/ui/gui/layout/divider.md).
 //
 // ## Type parameters
 // - `TMsg`: The application message type.
@@ -826,6 +829,7 @@ end function;
 
 // Inserts a flexible CUI spacer. Spacers in a row or column share the available
 // main-axis space with other growing children.
+// See [Spacing](../../docs/ui/gui/layout/spacing.md).
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Returns
@@ -836,6 +840,7 @@ begin
 end function;
 
 // Inserts CUI's fixed space horizontally in a row and vertically elsewhere.
+// See [Spacing](../../docs/ui/gui/layout/spacing.md).
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
@@ -848,6 +853,8 @@ begin
 end function;
 
 // Arranges children horizontally with default spacing.
+// See [GUI rows](../../docs/ui/gui/layout/row.md) and
+// [TUI rows and columns](../../docs/ui/tui/layout/rows-and-columns.md).
 //
 // ## Type parameters
 // - `TMsg`: The application message type.
@@ -863,6 +870,8 @@ begin
 end function;
 
 // Arranges children horizontally with explicit spacing and alignment.
+// See [GUI rows](../../docs/ui/gui/layout/row.md) and
+// [TUI rows and columns](../../docs/ui/tui/layout/rows-and-columns.md).
 //
 // ## Type parameters
 // - `TMsg`: The application message type.
@@ -882,6 +891,8 @@ begin
 end function;
 
 // Arranges children vertically with default spacing.
+// See [GUI columns](../../docs/ui/gui/layout/column.md) and
+// [TUI rows and columns](../../docs/ui/tui/layout/rows-and-columns.md).
 //
 // ## Type parameters
 // - `TMsg`: The application message type.
@@ -897,6 +908,8 @@ begin
 end function;
 
 // Arranges children vertically with explicit spacing and alignment.
+// See [GUI columns](../../docs/ui/gui/layout/column.md) and
+// [TUI rows and columns](../../docs/ui/tui/layout/rows-and-columns.md).
 //
 // ## Type parameters
 // - `TMsg`: The application message type.
@@ -916,6 +929,7 @@ begin
 end function;
 
 // Sets the sizing behavior of a child.
+// See [Sizing and units](../../docs/ui/layout/sizing.md).
 //
 // ## Type parameters
 // - `TMsg`: The application message type.
@@ -932,6 +946,7 @@ begin
 end function;
 
 // Applies a semantic style role.
+// See [Layout and style](../../docs/ui/widgets.md#layout-and-style).
 //
 // ## Type parameters
 // - `TMsg`: The application message type.
@@ -948,6 +963,7 @@ begin
 end function;
 
 // Frames a child.
+// See [Composition](../../docs/ui/layout/README.md#composition) and [TUI panels](../../docs/ui/tui/layout/panels.md).
 //
 // ## Type parameters
 // - `TMsg`: The application message type.
@@ -964,6 +980,9 @@ begin
 end function;
 
 // Displays a vertical viewport whose offset belongs to the host.
+// See [Scroll position](../../docs/ui/layout/scroll-position.md).
+// See also the [GUI scroll view](../../docs/ui/gui/layout/scroll-view.md) and
+// [TUI scroll view](../../docs/ui/tui/layout/scroll-view.md).
 //
 // ## Type parameters
 // - `TMsg`: The application message type.
@@ -985,6 +1004,7 @@ begin
 end function;
 
 // Displays multiple direct children in a native scroll viewport.
+// See [Scroll position](../../docs/ui/layout/scroll-position.md).
 //
 // ## Type parameters
 // - `TMsg`: The application message type.
@@ -1016,6 +1036,7 @@ begin
 end function;
 
 // Displays a vertical viewport whose position belongs to the model.
+// See [Scroll position](../../docs/ui/layout/scroll-position.md).
 //
 // ## Type parameters
 // - `TMsg`: The application message type.

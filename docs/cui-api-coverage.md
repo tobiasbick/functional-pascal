@@ -21,7 +21,11 @@ C function or adding another spelling for an existing operation.
 | `cui_box_begin` and `cui_box_end` | Rows, columns, layered stacks and responsive grids share `Layout.Flow` and `Elements.Size`. See [Layout](ui/gui/layout/README.md). |
 | `cui_separator` | [`Elements.Divider()`](ui/gui/layout/divider.md) uses CUI's direction and theme border color. |
 | `cui_viewport_size` | `CuiWindow.ViewportSize` supplies the logical drawable size for the graphical `View` and `Snapshot().Size`. |
-| `cui_scroll` | [`Elements.ScrollView`](ui/gui/layout/scroll-view.md) uses native viewport extents, padding, gap, edge fades and wheel routing. CUI's position and reveal APIs are vertical. |
+| `cui_split` | [`SplitViews.SplitView`](ui/gui/app-chrome/split-view.md) exposes the orientation, minimum pane sizes and divider proposals. |
+| Finalized rectangles and stable layout identities | Named containers and controls expose bounds in [`Snapshot().Controls`](ui/gui/host.md#invalidation-and-inspection). |
+| `cui_scroll`, `cui_scroll_to`, `cui_scroll_reveal` | [`Elements.ScrollView`](ui/gui/layout/scroll-view.md) uses native viewport extents, padding, gap, edge fades and wheel routing. `Layout.ScrollPosition` sets a vertical offset or reveals a child. |
+| `cui_virtual_list` | [`VirtualLists.VirtualList`](ui/gui/data-display/virtual-list.md) builds rows in CUI's requested viewport range. |
+| Window and text reading direction | [`Desktop.Options`, `Layout.Flow`, and `Texts.Options`](ui/gui/layout/reading-direction.md) configure inheritance and overrides. |
 | Rectangular texture updates | `MediaImages.Update` returns an immutable RGBA source with a dirty rectangle |
 | Canvas click, hover/press changes and optional two-axis wheel ownership | `Canvas` callbacks; unchanged pointer states emit no message |
 | Application shortcuts and editor navigation/find/selection | `BindingsFor`, `EditorCommands` |

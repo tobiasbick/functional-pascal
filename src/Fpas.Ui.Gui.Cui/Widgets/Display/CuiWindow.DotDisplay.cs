@@ -22,7 +22,7 @@ public sealed partial class CuiWindow
         Utf8.Validate(text, nameof(text));
         CheckFeedbackNumber(pitch, nameof(pitch));
         CheckExtent(kind, width, nameof(width));
-        if (align is < 0 or > 2 || color.Palette is < -1 or > 6) throw new ArgumentOutOfRangeException(nameof(align));
+        if (align is < 0 or > 4 || color.Palette is < -1 or > 6) throw new ArgumentOutOfRangeException(nameof(align));
         NativeMethods.DotDisplay(context, Stable(id), text, pitch, color.Palette, color.Rgba, align, kind, width, flags);
     }
 }

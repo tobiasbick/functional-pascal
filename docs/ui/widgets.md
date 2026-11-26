@@ -110,39 +110,13 @@ and input support. [GUI adapter](gui/host.md),
 
 ## Layout and style
 
-`Flow.Clip` controls native clipping at graphical stack bounds. By default,
-ordinary stacks clip and wrapping rows allow paint to extend past the bounds.
-Set it to false to keep strokes and shadows visible inside a containing viewport.
+Compose rows and columns with `Layout.Flow`. Set allocation with `Elements.Size`.
+The [layout chapter](layout/README.md) covers shared composition, sizing,
+responsive views and scroll positions. It links to the options for each host.
 
-`Role.DisplayValue` uses the graphical display face at 22 logical points
-with tabular digits.
-
-Layout follows the supported subset of CUI's box rules. Content uses the host's
-measured extent. Fill and positive Grow weights share the remaining space from
-zero, freezing children that reach their minimum or maximum. Fixed sizes never
-grow or shrink. Grow accepts finite nonnegative fractional weights, for example
-1.3 and 1 for CUI's proportional columns. GUI also supports `Extent.Percent(Value)` from zero through 100,
-resolved by CUI against the parent's inner main-axis extent. Percentages cannot
-grow and respect explicit bounds. Terminal and portable profiles reject them.
-Content children shrink proportionally toward their minimum
-content size; bounds can leave overflow, which the host clips.
-
-Default alignment stretches columns and centers rows on their cross axis.
-Intrinsic controls such as buttons keep their natural size. Explicit Start,
-Center, End and Stretch select another placement. Rows, columns, sizing,
-spacing, borders and scrolling form the shared layout subset. A graphical row
-can opt into native line wrapping with `Flow.Wrap`. The graphical
-`Role.Label` uses the weight and line metrics of `cui_label`.
-
-Use `Measure.Logical` for portable fixed sizes, bounds, spacing and scroll
-requests. GUI uses CUI logical points. TUI maps 8 logical units to a column and
-16 to a row, rounding positive distances upward; weighted allocations round
-shared boundaries so no cells are lost. `Measure.Cells` is an explicit terminal
-extension. GUI accepts fractional logical distances through `Measure.Points`.
-Semantic Tight/Normal/Loose spacing corresponds to 4/8/16 logical
-units and adapts to the host's resolution.
-When both minimum and maximum bounds are supplied, use logical units for both
-or cells for both.
+Use `Elements.Styled` to apply a semantic role. In the GUI, `Role.DisplayValue`
+uses the display face at 22 logical units with tabular digits. `Role.Label` uses
+the weight and line metrics of `cui_label`.
 
 ## Native text and drawing
 
@@ -253,33 +227,10 @@ three-step tour of its Cutoff knob, master meter and Bass fader.
 
 ## Native graphical layout
 
-`Fpas.Ui.Widgets.Containers.Stacks.Stack(Flow, Children)` layers children in paint order. `Align`
-places them horizontally and `Justify` vertically. `Elements.Spacer()` and
-`Elements.Gap(Measure.Logical(N))` use CUI's flexible and fixed spacing.
-
-For independent dimensions, pass `Flex.Width` and/or `Flex.Height` as
-`Layout.AxisSize` records, each with `Basis`, `Minimum` and `Maximum`. These
-explicit axes cannot mix with main-axis `Basis`, bounds or growth. Each explicit
-axis can set its own `AxisSize.Grow` for content or fill. Percentages
-resolve inside CUI. An omitted axis preserves its current size and bounds.
-
-`Flow.PaddingTop`, `PaddingEnd`, `PaddingBottom` and `PaddingStart` override
-axis or uniform padding, including an explicit zero. `Flow.PaddingX` and
-`PaddingY` override uniform padding along their respective axes.
-`Flow.ReadingDirection` inherits by default or selects `LeftToRight`,
-`RightToLeft` or `Auto`. `Auto` uses CUI's first strong directional character
-in descendant text. CUI mirrors flow and logical start and end spacing.
-See [Reading direction](gui/layout/reading-direction.md).
-
-Graphical rows, columns, layered stacks and grids can set their own border,
-corners, theme fill, elevation, opacity and native scrolling. Grid also
-supports automatic columns without a fixed cap. See [Layout](gui/layout/README.md).
-
-`Layout.ScrollOptions` configures `Elements.ScrollView`. The GUI supports
-horizontal overflow, viewport extents, insets, spacing between direct children
-and colored edge fades. Both axes use native clipping and fades with or without
-visible scrollbars. `Position` and `OnScroll` remain vertical, as in CUI's
-scroll-to API. See [Scroll view](gui/layout/scroll-view.md).
+The [GUI layout chapter](gui/layout/README.md) covers native box options,
+wrapping, layered stacks, grids, reading direction and scroll view layout.
+Use [independent axes](layout/sizing.md#independent-gui-axes) to set GUI width
+and height separately.
 
 ## Shared themes
 
@@ -1481,10 +1432,8 @@ Escape to return to the formatted value.
 
 ## Scrolling
 
-A controlled scroll view clamps the requested position to the current range.
-`End` follows the end as content grows. User input proposes a new position
-with the resolved offset and maximum in explicit host units. Layout and
-content changes recompute the visible offset without emitting messages.
+See [Scroll position](layout/scroll-position.md) for host-owned and model-owned
+scrolling, the position variants and scroll proposals.
 
 ## Table of contents and scroll anchors
 

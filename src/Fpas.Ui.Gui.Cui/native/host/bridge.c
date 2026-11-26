@@ -21,12 +21,13 @@
  * @param app_id Optional Linux desktop application identity, copied at creation.
  * @param no_vsync Nonzero to present without waiting for OpenGL vertical sync.
  * @param hidden Nonzero to create the window without showing it.
+ * @param reading_direction Native reading direction inherited by the window's widgets.
  * @return The owned app, or NULL on creation failure. */
 CUI_API cui_app *fpas_cui_window_create(const char *title, int width, int height,
                                       int renderer, int continuous, int placed,
                                       int x, int y, int has_position, int maximized,
                                       int minimum_width, int minimum_height, int fixed_size,
-                                      const char *app_id, int no_vsync, int hidden) {
+                                      const char *app_id, int no_vsync, int hidden, int reading_direction) {
     const cui_window_placement placement = {
         .x = x, .y = y, .width = width, .height = height,
         .state = maximized ? CUI_WINDOW_MAXIMIZED : CUI_WINDOW_NORMAL, .has_position = has_position != 0
@@ -40,6 +41,7 @@ CUI_API cui_app *fpas_cui_window_create(const char *title, int width, int height
         .placement = placed ? &placement : NULL
     };
     cui_app *app = cui_app_create(&options);
+    if (app) cui_app_ui(app)->direction = (cui_direction)reading_direction;
 #ifdef _WIN32
     if (app) {
         /* The FPAS Windows executable stores ApplicationIcon under IDI_APPLICATION. */

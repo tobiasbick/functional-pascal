@@ -90,6 +90,9 @@ uses System.Collections.Generic as C;
 //
 // ## Returns
 // The resolved backend tree, with no application-facing constructors.
+//
+// ## Remarks
+// See [terminal rows and columns](../../../../docs/ui/tui/layout/rows-and-columns.md).
 public function Prepare of TMsg(
   Prepared: V.Prepared of TMsg;
   Theme: Th.Theme;

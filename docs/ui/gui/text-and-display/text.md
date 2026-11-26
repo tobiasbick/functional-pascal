@@ -47,12 +47,17 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Role` | Pass Body, HeadingOne through HeadingFour, Label, Secondary, Muted or Code. |
+| `Settings` | `Texts.Options` defaults to inherited reading direction and Start alignment. |
 
 ## Usage
 
 Use Body for wrapping paragraphs and Code for a compact monospaced span.
 Place the code span in a row with the surrounding text. For a label shared
 between hosts, use `Elements.Text`.
+
+Pass `Texts.Options` to fix a text node's reading direction or use `Auto` to
+resolve it from the text. Start and End use the resulting direction. Left and
+Right select physical edges, and Center centers within the text's bounds.
 
 Apply `Elements.Styled` to a label when its appearance should follow a
 semantic role from the theme. Overview uses `DisplayTitle` for its main
@@ -64,6 +69,7 @@ heading and `Introduction` for the paragraph beneath it.
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Display/View.fpas)
 - [Code block](../code/code-block.md)
 - [Formatted text](formatted-text.md)
+- [Text lowering](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Display/NativeText.fpas)
 - [Overview](../overview/README.md)
 - [Chapter index](README.md)
 - [Terminal example](../../tui/text-and-display/text.md)

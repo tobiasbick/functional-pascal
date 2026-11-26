@@ -6,7 +6,7 @@ namespace Fpas.Ui.Gui.Cui.Widgets.Collections;
 /// <summary>Native grid column descriptor.</summary>
 /// <param name="Title">Literal heading.</param>
 /// <param name="Width">Initial width, or zero for the native default.</param>
-/// <param name="Alignment">Shared table text alignment.</param>
+/// <param name="Alignment">Native text alignment: start, center, right, left, or end, in that order.</param>
 /// <param name="Sortable">Whether to propose sorting.</param>
 /// <param name="Fixed">Whether to suppress resizing.</param>
 /// <param name="Priority">Responsive hiding priority, with zero always visible.</param>

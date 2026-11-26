@@ -41,11 +41,13 @@ end unit;
 | `Text / Font` | Supply the visible text and the native face, such as Mono. |
 | `Size` | Logical font size. Zero uses the theme size. |
 | `Color` | Supply a straight-alpha color. Use the current palette to follow the host appearance. |
+| `Settings` | `Texts.Options` defaults to inherited reading direction and Start alignment. |
 
 ## Usage
 
 Use this label when the view needs an exact face, size and color. For
 semantic headings and captions, use the text roles on the Text page.
+Both APIs use the same [reading direction and alignment options](text.md).
 
 ## See also
 
@@ -57,4 +59,4 @@ semantic headings and captions, use the text roles on the Text page.
 
 ## Source files
 
-- [NativeText.fpas](../../../../src/Fpas.Ui.Gui/Internal/Widgets/Display/NativeText.fpas)
+- [Presentation.fpas](../../../../src/Fpas.Ui.Gui/Internal/Presentation/Presentation.fpas)

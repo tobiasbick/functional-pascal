@@ -42,23 +42,28 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Settings` | A Flow record. Align places or stretches children horizontally. Justify places them vertically using Start, Center or End. |
-| `Children` | Specify children in paint order, with the topmost last. |
+| `Settings` | Pass a `Layout.Flow` record. `Align` places children horizontally. `Justify` places children vertically. |
+| `Children` | Specify children in paint order. The final child paints on top. |
 
 ## Usage
 
-Wrap the stack in `Elements.Size` when it needs a fixed height or maximum
-width. The shared space lets a badge or other overlay cover part of the
-content. Children use their content height by default. Use an explicit height
-to stretch an overlay vertically.
+CUI defaults to the start edge horizontally and the top edge vertically.
+Use `Align` to place or stretch children horizontally.
+Use `Justify` with `Start`, `Center` or `End` to place children vertically.
+Children use their content height by default. Set the height of a child
+explicitly to stretch that child vertically.
+Use `Elements.Size` on the stack to set its own dimensions.
 
 ## See also
 
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Containers/Stacks.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Layout/View.fpas)
-- [Reading direction and spacing](reading-direction.md)
-- [Chapter index](README.md)
+- [Container options](container-options.md)
+- [Reading direction](reading-direction.md)
+- [GUI layout](README.md)
 
 ## Source files
 
+- [Layout.fpas](../../../../src/Fpas.Ui/Layout.fpas)
+- [Stack presentation](../../../../src/Fpas.Ui.Gui/Internal/Presentation/Presentation.fpas)
 - [CuiLayoutOptionsTests.cs](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Layout/CuiLayoutOptionsTests.cs)

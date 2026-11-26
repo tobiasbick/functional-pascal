@@ -32,8 +32,12 @@ public function Map of (TChild, TParent)(
 ): E.Element of TParent;
 begin
   case Value of
-    when E.Element.NativeText(const Text: string, const Role: Texts.Appearance):
-      return (E.Element of TParent).NativeText(Text, Role);
+    when E.Element.NativeText(
+      const Text: string,
+      const Role: Texts.Appearance,
+      const Settings: Texts.Options
+    ):
+      return (E.Element of TParent).NativeText(Text, Role, Settings);
     when E.Element.Icon(
       const Glyph: string, const Size: float, const Color: G.Color?,
       const ThemeColor: Themes.ColorToken?

@@ -8,6 +8,7 @@ uses Fpas.Ui.Internal.Validation.Controls.MediaRules as M;
 uses Fpas.Ui.Internal.Validation.Core.ChartChecks as C;
 uses Fpas.Ui.Internal.Validation.Core.Checks as R;
 uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
+uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Canvas.Canvases as Canvas;
 uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Media.Images as Images;
@@ -58,6 +59,21 @@ begin
   end for;
 end procedure;
 
+// Validates the native reading direction and alignment shared by text elements.
+// ## Parameters
+// - `Settings`: The text's native layout options.
+// - `Location`: The source element's path for diagnostics.
+public procedure CheckTextOptions(Settings: Texts.Options; Location: string);
+begin
+  if not Sys.Enum.IsDefined of L.Direction(Settings.ReadingDirection) then
+    R.Reject(Location, 'Unknown native text reading direction.');
+  end if;
+
+  if not Sys.Enum.IsDefined of Texts.Alignment(Settings.Align) then
+    R.Reject(Location, 'Unknown native text alignment.');
+  end if;
+end procedure;
+
 // Validates the graphical display inputs and composed veil content.
 // ## Type parameters
 // - `TMsg`: Application message type.
@@ -77,11 +93,17 @@ public procedure Check of TMsg(
 begin
   R.RequireProfile(Profile, R.Profile.Graphical, Location);
   case Node of
-    when E.Element.NativeText(const Text: string, const Role: Texts.Appearance):
+    when E.Element.NativeText(
+      const Text: string,
+      const Role: Texts.Appearance,
+      const Settings: Texts.Options
+    ):
       R.CheckText(Text, Location);
       if not Sys.Enum.IsDefined of Texts.Appearance(Role) then
         R.Reject(Location, 'Unknown native text role.');
       end if;
+
+      CheckTextOptions(Settings, Location);
     when E.Element.Icon(
       const Glyph: string,
       const Size: float,

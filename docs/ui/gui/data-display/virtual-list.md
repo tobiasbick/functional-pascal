@@ -1,6 +1,7 @@
 # Virtual list
 
-Use a virtual list to show a large collection with rows of equal height. The gallery uses a row factory for 10,000 invoices. Available in **GUI**.
+Use a virtual list to show a large collection with rows of equal height.
+The gallery uses a row factory for 10,000 invoices. Available in **GUI**.
 
 ![Virtual list in the FPAS gallery](images/virtual-list.png)
 
@@ -32,27 +33,39 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Count` | Number of rows in the current model. |
-| `RowHeight` | Fixed logical height of at least one point. |
-| `Height` | Viewport extent. The example uses 220 logical points. |
+| `Count` | Nonnegative row count in the current model. |
+| `RowHeight` | Fixed height of at least one logical unit. The total row height must be less than `int.MaxValue`. |
+| `Height` | Viewport extent. CUI treats `Content` as `Fill`. |
 | `BuildRow` | A pure function that builds a row from its zero-based index. |
-| `Offset` | Optional saved scroll offset in logical points, restored when the list appears. |
-| `OnScroll` | Optional callback reporting the native scroll offset to store for a later visit. |
+| `Offset` | Null or a finite, nonnegative scroll offset in logical units. The host restores the offset when the view appears. |
+| `OnScroll` | Null or a callback that maps a native scroll offset to a message. |
 
 ## Interaction
 
-Scrolling changes which rows CUI requests. The factory can also receive rows just outside the viewport so scrolling has content ready. Give interactive children stable IDs unique across the view. The GUI snapshot reports the realized range as `first:last`, with last excluded.
+Scrolling changes which rows CUI requests. CUI can include rows just outside
+the viewport. Give interactive children unique, stable IDs across the view.
+The GUI snapshot reports the realized range as `first:last`, where `last` is
+the first index outside the range.
 
-Declare open modal scopes outside `BuildRow`. The GUI validates each realized
-row before drawing it and rejects open dialogs, sheets, command palettes and
-file pickers in its content. Rows outside the realized range remain unbuilt.
+The list retains its native offset while it stays in the view. Store offset
+messages in the model to restore the position when the list reappears. If
+the row count shrinks, CUI clamps the offset to the new range.
+
+Declare open modal scopes outside `BuildRow`. The GUI host validates realized
+rows before drawing them. It rejects open dialogs, sheets, command palettes,
+and file pickers in those rows.
+
+The host rejects a nested list when CUI has reached its layout or ID capacity,
+leaving the enclosing list and row available for the rest of the frame.
 
 ## See also
 
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Collections/VirtualLists.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Lists/Widgets/Invoices.fpas)
 - [Table](table.md)
+- [Scroll view](../layout/scroll-view.md)
 - [Data display](README.md)
+- [Collection scope tests](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Display/CuiCollectionTrackingTests.cs)
 
 ## Source files
 

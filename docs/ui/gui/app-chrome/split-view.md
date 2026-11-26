@@ -1,6 +1,7 @@
 # Split view
 
-App chrome shows a notes pane and a detail pane with a draggable divider.
+Use a split view for two panes with a draggable divider. The gallery shows
+a notes pane and a detail pane.
 Available in **GUI**.
 
 ![Two-pane split view in the FPAS gallery](images/split-view.png)
@@ -36,20 +37,32 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Width / Height` | Fill / Fill. |
-| `Vertical` | false. Set true to stack the panes. |
-| `MinimumFirst / MinimumSecond` | 0 / 0. Nonzero values are logical points along the split axis. |
+| `Id / Ratio` | Give the split a stable ID. Set the first pane's share to a value from 0 through 1. |
+| `Width / Height` | Both Fill. CUI treats Content as Fill for these options. |
+| `Vertical` | false for side-by-side panes. Set true to stack the panes. |
+| `MinimumFirst / MinimumSecond` | Both 0. CUI uses 120 logical units for a zero minimum. Set a positive value to supply a minimum along the split axis. |
 
 ## Interaction
 
-Drag the divider to propose a new ratio. Accept the proposal in the
-update and pass it back to the next view. Use the same ratio when restoring
-a saved split.
+Drag the divider to propose a new ratio. Store the proposal in the model
+and pass it to the next view. Use the same ratio to restore a saved split.
+
+CUI reserves one logical unit for the divider. If the pane minimums exceed
+the available space, CUI reduces them in proportion to each minimum. A
+horizontal split follows the surrounding reading direction. A vertical split
+puts its first pane at the top.
+
+Close the first pane's child layouts before calling `NextSplitPane` in the
+low-level CUI adapter. Close the second pane's child layouts before calling
+`EndSplitView`.
 
 ## See also
 
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Desktop/SplitViews.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Desktop/View.fpas)
+- [Windowing tests](../../../../tests/Fpas.Ui.Gui.Cui.Tests/Windowing/CuiWindowTests.cs)
+- [Docking workspace](dockspace.md)
+- [Sizing](../../layout/sizing.md)
 - [Chapter index](README.md)
 
 ## Source files

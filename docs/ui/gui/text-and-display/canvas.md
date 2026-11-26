@@ -59,10 +59,8 @@ focused canvas keeps its native focus until input resumes. If a managed input ca
 discards the current frame and its remaining input, then propagates the original
 exception. A subsequent `NextFrame()` starts a fresh view.
 
-Set `Scope := new L.FocusScope('inspector', true)` on a row, column or layered
-container to limit Tab and Shift+Tab to a pane. Give each pane a stable ID
-and mark the currently active pane. Inactive panes remain clickable. With
-no active pane, Tab visits unscoped controls. Open modals take precedence.
+Use a [focus scope](../layout/focus-scopes.md) to limit Tab and Shift+Tab to
+the active pane.
 
 ## Interaction
 

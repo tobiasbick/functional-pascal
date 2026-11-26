@@ -38,7 +38,7 @@ end unit;
 | `Unit / Detail` | Empty. The unit sits beside the value and the detail sits below it. |
 | `Size` | Medium. Small, Medium and Large use 17, 28 and 44 logical points. |
 | `Tone / Accent` | Neutral / false. Use Accent to draw the value with the theme accent. |
-| `Align / Width` | Left / Content. |
+| `Align / Width` | Start / Content. CUI aligns the readout column using logical Start, Center or End. |
 
 ## Interaction
 

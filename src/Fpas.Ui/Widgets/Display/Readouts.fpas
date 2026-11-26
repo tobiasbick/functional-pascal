@@ -30,7 +30,7 @@ public type Options = record
   // Use the theme accent.
   public Accent: bool := false;
   // Alignment within the readout.
-  public Align: T.Alignment := T.Alignment.Left;
+  public Align: T.Alignment := T.Alignment.Start;
   // Native width.
   public Width: L.Extent := L.Extent.Content;
 end record;

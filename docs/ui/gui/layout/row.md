@@ -1,7 +1,8 @@
 # Row
 
-`Elements.Row` lays out children horizontally in GUI and TUI. GUI uses a native
-CUI row and can wrap children onto additional lines.
+`Elements.Row` lays out children horizontally. The GUI host uses a native
+CUI row and can wrap children onto additional lines. The TUI host also
+supports rows.
 
 ## Example
 
@@ -34,19 +35,25 @@ end function;
 end unit;
 ```
 
-The default alignment centers children vertically. `Wrap` uses the row's
-available inner width to break lines. `Align` positions children vertically
-within each line, `Justify` distributes free space horizontally per line, and
-`Gap` separates both children and lines.
+## Alignment and wrapping
 
-FPAS clips non-wrapping rows by default. Wrapping rows can paint past their
-bounds unless `Clip` is enabled. Scrolling always clips to the viewport.
+`Align` places children vertically. The default centers children.
+`Justify` distributes free space horizontally.
 
-Rows and columns share sizing, padding, clipping, styling, identity and
-scrolling through `Elements.Size` and `Layout.Flow`. The [column
-reference](column.md) lists these options. Reading direction can be inherited,
-explicit or automatic. `Auto` selects direction from the first strong
-character in descendant text. See [Reading direction](reading-direction.md).
+With `Wrap := true`, CUI uses the inner width to decide where to break each
+line. A growing child's minimum width contributes to that decision.
+CUI then distributes the available width among the children on each line.
+`Align` places children within the height of their line.
+`Gap` separates adjacent children and lines.
+
+## See also
+
+- [Container options](container-options.md)
+- [Spacing and padding](spacing.md)
+- [Reading direction](reading-direction.md)
+- [Responsive layout](../../layout/responsive.md)
+- [TUI layout](../../tui/layout/README.md)
+- [GUI layout](README.md)
 
 ## Source files
 

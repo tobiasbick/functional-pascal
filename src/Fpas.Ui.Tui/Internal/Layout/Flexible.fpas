@@ -1,4 +1,4 @@
-// [Documentation](../../../../docs/ui/tui/host.md#views-layout-and-validation)
+// [Documentation](../../../../docs/ui/tui/layout/rows-and-columns.md)
 
 unit Fpas.Ui.Tui.Internal.Layout.Flexible;
 

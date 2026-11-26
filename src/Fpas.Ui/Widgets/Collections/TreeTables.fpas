@@ -95,7 +95,7 @@ begin
   );
 end function;
 
-// Draws the native indented tree cell inside a table cell.
+// Draws a [tree cell](../../../../docs/ui/gui/data-grid/tree-cell.md) inside a table cell.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters

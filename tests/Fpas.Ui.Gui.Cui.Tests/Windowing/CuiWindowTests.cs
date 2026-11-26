@@ -1,6 +1,7 @@
 // [Documentation](../../../docs/ui/gui/app-chrome/window.md)
 using System.Diagnostics;
 using Fpas.Tests.Support;
+using Fpas.Ui.Gui.Cui.Widgets.Desktop;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
 
@@ -123,6 +124,8 @@ public sealed class CuiWindowTests
         Assert.Throws<InvalidOperationException>(() => window.BeginViewport("overflow", true));
 
         window.EndColumn();
+        var split = new CuiSplitViewOptions(2, 100, 2, 100, false, 0, 0);
+        Assert.Throws<InvalidOperationException>(() => window.BeginSplitView("overflow", 0.5f, split, true));
         window.BeginRow(0, 0);
         window.EndRow();
         for (int remaining = opened - 1; remaining > 0; remaining--) window.EndColumn();
@@ -130,6 +133,39 @@ public sealed class CuiWindowTests
         window.TrackLastControl("after");
         window.Present();
         Assert.Equal(80, window.GetControlRectangle("after").Width);
+    }
+
+    /// <summary>A split rejects incorrect pane transitions and preserves the two pane layouts.</summary>
+    [GuiFact]
+    public void SplitPaneTransitionsKeepNativeLayoutBalanced()
+    {
+        using var window = new CuiWindow("Split layout", 400, 240, CuiRenderer.Software, continuous: true);
+        Assert.True(window.NextFrame());
+        var options = new CuiSplitViewOptions(2, 200, 2, 121, true, 80, 160);
+        Assert.Throws<InvalidOperationException>(() => window.NextSplitPane(true));
+        Assert.Equal(0.5f, window.BeginSplitView("split", 0.5f, options, true));
+        Assert.Throws<InvalidOperationException>(window.EndSplitView);
+        Assert.Throws<InvalidOperationException>(window.Present);
+
+        window.BeginColumn(0, 0);
+        Assert.Throws<InvalidOperationException>(() => window.NextSplitPane(true));
+        window.Skeleton("first", 2, 40, 16);
+        window.TrackLastControl("first");
+        window.EndColumn();
+        window.NextSplitPane(true);
+        Assert.Throws<InvalidOperationException>(() => window.NextSplitPane(true));
+        window.Skeleton("second", 2, 40, 16);
+        window.TrackLastControl("second");
+        window.EndSplitView();
+        window.TrackLastControl("split");
+        window.Present();
+
+        var split = window.GetControlRectangle("split");
+        var first = window.GetControlRectangle("first");
+        var second = window.GetControlRectangle("second");
+        Assert.Equal((200f, 121f), (split.Width, split.Height));
+        Assert.Equal(split.Y, first.Y);
+        Assert.Equal(split.Y + 41, second.Y, precision: 1);
     }
 
     /// <summary>Prevents cross-thread use and verifies disposal and layout-state failures.</summary>

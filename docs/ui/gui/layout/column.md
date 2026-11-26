@@ -1,7 +1,7 @@
 # Column
 
-`Elements.Column` lays out children vertically. Rows and columns are available
-in GUI and TUI. The additional options below use the native CUI box in GUI.
+`Elements.Column` lays out children vertically. The GUI host uses a native
+CUI column. The TUI host also supports columns.
 
 ## Example
 
@@ -39,29 +39,28 @@ end function;
 end unit;
 ```
 
-| Option | Behavior |
-| --- | --- |
-| `E.Size` | Constrain width and height independently. Both axes support content, percentage, fixed and weighted fill with optional bounds. |
-| `Align / Justify` | Align children horizontally and distribute them vertically. |
-| `Gap / Padding` | Use semantic or explicit logical distances, including fractions through `Measure.Points`. Edge insets take precedence over axis insets and uniform padding. |
-| `ReadingDirection` | Inherit, select left-to-right or right-to-left, or use `Auto` to detect the direction from the text. Start and end insets follow the direction. |
-| `Background / BackgroundTheme` | Choose an optional RGBA fill or a semantic theme color. |
-| `Border` | Set the width and an optional RGBA or theme color. Omitting the color uses the active theme border. |
-| `CornerRadius / Corners` | Set a common radius and override physical corners individually, including with zero. |
-| `Elevation / Opacity` | Select the native theme shadow and the paint opacity of the column and its children. |
-| `Clip` | Ordinary FPAS columns clip by default. Set false to allow paint past their bounds. Scrolling always clips to the viewport. |
-| `Scrolling / Id` | Native scrolling supports vertical or both axes. Supply a stable ID to retain the native position across changes within the same ID scope. Omitted IDs use CUI's automatic scroll identity. A named column is also visible in GUI frame inspection. |
+## Alignment and scrolling
 
-Use [ScrollView](scroll-view.md) when the model owns the scroll position or the
-application needs scroll events. Native row wrapping and grid columns have
-their own options through [Row](row.md) and [Grid](../feedback/grid.md).
+`Align` places children horizontally. The default stretches children across
+the available width. Controls with an intrinsic width keep that width.
+`Justify` distributes free space vertically.
 
-Nested `Elements.Size` calls can constrain one axis at a time. A width-only
-constraint preserves any height bounds already set on the box.
+Constrain the height to create vertical overflow for a scrolling column.
+Use a scroll view if the model owns the scroll position.
+
+## See also
+
+- [Container options](container-options.md)
+- [Spacing and padding](spacing.md)
+- [Sizing](../../layout/sizing.md)
+- [Scroll view](scroll-view.md)
+- [TUI layout](../../tui/layout/README.md)
+- [GUI layout](README.md)
 
 ## Source files
 
-- [Layout types](../../../../src/Fpas.Ui/Layout.fpas)
+- [Elements.fpas](../../../../src/Fpas.Ui/Elements.fpas)
+- [Layout.fpas](../../../../src/Fpas.Ui/Layout.fpas)
 - [GUI flow presentation](../../../../src/Fpas.Ui.Gui/Internal/Presentation/Presentation.fpas)
 - [Native pixel parity tests](../../../../src/Fpas.Ui.Gui.Cui/native/tests/layout_parity.c)
 - [FPAS layout contract](../../../../tests/Fixtures/gui-host/LayoutContract.fpas)

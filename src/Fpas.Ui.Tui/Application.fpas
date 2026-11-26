@@ -15,7 +15,7 @@ public type Input = variant
   Focus(Id: string);
   // Activate the control with the supplied ID.
   Activate(Id: string);
-  // Change the viewport to the supplied size in cells.
+  // Change the [terminal viewport](../../docs/ui/tui/layout/viewport.md#resize-and-screen-composition) in cells.
   Resize(Columns: int; Rows: int);
   // Press a named key with the supplied modifiers.
   KeyPress(Key: K.Key; Modifiers: K.KeyModifiers);

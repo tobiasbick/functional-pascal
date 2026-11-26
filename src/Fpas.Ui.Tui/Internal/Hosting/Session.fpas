@@ -194,6 +194,7 @@ public function Start of (TModel, TMsg)(
     end try;
   end procedure;
 
+  // Resolves the [terminal viewport](../../../../docs/ui/tui/layout/viewport.md) before layout.
   function PrepareView(Routing: I.State of TMsg): ViewSource of TMsg;
   begin
     Phase := 'view';

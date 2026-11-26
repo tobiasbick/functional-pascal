@@ -1,4 +1,4 @@
-// [Documentation](../../../../docs/ui/gui/host.md#invalidation-and-inspection)
+// [Documentation](../../../../docs/ui/gui/layout/layout-inspection.md)
 
 unit Fpas.Ui.Gui.Internal.Hosting.FrameControls;
 

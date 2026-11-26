@@ -6,6 +6,43 @@ namespace Fpas.Ui.Gui.Cui.Tests.Display;
 /// <summary>Checks collection parts, selection output and frame scopes.</summary>
 public sealed class CuiCollectionTrackingTests
 {
+    /// <summary>Rejects an extra virtual list while leaving enclosing lists and their rows usable.</summary>
+    [GuiFact]
+    public void VirtualListNestingLimitLeavesExistingScopesUsable()
+    {
+        using var window = new CuiWindow("Virtual list nesting", renderer: CuiRenderer.Software, continuous: true);
+        Assert.True(window.NextFrame());
+        int count = 0;
+        for (; count < 32; count++)
+        {
+            var failure = Record.Exception(() => window.BeginVirtualList($"list-{count}", 1, 50, 2, 50, true));
+            if (failure is not null)
+            {
+                Assert.Contains("nesting limit", Assert.IsType<InvalidOperationException>(failure).Message);
+                break;
+            }
+            window.BeginVirtualRow(0);
+        }
+        Assert.InRange(count, 1, 31);
+
+        window.EndVirtualRow();
+        window.EndVirtualList();
+        Assert.Equal(new CuiVirtualRange(0, 1), window.BeginVirtualList("replacement", 1, 50, 2, 50, true));
+        window.BeginVirtualRow(0);
+        window.Skeleton("row", 2, 48, 50);
+        window.TrackLastControl("replacement-row");
+        window.EndVirtualRow();
+        window.EndVirtualList();
+
+        for (int index = 1; index < count; index++)
+        {
+            window.EndVirtualRow();
+            window.EndVirtualList();
+        }
+        window.Present();
+        Assert.Equal(48, window.GetControlRectangle("replacement-row").Width);
+    }
+
     /// <summary>Reports realized grid headers without registering inspection keys.</summary>
     [GuiFact]
     public void DataGridReportsHeadersWithoutTracking()

@@ -34,7 +34,7 @@ end unit;
 | --- | --- |
 | `Pitch / Color / Accent` | 0 / Automatic / false. Zero uses the native spacing. Accent selects the theme accent. |
 | `Dim / Marquee` | true / false. Dim shows unlit dots. Marquee scrolls a line wider than the viewport. |
-| `Align / Width` | Left / Content. Give a marquee a constrained width. |
+| `Align / Width` | Start / Content. Start and End follow the reading direction. Give a marquee a constrained width. |
 
 ## Interaction
 

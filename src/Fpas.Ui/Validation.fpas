@@ -71,6 +71,7 @@ uses Fpas.Ui.Widgets.Containers.ExpandableTexts as ExpandableTexts;
 uses Fpas.Ui.Widgets.Containers.Grids as Grids;
 uses Fpas.Ui.Widgets.Conversation.Reactions as Reactions;
 uses Fpas.Ui.Widgets.Developer.Terminal as T;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Feedback.Alerts as Alerts;
 uses Fpas.Ui.Widgets.Feedback.Badges as Badges;
 uses Fpas.Ui.Widgets.Feedback.ProgressBars as ProgressBars;
@@ -582,7 +583,8 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Value: string,
         const Font: Motion.Font,
         const FontSize: float,
-        _
+        _,
+        const Settings: Texts.Options
       ):
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location);
         Rules.CheckText(Value, Location);
@@ -590,6 +592,8 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         if not Sys.Enum.IsDefined of Motion.Font(Font) then
           Rules.Reject(Location, 'Unknown graphical text font.');
         end if;
+
+        Display.CheckTextOptions(Settings, Location);
       when E.Element.Label(const Value: string):
         Rules.CheckText(Value, Location + '/text');
       when E.Element.SwitchAction(
@@ -1228,7 +1232,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _
       ), E.Element.GradientEditor(_, _, _, _, _), E.Element.TimelineEditor(_, _, _, _, _):
         EditingTools.Check of TMsg(Node, Location, Mode, Identify);
-      when E.Element.NativeText(_, _), E.Element.Icon(
+      when E.Element.NativeText(_, _, _), E.Element.Icon(
         _,
         _,
         _,
@@ -1547,6 +1551,13 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           case Position of
             when L.ScrollPosition.Offset(const Offset: L.Measure):
               discard LayoutRules.CheckMeasure(Offset, Mode, At + '/offset');
+            when L.ScrollPosition.Reveal(const ControlId: string):
+              Rules.RequireProfile(Mode, Rules.Profile.Graphical, At + '/reveal');
+              if Sys.String.IsNullOrWhiteSpace(ControlId) then
+                Rules.Reject(At + '/reveal', 'A scroll reveal needs a nonempty control ID.');
+              end if;
+
+              Rules.CheckText(ControlId, At + '/reveal');
             else
           end case;
         end if;

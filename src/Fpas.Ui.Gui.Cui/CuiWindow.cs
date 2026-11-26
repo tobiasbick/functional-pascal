@@ -17,7 +17,7 @@ public sealed partial class CuiWindow : IDisposable
         Accordion, ExpandableCard, SwipeItem, Tree, VirtualList, VirtualRow, Reorder, ReorderItem,
         Table, TableRow, DataGrid, TreeTable, Spotlight, Kanban, KanbanColumn, KanbanCard, SkeletonGroup,
         Carousel, CarouselSlide, CardStack, CardStackItem, Reasoning, Toolbar, NodeEditor, Veil, FocusScope,
-        TreeTableMenu
+        TreeTableMenu, SplitFirst, SplitSecond
     }
     private readonly record struct LayoutScope(Layout Kind, int Node = -1, object? Data = null);
 
@@ -47,10 +47,11 @@ public sealed partial class CuiWindow : IDisposable
     /// <param name="appId">Linux desktop identity; empty uses CUI's default.</param>
     /// <param name="noVsync">Whether OpenGL presents without waiting for vertical sync.</param>
     /// <param name="hidden">Whether to create the window without showing it.</param>
+    /// <param name="readingDirection">Inherit, left-to-right, right-to-left, or automatic, in native order.</param>
     public CuiWindow(string title, int width = 640, int height = 480,
         CuiRenderer renderer = CuiRenderer.Auto, bool continuous = false, CuiWindowPlacement? placement = null,
         int minimumWidth = 0, int minimumHeight = 0, bool fixedSize = false, string appId = "",
-        bool noVsync = false, bool hidden = false)
+        bool noVsync = false, bool hidden = false, int readingDirection = 0)
     {
         Utf8.Validate(title, nameof(title));
         Utf8.Validate(appId, nameof(appId));
@@ -64,6 +65,7 @@ public sealed partial class CuiWindow : IDisposable
         ArgumentOutOfRangeException.ThrowIfLessThan(width, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(height, 1);
         if (!Enum.IsDefined(renderer)) throw new ArgumentOutOfRangeException(nameof(renderer));
+        if (readingDirection is < 0 or > 3) throw new ArgumentOutOfRangeException(nameof(readingDirection));
         // CUI leaves the window's OpenGL context current on the creating thread.
         if (openGlWindow)
         {
@@ -75,7 +77,8 @@ public sealed partial class CuiWindow : IDisposable
         app = NativeMethods.Create(title, width, height, (int)renderer, continuous ? 1 : 0,
             placement.HasValue ? 1 : 0, at.X, at.Y, at.HasPosition ? 1 : 0,
             at.State == CuiWindowState.Maximized ? 1 : 0,
-            minimumWidth, minimumHeight, fixedSize ? 1 : 0, Optional(appId), noVsync ? 1 : 0, hidden ? 1 : 0);
+            minimumWidth, minimumHeight, fixedSize ? 1 : 0, Optional(appId), noVsync ? 1 : 0, hidden ? 1 : 0,
+            readingDirection);
         if (app == 0) throw new InvalidOperationException("CUI could not create a window. Check the native display connection.");
         wakeTarget = NativeMethods.OpenWakeTarget(app);
         if (wakeTarget == 0)

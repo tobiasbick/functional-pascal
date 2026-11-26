@@ -1,4 +1,4 @@
-// [Documentation](../../../../docs/ui/gui/host.md#frame-preparation-and-presentation)
+// [Documentation](../../../../docs/ui/gui/layout/container-options.md)
 
 unit Fpas.Ui.Gui.Internal.Layout.Sizing;
 
@@ -29,7 +29,7 @@ begin
   end case;
 end function;
 
-// Resolves semantic theme spacing.
+// Resolves [semantic spacing](../../../../docs/ui/gui/layout/spacing.md).
 //
 // ## Parameters
 // - `Value`: Semantic or explicit spacing.

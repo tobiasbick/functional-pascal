@@ -132,8 +132,45 @@ static bool check_box_close(void) {
     return unchanged && inner_closed && outer_closed;
 }
 
+/** Checks all physical and logical text alignments against direct CUI in an RTL viewport. */
+static bool check_text_alignment(void) {
+    enum { WIDTH = 300, HEIGHT = 180 };
+    static unsigned char pixels[2][WIDTH * HEIGHT * 4];
+    for (int pass = 0; pass < 2; ++pass) {
+        cui_sw_renderer *renderer = cui_sw_create();
+        const cui_ctx_desc settings = { .renderer = cui_sw_iface(renderer), .direction = CUI_DIRECTION_RTL };
+        cui_ctx *ui = cui_create(&settings);
+        if (!ui) { cui_sw_destroy(renderer); return false; }
+        cui_set_viewport(ui, WIDTH, HEIGHT, 1);
+        cui_begin_frame(ui, .016f);
+        for (int align = CUI_TEXT_START; align <= CUI_TEXT_END; ++align) {
+            const cui_direction direction = align == CUI_TEXT_CENTER ? CUI_DIRECTION_AUTO : CUI_DIRECTION_INHERIT;
+            if (pass) fpas_cui_display_text(ui, "Layout", 0, direction, align);
+            else {
+                const cui_text_opts options = { .direction = direction, .align = (cui_text_align)align };
+                cui_text_ex(ui, "Layout", &options);
+            }
+        }
+        if (pass) {
+            fpas_cui_formatted_text(ui, "Formatted", CUI_FONT_MEDIUM, 15, 0xffd02010u,
+                                    CUI_DIRECTION_LTR, CUI_TEXT_END);
+        } else {
+            const cui_text_opts options = { .font = CUI_FONT_MEDIUM, .size = 15, .color = CUI_RGBA(0x1020d0ff),
+                .direction = CUI_DIRECTION_LTR, .align = CUI_TEXT_END };
+            cui_text_ex(ui, "Formatted", &options);
+        }
+        cui_end_frame(ui);
+        cui_sw_render(renderer, cui_get_draw_data(ui), pixels[pass], WIDTH, HEIGHT, WIDTH * 4, CUI_SW_RGBA);
+        cui_destroy(ui);
+        cui_sw_destroy(renderer);
+    }
+    const bool matched = memcmp(pixels[0], pixels[1], sizeof pixels[0]) == 0;
+    if (!matched) fprintf(stderr, "FPAS text direction and alignment differ from direct CUI.\n");
+    return matched;
+}
+
 int main(void) {
-    bool valid = check_hover() && check_box_close();
+    bool valid = check_hover() && check_box_close() && check_text_alignment();
     for (int axis = 0; axis < 3; ++axis)
         for (int rtl = 0; rtl < 2; ++rtl)
             for (int dark = 0; dark < 2; ++dark)

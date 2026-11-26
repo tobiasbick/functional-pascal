@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/ui/widgets.md#host-preflight)
+// [Documentation](../../../../../docs/ui/layout/sizing.md)
 
 unit Fpas.Ui.Internal.Validation.Core.LayoutRules;
 

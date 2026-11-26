@@ -7,7 +7,7 @@ namespace Fpas.Ui.Gui.Cui.Widgets.Collections;
 /// <param name="Title">Literal heading.</param>
 /// <param name="Kind">Encoded extent kind.</param>
 /// <param name="Width">Extent value or grow weight.</param>
-/// <param name="Align">Native text alignment.</param>
+/// <param name="Align">Native text alignment: start, center, right, left, or end, in that order.</param>
 /// <param name="Sortable">Whether the header can be sorted.</param>
 public readonly record struct CuiTableColumn(string Title, int Kind, float Width, int Align, bool Sortable);
 

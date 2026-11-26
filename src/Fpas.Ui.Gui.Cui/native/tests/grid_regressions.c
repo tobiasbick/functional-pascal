@@ -130,10 +130,55 @@ static bool tree_lazy_load(void) {
     return valid;
 }
 
+/** Compares logical Start and End with physical Left in the RTL grid adapter. */
+static bool grid_alignment(void) {
+    enum { WIDTH = 440, HEIGHT = 200 };
+    static unsigned char pixels[2][WIDTH * HEIGHT * 4];
+    const char *titles[] = { "Start", "Left", "End" };
+    const float widths[] = { 130, 130, 130 };
+    const int flags[] = { CUI_TEXT_START, CUI_TEXT_LEFT, CUI_TEXT_END };
+    for (int pass = 0; pass < 2; ++pass) {
+        cui_sw_renderer *renderer = cui_sw_create();
+        const cui_ctx_desc settings = { .renderer = cui_sw_iface(renderer), .direction = CUI_DIRECTION_RTL };
+        cui_ctx *ui = cui_create(&settings);
+        if (!ui) { cui_sw_destroy(renderer); return false; }
+        cui_set_viewport(ui, WIDTH, HEIGHT, 1);
+        cui_begin_frame(ui, .016f);
+        int range[3], headers[3];
+        if (pass) {
+            int state[] = { -2, 0, -1, -1 };
+            void *grid = fpas_cui_data_grid_begin(ui, "grid", titles, widths, flags, 3, 1,
+                NULL, state, 2, 160, 40, 1, range, headers);
+            fpas_cui_data_grid_row(ui, 0, "row");
+            for (int i = 0; i < 3; ++i) fpas_cui_data_grid_cell(ui, "Value");
+            fpas_cui_data_grid_end(ui, grid, NULL, state);
+        } else {
+            const cui_grid_column columns[] = {
+                { .title = titles[0], .width = widths[0], .align = CUI_TEXT_START },
+                { .title = titles[1], .width = widths[1], .align = CUI_TEXT_LEFT },
+                { .title = titles[2], .width = widths[2], .align = CUI_TEXT_END }
+            };
+            cui_data_grid_begin(ui, "grid", columns, 3, 1, &range[0], &range[1],
+                .height = CUI_PX(160), .row_height = 40);
+            cui_data_grid_row(ui, 0);
+            for (int i = 0; i < 3; ++i) cui_data_grid_cell_text(ui, "Value");
+            cui_data_grid_end(ui);
+        }
+        cui_end_frame(ui);
+        cui_sw_render(renderer, cui_get_draw_data(ui), pixels[pass], WIDTH, HEIGHT, WIDTH * 4, CUI_SW_RGBA);
+        cui_destroy(ui);
+        cui_sw_destroy(renderer);
+    }
+    const bool matched = memcmp(pixels[0], pixels[1], sizeof pixels[0]) == 0;
+    if (!matched) fprintf(stderr, "FPAS grid column alignment differs from direct CUI.\n");
+    return matched;
+}
+
 int main(int argc, char **argv) {
     const bool adapter = argc < 2 || strcmp(argv[1], "upstream") != 0;
     const bool shrink = grid_shrink(adapter);
     const bool filter = filter_add(adapter);
     const bool tree = !adapter || tree_lazy_load();
-    return shrink && filter && tree ? 0 : 1;
+    const bool alignment = !adapter || grid_alignment();
+    return shrink && filter && tree && alignment ? 0 : 1;
 }

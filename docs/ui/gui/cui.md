@@ -69,9 +69,9 @@ deferred painting. See [editor commands](host.md#code-editor-commands).
 
 The host starts each view with `BeginHostView` and supplies shared sizing and
 layout constraints. Text, headings, separators, styles and scroll regions use
-native CUI nodes. Dockspace, dock-panel, split-view, menu-bar and status-bar
+native CUI nodes. Dockspace, dock-panel, menu-bar and status-bar
 scopes require callers to balance native begin and end operations within the
-same frame. Managed layout-stack checks cover the other managed layout scopes.
+same frame. Managed layout-stack checks cover split views and other managed layout scopes.
 
 `TrackLastControl` and composite tracking register nodes for geometry, focus
 and hover. `ScrollMetrics` reads the vertical offset and range of a tracked

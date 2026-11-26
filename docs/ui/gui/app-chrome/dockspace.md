@@ -42,9 +42,22 @@ end unit;
 | Option | Default or requirement |
 | --- | --- |
 | `Panels` | Include open, closed and inactive panels. Keys are stable and at most 63 UTF-8 bytes. |
-| `Width / Height / MinimumWidth / MinimumHeight` | Fill / Fill / 0 / 0. Zero uses the native minimum. |
+| `Width / Height` | Both Fill. |
+| `MinimumWidth / MinimumHeight` | Both 0. Zero uses the native minimum of 120 logical units for width and 96 for height. |
 | `InitialLayout / Load / KnownLayout` | Empty / null / empty. Use Load with a new revision for each explicit restore. |
 | `Shortcuts` | false. Enable window-wide shortcuts for the active group of tabs. |
+
+## Pane layout
+
+CUI uses the initial layout when the workspace first appears. At narrow
+widths, CUI puts the open panels in one tab strip. A compact workspace shows
+only the active panel and disables tab docking. As the workspace widens,
+CUI shows its split panes again.
+
+Keep panel keys stable when you change titles or move panels. Save the layout
+string to restore pane positions, sizes, and tabs. To restore an existing
+workspace, supply `Load` with a new `Revision`. CUI keeps the current layout
+if the restore text is invalid.
 
 ## Interaction
 
@@ -58,6 +71,7 @@ recent accepted value as `KnownLayout` to avoid repeat notifications.
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Desktop/Dockspaces.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Desktop/Workspace.fpas)
 - [Split view](split-view.md)
+- [Responsive layout](../../layout/responsive.md)
 - [Chapter index](README.md)
 
 ## Source files

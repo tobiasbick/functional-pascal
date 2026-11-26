@@ -50,8 +50,11 @@ void fpas_cui_group_style(cui_ctx *ui, int node, uint32_t background, int backgr
     n->opacity = opacity;
 }
 
-void fpas_cui_formatted_text(cui_ctx *ui, const char *text, int font, float size, uint32_t rgba) {
-    const cui_text_opts options = { .font = (cui_font)font, .size = size, .color = fpas_chart_color(-1, rgba) };
+/** Draws text with explicit typography, reading direction and alignment. */
+void fpas_cui_formatted_text(cui_ctx *ui, const char *text, int font, float size, uint32_t rgba,
+                             int direction, int alignment) {
+    const cui_text_opts options = { .font = (cui_font)font, .size = size, .color = fpas_chart_color(-1, rgba),
+        .direction = (cui_direction)direction, .align = (cui_text_align)alignment };
     cui_text_ex(ui, text, &options);
 }
 
@@ -176,6 +179,23 @@ void fpas_cui_scroll_state(cui_ctx *ui, const char *id, int mode, float offset, 
         state->ty = mode == 1 ? *maximum : cui__clampf(offset, 0, *maximum);
         state->y = state->ty;
     }
+}
+
+/** Resolves a reveal only when the tracked widget belongs to the named viewport. */
+int fpas_cui_scroll_reveal_child(cui_ctx *ui, int viewport, int child) {
+    if (viewport <= 0 || viewport >= ui->node_count || child <= 0 || child >= ui->node_count) return 0;
+    const cui_id row = ui->nodes[child].id;
+    if (!row) return 0;
+    int parent = ui->nodes[child].parent;
+    while (parent >= 0 && parent != viewport) {
+        if (ui->nodes[parent].flags & (CUI_NF_SCROLL_X | CUI_NF_SCROLL_Y)) return 0;
+        parent = ui->nodes[parent].parent;
+    }
+    if (parent != viewport) return 0;
+    const cui_id scroll = ui->nodes[viewport].id;
+    if (!cui__has_prev_rect(ui, row) || !cui__has_prev_rect(ui, scroll)) return -1;
+    cui__scroll_reveal(ui, scroll, row);
+    return 1;
 }
 
 unsigned int fpas_cui_modal_key(cui_ctx *ui) { return ui->current_layer; }

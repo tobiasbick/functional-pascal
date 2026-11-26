@@ -8,5 +8,5 @@ internal static partial class NativeMethods
 {
     [LibraryImport(Library, EntryPoint = "fpas_cui_display_text", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static unsafe partial void DisplayText(nint context, string text, int role);
+    internal static partial void DisplayText(nint context, string text, int role, int direction, int alignment);
 }

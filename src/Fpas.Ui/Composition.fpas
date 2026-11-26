@@ -70,6 +70,7 @@ uses Fpas.Ui.Widgets.Developer.JsonViews as JsonViews;
 uses Fpas.Ui.Widgets.Developer.Terminal as T;
 uses Fpas.Ui.Widgets.Display.DotDisplays as DotDisplays;
 uses Fpas.Ui.Widgets.Display.Readouts as Readouts;
+uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Feedback.Badges as Badges;
 uses Fpas.Ui.Widgets.Feedback.Counters as Counters;
 uses Fpas.Ui.Widgets.Feedback.Loaders as Loaders;
@@ -649,8 +650,9 @@ begin
       const Text: string,
       const Font: Motion.Font,
       const FontSize: float,
-      const Tint: MediaColor.Color
-    ): (E.Element of TParent).FormattedText(Text, Font, FontSize, Tint);
+      const Tint: MediaColor.Color,
+      const Settings: Texts.Options
+    ): (E.Element of TParent).FormattedText(Text, Font, FontSize, Tint, Settings);
     when E.Element.Problems(_, _, _, _), E.Element.Pipeline(
       _,
       _,
@@ -818,7 +820,7 @@ begin
       _,
       _
     ): EditingTools.Map of (TChild, TParent)(Value, Messages);
-    when E.Element.NativeText(_, _), E.Element.Icon(
+    when E.Element.NativeText(_, _, _), E.Element.Icon(
       _,
       _,
       _,

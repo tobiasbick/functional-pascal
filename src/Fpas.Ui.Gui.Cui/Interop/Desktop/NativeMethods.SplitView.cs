@@ -12,9 +12,9 @@ internal static partial class NativeMethods
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_split_view_next", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void SplitViewNext(nint ui, int enabled);
+    internal static partial int SplitViewNext(nint ui, int enabled);
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_split_view_end", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void SplitViewEnd(nint ui);
+    internal static partial int SplitViewEnd(nint ui);
 }

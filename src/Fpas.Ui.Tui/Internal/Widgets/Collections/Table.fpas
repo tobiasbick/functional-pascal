@@ -141,7 +141,7 @@ public procedure Arrange of TMsg(
     end if;
     const Space: int := Sys.Math.Max(0, Box.Width - Glyphs.Measure(Text));
     const Indent: int := case Alignment of
-      when T.Alignment.Right: Space;
+      when T.Alignment.Right, T.Alignment.End: Space;
       when T.Alignment.Center: Space div 2;
       else 0;
     end case;

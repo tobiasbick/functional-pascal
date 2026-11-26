@@ -168,6 +168,20 @@ public sealed partial class CuiWindow
         if (mode >= 0) scrollRequests[id] = (mode, offset);
     }
 
+    /// <summary>Adjusts a built viewport's scroll target by the least movement to show a child.</summary>
+    /// <param name="id">Stable identity passed to <see cref="BeginViewport(string, bool, bool)"/>.</param>
+    /// <param name="controlId">Host identity of the tracked descendant in the current frame.</param>
+    /// <returns>Whether both viewport and child had a previous layout to evaluate.</returns>
+    public bool TryRevealViewportChild(string id, string controlId)
+    {
+        CheckFrame();
+        if (!scrollNodes.TryGetValue(id, out int viewport) || !trackedNodes.TryGetValue(controlId, out int child))
+            return false;
+        int result = NativeMethods.ScrollRevealChild(context, viewport, child);
+        if (result < 0) RequestFrame();
+        return result > 0;
+    }
+
     /// <summary>Reads the grid's scroll target or requests an offset before building its rows.</summary>
     /// <param name="id">Stable grid identity.</param>
     /// <param name="offset">A requested logical offset, or null to read only.</param>

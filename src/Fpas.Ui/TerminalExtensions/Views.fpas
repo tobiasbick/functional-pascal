@@ -1,4 +1,4 @@
-// [Documentation](../../../docs/ui/tui/host.md#terminal-extensions)
+// [Documentation](../../../docs/ui/tui/layout/viewport.md)
 
 unit Fpas.Ui.TerminalExtensions.Views;
 

@@ -25,6 +25,8 @@ Set `Placement` to open at a saved place, maximized if it was; see
 `Continuous` requests frames while idle, for example for video.
 `NoVsync` lets OpenGL present without waiting for vertical sync.
 `Hidden` creates the window without showing it, for example for off-screen tests.
+`ReadingDirection` supplies the direction inherited by the window's widgets.
+See [reading direction](layout/reading-direction.md) for container overrides.
 All three default to false.
 
 On Windows, CUI temporarily suspends OpenGL vertical sync while the desktop
@@ -309,11 +311,9 @@ Transitions, viewport size changes and observed system appearance changes
 rebuild the view. Ordinary repaints reuse its prepared tree and never restart
 effects. Typed caches advance after successful presentation. The size classes
 and `LogicalWidth` and `LogicalHeight` passed to `View` come from the CUI
-frame's drawable area, including fractional logical points. `Snapshot().Size`
-reports the same dimensions for the last presented frame. Width classes are
-Compact below 600, Regular below 1200 and Expanded from 1200. Height uses
-thresholds of 400 and 900 logical points. Include relevant theme dependencies
-in cached subviews.
+frame's drawable area. `Snapshot().Size` reports the dimensions of the last
+presented frame. Include relevant theme dependencies in cached subviews.
+[Responsive views](../layout/responsive.md) lists the size class thresholds.
 
 During the native Windows resize loop, CUI lays out the cached view at the
 new size. The regular session step rebuilds `View` and publishes its snapshot.

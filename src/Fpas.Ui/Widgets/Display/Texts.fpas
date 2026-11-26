@@ -3,6 +3,7 @@
 unit Fpas.Ui.Widgets.Display.Texts;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Layout as L;
 
 // CUI's built-in text roles.
 public type Appearance = enum: byte
@@ -26,17 +27,44 @@ public type Appearance = enum: byte
   Code;
 end enum;
 
+// Horizontal alignment within the text's layout bounds.
+public type Alignment = enum: byte
+  // Align to the leading edge in the resolved reading direction.
+  Start;
+  // Center the text.
+  Center;
+  // Align to the physical right edge.
+  Right;
+  // Align to the physical left edge.
+  Left;
+  // Align to the trailing edge in the resolved reading direction.
+  End;
+end enum;
+
+// Layout options for native graphical text.
+public type Options = record
+  // Direction inherited from the container, overridden explicitly or resolved from the text.
+  public ReadingDirection: L.Direction := L.Direction.Inherit;
+  // Text alignment. Start and End follow the resolved reading direction.
+  public Align: Alignment := Alignment.Start;
+end record;
+
 // Creates a native CUI text element.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Text`: Literal text.
 // - `Role`: Native text role.
+// - `Settings`: Direction and alignment within the available bounds.
 // ## Returns
 // A graphical element.
-public function Text of TMsg(Text: string; Role: Appearance): E.Element of TMsg;
+public function Text of TMsg(
+  Text: string;
+  Role: Appearance;
+  Settings: Options? := null
+): E.Element of TMsg;
 begin
-  return (E.Element of TMsg).NativeText(Text, Role);
+  return (E.Element of TMsg).NativeText(Text, Role, Settings ?? new Options());
 end function;
 
 end unit;

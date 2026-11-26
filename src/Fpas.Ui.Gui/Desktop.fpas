@@ -45,6 +45,8 @@ public type Options = record
   public NoVsync: bool := false;
   // Whether to create the window without showing it, for example during testing.
   public Hidden: bool := false;
+  // Initial direction inherited by the window's layout and text.
+  public ReadingDirection: L.Direction := L.Direction.Inherit;
 end record;
 
 function CreateWindow(Settings: Options): Cui.CuiWindow;
@@ -61,7 +63,8 @@ begin
     Settings.FixedSize,
     Settings.AppId,
     Settings.NoVsync,
-    Settings.Hidden
+    Settings.Hidden,
+    cast Settings.ReadingDirection as int
   );
 end function;
 

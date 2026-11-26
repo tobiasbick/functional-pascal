@@ -15,7 +15,7 @@ public type Column = record
   // Initial width in logical points. Zero uses the native default.
   public Width: float := 0.0F;
   // Horizontal alignment.
-  public Align: T.Alignment := T.Alignment.Left;
+  public Align: T.Alignment := T.Alignment.Start;
   // Whether the header proposes sorting.
   public Sortable: bool := false;
   // Whether the width is fixed.

@@ -39,30 +39,39 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
+| `Desktop.Options.ReadingDirection` | Initial direction of the window. `Inherit` defaults to left to right. |
 | `ReadingDirection` | Inherit. `LeftToRight`, `RightToLeft` and `Auto` require the GUI host. |
-| `PaddingStart / PaddingEnd` | null / null. A value overrides the base padding for that logical edge. |
-| `Gap / Spacer` | Gap is a fixed child on the main axis. A spacer grows horizontally in a row or vertically in a column. |
+| `PaddingStart / PaddingEnd` | `null`. The resolved direction maps each logical edge to the physical left or right edge. |
 
 ## Usage
 
-Use start and end edges when the same row should mirror with the reading
-direction. The element order and labels stay the same. Change
-`Flow.Gap` to set the spacing between every pair of consecutive children.
-Use `Elements.Gap` for a fixed child with zero extent across the layout axis.
-`Measure.Points` accepts fractional distances. A gap of zero still participates
-in `Flow.Gap` spacing as a child.
-Each spacer gets an equal share of the remaining space when a row or column has
-several spacers and no other growing children. Use `Elements.Size` to set an
-explicit growth weight or bounds.
+Use start and end edges to mirror a row with the reading direction.
+The element order in the view and the labels stay the same.
 `Auto` uses CUI's first strong directional character in descendant text.
 CUI skips subtrees with an explicit direction. If it finds only neutral
 characters, the container inherits its parent's direction.
 
+Set `Desktop.Options.ReadingDirection` to configure the whole window.
+`Layout.Flow.ReadingDirection` overrides a subtree and `Texts.Options` can
+override one text element. Text Start and End follow the resolved direction.
+Left and Right select physical edges. Native floating layers inherit from
+their opening container, and native horizontal scrolling follows the area’s
+direction. Canvas coordinates stay physical. CUI’s filled text fields still
+edit left to right.
+
 ## See also
 
-- [Widget API and types](../../../../src/Fpas.Ui/Layout.fpas)
+- [Window options](../host.md#application-lifecycle)
+- [Native text options](../text-and-display/text.md)
+- [Spacing and padding](spacing.md)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Layout/View.fpas)
-- [Gap and Spacer API](../../../../src/Fpas.Ui/Elements.fpas)
 - [Layered stack](stack.md)
 - [Row](row.md)
-- [Chapter index](README.md)
+- [GUI layout](README.md)
+
+## Source files
+
+- [Layout.fpas](../../../../src/Fpas.Ui/Layout.fpas)
+- [Desktop.fpas](../../../../src/Fpas.Ui.Gui/Desktop.fpas)
+- [Texts.fpas](../../../../src/Fpas.Ui/Widgets/Display/Texts.fpas)
+- [Layout direction conversion](../../../../src/Fpas.Ui.Gui/Internal/Layout/Sizing.fpas)

@@ -1,4 +1,4 @@
-// [Documentation](../../../../../docs/ui/gui/text-and-display/formatted-text.md)
+// [Documentation](../../../../../docs/ui/gui/text-and-display/text.md)
 
 unit Fpas.Ui.Gui.Internal.Widgets.Display.NativeText;
 
@@ -12,9 +12,20 @@ uses Fpas.Ui.Widgets.Display.Texts as D;
 // - `Frame`: Current GUI frame.
 // - `Text`: Literal text.
 // - `Role`: Native text role.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Text: string; Role: D.Appearance);
+// - `Settings`: Reading direction and alignment of the text node.
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Text: string;
+  Role: D.Appearance;
+  Settings: D.Options
+);
 begin
-  Frame.Window.DisplayText(Text, cast Role as int);
+  Frame.Window.DisplayText(
+    Text,
+    cast Role as int,
+    cast Settings.ReadingDirection as int,
+    cast Settings.Align as int
+  );
   Frame.Labels.Add(Text);
 end procedure;
 

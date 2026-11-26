@@ -1,7 +1,8 @@
 # Panels and weighted layout
 
-Compose a panel from a border, a semantic surface role and a size rule. The
-gallery caps the sidebar at 24 columns and gives the preview the remaining space.
+Compose a panel from a border, a semantic surface role and a size rule.
+The gallery caps the sidebar at 24 columns and gives the remaining space
+to the preview.
 
 ![Two rounded, differently sized panels with a one-cell gap](../../../../examples/ui/tui/gallery/panels.png)
 
@@ -30,15 +31,32 @@ end function;
 end unit;
 ```
 
-## Interaction
+## Border and inner layout
 
-Place two panels in a row with weights 1 and 2 to split the available width
-proportionally. A fixed sidebar beside a fill panel reserves more width for
-the main content. Use `L.Measure.Cells(1)` for a one-column terminal gap. The
-panel is a container and adds no focus stop.
+`Elements.Border` reserves one cell on each edge. Set its `Title` to write a
+label on the top edge. Set padding on a row or column inside the border to
+add space between the content and the frame. `Elements.Styled` with
+`Styles.Role.Panel` applies the theme's panel colors.
+
+The panel adds no focus stop. Its controls participate in the enclosing
+focus scope.
+
+## Size a panel
+
+Place two fill panels in a row with weights one and two to share the
+available width proportionally. Use a fixed width for a sidebar to give
+the remaining width to a fill panel. Use `Flow.Gap` with
+`Spacing.Fixed(Measure.Cells(1))` for one cell between the panels.
 
 ## See also
 
 - [Layout](README.md)
-- [Shared API](../../widgets.md#layout-and-style)
+- [Rows and columns](rows-and-columns.md)
+- [Measures, extents and size rules](../../layout/sizing.md)
 - [Gallery source](../../../../examples/ui/tui/gallery/main.fpas)
+
+## Source files
+
+- [Elements.fpas](../../../../src/Fpas.Ui/Elements.fpas)
+- [Arrangement.fpas](../../../../src/Fpas.Ui.Tui/Internal/Layout/Arrangement.fpas)
+- [Drawing.fpas](../../../../src/Fpas.Ui.Tui/Internal/Rendering/Drawing.fpas)

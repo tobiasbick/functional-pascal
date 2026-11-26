@@ -1,6 +1,7 @@
 # Grid
 
-Use a grid for equal-width columns that can wrap as the window narrows. The gallery places Activity and Goals in the same row. Available in **GUI**.
+Use a grid for equal-width columns with a fixed or responsive count. The
+gallery places Activity and Goals side by side. Available in **GUI**.
 
 ![Grid in the FPAS gallery](images/grid.png)
 
@@ -34,24 +35,34 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Columns` | Defaults to 1. A positive value sets the fixed count or responsive cap. With a positive minimum width, zero lets CUI fit as many columns as the width and child count allow. Zero with no minimum uses one column. |
-| `MinimumColumnWidth` | 0 keeps the column count fixed. A positive logical width makes the count adapt to the available width. |
-| `Flow` | Optional `Layout.Flow` for spacing, edge insets, direction, clipping, appearance, native scrolling, focus scope and stable identity. Its gap and padding take precedence when supplied. |
+| `Columns` | Defaults to 1. Use a positive count for fixed columns or a responsive cap. Use 0 for a responsive cap equal to the child count. |
+| `MinimumColumnWidth` | Defaults to 0 for fixed columns. Use a positive width in logical units for responsive columns. |
+| `Flow` | `Layout.Flow` supplies common box options. If supplied, `Flow` supplies the gap and padding. |
 | `Gap / Padding` | Both default to None and apply when `Flow` is omitted. |
 
-## Interaction
+## Column and row layout
 
-CUI sizes each row to its tallest cell and places children in the order supplied.
-Use `Elements.Size` to set a width, height or bounds on the grid. The grid
-positions children at cell origins. Set `Align` and `Justify` on a row or
-column inside a cell to arrange its content. The Goals card uses Around to
-distribute the two rings. Overview uses Grid for both its metric tiles and
-its workspace and team cards.
+CUI fits responsive columns into the width inside the grid padding. The count
+includes room for gaps and has a minimum of one. If `Columns` and
+`MinimumColumnWidth` are both zero, CUI uses one column. A single column can
+be narrower than `MinimumColumnWidth`.
+
+CUI places children in order, one row at a time. The tallest child sets the
+row height. `Gap` separates columns and rows. A child with a fixed width keeps
+its width at the cell origin. `ReadingDirection` controls the order of the
+columns on screen.
+
+Use `Elements.Size` to supply the grid's width, height or bounds. Set `Flow.Align`
+to `Default`, `Flow.Justify` to `Start`, and `Flow.Wrap` to `false` on the grid.
+Set alignment and justification on a row or column inside a cell to arrange
+its content.
 
 ## See also
 
 - [Widget API and types](../../../../src/Fpas.Ui/Widgets/Containers/Grids.fpas)
 - [Common box options](../layout/column.md)
+- [Sizing](../../layout/sizing.md)
+- [Responsive layout](../../layout/responsive.md)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Feedback/View.fpas)
 - [Card](card.md)
 - [Overview](../overview/README.md)

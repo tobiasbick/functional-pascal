@@ -4,6 +4,7 @@ unit GuiGallery.Pages.Navigation.Update;
 
 uses Fpas.Ui.Gui.Toasts as Toasts;
 uses Fpas.Ui.Mvu.Application as Mvu;
+
 uses GuiGallery.Pages.Navigation.State as S;
 
 // Applies a message to this feature and describes its effects.

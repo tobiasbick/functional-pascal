@@ -6,6 +6,7 @@ uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Widgets.Developer.Terminals as Terminal;
 uses Fpas.Ui.Widgets.Files.FilePickers as Picker;
 uses Fpas.Ui.Widgets.Navigation.PathBars as Paths;
+
 uses GuiDocCaptures.Rendering.Presented as Presented;
 uses GuiDocCaptures.Rendering.Regions as Regions;
 uses GuiGallery.App.State as Gallery;

@@ -10,6 +10,7 @@ uses Fpas.Ui.Mvu.Application as A;
 uses Fpas.Ui.Mvu.Testing.EffectReplies as Effects;
 uses Fpas.Ui.Widgets.Collections.Tables as Tables;
 uses Fpas.Ui.Widgets.Inputs.Selects as Select;
+
 uses FpasAmp.AppState as WindowState;
 uses FpasAmp.Library.Inventory.Monitoring as Library;
 uses FpasAmp.Library.Metadata.Model as Tracks;

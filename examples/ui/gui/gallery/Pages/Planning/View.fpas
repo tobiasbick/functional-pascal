@@ -8,6 +8,7 @@ uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Planning.Gantts as Timeline;
 uses Fpas.Ui.Widgets.Planning.MonthCalendars as Month;
 uses Fpas.Ui.Widgets.Planning.WeekCalendars as W;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Planning.Board as Board;
 uses GuiGallery.Pages.Planning.State as M;

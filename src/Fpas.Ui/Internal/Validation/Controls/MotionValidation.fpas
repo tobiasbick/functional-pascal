@@ -17,6 +17,7 @@ uses Fpas.Ui.Widgets.Motion.Motion as M;
 uses Fpas.Ui.Widgets.Motion.Spotlights as Spot;
 uses Fpas.Ui.Widgets.Navigation.Docks as D;
 uses Fpas.Ui.Widgets.Navigation.TabBars as T;
+
 uses System as Sys;
 
 procedure Extent(Value: L.Extent; At: string);

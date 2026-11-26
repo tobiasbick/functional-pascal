@@ -15,6 +15,7 @@ uses Fpas.Ui.Widgets.Audio.Waveforms as Waves;
 uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
 uses Fpas.Ui.Widgets.Overlays.Popovers as Popovers;
+
 uses FpasAmp.Library.Metadata.Model as Tracks;
 uses FpasAmp.Ui.Albums.Artwork as Covers;
 uses FpasAmp.Ui.Albums.Music.Browse as Browse;

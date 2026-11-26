@@ -8,6 +8,7 @@ uses Fpas.Ui.Gui.Internal.Core.Parts as P;
 uses Fpas.Ui.Gui.Internal.Core.Values as Enc;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Canvas.FormatBars as D;
+
 uses System.Collections.Generic as Lists;
 
 // Presents CUI's native FormatBar widget.

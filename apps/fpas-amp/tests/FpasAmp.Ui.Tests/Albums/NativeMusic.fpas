@@ -6,6 +6,7 @@ unit FpasAmp.UiTests.NativeMusic;
 uses Fpas.Media.Audio as Audio;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+
 uses FpasAmp.AppState as Storage;
 uses FpasAmp.Library.Inventory.Monitoring as Monitor;
 uses FpasAmp.Library.Metadata.Model as Tracks;

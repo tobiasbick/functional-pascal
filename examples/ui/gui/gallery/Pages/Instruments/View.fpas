@@ -9,6 +9,7 @@ uses Fpas.Ui.Widgets.Charts.DotCharts as D;
 uses Fpas.Ui.Widgets.Charts.EventTracks as T;
 uses Fpas.Ui.Widgets.Display.DotDisplays as Display;
 uses Fpas.Ui.Widgets.Display.Readouts as R;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Instruments.State as S;
 uses GuiGallery.Shared.Sections as G;

@@ -3,6 +3,7 @@
 program FractalExplorer;
 
 uses Fpas.Ui.Tui.Host as App;
+
 uses Fractals.Explorer as X;
 uses Fractals.View as V;
 

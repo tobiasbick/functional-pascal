@@ -4,6 +4,7 @@
 unit FpasAmp.AppState;
 
 uses Fpas.Ui.Gui.Cui as Cui;
+
 uses FpasAmp.Persistence.JsonFields as Fields;
 uses FpasAmp.Persistence.JsonOutput as Output;
 uses FpasAmp.Persistence.PlayerState as Transport;

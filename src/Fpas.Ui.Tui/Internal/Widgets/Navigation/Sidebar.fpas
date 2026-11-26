@@ -7,6 +7,7 @@ uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Tui.Internal.Controls.Activation as A;
 uses Fpas.Ui.Tui.Internal.View.Tree as E;
 uses Fpas.Ui.Widgets.Navigation.Navigation as N;
+
 uses System.Collections.Generic as C;
 
 // Lowers the sidebar into terminal headings and direct actions.

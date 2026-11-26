@@ -13,6 +13,7 @@ uses Fpas.Ui.Widgets.Charts.RadarCharts as Ra;
 uses Fpas.Ui.Widgets.Charts.SplitBars as S;
 uses Fpas.Ui.Widgets.Charts.Treemaps as T;
 uses Fpas.Ui.Widgets.Charts.Waffles as W;
+
 uses System as Sys;
 
 procedure Samples(Values: array of float; Nonnegative: bool; At: string);

@@ -2,10 +2,6 @@
 
 unit DesktopCommandsContract;
 
-uses DesktopCommandMappingContract as Mapping;
-uses DesktopExampleContract as Example;
-uses DesktopFocusContract as Focus;
-uses DesktopSchedulingContract as Scheduling;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Closing as Closing;
@@ -18,6 +14,11 @@ uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.Widgets.Canvas.Canvases as Canvases;
 uses Fpas.Ui.Widgets.Canvas.Painting as Painting;
+
+uses DesktopCommandMappingContract as Mapping;
+uses DesktopExampleContract as Example;
+uses DesktopFocusContract as Focus;
+uses DesktopSchedulingContract as Scheduling;
 uses System as Sys;
 uses System.Threading as Threads;
 uses System.Threading.Tasks as Tasks;

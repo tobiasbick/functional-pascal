@@ -7,6 +7,7 @@ uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.Widgets.Collections.FilterBars as Filters;
 uses Fpas.Ui.Widgets.Collections.Tables as Tables;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+
 uses Gallery.Shared.AboutField as AboutSample;
 uses Gallery.Shared.LanguagesExample as LanguageSample;
 uses Gallery.Shared.PaginationExample as Pagination;

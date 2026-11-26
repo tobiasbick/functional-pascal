@@ -4,6 +4,7 @@ unit Fractals.Rendering;
 
 uses Fpas.Ui.TerminalExtensions.CellGrids as Grids;
 uses Fpas.Ui.Widgets.Developer.Terminal as T;
+
 uses Fractals.Camera as C;
 uses System as Sys;
 uses System.Collections.Generic as Lists;

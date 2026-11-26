@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Selection.State;
 
 uses Fpas.Ui.Widgets.Inputs.RangeSliders as R;
+
 uses Gallery.Shared.SaveFrequency as Frequency;
 uses GuiGallery.Shared.State as Demo;
 

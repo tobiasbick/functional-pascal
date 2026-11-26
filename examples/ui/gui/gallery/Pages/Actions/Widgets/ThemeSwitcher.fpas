@@ -7,6 +7,7 @@ uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
 uses Fpas.Ui.Widgets.Theming.ThemeToggles as Toggles;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+
 uses GuiGallery.Pages.Actions.State as State;
 uses GuiGallery.Shared.Sections as G;
 uses GuiGallery.Shared.State as Demo;

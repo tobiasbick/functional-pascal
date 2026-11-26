@@ -2,7 +2,6 @@
 
 unit DesktopCommands.View;
 
-uses DesktopCommands.State as S;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
@@ -11,6 +10,8 @@ uses Fpas.Ui.Widgets.Feedback.ProgressBars as Progress;
 uses Fpas.Ui.Widgets.Inputs.Selects as Selects;
 uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+
+uses DesktopCommands.State as S;
 uses System as Sys;
 uses System.Collections.Generic as C;
 

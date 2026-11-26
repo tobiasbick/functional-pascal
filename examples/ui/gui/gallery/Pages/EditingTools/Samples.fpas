@@ -7,6 +7,7 @@ uses Fpas.Ui.Widgets.Editors.CurveEditors as C;
 uses Fpas.Ui.Widgets.Editors.GradientEditors as G;
 uses Fpas.Ui.Widgets.Editors.PropertyInspectors as I;
 uses Fpas.Ui.Widgets.Editors.TimelineEditors as T;
+
 uses System as Sys;
 
 // The original crate material and transform properties.

@@ -4,6 +4,7 @@ unit DesktopCommands.Preferences;
 
 uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+
 uses System as Sys;
 uses System.IO as IO;
 uses System.Text.Json as Json;

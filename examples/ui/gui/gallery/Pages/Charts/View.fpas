@@ -14,6 +14,7 @@ uses Fpas.Ui.Widgets.Charts.Sparklines as Sparklines;
 uses Fpas.Ui.Widgets.Containers.Cards as Cards;
 uses Fpas.Ui.Widgets.Containers.Grids as Grids;
 uses Fpas.Ui.Widgets.Inputs.Checkboxes as Checks;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Charts.State as State;
 uses GuiGallery.Shared.Sections as G;

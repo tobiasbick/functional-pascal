@@ -6,6 +6,7 @@ uses Fpas.Ui.Gui.Cui.Widgets.Inputs as CuiInputs;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Input.Editor as Editor;
 uses Fpas.Ui.Widgets.Inputs.SearchFields as F;
+
 uses System as Sys;
 
 // Draws CUI's native search field with the model's current value.

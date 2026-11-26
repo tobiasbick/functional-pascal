@@ -4,6 +4,7 @@ unit Fpas.Ui.Widgets.Containers.ExpandableTexts;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Graphics as G;
+
 uses System as Sys;
 
 // Native text-clamping options.

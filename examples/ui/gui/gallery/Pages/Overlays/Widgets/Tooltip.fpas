@@ -6,6 +6,7 @@ uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
 uses Fpas.Ui.Widgets.Overlays.Tooltips as Tips;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Overlays.State as State;
 uses GuiGallery.Shared.Sections as G;

@@ -2,10 +2,11 @@
 
 program EditorCommandsExample;
 
+uses Fpas.Ui.Gui.Desktop as Gui;
+
 uses EditorCommands.State as S;
 uses EditorCommands.Update as Update;
 uses EditorCommands.View as View;
-uses Fpas.Ui.Gui.Desktop as Gui;
 uses System as Sys;
 
 begin

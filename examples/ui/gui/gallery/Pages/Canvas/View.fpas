@@ -18,6 +18,7 @@ uses Fpas.Ui.Widgets.Editors.NodeEditors as N;
 uses Fpas.Ui.Widgets.Inputs.Checkboxes as Check;
 uses Fpas.Ui.Widgets.Motion.Motion as M;
 uses Fpas.Ui.Widgets.Theming.Themes as Theme;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Canvas.Picture as Picture;
 uses GuiGallery.Pages.Canvas.SampleBounds as SampleBounds;

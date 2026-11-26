@@ -6,6 +6,7 @@ unit FpasAmp.Ui.Albums.Toolbar.Sorting;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
+
 uses FpasAmp.Ui.Albums.Toolbar.Model as M;
 uses System as Sys;
 uses System.Collections.Generic as C;

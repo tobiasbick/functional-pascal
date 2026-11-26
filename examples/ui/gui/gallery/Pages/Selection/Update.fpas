@@ -4,6 +4,7 @@ unit GuiGallery.Pages.Selection.Update;
 
 uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.Widgets.Inputs.RangeSliders as R;
+
 uses GuiGallery.Pages.Selection.State as S;
 
 // Applies a message to this feature and describes its effects.

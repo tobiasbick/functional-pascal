@@ -2,9 +2,6 @@
 
 program PublishedGallery;
 
-uses DesktopCommandsContract as DesktopCommandsContract;
-uses DrawingResourcesContract as DrawingResourcesContract;
-uses EditorCommandsContract as EditorCommandsContract;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Desktop as GuiHost;
@@ -12,6 +9,10 @@ uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
 uses Fpas.Ui.Mvu.Application as App;
 uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+
+uses DesktopCommandsContract as DesktopCommandsContract;
+uses DrawingResourcesContract as DrawingResourcesContract;
+uses EditorCommandsContract as EditorCommandsContract;
 uses GalleryActionWidgetsContract as ActionWidgetsContract;
 uses GalleryActionsContract as ActionsContract;
 uses GalleryActionsPickersContract as ActionsPickersContract;

@@ -6,6 +6,7 @@ uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Cui.Resources as Resources;
 uses Fpas.Ui.Gui.Fonts as Fonts;
+
 uses System.Collections.Generic as Generic;
 
 // Applies one resource operation on the GUI owner thread.

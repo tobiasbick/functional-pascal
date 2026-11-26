@@ -7,6 +7,7 @@ uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Feedback.Alerts as A;
 uses Fpas.Ui.Widgets.Feedback.ProgressBars as P;
 uses Fpas.Ui.Widgets.Planning.TimelineItems as Timeline;
+
 uses System as Sys;
 
 // Validates native alert options.

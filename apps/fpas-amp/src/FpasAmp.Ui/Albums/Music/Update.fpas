@@ -7,6 +7,7 @@ uses Fpas.Media.Images as Imaging;
 uses Fpas.Ui.Gui.Desktop as Desktop;
 uses Fpas.Ui.Mvu.Application as A;
 uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+
 uses FpasAmp.Library.Metadata.Model as Tracks;
 uses FpasAmp.Library.Metadata.Monitoring as Metadata;
 uses FpasAmp.Ui.Albums.Artwork as Artwork;

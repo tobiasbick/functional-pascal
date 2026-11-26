@@ -6,6 +6,7 @@ uses Fpas.Ui.Internal.Validation.Core.Checks as Rules;
 uses Fpas.Ui.Widgets.Inputs.HistogramSliders as Histograms;
 uses Fpas.Ui.Widgets.Inputs.RulerSliders as Rulers;
 uses Fpas.Ui.Widgets.Inputs.Sliders as S;
+
 uses System as Sys;
 
 // Checks finite ordered bounds and endpoints before calling the native slider.

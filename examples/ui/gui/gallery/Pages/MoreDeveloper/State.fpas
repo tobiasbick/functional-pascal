@@ -12,6 +12,7 @@ uses Fpas.Ui.Widgets.Developer.RegexTesters as R;
 uses Fpas.Ui.Widgets.Developer.RequestBars as H;
 uses Fpas.Ui.Widgets.Developer.StackTraces as S;
 uses Fpas.Ui.Widgets.Developer.TestExplorers as T;
+
 uses GuiGallery.Pages.MoreDeveloper.Samples as Samples;
 
 // State of the More developer tools examples.

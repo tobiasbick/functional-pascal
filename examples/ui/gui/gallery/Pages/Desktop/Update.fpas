@@ -9,6 +9,7 @@ uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.Widgets.Desktop.DocumentTabs as D;
 uses Fpas.Ui.Widgets.Desktop.Toolbars as T;
 uses Fpas.Ui.Widgets.Editors.PropertyInspectors as P;
+
 uses GuiGallery.Pages.Desktop.HostActions as HostActions;
 uses GuiGallery.Pages.Desktop.State as S;
 uses System as Sys;

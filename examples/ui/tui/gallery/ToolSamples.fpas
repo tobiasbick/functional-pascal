@@ -8,6 +8,7 @@ uses Fpas.Ui.Styles as Style;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
 uses Fpas.Ui.Widgets.Desktop.StatusBars as Status;
 uses Fpas.Ui.Widgets.Developer.LogConsoles as Log;
+
 uses Gallery.Shared.BuildLog as BuildLog;
 uses Gallery.Shared.SourceTree as SourceTree;
 uses Gallery.Shared.Strings as Strings;

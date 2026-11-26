@@ -10,6 +10,7 @@ uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.Mvu.Session as Runtime;
 uses Fpas.Ui.Mvu.Testing.EffectReplies as Replies;
+
 uses FpasAmp.Library.Inventory.Monitoring as Monitor;
 uses FpasAmp.Library.Metadata.Fingerprints.Calculator as Measurement;
 uses FpasAmp.Library.Metadata.Model as Tracks;

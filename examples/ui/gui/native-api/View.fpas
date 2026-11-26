@@ -9,6 +9,7 @@ uses Fpas.Ui.Widgets.Canvas.Canvases as Canvas;
 uses Fpas.Ui.Widgets.Charts.DotCharts as Dots;
 uses Fpas.Ui.Widgets.Charts.EventTracks as Events;
 uses Fpas.Ui.Widgets.Developer.TraceViewers as Trace;
+
 uses NativeApi.State as S;
 uses System as Sys;
 uses System.Globalization as Culture;

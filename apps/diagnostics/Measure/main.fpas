@@ -2,10 +2,11 @@
 
 async program DiagnosticsMeasure;
 
-uses Diagnostics.MeasureOptions as Arguments;
-uses Diagnostics.Samples as Samples;
 uses Fpas.Execution.Effects as Fx;
 uses Fpas.Processes.Workflows.Capture as Capture;
+
+uses Diagnostics.MeasureOptions as Arguments;
+uses Diagnostics.Samples as Samples;
 uses System as Sys;
 uses System.Collections.Generic as C;
 uses System.Diagnostics as Diag;

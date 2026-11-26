@@ -11,6 +11,7 @@ uses Fpas.Ui.Widgets.Charts.BarLists as Bars;
 uses Fpas.Ui.Widgets.Charts.Charts as C;
 uses Fpas.Ui.Widgets.Charts.Sankeys as Sk;
 uses Fpas.Ui.Widgets.Containers.Cards as Cards;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.MoreCharts.Data as Data;
 uses GuiGallery.Pages.MoreCharts.Layout as Layout;

@@ -2,8 +2,9 @@
 
 unit FpasAmp.Library.Tests.TagEditing;
 
-uses ATL as Atl;
 uses Fpas.Media.Tags.AudioFiles as Media;
+
+uses ATL as Atl;
 uses FpasAmp.Library.Inventory.Monitoring as Monitor;
 uses FpasAmp.Library.Metadata.Model as Tracks;
 uses FpasAmp.Library.Metadata.Monitoring as Metadata;

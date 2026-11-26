@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Files.Folders;
 
 uses Fpas.Ui.Widgets.Files.FileListings as Listings;
+
 uses Gallery.Shared.FilePickerExample as Sample;
 uses System as Sys;
 uses System.Collections.Generic as Lists;

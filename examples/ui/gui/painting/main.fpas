@@ -3,6 +3,7 @@
 program NativePaintingExample;
 
 uses Fpas.Ui.Gui.Desktop as Gui;
+
 uses NativePainting.State as S;
 uses NativePainting.Update as Update;
 uses NativePainting.View as View;

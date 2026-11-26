@@ -9,6 +9,7 @@ uses Fpas.Ui.Mvu.Application as App;
 uses Fpas.Ui.Mvu.Testing.EffectReplies as Replies;
 uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+
 uses GalleryHostAssertions as A;
 uses GuiGallery.App.State as State;
 uses GuiGallery.App.Update as GalleryUpdate;

@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Canvas.SampleBounds;
 
 uses Fpas.Ui.Widgets.Canvas.CanvasControls as Controls;
+
 uses GuiGallery.Pages.Canvas.State as State;
 uses System as Sys;
 

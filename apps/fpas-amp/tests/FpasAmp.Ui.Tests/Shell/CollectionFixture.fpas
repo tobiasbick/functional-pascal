@@ -3,8 +3,9 @@
 // Shared native-window and indexed media fixture for library browsing tests.
 unit FpasAmp.UiTests.CollectionFixture;
 
-uses ATL as Tags;
 uses Fpas.Ui.Gui.Application as Gui;
+
+uses ATL as Tags;
 uses FpasAmp.Library.Tests.AlbumSupport as Art;
 uses FpasAmp.Ui.App.Model as App;
 uses FpasAmp.Ui.Navigation.Model as Nav;

@@ -6,6 +6,7 @@ uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Widgets.Navigation.Tabs as T;
+
 uses System.Collections.Generic as Lists;
 
 // Presents the native tab strip and forwards changed selection.

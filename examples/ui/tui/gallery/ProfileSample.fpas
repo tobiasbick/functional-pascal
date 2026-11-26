@@ -10,6 +10,7 @@ uses Fpas.Ui.Widgets.Actions.Buttons as B;
 uses Fpas.Ui.Widgets.Inputs.TextFields as Fields;
 uses Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs;
 uses Fpas.Ui.Widgets.Overlays.Sheets as Sheets;
+
 uses Gallery.Shared.Profile as Demo;
 uses Gallery.Shared.Strings as Strings;
 uses Gallery.Shared.SwitchExamples as Switches;

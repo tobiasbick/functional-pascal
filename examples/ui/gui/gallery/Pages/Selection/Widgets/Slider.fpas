@@ -4,6 +4,7 @@ unit GuiGallery.Pages.Selection.Widgets.Slider;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Widgets.Inputs.Sliders as S;
+
 uses GuiGallery.Pages.Selection.State as State;
 uses GuiGallery.Shared.State as Demo;
 

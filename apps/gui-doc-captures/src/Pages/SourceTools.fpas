@@ -3,6 +3,7 @@
 unit GuiDocCaptures.Pages.SourceTools;
 
 uses Fpas.Ui.Gui.Application as Gui;
+
 uses GuiDocCaptures.Pages.DeveloperTools as Developer;
 uses GuiDocCaptures.Rendering.Presented as Presented;
 uses GuiGallery.App.State as Gallery;

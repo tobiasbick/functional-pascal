@@ -8,6 +8,7 @@ uses Fpas.Ui.Gui.Cui.Widgets.Inputs as CuiInputs;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Inputs.OneTimeCodes as O;
+
 uses System as Sys;
 
 // Draws the code boxes and sends change before completion.

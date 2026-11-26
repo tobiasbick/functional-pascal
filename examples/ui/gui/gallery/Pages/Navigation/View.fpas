@@ -4,6 +4,7 @@ unit GuiGallery.Pages.Navigation.View;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Navigation.State as State;
 uses GuiGallery.Pages.Navigation.Widgets.Breadcrumb as Breadcrumb;

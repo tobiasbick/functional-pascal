@@ -15,6 +15,7 @@ uses Fpas.Ui.Widgets.Containers.Cards as Cards;
 uses Fpas.Ui.Widgets.Containers.Grids as Grids;
 uses Fpas.Ui.Widgets.Navigation.Docks as Docking;
 uses Fpas.Ui.Widgets.Navigation.TabBars as Tabs;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Motion.State as M;
 uses GuiGallery.Shared.Sections as G;

@@ -4,6 +4,7 @@ unit GuiGallery.Pages.Selection.View;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
+
 uses Gallery.Shared.CheckboxExamples as Checkbox;
 uses Gallery.Shared.SaveFrequency as Frequency;
 uses Gallery.Shared.Strings as Strings;

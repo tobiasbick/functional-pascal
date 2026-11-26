@@ -5,6 +5,7 @@ unit Fpas.Ui.Tui.Internal.Terminal.Inputs;
 uses Fpas.Processes.Terminal as Terminal;
 uses Fpas.Ui.TerminalExtensions.Input as K;
 uses Fpas.Ui.Tui.Application as App;
+
 uses System as Sys;
 
 public function Translate(Event: Terminal.TerminalInput): App.Input?;

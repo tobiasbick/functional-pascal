@@ -4,6 +4,7 @@ unit Fpas.Ui.Widgets.Planning.MonthCalendars;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Styles as S;
+
 uses System as Sys;
 
 // A timed, all-day or multi-day event.

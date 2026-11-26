@@ -5,6 +5,7 @@ unit FpasAmp.Ui.Player.Model;
 
 uses Fpas.Media.Audio as Audio;
 uses Fpas.Media.Images as Images;
+
 uses FpasAmp.Library.Metadata.Model as Tracks;
 uses FpasAmp.Ui.Albums.Music.Model as Music;
 uses FpasAmp.Ui.Fingerprints as Fp;

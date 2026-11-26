@@ -4,6 +4,7 @@
 unit FpasAmp.Library.Metadata.Covers;
 
 uses Fpas.Media.Tags.Pictures as Pictures;
+
 uses FpasAmp.Library.Metadata.Internal.Reading as Reading;
 uses FpasAmp.Library.Persistence.Sql as Sql;
 uses FpasAmp.Library.Serialization.CatalogueJson as Codec;

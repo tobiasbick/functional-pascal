@@ -4,6 +4,7 @@ unit Fpas.Ui.Widgets.Theming.ThemeSwitchers;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+
 uses System as Sys;
 
 // Model-owned appearance choices, in CUI's native order.

@@ -3,6 +3,7 @@
 program NativeApiExample;
 
 uses Fpas.Ui.Gui.Desktop as Gui;
+
 uses NativeApi.State as S;
 uses NativeApi.Update as Update;
 uses NativeApi.View as View;

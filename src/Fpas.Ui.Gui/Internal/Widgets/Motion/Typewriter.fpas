@@ -8,6 +8,7 @@ uses Fpas.Ui.Gui.Cui.Widgets.Motion as CuiMotion;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Data.MotionData as Common;
 uses Fpas.Ui.Widgets.Motion.Motion as Motion;
+
 uses System as Sys;
 
 // Presents the native widget.

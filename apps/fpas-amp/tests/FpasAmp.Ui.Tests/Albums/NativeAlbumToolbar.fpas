@@ -11,6 +11,7 @@ uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.Widgets.Inputs.SearchFields as Search;
 uses Fpas.Ui.Widgets.Inputs.Selects as Selects;
 uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
+
 uses FpasAmp.Imaging as Thumbnails;
 uses FpasAmp.Library.Albums.Model as Library;
 uses FpasAmp.Library.Tests.AlbumSupport as Art;

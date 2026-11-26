@@ -7,6 +7,7 @@ uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Core.Parts as P;
 uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
 uses Fpas.Ui.Widgets.Developer.ProblemsPanels as D;
+
 uses System.Collections.Generic as Lists;
 
 function PackDiagnostic(Items: array of D.Diagnostic): array of CuiDeveloper.CuiDevDiagnostic;

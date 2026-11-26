@@ -9,6 +9,7 @@ uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Data.ChartData as Data;
 uses Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
 uses Fpas.Ui.Widgets.Charts.PatternMeters as P;
+
 uses System.Collections.Generic as Lists;
 
 // Draws the native CUI pattern-meter.

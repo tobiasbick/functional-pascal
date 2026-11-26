@@ -13,6 +13,7 @@ uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Overlays.Tooltips as Tips;
 uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+
 uses FpasAmp.Ui.Settings.Model as M;
 uses System as Sys;
 uses System.Collections.Generic as C;

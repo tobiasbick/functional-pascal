@@ -4,6 +4,7 @@ unit NativeTests;
 
 uses Fpas.Compiler as Compiler;
 uses Fpas.Compiler.Formatting as Formatting;
+
 uses System as Sys;
 uses System.Collections.Generic as C;
 uses System.IO.File as File;

@@ -3,9 +3,10 @@
 // Album identity, cover precedence and watcher invalidation use real synthetic media.
 unit FpasAmp.Library.Tests.Albums;
 
-uses ATL as A;
 uses Fpas.Media.Images as Images;
 uses Fpas.Media.Tags.AudioFiles as MediaTags;
+
+uses ATL as A;
 uses FpasAmp.Library.Albums.Model as M;
 uses FpasAmp.Library.Albums.Persistence.Queries as Query;
 uses FpasAmp.Library.Inventory.Monitoring as Monitor;

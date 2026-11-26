@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Voice.Script;
 
 uses Fpas.Ui.Widgets.Audio.Voice as V;
+
 uses System as Sys;
 
 type Turn = record

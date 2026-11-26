@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Inputs.Widgets.TextArea;
 
 uses Fpas.Ui.Elements as E;
+
 uses Gallery.Shared.AboutField as About;
 uses GuiGallery.Pages.Inputs.State as State;
 

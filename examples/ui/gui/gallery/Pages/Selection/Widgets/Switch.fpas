@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Selection.Widgets.Switch;
 
 uses Fpas.Ui.Elements as E;
+
 uses Gallery.Shared.SwitchExamples as S;
 uses GuiGallery.Pages.Selection.State as State;
 uses GuiGallery.Shared.State as Demo;

@@ -5,6 +5,7 @@ unit FpasAmp.Ui.Albums.Music.Model;
 
 uses Fpas.Media.Images as Imaging;
 uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+
 uses FpasAmp.Library.Albums.Model as Albums;
 uses FpasAmp.Library.Metadata.Model as Tracks;
 uses FpasAmp.Ui.Fingerprints as Fp;

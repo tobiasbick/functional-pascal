@@ -6,6 +6,7 @@ uses Fpas.Ui.Mvu.Session as Runtime;
 uses Fpas.Ui.TerminalExtensions.CellGrids as Grids;
 uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
 uses Fpas.Ui.Tui.Internal.Layout.Scene as A;
+
 uses System.Collections.Generic as C;
 
 // Admits deferred size messages in order when the bounded host mailbox has space.

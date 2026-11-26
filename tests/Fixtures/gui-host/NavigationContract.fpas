@@ -12,6 +12,7 @@ uses Fpas.Ui.Widgets.Navigation.Breadcrumbs as Breadcrumbs;
 uses Fpas.Ui.Widgets.Navigation.Paginations as Paginations;
 uses Fpas.Ui.Widgets.Navigation.Steppers as Steppers;
 uses Fpas.Ui.Widgets.Navigation.Tabs as Tabs;
+
 uses GuiGallery.App.State as State;
 uses GuiGallery.App.Update as GalleryUpdate;
 uses GuiGallery.App.View as View;

@@ -4,6 +4,7 @@ unit Fpas.Ui.Mvu.Tests.SessionTests;
 
 uses Fpas.Ui.Mvu.Application as A;
 uses Fpas.Ui.Mvu.Session as Runtime;
+
 uses System as Sys;
 uses System.Collections.Generic as C;
 uses System.Threading as T;

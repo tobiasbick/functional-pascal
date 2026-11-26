@@ -4,6 +4,7 @@ unit GuiGallery.App.Palette;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Widgets.Overlays.CommandPalettes as P;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.App.State as G;
 uses GuiGallery.Pages.Overlays.State as O;

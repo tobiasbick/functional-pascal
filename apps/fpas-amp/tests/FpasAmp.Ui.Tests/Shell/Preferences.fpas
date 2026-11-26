@@ -4,6 +4,7 @@
 unit FpasAmp.UiTests.Preferences;
 
 uses Fpas.Ui.Mvu.Application as Mvu;
+
 uses FpasAmp.Library.Inventory.Model as Inventory;
 uses FpasAmp.Library.Inventory.Monitoring as Monitor;
 uses FpasAmp.Library.Sources as S;

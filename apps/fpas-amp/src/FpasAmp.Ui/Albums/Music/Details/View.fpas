@@ -11,6 +11,7 @@ uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Navigation.Tabs as Tabs;
 uses Fpas.Ui.Widgets.Overlays.Dialogs as Dialogs;
+
 uses FpasAmp.Library.Metadata.Model as Tracks;
 uses FpasAmp.Ui.Albums.Artwork as Artwork;
 uses FpasAmp.Ui.Albums.Music.Browse as Browse;

@@ -7,6 +7,7 @@ uses Fpas.Ui.Widgets.Editors.FlameGraphs as F;
 uses Fpas.Ui.Widgets.Editors.GradientEditors as G;
 uses Fpas.Ui.Widgets.Editors.PropertyInspectors as I;
 uses Fpas.Ui.Widgets.Editors.TimelineEditors as T;
+
 uses GuiGallery.Pages.EditingTools.Capture as Capture;
 uses GuiGallery.Pages.EditingTools.Samples as Sample;
 

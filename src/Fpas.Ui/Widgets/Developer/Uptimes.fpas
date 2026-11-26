@@ -4,6 +4,7 @@ unit Fpas.Ui.Widgets.Developer.Uptimes;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
+
 uses System as Sys;
 
 // Data for the native Uptime widget.

@@ -3,6 +3,7 @@
 unit GuiDocCaptures.Pages.FeedbackAndDataDisplay;
 
 uses Fpas.Ui.Gui.Application as Gui;
+
 uses GuiDocCaptures.Rendering.Regions as Regions;
 uses GuiGallery.App.State as Gallery;
 

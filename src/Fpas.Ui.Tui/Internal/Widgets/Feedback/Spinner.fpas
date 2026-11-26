@@ -9,6 +9,7 @@ uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th;
 uses Fpas.Ui.Tui.Internal.View.Tree as E;
 uses Fpas.Ui.Widgets.Developer.Terminal as T;
 uses Fpas.Ui.Widgets.Feedback.Spinners as Spin;
+
 uses System.Collections.Generic as C;
 
 // Resolves shared spinner options to a terminal glyph sequence.

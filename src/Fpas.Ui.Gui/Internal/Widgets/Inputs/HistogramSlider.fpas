@@ -7,6 +7,7 @@ uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Widgets.Inputs.HistogramSliders as H;
 uses Fpas.Ui.Widgets.Inputs.RangeSliders as R;
+
 uses System.Globalization as Culture;
 
 // Draws the native histogram and publishes interval proposals.

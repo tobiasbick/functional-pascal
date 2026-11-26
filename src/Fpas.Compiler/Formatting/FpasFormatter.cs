@@ -58,7 +58,7 @@ public static class FpasFormatter
         IReadOnlyList<SyntaxImport> imports)
     {
         if (imports.Count < 2) return source.Text;
-        var ordered = imports.OrderByDescending(import => import.IsStandard)
+        var ordered = imports.OrderByDescending(import => import.IsFpas)
             .ThenBy(import => import.Name, StringComparer.Ordinal).ToArray();
         if (imports.SequenceEqual(ordered)) return source.Text;
 

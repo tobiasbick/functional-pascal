@@ -5,6 +5,7 @@ unit GuiGallery.Pages.Disclosure.Widgets.Banner;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
 uses Fpas.Ui.Widgets.Feedback.Banners as Banners;
+
 uses GuiGallery.Pages.Disclosure.State as S;
 
 // Shows the original announcement or the control to reopen it.

@@ -3,6 +3,7 @@
 unit GuiDocCaptures.Pages.InputsAndPickers;
 
 uses Fpas.Ui.Gui.Application as Gui;
+
 uses GuiDocCaptures.Rendering.Gestures as Gestures;
 uses GuiDocCaptures.Rendering.Presented as Presented;
 uses GuiDocCaptures.Rendering.Regions as Regions;

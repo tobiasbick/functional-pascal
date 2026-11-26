@@ -4,6 +4,7 @@ unit GalleryGridRenameContract;
 
 uses Fpas.Ui.Widgets.Collections.DataGrids as D;
 uses Fpas.Ui.Widgets.Collections.Tables as T;
+
 uses GuiGallery.Pages.DataGrid.State as S;
 uses GuiGallery.Pages.DataGrid.Update as U;
 uses System as Sys;

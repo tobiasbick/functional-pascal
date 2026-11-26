@@ -8,6 +8,7 @@ uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
 uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.Mvu.Testing.EffectReplies as Effects;
+
 uses FpasAmp.Library.Inventory.Monitoring as Inventory;
 uses FpasAmp.Library.Metadata.Model as Tracks;
 uses FpasAmp.Library.Metadata.Monitoring as Metadata;

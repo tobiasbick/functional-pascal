@@ -6,6 +6,7 @@ uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
 uses Fpas.Ui.Gui.Toasts as Toasts;
+
 uses GuiGallery.App.State as State;
 uses GuiGallery.App.Update as GalleryUpdate;
 uses GuiGallery.App.View as View;

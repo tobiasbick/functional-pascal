@@ -21,6 +21,7 @@ uses Fpas.Ui.Widgets.Feedback.TaskStates as Task;
 uses Fpas.Ui.Widgets.Motion.Motion as Motion;
 uses Fpas.Ui.Widgets.Motion.Typewriters as Typing;
 uses Fpas.Ui.Widgets.Theming.Themes as Theme;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Ai.State as S;
 uses GuiGallery.Shared.Sections as G;

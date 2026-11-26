@@ -2,11 +2,6 @@
 
 unit DesktopExampleContract;
 
-uses DesktopCommands.Background as Background;
-uses DesktopCommands.Preferences as Preferences;
-uses DesktopCommands.State as S;
-uses DesktopCommands.Update as Update;
-uses DesktopCommands.View as View;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Desktop as GuiHost;
@@ -15,6 +10,12 @@ uses Fpas.Ui.Mvu.Session as Core;
 uses Fpas.Ui.Mvu.Testing.EffectReplies as Replies;
 uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+
+uses DesktopCommands.Background as Background;
+uses DesktopCommands.Preferences as Preferences;
+uses DesktopCommands.State as S;
+uses DesktopCommands.Update as Update;
+uses DesktopCommands.View as View;
 uses GalleryHostAssertions as A;
 uses System as Sys;
 uses System.Globalization as Culture;

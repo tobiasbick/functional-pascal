@@ -5,6 +5,7 @@ unit Gallery.Shared.EditorStatus;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Styles as Style;
 uses Fpas.Ui.Widgets.Desktop.StatusBars as Status;
+
 uses Gallery.Shared.Strings as Strings;
 uses System.Collections.Generic as C;
 

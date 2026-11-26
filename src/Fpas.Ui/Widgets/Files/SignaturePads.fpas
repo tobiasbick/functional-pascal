@@ -4,6 +4,7 @@ unit Fpas.Ui.Widgets.Files.SignaturePads;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Graphics as G;
+
 uses System as Sys;
 
 // A point in CUI's logical signature drawing space.

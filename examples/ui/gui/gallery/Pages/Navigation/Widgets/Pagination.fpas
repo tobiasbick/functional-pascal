@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Navigation.Widgets.Pagination;
 
 uses Fpas.Ui.Elements as E;
+
 uses Gallery.Shared.PaginationExample as Sample;
 uses GuiGallery.Pages.Navigation.State as State;
 

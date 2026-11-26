@@ -5,6 +5,7 @@ unit Fpas.Ui.Internal.Validation.Inputs.ToggleGroupRules;
 uses Fpas.Ui.Internal.Validation.Core.Checks as Rules;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
 uses Fpas.Ui.Widgets.Actions.ToggleGroups as Toggles;
+
 uses System as Sys;
 
 // Checks native limits, captions and the controlled selection before presentation.

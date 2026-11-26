@@ -5,6 +5,7 @@ unit FpasAmp.Ui.Albums.Status;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Widgets.Desktop.StatusBars as Status;
+
 uses FpasAmp.Library.Search.Text as Tokens;
 uses FpasAmp.Ui.Albums.Model as M;
 uses FpasAmp.Ui.Albums.Music.Browse as Browse;

@@ -4,6 +4,7 @@ unit Gallery.Shared.PeopleFilters;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Widgets.Collections.FilterBars as F;
+
 uses System as Sys;
 
 const Fields: array of F.Field := [

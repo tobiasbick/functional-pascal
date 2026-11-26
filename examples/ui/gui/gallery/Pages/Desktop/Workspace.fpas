@@ -13,6 +13,7 @@ uses Fpas.Ui.Widgets.Developer.LogConsoles as Log;
 uses Fpas.Ui.Widgets.Editors.PropertyInspectors as Property;
 uses Fpas.Ui.Widgets.Motion.Motion as Text;
 uses Fpas.Ui.Widgets.Theming.Themes as Theme;
+
 uses GuiGallery.Pages.Desktop.State as S;
 uses GuiGallery.Shared.Sections as G;
 uses System.Collections.Generic as Lists;

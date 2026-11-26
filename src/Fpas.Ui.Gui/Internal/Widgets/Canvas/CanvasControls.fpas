@@ -12,6 +12,7 @@ uses Fpas.Ui.Gui.Internal.Data.CanvasData as Data;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Canvas.CanvasControls as D;
 uses Fpas.Ui.Widgets.Editors.NodeEditors as N;
+
 uses System.Collections.Generic as Lists;
 
 function Bounds(Value: D.Bounds?): Cui.CuiRectangle;

@@ -12,6 +12,7 @@ uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Media.Images as Images;
 uses Fpas.Ui.Widgets.Media.MediaImages as Media;
 uses Fpas.Ui.Widgets.Overlays.Veils as Veil;
+
 uses System as Sys;
 
 procedure Coordinates(X: float; Y: float; Path: string);

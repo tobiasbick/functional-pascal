@@ -9,6 +9,7 @@ uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
 uses Fpas.Ui.Widgets.Overlays.Sheets as Sheets;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.App.Palette as Palette;
 uses GuiGallery.App.Sidebar as Sidebar;

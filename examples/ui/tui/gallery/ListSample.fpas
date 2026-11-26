@@ -4,6 +4,7 @@ unit TuiGallery.ListSample;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.TerminalExtensions.SelectionLists as Lists;
+
 uses Gallery.Shared.ListEntries as Sample;
 uses Gallery.Shared.Strings as Strings;
 uses System as Sys;

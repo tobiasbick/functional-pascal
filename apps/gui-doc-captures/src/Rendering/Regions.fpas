@@ -4,6 +4,7 @@ unit GuiDocCaptures.Rendering.Regions;
 
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
+
 uses GuiGallery.App.State as Gallery;
 uses System as Sys;
 uses System.Collections.Generic as Generic;

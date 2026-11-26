@@ -2,9 +2,10 @@
 
 unit Fpas.Media.Tests.Tags;
 
-uses ATL as A;
 uses Fpas.Media.Tags.AudioFiles as Files;
 uses Fpas.Media.Tags.Pictures as Pictures;
+
+uses ATL as A;
 uses System as Sys;
 uses System.Collections.Generic as C;
 uses System.IO as IO;

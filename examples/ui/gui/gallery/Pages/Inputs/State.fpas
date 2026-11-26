@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Inputs.State;
 
 uses Fpas.Ui.Graphics as G;
+
 uses Gallery.Shared.AboutField as AboutSample;
 uses Gallery.Shared.PickerChoices as Choices;
 uses GuiGallery.Shared.State as Demo;

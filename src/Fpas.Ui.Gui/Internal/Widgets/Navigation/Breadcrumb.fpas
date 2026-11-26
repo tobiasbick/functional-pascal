@@ -6,6 +6,7 @@ uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Widgets.Navigation.Breadcrumbs as B;
+
 uses System.Collections.Generic as Lists;
 
 // Draws CUI's breadcrumb and publishes ancestor activations.

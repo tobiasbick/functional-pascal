@@ -13,6 +13,7 @@ uses Fpas.Ui.Validation as V;
 uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
 uses Fpas.Ui.Widgets.Feedback.Skeletons as Skel;
 uses Fpas.Ui.Widgets.Feedback.Spinners as Spin;
+
 uses GalleryHostAssertions as A;
 uses GuiGallery.App.State as State;
 uses GuiGallery.App.Update as Update;

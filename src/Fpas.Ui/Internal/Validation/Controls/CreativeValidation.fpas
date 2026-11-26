@@ -16,6 +16,7 @@ uses Fpas.Ui.Widgets.Inputs.SeedFields as SeedFields;
 uses Fpas.Ui.Widgets.Inputs.StepSliders as StepSliders;
 uses Fpas.Ui.Widgets.Pickers.AspectPickers as AspectPickers;
 uses Fpas.Ui.Widgets.Pickers.PaletteStrips as PaletteStrips;
+
 uses System as Sys;
 
 procedure Tone(Value: S.Tone; At: string);

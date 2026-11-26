@@ -6,6 +6,7 @@ uses Fpas.Ui.Gui.Cui.Widgets.Ai as CuiAi;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Core.Parts as P;
 uses Fpas.Ui.Widgets.Ai.PromptSuggestions as PromptSuggestions;
+
 uses System.Collections.Generic as Lists;
 
 // Presents CUI's native PromptSuggestions.

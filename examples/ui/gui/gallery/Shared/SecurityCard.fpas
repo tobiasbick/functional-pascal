@@ -5,6 +5,7 @@ unit Gallery.Shared.SecurityCard;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Containers.ExpandableCards as Cards;
+
 uses Gallery.Shared.Strings as Strings;
 uses System as Sys;
 

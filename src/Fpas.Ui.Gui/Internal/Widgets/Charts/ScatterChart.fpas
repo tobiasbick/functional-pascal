@@ -10,6 +10,7 @@ uses Fpas.Ui.Gui.Internal.Data.ChartData as Common;
 uses Fpas.Ui.Gui.Internal.Data.MoreChartData as Data;
 uses Fpas.Ui.Gui.Internal.Layout.Sizing as Size;
 uses Fpas.Ui.Widgets.Charts.ScatterCharts as W;
+
 uses System as Sys;
 
 // Presents CUI's native scatter-chart.

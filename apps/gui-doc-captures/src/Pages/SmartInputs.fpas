@@ -4,6 +4,7 @@ unit GuiDocCaptures.Pages.SmartInputs;
 
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Widgets.Pickers.EmojiPickers as Emoji;
+
 uses GuiDocCaptures.Rendering.Presented as Presented;
 uses GuiDocCaptures.Rendering.Regions as Regions;
 uses GuiGallery.App.State as Gallery;

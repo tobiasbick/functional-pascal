@@ -5,6 +5,7 @@ unit GuiGallery.Pages.Lists.Update;
 uses Fpas.Ui.Gui.Toasts as Toasts;
 uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.Widgets.Collections.Tables as T;
+
 uses GuiGallery.Pages.Lists.State as S;
 
 // Applies a message to this feature and describes its effects.

@@ -6,6 +6,7 @@ uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.TerminalExtensions.CellGrids as G;
 uses Fpas.Ui.TerminalExtensions.Input as K;
 uses Fpas.Ui.Widgets.Navigation.Navigation as Nav;
+
 uses Fractals.Camera as C;
 uses Fractals.Rendering as Render;
 uses System as Sys;

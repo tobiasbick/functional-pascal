@@ -10,6 +10,7 @@ uses Fpas.Ui.Mvu.Application as App;
 uses Fpas.Ui.Validation as V;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
 uses Fpas.Ui.Widgets.Overlays.Menus as M;
+
 uses GuiGallery.App.State as State;
 uses GuiGallery.App.Update as GalleryUpdate;
 uses GuiGallery.App.View as View;

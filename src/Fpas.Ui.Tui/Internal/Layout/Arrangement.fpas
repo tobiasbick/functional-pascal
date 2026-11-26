@@ -36,6 +36,7 @@ uses Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as PopupState;
 uses Fpas.Ui.Widgets.Developer.LogConsoles as Logs;
 uses Fpas.Ui.Widgets.Developer.Terminal as T;
 uses Fpas.Ui.Widgets.Overlays.CommandPalettes as Palettes;
+
 uses System as Sys;
 uses System.Collections.Generic as Generic;
 

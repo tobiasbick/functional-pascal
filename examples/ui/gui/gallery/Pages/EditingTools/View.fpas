@@ -14,6 +14,7 @@ uses Fpas.Ui.Widgets.Editors.PropertyInspectors as I;
 uses Fpas.Ui.Widgets.Editors.TimelineEditors as T;
 uses Fpas.Ui.Widgets.Motion.Motion as Text;
 uses Fpas.Ui.Widgets.Theming.Themes as Theme;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.EditingTools.Capture as Capture;
 uses GuiGallery.Pages.EditingTools.Samples as Sample;

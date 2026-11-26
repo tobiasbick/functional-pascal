@@ -12,6 +12,7 @@ uses Fpas.Ui.Tui.Internal.Rendering.Presentation as P;
 uses Fpas.Ui.Tui.Internal.Terminal.Inputs as Inputs;
 uses Fpas.Ui.Widgets.Developer.Terminal as T;
 uses Fpas.Ui.Widgets.Theming.Themes as Th;
+
 uses System as Sys;
 
 // Runs the application on the current terminal and restores terminal modes on exit.

@@ -4,6 +4,7 @@ unit GuiGallery.Pages.MoreCharts.Update;
 
 uses Fpas.Ui.Mvu.Application as M;
 uses Fpas.Ui.Widgets.Charts.Charts as C;
+
 uses GuiGallery.Pages.MoreCharts.Data as Data;
 uses GuiGallery.Pages.MoreCharts.State as State;
 uses System as Sys;

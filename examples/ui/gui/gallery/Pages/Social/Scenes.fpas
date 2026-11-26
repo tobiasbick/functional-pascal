@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Social.Scenes;
 
 uses Fpas.Ui.Widgets.Media.MediaImages as Media;
+
 uses System as Sys;
 
 function Channel(Value: float): byte;

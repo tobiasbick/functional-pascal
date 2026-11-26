@@ -5,6 +5,7 @@ unit FpasAmp.UiTests.NativeCollections;
 
 uses Fpas.Media.Audio as Audio;
 uses Fpas.Ui.Gui.Cui as Cui;
+
 uses FpasAmp.Library.Albums.Model as Catalog;
 uses FpasAmp.Library.Inventory.Monitoring as Monitor;
 uses FpasAmp.Library.Tests.MetadataSupport as Sources;

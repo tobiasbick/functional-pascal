@@ -5,6 +5,7 @@ unit FpasAmp.UiTests.NativeAlbums;
 
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
+
 uses FpasAmp.Library.Inventory.Model as Inventory;
 uses FpasAmp.Library.Inventory.Monitoring as Monitor;
 uses FpasAmp.Library.Sources as Sources;

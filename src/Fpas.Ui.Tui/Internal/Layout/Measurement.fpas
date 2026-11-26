@@ -7,6 +7,7 @@ uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
 uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G;
 uses Fpas.Ui.Tui.Internal.View.Tree as E;
 uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit;
+
 uses System as Sys;
 uses System.Globalization as Global;
 

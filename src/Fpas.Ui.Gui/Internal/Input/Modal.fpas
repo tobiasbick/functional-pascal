@@ -8,6 +8,7 @@ uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Input.ModalFocus as Focus;
 uses Fpas.Ui.Layout as L;
+
 uses System.Collections.Generic as Lists;
 
 // Presents the base and a native modal with shared input and focus rules.

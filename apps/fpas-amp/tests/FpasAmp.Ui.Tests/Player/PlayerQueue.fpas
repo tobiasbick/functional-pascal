@@ -5,6 +5,7 @@ unit FpasAmp.UiTests.PlayerQueue;
 
 uses Fpas.Media.Audio as Audio;
 uses Fpas.Media.Tags.AudioFiles as MediaTags;
+
 uses FpasAmp.AppState as Storage;
 uses FpasAmp.Library.Inventory.Model as Inventory;
 uses FpasAmp.Library.Metadata.Model as Tracks;

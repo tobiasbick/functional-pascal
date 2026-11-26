@@ -5,6 +5,7 @@ unit TuiGallery.InputSamples;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Widgets.Inputs.NumberFields as Number;
 uses Fpas.Ui.Widgets.Inputs.SearchFields as Search;
+
 uses Gallery.Shared.Strings as Strings;
 
 // Shows the CUI gallery's project search.

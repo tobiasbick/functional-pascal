@@ -7,6 +7,7 @@ uses Fpas.Ui.Widgets.Developer.HexViews as Hex;
 uses Fpas.Ui.Widgets.Developer.LogConsoles as Log;
 uses Fpas.Ui.Widgets.Display.Markdowns as Markdown;
 uses Fpas.Ui.Widgets.Editors.CodeEditors as Editor;
+
 uses Gallery.Shared.BuildLog as BuildLog;
 uses GuiGallery.Pages.Code.Samples as Sample;
 

@@ -107,7 +107,7 @@ operations together. The formatter preserves these authored sections rather
 than inferring their meaning.
 
 Each `uses` statement occupies its own line. Sort by the full import target,
-using ordinal comparison. Put `Std` and `Std.*` first, then leave one blank
+using ordinal comparison. Put `Fpas` and `Fpas.*` first, then leave one blank
 line before the other imports when both groups are present. An import can
 exceed the width target. Comments attached to an import move with it.
 

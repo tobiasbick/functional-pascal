@@ -16,6 +16,7 @@ uses Fpas.Ui.Widgets.Containers.ExpandableCards as Cards;
 uses Fpas.Ui.Widgets.Containers.ExpandableTexts as Texts;
 uses Fpas.Ui.Widgets.Overlays.Dialogs as D;
 uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
+
 uses GalleryHostAssertions as A;
 uses GuiGallery.App.State as State;
 uses GuiGallery.App.Update as GalleryUpdate;

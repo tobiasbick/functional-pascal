@@ -6,6 +6,7 @@ uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Widgets.Audio.LevelMeters as M;
+
 uses System as Sys;
 
 // Draws the native level bars and forwards a clip reset if requested.

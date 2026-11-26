@@ -6,6 +6,7 @@ uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
 uses Fpas.Ui.Widgets.Inputs.TextFields as F;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.SmartInputs.State as State;
 uses GuiGallery.Pages.SmartInputs.Widgets.Editors as Editors;

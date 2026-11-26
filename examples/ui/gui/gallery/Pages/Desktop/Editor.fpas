@@ -10,6 +10,7 @@ uses Fpas.Ui.Widgets.Desktop.Toolbars as Tools;
 uses Fpas.Ui.Widgets.Motion.Motion as Glyphs;
 uses Fpas.Ui.Widgets.Overlays.Menus as M;
 uses Fpas.Ui.Widgets.Theming.Themes as Theme;
+
 uses Gallery.Shared.EditorStatus as StatusExample;
 uses GuiGallery.Pages.Desktop.State as S;
 uses GuiGallery.Shared.Sections as G;

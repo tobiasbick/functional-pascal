@@ -7,6 +7,7 @@ uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Canvas.Painting as Painting;
 uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
+
 uses System as Sys;
 
 // A drawing command in canvas-local logical points.

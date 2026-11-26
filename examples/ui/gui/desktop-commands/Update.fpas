@@ -2,9 +2,6 @@
 
 unit DesktopCommands.Update;
 
-uses DesktopCommands.Background as Background;
-uses DesktopCommands.Preferences as Preferences;
-uses DesktopCommands.State as S;
 uses Fpas.Execution.Effects as Fx;
 uses Fpas.Ui.Gui.Closing as Closing;
 uses Fpas.Ui.Gui.FileDialogs as Files;
@@ -13,6 +10,10 @@ uses Fpas.Ui.Gui.Windows as Windows;
 uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+
+uses DesktopCommands.Background as Background;
+uses DesktopCommands.Preferences as Preferences;
+uses DesktopCommands.State as S;
 uses System as Sys;
 uses System.IO as IO;
 uses System.Threading as Threads;

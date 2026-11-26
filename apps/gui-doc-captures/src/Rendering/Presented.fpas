@@ -5,6 +5,7 @@ unit GuiDocCaptures.Rendering.Presented;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Mvu.Session as Mvu;
+
 uses GuiDocCaptures.Rendering.Regions as Regions;
 uses GuiGallery.App.State as Gallery;
 uses System as Sys;

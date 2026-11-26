@@ -10,6 +10,7 @@ uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextField as TextField;
 uses Fpas.Ui.Widgets.Developer.Terminal as T;
 uses Fpas.Ui.Widgets.Inputs.SearchFields as Search;
 uses Fpas.Ui.Widgets.Inputs.TextFields as Fields;
+
 uses System as Sys;
 
 // Resolves a search editor with an optional clear control.

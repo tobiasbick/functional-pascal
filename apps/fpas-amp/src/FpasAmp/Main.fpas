@@ -4,6 +4,7 @@
 async program FpasAmp;
 
 uses Fpas.Ui.Gui.Cui as Cui;
+
 uses FpasAmp.AppState as State;
 uses FpasAmp.Library.Inventory.Monitoring as Monitoring;
 uses FpasAmp.Library.Metadata.Model as Tracks;

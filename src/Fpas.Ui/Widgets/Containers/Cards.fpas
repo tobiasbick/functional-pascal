@@ -4,6 +4,7 @@ unit Fpas.Ui.Widgets.Containers.Cards;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
+
 uses System as Sys;
 
 // Presentation and input settings for a CUI card.

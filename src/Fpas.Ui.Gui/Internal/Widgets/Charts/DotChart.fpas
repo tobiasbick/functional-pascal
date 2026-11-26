@@ -9,6 +9,7 @@ uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Data.ChartData as Charts;
 uses Fpas.Ui.Widgets.Charts.Charts as Data;
 uses Fpas.Ui.Widgets.Charts.DotCharts as W;
+
 uses System as Sys;
 
 // Presents the native CUI widget.

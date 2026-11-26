@@ -6,6 +6,7 @@ uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Charts.Sparklines as Charts;
 uses Fpas.Ui.Widgets.Feedback.Spinners as Spin;
+
 uses Gallery.Shared.Strings as Strings;
 uses System.Globalization as Culture;
 

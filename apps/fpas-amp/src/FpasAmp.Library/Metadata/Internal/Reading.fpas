@@ -4,6 +4,7 @@
 unit FpasAmp.Library.Metadata.Internal.Reading;
 
 uses Fpas.Media.Tags.AudioFiles as MediaTags;
+
 uses FpasAmp.Library.Inventory.Internal.Directories as Directories;
 uses System as Sys;
 uses System.IO as IO;

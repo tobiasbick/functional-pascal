@@ -12,6 +12,7 @@ uses Fpas.Ui.Styles as Styles;
 uses Fpas.Ui.Validation as V;
 uses Fpas.Ui.Widgets.Containers.Stacks as Stacks;
 uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
+
 uses GalleryHostAssertions as A;
 uses GuiGallery.App.State as State;
 uses GuiGallery.App.Update as Update;

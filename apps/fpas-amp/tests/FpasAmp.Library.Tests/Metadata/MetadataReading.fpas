@@ -3,8 +3,9 @@
 // Tag selection, Unicode multi-values, database filtering and independent ratings.
 unit FpasAmp.Library.Tests.MetadataReading;
 
-uses ATL as A;
 uses Fpas.Media.Tags.AudioFiles as MediaTags;
+
+uses ATL as A;
 uses FpasAmp.Library.Inventory.Monitoring as Monitor;
 uses FpasAmp.Library.Metadata.Model as M;
 uses FpasAmp.Library.Metadata.Monitoring as Metadata;

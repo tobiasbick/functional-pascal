@@ -16,6 +16,7 @@ uses Fpas.Ui.Widgets.Editors.CodeEditors as Editor;
 uses Fpas.Ui.Widgets.Inputs.TextFields as Field;
 uses Fpas.Ui.Widgets.Motion.Motion as F;
 uses Fpas.Ui.Widgets.Theming.Themes as Theme;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Code.Samples as Sample;
 uses GuiGallery.Pages.Code.State as M;

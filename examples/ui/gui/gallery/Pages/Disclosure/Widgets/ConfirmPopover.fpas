@@ -7,6 +7,7 @@ uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
 uses Fpas.Ui.Widgets.Overlays.ConfirmPopovers as P;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Disclosure.State as State;
 uses GuiGallery.Shared.Sections as G;

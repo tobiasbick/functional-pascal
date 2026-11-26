@@ -9,6 +9,7 @@ uses Fpas.Ui.Widgets.Ai.Composers as Composer;
 uses Fpas.Ui.Widgets.Ai.ResponseActions as Response;
 uses Fpas.Ui.Widgets.Charts.EventTracks as Events;
 uses Fpas.Ui.Widgets.Navigation.PathBars as Paths;
+
 uses GalleryHostAssertions as A;
 uses GuiGallery.App.State as Gallery;
 uses GuiGallery.App.Update as Update;

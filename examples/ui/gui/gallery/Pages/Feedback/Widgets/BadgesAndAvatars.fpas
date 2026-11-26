@@ -9,6 +9,7 @@ uses Fpas.Ui.Widgets.Containers.Cards as Cards;
 uses Fpas.Ui.Widgets.Feedback.Badges as B;
 uses Fpas.Ui.Widgets.Media.AvatarGroups as Groups;
 uses Fpas.Ui.Widgets.Media.Avatars as A;
+
 uses GuiGallery.Shared.Sections as G;
 
 // Shows the native badges, status avatars and overlapping team from Feedback.

@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Disclosure.State;
 
 uses Fpas.Ui.Widgets.Feedback.Checklists as K;
+
 uses Gallery.Shared.SecurityCard as Security;
 uses System as Sys;
 

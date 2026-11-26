@@ -11,6 +11,7 @@ uses Fpas.Ui.Gui.Shortcuts as Shortcuts;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+
 uses System as Sys;
 
 // Native window configuration in logical units.

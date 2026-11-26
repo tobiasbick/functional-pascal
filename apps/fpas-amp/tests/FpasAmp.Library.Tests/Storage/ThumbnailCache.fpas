@@ -4,6 +4,7 @@
 unit FpasAmp.Library.Tests.ThumbnailCache;
 
 uses Fpas.Media.Images as Imaging;
+
 uses FpasAmp.Imaging as Thumbnails;
 uses FpasAmp.Library.Tests.AlbumSupport as Art;
 uses FpasAmp.Library.Tests.Support as H;

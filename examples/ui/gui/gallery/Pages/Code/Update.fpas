@@ -7,6 +7,7 @@ uses Fpas.Ui.Widgets.Developer.DiffViews as Diff;
 uses Fpas.Ui.Widgets.Developer.HexViews as Hex;
 uses Fpas.Ui.Widgets.Display.Markdowns as Markdown;
 uses Fpas.Ui.Widgets.Editors.CodeEditors as Editor;
+
 uses GuiGallery.Pages.Code.State as M;
 uses GuiGallery.Pages.Motion.Clock as Clock;
 uses System as Sys;

@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Files.Terminal;
 
 uses Fpas.Ui.Widgets.Files.FileListings as Listing;
+
 uses GuiGallery.Pages.Files.Folders as Files;
 uses System as Sys;
 uses System.Globalization as Locale;

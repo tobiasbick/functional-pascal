@@ -5,6 +5,7 @@ unit TuiGallery.PeopleSample;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Collections.Tables as T;
+
 uses Gallery.Shared.PeopleTable as People;
 uses Gallery.Shared.Strings as Strings;
 uses System.Collections.Generic as C;

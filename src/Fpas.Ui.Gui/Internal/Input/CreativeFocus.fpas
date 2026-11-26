@@ -13,6 +13,7 @@ uses Fpas.Ui.Widgets.Inputs.SeedFields as SeedFields;
 uses Fpas.Ui.Widgets.Inputs.StepSliders as StepSliders;
 uses Fpas.Ui.Widgets.Pickers.AspectPickers as AspectPickers;
 uses Fpas.Ui.Widgets.Pickers.PaletteStrips as PaletteStrips;
+
 uses System as Sys;
 
 function Pick(Id: string; Preferred: string?; Keys: array of string; Accept: array of bool; Initial: int): string?;

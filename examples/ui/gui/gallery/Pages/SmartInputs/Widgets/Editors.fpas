@@ -7,6 +7,7 @@ uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Inputs.InlineEdits as I;
 uses Fpas.Ui.Widgets.Inputs.MoneyFields as M;
 uses Fpas.Ui.Widgets.Inputs.ScrubFields as Scrubs;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.SmartInputs.State as S;
 uses GuiGallery.Shared.Sections as G;

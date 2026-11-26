@@ -13,7 +13,7 @@ Use `Console.WriteLine`, `Collections.List<int>`, and `Geometry.Translate`.
 Import a CLR namespace to access its generic types. An import does not expose
 unqualified members or acquire dependencies.
 
-The formatter sorts by target name and puts `Std` and `Std.*` in the first
+The formatter sorts by target name and puts `Fpas` and `Fpas.*` in the first
 group. See [formatting rules](../tools/fmt-style.md#wrapping-and-comments).
 
 A public type or type alias declared in an FPAS companion unit can also be

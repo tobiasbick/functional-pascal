@@ -7,6 +7,7 @@ uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Core.Parts as P;
 uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
 uses Fpas.Ui.Widgets.Charts.TimeHistograms as D;
+
 uses System.Collections.Generic as Lists;
 
 function PackSeries(Items: array of D.Series): array of CuiDeveloper.CuiDevSeries;

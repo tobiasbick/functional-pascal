@@ -7,6 +7,7 @@ uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Cui.Widgets.Collections as CuiCollections;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Widgets.Collections.FilterBars as B;
+
 uses System as Sys;
 
 // Presents a native filter bar.

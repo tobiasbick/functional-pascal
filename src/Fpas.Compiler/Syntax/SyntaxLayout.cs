@@ -59,6 +59,6 @@ internal sealed class SyntaxLayout(int tokenCount)
 internal sealed record SyntaxList(int Open, int Close, IReadOnlyList<int> Items, bool Wrap, bool CloseLine);
 internal sealed record SyntaxImport(int Keyword, int Semicolon, string Name)
 {
-    internal bool IsStandard => Name == "Std" || Name.StartsWith("Std.", StringComparison.Ordinal);
+    internal bool IsFpas => Name == "Fpas" || Name.StartsWith("Fpas.", StringComparison.Ordinal);
 }
 internal sealed record SyntaxBinary(int Start, int End, int Operator, int Right);

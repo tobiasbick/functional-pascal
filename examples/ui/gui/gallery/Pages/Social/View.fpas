@@ -15,6 +15,7 @@ uses Fpas.Ui.Widgets.Conversation.Presences as Presence;
 uses Fpas.Ui.Widgets.Conversation.TypingIndicators as Typing;
 uses Fpas.Ui.Widgets.Feedback.Counters as Counter;
 uses Fpas.Ui.Widgets.Feedback.Tickers as Ticker;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Social.Media as Media;
 uses GuiGallery.Pages.Social.State as S;

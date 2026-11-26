@@ -11,6 +11,7 @@ uses Fpas.Ui.Widgets.Developer.ProblemsPanels as P;
 uses Fpas.Ui.Widgets.Developer.QueryBuilders as Q;
 uses Fpas.Ui.Widgets.Developer.TraceViewers as T;
 uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
+
 uses System.Collections.Generic as Lists;
 
 // Original gallery sample data.

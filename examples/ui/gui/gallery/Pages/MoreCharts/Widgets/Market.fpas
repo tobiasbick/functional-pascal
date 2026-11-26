@@ -10,6 +10,7 @@ uses Fpas.Ui.Widgets.Charts.Charts as C;
 uses Fpas.Ui.Widgets.Charts.RadialGauges as R;
 uses Fpas.Ui.Widgets.Charts.ScatterCharts as Sc;
 uses Fpas.Ui.Widgets.Containers.Cards as Cards;
+
 uses GuiGallery.Pages.MoreCharts.Data as Data;
 
 // Builds the native bubble chart.

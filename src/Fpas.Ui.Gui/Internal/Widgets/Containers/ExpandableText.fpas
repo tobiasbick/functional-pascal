@@ -7,6 +7,7 @@ uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Widgets.Containers.ExpandableTexts as T;
+
 uses System as Sys;
 
 function Pack(Color: G.Color?): uint;

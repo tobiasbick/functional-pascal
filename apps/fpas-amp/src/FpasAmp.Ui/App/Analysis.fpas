@@ -5,6 +5,7 @@ unit FpasAmp.Ui.App.Analysis;
 
 uses Fpas.Media.Audio as Audio;
 uses Fpas.Ui.Mvu.Application as Mvu;
+
 uses FpasAmp.Library.Metadata.Model as Tracks;
 uses FpasAmp.Library.Metadata.Monitoring as Metadata;
 uses FpasAmp.Library.Metadata.Waveforms as Waves;

@@ -4,6 +4,7 @@ unit GuiGallery.Pages.Overlays.View;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
+
 uses GuiGallery.Pages.Overlays.State as S;
 uses GuiGallery.Pages.Overlays.Widgets.ContextMenu as Context;
 uses GuiGallery.Pages.Overlays.Widgets.Dialog as Dialog;

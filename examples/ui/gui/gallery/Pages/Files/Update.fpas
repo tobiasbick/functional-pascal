@@ -6,6 +6,7 @@ uses Fpas.Ui.Widgets.Developer.Terminals as Terminal;
 uses Fpas.Ui.Widgets.Files.FileBrowsers as Browser;
 uses Fpas.Ui.Widgets.Files.FilePickers as Picker;
 uses Fpas.Ui.Widgets.Navigation.PathBars as Paths;
+
 uses GuiGallery.Pages.Files.State as M;
 uses GuiGallery.Pages.Files.Terminal as Shell;
 uses GuiGallery.Pages.Files.View as V;

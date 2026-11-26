@@ -19,6 +19,7 @@ uses Fpas.Ui.Widgets.Feedback.Spinners as Spin;
 uses Fpas.Ui.Widgets.Overlays.Menus as Menus;
 uses Fpas.Ui.Widgets.Planning.TimelineItems as Timeline;
 uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
+
 uses GalleryHostAssertions as A;
 uses GuiGallery.App.State as State;
 uses GuiGallery.App.Update as Update;

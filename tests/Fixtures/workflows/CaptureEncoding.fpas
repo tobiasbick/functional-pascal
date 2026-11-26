@@ -4,6 +4,7 @@ async program CaptureEncoding;
 
 uses Fpas.Execution.Effects as Fx;
 uses Fpas.Processes.Workflows.Capture as Capture;
+
 uses System as Sys;
 uses System.IO as IO;
 uses System.Text as Text;

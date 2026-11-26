@@ -7,6 +7,7 @@ uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as Styles;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
+
 uses GuiGallery.Pages.Desktop.State as S;
 uses GuiGallery.Shared.Sections as G;
 

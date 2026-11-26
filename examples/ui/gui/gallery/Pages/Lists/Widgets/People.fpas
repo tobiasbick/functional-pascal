@@ -8,6 +8,7 @@ uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Collections.Tables as T;
 uses Fpas.Ui.Widgets.Feedback.Badges as B;
 uses Fpas.Ui.Widgets.Media.Avatars as A;
+
 uses Gallery.Shared.PeopleTable as People;
 uses GuiGallery.Pages.Lists.State as State;
 uses System.Collections.Generic as Lists;

@@ -8,6 +8,7 @@ uses Fpas.Ui.Gui.Internal.Core.Parts as P;
 uses Fpas.Ui.Gui.Internal.Core.Values as Enc;
 uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
 uses Fpas.Ui.Widgets.Editors.FlameGraphs as D;
+
 uses System.Collections.Generic as Lists;
 
 // Presents a native FlameGraph.

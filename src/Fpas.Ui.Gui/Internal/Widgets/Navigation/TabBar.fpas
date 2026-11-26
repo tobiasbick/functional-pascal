@@ -8,6 +8,7 @@ uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Data.ChartData as Colors;
 uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
 uses Fpas.Ui.Widgets.Navigation.TabBars as W;
+
 uses System as Sys;
 uses System.Collections.Generic as Lists;
 

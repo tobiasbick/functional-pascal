@@ -5,6 +5,7 @@ unit Fpas.Ui.Widgets.Planning.Gantts;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
+
 uses System as Sys;
 
 // Native task appearance.

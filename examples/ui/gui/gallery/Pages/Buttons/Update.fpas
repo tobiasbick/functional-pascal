@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Buttons.Update;
 
 uses Fpas.Ui.Mvu.Application as Mvu;
+
 uses GuiGallery.Pages.Buttons.State as S;
 
 // Applies a message to this feature and describes its effects.

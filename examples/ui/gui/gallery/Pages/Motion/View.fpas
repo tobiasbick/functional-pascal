@@ -16,6 +16,7 @@ uses Fpas.Ui.Widgets.Motion.Spotlights as Spotlights;
 uses Fpas.Ui.Widgets.Motion.TextReveals as Reveal;
 uses Fpas.Ui.Widgets.Motion.Typewriters as Typing;
 uses Fpas.Ui.Widgets.Motion.WordRotations as Words;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Motion.Controls as Controls;
 uses GuiGallery.Pages.Motion.State as M;

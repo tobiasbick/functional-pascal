@@ -4,6 +4,7 @@ unit FpasAmp.Ui.App.Subscriptions;
 
 uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.Mvu.Composition as Composition;
+
 uses FpasAmp.Library.Inventory.Model as Inventory;
 uses FpasAmp.Library.Inventory.Monitoring as Monitoring;
 uses FpasAmp.Library.Inventory.Progress as Progress;

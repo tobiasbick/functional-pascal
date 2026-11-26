@@ -10,6 +10,7 @@ uses Fpas.Ui.Gui.Internal.Data.ChartData as Data;
 uses Fpas.Ui.Gui.Internal.Layout.Sizing as Sizing;
 uses Fpas.Ui.Widgets.Charts.Charts as Ch;
 uses Fpas.Ui.Widgets.Charts.Treemaps as W;
+
 uses System as Sys;
 
 // Presents the native treemap and forwards its activation.

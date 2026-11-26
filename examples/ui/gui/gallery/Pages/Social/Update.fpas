@@ -8,6 +8,7 @@ uses Fpas.Ui.Widgets.Containers.CardStacks as Deck;
 uses Fpas.Ui.Widgets.Conversation.Comments as Comments;
 uses Fpas.Ui.Widgets.Media.ImageCroppers as Cropper;
 uses Fpas.Ui.Widgets.Media.ImageViewers as Viewer;
+
 uses GuiGallery.Pages.Social.State as S;
 
 // Applies changes to the social examples.

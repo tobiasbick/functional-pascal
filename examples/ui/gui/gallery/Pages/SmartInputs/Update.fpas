@@ -5,6 +5,7 @@ unit GuiGallery.Pages.SmartInputs.Update;
 uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
 uses Fpas.Ui.Widgets.Pickers.EmojiPickers as Emojis;
+
 uses GuiGallery.Pages.SmartInputs.State as S;
 uses System.Text as Text;
 

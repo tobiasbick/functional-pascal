@@ -6,6 +6,7 @@ unit FpasAmp.Ui.App.Controller;
 uses Fpas.Media.Audio as Audio;
 uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.Mvu.Composition as Composition;
+
 uses FpasAmp.Library.Albums.Access as AlbumAccess;
 uses FpasAmp.Library.Albums.Model as Releases;
 uses FpasAmp.Library.Inventory.Monitoring as Monitoring;

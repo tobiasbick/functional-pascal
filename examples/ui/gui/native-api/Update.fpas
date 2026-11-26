@@ -8,6 +8,7 @@ uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.Widgets.Canvas.Canvases as Canvas;
 uses Fpas.Ui.Widgets.Charts.EventTracks as Events;
 uses Fpas.Ui.Widgets.Developer.TraceViewers as Trace;
+
 uses NativeApi.State as S;
 
 // Acknowledges native proposals and requests geometry on the window owner thread.

@@ -6,6 +6,7 @@ unit FpasAmp.Ui.Albums.Toolbar.View;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Inputs.SearchFields as Search;
+
 uses FpasAmp.Library.Search.Matching as Matching;
 uses FpasAmp.Ui.Albums.Toolbar.Filters as Filters;
 uses FpasAmp.Ui.Albums.Toolbar.Model as M;

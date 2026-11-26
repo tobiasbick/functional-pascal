@@ -4,6 +4,7 @@ unit GuiGallery.Pages.Inputs.Update;
 
 uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Mvu.Application as Mvu;
+
 uses GuiGallery.Pages.Inputs.State as S;
 uses System as Sys;
 

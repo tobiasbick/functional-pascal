@@ -2,11 +2,12 @@
 
 unit DocExamples.Validation;
 
+uses Fpas.Execution.Effects as Fx;
+uses Fpas.Processes.Workflows.Capture as Capture;
+
 uses DocExamples.Diagnostics as Diagnostics;
 uses DocExamples.Model as M;
 uses DocExamples.Preparation as Preparation;
-uses Fpas.Execution.Effects as Fx;
-uses Fpas.Processes.Workflows.Capture as Capture;
 uses System as S;
 uses System.Collections.Generic as C;
 uses System.IO as IO;

@@ -4,6 +4,7 @@ unit GuiDocCaptures.Pages.Actions;
 
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Widgets.Actions.StatusButtons as Status;
+
 uses GuiDocCaptures.Rendering.Gestures as Gestures;
 uses GuiDocCaptures.Rendering.Presented as Presented;
 uses GuiDocCaptures.Rendering.Regions as Regions;

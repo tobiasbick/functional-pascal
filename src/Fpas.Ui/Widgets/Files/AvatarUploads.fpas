@@ -3,6 +3,7 @@
 unit Fpas.Ui.Widgets.Files.AvatarUploads;
 
 uses Fpas.Ui.Elements as E;
+
 uses System as Sys;
 
 // Extensions accepted by CUI for avatar image drops.

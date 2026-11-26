@@ -3,6 +3,7 @@
 program GuiWidgetGallery;
 
 uses Fpas.Ui.Gui.Desktop as Gui;
+
 uses GuiGallery.App.Sidebar as Sidebar;
 uses GuiGallery.App.State as State;
 uses GuiGallery.App.Update as Update;

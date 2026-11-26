@@ -2,7 +2,6 @@
 
 unit FpasAmp.UiTests.NativeTrackLinks;
 
-uses ATL as Tags;
 uses Fpas.Media.Audio as Audio;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
@@ -10,6 +9,8 @@ uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
 uses Fpas.Ui.Mvu.Application as A;
 uses Fpas.Ui.Mvu.Testing.EffectReplies as Effects;
 uses Fpas.Ui.Widgets.Collections.Tables as Tables;
+
+uses ATL as Tags;
 uses FpasAmp.Library.Albums.Model as Albums;
 uses FpasAmp.Library.Inventory.Monitoring as Inventory;
 uses FpasAmp.Library.Metadata.Model as Tracks;

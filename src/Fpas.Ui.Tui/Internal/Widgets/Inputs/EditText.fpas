@@ -3,6 +3,7 @@
 unit Fpas.Ui.Tui.Internal.Widgets.Inputs.EditText;
 
 uses Fpas.Ui.Tui.Internal.Rendering.Glyphs as G;
+
 uses System as Sys;
 uses System.Globalization as Global;
 uses System.Text as Text;

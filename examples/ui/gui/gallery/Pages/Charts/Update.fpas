@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Charts.Update;
 
 uses Fpas.Ui.Mvu.Application as M;
+
 uses GuiGallery.Pages.Charts.State as S;
 
 // Updates the chart demonstration without taking ownership of native hover.

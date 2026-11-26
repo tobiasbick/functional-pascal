@@ -15,6 +15,7 @@ uses Fpas.Ui.Widgets.Feedback.ProgressRings as Rings;
 uses Fpas.Ui.Widgets.Feedback.Skeletons as Skel;
 uses Fpas.Ui.Widgets.Feedback.Spinners as Spin;
 uses Fpas.Ui.Widgets.Planning.TimelineItems as Timeline;
+
 uses Gallery.Shared.ProgressExample as Samples;
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Feedback.State as Model;

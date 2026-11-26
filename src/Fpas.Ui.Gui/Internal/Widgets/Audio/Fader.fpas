@@ -6,6 +6,7 @@ uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Widgets.Audio.Faders as W;
+
 uses System.Globalization as Culture;
 
 // Draws the native mixer fader and forwards proposed values.

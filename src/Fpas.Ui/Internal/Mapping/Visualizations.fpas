@@ -20,6 +20,7 @@ uses Fpas.Ui.Widgets.Charts.ScatterCharts as ScatterCharts;
 uses Fpas.Ui.Widgets.Charts.SplitBars as SplitBars;
 uses Fpas.Ui.Widgets.Charts.Treemaps as Treemaps;
 uses Fpas.Ui.Widgets.Charts.Waffles as Waffles;
+
 uses System as Sys;
 
 // Maps native chart activation callbacks without invoking them.

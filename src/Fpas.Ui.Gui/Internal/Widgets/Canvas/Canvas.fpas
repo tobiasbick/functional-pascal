@@ -12,6 +12,7 @@ uses Fpas.Ui.Gui.Internal.Widgets.Canvas.PaintSurface as Surface;
 uses Fpas.Ui.Widgets.Canvas.Canvases as D;
 uses Fpas.Ui.Widgets.Canvas.Painting as Painting;
 uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
+
 uses System as Sys;
 
 function Pack(Shape: D.Shape): CuiCanvas.CuiDrawingShape;

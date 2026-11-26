@@ -4,6 +4,7 @@
 unit FpasAmp.UiTests.AlbumBrowse;
 
 uses Fpas.Ui.Mvu.Application as A;
+
 uses FpasAmp.Library.Albums.Model as Library;
 uses FpasAmp.Ui.Albums.Model as M;
 uses FpasAmp.Ui.Albums.Toolbar.Model as Toolbar;

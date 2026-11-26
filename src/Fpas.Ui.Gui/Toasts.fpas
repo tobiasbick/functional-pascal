@@ -3,6 +3,7 @@
 unit Fpas.Ui.Gui.Toasts;
 
 uses Fpas.Ui.Mvu.Application as Mvu;
+
 uses System as Sys;
 
 // Native CUI toast appearance.

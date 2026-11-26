@@ -12,6 +12,7 @@ uses Fpas.Ui.Validation as V;
 uses Fpas.Ui.Widgets.Inputs.SearchFields as SearchFields;
 uses Fpas.Ui.Widgets.Inputs.TextAreas as TextAreas;
 uses Fpas.Ui.Widgets.Inputs.TextFields as F;
+
 uses GuiGallery.App.State as State;
 uses GuiGallery.App.Update as GalleryUpdate;
 uses GuiGallery.App.View as View;

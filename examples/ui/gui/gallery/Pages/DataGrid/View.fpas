@@ -12,6 +12,7 @@ uses Fpas.Ui.Widgets.Feedback.Badges as B;
 uses Fpas.Ui.Widgets.Feedback.ProgressBars as Progress;
 uses Fpas.Ui.Widgets.Media.Avatars as A;
 uses Fpas.Ui.Widgets.Overlays.Menus as M;
+
 uses Gallery.Shared.PeopleFilters as Filters;
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.DataGrid.People as P;

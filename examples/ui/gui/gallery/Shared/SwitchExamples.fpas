@@ -4,6 +4,7 @@ unit Gallery.Shared.SwitchExamples;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Widgets.Inputs.Switches as S;
+
 uses Gallery.Shared.Strings as Strings;
 
 // Identity and copy for one switch used by both galleries.

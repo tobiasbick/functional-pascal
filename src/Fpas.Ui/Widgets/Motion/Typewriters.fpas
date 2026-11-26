@@ -4,6 +4,7 @@ unit Fpas.Ui.Widgets.Motion.Typewriters;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Widgets.Motion.Motion as Motion;
+
 uses System as Sys;
 
 // Draws the native CUI typewriter.

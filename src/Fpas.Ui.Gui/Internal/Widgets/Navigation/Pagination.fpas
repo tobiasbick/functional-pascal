@@ -5,6 +5,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Navigation.Pagination;
 uses Fpas.Ui.Gui.Application as App;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
+
 uses System as Sys;
 
 const PreviousPage: int := -1;

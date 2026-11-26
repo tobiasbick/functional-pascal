@@ -13,6 +13,7 @@ uses Fpas.Ui.Widgets.Display.Texts as T;
 uses Fpas.Ui.Widgets.Media.Images as Image;
 uses Fpas.Ui.Widgets.Motion.Motion as M;
 uses Fpas.Ui.Widgets.Theming.Themes as Theme;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.App.State as State;
 uses GuiGallery.Pages.Canvas.Picture as Picture;

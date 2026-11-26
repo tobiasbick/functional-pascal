@@ -2,13 +2,14 @@
 
 unit FpasAmp.UiTests.NativeTagEditor;
 
-uses ATL as Atl;
 uses Fpas.Media.Audio as Audio;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
 uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.Mvu.Testing.EffectReplies as Effects;
+
+uses ATL as Atl;
 uses FpasAmp.Library.Inventory.Monitoring as Library;
 uses FpasAmp.Library.Metadata.Model as Tracks;
 uses FpasAmp.Library.Metadata.Monitoring as Metadata;

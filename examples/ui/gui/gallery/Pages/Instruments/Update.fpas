@@ -4,6 +4,7 @@ unit GuiGallery.Pages.Instruments.Update;
 
 uses Fpas.Ui.Widgets.Charts.DotCharts as D;
 uses Fpas.Ui.Widgets.Charts.EventTracks as E;
+
 uses GuiGallery.Pages.Instruments.State as S;
 uses System as Sys;
 

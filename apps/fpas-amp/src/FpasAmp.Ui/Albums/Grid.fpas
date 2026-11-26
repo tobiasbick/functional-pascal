@@ -5,6 +5,7 @@ unit FpasAmp.Ui.Albums.Grid;
 
 uses Fpas.Media.Images as Images;
 uses Fpas.Ui.Mvu.Application as A;
+
 uses FpasAmp.Library.Albums.Model as Albums;
 uses FpasAmp.Ui.Albums.Browse as Browse;
 uses FpasAmp.Ui.Albums.Groups as Groups;

@@ -13,6 +13,7 @@ uses Fpas.Ui.Widgets.Media.ImageComparisons as ImageComparisons;
 uses Fpas.Ui.Widgets.Media.ImageCroppers as ImageCroppers;
 uses Fpas.Ui.Widgets.Media.ImageViewers as ImageViewers;
 uses Fpas.Ui.Widgets.Media.MediaImages as Media;
+
 uses System as Sys;
 
 // Validates media and card-stack widgets when matched.

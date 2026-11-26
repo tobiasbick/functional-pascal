@@ -6,6 +6,7 @@ uses Fpas.Ui.Tui.Internal.Controls.Activation as A;
 uses Fpas.Ui.Tui.Internal.Controls.ChoiceStrip as Strip;
 uses Fpas.Ui.Tui.Internal.View.Tree as E;
 uses Fpas.Ui.Widgets.Navigation.Tabs as T;
+
 uses System.Collections.Generic as C;
 
 // Prepares tabs with a model-owned selection for the terminal.

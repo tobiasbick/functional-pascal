@@ -9,6 +9,7 @@ uses Fpas.Ui.Widgets.Canvas.FormatBars as F;
 uses Fpas.Ui.Widgets.Canvas.SelectionBars as B;
 uses Fpas.Ui.Widgets.Desktop.Toolbars as T;
 uses Fpas.Ui.Widgets.Editors.NodeEditors as N;
+
 uses GuiGallery.Pages.Canvas.State as M;
 
 function Tools(Model: M.Model; Value: T.Event): M.Model;

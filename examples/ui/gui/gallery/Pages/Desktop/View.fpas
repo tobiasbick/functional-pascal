@@ -6,6 +6,7 @@ uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Desktop.SplitViews as Split;
 uses Fpas.Ui.Widgets.Theming.Themes as Theme;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Desktop.Editor as Editor;
 uses GuiGallery.Pages.Desktop.HostActions as HostActions;

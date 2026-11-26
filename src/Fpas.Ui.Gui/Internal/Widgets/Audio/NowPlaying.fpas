@@ -9,6 +9,7 @@ uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Data.ChartData as Colors;
 uses Fpas.Ui.Gui.Internal.Layout.Sizing as S;
 uses Fpas.Ui.Widgets.Audio.NowPlaying as W;
+
 uses System as Sys;
 
 // Presents the native widget.

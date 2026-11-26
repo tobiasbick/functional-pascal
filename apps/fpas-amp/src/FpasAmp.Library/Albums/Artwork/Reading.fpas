@@ -5,6 +5,7 @@ unit FpasAmp.Library.Albums.Artwork.Reading;
 
 uses Fpas.Media.Images as Imaging;
 uses Fpas.Media.Tags.Pictures as Pictures;
+
 uses FpasAmp.Imaging as Thumbnails;
 uses FpasAmp.Library.Albums.Artwork.Names as Names;
 uses FpasAmp.Library.Metadata.Covers as Covers;

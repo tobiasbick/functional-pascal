@@ -6,6 +6,7 @@ unit FpasAmp.UiTests.NativeShell;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Widgets.Overlays.ConfirmPopovers as Confirm;
+
 uses FpasAmp.Library.Inventory.Model as Inventory;
 uses FpasAmp.Library.Inventory.Monitoring as Monitor;
 uses FpasAmp.Library.Inventory.Progress as Progress;

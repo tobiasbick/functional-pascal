@@ -10,6 +10,7 @@ uses Fpas.Ui.Tui.Internal.Rendering.Themes as Th;
 uses Fpas.Ui.Tui.Internal.Widgets.Overlays.AnchoredPopup as Popup;
 uses Fpas.Ui.Tui.Internal.Widgets.Overlays.PopupState as State;
 uses Fpas.Ui.Widgets.Overlays.CommandPalettes as P;
+
 uses System.Collections.Generic as C;
 uses System.Globalization as Global;
 

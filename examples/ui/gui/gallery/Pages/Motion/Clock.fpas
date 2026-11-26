@@ -3,6 +3,7 @@
 unit GuiGallery.Pages.Motion.Clock;
 
 uses Fpas.Ui.Mvu.Application as A;
+
 uses System as Sys;
 uses System.Diagnostics as Diagnostics;
 uses System.Threading as Threads;

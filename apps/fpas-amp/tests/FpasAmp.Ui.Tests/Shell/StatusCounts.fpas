@@ -5,6 +5,7 @@ unit FpasAmp.UiTests.StatusCounts;
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Widgets.Collections.Tables as Tables;
 uses Fpas.Ui.Widgets.Desktop.StatusBars as Bars;
+
 uses FpasAmp.Library.Albums.Model as Library;
 uses FpasAmp.Library.Metadata.Model as Tracks;
 uses FpasAmp.Ui.Albums.Model as Albums;

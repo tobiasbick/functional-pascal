@@ -7,6 +7,7 @@ uses Fpas.Ui.Tui.Internal.Controls.ChoiceStrip as Strip;
 uses Fpas.Ui.Tui.Internal.View.Tree as E;
 uses Fpas.Ui.Widgets.Actions.Buttons as B;
 uses Fpas.Ui.Widgets.Actions.SegmentedControls as S;
+
 uses System.Collections.Generic as C;
 
 // Prepares a model-controlled segmented strip with visible terminal labels.

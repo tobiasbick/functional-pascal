@@ -8,6 +8,7 @@ uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Files.AvatarUploads as A;
 uses Fpas.Ui.Widgets.Files.Dropzones as D;
 uses Fpas.Ui.Widgets.Files.SignaturePads as P;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Capture.State as C;
 uses GuiGallery.Shared.Sections as G;

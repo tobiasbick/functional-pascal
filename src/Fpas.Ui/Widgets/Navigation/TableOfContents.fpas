@@ -3,6 +3,7 @@
 unit Fpas.Ui.Widgets.Navigation.TableOfContents;
 
 uses Fpas.Ui.Elements as E;
+
 uses System as Sys;
 uses System.Globalization as Culture;
 

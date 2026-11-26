@@ -65,28 +65,32 @@ public sealed class FormatterTests
     }
 
     [Fact]
-    public void Uses_statements_put_standard_units_first_and_sort_each_group_by_target()
+    public void Uses_statements_put_the_Fpas_namespace_first_and_sort_each_group_by_target()
     {
         const string input = """
             unit Demo;
-            uses System.Console as Console; uses Std.Ui.Gui.Widgets as Widgets;
+            uses System.Console as Console; uses Fpas.Ui.Mvu.Application as Mvu;
             uses
-              Std.Host.Cui.Controls as Controls;
+              Fpas.Ui.Elements as Elements;
             uses System as Sys;
-            uses Std.Host.Cui.Actions as Actions;
-            uses Std.Host.Cui as Cui;
+            uses Fpas.Ui.Gui.Desktop as Gui;
+            uses Fpas as F;
+            uses FpasAmp.Library as Library;
+            uses Std.Example as Example;
             uses App.Settings as Settings;
             end unit;
             """;
         const string expected = """
             unit Demo;
 
-            uses Std.Host.Cui as Cui;
-            uses Std.Host.Cui.Actions as Actions;
-            uses Std.Host.Cui.Controls as Controls;
-            uses Std.Ui.Gui.Widgets as Widgets;
+            uses Fpas as F;
+            uses Fpas.Ui.Elements as Elements;
+            uses Fpas.Ui.Gui.Desktop as Gui;
+            uses Fpas.Ui.Mvu.Application as Mvu;
 
             uses App.Settings as Settings;
+            uses FpasAmp.Library as Library;
+            uses Std.Example as Example;
             uses System as Sys;
             uses System.Console as Console;
 
@@ -132,16 +136,16 @@ public sealed class FormatterTests
             uses System.Text as Text; // Text access
             // Console access
             uses System.Console as Console;
-            // Standard unit
-            uses Std.Controls as Controls;
+            // FPAS widgets
+            uses Fpas.Ui.Elements as Elements;
             end unit;
             """;
         var formatted = Format(input);
         Assert.Contains("""
             // All imports
 
-            // Standard unit
-            uses Std.Controls as Controls;
+            // FPAS widgets
+            uses Fpas.Ui.Elements as Elements;
 
             // Console access
             uses System.Console as Console;

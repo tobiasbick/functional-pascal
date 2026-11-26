@@ -17,6 +17,7 @@ uses Fpas.Ui.Widgets.Developer.TraceViewers as T;
 uses Fpas.Ui.Widgets.Motion.Motion as Font;
 uses Fpas.Ui.Widgets.Pickers.SchedulePickers as S;
 uses Fpas.Ui.Widgets.Theming.Themes as Themes;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Developer.Samples as D;
 uses GuiGallery.Pages.Developer.State as M;

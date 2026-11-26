@@ -5,6 +5,7 @@ unit Gallery.Shared.PeopleTable;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Widgets.Collections.Tables as T;
+
 uses Gallery.Shared.Strings as Strings;
 uses System as Sys;
 

@@ -10,6 +10,7 @@ uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Input.ModalFocus as F;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Overlays.CommandPalettes as P;
+
 uses System.Globalization as Culture;
 
 // Presents the native CommandPalette element.

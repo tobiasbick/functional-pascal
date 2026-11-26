@@ -7,6 +7,7 @@ uses Fpas.Ui.Widgets.Inputs.GradientSliders as Gradient;
 uses Fpas.Ui.Widgets.Inputs.SeedFields as Seeds;
 uses Fpas.Ui.Widgets.Inputs.StepSliders as Steps;
 uses Fpas.Ui.Widgets.Pickers.PaletteStrips as Palette;
+
 uses GuiGallery.Pages.Creative.State as S;
 
 // Applies a proposal from the native Creative controls.

@@ -6,6 +6,7 @@ unit FpasAmp.Ui.Settings.Update;
 uses Fpas.Execution.Effects as Fx;
 uses Fpas.Ui.Gui.Cui.CuiDesktop as Desktop;
 uses Fpas.Ui.Mvu.Application as Mvu;
+
 uses FpasAmp.Library.Inventory.Model as Inventory;
 uses FpasAmp.Library.Inventory.Monitoring as Monitoring;
 uses FpasAmp.Library.Inventory.Progress as Progress;

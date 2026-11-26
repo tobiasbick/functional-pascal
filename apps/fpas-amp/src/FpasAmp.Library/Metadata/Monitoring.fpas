@@ -4,6 +4,7 @@
 unit FpasAmp.Library.Metadata.Monitoring;
 
 uses Fpas.Media.Tags.Pictures as Pictures;
+
 uses FpasAmp.Library.Albums.Access as Albums;
 uses FpasAmp.Library.Metadata.Covers as Covers;
 uses FpasAmp.Library.Metadata.Fingerprints.Calculator as FingerprintData;

@@ -9,6 +9,7 @@ uses Fpas.Ui.Widgets.Actions.Buttons as B;
 uses Fpas.Ui.Widgets.Containers.Cards as Cards;
 uses Fpas.Ui.Widgets.Feedback.Badges as Badges;
 uses Fpas.Ui.Widgets.Media.Avatars as Avatars;
+
 uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.Pages.Overview.State as State;
 uses GuiGallery.Shared.Sections as G;

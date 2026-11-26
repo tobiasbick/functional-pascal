@@ -34,8 +34,12 @@ end unit;
 
 ## Usage
 
-Place the divider between adjacent groups. The separator is passive.
-The gallery adds its Recent heading as a separate label beneath the line.
+Place the divider between adjacent groups. A plain divider is vertical in a
+row and horizontal elsewhere. CUI draws it one logical point thick in the
+theme's border color. In a row or column, it spans the available space on the
+cross axis. Pass a title to place a caption above a horizontal line.
+
+The Notifications example adds its Recent heading below the line.
 
 ## See also
 

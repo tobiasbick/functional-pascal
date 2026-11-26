@@ -83,14 +83,14 @@ public sealed class CuiHostLifecycleReviewTests
         Assert.True(window.NextFrame());
         window.BeginColumn();
         window.BeginViewport("viewport", false);
-        window.TrackLastControl("viewport-alias");
         window.Text("Not a viewport");
         window.TrackLastControl("text");
         window.EndScroll();
+        window.TrackLastControl("viewport-alias");
         window.BeginScroll("scroll", height: 40);
-        window.TrackLastControl("scroll-alias");
         window.Gap(100);
         window.EndScroll();
+        window.TrackLastControl("scroll-alias");
         window.EndColumn();
         window.Present();
 

@@ -5,12 +5,15 @@
 #include <string.h>
 #include <stdio.h>
 
-static bool matches(int axis, bool rtl, bool dark, int width) {
+static bool matches(int axis, bool rtl, bool dark, int width, bool styled) {
     const int height = 220;
     const size_t bytes = (size_t)width * height * 4;
     unsigned char *pixels[2] = { calloc(1, bytes), calloc(1, bytes) };
     if (!pixels[0] || !pixels[1]) { free(pixels[0]); free(pixels[1]); return false; }
     bool valid = true;
+    const bool grid = axis == CUI_GRID;
+    const bool wrap = styled && axis == CUI_ROW;
+    const cui_justify justify = wrap ? CUI_JUSTIFY_BETWEEN : CUI_JUSTIFY_START;
     for (int pass = 0; pass < 2; ++pass) {
         cui_sw_renderer *renderer = cui_sw_create();
         const cui_ctx_desc options = { .renderer = cui_sw_iface(renderer) };
@@ -22,29 +25,63 @@ static bool matches(int axis, bool rtl, bool dark, int width) {
         cui_begin_frame(ui, .04f);
         int node = 0;
         if (pass) {
-            node = fpas_cui_group_begin_ex(ui, axis, 0, 7, CUI_ALIGN_START, 0, 0, 0, CUI_JUSTIFY_START);
+            if (grid) {
+                node = fpas_cui_grid_begin(ui, 0, 100, 0, 7, styled,
+                                           styled ? "styled" : NULL, styled ? 2 : 0);
+            } else {
+                node = fpas_cui_group_open(ui, axis, 0, 7, CUI_ALIGN_START, 0, wrap, styled,
+                                           justify, styled ? "styled" : NULL, styled ? 2 : 0);
+            }
             fpas_cui_box_details(ui, node, 9, 21, 15, 33, rtl ? CUI_DIRECTION_RTL : CUI_DIRECTION_LTR);
+            if (styled)
+                fpas_cui_group_style(ui, node, 0, CUI_TOKEN_SURFACE_RAISED, 3, 13, 19, 23,
+                                     2, 0, CUI_TOKEN_ACCENT, CUI_ELEVATION_RAISED, .65f);
         } else {
-            const cui_box box = { .dir = (cui_dir)axis, .width = CUI_FILL, .height = CUI_FILL,
+            cui_box box = { .dir = (cui_dir)axis, .width = CUI_FILL, .height = CUI_FILL,
                 .pad_top = 9, .pad_right = 21, .pad_bottom = 15, .pad_left = 33, .gap = 7,
-                .align = CUI_ALIGN_START, .direction = rtl ? CUI_DIRECTION_RTL : CUI_DIRECTION_LTR };
-            cui_box_begin(ui, &box);
+                .align = CUI_ALIGN_START, .justify = justify, .wrap = wrap,
+                .direction = rtl ? CUI_DIRECTION_RTL : CUI_DIRECTION_LTR };
+            if (grid) {
+                box.align = CUI_ALIGN_DEFAULT;
+                box.min_column_width = 100;
+            }
+            if (styled) {
+                box.id = "styled"; box.scroll_y = true; box.scroll_x = true; box.clip = true;
+                box.bg = CUI_COLOR_SURFACE_RAISED; box.border = 2; box.border_color = CUI_COLOR_ACCENT;
+                box.radius_tl = 3; box.radius_tr = 13; box.radius_br = 19; box.radius_bl = 23;
+                box.elevation = CUI_ELEVATION_RAISED; box.opacity = .65f;
+            }
+            if (axis == CUI_ROW) cui_row_begin(ui, &box);
+            else if (axis == CUI_COLUMN) cui_column_begin(ui, &box);
+            else cui_box_begin(ui, &box);
         }
         cui_skeleton(ui, CUI_PX(60), 20);
-        cui_gap(ui, 10); cui_spacer(ui);
-        cui_skeleton(ui, CUI_PX(40), 12);
+        const int first = fpas_cui_last_node(ui);
+        if (!grid) {
+            cui_gap(ui, 10); cui_spacer(ui);
+            cui_skeleton(ui, CUI_PX(40), 12);
+        }
+        if (wrap || grid) {
+            for (int child = 0; child < 3; ++child) cui_skeleton(ui, CUI_PX(96), 20);
+        }
+        const int last = fpas_cui_last_node(ui);
         if (pass) {
-            fpas_cui_group_end(ui, node);
+            valid = fpas_cui_group_end(ui, node) && valid;
             fpas_cui_node_size(ui, node, 1, 1, 0, 0, -1, 0, 0);
             fpas_cui_node_size(ui, node, 0, 1, 0, 0, -1, 0, 0);
         } else cui_box_end(ui);
         cui_end_frame(ui);
+        if (wrap || grid) {
+            const bool wrapped = fpas_cui_node_rect(ui, last).y > fpas_cui_node_rect(ui, first).y;
+            valid = valid && wrapped == (width == 280);
+        }
         cui_sw_render(renderer, cui_get_draw_data(ui), pixels[pass], width, height, width * 4, CUI_SW_RGBA);
         cui_destroy(ui); cui_sw_destroy(renderer);
     }
     valid = valid && memcmp(pixels[0], pixels[1], bytes) == 0;
     free(pixels[0]); free(pixels[1]);
-    if (!valid) fprintf(stderr, "Layout mismatch: axis=%d rtl=%d dark=%d width=%d\n", axis, rtl, dark, width);
+    if (!valid) fprintf(stderr, "Layout mismatch: axis=%d rtl=%d dark=%d width=%d styled=%d\n",
+                        axis, rtl, dark, width, styled);
     return valid;
 }
 
@@ -77,12 +114,39 @@ static bool check_hover(void) {
     return idle && hovered;
 }
 
+/** A mismatched native close leaves the actual inner box open. */
+static bool check_box_close(void) {
+    cui_ctx *ui = cui_create(NULL);
+    if (!ui) return false;
+    cui_set_viewport(ui, 280, 220, 1);
+    cui_begin_frame(ui, .016f);
+    const int outer = fpas_cui_column_begin(ui, 0, 0);
+    const int inner = fpas_cui_row_begin(ui, 0, 0);
+    cui_gap(ui, 10);
+    const int leaf = fpas_cui_last_node(ui);
+    const bool unchanged = !fpas_cui_group_end(ui, outer) && fpas_cui_last_node(ui) == leaf;
+    const bool inner_closed = fpas_cui_group_end(ui, inner) && fpas_cui_last_node(ui) == inner;
+    const bool outer_closed = fpas_cui_group_end(ui, outer) && fpas_cui_last_node(ui) == outer;
+    cui_end_frame(ui);
+    cui_destroy(ui);
+    return unchanged && inner_closed && outer_closed;
+}
+
 int main(void) {
-    bool valid = check_hover();
+    bool valid = check_hover() && check_box_close();
     for (int axis = 0; axis < 3; ++axis)
         for (int rtl = 0; rtl < 2; ++rtl)
             for (int dark = 0; dark < 2; ++dark)
-                for (int narrow = 0; narrow < 2; ++narrow)
-                    valid = matches(axis, rtl != 0, dark != 0, narrow ? 280 : 640) && valid;
+                for (int narrow = 0; narrow < 2; ++narrow) {
+                    valid = matches(axis, rtl != 0, dark != 0, narrow ? 280 : 640, false) && valid;
+                    if (axis == CUI_ROW || axis == CUI_STACK)
+                        valid = matches(axis, rtl != 0, dark != 0, narrow ? 280 : 640, true) && valid;
+                }
+    for (int dark = 0; dark < 2; ++dark)
+        valid = matches(CUI_COLUMN, true, dark != 0, 280, true) && valid;
+    for (int rtl = 0; rtl < 2; ++rtl)
+        for (int dark = 0; dark < 2; ++dark)
+            for (int narrow = 0; narrow < 2; ++narrow)
+                valid = matches(CUI_GRID, rtl != 0, dark != 0, narrow ? 280 : 640, true) && valid;
     return valid ? 0 : 1;
 }

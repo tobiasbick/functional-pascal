@@ -3,6 +3,7 @@
 unit GalleryValidationBoundaryContract;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Validation as V;
 uses Fpas.Ui.Widgets.Charts.ActivityRings as Rings;
@@ -19,7 +20,10 @@ uses Fpas.Ui.Widgets.Charts.ScatterCharts as Scatter;
 uses Fpas.Ui.Widgets.Charts.SplitBars as Splits;
 uses Fpas.Ui.Widgets.Charts.Treemaps as Trees;
 uses Fpas.Ui.Widgets.Charts.Waffles as Waffles;
+uses Fpas.Ui.Widgets.Display.IconGlyphs as Glyphs;
+uses Fpas.Ui.Widgets.Display.Icons as Icons;
 uses Fpas.Ui.Widgets.Planning.Gantts as Gantts;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses System as Sys;
 
@@ -49,6 +53,22 @@ begin
       Reject(Node, Profile, 'Graphical');
     end for;
   end for;
+end procedure;
+
+procedure IconColors();
+begin
+  discard V.Prepare of int(
+    Icons.Icon of int(Glyphs.FileText, ThemeColor := Themes.ColorToken.Accent),
+    V.Target.Graphical
+  );
+  Reject(
+    Icons.Icon of int(
+      Glyphs.FileText, Color := new G.Color(0, 0, 0, 0),
+      ThemeColor := Themes.ColorToken.Accent
+    ),
+    V.Target.Graphical,
+    'one explicit color'
+  );
 end procedure;
 
 function Timeline(Origin: Sys.DateOnly; Days: int): E.Element of int;
@@ -255,6 +275,7 @@ end procedure;
 public procedure Verify();
 begin
   GraphicalStyles();
+  IconColors();
   FinalTimelineDay();
   ChartData();
   RankedAndScaledCharts();

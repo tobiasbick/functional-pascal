@@ -18,6 +18,10 @@ C function or adding another spelling for an existing operation.
 | Drawing primitives, text measurement, image caching, clipping and native frame clock | `Canvases.Canvas` with callback-scoped `Painting.Surface` |
 | Focusable canvas, ordered key/text/window-focus dispatch, hover cursor and visible focus | `Canvases.Options.Focusable`, `HoverCursor`, `OnInput`, `Mvu.Focus` and `Painting.Surface.FocusVisible()` |
 | Pane-scoped Tab and Shift+Tab | `Layout.Flow.Scope` on graphical rows, columns and layers |
+| `cui_box_begin` and `cui_box_end` | Rows, columns, layered stacks and responsive grids share `Layout.Flow` and `Elements.Size`. See [Layout](ui/gui/layout/README.md). |
+| `cui_separator` | [`Elements.Divider()`](ui/gui/layout/divider.md) uses CUI's direction and theme border color. |
+| `cui_viewport_size` | `CuiWindow.ViewportSize` supplies the logical drawable size for the graphical `View` and `Snapshot().Size`. |
+| `cui_scroll` | [`Elements.ScrollView`](ui/gui/layout/scroll-view.md) uses native viewport extents, padding, gap, edge fades and wheel routing. CUI's position and reveal APIs are vertical. |
 | Rectangular texture updates | `MediaImages.Update` returns an immutable RGBA source with a dirty rectangle |
 | Canvas click, hover/press changes and optional two-axis wheel ownership | `Canvas` callbacks; unchanged pointer states emit no message |
 | Application shortcuts and editor navigation/find/selection | `BindingsFor`, `EditorCommands` |
@@ -33,7 +37,7 @@ retains its semantic palette and cell-based widget subset.
 
 | Header family | Classification |
 | --- | --- |
-| `cui_create/destroy`, renderer/platform installation, viewport and frame begin/end, redraw scheduling, frame count | Host/backend lifecycle. CUI's app loop and the GUI session own it. Custom painting can read native time/delta; `Frames.Redraw` schedules work. |
+| `cui_create/destroy`, renderer/platform installation, viewport setup and frame begin/end, redraw scheduling, frame count | Host/backend lifecycle. CUI's app loop and the GUI session own it. Custom painting can read native time/delta; `Frames.Redraw` schedules work. |
 | `cui_input_*`, dropped-file counts/drag state, cursor, mouse/key levels and `cui_wants_*` | Platform input and native ownership. Applications consume typed widget proposals, drop zones and application bindings. Test injection remains a low-level binding service. |
 | `cui_make_id`, ID stack, last-ID/rect/hover queries, raw retained state and state destructors | Binding implementation. Stable application IDs and session snapshots provide the application contract. Raw native pointers are not exposed. |
 | `cui_set_theme`, `cui_get_theme_mode`, `cui_set_accent`, `cui_get_accent`, token/color resolution and accent names | Covered by the model's theme, semantic colors and accent enum. No second imperative application theme state. |

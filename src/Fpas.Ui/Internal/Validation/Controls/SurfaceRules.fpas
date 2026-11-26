@@ -3,6 +3,7 @@
 unit Fpas.Ui.Internal.Validation.Controls.SurfaceRules;
 
 uses Fpas.Ui.Internal.Validation.Core.Checks as Rules;
+uses Fpas.Ui.Internal.Validation.Core.ContainerRules as Containers;
 uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as S;
@@ -25,18 +26,28 @@ end procedure;
 
 // Checks CUI grid settings.
 // ## Parameters
-// - `Settings`: Requested column count, minimum and spacing.
+// - `Settings`: Requested column count, minimum and box options.
 // - `At`: Diagnostic location.
-public procedure Grid(Settings: G.Options; At: string);
+// ## Returns
+// Validated effective flow.
+public function Grid(Settings: G.Options; At: string): L.Flow;
 begin
-  if Settings.Columns < 1 then
-    Rules.Reject(At, 'A grid needs at least one column.');
+  if Settings.Columns < 0 then
+    Rules.Reject(At, 'The grid column count must be nonnegative.');
   end if;
 
   CheckDistance(Settings.MinimumColumnWidth, At + '/minimumColumnWidth');
-  LR.CheckSpacing(Settings.Gap, Rules.Profile.Graphical, At + '/gap');
-  LR.CheckSpacing(Settings.Padding, Rules.Profile.Graphical, At + '/padding');
-end procedure;
+  const Flow: L.Flow := G.FlowFor(Settings);
+  Containers.CheckStack(Flow, false, Rules.Profile.Graphical, At, At);
+  if Flow.Align <> L.Alignment.Default or Flow.Justify <> L.Justification.Start then
+    Rules.Reject(
+      At,
+      'CUI grid placement uses cell positions. Align and Justify apply inside each cell.'
+    );
+  end if;
+
+  return Flow;
+end function;
 
 // Checks native card dimensions and alignment.
 // ## Parameters

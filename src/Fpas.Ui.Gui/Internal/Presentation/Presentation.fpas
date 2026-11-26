@@ -616,6 +616,7 @@ public procedure Draw of TMsg(State: C.State of TMsg);
       when E.Element.NativeText(_, _), E.Element.Icon(
         _,
         _,
+        _,
         _
       ), E.Element.Emoji(_, _), E.Element.Keycap(_), E.Element.Image(_, _, _), E.Element.Canvas(
         _,
@@ -985,13 +986,14 @@ public procedure Draw of TMsg(State: C.State of TMsg);
       when E.Element.Separator(const Title: string):
         if Title = '' then
           Current.Window.Separator();
-        else
-          Current.Window.BeginGroup(false, 0, 4, 0, false);
-          Current.Window.Text(Title);
-          Current.Labels.Add(Title);
-          Current.Window.Separator();
-          Current.Window.EndGroup();
+          return;
         end if;
+
+        Current.Window.BeginGroup(false, 0, 4, 0, false);
+        Current.Window.Text(Title);
+        Current.Labels.Add(Title);
+        Current.Window.Separator();
+        Current.Window.EndGroup();
       when E.Element.ButtonAction(
         const Id: string,
         const Label: string,
@@ -1821,6 +1823,7 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         const Children: array of E.Element of TMsg
       ):
         GridWidget.Draw of TMsg(Current, Settings, Children, Visit);
+        return;
       when E.Element.Card(
         const Id: string, const Children: array of E.Element of TMsg, const Settings: Cards.Options,
         const Activate: (Sys.Func of TMsg)?
@@ -2007,13 +2010,15 @@ public procedure Draw of TMsg(State: C.State of TMsg);
     case Node of
       when E.Element.Spacer:
         Current.Window.Spacer();
+        return;
       when E.Element.Gap(const Distance: L.Measure):
         Current.Window.Gap(Size.Measure(Distance));
+        return;
       when E.Element.Layered(const Children: array of E.Element of TMsg, const Settings: L.Flow):
         Current.Window.BeginLayers(
           cast Settings.Align as int,
           cast Settings.Justify as int,
-          Settings.Clip ?? false
+          Settings.Clip ?? false, Settings.Id, cast Settings.Scrolling as int
         );
         Size.Container(Current.Window, Settings, true);
         const Scope: L.FocusScope? := Settings.Scope;
@@ -2022,7 +2027,7 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         end if;
 
         for Child: E.Element of TMsg in Children do
-          Visit(Child, Current, false, Settings.Align);
+          Visit(Child, Current, false, L.Alignment.Default);
         end for;
 
         if Scope <> null then
@@ -2030,6 +2035,8 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         end if;
 
         Current.Window.EndGroup();
+        C.TrackContainer of TMsg(Current, Settings.Id, 'layers');
+        return;
       when E.Element.Stack(
         const Children: array of E.Element of TMsg,
         const Row: bool,
@@ -2041,7 +2048,8 @@ public procedure Draw of TMsg(State: C.State of TMsg);
           Size.Spacing(Settings.Gap),
           cast Settings.Align as int,
           false,
-          Settings.Wrap, Settings.Clip ?? not Settings.Wrap, cast Settings.Justify as int
+          Settings.Wrap, Settings.Clip ?? not Settings.Wrap, cast Settings.Justify as int,
+          Settings.Id, cast Settings.Scrolling as int
         );
         Size.Container(Current.Window, Settings);
         const Scope: L.FocusScope? := Settings.Scope;
@@ -2058,9 +2066,18 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         end if;
 
         Current.Window.EndGroup();
+        C.TrackContainer of TMsg(
+          Current, Settings.Id, if Row then
+            'row'
+          else
+            'column'
+          end if
+        );
+        return;
       when E.Element.Sized(const Child: E.Element of TMsg, const Settings: L.Flex):
         Visit(Child, Current, Horizontal, Align);
-        Size.Apply(Current.Window, Settings, Horizontal, Align);
+        // Sizing a child preserves the alignment chosen while drawing it.
+        Size.Apply(Current.Window, Settings, Horizontal, L.Alignment.Default);
         return;
       when E.Element.Styled(const Child: E.Element of TMsg, const Role: S.Role):
         Visit(Child, Current, Horizontal, Align);
@@ -2084,10 +2101,10 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         AnchorWidget.Draw of TMsg(Current, Id);
       when E.Element.Scroll(
         const Id: string,
-        const Child: E.Element of TMsg,
+        const Children: array of E.Element of TMsg,
         const Position: L.ScrollPosition?,
         const Scroll: Sys.Func of (L.ScrollChange, TMsg)?,
-        const Bar: bool, const FadeEdges: bool, const HorizontalScroll: bool
+        const Settings: L.ScrollOptions
       ):
         const Token: string := C.Token('scroll', Id);
         var Before: float := 0;
@@ -2108,21 +2125,46 @@ public procedure Draw of TMsg(State: C.State of TMsg);
 
         Current.Window.ScrollState(Token, Mode, Offset, out Before, out Maximum);
         Current.Window.ScrollState(Token, -1, 0, out Before, out Maximum);
-        Current.Window.BeginViewport(Token, Bar, Current.AcceptInput, FadeEdges, HorizontalScroll);
-        Visit(Child, Current, false, L.Alignment.Stretch);
+        const Width: Size.NativeExtent := Size.Extent(Settings.Width ?? L.Extent.Fill);
+        const Height: Size.NativeExtent := Size.Extent(Settings.Height ?? L.Extent.Fill);
+        const Fade: G.Color? := Settings.FadeColor;
+        Current.Window.BeginViewport(
+          Token,
+          Settings.ShowScrollbar,
+          Current.AcceptInput,
+          Settings.FadeEdges,
+          Settings.Horizontal,
+          Width.Kind,
+          Width.Value,
+          Height.Kind,
+          Height.Value,
+          Size.Spacing(
+            Settings.Padding ?? L.Spacing.None
+          ),
+          Size.Spacing(Settings.Gap ?? L.Spacing.None),
+          if Fade = null then
+            0U
+          else
+            CreativeParts.Pack(Fade)
+          end if
+        );
+        for Child: E.Element of TMsg in Children do
+          Visit(Child, Current, false, L.Alignment.Stretch);
+        end for;
+
         Current.Window.EndScroll();
         var After: float := 0;
         Current.Window.ScrollState(Token, -1, 0, out After, out Maximum);
         if Current.AcceptInput and After <> Before then
           case Scroll of
             when is Sys.Func of (L.ScrollChange, TMsg) as Changed:
-              const Units: L.Measure := L.Measure.Logical(cast After as int);
+              const Units: L.Measure := L.Measure.Points(After);
               Current.Messages.Add(
                 Changed.Invoke(
                   new L.ScrollChange(
                     L.ScrollPosition.Offset(Units),
                     Units,
-                    L.Measure.Logical(cast Maximum as int)
+                    L.Measure.Points(Maximum)
                   )
                 )
               );

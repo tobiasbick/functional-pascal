@@ -3,13 +3,16 @@
 unit Fpas.Ui.Layout;
 
 uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
-// A portable logical distance or an explicit terminal cell distance.
+// A portable distance or an explicit host distance.
 public type Measure = variant
   // A whole number of terminal cells.
   Cells(Value: int);
   // A portable CUI logical distance. The terminal maps 8 units per column and 16 per row.
   Logical(Value: int);
+  // A finite logical distance with fractional precision. GUI only.
+  Points(Value: float);
 end variant;
 
 // A layout extent used for main-axis constraints and explicit widget widths.
@@ -32,6 +35,8 @@ public type AxisSize = record
   public Minimum: Measure? := null;
   // Optional upper bound in logical units.
   public Maximum: Measure? := null;
+  // Native growth weight. Fill uses one when no weight is given.
+  public Grow: float := 0.0F;
 end record;
 
 // Main-axis constraints and allocation weights.
@@ -101,6 +106,8 @@ public type Direction = enum: byte
   LeftToRight;
   // Mirror horizontal flow, start/end alignment and padding.
   RightToLeft;
+  // Resolve direction from the first strong descendant text, or inherit when all text is neutral.
+  Auto;
 end enum;
 
 // A named native Tab-navigation scope for a pane. Inactive scopes remain clickable.
@@ -111,7 +118,51 @@ public type FocusScope = record
   public Active: bool;
 end record;
 
-// Layout settings shared by rows, columns and graphical layered stacks.
+// Optional physical corner overrides in logical points.
+public type CornerRadii = record
+  // Top left radius.
+  public TopLeft: float? := null;
+  // Top right radius.
+  public TopRight: float? := null;
+  // Bottom right radius.
+  public BottomRight: float? := null;
+  // Bottom left radius.
+  public BottomLeft: float? := null;
+end record;
+
+// Stroke drawn on the container itself.
+public type Border = record
+  // Width in logical points.
+  public Width: float := 1.0F;
+  // Optional straight-alpha stroke color.
+  public Color: G.Color? := null;
+  // Optional theme stroke color. Omit both colors to use the theme border.
+  public ThemeColor: Themes.ColorToken? := null;
+end record;
+
+// Native theme shadow for a graphical container.
+public type Elevation = enum: byte
+  // No shadow.
+  None;
+  // Resting shadow.
+  Resting;
+  // Raised shadow.
+  Raised;
+  // Floating shadow.
+  Floating;
+end enum;
+
+// Native scroll axes for the container itself.
+public type ScrollMode = enum: byte
+  // The container does not scroll.
+  None;
+  // Enable vertical scrolling.
+  Vertical;
+  // Enable vertical and horizontal scrolling.
+  Both;
+end enum;
+
+// Layout settings shared by rows, columns, layered stacks and grids.
 public type Flow = record
   // The separation between consecutive children.
   public Gap: Spacing := Spacing.None;
@@ -125,13 +176,13 @@ public type Flow = record
   public Clip: bool? := null;
   // Graphical main-axis distribution. Start is portable.
   public Justify: Justification := Justification.Start;
-  // Optional graphical top inset, overriding Padding, including an explicit zero.
+  // Optional graphical top inset, overriding axis and uniform padding.
   public PaddingTop: Spacing? := null;
-  // Optional graphical logical end inset, overriding Padding.
+  // Optional graphical logical end inset, overriding axis and uniform padding.
   public PaddingEnd: Spacing? := null;
-  // Optional graphical bottom inset, overriding Padding.
+  // Optional graphical bottom inset, overriding axis and uniform padding.
   public PaddingBottom: Spacing? := null;
-  // Optional graphical logical start inset, overriding Padding.
+  // Optional graphical logical start inset, overriding axis and uniform padding.
   public PaddingStart: Spacing? := null;
   // Native inherited reading direction. Explicit directions require GUI.
   public ReadingDirection: Direction := Direction.Inherit;
@@ -141,6 +192,24 @@ public type Flow = record
   public CornerRadius: float := 0.0F;
   // Optional GUI keyboard focus scope for the children.
   public Scope: FocusScope? := null;
+  // Optional horizontal inset on both sides, overriding uniform padding.
+  public PaddingX: Spacing? := null;
+  // Optional vertical inset on both sides, overriding uniform padding.
+  public PaddingY: Spacing? := null;
+  // Optional graphical theme fill. Choose this or Background.
+  public BackgroundTheme: Themes.ColorToken? := null;
+  // Optional graphical stroke.
+  public Border: Border? := null;
+  // Optional physical corner overrides, including explicit zero.
+  public Corners: CornerRadii? := null;
+  // Graphical theme shadow.
+  public Elevation: Elevation := Elevation.None;
+  // Graphical paint opacity of the container and its descendants, from zero through one.
+  public Opacity: float := 1.0F;
+  // GUI scrolling managed by CUI. Use a stable Id when the column can move.
+  public Scrolling: ScrollMode := ScrollMode.None;
+  // Optional stable GUI identity. Anonymous scrolling uses CUI's automatic identity.
+  public Id: string? := null;
 end record;
 
 // An application-facing size class for responsive views.
@@ -160,9 +229,29 @@ public type Viewport = record
   // The size class for available height.
   public Height: SizeClass;
   // Measured width in portable logical units, when known.
-  public LogicalWidth: int? := null;
+  public LogicalWidth: float? := null;
   // Measured height in portable logical units, when known.
-  public LogicalHeight: int? := null;
+  public LogicalHeight: float? := null;
+end record;
+
+// Scroll view presentation and native CUI layout options.
+public type ScrollOptions = record
+  // Whether to show the scrollbar.
+  public ShowScrollbar: bool := true;
+  // Fade edges with additional content beyond them.
+  public FadeEdges: bool := false;
+  // Allow horizontal scrolling in addition to vertical scrolling.
+  public Horizontal: bool := false;
+  // GUI viewport width. The default fills the available width.
+  public Width: Extent? := null;
+  // GUI viewport height. The default and Content both fill the available height.
+  public Height: Extent? := null;
+  // GUI inset on every edge of the viewport.
+  public Padding: Spacing? := null;
+  // GUI spacing between direct children.
+  public Gap: Spacing? := null;
+  // GUI fade color. When omitted, CUI uses the nearest opaque backdrop.
+  public FadeColor: G.Color? := null;
 end record;
 
 // A model-owned vertical scroll request.

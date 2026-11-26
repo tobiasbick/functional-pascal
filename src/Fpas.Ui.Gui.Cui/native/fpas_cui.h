@@ -264,14 +264,16 @@ CUI_API void fpas_cui_finish_frame_for_destroy(cui_app *app);
 /** Begins a full-width column. Close it with cui_box_end.
  * @param ui Current UI-thread context.
  * @param padding Nonnegative logical padding.
- * @param gap Nonnegative logical child spacing. */
-CUI_API void fpas_cui_column_begin(cui_ctx *ui, float padding, float gap);
+ * @param gap Nonnegative logical child spacing.
+ * @return Frame-local node, or -1 at CUI's nesting limit. */
+CUI_API int fpas_cui_column_begin(cui_ctx *ui, float padding, float gap);
 
 /** Begins a full-width row. Close it with cui_box_end.
  * @param ui Current UI-thread context.
  * @param padding Nonnegative logical padding.
- * @param gap Nonnegative logical child spacing. */
-CUI_API void fpas_cui_row_begin(cui_ctx *ui, float padding, float gap);
+ * @param gap Nonnegative logical child spacing.
+ * @return Frame-local node, or -1 at CUI's nesting limit. */
+CUI_API int fpas_cui_row_begin(cui_ctx *ui, float padding, float gap);
 
 /** Requests focus for the next matching focusable control.
  * @param ui Current UI-thread context.
@@ -294,8 +296,9 @@ CUI_API void fpas_cui_input_scroll(cui_ctx *ui, float x, float y);
  * @param ui Current UI-thread context.
  * @param id Borrowed stable identity.
  * @param height Positive logical height, or zero to fill available space.
- * @param horizontal Nonzero to enable horizontal scrolling. */
-CUI_API void fpas_cui_scroll_begin(cui_ctx *ui, const char *id, float height, int horizontal);
+ * @param horizontal Nonzero to enable horizontal scrolling.
+ * @return Frame-local node, or -1 at CUI's nesting limit. */
+CUI_API int fpas_cui_scroll_begin(cui_ctx *ui, const char *id, float height, int horizontal);
 
 /** Sets the Win32 live-resize renderer. The callback draws on the UI thread.
  * @param app UI-thread application with no callback currently in flight.

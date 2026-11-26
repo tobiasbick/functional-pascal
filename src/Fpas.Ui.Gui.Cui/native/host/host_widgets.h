@@ -19,13 +19,21 @@ CUI_API int fpas_cui_group_begin(cui_ctx *ui, int horizontal, float padding, flo
 /* Opens a native row or column with main-axis justification. */
 CUI_API int fpas_cui_group_begin_ex(cui_ctx *ui, int horizontal, float padding, float gap,
                                    int align, int framed, int wrap, int clip, int justify);
+/** Opens a CUI box whose scroll mode is none (0), vertical (1) or both (2). */
+CUI_API int fpas_cui_group_open(cui_ctx *ui, int direction, float padding, float gap, int align,
+                                int framed, int wrap, int clip, int justify, const char *id, int scroll);
 /** Closes a group and restores its inspection identity.
  * @param ui Owner context.
- * @param node Frame-local group. */
-CUI_API void fpas_cui_group_end(cui_ctx *ui, int node);
+ * @param node Frame-local group.
+ * @return Nonzero when that group was the current box and has been closed. */
+CUI_API int fpas_cui_group_end(cui_ctx *ui, int node);
 /** Sets physical top/bottom and logical start/end padding and native inherited direction.
  * Call immediately after beginning the container, before layout resolution. */
 CUI_API void fpas_cui_surface(cui_ctx *ui, int node, uint32_t rgba, float radius);
+/** Applies native group styling. Border token -1 selects RGBA and 0 selects the default theme border. */
+CUI_API void fpas_cui_group_style(cui_ctx *ui, int node, uint32_t background, int background_token,
+                                  float tl, float tr, float br, float bl, float border,
+                                  uint32_t border_rgba, int border_token, int elevation, float opacity);
 CUI_API void fpas_cui_formatted_text(cui_ctx *ui, const char *text, int font, float size, uint32_t rgba);
 CUI_API void fpas_cui_box_details(cui_ctx *ui, int node, float top, float end, float bottom, float start, int direction);
 /** Applies node sizing on a parent axis.
@@ -115,8 +123,10 @@ CUI_API void fpas_cui_theme_read(cui_ctx *ui, uint32_t *colors);
  * @return Frame-local node, closed with group_end. */
 CUI_API int fpas_cui_viewport(cui_ctx *ui, const char *id, int scrollbar, int enabled);
 
-/* Opens the same viewport with optional native edge fades. */
-CUI_API int fpas_cui_viewport_ex(cui_ctx *ui, const char *id, int scrollbar, int enabled, int fade_edges, int horizontal);
+/** Opens a viewport with the native scroll options and host input and scrollbar settings. */
+CUI_API int fpas_cui_viewport_options(cui_ctx *ui, const char *id, int scrollbar, int enabled,
+                                     int fade_edges, int horizontal, int width_kind, float width,
+                                     int height_kind, float height, float padding, float gap, uint32_t fade_color);
 /** Reads a tracked viewport's current offset and range.
  * @param ui Owner context.
  * @param node Tracked viewport node.

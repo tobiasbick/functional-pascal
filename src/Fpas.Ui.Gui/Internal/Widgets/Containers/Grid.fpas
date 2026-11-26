@@ -23,17 +23,32 @@ public procedure Draw of TMsg(
   Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
 );
 begin
+  const Flow: L.Flow := G.FlowFor(Settings);
   Frame.Window.BeginGrid(
     Settings.Columns,
     Settings.MinimumColumnWidth,
-    Size.Spacing(Settings.Padding),
-    Size.Spacing(Settings.Gap)
+    Size.Spacing(Flow.Padding),
+    Size.Spacing(Flow.Gap),
+    Flow.Clip ?? false,
+    Flow.Id,
+    cast Flow.Scrolling as int
   );
+  Size.Container(Frame.Window, Flow);
+  const Scope: L.FocusScope? := Flow.Scope;
+  if Scope <> null then
+    Frame.Window.PushFocusScope(Scope.Id, Scope.Active);
+  end if;
+
   for Child: E.Element of TMsg in Children do
     Visit(Child, Frame, false, L.Alignment.Default);
   end for;
 
+  if Scope <> null then
+    Frame.Window.PopFocusScope();
+  end if;
+
   Frame.Window.EndGroup();
+  C.TrackContainer of TMsg(Frame, Flow.Id, 'grid');
 end procedure;
 
 end unit;

@@ -215,9 +215,12 @@ public function Build(
 begin
   const Width: int := Sys.Math.Max(
     220,
-    (Viewport.LogicalWidth ?? 1120) - Margin * 2 - PaneGap - SettingsWidth
+    (cast (Viewport.LogicalWidth ?? 1120.0F) as int) - Margin * 2 - PaneGap - SettingsWidth
   );
-  const Height: int := Sys.Math.Max(300, (Viewport.LogicalHeight ?? 760) - Margin * 2 - 63);
+  const Height: int := Sys.Math.Max(
+    300,
+    (cast (Viewport.LogicalHeight ?? 760.0F) as int) - Margin * 2 - 63
+  );
   return E.Column of S.Msg(
     new L.Flow(Gap := Space(18), Padding := Space(Margin)),
     Texts.Text of S.Msg('fpas-sweeper', Texts.Appearance.HeadingOne),

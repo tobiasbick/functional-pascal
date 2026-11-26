@@ -1,14 +1,26 @@
 // [Documentation](../../../../docs/ui/gui/cui.md#layout-and-control-inspection)
 #include "../fpas_cui.h"
 
-void fpas_cui_column_begin(cui_ctx *ui, float padding, float gap) {
-    const cui_box options = { .pad = padding, .gap = gap, .width = CUI_FILL };
-    (void)cui_column_begin(ui, &options);
+static bool fpas_box_has_space(cui_ctx *ui) {
+    return ui->parent_depth < CUI_PARENT_STACK;
 }
 
-void fpas_cui_row_begin(cui_ctx *ui, float padding, float gap) {
-    const cui_box options = { .pad = padding, .gap = gap, .width = CUI_FILL };
-    (void)cui_row_begin(ui, &options);
+static int fpas_open_box(cui_ctx *ui, const cui_box *options) {
+    if (!fpas_box_has_space(ui)) return -1;
+    cui_box_begin(ui, options);
+    return cui__current(ui);
+}
+
+/** Opens a full-width column and returns its frame-local node. */
+int fpas_cui_column_begin(cui_ctx *ui, float padding, float gap) {
+    const cui_box options = { .dir = CUI_COLUMN, .pad = padding, .gap = gap, .width = CUI_FILL };
+    return fpas_open_box(ui, &options);
+}
+
+/** Opens a full-width row and returns its frame-local node. */
+int fpas_cui_row_begin(cui_ctx *ui, float padding, float gap) {
+    const cui_box options = { .dir = CUI_ROW, .pad = padding, .gap = gap, .width = CUI_FILL };
+    return fpas_open_box(ui, &options);
 }
 
 void fpas_cui_request_focus(cui_ctx *ui, const char *id) {
@@ -27,10 +39,13 @@ void fpas_cui_input_scroll(cui_ctx *ui, float x, float y) {
     cui__compute_hot(ui);
 }
 
-void fpas_cui_scroll_begin(cui_ctx *ui, const char *id, float height, int horizontal) {
+/** Opens a scroll area and returns its frame-local node. */
+int fpas_cui_scroll_begin(cui_ctx *ui, const char *id, float height, int horizontal) {
+    if (!fpas_box_has_space(ui)) return -1;
     const cui_scroll_opts options = {
         .id = id, .width = CUI_FILL, .height = height > 0 ? CUI_PX(height) : CUI_FILL,
         .horizontal = horizontal != 0
     };
     cui_scroll_begin(ui, &options);
+    return cui__current(ui);
 }

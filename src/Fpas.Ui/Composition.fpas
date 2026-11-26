@@ -821,6 +821,7 @@ begin
     when E.Element.NativeText(_, _), E.Element.Icon(
       _,
       _,
+      _,
       _
     ), E.Element.Emoji(_, _), E.Element.Keycap(_), E.Element.Image(_, _, _), E.Element.Canvas(
       _,
@@ -1566,16 +1567,16 @@ begin
     when E.Element.ScrollAnchor(const FId: string): (E.Element of TParent).ScrollAnchor(FId);
     when E.Element.Scroll(
       const FId: string,
-      const FChild: E.Element of TChild,
+      const FChildren: array of E.Element of TChild,
       const FPosition: L.ScrollPosition?,
       const FOnScroll: Sys.Func of (L.ScrollChange, TChild)?,
-      const FShowScrollbar: bool, const FFadeEdges: bool, const FHorizontal: bool
+      const FSettings: L.ScrollOptions
     ): (E.Element of TParent).Scroll(
       FId,
-      Map of (TChild, TParent)(FChild, Messages),
+      Children(FChildren),
       FPosition,
       M.Callback of (L.ScrollChange, TChild, TParent)(FOnScroll, Messages),
-      FShowScrollbar, FFadeEdges, FHorizontal
+      FSettings
     );
     when E.Element.Sheet(
       const FId: string,

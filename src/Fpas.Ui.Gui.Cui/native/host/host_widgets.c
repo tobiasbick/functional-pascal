@@ -7,23 +7,47 @@ int fpas_cui_group_begin(cui_ctx *ui, int horizontal, float padding, float gap, 
 
 int fpas_cui_group_begin_ex(cui_ctx *ui, int horizontal, float padding, float gap,
                             int align, int framed, int wrap, int clip, int justify) {
-    const cui_box options = { .dir = (cui_dir)horizontal,
-        .pad = padding, .gap = gap, .align = (cui_align)align, .justify = (cui_justify)justify,
-        .border = framed ? 1 : 0, .clip = clip != 0, .wrap = wrap != 0 };
-    cui_box_begin(ui, &options);
-    return cui__current(ui);
+    return fpas_cui_group_open(ui, horizontal, padding, gap, align, framed, wrap, clip, justify, NULL, 0);
 }
 
-void fpas_cui_group_end(cui_ctx *ui, int node) {
+/** Opens a native layout box with optional identity and scroll axes. */
+int fpas_cui_group_open(cui_ctx *ui, int direction, float padding, float gap, int align,
+                        int framed, int wrap, int clip, int justify, const char *id, int scroll) {
+    const cui_box options = { .dir = (cui_dir)direction, .id = id,
+        .pad = padding, .gap = gap, .align = (cui_align)align, .justify = (cui_justify)justify,
+        .border = framed ? 1 : 0, .clip = clip != 0, .wrap = wrap != 0,
+        .scroll_y = scroll > 0, .scroll_x = scroll == 2 };
+    return fpas_open_box(ui, &options);
+}
+
+/** Closes the expected native box before exposing it as the last widget. */
+int fpas_cui_group_end(cui_ctx *ui, int node) {
+    if (node <= 0 || node != cui__current(ui)) return 0;
     cui_box_end(ui);
     ui->last_node = node;
     ui->last_id = ui->nodes[node].id;
+    return 1;
 }
 
 void fpas_cui_surface(cui_ctx *ui, int node, uint32_t rgba, float radius) {
     if (node < 0 || node >= ui->node_count) return;
     ui->nodes[node].bg = fpas_chart_color(-1, rgba);
     ui->nodes[node].radius = CUI_CORNERS(radius);
+}
+
+/** Applies the native paint options of a container. */
+void fpas_cui_group_style(cui_ctx *ui, int node, uint32_t background, int background_token,
+                          float tl, float tr, float br, float bl, float border,
+                          uint32_t border_rgba, int border_token, int elevation, float opacity) {
+    cui_node *n = &ui->nodes[node];
+    n->bg = background_token > 0 ? cui_token_color(ui, (cui_token)background_token)
+                                 : fpas_chart_color(-1, background);
+    n->radius = (cui_corners){ tl, tr, br, bl };
+    n->border = border;
+    n->border_color = border_token < 0 ? fpas_chart_color(-1, border_rgba)
+        : cui_token_color(ui, border_token > 0 ? (cui_token)border_token : CUI_TOKEN_BORDER);
+    n->elevation = (cui_elevation)elevation;
+    n->opacity = opacity;
 }
 
 void fpas_cui_formatted_text(cui_ctx *ui, const char *text, int font, float size, uint32_t rgba) {
@@ -185,19 +209,25 @@ static void fpas_hidden_scroll(cui_ctx *ui, cui_node *node, void *data) {
 }
 
 int fpas_cui_viewport(cui_ctx *ui, const char *id, int scrollbar, int enabled) {
-    return fpas_cui_viewport_ex(ui, id, scrollbar, enabled, 0, 0);
+    return fpas_cui_viewport_options(ui, id, scrollbar, enabled, 0, 0, 1, 0, 1, 0, 0, 0, 0);
 }
 
-int fpas_cui_viewport_ex(cui_ctx *ui, const char *id, int scrollbar, int enabled, int fade_edges, int horizontal) {
-    const cui_id key = cui_make_id(ui, id);
-    cui_scroll_state *state = cui_state(ui, key, sizeof *state);
-    state->fade = fade_edges ? cui__backdrop(ui) : cui__rgba(0, 0, 0, 0);
-    const cui_box options = { .width = CUI_FILL, .height = CUI_FILL };
+/** Opens a native scroll widget and applies the host's input and scrollbar settings. */
+int fpas_cui_viewport_options(cui_ctx *ui, const char *id, int scrollbar, int enabled, int fade_edges, int horizontal,
+                              int width_kind, float width, int height_kind, float height, float padding, float gap,
+                              uint32_t fade_color) {
+    if (!fpas_box_has_space(ui)) return -1;
+    const cui_scroll_opts options = {
+        .id = id, .width = fpas_extent(width_kind, width), .height = fpas_extent(height_kind, height),
+        .horizontal = horizontal != 0, .pad = padding, .gap = gap,
+        .fade_edges = fade_edges != 0, .fade_color = fpas_chart_color(-1, fade_color)
+    };
     const float wheel_x = ui->scroll_dx, wheel_y = ui->scroll_dy;
     if (!enabled) ui->scroll_dx = ui->scroll_dy = 0;
     cui_push_disabled(ui, !enabled);
-    int node = cui__scroll_begin_ex(ui, key, &options, horizontal != 0);
+    cui_scroll_begin(ui, &options);
     cui_pop_disabled(ui);
+    const int node = cui__current(ui);
     if (!enabled) {
         ui->scroll_dx = wheel_x;
         ui->scroll_dy = wheel_y;

@@ -7,11 +7,15 @@ uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Gui.Application as Gui;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Gui.Internal.Layout.Sizing as Sizing;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Styles as Styles;
 uses Fpas.Ui.Validation as V;
+uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
+uses Fpas.Ui.Widgets.Containers.Grids as Grids;
 uses Fpas.Ui.Widgets.Containers.Stacks as Stacks;
 uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Switchers;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses GalleryHostAssertions as A;
 uses GuiGallery.App.State as State;
@@ -19,6 +23,8 @@ uses GuiGallery.App.Update as Update;
 uses GuiGallery.App.View as Gallery;
 uses GuiGallery.Shared.State as Shared;
 uses System as Sys;
+uses System.IO.File as File;
+uses System.Linq.Enumerable as Enumerable;
 
 procedure Validate();
   procedure Reject(Node: E.Element of int; Profile: V.Target; Reason: string);
@@ -45,7 +51,7 @@ begin
     Reject(E.Gap of int(L.Measure.Logical(8)), Profile, 'Graphical');
     Reject(Stacks.Stack of int(new L.Flow(), E.Text of int('test')), Profile, 'Graphical');
     Reject(
-      E.Row of int(new L.Flow(ReadingDirection := L.Direction.RightToLeft)),
+      E.Row of int(new L.Flow(ReadingDirection := L.Direction.Auto)),
       Profile,
       'Graphical'
     );
@@ -56,7 +62,7 @@ begin
       'Graphical'
     );
     Reject(
-      E.ScrollView of int('x', E.Text of int('test'), Horizontal := true),
+      E.ScrollView of int('x', E.Text of int('test'), new L.ScrollOptions(Horizontal := true)),
       Profile,
       'Graphical'
     );
@@ -64,6 +70,17 @@ begin
 
   Reject(E.Gap of int(L.Measure.Logical(-1)), V.Target.Graphical, 'nonnegative');
   Reject(E.Gap of int(L.Measure.Cells(1)), V.Target.Graphical, 'terminal');
+  Reject(E.Gap of int(L.Measure.Points(float.PositiveInfinity)), V.Target.Graphical, 'finite');
+  Reject(Grids.Grid of int(new Grids.Options(Columns := -1)), V.Target.Graphical, 'nonnegative');
+  Reject(
+    Grids.Grid of int(new Grids.Options(Flow := new L.Flow(Justify := L.Justification.Center))),
+    V.Target.Graphical, 'cell positions'
+  );
+  Reject(E.Column of int(new L.Flow(Opacity := float.NaN)), V.Target.Graphical, 'opacity');
+  Reject(
+    E.Column of int(new L.Flow(Id := 'duplicate'), E.Column of int(new L.Flow(Id := 'duplicate'))),
+    V.Target.Graphical, 'Duplicate ID'
+  );
   Reject(
     E.Column of int(new L.Flow(ReadingDirection := cast 255 as L.Direction)),
     V.Target.Graphical,
@@ -116,6 +133,329 @@ begin
   );
 end procedure;
 
+procedure VerifyColumn(Renderer: Cui.CuiRenderer);
+  function View(_Model: State.Model; _Viewport: L.Viewport): E.Element of State.Msg;
+  begin
+    return E.Size of State.Msg(
+      E.Column of State.Msg(
+        new L.Flow(
+          Id := 'native-column', Padding := L.Spacing.Tight,
+          PaddingX := L.Spacing.Fixed(L.Measure.Points(16.5F)),
+          PaddingY := L.Spacing.Normal, PaddingTop := L.Spacing.None, Align := L.Alignment.Start,
+          Scrolling := L.ScrollMode.Both, BackgroundTheme := Themes.ColorToken.SurfaceRaised,
+          Border := new L.Border(Width := 2.0F, ThemeColor := Themes.ColorToken.Accent),
+          CornerRadius := 12.0F, Corners := new L.CornerRadii(TopLeft := 0.0F),
+          Elevation := L.Elevation.Raised, Opacity := 0.75F
+        ),
+        E.Size of State.Msg(
+          Buttons.Button of State.Msg('wide-child', 'Scrollable content', State.Msg.Preview),
+          new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(600))))
+        ),
+        E.Gap of State.Msg(L.Measure.Logical(320))
+      ),
+      new L.Flex(
+        Width := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(260))),
+        Height := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(120)))
+      )
+    );
+  end function;
+  procedure Inject();
+  begin
+    Window.MovePointer(120.0F, 70.0F);
+    if Wheel then
+      Window.Wheel(-1.0F, -1.0F);
+    end if;
+  end procedure;
+begin
+  var Wheel: bool := false;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('Native column', 480, 320, Renderer, true);
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
+    new State.Model(), Update.Update, View, Window, 32, Inject
+  );
+  A.Check(Session.Step(), 'Native column did not open.');
+  A.Check(Session.Step(), 'Native column did not present its initial geometry.');
+  const Box: Cui.CuiRectangle := A.Control(Session, 'native-column').Bounds;
+  const Before: Cui.CuiRectangle := A.Control(Session, 'wide-child').Bounds;
+  A.Check(
+    Box.Width = 260.0F and Box.Height = 120.0F,
+    'Native column did not keep both explicit axes.'
+  );
+  A.Check(
+    Before.X = Box.X + 16.5F and Before.Y = Box.Y,
+    'Column edge padding did not override axis and uniform padding.'
+  );
+  Wheel := true;
+  A.Check(Session.Step(), 'Native column stopped while scrolling.');
+  Wheel := false;
+  A.Check(Session.Step(), 'Native column stopped after scrolling.');
+  const After: Cui.CuiRectangle := A.Control(Session, 'wide-child').Bounds;
+  A.Check(
+    After.X < Before.X and After.Y < Before.Y,
+    'The native column did not scroll on both axes.'
+  );
+end procedure;
+
+procedure VerifyRow(Renderer: Cui.CuiRenderer);
+  function Item(Id: string): E.Element of State.Msg;
+  begin
+    return E.Size of State.Msg(
+      Buttons.Button of State.Msg(Id, Id, State.Msg.Preview),
+      new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(150))))
+    );
+  end function;
+  function View(_Model: State.Model; Viewport: L.Viewport): E.Element of State.Msg;
+  begin
+    ViewSize := Viewport;
+    return E.Column of State.Msg(
+      new L.Flow(ReadingDirection := L.Direction.RightToLeft),
+      E.Size of State.Msg(
+        E.Row of State.Msg(
+          new L.Flow(
+            Id := 'wrapping-row', Wrap := true, ReadingDirection := L.Direction.Auto,
+            Justify := L.Justification.Between, PaddingX := L.Spacing.Normal,
+            Gap := L.Spacing.Fixed(L.Measure.Points(10.5F))
+          ),
+          Item('first'), Item('second'), Item('third')
+        ),
+        new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fill))
+      )
+    );
+  end function;
+begin
+  var Fractional: Cui.CuiSize := new Cui.CuiSize();
+  Fractional.Width := 599.75F;
+  Fractional.Height := 399.75F;
+  const Logical: L.Viewport := Sizing.Viewport(Fractional);
+  A.Check(
+    Logical.LogicalWidth = Fractional.Width and Logical.LogicalHeight = Fractional.Height
+    and Logical.Width = L.SizeClass.Compact and Logical.Height = L.SizeClass.Compact,
+    'The responsive viewport lost fractional logical points.'
+  );
+
+  var ViewSize: L.Viewport := new L.Viewport(L.SizeClass.Compact, L.SizeClass.Compact);
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('Native row', 380, 320, Renderer, true);
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
+    new State.Model(), Update.Update, View, Window, 32
+  );
+  for Width: int in [380, 640, 380] do
+    const Height: int := if Width = 380 then
+      320
+    else
+      440
+    end if;
+    Window.Resize(Width, Height);
+    A.Check(Session.Step(), 'Native row stopped while resizing.');
+    A.Check(Session.Step(), 'Native row did not present the new geometry.');
+    const Native: Cui.CuiSize := Window.ViewportSize;
+    const Frame: Gui.Frame := Session.Snapshot();
+    const Expected: L.SizeClass := if Width = 380 then
+      L.SizeClass.Compact
+    else
+      L.SizeClass.Regular
+    end if;
+    A.Check(
+      Frame.Size.Width = Native.Width and Frame.Size.Height = Native.Height
+      and ViewSize.LogicalWidth = Native.Width and ViewSize.LogicalHeight = Native.Height
+      and ViewSize.Width = Expected and ViewSize.Height = Expected,
+      'View arguments and presented frame must follow the native viewport when it grows or shrinks.'
+    );
+    const Row: Cui.CuiRectangle := A.Control(Session, 'wrapping-row').Bounds;
+    const First: Cui.CuiRectangle := A.Control(Session, 'first').Bounds;
+    const Second: Cui.CuiRectangle := A.Control(Session, 'second').Bounds;
+    const Third: Cui.CuiRectangle := A.Control(Session, 'third').Bounds;
+    A.Check(
+      First.X = Row.X + 8.0F and Second.X > First.X and Second.Y = First.Y,
+      'Automatic direction did not lay out the Latin labels left to right inside the RTL parent.'
+    );
+    if Width = 380 then
+      A.Check(
+        Third.X = First.X and Third.Y = First.Y + First.Height + 10.5F,
+        'The third child did not wrap with the native line gap.'
+      );
+    else
+      A.Check(
+        Third.Y = First.Y and Third.X + Third.Width = Row.X + Row.Width - 8.0F,
+        'The wide row did not reunite and justify all three children.'
+      );
+    end if;
+  end for;
+end procedure;
+
+procedure VerifyGrid(Renderer: Cui.CuiRenderer);
+  function View(_Model: State.Model; _Viewport: L.Viewport): E.Element of State.Msg;
+  begin
+    return E.Size of State.Msg(
+      Grids.Grid of State.Msg(
+        new Grids.Options(
+          Columns := 0, MinimumColumnWidth := 120.0F,
+          Flow := new L.Flow(
+            Id := 'auto-grid', ReadingDirection := L.Direction.RightToLeft,
+            PaddingX := L.Spacing.Normal, PaddingStart := L.Spacing.Fixed(L.Measure.Logical(24)),
+            Gap := L.Spacing.Fixed(L.Measure.Points(10.5F)),
+            BackgroundTheme := Themes.ColorToken.SurfaceRaised, Border := new L.Border(),
+            Corners := new L.CornerRadii(TopLeft := 8.0F), Scrolling := L.ScrollMode.Vertical
+          )
+        ),
+        Buttons.Button of State.Msg('grid-first', 'First', State.Msg.Preview),
+        Buttons.Button of State.Msg('grid-second', 'Second', State.Msg.Preview),
+        Buttons.Button of State.Msg('grid-third', 'Third', State.Msg.Preview),
+        Buttons.Button of State.Msg('grid-fourth', 'Fourth', State.Msg.Preview)
+      ),
+      new L.Flex(
+        Width := new L.AxisSize(Basis := L.Extent.Fill),
+        Height := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(56)))
+      )
+    );
+  end function;
+  procedure Inject();
+  begin
+    Window.MovePointer(40.0F, 30.0F);
+    if Wheel then
+      Window.Wheel(-1.0F);
+    end if;
+  end procedure;
+begin
+  var Wheel: bool := false;
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('Native box grid', 380, 320, Renderer, true);
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
+    new State.Model(), Update.Update, View, Window, 32, Inject
+  );
+  for Width: int in [380, 560, 380] do
+    Window.Resize(Width, 320);
+    A.Check(Session.Step(), 'Grid stopped while resizing.');
+    A.Check(Session.Step(), 'Grid did not present the new geometry.');
+    const Grid: Cui.CuiRectangle := A.Control(Session, 'auto-grid').Bounds;
+    const First: Cui.CuiRectangle := A.Control(Session, 'grid-first').Bounds;
+    const Second: Cui.CuiRectangle := A.Control(Session, 'grid-second').Bounds;
+    const Third: Cui.CuiRectangle := A.Control(Session, 'grid-third').Bounds;
+    const Fourth: Cui.CuiRectangle := A.Control(Session, 'grid-fourth').Bounds;
+    A.Check(
+      Sys.Math.Abs(First.X + First.Width - (Grid.X + Grid.Width - 24.0F)) < 0.01F
+      and First.X > Second.X and First.Y = Second.Y,
+      'Grid did not apply RTL direction and the leading inset.'
+    );
+    if Width = 380 then
+      A.Check(
+        Third.Y = Fourth.Y and Third.Y = First.Y + First.Height + 10.5F,
+        'The automatic grid did not wrap after two cells at the narrow width.'
+      );
+    else
+      A.Check(
+        First.Y = Fourth.Y and Third.X > Fourth.X,
+        'The automatic grid did not expand to four columns.'
+      );
+    end if;
+  end for;
+  const Before: float := A.Control(Session, 'grid-first').Bounds.Y;
+  Wheel := true;
+  A.Check(Session.Step(), 'Grid stopped during scrolling.');
+  Wheel := false;
+  A.Check(Session.Step(), 'Grid stopped after scrolling.');
+  A.Check(
+    A.Control(Session, 'grid-first').Bounds.Y < Before,
+    'Grid did not use native vertical scrolling.'
+  );
+end procedure;
+
+procedure VerifySpacing(Renderer: Cui.CuiRenderer; Capture: string);
+  function Item(Id: string; Label: string): E.Element of State.Msg;
+  begin
+    return E.Size of State.Msg(
+      Buttons.Button of State.Msg(Id, Label, State.Msg.Preview),
+      new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(32))))
+    );
+  end function;
+  function View(Model: State.Model; _Viewport: L.Viewport): E.Element of State.Msg;
+  begin
+    const Spacer: E.Element of State.Msg := E.Spacer of State.Msg();
+    const VisibleSpacer: E.Element of State.Msg := if Model.Active = State.Page.Layout then
+      E.Styled of State.Msg(Spacer, Styles.Role.InverseSurface)
+    else
+      Spacer
+    end if;
+    return E.Column of State.Msg(
+      new L.Flow(Align := L.Alignment.Start),
+      E.Size of State.Msg(
+        E.Row of State.Msg(
+          new L.Flow(
+            Id := 'spacer-row', Align := L.Alignment.Stretch, Scrolling := L.ScrollMode.Vertical
+          ),
+          Item('row-start', 'A'),
+          VisibleSpacer,
+          E.Gap of State.Msg(L.Measure.Points(7.5F)),
+          E.Divider of State.Msg(),
+          Item('row-middle', 'B'),
+          Spacer,
+          E.Gap of State.Msg(L.Measure.Logical(0)),
+          Item('row-end', 'C')
+        ),
+        new L.Flex(
+          Width := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(320))),
+          Height := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(64)))
+        )
+      ),
+      E.Divider of State.Msg(),
+      E.Size of State.Msg(
+        E.Column of State.Msg(
+          new L.Flow(Id := 'spacer-column'),
+          Item('column-start', 'A'),
+          Spacer,
+          E.Gap of State.Msg(L.Measure.Logical(0)),
+          Item('column-middle', 'B'),
+          Spacer,
+          E.Gap of State.Msg(L.Measure.Points(9.5F)),
+          Item('column-end', 'C')
+        ),
+        new L.Flex(Height := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(208))))
+      )
+    );
+  end function;
+  procedure Inject();
+  begin
+    Window.MovePointer(-1.0F, -1.0F);
+  end procedure;
+begin
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('Native spacer', 420, 320, Renderer, true);
+  Window.SetReducedMotion(true);
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
+    new State.Model(), Update.Update, View, Window, 32, Inject
+  );
+  A.Check(Session.Step(), 'Spacer layout did not open.');
+  A.Check(Session.Step(), 'Spacer layout did not reach a stable frame.');
+  const Row: Cui.CuiRectangle := A.Control(Session, 'spacer-row').Bounds;
+  const First: Cui.CuiRectangle := A.Control(Session, 'row-start').Bounds;
+  const Middle: Cui.CuiRectangle := A.Control(Session, 'row-middle').Bounds;
+  const Last: Cui.CuiRectangle := A.Control(Session, 'row-end').Bounds;
+  A.Check(
+    Middle.X - First.X - 8.5F = Last.X - Middle.X and Last.X + Last.Width = Row.X + Row.Width,
+    'The row did not preserve its fixed gaps, equal spacer widths and one-point divider.'
+  );
+  const Column: Cui.CuiRectangle := A.Control(Session, 'spacer-column').Bounds;
+  A.Check(
+    Column.Y = Row.Y + Row.Height + 1.0F,
+    'The horizontal divider did not reserve one point.'
+  );
+  const Top: Cui.CuiRectangle := A.Control(Session, 'column-start').Bounds;
+  const Center: Cui.CuiRectangle := A.Control(Session, 'column-middle').Bounds;
+  const Bottom: Cui.CuiRectangle := A.Control(Session, 'column-end').Bounds;
+  A.Check(
+    Center.Y - Top.Y + 9.5F = Bottom.Y - Center.Y and Bottom.Y + Bottom.Height = Column.Y +
+      Column.Height,
+    'The column did not preserve its fixed gaps and equal spacer heights.'
+  );
+  const Plain: string := Capture + '.spacer-plain.png';
+  const Styled: string := Capture + '.spacer-styled.png';
+  Session.CapturePng(Plain);
+  A.Send(Session, State.Msg.Show(State.Page.Layout));
+  Session.CapturePng(Styled);
+  A.Check(
+    Enumerable.SequenceEqual of byte(File.ReadAllBytes(Plain), File.ReadAllBytes(Styled)),
+    'A spacer in a vertically scrolling row painted outside its native zero-height extent.'
+  );
+end procedure;
+
 // Verifies the public layout primitives and resets a reselected page's native viewport.
 // ## Parameters
 // - `Renderer`: Native renderer under test.
@@ -135,6 +475,10 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
   end procedure;
 begin
   Validate();
+  VerifyColumn(Renderer);
+  VerifyRow(Renderer);
+  VerifyGrid(Renderer);
+  VerifySpacing(Renderer, Capture);
   discard V.Prepare of State.Msg(
     Composition.Map of (int, State.Msg)(
       Stacks.Stack of int(new L.Flow(), E.Spacer of int(), E.Gap of int(L.Measure.Logical(4))),

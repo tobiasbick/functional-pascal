@@ -401,7 +401,7 @@ begin
         )
       )
     ),
-    FadeEdges := true
+    new L.ScrollOptions(FadeEdges := true)
   );
 end function;
 
@@ -414,11 +414,11 @@ end function;
 // The complete gallery view.
 public function Build(Model: State.Model; Viewport: L.Viewport): E.Element of State.Msg;
 begin
-  const Width: int := Viewport.LogicalWidth ?? if Viewport.Width = L.SizeClass.Compact then
-    600
+  const Width: int := cast (Viewport.LogicalWidth ?? if Viewport.Width = L.SizeClass.Compact then
+    600.0F
   else
-    1240
-  end if;
+    1240.0F
+  end if) as int;
   const Compact: bool := Width < DrawerBreakpoint;
   const Available: int := if Compact then
     Width
@@ -440,7 +440,7 @@ begin
     Sheets.Sheet of State.Msg(
       'drawer',
       Main,
-      Sidebar.Build(Model, Viewport.LogicalHeight ?? 820),
+      Sidebar.Build(Model, cast (Viewport.LogicalHeight ?? 820.0F) as int),
       Model.Drawer,
       new Sheets.Options(Sidebar.Title, Edge := Sheets.Side.Left, Size := 280),
       State.Msg.SetDrawer(false)

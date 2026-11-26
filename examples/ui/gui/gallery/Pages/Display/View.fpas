@@ -7,6 +7,7 @@ uses Fpas.Ui.Graphics as Color;
 uses Fpas.Ui.Layout as L;
 uses Fpas.Ui.Widgets.Canvas.Canvases as C;
 uses Fpas.Ui.Widgets.Display.Emojis as Em;
+uses Fpas.Ui.Widgets.Display.IconGlyphs as Glyphs;
 uses Fpas.Ui.Widgets.Display.Icons as I;
 uses Fpas.Ui.Widgets.Display.Keycaps as K;
 uses Fpas.Ui.Widgets.Display.Texts as T;
@@ -18,7 +19,6 @@ uses Gallery.Shared.Strings as Strings;
 uses GuiGallery.App.State as State;
 uses GuiGallery.Pages.Canvas.Picture as Picture;
 uses GuiGallery.Shared.Sections as G;
-uses System as Sys;
 
 const Swatches: array of Color.Color := [
   new Color.Color($55, $55, $55), new Color.Color($77, $47, $FF),
@@ -91,7 +91,7 @@ begin
     G.Heading of State.Msg(Strings.Get('Heading.IconEmojiAndKeycap')),
     E.Row of State.Msg(
       new L.Flow(Gap := G.Points(10), Align := L.Alignment.Center, Clip := false),
-      I.Icon of State.Msg(Sys.Char.ConvertFromUtf32($E0CC), 18.0F),
+      I.Icon of State.Msg(Glyphs.FileText, 18.0F),
       E.FormattedText of State.Msg('File text', M.Font.Body, 12.0F, Colors.TextSecondary)
     ),
     EmojiRow(Colors),

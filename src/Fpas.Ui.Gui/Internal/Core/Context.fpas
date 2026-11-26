@@ -148,4 +148,18 @@ begin
   State.Controls.Add(Control);
 end procedure;
 
+// Records the bounds of a named layout container after closing it.
+// ## Type parameters
+// - `TMsg`: Application message type.
+// ## Parameters
+// - `State`: Current presentation context.
+// - `Id`: Optional container identity.
+// - `Role`: Layout direction for frame inspection.
+public procedure TrackContainer of TMsg(State: State of TMsg; Id: string?; Role: string);
+begin
+  if Id <> null then
+    Track of TMsg(State, new App.Control(Id, '', Role, new Cui.CuiRectangle(), false));
+  end if;
+end procedure;
+
 end unit;

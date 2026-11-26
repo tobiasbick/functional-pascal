@@ -5,6 +5,8 @@ namespace Fpas.Ui.Gui.Cui;
 
 public sealed partial class CuiWindow
 {
+    private const int ThemeColorCount = 34;
+
     /// <summary>Gets the platform's app appearance, or null if CUI cannot determine it.</summary>
     public bool? SystemDark
     {
@@ -25,7 +27,8 @@ public sealed partial class CuiWindow
         CheckOpen(); ArgumentNullException.ThrowIfNull(colors);
         ArgumentOutOfRangeException.ThrowIfNegative(accent);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(accent, 7);
-        if (colors.Length != 34) throw new ArgumentException("Expected 34 CUI semantic colors.", nameof(colors));
+        if (colors.Length != ThemeColorCount)
+            throw new ArgumentException($"Expected {ThemeColorCount} CUI semantic colors.", nameof(colors));
         if (metrics is not null) ValidateThemeMetrics(metrics);
         fixed (uint* values = colors) NativeMethods.SetTheme(context, dark ? 1 : 0, accent, values);
         if (metrics is not null)
@@ -37,7 +40,7 @@ public sealed partial class CuiWindow
     public unsafe uint[] ReadTheme()
     {
         CheckOpen();
-        var colors = new uint[34];
+        var colors = new uint[ThemeColorCount];
         fixed (uint* values = colors) NativeMethods.ReadTheme(context, values);
         return colors;
     }

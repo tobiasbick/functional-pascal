@@ -32,6 +32,14 @@ uses its embedded icon for the window caption and Alt+Tab.
 
 `NextFrame` pumps events, presents an open view if needed and starts the next
 frame. Close layout scopes in reverse order before ending a frame.
+The matching end operation for a box, row, column or scroll container
+restores that container as the last widget for sizing, styling and
+`TrackLastControl`. FPAS checks the native nesting limit before opening a box
+and verifies the native identity before closing it.
+`ViewportSize` reads the CUI context's drawable dimensions in logical points.
+It reports the initial context default until the first `NextFrame`, then
+the dimensions captured at the start of the most recent CUI frame. `Size`
+reads the platform's current logical window dimensions.
 `Present` completes the current view and exposes finalized control rectangles.
 `CapturePng` writes a presented view to an existing directory. After an earlier
 presentation, it can also complete a newly constructed view. It releases that
@@ -66,9 +74,11 @@ scopes require callers to balance native begin and end operations within the
 same frame. Managed layout-stack checks cover the other managed layout scopes.
 
 `TrackLastControl` and composite tracking register nodes for geometry, focus
-and hover. `ScrollTo` requests an offset, and `ScrollReveal` scrolls a container
-the least that shows a control tracked in an earlier frame; nothing moves while
-it is wholly visible. Header snapshots and outer layout nodes can be tracked separately.
+and hover. `ScrollMetrics` reads the vertical offset and range of a tracked
+scroll viewport or scrolling box. `ScrollTo` requests an offset. `ScrollReveal`
+scrolls the least that shows a control tracked in an earlier frame. A wholly
+visible control stays in place. Header snapshots and outer layout nodes can be
+tracked separately.
 `ForgetControl` releases retained state and owned popup or feedback state for
 disappearing controls. Private state keys stay in the native bridge. Stable
 identities are separate from literal labels, and the FPAS host maps native

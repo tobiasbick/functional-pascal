@@ -181,10 +181,8 @@ public procedure Check of TMsg(Prepared: V.Prepared of TMsg);
         Visit(Child);
       when E.Element.Scroll(
         _,
-        const Child: E.Element of TMsg,
+        const Children: array of E.Element of TMsg,
         const Position: L.ScrollPosition?,
-        _,
-        _,
         _,
         _
       ):
@@ -194,7 +192,9 @@ public procedure Check of TMsg(Prepared: V.Prepared of TMsg);
           else
         end case;
 
-        Visit(Child);
+        for Child: E.Element of TMsg in Children do
+          Visit(Child);
+        end for;
       when E.Element.Sheet(
         _,
         const Base: E.Element of TMsg,

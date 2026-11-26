@@ -21,11 +21,12 @@ uses Fpas.Ui.Layout as L;
 // A scroll view that owns its offset.
 public function View(Cards: array of E.Element of string): E.Element of string;
 begin
-  return E.Size of string(
-    E.ScrollView of string('previews',
-      E.Row of string(new L.Flow(Gap := L.Spacing.Normal, Clip := false), Cards),
-      FadeEdges := true, Horizontal := true),
-    new L.Flex(Height := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(150))))
+  return E.ScrollView of string(
+    'previews',
+    E.Row of string(new L.Flow(Gap := L.Spacing.Normal, Clip := false), Cards),
+    new L.ScrollOptions(
+      FadeEdges := true, Horizontal := true, Height := L.Extent.Fixed(L.Measure.Logical(150))
+    )
   );
 end function;
 
@@ -36,8 +37,11 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `ShowScrollbar / FadeEdges / Horizontal` | true / false / false. Enable Horizontal to allow scrolling on both axes. |
-| `Position / OnScroll` | Use the controlled overload to store the vertical position in the model and receive scroll proposals. |
+| `ShowScrollbar / FadeEdges / Horizontal` | true / false / false. `Horizontal` enables scrolling on both axes. |
+| `Width / Height` | Both fill by default. Supply GUI extents for content width, fixed size or percentage. CUI treats content height as fill. |
+| `Padding / Gap` | GUI insets and spacing. Supply an array to stack direct children vertically with the specified gap. |
+| `FadeColor` | GUI tint used when `FadeEdges` is enabled. CUI defaults to the nearest opaque background. |
+| `Position / OnScroll` | Store the vertical position in the model and receive scroll proposals. GUI proposals use fractional logical points. |
 
 ## Interaction
 
@@ -52,6 +56,7 @@ in the same CUI scope.
 
 - [Widget API and types](../../../../src/Fpas.Ui/Elements.fpas)
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Layout/View.fpas)
+- [Native scroll options test](../../../../tests/Fixtures/gui-host/ScrollOptionsContract.fpas)
 - [Scroll anchor](../reader/scroll-anchor.md)
 - [Chapter index](README.md)
 - [Terminal example](../../tui/layout/scroll-view.md)

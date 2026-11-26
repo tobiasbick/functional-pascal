@@ -27,6 +27,8 @@ endif()
 add_library(cui fpas_cui.c host/wakeup.c)
 add_library(fpas::cui ALIAS cui)
 target_include_directories(cui PUBLIC "${FPAS_CUI_UPSTREAM_DIR}")
+# The vendored implementation includes its own bidi classifier and static text shaper.
+target_compile_definitions(cui PRIVATE CUI_TEXT_SHAPING)
 set_target_properties(cui PROPERTIES
     C_STANDARD 99 C_STANDARD_REQUIRED YES C_EXTENSIONS OFF
     C_VISIBILITY_PRESET hidden OUTPUT_NAME fpas_cui POSITION_INDEPENDENT_CODE YES)

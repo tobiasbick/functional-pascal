@@ -65,11 +65,12 @@ public function View(
   Theme: Themes.Theme
 ): E.Element of M.Msg;
 begin
-  const Width: int := Viewport.LogicalWidth ?? if Viewport.Width = L.SizeClass.Compact then
-    600
+  const Width: int := cast (Viewport.LogicalWidth ?? if Viewport.Width = L.SizeClass.Compact then
+    600.0F
   else
-    1000
-  end if;
+    1000.0F
+  end if) as int;
+  const Height: int := cast (Viewport.LogicalHeight ?? 680.0F) as int;
   const Compact: bool := Width < NavView.DrawerBreakpoint;
   var Settings: bool := false;
   case Current.Navigation.Active of
@@ -192,7 +193,7 @@ begin
     Sheets.Sheet of M.Msg(
       'navigation-drawer',
       E.Size of M.Msg(Main, Fill),
-      NavView.Sidebar(Current, Theme, Viewport.LogicalHeight ?? 680),
+      NavView.Sidebar(Current, Theme, Height),
       Current.Navigation.Drawer,
       new Sheets.Options(
         'FPas-Amp',
@@ -224,7 +225,7 @@ begin
   return TagView.Build of M.Msg(
     Editor,
     Width,
-    Viewport.LogicalHeight ?? 680,
+    Height,
     SettingsOverlay,
     M.Msg.TagEditor
   );

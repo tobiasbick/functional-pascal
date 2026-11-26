@@ -1,0 +1,139 @@
+// [Documentation](../../../docs/ui/gui/layout/README.md)
+
+unit GalleryNativeBoxContract;
+
+uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Gui.Application as Gui;
+uses Fpas.Ui.Gui.Cui as Cui;
+uses Fpas.Ui.Gui.Internal.Hosting.Session as Host;
+uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Containers.Stacks as Stacks;
+
+uses GalleryHostAssertions as A;
+uses GuiGallery.App.State as State;
+uses GuiGallery.App.Update as Update;
+
+// Checks native box alignment, independent sizing and automatic reading direction.
+// ## Parameters
+// - `Renderer`: Native renderer to test.
+public procedure Verify(Renderer: Cui.CuiRenderer);
+  function Child(Id: string): E.Element of State.Msg;
+  begin
+    return E.Column of State.Msg(new L.Flow(Id := Id), E.Gap of State.Msg(L.Measure.Points(20.5F)));
+  end function;
+
+  function AutoRow(Id: string; Caption: string): E.Element of State.Msg;
+  begin
+    const Marker: L.Flex := new L.Flex(
+      Width := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(24)))
+    );
+    return E.Row of State.Msg(
+      new L.Flow(ReadingDirection := L.Direction.Auto),
+      E.Column of State.Msg(
+        new L.Flow(ReadingDirection := L.Direction.LeftToRight),
+        E.Text of State.Msg('Explicit LTR')
+      ),
+      E.Text of State.Msg(Caption),
+      E.Size of State.Msg(Child(Id + '-first'), Marker),
+      E.Size of State.Msg(Child(Id + '-second'), Marker)
+    );
+  end function;
+
+  function View(_Model: State.Model; _Viewport: L.Viewport): E.Element of State.Msg;
+  begin
+    const Height: L.AxisSize := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(100)));
+    const Fit: L.Flex := new L.Flex(Height := new L.AxisSize(Maximum := L.Measure.Logical(80)));
+    const BoundedHeight: L.Flex := new L.Flex(
+      Height := new L.AxisSize(
+        Basis := Height.Basis, Maximum := L.Measure.Points(40.5F)
+      )
+    );
+    const BoundedWidth: L.Flex := new L.Flex(
+      Width := new L.AxisSize(
+        Basis := L.Extent.Fixed(L.Measure.Logical(60)), Minimum := L.Measure.Points(80.5F)
+      )
+    );
+    return E.Column of State.Msg(
+      E.Size of State.Msg(
+        Stacks.Stack of State.Msg(
+          new L.Flow(Id := 'layers', Align := L.Alignment.Stretch, Justify := L.Justification.End),
+          Child('overlay'),
+          E.Size of State.Msg(Child('bounded-overlay'), Fit)
+        ),
+        new L.Flex(Height := Height)
+      ),
+      E.Size of State.Msg(
+        E.Row of State.Msg(
+          new L.Flow(
+            Id := 'scrolling-row',
+            Align := L.Alignment.Stretch,
+            Scrolling := L.ScrollMode.Vertical
+          ),
+          Child('row-content'),
+          E.Size of State.Msg(Child('bounded-row-content'), Fit)
+        ),
+        new L.Flex(Height := Height)
+      ),
+      E.Size of State.Msg(E.Size of State.Msg(Child('height-limit'), BoundedHeight), BoundedWidth),
+      E.Row of State.Msg(
+        E.Size of State.Msg(E.Size of State.Msg(Child('width-limit'), BoundedWidth), BoundedHeight)
+      ),
+      E.Column of State.Msg(
+        new L.Flow(ReadingDirection := L.Direction.LeftToRight),
+        AutoRow('hebrew', '123 · שלום')
+      ),
+      E.Column of State.Msg(
+        new L.Flow(ReadingDirection := L.Direction.RightToLeft),
+        AutoRow('latin', '123 · Layout'),
+        AutoRow('neutral', '123 ·')
+      )
+    );
+  end function;
+
+  function IsMirrored(Session: Gui.Session of State.Msg; Id: string): bool;
+  begin
+    return A.Control(Session, Id + '-first').Bounds.X > A.Control(Session, Id + '-second').Bounds.X;
+  end function;
+begin
+  const Window: Cui.CuiWindow := new Cui.CuiWindow('Native boxes', 420, 400, Renderer, true);
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
+    new State.Model(), Update.Update, View, Window, 32
+  );
+  A.Check(Session.Step(), 'The native box fixture did not open.');
+  const Layers: Cui.CuiRectangle := A.Control(Session, 'layers').Bounds;
+  for Id: string in ['overlay', 'bounded-overlay'] do
+    const Bounds: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
+    A.Check(
+      Bounds.Width = Layers.Width and Bounds.Height = 20.5F and Bounds.Y + Bounds.Height =
+        Layers.Y + Layers.Height,
+      'A horizontally stretched overlay must keep its height and bottom alignment.'
+    );
+  end for;
+
+  for Id: string in ['row-content', 'bounded-row-content'] do
+    A.Check(
+      A.Control(Session, Id).Bounds.Height = 20.5F,
+      'A scrolling row must preserve the native fit height of a child box.'
+    );
+  end for;
+
+  for Id: string in ['height-limit', 'width-limit'] do
+    const Bounds: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
+    A.Check(
+      Bounds.Width = 80.5F and Bounds.Height = 40.5F,
+      'Nested width and height sizing must preserve both bounds.'
+    );
+  end for;
+
+  A.Check(IsMirrored(Session, 'hebrew'), 'Auto must mirror Hebrew text inside an LTR parent.');
+  A.Check(
+    not IsMirrored(Session, 'latin'),
+    'Auto must use LTR for Latin text inside an RTL parent.'
+  );
+  A.Check(
+    IsMirrored(Session, 'neutral'),
+    'Auto must inherit RTL when all scanned text is neutral.'
+  );
+end procedure;
+
+end unit;

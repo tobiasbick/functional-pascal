@@ -11,6 +11,7 @@ uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Media.Images as Images;
 uses Fpas.Ui.Widgets.Media.MediaImages as Media;
 uses Fpas.Ui.Widgets.Overlays.Veils as Veils;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses System as Sys;
 
@@ -33,8 +34,11 @@ begin
   case Value of
     when E.Element.NativeText(const Text: string, const Role: Texts.Appearance):
       return (E.Element of TParent).NativeText(Text, Role);
-    when E.Element.Icon(const Glyph: string, const Size: float, const Color: G.Color?):
-      return (E.Element of TParent).Icon(Glyph, Size, Color);
+    when E.Element.Icon(
+      const Glyph: string, const Size: float, const Color: G.Color?,
+      const ThemeColor: Themes.ColorToken?
+    ):
+      return (E.Element of TParent).Icon(Glyph, Size, Color, ThemeColor);
     when E.Element.Emoji(const Glyph: string, const Size: float):
       return (E.Element of TParent).Emoji(Glyph, Size);
     when E.Element.Keycap(const Keys: string):

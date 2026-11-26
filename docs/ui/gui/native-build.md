@@ -2,7 +2,9 @@
 
 Build the private native `fpas_cui` module from the pinned
 [CUI source pair](../../../third-party/cui/UPSTREAM.md). The FPAS CMake target
-links the platform libraries.
+links the platform libraries and enables CUI's bundled static text shaping.
+Automatic reading direction uses CUI's Unicode direction data. Static Arabic
+text requires a font with the relevant glyphs and shaping features.
 
 ## Bridge translation unit
 

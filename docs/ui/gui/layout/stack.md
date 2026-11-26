@@ -42,14 +42,15 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `Settings` | A Flow record. Align places children horizontally and Justify places them vertically. |
+| `Settings` | A Flow record. Align places or stretches children horizontally. Justify places them vertically using Start, Center or End. |
 | `Children` | Specify children in paint order, with the topmost last. |
 
 ## Usage
 
 Wrap the stack in `Elements.Size` when it needs a fixed height or maximum
 width. The shared space lets a badge or other overlay cover part of the
-content.
+content. Children use their content height by default. Use an explicit height
+to stretch an overlay vertically.
 
 ## See also
 

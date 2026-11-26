@@ -4,6 +4,7 @@ unit Fpas.Ui.Widgets.Display.Icons;
 
 uses Fpas.Ui.Elements as E;
 uses Fpas.Ui.Graphics as G;
+uses Fpas.Ui.Widgets.Theming.Themes as T;
 
 // Creates a native CUI icon element.
 // ## Type parameters
@@ -11,16 +12,18 @@ uses Fpas.Ui.Graphics as G;
 // ## Parameters
 // - `Glyph`: CUI icon glyph.
 // - `Size`: Logical icon size. Zero uses the default.
-// - `Color`: Explicit color, or null for the foreground.
+// - `Color`: Explicit straight-alpha color.
+// - `ThemeColor`: Color from the active theme. Leave both colors null for the foreground.
 // ## Returns
 // A graphical element.
 public function Icon of TMsg(
   Glyph: string;
   Size: float := 0.0F;
-  Color: G.Color? := null
+  Color: G.Color? := null;
+  ThemeColor: T.ColorToken? := null
 ): E.Element of TMsg;
 begin
-  return (E.Element of TMsg).Icon(Glyph, Size, Color);
+  return (E.Element of TMsg).Icon(Glyph, Size, Color, ThemeColor);
 end function;
 
 end unit;

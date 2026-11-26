@@ -7,15 +7,27 @@ uses Fpas.Ui.Layout as L;
 
 // Native CUI grid settings.
 public type Options = record
-  // Maximum number of columns.
+  // Fixed count or responsive cap. Zero lets CUI size up to the number of children.
   public Columns: int := 1;
   // Minimum logical column width before CUI wraps to fewer columns. Zero keeps the column count fixed.
   public MinimumColumnWidth: float := 0.0F;
-  // Spacing between cells.
+  // Spacing between cells when Flow is omitted.
   public Gap: L.Spacing := L.Spacing.None;
-  // Inset on all edges.
+  // Inset on all edges when Flow is omitted.
   public Padding: L.Spacing := L.Spacing.None;
+  // Optional native box options, including gap and padding. Grid placement determines alignment.
+  public Flow: L.Flow? := null;
 end record;
+
+// Gets the effective box options for the grid.
+// ## Parameters
+// - `Settings`: Grid settings.
+// ## Returns
+// Shared layout and appearance settings.
+public function FlowFor(Settings: Options): L.Flow;
+begin
+  return Settings.Flow ?? new L.Flow(Gap := Settings.Gap, Padding := Settings.Padding);
+end function;
 
 // Arranges children in equal-width columns and lets CUI resolve row heights.
 // ## Type parameters

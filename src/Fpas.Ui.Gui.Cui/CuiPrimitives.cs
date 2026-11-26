@@ -28,7 +28,7 @@ public struct CuiRectangle
     public float Height;
 }
 
-/// <summary>A native window size in logical units.</summary>
+/// <summary>A native window or viewport size in logical units.</summary>
 [StructLayout(LayoutKind.Sequential)]
 public struct CuiSize
 {

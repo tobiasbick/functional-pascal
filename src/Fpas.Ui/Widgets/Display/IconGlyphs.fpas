@@ -1,0 +1,346 @@
+// [Documentation](../../../../docs/ui/gui/text-and-display/icon.md)
+
+unit Fpas.Ui.Widgets.Display.IconGlyphs;
+
+uses System as Sys;
+
+// Glyph codes from the CUI_ICON_* definitions in the vendored cui.h.
+
+// Activity glyph.
+public const Activity: string := Sys.Char.ConvertFromUtf32($E038);
+// AlignLeft glyph.
+public const AlignLeft: string := Sys.Char.ConvertFromUtf32($E185);
+// Archive glyph.
+public const Archive: string := Sys.Char.ConvertFromUtf32($E041);
+// ArrowDown glyph.
+public const ArrowDown: string := Sys.Char.ConvertFromUtf32($E042);
+// ArrowLeft glyph.
+public const ArrowLeft: string := Sys.Char.ConvertFromUtf32($E048);
+// ArrowRight glyph.
+public const ArrowRight: string := Sys.Char.ConvertFromUtf32($E049);
+// ArrowUp glyph.
+public const ArrowUp: string := Sys.Char.ConvertFromUtf32($E04A);
+// ArrowUpRight glyph.
+public const ArrowUpRight: string := Sys.Char.ConvertFromUtf32($E04D);
+// AtSign glyph.
+public const AtSign: string := Sys.Char.ConvertFromUtf32($E04E);
+// AudioLines glyph.
+public const AudioLines: string := Sys.Char.ConvertFromUtf32($E55A);
+// Award glyph.
+public const Award: string := Sys.Char.ConvertFromUtf32($E04F);
+// BadgeCheck glyph.
+public const BadgeCheck: string := Sys.Char.ConvertFromUtf32($E241);
+// Battery glyph.
+public const Battery: string := Sys.Char.ConvertFromUtf32($E053);
+// Bell glyph.
+public const Bell: string := Sys.Char.ConvertFromUtf32($E059);
+// Bold glyph.
+public const Bold: string := Sys.Char.ConvertFromUtf32($E05D);
+// Bookmark glyph.
+public const Bookmark: string := Sys.Char.ConvertFromUtf32($E060);
+// Box glyph.
+public const Box: string := Sys.Char.ConvertFromUtf32($E061);
+// Briefcase glyph.
+public const Briefcase: string := Sys.Char.ConvertFromUtf32($E062);
+// Bug glyph.
+public const Bug: string := Sys.Char.ConvertFromUtf32($E20C);
+// Building2 glyph.
+public const Building2: string := Sys.Char.ConvertFromUtf32($E290);
+// Calendar glyph.
+public const Calendar: string := Sys.Char.ConvertFromUtf32($E063);
+// Camera glyph.
+public const Camera: string := Sys.Char.ConvertFromUtf32($E064);
+// ChartBar glyph.
+public const ChartBar: string := Sys.Char.ConvertFromUtf32($E2A2);
+// ChartLine glyph.
+public const ChartLine: string := Sys.Char.ConvertFromUtf32($E2A5);
+// ChartPie glyph.
+public const ChartPie: string := Sys.Char.ConvertFromUtf32($E06B);
+// Check glyph.
+public const Check: string := Sys.Char.ConvertFromUtf32($E06C);
+// CheckCheck glyph.
+public const CheckCheck: string := Sys.Char.ConvertFromUtf32($E38E);
+// ChevronDown glyph.
+public const ChevronDown: string := Sys.Char.ConvertFromUtf32($E06D);
+// ChevronLeft glyph.
+public const ChevronLeft: string := Sys.Char.ConvertFromUtf32($E06E);
+// ChevronRight glyph.
+public const ChevronRight: string := Sys.Char.ConvertFromUtf32($E06F);
+// ChevronsLeft glyph.
+public const ChevronsLeft: string := Sys.Char.ConvertFromUtf32($E072);
+// ChevronsRight glyph.
+public const ChevronsRight: string := Sys.Char.ConvertFromUtf32($E073);
+// ChevronsUpDown glyph.
+public const ChevronsUpDown: string := Sys.Char.ConvertFromUtf32($E211);
+// ChevronUp glyph.
+public const ChevronUp: string := Sys.Char.ConvertFromUtf32($E070);
+// Circle glyph.
+public const Circle: string := Sys.Char.ConvertFromUtf32($E076);
+// CircleAlert glyph.
+public const CircleAlert: string := Sys.Char.ConvertFromUtf32($E077);
+// CircleCheck glyph.
+public const CircleCheck: string := Sys.Char.ConvertFromUtf32($E226);
+// CircleDot glyph.
+public const CircleDot: string := Sys.Char.ConvertFromUtf32($E345);
+// CircleHelp glyph.
+public const CircleHelp: string := Sys.Char.ConvertFromUtf32($E082);
+// CircleUser glyph.
+public const CircleUser: string := Sys.Char.ConvertFromUtf32($E461);
+// CircleX glyph.
+public const CircleX: string := Sys.Char.ConvertFromUtf32($E084);
+// Clipboard glyph.
+public const Clipboard: string := Sys.Char.ConvertFromUtf32($E085);
+// Clock glyph.
+public const Clock: string := Sys.Char.ConvertFromUtf32($E087);
+// Cloud glyph.
+public const Cloud: string := Sys.Char.ConvertFromUtf32($E088);
+// Code glyph.
+public const Code: string := Sys.Char.ConvertFromUtf32($E093);
+// Command glyph.
+public const Command: string := Sys.Char.ConvertFromUtf32($E09A);
+// Compass glyph.
+public const Compass: string := Sys.Char.ConvertFromUtf32($E09B);
+// Copy glyph.
+public const Copy: string := Sys.Char.ConvertFromUtf32($E09E);
+// Cpu glyph.
+public const Cpu: string := Sys.Char.ConvertFromUtf32($E0A9);
+// CreditCard glyph.
+public const CreditCard: string := Sys.Char.ConvertFromUtf32($E0AA);
+// Database glyph.
+public const Database: string := Sys.Char.ConvertFromUtf32($E0AD);
+// DollarSign glyph.
+public const DollarSign: string := Sys.Char.ConvertFromUtf32($E0B1);
+// Dot glyph.
+public const Dot: string := Sys.Char.ConvertFromUtf32($E44F);
+// Download glyph.
+public const Download: string := Sys.Char.ConvertFromUtf32($E0B2);
+// Ellipsis glyph.
+public const Ellipsis: string := Sys.Char.ConvertFromUtf32($E0B6);
+// EllipsisVertical glyph.
+public const EllipsisVertical: string := Sys.Char.ConvertFromUtf32($E0B7);
+// ExternalLink glyph.
+public const ExternalLink: string := Sys.Char.ConvertFromUtf32($E0B9);
+// Eye glyph.
+public const Eye: string := Sys.Char.ConvertFromUtf32($E0BA);
+// EyeOff glyph.
+public const EyeOff: string := Sys.Char.ConvertFromUtf32($E0BB);
+// File glyph.
+public const File: string := Sys.Char.ConvertFromUtf32($E0C0);
+// FileText glyph.
+public const FileText: string := Sys.Char.ConvertFromUtf32($E0CC);
+// Filter glyph.
+public const Filter: string := Sys.Char.ConvertFromUtf32($E0DC);
+// Fingerprint glyph.
+public const Fingerprint: string := Sys.Char.ConvertFromUtf32($E2CB);
+// Flag glyph.
+public const Flag: string := Sys.Char.ConvertFromUtf32($E0D1);
+// Folder glyph.
+public const Folder: string := Sys.Char.ConvertFromUtf32($E0D7);
+// FolderOpen glyph.
+public const FolderOpen: string := Sys.Char.ConvertFromUtf32($E247);
+// Gift glyph.
+public const Gift: string := Sys.Char.ConvertFromUtf32($E0E1);
+// GitBranch glyph.
+public const GitBranch: string := Sys.Char.ConvertFromUtf32($E0E2);
+// Globe glyph.
+public const Globe: string := Sys.Char.ConvertFromUtf32($E0E8);
+// Grid3X3 glyph.
+public const Grid3X3: string := Sys.Char.ConvertFromUtf32($E0E9);
+// GripVertical glyph.
+public const GripVertical: string := Sys.Char.ConvertFromUtf32($E0EB);
+// Hash glyph.
+public const Hash: string := Sys.Char.ConvertFromUtf32($E0EF);
+// Heart glyph.
+public const Heart: string := Sys.Char.ConvertFromUtf32($E0F2);
+// History glyph.
+public const History: string := Sys.Char.ConvertFromUtf32($E1F5);
+// House glyph.
+public const House: string := Sys.Char.ConvertFromUtf32($E0F5);
+// Image glyph.
+public const Image: string := Sys.Char.ConvertFromUtf32($E0F6);
+// Inbox glyph.
+public const Inbox: string := Sys.Char.ConvertFromUtf32($E0F7);
+// Info glyph.
+public const Info: string := Sys.Char.ConvertFromUtf32($E0F9);
+// Italic glyph.
+public const Italic: string := Sys.Char.ConvertFromUtf32($E0FB);
+// Keyboard glyph.
+public const Keyboard: string := Sys.Char.ConvertFromUtf32($E284);
+// KeyRound glyph.
+public const KeyRound: string := Sys.Char.ConvertFromUtf32($E4A3);
+// Layers glyph.
+public const Layers: string := Sys.Char.ConvertFromUtf32($E529);
+// LayoutDashboard glyph.
+public const LayoutDashboard: string := Sys.Char.ConvertFromUtf32($E1C1);
+// Link glyph.
+public const Link: string := Sys.Char.ConvertFromUtf32($E102);
+// List glyph.
+public const List: string := Sys.Char.ConvertFromUtf32($E106);
+// ListChecks glyph.
+public const ListChecks: string := Sys.Char.ConvertFromUtf32($E1D0);
+// LoaderCircle glyph.
+public const LoaderCircle: string := Sys.Char.ConvertFromUtf32($E10A);
+// Lock glyph.
+public const Lock: string := Sys.Char.ConvertFromUtf32($E10B);
+// LogIn glyph.
+public const LogIn: string := Sys.Char.ConvertFromUtf32($E10D);
+// LogOut glyph.
+public const LogOut: string := Sys.Char.ConvertFromUtf32($E10E);
+// Mail glyph.
+public const Mail: string := Sys.Char.ConvertFromUtf32($E10F);
+// MapPin glyph.
+public const MapPin: string := Sys.Char.ConvertFromUtf32($E111);
+// Maximize2 glyph.
+public const Maximize2: string := Sys.Char.ConvertFromUtf32($E113);
+// Menu glyph.
+public const Menu: string := Sys.Char.ConvertFromUtf32($E115);
+// MessageSquare glyph.
+public const MessageSquare: string := Sys.Char.ConvertFromUtf32($E117);
+// Mic glyph.
+public const Mic: string := Sys.Char.ConvertFromUtf32($E118);
+// Minimize2 glyph.
+public const Minimize2: string := Sys.Char.ConvertFromUtf32($E11B);
+// Minus glyph.
+public const Minus: string := Sys.Char.ConvertFromUtf32($E11C);
+// Monitor glyph.
+public const Monitor: string := Sys.Char.ConvertFromUtf32($E11D);
+// Moon glyph.
+public const Moon: string := Sys.Char.ConvertFromUtf32($E11E);
+// Move glyph.
+public const Move: string := Sys.Char.ConvertFromUtf32($E121);
+// Music glyph.
+public const Music: string := Sys.Char.ConvertFromUtf32($E122);
+// NotebookPen glyph.
+public const NotebookPen: string := Sys.Char.ConvertFromUtf32($E596);
+// Package glyph.
+public const Package: string := Sys.Char.ConvertFromUtf32($E129);
+// Palette glyph.
+public const Palette: string := Sys.Char.ConvertFromUtf32($E1DD);
+// PanelLeft glyph.
+public const PanelLeft: string := Sys.Char.ConvertFromUtf32($E12A);
+// Paperclip glyph.
+public const Paperclip: string := Sys.Char.ConvertFromUtf32($E12D);
+// Pause glyph.
+public const Pause: string := Sys.Char.ConvertFromUtf32($E12E);
+// Pencil glyph.
+public const Pencil: string := Sys.Char.ConvertFromUtf32($E1F9);
+// Percent glyph.
+public const Percent: string := Sys.Char.ConvertFromUtf32($E132);
+// Phone glyph.
+public const Phone: string := Sys.Char.ConvertFromUtf32($E133);
+// Play glyph.
+public const Play: string := Sys.Char.ConvertFromUtf32($E13C);
+// Plus glyph.
+public const Plus: string := Sys.Char.ConvertFromUtf32($E13D);
+// PlusCircle glyph.
+public const PlusCircle: string := Sys.Char.ConvertFromUtf32($E081);
+// Printer glyph.
+public const Printer: string := Sys.Char.ConvertFromUtf32($E141);
+// Radio glyph.
+public const Radio: string := Sys.Char.ConvertFromUtf32($E142);
+// Redo2 glyph.
+public const Redo2: string := Sys.Char.ConvertFromUtf32($E2A0);
+// RefreshCw glyph.
+public const RefreshCw: string := Sys.Char.ConvertFromUtf32($E145);
+// Repeat glyph.
+public const Repeat: string := Sys.Char.ConvertFromUtf32($E146);
+// Rocket glyph.
+public const Rocket: string := Sys.Char.ConvertFromUtf32($E286);
+// RotateCcw glyph.
+public const RotateCcw: string := Sys.Char.ConvertFromUtf32($E148);
+// Save glyph.
+public const Save: string := Sys.Char.ConvertFromUtf32($E14D);
+// Scissors glyph.
+public const Scissors: string := Sys.Char.ConvertFromUtf32($E14E);
+// Search glyph.
+public const Search: string := Sys.Char.ConvertFromUtf32($E151);
+// Send glyph.
+public const Send: string := Sys.Char.ConvertFromUtf32($E152);
+// Server glyph.
+public const Server: string := Sys.Char.ConvertFromUtf32($E153);
+// Settings glyph.
+public const Settings: string := Sys.Char.ConvertFromUtf32($E154);
+// Share2 glyph.
+public const Share2: string := Sys.Char.ConvertFromUtf32($E156);
+// Shield glyph.
+public const Shield: string := Sys.Char.ConvertFromUtf32($E158);
+// ShoppingCart glyph.
+public const ShoppingCart: string := Sys.Char.ConvertFromUtf32($E15C);
+// Shuffle glyph.
+public const Shuffle: string := Sys.Char.ConvertFromUtf32($E15E);
+// SkipBack glyph.
+public const SkipBack: string := Sys.Char.ConvertFromUtf32($E15F);
+// SkipForward glyph.
+public const SkipForward: string := Sys.Char.ConvertFromUtf32($E160);
+// SlidersHorizontal glyph.
+public const SlidersHorizontal: string := Sys.Char.ConvertFromUtf32($E29A);
+// Smile glyph.
+public const Smile: string := Sys.Char.ConvertFromUtf32($E164);
+// Sparkles glyph.
+public const Sparkles: string := Sys.Char.ConvertFromUtf32($E412);
+// Square glyph.
+public const Square: string := Sys.Char.ConvertFromUtf32($E167);
+// SquareCheck glyph.
+public const SquareCheck: string := Sys.Char.ConvertFromUtf32($E559);
+// SquarePen glyph.
+public const SquarePen: string := Sys.Char.ConvertFromUtf32($E172);
+// SquareTerminal glyph.
+public const SquareTerminal: string := Sys.Char.ConvertFromUtf32($E20A);
+// Star glyph.
+public const Star: string := Sys.Char.ConvertFromUtf32($E176);
+// Sun glyph.
+public const Sun: string := Sys.Char.ConvertFromUtf32($E178);
+// Tag glyph.
+public const Tag: string := Sys.Char.ConvertFromUtf32($E17F);
+// Target glyph.
+public const Target: string := Sys.Char.ConvertFromUtf32($E180);
+// Terminal glyph.
+public const Terminal: string := Sys.Char.ConvertFromUtf32($E181);
+// ThumbsDown glyph.
+public const ThumbsDown: string := Sys.Char.ConvertFromUtf32($E189);
+// ThumbsUp glyph.
+public const ThumbsUp: string := Sys.Char.ConvertFromUtf32($E18A);
+// Trash2 glyph.
+public const Trash2: string := Sys.Char.ConvertFromUtf32($E18E);
+// TrendingDown glyph.
+public const TrendingDown: string := Sys.Char.ConvertFromUtf32($E190);
+// TrendingUp glyph.
+public const TrendingUp: string := Sys.Char.ConvertFromUtf32($E191);
+// TriangleAlert glyph.
+public const TriangleAlert: string := Sys.Char.ConvertFromUtf32($E193);
+// Type glyph.
+public const Type: string := Sys.Char.ConvertFromUtf32($E198);
+// Underline glyph.
+public const Underline: string := Sys.Char.ConvertFromUtf32($E19A);
+// Undo2 glyph.
+public const Undo2: string := Sys.Char.ConvertFromUtf32($E2A1);
+// Unlock glyph.
+public const Unlock: string := Sys.Char.ConvertFromUtf32($E10C);
+// Upload glyph.
+public const Upload: string := Sys.Char.ConvertFromUtf32($E19E);
+// User glyph.
+public const User: string := Sys.Char.ConvertFromUtf32($E19F);
+// UserPlus glyph.
+public const UserPlus: string := Sys.Char.ConvertFromUtf32($E1A2);
+// Users glyph.
+public const Users: string := Sys.Char.ConvertFromUtf32($E1A4);
+// Video glyph.
+public const Video: string := Sys.Char.ConvertFromUtf32($E1A5);
+// Volume2 glyph.
+public const Volume2: string := Sys.Char.ConvertFromUtf32($E1AB);
+// VolumeX glyph.
+public const VolumeX: string := Sys.Char.ConvertFromUtf32($E1AC);
+// Wallet glyph.
+public const Wallet: string := Sys.Char.ConvertFromUtf32($E204);
+// Wifi glyph.
+public const Wifi: string := Sys.Char.ConvertFromUtf32($E1AE);
+// X glyph.
+public const X: string := Sys.Char.ConvertFromUtf32($E1B2);
+// Zap glyph.
+public const Zap: string := Sys.Char.ConvertFromUtf32($E1B4);
+// ZoomIn glyph.
+public const ZoomIn: string := Sys.Char.ConvertFromUtf32($E1B6);
+// ZoomOut glyph.
+public const ZoomOut: string := Sys.Char.ConvertFromUtf32($E1B7);
+
+end unit;

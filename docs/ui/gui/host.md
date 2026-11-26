@@ -305,12 +305,18 @@ no message and does not rebuild the cached view or create a managed timer.
 Use background commands and typed messages for timed model updates. Pending
 frame requests are discarded at close; normal idle waiting remains enabled.
 
-Transitions, size changes and observed system appearance changes rebuild the
-view. Ordinary repaints reuse its
-prepared tree and never restart effects. Typed caches advance after successful
-presentation. Width classes are Compact below 600, Regular below 1200, then
-Expanded; height thresholds are 400 and 900 logical units. Include relevant
-theme dependencies in cached subviews.
+Transitions, viewport size changes and observed system appearance changes
+rebuild the view. Ordinary repaints reuse its prepared tree and never restart
+effects. Typed caches advance after successful presentation. The size classes
+and `LogicalWidth` and `LogicalHeight` passed to `View` come from the CUI
+frame's drawable area, including fractional logical points. `Snapshot().Size`
+reports the same dimensions for the last presented frame. Width classes are
+Compact below 600, Regular below 1200 and Expanded from 1200. Height uses
+thresholds of 400 and 900 logical points. Include relevant theme dependencies
+in cached subviews.
+
+During the native Windows resize loop, CUI lays out the cached view at the
+new size. The regular session step rebuilds `View` and publishes its snapshot.
 
 Platform live-resize callbacks draw the cached tree without Update, View,
 commands or input proposals. Callback state stays rooted until detachment;

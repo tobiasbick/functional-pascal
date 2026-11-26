@@ -15,6 +15,11 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "fpas_cui_surface")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void Surface(nint context, int node, uint rgba, float radius);
+    [LibraryImport(Library, EntryPoint = "fpas_cui_group_style")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial void GroupStyle(nint context, int node, uint background, int backgroundToken,
+        float topLeft, float topRight, float bottomRight, float bottomLeft, float border,
+        uint borderColor, int borderToken, int elevation, float opacity);
     [LibraryImport(Library, EntryPoint = "fpas_cui_formatted_text", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void FormattedText(nint context, string text, int font, float size, uint rgba);
@@ -28,9 +33,10 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "fpas_cui_modal_key")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial uint ModalKey(nint context);
-    [LibraryImport(Library, EntryPoint = "fpas_cui_viewport_ex", StringMarshalling = StringMarshalling.Utf8)]
+    [LibraryImport(Library, EntryPoint = "fpas_cui_viewport_options", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial int Viewport(nint context, string id, int scrollbar, int enabled, int fadeEdges, int horizontal);
+    internal static partial int Viewport(nint context, string id, int scrollbar, int enabled, int fadeEdges,
+        int horizontal, int widthKind, float width, int heightKind, float height, float padding, float gap, uint fadeColor);
     [LibraryImport(Library, EntryPoint = "fpas_cui_scroll_metrics")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void ScrollMetrics(nint context, int node, out float offset, out float maximum);
@@ -55,12 +61,13 @@ internal static partial class NativeMethods
     [LibraryImport(Library, EntryPoint = "fpas_cui_forget")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void Forget(nint context, uint key);
-    [LibraryImport(Library, EntryPoint = "fpas_cui_group_begin_ex")]
+    [LibraryImport(Library, EntryPoint = "fpas_cui_group_open", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial int GroupBegin(nint context, int horizontal, float padding, float gap, int align, int framed, int wrap, int clip, int justify);
+    internal static partial int GroupBegin(nint context, int direction, float padding, float gap,
+        int align, int framed, int wrap, int clip, int justify, string? id, int scroll);
     [LibraryImport(Library, EntryPoint = "fpas_cui_group_end")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void GroupEnd(nint context, int node);
+    internal static partial int GroupEnd(nint context, int node);
     [LibraryImport(Library, EntryPoint = "fpas_cui_node_size")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void NodeSize(nint context, int node, int horizontal, int kind, float basis, float minimum, float maximum, float grow, int align);

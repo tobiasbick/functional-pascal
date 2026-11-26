@@ -1231,6 +1231,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
       when E.Element.NativeText(_, _), E.Element.Icon(
         _,
         _,
+        _,
         _
       ), E.Element.Emoji(_, _), E.Element.Keycap(_), E.Element.Image(_, _, _), E.Element.Canvas(
         _,
@@ -1326,7 +1327,12 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
       ):
         const At: string := Location + '/grid';
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
-        SurfaceRules.Grid(Settings, At);
+        const Flow: L.Flow := SurfaceRules.Grid(Settings, At);
+        const GridId: string? := Flow.Id;
+        if GridId <> null then
+          discard Identify(GridId, At);
+        end if;
+
         for Index: int := 0 to Children.Length - 1 do
           Visit(Children[Index], At + '[' + Index.ToString() + ']');
         end for;
@@ -1422,6 +1428,11 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         discard LayoutRules.CheckMeasure(Distance, Mode, Location + '/gap');
       when E.Element.Layered(const Children: array of E.Element of TMsg, const Flow: L.Flow):
         ContainerRules.CheckLayered(Flow, Mode, Location);
+        const ContainerId: string? := Flow.Id;
+        if ContainerId <> null then
+          discard Identify(ContainerId, Location + '/layers');
+        end if;
+
         for Index: int := 0 to Children.Length - 1 do
           Visit(Children[Index], Location + '/layers[' + Index.ToString() + ']');
         end for;
@@ -1436,6 +1447,11 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           '/column'
         end if);
         ContainerRules.CheckStack(Flow, Horizontal, Mode, Location, At);
+        const ContainerId: string? := Flow.Id;
+        if ContainerId <> null then
+          discard Identify(ContainerId, At);
+        end if;
+
         for Index: int := 0 to Children.Length - 1 do
           Visit(Children[Index], At + '[' + Index.ToString() + ']');
         end for;
@@ -1501,17 +1517,23 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end case;
       when E.Element.Scroll(
         const Id: string,
-        const Child: E.Element of TMsg,
+        const Children: array of E.Element of TMsg,
         const Position: L.ScrollPosition?,
         const OnScroll: Sys.Func of (L.ScrollChange, TMsg)?,
-        _,
-        const FadeEdges: bool,
-        const Horizontal: bool
+        const Settings: L.ScrollOptions
       ):
         const At: string := Identify(Id, Location + '/scroll');
-        if FadeEdges or Horizontal then
+        if Settings.FadeEdges or Settings.Horizontal or Settings.Width <> null or Settings.Height <>
+          null
+          or Settings.Padding <> null or Settings.Gap <> null or Settings.FadeColor <> null
+        then
           Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         end if;
+
+        LayoutRules.CheckExtent(Settings.Width ?? L.Extent.Fill, Mode, At + '/width');
+        LayoutRules.CheckExtent(Settings.Height ?? L.Extent.Fill, Mode, At + '/height');
+        LayoutRules.CheckSpacing(Settings.Padding ?? L.Spacing.None, Mode, At + '/padding');
+        LayoutRules.CheckSpacing(Settings.Gap ?? L.Spacing.None, Mode, At + '/gap');
 
         if Position = null then
           UncontrolledScrolls.Add(Id, NativeScope);
@@ -1535,7 +1557,10 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
             ScrollOwner := Id;
           end procedure
         );
-        Visit(Child, At);
+        for Index: int := 0 to Children.Length - 1 do
+          Visit(Children[Index], At + '[' + Index.ToString() + ']');
+        end for;
+
         After(
           procedure() begin
             ScrollOwner := ParentScroll;

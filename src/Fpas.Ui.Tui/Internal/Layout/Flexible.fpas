@@ -27,6 +27,10 @@ begin
         16
       end if;
       return cast ((cast Units as long + Scale - 1L) div Scale) as int;
+    when L.Measure.Points(_):
+      raise new Sys.NotSupportedException(
+        'Fractional point distances require the graphical profile.'
+      );
   end case;
 end function;
 

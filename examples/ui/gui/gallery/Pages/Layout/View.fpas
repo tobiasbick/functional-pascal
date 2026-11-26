@@ -76,13 +76,12 @@ begin
       Strings.Get('Heading.HorizontalScrolling'),
       Strings.Get('Heading.HorizontalScrollingHint')
     ),
-    E.Size of TMsg(
-      E.ScrollView of TMsg(
-        'layout-horizontal',
-        E.Row of TMsg(new L.Flow(Gap := G.Points(12), Clip := false), Tiles.ToArray()),
-        FadeEdges := true, Horizontal := true
-      ),
-      new L.Flex(Height := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(150))))
+    E.ScrollView of TMsg(
+      'layout-horizontal',
+      E.Row of TMsg(new L.Flow(Gap := G.Points(12), Clip := false), Tiles.ToArray()),
+      new L.ScrollOptions(
+        FadeEdges := true, Horizontal := true, Height := L.Extent.Fixed(L.Measure.Logical(150))
+      )
     )
   );
 end function;

@@ -39,15 +39,24 @@ end unit;
 
 | Option | Default or requirement |
 | --- | --- |
-| `ReadingDirection` | Inherit. An explicit direction requires the GUI host. |
+| `ReadingDirection` | Inherit. `LeftToRight`, `RightToLeft` and `Auto` require the GUI host. |
 | `PaddingStart / PaddingEnd` | null / null. A value overrides the base padding for that logical edge. |
-| `Gap / Spacer` | Gap is a fixed child on the main axis. Spacer uses available space. |
+| `Gap / Spacer` | Gap is a fixed child on the main axis. A spacer grows horizontally in a row or vertically in a column. |
 
 ## Usage
 
 Use start and end edges when the same row should mirror with the reading
 direction. The element order and labels stay the same. Change
 `Flow.Gap` to set the spacing between every pair of consecutive children.
+Use `Elements.Gap` for a fixed child with zero extent across the layout axis.
+`Measure.Points` accepts fractional distances. A gap of zero still participates
+in `Flow.Gap` spacing as a child.
+Each spacer gets an equal share of the remaining space when a row or column has
+several spacers and no other growing children. Use `Elements.Size` to set an
+explicit growth weight or bounds.
+`Auto` uses CUI's first strong directional character in descendant text.
+CUI skips subtrees with an explicit direction. If it finds only neutral
+characters, the container inherits its parent's direction.
 
 ## See also
 
@@ -55,4 +64,5 @@ direction. The element order and labels stay the same. Change
 - [Gallery example](../../../../examples/ui/gui/gallery/Pages/Layout/View.fpas)
 - [Gap and Spacer API](../../../../src/Fpas.Ui/Elements.fpas)
 - [Layered stack](stack.md)
+- [Row](row.md)
 - [Chapter index](README.md)

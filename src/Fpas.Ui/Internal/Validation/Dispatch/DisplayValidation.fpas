@@ -3,6 +3,7 @@
 unit Fpas.Ui.Internal.Validation.Dispatch.DisplayValidation;
 
 uses Fpas.Ui.Elements as E;
+uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Internal.Validation.Controls.MediaRules as M;
 uses Fpas.Ui.Internal.Validation.Core.ChartChecks as C;
 uses Fpas.Ui.Internal.Validation.Core.Checks as R;
@@ -12,6 +13,7 @@ uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Media.Images as Images;
 uses Fpas.Ui.Widgets.Media.MediaImages as Media;
 uses Fpas.Ui.Widgets.Overlays.Veils as Veil;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses System as Sys;
 
@@ -83,8 +85,21 @@ begin
     when E.Element.Icon(
       const Glyph: string,
       const Size: float,
-      _
-    ), E.Element.Emoji(const Glyph: string, const Size: float):
+      const Color: G.Color?,
+      const ThemeColor: Themes.ColorToken?
+    ):
+      const Path: string := Location + '/icon';
+      R.CheckText(Glyph, Path);
+      if not Sys.Single.IsFinite(Size) or Size < 0.0F then
+        R.Reject(Path, 'Icon size must be finite and nonnegative.');
+      end if;
+
+      if ThemeColor <> null then
+        if Color <> null or not Sys.Enum.IsDefined of Themes.ColorToken(ThemeColor.Value) then
+          R.Reject(Path, 'Choose one explicit color or a valid theme color for the icon.');
+        end if;
+      end if;
+    when E.Element.Emoji(const Glyph: string, const Size: float):
       R.CheckText(Glyph, Location);
       C.Distance(Size, Location);
     when E.Element.Keycap(const Keys: string):

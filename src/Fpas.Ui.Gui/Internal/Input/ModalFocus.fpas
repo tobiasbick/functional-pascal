@@ -198,6 +198,12 @@ begin
       const Children: array of E.Element of TMsg,
       _,
       _
+    ), E.Element.Scroll(
+      _,
+      const Children: array of E.Element of TMsg,
+      _,
+      _,
+      _
     ), E.Element.ActionFooter(const Children: array of E.Element of TMsg), E.Element.SkeletonGroup(
       _,
       const Children: array of E.Element of TMsg,
@@ -304,8 +310,6 @@ begin
         return TopModal of TMsg(Child, Prepared, Previous);
       end if;
     when E.Element.Framed(const Child: E.Element of TMsg, _):
-      return TopModal of TMsg(Child, Prepared, Previous);
-    when E.Element.Scroll(_, const Child: E.Element of TMsg, _, _, _, _, _):
       return TopModal of TMsg(Child, Prepared, Previous);
     when E.Element.Deferred(const Id: string, _):
       return TopModal of TMsg(Prepared.Subviews[Id].Tree, Prepared, Previous);

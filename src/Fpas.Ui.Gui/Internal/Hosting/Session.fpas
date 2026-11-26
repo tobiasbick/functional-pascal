@@ -275,7 +275,7 @@ requires Capacity > 0;
       end if;
       const Cached: (V.Prepared of TMsg)? := Prepared;
       if Cached <> null and not BrokenView then
-        Paint(Cached, false, Window.Size);
+        Paint(Cached, false, Window.ViewportSize);
       else
         Window.Text('Closing…');
         Window.Present();
@@ -389,7 +389,7 @@ requires Capacity > 0;
         Finish();
         return false;
       end if;
-      const Size: Cui.CuiSize := Window.Size;
+      const Size: Cui.CuiSize := Window.ViewportSize;
       if Size.Width <> PreviousSize.Width or Size.Height <> PreviousSize.Height then
         Dirty := true;
       end if;

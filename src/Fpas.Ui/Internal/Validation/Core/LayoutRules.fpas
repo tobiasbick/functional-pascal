@@ -16,9 +16,9 @@ uses System as Sys;
 //
 // ## Returns
 // The validated distance in its declared units.
-public function CheckMeasure(Value: L.Measure; Current: R.Profile; Location: string): int;
+public function CheckMeasure(Value: L.Measure; Current: R.Profile; Location: string): double;
 begin
-  var Amount: int := 0;
+  var Amount: double := 0.0;
   case Value of
     when L.Measure.Cells(const Cells: int):
       if Current <> R.Profile.Terminal then
@@ -28,10 +28,13 @@ begin
       Amount := Cells;
     when L.Measure.Logical(const Units: int):
       Amount := Units;
+    when L.Measure.Points(const Points: float):
+      R.RequireProfile(Current, R.Profile.Graphical, Location);
+      Amount := Points;
   end case;
 
-  if Amount < 0 then
-    R.Reject(Location, 'A distance must be nonnegative.');
+  if not Sys.Double.IsFinite(Amount) or Amount < 0.0 then
+    R.Reject(Location, 'A distance must be finite and nonnegative.');
   end if;
 
   return Amount;
@@ -79,7 +82,9 @@ begin
     case Settings.Width of
       when is L.AxisSize as Axis:
         CheckFlex(
-          new L.Flex(Basis := Axis.Basis, Minimum := Axis.Minimum, Maximum := Axis.Maximum),
+          new L.Flex(
+            Basis := Axis.Basis, Minimum := Axis.Minimum, Maximum := Axis.Maximum, Grow := Axis.Grow
+          ),
           Current,
           Location + '/width'
         );
@@ -89,7 +94,9 @@ begin
     case Settings.Height of
       when is L.AxisSize as Axis:
         CheckFlex(
-          new L.Flex(Basis := Axis.Basis, Minimum := Axis.Minimum, Maximum := Axis.Maximum),
+          new L.Flex(
+            Basis := Axis.Basis, Minimum := Axis.Minimum, Maximum := Axis.Maximum, Grow := Axis.Grow
+          ),
           Current,
           Location + '/height'
         );
@@ -118,21 +125,20 @@ begin
     case Min of
       when L.Measure.Cells(_):
         case Max of
-          when L.Measure.Logical(_):
-            R.Reject(Location, 'Minimum and maximum must use the same measure units.');
+          when L.Measure.Cells(_):
           else
+            R.Reject(Location, 'Minimum and maximum must use the same measure units.');
         end case;
-      when L.Measure.Logical(_):
+      else
         case Max of
           when L.Measure.Cells(_):
             R.Reject(Location, 'Minimum and maximum must use the same measure units.');
           else
         end case;
-      else
     end case;
   end if;
-  const Minimum: int := if Min = null then
-    0
+  const Minimum: double := if Min = null then
+    0.0
   else
     CheckMeasure(
       Min,
@@ -140,8 +146,8 @@ begin
       Location + '/minimum'
     )
   end if;
-  const Maximum: int := if Max = null then
-    int.MaxValue
+  const Maximum: double := if Max = null then
+    double.PositiveInfinity
   else
     CheckMeasure(
       Max,

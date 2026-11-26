@@ -49,7 +49,7 @@ begin
   const Article: E.Element of TMsg := E.ScrollView of TMsg(
     'reader',
     E.Column of TMsg(new L.Flow(Gap := G.Points(14), Clip := false), Sections.ToArray()),
-    FadeEdges := true
+    new L.ScrollOptions(FadeEdges := true)
   );
   return E.Row of TMsg(
     new L.Flow(Gap := G.Points(28), Align := L.Alignment.Start),

@@ -125,7 +125,7 @@ CUI's scroll-to API. The gallery resets its viewport for every destination
 selection, including the active destination. The supplementary Layout page
 demonstrates these primitives in light, dark and narrow captures.
 See the [graphical layout API][fpas-native-layout] and [CUI layout reference][layout] for CUI's directional
-limits; mirrored layout does not add text shaping or bidirectional editing.
+limits, including the boundary between static text shaping and editing.
 
 ### Native keyboard limits
 
@@ -155,7 +155,7 @@ text, glyphs, keycaps, images and the interactive swatch canvas.
   and keyboard activation of the original @jonas link and its visible focus
   ring. The bridge paints the ring alongside the native hover underline.
   The graphical profile is required.
-- [x] Icon (`cui_icon`): standalone file icon from the CUI icon specimen.
+- [x] Icon (`cui_icon`): standalone icon with native size, RGBA and theme colors, and named CUI glyphs. [API](ui/gui/text-and-display/icon.md).
 - [x] Emoji display (`cui_emoji`): the original three emoji and counts.
 - [x] Keycap (`cui_kbd`): native Ctrl Shift P keycaps.
 - [x] Badge (`cui_badge`). [API][fpas-surfaces]. Overview shows the original
@@ -926,8 +926,8 @@ Include axis formatting through `cui_axis_units`, including `CUI_AXIS_HOURS`:
 12.25 reads 12:15 and 30 reads 06:00 on the next day. Match these semantics
 in the GUI chart bindings. For right-to-left views, readout and dot-display
 placement follow reading direction while chart and event-track time axes remain left to
-right. Arabic-script labels require CUI's optional static-text shaping support,
-which remains a separate native build option.
+right. FPAS enables CUI's static text shaping for Arabic-script labels.
+Supply a fallback font if the active font lacks the required glyphs.
 
 ### Conversation and media
 

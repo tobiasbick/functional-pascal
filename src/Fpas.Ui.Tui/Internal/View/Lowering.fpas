@@ -443,13 +443,16 @@ public function Prepare of TMsg(
         return (E.Element of TMsg).Framed(Visit(Child, Colors), Title);
       when Ui.Element.Scroll(
         const Id: string,
-        const Child: Ui.Element of TMsg,
+        const Children: array of Ui.Element of TMsg,
         const Position: L.ScrollPosition?,
         const Scroll: Sys.Func of (L.ScrollChange, TMsg)?,
-        const Bar: bool,
-        _,
-        _
+        const Settings: L.ScrollOptions
       ):
+        const Child: E.Element of TMsg := if Children.Length = 1 then
+          Visit(Children[0], Colors)
+        else
+          Visit(Ui.Column of TMsg(Children), Colors)
+        end if;
         case Scroll of
           when is Sys.Func of (L.ScrollChange, TMsg) as Callback:
             var Native: E.ScrollPosition := E.ScrollPosition.Offset(0);
@@ -463,13 +466,13 @@ public function Prepare of TMsg(
 
             return (E.Element of TMsg).ControlledScroll(
               Id,
-              Visit(Child, Colors),
+              Child,
               Native,
               Callback,
-              Bar
+              Settings.ShowScrollbar
             );
           else
-            return (E.Element of TMsg).Scrollable(Id, Visit(Child, Colors), Bar);
+            return (E.Element of TMsg).Scrollable(Id, Child, Settings.ShowScrollbar);
         end case;
       when Ui.Element.Sheet(
         const Id: string, const Base: Ui.Element of TMsg, const Content: Ui.Element of TMsg,

@@ -1014,6 +1014,12 @@ begin
       const Children: array of E.Element of TMsg,
       _,
       _
+    ), E.Element.Scroll(
+      _,
+      const Children: array of E.Element of TMsg,
+      _,
+      _,
+      _
     ), E.Element.ButtonGroup(
       const Children: array of E.Element of TMsg
     ), E.Element.ActionFooter(const Children: array of E.Element of TMsg), E.Element.SkeletonGroup(
@@ -1115,8 +1121,6 @@ begin
     when E.Element.Styled(const Child: E.Element of TMsg, _):
       return First of TMsg(Child, Prepared, Preferred);
     when E.Element.Framed(const Child: E.Element of TMsg, _):
-      return First of TMsg(Child, Prepared, Preferred);
-    when E.Element.Scroll(_, const Child: E.Element of TMsg, _, _, _, _, _):
       return First of TMsg(Child, Prepared, Preferred);
     when E.Element.Sheet(
       const Id: string, const Base: E.Element of TMsg, const Content: E.Element of TMsg,

@@ -19,6 +19,7 @@ uses Fpas.Ui.Widgets.Display.Texts as Texts;
 uses Fpas.Ui.Widgets.Media.Images as Images;
 uses Fpas.Ui.Widgets.Media.MediaImages as Media;
 uses Fpas.Ui.Widgets.Overlays.Veils as Veils;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses System as Sys;
 
@@ -38,8 +39,11 @@ begin
   case Node of
     when E.Element.NativeText(const Text: string, const Role: Texts.Appearance):
       NativeTextWidget.Draw of TMsg(Frame, Text, Role);
-    when E.Element.Icon(const Glyph: string, const Size: float, const Color: G.Color?):
-      IconWidget.Draw of TMsg(Frame, Glyph, Size, Color);
+    when E.Element.Icon(
+      const Glyph: string, const Size: float, const Color: G.Color?,
+      const ThemeColor: Themes.ColorToken?
+    ):
+      IconWidget.Draw of TMsg(Frame, Glyph, Size, Color, ThemeColor);
     when E.Element.Emoji(const Glyph: string, const Size: float):
       EmojiWidget.Draw of TMsg(Frame, Glyph, Size);
     when E.Element.Keycap(const Keys: string):

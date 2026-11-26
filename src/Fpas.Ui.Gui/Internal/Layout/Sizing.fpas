@@ -6,6 +6,7 @@ uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Gui.Cui as Cui;
 uses Fpas.Ui.Gui.Internal.Core.Values as P;
 uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses System as Sys;
 
@@ -21,6 +22,8 @@ begin
   case Value of
     when L.Measure.Logical(const Units: int):
       return cast Units as float;
+    when L.Measure.Points(const Points: float):
+      return Points;
     else
       raise new Sys.NotSupportedException('GUI layout requires logical units.');
   end case;
@@ -76,7 +79,16 @@ begin
   end case;
 end function;
 
-// Applies native edge insets and inherited reading direction to a new container.
+function ThemeToken(Value: Themes.ColorToken?): int;
+begin
+  return if Value = null then
+    0
+  else
+    cast Value.Value as int
+  end if;
+end function;
+
+// Applies native insets, reading direction and paint options to a new container.
 // ## Parameters
 // - `Window`: Current drawing window, immediately after opening the container.
 // - `Settings`: Validated container options.
@@ -84,28 +96,77 @@ end function;
 public procedure Container(Window: Cui.CuiWindow; Settings: L.Flow; Layered: bool := false);
 begin
   const Background: G.Color? := Settings.Background;
-  if Background <> null or Settings.CornerRadius > 0.0F then
-    Window.SurfaceLast(
+  const Border: L.Border? := Settings.Border;
+  const Corners: L.CornerRadii? := Settings.Corners;
+  const Radius: float := Settings.CornerRadius;
+  if Background <> null or Settings.BackgroundTheme <> null or Radius > 0.0F
+    or Corners <> null or Border <> null or Settings.Elevation <> L.Elevation.None
+    or Settings.Opacity <> 1.0F
+  then
+    const Stroke: G.Color? := if Border = null then
+      null
+    else
+      Border.Color
+    end if;
+    const StrokeToken: Themes.ColorToken? := if Border = null then
+      null
+    else
+      Border.ThemeColor
+    end if;
+    Window.StyleGroup(
       if Background = null then
         0U
       else
         P.Pack(Background)
-      end if, Settings.CornerRadius
+      end if,
+      ThemeToken(Settings.BackgroundTheme),
+      if Corners = null then
+        Radius
+      else
+        Corners.TopLeft ?? Radius
+      end if,
+      if Corners = null then
+        Radius
+      else
+        Corners.TopRight ?? Radius
+      end if,
+      if Corners = null then
+        Radius
+      else
+        Corners.BottomRight ?? Radius
+      end if,
+      if Corners = null then
+        Radius
+      else
+        Corners.BottomLeft ?? Radius
+      end if,
+      if Border = null then
+        0.0F
+      else
+        Border.Width
+      end if,
+      if Stroke = null then
+        null
+      else
+        P.Pack(Stroke)
+      end if,
+      ThemeToken(StrokeToken), cast Settings.Elevation as int, Settings.Opacity
     );
   end if;
 
   if not Layered and Settings.PaddingTop = null and Settings.PaddingEnd = null
     and Settings.PaddingBottom = null and Settings.PaddingStart = null
+    and Settings.PaddingX = null and Settings.PaddingY = null
     and Settings.ReadingDirection = L.Direction.Inherit
   then
     return;
   end if;
 
+  const X: L.Spacing := Settings.PaddingX ?? Settings.Padding;
+  const Y: L.Spacing := Settings.PaddingY ?? Settings.Padding;
   Window.LayoutLast(
-    Spacing(Settings.PaddingTop ?? Settings.Padding),
-    Spacing(Settings.PaddingEnd ?? Settings.Padding),
-    Spacing(Settings.PaddingBottom ?? Settings.Padding),
-    Spacing(Settings.PaddingStart ?? Settings.Padding),
+    Spacing(Settings.PaddingTop ?? Y), Spacing(Settings.PaddingEnd ?? X),
+    Spacing(Settings.PaddingBottom ?? Y), Spacing(Settings.PaddingStart ?? X),
     cast Settings.ReadingDirection as int
   );
 end procedure;
@@ -138,10 +199,16 @@ public procedure Apply(Window: Cui.CuiWindow; Value: L.Flex; Horizontal: bool; A
       else
         Measure(Maximum)
       end if,
-      0, 0
+      Settings.Grow, 0
     );
   end procedure;
 begin
+  if Value.Width <> null or Value.Height <> null then
+    Axis(Value.Width, true);
+    Axis(Value.Height, false);
+    return;
+  end if;
+
   const Basis: NativeExtent := Extent(Value.Basis);
   var Minimum: float := 0;
   var Maximum: float := -1;
@@ -166,14 +233,12 @@ begin
     Value.Grow,
     cast Align as int
   );
-  Axis(Value.Width, true);
-  Axis(Value.Height, false);
 end procedure;
 
-// Builds the responsive viewport from the window's logical dimensions.
+// Builds the responsive viewport from CUI's drawable dimensions.
 //
 // ## Parameters
-// - `Size`: The native window's measured size.
+// - `Size`: The native viewport size in logical points.
 // ## Returns
 // The responsive width and height classes and logical dimensions.
 public function Viewport(Size: Cui.CuiSize): L.Viewport;
@@ -193,7 +258,7 @@ begin
     else
       L.SizeClass.Expanded
     end if,
-    cast Size.Width as int, cast Size.Height as int
+    Size.Width, Size.Height
   );
 end function;
 

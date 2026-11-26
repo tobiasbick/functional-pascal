@@ -5,15 +5,7 @@ unit Fpas.Ui.Gui.Internal.Widgets.Display.Icon;
 uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Gui.Internal.Core.Context as C;
 uses Fpas.Ui.Gui.Internal.Core.Values as P;
-
-function OptionalColor(Color: G.Color?): uint;
-begin
-  return if Color = null then
-    0U
-  else
-    P.Pack(Color)
-  end if;
-end function;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 // Draws the native CUI icon.
 // ## Type parameters
@@ -22,10 +14,27 @@ end function;
 // - `Frame`: Current GUI frame.
 // - `Glyph`: CUI icon glyph.
 // - `Size`: Logical icon size. Zero uses the default.
-// - `Color`: Explicit color, or null for the foreground.
-public procedure Draw of TMsg(Frame: C.State of TMsg; Glyph: string; Size: float; Color: G.Color?);
+// - `Color`: Explicit straight-alpha color.
+// - `ThemeColor`: Active theme color. Null selects the foreground when no explicit color is given.
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg;
+  Glyph: string;
+  Size: float;
+  Color: G.Color?;
+  ThemeColor: Themes.ColorToken?
+);
 begin
-  Frame.Window.DisplayIcon(Glyph, Size, OptionalColor(Color));
+  if Color <> null then
+    Frame.Window.DisplayIcon(Glyph, Size, P.Pack(Color));
+  else
+    Frame.Window.DisplayIcon(
+      Glyph, Size, themeToken := if ThemeColor = null then
+        0
+      else
+        cast ThemeColor.Value as int
+      end if
+    );
+  end if;
 end procedure;
 
 end unit;

@@ -570,7 +570,7 @@ public type Element of TMsg = variant
   // Terminal rendered by the native graphical host.
   Terminal(Id: string; Output: string; Revision: int; Received: function(Terminals.Event): TMsg; Settings: Terminals.Options);
   // Native CUI Icon element.
-  Icon(Glyph: string; Size: float; Color: G.Color?);
+  Icon(Glyph: string; Size: float; Color: G.Color?; ThemeColor: Themes.ColorToken?);
   // Native CUI Emoji element.
   Emoji(Glyph: string; Size: float);
   // Native CUI Keycap element.
@@ -732,8 +732,8 @@ public type Element of TMsg = variant
   ScrollAnchor(Id: string);
   // Clip one child to a vertical viewport with optional model-controlled scrolling.
   Scroll(
-    Id: string; Child: Element of TMsg; Position: L.ScrollPosition?;
-    OnScroll: Sys.Func of (L.ScrollChange, TMsg)?; ShowScrollbar: bool; FadeEdges: bool; Horizontal: bool
+    Id: string; Children: array of Element of TMsg; Position: L.ScrollPosition?;
+    OnScroll: Sys.Func of (L.ScrollChange, TMsg)?; Settings: L.ScrollOptions
   );
   // Place a controlled, scrollable modal at one viewport edge.
   Sheet(
@@ -808,22 +808,24 @@ begin
   return (Element of TMsg).FormattedText(Text, Font, Size, Color);
 end function;
 
-// Separates adjacent content.
+// Separates adjacent content with a native CUI hairline.
 //
 // ## Type parameters
 // - `TMsg`: The application message type.
 //
 // ## Parameters
-// - `Title`: The optional separator caption.
+// - `Title`: An optional caption above a horizontal line. A plain divider is
+//   vertical in a row and horizontal elsewhere.
 //
 // ## Returns
-// The declarative widget.
+// The GUI-only divider.
 public function Divider of TMsg(Title: string := ''): Element of TMsg;
 begin
   return (Element of TMsg).Separator(Title);
 end function;
 
-// Inserts CUI's flexible space along the containing axis.
+// Inserts a flexible CUI spacer. Spacers in a row or column share the available
+// main-axis space with other growing children.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Returns
@@ -833,11 +835,11 @@ begin
   return (Element of TMsg).Spacer;
 end function;
 
-// Inserts CUI's fixed space along the containing axis.
+// Inserts CUI's fixed space horizontally in a row and vertically elsewhere.
 // ## Type parameters
 // - `TMsg`: Application message type.
 // ## Parameters
-// - `Distance`: Nonnegative logical distance.
+// - `Distance`: Finite nonnegative logical distance. Use `Measure.Points` for fractions.
 // ## Returns
 // A GUI-only fixed gap.
 public function Gap of TMsg(Distance: L.Measure): Element of TMsg;
@@ -969,21 +971,48 @@ end function;
 // ## Parameters
 // - `Id`: The stable viewport ID.
 // - `Child`: The scrollable content.
-// - `ShowScrollbar`: Whether to show an overflow indicator.
-// - `FadeEdges`: Whether the graphical viewport fades edges with hidden content.
-// - `Horizontal`: Also enable graphical horizontal scrolling; model positions remain vertical.
+// - `Settings`: Optional viewport presentation and layout options.
 //
 // ## Returns
 // The declarative widget.
 public function ScrollView of TMsg(
   Id: string;
   Child: Element of TMsg;
-  ShowScrollbar: bool := true;
-  FadeEdges: bool := false;
-  Horizontal: bool := false
+  Settings: L.ScrollOptions? := null
 ): Element of TMsg;
 begin
-  return (Element of TMsg).Scroll(Id, Child, null, null, ShowScrollbar, FadeEdges, Horizontal);
+  return (Element of TMsg).Scroll(Id, [Child], null, null, Settings ?? new L.ScrollOptions());
+end function;
+
+// Displays multiple direct children in a native scroll viewport.
+//
+// ## Type parameters
+// - `TMsg`: The application message type.
+//
+// ## Parameters
+// - `Id`: The stable viewport ID.
+// - `Children`: Direct children in layout order.
+// - `Settings`: Optional viewport presentation and layout options.
+// - `Position`: An optional model-owned vertical position.
+// - `OnScroll`: A callback required when the model owns the position.
+//
+// ## Returns
+// The declarative viewport.
+public function ScrollView of TMsg(
+  Id: string;
+  Children: array of Element of TMsg;
+  Settings: L.ScrollOptions? := null;
+  Position: L.ScrollPosition? := null;
+  OnScroll: Sys.Func of (L.ScrollChange, TMsg)? := null
+): Element of TMsg;
+begin
+  return (Element of TMsg).Scroll(
+    Id,
+    Children,
+    Position,
+    OnScroll,
+    Settings ?? new L.ScrollOptions()
+  );
 end function;
 
 // Displays a vertical viewport whose position belongs to the model.
@@ -996,9 +1025,7 @@ end function;
 // - `Child`: The scrollable content.
 // - `Position`: The model's requested position.
 // - `OnScroll`: Maps a user scroll request and resolution to a message.
-// - `ShowScrollbar`: Whether to show an overflow indicator.
-// - `FadeEdges`: Whether the graphical viewport fades edges with hidden content.
-// - `Horizontal`: Also enable graphical horizontal scrolling; model positions remain vertical.
+// - `Settings`: Optional viewport presentation and layout options.
 //
 // ## Returns
 // The declarative widget.
@@ -1007,19 +1034,15 @@ public function ScrollView of TMsg(
   Child: Element of TMsg;
   Position: L.ScrollPosition;
   OnScroll: function(L.ScrollChange): TMsg;
-  ShowScrollbar: bool := true;
-  FadeEdges: bool := false;
-  Horizontal: bool := false
+  Settings: L.ScrollOptions? := null
 ): Element of TMsg;
 begin
   return (Element of TMsg).Scroll(
     Id,
-    Child,
+    [Child],
     Position,
     OnScroll,
-    ShowScrollbar,
-    FadeEdges,
-    Horizontal
+    Settings ?? new L.ScrollOptions()
   );
 end function;
 

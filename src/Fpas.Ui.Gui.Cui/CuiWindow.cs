@@ -97,6 +97,10 @@ public sealed partial class CuiWindow : IDisposable
     /// <summary>Gets the logical size most recently observed by the native event loop.</summary>
     public CuiSize Size { get { CheckOpen(); return NativeMethods.Size(app); } }
 
+    /// <summary>Gets the drawable size in logical points stored in the CUI context.</summary>
+    /// <remarks>The native frame pump refreshes this value when it begins each frame.</remarks>
+    public CuiSize ViewportSize { get { CheckOpen(); return NativeMethods.ViewportSize(context); } }
+
     /// <summary>Requests a new logical size; the native event loop applies the resize.</summary>
     /// <param name="width">Positive requested width.</param>
     /// <param name="height">Positive requested height.</param>
@@ -226,11 +230,10 @@ public sealed partial class CuiWindow : IDisposable
     public void BeginColumn(float padding = 24, float gap = 12)
     {
         CheckLayoutOptions(padding, gap);
-        NativeMethods.BeginColumn(context, padding, gap);
-        layouts.Add(new(Layout.Column));
+        RegisterBox(Layout.Column, NativeMethods.BeginColumn(context, padding, gap));
     }
 
-    /// <summary>Closes the innermost layout when it is a column.</summary>
+    /// <summary>Closes the innermost column and makes it the last widget.</summary>
     public void EndColumn() => EndLayout(Layout.Column);
 
     /// <summary>Opens a padded full-width horizontal row in the current frame.</summary>
@@ -239,11 +242,10 @@ public sealed partial class CuiWindow : IDisposable
     public void BeginRow(float padding = 24, float gap = 12)
     {
         CheckLayoutOptions(padding, gap);
-        NativeMethods.BeginRow(context, padding, gap);
-        layouts.Add(new(Layout.Row));
+        RegisterBox(Layout.Row, NativeMethods.BeginRow(context, padding, gap));
     }
 
-    /// <summary>Closes the innermost layout when it is a row.</summary>
+    /// <summary>Closes the innermost row and makes it the last widget.</summary>
     public void EndRow() => EndLayout(Layout.Row);
 
     /// <summary>Opens a full-width scroll container in the current frame.</summary>
@@ -256,20 +258,12 @@ public sealed partial class CuiWindow : IDisposable
         Utf8.Validate(id, nameof(id));
         ArgumentException.ThrowIfNullOrEmpty(id);
         if (!float.IsFinite(height) || height < 0) throw new ArgumentOutOfRangeException(nameof(height));
-        NativeMethods.BeginScroll(context, Stable(id), height, horizontal ? 1 : 0);
-        int node = NativeMethods.LastNode(context);
-        if (node >= 0) scrollMetricNodes.Add(node);
-        layouts.Add(new(Layout.Scroll));
+        int node = NativeMethods.BeginScroll(context, Stable(id), height, horizontal ? 1 : 0);
+        RegisterBox(Layout.Scroll, node, scrolling: true);
     }
 
-    /// <summary>Closes the innermost layout when it is a scroll container.</summary>
-    public void EndScroll()
-    {
-        var scope = RequireLayout(Layout.Scroll);
-        if (scope.Node >= 0) NativeMethods.GroupEnd(context, scope.Node);
-        else NativeMethods.EndScroll(context);
-        layouts.RemoveAt(layouts.Count - 1);
-    }
+    /// <summary>Closes the innermost scroll container and makes it the last widget.</summary>
+    public void EndScroll() => EndLayout(Layout.Scroll);
 
     /// <summary>Requests a vertical scroll offset before drawing a previously laid out container.</summary>
     /// <param name="id">The identity passed to <see cref="BeginScroll"/>, in the same CUI ID scope.</param>
@@ -397,11 +391,18 @@ public sealed partial class CuiWindow : IDisposable
         if (!float.IsFinite(gap) || gap < 0) throw new ArgumentOutOfRangeException(nameof(gap));
     }
 
+    private void RegisterBox(Layout kind, int node, bool scrolling = false)
+    {
+        if (node < 0) throw new InvalidOperationException("The native CUI box nesting limit was reached.");
+        layouts.Add(new(kind, Node: node));
+        if (scrolling) scrollMetricNodes.Add(node);
+    }
+
     private void EndLayout(Layout expected)
     {
         var scope = RequireLayout(expected);
-        if (scope.Node >= 0) NativeMethods.GroupEnd(context, scope.Node);
-        else NativeMethods.EndBox(context);
+        if (NativeMethods.GroupEnd(context, scope.Node) == 0)
+            throw new InvalidOperationException("The innermost native box does not match the layout being closed.");
         layouts.RemoveAt(layouts.Count - 1);
     }
 

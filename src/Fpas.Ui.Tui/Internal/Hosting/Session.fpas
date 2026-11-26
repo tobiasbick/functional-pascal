@@ -213,7 +213,7 @@ public function Start of (TModel, TMsg)(
       else
         L.SizeClass.Expanded
       end if,
-      Viewport.Columns * 8, Viewport.Rows * 16
+      cast (Viewport.Columns * 8) as float, cast (Viewport.Rows * 16) as float
     );
     const Candidate: Validation.Prepared of TMsg := Validation.Prepare of TMsg(
       View(Core.Model(), Size),

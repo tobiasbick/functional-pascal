@@ -2,11 +2,22 @@
 
 unit Fpas.Ui.Internal.Validation.Core.ContainerRules;
 
+uses Fpas.Ui.Graphics as G;
 uses Fpas.Ui.Internal.Validation.Core.Checks as R;
 uses Fpas.Ui.Internal.Validation.Core.LayoutRules as LR;
 uses Fpas.Ui.Layout as L;
+uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 
 uses System as Sys;
+
+procedure CheckColor(Color: G.Color?; Token: Themes.ColorToken?; Location: string);
+begin
+  if Token <> null then
+    if Color <> null or not Sys.Enum.IsDefined of Themes.ColorToken(Token.Value) then
+      R.Reject(Location, 'Choose an explicit RGBA color or a valid theme color.');
+    end if;
+  end if;
+end procedure;
 
 procedure CheckContainer(Settings: L.Flow; Current: R.Profile; Location: string);
 begin
@@ -28,8 +39,51 @@ begin
     R.Reject(Location, 'The corner radius must be finite and nonnegative.');
   end if;
 
-  if Settings.Background <> null or Settings.CornerRadius > 0.0F then
+  if Settings.Background <> null or Settings.BackgroundTheme <> null
+    or Settings.CornerRadius > 0.0F or Settings.Border <> null or Settings.Corners <> null
+    or Settings.Opacity <> 1.0F or Settings.Elevation <> L.Elevation.None
+    or Settings.Scrolling <> L.ScrollMode.None or Settings.Id <> null
+  then
     R.RequireProfile(Current, R.Profile.Graphical, Location);
+  end if;
+
+  if not Sys.Enum.IsDefined of L.Elevation(Settings.Elevation) then
+    R.Reject(Location, 'Unknown container elevation.');
+  end if;
+
+  if not Sys.Enum.IsDefined of L.ScrollMode(Settings.Scrolling) then
+    R.Reject(Location, 'Unknown container scroll mode.');
+  end if;
+
+  if not Sys.Single.IsFinite(Settings.Opacity) or Settings.Opacity < 0.0F
+    or Settings.Opacity > 1.0F
+  then
+    R.Reject(Location, 'Container opacity must be finite and between zero and one.');
+  end if;
+
+  CheckColor(Settings.Background, Settings.BackgroundTheme, Location + '/background');
+  const Border: L.Border? := Settings.Border;
+  if Border <> null then
+    if not Sys.Single.IsFinite(Border.Width) or Border.Width < 0.0F then
+      R.Reject(Location, 'The border width must be finite and nonnegative.');
+    end if;
+
+    CheckColor(Border.Color, Border.ThemeColor, Location + '/border');
+  end if;
+  const Corners: L.CornerRadii? := Settings.Corners;
+  if Corners <> null then
+    for Radius: float? in [
+      Corners.TopLeft,
+      Corners.TopRight,
+      Corners.BottomRight,
+      Corners.BottomLeft
+    ] do
+      if Radius <> null then
+        if not Sys.Single.IsFinite(Radius.Value) or Radius.Value < 0.0F then
+          R.Reject(Location, 'Corner radii must be finite and nonnegative.');
+        end if;
+      end if;
+    end for;
   end if;
 
   if Settings.ReadingDirection <> L.Direction.Inherit then
@@ -40,7 +94,9 @@ begin
     Settings.PaddingTop,
     Settings.PaddingEnd,
     Settings.PaddingBottom,
-    Settings.PaddingStart
+    Settings.PaddingStart,
+    Settings.PaddingX,
+    Settings.PaddingY
   ] do
     if Inset <> null then
       R.RequireProfile(Current, R.Profile.Graphical, Location);

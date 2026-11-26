@@ -1,4 +1,6 @@
 // [Documentation](../../../docs/ui/gui/layout/stack.md)
+using Fpas.Tests.Support;
+
 namespace Fpas.Ui.Gui.Cui.Tests.Layout;
 
 /// <summary>Checks native spacing, layered boxes, logical insets and two-axis scrolling.</summary>
@@ -96,6 +98,77 @@ public sealed class CuiLayoutOptionsTests
         }
     }
 
+    /// <summary>Native size, spacing and custom edge fades also work with scrollbars hidden.</summary>
+    [GuiFact]
+    public void ViewportUsesNativeGeometryAndFadeColor()
+    {
+        using var window = new CuiWindow("Scroll options", 420, 320, CuiRenderer.Software, continuous: true);
+        window.SetReducedMotion(true);
+        for (int frame = 0; frame < 2; frame++)
+        {
+            Assert.True(window.NextFrame());
+            window.BeginViewport("scroll", false, true, true, horizontal: true,
+                widthKind: 2, width: 320, heightKind: 2, height: 140.5f,
+                padding: 8.5f, gap: 6.25f, fadeColor: 0xff0000ff);
+            window.Skeleton("first", 2, 600, 20); window.TrackLastControl("first");
+            window.Skeleton("second", 2, 600, 180); window.TrackLastControl("second");
+            window.EndScroll(); window.TrackLastControl("scroll");
+            window.Present();
+        }
+        var viewport = window.GetControlRectangle("scroll");
+        var first = window.GetControlRectangle("first");
+        var second = window.GetControlRectangle("second");
+        Assert.Equal((320f, 140.5f), (viewport.Width, viewport.Height));
+        Assert.Equal((viewport.X + 8.5f, viewport.Y + 8.5f), (first.X, first.Y));
+        Assert.Equal(first.Y + first.Height + 6.25f, second.Y);
+
+        using var directory = new TemporaryDirectory();
+        string path = directory.File("scroll-fade.png");
+        window.CapturePng(path);
+        var pixels = PngAssertions.ReadPixels(path, 420, 320);
+        uint edge = pixels[60 * 420 + 318];
+        Assert.True((edge & 0xff) > ((edge >> 16) & 0xff) + 80, "The right fade should be red.");
+    }
+
+    /// <summary>A named scrolling box exposes the native offset and range in each direction.</summary>
+    /// <param name="direction">CUI box direction.</param>
+    [GuiTheory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    public void ScrollingBoxExposesNativeMetrics(int direction)
+    {
+        using var window = new CuiWindow("Native box scrolling", 420, 320, CuiRenderer.Software, continuous: true);
+        window.SetReducedMotion(true);
+        foreach (float requested in new[] { 0f, 30.5f })
+        {
+            Assert.True(window.NextFrame());
+            window.ScrollTo("box", requested);
+            switch (direction)
+            {
+                case 2:
+                    window.BeginLayers(id: "box", scroll: 1);
+                    break;
+                case 3:
+                    window.BeginGrid(1, 0, 0, 0, id: "box", scroll: 1);
+                    break;
+                default:
+                    window.BeginGroup(direction == 1, 0, 0, 1, false, false, false, 0, "box", 1);
+                    break;
+            }
+            window.Skeleton("tall-content", 2, 140, 220);
+            window.EndGroup();
+            window.SizeLast(false, 2, 100, 0, -1, 0, 0);
+            window.TrackLastControl("box");
+            window.Present();
+
+            window.ScrollMetrics("box", out float offset, out float maximum);
+            Assert.Equal(requested, offset);
+            Assert.Equal(120, maximum);
+        }
+    }
+
     /// <summary>Invalid native layout options fail before mutating the frame.</summary>
     [GuiFact]
     public void InvalidLayoutOptionsLeaveTheFrameUsable()
@@ -109,7 +182,7 @@ public sealed class CuiLayoutOptionsTests
         }
         Assert.Throws<ArgumentOutOfRangeException>(() => window.BeginLayers(5));
         Assert.Throws<ArgumentOutOfRangeException>(() => window.BeginLayers(justification: 5));
-        Assert.Throws<ArgumentOutOfRangeException>(() => window.LayoutLast(0, 0, 0, 0, 3));
+        Assert.Throws<ArgumentOutOfRangeException>(() => window.LayoutLast(0, 0, 0, 0, 4));
         window.BeginLayers(); window.EndGroup(); window.Present();
     }
 }

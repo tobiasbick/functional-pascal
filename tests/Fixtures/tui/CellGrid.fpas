@@ -58,7 +58,8 @@ procedure Verify();
       E.Border of Msg(
         E.ScrollView of Msg(
           'clip', Tall, L.ScrollPosition.Offset(L.Measure.Cells(2)),
-          function(Value: L.ScrollChange): Msg => Msg.Scrolled, false
+          function(Value: L.ScrollChange): Msg => Msg.Scrolled,
+          new L.ScrollOptions(ShowScrollbar := false)
         )
       ), [],
       [K.CharacterShortcut of Msg('v', Msg.Toggle)]

@@ -35,7 +35,7 @@ end record;
 public type Frame = record
   // Session-local presentation sequence.
   public Id: long;
-  // Observed logical window size.
+  // Drawable size of this frame in CUI logical points.
   public Size: Cui.CuiSize;
   // Text labels in traversal order.
   public Text: array of string;

@@ -138,10 +138,11 @@ Use `Measure.Logical` for portable fixed sizes, bounds, spacing and scroll
 requests. GUI uses CUI logical points. TUI maps 8 logical units to a column and
 16 to a row, rounding positive distances upward; weighted allocations round
 shared boundaries so no cells are lost. `Measure.Cells` is an explicit terminal
-extension. Semantic Tight/Normal/Loose spacing corresponds to 4/8/16 logical
+extension. GUI accepts fractional logical distances through `Measure.Points`.
+Semantic Tight/Normal/Loose spacing corresponds to 4/8/16 logical
 units and adapts to the host's resolution.
-When both minimum and maximum bounds are supplied, use the same measure kind
-for both: `Logical` or `Cells`.
+When both minimum and maximum bounds are supplied, use logical units for both
+or cells for both.
 
 ## Native text and drawing
 
@@ -258,21 +259,27 @@ places them horizontally and `Justify` vertically. `Elements.Spacer()` and
 
 For independent dimensions, pass `Flex.Width` and/or `Flex.Height` as
 `Layout.AxisSize` records, each with `Basis`, `Minimum` and `Maximum`. These
-explicit axes cannot mix with main-axis `Basis`, bounds or growth. Percentages
-resolve inside CUI. An omitted axis preserves the widget's native preference.
+explicit axes cannot mix with main-axis `Basis`, bounds or growth. Each explicit
+axis can set its own `AxisSize.Grow` for content or fill. Percentages
+resolve inside CUI. An omitted axis preserves its current size and bounds.
 
 `Flow.PaddingTop`, `PaddingEnd`, `PaddingBottom` and `PaddingStart` override
-uniform padding, including an explicit zero. `Flow.ReadingDirection` inherits
-by default or selects `LeftToRight`/`RightToLeft`. CUI mirrors flow and logical
-start/end spacing; its documented widget and text-editing limits still apply.
-This does not enable optional static-text shaping or bidirectional editing.
+axis or uniform padding, including an explicit zero. `Flow.PaddingX` and
+`PaddingY` override uniform padding along their respective axes.
+`Flow.ReadingDirection` inherits by default or selects `LeftToRight`,
+`RightToLeft` or `Auto`. `Auto` uses CUI's first strong directional character
+in descendant text. CUI mirrors flow and logical start and end spacing.
+See [Reading direction](gui/layout/reading-direction.md).
 
-`Elements.ScrollView(..., Horizontal := true)` enables native horizontal
-scrolling in addition to vertical scrolling. `Position` and `OnScroll` remain
-vertical, as in CUI's scroll-to API. Both axes use native clipping and edge
-fades, with or without visible scrollbars. These layout extensions require GUI;
-portable and terminal profiles reject them. The Layout gallery demonstrates
-the native behavior.
+Graphical rows, columns, layered stacks and grids can set their own border,
+corners, theme fill, elevation, opacity and native scrolling. Grid also
+supports automatic columns without a fixed cap. See [Layout](gui/layout/README.md).
+
+`Layout.ScrollOptions` configures `Elements.ScrollView`. The GUI supports
+horizontal overflow, viewport extents, insets, spacing between direct children
+and colored edge fades. Both axes use native clipping and fades with or without
+visible scrollbars. `Position` and `OnScroll` remain vertical, as in CUI's
+scroll-to API. See [Scroll view](gui/layout/scroll-view.md).
 
 ## Shared themes
 
@@ -304,7 +311,8 @@ a palette color with Themes.Rgb(Color, OpaqueBackground).
 
 `Layout.Viewport` expresses width and height independently as compact, regular
 or expanded. The host also supplies `LogicalWidth` and `LogicalHeight` when it
-knows the measured size. The terminal maps a column to 8 logical units and a row
+knows the measured size. These dimensions can include fractional logical
+points in the GUI. The terminal maps a column to 8 logical units and a row
 to 16. `TerminalExtensions.Views.Viewport`
 resolves a terminal subtree from exact `Terminal.Viewport` columns and rows.
 The terminal host supplies this context to Prepare before any drawing.
@@ -1495,8 +1503,8 @@ highlights the active entry. Supply `OnActiveChange` to turn changes
 to the active anchor into messages. Use `TableOfContents.ItemId(Id, Index)`
 to address a row for focus.
 
-Use `FadeEdges := true` on a graphical `ScrollView` to fade the edges with
-hidden content. The [Reader page](../../examples/ui/gui/gallery/Pages/Reader/View.fpas)
+Set `ScrollOptions.FadeEdges` to fade the edges of a graphical scroll view
+with hidden content. The [Reader page](../../examples/ui/gui/gallery/Pages/Reader/View.fpas)
 combines the outline, anchors and edge fades.
 
 ## Charts

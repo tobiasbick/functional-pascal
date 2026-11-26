@@ -78,26 +78,30 @@ public sealed partial class CuiWindow
     /// <param name="wrap">Whether a horizontal group wraps.</param>
     /// <param name="clip">Whether to clip children at the container bounds.</param>
     /// <param name="justify">Start, center, end, between, or around in native order.</param>
+    /// <param name="id">Optional stable ID, otherwise CUI assigns anonymous scroll identity.</param>
+    /// <param name="scroll">None, vertical or both axes, in that order.</param>
     public void BeginGroup(bool horizontal, float padding, float gap, int alignment, bool framed,
-        bool wrap, bool clip, int justify)
+        bool wrap, bool clip, int justify, string? id = null, int scroll = 0)
     {
         CheckLayoutOptions(padding, gap);
         ArgumentOutOfRangeException.ThrowIfNegative(alignment);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(alignment, 4);
         if (justify is < 0 or > 4) throw new ArgumentOutOfRangeException(nameof(justify));
         if (wrap && !horizontal) throw new ArgumentException("Wrapping requires a horizontal group.", nameof(wrap));
-        int node = NativeMethods.GroupBegin(context, horizontal ? 1 : 0, padding, gap, alignment,
-            framed ? 1 : 0, wrap ? 1 : 0, clip ? 1 : 0, justify);
-        layouts.Add(new(Layout.Group, Node: node));
+        OpenGroup(horizontal ? 1 : 0, padding, gap, alignment, framed, wrap, clip, justify, id, scroll);
+    }
+
+    private void OpenGroup(int direction, float padding, float gap, int alignment, bool framed,
+        bool wrap, bool clip, int justify, string? id, int scroll)
+    {
+        if (scroll is < 0 or > 2) throw new ArgumentOutOfRangeException(nameof(scroll));
+        int node = NativeMethods.GroupBegin(context, direction, padding, gap, alignment,
+            framed ? 1 : 0, wrap ? 1 : 0, clip ? 1 : 0, justify, id is null ? null : Stable(id), scroll);
+        RegisterBox(Layout.Group, node, scrolling: scroll != 0);
     }
 
     /// <summary>Closes the innermost host group and makes it the last widget.</summary>
-    public void EndGroup()
-    {
-        var group = RequireLayout(Layout.Group);
-        NativeMethods.GroupEnd(context, group.Node);
-        layouts.RemoveAt(layouts.Count - 1);
-    }
+    public void EndGroup() => EndLayout(Layout.Group);
 
     /// <summary>Applies shared sizing to the last widget.</summary>
     /// <param name="horizontal">Parent main axis.</param>
@@ -190,16 +194,29 @@ public sealed partial class CuiWindow
     /// <param name="enabled">Whether user input is accepted.</param>
     /// <param name="fadeEdges">Whether to fade edges with hidden content.</param>
     /// <param name="horizontal">Also allow native horizontal scrolling; vertical requests remain vertical.</param>
-    public void BeginViewport(string id, bool showScrollbar, bool enabled, bool fadeEdges, bool horizontal = false)
+    /// <param name="widthKind">Native content, fill, fixed or percentage width, zero through three.</param>
+    /// <param name="width">Fixed width in logical points or a percentage.</param>
+    /// <param name="heightKind">Native extent encoding. Content and fill both use available height.</param>
+    /// <param name="height">Fixed height in logical points or a percentage.</param>
+    /// <param name="padding">Inset in logical points on every edge of the viewport.</param>
+    /// <param name="gap">Separation between direct children in logical points.</param>
+    /// <param name="fadeColor">Packed straight-alpha RGBA. Zero uses the nearest opaque backdrop.</param>
+    public void BeginViewport(string id, bool showScrollbar, bool enabled, bool fadeEdges, bool horizontal = false,
+        int widthKind = 1, float width = 0, int heightKind = 1, float height = 0, float padding = 0, float gap = 0,
+        uint fadeColor = 0)
     {
         CheckFrame();
-        int node = NativeMethods.Viewport(context, Stable(id), showScrollbar ? 1 : 0, enabled ? 1 : 0, fadeEdges ? 1 : 0, horizontal ? 1 : 0);
+        CheckExtent(widthKind, width, nameof(width));
+        CheckExtent(heightKind, height, nameof(height));
+        ValidateDistance(padding, nameof(padding));
+        ValidateDistance(gap, nameof(gap));
+        int node = NativeMethods.Viewport(context, Stable(id), showScrollbar ? 1 : 0, enabled ? 1 : 0,
+            fadeEdges ? 1 : 0, horizontal ? 1 : 0, widthKind, width, heightKind, height, padding, gap, fadeColor);
+        RegisterBox(Layout.Scroll, node, scrolling: true);
         scrollNodes[id] = node;
-        if (node >= 0) scrollMetricNodes.Add(node);
-        layouts.Add(new(Layout.Scroll, Node: node));
     }
 
-    /// <summary>Reads finalized controlled scrolling from a tracked viewport.</summary>
+    /// <summary>Reads finalized vertical scrolling from a tracked viewport or scrolling box.</summary>
     /// <param name="id">Tracked identity, including modal scope.</param>
     /// <param name="offset">Resolved logical offset.</param>
     /// <param name="maximum">Current logical range.</param>

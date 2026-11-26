@@ -87,29 +87,25 @@ internal static partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial CuiSize Size(nint app);
 
+    [LibraryImport(Library, EntryPoint = "cui_viewport_size")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    internal static partial CuiSize ViewportSize(nint context);
+
     [LibraryImport(Library, EntryPoint = "cui_set_reduced_motion")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial void ReducedMotion(nint context, byte enabled);
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_column_begin")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void BeginColumn(nint context, float padding, float gap);
+    internal static partial int BeginColumn(nint context, float padding, float gap);
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_row_begin")]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void BeginRow(nint context, float padding, float gap);
-
-    [LibraryImport(Library, EntryPoint = "cui_box_end")]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void EndBox(nint context);
+    internal static partial int BeginRow(nint context, float padding, float gap);
 
     [LibraryImport(Library, EntryPoint = "fpas_cui_scroll_begin", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void BeginScroll(nint context, string id, float height, int horizontal);
-
-    [LibraryImport(Library, EntryPoint = "cui_scroll_end")]
-    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    internal static partial void EndScroll(nint context);
+    internal static partial int BeginScroll(nint context, string id, float height, int horizontal);
 
     [LibraryImport(Library, EntryPoint = "cui_scroll_to", StringMarshalling = StringMarshalling.Utf8)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

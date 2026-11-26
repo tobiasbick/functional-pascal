@@ -36,6 +36,78 @@ public type Accent = enum
   Rose;
 end enum;
 
+// Semantic colors resolved against the active CUI theme.
+public type ColorToken = enum: byte
+  // Window background.
+  Background = 1;
+  // Default surface.
+  Surface;
+  // Raised surface.
+  SurfaceRaised;
+  // Muted surface.
+  SurfaceMuted;
+  // Primary foreground.
+  Foreground;
+  // Secondary text.
+  TextSecondary;
+  // Muted text.
+  TextMuted;
+  // Default border.
+  Border;
+  // Subtle border.
+  BorderSubtle;
+  // Strong border.
+  BorderStrong;
+  // Active accent.
+  Accent;
+  // Strong accent.
+  AccentStrong;
+  // Subtle accent.
+  AccentSubtle;
+  // Foreground on the accent.
+  AccentForeground;
+  // Success color.
+  Success;
+  // Warning color.
+  Warning;
+  // Danger color.
+  Danger;
+  // Informational color.
+  Info;
+  // Enabled control fill.
+  ControlOn;
+  // Glyph on an enabled control.
+  ControlGlyph;
+  // Control track.
+  ControlTrack;
+  // Hovered control track.
+  ControlTrackHover;
+  // Control thumb.
+  ControlThumb;
+  // Enabled control thumb.
+  ControlThumbOn;
+  // Hover overlay.
+  Hover;
+  // Active overlay.
+  Active;
+  // Modal scrim.
+  Scrim;
+  // Focus ring.
+  FocusRing;
+  // First data series.
+  Series1;
+  // Second data series.
+  Series2;
+  // Third data series.
+  Series3;
+  // Fourth data series.
+  Series4;
+  // Fifth data series.
+  Series5;
+  // Sixth data series.
+  Series6;
+end enum;
+
 // CUI semantic straight-alpha colors, shared by both hosts.
 // Treat a palette as immutable while a host retains its theme.
 public type Palette = record

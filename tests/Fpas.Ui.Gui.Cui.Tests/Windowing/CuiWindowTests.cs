@@ -73,6 +73,65 @@ public sealed class CuiWindowTests
         Assert.True(below.Y >= second.Y + second.Height);
     }
 
+    /// <summary>Closing a row and its enclosing column makes each box the target of subsequent sizing and tracking.</summary>
+    [GuiFact]
+    public void ClosingNestedBoxesMakesTheClosedBoxLast()
+    {
+        using var window = new CuiWindow("Nested boxes", renderer: CuiRenderer.Software, continuous: true);
+        Assert.True(window.NextFrame());
+        window.BeginColumn(0, 0);
+        window.BeginRow(0, 0);
+        window.Skeleton("child", 2, 20, 12);
+        window.TrackLastControl("child");
+        window.EndRow();
+        window.SizeLast(false, 2, 44, 0, -1, 0, 0);
+        window.TrackLastControl("row");
+        window.Skeleton("sibling", 2, 30, 20);
+        window.TrackLastControl("sibling");
+        window.EndColumn();
+        window.SizeLast(true, 2, 180, 0, -1, 0, 0);
+        window.TrackLastControl("column");
+        window.Present();
+
+        var row = window.GetControlRectangle("row");
+        var column = window.GetControlRectangle("column");
+        var sibling = window.GetControlRectangle("sibling");
+        Assert.Equal(12, window.GetControlRectangle("child").Height);
+        Assert.Equal((180f, 44f), (row.Width, row.Height));
+        Assert.Equal((180f, 64f), (column.Width, column.Height));
+        Assert.Equal(30, sibling.Width);
+        Assert.Equal(row.Y + row.Height, sibling.Y);
+    }
+
+    /// <summary>Rejecting a box at CUI's capacity leaves the existing boxes open and closable.</summary>
+    [GuiFact]
+    public void BoxNestingLimitLeavesOpenLayoutsBalanced()
+    {
+        using var window = new CuiWindow("Box capacity", renderer: CuiRenderer.Software, continuous: true);
+        Assert.True(window.NextFrame());
+        int opened = 0;
+        for (; opened < 1024; opened++)
+        {
+            var failure = Record.Exception(() => window.BeginColumn(0, 0));
+            if (failure is null) continue;
+            Assert.Contains("nesting limit", Assert.IsType<InvalidOperationException>(failure).Message);
+            break;
+        }
+        Assert.InRange(opened, 1, 1023);
+        Assert.Throws<InvalidOperationException>(() => window.BeginGrid(1, 0, 0, 0));
+        Assert.Throws<InvalidOperationException>(() => window.BeginScroll("overflow"));
+        Assert.Throws<InvalidOperationException>(() => window.BeginViewport("overflow", true));
+
+        window.EndColumn();
+        window.BeginRow(0, 0);
+        window.EndRow();
+        for (int remaining = opened - 1; remaining > 0; remaining--) window.EndColumn();
+        window.Skeleton("after", 2, 80, 20);
+        window.TrackLastControl("after");
+        window.Present();
+        Assert.Equal(80, window.GetControlRectangle("after").Width);
+    }
+
     /// <summary>Prevents cross-thread use and verifies disposal and layout-state failures.</summary>
     [GuiFact]
     [Trait("Category", "NativeGui")]
@@ -122,15 +181,19 @@ public sealed class CuiWindowTests
         window.SetReducedMotion(true);
         Draw(window);
         Draw(window);
+        Assert.Equal(640, window.ViewportSize.Width);
+        Assert.Equal(480, window.ViewportSize.Height);
         foreach (var (width, height) in new[] { (800, 600), (480, 360) })
         {
+            var before = window.ViewportSize;
             window.Resize(width, height);
+            Assert.Equal(before, window.ViewportSize);
             var deadline = Stopwatch.StartNew();
             do { Draw(window); }
-            while ((window.Size.Width != width || window.Size.Height != height) &&
+            while ((window.ViewportSize.Width != width || window.ViewportSize.Height != height) &&
                 deadline.Elapsed < TimeSpan.FromSeconds(5));
-            Assert.Equal(width, window.Size.Width);
-            Assert.Equal(height, window.Size.Height);
+            Assert.Equal(width, window.ViewportSize.Width);
+            Assert.Equal(height, window.ViewportSize.Height);
             Capture(window, width, height);
         }
     }

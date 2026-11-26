@@ -47,16 +47,16 @@ end function;
 // - `State`: Current selection indices.
 // ## Returns
 // The two segmented controls.
-public function Segments(State: Model): E.Element<Msg>;
+public function Segments(State: Model): E.Element of Msg;
 begin
-  return E.Column<Msg>(
+  return E.Column of Msg(
     new L.Flow(Gap := L.Spacing.Tight),
-    E.Styled<Msg>(E.Text<Msg>('Segmented control'), Style.Role.Heading),
-    S.SegmentedControl<Msg>(
+    E.Styled of Msg(E.Text of Msg('Segmented control'), Style.Role.Heading),
+    S.SegmentedControl of Msg(
       'view', [new S.Item('List'), new S.Item('Board'), new S.Item('Timeline')],
       State.View, Msg.SetView
     ),
-    S.SegmentedControl<Msg>(
+    S.SegmentedControl of Msg(
       'range', [new S.Item('Day'), new S.Item('Week'), new S.Item('Month'), new S.Item('Year')],
       State.Range, Msg.SetRange, new S.Options(ControlSize := B.Size.Small)
     )

@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Media.MediaImages as Media;
 // - `Picture`: File or tightly packed straight-alpha RGBA pixels.
 // ## Returns
 // The image at the gallery's logical size.
-public function View(Picture: Media.Source): E.Element<string>;
+public function View(Picture: Media.Source): E.Element of string;
 begin
-  return W.Image<string>('preview', Picture, new W.Options(
+  return W.Image of string('preview', Picture, new W.Options(
     Width := L.Extent.Fixed(L.Measure.Logical(234)),
     Height := L.Extent.Fixed(L.Measure.Logical(150)),
     Radius := 10.0F

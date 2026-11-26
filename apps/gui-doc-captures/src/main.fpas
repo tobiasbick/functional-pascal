@@ -63,7 +63,7 @@ requires Destination <> '';
     end if;
   end procedure;
 
-  procedure CapturePages(Session: Gui.Session<Gallery.Msg>);
+  procedure CapturePages(Session: Gui.Session of Gallery.Msg);
     procedure Key(Value: int);
     begin
       KeyCode := Value;
@@ -244,14 +244,14 @@ begin
     'FPas widget documentation', 1240, Height, Cui.CuiRenderer.Software, true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<Gallery.Msg> := Host.Start<Gallery.Model, Gallery.Msg>(
+  using const Session: Gui.Session of Gallery.Msg := Host.Start of (Gallery.Model, Gallery.Msg)(
     Workspaces.InitialModel(Page, Output),
-    function(Model: Gallery.Model; Message: Gallery.Msg): App.Transition<Gallery.Model, Gallery.Msg> => if FocusId =
+    function(Model: Gallery.Model; Message: Gallery.Msg): App.Transition of (Gallery.Model, Gallery.Msg) => if FocusId =
       ''
     then
       Update.Update(Model, Message)
     else
-      new App.Transition<Gallery.Model, Gallery.Msg>(Model, [App.Focus<Gallery.Msg>(FocusId)])
+      new App.Transition of (Gallery.Model, Gallery.Msg)(Model, [App.Focus of Gallery.Msg(FocusId)])
     end if,
     View.Build, Window, 128,
     Inject, ThemeFor := Update.ThemeFor

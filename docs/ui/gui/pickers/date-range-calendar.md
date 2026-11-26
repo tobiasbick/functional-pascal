@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Pickers.DateRanges as R;
 // - `Stay`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Stay: R.Value): E.Element<R.Value>;
+public function View(Stay: R.Value): E.Element of R.Value;
 begin
-  return W.DateRangeCalendar<R.Value>('picker-inline-range', Stay, function(Value: R.Value): R.Value => Value);
+  return W.DateRangeCalendar of R.Value('picker-inline-range', Stay, function(Value: R.Value): R.Value => Value);
 end function;
 
 end unit;

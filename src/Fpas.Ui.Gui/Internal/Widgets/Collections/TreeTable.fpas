@@ -29,7 +29,7 @@ uses System.Collections.Generic as Lists;
 // - `Open`: Current expansion or null for a leaf.
 // - `Change`: Optional expansion callback.
 // - `Icon`: Optional CUI glyph.
-public procedure Cell<TMsg>(Frame: C.State<TMsg>; Id: string; Label: string; Depth: int; Open: bool?; Change: Sys.Func<bool, TMsg>?; Icon: string);
+public procedure Cell of TMsg(Frame: C.State of TMsg; Id: string; Label: string; Depth: int; Open: bool?; Change: Sys.Func of (bool, TMsg)?; Icon: string);
 begin
   const Enabled: bool := Frame.AcceptInput and Open <> null and Change <> null;
   var Expanded: int := if Open = null then
@@ -56,7 +56,7 @@ begin
 
   if Toggled then
     case Change of
-      when is Sys.Func<bool, TMsg> as Notify:
+      when is Sys.Func of (bool, TMsg) as Notify:
         Frame.Messages.Add(Notify.Invoke(Expanded > 0));
       else
     end case;
@@ -95,17 +95,17 @@ end function;
 // - `Token`: Native table identity.
 // - `Build`: Builds the entries for the node the menu is open for.
 // - `Enabled`: Whether the menu may open and accept input.
-procedure DrawMenu<TMsg>(Frame: C.State<TMsg>; Id: string; Token: string; Build: Sys.Func<int, array of M.Entry<TMsg>>; Enabled: bool);
+procedure DrawMenu of TMsg(Frame: C.State of TMsg; Id: string; Token: string; Build: Sys.Func of (int, array of M.Entry of TMsg); Enabled: bool);
 begin
   const MenuId: string := Id + '/menu';
   var Node: int := -1;
   const Open: bool := Frame.Window.BeginTreeTableMenu(Token, Enabled, out Node);
-  const Entries: array of M.Entry<TMsg> := if Open and Node >= 0 then
+  const Entries: array of M.Entry of TMsg := if Open and Node >= 0 then
     Build.Invoke(Node)
   else
     []
   end if;
-  const Prepared: MenuWidget.Rows := MenuWidget.Prepare<TMsg>(
+  const Prepared: MenuWidget.Rows := MenuWidget.Prepare of TMsg(
     'tree-table-menu',
     MenuId,
     Entries,
@@ -115,7 +115,7 @@ begin
     Prepared.Entries,
     Prepared.Tokens
   );
-  MenuWidget.Report<TMsg>(
+  MenuWidget.Report of TMsg(
     Frame,
     'tree-table-menu',
     MenuId,
@@ -139,7 +139,7 @@ end procedure;
 // - `Change`: Maps a native result to a message.
 // - `Settings`: Viewport, guides and input settings.
 // - `Menu`: Optional context menu builder for a node.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Columns: array of D.Column; Nodes: array of T.Node; Cursor: int; Order: Tables.Sort?; Change: function(T.Change): TMsg; Settings: T.Options; Menu: Sys.Func<int, array of M.Entry<TMsg>>?);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Columns: array of D.Column; Nodes: array of T.Node; Cursor: int; Order: Tables.Sort?; Change: function(T.Change): TMsg; Settings: T.Options; Menu: Sys.Func of (int, array of M.Entry of TMsg)?);
   function Part(Index: int): string;
   begin
     return Id + '/node/' + Index.ToString(Sys.Globalization.CultureInfo.InvariantCulture);
@@ -148,7 +148,7 @@ begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('tree-table', Id);
   const Height: S.NativeExtent := S.Extent(Settings.Height);
-  const Labels: Lists.List<string> := new Lists.List<string>(Nodes.Length);
+  const Labels: Lists.List of string := new Lists.List of string(Nodes.Length);
   const Parents: array of int := new int[Nodes.Length];
   const NativeFlags: array of uint := new uint[Nodes.Length];
   for Index: int := 0 to Nodes.Length - 1 do
@@ -176,12 +176,12 @@ begin
   else
     0
   end if) +
-    (if C.WantsFocus<TMsg>(Frame, Id, Token, Enabled) then
+    (if C.WantsFocus of TMsg(Frame, Id, Token, Enabled) then
       8
     else
       0
     end if);
-  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+  const Track: Sys.Func of (int, string)? := if Frame.PaintingClosed then
     null
   else
     function(Index: int): string => C.Token('tree-table-row', Part(Index))
@@ -225,12 +225,12 @@ begin
   end while;
   const Result: CuiCollections.CuiTreeTableEvents := Frame.Window.EndTreeTable();
   case Menu of
-    when is Sys.Func<int, array of M.Entry<TMsg>> as Build:
-      DrawMenu<TMsg>(Frame, Id, Token, Build, Enabled);
+    when is Sys.Func of (int, array of M.Entry of TMsg) as Build:
+      DrawMenu of TMsg(Frame, Id, Token, Build, Enabled);
     else
   end case;
 
-  C.Track<TMsg>(Frame, new App.Control(Id, '', 'tree-table', new Cui.CuiRectangle(), Enabled));
+  C.Track of TMsg(Frame, new App.Control(Id, '', 'tree-table', new Cui.CuiRectangle(), Enabled));
   if not Enabled then
     return;
   end if;

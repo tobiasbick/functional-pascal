@@ -33,27 +33,27 @@ uses System as Sys;
 // - `Upload`: Starts the status spinner example.
 // ## Returns
 // Native feedback widgets with their responsive card layout.
-public function View<TMsg>(CreateProject: TMsg; State: Model.Model; Upload: TMsg): E.Element<TMsg>;
+public function View of TMsg(CreateProject: TMsg; State: Model.Model; Upload: TMsg): E.Element of TMsg;
 begin
   const Columns: Grid.Options := new Grid.Options(
     Columns := 2,
     MinimumColumnWidth := 260.0F,
     Gap := G.Points(16)
   );
-  return E.Column<TMsg>(
+  return E.Column of TMsg(
     new L.Flow(Gap := G.Points(20), Clip := false),
-    G.Heading<TMsg>(Strings.Get('Heading.Alerts'), Strings.Get('Heading.AlertsHint')),
-    E.Column<TMsg>(
+    G.Heading of TMsg(Strings.Get('Heading.Alerts'), Strings.Get('Heading.AlertsHint')),
+    E.Column of TMsg(
       new L.Flow(Gap := G.Points(10)),
-      A.Alert<TMsg>(
+      A.Alert of TMsg(
         'update', 'A new version is available',
         new A.Options(Description := 'Restart to update to 1.1.')
       ),
-      A.Alert<TMsg>(
+      A.Alert of TMsg(
         'payment', 'Payment received',
         new A.Options(Description := 'Your invoice was paid on November 5.', Tone := S.Tone.Success)
       ),
-      A.Alert<TMsg>(
+      A.Alert of TMsg(
         'storage', 'Storage almost full',
         new A.Options(
           Description := 'You have used 92% of your plan.',
@@ -61,7 +61,7 @@ begin
           Dismissible := true
         )
       ),
-      A.Alert<TMsg>(
+      A.Alert of TMsg(
         'build', 'Build failed',
         new A.Options(
           Description := 'Missing symbol cui_frame in main.c line 42.',
@@ -69,74 +69,74 @@ begin
         )
       )
     ),
-    Grid.Grid<TMsg>(
+    Grid.Grid of TMsg(
       Columns,
-      Cards.Card<TMsg>(
+      Cards.Card of TMsg(
         'progress-card', [
-          E.Styled<TMsg>(E.Text<TMsg>('Progress'), S.Role.Heading),
-          Samples.Upload<TMsg>(),
-          P.ProgressBar<TMsg>(
+          E.Styled of TMsg(E.Text of TMsg('Progress'), S.Role.Heading),
+          Samples.Upload of TMsg(),
+          P.ProgressBar of TMsg(
             'index',
             0.0F,
             new P.Options(Label := 'Indexing', Indeterminate := true)
           ),
-          Samples.ExportBar<TMsg>(true),
-          P.ProgressBar<TMsg>(
+          Samples.ExportBar of TMsg(true),
+          P.ProgressBar of TMsg(
             'sync', 0.0F,
             new P.Options(Label := 'Syncing library', Indeterminate := true, Dither := true)
           ),
-          Meters.Meter<TMsg>('storage-usage', 'Storage', 18.4F, 20.0F, 'GB'),
-          E.Row<TMsg>(
+          Meters.Meter of TMsg('storage-usage', 'Storage', 18.4F, 20.0F, 'GB'),
+          E.Row of TMsg(
             new L.Flow(Gap := G.Points(16), Wrap := true),
-            Spin.Spinner<TMsg>('spinner-small', 16.0F),
-            Spin.Spinner<TMsg>('spinner-medium', 22.0F),
-            Spin.Spinner<TMsg>('spinner-large', 28.0F)
+            Spin.Spinner of TMsg('spinner-small', 16.0F),
+            Spin.Spinner of TMsg('spinner-medium', 22.0F),
+            Spin.Spinner of TMsg('spinner-large', 28.0F)
           )
         ], new Cards.Options(Gap := 18.0F)
       ),
-      Cards.Card<TMsg>(
+      Cards.Card of TMsg(
         'loading-card', [
-          E.Styled<TMsg>(E.Text<TMsg>('Loading'), S.Role.Heading),
-          E.Row<TMsg>(
+          E.Styled of TMsg(E.Text of TMsg('Loading'), S.Role.Heading),
+          E.Row of TMsg(
             new L.Flow(Gap := G.Points(12), Wrap := true),
-            Skel.Skeleton<TMsg>('loading-avatar', L.Extent.Fixed(L.Measure.Logical(40)), 40.0F),
-            E.Size<TMsg>(
-              E.Column<TMsg>(
+            Skel.Skeleton of TMsg('loading-avatar', L.Extent.Fixed(L.Measure.Logical(40)), 40.0F),
+            E.Size of TMsg(
+              E.Column of TMsg(
                 new L.Flow(Gap := G.Points(8)),
-                Skel.Skeleton<TMsg>('loading-title', L.Extent.Percent(70.0F), 12.0F),
-                Skel.Skeleton<TMsg>('loading-subtitle', L.Extent.Percent(45.0F), 12.0F)
+                Skel.Skeleton of TMsg('loading-title', L.Extent.Percent(70.0F), 12.0F),
+                Skel.Skeleton of TMsg('loading-subtitle', L.Extent.Percent(45.0F), 12.0F)
               ),
               new L.Flex(Basis := L.Extent.Fill)
             )
           ),
-          Skel.Skeleton<TMsg>('loading-body', Height := 88.0F),
-          Skel.Skeleton<TMsg>('loading-line-1', L.Extent.Percent(90.0F), 12.0F),
-          Skel.Skeleton<TMsg>('loading-line-2', L.Extent.Percent(60.0F), 12.0F),
-          Loading.Placeholders<TMsg>()
+          Skel.Skeleton of TMsg('loading-body', Height := 88.0F),
+          Skel.Skeleton of TMsg('loading-line-1', L.Extent.Percent(90.0F), 12.0F),
+          Skel.Skeleton of TMsg('loading-line-2', L.Extent.Percent(60.0F), 12.0F),
+          Loading.Placeholders of TMsg()
         ], new Cards.Options(Gap := 14.0F)
       ),
-      Loading.Spinners<TMsg>(State, Upload)
+      Loading.Spinners of TMsg(State, Upload)
     ),
-    Grid.Grid<TMsg>(
+    Grid.Grid of TMsg(
       Columns,
-      Cards.Card<TMsg>(
+      Cards.Card of TMsg(
         'activity-card', [
-          E.Styled<TMsg>(E.Text<TMsg>('Activity'), S.Role.Heading),
-          Timeline.TimelineItem<TMsg>(
+          E.Styled of TMsg(E.Text of TMsg('Activity'), S.Role.Heading),
+          Timeline.TimelineItem of TMsg(
             'deployed', 'Deployed to production',
             new Timeline.Options(
               Time := '2m ago', Description := 'Release 1.0.3 is live in all regions.',
               Icon := Sys.Char.ConvertFromUtf32($E286), Tone := S.Tone.Success
             )
           ),
-          Timeline.TimelineItem<TMsg>(
+          Timeline.TimelineItem of TMsg(
             'review', 'Review requested',
             new Timeline.Options(
               Time := '1h ago', Description := 'Jonas asked you to review the theming changes.',
               Icon := Sys.Char.ConvertFromUtf32($E117), Tone := S.Tone.Info
             )
           ),
-          Timeline.TimelineItem<TMsg>(
+          Timeline.TimelineItem of TMsg(
             'failed', 'Build failed',
             new Timeline.Options(
               Time := '3h ago', Icon := Sys.Char.ConvertFromUtf32($E077),
@@ -145,22 +145,22 @@ begin
           )
         ], new Cards.Options(Gap := 14.0F)
       ),
-      Cards.Card<TMsg>(
+      Cards.Card of TMsg(
         'goals-card', [
-          E.Styled<TMsg>(E.Text<TMsg>('Goals'), S.Role.Heading),
-          E.Row<TMsg>(
+          E.Styled of TMsg(E.Text of TMsg('Goals'), S.Role.Heading),
+          E.Row of TMsg(
             new L.Flow(Gap := G.Points(24), Justify := L.Justification.Around, Clip := false),
-            Rings.ProgressRing<TMsg>('onboarding', 'Onboarding', 0.72F, 104.0F),
-            Rings.ProgressRing<TMsg>('quota', 'Quota', 0.35F, 104.0F)
+            Rings.ProgressRing of TMsg('onboarding', 'Onboarding', 0.72F, 104.0F),
+            Rings.ProgressRing of TMsg('quota', 'Quota', 0.35F, 104.0F)
           )
         ], new Cards.Options(Gap := 14.0F)
       )
     ),
-    G.Heading<TMsg>(Strings.Get('Heading.BadgesAndAvatars')),
-    BadgesAndAvatars.View<TMsg>(),
-    Cards.Card<TMsg>(
+    G.Heading of TMsg(Strings.Get('Heading.BadgesAndAvatars')),
+    BadgesAndAvatars.View of TMsg(),
+    Cards.Card of TMsg(
       'no-projects-card', [
-        Empty.EmptyState<TMsg>(
+        Empty.EmptyState of TMsg(
           'no-projects', 'No projects yet',
           new Empty.Options(
             Icon := Sys.Char.ConvertFromUtf32($E247),

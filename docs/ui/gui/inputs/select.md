@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Inputs.Selects as W;
 // - `Selected`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Selected: int): E.Element<int>;
+public function View(Selected: int): E.Element of int;
 begin
-  return W.Select<int>('input-language', [new W.Item('C'), new W.Item('Zig'), new W.Item('Rust')],
+  return W.Select of int('input-language', [new W.Item('C'), new W.Item('Zig'), new W.Item('Rust')],
     Selected, function(Index: int): int => Index,
     new W.Options(Label := 'Language', Placeholder := 'Pick a language', Searchable := true));
 end function;

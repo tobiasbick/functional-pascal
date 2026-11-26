@@ -38,7 +38,7 @@ binding scoped to the loop body; closures capture that iteration's value.
 `for Item: T in Source` requires the explicit element type. Omitting `: T` is an
 error. The source evaluates once. Vectors and strings use their ordinary
 CLR elements (`char` for strings). Other sources must provide a supported
-`IEnumerable<T>` or non-generic `IEnumerable` view; non-generic elements are
+`IEnumerable of T` or non-generic `IEnumerable` view; non-generic elements are
 `object?`. Each element must be implicitly convertible to the declared loop
 variable type. Use an explicit projection or cast for other conversions. Dispose
 an acquired disposable enumerator on every exit.

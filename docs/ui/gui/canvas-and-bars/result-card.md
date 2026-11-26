@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Media.MediaImages as M;
 // - `Picture`: A file or an immutable RGBA picture.
 // ## Returns
 // The card with a message to open the preview.
-public function View(Picture: M.Source): E.Element<string>;
+public function View(Picture: M.Source): E.Element of string;
 begin
-  return W.ResultCard<string>('result', Picture, 'Final result', 'show-preview',
+  return W.ResultCard of string('result', Picture, 'Final result', 'show-preview',
     new W.Options(Caption := 'Generated illustration', Badge := 'Done'));
 end function;
 

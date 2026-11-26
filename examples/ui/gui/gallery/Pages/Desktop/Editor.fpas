@@ -17,40 +17,40 @@ uses GuiGallery.Shared.Sections as G;
 uses System as Sys;
 uses System.Collections.Generic as Lists;
 
-function Action(Key: string; Label: string; Hint: string := ''; Enabled: bool := true; Checked: bool := false): M.Entry<S.Msg>;
+function Action(Key: string; Label: string; Hint: string := ''; Enabled: bool := true; Checked: bool := false): M.Entry of S.Msg;
 begin
-  return M.Entry<S.Msg>.Action(
-    new M.Item<S.Msg>(
+  return (M.Entry of S.Msg).Action(
+    new M.Item of S.Msg(
       Key, Label, S.Msg.Command(Key),
       Shortcut := Hint, Enabled := Enabled, Checked := Checked
     )
   );
 end function;
 
-function Menus(Model: S.Model): E.Element<S.Msg>;
+function Menus(Model: S.Model): E.Element of S.Msg;
 begin
-  return Bar.MenuBar<S.Msg>(
+  return Bar.MenuBar of S.Msg(
     'desktop-menu', [
-      new Bar.Menu<S.Msg>(
+      new Bar.Menu of S.Msg(
         'file', 'File', [
           Action('new', 'New file', 'Ctrl N'),
           Action('open', 'Open…', 'Ctrl O'),
-          M.Entry<S.Msg>.Separator,
+          (M.Entry of S.Msg).Separator,
           Action(
             'save',
             'Save',
             'Ctrl S'
           ),
           Action('save-as', 'Save as…', 'Ctrl Shift S'),
-          M.Entry<S.Msg>.Separator,
+          (M.Entry of S.Msg).Separator,
           Action('close', 'Close window', 'Ctrl Shift W')
         ]
       ),
-      new Bar.Menu<S.Msg>(
+      new Bar.Menu of S.Msg(
         'edit', 'Edit', [
           Action('undo', 'Undo', 'Ctrl Z'),
           Action('redo', 'Redo', 'Ctrl Shift Z', false),
-          M.Entry<S.Msg>.Separator,
+          (M.Entry of S.Msg).Separator,
           Action(
             'cut',
             'Cut',
@@ -58,24 +58,24 @@ begin
           ),
           Action('copy', 'Copy', 'Ctrl C'),
           Action('paste', 'Paste', 'Ctrl V'),
-          M.Entry<S.Msg>.Separator,
+          (M.Entry of S.Msg).Separator,
           Action('find', 'Find…', 'Ctrl F')
         ]
       ),
-      new Bar.Menu<S.Msg>(
+      new Bar.Menu of S.Msg(
         'view', 'View', [
           Action('sidebar', 'Sidebar', Checked := Model.Sidebar),
           Action('minimap', 'Minimap', Checked := Model.Minimap),
-          Action('wrap', 'Word wrap', Checked := Model.Wrap), M.Entry<S.Msg>.Separator,
+          Action('wrap', 'Word wrap', Checked := Model.Wrap), (M.Entry of S.Msg).Separator,
           Action('zoom-in', 'Zoom in', 'Ctrl ='), Action('zoom-out', 'Zoom out', 'Ctrl −')
         ]
       ),
-      new Bar.Menu<S.Msg>(
+      new Bar.Menu of S.Msg(
         'go', 'Go', [
           Action('go-file', 'Go to file…', 'Ctrl P'), Action('go-line', 'Go to line…', 'Ctrl G')
         ]
       ),
-      new Bar.Menu<S.Msg>(
+      new Bar.Menu of S.Msg(
         'help',
         'Help',
         [Action('keys', 'Keyboard shortcuts', 'Ctrl K'), Action('notes', 'Release notes')]
@@ -94,9 +94,9 @@ begin
   );
 end function;
 
-function Toolbar(Model: S.Model): E.Element<S.Msg>;
+function Toolbar(Model: S.Model): E.Element of S.Msg;
 begin
-  return Tools.Toolbar<S.Msg>(
+  return Tools.Toolbar of S.Msg(
     'desktop-tools', [
       Tool($E13D, 'New file', 'Ctrl N'),
       Tool($E247, 'Open', 'Ctrl O'),
@@ -127,25 +127,25 @@ begin
   );
 end function;
 
-function Statusbar(Model: S.Model; Colors: Theme.Palette): E.Element<S.Msg>;
+function Statusbar(Model: S.Model; Colors: Theme.Palette): E.Element of S.Msg;
 begin
-  return E.Column<S.Msg>(
+  return E.Column of S.Msg(
     new L.Flow(Background := Colors.SurfaceMuted),
-    StatusExample.View<S.Msg>(Model.Spaces, Model.Encoding, Model.Language, S.Msg.Command)
+    StatusExample.View of S.Msg(Model.Spaces, Model.Encoding, Model.Language, S.Msg.Command)
   );
 end function;
 
-function Code(Colors: Theme.Palette): E.Element<S.Msg>;
+function Code(Colors: Theme.Palette): E.Element of S.Msg;
 begin
   const Lines: array of string := StatusExample.CodeLines;
-  const Rows: Lists.List<E.Element<S.Msg>> := new Lists.List<E.Element<S.Msg>>();
+  const Rows: Lists.List of E.Element of S.Msg := new Lists.List of E.Element of S.Msg();
   for Index: int := 0 to Lines.Length - 1 do
     Rows.Add(
-      E.Row<S.Msg>(
+      E.Row of S.Msg(
         new L.Flow(Gap := G.Points(18)),
-        E.Size<S.Msg>(
-          E.Column<S.Msg>(
-            new L.Flow(Align := L.Alignment.End), E.FormattedText<S.Msg>(
+        E.Size of S.Msg(
+          E.Column of S.Msg(
+            new L.Flow(Align := L.Alignment.End), E.FormattedText of S.Msg(
               (41 + Index).ToString(),
               Glyphs.Font.Mono,
               12.0F,
@@ -154,12 +154,12 @@ begin
           ),
           new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(18))))
         ),
-        E.FormattedText<S.Msg>(Lines[Index], Glyphs.Font.Mono, 12.0F, Colors.Foreground)
+        E.FormattedText of S.Msg(Lines[Index], Glyphs.Font.Mono, 12.0F, Colors.Foreground)
       )
     );
   end for;
 
-  return E.Column<S.Msg>(
+  return E.Column of S.Msg(
     new L.Flow(
       Padding := G.Points(14), PaddingStart := G.Points(16),
       PaddingEnd := G.Points(16), Gap := G.Points(3)
@@ -173,14 +173,14 @@ end function;
 // - `Colors`: Current CUI palette.
 // ## Returns
 // Editor chrome and sample code.
-public function View(Model: S.Model; Colors: Theme.Palette): E.Element<S.Msg>;
+public function View(Model: S.Model; Colors: Theme.Palette): E.Element of S.Msg;
 begin
-  return E.Column<S.Msg>(
+  return E.Column of S.Msg(
     new L.Flow(Background := Colors.Surface, CornerRadius := 14.0F),
-    E.Column<S.Msg>(
+    E.Column of S.Msg(
       new L.Flow(Background := Colors.SurfaceMuted, CornerRadius := 13.0F),
       Menus(Model), Toolbar(Model),
-      Docs.DocumentTabs<S.Msg>(
+      Docs.DocumentTabs of S.Msg(
         'desktop-documents', Model.Tabs, Model.Selected, S.Msg.Tabs,
         new Docs.Options(Shortcuts := true)
       )

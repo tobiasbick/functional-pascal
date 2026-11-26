@@ -78,13 +78,13 @@ public type MonitoringTests = record
       end for;
       const Repeated: Q.Batch := Inbox.Take();
       X.Assert.False(Repeated.Full);
-      X.Assert.Equal<int>(4, Repeated.Directories.Length);
+      X.Assert.Equal of int(4, Repeated.Directories.Length);
       for Index: int := 0 to 9999 do
         Inbox.Mark('directory-' + Index.ToString());
       end for;
       const Batch: Q.Batch := Inbox.Take();
       X.Assert.True(Batch.Full);
-      X.Assert.Equal<int>(0, Batch.Directories.Length);
+      X.Assert.Equal of int(0, Batch.Directories.Length);
       Inbox.Configure(S.Normalize([H.Source('root', IO.Path.GetTempPath())]));
       var Published: bool := false;
       Inbox.PublishIfCurrent(

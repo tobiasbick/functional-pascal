@@ -18,11 +18,11 @@ uses System as Sys;
 uses System.Threading as T;
 uses System.Threading.Tasks as Tasks;
 
-function Clear(Library: Monitoring.Session; Target: string): Mvu.Command<M.Msg>;
+function Clear(Library: Monitoring.Session; Target: string): Mvu.Command of M.Msg;
 begin
-  return Mvu.StartBackground<M.Msg>(
+  return Mvu.StartBackground of M.Msg(
     'library-clear',
-    Mvu.FromWorker<M.Msg>(
+    Mvu.FromWorker of M.Msg(
       async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
         const Value: Inventory.Snapshot := await Library.ClearAsync(
           Target,
@@ -35,10 +35,10 @@ begin
   );
 end function;
 
-function OpenKeyPage(Key: M.AcoustIdKey): Mvu.Command<M.Msg>;
-  function Open(_Context: Mvu.BackgroundContext<M.Msg>; _Cancellation: T.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, M.Msg>>;
+function OpenKeyPage(Key: M.AcoustIdKey): Mvu.Command of M.Msg;
+  function Open(_Context: Mvu.BackgroundContext of M.Msg; _Cancellation: T.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, M.Msg);
   begin
-    return Tasks.Task.FromResult<Fx.Outcome<Fx.Completion, M.Msg>>(
+    return Tasks.Task.FromResult of Fx.Outcome of (Fx.Completion, M.Msg)(
       if Desktop.TryOpen(Url) then
         Fx.Outcome.Success(Fx.Completion.Done)
       else
@@ -52,65 +52,66 @@ begin
   else
     'https://acoustid.org/api-key'
   end if;
-  return Mvu.StartBackground<M.Msg>(
-    'acoustid-key-page', Fx.Effect<Fx.Completion, M.Msg, Mvu.BackgroundContext<M.Msg>>.Defer(Open)
+  return Mvu.StartBackground of M.Msg(
+    'acoustid-key-page',
+    Fx.Effect of (Fx.Completion, M.Msg, Mvu.BackgroundContext of M.Msg).Defer(Open)
   );
 end function;
 
-function Step(Current: M.State; Message: M.Msg; Save: procedure(M.Preferences); Library: Monitoring.Session): Mvu.Transition<M.State, M.Msg>;
+function Step(Current: M.State; Message: M.Msg; Save: procedure(M.Preferences); Library: Monitoring.Session): Mvu.Transition of (M.State, M.Msg);
 begin
   case Message of
     when M.Msg.OpenAcoustIdKeyPage(const Key: M.AcoustIdKey):
-      return new Mvu.Transition<M.State, M.Msg>(
+      return new Mvu.Transition of (M.State, M.Msg)(
         Current with
           AcoustIdLinkFailed := false;
         end with, [OpenKeyPage(Key)]
       );
     when M.Msg.AcoustIdKeyPageFailed:
-      return new Mvu.Transition<M.State, M.Msg>(
+      return new Mvu.Transition of (M.State, M.Msg)(
         Current with
           AcoustIdLinkFailed := true;
         end with, []
       );
     when M.Msg.InventoryReceived(const Value: Inventory.Snapshot):
-      return new Mvu.Transition<M.State, M.Msg>(State.Receive(Current, Value), []);
+      return new Mvu.Transition of (M.State, M.Msg)(State.Receive(Current, Value), []);
     when M.Msg.ProgressReceived(const Value: Progress.Snapshot):
       const Before: Progress.Snapshot? := Current.Progress;
       if Before <> null and Value.Sequence < Before.Sequence then
-        return new Mvu.Transition<M.State, M.Msg>(Current, []);
+        return new Mvu.Transition of (M.State, M.Msg)(Current, []);
       end if;
 
-      return new Mvu.Transition<M.State, M.Msg>(
+      return new Mvu.Transition of (M.State, M.Msg)(
         Current with
           Progress := Value;
         end with, []
       );
     when M.Msg.LibraryFailed(const Text: string):
-      return new Mvu.Transition<M.State, M.Msg>(
+      return new Mvu.Transition of (M.State, M.Msg)(
         Current with
           LibraryError := Text;
           Clearing := null;
         end with, []
       );
     when M.Msg.LibraryStopped(const Text: string):
-      return new Mvu.Transition<M.State, M.Msg>(
+      return new Mvu.Transition of (M.State, M.Msg)(
         Current with
           TerminalError := Text;
         end with, []
       );
     when M.Msg.AskClear(const Id: string):
       if Current.Clearing <> null or (Id <> '' and State.Source(Current, Id) = null) then
-        return new Mvu.Transition<M.State, M.Msg>(Current, []);
+        return new Mvu.Transition of (M.State, M.Msg)(Current, []);
       end if;
 
-      return new Mvu.Transition<M.State, M.Msg>(
+      return new Mvu.Transition of (M.State, M.Msg)(
         Current with
           ConfirmClear := Id;
           ConfirmRemove := null;
         end with, []
       );
     when M.Msg.CancelClear:
-      return new Mvu.Transition<M.State, M.Msg>(
+      return new Mvu.Transition of (M.State, M.Msg)(
         Current with
           ConfirmClear := null;
         end with, []
@@ -118,14 +119,14 @@ begin
     when M.Msg.ConfirmClear:
       const Target: string? := Current.ConfirmClear;
       if Target = null or Current.Clearing <> null then
-        return new Mvu.Transition<M.State, M.Msg>(Current, []);
+        return new Mvu.Transition of (M.State, M.Msg)(Current, []);
       end if;
       const Paused: M.State := Editing.Persist(Current, State.Pause(Current.Saved, Target), Save);
       if Paused.SaveFailed then
-        return new Mvu.Transition<M.State, M.Msg>(Paused, []);
+        return new Mvu.Transition of (M.State, M.Msg)(Paused, []);
       end if;
 
-      return new Mvu.Transition<M.State, M.Msg>(
+      return new Mvu.Transition of (M.State, M.Msg)(
         Paused with
           ConfirmClear := null;
           Clearing := Target;
@@ -133,7 +134,7 @@ begin
         end with, [Clear(Library, Target)]
       );
     when M.Msg.Cleared(const Id: string, const Value: Inventory.Snapshot):
-      return new Mvu.Transition<M.State, M.Msg>(State.Cleared(Current, Id, Value), []);
+      return new Mvu.Transition of (M.State, M.Msg)(State.Cleared(Current, Id, Value), []);
     when M.Msg.Rescan(const Id: string):
       const Source: Sources.MusicSource? := State.Source(Current, Id);
       if Source <> null and not Source.Offline and not Source.Paused and Current.Clearing =
@@ -142,9 +143,9 @@ begin
         Library.Refresh(Id);
       end if;
 
-      return new Mvu.Transition<M.State, M.Msg>(Current, []);
+      return new Mvu.Transition of (M.State, M.Msg)(Current, []);
     else
-      return new Mvu.Transition<M.State, M.Msg>(Editing.Apply(Current, Message, Save), []);
+      return new Mvu.Transition of (M.State, M.Msg)(Editing.Apply(Current, Message, Save), []);
   end case;
 end function;
 
@@ -158,9 +159,9 @@ end function;
 // - `Library`: Owns scanning, storage and index clearing.
 // ## Returns
 // The next settings state and any background command requested by the action.
-public function Apply(Current: M.State; Message: M.Msg; Save: procedure(M.Preferences); Library: Monitoring.Session): Mvu.Transition<M.State, M.Msg>;
+public function Apply(Current: M.State; Message: M.Msg; Save: procedure(M.Preferences); Library: Monitoring.Session): Mvu.Transition of (M.State, M.Msg);
 begin
-  const Next: Mvu.Transition<M.State, M.Msg> := Step(Current, Message, Save, Library);
+  const Next: Mvu.Transition of (M.State, M.Msg) := Step(Current, Message, Save, Library);
   if not Sources.SameDiscovery(Current.Saved.MusicSources, Next.Model.Saved.MusicSources) then
     Library.Configure(Next.Model.Saved.MusicSources);
   end if;

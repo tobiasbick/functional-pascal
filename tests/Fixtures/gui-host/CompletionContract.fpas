@@ -37,12 +37,12 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     end if;
   end procedure;
 
-  procedure Step(Session: Gui.Session<State.Msg>);
+  procedure Step(Session: Gui.Session of State.Msg);
   begin
     A.Check(Session.Step(), 'The gallery closed during the original examples.');
   end procedure;
 
-  procedure Click(Session: Gui.Session<State.Msg>; Id: string);
+  procedure Click(Session: Gui.Session of State.Msg; Id: string);
   begin
     const Box: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
     A.Check(Box.Width > 0.0F and Box.Height > 0.0F, 'The gallery control has no hit area: ' + Id);
@@ -58,7 +58,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     Step(Session);
   end procedure;
 
-  function Toast(Session: Gui.Session<State.Msg>; Title: string): string;
+  function Toast(Session: Gui.Session of State.Msg; Title: string): string;
   begin
     for Item: Gui.Control in Session.Snapshot().Controls do
       if Item.Role = 'toast' and Item.Text = Title then
@@ -82,7 +82,7 @@ begin
     true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(), Update.Update, View.Build, Window, 256, Inject, ThemeFor := Update.ThemeFor
   );
 

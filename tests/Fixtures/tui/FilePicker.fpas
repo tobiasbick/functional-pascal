@@ -50,7 +50,7 @@ begin
   end case;
 end function;
 
-function Update(Current: State; Message: Msg): M.Transition<State, Msg>;
+function Update(Current: State; Message: Msg): M.Transition of (State, Msg);
 begin
   const Next: State := case Message of
     when Msg.Open(const Kind: Picker.Mode): new State(Kind, Current.Result, Current.Proposals);
@@ -60,19 +60,19 @@ begin
       Current.Proposals + 1
     );
   end case;
-  return new M.Transition<State, Msg>(Next, []);
+  return new M.Transition of (State, Msg)(Next, []);
 end function;
 
-function View(Current: State): E.Element<Msg>;
+function View(Current: State): E.Element of Msg;
 begin
-  const Base: E.Element<Msg> := E.Column<Msg>(
-    B.Button<Msg>('open', 'Open', Msg.Open(Picker.Mode.OpenFile)),
-    B.Button<Msg>('save', 'Save as', Msg.Open(Picker.Mode.SaveFile)),
-    B.Button<Msg>('folder', 'Choose a folder', Msg.Open(Picker.Mode.Folder)),
-    E.Text<Msg>('Result: ' + Current.Result),
-    E.Text<Msg>('Proposals: ' + Current.Proposals.ToString())
+  const Base: E.Element of Msg := E.Column of Msg(
+    B.Button of Msg('open', 'Open', Msg.Open(Picker.Mode.OpenFile)),
+    B.Button of Msg('save', 'Save as', Msg.Open(Picker.Mode.SaveFile)),
+    B.Button of Msg('folder', 'Choose a folder', Msg.Open(Picker.Mode.Folder)),
+    E.Text of Msg('Result: ' + Current.Result),
+    E.Text of Msg('Proposals: ' + Current.Proposals.ToString())
   );
-  return Picker.FilePicker<Msg>(
+  return Picker.FilePicker of Msg(
     'picker', Current.Kind <> null, Msg.Close,
     new Picker.Options(
       Kind := Current.Kind ?? Picker.Mode.OpenFile,
@@ -121,7 +121,7 @@ end function;
 
 function Shows(Session: T.HeadlessSession; Text: string): bool;
 begin
-  return Sys.Array.Exists<string>(
+  return Sys.Array.Exists of string(
     Session.Snapshot().Lines,
     function(Line: string): bool => Line.Contains(Text)
   );
@@ -137,12 +137,12 @@ begin
 end procedure;
 
 procedure CheckLocalDisk();
-  function ViewLocal(Current: State): E.Element<Msg>;
+  function ViewLocal(Current: State): E.Element of Msg;
   begin
-    return Picker.FilePicker<Msg>(
+    return Picker.FilePicker of Msg(
       'local', Current.Kind <> null, Msg.Close,
       new Picker.Options(Start := Scratch.FullName, Filter := '*.txt'),
-      E.Text<Msg>(
+      E.Text of Msg(
         if Current.Result = IO.Path.Combine(Scratch.FullName, 'visible.txt') then
           'Local file selected'
         else
@@ -156,7 +156,7 @@ begin
   try
     IO.File.WriteAllText(IO.Path.Combine(Scratch.FullName, 'visible.txt'), '');
     IO.File.WriteAllText(IO.Path.Combine(Scratch.FullName, '.hidden.txt'), '');
-    using const Session: T.HeadlessSession := Headless.Start<State, Msg>(
+    using const Session: T.HeadlessSession := Headless.Start of (State, Msg)(
       new State(Picker.Mode.OpenFile), Update, ViewLocal, 104, 14
     );
     Check(
@@ -191,16 +191,16 @@ procedure CheckUncProvider();
     end case;
   end function;
 
-  function ViewUnc(Current: State): E.Element<Msg>;
+  function ViewUnc(Current: State): E.Element of Msg;
   begin
-    return Picker.FilePicker<Msg>(
+    return Picker.FilePicker of Msg(
       'unc', Current.Kind <> null, Msg.Close,
       new Picker.Options(Start := '\\server\share', Source := ReadUnc),
-      E.Text<Msg>('UNC provider')
+      E.Text of Msg('UNC provider')
     );
   end function;
 begin
-  using const Session: T.HeadlessSession := Headless.Start<State, Msg>(
+  using const Session: T.HeadlessSession := Headless.Start of (State, Msg)(
     new State(Picker.Mode.OpenFile), Update, ViewUnc, 74, 18
   );
   Check(Shows(Session, 'docs/') and not Shows(Session, '../'), 'UNC share exposed a parent.');
@@ -216,8 +216,8 @@ begin
 end procedure;
 
 begin
-  discard V.Prepare<Msg>(View(new State(Picker.Mode.OpenFile)), V.Target.Portable);
-  using const Session: T.HeadlessSession := Headless.Start<State, Msg>(
+  discard V.Prepare of Msg(View(new State(Picker.Mode.OpenFile)), V.Target.Portable);
+  using const Session: T.HeadlessSession := Headless.Start of (State, Msg)(
     new State(),
     Update,
     View,

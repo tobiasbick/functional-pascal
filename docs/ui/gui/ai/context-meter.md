@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Ai.ContextMeters as W;
 // - `Parts`: Labeled amounts in the usage breakdown.
 // ## Returns
 // The native context indicator.
-public function View(Used: float; Limit: float; Parts: array of W.Part): E.Element<string>;
+public function View(Used: float; Limit: float; Parts: array of W.Part): E.Element of string;
 begin
-  return W.ContextMeter<string>('context', Used, Limit, Parts, new W.Options(Unit := 'tokens'));
+  return W.ContextMeter of string('context', Used, Limit, Parts, new W.Options(Unit := 'tokens'));
 end function;
 
 end unit;

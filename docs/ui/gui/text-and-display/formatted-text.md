@@ -22,12 +22,12 @@ uses Fpas.Ui.Widgets.Theming.Themes as T;
 // - `Colors`: Current theme colors.
 // ## Returns
 // One row of two explicitly formatted labels.
-public function View(LineNumber: int; Content: string; Colors: T.Palette): E.Element<string>;
+public function View(LineNumber: int; Content: string; Colors: T.Palette): E.Element of string;
 begin
-  return E.Row<string>(
+  return E.Row of string(
     new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(18))),
-    E.FormattedText<string>(LineNumber.ToString(), M.Font.Mono, 12.0F, Colors.TextMuted),
-    E.FormattedText<string>(Content, M.Font.Mono, 12.0F, Colors.Foreground)
+    E.FormattedText of string(LineNumber.ToString(), M.Font.Mono, 12.0F, Colors.TextMuted),
+    E.FormattedText of string(Content, M.Font.Mono, 12.0F, Colors.Foreground)
   );
 end function;
 

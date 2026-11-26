@@ -32,7 +32,7 @@ begin
 end function;
 
 // Builds a compact source status/counter row and an optional native activity bar.
-public function View(Current: M.State; Source: Sources.MusicSource; Id: string): E.Element<M.Msg>;
+public function View(Current: M.State; Source: Sources.MusicSource; Id: string): E.Element of M.Msg;
 begin
   const Progress: P.SourceProgress? := State.Progress(Current, Source.Id);
   const Data: Inv.SourceSnapshot? := State.View(Current, Source.Id);
@@ -95,10 +95,10 @@ begin
       end if;
     end if;
   end if;
-  const Left: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  const Left: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();
   if Success then
     Left.Add(
-      Spinner.StatusSpinner<M.Msg>(
+      Spinner.StatusSpinner of M.Msg(
         Id + '-ready',
         Work.Status.Success,
         new Spinner.Options(Size := 14.0F, Keep := true)
@@ -106,24 +106,24 @@ begin
     );
   end if;
 
-  Left.Add(Texts.Text<M.Msg>(Label, Texts.Appearance.Secondary));
-  const Rows: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  Left.Add(Texts.Text of M.Msg(Label, Texts.Appearance.Secondary));
+  const Rows: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();
   Rows.Add(
-    E.Row<M.Msg>(
+    E.Row of M.Msg(
       new L.Flow(
         Gap := L.Spacing.Fixed(L.Measure.Logical(12)), Wrap := true,
         Align := L.Alignment.Center, Justify := L.Justification.Between
       ),
-      E.Row<M.Msg>(
+      E.Row of M.Msg(
         new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(6)), Align := L.Alignment.Center),
         Left.ToArray()
       ),
-      Texts.Text<M.Msg>(Details, Texts.Appearance.Secondary)
+      Texts.Text of M.Msg(Details, Texts.Appearance.Secondary)
     )
   );
   if Busy then
     Rows.Add(
-      Bars.ProgressBar<M.Msg>(
+      Bars.ProgressBar of M.Msg(
         Id + '-progress',
         0.0F,
         new Bars.Options(Indeterminate := true, Height := 4.0F, Width := L.Extent.Fill)
@@ -131,7 +131,7 @@ begin
     );
   end if;
 
-  return E.Column<M.Msg>(
+  return E.Column of M.Msg(
     new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8)), Align := L.Alignment.Stretch),
     Rows.ToArray()
   );

@@ -39,13 +39,13 @@ end function;
 // - `Enabled`: Whether the group accepts input.
 // ## Returns
 // A graphical group whose values are controlled by the application model.
-public function Reactions<TMsg>(
+public function Reactions of TMsg(
   Id: string; Items: array of Item; OnChange: function(int, Item): TMsg; Enabled: bool := true
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 requires Items.Length > 0;
 begin
-  return E.Element<TMsg>.ReactionGroup(Id, Items, OnChange, Enabled);
+  return (E.Element of TMsg).ReactionGroup(Id, Items, OnChange, Enabled);
 end function;
 
 end unit;

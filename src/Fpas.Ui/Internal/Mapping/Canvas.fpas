@@ -17,21 +17,21 @@ uses Fpas.Ui.Widgets.Media.MediaImages as Media;
 uses System as Sys;
 uses System.Collections.Generic as Lists;
 
-function MapNodes<TChild, TParent>(Items: array of NodeEditors.Node<TChild>; Child: function(E.Element<TChild>): E.Element<TParent>): array of NodeEditors.Node<TParent>;
+function MapNodes of (TChild, TParent)(Items: array of NodeEditors.Node of TChild; Child: function(E.Element of TChild): E.Element of TParent): array of NodeEditors.Node of TParent;
 begin
-  const Nodes: Lists.List<NodeEditors.Node<TParent>> := new Lists.List<NodeEditors.Node<TParent>>(
+  const Nodes: Lists.List of NodeEditors.Node of TParent := new Lists.List of NodeEditors.Node of TParent(
     Items.Length
   );
-  for Item: NodeEditors.Node<TChild> in Items do
-    var Body: E.Element<TParent>? := null;
+  for Item: NodeEditors.Node of TChild in Items do
+    var Body: (E.Element of TParent)? := null;
     case Item.Body of
-      when is E.Element<TChild> as Content:
+      when is E.Element of TChild as Content:
         Body := Child(Content);
       else
     end case;
 
     Nodes.Add(
-      new NodeEditors.Node<TParent>(
+      new NodeEditors.Node of TParent(
         Item.Id,
         Item.X,
         Item.Y,
@@ -58,7 +58,7 @@ end function;
 // - `Child`: Element conversion.
 // ## Returns
 // The corresponding parent element.
-public function Map<TChild, TParent>(Value: E.Element<TChild>; Messages: function(TChild): TParent; Child: function(E.Element<TChild>): E.Element<TParent>): E.Element<TParent>;
+public function Map of (TChild, TParent)(Value: E.Element of TChild; Messages: function(TChild): TParent; Child: function(E.Element of TChild): E.Element of TParent): E.Element of TParent;
 begin
   case Value of
     when E.Element.FormatBar(
@@ -67,7 +67,7 @@ begin
       const Changed: function(FormatBars.Event): TChild,
       const Settings: FormatBars.Options
     ):
-      return E.Element<TParent>.FormatBar(
+      return (E.Element of TParent).FormatBar(
         Id,
         Format,
         function(Proposal: FormatBars.Event): TParent => Messages(Changed(Proposal)),
@@ -76,31 +76,31 @@ begin
     when E.Element.LiveCursors(
       const Id: string,
       const People: array of LiveCursors.Person,
-      const Content: E.Element<TChild>,
+      const Content: E.Element of TChild,
       const Settings: LiveCursors.Options
     ):
-      return E.Element<TParent>.LiveCursors(Id, People, Child(Content), Settings);
+      return (E.Element of TParent).LiveCursors(Id, People, Child(Content), Settings);
     when E.Element.PresencePill(
       const Id: string,
       const People: array of LiveCursors.Person,
       const Settings: PresencePills.Options
     ):
-      return E.Element<TParent>.PresencePill(Id, People, Settings);
+      return (E.Element of TParent).PresencePill(Id, People, Settings);
     when E.Element.SelectionRing(
       const Id: string,
-      const Content: E.Element<TChild>,
+      const Content: E.Element of TChild,
       const Settings: SelectionRings.Options
     ):
-      return E.Element<TParent>.SelectionRing(Id, Child(Content), Settings);
+      return (E.Element of TParent).SelectionRing(Id, Child(Content), Settings);
     when E.Element.CanvasControls(
       const Id: string,
       const Viewport: NodeEditors.View,
       const Toggles: array of CanvasControls.Toggle,
       const Changed: function(CanvasControls.Event): TChild,
-      const Content: E.Element<TChild>,
+      const Content: E.Element of TChild,
       const Settings: CanvasControls.Options
     ):
-      return E.Element<TParent>.CanvasControls(
+      return (E.Element of TParent).CanvasControls(
         Id,
         Viewport,
         Toggles,
@@ -115,16 +115,16 @@ begin
       const Activate: TChild,
       const Settings: ResultCards.Options
     ):
-      return E.Element<TParent>.ResultCard(Id, Image, Title, Messages(Activate), Settings);
+      return (E.Element of TParent).ResultCard(Id, Image, Title, Messages(Activate), Settings);
     when E.Element.SelectionBar(
       const Id: string,
       const Selected: SelectionBars.Selection,
       const Actions: array of SelectionBars.Action,
       const Changed: function(SelectionBars.Event): TChild,
-      const Content: E.Element<TChild>,
+      const Content: E.Element of TChild,
       const Settings: SelectionBars.Options
     ):
-      return E.Element<TParent>.SelectionBar(
+      return (E.Element of TParent).SelectionBar(
         Id,
         Selected,
         Actions,
@@ -138,7 +138,7 @@ begin
       const Changed: function(Toolbars.Event): TChild,
       const Settings: Toolbars.Options
     ):
-      return E.Element<TParent>.Toolbar(
+      return (E.Element of TParent).Toolbar(
         Id,
         Items,
         function(Proposal: Toolbars.Event): TParent => Messages(Changed(Proposal)),
@@ -147,15 +147,15 @@ begin
     when E.Element.NodeEditor(
       const Id: string,
       const Viewport: NodeEditors.View,
-      const Nodes: array of NodeEditors.Node<TChild>,
+      const Nodes: array of NodeEditors.Node of TChild,
       const Links: array of NodeEditors.Link,
       const Changed: function(NodeEditors.Event): TChild,
       const Settings: NodeEditors.Options
     ):
-      return E.Element<TParent>.NodeEditor(
+      return (E.Element of TParent).NodeEditor(
         Id,
         Viewport,
-        MapNodes<TChild, TParent>(Nodes, Child),
+        MapNodes of (TChild, TParent)(Nodes, Child),
         Links,
         function(Proposal: NodeEditors.Event): TParent => Messages(Changed(Proposal)),
         Settings

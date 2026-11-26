@@ -23,18 +23,18 @@ uses System.Collections.Generic as C;
 // - `DateColumn`: Field with chronological direction labels, or -1.
 // ## Returns
 // The sort button with its native menu.
-public function Build<TMsg>(Id: string; Names: array of string; Alphabetical: array of bool; Order: Tables.Sort; Change: function(Tables.Sort): TMsg; Default: string := ''; DefaultId: string := 'default'; DateColumn: int := -1): E.Element<TMsg>;
+public function Build of TMsg(Id: string; Names: array of string; Alphabetical: array of bool; Order: Tables.Sort; Change: function(Tables.Sort): TMsg; Default: string := ''; DefaultId: string := 'default'; DateColumn: int := -1): E.Element of TMsg;
 requires Names.Length = Alphabetical.Length;
 requires Order.Column >= -1 and Order.Column < Names.Length;
 begin
-  const Entries: C.List<Menus.Entry<TMsg>> := new C.List<Menus.Entry<TMsg>>(
-    [Menus.Entry<TMsg>.Label('Sort by')]
+  const Entries: C.List of Menus.Entry of TMsg := new C.List of Menus.Entry of TMsg(
+    [(Menus.Entry of TMsg).Label('Sort by')]
   );
   const Column: int := Order.Column;
   if Default <> '' then
     Entries.Add(
-      Menus.Entry<TMsg>.Action(
-        new Menus.Item<TMsg>(
+      (Menus.Entry of TMsg).Action(
+        new Menus.Item of TMsg(
           DefaultId,
           Default,
           Change(new Tables.Sort(-1)),
@@ -46,8 +46,8 @@ begin
 
   for Index: int := 0 to Names.Length - 1 do
     Entries.Add(
-      Menus.Entry<TMsg>.Action(
-        new Menus.Item<TMsg>(
+      (Menus.Entry of TMsg).Action(
+        new Menus.Item of TMsg(
           Index.ToString(),
           Names[Index],
           Change(new Tables.Sort(Index, Order.Descending)),
@@ -83,10 +83,10 @@ begin
       end if
     end if;
     Label := Names[Column] + ' · ' + Direction;
-    Entries.Add(Menus.Entry<TMsg>.Separator);
+    Entries.Add((Menus.Entry of TMsg).Separator);
     Entries.Add(
-      Menus.Entry<TMsg>.Action(
-        new Menus.Item<TMsg>(
+      (Menus.Entry of TMsg).Action(
+        new Menus.Item of TMsg(
           'ascending',
           'Ascending',
           Change(new Tables.Sort(Column)),
@@ -95,8 +95,8 @@ begin
       )
     );
     Entries.Add(
-      Menus.Entry<TMsg>.Action(
-        new Menus.Item<TMsg>(
+      (Menus.Entry of TMsg).Action(
+        new Menus.Item of TMsg(
           'descending',
           'Descending',
           Change(new Tables.Sort(Column, true)),
@@ -106,7 +106,7 @@ begin
     );
   end if;
 
-  return Sorting.Trigger<TMsg>(Id, Label, Entries.ToArray(), Order.Descending);
+  return Sorting.Trigger of TMsg(Id, Label, Entries.ToArray(), Order.Descending);
 end function;
 
 end unit;

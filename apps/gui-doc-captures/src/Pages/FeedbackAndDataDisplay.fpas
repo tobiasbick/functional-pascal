@@ -11,7 +11,7 @@ uses GuiGallery.App.State as Gallery;
 // ## Parameters
 // - `Session`: Gallery session on Feedback with a visible upload status.
 // - `Output`: Directory for full-frame images and crop bounds.
-public procedure CaptureFeedback(Session: Gui.Session<Gallery.Msg>; Output: string);
+public procedure CaptureFeedback(Session: Gui.Session of Gallery.Msg; Output: string);
 begin
   Regions.Shot(Session, Output, 'alert', 'update', 'payment', 'storage', 'build');
   Regions.Shot(Session, Output, 'progress-bar', 'upload', 'index', 'export', 'sync');
@@ -50,7 +50,7 @@ end procedure;
 // ## Parameters
 // - `Session`: Gallery session on Data display.
 // - `Output`: Directory for full-frame images and crop bounds.
-public procedure CaptureDataDisplay(Session: Gui.Session<Gallery.Msg>; Output: string);
+public procedure CaptureDataDisplay(Session: Gui.Session of Gallery.Msg; Output: string);
 begin
   Regions.Shot(Session, Output, 'table', 'people');
   Regions.Shot(Session, Output, 'tree', 'tree-card');

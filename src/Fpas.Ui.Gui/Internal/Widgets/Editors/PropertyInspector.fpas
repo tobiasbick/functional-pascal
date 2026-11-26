@@ -73,17 +73,17 @@ end function;
 // - `Groups`: Groups and native property rows.
 // - `Changed`: Maps a native proposal.
 // - `Settings`: Native layout and behavior options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Groups: array of D.Group; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Groups: array of D.Group; Changed: function(D.Event): TMsg; Settings: D.Options);
 begin
   const Role: string := 'property-inspector';
   const Token: string := C.Token(Role, Id);
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   const Enabled: bool := Frame.AcceptInput;
-  const Native: Lists.List<CuiEditors.CuiPropertyGroup> := new Lists.List<CuiEditors.CuiPropertyGroup>(
+  const Native: Lists.List of CuiEditors.CuiPropertyGroup := new Lists.List of CuiEditors.CuiPropertyGroup(
     Groups.Length
   );
   for Group: D.Group in Groups do
-    const Rows: Lists.List<CuiEditors.CuiProperty> := new Lists.List<CuiEditors.CuiProperty>(
+    const Rows: Lists.List of CuiEditors.CuiProperty := new Lists.List of CuiEditors.CuiProperty(
       Group.Properties.Length
     );
     for Row: D.Property in Group.Properties do
@@ -111,7 +111,7 @@ begin
     end if;
   end for;
 
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, '');
 end procedure;
 
 end unit;

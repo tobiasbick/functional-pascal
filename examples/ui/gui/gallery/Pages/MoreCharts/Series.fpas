@@ -29,8 +29,8 @@ end function;
 // Software and OpenGL frame-time samples.
 public function Scatter(): array of Sc.Series;
 begin
-  const A: Lists.List<Sc.Point> := new Lists.List<Sc.Point>(40);
-  const B: Lists.List<Sc.Point> := new Lists.List<Sc.Point>(40);
+  const A: Lists.List of Sc.Point := new Lists.List of Sc.Point(40);
+  const B: Lists.List of Sc.Point := new Lists.List of Sc.Point(40);
   const Sa: array of float := new float[40];
   const Sb: array of float := new float[40];
   for Index: int := 0 to 39 do
@@ -54,7 +54,7 @@ end function;
 // Deterministic prices and volume.
 public function Candles(): array of Cs.Candle;
 begin
-  const Result: Lists.List<Cs.Candle> := new Lists.List<Cs.Candle>(2000);
+  const Result: Lists.List of Cs.Candle := new Lists.List of Cs.Candle(2000);
   var Price: float := 64.0F;
   for Index: int := 0 to 1999 do
     const Open: float := Price;

@@ -14,7 +14,7 @@ uses System.Collections.Generic as Lists;
 
 function PackField(Items: array of D.Field): array of CuiDeveloper.CuiDevField;
 begin
-  const Native: Lists.List<CuiDeveloper.CuiDevField> := new Lists.List<CuiDeveloper.CuiDevField>(
+  const Native: Lists.List of CuiDeveloper.CuiDevField := new Lists.List of CuiDeveloper.CuiDevField(
     Items.Length
   );
   for Entry: D.Field in Items do
@@ -26,7 +26,7 @@ end function;
 
 function PackRule(Items: array of D.Rule): array of CuiDeveloper.CuiDevRule;
 begin
-  const Native: Lists.List<CuiDeveloper.CuiDevRule> := new Lists.List<CuiDeveloper.CuiDevRule>(
+  const Native: Lists.List of CuiDeveloper.CuiDevRule := new Lists.List of CuiDeveloper.CuiDevRule(
     Items.Length
   );
   for Entry: D.Rule in Items do
@@ -55,7 +55,7 @@ end function;
 // - `RulesData`: RulesData supplied to the widget.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Fields: array of D.Field; RulesData: array of D.Rule; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Fields: array of D.Field; RulesData: array of D.Rule; Changed: function(D.Event): TMsg; Settings: D.Options);
 begin
   const Role: string := 'query-builder';
   const Token: string := C.Token(Role, Id);
@@ -73,9 +73,9 @@ begin
     Width.Value,
     Enabled
   );
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, '');
   if Enabled and not Sys.Object.ReferenceEquals(Result, Before) then
-    const Values: Lists.List<D.Rule> := new Lists.List<D.Rule>(Result.Length);
+    const Values: Lists.List of D.Rule := new Lists.List of D.Rule(Result.Length);
     for Entry: CuiDeveloper.CuiDevRule in Result do
       Values.Add(
         new D.Rule(Entry.Depth, Entry.Group, Entry.Any, Entry.Field, Entry.Operator, Entry.Value)

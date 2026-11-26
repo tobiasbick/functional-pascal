@@ -11,7 +11,7 @@ public sealed class OverloadExecutionTests
             uses System.Console as Console;
             function Choose(Value: int): string; begin return 'int'; end function;
             function Choose(Value: double): string; begin return 'double'; end function;
-            function Choose<T>(Value: T): string; begin return 'generic'; end function;
+            function Choose of T(Value: T): string; begin return 'generic'; end function;
             function Choose(): string; begin return 'empty'; end function;
             function Mode(Value: int): string; begin return 'value'; end function;
             function Mode(in Value: int): string; begin return 'in'; end function;
@@ -24,7 +24,7 @@ public sealed class OverloadExecutionTests
             end record;
             begin
               Console.WriteLine(Choose(1)); Console.WriteLine(Choose(1.5)); Console.WriteLine(Choose('text'));
-              Console.WriteLine(Choose<int>(2)); Console.WriteLine(Choose());
+              Console.WriteLine(Choose of int(2)); Console.WriteLine(Choose());
               const Callback: function(int): string := Choose;
               Console.WriteLine(Callback(3));
               const Value: int := 4;

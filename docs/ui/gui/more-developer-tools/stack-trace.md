@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Developer.StackTraces as W;
 // - `Message`: Exception message from the application.
 // ## Returns
 // The trace panel with clicked frames as messages.
-public function View(Frames: array of W.Frame; Message: string): E.Element<W.Event>;
+public function View(Frames: array of W.Frame; Message: string): E.Element of W.Event;
 begin
-  return W.StackTrace<W.Event>('error-trace', Frames,
+  return W.StackTrace of W.Event('error-trace', Frames,
     function(Change: W.Event): W.Event => Change,
     new W.Options(Title := 'Runtime error', Message := Message, Language := 'js'));
 end function;

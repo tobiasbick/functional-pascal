@@ -31,10 +31,10 @@ end record;
 // - `Settings`: Native presentation.
 // ## Returns
 // A graphical element.
-public function Treemap<TMsg>(Id: string; Items: array of C.Item; Settings: Options? := null; Selected: int := -1; OnSelect: Sys.Func<int, TMsg>? := null): E.Element<TMsg>;
+public function Treemap of TMsg(Id: string; Items: array of C.Item; Settings: Options? := null; Selected: int := -1; OnSelect: Sys.Func of (int, TMsg)? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Treemap(Id, Items, Selected, OnSelect, Settings ?? new Options());
+  return (E.Element of TMsg).Treemap(Id, Items, Selected, OnSelect, Settings ?? new Options());
 end function;
 
 end unit;

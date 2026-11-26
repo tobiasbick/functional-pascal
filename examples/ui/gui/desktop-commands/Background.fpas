@@ -18,8 +18,8 @@ public const Id: string := 'desktop-background';
 // - `SimulateError`: Whether to fail after two successful steps.
 // ## Returns
 // A cancellable background command whose replies update the application model.
-public function Start(SimulateError: bool): Mvu.Command<S.Msg>;
-  async function Run(Context: Mvu.BackgroundContext<S.Msg>; Token: Threads.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, S.Msg>>;
+public function Start(SimulateError: bool): Mvu.Command of S.Msg;
+  async function Run(Context: Mvu.BackgroundContext of S.Msg; Token: Threads.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, S.Msg);
   begin
     for Completed: int := 1 to S.WorkSteps do
       await Tasks.Task.Delay(
@@ -39,9 +39,9 @@ public function Start(SimulateError: bool): Mvu.Command<S.Msg>;
     return Fx.Outcome.Success(Fx.Completion.Done);
   end function;
 begin
-  return Mvu.StartBackground<S.Msg>(
+  return Mvu.StartBackground of S.Msg(
     Id,
-    Fx.Effect<Fx.Completion, S.Msg, Mvu.BackgroundContext<S.Msg>>.Defer(Run)
+    Fx.Effect of (Fx.Completion, S.Msg, Mvu.BackgroundContext of S.Msg).Defer(Run)
   );
 end function;
 

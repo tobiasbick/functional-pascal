@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Inputs.PasswordStrengthMeters as W;
 // - `Password`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Password: string): E.Element<string>;
+public function View(Password: string): E.Element of string;
 begin
-  return W.PasswordStrengthMeter<string>('input-password-strength', Password);
+  return W.PasswordStrengthMeter of string('input-password-strength', Password);
 end function;
 
 end unit;

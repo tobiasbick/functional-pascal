@@ -30,7 +30,7 @@ begin
     R.Reject(At, 'The text editor value exceeds its UTF-8 capacity.');
   end if;
 
-  if not Sys.Enum.IsDefined<B.Size>(Size) then
+  if not Sys.Enum.IsDefined of B.Size(Size) then
     R.Reject(At, 'The text editor requires a valid control size.');
   end if;
 end procedure;

@@ -72,7 +72,7 @@ public type Playlist = record
   // Identity, name and current read status.
   public Description: Summary;
   // Ordered entries including missing and remote targets.
-  public Entries: I.ImmutableArray<Entry>;
+  public Entries: I.ImmutableArray of Entry;
 end record;
 
 // A bounded summary page, combining both stores by default.

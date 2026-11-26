@@ -39,14 +39,14 @@ uses System as Sys;
 // - `Profile`: Target capability profile.
 // - `Identify`: Registers widget and part identities.
 // - `Visit`: Queues a composed child for validation.
-public procedure Check<TMsg>(Node: E.Element<TMsg>; Location: string; Profile: Rules.Profile; Identify: function(string, string): string; Visit: procedure(E.Element<TMsg>, string));
+public procedure Check of TMsg(Node: E.Element of TMsg; Location: string; Profile: Rules.Profile; Identify: function(string, string): string; Visit: procedure(E.Element of TMsg, string));
 begin
   case Node of
     when E.Element.VoiceWave(
       const Id: string,
       const Signal: Voice.Signal,
       const Progress: float?,
-      const Changed: Sys.Func<float, TMsg>?,
+      const Changed: Sys.Func of (float, TMsg)?,
       const Settings: VoiceWaves.Options
     ):
       const At: string := Identify(Id, Location + '/VoiceWave');
@@ -138,14 +138,14 @@ begin
       ChartRules.Color(Settings.Color, At);
     when E.Element.Reasoning(
       const Id: string,
-      const Bodies: array of E.Element<TMsg>,
+      const Bodies: array of E.Element of TMsg,
       const Settings: Reasonings.Options
     ):
       const At: string := Identify(Id, Location + '/Reasoning');
       Rules.RequireProfile(Profile, Rules.Profile.Graphical, At);
       Rules.CheckText(Settings.Title, At);
       ChartRules.Distance(Settings.Seconds, At);
-      for Child: E.Element<TMsg> in Bodies do
+      for Child: E.Element of TMsg in Bodies do
         Visit(Child, At);
       end for;
 
@@ -300,7 +300,7 @@ begin
       const At: string := Identify(Id, Location + '/ModelPicker');
       Rules.RequireProfile(Profile, Rules.Profile.Graphical, At);
       AiRules.Models(Items, Selected, At);
-      if not Sys.Enum.IsDefined<Menus.Placement>(Settings.Placement) then
+      if not Sys.Enum.IsDefined of Menus.Placement(Settings.Placement) then
         Rules.Reject(At, 'Unknown model menu placement.');
       end if;
     else

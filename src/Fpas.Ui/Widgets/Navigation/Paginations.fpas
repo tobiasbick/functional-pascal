@@ -16,12 +16,12 @@ uses Fpas.Ui.Elements as E;
 // - `Enabled`: Whether the pager accepts input.
 // ## Returns
 // The pager with one-based display labels.
-public function Pagination<TMsg>(
+public function Pagination of TMsg(
   Id: string; Page: int; PageCount: int; OnChange: function(int): TMsg; Enabled: bool := true
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.PaginationAction(Id, Page, PageCount, OnChange, Enabled);
+  return (E.Element of TMsg).PaginationAction(Id, Page, PageCount, OnChange, Enabled);
 end function;
 
 end unit;

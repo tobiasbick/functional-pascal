@@ -49,7 +49,7 @@ public sealed class SourceOperationTests
               const Buffer: Text.StringBuilder := new Text.StringBuilder();
               Buffer.Length := 0;
               discard Buffer.Length;
-              const Values: C.List<int> := new C.List<int>();
+              const Values: C.List of int := new C.List of int();
               Values.Add(2);
               Values[0] := Values[0] + 1;
               using const Timer: Timers.Timer := new Timers.Timer(100.0);
@@ -80,9 +80,9 @@ public sealed class SourceOperationTests
             function Read(Value: int): int; begin return Value; end function;
             function Read(Value: string): int; begin return Value.Length; end function;
             function Apply(Value: function(int): int): int; begin return Value(1); end function;
-            function Compare(Value: S.IComparable<int>): int; begin return Value.CompareTo(1); end function;
-            function Add<T>(Left: T; Right: T): T;
-            where T: N.IAdditionOperators<T, T, T>;
+            function Compare(Value: S.IComparable of int): int; begin return Value.CompareTo(1); end function;
+            function Add of T(Left: T; Right: T): T;
+            where T: N.IAdditionOperators of (T, T, T);
             begin return Left + Right; end function;
             begin discard Apply(Read); end;
             end program;
@@ -105,7 +105,7 @@ public sealed class SourceOperationTests
         var snapshot = Analyze("""
             program Protocols;
             uses System.Threading.Tasks as Tasks; uses System.IO as Io;
-            async function Work(): Tasks.Task<int>;
+            async function Work(): Tasks.Task of int;
             begin
               await using const Stream: Io.MemoryStream := new Io.MemoryStream();
               await Tasks.Task.Delay(1);

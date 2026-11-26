@@ -16,13 +16,13 @@ uses Fpas.Ui.Widgets.Feedback.Spinners as W;
 // - `Id`: Stable inspection identity.
 // - `Size`: Logical diameter, or zero for the native default.
 // - `Settings`: Native animation style and colors.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Size: float; Settings: W.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Size: float; Settings: W.Options);
 begin
   Frame.Window.Spinner(
     C.Token('spinner', Id), Size, cast<int>(Settings.Animation),
     Colors.Color(Settings.Color), Colors.Color(Settings.Track), Settings.Inverse
   );
-  C.Track<TMsg>(Frame, new App.Control(Id, '', 'spinner', new Cui.CuiRectangle(), false));
+  C.Track of TMsg(Frame, new App.Control(Id, '', 'spinner', new Cui.CuiRectangle(), false));
 end procedure;
 
 end unit;

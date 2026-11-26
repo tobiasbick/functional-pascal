@@ -29,7 +29,7 @@ const ExtensionPattern: R.Regex := new R.Regex('\A\.[A-Za-z0-9]+\z');
 
 const FileName: string := 'settings.json';
 
-function DecodeSource(Item: J.JsonElement; UsedIds: C.HashSet<string>; ref Valid: bool): Locations.MusicSource?;
+function DecodeSource(Item: J.JsonElement; UsedIds: C.HashSet of string; ref Valid: bool): Locations.MusicSource?;
 begin
   const Folder: string := Fields.StringValue(Fields.Field(Item, 'path')) ?? '';
   if not IO.Path.IsPathFullyQualified(Folder) or Folder.Contains(cast<char>(0)) then
@@ -72,10 +72,12 @@ begin
     Valid := false;
   end if;
 
-  const Extensions: C.List<string> := new C.List<string>();
+  const Extensions: C.List of string := new C.List of string();
   const ExtensionList: J.JsonElement := Fields.Field(Item, 'extensions');
   if ExtensionList.ValueKind = J.JsonValueKind.Array then
-    const Seen: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.OrdinalIgnoreCase);
+    const Seen: C.HashSet of string := new C.HashSet of string(
+      Sys.StringComparer.OrdinalIgnoreCase
+    );
     for Entry: J.JsonElement in ExtensionList.EnumerateArray() do
       const Extension: string := Fields.StringValue(Entry) ?? '';
       if ExtensionPattern.IsMatch(
@@ -102,7 +104,7 @@ begin
   );
 end function;
 
-function DecodeChoice<T>(Root: J.JsonElement; Name: string; Fallback: string; ref Valid: bool): string;
+function DecodeChoice of T(Root: J.JsonElement; Name: string; Fallback: string; ref Valid: bool): string;
 where T: struct, Sys.Enum;
 begin
   if Root.ValueKind <> J.JsonValueKind.Object then
@@ -116,8 +118,8 @@ begin
 
   const Text: string := Fields.StringValue(Fields.Field(Root, Name)) ?? '';
   var Choice: T := new T();
-  if Sys.Enum.TryParse<T>(Text, true, out Choice) then
-    const ChoiceName: string := Sys.Enum.GetName<T>(Choice) ?? '';
+  if Sys.Enum.TryParse of T(Text, true, out Choice) then
+    const ChoiceName: string := Sys.Enum.GetName of T(Choice) ?? '';
     if Text <> '' and Text = ChoiceName.ToLowerInvariant() then
       return Text;
     end if;
@@ -191,13 +193,13 @@ begin
   return new Model.AcoustIdKeys();
 end function;
 
-function Decode(Root: J.JsonElement): Files.Decoded<Model.Preferences>;
+function Decode(Root: J.JsonElement): Files.Decoded of Model.Preferences;
 begin
   const Items: J.JsonElement := Fields.Field(Root, SourcesKey);
   var Valid: bool := Items.ValueKind = J.JsonValueKind.Array;
-  const Sources: C.List<Locations.MusicSource> := new C.List<Locations.MusicSource>();
+  const Sources: C.List of Locations.MusicSource := new C.List of Locations.MusicSource();
   if Valid then
-    const UsedIds: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+    const UsedIds: C.HashSet of string := new C.HashSet of string(Sys.StringComparer.Ordinal);
     for Item: J.JsonElement in Items.EnumerateArray() do
       const Source: Locations.MusicSource? := DecodeSource(Item, UsedIds, ref Valid);
       if Source <> null then
@@ -206,14 +208,14 @@ begin
     end for;
   end if;
 
-  const Appearance: string := DecodeChoice<Switchers.Selection>(
+  const Appearance: string := DecodeChoice of Switchers.Selection(
     Root,
     'appearance',
     DefaultAppearance,
     ref Valid
   );
-  const Accent: string := DecodeChoice<Themes.Accent>(Root, 'accent', 'neutral', ref Valid);
-  return new Files.Decoded<Model.Preferences>(
+  const Accent: string := DecodeChoice of Themes.Accent(Root, 'accent', 'neutral', ref Valid);
+  return new Files.Decoded of Model.Preferences(
     new Model.Preferences(
       Sources.ToArray(),
       Appearance,
@@ -275,7 +277,7 @@ end procedure;
 public function Load(Directory: string): Model.Preferences;
 requires Directory.Length > 0;
 begin
-  return Files.Load<Model.Preferences>(
+  return Files.Load of Model.Preferences(
     IO.Path.Combine(Directory, FileName),
     new Model.Preferences([]),
     Decode, Encode,
@@ -291,7 +293,7 @@ end function;
 public procedure Save(Directory: string; Value: Model.Preferences);
 requires Directory.Length > 0;
 begin
-  Files.Save<Model.Preferences>(IO.Path.Combine(Directory, FileName), Value, Decode, Encode);
+  Files.Save of Model.Preferences(IO.Path.Combine(Directory, FileName), Value, Decode, Encode);
 end procedure;
 
 end unit;

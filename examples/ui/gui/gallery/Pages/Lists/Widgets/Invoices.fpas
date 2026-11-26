@@ -13,7 +13,7 @@ uses GuiGallery.Shared.Sections as G;
 uses System as Sys;
 uses System.Globalization as Culture;
 
-function Row(Index: int): E.Element<State.Msg>;
+function Row(Index: int): E.Element of State.Msg;
 begin
   const Invariant: Culture.CultureInfo := Culture.CultureInfo.InvariantCulture;
   const Hash: long := (cast<long>(Index + 1) * 2654435761L) mod 4294967296L;
@@ -26,31 +26,31 @@ begin
   else
     'Paid'
   end if;
-  return E.Row<State.Msg>(
+  return E.Row of State.Msg(
     new L.Flow(
       Gap := G.Points(12),
       PaddingStart := G.Points(12),
       PaddingEnd := G.Points(12),
       Clip := false
     ),
-    E.Styled<State.Msg>(E.Text<State.Msg>(Sys.Char.ConvertFromUtf32($E0CC)), S.Role.MutedIcon),
-    E.Size<State.Msg>(
-      E.Styled<State.Msg>(
-        E.Styled<State.Msg>(E.Text<State.Msg>(Title), S.Role.SingleLine),
+    E.Styled of State.Msg(E.Text of State.Msg(Sys.Char.ConvertFromUtf32($E0CC)), S.Role.MutedIcon),
+    E.Size of State.Msg(
+      E.Styled of State.Msg(
+        E.Styled of State.Msg(E.Text of State.Msg(Title), S.Role.SingleLine),
         S.Role.Tabular
       ),
       new L.Flex(Basis := L.Extent.Fill)
     ),
-    E.Styled<State.Msg>(
-      E.Styled<State.Msg>(
-        E.Styled<State.Msg>(E.Text<State.Msg>(Amount), S.Role.SingleLine),
+    E.Styled of State.Msg(
+      E.Styled of State.Msg(
+        E.Styled of State.Msg(E.Text of State.Msg(Amount), S.Role.SingleLine),
         S.Role.SmallBody
       ),
       S.Role.Tabular
     ),
-    E.Size<State.Msg>(
-      E.Styled<State.Msg>(
-        E.Styled<State.Msg>(E.Text<State.Msg>(Status), S.Role.Caption),
+    E.Size of State.Msg(
+      E.Styled of State.Msg(
+        E.Styled of State.Msg(E.Text of State.Msg(Status), S.Role.Caption),
         S.Role.SingleLine
       ),
       new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(32)))
@@ -61,11 +61,11 @@ end function;
 // Presents the original ten-thousand-row invoice viewport.
 // ## Returns
 // A native card around the virtual list.
-public function View(): E.Element<State.Msg>;
+public function View(): E.Element of State.Msg;
 begin
-  return C.Card<State.Msg>(
+  return C.Card of State.Msg(
     'invoice-card', [
-      V.VirtualList<State.Msg>(
+      V.VirtualList of State.Msg(
         'invoices',
         10000,
         36.0F,

@@ -34,7 +34,7 @@ begin
   return L.Spacing.Fixed(L.Measure.Logical(Value));
 end function;
 
-procedure Position(Parts: C.List<string>; Label: string; Index: int?; Total: int?);
+procedure Position(Parts: C.List of string; Label: string; Index: int?; Total: int?);
 begin
   if Index > 0 then
     Parts.Add(
@@ -47,17 +47,17 @@ begin
   end if;
 end procedure;
 
-function Summary(Current: M.State; Item: Tracks.Entry; Info: Tags.Info; Cover: Images.Bitmap?; Compact: bool): E.Element<M.Msg>;
+function Summary(Current: M.State; Item: Tracks.Entry; Info: Tags.Info; Cover: Images.Bitmap?; Compact: bool): E.Element of M.Msg;
 begin
-  const Lines: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
-  Lines.Add(Texts.Text<M.Msg>(Browse.Title(Item), Texts.Appearance.HeadingThree));
+  const Lines: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();
+  Lines.Add(Texts.Text of M.Msg(Browse.Title(Item), Texts.Appearance.HeadingThree));
   const Artist: string := Browse.Artist(Item);
   if Artist <> '' then
-    Lines.Add(E.Styled<M.Msg>(E.Text<M.Msg>(Artist), S.Role.Introduction));
+    Lines.Add(E.Styled of M.Msg(E.Text of M.Msg(Artist), S.Role.Introduction));
   end if;
 
   const Album: string := Browse.AlbumTitle(Item);
-  const Identity: C.List<string> := new C.List<string>();
+  const Identity: C.List of string := new C.List of string();
   if Album <> '' then
     Identity.Add(Album);
   elsif Current.Album.Id <> '' and Current.Album.Title <> '' then
@@ -69,10 +69,10 @@ begin
   end if;
 
   if Identity.Count > 0 then
-    Lines.Add(Texts.Text<M.Msg>(Sys.String.Join(' · ', Identity), Texts.Appearance.Secondary));
+    Lines.Add(Texts.Text of M.Msg(Sys.String.Join(' · ', Identity), Texts.Appearance.Secondary));
   end if;
 
-  const Parts: C.List<string> := new C.List<string>();
+  const Parts: C.List of string := new C.List of string();
   Position(Parts, 'Disc', Info.DiscNumber, Info.DiscTotal);
   Position(Parts, 'Track', Info.TrackNumber, Info.TrackTotal);
   const Duration: double := Browse.Duration(Item);
@@ -81,10 +81,10 @@ begin
   end if;
 
   if Parts.Count > 0 then
-    Lines.Add(Texts.Text<M.Msg>(Sys.String.Join(' · ', Parts), Texts.Appearance.Secondary));
+    Lines.Add(Texts.Text of M.Msg(Sys.String.Join(' · ', Parts), Texts.Appearance.Secondary));
   end if;
 
-  return E.Row<M.Msg>(
+  return E.Row of M.Msg(
     new L.Flow(
       Gap := Points(
         if Compact then
@@ -94,15 +94,18 @@ begin
         end if
       ), Align := L.Alignment.Start
     ),
-    Artwork.Build<M.Msg>(
+    Artwork.Build of M.Msg(
       'track-detail-cover', Cover, if Compact then
         72
       else
         144
       end if
     ),
-    E.Size<M.Msg>(
-      E.Column<M.Msg>(new L.Flow(Gap := Points(6), Align := L.Alignment.Stretch), Lines.ToArray()),
+    E.Size of M.Msg(
+      E.Column of M.Msg(
+        new L.Flow(Gap := Points(6), Align := L.Alignment.Stretch),
+        Lines.ToArray()
+      ),
       Fill
     )
   );
@@ -110,14 +113,14 @@ end function;
 
 // Overlays the selected track's details on Base. Current owns the selected tab and file.
 // Playback supplies ongoing analysis, Width is the available width, and Cover is the album image.
-public function Build(Current: M.State; Playback: Player.State; Width: int; Cover: Images.Bitmap?; Base: E.Element<M.Msg>): E.Element<M.Msg>;
+public function Build(Current: M.State; Playback: Player.State; Width: int; Cover: Images.Bitmap?; Base: E.Element of M.Msg): E.Element of M.Msg;
 begin
   const Item: Tracks.Entry? := Current.Details;
   const Compact: bool := Width < 585;
-  var Body: E.Element<M.Msg> := E.Column<M.Msg>();
+  var Body: E.Element of M.Msg := E.Column of M.Msg();
   if Item <> null then
     const Info: Tags.Info := Item.Metadata ?? new Tags.Info();
-    Body := E.Column<M.Msg>(
+    Body := E.Column of M.Msg(
       new L.Flow(
         Gap := Points(
           if Compact then
@@ -128,11 +131,11 @@ begin
         ), Align := L.Alignment.Stretch
       ),
       Summary(Current, Item, Info, Cover, Compact),
-      Tabs.Tabs<M.Msg>(
+      Tabs.Tabs of M.Msg(
         'track-detail-tabs', Sections, cast<int>(Current.ActiveDetailTab),
         function(Index: int): M.Msg => M.Msg.SelectDetailTab(cast<M.DetailTab>(Index))
       ),
-      E.Size<M.Msg>(
+      E.Size of M.Msg(
         Metadata.Panel(Current.ActiveDetailTab, Info, Compact), new L.Flex(
           Minimum := L.Measure.Logical(
             if Compact then
@@ -147,7 +150,7 @@ begin
     );
   end if;
 
-  return Dialogs.Dialog<M.Msg>(
+  return Dialogs.Dialog of M.Msg(
     'track-details',
     Base,
     Body,

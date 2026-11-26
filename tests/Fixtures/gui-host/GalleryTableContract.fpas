@@ -24,7 +24,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer);
       Button := -1;
     end if;
   end procedure;
-  procedure Click(Session: Gui.Session<State.Msg>; Id: string);
+  procedure Click(Session: Gui.Session of State.Msg; Id: string);
   begin
     const Target: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
     A.Check(Target.Width > 0.0F and Target.Height > 0.0F, 'Table control is not visible: ' + Id);
@@ -36,7 +36,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer);
     A.Check(Session.Step(), 'Table gallery closed during release.');
     A.Check(Session.Step(), 'Table gallery closed before presenting the update.');
   end procedure;
-  procedure CheckSelection(Session: Gui.Session<State.Msg>; Selected: string);
+  procedure CheckSelection(Session: Gui.Session of State.Msg; Selected: string);
   begin
     const Frame: Gui.Frame := Session.Snapshot();
     var Count: int := 0;
@@ -55,7 +55,7 @@ begin
   var Button: int := -1;
   const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI Table', 1100, 760, Renderer, true);
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Lists), Update.Update, View.Build, Window, 32, Inject,
     ThemeFor := Update.ThemeFor
   );

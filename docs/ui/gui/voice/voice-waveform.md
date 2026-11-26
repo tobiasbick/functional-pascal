@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Audio.VoiceWaves as W;
 // - `Progress`: Fraction played from zero through one.
 // ## Returns
 // The waveform with proposed seek fractions.
-public function View(Signal: V.Signal; Progress: float): E.Element<float>;
+public function View(Signal: V.Signal; Progress: float): E.Element of float;
 begin
-  return W.VoiceWave<float>('voice-clip', Signal, Progress,
+  return W.VoiceWave of float('voice-clip', Signal, Progress,
     function(Next: float): float => Next, new W.Options(Clip := true));
 end function;
 

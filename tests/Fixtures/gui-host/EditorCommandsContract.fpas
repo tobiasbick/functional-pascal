@@ -39,8 +39,8 @@ procedure Validate();
 begin
   var Rejected: bool := false;
   try
-    discard V.Prepare<bool>(
-      Editor.CodeEditor<bool>(
+    discard V.Prepare of bool(
+      Editor.CodeEditor of bool(
         'editor', Source, function(Value: Editor.Event): bool => true,
         new Editor.Options(Marks := [new Editor.Mark(2, 3)])
       ), V.Target.Graphical
@@ -52,10 +52,10 @@ begin
   Check(Rejected, 'Prepared views must reject marks that split a surrogate pair.');
   Rejected := false;
   try
-    discard V.Prepare<bool>(
-      Bulk.SelectionBar<bool>(
+    discard V.Prepare of bool(
+      Bulk.SelectionBar of bool(
         'bulk', Bulk.Selection.Count(-1), [],
-        function(Value: Bulk.Event): bool => false, E.Text<bool>('Anchor')
+        function(Value: Bulk.Event): bool => false, E.Text of bool('Anchor')
       ), V.Target.Graphical
     );
   catch Error: Sys.ArgumentException do
@@ -69,39 +69,51 @@ end procedure;
 // ## Parameters
 // - `Renderer`: Native renderer used for the real editor view.
 public procedure Verify(Renderer: Cui.CuiRenderer);
-  function Update(Model: Editor.Event; Message: Msg): Mvu.Transition<Editor.Event, Msg>;
+  function Update(Model: Editor.Event; Message: Msg): Mvu.Transition of (Editor.Event, Msg);
   begin
     case Message of
       when Msg.Observed(const Value: Editor.Event):
-        return new Mvu.Transition<Editor.Event, Msg>(Value, []);
+        return new Mvu.Transition of (Editor.Event, Msg)(Value, []);
       when Msg.Move:
-        return new Mvu.Transition<Editor.Event, Msg>(Model, [Commands.GoTo<Msg>('editor', 2, 2)]);
+        return new Mvu.Transition of (Editor.Event, Msg)(
+          Model,
+          [Commands.GoTo of Msg('editor', 2, 2)]
+        );
       when Msg.SelectRange:
-        return new Mvu.Transition<Editor.Event, Msg>(Model, [Commands.Select<Msg>('editor', 1, 4)]);
+        return new Mvu.Transition of (Editor.Event, Msg)(
+          Model,
+          [Commands.Select of Msg('editor', 1, 4)]
+        );
       when Msg.Find:
-        return new Mvu.Transition<Editor.Event, Msg>(Model, [Commands.Find<Msg>('editor', '😀')]);
+        return new Mvu.Transition of (Editor.Event, Msg)(
+          Model,
+          [Commands.Find of Msg('editor', '😀')]
+        );
       when Msg.HideFind:
-        return new Mvu.Transition<Editor.Event, Msg>(Model, [Commands.Find<Msg>('editor', null)]);
+        return new Mvu.Transition of (Editor.Event, Msg)(
+          Model,
+          [Commands.Find of Msg('editor', null)]
+        );
       when Msg.Save:
         Saves := Saves + 1;
-        return new Mvu.Transition<Editor.Event, Msg>(Model, []);
+        return new Mvu.Transition of (Editor.Event, Msg)(Model, []);
     end case;
   end function;
-  function View(Model: Editor.Event; Size: L.Viewport): E.Element<Msg>;
+  function View(Model: Editor.Event; Size: L.Viewport): E.Element of Msg;
   begin
     Last := Model;
-    return Editor.CodeEditor<Msg>(
+    return Editor.CodeEditor of Msg(
       'editor', Source, Msg.Observed,
       new Editor.Options(ReadOnly := true, Marks := [new Editor.Mark(1, 4)])
     );
   end function;
-  function Bindings(Model: Editor.Event): array of Shortcuts.Binding<Msg>;
+  function Bindings(Model: Editor.Event): array of Shortcuts.Binding of Msg;
   begin
     Selects := Selects + 1;
-    const Child: Shortcuts.Binding<int> := new Shortcuts.Binding<int>(
+    const Child: Shortcuts.Binding of int := new Shortcuts.Binding of int(
       new Keys.Combination(Keys.Key.S, Keys.PrimaryModifier()), 1, AllowWhileEditing := true
     );
-    return [Child.Map<Msg>(function(Value: int): Msg => Msg.Save)];
+    return [Child.Map of Msg(function(Value: int): Msg => Msg.Save)];
   end function;
   procedure Inject();
   begin
@@ -111,7 +123,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer);
       Input := false;
     end if;
   end procedure;
-  procedure Steps(Value: Gui.Session<Msg>);
+  procedure Steps(Value: Gui.Session of Msg);
   begin
     for Index: int := 0 to 3 do
       Check(Value.Step(), 'The editor session closed.');
@@ -131,7 +143,7 @@ begin
     true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<Msg> := Host.Start<Editor.Event, Msg>(
+  using const Session: Gui.Session of Msg := Host.Start of (Editor.Event, Msg)(
     Last, Update, View, Window, 64, Inject,
     BindingsFor := Bindings
   );

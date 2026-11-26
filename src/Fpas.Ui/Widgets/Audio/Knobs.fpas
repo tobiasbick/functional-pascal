@@ -44,13 +44,13 @@ end record;
 // - `Settings`: Optional native display and input settings.
 // ## Returns
 // The graphical rotary control.
-public function Knob<TMsg>(
+public function Knob of TMsg(
   Id: string; Label: string; Value: float; Minimum: float; Maximum: float;
   OnChange: function(float): TMsg; Settings: Options? := null
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Knob(
+  return (E.Element of TMsg).Knob(
     Id,
     Label,
     Value,

@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Navigation.Tabs as C;
 // - `Selected`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Selected: int): E.Element<int>;
+public function View(Selected: int): E.Element of int;
 begin
-  return C.Tabs<int>('tabs', [new C.Item('Overview'), new C.Item('Reports')],
+  return C.Tabs of int('tabs', [new C.Item('Overview'), new C.Item('Reports')],
     Selected, function(Index: int): int => Index);
 end function;
 

@@ -18,17 +18,17 @@ uses Fpas.Ui.Widgets.Ai.ModelPickers as ModelPickers;
 // - `Selected`: Selected model index.
 // - `Changed`: Maps the proposed index.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Items: array of ModelPickers.Item; Selected: int; Changed: function(int): TMsg; Settings: ModelPickers.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Items: array of ModelPickers.Item; Selected: int; Changed: function(int): TMsg; Settings: ModelPickers.Options);
 begin
   const Role: string := 'model-picker';
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled and Items.Length > 0;
-  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
+  const Focus: bool := C.WantsFocus of TMsg(Frame, Id, Token, Enabled);
   const Next: int := Frame.Window.ModelPicker(
     Token, Data.Models(Items), Selected, cast<int>(Settings.Placement),
     Enc.Bits(Enabled, 1) or Enc.Bits(Focus, 2) or Enc.Bits(Settings.Ghost, 4)
   );
-  P.Root<TMsg>(
+  P.Root of TMsg(
     Frame, Id, Role, if Items.Length = 0 then
       ''
     else

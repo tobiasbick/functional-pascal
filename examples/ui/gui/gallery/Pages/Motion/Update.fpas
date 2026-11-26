@@ -31,18 +31,18 @@ end function;
 // - `Message`: Proposed Motion action.
 // ## Returns
 // The next model and any toast.
-public function Update(State: M.Model; Message: M.Msg): A.Transition<M.Model, M.Msg>;
+public function Update(State: M.Model; Message: M.Msg): A.Transition of (M.Model, M.Msg);
 begin
   case Message of
     when M.Msg.Files:
-      return new A.Transition<M.Model, M.Msg>(State, [Toasts.Show<M.Msg>('Files')]);
+      return new A.Transition of (M.Model, M.Msg)(State, [Toasts.Show of M.Msg('Files')]);
     when M.Msg.Track(const Event: Player.Event):
-      return new A.Transition<M.Model, M.Msg>(
+      return new A.Transition of (M.Model, M.Msg)(
         State with
           Track := Event.Current;
         end with,
         if Event.Next then
-          [Toasts.Show<M.Msg>('Next track')]
+          [Toasts.Show of M.Msg('Next track')]
         else
           []
         end if
@@ -79,7 +79,7 @@ begin
         when M.Msg.Tick(const Seconds: float): Advance(State, Seconds);
         else State;
       end case;
-      return new A.Transition<M.Model, M.Msg>(Updated, []);
+      return new A.Transition of (M.Model, M.Msg)(Updated, []);
   end case;
 end function;
 

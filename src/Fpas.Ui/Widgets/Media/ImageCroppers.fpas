@@ -45,10 +45,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // The graphical element.
-public function ImageCropper<TMsg>(Id: string; Image: Media.Source; Current: Value; Change: function(Value): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function ImageCropper of TMsg(Id: string; Image: Media.Source; Current: Value; Change: function(Value): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.ImageCropper(Id, Image, Current, Change, Settings ?? new Options());
+  return (E.Element of TMsg).ImageCropper(Id, Image, Current, Change, Settings ?? new Options());
 end function;
 
 end unit;

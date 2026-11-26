@@ -18,14 +18,14 @@ uses System.Collections.Generic as Lists;
 function Move(Model: M.Model; Key: int; Source: int; Destination: int; Index: int): M.Model;
 begin
   const Columns: array of array of int := cast<array of array of int>(Model.Columns.Clone());
-  const FromItems: Lists.List<int> := new Lists.List<int>(Columns[Source]);
+  const FromItems: Lists.List of int := new Lists.List of int(Columns[Source]);
   if not FromItems.Remove(Key) then
     return Model;
   end if;
-  const ToItems: Lists.List<int> := if Source = Destination then
+  const ToItems: Lists.List of int := if Source = Destination then
     FromItems
   else
-    new Lists.List<int>(Columns[Destination])
+    new Lists.List of int(Columns[Destination])
   end if;
   ToItems.Insert(Sys.Math.Clamp(Index, 0, ToItems.Count), Key);
   Columns[Source] := FromItems.ToArray();
@@ -35,11 +35,11 @@ begin
   end with;
 end function;
 
-function Notify(Model: M.Model; Title: string; Detail: string := ''): A.Transition<M.Model, M.Msg>;
+function Notify(Model: M.Model; Title: string; Detail: string := ''): A.Transition of (M.Model, M.Msg);
 begin
-  return new A.Transition<M.Model, M.Msg>(
+  return new A.Transition of (M.Model, M.Msg)(
     Model,
-    [Toasts.Show<M.Msg>(Title, new Toasts.Options(Description := Detail))]
+    [Toasts.Show of M.Msg(Title, new Toasts.Options(Description := Detail))]
   );
 end function;
 
@@ -49,7 +49,7 @@ end function;
 // - `Message`: Proposed edit or activation.
 // ## Returns
 // Updated schedule and any activation toast.
-public function Update(Model: M.Model; Message: M.Msg): A.Transition<M.Model, M.Msg>;
+public function Update(Model: M.Model; Message: M.Msg): A.Transition of (M.Model, M.Msg);
 begin
   case Message of
     when M.Msg.Board(K.Event.Add(const Column: int)):
@@ -59,7 +59,7 @@ begin
     when M.Msg.Board(
       K.Event.Move(const Key: int, const Source: int, const Destination: int, const Index: int)
     ):
-      return new A.Transition<M.Model, M.Msg>(Move(Model, Key, Source, Destination, Index), []);
+      return new A.Transition of (M.Model, M.Msg)(Move(Model, Key, Source, Destination, Index), []);
     when M.Msg.Week(const Event: W.Event):
       const Next: M.Model := Model with
         Events := Event.Events;
@@ -69,7 +69,7 @@ begin
         return Notify(Next, Item.Title, Item.Detail);
       end if;
 
-      return new A.Transition<M.Model, M.Msg>(Next, []);
+      return new A.Transition of (M.Model, M.Msg)(Next, []);
     when M.Msg.Timeline(const Event: G.Event):
       const Next: M.Model := Model with
         Tasks := Event.Tasks;
@@ -85,7 +85,7 @@ begin
         );
       end if;
 
-      return new A.Transition<M.Model, M.Msg>(Next, []);
+      return new A.Transition of (M.Model, M.Msg)(Next, []);
     when M.Msg.Month(const Event: Month.Event):
       const Next: M.Model := Model with
         Month := Event.Month;
@@ -99,7 +99,7 @@ begin
         );
       end if;
 
-      return new A.Transition<M.Model, M.Msg>(Next, []);
+      return new A.Transition of (M.Model, M.Msg)(Next, []);
   end case;
 end function;
 

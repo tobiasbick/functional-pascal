@@ -16,14 +16,14 @@ uses Xunit as X;
 [X.InlineDataAttribute(2, 3, 5)]
 public procedure Addition(Left: int; Right: int; Expected: int);
 begin
-  X.Assert.Equal<int>(Expected, Left + Right);
+  X.Assert.Equal of int(Expected, Left + Right);
 end procedure;
 
 // Produces a failing assertion for the runner to report.
 [X.FactAttribute]
 public procedure Failure();
 begin
-  X.Assert.Equal<int>(1, 2);
+  X.Assert.Equal of int(1, 2);
 end procedure;
 
 // Fails if the runner executes this deliberately skipped case.

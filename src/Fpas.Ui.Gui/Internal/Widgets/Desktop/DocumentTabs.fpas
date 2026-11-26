@@ -21,15 +21,15 @@ uses System.Collections.Generic as Lists;
 // - `Selected`: Current selected index.
 // - `Changed`: Maps native proposals to messages.
 // - `Settings`: Native behavior.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Tabs: array of D.Tab; Selected: int; Changed: function(D.Change): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Tabs: array of D.Tab; Selected: int; Changed: function(D.Change): TMsg; Settings: D.Options);
 begin
   const Role: string := 'document-tabs';
   const Token: string := C.Token(Role, Id);
-  const Parts: Lists.List<string> := new Lists.List<string>(Tabs.Length + 1);
-  const Native: Lists.List<CuiDesktop.CuiDocumentTab> := new Lists.List<CuiDesktop.CuiDocumentTab>(
+  const Parts: Lists.List of string := new Lists.List of string(Tabs.Length + 1);
+  const Native: Lists.List of CuiDesktop.CuiDocumentTab := new Lists.List of CuiDesktop.CuiDocumentTab(
     Tabs.Length
   );
-  var Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Frame.AcceptInput and Selected >= 0);
+  var Focus: bool := C.WantsFocus of TMsg(Frame, Id, Token, Frame.AcceptInput and Selected >= 0);
   Parts.Add(Token);
   for Index: int := 0 to Tabs.Length - 1 do
     const Item: D.Tab := Tabs[Index];
@@ -45,7 +45,7 @@ begin
         Item.Dirty
       )
     );
-    if Index = Selected and C.WantsFocus<TMsg>(
+    if Index = Selected and C.WantsFocus of TMsg(
       Frame,
       TabId,
       TabToken,

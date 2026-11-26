@@ -20,16 +20,16 @@ uses System.Collections.Generic as Lists;
 // - `Items`: Ordered native actions.
 // - `OnChoose`: Maps a chosen action index to a message.
 // - `Settings`: Native trigger and input settings.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Items: array of S.Item;
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Items: array of S.Item;
   OnChoose: function(int): TMsg; Settings: S.Options
 );
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('speed-dial', Id);
-  const Labels: Lists.List<string> := new Lists.List<string>(Items.Length);
-  const Icons: Lists.List<string> := new Lists.List<string>(Items.Length);
-  var Focus: int := if C.WantsFocus<TMsg>(Frame, Id, Token, Enabled) then
+  const Labels: Lists.List of string := new Lists.List of string(Items.Length);
+  const Icons: Lists.List of string := new Lists.List of string(Items.Length);
+  var Focus: int := if C.WantsFocus of TMsg(Frame, Id, Token, Enabled) then
     1
   else
     0
@@ -38,11 +38,11 @@ begin
     Labels.Add(Items[Index].Label);
     Icons.Add(Items[Index].Icon);
     const ItemId: string := S.ItemId(Id, Index);
-    if C.WantsFocus<TMsg>(Frame, ItemId, C.Token('speed-action', ItemId), Enabled) then
+    if C.WantsFocus of TMsg(Frame, ItemId, C.Token('speed-action', ItemId), Enabled) then
       Focus := Index + 2;
     end if;
   end for;
-  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+  const Track: Sys.Func of (int, string)? := if Frame.PaintingClosed then
     null
   else
     function(Index: int): string => C.Token('speed-action', S.ItemId(Id, Index))

@@ -22,10 +22,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function PresencePill<TMsg>(Id: string; People: array of Live.Person; Settings: Options? := null): E.Element<TMsg>;
+public function PresencePill of TMsg(Id: string; People: array of Live.Person; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.PresencePill(Id, People, Settings ?? new Options());
+  return (E.Element of TMsg).PresencePill(Id, People, Settings ?? new Options());
 end function;
 
 end unit;

@@ -22,9 +22,9 @@ uses Fpas.Ui.Widgets.Editors.NodeEditors as N;
 // - `Toggles`: Glyphs, labels and states for additional toggles.
 // ## Returns
 // The canvas with viewport and toggle proposals.
-public function View(Child: E.Element<W.Event>; Viewport: N.View; Toggles: array of W.Toggle): E.Element<W.Event>;
+public function View(Child: E.Element of W.Event; Viewport: N.View; Toggles: array of W.Toggle): E.Element of W.Event;
 begin
-  return W.CanvasControls<W.Event>('zoom-rail', Viewport, Toggles,
+  return W.CanvasControls of W.Event('zoom-rail', Viewport, Toggles,
     function(Change: W.Event): W.Event => Change, Child);
 end function;
 

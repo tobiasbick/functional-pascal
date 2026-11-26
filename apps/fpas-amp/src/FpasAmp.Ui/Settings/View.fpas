@@ -22,17 +22,17 @@ uses FpasAmp.Ui.Settings.Model as M;
 uses System as Sys;
 uses System.Collections.Generic as C;
 
-function Body(Current: M.State; Tab: int; Theme: Themes.Theme; Width: int): E.Element<M.Msg>;
+function Body(Current: M.State; Tab: int; Theme: Themes.Theme; Width: int): E.Element of M.Msg;
 begin
-  const Page: E.Element<M.Msg> := case Tab of
+  const Page: E.Element of M.Msg := case Tab of
     when 1: LibraryView.View(Current, Theme);
     when 2: Metadata.View(Current, Width);
     else General.View(Current, Theme);
   end case;
-  const Alerted: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  const Alerted: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();
   if Current.SaveFailed and Current.Draft = null then
     Alerted.Add(
-      Alerts.Alert<M.Msg>(
+      Alerts.Alert of M.Msg(
         'settings-save-error',
         'Could not save settings. Try again.',
         new Alerts.Options(Tone := S.Tone.Danger, Dismissible := true),
@@ -44,7 +44,7 @@ begin
   const Error: string? := Current.TerminalError ?? Current.LibraryError;
   if Error <> null then
     Alerted.Add(
-      Alerts.Alert<M.Msg>(
+      Alerts.Alert of M.Msg(
         'library-error',
         'Library operation failed',
         new Alerts.Options(Tone := S.Tone.Danger, Description := Error)
@@ -53,7 +53,7 @@ begin
   end if;
 
   Alerted.Add(Page);
-  return E.Column<M.Msg>(
+  return E.Column of M.Msg(
     new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(20)), Align := L.Alignment.Stretch),
     Alerted.ToArray()
   );
@@ -74,23 +74,23 @@ end function;
 // - `Select`: Proposes another tab.
 // ## Returns
 // The scrollable settings page.
-public function Build<TParent>(Current: M.State; Tab: int; Theme: Themes.Theme; Width: int; Padding: int; Messages: function(M.Msg): TParent; Select: function(int): TParent): E.Element<TParent>;
+public function Build of TParent(Current: M.State; Tab: int; Theme: Themes.Theme; Width: int; Padding: int; Messages: function(M.Msg): TParent; Select: function(int): TParent): E.Element of TParent;
 begin
-  return E.ScrollView<TParent>(
-    'settings-scroll', E.Column<TParent>(
+  return E.ScrollView of TParent(
+    'settings-scroll', E.Column of TParent(
       new L.Flow(
         Padding := L.Spacing.Fixed(L.Measure.Logical(Padding)),
         Gap := L.Spacing.Fixed(L.Measure.Logical(20)),
         Align := L.Alignment.Stretch
       ),
-      Texts.Text<TParent>('Settings', Texts.Appearance.HeadingOne),
-      Tabs.Tabs<TParent>(
+      Texts.Text of TParent('Settings', Texts.Appearance.HeadingOne),
+      Tabs.Tabs of TParent(
         'settings-tabs',
         [new Tabs.Item('General'), new Tabs.Item('Library'), new Tabs.Item('Metadata')],
         Tab,
         Select
       ),
-      Composition.Map<M.Msg, TParent>(Body(Current, Tab, Theme, Width - 2 * Padding), Messages)
+      Composition.Map of (M.Msg, TParent)(Body(Current, Tab, Theme, Width - 2 * Padding), Messages)
     )
   );
 end function;
@@ -105,10 +105,10 @@ end function;
 // - `Messages`: Wraps settings messages in parent messages.
 // ## Returns
 // `Base`, or `Base` behind the picker or editor.
-public function Overlay<TParent>(Current: M.State; Base: E.Element<TParent>; Messages: function(M.Msg): TParent): E.Element<TParent>;
+public function Overlay of TParent(Current: M.State; Base: E.Element of TParent; Messages: function(M.Msg): TParent): E.Element of TParent;
 begin
   if Current.PickingFolder then
-    return Picker.FilePicker<TParent>(
+    return Picker.FilePicker of TParent(
       'music-folder-picker',
       true,
       function(Result: Picker.Event): TParent => Messages(M.Msg.FolderResult(Result)),
@@ -125,7 +125,7 @@ begin
   return if Draft = null then
     Base
   else
-    Editor.View<TParent>(Base, Draft, Current.SaveFailed, Messages)
+    Editor.View of TParent(Base, Draft, Current.SaveFailed, Messages)
   end if;
 end function;
 

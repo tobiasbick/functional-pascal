@@ -18,7 +18,7 @@ uses FpasAmp.Ui.Settings.Model as M;
 uses System as Sys;
 uses System.Collections.Generic as C;
 
-function Swatch(Theme: Themes.Theme; Accent: Themes.Accent): E.Element<M.Msg>;
+function Swatch(Theme: Themes.Theme; Accent: Themes.Accent): E.Element of M.Msg;
 begin
   const Name: string := Accent.ToString();
   const Color: G.Color := Themes.Light(Accent).Colors.Accent;
@@ -33,8 +33,8 @@ begin
     [Dot]
   end if;
   const Side: L.Extent := L.Extent.Fixed(L.Measure.Logical(28));
-  return Tips.Tooltip<M.Msg>(
-    Canvas.Canvas<M.Msg>(
+  return Tips.Tooltip of M.Msg(
+    Canvas.Canvas of M.Msg(
       'accent-' + Name.ToLowerInvariant(),
       Shapes,
       function(_Event: Canvas.Event): M.Msg => M.Msg.SetAccent(Accent),
@@ -51,10 +51,10 @@ end function;
 // - `Theme`: The current palette.
 // ## Returns
 // The general settings tab.
-public function View(Current: M.State; Theme: Themes.Theme): E.Element<M.Msg>;
+public function View(Current: M.State; Theme: Themes.Theme): E.Element of M.Msg;
 begin
-  const Colors: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
-  for Accent: Themes.Accent in Sys.Enum.GetValues<Themes.Accent>() do
+  const Colors: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();
+  for Accent: Themes.Accent in Sys.Enum.GetValues of Themes.Accent() do
     Colors.Add(Swatch(Theme, Accent));
   end for;
   const Options: Cards.Options := new Cards.Options(
@@ -62,13 +62,13 @@ begin
     Padding := 20.0F,
     Gap := 14.0F
   );
-  return E.Column<M.Msg>(
+  return E.Column of M.Msg(
     new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(16)), Align := L.Alignment.Stretch),
-    Cards.Card<M.Msg>(
+    Cards.Card of M.Msg(
       'appearance-card',
       [
-        Texts.Text<M.Msg>('Appearance', Texts.Appearance.HeadingThree),
-        Segments.SegmentedControl<M.Msg>(
+        Texts.Text of M.Msg('Appearance', Texts.Appearance.HeadingThree),
+        Segments.SegmentedControl of M.Msg(
           'appearance',
           [
             new Segments.Item('Light', Sys.Char.ConvertFromUtf32($E178)),
@@ -81,15 +81,15 @@ begin
       ],
       Options
     ),
-    Cards.Card<M.Msg>(
+    Cards.Card of M.Msg(
       'accent-card',
       [
-        Texts.Text<M.Msg>('Accent color', Texts.Appearance.HeadingThree),
-        E.Row<M.Msg>(
+        Texts.Text of M.Msg('Accent color', Texts.Appearance.HeadingThree),
+        E.Row of M.Msg(
           new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8)), Wrap := true),
           Colors.ToArray()
         ),
-        Texts.Text<M.Msg>(Theme.AccentFamily.ToString(), Texts.Appearance.Secondary)
+        Texts.Text of M.Msg(Theme.AccentFamily.ToString(), Texts.Appearance.Secondary)
       ],
       Options
     )

@@ -37,14 +37,14 @@ end record;
 // - `OnDismiss`: Proposed message when the dialog requests closure.
 // ## Returns
 // The base view with a centered modal when open.
-public function Dialog<TMsg>(
-  Id: string; Base: E.Element<TMsg>; Content: E.Element<TMsg>; Open: bool;
+public function Dialog of TMsg(
+  Id: string; Base: E.Element of TMsg; Content: E.Element of TMsg; Open: bool;
   Settings: Options; OnDismiss: TMsg
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 requires Settings.Width > 0;
 begin
-  return E.Element<TMsg>.Dialog(Id, Base, Content, Open, Settings, OnDismiss);
+  return (E.Element of TMsg).Dialog(Id, Base, Content, Open, Settings, OnDismiss);
 end function;
 
 // Returns the stable application ID of the header close button.

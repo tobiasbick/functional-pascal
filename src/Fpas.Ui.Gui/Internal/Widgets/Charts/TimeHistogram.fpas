@@ -12,7 +12,7 @@ uses System.Collections.Generic as Lists;
 
 function PackSeries(Items: array of D.Series): array of CuiDeveloper.CuiDevSeries;
 begin
-  const Native: Lists.List<CuiDeveloper.CuiDevSeries> := new Lists.List<CuiDeveloper.CuiDevSeries>(
+  const Native: Lists.List of CuiDeveloper.CuiDevSeries := new Lists.List of CuiDeveloper.CuiDevSeries(
     Items.Length
   );
   for Entry: D.Series in Items do
@@ -35,7 +35,7 @@ end function;
 // - `Value`: Value supplied to the widget.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Start: double; Bucket: double; Buckets: int; SeriesData: array of D.Series; Value: D.Range; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Start: double; Bucket: double; Buckets: int; SeriesData: array of D.Series; Value: D.Range; Changed: function(D.Event): TMsg; Settings: D.Options);
 begin
   const Role: string := 'time-histogram';
   const Token: string := C.Token(Role, Id);
@@ -55,7 +55,7 @@ begin
     Width.Value,
     Enabled
   );
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, '');
   if Enabled and (Result.Flags <> 0) then
     Frame.Messages.Add(Changed(new D.Event(Result.X, Result.Y)));
   end if;

@@ -69,7 +69,7 @@ For default metadata and constructor/copy emission see
 [record members](record-members.md).
 
 Records generate typed equality, `Equals`, and `GetHashCode`. Corresponding fields
-use `EqualityComparer<T>.Default`; array fields therefore compare by reference,
+use `(EqualityComparer of T).Default`; array fields therefore compare by reference,
 not element-by-element. Equality is not a recursive deep comparison of arbitrary
 .NET object graphs. Null equals null; a non-null record never equals null.
 Source members may not collide with the constructor, generated equality members,

@@ -25,80 +25,80 @@ uses System as Sys;
 // - `Messages`: Message translation.
 // ## Returns
 // The equivalent widget in the parent view.
-public function Map<TChild, TParent>(View: E.Element<TChild>; Messages: function(TChild): TParent): E.Element<TParent>;
+public function Map of (TChild, TParent)(View: E.Element of TChild; Messages: function(TChild): TParent): E.Element of TParent;
 begin
   case View of
     when E.Element.Alert(
       const Id: string, const Title: string, const Settings: Alerts.Options,
-      const Notify: Sys.Func<TChild>?
+      const Notify: (Sys.Func of TChild)?
     ):
-      return E.Element<TParent>.Alert(
+      return (E.Element of TParent).Alert(
         Id,
         Title,
         Settings,
-        M.Factory<TChild, TParent>(Notify, Messages)
+        M.Factory of (TChild, TParent)(Notify, Messages)
       );
     when E.Element.ProgressBar(
       const Id: string,
       const Fraction: float,
       const Settings: ProgressBars.Options
     ):
-      return E.Element<TParent>.ProgressBar(Id, Fraction, Settings);
+      return (E.Element of TParent).ProgressBar(Id, Fraction, Settings);
     when E.Element.Spinner(const Id: string, const Size: float, const Settings: Spinners.Options?):
-      return E.Element<TParent>.Spinner(Id, Size, Settings);
+      return (E.Element of TParent).Spinner(Id, Size, Settings);
     when E.Element.Skeleton(const Id: string, const Width: L.Extent, const Height: float):
-      return E.Element<TParent>.Skeleton(Id, Width, Height);
+      return (E.Element of TParent).Skeleton(Id, Width, Height);
     when E.Element.TimelineItem(
       const Id: string,
       const Title: string,
       const Settings: Timeline.Options
     ):
-      return E.Element<TParent>.TimelineItem(Id, Title, Settings);
+      return (E.Element of TParent).TimelineItem(Id, Title, Settings);
     when E.Element.LevelMeter(
       const Id: string,
       const Peaks: array of float,
       const Settings: Levels.Options,
-      const Notify: Sys.Func<TChild>?
+      const Notify: (Sys.Func of TChild)?
     ):
-      return E.Element<TParent>.LevelMeter(
+      return (E.Element of TParent).LevelMeter(
         Id,
         Peaks,
         Settings,
-        M.Factory<TChild, TParent>(Notify, Messages)
+        M.Factory of (TChild, TParent)(Notify, Messages)
       );
     when E.Element.Meter(
       const Id: string, const Label: string, const Used: float,
       const Total: float, const Unit: string
     ):
-      return E.Element<TParent>.Meter(Id, Label, Used, Total, Unit);
+      return (E.Element of TParent).Meter(Id, Label, Used, Total, Unit);
     when E.Element.ProgressRing(
       const Id: string, const Label: string, const Value: float, const Size: float
     ):
-      return E.Element<TParent>.ProgressRing(Id, Label, Value, Size);
+      return (E.Element of TParent).ProgressRing(Id, Label, Value, Size);
     when E.Element.Banner(
-      const Id: string, const Text: string, const Open: bool, const Dismiss: Sys.Func<TChild>?,
-      const Action: Sys.Func<TChild>?, const Settings: Banners.Options
+      const Id: string, const Text: string, const Open: bool, const Dismiss: (Sys.Func of TChild)?,
+      const Action: (Sys.Func of TChild)?, const Settings: Banners.Options
     ):
-      return E.Element<TParent>.Banner(
-        Id, Text, Open, M.Factory<TChild, TParent>(Dismiss, Messages),
-        M.Factory<TChild, TParent>(Action, Messages), Settings
+      return (E.Element of TParent).Banner(
+        Id, Text, Open, M.Factory of (TChild, TParent)(Dismiss, Messages),
+        M.Factory of (TChild, TParent)(Action, Messages), Settings
       );
     when E.Element.Countdown(
       const Id: string,
       const Seconds: double,
       const Settings: Countdowns.Options
     ):
-      return E.Element<TParent>.Countdown(Id, Seconds, Settings);
+      return (E.Element of TParent).Countdown(Id, Seconds, Settings);
     when E.Element.Checklist(
       const Id: string,
       const Steps: array of Checklists.Step,
       const Toggle: function(int, bool): TChild,
-      const Action: Sys.Func<int, TChild>?,
+      const Action: Sys.Func of (int, TChild)?,
       const Settings: Checklists.Options
     ):
-      return E.Element<TParent>.Checklist(
+      return (E.Element of TParent).Checklist(
         Id, Steps, function(Index: int; Done: bool): TParent => Messages(Toggle(Index, Done)),
-        M.Callback<int, TChild, TParent>(Action, Messages), Settings
+        M.Callback of (int, TChild, TParent)(Action, Messages), Settings
       );
     else
       raise new Sys.InvalidOperationException('Expected a feedback widget.');

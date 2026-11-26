@@ -23,7 +23,7 @@ uses System as Sys;
 // - `Selected`: Selected input item, or minus one. Requires `OnSelect` when set.
 // - `OnSelect`: Optional native selection proposal; null disables selection.
 // - `Settings`: Native presentation.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Items: array of Ch.Item; Selected: int; OnSelect: Sys.Func<int, TMsg>?; Settings: W.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Items: array of Ch.Item; Selected: int; OnSelect: Sys.Func of (int, TMsg)?; Settings: W.Options);
 begin
   const Token: string := C.Token('treemap', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
@@ -49,7 +49,7 @@ begin
   );
   if Enabled and Result.Selected <> Selected then
     case OnSelect of
-      when is Sys.Func<int, TMsg> as Notify:
+      when is Sys.Func of (int, TMsg) as Notify:
         Frame.Messages.Add(Notify.Invoke(Result.Selected));
       else
     end case;

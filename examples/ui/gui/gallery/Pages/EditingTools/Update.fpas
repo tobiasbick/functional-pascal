@@ -38,7 +38,7 @@ end function;
 function TrackCurve(Model: M.Model; Index: int; Value: C.Event): M.Model;
 begin
   const Tracks: array of T.Track := cast<array of T.Track>(Model.Tracks.Clone());
-  const Keys: Lists.List<T.Key> := new Lists.List<T.Key>(Value.Keys.Length);
+  const Keys: Lists.List of T.Key := new Lists.List of T.Key(Value.Keys.Length);
   for K: int := 0 to Value.Keys.Length - 1 do
     Keys.Add(new T.Key(Value.Keys[K], K = Value.Selected));
   end for;
@@ -128,14 +128,14 @@ end function;
 // - `Message`: Native or playback action.
 // ## Returns
 // Updated state and a playback command when needed.
-public function Update(Model: M.Model; Message: M.Msg): A.Transition<M.Model, M.Msg>;
+public function Update(Model: M.Model; Message: M.Msg): A.Transition of (M.Model, M.Msg);
 begin
   const Value: M.Model := Next(Model, Message);
-  const Commands: array of A.Command<M.Msg> := if Value.Playing = Model.Playing then
+  const Commands: array of A.Command of M.Msg := if Value.Playing = Model.Playing then
     []
   elsif Value.Playing then
     [
-      Clock.Start<M.Msg>(
+      Clock.Start of M.Msg(
         M.Msg.Tick,
         function(Error: Sys.Exception): M.Msg => M.Msg.Playback,
         16,
@@ -143,9 +143,9 @@ begin
       )
     ]
   else
-    [A.CancelBackground<M.Msg>('shot-playback')]
+    [A.CancelBackground of M.Msg('shot-playback')]
   end if;
-  return new A.Transition<M.Model, M.Msg>(Value, Commands);
+  return new A.Transition of (M.Model, M.Msg)(Value, Commands);
 end function;
 
 end unit;

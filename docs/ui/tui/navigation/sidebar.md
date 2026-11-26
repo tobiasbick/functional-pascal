@@ -17,11 +17,11 @@ uses Fpas.Ui.Widgets.Navigation.Navigation as W;
 // - `Active`: Key of the selected destination.
 // ## Returns
 // The resulting view.
-public function View(Active: string): E.Element<string>;
+public function View(Active: string): E.Element of string;
 begin
-  return E.ScrollView<string>('pages-scroll', W.Sidebar<string>('pages', [
-    new W.Section<string>('Library', [
-      new W.Item<string>('tracks', 'Tracks', 'tracks'), new W.Item<string>('albums', 'Albums', 'albums')
+  return E.ScrollView of string('pages-scroll', W.Sidebar of string('pages', [
+    new W.Section of string('Library', [
+      new W.Item of string('tracks', 'Tracks', 'tracks'), new W.Item of string('albums', 'Albums', 'albums')
     ])], Active));
 end function;
 

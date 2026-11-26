@@ -8,7 +8,7 @@ uses Fpas.Ui.Elements as E;
 //
 // ## Type parameters
 // - `TMsg`: The application message type.
-public type Item<TMsg> = record
+public type Item of TMsg = record
   // Stable key, unique across all sections in the sidebar.
   public Key: string;
   // Literal visible caption.
@@ -27,11 +27,11 @@ end record;
 //
 // ## Type parameters
 // - `TMsg`: The application message type.
-public type Section<TMsg> = record
+public type Section of TMsg = record
   // Literal section heading. An empty title omits the heading.
   public Title: string;
   // Destinations in display and focus order.
-  public Items: array of Item<TMsg>;
+  public Items: array of Item of TMsg;
   // Extra space before the heading in logical points. Positive values require GUI.
   public GapBefore: int := 0;
 end record;
@@ -49,10 +49,10 @@ end record;
 //
 // ## Returns
 // A view that can be sized or placed in a scroll viewport by the caller.
-public function Sidebar<TMsg>(Id: string; Sections: array of Section<TMsg>; ActiveKey: string?; Enabled: bool := true): E.Element<TMsg>;
+public function Sidebar of TMsg(Id: string; Sections: array of Section of TMsg; ActiveKey: string?; Enabled: bool := true): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Sidebar(Id, Sections, ActiveKey, Enabled);
+  return (E.Element of TMsg).Sidebar(Id, Sections, ActiveKey, Enabled);
 end function;
 
 // Derives the application focus ID of a sidebar destination.

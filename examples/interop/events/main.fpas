@@ -7,7 +7,7 @@ uses System.ComponentModel as Component;
 uses System.Console as Console;
 
 begin
-  const Values: Component.BindingList<int> := new Component.BindingList<int>();
+  const Values: Component.BindingList of int := new Component.BindingList of int();
   var Changes: int := 0;
   const Handler: Component.ListChangedEventHandler := procedure(Sender: object?; Change: Component.ListChangedEventArgs) begin
     Changes := Changes + 1;

@@ -15,7 +15,7 @@ uses Fpas.Ui.Internal.Validation.Dispatch.DeveloperReportValidation as Reports;
 // - `Location`: Current diagnostic path.
 // - `Profile`: Target capabilities.
 // - `Identify`: Registers widget IDs.
-public procedure Check<TMsg>(Node: E.Element<TMsg>; Location: string; Profile: V.Profile; Identify: function(string, string): string);
+public procedure Check of TMsg(Node: E.Element of TMsg; Location: string; Profile: V.Profile; Identify: function(string, string): string);
 begin
   case Node of
     when E.Element.Problems(_, _, _, _), E.Element.Pipeline(
@@ -60,9 +60,9 @@ begin
       _,
       _
     ), E.Element.Uptime(_, _, _, _):
-      Inspectors.Check<TMsg>(Node, Location, Profile, Identify);
+      Inspectors.Check of TMsg(Node, Location, Profile, Identify);
     else
-      Reports.Check<TMsg>(Node, Location, Profile, Identify);
+      Reports.Check of TMsg(Node, Location, Profile, Identify);
   end case;
 end procedure;
 

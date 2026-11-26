@@ -8,7 +8,7 @@ uses Fpas.Ui.Mvu.Application as Mvu;
 // An owned native caption-table replacement.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Request<TMsg> = record implements Mvu.HostExtension<TMsg>
+public type Request of TMsg = record implements Mvu.HostExtension of TMsg
   // Partial captions; null restores native English defaults.
   public Strings: Resources.CuiStrings?;
 
@@ -19,9 +19,9 @@ public type Request<TMsg> = record implements Mvu.HostExtension<TMsg>
   // - `Messages`: Parent mapper; no completion message is produced.
   // ## Returns
   // The same replacement in the parent message space.
-  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  public function Map of TNext(Messages: function(TMsg): TNext): Mvu.HostExtension of TNext;
   begin
-    return new Request<TNext>(self.Strings);
+    return new Request of TNext(self.Strings);
   end function;
 end record;
 
@@ -33,9 +33,9 @@ end record;
 // - `Strings`: Partial table, or null to restore English. Weeks start on Monday.
 // ## Returns
 // An owner-thread graphical command.
-public function Set<TMsg>(Strings: Resources.CuiStrings?): Mvu.Command<TMsg>;
+public function Set of TMsg(Strings: Resources.CuiStrings?): Mvu.Command of TMsg;
 begin
-  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new Request<TMsg>(Strings)));
+  return (Mvu.Command of TMsg).Host(Mvu.HostRequest.Extension(new Request of TMsg(Strings)));
 end function;
 
 end unit;

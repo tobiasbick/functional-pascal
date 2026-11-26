@@ -153,7 +153,7 @@ public sealed class ForeignHabitDiagnosticsTests
     [InlineData("program Sample; type Box = record public Result: int := 0; public function Answer(): int; begin Result := 1; end function; end record; begin end; end program;")]
     [InlineData("program Sample; uses System.Int32 as Result; function Answer(): int; begin Result := 1; end function; begin discard Answer(); end; end program;")]
     [InlineData("program Sample; type Result = int; function Answer(): int; begin Result := 1; end function; begin discard Answer(); end; end program;")]
-    [InlineData("program Sample; function Answer<Result>(): int; begin Result := 1; end function; begin discard Answer<int>(); end; end program;")]
+    [InlineData("program Sample; function Answer of Result(): int; begin Result := 1; end function; begin discard Answer of int(); end; end program;")]
     public void Declared_routines_members_and_types_do_not_receive_an_undeclared_result_hint(string source)
     {
         var diagnostic = Rejected(source, "FP3009");

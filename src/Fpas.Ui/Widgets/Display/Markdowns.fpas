@@ -37,10 +37,10 @@ end record;
 // - `Settings`: Native presentation options.
 // ## Returns
 // A graphical view element.
-public function Markdown<TMsg>(Id: string; Text: string; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function Markdown of TMsg(Id: string; Text: string; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Markdown(Id, Text, Changed, Settings ?? new Options());
+  return (E.Element of TMsg).Markdown(Id, Text, Changed, Settings ?? new Options());
 end function;
 
 end unit;

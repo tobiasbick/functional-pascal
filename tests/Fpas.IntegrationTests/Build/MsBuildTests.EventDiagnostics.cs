@@ -47,9 +47,9 @@ public sealed partial class MsBuildTests
             ("", "subscribe S.Invalid.Event with Handler;", "FP3034"),
             ("", "unsubscribe new S.Private().Changed with Handler;", "FP3034"),
             ("procedure Wire(Value: S.IBoth; Handler: Sys.Action); begin subscribe Value.Changed with Handler; end procedure;", "", "FP3034"),
-            ("procedure Wire(Value: S.IVariantBoth; Handler: Sys.Action<object>); begin subscribe Value.Changed with Handler; end procedure;", "", "FP3034"),
+            ("procedure Wire(Value: S.IVariantBoth; Handler: Sys.Action of object); begin subscribe Value.Changed with Handler; end procedure;", "", "FP3034"),
             ("", "subscribe new S.Invalid().Nullable with procedure(Value: string) begin end procedure;", "FP3003"),
-            ("async function Wire(Value: Tasks.Task<Sys.Action>): Tasks.Task; begin var Counter: S.Counter := new S.Counter(); subscribe Counter.Changed with await Value; end function;", "", "FP3030")
+            ("async function Wire(Value: Tasks.Task of Sys.Action): Tasks.Task; begin var Counter: S.Counter := new S.Counter(); subscribe Counter.Changed with await Value; end function;", "", "FP3030")
         ];
         foreach (var (declarations, body, code) in cases)
         {

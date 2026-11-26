@@ -20,14 +20,14 @@ uses Fpas.Ui.Widgets.Files.FileBrowsers as A;
 // - `Folder`: Model-owned input.
 // - `Change`: Maps a native proposal.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Folder: string; Change: function(A.Event): TMsg; Settings: A.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Folder: string; Change: function(A.Event): TMsg; Settings: A.Options);
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Role: string := 'file-browser';
   const Token: string := C.Token(Role, Id);
   const Parts: array of string := ['list', 'back', 'forward', 'up', 'path', 'filter', 'reload'];
-  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, C.Token(Role, Id + '/list'), Enabled)
-    or C.WantsFocus<TMsg>(Frame, Id + '/list', C.Token(Role, Id + '/list'), Enabled);
+  const Focus: bool := C.WantsFocus of TMsg(Frame, Id, C.Token(Role, Id + '/list'), Enabled)
+    or C.WantsFocus of TMsg(Frame, Id + '/list', C.Token(Role, Id + '/list'), Enabled);
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   const Height: S.NativeExtent := S.Extent(Settings.Height);
   const Flags: int := Enc.Bits(Enabled, 1) + Enc.Bits(Settings.FoldersOnly, 2) +
@@ -46,7 +46,7 @@ begin
     Settings.Revision,
     Flags,
     Focus,
-    P.Tracker<TMsg>(Frame, Id, Role, Parts)
+    P.Tracker of TMsg(Frame, Id, Role, Parts)
   );
   const Selected: string := Result.Selected ?? '';
   var Previous: string := '';
@@ -67,7 +67,7 @@ begin
     );
   end if;
 
-  P.Root<TMsg>(Frame, Id, Role, Result.Folder, false, Selected);
+  P.Root of TMsg(Frame, Id, Role, Result.Folder, false, Selected);
   if Result.Error and not Frame.PaintingClosed then
     // The list snapshot carries the status separately from the selected path.
     Frame.Controls[Frame.Controls.Count - 1] := Frame.Controls[Frame.Controls.Count - 1] with
@@ -77,7 +77,7 @@ begin
 
   for Index: int := 0 to Parts.Length - 1 do
     if Result.Parts[Index] then
-      P.Part<TMsg>(
+      P.Part of TMsg(
         Frame, Id, Role, Parts[Index], Parts[Index], Enabled, if Index = 0 then
           Selected
         else

@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Inputs.RadioButtons as C;
 // - `Selected`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Selected: bool): E.Element<string>;
+public function View(Selected: bool): E.Element of string;
 begin
-  return C.RadioButton<string>('save-periodic', 'Every 5 minutes', Selected,
+  return C.RadioButton of string('save-periodic', 'Every 5 minutes', Selected,
     function(): string => 'periodic', Description := 'A good balance for most projects.');
 end function;
 

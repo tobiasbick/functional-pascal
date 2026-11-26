@@ -87,15 +87,17 @@ public type StorageTests = record
       ScanPlaylists := true
     );
     await using const Session: Monitor.Session := F.Start([Source], Data.Path);
-    const Lists: I.ImmutableArray<M.Summary> := await P.Until(
+    const Lists: I.ImmutableArray of M.Summary := await P.Until(
       F.Tags(Session).Playlists,
-      function(Items: I.ImmutableArray<M.Summary>): bool => Items.Length = 1 and Items[0].Count = 1L
+      function(Items: I.ImmutableArray of M.Summary): bool => Items.Length = 1 and Items[
+        0
+      ].Count = 1L
     );
     X.Assert.Null(Lists[0].Error);
     using const Connection: Db.SqliteConnection := Sql.Open(
       IO.Path.Combine(Data.Path, 'library.db')
     );
-    X.Assert.Equal<long>(4L, D.Number(Connection, 'PRAGMA user_version;'));
+    X.Assert.Equal of long(4L, D.Number(Connection, 'PRAGMA user_version;'));
   end function;
 end record;
 

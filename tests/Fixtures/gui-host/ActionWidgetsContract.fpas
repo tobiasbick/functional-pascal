@@ -19,9 +19,9 @@ uses GuiGallery.Pages.Actions.State as SliceActions;
 // - `Renderer`: Native renderer under test.
 // - `Capture`: Prefix for the closed and open gallery captures.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
-  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  function Update(Model: State.Model; Message: State.Msg): App.Transition of (State.Model, State.Msg);
   begin
-    const Next: App.Transition<State.Model, State.Msg> := GalleryUpdate.Update(Model, Message);
+    const Next: App.Transition of (State.Model, State.Msg) := GalleryUpdate.Update(Model, Message);
     case Message of
       when State.Msg.Actions(SliceActions.Msg.UserCommand(const Chosen: string)):
         Command := Chosen;
@@ -33,7 +33,10 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     end case;
 
     if Target <> '' then
-      return new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Target)]);
+      return new App.Transition of (State.Model, State.Msg)(
+        Next.Model,
+        [App.Focus of State.Msg(Target)]
+      );
     end if;
 
     return Next;
@@ -54,12 +57,12 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     end if;
   end procedure;
 
-  procedure Step(Session: Gui.Session<State.Msg>);
+  procedure Step(Session: Gui.Session of State.Msg);
   begin
     A.Check(Session.Step(), 'Actions window closed unexpectedly.');
   end procedure;
 
-  procedure Click(Session: Gui.Session<State.Msg>; Id: string);
+  procedure Click(Session: Gui.Session of State.Msg; Id: string);
   begin
     const Area: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
     X := Area.X + Area.Width / 2;
@@ -73,7 +76,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     Step(Session);
   end procedure;
 
-  procedure Focus(Session: Gui.Session<State.Msg>; Id: string);
+  procedure Focus(Session: Gui.Session of State.Msg; Id: string);
   begin
     Target := Id;
     A.Send(Session, State.Msg.Preview);
@@ -81,7 +84,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     A.Check(A.Control(Session, Id).Focused, 'Focus did not reach ' + Id);
   end procedure;
 
-  procedure Key(Session: Gui.Session<State.Msg>; Value: int);
+  procedure Key(Session: Gui.Session of State.Msg; Value: int);
   begin
     PendingKey := Value;
     Step(Session);
@@ -102,7 +105,7 @@ begin
   const User: string := 'action-user';
   const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI Actions', 1000, 1040, Renderer, true);
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Actions), Update, View.Build, Window, 256, Inject,
     ThemeFor := GalleryUpdate.ThemeFor
   );

@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Editors.FlameGraphs as W;
 // - `Current`: Visible range, vertical offset and selection.
 // ## Returns
 // The graph with native view proposals as messages.
-public function View(Spans: array of W.Span; Current: W.View): E.Element<W.Event>;
+public function View(Spans: array of W.Span; Current: W.View): E.Element of W.Event;
 begin
-  return W.FlameGraph<W.Event>('profile', Spans, Current,
+  return W.FlameGraph of W.Event('profile', Spans, Current,
     function(Change: W.Event): W.Event => Change);
 end function;
 

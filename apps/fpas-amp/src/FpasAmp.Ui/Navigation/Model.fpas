@@ -58,11 +58,11 @@ public type State = record
   // Last settings tab, independent of the active destination.
   public SettingsTab: int := 0;
   // Saved vertical positions of visited cover grids, keyed by route.
-  public CoverScroll: I.ImmutableDictionary<string, float> := I.ImmutableDictionary<string, float>.Empty;
+  public CoverScroll: I.ImmutableDictionary of (string, float) := I.ImmutableDictionary of (string, float).Empty;
   // Whether the compact navigation drawer is open; never persisted.
   public Drawer: bool := false;
   // All available playlist summaries in invariant name order.
-  public Playlists: I.ImmutableArray<Lists.Summary> := I.ImmutableArray<Lists.Summary>.Empty;
+  public Playlists: I.ImmutableArray of Lists.Summary := (I.ImmutableArray of Lists.Summary).Empty;
   // Whether the first successful playlist snapshot has arrived.
   public Loaded: bool := false;
   // Last background navigation failure, if any.
@@ -80,7 +80,7 @@ public type Msg = variant
   // Open or dismiss the compact drawer.
   SetDrawer(Open: bool);
   // Replace all playlist summaries after a consistent background read.
-  Received(Items: I.ImmutableArray<Lists.Summary>);
+  Received(Items: I.ImmutableArray of Lists.Summary);
   // Keep cached data and report a background failure.
   Failed(Message: string);
 end variant;
@@ -245,7 +245,7 @@ begin
 end function;
 
 // Finds `Identity` by storage and UUID, retaining same-name lists independently.
-public function Find(Items: I.ImmutableArray<Lists.Summary>; Identity: Lists.Key): Lists.Summary?;
+public function Find(Items: I.ImmutableArray of Lists.Summary; Identity: Lists.Key): Lists.Summary?;
 begin
   for Item: Lists.Summary in Items do
     if Item.Identity = Identity then

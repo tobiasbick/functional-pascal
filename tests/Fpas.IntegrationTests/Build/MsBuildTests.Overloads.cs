@@ -13,7 +13,7 @@ public sealed partial class MsBuildTests
             unit Demo.Bridge;
             public function Pick(Value: int): string; begin return 'int'; end function;
             public function Pick(Value: double): string; begin return 'double'; end function;
-            public function Pick<T>(Value: T): string; begin return 'generic'; end function;
+            public function Pick of T(Value: T): string; begin return 'generic'; end function;
             public function Optional(Value: int := 1): string; begin return 'one'; end function;
             public function Optional(First: string; Second: int := 2): string; begin return First; end function;
             private function Pick(Value: bool): string; begin return 'private'; end function;

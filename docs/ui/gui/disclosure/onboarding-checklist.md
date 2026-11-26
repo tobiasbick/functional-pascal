@@ -25,9 +25,9 @@ end variant;
 // - `Steps`: Current steps from the model.
 // ## Returns
 // The widget for the application view.
-public function View(Steps: array of W.Step): E.Element<Msg>;
+public function View(Steps: array of W.Step): E.Element of Msg;
 begin
-  return W.Checklist<Msg>('workspace-onboarding', Steps, Msg.ToggleStep, Msg.CompleteStep,
+  return W.Checklist of Msg('workspace-onboarding', Steps, Msg.ToggleStep, Msg.CompleteStep,
     new W.Options(Title := 'Set up your workspace'));
 end function;
 

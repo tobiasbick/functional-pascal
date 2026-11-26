@@ -11,7 +11,7 @@
   Program entry blocks close with `end;`, followed by `end program;` for the
   program declaration. Units close with `end unit;`.
 - Use C# primitive aliases and ordinary CLR generic types: `int`, `double`,
-  `List<int>`, `Task<string>`. `integer` and `real` are not predefined aliases.
+  `List of int`, `Task of string`. `integer` and `real` are not predefined aliases.
 - The language is case-sensitive, including keywords. This preserves CLR names
   without case-folding collisions. Keywords use lowercase spelling.
 - Source comments use `//`. Attached Markdown documents declarations, with

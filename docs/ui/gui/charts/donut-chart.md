@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Charts.DonutCharts as W;
 // Builds the donut chart example.
 // ## Returns
 // The widget for the application view.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return W.DonutChart<string>('platforms', [46.0F, 27.0F, 17.0F, 10.0F],
+  return W.DonutChart of string('platforms', [46.0F, 27.0F, 17.0F, 10.0F],
     ['Windows', 'macOS', 'Linux', 'Other'],
     new W.Options(Height := 180.0F, Format := new C.ValueFormat(Suffix := '%')));
 end function;

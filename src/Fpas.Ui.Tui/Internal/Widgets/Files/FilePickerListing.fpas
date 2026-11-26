@@ -111,7 +111,7 @@ end function;
 
 function Disk(Folder: string): F.Listing;
 begin
-  const Entries: C.List<F.Entry> := new C.List<F.Entry>();
+  const Entries: C.List of F.Entry := new C.List of F.Entry();
   const Directory: IO.DirectoryInfo := new IO.DirectoryInfo(Folder);
   for Item: IO.FileSystemInfo in Directory.EnumerateFileSystemInfos() do
     if not Item.Name.StartsWith(
@@ -137,18 +137,18 @@ end function;
 // - `Source`: Provider, or null to read local disk.
 // ## Returns
 // Readable folder listing, or null if the source fails or returns invalid child names.
-public function Read(Folder: string; Source: Sys.Func<string, bool, F.Listing?>?): F.Listing?;
+public function Read(Folder: string; Source: Sys.Func of (string, bool, F.Listing?)?): F.Listing?;
 begin
   try
     const Value: F.Listing? := case Source of
-      when is Sys.Func<string, bool, F.Listing?> as Provider: Provider.Invoke(Folder, false);
+      when is Sys.Func of (string, bool, F.Listing?) as Provider: Provider.Invoke(Folder, false);
       else Disk(Folder);
     end case;
     if Value = null then
       return null;
     end if;
 
-    const Names: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+    const Names: C.HashSet of string := new C.HashSet of string(Sys.StringComparer.Ordinal);
     for Item: F.Entry in Value.Entries do
       if not IsChildName(Item.Name) or not Names.Add(Item.Name) then
         return null;
@@ -206,7 +206,7 @@ begin
   const Filter: array of string := Settings.Filter.Split(
     [#59, #44], Sys.StringSplitOptions.RemoveEmptyEntries or Sys.StringSplitOptions.TrimEntries
   );
-  const Rows: C.List<F.Entry> := new C.List<F.Entry>();
+  const Rows: C.List of F.Entry := new C.List of F.Entry();
   for Item: F.Entry in Listing.Entries do
     if Item.Directory or (Settings.Kind <> Picker.Mode.Folder and (Settings.Filter = '' or Matches(
       Filter,
@@ -217,7 +217,7 @@ begin
     end if;
   end for;
   const Result: array of F.Entry := Rows.ToArray();
-  Sys.Array.Sort<F.Entry>(Result, Compare);
+  Sys.Array.Sort of F.Entry(Result, Compare);
   return Result;
 end function;
 

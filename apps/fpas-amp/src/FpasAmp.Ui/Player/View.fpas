@@ -44,20 +44,20 @@ begin
   return Sys.Char.ConvertFromUtf32(Code);
 end function;
 
-function Divider(): E.Element<M.Msg>;
+function Divider(): E.Element of M.Msg;
 begin
-  return E.Size<M.Msg>(E.Styled<M.Msg>(E.Column<M.Msg>(), S.Role.Divider), Fixed(1));
+  return E.Size of M.Msg(E.Styled of M.Msg(E.Column of M.Msg(), S.Role.Divider), Fixed(1));
 end function;
 
-function Artwork(Live: bool): E.Element<M.Msg>;
+function Artwork(Live: bool): E.Element of M.Msg;
 begin
   const Edge: L.AxisSize := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(40)));
-  return E.Size<M.Msg>(
-    E.Styled<M.Msg>(
-      E.Column<M.Msg>(
+  return E.Size of M.Msg(
+    E.Styled of M.Msg(
+      E.Column of M.Msg(
         new L.Flow(Align := L.Alignment.Center, Justify := L.Justification.Center),
-        E.Styled<M.Msg>(
-          E.Text<M.Msg>(
+        E.Styled of M.Msg(
+          E.Text of M.Msg(
             Glyph(
               if Live then
                 $E142
@@ -72,15 +72,15 @@ begin
   );
 end function;
 
-function Transport(Current: M.State; Loaded: bool; Live: bool): E.Element<M.Msg>;
+function Transport(Current: M.State; Loaded: bool; Live: bool): E.Element of M.Msg;
 begin
-  return E.Row<M.Msg>(
+  return E.Row of M.Msg(
     new L.Flow(Gap := Points(4), Align := L.Alignment.Center),
-    Icons.IconButton<M.Msg>(
+    Icons.IconButton of M.Msg(
       'player-previous', Glyph($E15F), 'Previous', M.Msg.Previous,
       new Icons.Options(ControlSize := Icons.Size.Small, Enabled := Loaded and not Live)
     ),
-    Icons.IconButton<M.Msg>(
+    Icons.IconButton of M.Msg(
       'player-toggle', if Current.Playing then
         Glyph(
           if Live then
@@ -102,7 +102,7 @@ begin
       end if, M.Msg.Toggle,
       new Icons.Options(Variant := S.ButtonVariant.Primary, Enabled := Loaded)
     ),
-    Icons.IconButton<M.Msg>(
+    Icons.IconButton of M.Msg(
       'player-next', Glyph($E160), 'Next', M.Msg.Next,
       new Icons.Options(
         ControlSize := Icons.Size.Small,
@@ -112,12 +112,15 @@ begin
   );
 end function;
 
-function Caption(Text: string): E.Element<M.Msg>;
+function Caption(Text: string): E.Element of M.Msg;
 begin
-  return E.Styled<M.Msg>(E.Styled<M.Msg>(E.Text<M.Msg>(Text), S.Role.Tabular), S.Role.Caption);
+  return E.Styled of M.Msg(
+    E.Styled of M.Msg(E.Text of M.Msg(Text), S.Role.Tabular),
+    S.Role.Caption
+  );
 end function;
 
-function Info(Current: M.State; Track: Tracks.Entry?): E.Element<M.Msg>;
+function Info(Current: M.State; Track: Tracks.Entry?): E.Element of M.Msg;
 begin
   const Station: Radio.Station? := Current.Station;
   const Title: string := if Station <> null then
@@ -138,30 +141,30 @@ begin
   else
     Browse.Artist(Track)
   end if;
-  return E.Column<M.Msg>(
+  return E.Column of M.Msg(
     new L.Flow(Gap := Points(8), Justify := L.Justification.Center),
-    E.Row<M.Msg>(
+    E.Row of M.Msg(
       new L.Flow(Gap := Points(10), Align := L.Alignment.Center),
       if Current.Cover <> null then
-        Covers.Build<M.Msg>('player-podcast-cover', Current.Cover, 40)
+        Covers.Build of M.Msg('player-podcast-cover', Current.Cover, 40)
       else
         Artwork(Station <> null)
       end if,
-      E.Size<M.Msg>(
-        E.Column<M.Msg>(
+      E.Size of M.Msg(
+        E.Column of M.Msg(
           new L.Flow(Gap := Points(2)),
-          E.Styled<M.Msg>(
-            Texts.Text<M.Msg>(Title, Texts.Appearance.Label),
+          E.Styled of M.Msg(
+            Texts.Text of M.Msg(Title, Texts.Appearance.Label),
             S.Role.SingleLine
           ),
-          E.Styled<M.Msg>(
-            Texts.Text<M.Msg>(Current.Error ?? Artist, Texts.Appearance.Secondary),
+          E.Styled of M.Msg(
+            Texts.Text of M.Msg(Current.Error ?? Artist, Texts.Appearance.Secondary),
             S.Role.SingleLine
           )
         ), Fill
       )
     ),
-    E.Row<M.Msg>(
+    E.Row of M.Msg(
       new L.Flow(Gap := Points(10), Align := L.Alignment.Center),
       Transport(Current, Track <> null or Station <> null, Station <> null),
       Caption(
@@ -181,9 +184,9 @@ begin
   );
 end function;
 
-function Band(Current: M.State; Index: int): E.Element<M.Msg>;
+function Band(Current: M.State; Index: int): E.Element of M.Msg;
 begin
-  return Faders.Fader<M.Msg>(
+  return Faders.Fader of M.Msg(
     'player-eq-' + M.Bands[Index], M.Bands[Index], Current.Gains[Index], -M.Boost, M.Boost,
     function(Value: float): M.Msg => M.Msg.Gain(Index, Value),
     new Faders.Options(
@@ -192,7 +195,7 @@ begin
   );
 end function;
 
-function PresetMenu(Current: M.State): E.Element<M.Msg>;
+function PresetMenu(Current: M.State): E.Element of M.Msg;
 begin
   const Selected: int := Presets.Match(Current.Gains);
   const Label: string := if Selected >= 0 then
@@ -200,10 +203,10 @@ begin
   else
     'Custom'
   end if;
-  const Rows: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  const Rows: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();
   for Index: int := 0 to Presets.Choices.Length - 1 do
     Rows.Add(
-      Buttons.Button<M.Msg>(
+      Buttons.Button of M.Msg(
         'player-preset-' + Index.ToString(), Presets.Choices[Index].Name,
         M.Msg.Preset(Index), new Buttons.Options(
           Variant := S.ButtonVariant.Ghost, Selected := Selected = Index,
@@ -213,30 +216,30 @@ begin
     );
   end for;
 
-  return Popovers.Popover<M.Msg>(
+  return Popovers.Popover of M.Msg(
     'player-presets',
-    Buttons.Button<M.Msg>(
+    Buttons.Button of M.Msg(
       'player-eq-preset', Label, M.Msg.ShowPresets(not Current.PresetsOpen),
       new Buttons.Options(
         Variant := S.ButtonVariant.Outline, ControlSize := Buttons.Size.Small,
         IconRight := Glyph($E06D), Tooltip := 'Equalizer preset', Selected := Current.PresetsOpen
       )
     ),
-    E.Column<M.Msg>(new L.Flow(Align := L.Alignment.Stretch), Rows.ToArray()),
+    E.Column of M.Msg(new L.Flow(Align := L.Alignment.Stretch), Rows.ToArray()),
     Current.PresetsOpen, M.Msg.ShowPresets(false),
     new Popovers.Options(Position := Menus.Placement.TopEnd, Width := 150, Padding := 4)
   );
 end function;
 
-function Equalizer(Current: M.State): E.Element<M.Msg>;
+function Equalizer(Current: M.State): E.Element of M.Msg;
 begin
   const Track: L.AxisSize := new L.AxisSize(
     Basis := L.Extent.Fixed(L.Measure.Logical(FaderLength))
   );
-  const Bands: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>(
+  const Bands: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg(
     [
-      E.Size<M.Msg>(
-        E.Column<M.Msg>(
+      E.Size of M.Msg(
+        E.Column of M.Msg(
           new L.Flow(Align := L.Alignment.End, Justify := L.Justification.Between),
           Caption('+12'), Caption('0'), Caption('−12')
         ), new L.Flex(Height := Track)
@@ -247,30 +250,30 @@ begin
     Bands.Add(Band(Current, Index));
   end for;
 
-  return E.Column<M.Msg>(
+  return E.Column of M.Msg(
     new L.Flow(Gap := Points(4)),
-    E.Row<M.Msg>(
+    E.Row of M.Msg(
       new L.Flow(Gap := Points(8), Align := L.Alignment.Center),
-      E.Size<M.Msg>(Texts.Text<M.Msg>('Equalizer', Texts.Appearance.Muted), Fill),
+      E.Size of M.Msg(Texts.Text of M.Msg('Equalizer', Texts.Appearance.Muted), Fill),
       PresetMenu(Current),
-      Buttons.Button<M.Msg>(
+      Buttons.Button of M.Msg(
         'player-eq-reset', 'Reset', M.Msg.Flatten,
         new Buttons.Options(Variant := S.ButtonVariant.Ghost, ControlSize := Buttons.Size.Small)
       )
     ),
-    E.Row<M.Msg>(new L.Flow(Gap := Points(2), Align := L.Alignment.Start), Bands.ToArray())
+    E.Row of M.Msg(new L.Flow(Gap := Points(2), Align := L.Alignment.Start), Bands.ToArray())
   );
 end function;
 
-function Volume(Current: M.State): E.Element<M.Msg>;
+function Volume(Current: M.State): E.Element of M.Msg;
 begin
-  return Faders.Fader<M.Msg>(
+  return Faders.Fader of M.Msg(
     'player-volume', 'Volume', Current.Volume, M.Quietest, 0.0F, M.Msg.Volume,
     new Faders.Options(Step := 0.5F, UnitLabel := 'dB', Length := cast<float>(FaderLength))
   );
 end function;
 
-function Position(Current: M.State): E.Element<M.Msg>;
+function Position(Current: M.State): E.Element of M.Msg;
 begin
   const Length: double := Current.Duration;
   const Peaks: array of float := if Current.Waveform.Length > 0 then
@@ -278,7 +281,7 @@ begin
   else
     Baseline
   end if;
-  return Waves.Waveform<M.Msg>(
+  return Waves.Waveform of M.Msg(
     'player-position',
     Peaks,
     if Length > 0.0 then
@@ -301,42 +304,42 @@ end function;
 // - `Compact`: Whether to omit the equalizer and level meters for narrow windows.
 // ## Returns
 // The strip, starting with a top divider.
-public function Build(Current: M.State; Compact: bool): E.Element<M.Msg>;
+public function Build(Current: M.State; Compact: bool): E.Element of M.Msg;
 begin
   const Track: Tracks.Entry? := M.Track(Current);
-  const Controls: E.Element<M.Msg> := if Compact then
-    E.Row<M.Msg>(
+  const Controls: E.Element of M.Msg := if Compact then
+    E.Row of M.Msg(
       new L.Flow(Gap := Points(16), Align := L.Alignment.Center),
-      E.Size<M.Msg>(Info(Current, Track), Fill),
+      E.Size of M.Msg(Info(Current, Track), Fill),
       Volume(Current)
     )
   else
-    E.Row<M.Msg>(
+    E.Row of M.Msg(
       new L.Flow(Gap := Points(16), Align := L.Alignment.Stretch),
-      E.Size<M.Msg>(Info(Current, Track), Fill),
+      E.Size of M.Msg(Info(Current, Track), Fill),
       Divider(),
       Equalizer(Current),
       Divider(),
-      E.Row<M.Msg>(
+      E.Row of M.Msg(
         new L.Flow(Gap := Points(12), Align := L.Alignment.Center),
         Volume(Current),
-        Meters.LevelMeter<M.Msg>(
+        Meters.LevelMeter of M.Msg(
           'player-levels', Current.Levels,
           new Meters.Options(Length := cast<float>(FaderLength), Thickness := 5.0F)
         )
       )
     )
   end if;
-  return E.Column<M.Msg>(
+  return E.Column of M.Msg(
     new L.Flow(Align := L.Alignment.Stretch),
     Divider(),
-    E.Column<M.Msg>(
+    E.Column of M.Msg(
       new L.Flow(Padding := Points(12), Gap := Points(10), Align := L.Alignment.Stretch),
       Controls,
       if Current.Station = null then
         Position(Current)
       else
-        E.Row<M.Msg>()
+        E.Row of M.Msg()
       end if
     )
   );

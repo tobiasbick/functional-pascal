@@ -22,9 +22,9 @@ uses System as Sys;
 // - `Appointments`: Model-owned events, in stable order during edits.
 // ## Returns
 // The calendar with activation and schedule proposals.
-public function View(Week: Sys.DateOnly; Appointments: array of W.Appointment): E.Element<W.Event>;
+public function View(Week: Sys.DateOnly; Appointments: array of W.Appointment): E.Element of W.Event;
 begin
-  return W.WeekCalendar<W.Event>('week', new W.Value(Week, Appointments),
+  return W.WeekCalendar of W.Event('week', new W.Value(Week, Appointments),
     function(Change: W.Event): W.Event => Change,
     new W.Options(StartHour := 8.0F, EndHour := 19.0F,
       Height := L.Extent.Fixed(L.Measure.Logical(420))));

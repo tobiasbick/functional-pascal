@@ -21,13 +21,13 @@ end function;
 // - `Delete`: Opens the confirmation for project deletion.
 // ## Returns
 // The shared project options menu.
-public function View<TMsg>(Choose: function(string): TMsg; Delete: TMsg): E.Element<TMsg>;
+public function View of TMsg(Choose: function(string): TMsg; Delete: TMsg): E.Element of TMsg;
 begin
-  return M.Menu<TMsg>(
+  return M.Menu of TMsg(
     'options', Strings.Get('Text.Options'), [
-      M.Entry<TMsg>.Label(Strings.Get('Text.Project')),
-      M.Entry<TMsg>.Action(
-        new M.Item<TMsg>(
+      (M.Entry of TMsg).Label(Strings.Get('Text.Project')),
+      (M.Entry of TMsg).Action(
+        new M.Item of TMsg(
           'rename',
           Strings.Get('Text.Rename'),
           Choose(Strings.Get('Text.Rename')),
@@ -35,8 +35,8 @@ begin
           Shortcut := 'F2'
         )
       ),
-      M.Entry<TMsg>.Action(
-        new M.Item<TMsg>(
+      (M.Entry of TMsg).Action(
+        new M.Item of TMsg(
           'duplicate',
           Strings.Get('Text.Duplicate'),
           Choose(Strings.Get('Text.Duplicate')),
@@ -44,17 +44,17 @@ begin
           Shortcut := 'Ctrl D'
         )
       ),
-      M.Entry<TMsg>.Action(
-        new M.Item<TMsg>(
+      (M.Entry of TMsg).Action(
+        new M.Item of TMsg(
           'share',
           Strings.Get('Text.Share'),
           Choose(Strings.Get('Text.Share')),
           Icon($E156)
         )
       ),
-      M.Entry<TMsg>.Separator,
-      M.Entry<TMsg>.Action(
-        new M.Item<TMsg>(
+      (M.Entry of TMsg).Separator,
+      (M.Entry of TMsg).Action(
+        new M.Item of TMsg(
           'delete',
           Strings.Get('Text.Delete'),
           Delete,

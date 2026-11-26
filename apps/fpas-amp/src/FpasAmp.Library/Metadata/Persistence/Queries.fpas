@@ -52,7 +52,7 @@ end function;
 
 // Reads a bounded detached page from both stores. `Request` is validated by the
 // public session, `UserDatabase` is its durable store, and cancellation bounds row iteration.
-public function Read(Database: string; UserDatabase: string; Request: M.Query; Cancellation: T.CancellationToken): I.ImmutableArray<M.Entry>;
+public function Read(Database: string; UserDatabase: string; Request: M.Query; Cancellation: T.CancellationToken): I.ImmutableArray of M.Entry;
 begin
   Cancellation.ThrowIfCancellationRequested();
   using const Connection: Db.SqliteConnection := Sql.Open(Database);
@@ -91,7 +91,7 @@ end function;
 // - `Cancellation`: Cancels row iteration.
 // ## Returns
 // Detached tracks for the release, including their independent user ratings.
-public function ReadRelease(Database: string; UserDatabase: string; Id: string; Cancellation: T.CancellationToken): I.ImmutableArray<M.Entry>;
+public function ReadRelease(Database: string; UserDatabase: string; Id: string; Cancellation: T.CancellationToken): I.ImmutableArray of M.Entry;
 requires Id <> null;
 begin
   Cancellation.ThrowIfCancellationRequested();
@@ -115,15 +115,15 @@ begin
     discard Query.Parameters.AddWithValue('$album', Id);
   end if;
 
-  return Sql.Interruptible<I.ImmutableArray<M.Entry>>(
+  return Sql.Interruptible of I.ImmutableArray of M.Entry(
     Connection, Cancellation,
-    function(): I.ImmutableArray<M.Entry> => Entries(Query, Cancellation)
+    function(): I.ImmutableArray of M.Entry => Entries(Query, Cancellation)
   );
 end function;
 
-function Entries(Query: Db.SqliteCommand; Cancellation: T.CancellationToken): I.ImmutableArray<M.Entry>;
+function Entries(Query: Db.SqliteCommand; Cancellation: T.CancellationToken): I.ImmutableArray of M.Entry;
 begin
-  const Results: C.List<M.Entry> := new C.List<M.Entry>();
+  const Results: C.List of M.Entry := new C.List of M.Entry();
   using const Reader: Db.SqliteDataReader := Query.ExecuteReader();
   while Reader.Read() do
     Cancellation.ThrowIfCancellationRequested();
@@ -145,13 +145,13 @@ begin
         else
           Reader.GetString(6)
         end if,
-        Codec.ReadNames(Reader.GetString(7)) ?? Sys.Array.Empty<string>(),
+        Codec.ReadNames(Reader.GetString(7)) ?? Sys.Array.Empty of string(),
         Reader.GetString(8), Reader.GetString(9)
       )
     );
   end while;
 
-  return I.ImmutableArray.CreateRange<M.Entry>(Results);
+  return I.ImmutableArray.CreateRange of M.Entry(Results);
 end function;
 
 end unit;

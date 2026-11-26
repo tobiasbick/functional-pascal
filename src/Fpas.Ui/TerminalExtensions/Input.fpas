@@ -148,7 +148,7 @@ end enum;
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type ShortcutBinding<TMsg> = record
+public type ShortcutBinding of TMsg = record
   // Named key when Character is empty.
   public PressedKey: Key;
   // Required key modifiers.
@@ -171,9 +171,9 @@ end record;
 //
 // ## Returns
 // A shortcut for a screen or modal layer.
-public function Shortcut<TMsg>(PressedKey: Key; Modifiers: KeyModifiers; Message: TMsg): ShortcutBinding<TMsg>;
+public function Shortcut of TMsg(PressedKey: Key; Modifiers: KeyModifiers; Message: TMsg): ShortcutBinding of TMsg;
 begin
-  return new ShortcutBinding<TMsg>(PressedKey, Modifiers, Message);
+  return new ShortcutBinding of TMsg(PressedKey, Modifiers, Message);
 end function;
 
 // Binds a typed character when the focused control does not accept text.
@@ -187,7 +187,7 @@ end function;
 //
 // ## Returns
 // A character shortcut for one terminal scope.
-public function CharacterShortcut<TMsg>(Character: string; Message: TMsg): ShortcutBinding<TMsg>;
+public function CharacterShortcut of TMsg(Character: string; Message: TMsg): ShortcutBinding of TMsg;
 begin
   var Rune: Sys.Text.Rune := new Sys.Text.Rune(0);
   if not Sys.Text.Rune.TryGetRuneAt(
@@ -200,7 +200,7 @@ begin
     raise new Sys.ArgumentException('A character shortcut requires one printable Unicode scalar.');
   end if;
 
-  return new ShortcutBinding<TMsg>(Key.Unknown, KeyModifiers.None, Message, Character);
+  return new ShortcutBinding of TMsg(Key.Unknown, KeyModifiers.None, Message, Character);
 end function;
 
 end unit;

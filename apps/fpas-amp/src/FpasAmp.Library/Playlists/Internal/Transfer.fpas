@@ -32,7 +32,7 @@ begin
   if Value.Error <> null then
     raise new IO.InvalidDataException(Value.Error);
   end if;
-  const Items: C.List<M.Input> := new C.List<M.Input>();
+  const Items: C.List of M.Input := new C.List of M.Input();
   for Item: Reading.Item in Value.Items do
     Items.Add(new M.Input(M.Target.Location(Item.Reference.Location), Item.Title));
   end for;
@@ -55,7 +55,7 @@ begin
   if Value = null then
     raise new Sys.ArgumentException('Unknown playlist.', 'Identity');
   end if;
-  const Items: C.List<Files.Item> := new C.List<Files.Item>();
+  const Items: C.List of Files.Item := new C.List of Files.Item();
   for Entry: M.Entry in Value.Entries do
     Items.Add(new Files.Item(Entry.CurrentReference, Entry.Title));
   end for;

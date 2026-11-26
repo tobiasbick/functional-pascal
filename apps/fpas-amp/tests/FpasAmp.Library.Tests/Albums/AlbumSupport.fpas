@@ -93,7 +93,7 @@ begin
   end;
 
   Chunk(Png, 'IDAT', Compressed.ToArray());
-  Chunk(Png, 'IEND', Sys.Array.Empty<byte>());
+  Chunk(Png, 'IEND', Sys.Array.Empty of byte());
   return Png.ToArray();
 end function;
 
@@ -109,7 +109,7 @@ begin
   Audio.SortAlbum := Album;
   Audio.SortAlbumArtist := Artist;
   Audio.Artist := Artist;
-  const Fields: C.IDictionary<string?, string?>? := Audio.AdditionalFields;
+  const Fields: C.IDictionary of (string?, string?)? := Audio.AdditionalFields;
   if Fields = null then
     raise new Sys.InvalidOperationException('Missing ATL tag map.');
   end if;
@@ -126,7 +126,7 @@ end function;
 public procedure Embed(Path: string; Bytes: array of byte; Kind: A.PictureInfo.PIC_TYPE := A.PictureInfo.PIC_TYPE.Front);
 begin
   const Audio: A.Track := new A.Track(Path);
-  const Pictures: C.IList<A.PictureInfo?>? := Audio.EmbeddedPictures;
+  const Pictures: (C.IList of A.PictureInfo?)? := Audio.EmbeddedPictures;
   if Pictures = null then
     raise new Sys.InvalidOperationException('Missing ATL picture list.');
   end if;

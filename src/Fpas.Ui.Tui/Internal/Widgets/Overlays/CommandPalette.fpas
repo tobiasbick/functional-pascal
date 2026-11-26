@@ -29,36 +29,36 @@ uses System.Globalization as Global;
 // - `Controls`: Current visible controls.
 // ## Returns
 // The dialog input scope.
-public function Draw<TMsg>(
-  Id: string; Commands: array of P.Command<TMsg>; Change: function(bool): TMsg; UseShortcut: bool;
-  PopupState: State.State<TMsg>; Screen: F.Rect; Theme: Th.Theme;
-  Operations: C.List<D.Operation>; Controls: C.List<A.Control<TMsg>>
-): A.Scope<TMsg>;
+public function Draw of TMsg(
+  Id: string; Commands: array of P.Command of TMsg; Change: function(bool): TMsg; UseShortcut: bool;
+  PopupState: State.State of TMsg; Screen: F.Rect; Theme: Th.Theme;
+  Operations: C.List of D.Operation; Controls: C.List of A.Control of TMsg
+): A.Scope of TMsg;
 begin
   if PopupState.Read().Id <> Id then
     PopupState.Write(new State.Cursor(Id));
   end if;
-  const Rows: C.List<Popup.Row<TMsg>> := new C.List<Popup.Row<TMsg>>(Commands.Length);
+  const Rows: C.List of Popup.Row of TMsg := new C.List of Popup.Row of TMsg(Commands.Length);
   for Index: int := 0 to Commands.Length - 1 do
-    const Command: P.Command<TMsg> := Commands[Index];
+    const Command: P.Command of TMsg := Commands[Index];
     const Key: string := Id + '/command/' + Index.ToString(Global.CultureInfo.InvariantCulture);
     Rows.Add(
-      Popup.Row<TMsg>.Choice(
-        new Popup.Item<TMsg>(
+      (Popup.Row of TMsg).Choice(
+        new Popup.Item of TMsg(
           Key,
           Command.Title,
           ' ' + Command.Title,
           'command',
-          new Actions.Direct<TMsg>(Command.Message),
+          new Actions.Direct of TMsg(Command.Message),
           Hint := Command.Shortcut
         )
       )
     );
   end for;
 
-  return Popup.Draw<TMsg>(
+  return Popup.Draw of TMsg(
     PopupState,
-    new Popup.Content<TMsg>(
+    new Popup.Content of TMsg(
       Rows.ToArray(),
       54,
       Searchable := true,

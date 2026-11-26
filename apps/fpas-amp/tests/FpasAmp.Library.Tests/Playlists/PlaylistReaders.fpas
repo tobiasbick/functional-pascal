@@ -33,13 +33,13 @@ public type ReaderTests = record
       T.CancellationToken.None
     );
     X.Assert.True(Result.Error = null, Result.Error);
-    X.Assert.Equal<int>(2, Result.Items.Length);
-    X.Assert.Equal<string>(
+    X.Assert.Equal of int(2, Result.Items.Length);
+    X.Assert.Equal of string(
       IO.Path.Combine(Root.Path, 'sub', 'a b.ogg'),
       Result.Items[0].Reference.Location
     );
-    X.Assert.Equal<string>('Title & more', Result.Items[0].Title);
-    X.Assert.Equal<string>('https://example.invalid/a%20b', Result.Items[1].Reference.Location);
+    X.Assert.Equal of string('Title & more', Result.Items[0].Title);
+    X.Assert.Equal of string('https://example.invalid/a%20b', Result.Items[1].Reference.Location);
   end procedure;
 
   // Rooted XML paths decode once, while absolute plain-text paths remain literal.
@@ -49,8 +49,8 @@ public type ReaderTests = record
     using const Root: H.Folder := H.Folder.Create();
     const Escaped: string := IO.Path.Combine(Root.Path, 'a%20b%2520.ogg');
     const Expected: string := IO.Path.Combine(Root.Path, 'a b%20.ogg');
-    X.Assert.Equal<string>(Expected, References.Resolve(Escaped, Root.Path, true).Location);
-    X.Assert.Equal<string>(Escaped, References.Resolve(Escaped, Root.Path).Location);
+    X.Assert.Equal of string(Expected, References.Resolve(Escaped, Root.Path, true).Location);
+    X.Assert.Equal of string(Escaped, References.Resolve(Escaped, Root.Path).Location);
   end procedure;
 
   // The reference-only parser rejects excessive entries even in a small text file.
@@ -73,7 +73,7 @@ public type ReaderTests = record
       T.CancellationToken.None
     );
     X.Assert.NotNull(Result.Error);
-    X.Assert.Equal<int>(0, Result.Items.Length);
+    X.Assert.Equal of int(0, Result.Items.Length);
   end procedure;
 
   // Playlist formats preserve relative targets, Unicode, duplicates and order.
@@ -137,10 +137,16 @@ public type ReaderTests = record
       T.CancellationToken.None
     );
     X.Assert.True(Result.Error = null, Result.Error);
-    X.Assert.Equal<int>(3, Result.Items.Length);
-    X.Assert.Equal<string>(IO.Path.Combine(Root.Path, 'a.ogg'), Result.Items[0].Reference.Location);
-    X.Assert.Equal<string>(Result.Items[0].Reference.Location, Result.Items[1].Reference.Location);
-    X.Assert.Equal<string>(
+    X.Assert.Equal of int(3, Result.Items.Length);
+    X.Assert.Equal of string(
+      IO.Path.Combine(Root.Path, 'a.ogg'),
+      Result.Items[0].Reference.Location
+    );
+    X.Assert.Equal of string(
+      Result.Items[0].Reference.Location,
+      Result.Items[1].Reference.Location
+    );
+    X.Assert.Equal of string(
       IO.Path.Combine(Root.Path, 'missing.mp3'),
       Result.Items[2].Reference.Location
     );
@@ -159,7 +165,7 @@ public type ReaderTests = record
       'missing.mp3' + #10
     );
     const Info: IO.FileInfo := new IO.FileInfo(Path);
-    const Result: R.Result := await Tasks.Task.Run<R.Result>(
+    const Result: R.Result := await Tasks.Task.Run of R.Result(
       function(): R.Result => R.Read(
         Path,
         Info.Length,
@@ -168,10 +174,10 @@ public type ReaderTests = record
       )
     ).WaitAsync(Sys.TimeSpan.FromSeconds(5.0));
     X.Assert.True(Result.Error = null, Result.Error);
-    X.Assert.Equal<int>(2, Result.Items.Length);
-    X.Assert.Equal<string>('https://example.invalid/a?x=1', Result.Items[0].Reference.Location);
-    X.Assert.Equal<string>('Artist - Song: One, Two', Result.Items[0].Title);
-    X.Assert.Equal<string>('', Result.Items[1].Title);
+    X.Assert.Equal of int(2, Result.Items.Length);
+    X.Assert.Equal of string('https://example.invalid/a?x=1', Result.Items[0].Reference.Location);
+    X.Assert.Equal of string('Artist - Song: One, Two', Result.Items[0].Title);
+    X.Assert.Equal of string('', Result.Items[1].Title);
   end function;
 
   // FPL's experimental URI extraction retains cross-scheme order and file URI data.
@@ -195,10 +201,13 @@ public type ReaderTests = record
       T.CancellationToken.None
     );
     X.Assert.True(Result.Error = null, Result.Error);
-    X.Assert.Equal<int>(3, Result.Items.Length);
-    X.Assert.Equal<string>('https://example.invalid/first', Result.Items[0].Reference.Location);
-    X.Assert.Equal<string>(IO.Path.Combine(Root.Path, 'ü.ogg'), Result.Items[1].Reference.Location);
-    X.Assert.Equal<string>('http://example.invalid/last', Result.Items[2].Reference.Location);
+    X.Assert.Equal of int(3, Result.Items.Length);
+    X.Assert.Equal of string('https://example.invalid/first', Result.Items[0].Reference.Location);
+    X.Assert.Equal of string(
+      IO.Path.Combine(Root.Path, 'ü.ogg'),
+      Result.Items[1].Reference.Location
+    );
+    X.Assert.Equal of string('http://example.invalid/last', Result.Items[2].Reference.Location);
     if not Sys.OperatingSystem.IsWindows() then
       X.Assert.Null(References.Resolve('C:\Music\a.mp3', Root.Path).Key);
     end if;

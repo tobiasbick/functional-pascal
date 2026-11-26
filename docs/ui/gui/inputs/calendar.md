@@ -18,9 +18,9 @@ uses System as Sys;
 // - `Due`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Due: Sys.DateOnly?): E.Element<Sys.DateOnly>;
+public function View(Due: Sys.DateOnly?): E.Element of Sys.DateOnly;
 begin
-  return W.Calendar<Sys.DateOnly>('input-calendar', Due, function(Value: Sys.DateOnly): Sys.DateOnly => Value);
+  return W.Calendar of Sys.DateOnly('input-calendar', Due, function(Value: Sys.DateOnly): Sys.DateOnly => Value);
 end function;
 
 end unit;

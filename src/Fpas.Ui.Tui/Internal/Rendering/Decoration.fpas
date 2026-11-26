@@ -20,8 +20,8 @@ uses Fpas.Ui.Widgets.Developer.Terminal as T;
 uses System as Sys;
 uses System.Collections.Generic as Generic;
 
-public procedure Apply<TMsg>(
-  Cells: array of T.Cell; Columns: int; Control: A.Control<TMsg>;
+public procedure Apply of TMsg(
+  Cells: array of T.Cell; Columns: int; Control: A.Control of TMsg;
   Theme: Th.Theme; Focused: bool
 );
   procedure Mark(Column: int; Row: int; Style: T.Style);
@@ -63,9 +63,9 @@ begin
   const Bounds: F.Rect := Control.Bounds;
   case Control.Action of
     when A.Binding.SelectionList(
-      const List: E.SelectionListView<TMsg>,
+      const List: E.SelectionListView of TMsg,
       const Body: F.Rect,
-      const View: V.Viewport<TMsg>
+      const View: V.Viewport of TMsg
     ):
       if Focused then
         const Row: int := Body.Y + (List.Selected - View.Offset);
@@ -80,7 +80,7 @@ begin
 
       return;
     when A.Binding.Edit(
-      const Field: Edit.Field<TMsg>,
+      const Field: Edit.Field of TMsg,
       const Position: Edit.Tracking,
       const Origin: int,
       const X: int
@@ -98,7 +98,7 @@ begin
       );
       Caret(X, Bounds.Y);
       return;
-    when A.Binding.EditArea(const Area: AreaEdit.View<TMsg>, const X: int, const Y: int):
+    when A.Binding.EditArea(const Area: AreaEdit.View of TMsg, const X: int, const Y: int):
       const Value: string := Area.Field.Value;
       const Cursor: AreaEdit.Cursor := Area.Position.Read(Value);
       const Span: EditText.Range := EditText.Selection(Cursor.Offset, Cursor.Anchor);
@@ -119,7 +119,7 @@ begin
       return;
     when A.Binding.Grid(_, _):
       return;
-    when A.Binding.Scroll(const View: V.Viewport<TMsg>):
+    when A.Binding.Scroll(const View: V.Viewport of TMsg):
       if Focused then
         Mark(
           if View.Bar then
@@ -166,14 +166,14 @@ begin
   end for;
 end procedure;
 
-public function Capture<TMsg>(
-  Layout: A.Layout<TMsg>; Columns: int; Theme: Th.Theme; Focus: string; Hover: string; Scope: string
+public function Capture of TMsg(
+  Layout: A.Layout of TMsg; Columns: int; Theme: Th.Theme; Focus: string; Hover: string; Scope: string
 ): array of App.ControlSnapshot;
 begin
-  const Controls: Generic.List<App.ControlSnapshot> := new Generic.List<App.ControlSnapshot>(
+  const Controls: Generic.List of App.ControlSnapshot := new Generic.List of App.ControlSnapshot(
     Layout.Controls.Length
   );
-  for Control: A.Control<TMsg> in Layout.Controls do
+  for Control: A.Control of TMsg in Layout.Controls do
     const Focused: bool := Control.Id = Focus;
     const Hovered: bool := Control.Id = Hover;
     Controls.Add(
@@ -192,7 +192,7 @@ begin
       )
     );
     if Focused or Hovered then
-      Apply<TMsg>(Layout.Cells, Columns, Control, Theme, Focused);
+      Apply of TMsg(Layout.Cells, Columns, Control, Theme, Focused);
     end if;
   end for;
 
@@ -209,9 +209,9 @@ end function;
 // - `Theme`: Colors for the hint.
 // - `Hover`: Hovered control identity.
 // - `Scope`: Current input scope.
-public procedure ShowHint<TMsg>(Layout: A.Layout<TMsg>; Columns: int; Theme: Th.Theme; Hover: string; Scope: string);
+public procedure ShowHint of TMsg(Layout: A.Layout of TMsg; Columns: int; Theme: Th.Theme; Hover: string; Scope: string);
 begin
-  const Control: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, Hover);
+  const Control: (A.Control of TMsg)? := A.FindControl of TMsg(Layout, Hover);
   if Control = null or Control.Hint = '' or Control.Scope <> Scope then
     return;
   end if;
@@ -219,7 +219,7 @@ begin
   const Area: F.Rect := new F.Rect(0, 0, Columns, 1);
   const Surface: int := Th.Rgb(Theme.Colors.SurfaceRaised, Theme.Text.Background ?? 0);
   const Colors: T.Style := new T.Style(Th.Rgb(Theme.Colors.Foreground, Surface), Surface);
-  const Operations: Generic.List<D.Operation> := new Generic.List<D.Operation>();
+  const Operations: Generic.List of D.Operation := new Generic.List of D.Operation();
   Operations.Add(new D.Operation(' ' + Glyphs.SingleLine(Control.Hint), Area, Area, Colors, false));
   const Hint: D.Surface := D.Render(Operations, Columns, 1, [], Colors);
   const Row: int := Layout.Lines.Length - 1;

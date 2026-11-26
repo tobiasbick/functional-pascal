@@ -20,10 +20,10 @@ uses Fpas.Ui.Styles as S;
 // - `Weight`: Share of the available width.
 // ## Returns
 // The resulting view.
-public function View(Content: E.Element<string>; Weight: float): E.Element<string>;
+public function View(Content: E.Element of string; Weight: float): E.Element of string;
 requires Weight > 0.0F;
 begin
-  return E.Size<string>(E.Styled<string>(E.Border<string>(Content), S.Role.Panel),
+  return E.Size of string(E.Styled of string(E.Border of string(Content), S.Role.Panel),
     new L.Flex(Basis := L.Extent.Fill, Grow := Weight));
 end function;
 

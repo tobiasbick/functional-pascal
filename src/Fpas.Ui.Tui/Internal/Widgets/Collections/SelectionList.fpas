@@ -41,13 +41,13 @@ end function;
 // - `ContentKey`: Identity of the collection used to retain its scroll state.
 // ## Returns
 // The list's terminal presentation data.
-public function Lower<TMsg>(
+public function Lower of TMsg(
   Id: string; Items: array of Lists.Item; Selected: string;
-  OnSelect: function(string): Actions.Result<TMsg>; OnActivate: function(string): Actions.Result<TMsg>;
+  OnSelect: function(string): Actions.Result of TMsg; OnActivate: function(string): Actions.Result of TMsg;
   MaximumRows: int := int.MaxValue; ContentKey: string := ''
-): E.Element<TMsg>;
+): E.Element of TMsg;
 begin
-  const Current: int := Sys.Array.FindIndex<Lists.Item>(
+  const Current: int := Sys.Array.FindIndex of Lists.Item(
     Items,
     function(Item: Lists.Item): bool => Item.Key = Selected
   );
@@ -59,8 +59,8 @@ begin
     );
   end for;
 
-  return E.Element<TMsg>.SelectionList(
-    new E.SelectionListView<TMsg>(
+  return (E.Element of TMsg).SelectionList(
+    new E.SelectionListView of TMsg(
       Id,
       Items,
       Current,
@@ -89,27 +89,27 @@ end function;
 // - `Operations`: Paint commands for the frame.
 // ## Returns
 // The list's single focus and input binding.
-public function Arrange<TMsg>(
-  List: E.SelectionListView<TMsg>; Previous: A.Layout<TMsg>?; Clip: F.Rect;
+public function Arrange of TMsg(
+  List: E.SelectionListView of TMsg; Previous: (A.Layout of TMsg)?; Clip: F.Rect;
   Style: T.Style; Theme: Th.Theme; Scope: string; FocusReturn: string;
-  Offsets: C.Dictionary<string, int>; Regions: C.List<A.ScrollRegion>; Operations: C.List<D.Operation>
-): A.Control<TMsg>;
+  Offsets: C.Dictionary of (string, int); Regions: C.List of A.ScrollRegion; Operations: C.List of D.Operation
+): A.Control of TMsg;
 begin
   const Selected: string := if List.Selected < 0 then
     ''
   else
     List.Items[List.Selected].Key
   end if;
-  const Before: A.Control<TMsg>? := A.FindControl<TMsg>(Previous, List.Id);
+  const Before: (A.Control of TMsg)? := A.FindControl of TMsg(Previous, List.Id);
   var Offset: int := 0;
   discard Offsets.TryGetValue(List.Id, out Offset);
   var Follow: bool := true;
   if Before <> null then
     case Before.Action of
       when A.Binding.SelectionList(
-        const Old: E.SelectionListView<TMsg>,
+        const Old: E.SelectionListView of TMsg,
         _,
-        const View: V.Viewport<TMsg>
+        const View: V.Viewport of TMsg
       ):
         if Old.ContentKey <> List.ContentKey then
           Offset := 0;
@@ -125,7 +125,7 @@ begin
     Offset := Reveal(Offset, List.Selected, Clip.Height);
   end if;
 
-  const View: V.Viewport<TMsg> := V.Resolve<TMsg>(
+  const View: V.Viewport of TMsg := V.Resolve of TMsg(
     E.ScrollPosition.Offset(Offset),
     List.Items.Length,
     Clip,
@@ -166,11 +166,11 @@ begin
     Operations.Add(new D.Operation(Caption, Line, Line, Colors, false));
   end for;
 
-  V.DrawBar<TMsg>(View, Operations, Clip, Clip, Style, Theme.Widgets);
+  V.DrawBar of TMsg(View, Operations, Clip, Clip, Style, Theme.Widgets);
 
-  return new A.Control<TMsg>(
+  return new A.Control of TMsg(
     List.Id, List.Id, 'listbox', Selected, Clip, Scope, FocusReturn, List.Items.Length > 0,
-    A.Binding<TMsg>.SelectionList(List, Body, View), S.ButtonVariant.Ghost
+    (A.Binding of TMsg).SelectionList(List, Body, View), S.ButtonVariant.Ghost
   );
 end function;
 
@@ -184,14 +184,14 @@ end function;
 // - `Column`: Clicked terminal column.
 // - `Row`: Clicked terminal row.
 // - `Apply`: Dispatches the selection message.
-public procedure Click<TMsg>(
-  List: E.SelectionListView<TMsg>; Body: F.Rect; Offset: int; Column: int; Row: int; Apply: procedure(TMsg)
+public procedure Click of TMsg(
+  List: E.SelectionListView of TMsg; Body: F.Rect; Offset: int; Column: int; Row: int; Apply: procedure(TMsg)
 );
 begin
   if Body.Contains(Column, Row) then
     const Index: int := Offset + (Row - Body.Y);
     if Index < List.Items.Length and Index <> List.Selected then
-      Actions.Dispatch<TMsg>(List.OnSelect(List.Items[Index].Key), Apply);
+      Actions.Dispatch of TMsg(List.OnSelect(List.Items[Index].Key), Apply);
     end if;
   end if;
 end procedure;
@@ -207,9 +207,9 @@ end procedure;
 // - `Apply`: Dispatches the selection message.
 // ## Returns
 // True when the list owns the key.
-public function Navigate<TMsg>(
-  List: E.SelectionListView<TMsg>; View: V.Viewport<TMsg>; Key: K.Key;
-  Offsets: C.Dictionary<string, int>; Apply: procedure(TMsg)
+public function Navigate of TMsg(
+  List: E.SelectionListView of TMsg; View: V.Viewport of TMsg; Key: K.Key;
+  Offsets: C.Dictionary of (string, int); Apply: procedure(TMsg)
 ): bool;
 begin
   const Count: int := List.Items.Length;
@@ -228,7 +228,7 @@ begin
   if Index = List.Selected then
     Offsets[List.Id] := Reveal(View.Offset, Index, View.Rows);
   else
-    Actions.Dispatch<TMsg>(List.OnSelect(List.Items[Index].Key), Apply);
+    Actions.Dispatch of TMsg(List.OnSelect(List.Items[Index].Key), Apply);
   end if;
 
   return true;
@@ -240,12 +240,12 @@ end function;
 // ## Parameters
 // - `List`: Current list binding.
 // - `Apply`: Dispatches the activation message.
-public procedure Activate<TMsg>(List: E.SelectionListView<TMsg>; Apply: procedure(TMsg));
+public procedure Activate of TMsg(List: E.SelectionListView of TMsg; Apply: procedure(TMsg));
 begin
   if List.Selected >= 0 then
     const Item: Lists.Item := List.Items[List.Selected];
     if Item.CanActivate then
-      Actions.Dispatch<TMsg>(List.OnActivate(Item.Key), Apply);
+      Actions.Dispatch of TMsg(List.OnActivate(Item.Key), Apply);
     end if;
   end if;
 end procedure;

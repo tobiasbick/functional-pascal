@@ -53,10 +53,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function SelectionBar<TMsg>(Id: string; Selected: Selection; Actions: array of Action; Changed: function(Event): TMsg; Child: E.Element<TMsg>; Settings: Options? := null): E.Element<TMsg>;
+public function SelectionBar of TMsg(Id: string; Selected: Selection; Actions: array of Action; Changed: function(Event): TMsg; Child: E.Element of TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.SelectionBar(
+  return (E.Element of TMsg).SelectionBar(
     Id,
     Selected,
     Actions,

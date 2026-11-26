@@ -17,14 +17,14 @@ uses System.Threading as T;
 // Reads matching source IDs/roots into `Index` and isolated `Previous` views.
 // `Sources` are normalized settings; `Cancellation` interrupts row traversal.
 // Returns a startup snapshot view for every configured source, explicitly unverified.
-public function Restore(Connection: Db.SqliteConnection; Sources: array of S.MusicSource; Index: Trees.Tree; Previous: C.Dictionary<string, M.SourceSnapshot>; Cancellation: T.CancellationToken): I.ImmutableArray<M.SourceSnapshot>;
+public function Restore(Connection: Db.SqliteConnection; Sources: array of S.MusicSource; Index: Trees.Tree; Previous: C.Dictionary of (string, M.SourceSnapshot); Cancellation: T.CancellationToken): I.ImmutableArray of M.SourceSnapshot;
 begin
-  const Result: C.List<M.SourceSnapshot> := new C.List<M.SourceSnapshot>();
+  const Result: C.List of M.SourceSnapshot := new C.List of M.SourceSnapshot();
   for Source: S.MusicSource in Sources do
     Cancellation.ThrowIfCancellationRequested();
-    const Files: C.List<string> := new C.List<string>();
-    const Issues: C.List<M.ScanIssue> := new C.List<M.ScanIssue>();
-    const Extensions: C.HashSet<string> := new C.HashSet<string>(
+    const Files: C.List of string := new C.List of string();
+    const Issues: C.List of M.ScanIssue := new C.List of M.ScanIssue();
+    const Extensions: C.HashSet of string := new C.HashSet of string(
       Source.Extensions,
       Sys.StringComparer.OrdinalIgnoreCase
     );
@@ -108,8 +108,8 @@ begin
           M.Availability.Cached
         end if
       end if,
-      I.ImmutableArray.CreateRange<string>(Files).Sort(S.PathComparer()),
-      I.ImmutableArray.CreateRange<M.ScanIssue>(Issues),
+      I.ImmutableArray.CreateRange of string(Files).Sort(S.PathComparer()),
+      I.ImmutableArray.CreateRange of M.ScanIssue(Issues),
       false
     );
     Result.Add(View);
@@ -118,7 +118,7 @@ begin
     end if;
   end for;
 
-  return I.ImmutableArray.CreateRange<M.SourceSnapshot>(Result);
+  return I.ImmutableArray.CreateRange of M.SourceSnapshot(Result);
 end function;
 
 end unit;

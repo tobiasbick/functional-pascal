@@ -38,9 +38,9 @@ public type SourceSnapshot = record
   // Availability; a failed scan retains previously discovered entries.
   public Status: Availability;
   // Selected absolute paths sorted by the platform path comparer for membership lookup.
-  public Files: I.ImmutableArray<string>;
+  public Files: I.ImmutableArray of string;
   // Unreadable directories within this source.
-  public Issues: I.ImmutableArray<ScanIssue>;
+  public Issues: I.ImmutableArray of ScanIssue;
   // Whether an active ancestor watcher covers this source.
   public Watching: bool;
 end record;
@@ -52,7 +52,7 @@ public type Snapshot = record
   // Configuration generation; results from replaced configurations are not published.
   public Generation: long;
   // One view per configured source in settings order.
-  public Sources: I.ImmutableArray<SourceSnapshot>;
+  public Sources: I.ImmutableArray of SourceSnapshot;
   // True for startup data loaded before the current session's filesystem checks.
   public Cached: bool := false;
 end record;

@@ -22,10 +22,10 @@ uses Fpas.Ui.Widgets.Developer.Terminal as T;
 // - `Body`: Resolves the body when the card is open.
 // ## Returns
 // A terminal card whose header keeps a stable identity.
-public function Lower<TMsg>(
+public function Lower of TMsg(
   Id: string; Title: string; Open: bool; Change: function(bool): TMsg; Settings: C.Options;
-  Colors: T.Style; Body: function(): E.Element<TMsg>
-): E.Element<TMsg>;
+  Colors: T.Style; Body: function(): E.Element of TMsg
+): E.Element of TMsg;
 begin
   const Chevron: string := if Open then
     '▾ '
@@ -37,8 +37,8 @@ begin
   else
     '  [' + G.SingleLine(Settings.Badge) + ']'
   end if;
-  const Header: E.Element<TMsg> := E.Element<TMsg>.Action(
-    Id, new A.Proposal<bool, TMsg>(Change, not Open), Settings.Enabled,
+  const Header: E.Element of TMsg := (E.Element of TMsg).Action(
+    Id, new A.Proposal of (bool, TMsg)(Change, not Open), Settings.Enabled,
     new E.ActionView(
       Chevron + G.SingleLine(Title) + Badge,
       Name := Title,
@@ -56,18 +56,18 @@ begin
       Description := Settings.Description
     )
   );
-  const Children: array of E.Element<TMsg> := if Open then
+  const Children: array of E.Element of TMsg := if Open then
     [
-      Header, E.Element<TMsg>.DisclosureBody(
-        Id, E.Element<TMsg>.Stack([Body()], false, new E.Flow(PaddingX := 1)),
+      Header, (E.Element of TMsg).DisclosureBody(
+        Id, (E.Element of TMsg).Stack([Body()], false, new E.Flow(PaddingX := 1)),
         Settings.Enabled
       )
     ]
   else
     [Header]
   end if;
-  return E.Element<TMsg>.Decorated(
-    E.Element<TMsg>.Stack(Children, false, new E.Flow(Gap := 1)),
+  return (E.Element of TMsg).Decorated(
+    (E.Element of TMsg).Stack(Children, false, new E.Flow(Gap := 1)),
     Colors
   );
 end function;

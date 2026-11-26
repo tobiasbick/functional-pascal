@@ -26,17 +26,17 @@ begin
   return Value.ToString(Culture.CultureInfo.InvariantCulture);
 end function;
 
-type Choice<TMsg> = record implements Actions.IActivatable<TMsg>
+type Choice of TMsg = record implements Actions.IActivatable of TMsg
   public Notify: function(int): TMsg;
   public Target: int;
   public Current: int;
 
-  public function Activate(): Actions.Result<TMsg>;
+  public function Activate(): Actions.Result of TMsg;
   begin
     return if self.Target = self.Current then
-      Actions.Result<TMsg>.NoAction
+      (Actions.Result of TMsg).NoAction
     else
-      Actions.Result<TMsg>.Send(self.Notify(self.Target))
+      (Actions.Result of TMsg).Send(self.Notify(self.Target))
     end if;
   end function;
 end record;
@@ -57,10 +57,10 @@ end record;
 // - `Navigation`: Keyboard destinations, including vertically clipped controls.
 // - `Stops`: Tab traversal order.
 // - `Register`: Registers a visible control.
-public procedure Arrange<TMsg>(
-  Pager: E.PagerView<TMsg>; Area: F.Rect; Clip: F.Rect; Style: Terminal.Style; Theme: Th.Theme;
-  Scope: string; Parent: string; ScrollId: string; Operations: C.List<D.Operation>;
-  Navigation: C.List<A.NavigationStop>; Stops: C.List<A.TabStop>; Register: procedure(A.Control<TMsg>)
+public procedure Arrange of TMsg(
+  Pager: E.PagerView of TMsg; Area: F.Rect; Clip: F.Rect; Style: Terminal.Style; Theme: Th.Theme;
+  Scope: string; Parent: string; ScrollId: string; Operations: C.List of D.Operation;
+  Navigation: C.List of A.NavigationStop; Stops: C.List of A.TabStop; Register: procedure(A.Control of TMsg)
 );
   procedure Text(Value: string);
   begin
@@ -93,10 +93,10 @@ public procedure Arrange<TMsg>(
       );
     end if;
 
-    A.RegisterRowAction<TMsg>(
-      new A.Control<TMsg>(
+    A.RegisterRowAction of TMsg(
+      new A.Control of TMsg(
         Id, Label, Role, Value, Bounds, Scope, Fallback, Enabled,
-        A.Binding<TMsg>.Invoke(new Choice<TMsg>(Pager.Change, Target, Pager.Page)),
+        (A.Binding of TMsg).Invoke(new Choice of TMsg(Pager.Change, Target, Pager.Page)),
         Variant, ButtonStyle := true
       ), Clip, ScrollId, Navigation, Stops, Register
     );
@@ -127,11 +127,11 @@ begin
   const Status: string := 'Page ' + IndexText + ' of ' + CountText;
   if Clip.Height > 0 then
     Register(
-      new A.Control<TMsg>(
+      new A.Control of TMsg(
         Pager.Id, 'Pagination', 'pagination', Number(Pager.Page), F.Intersect(
           new F.Rect(Area.X, Area.Y, Area.Width, 1), Clip
         ), Scope, Parent, false,
-        A.Binding<TMsg>.Invoke(new Choice<TMsg>(Pager.Change, Pager.Page, Pager.Page)),
+        (A.Binding of TMsg).Invoke(new Choice of TMsg(Pager.Change, Pager.Page, Pager.Page)),
         S.ButtonVariant.Default
       )
     );

@@ -26,10 +26,10 @@ begin
 end procedure;
 
 procedure Validate();
-  procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);
+  procedure Reject(Node: E.Element of int; Profile: V.Target; Reason: string);
   begin
     try
-      discard V.Prepare<int>(Node, Profile);
+      discard V.Prepare of int(Node, Profile);
     catch Error: Sys.ArgumentException do
       Check(Error.Message.Contains(Reason), Error.Message);
       return;
@@ -38,14 +38,18 @@ procedure Validate();
     raise new Sys.InvalidOperationException('Popover preflight accepted an invalid view.');
   end procedure;
 begin
-  const Trigger: E.Element<int> := B.Button<int>('trigger', 'Open', 1);
-  const Text: E.Element<int> := E.Text<int>('Panel');
-  Reject(P.Popover<int>('panel', Trigger, Text, false, 0), V.Target.Terminal, 'Graphical profile');
+  const Trigger: E.Element of int := B.Button of int('trigger', 'Open', 1);
+  const Text: E.Element of int := E.Text of int('Panel');
   Reject(
-    Q.ConfirmPopover<int>('panel', Trigger, false, new Q.Options('Continue?'), 1, 0),
+    P.Popover of int('panel', Trigger, Text, false, 0),
+    V.Target.Terminal,
+    'Graphical profile'
+  );
+  Reject(
+    Q.ConfirmPopover of int('panel', Trigger, false, new Q.Options('Continue?'), 1, 0),
     V.Target.Portable, 'Graphical profile'
   );
-  Reject(P.Popover<int>('panel', Text, Text, false, 0), V.Target.Graphical, 'button trigger');
+  Reject(P.Popover of int('panel', Text, Text, false, 0), V.Target.Graphical, 'button trigger');
 end procedure;
 
 // Verifies native popover placement, input and cancellation in the real gallery.
@@ -68,7 +72,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       Pending := 0;
     end if;
   end procedure;
-  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  function Update(Model: State.Model; Message: State.Msg): App.Transition of (State.Model, State.Msg);
   begin
     case Message of
       when State.Msg.Disclosure(SliceDisclosure.Msg.PreviewBranchDeletion):
@@ -79,16 +83,16 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
         else
           'branch-trigger'
         end if;
-        return new App.Transition<State.Model, State.Msg>(
+        return new App.Transition of (State.Model, State.Msg)(
           Model,
-          [App.Focus<State.Msg>(Target)]
+          [App.Focus of State.Msg(Target)]
         );
       else
     end case;
 
     return GalleryUpdate.Update(Model, Message);
   end function;
-  procedure Exercise(Session: Gui.Session<State.Msg>);
+  procedure Exercise(Session: Gui.Session of State.Msg);
     function Find(Id: string): Gui.Control?;
     begin
       for Item: Gui.Control in Session.Snapshot().Controls do
@@ -208,7 +212,7 @@ begin
   var Confirmations: int := 0;
   const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI popovers', 1000, 900, Renderer, true);
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Overlays),
     Update,
     View.Build,

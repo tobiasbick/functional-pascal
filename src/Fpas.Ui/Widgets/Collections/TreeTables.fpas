@@ -71,10 +71,10 @@ end record;
 //   proposes that node as the selection first when it lies outside the selection.
 // ## Returns
 // The graphical tree table.
-public function TreeTable<TMsg>(Id: string; Columns: array of G.Column; Nodes: array of Node; Cursor: int; Order: T.Sort?; OnChange: function(Change): TMsg; Settings: Options? := null; Menu: Sys.Func<int, array of M.Entry<TMsg>>? := null): E.Element<TMsg>;
+public function TreeTable of TMsg(Id: string; Columns: array of G.Column; Nodes: array of Node; Cursor: int; Order: T.Sort?; OnChange: function(Change): TMsg; Settings: Options? := null; Menu: Sys.Func of (int, array of M.Entry of TMsg)? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.TreeTable(
+  return (E.Element of TMsg).TreeTable(
     Id,
     Columns,
     Nodes,
@@ -98,10 +98,10 @@ end function;
 // - `Icon`: Optional CUI glyph.
 // ## Returns
 // The graphical tree cell.
-public function TreeCell<TMsg>(Id: string; Label: string; Depth: int; Open: bool? := null; OnChange: Sys.Func<bool, TMsg>? := null; Icon: string := ''): E.Element<TMsg>;
+public function TreeCell of TMsg(Id: string; Label: string; Depth: int; Open: bool? := null; OnChange: Sys.Func of (bool, TMsg)? := null; Icon: string := ''): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.TreeCell(Id, Label, Depth, Open, OnChange, Icon);
+  return (E.Element of TMsg).TreeCell(Id, Label, Depth, Open, OnChange, Icon);
 end function;
 
 end unit;

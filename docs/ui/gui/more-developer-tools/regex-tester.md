@@ -21,9 +21,9 @@ uses Fpas.Ui.Widgets.Developer.RegexTesters as W;
 // - `Modifiers`: Native flag mask.
 // ## Returns
 // The tester with edits, validity and match count as messages.
-public function View(Pattern: string; Sample: string; Modifiers: int): E.Element<W.Event>;
+public function View(Pattern: string; Sample: string; Modifiers: int): E.Element of W.Event;
 begin
-  return W.RegexTester<W.Event>('regex', Pattern, Sample, Modifiers,
+  return W.RegexTester of W.Event('regex', Pattern, Sample, Modifiers,
     function(Change: W.Event): W.Event => Change, new W.Options(Height := 110.0F));
 end function;
 

@@ -23,7 +23,7 @@ begin
   end if;
 end procedure;
 
-function Control(Session: Gui.Session<State.Msg>; Id: string): Gui.Control;
+function Control(Session: Gui.Session of State.Msg; Id: string): Gui.Control;
 begin
   for Item: Gui.Control in Session.Snapshot().Controls do
     if Item.Id = Id then
@@ -35,11 +35,11 @@ begin
 end function;
 
 procedure Validation();
-  procedure Reject(Node: E.Element<int>; Profile: V.Target);
+  procedure Reject(Node: E.Element of int; Profile: V.Target);
   begin
     var Rejected: bool := false;
     try
-      discard V.Prepare<int>(Node, Profile);
+      discard V.Prepare of int(Node, Profile);
     catch Error: Sys.ArgumentException do
       Rejected := true;
     end try;
@@ -47,21 +47,23 @@ procedure Validation();
     Check(Rejected, 'Invalid or non-graphical context menus must fail before presentation.');
   end procedure;
 begin
-  const Entries: array of M.Entry<int> := [M.Entry<int>.Action(new M.Item<int>('copy', 'Copy', 1))];
-  const Node: E.Element<int> := M.ContextMenu<int>(
+  const Entries: array of M.Entry of int := [
+    (M.Entry of int).Action(new M.Item of int('copy', 'Copy', 1))
+  ];
+  const Node: E.Element of int := M.ContextMenu of int(
     'context',
-    B.Button<int>('target', 'Target', 0),
+    B.Button of int('target', 'Target', 0),
     Entries
   );
-  discard V.Prepare<int>(Node, V.Target.Graphical);
+  discard V.Prepare of int(Node, V.Target.Graphical);
   Reject(Node, V.Target.Terminal);
   Reject(Node, V.Target.Portable);
   Reject(
-    M.ContextMenu<int>('context', B.Button<int>('context/copy', 'Collision', 0), Entries),
+    M.ContextMenu of int('context', B.Button of int('context/copy', 'Collision', 0), Entries),
     V.Target.Graphical
   );
   Reject(
-    M.ContextMenu<int>('context', E.Text<int>('Target'), [Entries[0], Entries[0]]),
+    M.ContextMenu of int('context', E.Text of int('Target'), [Entries[0], Entries[0]]),
     V.Target.Graphical
   );
 end procedure;
@@ -71,9 +73,9 @@ end procedure;
 // - `Renderer`: Native renderer to verify.
 // - `Capture`: Prefix for the context-menu gallery screenshot.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
-  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  function Update(Model: State.Model; Message: State.Msg): App.Transition of (State.Model, State.Msg);
   begin
-    const Next: App.Transition<State.Model, State.Msg> := GalleryUpdate.Update(Model, Message);
+    const Next: App.Transition of (State.Model, State.Msg) := GalleryUpdate.Update(Model, Message);
     Last := Next.Model.Shared.MenuResult;
     return Next;
   end function;
@@ -96,11 +98,11 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       Pending := 0;
     end if;
   end procedure;
-  procedure Step(Session: Gui.Session<State.Msg>);
+  procedure Step(Session: Gui.Session of State.Msg);
   begin
     Check(Session.Step(), 'The context menu frame closed.');
   end procedure;
-  procedure Open(Session: Gui.Session<State.Msg>; Area: Cui.CuiRectangle);
+  procedure Open(Session: Gui.Session of State.Msg; Area: Cui.CuiRectangle);
   begin
     X := Area.X + Area.Width / 2;
     Y := Area.Y + Area.Height / 2;
@@ -110,7 +112,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     Step(Session);
     Check(Control(Session, 'context').Value = 'true', 'Right click must open CUI at the pointer.');
   end procedure;
-  procedure Key(Session: Gui.Session<State.Msg>; Code: int);
+  procedure Key(Session: Gui.Session of State.Msg; Code: int);
   begin
     Pending := Code;
     Step(Session);
@@ -132,7 +134,7 @@ begin
     true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Overlays),
     Update, View.Build, Window, 256, Inject, ThemeFor := GalleryUpdate.ThemeFor
   );

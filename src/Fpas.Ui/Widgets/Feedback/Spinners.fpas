@@ -60,11 +60,11 @@ end record;
 // - `Settings`: Optional activity style and colors.
 // ## Returns
 // A spinner drawn and animated by its host.
-public function Spinner<TMsg>(Id: string; Size: float := 0.0F; Settings: Options? := null): E.Element<TMsg>;
+public function Spinner of TMsg(Id: string; Size: float := 0.0F; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 requires Size >= 0.0F;
 begin
-  return E.Element<TMsg>.Spinner(Id, Size, Settings);
+  return (E.Element of TMsg).Spinner(Id, Size, Settings);
 end function;
 
 end unit;

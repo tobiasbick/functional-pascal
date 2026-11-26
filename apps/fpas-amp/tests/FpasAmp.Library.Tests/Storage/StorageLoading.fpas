@@ -34,15 +34,15 @@ public type StorageLoadingTests = record
     const Track: string := IO.Path.Combine(Sources[0].Path, 'track.flac');
     D.Configure(Connection, Sources);
     D.Save(Connection, Sources, D.Observation(Sources[0].Path, [Track], []));
-    const Previous: C.Dictionary<string, M.SourceSnapshot> := new C.Dictionary<string, M.SourceSnapshot>();
-    const Views: I.ImmutableArray<M.SourceSnapshot> := Loading.Restore(
+    const Previous: C.Dictionary of (string, M.SourceSnapshot) := new C.Dictionary of (string, M.SourceSnapshot)();
+    const Views: I.ImmutableArray of M.SourceSnapshot := Loading.Restore(
       Connection,
       Sources,
       Trees.Tree.Create(),
       Previous,
       T.CancellationToken.None
     );
-    X.Assert.Equal<M.Availability>(M.Availability.Cached, Views[0].Status);
+    X.Assert.Equal of M.Availability(M.Availability.Cached, Views[0].Status);
     X.Assert.True(H.Has(Views[0], Track));
     const Changed: array of S.MusicSource := S.Normalize(
       [
@@ -51,16 +51,16 @@ public type StorageLoadingTests = record
         end with
       ]
     );
-    const Other: I.ImmutableArray<M.SourceSnapshot> := Loading.Restore(
+    const Other: I.ImmutableArray of M.SourceSnapshot := Loading.Restore(
       Connection,
       Changed,
       Trees.Tree.Create(),
-      new C.Dictionary<string, M.SourceSnapshot>(),
+      new C.Dictionary of (string, M.SourceSnapshot)(),
       T.CancellationToken.None
     );
-    X.Assert.Equal<int>(0, Other[0].Files.Length);
+    X.Assert.Equal of int(0, Other[0].Files.Length);
     D.Configure(Connection, Changed);
-    X.Assert.Equal<long>(0L, D.Number(Connection, 'SELECT count(*) FROM files;'));
+    X.Assert.Equal of long(0L, D.Number(Connection, 'SELECT count(*) FROM files;'));
   end procedure;
 
   // Excluding formats updates only that source and preserves another source's shared file.
@@ -84,9 +84,9 @@ public type StorageLoadingTests = record
         end with, Sources[1]
       ]
     );
-    X.Assert.Equal<long>(1L, D.Number(Connection, 'SELECT count(*) FROM source_files;'));
-    X.Assert.Equal<long>(Id, D.FileId(Connection, Track));
-    X.Assert.Equal<long>(
+    X.Assert.Equal of long(1L, D.Number(Connection, 'SELECT count(*) FROM source_files;'));
+    X.Assert.Equal of long(Id, D.FileId(Connection, Track));
+    X.Assert.Equal of long(
       0L,
       D.Number(Connection, 'SELECT count(*) FROM directories WHERE source_id=''first'';')
     );
@@ -97,7 +97,7 @@ public type StorageLoadingTests = record
         end with
       ]
     );
-    X.Assert.Equal<long>(0L, D.Number(Connection, 'SELECT count(*) FROM files;'));
+    X.Assert.Equal of long(0L, D.Number(Connection, 'SELECT count(*) FROM files;'));
   end procedure;
 
   // A configuration superseded during synchronization cannot remove the stored index.
@@ -122,8 +122,8 @@ public type StorageLoadingTests = record
         end function, T.CancellationToken.None
       )
     );
-    X.Assert.Equal<long>(1L, D.Number(Connection, 'SELECT count(*) FROM files;'));
-    X.Assert.Equal<long>(1L, D.Number(Connection, 'SELECT count(*) FROM sources;'));
+    X.Assert.Equal of long(1L, D.Number(Connection, 'SELECT count(*) FROM files;'));
+    X.Assert.Equal of long(1L, D.Number(Connection, 'SELECT count(*) FROM sources;'));
   end procedure;
 
   // Unknown schema versions are rejected without removing existing tables or rows.
@@ -146,8 +146,8 @@ public type StorageLoadingTests = record
     end try;
 
     X.Assert.True(Failed);
-    X.Assert.Equal<long>(99L, D.Number(Connection, 'PRAGMA user_version;'));
-    X.Assert.Equal<long>(1L, D.Number(Connection, 'SELECT count(*) FROM sentinel;'));
+    X.Assert.Equal of long(99L, D.Number(Connection, 'PRAGMA user_version;'));
+    X.Assert.Equal of long(1L, D.Number(Connection, 'SELECT count(*) FROM sentinel;'));
   end procedure;
 end record;
 

@@ -14,20 +14,20 @@ uses Gallery.Shared.Strings as Strings;
 // - `TMsg`: Gallery message type.
 // ## Returns
 // Neutral, success, warning, and danger alerts.
-public function View<TMsg>(): E.Element<TMsg>;
+public function View of TMsg(): E.Element of TMsg;
 begin
-  return E.Column<TMsg>(
+  return E.Column of TMsg(
     new L.Flow(Gap := L.Spacing.Tight),
-    E.Styled<TMsg>(E.Text<TMsg>(Strings.Get('Heading.Alerts')), S.Role.Heading),
-    A.Alert<TMsg>(
+    E.Styled of TMsg(E.Text of TMsg(Strings.Get('Heading.Alerts')), S.Role.Heading),
+    A.Alert of TMsg(
       'update', 'A new version is available',
       new A.Options(Description := 'Restart to update to 1.1.')
     ),
-    A.Alert<TMsg>(
+    A.Alert of TMsg(
       'payment', 'Payment received',
       new A.Options(Description := 'Your invoice was paid on November 5.', Tone := S.Tone.Success)
     ),
-    A.Alert<TMsg>(
+    A.Alert of TMsg(
       'storage', 'Storage almost full',
       new A.Options(
         Description := 'You have used 92% of your plan.',
@@ -35,7 +35,7 @@ begin
         Dismissible := true
       )
     ),
-    A.Alert<TMsg>(
+    A.Alert of TMsg(
       'build', 'Build failed',
       new A.Options(
         Description := 'Missing symbol cui_frame in main.c line 42.',

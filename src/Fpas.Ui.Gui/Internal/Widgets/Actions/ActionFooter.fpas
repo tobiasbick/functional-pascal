@@ -14,13 +14,13 @@ uses Fpas.Ui.Layout as L;
 // - `Frame`: Drawing context.
 // - `Children`: Footer actions in display order.
 // - `Visit`: Host traversal for each action.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Children: array of E.Element<TMsg>;
-  Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment)
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Children: array of E.Element of TMsg;
+  Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
 );
 begin
   Frame.Window.BeginActionFooter();
-  for Child: E.Element<TMsg> in Children do
+  for Child: E.Element of TMsg in Children do
     Visit(Child, Frame, true, L.Alignment.Default);
   end for;
 

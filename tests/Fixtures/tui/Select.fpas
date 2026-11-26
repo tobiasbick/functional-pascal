@@ -35,13 +35,13 @@ begin
   end if;
 end procedure;
 
-function Update(Model: int; Proposed: int): M.Transition<int, int>;
+function Update(Model: int; Proposed: int): M.Transition of (int, int);
 begin
   Check(
     Proposed >= 0 and Proposed <> Model,
     'Background, disabled or redundant change dispatched.'
   );
-  return new M.Transition<int, int>(
+  return new M.Transition of (int, int)(
     if Proposed = 4 then
       Model
     else
@@ -50,15 +50,15 @@ begin
   );
 end function;
 
-function Form(Model: int): E.Element<int>;
+function Form(Model: int): E.Element of int;
 begin
-  return E.Column<int>(
-    B.Button<int>('back', 'Background', -1),
-    S.Select<int>(
+  return E.Column of int(
+    B.Button of int('back', 'Background', -1),
+    S.Select of int(
       'picker', Items, Model, function(Index: int): int => Index,
       new S.Options(Label := 'Language', Placeholder := 'Choose', Searchable := true)
     ),
-    S.Select<int>(
+    S.Select of int(
       'disabled',
       Items,
       -1,
@@ -68,21 +68,21 @@ begin
   );
 end function;
 
-function Dialog(Model: int): E.Element<int>;
+function Dialog(Model: int): E.Element of int;
 begin
-  return Dialogs.Dialog<int>(
-    'modal', B.Button<int>('outside', 'Outside', -1),
-    S.Select<int>('plain', Items, Model, function(Index: int): int => Index), true,
+  return Dialogs.Dialog of int(
+    'modal', B.Button of int('outside', 'Outside', -1),
+    S.Select of int('plain', Items, Model, function(Index: int): int => Index), true,
     new Dialogs.Options('Settings', InitialFocus := 'plain'), -1
   );
 end function;
 
-function Compact(Model: int; Size: L.Viewport): E.Element<int>;
+function Compact(Model: int; Size: L.Viewport): E.Element of int;
 begin
   return if Size.Width = L.SizeClass.Compact then
-    B.Button<int>('back', 'Background', -1)
+    B.Button of int('back', 'Background', -1)
   else
-    S.Select<int>(
+    S.Select of int(
       'picker', Items, Model, function(Index: int): int => Index,
       new S.Options(Searchable := Size.Width = L.SizeClass.Regular)
     )
@@ -132,7 +132,7 @@ begin
 end procedure;
 
 begin
-  using const Session: T.HeadlessSession := Headless.Start<int, int>(-1, Update, Form, 32, 16);
+  using const Session: T.HeadlessSession := Headless.Start of (int, int)(-1, Update, Form, 32, 16);
   Check(
     Row(Session, 'picker').Value = 'Choose' and Row(Session, 'disabled').Value = 'Select',
     'Custom and default placeholders.'
@@ -210,7 +210,7 @@ begin
   Key(Session, K.Key.End);
   Check(Row(Session, 'picker/option/9').Focused, 'Offscreen items remain reachable after resize.');
 
-  using const Responsive: T.HeadlessSession := Headless.Start<int, int>(
+  using const Responsive: T.HeadlessSession := Headless.Start of (int, int)(
     -1,
     Update,
     Compact,
@@ -236,7 +236,7 @@ begin
     Find(Responsive, 'picker/option/0') = null,
     'A removed popup stays closed when its trigger returns.'
   );
-  using const Modal: T.HeadlessSession := Headless.Start<int, int>(1, Update, Dialog, 55, 16);
+  using const Modal: T.HeadlessSession := Headless.Start of (int, int)(1, Update, Dialog, 55, 16);
   Key(Modal, K.Key.Enter);
   Check(
     Row(Modal, 'plain/option/1').Focused and not Row(Modal, 'modal/close').Enabled,

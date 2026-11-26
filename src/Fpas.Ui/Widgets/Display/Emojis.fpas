@@ -12,9 +12,9 @@ uses Fpas.Ui.Elements as E;
 // - `Size`: Logical emoji size. Zero uses the default.
 // ## Returns
 // A graphical element.
-public function Emoji<TMsg>(Glyph: string; Size: float := 0.0F): E.Element<TMsg>;
+public function Emoji of TMsg(Glyph: string; Size: float := 0.0F): E.Element of TMsg;
 begin
-  return E.Element<TMsg>.Emoji(Glyph, Size);
+  return (E.Element of TMsg).Emoji(Glyph, Size);
 end function;
 
 end unit;

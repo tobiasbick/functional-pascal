@@ -31,36 +31,35 @@ internal sealed class UsageNames
             return type.IsNullable ? "(" + array + ")?" : array;
         }
         if (type.Definition is not { } definition) return type.ToString();
-        return Named(definition, type.TypeArguments) + (type.IsNullable ? "?" : "");
+        return Named(definition, type.Arguments ?? TypeList.Empty, groupBeforeSuffix: type.IsNullable) + (type.IsNullable ? "?" : "");
     }
 
-    internal string Named(ImportedType definition, IReadOnlyList<TypeSymbol> arguments)
-        => Named(definition, arguments, Type, Alias);
+    internal string Named(ImportedType definition, IReadOnlyList<TypeSymbol> arguments, bool groupBeforeSuffix = false)
+        => Named(definition, arguments, Type, Alias, groupBeforeSuffix);
 
     internal static string Named(ImportedType definition, IReadOnlyList<TypeSymbol> arguments, Func<TypeSymbol, string> spellType,
-        Func<string, string> qualify)
+        Func<string, string> qualify, bool groupBeforeSuffix = false)
     {
         var segments = new Stack<ImportedType>();
         for (var type = definition; type is not null; type = type.DeclaringType) segments.Push(type);
         var ns = segments.Peek().Namespace;
-        var names = new List<string>();
-        if (ns.Length > 0) names.Add(qualify(ns));
+        var spelling = ns.Length > 0 ? qualify(ns) : "";
         var index = 0;
         foreach (var type in segments)
         {
             var parts = type.Name.Split('`');
             var name = FpasIdentifiers.SpellQualified(parts[0]);
-            if (ns.Length == 0 && names.Count == 0) name = qualify(parts[0]);
+            spelling = spelling.Length == 0 ? qualify(parts[0]) : spelling + "." + name;
             if (parts.Length > 1)
             {
                 if (!int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out var count) || count > arguments.Count - index)
                     throw new ArgumentException("Missing concrete type arguments for " + type.FullName + ".");
-                name += "<" + string.Join(", ", arguments.Skip(index).Take(count).Select(spellType)) + ">";
+                spelling = FpasIdentifiers.ApplyTypeArguments(spelling, arguments.Skip(index).Take(count).Select(spellType).ToArray(),
+                    groupBeforeSuffix || type != definition);
                 index += count;
             }
-            names.Add(name);
         }
-        return string.Join('.', names);
+        return spelling;
     }
 
     private string Alias(string path)

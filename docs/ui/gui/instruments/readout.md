@@ -20,10 +20,10 @@ uses Fpas.Ui.Widgets.Display.Readouts as W;
 // - `AboveLimit`: Whether the estimate exceeds the threshold.
 // ## Returns
 // The readout for the application view.
-public function View(Milligrams: string; AboveLimit: bool): E.Element<string>;
+public function View(Milligrams: string; AboveLimit: bool): E.Element of string;
 begin
   const Detail: string := if AboveLimit then 'OVER THE 50 MG LINE' else 'UNDER THE 50 MG LINE' end if;
-  return W.Readout<string>('at-bed', 'AT BED', Milligrams,
+  return W.Readout of string('at-bed', 'AT BED', Milligrams,
     new W.Options(Unit := 'MG', Detail := Detail, Size := W.Size.Large, Accent := AboveLimit));
 end function;
 

@@ -27,9 +27,9 @@ end function;
 // - `Change`: Maps an updated selection to a gallery message.
 // ## Returns
 // The shared multi-select example.
-public function View<TMsg>(Selected: array of bool; Change: function(array of bool): TMsg): E.Element<TMsg>;
+public function View of TMsg(Selected: array of bool; Change: function(array of bool): TMsg): E.Element of TMsg;
 begin
-  return M.MultiSelect<TMsg>(
+  return M.MultiSelect of TMsg(
     'picker-languages',
     Choices,
     Selected,

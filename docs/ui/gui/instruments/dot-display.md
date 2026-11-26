@@ -18,10 +18,10 @@ uses Fpas.Ui.Widgets.Display.DotDisplays as W;
 // - `AboveLimit`: Whether the estimate exceeds the threshold.
 // ## Returns
 // The display for the application view.
-public function View(AboveLimit: bool): E.Element<string>;
+public function View(AboveLimit: bool): E.Element of string;
 begin
   const Status: string := if AboveLimit then 'OVER' else 'UNDER' end if;
-  return W.DotDisplay<string>('bed-display', Status + ' THE LINE AT BEDTIME',
+  return W.DotDisplay of string('bed-display', Status + ' THE LINE AT BEDTIME',
     new W.Options(Pitch := 3.0F, Accent := AboveLimit));
 end function;
 

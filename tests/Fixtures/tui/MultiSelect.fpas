@@ -29,20 +29,20 @@ begin
   end if;
 end procedure;
 
-function Update(State: array of bool; Proposed: array of bool): M.Transition<array of bool, array of bool>;
+function Update(State: array of bool; Proposed: array of bool): M.Transition of (array of bool, array of bool);
 begin
   Check(
     Proposed.Length = Items.Length and not Sys.Object.ReferenceEquals(State, Proposed),
     'The widget must propose fresh flags in original order.'
   );
-  return new M.Transition<array of bool, array of bool>(Proposed, []);
+  return new M.Transition of (array of bool, array of bool)(Proposed, []);
 end function;
 
 function Picker(
   Id: string; State: array of bool; Enabled: bool := true; Limit: int := 0
-): E.Element<array of bool>;
+): E.Element of array of bool;
 begin
-  return Multi.MultiSelect<array of bool>(
+  return Multi.MultiSelect of array of bool(
     Id, Items, State, function(Value: array of bool): array of bool => Value,
     new Multi.Options(
       Label := 'Languages', Placeholder := 'Choose languages',
@@ -51,32 +51,32 @@ begin
   );
 end function;
 
-function View(State: array of bool): E.Element<array of bool>;
+function View(State: array of bool): E.Element of array of bool;
 begin
-  return E.Column<array of bool>(
-    B.Button<array of bool>('before', 'Before', []), Picker('picker', State),
-    B.Button<array of bool>('after', 'After', []), Picker('disabled', State, false)
+  return E.Column of array of bool(
+    B.Button of array of bool('before', 'Before', []), Picker('picker', State),
+    B.Button of array of bool('after', 'After', []), Picker('disabled', State, false)
   );
 end function;
 
-function Narrow(State: array of bool): E.Element<array of bool>;
+function Narrow(State: array of bool): E.Element of array of bool;
 begin
-  return E.Row<array of bool>(
-    E.Size<array of bool>(
+  return E.Row of array of bool(
+    E.Size of array of bool(
       Picker('picker', State),
       new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(11)))
     )
   );
 end function;
 
-function Limited(State: array of bool): E.Element<array of bool>;
+function Limited(State: array of bool): E.Element of array of bool;
 begin
   return Picker('picker', State, Limit := 1);
 end function;
 
 function Find(Session: T.HeadlessSession; Id: string): T.ControlSnapshot?;
 begin
-  return Sys.Array.Find<T.ControlSnapshot>(
+  return Sys.Array.Find of T.ControlSnapshot(
     Session.Snapshot().Controls, function(Item: T.ControlSnapshot): bool => Item.Id = Id
   );
 end function;
@@ -117,10 +117,10 @@ begin
   return Sys.String.Join(#10, Session.Snapshot().Lines).Contains(Caption);
 end function;
 
-procedure Reject(Node: E.Element<array of bool>; Diagnostic: string);
+procedure Reject(Node: E.Element of array of bool; Diagnostic: string);
 begin
   try
-    discard V.Prepare<array of bool>(Node, V.Target.Terminal);
+    discard V.Prepare of array of bool(Node, V.Target.Terminal);
   catch Error: Sys.ArgumentException do
     Check(Error.Message.Contains(Diagnostic), Error.Message);
     return;
@@ -130,14 +130,14 @@ begin
 end procedure;
 
 begin
-  discard V.Prepare<array of bool>(Picker('picker', Initial), V.Target.Portable);
+  discard V.Prepare of array of bool(Picker('picker', Initial), V.Target.Portable);
   Reject(Picker('picker', []), 'matching flags');
   Reject(
-    E.Column<array of bool>(
-      Picker('picker', Initial), B.Button<array of bool>('picker/bulk', 'Duplicate', [])
+    E.Column of array of bool(
+      Picker('picker', Initial), B.Button of array of bool('picker/bulk', 'Duplicate', [])
     ), 'Duplicate ID'
   );
-  using const Session: T.HeadlessSession := Headless.Start<array of bool, array of bool>(
+  using const Session: T.HeadlessSession := Headless.Start of (array of bool, array of bool)(
     Initial,
     Update,
     View,
@@ -227,7 +227,7 @@ begin
   Key(Session, K.Key.Escape);
   Check(not Initial[1] and Initial[2] and Initial[5], 'A proposal mutated the input flags.');
 
-  using const Small: T.HeadlessSession := Headless.Start<array of bool, array of bool>(
+  using const Small: T.HeadlessSession := Headless.Start of (array of bool, array of bool)(
     Initial,
     Update,
     Narrow,
@@ -235,7 +235,7 @@ begin
     8
   );
   Check(Shows(Small, 'C +2'), 'A narrow field did not fit the count to its allocated width.');
-  using const Cap: T.HeadlessSession := Headless.Start<array of bool, array of bool>(
+  using const Cap: T.HeadlessSession := Headless.Start of (array of bool, array of bool)(
     Initial,
     Update,
     Limited,

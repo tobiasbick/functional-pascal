@@ -18,11 +18,11 @@ uses Fpas.Ui.Widgets.Collections.VirtualLists as W;
 // - `Count`: Number of available rows.
 // ## Returns
 // The widget for the application view.
-public function View(Count: int): E.Element<string>;
+public function View(Count: int): E.Element of string;
 begin
-  return W.VirtualList<string>('invoices', Count, 36.0F,
+  return W.VirtualList of string('invoices', Count, 36.0F,
     L.Extent.Fixed(L.Measure.Logical(220)),
-    function(Index: int): E.Element<string> => E.Text<string>('Invoice ' + (Index + 1).ToString()));
+    function(Index: int): E.Element of string => E.Text of string('Invoice ' + (Index + 1).ToString()));
 end function;
 
 end unit;

@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Media.Carousels as W;
 // - `Selected`: Current zero-based index.
 // ## Returns
 // The carousel with a proposed slide index.
-public function View(Slides: array of E.Element<int>; Selected: int): E.Element<int>;
+public function View(Slides: array of E.Element of int; Selected: int): E.Element of int;
 begin
-  return W.Carousel<int>('release-tour', Slides, Selected,
+  return W.Carousel of int('release-tour', Slides, Selected,
     function(Index: int): int => Index, new W.Options(Height := 200.0F, AutoAdvance := 6.0F));
 end function;
 

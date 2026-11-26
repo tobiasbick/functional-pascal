@@ -16,7 +16,7 @@ uses Fpas.Ui.Widgets.Canvas.PresencePills as D;
 // - `Id`: Stable widget identity.
 // - `People`: Current collaborators.
 // - `Settings`: Native widget settings.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; People: array of Live.Person; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; People: array of Live.Person; Settings: D.Options);
 begin
   const Role: string := 'presence-pill';
   Frame.Window.PresencePill(
@@ -25,7 +25,7 @@ begin
     Settings.Size,
     Settings.MaxVisible
   );
-  P.Root<TMsg>(Frame, Id, Role, '', false, People.Length.ToString());
+  P.Root of TMsg(Frame, Id, Role, '', false, People.Length.ToString());
 end procedure;
 
 end unit;

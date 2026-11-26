@@ -36,16 +36,16 @@ end variant;
 // - `Preferences`: Model-owned recent emoji and skin tone.
 // ## Returns
 // A row containing the field and anchored palette.
-public function View(Text: string; Open: bool; Preferences: W.State): E.Element<Msg>;
+public function View(Text: string; Open: bool; Preferences: W.State): E.Element of Msg;
 begin
-  const Trigger: E.Element<Msg> := B.IconButton<Msg>(
+  const Trigger: E.Element of Msg := B.IconButton of Msg(
     'emoji-trigger', Sys.Char.ConvertFromUtf32($E164), 'Emoji', Msg.SetOpen(not Open));
-  const Picker: E.Element<Msg> := W.EmojiPicker<Msg>(
+  const Picker: E.Element of Msg := W.EmojiPicker of Msg(
     'message-emoji', Preferences, Msg.ChangeEmoji, new W.Options(Height := 260.0F));
-  return E.Row<Msg>(
+  return E.Row of Msg(
     new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8)), Align := L.Alignment.Center),
-    F.TextField<Msg>('message', Text, Msg.Edit),
-    P.Popover<Msg>('emoji-popup', Trigger, Picker, Open, Msg.SetOpen(false),
+    F.TextField of Msg('message', Text, Msg.Edit),
+    P.Popover of Msg('emoji-popup', Trigger, Picker, Open, Msg.SetOpen(false),
       new P.Options(Position := M.Placement.BottomEnd, Width := 340))
   );
 end function;

@@ -55,7 +55,7 @@ public sealed partial class DapDebuggerTests
             uses System.Threading.ManualResetEventSlim as Event; uses System.Threading.Thread as Thread; uses System.Threading.Tasks as Tasks; uses System.Console as Console;
             begin
               const Ready: Event := new Event(false);
-              const Worker: Tasks.Task<int> := Tasks.Task.Run<int>(function(): int
+              const Worker: Tasks.Task of int := Tasks.Task.Run of int(function(): int
               begin Ready.Set(); Thread.Sleep(60000); return 0; end function);
               Ready.Wait();
               Console.WriteLine('observe');

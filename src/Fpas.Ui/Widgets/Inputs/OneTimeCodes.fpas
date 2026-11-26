@@ -28,13 +28,13 @@ end record;
 // - `OnComplete`: Maps a newly entered complete code to a message after its change.
 // ## Returns
 // A graphical code input.
-public function OneTimeCodeInput<TMsg>(
+public function OneTimeCodeInput of TMsg(
   Id: string; Value: string; OnChange: function(string): TMsg;
-  Settings: Options? := null; OnComplete: Sys.Func<string, TMsg>? := null
-): E.Element<TMsg>;
+  Settings: Options? := null; OnComplete: Sys.Func of (string, TMsg)? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.OneTimeCodeInput(
+  return (E.Element of TMsg).OneTimeCodeInput(
     Id,
     Value,
     OnChange,

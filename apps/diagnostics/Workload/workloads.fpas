@@ -36,7 +36,7 @@ end function;
 [Compiler.MethodImplAttribute(Compiler.MethodImplOptions.NoInlining)]
 public function AllocationBatch(): long;
 begin
-  const Retained: Collections.Queue<array of byte> := new Collections.Queue<array of byte>();
+  const Retained: Collections.Queue of array of byte := new Collections.Queue of array of byte();
   var Result: long := 0;
   for Index: int := 0 to 511 do
     const Buffer: array of byte := new byte[8192];

@@ -19,13 +19,13 @@ uses Fpas.Ui.Widgets.Containers.CardStacks as CardStacks;
 // - `Changed`: Maps a native change to a message.
 // - `Settings`: Native widget options.
 // - `Visit`: Presents composed children.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Cards: array of E.Element<TMsg>; Changed: function(CardStacks.Direction): TMsg; Settings: CardStacks.Options; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Cards: array of E.Element of TMsg; Changed: function(CardStacks.Direction): TMsg; Settings: CardStacks.Options; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
 begin
   const Role: string := 'card-stack';
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled and Cards.Length > 0;
-  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id + '/top', C.Token(Role, Id + '/top'), Enabled)
-    or C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
+  const Focus: bool := C.WantsFocus of TMsg(Frame, Id + '/top', C.Token(Role, Id + '/top'), Enabled)
+    or C.WantsFocus of TMsg(Frame, Id, Token, Enabled);
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   Frame.Window.BeginCardStack(
     Token,
@@ -56,9 +56,9 @@ begin
       C.Token(Role, Id + '/top')
     end if
   );
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, '');
   if Cards.Length > 0 then
-    P.Part<TMsg>(Frame, Id, Role, 'top', '', Enabled, '');
+    P.Part of TMsg(Frame, Id, Role, 'top', '', Enabled, '');
   end if;
 
   if Enabled and Next <> 0 then

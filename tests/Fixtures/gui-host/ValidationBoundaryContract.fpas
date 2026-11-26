@@ -23,10 +23,10 @@ uses Fpas.Ui.Widgets.Planning.Gantts as Gantts;
 
 uses System as Sys;
 
-procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);
+procedure Reject(Node: E.Element of int; Profile: V.Target; Reason: string);
 begin
   try
-    discard V.Prepare<int>(Node, Profile);
+    discard V.Prepare of int(Node, Profile);
   catch Error: Sys.ArgumentException do
     if not Error.Message.Contains(Reason) then
       raise new Sys.InvalidOperationException('Unexpected preflight failure: ' + Error.Message);
@@ -43,17 +43,17 @@ begin
   for Role: S.Role in [
     S.Role.DisplayBody, S.Role.CompactLabel, S.Role.SuccessGlyph, S.Role.CompactMutedIcon
   ] do
-    const Node: E.Element<int> := E.Styled<int>(E.Text<int>('caption'), Role);
-    discard V.Prepare<int>(Node, V.Target.Graphical);
+    const Node: E.Element of int := E.Styled of int(E.Text of int('caption'), Role);
+    discard V.Prepare of int(Node, V.Target.Graphical);
     for Profile: V.Target in [V.Target.Portable, V.Target.Terminal] do
       Reject(Node, Profile, 'Graphical');
     end for;
   end for;
 end procedure;
 
-function Timeline(Origin: Sys.DateOnly; Days: int): E.Element<int>;
+function Timeline(Origin: Sys.DateOnly; Days: int): E.Element of int;
 begin
-  return Gantts.Gantt<int>(
+  return Gantts.Gantt of int(
     'boundary-timeline', new Gantts.Value(Origin, Days, []),
     function(Change: Gantts.Event): int => Change.Activated
   );
@@ -61,16 +61,16 @@ end function;
 
 procedure FinalTimelineDay();
 begin
-  discard V.Prepare<int>(Timeline(new Sys.DateOnly(9999, 12, 31), 1), V.Target.Graphical);
-  discard V.Prepare<int>(Timeline(new Sys.DateOnly(9999, 12, 30), 2), V.Target.Graphical);
+  discard V.Prepare of int(Timeline(new Sys.DateOnly(9999, 12, 31), 1), V.Target.Graphical);
+  discard V.Prepare of int(Timeline(new Sys.DateOnly(9999, 12, 30), 2), V.Target.Graphical);
   Reject(Timeline(new Sys.DateOnly(9999, 12, 31), 2), V.Target.Graphical, 'day range');
 end procedure;
 
 procedure ChartData();
 begin
   const Nodes: array of Sk.Node := [new Sk.Node('source'), new Sk.Node('sink')];
-  discard V.Prepare<int>(
-    Sk.Sankey<int>('flow', Nodes, [new Sk.Link(0, 1, 0.0F)]),
+  discard V.Prepare of int(
+    Sk.Sankey of int('flow', Nodes, [new Sk.Link(0, 1, 0.0F)]),
     V.Target.Graphical
   );
   for Edge: Sk.Link in [
@@ -78,29 +78,29 @@ begin
     new Sk.Link(0, 2, 1.0F),
     new Sk.Link(1, 1, 1.0F)
   ] do
-    Reject(Sk.Sankey<int>('flow', Nodes, [Edge]), V.Target.Graphical, 'different valid');
+    Reject(Sk.Sankey of int('flow', Nodes, [Edge]), V.Target.Graphical, 'different valid');
   end for;
   const Axes: array of string := ['x', 'y', 'z'];
   Reject(
-    E.Element<int>.RadarChart('radar', [], ['x', 'y'], new Radar.Options(), null),
+    (E.Element of int).RadarChart('radar', [], ['x', 'y'], new Radar.Options(), null),
     V.Target.Graphical, 'at least three axes'
   );
   const Valid: Charts.Series := new Charts.Series('first', [0.0F, 1.0F, 2.0F]);
-  discard V.Prepare<int>(Radar.RadarChart<int>('radar', [Valid], Axes), V.Target.Graphical);
+  discard V.Prepare of int(Radar.RadarChart of int('radar', [Valid], Axes), V.Target.Graphical);
   Reject(
-    Radar.RadarChart<int>('radar', [Valid, new Charts.Series('short', [1.0F, 2.0F])], Axes),
+    Radar.RadarChart of int('radar', [Valid, new Charts.Series('short', [1.0F, 2.0F])], Axes),
     V.Target.Graphical, 'axis count'
   );
   Reject(
-    Radar.RadarChart<int>('radar', [new Charts.Series('invalid', [0.0F, float.NaN, 1.0F])], Axes),
+    Radar.RadarChart of int('radar', [new Charts.Series('invalid', [0.0F, float.NaN, 1.0F])], Axes),
     V.Target.Graphical, 'finite visualization sample'
   );
 end procedure;
 
-procedure Chart(Node: E.Element<int>; Error: string := '');
+procedure Chart(Node: E.Element of int; Error: string := '');
 begin
   if Error = '' then
-    discard V.Prepare<int>(Node, V.Target.Graphical);
+    discard V.Prepare of int(Node, V.Target.Graphical);
   else
     Reject(Node, V.Target.Graphical, Error);
   end if;
@@ -109,22 +109,22 @@ end procedure;
 procedure RankedAndScaledCharts();
 begin
   const Item: Charts.Item := new Charts.Item('A', 1.0F);
-  Chart(Bars.BarList<int>('bars', [Item]));
-  Chart(Bars.BarList<int>('bars', [Item, Item]), 'unique');
-  Chart(Bars.BarList<int>('bars', [], new Bars.Options(MaximumRows := -1)), 'row limit');
-  Chart(Rings.ActivityRings<int>('rings', [Item, Item, Item, Item, Item, Item, Item, Item]));
+  Chart(Bars.BarList of int('bars', [Item]));
+  Chart(Bars.BarList of int('bars', [Item, Item]), 'unique');
+  Chart(Bars.BarList of int('bars', [], new Bars.Options(MaximumRows := -1)), 'row limit');
+  Chart(Rings.ActivityRings of int('rings', [Item, Item, Item, Item, Item, Item, Item, Item]));
   Chart(
-    Rings.ActivityRings<int>('rings', [Item, Item, Item, Item, Item, Item, Item, Item, Item]),
+    Rings.ActivityRings of int('rings', [Item, Item, Item, Item, Item, Item, Item, Item, Item]),
     'eight'
   );
   const Point: Scatter.Point := new Scatter.Point(-2.0F, 3.0F);
-  Chart(Scatter.ScatterChart<int>('scatter', [new Scatter.Series('a', [Point], [0.0F])]));
+  Chart(Scatter.ScatterChart of int('scatter', [new Scatter.Series('a', [Point], [0.0F])]));
   Chart(
-    Scatter.ScatterChart<int>('scatter', [new Scatter.Series('a', [Point], [0.0F, 1.0F])]),
+    Scatter.ScatterChart of int('scatter', [new Scatter.Series('a', [Point], [0.0F, 1.0F])]),
     'match'
   );
   Chart(
-    Scatter.ScatterChart<int>(
+    Scatter.ScatterChart of int(
       'scatter',
       [new Scatter.Series('a', [new Scatter.Point(float.NaN, 0.0F)])]
     ),
@@ -132,7 +132,7 @@ begin
   );
   const Band: Gauges.Band := new Gauges.Band(1.0F);
   Chart(
-    Gauges.RadialGauge<int>(
+    Gauges.RadialGauge of int(
       'dial',
       1.0F,
       0.0F,
@@ -140,17 +140,17 @@ begin
       new Gauges.Options(Sweep := 300.0F, Bands := [Band])
     )
   );
-  Chart(Gauges.RadialGauge<int>('dial', 1.0F, -float.MaxValue, float.MaxValue), 'finite radial');
+  Chart(Gauges.RadialGauge of int('dial', 1.0F, -float.MaxValue, float.MaxValue), 'finite radial');
   Chart(
-    Gauges.RadialGauge<int>('dial', 1.0F, 0.0F, 1.0F, new Gauges.Options(Sweep := 301.0F)),
+    Gauges.RadialGauge of int('dial', 1.0F, 0.0F, 1.0F, new Gauges.Options(Sweep := 301.0F)),
     'sweep'
   );
   Chart(
-    Gauges.RadialGauge<int>('dial', 1.0F, 0.0F, 1.0F, new Gauges.Options(Target := float.NaN)),
+    Gauges.RadialGauge of int('dial', 1.0F, 0.0F, 1.0F, new Gauges.Options(Target := float.NaN)),
     'target'
   );
   Chart(
-    Gauges.RadialGauge<int>('dial', 1.0F, 0.0F, 1.0F, new Gauges.Options(Bands := [Band, Band])),
+    Gauges.RadialGauge of int('dial', 1.0F, 0.0F, 1.0F, new Gauges.Options(Bands := [Band, Band])),
     'thresholds'
   );
 end procedure;
@@ -160,28 +160,28 @@ begin
   const Period: Candles.Candle := new Candles.Candle(2.0F, 3.0F, 1.0F, 1.0F, 8.0F);
   const Gap: Charts.Series := new Charts.Series('gap', [float.NaN]);
   Chart(
-    Candles.Candlestick<int>(
+    Candles.Candlestick of int(
       'c',
       [Period],
       new Candles.Options(Labels := ['day'], Overlays := [Gap])
     )
   );
-  Chart(Candles.Candlestick<int>('c', [new Candles.Candle(2.0F, 1.0F, 1.0F, 1.0F)]), 'OHLC');
+  Chart(Candles.Candlestick of int('c', [new Candles.Candle(2.0F, 1.0F, 1.0F, 1.0F)]), 'OHLC');
   Chart(
-    Candles.Candlestick<int>('c', [Period], new Candles.Options(Labels := ['a', 'b'])),
+    Candles.Candlestick of int('c', [Period], new Candles.Options(Labels := ['a', 'b'])),
     'labels'
   );
   Chart(
-    Candles.Candlestick<int>(
+    Candles.Candlestick of int(
       'c',
       [Period],
       new Candles.Options(Overlays := [Gap, Gap, Gap, Gap, Gap])
     ),
     'four'
   );
-  Chart(Candles.Candlestick<int>('c', [], new Candles.Options(Overlays := [Gap])), 'outgrow');
+  Chart(Candles.Candlestick of int('c', [], new Candles.Options(Overlays := [Gap])), 'outgrow');
   Chart(
-    Candles.Candlestick<int>(
+    Candles.Candlestick of int(
       'c', [Period], new Candles.Options(
         Overlays := [
           new Charts.Series('unbounded', [float.PositiveInfinity])
@@ -194,7 +194,7 @@ end procedure;
 procedure HeatAndPartToWholeCharts();
 begin
   Chart(
-    Heat.Heatmap<int>(
+    Heat.Heatmap of int(
       'heat',
       [-1.0F],
       1,
@@ -202,13 +202,13 @@ begin
       new Heat.Options(Range := new Charts.ValueRange(-1.0F, 0.0F))
     )
   );
-  Chart(Heat.Heatmap<int>('heat', [], int.MaxValue, int.MaxValue), 'rows times columns');
+  Chart(Heat.Heatmap of int('heat', [], int.MaxValue, int.MaxValue), 'rows times columns');
   Chart(
-    Heat.Heatmap<int>('heat', [0.0F], 1, 1, new Heat.Options(RowLabels := ['a', 'b'])),
+    Heat.Heatmap of int('heat', [0.0F], 1, 1, new Heat.Options(RowLabels := ['a', 'b'])),
     'match'
   );
   Chart(
-    Heat.Heatmap<int>(
+    Heat.Heatmap of int(
       'heat',
       [0.0F],
       1,
@@ -217,9 +217,9 @@ begin
     ),
     'increasing'
   );
-  Chart(CalendarHeat.CalendarHeatmap<int>('days', Sys.DateOnly.MaxValue, [1.0F]));
+  Chart(CalendarHeat.CalendarHeatmap of int('days', Sys.DateOnly.MaxValue, [1.0F]));
   Chart(
-    CalendarHeat.CalendarHeatmap<int>('days', Sys.DateOnly.MaxValue, [1.0F, 1.0F]),
+    CalendarHeat.CalendarHeatmap of int('days', Sys.DateOnly.MaxValue, [1.0F, 1.0F]),
     'dates exceed'
   );
   const Items: array of Charts.Item := [
@@ -227,15 +227,23 @@ begin
     new Charts.Item('next', 1.0F)
   ];
   Chart(
-    Trees.Treemap<int>('tree', Items, Selected := 1, OnSelect := function(Index: int): int => Index)
+    Trees.Treemap of int(
+      'tree',
+      Items,
+      Selected := 1,
+      OnSelect := function(Index: int): int => Index
+    )
   );
-  Chart(Trees.Treemap<int>('tree', Items, Selected := 0), 'callback');
-  Chart(Funnels.Funnel<int>('funnel', Items));
-  Chart(Splits.SplitBar<int>('split', Items));
-  Chart(Waffles.Waffle<int>('waffle', Items, new Waffles.Options(Rows := 1, Columns := 60)));
-  Chart(Waffles.Waffle<int>('waffle', Items, new Waffles.Options(Columns := 61)), 'one through 60');
+  Chart(Trees.Treemap of int('tree', Items, Selected := 0), 'callback');
+  Chart(Funnels.Funnel of int('funnel', Items));
+  Chart(Splits.SplitBar of int('split', Items));
+  Chart(Waffles.Waffle of int('waffle', Items, new Waffles.Options(Rows := 1, Columns := 60)));
   Chart(
-    Splits.SplitBar<int>(
+    Waffles.Waffle of int('waffle', Items, new Waffles.Options(Columns := 61)),
+    'one through 60'
+  );
+  Chart(
+    Splits.SplitBar of int(
       'split',
       [new Charts.Item('a', float.MaxValue), new Charts.Item('b', float.MaxValue)]
     ),

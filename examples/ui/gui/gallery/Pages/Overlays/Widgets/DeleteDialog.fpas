@@ -19,16 +19,16 @@ uses GuiGallery.Pages.Overlays.State as State;
 // - `Messages`: Maps confirmation messages into the parent session.
 // ## Returns
 // The active page and its controlled native confirmation.
-public function Wrap<TMsg>(
-  Base: E.Element<TMsg>; Open: bool; Messages: function(State.Msg): TMsg
-): E.Element<TMsg>;
+public function Wrap of TMsg(
+  Base: E.Element of TMsg; Open: bool; Messages: function(State.Msg): TMsg
+): E.Element of TMsg;
 begin
   const Cancel: TMsg := Messages(State.Msg.SetDeleteDialog(false));
-  return D.Dialog<TMsg>(
+  return D.Dialog of TMsg(
     'delete-project', Base,
-    F.ActionFooter<TMsg>(
-      B.Button<TMsg>('delete-project-cancel', 'Cancel', Cancel),
-      B.Button<TMsg>(
+    F.ActionFooter of TMsg(
+      B.Button of TMsg('delete-project-cancel', 'Cancel', Cancel),
+      B.Button of TMsg(
         'delete-project-confirm', 'Delete project', Messages(State.Msg.DeleteProject),
         new B.Options(Variant := S.ButtonVariant.Destructive)
       )

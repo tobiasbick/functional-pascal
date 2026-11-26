@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Inputs.TagInputs as W;
 // - `Topics`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Topics: array of string): E.Element<array of string>;
+public function View(Topics: array of string): E.Element of array of string;
 begin
-  return W.TagInput<array of string>('input-topics', Topics,
+  return W.TagInput of array of string('input-topics', Topics,
     function(Value: array of string): array of string => Value,
     new W.Options(Label := 'Topics', Placeholder := 'Add a topic', MaxUtf8Bytes := 255));
 end function;

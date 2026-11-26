@@ -16,9 +16,9 @@ uses Fpas.Ui.Widgets.Navigation.Breadcrumbs as C;
 // Builds the breadcrumb example.
 // ## Returns
 // The widget for the application view.
-public function View(): E.Element<int>;
+public function View(): E.Element of int;
 begin
-  return C.Breadcrumb<int>('breadcrumbs', ['Home', 'Projects', 'Settings'],
+  return C.Breadcrumb of int('breadcrumbs', ['Home', 'Projects', 'Settings'],
     function(Index: int): int => Index);
 end function;
 

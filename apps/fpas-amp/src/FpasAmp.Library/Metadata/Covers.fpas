@@ -26,7 +26,7 @@ end function;
 // Cache entries are addressed by SHA-256; cached artwork remains usable offline.
 // `UseCache` can be disabled by album thumbnail resolution to avoid duplicating
 // original artwork for every track; callers then own their thumbnail cache.
-public async function Read(Database: string; UserDatabase: string; FileId: long; Cancellation: T.CancellationToken; UseCache: bool := true): Tasks.Task<Pictures.Cover?>;
+public async function Read(Database: string; UserDatabase: string; FileId: long; Cancellation: T.CancellationToken; UseCache: bool := true): Tasks.Task of Pictures.Cover?;
 begin
   Cancellation.ThrowIfCancellationRequested();
   var Path: string := '';

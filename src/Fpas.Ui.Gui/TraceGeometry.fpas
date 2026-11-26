@@ -9,7 +9,7 @@ uses Fpas.Ui.Widgets.Developer.TraceViewers as Trace;
 // Reads one span from the last presented native trace on the window owner thread.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type SpanRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
+public type SpanRequest of TMsg = record implements Mvu.HostExtension of TMsg
   // Application identity supplied to the trace widget.
   public Id: string;
   // Span whose native geometry is requested.
@@ -24,10 +24,10 @@ public type SpanRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
   // - `Messages`: Maps child messages.
   // ## Returns
   // The same request with its result mapped to the parent.
-  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  public function Map of TNext(Messages: function(TMsg): TNext): Mvu.HostExtension of TNext;
   begin
     const Read: function(Cui.CuiRectangle): TMsg := self.OnRead;
-    return new SpanRequest<TNext>(
+    return new SpanRequest of TNext(
       self.Id, self.Span,
       function(Bounds: Cui.CuiRectangle): TNext => Messages(Read(Bounds))
     );
@@ -43,13 +43,15 @@ end record;
 // - `OnRead`: Maps bounds to a message; absent, folded or invisible spans return empty bounds.
 // ## Returns
 // An owner-thread graphical command. Reading before presentation is invalid.
-public function ReadSpanRectangle<TMsg>(
+public function ReadSpanRectangle of TMsg(
   Id: string; Span: Trace.Span;
   OnRead: function(Cui.CuiRectangle): TMsg
-): Mvu.Command<TMsg>;
+): Mvu.Command of TMsg;
 requires Id <> '';
 begin
-  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new SpanRequest<TMsg>(Id, Span, OnRead)));
+  return (Mvu.Command of TMsg).Host(
+    Mvu.HostRequest.Extension(new SpanRequest of TMsg(Id, Span, OnRead))
+  );
 end function;
 
 end unit;

@@ -14,7 +14,7 @@ uses GuiGallery.Pages.Lists.State as S;
 // - `Message`: Feature message.
 // ## Returns
 // Next feature model and commands.
-public function Update(State: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+public function Update(State: S.Model; Message: S.Msg): Mvu.Transition of (S.Model, S.Msg);
 begin
   const Next: S.Model := case Message of
     when S.Msg.SetAccordion(const Index: int, const Open: bool): State with
@@ -59,9 +59,9 @@ begin
     end with;
     else State;
   end case;
-  return new Mvu.Transition<S.Model, S.Msg>(
+  return new Mvu.Transition of (S.Model, S.Msg)(
     Next, case Message of
-      when S.Msg.Reorder(_): [Toasts.Show<S.Msg>('Order saved')];
+      when S.Msg.Reorder(_): [Toasts.Show of S.Msg('Order saved')];
       else [];
     end case
   );

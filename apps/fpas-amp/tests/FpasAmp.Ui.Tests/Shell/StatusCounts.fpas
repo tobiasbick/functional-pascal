@@ -18,10 +18,10 @@ uses System as Sys;
 uses System.Collections.Immutable as I;
 uses Xunit as X;
 
-function Caption<TMsg>(Bar: E.Element<TMsg>): string;
+function Caption of TMsg(Bar: E.Element of TMsg): string;
 begin
   case Bar of
-    when E.Element.StatusBar(_, const Items: array of Bars.Item<TMsg>, _):
+    when E.Element.StatusBar(_, const Items: array of Bars.Item of TMsg, _):
       case Items[0] of
         when Bars.Item.Text(const Label: Bars.Label):
           return Label.Text;
@@ -56,7 +56,7 @@ public type StatusCountTests = record
     const Current: Albums.State := Catalog.Apply(
       new Albums.State(Scope := Scope),
       Albums.Msg.Received(
-        new Library.Snapshot(I.ImmutableArray.Create<Library.Album>(Release), 2L)
+        new Library.Snapshot(I.ImmutableArray.Create of Library.Album(Release), 2L)
       ),
       null
     ).Model;
@@ -65,7 +65,7 @@ public type StatusCountTests = record
       Albums.Msg.Toolbar(Toolbar.Msg.Search('atlas')),
       null
     ).Model;
-    X.Assert.Equal<string>(Expected, Caption<Albums.Msg>(Footer.Build(Searched)));
+    X.Assert.Equal of string(Expected, Caption of Albums.Msg(Footer.Build(Searched)));
     const Draft: Albums.State := Catalog.Apply(
       Current,
       Albums.Msg.Toolbar(Toolbar.Msg.MinimumRating(6)),
@@ -76,7 +76,7 @@ public type StatusCountTests = record
       Albums.Msg.Toolbar(Toolbar.Msg.Apply),
       null
     ).Model;
-    X.Assert.Equal<string>(Expected, Caption<Albums.Msg>(Footer.Build(Filtered)));
+    X.Assert.Equal of string(Expected, Caption of Albums.Msg(Footer.Build(Filtered)));
   end procedure;
 
   // Both drill-downs count visible releases against every release in the catalogue.
@@ -86,14 +86,14 @@ public type StatusCountTests = record
   public procedure ScopedAlbums(Scope: Toolbar.Scope);
     procedure Check(Expected: string);
     begin
-      X.Assert.Equal<string>(Expected, Caption<Albums.Msg>(Footer.Build(Current)));
+      X.Assert.Equal of string(Expected, Caption of Albums.Msg(Footer.Build(Current)));
     end procedure;
     procedure Send(Message: Albums.Msg);
     begin
       Current := Catalog.Apply(Current, Message, null).Model;
     end procedure;
   begin
-    const Items: I.ImmutableArray<Library.Album>.Builder := I.ImmutableArray.CreateBuilder<Library.Album>(
+    const Items: (I.ImmutableArray of Library.Album).Builder := I.ImmutableArray.CreateBuilder of Library.Album(
       9
     );
     for Index: int := 0 to 8 do
@@ -151,7 +151,10 @@ public type StatusCountTests = record
       else
         '2 tracks'
       end if;
-      X.Assert.Equal<string>(Expected, Caption<Music.Msg>(Footer.Tracks(Current, LibraryTotal)));
+      X.Assert.Equal of string(
+        Expected,
+        Caption of Music.Msg(Footer.Tracks(Current, LibraryTotal))
+      );
     end procedure;
   begin
     var Current: Music.State := new Music.State(
@@ -160,7 +163,7 @@ public type StatusCountTests = record
     );
     Send(
       Music.Msg.Loaded(
-        1L, 1L, I.ImmutableArray.CreateRange<Tracks.Entry>(
+        1L, 1L, I.ImmutableArray.CreateRange of Tracks.Entry(
           [
             new Tracks.Entry(1L, 'a', 'First song.mp3', '', 6, null, null),
             new Tracks.Entry(2L, 'b', 'Second song.mp3', '', 8, null, null)

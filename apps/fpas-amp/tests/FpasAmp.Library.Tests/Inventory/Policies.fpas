@@ -25,7 +25,7 @@ public type PolicyTests = record
     const Original: S.MusicSource := H.Source('root', Root.Path);
     const Normalized: array of S.MusicSource := S.Normalize([Original]);
     Original.Extensions[0] := '.wav';
-    X.Assert.Equal<string>('.flac', Normalized[0].Extensions[0]);
+    X.Assert.Equal of string('.flac', Normalized[0].Extensions[0]);
     X.Assert.True(
       S.SameDiscovery(
         Normalized, S.Normalize(
@@ -39,7 +39,7 @@ public type PolicyTests = record
       )
     );
     X.Assert.False(S.Within(Root.Path + '-sibling', Root.Path));
-    X.Assert.Equal<int>(
+    X.Assert.Equal of int(
       0, S.Roots(
         S.Normalize(
           [
@@ -74,7 +74,7 @@ public type PolicyTests = record
         )
       );
       const After: Q.Batch := Inbox.Take();
-      X.Assert.Equal<long>(Before.Generation, After.Generation);
+      X.Assert.Equal of long(Before.Generation, After.Generation);
       X.Assert.False(After.Full);
     finally
       Inbox.Close();
@@ -97,7 +97,7 @@ public type PolicyTests = record
     Index.Scan(Root.Path, Sources, function(): bool => true, true, T.CancellationToken.None);
     IO.File.Delete(Track);
     Index.Scan(Root.Path, Sources, function(): bool => true, false, T.CancellationToken.None);
-    const Previous: C.Dictionary<string, M.SourceSnapshot> := new C.Dictionary<string, M.SourceSnapshot>();
+    const Previous: C.Dictionary of (string, M.SourceSnapshot) := new C.Dictionary of (string, M.SourceSnapshot)();
     X.Assert.True(H.Has(Index.Describe(Sources, [])[0], Track));
     Index.Scan(Root.Path, Sources, function(): bool => true, true, T.CancellationToken.None);
     X.Assert.False(H.Has(Index.Describe(Sources, [])[0], Track));
@@ -132,7 +132,7 @@ public type PolicyTests = record
       Session,
       function(Value: M.Snapshot): bool => Value.Generation > Before.Generation
     );
-    X.Assert.Equal<int>(1, After.Sources[0].Files.Length);
+    X.Assert.Equal of int(1, After.Sources[0].Files.Length);
     X.Assert.True(H.Has(After.Sources[0], Second));
   end function;
 

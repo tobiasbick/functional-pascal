@@ -18,9 +18,9 @@ uses System as Sys;
 // - `Due`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Due: Sys.DateOnly?): E.Element<Sys.DateOnly>;
+public function View(Due: Sys.DateOnly?): E.Element of Sys.DateOnly;
 begin
-  return W.DatePicker<Sys.DateOnly>('input-due-date', Due, function(Value: Sys.DateOnly): Sys.DateOnly => Value,
+  return W.DatePicker of Sys.DateOnly('input-due-date', Due, function(Value: Sys.DateOnly): Sys.DateOnly => Value,
     new W.Options(Label := 'Due date'));
 end function;
 

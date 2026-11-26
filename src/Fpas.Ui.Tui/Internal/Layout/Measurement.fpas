@@ -85,21 +85,21 @@ end function;
 // - `Node`: Prepared terminal element.
 // ## Returns
 // The element's resolved size constraints.
-public function FlexRule<TMsg>(Node: E.Element<TMsg>): E.Flex;
+public function FlexRule of TMsg(Node: E.Element of TMsg): E.Flex;
 begin
   case Node of
-    when E.Element.Palette(_, const Base: E.Element<TMsg>, _, _, _, _):
-      return FlexRule<TMsg>(Base);
+    when E.Element.Palette(_, const Base: E.Element of TMsg, _, _, _, _):
+      return FlexRule of TMsg(Base);
     when E.Element.CellGrid(_, _, _):
       return new E.Flex(Grow := 1);
     when E.Element.Sized(_, const Rule: E.Flex):
       return Rule;
-    when E.Element.Decorated(const Child: E.Element<TMsg>, _), E.Element.DisclosureBody(
+    when E.Element.Decorated(const Child: E.Element of TMsg, _), E.Element.DisclosureBody(
       _,
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       _
     ):
-      return FlexRule<TMsg>(Child);
+      return FlexRule of TMsg(Child);
     else
       return new E.Flex();
   end case;
@@ -117,18 +117,18 @@ end function;
 //
 // ## Returns
 // The subtree's minimum content extent in cells.
-public function Minimum<TMsg>(Node: E.Element<TMsg>; Horizontal: bool; ParentHorizontal: bool? := null): int;
+public function Minimum of TMsg(Node: E.Element of TMsg; Horizontal: bool; ParentHorizontal: bool? := null): int;
 begin
   case Node of
     when E.Element.Log(_, _, _):
       return 1;
-    when E.Element.Palette(_, const Base: E.Element<TMsg>, _, _, _, _):
-      return Minimum<TMsg>(Base, Horizontal, ParentHorizontal);
+    when E.Element.Palette(_, const Base: E.Element of TMsg, _, _, _, _):
+      return Minimum of TMsg(Base, Horizontal, ParentHorizontal);
     when E.Element.ChoiceStrip(_):
       return if Horizontal then
         1
       else
-        Intrinsic<TMsg>(Node, false)
+        Intrinsic of TMsg(Node, false)
       end if;
     when E.Element.Table(
       _
@@ -140,7 +140,7 @@ begin
       return if Horizontal then
         0
       else
-        Intrinsic<TMsg>(Node, false)
+        Intrinsic of TMsg(Node, false)
       end if;
     when E.Element.Label(const Value: string):
       if not Horizontal then
@@ -156,8 +156,8 @@ begin
       end for;
 
       return Width;
-    when E.Element.Sized(const Child: E.Element<TMsg>, const Rule: E.Flex):
-      const Content: int := Minimum<TMsg>(Child, Horizontal, ParentHorizontal);
+    when E.Element.Sized(const Child: E.Element of TMsg, const Rule: E.Flex):
+      const Content: int := Minimum of TMsg(Child, Horizontal, ParentHorizontal);
       if Horizontal <> (ParentHorizontal ?? Horizontal) then
         return Content;
       end if;
@@ -172,18 +172,18 @@ begin
         Rule.Maximum
       );
     when E.Element.Decorated(
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       _
-    ), E.Element.DisclosureBody(_, const Child: E.Element<TMsg>, _):
-      return Minimum<TMsg>(Child, Horizontal, ParentHorizontal);
+    ), E.Element.DisclosureBody(_, const Child: E.Element of TMsg, _):
+      return Minimum of TMsg(Child, Horizontal, ParentHorizontal);
     when E.Element.Stack(
-      const Children: array of E.Element<TMsg>,
+      const Children: array of E.Element of TMsg,
       const Axis: bool,
       const Flow: E.Flow
     ):
       var Span: int := 0;
-      for Child: E.Element<TMsg> in Children do
-        const Size: int := Minimum<TMsg>(Child, Horizontal, Axis);
+      for Child: E.Element of TMsg in Children do
+        const Size: int := Minimum of TMsg(Child, Horizontal, Axis);
         Span := if Axis = Horizontal then
           Span + Size
         else
@@ -218,10 +218,10 @@ begin
       _
     ):
       return 0;
-    when E.Element.Framed(const Child: E.Element<TMsg>, _):
-      return Minimum<TMsg>(Child, Horizontal, false) + 2;
+    when E.Element.Framed(const Child: E.Element of TMsg, _):
+      return Minimum of TMsg(Child, Horizontal, false) + 2;
     else
-      return Intrinsic<TMsg>(Node, Horizontal);
+      return Intrinsic of TMsg(Node, Horizontal);
   end case;
 end function;
 
@@ -236,14 +236,14 @@ end function;
 //
 // ## Returns
 // Constraints with a resolved minimum content size.
-public function AllocationRule<TMsg>(Node: E.Element<TMsg>; Horizontal: bool): E.Flex;
+public function AllocationRule of TMsg(Node: E.Element of TMsg; Horizontal: bool): E.Flex;
 begin
   case Node of
-    when E.Element.TextArea(const Area: AreaEdit.Field<TMsg>):
+    when E.Element.TextArea(const Area: AreaEdit.Field of TMsg):
       if not Horizontal and Area.Settings.Height < 0 then
         return new E.Flex(Minimum := 1, Grow := 1);
       end if;
-    when E.Element.Table(const Table: E.TableView<TMsg>):
+    when E.Element.Table(const Table: E.TableView of TMsg):
       if not Horizontal then
         case Table.Settings.Height of
           when L.Extent.Fill:
@@ -262,7 +262,7 @@ begin
         return new E.Flex(Grow := 1);
       when E.Element.Pager(_), E.Element.Breadcrumb(_):
         return new E.Flex(Minimum := 1);
-      when E.Element.ChoiceStrip(const Strip: E.ChoiceStripView<TMsg>):
+      when E.Element.ChoiceStrip(const Strip: E.ChoiceStripView of TMsg):
         return new E.Flex(
           Minimum := 1, Grow := if Strip.Settings.FullWidth then
             1
@@ -287,16 +287,16 @@ begin
         if View.FillWidth then
           return new E.Flex(Grow := 1);
         end if;
-      when E.Element.Decorated(const Child: E.Element<TMsg>, _), E.Element.DisclosureBody(
+      when E.Element.Decorated(const Child: E.Element of TMsg, _), E.Element.DisclosureBody(
         _,
-        const Child: E.Element<TMsg>,
+        const Child: E.Element of TMsg,
         _
       ):
-        return AllocationRule<TMsg>(Child, Horizontal);
+        return AllocationRule of TMsg(Child, Horizontal);
       else
     end case;
   end if;
-  const Rule: E.Flex := FlexRule<TMsg>(Node);
+  const Rule: E.Flex := FlexRule of TMsg(Node);
   if Rule.Basis >= 0 then
     return Rule;
   end if;
@@ -304,7 +304,7 @@ begin
   return Rule with
     Minimum := Sys.Math.Min(
       Rule.Maximum,
-      Sys.Math.Max(Rule.Minimum, Minimum<TMsg>(Node, Horizontal))
+      Sys.Math.Max(Rule.Minimum, Minimum of TMsg(Node, Horizontal))
     );
   end with;
 end function;
@@ -322,10 +322,10 @@ end function;
 //
 // ## Returns
 // True when the node can fill this cross-axis extent.
-public function CanStretch<TMsg>(Node: E.Element<TMsg>; Horizontal: bool; Explicit: bool := false): bool;
+public function CanStretch of TMsg(Node: E.Element of TMsg; Horizontal: bool; Explicit: bool := false): bool;
 begin
   case Node of
-    when E.Element.ChoiceStrip(const Strip: E.ChoiceStripView<TMsg>):
+    when E.Element.ChoiceStrip(const Strip: E.ChoiceStripView of TMsg):
       return Horizontal and (Explicit or Strip.Settings.FullWidth);
     when E.Element.Sparkline(_, _, const Fill: bool, _):
       return Horizontal and Fill;
@@ -336,14 +336,14 @@ begin
     when E.Element.Action(_, _, _, const View: E.ActionView):
       return Horizontal and (View.FillWidth or (Explicit and View.FixedWidth = null));
     when E.Element.Sized(
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       _
-    ), E.Element.Decorated(const Child: E.Element<TMsg>, _), E.Element.DisclosureBody(
+    ), E.Element.Decorated(const Child: E.Element of TMsg, _), E.Element.DisclosureBody(
       _,
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       _
     ):
-      return CanStretch<TMsg>(Child, Horizontal, Explicit);
+      return CanStretch of TMsg(Child, Horizontal, Explicit);
     else
       return true;
   end case;
@@ -358,39 +358,39 @@ end function;
 // - `Align`: Cross-axis alignment.
 // ## Returns
 // Columns assigned to the child for painting and text wrapping.
-public function CrossWidth<TMsg>(Node: E.Element<TMsg>; Available: int; Align: L.Alignment): int;
+public function CrossWidth of TMsg(Node: E.Element of TMsg; Available: int; Align: L.Alignment): int;
 begin
-  return if (Align = L.Alignment.Stretch or Align = L.Alignment.Default) and CanStretch<TMsg>(
+  return if (Align = L.Alignment.Stretch or Align = L.Alignment.Default) and CanStretch of TMsg(
     Node,
     true
   )
   then
     Available
   else
-    Sys.Math.Min(Available, Intrinsic<TMsg>(Node, true))
+    Sys.Math.Min(Available, Intrinsic of TMsg(Node, true))
   end if;
 end function;
 
-function WrappedStackHeight<TMsg>(
-  Children: array of E.Element<TMsg>; Axis: bool; Rule: E.Flow; Columns: int
+function WrappedStackHeight of TMsg(
+  Children: array of E.Element of TMsg; Axis: bool; Rule: E.Flow; Columns: int
 ): int;
 begin
   const Width: int := Sys.Math.Max(0, Columns - 2 * Rule.PaddingX);
   const Gaps: int := Sys.Math.Max(0, Children.Length - 1) * Rule.Gap;
   if Axis then
     const Preferred: array of int := new int[Children.Length];
-    const Rules: array of E.Flex := Sys.Array.ConvertAll<E.Element<TMsg>, E.Flex>(
+    const Rules: array of E.Flex := Sys.Array.ConvertAll of (E.Element of TMsg, E.Flex)(
       Children,
-      function(Child: E.Element<TMsg>): E.Flex => AllocationRule<TMsg>(Child, true)
+      function(Child: E.Element of TMsg): E.Flex => AllocationRule of TMsg(Child, true)
     );
     for Index: int := 0 to Children.Length - 1 do
-      Preferred[Index] := Intrinsic<TMsg>(Children[Index], true);
+      Preferred[Index] := Intrinsic of TMsg(Children[Index], true);
     end for;
     const Widths: array of int := F.Allocate(Preferred, Rules, Sys.Math.Max(0, Width - Gaps));
     var Height: int := 0;
     for Index: int := 0 to Children.Length - 1 do
       if Widths[Index] > 0 then
-        Height := Sys.Math.Max(Height, Intrinsic<TMsg>(Children[Index], false, Widths[Index]));
+        Height := Sys.Math.Max(Height, Intrinsic of TMsg(Children[Index], false, Widths[Index]));
       end if;
     end for;
 
@@ -398,11 +398,11 @@ begin
   end if;
 
   var Height: int := 2 * Rule.PaddingY + Gaps;
-  for Child: E.Element<TMsg> in Children do
-    const ChildWidth: int := CrossWidth<TMsg>(Child, Width, Rule.Align);
+  for Child: E.Element of TMsg in Children do
+    const ChildWidth: int := CrossWidth of TMsg(Child, Width, Rule.Align);
     Height := Height + F.PreferredSize(
-      Intrinsic<TMsg>(Child, false, ChildWidth),
-      FlexRule<TMsg>(Child)
+      Intrinsic of TMsg(Child, false, ChildWidth),
+      FlexRule of TMsg(Child)
     );
   end for;
 
@@ -418,7 +418,7 @@ end function;
 // - `Columns`: Wrapping width for a vertical measurement, or minus one for unwrapped content.
 // ## Returns
 // The preferred content extent in cells before applying the parent's allocation.
-public function Intrinsic<TMsg>(Node: E.Element<TMsg>; Horizontal: bool; Columns: int := -1): int;
+public function Intrinsic of TMsg(Node: E.Element of TMsg; Horizontal: bool; Columns: int := -1): int;
 begin
   case Node of
     when E.Element.Log(_, _, _):
@@ -427,27 +427,27 @@ begin
       else
         8
       end if;
-    when E.Element.Palette(_, const Base: E.Element<TMsg>, _, _, _, _):
-      return Intrinsic<TMsg>(Base, Horizontal, Columns);
-    when E.Element.SelectionList(const List: E.SelectionListView<TMsg>):
+    when E.Element.Palette(_, const Base: E.Element of TMsg, _, _, _, _):
+      return Intrinsic of TMsg(Base, Horizontal, Columns);
+    when E.Element.SelectionList(const List: E.SelectionListView of TMsg):
       return if Horizontal then
         List.Width
       else
         Sys.Math.Max(1, Sys.Math.Min(List.MaximumRows, List.Items.Length))
       end if;
-    when E.Element.Pager(const Pager: E.PagerView<TMsg>):
+    when E.Element.Pager(const Pager: E.PagerView of TMsg):
       return if Horizontal then
         PagerWidth(Pager.Count)
       else
         1
       end if;
-    when E.Element.Breadcrumb(const Trail: E.BreadcrumbView<TMsg>):
+    when E.Element.Breadcrumb(const Trail: E.BreadcrumbView of TMsg):
       return if Horizontal then
         Trail.Width
       else
         1
       end if;
-    when E.Element.ChoiceStrip(const Strip: E.ChoiceStripView<TMsg>):
+    when E.Element.ChoiceStrip(const Strip: E.ChoiceStripView of TMsg):
       if not Horizontal then
         return if Strip.Settings.Underline then
           Strip.Settings.Height + 1
@@ -461,7 +461,7 @@ begin
       end for;
 
       return Width;
-    when E.Element.Table(const Table: E.TableView<TMsg>):
+    when E.Element.Table(const Table: E.TableView of TMsg):
       if Horizontal then
         var Width: int := Sys.Math.Min(E.MaximumColumns, Table.Columns.Length - 1);
         for Cells: int in Table.Preferred do
@@ -483,9 +483,9 @@ begin
       end if;
 
       return LineCount(Value, Columns);
-    when E.Element.StatusBar(const Row: E.Element<TMsg>, const HideBorder: bool):
+    when E.Element.StatusBar(const Row: E.Element of TMsg, const HideBorder: bool):
       if Horizontal then
-        return Intrinsic<TMsg>(Row, true);
+        return Intrinsic of TMsg(Row, true);
       end if;
 
       return if HideBorder then
@@ -499,7 +499,7 @@ begin
       else
         1
       end if;
-    when E.Element.TextArea(const Field: AreaEdit.Field<TMsg>):
+    when E.Element.TextArea(const Field: AreaEdit.Field of TMsg):
       return if Horizontal then
         24
       else
@@ -540,16 +540,16 @@ begin
 
       return View.Height + LineCount(View.Description, Columns - 2 * View.Padding);
     when E.Element.Stack(
-      const Children: array of E.Element<TMsg>,
+      const Children: array of E.Element of TMsg,
       const Axis: bool,
       const Rule: E.Flow
     ):
       if not Horizontal and Columns >= 0 then
-        return WrappedStackHeight<TMsg>(Children, Axis, Rule, Columns);
+        return WrappedStackHeight of TMsg(Children, Axis, Rule, Columns);
       end if;
       var Size: int := 0;
-      for Child: E.Element<TMsg> in Children do
-        const Span: int := Intrinsic<TMsg>(Child, Horizontal);
+      for Child: E.Element of TMsg in Children do
+        const Span: int := Intrinsic of TMsg(Child, Horizontal);
         Size := if Axis = Horizontal then
           Size + Span
         else
@@ -570,28 +570,28 @@ begin
         0
       end if);
     when E.Element.Sized(
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       _
     ), E.Element.Decorated(
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       _
     ), E.Element.DisclosureBody(
       _,
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       _
-    ), E.Element.Scrollable(_, const Child: E.Element<TMsg>, _), E.Element.ControlledScroll(
-      _, const Child: E.Element<TMsg>, _, _, _
+    ), E.Element.Scrollable(_, const Child: E.Element of TMsg, _), E.Element.ControlledScroll(
+      _, const Child: E.Element of TMsg, _, _, _
     ), E.Element.Desktop(
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       _,
       _
     ):
-      return Intrinsic<TMsg>(Child, Horizontal, Columns);
+      return Intrinsic of TMsg(Child, Horizontal, Columns);
     when E.Element.ModalPanel(_, _, _, _, _, _):
       return 0;
-    when E.Element.Framed(const Child: E.Element<TMsg>, const Title: string):
+    when E.Element.Framed(const Child: E.Element of TMsg, const Title: string):
       return Sys.Math.Max(
-        Intrinsic<TMsg>(
+        Intrinsic of TMsg(
           Child,
           Horizontal,
           if Columns < 0 then

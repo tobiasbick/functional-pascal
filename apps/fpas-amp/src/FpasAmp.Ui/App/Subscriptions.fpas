@@ -33,13 +33,13 @@ begin
 end function;
 
 // Returns subscriptions for Library and Port and resumes waveform analysis for Current.
-public function Watch(Library: Monitoring.Session; Port: Playback.Connection; Current: PlayerModel.State): array of Mvu.Command<M.Msg>;
+public function Watch(Library: Monitoring.Session; Port: Playback.Connection; Current: PlayerModel.State): array of Mvu.Command of M.Msg;
 begin
-  const Commands: C.List<Mvu.Command<M.Msg>> := new C.List<Mvu.Command<M.Msg>>(
+  const Commands: C.List of Mvu.Command of M.Msg := new C.List of Mvu.Command of M.Msg(
     [
-      Mvu.StartBackground<M.Msg>(
+      Mvu.StartBackground of M.Msg(
         'library-inventory',
-        Mvu.FromWorker<M.Msg>(
+        Mvu.FromWorker of M.Msg(
           async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
             while await Library.Changes.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
               const Value: Inventory.Snapshot := await Library.Changes.ReadAsync(
@@ -53,9 +53,9 @@ begin
           Stopped
         )
       ),
-      Mvu.StartBackground<M.Msg>(
+      Mvu.StartBackground of M.Msg(
         'library-progress',
-        Mvu.FromWorker<M.Msg>(
+        Mvu.FromWorker of M.Msg(
           async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
             while await Library.Progress.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
               const Value: Progress.Snapshot := await Library.Progress.ReadAsync(
@@ -71,8 +71,8 @@ begin
       )
     ]
   );
-  for Work: Mvu.Command<PlayerModel.Msg> in Port.Watch() do
-    Commands.Add(Composition.MapCommand<PlayerModel.Msg, M.Msg>(Work, M.Msg.Player, 'player'));
+  for Work: Mvu.Command of PlayerModel.Msg in Port.Watch() do
+    Commands.Add(Composition.MapCommand of (PlayerModel.Msg, M.Msg)(Work, M.Msg.Player, 'player'));
   end for;
   const Tags: Metadata.Session? := Library.Metadata;
   if Current.WaveformKey <> '' then
@@ -81,12 +81,12 @@ begin
 
   if Tags <> null then
     Commands.Add(
-      Mvu.StartBackground<M.Msg>(
+      Mvu.StartBackground of M.Msg(
         'navigation-playlists',
-        Mvu.FromWorker<M.Msg>(
+        Mvu.FromWorker of M.Msg(
           async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
             await Tags.Playlists.ObserveAsync(
-              function(Items: I.ImmutableArray<Playlists.Summary>): Tasks.Task => Post(
+              function(Items: I.ImmutableArray of Playlists.Summary): Tasks.Task => Post(
                 M.Msg.Navigation(Nav.Msg.Received(Items))
               ),
               Cancellation
@@ -97,9 +97,9 @@ begin
       )
     );
     Commands.Add(
-      Mvu.StartBackground<M.Msg>(
+      Mvu.StartBackground of M.Msg(
         'library-metadata',
-        Mvu.FromWorker<M.Msg>(
+        Mvu.FromWorker of M.Msg(
           async function(_Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
             await Tags.Completion.WaitAsync(Cancellation).ConfigureAwait(false);
           end function, Stopped
@@ -110,12 +110,12 @@ begin
 
   if Tags = null then
     Commands.Add(
-      Mvu.StartBackground<M.Msg>(
+      Mvu.StartBackground of M.Msg(
         'navigation-playlists',
-        Mvu.FromWorker<M.Msg>(
+        Mvu.FromWorker of M.Msg(
           async function(Post: function(M.Msg): Tasks.Task; _Cancellation: T.CancellationToken): Tasks.Task begin
             await Post(
-              M.Msg.Navigation(Nav.Msg.Received(I.ImmutableArray<Playlists.Summary>.Empty))
+              M.Msg.Navigation(Nav.Msg.Received((I.ImmutableArray of Playlists.Summary).Empty))
             ).ConfigureAwait(false);
           end function, Failure
         )

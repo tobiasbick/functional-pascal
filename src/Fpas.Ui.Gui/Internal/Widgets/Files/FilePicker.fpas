@@ -23,7 +23,7 @@ uses Fpas.Ui.Widgets.Files.FilePickers as A;
 // - `Horizontal`: Parent axis.
 // - `Align`: Parent alignment.
 // - `Visit`: GUI traversal for composed content.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Base: E.Element<TMsg>?; Open: bool; Change: function(A.Event): TMsg; Settings: A.Options; Horizontal: bool; Align: L.Alignment; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Base: (E.Element of TMsg)?; Open: bool; Change: function(A.Event): TMsg; Settings: A.Options; Horizontal: bool; Align: L.Alignment; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
 begin
   if Base <> null then
     Visit(
@@ -51,7 +51,7 @@ begin
     Settings.FilterLabel,
     D.Provider(Settings.Source),
     if Open then
-      P.Tracker<TMsg>(Frame, Id, Role, Parts)
+      P.Tracker of TMsg(Frame, Id, Role, Parts)
     else
       null
     end if
@@ -63,7 +63,7 @@ begin
   if Open then
     for Index: int := 0 to Parts.Length - 1 do
       if Result.Parts[Index] then
-        P.Part<TMsg>(Frame, Id, Role, Parts[Index], Parts[Index], Enabled and Index <> 0, '');
+        P.Part of TMsg(Frame, Id, Role, Parts[Index], Parts[Index], Enabled and Index <> 0, '');
       end if;
     end for;
   end if;

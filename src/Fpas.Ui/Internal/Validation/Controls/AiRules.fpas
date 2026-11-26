@@ -18,7 +18,7 @@ uses System as Sys;
 // - `At`: Diagnostic location.
 public procedure Task(Status: T.Status; Seconds: float; Captions: array of string; At: string);
 begin
-  if not Sys.Enum.IsDefined<T.Status>(Status) then
+  if not Sys.Enum.IsDefined of T.Status(Status) then
     R.Reject(At, 'Unknown task status.');
   end if;
 

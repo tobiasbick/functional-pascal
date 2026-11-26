@@ -32,9 +32,9 @@ end function;
 // - `Text`: Literal wrapping text.
 // - `Settings`: Native options and input permission.
 // - `OnToggle`: Optional notification after native expansion changes.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Text: string; Settings: T.Options;
-  OnToggle: Sys.Func<TMsg>?
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Text: string; Settings: T.Options;
+  OnToggle: (Sys.Func of TMsg)?
 );
 begin
   const Allowed: bool := Settings.Enabled and Frame.AcceptInput;
@@ -43,11 +43,11 @@ begin
   const Result: int := Frame.Window.ExpandableText(
     C.Token('expandable-text', Id), Text,
     Settings.Lines, Settings.Size, Pack(Settings.Color), Pack(Settings.FadeTo), Allowed,
-    C.WantsFocus<TMsg>(Frame, Toggle, ToggleToken, Allowed), ToggleToken
+    C.WantsFocus of TMsg(Frame, Toggle, ToggleToken, Allowed), ToggleToken
   );
   if (Result and 1) <> 0 then
     case OnToggle of
-      when is Sys.Func<TMsg> as Notify:
+      when is Sys.Func of TMsg as Notify:
         Frame.Messages.Add(Notify.Invoke());
       else
     end case;

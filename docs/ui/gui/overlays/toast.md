@@ -15,9 +15,9 @@ uses Fpas.Ui.Mvu.Application as Mvu;
 // Builds the command for the update function.
 // ## Returns
 // A command that queues one toast in the GUI host.
-public function Notify(): Mvu.Command<string>;
+public function Notify(): Mvu.Command of string;
 begin
-  return W.Show<string>('Changes saved',
+  return W.Show of string('Changes saved',
     new W.Options(Description := 'Your profile is up to date.', Appearance := W.Tone.Success));
 end function;
 

@@ -19,13 +19,13 @@ uses System.Collections.Generic as Lists;
 // - `Messages`: Message translation.
 // ## Returns
 // A translated factory, or null when the original was absent.
-public function Factory<TChild, TParent>(
-  Value: Sys.Func<TChild>?;
+public function Factory of (TChild, TParent)(
+  Value: (Sys.Func of TChild)?;
   Messages: function(TChild): TParent
-): Sys.Func<TParent>?;
+): (Sys.Func of TParent)?;
 begin
   case Value of
-    when is Sys.Func<TChild> as Original:
+    when is Sys.Func of TChild as Original:
       return function(): TParent => Messages(Original.Invoke());
     else
       return null;
@@ -42,13 +42,13 @@ end function;
 // - `Messages`: Message translation.
 // ## Returns
 // A translated callback, retaining absence.
-public function Callback<TArg, TChild, TParent>(
-  Value: Sys.Func<TArg, TChild>?;
+public function Callback of (TArg, TChild, TParent)(
+  Value: Sys.Func of (TArg, TChild)?;
   Messages: function(TChild): TParent
-): Sys.Func<TArg, TParent>?;
+): Sys.Func of (TArg, TParent)?;
 begin
   case Value of
-    when is Sys.Func<TArg, TChild> as Original:
+    when is Sys.Func of (TArg, TChild) as Original:
       return function(Argument: TArg): TParent => Messages(Original.Invoke(Argument));
     else
       return null;
@@ -65,14 +65,14 @@ end function;
 // - `Messages`: Message translation.
 // ## Returns
 // A builder whose entries carry translated messages, retaining absence.
-public function MenuSource<TArg, TChild, TParent>(
-  Value: Sys.Func<TArg, array of M.Entry<TChild>>?;
+public function MenuSource of (TArg, TChild, TParent)(
+  Value: Sys.Func of (TArg, array of M.Entry of TChild)?;
   Messages: function(TChild): TParent
-): Sys.Func<TArg, array of M.Entry<TParent>>?;
+): Sys.Func of (TArg, array of M.Entry of TParent)?;
 begin
   case Value of
-    when is Sys.Func<TArg, array of M.Entry<TChild>> as Original:
-      return function(Argument: TArg): array of M.Entry<TParent> => Menu<TChild, TParent>(
+    when is Sys.Func of (TArg, array of M.Entry of TChild) as Original:
+      return function(Argument: TArg): array of M.Entry of TParent => Menu of (TChild, TParent)(
         Original.Invoke(Argument),
         Messages
       );
@@ -90,23 +90,23 @@ end function;
 // - `Messages`: Message translation.
 // ## Returns
 // Entries in the same order, including captions and separators.
-public function Menu<TChild, TParent>(
-  Values: array of M.Entry<TChild>;
+public function Menu of (TChild, TParent)(
+  Values: array of M.Entry of TChild;
   Messages: function(TChild): TParent
-): array of M.Entry<TParent>;
+): array of M.Entry of TParent;
 begin
-  const Result: Lists.List<M.Entry<TParent>> := new Lists.List<M.Entry<TParent>>();
+  const Result: Lists.List of M.Entry of TParent := new Lists.List of M.Entry of TParent();
   for Index: int := 0 to Values.Length - 1 do
     Result.Add(
       case Values[Index] of
-        when M.Entry.Action(const Item: M.Item<TChild>): M.Entry<TParent>.Action(
-          new M.Item<TParent>(
+        when M.Entry.Action(const Item: M.Item of TChild): (M.Entry of TParent).Action(
+          new M.Item of TParent(
             Item.Key, Item.Label, Messages(Item.Message), Item.Icon,
             Item.Shortcut, Item.Enabled, Item.Danger, Item.Checked
           )
         );
-        when M.Entry.Label(const Caption: string): M.Entry<TParent>.Label(Caption);
-        when M.Entry.Separator: M.Entry<TParent>.Separator;
+        when M.Entry.Label(const Caption: string): (M.Entry of TParent).Label(Caption);
+        when M.Entry.Separator: (M.Entry of TParent).Separator;
       end case
     );
   end for;
@@ -123,16 +123,16 @@ end function;
 // - `Messages`: Message translation.
 // ## Returns
 // Choices in their original order.
-public function Split<TChild, TParent>(
-  Values: array of S.Item<TChild>;
+public function Split of (TChild, TParent)(
+  Values: array of S.Item of TChild;
   Messages: function(TChild): TParent
-): array of S.Item<TParent>;
+): array of S.Item of TParent;
 begin
-  const Result: Lists.List<S.Item<TParent>> := new Lists.List<S.Item<TParent>>();
+  const Result: Lists.List of S.Item of TParent := new Lists.List of S.Item of TParent();
   for Index: int := 0 to Values.Length - 1 do
-    const Item: S.Item<TChild> := Values[Index];
+    const Item: S.Item of TChild := Values[Index];
     Result.Add(
-      new S.Item<TParent>(
+      new S.Item of TParent(
         Item.Key,
         Item.Label,
         Messages(Item.Message),
@@ -153,19 +153,19 @@ end function;
 // - `Messages`: Message translation.
 // ## Returns
 // Independently rebuilt sections in their original order.
-public function Navigation<TChild, TParent>(
-  Values: array of N.Section<TChild>;
+public function Navigation of (TChild, TParent)(
+  Values: array of N.Section of TChild;
   Messages: function(TChild): TParent
-): array of N.Section<TParent>;
+): array of N.Section of TParent;
 begin
-  const Result: Lists.List<N.Section<TParent>> := new Lists.List<N.Section<TParent>>();
+  const Result: Lists.List of N.Section of TParent := new Lists.List of N.Section of TParent();
   for Section: int := 0 to Values.Length - 1 do
-    const Original: N.Section<TChild> := Values[Section];
-    const Items: Lists.List<N.Item<TParent>> := new Lists.List<N.Item<TParent>>();
+    const Original: N.Section of TChild := Values[Section];
+    const Items: Lists.List of N.Item of TParent := new Lists.List of N.Item of TParent();
     for Index: int := 0 to Original.Items.Length - 1 do
-      const Item: N.Item<TChild> := Original.Items[Index];
+      const Item: N.Item of TChild := Original.Items[Index];
       Items.Add(
-        new N.Item<TParent>(
+        new N.Item of TParent(
           Item.Key,
           Item.Label,
           Messages(Item.Message),
@@ -176,7 +176,7 @@ begin
       );
     end for;
 
-    Result.Add(new N.Section<TParent>(Original.Title, Items.ToArray(), Original.GapBefore));
+    Result.Add(new N.Section of TParent(Original.Title, Items.ToArray(), Original.GapBefore));
   end for;
 
   return Result.ToArray();
@@ -191,16 +191,16 @@ end function;
 // - `Messages`: Message translation.
 // ## Returns
 // Equivalent bindings producing parent messages.
-public function Shortcuts<TChild, TParent>(
-  Values: array of K.ShortcutBinding<TChild>;
+public function Shortcuts of (TChild, TParent)(
+  Values: array of K.ShortcutBinding of TChild;
   Messages: function(TChild): TParent
-): array of K.ShortcutBinding<TParent>;
+): array of K.ShortcutBinding of TParent;
 begin
-  const Result: Lists.List<K.ShortcutBinding<TParent>> := new Lists.List<K.ShortcutBinding<TParent>>();
+  const Result: Lists.List of K.ShortcutBinding of TParent := new Lists.List of K.ShortcutBinding of TParent();
   for Index: int := 0 to Values.Length - 1 do
-    const Item: K.ShortcutBinding<TChild> := Values[Index];
+    const Item: K.ShortcutBinding of TChild := Values[Index];
     Result.Add(
-      new K.ShortcutBinding<TParent>(
+      new K.ShortcutBinding of TParent(
         Item.PressedKey,
         Item.Modifiers,
         Messages(Item.Message),

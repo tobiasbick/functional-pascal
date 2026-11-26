@@ -20,9 +20,9 @@ uses System as Sys;
 // - `Renderer`: Native renderer under test.
 // - `Capture`: Prefix for the closed and open captures.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
-  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  function Update(Model: State.Model; Message: State.Msg): App.Transition of (State.Model, State.Msg);
   begin
-    const Next: App.Transition<State.Model, State.Msg> := G.Update(Model, Message);
+    const Next: App.Transition of (State.Model, State.Msg) := G.Update(Model, Message);
     if ClearSelection then
       const Empty: Inputs.Model := Next.Model.Inputs with
         DueDate := null;
@@ -30,11 +30,14 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       const Cleared: State.Model := Next.Model with
         Inputs := Empty;
       end with;
-      return new App.Transition<State.Model, State.Msg>(Cleared, Next.Commands);
+      return new App.Transition of (State.Model, State.Msg)(Cleared, Next.Commands);
     end if;
 
     if Target <> '' then
-      return new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Target)]);
+      return new App.Transition of (State.Model, State.Msg)(
+        Next.Model,
+        [App.Focus of State.Msg(Target)]
+      );
     end if;
 
     return Next;
@@ -60,12 +63,12 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     end if;
   end procedure;
 
-  procedure Step(Session: Gui.Session<State.Msg>);
+  procedure Step(Session: Gui.Session of State.Msg);
   begin
     A.Check(Session.Step(), 'The Inputs page closed unexpectedly.');
   end procedure;
 
-  function Bounds(Session: Gui.Session<State.Msg>; Id: string): Cui.CuiRectangle;
+  function Bounds(Session: Gui.Session of State.Msg; Id: string): Cui.CuiRectangle;
   begin
     for Attempt: int := 0 to 15 do
       const Box: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
@@ -96,7 +99,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     );
   end function;
 
-  procedure Click(Session: Gui.Session<State.Msg>; Id: string);
+  procedure Click(Session: Gui.Session of State.Msg; Id: string);
   begin
     const Box: Cui.CuiRectangle := Bounds(Session, Id);
     X := Box.X + Box.Width / 2.0F;
@@ -110,14 +113,14 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     Step(Session);
   end procedure;
 
-  procedure Key(Session: Gui.Session<State.Msg>; Value: int);
+  procedure Key(Session: Gui.Session of State.Msg; Value: int);
   begin
     PendingKey := Value;
     Step(Session);
     Step(Session);
   end procedure;
 
-  procedure Focus(Session: Gui.Session<State.Msg>; Id: string);
+  procedure Focus(Session: Gui.Session of State.Msg; Id: string);
   begin
     Target := Id;
     A.Send(Session, State.Msg.Preview);
@@ -125,7 +128,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     A.Check(A.Control(Session, Id).Focused, 'Focus did not reach ' + Id);
   end procedure;
 
-  function HasControl(Session: Gui.Session<State.Msg>; Id: string): bool;
+  function HasControl(Session: Gui.Session of State.Msg; Id: string): bool;
   begin
     for Item: Gui.Control in Session.Snapshot().Controls do
       if Item.Id = Id then
@@ -136,7 +139,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     return false;
   end function;
 
-  procedure CheckDate(Session: Gui.Session<State.Msg>; Expected: string);
+  procedure CheckDate(Session: Gui.Session of State.Msg; Expected: string);
   begin
     A.Check(
       A.Control(Session, Due).Value = Expected and A.Control(Session, Calendar).Value = Expected,
@@ -165,7 +168,7 @@ begin
     true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Inputs),
     Update,
     View.Build,

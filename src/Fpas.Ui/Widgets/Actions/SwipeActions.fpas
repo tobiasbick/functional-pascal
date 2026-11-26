@@ -61,13 +61,20 @@ end function;
 // - `Settings`: Optional decoration and input permission.
 // ## Returns
 // A graphical swipe row that owns its gesture and reveal state in CUI.
-public function SwipeItem<TMsg>(
-  Id: string; Content: E.Element<TMsg>; Left: array of Item; Right: array of Item;
+public function SwipeItem of TMsg(
+  Id: string; Content: E.Element of TMsg; Left: array of Item; Right: array of Item;
   OnChoose: function(Side, int): TMsg; Settings: Options? := null
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.SwipeRow(Id, Content, Left, Right, OnChoose, Settings ?? new Options());
+  return (E.Element of TMsg).SwipeRow(
+    Id,
+    Content,
+    Left,
+    Right,
+    OnChoose,
+    Settings ?? new Options()
+  );
 end function;
 
 end unit;

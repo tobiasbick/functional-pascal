@@ -41,7 +41,7 @@ end procedure;
 
 procedure Tone(Value: S.Tone; At: string);
 begin
-  if not Sys.Enum.IsDefined<S.Tone>(Value) then
+  if not Sys.Enum.IsDefined of S.Tone(Value) then
     R.Reject(At, 'Unknown native tone.');
   end if;
 end procedure;
@@ -72,7 +72,7 @@ begin
   R.CheckText(Current.Text, At);
   R.CheckText(Settings.Icon, At);
   R.CheckText(Settings.Placeholder, At);
-  if not Sys.Enum.IsDefined<B.Size>(Settings.ControlSize) then
+  if not Sys.Enum.IsDefined of B.Size(Settings.ControlSize) then
     R.Reject(At, 'Invalid control size.');
   end if;
 
@@ -112,7 +112,7 @@ begin
   R.CheckText(Settings.FilterLabel, At);
   Path(Settings.Start, 1024, At);
   Path(Settings.Name, 256, At);
-  if not Sys.Enum.IsDefined<FilePickers.Mode>(Settings.Kind) then
+  if not Sys.Enum.IsDefined of FilePickers.Mode(Settings.Kind) then
     R.Reject(At, 'Unknown file picker mode.');
   end if;
 end procedure;
@@ -192,7 +192,7 @@ begin
     if Task.Start < 0 or Task.Finish > Current.Days or Task.Finish < Task.Start
       or (Task.Finish = Task.Start and not Task.Milestone) or Task.DependsOn < -1
       or Task.DependsOn >= Current.Tasks.Length or not Sys.Single.IsFinite(Task.Progress)
-      or Task.Progress < 0.0F or Task.Progress > 1.0F or not Sys.Enum.IsDefined<Gantts.Status>(
+      or Task.Progress < 0.0F or Task.Progress > 1.0F or not Sys.Enum.IsDefined of Gantts.Status(
       Task.State
     )
     then
@@ -208,10 +208,10 @@ end procedure;
 // - `Columns`: Model-owned input.
 // - `Settings`: Native settings.
 // - `At`: Diagnostic path.
-public procedure Kanban<TMsg>(Columns: array of Kanbans.Column<TMsg>; Settings: Kanbans.Options; At: string);
+public procedure Kanban of TMsg(Columns: array of Kanbans.Column of TMsg; Settings: Kanbans.Options; At: string);
 begin
-  const Keys: Lists.HashSet<int> := new Lists.HashSet<int>();
-  for Column: Kanbans.Column<TMsg> in Columns do
+  const Keys: Lists.HashSet of int := new Lists.HashSet of int();
+  for Column: Kanbans.Column of TMsg in Columns do
     R.CheckText(Column.Title, At);
     Chart.Distance(Column.Width, At);
     Chart.Color(Column.Dot, At);
@@ -219,7 +219,7 @@ begin
       R.Reject(At, 'A work-in-progress limit cannot be negative.');
     end if;
 
-    for Card: Kanbans.Card<TMsg> in Column.Cards do
+    for Card: Kanbans.Card of TMsg in Column.Cards do
       R.CheckText(Card.Title, At);
       if Card.Key < 0 or not Keys.Add(Card.Key) then
         R.Reject(At, 'Kanban card identities must be unique and nonnegative.');

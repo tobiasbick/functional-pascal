@@ -8,8 +8,8 @@ public sealed partial class AsyncControlTests
     [Theory]
     [InlineData("Gate", false, false, false)]
     [InlineData("Gate.ConfigureAwait(false)", true, false, false)]
-    [InlineData("new Tasks.ValueTask<int>(Gate)", false, false, false)]
-    [InlineData("new Tasks.ValueTask<int>(Gate).ConfigureAwait(false)", true, false, false)]
+    [InlineData("new Tasks.ValueTask of int(Gate)", false, false, false)]
+    [InlineData("new Tasks.ValueTask of int(Gate).ConfigureAwait(false)", true, false, false)]
     [InlineData("Gate", true, true, false)]
     [InlineData("Gate", false, true, false)]
     [InlineData("Gate", false, false, true)]
@@ -20,24 +20,24 @@ public sealed partial class AsyncControlTests
             program AsyncReturn;
             uses System as Sys; uses System.Console as Console; uses System.Threading.Tasks as Tasks;
               uses System.IO.File as File; uses System.Threading.Thread as Thread;
-            async function Child(Input: int; Gate: Tasks.Task<int>): Tasks.Task<int>;
+            async function Child(Input: int; Gate: Tasks.Task of int): Tasks.Task of int;
             begin
               const Release: int := await Gate;
               var Value: int := Input + Release;
               return Value;
             end function;
-            async function Parent(Input: int; Gate: Tasks.Task<int>): Tasks.Task<int>;
+            async function Parent(Input: int; Gate: Tasks.Task of int): Tasks.Task of int;
             begin
               const ChildValue: int := await Child(Input, Gate);
               var Result: int := ChildValue + 1;
               return Result;
             end function;
             begin
-              const Gate: Tasks.TaskCompletionSource<int> := new Tasks.TaskCompletionSource<int>(Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
-              const Pending: Tasks.Task<int> := Parent(19, Gate.Task);
+              const Gate: Tasks.TaskCompletionSource of int := new Tasks.TaskCompletionSource of int(Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
+              const Pending: Tasks.Task of int := Parent(19, Gate.Task);
               if Pending.IsCompleted then raise new Sys.InvalidOperationException('Must suspend'); end if;
               Console.WriteLine('pending');
-              const Releaser: Tasks.Task<int> := Tasks.Task.Run<int>(function(): int
+              const Releaser: Tasks.Task of int := Tasks.Task.Run of int(function(): int
               begin
                 while not File.Exists('release.txt') do Thread.Sleep(10); end while;
                 Gate.SetResult(22);
@@ -52,9 +52,9 @@ public sealed partial class AsyncControlTests
         if (loadTwice) source = source.Replace("System.IO.File as File; uses System.Threading.Thread as Thread;",
             "System.IO.File as File; uses System.Threading.Thread as Thread; uses System.Runtime.Loader.AssemblyLoadContext as LoadContext; uses System.IO.Path as Path;", StringComparison.Ordinal)
             .Replace("Console.WriteLine('pending');", "Console.WriteLine('pending'); const Duplicate: LoadContext := new LoadContext('duplicate', false); discard Duplicate.LoadFromAssemblyPath(Path.GetFullPath('Program.dll'));", StringComparison.Ordinal);
-        if (generic) source = source.Replace("Child(", "Child<T>(", StringComparison.Ordinal)
-            .Replace("await Child<T>(Input, Gate)", "await Child<T>(Input, Gate).ConfigureAwait(false)", StringComparison.Ordinal)
-            .Replace("Parent(", "Parent<T>(", StringComparison.Ordinal).Replace("Parent<T>(19,", "Parent<int>(19,", StringComparison.Ordinal);
+        if (generic) source = source.Replace("Child(", "Child of T(", StringComparison.Ordinal)
+            .Replace("await Child of T(Input, Gate)", "await Child of T(Input, Gate).ConfigureAwait(false)", StringComparison.Ordinal)
+            .Replace("Parent(", "Parent of T(", StringComparison.Ordinal).Replace("Parent of T(19,", "Parent of int(19,", StringComparison.Ordinal);
         await program.Compile(source, optimized ? ["--optimize"] : []);
         if (optimized) program.UseFullyOptimizedJit();
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));

@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Feedback.StatusTags as W;
 // - `Label`: Caption, or empty for the preset caption.
 // ## Returns
 // The status tag with a removal message.
-public function View(Label: string): E.Element<string>;
+public function View(Label: string): E.Element of string;
 begin
-  return W.StatusTag<string>('review', new W.Value(Label, W.Status.InReview),
+  return W.StatusTag of string('review', new W.Value(Label, W.Status.InReview),
     function(): string => 'remove-review', new W.Options(Small := true));
 end function;
 

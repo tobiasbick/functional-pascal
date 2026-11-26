@@ -12,10 +12,10 @@ uses Fpas.Ui.Elements as E;
 // - `Children`: Direct buttons and icon buttons in focus order.
 // ## Returns
 // A horizontal button group.
-public function ButtonGroup<TMsg>(params Children: array of E.Element<TMsg>): E.Element<TMsg>;
+public function ButtonGroup of TMsg(params Children: array of E.Element of TMsg): E.Element of TMsg;
 requires Children <> null;
 begin
-  return E.Element<TMsg>.ButtonGroup(Children);
+  return (E.Element of TMsg).ButtonGroup(Children);
 end function;
 
 end unit;

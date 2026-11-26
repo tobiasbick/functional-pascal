@@ -71,7 +71,7 @@ begin
     if not Current.Saving.Contains(Id) and (Current.Items[Index].Rating ?? 0) = Value then
       for Control: Gui.Control in Session.Window.Snapshot().Controls do
         if Control.Id = 'album-rating-' + Id then
-          X.Assert.Equal<string>(Value.ToString(), Control.Value);
+          X.Assert.Equal of string(Value.ToString(), Control.Value);
           X.Assert.True(Control.Enabled);
           return;
         end if;
@@ -179,7 +179,7 @@ public type NativeAlbumTests = record
         App.Msg.Navigation(Nav.Msg.Select(Nav.Route.Page(Nav.Page.Music)))
       );
       Pump(Session);
-      X.Assert.Equal<int>(0, Session.State().Albums.Images.Count);
+      X.Assert.Equal of int(0, Session.State().Albums.Images.Count);
     finally
       Library.DisposeAsync().GetAwaiter().GetResult();
     end try;

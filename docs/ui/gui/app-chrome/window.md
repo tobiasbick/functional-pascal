@@ -35,17 +35,17 @@ end variant;
 // The kept placement and the host command.
 public function Update(
   Kept: Cui.CuiWindowPlacement?; Message: Msg
-): Mvu.Transition<Cui.CuiWindowPlacement?, Msg>;
+): Mvu.Transition of (Cui.CuiWindowPlacement?, Msg);
 begin
   case Message of
     when Msg.Maximize:
-      return new Mvu.Transition<Cui.CuiWindowPlacement?, Msg>(Kept, [Windows.Maximize<Msg>()]);
+      return new Mvu.Transition of (Cui.CuiWindowPlacement?, Msg)(Kept, [Windows.Maximize of Msg()]);
     when Msg.Restore:
-      return new Mvu.Transition<Cui.CuiWindowPlacement?, Msg>(Kept, [Windows.Restore<Msg>()]);
+      return new Mvu.Transition of (Cui.CuiWindowPlacement?, Msg)(Kept, [Windows.Restore of Msg()]);
     when Msg.Save:
-      return new Mvu.Transition<Cui.CuiWindowPlacement?, Msg>(Kept, [Windows.ReadPlacement<Msg>(Msg.Saved)]);
+      return new Mvu.Transition of (Cui.CuiWindowPlacement?, Msg)(Kept, [Windows.ReadPlacement of Msg(Msg.Saved)]);
     when Msg.Saved(const Value: Cui.CuiWindowPlacement):
-      return new Mvu.Transition<Cui.CuiWindowPlacement?, Msg>(Value, []);
+      return new Mvu.Transition of (Cui.CuiWindowPlacement?, Msg)(Value, []);
   end case;
 end function;
 
@@ -62,11 +62,11 @@ and read `Session.Placement()` after the last step and before `Dispose`.
 
 | Command in `Fpas.Ui.Gui.Windows` | Effect |
 | --- | --- |
-| `Maximize<TMsg>()` | Maximizes the window on its display. |
-| `Minimize<TMsg>()` | Minimizes it to the taskbar or dock. |
-| `Restore<TMsg>()` | Undoes a maximize or a minimize. A window minimized from maximized comes back maximized. |
-| `MoveTo<TMsg>(X, Y)` | Places the top-left corner of the content. |
-| `ReadPlacement<TMsg>(OnRead)` | Sends the window's `Cui.CuiWindowPlacement` to the update. |
+| `Maximize of TMsg()` | Maximizes the window on its display. |
+| `Minimize of TMsg()` | Minimizes it to the taskbar or dock. |
+| `Restore of TMsg()` | Undoes a maximize or a minimize. A window minimized from maximized comes back maximized. |
+| `MoveTo of TMsg(X, Y)` | Places the top-left corner of the content. |
+| `ReadPlacement of TMsg(OnRead)` | Sends the window's `Cui.CuiWindowPlacement` to the update. |
 
 ## Placement
 

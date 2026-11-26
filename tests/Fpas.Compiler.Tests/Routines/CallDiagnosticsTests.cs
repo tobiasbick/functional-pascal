@@ -75,10 +75,10 @@ public sealed class CallDiagnosticsTests
     [Fact]
     public void Generic_errors_distinguish_inference_count_and_constraint()
     {
-        const string declaration = "procedure Pick<T>(); where T: class; begin end procedure;";
-        AssertExpectation(Check(declaration, "Pick();"), "type_arguments", "inference failed", "Pick<T>()");
-        AssertExpectation(Check(declaration, "Pick<int, int>();"), "type_argument_count", "2", "1");
-        var diagnostic = Check(declaration, "Pick<int>();");
+        const string declaration = "procedure Pick of T(); where T: class; begin end procedure;";
+        AssertExpectation(Check(declaration, "Pick();"), "type_arguments", "inference failed", "Pick of T()");
+        AssertExpectation(Check(declaration, "Pick of (int, int)();"), "type_argument_count", "2", "1");
+        var diagnostic = Check(declaration, "Pick of int();");
         Assert.Equal("FP3018", diagnostic.Code);
         Assert.Contains("for 'T' must satisfy 'class'", diagnostic.Message);
         AssertExpectation(diagnostic, "generic_constraint", "int", "class");

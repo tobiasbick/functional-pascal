@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Charts.ScatterCharts as W;
 // - `Series`: Series in input order.
 // ## Returns
 // The widget for the application view.
-public function View(Series: array of W.Series): E.Element<W.PointIndex>;
+public function View(Series: array of W.Series): E.Element of W.PointIndex;
 begin
-  return W.ScatterChart<W.PointIndex>('scatter', Series,
+  return W.ScatterChart of W.PointIndex('scatter', Series,
     new W.Options(Height := 300.0F, XLabel := 'Nodes', YLabel := 'Frame time (ms)',
       YFormat := new C.ValueFormat(DecimalPlaces := 2)),
     function(Chosen: W.PointIndex): W.PointIndex => Chosen);

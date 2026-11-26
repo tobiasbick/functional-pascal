@@ -16,9 +16,9 @@ uses Fpas.Ui.Widgets.Files.SignaturePads as W;
 // Builds a pad that reports a snapshot of the ink.
 // ## Returns
 // The pad with each signature change as an application message.
-public function View(): E.Element<W.Signature>;
+public function View(): E.Element of W.Signature;
 begin
-  return W.SignaturePad<W.Signature>('signature',
+  return W.SignaturePad of W.Signature('signature',
     function(Value: W.Signature): W.Signature => Value,
     new W.Options(Height := 180.0F));
 end function;

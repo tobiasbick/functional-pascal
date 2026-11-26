@@ -55,11 +55,11 @@ uses System.Collections.Generic as Generic;
 // - `AnimationPhase`: Current motion step for the rendered frame.
 // ## Returns
 // Painted cells with control bounds, keyboard navigation and scroll regions.
-public function Arrange<TMsg>(
-  Root: E.Element<TMsg>; Columns: int; Rows: int;
-  Previous: A.Layout<TMsg>?; Scroll: Generic.Dictionary<string, int>; Theme: Th.Theme; Popup: PopupState.State<TMsg>; Focus: string;
+public function Arrange of TMsg(
+  Root: E.Element of TMsg; Columns: int; Rows: int;
+  Previous: (A.Layout of TMsg)?; Scroll: Generic.Dictionary of (string, int); Theme: Th.Theme; Popup: PopupState.State of TMsg; Focus: string;
   AnimationPhase: long := 0L
-): A.Layout<TMsg>;
+): A.Layout of TMsg;
   procedure Draw(Value: string; Area: F.Rect; Clip: F.Rect; Style: T.Style; Wrap: bool);
   begin
     if Value.Length > 0 then
@@ -67,7 +67,7 @@ public function Arrange<TMsg>(
     end if;
   end procedure;
 
-  procedure AddControl(Control: A.Control<TMsg>);
+  procedure AddControl(Control: A.Control of TMsg);
   begin
     if Control.Id.Length = 0 or not Ids.Add(Control.Id) then
       raise new Sys.ArgumentException('Control IDs must be nonempty and unique.');
@@ -83,13 +83,13 @@ public function Arrange<TMsg>(
 
   procedure Register(
     Id: string; Label: string; Role: string; Value: string;
-    Area: F.Rect; ScopeId: string; Enabled: bool; Action: A.Binding<TMsg>;
+    Area: F.Rect; ScopeId: string; Enabled: bool; Action: A.Binding of TMsg;
     Variant: UiStyle.ButtonVariant := UiStyle.ButtonVariant.Default;
     ButtonStyle: bool := false; ArrowFocus: bool := false; Hint: string := ''; Foreground: G.Color? := null; TabTarget: string := ''
   );
   begin
     AddControl(
-      new A.Control<TMsg>(
+      new A.Control of TMsg(
         Id,
         Label,
         Role,
@@ -108,7 +108,7 @@ public function Arrange<TMsg>(
     );
   end procedure;
 
-  procedure Visit(Node: E.Element<TMsg>; Area: F.Rect; Limit: F.Rect; ScopeId: string; Style: T.Style);
+  procedure Visit(Node: E.Element of TMsg; Area: F.Rect; Limit: F.Rect; ScopeId: string; Style: T.Style);
     procedure HiddenTabStop(Id: string; Focusable: bool := false);
     begin
       TabStops.Add(new A.TabStop(Id, ScopeId));
@@ -152,13 +152,13 @@ public function Arrange<TMsg>(
           end if;
 
           return;
-        when E.Element.TextField(const Field: Edit.Field<TMsg>):
+        when E.Element.TextField(const Field: Edit.Field of TMsg):
           if Field.Settings.Enabled then
             HiddenTabStop(Field.Id);
           end if;
 
           return;
-        when E.Element.TextArea(const Field: AreaEdit.Field<TMsg>):
+        when E.Element.TextArea(const Field: AreaEdit.Field of TMsg):
           if Field.Settings.Enabled then
             HiddenTabStop(Field.Id);
           end if;
@@ -167,7 +167,7 @@ public function Arrange<TMsg>(
         when E.Element.CellGrid(const Id: string, _, _):
           HiddenTabStop(Id);
           return;
-        when E.Element.SelectionList(const List: E.SelectionListView<TMsg>):
+        when E.Element.SelectionList(const List: E.SelectionListView of TMsg):
           if List.Items.Length > 0 then
             HiddenTabStop(List.Id, true);
           end if;
@@ -199,9 +199,9 @@ public function Arrange<TMsg>(
     case Node of
       when E.Element.Palette(
         const Id: string,
-        const Base: E.Element<TMsg>,
+        const Base: E.Element of TMsg,
         const Open: bool,
-        const Commands: array of Palettes.Command<TMsg>,
+        const Commands: array of Palettes.Command of TMsg,
         const Change: function(bool): TMsg,
         const Shortcut: bool
       ):
@@ -212,7 +212,7 @@ public function Arrange<TMsg>(
 
         if Open then
           Scopes.Add(Id);
-          Active := Palette.Draw<TMsg>(
+          Active := Palette.Draw of TMsg(
             Id,
             Commands,
             Change,
@@ -239,34 +239,34 @@ public function Arrange<TMsg>(
         const Timestamps: bool
       ):
         AddControl(
-          Log.Arrange<TMsg>(
-            Id, Entries, Timestamps, A.FindControl<TMsg>(Previous, Id), Clip, Style, Theme,
+          Log.Arrange of TMsg(
+            Id, Entries, Timestamps, A.FindControl of TMsg(Previous, Id), Clip, Style, Theme,
             ScopeId, FocusReturn, Scroll, Regions, Operations
           )
         );
-      when E.Element.ChoiceStrip(const Strip: E.ChoiceStripView<TMsg>):
-        ChoiceStrip.Arrange<TMsg>(
+      when E.Element.ChoiceStrip(const Strip: E.ChoiceStripView of TMsg):
+        ChoiceStrip.Arrange of TMsg(
           Strip, Area, Clip, Style, Theme, ScopeId, FocusReturn, ScrollId, Focus,
           Scroll, Operations, NavigationRows, TabStops, AddControl
         );
-      when E.Element.Pager(const Pager: E.PagerView<TMsg>):
-        Pagination.Arrange<TMsg>(
+      when E.Element.Pager(const Pager: E.PagerView of TMsg):
+        Pagination.Arrange of TMsg(
           Pager, Area, Clip, Style, Theme, ScopeId, FocusReturn, ScrollId,
           Operations, NavigationRows, TabStops, AddControl
         );
-      when E.Element.Breadcrumb(const Trail: E.BreadcrumbView<TMsg>):
-        Breadcrumb.Arrange<TMsg>(
+      when E.Element.Breadcrumb(const Trail: E.BreadcrumbView of TMsg):
+        Breadcrumb.Arrange of TMsg(
           Trail, Area, Clip, Style, Theme, Popup, ScopeId, FocusReturn, ScrollId,
           Operations, NavigationRows, TabStops, AddControl
         );
-      when E.Element.Table(const Table: E.TableView<TMsg>):
-        Tables.Arrange<TMsg>(
+      when E.Element.Table(const Table: E.TableView of TMsg):
+        Tables.Arrange of TMsg(
           Table, Area, Clip, Style, Theme, ScopeId, FocusReturn,
           Scroll, Regions, NavigationRows, Operations, AddControl
         );
-      when E.Element.SelectionList(const List: E.SelectionListView<TMsg>):
+      when E.Element.SelectionList(const List: E.SelectionListView of TMsg):
         AddControl(
-          SelectionList.Arrange<TMsg>(
+          SelectionList.Arrange of TMsg(
             List, Previous, Clip, Style, Theme, ScopeId, FocusReturn, Scroll, Regions, Operations
           )
         );
@@ -281,10 +281,19 @@ public function Arrange<TMsg>(
           Operations.Add(new D.Operation('', Area, Clip, Style, false, Grid := Content));
         end if;
 
-        Register(Id, Id, 'cell-grid', '', Clip, ScopeId, true, A.Binding<TMsg>.Grid(Area, Changed));
-      when E.Element.TextArea(const Field: AreaEdit.Field<TMsg>):
+        Register(
+          Id,
+          Id,
+          'cell-grid',
+          '',
+          Clip,
+          ScopeId,
+          true,
+          (A.Binding of TMsg).Grid(Area, Changed)
+        );
+      when E.Element.TextArea(const Field: AreaEdit.Field of TMsg):
         AddControl(
-          AreaWidget.Arrange<TMsg>(
+          AreaWidget.Arrange of TMsg(
             Field,
             Previous,
             Area,
@@ -296,9 +305,9 @@ public function Arrange<TMsg>(
             Operations
           )
         );
-      when E.Element.TextField(const Field: Edit.Field<TMsg>):
+      when E.Element.TextField(const Field: Edit.Field of TMsg):
         AddControl(
-          FieldWidget.Arrange<TMsg>(
+          FieldWidget.Arrange of TMsg(
             Field,
             Previous,
             Area,
@@ -370,7 +379,7 @@ public function Arrange<TMsg>(
           Style,
           Theme
         );
-      when E.Element.StatusBar(const Row: E.Element<TMsg>, const HideBorder: bool):
+      when E.Element.StatusBar(const Row: E.Element of TMsg, const HideBorder: bool):
         var Top: int := Area.Y;
         if not HideBorder and Area.Height > 1 then
           D.HorizontalRule(
@@ -386,12 +395,12 @@ public function Arrange<TMsg>(
         Visit(Row, new F.Rect(Area.X, Top, Area.Width, 1), Clip, ScopeId, Style);
       when E.Element.Action(
         const Id: string,
-        const Handler: Actions.IActivatable<TMsg>,
+        const Handler: Actions.IActivatable of TMsg,
         const Enabled: bool,
         const View: E.ActionView
       ):
         const Caption: string := case View.CaptionForWidth of
-          when is Sys.Func<int, string> as ResolveCaption: ResolveCaption.Invoke(
+          when is Sys.Func of (int, string) as ResolveCaption: ResolveCaption.Invoke(
             Sys.Math.Max(0, Clip.Width - 2 * View.Padding)
           );
           else View.Caption;
@@ -412,7 +421,7 @@ public function Arrange<TMsg>(
           View.Foreground,
           View.Joined, View.Description
         );
-        const Action: A.Binding<TMsg> := A.Binding<TMsg>.Invoke(Handler);
+        const Action: A.Binding of TMsg := (A.Binding of TMsg).Invoke(Handler);
         Register(
           Id,
           View.Name ?? View.Caption,
@@ -428,11 +437,11 @@ public function Arrange<TMsg>(
           Hint := View.Hint,
           Foreground := View.Foreground, TabTarget := View.TabTarget
         );
-      when E.Element.Sized(const Child: E.Element<TMsg>, _):
+      when E.Element.Sized(const Child: E.Element of TMsg, _):
         Visit(Child, Area, Clip, ScopeId, Style);
       when E.Element.DisclosureBody(
         const Header: string,
-        const Child: E.Element<TMsg>,
+        const Child: E.Element of TMsg,
         const Enabled: bool
       ):
         const Parent: string := FocusReturn;
@@ -455,7 +464,7 @@ public function Arrange<TMsg>(
         FocusReturn := Parent;
         ScrollId := ParentScroll;
         InputBlocked := WasBlocked;
-      when E.Element.Decorated(const Child: E.Element<TMsg>, const ChildStyle: T.Style):
+      when E.Element.Decorated(const Child: E.Element of TMsg, const ChildStyle: T.Style):
         if Clip.Height > 0 and ChildStyle.Background <> null and ChildStyle.Background <>
           Style.Background
         then
@@ -464,12 +473,12 @@ public function Arrange<TMsg>(
 
         Visit(Child, Area, Clip, ScopeId, ChildStyle);
       when E.Element.Stack(
-        const Children: array of E.Element<TMsg>,
+        const Children: array of E.Element of TMsg,
         const Axis: bool,
         const Flow: E.Flow
       ):
         VisitStack(Children, Axis, Flow, Area, Clip, ScopeId, Style);
-      when E.Element.Framed(const Child: E.Element<TMsg>, const Title: string):
+      when E.Element.Framed(const Child: E.Element of TMsg, const Title: string):
         if Clip.Height > 0 then
           D.Border(Operations, Area, Clip, Title, Style, Widgets);
         end if;
@@ -480,8 +489,8 @@ public function Arrange<TMsg>(
             Sys.Math.Max(0, Area.Height - 2)
           ), Clip, ScopeId, Style
         );
-      when E.Element.Scrollable(const Id: string, const Child: E.Element<TMsg>, const Bar: bool):
-        const Layout: V.Geometry<TMsg> := V.Arrange<TMsg>(
+      when E.Element.Scrollable(const Id: string, const Child: E.Element of TMsg, const Bar: bool):
+        const Layout: V.Geometry of TMsg := V.Arrange of TMsg(
           Child,
           E.ScrollPosition.Offset(Offset(Id, int.MaxValue)),
           Area,
@@ -492,16 +501,16 @@ public function Arrange<TMsg>(
         Scroll[Id] := Layout.View.Offset;
         Regions.Add(new A.ScrollRegion(Id, ScopeId, Clip, Layout.View.Maximum));
         VisitScrolled(Id, Child, Layout.Content, Layout.Clip, ScopeId, Style);
-        V.DrawBar<TMsg>(Layout.View, Operations, Area, Clip, Style, Widgets);
+        V.DrawBar of TMsg(Layout.View, Operations, Area, Clip, Style, Widgets);
       when E.Element.ControlledScroll(
-        const Id: string, const Child: E.Element<TMsg>, const Position: E.ScrollPosition,
-        const OnScroll: Sys.Func<L.ScrollChange, TMsg>, const ShowScrollbar: bool
+        const Id: string, const Child: E.Element of TMsg, const Position: E.ScrollPosition,
+        const OnScroll: Sys.Func of (L.ScrollChange, TMsg), const ShowScrollbar: bool
       ):
-        const Layout: V.Geometry<TMsg> := V.Arrange<TMsg>(
+        const Layout: V.Geometry of TMsg := V.Arrange of TMsg(
           Child, Position, Area, Clip, ShowScrollbar, OnScroll
         );
-        const View: V.Viewport<TMsg> := Layout.View;
-        const Action: A.Binding<TMsg> := A.Binding<TMsg>.Scroll(View);
+        const View: V.Viewport of TMsg := Layout.View;
+        const Action: A.Binding of TMsg := (A.Binding of TMsg).Scroll(View);
         Register(
           Id,
           Id,
@@ -518,36 +527,36 @@ public function Arrange<TMsg>(
 
         VisitScrolled(Id, Child, Layout.Content, Layout.Clip, ScopeId, Style);
         if Focus = Id and not InputBlocked then
-          V.DrawBar<TMsg>(View, Operations, Area, Clip, Theme.Focus, null);
+          V.DrawBar of TMsg(View, Operations, Area, Clip, Theme.Focus, null);
         else
-          V.DrawBar<TMsg>(View, Operations, Area, Clip, Style, Widgets);
+          V.DrawBar of TMsg(View, Operations, Area, Clip, Style, Widgets);
         end if;
       when E.Element.Desktop(
-        const Content: E.Element<TMsg>, const Layers: array of E.Element<TMsg>,
-        const Keys: array of K.ShortcutBinding<TMsg>
+        const Content: E.Element of TMsg, const Layers: array of E.Element of TMsg,
+        const Keys: array of K.ShortcutBinding of TMsg
       ):
         if not InputBlocked and Keys.Length > 0 then
           GlobalKeys := Keys;
         end if;
 
         Visit(Content, Area, Clip, ScopeId, Style);
-        for Layer: E.Element<TMsg> in Layers do
+        for Layer: E.Element of TMsg in Layers do
           Visit(Layer, Area, Clip, ScopeId, Style);
         end for;
       when E.Element.ModalPanel(
         const Id: string, const Settings: E.ModalOptions, const Size: int,
-        const Content: E.Element<TMsg>, const Dismiss: Sys.Func<TMsg>, const Colors: T.Style
+        const Content: E.Element of TMsg, const Dismiss: Sys.Func of TMsg, const Colors: T.Style
       ):
         if InputBlocked then
           return;
         end if;
-        const Layer: Panel.Placement<TMsg> := Panel.Arrange<TMsg>(
+        const Layer: Panel.Placement of TMsg := Panel.Arrange of TMsg(
           Operations, Screen, Id, Settings, Size, Content, Colors, Theme, Dismiss, FocusReturn
         );
         Scopes.Add(Id);
         Active := Layer.Scope;
         case Layer.Close of
-          when is A.Control<TMsg> as Close:
+          when is A.Control of TMsg as Close:
             AddControl(Close);
           else
         end case;
@@ -556,7 +565,7 @@ public function Arrange<TMsg>(
     end case;
   end procedure;
 
-  procedure VisitScrolled(Id: string; Child: E.Element<TMsg>; Area: F.Rect; Clip: F.Rect; ScopeId: string; Style: T.Style);
+  procedure VisitScrolled(Id: string; Child: E.Element of TMsg; Area: F.Rect; Clip: F.Rect; ScopeId: string; Style: T.Style);
   begin
     const PreviousWrap: bool := WrapText;
     const ParentScroll: string := ScrollId;
@@ -577,11 +586,11 @@ public function Arrange<TMsg>(
   end function;
 
   procedure VisitStack(
-    Children: array of E.Element<TMsg>; Axis: bool; Flow: E.Flow;
+    Children: array of E.Element of TMsg; Axis: bool; Flow: E.Flow;
     Area: F.Rect; Clip: F.Rect; ScopeId: string; Style: T.Style
   );
   begin
-    const Bounds: array of F.Rect := Stacks.Bounds<TMsg>(
+    const Bounds: array of F.Rect := Stacks.Bounds of TMsg(
       Children,
       Axis,
       Flow,
@@ -596,34 +605,34 @@ public function Arrange<TMsg>(
   end procedure;
 begin
   const Widgets: Th.WidgetStyles? := Theme.Widgets;
-  const Operations: Generic.List<D.Operation> := new Generic.List<D.Operation>();
-  const Allocations: Generic.List<F.AllocationMemo> := new Generic.List<F.AllocationMemo>();
+  const Operations: Generic.List of D.Operation := new Generic.List of D.Operation();
+  const Allocations: Generic.List of F.AllocationMemo := new Generic.List of F.AllocationMemo();
   const PreviousAllocations: array of F.AllocationMemo := if Previous = null then
     []
   else
     Previous.Allocations
   end if;
-  const TabStops: Generic.List<A.TabStop> := new Generic.List<A.TabStop>();
-  const Controls: Generic.List<A.Control<TMsg>> := new Generic.List<A.Control<TMsg>>();
-  const Scopes: Generic.List<string> := new Generic.List<string>();
-  const Regions: Generic.List<A.ScrollRegion> := new Generic.List<A.ScrollRegion>();
-  const NavigationRows: Generic.List<A.NavigationStop> := new Generic.List<A.NavigationStop>();
+  const TabStops: Generic.List of A.TabStop := new Generic.List of A.TabStop();
+  const Controls: Generic.List of A.Control of TMsg := new Generic.List of A.Control of TMsg();
+  const Scopes: Generic.List of string := new Generic.List of string();
+  const Regions: Generic.List of A.ScrollRegion := new Generic.List of A.ScrollRegion();
+  const NavigationRows: Generic.List of A.NavigationStop := new Generic.List of A.NavigationStop();
   var ScrollId: string := '';
-  const Ids: Generic.HashSet<string> := new Generic.HashSet<string>();
-  var Active: A.Scope<TMsg>? := null;
+  const Ids: Generic.HashSet of string := new Generic.HashSet of string();
+  var Active: (A.Scope of TMsg)? := null;
   var FocusReturn: string := '';
   var InputBlocked: bool := false;
   var WrapText: bool := false;
-  var GlobalKeys: array of K.ShortcutBinding<TMsg> := [];
-  var OpenPalette: Sys.Func<TMsg>? := null;
+  var GlobalKeys: array of K.ShortcutBinding of TMsg := [];
+  var OpenPalette: (Sys.Func of TMsg)? := null;
   var PaletteOpen: bool := false;
   var Animated: bool := false;
   const Screen: F.Rect := new F.Rect(0, 0, Columns, Rows);
   Visit(Root, Screen, Screen, '', Theme.Text);
-  const OpenPopup: A.Scope<TMsg>? := if PaletteOpen then
+  const OpenPopup: (A.Scope of TMsg)? := if PaletteOpen then
     null
   else
-    PopupHost.Present<TMsg>(
+    PopupHost.Present of TMsg(
       Popup,
       Active,
       Screen,
@@ -642,7 +651,7 @@ begin
     Previous.Painted
   end if;
   const Surface: D.Surface := D.Render(Operations, Columns, Rows, PreviousRows, Theme.Text);
-  return new A.Layout<TMsg>(
+  return new A.Layout of TMsg(
     Surface.Lines,
     Surface.Cells,
     Controls.ToArray(),

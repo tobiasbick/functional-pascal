@@ -18,18 +18,18 @@ public type EffectRepliesTests = record
   // Superseding a held post cancels it. The replacement's failure is released once.
   [X.FactAttribute]
   public procedure SupersededReplyAndMappedFailure();
-    function Update(Model: string; Message: string): A.Transition<string, string>;
+    function Update(Model: string; Message: string): A.Transition of (string, string);
     begin
       if Message <> 'start' and Message <> 'replace' then
-        return new A.Transition<string, string>(Message, []);
+        return new A.Transition of (string, string)(Message, []);
       end if;
 
-      return Gate.Wrap<string>(
-        new A.Transition<string, string>(
+      return Gate.Wrap of string(
+        new A.Transition of (string, string)(
           Model, [
-            A.StartBackground<string>(
+            A.StartBackground of string(
               'load',
-              A.FromWorker<string>(
+              A.FromWorker of string(
                 function(Post: function(string): Tasks.Task; Token: T.CancellationToken): Tasks.Task begin
                   if Message = 'replace' then
                     raise new Sys.InvalidOperationException('Read failed');
@@ -44,30 +44,30 @@ public type EffectRepliesTests = record
       );
     end function;
   begin
-    const Gate: Replies.Effects<string> := Replies.Effects<string>.Create();
+    const Gate: Replies.Effects of string := (Replies.Effects of string).Create();
     using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
-    const Session: Runtime.Runtime<string, string, int> := Runtime.Start<string, string, int>(
+    const Session: Runtime.Runtime of (string, string, int) := Runtime.Start of (string, string, int)(
       'Waiting', Update, procedure(_Request: A.HostRequest) begin end procedure, 4
     );
     try
-      const First: Channels.ChannelReader<Replies.Reply<string>> := Gate.Watch('load');
+      const First: Channels.ChannelReader of Replies.Reply of string := Gate.Watch('load');
       Session.Dispatch('start');
-      const Held: Replies.Reply<string> := First.ReadAsync(
+      const Held: Replies.Reply of string := First.ReadAsync(
         Stop.Token
       ).AsTask().GetAwaiter().GetResult();
-      const Second: Channels.ChannelReader<Replies.Reply<string>> := Gate.Watch('load');
+      const Second: Channels.ChannelReader of Replies.Reply of string := Gate.Watch('load');
       Session.Dispatch('replace');
-      const Failure: Replies.Reply<string> := Second.ReadAsync(
+      const Failure: Replies.Reply of string := Second.ReadAsync(
         Stop.Token
       ).AsTask().GetAwaiter().GetResult();
       First.Completion.WaitAsync(Stop.Token).GetAwaiter().GetResult();
       X.Assert.True(Held.Release().IsCanceled);
-      X.Assert.Equal<int>(0, Session.QueueCount());
+      X.Assert.Equal of int(0, Session.QueueCount());
       Failure.Release().WaitAsync(Stop.Token).GetAwaiter().GetResult();
       Failure.Release().WaitAsync(Stop.Token).GetAwaiter().GetResult();
-      X.Assert.Equal<int>(1, Session.QueueCount());
+      X.Assert.Equal of int(1, Session.QueueCount());
       discard Session.Advance();
-      X.Assert.Equal<string>('Read failed', Session.Model());
+      X.Assert.Equal of string('Read failed', Session.Model());
     finally
       Session.Close().WaitAsync(Sys.TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
     end try;
@@ -76,10 +76,10 @@ public type EffectRepliesTests = record
   // A typed effect gets its environment at execution and emits both kinds of outcome through the session.
   [X.FactAttribute]
   public procedure TypedEffectOutcomes();
-    function Load(Value: int; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<int, string>>;
+    function Load(Value: int; Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (int, string);
     begin
       Token.ThrowIfCancellationRequested();
-      return Tasks.Task.FromResult<Fx.Outcome<int, string>>(
+      return Tasks.Task.FromResult of Fx.Outcome of (int, string)(
         if Value > 0 then
           Fx.Outcome.Success(Value * 2)
         else
@@ -88,19 +88,19 @@ public type EffectRepliesTests = record
       );
     end function;
 
-    function Update(Model: string; Message: string): A.Transition<string, string>;
+    function Update(Model: string; Message: string): A.Transition of (string, string);
     begin
       if Message <> 'load' and Message <> 'fail' then
-        return new A.Transition<string, string>(Message, []);
+        return new A.Transition of (string, string)(Message, []);
       end if;
 
-      return Gate.Wrap<string>(
-        new A.Transition<string, string>(
+      return Gate.Wrap of string(
+        new A.Transition of (string, string)(
           Model, [
-            A.StartBackground<string>(
-              'typed', A.FromEffect<int, string, int, string>(
-                Fx.Effect<int, string, int>.Defer(Load),
-                function(_Context: A.BackgroundContext<string>): int => if Message = 'load' then
+            A.StartBackground of string(
+              'typed', A.FromEffect of (int, string, int, string)(
+                Fx.Effect of (int, string, int).Defer(Load),
+                function(_Context: A.BackgroundContext of string): int => if Message = 'load' then
                   21
                 else
                   0
@@ -114,30 +114,30 @@ public type EffectRepliesTests = record
       );
     end function;
   begin
-    const Gate: Replies.Effects<string> := Replies.Effects<string>.Create();
+    const Gate: Replies.Effects of string := (Replies.Effects of string).Create();
     using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
-    const Session: Runtime.Runtime<string, string, int> := Runtime.Start<string, string, int>(
+    const Session: Runtime.Runtime of (string, string, int) := Runtime.Start of (string, string, int)(
       'waiting', Update, procedure(_Request: A.HostRequest) begin end procedure, 4
     );
     try
       for Request: string in ['load', 'fail'] do
         const Before: string := Session.Model();
-        const Reader: Channels.ChannelReader<Replies.Reply<string>> := Gate.Watch('typed');
+        const Reader: Channels.ChannelReader of Replies.Reply of string := Gate.Watch('typed');
         Session.Dispatch(Request);
-        const Reply: Replies.Reply<string> := Reader.ReadAsync(
+        const Reply: Replies.Reply of string := Reader.ReadAsync(
           Stop.Token
         ).AsTask().GetAwaiter().GetResult();
-        X.Assert.Equal<string>(Before, Session.Model());
-        X.Assert.Equal<int>(0, Session.QueueCount());
+        X.Assert.Equal of string(Before, Session.Model());
+        X.Assert.Equal of int(0, Session.QueueCount());
         const Expected: string := if Request = 'load' then
           'loaded 42'
         else
           'failed invalid'
         end if;
-        X.Assert.Equal<string>(Expected, Reply.Message);
+        X.Assert.Equal of string(Expected, Reply.Message);
         Reply.Release().WaitAsync(Stop.Token).GetAwaiter().GetResult();
         discard Session.Advance();
-        X.Assert.Equal<string>(Expected, Session.Model());
+        X.Assert.Equal of string(Expected, Session.Model());
       end for;
     finally
       Session.Close().WaitAsync(Stop.Token).GetAwaiter().GetResult();

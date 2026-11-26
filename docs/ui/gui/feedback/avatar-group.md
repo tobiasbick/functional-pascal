@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Media.AvatarGroups as W;
 // - `Names`: Names in display order.
 // ## Returns
 // The widget for the application view.
-public function View(Names: array of string): E.Element<string>;
+public function View(Names: array of string): E.Element of string;
 begin
-  return W.AvatarGroup<string>('feedback-team', Names, new W.Options(MaximumVisible := 4));
+  return W.AvatarGroup of string('feedback-team', Names, new W.Options(MaximumVisible := 4));
 end function;
 
 end unit;

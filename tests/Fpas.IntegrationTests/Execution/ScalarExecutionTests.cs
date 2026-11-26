@@ -34,14 +34,14 @@ public sealed class ScalarExecutionTests
         type PlayerName = distinct string;
         type Money = distinct decimal;
         type Flag = distinct bool;
-        function Echo<T>(Value: T): T; begin return Value; end function;
+        function Echo of T(Value: T): T; begin return Value; end function;
         function Ordered(Left: PlayerName; Right: PlayerName): bool;
         requires Left < Right;
         begin return true; end function;
         begin
           const Id: UserId := new UserId(42L); Console.WriteLine(cast<long>(Echo(Id)));
           Console.WriteLine(Id = new UserId(42L)); Console.WriteLine(Id < new UserId(43L));
-          const Items: C.HashSet<UserId> := new C.HashSet<UserId>(); discard Items.Add(Id); discard Items.Add(new UserId(42L)); Console.WriteLine(Items.Count);
+          const Items: C.HashSet of UserId := new C.HashSet of UserId(); discard Items.Add(Id); discard Items.Add(new UserId(42L)); Console.WriteLine(Items.Count);
           const Name: PlayerName := new PlayerName('Ada'); Console.WriteLine(Name.Value); Console.WriteLine(Name = cast<PlayerName>('Ada'));
           const Missing: PlayerName? := null; Console.WriteLine(Missing = null);
           Console.WriteLine(new PlayerName('Ada') < new PlayerName('Zed'));
@@ -64,9 +64,9 @@ public sealed class ScalarExecutionTests
         type Negative = long range -9223372036854775808L..-1L;
         type Full = long range -9223372036854775808L..9223372036854775807L;
         type High = ulong range 18446744073709551610UL..18446744073709551615UL;
-        function Create<T>(): T; where T: struct; begin return new T(); end function;
+        function Create of T(): T; where T: struct; begin return new T(); end function;
         begin
-          const Ports: array of Port := new Port[2]; Console.WriteLine(Ports[0].Value); Console.WriteLine(Create<Port>().Value);
+          const Ports: array of Port := new Port[2]; Console.WriteLine(Ports[0].Value); Console.WriteLine(Create of Port().Value);
           const Value: Port := new Port(80); const Number: int := Value; Console.WriteLine(Number); Console.WriteLine(Value + 1);
           Console.WriteLine(Port.LowerBound); Console.WriteLine(Port.UpperBound); Console.WriteLine(Value = new Port(80));
           Console.WriteLine(new Negative().Value); Console.WriteLine(new Negative(-1L).Value);

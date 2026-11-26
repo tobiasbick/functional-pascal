@@ -6,13 +6,13 @@ without changing their CLR representation or declaration syntax. Bindings,
 parameters, lambda signatures, and routine results still require explicit types.
 
 ```pascal fragment context=body
-function Identity<T>(Value: T): T;
+function Identity of T(Value: T): T;
 begin
   return Value;
 end function;
 
 const Number: int := Identity(42);
-const Copy: function(int): int := Identity<int>;
+const Copy: function(int): int := Identity of int;
 ```
 
 ## Routine and CLR method calls
@@ -24,9 +24,9 @@ Label) and Map(Items, Format); a method group for generic Identity keeps its
 explicit arguments.
 
 Evidence comes from argument types, array elements, matching constructed generic
-types, and typed callable signatures. A List<string> or `array of string` can provide the
-string argument of an IEnumerable<T> parameter. A typed lambda can provide both
-the input and output of Func<T, U>, including when it converts to a custom CLR
+types, and typed callable signatures. A `List of string` or `array of string` can
+provide the string argument of an `IEnumerable of T` parameter. A typed lambda can provide both
+the input and output of `Func of (T, U)`, including when it converts to a custom CLR
 delegate. Unique nongeneric method groups provide their ordinary callable types.
 
 The solver gathers exact/lower/upper bounds according to invariant, covariant,
@@ -39,9 +39,8 @@ type selected by its parameter, such as `array of double` for a widened numeric 
 
 Constraints are checked after inference and never supply missing type arguments.
 The expected routine result does not infer routine arguments. For example, a
-typed destination does not make Create<T>() infer T from its result; that call
-still needs Create<int>(). Generic method groups also retain explicit type
-arguments; a delegate destination alone does not close Identity<T>.
+typed destination alone still requires an explicit call such as `Create of int()`.
+Generic method groups likewise retain explicit type arguments, as in `Identity of int`.
 
 Imported overloads are inferred independently before ordinary applicability,
 constraint, and better-member checks. Equivalent closed parameter lists prefer
@@ -54,15 +53,15 @@ an overload and there is no dynamic/reflection fallback.
 The uninstantiated name of a generic variant supports case construction:
 
 ```pascal fragment context=declarations
-type Tree<T> = variant
+type Tree of T = variant
   Empty;
   Leaf(Value: T);
-  Branch(Left: Tree<T>; Right: Tree<T>);
+  Branch(Left: Tree of T; Right: Tree of T);
 end variant;
 
-const Leaf: Tree<int> := Tree.Leaf(42);
-const Empty: Tree<int> := Tree.Empty;
-const Branch: Tree<int> := Tree.Branch(Tree.Empty, Tree.Leaf(7));
+const Leaf: Tree of int := Tree.Leaf(42);
+const Empty: Tree of int := Tree.Empty;
+const Branch: Tree of int := Tree.Branch(Tree.Empty, Tree.Leaf(7));
 ```
 
 Payload types and a matching expected variant type supply evidence. Bindings,

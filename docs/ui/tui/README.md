@@ -37,18 +37,18 @@ uses Fpas.Ui.Mvu.Application as Mvu;
 uses Fpas.Ui.Tui.Host as Tui;
 uses Fpas.Ui.Widgets.Actions.Buttons as Buttons;
 
-function Update(Model: int; Message: int): Mvu.Transition<int, int>;
+function Update(Model: int; Message: int): Mvu.Transition of (int, int);
 begin
-  return new Mvu.Transition<int, int>(Model, [Mvu.Exit<int>()]);
+  return new Mvu.Transition of (int, int)(Model, [Mvu.Exit of int()]);
 end function;
 
-function View(Model: int): E.Element<int>;
+function View(Model: int): E.Element of int;
 begin
-  return Buttons.Button<int>('close', 'Close', 1);
+  return Buttons.Button of int('close', 'Close', 1);
 end function;
 
 begin
-  Tui.Run<int, int>(0, Update, View);
+  Tui.Run of (int, int)(0, Update, View);
 end;
 
 end program;

@@ -15,7 +15,7 @@ uses System.Globalization as G;
 // Search documents and filter choices, prepared once per catalogue snapshot.
 public type Catalog = record
   // One search document per album, in catalogue order.
-  public Documents: I.ImmutableArray<Matching.Document> := I.ImmutableArray<Matching.Document>.Empty;
+  public Documents: I.ImmutableArray of Matching.Document := (I.ImmutableArray of Matching.Document).Empty;
   // Distinct album artists in display order.
   public Artists: array of string := [];
   // Distinct genres in display order.
@@ -32,9 +32,9 @@ begin
   );
 end function;
 
-function Sorted(Values: C.HashSet<string>): array of string;
+function Sorted(Values: C.HashSet of string): array of string;
 begin
-  const Result: C.List<string> := new C.List<string>(Values);
+  const Result: C.List of string := new C.List of string(Values);
   Result.Sort(Names());
   return Result.ToArray();
 end function;
@@ -46,18 +46,18 @@ end function;
 // - `Scope`: Determines whether individual artist credits are searchable and filterable.
 // ## Returns
 // The catalog; titles weigh most in searches, then artists, then genres.
-public function Prepare(Items: I.ImmutableArray<Library.Album>; Scope: Toolbar.Scope := Toolbar.Scope.Albums): Catalog;
+public function Prepare(Items: I.ImmutableArray of Library.Album; Scope: Toolbar.Scope := Toolbar.Scope.Albums): Catalog;
 begin
-  const Documents: I.ImmutableArray<Matching.Document>.Builder := I.ImmutableArray.CreateBuilder<Matching.Document>(
+  const Documents: (I.ImmutableArray of Matching.Document).Builder := I.ImmutableArray.CreateBuilder of Matching.Document(
     Items.Length
   );
-  const Artists: C.HashSet<string> := new C.HashSet<string>(Names());
-  const Genres: C.HashSet<string> := new C.HashSet<string>(Names());
-  const CommonGenres: C.HashSet<string> := new C.HashSet<string>(Names());
-  const CommonArtists: C.HashSet<string> := new C.HashSet<string>(Names());
+  const Artists: C.HashSet of string := new C.HashSet of string(Names());
+  const Genres: C.HashSet of string := new C.HashSet of string(Names());
+  const CommonGenres: C.HashSet of string := new C.HashSet of string(Names());
+  const CommonArtists: C.HashSet of string := new C.HashSet of string(Names());
   var First: bool := true;
   for Album: Library.Album in Items do
-    const Fields: C.List<Matching.Field> := new C.List<Matching.Field>(
+    const Fields: C.List of Matching.Field := new C.List of Matching.Field(
       [new Matching.Field(Album.Title, Weights[0])]
     );
     if (Scope = Toolbar.Scope.Albums or Scope = Toolbar.Scope.GenreAlbums) then
@@ -80,7 +80,7 @@ begin
     end if;
 
     if (Scope = Toolbar.Scope.Albums or Scope = Toolbar.Scope.GenreAlbums) then
-      const Members: C.List<string> := new C.List<string>();
+      const Members: C.List of string := new C.List of string();
       if Album.Credits.Length > 0 then
         for Credit: Library.Membership in Album.Credits do
           Members.Add(Credit.Name);
@@ -186,7 +186,7 @@ end record;
 // The albums that pass the filters and, with search words, match at least one
 // of them. Best match lists the closest albums first. Equal sort keys use the
 // album title and then retain catalogue order.
-public function Select(Items: I.ImmutableArray<Library.Album>; Prepared: Catalog; Settings: Toolbar.State): I.ImmutableArray<Library.Album>;
+public function Select(Items: I.ImmutableArray of Library.Album; Prepared: Catalog; Settings: Toolbar.State): I.ImmutableArray of Library.Album;
   function Compare(Left: Entry; Right: Entry): int;
   begin
     var Result: int := 0;
@@ -226,7 +226,7 @@ begin
 
   const Search: Matching.Query := Matching.Query.Parse(Settings.Search);
   const Scores: array of double := Matching.Rank(Search, Prepared.Documents);
-  const Shown: C.List<Entry> := new C.List<Entry>();
+  const Shown: C.List of Entry := new C.List of Entry();
   for Index: int := 0 to Items.Length - 1 do
     if (Search.IsEmpty() or Scores[Index] > 0.0) and Allowed(Items[Index], Settings.Applied) then
       Shown.Add(new Entry(Items[Index], Scores[Index], Index));
@@ -234,7 +234,7 @@ begin
   end for;
 
   Shown.Sort(Compare);
-  const Result: I.ImmutableArray<Library.Album>.Builder := I.ImmutableArray.CreateBuilder<Library.Album>(
+  const Result: (I.ImmutableArray of Library.Album).Builder := I.ImmutableArray.CreateBuilder of Library.Album(
     Shown.Count
   );
   for Item: Entry in Shown do

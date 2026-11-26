@@ -21,7 +21,7 @@ uses System.Threading.Channels as Channels;
 uses System.Threading.Tasks as Tasks;
 
 begin
-  const Pipe: Channels.Channel<int> := Channels.Channel.CreateBounded<int>(1);
+  const Pipe: Channels.Channel of int := Channels.Channel.CreateBounded of int(1);
   await Pipe.Writer.WriteAsync(10, Threading.CancellationToken.None);
   const Pending: Tasks.ValueTask := Pipe.Writer.WriteAsync(20, Threading.CancellationToken.None);
   if Pending.IsCompleted then
@@ -68,9 +68,9 @@ uses System.Threading.Tasks as Tasks;
 
 // Joins one producer and one consumer, including their failure paths.
 public async function Sum(
-  Values: Generic.IEnumerable<int>; Capacity: int;
+  Values: Generic.IEnumerable of int; Capacity: int;
   Cancellation: Threading.CancellationToken
-): Tasks.Task<int>;
+): Tasks.Task of int;
 requires Capacity > 0;
   async function Produce(): Tasks.Task;
   begin
@@ -85,7 +85,7 @@ requires Capacity > 0;
       discard Pipe.Writer.TryComplete();
     end try;
   end function;
-  async function Consume(): Tasks.Task<int>;
+  async function Consume(): Tasks.Task of int;
   begin
     try
       var Total: int := 0;
@@ -117,10 +117,10 @@ begin
   Options.SingleWriter := true;
   Options.SingleReader := true;
   Options.AllowSynchronousContinuations := false;
-  const Pipe: Channels.Channel<int> := Channels.Channel.CreateBounded<int>(Options);
+  const Pipe: Channels.Channel of int := Channels.Channel.CreateBounded of int(Options);
 
   const Sending: Tasks.Task := Produce();
-  const Receiving: Tasks.Task<int> := Consume();
+  const Receiving: Tasks.Task of int := Consume();
   const Workers: array of Tasks.Task := [Sending, Receiving];
   await Tasks.Task.WhenAll(Workers).ConfigureAwait(false);
   return await Receiving.ConfigureAwait(false);

@@ -23,17 +23,17 @@ uses System.Collections.Generic as C;
 // Input behavior installed by layout for a visible control.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Binding<TMsg> = variant
+public type Binding of TMsg = variant
   // Single-line editor with its insertion point and first editable column.
-  Edit(Field: Edit.Field<TMsg>; Position: Edit.Tracking; Origin: int; Caret: int);
+  Edit(Field: Edit.Field of TMsg; Position: Edit.Tracking; Origin: int; Caret: int);
   // Multiline editor and the caret cell chosen by layout.
-  EditArea(View: AreaEdit.View<TMsg>; CaretX: int; CaretY: int);
+  EditArea(View: AreaEdit.View of TMsg; CaretX: int; CaretY: int);
   // Direct action invoked by pointer input or the activation key.
-  Invoke(Action: Actions.IActivatable<TMsg>);
+  Invoke(Action: Actions.IActivatable of TMsg);
   // Scroll viewport and its input policy.
-  Scroll(View: V.Viewport<TMsg>);
+  Scroll(View: V.Viewport of TMsg);
   // Model-owned selection and the visible list body excluding the scrollbar.
-  SelectionList(List: E.SelectionListView<TMsg>; Body: F.Rect; View: V.Viewport<TMsg>);
+  SelectionList(List: E.SelectionListView of TMsg; Body: F.Rect; View: V.Viewport of TMsg);
   // Unclipped allocation and event mapper for an interactive terminal image.
   Grid(Area: F.Rect; Changed: function(Grids.Event): TMsg);
 end variant;
@@ -41,7 +41,7 @@ end variant;
 // An interactive control in the arranged terminal scene.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Control<TMsg> = record
+public type Control of TMsg = record
   // Stable identity used for input and focus requests.
   public Id: string;
   // Accessible control name.
@@ -59,7 +59,7 @@ public type Control<TMsg> = record
   // Whether the control can receive input and focus.
   public Enabled: bool;
   // Pointer and keyboard behavior installed for the current model.
-  public Action: Binding<TMsg>;
+  public Action: Binding of TMsg;
   // Semantic colors used for an action's focus and hover state.
   public Variant: UiStyle.ButtonVariant;
   // Apply semantic button styling to keyboard focus and hover.
@@ -113,19 +113,19 @@ end record;
 // Interaction policy for the active modal or anchored overlay.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Scope<TMsg> = record
+public type Scope of TMsg = record
   // Stable overlay identity.
   public Id: string;
   // Preferred control to focus when the overlay opens.
   public Initial: string;
   // Optional message factory for dismissal.
-  public Escape: Sys.Func<TMsg>?;
+  public Escape: (Sys.Func of TMsg)?;
   // Application shortcuts available inside the overlay.
-  public Shortcuts: array of K.ShortcutBinding<TMsg>;
+  public Shortcuts: array of K.ShortcutBinding of TMsg;
   // Panel bounds for dismissible scrim input.
   public Panel: F.Rect? := null;
   // Routes transient popup input before application shortcuts and underlying controls.
-  public LocalInput: Sys.Func<App.Input, bool>? := null;
+  public LocalInput: Sys.Func of (App.Input, bool)? := null;
 end record;
 
 // The visible bounds and offset limit for a scroll viewport.
@@ -145,17 +145,17 @@ end record;
 // The arranged frame and the scene used to route input until the next frame.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Layout<TMsg> = record
+public type Layout of TMsg = record
   // Plain text for each presented terminal row.
   public Lines: array of string;
   // Styled terminal cells in row-major order.
   public Cells: array of T.Cell;
   // Visible controls in display order.
-  public Controls: array of Control<TMsg>;
+  public Controls: array of Control of TMsg;
   // Overlay that currently owns input.
-  public Active: Scope<TMsg>?;
+  public Active: (Scope of TMsg)?;
   // Keyboard shortcuts for the base view.
-  public GlobalKeys: array of K.ShortcutBinding<TMsg>;
+  public GlobalKeys: array of K.ShortcutBinding of TMsg;
   // Viewports that can receive a scroll request.
   public Regions: array of ScrollRegion;
   // Painted row cache retained for an equivalent region in the next frame.
@@ -163,7 +163,7 @@ public type Layout<TMsg> = record
   // Cached row and column allocations.
   public Allocations: array of F.AllocationMemo;
   // Last successful shared preflight/cache, retained by the owner.
-  public Prepared: Validation.Prepared<TMsg>? := null;
+  public Prepared: (Validation.Prepared of TMsg)? := null;
   // Open modal IDs, including those below the active scope.
   public Scopes: array of string := [];
   // Enabled navigation rows in display order, including rows outside a scroll viewport.
@@ -171,7 +171,7 @@ public type Layout<TMsg> = record
   // Enabled tab destinations in view order. A composite control contributes one entry.
   public TabStops: array of TabStop := [];
   // Optional focus-independent shortcut to open the command palette.
-  public OpenPalette: Sys.Func<TMsg>? := null;
+  public OpenPalette: (Sys.Func of TMsg)? := null;
   // Whether the scene contains visible motion that needs another frame.
   public Animated: bool := false;
 end record;
@@ -186,9 +186,9 @@ end record;
 // - `Navigation`: Keyboard destinations for that viewport.
 // - `Stops`: Tab traversal order.
 // - `Register`: Adds the visible control.
-public procedure RegisterRowAction<TMsg>(
-  Action: Control<TMsg>; Clip: F.Rect; ScrollId: string; Navigation: C.List<NavigationStop>;
-  Stops: C.List<TabStop>; Register: procedure(Control<TMsg>)
+public procedure RegisterRowAction of TMsg(
+  Action: Control of TMsg; Clip: F.Rect; ScrollId: string; Navigation: C.List of NavigationStop;
+  Stops: C.List of TabStop; Register: procedure(Control of TMsg)
 );
 begin
   const Visible: F.Rect := F.Intersect(Action.Bounds, Clip);
@@ -220,10 +220,10 @@ end procedure;
 // - `Id`: Control identity to find.
 // ## Returns
 // The matching control, or null when it is absent.
-public function FindControl<TMsg>(Layout: Layout<TMsg>?; Id: string): Control<TMsg>?;
+public function FindControl of TMsg(Layout: (Layout of TMsg)?; Id: string): (Control of TMsg)?;
 begin
   if Layout <> null then
-    for Control: Control<TMsg> in Layout.Controls do
+    for Control: Control of TMsg in Layout.Controls do
       if Control.Id = Id then
         return Control;
       end if;
@@ -240,10 +240,10 @@ end function;
 // - `Action`: Control input binding.
 // ## Returns
 // The command handler, or null for a different kind of input binding.
-public function Activatable<TMsg>(Action: Binding<TMsg>): Actions.IActivatable<TMsg>?;
+public function Activatable of TMsg(Action: Binding of TMsg): (Actions.IActivatable of TMsg)?;
 begin
   case Action of
-    when Binding.Invoke(const Handler: Actions.IActivatable<TMsg>):
+    when Binding.Invoke(const Handler: Actions.IActivatable of TMsg):
       return Handler;
     else
       return null;

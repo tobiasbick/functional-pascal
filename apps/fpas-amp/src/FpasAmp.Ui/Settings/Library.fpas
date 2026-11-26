@@ -27,47 +27,47 @@ begin
   return L.Spacing.Fixed(L.Measure.Logical(Value));
 end function;
 
-function SourceCard(Current: M.State; Source: Locations.MusicSource; Theme: Themes.Theme): E.Element<M.Msg>;
+function SourceCard(Current: M.State; Source: Locations.MusicSource; Theme: Themes.Theme): E.Element of M.Msg;
 begin
   const Id: string := 'source-' + Source.Id;
-  const Formats: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  const Formats: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();
   if Source.Extensions.Length = 0 then
-    Formats.Add(Texts.Text<M.Msg>('No formats selected', Texts.Appearance.Secondary));
+    Formats.Add(Texts.Text of M.Msg('No formats selected', Texts.Appearance.Secondary));
   else
-    Formats.Add(Texts.Text<M.Msg>('Formats', Texts.Appearance.Secondary));
+    Formats.Add(Texts.Text of M.Msg('Formats', Texts.Appearance.Secondary));
     for Extension: string in Source.Extensions do
-      Formats.Add(Badges.Badge<M.Msg>(Id + Extension, Extension.Substring(1).ToUpperInvariant()));
+      Formats.Add(Badges.Badge of M.Msg(Id + Extension, Extension.Substring(1).ToUpperInvariant()));
     end for;
   end if;
 
-  return Cards.Card<M.Msg>(
+  return Cards.Card of M.Msg(
     Id,
     [
-      E.Row<M.Msg>(
+      E.Row of M.Msg(
         new L.Flow(
           Gap := Gap(16),
           Align := L.Alignment.Center,
           Justify := L.Justification.Between,
           Wrap := true
         ),
-        E.Size<M.Msg>(
-          E.Column<M.Msg>(
+        E.Size of M.Msg(
+          E.Column of M.Msg(
             new L.Flow(Gap := Gap(4)),
-            Texts.Text<M.Msg>(Source.Name, Texts.Appearance.HeadingFour),
-            Texts.Text<M.Msg>(Source.Path, Texts.Appearance.Secondary)
+            Texts.Text of M.Msg(Source.Name, Texts.Appearance.HeadingFour),
+            Texts.Text of M.Msg(Source.Path, Texts.Appearance.Secondary)
           ),
           new L.Flex(Basis := L.Extent.Fill)
         ),
-        E.Column<M.Msg>(
+        E.Column of M.Msg(
           new L.Flow(Gap := Gap(8), Align := L.Alignment.Start),
-          Switches.Switch<M.Msg>(
+          Switches.Switch of M.Msg(
             Id + '-offline',
             'Offline',
             Source.Offline,
             function(Value: bool): M.Msg => M.Msg.SetOffline(Source.Id, Value),
             Enabled := Current.Clearing = null
           ),
-          Switches.Switch<M.Msg>(
+          Switches.Switch of M.Msg(
             Id + '-pause',
             'Pause',
             Source.Paused,
@@ -77,23 +77,23 @@ begin
         )
       ),
       Scan.View(Current, Source, Id),
-      E.Divider<M.Msg>(),
-      E.Row<M.Msg>(
+      E.Divider of M.Msg(),
+      E.Row of M.Msg(
         new L.Flow(
           Gap := Gap(12),
           Align := L.Alignment.Center,
           Justify := L.Justification.Between,
           Wrap := true
         ),
-        E.Row<M.Msg>(
+        E.Row of M.Msg(
           new L.Flow(Gap := Gap(8), Align := L.Alignment.Center, Wrap := true),
           Formats.ToArray()
         ),
-        E.Row<M.Msg>(
+        E.Row of M.Msg(
           new L.Flow(Gap := Gap(8), Wrap := true),
           Actions.Remove(Id + '-remove', Source.Id, Current, Theme),
           Database.Clear(Id + '-clear', Source.Id, 'Reset', Current, Theme),
-          B.Button<M.Msg>(
+          B.Button of M.Msg(
             Id + '-rescan', 'Refresh', M.Msg.Rescan(Source.Id),
             new B.Options(
               Variant := S.ButtonVariant.Outline, ControlSize := B.Size.Small,
@@ -105,7 +105,7 @@ begin
               Loading := Scan.Running(Current, Source), Icon := Sys.Char.ConvertFromUtf32($E145)
             )
           ),
-          B.Button<M.Msg>(
+          B.Button of M.Msg(
             Id + '-edit', 'Edit', M.Msg.EditSource(Source),
             new B.Options(
               Variant := S.ButtonVariant.Outline,
@@ -132,23 +132,23 @@ end function;
 // - `Theme`: Palette used by the native destructive action labels.
 // ## Returns
 // The source list and its actions.
-public function View(Current: M.State; Theme: Themes.Theme): E.Element<M.Msg>;
+public function View(Current: M.State; Theme: Themes.Theme): E.Element of M.Msg;
 begin
-  const Rows: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  const Rows: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();
   Rows.Add(
-    E.Row<M.Msg>(
+    E.Row of M.Msg(
       new L.Flow(
         Gap := Gap(12),
         Align := L.Alignment.Center,
         Justify := L.Justification.Between,
         Wrap := true
       ),
-      E.Column<M.Msg>(
+      E.Column of M.Msg(
         new L.Flow(Gap := Gap(4)),
-        Texts.Text<M.Msg>('Music sources', Texts.Appearance.HeadingTwo),
-        Texts.Text<M.Msg>('Subfolders are included.', Texts.Appearance.Secondary)
+        Texts.Text of M.Msg('Music sources', Texts.Appearance.HeadingTwo),
+        Texts.Text of M.Msg('Subfolders are included.', Texts.Appearance.Secondary)
       ),
-      B.Button<M.Msg>(
+      B.Button of M.Msg(
         'add-folder', 'Add folder', M.Msg.ChooseFolder,
         new B.Options(Variant := S.ButtonVariant.Primary, Icon := Sys.Char.ConvertFromUtf32($E13D))
       )
@@ -156,10 +156,10 @@ begin
   );
   if Current.Saved.MusicSources.Length = 0 then
     Rows.Add(
-      Cards.Card<M.Msg>(
+      Cards.Card of M.Msg(
         'empty-sources',
         [
-          Empty.EmptyState<M.Msg>(
+          Empty.EmptyState of M.Msg(
             'no-sources',
             'No music sources yet',
             new Empty.Options(Icon := Sys.Char.ConvertFromUtf32($E0D7))
@@ -175,19 +175,19 @@ begin
   end for;
 
   Rows.Add(
-    Cards.Card<M.Msg>(
+    Cards.Card of M.Msg(
       'database-card',
       [
-        Texts.Text<M.Msg>('Library database', Texts.Appearance.HeadingThree),
-        E.Row<M.Msg>(
+        Texts.Text of M.Msg('Library database', Texts.Appearance.HeadingThree),
+        E.Row of M.Msg(
           new L.Flow(
             Gap := Gap(16), Wrap := true, Align := L.Alignment.Center,
             Justify := L.Justification.Between
           ),
-          E.Column<M.Msg>(
+          E.Column of M.Msg(
             new L.Flow(Gap := Gap(4)),
-            Texts.Text<M.Msg>('Clear indexed files for all sources.', Texts.Appearance.Secondary),
-            Texts.Text<M.Msg>(
+            Texts.Text of M.Msg('Clear indexed files for all sources.', Texts.Appearance.Secondary),
+            Texts.Text of M.Msg(
               'Music files, ratings and source settings are kept.',
               Texts.Appearance.Secondary
             )
@@ -199,7 +199,10 @@ begin
     )
   );
 
-  return E.Column<M.Msg>(new L.Flow(Gap := Gap(16), Align := L.Alignment.Stretch), Rows.ToArray());
+  return E.Column of M.Msg(
+    new L.Flow(Gap := Gap(16), Align := L.Alignment.Stretch),
+    Rows.ToArray()
+  );
 end function;
 
 end unit;

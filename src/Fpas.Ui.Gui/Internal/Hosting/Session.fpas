@@ -50,15 +50,15 @@ uses System.Threading.Tasks as Tasks;
 //
 // ## Returns
 // The manually driven session.
-public function StartThemed<TModel, TMsg>(
+public function StartThemed of (TModel, TMsg)(
   InitialModel: TModel;
-  Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel, L.Viewport, Themes.Theme): E.Element<TMsg>;
+  Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
+  View: function(TModel, L.Viewport, Themes.Theme): E.Element of TMsg;
   Window: Cui.CuiWindow; Capacity: int; BeforeDraw: Sys.Action?;
   Theme: Themes.Theme; ThemeFor: function(TModel, Themes.Mode?): Themes.Theme;
-  ReadSystemAppearance: bool; OnCloseRequested: Sys.Func<TMsg>? := null;
-  BindingsFor: Sys.Func<TModel, array of Shortcuts.Binding<TMsg>>? := null
-): App.Session<TMsg>;
+  ReadSystemAppearance: bool; OnCloseRequested: (Sys.Func of TMsg)? := null;
+  BindingsFor: Sys.Func of (TModel, array of Shortcuts.Binding of TMsg)? := null
+): App.Session of TMsg;
 requires Capacity > 0;
   procedure CheckOwner();
   begin
@@ -152,7 +152,7 @@ requires Capacity > 0;
     Window.CapturePng(Path);
   end procedure;
 
-  function Context(Candidate: V.Prepared<TMsg>; Accept: bool; ObserveTransitions: bool; PreserveCanvasFocus: bool := false): C.State<TMsg>;
+  function Context(Candidate: V.Prepared of TMsg; Accept: bool; ObserveTransitions: bool; PreserveCanvasFocus: bool := false): C.State of TMsg;
   begin
     const Last: App.Frame? := Published;
     const Previous: array of App.Control := if Last = null then
@@ -160,16 +160,16 @@ requires Capacity > 0;
     else
       Last.Controls
     end if;
-    const Modal: string? := F.TopModal<TMsg>(Candidate.Tree, Candidate, Previous);
-    return new C.State<TMsg>(
+    const Modal: string? := F.TopModal of TMsg(Candidate.Tree, Candidate, Previous);
+    return new C.State of TMsg(
       Window,
       Candidate,
-      new Generic.List<TMsg>(),
-      new Generic.List<string>(),
-      new Generic.List<App.Control>(),
+      new Generic.List of TMsg(),
+      new Generic.List of string(),
+      new Generic.List of App.Control(),
       Focus,
       Modals,
-      new Generic.HashSet<string>(),
+      new Generic.HashSet of string(),
       Previous,
       Accept and Modal = null,
       Accept,
@@ -183,12 +183,12 @@ requires Capacity > 0;
 
   procedure ResizeDraw();
   begin
-    const Cached: V.Prepared<TMsg>? := Prepared;
+    const Cached: (V.Prepared of TMsg)? := Prepared;
     if Cached = null then
       return;
     end if;
 
-    P.Draw<TMsg>(Context(Cached, false, false));
+    P.Draw of TMsg(Context(Cached, false, false));
   end procedure;
 
   function HasDockPanel(Controls: array of App.Control): bool;
@@ -202,16 +202,16 @@ requires Capacity > 0;
     return false;
   end function;
 
-  procedure Paint(Candidate: V.Prepared<TMsg>; Accept: bool; Size: Cui.CuiSize);
+  procedure Paint(Candidate: V.Prepared of TMsg; Accept: bool; Size: Cui.CuiSize);
   begin
-    const State: C.State<TMsg> := Context(
+    const State: C.State of TMsg := Context(
       Candidate,
       Accept,
       Cleanup = null,
       Cleanup = null and not Accept
     );
-    P.Draw<TMsg>(State);
-    KeyBindings.Collect<TMsg>(Window, Bindings, Accept, State.Messages);
+    P.Draw of TMsg(State);
+    KeyBindings.Collect of TMsg(Window, Bindings, Accept, State.Messages);
     if Accept then
       Focus.Clear();
     end if;
@@ -221,7 +221,7 @@ requires Capacity > 0;
     end while;
 
     Window.Present();
-    C.CommitAnimations<TMsg>(State);
+    C.CommitAnimations of TMsg(State);
     FrameControls.Resolve(Window, State.Controls);
     if Accept then
       PreviousFocus := '';
@@ -232,9 +232,9 @@ requires Capacity > 0;
       end for;
     end if;
 
-    Tooltip.Collect<TMsg>(State);
+    Tooltip.Collect of TMsg(State);
     if ActiveToasts.Count > 0 then
-      Toast.Collect<TMsg>(State, ActiveToasts);
+      Toast.Collect of TMsg(State, ActiveToasts);
     end if;
 
     FrameId := FrameId + 1L;
@@ -243,7 +243,7 @@ requires Capacity > 0;
       FrameId, Size, State.Labels.ToArray(), Controls, CurrentTheme
     );
     if Cleanup = null and (HasDockPanel(Controls) or HasDockPanel(State.Previous))
-      and F.TopModal<TMsg>(Candidate.Tree, Candidate, Controls) <> State.ActiveModal
+      and F.TopModal of TMsg(Candidate.Tree, Candidate, Controls) <> State.ActiveModal
     then
       discard Window.TryWake();
     end if;
@@ -252,7 +252,7 @@ requires Capacity > 0;
       Pending.Enqueue(Message);
     end for;
 
-    F.RestoreClosed<TMsg>(State);
+    F.RestoreClosed of TMsg(State);
     if Pending.Count > 0 then
       discard Window.TryWake();
     end if;
@@ -264,7 +264,7 @@ requires Capacity > 0;
       if not Window.NextFrame() then
         return;
       end if;
-      const Cached: V.Prepared<TMsg>? := Prepared;
+      const Cached: (V.Prepared of TMsg)? := Prepared;
       if Cached <> null and not BrokenView then
         Paint(Cached, false, Window.Size);
       else
@@ -365,7 +365,7 @@ requires Capacity > 0;
 
       if Window.TakeCloseRequest() and Cleanup = null then
         case OnCloseRequested of
-          when is Sys.Func<TMsg> as Notify:
+          when is Sys.Func of TMsg as Notify:
             if not Services.ClosePending.Value then
               Services.ClosePending.Value := true;
               Pending.Enqueue(Notify.Invoke());
@@ -392,19 +392,19 @@ requires Capacity > 0;
           Dirty := true;
         end if;
       end if;
-      var Candidate: V.Prepared<TMsg>? := Prepared;
+      var Candidate: (V.Prepared of TMsg)? := Prepared;
       if Cleanup = null and (Dirty or Candidate = null) then
         const Model: TModel := Core.Model();
-        Bindings := KeyBindings.Prepare<TModel, TMsg>(Model, BindingsFor);
+        Bindings := KeyBindings.Prepare of (TModel, TMsg)(Model, BindingsFor);
         CurrentTheme := ThemeFor(Model, SystemAppearance);
 
         ThemeApplication.Apply(Window, CurrentTheme);
-        Candidate := V.Prepare<TMsg>(
+        Candidate := V.Prepare of TMsg(
           View(Model, Sizing.Viewport(Size), CurrentTheme),
           V.Target.Graphical,
           Prepared
         );
-        LayoutValidation.Check<TMsg>(Candidate);
+        LayoutValidation.Check of TMsg(Candidate);
       end if;
 
       if Candidate = null then
@@ -417,7 +417,7 @@ requires Capacity > 0;
         else
       end case;
 
-      Toast.Submit<TMsg>(Window, PendingToasts, ActiveToasts);
+      Toast.Submit of TMsg(Window, PendingToasts, ActiveToasts);
       Paint(Candidate, Cleanup = null and Pending.Count = 0, Size);
       Prepared := Candidate;
       PreviousSize := Size;
@@ -453,24 +453,24 @@ begin
   var FrameId: long := 0L;
   var Published: App.Frame? := null;
   var PreviousFocus: string := '';
-  var Prepared: V.Prepared<TMsg>? := null;
-  var Bindings: KeyBindings.Prepared<TMsg> := new KeyBindings.Prepared<TMsg>([], []);
+  var Prepared: (V.Prepared of TMsg)? := null;
+  var Bindings: KeyBindings.Prepared of TMsg := new KeyBindings.Prepared of TMsg([], []);
   var PreviousSize: Cui.CuiSize := new Cui.CuiSize();
   var Cleanup: Tasks.Task? := null;
-  const Pending: Generic.Queue<TMsg> := new Generic.Queue<TMsg>();
-  const Focus: Generic.Queue<string> := new Generic.Queue<string>();
-  const PendingToasts: Generic.Queue<Toasts.Request<TMsg>> := new Generic.Queue<Toasts.Request<TMsg>>();
-  const PendingFrames: Generic.Queue<float> := new Generic.Queue<float>();
-  const Services: Requests.State<TMsg> := new Requests.State<TMsg>(
+  const Pending: Generic.Queue of TMsg := new Generic.Queue of TMsg();
+  const Focus: Generic.Queue of string := new Generic.Queue of string();
+  const PendingToasts: Generic.Queue of Toasts.Request of TMsg := new Generic.Queue of Toasts.Request of TMsg();
+  const PendingFrames: Generic.Queue of float := new Generic.Queue of float();
+  const Services: Requests.State of TMsg := new Requests.State of TMsg(
     Window,
     Pending,
     PendingToasts,
     PendingFrames
   );
-  const ActiveToasts: Generic.Dictionary<int, Toasts.Request<TMsg>> := new Generic.Dictionary<int, Toasts.Request<TMsg>>();
-  const Modals: Generic.Dictionary<string, string> := new Generic.Dictionary<string, string>();
-  const CompletedAnimations: Generic.Dictionary<string, C.AnimationCompletion> := new Generic.Dictionary<string, C.AnimationCompletion>();
-  const Core: Runtime.Runtime<TModel, TMsg, bool> := Runtime.Start<TModel, TMsg, bool>(
+  const ActiveToasts: Generic.Dictionary of (int, Toasts.Request of TMsg) := new Generic.Dictionary of (int, Toasts.Request of TMsg)();
+  const Modals: Generic.Dictionary of (string, string) := new Generic.Dictionary of (string, string)();
+  const CompletedAnimations: Generic.Dictionary of (string, C.AnimationCompletion) := new Generic.Dictionary of (string, C.AnimationCompletion)();
+  const Core: Runtime.Runtime of (TModel, TMsg, bool) := Runtime.Start of (TModel, TMsg, bool)(
     InitialModel, Update,
     procedure(Request: Mvu.HostRequest) begin
       case Request of
@@ -478,7 +478,7 @@ begin
           Focus.Clear();
           Focus.Enqueue('app:' + Id);
         when Mvu.HostRequest.Extension(const Value: Sys.Object):
-          Requests.Apply<TMsg>(Value, Services);
+          Requests.Apply of TMsg(Value, Services);
         else
       end case;
     end procedure, Capacity,
@@ -491,7 +491,7 @@ begin
     Window.FollowSystemTheme(ReadSystemAppearance);
     ThemeApplication.Apply(Window, CurrentTheme);
     Window.SetResizeRenderer(ResizeDraw);
-    return App.Session<TMsg>.Create(
+    return (App.Session of TMsg).Create(
       Step, Core.Post, Snapshot, Core.IsOpen, Software, Release, Capture, Placement, Inspect
     );
   catch Error: Sys.Exception do
@@ -518,27 +518,27 @@ end function;
 // - `BindingsFor`: Optional immutable application bindings selected from the model.
 // ## Returns
 // The manually driven session.
-public function Start<TModel, TMsg>(
+public function Start of (TModel, TMsg)(
   InitialModel: TModel;
-  Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel, L.Viewport): E.Element<TMsg>; Window: Cui.CuiWindow; Capacity: int;
-  BeforeDraw: Sys.Action? := null; Theme: Themes.Theme? := null; ThemeFor: Sys.Func<TModel, Themes.Theme>? := null;
-  OnCloseRequested: Sys.Func<TMsg>? := null;
-  BindingsFor: Sys.Func<TModel, array of Shortcuts.Binding<TMsg>>? := null
-): App.Session<TMsg>;
+  Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
+  View: function(TModel, L.Viewport): E.Element of TMsg; Window: Cui.CuiWindow; Capacity: int;
+  BeforeDraw: Sys.Action? := null; Theme: Themes.Theme? := null; ThemeFor: Sys.Func of (TModel, Themes.Theme)? := null;
+  OnCloseRequested: (Sys.Func of TMsg)? := null;
+  BindingsFor: Sys.Func of (TModel, array of Shortcuts.Binding of TMsg)? := null
+): App.Session of TMsg;
 requires Capacity > 0;
 begin
   const InitialTheme: Themes.Theme := Theme ?? new Themes.Theme();
-  return StartThemed<TModel, TMsg>(
+  return StartThemed of (TModel, TMsg)(
     InitialModel, Update,
-    function(Model: TModel; Size: L.Viewport; _Theme: Themes.Theme): E.Element<TMsg> => View(
+    function(Model: TModel; Size: L.Viewport; _Theme: Themes.Theme): E.Element of TMsg => View(
       Model,
       Size
     ),
     Window, Capacity, BeforeDraw, InitialTheme,
     function(Model: TModel; _Appearance: Themes.Mode?): Themes.Theme begin
       case ThemeFor of
-        when is Sys.Func<TModel, Themes.Theme> as SelectTheme:
+        when is Sys.Func of (TModel, Themes.Theme) as SelectTheme:
           return SelectTheme.Invoke(Model);
         else
           return InitialTheme;

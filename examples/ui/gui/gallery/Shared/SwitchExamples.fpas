@@ -60,9 +60,9 @@ public const WeeklyDigest: Sample := new Sample(
 // - `Change`: Maps an activation to a new value.
 // ## Returns
 // Shared switch with the example's label and description.
-public function View<TMsg>(Item: Sample; On: bool; Change: function(bool): TMsg): E.Element<TMsg>;
+public function View of TMsg(Item: Sample; On: bool; Change: function(bool): TMsg): E.Element of TMsg;
 begin
-  return S.Switch<TMsg>(Item.Id, Item.Label, On, Change, Description := Item.Description);
+  return S.Switch of TMsg(Item.Id, Item.Label, On, Change, Description := Item.Description);
 end function;
 
 end unit;

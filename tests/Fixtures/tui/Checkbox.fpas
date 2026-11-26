@@ -19,28 +19,28 @@ begin
   end if;
 end procedure;
 
-function Update(State: bool; Proposed: bool): Mvu.Transition<bool, bool>;
+function Update(State: bool; Proposed: bool): Mvu.Transition of (bool, bool);
 begin
-  return new Mvu.Transition<bool, bool>(Proposed, []);
+  return new Mvu.Transition of (bool, bool)(Proposed, []);
 end function;
 
-function View(State: bool): E.Element<bool>;
+function View(State: bool): E.Element of bool;
   function DisabledChange(Value: bool): bool;
   begin
     raise new Sys.InvalidOperationException('The disabled checkbox dispatched a change.');
   end function;
 begin
-  return E.ScrollView<bool>(
-    'choices', E.Column<bool>(
-      C.Checkbox<bool>(
+  return E.ScrollView of bool(
+    'choices', E.Column of bool(
+      C.Checkbox of bool(
         'email',
         'Email',
         State,
         function(Value: bool): bool => Value,
         'Deliver update messages'
       ),
-      C.Checkbox<bool>('disabled', 'Disabled', true, DisabledChange, Enabled := false),
-      C.Checkbox<bool>(
+      C.Checkbox of bool('disabled', 'Disabled', true, DisabledChange, Enabled := false),
+      C.Checkbox of bool(
         'mixed',
         'All items',
         State,
@@ -49,7 +49,7 @@ begin
         Indeterminate := true,
         HideLabel := true
       ),
-      C.Checkbox<bool>('locked', 'Locked', State, function(Value: bool): bool => State)
+      C.Checkbox of bool('locked', 'Locked', State, function(Value: bool): bool => State)
     )
   );
 end function;
@@ -65,7 +65,13 @@ begin
 end procedure;
 
 begin
-  using const Session: T.HeadlessSession := Headless.Start<bool, bool>(false, Update, View, 16, 9);
+  using const Session: T.HeadlessSession := Headless.Start of (bool, bool)(
+    false,
+    Update,
+    View,
+    16,
+    9
+  );
   const Initial: T.Frame := Session.Snapshot();
   const Email: T.ControlSnapshot := Initial.Controls[0];
   Check(

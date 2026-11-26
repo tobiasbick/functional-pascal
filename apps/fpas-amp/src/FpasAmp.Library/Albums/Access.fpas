@@ -50,7 +50,7 @@ public type Session = record
   // - `Cancellation`: Cancels the query along with the parent lifetime.
   // ## Returns
   // The selected release's tracks in disc and track order.
-  public async function TracksAsync(Id: string; Cancellation: T.CancellationToken): Tasks.Task<I.ImmutableArray<Tracks.Entry>>;
+  public async function TracksAsync(Id: string; Cancellation: T.CancellationToken): Tasks.Task of I.ImmutableArray of Tracks.Entry;
   requires Id <> '';
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
@@ -58,8 +58,8 @@ public type Session = record
       Cancellation
     );
     await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
-    return await Tasks.Task.Run<I.ImmutableArray<Tracks.Entry>>(
-      function(): I.ImmutableArray<Tracks.Entry> => Queries.ReadRelease(
+    return await Tasks.Task.Run of I.ImmutableArray of Tracks.Entry(
+      function(): I.ImmutableArray of Tracks.Entry => Queries.ReadRelease(
         self.Database,
         self.Users,
         Id,
@@ -79,7 +79,7 @@ public type Session = record
     );
     await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
     await Tasks.TaskExtensions.Unwrap(
-      Tasks.Task.Run<Tasks.Task>(
+      Tasks.Task.Run of Tasks.Task(
         function(): Tasks.Task => Observing.Run(self.Database, self.Users, Publish, Linked.Token),
         Linked.Token
       )
@@ -89,7 +89,7 @@ public type Session = record
   // Observes all library songs and their release headers off the UI thread.
   // Publish receives the monotonic Stopwatch timestamp from before the read, the songs,
   // and their headers. Cancellation ends observation. The returned task covers its lifetime.
-  public async function ObserveSongsAsync(Publish: function(long, I.ImmutableArray<Tracks.Entry>, I.ImmutableArray<M.Album>): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
+  public async function ObserveSongsAsync(Publish: function(long, I.ImmutableArray of Tracks.Entry, I.ImmutableArray of M.Album): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
       self.Lifetime,
@@ -97,11 +97,11 @@ public type Session = record
     );
     await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
     await Tasks.TaskExtensions.Unwrap(
-      Tasks.Task.Run<Tasks.Task>(
+      Tasks.Task.Run of Tasks.Task(
         function(): Tasks.Task => Observing.Changes(
           self.Database, self.Users, function(): Tasks.Task begin
             const Started: long := D.Stopwatch.GetTimestamp();
-            const Songs: I.ImmutableArray<Tracks.Entry> := Queries.ReadRelease(
+            const Songs: I.ImmutableArray of Tracks.Entry := Queries.ReadRelease(
               self.Database,
               self.Users,
               '',
@@ -142,7 +142,7 @@ public type Session = record
 
   // Loads a bounded cached thumbnail for `Album`; missing/invalid art returns null.
   // `Cancellation` owns this request. Paused/offline sources are never opened.
-  public async function ThumbnailAsync(Album: M.Album; Cancellation: T.CancellationToken): Tasks.Task<Imaging.Bitmap?>;
+  public async function ThumbnailAsync(Album: M.Album; Cancellation: T.CancellationToken): Tasks.Task of Imaging.Bitmap?;
   requires Album.Id <> '';
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
@@ -150,9 +150,9 @@ public type Session = record
       Cancellation
     );
     await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
-    return await Tasks.TaskExtensions.Unwrap<Imaging.Bitmap?>(
-      Tasks.Task.Run<Tasks.Task<Imaging.Bitmap?>>(
-        function(): Tasks.Task<Imaging.Bitmap?> => Reading.Read(
+    return await Tasks.TaskExtensions.Unwrap of Imaging.Bitmap? (
+      Tasks.Task.Run of Tasks.Task of Imaging.Bitmap? (
+        function(): Tasks.Task of Imaging.Bitmap? => Reading.Read(
           self.Database, self.Users, Album.Id, Album.Revision, self.Cache,
           function(Path: string): bool begin
             for Source: Sources.MusicSource in self.Configuration.Read().Sources do

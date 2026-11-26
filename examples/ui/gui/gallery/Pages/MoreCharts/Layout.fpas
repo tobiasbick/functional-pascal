@@ -14,10 +14,10 @@ uses GuiGallery.Shared.Sections as G;
 // - `Children`: Sections in display order.
 // ## Returns
 // The native row.
-public function Row<TMsg>(params Children: array of E.Element<TMsg>): E.Element<TMsg>;
+public function Row of TMsg(params Children: array of E.Element of TMsg): E.Element of TMsg;
 begin
-  return E.Size<TMsg>(
-    E.Row<TMsg>(
+  return E.Size of TMsg(
+    E.Row of TMsg(
       new L.Flow(Gap := G.Points(24), Align := L.Alignment.Start, Clip := false),
       Children
     ),
@@ -34,10 +34,10 @@ end function;
 // - `Children`: Section content.
 // ## Returns
 // The native column.
-public function Column<TMsg>(Weight: float; Centered: bool; params Children: array of E.Element<TMsg>): E.Element<TMsg>;
+public function Column of TMsg(Weight: float; Centered: bool; params Children: array of E.Element of TMsg): E.Element of TMsg;
 begin
-  return E.Size<TMsg>(
-    E.Column<TMsg>(
+  return E.Size of TMsg(
+    E.Column of TMsg(
       new L.Flow(
         Gap := G.Points(10), Clip := false,
         Align := if Centered then

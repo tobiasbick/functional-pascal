@@ -27,8 +27,8 @@ begin
     or (Error is Sys.OperationCanceledException and not Stop.IsCancellationRequested);
 end function;
 
-function Search(Current: M.State; Term: string): A.Transition<M.State, M.Msg>;
-  async function Run(Context: A.BackgroundContext<M.Msg>; Stop: T.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, M.Msg>>;
+function Search(Current: M.State; Term: string): A.Transition of (M.State, M.Msg);
+  async function Run(Context: A.BackgroundContext of M.Msg; Stop: T.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, M.Msg);
   begin
     try
       const Found: array of M.Show := if Term = '' then
@@ -61,7 +61,7 @@ begin
   const Revision: long := Current.SearchRevision + 1L;
   const Market: string := Current.Market;
   const Genre: string := Current.Genre;
-  return new A.Transition<M.State, M.Msg>(
+  return new A.Transition of (M.State, M.Msg)(
     Current with
       Searching := true;
       SearchTerm := Term;
@@ -72,9 +72,9 @@ begin
       ShownResults := [];
       Covers := Current.Covers.Clear();
     end with, [
-      A.StartBackground<M.Msg>(
+      A.StartBackground of M.Msg(
         'search',
-        Fx.Effect<Fx.Completion, M.Msg, A.BackgroundContext<M.Msg>>.Defer(Run)
+        Fx.Effect of (Fx.Completion, M.Msg, A.BackgroundContext of M.Msg).Defer(Run)
       )
     ]
   );
@@ -106,8 +106,8 @@ begin
   end with;
 end function;
 
-function Open(Current: M.State; Show: M.Show; Subscribe: bool): A.Transition<M.State, M.Msg>;
-  async function Run(Context: A.BackgroundContext<M.Msg>; Stop: T.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, M.Msg>>;
+function Open(Current: M.State; Show: M.Show; Subscribe: bool): A.Transition of (M.State, M.Msg);
+  async function Run(Context: A.BackgroundContext of M.Msg; Stop: T.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, M.Msg);
   begin
     try
       const Feed: M.Feed := await Feeds.Load(Show, Stop).ConfigureAwait(false);
@@ -139,7 +139,7 @@ begin
   else
     new M.EpisodeView()
   end if;
-  return new A.Transition<M.State, M.Msg>(
+  return new A.Transition of (M.State, M.Msg)(
     Previous with
       Show := Show;
       Episodes := [];
@@ -159,9 +159,9 @@ begin
       Draft := null;
       Details := null;
     end with, [
-      A.StartBackground<M.Msg>(
+      A.StartBackground of M.Msg(
         'feed',
-        Fx.Effect<Fx.Completion, M.Msg, A.BackgroundContext<M.Msg>>.Defer(Run)
+        Fx.Effect of (Fx.Completion, M.Msg, A.BackgroundContext of M.Msg).Defer(Run)
       )
     ]
   );
@@ -174,7 +174,7 @@ end function;
 // - `Subscriptions`: Saved feeds for the local subscription filter.
 // ## Returns
 // The new page model and any cancellable directory or feed commands.
-public function Apply(Current: M.State; Action: M.Msg; Subscriptions: array of M.Show): A.Transition<M.State, M.Msg>;
+public function Apply(Current: M.State; Action: M.Msg; Subscriptions: array of M.Show): A.Transition of (M.State, M.Msg);
 begin
   var Next: M.State := Current;
   const Discovery: M.DiscoveryFilters? := Current.DiscoveryDraft;
@@ -283,7 +283,7 @@ begin
     when M.Msg.Open(const Show: M.Show, const Subscribe: bool):
       return Open(Current, Show, Subscribe);
     when M.Msg.Back:
-      return new A.Transition<M.State, M.Msg>(
+      return new A.Transition of (M.State, M.Msg)(
         RememberEpisodes(Current) with
           Show := null;
           Episodes := [];
@@ -295,7 +295,7 @@ begin
           AddOnLoad := false;
           Details := null;
           Draft := null;
-        end with, [A.CancelBackground<M.Msg>('feed')]
+        end with, [A.CancelBackground of M.Msg('feed')]
       );
     when M.Msg.Loaded(const Revision: long, const Value: M.Feed):
       if Revision = Current.FeedRevision then
@@ -419,7 +419,7 @@ begin
     else
   end case;
 
-  return new A.Transition<M.State, M.Msg>(Next, []);
+  return new A.Transition of (M.State, M.Msg)(Next, []);
 end function;
 
 end unit;

@@ -16,9 +16,9 @@ uses Gallery.Shared.Strings as Strings;
 // - `Change`: Maps edits to gallery messages.
 // ## Returns
 // The project search field.
-public function Projects<TMsg>(Query: string; Change: function(string): TMsg): E.Element<TMsg>;
+public function Projects of TMsg(Query: string; Change: function(string): TMsg): E.Element of TMsg;
 begin
-  return Search.SearchField<TMsg>(
+  return Search.SearchField of TMsg(
     'input-search', Query, Change,
     new Search.Options(
       Label := Strings.Get('Text.Search'), Placeholder := Strings.Get('Text.SearchProjects'),
@@ -35,9 +35,9 @@ end function;
 // - `Change`: Maps edits to gallery messages.
 // ## Returns
 // The seat count field with the original 0–99 range.
-public function Seats<TMsg>(Value: double; Change: function(double): TMsg): E.Element<TMsg>;
+public function Seats of TMsg(Value: double; Change: function(double): TMsg): E.Element of TMsg;
 begin
-  return Number.NumberField<TMsg>(
+  return Number.NumberField of TMsg(
     'input-seats', Value, 0.0, 99.0, Change, new Number.Options(Label := 'Seats')
   );
 end function;

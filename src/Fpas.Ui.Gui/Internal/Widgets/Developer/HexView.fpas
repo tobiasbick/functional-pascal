@@ -21,14 +21,14 @@ uses System.Collections.Generic as Lists;
 // - `Selected`: Current selection and cursor.
 // - `Changed`: Maps selection and editing proposals.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Data: array of byte; Selected: D.Selection; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Data: array of byte; Selected: D.Selection; Changed: function(D.Event): TMsg; Settings: D.Options);
 begin
   const Role: string := 'hex-view';
   const Token: string := C.Token(Role, Id);
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   const Enabled: bool := Frame.AcceptInput;
-  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
-  const Marks: Lists.List<CuiDeveloper.CuiHexMark> := new Lists.List<CuiDeveloper.CuiHexMark>(
+  const Focus: bool := C.WantsFocus of TMsg(Frame, Id, Token, Enabled);
+  const Marks: Lists.List of CuiDeveloper.CuiHexMark := new Lists.List of CuiDeveloper.CuiHexMark(
     Settings.Marks.Length
   );
   for Mark: D.Mark in Settings.Marks do
@@ -71,7 +71,7 @@ begin
     end case;
   end if;
 
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, '');
 end procedure;
 
 end unit;

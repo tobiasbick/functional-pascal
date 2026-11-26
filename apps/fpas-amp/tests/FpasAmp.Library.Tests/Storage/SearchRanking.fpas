@@ -19,9 +19,9 @@ begin
 end function;
 
 // A small catalogue with similar names, so ranking and noise are visible.
-function Catalogue(): I.ImmutableArray<Matching.Document>;
+function Catalogue(): I.ImmutableArray of Matching.Document;
 begin
-  return I.ImmutableArray.CreateRange<Matching.Document>(
+  return I.ImmutableArray.CreateRange of Matching.Document(
     [
       Album('The Wall', 'Pink Floyd', 'Progressive rock'),
       Album('Funhouse', 'Pink', 'Pop'),
@@ -61,8 +61,8 @@ public type SearchRankingTests = record
   [X.FactAttribute]
   public procedure WordsMatchInAnyOrder();
   begin
-    X.Assert.Equal<int>(0, Best('wall pink'));
-    X.Assert.Equal<int>(0, Best('pink floyd wall'));
+    X.Assert.Equal of int(0, Best('wall pink'));
+    X.Assert.Equal of int(0, Best('pink floyd wall'));
     X.Assert.True(Found('floyd', 0) and Found('floyd', 2));
     X.Assert.False(Found('floyd', 3));
   end procedure;
@@ -71,7 +71,7 @@ public type SearchRankingTests = record
   [X.FactAttribute]
   public procedure AnyWordIsEnough();
   begin
-    X.Assert.Equal<int>(0, Best('wall xylophone'));
+    X.Assert.Equal of int(0, Best('wall xylophone'));
     X.Assert.True(Found('puppets zzzz', 5));
   end procedure;
 
@@ -79,33 +79,33 @@ public type SearchRankingTests = record
   [X.FactAttribute]
   public procedure PrefixesMatchWhileTyping();
   begin
-    X.Assert.Equal<int>(4, Best('homo'));
-    X.Assert.Equal<int>(5, Best('mast pupp'));
+    X.Assert.Equal of int(4, Best('homo'));
+    X.Assert.Equal of int(5, Best('mast pupp'));
   end procedure;
 
   // Typos, accents and sound-alike spellings still find the album.
   [X.FactAttribute]
   public procedure ForgivesSpelling();
   begin
-    X.Assert.Equal<int>(3, Best('beatels'));
-    X.Assert.Equal<int>(5, Best('metalica'));
-    X.Assert.Equal<int>(4, Best('bjork'));
-    X.Assert.Equal<int>(7, Best('mayer'));
-    X.Assert.Equal<int>(7, Best('strassenmusik'));
+    X.Assert.Equal of int(3, Best('beatels'));
+    X.Assert.Equal of int(5, Best('metalica'));
+    X.Assert.Equal of int(4, Best('bjork'));
+    X.Assert.Equal of int(7, Best('mayer'));
+    X.Assert.Equal of int(7, Best('strassenmusik'));
   end procedure;
 
   // Words written together find names written apart.
   [X.FactAttribute]
   public procedure JoinedWordsMatch();
   begin
-    X.Assert.Equal<int>(0, Best('pinkfloyd'));
+    X.Assert.Equal of int(0, Best('pinkfloyd'));
   end procedure;
 
   // Numbers match exactly or as a prefix, never as a near miss.
   [X.FactAttribute]
   public procedure NumbersAreExact();
   begin
-    X.Assert.Equal<int>(6, Best('1999'));
+    X.Assert.Equal of int(6, Best('1999'));
     X.Assert.False(Found('1998', 6));
   end procedure;
 
@@ -114,8 +114,8 @@ public type SearchRankingTests = record
   public procedure WildcardsAreNotSearchTerms();
   begin
     X.Assert.True(Matching.Query.Parse('* ?').IsEmpty());
-    X.Assert.Equal<int>(-1, Best('*'));
-    X.Assert.Equal<int>(-1, Best(''));
+    X.Assert.Equal of int(-1, Best('*'));
+    X.Assert.Equal of int(-1, Best(''));
   end procedure;
 end record;
 

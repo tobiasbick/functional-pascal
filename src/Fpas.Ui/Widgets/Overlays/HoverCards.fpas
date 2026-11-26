@@ -27,12 +27,12 @@ end record;
 // - `Settings`: Optional placement, sizing and input settings.
 // ## Returns
 // The trigger in its original layout, with CUI-managed hover content.
-public function HoverCard<TMsg>(
-  Id: string; Trigger: E.Element<TMsg>; Content: E.Element<TMsg>; Settings: Options? := null
-): E.Element<TMsg>;
+public function HoverCard of TMsg(
+  Id: string; Trigger: E.Element of TMsg; Content: E.Element of TMsg; Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.HoverCard(Id, Trigger, Content, Settings ?? new Options());
+  return (E.Element of TMsg).HoverCard(Id, Trigger, Content, Settings ?? new Options());
 end function;
 
 end unit;

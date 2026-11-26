@@ -20,7 +20,7 @@ begin
   end if;
 end procedure;
 
-function Control(Session: Gui.Session<State.Msg>; Id: string): Gui.Control;
+function Control(Session: Gui.Session of State.Msg; Id: string): Gui.Control;
 begin
   for Item: Gui.Control in Session.Snapshot().Controls do
     if Item.Id = Id then
@@ -36,9 +36,9 @@ end function;
 // - `Renderer`: Native renderer to verify.
 // - `Capture`: Prefix for the open-menu screenshot.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
-  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  function Update(Model: State.Model; Message: State.Msg): App.Transition of (State.Model, State.Msg);
   begin
-    const Next: App.Transition<State.Model, State.Msg> := GalleryUpdate.Update(Model, Message);
+    const Next: App.Transition of (State.Model, State.Msg) := GalleryUpdate.Update(Model, Message);
     Last := Next.Model.DataGrid;
     return Next;
   end function;
@@ -57,11 +57,11 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       Modifiers := 0;
     end if;
   end procedure;
-  procedure Step(Session: Gui.Session<State.Msg>);
+  procedure Step(Session: Gui.Session of State.Msg);
   begin
     Check(Session.Step(), 'The tree-table menu frame closed.');
   end procedure;
-  procedure Open(Session: Gui.Session<State.Msg>; Row: string);
+  procedure Open(Session: Gui.Session of State.Msg; Row: string);
   begin
     const Area: Cui.CuiRectangle := Control(Session, Row).Bounds;
     Check(
@@ -81,7 +81,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       'A right click on a row must open its menu.'
     );
   end procedure;
-  procedure Key(Session: Gui.Session<State.Msg>; Code: int; Mods: int := 0);
+  procedure Key(Session: Gui.Session of State.Msg; Code: int; Mods: int := 0);
   begin
     Pending := Code;
     Modifiers := Mods;
@@ -103,7 +103,7 @@ begin
     true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.DataGrid),
     Update, View.Build, Window, 256, Inject, ThemeFor := GalleryUpdate.ThemeFor
   );

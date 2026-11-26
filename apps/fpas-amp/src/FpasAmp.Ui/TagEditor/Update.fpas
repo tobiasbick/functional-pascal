@@ -59,9 +59,9 @@ begin
   );
 end function;
 
-function BeginRequest(Current: M.State; Command: A.Command<M.Msg>; Index: int := -1; Scan: bool := false): A.Transition<M.State?, M.Msg>;
+function BeginRequest(Current: M.State; Command: A.Command of M.Msg; Index: int := -1; Scan: bool := false): A.Transition of (M.State?, M.Msg);
 begin
-  return new A.Transition<M.State?, M.Msg>(
+  return new A.Transition of (M.State?, M.Msg)(
     Current with
       Match := Index;
       Matches := if Index < 0 then
@@ -71,8 +71,8 @@ begin
       end if;
       Searching := not Scan;
       Scanning := Scan;
-      Proposals := I.ImmutableDictionary<string, string>.Empty;
-      Selected := I.ImmutableHashSet<string>.Empty;
+      Proposals := I.ImmutableDictionary of (string, string).Empty;
+      Selected := (I.ImmutableHashSet of string).Empty;
       Error := '';
       HttpDetails := '';
     end with,
@@ -90,10 +90,10 @@ begin
   end with;
 end function;
 
-function Detailed(Current: M.State; Values: I.ImmutableDictionary<string, string>): M.State;
+function Detailed(Current: M.State; Values: I.ImmutableDictionary of (string, string)): M.State;
 begin
-  const Proposals: I.ImmutableDictionary<string, string> := Custom.MatchNames(Current, Values);
-  var Selected: I.ImmutableHashSet<string> := Current.Selected;
+  const Proposals: I.ImmutableDictionary of (string, string) := Custom.MatchNames(Current, Values);
+  var Selected: I.ImmutableHashSet of string := Current.Selected;
   for Key: string in Current.Selected do
     if F.Value(Current.Proposals, Key) <> F.Value(Proposals, Key) then
       Selected := Selected.Remove(Key);
@@ -108,8 +108,8 @@ end function;
 
 function Loaded(Current: M.State; Original: Files.Snapshot): M.State;
 begin
-  const Rows: I.ImmutableArray<M.Custom>.Builder := I.ImmutableArray.CreateBuilder<M.Custom>();
-  const Names: C.SortedSet<string> := new C.SortedSet<string>(Sys.StringComparer.Ordinal);
+  const Rows: (I.ImmutableArray of M.Custom).Builder := I.ImmutableArray.CreateBuilder of M.Custom();
+  const Names: C.SortedSet of string := new C.SortedSet of string(Sys.StringComparer.Ordinal);
   for Key: string in Original.Values.Keys do
     if Key.StartsWith(F.Custom) then
       discard Names.Add(Key);
@@ -128,36 +128,36 @@ begin
   end with;
 end function;
 
-function Save(Current: M.State; Library: Metadata.Session): A.Transition<M.State?, M.Msg>;
+function Save(Current: M.State; Library: Metadata.Session): A.Transition of (M.State?, M.Msg);
 begin
   const Original: Files.Snapshot? := Current.Original;
   if Original = null or not (Current.Database or Current.AudioFile) then
-    return new A.Transition<M.State?, M.Msg>(Current, []);
+    return new A.Transition of (M.State?, M.Msg)(Current, []);
   end if;
 
   try
-    const Patch: I.ImmutableDictionary<string, string?> := Changes.Build(Current, Original);
+    const Patch: I.ImmutableDictionary of (string, string?) := Changes.Build(Current, Original);
     if Patch.Count = 0 then
-      return new A.Transition<M.State?, M.Msg>(
+      return new A.Transition of (M.State?, M.Msg)(
         null,
         [
-          A.CancelBackground<M.Msg>(Requests.Slot),
-          A.CancelBackground<M.Msg>('timer')
+          A.CancelBackground of M.Msg(Requests.Slot),
+          A.CancelBackground of M.Msg('timer')
         ]
       );
     end if;
 
-    return new A.Transition<M.State?, M.Msg>(
+    return new A.Transition of (M.State?, M.Msg)(
       Current with
         Saving := true;
         Error := '';
         HttpDetails := '';
       end with,
       [
-        A.CancelBackground<M.Msg>(Requests.Slot),
-        A.StartBackground<M.Msg>(
+        A.CancelBackground of M.Msg(Requests.Slot),
+        A.StartBackground of M.Msg(
           'save',
-          A.FromWorker<M.Msg>(
+          A.FromWorker of M.Msg(
             async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
               await Library.WriteTags(
                 Current.Track,
@@ -174,7 +174,7 @@ begin
       ]
     );
   catch Error: Sys.ArgumentException do
-    return new A.Transition<M.State?, M.Msg>(
+    return new A.Transition of (M.State?, M.Msg)(
       Current with
         Error := Error.Message;
       end with, []
@@ -185,15 +185,15 @@ end function;
 // Applies Message to Current. Library owns the file and database effects, when present.
 // ApplicationKey is the saved AcoustID lookup credential, or empty when unconfigured.
 // Returns the next draft and any effects for the host.
-public function Apply(Current: M.State?; Message: M.Msg; Library: Metadata.Session?; ApplicationKey: string): A.Transition<M.State?, M.Msg>;
+public function Apply(Current: M.State?; Message: M.Msg; Library: Metadata.Session?; ApplicationKey: string): A.Transition of (M.State?, M.Msg);
 begin
   case Message of
     when M.Msg.Open(const Track: Tracks.Entry):
       if Library = null or Track.TrackId = '' or (Current <> null and Current.Saving) then
-        return new A.Transition<M.State?, M.Msg>(Current, []);
+        return new A.Transition of (M.State?, M.Msg)(Current, []);
       end if;
 
-      return new A.Transition<M.State?, M.Msg>(
+      return new A.Transition of (M.State?, M.Msg)(
         new M.State(
           Track,
           Query := SearchText(Track),
@@ -202,11 +202,11 @@ begin
           AcoustId := Acoust.Availability()
         ),
         [
-          A.CancelBackground<M.Msg>(Requests.Slot),
+          A.CancelBackground of M.Msg(Requests.Slot),
           Requests.Timer(),
-          A.StartBackground<M.Msg>(
+          A.StartBackground of M.Msg(
             'load',
-            A.FromWorker<M.Msg>(
+            A.FromWorker of M.Msg(
               async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
                 await Post(M.Msg.Loaded(await Library.ReadTags(Track, Stop)));
               end function, Failure
@@ -218,32 +218,32 @@ begin
   end case;
 
   if Current = null then
-    return new A.Transition<M.State?, M.Msg>(null, []);
+    return new A.Transition of (M.State?, M.Msg)(null, []);
   end if;
 
   if Current.Saving then
     case Message of
       when M.Msg.Saved:
-        return new A.Transition<M.State?, M.Msg>(null, [A.CancelBackground<M.Msg>('timer')]);
+        return new A.Transition of (M.State?, M.Msg)(null, [A.CancelBackground of M.Msg('timer')]);
       when M.Msg.Failed(const Error: string):
-        return new A.Transition<M.State?, M.Msg>(
+        return new A.Transition of (M.State?, M.Msg)(
           Complete(Current) with
             Saving := false;
             Error := Error;
           end with, []
         );
       else
-        return new A.Transition<M.State?, M.Msg>(Current, []);
+        return new A.Transition of (M.State?, M.Msg)(Current, []);
     end case;
   end if;
   var Next: M.State := Current;
   case Message of
     when M.Msg.Close:
-      return new A.Transition<M.State?, M.Msg>(
+      return new A.Transition of (M.State?, M.Msg)(
         null, [
-          A.CancelBackground<M.Msg>('load'),
-          A.CancelBackground<M.Msg>(Requests.Slot),
-          A.CancelBackground<M.Msg>('timer')
+          A.CancelBackground of M.Msg('load'),
+          A.CancelBackground of M.Msg(Requests.Slot),
+          A.CancelBackground of M.Msg('timer')
         ]
       );
     when M.Msg.Loaded(const Original: Files.Snapshot):
@@ -258,13 +258,13 @@ begin
         Selected := Current.Selected.Remove(Key);
       end with;
     when M.Msg.Add:
-      return new A.Transition<M.State?, M.Msg>(
+      return new A.Transition of (M.State?, M.Msg)(
         Current with
           Extra := Current.Extra.Add(new M.Custom(Current.NextRow, '', ''));
           NextRow := Current.NextRow + 1;
           Offset := L.ScrollPosition.End;
         end with,
-        [A.Focus<M.Msg>('custom-name-' + Current.NextRow.ToString())]
+        [A.Focus of M.Msg('custom-name-' + Current.NextRow.ToString())]
       );
     when M.Msg.Change(const Id: int, const Name: bool, const Text: string):
       for Index: int := 0 to Current.Extra.Length - 1 do
@@ -345,9 +345,9 @@ begin
       then
         return BeginRequest(Current, Requests.Lookup(Current.Matches[Index]), Index);
       end if;
-    when M.Msg.RecordingReady(const Values: I.ImmutableDictionary<string, string>):
+    when M.Msg.RecordingReady(const Values: I.ImmutableDictionary of (string, string)):
       Next := Detailed(Current, Values);
-    when M.Msg.Proposed(const Values: I.ImmutableDictionary<string, string>):
+    when M.Msg.Proposed(const Values: I.ImmutableDictionary of (string, string)):
       Next := Complete(Detailed(Current, Values));
     when M.Msg.ReleaseFailed(const Details: string):
       Next := Complete(Current) with
@@ -367,9 +367,9 @@ begin
     when M.Msg.TakeAll(const Selected: bool):
       Next := Current with
         Selected := if Selected then
-          I.ImmutableHashSet.CreateRange<string>(Current.Proposals.Keys)
+          I.ImmutableHashSet.CreateRange of string(Current.Proposals.Keys)
         else
-          I.ImmutableHashSet<string>.Empty
+          (I.ImmutableHashSet of string).Empty
         end if;
       end with;
     when M.Msg.Database(const Checked: bool):
@@ -406,7 +406,7 @@ begin
     else
   end case;
 
-  return new A.Transition<M.State?, M.Msg>(Next, []);
+  return new A.Transition of (M.State?, M.Msg)(Next, []);
 end function;
 
 end unit;

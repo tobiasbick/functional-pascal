@@ -21,9 +21,9 @@ uses Fpas.Ui.Widgets.Charts.TimeHistograms as W;
 // - `Selected`: Current selected interval.
 // ## Returns
 // The histogram with changes to the chosen interval as messages.
-public function View(Start: double; Series: array of W.Series; Selected: W.Range): E.Element<W.Event>;
+public function View(Start: double; Series: array of W.Series; Selected: W.Range): E.Element of W.Event;
 begin
-  return W.TimeHistogram<W.Event>('event-time', Start, 900.0, 96, Series, Selected,
+  return W.TimeHistogram of W.Event('event-time', Start, 900.0, 96, Series, Selected,
     function(Change: W.Event): W.Event => Change,
     new W.Options(Utc := true, Height := 150.0F));
 end function;

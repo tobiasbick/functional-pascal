@@ -73,7 +73,7 @@ public sealed partial class MsBuildTests
             Assert.True(diagnostic.GetProperty("location").GetProperty("column").GetInt32() > 1);
             Assert.False(File.Exists(project.File("Invalid.dll")));
         }
-        foreach (var body in new[] { "discard L.Count<string>(['a']);", "discard L.Count([new S.Named()]);" })
+        foreach (var body in new[] { "discard L.Count of string(['a']);", "discard L.Count([new S.Named()]);" })
         {
             var source = "program Invalid; uses Shared.Limits as L; uses Shared as S; begin " + body + " end; end program;";
             var result = await ProcessRunner.RunAsync([TestEnvironment.Metadata("FpasCliPath"), "compile", "-", "--output", project.File("Invalid.dll"),
@@ -92,7 +92,7 @@ public sealed partial class MsBuildTests
             begin
               Console.WriteLine(L.Choose(42)); Console.WriteLine(new S.DefaultValue().Value);
               Console.WriteLine(L.Choose([1, 2, 3])); Console.WriteLine(new S.DefaultValue([4, 5]).Value);
-              Console.WriteLine(L.Count<int>([1, 2])); Console.WriteLine(L.Count([new S.Pixel()]));
+              Console.WriteLine(L.Count of int([1, 2])); Console.WriteLine(L.Count([new S.Pixel()]));
             end;
             end program;
             """);

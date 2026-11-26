@@ -23,19 +23,19 @@ uses System.Collections.Generic as Lists;
 // - `Changed`: Maps a native change to a message.
 // - `Settings`: Native widget options.
 // - `Visit`: Presents composed children.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Slides: array of E.Element<TMsg>; Index: int; Changed: function(int): TMsg; Settings: Carousels.Options; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Slides: array of E.Element of TMsg; Index: int; Changed: function(int): TMsg; Settings: Carousels.Options; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
 begin
   const Role: string := 'carousel';
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
-  const Focus: bool := C.WantsFocus<TMsg>(
+  const Focus: bool := C.WantsFocus of TMsg(
     Frame,
     Id + '/viewport',
     C.Token(Role, Id + '/viewport'),
     Enabled
   )
-    or C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
-  const Names: Lists.List<string> := new Lists.List<string>(Slides.Length + 1);
+    or C.WantsFocus of TMsg(Frame, Id, Token, Enabled);
+  const Names: Lists.List of string := new Lists.List of string(Slides.Length + 1);
   Names.Add('viewport');
   for Part: int := 0 to Slides.Length - 1 do
     Names.Add('dot-' + Part.ToString(Sys.Globalization.CultureInfo.InvariantCulture));
@@ -67,12 +67,12 @@ begin
     Frame.Window.EndCarouselSlide();
   end for;
 
-  const Next: int := Frame.Window.EndCarousel(P.Tracker<TMsg>(Frame, Id, Role, Parts));
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, Index.ToString());
-  P.Part<TMsg>(Frame, Id, Role, Parts[0], '', Enabled, '');
+  const Next: int := Frame.Window.EndCarousel(P.Tracker of TMsg(Frame, Id, Role, Parts));
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, Index.ToString());
+  P.Part of TMsg(Frame, Id, Role, Parts[0], '', Enabled, '');
   if not Settings.HideDots and Slides.Length > 1 then
     for Part: int := 1 to Slides.Length do
-      P.Part<TMsg>(Frame, Id, Role, Parts[Part], '', Enabled, '');
+      P.Part of TMsg(Frame, Id, Role, Parts[Part], '', Enabled, '');
     end for;
   end if;
 

@@ -23,7 +23,7 @@ uses Fpas.Ui.Widgets.Editors.CodeEditors as CodeEditors;
 // ## Parameters
 // - `Frame`: Current presentation.
 // - `Node`: Source tool element.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Node: E.Element<TMsg>);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Node: E.Element of TMsg);
 begin
   case Node of
     when E.Element.Markdown(
@@ -32,14 +32,14 @@ begin
       const Changed: function(Markdowns.Event): TMsg,
       const Settings: Markdowns.Options
     ):
-      Markdown.Draw<TMsg>(Frame, Id, Text, Changed, Settings);
+      Markdown.Draw of TMsg(Frame, Id, Text, Changed, Settings);
     when E.Element.CodeEditor(
       const Id: string,
       const Text: string,
       const Changed: function(CodeEditors.Event): TMsg,
       const Settings: CodeEditors.Options
     ):
-      CodeEditor.Draw<TMsg>(Frame, Id, Text, Changed, Settings);
+      CodeEditor.Draw of TMsg(Frame, Id, Text, Changed, Settings);
     when E.Element.DiffView(
       const Id: string,
       const Before: string,
@@ -48,7 +48,7 @@ begin
       const Changed: function(DiffViews.Event): TMsg,
       const Settings: DiffViews.Options
     ):
-      DiffView.Draw<TMsg>(Frame, Id, Before, After, Current, Changed, Settings);
+      DiffView.Draw of TMsg(Frame, Id, Before, After, Current, Changed, Settings);
     when E.Element.HexView(
       const Id: string,
       const Data: array of byte,
@@ -56,14 +56,14 @@ begin
       const Changed: function(HexViews.Event): TMsg,
       const Settings: HexViews.Options
     ):
-      HexView.Draw<TMsg>(Frame, Id, Data, Selected, Changed, Settings);
+      HexView.Draw of TMsg(Frame, Id, Data, Selected, Changed, Settings);
     when E.Element.LogConsole(
       const Id: string,
       const Entries: array of LogConsoles.Entry,
       const Cleared: TMsg,
       const Settings: LogConsoles.Options
     ):
-      LogConsole.Draw<TMsg>(Frame, Id, Entries, Cleared, Settings);
+      LogConsole.Draw of TMsg(Frame, Id, Entries, Cleared, Settings);
     when E.Element.Terminal(
       const Id: string,
       const Output: string,
@@ -71,7 +71,7 @@ begin
       const Received: function(Terminals.Event): TMsg,
       const Settings: Terminals.Options
     ):
-      Terminal.Draw<TMsg>(Frame, Id, Output, Revision, Received, Settings);
+      Terminal.Draw of TMsg(Frame, Id, Output, Revision, Received, Settings);
     else
   end case;
 end procedure;

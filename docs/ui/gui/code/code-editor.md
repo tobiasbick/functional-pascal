@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Editors.CodeEditors as W;
 // - `Source`: Current query text.
 // ## Returns
 // The editor with changes and caret position as messages.
-public function View(Source: string): E.Element<W.Event>;
+public function View(Source: string): E.Element of W.Event;
 begin
-  return W.CodeEditor<W.Event>('sql-editor', Source,
+  return W.CodeEditor of W.Event('sql-editor', Source,
     function(Change: W.Event): W.Event => Change,
     new W.Options(Language := 'sql', Height := 128.0F));
 end function;

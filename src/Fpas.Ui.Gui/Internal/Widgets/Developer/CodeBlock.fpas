@@ -15,7 +15,7 @@ uses Fpas.Ui.Widgets.Developer.CodeBlocks as W;
 // - `Id`: Stable widget identity.
 // - `Code`: Literal source.
 // - `Settings`: Native presentation options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Code: string; Settings: W.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Code: string; Settings: W.Options);
 begin
   const Token: string := C.Token('code-block', Id);
   const CopyId: string := Id + '/copy';
@@ -39,7 +39,7 @@ begin
     else
       0
     end if) +
-    (if C.WantsFocus<TMsg>(
+    (if C.WantsFocus of TMsg(
       Frame, CopyId, CopyToken, Frame.AcceptInput and not Settings.NoHeader
         and (Settings.Title <> '' or Settings.Language <> '')
     )
@@ -52,7 +52,7 @@ begin
     Token, Code, Settings.Language, Settings.Title,
     Settings.HighlightFrom, Settings.HighlightTo, Settings.MaxHeight, Settings.Size, Flags, Part
   );
-  C.Track<TMsg>(
+  C.Track of TMsg(
     Frame,
     new App.Control(Id, Settings.Title, 'code-block', new Cui.CuiRectangle(), false)
   );

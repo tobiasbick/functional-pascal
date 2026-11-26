@@ -18,9 +18,9 @@ uses System as Sys;
 // ## Parameters
 // - `Target`: Trigger element.
 // - `Location`: View path for diagnostics.
-public procedure CheckTrigger<TMsg>(Target: E.Element<TMsg>; Location: string);
+public procedure CheckTrigger of TMsg(Target: E.Element of TMsg; Location: string);
 begin
-  if not Buttons.IsButton<TMsg>(Target) then
+  if not Buttons.IsButton of TMsg(Target) then
     R.Reject(Location, 'A popover needs a button trigger.');
   end if;
 end procedure;
@@ -33,7 +33,7 @@ end procedure;
 public procedure CheckPanel(Settings: P.Options; Location: string);
 begin
   if Settings.Width < 0 or Settings.Padding < 0 or Settings.Gap < 0
-    or not Sys.Enum.IsDefined<M.Placement>(Settings.Position)
+    or not Sys.Enum.IsDefined of M.Placement(Settings.Position)
   then
     R.Reject(Location, 'A popover needs nonnegative dimensions and a valid placement.');
   end if;
@@ -55,7 +55,7 @@ begin
   ) or Sys.String.IsNullOrWhiteSpace(Settings.ConfirmLabel)
     or Sys.String.IsNullOrWhiteSpace(
     Settings.CancelLabel
-  ) or not Sys.Enum.IsDefined<M.Placement>(Settings.Position)
+  ) or not Sys.Enum.IsDefined of M.Placement(Settings.Position)
   then
     R.Reject(
       Location,

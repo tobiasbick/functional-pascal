@@ -26,27 +26,31 @@ begin
   end if;
 end procedure;
 
-function Modal(Open: bool; Kind: int := 0): E.Element<bool>;
+function Modal(Open: bool; Kind: int := 0): E.Element of bool;
 begin
   return case Kind of
-    when 1: Sheets.Sheet<bool>(
+    when 1: Sheets.Sheet of bool(
       'modal',
-      E.Text<bool>('Anchor'),
-      E.Text<bool>('Body'),
+      E.Text of bool('Anchor'),
+      E.Text of bool('Body'),
       Open,
       new Sheets.Options('Modal'),
       false
     );
-    when 2: Palettes.CommandPalette<bool>(
+    when 2: Palettes.CommandPalette of bool(
       'modal',
-      E.Text<bool>('Anchor'),
+      E.Text of bool('Anchor'),
       Open,
       [],
       function(Shown: bool): bool => false
     );
-    when 3: Pickers.FilePicker<bool>('modal', Open, function(Event: Pickers.Event): bool => false);
-    else Dialogs.Dialog<bool>(
-      'modal', E.Text<bool>('Anchor'), E.Text<bool>('Body'), Open,
+    when 3: Pickers.FilePicker of bool(
+      'modal',
+      Open,
+      function(Event: Pickers.Event): bool => false
+    );
+    else Dialogs.Dialog of bool(
+      'modal', E.Text of bool('Anchor'), E.Text of bool('Body'), Open,
       new Dialogs.Options('Modal'), false
     );
   end case;
@@ -58,8 +62,8 @@ begin
     for Open: int := 0 to 1 do
       var Rejected: bool := false;
       try
-        discard V.Prepare<bool>(
-          Reasoning.Reasoning<bool>('reasoning', [Modal(Open = 1, Kind)]), V.Target.Graphical
+        discard V.Prepare of bool(
+          Reasoning.Reasoning of bool('reasoning', [Modal(Open = 1, Kind)]), V.Target.Graphical
         );
       catch Error: Sys.ArgumentException do
         Rejected := Error.Message.Contains('outside native-owned collapsible reasoning bodies');
@@ -70,10 +74,10 @@ begin
   end for;
 
   // Returning from the restricted body must restore the enclosing validation scope.
-  discard V.Prepare<bool>(
-    E.Column<bool>(
+  discard V.Prepare of bool(
+    E.Column of bool(
       new L.Flow(),
-      Reasoning.Reasoning<bool>('reasoning', [E.Text<bool>('Body')]),
+      Reasoning.Reasoning of bool('reasoning', [E.Text of bool('Body')]),
       Modal(true)
     ),
     V.Target.Graphical
@@ -81,7 +85,7 @@ begin
 end procedure;
 
 procedure CachedScopes();
-  function Build(Kind: int): E.Element<bool>;
+  function Build(Kind: int): E.Element of bool;
   begin
     Built := Built + 1;
     return Modal(true, Kind);
@@ -89,13 +93,13 @@ procedure CachedScopes();
 begin
   var Built: int := 0;
   for Kind: int := 0 to 3 do
-    const Tree: E.Element<bool> := E.CachedSubview<int, bool>(
+    const Tree: E.Element of bool := E.CachedSubview of (int, bool)(
       'cached', Kind, Build, function(Left: int; Right: int): bool => Left = Right
     );
-    const Previous: V.Prepared<bool> := V.Prepare<bool>(Tree, V.Target.Graphical);
+    const Previous: V.Prepared of bool := V.Prepare of bool(Tree, V.Target.Graphical);
     var Rejected: bool := false;
     try
-      discard V.Prepare<bool>(
+      discard V.Prepare of bool(
         Tree, V.Target.Graphical, Previous, AllowOpenModals := false
       );
     catch Error: Sys.ArgumentException do
@@ -106,38 +110,44 @@ begin
       Rejected and Built = Kind + 1,
       'Cached modal scopes must be rechecked without rebuilding the cached subtree.'
     );
-    discard V.Prepare<bool>(Modal(false, Kind), V.Target.Graphical, AllowOpenModals := false);
+    discard V.Prepare of bool(Modal(false, Kind), V.Target.Graphical, AllowOpenModals := false);
   end for;
 end procedure;
 
 procedure Factory(Renderer: Cui.CuiRenderer; Kind: int);
-  function Row(Index: int): E.Element<bool>;
+  function Row(Index: int): E.Element of bool;
   begin
     Built := Built + 1;
     return if Index = 0 then
       Modal(Kind <> 3)
     else
-      E.Text<bool>('Row ' + Index.ToString())
+      E.Text of bool('Row ' + Index.ToString())
     end if;
   end function;
 
-  function GridRow(Index: int): Grids.Row<bool>;
+  function GridRow(Index: int): Grids.Row of bool;
   begin
-    const Child: E.Element<bool> := Row(Index);
-    const Cell: Grids.Cell<bool> := if Kind = 1 then
-      Grids.Cell<bool>.Content([Child])
+    const Child: E.Element of bool := Row(Index);
+    const Cell: Grids.Cell of bool := if Kind = 1 then
+      (Grids.Cell of bool).Content([Child])
     else
-      Grids.Cell<bool>.Editable('Value', 64, function(Text: string): bool => true, [Child])
+      (Grids.Cell of bool).Editable('Value', 64, function(Text: string): bool => true, [Child])
     end if;
-    return new Grids.Row<bool>('row-' + Index.ToString(), [Cell]);
+    return new Grids.Row of bool('row-' + Index.ToString(), [Cell]);
   end function;
 
-  function View(Model: bool; Viewport: L.Viewport): E.Element<bool>;
+  function View(Model: bool; Viewport: L.Viewport): E.Element of bool;
   begin
     return if Kind = 0 or Kind = 3 then
-      Virtuals.VirtualList<bool>('list', 10000, 40.0F, L.Extent.Fixed(L.Measure.Logical(120)), Row)
+      Virtuals.VirtualList of bool(
+        'list',
+        10000,
+        40.0F,
+        L.Extent.Fixed(L.Measure.Logical(120)),
+        Row
+      )
     else
-      Grids.DataGrid<bool>(
+      Grids.DataGrid of bool(
         'grid', [new Grids.Column('Column')], 10000, GridRow, new Grids.Value(),
         function(Value: Grids.Value): bool => true,
         new Grids.Options(Height := L.Extent.Fixed(L.Measure.Logical(120)))
@@ -154,9 +164,9 @@ begin
     Renderer,
     true
   );
-  using const Session: Gui.Session<bool> := Host.Start<bool, bool>(
+  using const Session: Gui.Session of bool := Host.Start of (bool, bool)(
     true,
-    function(Model: bool; Message: bool): Mvu.Transition<bool, bool> => new Mvu.Transition<bool, bool>(
+    function(Model: bool; Message: bool): Mvu.Transition of (bool, bool) => new Mvu.Transition of (bool, bool)(
       Message,
       []
     ),

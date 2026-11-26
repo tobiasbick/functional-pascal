@@ -22,7 +22,7 @@ end function;
 
 // Runs Operation on a dedicated Connection and interrupts SQLite sorting or scanning on Cancellation.
 // Returns the operation's TResult and always removes its connection-local progress handler.
-public function Interruptible<TResult>(Connection: Db.SqliteConnection; Cancellation: T.CancellationToken; Operation: function(): TResult): TResult;
+public function Interruptible of TResult(Connection: Db.SqliteConnection; Cancellation: T.CancellationToken; Operation: function(): TResult): TResult;
 begin
   Cancellation.ThrowIfCancellationRequested();
   if Cancellation.CanBeCanceled then

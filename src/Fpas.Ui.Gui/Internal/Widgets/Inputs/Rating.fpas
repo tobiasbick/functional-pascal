@@ -19,8 +19,8 @@ uses Fpas.Ui.Gui.Internal.Core.Context as C;
 // - `Maximum`: Number of stars.
 // - `Enabled`: Model-owned input permission.
 // - `StarSize`: Logical edge length of the native star boxes.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Label: string; Value: int;
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Label: string; Value: int;
   OnChange: function(int): TMsg; Maximum: int; Enabled: bool; StarSize: float
 );
 begin
@@ -36,7 +36,7 @@ begin
     Frame.Messages.Add(OnChange(Proposal));
   end if;
 
-  C.Track<TMsg>(
+  C.Track of TMsg(
     Frame,
     new App.Control(Id, Label, 'rating', new Cui.CuiRectangle(), Allowed, Value := Value.ToString())
   );

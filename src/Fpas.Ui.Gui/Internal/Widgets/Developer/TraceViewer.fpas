@@ -12,7 +12,7 @@ uses System.Collections.Generic as Lists;
 
 function PackTrack(Items: array of D.Track): array of CuiDeveloper.CuiDevTrack;
 begin
-  const Native: Lists.List<CuiDeveloper.CuiDevTrack> := new Lists.List<CuiDeveloper.CuiDevTrack>(
+  const Native: Lists.List of CuiDeveloper.CuiDevTrack := new Lists.List of CuiDeveloper.CuiDevTrack(
     Items.Length
   );
   for Entry: D.Track in Items do
@@ -24,7 +24,7 @@ end function;
 
 function PackSpan(Items: array of D.Span): array of CuiDeveloper.CuiDevSpan;
 begin
-  const Native: Lists.List<CuiDeveloper.CuiDevSpan> := new Lists.List<CuiDeveloper.CuiDevSpan>(
+  const Native: Lists.List of CuiDeveloper.CuiDevSpan := new Lists.List of CuiDeveloper.CuiDevSpan(
     Items.Length
   );
   for Entry: D.Span in Items do
@@ -45,7 +45,7 @@ end function;
 
 function PackMarker(Items: array of D.Marker): array of CuiDeveloper.CuiDevMarker;
 begin
-  const Native: Lists.List<CuiDeveloper.CuiDevMarker> := new Lists.List<CuiDeveloper.CuiDevMarker>(
+  const Native: Lists.List of CuiDeveloper.CuiDevMarker := new Lists.List of CuiDeveloper.CuiDevMarker(
     Items.Length
   );
   for Entry: D.Marker in Items do
@@ -68,13 +68,13 @@ end function;
 // - `Selection`: Selection supplied to the widget.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Tracks: array of D.Track; Spans: array of D.Span; Markers: array of D.Marker; Value: D.View; Selection: int; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Tracks: array of D.Track; Spans: array of D.Span; Markers: array of D.Marker; Value: D.View; Selection: int; Changed: function(D.Event): TMsg; Settings: D.Options);
 begin
   const Role: string := 'trace-viewer';
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Width: S.NativeExtent := S.Extent(Settings.Width);
-  const Links: Lists.List<CuiDeveloper.CuiTraceLink> := new Lists.List<CuiDeveloper.CuiTraceLink>(
+  const Links: Lists.List of CuiDeveloper.CuiTraceLink := new Lists.List of CuiDeveloper.CuiTraceLink(
     Settings.Links.Length
   );
   for Index: int := 0 to Settings.Links.Length - 1 do
@@ -107,7 +107,7 @@ begin
     when is D.Hover as Previous: Previous.Span <> Hovered.Span or Previous.Link <> Hovered.Link;
     else false;
   end case;
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, Selection.ToString());
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, Selection.ToString());
   if Enabled and (Result.Flags <> 0 or HoverChanged) then
     Frame.Messages.Add(
       Changed(

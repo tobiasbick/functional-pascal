@@ -20,7 +20,7 @@ uses System.Globalization as Culture;
 // - `OnChange`: Maps a native amount proposal.
 // - `Settings`: Currency captions, precision and width.
 
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Value: decimal; OnChange: function(decimal): TMsg; Settings: M.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Value: decimal; OnChange: function(decimal): TMsg; Settings: M.Options);
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('money-field', Id);
@@ -28,7 +28,7 @@ begin
   const Proposed: decimal := Frame.Window.MoneyField(
     Token, Value, Settings.Label, Settings.Symbol, Settings.Code,
     Settings.Hint, Settings.DecimalPlaces, Width.Kind, Width.Value, Enabled,
-    C.WantsFocus<TMsg>(Frame, Id, Token, Enabled), not Frame.PaintingClosed
+    C.WantsFocus of TMsg(Frame, Id, Token, Enabled), not Frame.PaintingClosed
   );
   if Enabled and Proposed <> Value then
     Frame.Messages.Add(OnChange(Proposed));

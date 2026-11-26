@@ -27,40 +27,40 @@ begin
   return Sys.Char.ConvertFromUtf32(Code);
 end function;
 
-function IconSample(Id: string; Code: int; Caption: string; Style: S.ButtonVariant := S.ButtonVariant.Default; Shortcut: string := ''): E.Element<State.Msg>;
+function IconSample(Id: string; Code: int; Caption: string; Style: S.ButtonVariant := S.ButtonVariant.Default; Shortcut: string := ''): E.Element of State.Msg;
 begin
-  return I.IconButton<State.Msg>(
+  return I.IconButton of State.Msg(
     Id, Glyph(Code), Caption, State.Msg.Preview,
     new I.Options(Variant := Style, Shortcut := Shortcut)
   );
 end function;
 
-function Section(Title: string; Description: string := ''): E.Element<State.Msg>;
+function Section(Title: string; Description: string := ''): E.Element of State.Msg;
 begin
-  const Padding: E.Element<State.Msg> := E.Size<State.Msg>(
-    E.Column<State.Msg>(), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(18)))
+  const Padding: E.Element of State.Msg := E.Size of State.Msg(
+    E.Column of State.Msg(), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(18)))
   );
-  const Heading: E.Element<State.Msg> := E.Styled<State.Msg>(
-    E.Text<State.Msg>(Title),
+  const Heading: E.Element of State.Msg := E.Styled of State.Msg(
+    E.Text of State.Msg(Title),
     S.Role.Heading
   );
   if Description = '' then
-    return E.Column<State.Msg>(Padding, Heading);
+    return E.Column of State.Msg(Padding, Heading);
   end if;
 
-  return E.Column<State.Msg>(
+  return E.Column of State.Msg(
     Padding,
-    E.Column<State.Msg>(
+    E.Column of State.Msg(
       new L.Flow(Gap := L.Spacing.Tight),
       Heading,
-      E.Styled<State.Msg>(E.Text<State.Msg>(Description), S.Role.Secondary)
+      E.Styled of State.Msg(E.Text of State.Msg(Description), S.Role.Secondary)
     )
   );
 end function;
 
-function Panel(Child: E.Element<State.Msg>): E.Element<State.Msg>;
+function Panel(Child: E.Element of State.Msg): E.Element of State.Msg;
 begin
-  return E.Styled<State.Msg>(E.Column<State.Msg>(Card, Child), S.Role.OutlinedPanel);
+  return E.Styled of State.Msg(E.Column of State.Msg(Card, Child), S.Role.OutlinedPanel);
 end function;
 
 // Builds the accepted examples from the CUI Buttons page.
@@ -71,32 +71,32 @@ end function;
 // - `Wide`: Whether complete example rows fit side by side.
 // ## Returns
 // The button variants, sizes, states, group and copy action.
-public function View(Model: State.Model; Data: Demo.Model; Wide: bool): E.Element<State.Msg>;
+public function View(Model: State.Model; Data: Demo.Model; Wide: bool): E.Element of State.Msg;
 begin
-  const Sizes: E.Element<State.Msg> := Samples.Sizes<State.Msg>(State.Msg.Preview);
-  const Actions: array of E.Element<State.Msg> := Samples.Icons<State.Msg>(State.Msg.Preview);
-  const CopyIcon: E.Element<State.Msg> := IconSample(
+  const Sizes: E.Element of State.Msg := Samples.Sizes of State.Msg(State.Msg.Preview);
+  const Actions: array of E.Element of State.Msg := Samples.Icons of State.Msg(State.Msg.Preview);
+  const CopyIcon: E.Element of State.Msg := IconSample(
     'icon-copy',
     $E09E,
     'Copy',
     Shortcut := 'Ctrl C'
   );
-  const Share: E.Element<State.Msg> := IconSample('icon-share', $E156, 'Share');
-  const Like: E.Element<State.Msg> := IconSample(
+  const Share: E.Element of State.Msg := IconSample('icon-share', $E156, 'Share');
+  const Like: E.Element of State.Msg := IconSample(
     'icon-like',
     $E0F2,
     'Like',
     S.ButtonVariant.Outline
   );
-  const Delete: E.Element<State.Msg> := IconSample(
+  const Delete: E.Element of State.Msg := IconSample(
     'icon-delete',
     $E18E,
     'Delete',
     S.ButtonVariant.Secondary
   );
-  const Variants: E.Element<State.Msg> := Samples.Variants<State.Msg>(State.Msg.Preview, Wide);
-  const Icons: E.Element<State.Msg> := if Wide then
-    E.Row<State.Msg>(
+  const Variants: E.Element of State.Msg := Samples.Variants of State.Msg(State.Msg.Preview, Wide);
+  const Icons: E.Element of State.Msg := if Wide then
+    E.Row of State.Msg(
       Row,
       Actions[0],
       Actions[1],
@@ -107,35 +107,35 @@ begin
       Delete
     )
   else
-    E.Column<State.Msg>(
+    E.Column of State.Msg(
       Stack,
-      E.Row<State.Msg>(Row, Actions[0], Actions[1]),
-      E.Row<State.Msg>(Row, Actions[2], CopyIcon, Share, Like, Delete)
+      E.Row of State.Msg(Row, Actions[0], Actions[1]),
+      E.Row of State.Msg(Row, Actions[2], CopyIcon, Share, Like, Delete)
     )
   end if;
-  const States: E.Element<State.Msg> := Samples.States<State.Msg>(
+  const States: E.Element of State.Msg := Samples.States of State.Msg(
     State.Msg.Preview,
     Wide,
     Model.ButtonLoading,
     State.Msg.SetButtonLoading
   );
-  const GroupAndCopy: E.Element<State.Msg> := if Wide then
-    E.Row<State.Msg>(
+  const GroupAndCopy: E.Element of State.Msg := if Wide then
+    E.Row of State.Msg(
       new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(12))),
       Group.View(Model, Data),
       Copy.View(),
       Hold.View(Model, Data)
     )
   else
-    E.Column<State.Msg>(Stack, Group.View(Model, Data), Copy.View(), Hold.View(Model, Data))
+    E.Column of State.Msg(Stack, Group.View(Model, Data), Copy.View(), Hold.View(Model, Data))
   end if;
 
-  return E.Column<State.Msg>(
+  return E.Column of State.Msg(
     new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(20))),
     Section('Variants', 'One primary action per view. Secondary for everything else.'),
     Panel(Variants),
     Section('Sizes and icons'),
-    Panel(E.Column<State.Msg>(Stack, Sizes, Icons)),
+    Panel(E.Column of State.Msg(Stack, Sizes, Icons)),
     Section('States', 'Loading keeps the label so the layout does not jump.'),
     Panel(States),
     Section(

@@ -46,7 +46,7 @@ begin
   for Item: C.Annotation in Settings.Annotations do
     R.CheckText(Item.Label, At);
     R.CheckText(Item.Detail, At);
-    if not Sys.Enum.IsDefined<C.AnnotationKind>(
+    if not Sys.Enum.IsDefined of C.AnnotationKind(
       Item.Kind
     ) or not Sys.Double.IsFinite(Item.X) or not Sys.Double.IsFinite(Item.Y)
     then

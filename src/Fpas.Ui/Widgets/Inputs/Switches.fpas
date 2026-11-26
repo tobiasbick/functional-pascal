@@ -17,13 +17,13 @@ uses Fpas.Ui.Elements as E;
 // - `Enabled`: Whether the row accepts input.
 // ## Returns
 // The control that proposes changes to the model.
-public function Switch<TMsg>(
+public function Switch of TMsg(
   Id: string; Label: string; On: bool; OnChange: function(bool): TMsg;
   Description: string := ''; Enabled: bool := true
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.SwitchAction(Id, Label, On, OnChange, Description, Enabled);
+  return (E.Element of TMsg).SwitchAction(Id, Label, On, OnChange, Description, Enabled);
 end function;
 
 end unit;

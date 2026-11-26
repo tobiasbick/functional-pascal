@@ -22,9 +22,9 @@ uses System.IO as IO;
 uses System.Threading as T;
 uses System.Threading.Tasks as Tasks;
 
-const Empty: array of A.Command<M.Msg> := [];
+const Empty: array of A.Command of M.Msg := [];
 
-function Fingerprint(Current: M.State; Track: Tracks.Entry; Generate: bool; Library: Metadata.Session?): A.Transition<M.State, M.Msg>;
+function Fingerprint(Current: M.State; Track: Tracks.Entry; Generate: bool; Library: Metadata.Session?): A.Transition of (M.State, M.Msg);
 begin
   const Next: M.State := Current with
     Details := Track;
@@ -37,13 +37,13 @@ begin
     );
   end with;
   if Library = null then
-    return new A.Transition<M.State, M.Msg>(Next, Empty);
+    return new A.Transition of (M.State, M.Msg)(Next, Empty);
   end if;
 
-  return new A.Transition<M.State, M.Msg>(
+  return new A.Transition of (M.State, M.Msg)(
     Next,
     [
-      Fp.Read<M.Msg>(
+      Fp.Read of M.Msg(
         'detail-fingerprint',
         Library,
         Track,
@@ -57,24 +57,24 @@ end function;
 // Starts the selected release's query for `Current` through the borrowed `Library`.
 // `LoadCover` requests the thumbnail when the grid has not already resolved it.
 // Returns a transition whose visit key accompanies both results and errors.
-public function Open(Current: M.State; Library: Metadata.Session?; LoadCover: bool := true): A.Transition<M.State, M.Msg>;
+public function Open(Current: M.State; Library: Metadata.Session?; LoadCover: bool := true): A.Transition of (M.State, M.Msg);
 begin
   if Library = null then
-    return new A.Transition<M.State, M.Msg>(
+    return new A.Transition of (M.State, M.Msg)(
       Current with
         Loaded := true;
       end with, Empty
     );
   end if;
 
-  return new A.Transition<M.State, M.Msg>(
+  return new A.Transition of (M.State, M.Msg)(
     Current, [
-      A.StartBackground<M.Msg>(
+      A.StartBackground of M.Msg(
         'load',
-        A.FromWorker<M.Msg>(
+        A.FromWorker of M.Msg(
           async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
             const Started: long := D.Stopwatch.GetTimestamp();
-            const Items: I.ImmutableArray<Tracks.Entry> := await Library.Albums.TracksAsync(
+            const Items: I.ImmutableArray of Tracks.Entry := await Library.Albums.TracksAsync(
               Current.Album.Id, Cancellation
             ).ConfigureAwait(false);
             await Post(M.Msg.Loaded(Current.Visit, Started, Items)).ConfigureAwait(false);
@@ -94,26 +94,26 @@ begin
   );
 end function;
 
-function Rating(Current: M.State; Library: Metadata.Session?; Id: string; Value: int): A.Transition<M.State, M.Msg>;
+function Rating(Current: M.State; Library: Metadata.Session?; Id: string; Value: int): A.Transition of (M.State, M.Msg);
 begin
   if Library = null or Id = '' or Current.Saving.ContainsKey(Id) or Value < 0 or Value > 10 then
-    return new A.Transition<M.State, M.Msg>(Current, Empty);
+    return new A.Transition of (M.State, M.Msg)(Current, Empty);
   end if;
   const Selected: int? := if Value = 0 then
     null
   else
     Value
   end if;
-  return new A.Transition<M.State, M.Msg>(
+  return new A.Transition of (M.State, M.Msg)(
     Browse.Select(
       Current with
         Saving := Current.Saving.Add(Id, Selected);
         Error := null;
       end with
     ), [
-      A.StartBackground<M.Msg>(
+      A.StartBackground of M.Msg(
         'rate/' + Id,
-        A.FromWorker<M.Msg>(
+        A.FromWorker of M.Msg(
           async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
             await Library.SetRatingAsync(Id, Selected, Cancellation).ConfigureAwait(false);
             await Post(
@@ -131,13 +131,13 @@ begin
   );
 end function;
 
-function OpenFolder(Current: M.State; Path: string): A.Transition<M.State, M.Msg>;
+function OpenFolder(Current: M.State; Path: string): A.Transition of (M.State, M.Msg);
 begin
-  return new A.Transition<M.State, M.Msg>(
+  return new A.Transition of (M.State, M.Msg)(
     Current, [
-      A.StartBackground<M.Msg>(
+      A.StartBackground of M.Msg(
         'folder',
-        A.FromWorker<M.Msg>(
+        A.FromWorker of M.Msg(
           function(_Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
             Cancellation.ThrowIfCancellationRequested();
             const Folder: string? := IO.Path.GetDirectoryName(Path);
@@ -160,19 +160,19 @@ end function;
 
 // Applies `Message` to `Current`. `Library` saves ratings off the owner thread.
 // Returns the next view and any commands to run.
-public function Apply(Current: M.State; Message: M.Msg; Library: Metadata.Session?): A.Transition<M.State, M.Msg>;
+public function Apply(Current: M.State; Message: M.Msg; Library: Metadata.Session?): A.Transition of (M.State, M.Msg);
 begin
   var Next: M.State := Current;
   case Message of
     when M.Msg.Back, M.Msg.Follow(_), M.Msg.Play(_), M.Msg.PlaySlot(_, _):
-      return new A.Transition<M.State, M.Msg>(Current, Empty);
+      return new A.Transition of (M.State, M.Msg)(Current, Empty);
     when M.Msg.Loaded(
       const Visit: long,
       const Started: long,
-      const Items: I.ImmutableArray<Tracks.Entry>
+      const Items: I.ImmutableArray of Tracks.Entry
     ):
       if Visit = Current.Visit and Started >= Current.ReadStarted then
-        const Scoped: I.ImmutableArray<Tracks.Entry> := if Current.RequiredGenre = '' then
+        const Scoped: I.ImmutableArray of Tracks.Entry := if Current.RequiredGenre = '' then
           Items
         else
           Browse.Songs(Items, new M.Selection(Genres := [Current.RequiredGenre]))
@@ -183,7 +183,7 @@ begin
               GenreChoices := if Current.RequiredGenre = '' then
                 Browse.GenreChoices(Scoped, T.CancellationToken.None)
               else
-                Sys.Array.Empty<string>()
+                Sys.Array.Empty of string()
               end if;
               Loaded := true;
             end with
@@ -214,7 +214,7 @@ begin
         FiltersOpen := Value;
         Draft := Current.Applied;
       end with;
-    when M.Msg.Genres(const Values: I.ImmutableHashSet<string>):
+    when M.Msg.Genres(const Values: I.ImmutableHashSet of string):
       Next := Current with
         Draft := Current.Draft with
           Genres := Values;
@@ -255,7 +255,7 @@ begin
         Draft := new M.Filters();
       end with;
     when M.Msg.Navigate(
-      const Rows: I.ImmutableArray<Tracks.Entry>,
+      const Rows: I.ImmutableArray of Tracks.Entry,
       const Cursor: int,
       const Anchor: int,
       const Scroll: float
@@ -271,7 +271,7 @@ begin
       end with;
     when M.Msg.Sort(const Order: Tables.Sort):
       if Order = Current.Order then
-        return new A.Transition<M.State, M.Msg>(Current, Empty);
+        return new A.Transition of (M.State, M.Msg)(Current, Empty);
       end if;
 
       Next := Browse.Select(
@@ -326,11 +326,11 @@ begin
         end with;
       end if;
     when M.Msg.DismissDetails:
-      return new A.Transition<M.State, M.Msg>(
+      return new A.Transition of (M.State, M.Msg)(
         Current with
           Details := null;
           Fingerprint := null;
-        end with, [A.CancelBackground<M.Msg>('detail-fingerprint')]
+        end with, [A.CancelBackground of M.Msg('detail-fingerprint')]
       );
     when M.Msg.ShowFolder(const Path: string):
       return OpenFolder(Current, Path);
@@ -338,7 +338,7 @@ begin
       // The shell owns the shared editor.
   end case;
 
-  return new A.Transition<M.State, M.Msg>(Next, Empty);
+  return new A.Transition of (M.State, M.Msg)(Next, Empty);
 end function;
 
 end unit;

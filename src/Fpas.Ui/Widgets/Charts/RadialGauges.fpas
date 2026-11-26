@@ -66,10 +66,10 @@ end record;
 // - `Settings`: Native presentation.
 // ## Returns
 // A graphical element.
-public function RadialGauge<TMsg>(Id: string; Value: float; Minimum: float; Maximum: float; Settings: Options? := null): E.Element<TMsg>;
+public function RadialGauge of TMsg(Id: string; Value: float; Minimum: float; Maximum: float; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.RadialGauge(Id, Value, Minimum, Maximum, Settings ?? new Options());
+  return (E.Element of TMsg).RadialGauge(Id, Value, Minimum, Maximum, Settings ?? new Options());
 end function;
 
 end unit;

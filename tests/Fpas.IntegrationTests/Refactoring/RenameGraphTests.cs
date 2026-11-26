@@ -35,7 +35,7 @@ public sealed class RenameGraphTests(SdkPackageFixture sdk) : IClassFixture<SdkP
     }
 
     [Theory]
-    [InlineData("Item<T> =", "Item", "Node")]
+    [InlineData("Item of T =", "Item", "Node")]
     [InlineData("T> = record", "T", "U")]
     [InlineData("Alias;", "Alias", "UnitAlias")]
     [InlineData("Bridge;", "Bridge", "Renamed")]
@@ -44,9 +44,9 @@ public sealed class RenameGraphTests(SdkPackageFixture sdk) : IClassFixture<SdkP
         const string source = """
             unit Demo.Bridge;
             uses System as Alias;
-            public type Item<T> = record public Value: T; end record;
+            public type Item of T = record public Value: T; end record;
             public function Run(): int;
-            begin const X: Item<int> := new Item<int>(Value := 42); return Alias.Math.Abs(X.Value); end function;
+            begin const X: Item of int := new Item of int(Value := 42); return Alias.Math.Abs(X.Value); end function;
             end unit;
             """;
         using var directory = RenameFixture.Create(sdk, source); var analysis = await RenameFixture.Analyze(directory);

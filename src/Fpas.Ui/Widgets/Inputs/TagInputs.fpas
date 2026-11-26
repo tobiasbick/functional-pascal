@@ -29,13 +29,13 @@ end record;
 // - `Settings`: Optional presentation and bounds.
 // ## Returns
 // A graphical tag input.
-public function TagInput<TMsg>(
+public function TagInput of TMsg(
   Id: string; Tags: array of string; OnChange: function(array of string): TMsg;
   Settings: Options? := null
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.TagInput(Id, Tags, OnChange, Settings ?? new Options());
+  return (E.Element of TMsg).TagInput(Id, Tags, OnChange, Settings ?? new Options());
 end function;
 
 // Gets the native remove-button identity for a tag position.

@@ -1,9 +1,15 @@
 # Generic data types
 
-Records, variants, and protocols can declare CLR type parameters, such as Box<T> or Tree<T>.
-Use angle brackets consistently in declarations, type annotations, and explicit
-construction. These source types are invariant: Box<string> does not convert to
-Box<object>. Recursive references still need finite constructed values.
+Records, variants, and protocols can declare CLR type parameters, such as
+`type Box of T` and `type Tree of T`. Use `of T` for one parameter or argument
+and `of (K, V)` for multiple parameters or arguments. These source types are
+invariant: `Box of string` and `Box of object` are distinct types. Recursive
+references still need finite constructed values.
+
+Single arguments can nest, as in `Box of List of int`. They include their own
+dotted name and nullable annotation. To qualify or annotate the enclosing
+type, write `(Box of int).Create(42)`, `(Outer of int).Inner`, or
+`(Box of string)?`. `Box of string?` holds a nullable string.
 
 Constraints follow the type declaration's equals sign and precede `record`, `variant`, or `protocol`.
 They are checked at construction, in field/signature types, and when forwarding
@@ -35,14 +41,14 @@ type Direction = enum: byte
   South = 1;
 end enum;
 
-type Tree<T> = variant
+type Tree of T = variant
   Empty;
   Leaf(Value: T);
-  Branch(Left: Tree<T>; Right: Tree<T>);
+  Branch(Left: Tree of T; Right: Tree of T);
 end variant;
 
-function Compare<T>(Left: T; Right: T): int;
-where T: Sys.IComparable<T>;
+function Compare of T(Left: T; Right: T): int;
+where T: Sys.IComparable of T;
 begin
   return Left.CompareTo(Right);
 end function;
@@ -51,7 +57,7 @@ begin
   const Port: int? := null;
   Console.WriteLine(Port ?? 8080);
 
-  const TreeValue: Tree<int> := Tree.Branch(Tree.Leaf(1), Tree.Leaf(2));
+  const TreeValue: Tree of int := Tree.Branch(Tree.Leaf(1), Tree.Leaf(2));
   case TreeValue of
     when Tree.Empty:
       Console.WriteLine('Empty tree');
@@ -61,7 +67,7 @@ begin
       Console.WriteLine('Branch');
   end case;
 
-  Console.WriteLine(Compare<int>(2, 3));
+  Console.WriteLine(Compare of int(2, 3));
   const Facing: Direction := cast<Direction>(255);
   case Facing of
     when Direction.North:

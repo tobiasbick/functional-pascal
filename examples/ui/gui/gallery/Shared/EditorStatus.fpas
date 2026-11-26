@@ -32,12 +32,12 @@ public const CodeLines: array of string := [
 // - `Columns`: Available terminal cells, or unlimited for the full editor.
 // ## Returns
 // The shared status bar.
-public function View<TMsg>(Indent: int; Encoding: int; Language: int; Command: function(string): TMsg; Columns: int := int.MaxValue): E.Element<TMsg>;
+public function View of TMsg(Indent: int; Encoding: int; Language: int; Command: function(string): TMsg; Columns: int := int.MaxValue): E.Element of TMsg;
 requires Indent >= 0 and Indent < 3 and Encoding >= 0 and Encoding < 2 and Language >= 0
   and Language < 3;
-  function Item(Key: string; Text: string; Tip: string := ''; Icon: string := ''): Status.Item<TMsg>;
+  function Item(Key: string; Text: string; Tip: string := ''; Icon: string := ''): Status.Item of TMsg;
   begin
-    return Status.Item<TMsg>.Action(
+    return (Status.Item of TMsg).Action(
       Key,
       new Status.Label(Text, Icon),
       Tip,
@@ -50,22 +50,26 @@ begin
   const Spaces: array of string := ['2', '4', '8'];
   const Encodings: array of string := ['UTF-8', 'UTF-16'];
   const Languages: array of string := ['Markdown', 'C', Strings.Get('Text.PlainText')];
-  const Items: C.List<Status.Item<TMsg>> := new C.List<Status.Item<TMsg>>();
+  const Items: C.List of Status.Item of TMsg := new C.List of Status.Item of TMsg();
   if Columns >= 12 then
     Items.Add(Item('branch', 'main', Strings.Get('Text.SwitchBranch'), ''));
   end if;
 
   if Columns >= 18 then
     Items.Add(
-      Status.Item<TMsg>.Text(new Status.Label(Strings.Get('Text.Saved'), '', Style.Tone.Success))
+      (Status.Item of TMsg).Text(
+        new Status.Label(Strings.Get('Text.Saved'), '', Style.Tone.Success)
+      )
     );
   end if;
 
   if Columns >= 40 then
-    Items.Add(Status.Item<TMsg>.Progress(0.62F, Strings.Get('Text.IndexingProgress'), 0.0F, false));
+    Items.Add(
+      (Status.Item of TMsg).Progress(0.62F, Strings.Get('Text.IndexingProgress'), 0.0F, false)
+    );
   end if;
 
-  Items.Add(Status.Item<TMsg>.Spacer);
+  Items.Add((Status.Item of TMsg).Spacer);
   if Columns >= 55 then
     Items.Add(Item('line', Strings.Get('Text.LineColumn'), Strings.Get('Text.GoToLine')));
   end if;
@@ -83,7 +87,7 @@ begin
     Items.Add(Item('notifications', '', Strings.Get('Text.Notifications'), ''));
   end if;
 
-  return Status.StatusBar<TMsg>('desktop-status', Items.ToArray());
+  return Status.StatusBar of TMsg('desktop-status', Items.ToArray());
 end function;
 
 end unit;

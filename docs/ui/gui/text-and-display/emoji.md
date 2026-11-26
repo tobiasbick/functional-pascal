@@ -19,12 +19,12 @@ uses Fpas.Ui.Widgets.Display.Emojis as W;
 // - `Count`: Current reaction count.
 // ## Returns
 // The emoji and its adjacent count.
-public function View(Count: int): E.Element<string>;
+public function View(Count: int): E.Element of string;
 begin
-  return E.Row<string>(
+  return E.Row of string(
     new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(6)), Align := L.Alignment.Center),
-    W.Emoji<string>('🎉', 18.0F),
-    E.Text<string>(Count.ToString())
+    W.Emoji of string('🎉', 18.0F),
+    E.Text of string(Count.ToString())
   );
 end function;
 

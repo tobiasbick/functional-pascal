@@ -20,19 +20,19 @@ uses Fpas.Ui.Widgets.Collections.TreeTables as W;
 // - `Open`: Whether the folder's child should be visible.
 // ## Returns
 // An expandable table with the proposed expansion as its message.
-public function View(Open: bool): E.Element<bool>;
+public function View(Open: bool): E.Element of bool;
 begin
-  const Folder: T.Row<bool> := new T.Row<bool>('src', [
-    T.Cell<bool>.Content([W.TreeCell<bool>('src-name', 'src', 0, Open,
+  const Folder: T.Row of bool := new T.Row of bool('src', [
+    (T.Cell of bool).Content([W.TreeCell of bool('src-name', 'src', 0, Open,
       function(Expanded: bool): bool => Expanded)]),
-    T.Cell<bool>.Text('8 KB')
+    (T.Cell of bool).Text('8 KB')
   ]);
-  const Source: T.Row<bool> := new T.Row<bool>('main', [
-    T.Cell<bool>.Content([W.TreeCell<bool>('main-name', 'main.c', 1)]),
-    T.Cell<bool>.Text('8 KB')
+  const Source: T.Row of bool := new T.Row of bool('main', [
+    (T.Cell of bool).Content([W.TreeCell of bool('main-name', 'main.c', 1)]),
+    (T.Cell of bool).Text('8 KB')
   ]);
-  const Rows: array of T.Row<bool> := if Open then [Folder, Source] else [Folder] end if;
-  return T.Table<bool>('source-files', [new T.Column('Name'), new T.Column('Size')], Rows);
+  const Rows: array of T.Row of bool := if Open then [Folder, Source] else [Folder] end if;
+  return T.Table of bool('source-files', [new T.Column('Name'), new T.Column('Size')], Rows);
 end function;
 
 end unit;

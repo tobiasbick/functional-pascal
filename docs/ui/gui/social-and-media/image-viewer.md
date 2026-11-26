@@ -21,9 +21,9 @@ uses Fpas.Ui.Widgets.Media.MediaImages as M;
 // - `Current`: Model-owned zoom and center.
 // ## Returns
 // The viewer with proposed pan and zoom as messages.
-public function View(Picture: M.Source; Current: W.Value): E.Element<W.Value>;
+public function View(Picture: M.Source; Current: W.Value): E.Element of W.Value;
 begin
-  return W.ImageViewer<W.Value>('landscape', Picture, Current,
+  return W.ImageViewer of W.Value('landscape', Picture, Current,
     function(Change: W.Value): W.Value => Change,
     new W.Options(Height := L.Extent.Fixed(L.Measure.Logical(260))));
 end function;

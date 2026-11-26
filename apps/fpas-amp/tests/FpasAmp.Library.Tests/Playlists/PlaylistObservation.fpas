@@ -53,26 +53,26 @@ public type ObservationTests = record
     end;
 
     using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
-    const Updates: Channels.Channel<I.ImmutableArray<M.Summary>> := Channels.Channel.CreateUnbounded<I.ImmutableArray<M.Summary>>();
+    const Updates: Channels.Channel of I.ImmutableArray of M.Summary := Channels.Channel.CreateUnbounded of I.ImmutableArray of M.Summary();
     const Running: Tasks.Task := Lists.ObserveAsync(
-      function(Items: I.ImmutableArray<M.Summary>): Tasks.Task => Updates.Writer.WriteAsync(
+      function(Items: I.ImmutableArray of M.Summary): Tasks.Task => Updates.Writer.WriteAsync(
         Items,
         Stop.Token
       ).AsTask(),
       Stop.Token
     );
     try
-      const Initial: I.ImmutableArray<M.Summary> := await Updates.Reader.ReadAsync(Stop.Token);
-      X.Assert.Equal<int>(251, Initial.Length);
-      X.Assert.Equal<string>('List 000', Initial[0].Name);
-      X.Assert.Equal<string>('List 250', Initial[250].Name);
+      const Initial: I.ImmutableArray of M.Summary := await Updates.Reader.ReadAsync(Stop.Token);
+      X.Assert.Equal of int(251, Initial.Length);
+      X.Assert.Equal of string('List 000', Initial[0].Name);
+      X.Assert.Equal of string('List 250', Initial[250].Name);
       discard await Lists.SaveAsync(Initial[0].Identity.Id, 'Changed', [], Stop.Token);
-      const Changed: I.ImmutableArray<M.Summary> := await Updates.Reader.ReadAsync(Stop.Token);
-      X.Assert.Equal<int>(251, Changed.Length);
-      X.Assert.Equal<string>('Changed', Changed[0].Name);
+      const Changed: I.ImmutableArray of M.Summary := await Updates.Reader.ReadAsync(Stop.Token);
+      X.Assert.Equal of int(251, Changed.Length);
+      X.Assert.Equal of string('Changed', Changed[0].Name);
       await Lists.DeleteAsync(Changed[0].Identity.Id, Stop.Token);
-      const Deleted: I.ImmutableArray<M.Summary> := await Updates.Reader.ReadAsync(Stop.Token);
-      X.Assert.Equal<int>(250, Deleted.Length);
+      const Deleted: I.ImmutableArray of M.Summary := await Updates.Reader.ReadAsync(Stop.Token);
+      X.Assert.Equal of int(250, Deleted.Length);
     finally
       Stop.Cancel();
       try
@@ -110,25 +110,25 @@ public type ObservationTests = record
         end with
       ], Data.Path
     );
-    const Updates: Channels.Channel<I.ImmutableArray<M.Summary>> := Channels.Channel.CreateUnbounded<I.ImmutableArray<M.Summary>>();
+    const Updates: Channels.Channel of I.ImmutableArray of M.Summary := Channels.Channel.CreateUnbounded of I.ImmutableArray of M.Summary();
     const Running: Tasks.Task := F.Tags(Library).Playlists.ObserveAsync(
-      function(Items: I.ImmutableArray<M.Summary>): Tasks.Task => Updates.Writer.WriteAsync(
+      function(Items: I.ImmutableArray of M.Summary): Tasks.Task => Updates.Writer.WriteAsync(
         Items, Stop.Token
       ).AsTask(),
       Stop.Token
     );
     try
-      var Snapshot: I.ImmutableArray<M.Summary> := await Updates.Reader.ReadAsync(Stop.Token);
-      X.Assert.Equal<int>(1, Snapshot.Length);
-      X.Assert.Equal<string>('Cached list', Snapshot[0].Name);
+      var Snapshot: I.ImmutableArray of M.Summary := await Updates.Reader.ReadAsync(Stop.Token);
+      X.Assert.Equal of int(1, Snapshot.Length);
+      X.Assert.Equal of string('Cached list', Snapshot[0].Name);
       Library.Configure([Source]);
       while Snapshot.Length = 1 do
         Snapshot := await Updates.Reader.ReadAsync(Stop.Token);
       end while;
 
-      X.Assert.Equal<int>(2, Snapshot.Length);
-      X.Assert.Equal<string>('New list', Snapshot[1].Name);
-      X.Assert.Equal<long>(1L, Snapshot[1].Count);
+      X.Assert.Equal of int(2, Snapshot.Length);
+      X.Assert.Equal of string('New list', Snapshot[1].Name);
+      X.Assert.Equal of long(1L, Snapshot[1].Count);
     finally
       Stop.Cancel();
       try

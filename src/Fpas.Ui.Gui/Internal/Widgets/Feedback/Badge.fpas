@@ -15,7 +15,7 @@ uses Fpas.Ui.Widgets.Feedback.Badges as B;
 // - `Id`: Stable badge identity.
 // - `Text`: Literal caption.
 // - `Settings`: Appearance.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Text: string; Settings: B.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Text: string; Settings: B.Options);
 begin
   Frame.Window.Badge(
     Text,
@@ -25,7 +25,7 @@ begin
     Settings.Icon,
     cast<int>(Settings.Size)
   );
-  C.Track<TMsg>(Frame, new App.Control(Id, Text, 'badge', new Cui.CuiRectangle(), false));
+  C.Track of TMsg(Frame, new App.Control(Id, Text, 'badge', new Cui.CuiRectangle(), false));
 end procedure;
 
 end unit;

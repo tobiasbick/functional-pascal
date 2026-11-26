@@ -19,14 +19,14 @@ uses System as Sys;
 // - `OnChange`: Maps a range proposal to a message.
 // - `Months`: Number of consecutive months.
 // - `Enabled`: Whether the calendar accepts input.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Value: R.Value; OnChange: function(R.Value): TMsg;
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Value: R.Value; OnChange: function(R.Value): TMsg;
   Months: int; Enabled: bool
 );
 begin
   const Accept: bool := Enabled and Frame.AcceptInput;
   const Role: string := 'date-range-calendar';
-  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+  const Track: Sys.Func of (int, string)? := if Frame.PaintingClosed then
     null
   else
     function(Part: int): string => Parts.Token(Id, Part)
@@ -34,7 +34,7 @@ begin
   const Result: CuiPickers.CuiDateRangeResult := Frame.Window.RangeCalendar(
     C.Token(Role, Id), Parts.StartDay(Value), Parts.EndDay(Value), Months, Accept, Track
   );
-  Parts.Publish<TMsg>(Frame, Id, 'Date range calendar', Role, Value, Accept, Result, OnChange);
+  Parts.Publish of TMsg(Frame, Id, 'Date range calendar', Role, Value, Accept, Result, OnChange);
 end procedure;
 
 end unit;

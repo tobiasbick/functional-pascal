@@ -22,7 +22,7 @@ public sealed partial class LintTests(SdkPackageFixture sdk) : IClassFixture<Sdk
             uses Demo.B.Payload as Payload; uses System.Console as Console; uses System as Sys; uses System.Collections.Generic as Collections;
             public function Size(): int;
             begin
-              const Values: Collections.List<Payload> := new Collections.List<Payload>();
+              const Values: Collections.List of Payload := new Collections.List of Payload();
               const Value: Sys.Int32 := Values.Count;
               return Value;
             end function;
@@ -197,14 +197,14 @@ public sealed partial class LintTests(SdkPackageFixture sdk) : IClassFixture<Sdk
             uses System.Collections.Generic as Collections;
             public type Store = record
               Seed: int := 1;
-              public Items: Collections.List<int> := new Collections.List<int>();
+              public Items: Collections.List of int := new Collections.List of int();
               public Values: array of int := [0];
               public Caption: string := '';
               public function Count(): int;
               begin return self.Items.Count + self.Seed; end function;
             end record;
             public type Data = record
-              public Items: Collections.List<int> := new Collections.List<int>();
+              public Items: Collections.List of int := new Collections.List of int();
             end record;
             end unit;
             """);

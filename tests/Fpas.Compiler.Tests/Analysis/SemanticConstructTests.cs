@@ -15,9 +15,9 @@ public sealed class SemanticConstructTests
             type Number = int;
             type Point = record public X: Number; end record;
             type Choice = variant None; Some(Value: int); end variant;
-            function Identity<T>(Value: T): T; begin return Value; end function;
+            function Identity of T(Value: T): T; begin return Value; end function;
             begin
-              const P: Point := new Point(X := Identity<int>(21));
+              const P: Point := new Point(X := Identity of int(21));
               const Q: Point := P with X := 42; end with;
               const C: Choice := Choice.Some(Value := Q.X);
               case C of
@@ -38,7 +38,7 @@ public sealed class SemanticConstructTests
         Assert.Equal(some.Id, Select(snapshot, source, "Some(Value := const").Id);
         var item = Assert.Single(snapshot.Symbols, symbol => symbol.Name == "Item");
         Assert.Equal(item.Id, Select(snapshot, source, "Item; end").Id);
-        Assert.Equal("int", TypeAt(snapshot, source, "Identity<int>(21)").Callable is { } callable ? snapshot.Types.Single(type => type.Id == callable.Result).Display : null);
+        Assert.Equal("int", TypeAt(snapshot, source, "Identity of int(21)").Callable is { } callable ? snapshot.Types.Single(type => type.Id == callable.Result).Display : null);
         AssertConsistent(snapshot);
     }
 
@@ -86,13 +86,13 @@ public sealed class SemanticConstructTests
             [S.ObsoleteAttribute('Example', DiagnosticId := 'ExampleCode')]
             procedure Handler(Sender: object?; Args: Timers.ElapsedEventArgs);
             begin end procedure;
-            async function Later<T>(Input: T): Tasks.Task<T>;
-            begin return await Tasks.Task.FromResult<T>(Input); end function;
+            async function Later of T(Input: T): Tasks.Task of T;
+            begin return await Tasks.Task.FromResult of T(Input); end function;
             begin
               using const Timer: Timers.Timer := new Timers.Timer();
               subscribe Timer.Elapsed with Handler;
               unsubscribe Timer.Elapsed with Handler;
-              discard Later<int>(42);
+              discard Later of int(42);
             end;
             end program;
             """;
@@ -113,11 +113,11 @@ public sealed class SemanticConstructTests
     {
         const string source = """
             program ExactTypes;
-            type Choice<T> = variant None; Some(Value: T); end variant;
+            type Choice of T = variant None; Some(Value: T); end variant;
             type Holder = record public Callback: function(int): int; end record;
             procedure Keep(in Value: string?); begin end procedure;
             begin
-              const Selected: Choice<int> := Choice.Some(42);
+              const Selected: Choice of int := Choice.Some(42);
               const H: Holder := new Holder(function(Value: int): int => Value + 1);
               discard H.Callback(42);
               var Text: string? := 'value';
@@ -139,7 +139,7 @@ public sealed class SemanticConstructTests
     {
         var library = TestCompilation.Compile("""
             unit Model;
-            public type Outcome<A, E> = variant Success(Value: A); Failure(Reason: E); end variant;
+            public type Outcome of (A, E) = variant Success(Value: A); Failure(Reason: E); end variant;
             end unit;
             """, CompilationTarget.Library);
         Assert.True(library.Success, string.Join(';', library.Diagnostics));
@@ -148,7 +148,7 @@ public sealed class SemanticConstructTests
             program Consumer;
             uses Model as M;
             begin
-              const Result: M.Outcome<int, string> := M.Outcome.Success(42);
+              const Result: M.Outcome of (int, string) := M.Outcome.Success(42);
               discard case Result of
                 when M.Outcome.Success(const Value: int): Value;
                 when M.Outcome.Failure(_): 0;
@@ -172,8 +172,8 @@ public sealed class SemanticConstructTests
         const string source = """
             program Original;
             type Flags = enum First = 1; Second = First + 1; Third = cast<int>(Flags.First) + Second; end enum;
-            function Identity<T>(Value: T): T; begin return Value; end function;
-            begin const Flag: Flags := Flags.Second; discard Identity<int>(42); end;
+            function Identity of T(Value: T): T; begin return Value; end function;
+            begin const Flag: Flags := Flags.Second; discard Identity of int(42); end;
             end program;
             """;
         var snapshot = SemanticAnalysis.Analyze(source);
@@ -197,11 +197,11 @@ public sealed class SemanticConstructTests
             type Reader = record implements IReader
               public function Read(): int; begin return 42; end function;
             end record;
-            function Zero<T>(): T; where T: N.INumber<T>;
+            function Zero of T(): T; where T: N.INumber of T;
             begin return T.Zero; end function;
             begin
               const Contract: IReader := new Reader();
-              discard Contract.Read(); discard Zero<int>();
+              discard Contract.Read(); discard Zero of int();
             end;
             end program;
             """;
@@ -222,17 +222,17 @@ public sealed class SemanticConstructTests
             program Definitions;
             uses System.Linq as L;
             begin
-              discard L.Enumerable.Repeat<int>(42, 1);
-              discard L.Enumerable.Repeat<string>('text', 1);
+              discard L.Enumerable.Repeat of int(42, 1);
+              discard L.Enumerable.Repeat of string('text', 1);
             end;
             end program;
             """;
         var snapshot = SemanticAnalysis.Analyze(source);
-        var first = Select(snapshot, source, "Repeat<int>"); var second = Select(snapshot, source, "Repeat<string>");
+        var first = Select(snapshot, source, "Repeat of int"); var second = Select(snapshot, source, "Repeat of string");
         Assert.Equal(first.Id, second.Id); Assert.Null(first.Type); Assert.Null(first.Callable);
         Assert.Equal(1, first.Metadata!.Arity);
         Assert.Equal(new[] { "!!0", "System.Int32" }, first.Metadata.Parameters);
-        foreach (var (marker, expected) in new[] { ("Repeat<int>", "int"), ("Repeat<string>", "string") })
+        foreach (var (marker, expected) in new[] { ("Repeat of int", "int"), ("Repeat of string", "string") })
         {
             var callable = TypeAt(snapshot, source, marker).Callable!;
             var result = snapshot.Types.Single(type => type.Id == callable.Result);

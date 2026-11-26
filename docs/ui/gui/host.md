@@ -10,7 +10,7 @@ transitions and [Fpas.Ui](../widgets.md) declarative views. Start with the
 
 Import `Fpas.Ui.Gui.Desktop` for window `Options` and the `Run` and `Start` entry
 points. Use `Run` for the owner loop or `Start` with `using const` for explicit
-`Step` calls. `Fpas.Ui.Gui.Application` defines `Session<TMsg>`, `Frame`, and
+`Step` calls. `Fpas.Ui.Gui.Application` defines `Session of TMsg`, `Frame`, and
 `Control`.
 Create, step, inspect and dispose sessions on their creating UI thread. Post
 admits typed messages from workers and reports Queued, Full or Closed.
@@ -44,8 +44,8 @@ Snapshot and disposal must not be reentered from callbacks.
 
 Supply `OnCloseRequested` to any Start/Run entry point to turn native closure
 into a typed message. Only one decision is pending at a time. Return
-`Fpas.Ui.Gui.Closing.Cancel<TMsg>()` to reject it and allow another request;
-return `Mvu.Exit<TMsg>()` to approve, optionally after asynchronous saving.
+`Fpas.Ui.Gui.Closing.Cancel of TMsg()` to reject it and allow another request;
+return `Mvu.Exit of TMsg()` to approve, optionally after asynchronous saving.
 While a decision is pending, admission and background work remain active.
 Without this callback, native close starts cleanup immediately. Explicit
 disposal always forces cleanup without invoking the callback. A callback
@@ -68,7 +68,7 @@ overrides and `Theme.Metrics`; the native theme never becomes a second model.
 
 ## Fonts and native captions
 
-`Fonts.Apply<TMsg>` schedules a typed `Fonts.Operation<TMsg>` between frames:
+`Fonts.Apply of TMsg` schedules a typed `Fonts.Operation of TMsg` between frames:
 `Load(Bytes, OnLoaded)`, `Assign(Graphics.Font.Body, Face)`, `Fallback(Face, Other)`,
 `Emoji(BytesOrNullForSystem, OnLoaded)` and `SupportsEmoji(Text, OnRead)`.
 Use CLR file APIs to obtain trusted font bytes. Loading copies them; completion
@@ -87,7 +87,7 @@ null. Acceptance does not promise glyph coverage; query `SupportsEmoji` for the
 sequence needed. A native parse failure can clear the previous emoji resource.
 System-font availability and color/monochrome coverage remain platform-dependent.
 
-`Localization.Set<TMsg>(CuiStrings)` copies native calendar/file-browser captions.
+`Localization.Set of TMsg(CuiStrings)` copies native calendar/file-browser captions.
 Month arrays contain twelve entries; weekday arrays seven, Monday first. Null
 arrays or entries retain English; a null table restores English. Per-widget
 captions take precedence. CUI owns the copied strings until replacement/close.
@@ -167,12 +167,12 @@ and its finalized bounds. The underlying control retains its own identity.
 
 Return a command from `Fpas.Ui.Gui.FileDialogs` in the update:
 
-- `OpenFile<TMsg>(OnSelected, Title, FilterName, Accept, OnCancelled)` selects
+- `OpenFile of TMsg(OnSelected, Title, FilterName, Accept, OnCancelled)` selects
   an existing file and checks the selected path against `Accept`.
-- `SaveFile<TMsg>(OnSelected, DefaultName, Title, FilterName, Accept, OnCancelled)`
+- `SaveFile of TMsg(OnSelected, DefaultName, Title, FilterName, Accept, OnCancelled)`
   selects a destination without creating or writing it. `DefaultName` can be
   a filename or path. The native dialog owns filter and overwrite behavior.
-- `ChooseFolder<TMsg>(OnSelected, Title, OnCancelled)` selects a directory.
+- `ChooseFolder of TMsg(OnSelected, Title, OnCancelled)` selects a directory.
 
 Only `OnSelected` is required. `Accept` lists extensions without dots,
 separated by semicolons; empty accepts any type. The owner opens CUI's platform
@@ -190,19 +190,19 @@ handler may finish asynchronously.
 
 ## Clipboard
 
-Return `Fpas.Ui.Gui.Clipboard.WriteText<TMsg>(Text)` to copy plain text from an
+Return `Fpas.Ui.Gui.Clipboard.WriteText of TMsg(Text)` to copy plain text from an
 update, such as a menu command that copies a path. Return
-`Fpas.Ui.Gui.Clipboard.ReadText<TMsg>(OnRead)` to read text. The host applies
+`Fpas.Ui.Gui.Clipboard.ReadText of TMsg(OnRead)` to read text. The host applies
 `OnRead` to the clipboard text on its owner thread and queues the resulting
 message. Unavailable clipboard text is passed as an empty string.
 
 ## Application shortcuts
 
 Supply `BindingsFor(Model)` to Start/Run or their themed variants. It returns
-immutable `Fpas.Ui.Gui.Shortcuts.Binding<TMsg>` values using the existing
+immutable `Fpas.Ui.Gui.Shortcuts.Binding of TMsg` values using the existing
 `ShortcutRecorders.Combination`, `Key`, `Modifier` and `PrimaryModifier()`.
 Each binding carries its message, Enabled, Repeat and AllowWhileEditing policy.
-`Binding.Map<TParent>(Messages)` wraps a feature slice's message. Bindings are
+`Binding.Map of TParent(Messages)` wraps a feature slice's message. Bindings are
 prepared with the model view and reused on native repaints; enabled key/modifier
 combinations must be unique. None is not an application key.
 
@@ -223,12 +223,12 @@ See the runnable [editor commands example](../../../examples/ui/gui/editor-comma
 
 Return commands from `Fpas.Ui.Gui.EditorCommands` in an update:
 
-- `GoTo<TMsg>(Id, Line, Column)` focuses/scrolls to a one-based native line and
+- `GoTo of TMsg(Id, Line, Column)` focuses/scrolls to a one-based native line and
   visual column, including tab stops. CUI clamps beyond the document.
-- `Select<TMsg>(Id, Anchor, Cursor)` focuses and selects a range in the next
+- `Select of TMsg(Id, Anchor, Cursor)` focuses and selects a range in the next
   view's model text. Offsets are UTF-16 code units at Unicode scalar boundaries;
   reversed ranges are valid and invalid positions are rejected.
-- `Find<TMsg>(Id, Query)` opens CUI's find bar and selects the next match from
+- `Find of TMsg(Id, Query)` opens CUI's find bar and selects the next match from
   the current caret/selection. Null closes the bar and restores editor focus.
   A query holds at most 255 UTF-8 bytes; longer or malformed text is rejected.
 
@@ -245,14 +245,14 @@ observations and highlight options.
 
 Return a command from `Fpas.Ui.Gui.Windows` to change the owner window:
 
-- `SetTitle<TMsg>(Title)` updates the native document title.
-- `Resize<TMsg>(Width, Height)` requests positive logical dimensions.
-- `Maximize<TMsg>()` and `Minimize<TMsg>()` change its state where the window
+- `SetTitle of TMsg(Title)` updates the native document title.
+- `Resize of TMsg(Width, Height)` requests positive logical dimensions.
+- `Maximize of TMsg()` and `Minimize of TMsg()` change its state where the window
   manager supports it.
-- `Restore<TMsg>()` undoes a maximize or a minimize. A window minimized from
+- `Restore of TMsg()` undoes a maximize or a minimize. A window minimized from
   maximized comes back maximized.
-- `MoveTo<TMsg>(X, Y)` places the top-left corner of the content.
-- `ReadPlacement<TMsg>(OnRead)` applies `OnRead` to the window's
+- `MoveTo of TMsg(X, Y)` places the top-left corner of the content.
+- `ReadPlacement of TMsg(OnRead)` applies `OnRead` to the window's
   `Cui.CuiWindowPlacement` on the owner thread and queues the message.
 
 A placement holds the normal size and place, also while the window is
@@ -277,7 +277,7 @@ to show. A window manager without EWMH support ignores them.
 
 ## Toasts
 
-Return `Fpas.Ui.Gui.Toasts.Show<TMsg>` as a command from an update. Each
+Return `Fpas.Ui.Gui.Toasts.Show of TMsg` as a command from an update. Each
 command queues one native notification after the model is committed.
 `Options` sets the description, tone, duration, action caption and draining
 timer. CUI defaults to four seconds, or six seconds with the timer line.
@@ -297,7 +297,7 @@ delimiter.
 
 ## Invalidation and inspection
 
-Return `Fpas.Ui.Gui.Frames.Redraw<TMsg>(DelaySeconds)` to request a native
+Return `Fpas.Ui.Gui.Frames.Redraw of TMsg(DelaySeconds)` to request a native
 frame after the current presentation. Zero requests the next frame; a finite
 positive value supplies seconds until a wakeup. CUI uses the earliest deadline
 and can render sooner for input or animation. This requests a repaint, emits

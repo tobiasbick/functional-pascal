@@ -26,7 +26,7 @@ uses System as Sys;
 // - `OnSelect`: Maps row activation by identity.
 // - `Settings`: Table sizing, appearance and input settings.
 // - `Visit`: Host traversal for composed cells.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Columns: array of T.Column; Rows: array of T.Row<TMsg>; Order: T.Sort?; OnSort: Sys.Func<T.Sort, TMsg>?; OnSelect: Sys.Func<string, TMsg>?; Settings: T.Options; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Columns: array of T.Column; Rows: array of T.Row of TMsg; Order: T.Sort?; OnSort: Sys.Func of (T.Sort, TMsg)?; OnSelect: Sys.Func of (string, TMsg)?; Settings: T.Options; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Height: S.NativeExtent := S.Extent(Settings.Height);
@@ -46,7 +46,7 @@ begin
       end if, cast<int>(Column.Align), Column.Sortable
     );
     const Header: string := T.HeaderId(Id, Index);
-    if C.WantsFocus<TMsg>(
+    if C.WantsFocus of TMsg(
       Frame,
       Header,
       C.Token('table-header', Header),
@@ -56,7 +56,7 @@ begin
       Focus := Index;
     end if;
   end for;
-  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+  const Track: Sys.Func of (int, string)? := if Frame.PaintingClosed then
     null
   else
     function(Index: int): string => C.Token('table-header', T.HeaderId(Id, Index))
@@ -73,7 +73,7 @@ begin
   );
   if Enabled and (Proposed.Column <> OldColumn or Proposed.Descending <> OldDescending) then
     case OnSort of
-      when is Sys.Func<T.Sort, TMsg> as Notify:
+      when is Sys.Func of (T.Sort, TMsg) as Notify:
         Frame.Messages.Add(Notify.Invoke(new T.Sort(Proposed.Column, Proposed.Descending)));
       else
     end case;
@@ -90,19 +90,19 @@ begin
     end for;
   end if;
 
-  for Row: T.Row<TMsg> in Rows do
+  for Row: T.Row of TMsg in Rows do
     const Token: string := C.Token('table-row', Row.Id);
     const RowEnabled: bool := Enabled and OnSelect <> null;
     if Frame.Window.BeginTableRow(
       Token,
       Row.Selected,
       Enabled,
-      C.WantsFocus<TMsg>(Frame, Row.Id, Token, RowEnabled),
+      C.WantsFocus of TMsg(Frame, Row.Id, Token, RowEnabled),
       not Frame.PaintingClosed
     ) and RowEnabled
     then
       case OnSelect of
-        when is Sys.Func<string, TMsg> as Notify:
+        when is Sys.Func of (string, TMsg) as Notify:
           Frame.Messages.Add(Notify.Invoke(Row.Id));
         else
       end case;
@@ -121,13 +121,13 @@ begin
       );
     end if;
 
-    for Cell: T.Cell<TMsg> in Row.Cells do
+    for Cell: T.Cell of TMsg in Row.Cells do
       case Cell of
         when T.Cell.Text(const Caption: string):
           Frame.Window.TableCell(Caption);
-        when T.Cell.Content(const Nodes: array of E.Element<TMsg>):
+        when T.Cell.Content(const Nodes: array of E.Element of TMsg):
           Frame.Window.TableCell(null);
-          for Child: E.Element<TMsg> in Nodes do
+          for Child: E.Element of TMsg in Nodes do
             Visit(Child, Frame, true, L.Alignment.Default);
           end for;
       end case;
@@ -137,7 +137,7 @@ begin
   end for;
 
   Frame.Window.EndTable();
-  C.Track<TMsg>(Frame, new App.Control(Id, '', 'table', new Cui.CuiRectangle(), Enabled));
+  C.Track of TMsg(Frame, new App.Control(Id, '', 'table', new Cui.CuiRectangle(), Enabled));
 end procedure;
 
 end unit;

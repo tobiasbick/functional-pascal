@@ -19,7 +19,7 @@ public sealed class SourceProjectionTests
             uses System.Console as Console; uses System.Threading.Tasks as Tasks;
             type Counter = record
               public Value: int;
-              {{(asynchronous ? "public async function Read(): Tasks.Task<int>;" : "public function Read(): int;")}}
+              {{(asynchronous ? "public async function Read(): Tasks.Task of int;" : "public function Read(): int;")}}
               begin
                 {{(asynchronous ? "await Tasks.Task.Delay(10);" : "discard 0;")}}
                 Console.WriteLine('self');
@@ -119,8 +119,8 @@ public sealed class SourceProjectionTests
             program SourceValues;
             uses System.Console as Console;
             type Point = record public X: int; public Label: string; end record;
-            type Envelope<T> = record public Value: T; end record;
-            type Choice<T> = variant Missing; Found(Value: T); end variant;
+            type Envelope of T = record public Value: T; end record;
+            type Choice of T = variant Missing; Found(Value: T); end variant;
             type UserId = distinct ulong;
             type Amount = distinct decimal;
             type Label = distinct string;
@@ -130,9 +130,9 @@ public sealed class SourceProjectionTests
             procedure Observe();
             begin
               const Position: Point := new Point(X := 42, Label := 'λ😀');
-              const Wrapped: Envelope<UserId> := new Envelope<UserId>(new UserId(18446744073709551615UL));
-              const Selected: Choice<int> := Choice<int>.Found(42);
-              const Missing: Choice<int> := Choice<int>.Missing;
+              const Wrapped: Envelope of UserId := new Envelope of UserId(new UserId(18446744073709551615UL));
+              const Selected: Choice of int := (Choice of int).Found(42);
+              const Missing: Choice of int := (Choice of int).Missing;
               const Quantity: Amount := new Amount(1.2500M);
               const Name: Label := new Label('mandelbrot');
               const Character: Letter := new Letter(#955);

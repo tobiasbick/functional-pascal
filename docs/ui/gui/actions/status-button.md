@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Actions.StatusButtons as B;
 // - `State`: Current application value.
 // ## Returns
 // The widget with its message type.
-public function View(State: B.Status): E.Element<string>;
+public function View(State: B.Status): E.Element of string;
 begin
-  return B.StatusButton<string>('save', 'Save changes', State, 'save',
+  return B.StatusButton of string('save', 'Save changes', State, 'save',
     new B.Options(SuccessLabel := 'Saved'));
 end function;
 

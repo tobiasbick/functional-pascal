@@ -16,7 +16,7 @@ uses Fpas.Ui.Widgets.Charts.Charts as Ch;
 // - `Id`: Stable identity.
 // - `Series`: Named finite samples.
 // - `Settings`: Native presentation.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Series: array of Ch.Series; Settings: Ch.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Series: array of Ch.Series; Settings: Ch.Options);
 begin
   const Token: string := C.Token('line-chart', Id);
   Frame.Window.LineChart(

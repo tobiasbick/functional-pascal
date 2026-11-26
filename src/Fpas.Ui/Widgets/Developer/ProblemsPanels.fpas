@@ -55,10 +55,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function Problems<TMsg>(Id: string; Diagnostics: array of Diagnostic; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function Problems of TMsg(Id: string; Diagnostics: array of Diagnostic; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Problems(Id, Diagnostics, Changed, Settings ?? new Options());
+  return (E.Element of TMsg).Problems(Id, Diagnostics, Changed, Settings ?? new Options());
 end function;
 
 end unit;

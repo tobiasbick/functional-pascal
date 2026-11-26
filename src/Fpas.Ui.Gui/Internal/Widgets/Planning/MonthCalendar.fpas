@@ -20,12 +20,12 @@ uses System as Sys;
 // - `Current`: Model-owned input.
 // - `Change`: Maps a native proposal.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Current: A.Value; Change: function(A.Event): TMsg; Settings: A.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Current: A.Value; Change: function(A.Event): TMsg; Settings: A.Options);
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Role: string := 'month-calendar';
   const Parts: array of string := ['grid', 'previous', 'next', 'today'];
-  const Focus: int := P.Focus<TMsg>(Frame, Id, Role, Parts, P.Inputs(4, Enabled), 0);
+  const Focus: int := P.Focus of TMsg(Frame, Id, Role, Parts, P.Inputs(4, Enabled), 0);
   const Month: int := new Sys.DateOnly(Current.Month.Year, Current.Month.Month, 1).DayNumber;
   const Result: CuiPlanning.CuiMonthResult := Frame.Window.MonthCalendar(
     C.Token(Role, Id),
@@ -39,7 +39,7 @@ begin
     D.Day(Settings.Today),
     Enc.Bits(Enabled, 1) + Enc.Bits(Settings.Hour12, 2),
     Focus + 1,
-    P.Tracker<TMsg>(Frame, Id, Role, Parts)
+    P.Tracker of TMsg(Frame, Id, Role, Parts)
   );
   if Enabled and (Result.Flags <> 0 or Result.Activated >= 0) then
     Frame.Messages.Add(
@@ -56,10 +56,10 @@ begin
     );
   end if;
 
-  P.Root<TMsg>(Frame, Id, Role, '', false, Result.Month.ToString());
+  P.Root of TMsg(Frame, Id, Role, '', false, Result.Month.ToString());
   for Index: int := 0 to Parts.Length - 1 do
     if Result.Parts[Index] then
-      P.Part<TMsg>(
+      P.Part of TMsg(
         Frame,
         Id,
         Role,

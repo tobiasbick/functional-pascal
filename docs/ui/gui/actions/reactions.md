@@ -25,9 +25,9 @@ end record;
 // - `Items`: Current application value.
 // ## Returns
 // The widget with its message type.
-public function View(Items: array of R.Item): E.Element<Change>;
+public function View(Items: array of R.Item): E.Element of Change;
 begin
-  return R.Reactions<Change>('votes', Items,
+  return R.Reactions of Change('votes', Items,
     function(Index: int; Item: R.Item): Change => new Change(Index, Item));
 end function;
 

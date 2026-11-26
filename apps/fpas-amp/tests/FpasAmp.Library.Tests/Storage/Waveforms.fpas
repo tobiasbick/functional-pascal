@@ -32,18 +32,18 @@ public type WaveformTests = record
     begin
       await using const Session: Monitor.Session := F.Start([F.Source(Music.Path)], Data.Path);
       const Tags: Metadata.Session := F.Tags(Session);
-      const Tracks: I.ImmutableArray<M.Entry> := await F.Until(
+      const Tracks: I.ImmutableArray of M.Entry := await F.Until(
         Tags,
-        function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 2
+        function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 2
       );
       using const Connection: Db.SqliteConnection := Sql.Open(Database);
-      X.Assert.Equal<long>(0L, D.Number(Connection, 'SELECT count(*) FROM waveforms;'));
+      X.Assert.Equal of long(0L, D.Number(Connection, 'SELECT count(*) FROM waveforms;'));
       const Measured: array of float := await Tags.WaveformAsync(
         Tracks[0],
         T.CancellationToken.None
       );
-      X.Assert.Equal<int>(Waves.Buckets, Measured.Length);
-      X.Assert.Equal<long>(
+      X.Assert.Equal of int(Waves.Buckets, Measured.Length);
+      X.Assert.Equal of long(
         cast<long>(Waves.Buckets),
         D.Number(Connection, 'SELECT length(levels) FROM waveforms;')
       );
@@ -55,20 +55,20 @@ public type WaveformTests = record
 
     await using const Reopened: Monitor.Session := F.Start([F.Source(Music.Path)], Data.Path);
     const Tags: Metadata.Session := F.Tags(Reopened);
-    const Tracks: I.ImmutableArray<M.Entry> := await F.Until(
+    const Tracks: I.ImmutableArray of M.Entry := await F.Until(
       Tags,
-      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 2
+      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 2
     );
-    X.Assert.Equal<string>(Tracks[0].Sha256, Tracks[1].Sha256);
+    X.Assert.Equal of string(Tracks[0].Sha256, Tracks[1].Sha256);
     const Cached: array of float := await Tags.WaveformAsync(Tracks[1], T.CancellationToken.None);
-    X.Assert.Equal<float>(1.0F, Cached[0]);
-    X.Assert.Equal<float>(0.0F, Cached[1]);
+    X.Assert.Equal of float(1.0F, Cached[0]);
+    X.Assert.Equal of float(0.0F, Cached[1]);
     using const Connection: Db.SqliteConnection := Sql.Open(Database);
-    X.Assert.Equal<long>(1L, D.Number(Connection, 'SELECT count(*) FROM waveforms;'));
+    X.Assert.Equal of long(1L, D.Number(Connection, 'SELECT count(*) FROM waveforms;'));
     Sql.Execute(Connection, 'UPDATE waveforms SET levels=zeroblob(1);', null, [], []);
     const Rebuilt: array of float := await Tags.WaveformAsync(Tracks[1], T.CancellationToken.None);
-    X.Assert.Equal<int>(Waves.Buckets, Rebuilt.Length);
-    X.Assert.Equal<long>(
+    X.Assert.Equal of int(Waves.Buckets, Rebuilt.Length);
+    X.Assert.Equal of long(
       cast<long>(Waves.Buckets),
       D.Number(Connection, 'SELECT length(levels) FROM waveforms;')
     );

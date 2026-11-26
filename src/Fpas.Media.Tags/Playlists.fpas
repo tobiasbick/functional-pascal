@@ -90,12 +90,12 @@ begin
       Failure
     );
   end if;
-  const Locations: C.IReadOnlyList<string?>? := Parsed.OriginalLocations;
-  const Tracks: C.IList<Audio.Track?>? := Parsed.Tracks;
+  const Locations: (C.IReadOnlyList of string?)? := Parsed.OriginalLocations;
+  const Tracks: (C.IList of Audio.Track?)? := Parsed.Tracks;
   if Locations = null or Tracks = null or Locations.Count <> Tracks.Count then
     raise new IO.InvalidDataException('ATL returned inconsistent playlist entries.');
   end if;
-  const Entries: C.List<Item> := new C.List<Item>(Locations.Count);
+  const Entries: C.List of Item := new C.List of Item(Locations.Count);
   for Position: int := 0 to Locations.Count - 1 do
     Cancellation.ThrowIfCancellationRequested();
     const Track: Audio.Track? := Tracks[Position];

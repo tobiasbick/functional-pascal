@@ -31,10 +31,10 @@ end record;
 // - `Settings`: Optional trend, icon and sparkline.
 // ## Returns
 // The graphical element.
-public function Metric<TMsg>(Id: string; Label: string; Value: string; Settings: Options? := null): E.Element<TMsg>;
+public function Metric of TMsg(Id: string; Label: string; Value: string; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Metric(Id, Label, Value, Settings ?? new Options());
+  return (E.Element of TMsg).Metric(Id, Label, Value, Settings ?? new Options());
 end function;
 
 end unit;

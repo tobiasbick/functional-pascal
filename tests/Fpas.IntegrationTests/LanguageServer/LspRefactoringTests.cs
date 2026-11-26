@@ -67,10 +67,10 @@ public sealed class LspRefactoringTests(SdkPackageFixture sdk) : IClassFixture<S
             uses System.Collections.Generic as Col;
             // Keep the attached note.
             uses System.IO as Retain;
-            public function Make(): Col.List<int>;
+            public function Make(): Col.List of int;
             begin
               Log.WriteLine('ready');
-              return new Col.List<int>();
+              return new Col.List of int();
             end function;
             end unit;
             """.ReplaceLineEndings("\r\n");
@@ -88,7 +88,7 @@ public sealed class LspRefactoringTests(SdkPackageFixture sdk) : IClassFixture<S
             position = Position(original, "new Col."), end = Position(original, ";\r\nend function;"), name = "Items"
         }));
         var extracted = Assert.Single(preview.GetProperty("files").EnumerateArray()).GetProperty("edits");
-        Assert.Equal("const Items: Col.List<int> := new Col.List<int>();\r\n  ",
+        Assert.Equal("const Items: Col.List of int := new Col.List of int();\r\n  ",
             extracted[0].GetProperty("newText").GetString());
         var at = Position(original, "System.Text");
         var imports = Result(await client.Request("fpas/prepareRefactoring", new

@@ -20,14 +20,14 @@ uses Fpas.Ui.Widgets.Planning.Kanbans as A;
 // - `Change`: Maps a native proposal.
 // - `Settings`: Native options.
 // - `Visit`: GUI traversal for composed content.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Columns: array of A.Column<TMsg>; Change: function(A.Event): TMsg; Settings: A.Options; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Columns: array of A.Column of TMsg; Change: function(A.Event): TMsg; Settings: A.Options; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
 begin
   const Role: string := 'kanban';
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   Frame.Window.BeginKanban(Token, Enabled);
   for Index: int := 0 to Columns.Length - 1 do
-    const Column: A.Column<TMsg> := Columns[Index];
+    const Column: A.Column of TMsg := Columns[Index];
     const ColumnKey: string := 'column-' + Index.ToString();
     const AddKey: string := 'add-' + Index.ToString();
     const TrackColumn: string? := if Frame.PaintingClosed then
@@ -44,13 +44,13 @@ begin
       Column.Title, Column.Cards.Length, Colors.Color(Column.Dot),
       Column.Limit, Column.Width, TrackColumn, TrackAdd
     );
-    P.Part<TMsg>(Frame, Id, Role, ColumnKey, Column.Title, false, '');
-    P.Part<TMsg>(Frame, Id, Role, AddKey, 'Add card', Enabled, '');
+    P.Part of TMsg(Frame, Id, Role, ColumnKey, Column.Title, false, '');
+    P.Part of TMsg(Frame, Id, Role, AddKey, 'Add card', Enabled, '');
     if Add and Enabled then
       Frame.Messages.Add(Change(A.Event.Add(Index)));
     end if;
 
-    for Card: A.Card<TMsg> in Column.Cards do
+    for Card: A.Card of TMsg in Column.Cards do
       const Key: string := 'card-' + Card.Key.ToString();
       const Native: string := C.Token(Role, Id + '/' + Key);
       const Track: string? := if Frame.PaintingClosed then
@@ -58,9 +58,9 @@ begin
       else
         Native
       end if;
-      const Focus: bool := C.WantsFocus<TMsg>(Frame, Id + '/' + Key, Native, Enabled);
+      const Focus: bool := C.WantsFocus of TMsg(Frame, Id + '/' + Key, Native, Enabled);
       const Click: bool := Frame.Window.BeginKanbanCard(Card.Key, Focus, Track);
-      P.Part<TMsg>(Frame, Id, Role, Key, Card.Title, Enabled, Index.ToString());
+      P.Part of TMsg(Frame, Id, Role, Key, Card.Title, Enabled, Index.ToString());
       if Click and Enabled then
         Frame.Messages.Add(Change(A.Event.Activate(Card.Key)));
       end if;
@@ -88,7 +88,7 @@ begin
     end case;
   end if;
 
-  P.Root<TMsg>(Frame, Id, Role, '', false, '');
+  P.Root of TMsg(Frame, Id, Role, '', false, '');
 end procedure;
 
 end unit;

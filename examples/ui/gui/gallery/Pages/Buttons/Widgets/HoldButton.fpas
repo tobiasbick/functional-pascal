@@ -16,9 +16,9 @@ uses System as Sys;
 // - `Model`: Retained gallery state.
 // ## Returns
 // A hold button and any completed confirmation count.
-public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+public function View(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
 begin
-  const Button: E.Element<State.Msg> := Holds.HoldButton<State.Msg>(
+  const Button: E.Element of State.Msg := Holds.HoldButton of State.Msg(
     'hold-delete', 'Hold to delete', State.Msg.ConfirmHold,
     new Holds.Options(Icon := Sys.Char.ConvertFromUtf32($E18E))
   );
@@ -26,7 +26,10 @@ begin
     return Button;
   end if;
 
-  return E.Column<State.Msg>(Button, E.Text<State.Msg>('Confirmed: ' + Model.HoldCount.ToString()));
+  return E.Column of State.Msg(
+    Button,
+    E.Text of State.Msg('Confirmed: ' + Model.HoldCount.ToString())
+  );
 end function;
 
 end unit;

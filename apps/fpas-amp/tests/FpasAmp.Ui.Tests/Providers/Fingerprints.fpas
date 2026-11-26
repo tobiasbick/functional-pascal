@@ -36,18 +36,18 @@ uses System.Threading as T;
 uses System.Threading.Channels as Channels;
 uses Xunit as X;
 
-function ClipboardText(Node: E.Element<Music.Msg>; Id: string := 'track-copy-fingerprint'): string?;
+function ClipboardText(Node: E.Element of Music.Msg; Id: string := 'track-copy-fingerprint'): string?;
 begin
   case Node of
-    when E.Element.Dialog(_, _, const Body: E.Element<Music.Msg>, true, _, _):
+    when E.Element.Dialog(_, _, const Body: E.Element of Music.Msg, true, _, _):
       return ClipboardText(Body, Id);
-    when E.Element.Stack(const Children: array of E.Element<Music.Msg>, _, _), E.Element.Card(
+    when E.Element.Stack(const Children: array of E.Element of Music.Msg, _, _), E.Element.Card(
       _,
-      const Children: array of E.Element<Music.Msg>,
+      const Children: array of E.Element of Music.Msg,
       _,
       _
     ):
-      for Child: E.Element<Music.Msg> in Children do
+      for Child: E.Element of Music.Msg in Children do
         const Value: string? := ClipboardText(Child, Id);
         if Value <> null then
           return Value;
@@ -118,9 +118,9 @@ public type FingerprintTests = record
     var Auto: string := '';
     var Manual: string := '';
     try
-      const Items: I.ImmutableArray<Tracks.Entry> := Fixtures.Until(
+      const Items: I.ImmutableArray of Tracks.Entry := Fixtures.Until(
         Fixtures.Tags(Store),
-        function(Rows: I.ImmutableArray<Tracks.Entry>): bool => Rows.Length = 2
+        function(Rows: I.ImmutableArray of Tracks.Entry): bool => Rows.Length = 2
       ).GetAwaiter().GetResult();
       const A: Tracks.Entry := if Items[0].Path = First then
         Items[0]
@@ -146,8 +146,11 @@ public type FingerprintTests = record
       discard Wait(Session, function(S: App.State): bool => S.Songs.Page.Shown.Length = 2);
       discard Session.Window.Post(App.Msg.Songs(Songs.Msg.Song(Music.Msg.Details(A))));
       discard Wait(Session, function(S: App.State): bool => Complete(S.Songs.Page.Fingerprint));
-      X.Assert.Contains<string>('Acoustic fingerprint', Session.Window.Snapshot().Text);
-      X.Assert.Contains<string>('No additional track information.', Session.Window.Snapshot().Text);
+      X.Assert.Contains of string('Acoustic fingerprint', Session.Window.Snapshot().Text);
+      X.Assert.Contains of string(
+        'No additional track information.',
+        Session.Window.Snapshot().Text
+      );
       discard Session.Window.Post(
         App.Msg.Songs(Songs.Msg.Song(Music.Msg.SelectDetailTab(Music.DetailTab.Credits)))
       );
@@ -155,7 +158,7 @@ public type FingerprintTests = record
         Session,
         function(S: App.State): bool => S.Songs.Page.ActiveDetailTab = Music.DetailTab.Credits
       );
-      X.Assert.Contains<string>('No credits available.', Session.Window.Snapshot().Text);
+      X.Assert.Contains of string('No credits available.', Session.Window.Snapshot().Text);
       X.Assert.Null(
         Fixtures.Tags(Store).FingerprintAsync(
           A,
@@ -165,7 +168,7 @@ public type FingerprintTests = record
       );
       discard Session.Window.Post(
         App.Msg.Player(
-          Player.Msg.Play(I.ImmutableArray.Create<Tracks.Entry>(A), 0, new Music.Selection())
+          Player.Msg.Play(I.ImmutableArray.Create of Tracks.Entry(A), 0, new Music.Selection())
         )
       );
       const Played: App.State := Wait(
@@ -178,19 +181,19 @@ public type FingerprintTests = record
         T.CancellationToken.None
       ).GetAwaiter().GetResult() ?? '';
       X.Assert.True(Auto.Length > 40);
-      X.Assert.Equal<string>(
+      X.Assert.Equal of string(
         First, ClipboardText(
           View.LibraryPage(Played.Songs.Page, 1000, 20, Played.Songs.Covers, Played.Player),
           'track-copy-path'
         )
       );
-      X.Assert.Equal<string>(
+      X.Assert.Equal of string(
         Auto,
         ClipboardText(
           View.LibraryPage(Played.Songs.Page, 1000, 20, Played.Songs.Covers, Played.Player)
         )
       );
-      X.Assert.Contains<string>(Auto.Substring(0, 40) + '…', Session.Window.Snapshot().Text);
+      X.Assert.Contains of string(Auto.Substring(0, 40) + '…', Session.Window.Snapshot().Text);
       const SaveAt: string? := Sys.Environment.GetEnvironmentVariable('FPAS_AMP_UI_ARTIFACTS');
       if SaveAt <> null then
         discard IO.Directory.CreateDirectory(SaveAt);
@@ -198,18 +201,18 @@ public type FingerprintTests = record
       end if;
 
       const Controls: array of Gui.Control := Session.Window.Snapshot().Controls;
-      const PathCopy: Gui.Control? := Sys.Array.Find<Gui.Control>(
+      const PathCopy: Gui.Control? := Sys.Array.Find of Gui.Control(
         Controls, function(Item: Gui.Control): bool => Item.Id = 'track-copy-path'
       );
-      const FingerprintCopy: Gui.Control? := Sys.Array.Find<Gui.Control>(
+      const FingerprintCopy: Gui.Control? := Sys.Array.Find of Gui.Control(
         Controls, function(Item: Gui.Control): bool => Item.Id = 'track-copy-fingerprint'
       );
       if PathCopy = null or FingerprintCopy = null then
         raise new Sys.InvalidOperationException('The dialog must show both copy buttons.');
       end if;
 
-      X.Assert.Equal<float>(PathCopy.Bounds.X, FingerprintCopy.Bounds.X);
-      X.Assert.Equal<float>(PathCopy.Bounds.Width, FingerprintCopy.Bounds.Width);
+      X.Assert.Equal of float(PathCopy.Bounds.X, FingerprintCopy.Bounds.X);
+      X.Assert.Equal of float(PathCopy.Bounds.Width, FingerprintCopy.Bounds.Width);
       discard Session.Window.Post(App.Msg.Songs(Songs.Msg.Song(Music.Msg.Details(B))));
       discard Wait(
         Session,
@@ -225,7 +228,10 @@ public type FingerprintTests = record
           T.CancellationToken.None
         ).GetAwaiter().GetResult()
       );
-      X.Assert.Contains<string>('No additional track information.', Session.Window.Snapshot().Text);
+      X.Assert.Contains of string(
+        'No additional track information.',
+        Session.Window.Snapshot().Text
+      );
       discard Session.Window.Post(
         App.Msg.Songs(Songs.Msg.Song(Music.Msg.SelectDetailTab(Music.DetailTab.Audio)))
       );
@@ -233,8 +239,8 @@ public type FingerprintTests = record
         Session,
         function(S: App.State): bool => S.Songs.Page.ActiveDetailTab = Music.DetailTab.Audio
       );
-      X.Assert.Contains<string>('44.1 kHz', Session.Window.Snapshot().Text);
-      X.Assert.Contains<string>('16-bit', Session.Window.Snapshot().Text);
+      X.Assert.Contains of string('44.1 kHz', Session.Window.Snapshot().Text);
+      X.Assert.Contains of string('16-bit', Session.Window.Snapshot().Text);
       discard Session.Window.Post(App.Msg.Songs(Songs.Msg.Song(Music.Msg.GenerateFingerprint)));
       const Generated: App.State := Wait(
         Session,
@@ -246,22 +252,22 @@ public type FingerprintTests = record
         T.CancellationToken.None
       ).GetAwaiter().GetResult() ?? '';
       X.Assert.True(Manual.Length > 40);
-      X.Assert.Contains<string>('44.1 kHz', Session.Window.Snapshot().Text);
-      X.Assert.NotEqual<string>(Auto, Manual);
-      X.Assert.Equal<string>(
+      X.Assert.Contains of string('44.1 kHz', Session.Window.Snapshot().Text);
+      X.Assert.NotEqual of string(Auto, Manual);
+      X.Assert.Equal of string(
         Manual,
         ClipboardText(View.Build(Generated.Songs.Page, 1000, 'Albums', Generated.Player, 2L))
       );
       X.Assert.True(Generated.Player.Playing);
-      X.Assert.Equal<string>(First, Generated.Player.Queue[Generated.Player.Index].Path);
+      X.Assert.Equal of string(First, Generated.Player.Queue[Generated.Player.Index].Path);
     finally
       Store.DisposeAsync().GetAwaiter().GetResult();
     end try;
     const Restart: Monitor.Session := Fixtures.Start([Source], Data.Path);
     try
-      const Items: I.ImmutableArray<Tracks.Entry> := Fixtures.Until(
+      const Items: I.ImmutableArray of Tracks.Entry := Fixtures.Until(
         Fixtures.Tags(Restart),
-        function(Rows: I.ImmutableArray<Tracks.Entry>): bool => Rows.Length = 2
+        function(Rows: I.ImmutableArray of Tracks.Entry): bool => Rows.Length = 2
       ).GetAwaiter().GetResult();
       for Item: Tracks.Entry in Items do
         const Cached: Measurement.Measurement? := Fixtures.Tags(Restart).MeasureFingerprintAsync(
@@ -273,7 +279,7 @@ public type FingerprintTests = record
           );
         end if;
 
-        X.Assert.Equal<string>(
+        X.Assert.Equal of string(
           if Item.Path = First then
             Auto
           else
@@ -286,11 +292,11 @@ public type FingerprintTests = record
         else
           17.0
         end if;
-        X.Assert.InRange<double>(Cached.Duration, Seconds - 0.1, Seconds + 0.1);
+        X.Assert.InRange of double(Cached.Duration, Seconds - 0.1, Seconds + 0.1);
       end for;
 
-      X.Assert.Equal<byte>(BeforeA, IO.File.ReadAllBytes(First));
-      X.Assert.Equal<byte>(BeforeB, IO.File.ReadAllBytes(Second));
+      X.Assert.Equal of byte(BeforeA, IO.File.ReadAllBytes(First));
+      X.Assert.Equal of byte(BeforeB, IO.File.ReadAllBytes(Second));
     finally
       Restart.DisposeAsync().GetAwaiter().GetResult();
     end try;
@@ -316,9 +322,9 @@ public type FingerprintTests = record
     end with;
     const Store: Monitor.Session := Fixtures.Start([Source], Data.Path);
     try
-      const Items: I.ImmutableArray<Tracks.Entry> := Fixtures.Until(
+      const Items: I.ImmutableArray of Tracks.Entry := Fixtures.Until(
         Fixtures.Tags(Store),
-        function(Rows: I.ImmutableArray<Tracks.Entry>): bool => Rows.Length = 1
+        function(Rows: I.ImmutableArray of Tracks.Entry): bool => Rows.Length = 1
       ).GetAwaiter().GetResult();
       const Initial: App.State := new App.State(
         new Settings.State(new Settings.Preferences([Source])),
@@ -327,10 +333,10 @@ public type FingerprintTests = record
       );
       using const Device: Audio.Session := new Audio.Session(true);
       const Port: Playback.Connection := Playback.Connection.Create(Device);
-      const Gate: Replies.Effects<App.Msg> := Replies.Effects<App.Msg>.Create();
-      const Host: Runtime.Runtime<App.State, App.Msg, int> := Runtime.Start<App.State, App.Msg, int>(
+      const Gate: Replies.Effects of App.Msg := (Replies.Effects of App.Msg).Create();
+      const Host: Runtime.Runtime of (App.State, App.Msg, int) := Runtime.Start of (App.State, App.Msg, int)(
         Initial,
-        function(S: App.State; Msg: App.Msg): Mvu.Transition<App.State, App.Msg> => Gate.Wrap<App.State>(
+        function(S: App.State; Msg: App.Msg): Mvu.Transition of (App.State, App.Msg) => Gate.Wrap of App.State(
           Controller.Apply(
             S,
             Msg,
@@ -343,15 +349,15 @@ public type FingerprintTests = record
         8
       );
       try
-        const Lookup: Channels.ChannelReader<Replies.Reply<App.Msg>> := Gate.Watch(
+        const Lookup: Channels.ChannelReader of Replies.Reply of App.Msg := Gate.Watch(
           'songs/song/detail-fingerprint'
         );
         Host.Dispatch(App.Msg.Songs(Songs.Msg.Song(Music.Msg.Details(Items[0]))));
-        const Miss: Replies.Reply<App.Msg> := Lookup.ReadAsync(
+        const Miss: Replies.Reply of App.Msg := Lookup.ReadAsync(
           Deadline.Token
         ).AsTask().GetAwaiter().GetResult();
         X.Assert.Null(CopyValue(Host.Model()));
-        const Calculation: Channels.ChannelReader<Replies.Reply<App.Msg>> := Gate.Watch(
+        const Calculation: Channels.ChannelReader of Replies.Reply of App.Msg := Gate.Watch(
           'player-fingerprint'
         );
         Host.Dispatch(
@@ -362,14 +368,14 @@ public type FingerprintTests = record
                 Audio.PlaybackState.Playing,
                 Sys.TimeSpan.FromSeconds(1),
                 Sys.TimeSpan.FromSeconds(12),
-                I.ImmutableArray<float>.Empty,
+                (I.ImmutableArray of float).Empty,
                 null,
                 Initial.Player.Revision
               )
             )
           )
         );
-        const Ready: Replies.Reply<App.Msg> := Calculation.ReadAsync(
+        const Ready: Replies.Reply of App.Msg := Calculation.ReadAsync(
           Deadline.Token
         ).AsTask().GetAwaiter().GetResult();
         X.Assert.Null(CopyValue(Host.Model()));
@@ -380,7 +386,7 @@ public type FingerprintTests = record
         Miss.Release().WaitAsync(Deadline.Token).GetAwaiter().GetResult();
         discard Host.Advance();
         Host.Dispatch(App.Msg.Player(Player.Msg.SourceLost(false)));
-        X.Assert.Equal<string>(Value, CopyValue(Host.Model()));
+        X.Assert.Equal of string(Value, CopyValue(Host.Model()));
       finally
         Host.Close().WaitAsync(Deadline.Token).GetAwaiter().GetResult();
       end try;

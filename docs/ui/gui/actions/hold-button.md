@@ -15,9 +15,9 @@ uses Fpas.Ui.Widgets.Actions.HoldButtons as H;
 // Builds the example view.
 // ## Returns
 // The widget with its message type.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return H.HoldButton<string>('delete', 'Hold to delete', 'delete');
+  return H.HoldButton of string('delete', 'Hold to delete', 'delete');
 end function;
 
 end unit;

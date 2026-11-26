@@ -18,7 +18,7 @@ uses System.Collections.Generic as Lists;
 // Native collaborator data in the same order.
 public function People(Items: array of Live.Person): array of CuiCanvas.CuiLivePerson;
 begin
-  const Native: Lists.List<CuiCanvas.CuiLivePerson> := new Lists.List<CuiCanvas.CuiLivePerson>(
+  const Native: Lists.List of CuiCanvas.CuiLivePerson := new Lists.List of CuiCanvas.CuiLivePerson(
     Items.Length
   );
   for Item: Live.Person in Items do

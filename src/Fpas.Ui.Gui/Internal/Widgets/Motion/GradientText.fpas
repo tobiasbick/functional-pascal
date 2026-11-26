@@ -18,7 +18,7 @@ uses Fpas.Ui.Widgets.Motion.GradientTexts as W;
 // - `Id`: Stable widget identity.
 // - `Text`: Display text.
 // - `Settings`: Native appearance and input options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Text: string; Settings: W.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Text: string; Settings: W.Options);
 begin
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   Frame.Window.GradientText(
@@ -32,7 +32,7 @@ begin
     ),
     Colors.Color(Settings.To), Settings.Animate
   );
-  C.Track<TMsg>(Frame, new App.Control(Id, Text, 'gradient-text', new Cui.CuiRectangle(), false));
+  C.Track of TMsg(Frame, new App.Control(Id, Text, 'gradient-text', new Cui.CuiRectangle(), false));
 end procedure;
 
 end unit;

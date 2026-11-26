@@ -11,9 +11,9 @@ uses GuiGallery.Pages.Navigation.State as State;
 //
 // ## Returns
 // The project trail and its ancestor action.
-public function View(): E.Element<State.Msg>;
+public function View(): E.Element of State.Msg;
 begin
-  return Sample.View<State.Msg>(State.Msg.SelectAncestor);
+  return Sample.View of State.Msg(State.Msg.SelectAncestor);
 end function;
 
 end unit;

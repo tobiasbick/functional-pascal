@@ -42,13 +42,13 @@ end function;
 // - `Enabled`: Whether the dial accepts input.
 // ## Returns
 // The graphical time dial.
-public function TimeDial<TMsg>(
+public function TimeDial of TMsg(
   Id: string; Value: Sys.TimeOnly; OnChange: function(Sys.TimeOnly): TMsg;
   Size: float := 0.0F; Enabled: bool := true
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.TimeDial(Id, Value, OnChange, Size, Enabled);
+  return (E.Element of TMsg).TimeDial(Id, Value, OnChange, Size, Enabled);
 end function;
 
 end unit;

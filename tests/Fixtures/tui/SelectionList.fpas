@@ -44,7 +44,7 @@ begin
   end if;
 end procedure;
 
-function Update(Current: State; Message: Msg): M.Transition<State, Msg>;
+function Update(Current: State; Message: Msg): M.Transition of (State, Msg);
 begin
   const Next: State := case Message of
     when Msg.Choose(const Key: string): Current with
@@ -60,21 +60,21 @@ begin
     end with;
     when Msg.Clear: new State(Selected := '');
   end case;
-  return new M.Transition<State, Msg>(Next, []);
+  return new M.Transition of (State, Msg)(Next, []);
 end function;
 
-function View(Current: State): E.Element<Msg>;
+function View(Current: State): E.Element of Msg;
 begin
-  return E.Column<Msg>(
-    B.Button<Msg>('clear', 'Clear', Msg.Clear),
-    E.Size<Msg>(
-      Lists.SelectionList<Msg>('list', Items, Current.Selected, Msg.Choose, Msg.Activate),
+  return E.Column of Msg(
+    B.Button of Msg('clear', 'Clear', Msg.Clear),
+    E.Size of Msg(
+      Lists.SelectionList of Msg('list', Items, Current.Selected, Msg.Choose, Msg.Activate),
       new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(3)))
     ),
-    Lists.SelectionList<Msg>('empty', [], '', Msg.Choose, Msg.Activate),
-    B.Button<Msg>('after', 'After', Msg.Clear),
-    E.Text<Msg>('Proposed ' + Current.LastProposal),
-    E.Text<Msg>('Activated ' + Current.LastActivation)
+    Lists.SelectionList of Msg('empty', [], '', Msg.Choose, Msg.Activate),
+    B.Button of Msg('after', 'After', Msg.Clear),
+    E.Text of Msg('Proposed ' + Current.LastProposal),
+    E.Text of Msg('Activated ' + Current.LastActivation)
   );
 end function;
 
@@ -91,7 +91,10 @@ end function;
 
 function Shows(Frame: T.Frame; Text: string): bool;
 begin
-  return Sys.Array.Exists<string>(Frame.Lines, function(Line: string): bool => Line.Contains(Text));
+  return Sys.Array.Exists of string(
+    Frame.Lines,
+    function(Line: string): bool => Line.Contains(Text)
+  );
 end function;
 
 procedure Send(Session: T.HeadlessSession; Input: T.Input);
@@ -109,10 +112,10 @@ begin
   Send(Session, T.Input.KeyPress(Pressed, Modifiers));
 end procedure;
 
-procedure Reject(Node: E.Element<Msg>; Profile: V.Target; Reason: string);
+procedure Reject(Node: E.Element of Msg; Profile: V.Target; Reason: string);
 begin
   try
-    discard V.Prepare<Msg>(Node, Profile);
+    discard V.Prepare of Msg(Node, Profile);
   catch Error: Sys.ArgumentException do
     Check(Error.Message.Contains(Reason), Error.Message);
     return;
@@ -122,7 +125,7 @@ begin
 end procedure;
 
 begin
-  const List: E.Element<Msg> := Lists.SelectionList<Msg>(
+  const List: E.Element of Msg := Lists.SelectionList of Msg(
     'list',
     Items,
     'one',
@@ -132,14 +135,14 @@ begin
   Reject(List, V.Target.Graphical, 'Terminal profile');
   Reject(List, V.Target.Portable, 'Terminal profile');
   Reject(
-    Lists.SelectionList<Msg>('list', [Items[0], Items[0]], 'one', Msg.Choose, Msg.Activate),
+    Lists.SelectionList of Msg('list', [Items[0], Items[0]], 'one', Msg.Choose, Msg.Activate),
     V.Target.Terminal, 'nonempty and unique'
   );
   Reject(
-    Lists.SelectionList<Msg>('list', Items, 'missing', Msg.Choose, Msg.Activate),
+    Lists.SelectionList of Msg('list', Items, 'missing', Msg.Choose, Msg.Activate),
     V.Target.Terminal, 'selected key'
   );
-  using const Session: T.HeadlessSession := Headless.Start<State, Msg>(
+  using const Session: T.HeadlessSession := Headless.Start of (State, Msg)(
     new State(),
     Update,
     View,

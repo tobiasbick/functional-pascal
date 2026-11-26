@@ -33,7 +33,7 @@ public sealed partial class MsBuildTests
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Bridge;
             uses System as Sys; uses System.Threading.Tasks as Tasks; uses Demo as D;
-            public async function Wait(Gate: Tasks.Task<int>; State: array of int): Tasks.Task<int>;
+            public async function Wait(Gate: Tasks.Task of int; State: array of int): Tasks.Task of int;
             requires State.Length = 3;
             ensures (Returned: int): Returned = State[2];
             begin
@@ -42,15 +42,15 @@ public sealed partial class MsBuildTests
               State[1] := D.AsyncApi.ThreadId();
               return Value + State[2];
             end function;
-            public async function Configure(Gate: Tasks.Task<int>; State: array of int): Tasks.Task<int>;
+            public async function Configure(Gate: Tasks.Task of int; State: array of int): Tasks.Task of int;
             begin
               const Value: int := await Gate.ConfigureAwait(false);
               State[1] := D.AsyncApi.ThreadId(); return Value;
             end function;
-            public async function Guard(Value: int): Tasks.Task<int>;
+            public async function Guard(Value: int): Tasks.Task of int;
             requires Value > 0;
             begin return Value; end function;
-            public async function Clean(Gate: Tasks.Task<int>; State: array of int; Mode: int): Tasks.Task<int>;
+            public async function Clean(Gate: Tasks.Task of int; State: array of int; Mode: int): Tasks.Task of int;
             ensures (Returned: int): Returned = 7;
             ensures State[0] = 3214;
             begin
@@ -63,7 +63,7 @@ public sealed partial class MsBuildTests
                 await Tasks.Task.Delay(1); State[0] := State[0] * 10 + 4;
               end try;
             end function;
-            public async function Catch(Gate: Tasks.Task<int>; State: array of int): Tasks.Task<int>;
+            public async function Catch(Gate: Tasks.Task of int; State: array of int): Tasks.Task of int;
             begin
               try
                 try discard await Gate;
@@ -76,9 +76,9 @@ public sealed partial class MsBuildTests
               end try;
               return 0;
             end function;
-            public async function Identity<T>(Gate: Tasks.Task<T>): Tasks.Task<T>;
+            public async function Identity of T(Gate: Tasks.Task of T): Tasks.Task of T;
             begin return await Gate; end function;
-            public async function Loops(State: array of int): Tasks.Task<int>;
+            public async function Loops(State: array of int): Tasks.Task of int;
             begin
               for Index: int := 1 to 3 do
                 await using const Resource: D.AsyncResource := new D.AsyncResource(State, Index, false);
@@ -96,11 +96,11 @@ public sealed partial class MsBuildTests
               await using const First: D.AsyncResource := D.AsyncApi.Acquire(State, 1, false);
               await using const Second: D.AsyncResource := D.AsyncApi.Acquire(State, 2, true);
             end function;
-            public function Capture<T>(Value: T): function(): Tasks.Task<T>;
-            begin return async function(): Tasks.Task<T> begin await Tasks.Task.Delay(1); return Value; end function; end function;
-            public type Box<T> = record
+            public function Capture of T(Value: T): function(): Tasks.Task of T;
+            begin return async function(): Tasks.Task of T begin await Tasks.Task.Delay(1); return Value; end function; end function;
+            public type Box of T = record
               public Value: T;
-              public async function Read<U>(Other: U): Tasks.Task<U>;
+              public async function Read of U(Other: U): Tasks.Task of U;
               begin await Tasks.Task.Delay(1); return Other; end function;
             end record;
             end unit;

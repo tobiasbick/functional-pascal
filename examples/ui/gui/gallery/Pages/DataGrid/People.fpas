@@ -79,7 +79,7 @@ end function;
 // - `Original`: Original example name.
 // ## Returns
 // The name displayed by the grid.
-public function Name(Edits: Lists.Dictionary<int, string>; Index: int; Original: string): string;
+public function Name(Edits: Lists.Dictionary of (int, string); Index: int; Original: string): string;
 begin
   var Edited: string := '';
   if Edits.TryGetValue(Index, out Edited) then
@@ -95,7 +95,7 @@ end function;
 // - `Edits`: Committed name overrides.
 // ## Returns
 // Display positions mapped to source indices.
-public function Order(Sort: T.Sort; Edits: Lists.Dictionary<int, string>): array of int;
+public function Order(Sort: T.Sort; Edits: Lists.Dictionary of (int, string)): array of int;
   function Compare(A: int; B: int): int;
   begin
     const Left: Person := At(A);
@@ -115,7 +115,7 @@ public function Order(Sort: T.Sort; Edits: Lists.Dictionary<int, string>): array
     end if;
   end function;
 begin
-  const Items: Lists.List<int> := new Lists.List<int>(Count());
+  const Items: Lists.List of int := new Lists.List of int(Count());
   for Index: int := 0 to Count() - 1 do
     Items.Add(Index);
   end for;

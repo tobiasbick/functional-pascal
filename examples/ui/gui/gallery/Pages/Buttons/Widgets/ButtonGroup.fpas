@@ -12,9 +12,9 @@ uses System as Sys;
 
 function FormatButton(
   Model: State.Model; Data: Demo.Model; Id: string; Label: string; Style: State.TextFormat; Icon: int
-): E.Element<State.Msg>;
+): E.Element of State.Msg;
 begin
-  return B.Button<State.Msg>(
+  return B.Button of State.Msg(
     Id, Label, State.Msg.ToggleFormat(Style),
     new B.Options(
       Icon := Sys.Char.ConvertFromUtf32(Icon),
@@ -30,9 +30,9 @@ end function;
 // - `Model`: Current formatting choices.
 // ## Returns
 // The gallery's formatting group.
-public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+public function View(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
 begin
-  return Groups.ButtonGroup<State.Msg>(
+  return Groups.ButtonGroup of State.Msg(
     FormatButton(Model, Data, 'format-bold', 'Bold', State.TextFormat.Bold, $E05D),
     FormatButton(Model, Data, 'format-italic', 'Italic', State.TextFormat.Italic, $E0FB),
     FormatButton(Model, Data, 'format-underline', 'Underline', State.TextFormat.Underline, $E19A)

@@ -12,10 +12,10 @@ uses GuiGallery.Shared.Sections as G;
 uses GuiGallery.Shared.State as Demo;
 uses System as Sys;
 
-function Items(ShowResult: bool): array of Split.Item<State.Msg>;
-  function Item(Key: string; Caption: string; Glyph: int): Split.Item<State.Msg>;
+function Items(ShowResult: bool): array of Split.Item of State.Msg;
+  function Item(Key: string; Caption: string; Glyph: int): Split.Item of State.Msg;
   begin
-    return new Split.Item<State.Msg>(
+    return new Split.Item of State.Msg(
       Key, Caption, if ShowResult then
         State.Msg.SplitChoice(Caption)
       else
@@ -43,25 +43,25 @@ end function;
 // - `Model`: Current gallery state.
 // ## Returns
 // Primary and outline split buttons with an inline result.
-public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+public function View(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
 begin
-  const Save: E.Element<State.Msg> := Split.SplitButton<State.Msg>(
+  const Save: E.Element of State.Msg := Split.SplitButton of State.Msg(
     'split-save', 'Save', State.Msg.SplitChoice('Saved'), Items(true),
     new Split.Options(Icon := Sys.Char.ConvertFromUtf32($E14D))
   );
-  const Export: E.Element<State.Msg> := Split.SplitButton<State.Msg>(
+  const Export: E.Element of State.Msg := Split.SplitButton of State.Msg(
     'split-export', 'Export', State.Msg.Preview, Items(false),
     new Split.Options(
       Variant := S.ButtonVariant.Outline,
       Icon := Sys.Char.ConvertFromUtf32($E0B2)
     )
   );
-  const Content: array of E.Element<State.Msg> := if Model.SplitResult = '' then
+  const Content: array of E.Element of State.Msg := if Model.SplitResult = '' then
     [Save, Export]
   else
-    [Save, Export, E.Styled<State.Msg>(E.Text<State.Msg>(Model.SplitResult), S.Role.Muted)]
+    [Save, Export, E.Styled of State.Msg(E.Text of State.Msg(Model.SplitResult), S.Role.Muted)]
   end if;
-  return E.Row<State.Msg>(new L.Flow(Gap := G.Points(12), Wrap := true), Content);
+  return E.Row of State.Msg(new L.Flow(Gap := G.Points(12), Wrap := true), Content);
 end function;
 
 end unit;

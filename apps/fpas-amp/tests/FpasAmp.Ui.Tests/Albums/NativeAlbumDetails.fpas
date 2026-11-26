@@ -29,7 +29,7 @@ uses System.IO as IO;
 uses System.Threading as T;
 uses Xunit as X;
 
-function Find(Session: Gui.Session<App.Msg>; Id: string): Gui.Control;
+function Find(Session: Gui.Session of App.Msg; Id: string): Gui.Control;
 begin
   for Item: Gui.Control in Session.Snapshot().Controls do
     if Item.Id = Id then
@@ -40,7 +40,7 @@ begin
   raise new Sys.InvalidOperationException('Missing native control: ' + Id);
 end function;
 
-function Has(Session: Gui.Session<App.Msg>; Id: string): bool;
+function Has(Session: Gui.Session of App.Msg; Id: string): bool;
 begin
   for Item: Gui.Control in Session.Snapshot().Controls do
     if Item.Id = Id then
@@ -51,13 +51,13 @@ begin
   return false;
 end function;
 
-procedure Step(Session: Gui.Session<App.Msg>);
+procedure Step(Session: Gui.Session of App.Msg);
 begin
   discard Session.Post(App.Msg.Settings(SettingsModel.Msg.DismissError));
   X.Assert.True(Session.Step());
 end procedure;
 
-procedure Wait(Session: Gui.Session<App.Msg>; Open: bool);
+procedure Wait(Session: Gui.Session of App.Msg; Open: bool);
 begin
   const Deadline: long := Sys.Environment.TickCount64 + 4000L;
   while Has(Session, 'album-details-album-0') <> Open and Sys.Environment.TickCount64 < Deadline do
@@ -65,10 +65,10 @@ begin
     Step(Session);
   end while;
 
-  X.Assert.Equal<bool>(Open, Has(Session, 'album-details-album-0'));
+  X.Assert.Equal of bool(Open, Has(Session, 'album-details-album-0'));
 end procedure;
 
-procedure Capture(Session: Gui.Session<App.Msg>; Name: string);
+procedure Capture(Session: Gui.Session of App.Msg; Name: string);
 begin
   const Directory: string? := Sys.Environment.GetEnvironmentVariable('FPAS_AMP_UI_ARTIFACTS');
   if Directory <> null then
@@ -111,7 +111,7 @@ public type DetailTests = record
       end if;
     end procedure;
 
-    function Apply(Current: App.State; Message: App.Msg): Mvu.Transition<App.State, App.Msg>;
+    function Apply(Current: App.State; Message: App.Msg): Mvu.Transition of (App.State, App.Msg);
     begin
       case Message of
         when App.Msg.Albums(const Child: Albums.Msg):
@@ -121,7 +121,7 @@ public type DetailTests = record
               RequestedRating := Value;
             else
           end case;
-          const Next: Mvu.Transition<Albums.State, Albums.Msg> := Update.Apply(
+          const Next: Mvu.Transition of (Albums.State, Albums.Msg) := Update.Apply(
             Current.Albums,
             Child,
             null
@@ -133,7 +133,7 @@ public type DetailTests = record
           Last := Current;
       end case;
 
-      return new Mvu.Transition<App.State, App.Msg>(Last, []);
+      return new Mvu.Transition of (App.State, App.Msg)(Last, []);
     end function;
   begin
     using const Root: H.Folder := H.Folder.Create();
@@ -144,8 +144,8 @@ public type DetailTests = record
       Art.Picture(35, 80, 100),
       T.CancellationToken.None
     );
-    var Items: I.ImmutableArray<Library.Album> := I.ImmutableArray<Library.Album>.Empty;
-    var Pictures: I.ImmutableDictionary<string, Imaging.Bitmap?> := I.ImmutableDictionary<string, Imaging.Bitmap?>.Empty;
+    var Items: I.ImmutableArray of Library.Album := (I.ImmutableArray of Library.Album).Empty;
+    var Pictures: I.ImmutableDictionary of (string, Imaging.Bitmap?) := I.ImmutableDictionary of (string, Imaging.Bitmap?).Empty;
     for Index: int := 0 to 35 do
       const Id: string := 'album-' + Index.ToString();
       Items := Items.Add(
@@ -180,7 +180,7 @@ public type DetailTests = record
         null
       ).Model with
         Images := Pictures;
-        Saving := I.ImmutableHashSet<string>.Empty.Add('album-0');
+        Saving := (I.ImmutableHashSet of string).Empty.Add('album-0');
       end with
     );
     var PointerX: float := -1.0F;
@@ -198,7 +198,7 @@ public type DetailTests = record
       true
     );
     Window.SetReducedMotion(true);
-    using const Session: Gui.Session<App.Msg> := Host.StartThemed<App.State, App.Msg>(
+    using const Session: Gui.Session of App.Msg := Host.StartThemed of (App.State, App.Msg)(
       Last, Apply, Shell.View, Window, 128, Inject, App.Theme(Last, null), App.Theme, false
     );
     Step(Session);
@@ -208,8 +208,8 @@ public type DetailTests = record
     const Grid: Cui.CuiRectangle := Find(Session, GridId).Bounds;
     X.Assert.True(Footer.Y + Footer.Height <= Find(Session, 'player-toggle').Bounds.Y);
     X.Assert.True(Grid.Y + Grid.Height <= Footer.Y);
-    X.Assert.Equal<float>(Footer.X, Grid.X);
-    X.Assert.Equal<float>(Footer.X + Footer.Width, Grid.X + Grid.Width);
+    X.Assert.Equal of float(Footer.X, Grid.X);
+    X.Assert.Equal of float(Footer.X + Footer.Width, Grid.X + Grid.Width);
     X.Assert.False(Find(Session, 'album-rating-album-0').Enabled);
     const FirstCard: Cui.CuiRectangle := Find(Session, 'album-album-0').Bounds;
     var FirstRow: int := 0;
@@ -219,12 +219,12 @@ public type DetailTests = record
       end if;
     end for;
 
-    X.Assert.Equal<int>(ExpectedColumns, FirstRow);
+    X.Assert.Equal of int(ExpectedColumns, FirstRow);
     const Cover: Cui.CuiRectangle := Find(Session, 'cover-album-0').Bounds;
-    X.Assert.Equal<float>(Cover.Width, Cover.Height);
-    X.Assert.InRange<float>(FirstCard.Width - Cover.Width, 0.0F, 4.0F);
-    X.Assert.Contains<string>('Example artist · 12 songs', Session.Snapshot().Text);
-    X.Assert.Contains<string>('Example artist · 1 song', Session.Snapshot().Text);
+    X.Assert.Equal of float(Cover.Width, Cover.Height);
+    X.Assert.InRange of float(FirstCard.Width - Cover.Width, 0.0F, 4.0F);
+    X.Assert.Contains of string('Example artist · 12 songs', Session.Snapshot().Text);
+    X.Assert.Contains of string('Example artist · 1 song', Session.Snapshot().Text);
     PointerX := Cover.X + Cover.Width / 2.0F;
     PointerY := Cover.Y + Cover.Height / 2.0F;
     Step(Session);
@@ -236,13 +236,13 @@ public type DetailTests = record
       'Album details must wait for the native hover delay.'
     );
     Wait(Session, true);
-    X.Assert.Equal<float>(80.0F, Find(Session, 'album-detail-cover-album-0').Bounds.Width);
-    X.Assert.Equal<float>(80.0F, Find(Session, 'album-detail-cover-album-0').Bounds.Height);
+    X.Assert.Equal of float(80.0F, Find(Session, 'album-detail-cover-album-0').Bounds.Width);
+    X.Assert.Equal of float(80.0F, Find(Session, 'album-detail-cover-album-0').Bounds.Height);
     X.Assert.False(Find(Session, 'album-detail-rating-album-0').Enabled);
-    X.Assert.Equal<string>('8', Find(Session, 'album-detail-rating-album-0').Value);
-    X.Assert.Contains<string>('Example artist', Session.Snapshot().Text);
-    X.Assert.Contains<string>('12 songs', Session.Snapshot().Text);
-    X.Assert.Contains<string>('8 / 10', Session.Snapshot().Text);
+    X.Assert.Equal of string('8', Find(Session, 'album-detail-rating-album-0').Value);
+    X.Assert.Contains of string('Example artist', Session.Snapshot().Text);
+    X.Assert.Contains of string('12 songs', Session.Snapshot().Text);
+    X.Assert.Contains of string('8 / 10', Session.Snapshot().Text);
     discard Session.Post(App.Msg.Albums(Albums.Msg.Rated('album-0', 8)));
     Step(Session);
     Capture(Session, 'albums-hover-' + Width.ToString());
@@ -255,7 +255,7 @@ public type DetailTests = record
     Left := 0;
     Step(Session);
     Step(Session);
-    X.Assert.Equal<int>(0, RatingRequests);
+    X.Assert.Equal of int(0, RatingRequests);
     const DetailCover: Cui.CuiRectangle := Find(Session, 'album-detail-cover-album-0').Bounds;
     PointerX := DetailCover.X + DetailCover.Width / 2.0F;
     PointerY := DetailCover.Y + DetailCover.Height / 2.0F;
@@ -300,8 +300,8 @@ public type DetailTests = record
     Left := 0;
     Step(Session);
     Step(Session);
-    X.Assert.Equal<int>(1, RatingRequests);
-    X.Assert.Equal<int>(2, RequestedRating);
+    X.Assert.Equal of int(1, RatingRequests);
+    X.Assert.Equal of int(2, RequestedRating);
     PointerX := Footer.X + 4.0F;
     PointerY := Grid.Y + Grid.Height / 2.0F;
     // Cross several complete rows, including CUI's two-row overscan.
@@ -326,15 +326,15 @@ public type DetailTests = record
       Find(Session, GridId).Value.StartsWith('0:'),
       'The native grid must scroll over the right gutter.'
     );
-    X.Assert.Equal<Cui.CuiRectangle>(Footer, Find(Session, 'album-status').Bounds);
-    X.Assert.Equal<int>(36, Last.Albums.Items.Length);
+    X.Assert.Equal of Cui.CuiRectangle(Footer, Find(Session, 'album-status').Bounds);
+    X.Assert.Equal of int(36, Last.Albums.Items.Length);
     Capture(Session, 'albums-scrolled-' + Width.ToString());
     discard Session.Post(
       App.Msg.Albums(Albums.Msg.Received(new Library.Snapshot()))
     );
     Step(Session);
     X.Assert.True(Has(Session, 'albums-empty'));
-    X.Assert.Equal<Cui.CuiRectangle>(Footer, Find(Session, 'album-status').Bounds);
+    X.Assert.Equal of Cui.CuiRectangle(Footer, Find(Session, 'album-status').Bounds);
     Capture(Session, 'albums-empty-' + Width.ToString());
   end procedure;
 
@@ -342,7 +342,7 @@ public type DetailTests = record
   [X.FactAttribute]
   [X.TraitAttribute('Category', 'Gui')]
   public procedure CollectionScrollPositions();
-    function Apply(Current: App.State; Message: App.Msg): Mvu.Transition<App.State, App.Msg>;
+    function Apply(Current: App.State; Message: App.Msg): Mvu.Transition of (App.State, App.Msg);
     begin
       case Message of
         when App.Msg.Navigation(Nav.Msg.Select(const Route: Nav.Route)):
@@ -361,10 +361,10 @@ public type DetailTests = record
           Last := Current;
       end case;
 
-      return new Mvu.Transition<App.State, App.Msg>(Last, []);
+      return new Mvu.Transition of (App.State, App.Msg)(Last, []);
     end function;
 
-    function Start(): Gui.Session<App.Msg>;
+    function Start(): Gui.Session of App.Msg;
     begin
       const Window: Cui.CuiWindow := new Cui.CuiWindow(
         'Cover scroll',
@@ -374,7 +374,7 @@ public type DetailTests = record
         true
       );
       Window.SetReducedMotion(true);
-      return Host.StartThemed<App.State, App.Msg>(
+      return Host.StartThemed of (App.State, App.Msg)(
         Last, Apply, Shell.View, Window, 128,
         procedure() begin
           Window.MovePointer(PointerX, PointerY);
@@ -386,14 +386,14 @@ public type DetailTests = record
       );
     end function;
 
-    procedure Select(Session: Gui.Session<App.Msg>; Route: Nav.Route);
+    procedure Select(Session: Gui.Session of App.Msg; Route: Nav.Route);
     begin
       discard Session.Post(App.Msg.Navigation(Nav.Msg.Select(Route)));
       Step(Session);
       Step(Session);
     end procedure;
 
-    function Range(Session: Gui.Session<App.Msg>): string;
+    function Range(Session: Gui.Session of App.Msg): string;
     begin
       return Find(Session, View.GridId(Last.Albums)).Value;
     end function;
@@ -405,7 +405,7 @@ public type DetailTests = record
       Shared,
       Tracks := 1L
     );
-    const Items: I.ImmutableArray<Library.Album>.Builder := I.ImmutableArray.CreateBuilder<Library.Album>(
+    const Items: (I.ImmutableArray of Library.Album).Builder := I.ImmutableArray.CreateBuilder of Library.Album(
       64
     );
     for Index: int := 1 to 64 do
@@ -440,9 +440,9 @@ public type DetailTests = record
     var PointerX: float := -1.0F;
     var PointerY: float := -1.0F;
     var Wheel: float := 0.0F;
-    const Ranges: C.List<string> := new C.List<string>();
+    const Ranges: C.List of string := new C.List of string();
     begin
-      using const Session: Gui.Session<App.Msg> := Start();
+      using const Session: Gui.Session of App.Msg := Start();
       for Index: int := 0 to Routes.Length - 1 do
         Select(Session, Routes[Index]);
         X.Assert.StartsWith('0:', Range(Session));
@@ -465,7 +465,7 @@ public type DetailTests = record
 
       for Index: int := 0 to Routes.Length - 1 do
         Select(Session, Routes[Index]);
-        X.Assert.Equal<string>(Ranges[Index], Range(Session));
+        X.Assert.Equal of string(Ranges[Index], Range(Session));
       end for;
     end;
 
@@ -476,10 +476,10 @@ public type DetailTests = record
         Offsets := Storage.Load(Data.Path).CoverScroll;
       end with;
     end with;
-    using const Reopened: Gui.Session<App.Msg> := Start();
+    using const Reopened: Gui.Session of App.Msg := Start();
     for Index: int := 0 to Routes.Length - 1 do
       Select(Reopened, Routes[Index]);
-      X.Assert.Equal<string>(Ranges[Index], Range(Reopened));
+      X.Assert.Equal of string(Ranges[Index], Range(Reopened));
     end for;
   end procedure;
 end record;

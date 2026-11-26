@@ -15,12 +15,12 @@ uses Fpas.Ui.Elements as E;
 // - `Enabled`: Whether ancestor links accept input.
 // ## Returns
 // The trail with an informational final item.
-public function Breadcrumb<TMsg>(
+public function Breadcrumb of TMsg(
   Id: string; Items: array of string; OnNavigate: function(int): TMsg; Enabled: bool := true
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.BreadcrumbTrail(Id, Items, OnNavigate, Enabled);
+  return (E.Element of TMsg).BreadcrumbTrail(Id, Items, OnNavigate, Enabled);
 end function;
 
 // Returns the focus identity of a breadcrumb ancestor.

@@ -57,7 +57,7 @@ begin
   A.Check(Sys.MathF.Abs(Actual - Ratio) < 0.001F, 'The frame ignored the saved split ratio.');
 end procedure;
 
-procedure Send(Session: Gui.Session<S.Msg>; Message: S.Msg);
+procedure Send(Session: Gui.Session of S.Msg; Message: S.Msg);
 begin
   A.Check(
     Session.Post(Message) = Core.Admission.Queued,
@@ -66,13 +66,13 @@ begin
   A.Check(Session.Step(), 'The desktop example closed unexpectedly.');
 end procedure;
 
-function Start(Path: string; Renderer: Cui.CuiRenderer; Effects: Replies.Effects<S.Msg>; Continuous: bool := true): Gui.Session<S.Msg>;
-  function Apply(Model: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+function Start(Path: string; Renderer: Cui.CuiRenderer; Effects: Replies.Effects of S.Msg; Continuous: bool := true): Gui.Session of S.Msg;
+  function Apply(Model: S.Model; Message: S.Msg): Mvu.Transition of (S.Model, S.Msg);
   begin
-    return Effects.Wrap<S.Model>(Update.Apply(Model, Message));
+    return Effects.Wrap of S.Model(Update.Apply(Model, Message));
   end function;
 begin
-  return GuiHost.StartThemed<S.Model, S.Msg>(
+  return GuiHost.StartThemed of (S.Model, S.Msg)(
     S.Initialize(Path), Apply, View.Build,
     new GuiHost.Options(
       Title := 'Desktop example', Width := 720, Height := 420, Renderer := Renderer,
@@ -85,8 +85,8 @@ end function;
 procedure SaveAndRestart(Path: string; Renderer: Cui.CuiRenderer);
   procedure Save();
   begin
-    const Effects: Replies.Effects<S.Msg> := Replies.Effects<S.Msg>.Create();
-    using const Session: Gui.Session<S.Msg> := Start(Path, Renderer, Effects);
+    const Effects: Replies.Effects of S.Msg := (Replies.Effects of S.Msg).Create();
+    using const Session: Gui.Session of S.Msg := Start(Path, Renderer, Effects);
     A.Check(Session.Step(), 'The initial desktop frame was not presented.');
     VerifyFrame(Session.Snapshot(), 'system', Themes.Accent.Neutral, 0.5F);
     Send(Session, S.Msg.SetAppearance(Switchers.Selection.Dark));
@@ -94,9 +94,11 @@ procedure SaveAndRestart(Path: string; Renderer: Cui.CuiRenderer);
     Send(Session, S.Msg.ResizeSplit(0.6F));
     VerifyFrame(Session.Snapshot(), 'dark', Themes.Accent.Violet, 0.6F);
     A.Check(not IO.File.Exists(Path), 'Editing preferences must wait for an explicit save.');
-    const Results: Channels.ChannelReader<Replies.Reply<S.Msg>> := Effects.Watch(Update.SaveEffect);
+    const Results: Channels.ChannelReader of Replies.Reply of S.Msg := Effects.Watch(
+      Update.SaveEffect
+    );
     Send(Session, S.Msg.SaveSettings);
-    const Result: Replies.Reply<S.Msg> := Results.ReadAsync().AsTask().WaitAsync(
+    const Result: Replies.Reply of S.Msg := Results.ReadAsync().AsTask().WaitAsync(
       Timeout
     ).GetAwaiter().GetResult();
     A.Check(
@@ -118,10 +120,10 @@ procedure SaveAndRestart(Path: string; Renderer: Cui.CuiRenderer);
   end procedure;
 begin
   Save();
-  using const Restarted: Gui.Session<S.Msg> := Start(
+  using const Restarted: Gui.Session of S.Msg := Start(
     Path,
     Renderer,
-    Replies.Effects<S.Msg>.Create()
+    (Replies.Effects of S.Msg).Create()
   );
   A.Check(Restarted.Step(), 'The first frame after restart was not presented.');
   const Frame: Gui.Frame := Restarted.Snapshot();
@@ -157,14 +159,16 @@ end procedure;
 procedure FailedWrite(Path: string; Renderer: Cui.CuiRenderer);
 begin
   discard IO.Directory.CreateDirectory(Path);
-  const Effects: Replies.Effects<S.Msg> := Replies.Effects<S.Msg>.Create();
-  using const Session: Gui.Session<S.Msg> := Start(Path, Renderer, Effects);
+  const Effects: Replies.Effects of S.Msg := (Replies.Effects of S.Msg).Create();
+  using const Session: Gui.Session of S.Msg := Start(Path, Renderer, Effects);
   A.Check(Session.Step(), 'An unreadable settings file prevented the first frame.');
   VerifyFrame(Session.Snapshot(), 'system', Themes.Accent.Neutral, 0.5F);
   Send(Session, S.Msg.SetAccent(Themes.Accent.Green));
-  const Results: Channels.ChannelReader<Replies.Reply<S.Msg>> := Effects.Watch(Update.SaveEffect);
+  const Results: Channels.ChannelReader of Replies.Reply of S.Msg := Effects.Watch(
+    Update.SaveEffect
+  );
   Send(Session, S.Msg.SaveSettings);
-  const Result: Replies.Reply<S.Msg> := Results.ReadAsync().AsTask().WaitAsync(
+  const Result: Replies.Reply of S.Msg := Results.ReadAsync().AsTask().WaitAsync(
     Timeout
   ).GetAwaiter().GetResult();
   A.Check(
@@ -186,18 +190,18 @@ begin
   );
 end procedure;
 
-function ReadReply(Source: Channels.ChannelReader<Replies.Reply<S.Msg>>): Replies.Reply<S.Msg>;
+function ReadReply(Source: Channels.ChannelReader of Replies.Reply of S.Msg): Replies.Reply of S.Msg;
 begin
   return Source.ReadAsync().AsTask().WaitAsync(Timeout).GetAwaiter().GetResult();
 end function;
 
-procedure PresentReply(Session: Gui.Session<S.Msg>; Reply: Replies.Reply<S.Msg>);
+procedure PresentReply(Session: Gui.Session of S.Msg; Reply: Replies.Reply of S.Msg);
 begin
   Reply.Release().WaitAsync(Timeout).GetAwaiter().GetResult();
   A.Check(Session.Step(), 'The background reply did not reach the desktop view.');
 end procedure;
 
-procedure CheckProgress(Session: Gui.Session<S.Msg>; Steps: int; Status: string; Running: bool);
+procedure CheckProgress(Session: Gui.Session of S.Msg; Steps: int; Status: string; Running: bool);
 begin
   const Frame: Gui.Frame := Session.Snapshot();
   const Progress: Gui.Control := Control(Frame, 'background-progress');
@@ -222,39 +226,41 @@ end procedure;
 
 procedure VerifyBackground(Renderer: Cui.CuiRenderer);
 begin
-  const Effects: Replies.Effects<S.Msg> := Replies.Effects<S.Msg>.Create();
-  using const Session: Gui.Session<S.Msg> := Start('', Renderer, Effects, Continuous := false);
+  const Effects: Replies.Effects of S.Msg := (Replies.Effects of S.Msg).Create();
+  using const Session: Gui.Session of S.Msg := Start('', Renderer, Effects, Continuous := false);
   A.Check(Session.Step(), 'The initial desktop example frame was not presented.');
   CheckProgress(Session, 0, 'Ready', false);
 
-  const Interrupted: Channels.ChannelReader<Replies.Reply<S.Msg>> := Effects.Watch(Background.Id);
+  const Interrupted: Channels.ChannelReader of Replies.Reply of S.Msg := Effects.Watch(
+    Background.Id
+  );
   Send(Session, S.Msg.StartWork(false));
-  const First: Replies.Reply<S.Msg> := ReadReply(Interrupted);
+  const First: Replies.Reply of S.Msg := ReadReply(Interrupted);
   CheckProgress(Session, 0, 'Running', true);
   PresentReply(Session, First);
   CheckProgress(Session, 1, 'Running', true);
-  const Pending: Replies.Reply<S.Msg> := ReadReply(Interrupted);
+  const Pending: Replies.Reply of S.Msg := ReadReply(Interrupted);
   Send(Session, S.Msg.CancelWork);
   Interrupted.Completion.WaitAsync(Timeout).GetAwaiter().GetResult();
   A.Check(Pending.Release().IsCanceled, 'Cancelling must invalidate a held timer tick.');
   CheckProgress(Session, 1, 'Cancelled', false);
 
-  const Retried: Channels.ChannelReader<Replies.Reply<S.Msg>> := Effects.Watch(Background.Id);
+  const Retried: Channels.ChannelReader of Replies.Reply of S.Msg := Effects.Watch(Background.Id);
   Send(Session, S.Msg.StartWork(false));
   for Step: int := 1 to S.WorkSteps do
-    const Tick: Replies.Reply<S.Msg> := ReadReply(Retried);
+    const Tick: Replies.Reply of S.Msg := ReadReply(Retried);
     CheckProgress(Session, Step - 1, 'Running', true);
     PresentReply(Session, Tick);
   end for;
 
   CheckProgress(Session, S.WorkSteps, 'Completed', false);
 
-  const Failed: Channels.ChannelReader<Replies.Reply<S.Msg>> := Effects.Watch(Background.Id);
+  const Failed: Channels.ChannelReader of Replies.Reply of S.Msg := Effects.Watch(Background.Id);
   Send(Session, S.Msg.StartWork(true));
   for Step: int := 1 to 2 do
     PresentReply(Session, ReadReply(Failed));
   end for;
-  const Failure: Replies.Reply<S.Msg> := ReadReply(Failed);
+  const Failure: Replies.Reply of S.Msg := ReadReply(Failed);
   CheckProgress(Session, 2, 'Running', true);
   PresentReply(Session, Failure);
   CheckProgress(Session, 2, 'Simulated background error.', false);

@@ -48,7 +48,7 @@ internal static class TestTemplate
             [X.FactAttribute]
             public procedure Addition();
             begin
-              X.Assert.Equal<int>(4, 2 + 2);
+              X.Assert.Equal of int(4, 2 + 2);
             end procedure;
             end unit;
 
@@ -63,7 +63,7 @@ internal static class TestTemplate
               [T.TestMethodAttribute]
               public procedure Addition();
               begin
-                T.Assert.AreEqual<int>(4, 2 + 2);
+                T.Assert.AreEqual of int(4, 2 + 2);
               end procedure;
             end record;
             end unit;
@@ -99,10 +99,10 @@ internal static class TestTemplate
 
         begin
           const Args: array of string := Sys.Environment.GetCommandLineArgs();
-          const Arguments: Collections.List<string> := new Collections.List<string>();
+          const Arguments: Collections.List of string := new Collections.List of string();
           for Index: int := 1 to Args.Length - 1 do Arguments.Add(Args[Index]); end for;
           const Builder: Platform.ITestApplicationBuilder := await Platform.TestApplication.CreateBuilderAsync(Arguments.ToArray());
-          MSTest.AddMSTest(Builder, function(): Collections.IEnumerable<Reflection.Assembly> begin
+          MSTest.AddMSTest(Builder, function(): Collections.IEnumerable of Reflection.Assembly begin
             return [Reflection.Assembly.GetExecutingAssembly()];
           end function);
           Trx.AddTrxReportProvider(Builder);

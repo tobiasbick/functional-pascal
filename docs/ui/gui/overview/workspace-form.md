@@ -37,17 +37,17 @@ end variant;
 // - `WeeklySummary`: Whether weekly summaries are enabled.
 // ## Returns
 // A card with typed edit and submit messages.
-public function View(Name: string; Email: string; WeeklySummary: bool): E.Element<Msg>;
+public function View(Name: string; Email: string; WeeklySummary: bool): E.Element of Msg;
 begin
-  return Card.Card<Msg>('workspace', [
-    E.Styled<Msg>(E.Text<Msg>('Create a workspace'), S.Role.Heading),
-    F.TextField<Msg>('workspace-name', Name, Msg.SetName,
+  return Card.Card of Msg('workspace', [
+    E.Styled of Msg(E.Text of Msg('Create a workspace'), S.Role.Heading),
+    F.TextField of Msg('workspace-name', Name, Msg.SetName,
       new F.Options(Label := 'Name', Placeholder := 'Your name', MaxUtf8Bytes := 63)),
-    F.TextField<Msg>('workspace-email', Email, Msg.SetEmail,
+    F.TextField of Msg('workspace-email', Email, Msg.SetEmail,
       new F.Options(Label := 'Email', Placeholder := 'you@example.com', MaxUtf8Bytes := 95)),
-    C.Checkbox<Msg>('workspace-summary', 'Email me a weekly summary',
+    C.Checkbox of Msg('workspace-summary', 'Email me a weekly summary',
       WeeklySummary, Msg.SetSummary),
-    B.Button<Msg>('workspace-create', 'Create workspace', Msg.Create,
+    B.Button of Msg('workspace-create', 'Create workspace', Msg.Create,
       new B.Options(Variant := S.ButtonVariant.Primary, Width := L.Extent.Fill))
   ], new Card.Options(Gap := 16.0F));
 end function;

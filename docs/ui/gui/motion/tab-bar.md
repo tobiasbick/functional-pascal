@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Navigation.TabBars as W;
 // - `Selected`: Selected zero-based index.
 // ## Returns
 // The bar with a proposed tab index.
-public function View(Tabs: array of W.Item; Selected: int): E.Element<int>;
+public function View(Tabs: array of W.Item; Selected: int): E.Element of int;
 begin
-  return W.TabBar<int>('bottom-tabs', Tabs, Selected, function(Index: int): int => Index);
+  return W.TabBar of int('bottom-tabs', Tabs, Selected, function(Index: int): int => Index);
 end function;
 
 end unit;

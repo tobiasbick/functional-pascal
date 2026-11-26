@@ -11,13 +11,13 @@ internal static class UsageSource
     {
         var unit = new UsageUnit();
         bool constructor = method.Name == ".ctor";
-        var target = unit.Receiver(owner, method.Owner, method.IsStatic || constructor);
+        var target = unit.Receiver(owner, method.Owner, method.IsStatic || constructor, constructor);
         if (constructor)
             target = "new " + target;
         else if (method.Name != "Invoke" || method.IsStatic || catalog.DelegateSignature(method.Owner) is null)
             target += "." + FpasIdentifiers.SpellQualified(method.Name);
         if (method.MethodArguments is { Count: > 0 } typeArguments)
-            target += "<" + string.Join(", ", typeArguments.Select(unit.Names.Type)) + ">";
+            target = FpasIdentifiers.ApplyTypeArguments(target, typeArguments.Select(unit.Names.Type).ToArray());
 
         var arguments = new List<string>();
         for (int i = 0; i < method.Parameters.Count; i++)
@@ -44,7 +44,8 @@ internal static class UsageSource
         var returnsValue = hasResult && !syncDispose && !asyncDispose;
         var returnType = hasResult ? unit.Names.Type(result) : null;
         var signature = returnsValue ? returnType : null;
-        if (isAsync) signature = unit.Names.Named(catalog.Required("System.Threading.Tasks.Task"), []) + (returnsValue ? "<" + returnType + ">" : "");
+        if (isAsync) signature = FpasIdentifiers.ApplyTypeArguments(unit.Names.Named(catalog.Required("System.Threading.Tasks.Task"), []),
+            returnsValue ? [returnType!] : []);
         var call = (awaitCall ? "await " : "") + target + "(" + string.Join(", ", arguments) + ")";
         var statement = (returnsValue ? "return " : "") + call + ";";
         if (syncDispose || asyncDispose)

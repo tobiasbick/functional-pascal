@@ -31,15 +31,15 @@ end function;
 // - `OnToggle`: Maps a proposed completion change to a message.
 // - `OnAction`: Optional callback for an activated step action.
 // - `Settings`: Native presentation and input options.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Steps: array of K.Step; OnToggle: function(int, bool): TMsg;
-  OnAction: Sys.Func<int, TMsg>?; Settings: K.Options
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Steps: array of K.Step; OnToggle: function(int, bool): TMsg;
+  OnAction: Sys.Func of (int, TMsg)?; Settings: K.Options
 );
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
-  const Titles: Lists.List<string> := new Lists.List<string>(Steps.Length);
-  const Descriptions: Lists.List<string> := new Lists.List<string>(Steps.Length);
-  const Actions: Lists.List<string> := new Lists.List<string>(Steps.Length);
+  const Titles: Lists.List of string := new Lists.List of string(Steps.Length);
+  const Descriptions: Lists.List of string := new Lists.List of string(Steps.Length);
+  const Actions: Lists.List of string := new Lists.List of string(Steps.Length);
   const Completed: array of int := new int[Steps.Length];
   var Focus: int := 0;
   var Done: int := 0;
@@ -54,13 +54,13 @@ begin
       Done := Done + 1;
     end if;
 
-    if C.WantsFocus<TMsg>(Frame, K.StepId(Id, Index), PartToken(Id, Index * 2), Enabled) then
+    if C.WantsFocus of TMsg(Frame, K.StepId(Id, Index), PartToken(Id, Index * 2), Enabled) then
       Focus := Index * 2 + 1;
     end if;
 
     if ActiveIndex < 0 and not Step.Done then
       ActiveIndex := Index;
-      if Step.ActionLabel <> '' and C.WantsFocus<TMsg>(
+      if Step.ActionLabel <> '' and C.WantsFocus of TMsg(
         Frame,
         K.ActionId(Id, Index),
         PartToken(Id, Index * 2 + 1),
@@ -71,7 +71,7 @@ begin
       end if;
     end if;
   end for;
-  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+  const Track: Sys.Func of (int, string)? := if Frame.PaintingClosed then
     null
   else
     function(Slot: int): string => PartToken(Id, Slot)
@@ -88,7 +88,7 @@ begin
 
   if Result.Action >= 0 then
     case OnAction of
-      when is Sys.Func<int, TMsg> as Notify:
+      when is Sys.Func of (int, TMsg) as Notify:
         Frame.Messages.Add(Notify.Invoke(Result.Action));
       else
     end case;

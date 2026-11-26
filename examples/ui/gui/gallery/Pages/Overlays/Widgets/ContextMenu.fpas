@@ -23,31 +23,31 @@ end function;
 // - `Model`: Filter values and visibility.
 // ## Returns
 // A muted target with Cut, Copy, Paste and Delete; commands only update preview state.
-public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+public function View(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
 begin
-  const Target: E.Element<State.Msg> := E.Styled<State.Msg>(
-    E.Column<State.Msg>(
+  const Target: E.Element of State.Msg := E.Styled of State.Msg(
+    E.Column of State.Msg(
       new L.Flow(Padding := L.Spacing.Fixed(L.Measure.Logical(28)), Align := L.Alignment.Center),
-      E.Styled<State.Msg>(E.Text<State.Msg>('Right click this area'), S.Role.Secondary)
+      E.Styled of State.Msg(E.Text of State.Msg('Right click this area'), S.Role.Secondary)
     ), S.Role.MutedPanel
   );
-  return E.Column<State.Msg>(
+  return E.Column of State.Msg(
     new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(16))),
-    E.Styled<State.Msg>(E.Text<State.Msg>('Popover and context menu'), S.Role.Heading),
-    E.Styled<State.Msg>(
-      E.Column<State.Msg>(
+    E.Styled of State.Msg(E.Text of State.Msg('Popover and context menu'), S.Role.Heading),
+    E.Styled of State.Msg(
+      E.Column of State.Msg(
         new L.Flow(
           Padding := L.Spacing.Fixed(L.Measure.Logical(24)),
           Gap := L.Spacing.Fixed(L.Measure.Logical(16))
         ),
-        E.Row<State.Msg>(
+        E.Row of State.Msg(
           new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8)), Wrap := true),
           Filter.View(Model, Data)
         ),
-        M.ContextMenu<State.Msg>(
+        M.ContextMenu of State.Msg(
           'context', Target, [
-            M.Entry<State.Msg>.Action(
-              new M.Item<State.Msg>(
+            (M.Entry of State.Msg).Action(
+              new M.Item of State.Msg(
                 'cut',
                 'Cut',
                 State.Msg.Shared(Demo.Msg.MenuChoice('Cut')),
@@ -55,8 +55,8 @@ begin
                 Shortcut := 'Ctrl X'
               )
             ),
-            M.Entry<State.Msg>.Action(
-              new M.Item<State.Msg>(
+            (M.Entry of State.Msg).Action(
+              new M.Item of State.Msg(
                 'copy',
                 'Copy',
                 State.Msg.Shared(Demo.Msg.MenuChoice('Copy')),
@@ -64,8 +64,8 @@ begin
                 Shortcut := 'Ctrl C'
               )
             ),
-            M.Entry<State.Msg>.Action(
-              new M.Item<State.Msg>(
+            (M.Entry of State.Msg).Action(
+              new M.Item of State.Msg(
                 'paste',
                 'Paste',
                 State.Msg.Shared(Demo.Msg.MenuChoice('Paste')),
@@ -73,9 +73,9 @@ begin
                 Shortcut := 'Ctrl V'
               )
             ),
-            M.Entry<State.Msg>.Separator,
-            M.Entry<State.Msg>.Action(
-              new M.Item<State.Msg>(
+            (M.Entry of State.Msg).Separator,
+            (M.Entry of State.Msg).Action(
+              new M.Item of State.Msg(
                 'delete',
                 'Delete',
                 State.Msg.Shared(Demo.Msg.MenuChoice('Delete')),

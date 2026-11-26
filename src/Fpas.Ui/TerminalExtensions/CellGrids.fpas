@@ -76,10 +76,10 @@ end variant;
 // - `Changed`: Maps local input and allocation changes to messages.
 // ## Returns
 // A terminal-only element. Images are clipped or padded without rescaling.
-public function CellGrid<TMsg>(Id: string; Content: Image?; Changed: function(Event): TMsg): E.Element<TMsg>;
+public function CellGrid of TMsg(Id: string; Content: Image?; Changed: function(Event): TMsg): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.TerminalCellGrid(Id, Content, Changed);
+  return (E.Element of TMsg).TerminalCellGrid(Id, Content, Changed);
 end function;
 
 end unit;

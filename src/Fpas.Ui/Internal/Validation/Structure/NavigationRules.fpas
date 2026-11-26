@@ -60,7 +60,7 @@ public procedure CheckTabs(
 begin
   const At: string := Identify(Id, Location + '/tabs');
   if Items.Length < 1 or Items.Length > 32 or Selected < 0 or Selected >= Items.Length
-    or not Sys.Enum.IsDefined<Tabs.Variant>(Settings.Appearance)
+    or not Sys.Enum.IsDefined of Tabs.Variant(Settings.Appearance)
   then
     R.Reject(At, 'Tabs need one through 32 choices, a selected index and a valid appearance.');
   end if;

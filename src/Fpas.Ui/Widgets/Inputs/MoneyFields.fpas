@@ -33,10 +33,10 @@ end record;
 // - `Settings`: Optional currency captions, precision and native width.
 // ## Returns
 // A graphical model-controlled money field.
-public function MoneyField<TMsg>(Id: string; Value: decimal; OnChange: function(decimal): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function MoneyField of TMsg(Id: string; Value: decimal; OnChange: function(decimal): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.MoneyField(Id, Value, OnChange, Settings ?? new Options());
+  return (E.Element of TMsg).MoneyField(Id, Value, OnChange, Settings ?? new Options());
 end function;
 
 end unit;

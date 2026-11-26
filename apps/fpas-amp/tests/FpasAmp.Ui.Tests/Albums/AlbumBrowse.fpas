@@ -14,9 +14,9 @@ uses System.Collections.Immutable as I;
 uses System.Linq as L;
 uses Xunit as X;
 
-function Catalogue(): I.ImmutableArray<Library.Album>;
+function Catalogue(): I.ImmutableArray of Library.Album;
 begin
-  return I.ImmutableArray.CreateRange<Library.Album>(
+  return I.ImmutableArray.CreateRange of Library.Album(
     [
       new Library.Album('wall', 'The Wall', 'Pink Floyd', 26L, 'r', 9, ['Progressive rock']),
       new Library.Album('road', 'Abbey Road', 'The Beatles', 17L, 'r', 8, ['Rock']),
@@ -44,7 +44,7 @@ function Ids(Current: M.State): string;
 begin
   return Sys.String.Join(
     ',',
-    L.Enumerable.Select<Library.Album, string>(
+    L.Enumerable.Select of (Library.Album, string)(
       Current.Shown,
       function(Album: Library.Album): string => Album.Id
     )
@@ -58,12 +58,12 @@ public type AlbumBrowseTests = record
   public procedure DefaultShowsAllByTitle();
   begin
     const Current: M.State := Loaded();
-    X.Assert.Equal<string>('road,home,date,wall', Ids(Current));
-    X.Assert.Equal<string>(
+    X.Assert.Equal of string('road,home,date,wall', Ids(Current));
+    X.Assert.Equal of string(
       ['Björk', 'Floyd Cramer', 'Pink Floyd', 'The Beatles'],
       Current.Catalog.Artists
     );
-    X.Assert.Equal<string>(
+    X.Assert.Equal of string(
       ['Country', 'Electronic', 'Progressive rock', 'Rock'],
       Current.Catalog.Genres
     );
@@ -78,11 +78,11 @@ public type AlbumBrowseTests = record
     Current := Send(Current, Toolbar.Msg.Genre('Rock'));
     Current := Send(Current, Toolbar.Msg.MinimumRating(8));
     Current := Send(Current, Toolbar.Msg.Apply);
-    X.Assert.Equal<string>('road', Ids(Current));
+    X.Assert.Equal of string('road', Ids(Current));
     Current := Send(Current, Toolbar.Msg.SetOpen(true));
     Current := Send(Current, Toolbar.Msg.Artist('Björk'));
-    const Items: I.ImmutableArray<Library.Album> := Catalogue();
-    const Refreshed: I.ImmutableArray<Library.Album> := Items.SetItem(
+    const Items: I.ImmutableArray of Library.Album := Catalogue();
+    const Refreshed: I.ImmutableArray of Library.Album := Items.SetItem(
       1, Items[1] with
         Genres := ['Alternative'];
       end with
@@ -96,13 +96,13 @@ public type AlbumBrowseTests = record
       M.Msg.Received(new Library.Snapshot(Refreshed, 65L)),
       null
     ).Model;
-    X.Assert.Equal<string>('road', Ids(Current));
-    X.Assert.Equal<string>('', Current.Toolbar.Applied.Genre);
-    X.Assert.Equal<string>('', Current.Toolbar.Draft.Genre);
-    X.Assert.Equal<string>('The Beatles', Current.Toolbar.Applied.Artist);
-    X.Assert.Equal<string>('Björk', Current.Toolbar.Draft.Artist);
-    X.Assert.Equal<int>(8, Current.Toolbar.Applied.MinimumRating);
-    X.Assert.Equal<int>(2, Toolbar.Count(Current.Toolbar.Applied));
+    X.Assert.Equal of string('road', Ids(Current));
+    X.Assert.Equal of string('', Current.Toolbar.Applied.Genre);
+    X.Assert.Equal of string('', Current.Toolbar.Draft.Genre);
+    X.Assert.Equal of string('The Beatles', Current.Toolbar.Applied.Artist);
+    X.Assert.Equal of string('Björk', Current.Toolbar.Draft.Artist);
+    X.Assert.Equal of int(8, Current.Toolbar.Applied.MinimumRating);
+    X.Assert.Equal of int(2, Toolbar.Count(Current.Toolbar.Applied));
     X.Assert.True(Current.Toolbar.Open);
   end procedure;
 
@@ -112,15 +112,15 @@ public type AlbumBrowseTests = record
   begin
     var Current: M.State := Send(Loaded(), Toolbar.Msg.Sort(Toolbar.Order.Rating));
     Current := Send(Current, Toolbar.Msg.Search('floyd'));
-    X.Assert.Equal<Toolbar.Order>(Toolbar.Order.Relevance, Current.Toolbar.Sort);
-    X.Assert.Equal<int>(2, Current.Shown.Length);
+    X.Assert.Equal of Toolbar.Order(Toolbar.Order.Relevance, Current.Toolbar.Sort);
+    X.Assert.Equal of int(2, Current.Shown.Length);
     X.Assert.Contains('wall', Ids(Current));
     X.Assert.Contains('date', Ids(Current));
     Current := Send(Current, Toolbar.Msg.Search('wall pink'));
-    X.Assert.Equal<string>('wall', Current.Shown[0].Id);
+    X.Assert.Equal of string('wall', Current.Shown[0].Id);
     Current := Send(Current, Toolbar.Msg.Search('  '));
-    X.Assert.Equal<Toolbar.Order>(Toolbar.Order.Rating, Current.Toolbar.Sort);
-    X.Assert.Equal<int>(4, Current.Shown.Length);
+    X.Assert.Equal of Toolbar.Order(Toolbar.Order.Rating, Current.Toolbar.Sort);
+    X.Assert.Equal of int(4, Current.Shown.Length);
   end procedure;
 
   // Filters apply only when confirmed, and they combine with each other.
@@ -129,25 +129,25 @@ public type AlbumBrowseTests = record
   begin
     var Current: M.State := Send(Loaded(), Toolbar.Msg.SetOpen(true));
     Current := Send(Current, Toolbar.Msg.Genre('rock'));
-    X.Assert.Equal<int>(4, Current.Shown.Length);
+    X.Assert.Equal of int(4, Current.Shown.Length);
     Current := Send(Current, Toolbar.Msg.Apply);
-    X.Assert.Equal<string>('road,home', Ids(Current));
+    X.Assert.Equal of string('road,home', Ids(Current));
     Current := Send(Current, Toolbar.Msg.SetOpen(true));
     Current := Send(Current, Toolbar.Msg.MinimumRating(8));
     Current := Send(Current, Toolbar.Msg.Apply);
-    X.Assert.Equal<string>('road', Ids(Current));
-    X.Assert.Equal<int>(2, Toolbar.Count(Current.Toolbar.Applied));
+    X.Assert.Equal of string('road', Ids(Current));
+    X.Assert.Equal of int(2, Toolbar.Count(Current.Toolbar.Applied));
     Current := Send(Current, Toolbar.Msg.SetOpen(true));
     Current := Send(Current, Toolbar.Msg.Reset);
     Current := Send(Current, Toolbar.Msg.Artist('Pink Floyd'));
     Current := Send(Current, Toolbar.Msg.Apply);
-    X.Assert.Equal<string>('wall', Ids(Current));
+    X.Assert.Equal of string('wall', Ids(Current));
     Current := Send(Current, Toolbar.Msg.SetOpen(true));
     Current := Send(Current, Toolbar.Msg.Reset);
     Current := Send(Current, Toolbar.Msg.MinimumRating(-1));
     Current := Send(Current, Toolbar.Msg.Apply);
-    X.Assert.Equal<string>('date', Ids(Current));
-    X.Assert.Equal<int>(1, Toolbar.Count(Current.Toolbar.Applied));
+    X.Assert.Equal of string('date', Ids(Current));
+    X.Assert.Equal of int(1, Toolbar.Count(Current.Toolbar.Applied));
   end procedure;
 
   // Each order sorts in both directions; unrated albums count as zero.
@@ -155,13 +155,13 @@ public type AlbumBrowseTests = record
   public procedure OrdersSortBothWays();
   begin
     var Current: M.State := Send(Loaded(), Toolbar.Msg.Sort(Toolbar.Order.Rating));
-    X.Assert.Equal<string>('date,home,road,wall', Ids(Current));
+    X.Assert.Equal of string('date,home,road,wall', Ids(Current));
     Current := Send(Current, Toolbar.Msg.Descending(true));
-    X.Assert.Equal<string>('wall,road,home,date', Ids(Current));
+    X.Assert.Equal of string('wall,road,home,date', Ids(Current));
     Current := Send(Current, Toolbar.Msg.Sort(Toolbar.Order.Songs));
-    X.Assert.Equal<string>('wall,road,date,home', Ids(Current));
+    X.Assert.Equal of string('wall,road,date,home', Ids(Current));
     Current := Send(Current, Toolbar.Msg.Sort(Toolbar.Order.Artist));
-    X.Assert.Equal<string>('road,wall,date,home', Ids(Current));
+    X.Assert.Equal of string('road,wall,date,home', Ids(Current));
   end procedure;
 
   // Best match cannot be chosen without search words.
@@ -169,7 +169,7 @@ public type AlbumBrowseTests = record
   public procedure BestMatchNeedsWords();
   begin
     const Current: M.State := Send(Loaded(), Toolbar.Msg.Sort(Toolbar.Order.Relevance));
-    X.Assert.Equal<Toolbar.Order>(Toolbar.Order.Title, Current.Toolbar.Sort);
+    X.Assert.Equal of Toolbar.Order(Toolbar.Order.Title, Current.Toolbar.Sort);
   end procedure;
 
   // A new order asks for a new visible range, so thumbnails follow the shown albums.
@@ -180,15 +180,15 @@ public type AlbumBrowseTests = record
       First := 0;
       Last := 4;
     end with;
-    const Sorted: A.Transition<M.State, M.Msg> := Update.Apply(
+    const Sorted: A.Transition of (M.State, M.Msg) := Update.Apply(
       Current, M.Msg.Toolbar(Toolbar.Msg.Descending(true)), null
     );
-    X.Assert.Equal<int>(-1, Sorted.Model.First);
+    X.Assert.Equal of int(-1, Sorted.Model.First);
     X.Assert.Empty(Sorted.Commands);
-    const Same: A.Transition<M.State, M.Msg> := Update.Apply(
+    const Same: A.Transition of (M.State, M.Msg) := Update.Apply(
       Current, M.Msg.Toolbar(Toolbar.Msg.SetOpen(true)), null
     );
-    X.Assert.Equal<int>(0, Same.Model.First);
+    X.Assert.Equal of int(0, Same.Model.First);
   end procedure;
 end record;
 

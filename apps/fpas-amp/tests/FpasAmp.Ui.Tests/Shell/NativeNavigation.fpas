@@ -180,7 +180,7 @@ public type NativeNavigationTests = record
         );
       end;
       const Saved: Storage.Snapshot := Storage.Load(Data.Path);
-      X.Assert.Equal<string>(Playing, Saved.Player.Source.AlbumId);
+      X.Assert.Equal of string(Playing, Saved.Player.Source.AlbumId);
       const Restored: Nav.State := new Nav.State(
         Active := Nav.Parse(Saved.ActivePage) ?? Nav.Route.Page(Nav.Page.Music)
       );
@@ -207,12 +207,12 @@ public type NativeNavigationTests = record
       discard Reopened.Window.Post(App.Msg.Albums(Albums.Msg.Music(Music.Msg.ShowFilters(true))));
       Until(Reopened, function(_State: Nav.State): bool => Has(Reopened, 'track-filter-rating'));
       X.Assert.False(Has(Reopened, 'track-filter-genre'));
-      X.Assert.Equal<string>(Playing, Reopened.State().Player.Source.AlbumId);
+      X.Assert.Equal of string(Playing, Reopened.State().Player.Source.AlbumId);
       X.Assert.False(Reopened.State().Player.Playing);
       discard Reopened.Window.Post(App.Msg.Albums(Albums.Msg.BackToAlbums));
       Pump(Reopened);
       X.Assert.Null(Reopened.State().Albums.Music);
-      X.Assert.Equal<string>(
+      X.Assert.Equal of string(
         if FromArtist then
           Nav.Key(Nav.Route.Artist(Person))
         else
@@ -248,7 +248,7 @@ public type NativeNavigationTests = record
       );
       Until(Session, function(_State: Nav.State): bool => Session.State().Albums.Loaded);
       X.Assert.True(Has(Session, 'albums-empty'));
-      X.Assert.Equal<string>(
+      X.Assert.Equal of string(
         if FromArtist then
           'artists'
         else
@@ -305,7 +305,7 @@ public type NativeNavigationTests = record
           function(State: Nav.State): bool => State.Loaded and State.Playlists.Length = 3
         );
         X.Assert.False(Has(Session, 'drawer-open'));
-        X.Assert.DoesNotContain<Gui.Control>(
+        X.Assert.DoesNotContain of Gui.Control(
           Session.Window.Snapshot().Controls,
           function(Item: Gui.Control): bool => Item.Id = 'navigation' and Item.Key = 'ratings'
         );
@@ -325,11 +325,11 @@ public type NativeNavigationTests = record
             );
           end if;
 
-          X.Assert.Equal<string>(
+          X.Assert.Equal of string(
             Page.ToString().ToLowerInvariant(),
             Nav.Key(Session.State().Navigation.Active)
           );
-          X.Assert.Contains<string>(Page.ToString(), Session.Window.Snapshot().Text);
+          X.Assert.Contains of string(Page.ToString(), Session.Window.Snapshot().Text);
           X.Assert.True(
             Has(
               Session, if Page = Nav.Page.Music then
@@ -347,19 +347,19 @@ public type NativeNavigationTests = record
           Session,
           function(_State: Nav.State): bool => Session.State().Songs.Page.Shown.Length = 3
         );
-        X.Assert.Contains<string>('Evening mix', Session.Window.Snapshot().Text);
-        X.Assert.Equal<long>(4L, Selected.Count);
-        const Rows: I.ImmutableArray<Tracks.Entry> := Session.State().Songs.Page.Shown;
-        X.Assert.Equal<string>('second.mp3', IO.Path.GetFileName(Rows[0].Path));
-        X.Assert.Equal<string>('first.mp3', IO.Path.GetFileName(Rows[1].Path));
-        X.Assert.Equal<long>(Rows[0].FileId, Rows[2].FileId);
-        X.Assert.Equal<int>(0, Session.State().Songs.Page.ReleaseIds.Length);
-        X.Assert.Equal<int>(0, Session.State().Songs.Page.Performers.Length);
-        X.Assert.Equal<int>(0, Session.State().Songs.Page.GenreChoices.Length);
+        X.Assert.Contains of string('Evening mix', Session.Window.Snapshot().Text);
+        X.Assert.Equal of long(4L, Selected.Count);
+        const Rows: I.ImmutableArray of Tracks.Entry := Session.State().Songs.Page.Shown;
+        X.Assert.Equal of string('second.mp3', IO.Path.GetFileName(Rows[0].Path));
+        X.Assert.Equal of string('first.mp3', IO.Path.GetFileName(Rows[1].Path));
+        X.Assert.Equal of long(Rows[0].FileId, Rows[2].FileId);
+        X.Assert.Equal of int(0, Session.State().Songs.Page.ReleaseIds.Length);
+        X.Assert.Equal of int(0, Session.State().Songs.Page.Performers.Length);
+        X.Assert.Equal of int(0, Session.State().Songs.Page.GenreChoices.Length);
         discard Session.Window.Post(App.Msg.Songs(Songs.Msg.Song(Music.Msg.PlaySlot(Rows, 2))));
         Pump(Session);
-        X.Assert.Equal<int>(2, Session.State().Player.Index);
-        X.Assert.Equal<string>(
+        X.Assert.Equal of int(2, Session.State().Player.Index);
+        X.Assert.Equal of string(
           Nav.Key(Session.State().Navigation.Active),
           Session.State().Player.Source.Playlist
         );
@@ -390,7 +390,7 @@ public type NativeNavigationTests = record
         SetRoute(Session, Nav.Route.Playlist(Session.State().Navigation.Playlists[0].Identity));
         X.Assert.False(Session.State().Navigation.Drawer);
         Settle(Session);
-        X.Assert.Contains<string>('Evening mix', Session.Window.Snapshot().Text);
+        X.Assert.Contains of string('Evening mix', Session.Window.Snapshot().Text);
       end;
     finally
       Library.DisposeAsync().GetAwaiter().GetResult();
@@ -473,7 +473,7 @@ public type NativeNavigationTests = record
               0
             ].Error <> null
           );
-          X.Assert.Equal<string>(Saved.ActivePage, Nav.Key(Session.State().Navigation.Active));
+          X.Assert.Equal of string(Saved.ActivePage, Nav.Key(Session.State().Navigation.Active));
           X.Assert.True(Has(Session, 'navigation-error'));
           Capture(Session, 'navigation-unavailable-playlist');
         else
@@ -484,14 +484,14 @@ public type NativeNavigationTests = record
               State.Active
             ) = 'music'
           );
-          X.Assert.Contains<string>('Music', Session.Window.Snapshot().Text);
+          X.Assert.Contains of string('Music', Session.Window.Snapshot().Text);
         end if;
 
         Storage.Save(
           Data.Path,
           Storage.FromWindow(Session.Window.Placement(), Session.State().Navigation)
         );
-        X.Assert.Equal<string>(
+        X.Assert.Equal of string(
           if Broken then
             Saved.ActivePage
           else

@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Developer.KeyValueEditors as W;
 // - `Pairs`: Header names, values and flags from the current draft.
 // ## Returns
 // The editor with proposed pairs as application messages.
-public function View(Pairs: array of W.Pair): E.Element<W.Event>;
+public function View(Pairs: array of W.Pair): E.Element of W.Event;
 begin
-  return W.KeyValueEditor<W.Event>('headers', Pairs,
+  return W.KeyValueEditor of W.Event('headers', Pairs,
     function(Change: W.Event): W.Event => Change, new W.Options(Capacity := 12));
 end function;
 

@@ -7,7 +7,7 @@ uses Fpas.Ui.Elements as E;
 // A command searchable by title.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Command<TMsg> = record
+public type Command of TMsg = record
   // Literal searchable caption.
   public Title: string;
   // Message sent when selected.
@@ -32,10 +32,10 @@ end record;
 // - `UseShortcut`: Whether the primary modifier plus K toggles the overlay.
 // ## Returns
 // The command palette element.
-public function CommandPalette<TMsg>(Id: string; Base: E.Element<TMsg>; Open: bool; Commands: array of Command<TMsg>; OnOpenChange: function(bool): TMsg; UseShortcut: bool := true): E.Element<TMsg>;
+public function CommandPalette of TMsg(Id: string; Base: E.Element of TMsg; Open: bool; Commands: array of Command of TMsg; OnOpenChange: function(bool): TMsg; UseShortcut: bool := true): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.CommandPalette(Id, Base, Open, Commands, OnOpenChange, UseShortcut);
+  return (E.Element of TMsg).CommandPalette(Id, Base, Open, Commands, OnOpenChange, UseShortcut);
 end function;
 
 end unit;

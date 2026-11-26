@@ -21,7 +21,7 @@ public type TagTests = record
     procedure AddCover(Path: string; Data: array of byte; Kind: A.PictureInfo.PIC_TYPE);
     begin
       const Track: A.Track := new A.Track(Path);
-      const Items: C.IList<A.PictureInfo?>? := Track.EmbeddedPictures;
+      const Items: (C.IList of A.PictureInfo?)? := Track.EmbeddedPictures;
       if Items = null then
         raise new Sys.InvalidOperationException('Expected an embedded picture collection.');
       end if;
@@ -52,7 +52,10 @@ public type TagTests = record
       end if;
 
       X.Assert.False(Fallback.Front);
-      X.Assert.Equal<string>(Sys.Convert.ToHexString(Back), Sys.Convert.ToHexString(Fallback.Data));
+      X.Assert.Equal of string(
+        Sys.Convert.ToHexString(Back),
+        Sys.Convert.ToHexString(Fallback.Data)
+      );
       AddCover(Path, Front, A.PictureInfo.PIC_TYPE.Front);
       const Selected: Pictures.Cover? := Pictures.Read(Path);
       if Selected = null then
@@ -60,20 +63,20 @@ public type TagTests = record
       end if;
 
       X.Assert.True(Selected.Front);
-      X.Assert.Equal<string>('image/png', Selected.MimeType);
-      X.Assert.Equal<string>(
+      X.Assert.Equal of string('image/png', Selected.MimeType);
+      X.Assert.Equal of string(
         Sys.Convert.ToHexString(Front),
         Sys.Convert.ToHexString(Selected.Data)
       );
       using const Stream: IO.FileStream := IO.File.OpenRead(Path);
       const Info: Files.Info := Files.Read(Stream, IO.Path.GetExtension(Name) ?? '');
-      X.Assert.Equal<string>('Studio', Info.Album);
-      X.Assert.Equal<int>(2, Info.Artists.Length);
-      X.Assert.Equal<string>('Écho', Info.Artists[0]);
-      X.Assert.Equal<string>('Second', Info.Artists[1]);
-      X.Assert.Equal<int>(2, Info.Genres.Length);
-      X.Assert.Equal<string>('Jazz', Info.Genres[0]);
-      X.Assert.Equal<string>('Live', Info.Genres[1]);
+      X.Assert.Equal of string('Studio', Info.Album);
+      X.Assert.Equal of int(2, Info.Artists.Length);
+      X.Assert.Equal of string('Écho', Info.Artists[0]);
+      X.Assert.Equal of string('Second', Info.Artists[1]);
+      X.Assert.Equal of int(2, Info.Genres.Length);
+      X.Assert.Equal of string('Jazz', Info.Genres[0]);
+      X.Assert.Equal of string('Live', Info.Genres[1]);
     finally
       Temp.Delete(true);
     end try;

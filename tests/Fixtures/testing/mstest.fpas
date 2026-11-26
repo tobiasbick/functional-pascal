@@ -34,7 +34,7 @@ public type Tests = record
   [T.TestMethodAttribute]
   public procedure SetupWasCalled();
   begin
-    T.Assert.AreEqual<int>(1, Active);
+    T.Assert.AreEqual of int(1, Active);
     Sys.Console.WriteLine('native output');
   end procedure;
 
@@ -49,7 +49,7 @@ public type Tests = record
   [T.DataRowAttribute(2, 3, 5)]
   public procedure Addition(Left: int; Right: int; Expected: int);
   begin
-    T.Assert.AreEqual<int>(Expected, Left + Right);
+    T.Assert.AreEqual of int(Expected, Left + Right);
   end procedure;
 
   // Checks that asynchronous tests complete while setup is active.
@@ -59,9 +59,9 @@ public type Tests = record
   [T.TestMethodAttribute]
   public async function AsyncTest(): Tasks.Task;
   begin
-    discard await Tasks.Task.FromResult<int>(42);
+    discard await Tasks.Task.FromResult of int(42);
 
-    T.Assert.AreEqual<int>(1, Active);
+    T.Assert.AreEqual of int(1, Active);
   end function;
 
   // Fails if the runner executes this deliberately skipped case.

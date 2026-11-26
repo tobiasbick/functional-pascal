@@ -23,10 +23,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function SourceList<TMsg>(Id: string; Documents: array of Sources.Item; Changed: Sys.Func<int, TMsg>?; Settings: Options? := null): E.Element<TMsg>;
+public function SourceList of TMsg(Id: string; Documents: array of Sources.Item; Changed: Sys.Func of (int, TMsg)?; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.SourceList(Id, Documents, Changed, Settings ?? new Options());
+  return (E.Element of TMsg).SourceList(Id, Documents, Changed, Settings ?? new Options());
 end function;
 
 end unit;

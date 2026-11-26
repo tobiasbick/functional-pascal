@@ -32,7 +32,7 @@ public sealed class AnalysisTests
     [InlineData("program Empty; begin end; end program;", CompilationTarget.Exe)]
     [InlineData("unit Library; public function Read(): int; begin return 42; end function; end unit;", CompilationTarget.Library)]
     [InlineData("program Records; type Point = record public X: int; end record; begin const P: Point := new Point(42); end; end program;", CompilationTarget.Exe)]
-    [InlineData("async program Async; uses System.Threading.Tasks as T; async function F(): T.Task<int>; begin return await T.Task.FromResult<int>(42); end function; begin discard await F(); end; end program;", CompilationTarget.Exe)]
+    [InlineData("async program Async; uses System.Threading.Tasks as T; async function F(): T.Task of int; begin return await T.Task.FromResult of int(42); end function; begin discard await F(); end; end program;", CompilationTarget.Exe)]
     public void Successful_analysis_has_independent_completion_and_does_not_publish_files(string source, CompilationTarget target)
     {
         using var directory = new TemporaryDirectory();
@@ -82,7 +82,7 @@ public sealed class AnalysisTests
             async function Work(): T.Task;
             begin
               var Value: int := 0;
-              Touch(ref Value, await T.Task.FromResult<int>(42));
+              Touch(ref Value, await T.Task.FromResult of int(42));
             end function;
             begin end;
             end program;

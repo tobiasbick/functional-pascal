@@ -15,9 +15,9 @@ uses Fpas.Ui.Mvu.Application as Mvu;
 // Builds the command for the update function.
 // ## Returns
 // A command that queues one toast in the GUI host.
-public function Notify(): Mvu.Command<string>;
+public function Notify(): Mvu.Command of string;
 begin
-  return W.Show<string>('3 conversations archived',
+  return W.Show of string('3 conversations archived',
     new W.Options(ActionLabel := 'Undo', ShowTimer := true),
     function(): string => 'restore-conversations');
 end function;

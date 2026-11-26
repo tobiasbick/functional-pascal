@@ -17,7 +17,7 @@ uses System.Collections.Generic as Lists;
 
 function Documents(Model: S.Model; Change: D.Change): S.Model;
 begin
-  const Tabs: Lists.List<D.Tab> := new Lists.List<D.Tab>(Model.Tabs);
+  const Tabs: Lists.List of D.Tab := new Lists.List of D.Tab(Model.Tabs);
   var Selected: int := Change.Selected;
   var Close: int := Change.Close;
   if Change.MoveFrom >= 0 then
@@ -175,18 +175,18 @@ end function;
 // - `Message`: A widget proposal or host action.
 // ## Returns
 // Updated gallery state and commands.
-public function Update(Model: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+public function Update(Model: S.Model; Message: S.Msg): Mvu.Transition of (S.Model, S.Msg);
 begin
-  return new Mvu.Transition<S.Model, S.Msg>(
+  return new Mvu.Transition of (S.Model, S.Msg)(
     Next(Model, Message),
     case Message of
-      when S.Msg.Maximize: [Windows.Maximize<S.Msg>()];
-      when S.Msg.Minimize: [Windows.Minimize<S.Msg>()];
-      when S.Msg.Restore: [Windows.Restore<S.Msg>()];
-      when S.Msg.MoveWindow: [Windows.MoveTo<S.Msg>(HostActions.MoveX, HostActions.MoveY)];
-      when S.Msg.ReadPlacement: [Windows.ReadPlacement<S.Msg>(S.Msg.PlacementRead)];
-      when S.Msg.CopyPath: [Clipboard.WriteText<S.Msg>(HostActions.SamplePath)];
-      when S.Msg.PasteText: [Clipboard.ReadText<S.Msg>(S.Msg.ClipboardText)];
+      when S.Msg.Maximize: [Windows.Maximize of S.Msg()];
+      when S.Msg.Minimize: [Windows.Minimize of S.Msg()];
+      when S.Msg.Restore: [Windows.Restore of S.Msg()];
+      when S.Msg.MoveWindow: [Windows.MoveTo of S.Msg(HostActions.MoveX, HostActions.MoveY)];
+      when S.Msg.ReadPlacement: [Windows.ReadPlacement of S.Msg(S.Msg.PlacementRead)];
+      when S.Msg.CopyPath: [Clipboard.WriteText of S.Msg(HostActions.SamplePath)];
+      when S.Msg.PasteText: [Clipboard.ReadText of S.Msg(S.Msg.ClipboardText)];
       else [];
     end case
   );

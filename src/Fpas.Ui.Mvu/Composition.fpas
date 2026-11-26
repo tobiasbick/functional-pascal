@@ -34,53 +34,53 @@ end function;
 // ## Returns
 // A parent command preserving cancellation, posting backpressure and failure handling.
 // Host extension payloads must implement Application.HostExtension<TChild>.
-public function MapCommand<TChild, TParent>(
-  Value: A.Command<TChild>;
+public function MapCommand of (TChild, TParent)(
+  Value: A.Command of TChild;
   Messages: function(TChild): TParent; Scope: string := ''
-): A.Command<TParent>;
+): A.Command of TParent;
   function Start(
-    Id: string; Work: Fx.Effect<Fx.Completion, TChild, A.BackgroundContext<TChild>>
-  ): A.Command<TParent>;
-    function Adapt(Parent: A.BackgroundContext<TParent>): A.BackgroundContext<TChild>;
+    Id: string; Work: Fx.Effect of (Fx.Completion, TChild, A.BackgroundContext of TChild)
+  ): A.Command of TParent;
+    function Adapt(Parent: A.BackgroundContext of TParent): A.BackgroundContext of TChild;
     begin
-      return new A.BackgroundContext<TChild>(
+      return new A.BackgroundContext of TChild(
         function(Message: TChild): Tasks.Task => Parent.Post(Messages(Message)),
         Parent.Clock
       );
     end function;
   begin
-    const Adapted: Fx.Effect<Fx.Completion, TChild, A.BackgroundContext<TParent>> := Fx.FromEnvironment(
+    const Adapted: Fx.Effect of (Fx.Completion, TChild, A.BackgroundContext of TParent) := Fx.FromEnvironment(
       Work,
       Adapt
     );
-    return A.StartBackground<TParent>(EffectId(Scope, Id), Fx.MapFailure(Adapted, Messages));
+    return A.StartBackground of TParent(EffectId(Scope, Id), Fx.MapFailure(Adapted, Messages));
   end function;
-  function Host(Request: A.HostRequest): A.Command<TParent>;
+  function Host(Request: A.HostRequest): A.Command of TParent;
   begin
     case Request of
       when A.HostRequest.Extension(const Payload: Sys.Object):
-        if not (Payload is A.HostExtension<TChild>) then
+        if not (Payload is A.HostExtension of TChild) then
           raise new Sys.ArgumentException(
             'A mapped host payload must implement HostExtension for its child message type.'
           );
         end if;
 
-        return A.Command<TParent>.Host(
+        return (A.Command of TParent).Host(
           A.HostRequest.Extension(
-            cast<A.HostExtension<TChild>>(Payload).Map<TParent>(Messages)
+            cast<A.HostExtension of TChild>(Payload).Map of TParent(Messages)
           )
         );
       else
-        return A.Command<TParent>.Host(Request);
+        return (A.Command of TParent).Host(Request);
     end case;
   end function;
 begin
   return case Value of
     when A.Command.Start(
       const Id: string,
-      const Work: Fx.Effect<Fx.Completion, TChild, A.BackgroundContext<TChild>>
+      const Work: Fx.Effect of (Fx.Completion, TChild, A.BackgroundContext of TChild)
     ): Start(Id, Work);
-    when A.Command.Cancel(const Id: string): A.Command<TParent>.Cancel(EffectId(Scope, Id));
+    when A.Command.Cancel(const Id: string): (A.Command of TParent).Cancel(EffectId(Scope, Id));
     when A.Command.Host(const Request: A.HostRequest): Host(Request);
   end case;
 end function;
@@ -97,17 +97,17 @@ end function;
 // - `Scope`: Optional effect ID prefix shared by start and cancel commands.
 // ## Returns
 // The child model and parent commands in their original order.
-public function MapTransition<TModel, TChild, TParent>(
-  Value: A.Transition<TModel, TChild>;
+public function MapTransition of (TModel, TChild, TParent)(
+  Value: A.Transition of (TModel, TChild);
   Messages: function(TChild): TParent; Scope: string := ''
-): A.Transition<TModel, TParent>;
+): A.Transition of (TModel, TParent);
 begin
-  const Commands: Lists.List<A.Command<TParent>> := new Lists.List<A.Command<TParent>>();
+  const Commands: Lists.List of A.Command of TParent := new Lists.List of A.Command of TParent();
   for Index: int := 0 to Value.Commands.Length - 1 do
-    Commands.Add(MapCommand<TChild, TParent>(Value.Commands[Index], Messages, Scope));
+    Commands.Add(MapCommand of (TChild, TParent)(Value.Commands[Index], Messages, Scope));
   end for;
 
-  return new A.Transition<TModel, TParent>(Value.Model, Commands.ToArray());
+  return new A.Transition of (TModel, TParent)(Value.Model, Commands.ToArray());
 end function;
 
 end unit;

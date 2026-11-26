@@ -34,10 +34,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // The graphical element.
-public function DotDisplay<TMsg>(Id: string; Text: string; Settings: Options? := null): E.Element<TMsg>;
+public function DotDisplay of TMsg(Id: string; Text: string; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.DotDisplay(Id, Text, Settings ?? new Options());
+  return (E.Element of TMsg).DotDisplay(Id, Text, Settings ?? new Options());
 end function;
 
 end unit;

@@ -160,8 +160,8 @@ begin
   else
     ''
   end if;
-  const Items: C.List<M.Episode> := new C.List<M.Episode>();
-  const Seen: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+  const Items: C.List of M.Episode := new C.List of M.Episode();
+  const Seen: C.HashSet of string := new C.HashSet of string(Sys.StringComparer.Ordinal);
   for Node: X.XElement in Channel.Elements(X.XName.Get('item')) do
     const Item: M.Episode? := Enclosure(Node, Base);
     if Item <> null and Seen.Add(Item.Id) then
@@ -199,7 +199,7 @@ end function;
 // - `Stop`: Cancels the request and body read.
 // ## Returns
 // The publisher's show metadata and playable audio episodes.
-public async function Load(Show: M.Show; Stop: T.CancellationToken): Tasks.Task<M.Feed>;
+public async function Load(Show: M.Show; Stop: T.CancellationToken): Tasks.Task of M.Feed;
 requires Show.Url <> '';
 begin
   using const Deadline: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(

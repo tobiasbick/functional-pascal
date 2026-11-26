@@ -25,15 +25,15 @@ uses System as Sys;
 // - `Activate`: Optional activation mapper for a leaf.
 // - `Settings`: Appearance and input settings.
 // - `Visit`: Host traversal for the expanded children.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Label: string; Open: bool?; Children: array of E.Element<TMsg>; Change: Sys.Func<bool, TMsg>?; Activate: Sys.Func<TMsg>?; Settings: T.Options; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Label: string; Open: bool?; Children: array of E.Element of TMsg; Change: Sys.Func of (bool, TMsg)?; Activate: (Sys.Func of TMsg)?; Settings: T.Options; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('tree-node', Id);
   const Result: CuiCollections.CuiTreeResult := Frame.Window.BeginTree(
     Token, Label, Settings.Icon, Open = null, Open ?? false, Settings.Selected, Enabled,
-    C.WantsFocus<TMsg>(Frame, Id, Token, Enabled)
+    C.WantsFocus of TMsg(Frame, Id, Token, Enabled)
   );
-  C.Track<TMsg>(
+  C.Track of TMsg(
     Frame, new App.Control(
       Id, Label, 'tree-node', new Cui.CuiRectangle(), Enabled,
       Value := if Open = null then
@@ -45,7 +45,7 @@ begin
   );
   if Enabled then
     case Change of
-      when is Sys.Func<bool, TMsg> as Notify:
+      when is Sys.Func of (bool, TMsg) as Notify:
         if Result.Open <> (Open ?? false) then
           Frame.Messages.Add(Notify.Invoke(Result.Open));
         end if;
@@ -54,7 +54,7 @@ begin
 
     if Result.Clicked then
       case Activate of
-        when is Sys.Func<TMsg> as Notify:
+        when is Sys.Func of TMsg as Notify:
           Frame.Messages.Add(Notify.Invoke());
         else
       end case;
@@ -62,7 +62,7 @@ begin
   end if;
 
   if Result.Open then
-    for Child: E.Element<TMsg> in Children do
+    for Child: E.Element of TMsg in Children do
       Visit(Child, Frame, false, L.Alignment.Default);
     end for;
 

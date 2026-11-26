@@ -17,71 +17,71 @@ uses Fpas.Ui.Widgets.Planning.Kanbans as Boards;
 //
 // ## Parameters
 // - `Prepared`: Graphically validated tree and cached subviews.
-public procedure Check<TMsg>(Prepared: V.Prepared<TMsg>);
-  procedure Visit(Node: E.Element<TMsg>);
+public procedure Check of TMsg(Prepared: V.Prepared of TMsg);
+  procedure Visit(Node: E.Element of TMsg);
   begin
     case Node of
-      when E.Element.Reasoning(_, const Bodies: array of E.Element<TMsg>, _):
-        for Child: E.Element<TMsg> in Bodies do
+      when E.Element.Reasoning(_, const Bodies: array of E.Element of TMsg, _):
+        for Child: E.Element of TMsg in Bodies do
           Visit(Child);
         end for;
       when E.Element.Carousel(
         _,
-        const Views: array of E.Element<TMsg>,
+        const Views: array of E.Element of TMsg,
         _,
         _,
         _
-      ), E.Element.CardStack(_, const Views: array of E.Element<TMsg>, _, _):
-        for Child: E.Element<TMsg> in Views do
+      ), E.Element.CardStack(_, const Views: array of E.Element of TMsg, _, _):
+        for Child: E.Element of TMsg in Views do
           Visit(Child);
         end for;
-      when E.Element.FilePicker(_, const Base: E.Element<TMsg>?, _, _, _):
+      when E.Element.FilePicker(_, const Base: (E.Element of TMsg)?, _, _, _):
         if Base <> null then
           Visit(Base);
         end if;
       when E.Element.SplitView(
         _,
         _,
-        const First: E.Element<TMsg>,
-        const Second: E.Element<TMsg>,
+        const First: E.Element of TMsg,
+        const Second: E.Element of TMsg,
         _,
         _
       ):
         Visit(First);
         Visit(Second);
-      when E.Element.Dockspace(_, const Panels: array of Dock.Panel<TMsg>, _, _):
-        for Panel: Dock.Panel<TMsg> in Panels do
+      when E.Element.Dockspace(_, const Panels: array of Dock.Panel of TMsg, _, _):
+        for Panel: Dock.Panel of TMsg in Panels do
           Visit(Panel.Content);
         end for;
-      when E.Element.Kanban(_, const Columns: array of Boards.Column<TMsg>, _, _):
-        for Column: Boards.Column<TMsg> in Columns do
-          for Card: Boards.Card<TMsg> in Column.Cards do
+      when E.Element.Kanban(_, const Columns: array of Boards.Column of TMsg, _, _):
+        for Column: Boards.Column of TMsg in Columns do
+          for Card: Boards.Card of TMsg in Column.Cards do
             Visit(Card.Content);
           end for;
         end for;
       when E.Element.Tour(
         _,
-        const Base: E.Element<TMsg>,
+        const Base: E.Element of TMsg,
         _,
         _,
         _,
         _
-      ), E.Element.CommandPalette(_, const Base: E.Element<TMsg>, _, _, _, _):
+      ), E.Element.CommandPalette(_, const Base: E.Element of TMsg, _, _, _, _):
         Visit(Base);
       when E.Element.Layered(
-        const Children: array of E.Element<TMsg>,
+        const Children: array of E.Element of TMsg,
         const Settings: L.Flow
       ), E.Element.Stack(
-        const Children: array of E.Element<TMsg>,
+        const Children: array of E.Element of TMsg,
         _,
         const Settings: L.Flow
       ):
         discard Size.Spacing(Settings.Gap);
         discard Size.Spacing(Settings.Padding);
-        for Child: E.Element<TMsg> in Children do
+        for Child: E.Element of TMsg in Children do
           Visit(Child);
         end for;
-      when E.Element.Sized(const Child: E.Element<TMsg>, const Settings: L.Flex):
+      when E.Element.Sized(const Child: E.Element of TMsg, const Settings: L.Flex):
         case Settings.Basis of
           when L.Extent.Fixed(const Distance: L.Measure):
             discard Size.Measure(Distance);
@@ -101,85 +101,87 @@ public procedure Check<TMsg>(Prepared: V.Prepared<TMsg>);
         end case;
 
         Visit(Child);
-      when E.Element.Grid(_, const Children: array of E.Element<TMsg>), E.Element.Spotlight(
+      when E.Element.Grid(_, const Children: array of E.Element of TMsg), E.Element.Spotlight(
         _,
-        const Children: array of E.Element<TMsg>,
+        const Children: array of E.Element of TMsg,
         _
       ), E.Element.Card(
         _,
-        const Children: array of E.Element<TMsg>,
+        const Children: array of E.Element of TMsg,
         _,
         _
-      ), E.Element.ActionFooter(const Children: array of E.Element<TMsg>), E.Element.SkeletonGroup(
+      ), E.Element.ActionFooter(
+        const Children: array of E.Element of TMsg
+      ), E.Element.SkeletonGroup(
         _,
-        const Children: array of E.Element<TMsg>,
+        const Children: array of E.Element of TMsg,
         _
       ), E.Element.TreeNode(
         _,
         _,
         _,
-        const Children: array of E.Element<TMsg>,
+        const Children: array of E.Element of TMsg,
         _,
         _,
         _
-      ), E.Element.ReorderableList(_, const Children: array of E.Element<TMsg>, _, _, _):
-        for Child: E.Element<TMsg> in Children do
+      ), E.Element.ReorderableList(_, const Children: array of E.Element of TMsg, _, _, _):
+        for Child: E.Element of TMsg in Children do
           Visit(Child);
         end for;
-      when E.Element.Table(_, _, const Rows: array of Tables.Row<TMsg>, _, _, _, _):
-        for Row: Tables.Row<TMsg> in Rows do
-          for Cell: Tables.Cell<TMsg> in Row.Cells do
+      when E.Element.Table(_, _, const Rows: array of Tables.Row of TMsg, _, _, _, _):
+        for Row: Tables.Row of TMsg in Rows do
+          for Cell: Tables.Cell of TMsg in Row.Cells do
             case Cell of
-              when Tables.Cell.Content(const Children: array of E.Element<TMsg>):
-                for Child: E.Element<TMsg> in Children do
+              when Tables.Cell.Content(const Children: array of E.Element of TMsg):
+                for Child: E.Element of TMsg in Children do
                   Visit(Child);
                 end for;
               else
             end case;
           end for;
         end for;
-      when E.Element.Contextual(_, const Child: E.Element<TMsg>, _, _):
+      when E.Element.Contextual(_, const Child: E.Element of TMsg, _, _):
         Visit(Child);
-      when E.Element.SwipeRow(_, const Child: E.Element<TMsg>, _, _, _, _):
+      when E.Element.SwipeRow(_, const Child: E.Element of TMsg, _, _, _, _):
         Visit(Child);
-      when E.Element.Hinted(const Child: E.Element<TMsg>, _, _):
+      when E.Element.Hinted(const Child: E.Element of TMsg, _, _):
         Visit(Child);
       when E.Element.Accordion(
         _,
         _,
         _,
         _,
-        const Content: E.Element<TMsg>,
+        const Content: E.Element of TMsg,
         _
-      ), E.Element.ExpandableCard(_, _, _, _, const Content: E.Element<TMsg>, _):
+      ), E.Element.ExpandableCard(_, _, _, _, const Content: E.Element of TMsg, _):
         Visit(Content);
       when E.Element.HoverCard(
         _,
-        const Trigger: E.Element<TMsg>,
-        const Content: E.Element<TMsg>,
+        const Trigger: E.Element of TMsg,
+        const Content: E.Element of TMsg,
         _
       ):
         Visit(Trigger);
         Visit(Content);
       when E.Element.Popover(
         _,
-        const Trigger: E.Element<TMsg>,
-        const Content: E.Element<TMsg>,
+        const Trigger: E.Element of TMsg,
+        const Content: E.Element of TMsg,
         _,
         _,
         _
       ):
         Visit(Trigger);
         Visit(Content);
-      when E.Element.ConfirmPopover(_, const Trigger: E.Element<TMsg>, _, _, _, _):
+      when E.Element.ConfirmPopover(_, const Trigger: E.Element of TMsg, _, _, _, _):
         Visit(Trigger);
-      when E.Element.Styled(const Child: E.Element<TMsg>, _):
+      when E.Element.Styled(const Child: E.Element of TMsg, _):
         Visit(Child);
-      when E.Element.Framed(const Child: E.Element<TMsg>, _):
+      when E.Element.Framed(const Child: E.Element of TMsg, _):
         Visit(Child);
       when E.Element.Scroll(
         _,
-        const Child: E.Element<TMsg>,
+        const Child: E.Element of TMsg,
         const Position: L.ScrollPosition?,
         _,
         _,
@@ -195,12 +197,19 @@ public procedure Check<TMsg>(Prepared: V.Prepared<TMsg>);
         Visit(Child);
       when E.Element.Sheet(
         _,
-        const Base: E.Element<TMsg>,
-        const Content: E.Element<TMsg>,
+        const Base: E.Element of TMsg,
+        const Content: E.Element of TMsg,
         _,
         _,
         _
-      ), E.Element.Dialog(_, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>, _, _, _):
+      ), E.Element.Dialog(
+        _,
+        const Base: E.Element of TMsg,
+        const Content: E.Element of TMsg,
+        _,
+        _,
+        _
+      ):
         Visit(Base);
         Visit(Content);
       when E.Element.Deferred(const Id: string, _):

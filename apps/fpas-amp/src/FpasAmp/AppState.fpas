@@ -35,7 +35,7 @@ public type Snapshot = record
   // Playback queue and the position to restore in pause.
   public Player: Transport.Saved := new Transport.Saved();
   // Vertical positions of visited cover grids, keyed by route.
-  public CoverScroll: I.ImmutableDictionary<string, float> := I.ImmutableDictionary<string, float>.Empty;
+  public CoverScroll: I.ImmutableDictionary of (string, float) := I.ImmutableDictionary of (string, float).Empty;
 end record;
 
 const FileName: string := 'state.json';
@@ -87,9 +87,9 @@ begin
   return 0;
 end function;
 
-function CoverScroll(Field: J.JsonElement; ref Valid: bool): I.ImmutableDictionary<string, float>;
+function CoverScroll(Field: J.JsonElement; ref Valid: bool): I.ImmutableDictionary of (string, float);
 begin
-  const Offsets: I.ImmutableDictionary<string, float>.Builder := I.ImmutableDictionary.CreateBuilder<string, float>();
+  const Offsets: I.ImmutableDictionary of (string, float).Builder := I.ImmutableDictionary.CreateBuilder of (string, float)();
   if Field.ValueKind = J.JsonValueKind.Object then
     for Item: J.JsonProperty in Field.EnumerateObject() do
       case Nav.Parse(Item.Name) of
@@ -117,7 +117,7 @@ begin
   return Offsets.ToImmutable();
 end function;
 
-function Decode(Root: J.JsonElement): Files.Decoded<Snapshot>;
+function Decode(Root: J.JsonElement): Files.Decoded of Snapshot;
 begin
   const Defaults: Snapshot := new Snapshot();
   var Valid: bool := true;
@@ -142,7 +142,7 @@ begin
     Valid := false;
   end if;
 
-  return new Files.Decoded<Snapshot>(
+  return new Files.Decoded of Snapshot(
     new Snapshot(
       Width, Height, X, Y, Maximized ?? Defaults.Maximized, Tab, if Route <> null then
         Nav.Key(Route)
@@ -168,7 +168,7 @@ begin
   Writer.WritePropertyName('player');
   Transport.Encode(Writer, Value.Player);
   Writer.WriteStartObject('coverScroll');
-  for Position: C.KeyValuePair<string, float> in Value.CoverScroll do
+  for Position: C.KeyValuePair of (string, float) in Value.CoverScroll do
     Writer.WriteNumber(Position.Key, Position.Value);
   end for;
 
@@ -186,7 +186,12 @@ public function Load(Directory: string): Snapshot;
 requires Directory.Length > 0;
 ensures (Value: Snapshot): Value.Width > 0 and Value.Height > 0;
 begin
-  return Files.Load<Snapshot>(IO.Path.Combine(Directory, FileName), new Snapshot(), Decode, Encode);
+  return Files.Load of Snapshot(
+    IO.Path.Combine(Directory, FileName),
+    new Snapshot(),
+    Decode,
+    Encode
+  );
 end function;
 
 // Validates and saves the window and selected page.
@@ -204,7 +209,7 @@ begin
     raise new Sys.ArgumentException('Invalid navigation route.', 'Value');
   end if;
 
-  Files.Save<Snapshot>(IO.Path.Combine(Directory, FileName), Value, Decode, Encode);
+  Files.Save of Snapshot(IO.Path.Combine(Directory, FileName), Value, Decode, Encode);
 end procedure;
 
 // Converts a stored placement for the GUI host.

@@ -46,7 +46,7 @@ end procedure;
 // The words in their original order; empty when `Value` has none.
 public function Words(Value: string): array of string;
 begin
-  const Result: C.List<string> := new C.List<string>();
+  const Result: C.List of string := new C.List of string();
   const Word: Text.StringBuilder := new Text.StringBuilder();
   for Letter: Text.Rune in Value.Normalize(Text.NormalizationForm.FormKD).EnumerateRunes() do
     const Category: G.UnicodeCategory := Text.Rune.GetUnicodeCategory(Letter);
@@ -96,7 +96,7 @@ begin
 
   const Parts: array of string := Value.Split(#34);
   const FreeText: Text.StringBuilder := new Text.StringBuilder();
-  const Phrases: C.List<string> := new C.List<string>();
+  const Phrases: C.List of string := new C.List of string();
   for Index: int := 0 to Parts.Length - 1 do
     const Part: string := Parts[Index];
     if Index mod 2 = 1 and Index < Parts.Length - 1 then

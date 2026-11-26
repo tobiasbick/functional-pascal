@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Conversation.TypingIndicators as W;
 // - `Participant`: Name to show while the user is typing.
 // ## Returns
 // The indicator for the conversation view.
-public function View(Participant: string): E.Element<string>;
+public function View(Participant: string): E.Element of string;
 begin
-  return W.TypingIndicator<string>('typing', Participant);
+  return W.TypingIndicator of string('typing', Participant);
 end function;
 
 end unit;

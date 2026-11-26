@@ -87,19 +87,19 @@ public sealed partial class MsBuildTests
               unsubscribe S.Log.Receiver().Changed with S.Log.ReadHandler();
               S.Log.Source.Fire(3);
             end procedure;
-            public procedure InterfaceWire(Value: S.IDerived<int>; Handler: S.Handler<int>);
+            public procedure InterfaceWire(Value: S.IDerived of int; Handler: S.Handler of int);
             begin subscribe Value.Changed with Handler; unsubscribe Value.Changed with Handler; end procedure;
-            public procedure InheritedWire(Value: S.Inherited; Handler: S.Handler<int>);
+            public procedure InheritedWire(Value: S.Inherited; Handler: S.Handler of int);
             begin subscribe Value.Changed with Handler; Value.Fire(4); unsubscribe Value.Changed with Handler; end procedure;
             public procedure StaticWire();
             begin
-              const Handler: S.Handler<int> := procedure(Value: int) begin S.Log.Trace := S.Log.Trace + Value.ToString(); end procedure;
+              const Handler: S.Handler of int := procedure(Value: int) begin S.Log.Trace := S.Log.Trace + Value.ToString(); end procedure;
               subscribe S.Log.Changed with Handler; S.Log.Fire(5);
               unsubscribe S.Log.Changed with Handler; S.Log.Fire(6);
             end procedure;
             public procedure StructWire(ref Value: S.Counter; Handler: Sys.Action);
             begin subscribe Value.Changed with Handler; unsubscribe Value.Changed with Handler; end procedure;
-            public procedure GenericWire<T>(ref Value: T; Handler: Sys.Action);
+            public procedure GenericWire of T(ref Value: T; Handler: Sys.Action);
             where T: S.ICounter;
             begin subscribe Value.Changed with Handler; unsubscribe Value.Changed with Handler; end procedure;
             public function ReadonlyStruct(Value: S.Counter; Handler: Sys.Action): int;
@@ -119,7 +119,7 @@ public sealed partial class MsBuildTests
               if Remove then unsubscribe Value.Changed with S.Log.ReadHandler();
               else subscribe Value.Changed with S.Log.ReadHandler(); end if;
             end procedure;
-            public procedure Cleanup(Value: S.Publisher<int>; Handler: S.Handler<int>);
+            public procedure Cleanup(Value: S.Publisher of int; Handler: S.Handler of int);
             begin
               subscribe Value.Changed with Handler;
               try Value.Fire(7); finally unsubscribe Value.Changed with Handler; end try;
@@ -181,7 +181,7 @@ public sealed partial class MsBuildTests
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Events;
             uses Shared as S; uses System as Sys; uses System.Threading.Tasks as Tasks;
-            public async function Wire(Source: Tasks.Task<S.Publisher>; Handler: Tasks.Task<Sys.Action>): Tasks.Task;
+            public async function Wire(Source: Tasks.Task of S.Publisher; Handler: Tasks.Task of Sys.Action): Tasks.Task;
             begin subscribe (await Source).Changed with await Handler; end function;
             public async function Cleanup(Source: S.Publisher; Handler: Sys.Action; Gate: Tasks.Task): Tasks.Task;
             begin

@@ -61,24 +61,24 @@ public type Msg = variant
   Quit;
 end variant;
 
-function RequestFrame(Next: Model): Mvu.Transition<Model, Msg>;
+function RequestFrame(Next: Model): Mvu.Transition of (Model, Msg);
   function Work(Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
   begin
     return Post(Msg.Ready(Render.Draw(Next.Camera, Next.Columns, Next.Rows, Token)));
   end function;
 begin
   if Next.Columns <= 0 or Next.Rows <= 0 then
-    return new Mvu.Transition<Model, Msg>(Next, []);
+    return new Mvu.Transition of (Model, Msg)(Next, []);
   end if;
 
-  return new Mvu.Transition<Model, Msg>(
+  return new Mvu.Transition of (Model, Msg)(
     Next with
       Status := 'Rendering';
     end with,
     [
-      Mvu.StartBackground<Msg>(
+      Mvu.StartBackground of Msg(
         'render',
-        Mvu.FromWorker<Msg>(
+        Mvu.FromWorker of Msg(
           Work,
           function(Error: Sys.Exception): Msg => Msg.Failed(Error.Message)
         )
@@ -99,7 +99,7 @@ begin
 end function;
 
 // Applies an input or worker `Message` to `State`, returning its model and owned effects.
-public function Update(State: Model; Message: Msg): Mvu.Transition<Model, Msg>;
+public function Update(State: Model; Message: Msg): Mvu.Transition of (Model, Msg);
 begin
   const Camera: C.Camera := State.Camera;
   var Next: Model := State;
@@ -122,10 +122,10 @@ begin
       else
         'plot'
       end if;
-      return new Mvu.Transition<Model, Msg>(
+      return new Mvu.Transition of (Model, Msg)(
         State with
           InPlot := not State.InPlot;
-        end with, [Mvu.Focus<Msg>(Target)]
+        end with, [Mvu.Focus of Msg(Target)]
       );
     when Msg.Grid(const Event: G.Event):
       case Event of
@@ -139,7 +139,7 @@ begin
           );
         when G.Event.Clicked(const Col: int, const Row: int, const Button: K.MouseButton):
           if State.Rows <= 0 then
-            return new Mvu.Transition<Model, Msg>(State, []);
+            return new Mvu.Transition of (Model, Msg)(State, []);
           end if;
 
           if Button = K.MouseButton.Middle then
@@ -158,7 +158,7 @@ begin
           end if;
         when G.Event.Wheel(const Col: int, const Row: int, const Delta: int):
           if State.Rows <= 0 then
-            return new Mvu.Transition<Model, Msg>(State, []);
+            return new Mvu.Transition of (Model, Msg)(State, []);
           end if;
           const Step: double := C.PixelStep(Camera, State.Rows);
           Next := State with
@@ -223,14 +223,14 @@ begin
         Status := 'Render failed: ' + Reason;
       end with;
     when Msg.Quit:
-      return new Mvu.Transition<Model, Msg>(State, [Mvu.Exit<Msg>()]);
+      return new Mvu.Transition of (Model, Msg)(State, [Mvu.Exit of Msg()]);
   end case;
 
   if Next.Camera <> Camera then
     return RequestFrame(Next);
   end if;
 
-  return new Mvu.Transition<Model, Msg>(Next, []);
+  return new Mvu.Transition of (Model, Msg)(Next, []);
 end function;
 
 end unit;

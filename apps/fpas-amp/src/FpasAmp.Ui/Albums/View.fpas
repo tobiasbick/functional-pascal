@@ -58,7 +58,7 @@ begin
   return L.Spacing.Fixed(L.Measure.Logical(Value));
 end function;
 
-function Tile(Current: M.State; Album: Library.Album; Edge: int; RowHeight: int): E.Element<M.Msg>;
+function Tile(Current: M.State; Album: Library.Album; Edge: int; RowHeight: int): E.Element of M.Msg;
 begin
   const Image: Imaging.Bitmap? := if Current.Images.ContainsKey(Album.Id) then
     Current.Images[Album.Id]
@@ -71,21 +71,21 @@ begin
   else
     Album.Artist + ' · ' + SongCount
   end if;
-  const Card: E.Element<M.Msg> := Cards.Card<M.Msg>(
+  const Card: E.Element of M.Msg := Cards.Card of M.Msg(
     'album-' + Album.Id, [
-      Artwork.Build<M.Msg>('cover-' + Album.Id, Image, Edge),
-      E.Column<M.Msg>(
+      Artwork.Build of M.Msg('cover-' + Album.Id, Image, Edge),
+      E.Column of M.Msg(
         new L.Flow(Gap := Points(2), Align := L.Alignment.Center),
-        E.Styled<M.Msg>(
-          E.Styled<M.Msg>(E.Text<M.Msg>(Album.Title), S.Role.Strong),
+        E.Styled of M.Msg(
+          E.Styled of M.Msg(E.Text of M.Msg(Album.Title), S.Role.Strong),
           S.Role.SingleLine
         ),
-        E.Styled<M.Msg>(
-          Texts.Text<M.Msg>(Caption, Texts.Appearance.Secondary),
+        E.Styled of M.Msg(
+          Texts.Text of M.Msg(Caption, Texts.Appearance.Secondary),
           S.Role.SingleLine
         )
       ),
-      Ratings.Rating<M.Msg>(
+      Ratings.Rating of M.Msg(
         'album-rating-' + Album.Id, 'Rate ' + Album.Title + ' (1–10)', Album.Rating ?? 0,
         function(Value: int): M.Msg => M.Msg.Rate(Album.Id, Value),
         Maximum := 10, Enabled := not Current.Saving.Contains(Album.Id),
@@ -105,9 +105,9 @@ begin
       M.Msg.OpenMusic(Album.Id)
     end if
   );
-  return Hover.HoverCard<M.Msg>(
+  return Hover.HoverCard of M.Msg(
     'album-details-' + Album.Id,
-    E.Styled<M.Msg>(Card, S.Role.Panel),
+    E.Styled of M.Msg(Card, S.Role.Panel),
     Details.Build(Album, Image, Toolbar.ItemName(Current.Scope)),
     new Hover.Options(Width := 380.0F, Delay := 0.7F)
   );
@@ -122,10 +122,10 @@ end function;
 // - `BackLabel`: Accessible label when the view was opened from a different section.
 // ## Returns
 // The current Albums view.
-public function Build(Current: M.State; Width: int; Padding: int; Playback: Player.State; BackLabel: string := ''): E.Element<M.Msg>;
-  function Row(Index: int): E.Element<M.Msg>;
+public function Build(Current: M.State; Width: int; Padding: int; Playback: Player.State; BackLabel: string := ''): E.Element of M.Msg;
+  function Row(Index: int): E.Element of M.Msg;
   begin
-    const Cells: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+    const Cells: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();
     for Position: int := Index * Count to Sys.Math.Min(
       Current.Shown.Length,
       (Index + 1) * Count
@@ -134,7 +134,7 @@ public function Build(Current: M.State; Width: int; Padding: int; Playback: Play
     end for;
 
     // Leave room for the native card's lift on hover.
-    return E.Row<M.Msg>(
+    return E.Row of M.Msg(
       new L.Flow(
         PaddingTop := Points(4), PaddingStart := Points(Padding), PaddingEnd := Points(Padding),
         Gap := Points(TileGap)
@@ -145,7 +145,7 @@ begin
   const Available: int := Sys.Math.Max(1, Width - Padding * 2);
   const Selected: Music.State? := Current.Music;
   if Selected <> null then
-    return Composition.Map<Music.Msg, M.Msg>(
+    return Composition.Map of (Music.Msg, M.Msg)(
       Songs.Build(
         Selected,
         Sys.Math.Max(1, Width),
@@ -167,10 +167,10 @@ begin
   const Plural: string := Toolbar.ItemName(Current.Scope) + 's';
   const Noun: string := Plural.ToLowerInvariant();
   const Parent: string := Toolbar.ItemName(Toolbar.Root(Current.Scope)).ToLowerInvariant() + 's';
-  const Heading: E.Element<M.Msg> := if Toolbar.Root(Current.Scope) <> Current.Scope then
-    E.Row<M.Msg>(
+  const Heading: E.Element of M.Msg := if Toolbar.Root(Current.Scope) <> Current.Scope then
+    E.Row of M.Msg(
       new L.Flow(Gap := Points(8), Align := L.Alignment.Center),
-      Icons.IconButton<M.Msg>(
+      Icons.IconButton of M.Msg(
         Parent + '-back',
         Sys.Char.ConvertFromUtf32($E048),
         if BackLabel <> '' then
@@ -180,17 +180,17 @@ begin
         end if,
         M.Msg.BackToGroups
       ),
-      Texts.Text<M.Msg>(Current.GroupName, Texts.Appearance.HeadingOne)
+      Texts.Text of M.Msg(Current.GroupName, Texts.Appearance.HeadingOne)
     )
   else
-    Texts.Text<M.Msg>(
+    Texts.Text of M.Msg(
       Plural, Texts.Appearance.HeadingOne
     )
   end if;
-  const Parts: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>(
+  const Parts: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg(
     [
       Heading,
-      Composition.Map<Toolbar.Msg, M.Msg>(
+      Composition.Map of (Toolbar.Msg, M.Msg)(
         ToolbarView.Build(
           Current.Toolbar, Current.Catalog.Artists, Current.Catalog.Genres, Available, Current.Scope
         ),
@@ -201,7 +201,7 @@ begin
   const Error: string? := Current.Error;
   if Error <> null then
     Parts.Add(
-      Alerts.Alert<M.Msg>(
+      Alerts.Alert of M.Msg(
         'album-error',
         'Library unavailable',
         new Alerts.Options(Tone := S.Tone.Warning, Description := Error)
@@ -211,7 +211,7 @@ begin
 
   if Current.Items.Length = 0 then
     Parts.Add(
-      Empty.EmptyState<M.Msg>(
+      Empty.EmptyState of M.Msg(
         'albums-empty', if Current.Loaded then
           'No ' + Noun + ' yet'
         else
@@ -225,7 +225,7 @@ begin
     );
   elsif Current.Shown.Length = 0 then
     Parts.Add(
-      Empty.EmptyState<M.Msg>(
+      Empty.EmptyState of M.Msg(
         'albums-no-match', 'No matching ' + Noun,
         new Empty.Options(
           Icon := Sys.Char.ConvertFromUtf32($E151),
@@ -235,7 +235,7 @@ begin
     );
   end if;
 
-  const Header: E.Element<M.Msg> := E.Column<M.Msg>(
+  const Header: E.Element of M.Msg := E.Column of M.Msg(
     new L.Flow(
       PaddingStart := Points(Padding), PaddingEnd := Points(Padding), Gap := Points(20),
       Align := L.Alignment.Stretch
@@ -244,11 +244,11 @@ begin
   const Key: string := Grid.Key(Current);
   var Offset: float := 0.0F;
   discard Current.Offsets.TryGetValue(Key, out Offset);
-  const Content: array of E.Element<M.Msg> := if Current.Shown.Length > 0 then
+  const Content: array of E.Element of M.Msg := if Current.Shown.Length > 0 then
     [
       Header,
-      E.Size<M.Msg>(
-        Virtual.VirtualList<M.Msg>(
+      E.Size of M.Msg(
+        Virtual.VirtualList of M.Msg(
           GridId(Current), (Current.Shown.Length + Count - 1) div Count,
           cast<float>(RowHeight), L.Extent.Fill, Row, Offset,
           function(Value: float): M.Msg => M.Msg.Scrolled(Key, Value)
@@ -259,10 +259,10 @@ begin
     [Header]
   end if;
 
-  return E.Column<M.Msg>(
+  return E.Column of M.Msg(
     new L.Flow(Align := L.Alignment.Stretch),
-    E.Size<M.Msg>(
-      E.Column<M.Msg>(
+    E.Size of M.Msg(
+      E.Column of M.Msg(
         new L.Flow(
           PaddingTop := Points(Padding), PaddingBottom := Points(Padding), Gap := Points(20),
           Align := L.Alignment.Stretch

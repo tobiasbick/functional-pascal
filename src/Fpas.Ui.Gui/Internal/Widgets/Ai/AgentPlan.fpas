@@ -19,12 +19,14 @@ uses System.Collections.Generic as Lists;
 // - `Steps`: Steps in order.
 // - `Changed`: Optional step activation mapper.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Steps: array of AgentPlans.Step; Changed: Sys.Func<int, TMsg>?; Settings: AgentPlans.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Steps: array of AgentPlans.Step; Changed: Sys.Func of (int, TMsg)?; Settings: AgentPlans.Options);
 begin
   const Role: string := 'agent-plan';
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled and Changed <> null;
-  const Native: Lists.List<CuiAi.CuiPlanStep> := new Lists.List<CuiAi.CuiPlanStep>(Steps.Length);
+  const Native: Lists.List of CuiAi.CuiPlanStep := new Lists.List of CuiAi.CuiPlanStep(
+    Steps.Length
+  );
   for Step: AgentPlans.Step in Steps do
     Native.Add(new CuiAi.CuiPlanStep(Step.Title, Step.Detail, cast<int>(Step.Status)));
   end for;
@@ -34,16 +36,16 @@ begin
     Native.ToArray(),
     Settings.Title,
     Enabled,
-    P.Tracker<TMsg>(Frame, Id, Role, Keys)
+    P.Tracker of TMsg(Frame, Id, Role, Keys)
   );
-  P.Root<TMsg>(Frame, Id, Role, Settings.Title, false, '');
+  P.Root of TMsg(Frame, Id, Role, Settings.Title, false, '');
   for Index: int := 0 to Steps.Length - 1 do
-    P.Part<TMsg>(Frame, Id, Role, Keys[Index], Steps[Index].Title, Enabled, '');
+    P.Part of TMsg(Frame, Id, Role, Keys[Index], Steps[Index].Title, Enabled, '');
   end for;
 
   if Picked >= 0 then
     case Changed of
-      when is Sys.Func<int, TMsg> as Callback:
+      when is Sys.Func of (int, TMsg) as Callback:
         Frame.Messages.Add(Callback.Invoke(Picked));
       else
     end case;

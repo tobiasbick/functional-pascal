@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Feedback.Counters as W;
 // - `Revenue`: Current total from the model.
 // ## Returns
 // The native counter.
-public function View(Revenue: double): E.Element<string>;
+public function View(Revenue: double): E.Element of string;
 begin
-  return W.Counter<string>('revenue', Revenue,
+  return W.Counter of string('revenue', Revenue,
     new W.Options(Format := new C.ValueFormat(Prefix := '$'),
       Size := 34.0F, GroupThousands := true));
 end function;

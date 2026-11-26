@@ -32,21 +32,21 @@ procedure Run(Renderer: Cui.CuiRenderer; Root: string; Width: int; Page: State.P
     end if;
   end procedure;
 
-  function Observe(Model: State.Model; Value: State.Msg): Mvu.Transition<State.Model, State.Msg>;
+  function Observe(Model: State.Model; Value: State.Msg): Mvu.Transition of (State.Model, State.Msg);
   begin
-    const Next: Mvu.Transition<State.Model, State.Msg> := Update.Update(Model, Value);
+    const Next: Mvu.Transition of (State.Model, State.Msg) := Update.Update(Model, Value);
     Last := Next.Model.Desktop;
     if Focus then
-      return new Mvu.Transition<State.Model, State.Msg>(
+      return new Mvu.Transition of (State.Model, State.Msg)(
         Next.Model,
-        [Mvu.Focus<State.Msg>('desktop-documents')]
+        [Mvu.Focus of State.Msg('desktop-documents')]
       );
     end if;
 
     return Next;
   end function;
 
-  procedure Draw(Session: Gui.Session<State.Msg>; Count: int := 4);
+  procedure Draw(Session: Gui.Session of State.Msg; Count: int := 4);
   begin
     for Frame: int := 1 to Count do
       A.Check(Session.Step(), 'The gallery closed.');
@@ -62,7 +62,7 @@ begin
   var Last: Desktop.Model := new Desktop.Model();
   const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI', Width, 1390, Renderer, true);
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := Page),
     Observe,
     Gallery.Build,

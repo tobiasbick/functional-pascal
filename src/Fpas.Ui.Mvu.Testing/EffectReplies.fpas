@@ -14,15 +14,15 @@ uses System.Threading.Tasks as Tasks;
 // One actual message from a background run, held just before mailbox admission.
 // ## Type parameters
 // - `TMsg`: The application's message type.
-public type Reply<TMsg> = record
+public type Reply of TMsg = record
   // The value produced by the worker.
   public Message: TMsg;
   // Releases this message once. Repeated calls return the same admission task.
   public Release: function(): Tasks.Task;
 end record;
 
-function Hold<TMsg>(
-  Writer: Channels.ChannelWriter<Reply<TMsg>>; Message: TMsg;
+function Hold of TMsg(
+  Writer: Channels.ChannelWriter of Reply of TMsg; Message: TMsg;
   Post: function(TMsg): Tasks.Task; Token: T.CancellationToken
 ): Tasks.Task;
   async function Forward(): Tasks.Task;
@@ -36,7 +36,7 @@ begin
   );
   const Admitted: Tasks.Task := Forward();
   if not Writer.TryWrite(
-    new Reply<TMsg>(
+    new Reply of TMsg(
       Message, function(): Tasks.Task begin
         discard Permit.TrySetResult();
         return Admitted;
@@ -50,19 +50,19 @@ begin
   return Admitted;
 end function;
 
-function Observe<TMsg>(
-  Id: string; Work: Fx.Effect<Fx.Completion, TMsg, A.BackgroundContext<TMsg>>;
-  Writer: Channels.ChannelWriter<Reply<TMsg>>
-): A.Command<TMsg>;
-  async function Run(Context: A.BackgroundContext<TMsg>; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, TMsg>>;
+function Observe of TMsg(
+  Id: string; Work: Fx.Effect of (Fx.Completion, TMsg, A.BackgroundContext of TMsg);
+  Writer: Channels.ChannelWriter of Reply of TMsg
+): A.Command of TMsg;
+  async function Run(Context: A.BackgroundContext of TMsg; Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, TMsg);
     function Publish(Message: TMsg): Tasks.Task;
     begin
-      return Hold<TMsg>(Writer, Message, Context.Post, Token);
+      return Hold of TMsg(Writer, Message, Context.Post, Token);
     end function;
   begin
     try
       case await Work.Run(
-        new A.BackgroundContext<TMsg>(Publish, Context.Clock),
+        new A.BackgroundContext of TMsg(Publish, Context.Clock),
         Token
       ).ConfigureAwait(false) of
         when Fx.Outcome.Success(_):
@@ -77,24 +77,24 @@ function Observe<TMsg>(
     end try;
   end function;
 begin
-  return A.StartBackground<TMsg>(
+  return A.StartBackground of TMsg(
     Id,
-    Fx.Effect<Fx.Completion, TMsg, A.BackgroundContext<TMsg>>.Defer(Run)
+    Fx.Effect of (Fx.Completion, TMsg, A.BackgroundContext of TMsg).Defer(Run)
   );
 end function;
 
 // Owner-thread test helper for real MVU transitions.
 // ## Type parameters
 // - `TMsg`: The host message type.
-public type Effects<TMsg> = record
-  Expected: C.Dictionary<string, Channels.Channel<Reply<TMsg>>> := new C.Dictionary<string, Channels.Channel<Reply<TMsg>>>();
+public type Effects of TMsg = record
+  Expected: C.Dictionary of (string, Channels.Channel of Reply of TMsg) := new C.Dictionary of (string, Channels.Channel of Reply of TMsg)();
 
   // Returns an empty set of expectations for a single test owner.
   // ## Returns
   // A new helper with no watched runs.
-  public static function Create(): Effects<TMsg>;
+  public static function Create(): Effects of TMsg;
   begin
-    return new Effects<TMsg>();
+    return new Effects of TMsg();
   end function;
 
   // Watches the next start of Id, including its mapped failure. Read a reply with
@@ -104,10 +104,10 @@ public type Effects<TMsg> = record
   // - `Id`: The stable identifier of the next run to observe.
   // ## Returns
   // A channel of held replies for that run.
-  public function Watch(Id: string): Channels.ChannelReader<Reply<TMsg>>;
+  public function Watch(Id: string): Channels.ChannelReader of Reply of TMsg;
   requires Id <> '';
   begin
-    const Channel: Channels.Channel<Reply<TMsg>> := Channels.Channel.CreateUnbounded<Reply<TMsg>>();
+    const Channel: Channels.Channel of Reply of TMsg := Channels.Channel.CreateUnbounded of Reply of TMsg();
     self.Expected.Add(Id, Channel);
     return Channel.Reader;
   end function;
@@ -119,27 +119,27 @@ public type Effects<TMsg> = record
   // - `Next`: The transition returned by the application update.
   // ## Returns
   // The transition with its watched effects wrapped for controlled admission.
-  public function Wrap<TModel>(Next: A.Transition<TModel, TMsg>): A.Transition<TModel, TMsg>;
+  public function Wrap of TModel(Next: A.Transition of (TModel, TMsg)): A.Transition of (TModel, TMsg);
   begin
     if self.Expected.Count = 0 then
       return Next;
     end if;
-    const Commands: array of A.Command<TMsg> := cast<array of A.Command<TMsg>>(Next.Commands.Clone());
+    const Commands: array of A.Command of TMsg := cast<array of A.Command of TMsg>(Next.Commands.Clone());
     for Index: int := 0 to Commands.Length - 1 do
       case Commands[Index] of
         when A.Command.Start(
           const Id: string,
-          const Work: Fx.Effect<Fx.Completion, TMsg, A.BackgroundContext<TMsg>>
+          const Work: Fx.Effect of (Fx.Completion, TMsg, A.BackgroundContext of TMsg)
         ):
           if self.Expected.ContainsKey(Id) then
-            Commands[Index] := Observe<TMsg>(Id, Work, self.Expected[Id].Writer);
+            Commands[Index] := Observe of TMsg(Id, Work, self.Expected[Id].Writer);
             discard self.Expected.Remove(Id);
           end if;
         else
       end case;
     end for;
 
-    return new A.Transition<TModel, TMsg>(Next.Model, Commands);
+    return new A.Transition of (TModel, TMsg)(Next.Model, Commands);
   end function;
 end record;
 

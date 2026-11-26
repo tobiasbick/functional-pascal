@@ -16,9 +16,9 @@ uses Fpas.Ui.Widgets.Feedback.Skeletons as W;
 // Builds the skeleton example.
 // ## Returns
 // The widget for the application view.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return W.Skeleton<string>('loading-title', L.Extent.Percent(70.0F), Height := 12.0F);
+  return W.Skeleton of string('loading-title', L.Extent.Percent(70.0F), Height := 12.0F);
 end function;
 
 end unit;

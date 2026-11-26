@@ -20,9 +20,9 @@ public type Connection = record
   // Caller-owned playback device session.
   Device: Audio.ISession;
   // FIFO carrying the commands returned by the player reducer.
-  Requests: Channels.Channel<M.Request>;
+  Requests: Channels.Channel of M.Request;
   // Private episode files for this shell, created on the first podcast play action.
-  public Cache: Sys.Lazy<IO.DirectoryInfo>;
+  public Cache: Sys.Lazy of IO.DirectoryInfo;
 
   // Creates a playback connection around `Device`.
   public static function Create(Device: Audio.ISession): Connection;
@@ -30,8 +30,8 @@ public type Connection = record
   begin
     return new Connection(
       Device,
-      Channels.Channel.CreateUnbounded<M.Request>(),
-      new Sys.Lazy<IO.DirectoryInfo>(Downloads.Workspace)
+      Channels.Channel.CreateUnbounded of M.Request(),
+      new Sys.Lazy of IO.DirectoryInfo(Downloads.Workspace)
     );
   end function;
 
@@ -79,14 +79,14 @@ public type Connection = record
   // Starts ordered command execution and forwards session events to the GUI mailbox.
   // ## Returns
   // The two cancellable subscriptions for this shell.
-  public function Watch(): array of A.Command<M.Msg>;
+  public function Watch(): array of A.Command of M.Msg;
   begin
     const Device: Audio.ISession := self.Device;
-    const Reader: Channels.ChannelReader<M.Request> := self.Requests.Reader;
+    const Reader: Channels.ChannelReader of M.Request := self.Requests.Reader;
     return [
-      A.StartBackground<M.Msg>(
+      A.StartBackground of M.Msg(
         'audio-commands',
-        A.FromWorker<M.Msg>(
+        A.FromWorker of M.Msg(
           async function(_Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
             while await Reader.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
               Cancellation.ThrowIfCancellationRequested();
@@ -99,9 +99,9 @@ public type Connection = record
           function(Error: Sys.Exception): M.Msg => M.Msg.Unavailable(Error.Message)
         )
       ),
-      A.StartBackground<M.Msg>(
+      A.StartBackground of M.Msg(
         'audio-events',
-        A.FromWorker<M.Msg>(
+        A.FromWorker of M.Msg(
           async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
             while await Device.Events.WaitToReadAsync(Cancellation).ConfigureAwait(false) do
               const Value: Audio.PlaybackEvent := await Device.Events.ReadAsync(

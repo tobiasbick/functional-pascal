@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Theming.Themes as Themes;
 // - `Mode`: Current application value.
 // ## Returns
 // The widget with its message type.
-public function View(Mode: Themes.Mode): E.Element<Themes.Mode>;
+public function View(Mode: Themes.Mode): E.Element of Themes.Mode;
 begin
-  return T.ThemeToggle<Themes.Mode>('appearance', Mode,
+  return T.ThemeToggle of Themes.Mode('appearance', Mode,
     function(Choice: Themes.Mode): Themes.Mode => Choice);
 end function;
 

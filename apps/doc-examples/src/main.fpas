@@ -27,8 +27,8 @@ begin
   var Jobs: int := 4;
   var Json: bool := false;
 
-  const Documents: C.List<string> := new C.List<string>();
-  const ExtraReferences: C.List<string> := new C.List<string>();
+  const Documents: C.List of string := new C.List of string();
+  const ExtraReferences: C.List of string := new C.List of string();
 
   var Index: int := 0;
 
@@ -194,13 +194,13 @@ begin
     Documents.Add(IO.Path.Combine(Root, 'README.md'));
   end if;
 
-  const Selected: C.SortedSet<string> := new C.SortedSet<string>(S.StringComparer.Ordinal);
+  const Selected: C.SortedSet of string := new C.SortedSet of string(S.StringComparer.Ordinal);
 
   for Document: string in Documents do
     discard Selected.Add(IO.Path.GetFullPath(Document, Root));
   end for;
 
-  const Paths: C.List<string> := new C.List<string>(Selected);
+  const Paths: C.List of string := new C.List of string(Selected);
 
   return new M.Options(
     Root,
@@ -224,7 +224,7 @@ begin
     Settings.PropertyNamingPolicy := J.JsonNamingPolicy.CamelCase;
 
     Console.WriteLine(
-      J.JsonSerializer.Serialize<M.FailureReport>(
+      J.JsonSerializer.Serialize of M.FailureReport(
         new M.FailureReport(1, 0, 1, [], Message),
         Settings
       )
@@ -248,13 +248,13 @@ begin
   try
     const Options: M.Options := Arguments(args);
 
-    const Items: C.List<M.Example> := new C.List<M.Example>();
+    const Items: C.List of M.Example := new C.List of M.Example();
 
     for Document: string in Options.Documents do
       Items.AddRange(Markdown.Read(Document));
     end for;
 
-    const Examples: C.List<M.Example> := new C.List<M.Example>();
+    const Examples: C.List of M.Example := new C.List of M.Example();
 
     for Item: M.Example in Items do
       if Item.Language = 'pascal' then
@@ -268,11 +268,11 @@ begin
 
     discard IO.Directory.CreateDirectory(Options.Output);
 
-    const Outcomes: C.List<M.Outcome> := new C.List<M.Outcome>();
+    const Outcomes: C.List of M.Outcome := new C.List of M.Outcome();
     var Index: int := 0;
 
     while Index < Examples.Count do
-      const Pending: C.List<Tasks.Task<M.Outcome>> := new C.List<Tasks.Task<M.Outcome>>();
+      const Pending: C.List of Tasks.Task of M.Outcome := new C.List of Tasks.Task of M.Outcome();
 
       for Offset: int := 0 to Options.Jobs - 1 do
         if Index + Offset < Examples.Count then
@@ -288,7 +288,7 @@ begin
         end if;
       end for;
 
-      Outcomes.AddRange(await Tasks.Task.WhenAll<M.Outcome>(Pending.ToArray()));
+      Outcomes.AddRange(await Tasks.Task.WhenAll of M.Outcome(Pending.ToArray()));
       Index := Index + Options.Jobs;
     end while;
 
@@ -342,7 +342,7 @@ begin
 
     const Settings: J.JsonSerializerOptions := new J.JsonSerializerOptions();
     Settings.PropertyNamingPolicy := J.JsonNamingPolicy.CamelCase;
-    const Json: string := J.JsonSerializer.Serialize<M.Report>(Report, Settings);
+    const Json: string := J.JsonSerializer.Serialize of M.Report(Report, Settings);
     IO.File.WriteAllText(IO.Path.Combine(Options.Output, 'report.json'), Json + #10);
 
     if Options.Json then
@@ -358,10 +358,10 @@ begin
       S.Environment.ExitCode := 1;
     end if;
   catch Error: S.OperationCanceledException do
-    Failure('Documentation check cancelled', S.Array.IndexOf<string>(args, '--json') >= 0);
+    Failure('Documentation check cancelled', S.Array.IndexOf of string(args, '--json') >= 0);
     S.Environment.ExitCode := 130;
   catch Error: S.Exception do
-    Failure(Error.Message, S.Array.IndexOf<string>(args, '--json') >= 0);
+    Failure(Error.Message, S.Array.IndexOf of string(args, '--json') >= 0);
     S.Environment.ExitCode := 1;
   finally
     unsubscribe Console.CancelKeyPress with Handler;

@@ -33,9 +33,9 @@ end function;
 // - `Change`: Maps a new filter state to the gallery message.
 // ## Returns
 // The shared filter bar.
-public function View<TMsg>(Current: F.Value; Change: function(F.Value): TMsg): E.Element<TMsg>;
+public function View of TMsg(Current: F.Value; Change: function(F.Value): TMsg): E.Element of TMsg;
 begin
-  return F.FilterBar<TMsg>('filters', Fields, Current, Change, 64);
+  return F.FilterBar of TMsg('filters', Fields, Current, Change, 64);
 end function;
 
 end unit;

@@ -20,30 +20,30 @@ uses System as Sys;
 // - `Model`: Current tree expansion and selection.
 // ## Returns
 // The two responsive examples.
-public function View(Model: State.Model): E.Element<State.Msg>;
+public function View(Model: State.Model): E.Element of State.Msg;
 begin
-  return Grid.Grid<State.Msg>(
+  return Grid.Grid of State.Msg(
     new Grid.Options(Columns := 2, MinimumColumnWidth := 260.0F, Gap := G.Points(16)),
-    E.Column<State.Msg>(
+    E.Column of State.Msg(
       new L.Flow(Gap := G.Points(12), Clip := false),
-      G.Heading<State.Msg>(Strings.Get('Heading.TreeView')),
-      Cards.Card<State.Msg>(
+      G.Heading of State.Msg(Strings.Get('Heading.TreeView')),
+      Cards.Card of State.Msg(
         'tree-card', [
-          SourceTree.View<State.Msg>(
+          SourceTree.View of State.Msg(
             Model.SourceOpen, Model.ComponentsOpen, Model.AssetsOpen, Model.File,
             State.Msg.SetSource, State.Msg.SetComponents, State.Msg.SetAssets, State.Msg.SelectFile
           )
         ], new Cards.Options(Padding := 10.0F, Gap := 1.0F)
       )
     ),
-    E.Column<State.Msg>(
+    E.Column of State.Msg(
       new L.Flow(Gap := G.Points(12), Clip := false),
-      G.Heading<State.Msg>(Strings.Get('Heading.List')),
-      Cards.Card<State.Msg>(
+      G.Heading of State.Msg(Strings.Get('Heading.List')),
+      Cards.Card of State.Msg(
         'list-card',
-        Sys.Array.ConvertAll<List.Entry, E.Element<State.Msg>>(
+        Sys.Array.ConvertAll of (List.Entry, E.Element of State.Msg)(
           List.Entries,
-          function(Item: List.Entry): E.Element<State.Msg> => I.ListItem<State.Msg>(
+          function(Item: List.Entry): E.Element of State.Msg => I.ListItem of State.Msg(
             Item.Id, Item.Title,
             Settings := new I.Options(
               Avatar := Item.Person, Subtitle := Item.Subtitle, Trailing := Item.Duration,

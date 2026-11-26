@@ -45,7 +45,7 @@ begin
     const Tags: Metadata.Session? := Inventory.Metadata;
     if Tags <> null and Opened.Player.Index >= 0 then
       try
-        var Items: I.ImmutableArray<Tracks.Entry> := Tags.QueueAsync(
+        var Items: I.ImmutableArray of Tracks.Entry := Tags.QueueAsync(
           Opened.Player.Source.AlbumId, Threads.CancellationToken.None
         ).GetAwaiter().GetResult();
         if Opened.Player.Source.Playlist <> '' then
@@ -59,7 +59,7 @@ begin
                 Items
               );
             else
-              Items := I.ImmutableArray<Tracks.Entry>.Empty;
+              Items := (I.ImmutableArray of Tracks.Entry).Empty;
           end case;
         end if;
 

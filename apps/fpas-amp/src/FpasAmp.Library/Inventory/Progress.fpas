@@ -51,7 +51,7 @@ public type Snapshot = record
   // Configuration generation.
   public Generation: long;
   // Detached source counters in configuration order.
-  public Sources: I.ImmutableArray<SourceProgress>;
+  public Sources: I.ImmutableArray of SourceProgress;
 end record;
 
 end unit;

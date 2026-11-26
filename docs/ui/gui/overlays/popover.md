@@ -18,11 +18,11 @@ uses Fpas.Ui.Widgets.Overlays.Popovers as W;
 // - `Open`: Current visibility from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Open: bool): E.Element<string>;
+public function View(Open: bool): E.Element of string;
 begin
-  return W.Popover<string>('filters',
-    B.Button<string>('filters-trigger', 'Filters', 'toggle-filters'),
-    E.Text<string>('Filter results'), Open, 'close-filters', new W.Options(Width := 280));
+  return W.Popover of string('filters',
+    B.Button of string('filters-trigger', 'Filters', 'toggle-filters'),
+    E.Text of string('Filter results'), Open, 'close-filters', new W.Options(Width := 280));
 end function;
 
 end unit;

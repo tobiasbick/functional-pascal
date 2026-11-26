@@ -90,14 +90,14 @@ uses System.Collections.Generic as C;
 //
 // ## Returns
 // The resolved backend tree, with no application-facing constructors.
-public function Prepare<TMsg>(
-  Prepared: V.Prepared<TMsg>; Theme: Th.Theme; Popup: PopupState.State<TMsg>;
+public function Prepare of TMsg(
+  Prepared: V.Prepared of TMsg; Theme: Th.Theme; Popup: PopupState.State of TMsg;
   Pickers: PickerState.State; Size: T.Viewport; Numbers: Number.State; AlertsState: Alert.State
-): E.Element<TMsg>;
-  function Children(Items: array of Ui.Element<TMsg>; Colors: T.Style; Horizontal: bool := false): array of E.Element<TMsg>;
+): E.Element of TMsg;
+  function Children(Items: array of Ui.Element of TMsg; Colors: T.Style; Horizontal: bool := false): array of E.Element of TMsg;
   begin
-    const Values: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
-    for Item: Ui.Element<TMsg> in Items do
+    const Values: C.List of E.Element of TMsg := new C.List of E.Element of TMsg();
+    for Item: Ui.Element of TMsg in Items do
       case Item of
         when Ui.Element.Alert(const Id: string, _, _, _) if AlertsState.Hidden(Id):
           continue;
@@ -109,7 +109,7 @@ public function Prepare<TMsg>(
 
     return Values.ToArray();
   end function;
-  function Visit(Node: Ui.Element<TMsg>; Colors: T.Style; ParentHorizontal: bool := false): E.Element<TMsg>;
+  function Visit(Node: Ui.Element of TMsg; Colors: T.Style; ParentHorizontal: bool := false): E.Element of TMsg;
   begin
     case Node of
       when Ui.Element.TerminalCellGrid(
@@ -117,21 +117,25 @@ public function Prepare<TMsg>(
         const Content: Grids.Image?,
         const Changed: function(Grids.Event): TMsg
       ):
-        return E.Element<TMsg>.CellGrid(Id, Content, Changed);
+        return (E.Element of TMsg).CellGrid(Id, Content, Changed);
       when Ui.Element.TerminalSelectionList(
         const Id: string, const Items: array of Lists.Item, const Selected: string,
         const OnSelect: function(string): TMsg, const OnActivate: function(string): TMsg
       ):
-        return SelectionList.Lower<TMsg>(
+        return SelectionList.Lower of TMsg(
           Id, Items, Selected,
-          function(Key: string): Actions.Result<TMsg> => Actions.Result<TMsg>.Send(OnSelect(Key)),
-          function(Key: string): Actions.Result<TMsg> => Actions.Result<TMsg>.Send(OnActivate(Key))
+          function(Key: string): Actions.Result of TMsg => (Actions.Result of TMsg).Send(
+            OnSelect(Key)
+          ),
+          function(Key: string): Actions.Result of TMsg => (Actions.Result of TMsg).Send(
+            OnActivate(Key)
+          )
         );
       when Ui.Element.FilterBar(
         const Id: string, const FilterFields: array of Filters.Field, const Current: Filters.Value,
         const Change: function(Filters.Value): TMsg, const Capacity: int, const Enabled: bool
       ):
-        return FilterWidget.Lower<TMsg>(
+        return FilterWidget.Lower of TMsg(
           Id,
           FilterFields,
           Current,
@@ -141,23 +145,23 @@ public function Prepare<TMsg>(
           Popup
         );
       when Ui.Element.Label(const Text: string):
-        return E.Element<TMsg>.Label(Text);
+        return (E.Element of TMsg).Label(Text);
       when Ui.Element.LogConsole(
         const Id: string,
         const Entries: array of Logs.Entry,
         const Clear: TMsg,
         const Settings: Logs.Options
       ):
-        return Log.Lower<TMsg>(Id, Entries, Clear, Settings, ParentHorizontal);
+        return Log.Lower of TMsg(Id, Entries, Clear, Settings, ParentHorizontal);
       when Ui.Element.CommandPalette(
         const Id: string,
-        const Base: Ui.Element<TMsg>,
+        const Base: Ui.Element of TMsg,
         const Open: bool,
-        const Commands: array of Palettes.Command<TMsg>,
+        const Commands: array of Palettes.Command of TMsg,
         const Change: function(bool): TMsg,
         const Shortcut: bool
       ):
-        return E.Element<TMsg>.Palette(
+        return (E.Element of TMsg).Palette(
           Id,
           Visit(Base, Colors, ParentHorizontal),
           Open,
@@ -166,58 +170,58 @@ public function Prepare<TMsg>(
           Shortcut
         );
       when Ui.Element.TreeNode(_, _, _, _, _, _, _):
-        return TreeRows.Lower<TMsg>(Node);
+        return TreeRows.Lower of TMsg(Node);
       when Ui.Element.ProgressBar(_, const Fraction: float, const Settings: ProgressBars.Options):
-        return Progress.Lower<TMsg>(Fraction, Settings, Theme);
+        return Progress.Lower of TMsg(Fraction, Settings, Theme);
       when Ui.Element.Spinner(_, _, const Settings: Spinners.Options?):
-        return Spinner.Lower<TMsg>(Settings, Theme);
+        return Spinner.Lower of TMsg(Settings, Theme);
       when Ui.Element.Sparkline(
         _,
         const Values: array of float,
         const Settings: Sparklines.Options
       ):
-        return Sparkline.Lower<TMsg>(Values, Settings, Theme);
+        return Sparkline.Lower of TMsg(Values, Settings, Theme);
       when Ui.Element.Alert(
         const Id: string,
         const Title: string,
         const Settings: Alerts.Options,
-        const Notify: Sys.Func<TMsg>?
+        const Notify: (Sys.Func of TMsg)?
       ):
         if AlertsState.Hidden(Id) then
-          return E.Element<TMsg>.Stack([], false, new E.Flow());
+          return (E.Element of TMsg).Stack([], false, new E.Flow());
         end if;
 
-        return Alert.Lower<TMsg>(Id, Title, Settings, Notify, AlertsState, Colors, Theme);
+        return Alert.Lower of TMsg(Id, Title, Settings, Notify, AlertsState, Colors, Theme);
       when Ui.Element.StatusBar(
         const Id: string,
-        const Items: array of StatusBars.Item<TMsg>,
+        const Items: array of StatusBars.Item of TMsg,
         const HideBorder: bool
       ):
-        return StatusLine.Lower<TMsg>(Id, Items, HideBorder, Theme);
+        return StatusLine.Lower of TMsg(Id, Items, HideBorder, Theme);
       when Ui.Element.ButtonAction(
         const Id: string,
         const Text: string,
         const Message: TMsg,
         const Settings: B.Options
       ):
-        return Button.Lower<TMsg>(Id, Text, Message, Settings);
+        return Button.Lower of TMsg(Id, Text, Message, Settings);
       when Ui.Element.ExpandableCard(
         const Id: string, const Title: string, const Open: bool, const Change: function(bool): TMsg,
-        const Content: Ui.Element<TMsg>, const Settings: Cards.Options
+        const Content: Ui.Element of TMsg, const Settings: Cards.Options
       ):
         const Surface: T.Style := Th.Role(Theme, UiStyle.Role.Panel, Colors);
-        return Card.Lower<TMsg>(
+        return Card.Lower of TMsg(
           Id, Title, Open, Change, Settings, Surface,
-          function(): E.Element<TMsg> => Visit(Content, Surface)
+          function(): E.Element of TMsg => Visit(Content, Surface)
         );
       when Ui.Element.Dropdown(
         const Id: string,
         const Label: string,
-        const Entries: array of Menus.Entry<TMsg>,
+        const Entries: array of Menus.Entry of TMsg,
         const Settings: Menus.Options
       ):
-        return Dropdown.Lower<TMsg>(
-          new Dropdown.Trigger<TMsg>(Id, Label, Entries, Settings, Popup)
+        return Dropdown.Lower of TMsg(
+          new Dropdown.Trigger of TMsg(Id, Label, Entries, Settings, Popup)
         );
       when Ui.Element.SelectInput(
         const Id: string,
@@ -226,36 +230,36 @@ public function Prepare<TMsg>(
         const Change: function(int): TMsg,
         const Settings: Selects.Options
       ):
-        return Select.Lower<TMsg>(
-          new Select.Trigger<TMsg>(Id, Items, Selected, Change, Settings, Popup)
+        return Select.Lower of TMsg(
+          new Select.Trigger of TMsg(Id, Items, Selected, Change, Settings, Popup)
         );
       when Ui.Element.MultiSelectInput(
         const Id: string, const Items: array of Selects.Item, const Selected: array of bool,
         const Change: function(array of bool): TMsg, const Settings: Multi.Options
       ):
-        return MultiSelect.Lower<TMsg>(
-          new MultiSelect.Trigger<TMsg>(Id, Items, Selected, Change, Settings, Popup)
+        return MultiSelect.Lower of TMsg(
+          new MultiSelect.Trigger of TMsg(Id, Items, Selected, Change, Settings, Popup)
         );
       when Ui.Element.TabStrip(
         const Id: string, const Items: array of TabSettings.Item, const Selected: int,
         const Change: function(int): TMsg, const Settings: TabSettings.Options
       ):
-        return Tabs.Lower<TMsg>(Id, Items, Selected, Change, Settings);
+        return Tabs.Lower of TMsg(Id, Items, Selected, Change, Settings);
       when Ui.Element.Segments(
         const Id: string, const Items: array of Segmented.Item, const Selected: int,
         const Change: function(int): TMsg, const Settings: Segmented.Options
       ):
-        return Segments.Lower<TMsg>(Id, Items, Selected, Change, Settings);
+        return Segments.Lower of TMsg(Id, Items, Selected, Change, Settings);
       when Ui.Element.PaginationAction(
         const Id: string, const Page: int, const Count: int,
         const Change: function(int): TMsg, const Enabled: bool
       ):
-        return E.Element<TMsg>.Pager(new E.PagerView<TMsg>(Id, Page, Count, Change, Enabled));
+        return (E.Element of TMsg).Pager(new E.PagerView of TMsg(Id, Page, Count, Change, Enabled));
       when Ui.Element.BreadcrumbTrail(
         const Id: string, const Items: array of string,
         const Navigate: function(int): TMsg, const Enabled: bool
       ):
-        return Breadcrumb.Lower<TMsg>(Id, Items, Navigate, Enabled);
+        return Breadcrumb.Lower of TMsg(Id, Items, Navigate, Enabled);
       when Ui.Element.Radios(
         const Id: string,
         const Items: array of R.Item,
@@ -264,7 +268,7 @@ public function Prepare<TMsg>(
         const Enabled: bool,
         const Gap: L.Spacing
       ):
-        return Radios.Lower<TMsg>(
+        return Radios.Lower of TMsg(
           Id,
           Items,
           Selected,
@@ -282,7 +286,7 @@ public function Prepare<TMsg>(
         const Indeterminate: bool,
         const HideLabel: bool
       ):
-        return Toggles.Checkbox<TMsg>(
+        return Toggles.Checkbox of TMsg(
           Id,
           Label,
           Checked,
@@ -300,10 +304,10 @@ public function Prepare<TMsg>(
         const Description: string,
         const Enabled: bool
       ):
-        return Toggles.Switch<TMsg>(Id, Label, On, Change, Description, Enabled);
+        return Toggles.Switch of TMsg(Id, Label, On, Change, Description, Enabled);
       when Ui.Element.TextArea(
         const Id: string, const Value: string, const Change: function(string): TMsg,
-        const Settings: Areas.Options, const Submit: Sys.Func<string, TMsg>?
+        const Settings: Areas.Options, const Submit: Sys.Func of (string, TMsg)?
       ):
         const Rows: int := Geometry.Cells(
           L.Measure.Logical(
@@ -314,33 +318,33 @@ public function Prepare<TMsg>(
             end if
           ), false
         );
-        return AreaWidget.Lower<TMsg>(
-          new AreaEdit.Field<TMsg>(Id, Value, Change, Settings, Submit, Rows),
+        return AreaWidget.Lower of TMsg(
+          new AreaEdit.Field of TMsg(Id, Value, Change, Settings, Submit, Rows),
           Colors,
           Theme
         );
       when Ui.Element.TextField(
         const Id: string, const Value: string, const Change: function(string): TMsg,
-        const Settings: Fields.Options, const Submit: Sys.Func<string, TMsg>?
+        const Settings: Fields.Options, const Submit: Sys.Func of (string, TMsg)?
       ):
-        const Send: function(string): Actions.Result<TMsg> := function(NewText: string): Actions.Result<TMsg> => Actions.Result<TMsg>.Send(
+        const Send: function(string): Actions.Result of TMsg := function(NewText: string): Actions.Result of TMsg => (Actions.Result of TMsg).Send(
           Change(NewText)
         );
-        const SubmitAction: Sys.Func<string, Actions.Result<TMsg>>? := case Submit of
-          when is Sys.Func<string, TMsg> as Callback: function(Text: string): Actions.Result<TMsg> => Actions.Result<TMsg>.Send(
+        const SubmitAction: Sys.Func of (string, Actions.Result of TMsg)? := case Submit of
+          when is Sys.Func of (string, TMsg) as Callback: function(Text: string): Actions.Result of TMsg => (Actions.Result of TMsg).Send(
             Callback.Invoke(Text)
           );
           else null;
         end case;
-        const Field: Edit.Field<TMsg> := new Edit.Field<TMsg>(
+        const Field: Edit.Field of TMsg := new Edit.Field of TMsg(
           Id,
           Value,
           Send,
           Settings,
           SubmitAction
         );
-        return FieldWidget.WithLabels<TMsg>(
-          E.Element<TMsg>.TextField(Field),
+        return FieldWidget.WithLabels of TMsg(
+          (E.Element of TMsg).TextField(Field),
           Settings.Label,
           Settings.Hint,
           Settings.Error,
@@ -349,14 +353,14 @@ public function Prepare<TMsg>(
         );
       when Ui.Element.SearchField(
         const Id: string, const Value: string, const Change: function(string): TMsg,
-        const Settings: SearchFields.Options, const Submit: Sys.Func<string, TMsg>?
+        const Settings: SearchFields.Options, const Submit: Sys.Func of (string, TMsg)?
       ):
-        return Search.Lower<TMsg>(Id, Value, Change, Settings, Submit, Colors, Theme);
+        return Search.Lower of TMsg(Id, Value, Change, Settings, Submit, Colors, Theme);
       when Ui.Element.NumberField(
         const Id: string, const Value: double, const Minimum: double, const Maximum: double,
         const Change: function(double): TMsg, const Settings: NumberFields.Options
       ):
-        return Number.Lower<TMsg>(
+        return Number.Lower of TMsg(
           Id,
           Value,
           Minimum,
@@ -369,12 +373,12 @@ public function Prepare<TMsg>(
         );
       when Ui.Element.Table(
         const Id: string, const Columns: array of Tables.Column,
-        const Rows: array of Tables.Row<TMsg>, const Order: Tables.Sort?,
-        const OnSort: Sys.Func<Tables.Sort, TMsg>?, const OnSelect: Sys.Func<string, TMsg>?,
+        const Rows: array of Tables.Row of TMsg, const Order: Tables.Sort?,
+        const OnSort: Sys.Func of (Tables.Sort, TMsg)?, const OnSelect: Sys.Func of (string, TMsg)?,
         const Settings: Tables.Options
       ):
-        return E.Element<TMsg>.Table(
-          new E.TableView<TMsg>(
+        return (E.Element of TMsg).Table(
+          new E.TableView of TMsg(
             Id,
             Columns,
             Rows,
@@ -382,22 +386,22 @@ public function Prepare<TMsg>(
             OnSort,
             OnSelect,
             Settings,
-            TableWidget.MeasureColumns<TMsg>(Columns, Rows, Order)
+            TableWidget.MeasureColumns of TMsg(Columns, Rows, Order)
           )
         );
       when Ui.Element.Sidebar(
         const Id: string,
-        const Sections: array of N.Section<TMsg>,
+        const Sections: array of N.Section of TMsg,
         const Active: string?,
         const Enabled: bool
       ):
-        return Sidebar.Lower<TMsg>(Id, Sections, Active, Enabled);
+        return Sidebar.Lower of TMsg(Id, Sections, Active, Enabled);
       when Ui.Element.Stack(
-        const Items: array of Ui.Element<TMsg>,
+        const Items: array of Ui.Element of TMsg,
         const Horizontal: bool,
         const Flow: L.Flow
       ):
-        return E.Element<TMsg>.Stack(
+        return (E.Element of TMsg).Stack(
           Children(Items, Colors, Horizontal),
           Horizontal,
           new E.Flow(
@@ -407,30 +411,30 @@ public function Prepare<TMsg>(
             Flow.Align
           )
         );
-      when Ui.Element.Sized(const Child: Ui.Element<TMsg>, const Rule: L.Flex):
-        return E.Element<TMsg>.Sized(
+      when Ui.Element.Sized(const Child: Ui.Element of TMsg, const Rule: L.Flex):
+        return (E.Element of TMsg).Sized(
           Visit(Child, Colors, ParentHorizontal),
           Geometry.Flex(Rule, ParentHorizontal)
         );
-      when Ui.Element.Styled(const Child: Ui.Element<TMsg>, const Value: UiStyle.Role):
+      when Ui.Element.Styled(const Child: Ui.Element of TMsg, const Value: UiStyle.Role):
         const Next: T.Style := Th.Merge(Colors, Th.Role(Theme, Value, Colors));
-        return E.Element<TMsg>.Decorated(Visit(Child, Next, ParentHorizontal), Next);
-      when Ui.Element.TerminalStyle(const Child: Ui.Element<TMsg>, const Value: T.Style):
+        return (E.Element of TMsg).Decorated(Visit(Child, Next, ParentHorizontal), Next);
+      when Ui.Element.TerminalStyle(const Child: Ui.Element of TMsg, const Value: T.Style):
         const Next: T.Style := Th.Merge(Colors, Value);
-        return E.Element<TMsg>.Decorated(Visit(Child, Next, ParentHorizontal), Next);
-      when Ui.Element.Framed(const Child: Ui.Element<TMsg>, const Title: string):
-        return E.Element<TMsg>.Framed(Visit(Child, Colors), Title);
+        return (E.Element of TMsg).Decorated(Visit(Child, Next, ParentHorizontal), Next);
+      when Ui.Element.Framed(const Child: Ui.Element of TMsg, const Title: string):
+        return (E.Element of TMsg).Framed(Visit(Child, Colors), Title);
       when Ui.Element.Scroll(
         const Id: string,
-        const Child: Ui.Element<TMsg>,
+        const Child: Ui.Element of TMsg,
         const Position: L.ScrollPosition?,
-        const Scroll: Sys.Func<L.ScrollChange, TMsg>?,
+        const Scroll: Sys.Func of (L.ScrollChange, TMsg)?,
         const Bar: bool,
         _,
         _
       ):
         case Scroll of
-          when is Sys.Func<L.ScrollChange, TMsg> as Callback:
+          when is Sys.Func of (L.ScrollChange, TMsg) as Callback:
             var Native: E.ScrollPosition := E.ScrollPosition.Offset(0);
             case Position of
               when L.ScrollPosition.End:
@@ -440,7 +444,7 @@ public function Prepare<TMsg>(
               else
             end case;
 
-            return E.Element<TMsg>.ControlledScroll(
+            return (E.Element of TMsg).ControlledScroll(
               Id,
               Visit(Child, Colors),
               Native,
@@ -448,13 +452,13 @@ public function Prepare<TMsg>(
               Bar
             );
           else
-            return E.Element<TMsg>.Scrollable(Id, Visit(Child, Colors), Bar);
+            return (E.Element of TMsg).Scrollable(Id, Visit(Child, Colors), Bar);
         end case;
       when Ui.Element.Sheet(
-        const Id: string, const Base: Ui.Element<TMsg>, const Content: Ui.Element<TMsg>,
+        const Id: string, const Base: Ui.Element of TMsg, const Content: Ui.Element of TMsg,
         const Open: bool, const Settings: Sheets.Options, const Dismiss: TMsg
       ):
-        return Panel.Lower<TMsg>(
+        return Panel.Lower of TMsg(
           Id, Visit(Base, Colors, ParentHorizontal), Open,
           new E.ModalOptions(
             Settings.Title,
@@ -465,13 +469,13 @@ public function Prepare<TMsg>(
             Sheets.CloseId(Id)
           ),
           function(): TMsg => Dismiss, Colors, Theme,
-          function(PanelStyle: T.Style): E.Element<TMsg> => Visit(Content, PanelStyle)
+          function(PanelStyle: T.Style): E.Element of TMsg => Visit(Content, PanelStyle)
         );
       when Ui.Element.Dialog(
-        const Id: string, const Base: Ui.Element<TMsg>, const Content: Ui.Element<TMsg>,
+        const Id: string, const Base: Ui.Element of TMsg, const Content: Ui.Element of TMsg,
         const Open: bool, const Settings: Dialogs.Options, const Dismiss: TMsg
       ):
-        return Panel.Lower<TMsg>(
+        return Panel.Lower of TMsg(
           Id, Visit(Base, Colors, ParentHorizontal), Open,
           new E.ModalOptions(
             Settings.Title, Settings.Description, Settings.Width, null, Settings.InitialFocus,
@@ -482,19 +486,19 @@ public function Prepare<TMsg>(
             end if, not Settings.Persistent
           ),
           function(): TMsg => Dismiss, Colors, Theme,
-          function(PanelStyle: T.Style): E.Element<TMsg> => Visit(Content, PanelStyle)
+          function(PanelStyle: T.Style): E.Element of TMsg => Visit(Content, PanelStyle)
         );
       when Ui.Element.FilePicker(
-        const Id: string, const Base: Ui.Element<TMsg>?, const Open: bool,
+        const Id: string, const Base: (Ui.Element of TMsg)?, const Open: bool,
         const Change: function(Files.Event): TMsg, const Settings: Files.Options
       ):
-        const Underneath: E.Element<TMsg> := if Base = null then
-          E.Element<TMsg>.Stack([], false, new E.Flow())
+        const Underneath: E.Element of TMsg := if Base = null then
+          (E.Element of TMsg).Stack([], false, new E.Flow())
         else
           Visit(Base, Colors, ParentHorizontal)
         end if;
         return if Open then
-          FilePicker.Lower<TMsg>(Id, Underneath, Change, Settings, Pickers, Size, Colors, Theme)
+          FilePicker.Lower of TMsg(Id, Underneath, Change, Settings, Pickers, Size, Colors, Theme)
         else
           Underneath
         end if;
@@ -503,17 +507,21 @@ public function Prepare<TMsg>(
       when Ui.Element.TerminalViewport(const Id: string, _):
         return Visit(Prepared.Subviews[Id].Tree, Colors, ParentHorizontal);
       when Ui.Element.TerminalScreen(
-        const Content: Ui.Element<TMsg>,
-        const Layers: array of Ui.Element<TMsg>,
-        const Shortcuts: array of K.ShortcutBinding<TMsg>
+        const Content: Ui.Element of TMsg,
+        const Layers: array of Ui.Element of TMsg,
+        const Shortcuts: array of K.ShortcutBinding of TMsg
       ):
-        return E.Element<TMsg>.Desktop(Visit(Content, Colors), Children(Layers, Colors), Shortcuts);
+        return (E.Element of TMsg).Desktop(
+          Visit(Content, Colors),
+          Children(Layers, Colors),
+          Shortcuts
+        );
       else
         raise new Sys.NotSupportedException('This widget requires the graphical profile.');
     end case;
   end function;
 begin
-  const Result: E.Element<TMsg> := Visit(Prepared.Tree, Theme.Text);
+  const Result: E.Element of TMsg := Visit(Prepared.Tree, Theme.Text);
   Pickers.Finish();
   AlertsState.Finish();
   return Result;

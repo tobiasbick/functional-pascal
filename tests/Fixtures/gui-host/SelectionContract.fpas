@@ -33,7 +33,7 @@ begin
   end if;
 end procedure;
 
-function Control(Session: Gui.Session<State.Msg>; Id: string; Key: string := ''): Gui.Control;
+function Control(Session: Gui.Session of State.Msg; Id: string; Key: string := ''): Gui.Control;
 begin
   for Item: Gui.Control in Session.Snapshot().Controls do
     if Item.Id = Id and Item.Key = Key then
@@ -45,11 +45,11 @@ begin
 end function;
 
 procedure Validate();
-  procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);
+  procedure Reject(Node: E.Element of int; Profile: V.Target; Reason: string);
   begin
     var Rejected: bool := false;
     try
-      discard V.Prepare<int>(Node, Profile);
+      discard V.Prepare of int(Node, Profile);
     catch Error: Sys.ArgumentException do
       Rejected := Error.Message.Contains(Reason);
     end try;
@@ -59,13 +59,13 @@ procedure Validate();
 begin
   const Items: array of Radios.Item := [new Radios.Item('First'), new Radios.Item('Second')];
   const Places: array of Cards.Item := [new Cards.Item('First'), new Cards.Item('Second')];
-  const Toggle: E.Element<int> := Switches.Switch<int>(
+  const Toggle: E.Element of int := Switches.Switch of int(
     'switch',
     'Switch',
     false,
     function(Value: bool): int => 2
   );
-  const CheckBox: E.Element<int> := Checkboxes.Checkbox<int>(
+  const CheckBox: E.Element of int := Checkboxes.Checkbox of int(
     'check',
     'Check',
     true,
@@ -74,17 +74,17 @@ begin
     HideLabel := true
   );
   for Profile: V.Target in [V.Target.Portable, V.Target.Terminal, V.Target.Graphical] do
-    const Group: E.Element<int> := Radios.RadioGroup<int>(
+    const Group: E.Element of int := Radios.RadioGroup of int(
       'group',
       Items,
       -1,
       function(Value: int): int => Value
     );
-    discard V.Prepare<int>(Group, Profile);
+    discard V.Prepare of int(Group, Profile);
     Reject(
-      E.Column<int>(
+      E.Column of int(
         Group,
-        Checkboxes.Checkbox<int>(
+        Checkboxes.Checkbox of int(
           Radios.ItemId('group', 1),
           'Duplicate',
           true,
@@ -95,13 +95,13 @@ begin
       'Duplicate'
     );
     Reject(
-      Radios.RadioGroup<int>('invalid', Items, 2, function(Value: int): int => Value),
+      Radios.RadioGroup of int('invalid', Items, 2, function(Value: int): int => Value),
       Profile,
       'selected index'
     );
-    discard V.Prepare<int>(CheckBox, Profile);
+    discard V.Prepare of int(CheckBox, Profile);
     Reject(
-      Checkboxes.Checkbox<int>(
+      Checkboxes.Checkbox of int(
         'check',
         ' ',
         false,
@@ -111,20 +111,20 @@ begin
       Profile,
       'accessible label'
     );
-    Reject(E.Column<int>(CheckBox, CheckBox), Profile, 'Duplicate');
-    discard V.Prepare<int>(Toggle, Profile);
+    Reject(E.Column of int(CheckBox, CheckBox), Profile, 'Duplicate');
+    discard V.Prepare of int(Toggle, Profile);
     Reject(
-      Switches.Switch<int>('switch', ' ', false, function(Value: bool): int => 2),
+      Switches.Switch of int('switch', ' ', false, function(Value: bool): int => 2),
       Profile,
       'accessible label'
     );
-    Reject(E.Column<int>(Toggle, Toggle), Profile, 'Duplicate');
+    Reject(E.Column of int(Toggle, Toggle), Profile, 'Duplicate');
   end for;
-  const Nodes: array of E.Element<int> := [
-    Radio.RadioButton<int>('radio', 'Radio', false, function(): int => 3),
-    Cards.RadioCards<int>('cards', Places, -1, function(Value: int): int => Value),
-    S.Slider<int>('slider', 'Slider', 0.0F, 0.0F, 1.0F, function(Value: float): int => 4),
-    R.RangeSlider<int>(
+  const Nodes: array of E.Element of int := [
+    Radio.RadioButton of int('radio', 'Radio', false, function(): int => 3),
+    Cards.RadioCards of int('cards', Places, -1, function(Value: int): int => Value),
+    S.Slider of int('slider', 'Slider', 0.0F, 0.0F, 1.0F, function(Value: float): int => 4),
+    R.RangeSlider of int(
       'range',
       'Range',
       new R.Interval(0.0F, 1.0F),
@@ -132,22 +132,22 @@ begin
       1.0F,
       function(Value: R.Interval): int => 5
     ),
-    Chips.Chip<int>('chip', 'Chip', false, function(Value: bool): int => 6),
-    Ratings.Rating<int>('rating', 'Rating', 0, function(Value: int): int => Value),
-    E.Row<int>(new L.Flow(Wrap := true), E.Text<int>('Wrap'))
+    Chips.Chip of int('chip', 'Chip', false, function(Value: bool): int => 6),
+    Ratings.Rating of int('rating', 'Rating', 0, function(Value: int): int => Value),
+    E.Row of int(new L.Flow(Wrap := true), E.Text of int('Wrap'))
   ];
-  for Node: E.Element<int> in Nodes do
-    discard V.Prepare<int>(Node, V.Target.Graphical);
+  for Node: E.Element of int in Nodes do
+    discard V.Prepare of int(Node, V.Target.Graphical);
     Reject(Node, V.Target.Terminal, 'Graphical profile');
     Reject(Node, V.Target.Portable, 'Graphical profile');
   end for;
 
   Reject(
-    S.Slider<int>('invalid', 'Slider', 0.0F, 0.0F, 0.0F, function(Value: float): int => 4),
+    S.Slider of int('invalid', 'Slider', 0.0F, 0.0F, 0.0F, function(Value: float): int => 4),
     V.Target.Graphical, 'finite increasing bounds'
   );
   Reject(
-    R.RangeSlider<int>(
+    R.RangeSlider of int(
       'invalid',
       'Range',
       new R.Interval(1.0F, 0.0F),
@@ -158,11 +158,11 @@ begin
     V.Target.Graphical, 'ordered endpoints'
   );
   Reject(
-    Ratings.Rating<int>('invalid', 'Rating', 6, function(Value: int): int => Value),
+    Ratings.Rating of int('invalid', 'Rating', 6, function(Value: int): int => Value),
     V.Target.Graphical, 'value within that range'
   );
   Reject(
-    E.Column<int>(new L.Flow(Wrap := true), E.Text<int>('Invalid')),
+    E.Column of int(new L.Flow(Wrap := true), E.Text of int('Invalid')),
     V.Target.Graphical, 'Wrapping requires a row'
   );
 end procedure;
@@ -173,7 +173,7 @@ end procedure;
 // - `Renderer`: Native renderer to exercise.
 // - `Capture`: Prefix for the full-page screenshot.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
-  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  function Update(Model: State.Model; Message: State.Msg): App.Transition of (State.Model, State.Msg);
   begin
     case Message of
       when State.Msg.Selection(SliceSelection.Msg.SetSaveFrequency(_)):
@@ -182,11 +182,11 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
         PreviewCalls := PreviewCalls + 1;
       else
     end case;
-    const Next: App.Transition<State.Model, State.Msg> := GalleryUpdate.Update(Model, Message);
+    const Next: App.Transition of (State.Model, State.Msg) := GalleryUpdate.Update(Model, Message);
     return if Focus = '' then
       Next
     else
-      new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Focus)])
+      new App.Transition of (State.Model, State.Msg)(Next.Model, [App.Focus of State.Msg(Focus)])
     end if;
   end function;
   procedure Inject();
@@ -203,18 +203,18 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       Pending := 0;
     end if;
   end procedure;
-  procedure Step(Session: Gui.Session<State.Msg>);
+  procedure Step(Session: Gui.Session of State.Msg);
   begin
     Check(Session.Step(), 'The Selection gallery closed.');
   end procedure;
-  procedure Press(Session: Gui.Session<State.Msg>; Area: Cui.CuiRectangle; Fraction: float);
+  procedure Press(Session: Gui.Session of State.Msg; Area: Cui.CuiRectangle; Fraction: float);
   begin
     X := Area.X + Area.Width * Fraction;
     Y := Area.Y + Area.Height / 2;
     Button := 1;
     Step(Session);
   end procedure;
-  procedure Release(Session: Gui.Session<State.Msg>);
+  procedure Release(Session: Gui.Session of State.Msg);
   begin
     Button := 0;
     Step(Session);
@@ -222,12 +222,12 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     X := -1.0F;
     Y := -1.0F;
   end procedure;
-  procedure Click(Session: Gui.Session<State.Msg>; Id: string; Key: string := '');
+  procedure Click(Session: Gui.Session of State.Msg; Id: string; Key: string := '');
   begin
     Press(Session, Control(Session, Id, Key).Bounds, 0.5F);
     Release(Session);
   end procedure;
-  procedure FocusControl(Session: Gui.Session<State.Msg>; Id: string);
+  procedure FocusControl(Session: Gui.Session of State.Msg; Id: string);
   begin
     Focus := Id;
     discard Session.Post(State.Msg.Preview);
@@ -251,7 +251,7 @@ begin
     true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Selection), Update, View.Build, Window, 256, Inject,
     ThemeFor := GalleryUpdate.ThemeFor
   );

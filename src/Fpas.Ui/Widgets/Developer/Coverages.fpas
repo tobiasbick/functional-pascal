@@ -55,10 +55,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function Coverage<TMsg>(Id: string; Files: array of File; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function Coverage of TMsg(Id: string; Files: array of File; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Coverage(Id, Files, Changed, Settings ?? new Options());
+  return (E.Element of TMsg).Coverage(Id, Files, Changed, Settings ?? new Options());
 end function;
 
 end unit;

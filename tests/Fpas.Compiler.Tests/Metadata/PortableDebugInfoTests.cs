@@ -23,7 +23,7 @@ public sealed class PortableDebugInfoTests
               const Read: function(): int := function(): int => Local;
               return Read();
             end function;
-            public async function Wait(Value: Tasks.Task<int>; Other: Tasks.Task<int>): Tasks.Task<int>;
+            public async function Wait(Value: Tasks.Task of int; Other: Tasks.Task of int): Tasks.Task of int;
             begin
               const Answer: int := await Value;
               const Final: int := await Other;

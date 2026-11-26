@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Conversation.ChatDividers as W;
 // - `DateLabel`: Visible date label.
 // ## Returns
 // The divider to place between bubbles.
-public function View(DateLabel: string): E.Element<string>;
+public function View(DateLabel: string): E.Element of string;
 begin
-  return W.ChatDivider<string>('day-boundary', DateLabel);
+  return W.ChatDivider of string('day-boundary', DateLabel);
 end function;
 
 end unit;

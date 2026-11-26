@@ -127,7 +127,7 @@ For a constructor, use the overload's `#ctor` ID. For example,
 For a generic declaration, repeat `--type-arg` in declaration order, starting
 with the outermost declaring type and ending with the method. Use FPAS types
 such as `int`, `array of string` or a fully qualified
-`System.Collections.Generic.List<string>`. The compiler resolves these against
+`System.Collections.Generic.List of string`. The compiler resolves these against
 the project's references and checks the constraints before verifying the call.
 
 ```sh

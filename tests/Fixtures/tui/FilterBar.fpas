@@ -20,16 +20,16 @@ const Fields: array of F.Field := [
 ];
 const InitialMasks: array of uint := [5u, 0u];
 
-function Update(State: F.Value; Proposed: F.Value): M.Transition<F.Value, F.Value>;
+function Update(State: F.Value; Proposed: F.Value): M.Transition of (F.Value, F.Value);
 begin
-  return new M.Transition<F.Value, F.Value>(Proposed, []);
+  return new M.Transition of (F.Value, F.Value)(Proposed, []);
 end function;
 
-function View(State: F.Value): E.Element<F.Value>;
+function View(State: F.Value): E.Element of F.Value;
 begin
-  return E.Column<F.Value>(
-    F.FilterBar<F.Value>('filters', Fields, State, function(Value: F.Value): F.Value => Value, 5),
-    F.FilterBar<F.Value>(
+  return E.Column of F.Value(
+    F.FilterBar of F.Value('filters', Fields, State, function(Value: F.Value): F.Value => Value, 5),
+    F.FilterBar of F.Value(
       'disabled', Fields, new F.Value([0u, 0u], null),
       function(Value: F.Value): F.Value => Value, Enabled := false
     )
@@ -60,7 +60,7 @@ end procedure;
 
 function Find(Session: T.HeadlessSession; Id: string): T.ControlSnapshot?;
 begin
-  return Sys.Array.Find<T.ControlSnapshot>(
+  return Sys.Array.Find of T.ControlSnapshot(
     Session.Snapshot().Controls, function(Control: T.ControlSnapshot): bool => Control.Id = Id
   );
 end function;
@@ -83,11 +83,11 @@ end function;
 procedure DuplicateIds();
 begin
   const State: F.Value := new F.Value(InitialMasks, '');
-  const Collides: E.Element<F.Value> := E.Column<F.Value>(
-    View(State), B.Button<F.Value>('filters/add/field/0/value/0', 'Duplicate', State)
+  const Collides: E.Element of F.Value := E.Column of F.Value(
+    View(State), B.Button of F.Value('filters/add/field/0/value/0', 'Duplicate', State)
   );
   try
-    discard V.Prepare<F.Value>(Collides, V.Target.Terminal);
+    discard V.Prepare of F.Value(Collides, V.Target.Terminal);
   catch Error: Sys.ArgumentException do
     Expect(Error.Message.Contains('Duplicate ID'), Error.Message);
     return;
@@ -98,7 +98,7 @@ end procedure;
 
 begin
   DuplicateIds();
-  using const Session: T.HeadlessSession := Headless.Start<F.Value, F.Value>(
+  using const Session: T.HeadlessSession := Headless.Start of (F.Value, F.Value)(
     new F.Value(InitialMasks, ''), Update, View, 48, 15
   );
   const Trigger: string := 'filters/add';

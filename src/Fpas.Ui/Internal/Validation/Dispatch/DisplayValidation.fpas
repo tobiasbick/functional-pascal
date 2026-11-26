@@ -65,13 +65,13 @@ end procedure;
 // - `Profile`: Target capabilities.
 // - `Identify`: Registers the widget ID.
 // - `Visit`: Validates composed children.
-public procedure Check<TMsg>(Node: E.Element<TMsg>; Location: string; Profile: R.Profile; Identify: function(string, string): string; Visit: procedure(E.Element<TMsg>?, string));
+public procedure Check of TMsg(Node: E.Element of TMsg; Location: string; Profile: R.Profile; Identify: function(string, string): string; Visit: procedure((E.Element of TMsg)?, string));
 begin
   R.RequireProfile(Profile, R.Profile.Graphical, Location);
   case Node of
     when E.Element.NativeText(const Text: string, const Role: Texts.Appearance):
       R.CheckText(Text, Location);
-      if not Sys.Enum.IsDefined<Texts.Appearance>(Role) then
+      if not Sys.Enum.IsDefined of Texts.Appearance(Role) then
         R.Reject(Location, 'Unknown native text role.');
       end if;
     when E.Element.Icon(
@@ -105,7 +105,7 @@ begin
       const Path: string := Identify(Id, Location + '/canvas');
       LR.CheckExtent(Options.Width, Profile, Path);
       LR.CheckExtent(Options.Height, Profile, Path);
-      if Options.HoverCursor <> null and not Sys.Enum.IsDefined<Canvas.Cursor>(
+      if Options.HoverCursor <> null and not Sys.Enum.IsDefined of Canvas.Cursor(
         Options.HoverCursor ?? Canvas.Cursor.Arrow
       )
       then
@@ -117,7 +117,7 @@ begin
       const Id: string,
       _,
       _,
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       const Options: Veil.Options
     ):
       const Path: string := Identify(Id, Location + '/veil');

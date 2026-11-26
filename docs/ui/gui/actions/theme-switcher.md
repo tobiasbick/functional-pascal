@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Theming.Themes as Palette;
 // - `Selected`: Current application value.
 // ## Returns
 // The widget with its message type.
-public function View(Selected: T.Selection): E.Element<T.Selection>;
+public function View(Selected: T.Selection): E.Element of T.Selection;
 begin
-  return T.ThemeSwitcher<T.Selection>('theme', Selected,
+  return T.ThemeSwitcher of T.Selection('theme', Selected,
     function(Choice: T.Selection): T.Selection => Choice, new T.Options(WithSystem := true));
 end function;
 

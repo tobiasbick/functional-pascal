@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Inputs.RangeSliders as R;
 // - `Price`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Price: R.Interval): E.Element<R.Interval>;
+public function View(Price: R.Interval): E.Element of R.Interval;
 begin
-  return W.HistogramSlider<R.Interval>('picker-price', 'Price',
+  return W.HistogramSlider of R.Interval('picker-price', 'Price',
     [4.0F, 13.0F, 28.0F, 35.0F, 18.0F, 6.0F], Price, 0.0F, 240.0F,
     function(Value: R.Interval): R.Interval => Value, new W.Options(Prefix := '$'));
 end function;

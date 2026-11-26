@@ -55,23 +55,23 @@ end record;
 // A cell rendered by the native grid.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Cell<TMsg> = variant
+public type Cell of TMsg = variant
   // Native single-line text.
   Text(Caption: string);
   // Composed graphical children.
-  Content(Children: array of E.Element<TMsg>);
+  Content(Children: array of E.Element of TMsg);
   // Editable text, with optional preceding children and a commit mapper.
-  Editable(Caption: string; Capacity: int; OnCommit: function(string): TMsg; Leading: array of E.Element<TMsg>);
+  Editable(Caption: string; Capacity: int; OnCommit: function(string): TMsg; Leading: array of E.Element of TMsg);
 end variant;
 
 // One realized row.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Row<TMsg> = record
+public type Row of TMsg = record
   // Stable identity, including across a model reordering.
   public Id: string;
   // One cell per column.
-  public Cells: array of Cell<TMsg>;
+  public Cells: array of Cell of TMsg;
 end record;
 
 // Draws a native grid. CUI calls for the visible rows and its overscan.
@@ -88,10 +88,10 @@ end record;
 // - `OnDoubleClick`: Optional action for a double-click on a row, with its display index.
 // ## Returns
 // The graphical grid.
-public function DataGrid<TMsg>(Id: string; Columns: array of Column; Count: int; BuildRow: function(int): Row<TMsg>; Current: Value; OnChange: function(Value): TMsg; Settings: Options? := null; OnDoubleClick: Sys.Func<int, TMsg>? := null): E.Element<TMsg>;
+public function DataGrid of TMsg(Id: string; Columns: array of Column; Count: int; BuildRow: function(int): Row of TMsg; Current: Value; OnChange: function(Value): TMsg; Settings: Options? := null; OnDoubleClick: Sys.Func of (int, TMsg)? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.DataGrid(
+  return (E.Element of TMsg).DataGrid(
     Id,
     Columns,
     Count,

@@ -24,7 +24,7 @@ begin
   return Sys.Convert.ToInt64(Query.ExecuteScalar());
 end function;
 
-function Same(Left: I.ImmutableArray<M.Summary>; Right: I.ImmutableArray<M.Summary>): bool;
+function Same(Left: I.ImmutableArray of M.Summary; Right: I.ImmutableArray of M.Summary): bool;
 begin
   if Left.Length <> Right.Length then
     return false;
@@ -46,19 +46,19 @@ end function;
 // Observes summaries in `Database`/`Users` on a background owner. `Publish` is
 // awaited for changed complete snapshots; cancellation closes the read connection.
 // Database versions are polled twice per second; unchanged content is not republished.
-public async function Run(Database: string; Users: string; Publish: function(I.ImmutableArray<M.Summary>): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
+public async function Run(Database: string; Users: string; Publish: function(I.ImmutableArray of M.Summary): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
 begin
   using const Connection: Db.SqliteConnection := Queries.OpenRead(Database, Users);
   var CatalogueVersion: long := -1L;
   var UserVersion: long := -1L;
-  var Previous: I.ImmutableArray<M.Summary> := I.ImmutableArray<M.Summary>.Empty;
+  var Previous: I.ImmutableArray of M.Summary := (I.ImmutableArray of M.Summary).Empty;
   var Published: bool := false;
   while true do
     Cancellation.ThrowIfCancellationRequested();
     const CurrentCatalogue: long := Version(Connection, 'PRAGMA main.data_version;');
     const CurrentUsers: long := Version(Connection, 'PRAGMA users.data_version;');
     if CurrentCatalogue <> CatalogueVersion or CurrentUsers <> UserVersion then
-      const Snapshot: I.ImmutableArray<M.Summary> := Queries.Snapshot(Connection, Cancellation);
+      const Snapshot: I.ImmutableArray of M.Summary := Queries.Snapshot(Connection, Cancellation);
       // Keep the versions from before the read so concurrent commits trigger the next poll.
       CatalogueVersion := CurrentCatalogue;
       UserVersion := CurrentUsers;

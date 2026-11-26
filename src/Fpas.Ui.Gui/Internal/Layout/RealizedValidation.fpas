@@ -14,12 +14,12 @@ uses Fpas.Ui.Validation as V;
 // - `Tree`: One realized row or composed cell subtree.
 // ## Returns
 // The prepared graphical subtree, with open modal scopes rejected.
-public function Prepare<TMsg>(Tree: E.Element<TMsg>): V.Prepared<TMsg>;
+public function Prepare of TMsg(Tree: E.Element of TMsg): V.Prepared of TMsg;
 begin
-  const Prepared: V.Prepared<TMsg> := V.Prepare<TMsg>(
+  const Prepared: V.Prepared of TMsg := V.Prepare of TMsg(
     Tree, V.Target.Graphical, AllowOpenModals := false
   );
-  Layout.Check<TMsg>(Prepared);
+  Layout.Check of TMsg(Prepared);
   return Prepared;
 end function;
 

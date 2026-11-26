@@ -51,10 +51,10 @@ end record;
 // - `Settings`: Optional native behavior.
 // ## Returns
 // A graphical element.
-public function DocumentTabs<TMsg>(Id: string; Tabs: array of Tab; Selected: int; OnChange: function(Change): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function DocumentTabs of TMsg(Id: string; Tabs: array of Tab; Selected: int; OnChange: function(Change): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.DocumentTabs(Id, Tabs, Selected, OnChange, Settings ?? new Options());
+  return (E.Element of TMsg).DocumentTabs(Id, Tabs, Selected, OnChange, Settings ?? new Options());
 end function;
 
 end unit;

@@ -15,7 +15,7 @@ uses Fpas.Ui.Widgets.Conversation.ChatMessages as W;
 // - `Id`: Stable widget identity.
 // - `Text`: Message body.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Text: string; Settings: W.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Text: string; Settings: W.Options);
 begin
   const Role: string := 'chat-message';
   const Token: string := C.Token(Role, Id);
@@ -25,7 +25,7 @@ begin
     Token, Text, Settings.Author, Settings.Time, Settings.Status,
     Settings.Avatar, Flags, Frame.AcceptInput
   );
-  P.Root<TMsg>(Frame, Id, Role, Text, false, '');
+  P.Root of TMsg(Frame, Id, Role, Text, false, '');
 end procedure;
 
 end unit;

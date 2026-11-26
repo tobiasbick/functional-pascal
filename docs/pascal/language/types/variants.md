@@ -16,7 +16,7 @@ Payload fields are immutable. Case names and payload labels are case-sensitive.
 
 A variant is a closed nominal reference type with compiler-generated case
 representations. It is **not** `System.Enum`. Generic variants use ordinary type
-parameters. `Tree<T>` may recursively refer to `Tree<T>` because CLR references
+parameters. `Tree of T` may recursively refer to `Tree of T` because CLR references
 break the storage cycle. All paths to constructing finite values must still
 follow the declared constructors; null is not a variant case.
 
@@ -24,16 +24,16 @@ Generic variants are declared by applications or imported from libraries like
 other types. For example:
 
 ```pascal fragment context=declarations
-type Tree<T> = variant
+type Tree of T = variant
   Empty;
   Leaf(Value: T);
-  Branch(Left: Tree<T>; Right: Tree<T>);
+  Branch(Left: Tree of T; Right: Tree of T);
 end variant;
 ```
 
 Constructors select the uninstantiated variant owner, for example `Tree.Leaf(1)`.
 Type arguments are inferred from payloads and expected type. A fieldless generic
-case requires expected type, such as `const Empty: Tree<int> := Tree.Empty;`.
+case requires expected type, such as `const Empty: Tree of int := Tree.Empty;`.
 Constructor inference must resolve exactly one variant type; arbitrary class static
 methods do not gain this shorthand. Value declarations still require explicit
 types even when a constructor supplies enough information to infer its arguments.

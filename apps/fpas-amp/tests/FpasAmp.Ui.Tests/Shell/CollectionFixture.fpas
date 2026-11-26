@@ -54,7 +54,7 @@ end function;
 // Captures the current Section of Session as Name when screenshots are enabled.
 public procedure Capture(Session: Shell.Session; Name: string; Section: string := 'artists');
 begin
-  X.Assert.Equal<string>(Section, Nav.SectionKey(Session.State().Navigation.Active));
+  X.Assert.Equal of string(Section, Nav.SectionKey(Session.State().Navigation.Active));
   X.Assert.True(Has(Session, 'player-toggle'));
   const Directory: string? := Sys.Environment.GetEnvironmentVariable('FPAS_AMP_UI_ARTIFACTS');
   if Directory <> null then

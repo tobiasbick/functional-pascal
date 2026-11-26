@@ -25,7 +25,7 @@ public sealed class GlobalTests
     [InlineData("const X: int := args.Length;", "", "FP3001")]
     [InlineData("var X: int := 'bad';", "", "FP3002")]
     [InlineData("public var X: int := 1;", "", "FP2003")]
-    [InlineData("const X: int := await Tasks.Task.FromResult<int>(1);", "", "FP3030")]
+    [InlineData("const X: int := await Tasks.Task.FromResult of int(1);", "", "FP3030")]
     public void Invalid_globals_storage_and_contract_reads_are_diagnosed(string declaration, string body, string code)
     {
         var result = TestCompilation.Compile("program Example; uses System.Threading.Tasks as Tasks; " + declaration + " begin " + body + " end; end program;");

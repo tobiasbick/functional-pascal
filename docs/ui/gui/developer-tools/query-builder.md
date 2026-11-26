@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Developer.QueryBuilders as W;
 // - `Rules`: Filter nodes in tree order, with the outer group first.
 // ## Returns
 // The query builder with proposed rules as messages.
-public function View(Fields: array of W.Field; Rules: array of W.Rule): E.Element<W.Event>;
+public function View(Fields: array of W.Field; Rules: array of W.Rule): E.Element of W.Event;
 begin
-  return W.QueryBuilder<W.Event>('filter', Fields, Rules,
+  return W.QueryBuilder of W.Event('filter', Fields, Rules,
     function(Change: W.Event): W.Event => Change, new W.Options(Capacity := 16));
 end function;
 

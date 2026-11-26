@@ -20,13 +20,13 @@ uses Fpas.Ui.Widgets.Desktop.Dockspaces as W;
 // - `SavedLayout`: Most recent native layout accepted by the model.
 // ## Returns
 // The workspace with serialized layout changes as messages.
-public function View(SavedLayout: string): E.Element<string>;
+public function View(SavedLayout: string): E.Element of string;
 begin
   const Initial: string := 'dock1 h0.28([*files],[*editor])';
   const Layout: string := if SavedLayout = '' then Initial else SavedLayout end if;
-  return W.Dockspace<string>('editor-workspace', [
-    new W.Panel<string>('files', 'Files', E.Text<string>('README.md')),
-    new W.Panel<string>('editor', 'Editor', E.Text<string>('Document'))
+  return W.Dockspace of string('editor-workspace', [
+    new W.Panel of string('files', 'Files', E.Text of string('README.md')),
+    new W.Panel of string('editor', 'Editor', E.Text of string('Document'))
   ], new W.Options(
     Height := L.Extent.Fixed(L.Measure.Logical(300)),
     InitialLayout := Layout,

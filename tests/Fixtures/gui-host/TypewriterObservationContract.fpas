@@ -25,13 +25,13 @@ begin
 end procedure;
 
 procedure Lifetime(Renderer: Cui.CuiRenderer);
-  function View(Visible: bool; Viewport: L.Viewport): E.Element<bool>;
+  function View(Visible: bool; Viewport: L.Viewport): E.Element of bool;
   begin
     if not Visible then
-      return E.Text<bool>('Removed');
+      return E.Text of bool('Removed');
     end if;
 
-    return Typing.Typewriter<bool>(
+    return Typing.Typewriter of bool(
       'typing', 'Same revision', OnComplete := function(): bool begin
         Callbacks := Callbacks + 1;
         return true;
@@ -42,9 +42,9 @@ begin
   var Callbacks: int := 0;
   const Window: Cui.CuiWindow := new Cui.CuiWindow('Typewriter lifetime', 480, 240, Renderer, true);
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<bool> := Host.Start<bool, bool>(
+  using const Session: Gui.Session of bool := Host.Start of (bool, bool)(
     true,
-    function(Model: bool; Message: bool): Mvu.Transition<bool, bool> => new Mvu.Transition<bool, bool>(
+    function(Model: bool; Message: bool): Mvu.Transition of (bool, bool) => new Mvu.Transition of (bool, bool)(
       Message,
       []
     ),
@@ -73,24 +73,34 @@ public procedure Verify(Renderer: Cui.CuiRenderer);
 
   function Draw(Text: string; Replay: int; Observe: bool; Accept: bool): int;
   begin
-    const Tree: E.Element<bool> := Typing.Typewriter<bool>(
+    const Tree: E.Element of bool := Typing.Typewriter of bool(
       'typing', Text, Replay, new Motion.TextOptions(Delay := 600.0F), Completed
     );
-    const Frame: C.State<bool> := new C.State<bool>(
-      Window, V.Prepare<bool>(Tree, V.Target.Graphical), new Lists.List<bool>(),
-      new Lists.List<string>(), new Lists.List<Gui.Control>(), new Lists.Queue<string>(),
-      new Lists.Dictionary<string, string>(), new Lists.HashSet<string>(), [], Accept, Accept, null,
-      ObserveTransitions := Observe, CompletedAnimations := Completions
+    const Frame: C.State of bool := new C.State of bool(
+      Window,
+      V.Prepare of bool(Tree, V.Target.Graphical),
+      new Lists.List of bool(),
+      new Lists.List of string(),
+      new Lists.List of Gui.Control(),
+      new Lists.Queue of string(),
+      new Lists.Dictionary of (string, string)(),
+      new Lists.HashSet of string(),
+      [],
+      Accept,
+      Accept,
+      null,
+      ObserveTransitions := Observe,
+      CompletedAnimations := Completions
     );
     Check(Window.NextFrame(), 'The typewriter observation window closed.');
-    P.Draw<bool>(Frame);
+    P.Draw of bool(Frame);
     Window.Present();
     return Frame.Messages.Count;
   end function;
 begin
   Lifetime(Renderer);
   var Callbacks: int := 0;
-  const Completions: Lists.Dictionary<string, C.AnimationCompletion> := new Lists.Dictionary<string, C.AnimationCompletion>();
+  const Completions: Lists.Dictionary of (string, C.AnimationCompletion) := new Lists.Dictionary of (string, C.AnimationCompletion)();
   using const Window: Cui.CuiWindow := new Cui.CuiWindow(
     'Typewriter owner observations', 480, 240, Renderer, true
   );

@@ -29,7 +29,7 @@ begin
   end if;
 end procedure;
 
-function Update(State: Model; Page: int): M.Transition<Model, int>;
+function Update(State: Model; Page: int): M.Transition of (Model, int);
 begin
   Check(
     Page >= 0 and Page < State.Count and Page <> State.Page and State.Enabled,
@@ -43,12 +43,12 @@ begin
       Enabled := not State.DisableOnChange;
     end with
   end if;
-  return new M.Transition<Model, int>(Next, []);
+  return new M.Transition of (Model, int)(Next, []);
 end function;
 
-function Pager(State: Model): E.Element<int>;
+function Pager(State: Model): E.Element of int;
 begin
-  return P.Pagination<int>(
+  return P.Pagination of int(
     'pages',
     State.Page,
     State.Count,
@@ -57,34 +57,37 @@ begin
   );
 end function;
 
-function View(State: Model): E.Element<int>;
+function View(State: Model): E.Element of int;
 begin
-  return E.Column<int>(
-    B.Button<int>('before', 'Before', -1),
+  return E.Column of int(
+    B.Button of int('before', 'Before', -1),
     Pager(State),
-    B.Button<int>('after', 'After', -1)
+    B.Button of int('after', 'After', -1)
   );
 end function;
 
-function Sized(State: Model): E.Element<int>;
+function Sized(State: Model): E.Element of int;
 begin
-  return E.Row<int>(
-    E.Size<int>(Pager(State), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(22))))
+  return E.Row of int(
+    E.Size of int(Pager(State), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(22))))
   );
 end function;
 
-function Scrolled(State: Model): E.Element<int>;
+function Scrolled(State: Model): E.Element of int;
 begin
-  return E.ScrollView<int>(
-    'scroll', E.Column<int>(
-      B.Button<int>('before', 'Before', -1), E.Text<int>('One'), E.Text<int>('Two'), Pager(State)
+  return E.ScrollView of int(
+    'scroll', E.Column of int(
+      B.Button of int('before', 'Before', -1),
+      E.Text of int('One'),
+      E.Text of int('Two'),
+      Pager(State)
     )
   );
 end function;
 
 function Find(Session: T.HeadlessSession; Id: string): T.ControlSnapshot?;
 begin
-  return Sys.Array.Find<T.ControlSnapshot>(
+  return Sys.Array.Find of T.ControlSnapshot(
     Session.Snapshot().Controls, function(Item: T.ControlSnapshot): bool => Item.Id = Id
   );
 end function;
@@ -125,10 +128,10 @@ begin
   return Sys.String.Join(#10, Session.Snapshot().Lines).Contains(Caption);
 end function;
 
-procedure Reject(Node: E.Element<int>; Diagnostic: string);
+procedure Reject(Node: E.Element of int; Diagnostic: string);
 begin
   try
-    discard V.Prepare<int>(Node, V.Target.Terminal);
+    discard V.Prepare of int(Node, V.Target.Terminal);
   catch Error: Sys.ArgumentException do
     Check(Error.Message.Contains(Diagnostic), Error.Message);
     return;
@@ -141,11 +144,11 @@ begin
   Reject(Pager(new Model(Count := 0)), 'positive page count');
   Reject(Pager(new Model(Page := 12)), 'valid page index');
   Reject(
-    E.Column<int>(Pager(new Model()), B.Button<int>('pages/11', 'Duplicate', -1)),
+    E.Column of int(Pager(new Model()), B.Button of int('pages/11', 'Duplicate', -1)),
     'Duplicate ID'
   );
 
-  using const Session: T.HeadlessSession := Headless.Start<Model, int>(
+  using const Session: T.HeadlessSession := Headless.Start of (Model, int)(
     new Model(),
     Update,
     View,
@@ -197,7 +200,7 @@ begin
   Send(Session, T.Input.Resize(8, 10));
   Check(Shows(Session, '11/12'), 'Tiny viewports did not show the shorter page status.');
 
-  using const Boundary: T.HeadlessSession := Headless.Start<Model, int>(
+  using const Boundary: T.HeadlessSession := Headless.Start of (Model, int)(
     new Model(Page := 10),
     Update,
     View,
@@ -209,7 +212,7 @@ begin
     Control(Boundary, 'pages/previous').Focused,
     'Focus did not move when Next became disabled.'
   );
-  using const Disabled: T.HeadlessSession := Headless.Start<Model, int>(
+  using const Disabled: T.HeadlessSession := Headless.Start of (Model, int)(
     new Model(Page := 1, DisableOnChange := true), Update, View, 24, 8
   );
   Click(Disabled, 'pages/next');
@@ -218,7 +221,7 @@ begin
     'Disabling a focused pager did not return focus to an available control.'
   );
 
-  using const Constrained: T.HeadlessSession := Headless.Start<Model, int>(
+  using const Constrained: T.HeadlessSession := Headless.Start of (Model, int)(
     new Model(),
     Update,
     Sized,
@@ -229,7 +232,7 @@ begin
     Shows(Constrained, 'Page 1 of 12') and Find(Constrained, 'pages/0') = null,
     'The pager used the terminal width instead of its allocated width.'
   );
-  using const Many: T.HeadlessSession := Headless.Start<Model, int>(
+  using const Many: T.HeadlessSession := Headless.Start of (Model, int)(
     new Model(Count := int.MaxValue), Update, View, 100, 6
   );
   Click(Many, 'pages/2147483646');
@@ -237,7 +240,7 @@ begin
     Control(Many, 'pages/2147483646').Value = 'true' and not Control(Many, 'pages/next').Enabled,
     'A large page count broke the last-page control.'
   );
-  using const Scroll: T.HeadlessSession := Headless.Start<Model, int>(
+  using const Scroll: T.HeadlessSession := Headless.Start of (Model, int)(
     new Model(),
     Update,
     Scrolled,

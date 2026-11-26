@@ -29,46 +29,46 @@ uses System as Sys;
 // - `Messages`: Wraps form messages for the application.
 // ## Returns
 // The Overview page.
-public function View<TMsg>(
+public function View of TMsg(
   Model: State.Model; Data: Demo.Model; Browse: TMsg; OpenPalette: TMsg; Messages: function(State.Msg): TMsg
-): E.Element<TMsg>;
+): E.Element of TMsg;
 begin
-  const Hero: E.Element<TMsg> := E.Column<TMsg>(
+  const Hero: E.Element of TMsg := E.Column of TMsg(
     new L.Flow(Gap := G.Points(14), Clip := false),
-    E.Styled<TMsg>(E.Text<TMsg>(Strings.Get('Text.ComponentsForFpas')), S.Role.DisplayTitle),
-    E.Styled<TMsg>(
-      E.Text<TMsg>(
+    E.Styled of TMsg(E.Text of TMsg(Strings.Get('Text.ComponentsForFpas')), S.Role.DisplayTitle),
+    E.Styled of TMsg(
+      E.Text of TMsg(
         Strings.Get('Text.GalleryIntro')
       ),
       S.Role.Introduction
     ),
-    E.Row<TMsg>(
+    E.Row of TMsg(
       new L.Flow(Gap := G.Points(8), PaddingTop := G.Points(6), Wrap := true),
-      B.Button<TMsg>(
+      B.Button of TMsg(
         'browse', Strings.Get('Text.BrowseComponents'), Browse,
         new B.Options(
           Variant := S.ButtonVariant.Primary,
           IconRight := Sys.Char.ConvertFromUtf32($E049)
         )
       ),
-      B.Button<TMsg>(
+      B.Button of TMsg(
         'overview-palette', Strings.Get('Text.OpenCommandPalette'), OpenPalette,
         new B.Options(Variant := S.ButtonVariant.Outline, Icon := Sys.Char.ConvertFromUtf32($E09A))
       )
     )
   );
-  return E.Column<TMsg>(
+  return E.Column of TMsg(
     new L.Flow(Gap := G.Points(20), Clip := false),
-    E.Column<TMsg>(Hero, G.Space<TMsg>(8)),
-    Grid.Grid<TMsg>(
+    E.Column of TMsg(Hero, G.Space of TMsg(8)),
+    Grid.Grid of TMsg(
       new Grid.Options(Columns := 3, MinimumColumnWidth := 200.0F, Gap := G.Points(16)),
-      Metrics.Metric<TMsg>(
+      Metrics.Metric of TMsg(
         'overview-components',
         Strings.Get('Text.SectionComponents'),
         '150',
         new Metrics.Options(Icon := Sys.Char.ConvertFromUtf32($E061))
       ),
-      Metrics.Metric<TMsg>(
+      Metrics.Metric of TMsg(
         'overview-frame-time', Strings.Get('Text.FrameTime'), '0.4 ms',
         new Metrics.Options(
           Delta := -18.0F, DeltaLabel := '-18% vs v0.9', LowerIsBetter := true,
@@ -76,17 +76,17 @@ begin
           Icon := Sys.Char.ConvertFromUtf32($E1B4)
         )
       ),
-      Metrics.Metric<TMsg>(
+      Metrics.Metric of TMsg(
         'overview-dependencies',
         Strings.Get('Text.Dependencies'),
         '0',
         new Metrics.Options(Icon := Sys.Char.ConvertFromUtf32($E129))
       )
     ),
-    Grid.Grid<TMsg>(
+    Grid.Grid of TMsg(
       new Grid.Options(Columns := 2, MinimumColumnWidth := 260.0F, Gap := G.Points(16)),
-      U.Map<State.Msg, TMsg>(Workspace.View(Model, Data), Messages),
-      U.Map<State.Msg, TMsg>(Team.View(), Messages)
+      U.Map of (State.Msg, TMsg)(Workspace.View(Model, Data), Messages),
+      U.Map of (State.Msg, TMsg)(Team.View(), Messages)
     )
   );
 end function;

@@ -26,11 +26,11 @@ uses System.Collections.Generic as C;
 // - `Theme`: Semantic colors for errors and hints.
 // ## Returns
 // A column of the editor and its optional surrounding text.
-public function WithLabels<TMsg>(Content: E.Element<TMsg>; Label: string; Hint: string; Error: string; Colors: T.Style; Theme: Th.Theme): E.Element<TMsg>;
+public function WithLabels of TMsg(Content: E.Element of TMsg; Label: string; Hint: string; Error: string; Colors: T.Style; Theme: Th.Theme): E.Element of TMsg;
 begin
-  const Rows: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
+  const Rows: C.List of E.Element of TMsg := new C.List of E.Element of TMsg();
   if Label <> '' then
-    Rows.Add(E.Element<TMsg>.Label(Label));
+    Rows.Add((E.Element of TMsg).Label(Label));
   end if;
 
   Rows.Add(Content);
@@ -49,11 +49,14 @@ begin
       end if, Colors.Background ?? 0
     );
     Rows.Add(
-      E.Element<TMsg>.Decorated(E.Element<TMsg>.Label(Detail), new T.Style(Ink, Colors.Background))
+      (E.Element of TMsg).Decorated(
+        (E.Element of TMsg).Label(Detail),
+        new T.Style(Ink, Colors.Background)
+      )
     );
   end if;
 
-  return E.Element<TMsg>.Stack(Rows.ToArray(), false, new E.Flow());
+  return (E.Element of TMsg).Stack(Rows.ToArray(), false, new E.Flow());
 end function;
 
 // Places terminal adornments alongside the editable value.
@@ -68,33 +71,36 @@ end function;
 // - `Theme`: Semantic field colors.
 // ## Returns
 // A row that gives remaining width to the editor.
-public function WithAdornments<TMsg>(
-  Field: Edit.Field<TMsg>; Prefix: string; Suffix: string; Actions: array of E.Element<TMsg>;
+public function WithAdornments of TMsg(
+  Field: Edit.Field of TMsg; Prefix: string; Suffix: string; Actions: array of E.Element of TMsg;
   Colors: T.Style; Theme: Th.Theme
-): E.Element<TMsg>;
-  function Affix(Value: string): E.Element<TMsg>;
+): E.Element of TMsg;
+  function Affix(Value: string): E.Element of TMsg;
   begin
     const Back: int := Colors.Background ?? Theme.Text.Background ?? 0;
-    return E.Element<TMsg>.Decorated(
-      E.Element<TMsg>.Label(G.SingleLine(Value)),
+    return (E.Element of TMsg).Decorated(
+      (E.Element of TMsg).Label(G.SingleLine(Value)),
       new T.Style(Th.Rgb(Theme.Colors.TextMuted, Back), Back)
     );
   end function;
 begin
-  const Items: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
+  const Items: C.List of E.Element of TMsg := new C.List of E.Element of TMsg();
   if Prefix <> '' then
     Items.Add(Affix(Prefix));
   end if;
 
   Items.Add(
-    E.Element<TMsg>.Sized(E.Element<TMsg>.TextField(Field), new E.Flex(Minimum := 1, Grow := 1))
+    (E.Element of TMsg).Sized(
+      (E.Element of TMsg).TextField(Field),
+      new E.Flex(Minimum := 1, Grow := 1)
+    )
   );
   if Suffix <> '' then
     Items.Add(Affix(Suffix));
   end if;
 
   Items.AddRange(Actions);
-  return E.Element<TMsg>.Stack(Items.ToArray(), true, new E.Flow());
+  return (E.Element of TMsg).Stack(Items.ToArray(), true, new E.Flow());
 end function;
 
 // Paints the displayed slice and binds it to its cursor and model callbacks.
@@ -112,13 +118,13 @@ end function;
 // - `Operations`: Paint operations for this frame.
 // ## Returns
 // Interactive bounds of the input row.
-public function Arrange<TMsg>(
-  Field: Edit.Field<TMsg>; Previous: A.Layout<TMsg>?; Area: F.Rect;
+public function Arrange of TMsg(
+  Field: Edit.Field of TMsg; Previous: (A.Layout of TMsg)?; Area: F.Rect;
   Clip: F.Rect; Scope: string; FocusReturn: string; Colors: T.Style; Theme: Th.Theme;
-  Operations: C.List<D.Operation>
-): A.Control<TMsg>;
+  Operations: C.List of D.Operation
+): A.Control of TMsg;
 begin
-  const Before: A.Control<TMsg>? := A.FindControl<TMsg>(Previous, Field.Id);
+  const Before: (A.Control of TMsg)? := A.FindControl of TMsg(Previous, Field.Id);
   var Old: Edit.Cursor? := null;
   if Before <> null then
     case Before.Action of
@@ -156,14 +162,14 @@ begin
   const Caret: int := X + G.Measure(
     Field.Value.Substring(Position.Start, Position.Offset - Position.Start)
   );
-  return new A.Control<TMsg>(
+  return new A.Control of TMsg(
     Field.Id, if Field.Settings.Label <> '' then
       Field.Settings.Label
     else
       Field.Id
     end if,
     Field.Role, Field.Value, Row, Scope, FocusReturn, Field.Settings.Enabled,
-    A.Binding<TMsg>.Edit(Field, Edit.Track(Position), X, Caret), S.ButtonVariant.Default
+    (A.Binding of TMsg).Edit(Field, Edit.Track(Position), X, Caret), S.ButtonVariant.Default
   );
 end function;
 

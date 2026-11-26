@@ -23,13 +23,13 @@ uses Fpas.Ui.Widgets.Audio.VoiceSessions as VoiceSessions;
 // - `Muted`: Microphone state, or null to omit the button.
 // - `Changed`: Maps a call action.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Mode: Voice.Activity; Signal: Voice.Signal; Muted: bool?; Changed: function(VoiceSessions.Event): TMsg; Settings: VoiceSessions.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Mode: Voice.Activity; Signal: Voice.Signal; Muted: bool?; Changed: function(VoiceSessions.Event): TMsg; Settings: VoiceSessions.Options);
 begin
   const Role: string := 'voice-session';
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Keys: array of string := ['mute', 'end'];
-  const Focus: int := P.Focus<TMsg>(
+  const Focus: int := P.Focus of TMsg(
     Frame, Id, Role, Keys, [Enabled and Muted <> null, Enabled and not Settings.HideEnd],
     if Muted <> null then
       0
@@ -45,10 +45,10 @@ begin
   const Result: CuiAudio.CuiVoiceSessionResult := Frame.Window.VoiceSession(
     Token, cast<int>(Mode), Signal.Levels, Signal.Owners,
     Labels, Muted, Width.Kind, Width.Value, Enc.Bits(Enabled, 1) or Enc.Bits(Settings.HideEnd, 2),
-    Focus, P.Tracker<TMsg>(Frame, Id, Role, Keys)
+    Focus, P.Tracker of TMsg(Frame, Id, Role, Keys)
   );
-  P.Root<TMsg>(Frame, Id, Role, Settings.Label, false, Mode.ToString());
-  Data.Parts<TMsg>(Frame, Id, Role, Keys, Result.Parts, Enabled);
+  P.Root of TMsg(Frame, Id, Role, Settings.Label, false, Mode.ToString());
+  Data.Parts of TMsg(Frame, Id, Role, Keys, Result.Parts, Enabled);
   if (Result.Events and 1) <> 0 then
     Frame.Messages.Add(Changed(VoiceSessions.Event.Mute(Result.Muted)));
   end if;

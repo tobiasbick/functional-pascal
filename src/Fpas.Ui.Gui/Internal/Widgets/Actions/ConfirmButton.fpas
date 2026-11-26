@@ -18,20 +18,20 @@ uses Fpas.Ui.Widgets.Actions.ConfirmButtons as Buttons;
 // - `Label`: Literal resting caption.
 // - `Message`: Proposed confirmation message.
 // - `Settings`: Confirmation caption, timeout, appearance and input permission.
-public procedure Draw<TMsg>(State: C.State<TMsg>; Id: string; Label: string; Message: TMsg; Settings: Buttons.Options);
+public procedure Draw of TMsg(State: C.State of TMsg; Id: string; Label: string; Message: TMsg; Settings: Buttons.Options);
 begin
   const Enabled: bool := Settings.Enabled and State.AcceptInput;
   const Token: string := C.Token('confirm-button', Id);
   const Result: CuiActions.CuiConfirmButtonResult := State.Window.ConfirmButton(
     Token, Label, Settings.ConfirmLabel, Settings.Icon, Settings.TimeoutMilliseconds,
     cast<int>(Settings.Variant), cast<int>(Settings.ControlSize), Enabled,
-    C.WantsFocus<TMsg>(State, Id, Token, Enabled)
+    C.WantsFocus of TMsg(State, Id, Token, Enabled)
   );
   if Result.Confirmed then
     State.Messages.Add(Message);
   end if;
 
-  C.Track<TMsg>(
+  C.Track of TMsg(
     State, new App.Control(
       Id, if Result.Armed then
         Settings.ConfirmLabel

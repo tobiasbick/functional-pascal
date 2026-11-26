@@ -24,7 +24,7 @@ end function;
 // - `OnChange`: Maps a native combination proposal.
 // - `Settings`: Native placeholder, width and input settings.
 
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Value: K.Combination; OnChange: function(K.Combination): TMsg; Settings: K.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Value: K.Combination; OnChange: function(K.Combination): TMsg; Settings: K.Options);
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('shortcut-recorder', Id);
@@ -37,13 +37,13 @@ begin
     Width.Kind,
     Width.Value,
     Enabled,
-    C.WantsFocus<TMsg>(Frame, Id, Token, Enabled),
+    C.WantsFocus of TMsg(Frame, Id, Token, Enabled),
     if Frame.PaintingClosed then
       null
     else
       C.Token('button', Clear)
     end if,
-    C.WantsFocus<TMsg>(Frame, Clear, C.Token('button', Clear), Enabled)
+    C.WantsFocus of TMsg(Frame, Clear, C.Token('button', Clear), Enabled)
   );
   const Proposed: K.Combination := new K.Combination(
     cast<K.Key>(Result.Value.Key),
@@ -80,7 +80,7 @@ end procedure;
 // - `Frame`: Presentation context.
 // - `Value`: Validated combination to display.
 
-public procedure Label<TMsg>(Frame: C.State<TMsg>; Value: K.Combination);
+public procedure Label of TMsg(Frame: C.State of TMsg; Value: K.Combination);
 begin
   const Caption: string := Frame.Window.DrawShortcutLabel(Native(Value));
   if not Frame.PaintingClosed then

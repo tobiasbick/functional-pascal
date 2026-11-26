@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Feedback.TaskStates as T;
 // - `Seconds`: Elapsed seconds.
 // ## Returns
 // The native status pill.
-public function View(Label: string; Seconds: float): E.Element<string>;
+public function View(Label: string; Seconds: float): E.Element of string;
 begin
-  return W.AgentStatus<string>('active-task', Label,
+  return W.AgentStatus of string('active-task', Label,
     new W.Options(Status := T.Status.Running, Seconds := Seconds));
 end function;
 

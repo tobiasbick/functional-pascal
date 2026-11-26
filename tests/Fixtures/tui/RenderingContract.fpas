@@ -40,15 +40,15 @@ begin
   end if;
 end procedure;
 
-function Update(State: int; Message: int): Mvu.Transition<int, int>;
+function Update(State: int; Message: int): Mvu.Transition of (int, int);
 begin
-  return new Mvu.Transition<int, int>(Message, []);
+  return new Mvu.Transition of (int, int)(Message, []);
 end function;
 
 procedure WideIdeographs();
-  function View(State: int): E.Element<int>;
+  function View(State: int): E.Element of int;
   begin
-    return E.Text<int>(Sys.Char.ConvertFromUtf32($30000) + 'A');
+    return E.Text of int(Sys.Char.ConvertFromUtf32($30000) + 'A');
   end function;
 begin
   Check(Glyphs.Width(Sys.Char.ConvertFromUtf32($2FFFD)) = 2, 'Last plane-two wide boundary.');
@@ -56,7 +56,7 @@ begin
   Check(Glyphs.Width(Sys.Char.ConvertFromUtf32($30000)) = 2, 'First plane-three wide boundary.');
   Check(Glyphs.Width(Sys.Char.ConvertFromUtf32($3FFFD)) = 2, 'Last plane-three wide boundary.');
   Check(Glyphs.Width(Sys.Char.ConvertFromUtf32($3FFFE)) = 1, 'Plane-three noncharacter boundary.');
-  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(0, Update, View, 4, 1);
+  using const Session: Tui.HeadlessSession := Headless.Start of (int, int)(0, Update, View, 4, 1);
   const Cells: array of Terminal.Cell := Session.Snapshot().Cells;
   Check(
     Cells[0].Text = Sys.Char.ConvertFromUtf32($30000) and Cells[1].Text = ''
@@ -80,12 +80,12 @@ end procedure;
 
 procedure ZeroWidthClusters();
   procedure CheckCluster(Value: string; Painted: string; Span: int);
-    function View(State: int): E.Element<int>;
+    function View(State: int): E.Element of int;
     begin
-      return E.Text<int>(Value + 'A');
+      return E.Text of int(Value + 'A');
     end function;
   begin
-    using const Session: Tui.HeadlessSession := Headless.Start<int, int>(0, Update, View, 6, 1);
+    using const Session: Tui.HeadlessSession := Headless.Start of (int, int)(0, Update, View, 6, 1);
     const Frame: Tui.Frame := Session.Snapshot();
     Check(
       Frame.Cells[0].Text = Painted and Frame.Cells[Span].Text = 'A',
@@ -130,9 +130,9 @@ begin
 end procedure;
 
 procedure DisabledForeground();
-  function View(State: int): E.Element<int>;
+  function View(State: int): E.Element of int;
   begin
-    return B.Button<int>(
+    return B.Button of int(
       'disabled', 'Disabled', 1,
       new B.Options(Enabled := false, Color := new G.Color(255, 0, 0))
     );
@@ -140,7 +140,7 @@ procedure DisabledForeground();
 begin
   const Theme: Themes.Theme := Themes.Dark();
   const Resolved: RenderThemes.Theme := RenderThemes.Resolve(Theme);
-  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(
+  using const Session: Tui.HeadlessSession := Headless.Start of (int, int)(
     0,
     Update,
     View,
@@ -161,7 +161,7 @@ begin
     Session.Snapshot().Cells[Index].Colors.Foreground = Resolved.Buttons.Disabled.Foreground,
     'A pointer over a disabled button must preserve disabled styling.'
   );
-  const Control: Scene.Control<int> := new Scene.Control<int>(
+  const Control: Scene.Control of int := new Scene.Control of int(
     'disabled',
     'Disabled',
     'button',
@@ -170,14 +170,14 @@ begin
     '',
     '',
     false,
-    Scene.Binding<int>.Invoke(
-      new Activation.Direct<int>(1)
+    (Scene.Binding of int).Invoke(
+      new Activation.Direct of int(1)
     ),
     Styles.ButtonVariant.Default,
     ButtonStyle := true,
     Foreground := new G.Color(255, 0, 0)
   );
-  Decoration.Apply<int>(Frame.Cells, 20, Control, Resolved, false);
+  Decoration.Apply of int(Frame.Cells, 20, Control, Resolved, false);
   Check(
     Frame.Cells[Index].Colors.Foreground = Resolved.Buttons.Disabled.Foreground,
     'Disabled precedence must also hold during hover decoration.'
@@ -185,21 +185,21 @@ begin
 end procedure;
 
 procedure BorderlessStatus();
-  function View(State: int): E.Element<int>;
+  function View(State: int): E.Element of int;
   begin
-    return E.Column<int>(
-      Status.StatusBar<int>(
+    return E.Column of int(
+      Status.StatusBar of int(
         'status', [
-          Status.Item<int>.Progress(0.0F, 'Scanning', 0.0F, true),
-          Status.Item<int>.Spacer,
-          Status.Item<int>.Action('encoding', new Status.Label(''), 'UTF-8', false, 1)
+          (Status.Item of int).Progress(0.0F, 'Scanning', 0.0F, true),
+          (Status.Item of int).Spacer,
+          (Status.Item of int).Action('encoding', new Status.Label(''), 'UTF-8', false, 1)
         ], true
       ),
-      E.Text<int>('Next row')
+      E.Text of int('Next row')
     );
   end function;
 begin
-  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(0, Update, View, 24, 2);
+  using const Session: Tui.HeadlessSession := Headless.Start of (int, int)(0, Update, View, 24, 2);
   const Frame: Tui.Frame := Session.Snapshot();
   Check(
     Frame.Lines[0].StartsWith('Scanning …') and Frame.Lines[0].EndsWith('UTF-8'),
@@ -213,18 +213,25 @@ begin
 end procedure;
 
 procedure PersistentDialog();
-  function View(State: int): E.Element<int>;
+  function View(State: int): E.Element of int;
   begin
-    return Dialogs.Dialog<int>(
-      'modal', B.Button<int>('open', 'Open', 1), B.Button<int>('done', 'Done', 0),
+    return Dialogs.Dialog of int(
+      'modal', B.Button of int('open', 'Open', 1), B.Button of int('done', 'Done', 0),
       State = 1, new Dialogs.Options('Review', Persistent := true, CloseButton := false), 0
     );
   end function;
   procedure Reject(Settings: Dialogs.Options);
   begin
     try
-      discard V.Prepare<int>(
-        Dialogs.Dialog<int>('modal', E.Text<int>('Base'), E.Text<int>('Body'), false, Settings, 0),
+      discard V.Prepare of int(
+        Dialogs.Dialog of int(
+          'modal',
+          E.Text of int('Base'),
+          E.Text of int('Body'),
+          false,
+          Settings,
+          0
+        ),
         V.Target.Terminal
       );
     catch Error: Sys.ArgumentException do
@@ -240,8 +247,8 @@ procedure PersistentDialog();
     discard Session.Step();
   end procedure;
 begin
-  discard V.Prepare<int>(View(1), V.Target.Portable);
-  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(0, Update, View, 64, 16);
+  discard V.Prepare of int(View(1), V.Target.Portable);
+  using const Session: Tui.HeadlessSession := Headless.Start of (int, int)(0, Update, View, 64, 16);
   Send(Session, Tui.Input.Activate('open'));
   const Opened: Tui.Frame := Session.Snapshot();
   Check(
@@ -267,20 +274,20 @@ begin
 end procedure;
 
 procedure ProgressTracks();
-  function View(State: int): E.Element<int>;
+  function View(State: int): E.Element of int;
   begin
-    return E.Column<int>(
-      Bars.ProgressBar<int>(
+    return E.Column of int(
+      Bars.ProgressBar of int(
         'plain',
         0.5F,
         new Bars.Options(Width := L.Extent.Fixed(L.Measure.Cells(7)))
       ),
-      Bars.ProgressBar<int>(
+      Bars.ProgressBar of int(
         'full',
         1.0F,
         new Bars.Options(ShowValue := true, Tone := Styles.Tone.Info)
       ),
-      Bars.ProgressBar<int>(
+      Bars.ProgressBar of int(
         'empty',
         0.0F,
         new Bars.Options(Width := L.Extent.Fixed(L.Measure.Cells(0)))
@@ -290,7 +297,7 @@ procedure ProgressTracks();
   procedure Reject(Options: Bars.Options);
   begin
     try
-      discard V.Prepare<int>(Bars.ProgressBar<int>('sample', 0.5F, Options), V.Target.Terminal);
+      discard V.Prepare of int(Bars.ProgressBar of int('sample', 0.5F, Options), V.Target.Terminal);
     catch Error: Sys.ArgumentException do
       Check(Error.Message.Contains('Graphical profile'), Error.Message);
       return;
@@ -299,7 +306,7 @@ procedure ProgressTracks();
     raise new Sys.InvalidOperationException('Animated progress or a custom height requires GUI.');
   end procedure;
 begin
-  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(0, Update, View, 12, 4);
+  using const Session: Tui.HeadlessSession := Headless.Start of (int, int)(0, Update, View, 12, 4);
   const Frame: Tui.Frame := Session.Snapshot();
   Check(Frame.Lines[0].TrimEnd() = '───────', 'Fixed-width continuous track.');
   const Filled: int? := Frame.Cells[0].Colors.Foreground;
@@ -323,19 +330,19 @@ procedure SwitchRows();
   begin
     raise new Sys.InvalidOperationException('Disabled or unactivated switch invoked its mapper.');
   end function;
-  function View(State: int): E.Element<int>;
+  function View(State: int): E.Element of int;
   begin
-    return E.ScrollView<int>(
-      'settings', E.Column<int>(
-        Switches.Switch<int>(
+    return E.ScrollView of int(
+      'settings', E.Column of int(
+        Switches.Switch of int(
           'first', 'Wi-Fi', State = 1, function(Value: bool): int => if Value then
             1
           else
             0
           end if, 'Two lines of description'
         ),
-        Switches.Switch<int>('blocked', 'Disabled', false, DisabledChange, Enabled := false),
-        Switches.Switch<int>('locked', 'Locked', false, function(Value: bool): int => State)
+        Switches.Switch of int('blocked', 'Disabled', false, DisabledChange, Enabled := false),
+        Switches.Switch of int('locked', 'Locked', false, function(Value: bool): int => State)
       )
     );
   end function;
@@ -349,8 +356,8 @@ procedure SwitchRows();
     end case;
   end procedure;
 begin
-  discard V.Prepare<int>(View(0), V.Target.Portable);
-  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(0, Update, View, 14, 8);
+  discard V.Prepare of int(View(0), V.Target.Portable);
+  using const Session: Tui.HeadlessSession := Headless.Start of (int, int)(0, Update, View, 14, 8);
   const Initial: Tui.Frame := Session.Snapshot();
   const Row: Tui.ControlSnapshot := Initial.Controls[0];
   Check(
@@ -384,24 +391,24 @@ begin
 end procedure;
 
 procedure ActivityAndPlots();
-  function View(State: int): E.Element<int>;
+  function View(State: int): E.Element of int;
   begin
-    return E.Column<int>(
-      Spin.Spinner<int>(
+    return E.Column of int(
+      Spin.Spinner of int(
         'activity', 40.0F,
         new Spin.Options(Color := Charts.Color.Rgba(new G.Color(255, 0, 0, 255)))
       ),
-      Sparks.Sparkline<int>('signed', [-3.0F, -1.0F, 0.0F]),
-      Sparks.Sparkline<int>('empty', []),
-      Sparks.Sparkline<int>('flat', [2.0F, 2.0F]),
-      Sparks.Sparkline<int>(
+      Sparks.Sparkline of int('signed', [-3.0F, -1.0F, 0.0F]),
+      Sparks.Sparkline of int('empty', []),
+      Sparks.Sparkline of int('flat', [2.0F, 2.0F]),
+      Sparks.Sparkline of int(
         'fixed', [0.0F, 1.0F],
         new Sparks.Options(Width := L.Extent.Fixed(L.Measure.Cells(5)), Height := 32.0F)
       )
     );
   end function;
 begin
-  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(0, Update, View, 8, 7);
+  using const Session: Tui.HeadlessSession := Headless.Start of (int, int)(0, Update, View, 8, 7);
   const Frame: Tui.Frame := Session.Snapshot();
   Check(
     Frame.Cells[0].Text = '◴' and Frame.Cells[0].Colors.Foreground = $FF0000,
@@ -420,17 +427,24 @@ begin
 end procedure;
 
 procedure TextTable();
-  function View(State: int): E.Element<int>;
+  function View(State: int): E.Element of int;
   begin
-    return Tables.Table<int>(
-      'measures', [
+    return Tables.Table of int(
+      'measures',
+      [
         new Tables.Column('Key', L.Extent.Fixed(L.Measure.Cells(3))),
         new Tables.Column('N', Align := Tables.Alignment.Right)
-      ], [new Tables.Row<int>('value', [Tables.Cell<int>.Text('A界Z'), Tables.Cell<int>.Text('7')])]
+      ],
+      [
+        new Tables.Row of int(
+          'value',
+          [(Tables.Cell of int).Text('A界Z'), (Tables.Cell of int).Text('7')]
+        )
+      ]
     );
   end function;
 begin
-  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(0, Update, View, 9, 3);
+  using const Session: Tui.HeadlessSession := Headless.Start of (int, int)(0, Update, View, 9, 3);
   const Frame: Tui.Frame := Session.Snapshot();
   Check(Frame.Lines[0] = 'Key     N' and Frame.Controls.Length = 0, 'Read-only table headings.');
   Check(
@@ -439,10 +453,10 @@ begin
     'Clip a wide text cell at its own boundary and right-align the next cell.'
   );
   try
-    discard V.Prepare<int>(
-      Tables.Table<int>(
+    discard V.Prepare of int(
+      Tables.Table of int(
         'people', [new Tables.Column('Person')],
-        [new Tables.Row<int>('person', [Tables.Cell<int>.Content([E.Text<int>('Name')])])]
+        [new Tables.Row of int('person', [(Tables.Cell of int).Content([E.Text of int('Name')])])]
       ), V.Target.Terminal
     );
   catch Error: Sys.ArgumentException do

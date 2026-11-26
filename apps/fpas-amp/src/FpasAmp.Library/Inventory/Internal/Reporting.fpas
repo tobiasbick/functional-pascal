@@ -17,17 +17,17 @@ uses System.Threading.Channels as Channels;
 
 // Bounded per-source counters and a throttled latest-value publisher.
 public type Reporting = record
-  Values: C.Dictionary<string, P.SourceProgress>;
-  Sequence: R.StrongBox<long>;
-  Last: R.StrongBox<long>;
+  Values: C.Dictionary of (string, P.SourceProgress);
+  Sequence: R.StrongBox of long;
+  Last: R.StrongBox of long;
 
   // Creates empty counters for one monitoring lifetime.
   public static function Create(): Reporting;
   begin
     return new Reporting(
-      new C.Dictionary<string, P.SourceProgress>(Sys.StringComparer.Ordinal),
-      new R.StrongBox<long>(0L),
-      new R.StrongBox<long>(0L)
+      new C.Dictionary of (string, P.SourceProgress)(Sys.StringComparer.Ordinal),
+      new R.StrongBox of long(0L),
+      new R.StrongBox of long(0L)
     );
   end function;
 
@@ -43,7 +43,7 @@ public type Reporting = record
   // Queues affected sources and preserves counters for paused/offline sources.
   public procedure Begin(Sources: array of S.MusicSource; Scopes: array of string);
   begin
-    const Keep: C.HashSet<string> := new C.HashSet<string>();
+    const Keep: C.HashSet of string := new C.HashSet of string();
     for Source: S.MusicSource in Sources do
       discard Keep.Add(Source.Id);
       var Value: P.SourceProgress := self.Read(Source);
@@ -80,7 +80,7 @@ public type Reporting = record
 
       self.Values[Source.Id] := Value;
     end for;
-    const Remove: C.List<string> := new C.List<string>();
+    const Remove: C.List of string := new C.List of string();
     for Id: string in self.Values.Keys do
       if not Keep.Contains(Id) then
         Remove.Add(Id);
@@ -137,7 +137,7 @@ public type Reporting = record
       if Source.Offline or Source.Paused or not S.Within(Value.Path, Source.Path) then
         continue;
       end if;
-      const Extensions: C.HashSet<string> := new C.HashSet<string>(
+      const Extensions: C.HashSet of string := new C.HashSet of string(
         Source.Extensions,
         Sys.StringComparer.OrdinalIgnoreCase
       );
@@ -174,13 +174,13 @@ public type Reporting = record
   end procedure;
 
   // Publishes detached counters to `Writer`; `Force` bypasses the 100 ms interval.
-  public procedure Publish(Sources: array of S.MusicSource; Generation: long; Writer: Channels.ChannelWriter<P.Snapshot>; Force: bool);
+  public procedure Publish(Sources: array of S.MusicSource; Generation: long; Writer: Channels.ChannelWriter of P.Snapshot; Force: bool);
   begin
     const Now: long := Sys.Environment.TickCount64;
     if not Force and Now - self.Last.Value < 100L then
       return;
     end if;
-    const Values: C.List<P.SourceProgress> := new C.List<P.SourceProgress>();
+    const Values: C.List of P.SourceProgress := new C.List of P.SourceProgress();
     for Source: S.MusicSource in Sources do
       Values.Add(self.Read(Source));
     end for;
@@ -191,7 +191,7 @@ public type Reporting = record
       new P.Snapshot(
         self.Sequence.Value,
         Generation,
-        I.ImmutableArray.CreateRange<P.SourceProgress>(Values)
+        I.ImmutableArray.CreateRange of P.SourceProgress(Values)
       )
     );
   end procedure;

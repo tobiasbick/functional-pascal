@@ -20,15 +20,15 @@ public sealed class StaticInspectionTests
             procedure Observe();
             begin
               const Global: int := 99;
-              const Integer: F.Slot<int> := new F.Slot<int>();
-              const Text: F.Slot<string> := new F.Slot<string>(); const EmptyInt: F.EmptySlot<int> := new F.EmptySlot<int>(); const EmptyText: F.EmptySlot<string> := new F.EmptySlot<string>();
+              const Integer: F.Slot of int := new F.Slot of int();
+              const Text: F.Slot of string := new F.Slot of string(); const EmptyInt: F.EmptySlot of int := new F.EmptySlot of int(); const EmptyText: F.EmptySlot of string := new F.EmptySlot of string();
               Console.WriteLine('observe');
               F.Warm.Number := 43;
               Console.WriteLine('after');
             end procedure;
             begin
               F.Warm.Setup();
-              F.Slot<int>.Call(Observe);
+              (F.Slot of int).Call(Observe);
             end;
             end program;
             """;

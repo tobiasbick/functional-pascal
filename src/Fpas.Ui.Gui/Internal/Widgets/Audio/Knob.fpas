@@ -22,8 +22,8 @@ uses System.Globalization as Culture;
 // - `Maximum`: Inclusive upper bound.
 // - `OnChange`: Maps a proposed value to a message.
 // - `Settings`: Native display and input settings.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Label: string; Value: float; Minimum: float; Maximum: float;
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Label: string; Value: float; Minimum: float; Maximum: float;
   OnChange: function(float): TMsg; Settings: W.Options
 );
 begin
@@ -57,7 +57,7 @@ begin
     Settings.ShowSign,
     Rgba,
     Enabled,
-    C.WantsFocus<TMsg>(Frame, Id, Token, Enabled),
+    C.WantsFocus of TMsg(Frame, Id, Token, Enabled),
     not Frame.PaintingClosed
   );
   if Proposed <> Value then

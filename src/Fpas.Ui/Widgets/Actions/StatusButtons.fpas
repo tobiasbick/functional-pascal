@@ -48,10 +48,10 @@ end record;
 // - `Settings`: Feedback captions, appearance and input permission.
 // ## Returns
 // A graphical status button. The application owns every state transition and reset.
-public function StatusButton<TMsg>(Id: string; Label: string; State: Status; Message: TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function StatusButton of TMsg(Id: string; Label: string; State: Status; Message: TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.StatusAction(Id, Label, State, Message, Settings ?? new Options());
+  return (E.Element of TMsg).StatusAction(Id, Label, State, Message, Settings ?? new Options());
 end function;
 
 end unit;

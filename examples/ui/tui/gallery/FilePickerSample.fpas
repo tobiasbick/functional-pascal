@@ -47,16 +47,16 @@ end function;
 // - `Current`: Current example state.
 // ## Returns
 // Picker launchers and the last confirmed path.
-public function Controls(Current: State): E.Element<Msg>;
+public function Controls(Current: State): E.Element of Msg;
 begin
-  return E.Column<Msg>(
+  return E.Column of Msg(
     new L.Flow(Gap := L.Spacing.Normal),
-    E.Row<Msg>(
+    E.Row of Msg(
       new L.Flow(Gap := L.Spacing.Normal),
-      B.Button<Msg>('files-open', Sample.OpenLabel, Msg.Open(Picker.Mode.OpenFile)),
-      B.Button<Msg>('files-save', Sample.SaveLabel, Msg.Open(Picker.Mode.SaveFile))
+      B.Button of Msg('files-open', Sample.OpenLabel, Msg.Open(Picker.Mode.OpenFile)),
+      B.Button of Msg('files-save', Sample.SaveLabel, Msg.Open(Picker.Mode.SaveFile))
     ),
-    E.Styled<Msg>(E.Text<Msg>(Current.Chosen), Styles.Role.Muted)
+    E.Styled of Msg(E.Text of Msg(Current.Chosen), Styles.Role.Muted)
   );
 end function;
 
@@ -69,17 +69,17 @@ end function;
 // - `Wrap`: Embeds a dialog action in a gallery message.
 // ## Returns
 // The gallery screen and its file picker layers.
-public function Present<TMsg>(Base: E.Element<TMsg>; Current: State; Wrap: function(Msg): TMsg): E.Element<TMsg>;
+public function Present of TMsg(Base: E.Element of TMsg; Current: State; Wrap: function(Msg): TMsg): E.Element of TMsg;
 begin
   const Closed: function(Picker.Event): TMsg := function(Event: Picker.Event): TMsg => Wrap(
     Msg.Close(Event)
   );
-  return Picker.FilePicker<TMsg>(
+  return Picker.FilePicker of TMsg(
     'files-save-picker',
     Current.Mode = Picker.Mode.SaveFile,
     Closed,
     Sample.Settings(true, Sample.Read),
-    Picker.FilePicker<TMsg>(
+    Picker.FilePicker of TMsg(
       'files-open-picker',
       Current.Mode = Picker.Mode.OpenFile,
       Closed,

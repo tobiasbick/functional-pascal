@@ -39,9 +39,9 @@ end record;
 // - `Theme`: Terminal theme providing the scrim and border.
 // ## Returns
 // Bounds of the panel, close button and body.
-function PaintPanel<TMsg>(
-  Operations: Generic.List<D.Operation>; Area: F.Rect; Settings: E.ModalOptions;
-  Size: int; Content: E.Element<TMsg>; Colors: T.Style; Theme: Th.Theme
+function PaintPanel of TMsg(
+  Operations: Generic.List of D.Operation; Area: F.Rect; Settings: E.ModalOptions;
+  Size: int; Content: E.Element of TMsg; Colors: T.Style; Theme: Th.Theme
 ): PanelBounds;
 begin
   const InsetX: int := if Area.Width >= 5 then
@@ -77,7 +77,7 @@ begin
       0
     end if;
     const InnerWidth: int := Sys.Math.Max(0, Width - 2 * Frame);
-    const BodyRows: int := Measurement.Intrinsic<TMsg>(Content, false, InnerWidth);
+    const BodyRows: int := Measurement.Intrinsic of TMsg(Content, false, InnerWidth);
     const HeaderRows: int := if Settings.Description = '' then
       1
     else
@@ -160,10 +160,10 @@ end function;
 // - `LowerContent`: Resolves the body with the panel's colors.
 // ## Returns
 // The base and its modal layer when visible.
-public function Lower<TMsg>(
-  Id: string; Base: E.Element<TMsg>; Open: bool; Settings: E.ModalOptions;
-  Dismiss: Sys.Func<TMsg>; Colors: T.Style; Theme: Th.Theme; LowerContent: function(T.Style): E.Element<TMsg>
-): E.Element<TMsg>;
+public function Lower of TMsg(
+  Id: string; Base: E.Element of TMsg; Open: bool; Settings: E.ModalOptions;
+  Dismiss: Sys.Func of TMsg; Colors: T.Style; Theme: Th.Theme; LowerContent: function(T.Style): E.Element of TMsg
+): E.Element of TMsg;
 begin
   if not Open then
     return Base;
@@ -174,13 +174,13 @@ begin
   const Size: int := F.Cells(L.Measure.Logical(Settings.Size), Across);
   const Surface: int := Th.Rgb(Theme.Colors.SurfaceRaised, Colors.Background ?? 0);
   const Panel: T.Style := new T.Style(Th.Rgb(Theme.Colors.Foreground, Surface), Surface);
-  return E.Element<TMsg>.Desktop(
+  return (E.Element of TMsg).Desktop(
     Base, [
-      E.Element<TMsg>.ModalPanel(
+      (E.Element of TMsg).ModalPanel(
         Id,
         Settings,
         Size,
-        E.Element<TMsg>.Scrollable(Id, LowerContent(Panel), true),
+        (E.Element of TMsg).Scrollable(Id, LowerContent(Panel), true),
         Dismiss,
         Panel
       )
@@ -192,11 +192,11 @@ end function;
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Placement<TMsg> = record
+public type Placement of TMsg = record
   // Modal input scope with scrim dismissal.
-  public Scope: A.Scope<TMsg>;
+  public Scope: A.Scope of TMsg;
   // Close button placed in the header.
-  public Close: A.Control<TMsg>?;
+  public Close: (A.Control of TMsg)?;
   // Available viewport for the scrollable body.
   public Body: F.Rect;
 end record;
@@ -218,12 +218,12 @@ end record;
 // - `FocusReturn`: Inherited fallback control identity.
 // ## Returns
 // The panel's placement and input bindings.
-public function Arrange<TMsg>(
-  Operations: Generic.List<D.Operation>; Screen: F.Rect; Id: string; Settings: E.ModalOptions;
-  Size: int; Content: E.Element<TMsg>; Colors: T.Style; Theme: Th.Theme; Dismiss: Sys.Func<TMsg>; FocusReturn: string
-): Placement<TMsg>;
+public function Arrange of TMsg(
+  Operations: Generic.List of D.Operation; Screen: F.Rect; Id: string; Settings: E.ModalOptions;
+  Size: int; Content: E.Element of TMsg; Colors: T.Style; Theme: Th.Theme; Dismiss: Sys.Func of TMsg; FocusReturn: string
+): Placement of TMsg;
 begin
-  const Bounds: PanelBounds := PaintPanel<TMsg>(
+  const Bounds: PanelBounds := PaintPanel of TMsg(
     Operations,
     Screen,
     Settings,
@@ -232,22 +232,22 @@ begin
     Colors,
     Theme
   );
-  const Escape: Sys.Func<TMsg>? := if Settings.Dismissible then
+  const Escape: (Sys.Func of TMsg)? := if Settings.Dismissible then
     Dismiss
   else
     null
   end if;
-  const Scope: A.Scope<TMsg> := new A.Scope<TMsg>(
+  const Scope: A.Scope of TMsg := new A.Scope of TMsg(
     Id, Settings.InitialFocus ?? Settings.CloseId ?? '', Escape, [], Bounds.Panel
   );
-  var Control: A.Control<TMsg>? := null;
+  var Control: (A.Control of TMsg)? := null;
   case Settings.CloseId of
     when is string as Close:
-      Control := new A.Control<TMsg>(
+      Control := new A.Control of TMsg(
         Close, 'Close', 'button', '', Bounds.Close, Id, FocusReturn, true,
-        A.Binding<TMsg>.Invoke(
-          new Actions.Callback<TMsg>(
-            function(): Actions.Result<TMsg> => Actions.Result<TMsg>.Send(Dismiss.Invoke())
+        (A.Binding of TMsg).Invoke(
+          new Actions.Callback of TMsg(
+            function(): Actions.Result of TMsg => (Actions.Result of TMsg).Send(Dismiss.Invoke())
           )
         ), S.ButtonVariant.Default,
         ButtonStyle := true, ArrowFocus := true
@@ -255,7 +255,7 @@ begin
     else
   end case;
 
-  return new Placement<TMsg>(Scope, Control, Bounds.Body);
+  return new Placement of TMsg(Scope, Control, Bounds.Body);
 end function;
 
 end unit;

@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Planning.Kanbans as W;
 // - `Columns`: Model-owned columns and ordered cards.
 // ## Returns
 // The board with actions and moves as application messages.
-public function View(Columns: array of W.Column<W.Event>): E.Element<W.Event>;
+public function View(Columns: array of W.Column of W.Event): E.Element of W.Event;
 begin
-  return W.Kanban<W.Event>('board', Columns, function(Change: W.Event): W.Event => Change);
+  return W.Kanban of W.Event('board', Columns, function(Change: W.Event): W.Event => Change);
 end function;
 
 // Creates a card with a plain text body.
@@ -30,9 +30,9 @@ end function;
 // - `Title`: Card caption.
 // ## Returns
 // A card to place in a column.
-public function Card(Key: int; Title: string): W.Card<W.Event>;
+public function Card(Key: int; Title: string): W.Card of W.Event;
 begin
-  return new W.Card<W.Event>(Key, Title, E.Text<W.Event>(Title));
+  return new W.Card of W.Event(Key, Title, E.Text of W.Event(Title));
 end function;
 
 end unit;

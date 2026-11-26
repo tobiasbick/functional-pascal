@@ -15,7 +15,7 @@ public sealed class SpanArgumentTests
             unit Spans;
             uses System as Sys; uses System.IO as IO; uses System.Buffers.Binary as Binary; uses System.Threading.Tasks as Tasks;
 
-            async function Later(Value: int): Tasks.Task<int>;
+            async function Later(Value: int): Tasks.Task of int;
             begin
               await Tasks.Task.Delay(1);
               return Value;
@@ -27,11 +27,11 @@ public sealed class SpanArgumentTests
               const Stream: IO.MemoryStream := new IO.MemoryStream();
               Stream.Write(Header);
               return Binary.BinaryPrimitives.ReadUInt32BigEndian(Header).ToString() + ' ' + Stream.Length.ToString() + ' '
-                + Sys.MemoryExtensions.IndexOf<int>([4, 5, 6], 5).ToString() + ' ' + Sys.MemoryExtensions.IndexOf([7, 8, 9], 9).ToString() + ' '
+                + Sys.MemoryExtensions.IndexOf of int([4, 5, 6], 5).ToString() + ' ' + Sys.MemoryExtensions.IndexOf([7, 8, 9], 9).ToString() + ' '
                 + new Sys.String([#120, #121]);
             end function;
 
-            public async function Mixed(Data: array of byte): Tasks.Task<string>;
+            public async function Mixed(Data: array of byte): Tasks.Task of string;
             begin
               return Sys.Convert.ToHexString(Data) + ' ' + Sys.BitConverter.ToInt32(Data, await Later(0)).ToString();
             end function;
@@ -55,10 +55,10 @@ public sealed class SpanArgumentTests
     /// <param name="code">Expected diagnostic code.</param>
     /// <param name="message">Expected message fragment.</param>
     [Theory]
-    [InlineData("discard Sys.MemoryExtensions.AsSpan<int>(new int[2]);", "FP3005", "byref-like type")]
-    [InlineData("const S: Sys.Span<int> := new Sys.Span<int>();", "FP3005", "Pass an array")]
+    [InlineData("discard Sys.MemoryExtensions.AsSpan of int(new int[2]);", "FP3005", "byref-like type")]
+    [InlineData("const S: Sys.Span of int := new Sys.Span of int();", "FP3005", "Pass an array")]
     [InlineData("const F: function(array of byte): uint := Binary.BinaryPrimitives.ReadUInt32BigEndian;", "FP3005", "byref-like type")]
-    [InlineData("const Items: array of string := ['a']; Sys.MemoryExtensions.Reverse<object>(Items);", "FP3003", "exact array element type")]
+    [InlineData("const Items: array of string := ['a']; Sys.MemoryExtensions.Reverse of object(Items);", "FP3003", "exact array element type")]
     public void Spans_stay_limited_to_call_arguments(string body, string code, string message)
     {
         var result = TestCompilation.CompileAgainstFramework(

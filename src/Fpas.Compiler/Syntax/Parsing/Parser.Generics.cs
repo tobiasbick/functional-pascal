@@ -5,13 +5,22 @@ internal sealed partial class Parser
 {
     private IReadOnlyList<Token> ReadTypeParameters()
     {
-        if (!At("<")) return [];
-        return ReadList("<", ">", ",", () =>
+        if (!At("of")) return [];
+        position++;
+        if (!At("(")) return [ReadParameterName()];
+
+        var start = Current.Position;
+        var names = ReadList("(", ")", ",", ReadParameterName, empty: false, wrap: false);
+        if (names.Count < 2)
+            throw source.Error("FP2003", "Write one type parameter directly after 'of'; use parentheses for multiple parameters.", start);
+        return names;
+
+        Token ReadParameterName()
         {
             var name = Identifier();
             using (Declaration(name, name.Position)) { }
             return name;
-        }, empty: false, wrap: false, tight: true);
+        }
     }
 
     private IReadOnlyList<WhereSyntax> ReadConstraints()

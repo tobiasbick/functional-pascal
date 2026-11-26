@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Editors.CurveEditors as W;
 // - `Selected`: Selected key index, or minus one.
 // ## Returns
 // The editor with key and selection proposals.
-public function View(Keys: array of W.Key; Selected: int): E.Element<W.Event>;
+public function View(Keys: array of W.Key; Selected: int): E.Element of W.Event;
 begin
-  return W.CurveEditor<W.Event>('easing', Keys, Selected,
+  return W.CurveEditor of W.Event('easing', Keys, Selected,
     function(Change: W.Event): W.Event => Change,
     new W.Options(Capacity := 16, XMaximum := 2.0F, YMaximum := 1.2F,
       XLabel := 'Time', YLabel := 'Value'));

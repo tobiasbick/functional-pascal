@@ -18,14 +18,14 @@ public sealed class CompoundInspectionTests
             uses Fixture as F; uses System.Console as Console;
             procedure Observe();
             begin
-              const Root: F.Node<int> := new F.Node<int>(42); const Derived: F.Derived := new F.Derived();
+              const Root: F.Node of int := new F.Node of int(42); const Derived: F.Derived := new F.Derived();
               Root.Next := Root;
-              const Alias: F.Node<int> := Root;
+              const Alias: F.Node of int := Root;
               const Values: array of int := [10, 20, 30];
               const Matrix: array[,] of int := new int[2, 3];
               Matrix[1, 2] := 42;
               const Offset: array[,] of int := F.Arrays.Offset();
-              const Boxed: object := 42; const Chain: F.Node<int> := F.Arrays.Chain(12); const Native: object := F.Arrays.Pointer();
+              const Boxed: object := 42; const Chain: F.Node of int := F.Arrays.Chain(12); const Native: object := F.Arrays.Pointer();
               Console.WriteLine('observe');
               Root.Value := 43;
               Values[0] := 11;
@@ -122,7 +122,7 @@ public sealed class CompoundInspectionTests
             uses Fixture as F; uses System.Console as Console;
             procedure Observe();
             begin
-              const Pool: array of F.Node<int> := F.Arrays.Many(5000);
+              const Pool: array of F.Node of int := F.Arrays.Many(5000);
               Console.WriteLine('observe');
             end procedure;
             begin Observe(); end;

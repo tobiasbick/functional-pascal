@@ -17,7 +17,7 @@ uses Fpas.Ui.Widgets.Display.Readouts as W;
 // - `Label`: Readout heading.
 // - `Value`: Displayed value.
 // - `Settings`: Native presentation options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Label: string; Value: string; Settings: W.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Label: string; Value: string; Settings: W.Options);
 begin
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   Frame.Window.Readout(
@@ -33,7 +33,7 @@ begin
     Width.Kind,
     Width.Value
   );
-  C.Track<TMsg>(
+  C.Track of TMsg(
     Frame,
     new App.Control(Id, Label, 'readout', new Cui.CuiRectangle(), false, Value := Value)
   );

@@ -15,9 +15,9 @@ uses System.Text.Json as J;
 uses System.Threading as T;
 uses System.Threading.Tasks as Tasks;
 
-async function Run(Options: M.Options; Arguments: array of string; Directory: string; Cancellation: T.CancellationToken): Tasks.Task<Capture.Captured>;
+async function Run(Options: M.Options; Arguments: array of string; Directory: string; Cancellation: T.CancellationToken): Tasks.Task of Capture.Captured;
 begin
-  const Environment: C.Dictionary<string, string> := new C.Dictionary<string, string>();
+  const Environment: C.Dictionary of (string, string) := new C.Dictionary of (string, string)();
   Environment['MSBUILDDISABLENODEREUSE'] := '1';
   Environment['DOTNET_CLI_USE_MSBUILD_SERVER'] := '0';
   const Request: Capture.Request := new Capture.Request(
@@ -69,7 +69,7 @@ end function;
 // - `Cancellation`: Cancels the checker and its owned child processes.
 // ## Returns
 // The last stage reached and whether the example met its expectations.
-public async function Check(Item: M.Example; Options: M.Options; Items: array of M.Example; Directory: string; Cancellation: T.CancellationToken): Tasks.Task<M.Outcome>;
+public async function Check(Item: M.Example; Options: M.Options; Items: array of M.Example; Directory: string; Cancellation: T.CancellationToken): Tasks.Task of M.Outcome;
 begin
   var Outcome: M.Outcome := new M.Outcome(Item.Document, Item.Line, Item.Id, false, 'prepare', '');
 
@@ -82,7 +82,7 @@ begin
       Stage := 'compile';
     end with;
 
-    const Arguments: C.List<string> := new C.List<string>();
+    const Arguments: C.List of string := new C.List of string();
     Arguments.Add(Options.Compiler);
     Arguments.Add('compile');
     for Source: M.Source in Prepared.Sources do
@@ -245,7 +245,7 @@ begin
     );
     IO.File.WriteAllText(
       IO.Path.Combine(Directory, 'run.json'),
-      J.JsonSerializer.Serialize<Capture.Captured>(Executed)
+      J.JsonSerializer.Serialize of Capture.Captured(Executed)
     );
 
     var Passed: bool := false;

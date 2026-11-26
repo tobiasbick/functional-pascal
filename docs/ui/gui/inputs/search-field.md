@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Inputs.SearchFields as W;
 // - `Query`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Query: string): E.Element<string>;
+public function View(Query: string): E.Element of string;
 begin
-  return W.SearchField<string>('input-search', Query, function(Value: string): string => Value,
+  return W.SearchField of string('input-search', Query, function(Value: string): string => Value,
     new W.Options(Label := 'Search', Placeholder := 'Search projects', MaxUtf8Bytes := 63));
 end function;
 

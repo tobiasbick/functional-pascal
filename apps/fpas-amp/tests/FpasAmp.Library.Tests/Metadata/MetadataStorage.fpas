@@ -38,10 +38,10 @@ public type MetadataStorageTests = record
         ' ON CONFLICT(path_key) DO UPDATE SET modified_utc=excluded.modified_utc;',
         null, ['$stamp'], [Stamp]
       );
-      X.Assert.Equal<long>(1L, D.Number(Connection, 'SELECT count(*) FROM content_jobs;'));
+      X.Assert.Equal of long(1L, D.Number(Connection, 'SELECT count(*) FROM content_jobs;'));
     end for;
 
-    X.Assert.Equal<long>(3L, D.Number(Connection, 'SELECT modified_utc FROM files;'));
+    X.Assert.Equal of long(3L, D.Number(Connection, 'SELECT modified_utc FROM files;'));
   end procedure;
 
   // An existing presence-only index is upgraded without replacing paths or row identities.
@@ -59,10 +59,10 @@ public type MetadataStorageTests = record
       []
     );
     Schema.Ensure(Connection);
-    X.Assert.Equal<long>(42L, D.Number(Connection, 'SELECT id FROM files;'));
-    X.Assert.Equal<long>(4L, D.Number(Connection, 'PRAGMA user_version;'));
-    X.Assert.Equal<long>(0L, D.Number(Connection, 'SELECT count(*) FROM metadata;'));
-    X.Assert.Equal<long>(
+    X.Assert.Equal of long(42L, D.Number(Connection, 'SELECT id FROM files;'));
+    X.Assert.Equal of long(4L, D.Number(Connection, 'PRAGMA user_version;'));
+    X.Assert.Equal of long(0L, D.Number(Connection, 'SELECT count(*) FROM metadata;'));
+    X.Assert.Equal of long(
       1L,
       D.Number(
         Connection,
@@ -81,9 +81,9 @@ public type MetadataStorageTests = record
     const Sources: array of S.MusicSource := [F.Source(Root.Path)];
     await using const Session: Monitor.Session := F.Start(Sources, Data.Path);
     const Tags: Metadata.Session := F.Tags(Session);
-    const Before: I.ImmutableArray<M.Entry> := await F.Until(
+    const Before: I.ImmutableArray of M.Entry := await F.Until(
       Tags,
-      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 1
     );
     await Tags.SetRatingAsync(Before[0].TrackId, 5, T.CancellationToken.None);
     begin
@@ -96,15 +96,15 @@ public type MetadataStorageTests = record
 
     IO.File.WriteAllText(Path, 'broken');
     Session.Refresh();
-    const After: I.ImmutableArray<M.Entry> := await F.Until(
+    const After: I.ImmutableArray of M.Entry := await F.Until(
       Tags,
-      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1 and Items[
+      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 1 and Items[
         0
       ].Error <> null
     );
-    X.Assert.Equal<string>(Before[0].TrackId, After[0].TrackId);
-    X.Assert.Equal<int?>(5, After[0].Rating);
-    X.Assert.Equal<string>('Stück', (After[0].Metadata ?? new MediaTags.Info()).Title);
+    X.Assert.Equal of string(Before[0].TrackId, After[0].TrackId);
+    X.Assert.Equal of int? (5, After[0].Rating);
+    X.Assert.Equal of string('Stück', (After[0].Metadata ?? new MediaTags.Info()).Title);
   end function;
 
   // Ordering/paging use database keys, filters are bound, and rating bounds are enforced.
@@ -117,26 +117,26 @@ public type MetadataStorageTests = record
     discard F.Write(Root.Path, 'a.ogg', 'Alpha');
     await using const Session: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
     const Tags: Metadata.Session := F.Tags(Session);
-    const Entries: I.ImmutableArray<M.Entry> := await F.Until(
+    const Entries: I.ImmutableArray of M.Entry := await F.Until(
       Tags,
-      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 2
+      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 2
     );
-    X.Assert.Equal<string>('Alpha', (Entries[0].Metadata ?? new MediaTags.Info()).Title);
-    const Page: I.ImmutableArray<M.Entry> := await Tags.QueryAsync(
+    X.Assert.Equal of string('Alpha', (Entries[0].Metadata ?? new MediaTags.Info()).Title);
+    const Page: I.ImmutableArray of M.Entry := await Tags.QueryAsync(
       new M.Query(Limit := 1, Offset := 1),
       T.CancellationToken.None
     );
-    X.Assert.Equal<int>(1, Page.Length);
-    X.Assert.Equal<string>('Zulu', (Page[0].Metadata ?? new MediaTags.Info()).Title);
+    X.Assert.Equal of int(1, Page.Length);
+    X.Assert.Equal of string('Zulu', (Page[0].Metadata ?? new MediaTags.Info()).Title);
     await Tags.SetRatingAsync(Entries[0].TrackId, 1, T.CancellationToken.None);
     await Tags.SetRatingAsync(Entries[1].TrackId, 10, T.CancellationToken.None);
-    const Rated: I.ImmutableArray<M.Entry> := await Tags.QueryAsync(
+    const Rated: I.ImmutableArray of M.Entry := await Tags.QueryAsync(
       new M.Query(Order := M.Sort.Rating, Descending := true),
       T.CancellationToken.None
     );
-    X.Assert.Equal<int?>(10, Rated[0].Rating);
-    X.Assert.Equal<int?>(1, Rated[1].Rating);
-    X.Assert.Equal<int>(
+    X.Assert.Equal of int? (10, Rated[0].Rating);
+    X.Assert.Equal of int? (1, Rated[1].Rating);
+    X.Assert.Equal of int(
       0,
       (await Tags.QueryAsync(new M.Query(Album := ''' OR 1=1 --'), T.CancellationToken.None)).Length
     );

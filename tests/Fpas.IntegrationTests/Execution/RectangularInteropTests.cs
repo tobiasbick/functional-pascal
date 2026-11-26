@@ -16,7 +16,7 @@ public sealed class RectangularInteropTests
         var source = directory.File("GridBridge.fpas"); var library = directory.File("GridBridge.dll");
         File.WriteAllText(source, """
             unit GridBridge;
-            public function Echo<T>(Grid: array[,] of T): array[,] of T; begin return Grid; end function;
+            public function Echo of T(Grid: array[,] of T): array[,] of T; begin return Grid; end function;
             public function Create(): array[,] of int;
             begin
               const Grid: array[,] of int := new int[2, 3];

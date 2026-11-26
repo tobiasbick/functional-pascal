@@ -25,7 +25,7 @@ public type Options = record
   // Hides the places sidebar.
   public NoPlaces: bool := false;
   // Optional listing callback. Empty means local disk.
-  public Source: Sys.Func<string, bool, F.Listing?>? := null;
+  public Source: Sys.Func of (string, bool, F.Listing?)? := null;
   // Native entry limit. Zero uses the native default.
   public MaximumEntries: int := 0;
   // Change to reload a provider's data in the current folder.
@@ -56,10 +56,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // The graphical widget.
-public function FileBrowser<TMsg>(Id: string; Folder: string; Change: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function FileBrowser of TMsg(Id: string; Folder: string; Change: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.FileBrowser(Id, Folder, Change, Settings ?? new Options());
+  return (E.Element of TMsg).FileBrowser(Id, Folder, Change, Settings ?? new Options());
 end function;
 
 end unit;

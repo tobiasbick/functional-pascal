@@ -21,7 +21,7 @@ begin
       Method := Value.Method;
     end with;
   end if;
-  const Pairs: Lists.List<K.Pair> := new Lists.List<K.Pair>();
+  const Pairs: Lists.List of K.Pair := new Lists.List of K.Pair();
   for Entry: CuiDeveloper.CuiDevPair in Cui.CuiWindow.UrlParameters(Value.Url, 8) do
     Pairs.Add(new K.Pair(Entry.Key, Entry.Value, Entry.Enabled, Entry.Secret));
   end for;
@@ -35,7 +35,7 @@ end function;
 
 function Parameters(Model: M.Model; Value: K.Event): M.Model;
 begin
-  const Pairs: Lists.List<CuiDeveloper.CuiDevPair> := new Lists.List<CuiDeveloper.CuiDevPair>(
+  const Pairs: Lists.List of CuiDeveloper.CuiDevPair := new Lists.List of CuiDeveloper.CuiDevPair(
     Value.Pairs.Length
   );
   for Entry: K.Pair in Value.Pairs do

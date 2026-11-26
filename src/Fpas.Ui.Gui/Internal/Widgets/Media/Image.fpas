@@ -28,7 +28,7 @@ end function;
 // - `Id`: Stable picture identity.
 // - `Source`: Picture file or immutable RGBA pixels.
 // - `Settings`: Native image settings.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Source: Media.Source; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Source: Media.Source; Settings: D.Options);
 begin
   const Role: string := 'image';
   const Width: S.NativeExtent := S.Extent(Settings.Width);
@@ -37,7 +37,7 @@ begin
     C.Token(Role, Id), MediaData.Convert(Source), Width.Kind, Width.Value,
     Height.Kind, Height.Value, Settings.Radius, OptionalColor(Settings.Tint)
   );
-  P.Root<TMsg>(Frame, Id, Role, '', false, '');
+  P.Root of TMsg(Frame, Id, Role, '', false, '');
 end procedure;
 
 end unit;

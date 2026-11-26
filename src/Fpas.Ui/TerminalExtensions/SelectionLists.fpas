@@ -25,13 +25,13 @@ end record;
 // - `OnActivate`: Maps activation of the selected item to a message.
 // ## Returns
 // A terminal-only element with one keyboard focus stop when it has items.
-public function SelectionList<TMsg>(
+public function SelectionList of TMsg(
   Id: string; Items: array of Item; SelectedKey: string;
   OnSelect: function(string): TMsg; OnActivate: function(string): TMsg
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.TerminalSelectionList(Id, Items, SelectedKey, OnSelect, OnActivate);
+  return (E.Element of TMsg).TerminalSelectionList(Id, Items, SelectedKey, OnSelect, OnActivate);
 end function;
 
 end unit;

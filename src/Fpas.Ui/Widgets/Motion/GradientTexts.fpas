@@ -32,10 +32,10 @@ end record;
 // - `Settings`: Optional native options.
 // ## Returns
 // The graphical widget.
-public function GradientText<TMsg>(Id: string; Text: string; Settings: Options? := null): E.Element<TMsg>;
+public function GradientText of TMsg(Id: string; Text: string; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.GradientText(Id, Text, Settings ?? new Options());
+  return (E.Element of TMsg).GradientText(Id, Text, Settings ?? new Options());
 end function;
 
 end unit;

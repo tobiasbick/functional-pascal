@@ -21,11 +21,11 @@ public sealed partial class AsyncControlTests
               Console.WriteLine(Value);
             end function;
             begin
-              const Gate: Tasks.TaskCompletionSource<int> := new Tasks.TaskCompletionSource<int>(Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
+              const Gate: Tasks.TaskCompletionSource of int := new Tasks.TaskCompletionSource of int(Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
               const Pending: Tasks.Task := Work(Gate.Task, 42);
               if Pending.IsCompleted then raise new Sys.InvalidOperationException('Must suspend'); end if;
               Console.WriteLine('pending');
-              const Releaser: Tasks.Task<int> := Tasks.Task.Run<int>(function(): int
+              const Releaser: Tasks.Task of int := Tasks.Task.Run of int(function(): int
               begin
                 while not File.Exists('release.txt') do Thread.Sleep(10); end while;
                 Gate.SetResult(1);

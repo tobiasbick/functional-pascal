@@ -9,7 +9,7 @@ uses GuiDocCaptures.Rendering.Presented as Presented;
 uses GuiGallery.App.State as Gallery;
 uses GuiGallery.Pages.Code.State as Code;
 
-procedure CaptureCode(Session: Gui.Session<Gallery.Msg>; Output: string; Scroll: procedure(float));
+procedure CaptureCode(Session: Gui.Session of Gallery.Msg; Output: string; Scroll: procedure(float));
 begin
   Presented.CaptureInView(Session, Output, 'code-block', Scroll, 'c-sample');
   Presented.CaptureInView(Session, Output, 'code-block-sql', Scroll, 'sql-sample');
@@ -33,7 +33,7 @@ begin
   Presented.CaptureInView(Session, Output, 'log-console', Scroll, 'log-console');
 end procedure;
 
-procedure CaptureEditing(Session: Gui.Session<Gallery.Msg>; Output: string; Scroll: procedure(float));
+procedure CaptureEditing(Session: Gui.Session of Gallery.Msg; Output: string; Scroll: procedure(float));
 begin
   Presented.CaptureInView(Session, Output, 'property-inspector', Scroll, 'crate-material', 'props');
   Presented.CaptureInView(Session, Output, 'flame-graph', Scroll, 'capture');
@@ -57,7 +57,7 @@ end procedure;
 // - `Page`: Code, Editing tools, Developer tools or More developer tools.
 // - `Scroll`: Injects a vertical wheel delta in native lines over the page margin.
 public procedure Capture(
-  Session: Gui.Session<Gallery.Msg>; Output: string; Page: Gallery.Page; Scroll: procedure(float)
+  Session: Gui.Session of Gallery.Msg; Output: string; Page: Gallery.Page; Scroll: procedure(float)
 );
 requires Page = Gallery.Page.Code or Page = Gallery.Page.EditingTools
   or Page = Gallery.Page.DeveloperTools or Page = Gallery.Page.MoreDeveloperTools;

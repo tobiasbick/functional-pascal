@@ -14,9 +14,9 @@ const Path: array of string := ['Home', 'Projects', 'FPas CUI', 'Settings'];
 // - `Navigate`: Maps an activated ancestor caption to a message.
 // ## Returns
 // The shared breadcrumb trail.
-public function View<TMsg>(Navigate: function(string): TMsg): E.Element<TMsg>;
+public function View of TMsg(Navigate: function(string): TMsg): E.Element of TMsg;
 begin
-  return B.Breadcrumb<TMsg>(
+  return B.Breadcrumb of TMsg(
     'breadcrumbs',
     Path,
     function(Index: int): TMsg => Navigate(Path[Index])

@@ -35,13 +35,13 @@ end record;
 // - `Settings`: Optional ticks, dimensions, value display and input permission.
 // ## Returns
 // The graphical ruler slider.
-public function RulerSlider<TMsg>(
+public function RulerSlider of TMsg(
   Id: string; Label: string; Value: float; Minimum: float; Maximum: float;
   OnChange: function(float): TMsg; Settings: Options? := null
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.RulerSlider(
+  return (E.Element of TMsg).RulerSlider(
     Id,
     Label,
     Value,

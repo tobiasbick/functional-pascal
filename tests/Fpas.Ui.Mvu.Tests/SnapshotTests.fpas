@@ -20,8 +20,8 @@ public type SnapshotTests = record
   // cancels the waiting reply, and continues to report runs until their cleanup finishes.
   [X.FactAttribute]
   public procedure FullMailboxReplacementAndClose();
-    function Update(Model: string; Message: string): A.Transition<string, string>;
-      async function Work(Context: A.BackgroundContext<string>; _Token: T.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, string>>;
+    function Update(Model: string; Message: string): A.Transition of (string, string);
+      async function Work(Context: A.BackgroundContext of string; _Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, string);
       begin
         try
           await Context.Post(Message + ' reply').ConfigureAwait(false);
@@ -33,14 +33,15 @@ public type SnapshotTests = record
       end function;
     begin
       if Message <> 'first' and Message <> 'replace' then
-        return new A.Transition<string, string>(Message, []);
+        return new A.Transition of (string, string)(Message, []);
       end if;
 
-      return Gate.Wrap<string>(
-        new A.Transition<string, string>(
+      return Gate.Wrap of string(
+        new A.Transition of (string, string)(
           Model, [
-            A.StartBackground<string>(
-              'load', Fx.Effect<Fx.Completion, string, A.BackgroundContext<string>>.Defer(Work)
+            A.StartBackground of string(
+              'load',
+              Fx.Effect of (Fx.Completion, string, A.BackgroundContext of string).Defer(Work)
             )
           ]
         )
@@ -50,45 +51,45 @@ public type SnapshotTests = record
     const Finish: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
       Tasks.TaskCreationOptions.RunContinuationsAsynchronously
     );
-    const Gate: Replies.Effects<string> := Replies.Effects<string>.Create();
+    const Gate: Replies.Effects of string := (Replies.Effects of string).Create();
     using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
-    const Session: Runtime.Runtime<string, string, int> := Runtime.Start<string, string, int>(
+    const Session: Runtime.Runtime of (string, string, int) := Runtime.Start of (string, string, int)(
       'ready', Update, procedure(_Request: A.HostRequest) begin end procedure, 1
     );
     try
-      const First: Channels.ChannelReader<Replies.Reply<string>> := Gate.Watch('load');
+      const First: Channels.ChannelReader of Replies.Reply of string := Gate.Watch('load');
       Session.Dispatch('first');
-      const OldReply: Replies.Reply<string> := First.ReadAsync(
+      const OldReply: Replies.Reply of string := First.ReadAsync(
         Stop.Token
       ).AsTask().GetAwaiter().GetResult();
       OldReply.Release().WaitAsync(Stop.Token).GetAwaiter().GetResult();
       const Full: D.SessionSnapshot := Session.Snapshot();
-      X.Assert.Equal<D.Lifecycle>(D.Lifecycle.Open, Full.State);
-      X.Assert.Equal<int>(1, Full.MailboxCount);
-      X.Assert.Equal<int>(1, Full.MailboxCapacity);
-      X.Assert.Equal<int>(1, Full.ActiveEffects.Count);
+      X.Assert.Equal of D.Lifecycle(D.Lifecycle.Open, Full.State);
+      X.Assert.Equal of int(1, Full.MailboxCount);
+      X.Assert.Equal of int(1, Full.MailboxCapacity);
+      X.Assert.Equal of int(1, Full.ActiveEffects.Count);
       const Old: D.EffectRun := Full.ActiveEffects[0];
-      X.Assert.Equal<string>('load', Old.Id);
+      X.Assert.Equal of string('load', Old.Id);
       X.Assert.True(Old.IsCurrent);
       X.Assert.False(Old.CancellationRequested);
 
-      const Second: Channels.ChannelReader<Replies.Reply<string>> := Gate.Watch('load');
+      const Second: Channels.ChannelReader of Replies.Reply of string := Gate.Watch('load');
       Session.Dispatch('replace');
-      const NewReply: Replies.Reply<string> := Second.ReadAsync(
+      const NewReply: Replies.Reply of string := Second.ReadAsync(
         Stop.Token
       ).AsTask().GetAwaiter().GetResult();
       const Replaced: D.SessionSnapshot := Session.Snapshot();
-      X.Assert.Equal<int>(1, Replaced.MailboxCount);
-      X.Assert.Equal<long>(0L, Replaced.StaleReplies);
-      X.Assert.Equal<int>(2, Replaced.ActiveEffects.Count);
+      X.Assert.Equal of int(1, Replaced.MailboxCount);
+      X.Assert.Equal of long(0L, Replaced.StaleReplies);
+      X.Assert.Equal of int(2, Replaced.ActiveEffects.Count);
       for Worker: D.EffectRun in Replaced.ActiveEffects do
         const Current: bool := Worker.Generation <> Old.Generation;
-        X.Assert.Equal<string>('load', Worker.Id);
-        X.Assert.Equal<bool>(Current, Worker.IsCurrent);
-        X.Assert.Equal<bool>(not Current, Worker.CancellationRequested);
+        X.Assert.Equal of string('load', Worker.Id);
+        X.Assert.Equal of bool(Current, Worker.IsCurrent);
+        X.Assert.Equal of bool(not Current, Worker.CancellationRequested);
       end for;
 
-      X.Assert.Equal<int>(1, Full.ActiveEffects.Count);
+      X.Assert.Equal of int(1, Full.ActiveEffects.Count);
       X.Assert.True(Full.ActiveEffects[0].IsCurrent);
 
       case Session.Advance() of
@@ -97,19 +98,19 @@ public type SnapshotTests = record
           X.Assert.Fail('Expected the queued reply of the superseded run to be discarded.');
       end case;
 
-      X.Assert.Equal<long>(1L, Session.Snapshot().StaleReplies);
-      X.Assert.Equal<string>('ready', Session.Model());
+      X.Assert.Equal of long(1L, Session.Snapshot().StaleReplies);
+      X.Assert.Equal of string('ready', Session.Model());
       discard Session.Post('pending at close');
-      const Space: Tasks.Task<bool> := Session.WaitForSpace(Stop.Token);
+      const Space: Tasks.Task of bool := Session.WaitForSpace(Stop.Token);
       const Admission: Tasks.Task := NewReply.Release();
       X.Assert.False(Admission.IsCompleted);
       const Closing: Tasks.Task := Session.Close();
       X.Assert.False(Space.GetAwaiter().GetResult());
       X.Assert.Same(Closing, Session.Close());
       const DuringClose: D.SessionSnapshot := Session.Snapshot();
-      X.Assert.Equal<D.Lifecycle>(D.Lifecycle.Closing, DuringClose.State);
-      X.Assert.Equal<int>(0, DuringClose.MailboxCount);
-      X.Assert.Equal<int>(2, DuringClose.ActiveEffects.Count);
+      X.Assert.Equal of D.Lifecycle(D.Lifecycle.Closing, DuringClose.State);
+      X.Assert.Equal of int(0, DuringClose.MailboxCount);
+      X.Assert.Equal of int(2, DuringClose.ActiveEffects.Count);
       for Worker: D.EffectRun in DuringClose.ActiveEffects do
         X.Assert.False(Worker.IsCurrent);
         X.Assert.True(Worker.CancellationRequested);
@@ -119,11 +120,11 @@ public type SnapshotTests = record
       Closing.WaitAsync(Stop.Token).GetAwaiter().GetResult();
       X.Assert.True(Admission.IsCanceled);
       const Closed: D.SessionSnapshot := Session.Snapshot();
-      X.Assert.Equal<D.Lifecycle>(D.Lifecycle.Closed, Closed.State);
-      X.Assert.Equal<int>(0, Closed.ActiveEffects.Count);
-      X.Assert.Equal<int>(0, Closed.MailboxCount);
-      X.Assert.Equal<long>(1L, Closed.StaleReplies);
-      X.Assert.Equal<string>('ready', Session.Model());
+      X.Assert.Equal of D.Lifecycle(D.Lifecycle.Closed, Closed.State);
+      X.Assert.Equal of int(0, Closed.ActiveEffects.Count);
+      X.Assert.Equal of int(0, Closed.MailboxCount);
+      X.Assert.Equal of long(1L, Closed.StaleReplies);
+      X.Assert.Equal of string('ready', Session.Model());
     finally
       discard Finish.TrySetResult();
       Session.Close().WaitAsync(Sys.TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();

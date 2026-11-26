@@ -25,7 +25,7 @@ begin
   end if;
 end procedure;
 
-function Find(Session: Gui.Session<State.Msg>; Id: string): Gui.Control?;
+function Find(Session: Gui.Session of State.Msg; Id: string): Gui.Control?;
 begin
   for Item: Gui.Control in Session.Snapshot().Controls do
     if Item.Id = Id then
@@ -36,10 +36,10 @@ begin
   return null;
 end function;
 
-procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);
+procedure Reject(Node: E.Element of int; Profile: V.Target; Reason: string);
 begin
   try
-    discard V.Prepare<int>(Node, Profile);
+    discard V.Prepare of int(Node, Profile);
   catch Error: Sys.ArgumentException do
     Check(Error.Message.Contains(Reason), Error.Message);
     return;
@@ -62,7 +62,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       Button := -1;
     end if;
   end procedure;
-  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  function Update(Model: State.Model; Message: State.Msg): App.Transition of (State.Model, State.Msg);
   begin
     case Message of
       when State.Msg.Overlays(SliceOverlays.Msg.Preview):
@@ -72,7 +72,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
 
     return GalleryUpdate.Update(Model, Message);
   end function;
-  procedure Step(Session: Gui.Session<State.Msg>);
+  procedure Step(Session: Gui.Session of State.Msg);
   begin
     Check(Session.Step(), 'The tooltip gallery closed.');
   end procedure;
@@ -83,10 +83,14 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     discard Window.TryWake();
   end procedure;
 begin
-  const Tip: E.Element<int> := T.Tooltip<int>(B.Button<int>('anchor', 'Anchor', 1), 'Hint');
+  const Tip: E.Element of int := T.Tooltip of int(B.Button of int('anchor', 'Anchor', 1), 'Hint');
   Reject(Tip, V.Target.Terminal, 'Graphical profile');
   Reject(Tip, V.Target.Portable, 'Graphical profile');
-  Reject(T.Tooltip<int>(E.Text<int>('Label'), 'Hint'), V.Target.Graphical, 'interactive target');
+  Reject(
+    T.Tooltip of int(E.Text of int('Label'), 'Hint'),
+    V.Target.Graphical,
+    'interactive target'
+  );
 
   var X: float := -1.0F;
   var Y: float := -1.0F;
@@ -94,7 +98,7 @@ begin
   var Presses: int := 0;
   const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI tooltip gallery', 1000, 900, Renderer);
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Overlays), Update, View.Build, Window, 256, Inject,
     ThemeFor := GalleryUpdate.ThemeFor
   );

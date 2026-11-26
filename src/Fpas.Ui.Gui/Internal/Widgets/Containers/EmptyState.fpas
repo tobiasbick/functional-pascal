@@ -18,12 +18,12 @@ uses System as Sys;
 // - `Title`: Literal heading.
 // - `Settings`: Appearance and optional action caption.
 // - `Action`: Optional action message factory.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Title: string; Settings: E.Options; Action: Sys.Func<TMsg>?);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Title: string; Settings: E.Options; Action: (Sys.Func of TMsg)?);
 begin
   const Part: string := E.ActionId(Id);
   const Token: string := C.Token('empty-state-action', Part);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled and Action <> null;
-  const Focus: bool := C.WantsFocus<TMsg>(Frame, Part, Token, Enabled);
+  const Focus: bool := C.WantsFocus of TMsg(Frame, Part, Token, Enabled);
   const Track: string? := if Action <> null and not Frame.PaintingClosed then
     Token
   else
@@ -33,7 +33,7 @@ begin
     C.Token('empty-state', Id), Title, Settings.Icon, Settings.Description, Settings.ActionLabel,
     Enabled, Focus, Track
   );
-  C.Track<TMsg>(Frame, new App.Control(Id, Title, 'empty-state', new Cui.CuiRectangle(), false));
+  C.Track of TMsg(Frame, new App.Control(Id, Title, 'empty-state', new Cui.CuiRectangle(), false));
   if Track <> null then
     Frame.Controls.Add(
       new App.Control(
@@ -48,7 +48,7 @@ begin
 
   if Enabled and Clicked then
     case Action of
-      when is Sys.Func<TMsg> as Notify:
+      when is Sys.Func of TMsg as Notify:
         Frame.Messages.Add(Notify.Invoke());
       else
     end case;

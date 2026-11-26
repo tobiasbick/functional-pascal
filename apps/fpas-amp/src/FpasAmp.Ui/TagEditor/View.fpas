@@ -48,22 +48,22 @@ begin
   return L.Spacing.Fixed(L.Measure.Logical(Value));
 end function;
 
-function Fixed(Content: E.Element<M.Msg>; Size: int): E.Element<M.Msg>;
+function Fixed(Content: E.Element of M.Msg; Size: int): E.Element of M.Msg;
 begin
-  return E.Size<M.Msg>(Content, new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(Size))));
+  return E.Size of M.Msg(Content, new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(Size))));
 end function;
 
-function Text(Value: string; Role: Texts.Appearance := Texts.Appearance.Label): E.Element<M.Msg>;
+function Text(Value: string; Role: Texts.Appearance := Texts.Appearance.Label): E.Element of M.Msg;
 begin
-  return Texts.Text<M.Msg>(Value, Role);
+  return Texts.Text of M.Msg(Value, Role);
 end function;
 
 function Button(
   Id: string; Title: string; OnClick: M.Msg; Variant: S.ButtonVariant := S.ButtonVariant.Outline;
   Enabled: bool := true; Size: B.Size := B.Size.Small
-): E.Element<M.Msg>;
+): E.Element of M.Msg;
 begin
-  return B.Button<M.Msg>(
+  return B.Button of M.Msg(
     Id,
     Title,
     OnClick,
@@ -71,7 +71,7 @@ begin
   );
 end function;
 
-function Input(Id: string; Value: string; Changed: function(string): M.Msg; Current: M.State; Placeholder: string := ''): E.Element<M.Msg>;
+function Input(Id: string; Value: string; Changed: function(string): M.Msg; Current: M.State; Placeholder: string := ''): E.Element of M.Msg;
 begin
   const Bytes: int := Encoding.Encoding.UTF8.GetByteCount(Value);
   if Value.Contains(#0) or Bytes > 65535 then
@@ -81,7 +81,7 @@ begin
   if Value.Contains(#10) or Value.Contains(#13) or Bytes > 4095 then
     const LF: string := Sys.Char.ConvertFromUtf32(10);
     const CR: string := Sys.Char.ConvertFromUtf32(13);
-    return Areas.TextArea<M.Msg>(
+    return Areas.TextArea of M.Msg(
       Id, Value.Replace(CR + LF, LF).Replace(CR, LF), Changed,
       new Areas.Options(
         Height := 64, ControlSize := B.Size.Small,
@@ -90,7 +90,7 @@ begin
     );
   end if;
 
-  return Fields.TextField<M.Msg>(
+  return Fields.TextField of M.Msg(
     Id, Value, Changed, new Fields.Options(
       ControlSize := B.Size.Small,
       Enabled := not Current.Saving,
@@ -100,22 +100,22 @@ begin
   );
 end function;
 
-function CustomProposal(Current: M.State; Key: string; Id: string): E.Element<M.Msg>;
+function CustomProposal(Current: M.State; Key: string; Id: string): E.Element of M.Msg;
 begin
   const Proposal: string := F.Value(Current.Proposals, Key);
   return if Proposal = '' then
     Text('—', Texts.Appearance.Muted)
   else
-    Checks.Checkbox<M.Msg>(
+    Checks.Checkbox of M.Msg(
       Id, Proposal, Current.Selected.Contains(Key),
       function(Value: bool): M.Msg => M.Msg.Take(Key, Value), Enabled := not Current.Saving
     )
   end if;
 end function;
 
-function CustomRows(Current: M.State; Height: int; Width: int): E.Element<M.Msg>;
+function CustomRows(Current: M.State; Height: int; Width: int): E.Element of M.Msg;
 begin
-  const Suggested: C.SortedSet<string> := new C.SortedSet<string>(Sys.StringComparer.Ordinal);
+  const Suggested: C.SortedSet of string := new C.SortedSet of string(Sys.StringComparer.Ordinal);
   for Key: string in Current.Proposals.Keys do
     if Key.StartsWith(F.Custom) then
       discard Suggested.Add(Key);
@@ -135,7 +135,7 @@ begin
   else
     Fill
   end if;
-  const Rows: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  const Rows: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();
   for Tag: M.Custom in Current.Extra do
     const Id: int := Tag.Id;
     const Key: string := F.Custom + Tag.Name;
@@ -148,10 +148,10 @@ begin
         Tag.Name
       end if;
       Rows.Add(
-        E.Row<M.Msg>(
+        E.Row of M.Msg(
           new L.Flow(Gap := Points(12), Align := L.Alignment.Center, PaddingEnd := Points(10)),
           Fixed(Text(Frame), NameWidth),
-          E.Size<M.Msg>(
+          E.Size of M.Msg(
             Text(TagFiles.BinaryPreview(Tag.Name, Tag.Value), Texts.Appearance.Secondary),
             Fill
           ),
@@ -160,7 +160,7 @@ begin
       );
       continue;
     end if;
-    const Cells: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+    const Cells: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();
     Cells.Add(
       Fixed(
         Input(
@@ -170,7 +170,7 @@ begin
       )
     );
     Cells.Add(
-      E.Size<M.Msg>(
+      E.Size of M.Msg(
         Input(
           'custom-value-' + Id.ToString(), Tag.Value,
           function(Value: string): M.Msg => M.Msg.Change(Id, false, Value), Current, 'Tag value'
@@ -178,7 +178,9 @@ begin
       )
     );
     if Compare then
-      Cells.Add(E.Size<M.Msg>(CustomProposal(Current, Key, 'custom-take-' + Id.ToString()), Fill));
+      Cells.Add(
+        E.Size of M.Msg(CustomProposal(Current, Key, 'custom-take-' + Id.ToString()), Fill)
+      );
     end if;
 
     Cells.Add(
@@ -188,7 +190,7 @@ begin
       )
     );
     Rows.Add(
-      E.Row<M.Msg>(
+      E.Row of M.Msg(
         new L.Flow(Gap := Points(12), Align := L.Alignment.Center, PaddingEnd := Points(10)),
         Cells.ToArray()
       )
@@ -197,11 +199,11 @@ begin
 
   for Key: string in Suggested do
     Rows.Add(
-      E.Row<M.Msg>(
+      E.Row of M.Msg(
         new L.Flow(Gap := Points(12), Align := L.Alignment.Center, PaddingEnd := Points(10)),
         Fixed(Text(Key.Substring(F.Custom.Length)), NameWidth),
         Fixed(Text('—', Texts.Appearance.Muted), ValueWidth),
-        E.Size<M.Msg>(CustomProposal(Current, Key, 'custom-new-' + Key), Fill)
+        E.Size of M.Msg(CustomProposal(Current, Key, 'custom-new-' + Key), Fill)
       )
     );
   end for;
@@ -210,22 +212,22 @@ begin
     Rows.Add(Text('No custom tags', Texts.Appearance.Secondary));
   end if;
 
-  const Header: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  const Header: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();
   Header.Add(Fixed(Text('Name'), NameWidth));
-  Header.Add(E.Size<M.Msg>(Text('Value'), ValueSize));
+  Header.Add(E.Size of M.Msg(Text('Value'), ValueSize));
   if Compare then
-    Header.Add(E.Size<M.Msg>(Text('MusicBrainz'), Fill));
+    Header.Add(E.Size of M.Msg(Text('MusicBrainz'), Fill));
   end if;
 
   Header.Add(Button('custom-add', 'Add tag', M.Msg.Add, Enabled := not Current.Saving));
-  return E.Column<M.Msg>(
+  return E.Column of M.Msg(
     new L.Flow(Gap := Points(7), Align := L.Alignment.Stretch),
-    E.Row<M.Msg>(
+    E.Row of M.Msg(
       new L.Flow(Gap := Points(12), Align := L.Alignment.Center),
       Header.ToArray()
     ),
     if Compare then
-      E.Row<M.Msg>(
+      E.Row of M.Msg(
         new L.Flow(Justify := L.Justification.End, Gap := Points(8)),
         Button(
           'custom-take-all',
@@ -240,20 +242,23 @@ begin
         )
       )
     else
-      E.Column<M.Msg>()
+      E.Column of M.Msg()
     end if,
-    E.Divider<M.Msg>(),
+    E.Divider of M.Msg(),
     Fixed(
-      E.ScrollView<M.Msg>(
+      E.ScrollView of M.Msg(
         'tag-custom-scroll',
-        E.Column<M.Msg>(new L.Flow(Gap := Points(8), Align := L.Alignment.Stretch), Rows.ToArray()),
+        E.Column of M.Msg(
+          new L.Flow(Gap := Points(8), Align := L.Alignment.Stretch),
+          Rows.ToArray()
+        ),
         Current.Offset, function(Change: L.ScrollChange): M.Msg => M.Msg.Scroll(Change.Position)
       ), Height
     )
   );
 end function;
 
-function Compare(Current: M.State; Height: int; Width: int): E.Element<M.Msg>;
+function Compare(Current: M.State; Height: int; Width: int): E.Element of M.Msg;
 begin
   const LabelWidth: int := if Width >= 680 then
     104
@@ -267,12 +272,12 @@ begin
   else
     'File tags'
   end if;
-  const Rows: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  const Rows: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();
   for Index: int := 0 to Keys[Current.Tab].Length - 1 do
     const Key: string := Keys[Current.Tab][Index];
     const Proposal: string := F.Value(Current.Proposals, Key);
     Rows.Add(
-      E.Row<M.Msg>(
+      E.Row of M.Msg(
         new L.Flow(Gap := Points(12), Align := L.Alignment.Center),
         Fixed(Text(Captions[Current.Tab][Index]), LabelWidth),
         Fixed(
@@ -281,11 +286,11 @@ begin
             function(Value: string): M.Msg => M.Msg.Edit(Key, Value), Current
           ), FileWidth
         ),
-        E.Size<M.Msg>(
+        E.Size of M.Msg(
           if Proposal = '' then
             Text('No suggestion', Texts.Appearance.Muted)
           else
-            Checks.Checkbox<M.Msg>(
+            Checks.Checkbox of M.Msg(
               'tag-take-' + Key, Proposal, Current.Selected.Contains(Key),
               function(Value: bool): M.Msg => M.Msg.Take(Key, Value), Enabled := not Current.Saving
             )
@@ -295,12 +300,12 @@ begin
     );
   end for;
 
-  return E.Column<M.Msg>(
+  return E.Column of M.Msg(
     new L.Flow(Gap := Points(7), Align := L.Alignment.Stretch),
-    E.Row<M.Msg>(
+    E.Row of M.Msg(
       new L.Flow(Gap := Points(12), Align := L.Alignment.Center),
       Fixed(Text('Tag', Texts.Appearance.Muted), LabelWidth), Fixed(Text(Caption), FileWidth),
-      E.Size<M.Msg>(Text('MusicBrainz'), Fill),
+      E.Size of M.Msg(Text('MusicBrainz'), Fill),
       Button(
         'tag-take-all', 'Select all', M.Msg.TakeAll(true), S.ButtonVariant.Ghost,
         not Current.Saving and Current.Proposals.Count > 0
@@ -310,42 +315,45 @@ begin
         not Current.Saving and Current.Selected.Count > 0
       )
     ),
-    E.Divider<M.Msg>(),
+    E.Divider of M.Msg(),
     Fixed(
-      E.ScrollView<M.Msg>(
+      E.ScrollView of M.Msg(
         'tag-rows-' + Current.Tab.ToString(),
-        E.Column<M.Msg>(new L.Flow(Gap := Points(8), Align := L.Alignment.Stretch), Rows.ToArray())
+        E.Column of M.Msg(
+          new L.Flow(Gap := Points(8), Align := L.Alignment.Stretch),
+          Rows.ToArray()
+        )
       ), Height
     )
   );
 end function;
 
-function Footer(Current: M.State): E.Element<M.Msg>;
+function Footer(Current: M.State): E.Element of M.Msg;
 begin
   const Original: TagFiles.Snapshot? := Current.Original;
-  return E.Row<M.Msg>(
+  return E.Row of M.Msg(
     new L.Flow(
       Justify := L.Justification.Between,
       Align := L.Alignment.Center,
       Gap := Points(8),
       Wrap := true
     ),
-    E.Row<M.Msg>(
+    E.Row of M.Msg(
       new L.Flow(Gap := Points(14), Align := L.Alignment.Center),
       Text('Save to'),
-      Checks.Checkbox<M.Msg>(
+      Checks.Checkbox of M.Msg(
         'tag-database',
         'Library database',
         Current.Database,
         M.Msg.Database,
         Enabled := not Current.Saving
       ),
-      Checks.Checkbox<M.Msg>(
+      Checks.Checkbox of M.Msg(
         'tag-file', 'Audio file', Current.AudioFile, M.Msg.AudioFile,
         Enabled := not Current.Saving and Original <> null and Original.Size >= 0L
       )
     ),
-    E.Row<M.Msg>(
+    E.Row of M.Msg(
       new L.Flow(Gap := Points(8), Align := L.Alignment.Center),
       Button(
         'tag-cancel',
@@ -374,10 +382,10 @@ end function;
 // Overlays Current on Base, forwarding each editor proposal through Message.
 // Width and Height are the viewport dimensions used to bound scrollable rows.
 // Returns the base view with the tag dialog on top.
-public function Build<TParent>(
-  Current: M.State; Width: int; Height: int; Base: E.Element<TParent>;
+public function Build of TParent(
+  Current: M.State; Width: int; Height: int; Base: E.Element of TParent;
   Message: function(M.Msg): TParent
-): E.Element<TParent>;
+): E.Element of TParent;
 begin
   const DialogWidth: int := Sys.Math.Clamp(Width - 24, 300, 900);
   const RowHeight: int := Sys.Math.Clamp(
@@ -387,10 +395,10 @@ begin
       306
     end if), 90, 258
   );
-  const Parts: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  const Parts: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();
   if Current.Error <> '' then
     Parts.Add(
-      Alerts.Alert<M.Msg>(
+      Alerts.Alert of M.Msg(
         'tag-error', Current.Error,
         new Alerts.Options(Tone := S.Tone.Warning, Description := Current.HttpDetails)
       )
@@ -403,7 +411,7 @@ begin
     end if;
   else
     Parts.Add(SearchView.Build(Current, DialogWidth));
-    Parts.Add(Tabs.Tabs<M.Msg>('tag-tabs', TabItems, Current.Tab, M.Msg.Tab));
+    Parts.Add(Tabs.Tabs of M.Msg('tag-tabs', TabItems, Current.Tab, M.Msg.Tab));
     if Current.Tab = 3 then
       Parts.Add(CustomRows(Current, RowHeight, DialogWidth));
     else
@@ -411,7 +419,7 @@ begin
     end if;
 
     Parts.Add(
-      E.Row<M.Msg>(
+      E.Row of M.Msg(
         new L.Flow(Justify := L.Justification.End),
         Text(
           SearchView.Status(Current),
@@ -419,13 +427,16 @@ begin
         )
       )
     );
-    Parts.Add(E.Divider<M.Msg>());
+    Parts.Add(E.Divider of M.Msg());
     Parts.Add(Footer(Current));
   end if;
 
-  return Dialog.Dialog<TParent>(
-    'tag-editor', Base, Composition.Map<M.Msg, TParent>(
-      E.Column<M.Msg>(new L.Flow(Gap := Points(11), Align := L.Alignment.Stretch), Parts.ToArray()),
+  return Dialog.Dialog of TParent(
+    'tag-editor', Base, Composition.Map of (M.Msg, TParent)(
+      E.Column of M.Msg(
+        new L.Flow(Gap := Points(11), Align := L.Alignment.Stretch),
+        Parts.ToArray()
+      ),
       Message
     ),
     true, new Dialog.Options(

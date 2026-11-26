@@ -14,10 +14,10 @@ uses Fpas.Ui.Elements as E;
 // - `Current`: Zero-based step in progress, or the step count when all are complete.
 // ## Returns
 // A graphical progress display driven by the model.
-public function Stepper<TMsg>(Id: string; Steps: array of string; Current: int): E.Element<TMsg>;
+public function Stepper of TMsg(Id: string; Steps: array of string; Current: int): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.StepProgress(Id, Steps, Current);
+  return (E.Element of TMsg).StepProgress(Id, Steps, Current);
 end function;
 
 end unit;

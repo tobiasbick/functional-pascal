@@ -21,7 +21,7 @@ uses Fpas.Ui.Widgets.Editors.TimelineEditors as TimelineEditors;
 // ## Parameters
 // - `Frame`: Current GUI frame.
 // - `Node`: Element to present.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Node: E.Element<TMsg>);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Node: E.Element of TMsg);
 begin
   case Node of
     when E.Element.PropertyInspector(
@@ -30,7 +30,7 @@ begin
       const Changed: function(PropertyInspectors.Event): TMsg,
       const Settings: PropertyInspectors.Options
     ):
-      PropertyInspector.Draw<TMsg>(Frame, Id, Groups, Changed, Settings);
+      PropertyInspector.Draw of TMsg(Frame, Id, Groups, Changed, Settings);
     when E.Element.FlameGraph(
       const Id: string,
       const Spans: array of FlameGraphs.Span,
@@ -38,7 +38,7 @@ begin
       const Changed: function(FlameGraphs.Event): TMsg,
       const Settings: FlameGraphs.Options
     ):
-      FlameGraph.Draw<TMsg>(Frame, Id, Spans, Current, Changed, Settings);
+      FlameGraph.Draw of TMsg(Frame, Id, Spans, Current, Changed, Settings);
     when E.Element.CurveEditor(
       const Id: string,
       const Keys: array of CurveEditors.Key,
@@ -46,7 +46,7 @@ begin
       const Changed: function(CurveEditors.Event): TMsg,
       const Settings: CurveEditors.Options
     ):
-      CurveEditor.Draw<TMsg>(Frame, Id, Keys, Selected, Changed, Settings);
+      CurveEditor.Draw of TMsg(Frame, Id, Keys, Selected, Changed, Settings);
     when E.Element.GradientEditor(
       const Id: string,
       const Stops: array of GradientEditors.Stop,
@@ -54,7 +54,7 @@ begin
       const Changed: function(GradientEditors.Event): TMsg,
       const Settings: GradientEditors.Options
     ):
-      GradientEditor.Draw<TMsg>(Frame, Id, Stops, Selected, Changed, Settings);
+      GradientEditor.Draw of TMsg(Frame, Id, Stops, Selected, Changed, Settings);
     when E.Element.TimelineEditor(
       const Id: string,
       const Tracks: array of TimelineEditors.Track,
@@ -62,7 +62,7 @@ begin
       const Changed: function(TimelineEditors.Event): TMsg,
       const Settings: TimelineEditors.Options
     ):
-      TimelineEditor.Draw<TMsg>(Frame, Id, Tracks, Current, Changed, Settings);
+      TimelineEditor.Draw of TMsg(Frame, Id, Tracks, Current, Changed, Settings);
     else
   end case;
 end procedure;

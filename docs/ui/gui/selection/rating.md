@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Inputs.Ratings as C;
 // - `Stars`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Stars: int): E.Element<int>;
+public function View(Stars: int): E.Element of int;
 begin
-  return C.Rating<int>('rating', 'Rating', Stars, function(Value: int): int => Value);
+  return C.Rating of int('rating', 'Rating', Stars, function(Value: int): int => Value);
 end function;
 
 end unit;

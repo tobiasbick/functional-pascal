@@ -21,10 +21,10 @@ uses System as Sys;
 // - `Format`: Zero-based index for PNG, JPG or WebP.
 // ## Returns
 // The field with selection and action proposals.
-public function View(Format: int): E.Element<W.Event>;
+public function View(Format: int): E.Element of W.Event;
 begin
   const Download: Tools.Tool := new Tools.Tool(Sys.Char.ConvertFromUtf32($E0B2), 'Download');
-  return W.OptionAction<W.Event>('export',
+  return W.OptionAction of W.Event('export',
     new W.Value('Save as', ['png', 'jpg', 'webp'], Format, Download),
     function(Change: W.Event): W.Event => Change);
 end function;

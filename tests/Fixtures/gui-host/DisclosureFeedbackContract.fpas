@@ -26,19 +26,22 @@ uses System.Threading.Channels as Channels;
 // - `Renderer`: Native renderer under test.
 // - `Capture`: Prefix for the disclosure screenshots.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
-  function Update(Model: State.Model; Message: State.Msg): Mvu.Transition<State.Model, State.Msg>;
+  function Update(Model: State.Model; Message: State.Msg): Mvu.Transition of (State.Model, State.Msg);
   begin
     case Message of
       when State.Msg.Disclosure(D.Msg.Preview):
         Activations := Activations + 1;
       else
     end case;
-    const Next: Mvu.Transition<State.Model, State.Msg> := G.Update(Model, Message);
+    const Next: Mvu.Transition of (State.Model, State.Msg) := G.Update(Model, Message);
     if Target <> '' then
-      return new Mvu.Transition<State.Model, State.Msg>(Next.Model, [Mvu.Focus<State.Msg>(Target)]);
+      return new Mvu.Transition of (State.Model, State.Msg)(
+        Next.Model,
+        [Mvu.Focus of State.Msg(Target)]
+      );
     end if;
 
-    return Effects.Wrap<State.Model>(Next);
+    return Effects.Wrap of State.Model(Next);
   end function;
 
   procedure Inject();
@@ -56,12 +59,12 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     end if;
   end procedure;
 
-  procedure Step(Session: Gui.Session<State.Msg>);
+  procedure Step(Session: Gui.Session of State.Msg);
   begin
     A.Check(Session.Step(), 'The Disclosure page closed unexpectedly.');
   end procedure;
 
-  function HasControl(Session: Gui.Session<State.Msg>; Id: string): bool;
+  function HasControl(Session: Gui.Session of State.Msg; Id: string): bool;
   begin
     for Item: Gui.Control in Session.Snapshot().Controls do
       if Item.Id = Id then
@@ -72,7 +75,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     return false;
   end function;
 
-  procedure Aim(Session: Gui.Session<State.Msg>; Id: string);
+  procedure Aim(Session: Gui.Session of State.Msg; Id: string);
   begin
     const Box: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
     A.Check(Box.Width > 0.0F and Box.Height > 0.0F, 'Missing native control ' + Id);
@@ -80,7 +83,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     Y := Box.Y + Box.Height / 2.0F;
   end procedure;
 
-  procedure WaitCard(Session: Gui.Session<State.Msg>; Open: bool);
+  procedure WaitCard(Session: Gui.Session of State.Msg; Open: bool);
   begin
     const Limit: Sys.DateTime := Sys.DateTime.UtcNow.AddSeconds(3.0);
     while HasControl(Session, 'jonas-card') <> Open and Sys.DateTime.UtcNow < Limit do
@@ -91,7 +94,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     A.Check(HasControl(Session, 'jonas-card') = Open, 'The hover card did not change visibility.');
   end procedure;
 
-  procedure Click(Session: Gui.Session<State.Msg>; Id: string);
+  procedure Click(Session: Gui.Session of State.Msg; Id: string);
   begin
     Aim(Session, Id);
     Left := 1;
@@ -109,7 +112,7 @@ begin
   var Key: int := 0;
   var Target: string := '';
   var Activations: int := 0;
-  const Effects: Replies.Effects<State.Msg> := Replies.Effects<State.Msg>.Create();
+  const Effects: Replies.Effects of State.Msg := (Replies.Effects of State.Msg).Create();
   const Timeout: Sys.TimeSpan := Sys.TimeSpan.FromSeconds(5.0);
   const Banner: string := 'release-banner';
   const Checklist: string := 'workspace-onboarding';
@@ -118,7 +121,7 @@ begin
     'FPas CUI disclosure feedback', 1100, 1500, Renderer, true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Disclosure),
     Update, View.Build, Window, 256, Inject, ThemeFor := G.ThemeFor
   );
@@ -240,16 +243,16 @@ begin
   A.Check(A.Control(Session, B.ActionId(Banner)).Enabled, 'The announcement must reopen.');
 
   A.Send(Session, State.Msg.Show(State.Page.Overview));
-  const Countdown: Channels.ChannelReader<Replies.Reply<State.Msg>> := Effects.Watch(Clock.Id);
+  const Countdown: Channels.ChannelReader of Replies.Reply of State.Msg := Effects.Watch(Clock.Id);
   A.Send(Session, State.Msg.Show(State.Page.Disclosure));
-  const Initial: Replies.Reply<State.Msg> := Countdown.ReadAsync().AsTask().WaitAsync(
+  const Initial: Replies.Reply of State.Msg := Countdown.ReadAsync().AsTask().WaitAsync(
     Timeout
   ).GetAwaiter().GetResult();
   Initial.Release().WaitAsync(Timeout).GetAwaiter().GetResult();
   Step(Session);
   const Before: string := A.Control(Session, 'disclosure-launch').Value;
 
-  const Tick: Replies.Reply<State.Msg> := Countdown.ReadAsync().AsTask().WaitAsync(
+  const Tick: Replies.Reply of State.Msg := Countdown.ReadAsync().AsTask().WaitAsync(
     Timeout
   ).GetAwaiter().GetResult();
   Step(Session);

@@ -15,9 +15,9 @@ uses GuiGallery.Shared.State as Demo;
 // - `Model`: Current gallery state.
 // ## Returns
 // The volume slider.
-public function Volume(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+public function Volume(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
 begin
-  return S.Slider<State.Msg>(
+  return S.Slider of State.Msg(
     'volume',
     'Volume',
     Model.Volume,
@@ -35,9 +35,9 @@ end function;
 // - `Model`: Current gallery state.
 // ## Returns
 // The brightness slider.
-public function Brightness(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+public function Brightness(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
 begin
-  return S.Slider<State.Msg>(
+  return S.Slider of State.Msg(
     'brightness',
     'Brightness',
     Data.Brightness,

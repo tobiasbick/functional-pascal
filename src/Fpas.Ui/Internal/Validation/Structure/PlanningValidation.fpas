@@ -25,7 +25,7 @@ uses Fpas.Ui.Widgets.Planning.WeekCalendars as WeekCalendars;
 // - `VisitScoped`: Validates children inside a native ID scope.
 // ## Returns
 // True when this dispatcher handled the element.
-public function Check<TMsg>(Node: E.Element<TMsg>; Location: string; Current: R.Profile; Identify: function(string, string): string; Visit: procedure(E.Element<TMsg>?, string); VisitScoped: procedure(E.Element<TMsg>, string)): bool;
+public function Check of TMsg(Node: E.Element of TMsg; Location: string; Current: R.Profile; Identify: function(string, string): string; Visit: procedure((E.Element of TMsg)?, string); VisitScoped: procedure(E.Element of TMsg, string)): bool;
 begin
   case Node of
     when E.Element.PathBar(
@@ -50,7 +50,7 @@ begin
       return true;
     when E.Element.FilePicker(
       const Id: string,
-      const Base: E.Element<TMsg>?,
+      const Base: (E.Element of TMsg)?,
       _,
       _,
       const Settings: FilePickers.Options
@@ -100,15 +100,15 @@ begin
       return true;
     when E.Element.Kanban(
       const Id: string,
-      const Columns: array of Kanbans.Column<TMsg>,
+      const Columns: array of Kanbans.Column of TMsg,
       _,
       const Settings: Kanbans.Options
     ):
       const At: string := Identify(Id, Location + '/Kanban');
       R.RequireProfile(Current, R.Profile.Graphical, At);
-      PlanningRules.Kanban<TMsg>(Columns, Settings, At);
-      for Column: Kanbans.Column<TMsg> in Columns do
-        for Card: Kanbans.Card<TMsg> in Column.Cards do
+      PlanningRules.Kanban of TMsg(Columns, Settings, At);
+      for Column: Kanbans.Column of TMsg in Columns do
+        for Card: Kanbans.Card of TMsg in Column.Cards do
           VisitScoped(Card.Content, At);
         end for;
       end for;

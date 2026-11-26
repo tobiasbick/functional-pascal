@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Developer.ApiExplorers as W;
 // - `Selected`: Selected endpoint index, or minus one.
 // ## Returns
 // The explorer with selection and Try it requests as messages.
-public function View(Endpoints: array of W.Endpoint; Selected: int): E.Element<W.Event>;
+public function View(Endpoints: array of W.Endpoint; Selected: int): E.Element of W.Event;
 begin
-  return W.ApiExplorer<W.Event>('endpoints', Endpoints, Selected,
+  return W.ApiExplorer of W.Event('endpoints', Endpoints, Selected,
     function(Change: W.Event): W.Event => Change);
 end function;
 

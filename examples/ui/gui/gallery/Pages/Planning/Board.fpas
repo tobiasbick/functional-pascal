@@ -81,57 +81,61 @@ begin
   return Columns[Index];
 end function;
 
-function Metric(Code: int; Count: int; Children: Lists.List<E.Element<M.Msg>>): bool;
+function Metric(Code: int; Count: int; Children: Lists.List of E.Element of M.Msg): bool;
 begin
   if Count = 0 then
     return false;
   end if;
 
-  Children.Add(E.Styled<M.Msg>(E.Text<M.Msg>(Sys.Char.ConvertFromUtf32(Code)), S.Role.MutedGlyph));
-  Children.Add(E.Styled<M.Msg>(E.Text<M.Msg>(Count.ToString()), S.Role.Caption));
+  Children.Add(
+    E.Styled of M.Msg(E.Text of M.Msg(Sys.Char.ConvertFromUtf32(Code)), S.Role.MutedGlyph)
+  );
+  Children.Add(E.Styled of M.Msg(E.Text of M.Msg(Count.ToString()), S.Role.Caption));
   return true;
 end function;
 
-function Content(Key: int): E.Element<M.Msg>;
+function Content(Key: int): E.Element of M.Msg;
 begin
   const Item: Card := Cards[Key - 1];
   const Id: string := 'planning-card-' + Key.ToString();
-  const Children: Lists.List<E.Element<M.Msg>> := new Lists.List<E.Element<M.Msg>>();
+  const Children: Lists.List of E.Element of M.Msg := new Lists.List of E.Element of M.Msg();
   Children.Add(
-    Badges.Badge<M.Msg>(
+    Badges.Badge of M.Msg(
       Id + '/tag',
       Item.Tag,
       new Badges.Options(Tone := Item.Tone, Size := B.Size.Small)
     )
   );
-  Children.Add(E.Styled<M.Msg>(E.Text<M.Msg>(Item.Title), S.Role.CompactLabel));
+  Children.Add(E.Styled of M.Msg(E.Text of M.Msg(Item.Title), S.Role.CompactLabel));
   if Item.Progress > 0.0F and Item.Progress < 1.0F then
     Children.Add(
-      Progress.ProgressBar<M.Msg>(
+      Progress.ProgressBar of M.Msg(
         Id + '/progress',
         Item.Progress,
         new Progress.Options(Height := 4.0F)
       )
     );
   end if;
-  const Footer: Lists.List<E.Element<M.Msg>> := new Lists.List<E.Element<M.Msg>>();
-  Footer.Add(Avatars.Avatar<M.Msg>(Id + '/owner', Item.Owner, new Avatars.Options(Size := 22.0F)));
-  Footer.Add(E.Spacer<M.Msg>());
+  const Footer: Lists.List of E.Element of M.Msg := new Lists.List of E.Element of M.Msg();
+  Footer.Add(
+    Avatars.Avatar of M.Msg(Id + '/owner', Item.Owner, new Avatars.Options(Size := 22.0F))
+  );
+  Footer.Add(E.Spacer of M.Msg());
   discard Metric($E12D, Item.Files, Footer);
   discard Metric($E117, Item.Comments, Footer);
   if Item.Progress >= 1.0F then
     Footer.Add(
-      E.Styled<M.Msg>(E.Text<M.Msg>(Sys.Char.ConvertFromUtf32($E226)), S.Role.SuccessGlyph)
+      E.Styled of M.Msg(E.Text of M.Msg(Sys.Char.ConvertFromUtf32($E226)), S.Role.SuccessGlyph)
     );
   end if;
 
   Children.Add(
-    E.Row<M.Msg>(
+    E.Row of M.Msg(
       new L.Flow(Gap := G.Points(10), Align := L.Alignment.Center, Clip := false),
       Footer.ToArray()
     )
   );
-  return E.Column<M.Msg>(new L.Flow(Gap := G.Points(8), Clip := false), Children.ToArray());
+  return E.Column of M.Msg(new L.Flow(Gap := G.Points(8), Clip := false), Children.ToArray());
 end function;
 
 // Draws the original four-column board.
@@ -139,17 +143,17 @@ end function;
 // - `Model`: Card order.
 // ## Returns
 // The native board with composed card bodies.
-public function View(Model: M.Model): E.Element<M.Msg>;
+public function View(Model: M.Model): E.Element of M.Msg;
 begin
-  const Result: Lists.List<K.Column<M.Msg>> := new Lists.List<K.Column<M.Msg>>();
+  const Result: Lists.List of K.Column of M.Msg := new Lists.List of K.Column of M.Msg();
   for Column: int := 0 to Columns.Length - 1 do
-    const Items: Lists.List<K.Card<M.Msg>> := new Lists.List<K.Card<M.Msg>>();
+    const Items: Lists.List of K.Card of M.Msg := new Lists.List of K.Card of M.Msg();
     for Key: int in Model.Columns[Column] do
-      Items.Add(new K.Card<M.Msg>(Key, Title(Key), Content(Key)));
+      Items.Add(new K.Card of M.Msg(Key, Title(Key), Content(Key)));
     end for;
 
     Result.Add(
-      new K.Column<M.Msg>(
+      new K.Column of M.Msg(
         Columns[Column], Items.ToArray(), Colors.Color.Rgba(Dots[Column]),
         if Column = 1 then
           3
@@ -160,7 +164,7 @@ begin
     );
   end for;
 
-  return K.Kanban<M.Msg>('planning-board', Result.ToArray(), M.Msg.Board);
+  return K.Kanban of M.Msg('planning-board', Result.ToArray(), M.Msg.Board);
 end function;
 
 end unit;

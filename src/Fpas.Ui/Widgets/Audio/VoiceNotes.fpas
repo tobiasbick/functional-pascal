@@ -49,10 +49,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function VoiceNote<TMsg>(Id: string; Levels: array of float; Playback: Value; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function VoiceNote of TMsg(Id: string; Levels: array of float; Playback: Value; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.VoiceNote(Id, Levels, Playback, Changed, Settings ?? new Options());
+  return (E.Element of TMsg).VoiceNote(Id, Levels, Playback, Changed, Settings ?? new Options());
 end function;
 
 end unit;

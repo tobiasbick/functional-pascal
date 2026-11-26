@@ -29,9 +29,9 @@ public type MetadataIdentityTests = record
     const Path: string := F.Write(Root.Path, 'original.mp3');
     await using const Session: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
     const Tags: Metadata.Session := F.Tags(Session);
-    const Before: I.ImmutableArray<M.Entry> := await F.Until(
+    const Before: I.ImmutableArray of M.Entry := await F.Until(
       Tags,
-      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 1
     );
     await Tags.SetRatingAsync(Before[0].TrackId, 8, T.CancellationToken.None);
     const Target: string := IO.Path.Combine(
@@ -43,15 +43,15 @@ public type MetadataIdentityTests = record
     );
     IO.File.Move(Path, Target);
     Session.Refresh();
-    const After: I.ImmutableArray<M.Entry> := await F.Until(
+    const After: I.ImmutableArray of M.Entry := await F.Until(
       Tags,
-      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1 and Items[
+      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 1 and Items[
         0
       ].Path = Target
     );
-    X.Assert.Equal<string>(Before[0].TrackId, After[0].TrackId);
-    X.Assert.Equal<string>(Before[0].Sha256, After[0].Sha256);
-    X.Assert.Equal<int?>(8, After[0].Rating);
+    X.Assert.Equal of string(Before[0].TrackId, After[0].TrackId);
+    X.Assert.Equal of string(Before[0].Sha256, After[0].Sha256);
+    X.Assert.Equal of int? (8, After[0].Rating);
   end function;
 
   // A bit-identical copy remains a separate track while the original still exists.
@@ -63,25 +63,25 @@ public type MetadataIdentityTests = record
     const Path: string := F.Write(Root.Path, 'original.ogg');
     await using const Session: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
     const Tags: Metadata.Session := F.Tags(Session);
-    const Before: I.ImmutableArray<M.Entry> := await F.Until(
+    const Before: I.ImmutableArray of M.Entry := await F.Until(
       Tags,
-      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 1
     );
     await Tags.SetRatingAsync(Before[0].TrackId, 6, T.CancellationToken.None);
     const Copy: string := IO.Path.Combine(Root.Path, 'copy.ogg');
     IO.File.Copy(Path, Copy);
     Session.Refresh();
-    const After: I.ImmutableArray<M.Entry> := await F.Until(
+    const After: I.ImmutableArray of M.Entry := await F.Until(
       Tags,
-      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 2
+      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 2
     );
     for Entry: M.Entry in After do
-      X.Assert.Equal<string>(Before[0].Sha256, Entry.Sha256);
+      X.Assert.Equal of string(Before[0].Sha256, Entry.Sha256);
       if Entry.Path = Copy then
-        X.Assert.NotEqual<string>(Before[0].TrackId, Entry.TrackId);
+        X.Assert.NotEqual of string(Before[0].TrackId, Entry.TrackId);
         X.Assert.Null(Entry.Rating);
       else
-        X.Assert.Equal<int?>(6, Entry.Rating);
+        X.Assert.Equal of int? (6, Entry.Rating);
       end if;
     end for;
   end function;
@@ -98,35 +98,35 @@ public type MetadataIdentityTests = record
     begin
       await using const Session: Monitor.Session := F.Start([Source], Data.Path);
       const Tags: Metadata.Session := F.Tags(Session);
-      const Before: I.ImmutableArray<M.Entry> := await F.Until(
+      const Before: I.ImmutableArray of M.Entry := await F.Until(
         Tags,
-        function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+        function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 1
       );
       Id := Before[0].TrackId;
       await Tags.SetRatingAsync(Id, 9, T.CancellationToken.None);
       using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
       discard await Session.ClearAsync('', Deadline.Token);
-      X.Assert.Equal<int>(0, (await Tags.QueryAsync(new M.Query(), Deadline.Token)).Length);
+      X.Assert.Equal of int(0, (await Tags.QueryAsync(new M.Query(), Deadline.Token)).Length);
       X.Assert.True(IO.File.Exists(Path));
       Session.Configure([Source]);
-      const Restored: I.ImmutableArray<M.Entry> := await F.Until(
+      const Restored: I.ImmutableArray of M.Entry := await F.Until(
         Tags,
-        function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+        function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 1
       );
-      X.Assert.Equal<string>(Id, Restored[0].TrackId);
-      X.Assert.Equal<int?>(9, Restored[0].Rating);
+      X.Assert.Equal of string(Id, Restored[0].TrackId);
+      X.Assert.Equal of int? (9, Restored[0].Rating);
     end;
     const Renamed: string := IO.Path.Combine(Root.Path, 'offline-rename.mp3');
     IO.File.Move(Path, Renamed);
     await using const Restart: Monitor.Session := F.Start([Source], Data.Path);
-    const After: I.ImmutableArray<M.Entry> := await F.Until(
+    const After: I.ImmutableArray of M.Entry := await F.Until(
       F.Tags(Restart),
-      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1 and Items[
+      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 1 and Items[
         0
       ].Path = Renamed
     );
-    X.Assert.Equal<string>(Id, After[0].TrackId);
-    X.Assert.Equal<int?>(9, After[0].Rating);
+    X.Assert.Equal of string(Id, After[0].TrackId);
+    X.Assert.Equal of int? (9, After[0].Rating);
   end function;
 
   // Removal affects only the selected source; re-adding it recovers its durable rating.
@@ -140,9 +140,9 @@ public type MetadataIdentityTests = record
     const B: S.MusicSource := F.Source(Root.Path, 'second');
     await using const Session: Monitor.Session := F.Start([A, B], Data.Path);
     const Tags: Metadata.Session := F.Tags(Session);
-    const Before: I.ImmutableArray<M.Entry> := await F.Until(
+    const Before: I.ImmutableArray of M.Entry := await F.Until(
       Tags,
-      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 1
     );
     await Tags.SetRatingAsync(Before[0].TrackId, 4, T.CancellationToken.None);
     Session.Configure([B]);
@@ -152,11 +152,11 @@ public type MetadataIdentityTests = record
         0
       ].Id = 'second'
     );
-    X.Assert.Equal<int>(
+    X.Assert.Equal of int(
       0,
       (await Tags.QueryAsync(new M.Query(SourceId := 'first'), T.CancellationToken.None)).Length
     );
-    X.Assert.Equal<int>(
+    X.Assert.Equal of int(
       1,
       (await Tags.QueryAsync(new M.Query(SourceId := 'second'), T.CancellationToken.None)).Length
     );
@@ -165,15 +165,18 @@ public type MetadataIdentityTests = record
       Session,
       function(Value: Inventory.Snapshot): bool => Value.Sources.Length = 0
     );
-    X.Assert.Equal<int>(0, (await Tags.QueryAsync(new M.Query(), T.CancellationToken.None)).Length);
+    X.Assert.Equal of int(
+      0,
+      (await Tags.QueryAsync(new M.Query(), T.CancellationToken.None)).Length
+    );
     X.Assert.True(IO.File.Exists(Path));
     Session.Configure([A]);
-    const After: I.ImmutableArray<M.Entry> := await F.Until(
+    const After: I.ImmutableArray of M.Entry := await F.Until(
       Tags,
-      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 1
     );
-    X.Assert.Equal<string>(Before[0].TrackId, After[0].TrackId);
-    X.Assert.Equal<int?>(4, After[0].Rating);
+    X.Assert.Equal of string(Before[0].TrackId, After[0].TrackId);
+    X.Assert.Equal of int? (4, After[0].Rating);
   end function;
 end record;
 

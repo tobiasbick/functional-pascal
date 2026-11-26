@@ -22,8 +22,8 @@ uses System.Globalization as Culture;
 // - `Maximum`: Inclusive upper bound.
 // - `OnChange`: Maps an adjusted value to a message.
 // - `Settings`: Increment, value display and input permission.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Label: string; Value: float; Minimum: float; Maximum: float;
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Label: string; Value: float; Minimum: float; Maximum: float;
   OnChange: function(float): TMsg; Settings: S.Options
 );
 begin
@@ -41,7 +41,7 @@ begin
     Settings.DecimalPlaces,
     Settings.Percent,
     Enabled,
-    C.WantsFocus<TMsg>(Frame, Id, Token, Enabled),
+    C.WantsFocus of TMsg(Frame, Id, Token, Enabled),
     if Frame.PaintingClosed then
       null
     else

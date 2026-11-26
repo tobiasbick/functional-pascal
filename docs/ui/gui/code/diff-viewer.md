@@ -21,9 +21,9 @@ uses Fpas.Ui.Widgets.Developer.DiffViews as W;
 // - `Current`: Selected change index, or minus one.
 // ## Returns
 // The diff with the native selection and layout as messages.
-public function View(Before: string; After: string; Current: int): E.Element<W.Event>;
+public function View(Before: string; After: string; Current: int): E.Element of W.Event;
 begin
-  return W.DiffView<W.Event>('config-diff', Before, After, Current,
+  return W.DiffView of W.Event('config-diff', Before, After, Current,
     function(Change: W.Event): W.Event => Change,
     new W.Options(Height := 372.0F, Language := 'c',
       OldTitle := 'Before', NewTitle := 'After'));

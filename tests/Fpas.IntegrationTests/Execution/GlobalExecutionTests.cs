@@ -40,11 +40,11 @@ public sealed class GlobalExecutionTests
         async program GlobalAsync;
         uses System.Console as Console; uses System.Threading.Tasks as Tasks;
         var Counter: int := 3;
-        const Gate: Tasks.TaskCompletionSource<bool> := new Tasks.TaskCompletionSource<bool>();
-        const Read: function(): Tasks.Task<int> := async function(): Tasks.Task<int>
+        const Gate: Tasks.TaskCompletionSource of bool := new Tasks.TaskCompletionSource of bool();
+        const Read: function(): Tasks.Task of int := async function(): Tasks.Task of int
         begin discard await Gate.Task; return Counter; end function;
         begin
-          const Pending: Tasks.Task<int> := Read();
+          const Pending: Tasks.Task of int := Read();
           Counter := 9; Gate.SetResult(true);
           Console.WriteLine(await Pending); Console.WriteLine(Counter);
         end;

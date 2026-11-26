@@ -23,9 +23,9 @@ uses Fpas.Ui.Widgets.Collections.TreeTables as W;
 // - `Cursor`: Current node index or minus one.
 // ## Returns
 // The tree with each proposed change as an application message.
-public function View(Nodes: array of W.Node; Cursor: int): E.Element<W.Change>;
+public function View(Nodes: array of W.Node; Cursor: int): E.Element of W.Change;
 begin
-  return W.TreeTable<W.Change>('project-tree',
+  return W.TreeTable of W.Change('project-tree',
     [new D.Column('Name', 320.0F), new D.Column('Size', 100.0F, T.Alignment.Right)],
     Nodes, Cursor, null, function(Change: W.Change): W.Change => Change,
     new W.Options(Height := L.Extent.Fixed(L.Measure.Logical(240)), Guides := true));
@@ -84,9 +84,9 @@ end variant;
 // - `Node`: Model index of the node the menu is open for.
 // ## Returns
 // The commands for that node.
-function Commands(Node: int): array of M.Entry<Msg>;
+function Commands(Node: int): array of M.Entry of Msg;
 begin
-  return [M.Entry<Msg>.Action(new M.Item<Msg>('delete', 'Delete', Msg.Delete(Node), Danger := true))];
+  return [(M.Entry of Msg).Action(new M.Item of Msg('delete', 'Delete', Msg.Delete(Node), Danger := true))];
 end function;
 
 // Builds a file tree whose rows have a context menu.
@@ -94,11 +94,11 @@ end function;
 // - `Nodes`: Nodes in sibling order, with parents before their children.
 // ## Returns
 // The tree table.
-public function View(Nodes: array of W.Node): E.Element<Msg>;
+public function View(Nodes: array of W.Node): E.Element of Msg;
 begin
-  return W.TreeTable<Msg>('files', [new D.Column('Name', 320.0F)], Nodes, -1, null,
+  return W.TreeTable of Msg('files', [new D.Column('Name', 320.0F)], Nodes, -1, null,
     function(Change: W.Change): Msg => Msg.Changed(Change),
-    Menu := function(Node: int): array of M.Entry<Msg> => Commands(Node));
+    Menu := function(Node: int): array of M.Entry of Msg => Commands(Node));
 end function;
 
 end unit;

@@ -118,7 +118,7 @@ begin
     raise new IO.InvalidDataException('no crop files in ' + SourceDirectory);
   end if;
 
-  Sys.Array.Sort<string>(Regions, Sys.StringComparer.Ordinal);
+  Sys.Array.Sort of string(Regions, Sys.StringComparer.Ordinal);
   discard IO.Directory.CreateDirectory(TargetDirectory);
   Magic.CodecManager.Configure(
     procedure(Codecs: Magic.CodecCollection) begin

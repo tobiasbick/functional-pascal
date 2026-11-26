@@ -35,7 +35,7 @@ begin
     R.Reject(At, 'Inline text must fit its one-to-511-byte single-line capacity.');
   end if;
 
-  if not Sys.Enum.IsDefined<I.Font>(
+  if not Sys.Enum.IsDefined of I.Font(
     Settings.Face
   ) or not Sys.Single.IsFinite(Settings.FontSize) or Settings.FontSize < 0.0F
   then
@@ -102,7 +102,7 @@ end procedure;
 // - `At`: Diagnostic path.
 public procedure Combination(Value: K.Combination; At: string);
 begin
-  if not Sys.Enum.IsDefined<K.Key>(Value.Key) or cast<int>(Value.Modifiers) > 15
+  if not Sys.Enum.IsDefined of K.Key(Value.Key) or cast<int>(Value.Modifiers) > 15
     or (Value.Key = K.Key.None and Value.Modifiers <> K.Modifier.None)
   then
     R.Reject(At, 'Invalid shortcut key or modifier flags.');

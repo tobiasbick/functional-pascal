@@ -13,7 +13,7 @@ uses System.Linq as L;
 uses System.Threading as T;
 uses System.Threading.Tasks as Tasks;
 
-function Same(A: I.ImmutableArray<M.Album>; B: I.ImmutableArray<M.Album>): bool;
+function Same(A: I.ImmutableArray of M.Album; B: I.ImmutableArray of M.Album): bool;
 begin
   if A.Length <> B.Length then
     return false;
@@ -27,13 +27,16 @@ begin
       Genres := Right.Genres;
       Credits := Right.Credits;
       GenreMemberships := Right.GenreMemberships;
-    end with <> Right or not L.Enumerable.SequenceEqual<string>(
+    end with <> Right or not L.Enumerable.SequenceEqual of string(
       Left.Genres,
       Right.Genres
-    ) or not L.Enumerable.SequenceEqual<M.Membership>(
+    ) or not L.Enumerable.SequenceEqual of M.Membership(
       Left.Credits,
       Right.Credits
-    ) or not L.Enumerable.SequenceEqual<M.Membership>(Left.GenreMemberships, Right.GenreMemberships)
+    ) or not L.Enumerable.SequenceEqual of M.Membership(
+      Left.GenreMemberships,
+      Right.GenreMemberships
+    )
     then
       return false;
     end if;

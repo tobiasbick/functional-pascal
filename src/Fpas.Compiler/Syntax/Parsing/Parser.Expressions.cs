@@ -32,7 +32,7 @@ internal sealed partial class Parser
         while (Precedence(Current) >= minimum)
         {
             var operatorIndex = position;
-            var op = ReadBinaryOperator();
+            var op = tokens[position++];
             var rightIndex = position;
             var precedence = Precedence(op);
             if (precedence == LogicalPrecedence)
@@ -54,19 +54,6 @@ internal sealed partial class Parser
             layout?.Binary.Add(new(start, position, operatorIndex, rightIndex));
         }
         return left;
-    }
-
-    private Token ReadBinaryOperator()
-    {
-        var op = tokens[position++];
-        if (op.Text == ">" && At("=") && op.Position + op.Length == Current.Position)
-        {
-            // Comparisons require adjacent characters; '> =' remains invalid.
-            op = op with { Text = ">=", Length = op.Length + Current.Length };
-            layout?.Tight.Add(position);
-            position++;
-        }
-        return op;
     }
 
     private ExpressionSyntax ReadUnary()
@@ -140,7 +127,8 @@ internal sealed partial class Parser
 
     private ExpressionSyntax ReadSuffix(ExpressionSyntax expression, bool allowWith = true)
     {
-        while (At(".") || At("(") || At("[") || At("<") || allowWith && At("with"))
+        while (At(".") || At("(") || At("[") ||
+            expression is (NameExpressionSyntax or MemberSyntax) && AtTypeArguments() || allowWith && At("with"))
         {
             var start = expression.SpanStart;
             if (At("with")) expression = ReadWith(expression);
@@ -150,17 +138,7 @@ internal sealed partial class Parser
                 expression = new MemberSyntax(expression, Identifier());
             }
             else if (At("[")) expression = new IndexSyntax(expression, ReadIndices());
-            else if (At("<"))
-            {
-                var saved = position;
-                var probe = layout is null ? this : new Parser(source, tokens) { position = position };
-                IReadOnlyList<TypeSyntax>? arguments = null;
-                try { arguments = probe.ReadTypeArguments(); }
-                catch (CompilationFailure) { probe.position = saved; }
-                if (arguments is null || !probe.At(".") && !probe.At("(") && !probe.At(";") && !probe.At(",") && !probe.At(")") && !probe.At("]") && !probe.At("else") && !probe.At("end")) { position = saved; break; }
-                if (layout is not null) arguments = ReadTypeArguments();
-                expression = new GenericNameSyntax(expression, arguments);
-            }
+            else if (At("of")) expression = new GenericNameSyntax(expression, ReadTypeArguments());
             else
             {
                 var argumentsStart = Current.Position;

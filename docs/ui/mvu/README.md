@@ -13,11 +13,11 @@ public type Msg = variant
 end variant;
 
 // Applies a counter action or asks the host to close.
-public function Update(Count: int; Message: Msg): Mvu.Transition<int, Msg>;
+public function Update(Count: int; Message: Msg): Mvu.Transition of (int, Msg);
 begin
   return case Message of
-    when Msg.Increment: new Mvu.Transition<int, Msg>(Count + 1, []);
-    when Msg.Close: new Mvu.Transition<int, Msg>(Count, [Mvu.Exit<Msg>()]);
+    when Msg.Increment: new Mvu.Transition of (int, Msg)(Count + 1, []);
+    when Msg.Close: new Mvu.Transition of (int, Msg)(Count, [Mvu.Exit of Msg()]);
   end case;
 end function;
 

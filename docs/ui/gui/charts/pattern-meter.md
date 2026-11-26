@@ -21,9 +21,9 @@ uses Fpas.Ui.Widgets.Charts.PatternMeters as W;
 // - `Grayscale`: Whether to draw the parts as grayscale patterns.
 // ## Returns
 // The widget for the application view.
-public function View(Grayscale: bool): E.Element<string>;
+public function View(Grayscale: bool): E.Element of string;
 begin
-  return W.PatternMeter<string>('storage', [
+  return W.PatternMeter of string('storage', [
     new W.Part('Photos', 81.0F), new W.Part('Video', 58.0F),
     new W.Part('Apps', 41.0F), new W.Part('Docs', 32.0F)
   ], new W.Options(Total := 256.0F, Label := 'Storage', Unit := 'GB', Grayscale := Grayscale));

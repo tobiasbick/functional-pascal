@@ -15,9 +15,9 @@ uses Fpas.Ui.Widgets.Display.Links as W;
 // Builds the link example.
 // ## Returns
 // The widget for the application view.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return W.Link<string>('jonas-link', '@jonas', 'open-profile');
+  return W.Link of string('jonas-link', '@jonas', 'open-profile');
 end function;
 
 end unit;

@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Overlays.Dialogs as W;
 // - `Open`: Current visibility from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Base: E.Element<string>; Open: bool): E.Element<string>;
+public function View(Base: E.Element of string; Open: bool): E.Element of string;
 begin
-  return W.Dialog<string>('edit-profile', Base, E.Text<string>('Review the profile details.'), Open,
+  return W.Dialog of string('edit-profile', Base, E.Text of string('Review the profile details.'), Open,
     new W.Options('Edit profile', Description := 'Changes are visible to your team.'),
     'close-profile');
 end function;

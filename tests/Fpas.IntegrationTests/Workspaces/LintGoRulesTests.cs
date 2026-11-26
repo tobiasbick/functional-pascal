@@ -15,11 +15,11 @@ public sealed partial class LintTests
             uses System.Threading as T; uses System.Threading.Channels as C; uses System.Threading.Tasks as Tasks;
             public type Session = record
               public Gate: T.SemaphoreSlim;
-              public Inbox: C.Channel<int>;
-              public Writer: C.ChannelWriter<int>;
+              public Inbox: C.Channel of int;
+              public Writer: C.ChannelWriter of int;
               public Stop: T.CancellationTokenSource;
-              public Complete: Tasks.TaskCompletionSource<int>;
-              public Reader: C.ChannelReader<int>;
+              public Complete: Tasks.TaskCompletionSource of int;
+              public Reader: C.ChannelReader of int;
               public Token: T.CancellationToken;
               Hidden: T.Mutex;
             end record;

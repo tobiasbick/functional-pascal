@@ -29,7 +29,7 @@ uses System.IO as IO;
 uses System.Threading as T;
 uses Xunit as X;
 
-function Find(Session: Gui.Session<App.Msg>; Id: string): Gui.Control;
+function Find(Session: Gui.Session of App.Msg; Id: string): Gui.Control;
 begin
   for Item: Gui.Control in Session.Snapshot().Controls do
     if Item.Id = Id then
@@ -40,7 +40,7 @@ begin
   raise new Sys.InvalidOperationException('Missing native control: ' + Id);
 end function;
 
-function Has(Session: Gui.Session<App.Msg>; Id: string): bool;
+function Has(Session: Gui.Session of App.Msg; Id: string): bool;
 begin
   for Item: Gui.Control in Session.Snapshot().Controls do
     if Item.Id = Id then
@@ -51,13 +51,13 @@ begin
   return false;
 end function;
 
-procedure Step(Session: Gui.Session<App.Msg>);
+procedure Step(Session: Gui.Session of App.Msg);
 begin
   discard Session.Post(App.Msg.Settings(SettingsModel.Msg.DismissError));
   X.Assert.True(Session.Step());
 end procedure;
 
-procedure Capture(Session: Gui.Session<App.Msg>; Name: string);
+procedure Capture(Session: Gui.Session of App.Msg; Name: string);
 begin
   const Directory: string? := Sys.Environment.GetEnvironmentVariable('FPAS_AMP_UI_ARTIFACTS');
   if Directory <> null then
@@ -99,11 +99,11 @@ public type ToolbarTests = record
       end if;
     end procedure;
 
-    function Apply(Current: App.State; Message: App.Msg): Mvu.Transition<App.State, App.Msg>;
+    function Apply(Current: App.State; Message: App.Msg): Mvu.Transition of (App.State, App.Msg);
     begin
       case Message of
         when App.Msg.Albums(const Child: Albums.Msg):
-          const Next: Mvu.Transition<Albums.State, Albums.Msg> := Update.Apply(
+          const Next: Mvu.Transition of (Albums.State, Albums.Msg) := Update.Apply(
             Current.Albums,
             Child,
             null
@@ -116,10 +116,10 @@ public type ToolbarTests = record
           Last := Current;
       end case;
 
-      return new Mvu.Transition<App.State, App.Msg>(Last, []);
+      return new Mvu.Transition of (App.State, App.Msg)(Last, []);
     end function;
 
-    procedure Press(Session: Gui.Session<App.Msg>; Id: string);
+    procedure Press(Session: Gui.Session of App.Msg; Id: string);
     begin
       const Box: Cui.CuiRectangle := Find(Session, Id).Bounds;
       X.Assert.True(Box.Width > 0.0F and Box.Height > 0.0F);
@@ -135,13 +135,13 @@ public type ToolbarTests = record
       Step(Session);
     end procedure;
 
-    procedure Pick(Session: Gui.Session<App.Msg>; Id: string; Index: int);
+    procedure Pick(Session: Gui.Session of App.Msg; Id: string; Index: int);
     begin
       Press(Session, Id);
       Press(Session, Selects.OptionId(Id, Index));
     end procedure;
 
-    procedure Preview(Session: Gui.Session<App.Msg>; Message: Toolbar.Msg);
+    procedure Preview(Session: Gui.Session of App.Msg; Message: Toolbar.Msg);
     begin
       discard Session.Post(App.Msg.Albums(Albums.Msg.Toolbar(Message)));
       Step(Session);
@@ -155,7 +155,7 @@ public type ToolbarTests = record
       Art.Picture(35, 80, 100),
       T.CancellationToken.None
     );
-    const Items: I.ImmutableArray<Library.Album> := I.ImmutableArray.CreateRange<Library.Album>(
+    const Items: I.ImmutableArray of Library.Album := I.ImmutableArray.CreateRange of Library.Album(
       [
         new Library.Album('one', 'Blue horizon', 'Example artist', 12L, 'fixture', 8, ['Jazz']),
         new Library.Album('two', 'City lights', 'Another artist', 9L, 'fixture', 6, ['Electronic']),
@@ -170,7 +170,7 @@ public type ToolbarTests = record
         )
       ]
     );
-    const Pictures: I.ImmutableDictionary<string, Imaging.Bitmap?> := I.ImmutableDictionary<string, Imaging.Bitmap?>.Empty.Add(
+    const Pictures: I.ImmutableDictionary of (string, Imaging.Bitmap?) := I.ImmutableDictionary of (string, Imaging.Bitmap?).Empty.Add(
       'one',
       Image
     ).Add('two', Image).Add('three', Image);
@@ -198,7 +198,7 @@ public type ToolbarTests = record
       true
     );
     Window.SetReducedMotion(true);
-    using const Session: Gui.Session<App.Msg> := Host.StartThemed<App.State, App.Msg>(
+    using const Session: Gui.Session of App.Msg := Host.StartThemed of (App.State, App.Msg)(
       Last, Apply, Shell.View, Window, 128, Inject, App.Theme(Last, null), App.Theme, false
     );
     Step(Session);
@@ -215,31 +215,31 @@ public type ToolbarTests = record
     Typed := 'horizon';
     Step(Session);
     Step(Session);
-    X.Assert.Equal<string>('horizon', Last.Albums.Toolbar.Search);
-    X.Assert.Equal<int>(1, Last.Albums.Shown.Length);
-    X.Assert.Equal<string>('one', Last.Albums.Shown[0].Id);
-    X.Assert.Equal<Toolbar.Order>(Toolbar.Order.Relevance, Last.Albums.Toolbar.Sort);
+    X.Assert.Equal of string('horizon', Last.Albums.Toolbar.Search);
+    X.Assert.Equal of int(1, Last.Albums.Shown.Length);
+    X.Assert.Equal of string('one', Last.Albums.Shown[0].Id);
+    X.Assert.Equal of Toolbar.Order(Toolbar.Order.Relevance, Last.Albums.Toolbar.Sort);
     Press(Session, Search.ClearId('album-search'));
-    X.Assert.Equal<string>('', Last.Albums.Toolbar.Search);
-    X.Assert.Equal<int>(3, Last.Albums.Shown.Length);
+    X.Assert.Equal of string('', Last.Albums.Toolbar.Search);
+    X.Assert.Equal of int(3, Last.Albums.Shown.Length);
     Press(Session, 'album-filters');
     X.Assert.True(Last.Albums.Toolbar.Open);
     X.Assert.True(Has(Session, 'album-filter-panel'));
     Pick(Session, 'album-filter-artist', 2);
-    X.Assert.Equal<string>('Example artist', Last.Albums.Toolbar.Draft.Artist);
+    X.Assert.Equal of string('Example artist', Last.Albums.Toolbar.Draft.Artist);
     Preview(Session, Toolbar.Msg.MinimumRating(7));
-    X.Assert.Equal<int>(0, Toolbar.Count(Last.Albums.Toolbar.Applied));
-    X.Assert.Equal<int>(3, Last.Albums.Shown.Length);
+    X.Assert.Equal of int(0, Toolbar.Count(Last.Albums.Toolbar.Applied));
+    X.Assert.Equal of int(3, Last.Albums.Shown.Length);
     Press(Session, 'album-filter-reset');
-    X.Assert.Equal<int>(0, Toolbar.Count(Last.Albums.Toolbar.Draft));
+    X.Assert.Equal of int(0, Toolbar.Count(Last.Albums.Toolbar.Draft));
     Pick(Session, 'album-filter-artist', 2);
     Preview(Session, Toolbar.Msg.MinimumRating(7));
     Press(Session, 'album-filter-apply');
     X.Assert.False(Last.Albums.Toolbar.Open);
-    X.Assert.Equal<int>(2, Toolbar.Count(Last.Albums.Toolbar.Applied));
-    X.Assert.Equal<int>(1, Last.Albums.Shown.Length);
-    X.Assert.Equal<string>('one', Last.Albums.Shown[0].Id);
-    X.Assert.Equal<string>('Filters · 2', Find(Session, 'album-filters').Text);
+    X.Assert.Equal of int(2, Toolbar.Count(Last.Albums.Toolbar.Applied));
+    X.Assert.Equal of int(1, Last.Albums.Shown.Length);
+    X.Assert.Equal of string('one', Last.Albums.Shown[0].Id);
+    X.Assert.Equal of string('Filters · 2', Find(Session, 'album-filters').Text);
     PointerX := -1.0F;
     PointerY := -1.0F;
     Step(Session);
@@ -247,25 +247,25 @@ public type ToolbarTests = record
     Press(Session, 'album-filters');
     Capture(Session, 'albums-toolbar-filters-' + Width.ToString());
     Pick(Session, 'album-filter-genre', 2);
-    X.Assert.Equal<string>('Jazz', Last.Albums.Toolbar.Draft.Genre);
+    X.Assert.Equal of string('Jazz', Last.Albums.Toolbar.Draft.Genre);
     Key := 3;
     Step(Session);
     Step(Session);
     X.Assert.False(Last.Albums.Toolbar.Open);
-    X.Assert.Equal<string>('', Last.Albums.Toolbar.Draft.Genre);
-    X.Assert.Equal<string>('', Last.Albums.Toolbar.Applied.Genre);
+    X.Assert.Equal of string('', Last.Albums.Toolbar.Draft.Genre);
+    X.Assert.Equal of string('', Last.Albums.Toolbar.Applied.Genre);
     Press(Session, 'album-sort');
     Press(Session, Menus.ItemId('album-sort', 'rating'));
-    X.Assert.Equal<Toolbar.Order>(Toolbar.Order.Rating, Last.Albums.Toolbar.Sort);
+    X.Assert.Equal of Toolbar.Order(Toolbar.Order.Rating, Last.Albums.Toolbar.Sort);
     Press(Session, 'album-sort');
     Press(Session, Menus.ItemId('album-sort', 'descending'));
     X.Assert.True(Last.Albums.Toolbar.Descending);
     X.Assert.Contains('High–low', Find(Session, 'album-sort').Text);
     Press(Session, 'album-sort');
     Capture(Session, 'albums-toolbar-sorting-' + Width.ToString());
-    X.Assert.Equal<I.ImmutableArray<Library.Album>>(Items, Last.Albums.Items);
+    X.Assert.Equal of I.ImmutableArray of Library.Album(Items, Last.Albums.Items);
     X.Assert.Same(Pictures, Last.Albums.Images);
-    X.Assert.Equal<int>(3, Last.Albums.Items.Length);
+    X.Assert.Equal of int(3, Last.Albums.Items.Length);
   end procedure;
 end record;
 

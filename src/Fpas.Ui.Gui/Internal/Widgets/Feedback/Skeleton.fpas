@@ -16,11 +16,11 @@ uses Fpas.Ui.Layout as L;
 // - `Id`: Stable placeholder identity.
 // - `Width`: Validated native width mode.
 // - `Height`: Logical height; zero selects the native default.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Width: L.Extent; Height: float);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Width: L.Extent; Height: float);
 begin
   const Native: Size.NativeExtent := Size.Extent(Width);
   Frame.Window.Skeleton(C.Token('skeleton', Id), Native.Kind, Native.Value, Height);
-  C.Track<TMsg>(Frame, new App.Control(Id, '', 'skeleton', new Cui.CuiRectangle(), false));
+  C.Track of TMsg(Frame, new App.Control(Id, '', 'skeleton', new Cui.CuiRectangle(), false));
 end procedure;
 
 end unit;

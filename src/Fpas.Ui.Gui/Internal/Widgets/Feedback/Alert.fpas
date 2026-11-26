@@ -18,9 +18,9 @@ uses System as Sys;
 // - `Title`: Literal heading.
 // - `Settings`: Native presentation and input permission.
 // - `Notify`: Optional dismissal notification.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Title: string;
-  Settings: A.Options; Notify: Sys.Func<TMsg>?
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Title: string;
+  Settings: A.Options; Notify: (Sys.Func of TMsg)?
 );
 begin
   const Dismiss: string := A.DismissId(Id);
@@ -29,11 +29,11 @@ begin
   const Result: int := Frame.Window.Alert(
     C.Token('alert', Id), Title, Settings.Description,
     Settings.Icon, cast<int>(Settings.Tone), Settings.Dismissible, Allowed,
-    C.WantsFocus<TMsg>(Frame, Dismiss, Token, Allowed and Settings.Dismissible), Token
+    C.WantsFocus of TMsg(Frame, Dismiss, Token, Allowed and Settings.Dismissible), Token
   );
   if (Result and 2) <> 0 then
     case Notify of
-      when is Sys.Func<TMsg> as Deliver:
+      when is Sys.Func of TMsg as Deliver:
         Frame.Messages.Add(Deliver.Invoke());
       else
     end case;

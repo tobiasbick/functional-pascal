@@ -20,11 +20,11 @@ uses Fpas.Ui.Widgets.Actions.Buttons as B;
 // - `Label`: Literal visible label.
 // - `Message`: Proposed activation message.
 // - `Settings`: Model-owned input and appearance options.
-public procedure Draw<TMsg>(State: C.State<TMsg>; Id: string; Label: string; Message: TMsg; Settings: B.Options);
+public procedure Draw of TMsg(State: C.State of TMsg; Id: string; Label: string; Message: TMsg; Settings: B.Options);
 begin
   const Enabled: bool := Settings.Enabled and State.AcceptInput;
   const Token: string := C.Token('button', Id);
-  const Focus: bool := C.WantsFocus<TMsg>(State, Id, Token, Enabled);
+  const Focus: bool := C.WantsFocus of TMsg(State, Id, Token, Enabled);
   const Width: float := case Settings.Width of
     when L.Extent.Fixed(const Distance: L.Measure): S.Measure(Distance);
     else -1.0f;
@@ -65,7 +65,7 @@ begin
   else
     ''
   end if;
-  C.Track<TMsg>(
+  C.Track of TMsg(
     State,
     new App.Control(Id, Label, 'button', new Cui.CuiRectangle(), Enabled, Value := Value)
   );

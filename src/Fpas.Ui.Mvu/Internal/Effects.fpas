@@ -102,9 +102,9 @@ end record;
 //
 // ## Type parameters
 // - `TMsg`: The application's message type.
-public type State<TMsg> = record
+public type State of TMsg = record
   // Schedules an effect with the supplied ID.
-  public Start: procedure(string, Fx.Effect<Fx.Completion, TMsg, App.BackgroundContext<TMsg>>);
+  public Start: procedure(string, Fx.Effect of (Fx.Completion, TMsg, App.BackgroundContext of TMsg));
   // Invalidates a generation and starts cancellation.
   public Cancel: procedure(string);
   // Reports whether an effect message belongs to the current generation.
@@ -114,7 +114,7 @@ public type State<TMsg> = record
   // Requests cancellation and returns the cleanup task.
   public Close: function(): Tasks.Task;
   // Copies metadata for runs whose body or cleanup is in progress.
-  public Active: function(): Generic.IReadOnlyList<D.EffectRun>;
+  public Active: function(): Generic.IReadOnlyList of D.EffectRun;
 end record;
 
 // Creates an effect owner that sends results through the session mailbox.
@@ -128,11 +128,11 @@ end record;
 //
 // ## Returns
 // The effect owner.
-public function Create<TMsg>(
+public function Create of TMsg(
   Enqueue: function(string, long, TMsg, Threads.CancellationToken): Tasks.Task; Clock: Sys.TimeProvider
-): State<TMsg>;
+): State of TMsg;
   async function Perform(
-    Id: string; Version: long; Work: Fx.Effect<Fx.Completion, TMsg, App.BackgroundContext<TMsg>>;
+    Id: string; Version: long; Work: Fx.Effect of (Fx.Completion, TMsg, App.BackgroundContext of TMsg);
     Token: Threads.CancellationToken
   ): Tasks.Task;
     function Post(Message: TMsg): Tasks.Task;
@@ -141,7 +141,7 @@ public function Create<TMsg>(
     end function;
   begin
     case await Work.Run(
-      new App.BackgroundContext<TMsg>(Post, Clock),
+      new App.BackgroundContext of TMsg(Post, Clock),
       Token
     ).ConfigureAwait(false) of
       when Fx.Outcome.Success(_):
@@ -182,7 +182,7 @@ public function Create<TMsg>(
     end for;
   end procedure;
 
-  procedure Start(Id: string; Work: Fx.Effect<Fx.Completion, TMsg, App.BackgroundContext<TMsg>>);
+  procedure Start(Id: string; Work: Fx.Effect of (Fx.Completion, TMsg, App.BackgroundContext of TMsg));
   begin
     Prune();
     Cancel(Id);
@@ -190,7 +190,7 @@ public function Create<TMsg>(
     const Version: long := Sequence;
     const Source: Threads.CancellationTokenSource := new Threads.CancellationTokenSource();
     const Task: Tasks.Task := Tasks.TaskExtensions.Unwrap(
-      Tasks.Task.Run<Tasks.Task>(
+      Tasks.Task.Run of Tasks.Task(
         function(): Tasks.Task => Perform(Id, Version, Work, Source.Token)
       )
     );
@@ -217,9 +217,9 @@ public function Create<TMsg>(
     return Count;
   end function;
 
-  function Active(): Generic.IReadOnlyList<D.EffectRun>;
+  function Active(): Generic.IReadOnlyList of D.EffectRun;
   begin
-    const Runs: Generic.List<D.EffectRun> := new Generic.List<D.EffectRun>();
+    const Runs: Generic.List of D.EffectRun := new Generic.List of D.EffectRun();
     for Worker: Run in Workers do
       if Worker.Running() then
         Runs.Add(Worker.Describe(IsCurrent(Worker.Id, Worker.Version)));
@@ -239,7 +239,7 @@ public function Create<TMsg>(
   begin
     Prune();
     Versions.Clear();
-    const Completions: Generic.List<Tasks.Task> := new Generic.List<Tasks.Task>(Faulted);
+    const Completions: Generic.List of Tasks.Task := new Generic.List of Tasks.Task(Faulted);
     for Worker: Run in Workers do
       const Cancelled: Run := Worker.RequestCancel();
       const Completion: Tasks.Task := Cancelled.Join();
@@ -251,12 +251,12 @@ public function Create<TMsg>(
     return Tasks.Task.WhenAll(Completions.ToArray());
   end function;
 begin
-  const Workers: Generic.List<Run> := new Generic.List<Run>();
-  const Versions: Generic.Dictionary<string, long> := new Generic.Dictionary<string, long>();
-  const Faulted: Generic.List<Tasks.Task> := new Generic.List<Tasks.Task>();
-  const Cleanup: Generic.List<Joining> := new Generic.List<Joining>();
+  const Workers: Generic.List of Run := new Generic.List of Run();
+  const Versions: Generic.Dictionary of (string, long) := new Generic.Dictionary of (string, long)();
+  const Faulted: Generic.List of Tasks.Task := new Generic.List of Tasks.Task();
+  const Cleanup: Generic.List of Joining := new Generic.List of Joining();
   var Sequence: long := 0L;
-  return new State<TMsg>(Start, Cancel, IsCurrent, Pending, Close, Active);
+  return new State of TMsg(Start, Cancel, IsCurrent, Pending, Close, Active);
 end function;
 
 end unit;

@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Inputs.Switches as S;
 // - `On`: Current setting from the application model.
 // ## Returns
 // A switch that proposes a new Boolean value on activation.
-public function View(On: bool): E.Element<bool>;
+public function View(On: bool): E.Element of bool;
 begin
-  return S.Switch<bool>('wifi', 'Wi-Fi', On, function(Value: bool): bool => Value);
+  return S.Switch of bool('wifi', 'Wi-Fi', On, function(Value: bool): bool => Value);
 end function;
 
 end unit;

@@ -23,7 +23,7 @@ uses System as Sys;
 // - `Links`: Directed nonnegative flows; zero flows are hidden.
 // - `Settings`: Native presentation.
 // - `OnActivate`: Optional native click callback.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Nodes: array of W.Node; Links: array of W.Link; Settings: W.Options; OnActivate: Sys.Func<W.Selection, TMsg>?);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Nodes: array of W.Node; Links: array of W.Link; Settings: W.Options; OnActivate: Sys.Func of (W.Selection, TMsg)?);
 begin
   const Token: string := C.Token('sankey', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
@@ -45,7 +45,7 @@ begin
   );
   if Enabled and Clicked >= 0 then
     case OnActivate of
-      when is Sys.Func<W.Selection, TMsg> as Notify:
+      when is Sys.Func of (W.Selection, TMsg) as Notify:
         Frame.Messages.Add(
           Notify.Invoke(
             if Clicked < Nodes.Length then

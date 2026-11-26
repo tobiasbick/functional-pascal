@@ -45,10 +45,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // The graphical element.
-public function Readout<TMsg>(Id: string; Label: string; Value: string; Settings: Options? := null): E.Element<TMsg>;
+public function Readout of TMsg(Id: string; Label: string; Value: string; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Readout(Id, Label, Value, Settings ?? new Options());
+  return (E.Element of TMsg).Readout(Id, Label, Value, Settings ?? new Options());
 end function;
 
 end unit;

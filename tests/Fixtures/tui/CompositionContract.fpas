@@ -25,7 +25,7 @@ uses System.Console as Console;
 uses System.Threading as Threads;
 uses System.Threading.Tasks as Tasks;
 
-type Payload<TMsg> = record implements A.HostExtension<TMsg>
+type Payload of TMsg = record implements A.HostExtension of TMsg
   // Message delivered by the test host.
   public Message: TMsg;
 
@@ -36,9 +36,9 @@ type Payload<TMsg> = record implements A.HostExtension<TMsg>
   // - `Messages`: Message translation.
   // ## Returns
   // The translated test payload.
-  public function Map<TNext>(Messages: function(TMsg): TNext): A.HostExtension<TNext>;
+  public function Map of TNext(Messages: function(TMsg): TNext): A.HostExtension of TNext;
   begin
-    return new Payload<TNext>(Messages(self.Message));
+    return new Payload of TNext(Messages(self.Message));
   end function;
 end record;
 
@@ -69,29 +69,29 @@ begin
   var Runs: int := 0;
   using const Source: Threads.CancellationTokenSource := new Threads.CancellationTokenSource();
   const Gate: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource();
-  const Original: A.Command<int> := A.StartBackground<int>(
-    'save', A.FromWorker<int>(
+  const Original: A.Command of int := A.StartBackground of int(
+    'save', A.FromWorker of int(
       Work,
       function(Error: Sys.Exception): int => -1
     )
   );
-  const Mapped: A.Command<string> := M.MapCommand<int, string>(Original, Wrap, 'left');
+  const Mapped: A.Command of string := M.MapCommand of (int, string)(Original, Wrap, 'left');
   Check(Runs = 0, 'Mapping started an effect eagerly.');
   case Mapped of
     when A.Command.Start(
       const Id: string,
-      const Effect: Fx.Effect<Fx.Completion, string, A.BackgroundContext<string>>
+      const Effect: Fx.Effect of (Fx.Completion, string, A.BackgroundContext of string)
     ):
       Check(Id = 'left/save', 'The effect scope was lost.');
       var Delivered: string := '';
-      const Context: A.BackgroundContext<string> := new A.BackgroundContext<string>(
+      const Context: A.BackgroundContext of string := new A.BackgroundContext of string(
         function(Message: string): Tasks.Task begin
           Delivered := Message;
           return Gate.Task;
         end function,
         Sys.TimeProvider.System
       );
-      const Pending: Tasks.Task<Fx.Outcome<Fx.Completion, string>> := Effect.Run(
+      const Pending: Tasks.Task of Fx.Outcome of (Fx.Completion, string) := Effect.Run(
         Context,
         Source.Token
       );
@@ -115,11 +115,11 @@ begin
     else
       raise new Sys.InvalidOperationException('Mapping changed the command kind.');
   end case;
-  const Transition: A.Transition<int, string> := M.MapTransition<int, int, string>(
-    new A.Transition<int, int>(
+  const Transition: A.Transition of (int, string) := M.MapTransition of (int, int, string)(
+    new A.Transition of (int, int)(
       42, [
-        A.CancelBackground<int>('save'), A.Focus<int>('global-control'),
-        A.Command<int>.Host(A.HostRequest.Extension(new Payload<int>(9))), A.Exit<int>()
+        A.CancelBackground of int('save'), A.Focus of int('global-control'),
+        (A.Command of int).Host(A.HostRequest.Extension(new Payload of int(9))), A.Exit of int()
       ]
     ), Wrap, 'left'
   );
@@ -144,7 +144,7 @@ begin
   case Transition.Commands[2] of
     when A.Command.Host(A.HostRequest.Extension(const Value: Sys.Object)):
       Check(
-        cast<Payload<string>>(Value).Message = 'parent/9',
+        cast<Payload of string>(Value).Message = 'parent/9',
         'Generic host payload dispatch lost its message type.'
       );
     else
@@ -152,8 +152,8 @@ begin
   end case;
 
   try
-    discard M.MapCommand<int, string>(
-      A.Command<int>.Host(A.HostRequest.Extension(new Sys.Object())),
+    discard M.MapCommand of (int, string)(
+      (A.Command of int).Host(A.HostRequest.Extension(new Sys.Object())),
       Wrap
     );
   catch Error: Sys.ArgumentException do
@@ -169,19 +169,19 @@ procedure Callbacks();
 begin
   var Submitted: int := 0;
   const Settings: F.Options := new F.Options(Enabled := false);
-  const Child: E.Element<int> := F.TextField<int>(
+  const Child: E.Element of int := F.TextField of int(
     'field', 'value', function(Value: string): int => Value.Length,
     Settings, function(Value: string): int begin
       Submitted := Submitted + 1;
       return Value.Length + 1;
     end function
   );
-  const Parent: E.Element<string> := U.Map<int, string>(Child, Wrap);
+  const Parent: E.Element of string := U.Map of (int, string)(Child, Wrap);
   Check(Submitted = 0, 'Mapping invoked a submit callback eagerly.');
   case Parent of
     when E.Element.TextField(
       const Id: string, const Value: string, const Change: function(string): string,
-      const Options: F.Options, const Submit: Sys.Func<string, string>?
+      const Options: F.Options, const Submit: Sys.Func of (string, string)?
     ):
       Check(
         Id = 'field' and Value = 'value' and Sys.Object.ReferenceEquals(Options, Settings),
@@ -189,7 +189,7 @@ begin
       );
       Check(Change('abcd') = 'parent/4', 'The editing callback was not translated.');
       case Submit of
-        when is Sys.Func<string, string> as Factory:
+        when is Sys.Func of (string, string) as Factory:
           Check(
             Factory.Invoke('abcd') = 'parent/5' and Submitted = 1,
             'The optional callback was invoked incorrectly.'
@@ -200,12 +200,12 @@ begin
     else
       raise new Sys.InvalidOperationException('Mapping changed the element kind.');
   end case;
-  const Menu: E.Element<string> := U.Map<int, string>(
-    Menus.Menu<int>(
+  const Menu: E.Element of string := U.Map of (int, string)(
+    Menus.Menu of int(
       'menu', 'Options',
       [
-        Menus.Entry<int>.Label('Group'), Menus.Entry<int>.Action(
-          new Menus.Item<int>(
+        (Menus.Entry of int).Label('Group'), (Menus.Entry of int).Action(
+          new Menus.Item of int(
             'item',
             'Action',
             3,
@@ -216,14 +216,14 @@ begin
             Checked := true
           )
         ),
-        Menus.Entry<int>.Separator
+        (Menus.Entry of int).Separator
       ]
     ), Wrap
   );
   case Menu of
-    when E.Element.Dropdown(_, _, const Entries: array of Menus.Entry<string>, _):
+    when E.Element.Dropdown(_, _, const Entries: array of Menus.Entry of string, _):
       case Entries[1] of
-        when Menus.Entry.Action(const Item: Menus.Item<string>):
+        when Menus.Entry.Action(const Item: Menus.Item of string):
           Check(
             Item.Message = 'parent/3' and Item.Key = 'item' and Item.Icon = 'i'
             and Item.Shortcut = 'Ctrl A' and not Item.Enabled
@@ -239,14 +239,14 @@ begin
 end procedure;
 
 procedure Cached();
-  function Build(Value: int): E.Element<int>;
+  function Build(Value: int): E.Element of int;
   begin
     Builds := Builds + 1;
-    return B.Button<int>('cached-action', 'Action', Value);
+    return B.Button of int('cached-action', 'Action', Value);
   end function;
-  function Child(Value: int): E.Element<int>;
+  function Child(Value: int): E.Element of int;
   begin
-    return E.CachedSubview<int, int>(
+    return E.CachedSubview of (int, int)(
       'cached',
       Value,
       Build,
@@ -255,12 +255,12 @@ procedure Cached();
   end function;
 begin
   var Builds: int := 0;
-  const First: V.Prepared<string> := V.Prepare<string>(
-    U.Map<int, string>(Child(1), Wrap),
+  const First: V.Prepared of string := V.Prepare of string(
+    U.Map of (int, string)(Child(1), Wrap),
     V.Target.Terminal
   );
-  const Second: V.Prepared<string> := V.Prepare<string>(
-    U.Map<int, string>(Child(1), Wrap),
+  const Second: V.Prepared of string := V.Prepare of string(
+    U.Map of (int, string)(Child(1), Wrap),
     V.Target.Terminal,
     First
   );
@@ -268,8 +268,8 @@ begin
     Builds = 1 and Sys.Object.ReferenceEquals(First.Subviews['cached'], Second.Subviews['cached']),
     'Mapping discarded an unchanged cached child.'
   );
-  const Third: V.Prepared<string> := V.Prepare<string>(
-    U.Map<int, string>(
+  const Third: V.Prepared of string := V.Prepare of string(
+    U.Map of (int, string)(
       Child(1),
       function(Value: int): string => 'other/' + Value.ToString()
     ), V.Target.Terminal, Second
@@ -282,44 +282,44 @@ begin
       raise new Sys.InvalidOperationException('The cached view changed kind.');
   end case;
 
-  discard V.Prepare<string>(U.Map<int, string>(Child(2), Wrap), V.Target.Terminal, Third);
+  discard V.Prepare of string(U.Map of (int, string)(Child(2), Wrap), V.Target.Terminal, Third);
   Check(Builds = 2, 'Mapping ignored changed child dependencies.');
 end procedure;
 
 procedure Outline();
-  function TableRow(Id: string; params Children: array of E.Element<string>): Tables.Row<string>;
+  function TableRow(Id: string; params Children: array of E.Element of string): Tables.Row of string;
   begin
-    return new Tables.Row<string>(Id, [Tables.Cell<string>.Content(Children)]);
+    return new Tables.Row of string(Id, [(Tables.Cell of string).Content(Children)]);
   end function;
-  function Table(params Rows: array of Tables.Row<string>): E.Element<string>;
+  function Table(params Rows: array of Tables.Row of string): E.Element of string;
   begin
-    return Tables.Table<string>('table', [new Tables.Column('Section')], Rows);
+    return Tables.Table of string('table', [new Tables.Column('Section')], Rows);
   end function;
-  function Board(params Cards: array of Kanbans.Card<string>): E.Element<string>;
+  function Board(params Cards: array of Kanbans.Card of string): E.Element of string;
   begin
-    return Kanbans.Kanban<string>(
-      'board', [new Kanbans.Column<string>('Articles', Cards)],
+    return Kanbans.Kanban of string(
+      'board', [new Kanbans.Column of string('Articles', Cards)],
       function(Event: Kanbans.Event): string => 'change'
     );
   end function;
-  function Article(): E.Element<string>;
+  function Article(): E.Element of string;
   begin
-    return E.ScrollView<string>(
-      'article', E.Column<string>(
-        Anchors.ScrollAnchor<string>('first'),
-        Anchors.ScrollAnchor<string>('unlisted'),
-        Anchors.ScrollAnchor<string>('last')
+    return E.ScrollView of string(
+      'article', E.Column of string(
+        Anchors.ScrollAnchor of string('first'),
+        Anchors.ScrollAnchor of string('unlisted'),
+        Anchors.ScrollAnchor of string('last')
       )
     );
   end function;
-  function Reader(Items: array of Toc.Item): E.Element<string>;
+  function Reader(Items: array of Toc.Item): E.Element of string;
   begin
-    return E.Row<string>(Toc.TableOfContents<string>('outline', 'article', Items), Article());
+    return E.Row of string(Toc.TableOfContents of string('outline', 'article', Items), Article());
   end function;
-  procedure RejectOutline(Tree: E.Element<string>; Expected: string);
+  procedure RejectOutline(Tree: E.Element of string; Expected: string);
   begin
     try
-      discard V.Prepare<string>(Tree, V.Target.Graphical);
+      discard V.Prepare of string(Tree, V.Target.Graphical);
     catch Error: Sys.ArgumentException do
       Check(Error.Message.Contains(Expected), Error.Message);
       return;
@@ -330,13 +330,13 @@ procedure Outline();
 begin
   const First: Toc.Item := new Toc.Item('First', 'first');
   const Last: Toc.Item := new Toc.Item('Last', 'last');
-  discard V.Prepare<string>(Reader([First, Last]), V.Target.Graphical);
+  discard V.Prepare of string(Reader([First, Last]), V.Target.Graphical);
   RejectOutline(Reader([Last, First]), 'in document order');
   const Settings: Dialogs.Options := new Dialogs.Options('Reader');
-  discard V.Prepare<string>(
-    Dialogs.Dialog<string>(
+  discard V.Prepare of string(
+    Dialogs.Dialog of string(
       'dialog',
-      E.Spacer<string>(),
+      E.Spacer of string(),
       Reader([First, Last]),
       true,
       Settings,
@@ -345,49 +345,49 @@ begin
     V.Target.Graphical
   );
   RejectOutline(
-    Dialogs.Dialog<string>(
-      'dialog', Article(), Toc.TableOfContents<string>('outline', 'article', [First, Last]),
+    Dialogs.Dialog of string(
+      'dialog', Article(), Toc.TableOfContents of string('outline', 'article', [First, Last]),
       true, Settings, 'close'
     ),
     'same CUI scope'
   );
-  const Trigger: E.Element<string> := B.Button<string>('show-outline', 'Outline', 'open');
+  const Trigger: E.Element of string := B.Button of string('show-outline', 'Outline', 'open');
   RejectOutline(
-    E.Row<string>(
-      Article(), Popovers.Popover<string>(
-        'popup', Trigger, Toc.TableOfContents<string>('outline', 'article', [First, Last]),
+    E.Row of string(
+      Article(), Popovers.Popover of string(
+        'popup', Trigger, Toc.TableOfContents of string('outline', 'article', [First, Last]),
         true, 'close'
       )
     ),
     'same CUI scope'
   );
-  const Index: E.Element<string> := Toc.TableOfContents<string>(
+  const Index: E.Element of string := Toc.TableOfContents of string(
     'outline',
     'article',
     [First, Last]
   );
-  discard V.Prepare<string>(Table(TableRow('row', Reader([First, Last]))), V.Target.Graphical);
-  discard V.Prepare<string>(
-    E.Row<string>(
-      Index, E.ScrollView<string>(
+  discard V.Prepare of string(Table(TableRow('row', Reader([First, Last]))), V.Target.Graphical);
+  discard V.Prepare of string(
+    E.Row of string(
+      Index, E.ScrollView of string(
         'article', Table(
-          TableRow('first-row', Anchors.ScrollAnchor<string>('first')),
-          TableRow('last-row', Anchors.ScrollAnchor<string>('last'))
+          TableRow('first-row', Anchors.ScrollAnchor of string('first')),
+          TableRow('last-row', Anchors.ScrollAnchor of string('last'))
         )
       )
     ),
     V.Target.Graphical
   );
   RejectOutline(Table(TableRow('a', Index), TableRow('b', Article())), 'same CUI scope');
-  RejectOutline(E.Row<string>(Index, Table(TableRow('row', Article()))), 'same CUI scope');
-  discard V.Prepare<string>(
-    Board(new Kanbans.Card<string>(1, 'Reader', Reader([First, Last]))),
+  RejectOutline(E.Row of string(Index, Table(TableRow('row', Article()))), 'same CUI scope');
+  discard V.Prepare of string(
+    Board(new Kanbans.Card of string(1, 'Reader', Reader([First, Last]))),
     V.Target.Graphical
   );
   RejectOutline(
     Board(
-      new Kanbans.Card<string>(1, 'Outline', Index),
-      new Kanbans.Card<string>(2, 'Article', Article())
+      new Kanbans.Card of string(1, 'Outline', Index),
+      new Kanbans.Card of string(2, 'Article', Article())
     ),
     'same CUI scope'
   );

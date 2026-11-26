@@ -16,9 +16,9 @@ uses Fpas.Ui.Widgets.Actions.Buttons as B;
 // Builds the example view.
 // ## Returns
 // The widget with its message type.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return B.Button<string>('save', 'Save', 'save',
+  return B.Button of string('save', 'Save', 'save',
     new B.Options(Variant := S.ButtonVariant.Primary));
 end function;
 

@@ -40,7 +40,7 @@ public type DiscoveryTests = record
       Session,
       function(Value: M.Snapshot): bool => Value.Sources[0].Status = M.Availability.Ready
     );
-    X.Assert.Equal<int>(2, Found.Sources[0].Files.Length);
+    X.Assert.Equal of int(2, Found.Sources[0].Files.Length);
     X.Assert.True(H.Has(Found.Sources[0], Locked));
   end function;
 
@@ -61,7 +61,7 @@ public type DiscoveryTests = record
         Extensions := ['.mp3'];
       end with, H.Source('parent', Root.Path), H.Source('other', Other.Path)
     ];
-    X.Assert.Equal<int>(2, S.Roots(S.Normalize(Sources)).Length);
+    X.Assert.Equal of int(2, S.Roots(S.Normalize(Sources)).Length);
     await using const Session: Monitor.Session := H.Start(
       Sources,
       T.CancellationToken.None
@@ -70,9 +70,9 @@ public type DiscoveryTests = record
       Session,
       function(Value: M.Snapshot): bool => Value.Sources.Length = 3
     );
-    X.Assert.Equal<int>(1, Found.Sources[0].Files.Length);
-    X.Assert.Equal<int>(2, Found.Sources[1].Files.Length);
-    X.Assert.Equal<int>(1, Found.Sources[2].Files.Length);
+    X.Assert.Equal of int(1, Found.Sources[0].Files.Length);
+    X.Assert.Equal of int(2, Found.Sources[1].Files.Length);
+    X.Assert.Equal of int(1, Found.Sources[2].Files.Length);
     X.Assert.True(Found.Sources[0].Watching);
   end function;
 
@@ -110,7 +110,7 @@ public type DiscoveryTests = record
         0
       ].Status = M.Availability.Ready
     );
-    X.Assert.Equal<int>(0, Returned.Sources[0].Files.Length);
+    X.Assert.Equal of int(0, Returned.Sources[0].Files.Length);
   end function;
 
   // Suspends source discovery and preserves its last view until it is re-enabled.
@@ -148,7 +148,7 @@ public type DiscoveryTests = record
       Session,
       function(Value: M.Snapshot): bool => Value.Generation > Offline.Generation
     );
-    X.Assert.Equal<int>(0, Online.Sources[0].Files.Length);
+    X.Assert.Equal of int(0, Online.Sources[0].Files.Length);
     Session.Configure([]);
     discard await H.Until(Session, function(Value: M.Snapshot): bool => Value.Sources.Length = 0);
   end function;
@@ -174,14 +174,14 @@ public type DiscoveryTests = record
       Session,
       function(Value: M.Snapshot): bool => Value.Sources.Length = 1
     );
-    X.Assert.Equal<int>(0, Found.Sources[0].Files.Length);
-    X.Assert.Equal<M.Availability>(M.Availability.Ready, Found.Sources[0].Status);
+    X.Assert.Equal of int(0, Found.Sources[0].Files.Length);
+    X.Assert.Equal of M.Availability(M.Availability.Ready, Found.Sources[0].Status);
     Session.Configure([H.Source('linked', IO.Path.Combine(Root.Path, 'external'))]);
     const Linked: M.Snapshot := await H.Until(
       Session,
       function(Value: M.Snapshot): bool => Value.Generation > Found.Generation
     );
-    X.Assert.Equal<M.Availability>(M.Availability.Unavailable, Linked.Sources[0].Status);
+    X.Assert.Equal of M.Availability(M.Availability.Unavailable, Linked.Sources[0].Status);
     X.Assert.False(Linked.Sources[0].Watching);
   end function;
 
@@ -217,7 +217,7 @@ public type DiscoveryTests = record
         function(Value: M.Snapshot): bool => Value.Sources[0].Status = M.Availability.Incomplete
       );
       X.Assert.True(H.Has(Denied.Sources[0], Track));
-      X.Assert.Equal<int>(1, Denied.Sources[0].Issues.Length);
+      X.Assert.Equal of int(1, Denied.Sources[0].Issues.Length);
       IO.File.SetUnixFileMode(Child, Permissions);
       Session.Refresh();
       discard await H.Until(

@@ -21,9 +21,9 @@ uses Fpas.Ui.Widgets.Media.MediaImages as M;
 // - `Crop`: Current rectangle in image pixels.
 // ## Returns
 // The cropper with its proposed rectangle as a message.
-public function View(Picture: M.Source; Crop: W.Value): E.Element<W.Value>;
+public function View(Picture: M.Source; Crop: W.Value): E.Element of W.Value;
 begin
-  return W.ImageCropper<W.Value>('crop', Picture, Crop,
+  return W.ImageCropper of W.Value('crop', Picture, Crop,
     function(Change: W.Value): W.Value => Change,
     new W.Options(Height := L.Extent.Fixed(L.Measure.Logical(260)), Aspect := 1.0F));
 end function;

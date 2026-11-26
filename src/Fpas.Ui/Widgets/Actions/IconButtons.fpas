@@ -43,14 +43,14 @@ end record;
 // - `Settings`: Optional input and appearance settings.
 // ## Returns
 // A graphical icon button.
-public function IconButton<TMsg>(
+public function IconButton of TMsg(
   Id: string; Icon: string; Tooltip: string; Message: TMsg; Settings: Options? := null
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 requires Icon <> '';
 requires Tooltip <> '';
 begin
-  return E.Element<TMsg>.IconAction(Id, Icon, Tooltip, Message, Settings ?? new Options());
+  return (E.Element of TMsg).IconAction(Id, Icon, Tooltip, Message, Settings ?? new Options());
 end function;
 
 end unit;

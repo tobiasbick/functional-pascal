@@ -14,9 +14,9 @@ uses GuiGallery.Shared.State as Demo;
 // - `Model`: Current gallery state.
 // ## Returns
 // The four independent reactions.
-public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+public function View(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
 begin
-  return R.Reactions<State.Msg>(
+  return R.Reactions of State.Msg(
     'action-reactions', Model.Reactions,
     function(Index: int; Value: R.Item): State.Msg => State.Msg.SetReaction(Index, Value)
   );

@@ -10,14 +10,14 @@ target; complete C# language and ABI feature coverage is not assumed.
 ## Span parameters
 
 A call to an imported method or constructor accepts a one-dimensional array, or
-an array literal, for a by-value `Span<T>` or `ReadOnlySpan<T>` parameter. The
+an array literal, for a by-value `Span of T` or `ReadOnlySpan of T` parameter. The
 compiler saves the array with the other arguments and creates the span directly
 before the call, so no span value is stored, captured or kept across `await`.
-`Span<T>` requires the array's exact element type. `ReadOnlySpan<T>` also accepts
+`Span of T` requires the array's exact element type. `ReadOnlySpan of T` also accepts
 arrays whose elements convert to `T` by reference, and a generic `T` is inferred
 from the array element. A candidate that needs fewer span conversions is always
 better, so existing array, collection and `params` overloads keep precedence;
-among otherwise equal span overloads, `ReadOnlySpan<T>` wins.
+among otherwise equal span overloads, `ReadOnlySpan of T` wins.
 
 Spans remain unsupported everywhere else: as source types, locals, fields,
 results, `ref`/`out`/`in` parameters, generic arguments, method-group delegates

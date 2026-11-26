@@ -17,11 +17,11 @@ uses Fpas.Ui.Widgets.Navigation.Navigation as N;
 // - `Sections`: Headings and destinations in focus order.
 // - `Active`: Model-owned active key.
 // - `Enabled`: Input permission for the sidebar.
-public procedure Draw<TMsg>(State: C.State<TMsg>; Id: string; Sections: array of N.Section<TMsg>; Active: string?; Enabled: bool);
+public procedure Draw of TMsg(State: C.State of TMsg; Id: string; Sections: array of N.Section of TMsg; Active: string?; Enabled: bool);
 begin
   const Group: string := C.Token('sidebar', Id);
   State.Window.BeginSidebar(Group, Active <> null);
-  for Section: N.Section<TMsg> in Sections do
+  for Section: N.Section of TMsg in Sections do
     if Section.GapBefore > 0 then
       State.Window.Gap(cast<float>(Section.GapBefore));
     end if;
@@ -31,11 +31,11 @@ begin
       State.Labels.Add(Section.Title);
     end if;
 
-    for Item: N.Item<TMsg> in Section.Items do
+    for Item: N.Item of TMsg in Section.Items do
       const Allowed: bool := Enabled and Item.Enabled and State.AcceptInput;
       const Selected: bool := Active = Item.Key;
       const Token: string := C.Token('navigation', Id, Item.Key);
-      const Focus: bool := C.WantsFocus<TMsg>(State, N.ItemId(Id, Item.Key), Token, Allowed);
+      const Focus: bool := C.WantsFocus of TMsg(State, N.ItemId(Id, Item.Key), Token, Allowed);
       if State.Window.SidebarItem(
         Group,
         Token,
@@ -50,7 +50,7 @@ begin
         State.Messages.Add(Item.Message);
       end if;
 
-      C.Track<TMsg>(
+      C.Track of TMsg(
         State, new App.Control(
           Id, Item.Label, 'navigation', new Cui.CuiRectangle(), Allowed,
           Key := Item.Key, Value := Selected.ToString()

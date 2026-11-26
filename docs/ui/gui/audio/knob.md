@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Audio.Knobs as W;
 // - `Hertz`: Current cutoff between 20 and 20,000 Hz.
 // ## Returns
 // The knob, with each proposed cutoff as an application message.
-public function View(Hertz: float): E.Element<float>;
+public function View(Hertz: float): E.Element of float;
 begin
-  return W.Knob<float>('cutoff', 'Cutoff', Hertz, 20.0F, 20000.0F,
+  return W.Knob of float('cutoff', 'Cutoff', Hertz, 20.0F, 20000.0F,
     function(Value: float): float => Value,
     new W.Options(UnitLabel := 'Hz', LogScale := true, Reset := 1000.0F));
 end function;

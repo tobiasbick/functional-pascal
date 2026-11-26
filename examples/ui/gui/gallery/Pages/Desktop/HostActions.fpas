@@ -39,35 +39,35 @@ end function;
 // - `Model`: Current placement and clipboard preview.
 // ## Returns
 // The actions with the last placement and the text from the last paste.
-public function View(Model: S.Model): E.Element<S.Msg>;
+public function View(Model: S.Model): E.Element of S.Msg;
 begin
   const Placement: Cui.CuiWindowPlacement? := Model.Placement;
-  return G.Card<S.Msg>(
+  return G.Card of S.Msg(
     12, [
-      E.Row<S.Msg>(
+      E.Row of S.Msg(
         new L.Flow(Gap := G.Points(8), Wrap := true),
-        B.Button<S.Msg>('desktop-maximize', 'Maximize window', S.Msg.Maximize),
-        B.Button<S.Msg>('desktop-minimize', 'Minimize', S.Msg.Minimize),
-        B.Button<S.Msg>('desktop-restore', 'Restore', S.Msg.Restore),
-        B.Button<S.Msg>(
+        B.Button of S.Msg('desktop-maximize', 'Maximize window', S.Msg.Maximize),
+        B.Button of S.Msg('desktop-minimize', 'Minimize', S.Msg.Minimize),
+        B.Button of S.Msg('desktop-restore', 'Restore', S.Msg.Restore),
+        B.Button of S.Msg(
           'desktop-move', 'Move to ' + MoveX.ToString() + ', ' + MoveY.ToString(), S.Msg.MoveWindow
         ),
-        B.Button<S.Msg>('desktop-placement', 'Read placement', S.Msg.ReadPlacement)
+        B.Button of S.Msg('desktop-placement', 'Read placement', S.Msg.ReadPlacement)
       ),
-      E.Text<S.Msg>(
+      E.Text of S.Msg(
         if Placement = null then
           'Placement not read'
         else
           Describe(Placement.Value)
         end if
       ),
-      E.Styled<S.Msg>(E.Text<S.Msg>(SamplePath), Styles.Role.Secondary),
-      E.Row<S.Msg>(
+      E.Styled of S.Msg(E.Text of S.Msg(SamplePath), Styles.Role.Secondary),
+      E.Row of S.Msg(
         new L.Flow(Gap := G.Points(8), Wrap := true),
-        B.Button<S.Msg>('desktop-copy-path', 'Copy path', S.Msg.CopyPath),
-        B.Button<S.Msg>('desktop-paste-text', 'Paste text', S.Msg.PasteText)
+        B.Button of S.Msg('desktop-copy-path', 'Copy path', S.Msg.CopyPath),
+        B.Button of S.Msg('desktop-paste-text', 'Paste text', S.Msg.PasteText)
       ),
-      E.Text<S.Msg>(
+      E.Text of S.Msg(
         if Model.PastedText = '' then
           'No text pasted'
         else

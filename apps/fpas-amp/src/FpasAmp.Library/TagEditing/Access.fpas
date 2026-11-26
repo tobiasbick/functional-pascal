@@ -51,13 +51,13 @@ begin
   end try;
 
   using const Connection: Db.SqliteConnection := Attached(Database, Users);
-  var Values: I.ImmutableDictionary<string, string> := Original.Values;
-  const Edits: I.ImmutableDictionary<string, string?> := Overrides.Read(
+  var Values: I.ImmutableDictionary of (string, string) := Original.Values;
+  const Edits: I.ImmutableDictionary of (string, string?) := Overrides.Read(
     Connection,
     null,
     Track.TrackId
   );
-  for Pair: C.KeyValuePair<string, string?> in Edits do
+  for Pair: C.KeyValuePair of (string, string?) in Edits do
     const Text: string? := Pair.Value;
     Values := if Text = null then
       Values.Remove(Pair.Key)
@@ -72,11 +72,11 @@ begin
   end with;
 end function;
 
-procedure SaveDatabase(Database: string; Users: string; Track: Tracks.Entry; Changes: I.ImmutableDictionary<string, string?>; Cancellation: T.CancellationToken);
+procedure SaveDatabase(Database: string; Users: string; Track: Tracks.Entry; Changes: I.ImmutableDictionary of (string, string?); Cancellation: T.CancellationToken);
 begin
   using const Connection: Db.SqliteConnection := Attached(Database, Users);
   using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
-  const Edits: I.ImmutableDictionary<string, string?> := Overrides.Read(
+  const Edits: I.ImmutableDictionary of (string, string?) := Overrides.Read(
     Connection,
     Transaction,
     Track.TrackId
@@ -112,7 +112,7 @@ end procedure;
 // - `Cancellation`: Stops before publishing pending changes when requested.
 public procedure Save(
   Database: string; Users: string; Track: Tracks.Entry; Original: Files.Snapshot;
-  Changes: I.ImmutableDictionary<string, string?>; ToDatabase: bool; ToFile: bool; Cancellation: T.CancellationToken
+  Changes: I.ImmutableDictionary of (string, string?); ToDatabase: bool; ToFile: bool; Cancellation: T.CancellationToken
 );
 requires ToDatabase or ToFile;
 begin

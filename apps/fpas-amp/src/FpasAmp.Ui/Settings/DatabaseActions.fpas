@@ -14,11 +14,11 @@ uses System as Sys;
 
 // Builds a native clear button and confirmation. `Target` is a source ID or empty
 // for the full database; `Id` is its stable widget identity. `Current` owns state.
-public function Clear(Id: string; Target: string; Label: string; Current: M.State; Theme: Themes.Theme): E.Element<M.Msg>;
+public function Clear(Id: string; Target: string; Label: string; Current: M.State; Theme: Themes.Theme): E.Element of M.Msg;
 begin
   const Confirmation: string? := Current.ConfirmClear;
   const Busy: string? := Current.Clearing;
-  const Button: E.Element<M.Msg> := B.Button<M.Msg>(
+  const Button: E.Element of M.Msg := B.Button of M.Msg(
     Id, Label, M.Msg.AskClear(Target),
     new B.Options(
       Variant := S.ButtonVariant.Outline, ControlSize := B.Size.Small,
@@ -26,7 +26,7 @@ begin
       Color := Theme.Colors.Danger, Icon := Sys.Char.ConvertFromUtf32($E18E)
     )
   );
-  return Confirm.ConfirmPopover<M.Msg>(
+  return Confirm.ConfirmPopover of M.Msg(
     Id + '-confirm', Button,
     Confirmation <> null and Confirmation = Target,
     new Confirm.Options(

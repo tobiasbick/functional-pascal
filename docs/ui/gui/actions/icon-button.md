@@ -16,9 +16,9 @@ uses System as Sys;
 // Builds the example view.
 // ## Returns
 // The widget with its message type.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return B.IconButton<string>('share', Sys.Char.ConvertFromUtf32($E156),
+  return B.IconButton of string('share', Sys.Char.ConvertFromUtf32($E156),
     'Share', 'share');
 end function;
 

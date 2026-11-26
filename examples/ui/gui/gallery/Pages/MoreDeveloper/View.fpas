@@ -23,10 +23,10 @@ uses GuiGallery.Pages.MoreDeveloper.State as M;
 uses GuiGallery.Shared.Sections as Section;
 uses System as Sys;
 
-function Limit(Maximum: int; Gap: int; params Children: array of E.Element<M.Msg>): E.Element<M.Msg>;
+function Limit(Maximum: int; Gap: int; params Children: array of E.Element of M.Msg): E.Element of M.Msg;
 begin
-  return E.Size<M.Msg>(
-    E.Column<M.Msg>(new L.Flow(Gap := Section.Points(Gap), Clip := false), Children),
+  return E.Size of M.Msg(
+    E.Column of M.Msg(new L.Flow(Gap := Section.Points(Gap), Clip := false), Children),
     new L.Flex(
       Width := new L.AxisSize(Basis := L.Extent.Fill, Maximum := L.Measure.Logical(Maximum))
     )
@@ -38,24 +38,24 @@ end function;
 // - `Model`: Retained page state.
 // ## Returns
 // Sections and examples in the original order.
-public function View(Model: M.Model): array of E.Element<M.Msg>;
+public function View(Model: M.Model): array of E.Element of M.Msg;
 begin
   return [
-    Section.Heading<M.Msg>(
+    Section.Heading of M.Msg(
       Strings.Get('Heading.TestExplorer'),
       Strings.Get('Heading.TestExplorerHint')
     ),
     Limit(
       760, 10,
-      T.TestExplorer<M.Msg>('dev-tests', D.Tests, M.Msg.Tests, new T.Options(Height := 500.0F))
+      T.TestExplorer of M.Msg('dev-tests', D.Tests, M.Msg.Tests, new T.Options(Height := 500.0F))
     ),
-    Section.Heading<M.Msg>(
+    Section.Heading of M.Msg(
       Strings.Get('Heading.StackTrace'),
       Strings.Get('Heading.StackTraceHint')
     ),
     Limit(
       760, 10,
-      S.StackTrace<M.Msg>(
+      S.StackTrace of M.Msg(
         'dev-stack',
         D.Frames,
         M.Msg.Stack,
@@ -66,13 +66,13 @@ begin
         )
       )
     ),
-    Section.Heading<M.Msg>(
+    Section.Heading of M.Msg(
       Strings.Get('Heading.Blame'),
       Strings.Get('Heading.BlameHint')
     ),
     Limit(
       900, 10,
-      B.Blame<M.Msg>(
+      B.Blame of M.Msg(
         'dev-blame',
         D.Lines,
         D.LineCommits,
@@ -81,18 +81,23 @@ begin
         new B.Options(Language := 'c', Now := 1794211200L, Height := 320.0F, FirstLine := 120)
       )
     ),
-    Section.Heading<M.Msg>(Strings.Get('Heading.Coverage'), Strings.Get('Heading.CoverageHint')),
+    Section.Heading of M.Msg(Strings.Get('Heading.Coverage'), Strings.Get('Heading.CoverageHint')),
     Limit(
       820, 10,
-      C.Coverage<M.Msg>('dev-coverage', D.Coverage, M.Msg.Coverage, new C.Options(Height := 372.0F))
+      C.Coverage of M.Msg(
+        'dev-coverage',
+        D.Coverage,
+        M.Msg.Coverage,
+        new C.Options(Height := 372.0F)
+      )
     ),
-    Section.Heading<M.Msg>(
+    Section.Heading of M.Msg(
       Strings.Get('Heading.RegexTester'),
       Strings.Get('Heading.RegexTesterHint')
     ),
     Limit(
       760, 10,
-      R.RegexTester<M.Msg>(
+      R.RegexTester of M.Msg(
         'dev-regex',
         Model.Pattern,
         Model.Sample,
@@ -101,49 +106,49 @@ begin
         new R.Options(Height := 110.0F)
       )
     ),
-    Section.Heading<M.Msg>(
+    Section.Heading of M.Msg(
       Strings.Get('Heading.HttpRequestBar'),
       Strings.Get('Heading.HttpRequestBarHint')
     ),
     Limit(
       760, 12,
-      H.RequestBar<M.Msg>('dev-request', Model.Method, Model.Url, M.Msg.Request),
-      K.KeyValueEditor<M.Msg>(
+      H.RequestBar of M.Msg('dev-request', Model.Method, Model.Url, M.Msg.Request),
+      K.KeyValueEditor of M.Msg(
         'dev-params',
         Model.Parameters,
         M.Msg.Parameters,
         new K.Options(Capacity := 8)
       ),
-      Status.ResponseStatus<M.Msg>('dev-response', 201, 0.142, 18400.0)
+      Status.ResponseStatus of M.Msg('dev-response', 201, 0.142, 18400.0)
     ),
-    Section.Heading<M.Msg>(
+    Section.Heading of M.Msg(
       Strings.Get('Heading.ApiExplorer'),
       Strings.Get('Heading.ApiExplorerHint')
     ),
     Limit(
       820, 10,
-      A.ApiExplorer<M.Msg>('dev-api', D.Endpoints, Model.Endpoint, M.Msg.Endpoint)
+      A.ApiExplorer of M.Msg('dev-api', D.Endpoints, Model.Endpoint, M.Msg.Endpoint)
     ),
-    Section.Heading<M.Msg>(
+    Section.Heading of M.Msg(
       Strings.Get('Heading.FeatureFlags'),
       Strings.Get('Heading.FeatureFlagsHint')
     ),
     Limit(
       860, 10,
-      F.FeatureFlags<M.Msg>('dev-flags', Model.Flags, D.Environments, M.Msg.Flag)
+      F.FeatureFlags of M.Msg('dev-flags', Model.Flags, D.Environments, M.Msg.Flag)
     ),
-    Section.Heading<M.Msg>(Strings.Get('Heading.Uptime'), Strings.Get('Heading.UptimeHint')),
+    Section.Heading of M.Msg(Strings.Get('Heading.Uptime'), Strings.Get('Heading.UptimeHint')),
     Limit(
       860, 10,
-      U.Uptime<M.Msg>('dev-uptime', D.Services, new Sys.DateOnly(2026, 11, 9))
+      U.Uptime of M.Msg('dev-uptime', D.Services, new Sys.DateOnly(2026, 11, 9))
     ),
-    Section.Heading<M.Msg>(
+    Section.Heading of M.Msg(
       Strings.Get('Heading.TimeHistogram'),
       Strings.Get('Heading.TimeHistogramHint')
     ),
     Limit(
       900, 10,
-      G.TimeHistogram<M.Msg>(
+      G.TimeHistogram of M.Msg(
         'dev-histogram',
         1794240000.0,
         900.0,

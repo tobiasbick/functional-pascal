@@ -110,7 +110,7 @@ begin
     else Ocean;
   end case;
   const Step: double := C.PixelStep(View, Rows);
-  const Pixels: Lists.List<T.Cell> := new Lists.List<T.Cell>(Rows * Columns);
+  const Pixels: Lists.List of T.Cell := new Lists.List of T.Cell(Rows * Columns);
   for Row: int := 0 to Rows - 1 do
     const Top: double := View.Y + (Rows - 2.0 * Row - 0.5) * Step;
     for Col: int := 0 to Columns - 1 do

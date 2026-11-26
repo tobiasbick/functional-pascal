@@ -13,7 +13,7 @@ begin
   if Batch.Full then
     return Roots;
   end if;
-  const Selected: C.List<string> := new C.List<string>();
+  const Selected: C.List of string := new C.List of string();
   for Directory: string in Batch.Directories do
     for Root: string in Roots do
       var Path: string := Directory;

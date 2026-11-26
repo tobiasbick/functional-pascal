@@ -26,22 +26,22 @@ uses System as Sys;
 // - `Theme`: Active terminal palette.
 // ## Returns
 // A labeled single-line editor with search adornments.
-public function Lower<TMsg>(
+public function Lower of TMsg(
   Id: string; Value: string; Change: function(string): TMsg; Settings: Search.Options;
-  Submit: Sys.Func<string, TMsg>?; Colors: T.Style; Theme: Th.Theme
-): E.Element<TMsg>;
-  function Propose(Text: string): Actions.Result<TMsg>;
+  Submit: Sys.Func of (string, TMsg)?; Colors: T.Style; Theme: Th.Theme
+): E.Element of TMsg;
+  function Propose(Text: string): Actions.Result of TMsg;
   begin
-    return Actions.Result<TMsg>.Send(Change(Text));
+    return (Actions.Result of TMsg).Send(Change(Text));
   end function;
 begin
-  const OnSubmit: Sys.Func<string, Actions.Result<TMsg>>? := case Submit of
-    when is Sys.Func<string, TMsg> as Callback: function(Text: string): Actions.Result<TMsg> => Actions.Result<TMsg>.Send(
+  const OnSubmit: Sys.Func of (string, Actions.Result of TMsg)? := case Submit of
+    when is Sys.Func of (string, TMsg) as Callback: function(Text: string): Actions.Result of TMsg => (Actions.Result of TMsg).Send(
       Callback.Invoke(Text)
     );
     else null;
   end case;
-  const Field: Edit.Field<TMsg> := new Edit.Field<TMsg>(
+  const Field: Edit.Field of TMsg := new Edit.Field of TMsg(
     Id, Value, Propose,
     new Fields.Options(
       Label := Settings.Label,
@@ -56,11 +56,11 @@ begin
     ),
     OnSubmit, Role := 'search-field'
   );
-  var Controls: array of E.Element<TMsg> := [];
+  var Controls: array of E.Element of TMsg := [];
   if Value <> '' and not Settings.ReadOnly then
-    const Clear: E.Element<TMsg> := E.Element<TMsg>.Action(
+    const Clear: E.Element of TMsg := (E.Element of TMsg).Action(
       Search.ClearId(Id),
-      new Actions.Callback<TMsg>(function(): Actions.Result<TMsg> => Propose('')),
+      new Actions.Callback of TMsg(function(): Actions.Result of TMsg => Propose('')),
       Settings.Enabled,
       new E.ActionView(
         '×',
@@ -69,11 +69,11 @@ begin
         FixedWidth := 3
       )
     );
-    Controls := [E.Element<TMsg>.DisclosureBody(Id, Clear, true)];
+    Controls := [(E.Element of TMsg).DisclosureBody(Id, Clear, true)];
   end if;
 
-  return TextField.WithLabels<TMsg>(
-    TextField.WithAdornments<TMsg>(
+  return TextField.WithLabels of TMsg(
+    TextField.WithAdornments of TMsg(
       Field,
       Settings.Prefix,
       Settings.Suffix,

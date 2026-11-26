@@ -60,22 +60,22 @@ public sealed partial class PublishingTests(SdkPackageFixture sdk) : IClassFixtu
             uses System as Sys; uses System.Console as Console; uses System.Threading.Tasks as Tasks; uses Shared.Value as Foreign;
               uses Fpas.Core.RecordAttribute as RecordMarker;
             type Id = distinct int;
-            type Box<T> = record
+            type Box of T = record
               public Value: T;
             end record;
-            async function Twice(Value: int): Tasks.Task<int>;
+            async function Twice(Value: int): Tasks.Task of int;
             requires Value >= 0;
             ensures (Result: int): Result = Value * 2;
             begin
               await Tasks.Task.Delay(1);
-              const Map: Sys.Func<int, int> := function(Item: int): int => Item + Value;
+              const Map: Sys.Func of (int, int) := function(Item: int): int => Item + Value;
               return Map.Invoke(Value);
             end function;
             begin
-              const Wrapped: Box<Id> := new Box<Id>(new Id(Foreign.Read()));
+              const Wrapped: Box of Id := new Box of Id(new Id(Foreign.Read()));
               const Value: int := await Twice(Wrapped.Value.Value);
               if Value <> 42 then raise new Sys.InvalidOperationException('Incorrect publishing result'); end if;
-              if not Sys.Attribute.IsDefined(typeof(Box<Id>), typeof(RecordMarker)) then
+              if not Sys.Attribute.IsDefined(typeof(Box of Id), typeof(RecordMarker)) then
                 raise new Sys.InvalidOperationException('Missing Core record metadata');
               end if;
               Console.WriteLine('published:' + Value.ToString());

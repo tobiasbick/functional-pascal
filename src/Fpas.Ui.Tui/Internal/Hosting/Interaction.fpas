@@ -24,7 +24,7 @@ uses System.Collections.Generic as Generic;
 // Owner-thread interaction state used to route input against a presented scene.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type State<TMsg> = record
+public type State of TMsg = record
   // Reads the focused control ID, or empty when focus is unset.
   public FocusId: function(): string;
   // Reads the control under the pointer, or empty when no control is eligible.
@@ -32,21 +32,21 @@ public type State<TMsg> = record
   // Reads the active overlay scope, or empty for the base view.
   public ScopeId: function(): string;
   // Updates focus and pointer capture for the next scene using its predecessor.
-  public Reconcile: procedure(A.Layout<TMsg>, A.Layout<TMsg>?);
+  public Reconcile: procedure(A.Layout of TMsg, (A.Layout of TMsg)?);
   // Requests focus for a stable control ID in the scene.
-  public SetFocus: procedure(A.Layout<TMsg>, string);
+  public SetFocus: procedure(A.Layout of TMsg, string);
   // Invokes the eligible control with the requested ID.
-  public Activate: procedure(A.Layout<TMsg>, string);
+  public Activate: procedure(A.Layout of TMsg, string);
   // Routes a complete click at the specified cell.
-  public Click: procedure(A.Layout<TMsg>, K.MouseButton, int, int);
+  public Click: procedure(A.Layout of TMsg, K.MouseButton, int, int);
   // Routes a pointer event.
-  public Pointer: procedure(A.Layout<TMsg>, K.PointerKind, K.MouseButton, int, int);
+  public Pointer: procedure(A.Layout of TMsg, K.PointerKind, K.MouseButton, int, int);
   // Routes a scroll delta at the pointer cell.
-  public Scroll: procedure(A.Layout<TMsg>, int, int, int);
+  public Scroll: procedure(A.Layout of TMsg, int, int, int);
   // Handles a terminal key with its modifier state.
-  public Key: procedure(A.Layout<TMsg>, K.Key, K.KeyModifiers);
+  public Key: procedure(A.Layout of TMsg, K.Key, K.KeyModifiers);
   // Routes text to the editor and permits character shortcuts for typed input.
-  public Insert: procedure(A.Layout<TMsg>, string, bool);
+  public Insert: procedure(A.Layout of TMsg, string, bool);
 end record;
 
 // Starts focus, pointer capture and input routing for one terminal session.
@@ -57,10 +57,10 @@ end record;
 // - `ScrollOffsets`: Session scroll offsets keyed by viewport ID.
 // ## Returns
 // The handlers and queries backed by the new session state.
-public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dictionary<string, int>): State<TMsg>;
-  function ActiveId(Layout: A.Layout<TMsg>): string;
+public function Create of TMsg(Apply: procedure(TMsg); ScrollOffsets: Generic.Dictionary of (string, int)): State of TMsg;
+  function ActiveId(Layout: A.Layout of TMsg): string;
   begin
-    const Active: A.Scope<TMsg>? := Layout.Active;
+    const Active: (A.Scope of TMsg)? := Layout.Active;
     if Active <> null then
       return Active.Id;
     end if;
@@ -68,17 +68,17 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     return '';
   end function;
 
-  function Eligible(Control: A.Control<TMsg>; Scope: string): bool;
+  function Eligible(Control: A.Control of TMsg; Scope: string): bool;
   begin
     return Control.Enabled and Control.Scope = Scope;
   end function;
 
-  function RetainCapture(Layout: A.Layout<TMsg>; Id: string; Scope: string): string;
+  function RetainCapture(Layout: A.Layout of TMsg; Id: string; Scope: string): string;
   begin
     if Id = '' then
       return '';
     end if;
-    const Control: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, Id);
+    const Control: (A.Control of TMsg)? := A.FindControl of TMsg(Layout, Id);
     return if Control <> null and Eligible(Control, Scope) then
       Id
     else
@@ -86,26 +86,26 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     end if;
   end function;
 
-  procedure SetFocus(Layout: A.Layout<TMsg>; Id: string);
+  procedure SetFocus(Layout: A.Layout of TMsg; Id: string);
   begin
-    const Control: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, Id);
+    const Control: (A.Control of TMsg)? := A.FindControl of TMsg(Layout, Id);
     if Control <> null and Eligible(Control, FocusScope) then
       Focus := Control.Id;
-    elsif Control = null and Navigation.CanFocusOffscreen<TMsg>(Layout, Id, FocusScope) then
+    elsif Control = null and Navigation.CanFocusOffscreen of TMsg(Layout, Id, FocusScope) then
       MoveFocus(Layout, Id);
     end if;
   end procedure;
 
-  function Invoke(Control: A.Control<TMsg>): bool;
+  function Invoke(Control: A.Control of TMsg): bool;
   begin
     case Control.Action of
-      when A.Binding.SelectionList(const List: E.SelectionListView<TMsg>, _, _):
-        SelectionList.Activate<TMsg>(List, Apply);
+      when A.Binding.SelectionList(const List: E.SelectionListView of TMsg, _, _):
+        SelectionList.Activate of TMsg(List, Apply);
         return true;
       else
     end case;
 
-    const Handler: Actions.IActivatable<TMsg>? := A.Activatable<TMsg>(Control.Action);
+    const Handler: (Actions.IActivatable of TMsg)? := A.Activatable of TMsg(Control.Action);
     if Handler = null then
       return false;
     end if;
@@ -114,22 +114,22 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
       Focus := Control.Id;
     end if;
 
-    Actions.Dispatch<TMsg>(Handler.Activate(), Apply);
+    Actions.Dispatch of TMsg(Handler.Activate(), Apply);
 
     return true;
   end function;
 
-  procedure ReconcileFocus(Layout: A.Layout<TMsg>; Previous: A.Layout<TMsg>?);
+  procedure ReconcileFocus(Layout: A.Layout of TMsg; Previous: (A.Layout of TMsg)?);
     function Restore(Id: string; Scope: string): bool;
     begin
       if Id = '' then
         return false;
       end if;
-      const Candidate: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, Id);
+      const Candidate: (A.Control of TMsg)? := A.FindControl of TMsg(Layout, Id);
       if Candidate <> null and Eligible(Candidate, Scope) then
         Focus := Id;
         return true;
-      elsif Candidate = null and Navigation.CanFocusOffscreen<TMsg>(Layout, Id, Scope) then
+      elsif Candidate = null and Navigation.CanFocusOffscreen of TMsg(Layout, Id, Scope) then
         Focus := Id;
         return true;
       end if;
@@ -142,7 +142,7 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     MiddleCaptured := RetainCapture(Layout, MiddleCaptured, Scope);
     if Previous <> null then
       for Id: string in Previous.Scopes do
-        if Sys.Array.IndexOf<string>(Layout.Scopes, Id) < 0 then
+        if Sys.Array.IndexOf of string(Layout.Scopes, Id) < 0 then
           discard Saved.Remove(Id);
         end if;
       end for;
@@ -155,12 +155,12 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
       CapturedScrim := false;
       Hover := '';
       // Remember a scope's own focus only while the scope remains open.
-      if FocusScope = '' or Sys.Array.IndexOf<string>(Layout.Scopes, FocusScope) >= 0 then
+      if FocusScope = '' or Sys.Array.IndexOf of string(Layout.Scopes, FocusScope) >= 0 then
         Saved[FocusScope] := Focus;
       end if;
 
       if not Saved.TryGetValue(Scope, out Focus) then
-        const Modal: A.Scope<TMsg>? := Layout.Active;
+        const Modal: (A.Scope of TMsg)? := Layout.Active;
         Focus := if Modal = null then
           ''
         else
@@ -172,7 +172,7 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     end if;
 
     if PointerKnown then
-      const Target: A.Control<TMsg>? := Hit(Layout, PointerColumn, PointerRow);
+      const Target: (A.Control of TMsg)? := Hit(Layout, PointerColumn, PointerRow);
       Hover := if Target = null then
         ''
       else
@@ -180,24 +180,24 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
       end if;
     end if;
 
-    const Layer: A.Scope<TMsg>? := Layout.Active;
+    const Layer: (A.Scope of TMsg)? := Layout.Active;
     if Layer <> null and Layer.LocalInput <> null then
       Focus := Layer.Initial;
       return;
     end if;
 
-    for Control: A.Control<TMsg> in Layout.Controls do
+    for Control: A.Control of TMsg in Layout.Controls do
       if Eligible(Control, Scope) and Control.Id = Focus then
         return;
       end if;
     end for;
 
-    if ChangedScope and Navigation.CanFocusOffscreen<TMsg>(Layout, Focus, Scope) then
+    if ChangedScope and Navigation.CanFocusOffscreen of TMsg(Layout, Focus, Scope) then
       return;
     end if;
 
-    var Old: A.Control<TMsg>? := A.FindControl<TMsg>(Previous, Focus);
-    const Seen: Generic.HashSet<string> := new Generic.HashSet<string>();
+    var Old: (A.Control of TMsg)? := A.FindControl of TMsg(Previous, Focus);
+    const Seen: Generic.HashSet of string := new Generic.HashSet of string();
     while Old <> null and (Old.FocusReturn <> '' or Old.FocusReplacement <> '') and Seen.Add(
       Old.Id
     ) do
@@ -205,14 +205,14 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
         return;
       end if;
 
-      Old := A.FindControl<TMsg>(Previous, Old.FocusReturn);
+      Old := A.FindControl of TMsg(Previous, Old.FocusReturn);
     end while;
 
-    Focus := Navigation.NextTab<TMsg>(Layout, Scope, '', false);
-    if Previous <> null and A.FindControl<TMsg>(Layout, Focus) = null then
+    Focus := Navigation.NextTab of TMsg(Layout, Scope, '', false);
+    if Previous <> null and A.FindControl of TMsg(Layout, Focus) = null then
       // Manual scrolling can hide the selected row. Leave the viewport where the user put it.
       Focus := '';
-      for Control: A.Control<TMsg> in Layout.Controls do
+      for Control: A.Control of TMsg in Layout.Controls do
         if Eligible(Control, Scope) then
           Focus := Control.Id;
           return;
@@ -221,22 +221,22 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     end if;
   end procedure;
 
-  procedure MoveFocus(Layout: A.Layout<TMsg>; Target: string);
+  procedure MoveFocus(Layout: A.Layout of TMsg; Target: string);
   begin
     Focus := Target;
-    if Target <> '' and A.FindControl<TMsg>(Layout, Target) = null then
-      discard Navigation.Reveal<TMsg>(Layout, Target, ScrollOffsets, Apply);
+    if Target <> '' and A.FindControl of TMsg(Layout, Target) = null then
+      discard Navigation.Reveal of TMsg(Layout, Target, ScrollOffsets, Apply);
     end if;
   end procedure;
 
-  procedure Cycle(Layout: A.Layout<TMsg>; Backwards: bool);
+  procedure Cycle(Layout: A.Layout of TMsg; Backwards: bool);
   begin
-    MoveFocus(Layout, Navigation.NextTab<TMsg>(Layout, FocusScope, Focus, Backwards));
+    MoveFocus(Layout, Navigation.NextTab of TMsg(Layout, FocusScope, Focus, Backwards));
   end procedure;
 
-  function Focused(Layout: A.Layout<TMsg>): A.Control<TMsg>?;
+  function Focused(Layout: A.Layout of TMsg): (A.Control of TMsg)?;
   begin
-    for Control: A.Control<TMsg> in Layout.Controls do
+    for Control: A.Control of TMsg in Layout.Controls do
       if Control.Id = Focus and Eligible(Control, FocusScope) then
         return Control;
       end if;
@@ -245,10 +245,10 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     return null;
   end function;
 
-  function Hit(Layout: A.Layout<TMsg>; Column: int; Row: int): A.Control<TMsg>?;
+  function Hit(Layout: A.Layout of TMsg; Column: int; Row: int): (A.Control of TMsg)?;
   begin
     for Index: int := Layout.Controls.Length - 1 downto 0 do
-      const Control: A.Control<TMsg> := Layout.Controls[Index];
+      const Control: A.Control of TMsg := Layout.Controls[Index];
       if Control.Scope = FocusScope and Control.Bounds.Contains(Column, Row) then
         if Control.Enabled then
           return Control;
@@ -261,9 +261,9 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     return null;
   end function;
 
-  function OnScrim(Layout: A.Layout<TMsg>; Column: int; Row: int): bool;
+  function OnScrim(Layout: A.Layout of TMsg; Column: int; Row: int): bool;
   begin
-    const Modal: A.Scope<TMsg>? := Layout.Active;
+    const Modal: (A.Scope of TMsg)? := Layout.Active;
     if Modal = null or Row < 0 or Row >= Layout.Lines.Length or Column < 0
       or Column >= Layout.Cells.Length div Layout.Lines.Length
     then
@@ -273,17 +273,17 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     return Panel <> null and not Panel.Contains(Column, Row);
   end function;
 
-  function Dismiss(Modal: A.Scope<TMsg>?): bool;
+  function Dismiss(Modal: (A.Scope of TMsg)?): bool;
   begin
     if Modal <> null then
       case Modal.LocalInput of
-        when is Sys.Func<App.Input, bool> as Popup:
+        when is Sys.Func of (App.Input, bool) as Popup:
           return Popup.Invoke(App.Input.KeyPress(K.Key.Escape, K.KeyModifiers.None));
         else
       end case;
 
       case Modal.Escape of
-        when is Sys.Func<TMsg> as Callback:
+        when is Sys.Func of TMsg as Callback:
           Apply(Callback.Invoke());
           return true;
         else
@@ -293,7 +293,7 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     return false;
   end function;
 
-  procedure ClickAt(Layout: A.Layout<TMsg>; Button: K.MouseButton; Column: int; Row: int);
+  procedure ClickAt(Layout: A.Layout of TMsg; Button: K.MouseButton; Column: int; Row: int);
   begin
     PointerKnown := true;
     PointerColumn := Column;
@@ -302,7 +302,7 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
       discard Dismiss(Layout.Active);
       return;
     end if;
-    const Control: A.Control<TMsg>? := Hit(Layout, Column, Row);
+    const Control: (A.Control of TMsg)? := Hit(Layout, Column, Row);
     if Control = null then
       return;
     end if;
@@ -313,19 +313,19 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
 
     case Control.Action of
       when A.Binding.SelectionList(
-        const List: E.SelectionListView<TMsg>,
+        const List: E.SelectionListView of TMsg,
         const Body: F.Rect,
-        const View: V.Viewport<TMsg>
+        const View: V.Viewport of TMsg
       ):
         if Button = K.MouseButton.Left then
-          SelectionList.Click<TMsg>(List, Body, View.Offset, Column, Row, Apply);
+          SelectionList.Click of TMsg(List, Body, View.Offset, Column, Row, Apply);
         end if;
-      when A.Binding.EditArea(const Area: AreaEdit.View<TMsg>, _, _):
+      when A.Binding.EditArea(const Area: AreaEdit.View of TMsg, _, _):
         if Button = K.MouseButton.Left then
-          AreaEdit.Click<TMsg>(Area, Column, Row);
+          AreaEdit.Click of TMsg(Area, Column, Row);
         end if;
       when A.Binding.Edit(
-        const Field: Edit.Field<TMsg>,
+        const Field: Edit.Field of TMsg,
         const Position: Edit.Tracking,
         const Origin: int,
         _
@@ -353,12 +353,12 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     end case;
   end procedure;
 
-  procedure Point(Layout: A.Layout<TMsg>; Kind: K.PointerKind; Button: K.MouseButton; Column: int; Row: int);
+  procedure Point(Layout: A.Layout of TMsg; Kind: K.PointerKind; Button: K.MouseButton; Column: int; Row: int);
   begin
     PointerKnown := true;
     PointerColumn := Column;
     PointerRow := Row;
-    const Target: A.Control<TMsg>? := Hit(Layout, Column, Row);
+    const Target: (A.Control of TMsg)? := Hit(Layout, Column, Row);
     Hover := if Target = null then
       ''
     else
@@ -402,9 +402,9 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     end case;
   end procedure;
 
-  procedure RouteKey(Layout: A.Layout<TMsg>; Key: K.Key; Modifiers: K.KeyModifiers);
+  procedure RouteKey(Layout: A.Layout of TMsg; Key: K.Key; Modifiers: K.KeyModifiers);
   begin
-    KeyRoutes.Route<TMsg>(
+    KeyRoutes.Route of TMsg(
       Layout, Focused(Layout), Key, Modifiers, ScrollOffsets, Apply, SetFocus,
       procedure(Target: string) begin
         Focus := Target;
@@ -413,20 +413,20 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     );
   end procedure;
 
-  procedure Activate(Layout: A.Layout<TMsg>; Id: string);
+  procedure Activate(Layout: A.Layout of TMsg; Id: string);
   begin
-    const Control: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, Id);
+    const Control: (A.Control of TMsg)? := A.FindControl of TMsg(Layout, Id);
     if Control <> null and Eligible(Control, FocusScope) then
       discard Invoke(Control);
     end if;
   end procedure;
 
-  procedure ScrollAt(Layout: A.Layout<TMsg>; Column: int; Row: int; Delta: int);
+  procedure ScrollAt(Layout: A.Layout of TMsg; Column: int; Row: int; Delta: int);
   begin
     PointerKnown := true;
     PointerColumn := Column;
     PointerRow := Row;
-    Scrolling.Wheel<TMsg>(
+    Scrolling.Wheel of TMsg(
       Layout,
       Hit(Layout, Column, Row),
       FocusScope,
@@ -438,16 +438,16 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     );
   end procedure;
 
-  procedure Insert(Layout: A.Layout<TMsg>; Text: string; Typed: bool);
+  procedure Insert(Layout: A.Layout of TMsg; Text: string; Typed: bool);
   begin
-    const Control: A.Control<TMsg>? := Focused(Layout);
+    const Control: (A.Control of TMsg)? := Focused(Layout);
     if Control <> null then
       case Control.Action of
-        when A.Binding.EditArea(const Area: AreaEdit.View<TMsg>, _, _):
-          AreaEdit.Insert<TMsg>(Area, Text, Apply);
+        when A.Binding.EditArea(const Area: AreaEdit.View of TMsg, _, _):
+          AreaEdit.Insert of TMsg(Area, Text, Apply);
           return;
-        when A.Binding.Edit(const Field: Edit.Field<TMsg>, const Position: Edit.Tracking, _, _):
-          Edit.Insert<TMsg>(Field, Position, Text, Apply);
+        when A.Binding.Edit(const Field: Edit.Field of TMsg, const Position: Edit.Tracking, _, _):
+          Edit.Insert of TMsg(Field, Position, Text, Apply);
           return;
         else
       end case;
@@ -463,13 +463,13 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     end if;
 
     if Typed and Text <> '' then
-      const Modal: A.Scope<TMsg>? := Layout.Active;
-      const Keys: array of K.ShortcutBinding<TMsg> := if Modal = null then
+      const Modal: (A.Scope of TMsg)? := Layout.Active;
+      const Keys: array of K.ShortcutBinding of TMsg := if Modal = null then
         Layout.GlobalKeys
       else
         Modal.Shortcuts
       end if;
-      for Shortcut: K.ShortcutBinding<TMsg> in Keys do
+      for Shortcut: K.ShortcutBinding of TMsg in Keys do
         if Shortcut.Character = Text then
           Apply(Shortcut.Message);
           return;
@@ -478,7 +478,7 @@ public function Create<TMsg>(Apply: procedure(TMsg); ScrollOffsets: Generic.Dict
     end if;
   end procedure;
 begin
-  const Saved: Generic.Dictionary<string, string> := new Generic.Dictionary<string, string>();
+  const Saved: Generic.Dictionary of (string, string) := new Generic.Dictionary of (string, string)();
   var Focus: string := '';
   var Hover: string := '';
   var PointerKnown: bool := false;
@@ -488,7 +488,7 @@ begin
   var CapturedScrim: bool := false;
   var MiddleCaptured: string := '';
   var FocusScope: string := '';
-  return new State<TMsg>(
+  return new State of TMsg(
     function(): string => Focus, function(): string => Hover, function(): string => FocusScope,
     ReconcileFocus, SetFocus, Activate, ClickAt, Point, ScrollAt, RouteKey, Insert
   );

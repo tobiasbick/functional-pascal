@@ -11,7 +11,7 @@ uses System.Collections.Generic as C;
 
 // Admits deferred size messages in order when the bounded host mailbox has space.
 // `TMsg` is the application message type, `Pending` the owner's backlog and `Post` its mailbox.
-public procedure Flush<TMsg>(Pending: C.Queue<TMsg>; Post: function(TMsg): Runtime.Admission);
+public procedure Flush of TMsg(Pending: C.Queue of TMsg; Post: function(TMsg): Runtime.Admission);
 begin
   while Pending.Count > 0 do
     case Post(Pending.Peek()) of
@@ -29,12 +29,12 @@ end procedure;
 // Compares the published `Layout` to `Before` by grid identity and allocation.
 // Queues first and changed sizes in `Pending` through `Post` for a later update.
 // `TMsg` is the application's message type.
-public procedure Presented<TMsg>(Before: A.Layout<TMsg>?; Layout: A.Layout<TMsg>; Pending: C.Queue<TMsg>; Post: function(TMsg): Runtime.Admission);
+public procedure Presented of TMsg(Before: (A.Layout of TMsg)?; Layout: A.Layout of TMsg; Pending: C.Queue of TMsg; Post: function(TMsg): Runtime.Admission);
 begin
-  for Control: A.Control<TMsg> in Layout.Controls do
+  for Control: A.Control of TMsg in Layout.Controls do
     case Control.Action of
       when A.Binding.Grid(const Area: F.Rect, const Changed: function(Grids.Event): TMsg):
-        const Previous: A.Control<TMsg>? := A.FindControl<TMsg>(Before, Control.Id);
+        const Previous: (A.Control of TMsg)? := A.FindControl of TMsg(Before, Control.Id);
         if Previous <> null then
           case Previous.Action of
             when A.Binding.Grid(const Old: F.Rect, _):
@@ -50,7 +50,7 @@ begin
     end case;
   end for;
 
-  Flush<TMsg>(Pending, Post);
+  Flush of TMsg(Pending, Post);
 end procedure;
 
 end unit;

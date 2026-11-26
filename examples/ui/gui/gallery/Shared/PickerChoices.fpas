@@ -45,9 +45,9 @@ public const InitialLanguage: int := -1;
 // - `Change`: Maps a new choice to a message.
 // ## Returns
 // The shared Country select.
-public function Country<TMsg>(Index: int; Change: function(int): TMsg): E.Element<TMsg>;
+public function Country of TMsg(Index: int; Change: function(int): TMsg): E.Element of TMsg;
 begin
-  return S.Select<TMsg>(
+  return S.Select of TMsg(
     'input-country',
     Countries,
     Index,
@@ -64,9 +64,9 @@ end function;
 // - `Change`: Maps a new choice to a message.
 // ## Returns
 // The shared Language select.
-public function Language<TMsg>(Index: int; Change: function(int): TMsg): E.Element<TMsg>;
+public function Language of TMsg(Index: int; Change: function(int): TMsg): E.Element of TMsg;
 begin
-  return S.Select<TMsg>(
+  return S.Select of TMsg(
     'input-language',
     Languages,
     Index,

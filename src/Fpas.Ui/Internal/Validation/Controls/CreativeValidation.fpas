@@ -21,7 +21,7 @@ uses System as Sys;
 
 procedure Tone(Value: S.Tone; At: string);
 begin
-  if not Sys.Enum.IsDefined<S.Tone>(Value) then
+  if not Sys.Enum.IsDefined of S.Tone(Value) then
     R.Reject(At, 'Unknown native tone.');
   end if;
 end procedure;
@@ -55,7 +55,7 @@ procedure StatusTag(Current: StatusTags.Value; Settings: StatusTags.Options; At:
 begin
   R.CheckText(Current.Label, At);
   R.CheckText(Settings.Icon, At);
-  if not Sys.Enum.IsDefined<StatusTags.Status>(Current.Preset) then
+  if not Sys.Enum.IsDefined of StatusTags.Status(Current.Preset) then
     R.Reject(At, 'Unknown native tag status.');
   end if;
 
@@ -90,7 +90,7 @@ begin
     R.Reject(At, 'The gradient value must be inside a finite increasing range.');
   end if;
 
-  if not Sys.Enum.IsDefined<GradientSliders.Track>(Settings.Kind) then
+  if not Sys.Enum.IsDefined of GradientSliders.Track(Settings.Kind) then
     R.Reject(At, 'Unknown gradient track.');
   end if;
   var Previous: float := -1.0F;
@@ -207,7 +207,7 @@ end procedure;
 // - `Identify`: Registers a widget ID.
 // ## Returns
 // True when this dispatcher handled the element.
-public function Check<TMsg>(Node: E.Element<TMsg>; Location: string; Current: R.Profile; Identify: function(string, string): string): bool;
+public function Check of TMsg(Node: E.Element of TMsg; Location: string; Current: R.Profile; Identify: function(string, string): string): bool;
 begin
   case Node of
     when E.Element.StatusTag(

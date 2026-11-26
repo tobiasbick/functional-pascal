@@ -86,10 +86,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // The graphical widget.
-public function Gantt<TMsg>(Id: string; Current: Value; Change: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function Gantt of TMsg(Id: string; Current: Value; Change: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Gantt(Id, Current, Change, Settings ?? new Options());
+  return (E.Element of TMsg).Gantt(Id, Current, Change, Settings ?? new Options());
 end function;
 
 end unit;

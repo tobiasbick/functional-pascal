@@ -12,11 +12,11 @@ uses System.Threading.Tasks as Tasks;
 
 // Waits at most fifteen seconds for a summary page satisfying `Accept`.
 // `Session` remains borrowed from its caller-owned inventory lifetime.
-public async function Until(Session: Access.Session; Accept: function(I.ImmutableArray<M.Summary>): bool): Tasks.Task<I.ImmutableArray<M.Summary>>;
+public async function Until(Session: Access.Session; Accept: function(I.ImmutableArray of M.Summary): bool): Tasks.Task of I.ImmutableArray of M.Summary;
 begin
   using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
   while true do
-    const Values: I.ImmutableArray<M.Summary> := await Session.ListAsync(
+    const Values: I.ImmutableArray of M.Summary := await Session.ListAsync(
       new M.Query(),
       Deadline.Token
     );
@@ -29,7 +29,7 @@ begin
 end function;
 
 // Loads `Key`, rejecting an unexpected absent list for test setup.
-public async function Read(Session: Access.Session; Key: M.Key): Tasks.Task<M.Playlist>;
+public async function Read(Session: Access.Session; Key: M.Key): Tasks.Task of M.Playlist;
 begin
   const Value: M.Playlist? := await Session.ReadAsync(Key, T.CancellationToken.None);
   if Value = null then

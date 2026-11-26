@@ -43,7 +43,7 @@ end procedure;
 
 procedure People(Items: array of Live.Person; At: string);
 begin
-  const Names: Lists.HashSet<string> := new Lists.HashSet<string>(Sys.StringComparer.Ordinal);
+  const Names: Lists.HashSet of string := new Lists.HashSet of string(Sys.StringComparer.Ordinal);
   for Item: Live.Person in Items do
     Text(Item.Name, At);
     Text(Item.Says, At);
@@ -117,7 +117,7 @@ end procedure;
 // - `Profile`: Target capabilities.
 // - `Identify`: Registers the widget ID.
 // - `Visit`: Checks embedded content.
-public procedure Check<TMsg>(Element: E.Element<TMsg>; Location: string; Profile: R.Profile; Identify: function(string, string): string; Visit: procedure(E.Element<TMsg>?, string));
+public procedure Check of TMsg(Element: E.Element of TMsg; Location: string; Profile: R.Profile; Identify: function(string, string): string; Visit: procedure((E.Element of TMsg)?, string));
   function At(Id: string; Role: string): string;
   begin
     const Path: string := Identify(Id, Location + '/' + Role);
@@ -155,7 +155,7 @@ begin
     when E.Element.LiveCursors(
       const Id: string,
       const Users: array of Live.Person,
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       const Settings: Live.Options
     ):
       const Path: string := At(Id, 'live-cursors');
@@ -180,7 +180,7 @@ begin
       end if;
     when E.Element.SelectionRing(
       const Id: string,
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       const Settings: Ring.Options
     ):
       const Path: string := At(Id, 'selection-ring');
@@ -192,7 +192,7 @@ begin
       const Transform: Nodes.View,
       const Toggles: array of Rail.Toggle,
       _,
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       const Settings: Rail.Options
     ):
       const Path: string := At(Id, 'canvas-controls');
@@ -241,7 +241,7 @@ begin
       const Selected: Bulk.Selection,
       const Actions: array of Bulk.Action,
       _,
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       const Settings: Bulk.Options
     ):
       const Path: string := At(Id, 'selection-bar');
@@ -272,7 +272,7 @@ begin
     when E.Element.NodeEditor(
       const Id: string,
       const Transform: Nodes.View,
-      const Items: array of Nodes.Node<TMsg>,
+      const Items: array of Nodes.Node of TMsg,
       const Links: array of Nodes.Link,
       _,
       const Settings: Nodes.Options
@@ -283,9 +283,9 @@ begin
       C.Distance(Settings.MaximumZoom, Path);
       LR.CheckExtent(Settings.Width, Profile, Path);
       LR.CheckExtent(Settings.Height, Profile, Path);
-      const Ids: Lists.HashSet<int> := new Lists.HashSet<int>();
-      const Pins: Lists.Dictionary<int, Nodes.Pin> := new Lists.Dictionary<int, Nodes.Pin>();
-      for Item: Nodes.Node<TMsg> in Items do
+      const Ids: Lists.HashSet of int := new Lists.HashSet of int();
+      const Pins: Lists.Dictionary of (int, Nodes.Pin) := new Lists.Dictionary of (int, Nodes.Pin)();
+      for Item: Nodes.Node of TMsg in Items do
         if not Ids.Add(Item.Id) then
           R.Reject(Path, 'Node IDs must be unique.');
         end if;
@@ -303,7 +303,7 @@ begin
         end for;
 
         case Item.Body of
-          when is E.Element<TMsg> as Body:
+          when is E.Element of TMsg as Body:
             Visit(Body, Path);
           else
         end case;

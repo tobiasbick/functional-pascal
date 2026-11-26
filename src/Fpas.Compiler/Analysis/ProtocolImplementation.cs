@@ -149,7 +149,7 @@ public static class ProtocolImplementation
                 var labels = parameters.Select((parameter, index) => Unique(usedNames,
                     IdentifierFacts.IsValid(parameter.Name) && parameter.Name != "self" ? parameter.Name :
                         "Argument" + (index + 1).ToString(CultureInfo.InvariantCulture))).Select(IdentifierFacts.Spell).ToArray();
-                var arguments = TypeArguments(names);
+                var arguments = FpasIdentifiers.ApplyTypeArguments("", names);
                 var returnsValue = method.Result.Kind != TypeKind.Void;
                 var header = "public " + (returnsValue ? "function " : "procedure ") + IdentifierFacts.Spell(method.Name) + arguments +
                     "(" + string.Join("; ", parameters.Select((parameter, index) =>
@@ -232,15 +232,18 @@ public static class ProtocolImplementation
         if (type.Parameter is { } parameter)
             return (method.SourceMethod?.GenericParameters.Contains(parameter) == true
                 ? names[parameter.Index] : IdentifierFacts.Spell(parameter.Name)) + nullable;
-        if (type.Definition is { } definition) return UsageNames.Named(definition, type.Arguments ?? TypeList.Empty, Spell, qualify) + nullable;
+        if (type.Definition is { } definition)
+            return UsageNames.Named(definition, type.Arguments ?? TypeList.Empty, Spell, qualify, type.IsNullable) + nullable;
         var arguments = type.Arguments?.Select(Spell).ToArray() ?? [];
         if (type.Record is { } record)
-            return (record.VariantCase is { } item ? Local(record.Owner, item.Owner.Name) + TypeArguments(arguments) + "." +
-                IdentifierFacts.Spell(record.Name) : Local(record.Owner, record.Name) + TypeArguments(arguments)) + nullable;
-        if (type.Interface is { } contract) return Local(contract.Owner, contract.Name) + TypeArguments(arguments) + nullable;
-        if (type.Variant is { } variant) return Local(variant.Owner, variant.Name) + TypeArguments(arguments) + nullable;
+            return (record.VariantCase is { } item ? FpasIdentifiers.ApplyTypeArguments(Local(record.Owner, item.Owner.Name), arguments, groupBeforeSuffix: true) + "." +
+                IdentifierFacts.Spell(record.Name) : Applied(record.Owner, record.Name)) + nullable;
+        if (type.Interface is { } contract) return Applied(contract.Owner, contract.Name) + nullable;
+        if (type.Variant is { } variant) return Applied(variant.Owner, variant.Name) + nullable;
         if (type.Scalar is { } scalar) return Local(scalar.Owner, scalar.Name) + nullable;
         return type.ToString();
+
+        string Applied(SourceUnit unit, string name) => FpasIdentifiers.ApplyTypeArguments(Local(unit, name), arguments, type.IsNullable);
     }
 
     private static string Unique(HashSet<string> used, string stem)
@@ -250,6 +253,5 @@ public static class ProtocolImplementation
         return name;
     }
 
-    private static string TypeArguments(string[] names) => names.Length == 0 ? "" : "<" + string.Join(", ", names) + ">";
     private static string Mode(ParameterSymbol parameter) => parameter.ByRef ? parameter.Mode + " " : "";
 }

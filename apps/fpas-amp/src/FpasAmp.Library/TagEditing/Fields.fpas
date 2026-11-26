@@ -12,7 +12,7 @@ uses System.Collections.Immutable as I;
 public const Custom: string := 'custom/';
 
 // Returns a field's text from Values or an empty value.
-public function Value(Values: I.ImmutableDictionary<string, string>; Key: string): string;
+public function Value(Values: I.ImmutableDictionary of (string, string); Key: string): string;
 begin
   var Found: string := '';
   return if Values.TryGetValue(Key, out Found) then
@@ -62,9 +62,9 @@ begin
 end function;
 
 // Builds an editable standard-field snapshot from the indexed or file tags.
-public function FromInfo(Info: Media.Info): I.ImmutableDictionary<string, string>;
+public function FromInfo(Info: Media.Info): I.ImmutableDictionary of (string, string);
 begin
-  return I.ImmutableDictionary<string, string>.Empty.Add('title', Info.Title).Add(
+  return I.ImmutableDictionary of (string, string).Empty.Add('title', Info.Title).Add(
     'artist',
     Sys.String.Join('; ', Info.Artists)
   ).Add(
@@ -89,10 +89,10 @@ begin
 end function;
 
 // Applies only the supplied standard fields to Info, preserving its technical properties.
-public function Project(Info: Media.Info; Changes: I.ImmutableDictionary<string, string?>): Media.Info;
+public function Project(Info: Media.Info; Changes: I.ImmutableDictionary of (string, string?)): Media.Info;
 begin
   var Result: Media.Info := Info;
-  for Field: Sys.Collections.Generic.KeyValuePair<string, string?> in Changes do
+  for Field: Sys.Collections.Generic.KeyValuePair of (string, string?) in Changes do
     const Text: string := Field.Value ?? '';
     case Field.Key of
       when 'title':

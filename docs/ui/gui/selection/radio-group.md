@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Inputs.RadioGroups as C;
 // - `Selected`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Selected: int): E.Element<int>;
+public function View(Selected: int): E.Element of int;
 begin
-  return C.RadioGroup<int>('save-frequency', [
+  return C.RadioGroup of int('save-frequency', [
     new C.Item('Every change', 'Save as you type. Uses the most disk.'),
     new C.Item('Every 5 minutes', 'A good balance for most projects.'),
     new C.Item('Only when I save')

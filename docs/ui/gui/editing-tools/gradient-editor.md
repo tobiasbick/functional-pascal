@@ -29,9 +29,9 @@ end function;
 // - `Selected`: Selected stop index, or minus one.
 // ## Returns
 // The editor with color, position and selection proposals.
-public function View(Stops: array of W.Stop; Selected: int): E.Element<W.Event>;
+public function View(Stops: array of W.Stop; Selected: int): E.Element of W.Event;
 begin
-  return W.GradientEditor<W.Event>('flame-ramp', Stops, Selected,
+  return W.GradientEditor of W.Event('flame-ramp', Stops, Selected,
     function(Change: W.Event): W.Event => Change, new W.Options(Capacity := 12));
 end function;
 

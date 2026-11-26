@@ -103,7 +103,7 @@ uses System as Sys;
 //
 // ## Returns
 // Its application ID, or null.
-public function First<TMsg>(Node: E.Element<TMsg>; Prepared: V.Prepared<TMsg>; Preferred: string? := null): string?;
+public function First of TMsg(Node: E.Element of TMsg; Prepared: V.Prepared of TMsg; Preferred: string? := null): string?;
 begin
   case Node of
     when E.Element.Canvas(
@@ -114,7 +114,7 @@ begin
       _,
       _,
       _,
-      const Handler: Sys.Func<Canvases.Input, TMsg>?
+      const Handler: Sys.Func of (Canvases.Input, TMsg)?
     ):
       if Options.Enabled and (Options.Focusable or Handler <> null) and (Preferred = null
         or Preferred = Id)
@@ -158,7 +158,7 @@ begin
       _,
       _
     ), E.Element.PromptSuggestions(_, _, _, _), E.Element.ModelPicker(_, _, _, _, _):
-      return AiFocus.First<TMsg>(Node, Preferred);
+      return AiFocus.First of TMsg(Node, Preferred);
     when E.Element.Comment(const Id: string, _, _, _, _, const Settings: Comments.Options):
       if Settings.Enabled then
         if Preferred = null or Preferred = Id or Preferred = Id + '/like' then
@@ -198,7 +198,7 @@ begin
       _,
       _
     ), E.Element.OptionAction(_, _, _, _), E.Element.SeedField(_, _, _, _):
-      return Creative.First<TMsg>(Node, Preferred);
+      return Creative.First of TMsg(Node, Preferred);
     when E.Element.ControlTile(const Id: string, _, _, _, const Settings: Tiles.Options):
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
@@ -207,7 +207,7 @@ begin
       const Id: string,
       _,
       const Progress: float?,
-      const Change: Sys.Func<float, TMsg>?,
+      const Change: Sys.Func of (float, TMsg)?,
       const Settings: Waves.Options
     ):
       if Settings.Enabled and Progress <> null and Change <> null and (Preferred = null
@@ -248,7 +248,7 @@ begin
       end if;
     when E.Element.Dock(
       const Id: string,
-      const Entries: array of Docks.Entry<TMsg>,
+      const Entries: array of Docks.Entry of TMsg,
       const Settings: Docks.Options
     ):
       if Settings.Enabled then
@@ -271,9 +271,9 @@ begin
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
       end if;
-    when E.Element.CommandPalette(_, const Base: E.Element<TMsg>, const Open: bool, _, _, _):
+    when E.Element.CommandPalette(_, const Base: E.Element of TMsg, const Open: bool, _, _, _):
       if not Open then
-        return First<TMsg>(Base, Prepared, Preferred);
+        return First of TMsg(Base, Prepared, Preferred);
       end if;
     when E.Element.CodeBlock(const Id: string, _, const Settings: CodeBlocks.Options):
       const Copy: string := Id + '/copy';
@@ -310,7 +310,7 @@ begin
       const Id: string,
       _,
       const Open: bool?,
-      const Children: array of E.Element<TMsg>,
+      const Children: array of E.Element of TMsg,
       _,
       _,
       const Settings: Trees.Options
@@ -320,8 +320,8 @@ begin
       end if;
 
       if Open ?? false then
-        for Child: E.Element<TMsg> in Children do
-          const Found: string? := First<TMsg>(Child, Prepared, Preferred);
+        for Child: E.Element of TMsg in Children do
+          const Found: string? := First of TMsg(Child, Prepared, Preferred);
           if Found <> null then
             return Found;
           end if;
@@ -330,10 +330,10 @@ begin
     when E.Element.Table(
       const Id: string,
       const Columns: array of Tables.Column,
-      const Rows: array of Tables.Row<TMsg>,
+      const Rows: array of Tables.Row of TMsg,
       const Order: Tables.Sort?,
       _,
-      const OnSelect: Sys.Func<string, TMsg>?,
+      const OnSelect: Sys.Func of (string, TMsg)?,
       const Settings: Tables.Options
     ):
       if Settings.Enabled and Order <> null then
@@ -345,16 +345,16 @@ begin
         end for;
       end if;
 
-      for Row: Tables.Row<TMsg> in Rows do
+      for Row: Tables.Row of TMsg in Rows do
         if Settings.Enabled and OnSelect <> null and (Preferred = null or Preferred = Row.Id) then
           return Row.Id;
         end if;
 
-        for Cell: Tables.Cell<TMsg> in Row.Cells do
+        for Cell: Tables.Cell of TMsg in Row.Cells do
           case Cell of
-            when Tables.Cell.Content(const Nodes: array of E.Element<TMsg>):
-              for Child: E.Element<TMsg> in Nodes do
-                const Found: string? := First<TMsg>(Child, Prepared, Preferred);
+            when Tables.Cell.Content(const Nodes: array of E.Element of TMsg):
+              for Child: E.Element of TMsg in Nodes do
+                const Found: string? := First of TMsg(Child, Prepared, Preferred);
                 if Found <> null then
                   return Found;
                 end if;
@@ -365,18 +365,25 @@ begin
       end for;
     when E.Element.ReorderableList(
       _,
-      const Items: array of E.Element<TMsg>,
+      const Items: array of E.Element of TMsg,
       const Order: array of int,
       _,
       _
     ):
       for Index: int in Order do
-        const Found: string? := First<TMsg>(Items[Index], Prepared, Preferred);
+        const Found: string? := First of TMsg(Items[Index], Prepared, Preferred);
         if Found <> null then
           return Found;
         end if;
       end for;
-    when E.Element.Tour(const Id: string, const Base: E.Element<TMsg>, _, const Current: int, _, _):
+    when E.Element.Tour(
+      const Id: string,
+      const Base: E.Element of TMsg,
+      _,
+      const Current: int,
+      _,
+      _
+    ):
       if Current >= 0 then
         if Preferred = Id or Preferred = Id + '/next' then
           return Id + '/next';
@@ -391,7 +398,7 @@ begin
         end if;
       end if;
 
-      return First<TMsg>(Base, Prepared, Preferred);
+      return First of TMsg(Base, Prepared, Preferred);
     when E.Element.TimePicker(const Id: string, _, _, const Settings: TimePickers.Options):
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
@@ -654,11 +661,11 @@ begin
       if Enabled and (Preferred = null or Preferred = Id) then
         return Id;
       end if;
-    when E.Element.HoverCard(_, const Trigger: E.Element<TMsg>, _, _):
-      return First<TMsg>(Trigger, Prepared, Preferred);
+    when E.Element.HoverCard(_, const Trigger: E.Element of TMsg, _, _):
+      return First of TMsg(Trigger, Prepared, Preferred);
     when E.Element.Banner(
-      const Id: string, _, const Open: bool, const Dismiss: Sys.Func<TMsg>?,
-      const Action: Sys.Func<TMsg>?, const Settings: Banners.Options
+      const Id: string, _, const Open: bool, const Dismiss: (Sys.Func of TMsg)?,
+      const Action: (Sys.Func of TMsg)?, const Settings: Banners.Options
     ):
       if Open and Settings.Enabled then
         if Action <> null and (Preferred = null or Preferred = Banners.ActionId(Id)) then
@@ -802,14 +809,14 @@ begin
       end if;
     when E.Element.SwipeRow(
       _,
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       _,
       _,
       _,
       const Settings: Swipe.Options
     ):
       if Settings.Enabled then
-        return First<TMsg>(Child, Prepared, Preferred);
+        return First of TMsg(Child, Prepared, Preferred);
       end if;
     when E.Element.AccountMenu(const Id: string, _, _, const Settings: UserMenus.Options):
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
@@ -837,13 +844,13 @@ begin
       end if;
     when E.Element.Sidebar(
       const Id: string,
-      const Sections: array of N.Section<TMsg>,
+      const Sections: array of N.Section of TMsg,
       _,
       const Enabled: bool
     ):
       if Enabled then
-        for Section: N.Section<TMsg> in Sections do
-          for Item: N.Item<TMsg> in Section.Items do
+        for Section: N.Section of TMsg in Sections do
+          for Item: N.Item of TMsg in Section.Items do
             const ItemId: string := N.ItemId(Id, Item.Key);
             if Item.Enabled and (Preferred = null or Preferred = ItemId) then
               return ItemId;
@@ -855,29 +862,29 @@ begin
       const Id: string,
       _,
       const Settings: EmptyStates.Options,
-      const Action: Sys.Func<TMsg>?
+      const Action: (Sys.Func of TMsg)?
     ):
       const Part: string := EmptyStates.ActionId(Id);
       if Settings.Enabled and Action <> null and (Preferred = null or Preferred = Part) then
         return Part;
       end if;
     when E.Element.Card(
-      const Id: string, const Children: array of E.Element<TMsg>, const Settings: Cards.Options,
-      const Activate: Sys.Func<TMsg>?
+      const Id: string, const Children: array of E.Element of TMsg, const Settings: Cards.Options,
+      const Activate: (Sys.Func of TMsg)?
     ):
       if Settings.Enabled and Activate <> null and (Preferred = null or Preferred = Id) then
         return Id;
       end if;
 
-      for Child: E.Element<TMsg> in Children do
-        const Found: string? := First<TMsg>(Child, Prepared, Preferred);
+      for Child: E.Element of TMsg in Children do
+        const Found: string? := First of TMsg(Child, Prepared, Preferred);
         if Found <> null then
           return Found;
         end if;
       end for;
     when E.Element.Carousel(
       const Id: string,
-      const Slides: array of E.Element<TMsg>,
+      const Slides: array of E.Element of TMsg,
       const Index: int,
       _,
       const Settings: Carousels.Options
@@ -891,11 +898,11 @@ begin
           return Preferred;
         end if;
 
-        return First<TMsg>(Slides[Index], Prepared, Preferred);
+        return First of TMsg(Slides[Index], Prepared, Preferred);
       end if;
     when E.Element.CardStack(
       const Id: string,
-      const DeckItems: array of E.Element<TMsg>,
+      const DeckItems: array of E.Element of TMsg,
       _,
       const Settings: CardStacks.Options
     ):
@@ -908,7 +915,7 @@ begin
           return Preferred;
         end if;
 
-        return First<TMsg>(DeckItems[0], Prepared, Preferred);
+        return First of TMsg(DeckItems[0], Prepared, Preferred);
       end if;
     when E.Element.ImageViewer(const Id: string, _, _, _, const Settings: ImageViewers.Options):
       if Settings.Enabled then
@@ -935,8 +942,15 @@ begin
           return Id;
         end if;
       end if;
-    when E.Element.SplitView(_, _, const Left: E.Element<TMsg>, const Right: E.Element<TMsg>, _, _):
-      return First<TMsg>(Left, Prepared, Preferred) ?? First<TMsg>(Right, Prepared, Preferred);
+    when E.Element.SplitView(
+      _,
+      _,
+      const Left: E.Element of TMsg,
+      const Right: E.Element of TMsg,
+      _,
+      _
+    ):
+      return First of TMsg(Left, Prepared, Preferred) ?? First of TMsg(Right, Prepared, Preferred);
     when E.Element.DocumentTabs(
       const Id: string,
       const Documents: array of Docs.Tab,
@@ -950,8 +964,8 @@ begin
           return Part;
         end if;
       end if;
-    when E.Element.StatusBar(const Id: string, const Items: array of StatusBar.Item<TMsg>, _):
-      for Item: StatusBar.Item<TMsg> in Items do
+    when E.Element.StatusBar(const Id: string, const Items: array of StatusBar.Item of TMsg, _):
+      for Item: StatusBar.Item of TMsg in Items do
         case Item of
           when StatusBar.Item.Action(const Key: string, _, _, const Enabled: bool, _):
             const Part: string := Menus.ItemId(Id, Key);
@@ -962,42 +976,42 @@ begin
         end case;
       end for;
     when E.Element.Layered(
-      const Children: array of E.Element<TMsg>,
+      const Children: array of E.Element of TMsg,
       _
-    ), E.Element.Grid(_, const Children: array of E.Element<TMsg>), E.Element.Spotlight(
+    ), E.Element.Grid(_, const Children: array of E.Element of TMsg), E.Element.Spotlight(
       _,
-      const Children: array of E.Element<TMsg>,
+      const Children: array of E.Element of TMsg,
       _
     ), E.Element.Stack(
-      const Children: array of E.Element<TMsg>,
+      const Children: array of E.Element of TMsg,
       _,
       _
     ), E.Element.ButtonGroup(
-      const Children: array of E.Element<TMsg>
-    ), E.Element.ActionFooter(const Children: array of E.Element<TMsg>), E.Element.SkeletonGroup(
+      const Children: array of E.Element of TMsg
+    ), E.Element.ActionFooter(const Children: array of E.Element of TMsg), E.Element.SkeletonGroup(
       _,
-      const Children: array of E.Element<TMsg>,
+      const Children: array of E.Element of TMsg,
       _
     ):
-      for Child: E.Element<TMsg> in Children do
-        const Found: string? := First<TMsg>(Child, Prepared, Preferred);
+      for Child: E.Element of TMsg in Children do
+        const Found: string? := First of TMsg(Child, Prepared, Preferred);
         if Found <> null then
           return Found;
         end if;
       end for;
     when E.Element.Contextual(
       _,
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       _,
       _
-    ), E.Element.Hinted(const Child: E.Element<TMsg>, _, _):
-      return First<TMsg>(Child, Prepared, Preferred);
+    ), E.Element.Hinted(const Child: E.Element of TMsg, _, _):
+      return First of TMsg(Child, Prepared, Preferred);
     when E.Element.Accordion(
       const Id: string,
       _,
       const Open: bool,
       _,
-      const Content: E.Element<TMsg>,
+      const Content: E.Element of TMsg,
       const Enabled: bool
     ):
       if Enabled then
@@ -1006,7 +1020,7 @@ begin
         end if;
 
         if Open then
-          return First<TMsg>(Content, Prepared, Preferred);
+          return First of TMsg(Content, Prepared, Preferred);
         end if;
       end if;
     when E.Element.ExpandableCard(
@@ -1014,7 +1028,7 @@ begin
       _,
       const Open: bool,
       _,
-      const Content: E.Element<TMsg>,
+      const Content: E.Element of TMsg,
       const Settings: ExpandableCards.Options
     ):
       if Settings.Enabled then
@@ -1023,7 +1037,7 @@ begin
         end if;
 
         if Open then
-          return First<TMsg>(Content, Prepared, Preferred);
+          return First of TMsg(Content, Prepared, Preferred);
         end if;
       end if;
     when E.Element.Alert(const Id: string, _, const Settings: Alerts.Options, _):
@@ -1046,68 +1060,68 @@ begin
       end if;
     when E.Element.Popover(
       _,
-      const Trigger: E.Element<TMsg>,
-      const Content: E.Element<TMsg>,
+      const Trigger: E.Element of TMsg,
+      const Content: E.Element of TMsg,
       const Open: bool,
       _,
       _
     ):
-      const Found: string? := First<TMsg>(Trigger, Prepared, Preferred);
+      const Found: string? := First of TMsg(Trigger, Prepared, Preferred);
       if Found <> null or not Open then
         return Found;
       end if;
 
-      return First<TMsg>(Content, Prepared, Preferred);
+      return First of TMsg(Content, Prepared, Preferred);
     when E.Element.Dialog(
-      const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>,
+      const Id: string, const Base: E.Element of TMsg, const Content: E.Element of TMsg,
       const Open: bool, const Settings: Dialogs.Options, _
     ):
       if not Open then
-        return First<TMsg>(Base, Prepared, Preferred);
+        return First of TMsg(Base, Prepared, Preferred);
       end if;
       const Close: string := Dialogs.CloseId(Id);
       if Settings.CloseButton and (Preferred = null or Preferred = Close) then
         return Close;
       end if;
 
-      return First<TMsg>(Content, Prepared, Preferred);
-    when E.Element.ConfirmPopover(_, const Trigger: E.Element<TMsg>, _, _, _, _):
-      return First<TMsg>(Trigger, Prepared, Preferred);
-    when E.Element.Sized(const Child: E.Element<TMsg>, _):
-      return First<TMsg>(Child, Prepared, Preferred);
-    when E.Element.Styled(const Child: E.Element<TMsg>, _):
-      return First<TMsg>(Child, Prepared, Preferred);
-    when E.Element.Framed(const Child: E.Element<TMsg>, _):
-      return First<TMsg>(Child, Prepared, Preferred);
-    when E.Element.Scroll(_, const Child: E.Element<TMsg>, _, _, _, _, _):
-      return First<TMsg>(Child, Prepared, Preferred);
+      return First of TMsg(Content, Prepared, Preferred);
+    when E.Element.ConfirmPopover(_, const Trigger: E.Element of TMsg, _, _, _, _):
+      return First of TMsg(Trigger, Prepared, Preferred);
+    when E.Element.Sized(const Child: E.Element of TMsg, _):
+      return First of TMsg(Child, Prepared, Preferred);
+    when E.Element.Styled(const Child: E.Element of TMsg, _):
+      return First of TMsg(Child, Prepared, Preferred);
+    when E.Element.Framed(const Child: E.Element of TMsg, _):
+      return First of TMsg(Child, Prepared, Preferred);
+    when E.Element.Scroll(_, const Child: E.Element of TMsg, _, _, _, _, _):
+      return First of TMsg(Child, Prepared, Preferred);
     when E.Element.Sheet(
-      const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>,
+      const Id: string, const Base: E.Element of TMsg, const Content: E.Element of TMsg,
       const Open: bool, _, _
     ):
       if not Open then
-        return First<TMsg>(Base, Prepared, Preferred);
+        return First of TMsg(Base, Prepared, Preferred);
       end if;
       const Close: string := Sheets.CloseId(Id);
       if Preferred = null or Preferred = Close then
         return Close;
       end if;
 
-      return First<TMsg>(Content, Prepared, Preferred);
+      return First of TMsg(Content, Prepared, Preferred);
     when E.Element.LiveCursors(
       _,
       _,
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       _
-    ), E.Element.SelectionRing(_, const Child: E.Element<TMsg>, _), E.Element.CanvasControls(
+    ), E.Element.SelectionRing(_, const Child: E.Element of TMsg, _), E.Element.CanvasControls(
       _,
       _,
       _,
       _,
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       _
-    ), E.Element.SelectionBar(_, _, _, _, const Child: E.Element<TMsg>, _):
-      return First<TMsg>(Child, Prepared, Preferred);
+    ), E.Element.SelectionBar(_, _, _, _, const Child: E.Element of TMsg, _):
+      return First of TMsg(Child, Prepared, Preferred);
     when E.Element.ResultCard(const Id: string, _, _, _, const Settings: ResultCards.Options):
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
         return Id;
@@ -1141,7 +1155,7 @@ begin
       const Id: string,
       const Revealed: bool,
       _,
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       const Settings: Veil.Options
     ):
       if Settings.Enabled and (Preferred = null or Preferred = Id) then
@@ -1149,10 +1163,10 @@ begin
       end if;
 
       if Settings.Enabled and Revealed then
-        return First<TMsg>(Child, Prepared, Preferred);
+        return First of TMsg(Child, Prepared, Preferred);
       end if;
     when E.Element.Deferred(const Id: string, _):
-      return First<TMsg>(Prepared.Subviews[Id].Tree, Prepared, Preferred);
+      return First of TMsg(Prepared.Subviews[Id].Tree, Prepared, Preferred);
     else
   end case;
 

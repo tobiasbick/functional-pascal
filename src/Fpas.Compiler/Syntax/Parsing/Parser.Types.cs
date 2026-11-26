@@ -31,33 +31,52 @@ internal sealed partial class Parser
     private TypeSyntax ReadTypeCore(bool arrays)
     {
         if (arrays && At("array")) return ReadArrayType();
-        if (arrays && At("("))
+        if (At("("))
         {
             var open = tokens[position++];
-            var type = ReadArrayType();
+            var type = ReadType(arrays);
             Expect(")");
-            layout?.Tight.Add(position);
-            Expect("?");
-            return type with { Position = open.Position, SpanEnd = LastEnd, Nullable = true };
+            return ReadGroupedTypeSuffix(type, open.Position);
         }
         if (At("function") || At("procedure")) return ReadCallableType();
+        return ReadNamedType([]);
+    }
 
-        var segments = new List<TypeSegmentSyntax>();
+    private TypeSyntax ReadNamedType(List<TypeSegmentSyntax> segments)
+    {
         do
         {
             var name = Identifier();
-            segments.Add(new(name, At("<") ? ReadTypeArguments() : null));
+            segments.Add(new(name, AtTypeArguments() ? ReadTypeArguments() : null));
             if (!At(".")) break;
             position++;
         } while (true);
-        var nullable = At("?");
-        if (nullable)
+        return ReadNullableSuffix(new(segments));
+    }
+
+    private TypeSyntax ReadGroupedTypeSuffix(TypeSyntax type, int start)
+    {
+        var unaryGeneric = type.Rank == 0 && type.Segments[^1].Arguments?.Count == 1;
+        if (!type.Nullable && unaryGeneric && At("."))
+        {
+            position++;
+            return ReadNamedType([.. type.Segments]) with { Position = start };
+        }
+        if (!type.Nullable && (type.Rank != 0 || unaryGeneric) && At("?"))
+            return ReadNullableSuffix(type with { Position = start });
+        throw source.Error("FP2003", "Use parentheses for multiple type arguments or to qualify a type before '.' or '?'.", start);
+    }
+
+    private TypeSyntax ReadNullableSuffix(TypeSyntax type)
+    {
+        if (At("?"))
         {
             layout?.Tight.Add(position);
             position++;
             if (At("?")) throw source.Error("FP2003", "Repeated nullable suffixes are invalid.", Current.Position);
+            type = type with { Nullable = true };
         }
-        return new TypeSyntax(segments, Nullable: nullable) { SpanEnd = LastEnd };
+        return type with { SpanEnd = LastEnd };
     }
 
     private TypeSyntax ReadArrayType()
@@ -78,6 +97,18 @@ internal sealed partial class Parser
         return new TypeSyntax([new(array)], Element: element, Rank: rank) { SpanEnd = LastEnd };
     }
 
+    // The 'of' terminating a case selector is followed by 'when', 'else', or 'end'.
+    private bool AtTypeArguments() => At("of") && tokens[position + 1] is
+        { Kind: TokenKind.Identifier } or { Kind: TokenKind.Symbol, Text: "(" } or
+        { Kind: TokenKind.Keyword, Text: "array" or "function" or "procedure" };
+
     private IReadOnlyList<TypeSyntax> ReadTypeArguments()
-        => ReadList("<", ">", ",", () => ReadType(), empty: false, wrap: false, tight: true);
+    {
+        Expect("of");
+        if (!At("(")) return [ReadType()];
+
+        var start = Current.Position;
+        var types = ReadList("(", ")", ",", () => ReadType(), empty: false, wrap: false);
+        return types.Count == 1 ? [ReadGroupedTypeSuffix(types[0], start)] : types;
+    }
 }

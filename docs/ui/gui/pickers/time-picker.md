@@ -20,9 +20,9 @@ uses System as Sys;
 // - `Time`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Time: Sys.TimeOnly): E.Element<Sys.TimeOnly>;
+public function View(Time: Sys.TimeOnly): E.Element of Sys.TimeOnly;
 begin
-  return W.TimePicker<Sys.TimeOnly>('picker-end-time', Time, function(Value: Sys.TimeOnly): Sys.TimeOnly => Value,
+  return W.TimePicker of Sys.TimeOnly('picker-end-time', Time, function(Value: Sys.TimeOnly): Sys.TimeOnly => Value,
     new W.Options(TwelveHour := true, MinuteStep := 15));
 end function;
 

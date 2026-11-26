@@ -16,27 +16,27 @@ uses GuiGallery.Shared.Sections as G;
 // - `Model`: Picker and shared stay selections.
 // ## Returns
 // The presets and preset-free fields followed by the linked calendar.
-public function View(Model: State.Model): E.Element<State.Msg>;
+public function View(Model: State.Model): E.Element of State.Msg;
 begin
-  return E.Column<State.Msg>(
+  return E.Column of State.Msg(
     new L.Flow(Gap := G.Points(20)),
-    E.Row<State.Msg>(
+    E.Row of State.Msg(
       new L.Flow(Gap := G.Points(12), Wrap := true),
-      P.DateRangePicker<State.Msg>(
+      P.DateRangePicker of State.Msg(
         'picker-date-range', Model.DateRange, State.Msg.SetDateRange, new P.Options(Width := 300.0F)
       ),
-      P.DateRangePicker<State.Msg>(
+      P.DateRangePicker of State.Msg(
         'picker-stay',
         Model.Stay,
         State.Msg.SetStay,
         new P.Options(Width := 300.0F, Presets := false)
       )
     ),
-    E.Row<State.Msg>(
-      E.Styled<State.Msg>(
-        E.Column<State.Msg>(
+    E.Row of State.Msg(
+      E.Styled of State.Msg(
+        E.Column of State.Msg(
           new L.Flow(Padding := G.Points(16)),
-          C.DateRangeCalendar<State.Msg>('picker-inline-range', Model.Stay, State.Msg.SetStay)
+          C.DateRangeCalendar of State.Msg('picker-inline-range', Model.Stay, State.Msg.SetStay)
         ),
         S.Role.OutlinedPanel
       )

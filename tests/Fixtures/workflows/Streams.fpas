@@ -19,12 +19,14 @@ begin
 end procedure;
 
 async function Verify(Fail: bool; CancelWhileWriting: bool; CancelWhileReading: bool): Tasks.Task;
-  function Acquire(Unused: bool; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<C.List<int>, string>>;
+  function Acquire(Unused: bool; Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (C.List of int, string);
   begin
-    return Tasks.Task.FromResult<Fx.Outcome<C.List<int>, string>>(Fx.Outcome.Success(Events));
+    return Tasks.Task.FromResult of Fx.Outcome of (C.List of int, string)(
+      Fx.Outcome.Success(Events)
+    );
   end function;
 
-  function Release(Resource: C.List<int>): Tasks.Task;
+  function Release(Resource: C.List of int): Tasks.Task;
   begin
     Check(ProducerJoined, 'The stream dependency was released before the producer stopped');
     Check(Sys.Object.ReferenceEquals(Resource, Events), 'The wrong dependency was released');
@@ -33,8 +35,8 @@ async function Verify(Fail: bool; CancelWhileWriting: bool; CancelWhileReading: 
   end function;
 
   async function Produce(
-    Resource: C.List<int>; Publish: function(int): Tasks.Task; Token: T.CancellationToken
-  ): Tasks.Task<Fx.Outcome<Fx.Completion, string>>;
+    Resource: C.List of int; Publish: function(int): Tasks.Task; Token: T.CancellationToken
+  ): Tasks.Task of Fx.Outcome of (Fx.Completion, string);
   begin
     Check(
       Sys.Object.ReferenceEquals(Resource, Events),
@@ -73,20 +75,23 @@ async function Verify(Fail: bool; CancelWhileWriting: bool; CancelWhileReading: 
     end if;
   end function;
 begin
-  const Events: C.List<int> := new C.List<int>();
+  const Events: C.List of int := new C.List of int();
   const Waiting: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
     Tasks.TaskCreationOptions.RunContinuationsAsynchronously
   );
   var ProducerJoined: bool := false;
   var Released: int := 0;
-  const Dependency: L.Layer<C.List<int>, string, bool> := L.Layer<C.List<int>, string, bool>.Create(
-    Fx.Effect<C.List<int>, string, bool>.Defer(Acquire), Release
+  const Dependency: L.Layer of (C.List of int, string, bool) := L.Layer of (C.List of int, string, bool).Create(
+    Fx.Effect of (C.List of int, string, bool).Defer(Acquire), Release
   );
-  const Plan: Fx.Effect<Fx.Completion, string, bool> := L.Provide(
-    Streams.Stream<int, string, C.List<int>>.Create(Produce).Consume(1, Receive), Dependency
+  const Plan: Fx.Effect of (Fx.Completion, string, bool) := L.Provide(
+    Streams.Stream of (int, string, C.List of int).Create(Produce).Consume(1, Receive), Dependency
   );
   using const Cancellation: T.CancellationTokenSource := new T.CancellationTokenSource();
-  const Run: Tasks.Task<Fx.Outcome<Fx.Completion, string>> := Plan.Run(false, Cancellation.Token);
+  const Run: Tasks.Task of Fx.Outcome of (Fx.Completion, string) := Plan.Run(
+    false,
+    Cancellation.Token
+  );
   if CancelWhileWriting or CancelWhileReading then
     await Waiting.Task;
     Cancellation.Cancel();

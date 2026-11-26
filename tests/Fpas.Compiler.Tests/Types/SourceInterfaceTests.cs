@@ -42,14 +42,14 @@ public sealed class SourceInterfaceTests
             unit Api;
             uses System as Sys;
             // A named source.
-            public type ISource<T> =
+            public type ISource of T =
             where T: class;
             protocol extends Sys.IDisposable
               // The current value.
               Value: T;
               // Reads a value.
               function Read(): T;
-              function Echo<U>(Value: U): U;
+              function Echo of U(Value: U): U;
               where U: class;
             end protocol;
             public type Empty = protocol end protocol;
@@ -83,7 +83,7 @@ public sealed class SourceInterfaceTests
 
     [Theory]
     [InlineData("type I = protocol extends I end protocol;", "FP3029")]
-    [InlineData("type I<T> = protocol extends J<T> end protocol; type J<T> = protocol extends I<T> end protocol;", "FP3029")]
+    [InlineData("type I of T = protocol extends J of T end protocol; type J of T = protocol extends I of T end protocol;", "FP3029")]
     [InlineData("type I = protocol extends Sys.String end protocol;", "FP3029")]
     [InlineData("type I = protocol end protocol; type J = protocol extends I? end protocol;", "FP3029")]
     [InlineData("type I = protocol end protocol; type J = protocol extends I, I end protocol;", "FP3029")]
@@ -93,10 +93,10 @@ public sealed class SourceInterfaceTests
     [InlineData("type I = protocol function F(): int; end protocol; type R = record implements I end record;", "FP3029")]
     [InlineData("type I = protocol extends Sys.Collections.IList end protocol; type R = record implements I end record;", "FP3029")]
     [InlineData("type I = protocol procedure F(in Value: int); end protocol; type R = record implements I public procedure F(ref Value: int); begin end procedure; end record;", "FP3029")]
-    [InlineData("type I = protocol function F<T>(Value: T): T; where T: class; end protocol; type R = record implements I public function F<T>(Value: T): T; begin return Value; end function; end record;", "FP3029")]
+    [InlineData("type I = protocol function F of T(Value: T): T; where T: class; end protocol; type R = record implements I public function F of T(Value: T): T; begin return Value; end function; end record;", "FP3029")]
     [InlineData("type A = protocol function F(): int; end protocol; type B = protocol function F(): string; end protocol; type C = protocol extends A, B end protocol;", "FP3029")]
     [InlineData("type A = protocol Name: string; end protocol; type B = protocol function Name(): string; end protocol; type C = protocol extends A, B end protocol;", "FP3029")]
-    [InlineData("type A = protocol function F<T>(Value: T): T; where T: class; end protocol; type B = protocol function F<U>(Value: U): U; where U: struct; end protocol; type C = protocol extends A, B end protocol;", "FP3029")]
+    [InlineData("type A = protocol function F of T(Value: T): T; where T: class; end protocol; type B = protocol function F of U(Value: U): U; where U: struct; end protocol; type C = protocol extends A, B end protocol;", "FP3029")]
     [InlineData("type A = protocol Value: string; end protocol; type B = protocol function get_Value(): string; end protocol; type C = protocol extends A, B end protocol;", "FP3029")]
     [InlineData("type I = protocol function F(Value: string?): string; end protocol; type R = record implements I public function F(Value: string): string; begin return Value; end function; end record;", "FP3029")]
     [InlineData("type I = protocol Value: string; end protocol; type R = record implements I public Value: string?; end record;", "FP3029")]
@@ -127,8 +127,8 @@ public sealed class SourceInterfaceTests
     [Theory]
     [InlineData("type I = protocol end protocol;", "discard new I();", "FP3003")]
     [InlineData("type I = protocol function Read(): int; end protocol; type R = record public function Read(): int; begin return 1; end function; end record;", "const Value: I := new R();", "FP3002")]
-    [InlineData("type I<T> = where T: class; protocol end protocol;", "const Value: I<int>? := null;", "FP3018")]
-    [InlineData("type I<T> = protocol end protocol; type R = record implements I<string> end record;", "const Value: I<object> := new R();", "FP3002")]
+    [InlineData("type I of T = where T: class; protocol end protocol;", "const Value: (I of int)? := null;", "FP3018")]
+    [InlineData("type I of T = protocol end protocol; type R = record implements I of string end record;", "const Value: I of object := new R();", "FP3002")]
     [InlineData("type A = protocol Value: string; end protocol; type B = protocol Value: string?; end protocol; type C = protocol extends A, B end protocol; type R = record implements C public Value: string; end record;", "const Value: C := new R('x'); discard Value.Value;", "FP3003")]
     [InlineData("type A = protocol Value: int; end protocol; type B = protocol Value: int; end protocol; type C = protocol extends A, B end protocol; type R = record implements C public Value: int; end record;", "const Value: C := new R(1); discard Value.Value;", "FP3003")]
     [InlineData("type A = protocol function Read(): int; end protocol; type B = protocol function Read(): int; end protocol; type C = protocol extends A, B end protocol; type R = record implements C public function Read(): int; begin return 1; end function; end record;", "const Value: C := new R(); discard Value.Read();", "FP3003")]
@@ -142,7 +142,7 @@ public sealed class SourceInterfaceTests
     [Theory]
     [InlineData("type Hidden = protocol end protocol; public type Exposed = protocol extends Hidden end protocol;")]
     [InlineData("type Hidden = record end record; public type Exposed = protocol Value: Hidden; end protocol;")]
-    [InlineData("type Hidden = protocol end protocol; public type Exposed<T> = where T: Hidden; protocol end protocol;")]
+    [InlineData("type Hidden = protocol end protocol; public type Exposed of T = where T: Hidden; protocol end protocol;")]
     public void Public_interfaces_cannot_expose_private_types(string declarations)
     {
         var result = TestCompilation.Compile("unit Invalid; " + declarations + " end unit;", CompilationTarget.Library);
@@ -155,13 +155,13 @@ public sealed class SourceInterfaceTests
     [Theory]
     [InlineData("Hidden")]
     [InlineData("array of Hidden")]
-    [InlineData("Box<Hidden>")]
+    [InlineData("Box of Hidden")]
     public void Public_aliases_cannot_expose_private_protocols(string target)
     {
         var result = TestCompilation.Compile($$"""
             unit Invalid;
             type Hidden = protocol end protocol;
-            public type Box<T> = record public Value: T; end record;
+            public type Box of T = record public Value: T; end record;
             public type Alias = {{target}};
             end unit;
             """, CompilationTarget.Library);

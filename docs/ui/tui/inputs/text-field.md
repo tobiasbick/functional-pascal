@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Inputs.TextFields as W;
 // - `Name`: Current full name.
 // ## Returns
 // The resulting view.
-public function View(Name: string): E.Element<string>;
+public function View(Name: string): E.Element of string;
 begin
-  return W.TextField<string>('input-name', Name, function(Value: string): string => Value,
+  return W.TextField of string('input-name', Name, function(Value: string): string => Value,
     new W.Options(Label := 'Full name', Placeholder := 'Maya Okafor', MaxUtf8Bytes := 63));
 end function;
 

@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Containers.Cards as W;
 // - `Content`: Child view drawn by the card.
 // ## Returns
 // The widget for the application view.
-public function View(Content: E.Element<string>): E.Element<string>;
+public function View(Content: E.Element of string): E.Element of string;
 begin
-  return W.Card<string>('badges-and-avatars-card', [Content], new W.Options(Gap := 16.0F));
+  return W.Card of string('badges-and-avatars-card', [Content], new W.Options(Gap := 16.0F));
 end function;
 
 end unit;

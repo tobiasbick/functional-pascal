@@ -39,12 +39,12 @@ begin
   end if;
 end procedure;
 
-function View(Model: int; Size: L.Viewport): E.Element<Msg>;
+function View(Model: int; Size: L.Viewport): E.Element of Msg;
 begin
-  return E.Text<Msg>('Desktop commands ' + Model.ToString());
+  return E.Text of Msg('Desktop commands ' + Model.ToString());
 end function;
 
-procedure Steps(Session: Gui.Session<Msg>);
+procedure Steps(Session: Gui.Session of Msg);
 begin
   for Index: int := 0 to 2 do
     Check(Session.Step(), 'Desktop command session closed unexpectedly.');
@@ -61,26 +61,26 @@ procedure VerifyClose(Renderer: Cui.CuiRenderer);
       Stopped.SetResult(true);
     end try;
   end function;
-  function Update(Model: int; Message: Msg): Mvu.Transition<int, Msg>;
+  function Update(Model: int; Message: Msg): Mvu.Transition of (int, Msg);
   begin
     case Message of
       when Msg.Start:
-        return new Mvu.Transition<int, Msg>(
+        return new Mvu.Transition of (int, Msg)(
           Model,
-          [Mvu.StartBackground<Msg>('work', Mvu.FromWorker<Msg>(Work, Msg.Failed))]
+          [Mvu.StartBackground of Msg('work', Mvu.FromWorker of Msg(Work, Msg.Failed))]
         );
       when Msg.Close:
-        return new Mvu.Transition<int, Msg>(Model + 1, []);
+        return new Mvu.Transition of (int, Msg)(Model + 1, []);
       when Msg.Reject:
-        return new Mvu.Transition<int, Msg>(Model, [Closing.Cancel<Msg>()]);
+        return new Mvu.Transition of (int, Msg)(Model, [Closing.Cancel of Msg()]);
       when Msg.Approve:
-        return new Mvu.Transition<int, Msg>(Model, [Mvu.Exit<Msg>()]);
+        return new Mvu.Transition of (int, Msg)(Model, [Mvu.Exit of Msg()]);
       when Msg.Configure:
-        return new Mvu.Transition<int, Msg>(
+        return new Mvu.Transition of (int, Msg)(
           Model, [
-            Windows.SetTitle<Msg>('Document — été'),
-            Windows.Resize<Msg>(480, 340),
-            Frames.Redraw<Msg>(0.05F)
+            Windows.SetTitle of Msg('Document — été'),
+            Windows.Resize of Msg(480, 340),
+            Frames.Redraw of Msg(0.05F)
           ]
         );
       when Msg.Failed(const Error: Sys.Exception):
@@ -94,14 +94,14 @@ procedure VerifyClose(Renderer: Cui.CuiRenderer);
   end function;
 begin
   var Notifications: int := 0;
-  const Started: Tasks.TaskCompletionSource<bool> := new Tasks.TaskCompletionSource<bool>(
+  const Started: Tasks.TaskCompletionSource of bool := new Tasks.TaskCompletionSource of bool(
     Tasks.TaskCreationOptions.RunContinuationsAsynchronously
   );
-  const Stopped: Tasks.TaskCompletionSource<bool> := new Tasks.TaskCompletionSource<bool>(
+  const Stopped: Tasks.TaskCompletionSource of bool := new Tasks.TaskCompletionSource of bool(
     Tasks.TaskCreationOptions.RunContinuationsAsynchronously
   );
   const Window: Cui.CuiWindow := new Cui.CuiWindow('Desktop close', 420, 300, Renderer, true);
-  using const Session: Gui.Session<Msg> := Host.Start<int, Msg>(
+  using const Session: Gui.Session of Msg := Host.Start of (int, Msg)(
     0, Update, View, Window, 64,
     OnCloseRequested := Notify
   );
@@ -141,13 +141,13 @@ begin
 end procedure;
 
 procedure VerifyDefaultAndDispose(Renderer: Cui.CuiRenderer);
-  function Update(Model: int; Message: Msg): Mvu.Transition<int, Msg>;
+  function Update(Model: int; Message: Msg): Mvu.Transition of (int, Msg);
   begin
-    return new Mvu.Transition<int, Msg>(Model, []);
+    return new Mvu.Transition of (int, Msg)(Model, []);
   end function;
 begin
   const Window: Cui.CuiWindow := new Cui.CuiWindow('Default close', 420, 300, Renderer, true);
-  using const Session: Gui.Session<Msg> := Host.Start<int, Msg>(0, Update, View, Window, 64);
+  using const Session: Gui.Session of Msg := Host.Start of (int, Msg)(0, Update, View, Window, 64);
   Steps(Session);
   Window.RequestClose();
   while Session.Step() do
@@ -155,7 +155,7 @@ begin
 
   Check(not Session.IsOpen(), 'Without a handler, native close must end the session.');
   // Explicit disposal is a forced cleanup, not another interactive close request.
-  using const Forced: Gui.Session<Msg> := GuiHost.Start<int, Msg>(
+  using const Forced: Gui.Session of Msg := GuiHost.Start of (int, Msg)(
     0, Update, View,
     new GuiHost.Options(
       Title := 'Forced cleanup',
@@ -191,9 +191,9 @@ begin
 end procedure;
 
 procedure VerifyFactoryFailure(Renderer: Cui.CuiRenderer);
-  function Update(Model: int; Message: Msg): Mvu.Transition<int, Msg>;
+  function Update(Model: int; Message: Msg): Mvu.Transition of (int, Msg);
   begin
-    return new Mvu.Transition<int, Msg>(Model, []);
+    return new Mvu.Transition of (int, Msg)(Model, []);
   end function;
 begin
   const Window: Cui.CuiWindow := new Cui.CuiWindow(
@@ -203,7 +203,7 @@ begin
     Renderer,
     true
   );
-  using const Session: Gui.Session<Msg> := Host.Start<int, Msg>(
+  using const Session: Gui.Session of Msg := Host.Start of (int, Msg)(
     0, Update, View, Window, 64,
     OnCloseRequested := function(): Msg begin
       raise new Sys.InvalidOperationException('Close factory failed.');
@@ -234,17 +234,17 @@ procedure VerifyDisposalCallbacks(Renderer: Cui.CuiRenderer);
     end try;
   end function;
 
-  function Update(Model: int; Message: Msg): Mvu.Transition<int, Msg>;
+  function Update(Model: int; Message: Msg): Mvu.Transition of (int, Msg);
   begin
-    return new Mvu.Transition<int, Msg>(
+    return new Mvu.Transition of (int, Msg)(
       Model,
-      [Mvu.StartBackground<Msg>('hold', Mvu.FromWorker<Msg>(Work, Msg.Failed))]
+      [Mvu.StartBackground of Msg('hold', Mvu.FromWorker of Msg(Work, Msg.Failed))]
     );
   end function;
 
   procedure Paint(Surface: Painting.Surface);
   begin
-    const Current: Gui.Session<Msg>? := Disposing;
+    const Current: (Gui.Session of Msg)? := Disposing;
     if Current <> null then
       try
         discard Current.Snapshot();
@@ -256,9 +256,9 @@ procedure VerifyDisposalCallbacks(Renderer: Cui.CuiRenderer);
     end if;
   end procedure;
 
-  function View(Model: int; Size: L.Viewport): E.Element<Msg>;
+  function View(Model: int; Size: L.Viewport): E.Element of Msg;
   begin
-    return Canvases.Canvas<Msg>(
+    return Canvases.Canvas of Msg(
       'paint',
       [],
       function(Value: Canvases.Event): Msg => Msg.Reject,
@@ -266,12 +266,12 @@ procedure VerifyDisposalCallbacks(Renderer: Cui.CuiRenderer);
     );
   end function;
 begin
-  var Disposing: Gui.Session<Msg>? := null;
+  var Disposing: (Gui.Session of Msg)? := null;
   var Rejected: bool := false;
-  const Started: Tasks.TaskCompletionSource<bool> := new Tasks.TaskCompletionSource<bool>(
+  const Started: Tasks.TaskCompletionSource of bool := new Tasks.TaskCompletionSource of bool(
     Tasks.TaskCreationOptions.RunContinuationsAsynchronously
   );
-  const ContinueCleanup: Tasks.TaskCompletionSource<bool> := new Tasks.TaskCompletionSource<bool>(
+  const ContinueCleanup: Tasks.TaskCompletionSource of bool := new Tasks.TaskCompletionSource of bool(
     Tasks.TaskCreationOptions.RunContinuationsAsynchronously
   );
   const Window: Cui.CuiWindow := new Cui.CuiWindow(
@@ -281,7 +281,7 @@ begin
     Renderer,
     true
   );
-  using const Session: Gui.Session<Msg> := Host.Start<int, Msg>(0, Update, View, Window, 8);
+  using const Session: Gui.Session of Msg := Host.Start of (int, Msg)(0, Update, View, Window, 8);
   Steps(Session);
   discard Session.Post(Msg.Start);
   Steps(Session);

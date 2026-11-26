@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Pickers.PaletteStrips as W;
 // - `Current`: Swatches, locks and optional shuffle seed.
 // ## Returns
 // The palette with lock and shuffle proposals.
-public function View(Current: W.Value): E.Element<W.Event>;
+public function View(Current: W.Value): E.Element of W.Event;
 begin
-  return W.PaletteStrip<W.Event>('palette', Current,
+  return W.PaletteStrip of W.Event('palette', Current,
     function(Change: W.Event): W.Event => Change);
 end function;
 

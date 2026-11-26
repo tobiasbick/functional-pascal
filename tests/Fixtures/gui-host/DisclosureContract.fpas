@@ -27,10 +27,10 @@ uses GuiGallery.Shared.State as SliceShared;
 uses System as Sys;
 
 procedure Validate();
-  procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);
+  procedure Reject(Node: E.Element of int; Profile: V.Target; Reason: string);
   begin
     try
-      discard V.Prepare<int>(Node, Profile);
+      discard V.Prepare of int(Node, Profile);
     catch Error: Sys.ArgumentException do
       A.Check(Error.Message.Contains(Reason), Error.Message);
       return;
@@ -39,88 +39,91 @@ procedure Validate();
     raise new Sys.InvalidOperationException('Disclosure preflight accepted an invalid view.');
   end procedure;
 begin
-  const Body: E.Element<int> := E.Text<int>('Body');
+  const Body: E.Element of int := E.Text of int('Body');
   const Change: function(bool): int := function(Open: bool): int => 1;
   Reject(
-    Accordions.Accordion<int>('a', 'Title', false, Change, Body),
+    Accordions.Accordion of int('a', 'Title', false, Change, Body),
     V.Target.Terminal, 'Graphical profile'
   );
   for Profile: V.Target in [V.Target.Terminal, V.Target.Portable] do
-    discard V.Prepare<int>(Cards.ExpandableCard<int>('c', 'Title', false, Change, Body), Profile);
+    discard V.Prepare of int(
+      Cards.ExpandableCard of int('c', 'Title', false, Change, Body),
+      Profile
+    );
   end for;
 
-  Reject(Texts.ExpandableText<int>('t', 'Text'), V.Target.Terminal, 'Graphical profile');
+  Reject(Texts.ExpandableText of int('t', 'Text'), V.Target.Terminal, 'Graphical profile');
   Reject(
-    Texts.ExpandableText<int>('t', 'Text', new Texts.Options(Lines := 0)),
+    Texts.ExpandableText of int('t', 'Text', new Texts.Options(Lines := 0)),
     V.Target.Graphical, 'positive Lines'
   );
   Reject(
-    Texts.ExpandableText<int>('t', 'Text', new Texts.Options(Size := Sys.Single.NaN)),
+    Texts.ExpandableText of int('t', 'Text', new Texts.Options(Size := Sys.Single.NaN)),
     V.Target.Graphical, 'finite'
   );
   Reject(
-    Accordions.Accordion<int>('a', '', false, Change, Body),
+    Accordions.Accordion of int('a', '', false, Change, Body),
     V.Target.Graphical, 'nonempty title'
   );
   Reject(
-    Cards.ExpandableCard<int>(
+    Cards.ExpandableCard of int(
       'c', 'Title', false, Change, Body,
       new Cards.Options(BadgeTone := cast<S.Tone>(255))
     ), V.Target.Graphical, 'badge tone'
   );
   Reject(
-    E.Column<int>(
-      Texts.ExpandableText<int>('t', 'Text'),
-      B.Button<int>('t/toggle', 'Duplicate', 0)
+    E.Column of int(
+      Texts.ExpandableText of int('t', 'Text'),
+      B.Button of int('t/toggle', 'Duplicate', 0)
     ),
     V.Target.Graphical, 'Duplicate'
   );
   Reject(
-    Accordions.Accordion<int>('a', 'Closed', false, Change, B.Button<int>('a', 'Duplicate', 0)),
+    Accordions.Accordion of int('a', 'Closed', false, Change, B.Button of int('a', 'Duplicate', 0)),
     V.Target.Graphical, 'Duplicate'
   );
 end procedure;
 
 procedure Lifecycle(Renderer: Cui.CuiRenderer);
-  function View(Model: State.Model; Viewport: L.Viewport): E.Element<State.Msg>;
+  function View(Model: State.Model; Viewport: L.Viewport): E.Element of State.Msg;
   begin
-    return E.Column<State.Msg>(
-      Cards.ExpandableCard<State.Msg>(
+    return E.Column of State.Msg(
+      Cards.ExpandableCard of State.Msg(
         'card',
         'Card ## literal',
         Model.Disclosure.BillingOpen,
         function(ChildValue: bool): State.Msg => State.Msg.Disclosure(
           SliceDisclosure.Msg.SetBilling(ChildValue)
         ),
-        D.Dialog<State.Msg>(
+        D.Dialog of State.Msg(
           'nested',
-          B.Button<State.Msg>('body', 'Body action', State.Msg.Preview),
-          E.Column<State.Msg>(
-            Texts.ExpandableText<State.Msg>('short', 'Short text'),
-            B.Button<State.Msg>('inside', 'Modal action', State.Msg.Preview)
+          B.Button of State.Msg('body', 'Body action', State.Msg.Preview),
+          E.Column of State.Msg(
+            Texts.ExpandableText of State.Msg('short', 'Short text'),
+            B.Button of State.Msg('inside', 'Modal action', State.Msg.Preview)
           ),
           Model.Overlays.ProfileDialog,
           new D.Options('Nested dialog', CloseButton := false),
           State.Msg.Overlays(SliceOverlays.Msg.SetProfileDialog(false))
         ),
         new Cards.Options(Enabled := Model.Shared.Newsletter)
-      ), Texts.ExpandableText<State.Msg>(
+      ), Texts.ExpandableText of State.Msg(
         'text',
         'A long native paragraph that occupies more than one line. A long native paragraph that occupies more than one line.',
         new Texts.Options(Lines := 1), function(): State.Msg => State.Msg.Preview
       )
     );
   end function;
-  function Update(Model: State.Model; Message: State.Msg): Mvu.Transition<State.Model, State.Msg>;
+  function Update(Model: State.Model; Message: State.Msg): Mvu.Transition of (State.Model, State.Msg);
   begin
     case Message of
       when State.Msg.Preview:
         Activations := Activations + 1;
       when State.Msg.Disclosure(SliceDisclosure.Msg.SetSecurity(const Header: bool)):
-        return new Mvu.Transition<State.Model, State.Msg>(
+        return new Mvu.Transition of (State.Model, State.Msg)(
           Model,
           [
-            Mvu.Focus<State.Msg>(
+            Mvu.Focus of State.Msg(
               if Header then
                 'card'
               else
@@ -131,12 +134,12 @@ procedure Lifecycle(Renderer: Cui.CuiRenderer);
         );
       when State.Msg.Disclosure(SliceDisclosure.Msg.SetBilling(_)):
         if Refuse then
-          return new Mvu.Transition<State.Model, State.Msg>(Model, []);
+          return new Mvu.Transition of (State.Model, State.Msg)(Model, []);
         end if;
       when State.Msg.Overlays(SliceOverlays.Msg.SetFilters(_)):
-        return new Mvu.Transition<State.Model, State.Msg>(
+        return new Mvu.Transition of (State.Model, State.Msg)(
           Model,
-          [Mvu.Focus<State.Msg>('text/toggle')]
+          [Mvu.Focus of State.Msg('text/toggle')]
         );
       else
     end case;
@@ -163,7 +166,7 @@ begin
     true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Disclosure := new SliceDisclosure.Model(BillingOpen := false)),
     Update,
     View,
@@ -235,11 +238,11 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       Key := 0;
     end if;
   end procedure;
-  procedure Step(Session: Gui.Session<State.Msg>);
+  procedure Step(Session: Gui.Session of State.Msg);
   begin
     A.Check(Session.Step(), 'The Disclosure page closed.');
   end procedure;
-  procedure Click(Session: Gui.Session<State.Msg>; Id: string);
+  procedure Click(Session: Gui.Session of State.Msg; Id: string);
   begin
     const Box: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
     X := Box.X + Box.Width / 2;
@@ -265,7 +268,7 @@ begin
     true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Lists), GalleryUpdate.Update, Gallery.Build,
     Window, 32, Inject, ThemeFor := GalleryUpdate.ThemeFor
   );

@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Navigation.Steppers as C;
 // - `Current`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Current: int): E.Element<string>;
+public function View(Current: int): E.Element of string;
 begin
-  return C.Stepper<string>('workflow-steps', ['Account', 'Workspace', 'Invite team', 'Done'], Current);
+  return C.Stepper of string('workflow-steps', ['Account', 'Workspace', 'Invite team', 'Done'], Current);
 end function;
 
 end unit;

@@ -20,7 +20,7 @@ uses System as Sys;
 // - `Messages`: Proposal conversion.
 // ## Returns
 // The same element in the parent message type.
-public function Map<TChild, TParent>(Value: E.Element<TChild>; Messages: function(TChild): TParent): E.Element<TParent>;
+public function Map of (TChild, TParent)(Value: E.Element of TChild; Messages: function(TChild): TParent): E.Element of TParent;
 begin
   case Value of
     when E.Element.PropertyInspector(
@@ -29,7 +29,7 @@ begin
       const Changed: function(PropertyInspectors.Event): TChild,
       const Settings: PropertyInspectors.Options
     ):
-      return E.Element<TParent>.PropertyInspector(
+      return (E.Element of TParent).PropertyInspector(
         Id,
         Groups,
         function(Value: PropertyInspectors.Event): TParent => Messages(Changed(Value)),
@@ -42,7 +42,7 @@ begin
       const Changed: function(FlameGraphs.Event): TChild,
       const Settings: FlameGraphs.Options
     ):
-      return E.Element<TParent>.FlameGraph(
+      return (E.Element of TParent).FlameGraph(
         Id,
         Spans,
         Current,
@@ -56,7 +56,7 @@ begin
       const Changed: function(CurveEditors.Event): TChild,
       const Settings: CurveEditors.Options
     ):
-      return E.Element<TParent>.CurveEditor(
+      return (E.Element of TParent).CurveEditor(
         Id,
         Keys,
         Selected,
@@ -70,7 +70,7 @@ begin
       const Changed: function(GradientEditors.Event): TChild,
       const Settings: GradientEditors.Options
     ):
-      return E.Element<TParent>.GradientEditor(
+      return (E.Element of TParent).GradientEditor(
         Id,
         Stops,
         Selected,
@@ -84,7 +84,7 @@ begin
       const Changed: function(TimelineEditors.Event): TChild,
       const Settings: TimelineEditors.Options
     ):
-      return E.Element<TParent>.TimelineEditor(
+      return (E.Element of TParent).TimelineEditor(
         Id,
         Tracks,
         Current,

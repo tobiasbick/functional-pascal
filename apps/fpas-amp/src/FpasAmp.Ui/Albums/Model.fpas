@@ -25,19 +25,19 @@ public type State = record
   // Name shown above the grouped albums.
   public GroupName: string := '';
   // Applied filters and sort order to restore when returning to each grid route.
-  public Toolbars: I.ImmutableDictionary<string, Toolbar.State> := I.ImmutableDictionary<string, Toolbar.State>.Empty;
+  public Toolbars: I.ImmutableDictionary of (string, Toolbar.State) := I.ImmutableDictionary of (string, Toolbar.State).Empty;
   // Vertical positions in logical points, keyed by grid route.
-  public Offsets: I.ImmutableDictionary<string, float> := I.ImmutableDictionary<string, float>.Empty;
+  public Offsets: I.ImmutableDictionary of (string, float) := I.ImmutableDictionary of (string, float).Empty;
   // Lightweight headers for the active grid.
-  public Items: I.ImmutableArray<Library.Album> := I.ImmutableArray<Library.Album>.Empty;
+  public Items: I.ImmutableArray of Library.Album := (I.ImmutableArray of Library.Album).Empty;
   // Search documents and filter choices prepared from Items.
   public Catalog: Browse.Catalog := new Browse.Catalog();
   // The albums the grid shows: Items after search, filters and sorting.
-  public Shown: I.ImmutableArray<Library.Album> := I.ImmutableArray<Library.Album>.Empty;
+  public Shown: I.ImmutableArray of Library.Album := (I.ImmutableArray of Library.Album).Empty;
   // Whether the initial background query completed.
   public Loaded: bool := false;
   // Thumbnail values for realized albums; null means a confirmed missing image.
-  public Images: I.ImmutableDictionary<string, Images.Bitmap?> := I.ImmutableDictionary<string, Images.Bitmap?>.Empty;
+  public Images: I.ImmutableDictionary of (string, Images.Bitmap?) := I.ImmutableDictionary of (string, Images.Bitmap?).Empty;
   // First requested index into Shown, or -1 before layout observation.
   public First: int := -1;
   // Exclusive requested end index.
@@ -47,13 +47,13 @@ public type State = record
   // Recoverable background read error.
   public Error: string? := null;
   // Albums whose independent user rating is being saved in background work.
-  public Saving: I.ImmutableHashSet<string> := I.ImmutableHashSet<string>.Empty;
+  public Saving: I.ImmutableHashSet of string := (I.ImmutableHashSet of string).Empty;
   // Search text, filters and order that select Shown from Items.
   public Toolbar: Toolbar.State := new Toolbar.State();
   // Visit counter keeps detached results scoped to the album that requested them.
   public MusicVisit: long := 0L;
   // In-session table controls for albums opened under each catalogue route.
-  public MusicViews: I.ImmutableDictionary<string, Music.Presentation> := I.ImmutableDictionary<string, Music.Presentation>.Empty;
+  public MusicViews: I.ImmutableDictionary of (string, Music.Presentation) := I.ImmutableDictionary of (string, Music.Presentation).Empty;
   // Album tracks currently shown inside the Albums destination.
   public Music: Music.State? := null;
 end record;

@@ -10,7 +10,7 @@ uses Fpas.Ui.Gui.Internal.Core.Context as C;
 // ## Parameters
 // - `Frame`: Current GUI frame.
 // - `Keys`: Space-separated key labels, for example Ctrl Shift P.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Keys: string);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Keys: string);
 begin
   Frame.Window.DisplayKeycap(Keys);
   Frame.Labels.Add(Keys);

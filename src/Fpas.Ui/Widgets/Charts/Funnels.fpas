@@ -30,10 +30,10 @@ end record;
 // - `OnActivate`: Optional clicked input index callback; hover remains native.
 // ## Returns
 // A graphical element.
-public function Funnel<TMsg>(Id: string; Items: array of C.Item; Settings: Options? := null; OnActivate: Sys.Func<int, TMsg>? := null): E.Element<TMsg>;
+public function Funnel of TMsg(Id: string; Items: array of C.Item; Settings: Options? := null; OnActivate: Sys.Func of (int, TMsg)? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Funnel(Id, Items, Settings ?? new Options(), OnActivate);
+  return (E.Element of TMsg).Funnel(Id, Items, Settings ?? new Options(), OnActivate);
 end function;
 
 end unit;

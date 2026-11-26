@@ -21,9 +21,9 @@ uses Fpas.Ui.Widgets.Developer.Keymaps as W;
 // - `Modifiers`: Modifier mask currently shown.
 // ## Returns
 // The keymap with modifier updates and clicked keys as messages.
-public function View(Bindings: array of W.Binding; Categories: array of string; Modifiers: int): E.Element<W.Event>;
+public function View(Bindings: array of W.Binding; Categories: array of string; Modifiers: int): E.Element of W.Event;
 begin
-  return W.Keymap<W.Event>('shortcuts', Bindings, Categories, Modifiers,
+  return W.Keymap of W.Event('shortcuts', Bindings, Categories, Modifiers,
     function(Change: W.Event): W.Event => Change);
 end function;
 

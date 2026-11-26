@@ -17,13 +17,13 @@ uses Fpas.Ui.Elements as E;
 // - `Enabled`: Whether the chip accepts input.
 // ## Returns
 // The chip for the graphical profile.
-public function Chip<TMsg>(
+public function Chip of TMsg(
   Id: string; Label: string; Selected: bool; OnChange: function(bool): TMsg;
   Icon: string := ''; Enabled: bool := true
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.ChipAction(Id, Label, Selected, OnChange, Icon, Enabled);
+  return (E.Element of TMsg).ChipAction(Id, Label, Selected, OnChange, Icon, Enabled);
 end function;
 
 end unit;

@@ -19,9 +19,9 @@ uses GuiGallery.Shared.State as Demo;
 // - `Data`: Shared name and email.
 // ## Returns
 // The Inputs page.
-public function View(Model: S.Model; Data: Demo.Model): E.Element<S.Msg>;
+public function View(Model: S.Model; Data: Demo.Model): E.Element of S.Msg;
 begin
-  return E.Column<S.Msg>(
+  return E.Column of S.Msg(
     new L.Flow(Gap := G.Points(20)),
     Fields.Inputs(Model, Data),
     Credentials.View(Model, Data),

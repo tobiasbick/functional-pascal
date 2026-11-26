@@ -17,13 +17,13 @@ uses System.Threading as T;
 
 function Headers(Connection: Db.SqliteConnection; Cancellation: T.CancellationToken): M.Snapshot;
 begin
-  Connection.CreateFunction<string, string>('amp_tag_key', M.TagKey, isDeterministic := true);
+  Connection.CreateFunction of (string, string)('amp_tag_key', M.TagKey, isDeterministic := true);
   using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction(deferred := true);
   using const Tracks: Db.SqliteCommand := Sql.Command(
     Connection, 'SELECT COUNT(*) FROM files WHERE kind=0;', Transaction, [], []
   );
   const TrackCount: long := Sys.Convert.ToInt64(Tracks.ExecuteScalar());
-  const Ratings: C.Dictionary<string, int> := new C.Dictionary<string, int>();
+  const Ratings: C.Dictionary of (string, int) := new C.Dictionary of (string, int)();
   using const RatingsQuery: Db.SqliteCommand := Sql.Command(
     Connection,
     'SELECT group_id,rating FROM users.group_ratings;', Transaction, [], []
@@ -34,7 +34,7 @@ begin
       Ratings[Values.GetString(0)] := Values.GetInt32(1);
     end while;
   end;
-  const Credits: C.Dictionary<string, M.Membership> := new C.Dictionary<string, M.Membership>();
+  const Credits: C.Dictionary of (string, M.Membership) := new C.Dictionary of (string, M.Membership)();
   using const Query: Db.SqliteCommand := Sql.Command(
     Connection,
     'WITH directory_art(dir,facts) AS MATERIALIZED (' +
@@ -68,18 +68,18 @@ begin
     []
   );
   using const Rows: Db.SqliteDataReader := Query.ExecuteReader();
-  const Albums: C.List<M.Album> := new C.List<M.Album>();
+  const Albums: C.List of M.Album := new C.List of M.Album();
   while Rows.Read() do
     Cancellation.ThrowIfCancellationRequested();
     const Revision: string := Sys.Convert.ToHexString(
       Crypto.SHA256.HashData(Text.Encoding.UTF8.GetBytes(Rows.GetString(4)))
     );
-    var Names: array of string := Codec.ReadNames(Rows.GetString(7)) ?? Sys.Array.Empty<string>();
+    var Names: array of string := Codec.ReadNames(Rows.GetString(7)) ?? Sys.Array.Empty of string();
     if Names.Length = 0 then
       Names := [''];
     end if;
-    const Members: C.List<M.Membership> := new C.List<M.Membership>();
-    const Seen: C.HashSet<string> := new C.HashSet<string>();
+    const Members: C.List of M.Membership := new C.List of M.Membership();
+    const Seen: C.HashSet of string := new C.HashSet of string();
     for Name: string in Names do
       if not Credits.ContainsKey(Name) then
         const Id: string := M.ArtistId(Name);
@@ -107,8 +107,8 @@ begin
       end if;
     end for;
 
-    const Styles: C.List<M.Membership> := new C.List<M.Membership>();
-    const Labels: C.List<string> := new C.List<string>();
+    const Styles: C.List of M.Membership := new C.List of M.Membership();
+    const Labels: C.List of string := new C.List of string();
     using const StylesJson: Json.JsonDocument := Json.JsonDocument.Parse(Rows.GetString(6));
     for Style: Json.JsonElement in StylesJson.RootElement.EnumerateArray() do
       const Label: string := (Style.GetProperty('name').GetString() ?? '').Trim();
@@ -143,7 +143,7 @@ begin
     );
   end while;
 
-  return new M.Snapshot(I.ImmutableArray.CreateRange<M.Album>(Albums), TrackCount);
+  return new M.Snapshot(I.ImmutableArray.CreateRange of M.Album(Albums), TrackCount);
 end function;
 
 // Reads headers on a caller-owned catalogue connection with the ratings store attached as users.
@@ -155,7 +155,7 @@ end function;
 public function ReadAttached(Connection: Db.SqliteConnection; Cancellation: T.CancellationToken): M.Snapshot;
 requires Connection <> null;
 begin
-  return Sql.Interruptible<M.Snapshot>(
+  return Sql.Interruptible of M.Snapshot(
     Connection, Cancellation,
     function(): M.Snapshot => Headers(Connection, Cancellation)
   );

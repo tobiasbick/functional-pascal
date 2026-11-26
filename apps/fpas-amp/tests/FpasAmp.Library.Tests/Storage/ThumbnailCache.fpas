@@ -36,13 +36,13 @@ public type CacheTests = record
       T.CancellationToken.None
     );
     for Image: Imaging.Bitmap in [Png, Jpeg] do
-      X.Assert.Equal<int>(384, Image.Width);
-      X.Assert.Equal<int>(384, Image.Height);
-      X.Assert.Equal<byte>(0, Image.Pixels[3]);
+      X.Assert.Equal of int(384, Image.Width);
+      X.Assert.Equal of int(384, Image.Height);
+      X.Assert.Equal of byte(0, Image.Pixels[3]);
       const Center: int := (192 * 384 + 192) * 4;
-      X.Assert.Equal<byte>(255, Image.Pixels[Center + 3]);
+      X.Assert.Equal of byte(255, Image.Pixels[Center + 3]);
       X.Assert.True(Image.Pixels[Center] > Image.Pixels[Center + 2]);
-      X.Assert.Equal<byte>(0, Image.Pixels[(384 * 383 + 192) * 4 + 3]);
+      X.Assert.Equal of byte(0, Image.Pixels[(384 * 383 + 192) * 4 + 3]);
     end for;
   end procedure;
 
@@ -66,7 +66,7 @@ public type CacheTests = record
       T.CancellationToken.None
     );
     X.Assert.Same(One, Two);
-    X.Assert.Equal<int>(1, IO.Directory.GetFiles(Root.Path, '*.rgba').Length);
+    X.Assert.Equal of int(1, IO.Directory.GetFiles(Root.Path, '*.rgba').Length);
     const Reloaded: Thumbnails.ThumbnailStore := new Thumbnails.ThumbnailStore(Root.Path);
     X.Assert.NotNull(Reloaded.TryGet('album-one', 'revision-one'));
     X.Assert.Null(Reloaded.TryGet('album-one', 'revision-two'));

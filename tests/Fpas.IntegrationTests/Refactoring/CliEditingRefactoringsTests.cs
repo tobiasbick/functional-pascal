@@ -17,9 +17,9 @@ public sealed class CliEditingRefactoringsTests(SdkPackageFixture sdk) : IClassF
         var source = """
             unit Demo.Bridge;
             uses System.Collections.Generic as Col;
-            public function Make(): Col.List<int>;
+            public function Make(): Col.List of int;
             begin
-              const Caption: string := '😀'; return new Col.List<int>(
+              const Caption: string := '😀'; return new Col.List of int(
               );
             end function;
             end unit;
@@ -47,8 +47,8 @@ public sealed class CliEditingRefactoringsTests(SdkPackageFixture sdk) : IClassF
         Assert.True(applied.ExitCode == 0, applied.Output + applied.Error);
         using (var report = JsonDocument.Parse(applied.Output))
             Assert.True(report.RootElement.GetProperty("rechecked").GetBoolean());
-        var expected = source.Replace("return new Col.List<int>(\r\n  );",
-            "const Items: Col.List<int> := new Col.List<int>(\r\n  ); return Items;");
+        var expected = source.Replace("return new Col.List of int(\r\n  );",
+            "const Items: Col.List of int := new Col.List of int(\r\n  ); return Items;");
         Assert.Equal(expected, File.ReadAllText(start.File));
 
         var stale = await RenameFixture.Cli(directory, "apply", Project, "--plan", path, "--no-restore", "--report", "json");
@@ -67,8 +67,8 @@ public sealed class CliEditingRefactoringsTests(SdkPackageFixture sdk) : IClassF
             uses System.Collections.Generic as Col;
             // Keep the attached note.
             uses System.IO as Retain;
-            public function Make(): Col.List<int>;
-            begin return new Col.List<int>(); end function;
+            public function Make(): Col.List of int;
+            begin return new Col.List of int(); end function;
             end unit;
             """.ReplaceLineEndings("\r\n");
         using var directory = RenameFixture.Create(sdk, source);

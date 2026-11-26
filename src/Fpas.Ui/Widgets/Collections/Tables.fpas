@@ -44,21 +44,21 @@ end record;
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Cell<TMsg> = variant
+public type Cell of TMsg = variant
   // Show plain text with the column's alignment.
   Text(Value: string);
   // Draw a row of graphical children directly in the cell.
-  Content(Children: array of E.Element<TMsg>);
+  Content(Children: array of E.Element of TMsg);
 end variant;
 
 // One table row with its model-owned selection.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Row<TMsg> = record
+public type Row of TMsg = record
   // Stable row identity.
   public Id: string;
   // One cell per column.
-  public Cells: array of Cell<TMsg>;
+  public Cells: array of Cell of TMsg;
   // Whether the row is selected.
   public Selected: bool := false;
 end record;
@@ -101,10 +101,10 @@ end function;
 // - `Settings`: Optional table settings.
 // ## Returns
 // The shared table element.
-public function Table<TMsg>(Id: string; Columns: array of Column; Rows: array of Row<TMsg>; Order: Sort? := null; OnSort: Sys.Func<Sort, TMsg>? := null; OnSelect: Sys.Func<string, TMsg>? := null; Settings: Options? := null): E.Element<TMsg>;
+public function Table of TMsg(Id: string; Columns: array of Column; Rows: array of Row of TMsg; Order: Sort? := null; OnSort: Sys.Func of (Sort, TMsg)? := null; OnSelect: Sys.Func of (string, TMsg)? := null; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Table(
+  return (E.Element of TMsg).Table(
     Id,
     Columns,
     Rows,

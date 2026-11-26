@@ -65,7 +65,7 @@ end function;
 // ## Parameters
 // - `Session`: Presented Data grid page.
 // - `Output`: Directory for full-frame images and crop bounds.
-public procedure CaptureDataGrid(Session: Gui.Session<Gallery.Msg>; Output: string);
+public procedure CaptureDataGrid(Session: Gui.Session of Gallery.Msg; Output: string);
 begin
   Regions.Shot(Session, Output, 'filter-bar', 'filters');
   Regions.Shot(Session, Output, 'data-grid', 'people-grid');
@@ -77,7 +77,7 @@ end procedure;
 // ## Parameters
 // - `Session`: Presented Files page with the sample directory.
 // - `Output`: Absolute directory for full-frame images and crop bounds.
-public procedure CaptureFiles(Session: Gui.Session<Gallery.Msg>; Output: string);
+public procedure CaptureFiles(Session: Gui.Session of Gallery.Msg; Output: string);
 begin
   Regions.Shot(Session, Output, 'file-browser', 'files-browser');
   Presented.Send(
@@ -100,7 +100,7 @@ end procedure;
 // ## Parameters
 // - `Session`: Presented Planning page.
 // - `Output`: Directory for full-frame images and crop bounds.
-public procedure CapturePlanningTop(Session: Gui.Session<Gallery.Msg>; Output: string);
+public procedure CapturePlanningTop(Session: Gui.Session of Gallery.Msg; Output: string);
 begin
   Regions.Shot(
     Session,
@@ -118,7 +118,7 @@ end procedure;
 // ## Parameters
 // - `Session`: Planning page scrolled to the bottom.
 // - `Output`: Directory for the full-frame image and crop bounds.
-public procedure CapturePlanningBottom(Session: Gui.Session<Gallery.Msg>; Output: string);
+public procedure CapturePlanningBottom(Session: Gui.Session of Gallery.Msg; Output: string);
 begin
   Regions.Shot(Session, Output, 'month-calendar', 'planning-month');
 end procedure;

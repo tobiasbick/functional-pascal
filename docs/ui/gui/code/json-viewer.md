@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Developer.JsonViews as W;
 // - `Document`: Literal JSON source.
 // ## Returns
 // The native JSON viewer for the application view.
-public function View(Document: string): E.Element<string>;
+public function View(Document: string): E.Element of string;
 begin
-  return W.JsonView<string>('response', Document, new W.Options(ExpandDepth := 2));
+  return W.JsonView of string('response', Document, new W.Options(ExpandDepth := 2));
 end function;
 
 end unit;

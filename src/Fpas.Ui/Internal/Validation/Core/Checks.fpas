@@ -84,7 +84,7 @@ end procedure;
 // - `Keys`: Previously visited keys.
 // - `Key`: Item identity.
 // - `Location`: Diagnostic location.
-public procedure CheckKey(Keys: Generic.HashSet<string>; Key: string; Location: string);
+public procedure CheckKey(Keys: Generic.HashSet of string; Key: string; Location: string);
 begin
   if Sys.String.IsNullOrWhiteSpace(Key) then
     Reject(Location, 'Item keys must be nonempty.');
@@ -102,7 +102,7 @@ end procedure;
 // - `Keys`: Permitted item identities.
 // - `Key`: Requested selection, or null.
 // - `Location`: Diagnostic location.
-public procedure CheckSelected(Keys: Generic.HashSet<string>; Key: string?; Location: string);
+public procedure CheckSelected(Keys: Generic.HashSet of string; Key: string?; Location: string);
 begin
   if Key <> null and not Keys.Contains(Key) then
     Reject(Location, 'Unknown selected key ' + Key + '.');

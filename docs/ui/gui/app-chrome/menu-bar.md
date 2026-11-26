@@ -17,13 +17,13 @@ uses Fpas.Ui.Widgets.Overlays.Menus as M;
 // Shows a File menu and its commands.
 // ## Returns
 // A menu bar that sends the chosen command.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return W.MenuBar<string>('editor-menus', [
-    new W.Menu<string>('file', 'File', [
-      M.Entry<string>.Action(new M.Item<string>('open', 'Open…', 'open', Shortcut := 'Ctrl O')),
-      M.Entry<string>.Separator,
-      M.Entry<string>.Action(new M.Item<string>('save', 'Save', 'save', Shortcut := 'Ctrl S'))
+  return W.MenuBar of string('editor-menus', [
+    new W.Menu of string('file', 'File', [
+      (M.Entry of string).Action(new M.Item of string('open', 'Open…', 'open', Shortcut := 'Ctrl O')),
+      (M.Entry of string).Separator,
+      (M.Entry of string).Action(new M.Item of string('save', 'Save', 'save', Shortcut := 'Ctrl S'))
     ])
   ]);
 end function;

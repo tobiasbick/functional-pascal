@@ -280,7 +280,7 @@ when another page exists. `truncated` means references exist outside this page,
 including earlier pages. Merge pages only
 when `snapshotId` matches.
 
-Use `--project <owning.fpasproj>` when a source is included in several compilations.
+Use `--project  of owning.fpasproj` when a source is included in several compilations.
 An ambiguous selection returns candidate project paths. Selection does not narrow
 the refs search scope. Configuration, preparation options, timeout and exit codes
 match check. Query responses are bounded to 4 MiB; oversized output returns result_limit
@@ -378,7 +378,7 @@ response schema with `fpas schema query-batch`.
 
 ### Find declarations
 
-`query find <context> --name <text>` searches explicit checked FPAS declarations,
+`query find  of context --name  of text` searches explicit checked FPAS declarations,
 including private declarations, imports, parameters and local bindings. It
 matches semantic simple or source-qualified names, case-sensitively and ordinally.
 Escaped names omit `@` for matching; navigation spans retain it. `--match` accepts
@@ -418,7 +418,7 @@ selection replaces `--file`, `--line` and `--column`. It also works in supported
 
 ### Inspect a declaration
 
-`query inspect <context> --file <source> --line <n> --column <n>` uses definition's
+`query inspect  of context --file  of source --line  of n --column  of n` uses definition's
 bound identifier selection, overload/static-contract rules and linked-owner
 disambiguation. Whitespace, comments, implicit bindings and namespaces retain
 definition's `not_found` reasons. Inspection does not predict runtime dispatch.

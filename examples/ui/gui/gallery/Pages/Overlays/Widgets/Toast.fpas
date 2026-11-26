@@ -16,11 +16,11 @@ uses GuiGallery.Shared.State as Demo;
 //
 // ## Returns
 // The native gallery section with passive notifications and timed Undo.
-public function View(): E.Element<State.Msg>;
+public function View(): E.Element of State.Msg;
 begin
-  const Buttons: E.Element<State.Msg> := E.Row<State.Msg>(
+  const Buttons: E.Element of State.Msg := E.Row of State.Msg(
     new L.Flow(Gap := G.Points(8), Wrap := true),
-    B.Button<State.Msg>(
+    B.Button of State.Msg(
       'toast-save-profile', 'Save profile',
       State.Msg.Shared(
         Demo.Msg.Notify(
@@ -32,7 +32,7 @@ begin
         )
       )
     ),
-    B.Button<State.Msg>(
+    B.Button of State.Msg(
       'toast-upload', 'Upload a 30 MB file',
       State.Msg.Shared(
         Demo.Msg.Notify(
@@ -44,8 +44,8 @@ begin
         )
       )
     ),
-    B.Button<State.Msg>('toast-archive', 'Archive a message', State.Msg.ArchiveMessage),
-    B.Button<State.Msg>(
+    B.Button of State.Msg('toast-archive', 'Archive a message', State.Msg.ArchiveMessage),
+    B.Button of State.Msg(
       'toast-update', 'Check for updates',
       State.Msg.Shared(
         Demo.Msg.Notify(
@@ -58,10 +58,10 @@ begin
       )
     )
   );
-  return E.Column<State.Msg>(
+  return E.Column of State.Msg(
     new L.Flow(Gap := G.Points(20)),
-    G.Heading<State.Msg>(Strings.Get('Heading.Toasts'), Strings.Get('Heading.ToastsHint')),
-    G.Card<State.Msg>(12, [Buttons])
+    G.Heading of State.Msg(Strings.Get('Heading.Toasts'), Strings.Get('Heading.ToastsHint')),
+    G.Card of State.Msg(12, [Buttons])
   );
 end function;
 

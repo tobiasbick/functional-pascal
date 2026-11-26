@@ -21,37 +21,37 @@ uses System as Sys;
 uses System.Collections.Generic as Lists;
 uses System.IO as IO;
 
-function Controls(Model: M.Model): E.Element<M.Msg>;
+function Controls(Model: M.Model): E.Element of M.Msg;
 begin
-  const Row: Lists.List<E.Element<M.Msg>> := new Lists.List<E.Element<M.Msg>>();
+  const Row: Lists.List of E.Element of M.Msg := new Lists.List of E.Element of M.Msg();
   Row.Add(
-    B.Button<M.Msg>(
+    B.Button of M.Msg(
       'files-open', PickerSample.OpenLabel, M.Msg.Open,
       new B.Options(Icon := Sys.Char.ConvertFromUtf32($E247))
     )
   );
   Row.Add(
-    B.Button<M.Msg>(
+    B.Button of M.Msg(
       'files-save', PickerSample.SaveLabel, M.Msg.Save,
       new B.Options(Icon := Sys.Char.ConvertFromUtf32($E0B2))
     )
   );
   if Model.Chosen <> '' then
-    Row.Add(E.Styled<M.Msg>(E.Text<M.Msg>(Model.Chosen), S.Role.Caption));
+    Row.Add(E.Styled of M.Msg(E.Text of M.Msg(Model.Chosen), S.Role.Caption));
   end if;
 
-  return E.Row<M.Msg>(
+  return E.Row of M.Msg(
     new L.Flow(Gap := G.Points(8), Align := L.Alignment.Center, Wrap := true, Clip := false),
     Row.ToArray()
   );
 end function;
 
-function Original(Model: M.Model): E.Element<M.Msg>;
+function Original(Model: M.Model): E.Element of M.Msg;
 begin
-  return E.Column<M.Msg>(
+  return E.Column of M.Msg(
     new L.Flow(Gap := G.Points(20), Clip := false),
-    G.Heading<M.Msg>(Strings.Get('Heading.FileBrowser'), Strings.Get('Heading.FileBrowserHint')),
-    Browser.FileBrowser<M.Msg>(
+    G.Heading of M.Msg(Strings.Get('Heading.FileBrowser'), Strings.Get('Heading.FileBrowserHint')),
+    Browser.FileBrowser of M.Msg(
       'files-browser', Model.Folder, M.Msg.Browse, new Browser.Options(
         Height := L.Extent.Fixed(L.Measure.Logical(380)), Source := Directory.ReadFolder
       )
@@ -62,7 +62,7 @@ end function;
 
 function Segments(Path: string): array of string;
 begin
-  const Parts: Lists.List<string> := new Lists.List<string>();
+  const Parts: Lists.List of string := new Lists.List of string();
   const Root: string := IO.Path.GetPathRoot(Path) ?? '';
   if Root <> '' then
     Parts.Add(Root);
@@ -85,7 +85,7 @@ end function;
 function ChildFolders(Folder: string): array of string;
 begin
   const Listing: Listings.Listing? := Directory.ReadFolder(Folder, false);
-  const Names: Lists.List<string> := new Lists.List<string>();
+  const Names: Lists.List of string := new Lists.List of string();
   if Listing <> null then
     for Entry: Listings.Entry in Listing.Entries do
       if Entry.Directory then
@@ -100,7 +100,7 @@ end function;
 
 function Children(Path: array of string): array of array of string;
 begin
-  const Menus: Lists.List<array of string> := new Lists.List<array of string>();
+  const Menus: Lists.List of array of string := new Lists.List of array of string();
   var Folder: string := Path[0];
   for Index: int := 0 to Path.Length - 2 do
     Menus.Add(ChildFolders(Folder));
@@ -150,32 +150,32 @@ end function;
 // - `Model`: Current Files state.
 // ## Returns
 // Original browser section followed by the path bar example.
-public function View(Model: M.Model): array of E.Element<M.Msg>;
+public function View(Model: M.Model): array of E.Element of M.Msg;
 begin
   const Path: array of string := Segments(Model.Folder);
-  const Base: E.Element<M.Msg> := E.Column<M.Msg>(
+  const Base: E.Element of M.Msg := E.Column of M.Msg(
     new L.Flow(Gap := G.Points(20), Clip := false),
     Original(Model),
-    G.Heading<M.Msg>(
+    G.Heading of M.Msg(
       Strings.Get('Text.SectionTerminal'),
       Strings.Get('Heading.TerminalHint')
     ),
-    Terminal.Terminal<M.Msg>(
+    Terminal.Terminal of M.Msg(
       'files-terminal', Model.Output, Model.TerminalRevision, M.Msg.Terminal,
       new Terminal.Options(Height := 300.0F, Prompt := '> ')
     ),
-    G.Heading<M.Msg>(Strings.Get('Heading.PathBar'), Strings.Get('Heading.PathBarHint')),
-    Paths.PathBar<M.Msg>(
+    G.Heading of M.Msg(Strings.Get('Heading.PathBar'), Strings.Get('Heading.PathBarHint')),
+    Paths.PathBar of M.Msg(
       'files-path-bar', new Paths.Value(Path, Model.Folder, Children(Path)),
       M.Msg.Path, new Paths.Options(Icon := Sys.Char.ConvertFromUtf32($E0D7))
     )
   );
   return [
-    Picker.FilePicker<M.Msg>(
+    Picker.FilePicker of M.Msg(
       'files-open-picker', Model.Opening, M.Msg.Opened,
       PickerSample.Settings(false, Directory.ReadFolder), Base
     ),
-    Picker.FilePicker<M.Msg>(
+    Picker.FilePicker of M.Msg(
       'files-save-picker', Model.Saving, M.Msg.Saved,
       PickerSample.Settings(true, Directory.ReadFolder)
     )

@@ -20,9 +20,9 @@ uses System as Sys;
 // - `Current`: Displayed month, selected date and appointment array.
 // ## Returns
 // The calendar with navigation and activation proposals.
-public function View(Current: W.Value): E.Element<W.Event>;
+public function View(Current: W.Value): E.Element of W.Event;
 begin
-  return W.MonthCalendar<W.Event>('release-calendar', Current,
+  return W.MonthCalendar of W.Event('release-calendar', Current,
     function(Change: W.Event): W.Event => Change);
 end function;
 

@@ -11,7 +11,7 @@ uses Fpas.Ui.Mvu.Composition as Composition;
 
 uses System as Sys;
 
-function Payload(Value: Mvu.Command<string>): Sys.Object;
+function Payload(Value: Mvu.Command of string): Sys.Object;
 begin
   case Value of
     when Mvu.Command.Host(const Request: Mvu.HostRequest):
@@ -33,10 +33,10 @@ begin
   end if;
 end procedure;
 
-function Map(Value: Mvu.Command<int>): Sys.Object;
+function Map(Value: Mvu.Command of int): Sys.Object;
 begin
   return Payload(
-    Composition.MapCommand<int, string>(
+    Composition.MapCommand of (int, string)(
       Value,
       function(Message: int): string => 'child:' + Message.ToString()
     )
@@ -46,15 +46,15 @@ end function;
 // Verifies typed selected/cancelled results across a feature slice and command mapping.
 public procedure Verify();
 begin
-  const Requests: array of Mvu.Command<int> := [
-    Files.OpenFile<int>(
+  const Requests: array of Mvu.Command of int := [
+    Files.OpenFile of int(
       function(Path: string): int => Path.Length,
       'Open',
       'Text',
       'txt',
       function(): int => -1
     ),
-    Files.SaveFile<int>(
+    Files.SaveFile of int(
       function(Path: string): int => Path.Length,
       'notes — été.txt',
       'Save',
@@ -62,18 +62,18 @@ begin
       'txt',
       function(): int => -1
     ),
-    Files.ChooseFolder<int>(
+    Files.ChooseFolder of int(
       function(Path: string): int => Path.Length,
       'Folder',
       function(): int => -1
     )
   ];
   for Index: int := 0 to Requests.Length - 1 do
-    const Request: Files.Request<string> := cast<Files.Request<string>>(Map(Requests[Index]));
+    const Request: Files.Request of string := cast<Files.Request of string>(Map(Requests[Index]));
     Check(cast<int>(Request.Kind) = Index, 'Mapping lost the native dialog kind.');
     Check(Request.OnSelected('été') = 'child:3', 'Selected paths did not map into the parent.');
     case Request.OnCancelled of
-      when is Sys.Func<string> as Notify:
+      when is Sys.Func of string as Notify:
         Check(Notify.Invoke() = 'child:-1', 'Dialog cancellation did not map into the parent.');
       else
         raise new Sys.InvalidOperationException('Mapped cancellation callback is missing.');
@@ -86,24 +86,24 @@ begin
       );
     end if;
   end for;
-  const Silent: Files.Request<string> := cast<Files.Request<string>>(Map(
-    Files.ChooseFolder<int>(function(Path: string): int => Path.Length)
+  const Silent: Files.Request of string := cast<Files.Request of string>(Map(
+    Files.ChooseFolder of int(function(Path: string): int => Path.Length)
   ));
   Check(Silent.OnCancelled = null, 'Mapping must preserve silent cancellation.');
-  const Title: Windows.TitleRequest<string> := cast<Windows.TitleRequest<string>>(Map(
-    Windows.SetTitle<int>('Document')
+  const Title: Windows.TitleRequest of string := cast<Windows.TitleRequest of string>(Map(
+    Windows.SetTitle of int('Document')
   ));
   Check(Title.Title = 'Document', 'Mapping lost the window title.');
-  const Size: Windows.SizeRequest<string> := cast<Windows.SizeRequest<string>>(Map(
-    Windows.Resize<int>(420, 300)
+  const Size: Windows.SizeRequest of string := cast<Windows.SizeRequest of string>(Map(
+    Windows.Resize of int(420, 300)
   ));
   Check(Size.Width = 420 and Size.Height = 300, 'Mapping lost the native size.');
-  const Frame: Frames.Request<string> := cast<Frames.Request<string>>(Map(
-    Frames.Redraw<int>(0.25F)
+  const Frame: Frames.Request of string := cast<Frames.Request of string>(Map(
+    Frames.Redraw of int(0.25F)
   ));
   Check(Frame.DelaySeconds = 0.25F, 'Mapping lost the native frame deadline.');
   Check(
-    Map(Closing.Cancel<int>()) is Closing.CancelRequest<string>,
+    Map(Closing.Cancel of int()) is Closing.CancelRequest of string,
     'Mapping lost the close rejection.'
   );
 end procedure;

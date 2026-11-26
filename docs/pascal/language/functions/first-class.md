@@ -14,7 +14,7 @@ Callable types are `function(T1, T2): R` and `procedure(T1, T2)`. Parameter name
 do not occur in callable types; calls through these types are positional.
 `function(): R` and `procedure()` represent zero-argument callables.
 The baseline supports by-value parameters in callable type syntax. Use an
-explicit imported delegate type such as `Sys.Func<int, int>?` for a nullable
+explicit imported delegate type such as `Sys.Func of (int, int)?` for a nullable
 delegate or a delegate array. Suffixes on a function's result type belong to
 that result, not to the callable itself.
 
@@ -61,7 +61,7 @@ program Functions;
 
 uses System.Console as Console;
 
-function Identity<T>(Value: T): T;
+function Identity of T(Value: T): T;
 begin
   return Value;
 end function;
@@ -83,7 +83,7 @@ end function;
 begin
   const Double: function(int): int := function(Value: int): int => Value * 2;
   const Counter: function(): int := MakeCounter();
-  Console.WriteLine(Identity<string>('Functions first'));
+  Console.WriteLine(Identity of string('Functions first'));
   Console.WriteLine(Apply(21, Double)); // 42
   Console.WriteLine(Counter()); // 1
   Console.WriteLine(Counter()); // 2

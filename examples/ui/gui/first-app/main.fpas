@@ -14,29 +14,29 @@ type Msg = variant
   Close;
 end variant;
 
-function Update(Count: int; Message: Msg): App.Transition<int, Msg>;
+function Update(Count: int; Message: Msg): App.Transition of (int, Msg);
 begin
   return case Message of
-    when Msg.Increment: new App.Transition<int, Msg>(Count + 1, []);
-    when Msg.Close: new App.Transition<int, Msg>(Count, [App.Exit<Msg>()]);
+    when Msg.Increment: new App.Transition of (int, Msg)(Count + 1, []);
+    when Msg.Close: new App.Transition of (int, Msg)(Count, [App.Exit of Msg()]);
   end case;
 end function;
 
-function View(Count: int; Viewport: L.Viewport): E.Element<Msg>;
+function View(Count: int; Viewport: L.Viewport): E.Element of Msg;
 begin
-  return E.Column<Msg>(
+  return E.Column of Msg(
     new L.Flow(Padding := L.Spacing.Loose, Gap := L.Spacing.Normal),
-    E.Text<Msg>('Count: ' + Count.ToString()),
-    B.Button<Msg>(
+    E.Text of Msg('Count: ' + Count.ToString()),
+    B.Button of Msg(
       'increment', 'Add one', Msg.Increment,
       new B.Options(Variant := S.ButtonVariant.Primary)
     ),
-    B.Button<Msg>('close', 'Close', Msg.Close)
+    B.Button of Msg('close', 'Close', Msg.Close)
   );
 end function;
 
 begin
-  Gui.Run<int, Msg>(
+  Gui.Run of (int, Msg)(
     0,
     Update,
     View,

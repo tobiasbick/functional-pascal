@@ -22,9 +22,9 @@ uses Fpas.Ui.Widgets.Feedback.TaskStates as T;
 // - `Seconds`: Elapsed seconds.
 // ## Returns
 // The disclosure for a recorded tool call.
-public function View(Input: string; Output: string; Seconds: float): E.Element<string>;
+public function View(Input: string; Output: string; Seconds: float): E.Element of string;
 begin
-  return W.ToolCall<string>('search', 'web_search',
+  return W.ToolCall of string('search', 'web_search',
     new W.Options(Status := T.Status.Done, Input := Input, Output := Output, Seconds := Seconds));
 end function;
 

@@ -21,9 +21,9 @@ uses System as Sys;
 // - `OnDismiss`: Optional dismissal message factory.
 // - `OnAction`: Optional activation message factory.
 // - `Settings`: Native presentation and input options.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Text: string; Open: bool;
-  OnDismiss: Sys.Func<TMsg>?; OnAction: Sys.Func<TMsg>?; Settings: B.Options
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Text: string; Open: bool;
+  OnDismiss: (Sys.Func of TMsg)?; OnAction: (Sys.Func of TMsg)?; Settings: B.Options
 );
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled and Open;
@@ -31,7 +31,7 @@ begin
   const DismissId: string := B.DismissId(Id);
   const ActionToken: string := C.Token('banner-action', ActionId);
   const DismissToken: string := C.Token('banner-dismiss', DismissId);
-  const Focus: int := if OnAction <> null and C.WantsFocus<TMsg>(
+  const Focus: int := if OnAction <> null and C.WantsFocus of TMsg(
     Frame,
     ActionId,
     ActionToken,
@@ -39,7 +39,7 @@ begin
   )
   then
     1
-  elsif OnDismiss <> null and C.WantsFocus<TMsg>(Frame, DismissId, DismissToken, Enabled) then
+  elsif OnDismiss <> null and C.WantsFocus of TMsg(Frame, DismissId, DismissToken, Enabled) then
     2
   else
     0
@@ -60,7 +60,7 @@ begin
   );
   if Result.Activated then
     case OnAction of
-      when is Sys.Func<TMsg> as Notify:
+      when is Sys.Func of TMsg as Notify:
         Frame.Messages.Add(Notify.Invoke());
       else
     end case;
@@ -68,7 +68,7 @@ begin
 
   if Result.Dismissed then
     case OnDismiss of
-      when is Sys.Func<TMsg> as Notify:
+      when is Sys.Func of TMsg as Notify:
         Frame.Messages.Add(Notify.Invoke());
       else
     end case;

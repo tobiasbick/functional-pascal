@@ -28,10 +28,10 @@ end record;
 // - `Settings`: Duration, icon, appearance and input permission.
 // ## Returns
 // A hold-to-confirm button for either host.
-public function HoldButton<TMsg>(Id: string; Label: string; Message: TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function HoldButton of TMsg(Id: string; Label: string; Message: TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.HoldAction(Id, Label, Message, Settings ?? new Options());
+  return (E.Element of TMsg).HoldAction(Id, Label, Message, Settings ?? new Options());
 end function;
 
 end unit;

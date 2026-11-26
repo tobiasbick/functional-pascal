@@ -18,13 +18,13 @@ uses Fpas.Ui.Widgets.Overlays.Menus as M;
 // - `Id`: Stable bar identity.
 // - `Menus`: Titles and their commands.
 // - `HideBorder`: Omit the bottom hairline.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Menus: array of B.Menu<TMsg>; HideBorder: bool);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Menus: array of B.Menu of TMsg; HideBorder: bool);
 begin
   Frame.Window.BeginMenuBar(C.Token('menu-bar', Id), not HideBorder, Frame.AcceptInput);
-  for Item: B.Menu<TMsg> in Menus do
+  for Item: B.Menu of TMsg in Menus do
     const TitleId: string := M.ItemId(Id, Item.Key);
     const Enabled: bool := Frame.AcceptInput and Item.Enabled;
-    const Rows: Menu.Rows := Menu.Prepare<TMsg>(
+    const Rows: Menu.Rows := Menu.Prepare of TMsg(
       'menu-bar-menu',
       TitleId,
       Item.Entries,
@@ -33,11 +33,11 @@ begin
     const Result: CuiOverlays.CuiMenuResult := Frame.Window.MenuBarMenu(
       Item.Key, Item.Label, Item.Mnemonic, Item.Width, Enabled, Rows.Entries, Rows.Tokens
     );
-    Menu.Report<TMsg>(Frame, 'menu-bar-menu', TitleId, Item.Label, Item.Entries, Enabled, Result);
+    Menu.Report of TMsg(Frame, 'menu-bar-menu', TitleId, Item.Label, Item.Entries, Enabled, Result);
   end for;
 
   Frame.Window.EndMenuBar();
-  P.Root<TMsg>(Frame, Id, 'menu-bar', '', Menus.Length > 0 and Frame.AcceptInput, '');
+  P.Root of TMsg(Frame, Id, 'menu-bar', '', Menus.Length > 0 and Frame.AcceptInput, '');
 end procedure;
 
 end unit;

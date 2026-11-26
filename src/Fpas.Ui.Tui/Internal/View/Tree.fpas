@@ -93,7 +93,7 @@ public type ActionView = record
   // Supporting text painted below the caption inside the same hit target.
   public Description: string := '';
   // Optional caption resolver for the cell width left after button padding.
-  public CaptionForWidth: Sys.Func<int, string>? := null;
+  public CaptionForWidth: Sys.Func of (int, string)? := null;
 end record;
 
 // Shared terminal geometry and input policy for dialogs and edge sheets.
@@ -117,19 +117,19 @@ end record;
 // Text table with the model's current order and activation mappers.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type TableView<TMsg> = record
+public type TableView of TMsg = record
   // Stable identity for scrolling and row navigation.
   public Id: string;
   // Columns in display order.
   public Columns: array of Tables.Column;
   // Plain text rows in model order.
-  public Rows: array of Tables.Row<TMsg>;
+  public Rows: array of Tables.Row of TMsg;
   // Current model-owned sort.
   public Order: Tables.Sort?;
   // Sort proposal on a heading activation.
-  public OnSort: Sys.Func<Tables.Sort, TMsg>?;
+  public OnSort: Sys.Func of (Tables.Sort, TMsg)?;
   // Selection proposal on a row activation.
-  public OnSelect: Sys.Func<string, TMsg>?;
+  public OnSelect: Sys.Func of (string, TMsg)?;
   // Height, row appearance and input policy.
   public Settings: Tables.Options;
   // Intrinsic widths measured once per prepared view.
@@ -167,7 +167,7 @@ end record;
 // Tab or segmented control with measured caption widths.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type ChoiceStripView<TMsg> = record
+public type ChoiceStripView of TMsg = record
   // Stable group ID.
   public Id: string;
   // Options in their original order.
@@ -175,7 +175,7 @@ public type ChoiceStripView<TMsg> = record
   // Choice that receives focus when Tab enters the group.
   public Entry: int;
   // Proposes activation of a positional choice.
-  public Activate: function(int): Actions.Result<TMsg>;
+  public Activate: function(int): Actions.Result of TMsg;
   // Appearance and input settings.
   public Settings: ChoiceStripOptions;
   // Intrinsic width of each label including padding.
@@ -185,7 +185,7 @@ end record;
 // Terminal list data shared by measurement, painting and input routing.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type SelectionListView<TMsg> = record
+public type SelectionListView of TMsg = record
   // Stable control and viewport identity.
   public Id: string;
   // Rows in display order.
@@ -195,9 +195,9 @@ public type SelectionListView<TMsg> = record
   // Natural column count including the selection marker.
   public Width: int;
   // Handles a proposed row selection.
-  public OnSelect: function(string): Actions.Result<TMsg>;
+  public OnSelect: function(string): Actions.Result of TMsg;
   // Handles activation of the current row.
-  public OnActivate: function(string): Actions.Result<TMsg>;
+  public OnActivate: function(string): Actions.Result of TMsg;
   // Maximum intrinsic row count before list scrolling.
   public MaximumRows: int := int.MaxValue;
   // Content identity for resetting the viewport when an entire listing changes.
@@ -207,7 +207,7 @@ end record;
 // Terminal pagination with a model-owned page and dispatch binding.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type PagerView<TMsg> = record
+public type PagerView of TMsg = record
   // Stable pager identity.
   public Id: string;
   // Current zero-based page.
@@ -223,7 +223,7 @@ end record;
 // Terminal breadcrumb captions and their measured widths.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type BreadcrumbView<TMsg> = record
+public type BreadcrumbView of TMsg = record
   // Stable trail identity.
   public Id: string;
   // Single-line captions in path order.
@@ -243,30 +243,30 @@ end record;
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Element<TMsg> = variant
+public type Element of TMsg = variant
   // Paint literal text.
   Label(Value: string);
   // Appended messages with a focusable terminal scrollback.
   Log(Id: string; Entries: array of Logs.Entry; Timestamps: bool);
   // Model-controlled searchable commands over a base view.
   Palette(
-    Id: string; Base: Element<TMsg>; Open: bool; Commands: array of Palettes.Command<TMsg>;
+    Id: string; Base: Element of TMsg; Open: bool; Commands: array of Palettes.Command of TMsg;
     Change: function(bool): TMsg; UseShortcut: bool
   );
   // Plain text table with a pinned header.
-  Table(Value: TableView<TMsg>);
+  Table(Value: TableView of TMsg);
   // Scrollable rows with one focus stop and separate selection and activation.
-  SelectionList(Value: SelectionListView<TMsg>);
+  SelectionList(Value: SelectionListView of TMsg);
   // Horizontally scrollable strip of choices.
-  ChoiceStrip(Value: ChoiceStripView<TMsg>);
+  ChoiceStrip(Value: ChoiceStripView of TMsg);
   // Responsive page navigation.
-  Pager(Value: PagerView<TMsg>);
+  Pager(Value: PagerView of TMsg);
   // Responsive trail of ancestor links and a current location.
-  Breadcrumb(Value: BreadcrumbView<TMsg>);
+  Breadcrumb(Value: BreadcrumbView of TMsg);
   // Single editable row with its model-owned value.
-  TextField(Field: Edit.Field<TMsg>);
+  TextField(Field: Edit.Field of TMsg);
   // Multiline editor with model-owned text.
-  TextArea(Field: AreaEdit.Field<TMsg>);
+  TextArea(Field: AreaEdit.Field of TMsg);
   // Fill the allocated cell surface with an image and register its input mapper.
   CellGrid(Id: string; Content: Grids.Image?; Changed: function(Grids.Event): TMsg);
   // Animated cell glyph with resolved dimensions and colors.
@@ -276,32 +276,32 @@ public type Element<TMsg> = variant
   // Paint a determinate progress track and optional caption.
   Progress(Fraction: float; Caption: string; Percent: string; Width: int?; Fill: Color.Color);
   // Fit one status row to the viewport, with an optional divider above.
-  StatusBar(Row: Element<TMsg>; HideBorder: bool);
+  StatusBar(Row: Element of TMsg; HideBorder: bool);
   // Paint and route a direct action with semantic button styling.
-  Action(Id: string; Handler: Actions.IActivatable<TMsg>; Enabled: bool; View: ActionView);
+  Action(Id: string; Handler: Actions.IActivatable of TMsg; Enabled: bool; View: ActionView);
   // Arrange children using resolved cell spacing.
-  Stack(Children: array of Element<TMsg>; Horizontal: bool; Settings: Flow);
+  Stack(Children: array of Element of TMsg; Horizontal: bool; Settings: Flow);
   // Constrain a child using resolved cell sizing.
-  Sized(Child: Element<TMsg>; Settings: Flex);
+  Sized(Child: Element of TMsg; Settings: Flex);
   // Apply inherited, resolved terminal colors.
-  Decorated(Child: Element<TMsg>; Settings: T.Style);
+  Decorated(Child: Element of TMsg; Settings: T.Style);
   // An open card body that returns focus to its header when it closes.
-  DisclosureBody(Header: string; Child: Element<TMsg>; Enabled: bool);
+  DisclosureBody(Header: string; Child: Element of TMsg; Enabled: bool);
   // Surround a child with a cell border.
-  Framed(Child: Element<TMsg>; Title: string);
+  Framed(Child: Element of TMsg; Title: string);
   // Scroll content using host-owned offsets.
-  Scrollable(Id: string; Child: Element<TMsg>; ShowScrollbar: bool);
+  Scrollable(Id: string; Child: Element of TMsg; ShowScrollbar: bool);
   // Resolve model-owned scrolling and keep its original shared mapper.
   ControlledScroll(
-    Id: string; Child: Element<TMsg>; Position: ScrollPosition;
-    OnScroll: Sys.Func<L.ScrollChange, TMsg>; ShowScrollbar: bool
+    Id: string; Child: Element of TMsg; Position: ScrollPosition;
+    OnScroll: Sys.Func of (L.ScrollChange, TMsg); ShowScrollbar: bool
   );
   // Paint base content followed by layers and install base-scope shortcuts.
-  Desktop(Content: Element<TMsg>; Overlays: array of Element<TMsg>; Shortcuts: array of K.ShortcutBinding<TMsg>);
+  Desktop(Content: Element of TMsg; Overlays: array of Element of TMsg; Shortcuts: array of K.ShortcutBinding of TMsg);
   // Place a centered or docked modal with a pinned header and a scrolling body.
   ModalPanel(
-    Id: string; Settings: ModalOptions; Size: int; Content: Element<TMsg>;
-    Dismiss: Sys.Func<TMsg>; Colors: T.Style
+    Id: string; Settings: ModalOptions; Size: int; Content: Element of TMsg;
+    Dismiss: Sys.Func of TMsg; Colors: T.Style
   );
 end variant;
 

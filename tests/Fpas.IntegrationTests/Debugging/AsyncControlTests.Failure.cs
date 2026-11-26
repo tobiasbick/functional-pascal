@@ -13,17 +13,17 @@ public sealed partial class AsyncControlTests
             program AsyncFailure;
             uses System as Sys; uses System.Console as Console; uses System.Threading.Tasks as Tasks;
               uses System.IO.File as File; uses System.Threading.Thread as Thread;
-            async function Work(Gate: Tasks.Task<int>): Tasks.Task<int>;
+            async function Work(Gate: Tasks.Task of int): Tasks.Task of int;
             begin
               const Value: int := await Gate;
               return Value;
             end function;
             begin
-              const Gate: Tasks.TaskCompletionSource<int> := new Tasks.TaskCompletionSource<int>(Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
-              const Pending: Tasks.Task<int> := Work(Gate.Task);
+              const Gate: Tasks.TaskCompletionSource of int := new Tasks.TaskCompletionSource of int(Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
+              const Pending: Tasks.Task of int := Work(Gate.Task);
               if Pending.IsCompleted then raise new Sys.InvalidOperationException('Must suspend'); end if;
               Console.WriteLine('pending');
-              const Releaser: Tasks.Task<int> := Tasks.Task.Run<int>(function(): int
+              const Releaser: Tasks.Task of int := Tasks.Task.Run of int(function(): int
               begin
                 while not File.Exists('release.txt') do Thread.Sleep(10); end while;
                 Gate.SetException(new Sys.InvalidOperationException('stored failure'));

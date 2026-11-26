@@ -67,10 +67,10 @@ end record;
 // - `OnActivate`: Optional native click callback.
 // ## Returns
 // A graphical element.
-public function ScatterChart<TMsg>(Id: string; Series: array of Series; Settings: Options? := null; OnActivate: Sys.Func<PointIndex, TMsg>? := null): E.Element<TMsg>;
+public function ScatterChart of TMsg(Id: string; Series: array of Series; Settings: Options? := null; OnActivate: Sys.Func of (PointIndex, TMsg)? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.ScatterChart(Id, Series, Settings ?? new Options(), OnActivate);
+  return (E.Element of TMsg).ScatterChart(Id, Series, Settings ?? new Options(), OnActivate);
 end function;
 
 end unit;

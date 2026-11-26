@@ -15,7 +15,7 @@ public sealed class LspEditorTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
           private Secret: int;
         end record;
         /// Returns the selected value.
-        public function Echo<T>(Value: T): T;
+        public function Echo of T(Value: T): T;
         begin
           return Value;
         end function;
@@ -110,7 +110,7 @@ public sealed class LspEditorTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
         Error(await client.Request("completionItem/resolve", field), -32801);
         var signature = Result(await client.Request("textDocument/signatureHelp", new { textDocument = document, position = Position(incomplete, ";\nend function;", true) }));
         Assert.Equal(0, signature.GetProperty("activeParameter").GetInt32());
-        Assert.Contains("Echo<int>", signature.GetProperty("signatures")[0].GetProperty("label").GetString());
+        Assert.Contains("Echo of int", signature.GetProperty("signatures")[0].GetProperty("label").GetString());
         await client.Stop();
     }
 

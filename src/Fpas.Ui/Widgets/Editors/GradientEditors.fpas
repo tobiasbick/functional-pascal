@@ -47,10 +47,16 @@ end record;
 // - `Settings`: Native layout and behavior options.
 // ## Returns
 // A graphical element.
-public function GradientEditor<TMsg>(Id: string; Stops: array of Stop; Selected: int; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function GradientEditor of TMsg(Id: string; Stops: array of Stop; Selected: int; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.GradientEditor(Id, Stops, Selected, Changed, Settings ?? new Options());
+  return (E.Element of TMsg).GradientEditor(
+    Id,
+    Stops,
+    Selected,
+    Changed,
+    Settings ?? new Options()
+  );
 end function;
 
 end unit;

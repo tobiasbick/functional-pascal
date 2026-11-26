@@ -43,7 +43,7 @@ public sealed class VariantExecutionTests
           Console.WriteLine(Outcome.Idle = Outcome.Idle);
           Console.WriteLine(First.Equals(cast<object>(Equal)));
           Console.WriteLine(First.GetHashCode() = Equal.GetHashCode());
-          const Seen: Collections.HashSet<Outcome> := new Collections.HashSet<Outcome>();
+          const Seen: Collections.HashSet of Outcome := new Collections.HashSet of Outcome();
           discard Seen.Add(First); discard Seen.Add(Equal); discard Seen.Add(Outcome.Idle);
           Console.WriteLine(Seen.Count); Console.WriteLine(First.Tag);
           const Missing: Outcome? := null;

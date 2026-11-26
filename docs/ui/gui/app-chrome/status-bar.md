@@ -20,14 +20,14 @@ uses Fpas.Ui.Widgets.Desktop.StatusBars as W;
 // - `Encoding`: Name of the current document encoding.
 // ## Returns
 // A status bar that reports activation of the encoding item.
-public function View(Progress: float; Encoding: string): E.Element<string>;
+public function View(Progress: float; Encoding: string): E.Element of string;
 requires Progress >= 0.0F and Progress <= 1.0F;
 begin
-  return W.StatusBar<string>('editor-status', [
-    W.Item<string>.Text(new W.Label('Saved')),
-    W.Item<string>.Progress(Progress, 'Indexing', 0.0F, false),
-    W.Item<string>.Spacer,
-    W.Item<string>.Action('encoding', new W.Label(Encoding), 'Change encoding', true, 'encoding')
+  return W.StatusBar of string('editor-status', [
+    (W.Item of string).Text(new W.Label('Saved')),
+    (W.Item of string).Progress(Progress, 'Indexing', 0.0F, false),
+    (W.Item of string).Spacer,
+    (W.Item of string).Action('encoding', new W.Label(Encoding), 'Change encoding', true, 'encoding')
   ]);
 end function;
 

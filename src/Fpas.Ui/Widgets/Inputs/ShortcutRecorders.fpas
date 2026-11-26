@@ -190,10 +190,10 @@ end record;
 // - `Settings`: Optional placeholder, width and input settings.
 // ## Returns
 // A graphical native shortcut recorder.
-public function ShortcutRecorder<TMsg>(Id: string; Value: Combination; OnChange: function(Combination): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function ShortcutRecorder of TMsg(Id: string; Value: Combination; OnChange: function(Combination): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.ShortcutRecorder(Id, Value, OnChange, Settings ?? new Options());
+  return (E.Element of TMsg).ShortcutRecorder(Id, Value, OnChange, Settings ?? new Options());
 end function;
 
 // Displays a shortcut using CUI's platform formatter and native keycaps.
@@ -203,9 +203,9 @@ end function;
 // - `Value`: Key and modifiers to display.
 // ## Returns
 // A graphical passive native shortcut label.
-public function Label<TMsg>(Value: Combination): E.Element<TMsg>;
+public function Label of TMsg(Value: Combination): E.Element of TMsg;
 begin
-  return E.Element<TMsg>.ShortcutLabel(Value);
+  return (E.Element of TMsg).ShortcutLabel(Value);
 end function;
 
 // Identifies the native clear action for inspection and focus.

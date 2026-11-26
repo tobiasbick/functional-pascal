@@ -64,30 +64,30 @@ const Prompts: array of Suggestions.Item := [
   new Suggestions.Item('Debug an error', 'Paste the stack trace', Icon($E20C))
 ];
 
-function Conversation(Model: S.Model; Colors: Theme.Palette): E.Element<S.Msg>;
+function Conversation(Model: S.Model; Colors: Theme.Palette): E.Element of S.Msg;
 begin
   const Busy: bool := Model.Editor.Busy;
   const Elapsed: float := Model.Elapsed;
-  const Views: Generic.List<E.Element<S.Msg>> := new Generic.List<E.Element<S.Msg>>(
+  const Views: Generic.List of E.Element of S.Msg := new Generic.List of E.Element of S.Msg(
     [
-      G.Heading<S.Msg>(
+      G.Heading of S.Msg(
         Strings.Get('Heading.Conversation'),
         Strings.Get('Heading.ConversationHint')
       ),
-      Chat.ChatMessage<S.Msg>(
+      Chat.ChatMessage of S.Msg(
         'ai-question',
         'Why do immediate mode toolkits feel so fast? Cite a few sources.',
         new Chat.Options(Mine := true)
       ),
-      Reason.Reasoning<S.Msg>(
+      Reason.Reasoning of S.Msg(
         'ai-reasoning', [
-          E.FormattedText<S.Msg>(
+          E.FormattedText of S.Msg(
             'The question is about perceived speed. Two parts: how little work a frame does, and how quickly input shows up on screen.',
             Motion.Font.Body,
             13.5F,
             Colors.TextSecondary
           ),
-          E.FormattedText<S.Msg>(
+          E.FormattedText of S.Msg(
             'Look for sources on retained versus immediate mode, text rendering cost and motion.',
             Motion.Font.Body,
             13.5F,
@@ -101,7 +101,7 @@ begin
           end if
         )
       ),
-      Tools.ToolCall<S.Msg>(
+      Tools.ToolCall of S.Msg(
         'ai-search', 'web_search', new Tools.Options(
           Status := Task.Status.Done,
           Icon := Icon($E0E8),
@@ -111,7 +111,7 @@ begin
           Output := '{"results": [{"title": "Immediate mode GUIs", "url": "https://fieldnotes.dev/immediate-mode"}], "took_ms": 1380}'
         )
       ),
-      Tools.ToolCall<S.Msg>(
+      Tools.ToolCall of S.Msg(
         'ai-read', 'read_file', new Tools.Options(
           Icon := Icon($E0CC), Detail := 'quarterly-report.pdf',
           Status := if Busy then
@@ -130,7 +130,7 @@ begin
   );
   if Busy then
     Views.Add(
-      Status.AgentStatus<S.Msg>(
+      Status.AgentStatus of S.Msg(
         'ai-status', 'Reading quarterly-report.pdf',
         new Status.Options(Status := Task.Status.Running, Seconds := Elapsed)
       )
@@ -138,31 +138,31 @@ begin
   end if;
 
   Views.Add(
-    Typing.Typewriter<S.Msg>(
+    Typing.Typewriter of S.Msg(
       'ai-answer',
       'They do very little work per frame: the interface is rebuilt from your data, laid out once and drawn in a handful of batches, so there is no tree of objects to keep in sync. Text is the expensive part, which is why glyphs are cached in an atlas, and motion feels quick when it is driven by springs instead of fixed curves.',
       Settings := new Motion.TextOptions(Size := 15.0F)
     )
   );
   Views.Add(
-    E.Row<S.Msg>(
+    E.Row of S.Msg(
       new L.Flow(Gap := G.Points(6), Align := L.Alignment.Center, Clip := false),
-      E.FormattedText<S.Msg>('Sources', Motion.Font.Body, 12.0F, Colors.TextMuted),
-      Citations.Citation<S.Msg>('ai-cite-1', 1, Documents[0], null),
-      Citations.Citation<S.Msg>('ai-cite-2', 2, Documents[1], null),
-      Citations.Citation<S.Msg>('ai-cite-3', 3, Documents[2], null)
+      E.FormattedText of S.Msg('Sources', Motion.Font.Body, 12.0F, Colors.TextMuted),
+      Citations.Citation of S.Msg('ai-cite-1', 1, Documents[0], null),
+      Citations.Citation of S.Msg('ai-cite-2', 2, Documents[1], null),
+      Citations.Citation of S.Msg('ai-cite-3', 3, Documents[2], null)
     )
   );
-  Views.Add(Lists.SourceList<S.Msg>('ai-sources', Documents, null));
+  Views.Add(Lists.SourceList of S.Msg('ai-sources', Documents, null));
   Views.Add(
-    E.Row<S.Msg>(
+    E.Row of S.Msg(
       new L.Flow(Gap := G.Points(8), Align := L.Alignment.Center, Clip := false),
-      Response.ResponseActions<S.Msg>(
+      Response.ResponseActions of S.Msg(
         'ai-response', Model.Vote, S.Msg.Response,
         new Response.Options(CopyText := 'They do very little work per frame.')
       ),
-      E.Spacer<S.Msg>(),
-      Context.ContextMeter<S.Msg>(
+      E.Spacer of S.Msg(),
+      Context.ContextMeter of S.Msg(
         'ai-context', 113400.0F, 200000.0F, [
           new Context.Part('System', 3200.0F),
           new Context.Part('Files', 41800.0F),
@@ -172,23 +172,23 @@ begin
     )
   );
   Views.Add(
-    Editor.Composer<S.Msg>(
+    Editor.Composer of S.Msg(
       'ai-composer', Model.Editor with
         Models := Models;
       end with,
       S.Msg.Editor, new Editor.Options(Placeholder := 'Ask a follow up')
     )
   );
-  return E.Column<S.Msg>(new L.Flow(Gap := G.Points(14), Clip := false), Views.ToArray());
+  return E.Column of S.Msg(new L.Flow(Gap := G.Points(14), Clip := false), Views.ToArray());
 end function;
 
-function Agent(Model: S.Model): E.Element<S.Msg>;
+function Agent(Model: S.Model): E.Element of S.Msg;
 begin
   const Busy: bool := Model.Editor.Busy;
-  return E.Column<S.Msg>(
+  return E.Column of S.Msg(
     new L.Flow(Gap := G.Points(14), Clip := false),
-    G.Heading<S.Msg>(Strings.Get('Heading.AgentPlan'), Strings.Get('Heading.AgentPlanHint')),
-    Plan.AgentPlan<S.Msg>(
+    G.Heading of S.Msg(Strings.Get('Heading.AgentPlan'), Strings.Get('Heading.AgentPlanHint')),
+    Plan.AgentPlan of S.Msg(
       'ai-plan', [
         new Plan.Step('Search for sources', '3 results', Task.Status.Done),
         new Plan.Step(
@@ -220,8 +220,8 @@ begin
         new Plan.Step('Check the citations')
       ], null, new Plan.Options(Title := 'Research plan')
     ),
-    G.Heading<S.Msg>(Strings.Get('Heading.Suggestions'), Strings.Get('Heading.SuggestionsHint')),
-    Suggestions.PromptSuggestions<S.Msg>(
+    G.Heading of S.Msg(Strings.Get('Heading.Suggestions'), Strings.Get('Heading.SuggestionsHint')),
+    Suggestions.PromptSuggestions of S.Msg(
       'ai-suggestions',
       Prompts,
       function(Index: int): S.Msg => S.Msg.Suggestion(Prompts[Index].Title),
@@ -236,16 +236,16 @@ end function;
 // - `Colors`: Active native palette.
 // ## Returns
 // The visible gallery sections.
-public function View(Model: S.Model; Colors: Theme.Palette): array of E.Element<S.Msg>;
+public function View(Model: S.Model; Colors: Theme.Palette): array of E.Element of S.Msg;
 begin
   return [
-    E.Row<S.Msg>(
+    E.Row of S.Msg(
       new L.Flow(Gap := G.Points(28), Align := L.Alignment.Start, Clip := false),
-      E.Size<S.Msg>(Conversation(Model, Colors), new L.Flex(Grow := 1.6F)),
-      E.Size<S.Msg>(Agent(Model), new L.Flex(Grow := 1.0F))
+      E.Size of S.Msg(Conversation(Model, Colors), new L.Flex(Grow := 1.6F)),
+      E.Size of S.Msg(Agent(Model), new L.Flex(Grow := 1.0F))
     ),
-    G.Heading<S.Msg>(Strings.Get('Heading.ModelPicker'), Strings.Get('Heading.ModelPickerHint')),
-    Picker.ModelPicker<S.Msg>('ai-model', Models, Model.Editor.Selected, S.Msg.ModelChoice)
+    G.Heading of S.Msg(Strings.Get('Heading.ModelPicker'), Strings.Get('Heading.ModelPickerHint')),
+    Picker.ModelPicker of S.Msg('ai-model', Models, Model.Editor.Selected, S.Msg.ModelChoice)
   ];
 end function;
 

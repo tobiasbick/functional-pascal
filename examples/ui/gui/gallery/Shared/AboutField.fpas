@@ -18,9 +18,9 @@ public const Initial: string := 'Mathematician and writer. I like engines that c
 // - `Change`: Maps an edit to an application message.
 // ## Returns
 // The multiline field and its hint.
-public function View<TMsg>(About: string; Change: function(string): TMsg): E.Element<TMsg>;
+public function View of TMsg(About: string; Change: function(string): TMsg): E.Element of TMsg;
 begin
-  return Area.TextArea<TMsg>(
+  return Area.TextArea of TMsg(
     'input-about', About, Change,
     new Area.Options(
       Label := Strings.Get('Text.About'),

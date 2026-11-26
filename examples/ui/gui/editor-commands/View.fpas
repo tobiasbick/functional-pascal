@@ -20,7 +20,7 @@ uses System as Sys;
 // - `Viewport`: Current logical viewport.
 // ## Returns
 // The native CUI view and optional guided tour.
-public function Build(Model: S.Model; Viewport: L.Viewport): E.Element<S.Msg>;
+public function Build(Model: S.Model; Viewport: L.Viewport): E.Element of S.Msg;
 begin
   const Emoji: int := Model.Text.IndexOf('😀', Sys.StringComparison.Ordinal);
   const Marks: array of Editor.Mark := if Emoji < 0 then
@@ -28,46 +28,50 @@ begin
   else
     [new Editor.Mark(Emoji, Emoji + 2)]
   end if;
-  const Base: E.Element<S.Msg> := E.Column<S.Msg>(
+  const Base: E.Element of S.Msg := E.Column of S.Msg(
     new L.Flow(Padding := L.Spacing.Normal, Gap := L.Spacing.Normal),
-    E.Row<S.Msg>(
+    E.Row of S.Msg(
       new L.Flow(Gap := L.Spacing.Normal),
-      Users.UserMenu<S.Msg>(
+      Users.UserMenu of S.Msg(
         'account', 'Example account',
-        [Menus.Entry<S.Msg>.Action(new Menus.Item<S.Msg>('profile', 'Profile', S.Msg.Account))],
+        [
+          (Menus.Entry of S.Msg).Action(
+            new Menus.Item of S.Msg('profile', 'Profile', S.Msg.Account)
+          )
+        ],
         new Users.Options(
           Detail := 'Native avatar and account menu',
           AvatarPath := Model.AvatarPath
         )
       ),
-      Buttons.Button<S.Msg>('tour', 'Take the tour (F1)', S.Msg.StartTour)
+      Buttons.Button of S.Msg('tour', 'Take the tour (F1)', S.Msg.StartTour)
     ),
-    E.Row<S.Msg>(
+    E.Row of S.Msg(
       new L.Flow(Gap := L.Spacing.Normal),
-      Buttons.Button<S.Msg>('find', 'Find emoji', S.Msg.Search),
-      Buttons.Button<S.Msg>('goto', 'Go to line 2', S.Msg.GoTo),
-      Buttons.Button<S.Msg>('select', 'Select all', S.Msg.SelectAll)
+      Buttons.Button of S.Msg('find', 'Find emoji', S.Msg.Search),
+      Buttons.Button of S.Msg('goto', 'Go to line 2', S.Msg.GoTo),
+      Buttons.Button of S.Msg('select', 'Select all', S.Msg.SelectAll)
     ),
-    Bulk.SelectionBar<S.Msg>(
+    Bulk.SelectionBar of S.Msg(
       'bulk', Bulk.Selection.Count(Model.Count), [new Bulk.Action('', 'Clear')], S.Msg.Bulk,
-      Editor.CodeEditor<S.Msg>(
+      Editor.CodeEditor of S.Msg(
         'editor', Model.Text, S.Msg.Edited,
         new Editor.Options(Height := 280.0F, Marks := Marks)
       ),
       new Bulk.Options(CountFormat := '%d chosen')
     ),
-    E.Size<S.Msg>(
-      E.Text<S.Msg>(''),
+    E.Size of S.Msg(
+      E.Text of S.Msg(''),
       new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(56)))
     ),
-    E.Text<S.Msg>(
+    E.Text of S.Msg(
       'UTF-16 caret ' + Model.Editor.Cursor.ToString() + ', anchor ' +
       Model.Editor.Anchor.ToString() +
       ', find matches ' + Model.Editor.Matches.ToString()
     ),
-    E.Text<S.Msg>(Model.Notice)
+    E.Text of S.Msg(Model.Notice)
   );
-  return Tours.Tour<S.Msg>(
+  return Tours.Tour of S.Msg(
     'guide', Base,
     [
       new Tours.Step(

@@ -15,7 +15,7 @@ uses System.Collections.Generic as Lists;
 function Snapshot(Value: CuiFiles.CuiSignature): S.Signature;
 begin
   const Coordinates: array of float := Value.Coordinates;
-  const Points: Lists.List<S.Point> := new Lists.List<S.Point>(Coordinates.Length div 2);
+  const Points: Lists.List of S.Point := new Lists.List of S.Point(Coordinates.Length div 2);
   for Index: int := 0 to Coordinates.Length div 2 - 1 do
     Points.Add(new S.Point(Coordinates[Index * 2], Coordinates[Index * 2 + 1]));
   end for;
@@ -31,8 +31,8 @@ end function;
 // - `Id`: Stable pad identity.
 // - `OnChange`: Optional mapper for points and stroke boundaries.
 // - `Settings`: Native display and input settings.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; OnChange: Sys.Func<S.Signature, TMsg>?; Settings: S.Options
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; OnChange: Sys.Func of (S.Signature, TMsg)?; Settings: S.Options
 );
 begin
   const Enabled: bool := Settings.Enabled and Frame.AcceptInput;
@@ -52,11 +52,11 @@ begin
   var ClearVisible: bool := false;
   const Value: CuiFiles.CuiSignature? := Frame.Window.SignaturePad(
     C.Token(Role, Id), Settings.Placeholder, Settings.Height, Rgba, Enabled,
-    C.WantsFocus<TMsg>(Frame, ClearId, ClearToken, Enabled),
+    C.WantsFocus of TMsg(Frame, ClearId, ClearToken, Enabled),
     not Frame.PaintingClosed, OnChange <> null, ClearToken, out ClearVisible
   );
   case OnChange of
-    when is Sys.Func<S.Signature, TMsg> as Notify:
+    when is Sys.Func of (S.Signature, TMsg) as Notify:
       case Value of
         when is CuiFiles.CuiSignature as Changed:
           Frame.Messages.Add(Notify.Invoke(Snapshot(Changed)));

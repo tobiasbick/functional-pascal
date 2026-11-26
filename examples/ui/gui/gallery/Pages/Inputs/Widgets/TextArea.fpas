@@ -12,9 +12,9 @@ uses GuiGallery.Pages.Inputs.State as State;
 // - `Model`: Current profile description.
 // ## Returns
 // The shared About field with the page's update callback.
-public function View(Model: State.Model): E.Element<State.Msg>;
+public function View(Model: State.Model): E.Element of State.Msg;
 begin
-  return About.View<State.Msg>(Model.About, State.Msg.SetAbout);
+  return About.View of State.Msg(Model.About, State.Msg.SetAbout);
 end function;
 
 end unit;

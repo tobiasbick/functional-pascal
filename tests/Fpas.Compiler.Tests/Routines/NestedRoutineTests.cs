@@ -16,11 +16,11 @@ public sealed class NestedRoutineTests
     {
         const string text = """
             unit Factory;
-            public function Build<T>(Value: T): function(): T;
+            public function Build of T(Value: T): function(): T;
               // Read the captured value.
-              function Read<U>(Other: U): T; where U: struct;
+              function Read of U(Other: U): T; where U: struct;
               begin discard Other; return Value; end function;
-              function Get(): T; begin return Read<int>(1); end function;
+              function Get(): T; begin return Read of int(1); end function;
             begin
               return Get;
             end function;
@@ -60,7 +60,7 @@ public sealed class NestedRoutineTests
     [InlineData("function F(): int; requires G() > 0; begin return 1; end function; function G(): int; begin return 1; end function;", "FP3027")]
     [InlineData("begin function F(): int; begin return 1; end function; end; discard F();", "FP3001")]
     [InlineData("const Read: function(): int := F; const Value: int := 1; function F(): int; begin return Value; end function;", "FP3033")]
-    [InlineData("function F<T>(Value: T): T; where T: struct; begin return Value; end function; discard F<string>('bad');", "FP3018")]
+    [InlineData("function F of T(Value: T): T; where T: struct; begin return Value; end function; discard F of string('bad');", "FP3018")]
     public void Invalid_local_declarations_captures_and_flow_are_diagnosed(string body, string code)
     {
         var result = TestCompilation.Compile("program Example; begin " + body + " end; end program;");

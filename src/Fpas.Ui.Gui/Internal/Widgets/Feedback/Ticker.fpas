@@ -15,7 +15,7 @@ uses Fpas.Ui.Widgets.Feedback.Tickers as W;
 // - `Id`: Stable widget identity.
 // - `Items`: Ordered ticker entries.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Items: array of W.Item; Settings: W.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Items: array of W.Item; Settings: W.Options);
 begin
   const Role: string := 'ticker';
   const Token: string := C.Token(Role, Id);
@@ -31,7 +31,7 @@ begin
   end for;
 
   Frame.Window.Ticker(Token, Data, Settings.Speed, Settings.Height);
-  P.Root<TMsg>(Frame, Id, Role, '', false, '');
+  P.Root of TMsg(Frame, Id, Role, '', false, '');
 end procedure;
 
 end unit;

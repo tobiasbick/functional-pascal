@@ -49,7 +49,7 @@ end procedure;
 // - `At`: Diagnostic location.
 public procedure Owner(Value: V.Owner; At: string);
 begin
-  if not Sys.Enum.IsDefined<V.Owner>(Value) then
+  if not Sys.Enum.IsDefined of V.Owner(Value) then
     R.Reject(At, 'Unknown voice owner.');
   end if;
 end procedure;
@@ -60,7 +60,7 @@ end procedure;
 // - `At`: Diagnostic location.
 public procedure Activity(Value: V.Activity; At: string);
 begin
-  if not Sys.Enum.IsDefined<V.Activity>(Value) then
+  if not Sys.Enum.IsDefined of V.Activity(Value) then
     R.Reject(At, 'Unknown voice activity.');
   end if;
 end procedure;

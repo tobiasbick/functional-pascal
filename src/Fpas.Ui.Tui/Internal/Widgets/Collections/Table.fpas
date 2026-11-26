@@ -18,7 +18,7 @@ uses Fpas.Ui.Widgets.Developer.Terminal as Terminal;
 uses System as Sys;
 uses System.Collections.Generic as C;
 
-function Caption<TMsg>(Cell: T.Cell<TMsg>): string;
+function Caption of TMsg(Cell: T.Cell of TMsg): string;
 begin
   case Cell of
     when T.Cell.Text(const Value: string):
@@ -51,7 +51,7 @@ end function;
 // - `Order`: Current sort indicator.
 // ## Returns
 // One preferred width in terminal cells per column.
-public function MeasureColumns<TMsg>(Columns: array of T.Column; Rows: array of T.Row<TMsg>; Order: T.Sort?): array of int;
+public function MeasureColumns of TMsg(Columns: array of T.Column; Rows: array of T.Row of TMsg; Order: T.Sort?): array of int;
 begin
   const Preferred: array of int := new int[Columns.Length];
   for Index: int := 0 to Columns.Length - 1 do
@@ -60,10 +60,10 @@ begin
         Preferred[Index] := F.Cells(Distance);
       else
         Preferred[Index] := Glyphs.Measure(Heading(Columns[Index], Order, Index));
-        for Row: T.Row<TMsg> in Rows do
+        for Row: T.Row of TMsg in Rows do
           Preferred[Index] := Sys.Math.Max(
             Preferred[Index],
-            Glyphs.Measure(Caption<TMsg>(Row.Cells[Index]))
+            Glyphs.Measure(Caption of TMsg(Row.Cells[Index]))
           );
         end for;
     end case;
@@ -72,10 +72,10 @@ begin
   return Preferred;
 end function;
 
-function Widths<TMsg>(Value: E.TableView<TMsg>; Width: int): array of int;
+function Widths of TMsg(Value: E.TableView of TMsg; Width: int): array of int;
 begin
   const Count: int := Value.Columns.Length;
-  const Rules: C.List<E.Flex> := new C.List<E.Flex>(Count);
+  const Rules: C.List of E.Flex := new C.List of E.Flex(Count);
   for Index: int := 0 to Count - 1 do
     const Column: T.Column := Value.Columns[Index];
     case Column.Width of
@@ -109,11 +109,11 @@ end function;
 // - `Stops`: Keyboard destinations, including scrolled-out rows.
 // - `Operations`: Cell paint operations.
 // - `Register`: Registers a visible input target.
-public procedure Arrange<TMsg>(
-  Value: E.TableView<TMsg>; Area: F.Rect; Clip: F.Rect; Style: Terminal.Style; Theme: Th.Theme;
-  Scope: string; FocusReturn: string; Offsets: C.Dictionary<string, int>;
-  Regions: C.List<Scene.ScrollRegion>; Stops: C.List<Scene.NavigationStop>; Operations: C.List<D.Operation>;
-  Register: procedure(Scene.Control<TMsg>)
+public procedure Arrange of TMsg(
+  Value: E.TableView of TMsg; Area: F.Rect; Clip: F.Rect; Style: Terminal.Style; Theme: Th.Theme;
+  Scope: string; FocusReturn: string; Offsets: C.Dictionary of (string, int);
+  Regions: C.List of Scene.ScrollRegion; Stops: C.List of Scene.NavigationStop; Operations: C.List of D.Operation;
+  Register: procedure(Scene.Control of TMsg)
 );
   procedure PaintCell(Text: string; Alignment: T.Alignment; Box: F.Rect; Limit: F.Rect; Colors: Terminal.Style);
   begin
@@ -141,7 +141,7 @@ begin
   const Body: F.Rect := new F.Rect(Area.X, Area.Y + 1, Area.Width, Area.Height - 1);
   var Offset: int := 0;
   discard Offsets.TryGetValue(Value.Id, out Offset);
-  const View: Scroll.Viewport<TMsg> := Scroll.Resolve<TMsg>(
+  const View: Scroll.Viewport of TMsg := Scroll.Resolve of TMsg(
     E.ScrollPosition.Offset(Offset),
     Value.Rows.Length,
     Body,
@@ -185,14 +185,14 @@ begin
   const Sizes: array of int := if Maximum > 0 then
     Value.Preferred
   else
-    Widths<TMsg>(Value, Width)
+    Widths of TMsg(Value, Width)
   end if;
   const TableClip: F.Rect := F.Intersect(new F.Rect(Area.X, Area.Y, Width, Area.Height), Clip);
   if Pan <> null and (Value.OnSelect = null or Limit.Height = 0 or Value.Rows.Length = 0) then
     Register(
-      new Scene.Control<TMsg>(
+      new Scene.Control of TMsg(
         Value.Id, Value.Id, 'table', '', TableClip, Scope, FocusReturn, Value.Settings.Enabled,
-        Scene.Binding<TMsg>.Scroll(View), S.ButtonVariant.Default, Pan := Pan
+        (Scene.Binding of TMsg).Scroll(View), S.ButtonVariant.Default, Pan := Pan
       )
     );
   end if;
@@ -203,7 +203,7 @@ begin
     PaintCell(Heading(Col, Value.Order, Index), Col.Align, Header, TableClip, Style);
     const Bounds: F.Rect := F.Intersect(Header, TableClip);
     case Value.OnSort of
-      when is Sys.Func<T.Sort, TMsg> as Notify:
+      when is Sys.Func of (T.Sort, TMsg) as Notify:
         if Col.Sortable and Bounds.Width > 0 and Bounds.Height > 0 then
           const Order: T.Sort? := Value.Order;
           const Next: T.Sort := new T.Sort(
@@ -211,7 +211,7 @@ begin
             Order <> null and Order.Column = Index and not Order.Descending
           );
           Register(
-            new Scene.Control<TMsg>(
+            new Scene.Control of TMsg(
               T.HeaderId(Value.Id, Index),
               Col.Title,
               'table-header',
@@ -220,8 +220,8 @@ begin
               Scope,
               FocusReturn,
               Value.Settings.Enabled,
-              Scene.Binding<TMsg>.Invoke(
-                new Actions.Proposal<T.Sort, TMsg>(Notify, Next)
+              (Scene.Binding of TMsg).Invoke(
+                new Actions.Proposal of (T.Sort, TMsg)(Notify, Next)
               ),
               S.ButtonVariant.Ghost
             )
@@ -238,7 +238,7 @@ begin
     Th.Rgb(Theme.Colors.SurfaceMuted, Style.Background ?? 0)
   );
   for Index: int := 0 to Value.Rows.Length - 1 do
-    const Row: T.Row<TMsg> := Value.Rows[Index];
+    const Row: T.Row of TMsg := Value.Rows[Index];
     const Box: F.Rect := new F.Rect(Area.X, Body.Y + Index - View.Offset, Width, 1);
     if Value.OnSelect <> null and Value.Settings.Enabled and Limit.Height > 0 then
       Stops.Add(new Scene.NavigationStop(Row.Id, Box, Value.Id, Value.Id));
@@ -260,7 +260,7 @@ begin
     X := Area.X - Left;
     for Column: int := 0 to Sizes.Length - 1 do
       PaintCell(
-        Caption<TMsg>(Row.Cells[Column]),
+        Caption of TMsg(Row.Cells[Column]),
         Value.Columns[Column].Align,
         new F.Rect(X, Box.Y, Sizes[Column], 1),
         Bounds,
@@ -270,19 +270,19 @@ begin
     end for;
 
     case Value.OnSelect of
-      when is Sys.Func<string, TMsg> as Notify:
+      when is Sys.Func of (string, TMsg) as Notify:
         Register(
-          new Scene.Control<TMsg>(
+          new Scene.Control of TMsg(
             Row.Id,
-            Caption<TMsg>(Row.Cells[0]),
+            Caption of TMsg(Row.Cells[0]),
             'table-row',
             Row.Selected.ToString(),
             Bounds,
             Scope,
             FocusReturn,
             Value.Settings.Enabled,
-            Scene.Binding<TMsg>.Invoke(
-              new Actions.Proposal<string, TMsg>(Notify, Row.Id)
+            (Scene.Binding of TMsg).Invoke(
+              new Actions.Proposal of (string, TMsg)(Notify, Row.Id)
             ),
             S.ButtonVariant.Ghost,
             Pan := Pan
@@ -302,7 +302,7 @@ begin
     Operations.Add(new D.Operation('›', Marker, TableClip, Theme.Buttons.Active.Normal, false));
   end if;
 
-  Scroll.DrawBar<TMsg>(View, Operations, Body, Limit, Style, Theme.Widgets);
+  Scroll.DrawBar of TMsg(View, Operations, Body, Limit, Style, Theme.Widgets);
 end procedure;
 
 end unit;

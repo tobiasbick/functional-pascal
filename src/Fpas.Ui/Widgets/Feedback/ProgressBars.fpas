@@ -33,11 +33,11 @@ end record;
 // - `Settings`: Native caption, track, width and activity options.
 // ## Returns
 // A display-only progress bar. Indeterminate, dither and custom height require the GUI.
-public function ProgressBar<TMsg>(Id: string; Value: float; Settings: Options? := null): E.Element<TMsg>;
+public function ProgressBar of TMsg(Id: string; Value: float; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 requires Value >= 0.0F and Value <= 1.0F;
 begin
-  return E.Element<TMsg>.ProgressBar(Id, Value, Settings ?? new Options());
+  return (E.Element of TMsg).ProgressBar(Id, Value, Settings ?? new Options());
 end function;
 
 end unit;

@@ -12,7 +12,7 @@ uses System.Collections.Generic as Lists;
 
 function PackDiagnostic(Items: array of D.Diagnostic): array of CuiDeveloper.CuiDevDiagnostic;
 begin
-  const Native: Lists.List<CuiDeveloper.CuiDevDiagnostic> := new Lists.List<CuiDeveloper.CuiDevDiagnostic>(
+  const Native: Lists.List of CuiDeveloper.CuiDevDiagnostic := new Lists.List of CuiDeveloper.CuiDevDiagnostic(
     Items.Length
   );
   for Entry: D.Diagnostic in Items do
@@ -41,7 +41,7 @@ end function;
 // - `Diagnostics`: Diagnostics supplied to the widget.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Diagnostics: array of D.Diagnostic; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Diagnostics: array of D.Diagnostic; Changed: function(D.Event): TMsg; Settings: D.Options);
 begin
   const Role: string := 'problems';
   const Token: string := C.Token(Role, Id);
@@ -56,7 +56,7 @@ begin
     Width.Value,
     Enabled
   );
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, Result.Count.ToString());
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, Result.Count.ToString());
   if Enabled and (Result.Action >= 0) then
     Frame.Messages.Add(Changed(new D.Event(Result.Index, Result.Action, Result.Count)));
   end if;

@@ -25,15 +25,15 @@ uses System.Threading.Channels as Channels;
 // - `Renderer`: Native renderer to exercise.
 // - `Capture`: Prefix for the Actions captures.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
-  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  function Update(Model: State.Model; Message: State.Msg): App.Transition of (State.Model, State.Msg);
   begin
-    const Next: App.Transition<State.Model, State.Msg> := GalleryUpdate.Update(Model, Message);
+    const Next: App.Transition of (State.Model, State.Msg) := GalleryUpdate.Update(Model, Message);
     case Message of
       when State.Msg.Preview:
         if Target <> '' then
-          return new App.Transition<State.Model, State.Msg>(
+          return new App.Transition of (State.Model, State.Msg)(
             Next.Model,
-            [App.Focus<State.Msg>(Target)]
+            [App.Focus of State.Msg(Target)]
           );
         end if;
       when State.Msg.Actions(SliceActions.Msg.ConfirmDelete):
@@ -43,7 +43,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       else
     end case;
 
-    return Effects.Wrap<State.Model>(Next);
+    return Effects.Wrap of State.Model(Next);
   end function;
 
   procedure Inject();
@@ -57,7 +57,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     end if;
   end procedure;
 
-  procedure Focus(Session: Gui.Session<State.Msg>; Id: string; Key: string := '');
+  procedure Focus(Session: Gui.Session of State.Msg; Id: string; Key: string := '');
   begin
     Target := if Key = '' then
       Id
@@ -72,7 +72,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     );
   end procedure;
 
-  procedure Key(Session: Gui.Session<State.Msg>; Value: int);
+  procedure Key(Session: Gui.Session of State.Msg; Value: int);
   begin
     PendingKey := Value;
     A.Check(Session.Step(), 'The split gallery closed during input.');
@@ -83,7 +83,7 @@ begin
   var PendingKey: int := 0;
   var Confirmations: int := 0;
   var SaveRequests: int := 0;
-  const Effects: Replies.Effects<State.Msg> := Replies.Effects<State.Msg>.Create();
+  const Effects: Replies.Effects of State.Msg := (Replies.Effects of State.Msg).Create();
   const SaveEffect: string := 'actions/save';
   const Timeout: Sys.TimeSpan := Sys.TimeSpan.FromSeconds(5.0);
   const Window: Cui.CuiWindow := new Cui.CuiWindow(
@@ -94,7 +94,7 @@ begin
     true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Actions), Update, View.Build, Window, 256, Inject,
     ThemeFor := GalleryUpdate.ThemeFor
   );
@@ -193,14 +193,14 @@ begin
   );
   Focus(Session, 'status-save');
   A.Check(A.Control(Session, 'status-save').Value = 'idle', 'The status preview must begin idle.');
-  const Save: Channels.ChannelReader<Replies.Reply<State.Msg>> := Effects.Watch(SaveEffect);
+  const Save: Channels.ChannelReader of Replies.Reply of State.Msg := Effects.Watch(SaveEffect);
   Key(Session, 2);
   A.Check(
     A.Control(Session, 'status-save').Value = 'busy' and SaveRequests = 1,
     'An idle activation must start one model-owned save.'
   );
   A.Check(A.Control(Session, 'status-save').Focused, 'Busy feedback must retain focus.');
-  const Completed: Replies.Reply<State.Msg> := Save.ReadAsync().AsTask().WaitAsync(
+  const Completed: Replies.Reply of State.Msg := Save.ReadAsync().AsTask().WaitAsync(
     Timeout
   ).GetAwaiter().GetResult();
   Key(Session, 2);
@@ -210,7 +210,7 @@ begin
     'While completion is held, the button must remain busy and reject activation.'
   );
 
-  const Reset: Channels.ChannelReader<Replies.Reply<State.Msg>> := Effects.Watch(SaveEffect);
+  const Reset: Channels.ChannelReader of Replies.Reply of State.Msg := Effects.Watch(SaveEffect);
   Completed.Release().WaitAsync(Timeout).GetAwaiter().GetResult();
   A.Check(Session.Step(), 'The gallery closed while presenting the save result.');
   A.Check(
@@ -219,7 +219,7 @@ begin
     'Releasing completion must show the Saved caption.'
   );
   Session.CapturePng(Capture + '.status.png');
-  const Ready: Replies.Reply<State.Msg> := Reset.ReadAsync().AsTask().WaitAsync(
+  const Ready: Replies.Reply of State.Msg := Reset.ReadAsync().AsTask().WaitAsync(
     Timeout
   ).GetAwaiter().GetResult();
   Key(Session, 2);

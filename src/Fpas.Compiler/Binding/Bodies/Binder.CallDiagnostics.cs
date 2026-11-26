@@ -44,7 +44,7 @@ internal sealed partial class Binder
         {
             var signatures = Signatures(missingTypes);
             return source.Error("FP3026", "Cannot infer a unique set of generic type arguments for this call.", position,
-                help: "Supply explicit type arguments on the routine name or pass arguments whose types determine them.",
+                help: "Supply explicit type arguments with 'of' on the routine name or pass arguments whose types determine them.",
                 expectation: new("type_arguments", signatures, "inference failed"),
                 related: signatures.Select(signature => new DiagnosticNote($"Type inference failed for {signature}.")).ToArray());
         }

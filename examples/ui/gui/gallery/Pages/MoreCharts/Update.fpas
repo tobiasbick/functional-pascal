@@ -16,17 +16,17 @@ uses System.Collections.Generic as Lists;
 // - `Message`: Requested model action.
 // ## Returns
 // Updated amounts and no commands.
-public function Update(Model: Data.Samples; Message: State.Msg): M.Transition<Data.Samples, State.Msg>;
+public function Update(Model: Data.Samples; Message: State.Msg): M.Transition of (Data.Samples, State.Msg);
 begin
   case Message of
     when State.Msg.Shuffle:
-      const Pages: Lists.List<C.Item> := new Lists.List<C.Item>(Model.Pages.Length);
+      const Pages: Lists.List of C.Item := new Lists.List of C.Item(Model.Pages.Length);
       for Index: int := 0 to Model.Pages.Length - 1 do
         const Old: C.Item := Model.Pages[Index];
         Pages.Add(new C.Item(Old.Label, cast<float>(Sys.Random.Shared.Next(500, 5500)), Old.Color));
       end for;
 
-      return new M.Transition<Data.Samples, State.Msg>(
+      return new M.Transition of (Data.Samples, State.Msg)(
         Model with
           Pages := Pages.ToArray();
         end with, []

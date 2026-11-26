@@ -188,9 +188,9 @@ begin
     'INSERT OR IGNORE INTO seen_files(source_id,path_key) VALUES($source,$key);',
     Transaction, ['$source', '$file', '$key'], [null, null, null]
   );
-  const Files: C.HashSet<string> := new C.HashSet<string>(Observation.Files, S.PathComparer());
-  const Playlists: C.HashSet<string>? := Observation.Playlists;
-  const Artwork: C.HashSet<string>? := Observation.Artwork;
+  const Files: C.HashSet of string := new C.HashSet of string(Observation.Files, S.PathComparer());
+  const Playlists: (C.HashSet of string)? := Observation.Playlists;
+  const Artwork: (C.HashSet of string)? := Observation.Artwork;
   if Artwork <> null then
     Files.UnionWith(Artwork);
   end if;
@@ -217,7 +217,7 @@ begin
     AddFile.Parameters['$kind'].Value := Kind;
     AddFile.Parameters['$size'].Value := Sys.DBNull.Value;
     AddFile.Parameters['$modified'].Value := Sys.DBNull.Value;
-    const Stamps: C.Dictionary<string, O.FileStamp>? := Observation.Stamps;
+    const Stamps: C.Dictionary of (string, O.FileStamp)? := Observation.Stamps;
     if Stamps <> null and Stamps.ContainsKey(File) then
       AddFile.Parameters['$size'].Value := Stamps[File].Size;
       AddFile.Parameters['$modified'].Value := Stamps[File].Modified;

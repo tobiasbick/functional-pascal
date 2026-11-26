@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Ai.Composers as W;
 // - `Draft`: Current draft, attachments, model options and optional recording.
 // ## Returns
 // The composer with draft and action proposals.
-public function View(Draft: W.Value): E.Element<W.Event>;
+public function View(Draft: W.Value): E.Element of W.Event;
 begin
-  return W.Composer<W.Event>('message', Draft, function(Change: W.Event): W.Event => Change,
+  return W.Composer of W.Event('message', Draft, function(Change: W.Event): W.Event => Change,
     new W.Options(Placeholder := 'Message', Microphone := true, MaxUtf8Bytes := 255));
 end function;
 

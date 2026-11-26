@@ -70,16 +70,16 @@ public sealed class RenameSemanticTests(SdkPackageFixture sdk) : IClassFixture<S
 
     [Theory]
     [InlineData("X: T", "X", "end")]
-    [InlineData("Point<T> =", "Point", "record")]
+    [InlineData("Point of T =", "Point", "record")]
     [InlineData("Value: int", "Value", "Input")]
     public async Task Generic_records_properties_constructor_labels_and_parameters_keep_bindings(string marker, string oldName, string newName)
     {
         const string source = """
             unit Demo.Bridge;
-            public type Point<T> = record public X: T; end record;
+            public type Point of T = record public X: T; end record;
             public function Read(Value: int): int;
             begin
-              const P: Point<int> := new Point<int>(X := Value);
+              const P: Point of int := new Point of int(X := Value);
               return P.X;
             end function;
             public function Run(): int; begin return Read(Value := 42); end function;
@@ -97,9 +97,9 @@ public sealed class RenameSemanticTests(SdkPackageFixture sdk) : IClassFixture<S
     [Fact]
     public async Task Generic_constraint_parameter_references_and_noop_renames_are_preserved()
     {
-        const string source = "unit Demo.Bridge; public type Item<T> = where T: class; record public Value: T; end record; end unit;";
+        const string source = "unit Demo.Bridge; public type Item of T = where T: class; record public Value: T; end record; end unit;";
         using var directory = RenameFixture.Create(sdk, source); var analysis = await RenameFixture.Analyze(directory);
-        var selection = RenameFixture.Select(directory, source, "T> =");
+        var selection = RenameFixture.Select(directory, source, "T =");
         var changed = RenameService.Prepare(analysis, selection, "U"); Assert.Equal(3, changed.Plan.EditCount);
         var noop = RenameService.Prepare(analysis, selection, "T"); Assert.Empty(noop.Edits.Documents); Assert.Equal(0, noop.Plan.EditCount);
         Assert.Equal(source, File.ReadAllText(directory.File("Game/Bridge.fpas")));

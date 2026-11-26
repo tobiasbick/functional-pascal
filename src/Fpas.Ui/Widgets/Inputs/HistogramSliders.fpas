@@ -33,13 +33,13 @@ end record;
 // - `Settings`: Optional height, endpoint display and input permission.
 // ## Returns
 // The graphical histogram slider.
-public function HistogramSlider<TMsg>(
+public function HistogramSlider of TMsg(
   Id: string; Label: string; Bins: array of float; Value: R.Interval; Minimum: float;
   Maximum: float; OnChange: function(R.Interval): TMsg; Settings: Options? := null
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.HistogramSlider(
+  return (E.Element of TMsg).HistogramSlider(
     Id, Label, Bins, Value, Minimum, Maximum, OnChange, Settings ?? new Options()
   );
 end function;

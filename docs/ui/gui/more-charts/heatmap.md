@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Charts.Heatmaps as W;
 // Builds the heatmap example.
 // ## Returns
 // The widget for the application view.
-public function View(): E.Element<W.Cell>;
+public function View(): E.Element of W.Cell;
 begin
-  return W.Heatmap<W.Cell>('traffic', [12.0F, 30.0F, 18.0F, 8.0F, 24.0F, 21.0F], 2, 3,
+  return W.Heatmap of W.Cell('traffic', [12.0F, 30.0F, 18.0F, 8.0F, 24.0F, 21.0F], 2, 3,
     new W.Options(RowLabels := ['Mon', 'Tue'], ColumnLabels := ['09:00', '12:00', '15:00'],
       Format := new C.ValueFormat(Suffix := ' req')),
     function(Chosen: W.Cell): W.Cell => Chosen);

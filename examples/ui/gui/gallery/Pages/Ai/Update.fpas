@@ -31,7 +31,7 @@ begin
         Selected := Index;
       end with;
     when Composer.Event.Remove(const Index: int):
-      const Files: Lists.List<string> := new Lists.List<string>(Value.Attachments);
+      const Files: Lists.List of string := new Lists.List of string(Value.Attachments);
       Files.RemoveAt(Index);
       return Value with
         Attachments := Files.ToArray();
@@ -99,22 +99,22 @@ end function;
 // - `Message`: Proposed action.
 // ## Returns
 // Updated state and any attachment toast.
-public function Update(Model: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+public function Update(Model: S.Model; Message: S.Msg): Mvu.Transition of (S.Model, S.Msg);
 begin
   const Next: S.Model := Apply(Model, Message);
   case Message of
     when S.Msg.Editor(Composer.Event.Attach):
-      return new Mvu.Transition<S.Model, S.Msg>(
+      return new Mvu.Transition of (S.Model, S.Msg)(
         Next,
         [
-          Toasts.Show<S.Msg>(
+          Toasts.Show of S.Msg(
             'Attach files',
             new Toasts.Options(Description := 'Drop files on the window, too.')
           )
         ]
       );
     else
-      return new Mvu.Transition<S.Model, S.Msg>(Next, []);
+      return new Mvu.Transition of (S.Model, S.Msg)(Next, []);
   end case;
 end function;
 

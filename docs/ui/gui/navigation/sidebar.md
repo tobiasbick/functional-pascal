@@ -17,12 +17,12 @@ uses Fpas.Ui.Widgets.Navigation.Navigation as C;
 // - `Active`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Active: string?): E.Element<string>;
+public function View(Active: string?): E.Element of string;
 begin
-  return C.Sidebar<string>('navigation', [
-    new C.Section<string>('Workspace', [
-      new C.Item<string>('overview', 'Overview', 'overview'),
-      new C.Item<string>('inbox', 'Inbox', 'inbox', Badge := '3')
+  return C.Sidebar of string('navigation', [
+    new C.Section of string('Workspace', [
+      new C.Item of string('overview', 'Overview', 'overview'),
+      new C.Item of string('inbox', 'Inbox', 'inbox', Badge := '3')
     ])
   ], Active);
 end function;

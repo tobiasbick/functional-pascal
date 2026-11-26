@@ -14,13 +14,13 @@ uses System.Linq as Linq;
 // - `Compare`: Compares two rows in the requested order.
 // ## Returns
 // A new array containing the sorted rows.
-public function Sorted<T>(Items: array of T; Compare: Sys.Comparison<T>): array of T;
+public function Sorted of T(Items: array of T; Compare: Sys.Comparison of T): array of T;
 begin
-  return Linq.Enumerable.ToArray<T>(
-    Linq.Enumerable.OrderBy<T, T>(
+  return Linq.Enumerable.ToArray of T(
+    Linq.Enumerable.OrderBy of (T, T)(
       Items,
       function(Item: T): T => Item,
-      C.Comparer<T>.Create(Compare)
+      (C.Comparer of T).Create(Compare)
     )
   );
 end function;
@@ -35,7 +35,7 @@ end function;
 // - `Key`: Returns the row's stable identity.
 // ## Returns
 // The matching row index in After, or -1 if the original selection is unavailable.
-public function Position<T>(Before: array of T; Index: int; After: array of T; Key: function(T): string): int;
+public function Position of T(Before: array of T; Index: int; After: array of T; Key: function(T): string): int;
 begin
   if Index < 0 or Index >= Before.Length then
     return -1;

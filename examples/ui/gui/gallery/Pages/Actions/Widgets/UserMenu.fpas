@@ -10,10 +10,10 @@ uses Fpas.Ui.Widgets.Overlays.UserMenus as U;
 uses GuiGallery.Pages.Actions.State as State;
 uses System as Sys;
 
-function Command(Key: string; Name: string; Icon: int; Shortcut: string := ''): M.Entry<State.Msg>;
+function Command(Key: string; Name: string; Icon: int; Shortcut: string := ''): M.Entry of State.Msg;
 begin
-  return M.Entry<State.Msg>.Action(
-    new M.Item<State.Msg>(
+  return (M.Entry of State.Msg).Action(
+    new M.Item of State.Msg(
       Key, Name, State.Msg.UserCommand(Key), Icon := Sys.Char.ConvertFromUtf32(Icon),
       Shortcut := Shortcut
     )
@@ -23,17 +23,17 @@ end function;
 // Shows CUI's original account trigger and preview commands.
 // ## Returns
 // A user menu in the original 260-point box.
-public function View(): E.Element<State.Msg>;
+public function View(): E.Element of State.Msg;
 begin
-  return E.Row<State.Msg>(
-    E.Size<State.Msg>(
-      U.UserMenu<State.Msg>(
+  return E.Row of State.Msg(
+    E.Size of State.Msg(
+      U.UserMenu of State.Msg(
         'action-user', 'Maya Okafor',
         [
           Command('profile', 'Profile', $E19F, 'Ctrl P'),
           Command('billing', 'Billing', $E0AA),
           Command('settings', 'Settings', $E154, 'Ctrl ,'),
-          M.Entry<State.Msg>.Separator,
+          (M.Entry of State.Msg).Separator,
           Command('log-out', 'Log out', $E10E)
         ],
         new U.Options(Detail := 'maya@example.com', Status := 'online')

@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Motion.Motion as M;
 // - `Title`: Heading text.
 // ## Returns
 // The native gradient text.
-public function View(Title: string): E.Element<string>;
+public function View(Title: string): E.Element of string;
 begin
-  return W.GradientText<string>('release-title', Title,
+  return W.GradientText of string('release-title', Title,
     new W.Options(Font := M.Font.Display, Size := 34.0F, Animate := true));
 end function;
 

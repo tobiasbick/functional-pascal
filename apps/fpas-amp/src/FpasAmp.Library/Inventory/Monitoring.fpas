@@ -18,16 +18,16 @@ uses System.Threading.Tasks as Tasks;
 // Owned discovery lifetime. Control methods never access the filesystem or database.
 public type Session = record implements Sys.IAsyncDisposable
   // Latest completed inventory, capacity one.
-  public Changes: Channels.ChannelReader<M.Snapshot>;
+  public Changes: Channels.ChannelReader of M.Snapshot;
   // Lightweight progress, capacity one and normally throttled to 100 ms.
-  public Progress: Channels.ChannelReader<P.Snapshot>;
+  public Progress: Channels.ChannelReader of P.Snapshot;
   // Worker completion, including native resource and connection cleanup.
   public Completion: Tasks.Task;
   // Borrowed metadata/rating access when enabled; disposed with this inventory session.
   public Metadata: Tags.Session?;
   SetSources: procedure(array of S.MusicSource);
   RequestScan: procedure(string);
-  RequestClear: function(string): Tasks.Task<M.Snapshot>;
+  RequestClear: function(string): Tasks.Task of M.Snapshot;
   Stop: function(): Tasks.Task;
 
   // Replaces validated settings. Pause/offline flags retain source-owned indexed data.
@@ -45,7 +45,7 @@ public type Session = record implements Sys.IAsyncDisposable
 
   // Pauses and clears `Id`, or every source when empty, then acknowledges its snapshot.
   // `Cancellation` cancels waiting; an accepted clear remains owned by the worker.
-  public function ClearAsync(Id: string; Cancellation: T.CancellationToken): Tasks.Task<M.Snapshot>;
+  public function ClearAsync(Id: string; Cancellation: T.CancellationToken): Tasks.Task of M.Snapshot;
   begin
     return self.RequestClear(Id).WaitAsync(Cancellation);
   end function;
@@ -102,14 +102,14 @@ public type Session = record implements Sys.IAsyncDisposable
     const Bounds: Channels.BoundedChannelOptions := new Channels.BoundedChannelOptions(1);
     Bounds.FullMode := Channels.BoundedChannelFullMode.DropOldest;
     Bounds.AllowSynchronousContinuations := false;
-    const Output: Channels.Channel<M.Snapshot> := Channels.Channel.CreateBounded<M.Snapshot>(
+    const Output: Channels.Channel of M.Snapshot := Channels.Channel.CreateBounded of M.Snapshot(
       Bounds
     );
-    const Progress: Channels.Channel<P.Snapshot> := Channels.Channel.CreateBounded<P.Snapshot>(
+    const Progress: Channels.Channel of P.Snapshot := Channels.Channel.CreateBounded of P.Snapshot(
       Bounds
     );
     const Running: Tasks.Task := Tasks.TaskExtensions.Unwrap(
-      Tasks.Task.Run<Tasks.Task>(
+      Tasks.Task.Run of Tasks.Task(
         function(): Tasks.Task => Worker.Run(
           Inbox,
           Output.Writer,
@@ -131,7 +131,7 @@ public type Session = record implements Sys.IAsyncDisposable
         )
       )
     );
-    const Cleanup: Sys.Lazy<Tasks.Task> := new Sys.Lazy<Tasks.Task>(
+    const Cleanup: Sys.Lazy of Tasks.Task := new Sys.Lazy of Tasks.Task(
       async function(): Tasks.Task begin
         Inbox.Close();
         try
@@ -161,8 +161,8 @@ public type Session = record implements Sys.IAsyncDisposable
         end if;
       end procedure,
       Inbox.Refresh,
-      function(Id: string): Tasks.Task<M.Snapshot> begin
-        const Pending: Tasks.Task<M.Snapshot> := Inbox.Clear(Id);
+      function(Id: string): Tasks.Task of M.Snapshot begin
+        const Pending: Tasks.Task of M.Snapshot := Inbox.Clear(Id);
         if Metadata <> null then
           Metadata.Pause(Id);
         end if;

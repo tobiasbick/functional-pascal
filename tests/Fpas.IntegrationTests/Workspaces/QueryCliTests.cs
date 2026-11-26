@@ -305,7 +305,7 @@ public sealed class QueryCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
             """;
         const string call = """
             unit Demo.Bridge;
-            public function Echo<T>(Value: T): T; begin return Value; end function;
+            public function Echo of T(Value: T): T; begin return Value; end function;
             public function Read(): int;
             begin
               return Echo(Value := 42;
@@ -335,7 +335,7 @@ public sealed class QueryCliTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
         var signatures = body.GetProperty("results")[0].GetProperty("result").GetProperty("signature");
         var active = signatures.GetProperty("items")[0];
         Assert.Equal(0, active.GetProperty("activeParameter").GetInt32());
-        Assert.Contains("Echo<int>", active.GetProperty("label").GetString());
+        Assert.Contains("Echo of int", active.GetProperty("label").GetString());
     }
 
     /// <summary>Checks that bounded batch output retains independent answers after an oversized result.</summary>

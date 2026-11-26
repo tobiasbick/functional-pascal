@@ -24,7 +24,7 @@ public sealed class CallableExecutionTests
               Print('delegate');
               const ReadArgs: function(): int := function(): int => args.Length;
               Console.WriteLine(ReadArgs());
-              const Nullable: Sys.Func<int, int>? := Transform;
+              const Nullable: Sys.Func of (int, int)? := Transform;
               if Nullable <> null then Console.WriteLine(Nullable(7)); end if;
             end;
             end program;
@@ -64,17 +64,17 @@ public sealed class CallableExecutionTests
             program Iterations;
             uses System as Sys; uses System.Collections.Generic as C; uses System.Console as Console;
             begin
-              const Functions: C.List<Sys.Func<int>> := new C.List<Sys.Func<int>>();
+              const Functions: C.List of Sys.Func of int := new C.List of Sys.Func of int();
               for Index: int := 1 to 3 do
                 const Copy: int := Index;
                 var Mutable: int := Index;
                 Functions.Add(function(): int => Index + Copy + Mutable);
                 Mutable := Mutable + 10;
               end for;
-              for Read: Sys.Func<int> in Functions do Console.WriteLine(Read()); end for;
-              const More: C.List<Sys.Func<int>> := new C.List<Sys.Func<int>>();
+              for Read: Sys.Func of int in Functions do Console.WriteLine(Read()); end for;
+              const More: C.List of Sys.Func of int := new C.List of Sys.Func of int();
               for Value: int in [4, 5] do More.Add(function(): int => Value); end for;
-              for Read: Sys.Func<int> in More do Console.WriteLine(Read()); end for;
+              for Read: Sys.Func of int in More do Console.WriteLine(Read()); end for;
             end;
             end program;
             """, "13", "16", "19", "4", "5");
@@ -89,16 +89,16 @@ public sealed class CallableExecutionTests
             begin
               var Calls: int := 0;
               const Threshold: int := 2;
-              const Filtered: C.IEnumerable<int> := Seq.Where<int>([1, 2, 3, 4],
+              const Filtered: C.IEnumerable of int := Seq.Where of int([1, 2, 3, 4],
                 function(Value: int): bool begin Calls := Calls + 1; return Value > Threshold; end function);
-              const Labels: C.IEnumerable<string> := Seq.Select<int, string>(Filtered, Label);
+              const Labels: C.IEnumerable of string := Seq.Select of (int, string)(Filtered, Label);
               Console.WriteLine(Calls);
               for Text: string in Labels do Console.WriteLine(Text); end for;
               Console.WriteLine(Calls);
-              const Array: array of string := Seq.ToArray<string>(Labels);
+              const Array: array of string := Seq.ToArray of string(Labels);
               Console.WriteLine(Array.Length);
               Console.WriteLine(Calls);
-              const Values: C.List<int> := new C.List<int>([3, 1, 2]);
+              const Values: C.List of int := new C.List of int([3, 1, 2]);
               Values.Sort(function(Left: int; Right: int): int => Right - Left);
               Console.WriteLine(Values[0]);
               Console.WriteLine(Values.Find(function(Value: int): bool => Value = 2));

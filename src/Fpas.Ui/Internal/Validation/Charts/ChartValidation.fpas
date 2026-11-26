@@ -44,7 +44,7 @@ uses System as Sys;
 // - `Identify`: Registers a widget ID.
 // ## Returns
 // True when this dispatcher handled the element.
-public function Check<TMsg>(Node: E.Element<TMsg>; Location: string; Current: R.Profile; Identify: function(string, string): string): bool;
+public function Check of TMsg(Node: E.Element of TMsg; Location: string; Current: R.Profile; Identify: function(string, string): string): bool;
 begin
   case Node of
     when E.Element.CodeBlock(
@@ -192,7 +192,7 @@ begin
       const Id: string,
       const Items: array of Charts.Item,
       const Selected: int,
-      const OnSelect: Sys.Func<int, TMsg>?,
+      const OnSelect: Sys.Func of (int, TMsg)?,
       const Settings: Treemaps.Options
     ):
       const At: string := Identify(Id, Location + '/Treemap');

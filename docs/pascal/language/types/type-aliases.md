@@ -6,15 +6,15 @@ new CLR identity. Use nominal domains when a distinct identity is required.
 ```pascal fragment context=declarations
 type UserName = string;
 
-type Names = Collections.List<string>;
+type Names = Collections.List of string;
 
 type Matrix = array[,] of double;
 ```
 
 `type Name = T;` is a transparent source alias and does not emit a new CLR type.
-It may not be recursive. Type arguments uniformly use `<...>`:
-`List<string>`, `Task<string>`, and `Dictionary<string, int>`.
-Nested generic closers such as `List<List<int>>` are valid.
+It may not be recursive. Write `of` before type arguments, as in `List of string`,
+`Task of string`, and `Dictionary of (string, int)`. A single argument may itself
+be generic, as in `List of List of int`.
 Type names and generic arity are resolved exactly. Source declarations cannot
 differ solely by capitalization accidentally: capitalization denotes distinct
 names and is never folded by import lookup.

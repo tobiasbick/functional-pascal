@@ -43,13 +43,13 @@ public sealed class NullableOperatorDiagnosticsTests
     [Theory]
     [InlineData("where T: struct;", "T?", "A + B")]
     [InlineData("where T: struct;", "bool", "A = B")]
-    [InlineData("where T: struct, N.IAdditionOperators<T, T, string>;", "string", "A + B")]
+    [InlineData("where T: struct, N.IAdditionOperators of (T, T, string);", "string", "A + B")]
     public void Generic_lifting_requires_a_supported_value_operator_signature(string constraints, string result, string expression)
     {
         var compiled = TestCompilation.Compile($$"""
             program Invalid;
             uses System.Numerics as N;
-            function Test<T>(A: T?; B: T?): {{result}};
+            function Test of T(A: T?; B: T?): {{result}};
             {{constraints}}
             begin return {{expression}}; end function;
             begin end; end program;

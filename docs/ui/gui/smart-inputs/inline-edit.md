@@ -20,14 +20,14 @@ uses System.Text as Text;
 // - `Title`: Single-line model text fitting the UTF-8 capacity.
 // ## Returns
 // An editor that sends the committed title.
-public function View(Title: string): E.Element<string>;
+public function View(Title: string): E.Element of string;
 requires Title.Length <= 127;
 begin
   if Text.Encoding.UTF8.GetByteCount(Title) > 127 or Title.Contains(#10) or Title.Contains(#13) then
     raise new Sys.ArgumentException('The title must fit 127 UTF-8 bytes on one line.');
   end if;
 
-  return W.InlineEdit<string>('roadmap-title', Title,
+  return W.InlineEdit of string('roadmap-title', Title,
     function(Proposed: string): string => Proposed,
     new W.Options(Placeholder := 'Add a title', Face := W.Font.Display,
       FontSize := 26.0F, MaxUtf8Bytes := 127));

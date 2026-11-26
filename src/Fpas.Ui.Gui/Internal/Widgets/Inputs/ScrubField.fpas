@@ -23,7 +23,7 @@ uses System.Globalization as Culture;
 // - `OnChange`: Maps a value proposal.
 // - `Settings`: Native step, precision and presentation.
 
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Label: string; Value: float; Minimum: float; Maximum: float; OnChange: function(float): TMsg; Settings: S.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Label: string; Value: float; Minimum: float; Maximum: float; OnChange: function(float): TMsg; Settings: S.Options);
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('scrub-field', Id);
@@ -31,7 +31,7 @@ begin
   const Proposed: float := Frame.Window.ScrubField(
     Token, Label, Value, Minimum, Maximum, Settings.Step,
     Settings.DecimalPlaces, Settings.Suffix, Settings.Icon, Width.Kind, Width.Value,
-    Enabled, C.WantsFocus<TMsg>(Frame, Id, Token, Enabled), not Frame.PaintingClosed
+    Enabled, C.WantsFocus of TMsg(Frame, Id, Token, Enabled), not Frame.PaintingClosed
   );
   if Enabled and Proposed <> Value then
     Frame.Messages.Add(OnChange(Proposed));

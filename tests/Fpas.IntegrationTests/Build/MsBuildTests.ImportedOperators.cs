@@ -86,7 +86,7 @@ public sealed partial class MsBuildTests
               Console.WriteLine(not new S.Measure(0));
               Console.WriteLine(new S.Measure(9) / 2);
               Console.WriteLine(new S.Measure(9) div 2);
-              Console.WriteLine(new S.Box<int>(1) + new S.Box<int>(42));
+              Console.WriteLine(new S.Box of int(1) + new S.Box of int(42));
 
               const Present: S.Measure? := Maybe(new S.Measure(4)) + 5;
               const Absent: S.Measure? := MissingValue() + RightValue();

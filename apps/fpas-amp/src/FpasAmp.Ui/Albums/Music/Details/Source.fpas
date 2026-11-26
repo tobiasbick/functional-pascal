@@ -25,7 +25,7 @@ begin
   return L.Spacing.Fixed(L.Measure.Logical(Value));
 end function;
 
-function Fingerprint(Current: M.State; Playback: Player.State; Item: Tracks.Entry): E.Element<M.Msg>;
+function Fingerprint(Current: M.State; Playback: Player.State; Item: Tracks.Entry): E.Element of M.Msg;
 begin
   const Local: Fp.State? := Current.Fingerprint;
   const Playing: Fp.State? := Playback.Fingerprint;
@@ -46,18 +46,18 @@ begin
       else
         Value
       end if;
-      return E.Row<M.Msg>(
+      return E.Row of M.Msg(
         new L.Flow(Gap := Points(8), Align := L.Alignment.Center),
-        E.Size<M.Msg>(E.Styled<M.Msg>(E.Text<M.Msg>(Preview), S.Role.SingleLine), Fill),
-        Copy.CopyButton<M.Msg>('track-copy-fingerprint', Value)
+        E.Size of M.Msg(E.Styled of M.Msg(E.Text of M.Msg(Preview), S.Role.SingleLine), Fill),
+        Copy.CopyButton of M.Msg('track-copy-fingerprint', Value)
       );
     end if;
 
     if Result.Busy then
-      return E.Text<M.Msg>('Checking fingerprint…');
+      return E.Text of M.Msg('Checking fingerprint…');
     end if;
   end if;
-  const Generate: E.Element<M.Msg> := Buttons.Button<M.Msg>(
+  const Generate: E.Element of M.Msg := Buttons.Button of M.Msg(
     'track-generate-fingerprint',
     'Generate fingerprint',
     M.Msg.GenerateFingerprint,
@@ -68,38 +68,38 @@ begin
   else
     'Not generated'
   end if;
-  return E.Row<M.Msg>(
+  return E.Row of M.Msg(
     new L.Flow(Gap := Points(8), Align := L.Alignment.Center),
-    E.Size<M.Msg>(Texts.Text<M.Msg>(Status, Texts.Appearance.Secondary), Fill), Generate
+    E.Size of M.Msg(Texts.Text of M.Msg(Status, Texts.Appearance.Secondary), Fill), Generate
   );
 end function;
 
 // Builds the source card for Item. Current and Playback supply pending or completed fingerprint work.
-public function Build(Current: M.State; Playback: Player.State; Item: Tracks.Entry): E.Element<M.Msg>;
+public function Build(Current: M.State; Playback: Player.State; Item: Tracks.Entry): E.Element of M.Msg;
 requires Item.Path <> '';
 begin
   const Row: L.Flow := new L.Flow(Gap := Points(6), Align := L.Alignment.Center);
-  const Rule: E.Element<M.Msg> := E.Size<M.Msg>(
-    E.Styled<M.Msg>(E.Column<M.Msg>(), S.Role.Divider),
+  const Rule: E.Element of M.Msg := E.Size of M.Msg(
+    E.Styled of M.Msg(E.Column of M.Msg(), S.Role.Divider),
     new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(1)))
   );
-  return Cards.Card<M.Msg>(
+  return Cards.Card of M.Msg(
     'track-detail-source',
     [
-      Texts.Text<M.Msg>('File path', Texts.Appearance.Label),
-      E.Row<M.Msg>(
+      Texts.Text of M.Msg('File path', Texts.Appearance.Label),
+      E.Row of M.Msg(
         Row,
-        E.Size<M.Msg>(E.Text<M.Msg>(Item.Path), Fill),
-        Icons.IconButton<M.Msg>(
+        E.Size of M.Msg(E.Text of M.Msg(Item.Path), Fill),
+        Icons.IconButton of M.Msg(
           'track-open-folder',
           Sys.Char.ConvertFromUtf32($E247),
           'Show in folder',
           M.Msg.ShowFolder(Item.Path)
         ),
-        Copy.CopyButton<M.Msg>('track-copy-path', Item.Path)
+        Copy.CopyButton of M.Msg('track-copy-path', Item.Path)
       ),
       Rule,
-      Texts.Text<M.Msg>('Acoustic fingerprint', Texts.Appearance.Label),
+      Texts.Text of M.Msg('Acoustic fingerprint', Texts.Appearance.Label),
       Fingerprint(Current, Playback, Item)
     ],
     new Cards.Options(

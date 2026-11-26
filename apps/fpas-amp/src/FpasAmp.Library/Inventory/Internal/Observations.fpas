@@ -18,19 +18,19 @@ public type DirectoryObservation = record
   // Normalized directory path.
   public Path: string;
   // Matching file paths actually encountered, before merging older entries.
-  public Files: C.HashSet<string>;
+  public Files: C.HashSet of string;
   // Ordinary direct child directories actually encountered.
-  public Children: C.HashSet<string>;
+  public Children: C.HashSet of string;
   // True only after the enumerator reached its end without an error.
   public Complete: bool;
   // Filesystem error when enumeration could not complete.
   public Failure: string?;
   // Optional per-file freshness; absent for callers supplying only path observations.
-  public Stamps: C.Dictionary<string, FileStamp>? := null;
+  public Stamps: C.Dictionary of (string, FileStamp)? := null;
   // Optional playlist paths; these are not counted as audio in presence snapshots.
-  public Playlists: C.HashSet<string>? := null;
+  public Playlists: (C.HashSet of string)? := null;
   // Recognized cover sidecars, observed without opening image content.
-  public Artwork: C.HashSet<string>? := null;
+  public Artwork: (C.HashSet of string)? := null;
 end record;
 
 end unit;

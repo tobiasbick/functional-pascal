@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Developer.CommitGraphs as W;
 // - `Selected`: Selected commit index, or minus one.
 // ## Returns
 // The graph with row selection and activation proposals.
-public function View(Commits: array of W.Commit; Selected: int): E.Element<W.Event>;
+public function View(Commits: array of W.Commit; Selected: int): E.Element of W.Event;
 begin
-  return W.CommitGraph<W.Event>('history', Commits, Selected,
+  return W.CommitGraph of W.Event('history', Commits, Selected,
     function(Change: W.Event): W.Event => Change, new W.Options(Height := 320.0F));
 end function;
 

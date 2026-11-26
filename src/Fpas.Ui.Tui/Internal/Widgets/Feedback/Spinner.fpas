@@ -20,7 +20,7 @@ uses System.Collections.Generic as C;
 // - `Theme`: Active terminal palette.
 // ## Returns
 // A single-cell spinner with resolved colors.
-public function Lower<TMsg>(Settings: Spin.Options?; Theme: Th.Theme): E.Element<TMsg>;
+public function Lower of TMsg(Settings: Spin.Options?; Theme: Th.Theme): E.Element of TMsg;
 begin
   const Options: Spin.Options := Settings ?? new Spin.Options();
   const Frames: string := case Options.Animation of
@@ -48,7 +48,7 @@ begin
       Theme.Colors.Accent
     end if
   );
-  return E.Element<TMsg>.Spinner(Frames, Ink, Options.Inverse);
+  return (E.Element of TMsg).Spinner(Frames, Ink, Options.Inverse);
 end function;
 
 // Paints one spinner frame in the allocated footprint.
@@ -65,7 +65,7 @@ end function;
 // ## Returns
 // Whether the animated glyph is visible.
 public function Paint(
-  Operations: C.List<D.Operation>; Area: F.Rect; Clip: F.Rect; Frames: string; Phase: long;
+  Operations: C.List of D.Operation; Area: F.Rect; Clip: F.Rect; Frames: string; Phase: long;
   Ink: G.Color; Inverse: bool; Style: T.Style; Theme: Th.Theme
 ): bool;
 begin

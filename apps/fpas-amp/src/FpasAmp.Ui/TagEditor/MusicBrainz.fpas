@@ -66,11 +66,11 @@ function CreateQuery(Endpoint: Sys.Uri; Gate: Pacing.Gate; Failure: array of str
 begin
   const Options: R.HttpRetryStrategyOptions := new R.HttpRetryStrategyOptions();
   Options.MaxRetryAttempts := RetryCount;
-  Options.ShouldHandle := function(Args: Retry.RetryPredicateArguments<H.HttpResponseMessage>): Tasks.ValueTask<bool> begin
+  Options.ShouldHandle := function(Args: Retry.RetryPredicateArguments of H.HttpResponseMessage): Tasks.ValueTask of bool begin
     const Reply: H.HttpResponseMessage? := Args.Outcome.Result;
     if Reply = null or Reply.IsSuccessStatusCode then
       Failure[0] := '';
-      return new Tasks.ValueTask<bool>(false);
+      return new Tasks.ValueTask of bool(false);
     end if;
 
     Failure[0] := Diagnostics(Reply, Args.AttemptNumber);
@@ -83,24 +83,24 @@ begin
         Pacing.RetryAfter(Reply)
       end if
     );
-    return new Tasks.ValueTask<bool>(Transient);
+    return new Tasks.ValueTask of bool(Transient);
   end function;
-  Options.DelayGenerator := function(Args: Retry.RetryDelayGeneratorArguments<H.HttpResponseMessage>): Tasks.ValueTask<Sys.TimeSpan?> begin
+  Options.DelayGenerator := function(Args: Retry.RetryDelayGeneratorArguments of H.HttpResponseMessage): Tasks.ValueTask of Sys.TimeSpan? begin
     const Reply: H.HttpResponseMessage? := Args.Outcome.Result;
     const Delay: Sys.TimeSpan? := if Reply <> null then
       Sys.TimeSpan.FromMilliseconds(cast<double>(RetryDelay(Reply, Args.AttemptNumber)))
     else
       null
     end if;
-    return new Tasks.ValueTask<Sys.TimeSpan?>(Delay);
+    return new Tasks.ValueTask of Sys.TimeSpan? (Delay);
   end function;
 
-  const Builder: P.ResiliencePipelineBuilder<H.HttpResponseMessage> := new P.ResiliencePipelineBuilder<H.HttpResponseMessage>();
-  discard P.RetryResiliencePipelineBuilderExtensions.AddRetry<H.HttpResponseMessage>(
+  const Builder: P.ResiliencePipelineBuilder of H.HttpResponseMessage := new P.ResiliencePipelineBuilder of H.HttpResponseMessage();
+  discard P.RetryResiliencePipelineBuilderExtensions.AddRetry of H.HttpResponseMessage(
     Builder,
     Options
   );
-  discard P.TimeoutResiliencePipelineBuilderExtensions.AddTimeout<P.ResiliencePipelineBuilder<H.HttpResponseMessage>>(
+  discard P.TimeoutResiliencePipelineBuilderExtensions.AddTimeout of P.ResiliencePipelineBuilder of H.HttpResponseMessage(
     Builder, Sys.TimeSpan.FromSeconds(TimeoutSeconds)
   );
   const Handler: R.ResilienceHandler := new R.ResilienceHandler(Builder.Build());
@@ -120,10 +120,10 @@ begin
   return Provider;
 end function;
 
-function Choices(Results: S.ISearchResults<S.ISearchResult<E.IRecording>>): array of Match;
+function Choices(Results: S.ISearchResults of S.ISearchResult of E.IRecording): array of Match;
 begin
-  const Result: C.List<Match> := new C.List<Match>();
-  for Hit: S.ISearchResult<E.IRecording> in Results.Results do
+  const Result: C.List of Match := new C.List of Match();
+  for Hit: S.ISearchResult of E.IRecording in Results.Results do
     const Recording: E.IRecording := Hit.Item;
     const Id: string := Recording.Id.ToString('D');
     const Title: string := Recording.Title + ' · ' + Tags.Artists(Recording.ArtistCredit);
@@ -207,7 +207,7 @@ public type Service = record implements Sys.IDisposable
     return self.Gate.Read();
   end function;
 
-  async function Run<TResult>(Request: function(): Tasks.Task<TResult>; Stop: T.CancellationToken): Tasks.Task<TResult>;
+  async function Run of TResult(Request: function(): Tasks.Task of TResult; Stop: T.CancellationToken): Tasks.Task of TResult;
   begin
     await self.Gate.Enter(Stop).ConfigureAwait(false);
     try
@@ -223,11 +223,11 @@ public type Service = record implements Sys.IDisposable
   end function;
 
   // Searches MusicBrainz for Input and returns selectable matches, honoring Stop.
-  public async function Search(Input: string; Stop: T.CancellationToken): Tasks.Task<array of Match>;
+  public async function Search(Input: string; Stop: T.CancellationToken): Tasks.Task of array of Match;
   begin
     return Choices(
-      await self.Run<S.ISearchResults<S.ISearchResult<E.IRecording>>>(
-        function(): Tasks.Task<S.ISearchResults<S.ISearchResult<E.IRecording>>> => self.Query.FindRecordingsAsync(
+      await self.Run of S.ISearchResults of S.ISearchResult of E.IRecording(
+        function(): Tasks.Task of S.ISearchResults of S.ISearchResult of E.IRecording => self.Query.FindRecordingsAsync(
           Terms(Input),
           12,
           null,
@@ -240,11 +240,11 @@ public type Service = record implements Sys.IDisposable
   end function;
 
   // Looks up recording Id with credits and genres, honoring Stop.
-  public function Recording(Id: string; Stop: T.CancellationToken): Tasks.Task<E.IRecording>;
+  public function Recording(Id: string; Stop: T.CancellationToken): Tasks.Task of E.IRecording;
   begin
     const Key: Sys.Guid := Sys.Guid.ParseExact(Id, 'D');
-    return self.Run<E.IRecording>(
-      function(): Tasks.Task<E.IRecording> => self.Query.LookupRecordingAsync(
+    return self.Run of E.IRecording(
+      function(): Tasks.Task of E.IRecording => self.Query.LookupRecordingAsync(
         Key, B.Include.ArtistCredits or B.Include.Genres or B.Include.ArtistRelationships
           or B.Include.WorkRelationships or B.Include.WorkLevelRelationships, null, null, Stop
       ), Stop
@@ -252,11 +252,11 @@ public type Service = record implements Sys.IDisposable
   end function;
 
   // Looks up release Id with its track list and labels, honoring Stop.
-  public function Release(Id: string; Stop: T.CancellationToken): Tasks.Task<E.IRelease>;
+  public function Release(Id: string; Stop: T.CancellationToken): Tasks.Task of E.IRelease;
   begin
     const Key: Sys.Guid := Sys.Guid.ParseExact(Id, 'D');
-    return self.Run<E.IRelease>(
-      function(): Tasks.Task<E.IRelease> => self.Query.LookupReleaseAsync(
+    return self.Run of E.IRelease(
+      function(): Tasks.Task of E.IRelease => self.Query.LookupReleaseAsync(
         Key, B.Include.ArtistCredits or B.Include.Recordings or B.Include.Labels
           or B.Include.ReleaseGroups, Stop
       ), Stop

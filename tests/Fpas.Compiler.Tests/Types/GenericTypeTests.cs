@@ -5,25 +5,25 @@ namespace Fpas.Compiler.Tests.Types;
 public sealed class GenericTypeTests
 {
     [Theory]
-    [InlineData("type Box<T, T> = record public Value: T; end record;", "", "FP3026")]
-    [InlineData("type Box<T> = where U: class; record public Value: T; end record;", "", "FP3026")]
-    [InlineData("type Box<T> = record public Value: T?; end record;", "", "FP3026")]
-    [InlineData("type Box<T> = record public Value: T; end record;", "const X: Box := new Box(1);", "FP3026")]
-    [InlineData("type Box<T> = record public Value: T; end record;", "const X: Box<int, string> := new Box<int, string>(1);", "FP3026")]
-    [InlineData("type Box<T> = where T: class; record public Value: T; end record;", "const X: Box<int> := new Box<int>(1);", "FP3018")]
-    [InlineData("type Box<T> = where T: class; record public Value: T; end record;", "const X: Box<string?> := new Box<string?>(null);", "FP3018")]
-    [InlineData("type Box<T> = where T: struct; record public Value: T; end record;", "const X: Box<int?> := new Box<int?>(null);", "FP3018")]
-    [InlineData("type Box<T> = where T: class; record public Value: T := null; end record;", "", "FP3013")]
-    [InlineData("type Box<T> = record public function F<T>(X: T): T; begin return X; end function; end record;", "", "FP3026")]
-    [InlineData("type Box<T> = record public function F<U>(X: U): U; where T: class; begin return X; end function; end record;", "", "FP3026")]
-    [InlineData("type Tree<T> = variant Empty; Leaf(Value: T); end variant;", "discard Tree.Empty;", "FP3026")]
-    [InlineData("type Tree<T> = variant Empty; Leaf(Value: T); end variant;", "discard Tree.Leaf(null);", "FP3026")]
-    [InlineData("type Tree<T> = where T: class; variant Empty; Leaf(Value: T); end variant;", "discard Tree<int>.Leaf(1);", "FP3018")]
-    [InlineData("type Tree<T> = variant Empty; Leaf(Value: T); end variant;", "const X: Tree<int> := Tree<int>.Leaf(1); discard case X of when Tree.Leaf(const V: string): 0; when Tree.Empty: 1; end case;", "FP3024")]
-    [InlineData("type Box<T> = where T: class; record public Value: T; end record; function F<U>(Value: U): Box<U>; begin return new Box<U>(Value); end function;", "", "FP3018")]
-    [InlineData("type Box<T> = record public Value: T; end record;", "const A: Box<int> := new Box<int>(1); const B: Box<string> := A;", "FP3002")]
-    [InlineData("type Box<T> = record public Value: T; end record;", "const A: Box<string> := new Box<string>('a'); const B: Box<object> := A;", "FP3002")]
-    [InlineData("type Factory<T> = where T: new(); record public Value: T; end record; type A = record public Value: Factory<B>; end record; type B = record public X: int; end record;", "", "FP3018")]
+    [InlineData("type Box of (T, T) = record public Value: T; end record;", "", "FP3026")]
+    [InlineData("type Box of T = where U: class; record public Value: T; end record;", "", "FP3026")]
+    [InlineData("type Box of T = record public Value: T?; end record;", "", "FP3026")]
+    [InlineData("type Box of T = record public Value: T; end record;", "const X: Box := new Box(1);", "FP3026")]
+    [InlineData("type Box of T = record public Value: T; end record;", "const X: Box of (int, string) := new Box of (int, string)(1);", "FP3026")]
+    [InlineData("type Box of T = where T: class; record public Value: T; end record;", "const X: Box of int := new Box of int(1);", "FP3018")]
+    [InlineData("type Box of T = where T: class; record public Value: T; end record;", "const X: Box of string? := new Box of string?(null);", "FP3018")]
+    [InlineData("type Box of T = where T: struct; record public Value: T; end record;", "const X: Box of int? := new Box of int?(null);", "FP3018")]
+    [InlineData("type Box of T = where T: class; record public Value: T := null; end record;", "", "FP3013")]
+    [InlineData("type Box of T = record public function F of T(X: T): T; begin return X; end function; end record;", "", "FP3026")]
+    [InlineData("type Box of T = record public function F of U(X: U): U; where T: class; begin return X; end function; end record;", "", "FP3026")]
+    [InlineData("type Tree of T = variant Empty; Leaf(Value: T); end variant;", "discard Tree.Empty;", "FP3026")]
+    [InlineData("type Tree of T = variant Empty; Leaf(Value: T); end variant;", "discard Tree.Leaf(null);", "FP3026")]
+    [InlineData("type Tree of T = where T: class; variant Empty; Leaf(Value: T); end variant;", "discard (Tree of int).Leaf(1);", "FP3018")]
+    [InlineData("type Tree of T = variant Empty; Leaf(Value: T); end variant;", "const X: Tree of int := (Tree of int).Leaf(1); discard case X of when Tree.Leaf(const V: string): 0; when Tree.Empty: 1; end case;", "FP3024")]
+    [InlineData("type Box of T = where T: class; record public Value: T; end record; function F of U(Value: U): Box of U; begin return new Box of U(Value); end function;", "", "FP3018")]
+    [InlineData("type Box of T = record public Value: T; end record;", "const A: Box of int := new Box of int(1); const B: Box of string := A;", "FP3002")]
+    [InlineData("type Box of T = record public Value: T; end record;", "const A: Box of string := new Box of string('a'); const B: Box of object := A;", "FP3002")]
+    [InlineData("type Factory of T = where T: new(); record public Value: T; end record; type A = record public Value: Factory of B; end record; type B = record public X: int; end record;", "", "FP3018")]
     public void Invalid_generic_types_are_diagnosed(string declaration, string body, string code)
     {
         var result = TestCompilation.Compile("program Example; " + declaration + " begin " + body + " end; end program;");
@@ -31,8 +31,8 @@ public sealed class GenericTypeTests
     }
 
     [Theory]
-    [InlineData("public type Box<T> = where T: Hidden; record Value: T; end record;")]
-    [InlineData("public type Choice<T> = where T: Hidden; variant Item(Value: T); end variant;")]
+    [InlineData("public type Box of T = where T: Hidden; record Value: T; end record;")]
+    [InlineData("public type Choice of T = where T: Hidden; variant Item(Value: T); end variant;")]
     public void Public_type_constraints_cannot_expose_private_types(string declaration)
     {
         var result = TestCompilation.Compile("unit Example; type Hidden = variant Empty; end variant; " + declaration + " end unit;", CompilationTarget.Library);

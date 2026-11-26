@@ -24,51 +24,51 @@ uses System as Sys;
 // - `Content`: Maps a nested element.
 // ## Returns
 // The element in the parent message type.
-public function Map<TChild, TParent>(Value: E.Element<TChild>; Messages: function(TChild): TParent; Content: function(E.Element<TChild>): E.Element<TParent>): E.Element<TParent>;
+public function Map of (TChild, TParent)(Value: E.Element of TChild; Messages: function(TChild): TParent; Content: function(E.Element of TChild): E.Element of TParent): E.Element of TParent;
 begin
   case Value of
     when E.Element.NativeText(const Text: string, const Role: Texts.Appearance):
-      return E.Element<TParent>.NativeText(Text, Role);
+      return (E.Element of TParent).NativeText(Text, Role);
     when E.Element.Icon(const Glyph: string, const Size: float, const Color: G.Color?):
-      return E.Element<TParent>.Icon(Glyph, Size, Color);
+      return (E.Element of TParent).Icon(Glyph, Size, Color);
     when E.Element.Emoji(const Glyph: string, const Size: float):
-      return E.Element<TParent>.Emoji(Glyph, Size);
+      return (E.Element of TParent).Emoji(Glyph, Size);
     when E.Element.Keycap(const Keys: string):
-      return E.Element<TParent>.Keycap(Keys);
+      return (E.Element of TParent).Keycap(Keys);
     when E.Element.Image(
       const Id: string,
       const Source: Media.Source,
       const Settings: Images.Options
     ):
-      return E.Element<TParent>.Image(Id, Source, Settings);
+      return (E.Element of TParent).Image(Id, Source, Settings);
     when E.Element.Canvas(
       const Id: string,
       const Drawing: array of Canvases.Shape,
       const Clicked: function(Canvases.Event): TChild,
       const Settings: Canvases.Options,
-      const OnWheel: Sys.Func<Canvases.Wheel, TChild>?,
-      const Paint: Sys.Action<Painting.Surface>?,
-      const OnPointer: Sys.Func<Canvases.Pointer, TChild>?,
-      const OnInput: Sys.Func<Canvases.Input, TChild>?
+      const OnWheel: Sys.Func of (Canvases.Wheel, TChild)?,
+      const Paint: (Sys.Action of Painting.Surface)?,
+      const OnPointer: Sys.Func of (Canvases.Pointer, TChild)?,
+      const OnInput: Sys.Func of (Canvases.Input, TChild)?
     ):
-      return E.Element<TParent>.Canvas(
+      return (E.Element of TParent).Canvas(
         Id,
         Drawing,
         function(Event: Canvases.Event): TParent => Messages(Clicked(Event)),
         Settings,
-        Mapping.Callback<Canvases.Wheel, TChild, TParent>(OnWheel, Messages),
+        Mapping.Callback of (Canvases.Wheel, TChild, TParent)(OnWheel, Messages),
         Paint,
-        Mapping.Callback<Canvases.Pointer, TChild, TParent>(OnPointer, Messages),
-        Mapping.Callback<Canvases.Input, TChild, TParent>(OnInput, Messages)
+        Mapping.Callback of (Canvases.Pointer, TChild, TParent)(OnPointer, Messages),
+        Mapping.Callback of (Canvases.Input, TChild, TParent)(OnInput, Messages)
       );
     when E.Element.Veil(
       const Id: string,
       const Revealed: bool,
       const Changed: function(bool): TChild,
-      const Child: E.Element<TChild>,
+      const Child: E.Element of TChild,
       const Settings: Veils.Options
     ):
-      return E.Element<TParent>.Veil(
+      return (E.Element of TParent).Veil(
         Id,
         Revealed,
         function(Visible: bool): TParent => Messages(Changed(Visible)),

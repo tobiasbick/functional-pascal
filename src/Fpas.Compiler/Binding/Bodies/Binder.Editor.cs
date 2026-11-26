@@ -130,7 +130,7 @@ internal sealed partial class Binder
         => method.Parameters.Select((type, index) => ParameterText(method.Parameter(index), type)).ToArray();
 
     private static string MethodText(ImportedMethod method, string name)
-        => name + (method.MethodArguments is { Count: > 0 } variables ? "<" + string.Join(", ", variables.Select(TypeFacts.Display)) + ">" : "") +
+        => FpasIdentifiers.ApplyTypeArguments(name, method.MethodArguments?.Select(TypeFacts.Display).ToArray() ?? []) +
             "(" + string.Join("; ", MethodParameters(method)) + ")" + (method.Result == TypeSymbol.Void ? "" : ": " + TypeFacts.Display(method.Result));
 
     private void EditorSignatures(IReadOnlyList<ImportedMethod> templates, IReadOnlyList<ExpressionSyntax> syntax, int position,

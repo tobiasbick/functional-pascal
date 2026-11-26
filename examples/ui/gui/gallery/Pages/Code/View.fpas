@@ -16,7 +16,7 @@ uses System as Sys;
 // - `TMsg`: Gallery message type.
 // ## Returns
 // Original code and JSON sections, followed by an SQL sample.
-public function View<TMsg>(): array of E.Element<TMsg>;
+public function View of TMsg(): array of E.Element of TMsg;
 begin
   const Line: string := Sys.Char.ConvertFromUtf32(10);
   const Counter: string := '#include <cui/cui.h>' + Line + Line +
@@ -39,31 +39,31 @@ begin
     ' "authors": [{"name": "Maya", "commits": 412}, {"name": "Jonas", "commits": 388}]}';
   const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
   return [
-    G.Heading<TMsg>(
+    G.Heading of TMsg(
       Strings.Get('Heading.CodeBlock'),
       Strings.Get('Heading.CodeBlockHint')
     ),
-    Code.CodeBlock<TMsg>('c-sample', Counter, new Code.Options('c', 'counter.c', true, 7)),
-    E.Row<TMsg>(
+    Code.CodeBlock of TMsg('c-sample', Counter, new Code.Options('c', 'counter.c', true, 7)),
+    E.Row of TMsg(
       new L.Flow(Gap := G.Points(16), Align := L.Alignment.Start, Clip := false),
-      E.Size<TMsg>(
-        E.Column<TMsg>(
+      E.Size of TMsg(
+        E.Column of TMsg(
           new L.Flow(Clip := false),
-          Code.CodeBlock<TMsg>('py', Fib, new Code.Options('python', 'fib.py'))
+          Code.CodeBlock of TMsg('py', Fib, new Code.Options('python', 'fib.py'))
         ), Fill
       ),
-      E.Size<TMsg>(
-        E.Column<TMsg>(
+      E.Size of TMsg(
+        E.Column of TMsg(
           new L.Flow(Clip := false),
-          Code.CodeBlock<TMsg>('sh', Shell, new Code.Options('shell'))
+          Code.CodeBlock of TMsg('sh', Shell, new Code.Options('shell'))
         ), Fill
       )
     ),
-    G.Heading<TMsg>(Strings.Get('Heading.JsonViewer'), Strings.Get('Heading.JsonViewerHint')),
-    Json.JsonView<TMsg>('json', Document, new Json.Options(2)),
-    Json.JsonView<TMsg>('broken', '{"ok": true, "oops": [1, 2,}'),
-    G.Heading<TMsg>(Strings.Get('Heading.Sql')),
-    Code.CodeBlock<TMsg>(
+    G.Heading of TMsg(Strings.Get('Heading.JsonViewer'), Strings.Get('Heading.JsonViewerHint')),
+    Json.JsonView of TMsg('json', Document, new Json.Options(2)),
+    Json.JsonView of TMsg('broken', '{"ok": true, "oops": [1, 2,}'),
+    G.Heading of TMsg(Strings.Get('Heading.Sql')),
+    Code.CodeBlock of TMsg(
       'sql-sample', 'SELECT team, COUNT(*) AS members' + Line +
         'FROM people' + Line + 'GROUP BY team' + Line + 'ORDER BY members DESC;' + Line,
       new Code.Options('sql', 'teams.sql', true)

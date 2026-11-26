@@ -17,9 +17,9 @@ uses System as Sys;
 // Draws the native file icon.
 // ## Returns
 // An 18-point icon in the theme foreground.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return W.Icon<string>(Sys.Char.ConvertFromUtf32($E0CC), 18.0F);
+  return W.Icon of string(Sys.Char.ConvertFromUtf32($E0CC), 18.0F);
 end function;
 
 end unit;

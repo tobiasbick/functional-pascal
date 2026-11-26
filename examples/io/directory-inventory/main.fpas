@@ -40,15 +40,15 @@ begin
     Options.AttributesToSkip := IO.FileAttributes.ReparsePoint;
     Options.IgnoreInaccessible := false;
     Options.MatchType := IO.MatchType.Win32;
-    const Visible: Collections.IEnumerable<string> := Seq.Where<string>(
+    const Visible: Collections.IEnumerable of string := Seq.Where of string(
       IO.Directory.EnumerateFiles(Root, Pattern, Options),
       function(Path: string): bool => not (IO.Path.GetFileName(Path) ?? '').StartsWith('.')
     );
-    const Paths: Collections.List<string> := Seq.ToList<string>(Visible);
+    const Paths: Collections.List of string := Seq.ToList of string(Visible);
     Paths.Sort();
 
     var Total: int := 0;
-    const Rows: Collections.IEnumerable<string> := Seq.Select<string, string>(
+    const Rows: Collections.IEnumerable of string := Seq.Select of (string, string)(
       Paths,
       function(Path: string): string begin
         const Lines: int := CountLines(Path);

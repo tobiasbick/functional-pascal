@@ -17,7 +17,7 @@ uses System.Collections.Generic as C;
 // The select trigger and current model bindings.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Trigger<TMsg> = record implements A.IActivatable<TMsg>
+public type Trigger of TMsg = record implements A.IActivatable of TMsg
   // Stable control identity.
   public Id: string;
   // Options in original index order.
@@ -29,12 +29,12 @@ public type Trigger<TMsg> = record implements A.IActivatable<TMsg>
   // Label, placeholder and input policy.
   public Settings: S.Options;
   // The owning terminal session.
-  public Popup: P.State<TMsg>;
+  public Popup: P.State of TMsg;
 
   // Opens the popup at the model selection with a fresh query.
   // ## Returns
   // Opening does not send a message.
-  public function Activate(): A.Result<TMsg>;
+  public function Activate(): A.Result of TMsg;
   begin
     const Highlight: string := if self.Selected >= 0 then
       S.OptionId(self.Id, self.Selected)
@@ -42,20 +42,20 @@ public type Trigger<TMsg> = record implements A.IActivatable<TMsg>
       ''
     end if;
     self.Popup.Write(new P.Cursor(self.Id, Highlight));
-    return A.Result<TMsg>.NoAction;
+    return (A.Result of TMsg).NoAction;
   end function;
 end record;
 
-type Option<TMsg> = record implements A.IActivatable<TMsg>
-  public Field: Trigger<TMsg>;
+type Option of TMsg = record implements A.IActivatable of TMsg
+  public Field: Trigger of TMsg;
   public Index: int;
 
-  public function Activate(): A.Result<TMsg>;
+  public function Activate(): A.Result of TMsg;
   begin
     return if self.Index = self.Field.Selected then
-      A.Result<TMsg>.NoAction
+      (A.Result of TMsg).NoAction
     else
-      A.Result<TMsg>.Send(self.Field.Change(self.Index))
+      (A.Result of TMsg).Send(self.Field.Change(self.Index))
     end if;
   end function;
 end record;
@@ -68,9 +68,9 @@ end record;
 // - `Anchor`: Visible trigger bounds.
 // ## Returns
 // Popup content with optional search.
-public function Content<TMsg>(Field: Trigger<TMsg>; Anchor: F.Rect): Popup.Content<TMsg>;
+public function Content of TMsg(Field: Trigger of TMsg; Anchor: F.Rect): Popup.Content of TMsg;
 begin
-  const Rows: C.List<Popup.Row<TMsg>> := new C.List<Popup.Row<TMsg>>(Field.Items.Length);
+  const Rows: C.List of Popup.Row of TMsg := new C.List of Popup.Row of TMsg(Field.Items.Length);
   for Index: int := 0 to Field.Items.Length - 1 do
     const Label: string := Field.Items[Index].Label;
     const Active: bool := Index = Field.Selected;
@@ -80,16 +80,16 @@ begin
       '  '
     end if) + G.SingleLine(Label);
     Rows.Add(
-      Popup.Row<TMsg>.Choice(
-        new Popup.Item<TMsg>(
+      (Popup.Row of TMsg).Choice(
+        new Popup.Item of TMsg(
           S.OptionId(Field.Id, Index), Label, Caption,
-          'select-option', new Option<TMsg>(Field, Index), Value := Active.ToString()
+          'select-option', new Option of TMsg(Field, Index), Value := Active.ToString()
         )
       )
     );
   end for;
 
-  return new Popup.Content<TMsg>(
+  return new Popup.Content of TMsg(
     Rows.ToArray(),
     Sys.Math.Max(18, Anchor.Width),
     Searchable := Field.Settings.Searchable
@@ -103,7 +103,7 @@ end function;
 // - `Field`: Model binding and popup state.
 // ## Returns
 // A trigger and optional caption in a single column.
-public function Lower<TMsg>(Field: Trigger<TMsg>): E.Element<TMsg>;
+public function Lower of TMsg(Field: Trigger of TMsg): E.Element of TMsg;
 begin
   const Value: string := if Field.Selected >= 0 then
     Field.Items[Field.Selected].Label
@@ -112,7 +112,7 @@ begin
   else
     'Select'
   end if;
-  const Button: E.Element<TMsg> := E.Element<TMsg>.Action(
+  const Button: E.Element of TMsg := (E.Element of TMsg).Action(
     Field.Id, Field, Field.Settings.Enabled,
     new E.ActionView(
       '▾ ' + G.SingleLine(Value),
@@ -126,12 +126,12 @@ begin
       ArrowFocus := false
     )
   );
-  const Rows: array of E.Element<TMsg> := if Field.Settings.Label = '' then
+  const Rows: array of E.Element of TMsg := if Field.Settings.Label = '' then
     [Button]
   else
-    [E.Element<TMsg>.Label(Field.Settings.Label), Button]
+    [(E.Element of TMsg).Label(Field.Settings.Label), Button]
   end if;
-  return E.Element<TMsg>.Stack(Rows, false, new E.Flow());
+  return (E.Element of TMsg).Stack(Rows, false, new E.Flow());
 end function;
 
 end unit;

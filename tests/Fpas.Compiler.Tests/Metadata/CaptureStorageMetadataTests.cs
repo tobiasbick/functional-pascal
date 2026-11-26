@@ -16,10 +16,10 @@ public sealed class CaptureStorageMetadataTests
             public function Factory(Seed: int): function(): int;
             begin
               var Value: int := Seed;
-              const Box: Runtime.StrongBox<int> := new Runtime.StrongBox<int>(70);
+              const Box: Runtime.StrongBox of int := new Runtime.StrongBox of int(70);
               return function(): int => Value + Box.Value;
             end function;
-            public async function Observe(): Tasks.Task<int>;
+            public async function Observe(): Tasks.Task of int;
             begin
               var Value: int := 40;
               const Read: function(): int := function(): int => Value;

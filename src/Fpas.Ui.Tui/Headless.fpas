@@ -24,12 +24,12 @@ uses Fpas.Ui.Widgets.Theming.Themes as Th;
 //
 // ## Returns
 // The session with its initial frame published.
-public function Start<TModel, TMsg>(
-  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel): Ui.Element<TMsg>; Columns: int; Rows: int
+public function Start of (TModel, TMsg)(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
+  View: function(TModel): Ui.Element of TMsg; Columns: int; Rows: int
 ): App.HeadlessSession;
 begin
-  return Start<TModel, TMsg>(InitialModel, Update, View, Columns, Rows, new Th.Theme());
+  return Start of (TModel, TMsg)(InitialModel, Update, View, Columns, Rows, new Th.Theme());
 end function;
 
 // Starts a manually driven terminal session.
@@ -48,12 +48,12 @@ end function;
 //
 // ## Returns
 // The session with its initial frame published.
-public function Start<TModel, TMsg>(
-  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel): Ui.Element<TMsg>; Columns: int; Rows: int; Theme: Th.Theme
+public function Start of (TModel, TMsg)(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
+  View: function(TModel): Ui.Element of TMsg; Columns: int; Rows: int; Theme: Th.Theme
 ): App.HeadlessSession;
 begin
-  return Start<TModel, TMsg>(
+  return Start of (TModel, TMsg)(
     InitialModel, Update, View, Columns, Rows, function(State: TModel): Th.Theme => Theme
   );
 end function;
@@ -74,14 +74,14 @@ end function;
 //
 // ## Returns
 // The session with its initial frame published.
-public function Start<TModel, TMsg>(
-  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel): Ui.Element<TMsg>; Columns: int; Rows: int; ThemeFor: function(TModel): Th.Theme
+public function Start of (TModel, TMsg)(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
+  View: function(TModel): Ui.Element of TMsg; Columns: int; Rows: int; ThemeFor: function(TModel): Th.Theme
 ): App.HeadlessSession;
 begin
-  return Start<TModel, TMsg>(
+  return Start of (TModel, TMsg)(
     InitialModel, Update,
-    function(State: TModel; Size: L.Viewport): Ui.Element<TMsg> => View(State),
+    function(State: TModel; Size: L.Viewport): Ui.Element of TMsg => View(State),
     Columns, Rows, ThemeFor
   );
 end function;
@@ -101,12 +101,12 @@ end function;
 //
 // ## Returns
 // The session with its initial frame published.
-public function Start<TModel, TMsg>(
-  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel, L.Viewport): Ui.Element<TMsg>; Columns: int; Rows: int
+public function Start of (TModel, TMsg)(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
+  View: function(TModel, L.Viewport): Ui.Element of TMsg; Columns: int; Rows: int
 ): App.HeadlessSession;
 begin
-  return Start<TModel, TMsg>(InitialModel, Update, View, Columns, Rows, new Th.Theme());
+  return Start of (TModel, TMsg)(InitialModel, Update, View, Columns, Rows, new Th.Theme());
 end function;
 
 // Starts a manually driven terminal session.
@@ -125,12 +125,12 @@ end function;
 //
 // ## Returns
 // The session with its initial frame published.
-public function Start<TModel, TMsg>(
-  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel, L.Viewport): Ui.Element<TMsg>; Columns: int; Rows: int; Theme: Th.Theme
+public function Start of (TModel, TMsg)(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
+  View: function(TModel, L.Viewport): Ui.Element of TMsg; Columns: int; Rows: int; Theme: Th.Theme
 ): App.HeadlessSession;
 begin
-  return Start<TModel, TMsg>(
+  return Start of (TModel, TMsg)(
     InitialModel, Update, View, Columns, Rows, function(State: TModel): Th.Theme => Theme
   );
 end function;
@@ -151,16 +151,16 @@ end function;
 //
 // ## Returns
 // The session with its initial frame published.
-public function Start<TModel, TMsg>(
-  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel, L.Viewport): Ui.Element<TMsg>; Columns: int; Rows: int;
+public function Start of (TModel, TMsg)(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
+  View: function(TModel, L.Viewport): Ui.Element of TMsg; Columns: int; Rows: int;
   ThemeFor: function(TModel): Th.Theme
 ): App.HeadlessSession;
   procedure Present(Value: App.Frame);
   begin
   end procedure;
 begin
-  return SessionHost.Start<TModel, TMsg>(
+  return SessionHost.Start of (TModel, TMsg)(
     InitialModel,
     Update,
     View,

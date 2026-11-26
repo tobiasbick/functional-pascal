@@ -17,11 +17,11 @@ uses Fpas.Ui.Widgets.Navigation.PathBars as W;
 // Shows a path with alternate folders under project.
 // ## Returns
 // The path bar with navigation proposals as messages.
-public function View(): E.Element<W.Event>;
+public function View(): E.Element of W.Event;
 begin
   const Current: W.Value := new W.Value(['project', 'src'], 'project/src',
     [['assets', 'src']]);
-  return W.PathBar<W.Event>('location', Current,
+  return W.PathBar of W.Event('location', Current,
     function(Change: W.Event): W.Event => Change);
 end function;
 

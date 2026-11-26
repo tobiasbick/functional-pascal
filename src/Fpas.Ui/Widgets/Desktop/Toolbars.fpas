@@ -71,10 +71,10 @@ end variant;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function Toolbar<TMsg>(Id: string; Items: array of Item; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function Toolbar of TMsg(Id: string; Items: array of Item; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Toolbar(Id, Items, Changed, Settings ?? new Options());
+  return (E.Element of TMsg).Toolbar(Id, Items, Changed, Settings ?? new Options());
 end function;
 
 end unit;

@@ -33,7 +33,7 @@ begin
   end try;
 end function;
 
-async function ReadFile(Path: string; Cancellation: T.CancellationToken): Tasks.Task<array of byte>;
+async function ReadFile(Path: string; Cancellation: T.CancellationToken): Tasks.Task of array of byte;
 begin
   const Info: IO.FileInfo := new IO.FileInfo(Path);
   const Size: long := Info.Length;
@@ -78,7 +78,7 @@ end function;
 // Resolves embedded front/other images, then unambiguous cover/folder/front sidecars.
 // `MayRead` rejects paused/offline sources; cached `Album`/`Revision` works offline.
 // All I/O runs on the background caller; returned pixels are immutable by contract.
-public async function Read(Database: string; Users: string; Album: string; Revision: string; Cache: Thumbnails.ThumbnailStore; MayRead: function(string): bool; Cancellation: T.CancellationToken): Tasks.Task<Imaging.Bitmap?>;
+public async function Read(Database: string; Users: string; Album: string; Revision: string; Cache: Thumbnails.ThumbnailStore; MayRead: function(string): bool; Cancellation: T.CancellationToken): Tasks.Task of Imaging.Bitmap?;
 begin
   Cancellation.ThrowIfCancellationRequested();
   const Cached: Imaging.Bitmap? := Cache.TryGet(Album, Revision);
@@ -89,7 +89,7 @@ begin
   using const Connection: Db.SqliteConnection := Sql.Open(Database);
   var FirstOther: Pictures.Cover? := null;
   // Keep only one encoded fallback while looking for a front cover.
-  const Remaining: C.List<C.KeyValuePair<long, string>> := new C.List<C.KeyValuePair<long, string>>();
+  const Remaining: C.List of C.KeyValuePair of (long, string) := new C.List of C.KeyValuePair of (long, string)();
   begin
     using const Query: Db.SqliteCommand := Sql.Command(
       Connection,
@@ -122,7 +122,9 @@ begin
           elsif FirstOther = null then
             FirstOther := Value;
           else
-            Remaining.Add(new C.KeyValuePair<long, string>(Rows.GetInt64(0), Rows.GetString(1)));
+            Remaining.Add(
+              new C.KeyValuePair of (long, string)(Rows.GetInt64(0), Rows.GetString(1))
+            );
           end if;
         end if;
       catch Unavailable: IO.IOException do
@@ -136,7 +138,7 @@ begin
     return Fallback;
   end if;
 
-  for Candidate: C.KeyValuePair<long, string> in Remaining do
+  for Candidate: C.KeyValuePair of (long, string) in Remaining do
     Cancellation.ThrowIfCancellationRequested();
     if MayRead(Candidate.Value) then
       try
@@ -152,7 +154,7 @@ begin
       end try;
     end if;
   end for;
-  const Paths: C.List<string> := new C.List<string>();
+  const Paths: C.List of string := new C.List of string();
   begin
     using const Query: Db.SqliteCommand := Sql.Command(
       Connection,

@@ -21,9 +21,9 @@ uses Fpas.Ui.Widgets.Ai.Reasonings as W;
 // - `Seconds`: Elapsed seconds.
 // ## Returns
 // The native disclosure panel.
-public function View(Summary: string; Thinking: bool; Seconds: float): E.Element<string>;
+public function View(Summary: string; Thinking: bool; Seconds: float): E.Element of string;
 begin
-  return W.Reasoning<string>('reasoning', [E.Text<string>(Summary)],
+  return W.Reasoning of string('reasoning', [E.Text of string(Summary)],
     new W.Options(Thinking := Thinking, Seconds := Seconds));
 end function;
 

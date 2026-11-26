@@ -26,9 +26,9 @@ end variant;
 // - `Order`: Current sort from the model.
 // ## Returns
 // The widget for the application view.
-public function View(Rows: array of W.Row<Msg>; Order: W.Sort): E.Element<Msg>;
+public function View(Rows: array of W.Row of Msg; Order: W.Sort): E.Element of Msg;
 begin
-  return W.Table<Msg>('people', [
+  return W.Table of Msg('people', [
     new W.Column('Name', Sortable := true),
     new W.Column('Status')
   ], Rows, Order, Msg.SortBy, Msg.SelectPerson);

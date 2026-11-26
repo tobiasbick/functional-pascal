@@ -16,9 +16,9 @@ uses Fpas.Ui.Widgets.Actions.Buttons as B;
 // Builds the button example.
 // ## Returns
 // The control for this view.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return B.Button<string>('save', 'Save changes', 'save', new B.Options(Variant := S.ButtonVariant.Primary));
+  return B.Button of string('save', 'Save changes', 'save', new B.Options(Variant := S.ButtonVariant.Primary));
 end function;
 
 end unit;

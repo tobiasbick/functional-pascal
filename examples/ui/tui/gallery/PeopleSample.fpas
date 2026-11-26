@@ -21,12 +21,12 @@ uses System.Collections.Generic as C;
 // - `Height`: Visible terminal rows including the header.
 // ## Returns
 // The Data display table and details.
-public function View<TMsg>(
+public function View of TMsg(
   Order: T.Sort; Selected: string; SortBy: function(T.Sort): TMsg;
   SelectPerson: function(string): TMsg; Height: int
-): E.Element<TMsg>;
+): E.Element of TMsg;
 begin
-  const Rows: C.List<T.Row<TMsg>> := new C.List<T.Row<TMsg>>();
+  const Rows: C.List of T.Row of TMsg := new C.List of T.Row of TMsg();
   const Columns: array of T.Column := People.Columns(
     L.Extent.Content,
     L.Extent.Content,
@@ -46,22 +46,22 @@ begin
     end if;
 
     Rows.Add(
-      new T.Row<TMsg>(
+      new T.Row of TMsg(
         Item.Id, [
-          T.Cell<TMsg>.Text(Item.Name),
-          T.Cell<TMsg>.Text(Item.Role),
-          T.Cell<TMsg>.Text(Item.Status)
+          (T.Cell of TMsg).Text(Item.Name),
+          (T.Cell of TMsg).Text(Item.Role),
+          (T.Cell of TMsg).Text(Item.Status)
         ], Item.Id = Selected
       )
     );
   end for;
 
-  return E.Column<TMsg>(
-    T.Table<TMsg>(
+  return E.Column of TMsg(
+    T.Table of TMsg(
       'people', [Columns[0], Columns[2], Columns[3]], Rows.ToArray(), Order, SortBy, SelectPerson,
       new T.Options(Height := L.Extent.Fixed(L.Measure.Cells(Height)), HorizontalScroll := true)
     ),
-    E.Text<TMsg>(Details)
+    E.Text of TMsg(Details)
   );
 end function;
 

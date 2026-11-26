@@ -32,13 +32,13 @@ end record;
 // - `Settings`: Step, value display and input permission.
 // ## Returns
 // A graphical slider with model-owned value.
-public function Slider<TMsg>(
+public function Slider of TMsg(
   Id: string; Label: string; Value: float; Minimum: float; Maximum: float;
   OnChange: function(float): TMsg; Settings: Options? := null
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.SliderAction(
+  return (E.Element of TMsg).SliderAction(
     Id,
     Label,
     Value,

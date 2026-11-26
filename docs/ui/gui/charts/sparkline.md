@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Charts.Sparklines as W;
 // - `Values`: Samples in display order.
 // ## Returns
 // The widget for the application view.
-public function View(Values: array of float): E.Element<string>;
+public function View(Values: array of float): E.Element of string;
 begin
-  return W.Sparkline<string>('chart-sparkline', Values, new W.Options(Height := 32.0F));
+  return W.Sparkline of string('chart-sparkline', Values, new W.Options(Height := 32.0F));
 end function;
 
 end unit;

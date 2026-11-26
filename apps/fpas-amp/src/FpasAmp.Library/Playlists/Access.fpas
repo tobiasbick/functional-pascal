@@ -29,7 +29,7 @@ public type Session = record
   // Publishes all changed playlist summaries through awaited `Publish`, including
   // the first empty snapshot. Cancellation closes the borrowed observation lifetime;
   // blocking database reads and polling stay off the caller's thread.
-  public async function ObserveAsync(Publish: function(I.ImmutableArray<M.Summary>): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
+  public async function ObserveAsync(Publish: function(I.ImmutableArray of M.Summary): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task;
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
       self.Lifetime,
@@ -37,7 +37,7 @@ public type Session = record
     );
     await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
     await Tasks.TaskExtensions.Unwrap(
-      Tasks.Task.Run<Tasks.Task>(
+      Tasks.Task.Run of Tasks.Task(
         function(): Tasks.Task => Observing.Run(self.Database, self.Users, Publish, Linked.Token),
         Linked.Token
       )
@@ -45,7 +45,7 @@ public type Session = record
   end function;
 
   // Lists a bounded summary page selected by `Request`; cancellation owns this call.
-  public async function ListAsync(Request: M.Query; Cancellation: T.CancellationToken): Tasks.Task<I.ImmutableArray<M.Summary>>;
+  public async function ListAsync(Request: M.Query; Cancellation: T.CancellationToken): Tasks.Task of I.ImmutableArray of M.Summary;
   requires Request.Limit >= 1 and Request.Limit <= 200;
   requires Request.Offset >= 0;
   begin
@@ -54,8 +54,8 @@ public type Session = record
       Cancellation
     );
     await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
-    return await Tasks.Task.Run<I.ImmutableArray<M.Summary>>(
-      function(): I.ImmutableArray<M.Summary> => Queries.List(
+    return await Tasks.Task.Run of I.ImmutableArray of M.Summary(
+      function(): I.ImmutableArray of M.Summary => Queries.List(
         self.Database,
         self.Users,
         Request,
@@ -66,7 +66,7 @@ public type Session = record
   end function;
 
   // Reads ordered `Identity`, or null when absent; cancellation owns this call.
-  public async function ReadAsync(Identity: M.Key; Cancellation: T.CancellationToken): Tasks.Task<M.Playlist?>;
+  public async function ReadAsync(Identity: M.Key; Cancellation: T.CancellationToken): Tasks.Task of M.Playlist?;
   requires Identity.Id <> '';
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
@@ -74,7 +74,7 @@ public type Session = record
       Cancellation
     );
     await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
-    return await Tasks.Task.Run<M.Playlist?>(
+    return await Tasks.Task.Run of M.Playlist? (
       function(): M.Playlist? => Queries.Read(self.Database, self.Users, Identity, Linked.Token),
       Linked.Token
     ).ConfigureAwait(false);
@@ -82,7 +82,7 @@ public type Session = record
 
   // Creates/replaces a local list by optional `Id`. `Items` retains duplicates/order;
   // locations must be absolute paths/URIs. Cancellation rolls back replacement.
-  public async function SaveAsync(Id: string?; Name: string; Items: array of M.Input; Cancellation: T.CancellationToken): Tasks.Task<M.Key>;
+  public async function SaveAsync(Id: string?; Name: string; Items: array of M.Input; Cancellation: T.CancellationToken): Tasks.Task of M.Key;
   requires Name <> '';
   requires Items <> null and Items.Length <= 100000;
   begin
@@ -92,7 +92,7 @@ public type Session = record
       Cancellation
     );
     await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
-    return await Tasks.Task.Run<M.Key>(
+    return await Tasks.Task.Run of M.Key(
       function(): M.Key => Lists.Save(self.Users, Id, Name, Copy, Linked.Token),
       Linked.Token
     ).ConfigureAwait(false);
@@ -117,7 +117,7 @@ public type Session = record
 
   // Imports absolute `Path` as a new durable copy, optionally named `Name`.
   // Referenced media is never opened or enrolled; cancellation owns this call.
-  public async function ImportAsync(Path: string; Cancellation: T.CancellationToken; Name: string? := null): Tasks.Task<M.Key>;
+  public async function ImportAsync(Path: string; Cancellation: T.CancellationToken; Name: string? := null): Tasks.Task of M.Key;
   requires Path <> '';
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
@@ -125,7 +125,7 @@ public type Session = record
       Cancellation
     );
     await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
-    return await Tasks.Task.Run<M.Key>(
+    return await Tasks.Task.Run of M.Key(
       function(): M.Key => Transfer.Import(self.Users, Path, Name, Linked.Token),
       Linked.Token
     ).ConfigureAwait(false);

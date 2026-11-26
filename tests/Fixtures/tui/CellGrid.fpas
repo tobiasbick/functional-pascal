@@ -30,38 +30,38 @@ type Msg = variant
 end variant;
 
 procedure Verify();
-  function Update(Visible: bool; Message: Msg): Mvu.Transition<bool, Msg>;
+  function Update(Visible: bool; Message: Msg): Mvu.Transition of (bool, Msg);
   begin
     case Message of
       when Msg.Grid(const Event: G.Event):
         Events.Add(Event);
       when Msg.Toggle:
-        return new Mvu.Transition<bool, Msg>(not Visible, []);
+        return new Mvu.Transition of (bool, Msg)(not Visible, []);
       when Msg.Scrolled:
         raise new Sys.InvalidOperationException('Grid wheel escaped to the enclosing scroll view.');
     end case;
 
-    return new Mvu.Transition<bool, Msg>(Visible, []);
+    return new Mvu.Transition of (bool, Msg)(Visible, []);
   end function;
 
-  function View(Visible: bool): E.Element<Msg>;
+  function View(Visible: bool): E.Element of Msg;
   begin
-    const Grid: E.Element<Msg> := if Visible then
-      G.CellGrid<Msg>('grid', Image, Msg.Grid)
+    const Grid: E.Element of Msg := if Visible then
+      G.CellGrid of Msg('grid', Image, Msg.Grid)
     else
-      E.Text<Msg>('hidden')
+      E.Text of Msg('hidden')
     end if;
-    const Tall: E.Element<Msg> := E.Column<Msg>(
-      E.Size<Msg>(Grid, new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(6))))
+    const Tall: E.Element of Msg := E.Column of Msg(
+      E.Size of Msg(Grid, new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(6))))
     );
-    return Views.Screen<Msg>(
-      E.Border<Msg>(
-        E.ScrollView<Msg>(
+    return Views.Screen of Msg(
+      E.Border of Msg(
+        E.ScrollView of Msg(
           'clip', Tall, L.ScrollPosition.Offset(L.Measure.Cells(2)),
           function(Value: L.ScrollChange): Msg => Msg.Scrolled, false
         )
       ), [],
-      [K.CharacterShortcut<Msg>('v', Msg.Toggle)]
+      [K.CharacterShortcut of Msg('v', Msg.Toggle)]
     );
   end function;
 
@@ -86,7 +86,7 @@ procedure Verify();
     Drain(Session);
   end procedure;
 begin
-  const Events: C.List<G.Event> := new C.List<G.Event>();
+  const Events: C.List of G.Event := new C.List of G.Event();
   const Style: T.Style := new T.Style($123456, $654321);
   const Dot: T.Cell := new T.Cell('.', Style);
   const Cells: array of T.Cell := [
@@ -99,7 +99,7 @@ begin
   ];
   const Image: G.Image := G.Image.Create(2, 3, Cells);
   Cells[4] := Dot;
-  using const Session: App.HeadlessSession := Headless.Start<bool, Msg>(
+  using const Session: App.HeadlessSession := Headless.Start of (bool, Msg)(
     true,
     Update,
     View,
@@ -145,24 +145,24 @@ end procedure;
 
 // One frame can contain more first-size notifications than the host mailbox can admit.
 procedure ManyVisibleGrids();
-  function View(State: int): E.Element<int>;
+  function View(State: int): E.Element of int;
   begin
-    const Children: C.List<E.Element<int>> := new C.List<E.Element<int>>();
+    const Children: C.List of E.Element of int := new C.List of E.Element of int();
     for Index: int := 0 to 69 do
       const Id: int := Index;
-      Children.Add(G.CellGrid<int>(Id.ToString(), null, function(Event: G.Event): int => Id));
+      Children.Add(G.CellGrid of int(Id.ToString(), null, function(Event: G.Event): int => Id));
     end for;
 
-    return E.Column<int>(Children.ToArray());
+    return E.Column of int(Children.ToArray());
   end function;
 
-  function Update(State: int; Id: int): Mvu.Transition<int, int>;
+  function Update(State: int; Id: int): Mvu.Transition of (int, int);
   begin
     Check(Id = State, 'Size messages must arrive once in layout order.');
-    return new Mvu.Transition<int, int>(State + 1, []);
+    return new Mvu.Transition of (int, int)(State + 1, []);
   end function;
 begin
-  using const Session: App.HeadlessSession := Headless.Start<int, int>(0, Update, View, 4, 70);
+  using const Session: App.HeadlessSession := Headless.Start of (int, int)(0, Update, View, 4, 70);
   for Index: int := 0 to 69 do
     case Session.Step() of
       when App.StepResult.EffectProcessed(_):

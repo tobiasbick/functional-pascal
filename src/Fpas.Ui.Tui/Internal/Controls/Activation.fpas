@@ -2,26 +2,26 @@
 
 unit Fpas.Ui.Tui.Internal.Controls.Activation;
 
-public type Result<TMsg> = variant
+public type Result of TMsg = variant
   NoAction;
   Send(Message: TMsg);
 end variant;
 
-public type IActivatable<TMsg> = protocol
-  function Activate(): Result<TMsg>;
+public type IActivatable of TMsg = protocol
+  function Activate(): Result of TMsg;
 end protocol;
 
 // Runs a callback only when an action is activated.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Callback<TMsg> = record implements IActivatable<TMsg>
+public type Callback of TMsg = record implements IActivatable of TMsg
   // Local action or application message proposal.
-  public Run: function(): Result<TMsg>;
+  public Run: function(): Result of TMsg;
 
   // Invokes the delayed action.
   // ## Returns
   // The application message, when the action produces one.
-  public function Activate(): Result<TMsg>;
+  public function Activate(): Result of TMsg;
   begin
     return self.Run();
   end function;
@@ -33,7 +33,7 @@ end record;
 // ## Parameters
 // - `Action`: Outcome of the control input.
 // - `Apply`: Application dispatcher.
-public procedure Dispatch<TMsg>(Action: Result<TMsg>; Apply: procedure(TMsg));
+public procedure Dispatch of TMsg(Action: Result of TMsg; Apply: procedure(TMsg));
 begin
   case Action of
     when Result.Send(const Message: TMsg):
@@ -42,17 +42,17 @@ begin
   end case;
 end procedure;
 
-public type Direct<TMsg> = record implements IActivatable<TMsg>
+public type Direct of TMsg = record implements IActivatable of TMsg
   public Message: TMsg;
   // Whether activation is suspended while the widget is busy.
   public Busy: bool := false;
 
-  public function Activate(): Result<TMsg>;
+  public function Activate(): Result of TMsg;
   begin
     return if self.Busy then
-      Result<TMsg>.NoAction
+      (Result of TMsg).NoAction
     else
-      Result<TMsg>.Send(self.Message)
+      (Result of TMsg).Send(self.Message)
     end if;
   end function;
 end record;
@@ -61,7 +61,7 @@ end record;
 // ## Type parameters
 // - `TValue`: Value proposed to the application.
 // - `TMsg`: Application message type.
-public type Proposal<TValue, TMsg> = record implements IActivatable<TMsg>
+public type Proposal of (TValue, TMsg) = record implements IActivatable of TMsg
   // Maps an accepted activation to an application message.
   public Notify: function(TValue): TMsg;
   // Value proposed by this presentation of the widget.
@@ -70,9 +70,9 @@ public type Proposal<TValue, TMsg> = record implements IActivatable<TMsg>
   // Invokes the application's mapper once.
   // ## Returns
   // The message to dispatch.
-  public function Activate(): Result<TMsg>;
+  public function Activate(): Result of TMsg;
   begin
-    return Result<TMsg>.Send(self.Notify(self.Value));
+    return (Result of TMsg).Send(self.Notify(self.Value));
   end function;
 end record;
 

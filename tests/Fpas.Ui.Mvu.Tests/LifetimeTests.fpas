@@ -18,7 +18,7 @@ public type LifetimeTests = record
   // Checks a typed post waiting for mailbox capacity when the session closes.
   [X.FactAttribute]
   public procedure ClosingCancelsTypedPostInFullMailbox();
-    async function Work(Context: A.BackgroundContext<string>; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, string>>;
+    async function Work(Context: A.BackgroundContext of string; Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, string);
       procedure PauseCancellation();
       begin
         discard CallbackStarted.TrySetResult();
@@ -36,20 +36,20 @@ public type LifetimeTests = record
       await Reply.ConfigureAwait(false);
       return Fx.Outcome.Success(Fx.Completion.Done);
     end function;
-    function Update(Model: string; _Message: string): A.Transition<string, string>;
+    function Update(Model: string; _Message: string): A.Transition of (string, string);
     begin
-      return new A.Transition<string, string>(
+      return new A.Transition of (string, string)(
         Model,
         [
-          A.StartBackground<string>(
+          A.StartBackground of string(
             'full',
-            Fx.Effect<Fx.Completion, string, A.BackgroundContext<string>>.Defer(Work)
+            Fx.Effect of (Fx.Completion, string, A.BackgroundContext of string).Defer(Work)
           )
         ]
       );
     end function;
   begin
-    const Announced: Tasks.TaskCompletionSource<Tasks.Task> := new Tasks.TaskCompletionSource<Tasks.Task>(
+    const Announced: Tasks.TaskCompletionSource of Tasks.Task := new Tasks.TaskCompletionSource of Tasks.Task(
       Tasks.TaskCreationOptions.RunContinuationsAsynchronously
     );
     const CallbackStarted: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
@@ -59,7 +59,7 @@ public type LifetimeTests = record
       Tasks.TaskCreationOptions.RunContinuationsAsynchronously
     );
     using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
-    const Session: Runtime.Runtime<string, string, int> := Runtime.Start<string, string, int>(
+    const Session: Runtime.Runtime of (string, string, int) := Runtime.Start of (string, string, int)(
       'ready', Update, procedure(_Request: A.HostRequest) begin end procedure, 1
     );
     try
@@ -82,7 +82,7 @@ public type LifetimeTests = record
   // Reports both worker and cancellation callback faults from a closing run.
   [X.FactAttribute]
   public procedure ShutdownPreservesConcurrentFaults();
-    async function Work(_Context: A.BackgroundContext<string>; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, string>>;
+    async function Work(_Context: A.BackgroundContext of string; Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, string);
       procedure Cancel();
       begin
         Release.SetResult();
@@ -94,14 +94,14 @@ public type LifetimeTests = record
       await Release.Task.WaitAsync(Stop.Token).ConfigureAwait(false);
       raise new Sys.InvalidOperationException('worker fault');
     end function;
-    function Update(Model: string; _Message: string): A.Transition<string, string>;
+    function Update(Model: string; _Message: string): A.Transition of (string, string);
     begin
-      return new A.Transition<string, string>(
+      return new A.Transition of (string, string)(
         Model,
         [
-          A.StartBackground<string>(
+          A.StartBackground of string(
             'faults',
-            Fx.Effect<Fx.Completion, string, A.BackgroundContext<string>>.Defer(Work)
+            Fx.Effect of (Fx.Completion, string, A.BackgroundContext of string).Defer(Work)
           )
         ]
       );
@@ -114,7 +114,7 @@ public type LifetimeTests = record
       Tasks.TaskCreationOptions.RunContinuationsAsynchronously
     );
     using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
-    const Session: Runtime.Runtime<string, string, int> := Runtime.Start<string, string, int>(
+    const Session: Runtime.Runtime of (string, string, int) := Runtime.Start of (string, string, int)(
       'ready', Update, procedure(_Request: A.HostRequest) begin end procedure, 1
     );
     try
@@ -127,20 +127,20 @@ public type LifetimeTests = record
         Sys.TimeSpan.FromSeconds(5)
       ).GetAwaiter().GetResult();
       const Closed: D.SessionSnapshot := Session.Snapshot();
-      X.Assert.Equal<D.Lifecycle>(D.Lifecycle.Closed, Closed.State);
-      X.Assert.Equal<int>(0, Closed.ActiveEffects.Count);
+      X.Assert.Equal of D.Lifecycle(D.Lifecycle.Closed, Closed.State);
+      X.Assert.Equal of int(0, Closed.ActiveEffects.Count);
       const Faults: Sys.AggregateException? := Closing.Exception;
       if Faults = null then
         raise new Sys.InvalidOperationException('Expected shutdown faults');
       end if;
 
       const All: array of string := ['callback fault', 'worker fault'];
-      const Actual: C.List<string> := new C.List<string>();
+      const Actual: C.List of string := new C.List of string();
       for Error: Sys.Exception in Faults.Flatten().InnerExceptions do
         Actual.Add(Error.Message);
       end for;
 
-      X.Assert.Equal<int>(All.Length, Actual.Count);
+      X.Assert.Equal of int(All.Length, Actual.Count);
       for Message: string in All do
         X.Assert.True(Actual.Contains(Message), 'Missing fault: ' + Message);
       end for;

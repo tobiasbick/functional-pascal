@@ -34,11 +34,11 @@ end record;
 // - `Settings`: Optional native increment, precision, width and display settings.
 // ## Returns
 // A graphical model-controlled scrub field.
-public function ScrubField<TMsg>(Id: string; Label: string; Value: float; Minimum: float; Maximum: float; OnChange: function(float): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function ScrubField of TMsg(Id: string; Label: string; Value: float; Minimum: float; Maximum: float; OnChange: function(float): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 requires Minimum < Maximum;
 begin
-  return E.Element<TMsg>.ScrubField(
+  return (E.Element of TMsg).ScrubField(
     Id,
     Label,
     Value,

@@ -12,7 +12,7 @@ uses System.Text.RegularExpressions as R;
 
 function Raw(Item: M.Example; Path: string; Primary: bool): M.Source;
 begin
-  const Lines: C.List<M.Origin> := new C.List<M.Origin>();
+  const Lines: C.List of M.Origin := new C.List of M.Origin();
   const Count: int := Item.Source.Split(#10).Length - 1;
 
   for Index: int := 0 to Count - 1 do
@@ -50,7 +50,7 @@ begin
   end if;
 
   const Source: Text.StringBuilder := new Text.StringBuilder();
-  const Origins: C.List<M.Origin> := new C.List<M.Origin>();
+  const Origins: C.List of M.Origin := new C.List of M.Origin();
   const Lines: array of string := IO.File.ReadAllText(Template).Replace(
     #13 + '' + #10,
     #10 + ''
@@ -87,7 +87,7 @@ end function;
 function CompanionSource(FileName: string; Destination: string; Options: M.Options): M.Source;
 begin
   const Output: Text.StringBuilder := new Text.StringBuilder();
-  const Origins: C.List<M.Origin> := new C.List<M.Origin>();
+  const Origins: C.List of M.Origin := new C.List of M.Origin();
   const Lines: array of string := IO.File.ReadAllText(FileName).Replace(
     #13 + '' + #10,
     #10 + ''
@@ -184,9 +184,9 @@ begin
     raise new IO.InvalidDataException('A unit cannot have the run fence option');
   end if;
 
-  const Sources: C.List<M.Source> := new C.List<M.Source>();
+  const Sources: C.List of M.Source := new C.List of M.Source();
   Sources.Add(Primary);
-  const Written: C.HashSet<string> := new C.HashSet<string>(S.StringComparer.OrdinalIgnoreCase);
+  const Written: C.HashSet of string := new C.HashSet of string(S.StringComparer.OrdinalIgnoreCase);
   discard Written.Add(Name);
   Write(Primary.Path, Primary.Text);
 

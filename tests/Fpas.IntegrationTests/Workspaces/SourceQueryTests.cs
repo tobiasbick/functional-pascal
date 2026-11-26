@@ -13,20 +13,20 @@ public sealed class SourceQueryTests(SdkPackageFixture sdk) : IClassFixture<SdkP
 {
     private const string Library = """
         unit Demo.Bridge;
-        public type Box<T> = record public Value: T; end record;
+        public type Box of T = record public Value: T; end record;
         public type Number = int;
         public function Read(Value: int): int; begin return Value; end function;
         public function Unused(): int; begin return 0; end function;
-        public function Identity<T>(Input: T): T; begin return Input; end function;
+        public function Identity of T(Input: T): T; begin return Input; end function;
         end unit;
         """;
     private const string Consumer = """
         program Consumer;
         uses Demo.Bridge as B;
         begin
-          const Box: B.Box<int> := new B.Box<int>(Value := B.Read(Value := 42));
+          const Box: B.Box of int := new B.Box of int(Value := B.Read(Value := 42));
           const Value: B.Number := Box.Value;
-          const Roundtrip: int := B.Identity<int>(Value);
+          const Roundtrip: int := B.Identity of int(Value);
         end;
         end program;
         """;
@@ -65,7 +65,7 @@ public sealed class SourceQueryTests(SdkPackageFixture sdk) : IClassFixture<SdkP
     public async Task Inspect_returns_exact_source_direct_types_metadata_and_explicit_omissions()
     {
         using var project = CreateGraph();
-        const string declaration = "public function Wrap(Value: Box<int>; Count: Number; Link: Node): Box<int>; begin const Temporary: string := 'body only'; return Value; end function;";
+        const string declaration = "public function Wrap(Value: Box of int; Count: Number; Link: Node): Box of int; begin const Temporary: string := 'body only'; return Value; end function;";
         var library = Library.Replace("end unit;", "public type Node = record Next: Node?; end record;\r\n// Wrap documentation\r\n" + declaration + "\r\nend unit;", StringComparison.Ordinal);
         File.WriteAllText(project.File("Game/Bridge.fpas"), library);
         using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(3));
@@ -127,7 +127,7 @@ public sealed class SourceQueryTests(SdkPackageFixture sdk) : IClassFixture<SdkP
         var analysis = WorkspaceAnalysis.Analyze(context, deadline.Token); Assert.True(analysis.Success, string.Join(';', analysis.Projects));
         var query = new SourceQuery(analysis);
         foreach (var (marker, kind, name) in new[] { ("Read(Value :=", "routine", "Read"), ("Number :=", "alias", "Number"),
-            ("Value;", "property", "Value"), ("Value := 42", "parameter", "Value"), ("Identity<int>", "routine", "Identity") })
+            ("Value;", "property", "Value"), ("Value := 42", "parameter", "Value"), ("Identity of int", "routine", "Identity") })
         {
             var result = query.Execute("definition", Select(project, "First/Program.fpas", Consumer, marker), cancellationToken: deadline.Token);
             Assert.Equal("ok", result.Status); Assert.Equal(project.File("Game/Game.fpasproj"), result.Definition!.Project);

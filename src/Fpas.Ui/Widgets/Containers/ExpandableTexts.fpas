@@ -32,13 +32,13 @@ end record;
 // - `OnToggle`: Optional notification after the native link changes expansion.
 // ## Returns
 // A GUI-only native expandable text block.
-public function ExpandableText<TMsg>(
+public function ExpandableText of TMsg(
   Id: string; Text: string; Settings: Options? := null;
-  OnToggle: Sys.Func<TMsg>? := null
-): E.Element<TMsg>;
+  OnToggle: (Sys.Func of TMsg)? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.ExpandableText(Id, Text, Settings ?? new Options(), OnToggle);
+  return (E.Element of TMsg).ExpandableText(Id, Text, Settings ?? new Options(), OnToggle);
 end function;
 
 // Gets the native expansion link's application identity.

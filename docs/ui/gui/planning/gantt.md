@@ -21,9 +21,9 @@ uses System as Sys;
 // - `Tasks`: Current model-owned tasks.
 // ## Returns
 // The Gantt chart with schedule proposals.
-public function View(Origin: Sys.DateOnly; Tasks: array of W.Task): E.Element<W.Event>;
+public function View(Origin: Sys.DateOnly; Tasks: array of W.Task): E.Element of W.Event;
 begin
-  return W.Gantt<W.Event>('release', new W.Value(Origin, 42, Tasks),
+  return W.Gantt of W.Event('release', new W.Value(Origin, 42, Tasks),
     function(Change: W.Event): W.Event => Change, new W.Options(Today := 9));
 end function;
 

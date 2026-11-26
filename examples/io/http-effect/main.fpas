@@ -16,8 +16,8 @@ type FetchFailure = variant
   RequestFailed(Reason: string);
 end variant;
 
-function Fetch(Address: Sys.Uri): Fx.Effect<string, FetchFailure, Http.HttpClient>;
-  async function Read(Client: Http.HttpClient; Stop: T.CancellationToken): Tasks.Task<Fx.Outcome<string, FetchFailure>>;
+function Fetch(Address: Sys.Uri): Fx.Effect of (string, FetchFailure, Http.HttpClient);
+  async function Read(Client: Http.HttpClient; Stop: T.CancellationToken): Tasks.Task of Fx.Outcome of (string, FetchFailure);
   begin
     try
       using const Response: Http.HttpResponseMessage := await Client.GetAsync(
@@ -37,10 +37,10 @@ function Fetch(Address: Sys.Uri): Fx.Effect<string, FetchFailure, Http.HttpClien
     end try;
   end function;
 begin
-  return Fx.Effect<string, FetchFailure, Http.HttpClient>.Defer(Read);
+  return Fx.Effect of (string, FetchFailure, Http.HttpClient).Defer(Read);
 end function;
 
-procedure Report(Result: Fx.Outcome<string, FetchFailure>);
+procedure Report(Result: Fx.Outcome of (string, FetchFailure));
 begin
   case Result of
     when Fx.Outcome.Success(const Body: string):
@@ -81,7 +81,7 @@ begin
   end if;
   case Address of
     when is Sys.Uri as Target:
-      const Work: Fx.Effect<string, FetchFailure, Http.HttpClient> := Fetch(Target);
+      const Work: Fx.Effect of (string, FetchFailure, Http.HttpClient) := Fetch(Target);
       using const Client: Http.HttpClient := new Http.HttpClient();
       Client.MaxResponseContentBufferSize := 65536L;
       Client.Timeout := T.Timeout.InfiniteTimeSpan;

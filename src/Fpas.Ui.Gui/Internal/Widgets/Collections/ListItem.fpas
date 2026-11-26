@@ -18,7 +18,7 @@ uses System as Sys;
 // - `Title`: Literal primary text.
 // - `Activate`: Optional native activation mapper.
 // - `Settings`: Appearance and input settings.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Title: string; Activate: Sys.Func<TMsg>?; Settings: I.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Title: string; Activate: (Sys.Func of TMsg)?; Settings: I.Options);
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('list-item', Id);
@@ -31,17 +31,17 @@ begin
     Settings.Icon,
     Settings.Selected,
     Enabled,
-    C.WantsFocus<TMsg>(Frame, Id, Token, Enabled)
+    C.WantsFocus of TMsg(Frame, Id, Token, Enabled)
   ) and Enabled
   then
     case Activate of
-      when is Sys.Func<TMsg> as Notify:
+      when is Sys.Func of TMsg as Notify:
         Frame.Messages.Add(Notify.Invoke());
       else
     end case;
   end if;
 
-  C.Track<TMsg>(Frame, new App.Control(Id, Title, 'list-item', new Cui.CuiRectangle(), Enabled));
+  C.Track of TMsg(Frame, new App.Control(Id, Title, 'list-item', new Cui.CuiRectangle(), Enabled));
 end procedure;
 
 end unit;

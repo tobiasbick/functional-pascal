@@ -28,10 +28,10 @@ public sealed class AsyncStackDepthTests
               public I: int := 9;
             end record;
             type Client = record
-              public function Read(Value: Options): Tasks.Task<int>;
-              begin return Tasks.Task.FromResult<int>(Value.I); end function;
+              public function Read(Value: Options): Tasks.Task of int;
+              begin return Tasks.Task.FromResult of int(Value.I); end function;
             end record;
-            public async function Run(): Tasks.Task<int>;
+            public async function Run(): Tasks.Task of int;
             begin
               const Session: Client := new Client();
               return await Session.Read(new Options(I := 42)).ConfigureAwait(false);

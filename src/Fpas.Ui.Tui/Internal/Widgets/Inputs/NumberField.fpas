@@ -75,20 +75,20 @@ end function;
 // - `Theme`: Active palette.
 // ## Returns
 // A labeled number field with keyboard editing and step controls.
-public function Lower<TMsg>(
+public function Lower of TMsg(
   Id: string; Value: double; Minimum: double; Maximum: double; Change: function(double): TMsg;
   Settings: N.Options; Session: State; Colors: T.Style; Theme: Th.Theme
-): E.Element<TMsg>;
-  function Propose(Number: double): Actions.Result<TMsg>;
+): E.Element of TMsg;
+  function Propose(Number: double): Actions.Result of TMsg;
   begin
     return if Number = Value then
-      Actions.Result<TMsg>.NoAction
+      (Actions.Result of TMsg).NoAction
     else
-      Actions.Result<TMsg>.Send(Change(Number))
+      (Actions.Result of TMsg).Send(Change(Number))
     end if;
   end function;
 
-  function UpdateText(Text: string): Actions.Result<TMsg>;
+  function UpdateText(Text: string): Actions.Result of TMsg;
   begin
     var Proposed: double := Value;
     var Parsed: double := 0.0;
@@ -106,18 +106,18 @@ public function Lower<TMsg>(
     return Propose(Proposed);
   end function;
 
-  function Step(Amount: double; Scale: int): Actions.Result<TMsg>;
+  function Step(Amount: double; Scale: int): Actions.Result of TMsg;
   begin
     Session.Write(null);
     return Propose(Sys.Math.Clamp(Value + Amount * cast<double>(Scale), Minimum, Maximum));
   end function;
 
-  function Key(Pressed: K.Key; Modifiers: K.KeyModifiers): Actions.Result<TMsg>?;
+  function Key(Pressed: K.Key; Modifiers: K.KeyModifiers): (Actions.Result of TMsg)?;
   begin
     if Modifiers = K.KeyModifiers.None and (Pressed = K.Key.Enter or Pressed = K.Key.Escape) then
       if Pressed = K.Key.Enter or Session.Read() <> null then
         Session.Write(null);
-        return Actions.Result<TMsg>.NoAction;
+        return (Actions.Result of TMsg).NoAction;
       end if;
     end if;
 
@@ -139,14 +139,14 @@ public function Lower<TMsg>(
     return null;
   end function;
 
-  function Button(Key: string; Caption: string; Name: string; Delta: double; CanStep: bool): E.Element<TMsg>;
+  function Button(Key: string; Caption: string; Name: string; Delta: double; CanStep: bool): E.Element of TMsg;
   begin
-    const Action: E.Element<TMsg> := E.Element<TMsg>.Action(
-      Key, new Actions.Callback<TMsg>(function(): Actions.Result<TMsg> => Step(Delta, 1)),
+    const Action: E.Element of TMsg := (E.Element of TMsg).Action(
+      Key, new Actions.Callback of TMsg(function(): Actions.Result of TMsg => Step(Delta, 1)),
       Settings.Enabled and CanStep,
       new E.ActionView(Caption, Name := Name, ArrowFocus := false, FixedWidth := 3)
     );
-    return E.Element<TMsg>.DisclosureBody(Id, Action, true);
+    return (E.Element of TMsg).DisclosureBody(Id, Action, true);
   end function;
 begin
   const Provider: Global.CultureInfo := Global.CultureInfo.InvariantCulture;
@@ -162,16 +162,16 @@ begin
       Session.Write(null);
     end if;
   end if;
-  const Field: Edit.Field<TMsg> := new Edit.Field<TMsg>(
+  const Field: Edit.Field of TMsg := new Edit.Field of TMsg(
     Id, Text, UpdateText, new Fields.Options(Label := Settings.Label, Enabled := Settings.Enabled),
     null, Role := 'number-field', KeyAction := Key
   );
-  const Controls: array of E.Element<TMsg> := [
+  const Controls: array of E.Element of TMsg := [
     Button(N.DecreaseId(Id), '−', 'Decrease', -Settings.Step, Value > Minimum),
     Button(N.IncreaseId(Id), '+', 'Increase', Settings.Step, Value < Maximum)
   ];
-  return TextField.WithLabels<TMsg>(
-    TextField.WithAdornments<TMsg>(Field, '', Settings.Suffix, Controls, Colors, Theme),
+  return TextField.WithLabels of TMsg(
+    TextField.WithAdornments of TMsg(Field, '', Settings.Suffix, Controls, Colors, Theme),
     Settings.Label, '', '', Colors, Theme
   );
 end function;

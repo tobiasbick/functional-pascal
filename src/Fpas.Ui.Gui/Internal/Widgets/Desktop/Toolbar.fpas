@@ -22,7 +22,7 @@ begin
   );
 end function;
 
-procedure ItemsDraw<TMsg>(Frame: C.State<TMsg>; Items: array of D.Item; Changed: function(D.Event): TMsg; Enabled: bool; ref Index: int);
+procedure ItemsDraw of TMsg(Frame: C.State of TMsg; Items: array of D.Item; Changed: function(D.Event): TMsg; Enabled: bool; ref Index: int);
 begin
   for Item: D.Item in Items do
     var Value: int := -1;
@@ -43,7 +43,7 @@ begin
       when D.Item.Group(const Children: array of D.Item):
         Action := false;
         Frame.Window.BeginToolbarGroup();
-        ItemsDraw<TMsg>(Frame, Children, Changed, Enabled, ref Index);
+        ItemsDraw of TMsg(Frame, Children, Changed, Enabled, ref Index);
         Frame.Window.EndToolbarGroup();
       when D.Item.Separator:
         Action := false;
@@ -72,16 +72,16 @@ end procedure;
 // - `Items`: Buttons, choices and groups in display order.
 // - `Changed`: Maps native proposals to messages.
 // - `Settings`: Native widget settings.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Items: array of D.Item; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Items: array of D.Item; Changed: function(D.Event): TMsg; Settings: D.Options);
 begin
   const Role: string := 'toolbar';
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   var Index: int := 0;
   Frame.Window.BeginToolbar(Token, Settings.Style, Settings.HideBorder, Enabled);
-  ItemsDraw<TMsg>(Frame, Items, Changed, Enabled, ref Index);
+  ItemsDraw of TMsg(Frame, Items, Changed, Enabled, ref Index);
   Frame.Window.EndToolbar();
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, '');
 end procedure;
 
 end unit;

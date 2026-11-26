@@ -54,7 +54,7 @@ begin
       return Current with
         Drawer := Open;
       end with;
-    when M.Msg.Received(const Items: I.ImmutableArray<Lists.Summary>):
+    when M.Msg.Received(const Items: I.ImmutableArray of Lists.Summary):
       const Next: M.State := Current with
         Playlists := Items;
         Loaded := true;

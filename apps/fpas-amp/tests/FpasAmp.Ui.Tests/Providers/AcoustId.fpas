@@ -25,28 +25,28 @@ public type AcoustIdTests = record
       ']},' +
       '{"score":0.75,"recordings":[' + Editions + ']},{"score":1.0}]}'
     );
-    X.Assert.Equal<int>(2, Matches.Length);
-    X.Assert.Equal<string>(Recording, Matches[0].Recording);
-    X.Assert.Equal<string>(Release, Matches[0].Release);
+    X.Assert.Equal of int(2, Matches.Length);
+    X.Assert.Equal of string(Recording, Matches[0].Recording);
+    X.Assert.Equal of string(Release, Matches[0].Release);
     X.Assert.Contains('North Pier Sessions · 2024-07-03 · US', Matches[0].Label);
     X.Assert.Contains('Mara Vale', Matches[0].Label);
-    X.Assert.Equal<string>(Other, Matches[1].Recording);
-    X.Assert.Equal<string>('', Matches[1].Release);
-    X.Assert.Equal<int>(0, Acoust.Decode('{"status":"ok","results":[]}').Length);
+    X.Assert.Equal of string(Other, Matches[1].Recording);
+    X.Assert.Equal of string('', Matches[1].Release);
+    X.Assert.Equal of int(0, Acoust.Decode('{"status":"ok","results":[]}').Length);
   end procedure;
 
   // API errors are surfaced by code, without echoing the response text.
   [X.FactAttribute]
   public procedure ErrorPayloadDoesNotPassThroughProviderText();
   begin
-    const Failure: Sys.InvalidOperationException := X.Assert.Throws<Sys.InvalidOperationException>(
+    const Failure: Sys.InvalidOperationException := X.Assert.Throws of Sys.InvalidOperationException(
       procedure() begin
         discard Acoust.Decode(
           '{"status":"error","error":{"code":4,"message":"fixture application key"}}'
         );
       end procedure
     );
-    X.Assert.Equal<string>('AcoustID API error 4', Failure.Message);
+    X.Assert.Equal of string('AcoustID API error 4', Failure.Message);
   end procedure;
 end record;
 

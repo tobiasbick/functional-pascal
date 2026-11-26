@@ -1,4 +1,5 @@
 // [Documentation](../../../docs/pascal/tools/refactoring.md#validation-and-plans)
+using Fpas.Compiler;
 using Fpas.Compiler.Analysis;
 using Fpas.Compiler.Syntax;
 
@@ -78,24 +79,27 @@ public static partial class CheckedRefactoring
             symbol.Kind is "record" or "interface" or "variant" or "domain" or "enum") is { } own)
             name = IdentifierFacts.Spell(own.Name);
         var args = type.Arguments.Select(Spell).ToArray();
-        if (!name.Contains('`')) return name.Replace('+', '.') + Arguments(args) + nullable;
+        if (!name.Contains('`')) return FpasIdentifiers.ApplyTypeArguments(name.Replace('+', '.'), args, type.Nullable) + nullable;
         var parts = name.Split('+');
         var consumed = 0;
+        var spelling = "";
         for (var index = 0; index < parts.Length; index++)
         {
             var part = parts[index];
             var marker = part.IndexOf('`');
+            if (spelling.Length > 0) spelling += ".";
+            spelling += marker < 0 ? part : part[..marker];
             if (marker < 0) continue;
             if (!int.TryParse(part.AsSpan(marker + 1), out var count) || count < 1 || consumed + count > args.Length)
                 throw Refuse("The selected generic value has no expressible FPAS type.");
-            parts[index] = part[..marker] + Arguments(args[consumed..(consumed + count)]);
+            spelling = FpasIdentifiers.ApplyTypeArguments(spelling, args[consumed..(consumed + count)],
+                index < parts.Length - 1 || type.Nullable);
             consumed += count;
         }
         if (consumed != args.Length) throw Refuse("The selected nested generic type cannot be spelled in this scope.");
-        return string.Join('.', parts) + nullable;
+        return spelling + nullable;
 
         string Spell(string id) => TypeSpelling(snapshot, Find(id), path, imports);
-        static string Arguments(string[] values) => values.Length == 0 ? "" : "<" + string.Join(", ", values) + ">";
     }
 
     private static string LineEnding(string text, int start)

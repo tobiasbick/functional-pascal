@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Feedback.Spinners as W;
 // Builds the spinner example.
 // ## Returns
 // The widget for the application view.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return W.Spinner<string>('syncing', 22.0F, new W.Options(Animation := W.Style.Orbit));
+  return W.Spinner of string('syncing', 22.0F, new W.Options(Animation := W.Style.Orbit));
 end function;
 
 end unit;

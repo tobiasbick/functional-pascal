@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Feedback.Countdowns as W;
 // - `SecondsLeft`: Time remaining from the application clock.
 // ## Returns
 // The widget for the application view.
-public function View(SecondsLeft: double): E.Element<string>;
+public function View(SecondsLeft: double): E.Element of string;
 begin
-  return W.Countdown<string>('disclosure-sale', SecondsLeft, new W.Options(Compact := true, HideDays := true));
+  return W.Countdown of string('disclosure-sale', SecondsLeft, new W.Options(Compact := true, HideDays := true));
 end function;
 
 end unit;

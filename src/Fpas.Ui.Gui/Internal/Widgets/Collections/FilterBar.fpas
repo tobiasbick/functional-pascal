@@ -21,7 +21,7 @@ uses System as Sys;
 // - `Change`: Maps a proposed filter value.
 // - `Capacity`: UTF-8 search buffer size.
 // - `Enabled`: Whether the bar accepts input.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Fields: array of B.Field; Current: B.Value; Change: function(B.Value): TMsg; Capacity: int; Enabled: bool);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Fields: array of B.Field; Current: B.Value; Change: function(B.Value): TMsg; Capacity: int; Enabled: bool);
   function Part(Index: int): string;
   begin
     return case Index of
@@ -43,7 +43,7 @@ begin
   end for;
 
   const Selected: array of uint := cast<array of uint>(Current.Selected.Clone());
-  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+  const Track: Sys.Func of (int, string)? := if Frame.PaintingClosed then
     null
   else
     function(Index: int): string => C.Token('filter-part', Part(Index))
@@ -55,13 +55,13 @@ begin
   end if;
   const Result: CuiCollections.CuiFilterResult := Frame.Window.FilterBar(
     Token, Native, Selected, Current.Search, Capacity, Accept,
-    C.WantsFocus<TMsg>(Frame, Id, C.Token('filter-part', Part(FocusPart)), Accept), Track
+    C.WantsFocus of TMsg(Frame, Id, C.Token('filter-part', Part(FocusPart)), Accept), Track
   );
   if Accept and Result.Changed then
     Frame.Messages.Add(Change(new B.Value(Selected, Result.Search)));
   end if;
 
-  C.Track<TMsg>(Frame, new App.Control(Id, '', 'filter-bar', new Cui.CuiRectangle(), Accept));
+  C.Track of TMsg(Frame, new App.Control(Id, '', 'filter-bar', new Cui.CuiRectangle(), Accept));
 
   for Index: int := 0 to Result.Parts.Length - 1 do
     if not Result.Parts[Index] then

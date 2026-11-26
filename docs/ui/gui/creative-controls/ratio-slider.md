@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Inputs.RatioSliders as W;
 // - `Coffee`: Current coffee share from zero through one.
 // ## Returns
 // The slider with a proposed fraction as its message.
-public function View(Coffee: float): E.Element<float>;
+public function View(Coffee: float): E.Element of float;
 begin
-  return W.RatioSlider<float>('blend', new W.Value('COFFEE', 'MILK', Coffee),
+  return W.RatioSlider of float('blend', new W.Value('COFFEE', 'MILK', Coffee),
     function(Value: float): float => Value);
 end function;
 

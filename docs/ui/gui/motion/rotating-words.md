@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Motion.WordRotations as W;
 // - `Targets`: Short phrases to cycle through.
 // ## Returns
 // The rotating word effect.
-public function View(Targets: array of string): E.Element<string>;
+public function View(Targets: array of string): E.Element of string;
 begin
-  return W.WordRotate<string>('destination', Targets, 2.2F,
+  return W.WordRotate of string('destination', Targets, 2.2F,
     new M.TextOptions(Font := M.Font.Display, Size := 26.0F));
 end function;
 

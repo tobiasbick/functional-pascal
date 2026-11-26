@@ -33,7 +33,7 @@ type Msg = variant
   Fail;
 end variant;
 
-const Effects: Replies.Effects<Msg> := Replies.Effects<Msg>.Create();
+const Effects: Replies.Effects of Msg := (Replies.Effects of Msg).Create();
 
 function Work(Post: function(Msg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
 begin
@@ -41,41 +41,41 @@ begin
   return Post(Msg.Progress);
 end function;
 
-function Update(State: int; Message: Msg): Mvu.Transition<int, Msg>;
+function Update(State: int; Message: Msg): Mvu.Transition of (int, Msg);
 begin
   case Message of
     when Msg.Start:
-      return Effects.Wrap<int>(
-        new Mvu.Transition<int, Msg>(
+      return Effects.Wrap of int(
+        new Mvu.Transition of (int, Msg)(
           State,
           [
-            Mvu.StartBackground<Msg>(
+            Mvu.StartBackground of Msg(
               'task',
-              Mvu.FromWorker<Msg>(Work, function(Error: Sys.Exception): Msg => Msg.Fail)
+              Mvu.FromWorker of Msg(Work, function(Error: Sys.Exception): Msg => Msg.Fail)
             )
           ]
         )
       );
     when Msg.Cancel:
-      return new Mvu.Transition<int, Msg>(State, [Mvu.CancelBackground<Msg>('task')]);
+      return new Mvu.Transition of (int, Msg)(State, [Mvu.CancelBackground of Msg('task')]);
     when Msg.Progress:
-      return new Mvu.Transition<int, Msg>(1, []);
+      return new Mvu.Transition of (int, Msg)(1, []);
     when Msg.Fail:
-      return new Mvu.Transition<int, Msg>(-1, []);
+      return new Mvu.Transition of (int, Msg)(-1, []);
   end case;
 end function;
 
-function View(State: int): E.Element<Msg>;
+function View(State: int): E.Element of Msg;
 begin
   if State < 0 then
     raise new Sys.InvalidOperationException('staged view failure');
   end if;
 
-  return E.Column<Msg>(
-    E.Text<Msg>(State.ToString()),
-    UiButtons.Button<Msg>('start', 'Start', Msg.Start),
-    UiButtons.Button<Msg>('cancel', 'Cancel', Msg.Cancel),
-    UiButtons.Button<Msg>('fail', 'Fail', Msg.Fail)
+  return E.Column of Msg(
+    E.Text of Msg(State.ToString()),
+    UiButtons.Button of Msg('start', 'Start', Msg.Start),
+    UiButtons.Button of Msg('cancel', 'Cancel', Msg.Cancel),
+    UiButtons.Button of Msg('fail', 'Fail', Msg.Fail)
   );
 end function;
 
@@ -91,13 +91,13 @@ end function;
 
 procedure CheckCancellation();
 begin
-  const Reader: Channels.ChannelReader<Replies.Reply<Msg>> := Effects.Watch('task');
+  const Reader: Channels.ChannelReader of Replies.Reply of Msg := Effects.Watch('task');
   using const Limit: Threads.CancellationTokenSource := new Threads.CancellationTokenSource(5000);
-  using const Session: App.HeadlessSession := Headless.Start<int, Msg>(0, Update, View, 20, 5);
+  using const Session: App.HeadlessSession := Headless.Start of (int, Msg)(0, Update, View, 20, 5);
   discard Send(Session, 'start');
   discard Send(Session, 'cancel');
   discard Session.Step();
-  const Reply: Replies.Reply<Msg> := Reader.ReadAsync(
+  const Reply: Replies.Reply of Msg := Reader.ReadAsync(
     Limit.Token
   ).AsTask().GetAwaiter().GetResult();
   if Session.Snapshot().Lines[0].TrimEnd() <> '0' then
@@ -119,7 +119,7 @@ end procedure;
 
 procedure CheckQueue();
 begin
-  using const Session: App.HeadlessSession := Headless.Start<int, Msg>(0, Update, View, 20, 5);
+  using const Session: App.HeadlessSession := Headless.Start of (int, Msg)(0, Update, View, 20, 5);
   const First: long := Send(Session, 'missing');
   var Last: long := First;
   var Full: bool := false;
@@ -165,7 +165,7 @@ end procedure;
 
 procedure CheckFailure();
 begin
-  using const Session: App.HeadlessSession := Headless.Start<int, Msg>(0, Update, View, 20, 5);
+  using const Session: App.HeadlessSession := Headless.Start of (int, Msg)(0, Update, View, 20, 5);
   const Complete: App.Frame := Session.Snapshot();
   const Id: long := Send(Session, 'fail');
   case Session.Step() of
@@ -183,36 +183,36 @@ begin
 end procedure;
 
 procedure CheckBounds(Minimum: L.Measure; Maximum: L.Measure; Horizontal: bool; Valid: bool; Mixed: bool);
-  function Bounded(): E.Element<bool>;
+  function Bounded(): E.Element of bool;
   begin
-    const Child: E.Element<bool> := E.Size<bool>(
-      E.Text<bool>('bounded'),
+    const Child: E.Element of bool := E.Size of bool(
+      E.Text of bool('bounded'),
       new L.Flex(Minimum := Minimum, Maximum := Maximum)
     );
     return if Horizontal then
-      E.Row<bool>(Child)
+      E.Row of bool(Child)
     else
-      E.Column<bool>(Child)
+      E.Column of bool(Child)
     end if;
   end function;
 
-  function UpdateBounds(State: bool; Message: bool): Mvu.Transition<bool, bool>;
+  function UpdateBounds(State: bool; Message: bool): Mvu.Transition of (bool, bool);
   begin
-    return new Mvu.Transition<bool, bool>(Message, []);
+    return new Mvu.Transition of (bool, bool)(Message, []);
   end function;
 
-  function ViewBounds(State: bool): E.Element<bool>;
+  function ViewBounds(State: bool): E.Element of bool;
   begin
     return if State then
       Bounded()
     else
-      UiButtons.Button<bool>('change', 'Change', true)
+      UiButtons.Button of bool('change', 'Change', true)
     end if;
   end function;
 begin
   var Rejected: bool := false;
   try
-    discard Validation.Prepare<bool>(Bounded(), Validation.Target.Terminal);
+    discard Validation.Prepare of bool(Bounded(), Validation.Target.Terminal);
   catch Error: Sys.ArgumentException do
     Rejected := true;
     if Mixed and not Error.Message.Contains('same measure units') then
@@ -225,7 +225,7 @@ begin
   end if;
 
   if not Valid then
-    using const Session: App.HeadlessSession := Headless.Start<bool, bool>(
+    using const Session: App.HeadlessSession := Headless.Start of (bool, bool)(
       false,
       UpdateBounds,
       ViewBounds,
@@ -325,20 +325,20 @@ begin
 end procedure;
 
 procedure CheckReuse();
-  function UpdateValue(State: int; Message: int): Mvu.Transition<int, int>;
+  function UpdateValue(State: int; Message: int): Mvu.Transition of (int, int);
   begin
-    return new Mvu.Transition<int, int>(Message, []);
+    return new Mvu.Transition of (int, int)(Message, []);
   end function;
 
-  function Build(Dependency: int): E.Element<int>;
+  function Build(Dependency: int): E.Element of int;
   begin
     Builds := Builds + 1;
-    return UiButtons.Button<int>('stable', 'Stable', Dependency);
+    return UiButtons.Button of int('stable', 'Stable', Dependency);
   end function;
 
-  function Cached(State: int): E.Element<int>;
+  function Cached(State: int): E.Element of int;
   begin
-    return E.CachedSubview<int, int>(
+    return E.CachedSubview of (int, int)(
       'stable-subview',
       0,
       Build,
@@ -347,7 +347,7 @@ procedure CheckReuse();
   end function;
 begin
   var Builds: int := 0;
-  using const Resized: App.HeadlessSession := Headless.Start<int, int>(
+  using const Resized: App.HeadlessSession := Headless.Start of (int, int)(
     0,
     UpdateValue,
     Cached,
@@ -359,7 +359,7 @@ begin
     raise new Sys.InvalidOperationException('Resize rebuilt an equivalent subview.');
   end if;
 
-  using const Fresh: App.HeadlessSession := Headless.Start<int, int>(
+  using const Fresh: App.HeadlessSession := Headless.Start of (int, int)(
     0,
     UpdateValue,
     Cached,
@@ -392,9 +392,9 @@ begin
 end procedure;
 
 procedure CheckLiveTheme();
-  function UpdateTheme(State: bool; Message: bool): Mvu.Transition<bool, bool>;
+  function UpdateTheme(State: bool; Message: bool): Mvu.Transition of (bool, bool);
   begin
-    return new Mvu.Transition<bool, bool>(Message, []);
+    return new Mvu.Transition of (bool, bool)(Message, []);
   end function;
 
   function ThemeFor(State: bool): TerminalThemes.Theme;
@@ -416,17 +416,17 @@ procedure CheckLiveTheme();
     );
   end function;
 
-  function StableView(State: bool): E.Element<bool>;
+  function StableView(State: bool): E.Element of bool;
   begin
-    return E.Column<bool>(
-      E.CellStyled<bool>(
-        UiButtons.Button<bool>('theme', 'Change color', true),
+    return E.Column of bool(
+      E.CellStyled of bool(
+        UiButtons.Button of bool('theme', 'Change color', true),
         new T.Style(Foreground := $E0ECF5)
       )
     );
   end function;
 begin
-  using const Session: App.HeadlessSession := Headless.Start<bool, bool>(
+  using const Session: App.HeadlessSession := Headless.Start of (bool, bool)(
     false, UpdateTheme, StableView, 20, 5, ThemeFor
   );
   const Original: App.Frame := Session.Snapshot();
@@ -449,16 +449,16 @@ begin
 end procedure;
 
 procedure CheckModifiedArrowShortcuts();
-  function Bindings(State: int): E.Element<Msg>;
+  function Bindings(State: int): E.Element of Msg;
   begin
-    return Views.Screen<Msg>(
+    return Views.Screen of Msg(
       View(State), [], [
-        InputKeys.Shortcut<Msg>(InputKeys.Key.Down, InputKeys.KeyModifiers.Ctrl, Msg.Progress)
+        InputKeys.Shortcut of Msg(InputKeys.Key.Down, InputKeys.KeyModifiers.Ctrl, Msg.Progress)
       ]
     );
   end function;
 begin
-  using const Session: App.HeadlessSession := Headless.Start<int, Msg>(
+  using const Session: App.HeadlessSession := Headless.Start of (int, Msg)(
     0, Update, Bindings, 20, 5
   );
   ExpectFocus(Session, 'start');
@@ -475,28 +475,28 @@ begin
 end procedure;
 
 procedure CheckScrollableSidebar();
-  function Viewport(Position: L.ScrollPosition): E.Element<L.ScrollPosition>;
+  function Viewport(Position: L.ScrollPosition): E.Element of L.ScrollPosition;
   begin
-    const Pages: array of Nav.Item<L.ScrollPosition> := [
-      new Nav.Item<L.ScrollPosition>('a', 'A', Position),
-      new Nav.Item<L.ScrollPosition>('b', 'B', Position, Enabled := false),
-      new Nav.Item<L.ScrollPosition>('c', 'C', Position),
-      new Nav.Item<L.ScrollPosition>('d', 'D', Position)
+    const Pages: array of Nav.Item of L.ScrollPosition := [
+      new Nav.Item of L.ScrollPosition('a', 'A', Position),
+      new Nav.Item of L.ScrollPosition('b', 'B', Position, Enabled := false),
+      new Nav.Item of L.ScrollPosition('c', 'C', Position),
+      new Nav.Item of L.ScrollPosition('d', 'D', Position)
     ];
-    return E.ScrollView<L.ScrollPosition>(
-      'scroll', Nav.Sidebar<L.ScrollPosition>(
+    return E.ScrollView of L.ScrollPosition(
+      'scroll', Nav.Sidebar of L.ScrollPosition(
         'nav',
-        [new Nav.Section<L.ScrollPosition>('', Pages)], 'a'
+        [new Nav.Section of L.ScrollPosition('', Pages)], 'a'
       ), Position,
       function(Change: L.ScrollChange): L.ScrollPosition => Change.Position
     );
   end function;
-  function SetPosition(State: L.ScrollPosition; Next: L.ScrollPosition): Mvu.Transition<L.ScrollPosition, L.ScrollPosition>;
+  function SetPosition(State: L.ScrollPosition; Next: L.ScrollPosition): Mvu.Transition of (L.ScrollPosition, L.ScrollPosition);
   begin
-    return new Mvu.Transition<L.ScrollPosition, L.ScrollPosition>(Next, []);
+    return new Mvu.Transition of (L.ScrollPosition, L.ScrollPosition)(Next, []);
   end function;
 begin
-  using const Session: App.HeadlessSession := Headless.Start<L.ScrollPosition, L.ScrollPosition>(
+  using const Session: App.HeadlessSession := Headless.Start of (L.ScrollPosition, L.ScrollPosition)(
     L.ScrollPosition.Start, SetPosition, Viewport, 12, 2
   );
   const Top: App.Frame := Session.Snapshot();

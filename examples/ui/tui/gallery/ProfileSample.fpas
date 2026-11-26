@@ -99,11 +99,11 @@ end function;
 // - `SideBySide`: Use the wide Inputs layout.
 // ## Returns
 // Name and email editors in gallery order.
-public function Editors(Model: State; Prefix: string; SideBySide: bool := false): E.Element<Msg>;
+public function Editors(Model: State; Prefix: string; SideBySide: bool := false): E.Element of Msg;
 begin
   const Inputs: bool := Prefix = 'input';
   const Workspace: bool := Prefix = 'workspace';
-  const Name: E.Element<Msg> := Fields.TextField<Msg>(
+  const Name: E.Element of Msg := Fields.TextField of Msg(
     Prefix + '-name', Model.Name, Msg.SetName,
     new Fields.Options(
       Label := if Inputs then
@@ -120,7 +120,7 @@ begin
       end if, MaxUtf8Bytes := 63
     )
   );
-  const Email: E.Element<Msg> := Fields.TextField<Msg>(
+  const Email: E.Element of Msg := Fields.TextField of Msg(
     Prefix + '-email', Model.Email, Msg.SetEmail,
     new Fields.Options(
       Label := Strings.Get('Text.Email'), Hint := if Inputs then
@@ -138,9 +138,9 @@ begin
   const Flow: L.Flow := new L.Flow(Gap := L.Spacing.Normal);
   const Half: L.Flex := new L.Flex(Basis := L.Extent.Fill, Grow := 1);
   return if SideBySide then
-    E.Row<Msg>(Flow, E.Size<Msg>(Name, Half), E.Size<Msg>(Email, Half))
+    E.Row of Msg(Flow, E.Size of Msg(Name, Half), E.Size of Msg(Email, Half))
   else
-    E.Column<Msg>(Flow, Name, Email)
+    E.Column of Msg(Flow, Name, Email)
   end if;
 end function;
 
@@ -149,13 +149,13 @@ end function;
 // - `Model`: Current shared preferences.
 // ## Returns
 // Wi-Fi, Bluetooth and airplane mode.
-public function Selection(Model: State): E.Element<Msg>;
+public function Selection(Model: State): E.Element of Msg;
 begin
-  return E.Column<Msg>(
+  return E.Column of Msg(
     new L.Flow(Gap := L.Spacing.Normal),
-    Switches.View<Msg>(Switches.Wifi, Model.Wifi, Msg.SetWifi),
-    Switches.View<Msg>(Switches.Bluetooth, Model.Bluetooth, Msg.SetBluetooth),
-    Switches.View<Msg>(Switches.Airplane, Model.Airplane, Msg.SetAirplane)
+    Switches.View of Msg(Switches.Wifi, Model.Wifi, Msg.SetWifi),
+    Switches.View of Msg(Switches.Bluetooth, Model.Bluetooth, Msg.SetBluetooth),
+    Switches.View of Msg(Switches.Airplane, Model.Airplane, Msg.SetAirplane)
   );
 end function;
 
@@ -164,21 +164,21 @@ end function;
 // - `Wide`: Whether all three actions fit on one row.
 // ## Returns
 // Three overlay actions.
-public function Openers(Wide: bool): E.Element<Msg>;
+public function Openers(Wide: bool): E.Element of Msg;
 begin
   const Flow: L.Flow := new L.Flow(Gap := L.Spacing.Tight);
-  const Triggers: array of E.Element<Msg> := [
-    B.Button<Msg>('edit-profile-open', Strings.Get('Text.EditProfile'), Msg.Show(Layer.Profile)),
-    B.Button<Msg>('sheet-open', Strings.Get('Text.OpenSheet'), Msg.Show(Layer.Notifications)),
-    B.Button<Msg>(
+  const Triggers: array of E.Element of Msg := [
+    B.Button of Msg('edit-profile-open', Strings.Get('Text.EditProfile'), Msg.Show(Layer.Profile)),
+    B.Button of Msg('sheet-open', Strings.Get('Text.OpenSheet'), Msg.Show(Layer.Notifications)),
+    B.Button of Msg(
       'delete-project-open', Strings.Get('Text.DeleteProject'), Msg.Show(Layer.Delete),
       new B.Options(Variant := S.ButtonVariant.Destructive)
     )
   ];
   return if Wide then
-    E.Row<Msg>(Flow, Triggers)
+    E.Row of Msg(Flow, Triggers)
   else
-    E.Column<Msg>(Flow, Triggers)
+    E.Column of Msg(Flow, Triggers)
   end if;
 end function;
 
@@ -191,27 +191,27 @@ end function;
 // - `Lift`: Maps an edit into the parent update.
 // ## Returns
 // The screen with its active dialog or sheet.
-public function Present<TMsg>(Base: E.Element<TMsg>; Model: State; Lift: function(Msg): TMsg): E.Element<TMsg>;
+public function Present of TMsg(Base: E.Element of TMsg; Model: State; Lift: function(Msg): TMsg): E.Element of TMsg;
 begin
   const Close: TMsg := Lift(Msg.Show(Layer.Closed));
   const Flow: L.Flow := new L.Flow(Padding := L.Spacing.Normal, Gap := L.Spacing.Normal);
   case Model.Open of
     when Layer.Profile:
-      return Dialogs.Dialog<TMsg>(
+      return Dialogs.Dialog of TMsg(
         'edit-profile',
         Base,
-        E.Column<TMsg>(
+        E.Column of TMsg(
           Flow,
-          Composition.Map<Msg, TMsg>(Editors(Model, 'edit-profile'), Lift),
-          Switches.View<TMsg>(
+          Composition.Map of (Msg, TMsg)(Editors(Model, 'edit-profile'), Lift),
+          Switches.View of TMsg(
             Switches.PublicProfile,
             Model.Wifi,
             function(Value: bool): TMsg => Lift(Msg.SetWifi(Value))
           ),
-          E.Row<TMsg>(
+          E.Row of TMsg(
             new L.Flow(Gap := L.Spacing.Tight),
-            B.Button<TMsg>('edit-profile-cancel', Strings.Get('Text.Cancel'), Close),
-            B.Button<TMsg>(
+            B.Button of TMsg('edit-profile-cancel', Strings.Get('Text.Cancel'), Close),
+            B.Button of TMsg(
               'edit-profile-save',
               Strings.Get('Text.SaveChanges'),
               Close,
@@ -228,29 +228,31 @@ begin
         Close
       );
     when Layer.Notifications:
-      return Sheets.Sheet<TMsg>(
+      return Sheets.Sheet of TMsg(
         'sheet',
         Base,
-        E.Column<TMsg>(
+        E.Column of TMsg(
           new L.Flow(Padding := L.Spacing.Normal, Gap := L.Spacing.Tight),
-          Switches.View<TMsg>(
+          Switches.View of TMsg(
             Switches.Comments,
             Model.Newsletter,
             function(Value: bool): TMsg => Lift(Msg.SetNewsletter(Value))
           ),
-          Switches.View<TMsg>(
+          Switches.View of TMsg(
             Switches.Mentions,
             Model.Wifi,
             function(Value: bool): TMsg => Lift(Msg.SetWifi(Value))
           ),
-          Switches.View<TMsg>(
+          Switches.View of TMsg(
             Switches.WeeklyDigest,
             Model.Bluetooth,
             function(Value: bool): TMsg => Lift(Msg.SetBluetooth(Value))
           ),
-          E.Styled<TMsg>(E.Text<TMsg>(Strings.Get('Text.Recent')), S.Role.Heading),
-          E.Text<TMsg>(Strings.Get('Text.RecentComment') + ' · ' + Strings.Get('Text.MinutesAgo')),
-          E.Text<TMsg>(
+          E.Styled of TMsg(E.Text of TMsg(Strings.Get('Text.Recent')), S.Role.Heading),
+          E.Text of TMsg(
+            Strings.Get('Text.RecentComment') + ' · ' + Strings.Get('Text.MinutesAgo')
+          ),
+          E.Text of TMsg(
             Strings.Get('Text.RecentInvitation') + ' · ' + Strings.Get('Text.HourAgo')
           )
         ),
@@ -262,18 +264,18 @@ begin
         Close
       );
     when Layer.Delete:
-      return Dialogs.Dialog<TMsg>(
+      return Dialogs.Dialog of TMsg(
         'delete-project',
         Base,
-        E.Column<TMsg>(
+        E.Column of TMsg(
           Flow,
-          E.Text<TMsg>(
+          E.Text of TMsg(
             Strings.Get('Text.DeleteProjectWarning')
           ),
-          E.Row<TMsg>(
+          E.Row of TMsg(
             new L.Flow(Gap := L.Spacing.Tight),
-            B.Button<TMsg>('delete-project-cancel', Strings.Get('Text.Cancel'), Close),
-            B.Button<TMsg>(
+            B.Button of TMsg('delete-project-cancel', Strings.Get('Text.Cancel'), Close),
+            B.Button of TMsg(
               'delete-project-confirm',
               Strings.Get('Text.DeleteProject'),
               Close,

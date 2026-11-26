@@ -39,12 +39,12 @@ end function;
 // - `Library`: The borrowed metadata session for loading and rating tracks.
 // ## Returns
 // The next state and any commands to run off the UI thread.
-public function Apply(Current: M.State; Message: M.Msg; Service: Access.Session?; Library: Metadata.Session? := null): A.Transition<M.State, M.Msg>;
+public function Apply(Current: M.State; Message: M.Msg; Service: Access.Session?; Library: Metadata.Session? := null): A.Transition of (M.State, M.Msg);
 begin
   case Message of
     when M.Msg.OpenGroup(const Id: string):
       if Toolbar.IsGroup(Current.Scope) and Current.Collections.Releases.ContainsKey(Id) then
-        return new A.Transition<M.State, M.Msg>(
+        return new A.Transition of (M.State, M.Msg)(
           Grid.Enter(
             Current, if Current.Scope = Toolbar.Scope.Artists then
               Toolbar.Scope.ArtistAlbums
@@ -52,19 +52,19 @@ begin
               Toolbar.Scope.GenreAlbums
             end if, Id
           ),
-          [A.CancelBackground<M.Msg>('images')]
+          [A.CancelBackground of M.Msg('images')]
         );
       end if;
 
-      return new A.Transition<M.State, M.Msg>(Current, []);
+      return new A.Transition of (M.State, M.Msg)(Current, []);
     when M.Msg.BackToGroups:
-      return new A.Transition<M.State, M.Msg>(
+      return new A.Transition of (M.State, M.Msg)(
         Grid.Enter(Current, Toolbar.Root(Current.Scope), ''),
-        [A.CancelBackground<M.Msg>('images'), A.Focus<M.Msg>('album-' + Current.GroupId)]
+        [A.CancelBackground of M.Msg('images'), A.Focus of M.Msg('album-' + Current.GroupId)]
       );
     when M.Msg.OpenMusic(const Id: string):
       if Toolbar.IsGroup(Current.Scope) then
-        return new A.Transition<M.State, M.Msg>(Current, []);
+        return new A.Transition of (M.State, M.Msg)(Current, []);
       end if;
 
       for Album: Albums.Album in Current.Items do
@@ -97,19 +97,19 @@ begin
         end if;
       end for;
 
-      return new A.Transition<M.State, M.Msg>(Current, []);
+      return new A.Transition of (M.State, M.Msg)(Current, []);
     when M.Msg.BackToAlbums:
       const Selected: Music.State? := Current.Music;
       if Selected = null then
-        return new A.Transition<M.State, M.Msg>(Current, []);
+        return new A.Transition of (M.State, M.Msg)(Current, []);
       end if;
 
-      return new A.Transition<M.State, M.Msg>(
+      return new A.Transition of (M.State, M.Msg)(
         Grid.LeaveMusic(Current),
-        [A.CancelBackground<M.Msg>('music/load'), A.Focus<M.Msg>('album-' + Selected.Album.Id)]
+        [A.CancelBackground of M.Msg('music/load'), A.Focus of M.Msg('album-' + Selected.Album.Id)]
       );
     when M.Msg.Scrolled(const RouteKey: string, const Offset: float):
-      return new A.Transition<M.State, M.Msg>(
+      return new A.Transition of (M.State, M.Msg)(
         Current with
           Offsets := if Offset > 0.0F then
             Current.Offsets.SetItem(RouteKey, Offset)
@@ -121,13 +121,13 @@ begin
     when M.Msg.Music(const Value: Music.Msg):
       const Selected: Music.State? := Current.Music;
       if Selected = null then
-        return new A.Transition<M.State, M.Msg>(Current, []);
+        return new A.Transition of (M.State, M.Msg)(Current, []);
       end if;
 
       return MusicTransition(Current, Songs.Apply(Selected, Value, Library));
     when M.Msg.Open:
       if Service = null then
-        return new A.Transition<M.State, M.Msg>(
+        return new A.Transition of (M.State, M.Msg)(
           Current with
             Loaded := true;
           end with,
@@ -135,15 +135,15 @@ begin
         );
       end if;
 
-      return new A.Transition<M.State, M.Msg>(
+      return new A.Transition of (M.State, M.Msg)(
         Current with
           First := -1;
           Last := -1;
         end with,
         [
-          A.StartBackground<M.Msg>(
+          A.StartBackground of M.Msg(
             'observe',
-            A.FromWorker<M.Msg>(
+            A.FromWorker of M.Msg(
               async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
                 await Service.ObserveAsync(
                   function(Value: Albums.Snapshot): Tasks.Task => Post(M.Msg.Received(Value)),
@@ -155,9 +155,9 @@ begin
         ]
       );
     when M.Msg.Close:
-      return new A.Transition<M.State, M.Msg>(
+      return new A.Transition of (M.State, M.Msg)(
         Grid.LeaveMusic(Current) with
-          Images := I.ImmutableDictionary<string, Images.Bitmap?>.Empty;
+          Images := I.ImmutableDictionary of (string, Images.Bitmap?).Empty;
           First := -1;
           Last := -1;
           Generation := Current.Generation + 1L;
@@ -165,9 +165,9 @@ begin
           Music := null;
         end with,
         [
-          A.CancelBackground<M.Msg>('observe'),
-          A.CancelBackground<M.Msg>('images'),
-          A.CancelBackground<M.Msg>('music/load')
+          A.CancelBackground of M.Msg('observe'),
+          A.CancelBackground of M.Msg('images'),
+          A.CancelBackground of M.Msg('music/load')
         ]
       );
     when M.Msg.Received(const Snapshot: Albums.Snapshot):
@@ -176,14 +176,14 @@ begin
       )
       then
         // Newly indexed audio can change only the footer while its tags are pending.
-        return new A.Transition<M.State, M.Msg>(
+        return new A.Transition of (M.State, M.Msg)(
           Current with
             Library := Snapshot;
           end with, []
         );
       end if;
       const Collections: Groups.Catalog := Groups.Build(Snapshot.Releases, Current.Scope);
-      const Projection: A.Transition<M.State, M.Msg> := Grid.Project(
+      const Projection: A.Transition of (M.State, M.Msg) := Grid.Project(
         Current with
           Library := Snapshot;
           Collections := Collections;
@@ -196,11 +196,11 @@ begin
       const Start: int := Sys.Math.Clamp(First, 0, Current.Shown.Length);
       const Finish: int := Sys.Math.Clamp(Last, Start, Current.Shown.Length);
       if Service = null or (Start = Current.First and Finish = Current.Last) then
-        return new A.Transition<M.State, M.Msg>(Current, []);
+        return new A.Transition of (M.State, M.Msg)(Current, []);
       end if;
       // keep the covers that stay visible and load only the missing ones
-      var Retained: I.ImmutableDictionary<string, Images.Bitmap?> := I.ImmutableDictionary<string, Images.Bitmap?>.Empty;
-      const Missing: C.List<int> := new C.List<int>();
+      var Retained: I.ImmutableDictionary of (string, Images.Bitmap?) := I.ImmutableDictionary of (string, Images.Bitmap?).Empty;
+      const Missing: C.List of int := new C.List of int();
       for Index: int := Start to Finish - 1 do
         const Id: string := Current.Shown[Index].Id;
         if Current.Images.ContainsKey(Id) then
@@ -216,15 +216,15 @@ begin
         Images := Retained;
       end with;
       if Missing.Count = 0 then
-        return new A.Transition<M.State, M.Msg>(Next, [A.CancelBackground<M.Msg>('images')]);
+        return new A.Transition of (M.State, M.Msg)(Next, [A.CancelBackground of M.Msg('images')]);
       end if;
 
       const Pending: array of int := Missing.ToArray();
-      return new A.Transition<M.State, M.Msg>(
+      return new A.Transition of (M.State, M.Msg)(
         Next, [
-          A.StartBackground<M.Msg>(
+          A.StartBackground of M.Msg(
             'images',
-            A.FromWorker<M.Msg>(
+            A.FromWorker of M.Msg(
               async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task
                 async function Load(Offset: int): Tasks.Task;
                 begin
@@ -266,16 +266,16 @@ begin
       );
     when M.Msg.Image(const Generation: long, const Id: string, const Value: Images.Bitmap?):
       if Generation <> Current.Generation then
-        return new A.Transition<M.State, M.Msg>(Current, []);
+        return new A.Transition of (M.State, M.Msg)(Current, []);
       end if;
 
-      return new A.Transition<M.State, M.Msg>(
+      return new A.Transition of (M.State, M.Msg)(
         Current with
           Images := Current.Images.SetItem(Id, Value);
         end with, []
       );
     when M.Msg.Failed(const Text: string):
-      return new A.Transition<M.State, M.Msg>(
+      return new A.Transition of (M.State, M.Msg)(
         Current with
           Error := Text;
           Loaded := true;
@@ -283,7 +283,7 @@ begin
       );
     when M.Msg.Rate(const Id: string, const Value: int):
       if Service = null or Value < 0 or Value > 10 or Current.Saving.Contains(Id) then
-        return new A.Transition<M.State, M.Msg>(Current, []);
+        return new A.Transition of (M.State, M.Msg)(Current, []);
       end if;
       var Exists: bool := false;
       for Item: Albums.Album in Current.Items do
@@ -294,21 +294,21 @@ begin
       end for;
 
       if not Exists then
-        return new A.Transition<M.State, M.Msg>(Current, []);
+        return new A.Transition of (M.State, M.Msg)(Current, []);
       end if;
       const Rating: int? := if Value = 0 then
         null
       else
         Value
       end if;
-      return new A.Transition<M.State, M.Msg>(
+      return new A.Transition of (M.State, M.Msg)(
         Current with
           Saving := Current.Saving.Add(Id);
           Error := null;
         end with, [
-          A.StartBackground<M.Msg>(
+          A.StartBackground of M.Msg(
             'rating-' + Id,
-            A.FromWorker<M.Msg>(
+            A.FromWorker of M.Msg(
               async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
                 await Service.SetRatingAsync(Id, Rating, Cancellation).ConfigureAwait(false);
                 await Post(M.Msg.Rated(Id, Rating)).ConfigureAwait(false);
@@ -319,7 +319,7 @@ begin
         ]
       );
     when M.Msg.Rated(const Id: string, const Value: int?):
-      const Releases: I.ImmutableArray<Albums.Album>.Builder := Current.Library.Releases.ToBuilder();
+      const Releases: (I.ImmutableArray of Albums.Album).Builder := Current.Library.Releases.ToBuilder();
       const Genre: bool := Id.StartsWith('genre-');
       const Grouped: bool := Genre or Id.StartsWith('artist-');
       for Index: int := 0 to Releases.Count - 1 do
@@ -337,7 +337,7 @@ begin
           end if;
           for Member: int := 0 to Members.Length - 1 do
             if Members[Member].Id = Id then
-              const Credits: array of Albums.Membership := new C.List<Albums.Membership>(
+              const Credits: array of Albums.Membership := new C.List of Albums.Membership(
                 Members
               ).ToArray();
               Credits[Member] := Credits[Member] with
@@ -368,7 +368,7 @@ begin
         ), Service, Library
       );
     when M.Msg.RatingFailed(const Id: string, const Text: string):
-      return new A.Transition<M.State, M.Msg>(
+      return new A.Transition of (M.State, M.Msg)(
         Current with
           Saving := Current.Saving.Remove(Id);
           Error := Text;
@@ -388,14 +388,14 @@ begin
       if Edited.Search = Current.Toolbar.Search and Edited.Applied = Current.Toolbar.Applied
         and Edited.Sort = Current.Toolbar.Sort and Edited.Descending = Current.Toolbar.Descending
       then
-        return new A.Transition<M.State, M.Msg>(Next, []);
+        return new A.Transition of (M.State, M.Msg)(Next, []);
       end if;
 
-      return new A.Transition<M.State, M.Msg>(Grid.Show(Next), []);
+      return new A.Transition of (M.State, M.Msg)(Grid.Show(Next), []);
   end case;
 end function;
 
-function RefreshMusic(Projection: A.Transition<M.State, M.Msg>; Library: Metadata.Session?): A.Transition<M.State, M.Msg>;
+function RefreshMusic(Projection: A.Transition of (M.State, M.Msg); Library: Metadata.Session?): A.Transition of (M.State, M.Msg);
 begin
   const Current: M.State := Projection.Model;
   const Page: Music.State? := Current.Music;
@@ -409,14 +409,14 @@ begin
         Album := Album;
       end with;
       if Album.Revision = Page.Album.Revision then
-        return new A.Transition<M.State, M.Msg>(
+        return new A.Transition of (M.State, M.Msg)(
           Current with
             Music := Updated;
           end with, Projection.Commands
         );
       end if;
 
-      const Reloaded: A.Transition<M.State, M.Msg> := MusicTransition(
+      const Reloaded: A.Transition of (M.State, M.Msg) := MusicTransition(
         Current,
         Songs.Open(
           Updated with
@@ -425,29 +425,31 @@ begin
           end with, Library
         )
       );
-      const Work: C.List<A.Command<M.Msg>> := new C.List<A.Command<M.Msg>>(Projection.Commands);
+      const Work: C.List of A.Command of M.Msg := new C.List of A.Command of M.Msg(
+        Projection.Commands
+      );
       Work.AddRange(Reloaded.Commands);
-      return new A.Transition<M.State, M.Msg>(Reloaded.Model, Work.ToArray());
+      return new A.Transition of (M.State, M.Msg)(Reloaded.Model, Work.ToArray());
     end if;
   end for;
 
-  const Work: C.List<A.Command<M.Msg>> := new C.List<A.Command<M.Msg>>(Projection.Commands);
-  Work.Add(A.CancelBackground<M.Msg>('music/load'));
-  return new A.Transition<M.State, M.Msg>(
+  const Work: C.List of A.Command of M.Msg := new C.List of A.Command of M.Msg(Projection.Commands);
+  Work.Add(A.CancelBackground of M.Msg('music/load'));
+  return new A.Transition of (M.State, M.Msg)(
     Current with
       Music := null;
     end with, Work.ToArray()
   );
 end function;
 
-function MusicTransition(Current: M.State; Child: A.Transition<Music.State, Music.Msg>): A.Transition<M.State, M.Msg>;
+function MusicTransition(Current: M.State; Child: A.Transition of (Music.State, Music.Msg)): A.Transition of (M.State, M.Msg);
 begin
-  const Mapped: A.Transition<Music.State, M.Msg> := Composition.MapTransition<Music.State, Music.Msg, M.Msg>(
+  const Mapped: A.Transition of (Music.State, M.Msg) := Composition.MapTransition of (Music.State, Music.Msg, M.Msg)(
     Child,
     M.Msg.Music,
     'music'
   );
-  return new A.Transition<M.State, M.Msg>(
+  return new A.Transition of (M.State, M.Msg)(
     Current with
       Music := Mapped.Model;
     end with, Mapped.Commands

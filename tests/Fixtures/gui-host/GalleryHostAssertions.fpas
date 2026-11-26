@@ -28,7 +28,7 @@ end procedure;
 // - `Key`: Optional part key.
 // ## Returns
 // The matching control.
-public function Control(Session: Gui.Session<State.Msg>; Id: string; Key: string := ''): Gui.Control;
+public function Control(Session: Gui.Session of State.Msg; Id: string; Key: string := ''): Gui.Control;
 begin
   for Value: Gui.Control in Session.Snapshot().Controls do
     if Value.Id = Id and Value.Key = Key then
@@ -46,7 +46,7 @@ end function;
 // - `Value`: Caption to find.
 // ## Returns
 // Whether the caption is present.
-public function HasText(Session: Gui.Session<State.Msg>; Value: string): bool;
+public function HasText(Session: Gui.Session of State.Msg; Value: string): bool;
 begin
   for Item: string in Session.Snapshot().Text do
     if Item = Value then
@@ -62,7 +62,7 @@ end function;
 // ## Parameters
 // - `Session`: Live gallery session.
 // - `Message`: Gallery action to post.
-public procedure Send(Session: Gui.Session<State.Msg>; Message: State.Msg);
+public procedure Send(Session: Gui.Session of State.Msg; Message: State.Msg);
 begin
   case Session.Post(Message) of
     when Mvu.Admission.Queued:

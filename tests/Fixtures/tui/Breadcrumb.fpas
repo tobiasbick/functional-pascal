@@ -25,28 +25,28 @@ begin
   end if;
 end procedure;
 
-function Update(State: int; Index: int): M.Transition<int, int>;
+function Update(State: int; Index: int): M.Transition of (int, int);
 begin
   if Index = -2 then
-    return new M.Transition<int, int>(Index, []);
+    return new M.Transition of (int, int)(Index, []);
   end if;
 
   Check(Index >= 0 and Index < Path.Length - 1, 'Activated a passive or disabled item.');
-  return new M.Transition<int, int>(Index, []);
+  return new M.Transition of (int, int)(Index, []);
 end function;
 
-function Trail(Enabled: bool := true): E.Element<int>;
+function Trail(Enabled: bool := true): E.Element of int;
 begin
-  return B.Breadcrumb<int>('trail', Path, function(Index: int): int => Index, Enabled);
+  return B.Breadcrumb of int('trail', Path, function(Index: int): int => Index, Enabled);
 end function;
 
-function View(State: int): E.Element<int>;
+function View(State: int): E.Element of int;
 begin
-  return E.Column<int>(
-    Buttons.Button<int>('before', 'Before', -1),
+  return E.Column of int(
+    Buttons.Button of int('before', 'Before', -1),
     Trail(),
-    Buttons.Button<int>('after', 'After', -1),
-    E.Text<int>(
+    Buttons.Button of int('after', 'After', -1),
+    E.Text of int(
       if State < 0 then
         ''
       else
@@ -56,41 +56,52 @@ begin
   );
 end function;
 
-function Disabled(State: int): E.Element<int>;
+function Disabled(State: int): E.Element of int;
 begin
-  return E.Column<int>(Buttons.Button<int>('before', 'Before', -1), Trail(false));
+  return E.Column of int(Buttons.Button of int('before', 'Before', -1), Trail(false));
 end function;
 
-function Constrained(State: int): E.Element<int>;
+function Constrained(State: int): E.Element of int;
 begin
-  return E.Row<int>(E.Size<int>(Trail(), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(24)))));
+  return E.Row of int(
+    E.Size of int(Trail(), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(24))))
+  );
 end function;
 
-function Scrolled(State: int): E.Element<int>;
+function Scrolled(State: int): E.Element of int;
 begin
-  return E.ScrollView<int>(
-    'scroll', E.Column<int>(
-      Buttons.Button<int>('before', 'Before', -1), E.Text<int>('One'), E.Text<int>('Two'), Trail()
+  return E.ScrollView of int(
+    'scroll', E.Column of int(
+      Buttons.Button of int('before', 'Before', -1),
+      E.Text of int('One'),
+      E.Text of int('Two'),
+      Trail()
     )
   );
 end function;
 
-function InCard(State: int): E.Element<int>;
+function InCard(State: int): E.Element of int;
 begin
-  return E.Column<int>(
-    Buttons.Button<int>('before', 'Before', -1),
-    Cards.ExpandableCard<int>('card', 'Path', State <> -2, function(Open: bool): int => -2, Trail())
+  return E.Column of int(
+    Buttons.Button of int('before', 'Before', -1),
+    Cards.ExpandableCard of int(
+      'card',
+      'Path',
+      State <> -2,
+      function(Open: bool): int => -2,
+      Trail()
+    )
   );
 end function;
 
-function LongLocation(State: int): E.Element<int>;
+function LongLocation(State: int): E.Element of int;
 begin
-  return B.Breadcrumb<int>('single', ['界😀example'], function(Index: int): int => -1);
+  return B.Breadcrumb of int('single', ['界😀example'], function(Index: int): int => -1);
 end function;
 
 function Find(Session: T.HeadlessSession; Id: string): T.ControlSnapshot?;
 begin
-  return Sys.Array.Find<T.ControlSnapshot>(
+  return Sys.Array.Find of T.ControlSnapshot(
     Session.Snapshot().Controls, function(Item: T.ControlSnapshot): bool => Item.Id = Id
   );
 end function;
@@ -131,10 +142,10 @@ begin
   return Sys.String.Join(#10, Session.Snapshot().Lines).Contains(Caption);
 end function;
 
-procedure Reject(Node: E.Element<int>; Diagnostic: string);
+procedure Reject(Node: E.Element of int; Diagnostic: string);
 begin
   try
-    discard V.Prepare<int>(Node, V.Target.Terminal);
+    discard V.Prepare of int(Node, V.Target.Terminal);
   catch Error: Sys.ArgumentException do
     Check(Error.Message.Contains(Diagnostic), Error.Message);
     return;
@@ -145,16 +156,16 @@ end procedure;
 
 begin
   Reject(
-    B.Breadcrumb<int>('empty', [], function(Index: int): int => Index),
+    B.Breadcrumb of int('empty', [], function(Index: int): int => Index),
     'at least one path item'
   );
   Reject(
-    E.Column<int>(Trail(), Buttons.Button<int>('trail/overflow', 'Duplicate', -1)),
+    E.Column of int(Trail(), Buttons.Button of int('trail/overflow', 'Duplicate', -1)),
     'Duplicate ID'
   );
-  discard V.Prepare<int>(Trail(), V.Target.Portable);
+  discard V.Prepare of int(Trail(), V.Target.Portable);
 
-  using const Session: T.HeadlessSession := Headless.Start<int, int>(-1, Update, View, 54, 10);
+  using const Session: T.HeadlessSession := Headless.Start of (int, int)(-1, Update, View, 54, 10);
   Check(
     Find(Session, 'trail/overflow') = null and Control(Session, 'trail/2').Enabled,
     'Wide trail did not expose the full path.'
@@ -220,7 +231,7 @@ begin
     'The tightest path did not let Enter select its last hidden ancestor.'
   );
 
-  using const Off: T.HeadlessSession := Headless.Start<int, int>(-1, Update, Disabled, 24, 5);
+  using const Off: T.HeadlessSession := Headless.Start of (int, int)(-1, Update, Disabled, 24, 5);
   Check(
     not Control(Off, 'trail/overflow').Enabled and not Control(Off, 'trail/2').Enabled,
     'A disabled trail exposed an enabled action.'
@@ -230,12 +241,18 @@ begin
     Find(Off, 'trail/0') = null and Control(Off, 'before').Focused,
     'A disabled overflow control opened its menu.'
   );
-  using const Sized: T.HeadlessSession := Headless.Start<int, int>(-1, Update, Constrained, 90, 6);
+  using const Sized: T.HeadlessSession := Headless.Start of (int, int)(
+    -1,
+    Update,
+    Constrained,
+    90,
+    6
+  );
   Check(
     Find(Sized, 'trail/0') = null and Control(Sized, 'trail/overflow').Enabled,
     'The breadcrumb used the terminal width instead of the allocated width.'
   );
-  using const Unicode: T.HeadlessSession := Headless.Start<int, int>(
+  using const Unicode: T.HeadlessSession := Headless.Start of (int, int)(
     -1,
     Update,
     LongLocation,
@@ -246,11 +263,17 @@ begin
     Shows(Unicode, '界…') and Find(Unicode, 'single/overflow') = null,
     'Clipping broke a double-width current caption or introduced an empty menu.'
   );
-  using const Scroll: T.HeadlessSession := Headless.Start<int, int>(-1, Update, Scrolled, 54, 2);
+  using const Scroll: T.HeadlessSession := Headless.Start of (int, int)(
+    -1,
+    Update,
+    Scrolled,
+    54,
+    2
+  );
   Check(Find(Scroll, 'trail/0') = null, 'Expected the breadcrumb to start below the fold.');
   Key(Scroll, K.Key.Tab);
   Check(Control(Scroll, 'trail/0').Focused, 'Tab could not reveal the offscreen breadcrumb.');
-  using const Card: T.HeadlessSession := Headless.Start<int, int>(-1, Update, InCard, 54, 8);
+  using const Card: T.HeadlessSession := Headless.Start of (int, int)(-1, Update, InCard, 54, 8);
   Send(Card, T.Input.Focus('trail/0'));
   Send(Card, T.Input.Activate('card'));
   Check(

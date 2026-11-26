@@ -15,9 +15,9 @@ uses Fpas.Ui.Widgets.Media.Avatars as W;
 // Builds the avatar example.
 // ## Returns
 // The widget for the application view.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return W.Avatar<string>('jonas-avatar', 'Jonas Berg', new W.Options(Size := 44.0F, Status := 'online'));
+  return W.Avatar of string('jonas-avatar', 'Jonas Berg', new W.Options(Size := 44.0F, Status := 'online'));
 end function;
 
 end unit;

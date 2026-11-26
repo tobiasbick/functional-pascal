@@ -19,16 +19,16 @@ public type ImageTests = record
     const Bitmap: Images.Bitmap := Images.CoverDecoder.Decode(
       IO.File.ReadAllBytes(Path), 8, T.CancellationToken.None
     );
-    X.Assert.Equal<int>(8, Bitmap.Width);
-    X.Assert.Equal<int>(8, Bitmap.Height);
-    X.Assert.Equal<int>(8 * 8 * 4, Bitmap.Pixels.Length);
+    X.Assert.Equal of int(8, Bitmap.Width);
+    X.Assert.Equal of int(8, Bitmap.Height);
+    X.Assert.Equal of int(8 * 8 * 4, Bitmap.Pixels.Length);
     for Row: int := 0 to 7 do
       const Pixel: int := Row * 8 * 4;
       if Row = 3 or Row = 4 then
-        X.Assert.Equal<byte>(255, Bitmap.Pixels[Pixel + 3]);
+        X.Assert.Equal of byte(255, Bitmap.Pixels[Pixel + 3]);
         X.Assert.True(Bitmap.Pixels[Pixel] > Bitmap.Pixels[Pixel + 2]);
       else
-        X.Assert.Equal<byte>(0, Bitmap.Pixels[Pixel + 3]);
+        X.Assert.Equal of byte(0, Bitmap.Pixels[Pixel + 3]);
       end if;
     end for;
   end procedure;

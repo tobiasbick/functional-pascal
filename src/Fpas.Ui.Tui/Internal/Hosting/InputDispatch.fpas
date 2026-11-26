@@ -17,12 +17,12 @@ uses System as Sys;
 // - `Routing`: Session's input router.
 // - `Layout`: Presented controls and modal scope.
 // - `Event`: Input to route.
-public procedure Dispatch<TMsg>(Routing: I.State<TMsg>; Layout: A.Layout<TMsg>; Event: App.Input);
+public procedure Dispatch of TMsg(Routing: I.State of TMsg; Layout: A.Layout of TMsg; Event: App.Input);
 begin
-  const Scope: A.Scope<TMsg>? := Layout.Active;
+  const Scope: (A.Scope of TMsg)? := Layout.Active;
   if Scope <> null then
     case Scope.LocalInput of
-      when is Sys.Func<App.Input, bool> as Popup:
+      when is Sys.Func of (App.Input, bool) as Popup:
         if Popup.Invoke(Event) then
           return;
         end if;

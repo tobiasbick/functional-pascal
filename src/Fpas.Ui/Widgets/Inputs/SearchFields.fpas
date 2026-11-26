@@ -45,13 +45,13 @@ end record;
 // - `OnSubmit`: Optional Enter action receiving the value after the frame's edit.
 // ## Returns
 // A search field for the graphical or terminal host.
-public function SearchField<TMsg>(
+public function SearchField of TMsg(
   Id: string; Value: string; OnChange: function(string): TMsg;
-  Settings: Options? := null; OnSubmit: Sys.Func<string, TMsg>? := null
-): E.Element<TMsg>;
+  Settings: Options? := null; OnSubmit: Sys.Func of (string, TMsg)? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.SearchField(Id, Value, OnChange, Settings ?? new Options(), OnSubmit);
+  return (E.Element of TMsg).SearchField(Id, Value, OnChange, Settings ?? new Options(), OnSubmit);
 end function;
 
 // Derives the identity of the clear button.

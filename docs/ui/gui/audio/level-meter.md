@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Audio.LevelMeters as W;
 // - `Right`: Linear peak of the right channel.
 // ## Returns
 // The meter with a message for a cleared clip indicator.
-public function View(Left: float; Right: float): E.Element<string>;
+public function View(Left: float; Right: float): E.Element of string;
 begin
-  return W.LevelMeter<string>('master', [Left, Right],
+  return W.LevelMeter of string('master', [Left, Right],
     new W.Options(Length := 240.0F, Horizontal := true, Scale := true, Segmented := true),
     function(): string => 'clip-cleared');
 end function;

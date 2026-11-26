@@ -23,48 +23,48 @@ end function;
 // - `Model`: Current sort and selection.
 // ## Returns
 // The native people table.
-public function View(Model: State.Model): E.Element<State.Msg>;
+public function View(Model: State.Model): E.Element of State.Msg;
 begin
-  const Rows: Lists.List<T.Row<State.Msg>> := new Lists.List<T.Row<State.Msg>>();
+  const Rows: Lists.List of T.Row of State.Msg := new Lists.List of T.Row of State.Msg();
   for Item: People.Person in People.Ordered(Model.Sort) do
     const Id: string := Item.Id;
     Rows.Add(
-      new T.Row<State.Msg>(
+      new T.Row of State.Msg(
         Id, [
-          T.Cell<State.Msg>.Content(
+          (T.Cell of State.Msg).Content(
             [
-              A.Avatar<State.Msg>(Id + '/avatar', Item.Name, new A.Options(Size := 26.0F)),
-              E.Styled<State.Msg>(
-                E.Styled<State.Msg>(E.Text<State.Msg>(Item.Name), S.Role.Strong),
+              A.Avatar of State.Msg(Id + '/avatar', Item.Name, new A.Options(Size := 26.0F)),
+              E.Styled of State.Msg(
+                E.Styled of State.Msg(E.Text of State.Msg(Item.Name), S.Role.Strong),
                 S.Role.SingleLine
               )
             ]
           ),
-          T.Cell<State.Msg>.Content(
+          (T.Cell of State.Msg).Content(
             [
-              E.Styled<State.Msg>(
-                E.Styled<State.Msg>(E.Text<State.Msg>(Item.Email), S.Role.Secondary),
+              E.Styled of State.Msg(
+                E.Styled of State.Msg(E.Text of State.Msg(Item.Email), S.Role.Secondary),
                 S.Role.SingleLine
               )
             ]
           ),
-          T.Cell<State.Msg>.Text(Item.Role),
-          T.Cell<State.Msg>.Content(
+          (T.Cell of State.Msg).Text(Item.Role),
+          (T.Cell of State.Msg).Content(
             [
-              B.Badge<State.Msg>(
+              B.Badge of State.Msg(
                 Id + '/status',
                 Item.Status,
                 new B.Options(Tone := Item.Tone, Dot := true)
               )
             ]
           ),
-          T.Cell<State.Msg>.Text(Item.Revenue)
+          (T.Cell of State.Msg).Text(Item.Revenue)
         ], Model.Selected = Id
       )
     );
   end for;
 
-  return T.Table<State.Msg>(
+  return T.Table of State.Msg(
     'people',
     People.Columns(Fixed(110), Fixed(120), Fixed(110)),
     Rows.ToArray(),

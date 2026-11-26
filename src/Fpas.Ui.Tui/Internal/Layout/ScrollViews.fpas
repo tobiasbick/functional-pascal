@@ -13,24 +13,24 @@ uses Fpas.Ui.Widgets.Developer.Terminal as T;
 uses System as Sys;
 uses System.Collections.Generic as Generic;
 
-public type Viewport<TMsg> = record
+public type Viewport of TMsg = record
   public Offset: int;
   public Maximum: int;
   public Rows: int;
   public Following: bool;
   public Bar: bool;
-  public OnScroll: Sys.Func<L.ScrollChange, TMsg>?;
+  public OnScroll: Sys.Func of (L.ScrollChange, TMsg)?;
 end record;
 
-public type Geometry<TMsg> = record
-  public View: Viewport<TMsg>;
+public type Geometry of TMsg = record
+  public View: Viewport of TMsg;
   public Content: F.Rect;
   public Clip: F.Rect;
 end record;
 
-public function ContentHeight<TMsg>(Child: E.Element<TMsg>; Area: F.Rect): int;
+public function ContentHeight of TMsg(Child: E.Element of TMsg; Area: F.Rect): int;
 begin
-  return Sys.Math.Max(Area.Height, M.Intrinsic<TMsg>(Child, false, Area.Width));
+  return Sys.Math.Max(Area.Height, M.Intrinsic of TMsg(Child, false, Area.Width));
 end function;
 
 // Resolves the offset, visible rows and thumb for a vertical viewport.
@@ -44,10 +44,10 @@ end function;
 // - `OnScroll`: Optional model-owned scroll mapper.
 // ## Returns
 // The clamped viewport.
-public function Resolve<TMsg>(
+public function Resolve of TMsg(
   Position: E.ScrollPosition; ContentRows: int; Area: F.Rect;
-  ShowScrollbar: bool; OnScroll: Sys.Func<L.ScrollChange, TMsg>?
-): Viewport<TMsg>;
+  ShowScrollbar: bool; OnScroll: Sys.Func of (L.ScrollChange, TMsg)?
+): Viewport of TMsg;
 begin
   const Maximum: int := Sys.Math.Max(0, ContentRows - Area.Height);
   var Offset: int := Maximum;
@@ -59,19 +59,19 @@ begin
     when E.ScrollPosition.End:
   end case;
 
-  return new Viewport<TMsg>(
+  return new Viewport of TMsg(
     Offset, Maximum, Area.Height, Following,
     ShowScrollbar and Maximum > 0 and Area.Width > 1, OnScroll
   );
 end function;
 
-public function Arrange<TMsg>(
-  Child: E.Element<TMsg>; Position: E.ScrollPosition; Area: F.Rect; Clip: F.Rect;
-  ShowScrollbar: bool; OnScroll: Sys.Func<L.ScrollChange, TMsg>?
-): Geometry<TMsg>;
+public function Arrange of TMsg(
+  Child: E.Element of TMsg; Position: E.ScrollPosition; Area: F.Rect; Clip: F.Rect;
+  ShowScrollbar: bool; OnScroll: Sys.Func of (L.ScrollChange, TMsg)?
+): Geometry of TMsg;
 begin
-  var Height: int := ContentHeight<TMsg>(Child, Area);
-  var View: Viewport<TMsg> := Resolve<TMsg>(Position, Height, Area, ShowScrollbar, OnScroll);
+  var Height: int := ContentHeight of TMsg(Child, Area);
+  var View: Viewport of TMsg := Resolve of TMsg(Position, Height, Area, ShowScrollbar, OnScroll);
   const Width: int := Area.Width - (if View.Bar then
     1
   else
@@ -79,17 +79,17 @@ begin
   end if);
   const Body: F.Rect := new F.Rect(Area.X, Area.Y, Width, Area.Height);
   if View.Bar then
-    Height := Sys.Math.Max(Height, ContentHeight<TMsg>(Child, Body));
-    View := Resolve<TMsg>(Position, Height, Area, ShowScrollbar, OnScroll);
+    Height := Sys.Math.Max(Height, ContentHeight of TMsg(Child, Body));
+    View := Resolve of TMsg(Position, Height, Area, ShowScrollbar, OnScroll);
   end if;
 
-  return new Geometry<TMsg>(
+  return new Geometry of TMsg(
     View, new F.Rect(Body.X, Body.Y - View.Offset, Width, Height), F.Intersect(Body, Clip)
   );
 end function;
 
-public procedure DrawBar<TMsg>(
-  View: Viewport<TMsg>; Operations: Generic.List<D.Operation>; Area: F.Rect; Clip: F.Rect;
+public procedure DrawBar of TMsg(
+  View: Viewport of TMsg; Operations: Generic.List of D.Operation; Area: F.Rect; Clip: F.Rect;
   Style: T.Style; Widgets: Th.WidgetStyles?
 );
 begin
@@ -133,7 +133,7 @@ begin
   end for;
 end procedure;
 
-public function Equivalent<TMsg>(Left: Viewport<TMsg>; Right: Viewport<TMsg>): bool;
+public function Equivalent of TMsg(Left: Viewport of TMsg; Right: Viewport of TMsg): bool;
 begin
   return Left.Offset = Right.Offset and Left.Maximum = Right.Maximum and Left.Rows = Right.Rows
     and Left.Following = Right.Following and Left.Bar = Right.Bar;

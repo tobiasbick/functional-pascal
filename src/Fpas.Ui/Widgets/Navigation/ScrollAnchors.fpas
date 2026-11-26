@@ -11,10 +11,10 @@ uses Fpas.Ui.Elements as E;
 // - `Id`: Globally unique anchor identity referenced by a table-of-contents entry.
 // ## Returns
 // An invisible marker with zero height.
-public function ScrollAnchor<TMsg>(Id: string): E.Element<TMsg>;
+public function ScrollAnchor of TMsg(Id: string): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.ScrollAnchor(Id);
+  return (E.Element of TMsg).ScrollAnchor(Id);
 end function;
 
 end unit;

@@ -1,8 +1,8 @@
 # Nullable types
 
-- `T?` for a non-nullable value type means `System.Nullable<T>`.
+- `T?` for a non-nullable value type means `System.Nullable of T`.
 - `T?` for a reference type is a nullable reference annotation; it does not
-  construct `Nullable<T>` or a wrapper object.
+  construct `Nullable of T` or a wrapper object.
 - `T` reference values are statically non-null. Definite assignment and nullable
   flow analysis diagnose possible null dereferences and invalid assignments.
 - Nullable metadata is imported and emitted. Unannotated foreign reference

@@ -31,10 +31,10 @@ end record;
 // - `Settings`: Optional native options.
 // ## Returns
 // The graphical widget.
-public function Spotlight<TMsg>(Id: string; Children: array of E.Element<TMsg>; Settings: Options? := null): E.Element<TMsg>;
+public function Spotlight of TMsg(Id: string; Children: array of E.Element of TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Spotlight(Id, Children, Settings ?? new Options());
+  return (E.Element of TMsg).Spotlight(Id, Children, Settings ?? new Options());
 end function;
 
 end unit;

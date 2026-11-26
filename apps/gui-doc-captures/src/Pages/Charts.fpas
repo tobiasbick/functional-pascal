@@ -11,7 +11,7 @@ uses GuiGallery.App.State as Gallery;
 // ## Parameters
 // - `Session`: Gallery session on Charts.
 // - `Output`: Directory for full-frame images and crop bounds.
-public procedure CaptureCharts(Session: Gui.Session<Gallery.Msg>; Output: string);
+public procedure CaptureCharts(Session: Gui.Session of Gallery.Msg; Output: string);
 begin
   Regions.Shot(Session, Output, 'line-chart', 'revenue');
   Regions.Shot(Session, Output, 'line-chart-dither', 'requests');
@@ -27,7 +27,7 @@ end procedure;
 // ## Parameters
 // - `Session`: Gallery session on Charts with Grayscale selected.
 // - `Output`: Directory for the full-frame image and crop bounds.
-public procedure CaptureGrayscale(Session: Gui.Session<Gallery.Msg>; Output: string);
+public procedure CaptureGrayscale(Session: Gui.Session of Gallery.Msg; Output: string);
 begin
   Regions.Shot(Session, Output, 'pattern-meter-grayscale', 'storage', 'grayscale');
 end procedure;
@@ -36,7 +36,7 @@ end procedure;
 // ## Parameters
 // - `Session`: Gallery session on More charts.
 // - `Output`: Directory for full-frame images and crop bounds.
-public procedure CaptureMoreChartsTop(Session: Gui.Session<Gallery.Msg>; Output: string);
+public procedure CaptureMoreChartsTop(Session: Gui.Session of Gallery.Msg; Output: string);
 begin
   Regions.Shot(Session, Output, 'heatmap', 'traffic');
   Regions.Shot(Session, Output, 'calendar-heatmap', 'activity');
@@ -52,7 +52,7 @@ end procedure;
 // ## Parameters
 // - `Session`: Gallery session scrolled to the bottom of More charts.
 // - `Output`: Directory for full-frame images and crop bounds.
-public procedure CaptureMoreChartsBottom(Session: Gui.Session<Gallery.Msg>; Output: string);
+public procedure CaptureMoreChartsBottom(Session: Gui.Session of Gallery.Msg; Output: string);
 begin
   Regions.Shot(Session, Output, 'bar-list', 'pages', 'shuffle-pages');
   Regions.Shot(Session, Output, 'activity-rings', 'rings');

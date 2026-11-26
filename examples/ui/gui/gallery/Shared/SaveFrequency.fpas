@@ -20,9 +20,9 @@ public const Initial: int := 1;
 // - `Change`: Maps a new frequency to a message.
 // ## Returns
 // The exclusive radio rows with their original descriptions.
-public function View<TMsg>(Selected: int; Change: function(int): TMsg): E.Element<TMsg>;
+public function View of TMsg(Selected: int; Change: function(int): TMsg): E.Element of TMsg;
 begin
-  return R.RadioGroup<TMsg>(
+  return R.RadioGroup of TMsg(
     'save-frequency', [
       new R.Item(Strings.Get('Text.EveryChange'), Strings.Get('Text.EveryChangeHint')),
       new R.Item(Strings.Get('Text.EveryFiveMinutes'), Strings.Get('Text.EveryFiveMinutesHint')),

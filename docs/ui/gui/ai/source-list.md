@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Ai.Sources as S;
 // - `Documents`: Sources in display order.
 // ## Returns
 // The list with source indices as activation messages.
-public function View(Documents: array of S.Item): E.Element<int>;
+public function View(Documents: array of S.Item): E.Element of int;
 begin
-  return W.SourceList<int>('sources', Documents, function(Index: int): int => Index);
+  return W.SourceList of int('sources', Documents, function(Index: int): int => Index);
 end function;
 
 end unit;

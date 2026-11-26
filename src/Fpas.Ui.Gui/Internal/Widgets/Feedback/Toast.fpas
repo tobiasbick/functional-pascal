@@ -19,13 +19,13 @@ uses System.Collections.Generic as Lists;
 // - `Window`: Current owner window.
 // - `Pending`: Requests emitted by model updates, in order.
 // - `Active`: Application data retained by native handle.
-public procedure Submit<TMsg>(
-  Window: Cui.CuiWindow; Pending: Lists.Queue<T.Request<TMsg>>;
-  Active: Lists.Dictionary<int, T.Request<TMsg>>
+public procedure Submit of TMsg(
+  Window: Cui.CuiWindow; Pending: Lists.Queue of T.Request of TMsg;
+  Active: Lists.Dictionary of (int, T.Request of TMsg)
 );
 begin
   while Pending.Count > 0 do
-    const Request: T.Request<TMsg> := Pending.Dequeue();
+    const Request: T.Request of TMsg := Pending.Dequeue();
     const Options: T.Options := Request.Settings;
     const Handle: int := Window.Toast(
       Request.Title, Options.Description, cast<int>(Options.Appearance), Options.Duration,
@@ -42,7 +42,7 @@ end procedure;
 // ## Parameters
 // - `Frame`: Completed GUI frame awaiting publication.
 // - `Active`: Application data retained by native handle.
-public procedure Collect<TMsg>(Frame: C.State<TMsg>; Active: Lists.Dictionary<int, T.Request<TMsg>>);
+public procedure Collect of TMsg(Frame: C.State of TMsg; Active: Lists.Dictionary of (int, T.Request of TMsg));
   procedure Track(Id: string; Text: string; Role: string; Part: CuiFeedback.CuiToastPart?; Enabled: bool);
   begin
     case Part of
@@ -62,8 +62,8 @@ public procedure Collect<TMsg>(Frame: C.State<TMsg>; Active: Lists.Dictionary<in
     end case;
   end procedure;
 begin
-  for Handle: int in new Lists.List<int>(Active.Keys) do
-    const Request: T.Request<TMsg> := Active[Handle];
+  for Handle: int in new Lists.List of int(Active.Keys) do
+    const Request: T.Request of TMsg := Active[Handle];
     const Current: CuiFeedback.CuiToastFrame := Frame.Window.PollToast(Handle);
     if not Current.Active then
       discard Active.Remove(Handle);
@@ -71,7 +71,7 @@ begin
 
     if Current.Invoked then
       case Request.OnAction of
-        when is Sys.Func<TMsg> as OnAction:
+        when is Sys.Func of TMsg as OnAction:
           Frame.Messages.Add(OnAction.Invoke());
         else
       end case;

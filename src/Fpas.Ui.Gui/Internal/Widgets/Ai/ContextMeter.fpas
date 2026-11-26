@@ -21,13 +21,13 @@ uses System.Collections.Generic as Lists;
 // - `Limit`: Context capacity.
 // - `Breakdown`: Optional usage breakdown.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Used: float; Limit: float; Breakdown: array of ContextMeters.Part; Settings: ContextMeters.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Used: float; Limit: float; Breakdown: array of ContextMeters.Part; Settings: ContextMeters.Options);
 begin
   const Role: string := 'context-meter';
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput;
-  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
-  const Native: Lists.List<CuiCharts.CuiVizItem> := new Lists.List<CuiCharts.CuiVizItem>(
+  const Focus: bool := C.WantsFocus of TMsg(Frame, Id, Token, Enabled);
+  const Native: Lists.List of CuiCharts.CuiVizItem := new Lists.List of CuiCharts.CuiVizItem(
     Breakdown.Length
   );
   for Part: ContextMeters.Part in Breakdown do
@@ -42,7 +42,7 @@ begin
     Settings.Unit,
     Enc.Bits(Enabled, 1) or Enc.Bits(Focus, 2)
   );
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, Used.ToString());
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, Used.ToString());
 end procedure;
 
 end unit;

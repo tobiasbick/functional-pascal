@@ -54,7 +54,7 @@ end function;
 // - `Source`: Folder listing to use in the example.
 // ## Returns
 // Shared picker settings, including the original save name.
-public function Settings(Save: bool; Source: Sys.Func<string, bool, Files.Listing?>): Picker.Options;
+public function Settings(Save: bool; Source: Sys.Func of (string, bool, Files.Listing?)): Picker.Options;
 begin
   return if Save then
     new Picker.Options(Kind := Picker.Mode.SaveFile, Name := 'untitled.txt', Source := Source)

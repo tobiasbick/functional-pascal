@@ -75,7 +75,7 @@ public sealed class DocumentationTests
             // A generic box.
             // ## Type parameters
             // - `T`: Stored value.
-            public type Box<T> = record
+            public type Box of T = record
               // Stored property.
               public Value: T;
               // Private state.
@@ -89,11 +89,11 @@ public sealed class DocumentationTests
               // - `U`: Method type.
               // ## Returns
               // The other value.
-              public function Copy<U>(ref Item: T; out Previous: T; in Other: U): U;
+              public function Copy of U(ref Item: T; out Previous: T; in Other: U): U;
               begin Previous := Item; return Other; end function;
             end record;
             // Optional result.
-            public type Outcome<T> = variant
+            public type Outcome of T = variant
               // Empty result.
               None;
               // Present result.
@@ -104,7 +104,7 @@ public sealed class DocumentationTests
             // Integer overload.
             public function Read(Value: int): int; begin return Value; end function;
             // Generic overload.
-            public function Read<T>(Value: T): T; begin return Value; end function;
+            public function Read of T(Value: T): T; begin return Value; end function;
             // Array and nullable arguments.
             public function Arrays(Grid: array[,] of int; Text: array of array of string?; Number: double?): int; begin return 0; end function;
             // Private helper.
@@ -141,7 +141,7 @@ public sealed class DocumentationTests
         var source = string.Join(newline,
             "// Header.", "unit Attached;", "uses System.Threading.Tasks as Tasks;",
             "// Detached.", "", "public function Detached(): int; begin return 0; end function;",
-            "// Attached summary.", "//", "// Second paragraph with `code` & <literal>.", "public async function Read(@type: int): Tasks.Task<int>;",
+            "// Attached summary.", "//", "// Second paragraph with `code` & <literal>.", "public async function Read(@type: int): Tasks.Task of int;",
             "begin return @type; end function; // Inline comment.",
             "public", "// Within modifiers, ignored.", "function Plain(): string; begin return 'https://example.com/'; end function;",
             "end unit;", "// EOF comment");

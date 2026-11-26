@@ -31,7 +31,7 @@ end record;
 // An application-owned node and its composed body.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Node<TMsg> = record
+public type Node of TMsg = record
   // Unique node identity.
   public Id: int;
   // Horizontal canvas position.
@@ -43,7 +43,7 @@ public type Node<TMsg> = record
   // Pin rows in display order.
   public Pins: array of Pin;
   // Optional body content.
-  public Body: E.Element<TMsg>? := null;
+  public Body: (E.Element of TMsg)? := null;
   // Node width, or zero for the default.
   public Width: float := 0.0F;
   // Optional glyph before the title.
@@ -106,10 +106,17 @@ end variant;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function NodeEditor<TMsg>(Id: string; Viewport: View; Nodes: array of Node<TMsg>; Links: array of Link; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function NodeEditor of TMsg(Id: string; Viewport: View; Nodes: array of Node of TMsg; Links: array of Link; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.NodeEditor(Id, Viewport, Nodes, Links, Changed, Settings ?? new Options());
+  return (E.Element of TMsg).NodeEditor(
+    Id,
+    Viewport,
+    Nodes,
+    Links,
+    Changed,
+    Settings ?? new Options()
+  );
 end function;
 
 end unit;

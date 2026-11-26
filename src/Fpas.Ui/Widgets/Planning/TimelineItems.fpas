@@ -28,12 +28,12 @@ end record;
 // - `Settings`: Native time, description, icon, tone and final-item options.
 // ## Returns
 // A noninteractive GUI-only item; CUI owns its layout, wrapping and connector.
-public function TimelineItem<TMsg>(
+public function TimelineItem of TMsg(
   Id: string; Title: string; Settings: Options? := null
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.TimelineItem(Id, Title, Settings ?? new Options());
+  return (E.Element of TMsg).TimelineItem(Id, Title, Settings ?? new Options());
 end function;
 
 end unit;

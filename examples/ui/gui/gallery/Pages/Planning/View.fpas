@@ -28,7 +28,7 @@ begin
     'Standup', 'Design review', 'Offsite', '1:1', 'Release', 'Planning',
     'Customer call', 'Lunch', 'Retro', 'Holiday', 'Demo', 'Board meeting'
   ];
-  const Result: Lists.List<Month.Appointment> := new Lists.List<Month.Appointment>();
+  const Result: Lists.List of Month.Appointment := new Lists.List of Month.Appointment();
   for Index: int := 0 to Names.Length - 1 do
     const Start: Sys.DateOnly := First.AddDays((Index * 5) mod 27);
     const Span: bool := Index = 2 or Index = 9;
@@ -53,21 +53,21 @@ end function;
 // - `Model`: Current board and schedule.
 // ## Returns
 // Native examples in gallery order.
-public function View(Model: M.Model): array of E.Element<M.Msg>;
+public function View(Model: M.Model): array of E.Element of M.Msg;
 begin
   const Day: int := (cast<int>(Model.Today.DayOfWeek) + 6) mod 7;
   const Monday: Sys.DateOnly := Model.Today.AddDays(-Day);
   return [
-    G.Heading<M.Msg>(
+    G.Heading of M.Msg(
       Strings.Get('Heading.Kanban'),
       Strings.Get('Heading.KanbanHint')
     ),
     Board.View(Model),
-    G.Heading<M.Msg>(
+    G.Heading of M.Msg(
       Strings.Get('Heading.WeekCalendar'),
       Strings.Get('Heading.WeekCalendarHint')
     ),
-    W.WeekCalendar<M.Msg>(
+    W.WeekCalendar of M.Msg(
       'planning-week', new W.Value(Monday, Model.Events), M.Msg.Week,
       new W.Options(
         StartHour := 8.0F,
@@ -75,19 +75,19 @@ begin
         Height := L.Extent.Fixed(L.Measure.Logical(420))
       )
     ),
-    G.Heading<M.Msg>(
+    G.Heading of M.Msg(
       Strings.Get('Heading.Gantt'),
       Strings.Get('Heading.GanttHint')
     ),
-    Timeline.Gantt<M.Msg>(
+    Timeline.Gantt of M.Msg(
       'planning-gantt', new Timeline.Value(Monday.AddDays(-7), 42, Model.Tasks),
       M.Msg.Timeline, new Timeline.Options(Today := 7 + Day)
     ),
-    G.Heading<M.Msg>(
+    G.Heading of M.Msg(
       Strings.Get('Heading.MonthCalendar'),
       Strings.Get('Heading.MonthCalendarHint')
     ),
-    Month.MonthCalendar<M.Msg>(
+    Month.MonthCalendar of M.Msg(
       'planning-month',
       new Month.Value(Model.Month ?? Model.Today, MonthEvents(Model.Today), Model.Selected),
       M.Msg.Month,

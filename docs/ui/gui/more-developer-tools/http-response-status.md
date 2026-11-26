@@ -21,9 +21,9 @@ uses Fpas.Ui.Widgets.Developer.ResponseStatuses as W;
 // - `Bytes`: Response size in bytes.
 // ## Returns
 // The response status for the application view.
-public function View(Status: int; Seconds: double; Bytes: double): E.Element<string>;
+public function View(Status: int; Seconds: double; Bytes: double): E.Element of string;
 begin
-  return W.ResponseStatus<string>('result', Status, Seconds, Bytes);
+  return W.ResponseStatus of string('result', Status, Seconds, Bytes);
 end function;
 
 end unit;

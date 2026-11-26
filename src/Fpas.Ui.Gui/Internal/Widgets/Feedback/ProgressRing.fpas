@@ -17,8 +17,8 @@ uses System.Globalization as Culture;
 // - `Label`: Literal caption.
 // - `Value`: Model-owned progress fraction.
 // - `Size`: Logical diameter; zero selects the native default.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Label: string; Value: float; Size: float
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Label: string; Value: float; Size: float
 );
 begin
   Frame.Window.ProgressRing(C.Token('progress-ring', Id), Label, Value, Size);
@@ -26,7 +26,7 @@ begin
     Frame.Labels.Add(Label);
   end if;
 
-  C.Track<TMsg>(
+  C.Track of TMsg(
     Frame,
     new App.Control(
       Id, Label, 'progress-ring', new Cui.CuiRectangle(), false,

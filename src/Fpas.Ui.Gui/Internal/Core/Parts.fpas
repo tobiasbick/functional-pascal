@@ -18,7 +18,7 @@ uses System.Collections.Generic as Lists;
 // The part names in native order.
 public function Indexed(Count: int; Last: string := ''): array of string;
 begin
-  const Parts: Lists.List<string> := new Lists.List<string>(Count + V.Bits(Last <> '', 1));
+  const Parts: Lists.List of string := new Lists.List of string(Count + V.Bits(Last <> '', 1));
   for Index: int := 0 to Count - 1 do
     Parts.Add(Index.ToString(Sys.Globalization.CultureInfo.InvariantCulture));
   end for;
@@ -39,7 +39,7 @@ end function;
 public function Inputs(Count: int; Enabled: bool): array of bool;
 begin
   const Values: array of bool := new bool[Count];
-  Sys.Array.Fill<bool>(Values, Enabled);
+  Sys.Array.Fill of bool(Values, Enabled);
   return Values;
 end function;
 
@@ -64,13 +64,13 @@ end function;
 // - `Preferred`: Preferred part for a whole-widget request.
 // ## Returns
 // The native part index or minus one.
-public function Focus<TMsg>(Frame: C.State<TMsg>; Id: string; Role: string; Parts: array of string; Accept: array of bool; Preferred: int): int;
+public function Focus of TMsg(Frame: C.State of TMsg; Id: string; Role: string; Parts: array of string; Accept: array of bool; Preferred: int): int;
 begin
   for Index: int := 0 to Parts.Length - 1 do
     const Part: string := PartId(Id, Parts[Index]);
     const Native: string := C.Token(Role, Part);
-    if C.WantsFocus<TMsg>(Frame, Part, Native, Accept[Index])
-      or (Index = Preferred and C.WantsFocus<TMsg>(Frame, Id, Native, Accept[Index]))
+    if C.WantsFocus of TMsg(Frame, Part, Native, Accept[Index])
+      or (Index = Preferred and C.WantsFocus of TMsg(Frame, Id, Native, Accept[Index]))
     then
       return Index;
     end if;
@@ -89,7 +89,7 @@ end function;
 // - `Parts`: Part names in native order.
 // ## Returns
 // The tracking mapper, or null while painting a closing view.
-public function Tracker<TMsg>(Frame: C.State<TMsg>; Id: string; Role: string; Parts: array of string): Sys.Func<int, string>?;
+public function Tracker of TMsg(Frame: C.State of TMsg; Id: string; Role: string; Parts: array of string): Sys.Func of (int, string)?;
 begin
   if Frame.PaintingClosed then
     return null;
@@ -108,9 +108,9 @@ end function;
 // - `Caption`: Visible label.
 // - `Enabled`: Input permission.
 // - `Value`: Snapshot value.
-public procedure Root<TMsg>(Frame: C.State<TMsg>; Id: string; Role: string; Caption: string; Enabled: bool; Value: string);
+public procedure Root of TMsg(Frame: C.State of TMsg; Id: string; Role: string; Caption: string; Enabled: bool; Value: string);
 begin
-  C.Track<TMsg>(
+  C.Track of TMsg(
     Frame,
     new App.Control(Id, Caption, Role, new Cui.CuiRectangle(), Enabled, Value := Value)
   );
@@ -127,7 +127,7 @@ end procedure;
 // - `Caption`: Visible label.
 // - `Enabled`: Input permission.
 // - `Value`: Snapshot value.
-public procedure Part<TMsg>(Frame: C.State<TMsg>; Id: string; Role: string; Key: string; Caption: string; Enabled: bool; Value: string);
+public procedure Part of TMsg(Frame: C.State of TMsg; Id: string; Role: string; Key: string; Caption: string; Enabled: bool; Value: string);
 begin
   if not Frame.PaintingClosed then
     Frame.Controls.Add(

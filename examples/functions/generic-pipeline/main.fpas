@@ -23,7 +23,7 @@ begin
     Console.WriteLine(Row);
   end for;
 
-  const Copy: function(string): string := Pipeline.Identity<string>;
+  const Copy: function(string): string := Pipeline.Identity of string;
   Console.WriteLine(Copy('identity'));
 end;
 

@@ -15,12 +15,12 @@ uses System.Globalization as Culture;
 // - `TMsg`: Gallery message type.
 // ## Returns
 // One line of activity feedback.
-public function Activity<TMsg>(): E.Element<TMsg>;
+public function Activity of TMsg(): E.Element of TMsg;
 begin
-  return E.Row<TMsg>(
+  return E.Row of TMsg(
     new L.Flow(Gap := L.Spacing.Tight),
-    Spin.Spinner<TMsg>('spinner-sync'),
-    E.Text<TMsg>(Strings.Get('Tui.Spinner.Sync'))
+    Spin.Spinner of TMsg('spinner-sync'),
+    E.Text of TMsg(Strings.Get('Tui.Spinner.Sync'))
   );
 end function;
 
@@ -29,13 +29,13 @@ end function;
 // - `TMsg`: Gallery message type.
 // ## Returns
 // A single line with the trend and latest sample.
-public function Sparkline<TMsg>(): E.Element<TMsg>;
+public function Sparkline of TMsg(): E.Element of TMsg;
 begin
   const Values: array of float := [3.0F, 5.0F, 4.0F, 8.0F, 6.0F, 9.0F, 8.0F];
-  return E.Row<TMsg>(
+  return E.Row of TMsg(
     new L.Flow(Gap := L.Spacing.Tight),
-    Charts.Sparkline<TMsg>('chart-sparkline', Values),
-    E.Text<TMsg>(
+    Charts.Sparkline of TMsg('chart-sparkline', Values),
+    E.Text of TMsg(
       Strings.Get('Tui.Sparkline.Latest') +
       Values[Values.Length - 1].ToString(Culture.CultureInfo.CurrentCulture)
     )

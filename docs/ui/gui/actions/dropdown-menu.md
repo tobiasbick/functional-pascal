@@ -15,13 +15,13 @@ uses Fpas.Ui.Widgets.Overlays.Menus as M;
 // Builds the example view.
 // ## Returns
 // The widget with its message type.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return M.Menu<string>('options', 'Options', [
-    M.Entry<string>.Label('Project'),
-    M.Entry<string>.Action(new M.Item<string>('rename', 'Rename', 'rename')),
-    M.Entry<string>.Separator,
-    M.Entry<string>.Action(new M.Item<string>('delete', 'Delete', 'delete', Danger := true))
+  return M.Menu of string('options', 'Options', [
+    (M.Entry of string).Label('Project'),
+    (M.Entry of string).Action(new M.Item of string('rename', 'Rename', 'rename')),
+    (M.Entry of string).Separator,
+    (M.Entry of string).Action(new M.Item of string('delete', 'Delete', 'delete', Danger := true))
   ]);
 end function;
 

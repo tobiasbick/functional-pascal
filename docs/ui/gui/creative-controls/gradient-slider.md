@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Inputs.GradientSliders as W;
 // - `Hue`: Current hue in degrees from zero through 360.
 // ## Returns
 // The slider with numeric and color proposals.
-public function View(Hue: float): E.Element<W.Event>;
+public function View(Hue: float): E.Element of W.Event;
 begin
-  return W.GradientSlider<W.Event>('hue', new W.Value('Hue', Hue, 0.0F, 360.0F),
+  return W.GradientSlider of W.Event('hue', new W.Value('Hue', Hue, 0.0F, 360.0F),
     function(Change: W.Event): W.Event => Change, new W.Options(Swatch := true));
 end function;
 

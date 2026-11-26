@@ -10,7 +10,7 @@ uses System as Sys;
 // An owner-window file selection request.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Request<TMsg> = record implements Mvu.HostExtension<TMsg>
+public type Request of TMsg = record implements Mvu.HostExtension of TMsg
   // Native Open, Save or Folder operation.
   public Kind: Cui.CuiFileDialogKind;
   // Optional dialog title.
@@ -24,7 +24,7 @@ public type Request<TMsg> = record implements Mvu.HostExtension<TMsg>
   // Mapper for a confirmed selection.
   public OnSelected: function(string): TMsg;
   // Optional message when CUI returns no selection.
-  public OnCancelled: Sys.Func<TMsg>? := null;
+  public OnCancelled: (Sys.Func of TMsg)? := null;
 
   // Translates the selected file into a parent message.
   // ## Type parameters
@@ -33,14 +33,14 @@ public type Request<TMsg> = record implements Mvu.HostExtension<TMsg>
   // - `Messages`: Wraps a child message.
   // ## Returns
   // The same request in the parent message space.
-  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  public function Map of TNext(Messages: function(TMsg): TNext): Mvu.HostExtension of TNext;
   begin
     const Select: function(string): TMsg := self.OnSelected;
-    const Cancelled: Sys.Func<TNext>? := case self.OnCancelled of
-      when is Sys.Func<TMsg> as Notify: function(): TNext => Messages(Notify.Invoke());
+    const Cancelled: (Sys.Func of TNext)? := case self.OnCancelled of
+      when is Sys.Func of TMsg as Notify: function(): TNext => Messages(Notify.Invoke());
       else null;
     end case;
-    return new Request<TNext>(
+    return new Request of TNext(
       self.Kind,
       self.Title,
       self.FilterName,
@@ -62,14 +62,14 @@ end record;
 // - `OnCancelled`: Optional message when CUI returns no selection.
 // ## Returns
 // The graphical host command.
-public function OpenFile<TMsg>(
+public function OpenFile of TMsg(
   OnSelected: function(string): TMsg; Title: string := ''; FilterName: string := ''; Accept: string := '';
-  OnCancelled: Sys.Func<TMsg>? := null
-): Mvu.Command<TMsg>;
+  OnCancelled: (Sys.Func of TMsg)? := null
+): Mvu.Command of TMsg;
 begin
-  return Mvu.Command<TMsg>.Host(
+  return (Mvu.Command of TMsg).Host(
     Mvu.HostRequest.Extension(
-      new Request<TMsg>(
+      new Request of TMsg(
         Cui.CuiFileDialogKind.Open,
         Title, FilterName, Accept, '', OnSelected, OnCancelled
       )
@@ -89,15 +89,15 @@ end function;
 // - `OnCancelled`: Optional message when CUI returns no selection.
 // ## Returns
 // The owner-thread graphical command.
-public function SaveFile<TMsg>(
+public function SaveFile of TMsg(
   OnSelected: function(string): TMsg; DefaultName: string := '';
   Title: string := ''; FilterName: string := ''; Accept: string := '';
-  OnCancelled: Sys.Func<TMsg>? := null
-): Mvu.Command<TMsg>;
+  OnCancelled: (Sys.Func of TMsg)? := null
+): Mvu.Command of TMsg;
 begin
-  return Mvu.Command<TMsg>.Host(
+  return (Mvu.Command of TMsg).Host(
     Mvu.HostRequest.Extension(
-      new Request<TMsg>(
+      new Request of TMsg(
         Cui.CuiFileDialogKind.Save,
         Title, FilterName, Accept, DefaultName, OnSelected, OnCancelled
       )
@@ -114,14 +114,14 @@ end function;
 // - `OnCancelled`: Optional message when CUI returns no selection.
 // ## Returns
 // The owner-thread graphical command.
-public function ChooseFolder<TMsg>(
+public function ChooseFolder of TMsg(
   OnSelected: function(string): TMsg; Title: string := '';
-  OnCancelled: Sys.Func<TMsg>? := null
-): Mvu.Command<TMsg>;
+  OnCancelled: (Sys.Func of TMsg)? := null
+): Mvu.Command of TMsg;
 begin
-  return Mvu.Command<TMsg>.Host(
+  return (Mvu.Command of TMsg).Host(
     Mvu.HostRequest.Extension(
-      new Request<TMsg>(
+      new Request of TMsg(
         Cui.CuiFileDialogKind.Folder,
         Title, '', '', '', OnSelected, OnCancelled
       )

@@ -19,14 +19,14 @@ uses Fpas.Ui.Widgets.Feedback.Skeletons as Placeholder;
 // Layers a badge over a placeholder.
 // ## Returns
 // A size-constrained stack with the badge painted last.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return E.Size<string>(
-    W.Stack<string>(
+  return E.Size of string(
+    W.Stack of string(
       new L.Flow(Align := L.Alignment.End, Justify := L.Justification.End,
         Padding := L.Spacing.Fixed(L.Measure.Logical(12))),
-      Placeholder.Skeleton<string>('preview-placeholder', Height := 140.0F),
-      Badge.Badge<string>('preview-badge', 'On top')
+      Placeholder.Skeleton of string('preview-placeholder', Height := 140.0F),
+      Badge.Badge of string('preview-badge', 'On top')
     ),
     new L.Flex(
       Width := new L.AxisSize(Basis := L.Extent.Fill, Maximum := L.Measure.Logical(420)),

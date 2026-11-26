@@ -90,10 +90,10 @@ public sealed partial class MsBuildTests
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Graph;
             uses System as Sys;
-            public type Box<T> = where T: Sys.IComparable<T>;
+            public type Box of T = where T: Sys.IComparable of T;
             record public Value: T; end record;
-            public type ItemBox = Box<Item>;
-            public type Item = record implements Sys.IComparable<Item>
+            public type ItemBox = Box of Item;
+            public type Item = record implements Sys.IComparable of Item
               public Value: int;
               public Children: array of ItemBox := [];
               public function CompareTo(Other: Item?): int;
@@ -104,12 +104,12 @@ public sealed partial class MsBuildTests
               public function Wrap(): ItemBox;
               begin return new ItemBox(self); end function;
             end record;
-            public type Link<T> = where T: Sys.IComparable<T>;
-            variant Empty; Next(Value: Box<T>); end variant;
+            public type Link of T = where T: Sys.IComparable of T;
+            variant Empty; Next(Value: Box of T); end variant;
             public function Build(): ItemBox;
             begin
               const Entry: Item := new Item(42);
-              const Tree: Link<Item> := Link.Next(Entry.Wrap());
+              const Tree: Link of Item := Link.Next(Entry.Wrap());
               return case Tree of
                 when Link.Empty: Entry.Wrap();
                 when Link.Next(const Value: ItemBox): Value;

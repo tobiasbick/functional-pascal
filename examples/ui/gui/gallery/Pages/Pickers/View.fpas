@@ -19,37 +19,38 @@ uses GuiGallery.Shared.Sections as G;
 // - `Model`: Current picker state.
 // ## Returns
 // The five original sections in their display order.
-public function View(Model: State.Model): E.Element<State.Msg>;
+public function View(Model: State.Model): E.Element of State.Msg;
 begin
-  const Languages: E.Element<State.Msg> := Sample.View<State.Msg>(
+  const Languages: E.Element of State.Msg := Sample.View of State.Msg(
     Model.Languages,
     State.Msg.SetLanguages
   );
-  return E.Column<State.Msg>(
+  return E.Column of State.Msg(
     new L.Flow(Gap := G.Points(20)),
-    G.Heading<State.Msg>(
+    G.Heading of State.Msg(
       Strings.Get('Heading.MultiSelect'),
       Strings.Get('Heading.MultiSelectHint')
     ),
-    E.Row<State.Msg>(
+    E.Row of State.Msg(
       new L.Flow(Gap := G.Points(12), Align := L.Alignment.Start),
-      E.Size<State.Msg>(
-        E.Column<State.Msg>(Languages), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(320)))
+      E.Size of State.Msg(
+        E.Column of State.Msg(Languages),
+        new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(320)))
       )
     ),
-    G.Heading<State.Msg>(
+    G.Heading of State.Msg(
       Strings.Get('Heading.DateRange'),
       Strings.Get('Heading.DateRangeHint')
     ),
     DateRange.View(Model),
-    G.Heading<State.Msg>(Strings.Get('Heading.Time'), Strings.Get('Heading.TimeHint')),
+    G.Heading of State.Msg(Strings.Get('Heading.Time'), Strings.Get('Heading.TimeHint')),
     Time.View(Model),
-    G.Heading<State.Msg>(
+    G.Heading of State.Msg(
       Strings.Get('Heading.WheelsAndDial'),
       Strings.Get('Heading.WheelsAndDialHint')
     ),
     WheelsAndDial.View(Model),
-    G.Heading<State.Msg>(
+    G.Heading of State.Msg(
       Strings.Get('Heading.RulerAndHistogram'),
       Strings.Get('Heading.RulerAndHistogramHint')
     ),

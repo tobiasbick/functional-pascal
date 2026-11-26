@@ -55,14 +55,14 @@ begin
   end if;
 end function;
 
-procedure Add(Rows: C.List<E.Element<M.Msg>>; Label: string; Value: string; Compact: bool);
+procedure Add(Rows: C.List of E.Element of M.Msg; Label: string; Value: string; Compact: bool);
 begin
   if not Sys.String.IsNullOrWhiteSpace(Value) then
     Rows.Add(
-      E.Row<M.Msg>(
+      E.Row of M.Msg(
         new L.Flow(Gap := Points(8), Align := L.Alignment.Start),
-        E.Size<M.Msg>(
-          Texts.Text<M.Msg>(Label, Texts.Appearance.Secondary), new L.Flex(
+        E.Size of M.Msg(
+          Texts.Text of M.Msg(Label, Texts.Appearance.Secondary), new L.Flex(
             Basis := L.Extent.Fixed(
               L.Measure.Logical(
                 if Compact then
@@ -74,24 +74,24 @@ begin
             )
           )
         ),
-        E.Size<M.Msg>(E.Text<M.Msg>(Value), Fill)
+        E.Size of M.Msg(E.Text of M.Msg(Value), Fill)
       )
     );
   end if;
 end procedure;
 
-function Column(Rows: C.List<E.Element<M.Msg>>): E.Element<M.Msg>;
+function Column(Rows: C.List of E.Element of M.Msg): E.Element of M.Msg;
 begin
-  return E.Column<M.Msg>(
+  return E.Column of M.Msg(
     new L.Flow(Gap := Points(6), Align := L.Alignment.Stretch),
     Rows.ToArray()
   );
 end function;
 
 // Returns the contents of Tab for the selected file's Info. Compact stacks audio fields vertically.
-public function Panel(Tab: M.DetailTab; Info: Tags.Info; Compact: bool): E.Element<M.Msg>;
+public function Panel(Tab: M.DetailTab; Info: Tags.Info; Compact: bool): E.Element of M.Msg;
 begin
-  const Rows: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  const Rows: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();
   case Tab of
     when M.DetailTab.Overview:
       Add(Rows, 'Genre', Sys.String.Join(', ', Info.Genres), Compact);
@@ -129,16 +129,16 @@ begin
           end if, Compact
         );
       end if;
-      const Technical: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+      const Technical: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();
       Add(Technical, 'Sample rate', Number(Info.SampleRate, '0.###', ' kHz', 1000.0), Compact);
       if Info.BitDepth > 0 then
         Add(Technical, 'Bit depth', (Info.BitDepth ?? 0).ToString() + '-bit', Compact);
       end if;
 
       if not Compact and Rows.Count > 0 and Technical.Count > 0 then
-        return E.Row<M.Msg>(
+        return E.Row of M.Msg(
           new L.Flow(Gap := Points(16), Align := L.Alignment.Start),
-          E.Size<M.Msg>(Column(Rows), Fill), E.Size<M.Msg>(Column(Technical), Fill)
+          E.Size of M.Msg(Column(Rows), Fill), E.Size of M.Msg(Column(Technical), Fill)
         );
       end if;
 
@@ -147,7 +147,7 @@ begin
   end case;
 
   if Rows.Count = 0 then
-    return Texts.Text<M.Msg>(
+    return Texts.Text of M.Msg(
       case Tab of
         when M.DetailTab.Overview: 'No additional track information.';
         when M.DetailTab.Credits: 'No credits available.';

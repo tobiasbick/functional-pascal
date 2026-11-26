@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Audio.VoiceNotes as W;
 // - `Playback`: Current duration, position, speed and playing state.
 // ## Returns
 // The note with transport and speed proposals.
-public function View(Levels: array of float; Playback: W.Value): E.Element<W.Event>;
+public function View(Levels: array of float; Playback: W.Value): E.Element of W.Event;
 begin
-  return W.VoiceNote<W.Event>('message', Levels, Playback,
+  return W.VoiceNote of W.Event('message', Levels, Playback,
     function(Change: W.Event): W.Event => Change);
 end function;
 

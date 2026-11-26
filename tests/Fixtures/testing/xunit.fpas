@@ -45,7 +45,7 @@ public type Lifetime = record implements X.IAsyncLifetime
   [X.FactAttribute]
   public procedure SetupWasCalled();
   begin
-    X.Assert.Equal<int>(1, Active);
+    X.Assert.Equal of int(1, Active);
   end procedure;
 
   // Checks addition against inline test data.
@@ -59,7 +59,7 @@ public type Lifetime = record implements X.IAsyncLifetime
   [X.InlineDataAttribute(2, 3, 5)]
   public procedure Addition(Left: int; Right: int; Expected: int);
   begin
-    X.Assert.Equal<int>(Expected, Left + Right);
+    X.Assert.Equal of int(Expected, Left + Right);
   end procedure;
 
   // Checks that asynchronous tests complete while setup is active.
@@ -69,9 +69,9 @@ public type Lifetime = record implements X.IAsyncLifetime
   [X.FactAttribute]
   public async function AsyncTest(): Tasks.Task;
   begin
-    discard await Tasks.Task.FromResult<int>(42);
+    discard await Tasks.Task.FromResult of int(42);
 
-    X.Assert.Equal<int>(1, Active);
+    X.Assert.Equal of int(1, Active);
   end function;
 
   // Fails if the runner executes this deliberately skipped case.
@@ -120,7 +120,7 @@ public type Shared = record implements X.IAsyncLifetime
 end record;
 
 // Exercises xUnit injection of class fixtures and test output.
-public type FixtureTests = record implements X.IClassFixture<Shared>
+public type FixtureTests = record implements X.IClassFixture of Shared
   // The class fixture supplied by xUnit.
   public Fixture: Shared;
   // The output helper supplied by xUnit.
@@ -131,7 +131,7 @@ public type FixtureTests = record implements X.IClassFixture<Shared>
   public procedure Injected();
   begin
     X.Assert.NotNull(self.Fixture);
-    X.Assert.Equal<int>(1, FixtureCount);
+    X.Assert.Equal of int(1, FixtureCount);
 
     self.Output.WriteLine('native output');
   end procedure;
@@ -141,7 +141,7 @@ end record;
 //
 // ## Returns
 // The input rows and their expected sums.
-public function Rows(): C.IEnumerable<array of object>;
+public function Rows(): C.IEnumerable of array of object;
 begin
   const Values: array of array of object := [[1, 2, 3], [2, 3, 5]];
   return Values;
@@ -157,7 +157,7 @@ end function;
 [X.MemberDataAttribute('Rows')]
 public procedure DataProvider(Left: int; Right: int; Expected: int);
 begin
-  X.Assert.Equal<int>(Expected, Left + Right);
+  X.Assert.Equal of int(Expected, Left + Right);
 end procedure;
 
 // Checks that the test project can call the compiler formatter and see a syntax failure.

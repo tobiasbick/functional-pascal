@@ -28,10 +28,10 @@ uses GuiGallery.Shared.State as Shared;
 uses System as Sys;
 
 procedure Validate();
-  procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);
+  procedure Reject(Node: E.Element of int; Profile: V.Target; Reason: string);
   begin
     try
-      discard V.Prepare<int>(Node, Profile);
+      discard V.Prepare of int(Node, Profile);
     catch Error: Sys.ArgumentException do
       A.Check(Error.Message.Contains(Reason), Error.Message);
       return;
@@ -40,28 +40,32 @@ procedure Validate();
     raise new Sys.InvalidOperationException('Feedback preflight accepted an invalid view.');
   end procedure;
 begin
-  const Alert: E.Element<int> := Alerts.Alert<int>('a', 'Title');
-  discard V.Prepare<int>(Alert, V.Target.Terminal);
+  const Alert: E.Element of int := Alerts.Alert of int('a', 'Title');
+  discard V.Prepare of int(Alert, V.Target.Terminal);
   Reject(Alert, V.Target.Portable, 'terminal or graphical profile');
-  discard V.Prepare<int>(P.ProgressBar<int>('p', 0.5F), V.Target.Portable);
+  discard V.Prepare of int(P.ProgressBar of int('p', 0.5F), V.Target.Portable);
   Reject(
-    P.ProgressBar<int>('p', 0.5F, new P.Options(Indeterminate := true)),
+    P.ProgressBar of int('p', 0.5F, new P.Options(Indeterminate := true)),
     V.Target.Portable,
     'Graphical profile'
   );
-  const Spinner: E.Element<int> := Spin.Spinner<int>('s');
-  discard V.Prepare<int>(Spinner, V.Target.Terminal);
+  const Spinner: E.Element of int := Spin.Spinner of int('s');
+  discard V.Prepare of int(Spinner, V.Target.Terminal);
   Reject(Spinner, V.Target.Portable, 'terminal or graphical profile');
-  Reject(Timeline.TimelineItem<int>('t', 'Entry'), V.Target.Terminal, 'Graphical profile');
-  Reject(Timeline.TimelineItem<int>('t', 'Entry'), V.Target.Portable, 'Graphical profile');
-  Reject(Timeline.TimelineItem<int>('t', ''), V.Target.Graphical, 'nonempty title');
-  Reject(Timeline.TimelineItem<int>('t', 'x' + Sys.Char.MinValue), V.Target.Graphical, 'zero');
+  Reject(Timeline.TimelineItem of int('t', 'Entry'), V.Target.Terminal, 'Graphical profile');
+  Reject(Timeline.TimelineItem of int('t', 'Entry'), V.Target.Portable, 'Graphical profile');
+  Reject(Timeline.TimelineItem of int('t', ''), V.Target.Graphical, 'nonempty title');
+  Reject(Timeline.TimelineItem of int('t', 'x' + Sys.Char.MinValue), V.Target.Graphical, 'zero');
   Reject(
-    Timeline.TimelineItem<int>('t', 'Entry', new Timeline.Options(Time := 'x' + Sys.Char.MinValue)),
+    Timeline.TimelineItem of int(
+      't',
+      'Entry',
+      new Timeline.Options(Time := 'x' + Sys.Char.MinValue)
+    ),
     V.Target.Graphical, 'zero'
   );
   Reject(
-    Timeline.TimelineItem<int>(
+    Timeline.TimelineItem of int(
       't',
       'Entry',
       new Timeline.Options(Description := 'x' + Sys.Char.MinValue)
@@ -69,130 +73,146 @@ begin
     V.Target.Graphical, 'zero'
   );
   Reject(
-    Timeline.TimelineItem<int>('t', 'Entry', new Timeline.Options(Icon := 'x' + Sys.Char.MinValue)),
+    Timeline.TimelineItem of int(
+      't',
+      'Entry',
+      new Timeline.Options(Icon := 'x' + Sys.Char.MinValue)
+    ),
     V.Target.Graphical, 'zero'
   );
   Reject(
-    Timeline.TimelineItem<int>('t', 'Entry', new Timeline.Options(Tone := cast<S.Tone>(255))),
+    Timeline.TimelineItem of int('t', 'Entry', new Timeline.Options(Tone := cast<S.Tone>(255))),
     V.Target.Graphical, 'valid tone'
   );
   Reject(
-    E.Column<int>(Timeline.TimelineItem<int>('same', 'Entry'), Spin.Spinner<int>('same')),
+    E.Column of int(Timeline.TimelineItem of int('same', 'Entry'), Spin.Spinner of int('same')),
     V.Target.Graphical, 'Duplicate'
   );
-  Reject(Rings.ProgressRing<int>('r', 'Quota', 0.35F), V.Target.Terminal, 'Graphical profile');
-  Reject(Rings.ProgressRing<int>('r', '', 0.0F), V.Target.Portable, 'Graphical profile');
-  Reject(E.Element<int>.ProgressRing('r', '', Sys.Single.NaN, 0.0F), V.Target.Graphical, 'finite');
-  Reject(E.Element<int>.ProgressRing('r', '', 1.1F, 0.0F), V.Target.Graphical, 'zero and one');
-  Reject(E.Element<int>.ProgressRing('r', '', 0.5F, -1.0F), V.Target.Graphical, 'nonnegative');
+  Reject(Rings.ProgressRing of int('r', 'Quota', 0.35F), V.Target.Terminal, 'Graphical profile');
+  Reject(Rings.ProgressRing of int('r', '', 0.0F), V.Target.Portable, 'Graphical profile');
   Reject(
-    E.Element<int>.ProgressRing('r', '', 0.5F, Sys.Single.PositiveInfinity),
+    (E.Element of int).ProgressRing('r', '', Sys.Single.NaN, 0.0F),
     V.Target.Graphical,
     'finite'
   );
-  Reject(Rings.ProgressRing<int>('r', 'x' + Sys.Char.MinValue, 0.5F), V.Target.Graphical, 'zero');
+  Reject((E.Element of int).ProgressRing('r', '', 1.1F, 0.0F), V.Target.Graphical, 'zero and one');
+  Reject((E.Element of int).ProgressRing('r', '', 0.5F, -1.0F), V.Target.Graphical, 'nonnegative');
   Reject(
-    E.Column<int>(Rings.ProgressRing<int>('same', '', 0.5F), Spin.Spinner<int>('same')),
+    (E.Element of int).ProgressRing('r', '', 0.5F, Sys.Single.PositiveInfinity),
+    V.Target.Graphical,
+    'finite'
+  );
+  Reject(Rings.ProgressRing of int('r', 'x' + Sys.Char.MinValue, 0.5F), V.Target.Graphical, 'zero');
+  Reject(
+    E.Column of int(Rings.ProgressRing of int('same', '', 0.5F), Spin.Spinner of int('same')),
     V.Target.Graphical, 'Duplicate'
   );
   Reject(
-    Meters.Meter<int>('m', 'Storage', 18.4F, 20.0F, 'GB'),
+    Meters.Meter of int('m', 'Storage', 18.4F, 20.0F, 'GB'),
     V.Target.Terminal,
     'Graphical profile'
   );
-  Reject(Meters.Meter<int>('m', 'Storage', 18.4F, 20.0F), V.Target.Portable, 'Graphical profile');
-  Reject(E.Element<int>.Meter('m', 'Storage', -1.0F, 20.0F, ''), V.Target.Graphical, 'nonnegative');
-  Reject(E.Element<int>.Meter('m', 'Storage', 1.0F, -1.0F, ''), V.Target.Graphical, 'nonnegative');
+  Reject(Meters.Meter of int('m', 'Storage', 18.4F, 20.0F), V.Target.Portable, 'Graphical profile');
   Reject(
-    E.Element<int>.Meter('m', 'Storage', Sys.Single.NaN, 20.0F, ''),
-    V.Target.Graphical,
-    'finite'
-  );
-  Reject(
-    E.Element<int>.Meter('m', 'Storage', 1.0F, Sys.Single.PositiveInfinity, ''),
-    V.Target.Graphical,
-    'finite'
-  );
-  Reject(
-    Meters.Meter<int>('m', 'Storage', 1.0F, 20.0F, 'x' + Sys.Char.MinValue),
-    V.Target.Graphical,
-    'zero'
-  );
-  Reject(
-    E.Column<int>(Meters.Meter<int>('m', 'Storage', 1.0F, 20.0F), Spin.Spinner<int>('m')),
-    V.Target.Graphical, 'Duplicate'
-  );
-  Reject(
-    E.Element<int>.ProgressBar('p', Sys.Single.NaN, new P.Options()),
-    V.Target.Graphical,
-    'finite'
-  );
-  Reject(
-    E.Element<int>.ProgressBar('p', 1.1F, new P.Options()),
-    V.Target.Graphical,
-    'zero and one'
-  );
-  Reject(
-    P.ProgressBar<int>('p', 0.5F, new P.Options(Height := -1.0F)),
+    (E.Element of int).Meter('m', 'Storage', -1.0F, 20.0F, ''),
     V.Target.Graphical,
     'nonnegative'
   );
   Reject(
-    P.ProgressBar<int>('p', 0.5F, new P.Options(Tone := cast<S.Tone>(255))),
+    (E.Element of int).Meter('m', 'Storage', 1.0F, -1.0F, ''),
     V.Target.Graphical,
-    'valid tone'
+    'nonnegative'
   );
   Reject(
-    E.Element<int>.Spinner('s', Sys.Single.PositiveInfinity, null),
+    (E.Element of int).Meter('m', 'Storage', Sys.Single.NaN, 20.0F, ''),
     V.Target.Graphical,
     'finite'
   );
-  Reject(Alerts.Alert<int>('a', ''), V.Target.Graphical, 'nonempty title');
   Reject(
-    Alerts.Alert<int>('a', 'Title', new Alerts.Options(Description := 'x' + Sys.Char.MinValue)),
+    (E.Element of int).Meter('m', 'Storage', 1.0F, Sys.Single.PositiveInfinity, ''),
+    V.Target.Graphical,
+    'finite'
+  );
+  Reject(
+    Meters.Meter of int('m', 'Storage', 1.0F, 20.0F, 'x' + Sys.Char.MinValue),
     V.Target.Graphical,
     'zero'
   );
   Reject(
-    E.Column<int>(
-      Alerts.Alert<int>('a', 'Title', new Alerts.Options(Dismissible := true)),
-      Spin.Spinner<int>('a/dismiss')
+    E.Column of int(Meters.Meter of int('m', 'Storage', 1.0F, 20.0F), Spin.Spinner of int('m')),
+    V.Target.Graphical, 'Duplicate'
+  );
+  Reject(
+    (E.Element of int).ProgressBar('p', Sys.Single.NaN, new P.Options()),
+    V.Target.Graphical,
+    'finite'
+  );
+  Reject(
+    (E.Element of int).ProgressBar('p', 1.1F, new P.Options()),
+    V.Target.Graphical,
+    'zero and one'
+  );
+  Reject(
+    P.ProgressBar of int('p', 0.5F, new P.Options(Height := -1.0F)),
+    V.Target.Graphical,
+    'nonnegative'
+  );
+  Reject(
+    P.ProgressBar of int('p', 0.5F, new P.Options(Tone := cast<S.Tone>(255))),
+    V.Target.Graphical,
+    'valid tone'
+  );
+  Reject(
+    (E.Element of int).Spinner('s', Sys.Single.PositiveInfinity, null),
+    V.Target.Graphical,
+    'finite'
+  );
+  Reject(Alerts.Alert of int('a', ''), V.Target.Graphical, 'nonempty title');
+  Reject(
+    Alerts.Alert of int('a', 'Title', new Alerts.Options(Description := 'x' + Sys.Char.MinValue)),
+    V.Target.Graphical,
+    'zero'
+  );
+  Reject(
+    E.Column of int(
+      Alerts.Alert of int('a', 'Title', new Alerts.Options(Dismissible := true)),
+      Spin.Spinner of int('a/dismiss')
     ), V.Target.Graphical, 'Duplicate'
   );
 end procedure;
 
 procedure Notification(Renderer: Cui.CuiRenderer);
-  function View(Model: State.Model; Viewport: L.Viewport): E.Element<State.Msg>;
+  function View(Model: State.Model; Viewport: L.Viewport): E.Element of State.Msg;
   begin
     if Model.Drawer then
-      return E.Text<State.Msg>('Removed');
+      return E.Text of State.Msg('Removed');
     end if;
 
-    return U.Map<int, State.Msg>(
-      E.Column<int>(
-        Menus.ContextMenu<int>(
-          'mapped-menu', E.Styled<int>(
-            E.Size<int>(
-              Alerts.Alert<int>(
+    return U.Map of (int, State.Msg)(
+      E.Column of int(
+        Menus.ContextMenu of int(
+          'mapped-menu', E.Styled of int(
+            E.Size of int(
+              Alerts.Alert of int(
                 'mapped',
                 'Mapped ## literal',
                 new Alerts.Options(Dismissible := true),
                 function(): int => 42
               ), new L.Flex()
             ), S.Role.Panel
-          ), [Menus.Entry<int>.Action(new Menus.Item<int>('preview', 'Preview', 42))]
+          ), [(Menus.Entry of int).Action(new Menus.Item of int('preview', 'Preview', 42))]
         ),
-        P.ProgressBar<int>('mapped-progress', 0.5F), Spin.Spinner<int>('mapped-spinner'),
-        Meters.Meter<int>('mapped-meter', 'Usage ## literal', 24.0F, 20.0F, 'GB'),
-        Meters.Meter<int>('zero-meter', '', 0.0F, 0.0F),
-        E.Styled<int>(
-          E.Size<int>(
-            Rings.ProgressRing<int>('mapped-ring', 'Ring##literal', 0.72F, 104.0F),
+        P.ProgressBar of int('mapped-progress', 0.5F), Spin.Spinner of int('mapped-spinner'),
+        Meters.Meter of int('mapped-meter', 'Usage ## literal', 24.0F, 20.0F, 'GB'),
+        Meters.Meter of int('zero-meter', '', 0.0F, 0.0F),
+        E.Styled of int(
+          E.Size of int(
+            Rings.ProgressRing of int('mapped-ring', 'Ring##literal', 0.72F, 104.0F),
             new L.Flex()
           ),
           S.Role.Panel
         ),
-        Timeline.TimelineItem<int>(
+        Timeline.TimelineItem of int(
           'mapped-timeline', 'Event##literal',
           new Timeline.Options(
             Time := 'Just now',
@@ -204,17 +224,17 @@ procedure Notification(Renderer: Cui.CuiRenderer);
       function(Value: int): State.Msg => State.Msg.Preview
     );
   end function;
-  function Change(Model: State.Model; Message: State.Msg): Mvu.Transition<State.Model, State.Msg>;
+  function Change(Model: State.Model; Message: State.Msg): Mvu.Transition of (State.Model, State.Msg);
   begin
     case Message of
       when State.Msg.Preview:
         Deliveries := Deliveries + 1;
       when State.Msg.SetDrawer(false):
-        return new Mvu.Transition<State.Model, State.Msg>(
+        return new Mvu.Transition of (State.Model, State.Msg)(
           Model with
             Drawer := false;
           end with,
-          [Mvu.Focus<State.Msg>('mapped/dismiss')]
+          [Mvu.Focus of State.Msg('mapped/dismiss')]
         );
       else
     end case;
@@ -235,7 +255,7 @@ begin
   var Key: int := 0;
   const Window: Cui.CuiWindow := new Cui.CuiWindow('Mapped feedback', 600, 680, Renderer, true);
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(), Change, View, Window, 32, Inject
   );
   A.Check(Session.Step(), 'Feedback session closed.');
@@ -323,7 +343,7 @@ begin
   var Left: int := -1;
   const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI feedback', 1100, 1700, Renderer, true);
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Feedback), Update.Update, Gallery.Build,
     Window, 32, Inject, ThemeFor := Update.ThemeFor
   );

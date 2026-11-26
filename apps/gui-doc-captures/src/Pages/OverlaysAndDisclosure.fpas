@@ -20,7 +20,7 @@ uses GuiGallery.Shared.State as Demo;
 // - `Output`: Directory for frame PNGs and crop bounds.
 // - `Input`: Native gestures for this session.
 // - `Window`: Gallery window resized for the responsive drawer.
-public procedure CaptureOverlays(Session: Gui.Session<Gallery.Msg>; Output: string; Input: Gestures.Controls; Window: Cui.CuiWindow);
+public procedure CaptureOverlays(Session: Gui.Session of Gallery.Msg; Output: string; Input: Gestures.Controls; Window: Cui.CuiWindow);
 begin
   Presented.Send(Session, Gallery.Msg.Overlays(Overlays.Msg.SetProfileDialog(true)));
   Regions.Shot(
@@ -93,7 +93,7 @@ end procedure;
 // - `Session`: Open gallery session.
 // - `Output`: Directory for frame PNGs and crop bounds.
 // - `Input`: Native gestures for this session.
-public procedure CaptureDisclosure(Session: Gui.Session<Gallery.Msg>; Output: string; Input: Gestures.Controls);
+public procedure CaptureDisclosure(Session: Gui.Session of Gallery.Msg; Output: string; Input: Gestures.Controls);
 begin
   Regions.Shot(
     Session,

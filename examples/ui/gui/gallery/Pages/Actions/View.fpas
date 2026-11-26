@@ -27,49 +27,49 @@ uses GuiGallery.Shared.State as Demo;
 // - `Model`: Current gallery state.
 // ## Returns
 // The implemented CUI Actions sections in their original order.
-public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+public function View(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
 begin
-  const Delete: E.Element<State.Msg> := Confirm.View();
-  const Save: E.Element<State.Msg> := Status.View(Model, Data);
-  const Morphing: array of E.Element<State.Msg> := if Model.ProjectDeleted then
+  const Delete: E.Element of State.Msg := Confirm.View();
+  const Save: E.Element of State.Msg := Status.View(Model, Data);
+  const Morphing: array of E.Element of State.Msg := if Model.ProjectDeleted then
     [
-      Delete, Save, E.Styled<State.Msg>(E.Text<State.Msg>('Project deleted'), S.Role.Muted)
+      Delete, Save, E.Styled of State.Msg(E.Text of State.Msg('Project deleted'), S.Role.Muted)
     ]
   else
     [Delete, Save]
   end if;
-  return E.Column<State.Msg>(
+  return E.Column of State.Msg(
     new L.Flow(Gap := G.Points(20)),
-    G.Heading<State.Msg>(
+    G.Heading of State.Msg(
       Strings.Get('Heading.SplitButton'),
       Strings.Get('Heading.SplitButtonHint')
     ),
     Split.View(Model, Data),
-    G.Heading<State.Msg>(
+    G.Heading of State.Msg(
       Strings.Get('Heading.ToggleGroup'),
       Strings.Get('Heading.ToggleGroupHint')
     ),
     ToggleGroup.View(Model, Data),
-    G.Heading<State.Msg>(
+    G.Heading of State.Msg(
       Strings.Get('Heading.MorphingButtons'),
       Strings.Get('Heading.MorphingButtonsHint')
     ),
-    E.Row<State.Msg>(new L.Flow(Gap := G.Points(12), Wrap := true), Morphing),
-    G.Heading<State.Msg>(Strings.Get('Heading.Reactions'), Strings.Get('Heading.ReactionsHint')),
+    E.Row of State.Msg(new L.Flow(Gap := G.Points(12), Wrap := true), Morphing),
+    G.Heading of State.Msg(Strings.Get('Heading.Reactions'), Strings.Get('Heading.ReactionsHint')),
     Reactions.View(Model, Data),
-    G.Heading<State.Msg>(
+    G.Heading of State.Msg(
       Strings.Get('Heading.Theme'),
       Strings.Get('Heading.ThemeHint')
     ),
     Theme.View(Model, Data),
-    G.Heading<State.Msg>(Strings.Get('Heading.UserMenu'), Strings.Get('Heading.UserMenuHint')),
+    G.Heading of State.Msg(Strings.Get('Heading.UserMenu'), Strings.Get('Heading.UserMenuHint')),
     UserMenu.View(),
-    G.Heading<State.Msg>(
+    G.Heading of State.Msg(
       Strings.Get('Heading.SwipeActions'),
       Strings.Get('Heading.SwipeActionsHint')
     ),
     SwipeActions.View(),
-    G.Heading<State.Msg>(Strings.Get('Heading.SpeedDial'), Strings.Get('Heading.SpeedDialHint')),
+    G.Heading of State.Msg(Strings.Get('Heading.SpeedDial'), Strings.Get('Heading.SpeedDialHint')),
     SpeedDial.View(Model)
   );
 end function;

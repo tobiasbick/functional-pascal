@@ -18,18 +18,18 @@ uses Fpas.Ui.Widgets.Feedback.SkeletonGroups as W;
 // - `Children`: Placeholder views in native layout order.
 // - `Settings`: Native options.
 // - `Visit`: Presents each composed child.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Children: array of E.Element<TMsg>; Settings: W.Options; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Children: array of E.Element of TMsg; Settings: W.Options; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
 begin
   const Role: string := 'skeleton-group';
   const Token: string := C.Token(Role, Id);
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   Frame.Window.BeginSkeletonGroup(Token, Width.Kind, Width.Value, Settings.Gap, Settings.Dither);
-  for Child: E.Element<TMsg> in Children do
+  for Child: E.Element of TMsg in Children do
     Visit(Child, Frame, false, L.Alignment.Default);
   end for;
 
   Frame.Window.EndSkeletonGroup();
-  P.Root<TMsg>(Frame, Id, Role, '', false, '');
+  P.Root of TMsg(Frame, Id, Role, '', false, '');
 end procedure;
 
 end unit;

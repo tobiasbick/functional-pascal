@@ -110,7 +110,7 @@ end function;
 // - `Stop`: Cancels the transfer and decoding.
 // ## Returns
 // A square thumbnail, or null if the address or artwork is unavailable.
-public async function Cover(Url: string; Edge: int; Stop: T.CancellationToken): Tasks.Task<Images.Bitmap?>;
+public async function Cover(Url: string; Edge: int; Stop: T.CancellationToken): Tasks.Task of Images.Bitmap?;
 requires Edge > 0;
 begin
   if M.Address(Url) = '' then

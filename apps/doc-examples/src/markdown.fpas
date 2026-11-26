@@ -56,7 +56,7 @@ function Instructions(Document: string; Line: int; Info: string; Source: string)
 begin
   const Words: array of string := R.Regex.Split(Info.Trim(), '\s+');
   var Item: M.Example := new M.Example(Document, Line, Words[0], Source, 'line-' + Line.ToString());
-  const Seen: C.HashSet<string> := new C.HashSet<string>(S.StringComparer.Ordinal);
+  const Seen: C.HashSet of string := new C.HashSet of string(S.StringComparer.Ordinal);
 
   for Index: int := 1 to Words.Length - 1 do
     const Word: string := Words[Index];
@@ -186,8 +186,8 @@ end function;
 // Track every Markdown fence, including unsupported languages, so nested-looking source is never selected.
 public function Read(Document: string): array of M.Example;
 begin
-  const Items: C.List<M.Example> := new C.List<M.Example>();
-  const Ids: C.HashSet<string> := new C.HashSet<string>(S.StringComparer.Ordinal);
+  const Items: C.List of M.Example := new C.List of M.Example();
+  const Ids: C.HashSet of string := new C.HashSet of string(S.StringComparer.Ordinal);
   const Lines: array of string := IO.File.ReadAllText(Document, Text.Encoding.UTF8).Replace(
     #13 + '' + #10,
     #10 + ''

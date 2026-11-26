@@ -40,7 +40,7 @@ type Msg = variant
   Clear;
 end variant;
 
-function Update(State: Model; Message: Msg): M.Transition<Model, Msg>;
+function Update(State: Model; Message: Msg): M.Transition of (Model, Msg);
 begin
   const Next: Model := case Message of
     when Msg.Show(const Visible: bool): State with
@@ -53,8 +53,8 @@ begin
       Selection := Id;
     end with;
     when Msg.Append: State with
-      Entries := Linq.ToArray<Logs.Entry>(
-        Linq.Append<Logs.Entry>(
+      Entries := Linq.ToArray of Logs.Entry(
+        Linq.Append of Logs.Entry(
           State.Entries,
           new Logs.Entry(Logs.Level.Info, 5.0, 'New output ' + State.Entries.Length.ToString())
         )
@@ -64,45 +64,45 @@ begin
       Entries := [];
     end with;
   end case;
-  return new M.Transition<Model, Msg>(Next, []);
+  return new M.Transition of (Model, Msg)(Next, []);
 end function;
 
-function View(State: Model): E.Element<Msg>;
+function View(State: Model): E.Element of Msg;
 begin
-  const Base: E.Element<Msg> := E.Column<Msg>(
-    Buttons.Button<Msg>('open', 'Open palette', Msg.Show(true)),
-    Buttons.Button<Msg>('append', 'Append output', Msg.Append),
-    Logs.LogConsole<Msg>('log', State.Entries, Msg.Clear, new Logs.Options(Height := 32.0F)),
-    Tree.Branch<Msg>(
+  const Base: E.Element of Msg := E.Column of Msg(
+    Buttons.Button of Msg('open', 'Open palette', Msg.Show(true)),
+    Buttons.Button of Msg('append', 'Append output', Msg.Append),
+    Logs.LogConsole of Msg('log', State.Entries, Msg.Clear, new Logs.Options(Height := 32.0F)),
+    Tree.Branch of Msg(
       'branch', 'Source', State.Open, [
-        Tree.Leaf<Msg>(
+        Tree.Leaf of Msg(
           'leaf', 'main.fpas', function(): Msg => Msg.Select('main.fpas'),
           new Tree.Options(Selected := State.Selection = 'main.fpas')
         )
       ], Msg.Expand
     ),
-    Table.Table<Msg>(
+    Table.Table of Msg(
       'table', [
         new Table.Column('Column A', L.Extent.Fixed(L.Measure.Cells(30))),
         new Table.Column('Column B', L.Extent.Fixed(L.Measure.Cells(28)))
       ], [
-        new Table.Row<Msg>(
+        new Table.Row of Msg(
           'row-a',
-          [Table.Cell<Msg>.Text('Beginning A'), Table.Cell<Msg>.Text('Hidden column A')]
+          [(Table.Cell of Msg).Text('Beginning A'), (Table.Cell of Msg).Text('Hidden column A')]
         ),
-        new Table.Row<Msg>(
+        new Table.Row of Msg(
           'row-b',
-          [Table.Cell<Msg>.Text('Beginning B'), Table.Cell<Msg>.Text('Hidden column B')]
+          [(Table.Cell of Msg).Text('Beginning B'), (Table.Cell of Msg).Text('Hidden column B')]
         )
       ], OnSelect := Msg.Select, Settings := new Table.Options(HorizontalScroll := true)
     ),
-    E.Text<Msg>('Selected ' + State.Selection)
+    E.Text of Msg('Selected ' + State.Selection)
   );
-  return Palette.CommandPalette<Msg>(
+  return Palette.CommandPalette of Msg(
     'palette', Base, State.PaletteOpen, [
-      new Palette.Command<Msg>('Build project', Msg.Select('build')),
-      new Palette.Command<Msg>('Open editor', Msg.Select('editor')),
-      new Palette.Command<Msg>('Open preview', Msg.Select('preview'))
+      new Palette.Command of Msg('Build project', Msg.Select('build')),
+      new Palette.Command of Msg('Open editor', Msg.Select('editor')),
+      new Palette.Command of Msg('Open preview', Msg.Select('preview'))
     ], Msg.Show
   );
 end function;
@@ -131,7 +131,7 @@ end procedure;
 
 function Shows(Session: App.HeadlessSession; Text: string): bool;
 begin
-  return Sys.Array.Exists<string>(
+  return Sys.Array.Exists of string(
     Session.Snapshot().Lines,
     function(Line: string): bool => Line.Contains(Text)
   );
@@ -149,21 +149,21 @@ begin
 end function;
 
 procedure NumberDraftInDialog();
-  function Apply(_State: bool; Message: bool): M.Transition<bool, bool>;
+  function Apply(_State: bool; Message: bool): M.Transition of (bool, bool);
   begin
-    return new M.Transition<bool, bool>(Message, []);
+    return new M.Transition of (bool, bool)(Message, []);
   end function;
 
-  function DialogView(Open: bool): E.Element<bool>;
+  function DialogView(Open: bool): E.Element of bool;
   begin
-    return Dialogs.Dialog<bool>(
-      'dialog', E.Text<bool>('Outside the dialog'),
-      Numbers.NumberField<bool>('count', 3.0, 0.0, 10.0, function(_Value: double): bool => true),
+    return Dialogs.Dialog of bool(
+      'dialog', E.Text of bool('Outside the dialog'),
+      Numbers.NumberField of bool('count', 3.0, 0.0, 10.0, function(_Value: double): bool => true),
       Open, new Dialogs.Options('Edit count', InitialFocus := 'count'), false
     );
   end function;
 begin
-  using const Session: App.HeadlessSession := Headless.Start<bool, bool>(
+  using const Session: App.HeadlessSession := Headless.Start of (bool, bool)(
     true,
     Apply,
     DialogView,
@@ -188,7 +188,7 @@ end procedure;
 
 begin
   NumberDraftInDialog();
-  using const Session: App.HeadlessSession := Headless.Start<Model, Msg>(
+  using const Session: App.HeadlessSession := Headless.Start of (Model, Msg)(
     new Model(),
     Update,
     View,

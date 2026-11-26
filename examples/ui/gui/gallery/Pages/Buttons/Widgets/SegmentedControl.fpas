@@ -18,18 +18,18 @@ uses System as Sys;
 // - `Model`: Current model-owned selection indices.
 // ## Returns
 // The two native selectors, with the upstream card's 16-point gap.
-public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+public function View(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
 begin
-  return E.Column<State.Msg>(
+  return E.Column of State.Msg(
     new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(16))),
-    S.SegmentedControl<State.Msg>(
+    S.SegmentedControl of State.Msg(
       'view', [
         new S.Item('List', Sys.Char.ConvertFromUtf32($E106)),
         new S.Item('Board', Sys.Char.ConvertFromUtf32($E1C1)),
         new S.Item('Timeline', Sys.Char.ConvertFromUtf32($E1F5))
       ], Model.SegmentedView, State.Msg.SetSegmentedView
     ),
-    S.SegmentedControl<State.Msg>(
+    S.SegmentedControl of State.Msg(
       'range', [
         new S.Item('Day'), new S.Item('Week'),
         new S.Item('Month'), new S.Item('Year')

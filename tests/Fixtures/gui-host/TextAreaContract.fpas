@@ -17,7 +17,7 @@ type Msg = variant
   Submit(Value: string);
 end variant;
 
-function Control(Session: Gui.Session<Msg>; Id: string): Gui.Control;
+function Control(Session: Gui.Session of Msg; Id: string): Gui.Control;
 begin
   for Item: Gui.Control in Session.Snapshot().Controls do
     if Item.Id = Id then
@@ -40,26 +40,29 @@ end procedure;
 // ## Parameters
 // - `Renderer`: Native renderer to exercise.
 public procedure Verify(Renderer: Cui.CuiRenderer);
-  function Update(Value: string; Message: Msg): App.Transition<string, Msg>;
+  function Update(Value: string; Message: Msg): App.Transition of (string, Msg);
   begin
     case Message of
       when Msg.Edit(const Text: string):
-        return new App.Transition<string, Msg>(Text, []);
+        return new App.Transition of (string, Msg)(Text, []);
       when Msg.Submit(const Text: string):
         Submitted := Text;
     end case;
 
-    return new App.Transition<string, Msg>(Value, []);
+    return new App.Transition of (string, Msg)(Value, []);
   end function;
-  function Build(Value: string; Viewport: L.Viewport): E.Element<Msg>;
+  function Build(Value: string; Viewport: L.Viewport): E.Element of Msg;
   begin
-    return E.ScrollView<Msg>(
-      'viewport', E.Column<Msg>(
-        A.TextArea<Msg>(
+    return E.ScrollView of Msg(
+      'viewport', E.Column of Msg(
+        A.TextArea of Msg(
           'area', Value, Msg.Edit,
           new A.Options(Height := 72, Prefix := 'Body:', Suffix := 'Markdown'), Msg.Submit
         ),
-        E.Size<Msg>(E.Column<Msg>(), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(400))))
+        E.Size of Msg(
+          E.Column of Msg(),
+          new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(400)))
+        )
       )
     );
   end function;
@@ -87,7 +90,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer);
       Submit := false;
     end if;
   end procedure;
-  procedure Step(Session: Gui.Session<Msg>);
+  procedure Step(Session: Gui.Session of Msg);
   begin
     Check(Session.Step(), 'The text area fixture closed.');
   end procedure;
@@ -131,7 +134,7 @@ begin
     true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<Msg> := Host.Start<string, Msg>(
+  using const Session: Gui.Session of Msg := Host.Start of (string, Msg)(
     Initial,
     Update,
     Build,
@@ -177,8 +180,8 @@ begin
   Step(Session);
   Check(
     Submitted = Edited and Control(Session, 'area').Value = Edited
-    and Sys.Array.IndexOf<string>(Session.Snapshot().Text, 'Body:') >= 0
-    and Sys.Array.IndexOf<string>(Session.Snapshot().Text, 'Markdown') >= 0,
+    and Sys.Array.IndexOf of string(Session.Snapshot().Text, 'Body:') >= 0
+    and Sys.Array.IndexOf of string(Session.Snapshot().Text, 'Markdown') >= 0,
     'Ctrl+Enter must submit the text without a line break or the displayed affixes.'
   );
 

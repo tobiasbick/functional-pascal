@@ -26,12 +26,12 @@ uses GuiGallery.Shared.State as Demo;
 // - `Wide`: Whether two 260-point columns fit with the native gap.
 // ## Returns
 // The complete Selection page.
-public function View(Model: State.Model; Data: Demo.Model; Wide: bool): E.Element<State.Msg>;
+public function View(Model: State.Model; Data: Demo.Model; Wide: bool): E.Element of State.Msg;
 begin
   const SectionFlow: L.Flow := new L.Flow(Gap := G.Points(12));
-  const Checkboxes: E.Element<State.Msg> := E.Column<State.Msg>(
-    SectionFlow, G.Heading<State.Msg>(Strings.Get('Text.Checkbox')), G.Card<State.Msg>(
-      14, Checkbox.Rows<State.Msg>(
+  const Checkboxes: E.Element of State.Msg := E.Column of State.Msg(
+    SectionFlow, G.Heading of State.Msg(Strings.Get('Text.Checkbox')), G.Card of State.Msg(
+      14, Checkbox.Rows of State.Msg(
         Data.Newsletter,
         Data.Marketing,
         function(Value: bool): State.Msg => State.Msg.Shared(Demo.Msg.SetNewsletter(Value)),
@@ -42,36 +42,39 @@ begin
       )
     )
   );
-  const Switches: E.Element<State.Msg> := E.Column<State.Msg>(
+  const Switches: E.Element of State.Msg := E.Column of State.Msg(
     SectionFlow,
-    G.Heading<State.Msg>(Strings.Get('Text.Switch')),
-    G.Card<State.Msg>(14, Switch.Rows(Model, Data))
+    G.Heading of State.Msg(Strings.Get('Text.Switch')),
+    G.Card of State.Msg(14, Switch.Rows(Model, Data))
   );
   const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
-  return E.Column<State.Msg>(
+  return E.Column of State.Msg(
     new L.Flow(Gap := G.Points(20)),
     if Wide then
-      E.Row<State.Msg>(
+      E.Row of State.Msg(
         new L.Flow(Gap := G.Points(16), Align := L.Alignment.Start),
-        E.Size<State.Msg>(Checkboxes, Fill), E.Size<State.Msg>(Switches, Fill)
+        E.Size of State.Msg(Checkboxes, Fill), E.Size of State.Msg(Switches, Fill)
       )
     else
-      E.Column<State.Msg>(new L.Flow(Gap := G.Points(16)), Checkboxes, Switches)
+      E.Column of State.Msg(new L.Flow(Gap := G.Points(16)), Checkboxes, Switches)
     end if,
-    G.Heading<State.Msg>(Strings.Get('Text.RadioGroup')),
-    G.Card<State.Msg>(
+    G.Heading of State.Msg(Strings.Get('Text.RadioGroup')),
+    G.Card of State.Msg(
       12,
-      [Frequency.View<State.Msg>(Model.SaveFrequency, State.Msg.SetSaveFrequency)]
+      [Frequency.View of State.Msg(Model.SaveFrequency, State.Msg.SetSaveFrequency)]
     ),
-    G.Heading<State.Msg>(Strings.Get('Heading.RadioCards'), Strings.Get('Heading.RadioCardsHint')),
+    G.Heading of State.Msg(
+      Strings.Get('Heading.RadioCards'),
+      Strings.Get('Heading.RadioCardsHint')
+    ),
     RadioCards.View(Model, Data),
-    G.Heading<State.Msg>(Strings.Get('Heading.Sliders'), Strings.Get('Heading.SlidersHint')),
-    G.Card<State.Msg>(
+    G.Heading of State.Msg(Strings.Get('Heading.Sliders'), Strings.Get('Heading.SlidersHint')),
+    G.Card of State.Msg(
       20,
       [Slider.Volume(Model, Data), Slider.Brightness(Model, Data), RangeSlider.View(Model, Data)]
     ),
-    G.Heading<State.Msg>(Strings.Get('Heading.ChipsAndRating')),
-    G.Card<State.Msg>(16, [Chip.View(Model, Data), Rating.View(Model, Data)])
+    G.Heading of State.Msg(Strings.Get('Heading.ChipsAndRating')),
+    G.Card of State.Msg(16, [Chip.View(Model, Data), Rating.View(Model, Data)])
   );
 end function;
 

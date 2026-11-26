@@ -18,12 +18,12 @@ uses Fpas.Ui.Widgets.Developer.Terminal as T;
 //
 // ## Returns
 // A terminal-only screen.
-public function Screen<TMsg>(
-  Content: E.Element<TMsg>; Layers: array of E.Element<TMsg>;
-  Shortcuts: array of K.ShortcutBinding<TMsg>
-): E.Element<TMsg>;
+public function Screen of TMsg(
+  Content: E.Element of TMsg; Layers: array of E.Element of TMsg;
+  Shortcuts: array of K.ShortcutBinding of TMsg
+): E.Element of TMsg;
 begin
-  return E.Element<TMsg>.TerminalScreen(Content, Layers, Shortcuts);
+  return (E.Element of TMsg).TerminalScreen(Content, Layers, Shortcuts);
 end function;
 
 // Builds a terminal-specific responsive subtree from exact dimensions.
@@ -37,9 +37,9 @@ end function;
 //
 // ## Returns
 // A terminal-only node, resolved and checked during preflight.
-public function Viewport<TMsg>(Id: string; Build: function(T.Viewport): E.Element<TMsg>): E.Element<TMsg>;
+public function Viewport of TMsg(Id: string; Build: function(T.Viewport): E.Element of TMsg): E.Element of TMsg;
 begin
-  return E.Element<TMsg>.TerminalViewport(Id, Build);
+  return (E.Element of TMsg).TerminalViewport(Id, Build);
 end function;
 
 end unit;

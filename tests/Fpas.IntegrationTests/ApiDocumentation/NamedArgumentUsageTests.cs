@@ -40,8 +40,8 @@ public sealed class NamedArgumentUsageTests(SdkPackageFixture sdk) : IClassFixtu
         var substring = Assert.Single(query.Search(new("M:System.String.Substring(System.Int32,System.Int32)", Usage: true)).Entries);
         Assert.Contains("Receiver.Substring(startIndex := StartIndex, length := Length)", substring.Usage!.Source);
         const string pair = "Calls.Pair``2(``0,``1)";
-        Assert.Contains("Pair<int, int>(first := First, second := Second)", Select(pair, "int", "int").Source);
-        Assert.Contains("Pair<int, string>(First, Second)", Select(pair, "int", "string").Source);
+        Assert.Contains("Pair of (int, int)(first := First, second := Second)", Select(pair, "int", "int").Source);
+        Assert.Contains("Pair of (int, string)(First, Second)", Select(pair, "int", "string").Source);
     }
 
     [Fact]

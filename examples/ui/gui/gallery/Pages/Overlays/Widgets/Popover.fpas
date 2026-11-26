@@ -22,16 +22,16 @@ uses System as Sys;
 // - `Model`: Current filter values and visibility.
 // ## Returns
 // An anchored panel shown in the Overlays card.
-public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+public function View(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
 begin
-  const Trigger: E.Element<State.Msg> := B.Button<State.Msg>(
+  const Trigger: E.Element of State.Msg := B.Button of State.Msg(
     'filters-trigger', 'Filters', State.Msg.SetFilters(not Model.Filters),
     new B.Options(Icon := Sys.Char.ConvertFromUtf32($E0DC))
   );
-  const Content: E.Element<State.Msg> := E.Column<State.Msg>(
+  const Content: E.Element of State.Msg := E.Column of State.Msg(
     new L.Flow(Gap := G.Points(10)),
-    E.Styled<State.Msg>(E.Text<State.Msg>('Filter results'), S.Role.Label),
-    Checks.Checkbox<State.Msg>(
+    E.Styled of State.Msg(E.Text of State.Msg('Filter results'), S.Role.Label),
+    Checks.Checkbox of State.Msg(
       'filters-active',
       'Only active',
       Data.Newsletter,
@@ -39,13 +39,13 @@ begin
         Demo.Msg.SetNewsletter(SharedValue)
       )
     ),
-    Checks.Checkbox<State.Msg>(
+    Checks.Checkbox of State.Msg(
       'filters-archived',
       'Include archived',
       Data.Marketing,
       function(SharedValue: bool): State.Msg => State.Msg.Shared(Demo.Msg.SetMarketing(SharedValue))
     ),
-    Sliders.Slider<State.Msg>(
+    Sliders.Slider of State.Msg(
       'filters-score',
       'Minimum score',
       Data.Brightness,
@@ -56,16 +56,16 @@ begin
       ),
       new Sliders.Options(ShowValue := true)
     ),
-    E.Row<State.Msg>(
+    E.Row of State.Msg(
       new L.Flow(Gap := G.Points(8)),
-      E.Size<State.Msg>(E.Column<State.Msg>(), new L.Flex(Basis := L.Extent.Fill)),
-      B.Button<State.Msg>(
+      E.Size of State.Msg(E.Column of State.Msg(), new L.Flex(Basis := L.Extent.Fill)),
+      B.Button of State.Msg(
         'filters-apply', 'Apply', State.Msg.SetFilters(false),
         new B.Options(Variant := S.ButtonVariant.Primary, ControlSize := B.Size.Small)
       )
     )
   );
-  return P.Popover<State.Msg>(
+  return P.Popover of State.Msg(
     'filters',
     Trigger,
     Content,

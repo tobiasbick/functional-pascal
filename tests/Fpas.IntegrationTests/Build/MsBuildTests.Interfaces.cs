@@ -36,16 +36,16 @@ public sealed partial class MsBuildTests
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Bridge;
             uses Demo as D; uses System.Collections.Generic as Collections;
-            public type Api<T> = record implements D.IApi<T>
+            public type Api of T = record implements D.IApi of T
               public Name: string;
               public Value: T;
               public function Read(): T; begin return self.Value; end function;
               public function Read(Other: T): T; begin return Other; end function;
-              public function Echo<U>(Value: U): U; where U: class; begin return Value; end function;
+              public function Echo of U(Value: U): U; where U: class; begin return Value; end function;
               public procedure Adjust(ref Value: int; out Before: int; in Step: int);
               begin Before := Value; Value := Value + Step; end procedure;
             end record;
-            public type Descending = record implements Collections.IComparer<int>
+            public type Descending = record implements Collections.IComparer of int
               public function Compare(Left: int; Right: int): int; begin return Right - Left; end function;
             end record;
             public type Default = record implements D.IDerived end record;
@@ -54,9 +54,9 @@ public sealed partial class MsBuildTests
             end record;
             public function Run(): string;
             begin
-              const Value: D.IApi<string> := new Api<string>('name', 'value');
+              const Value: D.IApi of string := new Api of string('name', 'value');
               const Numbers: array of int := [1, 3, 2];
-              const List: Collections.List<int> := new Collections.List<int>(Numbers);
+              const List: Collections.List of int := new Collections.List of int(Numbers);
               List.Sort(new Descending());
               if List[0] <> 3 then return 'wrong'; end if;
               return D.Interfaces.Call(Value);
@@ -79,13 +79,13 @@ public sealed partial class MsBuildTests
     [InlineData("IProperty", "public Value: string?;")]
     [InlineData("IParameter", "public procedure Write(Value: string); begin end procedure;")]
     [InlineData("IRef", "public procedure Change(ref Value: string); begin end procedure;")]
-    [InlineData("IList", "public function Read(): Collections.List<string?>; begin return new Collections.List<string?>(); end function;")]
+    [InlineData("IList", "public function Read(): Collections.List of string?; begin return new Collections.List of string?(); end function;")]
     [InlineData("ISetter", "public Value: int;")]
     [InlineData("IIndex", "")]
     [InlineData("IEvent", "")]
     [InlineData("IStatic", "")]
-    [InlineData("IConstraint", "public function Echo<T>(Value: T): T; begin return Value; end function;")]
-    [InlineData("IGenericNullable", "public function Read<T>(): T?; where T: class; begin return null; end function;")]
+    [InlineData("IConstraint", "public function Echo of T(Value: T): T; begin return Value; end function;")]
+    [InlineData("IGenericNullable", "public function Read of T(): T?; where T: class; begin return null; end function;")]
     [InlineData("IDiamond", "")]
     public async Task Incompatible_nullability_and_unsupported_interface_members_are_rejected(string contract, string members)
     {

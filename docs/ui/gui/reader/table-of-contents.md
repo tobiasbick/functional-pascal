@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Navigation.TableOfContents as W;
 // Links an outline to the article viewport.
 // ## Returns
 // The outline, with the active anchor key as a message.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return W.TableOfContents<string>('outline', 'article', [
+  return W.TableOfContents of string('outline', 'article', [
     new W.Item('Introduction', 'intro'),
     new W.Item('Installation', 'install'),
     new W.Item('With CMake', 'cmake', 1)

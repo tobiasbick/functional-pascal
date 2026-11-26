@@ -22,12 +22,12 @@ uses System.Collections.Generic as Lists;
 // - `Selected`: Selected index.
 // - `Change`: Maps a native proposal.
 // - `Settings`: Native appearance and input options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Items: array of W.Item; Selected: int; Change: function(int): TMsg; Settings: W.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Items: array of W.Item; Selected: int; Change: function(int): TMsg; Settings: W.Options);
 begin
   const Token: string := C.Token('tab-bar', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
-  const Icons: Lists.List<string> := new Lists.List<string>(Items.Length);
-  const Labels: Lists.List<string> := new Lists.List<string>(Items.Length);
+  const Icons: Lists.List of string := new Lists.List of string(Items.Length);
+  const Labels: Lists.List of string := new Lists.List of string(Items.Length);
   const Badges: array of int := new int[Items.Length];
   var Focus: int := -1;
   for Index: int := 0 to Items.Length - 1 do
@@ -35,8 +35,8 @@ begin
     Labels.Add(Items[Index].Label);
     Badges[Index] := Items[Index].Badge;
     const Part: string := Id + '/' + Index.ToString();
-    if C.WantsFocus<TMsg>(Frame, Part, C.Token('tab-bar-item', Part), Enabled)
-      or (Index = Selected and C.WantsFocus<TMsg>(
+    if C.WantsFocus of TMsg(Frame, Part, C.Token('tab-bar-item', Part), Enabled)
+      or (Index = Selected and C.WantsFocus of TMsg(
       Frame,
       Id,
       C.Token('tab-bar-item', Part),
@@ -56,7 +56,7 @@ begin
   else
     0
   end if);
-  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+  const Track: Sys.Func of (int, string)? := if Frame.PaintingClosed then
     null
   else
     function(Index: int): string => C.Token('tab-bar-item', Id + '/' + Index.ToString())
@@ -69,7 +69,7 @@ begin
     Frame.Messages.Add(Change(Next));
   end if;
 
-  C.Track<TMsg>(
+  C.Track of TMsg(
     Frame,
     new App.Control(Id, '', 'tab-bar', new Cui.CuiRectangle(), false, Value := Next.ToString())
   );

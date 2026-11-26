@@ -16,9 +16,9 @@ uses System as Sys;
 // - `Model`: Current gallery state.
 // ## Returns
 // The native radio card grid.
-public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+public function View(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
 begin
-  return R.RadioCards<State.Msg>(
+  return R.RadioCards of State.Msg(
     'places',
     [
       new R.Item(

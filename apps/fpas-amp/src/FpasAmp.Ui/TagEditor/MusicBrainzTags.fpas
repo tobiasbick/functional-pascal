@@ -9,7 +9,7 @@ uses System as Sys;
 uses System.Collections.Generic as C;
 uses System.Collections.Immutable as I;
 
-type Builder = I.ImmutableDictionary<string, string>.Builder;
+type Builder = I.ImmutableDictionary of (string, string).Builder;
 
 procedure Put(Fields: Builder; Key: string; Value: string?);
 begin
@@ -19,9 +19,9 @@ begin
 end procedure;
 
 // Joins the credited artist names for the tag editor.
-public function Artists(Credits: C.IReadOnlyList<E.INameCredit?>): string;
+public function Artists(Credits: C.IReadOnlyList of E.INameCredit?): string;
 begin
-  const Names: C.List<string> := new C.List<string>();
+  const Names: C.List of string := new C.List of string();
   for Credit: E.INameCredit? in Credits do
     if Credit = null then
       continue;
@@ -40,9 +40,9 @@ begin
   return Sys.String.Join('; ', Names);
 end function;
 
-function ArtistIds(Credits: C.IReadOnlyList<E.INameCredit?>): string;
+function ArtistIds(Credits: C.IReadOnlyList of E.INameCredit?): string;
 begin
-  const Ids: C.List<string> := new C.List<string>();
+  const Ids: C.List of string := new C.List of string();
   for Credit: E.INameCredit? in Credits do
     const Artist: E.IArtist? := if Credit <> null then
       Credit.Artist
@@ -170,14 +170,14 @@ begin
 end procedure;
 
 // Builds selectable recording tags, enriched with Release when it was retrieved.
-public function Proposals(Recording: E.IRecording; Release: E.IRelease?): I.ImmutableDictionary<string, string>;
+public function Proposals(Recording: E.IRecording; Release: E.IRelease?): I.ImmutableDictionary of (string, string);
 begin
-  const Fields: Builder := I.ImmutableDictionary.CreateBuilder<string, string>();
+  const Fields: Builder := I.ImmutableDictionary.CreateBuilder of (string, string)();
   Put(Fields, 'recording', Recording.Id.ToString('D'));
   Put(Fields, 'title', Recording.Title);
   Put(Fields, 'artist', Artists(Recording.ArtistCredit));
   Put(Fields, F.Custom + 'MusicBrainz Artist Id', ArtistIds(Recording.ArtistCredit));
-  const Genres: C.List<string> := new C.List<string>();
+  const Genres: C.List of string := new C.List of string();
   for Genre: E.IGenre? in Recording.Genres do
     if Genre <> null then
       Genres.Add(Genre.Name);

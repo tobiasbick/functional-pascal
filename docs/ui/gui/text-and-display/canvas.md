@@ -20,10 +20,10 @@ uses Fpas.Ui.Widgets.Canvas.Canvases as W;
 // - `Fill`: Swatch color.
 // ## Returns
 // A 22-point square canvas with a circle.
-public function View(Fill: G.Color): E.Element<W.Event>;
+public function View(Fill: G.Color): E.Element of W.Event;
 begin
   const Size: L.Extent := L.Extent.Fixed(L.Measure.Logical(22));
-  return W.Canvas<W.Event>('color-swatch',
+  return W.Canvas of W.Event('color-swatch',
     [W.Shape.Circle(11.0F, 11.0F, 8.0F, Fill)],
     function(Click: W.Event): W.Event => Click,
     new W.Options(Width := Size, Height := Size, Focusable := true, HoverCursor := W.Cursor.Hand));
@@ -52,7 +52,7 @@ committed Unicode. Key codes and modifier flags use the shared
 `ShortcutRecorders.Key` and `ShortcutRecorders.Modifier` types. When a click
 or Tab moves focus between canvases, subsequent text in that batch goes to the
 new owner. A key handled by the canvas does not also activate its click action.
-Request focus from Update with `Mvu.Focus<TMsg>(Id)`. A passive live-resize view
+Request focus from Update with `Mvu.Focus of TMsg(Id)`. A passive live-resize view
 preserves a canvas's focus eligibility and defers application input to the next
 interactive frame. When queued messages temporarily suspend input, the
 focused canvas keeps its native focus until input resumes. If a managed input callback throws, the window

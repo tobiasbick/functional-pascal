@@ -16,12 +16,12 @@ uses Fpas.Ui.Styles as S;
 // Builds the text example.
 // ## Returns
 // The resulting view.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return E.Column<string>(new L.Flow(Gap := L.Spacing.Normal),
-    E.Styled<string>(E.Text<string>('Components for FPas'), S.Role.Heading),
-    E.Text<string>('Components are functions.'),
-    E.Styled<string>(E.Text<string>('Muted text'), S.Role.Muted));
+  return E.Column of string(new L.Flow(Gap := L.Spacing.Normal),
+    E.Styled of string(E.Text of string('Components for FPas'), S.Role.Heading),
+    E.Text of string('Components are functions.'),
+    E.Styled of string(E.Text of string('Muted text'), S.Role.Muted));
 end function;
 
 end unit;

@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Inputs.TextFields as W;
 // - `Name`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Name: string): E.Element<string>;
+public function View(Name: string): E.Element of string;
 begin
-  return W.TextField<string>('input-name', Name, function(Value: string): string => Value,
+  return W.TextField of string('input-name', Name, function(Value: string): string => Value,
     new W.Options(Label := 'Full name', Placeholder := 'Maya Okafor', MaxUtf8Bytes := 63));
 end function;
 
@@ -28,9 +28,9 @@ end function;
 // - `Host`: The address without a scheme, up to 95 UTF-8 bytes.
 // ## Returns
 // A field that sends the edited address without the prefix.
-public function Address(Host: string): E.Element<string>;
+public function Address(Host: string): E.Element of string;
 begin
-  return W.TextField<string>('input-url', Host, function(Value: string): string => Value,
+  return W.TextField of string('input-url', Host, function(Value: string): string => Value,
     new W.Options(Prefix := 'https://', MaxUtf8Bytes := 95));
 end function;
 

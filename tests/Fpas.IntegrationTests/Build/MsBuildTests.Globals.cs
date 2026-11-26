@@ -58,7 +58,7 @@ public sealed partial class MsBuildTests
             public procedure Touch(); begin end procedure;
             public function Secret(): int; begin return Hidden; end function;
             public function SnapshotNow(): Snapshot; begin return new Snapshot(); end function;
-            public async function ReadAsync(): Tasks.Task<long>;
+            public async function ReadAsync(): Tasks.Task of long;
             begin await Tasks.Task.Delay(1); return Count; end function;
             end unit;
             """);

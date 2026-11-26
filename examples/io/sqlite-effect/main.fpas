@@ -15,8 +15,8 @@ type LookupFailure = variant
   Database(Code: int);
 end variant;
 
-function FindTitle(Id: int): Fx.Effect<string, LookupFailure, string>;
-  async function Read(ConnectionString: string; Stop: T.CancellationToken): Tasks.Task<Fx.Outcome<string, LookupFailure>>;
+function FindTitle(Id: int): Fx.Effect of (string, LookupFailure, string);
+  async function Read(ConnectionString: string; Stop: T.CancellationToken): Tasks.Task of Fx.Outcome of (string, LookupFailure);
   begin
     try
       await using const Connection: Db.SqliteConnection := new Db.SqliteConnection(
@@ -38,10 +38,10 @@ function FindTitle(Id: int): Fx.Effect<string, LookupFailure, string>;
     end try;
   end function;
 begin
-  return Fx.Effect<string, LookupFailure, string>.Defer(Read);
+  return Fx.Effect of (string, LookupFailure, string).Defer(Read);
 end function;
 
-procedure Report(Result: Fx.Outcome<string, LookupFailure>);
+procedure Report(Result: Fx.Outcome of (string, LookupFailure));
 begin
   case Result of
     when Fx.Outcome.Success(const Title: string):
@@ -59,8 +59,8 @@ end procedure;
 
 begin
   const Catalog: string := 'Data Source=books;Mode=Memory;Cache=Shared;Pooling=False';
-  const Present: Fx.Effect<string, LookupFailure, string> := FindTitle(1);
-  const Missing: Fx.Effect<string, LookupFailure, string> := FindTitle(2);
+  const Present: Fx.Effect of (string, LookupFailure, string) := FindTitle(1);
+  const Missing: Fx.Effect of (string, LookupFailure, string) := FindTitle(2);
   using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
   await using const Seed: Db.SqliteConnection := new Db.SqliteConnection(Catalog);
   await Seed.OpenAsync(Deadline.Token).ConfigureAwait(false);

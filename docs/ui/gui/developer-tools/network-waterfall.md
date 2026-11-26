@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Developer.NetworkWaterfalls as W;
 // - `Selected`: Selected request index, or minus one.
 // ## Returns
 // The waterfall with selected and activated requests as proposals.
-public function View(Requests: array of W.Request; Selected: int): E.Element<W.Event>;
+public function View(Requests: array of W.Request; Selected: int): E.Element of W.Event;
 begin
-  return W.NetworkWaterfall<W.Event>('network', Requests, Selected,
+  return W.NetworkWaterfall of W.Event('network', Requests, Selected,
     function(Change: W.Event): W.Event => Change,
     new W.Options(Height := 340.0F, DomLoaded := 0.395, Loaded := 0.68));
 end function;

@@ -18,20 +18,20 @@ uses System.Threading as Threads;
 uses System.Threading.Tasks as Tasks;
 
 procedure DockedModal(Renderer: Cui.CuiRenderer);
-  function View(Model: bool; Size: L.Viewport): E.Element<bool>;
+  function View(Model: bool; Size: L.Viewport): E.Element of bool;
   begin
     Builds := Builds + 1;
-    return E.Column<bool>(
+    return E.Column of bool(
       new L.Flow(),
-      Buttons.Button<bool>('outside', 'Outside', true),
-      Dock.Dockspace<bool>(
+      Buttons.Button of bool('outside', 'Outside', true),
+      Dock.Dockspace of bool(
         'dock', [
-          new Dock.Panel<bool>(
+          new Dock.Panel of bool(
             'panel', 'Panel',
-            Dialog.Dialog<bool>(
+            Dialog.Dialog of bool(
               'dialog',
-              E.Text<bool>('Base'),
-              Buttons.Button<bool>('inside', 'Inside', true),
+              E.Text of bool('Base'),
+              Buttons.Button of bool('inside', 'Inside', true),
               true,
               new Dialog.Options('Dialog'),
               false
@@ -60,9 +60,9 @@ begin
     Renderer
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<bool> := Host.Start<bool, bool>(
+  using const Session: Gui.Session of bool := Host.Start of (bool, bool)(
     true,
-    function(Model: bool; Message: bool): Mvu.Transition<bool, bool> => new Mvu.Transition<bool, bool>(
+    function(Model: bool; Message: bool): Mvu.Transition of (bool, bool) => new Mvu.Transition of (bool, bool)(
       Model,
       []
     ),
@@ -125,17 +125,17 @@ end procedure;
 // ## Parameters
 // - `Renderer`: Native renderer for the event-driven window.
 public procedure Verify(Renderer: Cui.CuiRenderer);
-  function Update(Model: int; Message: int): Mvu.Transition<int, int>;
+  function Update(Model: int; Message: int): Mvu.Transition of (int, int);
   begin
-    return new Mvu.Transition<int, int>(
+    return new Mvu.Transition of (int, int)(
       Model,
-      [Frames.Redraw<int>(30.0F), Frames.Redraw<int>(0.05F)]
+      [Frames.Redraw of int(30.0F), Frames.Redraw of int(0.05F)]
     );
   end function;
-  function View(Model: int; Size: L.Viewport): E.Element<int>;
+  function View(Model: int; Size: L.Viewport): E.Element of int;
   begin
     Builds := Builds + 1;
-    return E.Text<int>('A cached view with a native deadline');
+    return E.Text of int('A cached view with a native deadline');
   end function;
   async function Guard(): Tasks.Task;
   begin
@@ -150,7 +150,7 @@ begin
   using const Cancellation: Threads.CancellationTokenSource := new Threads.CancellationTokenSource();
   const Window: Cui.CuiWindow := new Cui.CuiWindow('MVU native frame deadline', 420, 300, Renderer);
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<int> := Host.Start<int, int>(0, Update, View, Window, 64);
+  using const Session: Gui.Session of int := Host.Start of (int, int)(0, Update, View, Window, 64);
   for Index: int := 0 to 5 do
     discard Window.TryWake();
     if not Session.Step() then

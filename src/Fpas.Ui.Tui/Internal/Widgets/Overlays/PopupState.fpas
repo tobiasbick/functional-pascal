@@ -19,7 +19,7 @@ end record;
 // Session-local popup state and the application dispatcher.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type State<TMsg> = record
+public type State of TMsg = record
   // Reads the open popup.
   public Read: function(): Cursor;
   // Replaces transient state without sending an application message.
@@ -35,10 +35,10 @@ end record;
 // - `Apply`: The session dispatcher.
 // ## Returns
 // Independent state for the session.
-public function Start<TMsg>(Apply: procedure(TMsg)): State<TMsg>;
+public function Start of TMsg(Apply: procedure(TMsg)): State of TMsg;
 begin
   var Current: Cursor := new Cursor();
-  return new State<TMsg>(
+  return new State of TMsg(
     function(): Cursor => Current,
     procedure(Value: Cursor) begin
       Current := Value;

@@ -38,13 +38,13 @@ end record;
 // - `OnClipCleared`: Optional message when the clip indicator is clicked.
 // ## Returns
 // The graphical level meter.
-public function LevelMeter<TMsg>(
+public function LevelMeter of TMsg(
   Id: string; Levels: array of float; Settings: Options? := null;
-  OnClipCleared: Sys.Func<TMsg>? := null
-): E.Element<TMsg>;
+  OnClipCleared: (Sys.Func of TMsg)? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.LevelMeter(Id, Levels, Settings ?? new Options(), OnClipCleared);
+  return (E.Element of TMsg).LevelMeter(Id, Levels, Settings ?? new Options(), OnClipCleared);
 end function;
 
 end unit;

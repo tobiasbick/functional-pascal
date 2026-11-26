@@ -22,9 +22,9 @@ uses Fpas.Ui.Widgets.Editors.NodeEditors as N;
 // - `Viewport`: Current canvas transform.
 // ## Returns
 // The child with native cursors drawn over it.
-public function View(Child: E.Element<string>; People: array of W.Person; Viewport: N.View): E.Element<string>;
+public function View(Child: E.Element of string; People: array of W.Person; Viewport: N.View): E.Element of string;
 begin
-  return W.LiveCursors<string>('collaborators', People, Child, new W.Options(View := Viewport));
+  return W.LiveCursors of string('collaborators', People, Child, new W.Options(View := Viewport));
 end function;
 
 end unit;

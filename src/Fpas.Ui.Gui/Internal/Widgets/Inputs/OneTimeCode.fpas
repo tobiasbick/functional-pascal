@@ -22,9 +22,9 @@ uses System as Sys;
 // - `OnChange`: Maps a native edit to a message.
 // - `Settings`: Label, length and input permission.
 // - `OnComplete`: Optional action receiving the newly entered complete code.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Value: string; OnChange: function(string): TMsg;
-  Settings: O.Options; OnComplete: Sys.Func<string, TMsg>?
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Value: string; OnChange: function(string): TMsg;
+  Settings: O.Options; OnComplete: Sys.Func of (string, TMsg)?
 );
 begin
   const Allowed: bool := Frame.AcceptInput and Settings.Enabled;
@@ -36,7 +36,7 @@ begin
   end if;
   const Result: CuiInputs.CuiOneTimeCodeResult := Frame.Window.OneTimeCode(
     Token, Value, Settings.Length, Allowed,
-    C.WantsFocus<TMsg>(Frame, Id, Token, Allowed), not Frame.PaintingClosed
+    C.WantsFocus of TMsg(Frame, Id, Token, Allowed), not Frame.PaintingClosed
   );
   const Proposed: string := Result.Value;
   if Settings.Label <> '' then
@@ -49,7 +49,7 @@ begin
 
   if Allowed and Result.Completed then
     case OnComplete of
-      when is Sys.Func<string, TMsg> as Complete:
+      when is Sys.Func of (string, TMsg) as Complete:
         Frame.Messages.Add(Complete.Invoke(Proposed));
       else
     end case;

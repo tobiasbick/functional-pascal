@@ -32,7 +32,7 @@ public type Options = record
   // Optional explanation of the filter.
   public FilterLabel: string := '';
   // Optional listing callback. Empty means local disk.
-  public Source: Sys.Func<string, bool, F.Listing?>? := null;
+  public Source: Sys.Func of (string, bool, F.Listing?)? := null;
 end record;
 
 // Result of closing the file picker.
@@ -52,10 +52,10 @@ end record;
 // - `Base`: Optional underlying view. It is drawn before the modal.
 // ## Returns
 // The shared modal widget.
-public function FilePicker<TMsg>(Id: string; Open: bool; Change: function(Event): TMsg; Settings: Options? := null; Base: E.Element<TMsg>? := null): E.Element<TMsg>;
+public function FilePicker of TMsg(Id: string; Open: bool; Change: function(Event): TMsg; Settings: Options? := null; Base: (E.Element of TMsg)? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.FilePicker(Id, Base, Open, Change, Settings ?? new Options());
+  return (E.Element of TMsg).FilePicker(Id, Base, Open, Change, Settings ?? new Options());
 end function;
 
 end unit;

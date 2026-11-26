@@ -12,9 +12,9 @@ uses GuiGallery.Pages.Navigation.State as State;
 // - `Model`: Current gallery state.
 // ## Returns
 // Both tab strips and the active underline tab's content.
-public function Rows(Model: State.Model): array of E.Element<State.Msg>;
+public function Rows(Model: State.Model): array of E.Element of State.Msg;
 begin
-  return Sample.Rows<State.Msg>(
+  return Sample.Rows of State.Msg(
     Model.ActiveTab,
     Model.ActivePillTab,
     State.Msg.SetTab,

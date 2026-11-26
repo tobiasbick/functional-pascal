@@ -36,13 +36,13 @@ end record;
 // - `Settings`: Native column count and input permission.
 // ## Returns
 // A native radio-card selector.
-public function RadioCards<TMsg>(
+public function RadioCards of TMsg(
   Id: string; Items: array of Item; Selected: int; OnChange: function(int): TMsg;
   Settings: Options? := null
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Cards(Id, Items, Selected, OnChange, Settings ?? new Options());
+  return (E.Element of TMsg).Cards(Id, Items, Selected, OnChange, Settings ?? new Options());
 end function;
 
 // Gets a card's positional identity for focus requests.

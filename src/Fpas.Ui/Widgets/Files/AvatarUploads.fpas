@@ -22,13 +22,13 @@ public const ImageExtensions: string := 'png;jpg;jpeg;bmp;gif;tga';
 // - `Enabled`: Whether the avatar accepts input.
 // ## Returns
 // The graphical uploadable avatar.
-public function AvatarUpload<TMsg>(
+public function AvatarUpload of TMsg(
   Id: string; Name: string; Path: string?; OnDrop: function(string): TMsg;
-  OnBrowse: Sys.Func<TMsg>? := null; Size: float := 88.0F; Enabled: bool := true
-): E.Element<TMsg>;
+  OnBrowse: (Sys.Func of TMsg)? := null; Size: float := 88.0F; Enabled: bool := true
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.AvatarUpload(Id, Name, Path, OnDrop, OnBrowse, Size, Enabled);
+  return (E.Element of TMsg).AvatarUpload(Id, Name, Path, OnDrop, OnBrowse, Size, Enabled);
 end function;
 
 end unit;

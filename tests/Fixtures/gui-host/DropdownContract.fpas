@@ -19,7 +19,7 @@ begin
   end if;
 end procedure;
 
-function Control(Session: Gui.Session<State.Msg>; Id: string): Gui.Control;
+function Control(Session: Gui.Session of State.Msg; Id: string): Gui.Control;
 begin
   for Value: Gui.Control in Session.Snapshot().Controls do
     if Value.Id = Id then
@@ -35,16 +35,16 @@ end function;
 // - `Renderer`: Native renderer to verify.
 // - `Capture`: Prefix for the open-menu gallery screenshot.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
-  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  function Update(Model: State.Model; Message: State.Msg): App.Transition of (State.Model, State.Msg);
   begin
-    const Next: App.Transition<State.Model, State.Msg> := GalleryUpdate.Update(Model, Message);
+    const Next: App.Transition of (State.Model, State.Msg) := GalleryUpdate.Update(Model, Message);
     Result := Next.Model.Shared.MenuResult;
     return if Focus = '' then
       Next
     else
-      new App.Transition<State.Model, State.Msg>(
+      new App.Transition of (State.Model, State.Msg)(
         Next.Model,
-        [App.Focus<State.Msg>(Focus)]
+        [App.Focus of State.Msg(Focus)]
       )
     end if;
   end function;
@@ -56,13 +56,13 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       Pending := 0;
     end if;
   end procedure;
-  procedure Key(Session: Gui.Session<State.Msg>; Value: int);
+  procedure Key(Session: Gui.Session of State.Msg; Value: int);
   begin
     Pending := Value;
     Check(Session.Step(), 'Menu key frame closed.');
     Check(Session.Step(), 'Menu transition frame closed.');
   end procedure;
-  procedure FocusMenu(Session: Gui.Session<State.Msg>; Id: string);
+  procedure FocusMenu(Session: Gui.Session of State.Msg; Id: string);
   begin
     Focus := Id;
     discard Session.Post(State.Msg.Preview);
@@ -82,7 +82,7 @@ begin
     true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Buttons),
     Update,
     View.Build,

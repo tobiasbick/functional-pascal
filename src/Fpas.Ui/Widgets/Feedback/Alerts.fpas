@@ -32,13 +32,13 @@ end record;
 // - `OnDismiss`: Optional notification delivered once after dismissal.
 // ## Returns
 // An alert for the graphical or terminal host, hidden after dismissal until removed and reinserted.
-public function Alert<TMsg>(
+public function Alert of TMsg(
   Id: string; Title: string; Settings: Options? := null;
-  OnDismiss: Sys.Func<TMsg>? := null
-): E.Element<TMsg>;
+  OnDismiss: (Sys.Func of TMsg)? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Alert(Id, Title, Settings ?? new Options(), OnDismiss);
+  return (E.Element of TMsg).Alert(Id, Title, Settings ?? new Options(), OnDismiss);
 end function;
 
 // Gets the application identity of the optional dismiss action.

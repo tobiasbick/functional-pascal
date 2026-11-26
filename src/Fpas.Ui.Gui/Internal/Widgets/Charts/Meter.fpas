@@ -18,8 +18,8 @@ uses System.Globalization as Culture;
 // - `Used`: Model-owned usage.
 // - `Total`: Model-owned capacity.
 // - `Unit`: Literal value suffix.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Label: string; Used: float;
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Label: string; Used: float;
   Total: float; Unit: string
 );
 begin
@@ -35,7 +35,7 @@ begin
   else
     ' ' + Unit
   end if);
-  C.Track<TMsg>(
+  C.Track of TMsg(
     Frame,
     new App.Control(Id, Label, 'meter', new Cui.CuiRectangle(), false, Value := Value)
   );

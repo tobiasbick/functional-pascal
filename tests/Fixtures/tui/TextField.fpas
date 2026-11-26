@@ -12,24 +12,24 @@ uses Fpas.Ui.Widgets.Inputs.TextFields as F;
 uses System as Sys;
 uses System.Console as Console;
 
-function Update(State: string; Message: string): Mvu.Transition<string, string>;
+function Update(State: string; Message: string): Mvu.Transition of (string, string);
 begin
-  return new Mvu.Transition<string, string>(Message, []);
+  return new Mvu.Transition of (string, string)(Message, []);
 end function;
 
-function View(Value: string): E.Element<string>;
+function View(Value: string): E.Element of string;
 begin
-  return E.Column<string>(
-    F.TextField<string>(
+  return E.Column of string(
+    F.TextField of string(
       'editor', Value, function(Text: string): string => Text,
       new F.Options(Label := 'Title', Placeholder := 'Untitled', MaxUtf8Bytes := 9),
       function(Text: string): string => 'ok'
     ),
-    F.TextField<string>(
+    F.TextField of string(
       'read', 'fixed', function(Text: string): string => 'bad',
       new F.Options(ReadOnly := true)
     ),
-    F.TextField<string>(
+    F.TextField of string(
       'off', '', function(Text: string): string => 'bad',
       new F.Options(Enabled := false)
     )
@@ -58,7 +58,7 @@ procedure Verify();
     end if;
   end procedure;
 begin
-  using const Session: Tui.HeadlessSession := Headless.Start<string, string>(
+  using const Session: Tui.HeadlessSession := Headless.Start of (string, string)(
     '',
     Update,
     View,

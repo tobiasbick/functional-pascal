@@ -12,9 +12,9 @@ uses Gallery.Shared.Strings as Strings;
 // - `TMsg`: Application message type.
 // ## Returns
 // The gallery upload at 68 percent.
-public function Upload<TMsg>(): E.Element<TMsg>;
+public function Upload of TMsg(): E.Element of TMsg;
 begin
-  return P.ProgressBar<TMsg>(
+  return P.ProgressBar of TMsg(
     'upload',
     0.68F,
     new P.Options(Label := Strings.Get('Text.UploadingAssets'), ShowValue := true)
@@ -28,9 +28,9 @@ end function;
 // - `Dither`: Enable the graphical dither pattern.
 // ## Returns
 // The gallery export at 42 percent.
-public function ExportBar<TMsg>(Dither: bool): E.Element<TMsg>;
+public function ExportBar of TMsg(Dither: bool): E.Element of TMsg;
 begin
-  return P.ProgressBar<TMsg>(
+  return P.ProgressBar of TMsg(
     'export',
     0.42F,
     new P.Options(Label := Strings.Get('Text.ExportingClip'), ShowValue := true, Dither := Dither)

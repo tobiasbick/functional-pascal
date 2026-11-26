@@ -55,10 +55,10 @@ end record;
 // - `Settings`: Optional native appearance and input settings.
 // ## Returns
 // The graphical widget.
-public function StepSlider<TMsg>(Id: string; Current: Value; Change: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function StepSlider of TMsg(Id: string; Current: Value; Change: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.StepSlider(Id, Current, Change, Settings ?? new Options());
+  return (E.Element of TMsg).StepSlider(Id, Current, Change, Settings ?? new Options());
 end function;
 
 end unit;

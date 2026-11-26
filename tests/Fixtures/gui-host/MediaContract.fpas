@@ -22,14 +22,14 @@ uses System.IO as IO;
 // - `Capture`: Directory for the PNG.
 // - `Suffix`: Renderer label for the PNG.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string; Suffix: string);
-  function Update(Model: State.Model; Message: State.Msg): Mvu.Transition<State.Model, State.Msg>;
+  function Update(Model: State.Model; Message: State.Msg): Mvu.Transition of (State.Model, State.Msg);
   begin
     case Message of
       when State.Msg.Social(Social.Msg.Swipe(const Direction: Cards.Direction)):
         Swiped := Direction;
       else
     end case;
-    const Next: Mvu.Transition<State.Model, State.Msg> := U.Update(Model, Message);
+    const Next: Mvu.Transition of (State.Model, State.Msg) := U.Update(Model, Message);
     Latest := Next.Model;
     return Next;
   end function;
@@ -54,14 +54,14 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string; Suffix: stri
     end if;
   end procedure;
 
-  procedure Step(Session: Gui.Session<State.Msg>; Count: int := 2);
+  procedure Step(Session: Gui.Session of State.Msg; Count: int := 2);
   begin
     for Frame: int := 1 to Count do
       A.Check(Session.Step(), 'The gallery closed.');
     end for;
   end procedure;
 
-  function Bounds(Session: Gui.Session<State.Msg>; Id: string): Cui.CuiRectangle;
+  function Bounds(Session: Gui.Session of State.Msg; Id: string): Cui.CuiRectangle;
   begin
     for Attempt: int := 0 to 15 do
       const Box: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
@@ -87,14 +87,14 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string; Suffix: stri
     raise new Sys.InvalidOperationException('Could not scroll the media control into view: ' + Id);
   end function;
 
-  procedure Move(Session: Gui.Session<State.Msg>; AtX: float; AtY: float);
+  procedure Move(Session: Gui.Session of State.Msg; AtX: float; AtY: float);
   begin
     X := AtX;
     Y := AtY;
     Step(Session, 1);
   end procedure;
 
-  procedure Drag(Session: Gui.Session<State.Msg>; DeltaX: float; DeltaY: float);
+  procedure Drag(Session: Gui.Session of State.Msg; DeltaX: float; DeltaY: float);
   begin
     Left := 1;
     Step(Session, 1);
@@ -116,7 +116,7 @@ begin
     'The requested renderer fell back.'
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     Latest, Update, View.Build, Window, 256, Inject, ThemeFor := U.ThemeFor
   );
   Step(Session, 9);

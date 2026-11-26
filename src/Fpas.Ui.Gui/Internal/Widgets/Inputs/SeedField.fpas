@@ -16,7 +16,7 @@ uses Fpas.Ui.Widgets.Inputs.SeedFields as A;
 // - `Current`: Model-owned value.
 // - `Change`: Maps a native proposal.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Current: A.Value; Change: function(A.Event): TMsg; Settings: A.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Current: A.Value; Change: function(A.Event): TMsg; Settings: A.Options);
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Role: string := 'seed-field';
@@ -24,7 +24,7 @@ begin
   const Locked: bool := Current.Locked ?? false;
   const Parts: array of string := ['dice', 'lock'];
   const Accept: array of bool := [Enabled and not Locked, Enabled and Current.Locked <> null];
-  const Focus: int := W.Focus<TMsg>(Frame, Id, Role, Parts, Accept, Enc.Bits(Locked, 1));
+  const Focus: int := W.Focus of TMsg(Frame, Id, Role, Parts, Accept, Enc.Bits(Locked, 1));
   var Seed: uint := Current.Seed;
   var Lock: int := Enc.Bits(Locked, 1);
   const Flags: int := Enc.Bits(Enabled, 1) + Enc.Bits(Settings.Plain, 8);
@@ -40,7 +40,7 @@ begin
     Settings.FixedText,
     Flags,
     Focus,
-    W.Tracker<TMsg>(Frame, Id, Role, Parts)
+    W.Tracker of TMsg(Frame, Id, Role, Parts)
   );
   if Result <> 0 then
     const Proposed: bool? := if Current.Locked <> null then
@@ -53,10 +53,10 @@ begin
     );
   end if;
 
-  W.Root<TMsg>(Frame, Id, Role, Current.Label, false, Seed.ToString());
-  W.Part<TMsg>(Frame, Id, Role, 'dice', 'New seed', Accept[0], '');
+  W.Root of TMsg(Frame, Id, Role, Current.Label, false, Seed.ToString());
+  W.Part of TMsg(Frame, Id, Role, 'dice', 'New seed', Accept[0], '');
   if Current.Locked <> null then
-    W.Part<TMsg>(Frame, Id, Role, 'lock', 'Keep this seed', Accept[1], (Lock <> 0).ToString());
+    W.Part of TMsg(Frame, Id, Role, 'lock', 'Keep this seed', Accept[1], (Lock <> 0).ToString());
   end if;
 end procedure;
 

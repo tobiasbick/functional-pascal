@@ -18,7 +18,7 @@ end record;
 // Items shown in a graphical or terminal status bar.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Item<TMsg> = variant
+public type Item of TMsg = variant
   // Static text and optional icon.
   Text(Value: Label);
   // Clickable item with a stable key, optional tooltip and a message.
@@ -38,10 +38,10 @@ end variant;
 // - `HideBorder`: Omit the top divider.
 // ## Returns
 // A shared status bar element.
-public function StatusBar<TMsg>(Id: string; Items: array of Item<TMsg>; HideBorder: bool := false): E.Element<TMsg>;
+public function StatusBar of TMsg(Id: string; Items: array of Item of TMsg; HideBorder: bool := false): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.StatusBar(Id, Items, HideBorder);
+  return (E.Element of TMsg).StatusBar(Id, Items, HideBorder);
 end function;
 
 end unit;

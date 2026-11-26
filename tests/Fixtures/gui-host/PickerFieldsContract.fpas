@@ -23,7 +23,7 @@ begin
   end if;
 end procedure;
 
-function Find(Session: Gui.Session<State.Msg>; Id: string): Gui.Control?;
+function Find(Session: Gui.Session of State.Msg; Id: string): Gui.Control?;
 begin
   for Item: Gui.Control in Session.Snapshot().Controls do
     if Item.Id = Id then
@@ -34,7 +34,7 @@ begin
   return null;
 end function;
 
-function Control(Session: Gui.Session<State.Msg>; Id: string): Gui.Control;
+function Control(Session: Gui.Session of State.Msg; Id: string): Gui.Control;
 begin
   const Found: Gui.Control? := Find(Session, Id);
   if Found <> null then
@@ -44,10 +44,10 @@ begin
   raise new Sys.InvalidOperationException('Missing picker ' + Id);
 end function;
 
-procedure Reject(Node: E.Element<string>; Target: V.Target; Expected: string);
+procedure Reject(Node: E.Element of string; Target: V.Target; Expected: string);
 begin
   try
-    discard V.Prepare<string>(Node, Target);
+    discard V.Prepare of string(Node, Target);
   catch Error: Sys.ArgumentException do
     Check(Error.Message.Contains(Expected), Error.Message);
     return;
@@ -61,19 +61,19 @@ begin
   const Pick: function(int): string := function(Index: int): string => Index.ToString();
   const Edit: function(double): string := function(Value: double): string => Value.ToString();
   const Items: array of S.Item := [new S.Item('Canada')];
-  Reject(S.Select<string>('select', Items, 1, Pick), V.Target.Graphical, 'valid index');
+  Reject(S.Select of string('select', Items, 1, Pick), V.Target.Graphical, 'valid index');
   for Profile: V.Target in [V.Target.Terminal, V.Target.Portable] do
-    discard V.Prepare<string>(S.Select<string>('select', Items, -1, Pick), Profile);
-    Reject(S.Select<string>('select', Items, 1, Pick), Profile, 'valid index');
+    discard V.Prepare of string(S.Select of string('select', Items, -1, Pick), Profile);
+    Reject(S.Select of string('select', Items, 1, Pick), Profile, 'valid index');
   end for;
 
   Reject(
-    N.NumberField<string>('number', Sys.Double.NaN, 0.0, 99.0, Edit),
+    N.NumberField of string('number', Sys.Double.NaN, 0.0, 99.0, Edit),
     V.Target.Graphical,
     'finite value'
   );
-  const Number: E.Element<string> := N.NumberField<string>('number', 3.0, 0.0, 99.0, Edit);
-  discard V.Prepare<string>(Number, V.Target.Terminal);
+  const Number: E.Element of string := N.NumberField of string('number', 3.0, 0.0, 99.0, Edit);
+  discard V.Prepare of string(Number, V.Target.Terminal);
   Reject(Number, V.Target.Portable, 'terminal or graphical profile');
 end procedure;
 
@@ -103,11 +103,11 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       KeyCode := 0;
     end if;
   end procedure;
-  procedure Step(Session: Gui.Session<State.Msg>);
+  procedure Step(Session: Gui.Session of State.Msg);
   begin
     Check(Session.Step(), 'The Pickers page closed.');
   end procedure;
-  procedure Click(Session: Gui.Session<State.Msg>; Id: string);
+  procedure Click(Session: Gui.Session of State.Msg; Id: string);
   begin
     const Box: Cui.CuiRectangle := Control(Session, Id).Bounds;
     Check(Box.Width > 0 and Box.Height > 0, 'The picker action must be visible: ' + Id);
@@ -119,13 +119,13 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     Step(Session);
     Step(Session);
   end procedure;
-  procedure TypeText(Session: Gui.Session<State.Msg>; Text: string);
+  procedure TypeText(Session: Gui.Session of State.Msg; Text: string);
   begin
     Input := Text;
     Step(Session);
     Step(Session);
   end procedure;
-  procedure Key(Session: Gui.Session<State.Msg>; Code: int; Modifiers: int := 0);
+  procedure Key(Session: Gui.Session of State.Msg; Code: int; Modifiers: int := 0);
   begin
     KeyCode := Code;
     Mods := Modifiers;
@@ -147,7 +147,7 @@ begin
   var Mods: int := 0;
   const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI Pickers', 1000, 1200, Renderer, true);
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Inputs),
     GalleryUpdate.Update, View.Build, Window, 32, Inject, ThemeFor := GalleryUpdate.ThemeFor
   );
@@ -183,7 +183,7 @@ begin
   Click(Session, 'input-language');
   TypeText(Session, 'zzz');
   Check(
-    Sys.Array.IndexOf<string>(Session.Snapshot().Text, 'No results') >= 0
+    Sys.Array.IndexOf of string(Session.Snapshot().Text, 'No results') >= 0
     and Find(Session, S.OptionId('input-language', 8)) = null,
     'Filtering with no match must hide all choices and show No results.'
   );

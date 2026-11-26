@@ -18,10 +18,10 @@ uses Fpas.Ui.Widgets.Overlays.ConfirmPopovers as W;
 // - `Open`: Current visibility from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Open: bool): E.Element<string>;
+public function View(Open: bool): E.Element of string;
 begin
-  return W.ConfirmPopover<string>('branch-question',
-    B.Button<string>('branch-trigger', 'Delete branch', 'ask-delete'), Open,
+  return W.ConfirmPopover of string('branch-question',
+    B.Button of string('branch-trigger', 'Delete branch', 'ask-delete'), Open,
     new W.Options('Delete feature/grid?', ConfirmLabel := 'Delete branch', Danger := true),
     'delete-branch', 'cancel-delete');
 end function;

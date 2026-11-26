@@ -22,9 +22,9 @@ uses System.Threading as Threads;
 // - `Renderer`: Native renderer to exercise.
 // - `Capture`: Prefix for the page captures.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
-  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  function Update(Model: State.Model; Message: State.Msg): App.Transition of (State.Model, State.Msg);
   begin
-    const Next: App.Transition<State.Model, State.Msg> := G.Update(Model, Message);
+    const Next: App.Transition of (State.Model, State.Msg) := G.Update(Model, Message);
     case Message of
       when State.Msg.Actions(Actions.Msg.SwipeChoice(const At: Swipe.Side, const Index: int)):
         Swipes := Swipes + 1;
@@ -34,7 +34,10 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     end case;
 
     if Target <> '' then
-      return new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Target)]);
+      return new App.Transition of (State.Model, State.Msg)(
+        Next.Model,
+        [App.Focus of State.Msg(Target)]
+      );
     end if;
 
     return Next;
@@ -65,12 +68,12 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     end if;
   end procedure;
 
-  procedure Step(Session: Gui.Session<State.Msg>);
+  procedure Step(Session: Gui.Session of State.Msg);
   begin
     A.Check(Session.Step(), 'Actions and Pickers gallery closed unexpectedly.');
   end procedure;
 
-  procedure Aim(Session: Gui.Session<State.Msg>; Id: string);
+  procedure Aim(Session: Gui.Session of State.Msg; Id: string);
   begin
     const Area: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
     A.Check(Area.Width > 0 and Area.Height > 0, 'No clickable geometry for ' + Id);
@@ -78,14 +81,14 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     Y := Area.Y + Area.Height / 2;
   end procedure;
 
-  procedure Leave(Session: Gui.Session<State.Msg>);
+  procedure Leave(Session: Gui.Session of State.Msg);
   begin
     X := -1.0F;
     Y := -1.0F;
     Step(Session);
   end procedure;
 
-  procedure Click(Session: Gui.Session<State.Msg>; Id: string; Trailing: bool := false);
+  procedure Click(Session: Gui.Session of State.Msg; Id: string; Trailing: bool := false);
   begin
     Aim(Session, Id);
     if Trailing then
@@ -99,14 +102,14 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     Leave(Session);
   end procedure;
 
-  procedure Key(Session: Gui.Session<State.Msg>; Value: int);
+  procedure Key(Session: Gui.Session of State.Msg; Value: int);
   begin
     PendingKey := Value;
     Step(Session);
     Step(Session);
   end procedure;
 
-  procedure Focus(Session: Gui.Session<State.Msg>; Id: string);
+  procedure Focus(Session: Gui.Session of State.Msg; Id: string);
   begin
     Target := Id;
     A.Send(Session, State.Msg.Preview);
@@ -114,7 +117,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     A.Check(A.Control(Session, Id).Focused, 'Focus did not reach ' + Id);
   end procedure;
 
-  function HasControl(Session: Gui.Session<State.Msg>; Id: string): bool;
+  function HasControl(Session: Gui.Session of State.Msg; Id: string): bool;
   begin
     for Item: Gui.Control in Session.Snapshot().Controls do
       if Item.Id = Id then
@@ -147,7 +150,7 @@ begin
     true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Actions), Update, View.Build, Window, 256, Inject,
     ThemeFor := G.ThemeFor
   );

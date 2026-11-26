@@ -19,7 +19,7 @@ uses Fpas.Ui.Widgets.Editors.NodeEditors as N;
 // - `Child`: Component under the cursors.
 // - `Settings`: Native widget settings.
 // - `Visit`: Presents embedded content.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; People: array of D.Person; Child: E.Element<TMsg>; Settings: D.Options; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; People: array of D.Person; Child: E.Element of TMsg; Settings: D.Options; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
 begin
   Visit(Child, Frame, false, L.Alignment.Default);
   const Transform: N.View := Settings.View ?? new N.View();

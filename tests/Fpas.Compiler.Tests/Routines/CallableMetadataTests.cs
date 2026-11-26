@@ -19,7 +19,7 @@ public sealed class CallableMetadataTests
           return function(Value: int): int begin Calls := Calls + 1; return Value + Offset + Calls; end function;
         end function;
         begin
-          const Values: C.IEnumerable<int> := Seq.Select<int, int>([1, 2], Mapper(3));
+          const Values: C.IEnumerable of int := Seq.Select of (int, int)([1, 2], Mapper(3));
           for Value: int in Values do discard Value; end for;
         end;
         end program;

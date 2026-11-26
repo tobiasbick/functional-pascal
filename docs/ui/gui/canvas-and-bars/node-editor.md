@@ -21,9 +21,9 @@ uses Fpas.Ui.Widgets.Editors.NodeEditors as W;
 // - `Links`: Connections from output to input pin IDs.
 // ## Returns
 // The node editor with native input proposals.
-public function View(Viewport: W.View; Nodes: array of W.Node<W.Event>; Links: array of W.Link): E.Element<W.Event>;
+public function View(Viewport: W.View; Nodes: array of W.Node of W.Event; Links: array of W.Link): E.Element of W.Event;
 begin
-  return W.NodeEditor<W.Event>('graph', Viewport, Nodes, Links,
+  return W.NodeEditor of W.Event('graph', Viewport, Nodes, Links,
     function(Change: W.Event): W.Event => Change);
 end function;
 

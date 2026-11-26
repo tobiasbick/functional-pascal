@@ -49,13 +49,13 @@ end record;
 // - `OnSubmit`: Optional message factory for Enter, receiving the value after any edit in that frame.
 // ## Returns
 // An editable field for the active host.
-public function TextField<TMsg>(
+public function TextField of TMsg(
   Id: string; Value: string; OnChange: function(string): TMsg;
-  Settings: Options? := null; OnSubmit: Sys.Func<string, TMsg>? := null
-): E.Element<TMsg>;
+  Settings: Options? := null; OnSubmit: Sys.Func of (string, TMsg)? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.TextField(Id, Value, OnChange, Settings ?? new Options(), OnSubmit);
+  return (E.Element of TMsg).TextField(Id, Value, OnChange, Settings ?? new Options(), OnSubmit);
 end function;
 
 // Derives the identity of the native clear button.

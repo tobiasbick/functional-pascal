@@ -18,7 +18,7 @@ uses System.Collections.Generic as C;
 // - `At`: Diagnostic location.
 public procedure SelectionList(Items: array of Lists.Item; Selected: string; At: string);
 begin
-  const Keys: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+  const Keys: C.HashSet of string := new C.HashSet of string(Sys.StringComparer.Ordinal);
   for Item: Lists.Item in Items do
     if Item.Key = '' or not Keys.Add(Item.Key) then
       R.Reject(At, 'Selection list item keys must be nonempty and unique.');
@@ -56,7 +56,7 @@ begin
   for Column: T.Column in Columns do
     R.CheckText(Column.Title, At + '/header');
     LR.CheckExtent(Column.Width, Profile, At + '/width');
-    if not Sys.Enum.IsDefined<T.Alignment>(
+    if not Sys.Enum.IsDefined of T.Alignment(
       Column.Align
     ) or not Sys.Single.IsFinite(Column.Grow) or Column.Grow <= 0.0F
     then

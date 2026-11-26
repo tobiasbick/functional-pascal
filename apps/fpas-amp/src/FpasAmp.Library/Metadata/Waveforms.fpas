@@ -29,7 +29,7 @@ const Indexed: string := 'SELECT m.sha256 FROM metadata m JOIN files f ON f.id=m
 // - `Cancellation`: Stops work when another track takes its place.
 // ## Returns
 // Relative RMS values in time order. Each cached interval occupies one byte.
-public async function Read(Database: string; Track: M.Entry; Cancellation: T.CancellationToken): Tasks.Task<array of float>;
+public async function Read(Database: string; Track: M.Entry; Cancellation: T.CancellationToken): Tasks.Task of array of float;
 requires Database <> '';
 requires Track.Path <> '';
 begin
@@ -63,7 +63,7 @@ begin
     discard Query.Parameters.AddWithValue('$count', Buckets);
     using const Rows: Db.SqliteDataReader := Query.ExecuteReader();
     if Rows.Read() then
-      const Packed: array of byte := Rows.GetFieldValue<array of byte>(0);
+      const Packed: array of byte := Rows.GetFieldValue of array of byte(0);
       const Levels: array of float := new float[Buckets];
       for Index: int := 0 to Buckets - 1 do
         Levels[Index] := cast<float>(Packed[Index]) / 255.0F;

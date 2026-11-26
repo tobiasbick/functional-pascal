@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Files.FileBrowsers as W;
 // - `Folder`: Current directory stored by the application.
 // ## Returns
 // The browser with folder, selection and activation proposals.
-public function View(Folder: string): E.Element<W.Event>;
+public function View(Folder: string): E.Element of W.Event;
 begin
-  return W.FileBrowser<W.Event>('project-files', Folder,
+  return W.FileBrowser of W.Event('project-files', Folder,
     function(Change: W.Event): W.Event => Change,
     new W.Options(Height := L.Extent.Fixed(L.Measure.Logical(380)),
       Filter := '*.md;*.txt'));

@@ -22,8 +22,8 @@ uses System.Globalization as Culture;
 // - `Maximum`: Inclusive upper bound.
 // - `OnChange`: Maps changed endpoints to a message.
 // - `Enabled`: Model-owned input permission.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Label: string; Value: R.Interval; Minimum: float; Maximum: float;
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Label: string; Value: R.Interval; Minimum: float; Maximum: float;
   OnChange: function(R.Interval): TMsg; Enabled: bool
 );
 begin
@@ -33,7 +33,7 @@ begin
   var Upper: float := Value.Upper;
   if Frame.Window.RangeSlider(
     Token, Label, Value.Lower, Value.Upper, Minimum, Maximum, Allowed,
-    C.WantsFocus<TMsg>(Frame, Id, Token, Allowed),
+    C.WantsFocus of TMsg(Frame, Id, Token, Allowed),
     if Frame.PaintingClosed then
       null
     else

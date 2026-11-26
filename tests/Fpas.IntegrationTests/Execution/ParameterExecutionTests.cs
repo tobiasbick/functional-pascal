@@ -51,9 +51,9 @@ public sealed class ParameterExecutionTests
             begin return Left * 10 + Right; end function;
             function Sum(Seed: int := 3; params Values: array of int): int;
             begin var Total: int := Seed; for Value: int in Values do Total := Total + Value; end for; return Total; end function;
-            function Head<T>(params Values: array of T): T;
+            function Head of T(params Values: array of T): T;
             begin return Values[0]; end function;
-            procedure Copy<T>(in Source: T; out Target: T);
+            procedure Copy of T(in Source: T; out Target: T);
             begin Target := Source; end procedure;
             function Label(Name: string := 'a' + 'b'; Flag: bool := 'x' = 'x'; Optional: int? := null): string;
             begin if Flag and not Optional.HasValue then return Name; else return 'bad'; end if; end function;

@@ -8,13 +8,13 @@ uses Fpas.Ui.Widgets.Overlays.Menus as M;
 // One title and its commands in a native desktop menu bar.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Menu<TMsg> = record
+public type Menu of TMsg = record
   // Stable key within the bar.
   public Key: string;
   // Visible menu title.
   public Label: string;
   // Commands, labels and separators.
-  public Entries: array of M.Entry<TMsg>;
+  public Entries: array of M.Entry of TMsg;
   // Optional ASCII letter or digit. Empty uses the title's first mnemonic.
   public Mnemonic: string := '';
   // Popup width in logical points. Zero uses the native default.
@@ -32,10 +32,10 @@ end record;
 // - `HideBorder`: Omit the native bottom hairline.
 // ## Returns
 // A graphical element.
-public function MenuBar<TMsg>(Id: string; Menus: array of Menu<TMsg>; HideBorder: bool := false): E.Element<TMsg>;
+public function MenuBar of TMsg(Id: string; Menus: array of Menu of TMsg; HideBorder: bool := false): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.MenuBar(Id, Menus, HideBorder);
+  return (E.Element of TMsg).MenuBar(Id, Menus, HideBorder);
 end function;
 
 end unit;

@@ -17,12 +17,12 @@ uses Fpas.Ui.Widgets.Navigation.Tabs as Tabs;
 // - `Selected`: The selected zero-based index.
 // ## Returns
 // A tab strip followed by the content for the selected tab.
-public function View(Selected: int): E.Element<int>;
+public function View(Selected: int): E.Element of int;
 begin
-  return E.Column<int>(
-    Tabs.Tabs<int>('sections', [new Tabs.Item('Overview'), new Tabs.Item('Reports')],
+  return E.Column of int(
+    Tabs.Tabs of int('sections', [new Tabs.Item('Overview'), new Tabs.Item('Reports')],
       Selected, function(Index: int): int => Index),
-    E.Text<int>(if Selected = 0 then 'Project overview' else 'Project reports' end if)
+    E.Text of int(if Selected = 0 then 'Project overview' else 'Project reports' end if)
   );
 end function;
 

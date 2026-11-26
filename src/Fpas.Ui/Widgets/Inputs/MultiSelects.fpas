@@ -30,13 +30,19 @@ end record;
 // - `Settings`: Optional caption, filtering and chip display settings.
 // ## Returns
 // A multi-select with model-owned selection and host-owned popup state.
-public function MultiSelect<TMsg>(
+public function MultiSelect of TMsg(
   Id: string; Items: array of S.Item; Selected: array of bool;
   OnChange: function(array of bool): TMsg; Settings: Options? := null
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.MultiSelectInput(Id, Items, Selected, OnChange, Settings ?? new Options());
+  return (E.Element of TMsg).MultiSelectInput(
+    Id,
+    Items,
+    Selected,
+    OnChange,
+    Settings ?? new Options()
+  );
 end function;
 
 end unit;

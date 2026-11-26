@@ -69,7 +69,7 @@ end procedure;
 // - `Renderer`: Requested native backend.
 public procedure Verify(Renderer: Cui.CuiRenderer);
 requires Renderer = Cui.CuiRenderer.Software or Renderer = Cui.CuiRenderer.OpenGl;
-  function Update(Current: Model; Message: Msg): Mvu.Transition<Model, Msg>;
+  function Update(Current: Model; Message: Msg): Mvu.Transition of (Model, Msg);
   begin
     var Next: Model := Current;
     case Message of
@@ -83,7 +83,7 @@ requires Renderer = Cui.CuiRenderer.Software or Renderer = Cui.CuiRenderer.OpenG
           Locked := Value;
         end with;
       when Msg.Focus(const Id: string):
-        return new Mvu.Transition<Model, Msg>(Current, [Mvu.Focus<Msg>(Id)]);
+        return new Mvu.Transition of (Model, Msg)(Current, [Mvu.Focus of Msg(Id)]);
       when Msg.ExpandCell(const Value: bool):
         Next := Current with
           BranchOpen := Value;
@@ -118,17 +118,17 @@ requires Renderer = Cui.CuiRenderer.Software or Renderer = Cui.CuiRenderer.OpenG
         end with;
     end case;
 
-    return new Mvu.Transition<Model, Msg>(Next, []);
+    return new Mvu.Transition of (Model, Msg)(Next, []);
   end function;
-  function View(Current: Model; Size: L.Viewport): E.Element<Msg>;
+  function View(Current: Model; Size: L.Viewport): E.Element of Msg;
   begin
     Last := Current;
     return case Current.Shown of
-      when Page.Calendar: Month.MonthCalendar<Msg>(
+      when Page.Calendar: Month.MonthCalendar of Msg(
         'month', Current.Calendar, Msg.Picked,
         new Month.Options(Today := Origin)
       );
-      when Page.Schedule: Week.WeekCalendar<Msg>(
+      when Page.Schedule: Week.WeekCalendar of Msg(
         'week',
         new Week.Value(Origin, Current.Appointments),
         Msg.Scheduled,
@@ -139,23 +139,23 @@ requires Renderer = Cui.CuiRenderer.Software or Renderer = Cui.CuiRenderer.OpenG
           ReadOnly := Current.Locked
         )
       );
-      when Page.Timeline: Gantt.Gantt<Msg>(
+      when Page.Timeline: Gantt.Gantt of Msg(
         'timeline',
         new Gantt.Value(Origin, 12, Current.Tasks),
         Msg.Moved,
         new Gantt.Options(DayWidth := 30.0F, RowHeight := 32.0F, ReadOnly := Current.Locked)
       );
-      when Page.Outline: Tree.TreeTable<Msg>(
+      when Page.Outline: Tree.TreeTable of Msg(
         'tree', [new Grid.Column('Name'), new Grid.Column('Kind')], Current.Nodes, Current.Cursor,
         null, Msg.Toggled, new Tree.Options(Enabled := not Current.Locked)
       );
-      else Tables.Table<Msg>(
+      else Tables.Table of Msg(
         'cells', [new Tables.Column('Name')], [
-          new Tables.Row<Msg>(
+          new Tables.Row of Msg(
             'row', [
-              Tables.Cell<Msg>.Content(
+              (Tables.Cell of Msg).Content(
                 [
-                  Tree.TreeCell<Msg>('cell', 'Folder', 0, Current.BranchOpen, Msg.ExpandCell)
+                  Tree.TreeCell of Msg('cell', 'Folder', 0, Current.BranchOpen, Msg.ExpandCell)
                 ]
               )
             ]
@@ -182,23 +182,23 @@ requires Renderer = Cui.CuiRenderer.Software or Renderer = Cui.CuiRenderer.OpenG
       Button := -1;
     end if;
   end procedure;
-  procedure Steps(Session: Gui.Session<Msg>);
+  procedure Steps(Session: Gui.Session of Msg);
   begin
     for Frame: int := 1 to 3 do
       Check(Session.Step(), 'The interaction window closed.');
     end for;
   end procedure;
-  procedure Post(Session: Gui.Session<Msg>; Message: Msg);
+  procedure Post(Session: Gui.Session of Msg; Message: Msg);
   begin
     discard Session.Post(Message);
     Steps(Session);
   end procedure;
-  procedure Key(Session: Gui.Session<Msg>; Value: Keys.Key);
+  procedure Key(Session: Gui.Session of Msg; Value: Keys.Key);
   begin
     Pending := Value;
     Steps(Session);
   end procedure;
-  procedure Point(Session: Gui.Session<Msg>; Id: string);
+  procedure Point(Session: Gui.Session of Msg; Id: string);
   begin
     for Item: Gui.Control in Session.Snapshot().Controls do
       if Item.Id = Id then
@@ -246,7 +246,7 @@ begin
     true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<Msg> := Host.Start<Model, Msg>(
+  using const Session: Gui.Session of Msg := Host.Start of (Model, Msg)(
     Last,
     Update,
     View,

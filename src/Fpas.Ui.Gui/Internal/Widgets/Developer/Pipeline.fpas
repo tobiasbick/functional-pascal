@@ -12,7 +12,7 @@ uses System.Collections.Generic as Lists;
 
 function PackJob(Items: array of D.Job): array of CuiDeveloper.CuiDevJob;
 begin
-  const Native: Lists.List<CuiDeveloper.CuiDevJob> := new Lists.List<CuiDeveloper.CuiDevJob>(
+  const Native: Lists.List of CuiDeveloper.CuiDevJob := new Lists.List of CuiDeveloper.CuiDevJob(
     Items.Length
   );
   for Entry: D.Job in Items do
@@ -41,7 +41,7 @@ end function;
 // - `Selection`: Selection supplied to the widget.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Stages: array of string; Jobs: array of D.Job; Selection: int; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Stages: array of string; Jobs: array of D.Job; Selection: int; Changed: function(D.Event): TMsg; Settings: D.Options);
 begin
   const Role: string := 'pipeline';
   const Token: string := C.Token(Role, Id);
@@ -56,7 +56,7 @@ begin
     Width.Value,
     Enabled
   );
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, Selection.ToString());
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, Selection.ToString());
   if Enabled and (Result.Index <> Selection or Result.Action >= 0) then
     Frame.Messages.Add(Changed(new D.Event(Result.Index, Result.Action)));
   end if;

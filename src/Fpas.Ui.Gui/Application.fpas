@@ -49,7 +49,7 @@ end record;
 //
 // ## Type parameters
 // - `TMsg`: The application's typed messages.
-public type Session<TMsg> = record implements Sys.IDisposable
+public type Session of TMsg = record implements Sys.IDisposable
   Process: function(): bool;
   Enqueue: function(TMsg): Core.Admission;
   Read: function(): Frame;
@@ -80,9 +80,9 @@ public type Session<TMsg> = record implements Sys.IDisposable
     Read: function(): Frame; Status: function(): bool; Software: function(): bool;
     Release: procedure(); Capture: procedure(string); Place: function(): Cui.CuiWindowPlacement;
     Inspect: function(): Windows.Info
-  ): Session<TMsg>;
+  ): Session of TMsg;
   begin
-    return new Session<TMsg>(
+    return new Session of TMsg(
       Process,
       Enqueue,
       Read,

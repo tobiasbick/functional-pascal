@@ -68,7 +68,7 @@ end function;
 // Returns preferences with one or all sources paused, preserving every other field.
 public function Pause(Current: M.Preferences; Id: string): M.Preferences;
 begin
-  const Sources: C.List<S.MusicSource> := new C.List<S.MusicSource>();
+  const Sources: C.List of S.MusicSource := new C.List of S.MusicSource();
   for Source: S.MusicSource in Current.MusicSources do
     Sources.Add(
       if Id = '' or Id = Source.Id then
@@ -96,7 +96,7 @@ begin
   end with;
   const Before: P.Snapshot? := Next.Progress;
   if Before <> null then
-    const Values: C.List<P.SourceProgress> := new C.List<P.SourceProgress>();
+    const Values: C.List of P.SourceProgress := new C.List of P.SourceProgress();
     for Item: P.SourceProgress in Before.Sources do
       Values.Add(
         if Id = '' or Id = Item.Id then
@@ -111,7 +111,7 @@ begin
       Progress := new P.Snapshot(
         Before.Sequence,
         Before.Generation,
-        I.ImmutableArray.CreateRange<P.SourceProgress>(Values)
+        I.ImmutableArray.CreateRange of P.SourceProgress(Values)
       );
     end with;
   end if;

@@ -51,11 +51,11 @@ end record;
 // - `Settings`: Native presentation and keyboard admission.
 // ## Returns
 // A graphical element.
-public function PatternMeter<TMsg>(Id: string; Parts: array of Part; Settings: Options? := null): E.Element<TMsg>;
+public function PatternMeter of TMsg(Id: string; Parts: array of Part; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 requires Parts.Length <= 32;
 begin
-  return E.Element<TMsg>.PatternMeter(Id, Parts, Settings ?? new Options());
+  return (E.Element of TMsg).PatternMeter(Id, Parts, Settings ?? new Options());
 end function;
 
 end unit;

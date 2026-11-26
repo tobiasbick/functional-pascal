@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Developer.TestExplorers as W;
 // - `Items`: Tests and suites in tree order.
 // ## Returns
 // The explorer with test and source-navigation requests as messages.
-public function View(Items: array of W.Item): E.Element<W.Event>;
+public function View(Items: array of W.Item): E.Element of W.Event;
 begin
-  return W.TestExplorer<W.Event>('test-results', Items,
+  return W.TestExplorer of W.Event('test-results', Items,
     function(Change: W.Event): W.Event => Change, new W.Options(Height := 500.0F));
 end function;
 

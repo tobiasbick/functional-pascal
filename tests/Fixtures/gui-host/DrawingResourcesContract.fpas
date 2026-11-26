@@ -158,12 +158,12 @@ end procedure;
 // - `Renderer`: Native renderer for the bounded session.
 // - `FontBytes`: Trusted TTF/OTF bytes, or null to exercise native rejection without a font dependency.
 public procedure Verify(Renderer: Cui.CuiRenderer; FontBytes: (array of byte)? := null);
-  function Update(Model: bool; Message: Msg): Mvu.Transition<bool, Msg>;
+  function Update(Model: bool; Message: Msg): Mvu.Transition of (bool, Msg);
   begin
     case Message of
       when Msg.Load:
-        const Child: Fonts.Request<bool> := new Fonts.Request<bool>(
-          Fonts.Operation<bool>.Load(
+        const Child: Fonts.Request of bool := new Fonts.Request of bool(
+          (Fonts.Operation of bool).Load(
             Bytes,
             function(Face: Resources.CuiFontFace?): bool begin
               Loaded := Face;
@@ -171,11 +171,11 @@ public procedure Verify(Renderer: Cui.CuiRenderer; FontBytes: (array of byte)? :
             end function
           )
         );
-        return new Mvu.Transition<bool, Msg>(
+        return new Mvu.Transition of (bool, Msg)(
           Model, [
-            Mvu.Command<Msg>.Host(
+            (Mvu.Command of Msg).Host(
               Mvu.HostRequest.Extension(
-                Child.Map<Msg>(
+                Child.Map of Msg(
                   function(Success: bool): Msg begin
                     Check(Success, 'Native font acceptance did not match the supplied data.');
                     return Msg.Completed;
@@ -187,19 +187,19 @@ public procedure Verify(Renderer: Cui.CuiRenderer; FontBytes: (array of byte)? :
         );
       when Msg.Completed:
         Done := true;
-        return new Mvu.Transition<bool, Msg>(
+        return new Mvu.Transition of (bool, Msg)(
           Model, [
-            Fonts.Apply<Msg>(Fonts.Operation<Msg>.Assign(G.Font.Body, Loaded)),
-            Localization.Set<Msg>(new Resources.CuiStrings(Today := 'Heute 日本'))
+            Fonts.Apply of Msg((Fonts.Operation of Msg).Assign(G.Font.Body, Loaded)),
+            Localization.Set of Msg(new Resources.CuiStrings(Today := 'Heute 日本'))
           ]
         );
       when Msg.Pointer(const Hovered: bool):
         PointerEvents := PointerEvents + 1;
-        return new Mvu.Transition<bool, Msg>(Model, []);
+        return new Mvu.Transition of (bool, Msg)(Model, []);
       when Msg.RequestCanvas:
-        return new Mvu.Transition<bool, Msg>(Model, [Mvu.Focus<Msg>('paint')]);
+        return new Mvu.Transition of (bool, Msg)(Model, [Mvu.Focus of Msg('paint')]);
       when Msg.Scale:
-        return new Mvu.Transition<bool, Msg>(not Model, []);
+        return new Mvu.Transition of (bool, Msg)(not Model, []);
     end case;
   end function;
   function ThemeFor(Model: bool; Appearance: Themes.Mode?): Themes.Theme;
@@ -251,12 +251,12 @@ public procedure Verify(Renderer: Cui.CuiRenderer; FontBytes: (array of byte)? :
     Surface.PushClip(0.0F, 0.0F, 40.0F, 40.0F);
     Surface.Line(0.0F, 0.0F, 50.0F, 50.0F, 2.0F, Color);
   end procedure;
-  function View(Model: bool; Size: L.Viewport; Theme: Themes.Theme): E.Element<Msg>;
+  function View(Model: bool; Size: L.Viewport; Theme: Themes.Theme): E.Element of Msg;
   begin
-    return E.Column<Msg>(
+    return E.Column of Msg(
       new L.Flow(Scope := new L.FocusScope('art', true)),
-      Composition.Map<bool, Msg>(
-        Canvas.Canvas<bool>(
+      Composition.Map of (bool, Msg)(
+        Canvas.Canvas of bool(
           'paint', [], function(_Event: Canvas.Event): bool => false,
           new Canvas.Options(Height := L.Extent.Fixed(L.Measure.Logical(130))), Paint := Paint,
           OnPointer := function(State: Canvas.Pointer): bool => State.Hovered,
@@ -292,7 +292,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; FontBytes: (array of byte)? :
       Window.InputText('Grüße 🎵');
     end if;
   end procedure;
-  procedure Steps(Value: Gui.Session<Msg>);
+  procedure Steps(Value: Gui.Session of Msg);
   begin
     for Index: int := 0 to 3 do
       Check(Value.Step(), 'The drawing session closed.');
@@ -328,7 +328,7 @@ begin
     Renderer,
     true
   );
-  using const Session: Gui.Session<Msg> := Host.StartThemed<bool, Msg>(
+  using const Session: Gui.Session of Msg := Host.StartThemed of (bool, Msg)(
     false, Update, View, Window, 32, Inject,
     Themes.Dark(), ThemeFor, true
   );
@@ -367,7 +367,7 @@ begin
   Check(LastScale = 1.5F, 'The shared theme did not reach native drawing.');
   Rejected := false;
   try
-    discard V.Prepare<Msg>(
+    discard V.Prepare of Msg(
       View(false, new L.Viewport(L.SizeClass.Regular, L.SizeClass.Regular), Themes.Light()),
       V.Target.Terminal
     );

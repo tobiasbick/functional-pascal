@@ -23,7 +23,7 @@ end function;
 // - `Glyph`: CUI icon glyph.
 // - `Size`: Logical icon size. Zero uses the default.
 // - `Color`: Explicit color, or null for the foreground.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Glyph: string; Size: float; Color: G.Color?);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Glyph: string; Size: float; Color: G.Color?);
 begin
   Frame.Window.DisplayIcon(Glyph, Size, OptionalColor(Color));
 end procedure;

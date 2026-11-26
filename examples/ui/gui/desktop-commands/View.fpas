@@ -15,13 +15,13 @@ uses DesktopCommands.State as S;
 uses System as Sys;
 uses System.Collections.Generic as C;
 
-const Accents: array of Themes.Accent := Sys.Enum.GetValues<Themes.Accent>();
+const Accents: array of Themes.Accent := Sys.Enum.GetValues of Themes.Accent();
 
 function AccentItems(): array of Selects.Item;
 begin
-  const Items: C.List<Selects.Item> := new C.List<Selects.Item>();
+  const Items: C.List of Selects.Item := new C.List of Selects.Item();
   for Accent: Themes.Accent in Accents do
-    Items.Add(new Selects.Item(Sys.Enum.GetName<Themes.Accent>(Accent) ?? ''));
+    Items.Add(new Selects.Item(Sys.Enum.GetName of Themes.Accent(Accent) ?? ''));
   end for;
 
   return Items.ToArray();
@@ -46,15 +46,15 @@ begin
   end if;
 end function;
 
-function ConfirmClose(Model: S.Model): E.Element<S.Msg>;
+function ConfirmClose(Model: S.Model): E.Element of S.Msg;
 begin
-  return E.Column<S.Msg>(
+  return E.Column of S.Msg(
     new L.Flow(Gap := L.Spacing.Normal),
-    E.Text<S.Msg>('Close this window?'),
-    E.Row<S.Msg>(
+    E.Text of S.Msg('Close this window?'),
+    E.Row of S.Msg(
       new L.Flow(Gap := L.Spacing.Normal, Wrap := true),
-      Buttons.Button<S.Msg>('stay', 'Keep open', S.Msg.Stay),
-      Buttons.Button<S.Msg>(
+      Buttons.Button of S.Msg('stay', 'Keep open', S.Msg.Stay),
+      Buttons.Button of S.Msg(
         'quit',
         'Close',
         S.Msg.Quit,
@@ -64,27 +64,27 @@ begin
   );
 end function;
 
-function BackgroundControls(Model: S.Model): E.Element<S.Msg>;
+function BackgroundControls(Model: S.Model): E.Element of S.Msg;
 begin
   const StartOptions: Buttons.Options := new Buttons.Options(
     ControlSize := Buttons.Size.Small, Enabled := not Model.WorkRunning
   );
-  return E.Column<S.Msg>(
+  return E.Column of S.Msg(
     new L.Flow(Gap := L.Spacing.Normal),
-    Progress.ProgressBar<S.Msg>(
+    Progress.ProgressBar of S.Msg(
       'background-progress', cast<float>(Model.WorkProgress) / cast<float>(S.WorkSteps),
       new Progress.Options(Label := 'Background progress', ShowValue := true)
     ),
-    E.Text<S.Msg>(Model.WorkStatus),
-    E.Row<S.Msg>(
+    E.Text of S.Msg(Model.WorkStatus),
+    E.Row of S.Msg(
       new L.Flow(Gap := L.Spacing.Normal, Wrap := true),
-      Buttons.Button<S.Msg>('start-work', 'Start', S.Msg.StartWork(false), StartOptions),
-      Buttons.Button<S.Msg>(
+      Buttons.Button of S.Msg('start-work', 'Start', S.Msg.StartWork(false), StartOptions),
+      Buttons.Button of S.Msg(
         'cancel-work', 'Cancel', S.Msg.CancelWork, new Buttons.Options(
           ControlSize := Buttons.Size.Small, Enabled := Model.WorkRunning
         )
       ),
-      Buttons.Button<S.Msg>('fail-work', 'Simulate error', S.Msg.StartWork(true), StartOptions)
+      Buttons.Button of S.Msg('fail-work', 'Simulate error', S.Msg.StartWork(true), StartOptions)
     )
   );
 end function;
@@ -96,47 +96,47 @@ end function;
 // - `Theme`: Resolved palette for the panes.
 // ## Returns
 // The native CUI view.
-public function Build(Model: S.Model; Viewport: L.Viewport; Theme: Themes.Theme): E.Element<S.Msg>;
+public function Build(Model: S.Model; Viewport: L.Viewport; Theme: Themes.Theme): E.Element of S.Msg;
 begin
-  return E.Column<S.Msg>(
+  return E.Column of S.Msg(
     new L.Flow(Padding := L.Spacing.Normal, Gap := L.Spacing.Normal),
-    E.Text<S.Msg>('Native desktop commands'),
-    E.Row<S.Msg>(
+    E.Text of S.Msg('Native desktop commands'),
+    E.Row of S.Msg(
       new L.Flow(Gap := L.Spacing.Normal, Wrap := true),
-      Switchers.ThemeSwitcher<S.Msg>(
+      Switchers.ThemeSwitcher of S.Msg(
         'appearance',
         Model.Settings.Appearance,
         S.Msg.SetAppearance,
         new Switchers.Options(WithSystem := true)
       ),
-      Selects.Select<S.Msg>(
-        'accent', AccentChoices, Sys.Array.IndexOf<Themes.Accent>(Accents, Model.Settings.Accent),
+      Selects.Select of S.Msg(
+        'accent', AccentChoices, Sys.Array.IndexOf of Themes.Accent(Accents, Model.Settings.Accent),
         function(Index: int): S.Msg => S.Msg.SetAccent(Accents[Index])
       ),
-      Buttons.Button<S.Msg>(
+      Buttons.Button of S.Msg(
         'save-settings',
         'Save settings',
         S.Msg.SaveSettings,
         new Buttons.Options(Enabled := not Model.Saving)
       )
     ),
-    E.Text<S.Msg>(Model.SaveStatus),
-    Split.SplitView<S.Msg>(
+    E.Text of S.Msg(Model.SaveStatus),
+    Split.SplitView of S.Msg(
       'desktop-split', Model.Settings.Ratio,
-      E.Column<S.Msg>(
+      E.Column of S.Msg(
         new L.Flow(
           Padding := L.Spacing.Normal,
           Gap := L.Spacing.Normal,
           Background := Theme.Colors.SurfaceMuted
         ),
-        Buttons.Button<S.Msg>('open', 'Open file', S.Msg.Open),
-        Buttons.Button<S.Msg>('save', 'Save destination', S.Msg.Save),
-        Buttons.Button<S.Msg>('folder', 'Choose folder', S.Msg.Folder),
-        Buttons.Button<S.Msg>('redraw', 'Request native repaint', S.Msg.Redraw)
+        Buttons.Button of S.Msg('open', 'Open file', S.Msg.Open),
+        Buttons.Button of S.Msg('save', 'Save destination', S.Msg.Save),
+        Buttons.Button of S.Msg('folder', 'Choose folder', S.Msg.Folder),
+        Buttons.Button of S.Msg('redraw', 'Request native repaint', S.Msg.Redraw)
       ),
-      E.Column<S.Msg>(
+      E.Column of S.Msg(
         new L.Flow(Padding := L.Spacing.Normal, Gap := L.Spacing.Normal),
-        E.Text<S.Msg>(Model.Selection),
+        E.Text of S.Msg(Model.Selection),
         if Model.Closing then
           ConfirmClose(Model)
         else

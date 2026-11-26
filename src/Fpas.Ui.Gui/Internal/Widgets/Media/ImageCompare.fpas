@@ -20,12 +20,12 @@ uses Fpas.Ui.Widgets.Media.MediaImages as Media;
 // - `Position`: Current divider position.
 // - `Changed`: Maps a native change to a message.
 // - `Settings`: Native widget options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Before: Media.Source; After: Media.Source; Position: float; Changed: function(float): TMsg; Settings: ImageComparisons.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Before: Media.Source; After: Media.Source; Position: float; Changed: function(float): TMsg; Settings: ImageComparisons.Options);
 begin
   const Role: string := 'image-compare';
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
-  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
+  const Focus: bool := C.WantsFocus of TMsg(Frame, Id, Token, Enabled);
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   var Next: float := Position;
   const Proposed: bool := Frame.Window.ImageCompare(
@@ -42,7 +42,7 @@ begin
     Enabled,
     Focus
   );
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, Position.ToString());
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, Position.ToString());
   if Enabled and Proposed then
     Frame.Messages.Add(Changed(Next));
   end if;

@@ -17,12 +17,12 @@ uses Fpas.Ui.Widgets.Collections.ReorderableLists as W;
 // - `Order`: Current sort from the model.
 // ## Returns
 // The widget for the application view.
-public function View(Order: array of int): E.Element<array of int>;
+public function View(Order: array of int): E.Element of array of int;
 begin
-  return W.ReorderableList<array of int>('task-order', [
-    E.Text<array of int>('Write the release notes'),
-    E.Text<array of int>('Update the screenshots'),
-    E.Text<array of int>('Tag the release')
+  return W.ReorderableList of array of int('task-order', [
+    E.Text of array of int('Write the release notes'),
+    E.Text of array of int('Update the screenshots'),
+    E.Text of array of int('Tag the release')
   ], Order, function(Proposed: array of int): array of int => Proposed);
 end function;
 

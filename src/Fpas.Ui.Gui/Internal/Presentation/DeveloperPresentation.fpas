@@ -55,7 +55,7 @@ uses System as Sys;
 // ## Parameters
 // - `Frame`: Current presentation frame.
 // - `Node`: Developer widget.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Node: E.Element<TMsg>);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Node: E.Element of TMsg);
 begin
   case Node of
     when E.Element.Problems(
@@ -64,7 +64,7 @@ begin
       const Changed: function(ProblemsPanels.Event): TMsg,
       const Settings: ProblemsPanels.Options
     ):
-      ProblemsWidget.Draw<TMsg>(Frame, Id, Diagnostics, Changed, Settings);
+      ProblemsWidget.Draw of TMsg(Frame, Id, Diagnostics, Changed, Settings);
     when E.Element.Pipeline(
       const Id: string,
       const Stages: array of string,
@@ -73,7 +73,7 @@ begin
       const Changed: function(Pipelines.Event): TMsg,
       const Settings: Pipelines.Options
     ):
-      PipelineWidget.Draw<TMsg>(Frame, Id, Stages, Jobs, Selection, Changed, Settings);
+      PipelineWidget.Draw of TMsg(Frame, Id, Stages, Jobs, Selection, Changed, Settings);
     when E.Element.Keymap(
       const Id: string,
       const Bindings: array of Keymaps.Binding,
@@ -82,7 +82,7 @@ begin
       const Changed: function(Keymaps.Event): TMsg,
       const Settings: Keymaps.Options
     ):
-      KeymapWidget.Draw<TMsg>(Frame, Id, Bindings, Categories, Modifiers, Changed, Settings);
+      KeymapWidget.Draw of TMsg(Frame, Id, Bindings, Categories, Modifiers, Changed, Settings);
     when E.Element.CommitGraph(
       const Id: string,
       const Commits: array of CommitGraphs.Commit,
@@ -90,7 +90,7 @@ begin
       const Changed: function(CommitGraphs.Event): TMsg,
       const Settings: CommitGraphs.Options
     ):
-      CommitGraphWidget.Draw<TMsg>(Frame, Id, Commits, Selection, Changed, Settings);
+      CommitGraphWidget.Draw of TMsg(Frame, Id, Commits, Selection, Changed, Settings);
     when E.Element.DependencyGraph(
       const Id: string,
       const Vertices: array of DependencyGraphs.Vertex,
@@ -99,7 +99,7 @@ begin
       const Changed: function(DependencyGraphs.Event): TMsg,
       const Settings: DependencyGraphs.Options
     ):
-      DependencyGraphWidget.Draw<TMsg>(Frame, Id, Vertices, Edges, Selection, Changed, Settings);
+      DependencyGraphWidget.Draw of TMsg(Frame, Id, Vertices, Edges, Selection, Changed, Settings);
     when E.Element.NetworkWaterfall(
       const Id: string,
       const Requests: array of NetworkWaterfalls.Request,
@@ -107,7 +107,7 @@ begin
       const Changed: function(NetworkWaterfalls.Event): TMsg,
       const Settings: NetworkWaterfalls.Options
     ):
-      NetworkWaterfallWidget.Draw<TMsg>(Frame, Id, Requests, Selection, Changed, Settings);
+      NetworkWaterfallWidget.Draw of TMsg(Frame, Id, Requests, Selection, Changed, Settings);
     when E.Element.TraceViewer(
       const Id: string,
       const Tracks: array of TraceViewers.Track,
@@ -118,7 +118,7 @@ begin
       const Changed: function(TraceViewers.Event): TMsg,
       const Settings: TraceViewers.Options
     ):
-      TraceViewerWidget.Draw<TMsg>(
+      TraceViewerWidget.Draw of TMsg(
         Frame,
         Id,
         Tracks,
@@ -135,14 +135,14 @@ begin
       const Changed: function(TestExplorers.Event): TMsg,
       const Settings: TestExplorers.Options
     ):
-      TestExplorerWidget.Draw<TMsg>(Frame, Id, Entries, Changed, Settings);
+      TestExplorerWidget.Draw of TMsg(Frame, Id, Entries, Changed, Settings);
     when E.Element.StackTrace(
       const Id: string,
       const Frames: array of StackTraces.Frame,
       const Changed: function(StackTraces.Event): TMsg,
       const Settings: StackTraces.Options
     ):
-      StackTraceWidget.Draw<TMsg>(Frame, Id, Frames, Changed, Settings);
+      StackTraceWidget.Draw of TMsg(Frame, Id, Frames, Changed, Settings);
     when E.Element.ResponseStatus(
       const Id: string,
       const Status: int,
@@ -150,14 +150,14 @@ begin
       const Bytes: double,
       const Settings: ResponseStatuses.Options
     ):
-      ResponseStatusWidget.Draw<TMsg>(Frame, Id, Status, Seconds, Bytes, Settings);
+      ResponseStatusWidget.Draw of TMsg(Frame, Id, Status, Seconds, Bytes, Settings);
     when E.Element.Uptime(
       const Id: string,
       const Services: array of Uptimes.Service,
       const LastDay: Sys.DateOnly,
       const Settings: Uptimes.Options
     ):
-      UptimeWidget.Draw<TMsg>(Frame, Id, Services, LastDay, Settings);
+      UptimeWidget.Draw of TMsg(Frame, Id, Services, LastDay, Settings);
     when E.Element.TimeHistogram(
       const Id: string,
       const Start: double,
@@ -168,7 +168,7 @@ begin
       const Changed: function(TimeHistograms.Event): TMsg,
       const Settings: TimeHistograms.Options
     ):
-      TimeHistogramWidget.Draw<TMsg>(
+      TimeHistogramWidget.Draw of TMsg(
         Frame,
         Id,
         Start,
@@ -185,7 +185,7 @@ begin
       const Changed: function(Coverages.Event): TMsg,
       const Settings: Coverages.Options
     ):
-      CoverageWidget.Draw<TMsg>(Frame, Id, ReportFiles, Changed, Settings);
+      CoverageWidget.Draw of TMsg(Frame, Id, ReportFiles, Changed, Settings);
     when E.Element.Blame(
       const Id: string,
       const Lines: array of string,
@@ -194,7 +194,7 @@ begin
       const Changed: function(Blames.Event): TMsg,
       const Settings: Blames.Options
     ):
-      BlameWidget.Draw<TMsg>(Frame, Id, Lines, LineCommits, Revisions, Changed, Settings);
+      BlameWidget.Draw of TMsg(Frame, Id, Lines, LineCommits, Revisions, Changed, Settings);
     when E.Element.ApiExplorer(
       const Id: string,
       const Endpoints: array of ApiExplorers.Endpoint,
@@ -202,14 +202,14 @@ begin
       const Changed: function(ApiExplorers.Event): TMsg,
       const Settings: ApiExplorers.Options
     ):
-      ApiExplorerWidget.Draw<TMsg>(Frame, Id, Endpoints, Selection, Changed, Settings);
+      ApiExplorerWidget.Draw of TMsg(Frame, Id, Endpoints, Selection, Changed, Settings);
     when E.Element.KeyValueEditor(
       const Id: string,
       const Pairs: array of KeyValueEditors.Pair,
       const Changed: function(KeyValueEditors.Event): TMsg,
       const Settings: KeyValueEditors.Options
     ):
-      KeyValueEditorWidget.Draw<TMsg>(Frame, Id, Pairs, Changed, Settings);
+      KeyValueEditorWidget.Draw of TMsg(Frame, Id, Pairs, Changed, Settings);
     when E.Element.QueryBuilder(
       const Id: string,
       const Fields: array of QueryBuilders.Field,
@@ -217,14 +217,14 @@ begin
       const Changed: function(QueryBuilders.Event): TMsg,
       const Settings: QueryBuilders.Options
     ):
-      QueryBuilderWidget.Draw<TMsg>(Frame, Id, Fields, RulesData, Changed, Settings);
+      QueryBuilderWidget.Draw of TMsg(Frame, Id, Fields, RulesData, Changed, Settings);
     when E.Element.SchedulePicker(
       const Id: string,
       const Expression: string,
       const Changed: function(SchedulePickers.Event): TMsg,
       const Settings: SchedulePickers.Options
     ):
-      SchedulePickerWidget.Draw<TMsg>(Frame, Id, Expression, Changed, Settings);
+      SchedulePickerWidget.Draw of TMsg(Frame, Id, Expression, Changed, Settings);
     when E.Element.RegexTester(
       const Id: string,
       const Pattern: string,
@@ -233,7 +233,7 @@ begin
       const Changed: function(RegexTesters.Event): TMsg,
       const Settings: RegexTesters.Options
     ):
-      RegexTesterWidget.Draw<TMsg>(Frame, Id, Pattern, Sample, Modifiers, Changed, Settings);
+      RegexTesterWidget.Draw of TMsg(Frame, Id, Pattern, Sample, Modifiers, Changed, Settings);
     when E.Element.RequestBar(
       const Id: string,
       const Method: int,
@@ -241,7 +241,7 @@ begin
       const Changed: function(RequestBars.Event): TMsg,
       const Settings: RequestBars.Options
     ):
-      RequestBarWidget.Draw<TMsg>(Frame, Id, Method, Url, Changed, Settings);
+      RequestBarWidget.Draw of TMsg(Frame, Id, Method, Url, Changed, Settings);
     when E.Element.FeatureFlags(
       const Id: string,
       const Entries: array of FeatureFlagEditors.Flag,
@@ -249,7 +249,7 @@ begin
       const Changed: function(FeatureFlagEditors.Event): TMsg,
       const Settings: FeatureFlagEditors.Options
     ):
-      FeatureFlagsWidget.Draw<TMsg>(Frame, Id, Entries, Environments, Changed, Settings);
+      FeatureFlagsWidget.Draw of TMsg(Frame, Id, Entries, Environments, Changed, Settings);
     else
   end case;
 end procedure;

@@ -7,7 +7,7 @@ uses Fpas.Ui.Mvu.Application as Mvu;
 // Requests a native redraw or a delayed native wakeup after the current view.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Request<TMsg> = record implements Mvu.HostExtension<TMsg>
+public type Request of TMsg = record implements Mvu.HostExtension of TMsg
   // Zero requests the next frame; positive values are seconds after presentation.
   public DelaySeconds: float;
 
@@ -18,9 +18,9 @@ public type Request<TMsg> = record implements Mvu.HostExtension<TMsg>
   // - `Messages`: Parent message mapper.
   // ## Returns
   // The same native frame request in the parent message space.
-  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  public function Map of TNext(Messages: function(TMsg): TNext): Mvu.HostExtension of TNext;
   begin
-    return new Request<TNext>(self.DelaySeconds);
+    return new Request of TNext(self.DelaySeconds);
   end function;
 end record;
 
@@ -32,10 +32,10 @@ end record;
 // - `DelaySeconds`: Finite nonnegative delay; zero requests the next frame.
 // ## Returns
 // An owner-thread graphical command; closing discards pending requests.
-public function Redraw<TMsg>(DelaySeconds: float := 0.0F): Mvu.Command<TMsg>;
+public function Redraw of TMsg(DelaySeconds: float := 0.0F): Mvu.Command of TMsg;
 requires DelaySeconds >= 0.0F and DelaySeconds <= float.MaxValue;
 begin
-  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new Request<TMsg>(DelaySeconds)));
+  return (Mvu.Command of TMsg).Host(Mvu.HostRequest.Extension(new Request of TMsg(DelaySeconds)));
 end function;
 
 end unit;

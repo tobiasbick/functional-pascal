@@ -21,16 +21,13 @@ CLR name, and the `@` is omitted from the metadata name.
 Primitive aliases are predefined type names, not keywords. They cannot be
 redeclared in a type namespace. See [types](../types/README.md).
 
-Generic closing `>` delimiters do not require surrounding whitespace:
-`type Box<T>=record Value:T;end record;` is valid. Parsing identifies the generic
-closing delimiter and the declaration's `=` separately. Compound comparison
-operators retain their spelling: `X>=1` is valid; `X > = 1` is invalid. The
-[formatter](../../tools/fmt-style.md) produces `Box<T> = record`, `Value: T;`
-and `X >= 1`.
+Generic types use `of`, as in `type Box of T = record Value: T; end record;`.
+Compound comparison operators require adjacent characters. `X>=1` is valid.
+`X > = 1` is invalid. The [formatter](../../tools/fmt-style.md) produces `X >= 1`.
 
 Spaces, tabs, Unicode whitespace, line endings and line comments can separate
 language elements. For example, `Value : T ;`, `Call ( Value )` and
-`Box< Box<int> >` are valid. Separate adjacent words such as `end if`; `endif`
+`Box of Box of int` are valid. Separate adjacent words such as `end if`; `endif`
 is one identifier. `notValue` is also one identifier, distinct from `not Value`.
 Comments cannot split a compound operator, numeric literal or escaped name.
 A separator is necessary when adjacent elements would otherwise merge. Keep a

@@ -57,12 +57,12 @@ public type TrackNavigationTests = record
         Key := 0;
       end if;
     end procedure;
-    procedure Frame(Session: Gui.Session<App.Msg>);
+    procedure Frame(Session: Gui.Session of App.Msg);
     begin
       discard Window.TryWake();
       X.Assert.True(Session.Step());
     end procedure;
-    function FirstRow(Session: Gui.Session<App.Msg>): int;
+    function FirstRow(Session: Gui.Session of App.Msg): int;
     begin
       for Item: Gui.Control in Session.Snapshot().Controls do
         if Item.Role = 'grid-row' then
@@ -72,7 +72,7 @@ public type TrackNavigationTests = record
 
       raise new Sys.InvalidOperationException('No track rows were presented.');
     end function;
-    function Control(Session: Gui.Session<App.Msg>; Id: string): Gui.Control;
+    function Control(Session: Gui.Session of App.Msg; Id: string): Gui.Control;
     begin
       for Item: Gui.Control in Session.Snapshot().Controls do
         if Item.Id = Id then
@@ -82,7 +82,7 @@ public type TrackNavigationTests = record
 
       raise new Sys.InvalidOperationException('Missing control: ' + Id);
     end function;
-    function VisibleSong(Session: Gui.Session<App.Msg>; Grid: Cui.CuiRectangle): Gui.Control;
+    function VisibleSong(Session: Gui.Session of App.Msg; Grid: Cui.CuiRectangle): Gui.Control;
     begin
       for Item: Gui.Control in Session.Snapshot().Controls do
         if Item.Role = 'grid-row' and Item.Bounds.Y >= Grid.Y + Grid.Height / 3.0F
@@ -96,7 +96,7 @@ public type TrackNavigationTests = record
         'Expected two visible songs below the sticky header.'
       );
     end function;
-    procedure CheckAccent(Session: Gui.Session<App.Msg>; ActiveId: string; OtherId: string);
+    procedure CheckAccent(Session: Gui.Session of App.Msg; ActiveId: string; OtherId: string);
       function Fill(Id: string): int;
       begin
         const Bounds: Cui.CuiRectangle := Control(Session, Id).Bounds;
@@ -117,10 +117,10 @@ public type TrackNavigationTests = record
         T.CancellationToken.None
       );
       const Accent: int := Fill('player-toggle');
-      X.Assert.Equal<int>(Accent, Fill(ActiveId));
-      X.Assert.NotEqual<int>(Accent, Fill(OtherId));
+      X.Assert.Equal of int(Accent, Fill(ActiveId));
+      X.Assert.NotEqual of int(Accent, Fill(OtherId));
     end procedure;
-    procedure Click(Session: Gui.Session<App.Msg>);
+    procedure Click(Session: Gui.Session of App.Msg);
     begin
       Button := 1;
       Frame(Session);
@@ -150,7 +150,7 @@ public type TrackNavigationTests = record
     else
       96
     end if;
-    const Items: I.ImmutableArray<Tracks.Entry>.Builder := I.ImmutableArray.CreateBuilder<Tracks.Entry>(
+    const Items: (I.ImmutableArray of Tracks.Entry).Builder := I.ImmutableArray.CreateBuilder of Tracks.Entry(
       Count
     );
     for Id: int := 0 to Count - 1 do
@@ -166,7 +166,7 @@ public type TrackNavigationTests = record
         )
       );
     end for;
-    const Songs: I.ImmutableArray<Tracks.Entry> := Items.MoveToImmutable();
+    const Songs: I.ImmutableArray of Tracks.Entry := Items.MoveToImmutable();
     const Initial: M.State := new M.State(
       new Albums.Album(
         if Library then
@@ -210,10 +210,10 @@ public type TrackNavigationTests = record
       true
     );
     Window.SetReducedMotion(true);
-    using const Session: Gui.Session<App.Msg> := Host.StartThemed<App.State, App.Msg>(
+    using const Session: Gui.Session of App.Msg := Host.StartThemed of (App.State, App.Msg)(
       Current,
-      function(State: App.State; Message: App.Msg): Mvu.Transition<App.State, App.Msg> begin
-        const Next: Mvu.Transition<App.State, App.Msg> := Controller.Apply(
+      function(State: App.State; Message: App.Msg): Mvu.Transition of (App.State, App.Msg) begin
+        const Next: Mvu.Transition of (App.State, App.Msg) := Controller.Apply(
           State,
           Message,
           procedure(_Value: Settings.Preferences) begin end procedure,
@@ -233,7 +233,7 @@ public type TrackNavigationTests = record
     );
     Frame(Session);
     Frame(Session);
-    X.Assert.Equal<int>(1, FirstRow(Session));
+    X.Assert.Equal of int(1, FirstRow(Session));
     const GridId: string := if Library then
       'music-tracks'
     else
@@ -257,10 +257,10 @@ public type TrackNavigationTests = record
     Frame(Session);
     Click(Session);
     X.Assert.False(Current.Player.Playing);
-    X.Assert.Equal<int>(File - 1, Page().Cursor);
+    X.Assert.Equal of int(File - 1, Page().Cursor);
     Click(Session);
     X.Assert.True(Current.Player.Playing);
-    X.Assert.Equal<long>(cast<long>(File), Current.Player.Queue[Current.Player.Index].FileId);
+    X.Assert.Equal of long(cast<long>(File), Current.Player.Queue[Current.Player.Index].FileId);
     const ButtonId: string := 'track-play-' + File.ToString();
     X.Assert.StartsWith('Pause ', Control(Session, ButtonId).Text);
     const OtherVersion: int := if File mod 2 = 0 then
@@ -270,9 +270,9 @@ public type TrackNavigationTests = record
     end if;
     const OtherButton: string := 'track-play-' + OtherVersion.ToString();
     const Title: string := (File div 2).ToString('D5');
-    X.Assert.Equal<string>('Play ' + Title, Control(Session, OtherButton).Text);
+    X.Assert.Equal of string('Play ' + Title, Control(Session, OtherButton).Text);
     CheckAccent(Session, ButtonId, OtherButton);
-    X.Assert.Equal<int>(Scrolled, FirstRow(Session));
+    X.Assert.Equal of int(Scrolled, FirstRow(Session));
 
     // Select a different row, then pause and resume the playing file at its own button.
     const Other: Cui.CuiRectangle := Control(Session, (File + 1).ToString()).Bounds;
@@ -281,7 +281,7 @@ public type TrackNavigationTests = record
     Click(Session);
     const Cursor: int := Page().Cursor;
     const Anchor: int := Page().Anchor;
-    X.Assert.Equal<int>(File, Cursor);
+    X.Assert.Equal of int(File, Cursor);
     const Toggle: Cui.CuiRectangle := Control(Session, ButtonId).Bounds;
     PointerX := Toggle.X + Toggle.Width / 2.0F;
     PointerY := Toggle.Y + Toggle.Height / 2.0F;
@@ -296,9 +296,9 @@ public type TrackNavigationTests = record
     Frame(Session);
     Click(Session);
     X.Assert.True(Current.Player.Playing);
-    X.Assert.Equal<int>(Cursor, Page().Cursor);
-    X.Assert.Equal<int>(Anchor, Page().Anchor);
-    X.Assert.Equal<int>(Scrolled, FirstRow(Session));
+    X.Assert.Equal of int(Cursor, Page().Cursor);
+    X.Assert.Equal of int(Anchor, Page().Anchor);
+    X.Assert.Equal of int(Scrolled, FirstRow(Session));
 
     PointerX := RowX;
     Frame(Session);
@@ -310,8 +310,8 @@ public type TrackNavigationTests = record
     Frame(Session);
     X.Assert.StartsWith('Play ', Control(Session, ButtonId).Text);
     X.Assert.StartsWith('Resume ', Control(Session, 'track-play-' + (File + 1).ToString()).Text);
-    X.Assert.Equal<int>(File - 1, Page().Cursor);
-    X.Assert.Equal<int>(Scrolled, FirstRow(Session));
+    X.Assert.Equal of int(File - 1, Page().Cursor);
+    X.Assert.Equal of int(Scrolled, FirstRow(Session));
 
     Wheel := -10.0F;
     Frame(Session);
@@ -333,7 +333,7 @@ public type TrackNavigationTests = record
     Key := 11;
     Frame(Session);
     Frame(Session);
-    X.Assert.Equal<int>(1, FirstRow(Session));
+    X.Assert.Equal of int(1, FirstRow(Session));
     for Press: int := 1 to 24 do
       Key := 10;
       Frame(Session);
@@ -342,9 +342,9 @@ public type TrackNavigationTests = record
 
     X.Assert.True(FirstRow(Session) > 1, 'Down must advance past the first viewport.');
     const BeforeSort: M.State := Page();
-    X.Assert.InRange<int>(BeforeSort.Cursor, 0, BeforeSort.Shown.Length - 1);
+    X.Assert.InRange of int(BeforeSort.Cursor, 0, BeforeSort.Shown.Length - 1);
     const FocusedFile: long := BeforeSort.Shown[BeforeSort.Cursor].FileId;
-    X.Assert.Equal<long>(25L, FocusedFile);
+    X.Assert.Equal of long(25L, FocusedFile);
     const TitleHeader: Cui.CuiRectangle := Control(Session, GridId + '/header/0').Bounds;
     PointerX := TitleHeader.X + TitleHeader.Width / 2.0F;
     PointerY := TitleHeader.Y + TitleHeader.Height / 2.0F;
@@ -352,12 +352,12 @@ public type TrackNavigationTests = record
     for Descending: bool in [false, true, false] do
       Click(Session);
       const Sorted: M.State := Page();
-      X.Assert.Equal<int>(0, Sorted.Order.Column);
-      X.Assert.Equal<bool>(Descending, Sorted.Order.Descending);
-      X.Assert.InRange<int>(Sorted.Cursor, 0, Sorted.Shown.Length - 1);
-      X.Assert.Equal<long>(FocusedFile, Sorted.Shown[Sorted.Cursor].FileId);
+      X.Assert.Equal of int(0, Sorted.Order.Column);
+      X.Assert.Equal of bool(Descending, Sorted.Order.Descending);
+      X.Assert.InRange of int(Sorted.Cursor, 0, Sorted.Shown.Length - 1);
+      X.Assert.Equal of long(FocusedFile, Sorted.Shown[Sorted.Cursor].FileId);
       if Descending then
-        X.Assert.NotEqual<int>(BeforeSort.Cursor, Sorted.Cursor);
+        X.Assert.NotEqual of int(BeforeSort.Cursor, Sorted.Cursor);
       end if;
 
       const FocusedRow: Cui.CuiRectangle := Control(Session, FocusedFile.ToString()).Bounds;
@@ -372,7 +372,7 @@ public type TrackNavigationTests = record
     discard Session.Post(Song(M.Msg.Search('00000')));
     Frame(Session);
     Frame(Session);
-    X.Assert.Equal<int>(1, FirstRow(Session));
+    X.Assert.Equal of int(1, FirstRow(Session));
   end function;
 end record;
 

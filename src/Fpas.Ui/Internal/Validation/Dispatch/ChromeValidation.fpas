@@ -41,7 +41,7 @@ procedure StatusLabel(Value: S.Label; At: string);
 begin
   Caption(Value.Text, At);
   R.CheckText(Value.Icon, At);
-  if not Sys.Enum.IsDefined<Style.Tone>(Value.Tone) then
+  if not Sys.Enum.IsDefined of Style.Tone(Value.Tone) then
     R.Reject(At, 'Unknown status icon tone.');
   end if;
 end procedure;
@@ -62,7 +62,7 @@ end procedure;
 // - `Profile`: Current target capabilities.
 // - `Identify`: Registers unique element or part identities.
 // - `Visit`: Schedules validation of a child.
-public procedure Check<TMsg>(Node: E.Element<TMsg>; Path: string; Profile: R.Profile; Identify: function(string, string): string; Visit: procedure(E.Element<TMsg>?, string));
+public procedure Check of TMsg(Node: E.Element of TMsg; Path: string; Profile: R.Profile; Identify: function(string, string): string; Visit: procedure((E.Element of TMsg)?, string));
 begin
   case Node of
     when E.Element.StatusBar(_, _, _):
@@ -71,13 +71,13 @@ begin
   end case;
 
   case Node of
-    when E.Element.MenuBar(const Id: string, const Items: array of M.Menu<TMsg>, _):
+    when E.Element.MenuBar(const Id: string, const Items: array of M.Menu of TMsg, _):
       const At: string := Identify(Id, Path + '/menu-bar');
       if Items.Length > 16 then
         R.Reject(At, 'A CUI menu bar holds at most 16 titles.');
       end if;
 
-      for Item: M.Menu<TMsg> in Items do
+      for Item: M.Menu of TMsg in Items do
         Key(Item.Key, At);
         Caption(Item.Label, At);
         R.CheckText(Item.Mnemonic, At);
@@ -88,7 +88,7 @@ begin
         end if;
 
         Chart.Distance(Item.Width, At);
-        Menu.Check<TMsg>(
+        Menu.Check of TMsg(
           Entries.ItemId(Id, Item.Key),
           Item.Label,
           Item.Entries,
@@ -116,9 +116,9 @@ begin
         R.CheckText(Tab.Icon, At);
         R.CheckText(Tab.Tooltip, At);
       end for;
-    when E.Element.StatusBar(const Id: string, const Items: array of S.Item<TMsg>, _):
+    when E.Element.StatusBar(const Id: string, const Items: array of S.Item of TMsg, _):
       const At: string := Identify(Id, Path + '/status-bar');
-      for Item: S.Item<TMsg> in Items do
+      for Item: S.Item of TMsg in Items do
         case Item of
           when S.Item.Text(const Value: S.Label):
             StatusLabel(Value, At);
@@ -141,8 +141,8 @@ begin
         end case;
       end for;
     when E.Element.SplitView(
-      const Id: string, const Ratio: float, const First: E.Element<TMsg>,
-      const Second: E.Element<TMsg>, _, const Settings: Split.Options
+      const Id: string, const Ratio: float, const First: E.Element of TMsg,
+      const Second: E.Element of TMsg, _, const Settings: Split.Options
     ):
       const At: string := Identify(Id, Path + '/split-view');
       Fraction(Ratio, At);
@@ -154,7 +154,7 @@ begin
       Visit(Second, At + '/second');
     when E.Element.Dockspace(
       const Id: string,
-      const Panels: array of Dock.Panel<TMsg>,
+      const Panels: array of Dock.Panel of TMsg,
       const Settings: Dock.Options,
       _
     ):
@@ -174,7 +174,7 @@ begin
         R.Reject(At, 'A CUI dockspace holds at most 48 panels.');
       end if;
 
-      for Panel: Dock.Panel<TMsg> in Panels do
+      for Panel: Dock.Panel of TMsg in Panels do
         Key(Panel.Key, At);
         Caption(Panel.Key, At);
         Caption(Panel.Title, At);

@@ -18,24 +18,24 @@ uses Gallery.Shared.Strings as Strings;
 // - `Preview`: Inert message for the disabled example.
 // ## Returns
 // Email notifications, Marketing and Disabled option.
-public function Rows<TMsg>(Newsletter: bool; Marketing: bool; SetNewsletter: function(bool): TMsg; SetMarketing: function(bool): TMsg; Preview: TMsg): array of E.Element<TMsg>;
+public function Rows of TMsg(Newsletter: bool; Marketing: bool; SetNewsletter: function(bool): TMsg; SetMarketing: function(bool): TMsg; Preview: TMsg): array of E.Element of TMsg;
 begin
   return [
-    C.Checkbox<TMsg>(
+    C.Checkbox of TMsg(
       'newsletter',
       Strings.Get('Text.EmailNotifications'),
       Newsletter,
       SetNewsletter,
       Description := Strings.Get('Text.EmailNotificationsHint')
     ),
-    C.Checkbox<TMsg>(
+    C.Checkbox of TMsg(
       'marketing',
       Strings.Get('Text.Marketing'),
       Marketing,
       SetMarketing,
       Description := Strings.Get('Text.MarketingHint')
     ),
-    C.Checkbox<TMsg>(
+    C.Checkbox of TMsg(
       'disabled-option',
       Strings.Get('Text.DisabledOption'),
       false,
@@ -53,9 +53,9 @@ end function;
 // - `Change`: Maps changes to this workspace preference.
 // ## Returns
 // The workspace summary checkbox.
-public function WeeklySummary<TMsg>(Checked: bool; Change: function(bool): TMsg): E.Element<TMsg>;
+public function WeeklySummary of TMsg(Checked: bool; Change: function(bool): TMsg): E.Element of TMsg;
 begin
-  return C.Checkbox<TMsg>(
+  return C.Checkbox of TMsg(
     'workspace-summary',
     Strings.Get('Text.SendWeeklySummary'),
     Checked,

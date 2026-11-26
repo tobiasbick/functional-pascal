@@ -14,7 +14,7 @@ uses System.Text as Text;
 // Model bindings for a multiline field.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Field<TMsg> = record
+public type Field of TMsg = record
   // Stable editor identity.
   public Id: string;
   // Current model text.
@@ -24,7 +24,7 @@ public type Field<TMsg> = record
   // Shared appearance and input options.
   public Settings: A.Options;
   // Optional Ctrl+Enter action.
-  public Submit: Sys.Func<string, TMsg>?;
+  public Submit: Sys.Func of (string, TMsg)?;
   // Preferred height in terminal rows.
   public Rows: int;
 end record;
@@ -92,9 +92,9 @@ end function;
 // Input geometry captured from the same lines as the renderer.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type View<TMsg> = record
+public type View of TMsg = record
   // Current application binding.
-  public Field: Field<TMsg>;
+  public Field: Field of TMsg;
   // Wrapped text rows.
   public Rows: array of Lines.Line;
   // Transient state for this presentation.
@@ -107,9 +107,9 @@ public type View<TMsg> = record
   public Height: int;
 end record;
 
-procedure Replace<TMsg>(View: View<TMsg>; Start: int; Count: int; Added: string; Apply: procedure(TMsg));
+procedure Replace of TMsg(View: View of TMsg; Start: int; Count: int; Added: string; Apply: procedure(TMsg));
 begin
-  const Field: Field<TMsg> := View.Field;
+  const Field: Field of TMsg := View.Field;
   const Position: Cursor := View.Position.Read(Field.Value);
   const Value: string := Field.Value.Remove(Start, Count).Insert(Start, Added);
   const Next: Cursor := new Cursor(
@@ -132,9 +132,9 @@ end procedure;
 // - `View`: Presented editor.
 // - `Input`: Typed or pasted text.
 // - `Apply`: Dispatches a model edit.
-public procedure Insert<TMsg>(View: View<TMsg>; Input: string; Apply: procedure(TMsg));
+public procedure Insert of TMsg(View: View of TMsg; Input: string; Apply: procedure(TMsg));
 begin
-  const Field: Field<TMsg> := View.Field;
+  const Field: Field of TMsg := View.Field;
   if Field.Settings.ReadOnly then
     return;
   end if;
@@ -144,11 +144,11 @@ begin
   const Available: int := Field.Settings.MaxUtf8Bytes - Text.Encoding.UTF8.GetByteCount(Remaining);
   const Added: string := TextEdit.Insertable(Input, Available, true);
   if Added <> '' then
-    Replace<TMsg>(View, Selected.Start, Selected.Stop - Selected.Start, Added, Apply);
+    Replace of TMsg(View, Selected.Start, Selected.Stop - Selected.Start, Added, Apply);
   end if;
 end procedure;
 
-procedure Place<TMsg>(View: View<TMsg>; Index: int; Offset: int; Goal: int; Extend: bool := false);
+procedure Place of TMsg(View: View of TMsg; Index: int; Offset: int; Goal: int; Extend: bool := false);
 begin
   const BeforeWrap: bool := Index + 1 < View.Rows.Length and View.Rows[Index + 1].Start = Offset;
   const Current: Cursor := View.Position.Read(View.Field.Value);
@@ -174,9 +174,9 @@ end procedure;
 // - `Apply`: Dispatches an edit or submission.
 // ## Returns
 // Whether the key was handled.
-public function Key<TMsg>(View: View<TMsg>; Pressed: K.Key; Modifiers: K.KeyModifiers; Apply: procedure(TMsg)): bool;
+public function Key of TMsg(View: View of TMsg; Pressed: K.Key; Modifiers: K.KeyModifiers; Apply: procedure(TMsg)): bool;
 begin
-  const Field: Field<TMsg> := View.Field;
+  const Field: Field of TMsg := View.Field;
   const Value: string := Field.Value;
   const Position: Cursor := View.Position.Read(Value);
   const At: int := Position.Offset;
@@ -188,7 +188,7 @@ begin
         View.Position.Move(new Cursor(Value, Value.Length, Position.Top, Anchor := 0));
       when K.Key.Enter:
         case Field.Submit of
-          when is Sys.Func<string, TMsg> as Submit:
+          when is Sys.Func of (string, TMsg) as Submit:
             Apply(Submit.Invoke(Value));
           else
         end case;
@@ -239,7 +239,7 @@ begin
         )
       );
     when K.Key.Home, K.Key.End:
-      Place<TMsg>(
+      Place of TMsg(
         View, Index, if Pressed = K.Key.Home then
           Row.Start
         else
@@ -259,7 +259,7 @@ begin
       else
         G.Measure(Value.Substring(Row.Start, At - Row.Start))
       end if;
-      Place<TMsg>(View, Target, Lines.AtColumn(Value, View.Rows[Target], Goal), Goal, Extend);
+      Place of TMsg(View, Target, Lines.AtColumn(Value, View.Rows[Target], Goal), Goal, Extend);
     when K.Key.Backspace, K.Key.Delete:
       if Extend then
         return false;
@@ -280,14 +280,14 @@ begin
         else
           At
         end if;
-        Replace<TMsg>(View, Start, Stop - Start, '', Apply);
+        Replace of TMsg(View, Start, Stop - Start, '', Apply);
       end if;
     when K.Key.Enter:
       if Extend then
         return false;
       end if;
 
-      Insert<TMsg>(View, cast<char>(10).ToString(), Apply);
+      Insert of TMsg(View, cast<char>(10).ToString(), Apply);
     else
       return false;
   end case;
@@ -302,14 +302,14 @@ end function;
 // - `View`: Presented editor.
 // - `Column`: Pointer column in terminal cells.
 // - `Row`: Pointer row in terminal cells.
-public procedure Click<TMsg>(View: View<TMsg>; Column: int; Row: int);
+public procedure Click of TMsg(View: View of TMsg; Column: int; Row: int);
 begin
   const Position: Cursor := View.Position.Read(View.Field.Value);
   const Index: int := Position.Top + Row - View.Y;
   if Index >= View.Rows.Length then
     View.Position.Move(new Cursor(View.Field.Value, View.Field.Value.Length, Position.Top));
   else
-    Place<TMsg>(
+    Place of TMsg(
       View,
       Index,
       Lines.AtColumn(View.Field.Value, View.Rows[Index], Column - View.X),
@@ -326,7 +326,7 @@ end procedure;
 // - `Delta`: Signed row count.
 // ## Returns
 // True when the editor used the wheel. At an edge the parent may scroll.
-public function Scroll<TMsg>(View: View<TMsg>; Delta: int): bool;
+public function Scroll of TMsg(View: View of TMsg; Delta: int): bool;
 begin
   const Position: Cursor := View.Position.Read(View.Field.Value);
   const Limit: int := Sys.Math.Max(0, View.Rows.Length - View.Height);

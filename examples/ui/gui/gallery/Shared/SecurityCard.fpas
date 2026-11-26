@@ -20,11 +20,11 @@ public const Initial: bool := false;
 // - `Change`: Maps a proposed expansion to a message.
 // ## Returns
 // The Security card with its summary and recovery-code details.
-public function View<TMsg>(Open: bool; Change: function(bool): TMsg): E.Element<TMsg>;
+public function View of TMsg(Open: bool; Change: function(bool): TMsg): E.Element of TMsg;
 begin
-  return Cards.ExpandableCard<TMsg>(
+  return Cards.ExpandableCard of TMsg(
     'security', Strings.Get('Text.Security'), Open, Change,
-    E.Styled<TMsg>(E.Text<TMsg>(Strings.Get('Text.RecoveryCodesAge')), S.Role.Secondary),
+    E.Styled of TMsg(E.Text of TMsg(Strings.Get('Text.RecoveryCodesAge')), S.Role.Secondary),
     new Cards.Options(
       Description := Strings.Get('Text.TwoFactorEnabled'),
       Icon := Sys.Char.ConvertFromUtf32($E158)

@@ -20,7 +20,7 @@ uses System.Collections.Generic as Lists;
 // - `Selected`: Model-owned choice.
 // - `OnChange`: Maps a different user choice to a message.
 // - `Settings`: System availability and input permission.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Selected: S.Selection; OnChange: function(S.Selection): TMsg; Settings: S.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Selected: S.Selection; OnChange: function(S.Selection): TMsg; Settings: S.Options);
 begin
   const Enabled: bool := Settings.Enabled and Frame.AcceptInput;
   const Count: int := if Settings.WithSystem then
@@ -29,14 +29,14 @@ begin
     2
   end if;
   const Token: string := C.Token('theme-switcher', Id);
-  const Tokens: Lists.List<string> := new Lists.List<string>();
+  const Tokens: Lists.List of string := new Lists.List of string();
   Tokens.Add(Token);
   var Focus: int := 0;
   for Index: int := 0 to Count - 1 do
     const Choice: S.Selection := cast<S.Selection>(Index);
     const Part: string := C.Token('theme-choice', Id, Parts.Key(Choice));
     Tokens.Add(Part);
-    if C.WantsFocus<TMsg>(Frame, S.ItemId(Id, Choice), Part, Enabled) then
+    if C.WantsFocus of TMsg(Frame, S.ItemId(Id, Choice), Part, Enabled) then
       Focus := Index + 1;
     end if;
   end for;

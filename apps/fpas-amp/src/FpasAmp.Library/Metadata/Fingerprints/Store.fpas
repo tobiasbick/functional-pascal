@@ -61,7 +61,7 @@ end function;
 procedure CheckSource(Configuration: Policy.Policy; Track: M.Entry; File: FileVersion);
 begin
   for Source: Sources.MusicSource in Configuration.Read().Sources do
-    if not Source.Offline and Sys.Array.IndexOf<string>(Track.SourceIds, Source.Id) >= 0
+    if not Source.Offline and Sys.Array.IndexOf of string(Track.SourceIds, Source.Id) >= 0
       and Sources.Within(Track.Path, Source.Path)
     then
       if Reading.Matches(Track.Path, File.Size, File.Modified) then
@@ -85,7 +85,7 @@ end function;
 // Reuses or calculates the fingerprint for Track in Database. Configuration identifies available
 // sources; Gate serializes generators in this library. Cancellation interrupts waiting and fpcalc.
 // Returns the fingerprint and whole-file duration only after they have been stored.
-public async function Generate(Database: string; Track: M.Entry; Configuration: Policy.Policy; Gate: T.SemaphoreSlim; Cancellation: T.CancellationToken): Tasks.Task<Calc.Measurement?>;
+public async function Generate(Database: string; Track: M.Entry; Configuration: Policy.Policy; Gate: T.SemaphoreSlim; Cancellation: T.CancellationToken): Tasks.Task of Calc.Measurement?;
 requires Database <> '';
 begin
   await Gate.WaitAsync(Cancellation).ConfigureAwait(false);

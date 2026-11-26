@@ -20,9 +20,9 @@ uses System as Sys;
 // - `On`: Whether Wi-Fi is enabled in the model.
 // ## Returns
 // The tile with the proposed state as its message.
-public function View(On: bool): E.Element<bool>;
+public function View(On: bool): E.Element of bool;
 begin
-  return W.ControlTile<bool>('wi-fi', 'Wi-Fi', On, function(Next: bool): bool => Next,
+  return W.ControlTile of bool('wi-fi', 'Wi-Fi', On, function(Next: bool): bool => Next,
     new W.Options(Icon := Sys.Char.ConvertFromUtf32($E1AE)));
 end function;
 

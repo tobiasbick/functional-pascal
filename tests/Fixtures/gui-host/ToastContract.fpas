@@ -22,7 +22,7 @@ begin
   end if;
 end procedure;
 
-function Find(Session: Gui.Session<State.Msg>; Id: string): Gui.Control?;
+function Find(Session: Gui.Session of State.Msg; Id: string): Gui.Control?;
 begin
   for Item: Gui.Control in Session.Snapshot().Controls do
     if Item.Id = Id then
@@ -33,7 +33,7 @@ begin
   return null;
 end function;
 
-function Card(Session: Gui.Session<State.Msg>; Title: string): Gui.Control;
+function Card(Session: Gui.Session of State.Msg; Title: string): Gui.Control;
 begin
   for Item: Gui.Control in Session.Snapshot().Controls do
     if Item.Role = 'toast' and Item.Text = Title then
@@ -44,7 +44,7 @@ begin
   raise new Sys.InvalidOperationException('Missing toast: ' + Title);
 end function;
 
-function Count(Session: Gui.Session<State.Msg>; Title: string): int;
+function Count(Session: Gui.Session of State.Msg; Title: string): int;
 begin
   var Result: int := 0;
   for Item: Gui.Control in Session.Snapshot().Controls do
@@ -56,7 +56,7 @@ begin
   return Result;
 end function;
 
-procedure Step(Session: Gui.Session<State.Msg>);
+procedure Step(Session: Gui.Session of State.Msg);
 begin
   Check(Session.Step(), 'The toast gallery closed.');
 end procedure;
@@ -71,7 +71,7 @@ begin
   var Y: float := -1.0F;
   const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI idle toast', 1000, 760, Renderer);
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Overlays),
     GalleryUpdate.Update,
     View.Build,
@@ -129,7 +129,7 @@ procedure VerifyExamples(Renderer: Cui.CuiRenderer; Capture: string);
     X := Area.X + Area.Width / 2;
     Y := Area.Y + Area.Height / 2;
   end procedure;
-  procedure Click(Session: Gui.Session<State.Msg>; Id: string);
+  procedure Click(Session: Gui.Session of State.Msg; Id: string);
   begin
     const Item: Gui.Control? := Find(Session, Id);
     if Item = null then
@@ -151,7 +151,7 @@ begin
   var Button: int := -1;
   const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI Toasts', 1000, 760, Renderer, true);
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Overlays),
     GalleryUpdate.Update,
     View.Build,

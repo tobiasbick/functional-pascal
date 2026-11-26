@@ -76,8 +76,8 @@ end function;
 // ## Returns
 // Completed outcome or timeout.
 public async function Wait(
-  Id: long; Milliseconds: int; Read: function(long, Sys.TimeSpan): Tasks.Task<App.StepResult?>
-): Tasks.Task<Terminal.TuiControlReply>;
+  Id: long; Milliseconds: int; Read: function(long, Sys.TimeSpan): Tasks.Task of App.StepResult?
+): Tasks.Task of Terminal.TuiControlReply;
 begin
   const Outcome: App.StepResult? := await Read(Id, Sys.TimeSpan.FromMilliseconds(Milliseconds));
   return if Outcome = null then

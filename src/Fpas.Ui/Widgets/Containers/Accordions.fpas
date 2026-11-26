@@ -17,13 +17,13 @@ uses Fpas.Ui.Elements as E;
 // - `Enabled`: Whether the header and body accept input.
 // ## Returns
 // A GUI-only native accordion.
-public function Accordion<TMsg>(
+public function Accordion of TMsg(
   Id: string; Title: string; Open: bool;
-  OnChange: function(bool): TMsg; Content: E.Element<TMsg>; Enabled: bool := true
-): E.Element<TMsg>;
+  OnChange: function(bool): TMsg; Content: E.Element of TMsg; Enabled: bool := true
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Accordion(Id, Title, Open, OnChange, Content, Enabled);
+  return (E.Element of TMsg).Accordion(Id, Title, Open, OnChange, Content, Enabled);
 end function;
 
 end unit;

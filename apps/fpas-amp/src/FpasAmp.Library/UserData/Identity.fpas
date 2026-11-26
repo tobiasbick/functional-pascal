@@ -30,7 +30,7 @@ end function;
 // `Size` and `Modified` are validated filesystem facts. Cancellation rolls back writes.
 // A move requires exactly one hash candidate and a confirmed missing previous path.
 // Optional `MayRecover` rejects known unavailable/paused source contexts.
-public function Resolve(Connection: Db.SqliteConnection; Path: string; Hash: string; Size: long; Modified: long; Cancellation: T.CancellationToken; MayRecover: Sys.Func<string, bool>? := null): string;
+public function Resolve(Connection: Db.SqliteConnection; Path: string; Hash: string; Size: long; Modified: long; Cancellation: T.CancellationToken; MayRecover: Sys.Func of (string, bool)? := null): string;
 begin
   Cancellation.ThrowIfCancellationRequested();
   const Key: string := Sql.Key(Path);
@@ -57,7 +57,7 @@ begin
 
   if Candidate <> '' then
     case MayRecover of
-      when is Sys.Func<string, bool> as Predicate:
+      when is Sys.Func of (string, bool) as Predicate:
         if not Predicate.Invoke(CandidatePath) then
           Candidate := '';
         end if;

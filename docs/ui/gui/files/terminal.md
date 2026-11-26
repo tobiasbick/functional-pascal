@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Developer.Terminals as W;
 // - `Revision`: Current scrollback reset revision.
 // ## Returns
 // The terminal with submitted commands and interrupts as messages.
-public function View(Output: string; Revision: int): E.Element<W.Event>;
+public function View(Output: string; Revision: int): E.Element of W.Event;
 begin
-  return W.Terminal<W.Event>('commands', Output, Revision,
+  return W.Terminal of W.Event('commands', Output, Revision,
     function(Input: W.Event): W.Event => Input,
     new W.Options(Height := 300.0F, Prompt := '> '));
 end function;

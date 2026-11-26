@@ -26,7 +26,7 @@ end variant;
 //
 // ## Type parameters
 // - `TInput`: The host's raw input type.
-public type Step<TInput> = variant
+public type Step of TInput = variant
   // The mailbox has no work for the owner.
   Idle;
   // The owner must route the supplied host input.
@@ -43,7 +43,7 @@ end variant;
 // - `TModel`: The application's model type.
 // - `TMsg`: The application's message type.
 // - `TInput`: The host's raw input type.
-public type Runtime<TModel, TMsg, TInput> = record
+public type Runtime of (TModel, TMsg, TInput) = record
   // Reads the current model on the host owner.
   public Model: function(): TModel;
   // Posts a host input. Multiple producers may post.
@@ -53,11 +53,11 @@ public type Runtime<TModel, TMsg, TInput> = record
   // Applies one message synchronously on the owner, for example after routing input.
   public Dispatch: procedure(TMsg);
   // Advances one FIFO item on the host owner.
-  public Advance: function(): Step<TInput>;
+  public Advance: function(): Step of TInput;
   // Waits for possible work or closure. The supplied token cancels the wait.
-  public WaitForWork: function(Threads.CancellationToken): Tasks.Task<bool>;
+  public WaitForWork: function(Threads.CancellationToken): Tasks.Task of bool;
   // Waits for possible capacity or closure. The supplied token cancels the wait.
-  public WaitForSpace: function(Threads.CancellationToken): Tasks.Task<bool>;
+  public WaitForSpace: function(Threads.CancellationToken): Tasks.Task of bool;
   // Reports whether the session accepts work.
   public IsOpen: function(): bool;
   // Counts queued items for host diagnostics.
@@ -70,7 +70,7 @@ public type Runtime<TModel, TMsg, TInput> = record
   public Snapshot: function(): D.SessionSnapshot;
 end record;
 
-type Entry<TMsg, TInput> = variant
+type Entry of (TMsg, TInput) = variant
   Empty;
   Input(Value: TInput);
   Message(Value: TMsg);
@@ -86,15 +86,15 @@ begin
   end case;
 end procedure;
 
-async function WriteBackground<TMsg, TInput>(
-  Queue: Channels.Channel<Entry<TMsg, TInput>>;
+async function WriteBackground of (TMsg, TInput)(
+  Queue: Channels.Channel of Entry of (TMsg, TInput);
   Wake: Sys.Action?; Id: string; Version: long; Message: TMsg;
   Cancellation: Threads.CancellationToken
 ): Tasks.Task;
 begin
   try
     await Queue.Writer.WriteAsync(
-      Entry<TMsg, TInput>.Background(Id, Version, Message),
+      Entry of (TMsg, TInput).Background(Id, Version, Message),
       Cancellation
     ).ConfigureAwait(false);
   catch _Closed: Channels.ChannelClosedException when Cancellation.IsCancellationRequested do
@@ -122,11 +122,11 @@ end function;
 //
 // ## Returns
 // The session. Serialize model reads, steps and close on the owner.
-public function Start<TModel, TMsg, TInput>(
-  InitialModel: TModel; Update: function(TModel, TMsg): App.Transition<TModel, TMsg>;
+public function Start of (TModel, TMsg, TInput)(
+  InitialModel: TModel; Update: function(TModel, TMsg): App.Transition of (TModel, TMsg);
   NotifyHost: procedure(App.HostRequest); Capacity: int; Wake: Sys.Action? := null;
   Clock: Sys.TimeProvider? := null
-): Runtime<TModel, TMsg, TInput>;
+): Runtime of (TModel, TMsg, TInput);
 requires Capacity > 0;
   function Model(): TModel;
   begin
@@ -143,7 +143,7 @@ requires Capacity > 0;
     end try;
   end function;
 
-  function TryEnqueue(Item: Entry<TMsg, TInput>): Admission;
+  function TryEnqueue(Item: Entry of (TMsg, TInput)): Admission;
   begin
     var Result: Admission := Admission.Closed;
     Threads.Monitor.Enter(Gate);
@@ -170,29 +170,29 @@ requires Capacity > 0;
 
   function Send(Input: TInput): Admission;
   begin
-    return TryEnqueue(Entry<TMsg, TInput>.Input(Input));
+    return TryEnqueue(Entry of (TMsg, TInput).Input(Input));
   end function;
 
   function Post(Message: TMsg): Admission;
   begin
-    return TryEnqueue(Entry<TMsg, TInput>.Message(Message));
+    return TryEnqueue(Entry of (TMsg, TInput).Message(Message));
   end function;
 
-  function WaitForWork(Cancellation: Threads.CancellationToken): Tasks.Task<bool>;
+  function WaitForWork(Cancellation: Threads.CancellationToken): Tasks.Task of bool;
   begin
     return if IsOpen() then
       Queue.Reader.WaitToReadAsync(Cancellation).AsTask()
     else
-      Tasks.Task.FromResult<bool>(false)
+      Tasks.Task.FromResult of bool(false)
     end if;
   end function;
 
-  function WaitForSpace(Cancellation: Threads.CancellationToken): Tasks.Task<bool>;
+  function WaitForSpace(Cancellation: Threads.CancellationToken): Tasks.Task of bool;
   begin
     return if IsOpen() then
       Queue.Writer.WaitToWriteAsync(Cancellation).AsTask()
     else
-      Tasks.Task.FromResult<bool>(false)
+      Tasks.Task.FromResult of bool(false)
     end if;
   end function;
 
@@ -208,7 +208,7 @@ requires Capacity > 0;
       const Closing: Tasks.Task := Workers.Close();
       Cleanup := Closing;
       discard Queue.Writer.TryComplete();
-      var Unused: Entry<TMsg, TInput> := Entry<TMsg, TInput>.Empty;
+      var Unused: Entry of (TMsg, TInput) := Entry of (TMsg, TInput).Empty;
       while Queue.Reader.TryRead(out Unused) do
       end while;
 
@@ -223,9 +223,9 @@ requires Capacity > 0;
     if not IsOpen() then
       return;
     end if;
-    const Next: App.Transition<TModel, TMsg> := Update(Current, Message);
+    const Next: App.Transition of (TModel, TMsg) := Update(Current, Message);
     Current := Next.Model;
-    for Command: App.Command<TMsg> in Next.Commands do
+    for Command: App.Command of TMsg in Next.Commands do
       if not IsOpen() then
         return;
       end if;
@@ -235,7 +235,7 @@ requires Capacity > 0;
           Workers.Cancel(Id);
         when App.Command.Start(
           const Id: string,
-          const Work: Fx.Effect<Fx.Completion, TMsg, App.BackgroundContext<TMsg>>
+          const Work: Fx.Effect of (Fx.Completion, TMsg, App.BackgroundContext of TMsg)
         ):
           Workers.Start(Id, Work);
         when App.Command.Host(const Request: App.HostRequest):
@@ -251,29 +251,29 @@ requires Capacity > 0;
     end for;
   end procedure;
 
-  function Advance(): Step<TInput>;
+  function Advance(): Step of TInput;
   begin
-    var Item: Entry<TMsg, TInput> := Entry<TMsg, TInput>.Empty;
+    var Item: Entry of (TMsg, TInput) := Entry of (TMsg, TInput).Empty;
     if not IsOpen() or not Queue.Reader.TryRead(out Item) then
-      return Step<TInput>.Idle;
+      return (Step of TInput).Idle;
     end if;
 
     case Item of
       when Entry.Input(const Value: TInput):
-        return Step<TInput>.Input(Value);
+        return (Step of TInput).Input(Value);
       when Entry.Message(const Value: TMsg):
         Dispatch(Value);
-        return Step<TInput>.Updated;
+        return (Step of TInput).Updated;
       when Entry.Background(const Id: string, const Version: long, const Value: TMsg):
         if Workers.IsCurrent(Id, Version) then
           Dispatch(Value);
-          return Step<TInput>.Updated;
+          return (Step of TInput).Updated;
         end if;
 
         StaleReplies := StaleReplies + 1L;
-        return Step<TInput>.Stale;
+        return (Step of TInput).Stale;
       when Entry.Empty:
-        return Step<TInput>.Idle;
+        return (Step of TInput).Idle;
     end case;
   end function;
 
@@ -299,11 +299,11 @@ requires Capacity > 0;
   end function;
 begin
   const Gate: Sys.Object := new Sys.Object();
-  const Queue: Channels.Channel<Entry<TMsg, TInput>> := Channels.Channel.CreateBounded<Entry<TMsg, TInput>>(
+  const Queue: Channels.Channel of Entry of (TMsg, TInput) := Channels.Channel.CreateBounded of Entry of (TMsg, TInput)(
     Capacity
   );
-  const Workers: Effects.State<TMsg> := Effects.Create<TMsg>(
-    function(Id: string; Version: long; Message: TMsg; Cancellation: Threads.CancellationToken): Tasks.Task => WriteBackground<TMsg, TInput>(
+  const Workers: Effects.State of TMsg := Effects.Create of TMsg(
+    function(Id: string; Version: long; Message: TMsg; Cancellation: Threads.CancellationToken): Tasks.Task => WriteBackground of (TMsg, TInput)(
       Queue,
       Wake,
       Id,
@@ -316,7 +316,7 @@ begin
   var Current: TModel := InitialModel;
   var Cleanup: Tasks.Task? := null;
   var StaleReplies: long := 0L;
-  return new Runtime<TModel, TMsg, TInput>(
+  return new Runtime of (TModel, TMsg, TInput)(
     Model, Send, Post, Dispatch, Advance, WaitForWork, WaitForSpace, IsOpen,
     function(): int => Queue.Reader.Count, Workers.Pending, Close, Snapshot
   );

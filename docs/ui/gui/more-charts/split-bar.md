@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Charts.SplitBars as W;
 // Builds the split bar example.
 // ## Returns
 // The widget for the application view.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return W.SplitBar<string>('split', [
+  return W.SplitBar of string('split', [
     new C.Item('Layout', 38.0F), new C.Item('Text', 24.0F), new C.Item('Paint', 21.0F)
   ], new W.Options(Format := new C.ValueFormat(Suffix := ' ms')));
 end function;

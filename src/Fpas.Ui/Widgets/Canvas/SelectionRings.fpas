@@ -27,10 +27,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function SelectionRing<TMsg>(Id: string; Child: E.Element<TMsg>; Settings: Options? := null): E.Element<TMsg>;
+public function SelectionRing of TMsg(Id: string; Child: E.Element of TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.SelectionRing(Id, Child, Settings ?? new Options());
+  return (E.Element of TMsg).SelectionRing(Id, Child, Settings ?? new Options());
 end function;
 
 end unit;

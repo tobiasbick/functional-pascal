@@ -30,10 +30,10 @@ end function;
 // The search field, the filter button and the sort menu.
 public function Build(
   Current: M.State; Artists: array of string; Genres: array of string; Width: int; Scope: M.Scope := M.Scope.Albums
-): E.Element<M.Msg>;
+): E.Element of M.Msg;
 requires Width > 0;
 begin
-  const Field: E.Element<M.Msg> := Search.SearchField<M.Msg>(
+  const Field: E.Element of M.Msg := Search.SearchField of M.Msg(
     'album-search', Current.Search, M.Msg.Search,
     new Search.Options(
       Placeholder := case Scope of
@@ -45,7 +45,7 @@ begin
       end case
     )
   );
-  return Arrange<M.Msg>(
+  return Arrange of M.Msg(
     Field, Filters.Build(Current, Artists, Genres, Width, Scope),
     Sorting.Build(Current, not Matching.Query.Parse(Current.Search).IsEmpty(), Scope), Width
   );
@@ -61,10 +61,10 @@ end function;
 // - `Width`: Available width in logical points.
 // ## Returns
 // The toolbar with wrapped controls at narrow widths.
-public function Arrange<TMsg>(Field: E.Element<TMsg>; Filter: E.Element<TMsg>; Sort: E.Element<TMsg>; Width: int): E.Element<TMsg>;
+public function Arrange of TMsg(Field: E.Element of TMsg; Filter: E.Element of TMsg; Sort: E.Element of TMsg; Width: int): E.Element of TMsg;
 requires Width > 0;
 begin
-  const Actions: E.Element<TMsg> := E.Row<TMsg>(
+  const Actions: E.Element of TMsg := E.Row of TMsg(
     new L.Flow(
       Gap := Points(12), Align := L.Alignment.Center,
       Justify := L.Justification.End, Wrap := true, Clip := false
@@ -74,7 +74,7 @@ begin
     Gap := Points(12), Align := L.Alignment.Center, Clip := false
   );
   if Width < 640 then
-    return E.Column<TMsg>(
+    return E.Column of TMsg(
       Flow with
         Align := L.Alignment.Stretch;
       end with,
@@ -82,7 +82,7 @@ begin
     );
   end if;
 
-  return E.Row<TMsg>(Flow, E.Size<TMsg>(Field, new L.Flex(Basis := L.Extent.Fill)), Actions);
+  return E.Row of TMsg(Flow, E.Size of TMsg(Field, new L.Flex(Basis := L.Extent.Fill)), Actions);
 end function;
 
 end unit;

@@ -13,20 +13,20 @@ public sealed partial class AsyncControlTests
             program Repeated;
             uses System as Sys; uses System.Console as Console; uses System.Threading.Tasks as Tasks;
               uses System.IO.File as File; uses System.Threading.Thread as Thread;
-            async function Work<T>(Input: T; First: Tasks.Task<int>; Second: Tasks.Task<int>): Tasks.Task<int>;
+            async function Work of T(Input: T; First: Tasks.Task of int; Second: Tasks.Task of int): Tasks.Task of int;
             begin
               const Value: int := await First.ConfigureAwait(false);
               Console.WriteLine(Value);
-              const Other: int := await new Tasks.ValueTask<int>(Second).ConfigureAwait(false);
+              const Other: int := await new Tasks.ValueTask of int(Second).ConfigureAwait(false);
               return Value + Other;
             end function;
             begin
-              const First: Tasks.TaskCompletionSource<int> := new Tasks.TaskCompletionSource<int>(Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
-              const Second: Tasks.TaskCompletionSource<int> := new Tasks.TaskCompletionSource<int>(Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
-              const Pending: Tasks.Task<int> := Work<int>(19, First.Task, Second.Task);
+              const First: Tasks.TaskCompletionSource of int := new Tasks.TaskCompletionSource of int(Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
+              const Second: Tasks.TaskCompletionSource of int := new Tasks.TaskCompletionSource of int(Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
+              const Pending: Tasks.Task of int := Work of int(19, First.Task, Second.Task);
               if Pending.IsCompleted then raise new Sys.InvalidOperationException('Must suspend'); end if;
               Console.WriteLine('first');
-              const Releaser: Tasks.Task<int> := Tasks.Task.Run<int>(function(): int
+              const Releaser: Tasks.Task of int := Tasks.Task.Run of int(function(): int
               begin
                 while not File.Exists('first.txt') do Thread.Sleep(10); end while;
                 First.SetResult(20);

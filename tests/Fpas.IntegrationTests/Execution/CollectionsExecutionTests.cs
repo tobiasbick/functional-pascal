@@ -62,28 +62,28 @@ public sealed class CollectionsExecutionTests
             program Collections;
             uses System.Collections.Generic as C; uses System.Console as Console;
             begin
-              const Values: C.List<string> := new C.List<string>();
+              const Values: C.List of string := new C.List of string();
               Values.Add('first'); Values.Add('second');
               Values[0] := 'updated';
               Console.WriteLine(Values[0]);
               Console.WriteLine(Values.Count);
-              const Indexed: C.IList<string> := Values;
+              const Indexed: C.IList of string := Values;
               Indexed.Add('third'); Indexed[2] := 'third';
               Console.WriteLine(Indexed.Count);
-              const Readable: C.IEnumerable<object> := Values;
+              const Readable: C.IEnumerable of object := Values;
               for Value: object in Readable do Console.WriteLine(Value); end for;
-              const Map: C.Dictionary<string, int> := new C.Dictionary<string, int>();
+              const Map: C.Dictionary of (string, int) := new C.Dictionary of (string, int)();
               Map['one'] := 1; Map['two'] := 2;
               Console.WriteLine(Map['two']);
               for Value: int in Map.Values do Console.WriteLine(Value); end for;
-              for Pair: C.KeyValuePair<string, int> in Map do Console.WriteLine(Pair.Key); Console.WriteLine(Pair.Value); end for;
-              const Nullable: C.List<string?> := new C.List<string?>();
+              for Pair: C.KeyValuePair of (string, int) in Map do Console.WriteLine(Pair.Key); Console.WriteLine(Pair.Value); end for;
+              const Nullable: C.List of string? := new C.List of string?();
               Nullable.Add(null); Nullable.Add('present');
               for Value: string? in Nullable do Console.WriteLine(Value ?? 'absent'); end for;
-              const Nested: C.List<C.List<int>> := new C.List<C.List<int>>();
-              Nested.Add(new C.List<int>([3, 4]));
+              const Nested: C.List of C.List of int := new C.List of C.List of int();
+              Nested.Add(new C.List of int([3, 4]));
               Console.WriteLine(Nested[0][1]);
-              Console.WriteLine(C.Comparer<int>.Default.Compare(1, 2) < 0);
+              Console.WriteLine((C.Comparer of int).Default.Compare(1, 2) < 0);
             end;
             end program;
             """, "updated", "2", "3", "updated", "second", "third", "2", "1", "2", "one", "1", "two", "2", "absent", "present", "4", "True");
@@ -118,7 +118,7 @@ public sealed class CollectionsExecutionTests
                 Console.WriteLine(Item);
                 break;
               end for;
-              const Values: C.List<int> := new C.List<int>([1, 2]);
+              const Values: C.List of int := new C.List of int([1, 2]);
               try
                 for Item: int in Values do Values.Add(3); end for;
               catch Failure: Sys.InvalidOperationException do Console.WriteLine('invalidated'); end try;

@@ -13,8 +13,8 @@ uses System.IO as IO;
 
 // Native watchers owned by the scan worker.
 public type Watchers = record implements Sys.IDisposable
-  Handles: C.List<IO.FileSystemWatcher>;
-  Roots: C.List<string>;
+  Handles: C.List of IO.FileSystemWatcher;
+  Roots: C.List of string;
 
   // Opens recursive watchers before a full scan. `Roots` are minimal active roots.
   // `Inbox` accepts nonblocking invalidations; failures fall back to control scans.
@@ -74,8 +74,8 @@ public type Watchers = record implements Sys.IDisposable
     end procedure;
   begin
     const Result: Watchers := new Watchers(
-      new C.List<IO.FileSystemWatcher>(),
-      new C.List<string>()
+      new C.List of IO.FileSystemWatcher(),
+      new C.List of string()
     );
     for Root: string in Roots do
       var Watcher: IO.FileSystemWatcher? := null;

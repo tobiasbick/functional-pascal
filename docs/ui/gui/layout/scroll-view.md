@@ -19,11 +19,11 @@ uses Fpas.Ui.Layout as L;
 // - `Cards`: The row contents in display order.
 // ## Returns
 // A scroll view that owns its offset.
-public function View(Cards: array of E.Element<string>): E.Element<string>;
+public function View(Cards: array of E.Element of string): E.Element of string;
 begin
-  return E.Size<string>(
-    E.ScrollView<string>('previews',
-      E.Row<string>(new L.Flow(Gap := L.Spacing.Normal, Clip := false), Cards),
+  return E.Size of string(
+    E.ScrollView of string('previews',
+      E.Row of string(new L.Flow(Gap := L.Spacing.Normal, Clip := false), Cards),
       FadeEdges := true, Horizontal := true),
     new L.Flex(Height := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(150))))
   );

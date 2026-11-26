@@ -38,7 +38,7 @@ end function;
 // An interactive command or choice within the popup.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Item<TMsg> = record
+public type Item of TMsg = record
   // Stable input identity.
   public Id: string;
   // Accessible caption and search text.
@@ -48,7 +48,7 @@ public type Item<TMsg> = record
   // Snapshot role.
   public Role: string;
   // Activation that proposes an application message.
-  public Handler: Actions.IActivatable<TMsg>;
+  public Handler: Actions.IActivatable of TMsg;
   // Explicit snapshot value. Null reports the highlight.
   public Value: string? := null;
   // Right-aligned display-only shortcut text.
@@ -64,9 +64,9 @@ end record;
 // One displayed popup row.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Row<TMsg> = variant
+public type Row of TMsg = variant
   // Interactive command or option.
-  Choice(Value: Item<TMsg>);
+  Choice(Value: Item of TMsg);
   // Static section label.
   Section(Text: string);
   // Static rule.
@@ -76,9 +76,9 @@ end variant;
 // Presentation shared by menus and select fields.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Content<TMsg> = record
+public type Content of TMsg = record
   // Rows in display order.
-  public Rows: array of Row<TMsg>;
+  public Rows: array of Row of TMsg;
   // Preferred panel width in cells.
   public Width: int;
   // Placement relative to the trigger.
@@ -104,16 +104,16 @@ end record;
 // - `Handler`: Action that proposes a new selection.
 // ## Returns
 // A popup item with checkbox presentation.
-public function Checkbox<TMsg>(
-  Id: string; Label: string; Role: string; Checked: bool; Handler: Actions.IActivatable<TMsg>
-): Item<TMsg>;
+public function Checkbox of TMsg(
+  Id: string; Label: string; Role: string; Checked: bool; Handler: Actions.IActivatable of TMsg
+): Item of TMsg;
 begin
   const Mark: string := if Checked then
     '[x] '
   else
     '[ ] '
   end if;
-  return new Item<TMsg>(
+  return new Item of TMsg(
     Id, Label, Mark + G.SingleLine(Label), Role, Handler,
     Value := if Checked then
       'true'
@@ -123,11 +123,11 @@ begin
   );
 end function;
 
-type Selection<TMsg> = record implements Actions.IActivatable<TMsg>
+type Selection of TMsg = record implements Actions.IActivatable of TMsg
   public Before: Sys.Action;
-  public Handler: Actions.IActivatable<TMsg>;
+  public Handler: Actions.IActivatable of TMsg;
 
-  public function Activate(): Actions.Result<TMsg>;
+  public function Activate(): Actions.Result of TMsg;
   begin
     self.Before.Invoke();
     return self.Handler.Activate();
@@ -148,10 +148,10 @@ end record;
 // - `Dismiss`: Model-owned close action, or null for an anchored popup.
 // ## Returns
 // Local input scope for the open popup.
-public function Draw<TMsg>(
-  Popup: P.State<TMsg>; Content: Content<TMsg>; Anchor: F.Rect; Screen: F.Rect; Theme: Th.Theme;
-  Operations: C.List<D.Operation>; Controls: C.List<A.Control<TMsg>>; Dismiss: Sys.Action? := null
-): A.Scope<TMsg>;
+public function Draw of TMsg(
+  Popup: P.State of TMsg; Content: Content of TMsg; Anchor: F.Rect; Screen: F.Rect; Theme: Th.Theme;
+  Operations: C.List of D.Operation; Controls: C.List of A.Control of TMsg; Dismiss: Sys.Action? := null
+): A.Scope of TMsg;
   procedure Close();
   begin
     case Dismiss of
@@ -162,7 +162,7 @@ public function Draw<TMsg>(
     end case;
   end procedure;
 
-  function Bind(Entry: Item<TMsg>): Selection<TMsg>;
+  function Bind(Entry: Item of TMsg): Selection of TMsg;
     procedure Before();
     begin
       if Entry.KeepOpen then
@@ -176,7 +176,7 @@ public function Draw<TMsg>(
       end if;
     end procedure;
   begin
-    return new Selection<TMsg>(Before, Entry.Handler);
+    return new Selection of TMsg(Before, Entry.Handler);
   end function;
 
   procedure ActivateHighlight();
@@ -263,7 +263,7 @@ public function Draw<TMsg>(
           MoveTo(cast<long>(At) + Delta);
         end if;
       when App.Input.Focus(const Id: string):
-        const Index: int := Enabled.FindIndex(function(Item: Item<TMsg>): bool => Item.Id = Id);
+        const Index: int := Enabled.FindIndex(function(Item: Item of TMsg): bool => Item.Id = Id);
         if Index >= 0 then
           MoveTo(Index);
         end if;
@@ -274,14 +274,14 @@ public function Draw<TMsg>(
     return true;
   end function;
 
-  procedure DrawRow(LineSpec: Row<TMsg>; Area: F.Rect);
+  procedure DrawRow(LineSpec: Row of TMsg; Area: F.Rect);
   begin
     case LineSpec of
       when Row.Section(const Label: string):
         Line(' ' + G.SingleLine(Label), Area, Muted);
       when Row.Rule:
         D.HorizontalRule(Operations, Area, Area, Colors, Theme.Widgets);
-      when Row.Choice(const Entry: Item<TMsg>):
+      when Row.Choice(const Entry: Item of TMsg):
         const Style: T.Style := if not Entry.Enabled then
           Muted
         elsif Entry.Danger then
@@ -309,7 +309,7 @@ public function Draw<TMsg>(
           'false'
         end if);
         Controls.Add(
-          new A.Control<TMsg>(
+          new A.Control of TMsg(
             Entry.Id,
             Entry.Label,
             Entry.Role,
@@ -318,7 +318,7 @@ public function Draw<TMsg>(
             Cursor.Id,
             Cursor.Id,
             Entry.Enabled,
-            A.Binding<TMsg>.Invoke(Bind(Entry)),
+            (A.Binding of TMsg).Invoke(Bind(Entry)),
             Styles.ButtonVariant.Ghost
           )
         );
@@ -331,12 +331,12 @@ begin
   else
     ''
   end if;
-  const Rows: C.List<Row<TMsg>> := new C.List<Row<TMsg>>();
-  const Enabled: C.List<Item<TMsg>> := new C.List<Item<TMsg>>();
-  const Indices: C.List<int> := new C.List<int>();
-  for LineSpec: Row<TMsg> in Content.Rows do
+  const Rows: C.List of Row of TMsg := new C.List of Row of TMsg();
+  const Enabled: C.List of Item of TMsg := new C.List of Item of TMsg();
+  const Indices: C.List of int := new C.List of int();
+  for LineSpec: Row of TMsg in Content.Rows do
     case LineSpec of
-      when Row.Choice(const Entry: Item<TMsg>):
+      when Row.Choice(const Entry: Item of TMsg):
         if not Entry.Label.Contains(Query, Sys.StringComparison.OrdinalIgnoreCase) then
           continue;
         end if;
@@ -355,7 +355,7 @@ begin
   else
     Sys.Math.Max(
       0,
-      Enabled.FindIndex(function(Item: Item<TMsg>): bool => Item.Id = Current.Highlight)
+      Enabled.FindIndex(function(Item: Item of TMsg): bool => Item.Id = Current.Highlight)
     )
   end if;
   const Wanted: int := Sys.Math.Clamp(
@@ -461,7 +461,7 @@ begin
     DrawRow(Rows[Top + Index], new F.Rect(Panel.X, Panel.Y + Header + Index, Panel.Width, 1));
   end for;
 
-  return new A.Scope<TMsg>(Cursor.Id, Cursor.Highlight, null, [], Outer, Route);
+  return new A.Scope of TMsg(Cursor.Id, Cursor.Highlight, null, [], Outer, Route);
 end function;
 
 end unit;

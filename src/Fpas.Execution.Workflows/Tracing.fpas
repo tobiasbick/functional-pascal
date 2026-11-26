@@ -24,14 +24,14 @@ uses System.Threading.Tasks as Tasks;
 //
 // ## Returns
 // The deferred workflow with a span when a listener requests one.
-public function Trace<A, E, R>(
-  Work: Fx.Effect<A, E, R>; Source: Diagnostics.ActivitySource; Name: string
-): Fx.Effect<A, E, R>;
-  async function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<Fx.Outcome<A, E>>;
+public function Trace of (A, E, R)(
+  Work: Fx.Effect of (A, E, R); Source: Diagnostics.ActivitySource; Name: string
+): Fx.Effect of (A, E, R);
+  async function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task of Fx.Outcome of (A, E);
   begin
     using const Span: Diagnostics.Activity? := Source.StartActivity(Name);
     try
-      const Result: Fx.Outcome<A, E> := await Work.Run(
+      const Result: Fx.Outcome of (A, E) := await Work.Run(
         Environment,
         Cancellation
       ).ConfigureAwait(false);
@@ -61,7 +61,7 @@ public function Trace<A, E, R>(
     end try;
   end function;
 begin
-  return Fx.Effect<A, E, R>.Defer(Execute);
+  return Fx.Effect of (A, E, R).Defer(Execute);
 end function;
 
 end unit;

@@ -32,9 +32,9 @@ public type MetadataSafetyTests = record
     const Bytes: array of byte := IO.File.ReadAllBytes(A);
     await using const Session: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
     const Tags: Metadata.Session := F.Tags(Session);
-    const Before: I.ImmutableArray<M.Entry> := await F.Until(
+    const Before: I.ImmutableArray of M.Entry := await F.Until(
       Tags,
-      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 2
+      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 2
     );
     await Tags.SetRatingAsync(Before[0].TrackId, 8, T.CancellationToken.None);
     await Tags.SetRatingAsync(Before[1].TrackId, 3, T.CancellationToken.None);
@@ -43,12 +43,12 @@ public type MetadataSafetyTests = record
     const C: string := IO.Path.Combine(Root.Path, 'new.mp3');
     IO.File.WriteAllBytes(C, Bytes);
     Session.Refresh();
-    const After: I.ImmutableArray<M.Entry> := await F.Until(
+    const After: I.ImmutableArray of M.Entry := await F.Until(
       Tags,
-      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1 and Items[0].Path = C
+      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 1 and Items[0].Path = C
     );
-    X.Assert.NotEqual<string>(Before[0].TrackId, After[0].TrackId);
-    X.Assert.NotEqual<string>(Before[1].TrackId, After[0].TrackId);
+    X.Assert.NotEqual of string(Before[0].TrackId, After[0].TrackId);
+    X.Assert.NotEqual of string(Before[1].TrackId, After[0].TrackId);
     X.Assert.Null(After[0].Rating);
   end function;
 
@@ -66,9 +66,9 @@ public type MetadataSafetyTests = record
     const SourceB: S.MusicSource := F.Source(B, 'b');
     await using const Session: Monitor.Session := F.Start([SourceA, SourceB], Data.Path);
     const Tags: Metadata.Session := F.Tags(Session);
-    const Before: I.ImmutableArray<M.Entry> := await F.Until(
+    const Before: I.ImmutableArray of M.Entry := await F.Until(
       Tags,
-      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 1
     );
     await Tags.SetRatingAsync(Before[0].TrackId, 9, T.CancellationToken.None);
     Session.Configure(
@@ -82,13 +82,13 @@ public type MetadataSafetyTests = record
     const Copy: string := IO.Path.Combine(B, 'copy.ogg');
     IO.File.WriteAllBytes(Copy, Bytes);
     Session.Refresh('b');
-    const After: I.ImmutableArray<M.Entry> := await F.Until(
+    const After: I.ImmutableArray of M.Entry := await F.Until(
       Tags,
-      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 2
+      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 2
     );
     for Entry: M.Entry in After do
       if Entry.Path = Copy then
-        X.Assert.NotEqual<string>(Before[0].TrackId, Entry.TrackId);
+        X.Assert.NotEqual of string(Before[0].TrackId, Entry.TrackId);
         X.Assert.Null(Entry.Rating);
       end if;
     end for;
@@ -113,9 +113,9 @@ public type MetadataSafetyTests = record
         return Checks < 4;
       end function
     );
-    X.Assert.Equal<string>('', Value.Hash);
+    X.Assert.Equal of string('', Value.Hash);
     X.Assert.NotNull(Value.Error);
-    X.Assert.Equal<int>(4, Checks);
+    X.Assert.Equal of int(4, Checks);
     using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource();
     Stop.Cancel();
     var Cancelled: bool := false;
@@ -150,7 +150,7 @@ public type MetadataSafetyTests = record
     end try;
 
     X.Assert.True(Failed);
-    X.Assert.Equal<string>('deliberately corrupt user data', IO.File.ReadAllText(Path));
+    X.Assert.Equal of string('deliberately corrupt user data', IO.File.ReadAllText(Path));
   end function;
 end record;
 

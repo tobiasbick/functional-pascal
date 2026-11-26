@@ -32,7 +32,7 @@ end enum;
 // One keyed command. Shortcut text is a hint, not an installed key binding.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Item<TMsg> = record
+public type Item of TMsg = record
   // Stable identity within the menu, independent of caption or position.
   public Key: string;
   // Literal command caption.
@@ -54,9 +54,9 @@ end record;
 // Ordered native menu content; only commands are interactive.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Entry<TMsg> = variant
+public type Entry of TMsg = variant
   // A keyed command with its message and presentation.
-  Action(Value: Item<TMsg>);
+  Action(Value: Item of TMsg);
   // A noninteractive section caption.
   Label(Text: string);
   // A noninteractive horizontal separator.
@@ -102,10 +102,10 @@ end function;
 // - `Settings`: Optional trigger and popup settings.
 // ## Returns
 // A menu that sends a command message and closes when that command is chosen.
-public function Menu<TMsg>(Id: string; Label: string; Entries: array of Entry<TMsg>; Settings: Options? := null): E.Element<TMsg>;
+public function Menu of TMsg(Id: string; Label: string; Entries: array of Entry of TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Dropdown(Id, Label, Entries, Settings ?? new Options());
+  return (E.Element of TMsg).Dropdown(Id, Label, Entries, Settings ?? new Options());
 end function;
 
 // Attaches a GUI context menu to the target's native root component.
@@ -118,10 +118,10 @@ end function;
 // - `Enabled`: Whether this context menu accepts input; target behavior is unchanged.
 // ## Returns
 // The target with CUI's pointer-positioned context menu. Requires the graphical profile.
-public function ContextMenu<TMsg>(Id: string; Target: E.Element<TMsg>; Entries: array of Entry<TMsg>; Enabled: bool := true): E.Element<TMsg>;
+public function ContextMenu of TMsg(Id: string; Target: E.Element of TMsg; Entries: array of Entry of TMsg; Enabled: bool := true): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Contextual(Id, Target, Entries, Enabled);
+  return (E.Element of TMsg).Contextual(Id, Target, Entries, Enabled);
 end function;
 
 end unit;

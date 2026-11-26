@@ -171,8 +171,8 @@ public sealed class FormatterTests
     [Fact]
     public void Keeps_generics_distinct_from_comparison_operators()
     {
-        var output = Format("program Demo;uses System.Collections.Generic.List as List;type Values=List<int?>;begin const X:int:=-1;const Y:bool:=X<2;const Z:bool:=(X+1)>0;end;end program;");
-        Assert.Contains("type Values = List<int?>;", output);
+        var output = Format("program Demo;uses System.Collections.Generic.List as List;type Values=List of int?;begin const X:int:=-1;const Y:bool:=X<2;const Z:bool:=(X+1)>0;end;end program;");
+        Assert.Contains("type Values = List of int?;", output);
         Assert.Contains("const X: int := -1;", output);
         Assert.Contains("X < 2", output);
         Assert.Contains("(X + 1) > 0", output);
@@ -319,17 +319,17 @@ public sealed class FormatterTests
     }
 
     [Fact]
-    public void A_failed_generic_probe_does_not_duplicate_inner_generic_layout()
+    public void Generic_calls_can_appear_directly_in_comparisons()
     {
-        var output = Format("program Demo;begin const Smaller:bool:=Value<Identity<\nint\n>(4);end;end program;");
-        Assert.Contains("Value < Identity<\n    int\n  >(4)", output);
+        var output = Format("program Demo;begin const Smaller:bool:=Value<Identity of int(4);end;end program;");
+        Assert.Contains("Value < Identity of int(4)", output);
     }
 
     [Fact]
     public void Type_constraints_members_contracts_and_attributes_use_structural_lines()
     {
-        var output = Format("unit Models;[Sys.Obsolete('sample')]public type Box<T> =where T:class;record public Value:T;public function Read():T;requires true;ensures true;begin return Self.Value;end function;end record;end unit;");
-        Assert.Contains("[Sys.Obsolete('sample')]\npublic type Box<T> =\nwhere T: class;\nrecord\n  public Value: T;\n\n  public function Read(): T;\n  requires true;\n  ensures true;\n  begin\n    return Self.Value;\n  end function;\nend record;\n\nend unit;", output);
+        var output = Format("unit Models;[Sys.Obsolete('sample')]public type Box of T =where T:class;record public Value:T;public function Read():T;requires true;ensures true;begin return Self.Value;end function;end record;end unit;");
+        Assert.Contains("[Sys.Obsolete('sample')]\npublic type Box of T =\nwhere T: class;\nrecord\n  public Value: T;\n\n  public function Read(): T;\n  requires true;\n  ensures true;\n  begin\n    return Self.Value;\n  end function;\nend record;\n\nend unit;", output);
     }
 
     [Fact]

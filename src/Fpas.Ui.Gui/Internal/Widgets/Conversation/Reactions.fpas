@@ -19,14 +19,14 @@ uses System.Collections.Generic as Lists;
 // - `Items`: Model-owned reactions.
 // - `OnChange`: Maps the changed index and proposed item to a message.
 // - `Enabled`: Whether the group accepts input.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Items: array of R.Item;
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Items: array of R.Item;
   OnChange: function(int, R.Item): TMsg; Enabled: bool
 );
 begin
   const Accept: bool := Enabled and Frame.AcceptInput;
   const Group: string := C.Token('reactions', Id);
-  const Tokens: Lists.List<string> := new Lists.List<string>(Items.Length + 1);
+  const Tokens: Lists.List of string := new Lists.List of string(Items.Length + 1);
   const Native: array of CuiConversation.CuiReaction := new CuiConversation.CuiReaction[
     Items.Length
   ];
@@ -38,7 +38,7 @@ begin
     const Token: string := C.Token('reaction', ItemId);
     Native[Index] := new CuiConversation.CuiReaction(Item.Icon, Item.Count, Item.Active);
     Tokens.Add(Token);
-    if C.WantsFocus<TMsg>(Frame, ItemId, Token, Accept) then
+    if C.WantsFocus of TMsg(Frame, ItemId, Token, Accept) then
       Focus := Index + 1;
     end if;
 

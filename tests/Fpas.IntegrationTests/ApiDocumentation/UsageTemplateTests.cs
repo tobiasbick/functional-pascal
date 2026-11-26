@@ -127,7 +127,7 @@ public sealed class UsageTemplateTests(SdkPackageFixture sdk) : IClassFixture<Sd
         Assert.Contains("return Receiver(Value);", Usage("Transform.Invoke(System.Int32)").Source);
         Assert.Contains("Use(ref Receiver: Sample.Counter);", Usage("Counter.Advance").Source);
         var asyncCall = Usage("Counter.AdvanceAsync");
-        Assert.Contains("Use(ref Receiver: Sample.Counter): Tasks.Task<int>;", asyncCall.Source);
+        Assert.Contains("Use(ref Receiver: Sample.Counter): Tasks.Task of int;", asyncCall.Source);
         Assert.Contains("return Receiver.AdvanceAsync();", asyncCall.Source);
         Assert.Contains("abstract", Usage("Base.#ctor").Reason);
         Assert.Contains("accessors", Usage("Widget.get_Size").Reason);
@@ -164,7 +164,7 @@ public sealed class UsageTemplateTests(SdkPackageFixture sdk) : IClassFixture<Sd
             }
             """);
         const string member = "M:Sample.Box`1.Read``1(`0,``0)";
-        const string list = "System.Collections.Generic.List<array of string>";
+        const string list = "System.Collections.Generic.List of array of string";
         var response = await DocumentationFixture.Cli(directory, directory.File("Game/Game.fpasproj"),
             "--usage", member, "--type-arg", list, "--type-arg", "int", "--report", "json");
         Assert.True(response.ExitCode == 0, response.Output + response.Error);
@@ -172,18 +172,18 @@ public sealed class UsageTemplateTests(SdkPackageFixture sdk) : IClassFixture<Sd
         var usage = Assert.Single(report.RootElement.GetProperty("result").GetProperty("entries").EnumerateArray()).GetProperty("usage");
         Assert.Equal("template", usage.GetProperty("status").GetString());
         var source = usage.GetProperty("source").GetString();
-        Assert.Contains("Receiver: Sample.Box<Generic.List<array of string>>", source);
-        Assert.Contains("return Receiver.Read<int>(Original, Replacement);", source);
+        Assert.Contains("Receiver: Sample.Box of Generic.List of array of string", source);
+        Assert.Contains("return Receiver.Read of int(Original, Replacement);", source);
 
         var query = new DocumentationQuery(await DocumentationFixture.Analyze(directory));
         ApiUsage Select(string id, params string[] arguments) => Assert.IsType<ApiUsage>(
             Assert.Single(query.Search(new(id, Assembly: "Shared", Usage: true, TypeArguments: arguments)).Entries).Usage);
-        Assert.Contains("new Sample.Box<Text.StringBuilder>(Value)", Select("M:Sample.Box`1.#ctor(`0)", "System.Text.StringBuilder").Source);
-        Assert.Contains("Sample.Box<Text.StringBuilder>.Create()", Select("M:Sample.Box`1.Create", "System.Text.StringBuilder").Source);
+        Assert.Contains("new Sample.Box of Text.StringBuilder(Value)", Select("M:Sample.Box`1.#ctor(`0)", "System.Text.StringBuilder").Source);
+        Assert.Contains("(Sample.Box of Text.StringBuilder).Create()", Select("M:Sample.Box`1.Create", "System.Text.StringBuilder").Source);
         var nestedId = Assert.Single(query.Search(new("Lookup.Api.Nested.Combine", Assembly: "Shared")).Entries).DocumentationId!;
         var nested = Select(nestedId, "System.Text.StringBuilder", "int", "string");
-        Assert.Contains("Receiver: Lookup.Api<Text.StringBuilder>.Nested<int>", nested.Source);
-        Assert.Contains("Receiver.Combine<string>(", nested.Source);
+        Assert.Contains("Receiver: (Lookup.Api of Text.StringBuilder).Nested of int", nested.Source);
+        Assert.Contains("Receiver.Combine of string(", nested.Source);
         Assert.Contains("declaring type (1) and method (1)", Select(member, list).Reason);
         var invalidOwner = Select(member, "int", "int");
         Assert.Equal("unavailable", invalidOwner.Status);

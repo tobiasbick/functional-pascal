@@ -48,6 +48,7 @@ internal sealed partial class Binder
         NameExpressionSyntax name => [new(name.Name)],
         MemberSyntax member when TypePath(member.Receiver) is { } prefix => [.. prefix, new(member.Name)],
         GenericNameSyntax generic when TypePath(generic.Name) is { } path => [.. path.SkipLast(1), path[^1] with { Arguments = generic.Arguments }],
+        ParenthesizedSyntax { Expression: GenericNameSyntax generic } => TypePath(generic),
         _ => null
     };
 

@@ -12,7 +12,7 @@ uses System.Collections.Generic as Lists;
 
 function PackParameter(Items: array of D.Parameter): array of CuiDeveloper.CuiDevParameter;
 begin
-  const Native: Lists.List<CuiDeveloper.CuiDevParameter> := new Lists.List<CuiDeveloper.CuiDevParameter>(
+  const Native: Lists.List of CuiDeveloper.CuiDevParameter := new Lists.List of CuiDeveloper.CuiDevParameter(
     Items.Length
   );
   for Entry: D.Parameter in Items do
@@ -32,7 +32,7 @@ end function;
 
 function PackEndpoint(Items: array of D.Endpoint): array of CuiDeveloper.CuiDevEndpoint;
 begin
-  const Native: Lists.List<CuiDeveloper.CuiDevEndpoint> := new Lists.List<CuiDeveloper.CuiDevEndpoint>(
+  const Native: Lists.List of CuiDeveloper.CuiDevEndpoint := new Lists.List of CuiDeveloper.CuiDevEndpoint(
     Items.Length
   );
   for Entry: D.Endpoint in Items do
@@ -61,7 +61,7 @@ end function;
 // - `Selection`: Selection supplied to the widget.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Endpoints: array of D.Endpoint; Selection: int; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Endpoints: array of D.Endpoint; Selection: int; Changed: function(D.Event): TMsg; Settings: D.Options);
 begin
   const Role: string := 'api-explorer';
   const Token: string := C.Token(Role, Id);
@@ -76,7 +76,7 @@ begin
     Width.Value,
     Enabled
   );
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, Selection.ToString());
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, Selection.ToString());
   if Enabled and (Result.Index <> Selection or Result.Action >= 0) then
     Frame.Messages.Add(Changed(new D.Event(Result.Index, Result.Action)));
   end if;

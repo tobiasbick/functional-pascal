@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Inputs.Sliders as C;
 // - `Brightness`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Brightness: float): E.Element<float>;
+public function View(Brightness: float): E.Element of float;
 begin
-  return C.Slider<float>('brightness', 'Brightness', Brightness, 0.0F, 100.0F,
+  return C.Slider of float('brightness', 'Brightness', Brightness, 0.0F, 100.0F,
     function(Value: float): float => Value,
     new C.Options(Step := 10.0F, ShowValue := true, Percent := true));
 end function;

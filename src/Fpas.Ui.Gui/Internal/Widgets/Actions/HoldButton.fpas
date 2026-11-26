@@ -17,11 +17,11 @@ uses Fpas.Ui.Widgets.Actions.HoldButtons as H;
 // - `Label`: Visible caption.
 // - `Message`: Message proposed once per completed hold.
 // - `Settings`: Hold duration and appearance.
-public procedure Draw<TMsg>(State: C.State<TMsg>; Id: string; Label: string; Message: TMsg; Settings: H.Options);
+public procedure Draw of TMsg(State: C.State of TMsg; Id: string; Label: string; Message: TMsg; Settings: H.Options);
 begin
   const Enabled: bool := Settings.Enabled and State.AcceptInput;
   const Token: string := C.Token('hold-button', Id);
-  const Focus: bool := C.WantsFocus<TMsg>(State, Id, Token, Enabled);
+  const Focus: bool := C.WantsFocus of TMsg(State, Id, Token, Enabled);
   if State.Window.HoldButton(
     Token,
     Label,
@@ -35,7 +35,10 @@ begin
     State.Messages.Add(Message);
   end if;
 
-  C.Track<TMsg>(State, new App.Control(Id, Label, 'hold-button', new Cui.CuiRectangle(), Enabled));
+  C.Track of TMsg(
+    State,
+    new App.Control(Id, Label, 'hold-button', new Cui.CuiRectangle(), Enabled)
+  );
 end procedure;
 
 end unit;

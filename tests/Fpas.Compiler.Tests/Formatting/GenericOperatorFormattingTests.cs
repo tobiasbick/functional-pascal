@@ -13,10 +13,10 @@ public sealed class GenericOperatorFormattingTests
     }
 
     [Fact]
-    public void Generic_closers_and_comparison_operators_get_their_contextual_spacing()
+    public void Generic_declarations_and_comparison_operators_get_their_contextual_spacing()
     {
-        var output = FormatterTests.Format("program Demo;type Box<T>=record public Value:T;end record;begin const X:int:=(1 and 3)or(2 xor 1);if X>=1 then discard X;end if;end;end program;");
-        Assert.Contains("type Box<T> = record", output);
+        var output = FormatterTests.Format("program Demo;type Box of T=record public Value:T;end record;begin const X:int:=(1 and 3)or(2 xor 1);if X>=1 then discard X;end if;end;end program;");
+        Assert.Contains("type Box of T = record", output);
         Assert.Contains("Value: T;", output);
         Assert.Contains("const X: int := (1 and 3) or (2 xor 1);", output);
         Assert.Contains("if X >= 1 then", output);

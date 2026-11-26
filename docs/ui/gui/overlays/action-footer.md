@@ -17,11 +17,11 @@ uses Fpas.Ui.Widgets.Actions.Buttons as B;
 // Builds the action footer example.
 // ## Returns
 // The widget for the application view.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return W.ActionFooter<string>(
-    B.Button<string>('cancel', 'Cancel', 'cancel'),
-    B.Button<string>('save', 'Save changes', 'save', new B.Options(Variant := S.ButtonVariant.Primary)));
+  return W.ActionFooter of string(
+    B.Button of string('cancel', 'Cancel', 'cancel'),
+    B.Button of string('save', 'Save changes', 'save', new B.Options(Variant := S.ButtonVariant.Primary)));
 end function;
 
 end unit;

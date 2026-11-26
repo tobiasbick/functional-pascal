@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Charts.Funnels as W;
 // Builds the funnel example.
 // ## Returns
 // The widget for the application view.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return W.Funnel<string>('funnel', [
+  return W.Funnel of string('funnel', [
     new C.Item('Visited', 12840.0F), new C.Item('Signed up', 4210.0F),
     new C.Item('Activated', 2380.0F), new C.Item('Subscribed', 860.0F)
   ]);

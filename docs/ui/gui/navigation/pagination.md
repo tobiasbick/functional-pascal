@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Navigation.Paginations as C;
 // - `Page`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Page: int): E.Element<int>;
+public function View(Page: int): E.Element of int;
 begin
-  return C.Pagination<int>('pages', Page, 12, function(Index: int): int => Index);
+  return C.Pagination of int('pages', Page, 12, function(Index: int): int => Index);
 end function;
 
 end unit;

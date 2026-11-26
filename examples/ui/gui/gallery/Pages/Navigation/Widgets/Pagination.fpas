@@ -13,9 +13,9 @@ uses GuiGallery.Pages.Navigation.State as State;
 // - `Model`: Current gallery state.
 // ## Returns
 // The native pagination example.
-public function View(Model: State.Model): E.Element<State.Msg>;
+public function View(Model: State.Model): E.Element of State.Msg;
 begin
-  return Sample.View<State.Msg>(Model.PageIndex, State.Msg.SetPageIndex);
+  return Sample.View of State.Msg(Model.PageIndex, State.Msg.SetPageIndex);
 end function;
 
 end unit;

@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Inputs.OneTimeCodes as W;
 // - `Code`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Code: string): E.Element<string>;
+public function View(Code: string): E.Element of string;
 begin
-  return W.OneTimeCodeInput<string>('input-code', Code, function(Value: string): string => Value,
+  return W.OneTimeCodeInput of string('input-code', Code, function(Value: string): string => Value,
     new W.Options(Label := 'Verification code'));
 end function;
 

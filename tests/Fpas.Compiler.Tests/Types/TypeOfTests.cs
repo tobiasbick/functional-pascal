@@ -38,7 +38,7 @@ public sealed class TypeOfTests
         var result = TestCompilation.CompileAgainstFramework("""
             program Invalid;
             uses System as Sys;
-            function Get<T>(): Sys.Type; begin return typeof(T?); end function;
+            function Get of T(): Sys.Type; begin return typeof(T?); end function;
             begin end;
             end program;
             """);
@@ -77,8 +77,8 @@ public sealed class TypeOfTests
             unit Tokens;
             uses System as Sys;
             public function Concrete(): Sys.Type; begin return typeof(int); end function;
-            public function Generic<T>(): Sys.Type; begin return typeof(T); end function;
-            public function Nullable<T>(): Sys.Type; where T: struct; begin return typeof(T?); end function;
+            public function Generic of T(): Sys.Type; begin return typeof(T); end function;
+            public function Nullable of T(): Sys.Type; where T: struct; begin return typeof(T?); end function;
             """ + "end unit;";
         CompilationResult Compile(IEnumerable<string> references) => FpasCompiler.Compile(new([new("tokens.fpas", text)], "Tokens",
             references.ToArray(), CompilationTarget.Library, EmitDebugInformation: true));

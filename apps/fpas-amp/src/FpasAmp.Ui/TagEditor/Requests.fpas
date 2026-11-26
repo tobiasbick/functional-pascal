@@ -27,11 +27,11 @@ end function;
 public const Slot: string := 'provider';
 
 // Emits changed provider status samples until the editor is closed.
-public function Timer(): A.Command<M.Msg>;
+public function Timer(): A.Command of M.Msg;
 begin
-  return A.StartBackground<M.Msg>(
+  return A.StartBackground of M.Msg(
     'timer',
-    A.FromWorker<M.Msg>(
+    A.FromWorker of M.Msg(
       async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
         var PreviousMusic: Pacing.Status := new Pacing.Status(Seconds := -1L);
         var PreviousAudio: Pacing.Status := PreviousMusic;
@@ -53,11 +53,11 @@ begin
 end function;
 
 // Searches MusicBrainz for Query and posts the selectable results.
-public function Search(Query: string): A.Command<M.Msg>;
+public function Search(Query: string): A.Command of M.Msg;
 begin
-  return A.StartBackground<M.Msg>(
+  return A.StartBackground of M.Msg(
     Slot,
-    A.FromWorker<M.Msg>(
+    A.FromWorker of M.Msg(
       async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
         await Post(M.Msg.Found(await MB.Live.Search(Query, Stop)));
       end function, Failed
@@ -66,14 +66,14 @@ begin
 end function;
 
 // Loads a recording and, when Choice includes one, enriches it with release details.
-public function Lookup(Choice: MB.Match): A.Command<M.Msg>;
+public function Lookup(Choice: MB.Match): A.Command of M.Msg;
 begin
-  return A.StartBackground<M.Msg>(
+  return A.StartBackground of M.Msg(
     Slot,
-    A.FromWorker<M.Msg>(
+    A.FromWorker of M.Msg(
       async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
         const Recording: E.IRecording := await MB.Live.Recording(Choice.Recording, Stop);
-        const Values: I.ImmutableDictionary<string, string> := Tags.Proposals(Recording, null);
+        const Values: I.ImmutableDictionary of (string, string) := Tags.Proposals(Recording, null);
         if Choice.Release = '' then
           await Post(M.Msg.Proposed(Values));
           return;
@@ -92,11 +92,11 @@ begin
 end function;
 
 // Measures Track through Library when needed and searches AcoustID with the saved ApplicationKey.
-public function Scan(Library: Metadata.Session; Track: Tracks.Entry; ApplicationKey: string): A.Command<M.Msg>;
+public function Scan(Library: Metadata.Session; Track: Tracks.Entry; ApplicationKey: string): A.Command of M.Msg;
 begin
-  return A.StartBackground<M.Msg>(
+  return A.StartBackground of M.Msg(
     Slot,
-    A.FromWorker<M.Msg>(
+    A.FromWorker of M.Msg(
       async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
         const Audio: Fingerprint.Measurement? := await Library.MeasureFingerprintAsync(
           Track,

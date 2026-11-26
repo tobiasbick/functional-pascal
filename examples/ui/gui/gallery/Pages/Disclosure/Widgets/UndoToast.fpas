@@ -14,12 +14,12 @@ uses System as Sys;
 // Builds the original timed Undo toast trigger.
 // ## Returns
 // The Undo toast section.
-public function View(): E.Element<State.Msg>;
+public function View(): E.Element of State.Msg;
 begin
-  return E.Column<State.Msg>(
+  return E.Column of State.Msg(
     new L.Flow(Gap := G.Points(20)),
-    G.Heading<State.Msg>(Strings.Get('Heading.UndoToast'), Strings.Get('Heading.UndoToastHint')),
-    B.Button<State.Msg>(
+    G.Heading of State.Msg(Strings.Get('Heading.UndoToast'), Strings.Get('Heading.UndoToastHint')),
+    B.Button of State.Msg(
       'archive-conversations', 'Archive 3 conversations', State.Msg.ArchiveConversations,
       new B.Options(Icon := Sys.Char.ConvertFromUtf32($E041))
     )

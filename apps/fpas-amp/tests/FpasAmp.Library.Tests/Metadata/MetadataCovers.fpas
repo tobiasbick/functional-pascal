@@ -37,7 +37,7 @@ public type MetadataCoverTests = record
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aO9sAAAAASUVORK5CYII='
     );
     const Track: A.Track := new A.Track(Path);
-    const Pictures: C.IList<A.PictureInfo?>? := Track.EmbeddedPictures;
+    const Pictures: (C.IList of A.PictureInfo?)? := Track.EmbeddedPictures;
     if Pictures = null then
       raise new Sys.InvalidOperationException('Missing picture collection.');
     end if;
@@ -47,8 +47,8 @@ public type MetadataCoverTests = record
     const Source: S.MusicSource := F.Source(Root.Path);
     await using const Session: Monitor.Session := F.Start([Source], Data.Path);
     const Tags: Metadata.Session := F.Tags(Session);
-    const Entries: I.ImmutableArray<M.Entry> := await F.Until(
-      Tags, function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+    const Entries: I.ImmutableArray of M.Entry := await F.Until(
+      Tags, function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 1
     );
     const Directory: string := Covers.DirectoryPath(IO.Path.Combine(Data.Path, 'userdata.db'));
     discard IO.Directory.CreateDirectory(Directory);
@@ -60,14 +60,14 @@ public type MetadataCoverTests = record
     );
     X.Assert.NotNull(Restored);
     if Restored <> null then
-      X.Assert.Equal<string>(
+      X.Assert.Equal of string(
         Sys.Convert.ToHexString(Bytes),
         Sys.Convert.ToHexString(Restored.Data)
       );
-      X.Assert.Equal<string>('image/png', Restored.MimeType);
+      X.Assert.Equal of string('image/png', Restored.MimeType);
     end if;
 
-    X.Assert.NotEqual<string>(Contents, IO.File.ReadAllText(CachedPath));
+    X.Assert.NotEqual of string(Contents, IO.File.ReadAllText(CachedPath));
     // Keep the indexed file ID available for the offline cache lookup.
     Session.Configure(
       [
@@ -100,7 +100,7 @@ public type MetadataCoverTests = record
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aO9sAAAAASUVORK5CYII='
     );
     const Track: A.Track := new A.Track(Path);
-    const Pictures: C.IList<A.PictureInfo?>? := Track.EmbeddedPictures;
+    const Pictures: (C.IList of A.PictureInfo?)? := Track.EmbeddedPictures;
     if Pictures = null then
       raise new Sys.InvalidOperationException('Missing picture collection.');
     end if;
@@ -110,9 +110,9 @@ public type MetadataCoverTests = record
     const Source: S.MusicSource := F.Source(Root.Path);
     await using const Session: Monitor.Session := F.Start([Source], Data.Path);
     const Tags: Metadata.Session := F.Tags(Session);
-    const Entries: I.ImmutableArray<M.Entry> := await F.Until(
+    const Entries: I.ImmutableArray of M.Entry := await F.Until(
       Tags,
-      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 1
     );
     const Cache: string := Covers.DirectoryPath(IO.Path.Combine(Data.Path, 'userdata.db'));
     X.Assert.False(IO.Directory.Exists(Cache));
@@ -125,9 +125,9 @@ public type MetadataCoverTests = record
       return;
     end if;
 
-    X.Assert.Equal<string>('image/png', Cover.MimeType);
-    X.Assert.Equal<string>(Sys.Convert.ToHexString(Bytes), Sys.Convert.ToHexString(Cover.Data));
-    X.Assert.Equal<int>(1, IO.Directory.GetFiles(Cache).Length);
+    X.Assert.Equal of string('image/png', Cover.MimeType);
+    X.Assert.Equal of string(Sys.Convert.ToHexString(Bytes), Sys.Convert.ToHexString(Cover.Data));
+    X.Assert.Equal of int(1, IO.Directory.GetFiles(Cache).Length);
     Session.Configure(
       [
         Source with
@@ -148,7 +148,10 @@ public type MetadataCoverTests = record
     );
     X.Assert.True(Cached <> null);
     if Cached <> null then
-      X.Assert.Equal<string>(Sys.Convert.ToHexString(Bytes), Sys.Convert.ToHexString(Cached.Data));
+      X.Assert.Equal of string(
+        Sys.Convert.ToHexString(Bytes),
+        Sys.Convert.ToHexString(Cached.Data)
+      );
     end if;
   end function;
 end record;

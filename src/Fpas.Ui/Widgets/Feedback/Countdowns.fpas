@@ -21,12 +21,12 @@ end record;
 // - `Settings`: Optional compact tiles and day display.
 // ## Returns
 // The graphical countdown.
-public function Countdown<TMsg>(
+public function Countdown of TMsg(
   Id: string; SecondsLeft: double; Settings: Options? := null
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Countdown(Id, SecondsLeft, Settings ?? new Options());
+  return (E.Element of TMsg).Countdown(Id, SecondsLeft, Settings ?? new Options());
 end function;
 
 end unit;

@@ -35,9 +35,9 @@ const TagNames: array of string := [
   'Expired'
 ];
 
-function TagRow(Model: M.Model; Small: bool): E.Element<M.Msg>;
+function TagRow(Model: M.Model; Small: bool): E.Element of M.Msg;
 begin
-  const Parts: Lists.List<E.Element<M.Msg>> := new Lists.List<E.Element<M.Msg>>();
+  const Parts: Lists.List of E.Element of M.Msg := new Lists.List of E.Element of M.Msg();
   for Index: int := 0 to TagNames.Length - 1 do
     if not Small or (Model.Hidden and (1 shl Index)) = 0 then
       const Status: Tags.Status := cast<Tags.Status>(Index);
@@ -45,20 +45,20 @@ begin
       if Small then
         const Slot: int := Index;
         Parts.Add(
-          Tags.StatusTag<M.Msg>(
+          Tags.StatusTag of M.Msg(
             'creative-remove-' + Slot.ToString(), Value,
             function(): M.Msg => M.Msg.RemoveTag(Slot), new Tags.Options(Small := true)
           )
         );
       else
-        Parts.Add(Tags.StatusTag<M.Msg>('creative-tag-' + Index.ToString(), Value));
+        Parts.Add(Tags.StatusTag of M.Msg('creative-tag-' + Index.ToString(), Value));
       end if;
     end if;
   end for;
 
   if Parts.Count = 0 then
     Parts.Add(
-      Buttons.Button<M.Msg>(
+      Buttons.Button of M.Msg(
         'creative-restore', 'Bring them back', M.Msg.RestoreTags,
         new Buttons.Options(ControlSize := Buttons.Size.Small, Variant := S.ButtonVariant.Ghost)
       )
@@ -69,7 +69,7 @@ begin
   else
     new L.Flow(Gap := G.Points(8), Wrap := true, Clip := false)
   end if;
-  return E.Row<M.Msg>(Flow, Parts.ToArray());
+  return E.Row of M.Msg(Flow, Parts.ToArray());
 end function;
 
 function Tool(Code: int; Tooltip: string; Active: bool := false): W.Tool;
@@ -77,41 +77,41 @@ begin
   return new W.Tool(Sys.Char.ConvertFromUtf32(Code), Tooltip, Active);
 end function;
 
-function GradientAndSteps(Model: M.Model): E.Element<M.Msg>;
+function GradientAndSteps(Model: M.Model): E.Element of M.Msg;
 begin
   const Display: string := if Model.Generated > 0 then
     Model.Variations.ToString() + ' · generated ' + Model.Generated.ToString() + ' times'
   else
     ''
   end if;
-  return Grid.Grid<M.Msg>(
+  return Grid.Grid of M.Msg(
     new Grid.Options(Columns := 2, MinimumColumnWidth := 260.0F, Gap := G.Points(12)),
-    Gradient.GradientSlider<M.Msg>(
+    Gradient.GradientSlider of M.Msg(
       'creative-hue', new Gradient.Value('Hue', Model.Hue, 0.0F, 360.0F),
       M.Msg.Hue, new Gradient.Options(Swatch := true)
     ),
-    Gradient.GradientSlider<M.Msg>(
+    Gradient.GradientSlider of M.Msg(
       'creative-kelvin', new Gradient.Value('White balance', Model.Kelvin, 2500.0F, 10000.0F),
       M.Msg.Kelvin, new Gradient.Options(
         Kind := Gradient.Track.Temperature, Step := 100.0F,
         Tool := Tool($E180, 'Pick from image', Model.Picking)
       )
     ),
-    Gradient.GradientSlider<M.Msg>(
+    Gradient.GradientSlider of M.Msg(
       'creative-opacity', new Gradient.Value('Opacity', Model.Opacity, 0.0F, 1.0F),
       M.Msg.Opacity, new Gradient.Options(
         Kind := Gradient.Track.Opacity,
         Color := Chart.Color.Rgba(new Colors.Color($2B, $B8, $A6))
       )
     ),
-    Step.StepSlider<M.Msg>(
+    Step.StepSlider of M.Msg(
       'creative-variations', new Step.Value('Variations', Model.Variations, 1, 4),
       M.Msg.Variations, new Step.Options(Display := Display, Tool := Tool($E145, 'Generate'))
     )
   );
 end function;
 
-function LastControls(Model: M.Model): E.Element<M.Msg>;
+function LastControls(Model: M.Model): E.Element of M.Msg;
 begin
   const Sizes: array of string := ['2.4 MB', '640 KB', '410 KB'];
   const Display: string := (if Model.SavedAs = Model.Format then
@@ -119,15 +119,15 @@ begin
   else
     ''
   end if) + Sizes[Model.Format];
-  return E.Column<M.Msg>(
+  return E.Column of M.Msg(
     new L.Flow(Gap := G.Points(12), Clip := false),
-    Aspect.AspectPicker<M.Msg>(
+    Aspect.AspectPicker of M.Msg(
       'creative-aspect', new Aspect.Value('Aspect ratio', Model.Aspect), M.Msg.Aspect,
       new Aspect.Options(Custom := true)
     ),
-    Grid.Grid<M.Msg>(
+    Grid.Grid of M.Msg(
       new Grid.Options(Columns := 2, MinimumColumnWidth := 260.0F, Gap := G.Points(12)),
-      Options.OptionAction<M.Msg>(
+      Options.OptionAction of M.Msg(
         'creative-background',
         new Options.Value(
           'Background',
@@ -137,13 +137,13 @@ begin
         ),
         M.Msg.Background, new Options.Options(Display := 'erase')
       ),
-      Options.OptionAction<M.Msg>(
+      Options.OptionAction of M.Msg(
         'creative-format',
         new Options.Value('Save as', ['png', 'jpg', 'webp'], Model.Format, Tool($E0B2, 'Download')),
         M.Msg.Format, new Options.Options(Display := Display)
       )
     ),
-    Seeds.SeedField<M.Msg>(
+    Seeds.SeedField of M.Msg(
       'creative-seed', new Seeds.Value('Seed', Model.Seed, Model.Fixed), M.Msg.Seed,
       new Seeds.Options(
         Display := if Model.Fixed = true then
@@ -161,42 +161,45 @@ end function;
 // - `Model`: Current settings and action results.
 // ## Returns
 // The sections in the original page order.
-public function View(Model: M.Model): array of E.Element<M.Msg>;
+public function View(Model: M.Model): array of E.Element of M.Msg;
 begin
   return [
-    G.Heading<M.Msg>(
+    G.Heading of M.Msg(
       Strings.Get('Heading.StatusTag'),
       Strings.Get('Heading.StatusTagHint')
     ),
     TagRow(Model, false),
     TagRow(Model, true),
-    G.Heading<M.Msg>(
+    G.Heading of M.Msg(
       Strings.Get('Heading.RatioSlider'),
       Strings.Get('Heading.RatioSliderHint')
     ),
-    E.Column<M.Msg>(
+    E.Column of M.Msg(
       new L.Flow(Gap := G.Points(12), Clip := false),
-      Ratio.RatioSlider<M.Msg>(
+      Ratio.RatioSlider of M.Msg(
         'creative-coffee', new Ratio.Value('COFFEE', 'MILK', Model.Coffee),
         M.Msg.Coffee, new Ratio.Options(Tone := S.Tone.Warning)
       ),
-      Ratio.RatioSlider<M.Msg>(
+      Ratio.RatioSlider of M.Msg(
         'creative-train', new Ratio.Value('TRAIN', 'TEST', Model.Train),
         M.Msg.Train, new Ratio.Options(Tone := S.Tone.Info)
       )
     ),
-    G.Heading<M.Msg>(
+    G.Heading of M.Msg(
       Strings.Get('Heading.GradientAndStepSliders'),
       Strings.Get('Heading.GradientAndStepSlidersHint')
     ),
     GradientAndSteps(Model),
-    G.Heading<M.Msg>(Strings.Get('Heading.PaletteStrip'), Strings.Get('Heading.PaletteStripHint')),
-    Palette.PaletteStrip<M.Msg>(
+    G.Heading of M.Msg(
+      Strings.Get('Heading.PaletteStrip'),
+      Strings.Get('Heading.PaletteStripHint')
+    ),
+    Palette.PaletteStrip of M.Msg(
       'creative-palette',
       new Palette.Value('Color palette', Model.Swatches, Model.PaletteSeed), M.Msg.PaletteChanged,
       new Palette.Options(Display := 'Click a swatch to lock it')
     ),
-    G.Heading<M.Msg>(
+    G.Heading of M.Msg(
       Strings.Get('Heading.AspectRatioOptionsAndSeed'),
       Strings.Get('Heading.AspectRatioOptionsAndSeedHint')
     ),

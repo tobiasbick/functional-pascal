@@ -95,7 +95,7 @@ public type NativeShellTests = record
       );
       Step(Session, 0);
       for Item: Gui.Control in Session.Window.Snapshot().Controls do
-        X.Assert.NotEqual<string>('clear-database', Item.Id);
+        X.Assert.NotEqual of string('clear-database', Item.Id);
       end for;
 
       Capture(Session, 'general');
@@ -111,15 +111,15 @@ public type NativeShellTests = record
           'source-music-pause'
         ).Bounds.Y > Control(Session, 'source-music-offline').Bounds.Y
       );
-      X.Assert.Equal<float>(
+      X.Assert.Equal of float(
         Control(Session, 'source-music-offline').Bounds.X,
         Control(Session, 'source-music-pause').Bounds.X
       );
       X.Assert.True(Control(Session, 'source-music-clear').Enabled);
-      X.Assert.Equal<string>('Delete', Control(Session, 'source-music-remove').Text);
-      X.Assert.Equal<string>('Reset', Control(Session, 'source-music-clear').Text);
-      X.Assert.Equal<string>('Refresh', Control(Session, 'source-music-rescan').Text);
-      X.Assert.Equal<string>('Edit', Control(Session, 'source-music-edit').Text);
+      X.Assert.Equal of string('Delete', Control(Session, 'source-music-remove').Text);
+      X.Assert.Equal of string('Reset', Control(Session, 'source-music-clear').Text);
+      X.Assert.Equal of string('Refresh', Control(Session, 'source-music-rescan').Text);
+      X.Assert.Equal of string('Edit', Control(Session, 'source-music-edit').Text);
       X.Assert.True(
         Control(
           Session,
@@ -153,14 +153,14 @@ public type NativeShellTests = record
         Session, Settings.Msg.ProgressReceived(
           new Progress.Snapshot(
             1000000L, 1L,
-            I.ImmutableArray.Create<Progress.SourceProgress>(
+            I.ImmutableArray.Create of Progress.SourceProgress(
               new Progress.SourceProgress(Source.Id, Progress.Phase.Scanning, 12480L, 318L)
             )
           )
         )
       );
       Step(Session, 1);
-      X.Assert.Equal<string>('indeterminate', Control(Session, 'source-music-progress').Value);
+      X.Assert.Equal of string('indeterminate', Control(Session, 'source-music-progress').Value);
       X.Assert.False(Control(Session, 'source-music-rescan').Enabled);
       Capture(Session, 'library-scanning');
       Send(Session, Settings.Msg.SetPaused(Source.Id, true));
@@ -243,12 +243,12 @@ public type NativeShellTests = record
       Capture(Session, 'library-remove');
       Send(Session, Settings.Msg.CancelRemove);
       Step(Session, 1);
-      X.Assert.Equal<int>(1, Saved.MusicSources.Length);
+      X.Assert.Equal of int(1, Saved.MusicSources.Length);
       Send(Session, Settings.Msg.AskRemove(Source.Id));
       Step(Session, 1);
       Send(Session, Settings.Msg.ConfirmRemove);
       Step(Session, 1);
-      X.Assert.Equal<int>(0, Saved.MusicSources.Length);
+      X.Assert.Equal of int(0, Saved.MusicSources.Length);
       X.Assert.True(IO.File.Exists(Track));
     finally
       Library.DisposeAsync().GetAwaiter().GetResult();

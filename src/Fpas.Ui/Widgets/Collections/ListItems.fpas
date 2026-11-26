@@ -32,10 +32,10 @@ end record;
 // - `Settings`: Optional row appearance.
 // ## Returns
 // The graphical element.
-public function ListItem<TMsg>(Id: string; Title: string; OnActivate: Sys.Func<TMsg>? := null; Settings: Options? := null): E.Element<TMsg>;
+public function ListItem of TMsg(Id: string; Title: string; OnActivate: (Sys.Func of TMsg)? := null; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.ListItem(Id, Title, OnActivate, Settings ?? new Options());
+  return (E.Element of TMsg).ListItem(Id, Title, OnActivate, Settings ?? new Options());
 end function;
 
 end unit;

@@ -13,7 +13,7 @@ uses System.Text as Text;
 
 function AllocateCached(
   Preferred: array of int; Rules: array of E.Flex; Available: int;
-  Previous: array of F.AllocationMemo; Next: Generic.List<F.AllocationMemo>
+  Previous: array of F.AllocationMemo; Next: Generic.List of F.AllocationMemo
 ): array of int;
 begin
   const Signature: Text.StringBuilder := new Text.StringBuilder();
@@ -42,9 +42,9 @@ begin
   return Sizes;
 end function;
 
-public function Bounds<TMsg>(
-  Children: array of E.Element<TMsg>; Axis: bool; Flow: E.Flow; Area: F.Rect;
-  PreviousAllocations: array of F.AllocationMemo; Allocations: Generic.List<F.AllocationMemo>;
+public function Bounds of TMsg(
+  Children: array of E.Element of TMsg; Axis: bool; Flow: E.Flow; Area: F.Rect;
+  PreviousAllocations: array of F.AllocationMemo; Allocations: Generic.List of F.AllocationMemo;
   WrapText: bool
 ): array of F.Rect;
 begin
@@ -77,28 +77,28 @@ begin
     end if
   end if;
   const Sizes: array of int := new int[Children.Length];
-  const Rules: Generic.List<E.Flex> := new Generic.List<E.Flex>(Children.Length);
+  const Rules: Generic.List of E.Flex := new Generic.List of E.Flex(Children.Length);
   for Index: int := 0 to Children.Length - 1 do
-    const Child: E.Element<TMsg> := Children[Index];
+    const Child: E.Element of TMsg := Children[Index];
     const Width: int := if WrapText and not Axis then
-      M.CrossWidth<TMsg>(Child, Cross, Align)
+      M.CrossWidth of TMsg(Child, Cross, Align)
     else
       -1
     end if;
-    Sizes[Index] := M.Intrinsic<TMsg>(Child, Axis, Width);
-    Rules.Add(M.AllocationRule<TMsg>(Child, Axis));
+    Sizes[Index] := M.Intrinsic of TMsg(Child, Axis, Width);
+    Rules.Add(M.AllocationRule of TMsg(Child, Axis));
   end for;
   const Allocation: array of int := AllocateCached(
     Sizes, Rules.ToArray(),
     Sys.Math.Max(0, Main - Sys.Math.Max(0, Children.Length - 1) * Flow.Gap),
     PreviousAllocations, Allocations
   );
-  const ChildrenBounds: Generic.List<F.Rect> := new Generic.List<F.Rect>(Children.Length);
+  const ChildrenBounds: Generic.List of F.Rect := new Generic.List of F.Rect(Children.Length);
   var Offset: int := 0;
   for Index: int := 0 to Children.Length - 1 do
-    const Child: E.Element<TMsg> := Children[Index];
+    const Child: E.Element of TMsg := Children[Index];
     const Span: int := Allocation[Index];
-    const ChildCross: int := if Align = L.Alignment.Stretch and M.CanStretch<TMsg>(
+    const ChildCross: int := if Align = L.Alignment.Stretch and M.CanStretch of TMsg(
       Child,
       not Axis,
       Flow.Align = L.Alignment.Stretch
@@ -108,7 +108,7 @@ begin
     else
       Sys.Math.Min(
         Cross,
-        M.Intrinsic<TMsg>(
+        M.Intrinsic of TMsg(
           Child, not Axis, if WrapText and Axis then
             Span
           else

@@ -19,18 +19,18 @@ uses GuiGallery.Shared.Sections as G;
 // - `Model`: Current gallery state.
 // ## Returns
 // The tabs, breadcrumb, pagination and stepper previews.
-public function View(Model: State.Model): E.Element<State.Msg>;
+public function View(Model: State.Model): E.Element of State.Msg;
 begin
-  const Trail: E.Element<State.Msg> := Breadcrumb.View();
-  const Pager: E.Element<State.Msg> := Pagination.View(Model);
-  return E.Column<State.Msg>(
+  const Trail: E.Element of State.Msg := Breadcrumb.View();
+  const Pager: E.Element of State.Msg := Pagination.View(Model);
+  return E.Column of State.Msg(
     new L.Flow(Gap := G.Points(20)),
-    G.Heading<State.Msg>(Strings.Get('Text.Tabs'), Strings.Get('Heading.TabsHint')),
-    G.Card<State.Msg>(16, Tabs.Rows(Model)),
-    G.Heading<State.Msg>(Strings.Get('Heading.BreadcrumbAndPagination')),
-    G.Card<State.Msg>(18, [Trail, Pager]),
-    G.Heading<State.Msg>(Strings.Get('Heading.Stepper')),
-    G.Card<State.Msg>(18, Stepper.Rows(Model))
+    G.Heading of State.Msg(Strings.Get('Text.Tabs'), Strings.Get('Heading.TabsHint')),
+    G.Card of State.Msg(16, Tabs.Rows(Model)),
+    G.Heading of State.Msg(Strings.Get('Heading.BreadcrumbAndPagination')),
+    G.Card of State.Msg(18, [Trail, Pager]),
+    G.Heading of State.Msg(Strings.Get('Heading.Stepper')),
+    G.Card of State.Msg(18, Stepper.Rows(Model))
   );
 end function;
 

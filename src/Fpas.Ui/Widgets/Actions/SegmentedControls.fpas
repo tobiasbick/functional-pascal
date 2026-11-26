@@ -37,10 +37,10 @@ end record;
 // - `Settings`: Control size, horizontal fill and input permission.
 // ## Returns
 // A selector which proposes changes without changing the model itself.
-public function SegmentedControl<TMsg>(Id: string; Items: array of Item; Selected: int; OnChange: function(int): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function SegmentedControl of TMsg(Id: string; Items: array of Item; Selected: int; OnChange: function(int): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Segments(Id, Items, Selected, OnChange, Settings ?? new Options());
+  return (E.Element of TMsg).Segments(Id, Items, Selected, OnChange, Settings ?? new Options());
 end function;
 
 // Gets a positional segment's stable identity for application focus requests.

@@ -13,7 +13,7 @@ uses GuiGallery.App.State as Gallery;
 // ## Parameters
 // - `Session`: Presented Instruments page.
 // - `Output`: Directory for full-frame images and crop bounds.
-public procedure CaptureInstruments(Session: Gui.Session<Gallery.Msg>; Output: string);
+public procedure CaptureInstruments(Session: Gui.Session of Gallery.Msg; Output: string);
 begin
   const Margin: Regions.Insets := new Regions.Insets();
   Regions.Capture(Session, Output, 'readout', Margin, 'bed', 'peak', 'cup-count');
@@ -26,7 +26,7 @@ end procedure;
 // ## Parameters
 // - `Session`: Presented Audio page with its tour closed.
 // - `Output`: Directory for full-frame images and crop bounds.
-public procedure CaptureAudio(Session: Gui.Session<Gallery.Msg>; Output: string);
+public procedure CaptureAudio(Session: Gui.Session of Gallery.Msg; Output: string);
 begin
   const Margin: Regions.Insets := new Regions.Insets();
   Regions.Capture(
@@ -44,7 +44,7 @@ end procedure;
 // ## Parameters
 // - `Session`: Presented Audio page with its tour open.
 // - `Output`: Directory for the full-frame image and crop bounds.
-public procedure CaptureTour(Session: Gui.Session<Gallery.Msg>; Output: string);
+public procedure CaptureTour(Session: Gui.Session of Gallery.Msg; Output: string);
 begin
   Regions.Capture(
     Session,
@@ -57,7 +57,7 @@ begin
   );
 end procedure;
 
-procedure DrawSampleStroke(Session: Gui.Session<Gallery.Msg>; Pointer: procedure(float, float, int));
+procedure DrawSampleStroke(Session: Gui.Session of Gallery.Msg; Pointer: procedure(float, float, int));
 begin
   const Pad: Cui.CuiRectangle := Presented.Bounds(Session, 'capture-signature');
   const BaseX: float := Pad.X + 46.0F;
@@ -83,7 +83,7 @@ end procedure;
 // - `Pointer`: Advances a frame after moving the pointer and pressing (1),
 //   releasing (0) or preserving (-1) the left button.
 public procedure CaptureFileControls(
-  Session: Gui.Session<Gallery.Msg>; Output: string; Pointer: procedure(float, float, int)
+  Session: Gui.Session of Gallery.Msg; Output: string; Pointer: procedure(float, float, int)
 );
 begin
   const Margin: Regions.Insets := new Regions.Insets();

@@ -26,13 +26,21 @@ end record;
 // - `Enabled`: Whether the range accepts input.
 // ## Returns
 // A graphical slider with a model-owned interval.
-public function RangeSlider<TMsg>(
+public function RangeSlider of TMsg(
   Id: string; Label: string; Value: Interval; Minimum: float; Maximum: float;
   OnChange: function(Interval): TMsg; Enabled: bool := true
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.RangeSliderAction(Id, Label, Value, Minimum, Maximum, OnChange, Enabled);
+  return (E.Element of TMsg).RangeSliderAction(
+    Id,
+    Label,
+    Value,
+    Minimum,
+    Maximum,
+    OnChange,
+    Enabled
+  );
 end function;
 
 end unit;

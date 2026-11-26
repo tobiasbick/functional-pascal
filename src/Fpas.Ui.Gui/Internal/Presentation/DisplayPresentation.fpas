@@ -29,34 +29,34 @@ uses System as Sys;
 // - `Frame`: Current GUI frame.
 // - `Node`: Native display element.
 // - `Visit`: Renders the veil's content.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Node: E.Element<TMsg>; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+public procedure Draw of TMsg(Frame: C.State of TMsg; Node: E.Element of TMsg; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
 begin
   case Node of
     when E.Element.NativeText(const Text: string, const Role: Texts.Appearance):
-      NativeTextWidget.Draw<TMsg>(Frame, Text, Role);
+      NativeTextWidget.Draw of TMsg(Frame, Text, Role);
     when E.Element.Icon(const Glyph: string, const Size: float, const Color: G.Color?):
-      IconWidget.Draw<TMsg>(Frame, Glyph, Size, Color);
+      IconWidget.Draw of TMsg(Frame, Glyph, Size, Color);
     when E.Element.Emoji(const Glyph: string, const Size: float):
-      EmojiWidget.Draw<TMsg>(Frame, Glyph, Size);
+      EmojiWidget.Draw of TMsg(Frame, Glyph, Size);
     when E.Element.Keycap(const Keys: string):
-      KeycapWidget.Draw<TMsg>(Frame, Keys);
+      KeycapWidget.Draw of TMsg(Frame, Keys);
     when E.Element.Image(
       const Id: string,
       const Source: Media.Source,
       const Settings: Images.Options
     ):
-      ImageWidget.Draw<TMsg>(Frame, Id, Source, Settings);
+      ImageWidget.Draw of TMsg(Frame, Id, Source, Settings);
     when E.Element.Canvas(
       const Id: string,
       const Drawing: array of Canvases.Shape,
       const Clicked: function(Canvases.Event): TMsg,
       const Settings: Canvases.Options,
-      const OnWheel: Sys.Func<Canvases.Wheel, TMsg>?,
-      const Paint: Sys.Action<Painting.Surface>?,
-      const OnPointer: Sys.Func<Canvases.Pointer, TMsg>?,
-      const OnInput: Sys.Func<Canvases.Input, TMsg>?
+      const OnWheel: Sys.Func of (Canvases.Wheel, TMsg)?,
+      const Paint: (Sys.Action of Painting.Surface)?,
+      const OnPointer: Sys.Func of (Canvases.Pointer, TMsg)?,
+      const OnInput: Sys.Func of (Canvases.Input, TMsg)?
     ):
-      CanvasWidget.Draw<TMsg>(
+      CanvasWidget.Draw of TMsg(
         Frame,
         Id,
         Drawing,
@@ -71,10 +71,10 @@ begin
       const Id: string,
       const Revealed: bool,
       const Changed: function(bool): TMsg,
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       const Settings: Veils.Options
     ):
-      VeilWidget.Draw<TMsg>(Frame, Id, Revealed, Changed, Child, Settings, Visit);
+      VeilWidget.Draw of TMsg(Frame, Id, Revealed, Changed, Child, Settings, Visit);
     else
   end case;
 end procedure;

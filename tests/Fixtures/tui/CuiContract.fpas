@@ -84,18 +84,18 @@ begin
   );
 end procedure;
 
-function Update(State: int; Message: int): Mvu.Transition<int, int>;
+function Update(State: int; Message: int): Mvu.Transition of (int, int);
 begin
-  return new Mvu.Transition<int, int>(Message, []);
+  return new Mvu.Transition of (int, int)(Message, []);
 end function;
 
 procedure SemanticColors();
-  function View(State: int): E.Element<int>;
+  function View(State: int): E.Element of int;
   begin
-    return E.Styled<int>(
-      E.Column<int>(
-        E.Styled<int>(E.Text<int>('x'), Styles.Role.Primary),
-        E.Styled<int>(E.Text<int>('y'), Styles.Role.Default)
+    return E.Styled of int(
+      E.Column of int(
+        E.Styled of int(E.Text of int('x'), Styles.Role.Primary),
+        E.Styled of int(E.Text of int('y'), Styles.Role.Default)
       ), Styles.Role.Panel
     );
   end function;
@@ -109,7 +109,7 @@ begin
       Accent := new G.Color(255, 0, 0, 128);
     end with;
   end with;
-  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(
+  using const Session: Tui.HeadlessSession := Headless.Start of (int, int)(
     0,
     Update,
     View,
@@ -129,26 +129,26 @@ begin
 end procedure;
 
 procedure LogicalDistances();
-  function View(State: int): E.Element<int>;
+  function View(State: int): E.Element of int;
   begin
-    return E.Column<int>(
+    return E.Column of int(
       new L.Flow(
         Gap := L.Spacing.Fixed(L.Measure.Logical(16)),
         Padding := L.Spacing.Fixed(L.Measure.Logical(16))
       ),
-      E.Size<int>(
-        B.Button<int>('a', 'A', 1),
+      E.Size of int(
+        B.Button of int('a', 'A', 1),
         new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(32)))
       ),
-      E.Size<int>(
-        B.Button<int>('b', 'B', 2),
+      E.Size of int(
+        B.Button of int('b', 'B', 2),
         new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(16)))
       )
     );
   end function;
 begin
-  discard V.Prepare<int>(View(0), V.Target.Portable);
-  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(0, Update, View, 12, 10);
+  discard V.Prepare of int(View(0), V.Target.Portable);
+  using const Session: Tui.HeadlessSession := Headless.Start of (int, int)(0, Update, View, 12, 10);
   const Controls: array of Tui.ControlSnapshot := Session.Snapshot().Controls;
   Check(
     Controls[0].Column = 2 and Controls[0].Row = 1 and Controls[0].Height = 2,
@@ -160,9 +160,9 @@ begin
   );
   var Rejected: bool := false;
   try
-    discard V.Prepare<int>(
-      E.Size<int>(
-        E.Text<int>('x'),
+    discard V.Prepare of int(
+      E.Size of int(
+        E.Text of int('x'),
         new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(32)), Grow := 1)
       ), V.Target.Portable
     );
@@ -175,16 +175,16 @@ end procedure;
 
 procedure SheetPlacement();
 begin
-  for Side: Sheets.Side in Sys.Enum.GetValues<Sheets.Side>() do
-    const View: function(int): E.Element<int> := function(State: int): E.Element<int> => Sheets.Sheet<int>(
-      'sheet', B.Button<int>('under', 'Background', 5),
-      E.Column<int>(B.Button<int>('inside', 'Body', 2), E.Text<int>('Last line')),
+  for Side: Sheets.Side in Sys.Enum.GetValues of Sheets.Side() do
+    const View: function(int): E.Element of int := function(State: int): E.Element of int => Sheets.Sheet of int(
+      'sheet', B.Button of int('under', 'Background', 5),
+      E.Column of int(B.Button of int('inside', 'Body', 2), E.Text of int('Last line')),
       State = 0, new Sheets.Options(
         'Header', Description := 'Detail', Edge := Side,
         Size := 64, InitialFocus := 'inside'
       ), 1
     );
-    using const Session: Tui.HeadlessSession := Headless.Start<int, int>(
+    using const Session: Tui.HeadlessSession := Headless.Start of (int, int)(
       0,
       Update,
       View,
@@ -228,15 +228,21 @@ begin
 end procedure;
 
 procedure SheetFocus();
-  function View(State: int): E.Element<int>;
+  function View(State: int): E.Element of int;
   begin
-    const First: E.Element<int> := Sheets.Sheet<int>(
-      'first', E.Column<int>(B.Button<int>('other', 'Other', 0), B.Button<int>('open', 'Open', 1)),
-      E.Column<int>(B.Button<int>('inside-first', 'Replace', 2), B.Button<int>('nest', 'Nest', 3)),
-      State = 1 or State = 3, new Sheets.Options('First', InitialFocus := 'inside-first'), 0
+    const First: E.Element of int := Sheets.Sheet of int(
+      'first',
+      E.Column of int(B.Button of int('other', 'Other', 0), B.Button of int('open', 'Open', 1)),
+      E.Column of int(
+        B.Button of int('inside-first', 'Replace', 2),
+        B.Button of int('nest', 'Nest', 3)
+      ),
+      State = 1 or State = 3,
+      new Sheets.Options('First', InitialFocus := 'inside-first'),
+      0
     );
-    return Sheets.Sheet<int>(
-      'second', First, B.Button<int>('inside-second', 'Remove first', 2), State = 2 or State = 3,
+    return Sheets.Sheet of int(
+      'second', First, B.Button of int('inside-second', 'Remove first', 2), State = 2 or State = 3,
       new Sheets.Options('Second', InitialFocus := 'inside-second'), if State = 3 then
         1
       else
@@ -257,7 +263,7 @@ procedure SheetFocus();
     raise new Sys.InvalidOperationException('Expected sheet focus on ' + Expected + '.');
   end procedure;
 begin
-  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(0, Update, View, 64, 16);
+  using const Session: Tui.HeadlessSession := Headless.Start of (int, int)(0, Update, View, 64, 16);
   const Escape: Tui.Input := Tui.Input.KeyPress(Keys.Key.Escape, Keys.KeyModifiers.None);
   Send(Session, Tui.Input.Focus('open'), 'open');
   Send(Session, Tui.Input.Activate('open'), 'inside-first');
@@ -274,11 +280,11 @@ begin
 end procedure;
 
 procedure ButtonAction();
-  function View(State: int): E.Element<int>;
+  function View(State: int): E.Element of int;
   begin
-    return E.Column<int>(
-      B.Button<int>('ready', 'Finish loading', 1),
-      B.Button<int>(
+    return E.Column of int(
+      B.Button of int('ready', 'Finish loading', 1),
+      B.Button of int(
         'save', if State = 0 then
           'Saving ## literal'
         else
@@ -296,18 +302,18 @@ procedure ButtonAction();
           Color := new G.Color(40, 150, 100)
         )
       ),
-      B.Button<int>('full', 'Full', 3, new B.Options(Width := L.Extent.Fill)),
-      E.Row<int>(
-        B.Button<int>(
+      B.Button of int('full', 'Full', 3, new B.Options(Width := L.Extent.Fill)),
+      E.Row of int(
+        B.Button of int(
           'fixed',
           'Fixed',
           3,
           new B.Options(Width := L.Extent.Fixed(L.Measure.Logical(80)))
         ),
-        B.Button<int>('fill-row', 'Fill', 3, new B.Options(Width := L.Extent.Fill))
+        B.Button of int('fill-row', 'Fill', 3, new B.Options(Width := L.Extent.Fill))
       ),
-      B.Button<int>('large', 'Large', 3, new B.Options(ControlSize := B.Size.Large)),
-      B.Button<int>(
+      B.Button of int('large', 'Large', 3, new B.Options(ControlSize := B.Size.Large)),
+      B.Button of int(
         'transparent',
         'Hidden label',
         3,
@@ -316,7 +322,7 @@ procedure ButtonAction();
     );
   end function;
 begin
-  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(
+  using const Session: Tui.HeadlessSession := Headless.Start of (int, int)(
     0, Update, View, 40, 12, ThemeFor := function(State: int): Themes.Theme => Themes.Dark()
   );
   discard Session.Send(Tui.Input.Focus('save'));
@@ -374,16 +380,16 @@ begin
 end procedure;
 
 procedure ChoiceStripSizing();
-  function View(State: int): E.Element<int>;
+  function View(State: int): E.Element of int;
   begin
-    return Segments.SegmentedControl<int>(
+    return Segments.SegmentedControl of int(
       'fill', [new Segments.Item('One'), new Segments.Item('Longer label')], State,
       function(Choice: int): int => Choice,
       new Segments.Options(ControlSize := B.Size.Large, FullWidth := true)
     );
   end function;
 begin
-  using const Session: Tui.HeadlessSession := Headless.Start<int, int>(0, Update, View, 41, 8);
+  using const Session: Tui.HeadlessSession := Headless.Start of (int, int)(0, Update, View, 41, 8);
   const Frame: Tui.Frame := Session.Snapshot();
   const First: Tui.ControlSnapshot := Frame.Controls[0];
   const Second: Tui.ControlSnapshot := Frame.Controls[1];
@@ -395,10 +401,10 @@ begin
 end procedure;
 
 procedure WidgetProfiles();
-  procedure Rejects(Node: E.Element<int>; Profile: V.Target; Reason: string);
+  procedure Rejects(Node: E.Element of int; Profile: V.Target; Reason: string);
   begin
     try
-      discard V.Prepare<int>(Node, Profile);
+      discard V.Prepare of int(Node, Profile);
     catch Error: Sys.ArgumentException do
       Check(Error.Message.Contains(Reason), Error.Message);
       return;
@@ -409,44 +415,44 @@ procedure WidgetProfiles();
     );
   end procedure;
 begin
-  const Widgets: array of E.Element<int> := [
-    E.Divider<int>(), Icon.IconButton<int>('icon', 'i', 'Inspect', 1),
-    Copy.CopyButton<int>('copy', 'text'), Hold.HoldButton<int>('hold', 'Hold', 1),
-    Confirm.ConfirmButton<int>('confirm', 'Confirm', 1),
-    Status.StatusButton<int>('status', 'Save', Status.Status.Idle, 1),
-    Groups.ButtonGroup<int>(B.Button<int>('action', 'Run', 1)),
-    Split.SplitButton<int>('split', 'Run', 1, [new Split.Item<int>('other', 'Other', 2)]),
-    Menus.ContextMenu<int>(
+  const Widgets: array of E.Element of int := [
+    E.Divider of int(), Icon.IconButton of int('icon', 'i', 'Inspect', 1),
+    Copy.CopyButton of int('copy', 'text'), Hold.HoldButton of int('hold', 'Hold', 1),
+    Confirm.ConfirmButton of int('confirm', 'Confirm', 1),
+    Status.StatusButton of int('status', 'Save', Status.Status.Idle, 1),
+    Groups.ButtonGroup of int(B.Button of int('action', 'Run', 1)),
+    Split.SplitButton of int('split', 'Run', 1, [new Split.Item of int('other', 'Other', 2)]),
+    Menus.ContextMenu of int(
       'context',
-      B.Button<int>('context-target', 'Project', 1),
-      [Menus.Entry<int>.Action(new Menus.Item<int>('open', 'Open', 1))]
+      B.Button of int('context-target', 'Project', 1),
+      [(Menus.Entry of int).Action(new Menus.Item of int('open', 'Open', 1))]
     ),
-    Toggles.ThemeToggle<int>('toggle', Themes.Mode.Dark, function(Mode: Themes.Mode): int => 1),
-    ToggleGroups.ToggleGroup<int>(
+    Toggles.ThemeToggle of int('toggle', Themes.Mode.Dark, function(Mode: Themes.Mode): int => 1),
+    ToggleGroups.ToggleGroup of int(
       'flags',
       [new ToggleGroups.Item('One')],
       [true],
       function(Flags: array of bool): int => Flags.Length
     ),
-    Switchers.ThemeSwitcher<int>(
+    Switchers.ThemeSwitcher of int(
       'theme', Switchers.Selection.Light,
       function(Choice: Switchers.Selection): int => 1
     )
   ];
-  for Node: E.Element<int> in Widgets do
-    discard V.Prepare<int>(Node, V.Target.Graphical);
+  for Node: E.Element of int in Widgets do
+    discard V.Prepare of int(Node, V.Target.Graphical);
     Rejects(Node, V.Target.Terminal, 'Graphical');
     Rejects(Node, V.Target.Portable, 'Graphical');
   end for;
 
-  const Choice: E.Element<int> := Segments.SegmentedControl<int>(
+  const Choice: E.Element of int := Segments.SegmentedControl of int(
     'choice',
     [new Segments.Item('One')],
     0,
     function(N: int): int => N
   );
-  discard V.Prepare<int>(Choice, V.Target.Graphical);
-  discard V.Prepare<int>(Choice, V.Target.Terminal);
+  discard V.Prepare of int(Choice, V.Target.Graphical);
+  discard V.Prepare of int(Choice, V.Target.Terminal);
   Rejects(Choice, V.Target.Portable, 'terminal or graphical profile');
 end procedure;
 

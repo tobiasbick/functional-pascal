@@ -18,13 +18,13 @@ public sealed class ImplementProtocolTests(SdkPackageFixture sdk) : IClassFixtur
             unit Demo.Adapters;
             uses System as Sys;
 
-            public type IBase<T> = protocol
+            public type IBase of T = protocol
               Label: string;
               function Read(Value: T): T;
             end protocol;
 
-            public type IReader<T> = protocol extends IBase<T>, Sys.IDisposable
-              function Echo<U>(Value: U): U;
+            public type IReader of T = protocol extends IBase of T, Sys.IDisposable
+              function Echo of U(Value: U): U;
               where U: class;
               function Choose(Value: string): string;
               function Choose(Value: int): int;
@@ -54,7 +54,7 @@ public sealed class ImplementProtocolTests(SdkPackageFixture sdk) : IClassFixtur
         var path = directory.File(".temp-data/protocol.json");
         var options = new[] { "implement-protocol", "Game/Game.fpasproj", "--file", at.File,
             "--line", FormattableString.Invariant($"{at.Line}"), "--column", FormattableString.Invariant($"{at.Column}"),
-            "--protocol", "IReader<int>", "--plan", path, "--report", "json" };
+            "--protocol", "IReader of int", "--plan", path, "--report", "json" };
         var missing = await RenameFixture.Cli(directory, options);
         Assert.Equal(1, missing.ExitCode);
         using (var report = JsonDocument.Parse(missing.Output))
@@ -76,7 +76,7 @@ public sealed class ImplementProtocolTests(SdkPackageFixture sdk) : IClassFixtur
         Assert.True(preview.ExitCode == 0, preview.Output + preview.Error);
         var plan = RefactorPlanJson.Read(File.ReadAllBytes(path));
         Assert.Equal("implement-protocol", plan.Kind);
-        Assert.Equal("IReader<int>", plan.Protocol!.Type);
+        Assert.Equal("IReader of int", plan.Protocol!.Type);
         Assert.Equal(4, plan.Protocol.Members.Count);
         Assert.True(plan.ChangesPublicApi);
         Assert.Equal(source, File.ReadAllText(at.File));
@@ -84,7 +84,7 @@ public sealed class ImplementProtocolTests(SdkPackageFixture sdk) : IClassFixtur
         var applied = await RenameFixture.Cli(directory, "apply", "Game/Game.fpasproj", "--plan", path, "--no-restore");
         Assert.True(applied.ExitCode == 0, applied.Output + applied.Error);
         var result = File.ReadAllText(at.File);
-        Assert.Contains("type Reader = record implements IReader<int>", result);
+        Assert.Contains("type Reader = record implements IReader of int", result);
         Assert.Contains("return self.ReadValue(Value);", result);
         Assert.Contains("where U: class;", result);
         Assert.Contains("return Value.Label;", result);

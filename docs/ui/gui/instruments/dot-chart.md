@@ -24,13 +24,13 @@ end variant;
 // Displays five equally spaced samples for each of two cups.
 // ## Returns
 // The chart for the application view.
-public function View(): E.Element<Msg>;
+public function View(): E.Element of Msg;
 begin
   const Bands: array of W.Series := [
     new W.Series([0.0F, 80.0F, 62.0F, 42.0F, 30.0F]),
     new W.Series([0.0F, 0.0F, 30.0F, 32.0F, 24.0F], Accent := true)
   ];
-  return W.DotChart<Msg>('caffeine', Bands, 5, Msg.AddCup,
+  return W.DotChart of Msg('caffeine', Bands, 5, Msg.AddCup,
     new W.Options(XMinimum := 6.0, XMaximum := 30.0, Units := W.AxisUnits.Hours,
       Range := new C.ValueRange(0.0F, 120.0F), Unit := 'MG',
       Annotations := [new C.Annotation(C.AnnotationKind.Y, Y := 50.0, Label := '50')]));

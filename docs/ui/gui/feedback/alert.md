@@ -16,9 +16,9 @@ uses Fpas.Ui.Widgets.Feedback.Alerts as W;
 // Builds the alert example.
 // ## Returns
 // The widget for the application view.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return W.Alert<string>('storage', 'Storage almost full',
+  return W.Alert of string('storage', 'Storage almost full',
     new W.Options(Description := 'You have used 92% of your plan.',
       Tone := S.Tone.Warning, Dismissible := true),
     function(): string => 'dismiss-storage');

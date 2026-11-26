@@ -36,10 +36,10 @@ end record;
 // - `Settings`: Availability of System and input permission.
 // ## Returns
 // A small segmented selector for either host, with independent focus stops.
-public function ThemeSwitcher<TMsg>(Id: string; Selected: Selection; OnChange: function(Selection): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function ThemeSwitcher of TMsg(Id: string; Selected: Selection; OnChange: function(Selection): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.ThemeChoice(Id, Selected, OnChange, Settings ?? new Options());
+  return (E.Element of TMsg).ThemeChoice(Id, Selected, OnChange, Settings ?? new Options());
 end function;
 
 // Gets a segment's stable application identity for focus requests.

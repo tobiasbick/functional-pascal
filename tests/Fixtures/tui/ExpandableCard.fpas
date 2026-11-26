@@ -28,10 +28,10 @@ begin
   end if;
 end procedure;
 
-function Update(State: Model; Message: string): M.Transition<Model, string>;
+function Update(State: Model; Message: string): M.Transition of (Model, string);
 begin
   Check(Message <> 'unexpected', 'A disabled or hidden control sent a message.');
-  return new M.Transition<Model, string>(
+  return new M.Transition of (Model, string)(
     case Message of
       when 'open': State with
         Open := true;
@@ -53,11 +53,11 @@ begin
   end if;
 end function;
 
-function Form(State: Model): E.Element<string>;
+function Form(State: Model): E.Element of string;
 begin
-  const Buttons: E.Element<string> := E.Column<string>(
-    E.Text<string>('Recovery instructions'),
-    B.Button<string>(
+  const Buttons: E.Element of string := E.Column of string(
+    E.Text of string('Recovery instructions'),
+    B.Button of string(
       'child', 'Close card', if State.Enabled then
         'close'
       else
@@ -65,16 +65,16 @@ begin
       end if
     )
   );
-  const Body: E.Element<string> := Views.Screen<string>(
-    Dialogs.Dialog<string>(
-      'inactive-modal', Buttons, B.Button<string>('never', 'Never', 'unexpected'),
+  const Body: E.Element of string := Views.Screen of string(
+    Dialogs.Dialog of string(
+      'inactive-modal', Buttons, B.Button of string('never', 'Never', 'unexpected'),
       not State.Enabled, new Dialogs.Options('Inactive dialog'), 'unexpected'
     ),
-    [], [K.Shortcut<string>(K.Key.U, K.KeyModifiers.Ctrl, 'unexpected')]
+    [], [K.Shortcut of string(K.Key.U, K.KeyModifiers.Ctrl, 'unexpected')]
   );
-  return E.Column<string>(
-    B.Button<string>('before', 'Before', 'noop'),
-    Cards.ExpandableCard<string>(
+  return E.Column of string(
+    B.Button of string('before', 'Before', 'noop'),
+    Cards.ExpandableCard of string(
       'card', 'Security', State.Open,
       if State.Enabled then
         Toggle
@@ -86,28 +86,28 @@ begin
         Enabled := State.Enabled
       )
     ),
-    B.Button<string>('after', 'After', 'noop')
+    B.Button of string('after', 'After', 'noop')
   );
 end function;
 
-function Space(Rows: int): E.Element<string>;
+function Space(Rows: int): E.Element of string;
 begin
-  return E.Size<string>(
-    E.Column<string>(),
+  return E.Size of string(
+    E.Column of string(),
     new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(Rows * 16)))
   );
 end function;
 
-function Scrolled(State: Model): E.Element<string>;
+function Scrolled(State: Model): E.Element of string;
 begin
-  return E.ScrollView<string>(
-    'outer', E.Column<string>(
-      B.Button<string>('before', 'Before', 'noop'),
-      Cards.ExpandableCard<string>(
+  return E.ScrollView of string(
+    'outer', E.Column of string(
+      B.Button of string('before', 'Before', 'noop'),
+      Cards.ExpandableCard of string(
         'card', 'Security', State.Open, Toggle,
-        E.Column<string>(Space(8), B.Button<string>('child', 'Close card', 'close'))
+        E.Column of string(Space(8), B.Button of string('child', 'Close card', 'close'))
       ),
-      Space(12), B.Button<string>('after', 'After', 'noop')
+      Space(12), B.Button of string('after', 'After', 'noop')
     )
   );
 end function;
@@ -149,7 +149,7 @@ begin
 end procedure;
 
 begin
-  using const Main: T.HeadlessSession := Headless.Start<Model, string>(
+  using const Main: T.HeadlessSession := Headless.Start of (Model, string)(
     new Model(),
     Update,
     Form,
@@ -194,7 +194,7 @@ begin
     'Clicking the description closes the card.'
   );
 
-  using const Disabled: T.HeadlessSession := Headless.Start<Model, string>(
+  using const Disabled: T.HeadlessSession := Headless.Start of (Model, string)(
     new Model(Open := true, Enabled := false),
     Update, Form, 40, 16
   );
@@ -216,7 +216,7 @@ begin
     'Disabled cards and their contents stay outside Tab traversal.'
   );
 
-  using const Narrow: T.HeadlessSession := Headless.Start<Model, string>(
+  using const Narrow: T.HeadlessSession := Headless.Start of (Model, string)(
     new Model(Open := true),
     Update,
     Scrolled,

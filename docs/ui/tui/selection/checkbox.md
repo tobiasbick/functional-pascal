@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Inputs.Checkboxes as C;
 // - `AllSelected`: Every item is selected.
 // ## Returns
 // A checkbox that proposes selecting or clearing the group.
-public function View(AnySelected: bool; AllSelected: bool): E.Element<bool>;
+public function View(AnySelected: bool; AllSelected: bool): E.Element of bool;
 begin
-  return C.Checkbox<bool>('all', 'All items', AnySelected, function(Value: bool): bool => Value,
+  return C.Checkbox of bool('all', 'All items', AnySelected, function(Value: bool): bool => Value,
     Indeterminate := AnySelected and not AllSelected);
 end function;
 

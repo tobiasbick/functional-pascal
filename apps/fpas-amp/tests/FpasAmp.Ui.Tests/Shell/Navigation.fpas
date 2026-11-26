@@ -37,7 +37,7 @@ public type NavigationTests = record
         M.Msg.Select(Route)
       );
       X.Assert.False(Selected.Drawer);
-      X.Assert.Equal<int>(1, Selected.SettingsTab);
+      X.Assert.Equal of int(1, Selected.SettingsTab);
       AppState.Save(
         Folder.Path,
         new AppState.Snapshot(
@@ -46,14 +46,14 @@ public type NavigationTests = record
         )
       );
       const Saved: AppState.Snapshot := AppState.Load(Folder.Path);
-      X.Assert.Equal<string>(M.Key(Route), Saved.ActivePage);
-      X.Assert.Equal<int>(1, Saved.SettingsTab);
-      X.Assert.Equal<M.Route?>(Route, M.Parse(Saved.ActivePage));
+      X.Assert.Equal of string(M.Key(Route), Saved.ActivePage);
+      X.Assert.Equal of int(1, Saved.SettingsTab);
+      X.Assert.Equal of M.Route? (Route, M.Parse(Saved.ActivePage));
     end for;
     const Settings: M.State := Update.Apply(new M.State(), M.Msg.SelectSettingsTab(1));
-    X.Assert.Equal<string>('settings', M.Key(Settings.Active));
-    X.Assert.Equal<int>(1, Settings.SettingsTab);
-    X.Assert.Equal<int>(1, Update.Apply(Settings, M.Msg.SelectSettingsTab(99)).SettingsTab);
+    X.Assert.Equal of string('settings', M.Key(Settings.Active));
+    X.Assert.Equal of int(1, Settings.SettingsTab);
+    X.Assert.Equal of int(1, Update.Apply(Settings, M.Msg.SelectSettingsTab(99)).SettingsTab);
   end procedure;
 
   // A window last closed on the retired Ratings page reopens on Music with the saved placement.
@@ -66,10 +66,10 @@ public type NavigationTests = record
       '{"width":1200,"height":700,"x":40,"y":50,"maximized":false,"settingsTab":1,"activePage":"ratings"}'
     );
     const Saved: AppState.Snapshot := AppState.Load(Folder.Path);
-    X.Assert.Equal<string>('music', Saved.ActivePage);
-    X.Assert.Equal<int>(1200, Saved.Width);
-    X.Assert.Equal<int>(1, Saved.SettingsTab);
-    X.Assert.Equal<int>(0, IO.Directory.GetFiles(Folder.Path, 'state.json.corrupt-*.bak').Length);
+    X.Assert.Equal of string('music', Saved.ActivePage);
+    X.Assert.Equal of int(1200, Saved.Width);
+    X.Assert.Equal of int(1, Saved.SettingsTab);
+    X.Assert.Equal of int(0, IO.Directory.GetFiles(Folder.Path, 'state.json.corrupt-*.bak').Length);
   end procedure;
 
   // A saved playlist waits for the first snapshot, then validates UUID/store identity.
@@ -83,33 +83,33 @@ public type NavigationTests = record
     const Stored: M.Route? := M.Parse(AppState.Load(Folder.Path).ActivePage);
     X.Assert.NotNull(Stored);
     const Initial: M.State := new M.State(Active := Stored ?? M.Route.Page(M.Page.Music));
-    X.Assert.Equal<string>(M.Key(Route), M.Key(Initial.Active));
+    X.Assert.Equal of string(M.Key(Route), M.Key(Initial.Active));
     X.Assert.False(Initial.Loaded);
-    const Items: I.ImmutableArray<Lists.Summary> := I.ImmutableArray.Create<Lists.Summary>(
+    const Items: I.ImmutableArray of Lists.Summary := I.ImmutableArray.Create of Lists.Summary(
       Playlist(Id),
       Playlist('22222222222222222222222222222222')
     );
     const Found: M.State := Update.Apply(Initial, M.Msg.Received(Items));
-    X.Assert.Equal<string>(M.Key(Route), M.Key(Found.Active));
-    X.Assert.Equal<int>(2, Found.Playlists.Length);
+    X.Assert.Equal of string(M.Key(Route), M.Key(Found.Active));
+    X.Assert.Equal of int(2, Found.Playlists.Length);
     const Failed: M.State := Update.Apply(
       Found,
-      M.Msg.Received(I.ImmutableArray.Create<Lists.Summary>(Playlist(Id, Error := 'Read failed')))
+      M.Msg.Received(I.ImmutableArray.Create of Lists.Summary(Playlist(Id, Error := 'Read failed')))
     );
-    X.Assert.Equal<string>(M.Key(Route), M.Key(Failed.Active));
+    X.Assert.Equal of string(M.Key(Route), M.Key(Failed.Active));
     const Missing: M.State := Update.Apply(
       Found,
-      M.Msg.Received(I.ImmutableArray<Lists.Summary>.Empty)
+      M.Msg.Received((I.ImmutableArray of Lists.Summary).Empty)
     );
-    X.Assert.Equal<string>('music', M.Key(Missing.Active));
-    X.Assert.Equal<string>('music', M.Key(Update.Apply(Missing, M.Msg.Select(Route)).Active));
+    X.Assert.Equal of string('music', M.Key(Missing.Active));
+    X.Assert.Equal of string('music', M.Key(Update.Apply(Missing, M.Msg.Select(Route)).Active));
     const MissingAtStartup: M.State := Update.Apply(
       Initial,
-      M.Msg.Received(I.ImmutableArray<Lists.Summary>.Empty)
+      M.Msg.Received((I.ImmutableArray of Lists.Summary).Empty)
     );
-    X.Assert.Equal<string>('music', M.Key(MissingAtStartup.Active));
+    X.Assert.Equal of string('music', M.Key(MissingAtStartup.Active));
     AppState.Save(Folder.Path, new AppState.Snapshot(ActivePage := M.Key(MissingAtStartup.Active)));
-    X.Assert.Equal<string>('music', AppState.Load(Folder.Path).ActivePage);
+    X.Assert.Equal of string('music', AppState.Load(Folder.Path).ActivePage);
   end procedure;
 
   // A failed refresh retains cached navigation instead of simulating source deletion.
@@ -120,12 +120,12 @@ public type NavigationTests = record
     const Current: M.State := new M.State(
       Active := M.Route.Playlist(Item.Identity),
       Loaded := true,
-      Playlists := I.ImmutableArray.Create<Lists.Summary>(Item)
+      Playlists := I.ImmutableArray.Create of Lists.Summary(Item)
     );
     const Failed: M.State := Update.Apply(Current, M.Msg.Failed('Catalogue unavailable'));
-    X.Assert.Equal<string>(M.Key(Current.Active), M.Key(Failed.Active));
-    X.Assert.Equal<string>('Catalogue unavailable', Failed.Error);
-    X.Assert.Equal<int>(1, Failed.Playlists.Length);
+    X.Assert.Equal of string(M.Key(Current.Active), M.Key(Failed.Active));
+    X.Assert.Equal of string('Catalogue unavailable', Failed.Error);
+    X.Assert.Equal of int(1, Failed.Playlists.Length);
   end procedure;
 
   // Unknown pages, invalid playlist UUIDs and malformed tabs repair to safe defaults.
@@ -143,8 +143,8 @@ public type NavigationTests = record
       Page + '"}'
     );
     const Saved: AppState.Snapshot := AppState.Load(Folder.Path);
-    X.Assert.Equal<string>('music', Saved.ActivePage);
-    X.Assert.Equal<int>(0, Saved.SettingsTab);
+    X.Assert.Equal of string('music', Saved.ActivePage);
+    X.Assert.Equal of int(0, Saved.SettingsTab);
   end procedure;
 end record;
 

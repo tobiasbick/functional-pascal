@@ -18,13 +18,13 @@ uses Fpas.Ui.Widgets.Conversation.Comments as W;
 // - `Current`: Current like state.
 // - `Change`: Maps the proposed like state or reply.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Author: string; Text: string; Current: W.Value; Change: function(W.Event): TMsg; Settings: W.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Author: string; Text: string; Current: W.Value; Change: function(W.Event): TMsg; Settings: W.Options);
 begin
   const Role: string := 'comment';
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Parts: array of string := ['like', 'reply'];
-  const Focus: int := P.Focus<TMsg>(Frame, Id, Role, Parts, P.Inputs(2, Enabled), 0);
+  const Focus: int := P.Focus of TMsg(Frame, Id, Role, Parts, P.Inputs(2, Enabled), 0);
   const LikeId: string? := if Frame.PaintingClosed then
     null
   else
@@ -50,9 +50,9 @@ begin
     Frame.Messages.Add(Change(W.Event.Reply));
   end if;
 
-  P.Root<TMsg>(Frame, Id, Role, Author, false, Text);
-  P.Part<TMsg>(Frame, Id, Role, Parts[0], 'Like', Enabled, Likes.ToString());
-  P.Part<TMsg>(Frame, Id, Role, Parts[1], 'Reply', Enabled, '');
+  P.Root of TMsg(Frame, Id, Role, Author, false, Text);
+  P.Part of TMsg(Frame, Id, Role, Parts[0], 'Like', Enabled, Likes.ToString());
+  P.Part of TMsg(Frame, Id, Role, Parts[1], 'Reply', Enabled, '');
 end procedure;
 
 end unit;

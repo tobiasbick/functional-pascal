@@ -54,12 +54,12 @@ end function;
 // - `Settings`: Optional geometry, ink and input permission.
 // ## Returns
 // The graphical signature pad.
-public function SignaturePad<TMsg>(
-  Id: string; OnChange: Sys.Func<Signature, TMsg>? := null; Settings: Options? := null
-): E.Element<TMsg>;
+public function SignaturePad of TMsg(
+  Id: string; OnChange: Sys.Func of (Signature, TMsg)? := null; Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.SignaturePad(Id, OnChange, Settings ?? new Options());
+  return (E.Element of TMsg).SignaturePad(Id, OnChange, Settings ?? new Options());
 end function;
 
 end unit;

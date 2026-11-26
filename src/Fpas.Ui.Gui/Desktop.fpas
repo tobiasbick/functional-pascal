@@ -82,19 +82,19 @@ end function;
 //
 // ## Returns
 // The owned session; its first Step presents the initial model.
-public function Start<TModel, TMsg>(
+public function Start of (TModel, TMsg)(
   InitialModel: TModel;
-  Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel, L.Viewport): E.Element<TMsg>; Settings: Options;
-  ThemeFor: Sys.Func<TModel, Themes.Theme>? := null; OnCloseRequested: Sys.Func<TMsg>? := null;
-  BindingsFor: Sys.Func<TModel, array of Shortcuts.Binding<TMsg>>? := null
-): App.Session<TMsg>;
+  Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
+  View: function(TModel, L.Viewport): E.Element of TMsg; Settings: Options;
+  ThemeFor: Sys.Func of (TModel, Themes.Theme)? := null; OnCloseRequested: (Sys.Func of TMsg)? := null;
+  BindingsFor: Sys.Func of (TModel, array of Shortcuts.Binding of TMsg)? := null
+): App.Session of TMsg;
 requires Settings.Width > 0;
 requires Settings.Height > 0;
 requires Settings.Capacity > 0;
 requires Settings.MinimumWidth >= 0 and Settings.MinimumHeight >= 0;
 begin
-  return SessionHost.Start<TModel, TMsg>(
+  return SessionHost.Start of (TModel, TMsg)(
     InitialModel,
     Update,
     View,
@@ -117,19 +117,19 @@ end function;
 // - `ThemeFor`: Optional model-owned shared theme selector.
 // - `OnCloseRequested`: Optional native close message factory. Exit approves; Closing.Cancel rejects.
 // - `BindingsFor`: Optional model-owned application shortcuts, evaluated after native widgets.
-public procedure Run<TModel, TMsg>(
+public procedure Run of (TModel, TMsg)(
   InitialModel: TModel;
-  Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel, L.Viewport): E.Element<TMsg>; Settings: Options;
-  ThemeFor: Sys.Func<TModel, Themes.Theme>? := null; OnCloseRequested: Sys.Func<TMsg>? := null;
-  BindingsFor: Sys.Func<TModel, array of Shortcuts.Binding<TMsg>>? := null
+  Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
+  View: function(TModel, L.Viewport): E.Element of TMsg; Settings: Options;
+  ThemeFor: Sys.Func of (TModel, Themes.Theme)? := null; OnCloseRequested: (Sys.Func of TMsg)? := null;
+  BindingsFor: Sys.Func of (TModel, array of Shortcuts.Binding of TMsg)? := null
 );
 requires Settings.Width > 0;
 requires Settings.Height > 0;
 requires Settings.Capacity > 0;
 requires Settings.MinimumWidth >= 0 and Settings.MinimumHeight >= 0;
 begin
-  using const Running: App.Session<TMsg> := Start<TModel, TMsg>(
+  using const Running: App.Session of TMsg := Start of (TModel, TMsg)(
     InitialModel,
     Update,
     View,
@@ -156,18 +156,18 @@ end procedure;
 // - `BindingsFor`: Optional model-owned application shortcuts, evaluated after native widgets.
 // ## Returns
 // The owned session. Its first Step resolves the theme and presents the initial view.
-public function StartThemed<TModel, TMsg>(
-  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel, L.Viewport, Themes.Theme): E.Element<TMsg>; Settings: Options;
-  ThemeFor: function(TModel, Themes.Mode?): Themes.Theme; OnCloseRequested: Sys.Func<TMsg>? := null;
-  BindingsFor: Sys.Func<TModel, array of Shortcuts.Binding<TMsg>>? := null
-): App.Session<TMsg>;
+public function StartThemed of (TModel, TMsg)(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
+  View: function(TModel, L.Viewport, Themes.Theme): E.Element of TMsg; Settings: Options;
+  ThemeFor: function(TModel, Themes.Mode?): Themes.Theme; OnCloseRequested: (Sys.Func of TMsg)? := null;
+  BindingsFor: Sys.Func of (TModel, array of Shortcuts.Binding of TMsg)? := null
+): App.Session of TMsg;
 requires Settings.Width > 0;
 requires Settings.Height > 0;
 requires Settings.Capacity > 0;
 requires Settings.MinimumWidth >= 0 and Settings.MinimumHeight >= 0;
 begin
-  return SessionHost.StartThemed<TModel, TMsg>(
+  return SessionHost.StartThemed of (TModel, TMsg)(
     InitialModel, Update, View,
     CreateWindow(Settings),
     Settings.Capacity, null, Settings.Theme, ThemeFor, true, OnCloseRequested, BindingsFor
@@ -187,18 +187,18 @@ end function;
 // - `ThemeFor`: Resolves a theme from the model and system appearance, which is null when unavailable.
 // - `OnCloseRequested`: Optional native close message factory. Exit approves; Closing.Cancel rejects.
 // - `BindingsFor`: Optional model-owned application shortcuts, evaluated after native widgets.
-public procedure RunThemed<TModel, TMsg>(
-  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel, L.Viewport, Themes.Theme): E.Element<TMsg>; Settings: Options;
-  ThemeFor: function(TModel, Themes.Mode?): Themes.Theme; OnCloseRequested: Sys.Func<TMsg>? := null;
-  BindingsFor: Sys.Func<TModel, array of Shortcuts.Binding<TMsg>>? := null
+public procedure RunThemed of (TModel, TMsg)(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
+  View: function(TModel, L.Viewport, Themes.Theme): E.Element of TMsg; Settings: Options;
+  ThemeFor: function(TModel, Themes.Mode?): Themes.Theme; OnCloseRequested: (Sys.Func of TMsg)? := null;
+  BindingsFor: Sys.Func of (TModel, array of Shortcuts.Binding of TMsg)? := null
 );
 requires Settings.Width > 0;
 requires Settings.Height > 0;
 requires Settings.Capacity > 0;
 requires Settings.MinimumWidth >= 0 and Settings.MinimumHeight >= 0;
 begin
-  using const Running: App.Session<TMsg> := StartThemed<TModel, TMsg>(
+  using const Running: App.Session of TMsg := StartThemed of (TModel, TMsg)(
     InitialModel,
     Update,
     View,

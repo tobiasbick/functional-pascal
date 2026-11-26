@@ -26,11 +26,11 @@ begin
   end if;
 end procedure;
 
-procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);
+procedure Reject(Node: E.Element of int; Profile: V.Target; Reason: string);
 begin
   var Rejected: bool := false;
   try
-    discard V.Prepare<int>(Node, Profile);
+    discard V.Prepare of int(Node, Profile);
   catch Error: Sys.ArgumentException do
     Rejected := Error.Message.Contains(Reason);
   end try;
@@ -43,35 +43,35 @@ begin
   const Choices: array of Tabs.Item := [new Tabs.Item('First')];
   const Change: function(int): int := function(Value: int): int => Value;
   for Profile: V.Target in [V.Target.Graphical, V.Target.Terminal, V.Target.Portable] do
-    discard V.Prepare<int>(Tabs.Tabs<int>('tabs', Choices, 0, Change), Profile);
-    Reject(Tabs.Tabs<int>('tabs', Choices, 1, Change), Profile, 'selected index');
+    discard V.Prepare of int(Tabs.Tabs of int('tabs', Choices, 0, Change), Profile);
+    Reject(Tabs.Tabs of int('tabs', Choices, 1, Change), Profile, 'selected index');
     Reject(
-      E.Column<int>(
-        Tabs.Tabs<int>('tabs', Choices, 0, Change),
-        Tabs.Tabs<int>('tabs/0', Choices, 0, Change)
+      E.Column of int(
+        Tabs.Tabs of int('tabs', Choices, 0, Change),
+        Tabs.Tabs of int('tabs/0', Choices, 0, Change)
       ), Profile, 'Duplicate'
     );
   end for;
-  const Shared: array of E.Element<int> := [
-    Breadcrumbs.Breadcrumb<int>('trail', ['Root', 'Current'], function(Value: int): int => Value),
-    Paginations.Pagination<int>('pager', 0, 12, function(Value: int): int => Value)
+  const Shared: array of E.Element of int := [
+    Breadcrumbs.Breadcrumb of int('trail', ['Root', 'Current'], function(Value: int): int => Value),
+    Paginations.Pagination of int('pager', 0, 12, function(Value: int): int => Value)
   ];
-  for Node: E.Element<int> in Shared do
+  for Node: E.Element of int in Shared do
     for Profile: V.Target in [V.Target.Graphical, V.Target.Terminal, V.Target.Portable] do
-      discard V.Prepare<int>(Node, Profile);
+      discard V.Prepare of int(Node, Profile);
     end for;
   end for;
-  const Stepper: E.Element<int> := Steppers.Stepper<int>('stepper', ['First', 'Second'], 2);
-  discard V.Prepare<int>(Stepper, V.Target.Graphical);
+  const Stepper: E.Element of int := Steppers.Stepper of int('stepper', ['First', 'Second'], 2);
+  discard V.Prepare of int(Stepper, V.Target.Graphical);
   Reject(Stepper, V.Target.Portable, 'Graphical profile');
   Reject(Stepper, V.Target.Terminal, 'Graphical profile');
 
   Reject(
-    Paginations.Pagination<int>('invalid', 12, 12, function(Value: int): int => Value),
+    Paginations.Pagination of int('invalid', 12, 12, function(Value: int): int => Value),
     V.Target.Graphical, 'valid page index'
   );
   Reject(
-    Steppers.Stepper<int>('invalid', ['Only'], 2),
+    Steppers.Stepper of int('invalid', ['Only'], 2),
     V.Target.Graphical,
     'between zero and the step count'
   );
@@ -83,13 +83,13 @@ end procedure;
 // - `Renderer`: Native renderer to exercise.
 // - `Capture`: Base path for the gallery screenshot.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
-  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  function Update(Model: State.Model; Message: State.Msg): App.Transition of (State.Model, State.Msg);
   begin
-    const Next: App.Transition<State.Model, State.Msg> := GalleryUpdate.Update(Model, Message);
+    const Next: App.Transition of (State.Model, State.Msg) := GalleryUpdate.Update(Model, Message);
     return if Focus = '' then
       Next
     else
-      new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Focus)])
+      new App.Transition of (State.Model, State.Msg)(Next.Model, [App.Focus of State.Msg(Focus)])
     end if;
   end function;
   procedure Inject();
@@ -106,7 +106,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       Pending := 0;
     end if;
   end procedure;
-  procedure Exercise(Session: Gui.Session<State.Msg>);
+  procedure Exercise(Session: Gui.Session of State.Msg);
     procedure Step();
     begin
       Check(Session.Step(), 'The Navigation gallery closed.');
@@ -308,7 +308,7 @@ begin
     true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(), Update, View.Build, Window, 256, Inject, ThemeFor := GalleryUpdate.ThemeFor
   );
   Exercise(Session);

@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Overlays.Tooltips as W;
 // - `Target`: The control that receives the overlay.
 // ## Returns
 // The widget for the application view.
-public function View(Target: E.Element<string>): E.Element<string>;
+public function View(Target: E.Element of string): E.Element of string;
 begin
-  return W.Tooltip<string>(Target, 'Bold', 'Ctrl B');
+  return W.Tooltip of string(Target, 'Bold', 'Ctrl B');
 end function;
 
 end unit;

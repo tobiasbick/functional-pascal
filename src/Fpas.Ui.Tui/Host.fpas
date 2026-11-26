@@ -25,11 +25,11 @@ uses System as Sys;
 // - `InitialModel`: The model before processing messages.
 // - `Update`: The application transition called for each message.
 // - `View`: Builds the terminal view from the current model.
-public procedure Run<TModel, TMsg>(
-  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>; View: function(TModel): Ui.Element<TMsg>
+public procedure Run of (TModel, TMsg)(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg); View: function(TModel): Ui.Element of TMsg
 );
 begin
-  Run<TModel, TMsg>(InitialModel, Update, View, new Th.Theme());
+  Run of (TModel, TMsg)(InitialModel, Update, View, new Th.Theme());
 end procedure;
 
 function TerminalWriter(Device: Terminal.ConsoleTerminal): procedure(int, int, array of T.Cell);
@@ -52,11 +52,11 @@ end function;
 // - `Update`: The application transition called for each message.
 // - `View`: Builds the terminal view from the current model.
 // - `Theme`: The fixed theme.
-public procedure Run<TModel, TMsg>(
-  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>; View: function(TModel): Ui.Element<TMsg>; Theme: Th.Theme
+public procedure Run of (TModel, TMsg)(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg); View: function(TModel): Ui.Element of TMsg; Theme: Th.Theme
 );
 begin
-  Run<TModel, TMsg>(InitialModel, Update, View, function(State: TModel): Th.Theme => Theme);
+  Run of (TModel, TMsg)(InitialModel, Update, View, function(State: TModel): Th.Theme => Theme);
 end procedure;
 
 // Resolves the theme from the current model before drawing each terminal frame.
@@ -70,15 +70,15 @@ end procedure;
 // - `Update`: The application transition called for each message.
 // - `View`: Builds the terminal view from the current model.
 // - `ThemeFor`: Selects the theme for the current model.
-public procedure Run<TModel, TMsg>(
-  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel): Ui.Element<TMsg>; ThemeFor: function(TModel): Th.Theme
+public procedure Run of (TModel, TMsg)(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
+  View: function(TModel): Ui.Element of TMsg; ThemeFor: function(TModel): Th.Theme
 );
 begin
-  Run<TModel, TMsg>(
+  Run of (TModel, TMsg)(
     InitialModel,
     Update,
-    function(State: TModel; Size: L.Viewport): Ui.Element<TMsg> => View(State),
+    function(State: TModel; Size: L.Viewport): Ui.Element of TMsg => View(State),
     ThemeFor
   );
 end procedure;
@@ -93,12 +93,12 @@ end procedure;
 // - `InitialModel`: The model before processing messages.
 // - `Update`: The application transition called for each message.
 // - `View`: Builds the terminal view from the current model and viewport.
-public procedure Run<TModel, TMsg>(
-  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel, L.Viewport): Ui.Element<TMsg>
+public procedure Run of (TModel, TMsg)(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
+  View: function(TModel, L.Viewport): Ui.Element of TMsg
 );
 begin
-  Run<TModel, TMsg>(InitialModel, Update, View, new Th.Theme());
+  Run of (TModel, TMsg)(InitialModel, Update, View, new Th.Theme());
 end procedure;
 
 // Runs the application on the current terminal.
@@ -112,12 +112,12 @@ end procedure;
 // - `Update`: The application transition called for each message.
 // - `View`: Builds the terminal view from the current model and viewport.
 // - `Theme`: The fixed theme.
-public procedure Run<TModel, TMsg>(
-  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel, L.Viewport): Ui.Element<TMsg>; Theme: Th.Theme
+public procedure Run of (TModel, TMsg)(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
+  View: function(TModel, L.Viewport): Ui.Element of TMsg; Theme: Th.Theme
 );
 begin
-  Run<TModel, TMsg>(InitialModel, Update, View, function(State: TModel): Th.Theme => Theme);
+  Run of (TModel, TMsg)(InitialModel, Update, View, function(State: TModel): Th.Theme => Theme);
 end procedure;
 
 // Gives the view portable size classes before laying out each frame.
@@ -131,9 +131,9 @@ end procedure;
 // - `Update`: The application transition called for each message.
 // - `View`: Builds the terminal view from the current model and viewport.
 // - `ThemeFor`: Selects the theme for the current model.
-public procedure Run<TModel, TMsg>(
-  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel, L.Viewport): Ui.Element<TMsg>; ThemeFor: function(TModel): Th.Theme
+public procedure Run of (TModel, TMsg)(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
+  View: function(TModel, L.Viewport): Ui.Element of TMsg; ThemeFor: function(TModel): Th.Theme
 );
   procedure Present(Value: App.Frame);
   begin
@@ -142,7 +142,7 @@ public procedure Run<TModel, TMsg>(
 begin
   using const Device: Terminal.ConsoleTerminal := new Terminal.ConsoleTerminal();
   const Write: procedure(int, int, array of T.Cell) := TerminalWriter(Device);
-  const Session: App.HeadlessSession := SessionHost.Start<TModel, TMsg>(
+  const Session: App.HeadlessSession := SessionHost.Start of (TModel, TMsg)(
     InitialModel,
     Update,
     View,

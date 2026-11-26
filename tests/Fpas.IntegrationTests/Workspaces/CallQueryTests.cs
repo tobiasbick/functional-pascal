@@ -14,7 +14,7 @@ public sealed class CallQueryTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
     private const string Library = """
         unit Numerics.Api;
         uses System as S;
-        public type Box<T> = record public Value: T; end record;
+        public type Box of T = record public Value: T; end record;
         public type Choice = variant Empty; Value(Item: int); end variant;
         public type IValue = protocol Value: int; function Read(): int; end protocol;
         public type Sample = record implements IValue
@@ -23,14 +23,14 @@ public sealed class CallQueryTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
         end record;
         public function Read(Value: int): int; begin return Value; end function;
         public function Read(Value: string): int; begin return Value.Length; end function;
-        public function Identity<T>(Value: T): T; begin return Value; end function;
+        public function Identity of T(Value: T): T; begin return Value; end function;
         public function Recursive(Value: int): int;
         begin if Value = 0 then return 0; end if; return Recursive(Value - 1); end function;
         public function Apply(Value: function(int): int): int; begin return Value(1); end function;
         public function Dispatch(Value: IValue): int; begin return Value.Read() + Value.Value; end function;
         public function Make(): int;
         begin
-          const Boxed: Box<int> := new Box<int>(Read(1));
+          const Boxed: Box of int := new Box of int(Read(1));
           const Item: Choice := Choice.Value(Boxed.Value);
           const Empty: Choice := Choice.Empty;
           const Payload: Choice.ValueCase := cast<Choice.ValueCase>(Item);
@@ -47,10 +47,10 @@ public sealed class CallQueryTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
         begin
           discard A.Read(1);
           discard A.Read(2);
-          discard A.Identity<int>(1);
+          discard A.Identity of int(1);
           discard A.Apply(A.Read);
           discard A.Dispatch(new A.Sample(1));
-          const Boxed: A.Box<int> := new A.Box<int>(A.Read(1));
+          const Boxed: A.Box of int := new A.Box of int(A.Read(1));
           const Item: A.Choice := A.Choice.Value(Boxed.Value);
           const Empty: A.Choice := A.Choice.Empty;
           const Payload: A.Choice.ValueCase := cast<A.Choice.ValueCase>(Item);
@@ -106,7 +106,7 @@ public sealed class CallQueryTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
         Assert.True(page.Truncated); Assert.Equal(3, page.Callers.Page.NextOffset);
         var other = query.Calls("callers", Select(project, "Game/Bridge.fpas", Library, "Read(Value: string"));
         Assert.Equal(0, other.Callers!.Page.TotalCount);
-        var generic = query.Calls("callers", Select(project, "Game/Bridge.fpas", Library, "Identity<T>"));
+        var generic = query.Calls("callers", Select(project, "Game/Bridge.fpas", Library, "Identity of T"));
         Assert.Equal(2, generic.Callers!.Page.TotalCount);
         Assert.All(generic.Callers.Page.Sites, site => Assert.Equal("int", site.Types.Single(type => type.Id == site.Site.Signature!.TypeParameters[0]).Display));
         var recursive = query.Calls("callers", Select(project, "Game/Bridge.fpas", Library, "Recursive(Value:"));

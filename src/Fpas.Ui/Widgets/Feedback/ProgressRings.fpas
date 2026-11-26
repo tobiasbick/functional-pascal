@@ -14,14 +14,14 @@ uses Fpas.Ui.Elements as E;
 // - `Size`: Finite nonnegative logical diameter; zero uses CUI's 96-point default.
 // ## Returns
 // A GUI-only progress ring; CUI owns its drawing, numeric formatting and animation.
-public function ProgressRing<TMsg>(
+public function ProgressRing of TMsg(
   Id: string; Label: string; Value: float; Size: float := 0.0F
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 requires Value >= 0.0F and Value <= 1.0F;
 requires Size >= 0.0F;
 begin
-  return E.Element<TMsg>.ProgressRing(Id, Label, Value, Size);
+  return (E.Element of TMsg).ProgressRing(Id, Label, Value, Size);
 end function;
 
 end unit;

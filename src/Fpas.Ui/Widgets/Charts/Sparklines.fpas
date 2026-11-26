@@ -25,10 +25,10 @@ end record;
 // - `Settings`: Optional width, height and ink.
 // ## Returns
 // The graphical or terminal plot.
-public function Sparkline<TMsg>(Id: string; Values: array of float; Settings: Options? := null): E.Element<TMsg>;
+public function Sparkline of TMsg(Id: string; Values: array of float; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Sparkline(Id, Values, Settings ?? new Options());
+  return (E.Element of TMsg).Sparkline(Id, Values, Settings ?? new Options());
 end function;
 
 end unit;

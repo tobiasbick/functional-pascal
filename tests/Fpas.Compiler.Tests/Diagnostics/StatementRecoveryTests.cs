@@ -84,7 +84,7 @@ public sealed class StatementRecoveryTests
         var result = TestCompilation.Compile("""
             program Example;
             function Read(): int;
-              function Broken<T>(Value: MissingType): int;
+              function Broken of T(Value: MissingType): int;
               begin
                 return Value;
               end function;
@@ -93,7 +93,7 @@ public sealed class StatementRecoveryTests
                 return MissingOther;
               end function;
             begin
-              discard Broken<int>(1);
+              discard Broken of int(1);
               return MissingOuter;
             end function;
             begin end;

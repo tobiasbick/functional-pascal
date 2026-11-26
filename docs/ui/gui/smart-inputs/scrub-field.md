@@ -18,10 +18,10 @@ uses Fpas.Ui.Widgets.Inputs.ScrubFields as W;
 // - `Radius`: Current radius between zero and 48 logical points.
 // ## Returns
 // A field that sends proposed radii to the update.
-public function View(Radius: float): E.Element<float>;
+public function View(Radius: float): E.Element of float;
 requires Radius >= 0.0F and Radius <= 48.0F;
 begin
-  return W.ScrubField<float>('radius', 'Radius', Radius, 0.0F, 48.0F,
+  return W.ScrubField of float('radius', 'Radius', Radius, 0.0F, 48.0F,
     function(Proposed: float): float => Proposed,
     new W.Options(Step := 0.5F, DecimalPlaces := 1, Suffix := 'px'));
 end function;

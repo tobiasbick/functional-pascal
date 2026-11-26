@@ -12,10 +12,10 @@ uses GuiGallery.Pages.Overlays.State as State;
 uses GuiGallery.Shared.Sections as G;
 uses System as Sys;
 
-function Help(Id: string; Glyph: int; Label: string; Shortcut: string := ''): E.Element<State.Msg>;
+function Help(Id: string; Glyph: int; Label: string; Shortcut: string := ''): E.Element of State.Msg;
 begin
-  return Tips.Tooltip<State.Msg>(
-    Icons.IconButton<State.Msg>(Id, Sys.Char.ConvertFromUtf32(Glyph), Label, State.Msg.Preview),
+  return Tips.Tooltip of State.Msg(
+    Icons.IconButton of State.Msg(Id, Sys.Char.ConvertFromUtf32(Glyph), Label, State.Msg.Preview),
     Label, Shortcut
   );
 end function;
@@ -24,19 +24,19 @@ end function;
 //
 // ## Returns
 // The Tooltips section of the Overlays page.
-public function View(): E.Element<State.Msg>;
+public function View(): E.Element of State.Msg;
 begin
-  return E.Column<State.Msg>(
+  return E.Column of State.Msg(
     new L.Flow(Gap := G.Points(20)),
-    G.Heading<State.Msg>(Strings.Get('Heading.Tooltips')),
-    G.Card<State.Msg>(
+    G.Heading of State.Msg(Strings.Get('Heading.Tooltips')),
+    G.Card of State.Msg(
       12, [
-        E.Row<State.Msg>(
+        E.Row of State.Msg(
           new L.Flow(Gap := G.Points(4), Wrap := true),
           Help('tooltip-bold', $E05D, 'Bold', 'Ctrl B'),
           Help('tooltip-italic', $E0FB, 'Italic', 'Ctrl I'),
           Help('tooltip-underline', $E19A, 'Underline', 'Ctrl U'),
-          E.Divider<State.Msg>(),
+          E.Divider of State.Msg(),
           Help('tooltip-align', $E185, 'Align left'),
           Help('tooltip-list', $E106, 'Bulleted list'),
           Help('tooltip-link', $E102, 'Insert link')

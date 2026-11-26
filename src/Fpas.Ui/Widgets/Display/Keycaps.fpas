@@ -11,9 +11,9 @@ uses Fpas.Ui.Elements as E;
 // - `Keys`: Space-separated key labels, for example Ctrl Shift P.
 // ## Returns
 // A graphical element.
-public function Keycap<TMsg>(Keys: string): E.Element<TMsg>;
+public function Keycap of TMsg(Keys: string): E.Element of TMsg;
 begin
-  return E.Element<TMsg>.Keycap(Keys);
+  return (E.Element of TMsg).Keycap(Keys);
 end function;
 
 end unit;

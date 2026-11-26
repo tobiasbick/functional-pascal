@@ -16,14 +16,14 @@ uses Fpas.Ui.Widgets.Pickers.DateRanges as R;
 // - `Enabled`: Whether day selection and month navigation accept input.
 // ## Returns
 // An inline graphical calendar with CUI-owned layout and browsing.
-public function DateRangeCalendar<TMsg>(
+public function DateRangeCalendar of TMsg(
   Id: string; Value: R.Value; OnChange: function(R.Value): TMsg;
   Months: int := 2; Enabled: bool := true
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 requires Months = 1 or Months = 2;
 begin
-  return E.Element<TMsg>.RangeCalendar(Id, Value, OnChange, Months, Enabled);
+  return (E.Element of TMsg).RangeCalendar(Id, Value, OnChange, Months, Enabled);
 end function;
 
 end unit;

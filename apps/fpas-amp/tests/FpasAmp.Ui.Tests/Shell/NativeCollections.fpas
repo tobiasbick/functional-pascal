@@ -71,15 +71,15 @@ public type CollectionNavigationTests = record
       Fixture.Capture(Session, 'artists-filter');
       Send(Session, Albums.Msg.Toolbar(Toolbar.Msg.MinimumRating(7)));
       Send(Session, Albums.Msg.Toolbar(Toolbar.Msg.Apply));
-      X.Assert.Equal<int>(1, Session.State().Albums.Shown.Length);
+      X.Assert.Equal of int(1, Session.State().Albums.Shown.Length);
       Send(Session, Albums.Msg.OpenGroup(Person));
       Fixture.Until(
         Session,
         function(): bool => Session.State().Albums.Images.Count = 4,
         'Discography covers did not load.'
       );
-      X.Assert.Equal<int>(4, Session.State().Albums.Shown.Length);
-      X.Assert.Equal<string>('Blue Hour', Session.State().Albums.Shown[1].Title);
+      X.Assert.Equal of int(4, Session.State().Albums.Shown.Length);
+      X.Assert.Equal of string('Blue Hour', Session.State().Albums.Shown[1].Title);
       const Release: string := Session.State().Albums.Shown[1].Id;
       X.Assert.Null(Session.State().Albums.Images[Session.State().Albums.Shown[0].Id]);
       X.Assert.NotNull(Session.State().Albums.Images[Release]);
@@ -101,7 +101,7 @@ public type CollectionNavigationTests = record
       Fixture.Capture(Session, 'artist-albums-filter');
       Send(Session, Albums.Msg.Toolbar(Toolbar.Msg.MinimumRating(9)));
       Send(Session, Albums.Msg.Toolbar(Toolbar.Msg.Apply));
-      X.Assert.Equal<int>(1, Session.State().Albums.Shown.Length);
+      X.Assert.Equal of int(1, Session.State().Albums.Shown.Length);
       Send(Session, Albums.Msg.OpenMusic(Release));
       Fixture.Until(
         Session, function(): bool begin
@@ -110,8 +110,8 @@ public type CollectionNavigationTests = record
         end function, 'Tracks did not load.'
       );
       const Route: Nav.Route := Session.State().Navigation.Active;
-      X.Assert.Equal<Nav.Route>(Nav.Route.ArtistAlbum(Person, Release), Route);
-      X.Assert.Equal<Nav.Route?>(Route, Nav.Parse(Nav.Key(Route)));
+      X.Assert.Equal of Nav.Route(Nav.Route.ArtistAlbum(Person, Release), Route);
+      X.Assert.Equal of Nav.Route? (Route, Nav.Parse(Nav.Key(Route)));
       Send(Session, Albums.Msg.Music(Music.Msg.ShowFilters(true)));
       Fixture.Until(
         Session,
@@ -120,15 +120,15 @@ public type CollectionNavigationTests = record
       );
       Fixture.Capture(Session, 'artist-tracks-filter');
       Send(Session, Albums.Msg.BackToAlbums);
-      X.Assert.Equal<Nav.Route>(Nav.Route.Artist(Person), Session.State().Navigation.Active);
-      X.Assert.Equal<int>(9, Session.State().Albums.Toolbar.Applied.MinimumRating);
+      X.Assert.Equal of Nav.Route(Nav.Route.Artist(Person), Session.State().Navigation.Active);
+      X.Assert.Equal of int(9, Session.State().Albums.Toolbar.Applied.MinimumRating);
       Send(Session, Albums.Msg.BackToGroups);
-      X.Assert.Equal<Nav.Route>(
+      X.Assert.Equal of Nav.Route(
         Nav.Route.Page(Nav.Page.Artists),
         Session.State().Navigation.Active
       );
-      X.Assert.Equal<int>(7, Session.State().Albums.Toolbar.Applied.MinimumRating);
-      X.Assert.Equal<int?>(8, Session.State().Albums.Shown[0].Rating);
+      X.Assert.Equal of int(7, Session.State().Albums.Toolbar.Applied.MinimumRating);
+      X.Assert.Equal of int? (8, Session.State().Albums.Shown[0].Rating);
     finally
       Library.DisposeAsync().GetAwaiter().GetResult();
     end try;
@@ -176,8 +176,8 @@ public type CollectionNavigationTests = record
           function(): bool => Session.State().Albums.Shown[2].Rating = 8,
           'Genre rating was not saved.'
         );
-        X.Assert.Equal<string>('Jazz', Session.State().Albums.Shown[2].Title);
-        X.Assert.Equal<long>(8L, Session.State().Albums.Shown[2].Tracks);
+        X.Assert.Equal of string('Jazz', Session.State().Albums.Shown[2].Title);
+        X.Assert.Equal of long(8L, Session.State().Albums.Shown[2].Tracks);
         Send(Session, Albums.Msg.Toolbar(Toolbar.Msg.SetOpen(true)));
         Fixture.Until(
           Session,
@@ -189,17 +189,17 @@ public type CollectionNavigationTests = record
         Fixture.Capture(Session, 'genres-filter', 'genres');
         Send(Session, Albums.Msg.Toolbar(Toolbar.Msg.MinimumRating(8)));
         Send(Session, Albums.Msg.Toolbar(Toolbar.Msg.Apply));
-        X.Assert.Equal<int>(1, Session.State().Albums.Shown.Length);
+        X.Assert.Equal of int(1, Session.State().Albums.Shown.Length);
         Send(Session, Albums.Msg.OpenGroup(Jazz));
         Fixture.Until(
           Session,
           function(): bool => Session.State().Albums.Images.Count = 3,
           'Genre albums did not load.'
         );
-        X.Assert.Equal<int>(3, Session.State().Albums.Items.Length);
+        X.Assert.Equal of int(3, Session.State().Albums.Items.Length);
         const Album: Catalog.Album := Session.State().Albums.Shown[0];
-        X.Assert.Equal<string>('Blue Hour', Album.Title);
-        X.Assert.Equal<long>(4L, Album.Tracks);
+        X.Assert.Equal of string('Blue Hour', Album.Title);
+        X.Assert.Equal of long(4L, Album.Tracks);
         X.Assert.Null(Album.Rating);
         Send(Session, Albums.Msg.Toolbar(Toolbar.Msg.SetOpen(true)));
         Fixture.Until(
@@ -212,7 +212,7 @@ public type CollectionNavigationTests = record
         Fixture.Capture(Session, 'genre-albums-filter', 'genres');
         Send(Session, Albums.Msg.Toolbar(Toolbar.Msg.Artist('Aster Vale')));
         Send(Session, Albums.Msg.Toolbar(Toolbar.Msg.Apply));
-        X.Assert.Equal<int>(2, Session.State().Albums.Shown.Length);
+        X.Assert.Equal of int(2, Session.State().Albums.Shown.Length);
         Send(Session, Albums.Msg.OpenMusic(Album.Id));
         Fixture.Until(
           Session, function(): bool begin
@@ -221,7 +221,7 @@ public type CollectionNavigationTests = record
           end function, 'Mixed album must show exactly its four jazz tracks.'
         );
         RouteKey := Nav.Key(Session.State().Navigation.Active);
-        X.Assert.Equal<Nav.Route?>(Nav.Route.GenreAlbum(Jazz, Album.Id), Nav.Parse(RouteKey));
+        X.Assert.Equal of Nav.Route? (Nav.Route.GenreAlbum(Jazz, Album.Id), Nav.Parse(RouteKey));
         Send(Session, Albums.Msg.Music(Music.Msg.ShowFilters(true)));
         Fixture.Until(
           Session,
@@ -238,12 +238,12 @@ public type CollectionNavigationTests = record
         end if;
 
         Send(Session, Albums.Msg.Music(Music.Msg.Play(Page.Shown[0].FileId)));
-        X.Assert.Equal<int>(4, Session.State().Player.Queue.Length);
-        X.Assert.Equal<string>(['Jazz'], Session.State().Player.Source.Genres);
+        X.Assert.Equal of int(4, Session.State().Player.Queue.Length);
+        X.Assert.Equal of string(['Jazz'], Session.State().Player.Source.Genres);
         Send(Session, Albums.Msg.BackToAlbums);
-        X.Assert.Equal<string>('Aster Vale', Session.State().Albums.Toolbar.Applied.Artist);
+        X.Assert.Equal of string('Aster Vale', Session.State().Albums.Toolbar.Applied.Artist);
         Send(Session, Albums.Msg.BackToGroups);
-        X.Assert.Equal<int>(8, Session.State().Albums.Toolbar.Applied.MinimumRating);
+        X.Assert.Equal of int(8, Session.State().Albums.Toolbar.Applied.MinimumRating);
         discard Session.Window.Post(
           App.Msg.Navigation(Nav.Msg.Select(Nav.Route.Page(Nav.Page.Albums)))
         );
@@ -273,7 +273,7 @@ public type CollectionNavigationTests = record
       );
       Send(Reopened, Albums.Msg.BackToAlbums);
       Send(Reopened, Albums.Msg.BackToGroups);
-      X.Assert.Equal<int?>(8, Reopened.State().Albums.Shown[2].Rating);
+      X.Assert.Equal of int? (8, Reopened.State().Albums.Shown[2].Rating);
     finally
       Library.DisposeAsync().GetAwaiter().GetResult();
     end try;

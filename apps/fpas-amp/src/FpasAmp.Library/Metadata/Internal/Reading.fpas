@@ -39,12 +39,12 @@ end function;
 // `Size`/`Modified` reject stale or changing files. Cancellation interrupts hashing
 // and is checked around ATL's synchronous parser. Pictures remain unloaded.
 // Optional `Current` rejects obsolete source policies between 64 KiB blocks.
-public async function Read(Path: string; Size: long; Modified: long; Cancellation: T.CancellationToken; Current: Sys.Func<bool>? := null): Tasks.Task<Result>;
+public async function Read(Path: string; Size: long; Modified: long; Cancellation: T.CancellationToken; Current: (Sys.Func of bool)? := null): Tasks.Task of Result;
   procedure Check();
   begin
     Cancellation.ThrowIfCancellationRequested();
     case Current of
-      when is Sys.Func<bool> as Predicate:
+      when is Sys.Func of bool as Predicate:
         if not Predicate.Invoke() then
           raise new Sys.OperationCanceledException('The source policy changed.');
         end if;

@@ -29,9 +29,9 @@ uses System as Sys;
 // - `Prefix`: Muted text before the value.
 // - `Suffix`: Muted text after the value.
 // - `Password`: Whether the snapshot must omit the value.
-public procedure Publish<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Role: string; Value: string; Result: CuiInputs.CuiTextFieldResult;
-  OnChange: function(string): TMsg; OnSubmit: Sys.Func<string, TMsg>?; Enabled: bool;
+public procedure Publish of TMsg(
+  Frame: C.State of TMsg; Id: string; Role: string; Value: string; Result: CuiInputs.CuiTextFieldResult;
+  OnChange: function(string): TMsg; OnSubmit: Sys.Func of (string, TMsg)?; Enabled: bool;
   Label: string; Hint: string; Error: string; Prefix: string; Suffix: string; Password: bool := false
 );
 begin
@@ -41,7 +41,7 @@ begin
 
   if Enabled and Result.Submitted then
     case OnSubmit of
-      when is Sys.Func<string, TMsg> as Submit:
+      when is Sys.Func of (string, TMsg) as Submit:
         Frame.Messages.Add(Submit.Invoke(Result.Value));
       else
     end case;

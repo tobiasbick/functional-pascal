@@ -46,8 +46,8 @@ end procedure;
 public function Observation(Path: string; Files: array of string; Children: array of string; Complete: bool := true; Failure: string? := null): O.DirectoryObservation;
 begin
   return new O.DirectoryObservation(
-    Path, new C.HashSet<string>(Files, S.PathComparer()),
-    new C.HashSet<string>(Children, S.PathComparer()), Complete, Failure
+    Path, new C.HashSet of string(Files, S.PathComparer()),
+    new C.HashSet of string(Children, S.PathComparer()), Complete, Failure
   );
 end function;
 

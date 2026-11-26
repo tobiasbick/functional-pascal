@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Charts.LineCharts as W;
 // Builds the line chart example.
 // ## Returns
 // The widget for the application view.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return W.LineChart<string>('revenue', [
+  return W.LineChart of string('revenue', [
     new C.Series('Revenue', [18.0F, 22.0F, 21.0F, 27.0F]),
     new C.Series('Costs', [12.0F, 13.0F, 15.0F, 14.0F])
   ], new C.Options(Labels := ['Jan', 'Feb', 'Mar', 'Apr'], Area := true, Smooth := true,

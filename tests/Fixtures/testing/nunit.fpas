@@ -60,7 +60,7 @@ public type Tests = record
   [N.TestAttribute]
   public async function AsyncTest(): Tasks.Task;
   begin
-    discard await Tasks.Task.FromResult<int>(42);
+    discard await Tasks.Task.FromResult of int(42);
 
     L.ClassicAssert.AreEqual(1, Active);
   end function;

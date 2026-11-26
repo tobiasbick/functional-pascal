@@ -17,11 +17,11 @@ uses Fpas.Ui.Widgets.Feedback.Skeletons as S;
 // Builds the skeleton group example.
 // ## Returns
 // The widget for the application view.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return W.SkeletonGroup<string>('loading-dither', [
-    S.Skeleton<string>('loading-title', L.Extent.Percent(60.0F), 8.0F),
-    S.Skeleton<string>('loading-line', Height := 8.0F)
+  return W.SkeletonGroup of string('loading-dither', [
+    S.Skeleton of string('loading-title', L.Extent.Percent(60.0F), 8.0F),
+    S.Skeleton of string('loading-line', Height := 8.0F)
   ], new W.Options(Gap := 10.0F, Dither := true));
 end function;
 

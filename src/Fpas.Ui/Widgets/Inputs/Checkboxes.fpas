@@ -19,13 +19,13 @@ uses Fpas.Ui.Elements as E;
 // - `HideLabel`: Draw only the checkbox while retaining its accessible label.
 // ## Returns
 // The control that proposes changes to the model.
-public function Checkbox<TMsg>(
+public function Checkbox of TMsg(
   Id: string; Label: string; Checked: bool; OnChange: function(bool): TMsg;
   Description: string := ''; Enabled: bool := true; Indeterminate: bool := false; HideLabel: bool := false
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.CheckboxAction(
+  return (E.Element of TMsg).CheckboxAction(
     Id,
     Label,
     Checked,

@@ -21,9 +21,9 @@ uses System as Sys;
 // - `Values`: Samples in display order.
 // ## Returns
 // The widget for the application view.
-public function View(Start: Sys.DateOnly; Values: array of float): E.Element<Sys.DateOnly>;
+public function View(Start: Sys.DateOnly; Values: array of float): E.Element of Sys.DateOnly;
 begin
-  return W.CalendarHeatmap<Sys.DateOnly>('activity', Start, Values,
+  return W.CalendarHeatmap of Sys.DateOnly('activity', Start, Values,
     new W.Options(Unit := 'contributions'), function(Day: Sys.DateOnly): Sys.DateOnly => Day);
 end function;
 

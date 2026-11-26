@@ -28,10 +28,10 @@ end record;
 // - `Settings`: Native image settings.
 // ## Returns
 // A graphical element.
-public function Image<TMsg>(Id: string; Source: Media.Source; Settings: Options? := null): E.Element<TMsg>;
+public function Image of TMsg(Id: string; Source: Media.Source; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Image(Id, Source, Settings ?? new Options());
+  return (E.Element of TMsg).Image(Id, Source, Settings ?? new Options());
 end function;
 
 end unit;

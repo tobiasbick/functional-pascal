@@ -20,32 +20,32 @@ uses System as Sys;
 // - `Model`: Editable message, visibility and emoji preferences.
 // ## Returns
 // The original Emoji picker section.
-public function View(Model: State.Model): array of E.Element<State.Msg>;
+public function View(Model: State.Model): array of E.Element of State.Msg;
 begin
-  const Message: E.Element<State.Msg> := F.TextField<State.Msg>(
+  const Message: E.Element of State.Msg := F.TextField of State.Msg(
     'smart-message', Model.Message, State.Msg.SetMessage,
     new F.Options(MaxUtf8Bytes := State.MessageCapacity)
   );
-  const Button: E.Element<State.Msg> := B.IconButton<State.Msg>(
+  const Button: E.Element of State.Msg := B.IconButton of State.Msg(
     'smart-emoji-trigger', Sys.Char.ConvertFromUtf32($E164), 'Emoji',
     State.Msg.SetEmojiOpen(not Model.EmojiOpen)
   );
-  const Picker: E.Element<State.Msg> := Emoji.EmojiPicker<State.Msg>(
+  const Picker: E.Element of State.Msg := Emoji.EmojiPicker of State.Msg(
     'smart-emoji', Model.Emoji, State.Msg.ChangeEmoji, new Emoji.Options(Height := 260.0F)
   );
-  const Popup: E.Element<State.Msg> := P.Popover<State.Msg>(
+  const Popup: E.Element of State.Msg := P.Popover of State.Msg(
     'smart-emoji-popup', Button, Picker, Model.EmojiOpen, State.Msg.SetEmojiOpen(false),
     new P.Options(Position := M.Placement.BottomEnd, Width := 340)
   );
   return [
-    G.Heading<State.Msg>(
+    G.Heading of State.Msg(
       Strings.Get('Heading.EmojiPicker'), Strings.Get('Heading.EmojiPickerHint')
     ),
-    E.Row<State.Msg>(
-      E.Size<State.Msg>(
-        E.Row<State.Msg>(
+    E.Row of State.Msg(
+      E.Size of State.Msg(
+        E.Row of State.Msg(
           new L.Flow(Gap := G.Points(8), Align := L.Alignment.Center),
-          E.Size<State.Msg>(Message, new L.Flex(Basis := L.Extent.Fill)),
+          E.Size of State.Msg(Message, new L.Flex(Basis := L.Extent.Fill)),
           Popup
         ),
         new L.Flex(Basis := L.Extent.Fill, Maximum := L.Measure.Logical(480))

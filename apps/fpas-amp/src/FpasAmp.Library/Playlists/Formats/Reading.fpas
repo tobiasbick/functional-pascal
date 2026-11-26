@@ -33,12 +33,12 @@ end record;
 // Expected `Size` and `Modified` reject stale files; cancellation bounds copying
 // and entry iteration. Files are limited to sixteen MiB and 100000 entries.
 // Optional `Current` rejects obsolete source policies between bounded copy blocks.
-public function Read(Path: string; Size: long; Modified: long; Cancellation: T.CancellationToken; Current: Sys.Func<bool>? := null): Result;
+public function Read(Path: string; Size: long; Modified: long; Cancellation: T.CancellationToken; Current: (Sys.Func of bool)? := null): Result;
   procedure Check();
   begin
     Cancellation.ThrowIfCancellationRequested();
     case Current of
-      when is Sys.Func<bool> as Predicate:
+      when is Sys.Func of bool as Predicate:
         if not Predicate.Invoke() then
           raise new Sys.OperationCanceledException('The source policy changed.');
         end if;
@@ -109,7 +109,7 @@ begin
     const Escaped: bool := Extension = '.xspf' or Extension = '.b4s' or Extension = '.asx'
       or Extension = '.wax' or Extension = '.wvx' or Extension = '.smil' or Extension = '.smi'
       or Extension = '.wpl' or Extension = '.zpl';
-    const Entries: C.List<Item> := new C.List<Item>();
+    const Entries: C.List of Item := new C.List of Item();
     for Entry: Formats.Item in Formats.Read(Temporary, Cancellation) do
       Check();
       Entries.Add(

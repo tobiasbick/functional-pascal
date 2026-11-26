@@ -12,9 +12,9 @@ uses System as Sys;
 //
 // ## Returns
 // The native gallery's Delete project button.
-public function View(): E.Element<State.Msg>;
+public function View(): E.Element of State.Msg;
 begin
-  return Confirm.ConfirmButton<State.Msg>(
+  return Confirm.ConfirmButton of State.Msg(
     'confirm-delete', 'Delete project', State.Msg.ConfirmDelete,
     new Confirm.Options(Icon := Sys.Char.ConvertFromUtf32($E18E))
   );

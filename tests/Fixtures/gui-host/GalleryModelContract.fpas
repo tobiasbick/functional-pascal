@@ -65,7 +65,7 @@ begin
     Renderer,
     true
   );
-  using const Session: Gui.Session<Gallery.Msg> := Host.Start<Gallery.Model, Gallery.Msg>(
+  using const Session: Gui.Session of Gallery.Msg := Host.Start of (Gallery.Model, Gallery.Msg)(
     new Gallery.Model(
       Active := Gallery.Page.Instruments,
       Instruments := new Instruments.Model(Cups := new Events.Value([], -1))

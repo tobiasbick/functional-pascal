@@ -43,10 +43,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // The graphical element.
-public function ImageViewer<TMsg>(Id: string; Image: Media.Source; Current: Value; Change: function(Value): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function ImageViewer of TMsg(Id: string; Image: Media.Source; Current: Value; Change: function(Value): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.ImageViewer(Id, Image, Current, Change, Settings ?? new Options());
+  return (E.Element of TMsg).ImageViewer(Id, Image, Current, Change, Settings ?? new Options());
 end function;
 
 end unit;

@@ -42,32 +42,32 @@ uses System as Sys;
 // - `Messages`: Message translation.
 // ## Returns
 // The node producing parent messages.
-public function Map<TChild, TParent>(Value: E.Element<TChild>; Messages: function(TChild): TParent): E.Element<TParent>;
+public function Map of (TChild, TParent)(Value: E.Element of TChild; Messages: function(TChild): TParent): E.Element of TParent;
 begin
   case Value of
     when E.Element.ExpandableText(
       const FId: string,
       const FText: string,
       const FSettings: ExpandableTexts.Options,
-      const FOnToggle: Sys.Func<TChild>?
+      const FOnToggle: (Sys.Func of TChild)?
     ):
-      return E.Element<TParent>.ExpandableText(
+      return (E.Element of TParent).ExpandableText(
         FId,
         FText,
         FSettings,
-        M.Factory<TChild, TParent>(FOnToggle, Messages)
+        M.Factory of (TChild, TParent)(FOnToggle, Messages)
       );
     when E.Element.Label(const FText: string):
-      return E.Element<TParent>.Label(FText);
+      return (E.Element of TParent).Label(FText);
     when E.Element.Separator(const FTitle: string):
-      return E.Element<TParent>.Separator(FTitle);
+      return (E.Element of TParent).Separator(FTitle);
     when E.Element.ButtonAction(
       const FId: string,
       const FText: string,
       const FMessage: TChild,
       const FSettings: B.Options
     ):
-      return E.Element<TParent>.ButtonAction(FId, FText, Messages(FMessage), FSettings);
+      return (E.Element of TParent).ButtonAction(FId, FText, Messages(FMessage), FSettings);
     when E.Element.IconAction(
       const FId: string,
       const FIcon: string,
@@ -75,17 +75,17 @@ begin
       const FMessage: TChild,
       const FSettings: Icons.Options
     ):
-      return E.Element<TParent>.IconAction(FId, FIcon, FTooltip, Messages(FMessage), FSettings);
+      return (E.Element of TParent).IconAction(FId, FIcon, FTooltip, Messages(FMessage), FSettings);
     when E.Element.CopyAction(
       const FId: string,
       const FText: string,
-      const FOnCopied: Sys.Func<TChild>?,
+      const FOnCopied: (Sys.Func of TChild)?,
       const FEnabled: bool
     ):
-      return E.Element<TParent>.CopyAction(
+      return (E.Element of TParent).CopyAction(
         FId,
         FText,
-        M.Factory<TChild, TParent>(FOnCopied, Messages),
+        M.Factory of (TChild, TParent)(FOnCopied, Messages),
         FEnabled
       );
     when E.Element.HoldAction(
@@ -94,14 +94,14 @@ begin
       const FMessage: TChild,
       const FSettings: Holds.Options
     ):
-      return E.Element<TParent>.HoldAction(FId, FLabel, Messages(FMessage), FSettings);
+      return (E.Element of TParent).HoldAction(FId, FLabel, Messages(FMessage), FSettings);
     when E.Element.ConfirmAction(
       const FId: string,
       const FLabel: string,
       const FMessage: TChild,
       const FSettings: Confirms.Options
     ):
-      return E.Element<TParent>.ConfirmAction(FId, FLabel, Messages(FMessage), FSettings);
+      return (E.Element of TParent).ConfirmAction(FId, FLabel, Messages(FMessage), FSettings);
     when E.Element.StatusAction(
       const FId: string,
       const FLabel: string,
@@ -109,14 +109,20 @@ begin
       const FMessage: TChild,
       const FSettings: Status.Options
     ):
-      return E.Element<TParent>.StatusAction(FId, FLabel, FState, Messages(FMessage), FSettings);
+      return (E.Element of TParent).StatusAction(
+        FId,
+        FLabel,
+        FState,
+        Messages(FMessage),
+        FSettings
+      );
     when E.Element.ThemeChoice(
       const FId: string,
       const FSelected: ThemeSwitchers.Selection,
       const FOnChange: function(ThemeSwitchers.Selection): TChild,
       const FSettings: ThemeSwitchers.Options
     ):
-      return E.Element<TParent>.ThemeChoice(
+      return (E.Element of TParent).ThemeChoice(
         FId,
         FSelected,
         function(A0: ThemeSwitchers.Selection): TParent => Messages(FOnChange(A0)),
@@ -128,7 +134,7 @@ begin
       const FOnChange: function(Themes.Mode): TChild,
       const FEnabled: bool
     ):
-      return E.Element<TParent>.ThemeFlip(
+      return (E.Element of TParent).ThemeFlip(
         FId,
         FAppearance,
         function(A0: Themes.Mode): TParent => Messages(FOnChange(A0)),
@@ -141,7 +147,7 @@ begin
       const FOnChange: function(int): TChild,
       const FSettings: Segmented.Options
     ):
-      return E.Element<TParent>.Segments(
+      return (E.Element of TParent).Segments(
         FId,
         FItems,
         FSelected,
@@ -155,7 +161,7 @@ begin
       const FOnChange: function(array of bool): TChild,
       const FSettings: ToggleGroups.Options
     ):
-      return E.Element<TParent>.Toggles(
+      return (E.Element of TParent).Toggles(
         FId,
         FItems,
         FSelected,
@@ -166,14 +172,14 @@ begin
       const FId: string,
       const FLabel: string,
       const FMessage: TChild,
-      const FItems: array of Split.Item<TChild>,
+      const FItems: array of Split.Item of TChild,
       const FSettings: Split.Options
     ):
-      return E.Element<TParent>.SplitAction(
+      return (E.Element of TParent).SplitAction(
         FId,
         FLabel,
         Messages(FMessage),
-        M.Split<TChild, TParent>(FItems, Messages),
+        M.Split of (TChild, TParent)(FItems, Messages),
         FSettings
       );
     when E.Element.ReactionGroup(
@@ -182,7 +188,7 @@ begin
       const FOnChange: function(int, Reactions.Item): TChild,
       const FEnabled: bool
     ):
-      return E.Element<TParent>.ReactionGroup(
+      return (E.Element of TParent).ReactionGroup(
         FId,
         FItems,
         function(A0: int; A1: Reactions.Item): TParent => Messages(FOnChange(A0, A1)),
@@ -192,19 +198,19 @@ begin
       const Id: string, const Items: array of Speed.Item, const Choose: function(int): TChild,
       const Settings: Speed.Options
     ):
-      return E.Element<TParent>.SpeedDialAction(
+      return (E.Element of TParent).SpeedDialAction(
         Id, Items, function(Index: int): TParent => Messages(Choose(Index)), Settings
       );
     when E.Element.AccountMenu(
       const FId: string,
       const FName: string,
-      const FEntries: array of Menus.Entry<TChild>,
+      const FEntries: array of Menus.Entry of TChild,
       const FSettings: UserMenus.Options
     ):
-      return E.Element<TParent>.AccountMenu(
+      return (E.Element of TParent).AccountMenu(
         FId,
         FName,
-        M.Menu<TChild, TParent>(FEntries, Messages),
+        M.Menu of (TChild, TParent)(FEntries, Messages),
         FSettings
       );
     when E.Element.CheckboxAction(
@@ -216,7 +222,7 @@ begin
       const FEnabled: bool,
       const FIndeterminate: bool, const FHideLabel: bool
     ):
-      return E.Element<TParent>.CheckboxAction(
+      return (E.Element of TParent).CheckboxAction(
         FId,
         FLabel,
         FChecked,
@@ -234,7 +240,7 @@ begin
       const FDescription: string,
       const FEnabled: bool
     ):
-      return E.Element<TParent>.SwitchAction(
+      return (E.Element of TParent).SwitchAction(
         FId,
         FLabel,
         FOn,
@@ -250,7 +256,7 @@ begin
       const FDescription: string,
       const FEnabled: bool
     ):
-      return E.Element<TParent>.RadioAction(
+      return (E.Element of TParent).RadioAction(
         FId,
         FLabel,
         FSelected,
@@ -266,7 +272,7 @@ begin
       const FEnabled: bool,
       const FGap: L.Spacing
     ):
-      return E.Element<TParent>.Radios(
+      return (E.Element of TParent).Radios(
         FId,
         FItems,
         FSelected,
@@ -281,7 +287,7 @@ begin
       const FOnChange: function(int): TChild,
       const FSettings: RadioCards.Options
     ):
-      return E.Element<TParent>.Cards(
+      return (E.Element of TParent).Cards(
         FId,
         FItems,
         FSelected,
@@ -297,7 +303,7 @@ begin
       const FOnChange: function(float): TChild,
       const FSettings: Sliders.Options
     ):
-      return E.Element<TParent>.SliderAction(
+      return (E.Element of TParent).SliderAction(
         FId,
         FLabel,
         FValue,
@@ -315,7 +321,7 @@ begin
       const FOnChange: function(RangeSliders.Interval): TChild,
       const FEnabled: bool
     ):
-      return E.Element<TParent>.RangeSliderAction(
+      return (E.Element of TParent).RangeSliderAction(
         FId,
         FLabel,
         FValue,
@@ -328,7 +334,7 @@ begin
       const Id: string, const Label: string, const Value: float, const Minimum: float,
       const Maximum: float, const Change: function(float): TChild, const Settings: Knobs.Options
     ):
-      return E.Element<TParent>.Knob(
+      return (E.Element of TParent).Knob(
         Id,
         Label,
         Value,
@@ -341,7 +347,7 @@ begin
       const Id: string, const Label: string, const Value: float, const Minimum: float,
       const Maximum: float, const Change: function(float): TChild, const Settings: Faders.Options
     ):
-      return E.Element<TParent>.Fader(
+      return (E.Element of TParent).Fader(
         Id,
         Label,
         Value,
@@ -354,7 +360,7 @@ begin
       const Id: string, const Label: string, const Value: float, const Minimum: float,
       const Maximum: float, const Change: function(float): TChild, const Settings: Rulers.Options
     ):
-      return E.Element<TParent>.RulerSlider(
+      return (E.Element of TParent).RulerSlider(
         Id,
         Label,
         Value,
@@ -368,7 +374,7 @@ begin
       const Value: RangeSliders.Interval, const Minimum: float, const Maximum: float,
       const Change: function(RangeSliders.Interval): TChild, const Settings: Histograms.Options
     ):
-      return E.Element<TParent>.HistogramSlider(
+      return (E.Element of TParent).HistogramSlider(
         Id, Label, Bins, Value, Minimum, Maximum,
         function(Proposal: RangeSliders.Interval): TParent => Messages(Change(Proposal)), Settings
       );
@@ -380,7 +386,7 @@ begin
       const FIcon: string,
       const FEnabled: bool
     ):
-      return E.Element<TParent>.ChipAction(
+      return (E.Element of TParent).ChipAction(
         FId,
         FLabel,
         FSelected,
@@ -397,7 +403,7 @@ begin
       const FEnabled: bool,
       const FStarSize: float
     ):
-      return E.Element<TParent>.RatingAction(
+      return (E.Element of TParent).RatingAction(
         FId,
         FLabel,
         FValue,
@@ -413,7 +419,7 @@ begin
       const FOnChange: function(int): TChild,
       const FSettings: Tabs.Options
     ):
-      return E.Element<TParent>.TabStrip(
+      return (E.Element of TParent).TabStrip(
         FId,
         FItems,
         FSelected,
@@ -426,7 +432,7 @@ begin
       const FOnNavigate: function(int): TChild,
       const FEnabled: bool
     ):
-      return E.Element<TParent>.BreadcrumbTrail(
+      return (E.Element of TParent).BreadcrumbTrail(
         FId,
         FItems,
         function(A0: int): TParent => Messages(FOnNavigate(A0)),
@@ -439,7 +445,7 @@ begin
       const FOnChange: function(int): TChild,
       const FEnabled: bool
     ):
-      return E.Element<TParent>.PaginationAction(
+      return (E.Element of TParent).PaginationAction(
         FId,
         FPage,
         FPageCount,
@@ -451,30 +457,30 @@ begin
       const FSteps: array of string,
       const FCurrent: int
     ):
-      return E.Element<TParent>.StepProgress(FId, FSteps, FCurrent);
+      return (E.Element of TParent).StepProgress(FId, FSteps, FCurrent);
     when E.Element.Dropdown(
       const FId: string,
       const FLabel: string,
-      const FEntries: array of Menus.Entry<TChild>,
+      const FEntries: array of Menus.Entry of TChild,
       const FSettings: Menus.Options
     ):
-      return E.Element<TParent>.Dropdown(
+      return (E.Element of TParent).Dropdown(
         FId,
         FLabel,
-        M.Menu<TChild, TParent>(FEntries, Messages),
+        M.Menu of (TChild, TParent)(FEntries, Messages),
         FSettings
       );
     when E.Element.PasswordStrengthMeter(const FId: string, const FPassword: string):
-      return E.Element<TParent>.PasswordStrengthMeter(FId, FPassword);
+      return (E.Element of TParent).PasswordStrengthMeter(FId, FPassword);
     when E.Element.Sidebar(
       const FId: string,
-      const FSections: array of N.Section<TChild>,
+      const FSections: array of N.Section of TChild,
       const FActiveKey: string?,
       const FEnabled: bool
     ):
-      return E.Element<TParent>.Sidebar(
+      return (E.Element of TParent).Sidebar(
         FId,
-        M.Navigation<TChild, TParent>(FSections, Messages),
+        M.Navigation of (TChild, TParent)(FSections, Messages),
         FActiveKey,
         FEnabled
       );

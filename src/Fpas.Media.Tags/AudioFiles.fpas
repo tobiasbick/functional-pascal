@@ -113,9 +113,9 @@ end function;
 
 function Extra(Track: A.Track; Name: string): string;
 begin
-  const Fields: C.IDictionary<string?, string?>? := Track.AdditionalFields;
+  const Fields: C.IDictionary of (string?, string?)? := Track.AdditionalFields;
   if Fields <> null then
-    for Pair: C.KeyValuePair<string?, string?> in Fields do
+    for Pair: C.KeyValuePair of (string?, string?) in Fields do
       if Key(Pair.Key ?? '') = Name then
         return Pair.Value ?? '';
       end if;
@@ -127,9 +127,9 @@ end function;
 
 function RecordingId(Track: A.Track): string;
 begin
-  const Fields: C.IDictionary<string?, string?>? := Track.AdditionalFields;
+  const Fields: C.IDictionary of (string?, string?)? := Track.AdditionalFields;
   if Fields <> null then
-    for Pair: C.KeyValuePair<string?, string?> in Fields do
+    for Pair: C.KeyValuePair of (string?, string?) in Fields do
       const Name: string := (Pair.Key ?? '').ToLowerInvariant();
       if Name = 'ufid.http://musicbrainz.org' or Name = 'ufid.https://musicbrainz.org' then
         try

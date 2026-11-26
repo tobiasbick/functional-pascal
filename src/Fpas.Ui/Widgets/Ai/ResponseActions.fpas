@@ -38,10 +38,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function ResponseActions<TMsg>(Id: string; Vote: int?; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function ResponseActions of TMsg(Id: string; Vote: int?; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.ResponseActions(Id, Vote, Changed, Settings ?? new Options());
+  return (E.Element of TMsg).ResponseActions(Id, Vote, Changed, Settings ?? new Options());
 end function;
 
 end unit;

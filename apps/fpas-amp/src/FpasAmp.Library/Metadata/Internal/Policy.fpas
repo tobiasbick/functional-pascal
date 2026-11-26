@@ -21,7 +21,7 @@ end record;
 // Shared policy and capacity-one wake signal; locks never cover filesystem/database work.
 public type Policy = record
   Gate: object;
-  State: R.StrongBox<Configuration>;
+  State: R.StrongBox of Configuration;
   // Worker signal; repeated invalidations coalesce.
   Signal: T.SemaphoreSlim;
 
@@ -30,7 +30,7 @@ public type Policy = record
   begin
     return new Policy(
       new object(),
-      new R.StrongBox<Configuration>(new Configuration(Sources, 1L)),
+      new R.StrongBox of Configuration(new Configuration(Sources, 1L)),
       new T.SemaphoreSlim(0, 1)
     );
   end function;
@@ -61,7 +61,7 @@ public type Policy = record
   end procedure;
 
   // Waits for a wake signal or timeout. `Milliseconds` is nonnegative; cancellation interrupts waiting.
-  public function Wait(Milliseconds: int; Cancellation: T.CancellationToken): Tasks.Task<bool>;
+  public function Wait(Milliseconds: int; Cancellation: T.CancellationToken): Tasks.Task of bool;
   begin
     return self.Signal.WaitAsync(Milliseconds, Cancellation);
   end function;
@@ -94,7 +94,7 @@ public type Policy = record
     T.Monitor.Enter(self.Gate);
     try
       const Before: Configuration := self.Read();
-      const Sources: C.List<S.MusicSource> := new C.List<S.MusicSource>();
+      const Sources: C.List of S.MusicSource := new C.List of S.MusicSource();
       for Source: S.MusicSource in Before.Sources do
         Sources.Add(
           if Id = '' or Source.Id = Id then

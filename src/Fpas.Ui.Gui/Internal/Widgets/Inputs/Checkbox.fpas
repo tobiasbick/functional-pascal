@@ -20,8 +20,8 @@ uses Fpas.Ui.Gui.Internal.Core.Context as C;
 // - `Enabled`: Model-owned input permission.
 // - `Indeterminate`: Draw a dash in place of the check mark while checked.
 // - `HideLabel`: Whether to render only the checkbox.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Label: string; Checked: bool; OnChange: function(bool): TMsg;
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Label: string; Checked: bool; OnChange: function(bool): TMsg;
   Description: string; Enabled: bool; Indeterminate: bool; HideLabel: bool
 );
 begin
@@ -33,7 +33,7 @@ begin
     Description,
     Checked,
     Allowed,
-    C.WantsFocus<TMsg>(Frame, Id, Token, Allowed),
+    C.WantsFocus of TMsg(Frame, Id, Token, Allowed),
     Indeterminate,
     HideLabel
   )
@@ -41,7 +41,7 @@ begin
     Frame.Messages.Add(OnChange(not Checked));
   end if;
 
-  C.Track<TMsg>(
+  C.Track of TMsg(
     Frame, new App.Control(
       Id, Label, 'checkbox', new Cui.CuiRectangle(), Allowed,
       Value := if Indeterminate and Checked then

@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Developer.Coverages as W;
 // - `Files`: Paths and total and covered counts.
 // ## Returns
 // The report with a message when a file is activated.
-public function View(Files: array of W.File): E.Element<W.Event>;
+public function View(Files: array of W.File): E.Element of W.Event;
 begin
-  return W.Coverage<W.Event>('coverage-report', Files,
+  return W.Coverage of W.Event('coverage-report', Files,
     function(Change: W.Event): W.Event => Change, new W.Options(Height := 372.0F));
 end function;
 

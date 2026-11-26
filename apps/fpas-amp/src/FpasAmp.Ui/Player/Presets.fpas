@@ -11,12 +11,12 @@ public type Curve = record
   // English caption shown in the preset menu.
   public Name: string;
   // Gain of each band in dB.
-  public Gains: I.ImmutableArray<float>;
+  public Gains: I.ImmutableArray of float;
 end record;
 
 function Define(Name: string; Gains: array of float): Curve;
 begin
-  return new Curve(Name, I.ImmutableArray.CreateRange<float>(Gains));
+  return new Curve(Name, I.ImmutableArray.CreateRange of float(Gains));
 end function;
 
 // Presets in menu order. The first entry is the neutral reset curve.
@@ -33,10 +33,10 @@ public const Choices: array of Curve := [
 // Finds the preset matching all ten values in `Gains`.
 // ## Returns
 // Index in Choices, or -1 for a custom curve.
-public function Match(Gains: I.ImmutableArray<float>): int;
+public function Match(Gains: I.ImmutableArray of float): int;
 begin
   for Index: int := 0 to Choices.Length - 1 do
-    if Linq.Enumerable.SequenceEqual<float>(Choices[Index].Gains, Gains) then
+    if Linq.Enumerable.SequenceEqual of float(Choices[Index].Gains, Gains) then
       return Index;
     end if;
   end for;

@@ -13,13 +13,13 @@ public sealed class VariantMetadataTests
     [Fact]
     public void A_missing_imported_generic_case_uses_the_source_alias()
     {
-        var library = TestCompilation.Compile("unit Example.Model; public type Choice<T> = variant Empty; Item(Value: T); end variant; end unit;", CompilationTarget.Library);
+        var library = TestCompilation.Compile("unit Example.Model; public type Choice of T = variant Empty; Item(Value: T); end variant; end unit;", CompilationTarget.Library);
         Assert.True(library.Success, string.Join(";", library.Diagnostics));
         using var directory = new TemporaryDirectory();
         var file = directory.File("Model.dll");
         File.WriteAllBytes(file, library.Program!.AssemblyImage.ToArray());
         var references = new[] { file }.Concat(TestCompilation.References).ToArray();
-        const string prefix = "program Consumer; uses Example.Model as M; begin const Value: M.Choice<int> := M.Choice.Empty; discard case Value of when M.Choice.Empty: 0;";
+        const string prefix = "program Consumer; uses Example.Model as M; begin const Value: M.Choice of int := M.Choice.Empty; discard case Value of when M.Choice.Empty: 0;";
         const string suffix = " end case; end; end program;";
         CompilationResult Compile(string text) => FpasCompiler.Compile(new([new("consumer.fpas", text)], "Consumer", references));
         var diagnostic = Assert.Single(Compile(prefix + suffix).Diagnostics);

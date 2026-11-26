@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Developer.LogConsoles as W;
 // - `Entries`: Immutable log entries in arrival order.
 // ## Returns
 // The console with a message to clear the model.
-public function View(Entries: array of W.Entry): E.Element<string>;
+public function View(Entries: array of W.Entry): E.Element of string;
 begin
-  return W.LogConsole<string>('build-log', Entries, 'clear-build-log',
+  return W.LogConsole of string('build-log', Entries, 'clear-build-log',
     new W.Options(Height := 352.0F, Timestamps := true));
 end function;
 

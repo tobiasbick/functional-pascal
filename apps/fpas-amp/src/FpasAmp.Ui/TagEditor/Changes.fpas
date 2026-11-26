@@ -41,10 +41,10 @@ begin
 end function;
 
 // Validates the draft and returns only changed fields and explicit custom removals.
-public function Build(Current: M.State; Original: Files.Snapshot): I.ImmutableDictionary<string, string?>;
+public function Build(Current: M.State; Original: Files.Snapshot): I.ImmutableDictionary of (string, string?);
 begin
-  const Changes: I.ImmutableDictionary<string, string?>.Builder := I.ImmutableDictionary.CreateBuilder<string, string?>();
-  for Field: C.KeyValuePair<string, string> in Current.Values do
+  const Changes: I.ImmutableDictionary of (string, string?).Builder := I.ImmutableDictionary.CreateBuilder of (string, string?)();
+  for Field: C.KeyValuePair of (string, string) in Current.Values do
     if Field.Key.StartsWith(F.Custom) then
       continue;
     end if;
@@ -57,8 +57,10 @@ begin
       Changes[Field.Key] := Normalize(Field.Key, Text);
     end if;
   end for;
-  const Custom: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.OrdinalIgnoreCase);
-  const Values: C.Dictionary<string, string> := new C.Dictionary<string, string>();
+  const Custom: C.HashSet of string := new C.HashSet of string(
+    Sys.StringComparer.OrdinalIgnoreCase
+  );
+  const Values: C.Dictionary of (string, string) := new C.Dictionary of (string, string)();
   for Row: M.Custom in Current.Extra do
     const Name: string := Row.Name.Trim();
     if Files.BinaryTag(Name) then

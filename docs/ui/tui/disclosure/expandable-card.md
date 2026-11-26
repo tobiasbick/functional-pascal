@@ -17,10 +17,10 @@ uses Fpas.Ui.Widgets.Containers.ExpandableCards as Cards;
 // - `Expanded`: Whether the details are visible.
 // ## Returns
 // A card that proposes the next expansion state.
-public function View(Expanded: bool): E.Element<bool>;
+public function View(Expanded: bool): E.Element of bool;
 begin
-  return Cards.ExpandableCard<bool>('security', 'Security', Expanded,
-    function(Value: bool): bool => Value, E.Text<bool>('Recovery codes are available.'),
+  return Cards.ExpandableCard of bool('security', 'Security', Expanded,
+    function(Value: bool): bool => Value, E.Text of bool('Recovery codes are available.'),
     new Cards.Options(Description := 'Two-factor authentication is on'));
 end function;
 

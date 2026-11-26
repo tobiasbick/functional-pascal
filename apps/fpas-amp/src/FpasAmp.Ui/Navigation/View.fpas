@@ -52,10 +52,10 @@ begin
   );
 end function;
 
-function Destination(Page: M.Page): Nav.Item<App.Msg>;
+function Destination(Page: M.Page): Nav.Item of App.Msg;
 begin
   const Route: M.Route := M.Route.Page(Page);
-  return new Nav.Item<App.Msg>(
+  return new Nav.Item of App.Msg(
     M.Key(Route),
     Title(Page),
     App.Msg.Navigation(M.Msg.Select(Route)),
@@ -87,7 +87,7 @@ begin
   return IO.Path.GetDirectoryName(Path) ?? '';
 end function;
 
-function Items(Current: App.State): E.Element<App.Msg>;
+function Items(Current: App.State): E.Element of App.Msg;
 begin
   var Active: string := M.SectionKey(Current.Navigation.Active);
   case Current.Navigation.Active of
@@ -97,8 +97,8 @@ begin
       end if;
     else
   end case;
-  const Playlists: C.List<Nav.Item<App.Msg>> := new C.List<Nav.Item<App.Msg>>();
-  const Names: C.Dictionary<string, int> := new C.Dictionary<string, int>(
+  const Playlists: C.List of Nav.Item of App.Msg := new C.List of Nav.Item of App.Msg();
+  const Names: C.Dictionary of (string, int) := new C.Dictionary of (string, int)(
     Sys.StringComparer.OrdinalIgnoreCase
   );
   for Item: Lists.Summary in Current.Navigation.Playlists do
@@ -112,7 +112,7 @@ begin
   for Item: Lists.Summary in Current.Navigation.Playlists do
     const Route: M.Route := M.Route.Playlist(Item.Identity);
     Playlists.Add(
-      new Nav.Item<App.Msg>(
+      new Nav.Item of App.Msg(
         M.Key(Route), Item.Name, App.Msg.Navigation(M.Msg.Select(Route)),
         Icon := Sys.Char.ConvertFromUtf32($E106), Badge := if Names[Item.Name] > 1 then
           SourceLabel(Item, Current)
@@ -125,7 +125,7 @@ begin
 
   if Playlists.Count = 0 then
     Playlists.Add(
-      new Nav.Item<App.Msg>(
+      new Nav.Item of App.Msg(
         'playlists-empty',
         if Current.Navigation.Loaded then
           'No playlists found'
@@ -136,26 +136,26 @@ begin
       )
     );
   end if;
-  const Stations: C.List<Nav.Item<App.Msg>> := new C.List<Nav.Item<App.Msg>>(
+  const Stations: C.List of Nav.Item of App.Msg := new C.List of Nav.Item of App.Msg(
     [Destination(M.Page.Stations)]
   );
   for Item: Radio.Station in Current.Settings.Saved.RadioFavorites do
     const Route: M.Route := M.Route.Station(Item.Id);
     Stations.Add(
-      new Nav.Item<App.Msg>(
+      new Nav.Item of App.Msg(
         M.Key(Route), Item.Name, App.Msg.Navigation(M.Msg.Select(Route)),
         Icon := Sys.Char.ConvertFromUtf32($E142)
       )
     );
   end for;
 
-  const Shows: C.List<Nav.Item<App.Msg>> := new C.List<Nav.Item<App.Msg>>(
+  const Shows: C.List of Nav.Item of App.Msg := new C.List of Nav.Item of App.Msg(
     [Destination(M.Page.Podcasts)]
   );
   for Item: Podcasts.Show in Current.Settings.Saved.PodcastSubscriptions do
     const Route: M.Route := M.Route.Podcast(Item.Id());
     Shows.Add(
-      new Nav.Item<App.Msg>(
+      new Nav.Item of App.Msg(
         M.Key(Route),
         Item.Title,
         App.Msg.Navigation(M.Msg.Select(Route)),
@@ -164,10 +164,10 @@ begin
     );
   end for;
 
-  return Nav.Sidebar<App.Msg>(
+  return Nav.Sidebar of App.Msg(
     'navigation',
     [
-      new Nav.Section<App.Msg>(
+      new Nav.Section of App.Msg(
         'Library',
         [
           Destination(M.Page.Music),
@@ -176,9 +176,9 @@ begin
           Destination(M.Page.Genres)
         ]
       ),
-      new Nav.Section<App.Msg>('Radio', Stations.ToArray(), GapBefore := 14),
-      new Nav.Section<App.Msg>('Podcasts', Shows.ToArray(), GapBefore := 14),
-      new Nav.Section<App.Msg>('Playlists', Playlists.ToArray(), GapBefore := 14)
+      new Nav.Section of App.Msg('Radio', Stations.ToArray(), GapBefore := 14),
+      new Nav.Section of App.Msg('Podcasts', Shows.ToArray(), GapBefore := 14),
+      new Nav.Section of App.Msg('Playlists', Playlists.ToArray(), GapBefore := 14)
     ],
     if Active = 'settings' or (not Current.Navigation.Loaded and Active.StartsWith(
       'playlist:'
@@ -193,14 +193,14 @@ end function;
 
 // Builds scrollable Library/Playlists and pinned Settings for `Current`/`Theme`.
 // Optional `DrawerHeight` bounds the native sheet body at compact window sizes.
-public function Sidebar(Current: App.State; Theme: Themes.Theme; DrawerHeight: int? := null): E.Element<App.Msg>;
+public function Sidebar(Current: App.State; Theme: Themes.Theme; DrawerHeight: int? := null): E.Element of App.Msg;
 begin
-  const Navigation: E.Element<App.Msg> := E.Size<App.Msg>(
-    E.ScrollView<App.Msg>('navigation-scroll', Items(Current)), new L.Flex(Basis := L.Extent.Fill)
+  const Navigation: E.Element of App.Msg := E.Size of App.Msg(
+    E.ScrollView of App.Msg('navigation-scroll', Items(Current)), new L.Flex(Basis := L.Extent.Fill)
   );
-  const Footer: E.Element<App.Msg> := Nav.Sidebar<App.Msg>(
+  const Footer: E.Element of App.Msg := Nav.Sidebar of App.Msg(
     'settings-navigation',
-    [new Nav.Section<App.Msg>('', [Destination(M.Page.Settings)])],
+    [new Nav.Section of App.Msg('', [Destination(M.Page.Settings)])],
     if M.Key(Current.Navigation.Active) = 'settings' then
       'settings'
     else
@@ -208,8 +208,8 @@ begin
     end if
   );
   if DrawerHeight <> null then
-    return E.Size<App.Msg>(
-      E.Column<App.Msg>(
+    return E.Size of App.Msg(
+      E.Column of App.Msg(
         new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8))),
         Navigation,
         Footer
@@ -220,16 +220,16 @@ begin
     );
   end if;
 
-  return E.Column<App.Msg>(
+  return E.Column of App.Msg(
     new L.Flow(
       Padding := L.Spacing.Fixed(L.Measure.Logical(12)),
       Gap := L.Spacing.Fixed(L.Measure.Logical(16)),
       Align := L.Alignment.Stretch,
       Background := Theme.Colors.SurfaceMuted
     ),
-    E.Row<App.Msg>(
+    E.Row of App.Msg(
       new L.Flow(Padding := L.Spacing.Fixed(L.Measure.Logical(4))),
-      Texts.Text<App.Msg>('FPas-Amp', Texts.Appearance.HeadingThree)
+      Texts.Text of App.Msg('FPas-Amp', Texts.Appearance.HeadingThree)
     ),
     Navigation, Footer
   );
@@ -237,7 +237,7 @@ end function;
 
 // Builds an actual native placeholder for the selected Library or Playlist route.
 // `Padding` follows the measured viewport; playlist failures remain informative.
-public function Placeholder(Current: App.State; Padding: int): E.Element<App.Msg>;
+public function Placeholder(Current: App.State; Padding: int): E.Element of App.Msg;
 begin
   var Heading: string := 'Music';
   var Description: string := 'Your music will appear here.';
@@ -279,12 +279,12 @@ begin
     when M.Route.Podcast(_):
       Heading := 'Podcasts';
   end case;
-  const Parts: C.List<E.Element<App.Msg>> := new C.List<E.Element<App.Msg>>(
-    [Texts.Text<App.Msg>(Heading, Texts.Appearance.HeadingOne)]
+  const Parts: C.List of E.Element of App.Msg := new C.List of E.Element of App.Msg(
+    [Texts.Text of App.Msg(Heading, Texts.Appearance.HeadingOne)]
   );
   if Error <> null then
     Parts.Add(
-      Alerts.Alert<App.Msg>(
+      Alerts.Alert of App.Msg(
         'navigation-error',
         'Playlist unavailable',
         new Alerts.Options(Tone := Styles.Tone.Warning, Description := Error)
@@ -293,14 +293,14 @@ begin
   end if;
 
   Parts.Add(
-    Empty.EmptyState<App.Msg>(
+    Empty.EmptyState of App.Msg(
       'page-placeholder',
       'Coming soon',
       new Empty.Options(Icon := Glyph, Description := Description)
     )
   );
-  return E.ScrollView<App.Msg>(
-    'page-scroll', E.Column<App.Msg>(
+  return E.ScrollView of App.Msg(
+    'page-scroll', E.Column of App.Msg(
       new L.Flow(
         Padding := L.Spacing.Fixed(L.Measure.Logical(Padding)),
         Gap := L.Spacing.Fixed(L.Measure.Logical(20)),

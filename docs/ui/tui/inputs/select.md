@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Inputs.Selects as S;
 // - `Selected`: Original index, or -1 before a choice.
 // ## Returns
 // The field sends a new index to the application when a choice is committed.
-public function View(Selected: int): E.Element<int>;
+public function View(Selected: int): E.Element of int;
 begin
-  return S.Select<int>('language',
+  return S.Select of int('language',
     [new S.Item('C99'), new S.Item('Zig'), new S.Item('Rust')],
     Selected, function(Index: int): int => Index,
     new S.Options(Label := 'Language', Placeholder := 'Pick a language', Searchable := true));

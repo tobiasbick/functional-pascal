@@ -16,9 +16,9 @@ uses System as Sys;
 // - `Model`: Current gallery state.
 // ## Returns
 // The Save changes button with its model-owned status.
-public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+public function View(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
 begin
-  return Work.StatusButton<State.Msg>(
+  return Work.StatusButton of State.Msg(
     'status-save', 'Save changes', Model.SaveStatus, State.Msg.StartSave,
     new Work.Options(
       Icon := Sys.Char.ConvertFromUtf32($E14D), SuccessLabel := 'Saved'

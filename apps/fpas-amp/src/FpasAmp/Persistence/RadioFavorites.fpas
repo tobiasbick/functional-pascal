@@ -25,8 +25,8 @@ begin
     return [];
   end if;
 
-  const Result: C.List<Radio.Station> := new C.List<Radio.Station>();
-  const Ids: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+  const Result: C.List of Radio.Station := new C.List of Radio.Station();
+  const Ids: C.HashSet of string := new C.HashSet of string(Sys.StringComparer.Ordinal);
   for Item: J.JsonElement in Items.EnumerateArray() do
     const Id: string := Read(Item, 'id');
     const Name: string := Read(Item, 'name').Trim();

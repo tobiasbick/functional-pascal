@@ -20,10 +20,10 @@ begin
   end if;
 end procedure;
 
-function Update(Selected: int; Proposed: int): M.Transition<int, int>;
+function Update(Selected: int; Proposed: int): M.Transition of (int, int);
 begin
   Check(Proposed <> Selected and Proposed <> 1, 'Redundant or disabled selection dispatched.');
-  return new M.Transition<int, int>(
+  return new M.Transition of (int, int)(
     if Proposed < 0 then
       Selected
     else
@@ -32,9 +32,9 @@ begin
   );
 end function;
 
-function Choices(Selected: int): E.Element<int>;
+function Choices(Selected: int): E.Element of int;
 begin
-  return R.RadioGroup<int>(
+  return R.RadioGroup of int(
     'speed', [
       new R.Item('Slow', 'First option'), new R.Item('Medium', Enabled := false),
       new R.Item('Fast', 'A longer description that wraps'), new R.Item('Instant')
@@ -42,38 +42,41 @@ begin
   );
 end function;
 
-function View(Selected: int): E.Element<int>;
+function View(Selected: int): E.Element of int;
 begin
-  return E.Column<int>(
-    B.Button<int>('before', 'Before', -2), Choices(Selected),
-    R.RadioGroup<int>(
+  return E.Column of int(
+    B.Button of int('before', 'Before', -2), Choices(Selected),
+    R.RadioGroup of int(
       'locked',
       [new R.Item('Locked')],
       0,
       function(Index: int): int => 1,
       Enabled := false
     ),
-    R.RadioGroup<int>(
+    R.RadioGroup of int(
       'declined',
       [new R.Item('A'), new R.Item('B')],
       0,
       function(Index: int): int => -2
     ),
-    B.Button<int>('after', 'After', -2)
+    B.Button of int('after', 'After', -2)
   );
 end function;
 
-function ScrollView(Selected: int): E.Element<int>;
+function ScrollView(Selected: int): E.Element of int;
 begin
-  return E.ScrollView<int>('scroll', E.Column<int>(E.Text<int>('Heading'), Choices(Selected)));
+  return E.ScrollView of int(
+    'scroll',
+    E.Column of int(E.Text of int('Heading'), Choices(Selected))
+  );
 end function;
 
-function Form(Selected: int): E.Element<int>;
+function Form(Selected: int): E.Element of int;
 begin
-  return E.ScrollView<int>(
-    'scroll', E.Column<int>(
-      B.Button<int>('before', 'Before', -2), E.Text<int>('First'), E.Text<int>('Second'),
-      Choices(Selected), B.Button<int>('after', 'After', -2)
+  return E.ScrollView of int(
+    'scroll', E.Column of int(
+      B.Button of int('before', 'Before', -2), E.Text of int('First'), E.Text of int('Second'),
+      Choices(Selected), B.Button of int('after', 'After', -2)
     )
   );
 end function;
@@ -105,7 +108,7 @@ begin
 end procedure;
 
 begin
-  using const Session: T.HeadlessSession := Headless.Start<int, int>(2, Update, View, 20, 24);
+  using const Session: T.HeadlessSession := Headless.Start of (int, int)(2, Update, View, 20, 24);
   Key(Session, K.Key.Tab);
   const Chosen: T.ControlSnapshot := Row(Session.Snapshot(), 'speed/2');
   Check(
@@ -159,7 +162,7 @@ begin
   Check(Row(Session.Snapshot(), 'declined/0').Focused, 'Reverse entry uses the model selection.');
 
   for Selected: int in [-1, 1] do
-    using const Empty: T.HeadlessSession := Headless.Start<int, int>(
+    using const Empty: T.HeadlessSession := Headless.Start of (int, int)(
       Selected,
       Update,
       Choices,
@@ -174,7 +177,7 @@ begin
     Check(Row(Empty.Snapshot(), 'speed/0').Value = 'true', 'Enter selects the focused choice.');
   end for;
 
-  using const Scrolled: T.HeadlessSession := Headless.Start<int, int>(
+  using const Scrolled: T.HeadlessSession := Headless.Start of (int, int)(
     3,
     Update,
     ScrollView,
@@ -198,7 +201,7 @@ begin
     Row(Scrolled.Snapshot(), 'speed/3').Value = 'false',
     'The wheel can scroll away from the selected row without selecting another choice.'
   );
-  using const Small: T.HeadlessSession := Headless.Start<int, int>(3, Update, Form, 20, 2);
+  using const Small: T.HeadlessSession := Headless.Start of (int, int)(3, Update, Form, 20, 2);
   Check(Row(Small.Snapshot(), 'before').Focused, 'Entry button is initially visible.');
   Key(Small, K.Key.Tab);
   Check(

@@ -20,13 +20,13 @@ uses System.Collections.Generic as Lists;
 // - `Entries`: Immutable log lines in arrival order.
 // - `Cleared`: Message proposed when the native Clear button is used.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Entries: array of D.Entry; Cleared: TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Entries: array of D.Entry; Cleared: TMsg; Settings: D.Options);
 begin
   const Role: string := 'log-console';
   const Token: string := C.Token(Role, Id);
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   const Enabled: bool := Frame.AcceptInput;
-  const Rows: Lists.List<CuiDeveloper.CuiLogEntry> := new Lists.List<CuiDeveloper.CuiLogEntry>(
+  const Rows: Lists.List of CuiDeveloper.CuiLogEntry := new Lists.List of CuiDeveloper.CuiLogEntry(
     Entries.Length
   );
   for Entry: D.Entry in Entries do
@@ -42,7 +42,7 @@ begin
     Frame.Messages.Add(Cleared);
   end if;
 
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, '');
 end procedure;
 
 end unit;

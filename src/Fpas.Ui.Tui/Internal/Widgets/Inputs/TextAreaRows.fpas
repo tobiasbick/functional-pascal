@@ -25,7 +25,7 @@ end record;
 public function Wrap(Value: string; Width: int): array of Line;
 requires Width > 0;
 begin
-  const Rows: C.List<Line> := new C.List<Line>();
+  const Rows: C.List of Line := new C.List of Line();
   const Starts: array of int := Global.StringInfo.ParseCombiningCharacters(Value);
   var First: int := 0;
   var At: int := 0;

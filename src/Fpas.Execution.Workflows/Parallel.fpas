@@ -25,11 +25,11 @@ uses System.Threading.Tasks as Tasks;
 // ## Returns
 // A deferred workflow. A failure stops admission, requests cancellation of the
 // other workers, and waits for them to finish. Unexpected faults remain task faults.
-public function All<A, E, R>(Work: array of Fx.Effect<A, E, R>; Concurrency: int): Fx.Effect<array of A, E, R>;
+public function All of (A, E, R)(Work: array of Fx.Effect of (A, E, R); Concurrency: int): Fx.Effect of (array of A, E, R);
 requires Concurrency > 0;
-  function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<Fx.Outcome<array of A, E>>;
-    async function RunWorkers(Lifetime: S.Scope): Tasks.Task<Fx.Outcome<array of A, E>>;
-      async function Worker(Child: S.Scope): Tasks.Task<Fx.Completion>;
+  function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task of Fx.Outcome of (array of A, E);
+    async function RunWorkers(Lifetime: S.Scope): Tasks.Task of Fx.Outcome of (array of A, E);
+      async function Worker(Child: S.Scope): Tasks.Task of Fx.Completion;
       begin
         try
           await Ready.Task.WaitAsync(Child.Token).ConfigureAwait(false);
@@ -40,7 +40,7 @@ requires Concurrency > 0;
             end if;
 
             const Index: int := cast<int>(Slot);
-            const Result: Fx.Outcome<A, E> := await Inputs[Index].Run(
+            const Result: Fx.Outcome of (A, E) := await Inputs[Index].Run(
               Environment,
               Child.Token
             ).ConfigureAwait(false);
@@ -65,16 +65,16 @@ requires Concurrency > 0;
         return Fx.Completion.Done;
       end function;
     begin
-      const Values: array of Fx.Outcome<A, E>? := new Fx.Outcome<A, E>?[Inputs.Length];
-      const Failure: Tasks.TaskCompletionSource<Fx.Outcome<array of A, E>> := new Tasks.TaskCompletionSource<Fx.Outcome<array of A, E>>();
+      const Values: array of Fx.Outcome of (A, E)? := new Fx.Outcome of (A, E)?[Inputs.Length];
+      const Failure: Tasks.TaskCompletionSource of Fx.Outcome of (array of A, E) := new Tasks.TaskCompletionSource of Fx.Outcome of (array of A, E)();
       const Cursor: array of long := [-1L];
       // Let the workers wait until the parent has registered the full group.
       const Ready: Tasks.TaskCompletionSource := new Tasks.TaskCompletionSource(
         Tasks.TaskCreationOptions.RunContinuationsAsynchronously
       );
-      const Workers: C.List<Tasks.Task> := new C.List<Tasks.Task>();
+      const Workers: C.List of Tasks.Task := new C.List of Tasks.Task();
       for Index: int := 1 to Sys.Math.Min(Concurrency, Inputs.Length) do
-        Workers.Add(Lifetime.Fork<Fx.Completion>(Worker).Join);
+        Workers.Add(Lifetime.Fork of Fx.Completion(Worker).Join);
       end for;
 
       Ready.SetResult();
@@ -84,8 +84,8 @@ requires Concurrency > 0;
       if Failure.Task.IsCompleted then
         return await Failure.Task.ConfigureAwait(false);
       end if;
-      const Ordered: C.List<A> := new C.List<A>(Inputs.Length);
-      for Result: Fx.Outcome<A, E>? in Values do
+      const Ordered: C.List of A := new C.List of A(Inputs.Length);
+      for Result: Fx.Outcome of (A, E)? in Values do
         case Result of
           when Fx.Outcome.Success(const Value: A):
             Ordered.Add(Value);
@@ -99,11 +99,11 @@ requires Concurrency > 0;
       return Fx.Outcome.Success(Ordered.ToArray());
     end function;
   begin
-    return S.Scope.Use<Fx.Outcome<array of A, E>>(RunWorkers, Cancellation);
+    return S.Scope.Use of Fx.Outcome of (array of A, E)(RunWorkers, Cancellation);
   end function;
 begin
-  const Inputs: array of Fx.Effect<A, E, R> := cast<array of Fx.Effect<A, E, R>>(Work.Clone());
-  return Fx.Effect<array of A, E, R>.Defer(Execute);
+  const Inputs: array of Fx.Effect of (A, E, R) := cast<array of Fx.Effect of (A, E, R)>(Work.Clone());
+  return Fx.Effect of (array of A, E, R).Defer(Execute);
 end function;
 
 end unit;

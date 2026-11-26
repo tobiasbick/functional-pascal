@@ -20,11 +20,11 @@ uses GuiGallery.Pages.MoreCharts.Data as Data;
 // - `Samples`: Original series and bubble sizes.
 // ## Returns
 // The native scatter card.
-public function Scatter<TMsg>(Samples: Data.Samples): E.Element<TMsg>;
+public function Scatter of TMsg(Samples: Data.Samples): E.Element of TMsg;
 begin
-  return Cards.Card<TMsg>(
+  return Cards.Card of TMsg(
     'scatter-card', [
-      Sc.ScatterChart<TMsg>(
+      Sc.ScatterChart of TMsg(
         'scatter', Samples.Scatter,
         new Sc.Options(
           Height := 300.0F, XLabel := 'Nodes', YLabel := 'Frame time (ms)',
@@ -40,11 +40,11 @@ end function;
 // - `TMsg`: Application message type.
 // ## Returns
 // CPU, temperature and memory instruments.
-public function Gauges<TMsg>(): E.Element<TMsg>;
+public function Gauges of TMsg(): E.Element of TMsg;
 begin
-  return Cards.Card<TMsg>(
+  return Cards.Card of TMsg(
     'instruments-card', [
-      R.RadialGauge<TMsg>(
+      R.RadialGauge of TMsg(
         'cpu-radial', 64.0F, 0.0F, 100.0F, new R.Options(
           Unit := '%',
           Label := 'CPU',
@@ -56,14 +56,14 @@ begin
           Size := 180.0F
         )
       ),
-      R.RadialGauge<TMsg>(
+      R.RadialGauge of TMsg(
         'temp',
         71.0F,
         20.0F,
         100.0F,
         new R.Options(Unit := 'C', Label := 'GPU temperature', Target := 85.0F, Size := 180.0F)
       ),
-      R.RadialGauge<TMsg>(
+      R.RadialGauge of TMsg(
         'mem', 0.62F * 32.0F, 0.0F, 32.0F, new R.Options(
           Format := new C.ValueFormat(DecimalPlaces := 1),
           Unit := 'GB',
@@ -92,12 +92,12 @@ end function;
 // - `Samples`: Original deterministic OHLC periods.
 // ## Returns
 // The native candlestick card with its original caption.
-public function Price<TMsg>(Samples: Data.Samples): E.Element<TMsg>;
+public function Price of TMsg(Samples: Data.Samples): E.Element of TMsg;
 begin
-  return Cards.Card<TMsg>(
+  return Cards.Card of TMsg(
     'price-card', [
-      E.Styled<TMsg>(E.Text<TMsg>('Price, 2,000 periods'), S.Role.Label),
-      Cs.Candlestick<TMsg>('price', Samples.Candles, new Cs.Options(Height := 280.0F))
+      E.Styled of TMsg(E.Text of TMsg('Price, 2,000 periods'), S.Role.Label),
+      Cs.Candlestick of TMsg('price', Samples.Candles, new Cs.Options(Height := 280.0F))
     ],
     new Cards.Options(Padding := 18.0F, Width := L.Extent.Fill, Gap := 10.0F)
   );

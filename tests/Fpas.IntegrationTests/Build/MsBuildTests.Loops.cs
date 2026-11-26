@@ -51,7 +51,7 @@ public sealed partial class MsBuildTests
               until S.Log.Check(Count);
               return Count;
             end function;
-            public async function RepeatAsync(): Tasks.Task<int>;
+            public async function RepeatAsync(): Tasks.Task of int;
             begin
               var Count: int := 0;
               repeat

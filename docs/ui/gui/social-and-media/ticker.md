@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Feedback.Tickers as W;
 // - `Figures`: Labels, values and optional percent changes.
 // ## Returns
 // The native scrolling ticker.
-public function View(Figures: array of W.Item): E.Element<string>;
+public function View(Figures: array of W.Item): E.Element of string;
 begin
-  return W.Ticker<string>('figures', Figures);
+  return W.Ticker of string('figures', Figures);
 end function;
 
 end unit;

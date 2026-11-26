@@ -13,9 +13,9 @@ uses Fpas.Ui.Layout as L;
 // - `Children`: Children in paint order, with the final child on top.
 // ## Returns
 // A graphical layered stack. Give it explicit axes with Elements.Size when needed.
-public function Stack<TMsg>(Settings: L.Flow; params Children: array of E.Element<TMsg>): E.Element<TMsg>;
+public function Stack of TMsg(Settings: L.Flow; params Children: array of E.Element of TMsg): E.Element of TMsg;
 begin
-  return E.Element<TMsg>.Layered(Children, Settings);
+  return (E.Element of TMsg).Layered(Children, Settings);
 end function;
 
 end unit;

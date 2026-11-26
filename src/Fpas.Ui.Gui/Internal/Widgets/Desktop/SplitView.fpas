@@ -22,7 +22,7 @@ uses Fpas.Ui.Widgets.Desktop.SplitViews as S;
 // - `Changed`: Maps a divider move to a message.
 // - `Settings`: Native layout and orientation.
 // - `Visit`: Presents a child in a pane.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Ratio: float; First: E.Element<TMsg>; Second: E.Element<TMsg>; Changed: function(float): TMsg; Settings: S.Options; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Ratio: float; First: E.Element of TMsg; Second: E.Element of TMsg; Changed: function(float): TMsg; Settings: S.Options; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
 begin
   const Width: Size.NativeExtent := Size.Extent(Settings.Width);
   const Height: Size.NativeExtent := Size.Extent(Settings.Height);
@@ -37,7 +37,7 @@ begin
   Frame.Window.NextSplitPane(Frame.AcceptInput);
   Visit(Second, Frame, false, L.Alignment.Default);
   Frame.Window.EndSplitView();
-  P.Root<TMsg>(Frame, Id, 'split-view', '', Frame.AcceptInput, Value.ToString());
+  P.Root of TMsg(Frame, Id, 'split-view', '', Frame.AcceptInput, Value.ToString());
   if Frame.AcceptInput and Value <> Ratio then
     Frame.Messages.Add(Changed(Value));
   end if;

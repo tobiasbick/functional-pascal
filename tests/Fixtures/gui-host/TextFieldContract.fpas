@@ -27,7 +27,7 @@ begin
   end if;
 end procedure;
 
-function Control<TMsg>(Session: Gui.Session<TMsg>; Id: string): Gui.Control;
+function Control of TMsg(Session: Gui.Session of TMsg; Id: string): Gui.Control;
 begin
   for Item: Gui.Control in Session.Snapshot().Controls do
     if Item.Id = Id then
@@ -38,7 +38,7 @@ begin
   raise new Sys.InvalidOperationException('Missing text field control ' + Id);
 end function;
 
-function HasLabel(Session: Gui.Session<State.Msg>; Text: string): bool;
+function HasLabel(Session: Gui.Session of State.Msg; Text: string): bool;
 begin
   for Label: string in Session.Snapshot().Text do
     if Label = Text then
@@ -50,10 +50,10 @@ begin
 end function;
 
 procedure Validate();
-  procedure Reject(Node: E.Element<string>; Profile: V.Target; Reason: string);
+  procedure Reject(Node: E.Element of string; Profile: V.Target; Reason: string);
   begin
     try
-      discard V.Prepare<string>(Node, Profile);
+      discard V.Prepare of string(Node, Profile);
     catch Error: Sys.ArgumentException do
       Check(Error.Message.Contains(Reason), Error.Message);
       return;
@@ -63,31 +63,34 @@ procedure Validate();
   end procedure;
 begin
   const Identity: function(string): string := function(Value: string): string => Value;
-  discard V.Prepare<string>(F.TextField<string>('field', '', Identity), V.Target.Portable);
+  discard V.Prepare of string(F.TextField of string('field', '', Identity), V.Target.Portable);
   Reject(
-    F.TextField<string>('field', '', Identity, new F.Options(Password := true)),
+    F.TextField of string('field', '', Identity, new F.Options(Password := true)),
     V.Target.Terminal,
     'Graphical profile'
   );
-  const Search: E.Element<string> := SearchFields.SearchField<string>('query', '', Identity);
-  discard V.Prepare<string>(Search, V.Target.Terminal);
+  const Search: E.Element of string := SearchFields.SearchField of string('query', '', Identity);
+  discard V.Prepare of string(Search, V.Target.Terminal);
   Reject(Search, V.Target.Portable, 'terminal or graphical profile');
-  discard V.Prepare<string>(TextAreas.TextArea<string>('about', '', Identity), V.Target.Portable);
+  discard V.Prepare of string(
+    TextAreas.TextArea of string('about', '', Identity),
+    V.Target.Portable
+  );
   Reject(
-    TextAreas.TextArea<string>('about', '', Identity, new TextAreas.Options(Prefix := 'About:')),
+    TextAreas.TextArea of string('about', '', Identity, new TextAreas.Options(Prefix := 'About:')),
     V.Target.Terminal, 'Graphical profile'
   );
   Reject(
-    TextAreas.TextArea<string>('about', 'line' + cast<char>(13), Identity),
+    TextAreas.TextArea of string('about', 'line' + cast<char>(13), Identity),
     V.Target.Graphical,
     'LF line endings'
   );
   Reject(
-    F.TextField<string>('field', 'é', Identity, new F.Options(MaxUtf8Bytes := 1)),
+    F.TextField of string('field', 'é', Identity, new F.Options(MaxUtf8Bytes := 1)),
     V.Target.Graphical, 'exceeds its UTF-8 capacity'
   );
   Reject(
-    F.TextField<string>('field', 'line' + Sys.Environment.NewLine, Identity),
+    F.TextField of string('field', 'line' + Sys.Environment.NewLine, Identity),
     V.Target.Graphical, 'single-line'
   );
 end procedure;
@@ -113,7 +116,7 @@ procedure VerifyGallery(Renderer: Cui.CuiRenderer; Capture: string);
       Input := '';
     end if;
   end procedure;
-  procedure Exercise(Session: Gui.Session<State.Msg>);
+  procedure Exercise(Session: Gui.Session of State.Msg);
     procedure Step();
     begin
       Check(Session.Step(), 'The text field gallery closed.');
@@ -133,7 +136,7 @@ procedure VerifyGallery(Renderer: Cui.CuiRenderer; Capture: string);
     end procedure;
     procedure Click(Id: string);
     begin
-      const Area: Cui.CuiRectangle := Control<State.Msg>(Session, Id).Bounds;
+      const Area: Cui.CuiRectangle := Control of State.Msg(Session, Id).Bounds;
       X := Area.X + Area.Width / 2;
       Y := Area.Y + Area.Height / 2;
       Left := 1;
@@ -145,8 +148,8 @@ procedure VerifyGallery(Renderer: Cui.CuiRenderer; Capture: string);
   begin
     Step();
     Step();
-    const Name: Gui.Control := Control<State.Msg>(Session, 'input-name');
-    const Email: Gui.Control := Control<State.Msg>(Session, 'input-email');
+    const Name: Gui.Control := Control of State.Msg(Session, 'input-name');
+    const Email: Gui.Control := Control of State.Msg(Session, 'input-email');
     Check(
       Name.Bounds.Y = Email.Bounds.Y and Email.Bounds.X > Name.Bounds.X
       and Name.Bounds.Width = Email.Bounds.Width and HasLabel(
@@ -156,9 +159,9 @@ procedure VerifyGallery(Renderer: Cui.CuiRenderer; Capture: string);
       'The original text fields must use two columns with the email hint.'
     );
     Session.CapturePng(Capture + '.text-fields.png');
-    const Query: Cui.CuiRectangle := Control<State.Msg>(Session, 'input-search').Bounds;
-    const Password: Cui.CuiRectangle := Control<State.Msg>(Session, 'input-password').Bounds;
-    const About: Cui.CuiRectangle := Control<State.Msg>(Session, 'input-about').Bounds;
+    const Query: Cui.CuiRectangle := Control of State.Msg(Session, 'input-search').Bounds;
+    const Password: Cui.CuiRectangle := Control of State.Msg(Session, 'input-password').Bounds;
+    const About: Cui.CuiRectangle := Control of State.Msg(Session, 'input-about').Bounds;
     Check(
       Query.Y = Password.Y and Query.X = Email.Bounds.X and About.X = Name.Bounds.X
       and About.Width = Name.Bounds.Width + Email.Bounds.Width + 16 and About.Height = 96
@@ -168,15 +171,15 @@ procedure VerifyGallery(Renderer: Cui.CuiRenderer; Capture: string);
     Click('input-search');
     TypeText('rain');
     Check(
-      Control<State.Msg>(Session, 'input-search').Value = 'rain',
+      Control of State.Msg(Session, 'input-search').Value = 'rain',
       'Search must retain the edited query.'
     );
     Click(SearchFields.ClearId('input-search'));
     Check(
-      Control<State.Msg>(
+      Control of State.Msg(
         Session,
         'input-search'
-      ).Value = '' and Control<State.Msg>(Session, 'input-search').Focused,
+      ).Value = '' and Control of State.Msg(Session, 'input-search').Focused,
       'The native search clear action must empty the query and return editor focus.'
     );
 
@@ -189,7 +192,7 @@ procedure VerifyGallery(Renderer: Cui.CuiRenderer; Capture: string);
     Key(12);
     TypeText('!');
     Check(
-      Control<State.Msg>(Session, 'input-about').Value = 'Alpha!' + cast<char>(10) + 'Béta',
+      Control of State.Msg(Session, 'input-about').Value = 'Alpha!' + cast<char>(10) + 'Béta',
       'Enter must insert LF and Up and End must edit the previous visual line.'
     );
 
@@ -197,17 +200,17 @@ procedure VerifyGallery(Renderer: Cui.CuiRenderer; Capture: string);
     Key(15, Primary);
     TypeText('Zoë 🐱');
     Check(
-      Control<State.Msg>(Session, 'input-name').Value = 'Zoë 🐱',
+      Control of State.Msg(Session, 'input-name').Value = 'Zoë 🐱',
       'Typing must preserve UTF-8.'
     );
     Key(4);
     Check(
-      Control<State.Msg>(Session, 'input-name').Value = 'Zoë ',
+      Control of State.Msg(Session, 'input-name').Value = 'Zoë ',
       'Backspace must remove the complete code point.'
     );
     Key(40, Primary);
     Check(
-      Control<State.Msg>(Session, 'input-name').Value = 'Zoë 🐱',
+      Control of State.Msg(Session, 'input-name').Value = 'Zoë 🐱',
       'Undo must restore the edited text.'
     );
     Key(15, Primary);
@@ -216,7 +219,7 @@ procedure VerifyGallery(Renderer: Cui.CuiRenderer; Capture: string);
     Step();
     TypeText('!');
     Check(
-      Control<State.Msg>(Session, 'input-name').Value = 'éZ!',
+      Control of State.Msg(Session, 'input-name').Value = 'éZ!',
       'A model replacement must reset stale UTF-8 offsets.'
     );
 
@@ -225,13 +228,13 @@ procedure VerifyGallery(Renderer: Cui.CuiRenderer; Capture: string);
     const Reveal: string := F.RevealId('input-password');
     Check(
       HasLabel(Session, 'Use 8 or more characters.')
-      and Control<State.Msg>(Session, 'input-password').Value = '',
+      and Control of State.Msg(Session, 'input-password').Value = '',
       'The password must report its error without exposing its value.'
     );
     Click(Reveal);
     Check(
-      Control<State.Msg>(Session, Reveal).Text = 'Hide password'
-      and Control<State.Msg>(
+      Control of State.Msg(Session, Reveal).Text = 'Hide password'
+      and Control of State.Msg(
         Session,
         'input-password'
       ).Value = '' and not HasLabel(Session, 'sample'),
@@ -239,7 +242,7 @@ procedure VerifyGallery(Renderer: Cui.CuiRenderer; Capture: string);
     );
     Click(Reveal);
     Check(
-      Control<State.Msg>(Session, Reveal).Text = 'Show password',
+      Control of State.Msg(Session, Reveal).Text = 'Show password',
       'The eye must mask the password again.'
     );
 
@@ -247,8 +250,8 @@ procedure VerifyGallery(Renderer: Cui.CuiRenderer; Capture: string);
     Step();
     Step();
     Check(
-      Control<State.Msg>(Session, 'input-url').Bounds.Width = 260
-      and Control<State.Msg>(Session, 'input-weight').Bounds.Width = 120
+      Control of State.Msg(Session, 'input-url').Bounds.Width = 260
+      and Control of State.Msg(Session, 'input-weight').Bounds.Width = 120
       and HasLabel(Session, 'https://') and HasLabel(Session, 'kg'),
       'The original affixes and field widths must be visible.'
     );
@@ -257,7 +260,7 @@ procedure VerifyGallery(Renderer: Cui.CuiRenderer; Capture: string);
     Key(15, Primary);
     TypeText('example.com');
     Check(
-      Control<State.Msg>(Session, 'input-url').Value = 'example.com',
+      Control of State.Msg(Session, 'input-url').Value = 'example.com',
       'The displayed prefix must remain outside the value.'
     );
   end procedure;
@@ -281,7 +284,7 @@ begin
     true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Inputs),
     GalleryUpdate.Update,
     View.Build,
@@ -300,39 +303,39 @@ type Msg = variant
 end variant;
 
 procedure VerifyOptions(Renderer: Cui.CuiRenderer);
-  function Update(Value: string; Message: Msg): App.Transition<string, Msg>;
+  function Update(Value: string; Message: Msg): App.Transition of (string, Msg);
   begin
     case Message of
       when Msg.Edit(const Text: string):
         Events.Add('edit:' + Text);
-        return new App.Transition<string, Msg>(Text, []);
+        return new App.Transition of (string, Msg)(Text, []);
       when Msg.Submit(const Text: string):
         Events.Add('submit:' + Text);
       when Msg.Focus:
-        return new App.Transition<string, Msg>(Value, [App.Focus<Msg>('edit')]);
+        return new App.Transition of (string, Msg)(Value, [App.Focus of Msg('edit')]);
     end case;
 
-    return new App.Transition<string, Msg>(Value, []);
+    return new App.Transition of (string, Msg)(Value, []);
   end function;
-  function Build(Value: string; Viewport: L.Viewport): E.Element<Msg>;
+  function Build(Value: string; Viewport: L.Viewport): E.Element of Msg;
   begin
-    return E.Column<Msg>(
+    return E.Column of Msg(
       new L.Flow(Gap := L.Spacing.Normal, Padding := L.Spacing.Normal),
-      F.TextField<Msg>(
+      F.TextField of Msg(
         'edit',
         Value,
         Msg.Edit,
         new F.Options(Clearable := true, MaxUtf8Bytes := 5),
         Msg.Submit
       ),
-      F.TextField<Msg>('read-only', 'fixed', Msg.Edit, new F.Options(ReadOnly := true)),
-      F.TextField<Msg>(
+      F.TextField of Msg('read-only', 'fixed', Msg.Edit, new F.Options(ReadOnly := true)),
+      F.TextField of Msg(
         'disabled',
         'sample',
         Msg.Edit,
         new F.Options(Password := true, Enabled := false)
       ),
-      SearchFields.SearchField<Msg>(
+      SearchFields.SearchField of Msg(
         'query', Value, Msg.Edit,
         new SearchFields.Options(Prefix := 'Projects:', Suffix := 'in scope'), Msg.Submit
       )
@@ -355,14 +358,14 @@ procedure VerifyOptions(Renderer: Cui.CuiRenderer);
       Submit := false;
     end if;
   end procedure;
-  procedure Exercise(Session: Gui.Session<Msg>);
+  procedure Exercise(Session: Gui.Session of Msg);
     procedure Step();
     begin
       Check(Session.Step(), 'The text field options fixture closed.');
     end procedure;
     procedure Click(Id: string);
     begin
-      const Area: Cui.CuiRectangle := Control<Msg>(Session, Id).Bounds;
+      const Area: Cui.CuiRectangle := Control of Msg(Session, Id).Bounds;
       X := Area.X + Area.Width / 2;
       Y := Area.Y + Area.Height / 2;
       Left := 1;
@@ -375,7 +378,7 @@ procedure VerifyOptions(Renderer: Cui.CuiRenderer);
     discard Session.Post(Msg.Focus);
     Step();
     Check(
-      Control<Msg>(Session, 'edit').Focused,
+      Control of Msg(Session, 'edit').Focused,
       'The host must focus the editor by its stable ID.'
     );
     Submit := true;
@@ -387,22 +390,22 @@ procedure VerifyOptions(Renderer: Cui.CuiRenderer);
     );
     Click(F.ClearId('edit'));
     Check(
-      Control<Msg>(Session, 'edit').Value = '' and Events.Count = 3 and Events[2] = 'edit:',
+      Control of Msg(Session, 'edit').Value = '' and Events.Count = 3 and Events[2] = 'edit:',
       'The native clear action must update the model.'
     );
     Click('read-only');
     Submit := true;
     Step();
     Step();
-    const ReadOnly: Gui.Control := Control<Msg>(Session, 'read-only');
+    const ReadOnly: Gui.Control := Control of Msg(Session, 'read-only');
     Check(
       ReadOnly.Focused and ReadOnly.Value = 'fixed' and Events.Count = 3,
       'A read-only field must allow focus without editing.'
     );
     Click(F.RevealId('disabled'));
     Check(
-      Control<Msg>(Session, F.RevealId('disabled')).Text = 'Show password'
-      and not Control<Msg>(Session, F.RevealId('disabled')).Enabled,
+      Control of Msg(Session, F.RevealId('disabled')).Text = 'Show password'
+      and not Control of Msg(Session, F.RevealId('disabled')).Enabled,
       'A disabled password field must disable its reveal action.'
     );
     Click('query');
@@ -412,8 +415,8 @@ procedure VerifyOptions(Renderer: Cui.CuiRenderer);
     Step();
     Check(
       Events.Count = 5 and Events[3] = 'edit:éZ' and Events[4] = 'submit:éZ'
-      and Sys.Array.IndexOf<string>(Session.Snapshot().Text, 'Projects:') >= 0
-      and Sys.Array.IndexOf<string>(Session.Snapshot().Text, 'in scope') >= 0,
+      and Sys.Array.IndexOf of string(Session.Snapshot().Text, 'Projects:') >= 0
+      and Sys.Array.IndexOf of string(Session.Snapshot().Text, 'in scope') >= 0,
       'Search must submit the edited query without its displayed affixes.'
     );
   end procedure;
@@ -423,7 +426,7 @@ begin
   var Left: int := -1;
   var Submit: bool := false;
   var SubmissionText: string := 'é😀';
-  const Events: Lists.List<string> := new Lists.List<string>();
+  const Events: Lists.List of string := new Lists.List of string();
   const Window: Cui.CuiWindow := new Cui.CuiWindow(
     'FPas CUI text field options',
     500,
@@ -432,7 +435,7 @@ begin
     true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<Msg> := Host.Start<string, Msg>(
+  using const Session: Gui.Session of Msg := Host.Start of (string, Msg)(
     'ab',
     Update,
     Build,
@@ -452,7 +455,7 @@ begin
     Renderer,
     true
   );
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Inputs),
     GalleryUpdate.Update,
     View.Build,
@@ -462,10 +465,10 @@ begin
   );
   Check(Session.Step(), 'The compact text field gallery closed.');
   Check(Session.Step(), 'The compact text field layout did not settle.');
-  const Name: Cui.CuiRectangle := Control<State.Msg>(Session, 'input-name').Bounds;
-  const Email: Cui.CuiRectangle := Control<State.Msg>(Session, 'input-email').Bounds;
-  const Search: Cui.CuiRectangle := Control<State.Msg>(Session, 'input-search').Bounds;
-  const About: Cui.CuiRectangle := Control<State.Msg>(Session, 'input-about').Bounds;
+  const Name: Cui.CuiRectangle := Control of State.Msg(Session, 'input-name').Bounds;
+  const Email: Cui.CuiRectangle := Control of State.Msg(Session, 'input-email').Bounds;
+  const Search: Cui.CuiRectangle := Control of State.Msg(Session, 'input-search').Bounds;
+  const About: Cui.CuiRectangle := Control of State.Msg(Session, 'input-about').Bounds;
   Check(
     Name.X = Email.X and Name.Width = Email.Width and Email.Y > Name.Y + Name.Height
     and Search.X = About.X and Search.Width = About.Width and About.Y > Search.Y + Search.Height,

@@ -34,10 +34,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // The graphical element.
-public function Carousel<TMsg>(Id: string; Slides: array of E.Element<TMsg>; Index: int; Change: function(int): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function Carousel of TMsg(Id: string; Slides: array of E.Element of TMsg; Index: int; Change: function(int): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Carousel(Id, Slides, Index, Change, Settings ?? new Options());
+  return (E.Element of TMsg).Carousel(Id, Slides, Index, Change, Settings ?? new Options());
 end function;
 
 end unit;

@@ -13,39 +13,39 @@ uses Fpas.Ui.Widgets.Collections.Trees as Trees;
 uses System as Sys;
 uses System.Collections.Generic as C;
 
-type Toggle<TMsg> = record implements A.IActivatable<TMsg>
+type Toggle of TMsg = record implements A.IActivatable of TMsg
   // Whether this branch is expanded.
   public Open: bool;
   // Maps expansion requests to model messages.
-  public Change: Sys.Func<bool, TMsg>;
+  public Change: Sys.Func of (bool, TMsg);
   // Parent ID, or empty for the root.
   public Parent: string;
 
   // Proposes toggling the displayed branch.
   // ## Returns
   // Expansion message.
-  public function Activate(): A.Result<TMsg>;
+  public function Activate(): A.Result of TMsg;
   begin
-    return A.Result<TMsg>.Send(self.Change.Invoke(not self.Open));
+    return (A.Result of TMsg).Send(self.Change.Invoke(not self.Open));
   end function;
 end record;
 
-type Leaf<TMsg> = record implements A.IActivatable<TMsg>
+type Leaf of TMsg = record implements A.IActivatable of TMsg
   // Optional action for this leaf.
-  public Choose: Sys.Func<TMsg>?;
+  public Choose: (Sys.Func of TMsg)?;
   // Parent ID, or empty for a standalone leaf.
   public Parent: string;
 
   // Invokes the optional leaf action.
   // ## Returns
   // Leaf message when one was configured.
-  public function Activate(): A.Result<TMsg>;
+  public function Activate(): A.Result of TMsg;
   begin
     case self.Choose of
-      when is Sys.Func<TMsg> as Choice:
-        return A.Result<TMsg>.Send(Choice.Invoke());
+      when is Sys.Func of TMsg as Choice:
+        return (A.Result of TMsg).Send(Choice.Invoke());
       else
-        return A.Result<TMsg>.NoAction;
+        return (A.Result of TMsg).NoAction;
     end case;
   end function;
 end record;
@@ -59,14 +59,14 @@ end record;
 // - `Apply`: Dispatches the expansion message.
 // ## Returns
 // Focus destination, empty when handled in place, or null for an unrelated key.
-public function Navigate<TMsg>(Handler: A.IActivatable<TMsg>?; Key: K.Key; Apply: procedure(TMsg)): string?;
+public function Navigate of TMsg(Handler: (A.IActivatable of TMsg)?; Key: K.Key; Apply: procedure(TMsg)): string?;
 begin
   if Key <> K.Key.Left and Key <> K.Key.Right then
     return null;
   end if;
 
   case Handler of
-    when is Toggle<TMsg> as Branch:
+    when is Toggle of TMsg as Branch:
       const Open: bool := Key = K.Key.Right;
       if Open <> Branch.Open then
         Apply(Branch.Change.Invoke(Open));
@@ -78,7 +78,7 @@ begin
       else
         Branch.Parent
       end if;
-    when is Leaf<TMsg> as Item:
+    when is Leaf of TMsg as Item:
       return if Key = K.Key.Left then
         Item.Parent
       else
@@ -96,26 +96,26 @@ end function;
 // - `Root`: Validated tree root.
 // ## Returns
 // Vertical tree rows.
-public function Lower<TMsg>(Root: Ui.Element<TMsg>): E.Element<TMsg>;
-  procedure Visit(Value: Ui.Element<TMsg>; Depth: int; Parent: string);
+public function Lower of TMsg(Root: Ui.Element of TMsg): E.Element of TMsg;
+  procedure Visit(Value: Ui.Element of TMsg; Depth: int; Parent: string);
   begin
     case Value of
       when Ui.Element.TreeNode(
         const Id: string,
         const Label: string,
         const Open: bool?,
-        const Children: array of Ui.Element<TMsg>,
-        const Change: Sys.Func<bool, TMsg>?,
-        const Choose: Sys.Func<TMsg>?,
+        const Children: array of Ui.Element of TMsg,
+        const Change: Sys.Func of (bool, TMsg)?,
+        const Choose: (Sys.Func of TMsg)?,
         const Settings: Trees.Options
       ):
         if Group = '' then
           Group := Id;
         end if;
-        var Handler: A.IActivatable<TMsg> := new Leaf<TMsg>(Choose, Parent);
+        var Handler: A.IActivatable of TMsg := new Leaf of TMsg(Choose, Parent);
         case Change of
-          when is Sys.Func<bool, TMsg> as Notify:
-            Handler := new Toggle<TMsg>(Open ?? false, Notify, Parent);
+          when is Sys.Func of (bool, TMsg) as Notify:
+            Handler := new Toggle of TMsg(Open ?? false, Notify, Parent);
           else
         end case;
         const Marker: string := if Open = null then
@@ -130,7 +130,7 @@ public function Lower<TMsg>(Root: Ui.Element<TMsg>): E.Element<TMsg>;
         end if;
 
         Rows.Add(
-          E.Element<TMsg>.Action(
+          (E.Element of TMsg).Action(
             Id, Handler, Settings.Enabled,
             new E.ActionView(
               new string(#32, Depth * 2) + Marker + G.SingleLine(Label), Name := Label,
@@ -150,7 +150,7 @@ public function Lower<TMsg>(Root: Ui.Element<TMsg>): E.Element<TMsg>;
           )
         );
         if Open ?? false then
-          for Child: Ui.Element<TMsg> in Children do
+          for Child: Ui.Element of TMsg in Children do
             Visit(Child, Depth + 1, Id);
           end for;
         end if;
@@ -158,11 +158,11 @@ public function Lower<TMsg>(Root: Ui.Element<TMsg>): E.Element<TMsg>;
     end case;
   end procedure;
 begin
-  const Rows: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
+  const Rows: C.List of E.Element of TMsg := new C.List of E.Element of TMsg();
   var Group: string := '';
   var Entry: string := '';
   Visit(Root, 0, '');
-  return E.Element<TMsg>.Stack(Rows.ToArray(), false, new E.Flow());
+  return (E.Element of TMsg).Stack(Rows.ToArray(), false, new E.Flow());
 end function;
 
 end unit;

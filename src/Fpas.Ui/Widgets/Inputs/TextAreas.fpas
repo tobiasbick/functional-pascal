@@ -49,13 +49,13 @@ end record;
 // - `OnSubmit`: Optional Ctrl+Enter action receiving the value after the frame's edit.
 // ## Returns
 // A graphical or terminal text area.
-public function TextArea<TMsg>(
+public function TextArea of TMsg(
   Id: string; Value: string; OnChange: function(string): TMsg;
-  Settings: Options? := null; OnSubmit: Sys.Func<string, TMsg>? := null
-): E.Element<TMsg>;
+  Settings: Options? := null; OnSubmit: Sys.Func of (string, TMsg)? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.TextArea(Id, Value, OnChange, Settings ?? new Options(), OnSubmit);
+  return (E.Element of TMsg).TextArea(Id, Value, OnChange, Settings ?? new Options(), OnSubmit);
 end function;
 
 // Derives the identity of the native clear button.

@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Inputs.Chips as C;
 // - `Selected`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Selected: bool): E.Element<bool>;
+public function View(Selected: bool): E.Element of bool;
 begin
-  return C.Chip<bool>('category-design', 'Design', Selected, function(Value: bool): bool => Value);
+  return C.Chip of bool('category-design', 'Design', Selected, function(Value: bool): bool => Value);
 end function;
 
 end unit;

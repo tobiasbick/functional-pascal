@@ -21,7 +21,7 @@ begin
   R.CheckText(Settings.Description, Location + '/description');
   R.CheckText(Settings.Icon, Location + '/icon');
   R.CheckText(Settings.Badge, Location + '/badge');
-  if Sys.String.IsNullOrWhiteSpace(Title) or not Sys.Enum.IsDefined<S.Tone>(
+  if Sys.String.IsNullOrWhiteSpace(Title) or not Sys.Enum.IsDefined of S.Tone(
     Settings.BadgeTone
   )
   then

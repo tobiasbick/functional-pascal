@@ -34,7 +34,7 @@ In an xUnit unit, import `Xunit as X` and declare public routines:
 [X.FactAttribute]
 public procedure Addition();
 begin
-  X.Assert.Equal<int>(4, 2 + 2);
+  X.Assert.Equal of int(4, 2 + 2);
 end procedure;
 
 [X.TheoryAttribute]
@@ -42,7 +42,7 @@ end procedure;
 [X.InlineDataAttribute(2, 3, 5)]
 public procedure Add(Left: int; Right: int; Expected: int);
 begin
-  X.Assert.Equal<int>(Expected, Left + Right);
+  X.Assert.Equal of int(Expected, Left + Right);
 end procedure;
 ```
 
@@ -54,7 +54,7 @@ Defining custom attribute classes is outside the language's supported class mode
 MSTest uses a public record with `[T.TestClassAttribute]`, where T aliases
 Microsoft.VisualStudio.TestTools.UnitTesting. Public instance methods carry
 `[T.TestMethodAttribute]`; data rows add `[T.DataRowAttribute(...)]`.
-Assert with `T.Assert.AreEqual<int>(Expected, Actual)`.
+Assert with `T.Assert.AreEqual of int(Expected, Actual)`.
 
 NUnit uses a public record with `[N.TestFixtureAttribute]`, where N aliases
 NUnit.Framework. Public instance methods carry `[N.TestAttribute]` or repeated

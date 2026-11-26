@@ -51,19 +51,19 @@ begin
   return M.Msg.Settings(SettingsModel.Msg.LibraryFailed(Error.Message));
 end function;
 
-function Settings(Current: M.State; Message: SettingsModel.Msg; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session): Mvu.Transition<M.State, M.Msg>;
+function Settings(Current: M.State; Message: SettingsModel.Msg; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session): Mvu.Transition of (M.State, M.Msg);
 begin
-  const Child: Mvu.Transition<SettingsModel.State, M.Msg> := Composition.MapTransition<SettingsModel.State, SettingsModel.Msg, M.Msg>(
+  const Child: Mvu.Transition of (SettingsModel.State, M.Msg) := Composition.MapTransition of (SettingsModel.State, SettingsModel.Msg, M.Msg)(
     SettingsUpdate.Apply(Current.Settings, Message, Save, Library), M.Msg.Settings, 'settings'
   );
-  return new Mvu.Transition<M.State, M.Msg>(
+  return new Mvu.Transition of (M.State, M.Msg)(
     Current with
       Settings := Child.Model;
     end with, Child.Commands
   );
 end function;
 
-function Album(Current: M.State; Message: AlbumModel.Msg; Library: Monitoring.Session): Mvu.Transition<M.State, M.Msg>;
+function Album(Current: M.State; Message: AlbumModel.Msg; Library: Monitoring.Session): Mvu.Transition of (M.State, M.Msg);
 begin
   const Tags: Metadata.Session? := Library.Metadata;
   const Service: AlbumAccess.Session? := if Tags <> null then
@@ -71,7 +71,7 @@ begin
   else
     null
   end if;
-  const Child: Mvu.Transition<AlbumModel.State, M.Msg> := Composition.MapTransition<AlbumModel.State, AlbumModel.Msg, M.Msg>(
+  const Child: Mvu.Transition of (AlbumModel.State, M.Msg) := Composition.MapTransition of (AlbumModel.State, AlbumModel.Msg, M.Msg)(
     AlbumUpdate.Apply(Current.Albums, Message, Service, Tags), M.Msg.Albums, 'albums'
   );
   var Next: M.State := Current with
@@ -100,16 +100,16 @@ begin
         if Id <> '' and Page = null then
           for Item: Releases.Album in Next.Albums.Items do
             if Item.Id = Id then
-              const Opened: Mvu.Transition<M.State, M.Msg> := Album(
+              const Opened: Mvu.Transition of (M.State, M.Msg) := Album(
                 Next,
                 AlbumModel.Msg.OpenMusic(Id),
                 Library
               );
-              const Commands: C.List<Mvu.Command<M.Msg>> := new C.List<Mvu.Command<M.Msg>>(
+              const Commands: C.List of Mvu.Command of M.Msg := new C.List of Mvu.Command of M.Msg(
                 Child.Commands
               );
               Commands.AddRange(Opened.Commands);
-              return new Mvu.Transition<M.State, M.Msg>(Opened.Model, Commands.ToArray());
+              return new Mvu.Transition of (M.State, M.Msg)(Opened.Model, Commands.ToArray());
             end if;
           end for;
         end if;
@@ -131,17 +131,17 @@ begin
     else
   end case;
 
-  return new Mvu.Transition<M.State, M.Msg>(Next, Child.Commands);
+  return new Mvu.Transition of (M.State, M.Msg)(Next, Child.Commands);
 end function;
 
-function Songs(Current: M.State; Message: LibrarySongs.Msg; Library: Monitoring.Session; Commands: array of Mvu.Command<M.Msg>): Mvu.Transition<M.State, M.Msg>;
+function Songs(Current: M.State; Message: LibrarySongs.Msg; Library: Monitoring.Session; Commands: array of Mvu.Command of M.Msg): Mvu.Transition of (M.State, M.Msg);
 begin
-  const Child: Mvu.Transition<LibrarySongs.State, M.Msg> := Composition.MapTransition<LibrarySongs.State, LibrarySongs.Msg, M.Msg>(
+  const Child: Mvu.Transition of (LibrarySongs.State, M.Msg) := Composition.MapTransition of (LibrarySongs.State, LibrarySongs.Msg, M.Msg)(
     LibrarySongs.Apply(Current.Songs, Message, Library.Metadata), M.Msg.Songs, 'songs'
   );
-  const All: C.List<Mvu.Command<M.Msg>> := new C.List<Mvu.Command<M.Msg>>(Commands);
+  const All: C.List of Mvu.Command of M.Msg := new C.List of Mvu.Command of M.Msg(Commands);
   All.AddRange(Child.Commands);
-  return new Mvu.Transition<M.State, M.Msg>(
+  return new Mvu.Transition of (M.State, M.Msg)(
     Current with
       Songs := Child.Model;
     end with, All.ToArray()
@@ -157,7 +157,7 @@ end function;
 public function SaveMixer(Current: M.State; Save: procedure(SettingsModel.Preferences)): SettingsModel.State;
 begin
   const Saved: SettingsModel.Preferences := Current.Settings.Saved;
-  if Saved.Mixer.Volume = Current.Player.Volume and Linq.Enumerable.SequenceEqual<float>(
+  if Saved.Mixer.Volume = Current.Player.Volume and Linq.Enumerable.SequenceEqual of float(
     Saved.Mixer.Gains,
     Current.Player.Gains
   )
@@ -173,7 +173,7 @@ begin
   );
 end function;
 
-function Transport(Current: M.State; Message: PlayerModel.Msg; Port: Playback.Connection; Library: Monitoring.Session): Mvu.Transition<M.State, M.Msg>;
+function Transport(Current: M.State; Message: PlayerModel.Msg; Port: Playback.Connection; Library: Monitoring.Session): Mvu.Transition of (M.State, M.Msg);
 begin
   const Child: PlayerModel.Transition := Player.Apply(
     Current.Player, Message,
@@ -194,11 +194,11 @@ begin
         );
       when PlayerModel.Request.Mixer(_):
         Port.Send(Work);
-        return new Mvu.Transition<M.State, M.Msg>(
+        return new Mvu.Transition of (M.State, M.Msg)(
           Next, [
-            Mvu.StartBackground<M.Msg>(
+            Mvu.StartBackground of M.Msg(
               'save-mixer',
-              Mvu.FromWorker<M.Msg>(
+              Mvu.FromWorker of M.Msg(
                 async function(Post: function(M.Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
                   await Tasks.Task.Delay(350, Cancellation).ConfigureAwait(false);
                   await Post(M.Msg.SaveMixer).ConfigureAwait(false);
@@ -220,9 +220,9 @@ begin
   );
 end function;
 
-function EditTags(Current: M.State; Message: TagModel.Msg; Library: Monitoring.Session): Mvu.Transition<M.State, M.Msg>;
+function EditTags(Current: M.State; Message: TagModel.Msg; Library: Monitoring.Session): Mvu.Transition of (M.State, M.Msg);
 begin
-  const Child: Mvu.Transition<TagModel.State?, M.Msg> := Composition.MapTransition<TagModel.State?, TagModel.Msg, M.Msg>(
+  const Child: Mvu.Transition of (TagModel.State?, M.Msg) := Composition.MapTransition of (TagModel.State?, TagModel.Msg, M.Msg)(
     TagUpdate.Apply(
       Current.TagEditor,
       Message,
@@ -231,7 +231,7 @@ begin
     ),
     M.Msg.TagEditor, 'tag-editor'
   );
-  return new Mvu.Transition<M.State, M.Msg>(
+  return new Mvu.Transition of (M.State, M.Msg)(
     Current with
       TagEditor := Child.Model;
     end with, Child.Commands
@@ -249,11 +249,11 @@ end function;
 // - `Port`: Ordered output mailbox and device event stream.
 // ## Returns
 // The next app state and the slices' mapped commands.
-public function Apply(Current: M.State; Message: M.Msg; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session; Port: Playback.Connection): Mvu.Transition<M.State, M.Msg>;
-  function Activate(Page: Music.State; Index: int; Playlist: string := ''): Mvu.Transition<M.State, M.Msg>;
+public function Apply(Current: M.State; Message: M.Msg; Save: procedure(SettingsModel.Preferences); Library: Monitoring.Session; Port: Playback.Connection): Mvu.Transition of (M.State, M.Msg);
+  function Activate(Page: Music.State; Index: int; Playlist: string := ''): Mvu.Transition of (M.State, M.Msg);
   begin
     if Index < 0 or Index >= Page.Shown.Length then
-      return new Mvu.Transition<M.State, M.Msg>(Current, []);
+      return new Mvu.Transition of (M.State, M.Msg)(Current, []);
     end if;
     const Source: Music.Selection := Browse.Selection(Page) with
       Playlist := Playlist;
@@ -281,12 +281,12 @@ public function Apply(Current: M.State; Message: M.Msg; Save: procedure(Settings
   end function;
   procedure BrowsePodcasts();
   begin
-    const Result: Mvu.Transition<M.State, M.Msg> := Podcasts.Navigate(
+    const Result: Mvu.Transition of (M.State, M.Msg) := Podcasts.Navigate(
       Next,
       Current.Navigation.Active
     );
     if Result.Commands.Length > 0 then
-      const Work: C.List<Mvu.Command<M.Msg>> := new C.List<Mvu.Command<M.Msg>>(Commands);
+      const Work: C.List of Mvu.Command of M.Msg := new C.List of Mvu.Command of M.Msg(Commands);
       Work.AddRange(Result.Commands);
       Commands := Work.ToArray();
     end if;
@@ -295,13 +295,13 @@ public function Apply(Current: M.State; Message: M.Msg; Save: procedure(Settings
   end procedure;
 begin
   var Next: M.State := Current;
-  var Commands: array of Mvu.Command<M.Msg> := [];
+  var Commands: array of Mvu.Command of M.Msg := [];
   case Message of
     when M.Msg.Closing(const FinalPlayer: PlayerModel.State):
-      return new Mvu.Transition<M.State, M.Msg>(
+      return new Mvu.Transition of (M.State, M.Msg)(
         Current with
           Player := FinalPlayer;
-        end with, [Mvu.Exit<M.Msg>()]
+        end with, [Mvu.Exit of M.Msg()]
       );
     when M.Msg.Navigation(const NavigationMessage: Nav.Msg):
       Next := Current with
@@ -314,7 +314,7 @@ begin
       end if;
 
       if Before <> After then
-        const Transition: Mvu.Transition<M.State, M.Msg> := Album(
+        const Transition: Mvu.Transition of (M.State, M.Msg) := Album(
           Next, if After then
             AlbumModel.Msg.Open
           else
@@ -324,15 +324,15 @@ begin
         Next := Transition.Model;
         Commands := Transition.Commands;
       elsif After and Current.Navigation.Active <> Next.Navigation.Active then
-        const Work: C.List<Mvu.Command<M.Msg>> := new C.List<Mvu.Command<M.Msg>>();
+        const Work: C.List of Mvu.Command of M.Msg := new C.List of Mvu.Command of M.Msg();
         if Next.Albums.Scope <> Current.Albums.Scope or Next.Albums.GroupId <>
           Current.Albums.GroupId
         then
-          Work.Add(Mvu.CancelBackground<M.Msg>('albums/images'));
-          Work.Add(Mvu.CancelBackground<M.Msg>('albums/music/load'));
+          Work.Add(Mvu.CancelBackground of M.Msg('albums/images'));
+          Work.Add(Mvu.CancelBackground of M.Msg('albums/music/load'));
         end if;
 
-        var Transition: Mvu.Transition<M.State, M.Msg> := new Mvu.Transition<M.State, M.Msg>(
+        var Transition: Mvu.Transition of (M.State, M.Msg) := new Mvu.Transition of (M.State, M.Msg)(
           Next,
           []
         );
@@ -356,12 +356,12 @@ begin
       if Next.Navigation.Active = Nav.Route.Page(Nav.Page.Stations)
         and not Next.Radio.Loaded and not Next.Radio.Searching
       then
-        const Result: Mvu.Transition<M.State, M.Msg> := Radio.Apply(
+        const Result: Mvu.Transition of (M.State, M.Msg) := Radio.Apply(
           Next,
           RadioModel.Msg.Refresh,
           Save
         );
-        const Work: C.List<Mvu.Command<M.Msg>> := new C.List<Mvu.Command<M.Msg>>(Commands);
+        const Work: C.List of Mvu.Command of M.Msg := new C.List of Mvu.Command of M.Msg(Commands);
         Work.AddRange(Result.Commands);
         Commands := Work.ToArray();
         Next := Result.Model;
@@ -382,7 +382,7 @@ begin
           when LibrarySongs.Msg.Song(Music.Msg.Play(const FileId: long)):
             return Activate(Current.Songs.Page, Browse.FindFile(Current.Songs.Page.Shown, FileId));
           when LibrarySongs.Msg.Song(
-            Music.Msg.PlaySlot(const Rows: I.ImmutableArray<Tracks.Entry>, const Index: int)
+            Music.Msg.PlaySlot(const Rows: I.ImmutableArray of Tracks.Entry, const Index: int)
           ):
             if Rows.Equals(Current.Songs.Page.Shown) then
               return Activate(Current.Songs.Page, Index, Nav.Key(Current.Navigation.Active));
@@ -448,12 +448,12 @@ begin
       end case;
 
       if Next.Navigation.Active = Nav.Route.Page(Nav.Page.Stations) then
-        const Result: Mvu.Transition<M.State, M.Msg> := Radio.Apply(
+        const Result: Mvu.Transition of (M.State, M.Msg) := Radio.Apply(
           Next,
           RadioModel.Msg.Refresh,
           Save
         );
-        const Work: C.List<Mvu.Command<M.Msg>> := new C.List<Mvu.Command<M.Msg>>(Commands);
+        const Work: C.List of Mvu.Command of M.Msg := new C.List of Mvu.Command of M.Msg(Commands);
         Work.AddRange(Result.Commands);
         Commands := Work.ToArray();
         Next := Result.Model;
@@ -465,18 +465,18 @@ begin
 
       if Nav.Browsing(Current.Navigation.Active) then
         Next := Browsing.Enter(Next);
-        const Transition: Mvu.Transition<M.State, M.Msg> := Album(
+        const Transition: Mvu.Transition of (M.State, M.Msg) := Album(
           Next,
           AlbumModel.Msg.Open,
           Library
         );
         Next := Transition.Model;
-        const All: C.List<Mvu.Command<M.Msg>> := new C.List<Mvu.Command<M.Msg>>(Commands);
+        const All: C.List of Mvu.Command of M.Msg := new C.List of Mvu.Command of M.Msg(Commands);
         All.AddRange(Transition.Commands);
         Commands := All.ToArray();
       end if;
     when M.Msg.Settings(const SettingsMessage: SettingsModel.Msg):
-      const Changed: Mvu.Transition<M.State, M.Msg> := Settings(
+      const Changed: Mvu.Transition of (M.State, M.Msg) := Settings(
         Current,
         SettingsMessage,
         Save,
@@ -499,14 +499,14 @@ begin
         end case;
 
         if not Availability.Allows(Changed.Model.Settings, Track) then
-          const StoppedPlayer: Mvu.Transition<M.State, M.Msg> := Transport(
+          const StoppedPlayer: Mvu.Transition of (M.State, M.Msg) := Transport(
             Changed.Model, PlayerModel.Msg.SourceLost(Advance), Port, Library
           );
-          const Work: C.List<Mvu.Command<M.Msg>> := new C.List<Mvu.Command<M.Msg>>(
+          const Work: C.List of Mvu.Command of M.Msg := new C.List of Mvu.Command of M.Msg(
             Changed.Commands
           );
           Work.AddRange(StoppedPlayer.Commands);
-          return new Mvu.Transition<M.State, M.Msg>(StoppedPlayer.Model, Work.ToArray());
+          return new Mvu.Transition of (M.State, M.Msg)(StoppedPlayer.Model, Work.ToArray());
         end if;
       end if;
 
@@ -517,7 +517,7 @@ begin
       end with;
   end case;
 
-  return new Mvu.Transition<M.State, M.Msg>(Next, Commands);
+  return new Mvu.Transition of (M.State, M.Msg)(Next, Commands);
 end function;
 
 end unit;

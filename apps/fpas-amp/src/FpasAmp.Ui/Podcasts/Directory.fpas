@@ -18,7 +18,7 @@ const ChartSize: int := 100;
 
 var NextSearch: long := 0L;
 
-async function Read(Address: string; Stop: T.CancellationToken): Tasks.Task<J.JsonDocument>;
+async function Read(Address: string; Stop: T.CancellationToken): Tasks.Task of J.JsonDocument;
 begin
   using const Deadline: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
     Stop
@@ -41,7 +41,7 @@ begin
   ).ConfigureAwait(false);
 end function;
 
-async function Store(Address: string; Stop: T.CancellationToken): Tasks.Task<J.JsonDocument>;
+async function Store(Address: string; Stop: T.CancellationToken): Tasks.Task of J.JsonDocument;
 begin
   await Gate.WaitAsync(Stop).ConfigureAwait(false);
   try
@@ -64,7 +64,7 @@ end function;
 // - `Stop`: Cancels both the rate-limit wait and the request.
 // ## Returns
 // Up to 30 unique show results in Apple order.
-public async function Search(Market: string; Term: string; Stop: T.CancellationToken): Tasks.Task<array of M.Show>;
+public async function Search(Market: string; Term: string; Stop: T.CancellationToken): Tasks.Task of array of M.Show;
 requires Market <> '' and Term <> '';
 begin
   const Address: string := 'https://itunes.apple.com/search?media=podcast&entity=podcast&limit=30&country=' +
@@ -73,7 +73,7 @@ begin
   return Payload.Search(Result.RootElement);
 end function;
 
-async function Chart(Market: string; Genre: string; Stop: T.CancellationToken): Tasks.Task<array of long>;
+async function Chart(Market: string; Genre: string; Stop: T.CancellationToken): Tasks.Task of array of long;
 begin
   const Country: string := Sys.Uri.EscapeDataString(Market.ToLowerInvariant());
   const Limit: string := ChartSize.ToString(G.CultureInfo.InvariantCulture);
@@ -99,7 +99,7 @@ end function;
 // - `Stop`: Cancels the chart and lookup requests and rate-limit waits.
 // ## Returns
 // Up to 100 unique RSS shows in chart order.
-public async function Discover(Market: string; Genre: string; Stop: T.CancellationToken): Tasks.Task<array of M.Show>;
+public async function Discover(Market: string; Genre: string; Stop: T.CancellationToken): Tasks.Task of array of M.Show;
 requires Market <> '';
 begin
   const Ranked: array of long := await Chart(Market, Genre, Stop).ConfigureAwait(false);
@@ -107,7 +107,7 @@ begin
     return [];
   end if;
 
-  const Ids: string := Sys.String.Join<long>(',', Ranked);
+  const Ids: string := Sys.String.Join of long(',', Ranked);
   using const Result: J.JsonDocument := await Store(
     'https://itunes.apple.com/lookup?country=' +
     Sys.Uri.EscapeDataString(Market) + '&entity=podcast&id=' + Ids, Stop

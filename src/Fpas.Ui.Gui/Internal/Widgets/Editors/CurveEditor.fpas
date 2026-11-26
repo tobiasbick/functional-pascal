@@ -22,7 +22,7 @@ uses System.Collections.Generic as Lists;
 // - `Selected`: Current key selection.
 // - `Changed`: Maps a native proposal.
 // - `Settings`: Native layout and behavior options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Keys: array of D.Key; Selected: int; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Keys: array of D.Key; Selected: int; Changed: function(D.Event): TMsg; Settings: D.Options);
 begin
   const Role: string := 'curve-editor';
   const Token: string := C.Token(Role, Id);
@@ -53,7 +53,7 @@ begin
   );
   case Result of
     when is CuiEditors.CuiCurveEdit as Edit:
-      const NewKeys: Lists.List<D.Key> := new Lists.List<D.Key>(Edit.Keys.Length);
+      const NewKeys: Lists.List of D.Key := new Lists.List of D.Key(Edit.Keys.Length);
       for Item: CuiEditors.CuiCurveKey in Edit.Keys do
         NewKeys.Add(KeyData.Read(Item));
       end for;
@@ -64,7 +64,7 @@ begin
     else
   end case;
 
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, '');
 end procedure;
 
 end unit;

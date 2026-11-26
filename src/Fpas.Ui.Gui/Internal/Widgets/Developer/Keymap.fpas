@@ -12,7 +12,7 @@ uses System.Collections.Generic as Lists;
 
 function PackBinding(Items: array of D.Binding): array of CuiDeveloper.CuiDevBinding;
 begin
-  const Native: Lists.List<CuiDeveloper.CuiDevBinding> := new Lists.List<CuiDeveloper.CuiDevBinding>(
+  const Native: Lists.List of CuiDeveloper.CuiDevBinding := new Lists.List of CuiDeveloper.CuiDevBinding(
     Items.Length
   );
   for Entry: D.Binding in Items do
@@ -35,7 +35,7 @@ end function;
 // - `Modifiers`: Modifiers supplied to the widget.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Bindings: array of D.Binding; Categories: array of string; Modifiers: int; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Bindings: array of D.Binding; Categories: array of string; Modifiers: int; Changed: function(D.Event): TMsg; Settings: D.Options);
 begin
   const Role: string := 'keymap';
   const Token: string := C.Token(Role, Id);
@@ -51,7 +51,7 @@ begin
     Width.Value,
     Enabled
   );
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, '');
   if Enabled and (Result.Index <> Modifiers or Result.Action > 0) then
     Frame.Messages.Add(Changed(new D.Event(Result.Index, Result.Action, Result.Count)));
   end if;

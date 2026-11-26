@@ -17,10 +17,10 @@ uses Fpas.Ui.Widgets.Containers.ExpandableCards as W;
 // - `Expanded`: Current expansion state.
 // ## Returns
 // The widget for the application view.
-public function View(Expanded: bool): E.Element<bool>;
+public function View(Expanded: bool): E.Element of bool;
 begin
-  return W.ExpandableCard<bool>('billing', 'Billing', Expanded, function(Value: bool): bool => Value,
-    E.Text<bool>('7 of 10 seats in use'),
+  return W.ExpandableCard of bool('billing', 'Billing', Expanded, function(Value: bool): bool => Value,
+    E.Text of bool('7 of 10 seats in use'),
     new W.Options(Description := 'Pro plan, renews on December 1', Badge := 'Active'));
 end function;
 

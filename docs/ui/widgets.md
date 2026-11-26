@@ -18,7 +18,7 @@ directly in `Fpas.Ui`.
 
 ## Building a view
 
-Use the constructors in `Fpas.Ui.Elements` to build an `Element<TMsg>` from
+Use the constructors in `Fpas.Ui.Elements` to build an `Element of TMsg` from
 the model. A view can capture a message directly or use a callback to turn an
 input value into a message. The host invokes input callbacks for accepted
 interactions and dispatches their messages through MVU. Values supplied by the
@@ -466,7 +466,7 @@ require the graphical profile.
 ## User menu
 
 `Fpas.Ui.Widgets.Overlays.UserMenus.UserMenu` takes a stable ID, an account name and the same
-`Fpas.Ui.Widgets.Overlays.Menus.Entry<TMsg>` commands and decorations as a dropdown. CUI draws
+`Fpas.Ui.Widgets.Overlays.Menus.Entry of TMsg` commands and decorations as a dropdown. CUI draws
 the initials avatar, optional status and detail, trigger and popup. `Options`
 sets compact presentation, popup placement and width, and input permission.
 `AvatarPath` supplies a native PNG/JPEG image for the trigger and popup;
@@ -755,7 +755,7 @@ popup.
 ## Dropdown menu
 
 `Fpas.Ui.Widgets.Overlays.Menus.Menu` takes a trigger ID, a literal caption, ordered `Entry`
-content and optional `Options`. Use `Entry.Action(new Item<TMsg>(Key, Label,
+content and optional `Options`. Use `Entry.Action(new Item of TMsg(Key, Label,
 Message, ...))` for commands, `Entry.Label(Text)` for section captions and
 `Entry.Separator` for rules. Command keys define identity independently of
 caption and position; `Menus.ItemId(Id, Key)` returns the inspection identity.
@@ -801,8 +801,8 @@ harmless preview messages.
 
 ## Accordion and expandable card
 
-`Fpas.Ui.Widgets.Containers.Accordions.Accordion<TMsg>(Id, Title, Open, OnChange, Content, Enabled)`
-and `Fpas.Ui.Widgets.Containers.ExpandableCards.ExpandableCard<TMsg>(Id, Title, Open, OnChange, Content, Settings)`
+`Fpas.Ui.Widgets.Containers.Accordions.Accordion of TMsg(Id, Title, Open, OnChange, Content, Enabled)`
+and `Fpas.Ui.Widgets.Containers.ExpandableCards.ExpandableCard of TMsg(Id, Title, Open, OnChange, Content, Settings)`
 keep `Open` in the model. Pointer activation, Enter and Space propose the
 opposite state. Stable header IDs remain independent of literal titles, including
 `##` and `###`, and the body has its own control IDs.
@@ -902,7 +902,7 @@ graphical profile.
   after native input. Both expose numeric and hours axes and can be aligned
   by giving them the same width and range.
   Dot-chart `XLabel`/`ValueLabel` and event-track `Label` accept optional
-  `System.Func<double, string>` formatters. They run during native painting,
+  `System.Func of (double, string)` formatters. They run during native painting,
   remain alive through the frame and return valid Unicode without NUL. The
   native UTF-8 buffer truncates at complete Unicode scalars. They must be short,
   pure and must not reenter the window; failures propagate after native rendering.
@@ -1017,7 +1017,7 @@ their native examples.
   a folder in the [GUI](gui/files/file-picker.md) or [TUI](tui/files/file-picker.md).
   Its event carries the chosen path or null on dismissal.
   Set either widget's `Options.Source` to a
-  `Sys.Func<string, bool, FileListings.Listing?>` to supply folder entries.
+  `Sys.Func of (string, bool, FileListings.Listing?)` to supply folder entries.
   It receives the folder path and hidden-file mode; null reports an unreadable folder.
 - `Kanbans.Kanban` lays out model-owned columns and cards. Card bodies can
   contain regular FPAS UI elements. Native drag proposes a card's destination.
@@ -1092,7 +1092,7 @@ example uses local sample data and keeps the URL and parameter editor in sync.
 
 ## Expandable text
 
-`Fpas.Ui.Widgets.Containers.ExpandableTexts.ExpandableText<TMsg>(Id, Text, Settings, OnToggle)`
+`Fpas.Ui.Widgets.Containers.ExpandableTexts.ExpandableText of TMsg(Id, Text, Settings, OnToggle)`
 uses CUI's wrapping text, fade and Show more / Show less link. CUI owns local
 expansion; removing the element releases it. `OnToggle` optionally notifies the
 application of native activation without duplicating that state in its model.
@@ -1126,7 +1126,7 @@ All three widgets require the graphical profile.
 
 ## Alerts, progress and spinners
 
-`Fpas.Ui.Widgets.Feedback.Alerts.Alert<TMsg>(Id, Title, Settings, OnDismiss)` draws CUI's inline
+`Fpas.Ui.Widgets.Feedback.Alerts.Alert of TMsg(Id, Title, Settings, OnDismiss)` draws CUI's inline
 alert. Options provide `Description`, `Styles.Tone`, an optional icon glyph,
 `Dismissible` and `Enabled`. Empty icons use CUI's tone-specific default. Titles
 and descriptions are literal, including `##`. CUI owns dismissal: the alert
@@ -1138,7 +1138,7 @@ visible ones have role `alert`. `Alerts.DismissId(Id)` identifies the optional
 The [terminal alert](tui/feedback/alert.md) uses a tone-colored text symbol
 and wraps its text. Its close action uses the same ID and notification.
 
-`Fpas.Ui.Widgets.Feedback.ProgressBars.ProgressBar<TMsg>(Id, Value, Settings)` displays a finite
+`Fpas.Ui.Widgets.Feedback.ProgressBars.ProgressBar of TMsg(Id, Value, Settings)` displays a finite
 fraction from zero through one. Options map to CUI's `Label`, `ShowValue`,
 `Indeterminate`, `Dither`, `Styles.Tone` and logical track `Height` (zero uses the
 native default). `Dither` uses CUI's drifting ordered-dot fill for either progress
@@ -1149,7 +1149,7 @@ The terminal puts the caption, a two-color `─` line and the rounded percentage
 on one row. Content and Fill use the available columns. Fixed caps the entire
 row. On narrow rows the caption shortens to leave room for progress.
 
-`Fpas.Ui.Widgets.Feedback.Spinners.Spinner<TMsg>(Id, Size := 0.0F)` takes an
+`Fpas.Ui.Widgets.Feedback.Spinners.Spinner of TMsg(Id, Size := 0.0F)` takes an
 activity style, ink and track colors, and a finite nonnegative logical diameter.
 Zero selects the default. GUI uses CUI animation and reports a noninteractive
 `spinner` snapshot. The [terminal spinner](tui/feedback/spinner.md) animates
@@ -1161,7 +1161,7 @@ bars, and 16/22/28-point spinners.
 
 ## Skeleton
 
-`Fpas.Ui.Widgets.Feedback.Skeletons.Skeleton<TMsg>(Id, Width, Height := 0.0F)` draws CUI's loading
+`Fpas.Ui.Widgets.Feedback.Skeletons.Skeleton of TMsg(Id, Width, Height := 0.0F)` draws CUI's loading
 placeholder. Omitted width fills its parent. Use `Layout.Extent.Fixed` with a
 logical measure or `Layout.Extent.Percent` for another width; `Content` is
 rejected because a placeholder has no intrinsic content. Percentages are finite
@@ -1175,7 +1175,7 @@ Loading avatar, percentage text lines and 88-point body placeholder.
 
 ## Timeline item
 
-`Fpas.Ui.Widgets.Planning.TimelineItems.TimelineItem<TMsg>(Id, Title, Settings)` displays a
+`Fpas.Ui.Widgets.Planning.TimelineItems.TimelineItem of TMsg(Id, Title, Settings)` displays a
 noninteractive native activity entry. The title must be nonempty. Options map
 directly to CUI's optional literal `Time` and `Description`, icon glyph,
 `Styles.Tone`, and `Last` flag. An empty icon uses CUI's dot. `Last` omits the
@@ -1189,7 +1189,7 @@ Activity entries, including the final failed build without a connector.
 
 ## Progress ring
 
-`Fpas.Ui.Widgets.Feedback.ProgressRings.ProgressRing<TMsg>(Id, Label, Value, Size := 0.0F)` draws
+`Fpas.Ui.Widgets.Feedback.ProgressRings.ProgressRing of TMsg(Id, Label, Value, Size := 0.0F)` draws
 CUI's circular progress with a centered percentage and optional literal caption.
 The fraction must be finite and between zero and one. The diameter must be
 finite and nonnegative; zero selects CUI's 96-point default. The native ring
@@ -1204,8 +1204,8 @@ the original Onboarding and Quota examples at 104 points.
 
 ## Meter
 
-`Fpas.Ui.Widgets.Charts.Meters.Meter<TMsg>(Id, Label, Used, Total, Unit := '')` displays native
-capacity usage, for example `Meters.Meter<Msg>('storage', 'Storage', 18.4F, 20.0F, 'GB')`.
+`Fpas.Ui.Widgets.Charts.Meters.Meter of TMsg(Id, Label, Used, Total, Unit := '')` displays native
+capacity usage, for example `Meters.Meter of Msg('storage', 'Storage', 18.4F, 20.0F, 'GB')`.
 Usage and capacity must be finite and nonnegative. Usage may exceed capacity;
 CUI clamps the visual fill. Zero capacity displays an empty track. CUI owns
 numeric formatting, interpolation and its warning/danger thresholds. Labels and
@@ -1216,14 +1216,14 @@ releases its native interpolation state. Meter requires the graphical profile.
 
 ## Popover and confirmation popover
 
-`Fpas.Ui.Widgets.Overlays.Popovers.Popover<TMsg>(Id, Trigger, Content, Open, OnDismiss, Settings)`
+`Fpas.Ui.Widgets.Overlays.Popovers.Popover of TMsg(Id, Trigger, Content, Open, OnDismiss, Settings)`
 attaches a nonmodal native panel to a button. The trigger keeps its layout
 and activation message. Use that message to toggle `Open` in the model. Escape
 and a press outside propose `OnDismiss`. Actions in `Content` can close the
 panel through their own updates. CUI fits the panel to the viewport around
 the requested placement. Width, padding and gap use logical points.
 
-`Fpas.Ui.Widgets.Overlays.ConfirmPopovers.ConfirmPopover<TMsg>` asks a question at the trigger
+`Fpas.Ui.Widgets.Overlays.ConfirmPopovers.ConfirmPopover of TMsg` asks a question at the trigger
 and draws CUI's affirmative and cancel buttons. The model opens the question
 in response to the trigger. Confirm proposes `OnConfirm`. Cancel, Escape
 and a press outside propose `OnDismiss`. Close the question in the update for
@@ -1232,7 +1232,7 @@ requires a separate activation. Both popovers require the Graphical profile.
 
 ## Tooltip
 
-`Fpas.Ui.Widgets.Overlays.Tooltips.Tooltip<TMsg>(Target, Text, Shortcut)` attaches native
+`Fpas.Ui.Widgets.Overlays.Tooltips.Tooltip of TMsg(Target, Text, Shortcut)` attaches native
 pointer help to a single control, such as a button, checkbox, slider or canvas.
 The target retains its layout, focus and activation. The optional shortcut
 appears as a key hint. Bind the gesture separately in the application.
@@ -1246,7 +1246,7 @@ requires the Graphical profile.
 
 ## Dialog and action footer
 
-`Fpas.Ui.Widgets.Overlays.Dialogs.Dialog<TMsg>(Id, Base, Content, Open, Settings, OnDismiss)`
+`Fpas.Ui.Widgets.Overlays.Dialogs.Dialog of TMsg(Id, Base, Content, Open, Settings, OnDismiss)`
 presents a centered modal above `Base`. The model controls `Open`.
 In the GUI, keep `Content` available during the exit transition. The host disables the
 underlying view, moves focus into the dialog and restores focus on closure.
@@ -1261,7 +1261,7 @@ button and a click on the scrim propose `OnDismiss`. A focused text field
 handles Escape before the dialog. `Persistent` suppresses Escape and scrim
 dismissal. Set `CloseButton` to false to hide the native close action.
 
-`Fpas.Ui.Widgets.Actions.ActionFooters.ActionFooter<TMsg>(Children)` lays out the supplied
+`Fpas.Ui.Widgets.Actions.ActionFooters.ActionFooter of TMsg(Children)` lays out the supplied
 actions in CUI's right-aligned row with an eight-point top inset and an
 eight-point gap. Cancel and Save can close a dialog through their ordinary
 application messages. The footer requires the Graphical profile. Use a
@@ -1296,7 +1296,7 @@ These widgets require the graphical profile and call CUI directly:
   with `or`; `PrimaryModifier()` chooses Command on macOS and Control elsewhere.
   Native recording starts with a click or focused Enter/Space. Escape cancels,
   unmodified Backspace/Delete clears, and unmodified Tab leaves recording.
-  `ClearId(Id)` identifies the native clear button. `Label<TMsg>(Value)` draws
+  `ClearId(Id)` identifies the native clear button. `Label of TMsg(Value)` draws
   CUI keycaps using the same platform-specific shortcut formatter.
 
 Each interactive widget has `Enabled` and native content/fill/fixed/percentage
@@ -1310,7 +1310,7 @@ for the grouped money display.
 
 ## Text field
 
-`Fpas.Ui.Widgets.Inputs.TextFields.TextField<TMsg>(Id, Value, OnChange, Settings, OnSubmit)`
+`Fpas.Ui.Widgets.Inputs.TextFields.TextField of TMsg(Id, Value, OnChange, Settings, OnSubmit)`
 edits a model-owned single-line value. In the GUI, set the caption, placeholder, leading icon,
 hint, error, prefix and suffix through `Options`. An error replaces the hint.
 The editable value excludes the prefix and suffix. Use shared layout options
@@ -1336,7 +1336,7 @@ require the Graphical profile.
 
 ## Search field
 
-`Fpas.Ui.Widgets.Inputs.SearchFields.SearchField<TMsg>(Id, Value, OnChange, Settings, OnSubmit)`
+`Fpas.Ui.Widgets.Inputs.SearchFields.SearchField of TMsg(Id, Value, OnChange, Settings, OnSubmit)`
 uses CUI's search icon, placeholder and clear button. The query is a model-owned
 single line. The native clear button empties it and returns focus to the field.
 Enter can submit the current query. Options allow a custom icon, placeholder,
@@ -1346,7 +1346,7 @@ editor and adornments and supports the same query and clear action.
 
 ## Text area
 
-`Fpas.Ui.Widgets.Inputs.TextAreas.TextArea<TMsg>(Id, Value, OnChange, Settings, OnSubmit)`
+`Fpas.Ui.Widgets.Inputs.TextAreas.TextArea of TMsg(Id, Value, OnChange, Settings, OnSubmit)`
 wraps model text with LF line endings. Enter inserts LF and Up and Down move
 between visual lines. The wheel scrolls the text area and hands off to its
 enclosing viewport at an edge.
@@ -1360,7 +1360,7 @@ and read-only mode.
 
 ## Tag input
 
-`Fpas.Ui.Widgets.Inputs.TagInputs.TagInput<TMsg>(Id, Tags, OnChange, Settings)` uses an ordered
+`Fpas.Ui.Widgets.Inputs.TagInputs.TagInput of TMsg(Id, Tags, OnChange, Settings)` uses an ordered
 array of model-owned tags. Enter or comma commits the draft. Backspace in
 an empty draft removes the last tag, and each chip has a native remove button.
 Tags are nonempty single lines without commas or surrounding ASCII spaces.
@@ -1370,7 +1370,7 @@ use `TagInputs.RemoveId(Id, Index)` in GUI snapshots.
 
 ## One-time code input
 
-`Fpas.Ui.Widgets.Inputs.OneTimeCodes.OneTimeCodeInput<TMsg>(Id, Value, OnChange, Settings, OnComplete)`
+`Fpas.Ui.Widgets.Inputs.OneTimeCodes.OneTimeCodeInput of TMsg(Id, Value, OnChange, Settings, OnComplete)`
 uses one to twelve native boxes for ASCII letters or digits. Typing appends,
 Backspace removes the last character, and paste replaces the code. When a
 user edit fills all boxes, the change message precedes the optional completion
@@ -1380,7 +1380,7 @@ exposes only the number of entered characters.
 
 ## Password strength meter
 
-`Fpas.Ui.Widgets.Inputs.PasswordStrengthMeters.PasswordStrengthMeter<TMsg>(Id, Password)`
+`Fpas.Ui.Widgets.Inputs.PasswordStrengthMeters.PasswordStrengthMeter of TMsg(Id, Password)`
 displays CUI's heuristic score from zero to four and its corresponding
 strength label. Its GUI snapshot contains the score and label. These three
 widgets require the Graphical profile.
@@ -1452,7 +1452,7 @@ All three widgets require the graphical profile.
 
 ## Select
 
-`Fpas.Ui.Widgets.Inputs.Selects.Select<TMsg>(Id, Items, Selected, OnChange, Settings)` uses
+`Fpas.Ui.Widgets.Inputs.Selects.Select of TMsg(Id, Items, Selected, OnChange, Settings)` uses
 zero-based indices in model order. Use minus one for an unselected trigger.
 Items supply a literal caption and an optional glyph. Enable `Searchable`
 to filter the popup. Choosing a row reports its original index and
@@ -1461,7 +1461,7 @@ rows use `Selects.OptionId(Id, Index)` in GUI and terminal snapshots. The [termi
 
 ## Number field
 
-`Fpas.Ui.Widgets.Inputs.NumberFields.NumberField<TMsg>(Id, Value, Minimum, Maximum, OnChange, Settings)`
+`Fpas.Ui.Widgets.Inputs.NumberFields.NumberField of TMsg(Id, Value, Minimum, Maximum, OnChange, Settings)`
 uses a finite model-owned double within inclusive bounds. Type a complete
 finite number or adjust it with the native step buttons or arrow keys.
 Shift with an arrow applies ten steps. Input is clamped to the bounds and
@@ -1480,11 +1480,11 @@ content changes recompute the visible offset without emitting messages.
 
 ## Table of contents and scroll anchors
 
-Add `Fpas.Ui.Widgets.Navigation.ScrollAnchors.ScrollAnchor<TMsg>(Id)` before each heading in an
+Add `Fpas.Ui.Widgets.Navigation.ScrollAnchors.ScrollAnchor of TMsg(Id)` before each heading in an
 graphical `ScrollView`. Anchor IDs are unique throughout the view tree.
 The marker has zero height and takes its place in the containing stack.
 
-`Fpas.Ui.Widgets.Navigation.TableOfContents.TableOfContents<TMsg>(Id, ScrollId, Items)` takes one
+`Fpas.Ui.Widgets.Navigation.TableOfContents.TableOfContents of TMsg(Id, ScrollId, Items)` takes one
 to 64 entries in document order. Give each entry its title, anchor ID and an
 optional indentation level from zero through four. Each entry references an
 anchor inside the outline's uncontrolled viewport. An outline can omit anchors.
@@ -1657,7 +1657,7 @@ Captions are single-line and reserve CUI's `##` delimiter. The terminal
 profile rejects these native desktop elements in preflight.
 ## Subview composition
 
-`Fpas.Ui.Composition.Map<TChild, TParent>(Tree, Messages)` embeds a child view
+`Fpas.Ui.Composition.Map of (TChild, TParent)(Tree, Messages)` embeds a child view
 with its own message type. `Messages` is a pure wrapper, typically a case of
 the parent's message variant. IDs, options, values, layout and native widget
 selection stay unchanged. Every message-bearing node is supported, including

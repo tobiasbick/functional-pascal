@@ -22,12 +22,12 @@ uses Fpas.Ui.Widgets.Canvas.SelectionBars as W;
 // ## Returns
 // The list with bulk action and clear proposals.
 public function View(
-  Child: E.Element<W.Event>;
+  Child: E.Element of W.Event;
   Selected: array of bool;
   Actions: array of W.Action
-): E.Element<W.Event>;
+): E.Element of W.Event;
 begin
-  return W.SelectionBar<W.Event>('bulk-files', W.Selection.Items(Selected), Actions,
+  return W.SelectionBar of W.Event('bulk-files', W.Selection.Items(Selected), Actions,
     function(Change: W.Event): W.Event => Change, Child);
 end function;
 

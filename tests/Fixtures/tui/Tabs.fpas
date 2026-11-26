@@ -26,10 +26,10 @@ begin
   end if;
 end procedure;
 
-function Update(State: int; Proposed: int): M.Transition<int, int>;
+function Update(State: int; Proposed: int): M.Transition of (int, int);
 begin
   Check(Proposed >= 0 and State <> Proposed, 'A disabled or already selected tab sent a message.');
-  return new M.Transition<int, int>(
+  return new M.Transition of (int, int)(
     if Proposed = 2 then
       State
     else
@@ -38,38 +38,38 @@ begin
   );
 end function;
 
-function Strip(State: int): E.Element<int>;
+function Strip(State: int): E.Element of int;
 begin
-  return Tabs.Tabs<int>('tabs', Items, State, function(Value: int): int => Value);
+  return Tabs.Tabs of int('tabs', Items, State, function(Value: int): int => Value);
 end function;
 
-function View(State: int): E.Element<int>;
+function View(State: int): E.Element of int;
 begin
-  return E.Column<int>(
-    B.Button<int>('before', 'Before', -1),
+  return E.Column of int(
+    B.Button of int('before', 'Before', -1),
     Strip(State),
-    Tabs.Tabs<int>(
+    Tabs.Tabs of int(
       'disabled', [new Tabs.Item('Read only')], 0, function(Value: int): int => -1,
       new Tabs.Options(Enabled := false)
     ),
-    B.Button<int>('after', 'After', -1)
+    B.Button of int('after', 'After', -1)
   );
 end function;
 
-function Scrolled(State: int): E.Element<int>;
+function Scrolled(State: int): E.Element of int;
 begin
-  return E.ScrollView<int>(
+  return E.ScrollView of int(
     'scroll',
-    E.Column<int>(
-      B.Button<int>('before', 'Before', -1), E.Text<int>('Filler'), E.Text<int>('Filler'),
-      Strip(State), B.Button<int>('after', 'After', -1)
+    E.Column of int(
+      B.Button of int('before', 'Before', -1), E.Text of int('Filler'), E.Text of int('Filler'),
+      Strip(State), B.Button of int('after', 'After', -1)
     )
   );
 end function;
 
-function Pill(State: int): E.Element<int>;
+function Pill(State: int): E.Element of int;
 begin
-  return Tabs.Tabs<int>(
+  return Tabs.Tabs of int(
     'pills',
     [new Tabs.Item('A'), new Tabs.Item('B')],
     State,
@@ -78,10 +78,10 @@ begin
   );
 end function;
 
-function Dialog(State: int): E.Element<int>;
+function Dialog(State: int): E.Element of int;
 begin
-  return Dialogs.Dialog<int>(
-    'dialog', E.Text<int>('Background'), Strip(State), true,
+  return Dialogs.Dialog of int(
+    'dialog', E.Text of int('Background'), Strip(State), true,
     new Dialogs.Options('Tabs', InitialFocus := 'tabs/3'), -1
   );
 end function;
@@ -129,7 +129,7 @@ begin
 end procedure;
 
 begin
-  using const Main: T.HeadlessSession := Headless.Start<int, int>(1, Update, View, 64, 10);
+  using const Main: T.HeadlessSession := Headless.Start of (int, int)(1, Update, View, 64, 10);
   Key(Main, K.Key.Tab);
   const First: T.ControlSnapshot := Control(Main, 'tabs/1');
   Check(
@@ -163,7 +163,7 @@ begin
   Key(Main, K.Key.Right);
   Check(Control(Main, 'tabs/3').Focused, 'Right stops at the last tab.');
 
-  using const Narrow: T.HeadlessSession := Headless.Start<int, int>(1, Update, View, 11, 10);
+  using const Narrow: T.HeadlessSession := Headless.Start of (int, int)(1, Update, View, 11, 10);
   Key(Narrow, K.Key.Tab);
   Check(
     Control(Narrow, 'tabs/1').Focused and Find(Narrow, 'tabs/3') = null,
@@ -199,7 +199,13 @@ begin
     'Even one column supports keyboard navigation.'
   );
 
-  using const Vertical: T.HeadlessSession := Headless.Start<int, int>(3, Update, Scrolled, 14, 2);
+  using const Vertical: T.HeadlessSession := Headless.Start of (int, int)(
+    3,
+    Update,
+    Scrolled,
+    14,
+    2
+  );
   Key(Vertical, K.Key.Tab);
   Check(
     Control(Vertical, 'tabs/3').Focused,
@@ -208,7 +214,7 @@ begin
   Key(Vertical, K.Key.Tab);
   Check(Control(Vertical, 'after').Focused, 'Tab can leave the revealed strip.');
 
-  using const Pills: T.HeadlessSession := Headless.Start<int, int>(0, Update, Pill, 20, 4);
+  using const Pills: T.HeadlessSession := Headless.Start of (int, int)(0, Update, Pill, 20, 4);
   const Left: T.ControlSnapshot := Control(Pills, 'pills/0');
   const Right: T.ControlSnapshot := Control(Pills, 'pills/1');
   Check(
@@ -216,7 +222,7 @@ begin
     'Full-width pill tabs share the complete row.'
   );
   Check(Pills.Snapshot().Lines[1].Trim() = '', 'The pill style has no baseline.');
-  using const Modal: T.HeadlessSession := Headless.Start<int, int>(0, Update, Dialog, 22, 9);
+  using const Modal: T.HeadlessSession := Headless.Start of (int, int)(0, Update, Dialog, 22, 9);
   Check(Control(Modal, 'tabs/3').Focused, 'A modal can initially focus a hidden tab.');
   Key(Modal, K.Key.Enter);
   Check(Control(Modal, 'tabs/3').Value = 'true', 'Focus does not commit until activated.');

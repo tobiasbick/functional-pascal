@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Pickers.SchedulePickers as W;
 // - `Expression`: Current five-field cron expression.
 // ## Returns
 // The picker with cron expression changes as messages.
-public function View(Expression: string): E.Element<W.Event>;
+public function View(Expression: string): E.Element of W.Event;
 begin
-  return W.SchedulePicker<W.Event>('backup', Expression,
+  return W.SchedulePicker of W.Event('backup', Expression,
     function(Change: W.Event): W.Event => Change, new W.Options(Utc := true));
 end function;
 

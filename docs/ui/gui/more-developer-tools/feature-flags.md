@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Developer.FeatureFlagEditors as W;
 // - `Environments`: Environment names in display order.
 // ## Returns
 // The editor with one flag change per proposal.
-public function View(Flags: array of W.Flag; Environments: array of string): E.Element<W.Event>;
+public function View(Flags: array of W.Flag; Environments: array of string): E.Element of W.Event;
 begin
-  return W.FeatureFlags<W.Event>('rollout', Flags, Environments,
+  return W.FeatureFlags of W.Event('rollout', Flags, Environments,
     function(Change: W.Event): W.Event => Change);
 end function;
 

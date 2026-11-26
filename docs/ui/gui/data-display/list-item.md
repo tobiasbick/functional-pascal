@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Collections.ListItems as W;
 // - `Selected`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Selected: bool): E.Element<string>;
+public function View(Selected: bool): E.Element of string;
 begin
-  return W.ListItem<string>('design-review', 'Design review',
+  return W.ListItem of string('design-review', 'Design review',
     function(): string => 'open-review',
     new W.Options(Subtitle := 'Tomorrow at 10:00', Avatar := 'Jonas Berg', Trailing := '45m',
       Selected := Selected));

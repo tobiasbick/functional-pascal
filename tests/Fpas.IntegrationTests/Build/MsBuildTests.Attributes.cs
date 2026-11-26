@@ -71,7 +71,7 @@ public sealed partial class MsBuildTests
               uses System.Collections.Generic as C; uses System.Text.Json.Serialization as Json; uses System.Runtime.CompilerServices as Compiler;
             [Sys.FlagsAttribute]
             public type Local = enum : uint A = 1; B = 2; end enum;
-            [S.GenericAttribute<int>(42)]
+            [S.GenericAttribute of int(42)]
             [S.OptionalAttribute]
             [S.PackAttribute(1, 2, 3)]
             [S.PackAttribute([])]
@@ -79,24 +79,24 @@ public sealed partial class MsBuildTests
             [Sys.SerializableAttribute]
             [S.ScalarsAttribute(-128, 255, -32768, 65535, -2147483648, 4294967295U, -9223372036854775808L,
               18446744073709551615UL, 1.25F, 2.5, #65535, true)]
-            [S.PayloadAttribute('hello' + #10 + 'CLR', typeof(C.List<string?>), S.Mode.High, typeof(int?), [1, 2],
-              [null, 'text', 42, true, #65, S.Mode.High, typeof(Model<int>), [1, 2], typeof(array of Model<int>), typeof(array[,] of int)],
+            [S.PayloadAttribute('hello' + #10 + 'CLR', typeof(C.List of string?), S.Mode.High, typeof(int?), [1, 2],
+              [null, 'text', 42, true, #65, S.Mode.High, typeof(Model of int), [1, 2], typeof(array of Model of int), typeof(array[,] of int)],
               Note := 'named', ExtraType := typeof(Local), Modes := [S.Mode.High], Count := 4294967295U)]
             [S.PayloadAttribute(null, null, S.Mode.High, Local.A, null, null)]
-            public type Model<T> = record
+            public type Model of T = record
               [Json.JsonPropertyNameAttribute('payload')]
               public Value: T;
               [S.SingleAttribute(9)]
               [Compiler.MethodImplAttribute(Compiler.MethodImplOptions.AggressiveInlining)]
               public function Read(): T; begin return self.Value; end function;
             end record;
-            [Sys.SerializableAttribute] [S.SingleAttribute(1)] public type Outcome<T> = variant Empty; Value(Data: T); end variant;
+            [Sys.SerializableAttribute] [S.SingleAttribute(1)] public type Outcome of T = variant Empty; Value(Data: T); end variant;
             [S.SingleAttribute(2)] public type Id = distinct long;
             [S.SingleAttribute(3)] public type Percent = int range 0..100;
             [S.SingleAttribute(4)] public type Name = distinct string;
             [S.SingleAttribute(5)]
             [Compiler.MethodImplAttribute(Compiler.MethodImplOptions.NoInlining)]
-            public async function Work(): Tasks.Task<int>; begin await Tasks.Task.Delay(1); return 5; end function;
+            public async function Work(): Tasks.Task of int; begin await Tasks.Task.Delay(1); return 5; end function;
             [S.ExplodingAttribute]
             public function Explosive(): int; begin return 42; end function;
             public function Nested(): int;
@@ -120,7 +120,7 @@ public sealed partial class MsBuildTests
             unit Demo.Consumer;
             uses Demo.Marked as M;
             public function Read(): int;
-            begin const Value: M.Model<int> := new M.Model<int>(42); return Value.Read(); end function;
+            begin const Value: M.Model of int := new M.Model of int(42); return Value.Read(); end function;
             end unit;
             """);
         var host = XDocument.Load(project.File("Host/Host.csproj"));

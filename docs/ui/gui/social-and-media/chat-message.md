@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Conversation.ChatMessages as W;
 // - `Receipt`: Current delivery or read status.
 // ## Returns
 // The chat bubble for the application view.
-public function View(Message: string; Receipt: string): E.Element<string>;
+public function View(Message: string; Receipt: string): E.Element of string;
 begin
-  return W.ChatMessage<string>('outgoing', Message,
+  return W.ChatMessage of string('outgoing', Message,
     new W.Options(Mine := true, Grouped := true, LastInGroup := true, Status := Receipt));
 end function;
 

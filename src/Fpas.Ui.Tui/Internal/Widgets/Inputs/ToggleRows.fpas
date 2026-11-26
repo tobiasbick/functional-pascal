@@ -6,13 +6,13 @@ uses Fpas.Ui.Styles as S;
 uses Fpas.Ui.Tui.Internal.Controls.Activation as A;
 uses Fpas.Ui.Tui.Internal.View.Tree as E;
 
-function Row<TMsg>(
+function Row of TMsg(
   Id: string; Name: string; Checked: bool; Change: function(bool): TMsg;
   Role: string; Caption: string; Description: string; Enabled: bool; Mixed: bool := false; Compact: bool := false
-): E.Element<TMsg>;
+): E.Element of TMsg;
 begin
-  return E.Element<TMsg>.Action(
-    Id, new A.Proposal<bool, TMsg>(Change, not Checked), Enabled,
+  return (E.Element of TMsg).Action(
+    Id, new A.Proposal of (bool, TMsg)(Change, not Checked), Enabled,
     new E.ActionView(
       Caption,
       Name := Name,
@@ -52,14 +52,14 @@ end function;
 // - `Enabled`: Whether input may activate the row.
 // ## Returns
 // A terminal action with a visible and inspectable Boolean state.
-public function Switch<TMsg>(Id: string; Label: string; On: bool; Change: function(bool): TMsg; Description: string; Enabled: bool): E.Element<TMsg>;
+public function Switch of TMsg(Id: string; Label: string; On: bool; Change: function(bool): TMsg; Description: string; Enabled: bool): E.Element of TMsg;
 begin
   const Marker: string := if On then
     '[─●] On   '
   else
     '[●─] Off  '
   end if;
-  return Row<TMsg>(Id, Label, On, Change, 'switch', Marker + Label, Description, Enabled);
+  return Row of TMsg(Id, Label, On, Change, 'switch', Marker + Label, Description, Enabled);
 end function;
 
 // Builds a controlled checkbox with a single focus stop.
@@ -76,10 +76,10 @@ end function;
 // - `HideLabel`: Show just the three-cell marker.
 // ## Returns
 // An action whose inspection value is true, false or mixed.
-public function Checkbox<TMsg>(
+public function Checkbox of TMsg(
   Id: string; Label: string; Checked: bool; Change: function(bool): TMsg;
   Description: string; Enabled: bool; Indeterminate: bool; HideLabel: bool
-): E.Element<TMsg>;
+): E.Element of TMsg;
 begin
   const Mixed: bool := Checked and Indeterminate;
   const Marker: string := if Mixed then
@@ -89,7 +89,7 @@ begin
   else
     '[ ]'
   end if;
-  return Row<TMsg>(
+  return Row of TMsg(
     Id, Label, Checked, Change, 'checkbox', if HideLabel then
       Marker
     else

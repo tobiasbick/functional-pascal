@@ -70,16 +70,16 @@ begin
   return Minutes.ToString() + ':' + (Seconds mod 60L).ToString('00');
 end function;
 
-function TagChoices(Items: I.ImmutableArray<Tracks.Entry>; Values: function(Tracks.Entry): array of string; Stop: T.CancellationToken): array of string;
+function TagChoices(Items: I.ImmutableArray of Tracks.Entry; Values: function(Tracks.Entry): array of string; Stop: T.CancellationToken): array of string;
 begin
   if Items.Length < 2 then
     return [];
   end if;
-  const Names: C.Dictionary<string, string> := new C.Dictionary<string, string>(
+  const Names: C.Dictionary of (string, string) := new C.Dictionary of (string, string)(
     Sys.StringComparer.Ordinal
   );
-  const Common: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
-  const Keys: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+  const Common: C.HashSet of string := new C.HashSet of string(Sys.StringComparer.Ordinal);
+  const Keys: C.HashSet of string := new C.HashSet of string(Sys.StringComparer.Ordinal);
   var First: bool := true;
   for Track: Tracks.Entry in Items do
     Stop.ThrowIfCancellationRequested();
@@ -103,19 +103,19 @@ begin
   for Key: string in Common do
     discard Names.Remove(Key);
   end for;
-  const Result: C.List<string> := new C.List<string>(Names.Values);
+  const Result: C.List of string := new C.List of string(Names.Values);
   Result.Sort(Sys.StringComparer.CurrentCultureIgnoreCase);
   return Result.ToArray();
 end function;
 
 // Returns the genres that match some but not all Items. Stop cancels catalogue preparation.
-public function GenreChoices(Items: I.ImmutableArray<Tracks.Entry>; Stop: T.CancellationToken): array of string;
+public function GenreChoices(Items: I.ImmutableArray of Tracks.Entry; Stop: T.CancellationToken): array of string;
 begin
   return TagChoices(Items, Genres, Stop);
 end function;
 
 // Returns the performers that match some but not all Items. Stop cancels catalogue preparation.
-public function PerformerChoices(Items: I.ImmutableArray<Tracks.Entry>; Stop: T.CancellationToken): array of string;
+public function PerformerChoices(Items: I.ImmutableArray of Tracks.Entry; Stop: T.CancellationToken): array of string;
   function Credits(Item: Tracks.Entry): array of string;
   begin
     const Info: MediaTags.Info? := Item.Metadata;
@@ -139,7 +139,7 @@ end function;
 public function ReconcileFilters(Current: M.State): M.State;
   function Retain(Value: M.Filters): M.Filters;
   begin
-    var Genres: I.ImmutableHashSet<string> := Value.Genres.Clear();
+    var Genres: I.ImmutableHashSet of string := Value.Genres.Clear();
     for Selected: string in Value.Genres do
       const Name: string := Options.Retain(Selected, Current.GenreChoices, SameTag);
       if Name <> '' then
@@ -164,7 +164,7 @@ begin
   end with;
 end function;
 
-function Has(Values: array of string; Selected: I.ImmutableHashSet<string>): bool;
+function Has(Values: array of string; Selected: I.ImmutableHashSet of string): bool;
 begin
   if Selected.IsEmpty then
     return true;
@@ -202,7 +202,7 @@ begin
   else
     const Tags: array of string := Genres(Entry);
     if Query.Phrases.Length > 0 then
-      const Values: C.List<string> := new C.List<string>([Caption]);
+      const Values: C.List of string := new C.List of string([Caption]);
       Values.AddRange(Tags);
       if not Text.PhrasesMatch(Query.Phrases, Values.ToArray()) then
         return false;
@@ -243,7 +243,7 @@ begin
     if Current.RequiredGenre <> '' then
       [Current.RequiredGenre]
     else
-      new C.List<string>(Current.Applied.Genres).ToArray()
+      new C.List of string(Current.Applied.Genres).ToArray()
     end if,
     Current.Applied.MinimumRating,
     Current.Order.Column,
@@ -257,7 +257,7 @@ end function;
 // Pending supplies the local edits to use for filtering, sorting and displayed values.
 // ## Returns
 // The same track order for a freshly opened page and a restored session.
-public function Songs(TracksInOrder: I.ImmutableArray<Tracks.Entry>; Source: M.Selection; Pending: I.ImmutableDictionary<string, int?>? := null): I.ImmutableArray<Tracks.Entry>;
+public function Songs(TracksInOrder: I.ImmutableArray of Tracks.Entry; Source: M.Selection; Pending: I.ImmutableDictionary of (string, int?)? := null): I.ImmutableArray of Tracks.Entry;
   function Compare(Left: Tracks.Entry; Right: Tracks.Entry): int;
   begin
     const Names: Sys.StringComparer := Sys.StringComparer.CurrentCultureIgnoreCase;
@@ -285,17 +285,17 @@ public function Songs(TracksInOrder: I.ImmutableArray<Tracks.Entry>; Source: M.S
   end function;
 begin
   const Query: Text.QueryParts := Text.ParseQuery(Source.Search);
-  const Keys: I.ImmutableHashSet<string>.Builder := I.ImmutableHashSet.CreateBuilder<string>();
+  const Keys: (I.ImmutableHashSet of string).Builder := I.ImmutableHashSet.CreateBuilder of string();
   for Genre: string in Source.Genres do
     discard Keys.Add(Albums.TagKey(Genre));
   end for;
-  const GenresFilter: I.ImmutableHashSet<string> := Keys.ToImmutable();
-  const Performer: I.ImmutableHashSet<string> := if Source.Performer = '' then
-    I.ImmutableHashSet<string>.Empty
+  const GenresFilter: I.ImmutableHashSet of string := Keys.ToImmutable();
+  const Performer: I.ImmutableHashSet of string := if Source.Performer = '' then
+    (I.ImmutableHashSet of string).Empty
   else
-    I.ImmutableHashSet.Create<string>(Albums.TagKey(Source.Performer))
+    I.ImmutableHashSet.Create of string(Albums.TagKey(Source.Performer))
   end if;
-  const Items: C.List<Tracks.Entry> := new C.List<Tracks.Entry>();
+  const Items: C.List of Tracks.Entry := new C.List of Tracks.Entry();
   for Item: Tracks.Entry in TracksInOrder do
     var Entry: Tracks.Entry := Item;
     var Value: int? := null;
@@ -325,11 +325,11 @@ begin
     Items.Sort(Compare);
   end if;
 
-  return I.ImmutableArray.CreateRange<Tracks.Entry>(Items);
+  return I.ImmutableArray.CreateRange of Tracks.Entry(Items);
 end function;
 
 // Returns the position of FileId in Shown, or -1 if that file is absent.
-public function FindFile(Shown: I.ImmutableArray<Tracks.Entry>; FileId: long): int;
+public function FindFile(Shown: I.ImmutableArray of Tracks.Entry; FileId: long): int;
 ensures (Position: int): Position >= -1;
 begin
   for Position: int := 0 to Shown.Length - 1 do
@@ -341,7 +341,7 @@ begin
   return -1;
 end function;
 
-function Position(Rows: I.ImmutableArray<Tracks.Entry>; Index: int): M.RowPosition?;
+function Position(Rows: I.ImmutableArray of Tracks.Entry; Index: int): M.RowPosition?;
 begin
   if Index < 0 or Index >= Rows.Length then
     return null;
@@ -357,7 +357,7 @@ begin
   return new M.RowPosition(File, Occurrence);
 end function;
 
-function Locate(Rows: I.ImmutableArray<Tracks.Entry>; Key: M.RowPosition?): int;
+function Locate(Rows: I.ImmutableArray of Tracks.Entry; Key: M.RowPosition?): int;
 begin
   if Key <> null then
     var Remaining: int := Key.Occurrence;
@@ -412,7 +412,7 @@ begin
 end function;
 
 // Returns the new position of the file at Index in Previous, or -1 when absent from Shown.
-public function RowIndex(Previous: I.ImmutableArray<Tracks.Entry>; Index: int; Shown: I.ImmutableArray<Tracks.Entry>): int;
+public function RowIndex(Previous: I.ImmutableArray of Tracks.Entry; Index: int; Shown: I.ImmutableArray of Tracks.Entry): int;
 ensures (Position: int): Position >= -1;
 begin
   if Index < 0 or Index >= Previous.Length then
@@ -430,7 +430,7 @@ end function;
 public function Select(Current: M.State): M.State;
 begin
   const Resume: M.Presentation? := Current.Resume;
-  const Shown: I.ImmutableArray<Tracks.Entry> := Songs(
+  const Shown: I.ImmutableArray of Tracks.Entry := Songs(
     Current.Tracks,
     Selection(Current),
     Current.Saving

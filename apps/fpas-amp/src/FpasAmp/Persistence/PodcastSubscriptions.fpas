@@ -29,8 +29,8 @@ begin
     Valid := false;
     return [];
   end if;
-  const Shows: C.List<Podcasts.Show> := new C.List<Podcasts.Show>();
-  const Seen: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+  const Shows: C.List of Podcasts.Show := new C.List of Podcasts.Show();
+  const Seen: C.HashSet of string := new C.HashSet of string(Sys.StringComparer.Ordinal);
   for Item: J.JsonElement in Items.EnumerateArray() do
     const Url: string := Podcasts.Address(Read(Item, 'url'));
     const Title: string := Read(Item, 'title').Trim();

@@ -18,26 +18,26 @@ uses System.Collections.Generic as Lists;
 // - `Items`: Suggestions in display order.
 // - `Changed`: Maps the selected index.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Items: array of PromptSuggestions.Item; Changed: function(int): TMsg; Settings: PromptSuggestions.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Items: array of PromptSuggestions.Item; Changed: function(int): TMsg; Settings: PromptSuggestions.Options);
 begin
   const Role: string := 'prompt-suggestions';
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
-  const Native: Lists.List<CuiAi.CuiSuggestion> := new Lists.List<CuiAi.CuiSuggestion>(
+  const Native: Lists.List of CuiAi.CuiSuggestion := new Lists.List of CuiAi.CuiSuggestion(
     Items.Length
   );
   for Item: PromptSuggestions.Item in Items do
     Native.Add(new CuiAi.CuiSuggestion(Item.Title, Item.Detail, Item.Icon));
   end for;
   const Keys: array of string := P.Indexed(Items.Length);
-  const Focus: int := P.Focus<TMsg>(Frame, Id, Role, Keys, P.Inputs(Keys.Length, Enabled), 0);
+  const Focus: int := P.Focus of TMsg(Frame, Id, Role, Keys, P.Inputs(Keys.Length, Enabled), 0);
   const Picked: int := Frame.Window.PromptSuggestions(
     Token, Native.ToArray(), Settings.Columns, Enabled, Focus,
-    P.Tracker<TMsg>(Frame, Id, Role, Keys)
+    P.Tracker of TMsg(Frame, Id, Role, Keys)
   );
-  P.Root<TMsg>(Frame, Id, Role, '', false, '');
+  P.Root of TMsg(Frame, Id, Role, '', false, '');
   for Index: int := 0 to Items.Length - 1 do
-    P.Part<TMsg>(Frame, Id, Role, Keys[Index], Items[Index].Title, Enabled, '');
+    P.Part of TMsg(Frame, Id, Role, Keys[Index], Items[Index].Title, Enabled, '');
   end for;
 
   if Picked >= 0 then

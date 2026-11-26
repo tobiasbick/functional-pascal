@@ -13,14 +13,14 @@ uses GuiGallery.Pages.Buttons.State as State;
 //
 // ## Returns
 // The gallery's copy-button example.
-public function View(): E.Element<State.Msg>;
+public function View(): E.Element of State.Msg;
 begin
   const Command: string := 'npm i cui';
-  return E.Styled<State.Msg>(
-    E.Row<State.Msg>(
+  return E.Styled of State.Msg(
+    E.Row of State.Msg(
       new L.Flow(Gap := L.Spacing.Tight, Padding := L.Spacing.Tight, Align := L.Alignment.Center),
-      E.Text<State.Msg>(Command),
-      Copy.CopyButton<State.Msg>('copy-install', Command)
+      E.Text of State.Msg(Command),
+      Copy.CopyButton of State.Msg('copy-install', Command)
     ),
     S.Role.MutedPanel
   );

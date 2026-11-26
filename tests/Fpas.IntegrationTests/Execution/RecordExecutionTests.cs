@@ -26,7 +26,7 @@ public sealed class RecordExecutionTests
           Console.WriteLine(First.Equals(cast<object>(Equal)));
           Console.WriteLine(First.Equals(cast<object?>('other')));
           Console.WriteLine(First.GetHashCode() = Equal.GetHashCode());
-          const Seen: Collections.HashSet<Point> := new Collections.HashSet<Point>();
+          const Seen: Collections.HashSet of Point := new Collections.HashSet of Point();
           discard Seen.Add(First); discard Seen.Add(Equal); discard Seen.Add(Changed);
           Console.WriteLine(Seen.Count);
           Console.WriteLine(First.X); Console.WriteLine(Changed.Reader()());

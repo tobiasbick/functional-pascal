@@ -20,22 +20,22 @@ uses System.Collections.Generic as Lists;
 // - `Model`: Editable field values and emoji preferences.
 // ## Returns
 // Inline edits, scrub and money fields, affixes, shortcut recording and emoji.
-public function View(Model: State.Model): array of E.Element<State.Msg>;
+public function View(Model: State.Model): array of E.Element of State.Msg;
 begin
-  const Parts: Lists.List<E.Element<State.Msg>> := new Lists.List<E.Element<State.Msg>>();
+  const Parts: Lists.List of E.Element of State.Msg := new Lists.List of E.Element of State.Msg();
   Parts.AddRange(Editors.Inline(Model));
   Parts.AddRange(Editors.Scrub(Model));
   Parts.AddRange(Editors.Money(Model));
   Parts.AddRange(
     [
-      G.Heading<State.Msg>(
+      G.Heading of State.Msg(
         Strings.Get('Heading.PrefixAndSuffix'),
         Strings.Get('Heading.PrefixAndSuffixHint')
       ),
-      E.Row<State.Msg>(
+      E.Row of State.Msg(
         new L.Flow(Gap := G.Points(12), Wrap := true),
-        E.Size<State.Msg>(
-          F.TextField<State.Msg>(
+        E.Size of State.Msg(
+          F.TextField of State.Msg(
             'input-url',
             Model.Url,
             State.Msg.SetUrl,
@@ -43,8 +43,8 @@ begin
           ),
           new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(260)))
         ),
-        E.Size<State.Msg>(
-          F.TextField<State.Msg>(
+        E.Size of State.Msg(
+          F.TextField of State.Msg(
             'input-weight',
             Model.Weight,
             State.Msg.SetWeight,
@@ -53,14 +53,18 @@ begin
           new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(120)))
         )
       ),
-      G.Heading<State.Msg>(
+      G.Heading of State.Msg(
         Strings.Get('Heading.ShortcutRecorder'),
         Strings.Get('Heading.ShortcutRecorderHint')
       ),
-      E.Row<State.Msg>(
+      E.Row of State.Msg(
         new L.Flow(Gap := G.Points(12), Wrap := true),
-        Keys.ShortcutRecorder<State.Msg>('palette-key', Model.PaletteKey, State.Msg.SetPaletteKey),
-        Keys.ShortcutRecorder<State.Msg>(
+        Keys.ShortcutRecorder of State.Msg(
+          'palette-key',
+          Model.PaletteKey,
+          State.Msg.SetPaletteKey
+        ),
+        Keys.ShortcutRecorder of State.Msg(
           'search-key', Model.SearchKey, State.Msg.SetSearchKey,
           new Keys.Options(Placeholder := 'Record shortcut')
         )

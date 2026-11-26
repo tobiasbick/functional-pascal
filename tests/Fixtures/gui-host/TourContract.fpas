@@ -12,25 +12,25 @@ uses GalleryHostAssertions as A;
 uses System as Sys;
 
 procedure CountFormats();
-  function Tour(Format: string; Current: int): E.Element<int>;
+  function Tour(Format: string; Current: int): E.Element of int;
   begin
-    return T.Tour<int>(
-      'tour-format', E.Text<int>('Base'), [new T.Step()], Current,
+    return T.Tour of int(
+      'tour-format', E.Text of int('Base'), [new T.Step()], Current,
       function(Change: T.Change): int => Change.Step, new T.Options(CountFormat := Format)
     );
   end function;
-  function Selection(Format: string; Count: int): E.Element<int>;
+  function Selection(Format: string; Count: int): E.Element of int;
   begin
-    return Bulk.SelectionBar<int>(
+    return Bulk.SelectionBar of int(
       'selection-format', Bulk.Selection.Count(Count), [],
-      function(Change: Bulk.Event): int => Change.Index, E.Text<int>('Anchor'),
+      function(Change: Bulk.Event): int => Change.Index, E.Text of int('Anchor'),
       new Bulk.Options(CountFormat := Format)
     );
   end function;
-  procedure Reject(Node: E.Element<int>; Id: string);
+  procedure Reject(Node: E.Element of int; Id: string);
   begin
     try
-      discard V.Prepare<int>(Node, V.Target.Graphical);
+      discard V.Prepare of int(Node, V.Target.Graphical);
     catch Error: Sys.ArgumentException do
       A.Check(Error.Message.Contains(Id) and Error.Message.Contains('countFormat'), Error.Message);
       return;
@@ -41,15 +41,15 @@ procedure CountFormats();
 begin
   for Format: string in ['', 'Selected', '100%%', '%d chosen (100%%)', '%%%d'] do
     for Current: int in [-1, 0] do
-      discard V.Prepare<int>(Tour(Format, Current), V.Target.Graphical);
+      discard V.Prepare of int(Tour(Format, Current), V.Target.Graphical);
     end for;
 
     for Count: int in [0, 5] do
-      discard V.Prepare<int>(Selection(Format, Count), V.Target.Graphical);
+      discard V.Prepare of int(Selection(Format, Count), V.Target.Graphical);
     end for;
   end for;
 
-  discard V.Prepare<int>(Tour('Step %d / %d', 0), V.Target.Graphical);
+  discard V.Prepare of int(Tour('Step %d / %d', 0), V.Target.Graphical);
   for Format: string in ['%s', '%n', '%', '%1$d', '%02d', '%d %d %d'] do
     for Current: int in [-1, 0] do
       Reject(Tour(Format, Current), 'tour-format');
@@ -65,10 +65,10 @@ end procedure;
 
 // Checks tour preflight before native calls can create an overlay.
 public procedure Verify();
-  procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);
+  procedure Reject(Node: E.Element of int; Profile: V.Target; Reason: string);
   begin
     try
-      discard V.Prepare<int>(Node, Profile);
+      discard V.Prepare of int(Node, Profile);
     catch Error: Sys.ArgumentException do
       A.Check(Error.Message.Contains(Reason), Error.Message);
       return;
@@ -76,10 +76,10 @@ public procedure Verify();
 
     raise new Sys.InvalidOperationException('Invalid tour was accepted.');
   end procedure;
-  function View(Steps: array of T.Step; Current: int; Settings: T.Options): E.Element<int>;
+  function View(Steps: array of T.Step; Current: int; Settings: T.Options): E.Element of int;
   begin
-    return E.Element<int>.Tour(
-      'tour', E.Text<int>('Base'), Steps, Current,
+    return (E.Element of int).Tour(
+      'tour', E.Text of int('Base'), Steps, Current,
       function(Change: T.Change): int => Change.Step, Settings
     );
   end function;

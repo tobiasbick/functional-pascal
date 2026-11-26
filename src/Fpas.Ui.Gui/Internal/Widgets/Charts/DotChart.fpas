@@ -22,7 +22,7 @@ uses System as Sys;
 // - `Count`: Samples per series.
 // - `Activate`: Optional activation mapper.
 // - `Settings`: Native presentation options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Bands: array of W.Series; Count: int; Activate: Sys.Func<W.Hit, TMsg>?; Settings: W.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Bands: array of W.Series; Count: int; Activate: Sys.Func of (W.Hit, TMsg)?; Settings: W.Options);
 begin
   const Token: string := C.Token('dot-chart', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
@@ -50,17 +50,17 @@ begin
   );
   const Hit: CuiCharts.CuiDotHit := Frame.Window.DotChart(
     Token, Samples, Accent, Count, Native,
-    Enabled, C.WantsFocus<TMsg>(Frame, Id, Token, Enabled)
+    Enabled, C.WantsFocus of TMsg(Frame, Id, Token, Enabled)
   );
   if Hit.Clicked and Enabled then
     case Activate of
-      when is Sys.Func<W.Hit, TMsg> as Notify:
+      when is Sys.Func of (W.Hit, TMsg) as Notify:
         Frame.Messages.Add(Notify.Invoke(new W.Hit(Hit.X, Hit.Index, Hit.Value)));
       else
     end case;
   end if;
 
-  C.Track<TMsg>(
+  C.Track of TMsg(
     Frame, new App.Control(
       Id, '', 'dot-chart', new Cui.CuiRectangle(), Enabled,
       Value := Hit.Index.ToString()

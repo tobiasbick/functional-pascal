@@ -65,7 +65,7 @@ begin
   end if;
 end function;
 
-function SameArtwork(Left: I.ImmutableArray<Albums.Album>; Right: I.ImmutableArray<Albums.Album>): bool;
+function SameArtwork(Left: I.ImmutableArray of Albums.Album; Right: I.ImmutableArray of Albums.Album): bool;
 begin
   if Left.Length <> Right.Length then
     return false;
@@ -83,17 +83,17 @@ end function;
 // Keeps the covers of albums whose artwork revision did not change, so a catalogue
 // update does not blank covers that are still current.
 function Fresh(
-  Previous: I.ImmutableArray<Albums.Album>; Items: I.ImmutableArray<Albums.Album>;
-  Loaded: I.ImmutableDictionary<string, Images.Bitmap?>
-): I.ImmutableDictionary<string, Images.Bitmap?>;
+  Previous: I.ImmutableArray of Albums.Album; Items: I.ImmutableArray of Albums.Album;
+  Loaded: I.ImmutableDictionary of (string, Images.Bitmap?)
+): I.ImmutableDictionary of (string, Images.Bitmap?);
 begin
-  const Revisions: C.Dictionary<string, string> := new C.Dictionary<string, string>();
+  const Revisions: C.Dictionary of (string, string) := new C.Dictionary of (string, string)();
   for Album: Albums.Album in Previous do
     Revisions[Album.Id] := Album.Revision;
   end for;
 
-  var Kept: I.ImmutableDictionary<string, Images.Bitmap?> := Loaded;
-  const Current: C.HashSet<string> := new C.HashSet<string>();
+  var Kept: I.ImmutableDictionary of (string, Images.Bitmap?) := Loaded;
+  const Current: C.HashSet of string := new C.HashSet of string();
   for Album: Albums.Album in Items do
     var Revision: string := '';
     if Revisions.TryGetValue(Album.Id, out Revision) and Revision = Album.Revision then
@@ -110,7 +110,7 @@ begin
   return Kept;
 end function;
 
-function SameOrder(Left: I.ImmutableArray<Albums.Album>; Right: I.ImmutableArray<Albums.Album>): bool;
+function SameOrder(Left: I.ImmutableArray of Albums.Album; Right: I.ImmutableArray of Albums.Album): bool;
 begin
   if Left.Length <> Right.Length then
     return false;
@@ -129,7 +129,7 @@ end function;
 // so thumbnails follow the albums that are actually shown.
 public function Show(Current: M.State): M.State;
 begin
-  const Shown: I.ImmutableArray<Albums.Album> := Browse.Select(
+  const Shown: I.ImmutableArray of Albums.Album := Browse.Select(
     Current.Items,
     Current.Catalog,
     Current.Toolbar
@@ -149,15 +149,15 @@ end function;
 
 // Rebuilds the active grid from the catalogue in `Current`. Returns the new grid
 // and cancels pending thumbnails if their candidate revisions have changed.
-public function Project(Current: M.State): A.Transition<M.State, M.Msg>;
+public function Project(Current: M.State): A.Transition of (M.State, M.Msg);
 begin
-  var Items: I.ImmutableArray<Albums.Album> := Current.Library.Releases;
+  var Items: I.ImmutableArray of Albums.Album := Current.Library.Releases;
   var Name: string := '';
   if Toolbar.IsGroup(Current.Scope) then
     Items := Current.Collections.Headers;
   elsif Current.Scope <> Toolbar.Scope.Albums then
     if not Current.Collections.Releases.TryGetValue(Current.GroupId, out Items) then
-      Items := I.ImmutableArray<Albums.Album>.Empty;
+      Items := (I.ImmutableArray of Albums.Album).Empty;
     else
       for Header: Albums.Album in Current.Collections.Headers do
         if Header.Id = Current.GroupId then
@@ -181,16 +181,16 @@ begin
     end with
   );
   if SameArtwork(Current.Items, Items) then
-    return new A.Transition<M.State, M.Msg>(Next, []);
+    return new A.Transition of (M.State, M.Msg)(Next, []);
   end if;
 
-  return new A.Transition<M.State, M.Msg>(
+  return new A.Transition of (M.State, M.Msg)(
     Next with
       Images := Fresh(Current.Items, Items, Current.Images);
       First := -1;
       Last := -1;
       Generation := Current.Generation + 1L;
-    end with, [A.CancelBackground<M.Msg>('images')]
+    end with, [A.CancelBackground of M.Msg('images')]
   );
 end function;
 
@@ -201,7 +201,7 @@ begin
   if Current.Scope = Scope and Current.GroupId = Id then
     return Current;
   end if;
-  const Toolbars: I.ImmutableDictionary<string, Toolbar.State> := Current.Toolbars.SetItem(
+  const Toolbars: I.ImmutableDictionary of (string, Toolbar.State) := Current.Toolbars.SetItem(
     Key(Current), ToolbarUpdate.Apply(Current.Toolbar, Toolbar.Msg.SetOpen(false))
   );
   var Saved: Toolbar.State := new Toolbar.State();

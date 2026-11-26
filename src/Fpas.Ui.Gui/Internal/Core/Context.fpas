@@ -22,23 +22,23 @@ end record;
 //
 // ## Type parameters
 // - `TMsg`: Message type.
-public type State<TMsg> = record
+public type State of TMsg = record
   // Owner window.
   public Window: Cui.CuiWindow;
   // Graphically validated tree and subviews.
-  public Prepared: V.Prepared<TMsg>;
+  public Prepared: V.Prepared of TMsg;
   // Proposed messages.
-  public Messages: C.List<TMsg>;
+  public Messages: C.List of TMsg;
   // Displayed labels.
-  public Labels: C.List<string>;
+  public Labels: C.List of string;
   // Semantic control descriptors.
-  public Controls: C.List<App.Control>;
+  public Controls: C.List of App.Control;
   // Source or exact-native focus requests.
-  public Focus: C.Queue<string>;
+  public Focus: C.Queue of string;
   // Open modal IDs and focus to restore.
-  public Modals: C.Dictionary<string, string>;
+  public Modals: C.Dictionary of (string, string);
   // Modal IDs visited in this frame.
-  public SeenModals: C.HashSet<string>;
+  public SeenModals: C.HashSet of string;
   // The preceding successfully presented controls.
   public Previous: array of App.Control;
   // Whether this traversal may emit user messages.
@@ -52,9 +52,9 @@ public type State<TMsg> = record
   // Whether this normal owner traversal may deliver non-input observations.
   public ObserveTransitions: bool := true;
   // Completed animation revisions retained across cached native repaints.
-  public CompletedAnimations: C.Dictionary<string, AnimationCompletion> := new C.Dictionary<string, AnimationCompletion>();
+  public CompletedAnimations: C.Dictionary of (string, AnimationCompletion) := new C.Dictionary of (string, AnimationCompletion)();
   // Animations visible during this traversal, for removal reconciliation.
-  public SeenAnimations: C.HashSet<string> := new C.HashSet<string>();
+  public SeenAnimations: C.HashSet of string := new C.HashSet of string();
   // The native focus token from the preceding input-enabled presentation.
   public PreviousFocus: string := '';
   // Preserve a focused canvas while this frame drains locally queued input.
@@ -66,10 +66,10 @@ end record;
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `State`: Successfully presented traversal and its retained animation observations.
-public procedure CommitAnimations<TMsg>(State: State<TMsg>);
+public procedure CommitAnimations of TMsg(State: State of TMsg);
 begin
   if State.ObserveTransitions then
-    for Id: string in new C.List<string>(State.CompletedAnimations.Keys) do
+    for Id: string in new C.List of string(State.CompletedAnimations.Keys) do
       if not State.SeenAnimations.Contains(Id) then
         discard State.CompletedAnimations.Remove(Id);
       end if;
@@ -106,7 +106,7 @@ end function;
 //
 // ## Returns
 // Whether to ask CUI for focus.
-public function WantsFocus<TMsg>(State: State<TMsg>; Id: string; Native: string; Enabled: bool; Preferred: bool := true): bool;
+public function WantsFocus of TMsg(State: State of TMsg; Id: string; Native: string; Enabled: bool; Preferred: bool := true): bool;
 begin
   if not Enabled or not State.AcceptInput or State.Focus.Count = 0 then
     return false;
@@ -132,7 +132,7 @@ end function;
 // ## Parameters
 // - `State`: Frame context.
 // - `Control`: Its semantic descriptor.
-public procedure Track<TMsg>(State: State<TMsg>; Control: App.Control);
+public procedure Track of TMsg(State: State of TMsg; Control: App.Control);
 begin
   if State.PaintingClosed then
     return;

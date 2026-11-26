@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Audio.NowPlaying as W;
 // - `Track`: Track title, artist, playback and artwork.
 // ## Returns
 // The player with transport and seek proposals.
-public function View(Track: W.Value): E.Element<W.Event>;
+public function View(Track: W.Value): E.Element of W.Event;
 begin
-  return W.NowPlaying<W.Event>('player', Track, function(Change: W.Event): W.Event => Change);
+  return W.NowPlaying of W.Event('player', Track, function(Change: W.Event): W.Event => Change);
 end function;
 
 end unit;

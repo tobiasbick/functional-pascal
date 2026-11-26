@@ -30,7 +30,7 @@ begin
   end if;
 end procedure;
 
-function Find(Session: Gui.Session<bool>; Id: string): Gui.Control?;
+function Find(Session: Gui.Session of bool; Id: string): Gui.Control?;
 begin
   for Control: Gui.Control in Session.Snapshot().Controls do
     if Control.Id = Id then
@@ -41,7 +41,7 @@ begin
   return null;
 end function;
 
-function Control(Session: Gui.Session<bool>; Id: string): Gui.Control;
+function Control(Session: Gui.Session of bool; Id: string): Gui.Control;
 begin
   const Found: Gui.Control? := Find(Session, Id);
   if Found = null then
@@ -57,54 +57,56 @@ procedure VerifyContainer(Renderer: Cui.CuiRenderer; Kind: int);
     Check(Condition, 'Container kind ' + Kind.ToString() + ': ' + Reason);
   end procedure;
 
-  function View(Open: bool; Viewport: L.Viewport): E.Element<bool>;
+  function View(Open: bool; Viewport: L.Viewport): E.Element of bool;
   begin
-    const Dialog: E.Element<bool> := Dialogs.Dialog<bool>(
-      'modal', E.Text<bool>('Dialog anchor'),
-      Buttons.Button<bool>('inside', 'Finish', false), Open,
+    const Dialog: E.Element of bool := Dialogs.Dialog of bool(
+      'modal', E.Text of bool('Dialog anchor'),
+      Buttons.Button of bool('inside', 'Finish', false), Open,
       new Dialogs.Options('Composed dialog'), false
     );
-    const Wrapped: E.Element<bool> := case Kind of
-      when 0: Rings.SelectionRing<bool>('ring', Dialog);
-      when 1: Cursors.LiveCursors<bool>('cursors', [], Dialog);
-      when 2: Rails.CanvasControls<bool>(
+    const Wrapped: E.Element of bool := case Kind of
+      when 0: Rings.SelectionRing of bool('ring', Dialog);
+      when 1: Cursors.LiveCursors of bool('cursors', [], Dialog);
+      when 2: Rails.CanvasControls of bool(
         'rail', new Nodes.View(), [], function(Event: Rails.Event): bool => true, Dialog
       );
-      when 3: Bars.SelectionBar<bool>(
+      when 3: Bars.SelectionBar of bool(
         'selection', Bars.Selection.Items([]), [], function(Event: Bars.Event): bool => true, Dialog
       );
-      when 4: Tables.Table<bool>(
+      when 4: Tables.Table of bool(
         'table', [new Tables.Column('Column')],
-        [new Tables.Row<bool>('row', [Tables.Cell<bool>.Content([Dialog])])]
+        [new Tables.Row of bool('row', [(Tables.Cell of bool).Content([Dialog])])]
       );
-      when 5: Reorders.ReorderableList<bool>(
+      when 5: Reorders.ReorderableList of bool(
         'order',
         [Dialog],
         [0],
         function(Order: array of int): bool => true
       );
-      when 6..7: Trees.Branch<bool>(
+      when 6..7: Trees.Branch of bool(
         'branch', 'Branch', Kind = 6, [Dialog], function(Expanded: bool): bool => true
       );
-      when 8..10: Veils.Veil<bool>(
+      when 8..10: Veils.Veil of bool(
         'veil', Kind <> 9, function(Revealed: bool): bool => true, Dialog,
         new Veils.Options(Enabled := Kind <> 10)
       );
-      when 11..12: Kanbans.Kanban<bool>(
-        'board', [new Kanbans.Column<bool>('Column', [new Kanbans.Card<bool>(0, 'Card', Dialog)])],
-        function(Event: Kanbans.Event): bool => true, new Kanbans.Options(Enabled := Kind = 11)
+      when 11..12: Kanbans.Kanban of bool(
+        'board',
+        [new Kanbans.Column of bool('Column', [new Kanbans.Card of bool(0, 'Card', Dialog)])],
+        function(Event: Kanbans.Event): bool => true,
+        new Kanbans.Options(Enabled := Kind = 11)
       );
-      else Nodes.NodeEditor<bool>(
+      else Nodes.NodeEditor of bool(
         'nodes',
         new Nodes.View(),
-        [new Nodes.Node<bool>(0, 0.0F, 0.0F, 'Node', [], Body := Dialog)],
+        [new Nodes.Node of bool(0, 0.0F, 0.0F, 'Node', [], Body := Dialog)],
         [],
         function(Event: Nodes.Event): bool => true,
         new Nodes.Options(Enabled := Kind = 13)
       );
     end case;
-    return E.Column<bool>(
-      new L.Flow(), Buttons.Button<bool>('background', 'Background', true), Wrapped
+    return E.Column of bool(
+      new L.Flow(), Buttons.Button of bool('background', 'Background', true), Wrapped
     );
   end function;
 
@@ -121,9 +123,9 @@ begin
   const Window: Cui.CuiWindow := new Cui.CuiWindow(
     'Composed modal contract', 700, 500, Renderer, true
   );
-  using const Session: Gui.Session<bool> := Host.Start<bool, bool>(
+  using const Session: Gui.Session of bool := Host.Start of (bool, bool)(
     true,
-    function(Model: bool; Message: bool): App.Transition<bool, bool> => new App.Transition<bool, bool>(
+    function(Model: bool; Message: bool): App.Transition of (bool, bool) => new App.Transition of (bool, bool)(
       Message,
       []
     ),

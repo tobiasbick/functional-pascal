@@ -47,12 +47,12 @@ end function;
 // - `Enabled`: Whether the picker accepts input.
 // ## Returns
 // The graphical color picker.
-public function ColorPicker<TMsg>(
+public function ColorPicker of TMsg(
   Id: string; Value: G.Color; OnChange: function(G.Color): TMsg; Enabled: bool := true
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.ColorPicker(Id, Value, OnChange, Enabled);
+  return (E.Element of TMsg).ColorPicker(Id, Value, OnChange, Enabled);
 end function;
 
 end unit;

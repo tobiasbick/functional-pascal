@@ -15,7 +15,7 @@ uses System.Threading as Threads;
 // Presents the next gallery frame.
 // ## Parameters
 // - `Session`: Open gallery session.
-public procedure Step(Session: Gui.Session<Gallery.Msg>);
+public procedure Step(Session: Gui.Session of Gallery.Msg);
 begin
   if not Session.Step() then
     raise new Sys.InvalidOperationException('The gallery closed during capture.');
@@ -26,7 +26,7 @@ end procedure;
 // ## Parameters
 // - `Session`: Open gallery session.
 // - `Message`: Gallery action to apply.
-public procedure Send(Session: Gui.Session<Gallery.Msg>; Message: Gallery.Msg);
+public procedure Send(Session: Gui.Session of Gallery.Msg; Message: Gallery.Msg);
 begin
   case Session.Post(Message) of
     when Mvu.Admission.Queued:
@@ -44,7 +44,7 @@ end procedure;
 // - `Id`: Control identity.
 // ## Returns
 // Positive-width and positive-height bounds in logical window coordinates.
-public function Bounds(Session: Gui.Session<Gallery.Msg>; Id: string): Cui.CuiRectangle;
+public function Bounds(Session: Gui.Session of Gallery.Msg; Id: string): Cui.CuiRectangle;
 begin
   for Control: Gui.Control in Session.Snapshot().Controls do
     if Control.Id = Id and Control.Bounds.Width > 0.0F and Control.Bounds.Height > 0.0F then
@@ -59,7 +59,7 @@ end function;
 // ## Parameters
 // - `Session`: Gallery session receiving the pointer input.
 // - `Id`: Control identity to wait for.
-public procedure AwaitVisible(Session: Gui.Session<Gallery.Msg>; Id: string);
+public procedure AwaitVisible(Session: Gui.Session of Gallery.Msg; Id: string);
 begin
   const Time: Diagnostics.Stopwatch := Diagnostics.Stopwatch.StartNew();
   while Time.Elapsed.TotalSeconds < 2.0 do
@@ -83,7 +83,7 @@ end procedure;
 // - `Output`: Directory for the full-frame image and crop bounds.
 // - `Name`: Basename of the screenshot.
 // - `Title`: Gallery toast title.
-public procedure CaptureToast(Session: Gui.Session<Gallery.Msg>; Output: string; Name: string; Title: string);
+public procedure CaptureToast(Session: Gui.Session of Gallery.Msg; Output: string; Name: string; Title: string);
 begin
   for Control: Gui.Control in Session.Snapshot().Controls do
     if Control.Role = 'toast' and Control.Text = Title then
@@ -103,7 +103,7 @@ end procedure;
 // - `Scroll`: Injects a vertical wheel delta over the page margin.
 // - `Ids`: The controls to include in the crop.
 public procedure CaptureInView(
-  Session: Gui.Session<Gallery.Msg>; Output: string; Name: string;
+  Session: Gui.Session of Gallery.Msg; Output: string; Name: string;
   Scroll: procedure(float); params Ids: array of string
 );
 begin

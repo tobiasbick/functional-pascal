@@ -18,8 +18,8 @@ uses System as Sys;
 // - `Peaks`: Linear channel peaks.
 // - `Settings`: Native meter settings.
 // - `OnClipCleared`: Optional message on a clip reset.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Peaks: array of float; Settings: M.Options; OnClipCleared: Sys.Func<TMsg>?
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Peaks: array of float; Settings: M.Options; OnClipCleared: (Sys.Func of TMsg)?
 );
 begin
   const Role: string := 'level-meter';
@@ -30,7 +30,7 @@ begin
   );
   if Cleared then
     case OnClipCleared of
-      when is Sys.Func<TMsg> as Notify:
+      when is Sys.Func of TMsg as Notify:
         Frame.Messages.Add(Notify.Invoke());
       else
     end case;

@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Containers.Grids as W;
 // - `Goals`: Goals cell.
 // ## Returns
 // The widget for the application view.
-public function View(Activity: E.Element<string>; Goals: E.Element<string>): E.Element<string>;
+public function View(Activity: E.Element of string; Goals: E.Element of string): E.Element of string;
 begin
-  return W.Grid<string>(
+  return W.Grid of string(
     new W.Options(Columns := 2, MinimumColumnWidth := 260.0F,
       Gap := L.Spacing.Fixed(L.Measure.Logical(16))),
     Activity, Goals);

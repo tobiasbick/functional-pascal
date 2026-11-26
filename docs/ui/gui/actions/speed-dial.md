@@ -16,9 +16,9 @@ uses System as Sys;
 // Builds the example view.
 // ## Returns
 // The widget with its message type.
-public function View(): E.Element<int>;
+public function View(): E.Element of int;
 begin
-  return D.SpeedDial<int>('create', [
+  return D.SpeedDial of int('create', [
     new D.Item('New note', Sys.Char.ConvertFromUtf32($E0CC)),
     new D.Item('Upload image', Sys.Char.ConvertFromUtf32($E0F6))
   ], function(Index: int): int => Index, new D.Options(Tooltip := 'Create'));

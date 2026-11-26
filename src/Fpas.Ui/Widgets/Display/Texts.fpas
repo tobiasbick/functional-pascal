@@ -34,9 +34,9 @@ end enum;
 // - `Role`: Native text role.
 // ## Returns
 // A graphical element.
-public function Text<TMsg>(Text: string; Role: Appearance): E.Element<TMsg>;
+public function Text of TMsg(Text: string; Role: Appearance): E.Element of TMsg;
 begin
-  return E.Element<TMsg>.NativeText(Text, Role);
+  return (E.Element of TMsg).NativeText(Text, Role);
 end function;
 
 end unit;

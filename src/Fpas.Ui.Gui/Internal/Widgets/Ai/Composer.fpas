@@ -19,14 +19,14 @@ uses Fpas.Ui.Widgets.Ai.Composers as Composers;
 // - `Content`: The model-owned draft, attachments, selection and recording.
 // - `Changed`: Maps an edit or native action.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Content: Composers.Value; Changed: function(Composers.Event): TMsg; Settings: Composers.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Content: Composers.Value; Changed: function(Composers.Event): TMsg; Settings: Composers.Options);
 begin
   const Role: string := 'composer';
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Take: Composers.Recording? := Content.Take;
   const Keys: array of string := ['editor', 'send', 'record', 'cancel'];
-  const Focus: int := P.Focus<TMsg>(
+  const Focus: int := P.Focus of TMsg(
     Frame, Id, Role, Keys,
     [
       Enabled and Take = null,
@@ -60,10 +60,10 @@ begin
       Content.Busy,
       2
     ) or Enc.Bits(Settings.Microphone, 4) or Enc.Bits(Take <> null, 8),
-    Focus, P.Tracker<TMsg>(Frame, Id, Role, Keys)
+    Focus, P.Tracker of TMsg(Frame, Id, Role, Keys)
   );
-  P.Root<TMsg>(Frame, Id, Role, '', false, Content.Draft);
-  Data.Parts<TMsg>(Frame, Id, Role, Keys, Result.Parts, Enabled);
+  P.Root of TMsg(Frame, Id, Role, '', false, Content.Draft);
+  Data.Parts of TMsg(Frame, Id, Role, Keys, Result.Parts, Enabled);
   if Enabled and Result.Draft <> Content.Draft then
     Frame.Messages.Add(Changed(Composers.Event.Edit(Result.Draft)));
   end if;

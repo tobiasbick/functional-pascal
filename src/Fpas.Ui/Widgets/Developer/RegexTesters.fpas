@@ -45,10 +45,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function RegexTester<TMsg>(Id: string; Pattern: string; Sample: string; Modifiers: int; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function RegexTester of TMsg(Id: string; Pattern: string; Sample: string; Modifiers: int; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.RegexTester(
+  return (E.Element of TMsg).RegexTester(
     Id,
     Pattern,
     Sample,

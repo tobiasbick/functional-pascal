@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Conversation.Comments as W;
 // - `Current`: Model-owned like count and current user state.
 // ## Returns
 // The comment with Like and Reply proposals.
-public function View(Body: string; Current: W.Value): E.Element<W.Event>;
+public function View(Body: string; Current: W.Value): E.Element of W.Event;
 begin
-  return W.Comment<W.Event>('reply', 'Priya Nair', Body, Current,
+  return W.Comment of W.Event('reply', 'Priya Nair', Body, Current,
     function(Change: W.Event): W.Event => Change, new W.Options(Depth := 1, Edited := true));
 end function;
 

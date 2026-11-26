@@ -11,7 +11,7 @@ uses Fpas.Ui.Gui.Internal.Core.Context as C;
 // - `Frame`: Current GUI frame.
 // - `Glyph`: Emoji sequence to display.
 // - `Size`: Logical emoji size. Zero uses the default.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Glyph: string; Size: float);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Glyph: string; Size: float);
 begin
   Frame.Window.DisplayEmoji(Glyph, Size);
 end procedure;

@@ -48,11 +48,18 @@ end record;
 // - `OnActivate`: Optional clicked matrix cell callback; hover remains native.
 // ## Returns
 // A graphical element.
-public function Heatmap<TMsg>(Id: string; Values: array of float; Rows: int; Columns: int; Settings: Options? := null; OnActivate: Sys.Func<Cell, TMsg>? := null): E.Element<TMsg>;
+public function Heatmap of TMsg(Id: string; Values: array of float; Rows: int; Columns: int; Settings: Options? := null; OnActivate: Sys.Func of (Cell, TMsg)? := null): E.Element of TMsg;
 requires Id <> '';
 requires Rows >= 0 and Columns >= 0;
 begin
-  return E.Element<TMsg>.Heatmap(Id, Values, Rows, Columns, Settings ?? new Options(), OnActivate);
+  return (E.Element of TMsg).Heatmap(
+    Id,
+    Values,
+    Rows,
+    Columns,
+    Settings ?? new Options(),
+    OnActivate
+  );
 end function;
 
 end unit;

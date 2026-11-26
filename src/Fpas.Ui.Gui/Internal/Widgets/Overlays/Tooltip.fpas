@@ -14,7 +14,7 @@ uses Fpas.Ui.Gui.Internal.Core.Context as C;
 // - `Frame`: Current drawing context.
 // - `Caption`: Literal tooltip text.
 // - `Shortcut`: Optional shortcut hint.
-public procedure Attach<TMsg>(Frame: C.State<TMsg>; Caption: string; Shortcut: string);
+public procedure Attach of TMsg(Frame: C.State of TMsg; Caption: string; Shortcut: string);
 begin
   if Frame.AcceptInput then
     Frame.Window.Tooltip(Caption, Shortcut);
@@ -27,7 +27,7 @@ end procedure;
 // - `TMsg`: Application message type.
 // ## Parameters
 // - `Frame`: Completed drawing context.
-public procedure Collect<TMsg>(Frame: C.State<TMsg>);
+public procedure Collect of TMsg(Frame: C.State of TMsg);
 begin
   case Frame.Window.VisibleTooltip() of
     when is CuiOverlays.CuiTooltipFrame as Tip:

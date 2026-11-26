@@ -164,13 +164,13 @@ public type State = record
   // Selection identity waiting for the current feed to load.
   public ResumeEpisode: string := '';
   // In-session episode controls for each visited feed, keyed by its navigation ID.
-  public EpisodeViews: I.ImmutableDictionary<string, EpisodeView> := I.ImmutableDictionary<string, EpisodeView>.Empty;
+  public EpisodeViews: I.ImmutableDictionary of (string, EpisodeView) := I.ImmutableDictionary of (string, EpisodeView).Empty;
   // URL being edited in the RSS dialog, or null when closed.
   public Draft: string? := null;
   // Episode whose description is open, or null.
   public Details: Episode? := null;
   // Decoded images keyed by their validated remote address.
-  public Covers: I.ImmutableDictionary<string, Images.Bitmap?> := I.ImmutableDictionary<string, Images.Bitmap?>.Empty;
+  public Covers: I.ImmutableDictionary of (string, Images.Bitmap?) := I.ImmutableDictionary of (string, Images.Bitmap?).Empty;
 
   // Returns whether the result table is for a submitted search term.
   public function Searched(): bool;

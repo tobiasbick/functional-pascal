@@ -22,20 +22,20 @@ uses System.Collections.Generic as Lists;
 // - `Selected`: Current index or minus one.
 // - `OnChange`: Maps a selected index to a message.
 // - `Settings`: Caption, search and input permission.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Items: array of S.Item; Selected: int;
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Items: array of S.Item; Selected: int;
   OnChange: function(int): TMsg; Settings: S.Options
 );
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('select', Id);
-  const Labels: Lists.List<string> := new Lists.List<string>(Items.Length);
-  const Icons: Lists.List<string> := new Lists.List<string>(Items.Length);
+  const Labels: Lists.List of string := new Lists.List of string(Items.Length);
+  const Icons: Lists.List of string := new Lists.List of string(Items.Length);
   for Item: S.Item in Items do
     Labels.Add(Item.Label);
     Icons.Add(Item.Icon);
   end for;
-  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+  const Track: Sys.Func of (int, string)? := if Frame.PaintingClosed then
     null
   else
     function(Index: int): string => C.Token('select-option', S.OptionId(Id, Index))
@@ -49,7 +49,7 @@ begin
     Settings.Placeholder,
     Settings.Searchable,
     Enabled,
-    C.WantsFocus<TMsg>(Frame, Id, Token, Enabled),
+    C.WantsFocus of TMsg(Frame, Id, Token, Enabled),
     Track
   );
   if Enabled and Result.Selected <> Selected then

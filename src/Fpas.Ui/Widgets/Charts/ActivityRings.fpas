@@ -35,10 +35,10 @@ end record;
 // - `OnActivate`: Optional native click callback.
 // ## Returns
 // A graphical element.
-public function ActivityRings<TMsg>(Id: string; Items: array of C.Item; Settings: Options? := null; OnActivate: Sys.Func<int, TMsg>? := null): E.Element<TMsg>;
+public function ActivityRings of TMsg(Id: string; Items: array of C.Item; Settings: Options? := null; OnActivate: Sys.Func of (int, TMsg)? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.ActivityRings(Id, Items, Settings ?? new Options(), OnActivate);
+  return (E.Element of TMsg).ActivityRings(Id, Items, Settings ?? new Options(), OnActivate);
 end function;
 
 end unit;

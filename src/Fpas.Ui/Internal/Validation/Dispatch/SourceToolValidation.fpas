@@ -31,7 +31,7 @@ end procedure;
 // - `Location`: Parent diagnostic path.
 // - `Profile`: Target capabilities.
 // - `Identify`: Registers a widget identity.
-public procedure Check<TMsg>(Node: E.Element<TMsg>; Location: string; Profile: R.Profile; Identify: function(string, string): string);
+public procedure Check of TMsg(Node: E.Element of TMsg; Location: string; Profile: R.Profile; Identify: function(string, string): string);
 begin
   case Node of
     when E.Element.LogConsole(_, _, _, _):
@@ -142,7 +142,7 @@ begin
       for Mark: HexViews.Mark in Settings.Marks do
         if Mark.Start < 0 or Mark.Start > Data.Length or Mark.Length < 0 or Mark.Length >
           Data.Length - Mark.Start
-          or not Sys.Enum.IsDefined<S.Tone>(Mark.Tone)
+          or not Sys.Enum.IsDefined of S.Tone(Mark.Tone)
         then
           R.Reject(Path, 'Invalid hex highlight.');
         end if;
@@ -165,7 +165,7 @@ begin
       Height(Settings.Height, Path);
       for Entry: LogConsoles.Entry in Entries do
         R.CheckText(Entry.Text, Path);
-        if not Sys.Enum.IsDefined<LogConsoles.Level>(
+        if not Sys.Enum.IsDefined of LogConsoles.Level(
           Entry.Severity
         ) or not Sys.Double.IsFinite(Entry.Time) or Entry.Time < 0.0
         then

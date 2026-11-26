@@ -21,7 +21,7 @@ uses System as Sys;
 // - `Replay`: Animation revision.
 // - `Settings`: Native appearance and input options.
 // - `OnComplete`: Optional message factory for completion.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Text: string; Replay: int; Settings: Motion.TextOptions; OnComplete: Sys.Func<TMsg>?);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Text: string; Replay: int; Settings: Motion.TextOptions; OnComplete: (Sys.Func of TMsg)?);
 begin
   const Token: string := C.Token('typewriter', Id);
   const Progress: CuiMotion.CuiTypewriterResult := Frame.Window.Typewriter(
@@ -42,7 +42,7 @@ begin
     // Done remains observable after a cached resize consumed the native edge.
     if Progress.Done and not Frame.CompletedAnimations.ContainsKey(Id) then
       case OnComplete of
-        when is Sys.Func<TMsg> as Notify:
+        when is Sys.Func of TMsg as Notify:
           Frame.Messages.Add(Notify.Invoke());
         else
       end case;
@@ -51,7 +51,7 @@ begin
     end if;
   end if;
 
-  C.Track<TMsg>(
+  C.Track of TMsg(
     Frame,
     new App.Control(
       Id,

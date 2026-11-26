@@ -20,14 +20,14 @@ begin
   const Now: float := Model.Time + Seconds;
   const Last: int := cast<int>(Sys.MathF.Floor(Now * 20.0F));
   const First: int := Sys.Math.Max(Model.SampleIndex, Last - 239);
-  const Levels: Lists.List<float> := new Lists.List<float>(Model.Timeline.Levels);
+  const Levels: Lists.List of float := new Lists.List of float(Model.Timeline.Levels);
   const PreviousTags: (array of byte)? := Model.Timeline.Owners;
-  const Tags: Lists.List<byte> := new Lists.List<byte>();
+  const Tags: Lists.List of byte := new Lists.List of byte();
   if PreviousTags <> null then
     Tags.AddRange(PreviousTags);
   end if;
   const Take: Editor.Recording? := Model.Editor.Take;
-  const Samples: Lists.List<float> := new Lists.List<float>();
+  const Samples: Lists.List of float := new Lists.List of float();
   if Take <> null then
     Samples.AddRange(Take.Levels);
   end if;
@@ -48,7 +48,7 @@ begin
   const Trim: int := Sys.Math.Max(0, Levels.Count - 240);
   Levels.RemoveRange(0, Trim);
   Tags.RemoveRange(0, Trim);
-  const Messages: Lists.List<S.Note> := new Lists.List<S.Note>(Model.Notes.Length);
+  const Messages: Lists.List of S.Note := new Lists.List of S.Note(Model.Notes.Length);
   for Note: S.Note in Model.Notes do
     const Playback: Notes.Value := Note.Playback;
     if Playback.Playing then
@@ -87,7 +87,7 @@ end function;
 
 function Transport(Model: S.Model; Key: int; Change: Notes.Event): S.Model;
 begin
-  const Messages: Lists.List<S.Note> := new Lists.List<S.Note>(Model.Notes);
+  const Messages: Lists.List of S.Note := new Lists.List of S.Note(Model.Notes);
   for Index: int := 0 to Messages.Count - 1 do
     const Item: S.Note := Messages[Index];
     if Item.Key = Key then
@@ -147,7 +147,7 @@ begin
       if Take = null then
         return Model;
       end if;
-      const Messages: Lists.List<S.Note> := new Lists.List<S.Note>(Model.Notes);
+      const Messages: Lists.List of S.Note := new Lists.List of S.Note(Model.Notes);
       if Messages.Count = 8 then
         Messages.RemoveAt(1);
       end if;
@@ -178,7 +178,7 @@ end function;
 // - `Message`: Native action or elapsed clock time.
 // ## Returns
 // Updated state and any call-end toast.
-public function Update(Model: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+public function Update(Model: S.Model; Message: S.Msg): Mvu.Transition of (S.Model, S.Msg);
 begin
   const Next: S.Model := case Message of
     when S.Msg.Tick(const Seconds: float): Tick(Model, Seconds);
@@ -200,17 +200,17 @@ begin
   end case;
   case Message of
     when S.Msg.Call(Calls.Event.EndCall):
-      return new Mvu.Transition<S.Model, S.Msg>(
+      return new Mvu.Transition of (S.Model, S.Msg)(
         Next,
         [
-          Toasts.Show<S.Msg>(
+          Toasts.Show of S.Msg(
             'Call ended',
             new Toasts.Options(Description := 'A new one starts from the top.')
           )
         ]
       );
     else
-      return new Mvu.Transition<S.Model, S.Msg>(Next, []);
+      return new Mvu.Transition of (S.Model, S.Msg)(Next, []);
   end case;
 end function;
 

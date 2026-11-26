@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Developer.ProblemsPanels as W;
 // - `Diagnostics`: Diagnostics in the application model.
 // ## Returns
 // The panel with selection and source activations as messages.
-public function View(Diagnostics: array of W.Diagnostic): E.Element<W.Event>;
+public function View(Diagnostics: array of W.Diagnostic): E.Element of W.Event;
 begin
-  return W.Problems<W.Event>('diagnostics', Diagnostics,
+  return W.Problems of W.Event('diagnostics', Diagnostics,
     function(Change: W.Event): W.Event => Change, new W.Options(Height := 300.0F));
 end function;
 

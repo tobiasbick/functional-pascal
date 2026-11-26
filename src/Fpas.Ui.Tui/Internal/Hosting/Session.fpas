@@ -43,11 +43,11 @@ type PendingInput = record
   public Acknowledgement: Tasks.Task?;
 end record;
 
-type ViewSource<TMsg> = record
+type ViewSource of TMsg = record
   // Validated view and its shared cache for subsequent frames.
-  public Prepared: Validation.Prepared<TMsg>;
+  public Prepared: Validation.Prepared of TMsg;
   // Lowered terminal view ready for arrangement.
-  public Root: E.Element<TMsg>;
+  public Root: E.Element of TMsg;
   // Cell palette used to lower and paint this view.
   public Theme: Th.Theme;
 end record;
@@ -79,9 +79,9 @@ end procedure;
 //
 // ## Returns
 // The host session.
-public function Start<TModel, TMsg>(
-  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition<TModel, TMsg>;
-  View: function(TModel, L.Viewport): Ui.Element<TMsg>; Columns: int; Rows: int;
+public function Start of (TModel, TMsg)(
+  InitialModel: TModel; Update: function(TModel, TMsg): Mvu.Transition of (TModel, TMsg);
+  View: function(TModel, L.Viewport): Ui.Element of TMsg; Columns: int; Rows: int;
   Present: procedure(App.Frame); Manual: bool;
   ThemeFor: function(TModel): SharedThemes.Theme
 ): App.HeadlessSession;
@@ -161,7 +161,7 @@ public function Start<TModel, TMsg>(
     end try;
   end function;
 
-  async function Wait(Id: long; Timeout: Sys.TimeSpan): Tasks.Task<App.StepResult?>;
+  async function Wait(Id: long; Timeout: Sys.TimeSpan): Tasks.Task of App.StepResult?;
   begin
     const Clock: Diag.Stopwatch := Diag.Stopwatch.StartNew();
     while true do
@@ -190,7 +190,7 @@ public function Start<TModel, TMsg>(
     end try;
   end procedure;
 
-  function PrepareView(Routing: I.State<TMsg>): ViewSource<TMsg>;
+  function PrepareView(Routing: I.State of TMsg): ViewSource of TMsg;
   begin
     Phase := 'view';
     const Theme: Th.Theme := Th.Resolve(ThemeFor(Core.Model()));
@@ -211,7 +211,7 @@ public function Start<TModel, TMsg>(
       end if,
       Viewport.Columns * 8, Viewport.Rows * 16
     );
-    const Candidate: Validation.Prepared<TMsg> := Validation.Prepare<TMsg>(
+    const Candidate: Validation.Prepared of TMsg := Validation.Prepare of TMsg(
       View(Core.Model(), Size),
       Validation.Target.Terminal,
       if Current = null then
@@ -222,7 +222,7 @@ public function Start<TModel, TMsg>(
       new T.Viewport(Viewport.Columns, Viewport.Rows)
     );
     Numbers.Retain(PendingFocus ?? Routing.FocusId());
-    const Root: E.Element<TMsg> := Lower.Prepare<TMsg>(
+    const Root: E.Element of TMsg := Lower.Prepare of TMsg(
       Candidate,
       Theme,
       Popup,
@@ -231,7 +231,7 @@ public function Start<TModel, TMsg>(
       Numbers,
       Alerts
     );
-    return new ViewSource<TMsg>(Candidate, Root, Theme);
+    return new ViewSource of TMsg(Candidate, Root, Theme);
   end function;
 
   function AnimationPhase(): long;
@@ -245,13 +245,13 @@ public function Start<TModel, TMsg>(
 
   procedure Paint(AnimationOnly: bool := false);
   begin
-    const Routing: I.State<TMsg>? := Interaction;
+    const Routing: (I.State of TMsg)? := Interaction;
     if Routing = null then
       raise new Sys.InvalidOperationException('Missing interaction state.');
     end if;
 
-    const Cached: ViewSource<TMsg>? := LastView;
-    const Source: ViewSource<TMsg> := if AnimationOnly and Cached <> null then
+    const Cached: (ViewSource of TMsg)? := LastView;
+    const Source: ViewSource of TMsg := if AnimationOnly and Cached <> null then
       Cached
     else
       PrepareView(Routing)
@@ -261,7 +261,7 @@ public function Start<TModel, TMsg>(
     const Tick: long := AnimationPhase();
     LastAnimationPhase := Tick;
     Phase := 'layout_or_drawing';
-    var Layout: A.Layout<TMsg> := Arrangement.Arrange<TMsg>(
+    var Layout: A.Layout of TMsg := Arrangement.Arrange of TMsg(
       Source.Root,
       Viewport.Columns,
       Viewport.Rows,
@@ -273,16 +273,16 @@ public function Start<TModel, TMsg>(
     const Target: string? := PendingFocus;
     PendingFocus := null;
     const Entry: string := Target ?? Routing.FocusId();
-    if Entry <> '' and A.FindControl<TMsg>(Layout, Entry) = null and (Navigation.Reveal<TMsg>(
+    if Entry <> '' and A.FindControl of TMsg(Layout, Entry) = null and (Navigation.Reveal of TMsg(
       Layout,
       Entry,
       ScrollOffsets,
       Core.Dispatch,
       false
     )
-      or Navigation.CanFocusOffscreen<TMsg>(Layout, Entry, Routing.ScopeId()))
+      or Navigation.CanFocusOffscreen of TMsg(Layout, Entry, Routing.ScopeId()))
     then
-      Layout := Arrangement.Arrange<TMsg>(
+      Layout := Arrangement.Arrange of TMsg(
         Source.Root,
         Viewport.Columns,
         Viewport.Rows,
@@ -302,16 +302,16 @@ public function Start<TModel, TMsg>(
     const Focus: string := Routing.FocusId();
     Numbers.Retain(Focus);
     const Hover: string := Routing.HoverId();
-    const Controls: array of App.ControlSnapshot := D.Capture<TMsg>(
+    const Controls: array of App.ControlSnapshot := D.Capture of TMsg(
       Layout, Viewport.Columns, Theme, Focus, Hover, Routing.ScopeId()
     );
-    D.ShowHint<TMsg>(Layout, Viewport.Columns, Theme, Hover, Routing.ScopeId());
+    D.ShowHint of TMsg(Layout, Viewport.Columns, Theme, Hover, Routing.ScopeId());
     const Prior: App.Frame? := Published;
-    const Before: A.Layout<TMsg>? := Current;
+    const Before: (A.Layout of TMsg)? := Current;
     if Prior <> null and Before <> null and Prior.Columns = Viewport.Columns and Prior.Rows =
       Viewport.Rows
       and LastFocus = Focus and LastHover = Hover
-      and Q.Equivalent<TMsg>(Before, Layout)
+      and Q.Equivalent of TMsg(Before, Layout)
     then
       Current := Layout;
       return;
@@ -342,13 +342,13 @@ public function Start<TModel, TMsg>(
       Threads.Monitor.Exit(Gate);
     end try;
 
-    Grids.Presented<TMsg>(Before, Layout, PendingSizes, Core.Post);
+    Grids.Presented of TMsg(Before, Layout, PendingSizes, Core.Post);
   end procedure;
 
   procedure Route(Entry: PendingInput);
   begin
-    const Layout: A.Layout<TMsg>? := Current;
-    const Routing: I.State<TMsg>? := Interaction;
+    const Layout: (A.Layout of TMsg)? := Current;
+    const Routing: (I.State of TMsg)? := Interaction;
     if Layout = null or Routing = null then
       return;
     end if;
@@ -357,7 +357,7 @@ public function Start<TModel, TMsg>(
       when App.Input.Resize(const NewColumns: int, const NewRows: int):
         Viewport := new T.Viewport(NewColumns, NewRows);
       else
-        InputDispatch.Dispatch<TMsg>(Routing, Layout, Entry.Event);
+        InputDispatch.Dispatch of TMsg(Routing, Layout, Entry.Event);
     end case;
   end procedure;
 
@@ -394,11 +394,11 @@ public function Start<TModel, TMsg>(
     Threads.Monitor.Enter(StepGate);
     try
       Phase := 'update';
-      const Advanced: Runtime.Step<PendingInput> := Core.Advance();
-      Grids.Flush<TMsg>(PendingSizes, Core.Post);
+      const Advanced: Runtime.Step of PendingInput := Core.Advance();
+      Grids.Flush of TMsg(PendingSizes, Core.Post);
       case Advanced of
         when Runtime.Step.Idle:
-          const Layout: A.Layout<TMsg>? := Current;
+          const Layout: (A.Layout of TMsg)? := Current;
           if not Manual and Layout <> null and Layout.Animated and Core.IsOpen()
             and AnimationPhase() <> LastAnimationPhase
           then
@@ -455,16 +455,16 @@ public function Start<TModel, TMsg>(
 begin
   const Gate: Sys.Object := new Sys.Object();
   const StepGate: Sys.Object := new Sys.Object();
-  const Outcomes: Generic.Dictionary<long, App.StepResult> := new Generic.Dictionary<long, App.StepResult>();
-  const OutcomeOrder: Generic.Queue<long> := new Generic.Queue<long>();
-  const PendingSizes: Generic.Queue<TMsg> := new Generic.Queue<TMsg>();
-  const ScrollOffsets: Generic.Dictionary<string, int> := new Generic.Dictionary<string, int>();
+  const Outcomes: Generic.Dictionary of (long, App.StepResult) := new Generic.Dictionary of (long, App.StepResult)();
+  const OutcomeOrder: Generic.Queue of long := new Generic.Queue of long();
+  const PendingSizes: Generic.Queue of TMsg := new Generic.Queue of TMsg();
+  const ScrollOffsets: Generic.Dictionary of (string, int) := new Generic.Dictionary of (string, int)();
   const Numbers: Number.State := Number.Start();
   const Alerts: Alert.State := new Alert.State();
   var PendingFocus: string? := null;
   var Viewport: T.Viewport := new T.Viewport(Columns, Rows);
-  var Current: A.Layout<TMsg>? := null;
-  var LastView: ViewSource<TMsg>? := null;
+  var Current: (A.Layout of TMsg)? := null;
+  var LastView: (ViewSource of TMsg)? := null;
   const AnimationClock: Diag.Stopwatch := Diag.Stopwatch.StartNew();
   var LastAnimationPhase: long := 0L;
   var Published: App.Frame? := null;
@@ -474,7 +474,7 @@ begin
   var LastFocus: string := '';
   var LastHover: string := '';
   var Connection: Terminal.TuiControlConnection? := null;
-  const Core: Runtime.Runtime<TModel, TMsg, PendingInput> := Runtime.Start<TModel, TMsg, PendingInput>(
+  const Core: Runtime.Runtime of (TModel, TMsg, PendingInput) := Runtime.Start of (TModel, TMsg, PendingInput)(
     InitialModel, Update, procedure(Request: Mvu.HostRequest) begin
       case Request of
         when Mvu.HostRequest.Focus(const Id: string):
@@ -485,9 +485,9 @@ begin
       end case;
     end procedure, 64
   );
-  const Popup: PopupState.State<TMsg> := PopupState.Start<TMsg>(Core.Dispatch);
+  const Popup: PopupState.State of TMsg := PopupState.Start of TMsg(Core.Dispatch);
   const Pickers: PickerState.State := PickerState.Start();
-  const Interaction: I.State<TMsg> := I.Create<TMsg>(Core.Dispatch, ScrollOffsets);
+  const Interaction: I.State of TMsg := I.Create of TMsg(Core.Dispatch, ScrollOffsets);
   CheckSize(Columns, Rows);
   try
     Paint();
@@ -499,7 +499,7 @@ begin
         ),
         function(): Sys.Object => ReadFrame(),
         function(): Terminal.TuiControlReply => Replies.Describe(Step()),
-        function(Id: long; Milliseconds: int): Tasks.Task<Terminal.TuiControlReply> => Replies.Wait(
+        function(Id: long; Milliseconds: int): Tasks.Task of Terminal.TuiControlReply => Replies.Wait(
           Id,
           Milliseconds,
           Wait

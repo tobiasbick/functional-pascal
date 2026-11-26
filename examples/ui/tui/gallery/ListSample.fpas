@@ -48,9 +48,9 @@ end function;
 // - `Current`: Current selection and last opened row.
 // ## Returns
 // Terminal selection list and detail text.
-public function View(Current: State): E.Element<Msg>;
+public function View(Current: State): E.Element of Msg;
 begin
-  const Rows: array of Lists.Item := Sys.Array.ConvertAll<Sample.Entry, Lists.Item>(
+  const Rows: array of Lists.Item := Sys.Array.ConvertAll of (Sample.Entry, Lists.Item)(
     Sample.Entries,
     function(Item: Sample.Entry): Lists.Item => new Lists.Item(
       Item.Id, Item.Title + ' · ' + Item.Duration
@@ -68,9 +68,9 @@ begin
     end if;
   end for;
 
-  return E.Column<Msg>(
-    Lists.SelectionList<Msg>('sample-list', Rows, Current.Selected, Msg.Select, Msg.Open),
-    E.Text<Msg>(Details), E.Text<Msg>(Opened)
+  return E.Column of Msg(
+    Lists.SelectionList of Msg('sample-list', Rows, Current.Selected, Msg.Select, Msg.Open),
+    E.Text of Msg(Details), E.Text of Msg(Opened)
   );
 end function;
 

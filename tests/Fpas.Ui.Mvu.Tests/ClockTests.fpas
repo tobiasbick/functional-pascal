@@ -20,7 +20,7 @@ public type ClockTests = record
   // A scoped replacement cancels the first timer and debounces against virtual time.
   [X.FactAttribute]
   public procedure ComposedDebounceUsesSessionClock();
-    async function Wait(Context: A.BackgroundContext<int>; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, int>>;
+    async function Wait(Context: A.BackgroundContext of int; Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, int);
     begin
       const Delay: Tasks.Task := Tasks.Task.Delay(
         Sys.TimeSpan.FromMilliseconds(250),
@@ -33,19 +33,19 @@ public type ClockTests = record
       return Fx.Outcome.Success(Fx.Completion.Done);
     end function;
 
-    function Update(Model: string; Message: string): A.Transition<string, string>;
+    function Update(Model: string; Message: string): A.Transition of (string, string);
     begin
       if Message <> 'start' then
-        return new A.Transition<string, string>(Message, []);
+        return new A.Transition of (string, string)(Message, []);
       end if;
-      const Command: A.Command<int> := A.StartBackground<int>(
-        'timer', Fx.Effect<Fx.Completion, int, A.BackgroundContext<int>>.Defer(Wait)
+      const Command: A.Command of int := A.StartBackground of int(
+        'timer', Fx.Effect of (Fx.Completion, int, A.BackgroundContext of int).Defer(Wait)
       );
-      return Gate.Wrap<string>(
-        new A.Transition<string, string>(
+      return Gate.Wrap of string(
+        new A.Transition of (string, string)(
           Model,
           [
-            Composition.MapCommand<int, string>(
+            Composition.MapCommand of (int, string)(
               Command,
               function(Value: int): string => Value.ToString(),
               'left'
@@ -56,21 +56,23 @@ public type ClockTests = record
     end function;
   begin
     const Time: TimeTesting.FakeTimeProvider := new TimeTesting.FakeTimeProvider();
-    const Registered: Channels.Channel<Tasks.Task> := Channels.Channel.CreateUnbounded<Tasks.Task>();
-    const Gate: Replies.Effects<string> := Replies.Effects<string>.Create();
+    const Registered: Channels.Channel of Tasks.Task := Channels.Channel.CreateUnbounded of Tasks.Task();
+    const Gate: Replies.Effects of string := (Replies.Effects of string).Create();
     using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
-    const Session: Runtime.Runtime<string, string, int> := Runtime.Start<string, string, int>(
+    const Session: Runtime.Runtime of (string, string, int) := Runtime.Start of (string, string, int)(
       'waiting', Update, procedure(_Request: A.HostRequest) begin end procedure, 1, Clock := Time
     );
     try
-      const First: Channels.ChannelReader<Replies.Reply<string>> := Gate.Watch('left/timer');
+      const First: Channels.ChannelReader of Replies.Reply of string := Gate.Watch('left/timer');
       Session.Dispatch('start');
       const Timer: Tasks.Task := Registered.Reader.ReadAsync(
         Stop.Token
       ).AsTask().GetAwaiter().GetResult();
       Time.Advance(Sys.TimeSpan.FromMilliseconds(100));
       X.Assert.False(Timer.IsCompleted);
-      const Replacement: Channels.ChannelReader<Replies.Reply<string>> := Gate.Watch('left/timer');
+      const Replacement: Channels.ChannelReader of Replies.Reply of string := Gate.Watch(
+        'left/timer'
+      );
       Session.Dispatch('start');
       const NextTimer: Tasks.Task := Registered.Reader.ReadAsync(
         Stop.Token
@@ -79,18 +81,18 @@ public type ClockTests = record
       X.Assert.True(Timer.IsCanceled);
       Time.Advance(Sys.TimeSpan.FromMilliseconds(249));
       X.Assert.False(NextTimer.IsCompleted);
-      X.Assert.Equal<int>(0, Session.QueueCount());
+      X.Assert.Equal of int(0, Session.QueueCount());
       Time.Advance(Sys.TimeSpan.FromMilliseconds(1));
-      const Reply: Replies.Reply<string> := Replacement.ReadAsync(
+      const Reply: Replies.Reply of string := Replacement.ReadAsync(
         Stop.Token
       ).AsTask().GetAwaiter().GetResult();
-      X.Assert.Equal<string>('42', Reply.Message);
-      X.Assert.Equal<string>('waiting', Session.Model());
-      X.Assert.Equal<int>(0, Session.QueueCount());
+      X.Assert.Equal of string('42', Reply.Message);
+      X.Assert.Equal of string('waiting', Session.Model());
+      X.Assert.Equal of int(0, Session.QueueCount());
       Reply.Release().WaitAsync(Stop.Token).GetAwaiter().GetResult();
-      X.Assert.Equal<string>('waiting', Session.Model());
+      X.Assert.Equal of string('waiting', Session.Model());
       discard Session.Advance();
-      X.Assert.Equal<string>('42', Session.Model());
+      X.Assert.Equal of string('42', Session.Model());
     finally
       Session.Close().WaitAsync(Sys.TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
     end try;
@@ -99,7 +101,7 @@ public type ClockTests = record
   // Reaching a deadline yields an expected failure on the next owner turn.
   [X.FactAttribute]
   public procedure DeadlineBecomesExpectedFailure();
-    async function Wait(Context: A.BackgroundContext<string>; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, string>>;
+    async function Wait(Context: A.BackgroundContext of string; Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, string);
     begin
       using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(
         Sys.TimeSpan.FromSeconds(1), Context.Clock
@@ -117,17 +119,18 @@ public type ClockTests = record
       end try;
     end function;
 
-    function Update(Model: string; Message: string): A.Transition<string, string>;
+    function Update(Model: string; Message: string): A.Transition of (string, string);
     begin
       if Message <> 'start' then
-        return new A.Transition<string, string>(Message, []);
+        return new A.Transition of (string, string)(Message, []);
       end if;
 
-      return Gate.Wrap<string>(
-        new A.Transition<string, string>(
+      return Gate.Wrap of string(
+        new A.Transition of (string, string)(
           Model, [
-            A.StartBackground<string>(
-              'deadline', Fx.Effect<Fx.Completion, string, A.BackgroundContext<string>>.Defer(Wait)
+            A.StartBackground of string(
+              'deadline',
+              Fx.Effect of (Fx.Completion, string, A.BackgroundContext of string).Defer(Wait)
             )
           ]
         )
@@ -135,16 +138,16 @@ public type ClockTests = record
     end function;
   begin
     const Time: TimeTesting.FakeTimeProvider := new TimeTesting.FakeTimeProvider();
-    const Registered: Tasks.TaskCompletionSource<T.CancellationToken> := new Tasks.TaskCompletionSource<T.CancellationToken>(
+    const Registered: Tasks.TaskCompletionSource of T.CancellationToken := new Tasks.TaskCompletionSource of T.CancellationToken(
       Tasks.TaskCreationOptions.RunContinuationsAsynchronously
     );
-    const Gate: Replies.Effects<string> := Replies.Effects<string>.Create();
+    const Gate: Replies.Effects of string := (Replies.Effects of string).Create();
     using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
-    const Session: Runtime.Runtime<string, string, int> := Runtime.Start<string, string, int>(
+    const Session: Runtime.Runtime of (string, string, int) := Runtime.Start of (string, string, int)(
       'running', Update, procedure(_Request: A.HostRequest) begin end procedure, 1, Clock := Time
     );
     try
-      const Reader: Channels.ChannelReader<Replies.Reply<string>> := Gate.Watch('deadline');
+      const Reader: Channels.ChannelReader of Replies.Reply of string := Gate.Watch('deadline');
       Session.Dispatch('start');
       const Deadline: T.CancellationToken := Registered.Task.WaitAsync(
         Stop.Token
@@ -153,14 +156,14 @@ public type ClockTests = record
       X.Assert.False(Deadline.IsCancellationRequested);
       Time.Advance(Sys.TimeSpan.FromMilliseconds(1));
       X.Assert.True(Deadline.IsCancellationRequested);
-      const Reply: Replies.Reply<string> := Reader.ReadAsync(
+      const Reply: Replies.Reply of string := Reader.ReadAsync(
         Stop.Token
       ).AsTask().GetAwaiter().GetResult();
-      X.Assert.Equal<string>('timed out', Reply.Message);
-      X.Assert.Equal<string>('running', Session.Model());
+      X.Assert.Equal of string('timed out', Reply.Message);
+      X.Assert.Equal of string('running', Session.Model());
       Reply.Release().WaitAsync(Stop.Token).GetAwaiter().GetResult();
       discard Session.Advance();
-      X.Assert.Equal<string>('timed out', Session.Model());
+      X.Assert.Equal of string('timed out', Session.Model());
     finally
       Session.Close().WaitAsync(Sys.TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
     end try;

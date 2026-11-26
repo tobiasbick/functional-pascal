@@ -32,7 +32,7 @@ begin
   end if;
 end procedure;
 
-function Update(State: Model; Message: Msg): M.Transition<Model, Msg>;
+function Update(State: Model; Message: Msg): M.Transition of (Model, Msg);
 begin
   case Message of
     when Msg.Edit(const Value: string):
@@ -43,9 +43,9 @@ begin
           Text := Value;
         end with
       end if;
-      return new M.Transition<Model, Msg>(Next, []);
+      return new M.Transition of (Model, Msg)(Next, []);
     when Msg.Submit(const Value: string):
-      return new M.Transition<Model, Msg>(
+      return new M.Transition of (Model, Msg)(
         State with
           Submitted := Value;
         end with, []
@@ -55,39 +55,39 @@ begin
   end case;
 end function;
 
-function Form(State: Model): E.Element<Msg>;
+function Form(State: Model): E.Element of Msg;
 begin
-  return E.Column<Msg>(
-    A.TextArea<Msg>(
+  return E.Column of Msg(
+    A.TextArea of Msg(
       'area', State.Text, Msg.Edit, new A.Options(
         Label := 'About', Hint := 'Notes',
         Error := 'Please review', Placeholder := 'Start here', Height := 32, MaxUtf8Bytes := 32
       ), Msg.Submit
     ),
-    A.TextArea<Msg>(
+    A.TextArea of Msg(
       'readonly', State.Submitted, function(Value: string): Msg => Msg.Unexpected,
       new A.Options(Height := 16, ReadOnly := true)
     ),
-    A.TextArea<Msg>(
+    A.TextArea of Msg(
       'disabled', 'Unavailable', function(Value: string): Msg => Msg.Unexpected,
       new A.Options(Enabled := false, Height := 16)
     ),
-    B.Button<Msg>('next', 'Next', Msg.Unexpected)
+    B.Button of Msg('next', 'Next', Msg.Unexpected)
   );
 end function;
 
-function Fill(State: Model): E.Element<Msg>;
+function Fill(State: Model): E.Element of Msg;
 begin
-  return A.TextArea<Msg>('fill', State.Text, Msg.Edit, new A.Options(Height := -1));
+  return A.TextArea of Msg('fill', State.Text, Msg.Edit, new A.Options(Height := -1));
 end function;
 
-function Scrolled(State: Model): E.Element<Msg>;
+function Scrolled(State: Model): E.Element of Msg;
 begin
-  return E.ScrollView<Msg>(
-    'outer', E.Column<Msg>(
-      A.TextArea<Msg>('area', State.Text, Msg.Edit, new A.Options(Height := 32)),
-      E.Size<Msg>(E.Column<Msg>(), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(160)))),
-      E.Text<Msg>('Bottom')
+  return E.ScrollView of Msg(
+    'outer', E.Column of Msg(
+      A.TextArea of Msg('area', State.Text, Msg.Edit, new A.Options(Height := 32)),
+      E.Size of Msg(E.Column of Msg(), new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(160)))),
+      E.Text of Msg('Bottom')
     )
   );
 end function;
@@ -120,7 +120,7 @@ end procedure;
 
 begin
   const Initial: string := 'abcd' + #10 + 'x' + #10 + 'wxyz' + #10 + 'end';
-  using const Session: T.HeadlessSession := Headless.Start<Model, Msg>(
+  using const Session: T.HeadlessSession := Headless.Start of (Model, Msg)(
     new Model(Initial),
     Update,
     Form,
@@ -179,7 +179,7 @@ begin
   Key(Session, K.Key.Tab);
   Check(Control(Session, 'next').Focused, 'One tab stop per area and disabled areas are skipped.');
 
-  using const Wrapped: T.HeadlessSession := Headless.Start<Model, Msg>(
+  using const Wrapped: T.HeadlessSession := Headless.Start of (Model, Msg)(
     new Model('one two three'),
     Update,
     Form,
@@ -207,7 +207,7 @@ begin
     'Resize keeps an editable caret in one column.'
   );
 
-  using const Limit: T.HeadlessSession := Headless.Start<Model, Msg>(
+  using const Limit: T.HeadlessSession := Headless.Start of (Model, Msg)(
     new Model(new string(#97, 29)),
     Update,
     Form,
@@ -235,7 +235,7 @@ begin
     'Shift+Home selects from the caret to the line start.'
   );
 
-  using const Nested: T.HeadlessSession := Headless.Start<Model, Msg>(
+  using const Nested: T.HeadlessSession := Headless.Start of (Model, Msg)(
     new Model(Initial),
     Update,
     Scrolled,
@@ -253,7 +253,7 @@ begin
     'Wheel goes to the parent at the editor edge.'
   );
 
-  using const Empty: T.HeadlessSession := Headless.Start<Model, Msg>(
+  using const Empty: T.HeadlessSession := Headless.Start of (Model, Msg)(
     new Model(''),
     Update,
     Form,
@@ -264,7 +264,7 @@ begin
     Empty.Snapshot().Lines[Control(Empty, 'area').Row].Contains('Start here'),
     'Empty text shows the placeholder.'
   );
-  using const Expanded: T.HeadlessSession := Headless.Start<Model, Msg>(
+  using const Expanded: T.HeadlessSession := Headless.Start of (Model, Msg)(
     new Model(''),
     Update,
     Fill,

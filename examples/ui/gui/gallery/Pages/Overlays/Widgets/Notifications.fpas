@@ -23,34 +23,34 @@ uses GuiGallery.Shared.State as Demo;
 // - `Messages`: Maps shared preferences into the parent session.
 // ## Returns
 // The active page and its controlled Notifications sheet.
-public function Wrap<TMsg>(
-  Base: E.Element<TMsg>; Data: Demo.Model; Open: bool; Dismiss: TMsg; Messages: function(Demo.Msg): TMsg
-): E.Element<TMsg>;
+public function Wrap of TMsg(
+  Base: E.Element of TMsg; Data: Demo.Model; Open: bool; Dismiss: TMsg; Messages: function(Demo.Msg): TMsg
+): E.Element of TMsg;
 begin
-  return Sheet.Sheet<TMsg>(
+  return Sheet.Sheet of TMsg(
     'sheet', Base,
-    E.Column<TMsg>(
+    E.Column of TMsg(
       new L.Flow(Gap := G.Points(16)),
-      S.View<TMsg>(
+      S.View of TMsg(
         S.Comments, Data.Newsletter,
         function(Value: bool): TMsg => Messages(Demo.Msg.SetNewsletter(Value))
       ),
-      S.View<TMsg>(
+      S.View of TMsg(
         S.Mentions, Data.Wifi,
         function(Value: bool): TMsg => Messages(Demo.Msg.SetWifi(Value))
       ),
-      S.View<TMsg>(
+      S.View of TMsg(
         S.WeeklyDigest, Data.Bluetooth,
         function(Value: bool): TMsg => Messages(Demo.Msg.SetBluetooth(Value))
       ),
-      E.Divider<TMsg>(),
-      E.Styled<TMsg>(E.Text<TMsg>('Recent'), Style.Role.Label),
-      I.ListItem<TMsg>(
+      E.Divider of TMsg(),
+      E.Styled of TMsg(E.Text of TMsg('Recent'), Style.Role.Label),
+      I.ListItem of TMsg(
         'recent-comment',
         'Jonas commented on Release 1.0',
         Settings := new I.Options(Avatar := 'Jonas Berg', Subtitle := '2 minutes ago')
       ),
-      I.ListItem<TMsg>(
+      I.ListItem of TMsg(
         'recent-invitation',
         'Priya invited you to Engines',
         Settings := new I.Options(Avatar := 'Priya Nair', Subtitle := '1 hour ago')

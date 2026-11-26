@@ -18,7 +18,7 @@ uses System as Sys;
 // - `Settings`: Dropdown options, or null for a native context menu.
 // - `Location`: Owning view path.
 // - `Identify`: Registers a globally unique identity and returns its diagnostic path.
-public procedure Check<TMsg>(Id: string; Label: string; Entries: array of M.Entry<TMsg>; Settings: M.Options?; Location: string; Identify: function(string, string): string);
+public procedure Check of TMsg(Id: string; Label: string; Entries: array of M.Entry of TMsg; Settings: M.Options?; Location: string; Identify: function(string, string): string);
 begin
   const At: string := Identify(Id, Location + '/menu');
   Rules.CheckText(Label, At);
@@ -28,19 +28,19 @@ begin
 
   if Settings <> null then
     Rules.CheckText(Settings.Icon, At + '/icon');
-    if Settings.Variant = S.ButtonVariant.Active or not Sys.Enum.IsDefined<S.ButtonVariant>(
+    if Settings.Variant = S.ButtonVariant.Active or not Sys.Enum.IsDefined of S.ButtonVariant(
       Settings.Variant
     )
-      or not Sys.Enum.IsDefined<M.Placement>(Settings.Position)
+      or not Sys.Enum.IsDefined of M.Placement(Settings.Position)
       or not Sys.Single.IsFinite(Settings.Width) or Settings.Width < 0.0
     then
       Rules.Reject(At, 'A menu needs a CUI variant, placement and finite nonnegative width.');
     end if;
   end if;
 
-  for Entry: M.Entry<TMsg> in Entries do
+  for Entry: M.Entry of TMsg in Entries do
     case Entry of
-      when M.Entry.Action(const Item: M.Item<TMsg>):
+      when M.Entry.Action(const Item: M.Item of TMsg):
         if Sys.String.IsNullOrWhiteSpace(Item.Key) then
           Rules.Reject(At, 'Menu command keys must be nonempty.');
         end if;

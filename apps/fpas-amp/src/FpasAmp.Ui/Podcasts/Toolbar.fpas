@@ -34,9 +34,9 @@ end function;
 function Picker(
   Id: string; Items: array of Select.Item; Choices: array of Catalog.Choice;
   Value: string; Change: function(string): M.Msg; Label: string
-): E.Element<App.Msg>;
+): E.Element of App.Msg;
 begin
-  return Select.Select<App.Msg>(
+  return Select.Select of App.Msg(
     Id, Items, Catalog.IndexOf(Choices, Value),
     function(Index: int): App.Msg => Action(Change(Choices[Index].Code)),
     new Select.Options(Label := Label, Searchable := true)
@@ -45,7 +45,7 @@ end function;
 
 function Labels(Choices: array of Catalog.Choice): array of Select.Item;
 begin
-  const Items: C.List<Select.Item> := new C.List<Select.Item>();
+  const Items: C.List of Select.Item := new C.List of Select.Item();
   for Choice: Catalog.Choice in Choices do
     Items.Add(new Select.Item(Choice.Label));
   end for;
@@ -69,14 +69,14 @@ begin
   );
 end function;
 
-function SubscriptionChoice(Value: M.SubscriptionFilter): E.Element<App.Msg>;
+function SubscriptionChoice(Value: M.SubscriptionFilter): E.Element of App.Msg;
 begin
   const Key: string := case Value of
     when M.SubscriptionFilter.Subscribed: 'subscribed';
     when M.SubscriptionFilter.Unsubscribed: 'unsubscribed';
     else '';
   end case;
-  return Filters.Choice<App.Msg>(
+  return Filters.Choice of App.Msg(
     'podcast-subscription-filter', 'Subscription', 'All podcasts', ['subscribed', 'unsubscribed'],
     Key, Subscription, ['Subscribed', 'Unsubscribed']
   );
@@ -88,15 +88,15 @@ end function;
 // - `Width`: Available width in logical points.
 // ## Returns
 // Search controls, a directory filter form and a sort menu.
-public function Search(Page: M.State; Width: int): E.Element<App.Msg>;
+public function Search(Page: M.State; Width: int): E.Element of App.Msg;
 requires Width > 0;
 begin
-  const Input: E.Element<App.Msg> := Fields.SearchField<App.Msg>(
+  const Input: E.Element of App.Msg := Fields.SearchField of App.Msg(
     'podcast-search-input', Page.Query,
     function(Value: string): App.Msg => App.Msg.Podcasts(M.Msg.Query(Value)),
     new Fields.Options(Placeholder := 'Search Apple Podcasts…'), Submit
   );
-  const SubmitButton: E.Element<App.Msg> := B.Button<App.Msg>(
+  const SubmitButton: E.Element of App.Msg := B.Button of App.Msg(
     'podcast-search-submit', if Page.Query.Trim() = '' then
       'Refresh'
     else
@@ -121,8 +121,8 @@ begin
     else
       0
     end if);
-  const Panel: E.Element<App.Msg> := if Draft <> null then
-    Filters.Panel<App.Msg>(
+  const Panel: E.Element of App.Msg := if Draft <> null then
+    Filters.Panel of App.Msg(
       'podcast', 'Filter podcasts', [
         Picker('podcast-market', Markets, Catalog.Markets, Draft.Market, M.Msg.Market, 'Market'),
         Picker('podcast-genre', Genres, Catalog.Genres, Draft.Genre, M.Msg.Genre, 'Genre'),
@@ -130,15 +130,15 @@ begin
       ], Action(M.Msg.ResetDiscoveryFilters), Action(M.Msg.ApplyDiscoveryFilters)
     )
   else
-    E.Column<App.Msg>()
+    E.Column of App.Msg()
   end if;
-  return Layout.Arrange<App.Msg>(
-    E.Row<App.Msg>(
+  return Layout.Arrange of App.Msg(
+    E.Row of App.Msg(
       new L.Flow(Gap := Gap, Align := L.Alignment.Center, Clip := false),
-      E.Size<App.Msg>(Input, Fill),
+      E.Size of App.Msg(Input, Fill),
       SubmitButton
     ),
-    Filters.Popup<App.Msg>(
+    Filters.Popup of App.Msg(
       'podcast',
       Panel,
       Count,
@@ -146,19 +146,19 @@ begin
       function(Open: bool): App.Msg => Action(M.Msg.SetDiscoveryFilters(Open)),
       Width
     ),
-    Sort.Build<App.Msg>(
+    Sort.Build of App.Msg(
       'podcast-sort', ['Podcast', 'Publisher'], [true, true], Page.SearchOrder,
       function(Order: Tables.Sort): App.Msg => Action(M.Msg.SortResults(Order)), 'Apple order'
     ), Width
   );
 end function;
 
-function EpisodePanel(Page: M.State; Draft: M.EpisodeFilters): E.Element<App.Msg>;
+function EpisodePanel(Page: M.State; Draft: M.EpisodeFilters): E.Element of App.Msg;
 begin
-  const Choices: C.List<E.Element<App.Msg>> := new C.List<E.Element<App.Msg>>();
+  const Choices: C.List of E.Element of App.Msg := new C.List of E.Element of App.Msg();
   if Page.Years.Length > 1 then
     Choices.Add(
-      Filters.Choice<App.Msg>(
+      Filters.Choice of App.Msg(
         'episode-filter-year', 'Publication year', 'All years', Page.Years, Draft.Year,
         function(Value: string): App.Msg => Action(M.Msg.EpisodeYear(Value))
       )
@@ -166,13 +166,13 @@ begin
   end if;
 
   Choices.Add(
-    Filters.Choice<App.Msg>(
+    Filters.Choice of App.Msg(
       'episode-filter-duration', 'Duration', 'Any duration', ['short', 'medium', 'long', 'unknown'],
       Draft.Duration, function(Value: string): App.Msg => Action(M.Msg.EpisodeDuration(Value)),
       ['Under 15 minutes', '15 to under 45 minutes', '45 minutes or longer', 'Unknown duration']
     )
   );
-  return Filters.Panel<App.Msg>(
+  return Filters.Panel of App.Msg(
     'episode', 'Filter episodes', Choices.ToArray(),
     Action(M.Msg.ResetEpisodeFilters), Action(M.Msg.ApplyEpisodeFilters)
   );
@@ -184,7 +184,7 @@ end function;
 // - `Width`: Available width in logical points.
 // ## Returns
 // Search controls, a publication and duration filter form, and a sort menu.
-public function Episodes(Page: M.State; Width: int): E.Element<App.Msg>;
+public function Episodes(Page: M.State; Width: int): E.Element of App.Msg;
 requires Width > 0;
 begin
   const Applied: M.EpisodeFilters := Page.AppliedEpisodes;
@@ -198,19 +198,19 @@ begin
     0
   end if);
   const Draft: M.EpisodeFilters? := Page.EpisodeDraft;
-  const Panel: E.Element<App.Msg> := if Draft <> null then
+  const Panel: E.Element of App.Msg := if Draft <> null then
     EpisodePanel(Page, Draft)
   else
-    E.Column<App.Msg>()
+    E.Column of App.Msg()
   end if;
-  return Layout.Arrange<App.Msg>(
-    Fields.SearchField<App.Msg>(
+  return Layout.Arrange of App.Msg(
+    Fields.SearchField of App.Msg(
       'podcast-episode-search',
       Page.EpisodeFilter,
       function(Value: string): App.Msg => Action(M.Msg.Filter(Value)),
       new Fields.Options(Placeholder := 'Search episodes…')
     ),
-    Filters.Popup<App.Msg>(
+    Filters.Popup of App.Msg(
       'episode',
       Panel,
       Count,
@@ -218,7 +218,7 @@ begin
       function(Open: bool): App.Msg => Action(M.Msg.SetEpisodeFilters(Open)),
       Width
     ),
-    Sort.Build<App.Msg>(
+    Sort.Build of App.Msg(
       'episode-sort', ['Title', 'Published', 'Time'], [true, false, false], Page.EpisodeOrder,
       function(Order: Tables.Sort): App.Msg => Action(M.Msg.SortEpisodes(Order)), DateColumn := 1
     ), Width

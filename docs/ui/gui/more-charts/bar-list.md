@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Charts.Charts as C;
 // - `Items`: Current values in input order.
 // ## Returns
 // The widget for the application view.
-public function View(Items: array of C.Item): E.Element<int>;
+public function View(Items: array of C.Item): E.Element of int;
 begin
-  return W.BarList<int>('pages', Items, new W.Options(MaximumRows := 5),
+  return W.BarList of int('pages', Items, new W.Options(MaximumRows := 5),
     function(Index: int): int => Index);
 end function;
 

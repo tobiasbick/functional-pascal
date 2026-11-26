@@ -20,25 +20,25 @@ uses System.Collections.Generic as C;
 // - `Settings`: Shared appearance, width and input options.
 // ## Returns
 // A horizontal strip of tabs.
-public function Lower<TMsg>(
+public function Lower of TMsg(
   Id: string; Items: array of T.Item; Selected: int; Change: function(int): TMsg; Settings: T.Options
-): E.Element<TMsg>;
-  function Activate(Index: int): A.Result<TMsg>;
+): E.Element of TMsg;
+  function Activate(Index: int): A.Result of TMsg;
   begin
     return if Index = Selected then
-      A.Result<TMsg>.NoAction
+      (A.Result of TMsg).NoAction
     else
-      A.Result<TMsg>.Send(Change(Index))
+      (A.Result of TMsg).Send(Change(Index))
     end if;
   end function;
 begin
-  const Choices: C.List<E.ChoiceItem> := new C.List<E.ChoiceItem>(Items.Length);
+  const Choices: C.List of E.ChoiceItem := new C.List of E.ChoiceItem(Items.Length);
   for Index: int := 0 to Items.Length - 1 do
     const Label: string := Items[Index].Label;
     Choices.Add(new E.ChoiceItem(Label, Label, Index = Selected));
   end for;
 
-  return Strip.Lower<TMsg>(
+  return Strip.Lower of TMsg(
     Id, Choices.ToArray(), Selected, Activate,
     new E.ChoiceStripOptions(
       'tab', Settings.Enabled, FullWidth := Settings.FullWidth,

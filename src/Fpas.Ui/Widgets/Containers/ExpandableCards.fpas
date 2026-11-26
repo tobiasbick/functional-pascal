@@ -32,13 +32,13 @@ end record;
 // - `Settings`: Header decoration and input permission.
 // ## Returns
 // A graphical or terminal expandable card.
-public function ExpandableCard<TMsg>(
+public function ExpandableCard of TMsg(
   Id: string; Title: string; Open: bool;
-  OnChange: function(bool): TMsg; Content: E.Element<TMsg>; Settings: Options? := null
-): E.Element<TMsg>;
+  OnChange: function(bool): TMsg; Content: E.Element of TMsg; Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.ExpandableCard(
+  return (E.Element of TMsg).ExpandableCard(
     Id,
     Title,
     Open,

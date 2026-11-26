@@ -21,16 +21,16 @@ uses System.Threading as T;
 
 // Worker-owned physical directory cache and source-specific observed facts.
 public type Tree = record
-  Entries: C.Dictionary<string, C.HashSet<string>>;
-  Attempted: C.HashSet<string>;
+  Entries: C.Dictionary of (string, C.HashSet of string);
+  Attempted: C.HashSet of string;
   Catalog: Data.Catalog;
 
   // Creates an empty traversal cache and source catalog.
   public static function Create(): Tree;
   begin
     return new Tree(
-      new C.Dictionary<string, C.HashSet<string>>(S.PathComparer()),
-      new C.HashSet<string>(S.PathComparer()),
+      new C.Dictionary of (string, C.HashSet of string)(S.PathComparer()),
+      new C.HashSet of string(S.PathComparer()),
       Data.Catalog.Create()
     );
   end function;
@@ -39,7 +39,7 @@ public type Tree = record
   public procedure RestoreDirectory(Id: string; Path: string; Error: string?);
   begin
     if not self.Entries.ContainsKey(Path) then
-      self.Entries[Path] := new C.HashSet<string>(S.PathComparer());
+      self.Entries[Path] := new C.HashSet of string(S.PathComparer());
     end if;
 
     self.Catalog.RestoreDirectory(Id, Path, Error);
@@ -75,7 +75,7 @@ public type Tree = record
   // Reconciles a subtree for normalized active `Sources`. `Current` rejects obsolete
   // configurations; `Recursive` includes known descendants. `Checkpoint` atomically
   // saves each observation before publication. Cancellation interrupts between entries.
-  public procedure Scan(Scope: string; Sources: array of S.MusicSource; Current: function(): bool; Recursive: bool; Cancellation: T.CancellationToken; Checkpoint: Sys.Func<O.DirectoryObservation, bool>? := null);
+  public procedure Scan(Scope: string; Sources: array of S.MusicSource; Current: function(): bool; Recursive: bool; Cancellation: T.CancellationToken; Checkpoint: Sys.Func of (O.DirectoryObservation, bool)? := null);
     function SelectedPlaylist(Path: string): bool;
     begin
       if not PlaylistFormats.IsPlaylist(Path) then
@@ -147,7 +147,7 @@ public type Tree = record
       return Current();
     end function;
   begin
-    const Pending: C.Stack<string> := new C.Stack<string>();
+    const Pending: C.Stack of string := new C.Stack of string();
     Pending.Push(Scope);
     const Options: IO.EnumerationOptions := new IO.EnumerationOptions();
     Options.RecurseSubdirectories := false;
@@ -158,13 +158,13 @@ public type Tree = record
         return;
       end if;
       const Directory: string := Pending.Pop();
-      const Found: C.HashSet<string> := new C.HashSet<string>(S.PathComparer());
-      const Playlists: C.HashSet<string> := new C.HashSet<string>(S.PathComparer());
-      const Artwork: C.HashSet<string> := new C.HashSet<string>(S.PathComparer());
-      const Stamps: C.Dictionary<string, O.FileStamp> := new C.Dictionary<string, O.FileStamp>(
+      const Found: C.HashSet of string := new C.HashSet of string(S.PathComparer());
+      const Playlists: C.HashSet of string := new C.HashSet of string(S.PathComparer());
+      const Artwork: C.HashSet of string := new C.HashSet of string(S.PathComparer());
+      const Stamps: C.Dictionary of (string, O.FileStamp) := new C.Dictionary of (string, O.FileStamp)(
         S.PathComparer()
       );
-      const Children: C.HashSet<string> := new C.HashSet<string>(S.PathComparer());
+      const Children: C.HashSet of string := new C.HashSet of string(S.PathComparer());
       var Complete: bool := false;
       var Failure: string? := null;
       try
@@ -230,7 +230,7 @@ public type Tree = record
         Artwork
       );
       case Checkpoint of
-        when is Sys.Func<O.DirectoryObservation, bool> as Save:
+        when is Sys.Func of (O.DirectoryObservation, bool) as Save:
           if not Save.Invoke(Value) then
             return;
           end if;
@@ -255,7 +255,7 @@ public type Tree = record
   end procedure;
 
   // Creates source-owned views, preserving paused/offline memberships independently.
-  public function Describe(Sources: array of S.MusicSource; Watched: array of string): I.ImmutableArray<M.SourceSnapshot>;
+  public function Describe(Sources: array of S.MusicSource; Watched: array of string): I.ImmutableArray of M.SourceSnapshot;
   begin
     return self.Catalog.Describe(Sources, Watched);
   end function;
@@ -274,8 +274,8 @@ public type Tree = record
       self.Entries.Clear();
       return;
     end if;
-    const Known: C.HashSet<string> := self.Catalog.KnownFiles();
-    for Files: C.HashSet<string> in self.Entries.Values do
+    const Known: C.HashSet of string := self.Catalog.KnownFiles();
+    for Files: C.HashSet of string in self.Entries.Values do
       Files.IntersectWith(Known);
     end for;
   end procedure;
@@ -284,7 +284,7 @@ public type Tree = record
   public procedure Prune(Sources: array of S.MusicSource);
   begin
     self.Catalog.Prune(Sources);
-    const Remove: C.List<string> := new C.List<string>();
+    const Remove: C.List of string := new C.List of string();
     for Directory: string in self.Entries.Keys do
       var Keep: bool := false;
       for Source: S.MusicSource in Sources do

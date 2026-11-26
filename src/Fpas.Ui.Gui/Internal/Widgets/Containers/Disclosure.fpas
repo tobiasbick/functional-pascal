@@ -25,10 +25,10 @@ uses System.Collections.Generic as Lists;
 // - `Card`: Selects CUI's expandable card instead of its accordion.
 // - `Settings`: Header decoration and input permission.
 // - `Visit`: Host traversal for the native body.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Title: string; Open: bool;
-  OnChange: function(bool): TMsg; Content: E.Element<TMsg>; Card: bool; Settings: Cards.Options;
-  Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment)
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Title: string; Open: bool;
+  OnChange: function(bool): TMsg; Content: E.Element of TMsg; Card: bool; Settings: Cards.Options;
+  Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
 );
 begin
   const Role: string := if Card then
@@ -40,7 +40,7 @@ begin
   const Allowed: bool := Settings.Enabled and Frame.AcceptInput;
   const Result: int := Frame.Window.BeginDisclosure(
     Token, Title, Card, Open, Allowed,
-    C.WantsFocus<TMsg>(Frame, Id, Token, Allowed), Settings.Description, Settings.Icon,
+    C.WantsFocus of TMsg(Frame, Id, Token, Allowed), Settings.Description, Settings.Icon,
     Settings.Badge, cast<int>(Settings.BadgeTone)
   );
   if (Result and 2) <> 0 and Allowed then
@@ -64,14 +64,14 @@ begin
     return;
   end if;
   const Visible: bool := Open and (Result and 4) <> 0 and not Frame.PaintingClosed;
-  const Inside: C.State<TMsg> := Frame with
+  const Inside: C.State of TMsg := Frame with
     AcceptInput := Allowed and Visible;
     Interactive := Frame.Interactive and Settings.Enabled;
     PaintingClosed := not Visible;
     Labels := if Visible then
       Frame.Labels
     else
-      new Lists.List<string>()
+      new Lists.List of string()
     end if;
   end with;
   Visit(Content, Inside, false, L.Alignment.Default);

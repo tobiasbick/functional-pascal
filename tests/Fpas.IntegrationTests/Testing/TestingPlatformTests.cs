@@ -45,7 +45,7 @@ public sealed class TestingPlatformTests(SdkPackageFixture sdk) : IClassFixture<
         Assert.True(created.ExitCode == 0, created.Output + created.Error);
         var source = directory.File("Waiting/Waiting.fpas");
         var identity = directory.File("runner.pid");
-        File.WriteAllText(source, File.ReadAllText(source).Replace("T.Assert.AreEqual<int>(4, 2 + 2);", "Sys.IO.File.WriteAllText('" + identity.Replace("'", "''", StringComparison.Ordinal) + "', Sys.Environment.ProcessId.ToString()); Sys.Threading.Thread.Sleep(60000);", StringComparison.Ordinal)
+        File.WriteAllText(source, File.ReadAllText(source).Replace("T.Assert.AreEqual of int(4, 2 + 2);", "Sys.IO.File.WriteAllText('" + identity.Replace("'", "''", StringComparison.Ordinal) + "', Sys.Environment.ProcessId.ToString()); Sys.Threading.Thread.Sleep(60000);", StringComparison.Ordinal)
             .Replace("uses Microsoft", "uses System as Sys; uses Microsoft", StringComparison.Ordinal));
         var project = directory.File("Waiting/Waiting.fpasproj"); var config = TestEnvironment.Metadata("FpasBuildConfiguration");
         var build = await ProjectCliFixture.Cli(directory, "build", project, "--configuration", config, "--report", "json");

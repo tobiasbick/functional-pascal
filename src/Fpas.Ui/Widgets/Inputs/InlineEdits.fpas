@@ -41,10 +41,10 @@ end record;
 // - `Settings`: Optional native presentation, width and UTF-8 capacity.
 // ## Returns
 // A graphical inline editor retaining its draft until commit or cancellation.
-public function InlineEdit<TMsg>(Id: string; Value: string; OnChange: function(string): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function InlineEdit of TMsg(Id: string; Value: string; OnChange: function(string): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.InlineEdit(Id, Value, OnChange, Settings ?? new Options());
+  return (E.Element of TMsg).InlineEdit(Id, Value, OnChange, Settings ?? new Options());
 end function;
 
 end unit;

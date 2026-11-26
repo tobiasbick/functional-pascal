@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Charts.Treemaps as W;
 // - `Selected`: Currently selected input index, or minus one.
 // ## Returns
 // The widget for the application view.
-public function View(Selected: int): E.Element<int>;
+public function View(Selected: int): E.Element of int;
 begin
-  return W.Treemap<int>('bundle', [
+  return W.Treemap of int('bundle', [
     new C.Item('Layout', 55.0F), new C.Item('Text', 42.0F), new C.Item('Draw', 35.0F)
   ], new W.Options(Height := 280.0F, Format := new C.ValueFormat(Suffix := ' KB')),
     Selected, function(Index: int): int => Index);

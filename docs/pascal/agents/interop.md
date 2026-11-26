@@ -12,7 +12,7 @@ accessible class/struct/record or constrained type. Fields, properties, indexers
 and ordinary instance/static methods retain .NET meaning. Read-only accessors/
 storage cannot be assigned; a const reference can still point to a mutable collection.
 
-Use List<T>, Dictionary<K, V>, Stream, Regex, JsonSerializer, HttpClient, and
+Use `List of T`, `Dictionary of (K, V)`, Stream, Regex, JsonSerializer, HttpClient, and
 other .NET APIs directly. Extension methods use static form: import
 System.Linq.Enumerable and call Enumerable.Where/Select with typed delegates.
 Member access does not discover extension methods. Inspect the referenced API
@@ -31,7 +31,7 @@ without an applicable equality operator compare by identity. Value-type operator
 
 ## Protocols, interfaces, and attributes
 
-Declare nominal CLR interfaces with `type Source<T> = protocol ... end protocol;`.
+Declare nominal CLR interfaces with `type Source of T = protocol ... end protocol;`.
 Use `Name: T;` for getter-only properties and bodyless function/procedure
 signatures for methods. Optional `extends` lists protocols or imported interfaces.
 Type constraints precede `protocol`. Method constraints follow signatures.
@@ -65,7 +65,7 @@ uses System.Linq.Enumerable as Enumerable;
 uses System.Text.Json as Json;
 uses System.Text.Json.Serialization as Serialization;
 
-type Descending = record implements C.IComparer<int>
+type Descending = record implements C.IComparer of int
   public function Compare(Left: int; Right: int): int;
   begin
     return Right.CompareTo(Left);
@@ -78,13 +78,13 @@ type Item = record
 end record;
 
 begin
-  const Values: C.List<int> := new C.List<int>();
+  const Values: C.List of int := new C.List of int();
   Values.Add(1);
   Values.Add(3);
   Values.Add(2);
   Values.Sort(new Descending());
-  const Count: int := Enumerable.Count<int>(Values);
-  const Text: string := Json.JsonSerializer.Serialize<Item>(new Item(Name := 'entry'));
+  const Count: int := Enumerable.Count of int(Values);
+  const Text: string := Json.JsonSerializer.Serialize of Item(new Item(Name := 'entry'));
   if Values[0] <> 3 or Count <> 3 or not Text.Contains('item_name')
     or typeof(int).Name <> 'Int32'
   then
@@ -115,7 +115,7 @@ uses System.Console as Console;
 
 begin
   var Changes: int := 0;
-  const Items: C.ObservableCollection<int> := new C.ObservableCollection<int>();
+  const Items: C.ObservableCollection of int := new C.ObservableCollection of int();
   const Handler: Events.NotifyCollectionChangedEventHandler := procedure(Sender: object?; Event: Events.NotifyCollectionChangedEventArgs) begin
     Changes := Changes + 1;
   end procedure;
@@ -134,17 +134,17 @@ end program;
 ```
 
 Imported methods and constructors accept vectors or array literals for by-value
-`Span<T>` and `ReadOnlySpan<T>` parameters. Writable spans require the exact
+`Span of T` and `ReadOnlySpan of T` parameters. Writable spans require the exact
 element type. See [span parameters](../interop/supported-signatures.md#span-parameters)
 for read-only conversions and overload selection. Imported `unmanaged` generics accept unmanaged value types. Other ref
 structs, pointers, ref returns, init-only setters, and unsupported
 modifiers/calling conventions receive diagnostics.
 Use an ordinary supported API overload; runtime reflection is not a compiler
 fallback. Nested CLR type paths put each segment's own arguments on that segment,
-as in N.Outer<string>.Inner<int>; N.Outer<string>.Leaf inherits its owner's
-arguments without repeating them. Imported static abstract/virtual interface
+as in `(N.Outer of string).Inner of int`. `(N.Outer of string).Leaf` inherits its
+owner's arguments. Imported static abstract/virtual interface
 members dispatch through constrained type parameters, including generic operators,
-T.Zero, and T.CreateChecked<int>. Read [generic constraints](../language/functions/generic-routines.md).
+`T.Zero`, and `T.CreateChecked of int`. Read [generic constraints](../language/functions/generic-routines.md).
 
 Before changing public identities/signatures/representations, read the binding
 [interop rules](../interop/README.md) and [CLR mapping](../../specs/clr-mapping.md).

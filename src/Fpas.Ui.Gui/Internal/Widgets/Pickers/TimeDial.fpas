@@ -20,8 +20,8 @@ uses System.Globalization as Culture;
 // - `OnChange`: Maps a proposed time to a message.
 // - `Size`: Face diameter or zero for CUI's default.
 // - `Enabled`: Whether the dial accepts input.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Value: Sys.TimeOnly; OnChange: function(Sys.TimeOnly): TMsg;
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Value: Sys.TimeOnly; OnChange: function(Sys.TimeOnly): TMsg;
   Size: float; Enabled: bool
 );
 begin
@@ -31,11 +31,11 @@ begin
   const Face: string := D.FaceId(Id);
   const HourToken: string := C.Token('time-selector', Hours);
   const MinuteToken: string := C.Token('time-selector', Minutes);
-  const Focus: int := if C.WantsFocus<TMsg>(Frame, Hours, HourToken, Accept)
-    or C.WantsFocus<TMsg>(Frame, Id, HourToken, Accept)
+  const Focus: int := if C.WantsFocus of TMsg(Frame, Hours, HourToken, Accept)
+    or C.WantsFocus of TMsg(Frame, Id, HourToken, Accept)
   then
     1
-  elsif C.WantsFocus<TMsg>(Frame, Minutes, MinuteToken, Accept) then
+  elsif C.WantsFocus of TMsg(Frame, Minutes, MinuteToken, Accept) then
     2
   else
     0

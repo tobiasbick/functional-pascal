@@ -37,7 +37,7 @@ begin
   return Reduce(
     new M.State(),
     M.Msg.Play(
-      I.ImmutableArray.CreateRange<Tracks.Entry>([Song(1L, 200.0), Song(2L, 100.0)]),
+      I.ImmutableArray.CreateRange of Tracks.Entry([Song(1L, 200.0), Song(2L, 100.0)]),
       0,
       new Music.Selection()
     )
@@ -58,7 +58,7 @@ public type PlayerTransportTests = record
     end with;
     const Playing: M.State := Reduce(
       new M.State(), M.Msg.Play(
-        I.ImmutableArray.CreateRange<Tracks.Entry>([First, Second]), 0, new Music.Selection()
+        I.ImmutableArray.CreateRange of Tracks.Entry([First, Second]), 0, new Music.Selection()
       )
     );
     const Paused: M.State := Reduce(Reduce(Playing, M.Msg.Toggle), M.Msg.Seek(0.5F));
@@ -66,10 +66,10 @@ public type PlayerTransportTests = record
     const Ready: M.State := Reduce(Paused, M.Msg.Measured('first', Levels));
     X.Assert.Same(Levels, Ready.Waveform);
     const Selected: M.State := Reduce(Ready, M.Msg.Next);
-    X.Assert.Equal<int>(0, Selected.Waveform.Length);
-    X.Assert.Equal<string>('', Selected.WaveformKey);
+    X.Assert.Equal of int(0, Selected.Waveform.Length);
+    X.Assert.Equal of string('', Selected.WaveformKey);
     const Resumed: M.State := Reduce(Selected, M.Msg.Toggle);
-    X.Assert.Equal<string>('second', Resumed.WaveformKey);
+    X.Assert.Equal of string('second', Resumed.WaveformKey);
     X.Assert.Same(Resumed, Reduce(Resumed, M.Msg.Measured('first', Levels)));
   end procedure;
 
@@ -80,13 +80,17 @@ public type PlayerTransportTests = record
     const First: M.State := Started();
     const Ended: M.Msg := M.Msg.Observed(
       new Audio.PlaybackEvent(
-        'song.mp3', Audio.PlaybackState.Ended,
-        Sys.TimeSpan.FromSeconds(200), Sys.TimeSpan.FromSeconds(200), I.ImmutableArray<float>.Empty,
-        null, First.Revision
+        'song.mp3',
+        Audio.PlaybackState.Ended,
+        Sys.TimeSpan.FromSeconds(200),
+        Sys.TimeSpan.FromSeconds(200),
+        (I.ImmutableArray of float).Empty,
+        null,
+        First.Revision
       )
     );
     const Second: M.State := Reduce(First, Ended);
-    X.Assert.Equal<int>(1, Second.Index);
+    X.Assert.Equal of int(1, Second.Index);
     X.Assert.True(Second.Playing);
     X.Assert.Same(Second, Reduce(Second, Ended));
     const Failed: M.State := Reduce(
@@ -96,7 +100,7 @@ public type PlayerTransportTests = record
           Audio.PlaybackState.Failed,
           Sys.TimeSpan.Zero,
           Sys.TimeSpan.Zero,
-          I.ImmutableArray<float>.Empty,
+          (I.ImmutableArray of float).Empty,
           'Could not open file',
           Second.Revision
         )
@@ -119,14 +123,14 @@ public type PlayerTransportTests = record
     X.Assert.Same(Idle, Reduce(Idle, M.Msg.Seek(0.5F)));
     X.Assert.Same(
       Idle,
-      Reduce(Idle, M.Msg.Play(I.ImmutableArray<Tracks.Entry>.Empty, 0, new Music.Selection()))
+      Reduce(Idle, M.Msg.Play((I.ImmutableArray of Tracks.Entry).Empty, 0, new Music.Selection()))
     );
 
     const First: M.State := Started();
     X.Assert.True(First.Playing);
-    X.Assert.Equal<long>(1L, (M.Track(First) ?? Song(0L, 0.0)).FileId);
+    X.Assert.Equal of long(1L, (M.Track(First) ?? Song(0L, 0.0)).FileId);
     const Last: M.State := Reduce(First, M.Msg.Next);
-    X.Assert.Equal<int>(1, Last.Index);
+    X.Assert.Equal of int(1, Last.Index);
     X.Assert.Same(Last, Reduce(Last, M.Msg.Next));
     X.Assert.False(Reduce(Last, M.Msg.Toggle).Playing);
   end procedure;
@@ -137,14 +141,14 @@ public type PlayerTransportTests = record
   begin
     const Second: M.State := Reduce(Started(), M.Msg.Next);
     const Early: M.State := Reduce(Second, M.Msg.Previous);
-    X.Assert.Equal<int>(0, Early.Index);
+    X.Assert.Equal of int(0, Early.Index);
 
     const Late: M.State := Reduce(
       Reduce(Second, M.Msg.Seek(0.5F)),
       M.Msg.Previous
     );
-    X.Assert.Equal<int>(1, Late.Index);
-    X.Assert.Equal<double>(0.0, Late.Position);
+    X.Assert.Equal of int(1, Late.Index);
+    X.Assert.Equal of double(0.0, Late.Position);
   end procedure;
 
   // Seeking, volume and equalizer gains are clamped to their ranges.
@@ -152,15 +156,15 @@ public type PlayerTransportTests = record
   public procedure SoundSettingsAreClamped();
   begin
     const Current: M.State := Started();
-    X.Assert.Equal<double>(200000.0, Reduce(Current, M.Msg.Seek(3.0F)).Position);
-    X.Assert.Equal<double>(50000.0, Reduce(Current, M.Msg.Seek(0.25F)).Position);
-    X.Assert.Equal<float>(M.Quietest, Reduce(Current, M.Msg.Volume(-90.0F)).Volume);
-    X.Assert.Equal<float>(0.0F, Reduce(Current, M.Msg.Volume(6.0F)).Volume);
+    X.Assert.Equal of double(200000.0, Reduce(Current, M.Msg.Seek(3.0F)).Position);
+    X.Assert.Equal of double(50000.0, Reduce(Current, M.Msg.Seek(0.25F)).Position);
+    X.Assert.Equal of float(M.Quietest, Reduce(Current, M.Msg.Volume(-90.0F)).Volume);
+    X.Assert.Equal of float(0.0F, Reduce(Current, M.Msg.Volume(6.0F)).Volume);
 
     const Boosted: M.State := Reduce(Current, M.Msg.Gain(9, 20.0F));
-    X.Assert.Equal<float>(M.Boost, Boosted.Gains[9]);
+    X.Assert.Equal of float(M.Boost, Boosted.Gains[9]);
     X.Assert.Same(Boosted, Reduce(Boosted, M.Msg.Gain(10, 1.0F)));
-    X.Assert.Equal<float>(0.0F, Reduce(Boosted, M.Msg.Flatten).Gains[9]);
+    X.Assert.Equal of float(0.0F, Reduce(Boosted, M.Msg.Flatten).Gains[9]);
   end procedure;
 end record;
 

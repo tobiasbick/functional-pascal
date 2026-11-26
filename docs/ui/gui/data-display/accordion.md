@@ -17,11 +17,11 @@ uses Fpas.Ui.Widgets.Containers.Accordions as W;
 // - `Open`: Expansion flag from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Open: bool): E.Element<bool>;
+public function View(Open: bool): E.Element of bool;
 begin
-  return W.Accordion<bool>('reduced-motion', 'Does it respect reduced motion?', Open,
+  return W.Accordion of bool('reduced-motion', 'Does it respect reduced motion?', Open,
     function(Expanded: bool): bool => Expanded,
-    E.Text<bool>('Every animation has a reduced motion path.'));
+    E.Text of bool('Every animation has a reduced motion path.'));
 end function;
 
 end unit;

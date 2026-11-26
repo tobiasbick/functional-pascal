@@ -22,7 +22,7 @@ end record;
 // Changes how the owner window is shown.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type StateRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
+public type StateRequest of TMsg = record implements Mvu.HostExtension of TMsg
   // Maximized or minimized to change to; normal restores the window.
   public Target: Cui.CuiWindowState;
 
@@ -33,16 +33,16 @@ public type StateRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
   // - `Messages`: Mapper for child messages.
   // ## Returns
   // The parent state request.
-  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  public function Map of TNext(Messages: function(TMsg): TNext): Mvu.HostExtension of TNext;
   begin
-    return new StateRequest<TNext>(self.Target);
+    return new StateRequest of TNext(self.Target);
   end function;
 end record;
 
 // Changes the owner window's document title.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type TitleRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
+public type TitleRequest of TMsg = record implements Mvu.HostExtension of TMsg
   // Valid Unicode title.
   public Title: string;
 
@@ -53,16 +53,16 @@ public type TitleRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
   // - `Messages`: Parent message mapper.
   // ## Returns
   // The same title request in the parent message space.
-  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  public function Map of TNext(Messages: function(TMsg): TNext): Mvu.HostExtension of TNext;
   begin
-    return new TitleRequest<TNext>(self.Title);
+    return new TitleRequest of TNext(self.Title);
   end function;
 end record;
 
 // Changes the owner window's logical dimensions.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type SizeRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
+public type SizeRequest of TMsg = record implements Mvu.HostExtension of TMsg
   // Positive logical width.
   public Width: int;
   // Positive logical height.
@@ -75,16 +75,16 @@ public type SizeRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
   // - `Messages`: Parent message mapper.
   // ## Returns
   // The same size request in the parent message space.
-  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  public function Map of TNext(Messages: function(TMsg): TNext): Mvu.HostExtension of TNext;
   begin
-    return new SizeRequest<TNext>(self.Width, self.Height);
+    return new SizeRequest of TNext(self.Width, self.Height);
   end function;
 end record;
 
 // Moves the owner window.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type MoveRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
+public type MoveRequest of TMsg = record implements Mvu.HostExtension of TMsg
   // Left edge of the content in desktop coordinates.
   public X: int;
   // Top edge of the content in desktop coordinates.
@@ -97,16 +97,16 @@ public type MoveRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
   // - `Messages`: Mapper for child messages.
   // ## Returns
   // The parent move request.
-  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  public function Map of TNext(Messages: function(TMsg): TNext): Mvu.HostExtension of TNext;
   begin
-    return new MoveRequest<TNext>(self.X, self.Y);
+    return new MoveRequest of TNext(self.X, self.Y);
   end function;
 end record;
 
 // Reads the owner window's placement and produces an application message.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type PlacementRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
+public type PlacementRequest of TMsg = record implements Mvu.HostExtension of TMsg
   // Maps the placement to a message.
   public OnRead: function(Cui.CuiWindowPlacement): TMsg;
 
@@ -117,18 +117,18 @@ public type PlacementRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
   // - `Messages`: Mapper for child messages.
   // ## Returns
   // The parent placement request.
-  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  public function Map of TNext(Messages: function(TMsg): TNext): Mvu.HostExtension of TNext;
   begin
     const Result: function(Cui.CuiWindowPlacement): TMsg := self.OnRead;
-    return new PlacementRequest<TNext>(
+    return new PlacementRequest of TNext(
       function(Placement: Cui.CuiWindowPlacement): TNext => Messages(Result(Placement))
     );
   end function;
 end record;
 
-function Change<TMsg>(Target: Cui.CuiWindowState): Mvu.Command<TMsg>;
+function Change of TMsg(Target: Cui.CuiWindowState): Mvu.Command of TMsg;
 begin
-  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new StateRequest<TMsg>(Target)));
+  return (Mvu.Command of TMsg).Host(Mvu.HostRequest.Extension(new StateRequest of TMsg(Target)));
 end function;
 
 // Changes the native document title between frames.
@@ -138,9 +138,9 @@ end function;
 // - `Title`: Valid Unicode title, copied by CUI.
 // ## Returns
 // The owner-thread graphical command.
-public function SetTitle<TMsg>(Title: string): Mvu.Command<TMsg>;
+public function SetTitle of TMsg(Title: string): Mvu.Command of TMsg;
 begin
-  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new TitleRequest<TMsg>(Title)));
+  return (Mvu.Command of TMsg).Host(Mvu.HostRequest.Extension(new TitleRequest of TMsg(Title)));
 end function;
 
 // Changes the native window's logical dimensions.
@@ -151,10 +151,12 @@ end function;
 // - `Height`: Positive logical height.
 // ## Returns
 // The owner-thread graphical command; the platform applies the size request.
-public function Resize<TMsg>(Width: int; Height: int): Mvu.Command<TMsg>;
+public function Resize of TMsg(Width: int; Height: int): Mvu.Command of TMsg;
 requires Width > 0 and Height > 0;
 begin
-  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new SizeRequest<TMsg>(Width, Height)));
+  return (Mvu.Command of TMsg).Host(
+    Mvu.HostRequest.Extension(new SizeRequest of TMsg(Width, Height))
+  );
 end function;
 
 // Maximizes the window where the window manager supports it.
@@ -162,9 +164,9 @@ end function;
 // - `TMsg`: Application message type.
 // ## Returns
 // The graphical window command.
-public function Maximize<TMsg>(): Mvu.Command<TMsg>;
+public function Maximize of TMsg(): Mvu.Command of TMsg;
 begin
-  return Change<TMsg>(Cui.CuiWindowState.Maximized);
+  return Change of TMsg(Cui.CuiWindowState.Maximized);
 end function;
 
 // Minimizes the window to the taskbar or dock where the window manager supports it.
@@ -172,9 +174,9 @@ end function;
 // - `TMsg`: Application message type.
 // ## Returns
 // The graphical window command.
-public function Minimize<TMsg>(): Mvu.Command<TMsg>;
+public function Minimize of TMsg(): Mvu.Command of TMsg;
 begin
-  return Change<TMsg>(Cui.CuiWindowState.Minimized);
+  return Change of TMsg(Cui.CuiWindowState.Minimized);
 end function;
 
 // Undoes a maximize or a minimize. A window minimized from maximized comes back
@@ -183,9 +185,9 @@ end function;
 // - `TMsg`: Application message type.
 // ## Returns
 // The graphical window command.
-public function Restore<TMsg>(): Mvu.Command<TMsg>;
+public function Restore of TMsg(): Mvu.Command of TMsg;
 begin
-  return Change<TMsg>(Cui.CuiWindowState.Normal);
+  return Change of TMsg(Cui.CuiWindowState.Normal);
 end function;
 
 // Moves the top-left corner of the window's content. Wayland ignores the
@@ -197,9 +199,9 @@ end function;
 // - `Y`: Top edge in the same units, growing down.
 // ## Returns
 // The graphical window command.
-public function MoveTo<TMsg>(X: int; Y: int): Mvu.Command<TMsg>;
+public function MoveTo of TMsg(X: int; Y: int): Mvu.Command of TMsg;
 begin
-  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new MoveRequest<TMsg>(X, Y)));
+  return (Mvu.Command of TMsg).Host(Mvu.HostRequest.Extension(new MoveRequest of TMsg(X, Y)));
 end function;
 
 // Reads the window's normal size and place and whether it is or comes back
@@ -211,9 +213,11 @@ end function;
 // - `OnRead`: Maps the placement to one message.
 // ## Returns
 // The graphical window command.
-public function ReadPlacement<TMsg>(OnRead: function(Cui.CuiWindowPlacement): TMsg): Mvu.Command<TMsg>;
+public function ReadPlacement of TMsg(OnRead: function(Cui.CuiWindowPlacement): TMsg): Mvu.Command of TMsg;
 begin
-  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new PlacementRequest<TMsg>(OnRead)));
+  return (Mvu.Command of TMsg).Host(
+    Mvu.HostRequest.Extension(new PlacementRequest of TMsg(OnRead))
+  );
 end function;
 
 end unit;

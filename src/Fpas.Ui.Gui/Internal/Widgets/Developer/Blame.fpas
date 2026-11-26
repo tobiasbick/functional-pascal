@@ -12,7 +12,7 @@ uses System.Collections.Generic as Lists;
 
 function PackRevision(Items: array of D.Revision): array of CuiDeveloper.CuiDevRevision;
 begin
-  const Native: Lists.List<CuiDeveloper.CuiDevRevision> := new Lists.List<CuiDeveloper.CuiDevRevision>(
+  const Native: Lists.List of CuiDeveloper.CuiDevRevision := new Lists.List of CuiDeveloper.CuiDevRevision(
     Items.Length
   );
   for Entry: D.Revision in Items do
@@ -35,7 +35,7 @@ end function;
 // - `Revisions`: Revisions supplied to the widget.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Lines: array of string; LineCommits: array of int; Revisions: array of D.Revision; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Lines: array of string; LineCommits: array of int; Revisions: array of D.Revision; Changed: function(D.Event): TMsg; Settings: D.Options);
 begin
   const Role: string := 'blame';
   const Token: string := C.Token(Role, Id);
@@ -54,7 +54,7 @@ begin
     Width.Value,
     Enabled
   );
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, '');
   if Enabled and (Result.Action >= 0) then
     Frame.Messages.Add(Changed(new D.Event(Result.Action)));
   end if;

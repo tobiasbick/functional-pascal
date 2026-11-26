@@ -21,7 +21,7 @@ uses System as Sys;
 // - `Current`: Playback model.
 // - `Change`: Maps a native proposal.
 // - `Settings`: Native appearance and input options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Current: W.Value; Change: function(W.Event): TMsg; Settings: W.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Current: W.Value; Change: function(W.Event): TMsg; Settings: W.Options);
 begin
   const Token: string := C.Token('now-playing', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
@@ -30,13 +30,13 @@ begin
   var Focus: int := -1;
   for Index: int := 0 to 2 do
     const Part: string := Id + '/' + Parts[Index];
-    if C.WantsFocus<TMsg>(Frame, Part, C.Token('player-part', Part), Enabled)
-      or (Index = 0 and C.WantsFocus<TMsg>(Frame, Id, C.Token('player-part', Part), Enabled))
+    if C.WantsFocus of TMsg(Frame, Part, C.Token('player-part', Part), Enabled)
+      or (Index = 0 and C.WantsFocus of TMsg(Frame, Id, C.Token('player-part', Part), Enabled))
     then
       Focus := Index;
     end if;
   end for;
-  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+  const Track: Sys.Func of (int, string)? := if Frame.PaintingClosed then
     null
   else
     function(Index: int): string => C.Token('player-part', Id + '/' + Parts[Index])
@@ -76,7 +76,7 @@ begin
     );
   end if;
 
-  C.Track<TMsg>(
+  C.Track of TMsg(
     Frame, new App.Control(
       Id, Current.Title, 'now-playing', new Cui.CuiRectangle(), false,
       Value := Position.ToString(Sys.Globalization.CultureInfo.InvariantCulture)

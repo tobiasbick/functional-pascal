@@ -18,7 +18,7 @@ uses Fpas.Ui.Widgets.Charts.DonutCharts as D;
 // - `Values`: Nonnegative shares.
 // - `Labels`: Share captions.
 // - `Settings`: Native presentation.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Values: array of float; Labels: array of string; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Values: array of float; Labels: array of string; Settings: D.Options);
 begin
   const Token: string := C.Token('donut-chart', Id);
   const Width: Size.NativeExtent := Size.Extent(Settings.Width);

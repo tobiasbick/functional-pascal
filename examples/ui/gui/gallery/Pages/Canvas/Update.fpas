@@ -129,13 +129,13 @@ end function;
 // - `Message`: Widget proposal or clock tick.
 // ## Returns
 // Updated page model and host commands.
-public function Update(Model: M.Model; Message: M.Msg): Mvu.Transition<M.Model, M.Msg>;
+public function Update(Model: M.Model; Message: M.Msg): Mvu.Transition of (M.Model, M.Msg);
 begin
-  return new Mvu.Transition<M.Model, M.Msg>(
+  return new Mvu.Transition of (M.Model, M.Msg)(
     Next(Model, Message),
     case Message of
       when M.Msg.ChooseAvatar: [
-        Files.OpenFile<M.Msg>(
+        Files.OpenFile of M.Msg(
           M.Msg.SetAvatar,
           'Choose an avatar for Paul',
           'PNG and JPEG images',

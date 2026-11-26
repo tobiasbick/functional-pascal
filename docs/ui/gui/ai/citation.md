@@ -21,9 +21,9 @@ uses Fpas.Ui.Widgets.Ai.Sources as S;
 // - `Source`: Source URL, title and optional snippet.
 // ## Returns
 // The citation chip.
-public function View(Number: int; Source: S.Item): E.Element<string>;
+public function View(Number: int; Source: S.Item): E.Element of string;
 begin
-  return W.Citation<string>('reference', Number, Source,
+  return W.Citation of string('reference', Number, Source,
     function(): string => Source.Url);
 end function;
 

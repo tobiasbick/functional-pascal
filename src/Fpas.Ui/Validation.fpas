@@ -121,16 +121,16 @@ end enum;
 //
 // ## Type parameters
 // - `TMsg`: The application message type.
-public type Prepared<TMsg> = record
+public type Prepared of TMsg = record
   // The root view. Deferred nodes reference Subviews by ID.
-  public Tree: E.Element<TMsg>;
+  public Tree: E.Element of TMsg;
   // The resolved subtrees for this view, including nested deferred nodes.
-  public Subviews: Generic.IReadOnlyDictionary<string, E.CacheEntry<TMsg>>;
+  public Subviews: Generic.IReadOnlyDictionary of (string, E.CacheEntry of TMsg);
 end record;
 
-type Work<TMsg> = variant
-  Enter(Node: E.Element<TMsg>?; Location: string);
-  Leave(Node: E.Element<TMsg>);
+type Work of TMsg = variant
+  Enter(Node: (E.Element of TMsg)?; Location: string);
+  Leave(Node: E.Element of TMsg);
   Resume(Action: procedure());
 end variant;
 
@@ -162,10 +162,10 @@ end record;
 //
 // ## Returns
 // The view and the cache entries that its presenter should use.
-public function Prepare<TMsg>(
-  Tree: E.Element<TMsg>; Profile: Target; Previous: Prepared<TMsg>? := null; TerminalSize: T.Viewport? := null;
+public function Prepare of TMsg(
+  Tree: E.Element of TMsg; Profile: Target; Previous: (Prepared of TMsg)? := null; TerminalSize: T.Viewport? := null;
   AllowOpenModals: bool := true
-): Prepared<TMsg>;
+): Prepared of TMsg;
 requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Target.Graphical;
   function Identify(Id: string; Location: string): string;
   begin
@@ -188,15 +188,15 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
     end if;
   end procedure;
 
-  procedure VisitScoped(Node: E.Element<TMsg>; Location: string);
+  procedure VisitScoped(Node: E.Element of TMsg; Location: string);
   begin
     VisitScopedContent(Node, Location);
   end procedure;
-  procedure CheckNode(Node: E.Element<TMsg>; Location: string);
+  procedure CheckNode(Node: E.Element of TMsg; Location: string);
   begin
     case Node of
       when E.Element.Dialog(
-        const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>,
+        const Id: string, const Base: E.Element of TMsg, const Content: E.Element of TMsg,
         _, const Settings: Dialogs.Options, _
       ):
         if Settings.Draggable or Settings.Resizable then
@@ -224,7 +224,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
 
         Visit(Base, At + '/base');
         VisitScopedContent(Content, At + '/content', Detached := true);
-      when E.Element.ActionFooter(const Children: array of E.Element<TMsg>):
+      when E.Element.ActionFooter(const Children: array of E.Element of TMsg):
         const At: string := Location + '/actionFooter';
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         for Index: int := 0 to Children.Length - 1 do
@@ -322,7 +322,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         if Settings <> null then
           ChartChecks.Color(Settings.Color, At);
           ChartChecks.Color(Settings.Track, At);
-          if not Sys.Enum.IsDefined<Spinners.Style>(Settings.Animation) then
+          if not Sys.Enum.IsDefined of Spinners.Style(Settings.Animation) then
             Rules.Reject(At, 'Unknown spinner animation.');
           end if;
         end if;
@@ -366,15 +366,15 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         FeedbackRules.Meter(Label, Used, Total, Unit, Identify(Id, Location + '/meter'));
       when E.Element.Contextual(
         const Id: string,
-        const Child: E.Element<TMsg>,
-        const Entries: array of Menus.Entry<TMsg>,
+        const Child: E.Element of TMsg,
+        const Entries: array of Menus.Entry of TMsg,
         _
       ):
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location + '/contextMenu');
-        MenuRules.Check<TMsg>(Id, 'Context menu', Entries, null, Location, Identify);
+        MenuRules.Check of TMsg(Id, 'Context menu', Entries, null, Location, Identify);
         Visit(Child, Location + '/target');
       when E.Element.Hinted(
-        const Child: E.Element<TMsg>,
+        const Child: E.Element of TMsg,
         const Caption: string,
         const Shortcut: string
       ):
@@ -383,7 +383,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         Visit(Child, At + '/target');
         After(
           procedure() begin
-            TooltipRules.Check<TMsg>(Child, Caption, Shortcut, Subviews, At);
+            TooltipRules.Check of TMsg(Child, Caption, Shortcut, Subviews, At);
           end procedure
         );
       when E.Element.Accordion(
@@ -391,7 +391,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Title: string,
         _,
         _,
-        const Content: E.Element<TMsg>,
+        const Content: E.Element of TMsg,
         _
       ):
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location + '/accordion');
@@ -403,7 +403,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Title: string,
         _,
         _,
-        const Content: E.Element<TMsg>,
+        const Content: E.Element of TMsg,
         const Settings: ExpandableCards.Options
       ):
         const At: string := Identify(Id, Location + '/expandableCard');
@@ -441,15 +441,15 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end if;
       when E.Element.HoverCard(
         const Id: string,
-        const Trigger: E.Element<TMsg>,
-        const Content: E.Element<TMsg>,
+        const Trigger: E.Element of TMsg,
+        const Content: E.Element of TMsg,
         const Settings: HoverCards.Options
       ):
         const At: string := Identify(Id, Location + '/hoverCard');
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         if not Sys.Single.IsFinite(Settings.Width) or Settings.Width < 0.0F
           or not Sys.Single.IsFinite(Settings.Delay) or Settings.Delay < 0.0F
-          or not Sys.Enum.IsDefined<Menus.Placement>(Settings.Position)
+          or not Sys.Enum.IsDefined of Menus.Placement(Settings.Position)
         then
           Rules.Reject(
             At,
@@ -460,7 +460,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         Visit(Trigger, At + '/trigger');
         After(
           procedure() begin
-            if not TooltipRules.HasAnchor<TMsg>(Trigger, Subviews) then
+            if not TooltipRules.HasAnchor of TMsg(Trigger, Subviews) then
               Rules.Reject(At, 'A hover card needs one interactive trigger.');
             end if;
 
@@ -474,18 +474,18 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           end procedure
         );
       when E.Element.Popover(
-        const Id: string, const Trigger: E.Element<TMsg>, const Content: E.Element<TMsg>, _, _,
+        const Id: string, const Trigger: E.Element of TMsg, const Content: E.Element of TMsg, _, _,
         const Settings: Popovers.Options
       ):
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location + '/popover');
         const At: string := Identify(Id, Location + '/popover');
         PopupRules.CheckPanel(Settings, At);
-        PopupRules.CheckTrigger<TMsg>(Trigger, At);
+        PopupRules.CheckTrigger of TMsg(Trigger, At);
         Visit(Trigger, At + '/trigger');
         VisitScopedContent(Content, At + '/content', Detached := true);
       when E.Element.ConfirmPopover(
         const Id: string,
-        const Trigger: E.Element<TMsg>,
+        const Trigger: E.Element of TMsg,
         _,
         const Settings: ConfirmPopovers.Options,
         _,
@@ -496,7 +496,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         discard Identify(ConfirmPopovers.CancelId(Id), At + '/cancel');
         discard Identify(ConfirmPopovers.ConfirmId(Id), At + '/confirm');
         PopupRules.CheckQuestion(Settings, At);
-        PopupRules.CheckTrigger<TMsg>(Trigger, At);
+        PopupRules.CheckTrigger of TMsg(Trigger, At);
         Visit(Trigger, At + '/trigger');
       when E.Element.ReactionGroup(const Id: string, const Items: array of Reactions.Item, _, _):
         const Path: string := Location + '/reactions';
@@ -529,7 +529,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           discard Identify(Speed.ItemId(Id, Index), At + '/action');
         end for;
       when E.Element.SwipeRow(
-        const Id: string, const Child: E.Element<TMsg>, const Left: array of Swipe.Item,
+        const Id: string, const Child: E.Element of TMsg, const Left: array of Swipe.Item,
         const Right: array of Swipe.Item, _, const Settings: Swipe.Options
       ):
         const Path: string := Location + '/swipeRow';
@@ -546,12 +546,12 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
 
         Visit(Child, At + '/content');
       when E.Element.AccountMenu(
-        const Id: string, const Name: string, const Entries: array of Menus.Entry<TMsg>,
+        const Id: string, const Name: string, const Entries: array of Menus.Entry of TMsg,
         const Settings: UserMenus.Options
       ):
         const Path: string := Location + '/userMenu';
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, Path);
-        MenuRules.Check<TMsg>(Id, Name, Entries, null, Path, Identify);
+        MenuRules.Check of TMsg(Id, Name, Entries, null, Path, Identify);
         Rules.CheckText(Settings.Detail, Path + '/detail');
         Rules.CheckText(Settings.Status, Path + '/status');
         const AvatarPath: string? := Settings.AvatarPath;
@@ -560,7 +560,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end if;
 
         if Settings.Detail.Contains(#10) or Settings.Detail.Contains(#13)
-          or not Sys.Enum.IsDefined<Menus.Placement>(Settings.Position)
+          or not Sys.Enum.IsDefined of Menus.Placement(Settings.Position)
           or not Sys.Single.IsFinite(Settings.Width) or Settings.Width < 0.0
         then
           Rules.Reject(
@@ -571,10 +571,10 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
       when E.Element.Dropdown(
         const Id: string,
         const Label: string,
-        const Entries: array of Menus.Entry<TMsg>,
+        const Entries: array of Menus.Entry of TMsg,
         const Settings: Menus.Options
       ):
-        MenuRules.Check<TMsg>(Id, Label, Entries, Settings, Location, Identify);
+        MenuRules.Check of TMsg(Id, Label, Entries, Settings, Location, Identify);
       when E.Element.FormattedText(
         const Value: string,
         const Font: Motion.Font,
@@ -584,7 +584,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location);
         Rules.CheckText(Value, Location);
         ChartChecks.Distance(FontSize, Location);
-        if not Sys.Enum.IsDefined<Motion.Font>(Font) then
+        if not Sys.Enum.IsDefined of Motion.Font(Font) then
           Rules.Reject(Location, 'Unknown graphical text font.');
         end if;
       when E.Element.Label(const Value: string):
@@ -692,8 +692,8 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         Rules.CheckText(Settings.TerminalIconRight, At + '/terminalIconRight');
         Rules.CheckText(Settings.Tooltip, At + '/tooltip');
         Rules.CheckText(Settings.Shortcut, At + '/shortcut');
-        if not Sys.Enum.IsDefined<S.ButtonVariant>(Settings.Variant)
-          or not Sys.Enum.IsDefined<B.Size>(Settings.ControlSize)
+        if not Sys.Enum.IsDefined of S.ButtonVariant(Settings.Variant)
+          or not Sys.Enum.IsDefined of B.Size(Settings.ControlSize)
         then
           Rules.Reject(At, 'Unknown button variant or size.');
         end if;
@@ -715,8 +715,8 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           Rules.Reject(At, 'An icon button needs an icon and a tooltip.');
         end if;
 
-        if not Sys.Enum.IsDefined<S.ButtonVariant>(Settings.Variant)
-          or not Sys.Enum.IsDefined<Icons.Size>(Settings.ControlSize)
+        if not Sys.Enum.IsDefined of S.ButtonVariant(Settings.Variant)
+          or not Sys.Enum.IsDefined of Icons.Size(Settings.ControlSize)
         then
           Rules.Reject(At, 'Unknown icon button variant or size.');
         end if;
@@ -734,7 +734,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         Rules.CheckText(Label, At);
         Rules.CheckText(Settings.Icon, At + '/icon');
         if Settings.DurationMilliseconds <= 0 or Settings.Variant = S.ButtonVariant.Active
-          or not Sys.Enum.IsDefined<S.ButtonVariant>(
+          or not Sys.Enum.IsDefined of S.ButtonVariant(
           Settings.Variant
         )
         then
@@ -752,8 +752,8 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         Rules.CheckText(Settings.ConfirmLabel, At + '/confirmLabel');
         Rules.CheckText(Settings.Icon, At + '/icon');
         if Settings.TimeoutMilliseconds <= 0 or Settings.Variant = S.ButtonVariant.Active
-          or not Sys.Enum.IsDefined<S.ButtonVariant>(Settings.Variant)
-          or not Sys.Enum.IsDefined<B.Size>(Settings.ControlSize)
+          or not Sys.Enum.IsDefined of S.ButtonVariant(Settings.Variant)
+          or not Sys.Enum.IsDefined of B.Size(Settings.ControlSize)
         then
           Rules.Reject(
             At,
@@ -778,10 +778,10 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           Rules.CheckText(Busy, At + '/busyLabel');
         end if;
 
-        if not Sys.Enum.IsDefined<Status.Status>(State)
-          or not Sys.Enum.IsDefined<S.ButtonVariant>(Settings.Variant)
+        if not Sys.Enum.IsDefined of Status.Status(State)
+          or not Sys.Enum.IsDefined of S.ButtonVariant(Settings.Variant)
           or Settings.Variant = S.ButtonVariant.Active
-          or not Sys.Enum.IsDefined<B.Size>(Settings.ControlSize)
+          or not Sys.Enum.IsDefined of B.Size(Settings.ControlSize)
         then
           Rules.Reject(At, 'A status button needs a valid work state, button variant and size.');
         end if;
@@ -798,7 +798,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end if;
 
         if Items.Length < 1 or Items.Length > 32 or Selected < 0 or Selected >= Items.Length
-          or not Sys.Enum.IsDefined<B.Size>(Settings.ControlSize)
+          or not Sys.Enum.IsDefined of B.Size(Settings.ControlSize)
         then
           Rules.Reject(
             At,
@@ -833,7 +833,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
       when E.Element.ThemeFlip(const Id: string, const Appearance: Themes.Mode, _, _):
         const At: string := Identify(Id, Location + '/themeToggle');
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
-        if not Sys.Enum.IsDefined<Themes.Mode>(Appearance) then
+        if not Sys.Enum.IsDefined of Themes.Mode(Appearance) then
           Rules.Reject(At, 'A theme toggle needs a concrete Light or Dark appearance.');
         end if;
       when E.Element.ThemeChoice(
@@ -844,7 +844,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
       ):
         const At: string := Identify(Id, Location + '/themeSwitcher');
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
-        if not Sys.Enum.IsDefined<ThemeSwitchers.Selection>(Selected)
+        if not Sys.Enum.IsDefined of ThemeSwitchers.Selection(Selected)
           or (Selected = ThemeSwitchers.Selection.System and not Settings.WithSystem)
         then
           Rules.Reject(At, 'A theme selector needs an available Light, Dark or System choice.');
@@ -860,10 +860,10 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
             At + '/item'
           );
         end for;
-      when E.Element.ButtonGroup(const Children: array of E.Element<TMsg>):
+      when E.Element.ButtonGroup(const Children: array of E.Element of TMsg):
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location);
         for Index: int := 0 to Children.Length - 1 do
-          const Child: E.Element<TMsg> := Children[Index];
+          const Child: E.Element of TMsg := Children[Index];
           const At: string := Location + '/buttonGroup[' + Index.ToString() + ']';
           CheckGroupedButton(Child, At);
         end for;
@@ -871,7 +871,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Id: string,
         const Label: string,
         _,
-        const Items: array of Split.Item<TMsg>,
+        const Items: array of Split.Item of TMsg,
         const Settings: Split.Options
       ):
         const At: string := Identify(Id, Location + '/splitButton');
@@ -880,14 +880,14 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         Rules.CheckText(Settings.Icon, At + '/icon');
         discard Identify(Split.MenuId(Id), At + '/menu');
         if Items.Length = 0 or Settings.Variant = S.ButtonVariant.Active
-          or not Sys.Enum.IsDefined<S.ButtonVariant>(
+          or not Sys.Enum.IsDefined of S.ButtonVariant(
           Settings.Variant
-        ) or not Sys.Enum.IsDefined<B.Size>(Settings.ControlSize)
+        ) or not Sys.Enum.IsDefined of B.Size(Settings.ControlSize)
         then
           Rules.Reject(At, 'A split button needs menu items, a CUI variant and a known size.');
         end if;
 
-        for Item: Split.Item<TMsg> in Items do
+        for Item: Split.Item of TMsg in Items do
           if Sys.String.IsNullOrWhiteSpace(Item.Key) then
             Rules.Reject(At, 'Menu item keys must be nonempty.');
           end if;
@@ -897,13 +897,13 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end for;
       when E.Element.Sidebar(
         const Id: string,
-        const Sections: array of N.Section<TMsg>,
+        const Sections: array of N.Section of TMsg,
         const Active: string?,
         _
       ):
         const At: string := Identify(Id, Location + '/sidebar');
-        const Keys: Generic.HashSet<string> := new Generic.HashSet<string>();
-        for Section: N.Section<TMsg> in Sections do
+        const Keys: Generic.HashSet of string := new Generic.HashSet of string();
+        for Section: N.Section of TMsg in Sections do
           Rules.CheckText(Section.Title, At + '/heading');
           if Section.GapBefore <> 0 then
             Rules.RequireProfile(Mode, Rules.Profile.Graphical, At + '/heading gap');
@@ -914,7 +914,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
             );
           end if;
 
-          for Item: N.Item<TMsg> in Section.Items do
+          for Item: N.Item of TMsg in Section.Items do
             Rules.CheckKey(Keys, Item.Key, At);
             const ItemAt: string := Identify(N.ItemId(Id, Item.Key), At + '/item');
             Rules.CheckText(Item.Label, ItemAt);
@@ -941,8 +941,8 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Id: string,
         const Label: string,
         const Open: bool?,
-        const Children: array of E.Element<TMsg>,
-        const Change: Sys.Func<bool, TMsg>?,
+        const Children: array of E.Element of TMsg,
+        const Change: Sys.Func of (bool, TMsg)?,
         _,
         const Settings: Trees.Options
       ):
@@ -953,7 +953,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           Rules.Reject(At, 'Expansion and its callback belong to a branch.');
         end if;
 
-        for Child: E.Element<TMsg> in Children do
+        for Child: E.Element of TMsg in Children do
           if Mode <> Rules.Profile.Graphical then
             case Child of
               when E.Element.TreeNode(_, _, _, _, _, _, _):
@@ -967,9 +967,9 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
       when E.Element.Table(
         const Id: string,
         const Columns: array of Tables.Column,
-        const Rows: array of Tables.Row<TMsg>,
+        const Rows: array of Tables.Row of TMsg,
         const Order: Tables.Sort?,
-        const OnSort: Sys.Func<Tables.Sort, TMsg>?,
+        const OnSort: Sys.Func of (Tables.Sort, TMsg)?,
         _,
         const Settings: Tables.Options
       ):
@@ -988,7 +988,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           discard Identify(Tables.HeaderId(Id, Index), At + '/header');
         end for;
 
-        for Row: Tables.Row<TMsg> in Rows do
+        for Row: Tables.Row of TMsg in Rows do
           CheckTableRow(Row, Columns.Length, At);
         end for;
       when E.Element.FilterBar(
@@ -1019,7 +1019,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end for;
       when E.Element.TreeCell(
         const Id: string, const Label: string, const Depth: int,
-        const Open: bool?, const Change: Sys.Func<bool, TMsg>?, const Icon: string
+        const Open: bool?, const Change: Sys.Func of (bool, TMsg)?, const Icon: string
       ):
         const At: string := Identify(Id, Location + '/treeCell');
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
@@ -1043,12 +1043,12 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         GridRules.Grid(Columns, Nodes.Length, Order, Settings.Height, Settings.RowHeight, At);
         GridRules.Tree(Nodes, Columns.Length, Cursor, At);
       when E.Element.ReorderableList(
-        const Id: string, const Items: array of E.Element<TMsg>, const Order: array of int, _, _
+        const Id: string, const Items: array of E.Element of TMsg, const Order: array of int, _, _
       ):
         const At: string := Identify(Id, Location + '/reorder');
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         CollectionRules.Reorder(Items.Length, Order, At);
-        for Child: E.Element<TMsg> in Items do
+        for Child: E.Element of TMsg in Items do
           Visit(Child, At);
         end for;
       when E.Element.VirtualList(
@@ -1150,7 +1150,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _,
         _
       ), E.Element.RequestBar(_, _, _, _, _), E.Element.FeatureFlags(_, _, _, _, _):
-        Developer.Check<TMsg>(Node, Location, Mode, Identify);
+        Developer.Check of TMsg(Node, Location, Mode, Identify);
       when E.Element.FormatBar(
         _,
         _,
@@ -1180,7 +1180,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _,
         _
       ), E.Element.Toolbar(_, _, _, _), E.Element.NodeEditor(_, _, _, _, _, _):
-        Canvas.Check<TMsg>(Node, Location, Mode, Identify, Visit);
+        Canvas.Check of TMsg(Node, Location, Mode, Identify, Visit);
       when E.Element.MenuBar(_, _, _), E.Element.StatusBar(_, _, _), E.Element.DocumentTabs(
         _,
         _,
@@ -1195,7 +1195,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _,
         _
       ):
-        Chrome.Check<TMsg>(Node, Location, Mode, Identify, Visit);
+        Chrome.Check of TMsg(Node, Location, Mode, Identify, Visit);
       when E.Element.Markdown(_, _, _, _), E.Element.CodeEditor(_, _, _, _), E.Element.DiffView(
         _,
         _,
@@ -1210,7 +1210,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _,
         _
       ), E.Element.LogConsole(_, _, _, _), E.Element.Terminal(_, _, _, _, _):
-        SourceTools.Check<TMsg>(Node, Location, Mode, Identify);
+        SourceTools.Check of TMsg(Node, Location, Mode, Identify);
       when E.Element.PropertyInspector(_, _, _, _), E.Element.FlameGraph(
         _,
         _,
@@ -1224,7 +1224,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _,
         _
       ), E.Element.GradientEditor(_, _, _, _, _), E.Element.TimelineEditor(_, _, _, _, _):
-        EditingTools.Check<TMsg>(Node, Location, Mode, Identify);
+        EditingTools.Check of TMsg(Node, Location, Mode, Identify);
       when E.Element.NativeText(_, _), E.Element.Icon(
         _,
         _,
@@ -1244,7 +1244,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _,
         _
       ):
-        Display.Check<TMsg>(Node, Location, Mode, Identify, Visit);
+        Display.Check of TMsg(Node, Location, Mode, Identify, Visit);
       when E.Element.VoiceWave(
         _,
         _,
@@ -1293,19 +1293,19 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         _,
         _
       ):
-        VoiceAndAi.Check<TMsg>(Node, Location, Mode, Identify, VisitReasoning);
+        VoiceAndAi.Check of TMsg(Node, Location, Mode, Identify, VisitReasoning);
       when E.Element.CommandPalette(
         const Id: string,
-        const Base: E.Element<TMsg>,
+        const Base: E.Element of TMsg,
         _,
-        const Commands: array of Palettes.Command<TMsg>,
+        const Commands: array of Palettes.Command of TMsg,
         _,
         _
       ):
         const At: string := Identify(Id, Location + '/commandPalette');
         discard Identify(Id + '/query', At);
         for Index: int := 0 to Commands.Length - 1 do
-          const Item: Palettes.Command<TMsg> := Commands[Index];
+          const Item: Palettes.Command of TMsg := Commands[Index];
           discard Identify(
             Id + '/command/' + Index.ToString(Sys.Globalization.CultureInfo.InvariantCulture),
             At
@@ -1317,7 +1317,10 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end for;
 
         Visit(Base, At);
-      when E.Element.Grid(const Settings: Grids.Options, const Children: array of E.Element<TMsg>):
+      when E.Element.Grid(
+        const Settings: Grids.Options,
+        const Children: array of E.Element of TMsg
+      ):
         const At: string := Location + '/grid';
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
         SurfaceRules.Grid(Settings, At);
@@ -1325,7 +1328,10 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           Visit(Children[Index], At + '[' + Index.ToString() + ']');
         end for;
       when E.Element.Card(
-        const Id: string, const Children: array of E.Element<TMsg>, const Settings: Cards.Options, _
+        const Id: string,
+        const Children: array of E.Element of TMsg,
+        const Settings: Cards.Options,
+        _
       ):
         const At: string := Identify(Id, Location + '/card');
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
@@ -1358,7 +1364,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const Id: string,
         const Title: string,
         const Settings: EmptyStates.Options,
-        const Action: Sys.Func<TMsg>?
+        const Action: (Sys.Func of TMsg)?
       ):
         const At: string := Identify(Id, Location + '/emptyState');
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, At);
@@ -1367,7 +1373,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           discard Identify(EmptyStates.ActionId(Id), At + '/action');
         end if;
       when E.Element.Tour(
-        const Id: string, const Base: E.Element<TMsg>, const Steps: array of Tours.Step,
+        const Id: string, const Base: E.Element of TMsg, const Steps: array of Tours.Step,
         const Current: int, _, const Settings: Tours.Options
       ):
         const At: string := Identify(Id, Location + '/tour');
@@ -1389,7 +1395,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           Rules.CheckText(Item.Target, At + '/target');
           Rules.CheckText(Item.Title, At + '/title');
           Rules.CheckText(Item.Body, At + '/body');
-          if not Sys.Enum.IsDefined<Menus.Placement>(Item.Position) then
+          if not Sys.Enum.IsDefined of Menus.Placement(Item.Position) then
             Rules.Reject(At, 'Unknown tour placement.');
           end if;
         end for;
@@ -1411,13 +1417,13 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
       when E.Element.Gap(const Distance: L.Measure):
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location + '/gap');
         discard LayoutRules.CheckMeasure(Distance, Mode, Location + '/gap');
-      when E.Element.Layered(const Children: array of E.Element<TMsg>, const Flow: L.Flow):
+      when E.Element.Layered(const Children: array of E.Element of TMsg, const Flow: L.Flow):
         ContainerRules.CheckLayered(Flow, Mode, Location);
         for Index: int := 0 to Children.Length - 1 do
           Visit(Children[Index], Location + '/layers[' + Index.ToString() + ']');
         end for;
       when E.Element.Stack(
-        const Children: array of E.Element<TMsg>,
+        const Children: array of E.Element of TMsg,
         const Horizontal: bool,
         const Flow: L.Flow
       ):
@@ -1430,11 +1436,11 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         for Index: int := 0 to Children.Length - 1 do
           Visit(Children[Index], At + '[' + Index.ToString() + ']');
         end for;
-      when E.Element.Sized(const Child: E.Element<TMsg>, const Flex: L.Flex):
+      when E.Element.Sized(const Child: E.Element of TMsg, const Flex: L.Flex):
         LayoutRules.CheckFlex(Flex, Mode, Location + '/size');
         Visit(Child, Location + '/size');
-      when E.Element.Styled(const Child: E.Element<TMsg>, const Role: S.Role):
-        if not Sys.Enum.IsDefined<S.Role>(Role) then
+      when E.Element.Styled(const Child: E.Element of TMsg, const Role: S.Role):
+        if not Sys.Enum.IsDefined of S.Role(Role) then
           Rules.Reject(Location + '/style', 'Unknown semantic style role.');
         end if;
 
@@ -1450,7 +1456,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end if;
 
         Visit(Child, Location + '/style');
-      when E.Element.Framed(const Child: E.Element<TMsg>, const Title: string):
+      when E.Element.Framed(const Child: E.Element of TMsg, const Title: string):
         Rules.CheckText(Title, Location + '/border');
         Visit(Child, Location + '/border');
       when E.Element.TableOfContents(
@@ -1467,7 +1473,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           Rules.Reject(At, 'Each scroll viewport can have only one table of contents.');
         end if;
 
-        const Seen: Generic.HashSet<string> := new Generic.HashSet<string>();
+        const Seen: Generic.HashSet of string := new Generic.HashSet of string();
         for Index: int := 0 to Items.Length - 1 do
           const Entry: Toc.Item := Items[Index];
           const Row: string := Identify(Toc.ItemId(Id, Index), At);
@@ -1492,9 +1498,9 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end case;
       when E.Element.Scroll(
         const Id: string,
-        const Child: E.Element<TMsg>,
+        const Child: E.Element of TMsg,
         const Position: L.ScrollPosition?,
-        const OnScroll: Sys.Func<L.ScrollChange, TMsg>?,
+        const OnScroll: Sys.Func of (L.ScrollChange, TMsg)?,
         _,
         const FadeEdges: bool,
         const Horizontal: bool
@@ -1533,7 +1539,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           end procedure
         );
       when E.Element.Sheet(
-        const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>, _,
+        const Id: string, const Base: E.Element of TMsg, const Content: E.Element of TMsg, _,
         const Settings: Sheets.Options, _
       ):
         if HoverDepth > 0 then
@@ -1548,7 +1554,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           Rules.CheckText(Initial, At + '/initialFocus');
         end if;
 
-        if Settings.Size <= 0 or not Sys.Enum.IsDefined<Sheets.Side>(Settings.Edge) then
+        if Settings.Size <= 0 or not Sys.Enum.IsDefined of Sheets.Side(Settings.Edge) then
           Rules.Reject(At, 'A sheet needs a positive size and a valid edge.');
         end if;
 
@@ -1556,10 +1562,10 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         VisitScopedContent(Content, At + '/content', Detached := true);
       when E.Element.Deferred(
         const Id: string,
-        const Resolve: function(E.CacheEntry<TMsg>?): E.CacheEntry<TMsg>
+        const Resolve: function((E.CacheEntry of TMsg)?): E.CacheEntry of TMsg
       ):
         const At: string := Identify(Id, Location + '/subview');
-        const Old: E.CacheEntry<TMsg>? := if Previous <> null and Previous.Subviews.ContainsKey(
+        const Old: (E.CacheEntry of TMsg)? := if Previous <> null and Previous.Subviews.ContainsKey(
           Id
         )
         then
@@ -1567,7 +1573,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         else
           null
         end if;
-        const Current: E.CacheEntry<TMsg> := Resolve(Old);
+        const Current: E.CacheEntry of TMsg := Resolve(Old);
         Subviews.Add(Id, Current);
         Visit(Current.Tree, At);
       when E.Element.TerminalCellGrid(const Id: string, _, _):
@@ -1578,26 +1584,26 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         const At: string := Identify(Id, Location + '/selectionList');
         Rules.RequireProfile(Mode, Rules.Profile.Terminal, At);
         CollectionRules.SelectionList(Items, Selected, At);
-      when E.Element.TerminalStyle(const Child: E.Element<TMsg>, const Colors: T.Style):
+      when E.Element.TerminalStyle(const Child: E.Element of TMsg, const Colors: T.Style):
         const At: string := Location + '/cellStyle';
         Rules.RequireProfile(Mode, Rules.Profile.Terminal, At);
         CheckTerminalColor(Colors.Foreground, At);
         CheckTerminalColor(Colors.Background, At);
         Visit(Child, At);
       when E.Element.TerminalScreen(
-        const Content: E.Element<TMsg>,
-        const Layers: array of E.Element<TMsg>,
-        const Shortcuts: array of K.ShortcutBinding<TMsg>
+        const Content: E.Element of TMsg,
+        const Layers: array of E.Element of TMsg,
+        const Shortcuts: array of K.ShortcutBinding of TMsg
       ):
         Rules.RequireProfile(Mode, Rules.Profile.Terminal, Location + '/screen');
         CheckShortcuts(Shortcuts, Location);
         Visit(Content, Location + '/content');
-        for Layer: E.Element<TMsg> in Layers do
+        for Layer: E.Element of TMsg in Layers do
           Visit(Layer, Location + '/layer');
         end for;
       when E.Element.TerminalViewport(
         const Id: string,
-        const Build: function(T.Viewport): E.Element<TMsg>
+        const Build: function(T.Viewport): E.Element of TMsg
       ):
         const At: string := Identify(Id, Location + '/terminalViewport');
         Rules.RequireProfile(Mode, Rules.Profile.Terminal, At);
@@ -1610,29 +1616,29 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         if Size.Columns < 1 or Size.Rows < 1 then
           Rules.Reject(At, 'Terminal dimensions must be positive.');
         end if;
-        const Content: E.Element<TMsg> := Build(Size);
-        Subviews.Add(Id, new E.CacheEntry<TMsg>(Size, Content));
+        const Content: E.Element of TMsg := Build(Size);
+        Subviews.Add(Id, new E.CacheEntry of TMsg(Size, Content));
         Visit(Content, At);
       else
-        if MediaValidation.Check<TMsg>(Node, Location, Mode, Identify, Visit)
-          or ConversationValidation.Check<TMsg>(Node, Location, Mode, Identify, Visit)
-          or PlanningValidation.Check<TMsg>(Node, Location, Mode, Identify, Visit, VisitScoped)
-          or CreativeValidation.Check<TMsg>(Node, Location, Mode, Identify)
-          or MotionValidation.Check<TMsg>(Node, Location, Mode, Identify, Visit)
-          or ChartValidation.Check<TMsg>(Node, Location, Mode, Identify)
-          or PickerValidation.Check<TMsg>(Node, Location, Mode, Identify)
-          or FeedbackAndAudio.Check<TMsg>(Node, Location, Mode, Identify)
+        if MediaValidation.Check of TMsg(Node, Location, Mode, Identify, Visit)
+          or ConversationValidation.Check of TMsg(Node, Location, Mode, Identify, Visit)
+          or PlanningValidation.Check of TMsg(Node, Location, Mode, Identify, Visit, VisitScoped)
+          or CreativeValidation.Check of TMsg(Node, Location, Mode, Identify)
+          or MotionValidation.Check of TMsg(Node, Location, Mode, Identify, Visit)
+          or ChartValidation.Check of TMsg(Node, Location, Mode, Identify)
+          or PickerValidation.Check of TMsg(Node, Location, Mode, Identify)
+          or FeedbackAndAudio.Check of TMsg(Node, Location, Mode, Identify)
         then
           return;
         end if;
     end case;
   end procedure;
 
-  procedure CheckGroupedButton(Child: E.Element<TMsg>; Location: string);
+  procedure CheckGroupedButton(Child: E.Element of TMsg; Location: string);
   begin
     After(
       procedure() begin
-        if not TooltipRules.IsButton<TMsg>(Child) then
+        if not TooltipRules.IsButton of TMsg(Child) then
           Rules.Reject(Location, 'A button group accepts only button actions.');
         end if;
 
@@ -1641,7 +1647,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
     );
   end procedure;
 
-  procedure CheckTableCell(Cell: Tables.Cell<TMsg>; Location: string);
+  procedure CheckTableCell(Cell: Tables.Cell of TMsg; Location: string);
   begin
     case Cell of
       when Tables.Cell.Text(const Caption: string):
@@ -1650,15 +1656,15 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
             Rules.CheckText(Caption, Location);
           end procedure
         );
-      when Tables.Cell.Content(const Nodes: array of E.Element<TMsg>):
+      when Tables.Cell.Content(const Nodes: array of E.Element of TMsg):
         Rules.RequireProfile(Mode, Rules.Profile.Graphical, Location);
-        for Child: E.Element<TMsg> in Nodes do
+        for Child: E.Element of TMsg in Nodes do
           Visit(Child, Location);
         end for;
     end case;
   end procedure;
 
-  procedure CheckTableRow(Row: Tables.Row<TMsg>; ColumnCount: int; Location: string);
+  procedure CheckTableRow(Row: Tables.Row of TMsg; ColumnCount: int; Location: string);
   begin
     After(
       procedure() begin
@@ -1670,7 +1676,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         InNativeScope(
           false,
           procedure() begin
-            for Cell: Tables.Cell<TMsg> in Row.Cells do
+            for Cell: Tables.Cell of TMsg in Row.Cells do
               CheckTableCell(Cell, At + '/cell');
             end for;
           end procedure
@@ -1681,14 +1687,14 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
 
   // Schedule work in source order. ValidateTree processes each appended batch
   // depth-first after the current check has returned.
-  procedure Visit(Node: E.Element<TMsg>?; Location: string);
+  procedure Visit(Node: (E.Element of TMsg)?; Location: string);
   begin
-    Pending.Add(Work<TMsg>.Enter(Node, Location));
+    Pending.Add((Work of TMsg).Enter(Node, Location));
   end procedure;
 
   procedure After(Action: procedure());
   begin
-    Pending.Add(Work<TMsg>.Resume(Action));
+    Pending.Add((Work of TMsg).Resume(Action));
   end procedure;
 
   // Native widgets can scope IDs without lifting their content out of an enclosing scroll.
@@ -1715,7 +1721,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
     );
   end procedure;
 
-  procedure VisitScopedContent(Node: E.Element<TMsg>; Location: string; Detached: bool := false);
+  procedure VisitScopedContent(Node: E.Element of TMsg; Location: string; Detached: bool := false);
   begin
     InNativeScope(
       Detached,
@@ -1725,7 +1731,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
     );
   end procedure;
 
-  procedure VisitReasoning(Node: E.Element<TMsg>; Location: string);
+  procedure VisitReasoning(Node: E.Element of TMsg; Location: string);
   begin
     After(
       procedure() begin
@@ -1740,7 +1746,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
     );
   end procedure;
 
-  procedure CheckModalScope(Node: E.Element<TMsg>; Location: string);
+  procedure CheckModalScope(Node: E.Element of TMsg; Location: string);
   begin
     var Modal: bool := false;
     var Open: bool := false;
@@ -1792,10 +1798,10 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
     Visit(Tree, 'root');
     while Pending.Count > 0 do
       const Index: int := Pending.Count - 1;
-      const Next: Work<TMsg> := Pending[Index];
+      const Next: Work of TMsg := Pending[Index];
       Pending.RemoveAt(Index);
       case Next of
-        when Work.Enter(const Node: E.Element<TMsg>?, const Location: string):
+        when Work.Enter(const Node: (E.Element of TMsg)?, const Location: string):
           if Node = null then
             raise new Sys.ArgumentException(Location + ' — A view node is missing.');
           end if;
@@ -1804,12 +1810,12 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
             Rules.Reject(Location, 'A view cannot contain a cycle.');
           end if;
 
-          Pending.Add(Work<TMsg>.Leave(Node));
+          Pending.Add((Work of TMsg).Leave(Node));
           CheckModalScope(Node, Location);
           CheckNode(Node, Location);
           // The leave marker stays below the scheduled children.
           Pending.Reverse(Index + 1, Pending.Count - Index - 1);
-        when Work.Leave(const Node: E.Element<TMsg>):
+        when Work.Leave(const Node: E.Element of TMsg):
           discard Visiting.Remove(Node);
         when Work.Resume(const Action: procedure()):
           Action();
@@ -1818,11 +1824,11 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
     end while;
   end procedure;
 
-  procedure CheckShortcuts(Shortcuts: array of K.ShortcutBinding<TMsg>; Location: string);
+  procedure CheckShortcuts(Shortcuts: array of K.ShortcutBinding of TMsg; Location: string);
   begin
-    const Gestures: Generic.HashSet<string> := new Generic.HashSet<string>();
-    for Shortcut: K.ShortcutBinding<TMsg> in Shortcuts do
-      if not Sys.Enum.IsDefined<K.Key>(
+    const Gestures: Generic.HashSet of string := new Generic.HashSet of string();
+    for Shortcut: K.ShortcutBinding of TMsg in Shortcuts do
+      if not Sys.Enum.IsDefined of K.Key(
         Shortcut.PressedKey
       ) or (cast<int>(Shortcut.Modifiers) and not 7) <> 0
       then
@@ -1860,22 +1866,22 @@ begin
     when Target.Terminal: Rules.Profile.Terminal;
     else Rules.Profile.Graphical;
   end case;
-  const Ids: Generic.HashSet<string> := new Generic.HashSet<string>();
-  const Visiting: Generic.HashSet<Sys.Object> := new Generic.HashSet<Sys.Object>(
+  const Ids: Generic.HashSet of string := new Generic.HashSet of string();
+  const Visiting: Generic.HashSet of Sys.Object := new Generic.HashSet of Sys.Object(
     Generic.ReferenceEqualityComparer.Instance
   );
-  const Pending: Generic.List<Work<TMsg>> := new Generic.List<Work<TMsg>>();
-  const Subviews: Generic.Dictionary<string, E.CacheEntry<TMsg>> := new Generic.Dictionary<string, E.CacheEntry<TMsg>>();
+  const Pending: Generic.List of Work of TMsg := new Generic.List of Work of TMsg();
+  const Subviews: Generic.Dictionary of (string, E.CacheEntry of TMsg) := new Generic.Dictionary of (string, E.CacheEntry of TMsg)();
   var HoverDepth: int := 0;
   var ReasoningDepth: int := 0;
-  const UncontrolledScrolls: Generic.Dictionary<string, int> := new Generic.Dictionary<string, int>();
-  const AnchorPlacements: Generic.Dictionary<string, AnchorPlacement> := new Generic.Dictionary<string, AnchorPlacement>();
-  const TocTargets: Generic.Dictionary<string, OutlineTarget> := new Generic.Dictionary<string, OutlineTarget>();
+  const UncontrolledScrolls: Generic.Dictionary of (string, int) := new Generic.Dictionary of (string, int)();
+  const AnchorPlacements: Generic.Dictionary of (string, AnchorPlacement) := new Generic.Dictionary of (string, AnchorPlacement)();
+  const TocTargets: Generic.Dictionary of (string, OutlineTarget) := new Generic.Dictionary of (string, OutlineTarget)();
   var ScrollOwner: string? := null;
   var NativeScope: int := 0;
   var ScopeCount: int := 0;
   ValidateTree();
-  for EntryTarget: Generic.KeyValuePair<string, OutlineTarget> in TocTargets do
+  for EntryTarget: Generic.KeyValuePair of (string, OutlineTarget) in TocTargets do
     const ScrollId: string := EntryTarget.Key;
     const OutlineView: OutlineTarget := EntryTarget.Value;
     var ScrollScope: int := 0;
@@ -1911,9 +1917,9 @@ begin
     end for;
   end for;
 
-  return new Prepared<TMsg>(
+  return new Prepared of TMsg(
     Tree,
-    new Collections.ReadOnlyDictionary<string, E.CacheEntry<TMsg>>(Subviews)
+    new Collections.ReadOnlyDictionary of (string, E.CacheEntry of TMsg)(Subviews)
   );
 end function;
 

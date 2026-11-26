@@ -10,19 +10,19 @@ public sealed partial class AsyncControlTests
         await program.Compile("""
             program NestedEntry;
             uses System as Sys; uses System.Console as Console; uses System.Threading.Tasks as Tasks;
-            async function Child<T>(Input: T; Gate: Tasks.Task<int>): Tasks.Task<T>;
+            async function Child of T(Input: T; Gate: Tasks.Task of int): Tasks.Task of T;
             begin
               const Release: int := await Gate;
               return Input;
             end function;
-            async function Parent(Gate: Tasks.Task<int>): Tasks.Task<int>;
+            async function Parent(Gate: Tasks.Task of int): Tasks.Task of int;
             begin
-              const Value: int := await Child<int>(42, Gate);
+              const Value: int := await Child of int(42, Gate);
               return Value;
             end function;
             begin
-              const Gate: Tasks.TaskCompletionSource<int> := new Tasks.TaskCompletionSource<int>(Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
-              const Pending: Tasks.Task<int> := Parent(Gate.Task);
+              const Gate: Tasks.TaskCompletionSource of int := new Tasks.TaskCompletionSource of int(Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
+              const Pending: Tasks.Task of int := Parent(Gate.Task);
               if Pending.IsCompleted then raise new Sys.InvalidOperationException('Must suspend'); end if;
               Gate.SetResult(1);
               Console.WriteLine(Pending.GetAwaiter().GetResult());
@@ -54,15 +54,15 @@ public sealed partial class AsyncControlTests
         await program.Compile("""
             program AsyncKickoff;
             uses System as Sys; uses System.Console as Console; uses System.Threading.Tasks as Tasks;
-            async function Work(Input: int; Gate: Tasks.Task<int>): Tasks.Task<int>;
+            async function Work(Input: int; Gate: Tasks.Task of int): Tasks.Task of int;
             begin
               var Value: int := Input + 1;
               const Release: int := await Gate;
               return Value + Release;
             end function;
             begin
-              const Gate: Tasks.TaskCompletionSource<int> := new Tasks.TaskCompletionSource<int>();
-              const Pending: Tasks.Task<int> := Work(19, Gate.Task);
+              const Gate: Tasks.TaskCompletionSource of int := new Tasks.TaskCompletionSource of int();
+              const Pending: Tasks.Task of int := Work(19, Gate.Task);
               if Pending.IsCompleted then raise new Sys.InvalidOperationException('Must suspend'); end if;
               Gate.SetResult(22);
               Console.WriteLine(Pending.GetAwaiter().GetResult());

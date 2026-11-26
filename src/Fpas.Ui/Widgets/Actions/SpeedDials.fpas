@@ -46,12 +46,12 @@ end function;
 // - `Settings`: Optional trigger and placement options.
 // ## Returns
 // A graphical speed dial with CUI-owned expansion.
-public function SpeedDial<TMsg>(
+public function SpeedDial of TMsg(
   Id: string; Items: array of Item; OnChoose: function(int): TMsg; Settings: Options? := null
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.SpeedDialAction(Id, Items, OnChoose, Settings ?? new Options());
+  return (E.Element of TMsg).SpeedDialAction(Id, Items, OnChoose, Settings ?? new Options());
 end function;
 
 end unit;

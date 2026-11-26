@@ -55,8 +55,8 @@ public type PlayerQueueTests = record
       Outer.Id,
       Outer.Path,
       Inventory.Availability.Offline,
-      I.ImmutableArray.Create<string>(Path),
-      I.ImmutableArray<Inventory.ScanIssue>.Empty,
+      I.ImmutableArray.Create of string(Path),
+      (I.ImmutableArray of Inventory.ScanIssue).Empty,
       false
     );
     const Shared: Inventory.SourceSnapshot := Owned with
@@ -77,7 +77,7 @@ public type PlayerQueueTests = record
         end with
       )
     );
-    const Views: I.ImmutableArray<Inventory.SourceSnapshot> := I.ImmutableArray.CreateRange<Inventory.SourceSnapshot>(
+    const Views: I.ImmutableArray of Inventory.SourceSnapshot := I.ImmutableArray.CreateRange of Inventory.SourceSnapshot(
       [Owned, Shared]
     );
     const Snapshot: Inventory.Snapshot := new Inventory.Snapshot(1L, 0L, Views);
@@ -89,7 +89,7 @@ public type PlayerQueueTests = record
       )
     );
     const Cleared: Inventory.SourceSnapshot := Shared with
-      Files := I.ImmutableArray<string>.Empty;
+      Files := (I.ImmutableArray of string).Empty;
     end with;
     X.Assert.False(
       Availability.Allows(
@@ -109,7 +109,7 @@ public type PlayerQueueTests = record
   public procedure NavigationSkipsOfflineSlots(Failed: bool);
   begin
     const Base: Tracks.Entry := Song(1L, 3.0);
-    const Queue: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray.CreateRange<Tracks.Entry>(
+    const Queue: I.ImmutableArray of Tracks.Entry := I.ImmutableArray.CreateRange of Tracks.Entry(
       [
         Base with
           Path := 'offline';
@@ -130,10 +130,10 @@ public type PlayerQueueTests = record
       M.Msg.Play(Queue, 0, new Music.Selection()),
       Allowed
     ).Model;
-    X.Assert.Equal<int>(1, First.Index);
+    X.Assert.Equal of int(1, First.Index);
     const Next: M.State := Update.Apply(First, M.Msg.Next, Allowed).Model;
-    X.Assert.Equal<int>(3, Next.Index);
-    X.Assert.Equal<int>(1, Update.Apply(Next, M.Msg.Previous, Allowed).Model.Index);
+    X.Assert.Equal of int(3, Next.Index);
+    X.Assert.Equal of int(1, Update.Apply(Next, M.Msg.Previous, Allowed).Model.Index);
     const Event: Audio.PlaybackEvent := new Audio.PlaybackEvent(
       'one',
       if Failed then
@@ -141,9 +141,9 @@ public type PlayerQueueTests = record
       else
         Audio.PlaybackState.Ended
       end if,
-      Sys.TimeSpan.Zero, Sys.TimeSpan.Zero, I.ImmutableArray<float>.Empty, null, First.Revision
+      Sys.TimeSpan.Zero, Sys.TimeSpan.Zero, (I.ImmutableArray of float).Empty, null, First.Revision
     );
-    X.Assert.Equal<int>(3, Update.Apply(First, M.Msg.Observed(Event), Allowed).Model.Index);
+    X.Assert.Equal of int(3, Update.Apply(First, M.Msg.Observed(Event), Allowed).Model.Index);
     const Restored: M.State := Update.Apply(
       First with
         Playing := false;
@@ -153,7 +153,7 @@ public type PlayerQueueTests = record
     ).Model;
     X.Assert.True(Restored.NeedsOpen);
     X.Assert.False(Restored.Playing);
-    X.Assert.Equal<string>('two', Restored.WaveformKey);
+    X.Assert.Equal of string('two', Restored.WaveformKey);
   end procedure;
 
   // Bookmark size is independent of the number of tracks, and catalogue edits apply on reopen.
@@ -161,7 +161,7 @@ public type PlayerQueueTests = record
   public procedure LargeSelectionsRestoreByTrackIdentityAndQuery();
   begin
     using const Folder: H.Folder := H.Folder.Create();
-    const All: I.ImmutableArray<Tracks.Entry>.Builder := I.ImmutableArray.CreateBuilder<Tracks.Entry>();
+    const All: (I.ImmutableArray of Tracks.Entry).Builder := I.ImmutableArray.CreateBuilder of Tracks.Entry();
     for N: int := 0 to 10009 do
       All.Add(
         Song(cast<long>(N), cast<double>(N + 1)) with
@@ -175,7 +175,7 @@ public type PlayerQueueTests = record
       Column := 3,
       Descending := true
     );
-    const Queue: I.ImmutableArray<Tracks.Entry> := Browse.Songs(All.ToImmutable(), Origin);
+    const Queue: I.ImmutableArray of Tracks.Entry := Browse.Songs(All.ToImmutable(), Origin);
     const Current: M.State := new M.State(
       Queue := Queue,
       Source := Origin,
@@ -197,16 +197,16 @@ public type PlayerQueueTests = record
     );
     const Saved: Bookmark.Saved := Storage.Load(Folder.Path).Player;
     const Restored: M.State := Bookmark.Restore(Saved, All.ToImmutable());
-    X.Assert.Equal<int>(10011, Restored.Queue.Length);
-    X.Assert.Equal<int>(11, Restored.Index);
-    X.Assert.Equal<string>(Current.Queue[10].TrackId, Restored.Queue[11].TrackId);
-    X.Assert.Equal<double>(3400.0, Restored.Position);
+    X.Assert.Equal of int(10011, Restored.Queue.Length);
+    X.Assert.Equal of int(11, Restored.Index);
+    X.Assert.Equal of string(Current.Queue[10].TrackId, Restored.Queue[11].TrackId);
+    X.Assert.Equal of double(3400.0, Restored.Position);
     X.Assert.False(Restored.Playing);
     discard All.Remove(Current.Queue[Current.Index]);
     const Replaced: M.State := Bookmark.Restore(Saved, All.ToImmutable());
-    X.Assert.Equal<int>(Saved.Index, Replaced.Index);
-    X.Assert.NotEqual<string>(Saved.TrackId, Replaced.Queue[Replaced.Index].TrackId);
-    X.Assert.Equal<double>(0.0, Replaced.Position);
+    X.Assert.Equal of int(Saved.Index, Replaced.Index);
+    X.Assert.NotEqual of string(Saved.TrackId, Replaced.Queue[Replaced.Index].TrackId);
+    X.Assert.Equal of double(0.0, Replaced.Position);
   end procedure;
 
   // An unrated queue uses the same filter after saving and restoring its bookmark.
@@ -218,19 +218,19 @@ public type PlayerQueueTests = record
     const Rated: Tracks.Entry := Song(2L, 200.0) with
       Rating := 7;
     end with;
-    const Library: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray.CreateRange<Tracks.Entry>(
+    const Library: I.ImmutableArray of Tracks.Entry := I.ImmutableArray.CreateRange of Tracks.Entry(
       [Unrated, Rated]
     );
     const Source: Music.Selection := new Music.Selection(MinimumRating := -1);
-    const Queue: I.ImmutableArray<Tracks.Entry> := Browse.Songs(Library, Source);
-    X.Assert.Equal<int>(1, Queue.Length);
-    X.Assert.Equal<string>(Unrated.TrackId, Queue[0].TrackId);
+    const Queue: I.ImmutableArray of Tracks.Entry := Browse.Songs(Library, Source);
+    X.Assert.Equal of int(1, Queue.Length);
+    X.Assert.Equal of string(Unrated.TrackId, Queue[0].TrackId);
     const Playing: M.State := new M.State(Queue := Queue, Source := Source, Index := 0);
     Storage.Save(Folder.Path, new Storage.Snapshot(Player := Bookmark.Capture(Playing)));
     const Restored: M.State := Bookmark.Restore(Storage.Load(Folder.Path).Player, Library);
-    X.Assert.Equal<int>(-1, Restored.Source.MinimumRating);
-    X.Assert.Equal<int>(1, Restored.Queue.Length);
-    X.Assert.Equal<string>(Unrated.TrackId, Restored.Queue[0].TrackId);
+    X.Assert.Equal of int(-1, Restored.Source.MinimumRating);
+    X.Assert.Equal of int(1, Restored.Queue.Length);
+    X.Assert.Equal of string(Unrated.TrackId, Restored.Queue[0].TrackId);
   end procedure;
 end record;
 

@@ -31,9 +31,9 @@ public type DiscoveryTests = record
     end with;
     await using const Session: Monitor.Session := F.Start([Source], Data.Path);
     const Lists: Access.Session := F.Tags(Session).Playlists;
-    const Audio: I.ImmutableArray<Tags.Entry> := await F.Until(
+    const Audio: I.ImmutableArray of Tags.Entry := await F.Until(
       F.Tags(Session),
-      function(Items: I.ImmutableArray<Tags.Entry>): bool => Items.Length = 1
+      function(Items: I.ImmutableArray of Tags.Entry): bool => Items.Length = 1
     );
     const Subfolder: string := IO.Directory.CreateDirectory(
       IO.Path.Combine(Root.Path, 'lists')
@@ -44,33 +44,37 @@ public type DiscoveryTests = record
       '../track.mp3' + #10 + '../track.mp3' + #10 + 'missing.ogg' + #10 +
       'https://example.invalid/live' + #10
     );
-    const Initial: I.ImmutableArray<M.Summary> := await P.Until(
+    const Initial: I.ImmutableArray of M.Summary := await P.Until(
       Lists,
-      function(Items: I.ImmutableArray<M.Summary>): bool => Items.Length = 1 and Items[0].Count = 4L
+      function(Items: I.ImmutableArray of M.Summary): bool => Items.Length = 1 and Items[
+        0
+      ].Count = 4L
     );
     const Value: M.Playlist := await P.Read(Lists, Initial[0].Identity);
-    X.Assert.Equal<M.Target>(M.Target.Track(Audio[0].TrackId), Value.Entries[0].Destination);
-    X.Assert.Equal<M.Target>(Value.Entries[0].Destination, Value.Entries[1].Destination);
+    X.Assert.Equal of M.Target(M.Target.Track(Audio[0].TrackId), Value.Entries[0].Destination);
+    X.Assert.Equal of M.Target(Value.Entries[0].Destination, Value.Entries[1].Destination);
     X.Assert.True(Value.Entries[0].Indexed);
     X.Assert.False(Value.Entries[2].Indexed);
-    X.Assert.Equal<string>('https://example.invalid/live', Value.Entries[3].CurrentReference);
+    X.Assert.Equal of string('https://example.invalid/live', Value.Entries[3].CurrentReference);
     const Snapshot: Inventory.Snapshot := await H.Until(
       Session,
       function(State: Inventory.Snapshot): bool => State.Sources.Length = 1 and State.Sources[
         0
       ].Files.Length = 1
     );
-    X.Assert.Equal<int>(1, Snapshot.Sources[0].Files.Length);
+    X.Assert.Equal of int(1, Snapshot.Sources[0].Files.Length);
     IO.File.WriteAllText(Path, '../track.mp3' + #10);
-    const Changed: I.ImmutableArray<M.Summary> := await P.Until(
+    const Changed: I.ImmutableArray of M.Summary := await P.Until(
       Lists,
-      function(Items: I.ImmutableArray<M.Summary>): bool => Items.Length = 1 and Items[0].Count = 1L
+      function(Items: I.ImmutableArray of M.Summary): bool => Items.Length = 1 and Items[
+        0
+      ].Count = 1L
     );
-    X.Assert.Equal<string>(Initial[0].Identity.Id, Changed[0].Identity.Id);
+    X.Assert.Equal of string(Initial[0].Identity.Id, Changed[0].Identity.Id);
     IO.File.Delete(Path);
     discard await P.Until(
       Lists,
-      function(Items: I.ImmutableArray<M.Summary>): bool => Items.Length = 0
+      function(Items: I.ImmutableArray of M.Summary): bool => Items.Length = 0
     );
     X.Assert.True(IO.File.Exists(Audio[0].Path));
   end function;
@@ -96,9 +100,11 @@ public type DiscoveryTests = record
     );
     await using const Session: Monitor.Session := F.Start([Source], Data.Path);
     const Lists: Access.Session := F.Tags(Session).Playlists;
-    const Initial: I.ImmutableArray<M.Summary> := await P.Until(
+    const Initial: I.ImmutableArray of M.Summary := await P.Until(
       Lists,
-      function(Items: I.ImmutableArray<M.Summary>): bool => Items.Length = 1 and Items[0].Count = 1L
+      function(Items: I.ImmutableArray of M.Summary): bool => Items.Length = 1 and Items[
+        0
+      ].Count = 1L
     );
     Session.Configure(
       [
@@ -111,17 +117,17 @@ public type DiscoveryTests = record
     const Cached: M.Playlist := await P.Read(Lists, Initial[0].Identity);
     X.Assert.Null(Cached.Description.Error);
     Session.Configure([Source]);
-    const Failed: I.ImmutableArray<M.Summary> := await P.Until(
+    const Failed: I.ImmutableArray of M.Summary := await P.Until(
       Lists,
-      function(Items: I.ImmutableArray<M.Summary>): bool => Items.Length = 1 and Items[
+      function(Items: I.ImmutableArray of M.Summary): bool => Items.Length = 1 and Items[
         0
       ].Error <> null
     );
-    X.Assert.Equal<long>(1L, Failed[0].Count);
+    X.Assert.Equal of long(1L, Failed[0].Count);
     IO.File.WriteAllText(Path, '<playlist/>');
     discard await P.Until(
       Lists,
-      function(Items: I.ImmutableArray<M.Summary>): bool => Items.Length = 1 and Items[
+      function(Items: I.ImmutableArray of M.Summary): bool => Items.Length = 1 and Items[
         0
       ].Error = null and Items[0].Count = 0L
     );
@@ -134,7 +140,7 @@ public type DiscoveryTests = record
     );
     discard await P.Until(
       Lists,
-      function(Items: I.ImmutableArray<M.Summary>): bool => Items.Length = 0
+      function(Items: I.ImmutableArray of M.Summary): bool => Items.Length = 0
     );
   end function;
 end record;

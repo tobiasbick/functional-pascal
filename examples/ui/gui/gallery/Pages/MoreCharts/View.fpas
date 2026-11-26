@@ -21,15 +21,15 @@ uses GuiGallery.Pages.MoreCharts.Widgets.Flows as Flows;
 uses GuiGallery.Pages.MoreCharts.Widgets.Market as Market;
 uses GuiGallery.Shared.Sections as G;
 
-function Matrix<TMsg>(Samples: Data.Samples): E.Element<TMsg>;
+function Matrix of TMsg(Samples: Data.Samples): E.Element of TMsg;
 begin
-  return Layout.Row<TMsg>(
-    Layout.Column<TMsg>(
+  return Layout.Row of TMsg(
+    Layout.Column of TMsg(
       1.0F, false,
-      G.Heading<TMsg>(Strings.Get('Heading.Heatmap'), Strings.Get('Heading.HeatmapHint')),
-      Cards.Card<TMsg>(
+      G.Heading of TMsg(Strings.Get('Heading.Heatmap'), Strings.Get('Heading.HeatmapHint')),
+      Cards.Card of TMsg(
         'traffic-card', [
-          Heatmaps.Heatmap<TMsg>(
+          Heatmaps.Heatmap of TMsg(
             'traffic', Samples.Traffic, 7, 24, new Heatmaps.Options(
               RowLabels := ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
               ColumnLabels := [
@@ -68,13 +68,13 @@ begin
   );
 end function;
 
-function Areas<TMsg>(): E.Element<TMsg>;
+function Areas of TMsg(): E.Element of TMsg;
 begin
-  return Layout.Row<TMsg>(
-    Layout.Column<TMsg>(
+  return Layout.Row of TMsg(
+    Layout.Column of TMsg(
       1.3F, false,
-      G.Heading<TMsg>(Strings.Get('Heading.Treemap'), Strings.Get('Heading.TreemapHint')),
-      Treemaps.Treemap<TMsg>(
+      G.Heading of TMsg(Strings.Get('Heading.Treemap'), Strings.Get('Heading.TreemapHint')),
+      Treemaps.Treemap of TMsg(
         'bundle', [
           new C.Item('Layout', 55.0F),
           new C.Item('Text', 42.0F),
@@ -89,10 +89,10 @@ begin
         ], new Treemaps.Options(Height := 280.0F, Format := new C.ValueFormat(Suffix := ' KB'))
       )
     ),
-    Layout.Column<TMsg>(
+    Layout.Column of TMsg(
       1.0F, true,
-      G.Heading<TMsg>(Strings.Get('Heading.Radar'), Strings.Get('Heading.RadarHint')),
-      Radar.RadarChart<TMsg>(
+      G.Heading of TMsg(Strings.Get('Heading.Radar'), Strings.Get('Heading.RadarHint')),
+      Radar.RadarChart of TMsg(
         'radar',
         [
           new C.Series('1.0', [82.0F, 64.0F, 90.0F, 58.0F, 75.0F, 88.0F]),
@@ -105,31 +105,31 @@ begin
   );
 end function;
 
-function Shares<TMsg>(): E.Element<TMsg>;
+function Shares of TMsg(): E.Element of TMsg;
 begin
-  return Layout.Row<TMsg>(
-    Layout.Column<TMsg>(
+  return Layout.Row of TMsg(
+    Layout.Column of TMsg(
       1.0F, false,
-      G.Heading<TMsg>(Strings.Get('Heading.Funnel'), Strings.Get('Heading.FunnelHint')),
-      Funnels.Funnel<TMsg>(
+      G.Heading of TMsg(Strings.Get('Heading.Funnel'), Strings.Get('Heading.FunnelHint')),
+      Funnels.Funnel of TMsg(
         'funnel', [
           new C.Item('Visited', 12840.0F), new C.Item('Signed up', 4210.0F),
           new C.Item('Activated', 2380.0F), new C.Item('Subscribed', 860.0F)
         ]
       )
     ),
-    Layout.Column<TMsg>(
+    Layout.Column of TMsg(
       1.0F, false,
-      G.Heading<TMsg>(Strings.Get('Heading.SplitBar'), Strings.Get('Heading.SplitBarHint')),
-      Splits.SplitBar<TMsg>(
+      G.Heading of TMsg(Strings.Get('Heading.SplitBar'), Strings.Get('Heading.SplitBarHint')),
+      Splits.SplitBar of TMsg(
         'split', [
           new C.Item('Layout', 38.0F), new C.Item('Text', 24.0F), new C.Item('Paint', 21.0F),
           new C.Item('Input', 9.0F), new C.Item('Other', 8.0F)
         ], new Splits.Options(Format := new C.ValueFormat(Suffix := ' ms'))
       ),
-      E.Gap<TMsg>(L.Measure.Logical(18)),
-      G.Heading<TMsg>(Strings.Get('Heading.Waffle'), Strings.Get('Heading.WaffleHint')),
-      Waffles.Waffle<TMsg>(
+      E.Gap of TMsg(L.Measure.Logical(18)),
+      G.Heading of TMsg(Strings.Get('Heading.Waffle'), Strings.Get('Heading.WaffleHint')),
+      Waffles.Waffle of TMsg(
         'waffle',
         [new C.Item('Windows', 46.0F), new C.Item('macOS', 31.0F), new C.Item('Linux', 23.0F)],
         new Waffles.Options(CellSize := 14.0F)
@@ -146,17 +146,17 @@ end function;
 // - `Shuffle`: Replaces the ranked amounts.
 // ## Returns
 // The complete native More charts page.
-public function View<TMsg>(Samples: Data.Samples; Shuffle: TMsg): array of E.Element<TMsg>;
+public function View of TMsg(Samples: Data.Samples; Shuffle: TMsg): array of E.Element of TMsg;
 begin
   return [
-    Matrix<TMsg>(Samples),
-    G.Heading<TMsg>(
+    Matrix of TMsg(Samples),
+    G.Heading of TMsg(
       Strings.Get('Heading.CalendarHeatmap'),
       Strings.Get('Heading.CalendarHeatmapHint')
     ),
-    Cards.Card<TMsg>(
+    Cards.Card of TMsg(
       'activity-card', [
-        Calendars.CalendarHeatmap<TMsg>(
+        Calendars.CalendarHeatmap of TMsg(
           'activity',
           Samples.Start,
           Samples.Activity,
@@ -165,15 +165,15 @@ begin
       ],
       new Cards.Options(Padding := 18.0F)
     ),
-    Areas<TMsg>(),
-    Shares<TMsg>(),
-    G.Heading<TMsg>(Strings.Get('Heading.Sankey'), Strings.Get('Heading.SankeyHint')),
-    Flows.Sankey<TMsg>(),
-    Flows.Ranked<TMsg>(Samples, Shuffle),
-    G.Heading<TMsg>(Strings.Get('Heading.Scatter'), Strings.Get('Heading.ScatterHint')),
-    Market.Scatter<TMsg>(Samples),
-    Market.Gauges<TMsg>(),
-    Market.Price<TMsg>(Samples)
+    Areas of TMsg(),
+    Shares of TMsg(),
+    G.Heading of TMsg(Strings.Get('Heading.Sankey'), Strings.Get('Heading.SankeyHint')),
+    Flows.Sankey of TMsg(),
+    Flows.Ranked of TMsg(Samples, Shuffle),
+    G.Heading of TMsg(Strings.Get('Heading.Scatter'), Strings.Get('Heading.ScatterHint')),
+    Market.Scatter of TMsg(Samples),
+    Market.Gauges of TMsg(),
+    Market.Price of TMsg(Samples)
   ];
 end function;
 

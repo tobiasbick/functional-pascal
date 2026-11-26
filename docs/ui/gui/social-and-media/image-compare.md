@@ -22,9 +22,9 @@ uses Fpas.Ui.Widgets.Media.MediaImages as M;
 // - `Divider`: Divider position from zero through one.
 // ## Returns
 // The comparison with a proposed divider fraction.
-public function View(Before: M.Source; After: M.Source; Divider: float): E.Element<float>;
+public function View(Before: M.Source; After: M.Source; Divider: float): E.Element of float;
 begin
-  return W.ImageCompare<float>('before-after', Before, After, Divider,
+  return W.ImageCompare of float('before-after', Before, After, Divider,
     function(Position: float): float => Position, new W.Options(Height := 230.0F));
 end function;
 

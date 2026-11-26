@@ -18,37 +18,37 @@ uses System as Sys;
 // - `Messages`: Application message translator.
 // ## Returns
 // The translated capture widget.
-public function Map<TChild, TParent>(View: E.Element<TChild>; Messages: function(TChild): TParent): E.Element<TParent>;
+public function Map of (TChild, TParent)(View: E.Element of TChild; Messages: function(TChild): TParent): E.Element of TParent;
 begin
   case View of
     when E.Element.Dropzone(
       const Id: string, const Drop: function(array of string): TChild,
-      const Browse: Sys.Func<TChild>?, const Settings: Dropzones.Options
+      const Browse: (Sys.Func of TChild)?, const Settings: Dropzones.Options
     ):
-      return E.Element<TParent>.Dropzone(
+      return (E.Element of TParent).Dropzone(
         Id, function(Paths: array of string): TParent => Messages(Drop(Paths)),
-        M.Factory<TChild, TParent>(Browse, Messages), Settings
+        M.Factory of (TChild, TParent)(Browse, Messages), Settings
       );
     when E.Element.AvatarUpload(
       const Id: string,
       const Name: string,
       const Path: string?,
       const Drop: function(string): TChild,
-      const Browse: Sys.Func<TChild>?,
+      const Browse: (Sys.Func of TChild)?,
       const Size: float,
       const Enabled: bool
     ):
-      return E.Element<TParent>.AvatarUpload(
+      return (E.Element of TParent).AvatarUpload(
         Id, Name, Path, function(Image: string): TParent => Messages(Drop(Image)),
-        M.Factory<TChild, TParent>(Browse, Messages), Size, Enabled
+        M.Factory of (TChild, TParent)(Browse, Messages), Size, Enabled
       );
     when E.Element.SignaturePad(
       const Id: string,
-      const Change: Sys.Func<Signatures.Signature, TChild>?,
+      const Change: Sys.Func of (Signatures.Signature, TChild)?,
       const Settings: Signatures.Options
     ):
-      return E.Element<TParent>.SignaturePad(
-        Id, M.Callback<Signatures.Signature, TChild, TParent>(Change, Messages), Settings
+      return (E.Element of TParent).SignaturePad(
+        Id, M.Callback of (Signatures.Signature, TChild, TParent)(Change, Messages), Settings
       );
     else
       raise new Sys.InvalidOperationException('Expected a capture widget.');

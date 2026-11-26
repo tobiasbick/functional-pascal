@@ -21,9 +21,9 @@ uses Fpas.Ui.Widgets.Canvas.SelectionRings as W;
 // - `Owner`: Collaborator label.
 // ## Returns
 // The child with the native selection ring.
-public function View(Child: E.Element<string>; Owner: string): E.Element<string>;
+public function View(Child: E.Element of string; Owner: string): E.Element of string;
 begin
-  return W.SelectionRing<string>('remote-selection', Child,
+  return W.SelectionRing of string('remote-selection', Child,
     new W.Options(Tone := S.Tone.Warning, Name := Owner));
 end function;
 

@@ -23,8 +23,8 @@ const NoFocus: int := -3;
 // - `Count`: Positive page count.
 // - `OnChange`: Maps a proposed page to a message.
 // - `Enabled`: Model-owned input permission.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Page: int; Count: int; OnChange: function(int): TMsg; Enabled: bool
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Page: int; Count: int; OnChange: function(int): TMsg; Enabled: bool
 );
   function Token(Index: int): string;
   begin
@@ -33,13 +33,13 @@ public procedure Draw<TMsg>(
 begin
   const Allowed: bool := Enabled and Frame.AcceptInput;
   var Focus: int := NoFocus;
-  if C.WantsFocus<TMsg>(Frame, Id, Token(Page), Allowed) then
+  if C.WantsFocus of TMsg(Frame, Id, Token(Page), Allowed) then
     Focus := Page;
   elsif Allowed and Frame.Focus.Count > 0 then
     for Prior: App.Control in Frame.Previous do
       if Prior.Id = Id and Prior.Role = 'page' then
         const Index: int := Sys.Int32.Parse(Prior.Key);
-        if Index < Count and C.WantsFocus<TMsg>(Frame, Id, Token(Index), Allowed, false) then
+        if Index < Count and C.WantsFocus of TMsg(Frame, Id, Token(Index), Allowed, false) then
           Focus := Index;
           break;
         end if;
@@ -64,7 +64,7 @@ begin
     return;
   end if;
 
-  C.Track<TMsg>(
+  C.Track of TMsg(
     Frame, new App.Control(
       Id, 'Pagination', 'pagination', new Cui.CuiRectangle(), false, Value := Page.ToString()
     )

@@ -34,16 +34,16 @@ const Months: array of string := [
   'Dec'
 ];
 
-function Card(Id: string; Settings: Cards.Options; params Children: array of E.Element<State.Msg>): E.Element<State.Msg>;
+function Card(Id: string; Settings: Cards.Options; params Children: array of E.Element of State.Msg): E.Element of State.Msg;
 begin
-  return Cards.Card<State.Msg>(Id, Children, Settings);
+  return Cards.Card of State.Msg(Id, Children, Settings);
 end function;
 
-function Line(): E.Element<State.Msg>;
+function Line(): E.Element of State.Msg;
 begin
   return Card(
     'revenue-card', new Cards.Options(),
-    Lines.LineChart<State.Msg>(
+    Lines.LineChart of State.Msg(
       'revenue', [
         new C.Series(
           'Revenue',
@@ -61,14 +61,14 @@ begin
   );
 end function;
 
-function Visits(): E.Element<State.Msg>;
+function Visits(): E.Element of State.Msg;
 begin
-  return E.Column<State.Msg>(
+  return E.Column of State.Msg(
     new L.Flow(Gap := G.Points(12), Clip := false),
-    G.Heading<State.Msg>(Strings.Get('Heading.BarChart')),
+    G.Heading of State.Msg(Strings.Get('Heading.BarChart')),
     Card(
       'visits-card', new Cards.Options(),
-      Bars.BarChart<State.Msg>(
+      Bars.BarChart of State.Msg(
         'visits', [
           new C.Series('Desktop', [42.0F, 51.0F, 38.0F, 64.0F, 58.0F, 71.0F]),
           new C.Series('Mobile', [28.0F, 33.0F, 30.0F, 41.0F, 46.0F, 49.0F])
@@ -78,14 +78,14 @@ begin
   );
 end function;
 
-function Platforms(): E.Element<State.Msg>;
+function Platforms(): E.Element of State.Msg;
 begin
-  return E.Column<State.Msg>(
+  return E.Column of State.Msg(
     new L.Flow(Gap := G.Points(12), Clip := false),
-    G.Heading<State.Msg>(Strings.Get('Heading.DonutChart')),
+    G.Heading of State.Msg(Strings.Get('Heading.DonutChart')),
     Card(
       'platforms-card', new Cards.Options(Align := L.Alignment.Center),
-      Donuts.DonutChart<State.Msg>(
+      Donuts.DonutChart of State.Msg(
         'platforms', [46.0F, 27.0F, 17.0F, 10.0F],
         ['Windows', 'macOS', 'Linux', 'Other'], new Donuts.Options(
           Height := 180.0F,
@@ -96,11 +96,11 @@ begin
   );
 end function;
 
-function Requests(): E.Element<State.Msg>;
+function Requests(): E.Element of State.Msg;
 begin
   return Card(
     'requests-card', new Cards.Options(),
-    Lines.LineChart<State.Msg>(
+    Lines.LineChart of State.Msg(
       'requests', [
         new C.Series(
           'API',
@@ -137,11 +137,11 @@ begin
   );
 end function;
 
-function Storage(Model: State.Model): E.Element<State.Msg>;
+function Storage(Model: State.Model): E.Element of State.Msg;
 begin
   return Card(
     'storage-card', new Cards.Options(Gap := 24.0F),
-    Patterns.PatternMeter<State.Msg>(
+    Patterns.PatternMeter of State.Msg(
       'storage',
       [
         new Patterns.Part('Photos', 81.0F), new Patterns.Part('Video', 58.0F),
@@ -154,15 +154,15 @@ begin
         Grayscale := Model.Grayscale
       )
     ),
-    Checks.Checkbox<State.Msg>('grayscale', 'Grayscale', Model.Grayscale, State.Msg.SetGrayscale)
+    Checks.Checkbox of State.Msg('grayscale', 'Grayscale', Model.Grayscale, State.Msg.SetGrayscale)
   );
 end function;
 
-function Runs(): E.Element<State.Msg>;
+function Runs(): E.Element of State.Msg;
 begin
   return Card(
     'runs-card', new Cards.Options(),
-    Bars.BarChart<State.Msg>(
+    Bars.BarChart of State.Msg(
       'runs',
       [
         new C.Series('Passed', [112.0F, 124.0F, 131.0F, 128.0F, 140.0F, 152.0F, 149.0F, 161.0F]),
@@ -183,7 +183,7 @@ end function;
 // - `Model`: The pattern-meter palette choice.
 // ## Returns
 // Native chart sections in their original order.
-public function View(Model: State.Model): array of E.Element<State.Msg>;
+public function View(Model: State.Model): array of E.Element of State.Msg;
 begin
   const Grid: Grids.Options := new Grids.Options(
     Columns := 2,
@@ -191,34 +191,34 @@ begin
     Gap := G.Points(16)
   );
   return [
-    G.Heading<State.Msg>(
+    G.Heading of State.Msg(
       Strings.Get('Heading.LineChart'),
       Strings.Get('Heading.LineChartHint')
     ),
     Line(),
-    Grids.Grid<State.Msg>(Grid, Visits(), Platforms()),
-    G.Heading<State.Msg>(
+    Grids.Grid of State.Msg(Grid, Visits(), Platforms()),
+    G.Heading of State.Msg(
       Strings.Get('Heading.DitherAreaChart'),
       Strings.Get('Heading.DitherAreaChartHint')
     ),
     Requests(),
-    G.Heading<State.Msg>(
+    G.Heading of State.Msg(
       Strings.Get('Heading.PatternMeter'),
       Strings.Get('Heading.PatternMeterHint')
     ),
     Storage(Model),
-    G.Heading<State.Msg>(Strings.Get('Heading.StackedBarsAndGauges')),
-    Grids.Grid<State.Msg>(
+    G.Heading of State.Msg(Strings.Get('Heading.StackedBarsAndGauges')),
+    Grids.Grid of State.Msg(
       Grid, Runs(),
       Card(
         'gauges-card',
         new Cards.Options(Horizontal := true, Gap := 24.0F, Align := L.Alignment.Center),
-        Gauges.Gauge<State.Msg>('cpu', 'CPU', 0.42F, 130.0F),
-        Gauges.Gauge<State.Msg>('memory', 'Memory', 0.81F, 130.0F)
+        Gauges.Gauge of State.Msg('cpu', 'CPU', 0.42F, 130.0F),
+        Gauges.Gauge of State.Msg('memory', 'Memory', 0.81F, 130.0F)
       )
     ),
-    G.Heading<State.Msg>(Strings.Get('Heading.Sparkline')),
-    Sparklines.Sparkline<State.Msg>('chart-sparkline', [3.0F, 5.0F, 4.0F, 8.0F, 6.0F, 9.0F, 8.0F])
+    G.Heading of State.Msg(Strings.Get('Heading.Sparkline')),
+    Sparklines.Sparkline of State.Msg('chart-sparkline', [3.0F, 5.0F, 4.0F, 8.0F, 6.0F, 9.0F, 8.0F])
   ];
 end function;
 

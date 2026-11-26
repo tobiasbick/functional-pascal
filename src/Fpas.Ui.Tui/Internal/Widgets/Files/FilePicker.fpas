@@ -27,7 +27,7 @@ begin
   const Listing: F.Listing? := Current.Listing;
   return Listing <> null and Data.IsChildName(Value)
     and (Current.Source <> null or Value.IndexOfAny(IO.Path.GetInvalidFileNameChars()) < 0)
-    and not Sys.Array.Exists<F.Entry>(
+    and not Sys.Array.Exists of F.Entry(
     Listing.Entries,
     function(Item: F.Entry): bool => Item.Directory and Item.Name.Equals(Value, Comparison)
   );
@@ -47,11 +47,11 @@ end function;
 // - `Theme`: Current terminal theme.
 // ## Returns
 // The underlying view with a modal layer.
-public function Lower<TMsg>(
-  Id: string; Base: E.Element<TMsg>; Change: function(Picker.Event): TMsg; Settings: Picker.Options;
+public function Lower of TMsg(
+  Id: string; Base: E.Element of TMsg; Change: function(Picker.Event): TMsg; Settings: Picker.Options;
   State: S.State; Size: T.Viewport; Colors: T.Style; Theme: Th.Theme
-): E.Element<TMsg>;
-  function Select(Key: string): A.Result<TMsg>;
+): E.Element of TMsg;
+  function Select(Key: string): A.Result of TMsg;
   begin
     State.Write(
       Id, Current with
@@ -63,26 +63,26 @@ public function Lower<TMsg>(
         end if;
       end with
     );
-    return A.Result<TMsg>.NoAction;
+    return (A.Result of TMsg).NoAction;
   end function;
 
-  function Chosen(Path: string): A.Result<TMsg>;
+  function Chosen(Path: string): A.Result of TMsg;
   begin
-    return A.Result<TMsg>.Send(Change(new Picker.Event(Path)));
+    return (A.Result of TMsg).Send(Change(new Picker.Event(Path)));
   end function;
 
-  function Activate(Key: string): A.Result<TMsg>;
+  function Activate(Key: string): A.Result of TMsg;
   begin
     if Key = '..' then
       State.Write(Id, S.Move(Current, Parent));
-      return A.Result<TMsg>.NoAction;
+      return (A.Result of TMsg).NoAction;
     end if;
 
     const Entry: F.Entry := ByName[Key];
     const Path: string := Data.Join(Current.Folder, Key);
     if Entry.Directory then
       State.Write(Id, S.Move(Current, Path));
-      return A.Result<TMsg>.NoAction;
+      return (A.Result of TMsg).NoAction;
     end if;
 
     if Save then
@@ -92,26 +92,26 @@ public function Lower<TMsg>(
     return Chosen(Path);
   end function;
 
-  function EditName(Value: string): A.Result<TMsg>;
+  function EditName(Value: string): A.Result of TMsg;
   begin
     State.Write(
       Id, Current with
         Name := Value;
       end with
     );
-    return A.Result<TMsg>.NoAction;
+    return (A.Result of TMsg).NoAction;
   end function;
 
-  function SaveName(Value: string): A.Result<TMsg>;
+  function SaveName(Value: string): A.Result of TMsg;
   begin
     return if SaveAllowed(Current, Value, NameComparison) then
       Chosen(Data.Join(Current.Folder, Value))
     else
-      A.Result<TMsg>.NoAction
+      (A.Result of TMsg).NoAction
     end if;
   end function;
 
-  function Confirm(): A.Result<TMsg>;
+  function Confirm(): A.Result of TMsg;
   begin
     if Save then
       return SaveName(Current.Name);
@@ -139,10 +139,10 @@ public function Lower<TMsg>(
     return Change(new Picker.Event(null));
   end function;
 
-  function Action(Key: string; Label: string; Handler: function(): A.Result<TMsg>; Enabled: bool; Primary: bool): E.Element<TMsg>;
+  function Action(Key: string; Label: string; Handler: function(): A.Result of TMsg; Enabled: bool; Primary: bool): E.Element of TMsg;
   begin
-    return E.Element<TMsg>.Action(
-      Id + '/' + Key, new A.Callback<TMsg>(Handler), Enabled,
+    return (E.Element of TMsg).Action(
+      Id + '/' + Key, new A.Callback of TMsg(Handler), Enabled,
       new E.ActionView(
         Label, Variant := if Primary then
           Styles.ButtonVariant.Primary
@@ -153,16 +153,16 @@ public function Lower<TMsg>(
     );
   end function;
 
-  function Body(PanelColors: T.Style): E.Element<TMsg>;
+  function Body(PanelColors: T.Style): E.Element of TMsg;
   begin
-    const Content: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
+    const Content: C.List of E.Element of TMsg := new C.List of E.Element of TMsg();
     if Status <> '' then
-      Content.Add(E.Element<TMsg>.Label(Status));
+      Content.Add((E.Element of TMsg).Label(Status));
     end if;
 
     if Items.Count > 0 then
       Content.Add(
-        List.Lower<TMsg>(
+        List.Lower of TMsg(
           Id + '/list', Items.ToArray(), Current.Selected, Select, Activate,
           Sys.Math.Clamp(
             Size.Rows - (if Save then
@@ -176,26 +176,26 @@ public function Lower<TMsg>(
     end if;
 
     if Save then
-      Content.Add(E.Element<TMsg>.Label('File name'));
+      Content.Add((E.Element of TMsg).Label('File name'));
       Content.Add(
-        E.Element<TMsg>.TextField(
-          new Edit.Field<TMsg>(
+        (E.Element of TMsg).TextField(
+          new Edit.Field of TMsg(
             Id + '/name', Current.Name, EditName,
             new Field.Options(Label := 'File name', MaxUtf8Bytes := 255), SaveName
           )
         )
       );
     elsif Filter <> '' then
-      Content.Add(E.Element<TMsg>.Label(Filter));
+      Content.Add((E.Element of TMsg).Label(Filter));
     end if;
 
     Content.Add(
-      E.Element<TMsg>.Stack(
+      (E.Element of TMsg).Stack(
         [
           Action(
             'cancel',
             'Cancel',
-            function(): A.Result<TMsg> => A.Result<TMsg>.Send(Cancel()),
+            function(): A.Result of TMsg => (A.Result of TMsg).Send(Cancel()),
             true,
             false
           ),
@@ -204,7 +204,7 @@ public function Lower<TMsg>(
         Size.Columns >= 20, new E.Flow(Gap := 1, Align := L.Alignment.Start)
       )
     );
-    return E.Element<TMsg>.Stack(Content.ToArray(), false, new E.Flow());
+    return (E.Element of TMsg).Stack(Content.ToArray(), false, new E.Flow());
   end function;
 begin
   var Current: S.Cursor := State.Open(Id, Settings);
@@ -219,10 +219,10 @@ begin
     Sys.StringComparison.Ordinal
   end if;
   const Children: array of F.Entry := Data.Visible(Current.Listing, Settings);
-  const ByName: C.Dictionary<string, F.Entry> := new C.Dictionary<string, F.Entry>(
+  const ByName: C.Dictionary of (string, F.Entry) := new C.Dictionary of (string, F.Entry)(
     Sys.StringComparer.Ordinal
   );
-  const Items: C.List<Rows.Item> := new C.List<Rows.Item>();
+  const Items: C.List of Rows.Item := new C.List of Rows.Item();
   if Parent <> '' then
     Items.Add(new Rows.Item('..', '../'));
   end if;
@@ -287,7 +287,7 @@ begin
   else
     '/cancel'
   end if;
-  return Modal.Lower<TMsg>(
+  return Modal.Lower of TMsg(
     Id, Base, true, new E.ModalOptions(Title, Current.Folder, 512, null, Id + Initial, null),
     Cancel, Colors, Theme, Body
   );

@@ -14,19 +14,19 @@ uses GuiGallery.Pages.Overview.State as S;
 // - `Message`: A workspace preview action.
 // ## Returns
 // The next state and any toast command.
-public function Update(Model: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+public function Update(Model: S.Model; Message: S.Msg): Mvu.Transition of (S.Model, S.Msg);
 begin
   case Message of
     when S.Msg.SetWeeklySummary(const Value: bool):
-      return new Mvu.Transition<S.Model, S.Msg>(
+      return new Mvu.Transition of (S.Model, S.Msg)(
         Model with
           WeeklySummary := Value;
         end with, []
       );
     when S.Msg.CreateWorkspace:
-      return new Mvu.Transition<S.Model, S.Msg>(
+      return new Mvu.Transition of (S.Model, S.Msg)(
         Model, [
-          Toasts.Show<S.Msg>(
+          Toasts.Show of S.Msg(
             Strings.Get('Text.WorkspaceCreated'),
             new Toasts.Options(
               Description := Strings.Get('Text.WorkspaceEmpty'),
@@ -36,7 +36,7 @@ begin
         ]
       );
     else
-      return new Mvu.Transition<S.Model, S.Msg>(Model, []);
+      return new Mvu.Transition of (S.Model, S.Msg)(Model, []);
   end case;
 end function;
 

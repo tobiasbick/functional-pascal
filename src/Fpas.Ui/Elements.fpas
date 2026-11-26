@@ -227,27 +227,27 @@ uses System as Sys;
 //
 // ## Type parameters
 // - `TMsg`: The application message type.
-public type Element<TMsg> = variant
+public type Element of TMsg = variant
   // Draw a native inline link.
   LinkAction(Id: string; Label: string; OnActivate: TMsg; Enabled: bool);
   // Display native initials or a picture with an optional presence dot.
   Avatar(Id: string; Name: string; Settings: Avatars.Options);
   // Attach a native pointer-driven panel to an interactive control.
-  HoverCard(Id: string; Trigger: Element<TMsg>; Content: Element<TMsg>; Settings: HoverCards.Options);
+  HoverCard(Id: string; Trigger: Element of TMsg; Content: Element of TMsg; Settings: HoverCards.Options);
   // Display a native banner with model-owned visibility.
-  Banner(Id: string; Text: string; Open: bool; OnDismiss: Sys.Func<TMsg>?; OnAction: Sys.Func<TMsg>?; Settings: Banners.Options);
+  Banner(Id: string; Text: string; Open: bool; OnDismiss: (Sys.Func of TMsg)?; OnAction: (Sys.Func of TMsg)?; Settings: Banners.Options);
   // Display CUI's rolling countdown tiles.
   Countdown(Id: string; SecondsLeft: double; Settings: Countdowns.Options);
   // Display CUI's onboarding checklist and its native progress.
-  Checklist(Id: string; Steps: array of Checklists.Step; OnToggle: function(int, bool): TMsg; OnAction: Sys.Func<int, TMsg>?; Settings: Checklists.Options);
+  Checklist(Id: string; Steps: array of Checklists.Step; OnToggle: function(int, bool): TMsg; OnAction: Sys.Func of (int, TMsg)?; Settings: Checklists.Options);
   // Display an inline alert with host-owned dismissal.
-  Alert(Id: string; Title: string; Settings: Alerts.Options; OnDismiss: Sys.Func<TMsg>?);
+  Alert(Id: string; Title: string; Settings: Alerts.Options; OnDismiss: (Sys.Func of TMsg)?);
   // Display a progress fraction or activity animation.
   ProgressBar(Id: string; Value: float; Settings: ProgressBars.Options);
   // Display an activity spinner.
   Spinner(Id: string; Size: float; Settings: Spinners.Options?);
   // Display linear audio peaks on a native dBFS scale.
-  LevelMeter(Id: string; Peaks: array of float; Settings: Levels.Options; OnClipCleared: Sys.Func<TMsg>?);
+  LevelMeter(Id: string; Peaks: array of float; Settings: Levels.Options; OnClipCleared: (Sys.Func of TMsg)?);
   // Display native capacity usage and its threshold color.
   Meter(Id: string; Label: string; Used: float; Total: float; Unit: string);
   // Display native circular progress with a literal caption.
@@ -257,11 +257,11 @@ public type Element<TMsg> = variant
   // Display a native activity entry with its optional time and connector.
   TimelineItem(Id: string; Title: string; Settings: Timeline.Options);
   // Open a model-controlled native accordion body.
-  Accordion(Id: string; Title: string; Open: bool; OnChange: function(bool): TMsg; Content: Element<TMsg>; Enabled: bool);
+  Accordion(Id: string; Title: string; Open: bool; OnChange: function(bool): TMsg; Content: Element of TMsg; Enabled: bool);
   // Open a model-controlled native card body.
-  ExpandableCard(Id: string; Title: string; Open: bool; OnChange: function(bool): TMsg; Content: Element<TMsg>; Settings: ExpandableCards.Options);
+  ExpandableCard(Id: string; Title: string; Open: bool; OnChange: function(bool): TMsg; Content: Element of TMsg; Settings: ExpandableCards.Options);
   // Let CUI clamp and expand wrapping text locally.
-  ExpandableText(Id: string; Text: string; Settings: ExpandableTexts.Options; OnToggle: Sys.Func<TMsg>?);
+  ExpandableText(Id: string; Text: string; Settings: ExpandableTexts.Options; OnToggle: (Sys.Func of TMsg)?);
   // Display text.
   Label(Text: string);
   // Static text with an explicit native typeface, size and color.
@@ -273,7 +273,7 @@ public type Element<TMsg> = variant
   // Activate a named icon button with a stable identity and model-owned settings.
   IconAction(Id: string; Icon: string; Tooltip: string; Message: TMsg; Settings: Icons.Options);
   // Submit literal text to the clipboard and optionally propose a message.
-  CopyAction(Id: string; Text: string; OnCopied: Sys.Func<TMsg>?; Enabled: bool);
+  CopyAction(Id: string; Text: string; OnCopied: (Sys.Func of TMsg)?; Enabled: bool);
   // Propose a message after a deliberate hold.
   HoldAction(Id: string; Label: string; Message: TMsg; Settings: Holds.Options);
   // Propose a message after two activations within a confirmation window.
@@ -292,15 +292,15 @@ public type Element<TMsg> = variant
     OnChange: function(array of bool): TMsg; Settings: ToggleGroups.Options
   );
   // A main action and a host-owned popup of related actions.
-  SplitAction(Id: string; Label: string; Message: TMsg; Items: array of Split.Item<TMsg>; Settings: Split.Options);
+  SplitAction(Id: string; Label: string; Message: TMsg; Items: array of Split.Item of TMsg; Settings: Split.Options);
   // Native reaction pills with controlled counts and activation.
   ReactionGroup(Id: string; Items: array of Reactions.Item; OnChange: function(int, Reactions.Item): TMsg; Enabled: bool);
   // Native account trigger and its command popup.
-  AccountMenu(Id: string; Name: string; Entries: array of Menus.Entry<TMsg>; Settings: UserMenus.Options);
+  AccountMenu(Id: string; Name: string; Entries: array of Menus.Entry of TMsg; Settings: UserMenus.Options);
   // Native floating trigger and ordered actions.
   SpeedDialAction(Id: string; Items: array of Speed.Item; OnChoose: function(int): TMsg; Settings: Speed.Options);
   // Foreground content with native swipe actions on either side.
-  SwipeRow(Id: string; Content: Element<TMsg>; Left: array of Swipe.Item; Right: array of Swipe.Item; OnChoose: function(Swipe.Side, int): TMsg; Settings: Swipe.Options);
+  SwipeRow(Id: string; Content: Element of TMsg; Left: array of Swipe.Item; Right: array of Swipe.Item; OnChoose: function(Swipe.Side, int): TMsg; Settings: Swipe.Options);
   // Propose a changed model-owned checkbox value.
   CheckboxAction(Id: string; Label: string; Checked: bool; OnChange: function(bool): TMsg; Description: string; Enabled: bool; Indeterminate: bool; HideLabel: bool);
   // Propose a changed model-owned switch value.
@@ -316,11 +316,11 @@ public type Element<TMsg> = variant
   // Propose both endpoints of a native range slider in one message.
   RangeSliderAction(Id: string; Label: string; Value: RangeSliders.Interval; Minimum: float; Maximum: float; OnChange: function(RangeSliders.Interval): TMsg; Enabled: bool);
   // A native file drop target with an optional browse action.
-  Dropzone(Id: string; OnDrop: function(array of string): TMsg; OnBrowse: Sys.Func<TMsg>?; Settings: Dropzones.Options);
+  Dropzone(Id: string; OnDrop: function(array of string): TMsg; OnBrowse: (Sys.Func of TMsg)?; Settings: Dropzones.Options);
   // A native avatar with image drop and an optional browse action.
-  AvatarUpload(Id: string; Name: string; Path: string?; OnDrop: function(string): TMsg; OnBrowse: Sys.Func<TMsg>?; Size: float; Enabled: bool);
+  AvatarUpload(Id: string; Name: string; Path: string?; OnDrop: function(string): TMsg; OnBrowse: (Sys.Func of TMsg)?; Size: float; Enabled: bool);
   // A native drawing pad for signatures and its Clear action.
-  SignaturePad(Id: string; OnChange: Sys.Func<Signatures.Signature, TMsg>?; Settings: Signatures.Options);
+  SignaturePad(Id: string; OnChange: Sys.Func of (Signatures.Signature, TMsg)?; Settings: Signatures.Options);
   // A native rotary control.
   Knob(Id: string; Label: string; Value: float; Minimum: float; Maximum: float; OnChange: function(float): TMsg; Settings: Knobs.Options);
   // A native mixer fader.
@@ -342,15 +342,15 @@ public type Element<TMsg> = variant
   // Display model-owned progress through a graphical sequence of steps.
   StepProgress(Id: string; Steps: array of string; Current: int);
   // Join adjacent buttons under a shared outline.
-  ButtonGroup(Children: array of Element<TMsg>);
+  ButtonGroup(Children: array of Element of TMsg);
   // Open a native command menu from one trigger.
-  Dropdown(Id: string; Label: string; Entries: array of Menus.Entry<TMsg>; Settings: Menus.Options);
+  Dropdown(Id: string; Label: string; Entries: array of Menus.Entry of TMsg; Settings: Menus.Options);
   // Attach CUI's GUI-only right-click menu to a target component.
-  Contextual(Id: string; Target: Element<TMsg>; Entries: array of Menus.Entry<TMsg>; Enabled: bool);
+  Contextual(Id: string; Target: Element of TMsg; Entries: array of Menus.Entry of TMsg; Enabled: bool);
   // Attach graphical hover help to one interactive control.
-  Hinted(Target: Element<TMsg>; Text: string; Shortcut: string);
+  Hinted(Target: Element of TMsg; Text: string; Shortcut: string);
   // Edit one line with a model-owned value.
-  TextField(Id: string; Value: string; OnChange: function(string): TMsg; Settings: TextFields.Options; OnSubmit: Sys.Func<string, TMsg>?);
+  TextField(Id: string; Value: string; OnChange: function(string): TMsg; Settings: TextFields.Options; OnSubmit: Sys.Func of (string, TMsg)?);
   // Native inline text with a retained draft and model-owned commit.
   InlineEdit(Id: string; Value: string; OnChange: function(string): TMsg; Settings: InlineEdits.Options);
   // Native draggable numeric field with an optional typing mode.
@@ -362,13 +362,13 @@ public type Element<TMsg> = variant
   // Native platform key names displayed as keycaps.
   ShortcutLabel(Value: RecorderKeys.Combination);
   // Edit one graphical search query with the native clear action.
-  SearchField(Id: string; Value: string; OnChange: function(string): TMsg; Settings: SearchFields.Options; OnSubmit: Sys.Func<string, TMsg>?);
+  SearchField(Id: string; Value: string; OnChange: function(string): TMsg; Settings: SearchFields.Options; OnSubmit: Sys.Func of (string, TMsg)?);
   // Edit wrapping multiline graphical text.
-  TextArea(Id: string; Value: string; OnChange: function(string): TMsg; Settings: TextAreas.Options; OnSubmit: Sys.Func<string, TMsg>?);
+  TextArea(Id: string; Value: string; OnChange: function(string): TMsg; Settings: TextAreas.Options; OnSubmit: Sys.Func of (string, TMsg)?);
   // Edit an ordered list of tags.
   TagInput(Id: string; Tags: array of string; OnChange: function(array of string): TMsg; Settings: TagInputs.Options);
   // Enter a fixed-length ASCII alphanumeric verification code.
-  OneTimeCodeInput(Id: string; Value: string; OnChange: function(string): TMsg; Settings: OneTimeCodes.Options; OnComplete: Sys.Func<string, TMsg>?);
+  OneTimeCodeInput(Id: string; Value: string; OnChange: function(string): TMsg; Settings: OneTimeCodes.Options; OnComplete: Sys.Func of (string, TMsg)?);
   // Show CUI's visual strength score for a password.
   PasswordStrengthMeter(Id: string; Password: string);
   // Choose an option by position, with optional filtering.
@@ -396,47 +396,47 @@ public type Element<TMsg> = variant
   // Edit a bounded number with native step buttons.
   NumberField(Id: string; Value: double; Minimum: double; Maximum: double; OnChange: function(double): TMsg; Settings: NumberFields.Options);
   // Present a native centered modal over the base view.
-  Dialog(Id: string; Base: Element<TMsg>; Content: Element<TMsg>; Open: bool; Settings: Dialogs.Options; OnDismiss: TMsg);
+  Dialog(Id: string; Base: Element of TMsg; Content: Element of TMsg; Open: bool; Settings: Dialogs.Options; OnDismiss: TMsg);
   // Lay actions out in CUI's right-aligned footer.
-  ActionFooter(Children: array of Element<TMsg>);
+  ActionFooter(Children: array of Element of TMsg);
   // Attach a model-controlled floating view to a button.
-  Popover(Id: string; Trigger: Element<TMsg>; Content: Element<TMsg>; Open: bool; OnDismiss: TMsg; Settings: Popovers.Options);
+  Popover(Id: string; Trigger: Element of TMsg; Content: Element of TMsg; Open: bool; OnDismiss: TMsg; Settings: Popovers.Options);
   // Ask for confirmation at an existing button.
-  ConfirmPopover(Id: string; Trigger: Element<TMsg>; Open: bool; Settings: ConfirmPopovers.Options; OnConfirm: TMsg; OnDismiss: TMsg);
+  ConfirmPopover(Id: string; Trigger: Element of TMsg; Open: bool; Settings: ConfirmPopovers.Options; OnConfirm: TMsg; OnDismiss: TMsg);
   // Display grouped destinations with a single model-owned active key.
-  Sidebar(Id: string; Sections: array of N.Section<TMsg>; ActiveKey: string?; Enabled: bool);
+  Sidebar(Id: string; Sections: array of N.Section of TMsg; ActiveKey: string?; Enabled: bool);
   // Arrange children in the native equal-width responsive grid.
-  Grid(Settings: Grids.Options; Children: array of Element<TMsg>);
+  Grid(Settings: Grids.Options; Children: array of Element of TMsg);
   // Draw a native card around its children.
-  Card(Id: string; Children: array of Element<TMsg>; Settings: Cards.Options; OnActivate: Sys.Func<TMsg>?);
+  Card(Id: string; Children: array of Element of TMsg; Settings: Cards.Options; OnActivate: (Sys.Func of TMsg)?);
   // Draw a tinted or solid label.
   Badge(Id: string; Text: string; Settings: Badges.Options);
   // Display CUI's native sankey.
-  Sankey(Id: string; Nodes: array of Sankeys.Node; Links: array of Sankeys.Link; Settings: Sankeys.Options; OnActivate: Sys.Func<Sankeys.Selection, TMsg>?);
+  Sankey(Id: string; Nodes: array of Sankeys.Node; Links: array of Sankeys.Link; Settings: Sankeys.Options; OnActivate: Sys.Func of (Sankeys.Selection, TMsg)?);
   // Display CUI's native bar-list.
-  BarList(Id: string; Items: array of Charts.Item; Settings: BarLists.Options; OnActivate: Sys.Func<int, TMsg>?);
+  BarList(Id: string; Items: array of Charts.Item; Settings: BarLists.Options; OnActivate: Sys.Func of (int, TMsg)?);
   // Display CUI's native activity-rings.
-  ActivityRings(Id: string; Items: array of Charts.Item; Settings: ActivityRings.Options; OnActivate: Sys.Func<int, TMsg>?);
+  ActivityRings(Id: string; Items: array of Charts.Item; Settings: ActivityRings.Options; OnActivate: Sys.Func of (int, TMsg)?);
   // Display CUI's native scatter-chart.
-  ScatterChart(Id: string; Series: array of ScatterCharts.Series; Settings: ScatterCharts.Options; OnActivate: Sys.Func<ScatterCharts.PointIndex, TMsg>?);
+  ScatterChart(Id: string; Series: array of ScatterCharts.Series; Settings: ScatterCharts.Options; OnActivate: Sys.Func of (ScatterCharts.PointIndex, TMsg)?);
   // Display CUI's native radial-gauge.
   RadialGauge(Id: string; Value: float; Minimum: float; Maximum: float; Settings: RadialGauges.Options);
   // Display CUI's native candlestick.
-  Candlestick(Id: string; Candles: array of Candlesticks.Candle; Settings: Candlesticks.Options; OnCursorChange: Sys.Func<int, TMsg>?);
+  Candlestick(Id: string; Candles: array of Candlesticks.Candle; Settings: Candlesticks.Options; OnCursorChange: Sys.Func of (int, TMsg)?);
   // Display CUI's native heatmap.
-  Heatmap(Id: string; Values: array of float; Rows: int; Columns: int; Settings: Heatmaps.Options; OnActivate: Sys.Func<Heatmaps.Cell, TMsg>?);
+  Heatmap(Id: string; Values: array of float; Rows: int; Columns: int; Settings: Heatmaps.Options; OnActivate: Sys.Func of (Heatmaps.Cell, TMsg)?);
   // Display CUI's native calendar-heatmap.
-  CalendarHeatmap(Id: string; Start: Sys.DateOnly; Values: array of float; Settings: CalendarHeatmaps.Options; OnActivate: Sys.Func<Sys.DateOnly, TMsg>?);
+  CalendarHeatmap(Id: string; Start: Sys.DateOnly; Values: array of float; Settings: CalendarHeatmaps.Options; OnActivate: Sys.Func of (Sys.DateOnly, TMsg)?);
   // Display CUI's native treemap.
-  Treemap(Id: string; Items: array of Charts.Item; Selected: int; OnSelect: Sys.Func<int, TMsg>?; Settings: Treemaps.Options);
+  Treemap(Id: string; Items: array of Charts.Item; Selected: int; OnSelect: Sys.Func of (int, TMsg)?; Settings: Treemaps.Options);
   // Display CUI's native radar-chart.
-  RadarChart(Id: string; Series: array of Charts.Series; Axes: array of string; Settings: RadarCharts.Options; OnActivate: Sys.Func<int, TMsg>?);
+  RadarChart(Id: string; Series: array of Charts.Series; Axes: array of string; Settings: RadarCharts.Options; OnActivate: Sys.Func of (int, TMsg)?);
   // Display CUI's native funnel.
-  Funnel(Id: string; Items: array of Charts.Item; Settings: Funnels.Options; OnActivate: Sys.Func<int, TMsg>?);
+  Funnel(Id: string; Items: array of Charts.Item; Settings: Funnels.Options; OnActivate: Sys.Func of (int, TMsg)?);
   // Display CUI's native split-bar.
-  SplitBar(Id: string; Items: array of Charts.Item; Settings: SplitBars.Options; OnActivate: Sys.Func<int, TMsg>?);
+  SplitBar(Id: string; Items: array of Charts.Item; Settings: SplitBars.Options; OnActivate: Sys.Func of (int, TMsg)?);
   // Display CUI's native waffle.
-  Waffle(Id: string; Items: array of Charts.Item; Settings: Waffles.Options; OnActivate: Sys.Func<int, TMsg>?);
+  Waffle(Id: string; Items: array of Charts.Item; Settings: Waffles.Options; OnActivate: Sys.Func of (int, TMsg)?);
   // Display a native line or area chart.
   LineChart(Id: string; Series: array of Charts.Series; Settings: Charts.Options);
   // Display a native grouped or stacked bar chart.
@@ -452,25 +452,25 @@ public type Element<TMsg> = variant
   // Draw overlapping avatars and an overflow count.
   AvatarGroup(Id: string; Names: array of string; Settings: AvatarGroups.Options);
   // Draw an empty-state message and its optional native action.
-  EmptyState(Id: string; Title: string; Settings: EmptyStates.Options; OnAction: Sys.Func<TMsg>?);
+  EmptyState(Id: string; Title: string; Settings: EmptyStates.Options; OnAction: (Sys.Func of TMsg)?);
   // Native list item with optional activation.
-  ListItem(Id: string; Title: string; Activate: Sys.Func<TMsg>?; Settings: ListItems.Options);
+  ListItem(Id: string; Title: string; Activate: (Sys.Func of TMsg)?; Settings: ListItems.Options);
   // A branch with model-owned expansion or a leaf with optional activation.
-  TreeNode(Id: string; Label: string; Open: bool?; Children: array of Element<TMsg>; Change: Sys.Func<bool, TMsg>?; Activate: Sys.Func<TMsg>?; Settings: Trees.Options);
+  TreeNode(Id: string; Label: string; Open: bool?; Children: array of Element of TMsg; Change: Sys.Func of (bool, TMsg)?; Activate: (Sys.Func of TMsg)?; Settings: Trees.Options);
   // Native table with structured rows and model-owned sorting.
-  Table(Id: string; Columns: array of Tables.Column; Rows: array of Tables.Row<TMsg>; Order: Tables.Sort?; Sort: Sys.Func<Tables.Sort, TMsg>?; Select: Sys.Func<string, TMsg>?; Settings: Tables.Options);
+  Table(Id: string; Columns: array of Tables.Column; Rows: array of Tables.Row of TMsg; Order: Tables.Sort?; Sort: Sys.Func of (Tables.Sort, TMsg)?; Select: Sys.Func of (string, TMsg)?; Settings: Tables.Options);
   // Native search and multi-value filters.
   FilterBar(Id: string; Fields: array of Filters.Field; Current: Filters.Value; Change: function(Filters.Value): TMsg; Capacity: int; Enabled: bool);
   // Virtualized native grid with lazily built cells.
-  DataGrid(Id: string; Columns: array of DataGrids.Column; Count: int; Build: function(int): DataGrids.Row<TMsg>; Current: DataGrids.Value; Change: function(DataGrids.Value): TMsg; Settings: DataGrids.Options; OnDoubleClick: Sys.Func<int, TMsg>?);
+  DataGrid(Id: string; Columns: array of DataGrids.Column; Count: int; Build: function(int): DataGrids.Row of TMsg; Current: DataGrids.Value; Change: function(DataGrids.Value): TMsg; Settings: DataGrids.Options; OnDoubleClick: Sys.Func of (int, TMsg)?);
   // Indented tree content for an existing table cell.
-  TreeCell(Id: string; Label: string; Depth: int; Open: bool?; Change: Sys.Func<bool, TMsg>?; Icon: string);
+  TreeCell(Id: string; Label: string; Depth: int; Open: bool?; Change: Sys.Func of (bool, TMsg)?; Icon: string);
   // Virtualized native tree table with model-owned nodes.
-  TreeTable(Id: string; Columns: array of DataGrids.Column; Nodes: array of TreeTables.Node; Cursor: int; Order: Tables.Sort?; Change: function(TreeTables.Change): TMsg; Settings: TreeTables.Options; Menu: Sys.Func<int, array of Menus.Entry<TMsg>>?);
+  TreeTable(Id: string; Columns: array of DataGrids.Column; Nodes: array of TreeTables.Node; Cursor: int; Order: Tables.Sort?; Change: function(TreeTables.Change): TMsg; Settings: TreeTables.Options; Menu: Sys.Func of (int, array of Menus.Entry of TMsg)?);
   // Native drag-to-reorder list.
-  ReorderableList(Id: string; Items: array of Element<TMsg>; Order: array of int; Change: function(array of int): TMsg; Enabled: bool);
+  ReorderableList(Id: string; Items: array of Element of TMsg; Order: array of int; Change: function(array of int): TMsg; Enabled: bool);
   // Native viewport with lazily realized rows.
-  VirtualList(Id: string; Count: int; RowHeight: float; Height: L.Extent; BuildRow: function(int): Element<TMsg>; Offset: float?; OnScroll: Sys.Func<float, TMsg>?);
+  VirtualList(Id: string; Count: int; RowHeight: float; Height: L.Extent; BuildRow: function(int): Element of TMsg; Offset: float?; OnScroll: Sys.Func of (float, TMsg)?);
   // Native code block.
   CodeBlock(Id: string; Code: string; Settings: CodeBlocks.Options);
   // Native json view.
@@ -480,7 +480,7 @@ public type Element<TMsg> = variant
   // Native dot display.
   DotDisplay(Id: string; Text: string; Settings: DotDisplays.Options);
   // Native dot chart.
-  DotChart(Id: string; Bands: array of DotCharts.Series; Count: int; Activate: Sys.Func<DotCharts.Hit, TMsg>?; Settings: DotCharts.Options);
+  DotChart(Id: string; Bands: array of DotCharts.Series; Count: int; Activate: Sys.Func of (DotCharts.Hit, TMsg)?; Settings: DotCharts.Options);
   // Native event track.
   EventTrack(Id: string; Current: EventTracks.Value; Change: function(EventTracks.Change): TMsg; Settings: EventTracks.Options);
   // Native CUI path bar.
@@ -488,7 +488,7 @@ public type Element<TMsg> = variant
   // Native CUI file browser.
   FileBrowser(Id: string; Folder: string; Change: function(FileBrowsers.Event): TMsg; Settings: FileBrowsers.Options);
   // Shared file selection modal with an optional underlying view.
-  FilePicker(Id: string; Base: Element<TMsg>?; Open: bool; Change: function(FilePickers.Event): TMsg; Settings: FilePickers.Options);
+  FilePicker(Id: string; Base: (Element of TMsg)?; Open: bool; Change: function(FilePickers.Event): TMsg; Settings: FilePickers.Options);
   // Native CUI week calendar.
   WeekCalendar(Id: string; Current: WeekCalendars.Value; Change: function(WeekCalendars.Event): TMsg; Settings: WeekCalendars.Options);
   // Native CUI month calendar.
@@ -512,11 +512,11 @@ public type Element<TMsg> = variant
   // Draws the native status spinner and its result transition.
   StatusSpinner(Id: string; Status: Status.Status; Settings: StatusSpinners.Options);
   // Builds a native group of placeholders with a shared animation.
-  SkeletonGroup(Id: string; Children: array of Element<TMsg>; Settings: SkeletonGroups.Options);
+  SkeletonGroup(Id: string; Children: array of Element of TMsg; Settings: SkeletonGroups.Options);
   // Draws a compact native chart for a series of values.
   Sparkline(Id: string; Values: array of float; Settings: Sparklines.Options);
   // Native VoiceWave element.
-  VoiceWave(Id: string; Signal: Voice.Signal; Progress: float?; Changed: Sys.Func<float, TMsg>?; Settings: VoiceWaves.Options);
+  VoiceWave(Id: string; Signal: Voice.Signal; Progress: float?; Changed: Sys.Func of (float, TMsg)?; Settings: VoiceWaves.Options);
   // Native VoiceNote element.
   VoiceNote(Id: string; Levels: array of float; Playback: VoiceNotes.Value; Changed: function(VoiceNotes.Event): TMsg; Settings: VoiceNotes.Options);
   // Native VoiceSession element.
@@ -524,19 +524,19 @@ public type Element<TMsg> = variant
   // Native Composer element.
   Composer(Id: string; Content: Composers.Value; Changed: function(Composers.Event): TMsg; Settings: Composers.Options);
   // Native VoiceOrb element.
-  VoiceOrb(Id: string; Mode: Voice.Activity; Level: float; Activate: Sys.Func<TMsg>?; Settings: VoiceOrbs.Options);
+  VoiceOrb(Id: string; Mode: Voice.Activity; Level: float; Activate: (Sys.Func of TMsg)?; Settings: VoiceOrbs.Options);
   // Native Reasoning element.
-  Reasoning(Id: string; Bodies: array of Element<TMsg>; Settings: Reasonings.Options);
+  Reasoning(Id: string; Bodies: array of Element of TMsg; Settings: Reasonings.Options);
   // Native ToolCall element.
   ToolCall(Id: string; Name: string; Settings: ToolCalls.Options);
   // Native AgentPlan element.
-  AgentPlan(Id: string; Steps: array of AgentPlans.Step; Changed: Sys.Func<int, TMsg>?; Settings: AgentPlans.Options);
+  AgentPlan(Id: string; Steps: array of AgentPlans.Step; Changed: Sys.Func of (int, TMsg)?; Settings: AgentPlans.Options);
   // Native AgentStatus element.
   AgentStatus(Id: string; Label: string; Settings: AgentStatuses.Options);
   // Native SourceList element.
-  SourceList(Id: string; Documents: array of Sources.Item; Changed: Sys.Func<int, TMsg>?; Settings: SourceLists.Options);
+  SourceList(Id: string; Documents: array of Sources.Item; Changed: Sys.Func of (int, TMsg)?; Settings: SourceLists.Options);
   // Native Citation element.
-  Citation(Id: string; Number: int; Source: Sources.Item?; Activate: Sys.Func<TMsg>?; Settings: Citations.Options);
+  Citation(Id: string; Number: int; Source: Sources.Item?; Activate: (Sys.Func of TMsg)?; Settings: Citations.Options);
   // Native ContextMeter element.
   ContextMeter(Id: string; Used: float; Limit: float; Breakdown: array of ContextMeters.Part; Settings: ContextMeters.Options);
   // Native ResponseActions element.
@@ -578,37 +578,37 @@ public type Element<TMsg> = variant
   // Native CUI Image element.
   Image(Id: string; Source: Media.Source; Settings: Images.Options);
   // Native CUI Canvas element.
-  Canvas(Id: string; Drawing: array of Canvases.Shape; Clicked: function(Canvases.Event): TMsg; Settings: Canvases.Options; OnWheel: Sys.Func<Canvases.Wheel, TMsg>?; Paint: Sys.Action<Painting.Surface>?; OnPointer: Sys.Func<Canvases.Pointer, TMsg>?; OnInput: Sys.Func<Canvases.Input, TMsg>?);
+  Canvas(Id: string; Drawing: array of Canvases.Shape; Clicked: function(Canvases.Event): TMsg; Settings: Canvases.Options; OnWheel: Sys.Func of (Canvases.Wheel, TMsg)?; Paint: (Sys.Action of Painting.Surface)?; OnPointer: Sys.Func of (Canvases.Pointer, TMsg)?; OnInput: Sys.Func of (Canvases.Input, TMsg)?);
   // Native CUI Veil element.
-  Veil(Id: string; Revealed: bool; Changed: function(bool): TMsg; Child: Element<TMsg>; Settings: Veils.Options);
+  Veil(Id: string; Revealed: bool; Changed: function(bool): TMsg; Child: Element of TMsg; Settings: Veils.Options);
   // Native CUI FormatBar element.
   FormatBar(Id: string; Format: FormatBars.Value; Changed: function(FormatBars.Event): TMsg; Settings: FormatBars.Options);
   // Native CUI LiveCursors element.
-  LiveCursors(Id: string; People: array of LiveCursors.Person; Child: Element<TMsg>; Settings: LiveCursors.Options);
+  LiveCursors(Id: string; People: array of LiveCursors.Person; Child: Element of TMsg; Settings: LiveCursors.Options);
   // Native CUI PresencePill element.
   PresencePill(Id: string; People: array of LiveCursors.Person; Settings: PresencePills.Options);
   // Native CUI SelectionRing element.
-  SelectionRing(Id: string; Child: Element<TMsg>; Settings: SelectionRings.Options);
+  SelectionRing(Id: string; Child: Element of TMsg; Settings: SelectionRings.Options);
   // Native CUI CanvasControls element.
-  CanvasControls(Id: string; Viewport: NodeEditors.View; Toggles: array of CanvasControls.Toggle; Changed: function(CanvasControls.Event): TMsg; Child: Element<TMsg>; Settings: CanvasControls.Options);
+  CanvasControls(Id: string; Viewport: NodeEditors.View; Toggles: array of CanvasControls.Toggle; Changed: function(CanvasControls.Event): TMsg; Child: Element of TMsg; Settings: CanvasControls.Options);
   // Native CUI ResultCard element.
   ResultCard(Id: string; Image: Media.Source; Title: string; Activate: TMsg; Settings: ResultCards.Options);
   // Native CUI SelectionBar element.
-  SelectionBar(Id: string; Selected: SelectionBars.Selection; Actions: array of SelectionBars.Action; Changed: function(SelectionBars.Event): TMsg; Child: Element<TMsg>; Settings: SelectionBars.Options);
+  SelectionBar(Id: string; Selected: SelectionBars.Selection; Actions: array of SelectionBars.Action; Changed: function(SelectionBars.Event): TMsg; Child: Element of TMsg; Settings: SelectionBars.Options);
   // Native desktop menu bar.
-  MenuBar(Id: string; Menus: array of MenuBars.Menu<TMsg>; HideBorder: bool);
+  MenuBar(Id: string; Menus: array of MenuBars.Menu of TMsg; HideBorder: bool);
   // Native closable, reorderable document tabs.
   DocumentTabs(Id: string; Tabs: array of Documents.Tab; Selected: int; Changed: function(Documents.Change): TMsg; Settings: Documents.Options);
   // Shared status bar with messages and actions.
-  StatusBar(Id: string; Items: array of StatusBars.Item<TMsg>; HideBorder: bool);
+  StatusBar(Id: string; Items: array of StatusBars.Item of TMsg; HideBorder: bool);
   // Native split view with a draggable divider.
-  SplitView(Id: string; Ratio: float; First: Element<TMsg>; Second: Element<TMsg>; Changed: function(float): TMsg; Settings: SplitViews.Options);
+  SplitView(Id: string; Ratio: float; First: Element of TMsg; Second: Element of TMsg; Changed: function(float): TMsg; Settings: SplitViews.Options);
   // Native docking workspace with movable panels.
-  Dockspace(Id: string; Panels: array of Dockspaces.Panel<TMsg>; Settings: Dockspaces.Options; Changed: Sys.Func<string, TMsg>?);
+  Dockspace(Id: string; Panels: array of Dockspaces.Panel of TMsg; Settings: Dockspaces.Options; Changed: Sys.Func of (string, TMsg)?);
   // Native CUI Toolbar element.
   Toolbar(Id: string; Items: array of Toolbars.Item; Changed: function(Toolbars.Event): TMsg; Settings: Toolbars.Options);
   // Native CUI NodeEditor element.
-  NodeEditor(Id: string; Viewport: NodeEditors.View; Nodes: array of NodeEditors.Node<TMsg>; Links: array of NodeEditors.Link; Changed: function(NodeEditors.Event): TMsg; Settings: NodeEditors.Options);
+  NodeEditor(Id: string; Viewport: NodeEditors.View; Nodes: array of NodeEditors.Node of TMsg; Links: array of NodeEditors.Link; Changed: function(NodeEditors.Event): TMsg; Settings: NodeEditors.Options);
   // Native Problems widget.
   Problems(Id: string; Diagnostics: array of ProblemsPanels.Diagnostic; Changed: function(ProblemsPanels.Event): TMsg; Settings: ProblemsPanels.Options);
   // Native Pipeline widget.
@@ -652,9 +652,9 @@ public type Element<TMsg> = variant
   // Native FeatureFlags widget.
   FeatureFlags(Id: string; Entries: array of FeatureFlagEditors.Flag; Environments: array of string; Changed: function(FeatureFlagEditors.Event): TMsg; Settings: FeatureFlagEditors.Options);
   // Native Carousel element.
-  Carousel(Id: string; Slides: array of Element<TMsg>; Index: int; Change: function(int): TMsg; Settings: Carousels.Options);
+  Carousel(Id: string; Slides: array of Element of TMsg; Index: int; Change: function(int): TMsg; Settings: Carousels.Options);
   // Native CardStack element.
-  CardStack(Id: string; Cards: array of Element<TMsg>; Change: function(CardStacks.Direction): TMsg; Settings: CardStacks.Options);
+  CardStack(Id: string; Cards: array of Element of TMsg; Change: function(CardStacks.Direction): TMsg; Settings: CardStacks.Options);
   // Native ImageViewer element.
   ImageViewer(Id: string; Image: Media.Source; Current: ImageViewers.Value; Change: function(ImageViewers.Value): TMsg; Settings: ImageViewers.Options);
   // Native ImageCropper element.
@@ -662,9 +662,9 @@ public type Element<TMsg> = variant
   // Native ImageCompare element.
   ImageCompare(Id: string; Before: Media.Source; After: Media.Source; Position: float; Change: function(float): TMsg; Settings: ImageComparisons.Options);
   // Native CUI Kanban board.
-  Kanban(Id: string; Columns: array of Kanbans.Column<TMsg>; Change: function(Kanbans.Event): TMsg; Settings: Kanbans.Options);
+  Kanban(Id: string; Columns: array of Kanbans.Column of TMsg; Change: function(Kanbans.Event): TMsg; Settings: Kanbans.Options);
   // Native CUI status tag.
-  StatusTag(Id: string; Current: StatusTags.Value; Remove: Sys.Func<TMsg>?; Settings: StatusTags.Options);
+  StatusTag(Id: string; Current: StatusTags.Value; Remove: (Sys.Func of TMsg)?; Settings: StatusTags.Options);
   // Native CUI ratio slider.
   RatioSlider(Id: string; Current: RatioSliders.Value; Change: function(float): TMsg; Settings: RatioSliders.Options);
   // Native CUI gradient slider.
@@ -682,7 +682,7 @@ public type Element<TMsg> = variant
   // Native shimmer text.
   ShimmerText(Id: string; Text: string; Settings: Motion.TextOptions);
   // Native typewriter.
-  Typewriter(Id: string; Text: string; Replay: int; Settings: Motion.TextOptions; OnComplete: Sys.Func<TMsg>?);
+  Typewriter(Id: string; Text: string; Replay: int; Settings: Motion.TextOptions; OnComplete: (Sys.Func of TMsg)?);
   // Native text reveal.
   TextReveal(Id: string; Text: string; Replay: int; Settings: Motion.TextOptions);
   // Native word rotate.
@@ -692,28 +692,28 @@ public type Element<TMsg> = variant
   // Native gradient text.
   GradientText(Id: string; Text: string; Settings: GradientTexts.Options);
   // Native spotlight.
-  Spotlight(Id: string; Children: array of Element<TMsg>; Settings: Spotlights.Options);
+  Spotlight(Id: string; Children: array of Element of TMsg; Settings: Spotlights.Options);
   // Native loader.
   Loader(Id: string; Style: Loaders.Animation; Settings: Loaders.Options);
   // Native dock.
-  Dock(Id: string; Entries: array of Docks.Entry<TMsg>; Settings: Docks.Options);
+  Dock(Id: string; Entries: array of Docks.Entry of TMsg; Settings: Docks.Options);
   // Native control tile.
   ControlTile(Id: string; Label: string; On: bool; Change: function(bool): TMsg; Settings: ControlTiles.Options);
   // Native now playing.
   NowPlaying(Id: string; Current: NowPlaying.Value; Change: function(NowPlaying.Event): TMsg; Settings: NowPlaying.Options);
   // Native waveform.
-  Waveform(Id: string; Peaks: array of float; Progress: float?; Change: Sys.Func<float, TMsg>?; Settings: Waveforms.Options);
+  Waveform(Id: string; Peaks: array of float; Progress: float?; Change: Sys.Func of (float, TMsg)?; Settings: Waveforms.Options);
   // Native tab bar.
   TabBar(Id: string; Items: array of TabBars.Item; Selected: int; Change: function(int): TMsg; Settings: TabBars.Options);
   // Native searchable modal command palette.
-  CommandPalette(Id: string; Base: Element<TMsg>; Open: bool; Commands: array of Palettes.Command<TMsg>; Change: function(bool): TMsg; UseShortcut: bool);
+  CommandPalette(Id: string; Base: Element of TMsg; Open: bool; Commands: array of Palettes.Command of TMsg; Change: function(bool): TMsg; UseShortcut: bool);
   // Lay children out along one axis in order.
-  Stack(Children: array of Element<TMsg>; Horizontal: bool; Settings: L.Flow);
+  Stack(Children: array of Element of TMsg; Horizontal: bool; Settings: L.Flow);
   // Place graphical children on top of each other using native CUI layout.
-  Layered(Children: array of Element<TMsg>; Settings: L.Flow);
+  Layered(Children: array of Element of TMsg; Settings: L.Flow);
   // Draw a native model-controlled spotlight tour over its base view.
   Tour(
-    Id: string; Base: Element<TMsg>; Steps: array of Tours.Step; Current: int;
+    Id: string; Base: Element of TMsg; Steps: array of Tours.Step; Current: int;
     OnChange: function(Tours.Change): TMsg; Settings: Tours.Options
   );
   // Insert a native flexible gap along the containing axis.
@@ -721,29 +721,29 @@ public type Element<TMsg> = variant
   // Insert a native fixed gap along the containing axis.
   Gap(Distance: L.Measure);
   // Adjust the allocation of one child.
-  Sized(Child: Element<TMsg>; Settings: L.Flex);
+  Sized(Child: Element of TMsg; Settings: L.Flex);
   // Apply the host theme's semantic role to one child.
-  Styled(Child: Element<TMsg>; Role: S.Role);
+  Styled(Child: Element of TMsg; Role: S.Role);
   // Frame one child with an optional title.
-  Framed(Child: Element<TMsg>; Title: string);
+  Framed(Child: Element of TMsg; Title: string);
   // A native outline linked to an uncontrolled scroll viewport.
-  TableOfContents(Id: string; ScrollId: string; Items: array of Toc.Item; OnActiveChange: Sys.Func<string, TMsg>?; Enabled: bool);
+  TableOfContents(Id: string; ScrollId: string; Items: array of Toc.Item; OnActiveChange: Sys.Func of (string, TMsg)?; Enabled: bool);
   // A zero-height destination inside a graphical viewport.
   ScrollAnchor(Id: string);
   // Clip one child to a vertical viewport with optional model-controlled scrolling.
   Scroll(
-    Id: string; Child: Element<TMsg>; Position: L.ScrollPosition?;
-    OnScroll: Sys.Func<L.ScrollChange, TMsg>?; ShowScrollbar: bool; FadeEdges: bool; Horizontal: bool
+    Id: string; Child: Element of TMsg; Position: L.ScrollPosition?;
+    OnScroll: Sys.Func of (L.ScrollChange, TMsg)?; ShowScrollbar: bool; FadeEdges: bool; Horizontal: bool
   );
   // Place a controlled, scrollable modal at one viewport edge.
   Sheet(
-    Id: string; Base: Element<TMsg>; Content: Element<TMsg>; Open: bool;
+    Id: string; Base: Element of TMsg; Content: Element of TMsg; Open: bool;
     Settings: Sheets.Options; OnDismiss: TMsg
   );
   // Resolve a typed cached subtree by comparing its dependencies.
-  Deferred(Id: string; Resolve: function(CacheEntry<TMsg>?): CacheEntry<TMsg>);
+  Deferred(Id: string; Resolve: function((CacheEntry of TMsg)?): CacheEntry of TMsg);
   // Apply terminal-specific RGB styling to a subtree.
-  TerminalStyle(Child: Element<TMsg>; Colors: T.Style);
+  TerminalStyle(Child: Element of TMsg; Colors: T.Style);
   // Display a cell image and route its local input and size changes.
   TerminalCellGrid(Id: string; Content: CellGrids.Image?; Changed: function(CellGrids.Event): TMsg);
   // Show selectable rows with distinct selection and activation callbacks.
@@ -752,23 +752,23 @@ public type Element<TMsg> = variant
     OnSelect: function(string): TMsg; OnActivate: function(string): TMsg
   );
   // Compose terminal content, floating layers and scoped shortcuts.
-  TerminalScreen(Content: Element<TMsg>; Layers: array of Element<TMsg>; Shortcuts: array of Keys.ShortcutBinding<TMsg>);
+  TerminalScreen(Content: Element of TMsg; Layers: array of Element of TMsg; Shortcuts: array of Keys.ShortcutBinding of TMsg);
   // Resolve a terminal-specific subtree using exact cell dimensions.
-  TerminalViewport(Id: string; Build: function(T.Viewport): Element<TMsg>);
+  TerminalViewport(Id: string; Build: function(T.Viewport): Element of TMsg);
 end variant;
 
 // A host-owned cache entry for one typed subview.
 //
 // ## Type parameters
 // - `TMsg`: The application message type.
-public type CacheEntry<TMsg> = record
+public type CacheEntry of TMsg = record
   // The captured dependency value, boxed with its original type.
   public Dependencies: Sys.Object;
   // The view built for those dependencies.
-  public Tree: Element<TMsg>;
+  public Tree: Element of TMsg;
 end record;
 
-type DependencyBox<TDeps> = record
+type DependencyBox of TDeps = record
   // Original dependency value used by the subview's equality check.
   public Value: TDeps;
 end record;
@@ -783,9 +783,9 @@ end record;
 //
 // ## Returns
 // The declarative widget.
-public function Text<TMsg>(Text: string): Element<TMsg>;
+public function Text of TMsg(Text: string): Element of TMsg;
 begin
-  return Element<TMsg>.Label(Text);
+  return (Element of TMsg).Label(Text);
 end function;
 
 // Displays text with explicit graphical typography.
@@ -798,9 +798,9 @@ end function;
 // - `Color`: Straight-alpha text color.
 // ## Returns
 // A label for the graphical profile.
-public function FormattedText<TMsg>(Text: string; Font: Motion.Font; Size: float; Color: G.Color): Element<TMsg>;
+public function FormattedText of TMsg(Text: string; Font: Motion.Font; Size: float; Color: G.Color): Element of TMsg;
 begin
-  return Element<TMsg>.FormattedText(Text, Font, Size, Color);
+  return (Element of TMsg).FormattedText(Text, Font, Size, Color);
 end function;
 
 // Separates adjacent content.
@@ -813,9 +813,9 @@ end function;
 //
 // ## Returns
 // The declarative widget.
-public function Divider<TMsg>(Title: string := ''): Element<TMsg>;
+public function Divider of TMsg(Title: string := ''): Element of TMsg;
 begin
-  return Element<TMsg>.Separator(Title);
+  return (Element of TMsg).Separator(Title);
 end function;
 
 // Inserts CUI's flexible space along the containing axis.
@@ -823,9 +823,9 @@ end function;
 // - `TMsg`: Application message type.
 // ## Returns
 // A GUI-only flexible gap.
-public function Spacer<TMsg>(): Element<TMsg>;
+public function Spacer of TMsg(): Element of TMsg;
 begin
-  return Element<TMsg>.Spacer;
+  return (Element of TMsg).Spacer;
 end function;
 
 // Inserts CUI's fixed space along the containing axis.
@@ -835,9 +835,9 @@ end function;
 // - `Distance`: Nonnegative logical distance.
 // ## Returns
 // A GUI-only fixed gap.
-public function Gap<TMsg>(Distance: L.Measure): Element<TMsg>;
+public function Gap of TMsg(Distance: L.Measure): Element of TMsg;
 begin
-  return Element<TMsg>.Gap(Distance);
+  return (Element of TMsg).Gap(Distance);
 end function;
 
 // Arranges children horizontally with default spacing.
@@ -850,9 +850,9 @@ end function;
 //
 // ## Returns
 // The declarative widget.
-public function Row<TMsg>(params Children: array of Element<TMsg>): Element<TMsg>;
+public function Row of TMsg(params Children: array of Element of TMsg): Element of TMsg;
 begin
-  return Element<TMsg>.Stack(Children, true, new L.Flow());
+  return (Element of TMsg).Stack(Children, true, new L.Flow());
 end function;
 
 // Arranges children horizontally with explicit spacing and alignment.
@@ -866,9 +866,9 @@ end function;
 //
 // ## Returns
 // The declarative widget.
-public function Row<TMsg>(Settings: L.Flow; params Children: array of Element<TMsg>): Element<TMsg>;
+public function Row of TMsg(Settings: L.Flow; params Children: array of Element of TMsg): Element of TMsg;
 begin
-  return Element<TMsg>.Stack(Children, true, Settings);
+  return (Element of TMsg).Stack(Children, true, Settings);
 end function;
 
 // Arranges children vertically with default spacing.
@@ -881,9 +881,9 @@ end function;
 //
 // ## Returns
 // The declarative widget.
-public function Column<TMsg>(params Children: array of Element<TMsg>): Element<TMsg>;
+public function Column of TMsg(params Children: array of Element of TMsg): Element of TMsg;
 begin
-  return Element<TMsg>.Stack(Children, false, new L.Flow());
+  return (Element of TMsg).Stack(Children, false, new L.Flow());
 end function;
 
 // Arranges children vertically with explicit spacing and alignment.
@@ -897,9 +897,9 @@ end function;
 //
 // ## Returns
 // The declarative widget.
-public function Column<TMsg>(Settings: L.Flow; params Children: array of Element<TMsg>): Element<TMsg>;
+public function Column of TMsg(Settings: L.Flow; params Children: array of Element of TMsg): Element of TMsg;
 begin
-  return Element<TMsg>.Stack(Children, false, Settings);
+  return (Element of TMsg).Stack(Children, false, Settings);
 end function;
 
 // Sets the sizing behavior of a child.
@@ -913,9 +913,9 @@ end function;
 //
 // ## Returns
 // The declarative widget.
-public function Size<TMsg>(Child: Element<TMsg>; Settings: L.Flex): Element<TMsg>;
+public function Size of TMsg(Child: Element of TMsg; Settings: L.Flex): Element of TMsg;
 begin
-  return Element<TMsg>.Sized(Child, Settings);
+  return (Element of TMsg).Sized(Child, Settings);
 end function;
 
 // Applies a semantic style role.
@@ -929,9 +929,9 @@ end function;
 //
 // ## Returns
 // The declarative widget.
-public function Styled<TMsg>(Child: Element<TMsg>; Role: S.Role): Element<TMsg>;
+public function Styled of TMsg(Child: Element of TMsg; Role: S.Role): Element of TMsg;
 begin
-  return Element<TMsg>.Styled(Child, Role);
+  return (Element of TMsg).Styled(Child, Role);
 end function;
 
 // Frames a child.
@@ -945,9 +945,9 @@ end function;
 //
 // ## Returns
 // The declarative widget.
-public function Border<TMsg>(Child: Element<TMsg>; Title: string := ''): Element<TMsg>;
+public function Border of TMsg(Child: Element of TMsg; Title: string := ''): Element of TMsg;
 begin
-  return Element<TMsg>.Framed(Child, Title);
+  return (Element of TMsg).Framed(Child, Title);
 end function;
 
 // Displays a vertical viewport whose offset belongs to the host.
@@ -964,9 +964,9 @@ end function;
 //
 // ## Returns
 // The declarative widget.
-public function ScrollView<TMsg>(Id: string; Child: Element<TMsg>; ShowScrollbar: bool := true; FadeEdges: bool := false; Horizontal: bool := false): Element<TMsg>;
+public function ScrollView of TMsg(Id: string; Child: Element of TMsg; ShowScrollbar: bool := true; FadeEdges: bool := false; Horizontal: bool := false): Element of TMsg;
 begin
-  return Element<TMsg>.Scroll(Id, Child, null, null, ShowScrollbar, FadeEdges, Horizontal);
+  return (Element of TMsg).Scroll(Id, Child, null, null, ShowScrollbar, FadeEdges, Horizontal);
 end function;
 
 // Displays a vertical viewport whose position belongs to the model.
@@ -985,9 +985,17 @@ end function;
 //
 // ## Returns
 // The declarative widget.
-public function ScrollView<TMsg>(Id: string; Child: Element<TMsg>; Position: L.ScrollPosition; OnScroll: function(L.ScrollChange): TMsg; ShowScrollbar: bool := true; FadeEdges: bool := false; Horizontal: bool := false): Element<TMsg>;
+public function ScrollView of TMsg(Id: string; Child: Element of TMsg; Position: L.ScrollPosition; OnScroll: function(L.ScrollChange): TMsg; ShowScrollbar: bool := true; FadeEdges: bool := false; Horizontal: bool := false): Element of TMsg;
 begin
-  return Element<TMsg>.Scroll(Id, Child, Position, OnScroll, ShowScrollbar, FadeEdges, Horizontal);
+  return (Element of TMsg).Scroll(
+    Id,
+    Child,
+    Position,
+    OnScroll,
+    ShowScrollbar,
+    FadeEdges,
+    Horizontal
+  );
 end function;
 
 // Applies terminal-specific RGB colors.
@@ -1001,9 +1009,9 @@ end function;
 //
 // ## Returns
 // The declarative widget.
-public function CellStyled<TMsg>(Child: Element<TMsg>; Colors: T.Style): Element<TMsg>;
+public function CellStyled of TMsg(Child: Element of TMsg; Colors: T.Style): Element of TMsg;
 begin
-  return Element<TMsg>.TerminalStyle(Child, Colors);
+  return (Element of TMsg).TerminalStyle(Child, Colors);
 end function;
 
 // Reuses a subtree while its typed dependencies compare equal.
@@ -1020,22 +1028,22 @@ end function;
 //
 // ## Returns
 // The deferred subtree.
-public function CachedSubview<TDeps, TMsg>(
-  Id: string; Dependencies: TDeps; Build: function(TDeps): Element<TMsg>; Equal: function(TDeps, TDeps): bool
-): Element<TMsg>;
-  function Resolve(Previous: CacheEntry<TMsg>?): CacheEntry<TMsg>;
+public function CachedSubview of (TDeps, TMsg)(
+  Id: string; Dependencies: TDeps; Build: function(TDeps): Element of TMsg; Equal: function(TDeps, TDeps): bool
+): Element of TMsg;
+  function Resolve(Previous: (CacheEntry of TMsg)?): CacheEntry of TMsg;
   begin
-    if Previous <> null and Previous.Dependencies is DependencyBox<TDeps> then
-      const Old: DependencyBox<TDeps> := cast<DependencyBox<TDeps>>(Previous.Dependencies);
+    if Previous <> null and Previous.Dependencies is DependencyBox of TDeps then
+      const Old: DependencyBox of TDeps := cast<DependencyBox of TDeps>(Previous.Dependencies);
       if Equal(Old.Value, Dependencies) then
         return Previous;
       end if;
     end if;
 
-    return new CacheEntry<TMsg>(new DependencyBox<TDeps>(Dependencies), Build(Dependencies));
+    return new CacheEntry of TMsg(new DependencyBox of TDeps(Dependencies), Build(Dependencies));
   end function;
 begin
-  return Element<TMsg>.Deferred(Id, Resolve);
+  return (Element of TMsg).Deferred(Id, Resolve);
 end function;
 
 end unit;

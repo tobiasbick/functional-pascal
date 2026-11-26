@@ -18,8 +18,8 @@ function Catalogue(Rating: int): Page.Catalogue;
 begin
   const Song: Tracks.Entry := new Tracks.Entry(1L, 'song', 'song.mp3', '', Rating, null, null);
   return new Page.Catalogue(
-    I.ImmutableArray.Create<Tracks.Entry>(Song),
-    I.ImmutableDictionary<string, Albums.Album>.Empty, [], [], [], []
+    I.ImmutableArray.Create of Tracks.Entry(Song),
+    I.ImmutableDictionary of (string, Albums.Album).Empty, [], [], [], []
   );
 end function;
 
@@ -55,7 +55,7 @@ public type TrackRatingTests = record
       ).Model;
       Current := Page.Apply(Current, Page.Msg.Song(Music.Msg.Minimum(Minimum)), Library).Model;
       Current := Page.Apply(Current, Page.Msg.Song(Music.Msg.ApplyFilters), Library).Model;
-      X.Assert.Equal<int>(3, VisibleRating(Current.Page));
+      X.Assert.Equal of int(3, VisibleRating(Current.Page));
       Current := Page.Apply(
         Current,
         Page.Msg.Song(Music.Msg.Rate('song', 0)),
@@ -77,12 +77,12 @@ public type TrackRatingTests = record
         );
       end with;
       Current := Page.Apply(Current, Page.Msg.Received(0L, 3L, Scanned), Library).Model;
-      X.Assert.Equal<int>(2, Current.Page.Tracks.Length);
+      X.Assert.Equal of int(2, Current.Page.Tracks.Length);
       const Actual: array of int := [Clicked, Pending, Saved, VisibleRating(Current.Page)];
       const Wanted: array of int := [Expected, Expected, Expected, Expected];
-      X.Assert.Equal<int>(Wanted, Actual);
+      X.Assert.Equal of int(Wanted, Actual);
       Current := Page.Apply(Current, Page.Msg.Received(0L, 5L, Catalogue(7)), Library).Model;
-      X.Assert.Equal<int>(7, VisibleRating(Current.Page));
+      X.Assert.Equal of int(7, VisibleRating(Current.Page));
     finally
       Inventory.DisposeAsync().GetAwaiter().GetResult();
     end try;
@@ -100,25 +100,25 @@ public type TrackRatingTests = record
         new Albums.Album('album', 'Album', '', 1L, ''),
         0L
       );
-      const Items: I.ImmutableArray<Tracks.Entry> := Catalogue(3).Tracks;
+      const Items: I.ImmutableArray of Tracks.Entry := Catalogue(3).Tracks;
       Current := Edit.Apply(Current, Music.Msg.Loaded(0L, 1L, Items), Library).Model;
       Current := Edit.Apply(Current, Music.Msg.Rate('song', 8), Library).Model;
       Current := Edit.Apply(Current, Music.Msg.Rated(0L, 'song', 8, 3L), Library).Model;
       Current := Edit.Apply(Current, Music.Msg.Rate('song', 5), Library).Model;
       Current := Edit.Apply(Current, Music.Msg.Loaded(0L, 2L, Items), Library).Model;
-      X.Assert.Equal<int>(5, VisibleRating(Current));
+      X.Assert.Equal of int(5, VisibleRating(Current));
       Current := Edit.Apply(
         Current,
         Music.Msg.RatingFailed(0L, 'song', 'Write failed'),
         Library
       ).Model;
-      X.Assert.Equal<int>(8, VisibleRating(Current));
-      X.Assert.Equal<string?>('Write failed', Current.Error);
+      X.Assert.Equal of int(8, VisibleRating(Current));
+      X.Assert.Equal of string? ('Write failed', Current.Error);
       Current := Edit.Apply(Current, Music.Msg.Rate('song', 6), Library).Model;
-      X.Assert.Equal<int>(6, VisibleRating(Current));
+      X.Assert.Equal of int(6, VisibleRating(Current));
       Current := Edit.Apply(Current, Music.Msg.Loaded(0L, 6L, Catalogue(9).Tracks), Library).Model;
       Current := Edit.Apply(Current, Music.Msg.Rated(0L, 'song', 6, 5L), Library).Model;
-      X.Assert.Equal<int>(9, VisibleRating(Current));
+      X.Assert.Equal of int(9, VisibleRating(Current));
     finally
       Inventory.DisposeAsync().GetAwaiter().GetResult();
     end try;

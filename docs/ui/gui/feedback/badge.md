@@ -16,9 +16,9 @@ uses Fpas.Ui.Widgets.Feedback.Badges as W;
 // Builds the badge example.
 // ## Returns
 // The widget for the application view.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return W.Badge<string>('badge-active', 'Active', new W.Options(Tone := S.Tone.Success, Dot := true));
+  return W.Badge of string('badge-active', 'Active', new W.Options(Tone := S.Tone.Success, Dot := true));
 end function;
 
 end unit;

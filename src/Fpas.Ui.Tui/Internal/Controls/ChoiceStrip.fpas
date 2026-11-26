@@ -18,16 +18,16 @@ uses Fpas.Ui.Widgets.Developer.Terminal as Terminal;
 uses System as Sys;
 uses System.Collections.Generic as C;
 
-type Choice<TMsg> = record implements Actions.IActivatable<TMsg>
+type Choice of TMsg = record implements Actions.IActivatable of TMsg
   // Shared choices and selection callback for this item.
-  public Strip: E.ChoiceStripView<TMsg>;
+  public Strip: E.ChoiceStripView of TMsg;
   // Position of this enabled choice in the strip.
   public Index: int;
 
   // Proposes this choice through the strip's selector.
   // ## Returns
   // The message or no-op resulting from invoking the choice.
-  public function Activate(): Actions.Result<TMsg>;
+  public function Activate(): Actions.Result of TMsg;
   begin
     return self.Strip.Activate(self.Index);
   end function;
@@ -63,12 +63,12 @@ end function;
 // - `Settings`: Rendering and input policy.
 // ## Returns
 // The strip and its intrinsic cell widths.
-public function Lower<TMsg>(
+public function Lower of TMsg(
   Id: string; Items: array of E.ChoiceItem; Entry: int;
-  Activate: function(int): Actions.Result<TMsg>; Settings: E.ChoiceStripOptions
-): E.Element<TMsg>;
+  Activate: function(int): Actions.Result of TMsg; Settings: E.ChoiceStripOptions
+): E.Element of TMsg;
 begin
-  const Widths: array of int := Sys.Array.ConvertAll<E.ChoiceItem, int>(
+  const Widths: array of int := Sys.Array.ConvertAll of (E.ChoiceItem, int)(
     Items,
     function(Item: E.ChoiceItem): int => Sys.Math.Min(
       E.MaximumColumns, G.Measure(G.SingleLine(Item.Caption)) + 2 * Settings.Padding
@@ -80,11 +80,11 @@ begin
       Widest := Sys.Math.Max(Widest, Width);
     end for;
 
-    Sys.Array.Fill<int>(Widths, Widest);
+    Sys.Array.Fill of int(Widths, Widest);
   end if;
 
-  return E.Element<TMsg>.ChoiceStrip(
-    new E.ChoiceStripView<TMsg>(Id, Items, Entry, Activate, Settings, Widths)
+  return (E.Element of TMsg).ChoiceStrip(
+    new E.ChoiceStripView of TMsg(Id, Items, Entry, Activate, Settings, Widths)
   );
 end function;
 
@@ -97,10 +97,10 @@ end function;
 // - `Apply`: Dispatches a changed selection to the application.
 // ## Returns
 // The new focus identity, or null for an unrelated control or key.
-public function Move<TMsg>(Handler: Actions.IActivatable<TMsg>?; Key: K.Key; Apply: procedure(TMsg)): string?;
+public function Move of TMsg(Handler: (Actions.IActivatable of TMsg)?; Key: K.Key; Apply: procedure(TMsg)): string?;
 begin
   case Handler of
-    when is Choice<TMsg> as Item:
+    when is Choice of TMsg as Item:
       const Last: int := Item.Strip.Items.Length - 1;
       const Next: int := case Key of
         when K.Key.Left: Sys.Math.Max(0, Item.Index - 1);
@@ -111,7 +111,7 @@ begin
       end case;
       if Next >= 0 then
         if Next <> Item.Index then
-          Actions.Dispatch<TMsg>(Item.Strip.Activate(Next), Apply);
+          Actions.Dispatch of TMsg(Item.Strip.Activate(Next), Apply);
         end if;
 
         return ItemId(Item.Strip.Id, Next);
@@ -140,11 +140,11 @@ end function;
 // - `Navigation`: Keyboard destinations, including clipped choices.
 // - `Stops`: Tab traversal order.
 // - `Register`: Registers visible controls.
-public procedure Arrange<TMsg>(
-  Strip: E.ChoiceStripView<TMsg>; Area: F.Rect; Clip: F.Rect; Style: Terminal.Style; Theme: Th.Theme;
-  Scope: string; Parent: string; ScrollId: string; Focus: string; Offsets: C.Dictionary<string, int>;
-  Operations: C.List<D.Operation>; Navigation: C.List<A.NavigationStop>; Stops: C.List<A.TabStop>;
-  Register: procedure(A.Control<TMsg>)
+public procedure Arrange of TMsg(
+  Strip: E.ChoiceStripView of TMsg; Area: F.Rect; Clip: F.Rect; Style: Terminal.Style; Theme: Th.Theme;
+  Scope: string; Parent: string; ScrollId: string; Focus: string; Offsets: C.Dictionary of (string, int);
+  Operations: C.List of D.Operation; Navigation: C.List of A.NavigationStop; Stops: C.List of A.TabStop;
+  Register: procedure(A.Control of TMsg)
 );
 begin
   if Area.Height = 0 or Clip.Width = 0 then
@@ -152,7 +152,7 @@ begin
   end if;
 
   const Count: int := Strip.Items.Length;
-  const Ids: C.List<string> := new C.List<string>(Count);
+  const Ids: C.List of string := new C.List of string(Count);
   for Index: int := 0 to Count - 1 do
     Ids.Add(ItemId(Strip.Id, Index));
   end for;
@@ -176,7 +176,7 @@ begin
     return;
   end if;
 
-  const Widths: array of int := Sys.Array.ConvertAll<int, int>(
+  const Widths: array of int := Sys.Array.ConvertAll of (int, int)(
     Strip.Widths,
     function(Width: int): int => Sys.Math.Min(Width, Visible.Width)
   );
@@ -272,7 +272,7 @@ begin
     end if;
 
     Register(
-      new A.Control<TMsg>(
+      new A.Control of TMsg(
         Ids[Index],
         Item.Label,
         Strip.Settings.Role,
@@ -285,7 +285,7 @@ begin
         Scope,
         Parent,
         Strip.Settings.Enabled,
-        A.Binding<TMsg>.Invoke(new Choice<TMsg>(Strip, Index)),
+        (A.Binding of TMsg).Invoke(new Choice of TMsg(Strip, Index)),
         Variant,
         ButtonStyle := true,
         TabTarget := Entry

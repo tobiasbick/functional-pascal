@@ -61,7 +61,7 @@ public sealed class DeclarationContextTests
     {
         var source = string.Join(newline,
             "// Catalogue 🙂", "program Catalogue;", "uses System as Sys;",
-            "type Box<T> = record", "  // Stored value", "  public Value: T;",
+            "type Box of T = record", "  // Stored value", "  public Value: T;",
             "  public function Read(): T; begin return self.Value; end function;", "end record;",
             "// Outer documentation", "[Sys.ObsoleteAttribute('Example')]",
             "function Outer(Value: int): int;", "requires Value > 0;", "  function Inner(Input: int): int;",

@@ -21,11 +21,11 @@ uses Fpas.Ui.Widgets.Overlays.Dialogs as W;
 // - `Open`: Model-owned visibility.
 // ## Returns
 // The resulting view.
-public function View(Base: E.Element<string>; Open: bool): E.Element<string>;
+public function View(Base: E.Element of string; Open: bool): E.Element of string;
 begin
-  return W.Dialog<string>('delete-project', Base,
-    E.Column<string>(E.Text<string>('This removes the project and its history for everyone. You cannot undo this.'),
-      E.Row<string>(B.Button<string>('cancel', 'Cancel', 'close'), B.Button<string>('delete', 'Delete project', 'delete'))),
+  return W.Dialog of string('delete-project', Base,
+    E.Column of string(E.Text of string('This removes the project and its history for everyone. You cannot undo this.'),
+      E.Row of string(B.Button of string('cancel', 'Cancel', 'close'), B.Button of string('delete', 'Delete project', 'delete'))),
     Open, new W.Options('Delete this project?', Width := 400, InitialFocus := 'cancel'), 'close');
 end function;
 

@@ -13,11 +13,11 @@ uses FpasAmp.Ui.Settings.Model as M;
 
 // Builds a source removal trigger for `SourceId`. `Id` is its stable control identity;
 // `Current` owns confirmation state and `Theme` supplies the native danger color.
-public function Remove(Id: string; SourceId: string; Current: M.State; Theme: Themes.Theme): E.Element<M.Msg>;
+public function Remove(Id: string; SourceId: string; Current: M.State; Theme: Themes.Theme): E.Element of M.Msg;
 begin
-  return Confirm.ConfirmPopover<M.Msg>(
+  return Confirm.ConfirmPopover of M.Msg(
     Id + '-confirm',
-    B.Button<M.Msg>(
+    B.Button of M.Msg(
       Id, 'Delete', M.Msg.AskRemove(SourceId),
       new B.Options(
         Variant := S.ButtonVariant.Outline, ControlSize := B.Size.Small,

@@ -32,7 +32,7 @@ uses Fpas.Ui.Widgets.Media.MediaImages as Media;
 // - `Frame`: Current presentation frame.
 // - `Node`: Canvas element.
 // - `Visit`: Presents embedded content.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Node: E.Element<TMsg>; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+public procedure Draw of TMsg(Frame: C.State of TMsg; Node: E.Element of TMsg; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
 begin
   case Node of
     when E.Element.FormatBar(
@@ -41,35 +41,35 @@ begin
       const Changed: function(FormatBars.Event): TMsg,
       const Settings: FormatBars.Options
     ):
-      FormatBarWidget.Draw<TMsg>(Frame, Id, Format, Changed, Settings);
+      FormatBarWidget.Draw of TMsg(Frame, Id, Format, Changed, Settings);
     when E.Element.LiveCursors(
       const Id: string,
       const People: array of LiveCursors.Person,
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       const Settings: LiveCursors.Options
     ):
-      LiveCursorsWidget.Draw<TMsg>(Frame, Id, People, Child, Settings, Visit);
+      LiveCursorsWidget.Draw of TMsg(Frame, Id, People, Child, Settings, Visit);
     when E.Element.PresencePill(
       const Id: string,
       const People: array of LiveCursors.Person,
       const Settings: PresencePills.Options
     ):
-      PresencePillWidget.Draw<TMsg>(Frame, Id, People, Settings);
+      PresencePillWidget.Draw of TMsg(Frame, Id, People, Settings);
     when E.Element.SelectionRing(
       const Id: string,
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       const Settings: SelectionRings.Options
     ):
-      SelectionRingWidget.Draw<TMsg>(Frame, Id, Child, Settings, Visit);
+      SelectionRingWidget.Draw of TMsg(Frame, Id, Child, Settings, Visit);
     when E.Element.CanvasControls(
       const Id: string,
       const Viewport: NodeEditors.View,
       const Toggles: array of CanvasControls.Toggle,
       const Changed: function(CanvasControls.Event): TMsg,
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       const Settings: CanvasControls.Options
     ):
-      CanvasControlsWidget.Draw<TMsg>(
+      CanvasControlsWidget.Draw of TMsg(
         Frame,
         Id,
         Viewport,
@@ -86,32 +86,41 @@ begin
       const Activate: TMsg,
       const Settings: ResultCards.Options
     ):
-      ResultCardWidget.Draw<TMsg>(Frame, Id, Image, Title, Activate, Settings);
+      ResultCardWidget.Draw of TMsg(Frame, Id, Image, Title, Activate, Settings);
     when E.Element.SelectionBar(
       const Id: string,
       const Selected: SelectionBars.Selection,
       const Actions: array of SelectionBars.Action,
       const Changed: function(SelectionBars.Event): TMsg,
-      const Child: E.Element<TMsg>,
+      const Child: E.Element of TMsg,
       const Settings: SelectionBars.Options
     ):
-      SelectionBarWidget.Draw<TMsg>(Frame, Id, Selected, Actions, Changed, Child, Settings, Visit);
+      SelectionBarWidget.Draw of TMsg(
+        Frame,
+        Id,
+        Selected,
+        Actions,
+        Changed,
+        Child,
+        Settings,
+        Visit
+      );
     when E.Element.Toolbar(
       const Id: string,
       const Items: array of Toolbars.Item,
       const Changed: function(Toolbars.Event): TMsg,
       const Settings: Toolbars.Options
     ):
-      ToolbarWidget.Draw<TMsg>(Frame, Id, Items, Changed, Settings);
+      ToolbarWidget.Draw of TMsg(Frame, Id, Items, Changed, Settings);
     when E.Element.NodeEditor(
       const Id: string,
       const Viewport: NodeEditors.View,
-      const Nodes: array of NodeEditors.Node<TMsg>,
+      const Nodes: array of NodeEditors.Node of TMsg,
       const Links: array of NodeEditors.Link,
       const Changed: function(NodeEditors.Event): TMsg,
       const Settings: NodeEditors.Options
     ):
-      NodeEditorWidget.Draw<TMsg>(Frame, Id, Viewport, Nodes, Links, Changed, Settings, Visit);
+      NodeEditorWidget.Draw of TMsg(Frame, Id, Viewport, Nodes, Links, Changed, Settings, Visit);
     else
   end case;
 end procedure;

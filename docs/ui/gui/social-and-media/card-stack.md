@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Containers.CardStacks as W;
 // - `Cards`: Composed card views, front to back.
 // ## Returns
 // The deck with swipe directions as messages.
-public function View(Cards: array of E.Element<W.Direction>): E.Element<W.Direction>;
+public function View(Cards: array of E.Element of W.Direction): E.Element of W.Direction;
 begin
-  return W.CardStack<W.Direction>('destinations', Cards,
+  return W.CardStack of W.Direction('destinations', Cards,
     function(Swipe: W.Direction): W.Direction => Swipe, new W.Options(Height := 200.0F));
 end function;
 

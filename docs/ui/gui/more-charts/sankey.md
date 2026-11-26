@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Charts.Sankeys as W;
 // Builds the sankey example.
 // ## Returns
 // The widget for the application view.
-public function View(): E.Element<W.Selection>;
+public function View(): E.Element of W.Selection;
 begin
-  return W.Sankey<W.Selection>('flow',
+  return W.Sankey of W.Selection('flow',
     [new W.Node('Search'), new W.Node('Sign up'), new W.Node('Trial'), new W.Node('Paid')],
     [new W.Link(0, 1, 420.0F), new W.Link(1, 2, 420.0F), new W.Link(2, 3, 260.0F)],
     new W.Options(Height := 280.0F), function(Item: W.Selection): W.Selection => Item);

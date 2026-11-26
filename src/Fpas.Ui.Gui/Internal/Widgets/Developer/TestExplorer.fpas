@@ -12,7 +12,7 @@ uses System.Collections.Generic as Lists;
 
 function PackTestItem(Items: array of D.Item): array of CuiDeveloper.CuiDevTestItem;
 begin
-  const Native: Lists.List<CuiDeveloper.CuiDevTestItem> := new Lists.List<CuiDeveloper.CuiDevTestItem>(
+  const Native: Lists.List of CuiDeveloper.CuiDevTestItem := new Lists.List of CuiDeveloper.CuiDevTestItem(
     Items.Length
   );
   for Entry: D.Item in Items do
@@ -39,7 +39,7 @@ end function;
 // - `Entries`: Entries supplied to the widget.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Entries: array of D.Item; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Entries: array of D.Item; Changed: function(D.Event): TMsg; Settings: D.Options);
 begin
   const Role: string := 'test-explorer';
   const Token: string := C.Token(Role, Id);
@@ -53,7 +53,7 @@ begin
     Width.Value,
     Enabled
   );
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, Result.Count.ToString());
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, Result.Count.ToString());
   if Enabled and (Result.Action >= 0 or Result.Hover >= 0 or Result.Flags <> 0) then
     Frame.Messages.Add(
       Changed(

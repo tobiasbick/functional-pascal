@@ -38,10 +38,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function VoiceWave<TMsg>(Id: string; Signal: Voice.Signal; Progress: float?; Changed: Sys.Func<float, TMsg>?; Settings: Options? := null): E.Element<TMsg>;
+public function VoiceWave of TMsg(Id: string; Signal: Voice.Signal; Progress: float?; Changed: Sys.Func of (float, TMsg)?; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.VoiceWave(Id, Signal, Progress, Changed, Settings ?? new Options());
+  return (E.Element of TMsg).VoiceWave(Id, Signal, Progress, Changed, Settings ?? new Options());
 end function;
 
 end unit;

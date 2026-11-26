@@ -6,7 +6,7 @@ Declare a .NET Task result and await supported .NET operations inside the body.
 async function Download(
   Address: string;
   Cancellation: Threading.CancellationToken
-): Tasks.Task<string>;
+): Tasks.Task of string;
 begin
   using const Client: Http.HttpClient := new Http.HttpClient();
   return await Client.GetStringAsync(Address, Cancellation);
@@ -14,14 +14,14 @@ end function;
 ```
 
 `async` marks a function and its body. The declared return type is explicitly
-`System.Threading.Tasks.Task<T>` or non-generic `Task`. A `return Value;` inside
-`Task<T>` supplies `T`; `return;` completes a non-generic Task. Every normal path
-of an async `Task<T>` function must return a value. Async functions returning
+`System.Threading.Tasks.Task of T` or non-generic `Task`. A `return Value;` inside
+`Task of T` supplies `T`; `return;` completes a non-generic Task. Every normal path
+of an async `Task of T` function must return a value. Async functions returning
 non-generic Task may complete at the end of their body.
 
 There are no async procedures/async void functions. An anonymous async function
-uses `async function(...): Task<T> begin ... end function`. Async expression
-lambdas use `async function(...): Task<T> => Expression` and supply a `T` result.
+uses `async function(...): Task of T begin ... end function`. Async expression
+lambdas use `async function(...): Task of T => Expression` and supply a `T` result.
 For an ordinary synchronous function returning Task, normal return rules apply:
 it returns the task object itself and cannot use await.
 

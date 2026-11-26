@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Ai.AgentPlans as W;
 // - `Steps`: Ordered steps with their current states.
 // ## Returns
 // The plan with selected step indices as messages.
-public function View(Steps: array of W.Step): E.Element<int>;
+public function View(Steps: array of W.Step): E.Element of int;
 begin
-  return W.AgentPlan<int>('research-plan', Steps, function(Index: int): int => Index,
+  return W.AgentPlan of int('research-plan', Steps, function(Index: int): int => Index,
     new W.Options(Title := 'Research plan'));
 end function;
 

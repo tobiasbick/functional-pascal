@@ -34,15 +34,15 @@ public type StorageCheckpointTests = record
     D.Save(Connection, Sources, D.Observation(Album, [Track], []));
     const Id: long := D.FileId(Connection, Track);
     X.Assert.True(Id > 0L);
-    X.Assert.Equal<long>(1L, D.Number(Connection, 'SELECT count(*) FROM files;'));
-    X.Assert.Equal<long>(2L, D.Number(Connection, 'SELECT count(*) FROM source_files;'));
+    X.Assert.Equal of long(1L, D.Number(Connection, 'SELECT count(*) FROM files;'));
+    X.Assert.Equal of long(2L, D.Number(Connection, 'SELECT count(*) FROM source_files;'));
     D.Save(Connection, Sources, D.Observation(Album, [Track], []));
-    X.Assert.Equal<long>(Id, D.FileId(Connection, Track));
+    X.Assert.Equal of long(Id, D.FileId(Connection, Track));
     D.Configure(Connection, [Sources[1]]);
-    X.Assert.Equal<long>(1L, D.Number(Connection, 'SELECT count(*) FROM source_files;'));
-    X.Assert.Equal<long>(Id, D.FileId(Connection, Track));
+    X.Assert.Equal of long(1L, D.Number(Connection, 'SELECT count(*) FROM source_files;'));
+    X.Assert.Equal of long(Id, D.FileId(Connection, Track));
     D.Configure(Connection, []);
-    X.Assert.Equal<long>(0L, D.Number(Connection, 'SELECT count(*) FROM files;'));
+    X.Assert.Equal of long(0L, D.Number(Connection, 'SELECT count(*) FROM files;'));
   end procedure;
 
   // An incomplete directory cannot delete unseen children/files or advance its last success.
@@ -62,15 +62,15 @@ public type StorageCheckpointTests = record
       'SELECT checked_utc FROM directories WHERE parent_key NOT IN(SELECT path_key FROM directories);'
     );
     D.Save(Connection, Sources, D.Observation(Root.Path, [], [], false, 'temporarily unavailable'));
-    X.Assert.Equal<long>(1L, D.Number(Connection, 'SELECT count(*) FROM files;'));
-    X.Assert.Equal<long>(2L, D.Number(Connection, 'SELECT count(*) FROM directories;'));
-    X.Assert.Equal<long>(
+    X.Assert.Equal of long(1L, D.Number(Connection, 'SELECT count(*) FROM files;'));
+    X.Assert.Equal of long(2L, D.Number(Connection, 'SELECT count(*) FROM directories;'));
+    X.Assert.Equal of long(
       Checked,
       D.Number(Connection, 'SELECT checked_utc FROM directories WHERE error IS NOT NULL;')
     );
     D.Save(Connection, Sources, D.Observation(Root.Path, [], []));
-    X.Assert.Equal<long>(0L, D.Number(Connection, 'SELECT count(*) FROM files;'));
-    X.Assert.Equal<long>(1L, D.Number(Connection, 'SELECT count(*) FROM directories;'));
+    X.Assert.Equal of long(0L, D.Number(Connection, 'SELECT count(*) FROM files;'));
+    X.Assert.Equal of long(1L, D.Number(Connection, 'SELECT count(*) FROM directories;'));
   end procedure;
 
   // Removing a child from an active parent preserves an offline nested source's view.
@@ -96,9 +96,9 @@ public type StorageCheckpointTests = record
     ];
     D.Configure(Connection, Sources);
     D.Save(Connection, Sources, D.Observation(Root.Path, [], []));
-    X.Assert.Equal<long>(1L, D.Number(Connection, 'SELECT count(*) FROM source_files;'));
-    X.Assert.Equal<long>(Id, D.FileId(Connection, Track));
-    X.Assert.Equal<long>(
+    X.Assert.Equal of long(1L, D.Number(Connection, 'SELECT count(*) FROM source_files;'));
+    X.Assert.Equal of long(Id, D.FileId(Connection, Track));
+    X.Assert.Equal of long(
       1L,
       D.Number(Connection, 'SELECT count(*) FROM directories WHERE source_id=''child'';')
     );
@@ -115,14 +115,14 @@ public type StorageCheckpointTests = record
     D.Configure(Connection, Sources);
     D.Save(Connection, Sources, D.Observation(Root.Path, [Track], []));
     const Checked: long := D.Number(Connection, 'SELECT checked_utc FROM directories;');
-    const Files: C.HashSet<string> := new C.HashSet<string>();
+    const Files: C.HashSet of string := new C.HashSet of string();
     for Index: int := 0 to 999 do
       discard Files.Add(IO.Path.Combine(Root.Path, Index.ToString() + '.flac'));
     end for;
     const Observation: O.DirectoryObservation := new O.DirectoryObservation(
       Root.Path,
       Files,
-      new C.HashSet<string>(),
+      new C.HashSet of string(),
       true,
       null
     );
@@ -135,9 +135,9 @@ public type StorageCheckpointTests = record
         end function, T.CancellationToken.None
       )
     );
-    X.Assert.Equal<long>(1L, D.Number(Connection, 'SELECT count(*) FROM files;'));
+    X.Assert.Equal of long(1L, D.Number(Connection, 'SELECT count(*) FROM files;'));
     X.Assert.True(D.FileId(Connection, Track) > 0L);
-    X.Assert.Equal<long>(Checked, D.Number(Connection, 'SELECT checked_utc FROM directories;'));
+    X.Assert.Equal of long(Checked, D.Number(Connection, 'SELECT checked_utc FROM directories;'));
   end procedure;
 
   // A SQLite failure propagates and rolls back the preceding directory update.
@@ -167,11 +167,11 @@ public type StorageCheckpointTests = record
     end try;
 
     X.Assert.True(Failed);
-    X.Assert.Equal<long>(0L, D.Number(Connection, 'SELECT count(*) FROM directories;'));
-    X.Assert.Equal<long>(0L, D.Number(Connection, 'SELECT count(*) FROM files;'));
+    X.Assert.Equal of long(0L, D.Number(Connection, 'SELECT count(*) FROM directories;'));
+    X.Assert.Equal of long(0L, D.Number(Connection, 'SELECT count(*) FROM files;'));
     Sql.Execute(Connection, 'DROP TRIGGER reject_files;', null, [], []);
     D.Save(Connection, Sources, D.Observation(Root.Path, [], []));
-    X.Assert.Equal<long>(
+    X.Assert.Equal of long(
       1L,
       D.Number(Connection, 'SELECT count(*) FROM directories WHERE checked_utc IS NOT NULL;')
     );

@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Inputs.RadioGroups as R;
 // - `Selected`: Current choice index, or -1 for no selection.
 // ## Returns
 // A control that sends the proposed index to the update function.
-public function View(Selected: int): E.Element<int>;
+public function View(Selected: int): E.Element of int;
 begin
-  return R.RadioGroup<int>('save-frequency', [
+  return R.RadioGroup of int('save-frequency', [
     new R.Item('Every change'),
     new R.Item('Every 5 minutes', 'A good balance for most projects.'),
     new R.Item('Only when I save')

@@ -15,9 +15,9 @@ uses Fpas.Ui.Widgets.Containers.EmptyStates as W;
 // Builds the empty state example.
 // ## Returns
 // The widget for the application view.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return W.EmptyState<string>('no-projects', 'No projects yet',
+  return W.EmptyState of string('no-projects', 'No projects yet',
     new W.Options(Description := 'Create a project to group screens and builds.', ActionLabel := 'New project'),
     function(): string => 'create-project');
 end function;

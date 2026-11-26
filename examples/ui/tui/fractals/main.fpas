@@ -8,7 +8,7 @@ uses Fractals.Explorer as X;
 uses Fractals.View as V;
 
 begin
-  App.Run<X.Model, X.Msg>(new X.Model(), X.Update, V.View, V.Theme());
+  App.Run of (X.Model, X.Msg)(new X.Model(), X.Update, V.View, V.Theme());
 end;
 
 end program;

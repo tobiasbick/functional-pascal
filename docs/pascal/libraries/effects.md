@@ -4,13 +4,13 @@ Use `Fpas.Execution.Effects` to describe work with a typed result, expected fail
 dependencies. `Fpas.NET.Sdk` supplies the assembly to every FPAS project. Import
 it with `uses Fpas.Execution.Effects as Fx;`.
 
-`Fx.Effect<A, E, R>` is a generic record. `A` is the success value, `E` is an
+`Fx.Effect of (A, E, R)` is a generic record. `A` is the success value, `E` is an
 expected failure and `R` is the environment required to run the work. Use a
 record for multiple dependencies and a variant for distinct expected failures.
 Use `Fx.Completion` as the success type when there is no value to return.
 
-1. Pass a function taking `R` and a cancellation token to `Fx.Effect<A, E, R>.Defer`.
-   The function returns `Task<Fx.Outcome<A, E>>`. Creating or composing the effect
+1. Pass a function taking `R` and a cancellation token to `Fx.Effect of (A, E, R).Defer`.
+   The function returns `Task of Fx.Outcome of (A, E)`. Creating or composing the effect
    stores work for later.
 2. Compose with `Fx.Map` to transform a success or `Fx.AndThen` to choose the next
    effect after success. Use `Fx.MapFailure` to change the failure type,

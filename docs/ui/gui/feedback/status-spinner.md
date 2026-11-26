@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Feedback.StatusSpinners as W;
 // - `Status`: Current state of the upload.
 // ## Returns
 // The widget for the application view.
-public function View(Status: Work.Status): E.Element<string>;
+public function View(Status: Work.Status): E.Element of string;
 begin
-  return W.StatusSpinner<string>('feedback-upload-status', Status, new W.Options(Size := 18.0F));
+  return W.StatusSpinner of string('feedback-upload-status', Status, new W.Options(Size := 18.0F));
 end function;
 
 end unit;

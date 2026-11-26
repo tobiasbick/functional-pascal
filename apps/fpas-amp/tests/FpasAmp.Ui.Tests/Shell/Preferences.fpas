@@ -31,9 +31,9 @@ public type PreferenceTests = record
     const Path: string := IO.Path.Combine(Folder.Path, 'settings.json');
     IO.File.WriteAllText(Path, '{"musicSources":[]}');
     const Defaults: M.AcoustIdKeys := Store.Load(Folder.Path).AcoustId;
-    X.Assert.Equal<string>('', Defaults.ApplicationKey);
-    X.Assert.Equal<string>('', Defaults.UserApiKey);
-    X.Assert.Equal<int>(
+    X.Assert.Equal of string('', Defaults.ApplicationKey);
+    X.Assert.Equal of string('', Defaults.UserApiKey);
+    X.Assert.Equal of int(
       0,
       IO.Directory.GetFiles(Folder.Path, 'settings.json.corrupt-*.bak').Length
     );
@@ -43,14 +43,14 @@ public type PreferenceTests = record
       '{"musicSources":[],"acoustId":{"applicationKey":false,"userApiKey":"fixture-user-key"}}'
     );
     const Repaired: M.AcoustIdKeys := Store.Load(Folder.Path).AcoustId;
-    X.Assert.Equal<string>('', Repaired.ApplicationKey);
-    X.Assert.Equal<string>('fixture-user-key', Repaired.UserApiKey);
-    X.Assert.Equal<int>(
+    X.Assert.Equal of string('', Repaired.ApplicationKey);
+    X.Assert.Equal of string('fixture-user-key', Repaired.UserApiKey);
+    X.Assert.Equal of int(
       1,
       IO.Directory.GetFiles(Folder.Path, 'settings.json.corrupt-*.bak').Length
     );
-    X.Assert.Equal<string>('fixture-user-key', Store.Load(Folder.Path).AcoustId.UserApiKey);
-    X.Assert.Equal<int>(
+    X.Assert.Equal of string('fixture-user-key', Store.Load(Folder.Path).AcoustId.UserApiKey);
+    X.Assert.Equal of int(
       1,
       IO.Directory.GetFiles(Folder.Path, 'settings.json.corrupt-*.bak').Length
     );
@@ -71,7 +71,7 @@ public type PreferenceTests = record
     );
     const Failed: M.State := UpdateEditing.Apply(Edited, M.Msg.SaveAcoustIdKeys, Reject);
     X.Assert.True(Failed.SaveFailed);
-    X.Assert.Equal<string>('fixture-user-key', Failed.Saved.AcoustId.UserApiKey);
+    X.Assert.Equal of string('fixture-user-key', Failed.Saved.AcoustId.UserApiKey);
 
     using const Folder: H.Folder := H.Folder.Create();
     const Retried: M.State := UpdateEditing.Apply(
@@ -81,8 +81,8 @@ public type PreferenceTests = record
     );
     X.Assert.False(Retried.SaveFailed);
     const Stored: M.AcoustIdKeys := Store.Load(Folder.Path).AcoustId;
-    X.Assert.Equal<string>('fixture-app-key', Stored.ApplicationKey);
-    X.Assert.Equal<string>('', Stored.UserApiKey);
+    X.Assert.Equal of string('fixture-app-key', Stored.ApplicationKey);
+    X.Assert.Equal of string('', Stored.UserApiKey);
   end procedure;
 
   // Damaged extension policies are repaired to settings that discovery can accept.
@@ -93,15 +93,16 @@ public type PreferenceTests = record
     const Path: string := IO.Path.Combine(Folder.Path, 'settings.json');
     IO.File.WriteAllText(
       Path,
-      '{"musicSources":[{"id":"music","name":"Music","path":' + J.JsonSerializer.Serialize<string>(
+      '{"musicSources":[{"id":"music","name":"Music","path":' +
+      J.JsonSerializer.Serialize of string(
         Folder.Path
       ) +
       ',"offline":false,"extensions":[".M3U",".mp3"]}]}'
     );
     const Loaded: M.Preferences := Store.Load(Folder.Path);
-    X.Assert.Equal<string>(['.mp3'], Loaded.MusicSources[0].Extensions);
-    X.Assert.Equal<int>(1, S.Normalize(Loaded.MusicSources).Length);
-    X.Assert.Equal<int>(
+    X.Assert.Equal of string(['.mp3'], Loaded.MusicSources[0].Extensions);
+    X.Assert.Equal of int(1, S.Normalize(Loaded.MusicSources).Length);
+    X.Assert.Equal of int(
       1,
       IO.Directory.GetFiles(Folder.Path, 'settings.json.corrupt-*.bak').Length
     );
@@ -122,7 +123,7 @@ public type PreferenceTests = record
     end try;
 
     X.Assert.True(Rejected);
-    X.Assert.Equal<string>(['.mp3'], Store.Load(Folder.Path).MusicSources[0].Extensions);
+    X.Assert.Equal of string(['.mp3'], Store.Load(Folder.Path).MusicSources[0].Extensions);
   end procedure;
 
   // App settings enable playlist discovery by default and retain an explicit opt-out.
@@ -146,7 +147,8 @@ public type PreferenceTests = record
     const Path: string := IO.Path.Combine(Folder.Path, 'settings.json');
     IO.File.WriteAllText(
       Path,
-      '{"musicSources":[{"id":"music","name":"Music","path":' + J.JsonSerializer.Serialize<string>(
+      '{"musicSources":[{"id":"music","name":"Music","path":' +
+      J.JsonSerializer.Serialize of string(
         Folder.Path
       ) + ',"offline":false,"extensions":[".mp3"]}]}'
     );
@@ -171,12 +173,12 @@ public type PreferenceTests = record
       Current,
       M.Msg.Cleared(
         '',
-        new Inventory.Snapshot(1L, 1L, I.ImmutableArray<Inventory.SourceSnapshot>.Empty)
+        new Inventory.Snapshot(1L, 1L, (I.ImmutableArray of Inventory.SourceSnapshot).Empty)
       ),
       Save,
       Library
     ).Model;
-    X.Assert.Equal<string>('test worker failure', Cleared.TerminalError);
+    X.Assert.Equal of string('test worker failure', Cleared.TerminalError);
     X.Assert.Null(Cleared.LibraryError);
   end function;
 
@@ -205,7 +207,7 @@ public type PreferenceTests = record
     const Save: procedure(M.Preferences) := procedure(_Value: M.Preferences) begin
       raise new IO.IOException('test save failure');
     end procedure;
-    const Pause: Mvu.Transition<M.State, M.Msg> := Update.Apply(
+    const Pause: Mvu.Transition of (M.State, M.Msg) := Update.Apply(
       Current,
       M.Msg.SetPaused(Source.Id, true),
       Save,
@@ -213,7 +215,7 @@ public type PreferenceTests = record
     );
     X.Assert.True(Pause.Model.SaveFailed);
     X.Assert.False(Pause.Model.Saved.MusicSources[0].Paused);
-    const Clear: Mvu.Transition<M.State, M.Msg> := Update.Apply(
+    const Clear: Mvu.Transition of (M.State, M.Msg) := Update.Apply(
       Current with
         ConfirmClear := Source.Id;
       end with, M.Msg.ConfirmClear, Save, Library
@@ -221,15 +223,15 @@ public type PreferenceTests = record
     X.Assert.True(Clear.Model.SaveFailed);
     X.Assert.False(Clear.Model.Saved.MusicSources[0].Paused);
     X.Assert.True(Clear.Model.Clearing = null);
-    X.Assert.Equal<int>(0, Clear.Commands.Length);
-    const Remove: Mvu.Transition<M.State, M.Msg> := Update.Apply(
+    X.Assert.Equal of int(0, Clear.Commands.Length);
+    const Remove: Mvu.Transition of (M.State, M.Msg) := Update.Apply(
       Current with
         ConfirmRemove := Source.Id;
       end with, M.Msg.ConfirmRemove, Save, Library
     );
     X.Assert.True(Remove.Model.SaveFailed);
-    X.Assert.Equal<int>(1, Remove.Model.Saved.MusicSources.Length);
-    X.Assert.Equal<int>(0, Remove.Commands.Length);
+    X.Assert.Equal of int(1, Remove.Model.Saved.MusicSources.Length);
+    X.Assert.Equal of int(0, Remove.Commands.Length);
   end function;
 end record;
 

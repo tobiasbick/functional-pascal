@@ -20,12 +20,12 @@ public sealed class ExpressionInspectionTests
             program GenericTypes;
             uses System.Console as Console; uses System.Runtime.CompilerServices as Runtime;
             [Runtime.MethodImplAttribute(Runtime.MethodImplOptions.NoInlining)]
-            procedure Observe<T>(Value: T);
+            procedure Observe of T(Value: T);
             begin
               const Removed: T := Value;
               Console.WriteLine(cast<object?>(Value));
             end procedure;
-            begin Observe<int>(42); end;
+            begin Observe of int(42); end;
             end program;
             """, optimized ? ["--optimize"] : []);
         if (optimized) program.UseFullyOptimizedJit();

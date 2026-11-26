@@ -18,8 +18,8 @@ uses Fpas.Ui.Gui.Internal.Core.Context as C;
 // - `OnChange`: Maps proposed selection to a message.
 // - `Icon`: Optional glyph in the unselected state.
 // - `Enabled`: Model-owned input permission.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Label: string; Selected: bool;
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Label: string; Selected: bool;
   OnChange: function(bool): TMsg; Icon: string; Enabled: bool
 );
 begin
@@ -31,13 +31,13 @@ begin
     Icon,
     Selected,
     Allowed,
-    C.WantsFocus<TMsg>(Frame, Id, Token, Allowed)
+    C.WantsFocus of TMsg(Frame, Id, Token, Allowed)
   )
   then
     Frame.Messages.Add(OnChange(not Selected));
   end if;
 
-  C.Track<TMsg>(
+  C.Track of TMsg(
     Frame, new App.Control(
       Id, Label, 'chip', new Cui.CuiRectangle(), Allowed,
       Value := if Selected then

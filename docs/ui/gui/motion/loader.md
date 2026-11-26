@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Feedback.Loaders as W;
 // - `Style`: One of Dots, Bars, Pulse, Orbit or Grid.
 // ## Returns
 // The chosen native loader.
-public function View(Style: W.Animation): E.Element<string>;
+public function View(Style: W.Animation): E.Element of string;
 begin
-  return W.Loader<string>('wait', Style, new W.Options(Size := 28.0F));
+  return W.Loader of string('wait', Style, new W.Options(Size := 28.0F));
 end function;
 
 end unit;

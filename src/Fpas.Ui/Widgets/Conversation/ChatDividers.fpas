@@ -12,10 +12,10 @@ uses Fpas.Ui.Elements as E;
 // - `Label`: Divider caption.
 // ## Returns
 // The graphical element.
-public function ChatDivider<TMsg>(Id: string; Label: string): E.Element<TMsg>;
+public function ChatDivider of TMsg(Id: string; Label: string): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.ChatDivider(Id, Label);
+  return (E.Element of TMsg).ChatDivider(Id, Label);
 end function;
 
 end unit;

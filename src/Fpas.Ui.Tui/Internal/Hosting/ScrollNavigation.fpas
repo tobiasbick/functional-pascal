@@ -13,10 +13,10 @@ uses Fpas.Ui.Tui.Internal.Widgets.Inputs.TextAreaEditing as AreaEdit;
 uses System as Sys;
 uses System.Collections.Generic as C;
 
-procedure Notify<TMsg>(View: V.Viewport<TMsg>; Position: L.ScrollPosition; Offset: int; Apply: procedure(TMsg));
+procedure Notify of TMsg(View: V.Viewport of TMsg; Position: L.ScrollPosition; Offset: int; Apply: procedure(TMsg));
 begin
   case View.OnScroll of
-    when is Sys.Func<L.ScrollChange, TMsg> as Callback:
+    when is Sys.Func of (L.ScrollChange, TMsg) as Callback:
       Apply(
         Callback.Invoke(
           new L.ScrollChange(Position, L.Measure.Cells(Offset), L.Measure.Cells(View.Maximum))
@@ -26,7 +26,7 @@ begin
   end case;
 end procedure;
 
-public procedure Move<TMsg>(View: V.Viewport<TMsg>; Delta: int; Apply: procedure(TMsg));
+public procedure Move of TMsg(View: V.Viewport of TMsg; Delta: int; Apply: procedure(TMsg));
 begin
   const Offset: int := cast<int>(Sys.Math.Clamp(
     cast<long>(View.Offset) + cast<long>(Delta),
@@ -34,12 +34,12 @@ begin
     cast<long>(View.Maximum)
   ));
   if Offset <> View.Offset then
-    Notify<TMsg>(View, L.ScrollPosition.Offset(L.Measure.Cells(Offset)), Offset, Apply);
+    Notify of TMsg(View, L.ScrollPosition.Offset(L.Measure.Cells(Offset)), Offset, Apply);
   end if;
 end procedure;
 
-public function Key<TMsg>(
-  View: V.Viewport<TMsg>; Pressed: K.Key; Modifiers: K.KeyModifiers; Apply: procedure(TMsg)
+public function Key of TMsg(
+  View: V.Viewport of TMsg; Pressed: K.Key; Modifiers: K.KeyModifiers; Apply: procedure(TMsg)
 ): bool;
 begin
 
@@ -49,18 +49,18 @@ begin
 
   case Pressed of
     when K.Key.Up:
-      Move<TMsg>(View, -1, Apply);
+      Move of TMsg(View, -1, Apply);
     when K.Key.Down:
-      Move<TMsg>(View, 1, Apply);
+      Move of TMsg(View, 1, Apply);
     when K.Key.PageUp:
-      Move<TMsg>(View, -View.Rows, Apply);
+      Move of TMsg(View, -View.Rows, Apply);
     when K.Key.PageDown:
-      Move<TMsg>(View, View.Rows, Apply);
+      Move of TMsg(View, View.Rows, Apply);
     when K.Key.Home:
-      Move<TMsg>(View, -View.Offset, Apply);
+      Move of TMsg(View, -View.Offset, Apply);
     when K.Key.End:
       if not View.Following then
-        Notify<TMsg>(View, L.ScrollPosition.End, View.Maximum, Apply);
+        Notify of TMsg(View, L.ScrollPosition.End, View.Maximum, Apply);
       end if;
     else
       return false;
@@ -74,7 +74,7 @@ end function;
 // - `Offsets`: Host-owned scroll offsets.
 // - `Region`: Viewport and its scroll limits.
 // - `Delta`: Signed row movement.
-public procedure MoveOffset(Offsets: C.Dictionary<string, int>; Region: A.ScrollRegion; Delta: int);
+public procedure MoveOffset(Offsets: C.Dictionary of (string, int); Region: A.ScrollRegion; Delta: int);
 begin
   var Before: int := 0;
   discard Offsets.TryGetValue(Region.Id, out Before);
@@ -97,15 +97,15 @@ end procedure;
 // - `Delta`: Signed row movement.
 // - `Offsets`: Host-owned scroll offsets.
 // - `Apply`: Dispatches a proposed application change.
-public procedure Wheel<TMsg>(
-  Layout: A.Layout<TMsg>; Hit: A.Control<TMsg>?; Scope: string; Column: int; Row: int; Delta: int;
-  Offsets: C.Dictionary<string, int>; Apply: procedure(TMsg)
+public procedure Wheel of TMsg(
+  Layout: A.Layout of TMsg; Hit: (A.Control of TMsg)?; Scope: string; Column: int; Row: int; Delta: int;
+  Offsets: C.Dictionary of (string, int); Apply: procedure(TMsg)
 );
 begin
   if Hit <> null then
     case Hit.Action of
-      when A.Binding.EditArea(const Area: AreaEdit.View<TMsg>, _, _):
-        if AreaEdit.Scroll<TMsg>(Area, Delta) then
+      when A.Binding.EditArea(const Area: AreaEdit.View of TMsg, _, _):
+        if AreaEdit.Scroll of TMsg(Area, Delta) then
           return;
         end if;
       when A.Binding.Grid(const Area: F.Rect, const Changed: function(Grids.Event): TMsg):
@@ -119,11 +119,11 @@ begin
     const Region: A.ScrollRegion := Layout.Regions[Index];
     if Region.Scope = Scope and Region.Bounds.Contains(Column, Row) then
       if Region.Controlled then
-        const Target: A.Control<TMsg>? := A.FindControl<TMsg>(Layout, Region.Id);
+        const Target: (A.Control of TMsg)? := A.FindControl of TMsg(Layout, Region.Id);
         if Target <> null then
           case Target.Action of
-            when A.Binding.Scroll(const View: V.Viewport<TMsg>):
-              Move<TMsg>(View, Delta, Apply);
+            when A.Binding.Scroll(const View: V.Viewport of TMsg):
+              Move of TMsg(View, Delta, Apply);
             else
           end case;
         end if;

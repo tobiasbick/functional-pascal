@@ -62,7 +62,7 @@ begin
     end if;
   end if;
   const Add: string := Id + '/add';
-  const HasFields: bool := Sys.Array.Exists<Filters.Field>(
+  const HasFields: bool := Sys.Array.Exists of Filters.Field(
     Fields, function(Field: Filters.Field): bool => Field.Values.Length > 0
   );
   if Terminal and HasFields then
@@ -129,7 +129,7 @@ begin
   for Column: G.Column in Columns do
     R.CheckText(Column.Title, At + '/header');
     if not Sys.Single.IsFinite(Column.Width) or Column.Width < 0.0F
-      or not Sys.Enum.IsDefined<Tables.Alignment>(
+      or not Sys.Enum.IsDefined of Tables.Alignment(
       Column.Align
     ) or Column.Priority < 0 or Column.Priority > 255
     then

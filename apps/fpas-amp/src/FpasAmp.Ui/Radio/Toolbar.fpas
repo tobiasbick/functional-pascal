@@ -18,9 +18,9 @@ begin
   return App.Msg.Radio(Message);
 end function;
 
-function Field(Key: string; Value: string): E.Element<App.Msg>;
+function Field(Key: string; Value: string): E.Element of App.Msg;
 begin
-  return Fields.TextField<App.Msg>(
+  return Fields.TextField of App.Msg(
     'radio-filter-' + Key,
     Value,
     function(Text: string): App.Msg => Action(M.Msg.Filter(Key, Text)),
@@ -34,7 +34,7 @@ end function;
 // - `Width`: Available width in logical points.
 // ## Returns
 // The station search field, filter form and active sort menu.
-public function Build(Page: M.State; Width: int): E.Element<App.Msg>;
+public function Build(Page: M.State; Width: int): E.Element of App.Msg;
 requires Width > 0;
 begin
   const Count: int := (if Page.Filter.Country <> '' then
@@ -56,8 +56,8 @@ begin
       0
     end if);
   const Draft: M.Query? := Page.FilterDraft;
-  const Panel: E.Element<App.Msg> := if Draft <> null then
-    Filters.Panel<App.Msg>(
+  const Panel: E.Element of App.Msg := if Draft <> null then
+    Filters.Panel of App.Msg(
       'radio', 'Filter stations',
       [
         Field('Country', Draft.Country),
@@ -68,16 +68,16 @@ begin
       Action(M.Msg.ResetFilters), Action(M.Msg.ApplyFilters)
     )
   else
-    E.Column<App.Msg>()
+    E.Column of App.Msg()
   end if;
-  return Toolbar.Arrange<App.Msg>(
-    Search.SearchField<App.Msg>(
+  return Toolbar.Arrange of App.Msg(
+    Search.SearchField of App.Msg(
       'radio-search',
       Page.Filter.Name,
       function(Value: string): App.Msg => Action(M.Msg.Name(Value)),
       new Search.Options(Placeholder := 'Search stations…')
     ),
-    Filters.Popup<App.Msg>(
+    Filters.Popup of App.Msg(
       'radio',
       Panel,
       Count,
@@ -85,7 +85,7 @@ begin
       function(Open: bool): App.Msg => Action(M.Msg.SetFilters(Open)),
       Width
     ),
-    Sort.Build<App.Msg>(
+    Sort.Build of App.Msg(
       'radio-sort',
       ['Station', 'Country', 'Language', 'Genre', 'Bitrate'],
       [true, true, true, true, false],

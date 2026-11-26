@@ -34,7 +34,7 @@ begin
   return L.Spacing.Fixed(L.Measure.Logical(Value));
 end function;
 
-function Sort(Current: M.State; Playlist: bool := false): E.Element<M.Msg>;
+function Sort(Current: M.State; Playlist: bool := false): E.Element of M.Msg;
 begin
   const Whole: bool := Current.Album.Id = '';
   const Names: array of string := if Whole then
@@ -54,7 +54,7 @@ begin
   else
     ''
   end if;
-  return TableSort.Build<M.Msg>(
+  return TableSort.Build of M.Msg(
     'track-sort',
     Names,
     Alphabetical,
@@ -76,14 +76,14 @@ end function;
 // PlaylistName and PlaylistCount specify the displayed playlist when present.
 // PlaylistError is the last parse failure from the playlist source.
 // Returns the toolbar, virtual table, status bar and track-details overlay.
-public function LibraryPage(Current: M.State; Width: int; Padding: int; Covers: I.ImmutableDictionary<string, Imaging.Bitmap?>; Playback: Player.State; PlaylistName: string? := null; PlaylistCount: long? := null; PlaylistError: string? := null): E.Element<M.Msg>;
+public function LibraryPage(Current: M.State; Width: int; Padding: int; Covers: I.ImmutableDictionary of (string, Imaging.Bitmap?); Playback: Player.State; PlaylistName: string? := null; PlaylistCount: long? := null; PlaylistError: string? := null): E.Element of M.Msg;
 begin
   const Inner: int := Sys.Math.Max(1, Width - 2 * Padding);
-  const Parts: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>(
+  const Parts: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg(
     [
-      Texts.Text<M.Msg>(PlaylistName ?? 'Music', Texts.Appearance.HeadingOne),
-      LibraryToolbar.Arrange<M.Msg>(
-        Search.SearchField<M.Msg>(
+      Texts.Text of M.Msg(PlaylistName ?? 'Music', Texts.Appearance.HeadingOne),
+      LibraryToolbar.Arrange of M.Msg(
+        Search.SearchField of M.Msg(
           'track-search', Current.Search, M.Msg.Search,
           new Search.Options(Placeholder := 'Search titles, artists and albums…')
         ), Filters.Build(Current, Inner), Sort(Current, PlaylistName <> null), Inner
@@ -92,7 +92,7 @@ begin
   );
   if PlaylistError <> null then
     Parts.Add(
-      Alerts.Alert<M.Msg>(
+      Alerts.Alert of M.Msg(
         'navigation-error', 'Playlist unavailable',
         new Alerts.Options(Tone := S.Tone.Warning, Description := PlaylistError)
       )
@@ -101,7 +101,7 @@ begin
   const Error: string? := Current.Error;
   if Error <> null then
     Parts.Add(
-      Alerts.Alert<M.Msg>(
+      Alerts.Alert of M.Msg(
         'track-error',
         'Track operation failed',
         new Alerts.Options(Tone := S.Tone.Warning, Description := Error)
@@ -110,7 +110,7 @@ begin
   end if;
 
   Parts.Add(
-    E.Size<M.Msg>(TrackTable.Build(Current, Inner, Playback, Covers, PlaylistName <> null), Fill)
+    E.Size of M.Msg(TrackTable.Build(Current, Inner, Playback, Covers, PlaylistName <> null), Fill)
   );
   var Cover: Imaging.Bitmap? := null;
   const Item: Tracks.Entry? := Current.Details;
@@ -119,10 +119,10 @@ begin
   end if;
 
   return Dialog.Build(
-    Current, Playback, Width, Cover, E.Column<M.Msg>(
+    Current, Playback, Width, Cover, E.Column of M.Msg(
       new L.Flow(Align := L.Alignment.Stretch),
-      E.Size<M.Msg>(
-        E.Column<M.Msg>(
+      E.Size of M.Msg(
+        E.Column of M.Msg(
           new L.Flow(Padding := Points(Padding), Gap := Points(16), Align := L.Alignment.Stretch),
           Parts.ToArray()
         ),
@@ -142,7 +142,7 @@ end function;
 // - `Playback`: Player state for the current track's button.
 // ## Returns
 // The album sleeve beside the searchable track list and its status bar.
-public function Build(Current: M.State; Width: int; GroupName: string; Playback: Player.State; LibraryTrackCount: long; BackLabel: string := ''): E.Element<M.Msg>;
+public function Build(Current: M.State; Width: int; GroupName: string; Playback: Player.State; LibraryTrackCount: long; BackLabel: string := ''): E.Element of M.Msg;
 requires Width > 0;
 begin
   const Narrow: bool := Width < 700;
@@ -158,12 +158,12 @@ begin
   end if;
   const Edge: int := Sys.Math.Clamp((Width - 480) div 2, 72, 174);
   const TrackWidth: int := Sys.Math.Max(1, Width - 2 * (Inset + Gutter) - Edge - 1);
-  const Heading: E.Element<M.Msg> := E.Row<M.Msg>(
+  const Heading: E.Element of M.Msg := E.Row of M.Msg(
     new L.Flow(
       PaddingStart := Points(Inset), PaddingTop := Points(Inset), PaddingBottom := Points(Inset),
       Gap := Points(6), Align := L.Alignment.Center
     ),
-    Icons.IconButton<M.Msg>(
+    Icons.IconButton of M.Msg(
       'tracks-back',
       Sys.Char.ConvertFromUtf32($E048),
       if BackLabel <> '' then
@@ -173,7 +173,7 @@ begin
       end if,
       M.Msg.Back
     ),
-    Texts.Text<M.Msg>(
+    Texts.Text of M.Msg(
       if GroupName = '' then
         'Albums'
       else
@@ -181,33 +181,33 @@ begin
       end if, Texts.Appearance.HeadingThree
     )
   );
-  const Sleeve: E.Element<M.Msg> := E.Column<M.Msg>(
+  const Sleeve: E.Element of M.Msg := E.Column of M.Msg(
     new L.Flow(
       PaddingStart := Points(Inset), PaddingTop := Points(Inset), PaddingEnd := Points(Gutter),
       Gap := Points(12), Align := L.Alignment.Stretch
     ),
-    Artwork.Build<M.Msg>('track-album-cover', Current.Cover, Edge),
-    E.Column<M.Msg>(
+    Artwork.Build of M.Msg('track-album-cover', Current.Cover, Edge),
+    E.Column of M.Msg(
       new L.Flow(Gap := Points(4), Align := L.Alignment.Stretch),
-      Texts.Text<M.Msg>(
+      Texts.Text of M.Msg(
         Current.Album.Title, if Narrow then
           Texts.Appearance.HeadingFour
         else
           Texts.Appearance.HeadingTwo
         end if
       ),
-      Texts.Text<M.Msg>(Current.Album.Artist, Texts.Appearance.Secondary)
+      Texts.Text of M.Msg(Current.Album.Artist, Texts.Appearance.Secondary)
     )
   );
-  const Field: E.Element<M.Msg> := Search.SearchField<M.Msg>(
+  const Field: E.Element of M.Msg := Search.SearchField of M.Msg(
     'track-search',
     Current.Search,
     M.Msg.Search,
     new Search.Options(Placeholder := 'Search titles and genres…')
   );
-  const Parts: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>(
+  const Parts: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg(
     [
-      LibraryToolbar.Arrange<M.Msg>(
+      LibraryToolbar.Arrange of M.Msg(
         Field,
         Filters.Build(Current, TrackWidth),
         Sort(Current),
@@ -218,15 +218,15 @@ begin
   const Error: string? := Current.Error;
   if Error <> null then
     Parts.Add(
-      Alerts.Alert<M.Msg>(
+      Alerts.Alert of M.Msg(
         'track-error', 'Track operation failed',
         new Alerts.Options(Tone := S.Tone.Warning, Description := Error)
       )
     );
   end if;
 
-  Parts.Add(E.Size<M.Msg>(TrackTable.Build(Current, TrackWidth, Playback), Fill));
-  const Songs: E.Element<M.Msg> := E.Column<M.Msg>(
+  Parts.Add(E.Size of M.Msg(TrackTable.Build(Current, TrackWidth, Playback), Fill));
+  const Songs: E.Element of M.Msg := E.Column of M.Msg(
     new L.Flow(
       PaddingStart := Points(Gutter),
       PaddingEnd := Points(Inset), PaddingTop := Points(Inset), PaddingBottom := Points(Inset),
@@ -234,17 +234,17 @@ begin
     ), Parts.ToArray()
   );
   const Stretch: L.Flow := new L.Flow(Align := L.Alignment.Stretch);
-  const Rule: E.Element<M.Msg> := E.Size<M.Msg>(
-    E.Styled<M.Msg>(E.Column<M.Msg>(), S.Role.Divider),
+  const Rule: E.Element of M.Msg := E.Size of M.Msg(
+    E.Styled of M.Msg(E.Column of M.Msg(), S.Role.Divider),
     Fixed(1)
   );
-  const Columns: E.Element<M.Msg> := E.Row<M.Msg>(
+  const Columns: E.Element of M.Msg := E.Row of M.Msg(
     Stretch,
-    E.Size<M.Msg>(Sleeve, Fixed(Inset + Edge + Gutter)), Rule,
-    E.Size<M.Msg>(
-      E.Column<M.Msg>(
+    E.Size of M.Msg(Sleeve, Fixed(Inset + Edge + Gutter)), Rule,
+    E.Size of M.Msg(
+      E.Column of M.Msg(
         Stretch,
-        E.Size<M.Msg>(Songs, Fill),
+        E.Size of M.Msg(Songs, Fill),
         Status.Tracks(Current, LibraryTrackCount)
       ),
       Fill
@@ -252,7 +252,7 @@ begin
   );
   return Dialog.Build(
     Current, Playback, Width, Current.Cover,
-    E.Column<M.Msg>(Stretch, Heading, Rule, E.Size<M.Msg>(Columns, Fill))
+    E.Column of M.Msg(Stretch, Heading, Rule, E.Size of M.Msg(Columns, Fill))
   );
 end function;
 

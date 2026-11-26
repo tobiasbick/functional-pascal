@@ -49,15 +49,15 @@ public sealed partial class MsBuildTests
             unit Demo.Api;
             uses System as Sys; uses System.Collections.Generic as Collections;
             // Box.
-            public type Box<T> = record
+            public type Box of T = record
               // Value.
               public Value: T;
               // Copy.
-              public function Copy<U>(ref item: T; out previous: T; in other: U): U;
+              public function Copy of U(ref item: T; out previous: T; in other: U): U;
               begin previous := item; return other; end function;
             end record;
             // Outcome.
-            public type Outcome<T> = variant
+            public type Outcome of T = variant
               // Empty.
               None;
               // Present.
@@ -66,9 +66,9 @@ public sealed partial class MsBuildTests
             // Read.
             public function Read(value: int): int; begin return value; end function;
             // Read.
-            public function Read<T>(value: T): T; begin return value; end function;
+            public function Read of T(value: T): T; begin return value; end function;
             // Arguments.
-            public procedure Arguments(box: Box<int>; grid: array[,] of array of int; text: (array of string?)?; number: double?; callback: function(int): string);
+            public procedure Arguments(box: Box of int; grid: array[,] of array of int; text: (array of string?)?; number: double?; callback: function(int): string);
             begin end procedure;
             end unit;
             """);

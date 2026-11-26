@@ -49,9 +49,9 @@ public type Options = record
   // Safe X label format.
   public XFormat: C.ValueFormat? := null;
   // Formats X-axis and readout values during painting; null uses the native format.
-  public XLabel: Sys.Func<double, string>? := null;
+  public XLabel: Sys.Func of (double, string)? := null;
   // Formats the readout value before its unit; null uses the native format.
-  public ValueLabel: Sys.Func<double, string>? := null;
+  public ValueLabel: Sys.Func of (double, string)? := null;
   // Distance between axis labels, or zero for automatic spacing.
   public XStep: double := 0.0;
   // Optional fixed range for stacked values.
@@ -85,10 +85,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // The graphical element.
-public function DotChart<TMsg>(Id: string; Bands: array of Series; Count: int; OnActivate: Sys.Func<Hit, TMsg>? := null; Settings: Options? := null): E.Element<TMsg>;
+public function DotChart of TMsg(Id: string; Bands: array of Series; Count: int; OnActivate: Sys.Func of (Hit, TMsg)? := null; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.DotChart(Id, Bands, Count, OnActivate, Settings ?? new Options());
+  return (E.Element of TMsg).DotChart(Id, Bands, Count, OnActivate, Settings ?? new Options());
 end function;
 
 end unit;

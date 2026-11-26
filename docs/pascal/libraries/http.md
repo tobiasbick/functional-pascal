@@ -28,7 +28,7 @@ uses System.Threading.Tasks as Tasks;
 public async function GetUtf8(
   Client: Http.HttpClient; Address: Sys.Uri;
   MaximumCharacters: int; Cancellation: Threading.CancellationToken
-): Tasks.Task<string>;
+): Tasks.Task of string;
 requires MaximumCharacters >= 0;
 begin
   using const Request: Http.HttpRequestMessage := new Http.HttpRequestMessage(
@@ -49,7 +49,7 @@ begin
     new Text.UTF8Encoding(false, true), false, 4096, true
   );
   const Buffer: array of char := new char[4096];
-  const Memory: Sys.Memory<char> := new Sys.Memory<char>(Buffer);
+  const Memory: Sys.Memory of char := new Sys.Memory of char(Buffer);
   const Result: Text.StringBuilder := new Text.StringBuilder();
   while true do
     const Count: int := await Reader.ReadAsync(Memory, Cancellation).ConfigureAwait(false);

@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Pickers.AspectPickers as W;
 // - `Selected`: Zero-based ratio index, including the final Custom slot.
 // ## Returns
 // The picker with the proposed index as its message.
-public function View(Selected: int): E.Element<int>;
+public function View(Selected: int): E.Element of int;
 begin
-  return W.AspectPicker<int>('output-ratio', new W.Value('Aspect ratio', Selected),
+  return W.AspectPicker of int('output-ratio', new W.Value('Aspect ratio', Selected),
     function(Index: int): int => Index, new W.Options(Custom := true));
 end function;
 

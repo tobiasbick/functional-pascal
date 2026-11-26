@@ -21,9 +21,9 @@ uses Fpas.Ui.Widgets.Developer.Blames as W;
 // - `Revisions`: Hashes, authors, summaries and timestamps.
 // ## Returns
 // The blame view with clicked revisions as messages.
-public function View(Lines: array of string; LineCommits: array of int; Revisions: array of W.Revision): E.Element<W.Event>;
+public function View(Lines: array of string; LineCommits: array of int; Revisions: array of W.Revision): E.Element of W.Event;
 begin
-  return W.Blame<W.Event>('source-history', Lines, LineCommits, Revisions,
+  return W.Blame of W.Event('source-history', Lines, LineCommits, Revisions,
     function(Change: W.Event): W.Event => Change,
     new W.Options(Language := 'c', Height := 320.0F, FirstLine := 120));
 end function;

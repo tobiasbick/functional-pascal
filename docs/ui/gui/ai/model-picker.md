@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Ai.ModelPickers as W;
 // - `Current`: Selected zero-based index.
 // ## Returns
 // The picker with proposed model indices.
-public function View(Models: array of W.Item; Current: int): E.Element<int>;
+public function View(Models: array of W.Item; Current: int): E.Element of int;
 begin
-  return W.ModelPicker<int>('model', Models, Current, function(Index: int): int => Index);
+  return W.ModelPicker of int('model', Models, Current, function(Index: int): int => Index);
 end function;
 
 end unit;

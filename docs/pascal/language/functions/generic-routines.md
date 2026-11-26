@@ -3,26 +3,27 @@
 Generic routines preserve CLR type parameters and validate their constraints.
 
 ```pascal fragment context=declarations
-function Identity<T>(Value: T): T;
+function Identity of T(Value: T): T;
 begin
   return Value;
 end function;
 
-function Compare<T>(Left: T; Right: T): int;
-where T: Sys.IComparable<T>;
+function Compare of T(Left: T; Right: T): int;
+where T: Sys.IComparable of T;
 begin
   return Left.CompareTo(Right);
 end function;
 ```
 
-Generic arguments use `<...>` in declarations, types, and calls:
-`Identity<int>(42)`. Calls may infer routine type arguments from supplied argument
+Generic declarations, types, and calls use `of`, as in `Identity of int(42)`.
+Enclose multiple arguments in parentheses, as in `Convert of (int, string)(42)`.
+Calls may infer routine type arguments from supplied argument
 types. Expected result type alone does not infer routine type arguments. See
 [type inference](type-inference.md) for overload evidence and contextual variants.
 Namespace-qualified and nested CLR generics are supported. Put each type's own
-arguments on its name segment, for example `N.Outer<string>.Inner<int>`. An inner
+arguments on its name segment, for example `(N.Outer of string).Inner of int`. An inner
 type that introduces no parameters still inherits the enclosing arguments, as in
-`Collections.Dictionary<string, int>.KeyCollection`. Enclosing arguments are not
+`Collections.Dictionary of (string, int).KeyCollection`. Enclosing arguments are not
 repeated on the nested segment. Every segment must name an accessible type and
 satisfy its arity and constraints; constraints on inner parameters may refer to
 outer parameters. The same paths work in annotations, construction, casts,
@@ -34,7 +35,7 @@ the body/type definition. Constraints may include a base class, interfaces,
 with `new()` last. A record constraint example is:
 
 ```pascal fragment context=declarations
-type Box<T> =
+type Box of T =
 where T: class;
 record
   public Value: T;
@@ -58,9 +59,9 @@ parameter cannot serve as another parameter's base constraint.
 The same requirements are validated at source calls, when constructing CLR
 generic types containing these parameters, and when forwarding them to CLR
 methods. Constraints resolve instance members and static abstract/virtual members
-of imported interfaces. For example, `where T: N.INumber<T>;` permits arithmetic,
+of imported interfaces. For example, `where T: N.INumber of T;` permits arithmetic,
 `T.Zero`, and `T.CreateChecked(Value)` through the actual System.Numerics contract.
-Static method groups such as `T.CreateChecked<int>` become ordinary CLR delegates.
+Static method groups such as `T.CreateChecked of int` become ordinary CLR delegates.
 Inherited contracts and default implementations retain CLR dispatch. Unrelated
 applicable operators or same-name static properties are ambiguous, not selected
 by constraint order. Source declarations cannot state unmanaged or byref-like
@@ -75,8 +76,8 @@ program GenericArithmetic;
 uses System.Console as Console;
 uses System.Numerics as N;
 
-function Sum<T>(Values: array of T): T;
-where T: N.INumber<T>;
+function Sum of T(Values: array of T): T;
+where T: N.INumber of T;
 begin
   var Total: T := T.Zero;
   for Value: T in Values do
@@ -87,7 +88,7 @@ begin
 end function;
 
 begin
-  Console.WriteLine(Sum<int>([20, 22]));
+  Console.WriteLine(Sum of int([20, 22]));
 end;
 
 end program;

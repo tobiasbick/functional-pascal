@@ -32,10 +32,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function PromptSuggestions<TMsg>(Id: string; Items: array of Item; Changed: function(int): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function PromptSuggestions of TMsg(Id: string; Items: array of Item; Changed: function(int): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.PromptSuggestions(Id, Items, Changed, Settings ?? new Options());
+  return (E.Element of TMsg).PromptSuggestions(Id, Items, Changed, Settings ?? new Options());
 end function;
 
 end unit;

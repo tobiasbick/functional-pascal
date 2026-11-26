@@ -49,9 +49,9 @@ begin
   return Strings.Get('Page.' + Page.ToString());
 end function;
 
-function Destination(Page: State.Page; Icon: int): N.Item<State.Msg>;
+function Destination(Page: State.Page; Icon: int): N.Item of State.Msg;
 begin
-  return new N.Item<State.Msg>(
+  return new N.Item of State.Msg(
     Page.ToString().ToLowerInvariant(),
     PageTitle(Page),
     State.Msg.Show(Page),
@@ -59,12 +59,12 @@ begin
   );
 end function;
 
-function NavigationItems(Page: State.Page): E.Element<State.Msg>;
+function NavigationItems(Page: State.Page): E.Element of State.Msg;
 begin
-  return N.Sidebar<State.Msg>(
+  return N.Sidebar of State.Msg(
     'navigation',
     [
-      new N.Section<State.Msg>(
+      new N.Section of State.Msg(
         Strings.Get('Text.SectionComponents'), [
           Destination(State.Page.Overview, $E1C1),
           Destination(State.Page.Buttons, $E1B4),
@@ -77,7 +77,7 @@ begin
           Destination(State.Page.Charts, $E2A5)
         ]
       ),
-      new N.Section<State.Msg>(
+      new N.Section of State.Msg(
         Strings.Get('Text.SectionExtended'),
         [
           Destination(State.Page.Actions, $E09A),
@@ -113,8 +113,8 @@ begin
   );
 end function;
 
-function ThemeControl(Model: Shared.Model; Colors: Themes.Palette): E.Element<State.Msg>;
-  function Swatch(Index: int): E.Element<State.Msg>;
+function ThemeControl(Model: Shared.Model; Colors: Themes.Palette): E.Element of State.Msg;
+  function Swatch(Index: int): E.Element of State.Msg;
   begin
     const Accent: Themes.Accent := cast<Themes.Accent>(Index);
     const Name: string := Accent.ToString().ToLowerInvariant();
@@ -129,8 +129,8 @@ function ThemeControl(Model: Shared.Model; Colors: Themes.Palette): E.Element<St
       [Dot]
     end if;
     const Extent: L.Extent := L.Extent.Fixed(L.Measure.Logical(22));
-    return Tips.Tooltip<State.Msg>(
-      Canvases.Canvas<State.Msg>(
+    return Tips.Tooltip of State.Msg(
+      Canvases.Canvas of State.Msg(
         'accent-' + Name, Shapes,
         function(_Event: Canvases.Event): State.Msg => State.Msg.Shared(
           Shared.Msg.SetAccent(Accent)
@@ -141,14 +141,14 @@ function ThemeControl(Model: Shared.Model; Colors: Themes.Palette): E.Element<St
     );
   end function;
 begin
-  const Swatches: Collections.List<E.Element<State.Msg>> := new Collections.List<E.Element<State.Msg>>();
+  const Swatches: Collections.List of E.Element of State.Msg := new Collections.List of E.Element of State.Msg();
   for Index: int := 0 to AccentColors.Length - 1 do
     Swatches.Add(Swatch(Index));
   end for;
 
-  return E.Column<State.Msg>(
+  return E.Column of State.Msg(
     new L.Flow(Gap := Layout.Points(12), Padding := Layout.Points(8)),
-    Segments.SegmentedControl<State.Msg>(
+    Segments.SegmentedControl of State.Msg(
       'theme',
       [
         new Segments.Item(Strings.Get('Text.ThemeLight'), Icon := Sys.Char.ConvertFromUtf32($E178)),
@@ -160,33 +160,33 @@ begin
       ),
       new Segments.Options(ControlSize := Buttons.Size.Small, FullWidth := true)
     ),
-    E.Row<State.Msg>(new L.Flow(Justify := L.Justification.Between), Swatches.ToArray())
+    E.Row of State.Msg(new L.Flow(Justify := L.Justification.Between), Swatches.ToArray())
   );
 end function;
 
-function Brand(Colors: Themes.Palette): E.Element<State.Msg>;
+function Brand(Colors: Themes.Palette): E.Element of State.Msg;
 begin
   const Side: L.AxisSize := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(28)));
-  const Row: E.Element<State.Msg> := E.Row<State.Msg>(
+  const Row: E.Element of State.Msg := E.Row of State.Msg(
     new L.Flow(
       Gap := Layout.Points(10), PaddingStart := Layout.Points(8), PaddingEnd := Layout.Points(8),
       PaddingTop := Layout.Points(6), Align := L.Alignment.Start
     ),
-    E.Size<State.Msg>(
-      Stacks.Stack<State.Msg>(
+    E.Size of State.Msg(
+      Stacks.Stack of State.Msg(
         new L.Flow(
           Align := L.Alignment.Center, Justify := L.Justification.Center,
           Background := Colors.Foreground, CornerRadius := 9.0F
         ),
-        E.FormattedText<State.Msg>('F', Motion.Font.Display, 16.0F, Colors.Background)
+        E.FormattedText of State.Msg('F', Motion.Font.Display, 16.0F, Colors.Background)
       ),
       new L.Flex(Width := Side, Height := Side)
     ),
-    E.FormattedText<State.Msg>(Title, Motion.Font.Medium, 15.0F, Colors.Foreground),
-    E.Spacer<State.Msg>(),
-    E.Size<State.Msg>(
-      E.Row<State.Msg>(
-        Badges.Badge<State.Msg>(
+    E.FormattedText of State.Msg(Title, Motion.Font.Medium, 15.0F, Colors.Foreground),
+    E.Spacer of State.Msg(),
+    E.Size of State.Msg(
+      E.Row of State.Msg(
+        Badges.Badge of State.Msg(
           'cui-version',
           'v1.4',
           new Badges.Options(Size := Buttons.Size.Small)
@@ -195,7 +195,7 @@ begin
       new L.Flex(Height := Side)
     )
   );
-  return E.Size<State.Msg>(Row, new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(52))));
+  return E.Size of State.Msg(Row, new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(52))));
 end function;
 
 // Displays the gallery brand beside the drawer opener.
@@ -203,9 +203,9 @@ end function;
 // - `Model`: Gallery state supplying the active theme.
 // ## Returns
 // The title in the compact header.
-public function HeaderText(Model: State.Model): E.Element<State.Msg>;
+public function HeaderText(Model: State.Model): E.Element of State.Msg;
 begin
-  return E.FormattedText<State.Msg>(
+  return E.FormattedText of State.Msg(
     Title, Motion.Font.Medium, 15.0F, Update.ThemeFor(Model).Colors.Foreground
   );
 end function;
@@ -216,26 +216,26 @@ end function;
 // - `DrawerViewportHeight`: Window height for compact mode, or null for the desktop sidebar.
 // ## Returns
 // The gallery sidebar content.
-public function Build(Model: State.Model; DrawerViewportHeight: int? := null): E.Element<State.Msg>;
+public function Build(Model: State.Model; DrawerViewportHeight: int? := null): E.Element of State.Msg;
 begin
   const Colors: Themes.Palette := Update.ThemeFor(Model).Colors;
-  const Navigation: E.Element<State.Msg> := E.Size<State.Msg>(
-    E.ScrollView<State.Msg>('navigation-scroll', NavigationItems(Model.Active)),
+  const Navigation: E.Element of State.Msg := E.Size of State.Msg(
+    E.ScrollView of State.Msg('navigation-scroll', NavigationItems(Model.Active)),
     new L.Flex(Basis := L.Extent.Fill)
   );
-  const Footer: E.Element<State.Msg> := ThemeControl(Model.Shared, Colors);
+  const Footer: E.Element of State.Msg := ThemeControl(Model.Shared, Colors);
   case DrawerViewportHeight of
     when is int as Height:
       // The sheet body scrolls. Bound the inner column so its footer remains visible.
       // CUI uses 16 points for outer margins, 48 for panel padding, and 46 for the header and gap.
-      return E.Size<State.Msg>(
-        E.Column<State.Msg>(new L.Flow(Gap := Layout.Points(2)), Navigation, Footer),
+      return E.Size of State.Msg(
+        E.Column of State.Msg(new L.Flow(Gap := Layout.Points(2)), Navigation, Footer),
         new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(Sys.Math.Max(0, Height - 110))))
       );
     else
   end case;
 
-  return E.Column<State.Msg>(
+  return E.Column of State.Msg(
     new L.Flow(
       Padding := Layout.Points(12), Gap := Layout.Points(2), Background := Colors.SurfaceMuted
     ),

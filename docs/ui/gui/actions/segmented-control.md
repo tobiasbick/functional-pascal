@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Actions.SegmentedControls as S;
 // - `Selected`: Current application value.
 // ## Returns
 // The widget with its message type.
-public function View(Selected: int): E.Element<int>;
+public function View(Selected: int): E.Element of int;
 begin
-  return S.SegmentedControl<int>('view', [new S.Item('List'), new S.Item('Board')],
+  return S.SegmentedControl of int('view', [new S.Item('List'), new S.Item('Board')],
     Selected, function(Index: int): int => Index);
 end function;
 

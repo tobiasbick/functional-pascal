@@ -19,13 +19,13 @@ uses Fpas.Ui.Widgets.Developer.Terminals as D;
 // - `Revision`: Change to explicitly clear the scrollback before replaying the supplied output.
 // - `Received`: Maps submissions and interrupts.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Output: string; Revision: int; Received: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Output: string; Revision: int; Received: function(D.Event): TMsg; Settings: D.Options);
 begin
   const Role: string := 'terminal';
   const Token: string := C.Token(Role, Id);
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   const Enabled: bool := Frame.AcceptInput;
-  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled and Settings.Input);
+  const Focus: bool := C.WantsFocus of TMsg(Frame, Id, Token, Enabled and Settings.Input);
   const Result: CuiDeveloper.CuiTerminalEvent := Frame.Window.Terminal(
     Token,
     Output,
@@ -46,7 +46,7 @@ begin
     Frame.Messages.Add(Received(D.Event.Interrupt));
   end if;
 
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled and Settings.Input, '');
+  P.Root of TMsg(Frame, Id, Role, '', Enabled and Settings.Input, '');
 end procedure;
 
 end unit;

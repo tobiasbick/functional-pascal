@@ -18,9 +18,9 @@ uses System as Sys;
 // - `Model`: Current selections for both groups.
 // ## Returns
 // The Toggle group section of the native Actions page.
-public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+public function View(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
 begin
-  const Formats: E.Element<State.Msg> := T.ToggleGroup<State.Msg>(
+  const Formats: E.Element of State.Msg := T.ToggleGroup of State.Msg(
     'action-format', [
       new T.Item('Bold', Sys.Char.ConvertFromUtf32($E05D)),
       new T.Item('Italic', Sys.Char.ConvertFromUtf32($E0FB)),
@@ -29,7 +29,7 @@ begin
     ], Model.ToggleFormats ?? [true, false, false, false], State.Msg.SetToggleFormats,
     new T.Options(IconOnly := true)
   );
-  const Alignment: E.Element<State.Msg> := T.ToggleGroup<State.Msg>(
+  const Alignment: E.Element of State.Msg := T.ToggleGroup of State.Msg(
     'action-align', [
       new T.Item('Left', Sys.Char.ConvertFromUtf32($E185)),
       new T.Item('Center', Sys.Char.ConvertFromUtf32($E106)),
@@ -37,7 +37,7 @@ begin
     ], Model.ToggleAlignment ?? [true, false, false], State.Msg.SetToggleAlignment,
     new T.Options(Exclusive := true)
   );
-  return E.Row<State.Msg>(new L.Flow(Gap := G.Points(12), Wrap := true), Formats, Alignment);
+  return E.Row of State.Msg(new L.Flow(Gap := G.Points(12), Wrap := true), Formats, Alignment);
 end function;
 
 end unit;

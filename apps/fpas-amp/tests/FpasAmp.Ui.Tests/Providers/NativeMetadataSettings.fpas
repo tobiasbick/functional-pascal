@@ -23,7 +23,7 @@ uses System.IO as IO;
 uses System.Threading as T;
 uses Xunit as X;
 
-function Control(Session: Gui.Session<App.Msg>; Id: string; Key: string := ''): Gui.Control;
+function Control(Session: Gui.Session of App.Msg; Id: string; Key: string := ''): Gui.Control;
 begin
   for Item: Gui.Control in Session.Snapshot().Controls do
     if Item.Id = Id and Item.Key = Key then
@@ -34,7 +34,7 @@ begin
   raise new Sys.InvalidOperationException('Missing native control: ' + Id);
 end function;
 
-procedure Step(Session: Gui.Session<App.Msg>);
+procedure Step(Session: Gui.Session of App.Msg);
 begin
   discard Session.Post(App.Msg.Navigation(Nav.Msg.SetDrawer(false)));
   X.Assert.True(Session.Step());
@@ -60,9 +60,9 @@ public type NativeMetadataSettingsTests = record
       end if;
     end procedure;
 
-    function Apply(Current: App.State; Message: App.Msg): Mvu.Transition<App.State, App.Msg>;
+    function Apply(Current: App.State; Message: App.Msg): Mvu.Transition of (App.State, App.Msg);
     begin
-      const Next: Mvu.Transition<App.State, App.Msg> := Controller.Apply(
+      const Next: Mvu.Transition of (App.State, App.Msg) := Controller.Apply(
         Current, Message, procedure(Value: Settings.Preferences) begin
           Storage.Save(Folder.Path, Value);
         end procedure, Library, Port
@@ -71,15 +71,15 @@ public type NativeMetadataSettingsTests = record
       case Message of
         when App.Msg.Settings(Settings.Msg.OpenAcoustIdKeyPage(const Key: Settings.AcoustIdKey)):
           Link := Key;
-          X.Assert.Equal<int>(1, Next.Commands.Length);
-          return new Mvu.Transition<App.State, App.Msg>(Next.Model, []);
+          X.Assert.Equal of int(1, Next.Commands.Length);
+          return new Mvu.Transition of (App.State, App.Msg)(Next.Model, []);
         else
       end case;
 
       return Next;
     end function;
 
-    procedure Click(Session: Gui.Session<App.Msg>; Bounds: Cui.CuiRectangle);
+    procedure Click(Session: Gui.Session of App.Msg; Bounds: Cui.CuiRectangle);
     begin
       XPosition := Bounds.X + Bounds.Width / 2.0F;
       YPosition := Bounds.Y + Bounds.Height / 2.0F;
@@ -109,12 +109,12 @@ public type NativeMetadataSettingsTests = record
     const Library: Monitor.Session := H.Start([], T.CancellationToken.None);
     try
       Window.SetReducedMotion(true);
-      using const Session: Gui.Session<App.Msg> := Host.StartThemed<App.State, App.Msg>(
+      using const Session: Gui.Session of App.Msg := Host.StartThemed of (App.State, App.Msg)(
         Last, Apply, Shell.View, Window, 128, Inject, App.Theme(Last, null), App.Theme, false
       );
       Step(Session);
       Click(Session, Control(Session, 'settings-tabs', '2').Bounds);
-      X.Assert.Equal<int>(2, Last.Navigation.SettingsTab);
+      X.Assert.Equal of int(2, Last.Navigation.SettingsTab);
       X.Assert.False(Control(Session, 'save-acoustid-keys').Enabled);
       const AppLink: Cui.CuiRectangle := Control(Session, 'acoustid-application-key-setup').Bounds;
       const UserLink: Cui.CuiRectangle := Control(Session, 'acoustid-user-key-setup').Bounds;
@@ -152,12 +152,12 @@ public type NativeMetadataSettingsTests = record
       Click(Session, Control(Session, 'save-acoustid-keys').Bounds);
       X.Assert.False(Control(Session, 'save-acoustid-keys').Enabled);
       const Saved: Settings.AcoustIdKeys := Storage.Load(Folder.Path).AcoustId;
-      X.Assert.Equal<string>('fixture-app-key', Saved.ApplicationKey);
-      X.Assert.Equal<string>('fixture-user-key', Saved.UserApiKey);
+      X.Assert.Equal of string('fixture-app-key', Saved.ApplicationKey);
+      X.Assert.Equal of string('fixture-user-key', Saved.UserApiKey);
       StateStorage.Save(Folder.Path, StateStorage.FromWindow(Session.Placement(), Last.Navigation));
       const Restored: StateStorage.Snapshot := StateStorage.Load(Folder.Path);
-      X.Assert.Equal<string>('settings', Restored.ActivePage);
-      X.Assert.Equal<int>(2, Restored.SettingsTab);
+      X.Assert.Equal of string('settings', Restored.ActivePage);
+      X.Assert.Equal of int(2, Restored.SettingsTab);
     finally
       Library.DisposeAsync().GetAwaiter().GetResult();
     end try;

@@ -21,9 +21,9 @@ uses Fpas.Ui.Widgets.Developer.HexViews as W;
 // - `Selected`: Model-owned range and caret.
 // ## Returns
 // Hex viewer with selection and edit proposals.
-public function View(Bytes: array of byte; Selected: W.Selection): E.Element<W.Event>;
+public function View(Bytes: array of byte; Selected: W.Selection): E.Element of W.Event;
 begin
-  return W.HexView<W.Event>('png-bytes', Bytes, Selected,
+  return W.HexView of W.Event('png-bytes', Bytes, Selected,
     function(Change: W.Event): W.Event => Change,
     new W.Options(Editable := true,
       Marks := [new W.Mark(0, 8, S.Tone.Info, 'PNG signature')]));

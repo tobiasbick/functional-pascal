@@ -12,10 +12,10 @@ uses FpasAmp.Ui.Albums.Toolbar.Filters as Toolbar;
 uses System.Collections.Generic as C;
 uses System.Collections.Immutable as I;
 
-function Genres(Names: array of string; Draft: M.Filters): E.Element<M.Msg>;
+function Genres(Names: array of string; Draft: M.Filters): E.Element of M.Msg;
   function Change(Flags: array of bool): M.Msg;
   begin
-    const Chosen: I.ImmutableHashSet<string>.Builder := Draft.Genres.Clear().ToBuilder();
+    const Chosen: (I.ImmutableHashSet of string).Builder := Draft.Genres.Clear().ToBuilder();
     for Index: int := 0 to Names.Length - 1 do
       if Flags[Index] then
         discard Chosen.Add(Names[Index]);
@@ -25,7 +25,7 @@ function Genres(Names: array of string; Draft: M.Filters): E.Element<M.Msg>;
     return M.Msg.Genres(Chosen.ToImmutable());
   end function;
 begin
-  const Items: C.List<Selects.Item> := new C.List<Selects.Item>(Names.Length);
+  const Items: C.List of Selects.Item := new C.List of Selects.Item(Names.Length);
   const Selected: array of bool := new bool[Names.Length];
   for Index: int := 0 to Names.Length - 1 do
     const Name: string := Names[Index];
@@ -33,7 +33,7 @@ begin
     Selected[Index] := Draft.Genres.Contains(Name);
   end for;
 
-  return Multi.MultiSelect<M.Msg>(
+  return Multi.MultiSelect of M.Msg(
     'track-filter-genre', Items.ToArray(), Selected, Change,
     new Multi.Options(Label := 'Genre', Placeholder := 'All genres', Searchable := Names.Length > 8)
   );
@@ -45,19 +45,26 @@ end function;
 // - `Width`: Maximum popup width in logical points.
 // ## Returns
 // The filter button and its anchored form.
-public function Build(Current: M.State; Width: int): E.Element<M.Msg>;
+public function Build(Current: M.State; Width: int): E.Element of M.Msg;
 requires Width > 0;
 begin
-  const Fields: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  const Fields: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();
   const Count: int := Current.Applied.Count();
 
   if not Current.FiltersOpen then
-    return Toolbar.Popup<M.Msg>('track', E.Column<M.Msg>(), Count, false, M.Msg.ShowFilters, Width);
+    return Toolbar.Popup of M.Msg(
+      'track',
+      E.Column of M.Msg(),
+      Count,
+      false,
+      M.Msg.ShowFilters,
+      Width
+    );
   end if;
 
   if Current.Album.Id = '' and Current.Performers.Length > 0 then
     Fields.Add(
-      Toolbar.Choice<M.Msg>(
+      Toolbar.Choice of M.Msg(
         'track-filter-artist',
         'Artist',
         'All artists',
@@ -70,7 +77,7 @@ begin
 
   if Current.Album.Id = '' and Current.ReleaseIds.Length > 0 then
     Fields.Add(
-      Toolbar.Choice<M.Msg>(
+      Toolbar.Choice of M.Msg(
         'track-filter-album',
         'Album',
         'All albums',
@@ -84,7 +91,7 @@ begin
   if Current.GenreChoices.Length > 0 then
     Fields.Add(Genres(Current.GenreChoices, Current.Draft));
   end if;
-  const Form: E.Element<M.Msg> := Toolbar.Form<M.Msg>(
+  const Form: E.Element of M.Msg := Toolbar.Form of M.Msg(
     'track',
     'Filter tracks',
     Fields.ToArray(),
@@ -93,7 +100,14 @@ begin
     M.Msg.Reset,
     M.Msg.ApplyFilters, 'Minimum track rating'
   );
-  return Toolbar.Popup<M.Msg>('track', Form, Count, Current.FiltersOpen, M.Msg.ShowFilters, Width);
+  return Toolbar.Popup of M.Msg(
+    'track',
+    Form,
+    Count,
+    Current.FiltersOpen,
+    M.Msg.ShowFilters,
+    Width
+  );
 end function;
 
 end unit;

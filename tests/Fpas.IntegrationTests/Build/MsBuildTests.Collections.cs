@@ -57,20 +57,20 @@ public sealed partial class MsBuildTests
         Assert.True(build.ExitCode == 0, build.Output + build.Error);
         var cases = new (string Body, string? Error)[]
         {
-            ("const X: D.NeedsClass<int> := new D.NeedsClass<int>();", "FP3018"),
-            ("const X: D.NeedsValue<string> := new D.NeedsValue<string>();", "FP3018"),
-            ("const X: D.NeedsValue<int?> := new D.NeedsValue<int?>();", "FP3018"),
-            ("const X: D.NeedsNew<string> := new D.NeedsNew<string>();", "FP3018"),
-            ("const X: D.NeedsDisposable<string> := new D.NeedsDisposable<string>();", "FP3018"),
-            ("const X: D.NeedsComparable<object> := new D.NeedsComparable<object>();", "FP3018"),
-            ("const X: D.NeedsComparable<int> := new D.NeedsComparable<int>();", null),
-            ("const X: D.NeedsNew<int> := new D.NeedsNew<int>();", null),
-            ("const X: D.NeedsDisposable<D.Resource> := new D.NeedsDisposable<D.Resource>();", null),
+            ("const X: D.NeedsClass of int := new D.NeedsClass of int();", "FP3018"),
+            ("const X: D.NeedsValue of string := new D.NeedsValue of string();", "FP3018"),
+            ("const X: D.NeedsValue of int? := new D.NeedsValue of int?();", "FP3018"),
+            ("const X: D.NeedsNew of string := new D.NeedsNew of string();", "FP3018"),
+            ("const X: D.NeedsDisposable of string := new D.NeedsDisposable of string();", "FP3018"),
+            ("const X: D.NeedsComparable of object := new D.NeedsComparable of object();", "FP3018"),
+            ("const X: D.NeedsComparable of int := new D.NeedsComparable of int();", null),
+            ("const X: D.NeedsNew of int := new D.NeedsNew of int();", null),
+            ("const X: D.NeedsDisposable of D.Resource := new D.NeedsDisposable of D.Resource();", null),
             ("const X: string := D.CollectionApi.NullableArray()[0];", "FP3013"),
             ("const X: string := D.CollectionApi.Nested()[0][0];", "FP3013"),
             ("const X: string := D.CollectionApi.NullableList(true)[0];", "FP3013"),
             ("const X: string := D.CollectionApi.NonNullArray()[0];", null),
-            ("const X: D.Box<int> := new D.Box<int>(1); const N: int := X.Maybe();", null)
+            ("const X: D.Box of int := new D.Box of int(1); const N: int := X.Maybe();", null)
         };
         foreach (var (body, error) in cases)
         {
@@ -96,7 +96,7 @@ public sealed partial class MsBuildTests
             public function Run(Name: string; Mode: int): int;
             begin
               using const Outer: D.Resource := new D.Resource('outer');
-              const Source: D.Probe<int> := new D.Probe<int>(Name, [1, 2]);
+              const Source: D.Probe of int := new D.Probe of int(Name, [1, 2]);
               for Item: int in Source do
                 if Mode = 1 then break; end if;
                 if Mode = 2 then continue; end if;
@@ -149,25 +149,25 @@ public sealed partial class MsBuildTests
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Bridge;
             uses System.Collections.Generic as C; uses Demo as D;
-            public function Echo(Value: C.Dictionary<string, C.List<array of string?>>): C.Dictionary<string, C.List<array of string?>>;
+            public function Echo(Value: C.Dictionary of (string, C.List of array of string?)): C.Dictionary of (string, C.List of array of string?);
             begin return D.CollectionApi.Echo(Value); end function;
-            public function Maybe(Value: C.List<string?>?): C.List<string?>?;
+            public function Maybe(Value: (C.List of string?)?): (C.List of string?)?;
             begin return Value; end function;
             public function Grid(Value: array[,] of int): array[,] of int;
             begin Value[1, 0] := 9; return Value; end function;
             public function Jagged(Value: array of array of string?): array of array of string?;
             begin return Value; end function;
-            public function Pair(Value: C.KeyValuePair<string, string?>?): C.KeyValuePair<string, string?>?;
+            public function Pair(Value: C.KeyValuePair of (string, string?)?): C.KeyValuePair of (string, string?)?;
             begin return D.CollectionApi.EchoPair(Value); end function;
             public function Read(): string;
             begin
-              const Box: D.DerivedBox<string?> := new D.DerivedBox<string?>(null);
+              const Box: D.DerivedBox of string? := new D.DerivedBox of string?(null);
               Box.Field := 'field'; Box.Value := null;
               const Cells: array of string? := Box.Repeat();
-              const Optional: C.List<string?>? := D.CollectionApi.NullableList(true);
+              const Optional: (C.List of string?)? := D.CollectionApi.NullableList(true);
               if Optional = null then return 'missing'; end if;
-              const Elements: C.List<array of string?> := D.CollectionApi.Nested();
-              const Numbers: C.List<int?> := D.CollectionApi.NullableNumbers();
+              const Elements: C.List of array of string? := D.CollectionApi.Nested();
+              const Numbers: C.List of int? := D.CollectionApi.NullableNumbers();
               return (Cells[1] ?? 'null') + ':' + (Optional[0] ?? 'null') + ':' + (Elements[0][0] ?? 'null') + ':' +
                 D.CollectionApi.Overload(['item']) + ':' + (Box.Maybe() ?? 'null');
             end function;
@@ -226,10 +226,10 @@ public sealed partial class MsBuildTests
             uses Demo.Bridge as B; uses System.Collections.Generic as C;
             public function Read(): string;
             begin
-              const Data: C.Dictionary<string, C.List<array of string?>> := new C.Dictionary<string, C.List<array of string?>>();
+              const Data: C.Dictionary of (string, C.List of array of string?) := new C.Dictionary of (string, C.List of array of string?)();
               const Rows: array of array of string? := [[null]];
-              Data['key'] := new C.List<array of string?>(Rows);
-              const Returned: C.Dictionary<string, C.List<array of string?>> := B.Echo(Data);
+              Data['key'] := new C.List of array of string?(Rows);
+              const Returned: C.Dictionary of (string, C.List of array of string?) := B.Echo(Data);
               return Returned['key'][0][0] ?? 'round trip';
             end function;
             end unit;

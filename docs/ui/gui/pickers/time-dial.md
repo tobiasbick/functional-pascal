@@ -18,9 +18,9 @@ uses System as Sys;
 // - `Time`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Time: Sys.TimeOnly): E.Element<Sys.TimeOnly>;
+public function View(Time: Sys.TimeOnly): E.Element of Sys.TimeOnly;
 begin
-  return W.TimeDial<Sys.TimeOnly>('picker-time-dial', Time, function(Value: Sys.TimeOnly): Sys.TimeOnly => Value,
+  return W.TimeDial of Sys.TimeOnly('picker-time-dial', Time, function(Value: Sys.TimeOnly): Sys.TimeOnly => Value,
     Size := 232.0F);
 end function;
 

@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Overlays.HoverCards as W;
 // - `Content`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Content: E.Element<string>): E.Element<string>;
+public function View(Content: E.Element of string): E.Element of string;
 begin
-  return W.HoverCard<string>('jonas-card', L.Link<string>('jonas-link', '@jonas', 'open-profile'), Content);
+  return W.HoverCard of string('jonas-card', L.Link of string('jonas-link', '@jonas', 'open-profile'), Content);
 end function;
 
 end unit;

@@ -23,13 +23,13 @@ uses System.Collections.Generic as C;
 // - `Theme`: Active terminal palette.
 // ## Returns
 // A plot on one terminal row.
-public function Lower<TMsg>(Values: array of float; Settings: Chart.Options; Theme: Th.Theme): E.Element<TMsg>;
+public function Lower of TMsg(Values: array of float; Settings: Chart.Options; Theme: Th.Theme): E.Element of TMsg;
 begin
   const Width: int := case Settings.Width of
     when L.Extent.Fixed(const Distance: L.Measure): F.Cells(Distance);
     else Sys.Math.Clamp(Values.Length, 1, E.MaximumColumns);
   end case;
-  return E.Element<TMsg>.Sparkline(
+  return (E.Element of TMsg).Sparkline(
     Values, Width, Settings.Width = L.Extent.Fill,
     Th.ChartColor(Theme, Settings.Color, Theme.Colors.Series1)
   );
@@ -45,7 +45,7 @@ end function;
 // - `Style`: Inherited text colors.
 // - `Theme`: Active terminal palette.
 public procedure Paint(
-  Operations: C.List<D.Operation>; Area: F.Rect; Clip: F.Rect; Values: array of float;
+  Operations: C.List of D.Operation; Area: F.Rect; Clip: F.Rect; Values: array of float;
   Ink: G.Color; Style: T.Style; Theme: Th.Theme
 );
 begin

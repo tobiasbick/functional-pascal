@@ -47,10 +47,17 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function Pipeline<TMsg>(Id: string; Stages: array of string; Jobs: array of Job; Selection: int; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function Pipeline of TMsg(Id: string; Stages: array of string; Jobs: array of Job; Selection: int; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Pipeline(Id, Stages, Jobs, Selection, Changed, Settings ?? new Options());
+  return (E.Element of TMsg).Pipeline(
+    Id,
+    Stages,
+    Jobs,
+    Selection,
+    Changed,
+    Settings ?? new Options()
+  );
 end function;
 
 end unit;

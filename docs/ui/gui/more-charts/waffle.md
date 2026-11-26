@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Charts.Waffles as W;
 // Builds the waffle example.
 // ## Returns
 // The widget for the application view.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return W.Waffle<string>('waffle', [
+  return W.Waffle of string('waffle', [
     new C.Item('Windows', 46.0F), new C.Item('macOS', 31.0F), new C.Item('Linux', 23.0F)
   ], new W.Options(CellSize := 14.0F));
 end function;

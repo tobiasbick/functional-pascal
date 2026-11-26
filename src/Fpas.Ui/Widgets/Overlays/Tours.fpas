@@ -69,15 +69,15 @@ end record;
 // - `Settings`: Optional native card and spotlight settings.
 // ## Returns
 // The base view with CUI-owned spotlight, card, buttons and navigation.
-public function Tour<TMsg>(
-  Id: string; Base: E.Element<TMsg>; Steps: array of Step;
+public function Tour of TMsg(
+  Id: string; Base: E.Element of TMsg; Steps: array of Step;
   Current: int; OnChange: function(Change): TMsg; Settings: Options? := null
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 requires Steps.Length > 0;
 requires Current >= -1 and Current < Steps.Length;
 begin
-  return E.Element<TMsg>.Tour(Id, Base, Steps, Current, OnChange, Settings ?? new Options());
+  return (E.Element of TMsg).Tour(Id, Base, Steps, Current, OnChange, Settings ?? new Options());
 end function;
 
 // Gets the inspection and focus identity of the native close button.

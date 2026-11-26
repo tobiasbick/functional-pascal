@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Inputs.Switches as C;
 // - `On`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(On: bool): E.Element<bool>;
+public function View(On: bool): E.Element of bool;
 begin
-  return C.Switch<bool>('wifi', 'Wi-Fi', On, function(Value: bool): bool => Value);
+  return C.Switch of bool('wifi', 'Wi-Fi', On, function(Value: bool): bool => Value);
 end function;
 
 end unit;

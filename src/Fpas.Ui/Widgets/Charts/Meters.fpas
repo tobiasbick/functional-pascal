@@ -15,15 +15,15 @@ uses Fpas.Ui.Elements as E;
 // - `Unit`: Optional literal unit displayed beside the values.
 // ## Returns
 // A GUI-only meter; CUI owns its track, interpolation and threshold colors.
-public function Meter<TMsg>(
+public function Meter of TMsg(
   Id: string; Label: string; Used: float; Total: float;
   Unit: string := ''
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 requires Used >= 0.0F;
 requires Total >= 0.0F;
 begin
-  return E.Element<TMsg>.Meter(Id, Label, Used, Total, Unit);
+  return (E.Element of TMsg).Meter(Id, Label, Used, Total, Unit);
 end function;
 
 end unit;

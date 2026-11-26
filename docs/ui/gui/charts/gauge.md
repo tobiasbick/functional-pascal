@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Charts.Gauges as W;
 // - `Fraction`: Current reading from zero through one.
 // ## Returns
 // The widget for the application view.
-public function View(Fraction: float): E.Element<string>;
+public function View(Fraction: float): E.Element of string;
 begin
-  return W.Gauge<string>('cpu', 'CPU', Fraction, 130.0F);
+  return W.Gauge of string('cpu', 'CPU', Fraction, 130.0F);
 end function;
 
 end unit;

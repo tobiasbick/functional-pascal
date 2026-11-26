@@ -34,7 +34,7 @@ public const Quietest: float := -60.0F;
 // Returns a gain of zero dB for every band.
 // ## Returns
 // One neutral gain per entry of `Bands`.
-public function Flat(): I.ImmutableArray<float>;
+public function Flat(): I.ImmutableArray of float;
 begin
   return Presets.Choices[0].Gains;
 end function;
@@ -42,7 +42,7 @@ end function;
 // Owner-thread player state and the most recent matching audio observation.
 public type State = record
   // Tracks in play order, captured from the table that started playback.
-  public Queue: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray<Tracks.Entry>.Empty;
+  public Queue: I.ImmutableArray of Tracks.Entry := (I.ImmutableArray of Tracks.Entry).Empty;
   // Origin, filters and sort order of the playing queue.
   public Source: Music.Selection := new Music.Selection();
   // Position of the current track in `Queue`, or -1 before the first track.
@@ -74,7 +74,7 @@ public type State = record
   // Output volume in dB, from `Quietest` through zero.
   public Volume: float := 0.0F;
   // Equalizer gains in dB, one per entry of `Bands`.
-  public Gains: I.ImmutableArray<float> := Flat();
+  public Gains: I.ImmutableArray of float := Flat();
   // Local fingerprint request for the current track, after audio starts.
   public Fingerprint: Fp.State? := null;
   // Selected live station, or null when the player is in local track mode.
@@ -94,11 +94,11 @@ end record;
 // Transport, volume and equalizer proposals.
 public type Msg = variant
   // Start `Queue[Index]` and retain `Source` to reconstruct the selection.
-  Play(Queue: I.ImmutableArray<Tracks.Entry>; Index: int; Source: Music.Selection);
+  Play(Queue: I.ImmutableArray of Tracks.Entry; Index: int; Source: Music.Selection);
   // Play the given radio station, toggling playback if it is already selected.
   PlayStation(Station: Radio.Station);
   // Select a finite queue of episodes and its shared show artwork.
-  PlayEpisodes(Queue: I.ImmutableArray<Tracks.Entry>; Index: int; Cover: Images.Bitmap?);
+  PlayEpisodes(Queue: I.ImmutableArray of Tracks.Entry; Index: int; Cover: Images.Bitmap?);
   // Accept the complete downloaded file for the matching request.
   EpisodeReady(Revision: long; Path: string);
   // Report the failure of the matching episode download.

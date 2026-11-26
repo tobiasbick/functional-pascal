@@ -33,10 +33,10 @@ end record;
 // - `Settings`: Optional native options.
 // ## Returns
 // The graphical widget.
-public function ControlTile<TMsg>(Id: string; Label: string; On: bool; Change: function(bool): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function ControlTile of TMsg(Id: string; Label: string; On: bool; Change: function(bool): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.ControlTile(Id, Label, On, Change, Settings ?? new Options());
+  return (E.Element of TMsg).ControlTile(Id, Label, On, Change, Settings ?? new Options());
 end function;
 
 end unit;

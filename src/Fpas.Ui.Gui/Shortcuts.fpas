@@ -7,7 +7,7 @@ uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
 // A model-owned application key binding, evaluated after native widgets.
 // ## Type parameters
 // - `TMsg`: Message delivered by activation.
-public type Binding<TMsg> = record
+public type Binding of TMsg = record
   // Existing native key/modifier types; use Keys.PrimaryModifier for portable commands.
   public Combination: Keys.Combination;
   // Message queued once when the combination activates.
@@ -27,9 +27,9 @@ public type Binding<TMsg> = record
   // - `Messages`: Parent message mapper.
   // ## Returns
   // The binding in its parent's message space.
-  public function Map<TNext>(Messages: function(TMsg): TNext): Binding<TNext>;
+  public function Map of TNext(Messages: function(TMsg): TNext): Binding of TNext;
   begin
-    return new Binding<TNext>(
+    return new Binding of TNext(
       self.Combination, Messages(self.Message), self.Enabled,
       self.Repeat, self.AllowWhileEditing
     );

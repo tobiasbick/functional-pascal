@@ -12,7 +12,7 @@ uses System.Collections.Generic as Generic;
 // ## Parameters
 // - `Window`: Window with a successfully presented frame.
 // - `Controls`: Descriptors from the view traversal, updated with native bounds and input state.
-public procedure Resolve(Window: Cui.CuiWindow; Controls: Generic.List<App.Control>);
+public procedure Resolve(Window: Cui.CuiWindow; Controls: Generic.List of App.Control);
 begin
   for Index: int := 0 to Controls.Count - 1 do
     const Control: App.Control := Controls[Index];

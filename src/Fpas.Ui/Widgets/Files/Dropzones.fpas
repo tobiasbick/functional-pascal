@@ -34,13 +34,13 @@ end record;
 // - `Settings`: Optional extension filter, display and input settings.
 // ## Returns
 // The graphical file dropzone.
-public function Dropzone<TMsg>(
-  Id: string; OnDrop: function(array of string): TMsg; OnBrowse: Sys.Func<TMsg>? := null;
+public function Dropzone of TMsg(
+  Id: string; OnDrop: function(array of string): TMsg; OnBrowse: (Sys.Func of TMsg)? := null;
   Settings: Options? := null
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Dropzone(Id, OnDrop, OnBrowse, Settings ?? new Options());
+  return (E.Element of TMsg).Dropzone(Id, OnDrop, OnBrowse, Settings ?? new Options());
 end function;
 
 end unit;

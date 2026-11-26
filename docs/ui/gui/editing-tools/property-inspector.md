@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Editors.PropertyInspectors as W;
 // - `Groups`: The object's properties and expansion state.
 // ## Returns
 // The inspector with edits and expansion changes as messages.
-public function View(Groups: array of W.Group): E.Element<W.Event>;
+public function View(Groups: array of W.Group): E.Element of W.Event;
 begin
-  return W.PropertyInspector<W.Event>('object', Groups,
+  return W.PropertyInspector of W.Event('object', Groups,
     function(Change: W.Event): W.Event => Change, new W.Options(LabelWidth := 126.0F));
 end function;
 

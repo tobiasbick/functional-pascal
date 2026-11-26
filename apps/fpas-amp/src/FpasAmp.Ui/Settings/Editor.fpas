@@ -33,14 +33,14 @@ const CommonFormats: array of string := [
   '.wma'
 ];
 
-function FormatSelector(Selected: array of string): E.Element<M.Msg>;
+function FormatSelector(Selected: array of string): E.Element of M.Msg;
 begin
-  const Names: C.List<string> := new C.List<string>(CommonFormats);
-  const Listed: C.HashSet<string> := new C.HashSet<string>(
+  const Names: C.List of string := new C.List of string(CommonFormats);
+  const Listed: C.HashSet of string := new C.HashSet of string(
     CommonFormats,
     Sys.StringComparer.OrdinalIgnoreCase
   );
-  const Enabled: C.HashSet<string> := new C.HashSet<string>(
+  const Enabled: C.HashSet of string := new C.HashSet of string(
     Selected,
     Sys.StringComparer.OrdinalIgnoreCase
   );
@@ -49,17 +49,17 @@ begin
       Names.Add(Extension);
     end if;
   end for;
-  const Items: C.List<Selects.Item> := new C.List<Selects.Item>(Names.Count);
+  const Items: C.List of Selects.Item := new C.List of Selects.Item(Names.Count);
   const Active: array of bool := new bool[Names.Count];
   for Index: int := 0 to Names.Count - 1 do
     Items.Add(new Selects.Item(Names[Index].Substring(1).ToUpperInvariant()));
     Active[Index] := Enabled.Contains(Names[Index]);
   end for;
 
-  return Multi.MultiSelect<M.Msg>(
+  return Multi.MultiSelect of M.Msg(
     'source-formats', Items.ToArray(), Active,
     function(Flags: array of bool): M.Msg begin
-      const Formats: C.List<string> := new C.List<string>();
+      const Formats: C.List of string := new C.List of string();
       for Index: int := 0 to Flags.Length - 1 do
         if Flags[Index] then
           Formats.Add(Names[Index]);
@@ -83,12 +83,12 @@ end function;
 // - `Messages`: Wraps settings messages in parent messages.
 // ## Returns
 // `Base` with the editor open.
-public function View<TParent>(Base: E.Element<TParent>; Draft: Locations.MusicSource; SaveFailed: bool; Messages: function(M.Msg): TParent): E.Element<TParent>;
+public function View of TParent(Base: E.Element of TParent; Draft: Locations.MusicSource; SaveFailed: bool; Messages: function(M.Msg): TParent): E.Element of TParent;
 begin
-  const Content: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>(
+  const Content: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg(
     [
-      Texts.Text<M.Msg>(Draft.Path, Texts.Appearance.Secondary),
-      Fields.TextField<M.Msg>(
+      Texts.Text of M.Msg(Draft.Path, Texts.Appearance.Secondary),
+      Fields.TextField of M.Msg(
         'source-name',
         Draft.Name,
         M.Msg.SetName,
@@ -99,7 +99,7 @@ begin
   );
   if SaveFailed then
     Content.Add(
-      Alerts.Alert<M.Msg>(
+      Alerts.Alert of M.Msg(
         'source-save-error',
         'Could not save settings. Try again.',
         new Alerts.Options(Tone := S.Tone.Danger)
@@ -108,14 +108,14 @@ begin
   end if;
 
   Content.Add(
-    Footers.ActionFooter<M.Msg>(
-      B.Button<M.Msg>(
+    Footers.ActionFooter of M.Msg(
+      B.Button of M.Msg(
         'source-cancel',
         'Cancel',
         M.Msg.CancelEdit,
         new B.Options(Variant := S.ButtonVariant.Outline)
       ),
-      B.Button<M.Msg>(
+      B.Button of M.Msg(
         'source-save', 'Save', M.Msg.SaveSource,
         new B.Options(
           Variant := S.ButtonVariant.Primary,
@@ -124,10 +124,10 @@ begin
       )
     )
   );
-  return Dialogs.Dialog<TParent>(
+  return Dialogs.Dialog of TParent(
     'edit-source', Base,
-    Composition.Map<M.Msg, TParent>(
-      E.Column<M.Msg>(
+    Composition.Map of (M.Msg, TParent)(
+      E.Column of M.Msg(
         new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(14)), Align := L.Alignment.Stretch),
         Content.ToArray()
       ), Messages

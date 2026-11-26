@@ -1,7 +1,7 @@
 # Deferred workflows
 
 Use `Fpas.Execution.Workflows` for execution policies and resource lifetimes on top of
-the SDK's [`Effect<A, E, R>`](effects.md). Add a project reference to
+the SDK's [`Effect of (A, E, R)`](effects.md). Add a project reference to
 [Fpas.Execution.Workflows.fpasproj](../../../src/Fpas.Execution.Workflows/Fpas.Execution.Workflows.fpasproj).
 
 ## Retry and deadlines

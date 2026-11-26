@@ -20,7 +20,7 @@ public type Cursor = record
   // Proposed save name.
   public Name: string := '';
   // Provider supplying the current listing.
-  public Source: Sys.Func<string, bool, F.Listing?>? := null;
+  public Source: Sys.Func of (string, bool, F.Listing?)? := null;
 end record;
 
 // Per-session access to open pickers.
@@ -71,7 +71,7 @@ public function Start(): State;
 
   procedure Finish();
   begin
-    const Closed: C.List<string> := new C.List<string>();
+    const Closed: C.List of string := new C.List of string();
     for Id: string in Opened.Keys do
       if not Seen.Contains(Id) then
         Closed.Add(Id);
@@ -85,8 +85,8 @@ public function Start(): State;
     Seen.Clear();
   end procedure;
 begin
-  const Opened: C.Dictionary<string, Cursor> := new C.Dictionary<string, Cursor>();
-  const Seen: C.HashSet<string> := new C.HashSet<string>();
+  const Opened: C.Dictionary of (string, Cursor) := new C.Dictionary of (string, Cursor)();
+  const Seen: C.HashSet of string := new C.HashSet of string();
   return new State(Open, Write, Finish);
 end function;
 

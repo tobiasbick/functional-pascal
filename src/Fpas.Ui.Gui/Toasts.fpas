@@ -38,13 +38,13 @@ end record;
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Request<TMsg> = record implements Mvu.HostExtension<TMsg>
+public type Request of TMsg = record implements Mvu.HostExtension of TMsg
   // Literal title, up to 127 UTF-8 bytes.
   public Title: string;
   // Native appearance, duration and action caption.
   public Settings: Options;
   // Optional factory called once if the action is activated.
-  public OnAction: Sys.Func<TMsg>? := null;
+  public OnAction: (Sys.Func of TMsg)? := null;
 
   // Translates the optional action factory without showing the toast or invoking it.
   //
@@ -54,16 +54,16 @@ public type Request<TMsg> = record implements Mvu.HostExtension<TMsg>
   // - `Messages`: Wraps an action message for the parent session.
   // ## Returns
   // A toast payload for the parent host, retaining its appearance and lifetime.
-  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  public function Map of TNext(Messages: function(TMsg): TNext): Mvu.HostExtension of TNext;
   begin
-    var Action: Sys.Func<TNext>? := null;
+    var Action: (Sys.Func of TNext)? := null;
     case self.OnAction of
-      when is Sys.Func<TMsg> as Original:
+      when is Sys.Func of TMsg as Original:
         Action := function(): TNext => Messages(Original.Invoke());
       else
     end case;
 
-    return new Request<TNext>(self.Title, self.Settings, Action);
+    return new Request of TNext(self.Title, self.Settings, Action);
   end function;
 end record;
 
@@ -77,9 +77,9 @@ end record;
 // - `OnAction`: Optional message factory, supplied together with an action caption.
 // ## Returns
 // A graphical host command that shows one notification.
-public function Show<TMsg>(
-  Title: string; Settings: Options? := null; OnAction: Sys.Func<TMsg>? := null
-): Mvu.Command<TMsg>;
+public function Show of TMsg(
+  Title: string; Settings: Options? := null; OnAction: (Sys.Func of TMsg)? := null
+): Mvu.Command of TMsg;
 requires Title <> '';
 begin
   const Resolved: Options := Settings ?? new Options();
@@ -87,8 +87,8 @@ begin
     raise new Sys.ArgumentException('Supply both an action caption and an action message factory.');
   end if;
 
-  return Mvu.Command<TMsg>.Host(
-    Mvu.HostRequest.Extension(new Request<TMsg>(Title, Resolved, OnAction))
+  return (Mvu.Command of TMsg).Host(
+    Mvu.HostRequest.Extension(new Request of TMsg(Title, Resolved, OnAction))
   );
 end function;
 

@@ -39,13 +39,13 @@ end function;
 // - `Enabled`: Whether the entries can receive focus and jump to their anchors.
 // ## Returns
 // The graphical table of contents.
-public function TableOfContents<TMsg>(
+public function TableOfContents of TMsg(
   Id: string; ScrollId: string; Items: array of Item;
-  OnActiveChange: Sys.Func<string, TMsg>? := null; Enabled: bool := true
-): E.Element<TMsg>;
+  OnActiveChange: Sys.Func of (string, TMsg)? := null; Enabled: bool := true
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.TableOfContents(Id, ScrollId, Items, OnActiveChange, Enabled);
+  return (E.Element of TMsg).TableOfContents(Id, ScrollId, Items, OnActiveChange, Enabled);
 end function;
 
 end unit;

@@ -31,18 +31,18 @@ end variant;
 // Builds the attachments drop target.
 // ## Returns
 // The dropzone for the application view.
-public function View(): E.Element<Msg>;
+public function View(): E.Element of Msg;
 begin
-  return W.Dropzone<Msg>('attachments', Msg.Dropped, function(): Msg => Msg.Browse,
+  return W.Dropzone of Msg('attachments', Msg.Dropped, function(): Msg => Msg.Browse,
     new W.Options(Description := 'PNG, JPG or PDF', Accept := Accepted));
 end function;
 
 // Handles the Browse message.
 // ## Returns
 // The command to include in the update result.
-public function OpenChooser(): Mvu.Command<Msg>;
+public function OpenChooser(): Mvu.Command of Msg;
 begin
-  return Dialogs.OpenFile<Msg>(Msg.Selected, 'Select an attachment', 'Images and PDF', Accepted);
+  return Dialogs.OpenFile of Msg(Msg.Selected, 'Select an attachment', 'Images and PDF', Accepted);
 end function;
 
 end unit;

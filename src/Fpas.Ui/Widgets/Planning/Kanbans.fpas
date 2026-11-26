@@ -8,23 +8,23 @@ uses Fpas.Ui.Widgets.Charts.Charts as Colors;
 // One card, with native drag and application-defined contents.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Card<TMsg> = record
+public type Card of TMsg = record
   // Stable nonnegative native card identity, unique on this board.
   public Key: int;
   // Accessible caption.
   public Title: string;
   // Graphical content.
-  public Content: E.Element<TMsg>;
+  public Content: E.Element of TMsg;
 end record;
 
 // One board column.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Column<TMsg> = record
+public type Column of TMsg = record
   // Heading.
   public Title: string;
   // Cards in order.
-  public Cards: array of Card<TMsg>;
+  public Cards: array of Card of TMsg;
   // Heading dot.
   public Dot: Colors.Color := Colors.Color.Automatic;
   // Work-in-progress limit. Zero hides the limit.
@@ -59,10 +59,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // The graphical widget.
-public function Kanban<TMsg>(Id: string; Columns: array of Column<TMsg>; Change: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function Kanban of TMsg(Id: string; Columns: array of Column of TMsg; Change: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Kanban(Id, Columns, Change, Settings ?? new Options());
+  return (E.Element of TMsg).Kanban(Id, Columns, Change, Settings ?? new Options());
 end function;
 
 end unit;

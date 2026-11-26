@@ -23,10 +23,10 @@ uses GuiGallery.Pages.Developer.Samples as D;
 uses GuiGallery.Pages.Developer.State as M;
 uses GuiGallery.Shared.Sections as Section;
 
-function Limit(Maximum: int; Gap: int; params Children: array of E.Element<M.Msg>): E.Element<M.Msg>;
+function Limit(Maximum: int; Gap: int; params Children: array of E.Element of M.Msg): E.Element of M.Msg;
 begin
-  return E.Size<M.Msg>(
-    E.Column<M.Msg>(new L.Flow(Gap := Section.Points(Gap), Clip := false), Children),
+  return E.Size of M.Msg(
+    E.Column of M.Msg(new L.Flow(Gap := Section.Points(Gap), Clip := false), Children),
     new L.Flex(
       Width := new L.AxisSize(Basis := L.Extent.Fill, Maximum := L.Measure.Logical(Maximum))
     )
@@ -39,16 +39,16 @@ end function;
 // - `Palette`: Colors for the sample labels.
 // ## Returns
 // Sections and examples in the original order.
-public function View(Model: M.Model; Palette: Themes.Palette): array of E.Element<M.Msg>;
+public function View(Model: M.Model; Palette: Themes.Palette): array of E.Element of M.Msg;
 begin
   return [
-    Section.Heading<M.Msg>(
+    Section.Heading of M.Msg(
       Strings.Get('Heading.TraceViewer'),
       Strings.Get('Heading.TraceViewerHint')
     ),
     Limit(
       1000, 10,
-      T.TraceViewer<M.Msg>(
+      T.TraceViewer of M.Msg(
         'dev-trace',
         Model.Tracks,
         D.Spans,
@@ -59,13 +59,13 @@ begin
         new T.Options(Height := 320.0F)
       )
     ),
-    Section.Heading<M.Msg>(
+    Section.Heading of M.Msg(
       Strings.Get('Heading.NetworkWaterfall'),
       Strings.Get('Heading.NetworkWaterfallHint')
     ),
     Limit(
       1000, 10,
-      W.NetworkWaterfall<M.Msg>(
+      W.NetworkWaterfall of M.Msg(
         'dev-net',
         D.Requests,
         Model.Waterfall,
@@ -73,13 +73,13 @@ begin
         new W.Options(Height := 340.0F, DomLoaded := 0.395, Loaded := 0.68)
       )
     ),
-    Section.Heading<M.Msg>(
+    Section.Heading of M.Msg(
       Strings.Get('Heading.DependencyGraph'),
       Strings.Get('Heading.DependencyGraphHint')
     ),
     Limit(
       1000, 10,
-      G.DependencyGraph<M.Msg>(
+      G.DependencyGraph of M.Msg(
         'dev-deps',
         D.Vertices,
         D.Edges,
@@ -88,13 +88,13 @@ begin
         new G.Options(Height := 340.0F)
       )
     ),
-    Section.Heading<M.Msg>(
+    Section.Heading of M.Msg(
       Strings.Get('Heading.CommitGraph'),
       Strings.Get('Heading.CommitGraphHint')
     ),
     Limit(
       920, 10,
-      C.CommitGraph<M.Msg>(
+      C.CommitGraph of M.Msg(
         'dev-history',
         D.Commits,
         Model.Commit,
@@ -102,72 +102,72 @@ begin
         new C.Options(Height := 320.0F)
       )
     ),
-    Section.Heading<M.Msg>(Strings.Get('Heading.Pipeline'), Strings.Get('Heading.PipelineHint')),
+    Section.Heading of M.Msg(Strings.Get('Heading.Pipeline'), Strings.Get('Heading.PipelineHint')),
     Limit(
       920, 10,
-      J.Pipeline<M.Msg>('dev-pipeline', D.Stages, D.Jobs, Model.Pipeline, M.Msg.Pipeline)
+      J.Pipeline of M.Msg('dev-pipeline', D.Stages, D.Jobs, Model.Pipeline, M.Msg.Pipeline)
     ),
-    Section.Heading<M.Msg>(Strings.Get('Heading.Problems'), Strings.Get('Heading.ProblemsHint')),
+    Section.Heading of M.Msg(Strings.Get('Heading.Problems'), Strings.Get('Heading.ProblemsHint')),
     Limit(
       760, 10,
-      P.Problems<M.Msg>(
+      P.Problems of M.Msg(
         'dev-problems',
         D.Diagnostics,
         M.Msg.Problems,
         new P.Options(Height := 300.0F)
       )
     ),
-    Section.Heading<M.Msg>(
+    Section.Heading of M.Msg(
       Strings.Get('Heading.KeyValueEditor'),
       Strings.Get('Heading.KeyValueEditorHint')
     ),
     Limit(
       680, 10,
-      E.FormattedText<M.Msg>('Headers', Font.Font.Medium, 0.0F, Palette.Foreground),
-      K.KeyValueEditor<M.Msg>(
+      E.FormattedText of M.Msg('Headers', Font.Font.Medium, 0.0F, Palette.Foreground),
+      K.KeyValueEditor of M.Msg(
         'dev-headers',
         Model.Headers,
         M.Msg.Headers,
         new K.Options(Capacity := 12)
       )
     ),
-    Section.Heading<M.Msg>(
+    Section.Heading of M.Msg(
       Strings.Get('Heading.QueryBuilder'),
       Strings.Get('Heading.QueryBuilderHint')
     ),
     Limit(
       720, 10,
-      Q.QueryBuilder<M.Msg>(
+      Q.QueryBuilder of M.Msg(
         'dev-filter',
         D.Fields,
         Model.Rules,
         M.Msg.Query,
         new Q.Options(Capacity := 16)
       ),
-      E.FormattedText<M.Msg>(
+      E.FormattedText of M.Msg(
         NativeQuery.Description(D.Fields, Model.Rules),
         Font.Font.Body,
         12.0F,
         Palette.TextMuted
       )
     ),
-    Section.Heading<M.Msg>(
+    Section.Heading of M.Msg(
       Strings.Get('Heading.SchedulePicker'),
       Strings.Get('Heading.SchedulePickerHint')
     ),
     Limit(
       560, 10,
-      S.SchedulePicker<M.Msg>(
+      S.SchedulePicker of M.Msg(
         'dev-backup',
         Model.Cron,
         M.Msg.Schedule,
         new S.Options(Now := 1794211200L, Utc := true)
       )
     ),
-    Section.Heading<M.Msg>(Strings.Get('Heading.Keymap'), Strings.Get('Heading.KeymapHint')),
+    Section.Heading of M.Msg(Strings.Get('Heading.Keymap'), Strings.Get('Heading.KeymapHint')),
     Limit(
       900, 10,
-      Keys.Keymap<M.Msg>('dev-keys', D.Bindings, D.Categories, Model.Modifiers, M.Msg.Keys)
+      Keys.Keymap of M.Msg('dev-keys', D.Bindings, D.Categories, Model.Modifiers, M.Msg.Keys)
     )
   ];
 end function;

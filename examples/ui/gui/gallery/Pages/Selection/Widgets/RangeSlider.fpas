@@ -15,9 +15,9 @@ uses GuiGallery.Shared.State as Demo;
 // - `Model`: Current gallery state.
 // ## Returns
 // The price range slider.
-public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+public function View(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
 begin
-  return R.RangeSlider<State.Msg>(
+  return R.RangeSlider of State.Msg(
     'price-range', 'Price range', new R.Interval(Model.PriceLower, Model.PriceUpper),
     0.0F, 100.0F, State.Msg.SetPrice
   );

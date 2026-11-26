@@ -25,11 +25,15 @@ uses System as Sys;
 // - `Frame`: Current presentation context.
 // - `Node`: Native chrome element.
 // - `Visit`: Presents child content in native pane scopes.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Node: E.Element<TMsg>; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+public procedure Draw of TMsg(Frame: C.State of TMsg; Node: E.Element of TMsg; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
 begin
   case Node of
-    when E.Element.MenuBar(const Id: string, const Items: array of M.Menu<TMsg>, const Hide: bool):
-      MenuBar.Draw<TMsg>(Frame, Id, Items, Hide);
+    when E.Element.MenuBar(
+      const Id: string,
+      const Items: array of M.Menu of TMsg,
+      const Hide: bool
+    ):
+      MenuBar.Draw of TMsg(Frame, Id, Items, Hide);
     when E.Element.DocumentTabs(
       const Id: string,
       const Tabs: array of D.Tab,
@@ -37,29 +41,29 @@ begin
       const Change: function(D.Change): TMsg,
       const Settings: D.Options
     ):
-      DocumentTabs.Draw<TMsg>(Frame, Id, Tabs, Selected, Change, Settings);
+      DocumentTabs.Draw of TMsg(Frame, Id, Tabs, Selected, Change, Settings);
     when E.Element.StatusBar(
       const Id: string,
-      const Items: array of S.Item<TMsg>,
+      const Items: array of S.Item of TMsg,
       const Hide: bool
     ):
-      StatusBar.Draw<TMsg>(Frame, Id, Items, Hide);
+      StatusBar.Draw of TMsg(Frame, Id, Items, Hide);
     when E.Element.SplitView(
       const Id: string,
       const Ratio: float,
-      const First: E.Element<TMsg>,
-      const Second: E.Element<TMsg>,
+      const First: E.Element of TMsg,
+      const Second: E.Element of TMsg,
       const Change: function(float): TMsg,
       const Settings: Split.Options
     ):
-      SplitView.Draw<TMsg>(Frame, Id, Ratio, First, Second, Change, Settings, Visit);
+      SplitView.Draw of TMsg(Frame, Id, Ratio, First, Second, Change, Settings, Visit);
     when E.Element.Dockspace(
       const Id: string,
-      const Panels: array of Dock.Panel<TMsg>,
+      const Panels: array of Dock.Panel of TMsg,
       const Settings: Dock.Options,
-      const Change: Sys.Func<string, TMsg>?
+      const Change: Sys.Func of (string, TMsg)?
     ):
-      Dockspace.Draw<TMsg>(Frame, Id, Panels, Settings, Change, Visit);
+      Dockspace.Draw of TMsg(Frame, Id, Panels, Settings, Change, Visit);
     else
   end case;
 end procedure;

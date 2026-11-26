@@ -19,13 +19,13 @@ uses System as Sys;
 // - `Model`: Current confirmation and preview result.
 // ## Returns
 // The Confirm popover section on the Disclosure page.
-public function View(Model: State.Model): E.Element<State.Msg>;
+public function View(Model: State.Model): E.Element of State.Msg;
 begin
-  const Trigger: E.Element<State.Msg> := B.Button<State.Msg>(
+  const Trigger: E.Element of State.Msg := B.Button of State.Msg(
     'branch-trigger', 'Delete branch', State.Msg.SetBranchQuestion(true),
     new B.Options(Icon := Sys.Char.ConvertFromUtf32($E18E))
   );
-  const Question: E.Element<State.Msg> := P.ConfirmPopover<State.Msg>(
+  const Question: E.Element of State.Msg := P.ConfirmPopover of State.Msg(
     'branch-question', Trigger, Model.BranchQuestion,
     new P.Options(
       'Delete feature/grid?', 'The branch and its 12 commits are removed from the remote.',
@@ -33,17 +33,17 @@ begin
     ),
     State.Msg.PreviewBranchDeletion, State.Msg.SetBranchQuestion(false)
   );
-  const Row: E.Element<State.Msg> := if Model.BranchDeleted then
-    E.Row<State.Msg>(
+  const Row: E.Element of State.Msg := if Model.BranchDeleted then
+    E.Row of State.Msg(
       new L.Flow(Gap := G.Points(12), Wrap := true), Question,
-      E.Styled<State.Msg>(E.Text<State.Msg>('Branch deleted'), S.Role.Muted)
+      E.Styled of State.Msg(E.Text of State.Msg('Branch deleted'), S.Role.Muted)
     )
   else
-    E.Row<State.Msg>(new L.Flow(Gap := G.Points(12), Wrap := true), Question)
+    E.Row of State.Msg(new L.Flow(Gap := G.Points(12), Wrap := true), Question)
   end if;
-  return E.Column<State.Msg>(
+  return E.Column of State.Msg(
     new L.Flow(Gap := G.Points(20)),
-    G.Heading<State.Msg>(
+    G.Heading of State.Msg(
       Strings.Get('Heading.ConfirmPopover'),
       Strings.Get('Heading.ConfirmPopoverHint')
     ),

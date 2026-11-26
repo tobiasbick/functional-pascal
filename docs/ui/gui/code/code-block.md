@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Developer.CodeBlocks as W;
 // - `Query`: SQL source text.
 // ## Returns
 // A code block with line numbers and a copy button.
-public function View(Query: string): E.Element<string>;
+public function View(Query: string): E.Element of string;
 begin
-  return W.CodeBlock<string>('query', Query,
+  return W.CodeBlock of string('query', Query,
     new W.Options(Language := 'sql', Title := 'people.sql', LineNumbers := true));
 end function;
 

@@ -18,10 +18,10 @@ uses Fpas.Ui.Widgets.Overlays.Sheets as W;
 // - `Open`: Model-owned visibility.
 // ## Returns
 // The resulting view.
-public function View(Base: E.Element<string>; Open: bool): E.Element<string>;
+public function View(Base: E.Element of string; Open: bool): E.Element of string;
 begin
-  return W.Sheet<string>('sheet', Base,
-    E.Column<string>(E.Text<string>('Recent'), E.Text<string>('Jonas commented on Release 1.0')),
+  return W.Sheet of string('sheet', Base,
+    E.Column of string(E.Text of string('Recent'), E.Text of string('Jonas commented on Release 1.0')),
     Open, new W.Options('Notifications', Description := 'Choose what we tell you about.'), 'close');
 end function;
 

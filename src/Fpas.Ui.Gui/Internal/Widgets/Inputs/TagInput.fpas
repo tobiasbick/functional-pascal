@@ -20,21 +20,21 @@ uses System as Sys;
 // - `Tags`: Model-owned tags.
 // - `OnChange`: Maps a proposed tag list to a message.
 // - `Settings`: Caption, bounds and input permission.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Tags: array of string; OnChange: function(array of string): TMsg;
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Tags: array of string; OnChange: function(array of string): TMsg;
   Settings: T.Options
 );
 begin
   const Allowed: bool := Frame.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('tag-input', Id);
-  const TrackRemove: Sys.Func<int, string>? := if Frame.PaintingClosed then
+  const TrackRemove: Sys.Func of (int, string)? := if Frame.PaintingClosed then
     null
   else
     function(Index: int): string => C.Token('button', T.RemoveId(Id, Index))
   end if;
   const Result: CuiInputs.CuiTagInputResult := Frame.Window.TagInput(
     Token, Tags, Settings.Label, Settings.Placeholder, Settings.MaxTags, Settings.MaxUtf8Bytes,
-    Allowed, C.WantsFocus<TMsg>(Frame, Id, Token, Allowed), TrackRemove
+    Allowed, C.WantsFocus of TMsg(Frame, Id, Token, Allowed), TrackRemove
   );
   if Allowed and not Sys.Object.ReferenceEquals(Tags, Result.Tags) then
     Frame.Messages.Add(OnChange(Result.Tags));

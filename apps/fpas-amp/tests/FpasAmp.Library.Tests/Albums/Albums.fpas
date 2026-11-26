@@ -27,7 +27,7 @@ uses System.Threading as T;
 uses System.Threading.Tasks as Tasks;
 uses Xunit as X;
 
-function Read(Data: string): I.ImmutableArray<M.Album>;
+function Read(Data: string): I.ImmutableArray of M.Album;
 begin
   return Query.Read(
     IO.Path.Combine(Data, 'library.db'),
@@ -36,11 +36,11 @@ begin
   ).Releases;
 end function;
 
-async function Until(Data: string; Accept: function(I.ImmutableArray<M.Album>): bool): Tasks.Task<I.ImmutableArray<M.Album>>;
+async function Until(Data: string; Accept: function(I.ImmutableArray of M.Album): bool): Tasks.Task of I.ImmutableArray of M.Album;
 begin
   using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
   while true do
-    const Items: I.ImmutableArray<M.Album> := Read(Data);
+    const Items: I.ImmutableArray of M.Album := Read(Data);
     if Accept(Items) then
       return Items;
     end if;
@@ -74,7 +74,7 @@ public type AlbumTests = record
         [
           Path,
           IO.Path.GetDirectoryName(Path),
-          Json.JsonSerializer.Serialize<MediaTags.Info>(
+          Json.JsonSerializer.Serialize of MediaTags.Info(
             new MediaTags.Info(
               Album := 'Cached release',
               AlbumArtists := ['Example', 'Echo; Lane', 'example'],
@@ -90,18 +90,18 @@ public type AlbumTests = record
       using const Connection: Db.SqliteConnection := Sql.Open(Database);
       Schema.Ensure(Connection);
     end;
-    const Items: I.ImmutableArray<M.Album> := Read(Data.Path);
-    X.Assert.Equal<int>(1, Items.Length);
-    X.Assert.Equal<string>('Cached release', Items[0].Title);
-    X.Assert.Equal<string>('Example; Echo; Lane; example', Items[0].Artist);
-    X.Assert.Equal<int>(3, Items[0].Credits.Length);
-    X.Assert.Equal<string>('Echo; Lane', Items[0].Credits[0].Name);
-    X.Assert.Equal<string>(M.ArtistId('example'), Items[0].Credits[1].Id);
-    X.Assert.Equal<string>(M.ArtistId('Guest performer'), Items[0].Credits[2].Id);
-    X.Assert.Equal<int>(2, Items[0].GenreMemberships.Length);
+    const Items: I.ImmutableArray of M.Album := Read(Data.Path);
+    X.Assert.Equal of int(1, Items.Length);
+    X.Assert.Equal of string('Cached release', Items[0].Title);
+    X.Assert.Equal of string('Example; Echo; Lane; example', Items[0].Artist);
+    X.Assert.Equal of int(3, Items[0].Credits.Length);
+    X.Assert.Equal of string('Echo; Lane', Items[0].Credits[0].Name);
+    X.Assert.Equal of string(M.ArtistId('example'), Items[0].Credits[1].Id);
+    X.Assert.Equal of string(M.ArtistId('Guest performer'), Items[0].Credits[2].Id);
+    X.Assert.Equal of int(2, Items[0].GenreMemberships.Length);
     var HasElectro: bool := false;
     for Group: M.Membership in Items[0].GenreMemberships do
-      X.Assert.Equal<long>(1L, Group.Tracks);
+      X.Assert.Equal of long(1L, Group.Tracks);
       if Group.Id = M.GenreId('Électro') then
         HasElectro := true;
       end if;
@@ -133,13 +133,13 @@ public type AlbumTests = record
     await using const Session: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
     discard await F.Until(
       F.Tags(Session),
-      function(Items: I.ImmutableArray<Tags.Entry>): bool => Items.Length = 4
+      function(Items: I.ImmutableArray of Tags.Entry): bool => Items.Length = 4
     );
-    const Albums: I.ImmutableArray<M.Album> := Read(Data.Path);
-    X.Assert.Equal<int>(3, Albums.Length);
-    X.Assert.Equal<string>('Release', Albums[0].Title);
-    X.Assert.Equal<long>(2L, Albums[0].Tracks);
-    X.Assert.NotEqual<string>(Albums[1].Id, Albums[2].Id);
+    const Albums: I.ImmutableArray of M.Album := Read(Data.Path);
+    X.Assert.Equal of int(3, Albums.Length);
+    X.Assert.Equal of string('Release', Albums[0].Title);
+    X.Assert.Equal of long(2L, Albums[0].Tracks);
+    X.Assert.NotEqual of string(Albums[1].Id, Albums[2].Id);
   end function;
 
   // A front cover on a later track wins over a back cover and an external sidecar.
@@ -157,7 +157,7 @@ public type AlbumTests = record
     await using const Session: Monitor.Session := F.Start([Source], Data.Path);
     discard await F.Until(
       F.Tags(Session),
-      function(Items: I.ImmutableArray<Tags.Entry>): bool => Items.Length = 2
+      function(Items: I.ImmutableArray of Tags.Entry): bool => Items.Length = 2
     );
     const Album: M.Album := Read(Data.Path)[0];
     const Picture: Images.Bitmap? := await F.Tags(Session).Albums.ThumbnailAsync(
@@ -166,7 +166,7 @@ public type AlbumTests = record
     );
     case Picture of
       when is Images.Bitmap as Pixels:
-        X.Assert.Equal<int>(384, Pixels.Width);
+        X.Assert.Equal of int(384, Pixels.Width);
         X.Assert.True(Pixels.Pixels[2] > Pixels.Pixels[0]);
       else
         X.Assert.True(false, 'Expected the embedded front cover.');
@@ -201,7 +201,7 @@ public type AlbumTests = record
     await using const Session: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
     discard await F.Until(
       F.Tags(Session),
-      function(Items: I.ImmutableArray<Tags.Entry>): bool => Items.Length = 2
+      function(Items: I.ImmutableArray of Tags.Entry): bool => Items.Length = 2
     );
     const Album: M.Album := Read(Data.Path)[0];
     const Picture: Images.Bitmap? := await F.Tags(Session).Albums.ThumbnailAsync(
@@ -229,15 +229,15 @@ public type AlbumTests = record
     await using const Session: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
     discard await F.Until(
       F.Tags(Session),
-      function(Items: I.ImmutableArray<Tags.Entry>): bool => Items.Length = 1
+      function(Items: I.ImmutableArray of Tags.Entry): bool => Items.Length = 1
     );
     const Initial: M.Album := Read(Data.Path)[0];
     X.Assert.Null(await F.Tags(Session).Albums.ThumbnailAsync(Initial, T.CancellationToken.None));
     const Path: string := IO.Path.Combine(Root.Path, 'CoVeR.PNG');
     IO.File.WriteAllBytes(Path, Art.Picture(220, 20, 20));
-    const Added: I.ImmutableArray<M.Album> := await Until(
+    const Added: I.ImmutableArray of M.Album := await Until(
       Data.Path,
-      function(Items: I.ImmutableArray<M.Album>): bool => Items.Length = 1 and Items[
+      function(Items: I.ImmutableArray of M.Album): bool => Items.Length = 1 and Items[
         0
       ].Revision <> Initial.Revision
     );
@@ -245,9 +245,9 @@ public type AlbumTests = record
       await F.Tags(Session).Albums.ThumbnailAsync(Added[0], T.CancellationToken.None)
     );
     IO.File.WriteAllBytes(Path, Art.Picture(20, 220, 20));
-    const Changed: I.ImmutableArray<M.Album> := await Until(
+    const Changed: I.ImmutableArray of M.Album := await Until(
       Data.Path,
-      function(Items: I.ImmutableArray<M.Album>): bool => Items.Length = 1 and Items[
+      function(Items: I.ImmutableArray of M.Album): bool => Items.Length = 1 and Items[
         0
       ].Revision <> Added[0].Revision
     );
@@ -263,9 +263,9 @@ public type AlbumTests = record
     end case;
 
     IO.File.Delete(Path);
-    const Deleted: I.ImmutableArray<M.Album> := await Until(
+    const Deleted: I.ImmutableArray of M.Album := await Until(
       Data.Path,
-      function(Items: I.ImmutableArray<M.Album>): bool => Items.Length = 1 and Items[
+      function(Items: I.ImmutableArray of M.Album): bool => Items.Length = 1 and Items[
         0
       ].Revision <> Changed[0].Revision
     );
@@ -286,10 +286,10 @@ public type AlbumTests = record
     await using const Session: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
     discard await F.Until(
       F.Tags(Session),
-      function(Items: I.ImmutableArray<Tags.Entry>): bool => Items.Length = 2
+      function(Items: I.ImmutableArray of Tags.Entry): bool => Items.Length = 2
     );
-    const Albums: I.ImmutableArray<M.Album> := Read(Data.Path);
-    X.Assert.Equal<int>(2, Albums.Length);
+    const Albums: I.ImmutableArray of M.Album := Read(Data.Path);
+    X.Assert.Equal of int(2, Albums.Length);
     for Album: M.Album in Albums do
       X.Assert.Null(await F.Tags(Session).Albums.ThumbnailAsync(Album, T.CancellationToken.None));
     end for;

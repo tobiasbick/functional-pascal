@@ -69,15 +69,15 @@ end function;
 public function Normalize(Sources: array of MusicSource): array of MusicSource;
 requires Sources <> null;
 begin
-  const Ids: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
-  const Result: C.List<MusicSource> := new C.List<MusicSource>();
+  const Ids: C.HashSet of string := new C.HashSet of string(Sys.StringComparer.Ordinal);
+  const Result: C.List of MusicSource := new C.List of MusicSource();
   for Source: MusicSource in Sources do
     if Sys.String.IsNullOrWhiteSpace(Source.Id) or not Ids.Add(Source.Id)
       or not IO.Path.IsPathFullyQualified(Source.Path) or Source.Path.Contains(cast<char>(0))
     then
       raise new Sys.ArgumentException('Expected unique source IDs and absolute directory paths.');
     end if;
-    const Extensions: C.HashSet<string> := new C.HashSet<string>(
+    const Extensions: C.HashSet of string := new C.HashSet of string(
       Sys.StringComparer.OrdinalIgnoreCase
     );
     for Extension: string in Source.Extensions do
@@ -99,7 +99,7 @@ begin
 
       discard Extensions.Add(Extension);
     end for;
-    const Items: C.List<string> := new C.List<string>(Extensions);
+    const Items: C.List of string := new C.List of string(Extensions);
     Result.Add(
       new MusicSource(
         Source.Id,
@@ -132,7 +132,7 @@ begin
     then
       return false;
     end if;
-    const Extensions: C.HashSet<string> := new C.HashSet<string>(
+    const Extensions: C.HashSet of string := new C.HashSet of string(
       A.Extensions,
       Sys.StringComparer.OrdinalIgnoreCase
     );
@@ -148,7 +148,7 @@ end function;
 // `Sources` contains normalized settings. Each returned tree needs one traversal/watcher.
 public function Roots(Sources: array of MusicSource): array of string;
 begin
-  const Result: C.List<string> := new C.List<string>();
+  const Result: C.List of string := new C.List of string();
   for Source: MusicSource in Sources do
     if Source.Offline or Source.Paused or not HasWork(Source) then
       continue;

@@ -43,8 +43,8 @@ public sealed partial class MsBuildTests
             public type UserName = distinct string;
             public type Percent = int range 0..100;
             public type Direction = enum North; South; end enum;
-            public type Model<T> = record public Value: T; end record;
-            public type Tree<T> = variant Empty; Leaf(Value: T); end variant;
+            public type Model of T = record public Value: T; end record;
+            public type Tree of T = variant Empty; Leaf(Value: T); end variant;
             public function Touch(): int; begin return Initialized; end function;
             end unit;
             """);
@@ -56,13 +56,13 @@ public sealed partial class MsBuildTests
             public function Snapshot(): array of Sys.Type;
             begin
               return [typeof(M.Amount), typeof(M.UserName), typeof(M.Percent), typeof(M.Direction),
-                typeof(M.Model<int>), typeof(M.Tree<string>), typeof(array of M.Tree<string>), typeof(S.Foreign)];
+                typeof(M.Model of int), typeof(M.Tree of string), typeof(array of M.Tree of string), typeof(S.Foreign)];
             end function;
-            public function Get<T>(): Sys.Type; begin return typeof(T); end function;
-            public function Factory<T>(): function(): Sys.Type; begin return function(): Sys.Type => typeof(T); end function;
+            public function Get of T(): Sys.Type; begin return typeof(T); end function;
+            public function Factory of T(): function(): Sys.Type; begin return function(): Sys.Type => typeof(T); end function;
             public function HiddenType(): Sys.Type; begin return typeof(Hidden); end function;
             public function Touch(): int; begin return M.Touch(); end function;
-            public async function AsyncGet<T>(Gate: Tasks.Task): Tasks.Task<Sys.Type>;
+            public async function AsyncGet of T(Gate: Tasks.Task): Tasks.Task of Sys.Type;
             begin await Gate; return typeof(T); end function;
             end unit;
             """);

@@ -19,16 +19,18 @@ begin
 end procedure;
 
 async function VerifyLayers(): Tasks.Task;
-  function Acquire(Value: int; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<int, string>>;
+  function Acquire(Value: int; Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (int, string);
   begin
     Events.Add('acquire ' + Value.ToString());
-    return Tasks.Task.FromResult<Fx.Outcome<int, string>>(Fx.Outcome.Success(Value));
+    return Tasks.Task.FromResult of Fx.Outcome of (int, string)(Fx.Outcome.Success(Value));
   end function;
 
-  function AcquireDependent(Value: int; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<int, string>>;
+  function AcquireDependent(Value: int; Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (int, string);
   begin
     if Value < 0 then
-      return Tasks.Task.FromResult<Fx.Outcome<int, string>>(Fx.Outcome.Failure('unavailable'));
+      return Tasks.Task.FromResult of Fx.Outcome of (int, string)(
+        Fx.Outcome.Failure('unavailable')
+      );
     end if;
 
     return Acquire(Value + 1, Token);
@@ -40,23 +42,23 @@ async function VerifyLayers(): Tasks.Task;
     return Tasks.Task.CompletedTask;
   end function;
 
-  function Use(Value: int; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<int, string>>;
+  function Use(Value: int; Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (int, string);
   begin
     Events.Add('use ' + Value.ToString());
-    return Tasks.Task.FromResult<Fx.Outcome<int, string>>(Fx.Outcome.Success(Value));
+    return Tasks.Task.FromResult of Fx.Outcome of (int, string)(Fx.Outcome.Success(Value));
   end function;
 begin
-  const Events: C.List<string> := new C.List<string>();
-  const First: L.Layer<int, string, int> := L.Layer<int, string, int>.Create(
-    Fx.Effect<int, string, int>.Defer(Acquire),
+  const Events: C.List of string := new C.List of string();
+  const First: L.Layer of (int, string, int) := L.Layer of (int, string, int).Create(
+    Fx.Effect of (int, string, int).Defer(Acquire),
     Release
   );
-  const Next: L.Layer<int, string, int> := L.Layer<int, string, int>.Create(
-    Fx.Effect<int, string, int>.Defer(AcquireDependent),
+  const Next: L.Layer of (int, string, int) := L.Layer of (int, string, int).Create(
+    Fx.Effect of (int, string, int).Defer(AcquireDependent),
     Release
   );
-  const Program: Fx.Effect<int, string, int> := L.Provide(
-    Fx.Effect<int, string, int>.Defer(Use),
+  const Program: Fx.Effect of (int, string, int) := L.Provide(
+    Fx.Effect of (int, string, int).Defer(Use),
     First.ThenBuild(Next)
   );
 
@@ -87,8 +89,8 @@ begin
 end function;
 
 async function VerifyChild(): Tasks.Task;
-  async function Use(Parent: S.Scope): Tasks.Task<int>;
-    async function First(Child: S.Scope): Tasks.Task<int>;
+  async function Use(Parent: S.Scope): Tasks.Task of int;
+    async function First(Child: S.Scope): Tasks.Task of int;
     begin
       try
         Started.SetResult();
@@ -100,7 +102,7 @@ async function VerifyChild(): Tasks.Task;
       return 0;
     end function;
 
-    async function Other(Child: S.Scope): Tasks.Task<int>;
+    async function Other(Child: S.Scope): Tasks.Task of int;
     begin
       await SiblingMayFinish.Task.WaitAsync(Child.Token);
       return 7;
@@ -113,8 +115,8 @@ async function VerifyChild(): Tasks.Task;
         return Tasks.Task.CompletedTask;
       end function
     );
-    const Child: S.Child<int> := Parent.Fork<int>(First);
-    const Sibling: S.Child<int> := Parent.Fork<int>(Other);
+    const Child: S.Child of int := Parent.Fork of int(First);
+    const Sibling: S.Child of int := Parent.Fork of int(Other);
     await Started.Task;
     await Child.Cancel();
     try
@@ -137,12 +139,12 @@ begin
   );
   var Released: int := 0;
   var Cleaned: bool := false;
-  Check((await S.Scope.Use<int>(Use, T.CancellationToken.None)) = 7, 'Sibling did not finish');
+  Check((await S.Scope.Use of int(Use, T.CancellationToken.None)) = 7, 'Sibling did not finish');
   Check(Released = 1, 'Resource was not released exactly once');
 end function;
 
 async function VerifyFaults(): Tasks.Task;
-  function Use(Scope: S.Scope): Tasks.Task<int>;
+  function Use(Scope: S.Scope): Tasks.Task of int;
   begin
     Scope.OnClose(
       function(): Tasks.Task begin
@@ -160,7 +162,7 @@ async function VerifyFaults(): Tasks.Task;
 begin
   var Released: int := 0;
   try
-    discard await S.Scope.Use<int>(Use, T.CancellationToken.None);
+    discard await S.Scope.Use of int(Use, T.CancellationToken.None);
     Check(false, 'Scope failures were swallowed');
   catch Failure: Sys.AggregateException do
     Check(Failure.InnerExceptions.Count = 2, 'One of the failures was lost');
@@ -172,7 +174,7 @@ begin
 end function;
 
 async function VerifyCompletedValue(Callback: bool): Tasks.Task;
-  function Use(Lifetime: S.Scope): Tasks.Task<Fx.Outcome<int, string>>;
+  function Use(Lifetime: S.Scope): Tasks.Task of Fx.Outcome of (int, string);
   begin
     Lifetime.OnClose(
       function(): Tasks.Task begin
@@ -194,7 +196,9 @@ async function VerifyCompletedValue(Callback: bool): Tasks.Task;
       );
     end if;
 
-    return Tasks.Task.FromResult<Fx.Outcome<int, string>>(Fx.Outcome.Failure('expected outcome'));
+    return Tasks.Task.FromResult of Fx.Outcome of (int, string)(
+      Fx.Outcome.Failure('expected outcome')
+    );
   end function;
 begin
   var Released: int := 0;
@@ -202,7 +206,7 @@ begin
     'release failure'
   );
   try
-    discard await S.Scope.Use<Fx.Outcome<int, string>>(Use, T.CancellationToken.None);
+    discard await S.Scope.Use of Fx.Outcome of (int, string)(Use, T.CancellationToken.None);
     Check(false, 'Scope cleanup failure was swallowed');
   catch Failure: Sys.AggregateException do
     const Faults: Sys.AggregateException := Failure.Flatten();
@@ -218,7 +222,7 @@ begin
       raise new Sys.InvalidOperationException('Cleanup lost the completed outcome');
     end if;
 
-    const Completed: Fx.Outcome<int, string> := cast<Fx.Outcome<int, string>>(Stored);
+    const Completed: Fx.Outcome of (int, string) := cast<Fx.Outcome of (int, string)>(Stored);
     case Completed of
       when Fx.Outcome.Failure(const Reason: string):
         Check(Reason = 'expected outcome', 'Cleanup lost the completed expected outcome');
@@ -231,7 +235,7 @@ begin
 end function;
 
 async function VerifyLateAcquisition(): Tasks.Task;
-  function Acquire(Value: int; Token: T.CancellationToken): Tasks.Task<Fx.Outcome<int, string>>;
+  function Acquire(Value: int; Token: T.CancellationToken): Tasks.Task of Fx.Outcome of (int, string);
   begin
     return Acquired.Task;
   end function;
@@ -243,22 +247,22 @@ async function VerifyLateAcquisition(): Tasks.Task;
     return Tasks.Task.CompletedTask;
   end function;
 
-  function Use(Lifetime: S.Scope): Tasks.Task<Tasks.Task<Fx.Outcome<int, string>>>;
+  function Use(Lifetime: S.Scope): Tasks.Task of Tasks.Task of Fx.Outcome of (int, string);
   begin
-    const Dependency: L.Layer<int, string, int> := L.Layer<int, string, int>.Create(
-      Fx.Effect<int, string, int>.Defer(Acquire), Release
+    const Dependency: L.Layer of (int, string, int) := L.Layer of (int, string, int).Create(
+      Fx.Effect of (int, string, int).Defer(Acquire), Release
     );
     // Deliberately let acquisition escape so it finishes after its owner closes.
-    return Tasks.Task.FromResult<Tasks.Task<Fx.Outcome<int, string>>>(
+    return Tasks.Task.FromResult of Tasks.Task of Fx.Outcome of (int, string)(
       Dependency.Build(42, Lifetime)
     );
   end function;
 begin
   var Released: int := 0;
-  const Acquired: Tasks.TaskCompletionSource<Fx.Outcome<int, string>> := new Tasks.TaskCompletionSource<Fx.Outcome<int, string>>(
+  const Acquired: Tasks.TaskCompletionSource of Fx.Outcome of (int, string) := new Tasks.TaskCompletionSource of Fx.Outcome of (int, string)(
     Tasks.TaskCreationOptions.RunContinuationsAsynchronously
   );
-  const Pending: Tasks.Task<Fx.Outcome<int, string>> := await S.Scope.Use<Tasks.Task<Fx.Outcome<int, string>>>(
+  const Pending: Tasks.Task of Fx.Outcome of (int, string) := await S.Scope.Use of Tasks.Task of Fx.Outcome of (int, string)(
     Use,
     T.CancellationToken.None
   );

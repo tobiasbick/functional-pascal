@@ -26,7 +26,7 @@ uses Fpas.Ui.Widgets.Editors.NodeEditors as D;
 // - `Changed`: Maps native proposals to messages.
 // - `Settings`: Native widget settings.
 // - `Visit`: Presents embedded content.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Viewport: D.View; Nodes: array of D.Node<TMsg>; Links: array of D.Link; Changed: function(D.Event): TMsg; Settings: D.Options; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Viewport: D.View; Nodes: array of D.Node of TMsg; Links: array of D.Link; Changed: function(D.Event): TMsg; Settings: D.Options; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
 begin
   const Role: string := 'node-editor';
   const Token: string := C.Token(Role, Id);
@@ -47,12 +47,12 @@ begin
   then
     return;
   end if;
-  const BodyFrame: C.State<TMsg> := Frame with
+  const BodyFrame: C.State of TMsg := Frame with
     AcceptInput := Enabled;
     Interactive := Frame.Interactive and Settings.Enabled;
     PaintingClosed := Frame.PaintingClosed or not Settings.Enabled;
   end with;
-  for Item: D.Node<TMsg> in Nodes do
+  for Item: D.Node of TMsg in Nodes do
     var X: float := Item.X;
     var Y: float := Item.Y;
     Frame.Window.BeginNode(Item.Id, ref X, ref Y, Item.Title, Item.Width, Item.Icon);
@@ -61,7 +61,7 @@ begin
     end for;
 
     case Item.Body of
-      when is E.Element<TMsg> as Content:
+      when is E.Element of TMsg as Content:
         Frame.Window.BeginNodeContent();
         Visit(Content, BodyFrame, false, L.Alignment.Default);
         Frame.Window.EndNodeContent();
@@ -84,7 +84,7 @@ begin
     Frame.Window.NodeLink(Link.Id, Link.FromPin, Link.ToPin);
   end for;
   const Next: CuiEditors.CuiNodeView := Frame.Window.EndNodeEditor();
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, Next.Zoom.ToString());
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, Next.Zoom.ToString());
   if Enabled then
     if Next.X <> Viewport.X or Next.Y <> Viewport.Y or Next.Zoom <> Viewport.Zoom then
       Frame.Messages.Add(Changed(D.Event.Pan(new D.View(Next.X, Next.Y, Next.Zoom))));

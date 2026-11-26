@@ -65,10 +65,10 @@ begin
   R.CheckText(Settings.Unit, At + '/unit');
   R.CheckText(Settings.Detail, At + '/detail');
   LR.CheckExtent(Settings.Width, R.Profile.Graphical, At);
-  if not Sys.Enum.IsDefined<Readouts.Size>(
+  if not Sys.Enum.IsDefined of Readouts.Size(
     Settings.Size
-  ) or not Sys.Enum.IsDefined<Styles.Tone>(Settings.Tone)
-    or not Sys.Enum.IsDefined<Tables.Alignment>(Settings.Align)
+  ) or not Sys.Enum.IsDefined of Styles.Tone(Settings.Tone)
+    or not Sys.Enum.IsDefined of Tables.Alignment(Settings.Align)
   then
     R.Reject(At, 'Invalid readout size, tone or alignment.');
   end if;
@@ -85,14 +85,14 @@ begin
   LR.CheckExtent(Settings.Width, R.Profile.Graphical, At);
   Feedback.Nonnegative(Settings.Pitch, At);
   ChartRules.Color(Settings.Color, At);
-  if not Sys.Enum.IsDefined<Tables.Alignment>(Settings.Align) then
+  if not Sys.Enum.IsDefined of Tables.Alignment(Settings.Align) then
     R.Reject(At, 'Invalid dot display alignment.');
   end if;
 end procedure;
 
 procedure Axis(Lo: double; Hi: double; Step: double; Units: Dots.AxisUnits; At: string);
 begin
-  if not Sys.Enum.IsDefined<Dots.AxisUnits>(Units) or not Sys.Double.IsFinite(Lo)
+  if not Sys.Enum.IsDefined of Dots.AxisUnits(Units) or not Sys.Double.IsFinite(Lo)
     or not Sys.Double.IsFinite(Hi) or not Sys.Double.IsFinite(Hi - Lo)
     or not Sys.Double.IsFinite(Step) or Step < 0.0
     or (Step > 0.0 and (Lo + Step <= Lo or Hi - Step >= Hi))
@@ -151,7 +151,7 @@ begin
   for Item: Charts.Annotation in Settings.Annotations do
     R.CheckText(Item.Label, At);
     R.CheckText(Item.Detail, At);
-    if not Sys.Enum.IsDefined<Charts.AnnotationKind>(Item.Kind)
+    if not Sys.Enum.IsDefined of Charts.AnnotationKind(Item.Kind)
       or not Sys.Double.IsFinite(Item.X) or not Sys.Double.IsFinite(Item.Y)
     then
       R.Reject(At, 'Chart annotations need finite coordinates and a known kind.');

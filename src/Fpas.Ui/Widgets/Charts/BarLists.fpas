@@ -35,10 +35,10 @@ end record;
 // - `OnActivate`: Optional native click callback.
 // ## Returns
 // A graphical element.
-public function BarList<TMsg>(Id: string; Items: array of C.Item; Settings: Options? := null; OnActivate: Sys.Func<int, TMsg>? := null): E.Element<TMsg>;
+public function BarList of TMsg(Id: string; Items: array of C.Item; Settings: Options? := null; OnActivate: Sys.Func of (int, TMsg)? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.BarList(Id, Items, Settings ?? new Options(), OnActivate);
+  return (E.Element of TMsg).BarList(Id, Items, Settings ?? new Options(), OnActivate);
 end function;
 
 end unit;

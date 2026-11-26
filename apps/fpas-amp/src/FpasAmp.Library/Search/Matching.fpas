@@ -46,7 +46,7 @@ public type Document = record
   // finds "Pink Floyd".
   public static function Create(Fields: array of Field): Document;
   begin
-    const Terms: C.List<Term> := new C.List<Term>();
+    const Terms: C.List of Term := new C.List of Term();
     for Item: Field in Fields do
       const Parts: array of string := Tokens.Words(Item.Text);
       for Index: int := 0 to Parts.Length - 1 do
@@ -58,7 +58,7 @@ public type Document = record
       end for;
     end for;
 
-    const Texts: array of string := Sys.Array.ConvertAll<Field, string>(
+    const Texts: array of string := Sys.Array.ConvertAll of (Field, string)(
       Fields, function(Item: Field): string => Item.Text
     );
     return new Document(Terms.ToArray(), Texts);
@@ -83,7 +83,7 @@ public type Query = record
   // The query; empty when `Text` contains no words or phrases.
   public static function Parse(Text: string): Query;
   begin
-    const Distinct: C.List<string> := new C.List<string>();
+    const Distinct: C.List of string := new C.List of string();
     const Parts: Tokens.QueryParts := Tokens.ParseQuery(Text);
     for Word: string in Parts.Words do
       if not Distinct.Contains(Word) then
@@ -91,7 +91,7 @@ public type Query = record
       end if;
     end for;
 
-    const Codes: C.List<string> := new C.List<string>();
+    const Codes: C.List of string := new C.List of string();
     for Word: string in Distinct do
       Codes.Add(Tokens.Phonetic(Word));
     end for;
@@ -175,7 +175,7 @@ end function;
 // One score per document, in the same order; zero means no match. Matches far
 // below the best one are dropped as noise in searches without quotes. An empty
 // query scores everything zero.
-public function Rank(Search: Query; Documents: I.ImmutableArray<Document>): array of double;
+public function Rank(Search: Query; Documents: I.ImmutableArray of Document): array of double;
 begin
   const Scores: array of double := new double[Documents.Length];
   if Search.IsEmpty() or Documents.Length = 0 then

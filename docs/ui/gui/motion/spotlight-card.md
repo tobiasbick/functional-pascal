@@ -21,9 +21,9 @@ uses Fpas.Ui.Widgets.Motion.Spotlights as W;
 // - `Active`: Whether to draw the beam.
 // ## Returns
 // The card with its supplied contents.
-public function View(Heading: string; Detail: string; Active: bool): E.Element<string>;
+public function View(Heading: string; Detail: string; Active: bool): E.Element of string;
 begin
-  return W.Spotlight<string>('renderer', [E.Text<string>(Heading), E.Text<string>(Detail)],
+  return W.Spotlight of string('renderer', [E.Text of string(Heading), E.Text of string(Detail)],
     new W.Options(Beam := Active));
 end function;
 

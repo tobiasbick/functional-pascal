@@ -58,10 +58,10 @@ end record;
 // - `Settings`: Optional input and appearance settings.
 // ## Returns
 // A portable button.
-public function Button<TMsg>(Id: string; Text: string; Message: TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function Button of TMsg(Id: string; Text: string; Message: TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.ButtonAction(Id, Text, Message, Settings ?? new Options());
+  return (E.Element of TMsg).ButtonAction(Id, Text, Message, Settings ?? new Options());
 end function;
 
 end unit;

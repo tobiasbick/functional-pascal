@@ -14,9 +14,9 @@ uses System.Threading.Tasks as Tasks;
 //
 // ## Type parameters
 // - `A`: The child's result type.
-public type Child<A> = record
+public type Child of A = record
   // The result task. It completes after the child's own cleanup.
-  public Join: Tasks.Task<A>;
+  public Join: Tasks.Task of A;
   // Requests cancellation of this child and returns its cancellation callback task.
   public Cancel: function(): Tasks.Task;
 end record;
@@ -26,17 +26,17 @@ public type Scope = record
   // Pass this token to work that belongs to this scope.
   public Token: Threads.CancellationToken;
   Gate: object;
-  Closed: Runtime.StrongBox<bool>;
-  Children: C.List<Tasks.Task>;
-  Finalizers: C.List<function(): Tasks.Task>;
-  Request: Sys.Lazy<Tasks.Task>;
+  Closed: Runtime.StrongBox of bool;
+  Children: C.List of Tasks.Task;
+  Finalizers: C.List of function(): Tasks.Task;
+  Request: Sys.Lazy of Tasks.Task;
 
   static function Open(Source: Threads.CancellationTokenSource): Scope;
   begin
     return new Scope(
-      Source.Token, new object(), new Runtime.StrongBox<bool>(false),
-      new C.List<Tasks.Task>(), new C.List<function(): Tasks.Task>(),
-      new Sys.Lazy<Tasks.Task>(Source.CancelAsync)
+      Source.Token, new object(), new Runtime.StrongBox of bool(false),
+      new C.List of Tasks.Task(), new C.List of function(): Tasks.Task(),
+      new Sys.Lazy of Tasks.Task(Source.CancelAsync)
     );
   end function;
 
@@ -82,7 +82,7 @@ public type Scope = record
   //
   // ## Returns
   // A handle for joining or cancelling the child independently.
-  public function Fork<A>(Work: function(Scope): Tasks.Task<A>): Child<A>;
+  public function Fork of A(Work: function(Scope): Tasks.Task of A): Child of A;
   begin
     Threads.Monitor.Enter(self.Gate);
     try
@@ -91,27 +91,27 @@ public type Scope = record
       const Source: Threads.CancellationTokenSource := new Threads.CancellationTokenSource();
       const Nested: Scope := Scope.Open(Source);
       const Parent: Threads.CancellationToken := self.Token;
-      const Running: Tasks.Task<A> := Tasks.TaskExtensions.Unwrap<A>(
-        Tasks.Task.Run<Tasks.Task<A>>(
-          function(): Tasks.Task<A> => Nested.Execute<A>(Work, Source, Parent)
+      const Running: Tasks.Task of A := Tasks.TaskExtensions.Unwrap of A(
+        Tasks.Task.Run of Tasks.Task of A(
+          function(): Tasks.Task of A => Nested.Execute of A(Work, Source, Parent)
         )
       );
       self.Children.Add(Running);
-      return new Child<A>(Running, Nested.Cancel);
+      return new Child of A(Running, Nested.Cancel);
     finally
       Threads.Monitor.Exit(self.Gate);
     end try;
   end function;
 
-  async function Execute<A>(
-    Work: function(Scope): Tasks.Task<A>; Source: Threads.CancellationTokenSource; Parent: Threads.CancellationToken
-  ): Tasks.Task<A>;
+  async function Execute of A(
+    Work: function(Scope): Tasks.Task of A; Source: Threads.CancellationTokenSource; Parent: Threads.CancellationToken
+  ): Tasks.Task of A;
     procedure CancelFromParent();
     begin
       discard self.Cancel();
     end procedure;
 
-    async function Invoke(): Tasks.Task<A>;
+    async function Invoke(): Tasks.Task of A;
     begin
       self.Token.ThrowIfCancellationRequested();
       return await Work(self).ConfigureAwait(false);
@@ -121,7 +121,7 @@ public type Scope = record
     using const Registration: Threads.CancellationTokenRegistration := Parent.Register(
       CancelFromParent
     );
-    const Body: Tasks.Task<A> := Invoke();
+    const Body: Tasks.Task of A := Invoke();
     var Primary: Sys.Exception? := null;
     try
       discard await Body.ConfigureAwait(false);
@@ -129,7 +129,7 @@ public type Scope = record
       Primary := Failure;
     end try;
 
-    const Faults: C.List<Sys.Exception> := new C.List<Sys.Exception>();
+    const Faults: C.List of Sys.Exception := new C.List of Sys.Exception();
     await self.Close(Faults).ConfigureAwait(false);
     if Faults.Count > 0 then
       if Primary <> null and not Faults.Contains(Primary) then
@@ -161,7 +161,7 @@ public type Scope = record
     return await Body.ConfigureAwait(false);
   end function;
 
-  async function Close(Faults: C.List<Sys.Exception>): Tasks.Task;
+  async function Close(Faults: C.List of Sys.Exception): Tasks.Task;
   begin
     Threads.Monitor.Enter(self.Gate);
     try
@@ -200,14 +200,14 @@ public type Scope = record
   //
   // ## Returns
   // The body result after all owned children and finalizers finish.
-  public static function Use<A>(Work: function(Scope): Tasks.Task<A>; Cancellation: Threads.CancellationToken): Tasks.Task<A>;
+  public static function Use of A(Work: function(Scope): Tasks.Task of A; Cancellation: Threads.CancellationToken): Tasks.Task of A;
   begin
     const Source: Threads.CancellationTokenSource := new Threads.CancellationTokenSource();
-    return Scope.Open(Source).Execute<A>(Work, Source, Cancellation);
+    return Scope.Open(Source).Execute of A(Work, Source, Cancellation);
   end function;
 end record;
 
-async function Observe(Work: Tasks.Task; Faults: C.List<Sys.Exception>; IgnoreCancellation: bool): Tasks.Task;
+async function Observe(Work: Tasks.Task; Faults: C.List of Sys.Exception; IgnoreCancellation: bool): Tasks.Task;
 begin
   try
     await Work.ConfigureAwait(false);

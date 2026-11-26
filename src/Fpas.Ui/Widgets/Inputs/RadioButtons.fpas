@@ -17,13 +17,13 @@ uses Fpas.Ui.Elements as E;
 // - `Enabled`: Whether the row accepts input.
 // ## Returns
 // The graphical control that proposes changes to the model.
-public function RadioButton<TMsg>(
+public function RadioButton of TMsg(
   Id: string; Label: string; Selected: bool; OnSelect: function(): TMsg;
   Description: string := ''; Enabled: bool := true
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.RadioAction(Id, Label, Selected, OnSelect, Description, Enabled);
+  return (E.Element of TMsg).RadioAction(Id, Label, Selected, OnSelect, Description, Enabled);
 end function;
 
 end unit;

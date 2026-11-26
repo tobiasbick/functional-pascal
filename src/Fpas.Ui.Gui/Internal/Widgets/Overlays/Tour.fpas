@@ -38,17 +38,17 @@ end function;
 // - `Current`: Model-owned step, minus one when closed.
 // - `OnChange`: Maps native step proposals to messages.
 // - `Settings`: Native card and spotlight options.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Steps: array of T.Step;
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Steps: array of T.Step;
   Current: int; OnChange: function(T.Change): TMsg; Settings: T.Options
 );
 begin
   if Current < 0 or Frame.PaintingClosed then
     return;
   end if;
-  const Targets: Lists.List<string> := new Lists.List<string>(Steps.Length);
-  const Titles: Lists.List<string> := new Lists.List<string>(Steps.Length);
-  const Bodies: Lists.List<string> := new Lists.List<string>(Steps.Length);
+  const Targets: Lists.List of string := new Lists.List of string(Steps.Length);
+  const Titles: Lists.List of string := new Lists.List of string(Steps.Length);
+  const Bodies: Lists.List of string := new Lists.List of string(Steps.Length);
   const Positions: array of int := new int[Steps.Length];
   for Index: int := 0 to Steps.Length - 1 do
     var Target: string := '';
@@ -66,7 +66,7 @@ begin
   end for;
   var Focus: int := 0;
   for Slot: int := 0 to 2 do
-    if (Slot <> 1 or Current > 0) and C.WantsFocus<TMsg>(
+    if (Slot <> 1 or Current > 0) and C.WantsFocus of TMsg(
       Frame,
       PartId(Id, Slot), C.Token(Role(Slot), PartId(Id, Slot)), Frame.AcceptInput
     )

@@ -19,13 +19,13 @@ uses Fpas.Ui.Widgets.Collections.FilterBars as W;
 // - `Current`: Model-owned masks and search text.
 // ## Returns
 // The bar with each proposed filter state as an application message.
-public function View(Current: W.Value): E.Element<W.Value>;
+public function View(Current: W.Value): E.Element of W.Value;
 begin
   const Fields: array of W.Field := [
     new W.Field('Team', ['Engine', 'Design', 'Platform']),
     new W.Field('Status', ['Active', 'Away', 'Invited'])
   ];
-  return W.FilterBar<W.Value>('people-filters', Fields, Current,
+  return W.FilterBar of W.Value('people-filters', Fields, Current,
     function(Value: W.Value): W.Value => Value);
 end function;
 

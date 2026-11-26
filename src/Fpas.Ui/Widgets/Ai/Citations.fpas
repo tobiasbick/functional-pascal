@@ -24,10 +24,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function Citation<TMsg>(Id: string; Number: int; Source: Sources.Item?; Activate: Sys.Func<TMsg>?; Settings: Options? := null): E.Element<TMsg>;
+public function Citation of TMsg(Id: string; Number: int; Source: Sources.Item?; Activate: (Sys.Func of TMsg)?; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Citation(Id, Number, Source, Activate, Settings ?? new Options());
+  return (E.Element of TMsg).Citation(Id, Number, Source, Activate, Settings ?? new Options());
 end function;
 
 end unit;

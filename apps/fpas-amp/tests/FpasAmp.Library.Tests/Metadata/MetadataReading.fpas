@@ -31,14 +31,14 @@ public type MetadataReadingTests = record
       IO.Path.Combine(Root.Path, 'untagged.mp3')
     );
     await using const Session: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
-    const Values: I.ImmutableArray<M.Entry> := await F.Until(
+    const Values: I.ImmutableArray of M.Entry := await F.Until(
       F.Tags(Session),
-      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 1
     );
     X.Assert.Null(Values[0].Error);
     const Tags: MediaTags.Info := Values[0].Metadata ?? new MediaTags.Info();
-    X.Assert.Equal<string>('', Tags.Title);
-    X.Assert.Equal<int>(0, Tags.Artists.Length);
+    X.Assert.Equal of string('', Tags.Title);
+    X.Assert.Equal of int(0, Tags.Artists.Length);
     X.Assert.Null(Tags.TrackNumber);
     X.Assert.Null(Tags.TrackTotal);
     X.Assert.Null(Tags.DiscNumber);
@@ -58,14 +58,14 @@ public type MetadataReadingTests = record
     const Path: string := F.Write(Root.Path, 'track' + Extension, Fixture := Fixture);
     await using const Session: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
     const Tags: Metadata.Session := F.Tags(Session);
-    const Values: I.ImmutableArray<M.Entry> := await F.Until(
+    const Values: I.ImmutableArray of M.Entry := await F.Until(
       Tags,
-      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 1
     );
     const Entry: M.Entry := Values[0];
     X.Assert.Null(Entry.Error);
     X.Assert.True(Entry.TrackId.Length = 32);
-    X.Assert.Equal<int>(64, Entry.Sha256.Length);
+    X.Assert.Equal of int(64, Entry.Sha256.Length);
     X.Assert.Null(Entry.Rating);
     const Fields: MediaTags.Info? := Entry.Metadata;
     X.Assert.True(Fields <> null);
@@ -73,35 +73,35 @@ public type MetadataReadingTests = record
       return;
     end if;
 
-    X.Assert.Equal<string>('Stück', Fields.Title);
-    X.Assert.Equal<string>('Älbum', Fields.Album);
-    X.Assert.Equal<int>(2, Fields.Artists.Length);
-    X.Assert.Equal<string>('AC/DC', Fields.Artists[0]);
-    X.Assert.Equal<string>('Björk', Fields.Artists[1]);
-    X.Assert.Equal<int>(2, Fields.Genres.Length);
-    X.Assert.Equal<int?>(2, Fields.TrackNumber);
-    X.Assert.Equal<int?>(12, Fields.TrackTotal);
-    X.Assert.Equal<int?>(2, Fields.DiscTotal);
+    X.Assert.Equal of string('Stück', Fields.Title);
+    X.Assert.Equal of string('Älbum', Fields.Album);
+    X.Assert.Equal of int(2, Fields.Artists.Length);
+    X.Assert.Equal of string('AC/DC', Fields.Artists[0]);
+    X.Assert.Equal of string('Björk', Fields.Artists[1]);
+    X.Assert.Equal of int(2, Fields.Genres.Length);
+    X.Assert.Equal of int? (2, Fields.TrackNumber);
+    X.Assert.Equal of int? (12, Fields.TrackTotal);
+    X.Assert.Equal of int? (2, Fields.DiscTotal);
     X.Assert.True(Fields.ReleaseDate.StartsWith('2024'));
-    X.Assert.Equal<double?>(120.0, Fields.Bpm);
-    X.Assert.Equal<double?>(-3.25, Fields.ReplayGainTrack);
-    X.Assert.Equal<string>('11111111-1111-1111-1111-111111111111', Fields.MusicBrainzReleaseId);
+    X.Assert.Equal of double? (120.0, Fields.Bpm);
+    X.Assert.Equal of double? (-3.25, Fields.ReplayGainTrack);
+    X.Assert.Equal of string('11111111-1111-1111-1111-111111111111', Fields.MusicBrainzReleaseId);
     X.Assert.True(Fields.DurationMilliseconds > 0.0);
     X.Assert.True(Fields.SampleRate > 0.0);
-    X.Assert.Equal<int?>(2, Fields.Channels);
-    const Filtered: I.ImmutableArray<M.Entry> := await Tags.QueryAsync(
+    X.Assert.Equal of int? (2, Fields.Channels);
+    const Filtered: I.ImmutableArray of M.Entry := await Tags.QueryAsync(
       new M.Query(Album := 'älbum', Artist := 'björk', Genre := 'rock'), T.CancellationToken.None
     );
-    X.Assert.Equal<int>(1, Filtered.Length);
+    X.Assert.Equal of int(1, Filtered.Length);
     await Tags.SetRatingAsync(Entry.TrackId, 10, T.CancellationToken.None);
-    const Rated: I.ImmutableArray<M.Entry> := await Tags.QueryAsync(
+    const Rated: I.ImmutableArray of M.Entry := await Tags.QueryAsync(
       new M.Query(MinimumRating := 10),
       T.CancellationToken.None
     );
-    X.Assert.Equal<int>(1, Rated.Length);
-    X.Assert.Equal<int?>(10, Rated[0].Rating);
+    X.Assert.Equal of int(1, Rated.Length);
+    X.Assert.Equal of int? (10, Rated[0].Rating);
     await Tags.SetRatingAsync(Entry.TrackId, null, T.CancellationToken.None);
-    X.Assert.Equal<int>(
+    X.Assert.Equal of int(
       0,
       (await Tags.QueryAsync(new M.Query(MinimumRating := 1), T.CancellationToken.None)).Length
     );
@@ -117,24 +117,24 @@ public type MetadataReadingTests = record
     const Path: string := F.Write(Root.Path, 'track.mp3');
     await using const Session: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
     const Tags: Metadata.Session := F.Tags(Session);
-    const Before: I.ImmutableArray<M.Entry> := await F.Until(
+    const Before: I.ImmutableArray of M.Entry := await F.Until(
       Tags,
-      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1
+      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 1
     );
     await Tags.SetRatingAsync(Before[0].TrackId, 7, T.CancellationToken.None);
     const Changed: A.Track := new A.Track(Path);
     Changed.Title := 'New title';
     X.Assert.True(Changed.Save());
     Session.Refresh();
-    const After: I.ImmutableArray<M.Entry> := await F.Until(
+    const After: I.ImmutableArray of M.Entry := await F.Until(
       Tags,
-      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 1 and Items[
+      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 1 and Items[
         0
       ].Sha256 <> Before[0].Sha256
     );
-    X.Assert.Equal<string>(Before[0].TrackId, After[0].TrackId);
-    X.Assert.Equal<int?>(7, After[0].Rating);
-    X.Assert.Equal<string>('New title', (After[0].Metadata ?? new MediaTags.Info()).Title);
+    X.Assert.Equal of string(Before[0].TrackId, After[0].TrackId);
+    X.Assert.Equal of int? (7, After[0].Rating);
+    X.Assert.Equal of string('New title', (After[0].Metadata ?? new MediaTags.Info()).Title);
   end function;
 
   // One malformed file records its failure without preventing other files from being read.
@@ -146,9 +146,9 @@ public type MetadataReadingTests = record
     discard F.Write(Root.Path, 'good.ogg');
     IO.File.WriteAllText(IO.Path.Combine(Root.Path, 'bad.mp3'), 'not audio');
     await using const Session: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
-    const Values: I.ImmutableArray<M.Entry> := await F.Until(
+    const Values: I.ImmutableArray of M.Entry := await F.Until(
       F.Tags(Session),
-      function(Items: I.ImmutableArray<M.Entry>): bool => Items.Length = 2
+      function(Items: I.ImmutableArray of M.Entry): bool => Items.Length = 2
     );
     var Good: int := 0;
     var Bad: int := 0;
@@ -160,8 +160,8 @@ public type MetadataReadingTests = record
       end if;
     end for;
 
-    X.Assert.Equal<int>(1, Good);
-    X.Assert.Equal<int>(1, Bad);
+    X.Assert.Equal of int(1, Good);
+    X.Assert.Equal of int(1, Bad);
     X.Assert.False(F.Tags(Session).Completion.IsCompleted);
   end function;
 end record;

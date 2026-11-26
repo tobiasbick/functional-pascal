@@ -19,7 +19,7 @@ uses GuiGallery.Shared.State as Demo;
 // - `Model`: Current appearance choices and simulated provider value.
 // ## Returns
 // The original row with the selector and light/dark toggle.
-public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+public function View(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
   function Choose(Appearance: Themes.Mode): State.Msg;
   begin
     return State.Msg.Shared(
@@ -33,9 +33,9 @@ public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>
     );
   end function;
 begin
-  return E.Row<State.Msg>(
+  return E.Row of State.Msg(
     new L.Flow(Gap := G.Points(16), Wrap := true),
-    Switchers.ThemeSwitcher<State.Msg>(
+    Switchers.ThemeSwitcher of State.Msg(
       'theme-preview',
       Data.Appearance,
       function(SharedValue: Switchers.Selection): State.Msg => State.Msg.Shared(
@@ -43,7 +43,7 @@ begin
       ),
       new Switchers.Options(WithSystem := true)
     ),
-    Toggles.ThemeToggle<State.Msg>(
+    Toggles.ThemeToggle of State.Msg(
       'theme-toggle',
       Switchers.Resolve(Data.Appearance, Data.SystemAppearance),
       Choose

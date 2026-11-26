@@ -53,10 +53,10 @@ end record;
 async function Drain(
   Reader: IO.StreamReader; MaximumCharacters: int;
   Cancellation: Threading.CancellationToken
-): Tasks.Task<CapturedText>;
+): Tasks.Task of CapturedText;
 begin
   const Buffer: array of char := new char[4096];
-  const Memory: Sys.Memory<char> := new Sys.Memory<char>(Buffer);
+  const Memory: Sys.Memory of char := new Sys.Memory of char(Buffer);
   const Prefix: Text.StringBuilder := new Text.StringBuilder();
   var Truncated: bool := false;
   while true do
@@ -82,7 +82,7 @@ public async function Run(
   Options: Diagnostics.ProcessStartInfo;
   TimeoutMilliseconds: int; MaximumCharacters: int;
   Cancellation: Threading.CancellationToken
-): Tasks.Task<Result>;
+): Tasks.Task of Result;
 requires TimeoutMilliseconds > 0;
 requires MaximumCharacters >= 0;
 begin
@@ -104,18 +104,18 @@ begin
   end if;
 
   Deadline.CancelAfter(TimeoutMilliseconds);
-  const Output: Tasks.Task<CapturedText> := Drain(
+  const Output: Tasks.Task of CapturedText := Drain(
     Child.StandardOutput,
     MaximumCharacters,
     Deadline.Token
   );
-  const Error: Tasks.Task<CapturedText> := Drain(
+  const Error: Tasks.Task of CapturedText := Drain(
     Child.StandardError,
     MaximumCharacters,
     Deadline.Token
   );
-  const Readers: array of Tasks.Task<CapturedText> := [Output, Error];
-  const Reading: Tasks.Task<array of CapturedText> := Tasks.Task.WhenAll<CapturedText>(Readers);
+  const Readers: array of Tasks.Task of CapturedText := [Output, Error];
+  const Reading: Tasks.Task of array of CapturedText := Tasks.Task.WhenAll of CapturedText(Readers);
   try
     Child.StandardInput.Close();
     await Child.WaitForExitAsync(Deadline.Token).ConfigureAwait(false);

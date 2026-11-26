@@ -21,9 +21,9 @@ uses Fpas.Ui.Widgets.Developer.RequestBars as W;
 // - `Loading`: Whether an application request is in progress.
 // ## Returns
 // The request bar with edits and send or cancel intents.
-public function View(Method: int; Url: string; Loading: bool): E.Element<W.Event>;
+public function View(Method: int; Url: string; Loading: bool): E.Element of W.Event;
 begin
-  return W.RequestBar<W.Event>('request', Method, Url,
+  return W.RequestBar of W.Event('request', Method, Url,
     function(Change: W.Event): W.Event => Change, new W.Options(Loading := Loading));
 end function;
 

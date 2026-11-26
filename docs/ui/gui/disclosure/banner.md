@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Feedback.Banners as W;
 // - `Open`: Current visibility from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Open: bool): E.Element<string>;
+public function View(Open: bool): E.Element of string;
 begin
-  return W.Banner<string>('release-banner', 'Version 1.1 is out.', Open,
+  return W.Banner of string('release-banner', 'Version 1.1 is out.', Open,
     function(): string => 'dismiss-banner', function(): string => 'read-notes',
     new W.Options(ActionLabel := 'Read the notes'));
 end function;

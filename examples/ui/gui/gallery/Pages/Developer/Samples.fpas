@@ -452,7 +452,7 @@ const FrameSpans: array of T.Span := [
 
 function TraceSpans(): array of T.Span;
 begin
-  const Values: Lists.List<T.Span> := new Lists.List<T.Span>(3 * FrameSpans.Length);
+  const Values: Lists.List of T.Span := new Lists.List of T.Span(3 * FrameSpans.Length);
   for Lane: int := 0 to 4 do
     for Depth: int := 0 to 2 do
       for Frame: int := 0 to 2 do

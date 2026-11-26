@@ -62,13 +62,13 @@ end function;
 
 // Maps Values onto matching names already in Current. Unmatched proposals use the
 // format's customary spelling. Returns both the standard and the mapped custom values.
-public function MatchNames(Current: M.State; Values: I.ImmutableDictionary<string, string>): I.ImmutableDictionary<string, string>;
+public function MatchNames(Current: M.State; Values: I.ImmutableDictionary of (string, string)): I.ImmutableDictionary of (string, string);
 begin
   const Extension: string := (IO.Path.GetExtension(Current.Track.Path) ?? '').ToLowerInvariant();
   const Vorbis: bool := Extension = '.flac' or Extension = '.ogg' or Extension = '.opus'
     or Extension = '.oga';
-  const Result: I.ImmutableDictionary<string, string>.Builder := I.ImmutableDictionary.CreateBuilder<string, string>();
-  for Pair: C.KeyValuePair<string, string> in Values do
+  const Result: I.ImmutableDictionary of (string, string).Builder := I.ImmutableDictionary.CreateBuilder of (string, string)();
+  for Pair: C.KeyValuePair of (string, string) in Values do
     if not Pair.Key.StartsWith(F.Custom) then
       Result[Pair.Key] := Pair.Value;
       continue;

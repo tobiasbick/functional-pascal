@@ -20,12 +20,12 @@ uses System.Collections.Generic as Lists;
 // - `Id`: Stable identity.
 // - `Parts`: Named nonnegative amounts.
 // - `Settings`: Native presentation.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Parts: array of P.Part; Settings: P.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Parts: array of P.Part; Settings: P.Options);
 begin
   const Token: string := C.Token('pattern-meter', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Width: Size.NativeExtent := Size.Extent(Settings.Width);
-  const Values: Lists.List<CuiCharts.CuiMeterPart> := new Lists.List<CuiCharts.CuiMeterPart>();
+  const Values: Lists.List of CuiCharts.CuiMeterPart := new Lists.List of CuiCharts.CuiMeterPart();
   for Item: P.Part in Parts do
     Values.Add(
       new CuiCharts.CuiMeterPart(Item.Name, Item.Value, Data.Color(Item.Color), Item.Density)
@@ -45,7 +45,7 @@ begin
   );
   const Shown: int := Frame.Window.PatternMeter(
     Token, Values.ToArray(), Options, Enabled,
-    C.WantsFocus<TMsg>(Frame, Id, Token, Enabled), not Frame.PaintingClosed
+    C.WantsFocus of TMsg(Frame, Id, Token, Enabled), not Frame.PaintingClosed
   );
   if Frame.PaintingClosed then
     return;

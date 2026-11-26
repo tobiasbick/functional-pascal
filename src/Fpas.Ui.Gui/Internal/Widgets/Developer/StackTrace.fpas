@@ -12,11 +12,11 @@ uses System.Collections.Generic as Lists;
 
 function PackStackFrame(Items: array of D.Frame): array of CuiDeveloper.CuiDevStackFrame;
 begin
-  const Native: Lists.List<CuiDeveloper.CuiDevStackFrame> := new Lists.List<CuiDeveloper.CuiDevStackFrame>(
+  const Native: Lists.List of CuiDeveloper.CuiDevStackFrame := new Lists.List of CuiDeveloper.CuiDevStackFrame(
     Items.Length
   );
   for Entry: D.Frame in Items do
-    const Source: Lists.List<string?> := new Lists.List<string?>(Entry.Source.Length);
+    const Source: Lists.List of string? := new Lists.List of string? (Entry.Source.Length);
     for Line: string in Entry.Source do
       Source.Add(Line);
     end for;
@@ -46,7 +46,7 @@ end function;
 // - `Frames`: Frames supplied to the widget.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Frames: array of D.Frame; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Frames: array of D.Frame; Changed: function(D.Event): TMsg; Settings: D.Options);
 begin
   const Role: string := 'stack-trace';
   const Token: string := C.Token(Role, Id);
@@ -62,7 +62,7 @@ begin
     Width.Value,
     Enabled
   );
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, '');
   if Enabled and (Result.Action >= 0) then
     Frame.Messages.Add(Changed(new D.Event(Result.Action)));
   end if;

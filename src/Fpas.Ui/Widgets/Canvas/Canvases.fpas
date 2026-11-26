@@ -112,10 +112,10 @@ end record;
 // - `OnInput`: Optional ordered keyboard/text mapper. Enables component focus and leaves Tab navigation to CUI.
 // ## Returns
 // A graphical element.
-public function Canvas<TMsg>(Id: string; Drawing: array of Shape; Clicked: function(Event): TMsg; Settings: Options? := null; OnWheel: Sys.Func<Wheel, TMsg>? := null; Paint: Sys.Action<Painting.Surface>? := null; OnPointer: Sys.Func<Pointer, TMsg>? := null; OnInput: Sys.Func<Input, TMsg>? := null): E.Element<TMsg>;
+public function Canvas of TMsg(Id: string; Drawing: array of Shape; Clicked: function(Event): TMsg; Settings: Options? := null; OnWheel: Sys.Func of (Wheel, TMsg)? := null; Paint: (Sys.Action of Painting.Surface)? := null; OnPointer: Sys.Func of (Pointer, TMsg)? := null; OnInput: Sys.Func of (Input, TMsg)? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Canvas(
+  return (E.Element of TMsg).Canvas(
     Id,
     Drawing,
     Clicked,

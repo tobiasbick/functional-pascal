@@ -20,34 +20,34 @@ uses GuiGallery.Shared.Sections as G;
 // - `Model`: Model-owned choices, due date, seat count and brand color.
 // ## Returns
 // The Pickers section of the Inputs page.
-public function View(Model: State.Model): E.Element<State.Msg>;
+public function View(Model: State.Model): E.Element of State.Msg;
 begin
-  const Country: E.Element<State.Msg> := Choices.Country<State.Msg>(
+  const Country: E.Element of State.Msg := Choices.Country of State.Msg(
     Model.Country,
     State.Msg.SetCountry
   );
-  const Language: E.Element<State.Msg> := Choices.Language<State.Msg>(
+  const Language: E.Element of State.Msg := Choices.Language of State.Msg(
     Model.Language,
     State.Msg.SetLanguage
   );
-  const Due: E.Element<State.Msg> := D.DatePicker<State.Msg>(
+  const Due: E.Element of State.Msg := D.DatePicker of State.Msg(
     'input-due-date', Model.DueDate, State.Msg.SetDueDate, new D.Options(Label := 'Due date')
   );
-  const Seats: E.Element<State.Msg> := N.NumberField<State.Msg>(
+  const Seats: E.Element of State.Msg := N.NumberField of State.Msg(
     'input-seats', Model.Seats, 0.0, 99.0, State.Msg.SetSeats, new N.Options(Label := 'Seats')
   );
-  const Brand: E.Element<State.Msg> := BrandColor.View(Model);
-  const Fields: array of E.Element<State.Msg> := [
-    Grid.Grid<State.Msg>(
+  const Brand: E.Element of State.Msg := BrandColor.View(Model);
+  const Fields: array of E.Element of State.Msg := [
+    Grid.Grid of State.Msg(
       new Grid.Options(Columns := 2, MinimumColumnWidth := 260.0F, Gap := G.Points(16)),
       Country, Language, Due, Seats
     ),
     Brand
   ];
-  return E.Column<State.Msg>(
+  return E.Column of State.Msg(
     new L.Flow(Gap := G.Points(20)),
-    G.Heading<State.Msg>(Strings.Get('Page.Pickers')),
-    G.Card<State.Msg>(16, Fields)
+    G.Heading of State.Msg(Strings.Get('Page.Pickers')),
+    G.Card of State.Msg(16, Fields)
   );
 end function;
 

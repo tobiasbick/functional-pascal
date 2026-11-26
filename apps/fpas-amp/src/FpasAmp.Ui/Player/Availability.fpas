@@ -27,7 +27,7 @@ begin
     if Snapshot <> null then
       const View: Inventory.SourceSnapshot? := Index.View(Current, Source.Id);
       if View <> null and Sources.PathComparer().Equals(View.Path, Source.Path)
-        and I.ImmutableArray.BinarySearch<string>(
+        and I.ImmutableArray.BinarySearch of string(
         View.Files,
         Track.Path,
         Sources.PathComparer()

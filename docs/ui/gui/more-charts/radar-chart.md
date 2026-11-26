@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Charts.RadarCharts as W;
 // Builds the radar chart example.
 // ## Returns
 // The widget for the application view.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return W.RadarChart<string>('radar', [
+  return W.RadarChart of string('radar', [
     new C.Series('1.0', [82.0F, 64.0F, 90.0F]),
     new C.Series('1.1', [70.0F, 85.0F, 72.0F])
   ], ['Speed', 'Size', 'Polish'], new W.Options(Size := 220.0F, Maximum := 100.0F));

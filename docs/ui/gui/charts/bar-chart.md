@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Charts.Charts as C;
 // Builds the bar chart example.
 // ## Returns
 // The widget for the application view.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return W.BarChart<string>('visits', [
+  return W.BarChart of string('visits', [
     new C.Series('Desktop', [42.0F, 51.0F, 38.0F]),
     new C.Series('Mobile', [28.0F, 33.0F, 30.0F])
   ], new C.Options(Labels := ['Jan', 'Feb', 'Mar'], Height := 200.0F));

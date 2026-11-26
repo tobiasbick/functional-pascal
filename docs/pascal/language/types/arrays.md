@@ -37,9 +37,9 @@ element type; contextual inference follows [type inference](../functions/type-in
 Use actual .NET collections:
 
 ```pascal fragment context=body
-const Names: Collections.List<string> := new Collections.List<string>();
+const Names: Collections.List of string := new Collections.List of string();
 Names.Add('Alpha');
-const Counts: Collections.Dictionary<string, int> := new Collections.Dictionary<string, int>();
+const Counts: Collections.Dictionary of (string, int) := new Collections.Dictionary of (string, int)();
 Counts['Alpha'] := 10;
 ```
 
@@ -61,14 +61,14 @@ begin
   Shared[0] := 9;
   Console.WriteLine(Values[0]); // 9: both bindings reference the same array
 
-  const Names: Generic.List<string> := new Generic.List<string>();
+  const Names: Generic.List of string := new Generic.List of string();
   Names.Add('Alpha');
   Names.Add('Beta');
   for Name: string in Names do
     Console.WriteLine(Name);
   end for;
 
-  const Counts: Generic.Dictionary<string, int> := new Generic.Dictionary<string, int>();
+  const Counts: Generic.Dictionary of (string, int) := new Generic.Dictionary of (string, int)();
   Counts['Alpha'] := 10;
   var Count: int := 0;
   if Counts.TryGetValue('Alpha', out Count) then

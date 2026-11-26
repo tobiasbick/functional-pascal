@@ -26,7 +26,7 @@ begin
   end if;
 end procedure;
 
-function Find<TMsg>(Session: Gui.Session<TMsg>; Id: string): Gui.Control?;
+function Find of TMsg(Session: Gui.Session of TMsg; Id: string): Gui.Control?;
 begin
   for Item: Gui.Control in Session.Snapshot().Controls do
     if Item.Id = Id then
@@ -37,9 +37,9 @@ begin
   return null;
 end function;
 
-function RequireControl<TMsg>(Session: Gui.Session<TMsg>; Id: string): Gui.Control;
+function RequireControl of TMsg(Session: Gui.Session of TMsg; Id: string): Gui.Control;
 begin
-  const Item: Gui.Control? := Find<TMsg>(Session, Id);
+  const Item: Gui.Control? := Find of TMsg(Session, Id);
   if Item = null then
     raise new Sys.InvalidOperationException('Missing dialog control ' + Id);
   end if;
@@ -48,10 +48,10 @@ begin
 end function;
 
 procedure Validate();
-  procedure Reject(Node: E.Element<bool>; Profile: V.Target; Reason: string);
+  procedure Reject(Node: E.Element of bool; Profile: V.Target; Reason: string);
   begin
     try
-      discard V.Prepare<bool>(Node, Profile);
+      discard V.Prepare of bool(Node, Profile);
     catch Error: Sys.ArgumentException do
       Check(Error.Message.Contains(Reason), Error.Message);
       return;
@@ -60,16 +60,18 @@ procedure Validate();
     raise new Sys.InvalidOperationException('Dialog preflight accepted an invalid view.');
   end procedure;
 begin
-  const Base: E.Element<bool> := E.Text<bool>('Base');
-  const Footer: E.Element<bool> := F.ActionFooter<bool>(B.Button<bool>('done', 'Done', false));
+  const Base: E.Element of bool := E.Text of bool('Base');
+  const Footer: E.Element of bool := F.ActionFooter of bool(
+    B.Button of bool('done', 'Done', false)
+  );
   Reject(Footer, V.Target.Terminal, 'Graphical profile');
   Reject(
-    D.Dialog<bool>('dialog', Base, Footer, false, new D.Options('Dialog'), false),
+    D.Dialog of bool('dialog', Base, Footer, false, new D.Options('Dialog'), false),
     V.Target.Portable, 'Graphical profile'
   );
   Reject(
-    D.Dialog<bool>(
-      'dialog', B.Button<bool>('done', 'Duplicate', false), Footer, false,
+    D.Dialog of bool(
+      'dialog', B.Button of bool('done', 'Duplicate', false), Footer, false,
       new D.Options('Dialog'), false
     ), V.Target.Graphical, 'Duplicate ID'
   );
@@ -96,14 +98,14 @@ procedure VerifyProfile(Renderer: Cui.CuiRenderer; Capture: string);
       Input := '';
     end if;
   end procedure;
-  procedure Exercise(Session: Gui.Session<State.Msg>);
+  procedure Exercise(Session: Gui.Session of State.Msg);
     procedure Step();
     begin
       Check(Session.Step(), 'The Edit profile gallery closed.');
     end procedure;
     function Control(Id: string): Gui.Control;
     begin
-      return RequireControl<State.Msg>(Session, Id);
+      return RequireControl of State.Msg(Session, Id);
     end function;
     procedure Click();
     begin
@@ -175,7 +177,7 @@ procedure VerifyProfile(Renderer: Cui.CuiRenderer; Capture: string);
     Modifiers := 0;
     Step();
     Check(
-      Find<State.Msg>(Session, Dialog) <> null and not Control(Name).Focused,
+      Find of State.Msg(Session, Dialog) <> null and not Control(Name).Focused,
       'The first Escape must leave the text field.'
     );
     KeyCode := 3;
@@ -183,7 +185,10 @@ procedure VerifyProfile(Renderer: Cui.CuiRenderer; Capture: string);
     Step();
     Step();
     Check(
-      Find<State.Msg>(Session, Dialog) = null and Control(Trigger).Focused and Notifications() = 0,
+      Find of State.Msg(
+        Session,
+        Dialog
+      ) = null and Control(Trigger).Focused and Notifications() = 0,
       'The next Escape must close the dialog and return focus to the trigger.'
     );
 
@@ -194,20 +199,20 @@ procedure VerifyProfile(Renderer: Cui.CuiRenderer; Capture: string);
     );
     Select(Cancel);
     Check(
-      Find<State.Msg>(Session, Dialog) = null and Notifications() = 0,
+      Find of State.Msg(Session, Dialog) = null and Notifications() = 0,
       'Cancel must close without notifying.'
     );
     Select(Trigger);
     Select(D.CloseId(Dialog));
     Check(
-      Find<State.Msg>(Session, Dialog) = null,
+      Find of State.Msg(Session, Dialog) = null,
       'The native close button must dismiss the dialog.'
     );
     Select(Trigger);
     X := 5.0F;
     Y := 5.0F;
     Click();
-    Check(Find<State.Msg>(Session, Dialog) = null, 'The native scrim must dismiss the dialog.');
+    Check(Find of State.Msg(Session, Dialog) = null, 'The native scrim must dismiss the dialog.');
 
     Select(Trigger);
     Select('edit-profile-public');
@@ -218,7 +223,10 @@ procedure VerifyProfile(Renderer: Cui.CuiRenderer; Capture: string);
     Select(Save);
     Step();
     Check(
-      Find<State.Msg>(Session, Dialog) = null and Control(Trigger).Focused and Notifications() = 1,
+      Find of State.Msg(
+        Session,
+        Dialog
+      ) = null and Control(Trigger).Focused and Notifications() = 1,
       'Save changes must close, restore focus and emit one success toast.'
     );
   end procedure;
@@ -237,7 +245,7 @@ begin
     true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Overlays),
     GalleryUpdate.Update,
     View.Build,
@@ -250,16 +258,16 @@ begin
 end procedure;
 
 procedure VerifyPersistent(Renderer: Cui.CuiRenderer);
-  function Update(Open: bool; Message: bool): App.Transition<bool, bool>;
+  function Update(Open: bool; Message: bool): App.Transition of (bool, bool);
   begin
-    return new App.Transition<bool, bool>(Message, []);
+    return new App.Transition of (bool, bool)(Message, []);
   end function;
-  function Build(Open: bool; Viewport: L.Viewport): E.Element<bool>;
+  function Build(Open: bool; Viewport: L.Viewport): E.Element of bool;
   begin
-    return D.Dialog<bool>(
+    return D.Dialog of bool(
       'persistent',
-      E.Text<bool>('Base'),
-      F.ActionFooter<bool>(B.Button<bool>('done', 'Done', false)),
+      E.Text of bool('Base'),
+      F.ActionFooter of bool(B.Button of bool('done', 'Done', false)),
       Open,
       new D.Options('Persistent', Persistent := true, CloseButton := false, InitialFocus := 'done'),
       false
@@ -277,7 +285,7 @@ procedure VerifyPersistent(Renderer: Cui.CuiRenderer);
 
     Event := 0;
   end procedure;
-  procedure Step(Session: Gui.Session<bool>);
+  procedure Step(Session: Gui.Session of bool);
   begin
     Check(Session.Step(), 'The persistent dialog fixture closed.');
   end procedure;
@@ -293,7 +301,7 @@ begin
     true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<bool> := Host.Start<bool, bool>(
+  using const Session: Gui.Session of bool := Host.Start of (bool, bool)(
     true,
     Update,
     Build,
@@ -302,10 +310,10 @@ begin
     Inject
   );
   Step(Session);
-  const Panel: Cui.CuiRectangle := RequireControl<bool>(Session, 'persistent').Bounds;
+  const Panel: Cui.CuiRectangle := RequireControl of bool(Session, 'persistent').Bounds;
   Check(
-    Panel.Width = 328 and Find<bool>(Session, 'persistent/close') = null
-    and RequireControl<bool>(Session, 'done').Focused,
+    Panel.Width = 328 and Find of bool(Session, 'persistent/close') = null
+    and RequireControl of bool(Session, 'done').Focused,
     'The dialog must fit a narrow window and honor its focus and close options.'
   );
   Event := 1;
@@ -316,10 +324,10 @@ begin
   Step(Session);
   Step(Session);
   Check(
-    Find<bool>(Session, 'persistent') <> null,
+    Find of bool(Session, 'persistent') <> null,
     'Escape and the scrim must leave a persistent dialog open.'
   );
-  const Done: Cui.CuiRectangle := RequireControl<bool>(Session, 'done').Bounds;
+  const Done: Cui.CuiRectangle := RequireControl of bool(Session, 'done').Bounds;
   X := Done.X + Done.Width / 2;
   Y := Done.Y + Done.Height / 2;
   Event := 2;
@@ -328,7 +336,7 @@ begin
   Step(Session);
   Step(Session);
   Check(
-    Find<bool>(Session, 'persistent') = null,
+    Find of bool(Session, 'persistent') = null,
     'A footer action must still close a persistent dialog through the model.'
   );
 end procedure;
@@ -342,11 +350,11 @@ procedure VerifyGeometry(Renderer: Cui.CuiRenderer);
       Button := -1;
     end if;
   end procedure;
-  procedure Step(Session: Gui.Session<State.Msg>);
+  procedure Step(Session: Gui.Session of State.Msg);
   begin
     Check(Session.Step(), 'The dialog geometry fixture closed.');
   end procedure;
-  procedure Drag(Session: Gui.Session<State.Msg>; FromX: float; FromY: float; ByX: float; ByY: float);
+  procedure Drag(Session: Gui.Session of State.Msg; FromX: float; FromY: float; ByX: float; ByY: float);
   begin
     X := FromX;
     Y := FromY;
@@ -367,7 +375,7 @@ begin
     'FPas CUI dialog geometry', 1000, 820, Renderer, true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(
       Active := State.Page.Overlays,
       Overlays := new Overlays.Model(ProfileDialog := true)
@@ -375,16 +383,19 @@ begin
     GalleryUpdate.Update, View.Build, Window, 32, Inject, ThemeFor := GalleryUpdate.ThemeFor
   );
   Step(Session);
-  const Initial: Cui.CuiRectangle := RequireControl<State.Msg>(Session, 'edit-profile').Bounds;
+  const Initial: Cui.CuiRectangle := RequireControl of State.Msg(Session, 'edit-profile').Bounds;
   Drag(Session, Initial.X + Initial.Width / 2, Initial.Y + 35.0F, 35.0F, 25.0F);
-  const Moved: Cui.CuiRectangle := RequireControl<State.Msg>(Session, 'edit-profile').Bounds;
+  const Moved: Cui.CuiRectangle := RequireControl of State.Msg(Session, 'edit-profile').Bounds;
   Check(
     Moved.X > Initial.X + 30.0F and Moved.Y > Initial.Y + 20.0F
     and Moved.Width = Initial.Width, 'Dragging the header must move the dialog.'
   );
   Drag(Session, Moved.X + Moved.Width, Moved.Y + Moved.Height, 56.0F, 45.0F);
-  const Resized: Cui.CuiRectangle := RequireControl<State.Msg>(Session, 'edit-profile').Bounds;
-  const Footer: Cui.CuiRectangle := RequireControl<State.Msg>(Session, 'edit-profile-save').Bounds;
+  const Resized: Cui.CuiRectangle := RequireControl of State.Msg(Session, 'edit-profile').Bounds;
+  const Footer: Cui.CuiRectangle := RequireControl of State.Msg(
+    Session,
+    'edit-profile-save'
+  ).Bounds;
   Check(
     Resized.Width > Moved.Width + 45.0F and Resized.Height > Moved.Height + 35.0F,
     'Dragging the corner must resize the dialog.'

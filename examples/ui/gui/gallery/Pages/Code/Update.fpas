@@ -135,24 +135,24 @@ end function;
 // - `Message`: Code action.
 // ## Returns
 // Updated Code state and replay commands.
-public function Update(Model: M.Model; Message: M.Msg): A.Transition<M.Model, M.Msg>;
+public function Update(Model: M.Model; Message: M.Msg): A.Transition of (M.Model, M.Msg);
 begin
   const Value: M.Model := Next(Model, Message);
-  const Commands: array of A.Command<M.Msg> := case Message of
+  const Commands: array of A.Command of M.Msg := case Message of
     when M.Msg.Replay: [
-      Clock.Start<M.Msg>(
+      Clock.Start of M.Msg(
         function(Seconds: float): M.Msg => M.Msg.Tick,
         function(Error: Sys.Exception): M.Msg => M.Msg.Tick, 17, 'markdown-replay'
       )
     ];
     when M.Msg.Tick: if Value.Replay = -1 then
-        [A.CancelBackground<M.Msg>('markdown-replay')]
+        [A.CancelBackground of M.Msg('markdown-replay')]
       else
         []
       end if;
     else [];
   end case;
-  return new A.Transition<M.Model, M.Msg>(Value, Commands);
+  return new A.Transition of (M.Model, M.Msg)(Value, Commands);
 end function;
 
 end unit;

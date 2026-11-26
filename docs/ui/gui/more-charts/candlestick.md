@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Charts.Candlesticks as W;
 // - `Candles`: OHLC periods in chronological order.
 // ## Returns
 // The widget for the application view.
-public function View(Candles: array of W.Candle): E.Element<int>;
+public function View(Candles: array of W.Candle): E.Element of int;
 begin
-  return W.Candlestick<int>('price', Candles, new W.Options(Height := 280.0F),
+  return W.Candlestick of int('price', Candles, new W.Options(Height := 280.0F),
     function(Index: int): int => Index);
 end function;
 

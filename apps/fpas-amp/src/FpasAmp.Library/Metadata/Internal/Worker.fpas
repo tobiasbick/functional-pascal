@@ -50,7 +50,7 @@ end function;
 // - `Cancellation`: Stops the worker and releases its connections.
 // ## Returns
 // The task for the worker's lifetime.
-public async function Run(Policy: P.Policy; Database: string; UserDatabase: string; Ready: Tasks.TaskCompletionSource<bool>; Cancellation: T.CancellationToken): Tasks.Task;
+public async function Run(Policy: P.Policy; Database: string; UserDatabase: string; Ready: Tasks.TaskCompletionSource of bool; Cancellation: T.CancellationToken): Tasks.Task;
 begin
   try
     Cancellation.ThrowIfCancellationRequested();

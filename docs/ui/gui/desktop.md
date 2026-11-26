@@ -54,9 +54,9 @@ spotlights and explanation cards to model-selected controls.
 
 Keep application state in an immutable record. Define a message variant for user
 actions and completed work. Update has type
-`function(Model, Msg): Mvu.Transition<Model, Msg>` and returns the next model
+`function(Model, Msg): Mvu.Transition of (Model, Msg)` and returns the next model
 plus commands. View has type
-`function(Model, Layout.Viewport): Elements.Element<Msg>` and builds widgets
+`function(Model, Layout.Viewport): Elements.Element of Msg` and builds widgets
 from that model using the `Fpas.Ui` widget units.
 
 Control IDs stay stable and unique; item keys are local to their collection.
@@ -64,7 +64,7 @@ Theme selections, navigation, sheet visibility and action feedback belong to
 the model. Rejecting a proposal leaves the model value authoritative.
 
 Import `Fpas.Ui.Gui.Desktop` as `Gui` and start the owner loop with
-`Gui.Run<Model, Msg>(new Model(), Update, View, new Gui.Options())`.
+`Gui.Run of (Model, Msg)(new Model(), Update, View, new Gui.Options())`.
 Use `Gui.Options` to set title, logical width and height, renderer and mailbox
 capacity. Set `Placement` to reopen a window where it was closed.
 `MinimumWidth`, `MinimumHeight`, `FixedSize` and Linux `AppId` configure native
@@ -109,8 +109,8 @@ releases native resources on the owner. Step, Snapshot and disposal must not be
 reentered from callbacks.
 
 An optional `OnCloseRequested` message factory on Start/Run lets the model
-confirm native closure. Return `Closing.Cancel<TMsg>()` to keep running or
-`Mvu.Exit<TMsg>()` to approve cleanup. Pending confirmation leaves background
+confirm native closure. Return `Closing.Cancel of TMsg()` to keep running or
+`Mvu.Exit of TMsg()` to approve cleanup. Pending confirmation leaves background
 work active. Without a handler, native close starts cleanup immediately.
 The [desktop commands example](../../../examples/ui/gui/desktop-commands/README.md)
 also shows native Open/Save/Choose Folder, optional cancellation messages and
@@ -122,7 +122,7 @@ before the first frame and reports background save results through typed MVU
 messages. A [dockspace layout callback](../../../src/Fpas.Ui/Widgets/Desktop/Dockspaces.fpas)
 can also supply layout data to application storage.
 
-`Fpas.Ui.Gui.Frames.Redraw<TMsg>(DelaySeconds)` requests a native repaint now
+`Fpas.Ui.Gui.Frames.Redraw of TMsg(DelaySeconds)` requests a native repaint now
 or within a finite positive delay. It repaints the existing view. Use
 [cancellable background work](../../../examples/ui/gui/desktop-commands/README.md#background-progress)
 for timed application updates that change what the view displays.

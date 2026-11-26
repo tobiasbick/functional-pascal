@@ -147,7 +147,7 @@ contracts do not establish synchronization or a data-race guarantee.
 ## Async routines
 
 ```pascal fragment context=declarations
-async function DoubleAfterDelay(Value: int): Tasks.Task<int>;
+async function DoubleAfterDelay(Value: int): Tasks.Task of int;
 requires Value >= 0;
 requires Value <= int.MaxValue div 2;
 ensures (Returned: int): Returned = Value * 2;

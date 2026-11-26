@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Motion.NumberRolls as W;
 // - `Total`: Formatted amount with any prefix or grouping.
 // ## Returns
 // The native rolling figure.
-public function View(Total: string): E.Element<string>;
+public function View(Total: string): E.Element of string;
 begin
-  return W.NumberRoll<string>('total', Total,
+  return W.NumberRoll of string('total', Total,
     new M.TextOptions(Font := M.Font.Display, Size := 26.0F));
 end function;
 

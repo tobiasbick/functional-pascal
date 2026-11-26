@@ -76,20 +76,20 @@ public type TagEditingTests = record
     const Initial: Files.Snapshot := Files.Read(Path);
     const UniqueKey: string := Fields.Custom + 'UFID.' + Owner;
     const PrivateKey: string := Fields.Custom + 'PRIV.' + Owner;
-    X.Assert.Equal<string>(
+    X.Assert.Equal of string(
       Sys.Convert.ToBase64String(Unique),
       Fields.Value(Initial.Values, UniqueKey)
     );
-    X.Assert.Equal<string>(
+    X.Assert.Equal of string(
       Sys.Convert.ToBase64String(PrivateData),
       Fields.Value(Initial.Values, PrivateKey)
     );
-    X.Assert.Equal<string>(Recording, Fields.Value(Initial.Values, 'recording'));
+    X.Assert.Equal of string(Recording, Fields.Value(Initial.Values, 'recording'));
     const Next: string := '22222222-2222-2222-2222-222222222222';
     const Staged: string := Files.Stage(
       Path,
       Initial,
-      I.ImmutableDictionary<string, string?>.Empty.Add(
+      I.ImmutableDictionary of (string, string?).Empty.Add(
         'title',
         'Updated title'
       ).Add('recording', Next)
@@ -100,15 +100,15 @@ public type TagEditingTests = record
       IO.File.Delete(Staged);
     end try;
     const After: Files.Snapshot := Files.Read(Path);
-    X.Assert.Equal<string>(
+    X.Assert.Equal of string(
       Fields.Value(Initial.Values, UniqueKey),
       Fields.Value(After.Values, UniqueKey)
     );
-    X.Assert.Equal<string>(
+    X.Assert.Equal of string(
       Fields.Value(Initial.Values, PrivateKey),
       Fields.Value(After.Values, PrivateKey)
     );
-    X.Assert.Equal<string>(Next, Fields.Value(After.Values, 'recording'));
+    X.Assert.Equal of string(Next, Fields.Value(After.Values, 'recording'));
     const Raw: string := Text.Encoding.Latin1.GetString(IO.File.ReadAllBytes(Path));
     X.Assert.Contains(Owner + #0 + Text.Encoding.Latin1.GetString(Unique), Raw);
     X.Assert.Contains(Owner + #0 + Text.Encoding.Latin1.GetString(PrivateData), Raw);
@@ -125,7 +125,7 @@ public type TagEditingTests = record
     using const Data: H.Folder := H.Folder.Create();
     const Path: string := F.Write(Root.Path, 'editor.mp3', 'Original title');
     const Audio: Atl.Track := new Atl.Track(Path);
-    const Extra: C.IDictionary<string?, string?>? := Audio.AdditionalFields;
+    const Extra: C.IDictionary of (string?, string?)? := Audio.AdditionalFields;
     if Extra = null then
       raise new Sys.InvalidOperationException('Missing fixture tags.');
     end if;
@@ -139,17 +139,17 @@ public type TagEditingTests = record
     using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
     await using const Library: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
     const Stage: Metadata.Session := F.Tags(Library);
-    const Indexed: I.ImmutableArray<Tracks.Entry> := await F.Until(
+    const Indexed: I.ImmutableArray of Tracks.Entry := await F.Until(
       Stage,
-      function(Items: I.ImmutableArray<Tracks.Entry>): bool => Items.Length = 1 and Items[
+      function(Items: I.ImmutableArray of Tracks.Entry): bool => Items.Length = 1 and Items[
         0
       ].TrackId <> ''
     );
     const Track: Tracks.Entry := Indexed[0];
     const Original: Files.Snapshot := await Stage.ReadTags(Track, Stop.Token);
-    X.Assert.Equal<string>('Value 50', Fields.Value(Original.Values, Fields.Custom + 'EDIT_050'));
+    X.Assert.Equal of string('Value 50', Fields.Value(Original.Values, Fields.Custom + 'EDIT_050'));
     const Multiline: string := 'First line' + #10 + 'Second line';
-    const Patch: I.ImmutableDictionary<string, string?> := I.ImmutableDictionary<string, string?>.Empty.Add(
+    const Patch: I.ImmutableDictionary of (string, string?) := I.ImmutableDictionary of (string, string?).Empty.Add(
       'title',
       'Edited title'
     ).Add('year', '2025').Add('track', '5 / 12').Add('disc', '1 / 3').Add(
@@ -159,16 +159,19 @@ public type TagEditingTests = record
     await Stage.WriteTags(Track, Original, Patch, ToDatabase, ToFile, Stop.Token);
     const Disk: Files.Snapshot := Files.Read(Path);
     const Reopened: Files.Snapshot := await Stage.ReadTags(Track, Stop.Token);
-    X.Assert.Equal<string>('Edited title', Fields.Value(Reopened.Values, 'title'));
-    X.Assert.Equal<string>('2025', Fields.Value(Reopened.Values, 'year'));
-    X.Assert.Equal<string>('5 / 12', Fields.Value(Reopened.Values, 'track'));
-    X.Assert.Equal<string>('1 / 3', Fields.Value(Reopened.Values, 'disc'));
-    X.Assert.Equal<string>('Added tag', Fields.Value(Reopened.Values, Fields.Custom + 'EDIT_NEW'));
-    X.Assert.Equal<string>(Multiline, Fields.Value(Reopened.Values, Fields.Custom + 'EDIT_050'));
+    X.Assert.Equal of string('Edited title', Fields.Value(Reopened.Values, 'title'));
+    X.Assert.Equal of string('2025', Fields.Value(Reopened.Values, 'year'));
+    X.Assert.Equal of string('5 / 12', Fields.Value(Reopened.Values, 'track'));
+    X.Assert.Equal of string('1 / 3', Fields.Value(Reopened.Values, 'disc'));
+    X.Assert.Equal of string(
+      'Added tag',
+      Fields.Value(Reopened.Values, Fields.Custom + 'EDIT_NEW')
+    );
+    X.Assert.Equal of string(Multiline, Fields.Value(Reopened.Values, Fields.Custom + 'EDIT_050'));
     X.Assert.False(Reopened.Values.ContainsKey(Fields.Custom + 'EDIT_002'));
     for Index: int := 1 to 49 do
       if Index <> 2 then
-        X.Assert.Equal<string>(
+        X.Assert.Equal of string(
           'Value ' + Index.ToString(),
           Fields.Value(Reopened.Values, Fields.Custom + 'EDIT_' + Index.ToString('D3'))
         );
@@ -176,27 +179,27 @@ public type TagEditingTests = record
     end for;
 
     if ToFile then
-      X.Assert.Equal<string>('Edited title', Fields.Value(Disk.Values, 'title'));
-      X.Assert.Equal<string>(Multiline, Fields.Value(Disk.Values, Fields.Custom + 'EDIT_050'));
+      X.Assert.Equal of string('Edited title', Fields.Value(Disk.Values, 'title'));
+      X.Assert.Equal of string(Multiline, Fields.Value(Disk.Values, Fields.Custom + 'EDIT_050'));
       X.Assert.False(Disk.Values.ContainsKey(Fields.Custom + 'EDIT_002'));
     else
-      X.Assert.Equal<byte>(Before, IO.File.ReadAllBytes(Path));
+      X.Assert.Equal of byte(Before, IO.File.ReadAllBytes(Path));
       // Rebuild a fresh catalogue against the same durable user database.
       await Library.DisposeAsync();
       await using const Rebuilt: Monitor.Session := Monitor.Session.Start(
         [F.Source(Root.Path)], IO.Path.Combine(Data.Path, 'rebuilt.db'), Stop.Token,
         UserDataPath := IO.Path.Combine(Data.Path, 'userdata.db')
       );
-      const Rows: I.ImmutableArray<Tracks.Entry> := await F.Until(
+      const Rows: I.ImmutableArray of Tracks.Entry := await F.Until(
         F.Tags(Rebuilt),
-        function(Items: I.ImmutableArray<Tracks.Entry>): bool => Items.Length = 1 and Items[
+        function(Items: I.ImmutableArray of Tracks.Entry): bool => Items.Length = 1 and Items[
           0
         ].TrackId <> ''
       );
       const Cached: Media.Info? := Rows[0].Metadata;
       X.Assert.True(Cached <> null and Cached.Title = 'Edited title');
       const Reloaded: Files.Snapshot := await F.Tags(Rebuilt).ReadTags(Rows[0], Stop.Token);
-      X.Assert.Equal<string>(
+      X.Assert.Equal of string(
         Multiline,
         Fields.Value(Reloaded.Values, Fields.Custom + 'EDIT_050')
       );

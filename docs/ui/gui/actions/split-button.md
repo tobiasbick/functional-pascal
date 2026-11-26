@@ -15,11 +15,11 @@ uses Fpas.Ui.Widgets.Actions.SplitButtons as S;
 // Builds the example view.
 // ## Returns
 // The widget with its message type.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return S.SplitButton<string>('save', 'Save', 'save', [
-    new S.Item<string>('draft', 'Save as draft', 'draft'),
-    new S.Item<string>('publish', 'Save and publish', 'publish')
+  return S.SplitButton of string('save', 'Save', 'save', [
+    new S.Item of string('draft', 'Save as draft', 'draft'),
+    new S.Item of string('publish', 'Save and publish', 'publish')
   ]);
 end function;
 

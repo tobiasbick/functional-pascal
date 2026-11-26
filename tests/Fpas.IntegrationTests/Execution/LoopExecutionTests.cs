@@ -12,15 +12,15 @@ public sealed class LoopExecutionTests
         procedure Initialize(out Number: int);
         begin repeat try continue; finally Number := 7; end try; until Number = 7; end procedure;
         begin
-          const Readers: C.List<Sys.Func<int>> := new C.List<Sys.Func<int>>();
+          const Readers: C.List of Sys.Func of int := new C.List of Sys.Func of int();
           var Index: int := 0;
           repeat
             var Count: int := Index;
             function Next(): int; begin Count := Count + 1; return Count; end function;
             Readers.Add(Next); Index := Index + 1;
           until Index = 3;
-          for Read: Sys.Func<int> in Readers do Console.WriteLine(Read()); end for;
-          for Read: Sys.Func<int> in Readers do Console.WriteLine(Read()); end for;
+          for Read: Sys.Func of int in Readers do Console.WriteLine(Read()); end for;
+          for Read: Sys.Func of int in Readers do Console.WriteLine(Read()); end for;
           var Number: int := 0; Parse(out Number); Console.WriteLine(Number); Initialize(out Number); Console.WriteLine(Number);
         end;
         end program;
@@ -31,9 +31,9 @@ public sealed class LoopExecutionTests
         async program AsyncLoops;
         uses System.Console as Console; uses System.Threading.Tasks as Tasks;
         type High = ulong range 18446744073709551614UL..18446744073709551615UL;
-        async function Lower(): Tasks.Task<High>;
+        async function Lower(): Tasks.Task of High;
         begin await Tasks.Task.Delay(1); return new High(18446744073709551614UL); end function;
-        async function Done(Count: int): Tasks.Task<bool>;
+        async function Done(Count: int): Tasks.Task of bool;
         begin await Tasks.Task.Delay(1); return Count = 3; end function;
         begin
           for Index: High := await Lower() to new High(18446744073709551615UL) do
@@ -85,12 +85,12 @@ public sealed class LoopExecutionTests
         type Port = ushort range 65533..65535;
         type Wide = long range -9223372036854775808L..9223372036854775807L;
         begin
-          const Readers: C.List<Sys.Func<Port>> := new C.List<Sys.Func<Port>>();
+          const Readers: C.List of Sys.Func of Port := new C.List of Sys.Func of Port();
           for Index: Port := new Port(65534) to new Port(65535) do
             function Read(): Port; begin return Index; end function;
             Readers.Add(Read);
           end for;
-          for Read: Sys.Func<Port> in Readers do Console.WriteLine(Read().Value); end for;
+          for Read: Sys.Func of Port in Readers do Console.WriteLine(Read().Value); end for;
           for Index: Wide := new Wide(-9223372036854775807L) downto new Wide(-9223372036854775808L) do Console.WriteLine(Index.Value); end for;
           for Index: Port := new Port(65535) to new Port(65534) do Console.WriteLine('wrong'); end for;
           for Index: ulong := 0UL downto 1UL do Console.WriteLine('wrong'); end for;

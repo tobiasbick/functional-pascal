@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Inputs.Checkboxes as C;
 // - `Checked`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Checked: bool): E.Element<bool>;
+public function View(Checked: bool): E.Element of bool;
 begin
-  return C.Checkbox<bool>('newsletter', 'Email notifications', Checked,
+  return C.Checkbox of bool('newsletter', 'Email notifications', Checked,
     function(Value: bool): bool => Value, Description := 'Product news, at most once a month.');
 end function;
 

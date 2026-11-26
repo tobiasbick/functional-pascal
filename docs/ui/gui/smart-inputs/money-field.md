@@ -19,14 +19,14 @@ uses System as Sys;
 // - `Salary`: Exact whole-euro amount.
 // ## Returns
 // A field that sends proposed amounts.
-public function View(Salary: decimal): E.Element<decimal>;
+public function View(Salary: decimal): E.Element of decimal;
 requires Salary >= decimal.MinValue and Salary <= decimal.MaxValue;
 begin
   if Sys.Decimal.Round(Salary, 0) <> Salary then
     raise new Sys.ArgumentException('The salary must be a whole-euro amount.');
   end if;
 
-  return W.MoneyField<decimal>('salary', Salary,
+  return W.MoneyField of decimal('salary', Salary,
     function(Proposed: decimal): decimal => Proposed,
     new W.Options(Label := 'Salary', Symbol := '€', Code := 'EUR',
       DecimalPlaces := 0, Hint := 'Gross per year'));

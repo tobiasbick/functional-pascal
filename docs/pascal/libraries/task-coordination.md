@@ -21,11 +21,11 @@ uses System.Threading as Threading;
 uses System.Threading.Tasks as Tasks;
 
 // Holds the caller's permit until the supplied work has completed.
-public async function UnderGate<T>(
+public async function UnderGate of T(
   Gate: Threading.SemaphoreSlim;
-  Work: Sys.Func<Threading.CancellationToken, Tasks.Task<T>>;
+  Work: Sys.Func of (Threading.CancellationToken, Tasks.Task of T);
   Cancellation: Threading.CancellationToken
-): Tasks.Task<T>;
+): Tasks.Task of T;
 begin
   await Gate.WaitAsync(Cancellation).ConfigureAwait(false);
   try
@@ -58,25 +58,25 @@ uses System.Threading.Tasks as Tasks;
 
 begin
   using const Gate: Threading.SemaphoreSlim := new Threading.SemaphoreSlim(1, 1);
-  const Start: Tasks.TaskCompletionSource<bool> := new Tasks.TaskCompletionSource<bool>(
+  const Start: Tasks.TaskCompletionSource of bool := new Tasks.TaskCompletionSource of bool(
     Tasks.TaskCreationOptions.RunContinuationsAsynchronously
   );
   var Total: int := 0;
-  async function Add(Value: int): Tasks.Task<int>;
+  async function Add(Value: int): Tasks.Task of int;
   begin
     discard await Start.Task.ConfigureAwait(false);
-    return await Coordination.UnderGate<int>(
+    return await Coordination.UnderGate of int(
       Gate,
-      async function(Cancellation: Threading.CancellationToken): Tasks.Task<int> begin
+      async function(Cancellation: Threading.CancellationToken): Tasks.Task of int begin
         Cancellation.ThrowIfCancellationRequested();
         Total := Total + Value;
         return Total;
       end function, Threading.CancellationToken.None
     ).ConfigureAwait(false);
   end function;
-  const Jobs: array of Tasks.Task<int> := [Add(1), Add(2), Add(3)];
+  const Jobs: array of Tasks.Task of int := [Add(1), Add(2), Add(3)];
   Start.SetResult(true);
-  discard await Tasks.Task.WhenAll<int>(Jobs).ConfigureAwait(false);
+  discard await Tasks.Task.WhenAll of int(Jobs).ConfigureAwait(false);
   if Total <> 6 then
     raise new Sys.InvalidOperationException('Shared update was lost');
   end if;
@@ -114,16 +114,16 @@ uses System.Threading as Threading;
 uses System.Threading.Tasks as Tasks;
 
 begin
-  const First: Tasks.TaskCompletionSource<int> := new Tasks.TaskCompletionSource<int>(
+  const First: Tasks.TaskCompletionSource of int := new Tasks.TaskCompletionSource of int(
     Tasks.TaskCreationOptions.RunContinuationsAsynchronously
   );
-  const Second: Tasks.TaskCompletionSource<int> := new Tasks.TaskCompletionSource<int>(
+  const Second: Tasks.TaskCompletionSource of int := new Tasks.TaskCompletionSource of int(
     Tasks.TaskCreationOptions.RunContinuationsAsynchronously
   );
-  const Jobs: array of Tasks.Task<int> := [First.Task, Second.Task];
-  const Joined: Tasks.Task<array of int> := Tasks.Task.WhenAll<int>(Jobs);
+  const Jobs: array of Tasks.Task of int := [First.Task, Second.Task];
+  const Joined: Tasks.Task of array of int := Tasks.Task.WhenAll of int(Jobs);
   First.SetException(new Sys.InvalidOperationException('First operation failed'));
-  const Finished: Tasks.Task<int> := await Tasks.Task.WhenAny<int>(Jobs);
+  const Finished: Tasks.Task of int := await Tasks.Task.WhenAny of int(Jobs);
   try
     discard await Finished;
   catch Failure: Sys.InvalidOperationException do
@@ -148,11 +148,11 @@ begin
 
   using const Cancellation: Threading.CancellationTokenSource := new Threading.CancellationTokenSource();
   Cancellation.Cancel();
-  const CanceledJobs: array of Tasks.Task<int> := [
-    Tasks.Task.FromResult<int>(1),
-    Tasks.Task.FromCanceled<int>(Cancellation.Token)
+  const CanceledJobs: array of Tasks.Task of int := [
+    Tasks.Task.FromResult of int(1),
+    Tasks.Task.FromCanceled of int(Cancellation.Token)
   ];
-  const CanceledJoin: Tasks.Task<array of int> := Tasks.Task.WhenAll<int>(CanceledJobs);
+  const CanceledJoin: Tasks.Task of array of int := Tasks.Task.WhenAll of int(CanceledJobs);
   try
     discard await CanceledJoin;
   catch Failure: Sys.OperationCanceledException when CanceledJoin.IsCanceled do

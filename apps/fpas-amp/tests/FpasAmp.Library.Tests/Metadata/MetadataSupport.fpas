@@ -47,7 +47,7 @@ begin
   Track.SortAlbum := 'Album';
   Track.BPM := 120.0F;
   Track.Popularity := 1.0F;
-  const Extra: C.IDictionary<string?, string?>? := Track.AdditionalFields;
+  const Extra: C.IDictionary of (string?, string?)? := Track.AdditionalFields;
   if Extra = null then
     raise new Sys.InvalidOperationException('Missing ATL fields.');
   end if;
@@ -89,11 +89,11 @@ begin
 end function;
 
 // Waits at most fifteen seconds for a bounded page satisfying `Accept`.
-public async function Until(Session: Metadata.Session; Accept: function(I.ImmutableArray<M.Entry>): bool): Tasks.Task<I.ImmutableArray<M.Entry>>;
+public async function Until(Session: Metadata.Session; Accept: function(I.ImmutableArray of M.Entry): bool): Tasks.Task of I.ImmutableArray of M.Entry;
 begin
   using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
   while true do
-    const Values: I.ImmutableArray<M.Entry> := await Session.QueryAsync(
+    const Values: I.ImmutableArray of M.Entry := await Session.QueryAsync(
       new M.Query(Limit := 500),
       Deadline.Token
     ).ConfigureAwait(false);

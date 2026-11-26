@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Feedback.ProgressRings as W;
 // - `Fraction`: Current progress from zero through one.
 // ## Returns
 // The widget for the application view.
-public function View(Fraction: float): E.Element<string>;
+public function View(Fraction: float): E.Element of string;
 begin
-  return W.ProgressRing<string>('onboarding', 'Onboarding', Fraction, 104.0F);
+  return W.ProgressRing of string('onboarding', 'Onboarding', Fraction, 104.0F);
 end function;
 
 end unit;

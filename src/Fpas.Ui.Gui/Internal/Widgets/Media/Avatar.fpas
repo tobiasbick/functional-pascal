@@ -15,7 +15,7 @@ uses Fpas.Ui.Widgets.Media.Avatars as A;
 // - `Id`: Stable avatar identity.
 // - `Name`: Name used for initials.
 // - `Settings`: Native size, presence and image options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Name: string; Settings: A.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Name: string; Settings: A.Options);
 begin
   const Role: string := 'avatar';
   const Image: bool := Frame.Window.Avatar(

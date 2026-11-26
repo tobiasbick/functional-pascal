@@ -20,13 +20,13 @@ uses Fpas.Ui.Widgets.Developer.DiffViews as D;
 // - `Current`: Selected change, or minus one.
 // - `Changed`: Maps diff and selection updates.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Before: string; After: string; Current: int; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Before: string; After: string; Current: int; Changed: function(D.Event): TMsg; Settings: D.Options);
 begin
   const Role: string := 'diff-view';
   const Token: string := C.Token(Role, Id);
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   const Enabled: bool := Frame.AcceptInput;
-  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
+  const Focus: bool := C.WantsFocus of TMsg(Frame, Id, Token, Enabled);
   const Result: CuiDeveloper.CuiDiffViewEvent? := Frame.Window.DiffView(
     Token, Before, After, Current, Settings.Language, Settings.OldTitle, Settings.NewTitle,
     Settings.Context, Width.Kind, Width.Value, Settings.Height, Settings.Size,
@@ -41,7 +41,7 @@ begin
     end case;
   end if;
 
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, '');
 end procedure;
 
 end unit;

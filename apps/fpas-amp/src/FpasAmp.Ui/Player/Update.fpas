@@ -209,7 +209,7 @@ begin
   const Revision: long := Current.Revision + 1L;
   case Message of
     when M.Msg.Play(
-      const Queue: I.ImmutableArray<Tracks.Entry>,
+      const Queue: I.ImmutableArray of Tracks.Entry,
       const Index: int,
       const Source: Music.Selection
     ):
@@ -230,7 +230,7 @@ begin
         return Idle(Current);
       end if;
     when M.Msg.PlayEpisodes(
-      const Queue: I.ImmutableArray<Tracks.Entry>,
+      const Queue: I.ImmutableArray of Tracks.Entry,
       const Index: int,
       const Cover: Images.Bitmap?
     ):

@@ -21,10 +21,10 @@ public const Id: string := 'disclosure-countdown';
 // - `OnFailure`: Maps a worker exception to a message.
 // ## Returns
 // The cancellable background command.
-public function Start<TMsg>(
+public function Start of TMsg(
   Deadline: Sys.DateTimeOffset?; Tick: function(Sys.DateTimeOffset, double): TMsg;
   OnFailure: function(Sys.Exception): TMsg
-): Mvu.Command<TMsg>;
+): Mvu.Command of TMsg;
   async function Run(Post: function(TMsg): Tasks.Task; Token: Threads.CancellationToken): Tasks.Task;
   begin
     const Target: Sys.DateTimeOffset := Deadline ?? Sys.DateTimeOffset.UtcNow.AddSeconds(
@@ -44,7 +44,7 @@ public function Start<TMsg>(
     end while;
   end function;
 begin
-  return Mvu.StartBackground<TMsg>(Id, Mvu.FromWorker<TMsg>(Run, OnFailure));
+  return Mvu.StartBackground of TMsg(Id, Mvu.FromWorker of TMsg(Run, OnFailure));
 end function;
 
 end unit;

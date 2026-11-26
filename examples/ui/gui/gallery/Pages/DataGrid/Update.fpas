@@ -17,7 +17,7 @@ begin
   return if Index < 0 or Index >= Before.Length then
     -1
   else
-    Sys.Array.IndexOf<int>(After, Before[Index])
+    Sys.Array.IndexOf of int(After, Before[Index])
   end if;
 end function;
 
@@ -61,7 +61,7 @@ end function;
 
 function UpdateTree(State: S.Model; Value: Tree.Change): S.Model;
 begin
-  const Nodes: Lists.List<Tree.Node> := new Lists.List<Tree.Node>(Value.Nodes);
+  const Nodes: Lists.List of Tree.Node := new Lists.List of Tree.Node(Value.Nodes);
   for Index: int in Value.Load do
     Nodes[Index] := Nodes[Index] with
       Loading := false;
@@ -98,7 +98,9 @@ begin
     when S.Msg.SetGrid(const Value: D.Value, const Rows: array of int):
       return Grid(State, Value, Rows);
     when S.Msg.Rename(const Index: int, const Name: string):
-      const Names: Lists.Dictionary<int, string> := new Lists.Dictionary<int, string>(State.Names);
+      const Names: Lists.Dictionary of (int, string) := new Lists.Dictionary of (int, string)(
+        State.Names
+      );
       Names[Index] := Name;
       const Sort: T.Sort? := State.Grid.Order;
       if Sort <> null and Sort.Column = 0 then

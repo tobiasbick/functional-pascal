@@ -13,7 +13,7 @@ uses System.Collections.Generic as Lists;
 
 function PackService(Items: array of D.Service): array of CuiDeveloper.CuiDevService;
 begin
-  const Native: Lists.List<CuiDeveloper.CuiDevService> := new Lists.List<CuiDeveloper.CuiDevService>(
+  const Native: Lists.List of CuiDeveloper.CuiDevService := new Lists.List of CuiDeveloper.CuiDevService(
     Items.Length
   );
   for Entry: D.Service in Items do
@@ -32,7 +32,7 @@ end function;
 // - `Services`: Services supplied to the widget.
 // - `LastDay`: LastDay supplied to the widget.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Services: array of D.Service; LastDay: Sys.DateOnly; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Services: array of D.Service; LastDay: Sys.DateOnly; Settings: D.Options);
 begin
   const Role: string := 'uptime';
   const Token: string := C.Token(Role, Id);
@@ -48,7 +48,7 @@ begin
     Width.Value,
     Enabled
   );
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, '');
 end procedure;
 
 end unit;

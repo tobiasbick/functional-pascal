@@ -17,12 +17,12 @@ uses Fpas.Ui.Widgets.Overlays.Menus as W;
 // - `Target`: The control that receives the overlay.
 // ## Returns
 // The widget for the application view.
-public function View(Target: E.Element<string>): E.Element<string>;
+public function View(Target: E.Element of string): E.Element of string;
 begin
-  return W.ContextMenu<string>('context', Target, [
-    W.Entry<string>.Action(new W.Item<string>('copy', 'Copy', 'copy', Shortcut := 'Ctrl C')),
-    W.Entry<string>.Separator,
-    W.Entry<string>.Action(new W.Item<string>('delete', 'Delete', 'delete', Danger := true))
+  return W.ContextMenu of string('context', Target, [
+    (W.Entry of string).Action(new W.Item of string('copy', 'Copy', 'copy', Shortcut := 'Ctrl C')),
+    (W.Entry of string).Separator,
+    (W.Entry of string).Action(new W.Item of string('delete', 'Delete', 'delete', Danger := true))
   ]);
 end function;
 

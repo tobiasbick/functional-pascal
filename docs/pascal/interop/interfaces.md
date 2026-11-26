@@ -13,15 +13,15 @@ program InterfaceSources;
 uses System as Sys;
 uses System.Console as Console;
 
-type ISource<T> = protocol
+type ISource of T = protocol
   Name: string;
   function Read(): T;
 end protocol;
 
-type IDisposableSource<T> = protocol extends ISource<T>, Sys.IDisposable
+type IDisposableSource of T = protocol extends ISource of T, Sys.IDisposable
 end protocol;
 
-type ConstantSource<T> = record implements IDisposableSource<T>
+type ConstantSource of T = record implements IDisposableSource of T
   public Name: string;
   public Value: T;
 
@@ -36,7 +36,7 @@ type ConstantSource<T> = record implements IDisposableSource<T>
 end record;
 
 begin
-  using const Source: IDisposableSource<int> := new ConstantSource<int>('answer', 42);
+  using const Source: IDisposableSource of int := new ConstantSource of int('answer', 42);
   if Source.Name <> 'answer' or Source.Read() <> 42 then
     raise new Sys.InvalidOperationException('Incorrect interface dispatch');
   end if;
@@ -58,11 +58,11 @@ Generic type constraints follow `=` and precede `protocol`. Method constraints
 follow the signature, as on implemented routines.
 
 ```pascal fragment context=declarations
-public type IFactory<T> =
+public type IFactory of T =
 where T: class;
 protocol
   function Create(): T;
-  function Echo<U>(Value: U): U;
+  function Echo of U(Value: U): U;
   where U: class;
 end protocol;
 ```

@@ -36,7 +36,7 @@ begin
   const Rating: int := Fields.IntegerValue(Fields.Field(Field, 'minimumRating')) ?? -2;
   const Desc: bool? := Fields.BooleanValue(Fields.Field(Field, 'descending'));
   const Values: J.JsonElement := Fields.Field(Field, 'genres');
-  const Genres: C.List<string> := new C.List<string>();
+  const Genres: C.List of string := new C.List of string();
   if Values.ValueKind = J.JsonValueKind.Array then
     for Item: J.JsonElement in Values.EnumerateArray() do
       const Name: string? := Fields.StringValue(Item);
@@ -168,12 +168,12 @@ end function;
 // Restores `Value` against fresh source `Entries`, reusing the browser's filter and sort.
 // ## Returns
 // A paused queue. A replacement title starts at zero if the saved title disappeared.
-public function Restore(Value: Saved; Entries: I.ImmutableArray<Tracks.Entry>): M.State;
+public function Restore(Value: Saved; Entries: I.ImmutableArray of Tracks.Entry): M.State;
 begin
   if Value.Index < 0 then
     return new M.State();
   end if;
-  const Queue: I.ImmutableArray<Tracks.Entry> := Browse.Songs(Entries, Value.Source);
+  const Queue: I.ImmutableArray of Tracks.Entry := Browse.Songs(Entries, Value.Source);
   if Queue.IsEmpty then
     return new M.State();
   end if;

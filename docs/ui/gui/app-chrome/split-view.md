@@ -19,11 +19,11 @@ uses Fpas.Ui.Widgets.Desktop.SplitViews as W;
 // - `Ratio`: Model-owned share of the first pane.
 // ## Returns
 // The split with new ratios as messages.
-public function View(Ratio: float): E.Element<float>;
+public function View(Ratio: float): E.Element of float;
 requires Ratio >= 0.0F and Ratio <= 1.0F;
 begin
-  return W.SplitView<float>('notes-split', Ratio,
-    E.Text<float>('Notes'), E.Text<float>('Selected note'),
+  return W.SplitView of float('notes-split', Ratio,
+    E.Text of float('Notes'), E.Text of float('Selected note'),
     function(Value: float): float => Value,
     new W.Options(Height := L.Extent.Fixed(L.Measure.Logical(128)),
       MinimumFirst := 96.0F, MinimumSecond := 120.0F));

@@ -19,7 +19,7 @@ uses System.Threading.Tasks as Tasks;
 
 // Requests the thumbnail for `Album` through `Service`, observing `Cancellation`.
 // Returns null when the artwork is unavailable so the view can show its placeholder.
-public async function Load(Service: Access.Session; Album: Albums.Album; Cancellation: T.CancellationToken): Tasks.Task<Imaging.Bitmap?>;
+public async function Load(Service: Access.Session; Album: Albums.Album; Cancellation: T.CancellationToken): Tasks.Task of Imaging.Bitmap?;
 requires Album.Id <> '';
 begin
   try
@@ -35,13 +35,13 @@ end function;
 // Presents cached `Image` at logical `Edge` with stable `Id`, or a square placeholder.
 // This pure view performs no I/O and does not retain additional decoded image data.
 // `TMsg` is the message type of the containing view.
-public function Build<TMsg>(Id: string; Image: Imaging.Bitmap?; Edge: int): E.Element<TMsg>;
+public function Build of TMsg(Id: string; Image: Imaging.Bitmap?; Edge: int): E.Element of TMsg;
 requires Id <> '';
 requires Edge > 0;
 begin
   case Image of
     when is Imaging.Bitmap as Bitmap:
-      return Images.Image<TMsg>(
+      return Images.Image of TMsg(
         Id, Media.Source.Rgba(Bitmap.Width, Bitmap.Height, Bitmap.Pixels),
         new Images.Options(
           Width := L.Extent.Fixed(L.Measure.Logical(Edge)),
@@ -50,10 +50,10 @@ begin
       );
     else
       const Size: L.AxisSize := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(Edge)));
-      return E.Size<TMsg>(
-        E.Column<TMsg>(
+      return E.Size of TMsg(
+        E.Column of TMsg(
           new L.Flow(Align := L.Alignment.Center, Justify := L.Justification.Center),
-          E.Styled<TMsg>(E.Text<TMsg>(Sys.Char.ConvertFromUtf32($E122)), S.Role.MutedIcon)
+          E.Styled of TMsg(E.Text of TMsg(Sys.Char.ConvertFromUtf32($E122)), S.Role.MutedIcon)
         ), new L.Flex(Width := Size, Height := Size)
       );
   end case;

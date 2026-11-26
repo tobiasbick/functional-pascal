@@ -14,12 +14,12 @@ uses GuiGallery.Shared.Sections as G;
 // - `Model`: Current clock sample.
 // ## Returns
 // The native countdown pair.
-public function View(Model: S.Model): E.Element<S.Msg>;
+public function View(Model: S.Model): E.Element of S.Msg;
 begin
-  return E.Row<S.Msg>(
+  return E.Row of S.Msg(
     new L.Flow(Gap := G.Points(24), Align := L.Alignment.Center),
-    D.Countdown<S.Msg>('disclosure-launch', Model.SecondsLeft),
-    D.Countdown<S.Msg>(
+    D.Countdown of S.Msg('disclosure-launch', Model.SecondsLeft),
+    D.Countdown of S.Msg(
       'disclosure-sale', Model.SecondsLeft - 172800.0,
       new D.Options(Compact := true, HideDays := true)
     )

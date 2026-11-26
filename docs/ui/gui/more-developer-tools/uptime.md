@@ -21,9 +21,9 @@ uses System as Sys;
 // - `LastDay`: Date corresponding to the newest sample.
 // ## Returns
 // The availability panel for the application view.
-public function View(Services: array of W.Service; LastDay: Sys.DateOnly): E.Element<string>;
+public function View(Services: array of W.Service; LastDay: Sys.DateOnly): E.Element of string;
 begin
-  return W.Uptime<string>('availability', Services, LastDay);
+  return W.Uptime of string('availability', Services, LastDay);
 end function;
 
 end unit;

@@ -11,19 +11,19 @@ uses Fpas.Ui.Widgets.Inputs.RadioGroups as R;
 uses System as Sys;
 uses System.Collections.Generic as C;
 
-type Choice<TMsg> = record implements A.IActivatable<TMsg>
+type Choice of TMsg = record implements A.IActivatable of TMsg
   public Group: string;
   public Items: array of R.Item;
   public Index: int;
   public Selected: int;
   public Change: function(int): TMsg;
 
-  public function Activate(): A.Result<TMsg>;
+  public function Activate(): A.Result of TMsg;
   begin
     return if self.Index = self.Selected then
-      A.Result<TMsg>.NoAction
+      (A.Result of TMsg).NoAction
     else
-      A.Result<TMsg>.Send(self.Change(self.Index))
+      (A.Result of TMsg).Send(self.Change(self.Index))
     end if;
   end function;
 end record;
@@ -37,7 +37,7 @@ end record;
 // - `Apply`: Dispatches a change when the target differs from the model.
 // ## Returns
 // Target focus identity, or null for an unrelated key or control.
-public function Move<TMsg>(Handler: A.IActivatable<TMsg>?; Key: K.Key; Apply: procedure(TMsg)): string?;
+public function Move of TMsg(Handler: (A.IActivatable of TMsg)?; Key: K.Key; Apply: procedure(TMsg)): string?;
 begin
   const Delta: int := case Key of
     when K.Key.Left, K.Key.Up: -1;
@@ -46,7 +46,7 @@ begin
   end case;
   if Delta <> 0 then
     case Handler of
-      when is Choice<TMsg> as Row:
+      when is Choice of TMsg as Row:
         var Next: int := Row.Index;
         repeat
           Next := if Delta > 0 then
@@ -82,26 +82,26 @@ end function;
 // - `Gap`: Terminal rows between choices.
 // ## Returns
 // A vertical group with one tab stop and individually addressable choices.
-public function Lower<TMsg>(Id: string; Items: array of R.Item; Selected: int; Change: function(int): TMsg; Enabled: bool; Gap: int): E.Element<TMsg>;
+public function Lower of TMsg(Id: string; Items: array of R.Item; Selected: int; Change: function(int): TMsg; Enabled: bool; Gap: int): E.Element of TMsg;
 begin
   const Entry: int := if Selected >= 0 and Items[Selected].Enabled then
     Selected
   else
-    Sys.Array.FindIndex<R.Item>(Items, function(Item: R.Item): bool => Item.Enabled)
+    Sys.Array.FindIndex of R.Item(Items, function(Item: R.Item): bool => Item.Enabled)
   end if;
   const Target: string := if Entry >= 0 then
     R.ItemId(Id, Entry)
   else
     ''
   end if;
-  const Rows: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>(Items.Length);
+  const Rows: C.List of E.Element of TMsg := new C.List of E.Element of TMsg(Items.Length);
   for Index: int := 0 to Items.Length - 1 do
     const Item: R.Item := Items[Index];
     const Active: bool := Index = Selected;
     Rows.Add(
-      E.Element<TMsg>.Action(
+      (E.Element of TMsg).Action(
         R.ItemId(Id, Index),
-        new Choice<TMsg>(Id, Items, Index, Selected, Change),
+        new Choice of TMsg(Id, Items, Index, Selected, Change),
         Enabled and Item.Enabled,
         new E.ActionView(
           (if Active then
@@ -130,7 +130,7 @@ begin
     );
   end for;
 
-  return E.Element<TMsg>.Stack(Rows.ToArray(), false, new E.Flow(Gap := Gap));
+  return (E.Element of TMsg).Stack(Rows.ToArray(), false, new E.Flow(Gap := Gap));
 end function;
 
 end unit;

@@ -17,7 +17,7 @@ uses System as Sys;
 // - `At`: Diagnostic path.
 public procedure SpeedDial(Items: array of D.Item; Settings: D.Options; At: string);
 begin
-  if Items.Length < 1 or Items.Length > 16 or not Sys.Enum.IsDefined<M.Placement>(
+  if Items.Length < 1 or Items.Length > 16 or not Sys.Enum.IsDefined of M.Placement(
     Settings.Position
   )
   then
@@ -49,7 +49,7 @@ public procedure SwipeRow(Left: array of S.Item; Right: array of S.Item; Setting
       R.CheckText(Item.Icon, At + '/glyph');
       if Sys.String.IsNullOrWhiteSpace(
         Item.Label
-      ) or not Sys.Enum.IsDefined<Styles.Tone>(Item.Tone)
+      ) or not Sys.Enum.IsDefined of Styles.Tone(Item.Tone)
       then
         R.Reject(At, 'Each swipe action needs a label and native tone.');
       end if;

@@ -27,7 +27,7 @@ uses System as Sys;
 // - `Offset`: Saved offset to restore when the list reappears.
 // - `OnScroll`: Optional observer for the latest native target offset.
 // - `Visit`: Host traversal for a realized row.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Count: int; RowHeight: float; Height: L.Extent; Build: function(int): E.Element<TMsg>; Offset: float?; OnScroll: Sys.Func<float, TMsg>?; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Count: int; RowHeight: float; Height: L.Extent; Build: function(int): E.Element of TMsg; Offset: float?; OnScroll: Sys.Func of (float, TMsg)?; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
 begin
   const Extent: S.NativeExtent := S.Extent(Height);
   const Token: string := C.Token('virtual-list', Id);
@@ -42,8 +42,8 @@ begin
     Token, Count, RowHeight, Extent.Kind, Extent.Value, Frame.AcceptInput, Restore
   );
   for Index: int := Range.First to Range.Last - 1 do
-    const Row: E.Element<TMsg> := Build(Index);
-    const Prepared: V.Prepared<TMsg> := Realized.Prepare<TMsg>(Row);
+    const Row: E.Element of TMsg := Build(Index);
+    const Prepared: V.Prepared of TMsg := Realized.Prepare of TMsg(Row);
     Frame.Window.BeginVirtualRow(Index);
     Visit(
       Row, Frame with
@@ -57,7 +57,7 @@ begin
   Frame.Window.EndVirtualList();
   if Frame.AcceptInput then
     case OnScroll of
-      when is Sys.Func<float, TMsg> as Report:
+      when is Sys.Func of (float, TMsg) as Report:
         var Position: float := 0.0F;
         var Maximum: float := 0.0F;
         Frame.Window.ScrollState(Token, -1, 0.0F, out Position, out Maximum);
@@ -68,7 +68,7 @@ begin
     end case;
   end if;
 
-  C.Track<TMsg>(
+  C.Track of TMsg(
     Frame, new App.Control(
       Id, '', 'virtual-list', new Cui.CuiRectangle(), Frame.AcceptInput,
       Value := Range.First.ToString() + ':' + Range.Last.ToString()

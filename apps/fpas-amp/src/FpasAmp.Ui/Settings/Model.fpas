@@ -173,7 +173,7 @@ end function;
 // The selected light, dark or system mode.
 public function Appearance(Settings: Preferences): Switchers.Selection;
 begin
-  return Sys.Enum.Parse<Switchers.Selection>(Settings.Appearance, true);
+  return Sys.Enum.Parse of Switchers.Selection(Settings.Appearance, true);
 end function;
 
 // Resolves the stored accent choice.
@@ -184,7 +184,7 @@ end function;
 // The selected CUI accent.
 public function Accent(Settings: Preferences): Themes.Accent;
 begin
-  return Sys.Enum.Parse<Themes.Accent>(Settings.Accent, true);
+  return Sys.Enum.Parse of Themes.Accent(Settings.Accent, true);
 end function;
 
 end unit;

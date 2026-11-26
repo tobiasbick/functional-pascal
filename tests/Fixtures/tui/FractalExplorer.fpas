@@ -40,7 +40,7 @@ begin
     RowWith(Frame, 'Iterations').Contains('PgUp/PgDn'),
     'Show the iteration keys beside the gauge.'
   );
-  const Top: int := Sys.Array.IndexOf<string>(Frame.Lines, RowWith(Frame, 'Status'));
+  const Top: int := Sys.Array.IndexOf of string(Frame.Lines, RowWith(Frame, 'Status'));
   Check(Top >= 0, 'The status panel has a frame.');
   for Index: int := Top + 1 to Frame.Rows - 2 do
     const Row: string := Frame.Lines[Index];
@@ -100,7 +100,7 @@ procedure Verify();
     using const Limit: Threads.CancellationTokenSource := new Threads.CancellationTokenSource(
       10000
     );
-    const Reply: Replies.Reply<X.Msg> := Render.ReadAsync(
+    const Reply: Replies.Reply of X.Msg := Render.ReadAsync(
       Limit.Token
     ).AsTask().GetAwaiter().GetResult();
     Check(
@@ -135,11 +135,11 @@ procedure Verify();
     return Frame;
   end function;
 begin
-  const Effects: Replies.Effects<X.Msg> := Replies.Effects<X.Msg>.Create();
-  var Render: Channels.ChannelReader<Replies.Reply<X.Msg>> := Effects.Watch('render');
-  using const Session: App.HeadlessSession := Headless.Start<X.Model, X.Msg>(
+  const Effects: Replies.Effects of X.Msg := (Replies.Effects of X.Msg).Create();
+  var Render: Channels.ChannelReader of Replies.Reply of X.Msg := Effects.Watch('render');
+  using const Session: App.HeadlessSession := Headless.Start of (X.Model, X.Msg)(
     new X.Model(),
-    function(State: X.Model; Message: X.Msg): Mvu.Transition<X.Model, X.Msg> => Effects.Wrap<X.Model>(
+    function(State: X.Model; Message: X.Msg): Mvu.Transition of (X.Model, X.Msg) => Effects.Wrap of X.Model(
       X.Update(State, Message)
     ),
     V.View, 80, 25, V.Theme()

@@ -10,20 +10,20 @@ uses System.Collections.Immutable as I;
 
 // Resolves List against the current catalogue, keeping its order and repeated tracks.
 // Entries without a catalogue match remain in storage and are omitted from this queue.
-public function Resolve(List: Lists.Playlist?; Catalogue: I.ImmutableArray<Tracks.Entry>): I.ImmutableArray<Tracks.Entry>;
+public function Resolve(List: Lists.Playlist?; Catalogue: I.ImmutableArray of Tracks.Entry): I.ImmutableArray of Tracks.Entry;
 begin
   if List = null or List.Entries.IsEmpty then
-    return I.ImmutableArray<Tracks.Entry>.Empty;
+    return (I.ImmutableArray of Tracks.Entry).Empty;
   end if;
 
-  const Paths: C.Dictionary<string, Tracks.Entry> := new C.Dictionary<string, Tracks.Entry>(
+  const Paths: C.Dictionary of (string, Tracks.Entry) := new C.Dictionary of (string, Tracks.Entry)(
     if Sys.OperatingSystem.IsWindows() then
       Sys.StringComparer.OrdinalIgnoreCase
     else
       Sys.StringComparer.Ordinal
     end if
   );
-  const Ids: C.Dictionary<string, Tracks.Entry> := new C.Dictionary<string, Tracks.Entry>();
+  const Ids: C.Dictionary of (string, Tracks.Entry) := new C.Dictionary of (string, Tracks.Entry)();
   for Item: Tracks.Entry in Catalogue do
     Paths[Item.Path] := Item;
     if Item.TrackId <> '' then
@@ -31,7 +31,7 @@ begin
     end if;
   end for;
 
-  const Result: I.ImmutableArray<Tracks.Entry>.Builder := I.ImmutableArray.CreateBuilder<Tracks.Entry>();
+  const Result: (I.ImmutableArray of Tracks.Entry).Builder := I.ImmutableArray.CreateBuilder of Tracks.Entry();
   for Item: Lists.Entry in List.Entries do
     if Paths.ContainsKey(Item.CurrentReference) then
       Result.Add(Paths[Item.CurrentReference]);

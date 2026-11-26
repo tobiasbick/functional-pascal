@@ -64,7 +64,7 @@ public sealed class NameArgumentsTests(SdkPackageFixture sdk) : IClassFixture<Sd
         const string source = """
             unit Demo.Bridge;
             uses Sample as S;
-            function Pair<T>(Left: T; Right: T): T; begin return Left; end function;
+            function Pair of T(Left: T; Right: T): T; begin return Left; end function;
             public function Run(Choose: S.Choose; Text: string): int;
             begin
               var N: int := 1;
@@ -80,7 +80,7 @@ public sealed class NameArgumentsTests(SdkPackageFixture sdk) : IClassFixture<Sd
               S.Api.Route(1, 2, Text);
               S.Api.Send(Bytes, Bytes, 1);
               const A: S.Api := new S.Api(true, false);
-              return Choose(N, Pair<int>(2, 3)) + Text.Substring(1, 2).Length;
+              return Choose(N, Pair of int(2, 3)) + Text.Substring(1, 2).Length;
             end function;
             end unit;
             """;
@@ -109,8 +109,8 @@ public sealed class NameArgumentsTests(SdkPackageFixture sdk) : IClassFixture<Sd
         void Check(string marker, string replacement) =>
             Assert.Equal(source.Replace(marker, replacement), Assert.Single(Prepare(marker).Edits.Documents).NewText);
 
-        Check("Pair<int>(2, 3)", "Pair<int>(Left := 2, Right := 3)");
-        Check("Choose(N, Pair<int>(2, 3))", "Choose(first := N, second := Pair<int>(2, 3))");
+        Check("Pair of int(2, 3)", "Pair of int(Left := 2, Right := 3)");
+        Check("Choose(N, Pair of int(2, 3))", "Choose(first := N, second := Pair of int(2, 3))");
         Check("Substring(1, 2)", "Substring(startIndex := 1, length := 2)");
         Check("new S.Api(true, false)", "new S.Api(enabled := true, visible := false)");
         Check("Copy(ref N, out N)", "Copy(source := ref N, result := out N)");

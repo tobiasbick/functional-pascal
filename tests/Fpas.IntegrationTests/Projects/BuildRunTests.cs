@@ -20,7 +20,7 @@ public sealed class BuildRunTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
             uses Fpas.Execution.Effects as Fx; uses System.Console as Console; uses System.IO as IO;
               uses System.Threading as Threads; uses System.Threading.Tasks as Tasks;
 
-            async function Read(Path: string; Token: Threads.CancellationToken): Tasks.Task<Fx.Outcome<string, string>>;
+            async function Read(Path: string; Token: Threads.CancellationToken): Tasks.Task of Fx.Outcome of (string, string);
             begin
               Console.WriteLine('reading');
               try
@@ -30,7 +30,7 @@ public sealed class BuildRunTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
               end try;
             end function;
 
-            procedure Print(Result: Fx.Outcome<string, string>);
+            procedure Print(Result: Fx.Outcome of (string, string));
             begin
               case Result of
                 when Fx.Outcome.Success(const Text: string): Console.WriteLine(Text);
@@ -39,7 +39,7 @@ public sealed class BuildRunTests(SdkPackageFixture sdk) : IClassFixture<SdkPack
             end procedure;
 
             begin
-              const Effect: Fx.Effect<string, string, string> := Fx.Effect<string, string, string>.Defer(Read);
+              const Effect: Fx.Effect of (string, string, string) := Fx.Effect of (string, string, string).Defer(Read);
               Console.WriteLine('deferred');
               Print(Effect.Run('absent.txt', Threads.CancellationToken.None).GetAwaiter().GetResult());
               IO.File.WriteAllText('present.txt', 'from disk');

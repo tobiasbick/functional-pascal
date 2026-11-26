@@ -50,10 +50,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function FeatureFlags<TMsg>(Id: string; Entries: array of Flag; Environments: array of string; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function FeatureFlags of TMsg(Id: string; Entries: array of Flag; Environments: array of string; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.FeatureFlags(
+  return (E.Element of TMsg).FeatureFlags(
     Id,
     Entries,
     Environments,

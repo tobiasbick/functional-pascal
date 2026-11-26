@@ -69,12 +69,12 @@ end function;
 // - `Settings`: Optional label, width, format, minute step and input permission.
 // ## Returns
 // The graphical time picker.
-public function TimePicker<TMsg>(
+public function TimePicker of TMsg(
   Id: string; Value: Sys.TimeOnly; OnChange: function(Sys.TimeOnly): TMsg; Settings: Options? := null
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.TimePicker(Id, Value, OnChange, Settings ?? new Options());
+  return (E.Element of TMsg).TimePicker(Id, Value, OnChange, Settings ?? new Options());
 end function;
 
 end unit;

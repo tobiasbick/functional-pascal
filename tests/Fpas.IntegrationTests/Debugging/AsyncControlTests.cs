@@ -18,7 +18,7 @@ public sealed partial class AsyncControlTests
             async program AsyncControl;
             uses System as Sys; uses System.Console as Console; uses System.Threading.Tasks as Tasks;
               uses System.IO.File as File; uses System.Threading.Thread as Thread;
-            async function Work(Input: int; Gate: Tasks.Task<int>): Tasks.Task<int>;
+            async function Work(Input: int; Gate: Tasks.Task of int): Tasks.Task of int;
             begin
               var Value: int := Input + 1;
               const Release: int := await Gate;
@@ -26,13 +26,13 @@ public sealed partial class AsyncControlTests
               return Value;
             end function;
             begin
-              const Gate: Tasks.TaskCompletionSource<int> := new Tasks.TaskCompletionSource<int>(Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
-              const Pending: Tasks.Task<int> := Work(19, Gate.Task);
+              const Gate: Tasks.TaskCompletionSource of int := new Tasks.TaskCompletionSource of int(Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
+              const Pending: Tasks.Task of int := Work(19, Gate.Task);
               if Pending.IsCompleted then raise new Sys.InvalidOperationException('The task must suspend'); end if;
-              const Other: Tasks.Task<int> := Work(100, Tasks.Task.FromResult<int>(1));
+              const Other: Tasks.Task of int := Work(100, Tasks.Task.FromResult of int(1));
               Console.WriteLine(await Other);
               Console.WriteLine('pending');
-              const Releaser: Tasks.Task<int> := Tasks.Task.Run<int>(function(): int
+              const Releaser: Tasks.Task of int := Tasks.Task.Run of int(function(): int
               begin
                 while not File.Exists('release.txt') do Thread.Sleep(10); end while;
                 Gate.SetResult(22);
@@ -90,24 +90,24 @@ public sealed partial class AsyncControlTests
     }
 
     [Theory]
-    [InlineData("over", "Tasks.Task.FromResult<int>(22)")]
-    [InlineData("into", "Tasks.Task.FromResult<int>(22)")]
-    [InlineData("over", "Tasks.Task.FromResult<int>(22).ConfigureAwait(false)")]
-    [InlineData("into", "Tasks.Task.FromResult<int>(22).ConfigureAwait(false)")]
-    [InlineData("over", "new Tasks.ValueTask<int>(22)")]
-    [InlineData("into", "new Tasks.ValueTask<int>(22)")]
-    [InlineData("over", "new Tasks.ValueTask<int>(22).ConfigureAwait(false)")]
-    [InlineData("into", "new Tasks.ValueTask<int>(22).ConfigureAwait(false)")]
+    [InlineData("over", "Tasks.Task.FromResult of int(22)")]
+    [InlineData("into", "Tasks.Task.FromResult of int(22)")]
+    [InlineData("over", "Tasks.Task.FromResult of int(22).ConfigureAwait(false)")]
+    [InlineData("into", "Tasks.Task.FromResult of int(22).ConfigureAwait(false)")]
+    [InlineData("over", "new Tasks.ValueTask of int(22)")]
+    [InlineData("into", "new Tasks.ValueTask of int(22)")]
+    [InlineData("over", "new Tasks.ValueTask of int(22).ConfigureAwait(false)")]
+    [InlineData("into", "new Tasks.ValueTask of int(22).ConfigureAwait(false)")]
     public async Task An_already_completed_await_stops_at_the_following_source_statement(string kind, string awaited)
     {
         using var program = new Debuggee("own-completed-await");
         await program.Compile("""
             async program CompletedAwait;
             uses System.Console as Console; uses System.Threading.Tasks as Tasks;
-            async function Work(Input: int): Tasks.Task<int>;
+            async function Work(Input: int): Tasks.Task of int;
             begin
               var Value: int := Input + 1;
-              const Release: int := await Tasks.Task.FromResult<int>(22);
+              const Release: int := await Tasks.Task.FromResult of int(22);
               Value := Value + Release;
               return Value;
             end function;
@@ -115,7 +115,7 @@ public sealed partial class AsyncControlTests
               Console.WriteLine(await Work(19));
             end;
             end program;
-            """.Replace("await Tasks.Task.FromResult<int>(22)", $"await {awaited}", StringComparison.Ordinal));
+            """.Replace("await Tasks.Task.FromResult of int(22)", $"await {awaited}", StringComparison.Ordinal));
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         await using var host = await Launch(program, 6, deadline.Token);
         var before = host.Snapshot; var original = await Top(host, before, deadline.Token);
@@ -143,14 +143,14 @@ public sealed partial class AsyncControlTests
         await program.Compile("""
             program CancelAwait;
             uses System as Sys; uses System.Console as Console; uses System.Threading.Tasks as Tasks; uses System.Threading.Thread as Thread;
-            async function Work(Gate: Tasks.Task<int>): Tasks.Task<int>;
+            async function Work(Gate: Tasks.Task of int): Tasks.Task of int;
             begin
               const Value: int := await Gate;
               return Value;
             end function;
             begin
-              const Gate: Tasks.TaskCompletionSource<int> := new Tasks.TaskCompletionSource<int>();
-              const Pending: Tasks.Task<int> := Work(Gate.Task);
+              const Gate: Tasks.TaskCompletionSource of int := new Tasks.TaskCompletionSource of int();
+              const Pending: Tasks.Task of int := Work(Gate.Task);
               if Pending.IsCompleted then raise new Sys.InvalidOperationException('Must suspend'); end if;
               Console.WriteLine('pending');
               Thread.Sleep(60000);

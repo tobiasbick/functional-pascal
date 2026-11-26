@@ -9,7 +9,7 @@ uses Fpas.Ui.Mvu.Application as Mvu;
 // An owner-thread font operation. Faces and emoji data live until the window closes.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Operation<TMsg> = variant
+public type Operation of TMsg = variant
   // Copies trusted font bytes; returns null when CUI rejects the face.
   Load(Data: array of byte; OnLoaded: function(Resources.CuiFontFace?): TMsg);
   // Replaces a role; null restores its built-in face.
@@ -25,9 +25,9 @@ end variant;
 // A font request retained when feature commands are mapped to a parent model.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Request<TMsg> = record implements Mvu.HostExtension<TMsg>
+public type Request of TMsg = record implements Mvu.HostExtension of TMsg
   // Work to perform after the current frame is presented.
-  public Action: Operation<TMsg>;
+  public Action: Operation of TMsg;
 
   // Maps completion messages without performing resource work.
   // ## Type parameters
@@ -36,40 +36,40 @@ public type Request<TMsg> = record implements Mvu.HostExtension<TMsg>
   // - `Messages`: Parent message mapper.
   // ## Returns
   // The same resource operation with mapped completion messages.
-  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  public function Map of TNext(Messages: function(TMsg): TNext): Mvu.HostExtension of TNext;
   begin
-    const Next: Operation<TNext> := case self.Action of
+    const Next: Operation of TNext := case self.Action of
       when Operation.Load(
         const Data: array of byte,
         const Loaded: function(Resources.CuiFontFace?): TMsg
-      ): Operation<TNext>.Load(
+      ): (Operation of TNext).Load(
         Data,
         function(Face: Resources.CuiFontFace?): TNext => Messages(Loaded(Face))
       );
       when Operation.Assign(
         const Role: G.Font,
         const Face: Resources.CuiFontFace?
-      ): Operation<TNext>.Assign(Role, Face);
+      ): (Operation of TNext).Assign(Role, Face);
       when Operation.Fallback(
         const Face: Resources.CuiFontFace,
         const Fallback: Resources.CuiFontFace
-      ): Operation<TNext>.Fallback(Face, Fallback);
+      ): (Operation of TNext).Fallback(Face, Fallback);
       when Operation.Emoji(
         const Data: (array of byte)?,
         const Loaded: function(bool): TMsg
-      ): Operation<TNext>.Emoji(
+      ): (Operation of TNext).Emoji(
         Data,
         function(Supported: bool): TNext => Messages(Loaded(Supported))
       );
       when Operation.SupportsEmoji(
         const Text: string,
         const Read: function(bool): TMsg
-      ): Operation<TNext>.SupportsEmoji(
+      ): (Operation of TNext).SupportsEmoji(
         Text,
         function(Supported: bool): TNext => Messages(Read(Supported))
       );
     end case;
-    return new Request<TNext>(Next);
+    return new Request of TNext(Next);
   end function;
 end record;
 
@@ -81,9 +81,9 @@ end record;
 // - `Action`: Resource operation and typed result mapper.
 // ## Returns
 // A graphical owner-thread command.
-public function Apply<TMsg>(Action: Operation<TMsg>): Mvu.Command<TMsg>;
+public function Apply of TMsg(Action: Operation of TMsg): Mvu.Command of TMsg;
 begin
-  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new Request<TMsg>(Action)));
+  return (Mvu.Command of TMsg).Host(Mvu.HostRequest.Extension(new Request of TMsg(Action)));
 end function;
 
 end unit;

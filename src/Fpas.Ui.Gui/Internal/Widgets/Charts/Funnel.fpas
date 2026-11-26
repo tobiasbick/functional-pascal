@@ -22,7 +22,7 @@ uses System as Sys;
 // - `Items`: Named nonnegative amounts.
 // - `Settings`: Native presentation.
 // - `OnActivate`: Optional native click callback.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Items: array of Ch.Item; Settings: W.Options; OnActivate: Sys.Func<int, TMsg>?);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Items: array of Ch.Item; Settings: W.Options; OnActivate: Sys.Func of (int, TMsg)?);
 begin
   const Token: string := C.Token('funnel', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
@@ -42,7 +42,7 @@ begin
   );
   if Enabled and Clicked >= 0 then
     case OnActivate of
-      when is Sys.Func<int, TMsg> as Notify:
+      when is Sys.Func of (int, TMsg) as Notify:
         Frame.Messages.Add(Notify.Invoke(Clicked));
       else
     end case;

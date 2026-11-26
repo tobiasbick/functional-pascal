@@ -28,9 +28,9 @@ uses System.Threading.Tasks as Tasks;
 // Detached catalogue and filter choices, prepared by the observer.
 public type Catalogue = record
   // All indexed audio files in catalogue order.
-  public Tracks: I.ImmutableArray<Tracks.Entry>;
+  public Tracks: I.ImmutableArray of Tracks.Entry;
   // Release identities and revisions used to find artwork.
-  public Releases: I.ImmutableDictionary<string, Albums.Album>;
+  public Releases: I.ImmutableDictionary of (string, Albums.Album);
   // Distinct performer credits for the filter.
   public Performers: array of string;
   // Album filter labels, qualified by artist for duplicate titles.
@@ -46,7 +46,7 @@ public type State = record
   // Current track list key, or empty while its observer is closed.
   public ActiveKey: string := '';
   // In-session controls keyed by Music or a particular playlist.
-  public Views: I.ImmutableDictionary<string, Songs.Presentation> := I.ImmutableDictionary<string, Songs.Presentation>.Empty;
+  public Views: I.ImmutableDictionary of (string, Songs.Presentation) := I.ImmutableDictionary of (string, Songs.Presentation).Empty;
   // Song selection for the whole library, whose persisted release ID is empty.
   public Page: Songs.State := new Songs.State(
     new Albums.Album('', '', '', 0L, ''),
@@ -54,9 +54,9 @@ public type State = record
     Order := new Tables.Sort(0)
   );
   // Release headers from the last catalogue snapshot.
-  public Headers: I.ImmutableDictionary<string, Albums.Album> := I.ImmutableDictionary<string, Albums.Album>.Empty;
+  public Headers: I.ImmutableDictionary of (string, Albums.Album) := I.ImmutableDictionary of (string, Albums.Album).Empty;
   // Realized release thumbnails. A null entry means artwork was unavailable.
-  public Covers: I.ImmutableDictionary<string, Imaging.Bitmap?> := I.ImmutableDictionary<string, Imaging.Bitmap?>.Empty;
+  public Covers: I.ImmutableDictionary of (string, Imaging.Bitmap?) := I.ImmutableDictionary of (string, Imaging.Bitmap?).Empty;
   // First realized row, or -1 after a change of selection.
   public First: int := -1;
   // Exclusive end of the realized row range.
@@ -83,18 +83,20 @@ public type Msg = variant
   Song(Value: Songs.Msg);
 end variant;
 
-function Prepare(Items: I.ImmutableArray<Tracks.Entry>; Headers: I.ImmutableArray<Albums.Album>; Cancellation: T.CancellationToken): Catalogue;
+function Prepare(Items: I.ImmutableArray of Tracks.Entry; Headers: I.ImmutableArray of Albums.Album; Cancellation: T.CancellationToken): Catalogue;
 begin
-  const Used: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+  const Used: C.HashSet of string := new C.HashSet of string(Sys.StringComparer.Ordinal);
   for Item: Tracks.Entry in Items do
     Cancellation.ThrowIfCancellationRequested();
     discard Used.Add(Item.AlbumId);
   end for;
-  const Titles: C.List<string> := new C.List<string>(Headers.Length);
-  const Ids: C.List<string> := new C.List<string>(Headers.Length);
-  const Seen: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.OrdinalIgnoreCase);
-  const Duplicate: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.OrdinalIgnoreCase);
-  const Releases: I.ImmutableDictionary<string, Albums.Album>.Builder := I.ImmutableDictionary.CreateBuilder<string, Albums.Album>();
+  const Titles: C.List of string := new C.List of string(Headers.Length);
+  const Ids: C.List of string := new C.List of string(Headers.Length);
+  const Seen: C.HashSet of string := new C.HashSet of string(Sys.StringComparer.OrdinalIgnoreCase);
+  const Duplicate: C.HashSet of string := new C.HashSet of string(
+    Sys.StringComparer.OrdinalIgnoreCase
+  );
+  const Releases: I.ImmutableDictionary of (string, Albums.Album).Builder := I.ImmutableDictionary.CreateBuilder of (string, Albums.Album)();
   for Item: Albums.Album in Headers do
     Releases[Item.Id] := Item;
     if Used.Contains(Item.Id) and not Seen.Add(Item.Title) then
@@ -126,15 +128,15 @@ begin
   );
 end function;
 
-function Visible(Current: State; First: int; Last: int; Library: Metadata.Session?): A.Transition<State, Msg>;
+function Visible(Current: State; First: int; Last: int; Library: Metadata.Session?): A.Transition of (State, Msg);
 begin
   const Start: int := Sys.Math.Clamp(First, 0, Current.Page.Shown.Length);
   const Finish: int := Sys.Math.Clamp(Last, Start, Current.Page.Shown.Length);
   if Current.First = Start and Current.Last = Finish then
-    return new A.Transition<State, Msg>(Current, []);
+    return new A.Transition of (State, Msg)(Current, []);
   end if;
-  const Retained: I.ImmutableDictionary<string, Imaging.Bitmap?>.Builder := I.ImmutableDictionary.CreateBuilder<string, Imaging.Bitmap?>();
-  const Missing: C.Dictionary<string, Albums.Album> := new C.Dictionary<string, Albums.Album>();
+  const Retained: I.ImmutableDictionary of (string, Imaging.Bitmap?).Builder := I.ImmutableDictionary.CreateBuilder of (string, Imaging.Bitmap?)();
+  const Missing: C.Dictionary of (string, Albums.Album) := new C.Dictionary of (string, Albums.Album)();
   for Index: int := Start to Finish - 1 do
     const Id: string := Current.Page.Shown[Index].AlbumId;
     if Current.Covers.ContainsKey(Id) then
@@ -150,14 +152,14 @@ begin
     Generation := Current.Generation + 1L;
   end with;
   if Missing.Count = 0 or Library = null then
-    return new A.Transition<State, Msg>(Next, [A.CancelBackground<Msg>('covers')]);
+    return new A.Transition of (State, Msg)(Next, [A.CancelBackground of Msg('covers')]);
   end if;
 
-  return new A.Transition<State, Msg>(
+  return new A.Transition of (State, Msg)(
     Next, [
-      A.StartBackground<Msg>(
+      A.StartBackground of Msg(
         'covers',
-        A.FromWorker<Msg>(
+        A.FromWorker of Msg(
           async function(Post: function(Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
             for Release: Albums.Album in Missing.Values do
               Cancellation.ThrowIfCancellationRequested();
@@ -180,7 +182,7 @@ end function;
 
 // Applies Message to Current, borrowing Library for reads and durable rating writes.
 // Returns the updated Music state and its cancellable commands.
-public function Apply(Current: State; Message: Msg; Library: Metadata.Session?): A.Transition<State, Msg>;
+public function Apply(Current: State; Message: Msg; Library: Metadata.Session?): A.Transition of (State, Msg);
 begin
   var Next: State := Current;
   case Message of
@@ -191,7 +193,7 @@ begin
       end case;
       const Blank: State := new State();
       const Visit: long := Current.Page.Visit + 1L;
-      const Views: I.ImmutableDictionary<string, Songs.Presentation> := if Current.ActiveKey <>
+      const Views: I.ImmutableDictionary of (string, Songs.Presentation) := if Current.ActiveKey <>
         ''
       then
         Current.Views.SetItem(Current.ActiveKey, Browse.Remember(Current.Page))
@@ -227,21 +229,21 @@ begin
         Generation := Current.Generation + 1L;
       end with;
       if Message = Msg.Close or Library = null then
-        return new A.Transition<State, Msg>(
+        return new A.Transition of (State, Msg)(
           Next,
-          [A.CancelBackground<Msg>('observe'), A.CancelBackground<Msg>('covers')]
+          [A.CancelBackground of Msg('observe'), A.CancelBackground of Msg('covers')]
         );
       end if;
 
-      return new A.Transition<State, Msg>(
+      return new A.Transition of (State, Msg)(
         Next, [
-          A.StartBackground<Msg>(
+          A.StartBackground of Msg(
             'observe',
-            A.FromWorker<Msg>(
+            A.FromWorker of Msg(
               async function(Post: function(Msg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
                 await Library.Albums.ObserveSongsAsync(
-                  async function(Started: long; Entries: I.ImmutableArray<Tracks.Entry>; Releases: I.ImmutableArray<Albums.Album>): Tasks.Task begin
-                    var Items: I.ImmutableArray<Tracks.Entry> := Entries;
+                  async function(Started: long; Entries: I.ImmutableArray of Tracks.Entry; Releases: I.ImmutableArray of Albums.Album): Tasks.Task begin
+                    var Items: I.ImmutableArray of Tracks.Entry := Entries;
                     if Identity <> null then
                       const List: Lists.Playlist? := await Library.Playlists.ReadAsync(
                         Identity, Cancellation
@@ -265,7 +267,7 @@ begin
       );
     when Msg.Received(const Visit: long, const Started: long, const Value: Catalogue):
       if Visit = Current.Page.Visit and Started >= Current.Page.ReadStarted then
-        var Kept: I.ImmutableDictionary<string, Imaging.Bitmap?> := Current.Covers;
+        var Kept: I.ImmutableDictionary of (string, Imaging.Bitmap?) := Current.Covers;
         for Id: string in Current.Covers.Keys do
           if Current.Covers[Id] = null or not Value.Releases.ContainsKey(
             Id
@@ -305,7 +307,7 @@ begin
         end with;
       end if;
     when Msg.Song(const Proposal: Songs.Msg):
-      const Child: A.Transition<Songs.State, Msg> := Composition.MapTransition<Songs.State, Songs.Msg, Msg>(
+      const Child: A.Transition of (Songs.State, Msg) := Composition.MapTransition of (Songs.State, Songs.Msg, Msg)(
         Edit.Apply(Current.Page, Proposal, Library),
         Msg.Song,
         'song'
@@ -321,10 +323,10 @@ begin
         end with;
       end if;
 
-      return new A.Transition<State, Msg>(Next, Child.Commands);
+      return new A.Transition of (State, Msg)(Next, Child.Commands);
   end case;
 
-  return new A.Transition<State, Msg>(Next, []);
+  return new A.Transition of (State, Msg)(Next, []);
 end function;
 
 end unit;

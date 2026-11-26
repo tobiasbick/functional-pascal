@@ -24,10 +24,10 @@ begin
   return L.Extent.Fixed(L.Measure.Logical(Amount));
 end function;
 
-function Tile(Title: string; Description: string; Background: Color.Color; Deck: bool): E.Element<S.Msg>;
+function Tile(Title: string; Description: string; Background: Color.Color; Deck: bool): E.Element of S.Msg;
 begin
-  return E.Size<S.Msg>(
-    E.Column<S.Msg>(
+  return E.Size of S.Msg(
+    E.Column of S.Msg(
       new L.Flow(
         Gap := G.Points(
           if Deck then
@@ -49,7 +49,7 @@ begin
           16.0F
         end if
       ),
-      E.FormattedText<S.Msg>(
+      E.FormattedText of S.Msg(
         Title, M.Font.Display, if Deck then
           22.0F
         else
@@ -57,7 +57,7 @@ begin
         end if,
         new Color.Color(255, 255, 255)
       ),
-      E.FormattedText<S.Msg>(
+      E.FormattedText of S.Msg(
         Description, if Deck then
           M.Font.Medium
         else
@@ -83,9 +83,9 @@ begin
   );
 end function;
 
-function Tour(Index: int): E.Element<S.Msg>;
+function Tour(Index: int): E.Element of S.Msg;
 begin
-  return Carousels.Carousel<S.Msg>(
+  return Carousels.Carousel of S.Msg(
     'social-tour',
     [
       Tile(
@@ -119,20 +119,20 @@ begin
   );
 end function;
 
-function Deck(Index: int): E.Element<S.Msg>;
+function Deck(Index: int): E.Element of S.Msg;
 begin
   const Names: array of string := ['Kyoto', 'Lisbon', 'Reykjavik', 'Oaxaca', 'Hanoi'];
   const Colors: array of Color.Color := [
     new Color.Color($C8, $55, $3D), new Color.Color($2D, $30, $47), new Color.Color($5B, $8E, $7D),
     new Color.Color($B7, $79, $1F), new Color.Color($1F, $3A, $5F)
   ];
-  const Cards: Lists.List<E.Element<S.Msg>> := new Lists.List<E.Element<S.Msg>>(3);
+  const Cards: Lists.List of E.Element of S.Msg := new Lists.List of E.Element of S.Msg(3);
   for Depth: int := 0 to 2 do
     const Card: int := (Index + Depth) mod Names.Length;
     Cards.Add(Tile(Names[Card], 'Swipe right to save', Colors[Card], true));
   end for;
 
-  return Stacks.CardStack<S.Msg>(
+  return Stacks.CardStack of S.Msg(
     'social-deck',
     Cards.ToArray(),
     function(Direction: Stacks.Direction): S.Msg => S.Msg.Swipe(Direction),
@@ -141,14 +141,14 @@ begin
 end function;
 
 function Column(
-  Title: string; Description: string; Widget: E.Element<S.Msg>; Weight: float := 1.0F;
+  Title: string; Description: string; Widget: E.Element of S.Msg; Weight: float := 1.0F;
   Minimum: L.Measure? := null; Align: L.Alignment := L.Alignment.Default
-): E.Element<S.Msg>;
+): E.Element of S.Msg;
 begin
-  return E.Size<S.Msg>(
-    E.Column<S.Msg>(
+  return E.Size of S.Msg(
+    E.Column of S.Msg(
       new L.Flow(Gap := G.Points(10), Align := Align, Clip := false),
-      G.Heading<S.Msg>(Title, Description), Widget
+      G.Heading of S.Msg(Title, Description), Widget
     ),
     new L.Flex(Grow := Weight, Minimum := Minimum)
   );
@@ -159,17 +159,17 @@ end function;
 // - `Model`: Current values for the five examples.
 // ## Returns
 // The sections following the ticker.
-public function View(Model: S.Model): array of E.Element<S.Msg>;
+public function View(Model: S.Model): array of E.Element of S.Msg;
 begin
   const Landscape: Images.Source := Scene.Picture(true);
   return [
-    G.Heading<S.Msg>(Strings.Get('Heading.Carousel'), Strings.Get('Heading.CarouselHint')),
+    G.Heading of S.Msg(Strings.Get('Heading.Carousel'), Strings.Get('Heading.CarouselHint')),
     Tour(Model.Slide),
-    E.Row<S.Msg>(
+    E.Row of S.Msg(
       new L.Flow(Gap := G.Points(24), Align := L.Alignment.Start, Wrap := true, Clip := false),
       Column(
         'Image viewer', 'Wheel to zoom around the pointer, drag to pan, double-click for 100%.',
-        Viewers.ImageViewer<S.Msg>(
+        Viewers.ImageViewer of S.Msg(
           'social-viewer',
           Landscape,
           Model.Picture,
@@ -179,7 +179,7 @@ begin
       ),
       Column(
         'Cropper', 'Drag the corners; the square keeps its shape.',
-        Croppers.ImageCropper<S.Msg>(
+        Croppers.ImageCropper of S.Msg(
           'social-crop',
           Landscape,
           Model.Crop,
@@ -188,11 +188,11 @@ begin
         ), 2.0F, L.Measure.Logical(240)
       )
     ),
-    E.Row<S.Msg>(
+    E.Row of S.Msg(
       new L.Flow(Gap := G.Points(24), Align := L.Alignment.Start, Clip := false),
       Column(
         'Before and after', 'Drag the divider.',
-        Comparisons.ImageCompare<S.Msg>(
+        Comparisons.ImageCompare of S.Msg(
           'social-compare',
           Scene.Picture(false),
           Landscape,

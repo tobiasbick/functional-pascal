@@ -56,7 +56,7 @@ end procedure;
 public procedure BarList(Items: array of C.Item; Settings: B.Options; At: string);
 begin
   Common.Items(Items, At);
-  const Labels: Lists.HashSet<string> := new Lists.HashSet<string>(Sys.StringComparer.Ordinal);
+  const Labels: Lists.HashSet of string := new Lists.HashSet of string(Sys.StringComparer.Ordinal);
   for Item: C.Item in Items do
     if not Labels.Add(Item.Label) then
       R.Reject(At, 'Bar-list labels must be unique native identities.');
@@ -147,7 +147,7 @@ begin
   R.CheckText(Settings.Label, At);
   R.CheckText(Settings.Unit, At);
   R.CheckText(Settings.Detail, At);
-  if not Sys.Enum.IsDefined<G.Style>(
+  if not Sys.Enum.IsDefined of G.Style(
     Settings.Style
   ) or (Settings.Sweep <> 0.0F and (Settings.Sweep < 90.0F or Settings.Sweep > 300.0F))
     or Settings.Bands.Length > 16
@@ -162,7 +162,7 @@ begin
   for Band: G.Band in Settings.Bands do
     if not Sys.Single.IsFinite(
       Band.To
-    ) or Band.To <= Previous or Band.To > Maximum or not Sys.Enum.IsDefined<Style.Tone>(Band.Tone)
+    ) or Band.To <= Previous or Band.To > Maximum or not Sys.Enum.IsDefined of Style.Tone(Band.Tone)
     then
       R.Reject(At, 'Radial thresholds must increase within the scale.');
     end if;

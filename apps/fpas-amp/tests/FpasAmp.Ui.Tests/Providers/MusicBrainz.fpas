@@ -79,16 +79,16 @@ public type MusicBrainzTests = record
       'Search title · Mara Vale',
       Stop.Token
     );
-    X.Assert.Equal<int>(2, Matches.Length);
+    X.Assert.Equal of int(2, Matches.Length);
     X.Assert.Contains('Chosen edition · 2024-07-03 — Search title · Mara Vale', Matches[0].Label);
-    X.Assert.Equal<string>(ReleaseId, Matches[0].Release);
-    X.Assert.Equal<string>(Replies[0].Request, Replies[1].Request);
+    X.Assert.Equal of string(ReleaseId, Matches[0].Release);
+    X.Assert.Equal of string(Replies[0].Request, Replies[1].Request);
     X.Assert.Contains('GET /ws/2/recording/?', Replies[1].Request);
     X.Assert.True(Replies[1].Arrived - Replies[0].Arrived >= 3000L);
 
     const Recording: E.IRecording := await Provider.Recording(Matches[0].Recording, Stop.Token);
     const Release: E.IRelease := await Provider.Release(Matches[0].Release, Stop.Token);
-    const Values: I.ImmutableDictionary<string, string> := Tags.Proposals(Recording, Release);
+    const Values: I.ImmutableDictionary of (string, string) := Tags.Proposals(Recording, Release);
     try
       discard await Provider.Search('fixture-private-search', Stop.Token);
       raise new Sys.InvalidOperationException('Expected the provider to report the failed search.');
@@ -103,41 +103,41 @@ public type MusicBrainzTests = record
     X.Assert.Contains('work-level-rels', Replies[2].Request);
     X.Assert.Contains(ReleaseId, Replies[3].Request);
     X.Assert.True(Replies[3].Arrived - Replies[2].Arrived >= 1000L);
-    X.Assert.Equal<string>('Printed track title', Fields.Value(Values, 'title'));
-    X.Assert.Equal<string>('Chosen edition', Fields.Value(Values, 'album'));
-    X.Assert.Equal<string>('2 / 2', Fields.Value(Values, 'track'));
-    X.Assert.Equal<string>('1 / 1', Fields.Value(Values, 'disc'));
-    X.Assert.Equal<string>('Tidehouse', Fields.Value(Values, 'label'));
-    X.Assert.Equal<string>('2024', Fields.Value(Values, 'year'));
-    X.Assert.Equal<string>('Elias Hart', Fields.Value(Values, 'producer'));
-    X.Assert.Equal<string>('Mara Vale', Fields.Value(Values, 'composer'));
+    X.Assert.Equal of string('Printed track title', Fields.Value(Values, 'title'));
+    X.Assert.Equal of string('Chosen edition', Fields.Value(Values, 'album'));
+    X.Assert.Equal of string('2 / 2', Fields.Value(Values, 'track'));
+    X.Assert.Equal of string('1 / 1', Fields.Value(Values, 'disc'));
+    X.Assert.Equal of string('Tidehouse', Fields.Value(Values, 'label'));
+    X.Assert.Equal of string('2024', Fields.Value(Values, 'year'));
+    X.Assert.Equal of string('Elias Hart', Fields.Value(Values, 'producer'));
+    X.Assert.Equal of string('Mara Vale', Fields.Value(Values, 'composer'));
     X.Assert.False(Values.ContainsKey('lyricist'));
-    X.Assert.Equal<string>('Latn', Fields.Value(Values, Fields.Custom + 'SCRIPT'));
-    X.Assert.Equal<string>(
+    X.Assert.Equal of string('Latn', Fields.Value(Values, Fields.Custom + 'SCRIPT'));
+    X.Assert.Equal of string(
       'official',
       Fields.Value(Values, Fields.Custom + 'MusicBrainz Album Status')
     );
     const Existing: string := Fields.Custom + 'MUSICBRAINZ_ALBUMID';
     const Original: Files.Snapshot := new Files.Snapshot(
-      I.ImmutableDictionary<string, string>.Empty.Add(Existing, 'Original release')
+      I.ImmutableDictionary of (string, string).Empty.Add(Existing, 'Original release')
     );
     const Draft: Editor.State := new Editor.State(
       new Tracks.Entry(1L, 'track', 'fixture.flac', '', null, null, null),
       Original := Original, Values := Original.Values,
-      Extra := I.ImmutableArray.Create<Editor.Custom>(
+      Extra := I.ImmutableArray.Create of Editor.Custom(
         new Editor.Custom(0, 'MUSICBRAINZ_ALBUMID', 'Original release')
       )
     );
-    const Resolved: I.ImmutableDictionary<string, string> := Custom.MatchNames(Draft, Values);
-    const Selected: I.ImmutableDictionary<string, string?> := Changes.Build(
+    const Resolved: I.ImmutableDictionary of (string, string) := Custom.MatchNames(Draft, Values);
+    const Selected: I.ImmutableDictionary of (string, string?) := Changes.Build(
       Draft with
         Proposals := Resolved;
-        Selected := I.ImmutableHashSet<string>.Empty.Add(Existing).Add(Fields.Custom + 'ASIN');
+        Selected := (I.ImmutableHashSet of string).Empty.Add(Existing).Add(Fields.Custom + 'ASIN');
       end with, Original
     );
-    X.Assert.Equal<int>(2, Selected.Count);
-    X.Assert.Equal<string?>(ReleaseId, Selected[Existing]);
-    X.Assert.Equal<string?>('B0000TEST0', Selected[Fields.Custom + 'ASIN']);
+    X.Assert.Equal of int(2, Selected.Count);
+    X.Assert.Equal of string? (ReleaseId, Selected[Existing]);
+    X.Assert.Equal of string? ('B0000TEST0', Selected[Fields.Custom + 'ASIN']);
   end function;
 
   // The shared deadline remains in force after a slot owner exits.

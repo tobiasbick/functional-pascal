@@ -17,9 +17,9 @@ uses Fpas.Ui.TerminalExtensions.CellGrids as W;
 // - `Image`: Current pixels, or null while computing them.
 // ## Returns
 // The resulting view.
-public function View(Image: W.Image?): E.Element<W.Event>;
+public function View(Image: W.Image?): E.Element of W.Event;
 begin
-  return W.CellGrid<W.Event>('drawing', Image, function(Input: W.Event): W.Event => Input);
+  return W.CellGrid of W.Event('drawing', Image, function(Input: W.Event): W.Event => Input);
 end function;
 
 end unit;

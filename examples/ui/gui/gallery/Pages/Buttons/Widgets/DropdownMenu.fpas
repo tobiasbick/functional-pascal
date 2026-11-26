@@ -19,26 +19,26 @@ end function;
 // Clones both dropdown examples on CUI's Buttons page.
 // ## Returns
 // Options with sections, hints and a danger command, plus the icon-only More actions menu.
-public function View(): E.Element<State.Msg>;
+public function View(): E.Element of State.Msg;
 begin
-  return E.Row<State.Msg>(
+  return E.Row of State.Msg(
     new L.Flow(Gap := L.Spacing.Normal),
-    Options.View<State.Msg>(
+    Options.View of State.Msg(
       function(Name: string): State.Msg => State.Msg.Shared(Demo.Msg.MenuChoice(Name)),
       State.Msg.OpenDeleteDialog
     ),
-    M.Menu<State.Msg>(
+    M.Menu of State.Msg(
       'more-actions', 'More actions', [
-        M.Entry<State.Msg>.Action(
-          new M.Item<State.Msg>(
+        (M.Entry of State.Msg).Action(
+          new M.Item of State.Msg(
             'archive',
             'Archive',
             State.Msg.Shared(Demo.Msg.MenuChoice('Archive')),
             Icon($E041)
           )
         ),
-        M.Entry<State.Msg>.Action(
-          new M.Item<State.Msg>(
+        (M.Entry of State.Msg).Action(
+          new M.Item of State.Msg(
             'export',
             'Export',
             State.Msg.Shared(Demo.Msg.MenuChoice('Export')),

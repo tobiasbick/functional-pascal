@@ -164,12 +164,12 @@ end record;
 // - `Message`: Action produced by the gallery or its host.
 // ## Returns
 // The next model and its effects.
-public function Update(State: Model; Message: Msg): Mvu.Transition<Model, Msg>;
+public function Update(State: Model; Message: Msg): Mvu.Transition of (Model, Msg);
 begin
   var Next: Model := State;
   case Message of
     when Msg.Quit:
-      return new Mvu.Transition<Model, Msg>(State, [Mvu.Exit<Msg>()]);
+      return new Mvu.Transition of (Model, Msg)(State, [Mvu.Exit of Msg()]);
     when Msg.SelectPage(const Page: Catalog.Entry):
       Next := State with
         Active := Page;
@@ -253,7 +253,7 @@ begin
         WorkspaceCreated := true;
       end with;
     when Msg.Focus(const Id: string):
-      return new Mvu.Transition<Model, Msg>(State, [Mvu.Focus<Msg>(Id)]);
+      return new Mvu.Transition of (Model, Msg)(State, [Mvu.Focus of Msg(Id)]);
     when Msg.ProfileAction(const Action: Profile.Msg):
       Next := State with
         ProfileState := Profile.Update(State.ProfileState, Action);
@@ -308,7 +308,7 @@ begin
       end with;
   end case;
 
-  return new Mvu.Transition<Model, Msg>(Next, []);
+  return new Mvu.Transition of (Model, Msg)(Next, []);
 end function;
 
 end unit;

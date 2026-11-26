@@ -32,7 +32,7 @@ uses System as Sys;
 // - `Messages`: Pure message translation.
 // ## Returns
 // The same chart data, identities and options with translated callbacks.
-public function Map<TChild, TParent>(Value: E.Element<TChild>; Messages: function(TChild): TParent): E.Element<TParent>;
+public function Map of (TChild, TParent)(Value: E.Element of TChild; Messages: function(TChild): TParent): E.Element of TParent;
 begin
   case Value of
     when E.Element.Sankey(
@@ -40,50 +40,50 @@ begin
       const Nodes: array of Sankeys.Node,
       const Links: array of Sankeys.Link,
       const Settings: Sankeys.Options,
-      const OnActivate: Sys.Func<Sankeys.Selection, TChild>?
+      const OnActivate: Sys.Func of (Sankeys.Selection, TChild)?
     ):
-      return E.Element<TParent>.Sankey(
+      return (E.Element of TParent).Sankey(
         Id,
         Nodes,
         Links,
         Settings,
-        M.Callback<Sankeys.Selection, TChild, TParent>(OnActivate, Messages)
+        M.Callback of (Sankeys.Selection, TChild, TParent)(OnActivate, Messages)
       );
     when E.Element.BarList(
       const Id: string,
       const Items: array of Charts.Item,
       const Settings: BarLists.Options,
-      const OnActivate: Sys.Func<int, TChild>?
+      const OnActivate: Sys.Func of (int, TChild)?
     ):
-      return E.Element<TParent>.BarList(
+      return (E.Element of TParent).BarList(
         Id,
         Items,
         Settings,
-        M.Callback<int, TChild, TParent>(OnActivate, Messages)
+        M.Callback of (int, TChild, TParent)(OnActivate, Messages)
       );
     when E.Element.ActivityRings(
       const Id: string,
       const Items: array of Charts.Item,
       const Settings: ActivityRings.Options,
-      const OnActivate: Sys.Func<int, TChild>?
+      const OnActivate: Sys.Func of (int, TChild)?
     ):
-      return E.Element<TParent>.ActivityRings(
+      return (E.Element of TParent).ActivityRings(
         Id,
         Items,
         Settings,
-        M.Callback<int, TChild, TParent>(OnActivate, Messages)
+        M.Callback of (int, TChild, TParent)(OnActivate, Messages)
       );
     when E.Element.ScatterChart(
       const Id: string,
       const Series: array of ScatterCharts.Series,
       const Settings: ScatterCharts.Options,
-      const OnActivate: Sys.Func<ScatterCharts.PointIndex, TChild>?
+      const OnActivate: Sys.Func of (ScatterCharts.PointIndex, TChild)?
     ):
-      return E.Element<TParent>.ScatterChart(
+      return (E.Element of TParent).ScatterChart(
         Id,
         Series,
         Settings,
-        M.Callback<ScatterCharts.PointIndex, TChild, TParent>(OnActivate, Messages)
+        M.Callback of (ScatterCharts.PointIndex, TChild, TParent)(OnActivate, Messages)
       );
     when E.Element.RadialGauge(
       const Id: string,
@@ -92,18 +92,18 @@ begin
       const Maximum: float,
       const Settings: RadialGauges.Options
     ):
-      return E.Element<TParent>.RadialGauge(Id, Value, Minimum, Maximum, Settings);
+      return (E.Element of TParent).RadialGauge(Id, Value, Minimum, Maximum, Settings);
     when E.Element.Candlestick(
       const Id: string,
       const Candles: array of Candlesticks.Candle,
       const Settings: Candlesticks.Options,
-      const OnCursorChange: Sys.Func<int, TChild>?
+      const OnCursorChange: Sys.Func of (int, TChild)?
     ):
-      return E.Element<TParent>.Candlestick(
+      return (E.Element of TParent).Candlestick(
         Id,
         Candles,
         Settings,
-        M.Callback<int, TChild, TParent>(OnCursorChange, Messages)
+        M.Callback of (int, TChild, TParent)(OnCursorChange, Messages)
       );
     when E.Element.Heatmap(
       const Id: string,
@@ -111,42 +111,42 @@ begin
       const Rows: int,
       const Columns: int,
       const Settings: Heatmaps.Options,
-      const OnActivate: Sys.Func<Heatmaps.Cell, TChild>?
+      const OnActivate: Sys.Func of (Heatmaps.Cell, TChild)?
     ):
-      return E.Element<TParent>.Heatmap(
+      return (E.Element of TParent).Heatmap(
         Id,
         Values,
         Rows,
         Columns,
         Settings,
-        M.Callback<Heatmaps.Cell, TChild, TParent>(OnActivate, Messages)
+        M.Callback of (Heatmaps.Cell, TChild, TParent)(OnActivate, Messages)
       );
     when E.Element.CalendarHeatmap(
       const Id: string,
       const Start: Sys.DateOnly,
       const Values: array of float,
       const Settings: CalendarHeatmaps.Options,
-      const OnActivate: Sys.Func<Sys.DateOnly, TChild>?
+      const OnActivate: Sys.Func of (Sys.DateOnly, TChild)?
     ):
-      return E.Element<TParent>.CalendarHeatmap(
+      return (E.Element of TParent).CalendarHeatmap(
         Id,
         Start,
         Values,
         Settings,
-        M.Callback<Sys.DateOnly, TChild, TParent>(OnActivate, Messages)
+        M.Callback of (Sys.DateOnly, TChild, TParent)(OnActivate, Messages)
       );
     when E.Element.Treemap(
       const Id: string,
       const Items: array of Charts.Item,
       const Selected: int,
-      const OnSelect: Sys.Func<int, TChild>?,
+      const OnSelect: Sys.Func of (int, TChild)?,
       const Settings: Treemaps.Options
     ):
-      return E.Element<TParent>.Treemap(
+      return (E.Element of TParent).Treemap(
         Id,
         Items,
         Selected,
-        M.Callback<int, TChild, TParent>(OnSelect, Messages),
+        M.Callback of (int, TChild, TParent)(OnSelect, Messages),
         Settings
       );
     when E.Element.RadarChart(
@@ -154,83 +154,83 @@ begin
       const Series: array of Charts.Series,
       const Axes: array of string,
       const Settings: RadarCharts.Options,
-      const OnActivate: Sys.Func<int, TChild>?
+      const OnActivate: Sys.Func of (int, TChild)?
     ):
-      return E.Element<TParent>.RadarChart(
+      return (E.Element of TParent).RadarChart(
         Id,
         Series,
         Axes,
         Settings,
-        M.Callback<int, TChild, TParent>(OnActivate, Messages)
+        M.Callback of (int, TChild, TParent)(OnActivate, Messages)
       );
     when E.Element.Funnel(
       const Id: string,
       const Items: array of Charts.Item,
       const Settings: Funnels.Options,
-      const OnActivate: Sys.Func<int, TChild>?
+      const OnActivate: Sys.Func of (int, TChild)?
     ):
-      return E.Element<TParent>.Funnel(
+      return (E.Element of TParent).Funnel(
         Id,
         Items,
         Settings,
-        M.Callback<int, TChild, TParent>(OnActivate, Messages)
+        M.Callback of (int, TChild, TParent)(OnActivate, Messages)
       );
     when E.Element.SplitBar(
       const Id: string,
       const Items: array of Charts.Item,
       const Settings: SplitBars.Options,
-      const OnActivate: Sys.Func<int, TChild>?
+      const OnActivate: Sys.Func of (int, TChild)?
     ):
-      return E.Element<TParent>.SplitBar(
+      return (E.Element of TParent).SplitBar(
         Id,
         Items,
         Settings,
-        M.Callback<int, TChild, TParent>(OnActivate, Messages)
+        M.Callback of (int, TChild, TParent)(OnActivate, Messages)
       );
     when E.Element.Waffle(
       const Id: string,
       const Items: array of Charts.Item,
       const Settings: Waffles.Options,
-      const OnActivate: Sys.Func<int, TChild>?
+      const OnActivate: Sys.Func of (int, TChild)?
     ):
-      return E.Element<TParent>.Waffle(
+      return (E.Element of TParent).Waffle(
         Id,
         Items,
         Settings,
-        M.Callback<int, TChild, TParent>(OnActivate, Messages)
+        M.Callback of (int, TChild, TParent)(OnActivate, Messages)
       );
     when E.Element.LineChart(
       const Id: string,
       const Series: array of Charts.Series,
       const Settings: Charts.Options
     ):
-      return E.Element<TParent>.LineChart(Id, Series, Settings);
+      return (E.Element of TParent).LineChart(Id, Series, Settings);
     when E.Element.BarChart(
       const Id: string,
       const Series: array of Charts.Series,
       const Settings: Charts.Options
     ):
-      return E.Element<TParent>.BarChart(Id, Series, Settings);
+      return (E.Element of TParent).BarChart(Id, Series, Settings);
     when E.Element.DonutChart(
       const Id: string,
       const Values: array of float,
       const Labels: array of string,
       const Settings: Donuts.Options
     ):
-      return E.Element<TParent>.DonutChart(Id, Values, Labels, Settings);
+      return (E.Element of TParent).DonutChart(Id, Values, Labels, Settings);
     when E.Element.Gauge(
       const Id: string,
       const Label: string,
       const Current: float,
       const Size: float
     ):
-      return E.Element<TParent>.Gauge(Id, Label, Current, Size);
+      return (E.Element of TParent).Gauge(Id, Label, Current, Size);
     when E.Element.PatternMeter(
       const Id: string,
       const Parts: array of Patterns.Part,
       const Settings: Patterns.Options
     ):
-      return E.Element<TParent>.PatternMeter(Id, Parts, Settings);
+      return (E.Element of TParent).PatternMeter(Id, Parts, Settings);
     else
       raise new Sys.InvalidOperationException('An unexpected node reached visualization mapping.');
   end case;

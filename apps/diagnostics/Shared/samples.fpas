@@ -104,7 +104,7 @@ begin
 
   const Sorted: array of double := new double[Values.Length];
   Sys.Array.Copy(Values, Sorted, Values.Length);
-  Sys.Array.Sort<double>(Sorted);
+  Sys.Array.Sort of double(Sorted);
   var Sum: double := 0.0;
   for Value: double in Values do
     Sum := Sum + Value;

@@ -63,12 +63,12 @@ begin
   end if;
 
   const Results: array of J.JsonElement := Response.Items(Root, 'results');
-  Sys.Array.Sort<J.JsonElement>(
+  Sys.Array.Sort of J.JsonElement(
     Results,
     function(Left: J.JsonElement; Right: J.JsonElement): int => Score(Right).CompareTo(Score(Left))
   );
-  const Seen: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
-  const Matches: C.List<MB.Match> := new C.List<MB.Match>();
+  const Seen: C.HashSet of string := new C.HashSet of string(Sys.StringComparer.Ordinal);
+  const Matches: C.List of MB.Match := new C.List of MB.Match();
   for Result: J.JsonElement in Results do
     const Percent: string := Score(Result).ToString('P0', G.CultureInfo.InvariantCulture);
     for Recording: J.JsonElement in Response.Items(Result, 'recordings') do
@@ -76,7 +76,7 @@ begin
       if RecordingId = '' then
         continue;
       end if;
-      const Artists: C.List<string> := new C.List<string>();
+      const Artists: C.List of string := new C.List of string();
       for Artist: J.JsonElement in Response.Items(Recording, 'artists') do
         const Name: string := Response.Text(Artist, 'name');
         if Name <> '' then
@@ -148,7 +148,7 @@ end function;
 
 // Looks up Fingerprint with the saved ApplicationKey. Stop cancels waiting and the HTTP request.
 // Returns selectable MusicBrainz matches. The request body contains no user submission key.
-public async function Scan(ApplicationKey: string; Audio: Fingerprint.Measurement; Stop: T.CancellationToken): Tasks.Task<array of MB.Match>;
+public async function Scan(ApplicationKey: string; Audio: Fingerprint.Measurement; Stop: T.CancellationToken): Tasks.Task of array of MB.Match;
 requires ApplicationKey <> '';
 requires Audio.Value <> '' and Audio.Duration >= 1.0;
 begin
@@ -167,14 +167,14 @@ begin
     );
     Request.Content := new H.FormUrlEncodedContent(
       [
-        new C.KeyValuePair<string?, string?>('client', ApplicationKey),
-        new C.KeyValuePair<string?, string?>(
+        new C.KeyValuePair of (string?, string?)('client', ApplicationKey),
+        new C.KeyValuePair of (string?, string?)(
           'duration',
           (cast<long>(Sys.Math.Floor(Audio.Duration))).ToString(G.CultureInfo.InvariantCulture)
         ),
-        new C.KeyValuePair<string?, string?>('fingerprint', Audio.Value),
-        new C.KeyValuePair<string?, string?>('meta', 'recordings releasegroups releases'),
-        new C.KeyValuePair<string?, string?>('format', 'json')
+        new C.KeyValuePair of (string?, string?)('fingerprint', Audio.Value),
+        new C.KeyValuePair of (string?, string?)('meta', 'recordings releasegroups releases'),
+        new C.KeyValuePair of (string?, string?)('format', 'json')
       ]
     );
     await Gate.Start(Stop).ConfigureAwait(false);

@@ -41,8 +41,9 @@ domain declarations retain separate identities even when their bounds match.
 An enum is a real CLR enum with an integral base and named constants; unnamed
 underlying values remain possible. Use a variant for cases with payloads; see
 [patterns](patterns-errors.md). Records/variants may be recursive through references
-and generic: Box<T>, Tree<T>, or Dictionary<string, int>. Type arguments uniformly
-use angle brackets. Source records/variants are invariant. Constraints use where
+and generic. Write `Box of T`, `Tree of T`, or `Dictionary of (string, int)`.
+Group a single-argument type before applying `?` or `.Member` to it, as in
+`(Box of string)?` and `(Box of int).Create(1)`. Source types are invariant. Constraints use where
 clauses; [functions](functions.md) explains them and inference.
 
 ```pascal
@@ -55,7 +56,7 @@ type UserId = distinct long;
 
 type Port = ushort range 1..65535;
 
-type Box<T> = record
+type Box of T = record
   public Value: T;
 end record;
 
@@ -70,7 +71,7 @@ begin
     X := 4;
   end with;
   const Id: UserId := new UserId(7L);
-  const Wrapped: Box<UserId> := new Box<UserId>(Id);
+  const Wrapped: Box of UserId := new Box of UserId(Id);
   const Ports: array of Port := new Port[1];
   if Original.X <> 1 or Moved.X <> 4 or Moved.Y <> 2
     or cast<long>(Wrapped.Value) <> 7L or Ports[0].Value <> 1

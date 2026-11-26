@@ -21,9 +21,9 @@ uses Fpas.Ui.Widgets.Motion.Typewriters as W;
 // - `Revision`: Replay revision.
 // ## Returns
 // The typewriter with a completion message.
-public function View(Answer: string; Revision: int): E.Element<string>;
+public function View(Answer: string; Revision: int): E.Element of string;
 begin
-  return W.Typewriter<string>('answer', Answer, Revision,
+  return W.Typewriter of string('answer', Answer, Revision,
     new M.TextOptions(Size := 15.0F, Caret := true), function(): string => 'answer-visible');
 end function;
 

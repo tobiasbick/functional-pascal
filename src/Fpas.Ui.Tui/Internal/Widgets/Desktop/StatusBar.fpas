@@ -23,14 +23,14 @@ uses System.Collections.Generic as C;
 // - `Theme`: Palette for the inline progress track.
 // ## Returns
 // A compact terminal status bar.
-public function Lower<TMsg>(Id: string; Items: array of Bars.Item<TMsg>; HideBorder: bool; Theme: Th.Theme): E.Element<TMsg>;
+public function Lower of TMsg(Id: string; Items: array of Bars.Item of TMsg; HideBorder: bool; Theme: Th.Theme): E.Element of TMsg;
 begin
-  const Parts: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
-  for Item: Bars.Item<TMsg> in Items do
+  const Parts: C.List of E.Element of TMsg := new C.List of E.Element of TMsg();
+  for Item: Bars.Item of TMsg in Items do
     case Item of
       when Bars.Item.Text(const Value: Bars.Label):
         if Value.Text <> '' then
-          Parts.Add(E.Element<TMsg>.Label(Value.Text));
+          Parts.Add((E.Element of TMsg).Label(Value.Text));
         end if;
       when Bars.Item.Action(
         const Key: string,
@@ -47,8 +47,8 @@ begin
           Key
         end if;
         Parts.Add(
-          E.Element<TMsg>.Action(
-            Menus.ItemId(Id, Key), new Actions.Direct<TMsg>(Clicked), Enabled,
+          (E.Element of TMsg).Action(
+            Menus.ItemId(Id, Key), new Actions.Direct of TMsg(Clicked), Enabled,
             new E.ActionView(
               Caption, Role := 'status-item', Variant := S.ButtonVariant.Ghost,
               ArrowFocus := false, Padding := 0, Joined := true, Hint := Tooltip
@@ -62,27 +62,27 @@ begin
         const Indeterminate: bool
       ):
         if Caption <> '' then
-          Parts.Add(E.Element<TMsg>.Label(Caption));
+          Parts.Add((E.Element of TMsg).Label(Caption));
         end if;
 
         if Indeterminate then
-          Parts.Add(E.Element<TMsg>.Label('…'));
+          Parts.Add((E.Element of TMsg).Label('…'));
         else
           const Cells: int := if Width > 0.0F then
             cast<int>(Sys.Math.Min(cast<double>(E.MaximumColumns), Sys.Math.Ceiling(Width / 8.0)))
           else
             8
           end if;
-          Parts.Add(E.Element<TMsg>.Progress(Value, '', '', Cells, Theme.Colors.ControlOn));
+          Parts.Add((E.Element of TMsg).Progress(Value, '', '', Cells, Theme.Colors.ControlOn));
         end if;
       when Bars.Item.Spacer:
-        Parts.Add(E.Element<TMsg>.Sized(E.Element<TMsg>.Label(''), new E.Flex(Grow := 1)));
+        Parts.Add((E.Element of TMsg).Sized((E.Element of TMsg).Label(''), new E.Flex(Grow := 1)));
     end case;
   end for;
-  const Row: E.Element<TMsg> := E.Element<TMsg>.Stack(
+  const Row: E.Element of TMsg := (E.Element of TMsg).Stack(
     Parts.ToArray(), true, new E.Flow(Gap := 1, Align := L.Alignment.Stretch)
   );
-  return E.Element<TMsg>.StatusBar(Row, HideBorder);
+  return (E.Element of TMsg).StatusBar(Row, HideBorder);
 end function;
 
 end unit;

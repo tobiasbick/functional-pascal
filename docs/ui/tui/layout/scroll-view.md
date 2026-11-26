@@ -17,9 +17,9 @@ uses Fpas.Ui.Layout as L;
 // - `Items`: Rows to display.
 // ## Returns
 // The resulting view.
-public function View(Items: array of E.Element<string>): E.Element<string>;
+public function View(Items: array of E.Element of string): E.Element of string;
 begin
-  return E.Size<string>(E.ScrollView<string>('tracks-scroll', E.Column<string>(Items)),
+  return E.Size of string(E.ScrollView of string('tracks-scroll', E.Column of string(Items)),
     new L.Flex(Basis := L.Extent.Fixed(L.Measure.Cells(8))));
 end function;
 

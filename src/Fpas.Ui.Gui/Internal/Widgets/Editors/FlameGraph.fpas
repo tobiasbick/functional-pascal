@@ -21,13 +21,13 @@ uses System.Collections.Generic as Lists;
 // - `Current`: Current range and selection.
 // - `Changed`: Maps a native proposal.
 // - `Settings`: Native layout and behavior options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Spans: array of D.Span; Current: D.View; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Spans: array of D.Span; Current: D.View; Changed: function(D.Event): TMsg; Settings: D.Options);
 begin
   const Role: string := 'flame-graph';
   const Token: string := C.Token(Role, Id);
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   const Enabled: bool := Frame.AcceptInput;
-  const Native: Lists.List<CuiEditors.CuiFlameSpan> := new Lists.List<CuiEditors.CuiFlameSpan>(
+  const Native: Lists.List of CuiEditors.CuiFlameSpan := new Lists.List of CuiEditors.CuiFlameSpan(
     Spans.Length
   );
   for Span: D.Span in Spans do
@@ -35,7 +35,7 @@ begin
       new CuiEditors.CuiFlameSpan(Span.Name, Span.Start, Span.Finish, Span.Depth, Span.ColorKey)
     );
   end for;
-  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
+  const Focus: bool := C.WantsFocus of TMsg(Frame, Id, Token, Enabled);
   const Result: CuiEditors.CuiFlameRange? := Frame.Window.FlameGraph(
     Token,
     Native.ToArray(),
@@ -60,7 +60,7 @@ begin
     else
   end case;
 
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, '');
 end procedure;
 
 end unit;

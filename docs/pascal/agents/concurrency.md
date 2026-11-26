@@ -5,7 +5,7 @@ composing asynchronous effects.
 
 ## Calling and awaiting
 
-An async function explicitly returns System.Threading.Tasks.Task or Task<T>.
+An async function explicitly returns `Task` or `Task of T` from System.Threading.Tasks.
 Its body returns the inner T, or return;/fallthrough for non-generic Task.
 Anonymous async functions follow the same rule. Async procedures/void are not
 supported. A synchronous function returning Task returns that object normally
@@ -13,7 +13,7 @@ and cannot await merely because its return type is Task.
 
 Calling async code runs synchronously until its first incomplete await; it does
 not automatically start a thread. Await suspends rather than blocking that thread.
-Task<T>/ValueTask<T> yields T; Task/ValueTask await has no result. Supported
+`Task of T` and `ValueTask of T` yield `T`. `Task` and `ValueTask` have no result. Supported
 ConfigureAwait forms preserve ordinary .NET continuation-context behavior.
 Use ConfigureAwait(false) explicitly when appropriate. Custom awaiters and async
 iterators are outside the baseline. ValueTask use must follow its producer's
@@ -46,9 +46,9 @@ in supported catch/finally bodies, but not exception filters.
 
 ## Composable effects
 
-Import SDK [Fpas.Execution.Effects](../libraries/effects.md) as `Fx`. `Effect<A, E, R>`
+Import SDK [Fpas.Execution.Effects](../libraries/effects.md) as `Fx`. `Effect of (A, E, R)`
 describes a success value `A`, an expected failure `E`, and an environment `R`.
-Use `Fx.Effect<A, E, R>.Defer(Body)`, compose with `Fx.Map` or `Fx.AndThen`,
+Use `Fx.Effect of (A, E, R).Defer(Body)`, compose with `Fx.Map` or `Fx.AndThen`,
 then call `Run(Environment, Cancellation)`. Each run executes the body again.
 Use ordinary `async`, `await`, and `await using` inside the body for CLR I/O.
 Match `Fx.Outcome.Success` and `Fx.Outcome.Failure`. Unexpected CLR exceptions
@@ -77,7 +77,7 @@ uses System.IO as IO;
 uses System.Threading as Threading;
 uses System.Threading.Tasks as Tasks;
 
-async function DoubleAfter(Value: int; Cancellation: Threading.CancellationToken): Tasks.Task<int>;
+async function DoubleAfter(Value: int; Cancellation: Threading.CancellationToken): Tasks.Task of int;
 requires Value >= 0;
 requires Value <= int.MaxValue div 2;
 ensures (Answer: int): Answer = Value * 2;
@@ -88,10 +88,10 @@ end function;
 
 begin
   using const Cancellation: Threading.CancellationTokenSource := new Threading.CancellationTokenSource();
-  const Work: Tasks.Task<int> := DoubleAfter(21, Cancellation.Token);
-  const Other: Tasks.Task<int> := Tasks.Task.Run<int>(function(): int => 7);
-  const Pending: array of Tasks.Task<int> := [Work, Other];
-  const Results: array of int := await Tasks.Task.WhenAll<int>(Pending).ConfigureAwait(false);
+  const Work: Tasks.Task of int := DoubleAfter(21, Cancellation.Token);
+  const Other: Tasks.Task of int := Tasks.Task.Run of int(function(): int => 7);
+  const Pending: array of Tasks.Task of int := [Work, Other];
+  const Results: array of int := await Tasks.Task.WhenAll of int(Pending).ConfigureAwait(false);
   begin
     await using const Stream: IO.MemoryStream := new IO.MemoryStream();
     Stream.WriteByte(65);

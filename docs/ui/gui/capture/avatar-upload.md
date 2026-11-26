@@ -29,18 +29,18 @@ end variant;
 // - `Path`: Current image path, or null to show initials.
 // ## Returns
 // The avatar upload for the application view.
-public function View(Path: string?): E.Element<Msg>;
+public function View(Path: string?): E.Element of Msg;
 begin
-  return W.AvatarUpload<Msg>('profile-photo', 'Maya Okafor', Path, Msg.SetPhoto,
+  return W.AvatarUpload of Msg('profile-photo', 'Maya Okafor', Path, Msg.SetPhoto,
     function(): Msg => Msg.Browse);
 end function;
 
 // Handles the Browse message.
 // ## Returns
 // The command to include in the update result.
-public function OpenChooser(): Mvu.Command<Msg>;
+public function OpenChooser(): Mvu.Command of Msg;
 begin
-  return Dialogs.OpenFile<Msg>(Msg.SetPhoto, 'Select a profile photo', 'Images', W.ImageExtensions);
+  return Dialogs.OpenFile of Msg(Msg.SetPhoto, 'Select a profile photo', 'Images', W.ImageExtensions);
 end function;
 
 end unit;

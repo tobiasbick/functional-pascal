@@ -27,14 +27,14 @@ uses System.Collections.Generic as C;
 // - `Theme`: Terminal palette.
 // ## Returns
 // The terminal area and its text chrome.
-public function Lower<TMsg>(Field: Edit.Field<TMsg>; Colors: T.Style; Theme: Th.Theme): E.Element<TMsg>;
+public function Lower of TMsg(Field: Edit.Field of TMsg; Colors: T.Style; Theme: Th.Theme): E.Element of TMsg;
 begin
-  const View: E.Element<TMsg> := Chrome.WithLabels<TMsg>(
-    E.Element<TMsg>.TextArea(Field),
+  const View: E.Element of TMsg := Chrome.WithLabels of TMsg(
+    (E.Element of TMsg).TextArea(Field),
     Field.Settings.Label, Field.Settings.Hint, Field.Settings.Error, Colors, Theme
   );
   return if Field.Settings.Height < 0 then
-    E.Element<TMsg>.Sized(View, new E.Flex(Grow := 1))
+    (E.Element of TMsg).Sized(View, new E.Flex(Grow := 1))
   else
     View
   end if;
@@ -55,16 +55,16 @@ end function;
 // - `Operations`: Paint commands for the frame.
 // ## Returns
 // Editor input binding and bounds.
-public function Arrange<TMsg>(
-  Field: Edit.Field<TMsg>; Previous: A.Layout<TMsg>?; Area: F.Rect; Clip: F.Rect;
-  Scope: string; FocusReturn: string; Colors: T.Style; Theme: Th.Theme; Operations: C.List<D.Operation>
-): A.Control<TMsg>;
+public function Arrange of TMsg(
+  Field: Edit.Field of TMsg; Previous: (A.Layout of TMsg)?; Area: F.Rect; Clip: F.Rect;
+  Scope: string; FocusReturn: string; Colors: T.Style; Theme: Th.Theme; Operations: C.List of D.Operation
+): A.Control of TMsg;
 begin
   var Old: Edit.Cursor := new Edit.Cursor(Field.Value);
-  const Before: A.Control<TMsg>? := A.FindControl<TMsg>(Previous, Field.Id);
+  const Before: (A.Control of TMsg)? := A.FindControl of TMsg(Previous, Field.Id);
   if Before <> null then
     case Before.Action of
-      when A.Binding.EditArea(const View: Edit.View<TMsg>, _, _):
+      when A.Binding.EditArea(const View: Edit.View of TMsg, _, _):
         Old := View.Position.Read(Field.Value);
       else
     end case;
@@ -126,8 +126,8 @@ begin
   end for;
 
   if Pad > 0 and Limit > 0 then
-    V.DrawBar<TMsg>(
-      new V.Viewport<TMsg>(Top, Limit, Height, false, true, null),
+    V.DrawBar of TMsg(
+      new V.Viewport of TMsg(Top, Limit, Height, false, true, null),
       Operations,
       Area,
       Clip,
@@ -150,10 +150,10 @@ begin
   else
     Field.Id
   end if;
-  return new A.Control<TMsg>(
+  return new A.Control of TMsg(
     Field.Id, Label, 'text-area', Field.Value, Clip, Scope, FocusReturn, Field.Settings.Enabled,
-    A.Binding<TMsg>.EditArea(
-      new Edit.View<TMsg>(Field, Wrapped, Edit.Track(Position), X, Area.Y, Height),
+    (A.Binding of TMsg).EditArea(
+      new Edit.View of TMsg(Field, Wrapped, Edit.Track(Position), X, Area.Y, Height),
       CaretX,
       CaretY
     ),

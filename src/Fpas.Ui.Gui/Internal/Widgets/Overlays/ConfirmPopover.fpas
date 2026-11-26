@@ -24,10 +24,10 @@ uses Fpas.Ui.Widgets.Overlays.ConfirmPopovers as P;
 // - `Horizontal`: Axis containing the trigger.
 // - `Align`: Alignment of the trigger.
 // - `Visit`: Host traversal for the trigger.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Trigger: E.Element<TMsg>; Open: bool; Settings: P.Options;
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Trigger: E.Element of TMsg; Open: bool; Settings: P.Options;
   Confirm: TMsg; Dismiss: TMsg; Horizontal: bool; Align: L.Alignment;
-  Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment)
+  Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
 );
 begin
   Visit(Trigger, Frame, Horizontal, Align);

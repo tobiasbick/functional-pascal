@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Files.FilePickers as W;
 // - `Open`: Visibility stored in the model.
 // ## Returns
 // The view with the picker and its result message.
-public function View(Base: E.Element<W.Event>; Open: bool): E.Element<W.Event>;
+public function View(Base: E.Element of W.Event; Open: bool): E.Element of W.Event;
 begin
-  return W.FilePicker<W.Event>('save-report', Open,
+  return W.FilePicker of W.Event('save-report', Open,
     function(Choice: W.Event): W.Event => Choice,
     new W.Options(Kind := W.Mode.SaveFile, Title := 'Save report',
       Name := 'report.txt', Filter := '*.txt'), Base);

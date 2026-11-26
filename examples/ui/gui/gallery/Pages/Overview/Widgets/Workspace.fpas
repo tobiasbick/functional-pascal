@@ -22,22 +22,22 @@ uses System as Sys;
 // - `Data`: Profile values shared with other gallery pages.
 // ## Returns
 // A form that occupies its column in the original responsive layout.
-public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+public function View(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
 begin
-  return Cards.Card<State.Msg>(
+  return Cards.Card of State.Msg(
     'workspace-card', [
-      E.Column<State.Msg>(
+      E.Column of State.Msg(
         new L.Flow(Gap := G.Points(4)),
-        E.Styled<State.Msg>(
-          E.Text<State.Msg>(Strings.Get('Text.CreateWorkspaceHeading')),
+        E.Styled of State.Msg(
+          E.Text of State.Msg(Strings.Get('Text.CreateWorkspaceHeading')),
           S.Role.Heading
         ),
-        E.Styled<State.Msg>(
-          E.Text<State.Msg>(Strings.Get('Text.WorkspaceInviteHint')),
+        E.Styled of State.Msg(
+          E.Text of State.Msg(Strings.Get('Text.WorkspaceInviteHint')),
           S.Role.Secondary
         )
       ),
-      T.TextField<State.Msg>(
+      T.TextField of State.Msg(
         'workspace-name', Data.Name,
         function(Value: string): State.Msg => State.Msg.Shared(Demo.Msg.SetName(Value)),
         new T.Options(
@@ -46,7 +46,7 @@ begin
           MaxUtf8Bytes := 63
         )
       ),
-      T.TextField<State.Msg>(
+      T.TextField of State.Msg(
         'workspace-email', Data.Email,
         function(Value: string): State.Msg => State.Msg.Shared(Demo.Msg.SetEmail(Value)),
         new T.Options(
@@ -56,8 +56,8 @@ begin
           MaxUtf8Bytes := 95
         )
       ),
-      C.WeeklySummary<State.Msg>(Model.WeeklySummary, State.Msg.SetWeeklySummary),
-      B.Button<State.Msg>(
+      C.WeeklySummary of State.Msg(Model.WeeklySummary, State.Msg.SetWeeklySummary),
+      B.Button of State.Msg(
         'workspace-create', Strings.Get('Text.CreateWorkspace'), State.Msg.CreateWorkspace,
         new B.Options(Variant := S.ButtonVariant.Primary, Width := L.Extent.Fill)
       )

@@ -15,9 +15,9 @@ uses System.Collections.Generic as C;
 // Dismissal state retained for alerts that remain in the terminal view.
 public type State = record
   // IDs dismissed by the user.
-  public Dismissed: C.HashSet<string> := new C.HashSet<string>();
+  public Dismissed: C.HashSet of string := new C.HashSet of string();
   // Dismissed IDs encountered while preparing the current view.
-  public Seen: C.HashSet<string> := new C.HashSet<string>();
+  public Seen: C.HashSet of string := new C.HashSet of string();
 
   // Checks visibility and retains dismissal for this presentation.
   // ## Parameters
@@ -55,19 +55,19 @@ end record;
 // - `Theme`: Active terminal palette.
 // ## Returns
 // The alert panel.
-public function Lower<TMsg>(
-  Id: string; Title: string; Settings: A.Options; Notify: Sys.Func<TMsg>?;
+public function Lower of TMsg(
+  Id: string; Title: string; Settings: A.Options; Notify: (Sys.Func of TMsg)?;
   Session: State; Colors: T.Style; Theme: Th.Theme
-): E.Element<TMsg>;
-  function Dismiss(): Actions.Result<TMsg>;
+): E.Element of TMsg;
+  function Dismiss(): Actions.Result of TMsg;
   begin
     if not Session.Dismissed.Add(Id) then
-      return Actions.Result<TMsg>.NoAction;
+      return (Actions.Result of TMsg).NoAction;
     end if;
 
     return case Notify of
-      when is Sys.Func<TMsg> as Callback: Actions.Result<TMsg>.Send(Callback.Invoke());
-      else Actions.Result<TMsg>.NoAction;
+      when is Sys.Func of TMsg as Callback: (Actions.Result of TMsg).Send(Callback.Invoke());
+      else (Actions.Result of TMsg).NoAction;
     end case;
   end function;
 begin
@@ -82,16 +82,16 @@ begin
     else 'i';
   end case;
   const Ink: int := Th.Rgb(Th.ToneColor(Theme, Settings.Tone), Back);
-  const Heading: E.Element<TMsg> := E.Element<TMsg>.Stack(
+  const Heading: E.Element of TMsg := (E.Element of TMsg).Stack(
     [
-      E.Element<TMsg>.Decorated(E.Element<TMsg>.Label(Mark + ' '), new T.Style(Ink, Back)),
-      E.Element<TMsg>.Sized(E.Element<TMsg>.Label(Title), new E.Flex(Grow := 1))
+      (E.Element of TMsg).Decorated((E.Element of TMsg).Label(Mark + ' '), new T.Style(Ink, Back)),
+      (E.Element of TMsg).Sized((E.Element of TMsg).Label(Title), new E.Flex(Grow := 1))
     ], true, new E.Flow()
   );
-  var Header: E.Element<TMsg> := Heading;
+  var Header: E.Element of TMsg := Heading;
   if Settings.Dismissible then
-    const Close: E.Element<TMsg> := E.Element<TMsg>.Action(
-      A.DismissId(Id), new Actions.Callback<TMsg>(Dismiss), Settings.Enabled,
+    const Close: E.Element of TMsg := (E.Element of TMsg).Action(
+      A.DismissId(Id), new Actions.Callback of TMsg(Dismiss), Settings.Enabled,
       new E.ActionView(
         '×',
         Name := 'Dismiss ' + Title,
@@ -100,17 +100,17 @@ begin
         FixedWidth := 3
       )
     );
-    Header := E.Element<TMsg>.Stack(
-      [E.Element<TMsg>.Sized(Heading, new E.Flex(Grow := 1)), Close], true, new E.Flow()
+    Header := (E.Element of TMsg).Stack(
+      [(E.Element of TMsg).Sized(Heading, new E.Flex(Grow := 1)), Close], true, new E.Flow()
     );
   end if;
-  const Contents: array of E.Element<TMsg> := if Settings.Description = '' then
+  const Contents: array of E.Element of TMsg := if Settings.Description = '' then
     [Header]
   else
-    [Header, E.Element<TMsg>.Label(Settings.Description)]
+    [Header, (E.Element of TMsg).Label(Settings.Description)]
   end if;
-  return E.Element<TMsg>.Decorated(
-    E.Element<TMsg>.Stack(Contents, false, new E.Flow(PaddingX := 1)),
+  return (E.Element of TMsg).Decorated(
+    (E.Element of TMsg).Stack(Contents, false, new E.Flow(PaddingX := 1)),
     new T.Style(Th.Rgb(Theme.Colors.Foreground, Back), Back)
   );
 end function;

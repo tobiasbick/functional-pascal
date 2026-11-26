@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Conversation.Presences as W;
 // - `Users`: People in display order.
 // ## Returns
 // The native presence display.
-public function View(Users: array of W.User): E.Element<string>;
+public function View(Users: array of W.User): E.Element of string;
 begin
-  return W.Presence<string>('conversation-users', Users);
+  return W.Presence of string('conversation-users', Users);
 end function;
 
 end unit;

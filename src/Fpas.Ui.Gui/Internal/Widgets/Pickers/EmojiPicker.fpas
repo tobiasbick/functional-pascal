@@ -43,19 +43,19 @@ end function;
 // - `Value`: Model-owned history and tone.
 // - `OnChange`: Maps native changes to a message.
 // - `Settings`: Layout, labels and input permission.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Value: P.State; OnChange: function(P.Change): TMsg;
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Value: P.State; OnChange: function(P.Change): TMsg;
   Settings: P.Options
 );
 begin
   const Accept: bool := Settings.Enabled and Frame.AcceptInput;
   const Role: string := 'emoji-picker';
-  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+  const Track: Sys.Func of (int, string)? := if Frame.PaintingClosed then
     null
   else
     function(Part: int): string => Token(Id, Part)
   end if;
-  const Focus: int := if Settings.Search and C.WantsFocus<TMsg>(
+  const Focus: int := if Settings.Search and C.WantsFocus of TMsg(
     Frame,
     P.SearchId(Id),
     Token(Id, 0),
@@ -63,7 +63,7 @@ begin
   )
   then
     1
-  elsif C.WantsFocus<TMsg>(Frame, P.GridId(Id), Token(Id, 1), Accept) then
+  elsif C.WantsFocus of TMsg(Frame, P.GridId(Id), Token(Id, 1), Accept) then
     2
   else
     0

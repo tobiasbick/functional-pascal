@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Containers.ExpandableTexts as W;
 // - `Text`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Text: string): E.Element<string>;
+public function View(Text: string): E.Element of string;
 begin
-  return W.ExpandableText<string>('about-cui', Text, new W.Options(Lines := 2));
+  return W.ExpandableText of string('about-cui', Text, new W.Options(Lines := 2));
 end function;
 
 end unit;

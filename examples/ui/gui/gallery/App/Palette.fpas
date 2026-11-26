@@ -11,9 +11,9 @@ uses GuiGallery.Pages.Overlays.State as O;
 uses GuiGallery.Shared.State as S;
 uses System as Sys;
 
-function Command(Title: string; Message: G.Msg; Icon: int; Group: string; Shortcut: string := ''): P.Command<G.Msg>;
+function Command(Title: string; Message: G.Msg; Icon: int; Group: string; Shortcut: string := ''): P.Command of G.Msg;
 begin
-  return new P.Command<G.Msg>(Title, Message, Sys.Char.ConvertFromUtf32(Icon), Group, Shortcut);
+  return new P.Command of G.Msg(Title, Message, Sys.Char.ConvertFromUtf32(Icon), Group, Shortcut);
 end function;
 
 // Presents the original searchable gallery commands.
@@ -22,9 +22,9 @@ end function;
 // - `Base`: The gallery below the modal.
 // ## Returns
 // The gallery with its command palette.
-public function Wrap(Open: bool; Base: E.Element<G.Msg>): E.Element<G.Msg>;
+public function Wrap(Open: bool; Base: E.Element of G.Msg): E.Element of G.Msg;
 begin
-  return P.CommandPalette<G.Msg>(
+  return P.CommandPalette of G.Msg(
     'gallery-palette', Base, Open, [
       Command(
         Strings.Get('Palette.Overview'),

@@ -18,11 +18,11 @@ uses Fpas.Ui.Widgets.Overlays.CommandPalettes as W;
 // - `Open`: Current visibility from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Base: E.Element<string>; Open: bool): E.Element<string>;
+public function View(Base: E.Element of string; Open: bool): E.Element of string;
 begin
-  return W.CommandPalette<string>('commands', Base, Open, [
-    new W.Command<string>('Go to Overview', 'overview', Group := 'Navigation'),
-    new W.Command<string>('Toggle dark mode', 'theme', Group := 'Preferences')
+  return W.CommandPalette of string('commands', Base, Open, [
+    new W.Command of string('Go to Overview', 'overview', Group := 'Navigation'),
+    new W.Command of string('Toggle dark mode', 'theme', Group := 'Preferences')
   ], function(Visible: bool): string => if Visible then 'open-commands' else 'close-commands' end if);
 end function;
 

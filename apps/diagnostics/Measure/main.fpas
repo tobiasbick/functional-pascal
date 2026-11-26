@@ -30,9 +30,9 @@ begin
 end procedure;
 
 async function Measure(
-  Target: Fx.Effect<Capture.Captured, Capture.CaptureFailure, Capture.Request>;
+  Target: Fx.Effect of (Capture.Captured, Capture.CaptureFailure, Capture.Request);
   Request: Capture.Request; Cancellation: Threading.CancellationToken
-): Tasks.Task<Capture.Captured>;
+): Tasks.Task of Capture.Captured;
 begin
   case await Target.Run(Request, Cancellation) of
     when Fx.Outcome.Success(const Captured: Capture.Captured):
@@ -56,13 +56,13 @@ begin
     else
       const Options: Arguments.Options := Arguments.Read(Args);
       Samples.Validate(Options.Output, Options.Label, Options.Environment);
-      const Environment: C.Dictionary<string, string> := new C.Dictionary<string, string>();
+      const Environment: C.Dictionary of (string, string) := new C.Dictionary of (string, string)();
       Environment['MSBUILDDISABLENODEREUSE'] := '1';
       Environment['DOTNET_CLI_USE_MSBUILD_SERVER'] := '0';
       const Request: Capture.Request := new Capture.Request(
         Options.Executable, Options.Arguments, Options.Directory, Environment
       );
-      const CaptureTarget: Fx.Effect<Capture.Captured, Capture.CaptureFailure, Capture.Request> := Capture.Read(
+      const CaptureTarget: Fx.Effect of (Capture.Captured, Capture.CaptureFailure, Capture.Request) := Capture.Read(
         Options.Timeout, 65536
       );
       const Values: array of double := new double[Options.Count];

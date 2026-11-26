@@ -46,7 +46,7 @@ public type Options = record
   // Safe numeric label format.
   public Format: C.ValueFormat? := null;
   // Formats axis and selected-event times during painting; null uses the native format.
-  public Label: Sys.Func<double, string>? := null;
+  public Label: Sys.Func of (double, string)? := null;
   // Label distance or zero for automatic spacing.
   public LabelStep: double := 0.0;
   // Allow adding events.
@@ -69,10 +69,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // The graphical element.
-public function EventTrack<TMsg>(Id: string; Current: Value; OnChange: function(Change): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function EventTrack of TMsg(Id: string; Current: Value; OnChange: function(Change): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.EventTrack(Id, Current, OnChange, Settings ?? new Options());
+  return (E.Element of TMsg).EventTrack(Id, Current, OnChange, Settings ?? new Options());
 end function;
 
 end unit;

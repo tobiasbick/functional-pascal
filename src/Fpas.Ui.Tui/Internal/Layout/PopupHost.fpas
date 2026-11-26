@@ -28,23 +28,23 @@ uses System.Collections.Generic as C;
 // - `Controls`: Controls of the current frame.
 // ## Returns
 // Open popup scope, or null when there is no eligible trigger.
-public function Present<TMsg>(
-  State: P.State<TMsg>; Parent: A.Scope<TMsg>?; Screen: F.Rect; Theme: Th.Theme;
-  Operations: C.List<D.Operation>; Controls: C.List<A.Control<TMsg>>
-): A.Scope<TMsg>?;
-  function Content(Owner: A.Control<TMsg>): Popup.Content<TMsg>?;
+public function Present of TMsg(
+  State: P.State of TMsg; Parent: (A.Scope of TMsg)?; Screen: F.Rect; Theme: Th.Theme;
+  Operations: C.List of D.Operation; Controls: C.List of A.Control of TMsg
+): (A.Scope of TMsg)?;
+  function Content(Owner: A.Control of TMsg): (Popup.Content of TMsg)?;
   begin
-    case A.Activatable<TMsg>(Owner.Action) of
-      when is Select.Trigger<TMsg> as Field:
-        return Select.Content<TMsg>(Field, Owner.Bounds);
-      when is MultiSelect.Trigger<TMsg> as Multi:
-        return MultiSelect.Content<TMsg>(Multi, Owner.Bounds.Width);
-      when is Menu.Trigger<TMsg> as Dropdown:
-        return Menu.Content<TMsg>(Dropdown, Owner.Bounds, Screen.Width);
-      when is Filters.Trigger<TMsg> as Filter:
-        return Filters.Content<TMsg>(Filter);
-      when is Breadcrumb.Trigger<TMsg> as Trail:
-        return Breadcrumb.Content<TMsg>(Trail);
+    case A.Activatable of TMsg(Owner.Action) of
+      when is Select.Trigger of TMsg as Field:
+        return Select.Content of TMsg(Field, Owner.Bounds);
+      when is MultiSelect.Trigger of TMsg as Multi:
+        return MultiSelect.Content of TMsg(Multi, Owner.Bounds.Width);
+      when is Menu.Trigger of TMsg as Dropdown:
+        return Menu.Content of TMsg(Dropdown, Owner.Bounds, Screen.Width);
+      when is Filters.Trigger of TMsg as Filter:
+        return Filters.Content of TMsg(Filter);
+      when is Breadcrumb.Trigger of TMsg as Trail:
+        return Breadcrumb.Content of TMsg(Trail);
       else
         return null;
     end case;
@@ -59,13 +59,13 @@ begin
   else
     Parent.Id
   end if;
-  const Owner: A.Control<TMsg>? := Controls.Find(
-    function(Control: A.Control<TMsg>): bool => Control.Id = Id
+  const Owner: (A.Control of TMsg)? := Controls.Find(
+    function(Control: A.Control of TMsg): bool => Control.Id = Id
   );
   if Owner <> null and Owner.Enabled and Owner.Scope = Scope then
-    const Active: Popup.Content<TMsg>? := Content(Owner);
+    const Active: (Popup.Content of TMsg)? := Content(Owner);
     if Active <> null then
-      return Popup.Draw<TMsg>(State, Active, Owner.Bounds, Screen, Theme, Operations, Controls);
+      return Popup.Draw of TMsg(State, Active, Owner.Bounds, Screen, Theme, Operations, Controls);
     end if;
   end if;
 

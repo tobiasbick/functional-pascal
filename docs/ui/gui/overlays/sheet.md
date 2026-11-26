@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Overlays.Sheets as W;
 // - `Open`: Current visibility from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Base: E.Element<string>; Open: bool): E.Element<string>;
+public function View(Base: E.Element of string; Open: bool): E.Element of string;
 begin
-  return W.Sheet<string>('notifications', Base, E.Text<string>('Notification preferences'), Open,
+  return W.Sheet of string('notifications', Base, E.Text of string('Notification preferences'), Open,
     new W.Options('Notifications', Description := 'Choose what we tell you about.'),
     'close-notifications');
 end function;

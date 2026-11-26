@@ -16,11 +16,11 @@ uses Fpas.Ui.Widgets.Actions.Buttons as B;
 // Builds the example view.
 // ## Returns
 // The widget with its message type.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return G.ButtonGroup<string>(
-    B.Button<string>('bold', 'Bold', 'bold'),
-    B.Button<string>('italic', 'Italic', 'italic')
+  return G.ButtonGroup of string(
+    B.Button of string('bold', 'Bold', 'bold'),
+    B.Button of string('italic', 'Italic', 'italic')
   );
 end function;
 

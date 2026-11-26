@@ -74,7 +74,7 @@ end function;
 public function Previous(Value: string; Offset: int): int;
 begin
   const Starts: array of int := Global.StringInfo.ParseCombiningCharacters(Value);
-  const Index: int := Sys.Array.BinarySearch<int>(Starts, Offset);
+  const Index: int := Sys.Array.BinarySearch of int(Starts, Offset);
   const Before: int := (if Index >= 0 then
     Index
   else

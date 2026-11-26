@@ -22,7 +22,7 @@ uses Fpas.Ui.Widgets.Actions.Buttons as B;
 // - `Role`: Inspection role for this action or its owning composite widget.
 // ## Returns
 // A terminal action retaining the original label for inspection.
-public function Lower<TMsg>(Id: string; Label: string; Message: TMsg; Settings: B.Options; Role: string := 'button'): E.Element<TMsg>;
+public function Lower of TMsg(Id: string; Label: string; Message: TMsg; Settings: B.Options; Role: string := 'button'): E.Element of TMsg;
 begin
   const Leading: string := if Settings.Loading then
     '…'
@@ -65,8 +65,8 @@ begin
     else false;
   end case;
   const Large: bool := Settings.ControlSize = B.Size.Large;
-  return E.Element<TMsg>.Action(
-    Id, new A.Direct<TMsg>(Message, Settings.Loading), Settings.Enabled, new E.ActionView(
+  return (E.Element of TMsg).Action(
+    Id, new A.Direct of TMsg(Message, Settings.Loading), Settings.Enabled, new E.ActionView(
       Caption, Name := Label, Role := Role, Variant := Variant,
       Value := if Settings.Loading then
         'loading'

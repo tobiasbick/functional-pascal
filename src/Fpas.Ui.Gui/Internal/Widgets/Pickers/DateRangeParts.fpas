@@ -110,8 +110,8 @@ end function;
 // - `Enabled`: Whether these controls accept input.
 // - `Result`: CUI proposal and visible parts.
 // - `OnChange`: Maps the proposal to an application message.
-public procedure Publish<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Label: string; Role: string; Value: R.Value; Enabled: bool;
+public procedure Publish of TMsg(
+  Frame: C.State of TMsg; Id: string; Label: string; Role: string; Value: R.Value; Enabled: bool;
   Result: CuiPickers.CuiDateRangeResult; OnChange: function(R.Value): TMsg
 );
 begin

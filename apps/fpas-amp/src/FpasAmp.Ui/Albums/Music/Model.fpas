@@ -16,7 +16,7 @@ uses System.Collections.Immutable as I;
 // Confirmed or draft track filters.
 public type Filters = record
   // Selected genres. An empty set includes all genres.
-  public Genres: I.ImmutableHashSet<string> := I.ImmutableHashSet<string>.Empty.WithComparer(
+  public Genres: I.ImmutableHashSet of string := (I.ImmutableHashSet of string).Empty.WithComparer(
     Sys.StringComparer.OrdinalIgnoreCase
   );
   // Inclusive rating floor, zero for any rating or -1 for unrated tracks.
@@ -117,11 +117,11 @@ public type State = record
   // Identity of this visit, used to reject late background results.
   public Visit: long;
   // Tracks belonging to this page, in disc and track order.
-  public Tracks: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray<Tracks.Entry>.Empty;
+  public Tracks: I.ImmutableArray of Tracks.Entry := (I.ImmutableArray of Tracks.Entry).Empty;
   // Genre choices that distinguish tracks within the full release.
   public GenreChoices: array of string := [];
   // Filtered and sorted release tracks.
-  public Shown: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray<Tracks.Entry>.Empty;
+  public Shown: I.ImmutableArray of Tracks.Entry := (I.ImmutableArray of Tracks.Entry).Empty;
   // Keyboard cursor in Shown, or -1 when unset.
   public Cursor: int := -1;
   // Range anchor in Shown, or -1 when unset.
@@ -143,9 +143,9 @@ public type State = record
   // Grid sort; column -1 uses disc and track order.
   public Order: Tables.Sort := new Tables.Sort(-1);
   // Proposed ratings shown while the corresponding writes are in flight.
-  public Saving: I.ImmutableDictionary<string, int?> := I.ImmutableDictionary<string, int?>.Empty;
+  public Saving: I.ImmutableDictionary of (string, int?) := I.ImmutableDictionary of (string, int?).Empty;
   // Confirmed edits newer than the last track query, keyed by track identity.
-  public Receipts: I.ImmutableDictionary<string, RatingReceipt> := I.ImmutableDictionary<string, RatingReceipt>.Empty;
+  public Receipts: I.ImmutableDictionary of (string, RatingReceipt) := I.ImmutableDictionary of (string, RatingReceipt).Empty;
   // Monotonic start of the last track query delivered to this visit.
   public ReadStarted: long := 0L;
   // Details dialog's track, when open.
@@ -175,7 +175,7 @@ public type Msg = variant
   // Return to the parent album grid.
   Back;
   // Tracks loaded for Visit, with the monotonic timestamp Started from before the query.
-  Loaded(Visit: long; Started: long; Items: I.ImmutableArray<Tracks.Entry>);
+  Loaded(Visit: long; Started: long; Items: I.ImmutableArray of Tracks.Entry);
   // Publishes the selected release's thumbnail for this visit.
   CoverLoaded(Visit: long; Image: Imaging.Bitmap?);
   // Reports a failure for a visit.
@@ -185,7 +185,7 @@ public type Msg = variant
   // Change the visibility of the filter controls.
   ShowFilters(Open: bool);
   // Replace the draft genre selection.
-  Genres(Values: I.ImmutableHashSet<string>);
+  Genres(Values: I.ImmutableHashSet of string);
   // Set the draft rating floor, or choose -1 for unrated tracks.
   Minimum(Value: int);
   // Select a performer in the draft filters.
@@ -199,7 +199,7 @@ public type Msg = variant
   // Set the song sort order.
   Sort(Order: Tables.Sort);
   // Cursor and anchor proposed against the rows presented in the input frame.
-  Navigate(Rows: I.ImmutableArray<Tracks.Entry>; Cursor: int; Anchor: int; Scroll: float);
+  Navigate(Rows: I.ImmutableArray of Tracks.Entry; Cursor: int; Anchor: int; Scroll: float);
   // Open the catalogue destination linked from a composed track cell.
   Follow(Destination: Nav.Route);
   // Propose a rating, with zero clearing it.
@@ -211,7 +211,7 @@ public type Msg = variant
   // Toggle the current file or start FileId in the displayed queue.
   Play(FileId: long);
   // Activate Index from the rendered playlist Rows, preserving duplicate positions.
-  PlaySlot(Rows: I.ImmutableArray<Tracks.Entry>; Index: int);
+  PlaySlot(Rows: I.ImmutableArray of Tracks.Entry; Index: int);
   // Show metadata for one track.
   Details(Item: Tracks.Entry);
   // Opens the tag editor for one indexed track.

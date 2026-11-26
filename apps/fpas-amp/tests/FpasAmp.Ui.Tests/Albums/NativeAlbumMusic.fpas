@@ -35,7 +35,7 @@ uses System.IO as IO;
 uses System.Threading as T;
 uses Xunit as X;
 
-function Control(Session: Gui.Session<App.Msg>; Id: string; Key: string := ''): Gui.Control;
+function Control(Session: Gui.Session of App.Msg; Id: string; Key: string := ''): Gui.Control;
 begin
   for Item: Gui.Control in Session.Snapshot().Controls do
     if Item.Id = Id and Item.Key = Key then
@@ -46,7 +46,7 @@ begin
   raise new Sys.InvalidOperationException('Missing native control: ' + Id);
 end function;
 
-function Has(Session: Gui.Session<App.Msg>; Id: string): bool;
+function Has(Session: Gui.Session of App.Msg; Id: string): bool;
 begin
   for Item: Gui.Control in Session.Snapshot().Controls do
     if Item.Id = Id then
@@ -57,13 +57,13 @@ begin
   return false;
 end function;
 
-procedure Step(Session: Gui.Session<App.Msg>);
+procedure Step(Session: Gui.Session of App.Msg);
 begin
   discard Session.Post(App.Msg.Settings(Settings.Msg.DismissError));
   X.Assert.True(Session.Step());
 end procedure;
 
-procedure Until(Session: Gui.Session<App.Msg>; Ready: function(): bool; Failure: string);
+procedure Until(Session: Gui.Session of App.Msg; Ready: function(): bool; Failure: string);
 begin
   const Deadline: long := Sys.Environment.TickCount64 + 15000L;
   while Sys.Environment.TickCount64 < Deadline do
@@ -106,23 +106,23 @@ public type AlbumMusicTests = record
         Wheel := 0.0F;
       end if;
     end procedure;
-    function Apply(Current: App.State; Message: App.Msg): A.Transition<App.State, App.Msg>;
+    function Apply(Current: App.State; Message: App.Msg): A.Transition of (App.State, App.Msg);
     begin
-      const Next: A.Transition<App.State, App.Msg> := Controller.Apply(
+      const Next: A.Transition of (App.State, App.Msg) := Controller.Apply(
         Current, Message, procedure(_Value: Settings.Preferences) begin end procedure, Store, Port
       );
       case Message of
         when App.Msg.Albums(Albums.Msg.Music(Music.Msg.ShowFolder(const Path: string))):
           // Observe the desktop request without opening a file manager on the user's desktop.
           FolderRequest := Path;
-          return new A.Transition<App.State, App.Msg>(Next.Model, []);
+          return new A.Transition of (App.State, App.Msg)(Next.Model, []);
         else
       end case;
 
       Last := Next.Model;
       return Next;
     end function;
-    procedure Click(Session: Gui.Session<App.Msg>; Bounds: Cui.CuiRectangle; XFraction: float := 0.6F);
+    procedure Click(Session: Gui.Session of App.Msg; Bounds: Cui.CuiRectangle; XFraction: float := 0.6F);
     begin
       XPos := Bounds.X + Bounds.Width * XFraction;
       YPos := Bounds.Y + Bounds.Height / 2.0F;
@@ -133,7 +133,7 @@ public type AlbumMusicTests = record
       Step(Session);
       Step(Session);
     end procedure;
-    procedure Send(Session: Gui.Session<App.Msg>; Message: Albums.Msg);
+    procedure Send(Session: Gui.Session of App.Msg; Message: Albums.Msg);
     begin
       discard Session.Post(App.Msg.Albums(Message));
       Step(Session);
@@ -176,7 +176,7 @@ public type AlbumMusicTests = record
     const Store: Library.Session := Sources.Start([Sources.Source(Root.Path)], Data.Path);
     try
       Window.SetReducedMotion(true);
-      using const Session: Gui.Session<App.Msg> := Host.StartThemed<App.State, App.Msg>(
+      using const Session: Gui.Session of App.Msg := Host.StartThemed of (App.State, App.Msg)(
         Last, Apply, Shell.View, Window, 128, Inject, App.Theme(Last, null), App.Theme, false,
         OnCloseRequested := function(): App.Msg => App.Msg.Closing(Port.Stop(Last.Player))
       );
@@ -241,28 +241,28 @@ public type AlbumMusicTests = record
         raise new Sys.InvalidOperationException('Missing music page.');
       end if;
 
-      X.Assert.Equal<string>(Selected.Id, 'album-' + Page.Album.Id);
-      X.Assert.Equal<int>(2, Page.Tracks.Length);
+      X.Assert.Equal of string(Selected.Id, 'album-' + Page.Album.Id);
+      X.Assert.Equal of int(2, Page.Tracks.Length);
       const Track: Metadata.Entry := Page.Tracks[0];
-      X.Assert.Equal<string>(
+      X.Assert.Equal of string(
         Page.Album.Artist,
         (Track.Metadata ?? new MediaTags.Info()).Artists[0]
       );
-      X.Assert.Contains<string>('Albums', Session.Snapshot().Text);
-      X.Assert.Equal<string>('albums', Nav.SectionKey(Last.Navigation.Active));
+      X.Assert.Contains of string('Albums', Session.Snapshot().Text);
+      X.Assert.Equal of string('albums', Nav.SectionKey(Last.Navigation.Active));
       const TrackSearch: Cui.CuiRectangle := Control(Session, 'track-search').Bounds;
       const TrackFilter: Cui.CuiRectangle := Control(Session, 'track-filters').Bounds;
       const TrackSort: Cui.CuiRectangle := Control(Session, 'track-sort').Bounds;
       const Cover: Cui.CuiRectangle := Control(Session, 'track-album-cover').Bounds;
-      X.Assert.Equal<float>(174.0F, Cover.Width);
-      X.Assert.Equal<float>(Cover.Y, TrackSearch.Y);
+      X.Assert.Equal of float(174.0F, Cover.Width);
+      X.Assert.Equal of float(Cover.Y, TrackSearch.Y);
       X.Assert.True(TrackSearch.X > Cover.X + Cover.Width);
-      X.Assert.Equal<string>('Time', Control(Session, 'album-tracks/header/1').Text);
-      X.Assert.Equal<string>('Rating', Control(Session, 'album-tracks/header/2').Text);
-      X.Assert.Equal<float>(AlbumSearch.Height, TrackSearch.Height);
-      X.Assert.Equal<float>(AlbumFilter.Height, TrackFilter.Height);
-      X.Assert.Equal<float>(AlbumSort.Height, TrackSort.Height);
-      X.Assert.Equal<float>(AlbumFilter.Y - AlbumSearch.Y, TrackFilter.Y - TrackSearch.Y);
+      X.Assert.Equal of string('Time', Control(Session, 'album-tracks/header/1').Text);
+      X.Assert.Equal of string('Rating', Control(Session, 'album-tracks/header/2').Text);
+      X.Assert.Equal of float(AlbumSearch.Height, TrackSearch.Height);
+      X.Assert.Equal of float(AlbumFilter.Height, TrackFilter.Height);
+      X.Assert.Equal of float(AlbumSort.Height, TrackSort.Height);
+      X.Assert.Equal of float(AlbumFilter.Y - AlbumSearch.Y, TrackFilter.Y - TrackSearch.Y);
       const Footer: Cui.CuiRectangle := Control(Session, 'track-status').Bounds;
       const Toggle: Gui.Control := Control(Session, 'player-toggle');
       X.Assert.False(Toggle.Enabled);
@@ -271,7 +271,7 @@ public type AlbumMusicTests = record
       const Id: string := Track.FileId.ToString();
       const TrackRating: Cui.CuiRectangle := Control(Session, 'track-rating-' + Id).Bounds;
       X.Assert.True(AlbumRating.Height > 0.0F);
-      X.Assert.Equal<float>(AlbumRating.Height, TrackRating.Height);
+      X.Assert.Equal of float(AlbumRating.Height, TrackRating.Height);
       Click(Session, TrackRating, 0.95F);
       Until(
         Session, function(): bool begin
@@ -280,18 +280,18 @@ public type AlbumMusicTests = record
         end function, 'The clicked track rating was not saved.'
       );
       Click(Session, Control(Session, 'album-tracks/header/2').Bounds);
-      X.Assert.Equal<int>(4, TrackSortColumn(Last));
+      X.Assert.Equal of int(4, TrackSortColumn(Last));
       Click(Session, Control(Session, 'album-tracks/header/1').Bounds);
-      X.Assert.Equal<int>(3, TrackSortColumn(Last));
+      X.Assert.Equal of int(3, TrackSortColumn(Last));
       Send(Session, Albums.Msg.Music(Music.Msg.Sort(new Tables.Sort(-1))));
       Click(Session, Control(Session, 'track-menu-' + Id).Bounds);
       Step(Session);
       Click(Session, Control(Session, 'track-menu-' + Id + '/details').Bounds);
-      X.Assert.Contains<string>('Track details', Session.Snapshot().Text);
-      X.Assert.Contains<string>('120 BPM', Session.Snapshot().Text);
-      X.Assert.Contains<string>('Demo Release · 2024', Session.Snapshot().Text);
+      X.Assert.Contains of string('Track details', Session.Snapshot().Text);
+      X.Assert.Contains of string('120 BPM', Session.Snapshot().Text);
+      X.Assert.Contains of string('Demo Release · 2024', Session.Snapshot().Text);
       X.Assert.True(
-        Sys.Array.Exists<string>(
+        Sys.Array.Exists of string(
           Session.Snapshot().Text,
           function(Line: string): bool => Line.StartsWith('Disc 1 of 2 · Track 2 of 12')
         )
@@ -300,7 +300,7 @@ public type AlbumMusicTests = record
       const OpenPath: Cui.CuiRectangle := Control(Session, 'track-open-folder').Bounds;
       X.Assert.True(OpenPath.Width > 0.0F and CopyPath.X >= OpenPath.X + OpenPath.Width);
       Click(Session, OpenPath);
-      X.Assert.Equal<string>(Track.Path, FolderRequest);
+      X.Assert.Equal of string(Track.Path, FolderRequest);
       const SaveAt: string? := Sys.Environment.GetEnvironmentVariable('FPAS_AMP_UI_ARTIFACTS');
       if SaveAt <> null then
         discard IO.Directory.CreateDirectory(SaveAt);
@@ -308,16 +308,16 @@ public type AlbumMusicTests = record
       end if;
 
       Click(Session, Control(Session, 'track-detail-tabs', '1').Bounds);
-      X.Assert.Contains<string>('Test label', Session.Snapshot().Text);
-      X.Assert.DoesNotContain<string>('120 BPM', Session.Snapshot().Text);
+      X.Assert.Contains of string('Test label', Session.Snapshot().Text);
+      X.Assert.DoesNotContain of string('120 BPM', Session.Snapshot().Text);
       if SaveAt <> null then
         Session.CapturePng(IO.Path.Combine(SaveAt, 'track-details-credits.png'));
       end if;
 
       Click(Session, Control(Session, 'track-detail-tabs', '2').Bounds);
-      X.Assert.Contains<string>('Stereo', Session.Snapshot().Text);
-      X.Assert.Contains<string>('Sample rate', Session.Snapshot().Text);
-      X.Assert.DoesNotContain<string>('Test label', Session.Snapshot().Text);
+      X.Assert.Contains of string('Stereo', Session.Snapshot().Text);
+      X.Assert.Contains of string('Sample rate', Session.Snapshot().Text);
+      X.Assert.DoesNotContain of string('Test label', Session.Snapshot().Text);
       if SaveAt <> null then
         Session.CapturePng(IO.Path.Combine(SaveAt, 'track-details-audio.png'));
       end if;
@@ -344,34 +344,34 @@ public type AlbumMusicTests = record
       );
       Send(Session, Albums.Msg.Music(Music.Msg.DismissDetails));
       Send(Session, Albums.Msg.Music(Music.Msg.Search('Intro')));
-      X.Assert.Equal<string>('0:1', Control(Session, 'album-tracks').Value);
+      X.Assert.Equal of string('0:1', Control(Session, 'album-tracks').Value);
       Send(Session, Albums.Msg.Music(Music.Msg.Search('Rock')));
-      X.Assert.Equal<string>('0:1', Control(Session, 'album-tracks').Value);
+      X.Assert.Equal of string('0:1', Control(Session, 'album-tracks').Value);
       Send(Session, Albums.Msg.Music(Music.Msg.Search(Page.Album.Title)));
-      X.Assert.Equal<string>('No matching tracks', Control(Session, 'tracks-empty').Text);
+      X.Assert.Equal of string('No matching tracks', Control(Session, 'tracks-empty').Text);
       Send(Session, Albums.Msg.Music(Music.Msg.Search(Page.Album.Artist)));
-      X.Assert.Equal<string>('No matching tracks', Control(Session, 'tracks-empty').Text);
+      X.Assert.Equal of string('No matching tracks', Control(Session, 'tracks-empty').Text);
       Send(Session, Albums.Msg.Music(Music.Msg.Search('')));
       Click(Session, Control(Session, 'track-filters').Bounds);
       Click(Session, Control(Session, 'track-filter-genre').Bounds);
       const Genre: string := Selects.OptionId('track-filter-genre', 0);
-      X.Assert.Equal<string>('Rock', Control(Session, Genre).Text);
+      X.Assert.Equal of string('Rock', Control(Session, Genre).Text);
       X.Assert.False(Has(Session, Selects.OptionId('track-filter-genre', 1)));
       Click(Session, Control(Session, Genre).Bounds);
-      X.Assert.Equal<string>('Rock', Control(Session, 'track-filter-genre').Value);
-      X.Assert.Equal<string>('0:2', Control(Session, 'album-tracks').Value);
+      X.Assert.Equal of string('Rock', Control(Session, 'track-filter-genre').Value);
+      X.Assert.Equal of string('0:2', Control(Session, 'album-tracks').Value);
       Click(Session, Control(Session, 'track-filter-genre').Bounds);
       Click(Session, Control(Session, 'track-filter-apply').Bounds);
-      X.Assert.Equal<string>('0:1', Control(Session, 'album-tracks').Value);
+      X.Assert.Equal of string('0:1', Control(Session, 'album-tracks').Value);
       Click(Session, Control(Session, 'track-filters').Bounds);
       Click(Session, Control(Session, 'track-filter-reset').Bounds);
       Send(Session, Albums.Msg.Music(Music.Msg.Minimum(1)));
       Click(Session, Control(Session, 'track-filter-apply').Bounds);
-      X.Assert.Equal<string>('0:1', Control(Session, 'album-tracks').Value);
+      X.Assert.Equal of string('0:1', Control(Session, 'album-tracks').Value);
       Click(Session, Control(Session, 'track-filters').Bounds);
       Click(Session, Control(Session, 'track-filter-reset').Bounds);
       Click(Session, Control(Session, 'track-filter-apply').Bounds);
-      X.Assert.Equal<string>('0:2', Control(Session, 'album-tracks').Value);
+      X.Assert.Equal of string('0:2', Control(Session, 'album-tracks').Value);
       if SaveAt <> null then
         Session.CapturePng(IO.Path.Combine(SaveAt, 'album-music.png'));
         Click(Session, Control(Session, 'track-filters').Bounds);
@@ -381,13 +381,13 @@ public type AlbumMusicTests = record
 
       Click(Session, Control(Session, 'track-play-' + Id).Bounds, 0.5F);
       X.Assert.True(Last.Player.Playing);
-      X.Assert.Equal<long>(Track.FileId, Last.Player.Queue[Last.Player.Index].FileId);
-      X.Assert.Equal<string>(Page.Album.Id, Bookmark.Capture(Last.Player).Source.AlbumId);
+      X.Assert.Equal of long(Track.FileId, Last.Player.Queue[Last.Player.Index].FileId);
+      X.Assert.Equal of string(Page.Album.Id, Bookmark.Capture(Last.Player).Source.AlbumId);
       Click(Session, Control(Session, 'player-toggle').Bounds, 0.5F);
       X.Assert.False(Last.Player.Playing);
       const Wave: Cui.CuiRectangle := Control(Session, 'player-position').Bounds;
       Click(Session, Wave, 0.72F);
-      X.Assert.InRange<double>(Last.Player.Position / Last.Player.Duration, 0.70, 0.74);
+      X.Assert.InRange of double(Last.Player.Position / Last.Player.Duration, 0.70, 0.74);
       const BeforeDrag: long := Last.Player.Revision;
       XPos := Wave.X + Wave.Width * 0.9F;
       Step(Session);
@@ -397,31 +397,31 @@ public type AlbumMusicTests = record
       Step(Session);
       XPos := Wave.X + Wave.Width * 0.2F;
       Step(Session);
-      X.Assert.Equal<long>(BeforeDrag, Last.Player.Revision);
+      X.Assert.Equal of long(BeforeDrag, Last.Player.Revision);
       Left := 0;
       Step(Session);
       Step(Session);
-      X.Assert.Equal<long>(BeforeDrag + 1L, Last.Player.Revision);
-      X.Assert.InRange<double>(Last.Player.Position / Last.Player.Duration, 0.18, 0.22);
+      X.Assert.Equal of long(BeforeDrag + 1L, Last.Player.Revision);
+      X.Assert.InRange of double(Last.Player.Position / Last.Player.Duration, 0.18, 0.22);
       const Volume: Cui.CuiRectangle := Control(Session, 'player-volume').Bounds;
       X.Assert.True(Volume.X + Volume.Width <= Control(Session, 'player-levels').Bounds.X);
       X.Assert.True(Volume.Y + Volume.Height <= Wave.Y);
       Click(Session, Volume, 0.5F);
-      X.Assert.InRange<float>(Last.Player.Volume, -55.0F, -5.0F);
+      X.Assert.InRange of float(Last.Player.Volume, -55.0F, -5.0F);
       const Selector: Gui.Control := Control(Session, 'player-eq-preset');
       const Reset: Cui.CuiRectangle := Control(Session, 'player-eq-reset').Bounds;
-      X.Assert.Equal<float>(Reset.Height, Selector.Bounds.Height);
+      X.Assert.Equal of float(Reset.Height, Selector.Bounds.Height);
       X.Assert.True(Selector.Bounds.X + Selector.Bounds.Width <= Reset.X);
       Click(Session, Selector.Bounds);
       Click(Session, Control(Session, 'player-preset-1').Bounds);
-      X.Assert.Equal<string>('Rock', Control(Session, 'player-eq-preset').Text);
-      X.Assert.Equal<float>(4.0F, Last.Player.Gains[0]);
+      X.Assert.Equal of string('Rock', Control(Session, 'player-eq-preset').Text);
+      X.Assert.Equal of float(4.0F, Last.Player.Gains[0]);
       Click(Session, Control(Session, 'player-eq-preset').Bounds);
       Click(Session, Control(Session, 'player-preset-0').Bounds);
-      X.Assert.Equal<float>(0.0F, Last.Player.Gains[0]);
+      X.Assert.Equal of float(0.0F, Last.Player.Gains[0]);
       if Last.Player.Index + 1 < Last.Player.Queue.Length then
         Click(Session, Control(Session, 'player-next').Bounds, 0.5F);
-        X.Assert.Equal<int>(1, Last.Player.Index);
+        X.Assert.Equal of int(1, Last.Player.Index);
       end if;
       const Bass: Cui.CuiRectangle := Control(Session, 'player-eq-31').Bounds;
       XPos := Bass.X + Bass.Width / 2.0F;
@@ -432,9 +432,9 @@ public type AlbumMusicTests = record
       Left := 0;
       Step(Session);
       X.Assert.True(Last.Player.Gains[0] > 6.0F, 'Dragging the 31 Hz fader did not boost it.');
-      X.Assert.Equal<string>('Custom', Control(Session, 'player-eq-preset').Text);
+      X.Assert.Equal of string('Custom', Control(Session, 'player-eq-preset').Text);
       Click(Session, Control(Session, 'player-eq-reset').Bounds);
-      X.Assert.Equal<string>('None', Control(Session, 'player-eq-preset').Text);
+      X.Assert.Equal of string('None', Control(Session, 'player-eq-preset').Text);
       if SaveAt <> null then
         Session.CapturePng(IO.Path.Combine(SaveAt, 'album-music-player.png'));
       end if;
@@ -464,10 +464,10 @@ public type AlbumMusicTests = record
       Step(Session);
       Click(Session, Control(Session, 'tracks-back').Bounds);
       X.Assert.Null(Last.Albums.Music);
-      X.Assert.Equal<string>(Before.Toolbar.Search, Last.Albums.Toolbar.Search);
-      X.Assert.Equal<string>(Before.Toolbar.Applied.Genre, Last.Albums.Toolbar.Applied.Genre);
-      X.Assert.Equal<Toolbar.Order>(Before.Toolbar.Sort, Last.Albums.Toolbar.Sort);
-      X.Assert.Equal<float>(Before.Offsets['albums'], Last.Albums.Offsets['albums']);
+      X.Assert.Equal of string(Before.Toolbar.Search, Last.Albums.Toolbar.Search);
+      X.Assert.Equal of string(Before.Toolbar.Applied.Genre, Last.Albums.Toolbar.Applied.Genre);
+      X.Assert.Equal of Toolbar.Order(Before.Toolbar.Sort, Last.Albums.Toolbar.Sort);
+      X.Assert.Equal of float(Before.Offsets['albums'], Last.Albums.Offsets['albums']);
       const Returned: Cui.CuiRectangle := Control(Session, Selected.Id).Bounds;
       X.Assert.True(
         Sys.Math.Abs(Returned.Y - Selected.Bounds.Y) < 1.0F,
@@ -489,8 +489,8 @@ public type AlbumMusicTests = record
       const Stopped: Media.PlaybackEvent? := Device.StopPlayback();
       X.Assert.True(Stopped is Media.PlaybackEvent);
       if Stopped is Media.PlaybackEvent then
-        X.Assert.Equal<long>(Last.Player.Revision, Stopped.RequestId);
-        X.Assert.Equal<double>(Stopped.Position.TotalMilliseconds, Last.Player.Position);
+        X.Assert.Equal of long(Last.Player.Revision, Stopped.RequestId);
+        X.Assert.Equal of double(Stopped.Position.TotalMilliseconds, Last.Player.Position);
       end if;
       const Saved: Bookmark.Saved := Bookmark.Capture(Last.Player);
       const Restored: Player.State := Bookmark.Restore(
@@ -498,13 +498,13 @@ public type AlbumMusicTests = record
           Saved.Source.AlbumId, T.CancellationToken.None
         ).GetAwaiter().GetResult()
       );
-      X.Assert.Equal<int>(2, Restored.Queue.Length);
-      X.Assert.Equal<string>(Page.Album.Id, Saved.Source.AlbumId);
-      X.Assert.Equal<long>(
+      X.Assert.Equal of int(2, Restored.Queue.Length);
+      X.Assert.Equal of string(Page.Album.Id, Saved.Source.AlbumId);
+      X.Assert.Equal of long(
         Last.Player.Queue[Last.Player.Index].FileId,
         Restored.Queue[Restored.Index].FileId
       );
-      X.Assert.Equal<double>(Last.Player.Position, Restored.Position);
+      X.Assert.Equal of double(Last.Player.Position, Restored.Position);
       X.Assert.False(Restored.Playing);
     finally
       Store.DisposeAsync().GetAwaiter().GetResult();

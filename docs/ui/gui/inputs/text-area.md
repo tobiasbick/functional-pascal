@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Inputs.TextAreas as W;
 // - `About`: Current value with LF line endings and up to 511 UTF-8 bytes.
 // ## Returns
 // The widget for the application view.
-public function View(About: string): E.Element<string>;
+public function View(About: string): E.Element of string;
 begin
-  return W.TextArea<string>('input-about', About, function(Value: string): string => Value,
+  return W.TextArea of string('input-about', About, function(Value: string): string => Value,
     new W.Options(Label := 'About', Hint := 'Write a short profile description.', MaxUtf8Bytes := 511));
 end function;
 

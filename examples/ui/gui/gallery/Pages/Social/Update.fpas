@@ -17,7 +17,7 @@ uses GuiGallery.Pages.Social.State as S;
 // - `Message`: The native widget action.
 // ## Returns
 // The updated model and any toast for a dismissed card.
-public function Update(Model: S.Model; Message: S.Msg): A.Transition<S.Model, S.Msg>;
+public function Update(Model: S.Model; Message: S.Msg): A.Transition of (S.Model, S.Msg);
   function Apply(): S.Model;
   begin
     case Message of
@@ -62,9 +62,9 @@ begin
   const Next: S.Model := Apply();
   case Message of
     when S.Msg.Swipe(const Direction: Deck.Direction):
-      return new A.Transition<S.Model, S.Msg>(
+      return new A.Transition of (S.Model, S.Msg)(
         Next, [
-          Toasts.Show<S.Msg>(
+          Toasts.Show of S.Msg(
             if Direction = Deck.Direction.Right then
               'Saved'
             else
@@ -74,7 +74,7 @@ begin
         ]
       );
     else
-      return new A.Transition<S.Model, S.Msg>(Next, []);
+      return new A.Transition of (S.Model, S.Msg)(Next, []);
   end case;
 end function;
 

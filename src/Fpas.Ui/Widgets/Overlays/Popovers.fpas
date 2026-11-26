@@ -30,13 +30,20 @@ end record;
 // - `Settings`: Optional placement and sizing.
 // ## Returns
 // A graphical view with the trigger's original layout.
-public function Popover<TMsg>(
-  Id: string; Trigger: E.Element<TMsg>; Content: E.Element<TMsg>; Open: bool;
+public function Popover of TMsg(
+  Id: string; Trigger: E.Element of TMsg; Content: E.Element of TMsg; Open: bool;
   OnDismiss: TMsg; Settings: Options? := null
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Popover(Id, Trigger, Content, Open, OnDismiss, Settings ?? new Options());
+  return (E.Element of TMsg).Popover(
+    Id,
+    Trigger,
+    Content,
+    Open,
+    OnDismiss,
+    Settings ?? new Options()
+  );
 end function;
 
 end unit;

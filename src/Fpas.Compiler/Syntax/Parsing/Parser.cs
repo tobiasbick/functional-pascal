@@ -132,7 +132,7 @@ internal sealed partial class Parser(SourceText source, IReadOnlyList<Token> tok
         var isAsync = At("async");
         if (isAsync) position++;
         var function = At("function");
-        if (isAsync && !function) throw source.Error("FP2003", "Async routines must be functions returning Task or Task<T>.", Current.Position);
+        if (isAsync && !function) throw source.Error("FP2003", "Async routines must be functions returning Task or Task of T.", Current.Position);
         Expect(function ? "function" : "procedure");
         var name = Identifier();
         using var declaration = Declaration(name, start, nested ? null : isPublic ? "public" : "private", documentation);

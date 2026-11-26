@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Actions.ToggleGroups as T;
 // - `Selected`: Current application value.
 // ## Returns
 // The widget with its message type.
-public function View(Selected: array of bool): E.Element<array of bool>;
+public function View(Selected: array of bool): E.Element of array of bool;
 begin
-  return T.ToggleGroup<array of bool>('format', [new T.Item('Bold'), new T.Item('Italic')],
+  return T.ToggleGroup of array of bool('format', [new T.Item('Bold'), new T.Item('Italic')],
     Selected, function(Flags: array of bool): array of bool => Flags);
 end function;
 

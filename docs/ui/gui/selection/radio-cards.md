@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Inputs.RadioCards as C;
 // - `Selected`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Selected: int): E.Element<int>;
+public function View(Selected: int): E.Element of int;
 begin
-  return C.RadioCards<int>('places', [
+  return C.RadioCards of int('places', [
     new C.Item('This computer', 'Saved next to the project.'),
     new C.Item('Team server', 'Synced to your company server.', Badge := 'Default'),
     new C.Item('Both', 'Keep both a local and a server copy.')

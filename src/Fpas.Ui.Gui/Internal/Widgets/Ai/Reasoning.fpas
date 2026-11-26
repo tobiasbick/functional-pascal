@@ -18,18 +18,18 @@ uses Fpas.Ui.Widgets.Ai.Reasonings as Reasonings;
 // - `Bodies`: Composed reasoning body.
 // - `Settings`: Native options.
 // - `Visit`: Draws composed children.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Bodies: array of E.Element<TMsg>; Settings: Reasonings.Options; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Bodies: array of E.Element of TMsg; Settings: Reasonings.Options; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
 begin
   const Role: string := 'reasoning';
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Header: string := C.Token(Role, Id + '/toggle');
-  const Focus: bool := C.WantsFocus<TMsg>(
+  const Focus: bool := C.WantsFocus of TMsg(
     Frame,
     Id + '/toggle',
     Header,
     Enabled
-  ) or C.WantsFocus<TMsg>(Frame, Id, Header, Enabled);
+  ) or C.WantsFocus of TMsg(Frame, Id, Header, Enabled);
   const Status: int := Frame.Window.BeginReasoning(
     Token, Settings.Thinking, Settings.Seconds, Settings.Title,
     Enc.Bits(Enabled, 1) or Enc.Bits(Focus, 2), if Frame.PaintingClosed then
@@ -40,7 +40,7 @@ begin
   );
   const Open: bool := (Status and 2) <> 0;
   if (Status and 1) <> 0 then
-    for Body: E.Element<TMsg> in Bodies do
+    for Body: E.Element of TMsg in Bodies do
       Visit(
         Body, Frame with
           AcceptInput := Enabled and Open;
@@ -53,8 +53,8 @@ begin
     Frame.Window.EndReasoning();
   end if;
 
-  P.Root<TMsg>(Frame, Id, Role, Settings.Title, false, Open.ToString());
-  P.Part<TMsg>(Frame, Id, Role, 'toggle', Settings.Title, Enabled, Open.ToString());
+  P.Root of TMsg(Frame, Id, Role, Settings.Title, false, Open.ToString());
+  P.Part of TMsg(Frame, Id, Role, 'toggle', Settings.Title, Enabled, Open.ToString());
 end procedure;
 
 end unit;

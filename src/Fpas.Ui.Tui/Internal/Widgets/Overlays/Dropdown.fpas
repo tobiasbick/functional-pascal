@@ -17,25 +17,25 @@ uses System.Collections.Generic as C;
 // Trigger and current model commands for an anchored menu.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Trigger<TMsg> = record implements Actions.IActivatable<TMsg>
+public type Trigger of TMsg = record implements Actions.IActivatable of TMsg
   // Stable control identity.
   public Id: string;
   // Accessible menu name.
   public Label: string;
   // Current commands, sections and separators.
-  public Entries: array of M.Entry<TMsg>;
+  public Entries: array of M.Entry of TMsg;
   // Shared menu appearance and input permission.
   public Settings: M.Options;
   // The owning terminal session.
-  public State: P.State<TMsg>;
+  public State: P.State of TMsg;
 
   // Opens the menu at its first available command.
   // ## Returns
   // Opening sends no application message.
-  public function Activate(): Actions.Result<TMsg>;
+  public function Activate(): Actions.Result of TMsg;
   begin
     self.State.Write(new P.Cursor(self.Id));
-    return Actions.Result<TMsg>.NoAction;
+    return (Actions.Result of TMsg).NoAction;
   end function;
 end record;
 
@@ -46,7 +46,7 @@ end record;
 // - `Menu`: Current menu binding.
 // ## Returns
 // Button with its accessible name and open state.
-public function Lower<TMsg>(Menu: Trigger<TMsg>): E.Element<TMsg>;
+public function Lower of TMsg(Menu: Trigger of TMsg): E.Element of TMsg;
 begin
   const Variant: Styles.ButtonVariant := if Menu.Settings.Variant <>
     Styles.ButtonVariant.Default
@@ -68,7 +68,7 @@ begin
   else
     'false'
   end if;
-  const Button: E.Element<TMsg> := E.Element<TMsg>.Action(
+  const Button: E.Element of TMsg := (E.Element of TMsg).Action(
     Menu.Id, Menu, Menu.Settings.Enabled,
     new E.ActionView(
       Caption, Name := Menu.Label, Role := 'menu', Value := Value, Variant := Variant,
@@ -79,7 +79,7 @@ begin
       end if), ArrowFocus := false
     )
   );
-  return E.Element<TMsg>.Stack([Button], false, new E.Flow());
+  return (E.Element of TMsg).Stack([Button], false, new E.Flow());
 end function;
 
 // Resolves menu entries to shared popup rows.
@@ -91,13 +91,13 @@ end function;
 // - `Columns`: Terminal width used to cap the requested panel width.
 // ## Returns
 // The shared popup content.
-public function Content<TMsg>(Menu: Trigger<TMsg>; Anchor: F.Rect; Columns: int): Popup.Content<TMsg>;
+public function Content of TMsg(Menu: Trigger of TMsg; Anchor: F.Rect; Columns: int): Popup.Content of TMsg;
 begin
-  const Rows: C.List<Popup.Row<TMsg>> := new C.List<Popup.Row<TMsg>>(Menu.Entries.Length);
+  const Rows: C.List of Popup.Row of TMsg := new C.List of Popup.Row of TMsg(Menu.Entries.Length);
   var Width: int := Sys.Math.Max(18, Anchor.Width);
-  for Spec: M.Entry<TMsg> in Menu.Entries do
+  for Spec: M.Entry of TMsg in Menu.Entries do
     case Spec of
-      when M.Entry.Action(const Item: M.Item<TMsg>):
+      when M.Entry.Action(const Item: M.Item of TMsg):
         const Text: string := (if Item.Checked then
           '✓ '
         else
@@ -105,13 +105,13 @@ begin
         end if) + G.SingleLine(Item.Label);
         Width := Sys.Math.Max(Width, G.Measure(Text) + G.Measure(Item.Shortcut) + 3);
         Rows.Add(
-          Popup.Row<TMsg>.Choice(
-            new Popup.Item<TMsg>(
+          (Popup.Row of TMsg).Choice(
+            new Popup.Item of TMsg(
               M.ItemId(Menu.Id, Item.Key),
               Item.Label,
               Text,
               'menu-item',
-              new Actions.Direct<TMsg>(Item.Message),
+              new Actions.Direct of TMsg(Item.Message),
               Hint := Item.Shortcut,
               Enabled := Item.Enabled,
               Danger := Item.Danger
@@ -120,9 +120,9 @@ begin
         );
       when M.Entry.Label(const Text: string):
         Width := Sys.Math.Max(Width, G.Measure(Text) + 2);
-        Rows.Add(Popup.Row<TMsg>.Section(Text));
+        Rows.Add((Popup.Row of TMsg).Section(Text));
       when M.Entry.Separator:
-        Rows.Add(Popup.Row<TMsg>.Rule);
+        Rows.Add((Popup.Row of TMsg).Rule);
     end case;
   end for;
 
@@ -135,7 +135,7 @@ begin
     );
   end if;
 
-  return new Popup.Content<TMsg>(Rows.ToArray(), Width, Menu.Settings.Position);
+  return new Popup.Content of TMsg(Rows.ToArray(), Width, Menu.Settings.Position);
 end function;
 
 end unit;

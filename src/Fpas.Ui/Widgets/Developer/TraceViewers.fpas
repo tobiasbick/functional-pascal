@@ -119,10 +119,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function TraceViewer<TMsg>(Id: string; Tracks: array of Track; Spans: array of Span; Markers: array of Marker; Value: View; Selection: int; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function TraceViewer of TMsg(Id: string; Tracks: array of Track; Spans: array of Span; Markers: array of Marker; Value: View; Selection: int; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.TraceViewer(
+  return (E.Element of TMsg).TraceViewer(
     Id,
     Tracks,
     Spans,

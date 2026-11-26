@@ -23,11 +23,11 @@ uses System as Sys;
 // - `TMsg`: Application message type.
 // ## Returns
 // The native flow diagram.
-public function Sankey<TMsg>(): E.Element<TMsg>;
+public function Sankey of TMsg(): E.Element of TMsg;
 begin
-  return Cards.Card<TMsg>(
+  return Cards.Card of TMsg(
     'flow-card', [
-      Sk.Sankey<TMsg>(
+      Sk.Sankey of TMsg(
         'flow', [
           new Sk.Node('Search'),
           new Sk.Node('Social'),
@@ -56,30 +56,30 @@ end function;
 // - `Shuffle`: Replaces the model amounts.
 // ## Returns
 // The native two-column section.
-public function Ranked<TMsg>(Samples: Data.Samples; Shuffle: TMsg): E.Element<TMsg>;
+public function Ranked of TMsg(Samples: Data.Samples; Shuffle: TMsg): E.Element of TMsg;
 begin
-  return Layout.Row<TMsg>(
-    Layout.Column<TMsg>(
+  return Layout.Row of TMsg(
+    Layout.Column of TMsg(
       1.4F, false,
-      G.Heading<TMsg>(
+      G.Heading of TMsg(
         Strings.Get('Heading.BarList'),
         Strings.Get('Heading.BarListHint')
       ),
-      Bars.BarList<TMsg>('pages', Samples.Pages),
-      B.Button<TMsg>(
+      Bars.BarList of TMsg('pages', Samples.Pages),
+      B.Button of TMsg(
         'shuffle-pages', 'Shuffle', Shuffle, new B.Options(
           ControlSize := B.Size.Small,
           Icon := Sys.Char.ConvertFromUtf32($E15E), Variant := S.ButtonVariant.Outline
         )
       )
     ),
-    Layout.Column<TMsg>(
+    Layout.Column of TMsg(
       1.0F, true,
-      G.Heading<TMsg>(
+      G.Heading of TMsg(
         Strings.Get('Heading.ActivityRings'),
         Strings.Get('Heading.ActivityRingsHint')
       ),
-      Rings.ActivityRings<TMsg>(
+      Rings.ActivityRings of TMsg(
         'rings',
         [new C.Item('Move', 0.82F), new C.Item('Exercise', 1.24F), new C.Item('Stand', 0.58F)],
         new Rings.Options(Size := 170.0F, Center := '82%', Caption := 'of goal')

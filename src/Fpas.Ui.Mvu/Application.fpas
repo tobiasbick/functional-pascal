@@ -12,7 +12,7 @@ uses System.Threading.Tasks as Tasks;
 //
 // ## Type parameters
 // - `TMsg`: Messages produced by the payload.
-public type HostExtension<TMsg> = protocol
+public type HostExtension of TMsg = protocol
   // Rebuilds the payload with translated messages without performing host work.
   //
   // ## Type parameters
@@ -21,7 +21,7 @@ public type HostExtension<TMsg> = protocol
   // - `Messages`: Translates one child message.
   // ## Returns
   // The payload understood by the host of the parent session.
-  function Map<TNext>(Messages: function(TMsg): TNext): HostExtension<TNext>;
+  function Map of TNext(Messages: function(TMsg): TNext): HostExtension of TNext;
 end protocol;
 
 // A request for the host that owns the input, view and presentation.
@@ -38,7 +38,7 @@ end variant;
 //
 // ## Type parameters
 // - `TMsg`: The session's message type.
-public type BackgroundContext<TMsg> = record
+public type BackgroundContext of TMsg = record
   // Posts a message and completes when the mailbox admits it.
   public Post: function(TMsg): Tasks.Task;
   // Drives time-based waits and deadlines in the effect.
@@ -49,9 +49,9 @@ end record;
 //
 // ## Type parameters
 // - `TMsg`: The application's message type.
-public type Command<TMsg> = variant
+public type Command of TMsg = variant
   // Start an effect under Id, posting an expected failure as a message.
-  Start(Id: string; Work: Fx.Effect<Fx.Completion, TMsg, BackgroundContext<TMsg>>);
+  Start(Id: string; Work: Fx.Effect of (Fx.Completion, TMsg, BackgroundContext of TMsg));
   // Cancel the current run of the supplied effect ID.
   Cancel(Id: string);
   // Forward a request to the host.
@@ -63,11 +63,11 @@ end variant;
 // ## Type parameters
 // - `TModel`: The application's model type.
 // - `TMsg`: The application's message type.
-public type Transition<TModel, TMsg> = record
+public type Transition of (TModel, TMsg) = record
   // The model to commit.
   public Model: TModel;
   // The commands to execute in order after committing the model.
-  public Commands: array of Command<TMsg>;
+  public Commands: array of Command of TMsg;
 end record;
 
 // Requests that the host finish the session.
@@ -77,9 +77,9 @@ end record;
 //
 // ## Returns
 // The close command.
-public function Exit<TMsg>(): Command<TMsg>;
+public function Exit of TMsg(): Command of TMsg;
 begin
-  return Command<TMsg>.Host(HostRequest.Close);
+  return (Command of TMsg).Host(HostRequest.Close);
 end function;
 
 // Requests focus in the view produced by the update.
@@ -92,9 +92,9 @@ end function;
 //
 // ## Returns
 // The focus command.
-public function Focus<TMsg>(Id: string): Command<TMsg>;
+public function Focus of TMsg(Id: string): Command of TMsg;
 begin
-  return Command<TMsg>.Host(HostRequest.Focus(Id));
+  return (Command of TMsg).Host(HostRequest.Focus(Id));
 end function;
 
 // Describes an owned background run that may post messages while it executes.
@@ -108,10 +108,10 @@ end function;
 //
 // ## Returns
 // The command that starts the run.
-public function StartBackground<TMsg>(Id: string; Work: Fx.Effect<Fx.Completion, TMsg, BackgroundContext<TMsg>>): Command<TMsg>;
+public function StartBackground of TMsg(Id: string; Work: Fx.Effect of (Fx.Completion, TMsg, BackgroundContext of TMsg)): Command of TMsg;
 requires Id.Length > 0;
 begin
-  return Command<TMsg>.Start(Id, Work);
+  return (Command of TMsg).Start(Id, Work);
 end function;
 
 // Adapts callback-based work that can post messages as it runs.
@@ -125,11 +125,11 @@ end function;
 //
 // ## Returns
 // A deferred effect ready for `StartBackground`.
-public function FromWorker<TMsg>(
+public function FromWorker of TMsg(
   Work: function(function(TMsg): Tasks.Task, Threads.CancellationToken): Tasks.Task;
   OnFailure: function(Sys.Exception): TMsg
-): Fx.Effect<Fx.Completion, TMsg, BackgroundContext<TMsg>>;
-  async function Run(Context: BackgroundContext<TMsg>; Token: Threads.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, TMsg>>;
+): Fx.Effect of (Fx.Completion, TMsg, BackgroundContext of TMsg);
+  async function Run(Context: BackgroundContext of TMsg; Token: Threads.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, TMsg);
   begin
     try
       await Work(Context.Post, Token).ConfigureAwait(false);
@@ -141,7 +141,7 @@ public function FromWorker<TMsg>(
     return Fx.Outcome.Success(Fx.Completion.Done);
   end function;
 begin
-  return Fx.Effect<Fx.Completion, TMsg, BackgroundContext<TMsg>>.Defer(Run);
+  return Fx.Effect of (Fx.Completion, TMsg, BackgroundContext of TMsg).Defer(Run);
 end function;
 
 // Adapts a typed effect by translating its outcome into session messages.
@@ -160,11 +160,11 @@ end function;
 //
 // ## Returns
 // A deferred effect ready for `StartBackground`.
-public function FromEffect<A, E, R, TMsg>(
-  Work: Fx.Effect<A, E, R>; Environment: function(BackgroundContext<TMsg>): R;
+public function FromEffect of (A, E, R, TMsg)(
+  Work: Fx.Effect of (A, E, R); Environment: function(BackgroundContext of TMsg): R;
   OnSuccess: function(A): TMsg; OnFailure: function(E): TMsg
-): Fx.Effect<Fx.Completion, TMsg, BackgroundContext<TMsg>>;
-  async function Run(Context: BackgroundContext<TMsg>; Token: Threads.CancellationToken): Tasks.Task<Fx.Outcome<Fx.Completion, TMsg>>;
+): Fx.Effect of (Fx.Completion, TMsg, BackgroundContext of TMsg);
+  async function Run(Context: BackgroundContext of TMsg; Token: Threads.CancellationToken): Tasks.Task of Fx.Outcome of (Fx.Completion, TMsg);
   begin
     case await Work.Run(Environment(Context), Token).ConfigureAwait(false) of
       when Fx.Outcome.Success(const Value: A):
@@ -177,7 +177,7 @@ public function FromEffect<A, E, R, TMsg>(
     end case;
   end function;
 begin
-  return Fx.Effect<Fx.Completion, TMsg, BackgroundContext<TMsg>>.Defer(Run);
+  return Fx.Effect of (Fx.Completion, TMsg, BackgroundContext of TMsg).Defer(Run);
 end function;
 
 // Requests cancellation and invalidates queued messages from the cancelled run.
@@ -190,9 +190,9 @@ end function;
 //
 // ## Returns
 // The cancellation command.
-public function CancelBackground<TMsg>(Id: string): Command<TMsg>;
+public function CancelBackground of TMsg(Id: string): Command of TMsg;
 begin
-  return Command<TMsg>.Cancel(Id);
+  return (Command of TMsg).Cancel(Id);
 end function;
 
 end unit;

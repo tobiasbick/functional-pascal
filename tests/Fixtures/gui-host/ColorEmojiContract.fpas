@@ -22,16 +22,19 @@ uses System as Sys;
 // - `Renderer`: Native renderer under test.
 // - `Capture`: Prefix for closed and open gallery captures.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
-  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  function Update(Model: State.Model; Message: State.Msg): App.Transition of (State.Model, State.Msg);
   begin
     case Message of
       when State.Msg.Inputs(Inputs.Msg.SetBrandColor(const Color: Graphics.Color)):
         ProposedColor := Color;
       else
     end case;
-    const Next: App.Transition<State.Model, State.Msg> := G.Update(Model, Message);
+    const Next: App.Transition of (State.Model, State.Msg) := G.Update(Model, Message);
     if Target <> '' then
-      return new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Target)]);
+      return new App.Transition of (State.Model, State.Msg)(
+        Next.Model,
+        [App.Focus of State.Msg(Target)]
+      );
     end if;
 
     return Next;
@@ -57,12 +60,12 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     end if;
   end procedure;
 
-  procedure Step(Session: Gui.Session<State.Msg>);
+  procedure Step(Session: Gui.Session of State.Msg);
   begin
     A.Check(Session.Step(), 'The picker gallery closed unexpectedly.');
   end procedure;
 
-  procedure Click(Session: Gui.Session<State.Msg>; Id: string; Horizontal: float := 0.5F);
+  procedure Click(Session: Gui.Session of State.Msg; Id: string; Horizontal: float := 0.5F);
   begin
     const Box: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
     A.Check(Box.Width > 0.0F and Box.Height > 0.0F, 'Missing native picker geometry for ' + Id);
@@ -77,14 +80,14 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     Step(Session);
   end procedure;
 
-  procedure Key(Session: Gui.Session<State.Msg>; Value: int);
+  procedure Key(Session: Gui.Session of State.Msg; Value: int);
   begin
     PendingKey := Value;
     Step(Session);
     Step(Session);
   end procedure;
 
-  procedure Focus(Session: Gui.Session<State.Msg>; Id: string);
+  procedure Focus(Session: Gui.Session of State.Msg; Id: string);
   begin
     Target := Id;
     A.Send(Session, State.Msg.Preview);
@@ -92,7 +95,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     A.Check(A.Control(Session, Id).Focused, 'Focus did not reach ' + Id);
   end procedure;
 
-  function HasControl(Session: Gui.Session<State.Msg>; Id: string): bool;
+  function HasControl(Session: Gui.Session of State.Msg; Id: string): bool;
   begin
     for Item: Gui.Control in Session.Snapshot().Controls do
       if Item.Id = Id then
@@ -103,7 +106,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     return false;
   end function;
 
-  procedure Search(Session: Gui.Session<State.Msg>; Query: string);
+  procedure Search(Session: Gui.Session of State.Msg; Query: string);
   begin
     Click(Session, Emojis.SearchId(Emoji));
     Text := Query;
@@ -134,7 +137,7 @@ begin
     true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Inputs),
     Update,
     View.Build,

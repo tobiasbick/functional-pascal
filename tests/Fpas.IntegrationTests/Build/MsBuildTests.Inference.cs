@@ -41,12 +41,12 @@ public sealed partial class MsBuildTests
             """);
         File.WriteAllText(project.File("Game/InferenceLibrary.fpas"), """
             unit Demo.InferenceLibrary;
-            public type Tree<T> = variant Empty; Leaf(Value: T); Branch(Left: Tree<T>; Right: Tree<T>); end variant;
-            public type RefChoice<T> = where T: class; variant Empty; Value(Item: T); end variant;
-            public type MaybeValue<T> = where T: struct; variant Empty; Value(Item: T?); end variant;
-            public function Identity<T>(Value: T): T; begin return Value; end function;
-            public function Count<T>(Value: Tree<T>): int;
-            begin return case Value of when Tree.Empty: 0; when Tree.Leaf(_): 1; when Tree.Branch(const L: Tree<T>, const R: Tree<T>): Count(L) + Count(R); end case; end function;
+            public type Tree of T = variant Empty; Leaf(Value: T); Branch(Left: Tree of T; Right: Tree of T); end variant;
+            public type RefChoice of T = where T: class; variant Empty; Value(Item: T); end variant;
+            public type MaybeValue of T = where T: struct; variant Empty; Value(Item: T?); end variant;
+            public function Identity of T(Value: T): T; begin return Value; end function;
+            public function Count of T(Value: Tree of T): int;
+            begin return case Value of when Tree.Empty: 0; when Tree.Leaf(_): 1; when Tree.Branch(const L: Tree of T, const R: Tree of T): Count(L) + Count(R); end case; end function;
             end unit;
             """);
         Directory.CreateDirectory(project.File("Consumer"));
@@ -61,10 +61,10 @@ public sealed partial class MsBuildTests
             uses Demo.InferenceLibrary as L; uses Demo.InferenceApi as Api; uses Demo as D;
             public function Run(): array of string;
             begin
-              const Tree: L.Tree<int> := L.Tree.Branch(L.Tree.Empty, L.Tree.Leaf(L.Identity(42)));
-              const Empty: L.Tree<string> := L.Tree.Empty;
+              const Tree: L.Tree of int := L.Tree.Branch(L.Tree.Empty, L.Tree.Leaf(L.Identity(42)));
+              const Empty: L.Tree of string := L.Tree.Empty;
               const Maybe: int? := 9;
-              const Optional: L.MaybeValue<int> := L.MaybeValue.Value(null);
+              const Optional: L.MaybeValue of int := L.MaybeValue.Value(null);
               return [Api.Kind(L.Count(Tree)), Api.Kind(Empty), Api.Choose(1, 2.5), Api.Pick(1), Api.Pick('text'), Api.Specific([1, 2]),
                 Api.Output(function(): int => 3), Api.Custom(function(Left: int; Right: int): int => Left - Right, 1), Api.Nullable(Maybe),
                 Api.Variance(['text'], new D.ObjectComparer()), Api.Kind(new D.Dual()),

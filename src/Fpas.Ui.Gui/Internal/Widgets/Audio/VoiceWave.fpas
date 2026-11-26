@@ -22,22 +22,22 @@ uses System as Sys;
 // - `Progress`: Current played fraction, or null for passive rendering.
 // - `Changed`: Maps a seek proposal.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Signal: Voice.Signal; Progress: float?; Changed: Sys.Func<float, TMsg>?; Settings: VoiceWaves.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Signal: Voice.Signal; Progress: float?; Changed: Sys.Func of (float, TMsg)?; Settings: VoiceWaves.Options);
 begin
   const Role: string := 'voice-wave';
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled and Changed <> null;
-  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled);
+  const Focus: bool := C.WantsFocus of TMsg(Frame, Id, Token, Enabled);
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   const Next: float := Frame.Window.VoiceWave(
     Token, Signal.Levels, Signal.Owners, Progress, Width.Kind, Width.Value,
     Settings.Pitch, Settings.Step, cast<int>(Settings.Owner), Colors.Color(Settings.Color),
     Enc.Bits(Enabled, 1) or Enc.Bits(Focus, 2) or Enc.Bits(Settings.Clip, 4)
   );
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, (Progress ?? 0.0F).ToString());
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, (Progress ?? 0.0F).ToString());
   if Enabled and Next <> Progress then
     case Changed of
-      when is Sys.Func<float, TMsg> as Callback:
+      when is Sys.Func of (float, TMsg) as Callback:
         Frame.Messages.Add(Callback.Invoke(Next));
       else
     end case;

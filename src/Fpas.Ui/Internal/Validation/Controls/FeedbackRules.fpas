@@ -20,7 +20,7 @@ begin
   R.CheckText(Title, Location + '/title');
   R.CheckText(Settings.Description, Location + '/description');
   R.CheckText(Settings.Icon, Location + '/icon');
-  if Sys.String.IsNullOrWhiteSpace(Title) or not Sys.Enum.IsDefined<S.Tone>(Settings.Tone) then
+  if Sys.String.IsNullOrWhiteSpace(Title) or not Sys.Enum.IsDefined of S.Tone(Settings.Tone) then
     R.Reject(Location, 'An alert needs a nonempty title and a valid tone.');
   end if;
 end procedure;
@@ -36,7 +36,7 @@ begin
   R.CheckText(Settings.Time, Location + '/time');
   R.CheckText(Settings.Description, Location + '/description');
   R.CheckText(Settings.Icon, Location + '/icon');
-  if Sys.String.IsNullOrWhiteSpace(Title) or not Sys.Enum.IsDefined<S.Tone>(Settings.Tone) then
+  if Sys.String.IsNullOrWhiteSpace(Title) or not Sys.Enum.IsDefined of S.Tone(Settings.Tone) then
     R.Reject(Location, 'A timeline item needs a nonempty title and a valid tone.');
   end if;
 end procedure;
@@ -51,7 +51,7 @@ begin
   R.CheckText(Settings.Label, Location + '/label');
   Fraction(Value, Location);
 
-  if not Sys.Enum.IsDefined<S.Tone>(Settings.Tone) then
+  if not Sys.Enum.IsDefined of S.Tone(Settings.Tone) then
     R.Reject(Location, 'Progress needs a valid tone.');
   end if;
 

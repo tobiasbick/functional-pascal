@@ -16,9 +16,9 @@ public const Initial: int := 0;
 // - `Change`: Maps a page change to a gallery message.
 // ## Returns
 // The shared pager.
-public function View<TMsg>(Page: int; Change: function(int): TMsg): E.Element<TMsg>;
+public function View of TMsg(Page: int; Change: function(int): TMsg): E.Element of TMsg;
 begin
-  return P.Pagination<TMsg>('pages', Page, 12, Change);
+  return P.Pagination of TMsg('pages', Page, 12, Change);
 end function;
 
 end unit;

@@ -38,14 +38,14 @@ begin
   return if Order.Column < 0 then
     Items
   else
-    Rows.Sorted<M.Station>(Items, Compare)
+    Rows.Sorted of M.Station(Items, Compare)
   end if;
 end function;
 
-function Search(Current: M.State; Filter: M.Query): A.Transition<M.State, M.Msg>;
+function Search(Current: M.State; Filter: M.Query): A.Transition of (M.State, M.Msg);
 begin
   const Revision: long := Current.Revision + 1L;
-  return new A.Transition<M.State, M.Msg>(
+  return new A.Transition of (M.State, M.Msg)(
     Current with
       Filter := Filter;
       Searching := true;
@@ -53,9 +53,9 @@ begin
       Revision := Revision;
     end with,
     [
-      A.StartBackground<M.Msg>(
+      A.StartBackground of M.Msg(
         'search',
-        A.FromWorker<M.Msg>(
+        A.FromWorker of M.Msg(
           async function(Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
             await Tasks.Task.Delay(275, Stop).ConfigureAwait(false);
             const Items: array of M.Station := await Directory.Search(
@@ -77,7 +77,7 @@ end function;
 // - `Action`: A user action or a detached reply from a worker.
 // ## Returns
 // The updated radio page and any requested background commands.
-public function Apply(Current: M.State; Action: M.Msg): A.Transition<M.State, M.Msg>;
+public function Apply(Current: M.State; Action: M.Msg): A.Transition of (M.State, M.Msg);
 begin
   var Next: M.State := Current;
   const Draft: M.Draft? := Current.Editing;
@@ -151,8 +151,8 @@ begin
           Results := Items;
           Loaded := true;
           Searching := false;
-          Cursor := Rows.Position<M.Station>(Current.Items, Current.Cursor, Shown, Key);
-          Anchor := Rows.Position<M.Station>(Current.Items, Current.Anchor, Shown, Key);
+          Cursor := Rows.Position of M.Station(Current.Items, Current.Cursor, Shown, Key);
+          Anchor := Rows.Position of M.Station(Current.Items, Current.Anchor, Shown, Key);
         end with;
       end if;
     when M.Msg.Failed(const Revision: long, const Message: string):
@@ -175,8 +175,8 @@ begin
         Next := Current with
           Items := Items;
           Order := Order;
-          Cursor := Rows.Position<M.Station>(Current.Items, Current.Cursor, Items, Key);
-          Anchor := Rows.Position<M.Station>(Current.Items, Current.Anchor, Items, Key);
+          Cursor := Rows.Position of M.Station(Current.Items, Current.Cursor, Items, Key);
+          Anchor := Rows.Position of M.Station(Current.Items, Current.Anchor, Items, Key);
         end with;
       end if;
     when M.Msg.Add:
@@ -208,12 +208,12 @@ begin
     when M.Msg.Website(const Value: string):
       const Url: string := M.Address(Value);
       if Url <> '' then
-        return new A.Transition<M.State, M.Msg>(
+        return new A.Transition of (M.State, M.Msg)(
           Current,
           [
-            A.StartBackground<M.Msg>(
+            A.StartBackground of M.Msg(
               'website',
-              A.FromWorker<M.Msg>(
+              A.FromWorker of M.Msg(
                 async function(_Post: function(M.Msg): Tasks.Task; Stop: T.CancellationToken): Tasks.Task begin
                   Stop.ThrowIfCancellationRequested();
                   const Start: D.ProcessStartInfo := new D.ProcessStartInfo(Url);
@@ -234,7 +234,7 @@ begin
     when M.Msg.Favorite(_), M.Msg.Save:
   end case;
 
-  return new A.Transition<M.State, M.Msg>(Next, []);
+  return new A.Transition of (M.State, M.Msg)(Next, []);
 end function;
 
 end unit;

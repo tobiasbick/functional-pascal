@@ -20,10 +20,10 @@ uses System as Sys;
 // - `FilesRunning`: Whether to show the running dot on Files.
 // ## Returns
 // The dock with a message when Files is opened.
-public function View(FilesRunning: bool): E.Element<string>;
+public function View(FilesRunning: bool): E.Element of string;
 begin
-  return W.Dock<string>('dock', [
-    W.Entry<string>.Item(Sys.Char.ConvertFromUtf32($E0D7), 'Files', 'open-files',
+  return W.Dock of string('dock', [
+    (W.Entry of string).Item(Sys.Char.ConvertFromUtf32($E0D7), 'Files', 'open-files',
       C.Color.Automatic, FilesRunning, 0)
   ]);
 end function;

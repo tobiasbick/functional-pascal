@@ -43,14 +43,14 @@ end record;
 // - `OnDismiss`: Message sent by Escape, the close button or a click on the scrim.
 // ## Returns
 // A view that includes the base and the controlled sheet.
-public function Sheet<TMsg>(
-  Id: string; Base: E.Element<TMsg>; Content: E.Element<TMsg>; Open: bool;
+public function Sheet of TMsg(
+  Id: string; Base: E.Element of TMsg; Content: E.Element of TMsg; Open: bool;
   Settings: Options; OnDismiss: TMsg
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 requires Settings.Size > 0;
 begin
-  return E.Element<TMsg>.Sheet(Id, Base, Content, Open, Settings, OnDismiss);
+  return (E.Element of TMsg).Sheet(Id, Base, Content, Open, Settings, OnDismiss);
 end function;
 
 // Derives the application ID of a sheet's built-in close button.

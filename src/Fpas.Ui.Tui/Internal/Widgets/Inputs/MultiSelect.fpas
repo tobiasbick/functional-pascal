@@ -19,7 +19,7 @@ uses System.Linq.Enumerable as Linq;
 // Opens the checklist and holds its current model bindings.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Trigger<TMsg> = record implements Actions.IActivatable<TMsg>
+public type Trigger of TMsg = record implements Actions.IActivatable of TMsg
   // Stable picker identity.
   public Id: string;
   // Choices in original index order.
@@ -31,45 +31,45 @@ public type Trigger<TMsg> = record implements Actions.IActivatable<TMsg>
   // Presentation and input options.
   public Settings: Multi.Options;
   // Session-local popup state.
-  public State: P.State<TMsg>;
+  public State: P.State of TMsg;
 
   // Opens with a fresh query and highlights the first selected choice when present.
   // ## Returns
   // No application message.
-  public function Activate(): Actions.Result<TMsg>;
+  public function Activate(): Actions.Result of TMsg;
   begin
-    const Index: int := Sys.Array.IndexOf<bool>(self.Selected, true);
+    const Index: int := Sys.Array.IndexOf of bool(self.Selected, true);
     const Highlight: string := if Index >= 0 then
       Selects.OptionId(self.Id, Index)
     else
       ''
     end if;
     self.State.Write(new P.Cursor(self.Id, Highlight));
-    return Actions.Result<TMsg>.NoAction;
+    return (Actions.Result of TMsg).NoAction;
   end function;
 end record;
 
-type Toggle<TMsg> = record implements Actions.IActivatable<TMsg>
-  public Field: Trigger<TMsg>;
+type Toggle of TMsg = record implements Actions.IActivatable of TMsg
+  public Field: Trigger of TMsg;
   public Index: int;
 
-  public function Activate(): Actions.Result<TMsg>;
+  public function Activate(): Actions.Result of TMsg;
   begin
     const Selection: array of bool := cast<array of bool>(self.Field.Selected.Clone());
     Selection[self.Index] := not Selection[self.Index];
-    return Actions.Result<TMsg>.Send(self.Field.Change(Selection));
+    return (Actions.Result of TMsg).Send(self.Field.Change(Selection));
   end function;
 end record;
 
-type Bulk<TMsg> = record implements Actions.IActivatable<TMsg>
-  public Field: Trigger<TMsg>;
+type Bulk of TMsg = record implements Actions.IActivatable of TMsg
+  public Field: Trigger of TMsg;
   public SelectAll: bool;
 
-  public function Activate(): Actions.Result<TMsg>;
+  public function Activate(): Actions.Result of TMsg;
   begin
     const Selection: array of bool := new bool[self.Field.Selected.Length];
-    Sys.Array.Fill<bool>(Selection, self.SelectAll);
-    return Actions.Result<TMsg>.Send(self.Field.Change(Selection));
+    Sys.Array.Fill of bool(Selection, self.SelectAll);
+    return (Actions.Result of TMsg).Send(self.Field.Change(Selection));
   end function;
 end record;
 
@@ -81,22 +81,22 @@ end record;
 // - `Width`: Visible trigger width.
 // ## Returns
 // Popup options that stay open while toggling choices.
-public function Content<TMsg>(Field: Trigger<TMsg>; Width: int): Popup.Content<TMsg>;
+public function Content of TMsg(Field: Trigger of TMsg; Width: int): Popup.Content of TMsg;
 begin
-  const Rows: C.List<Popup.Row<TMsg>> := new C.List<Popup.Row<TMsg>>();
+  const Rows: C.List of Popup.Row of TMsg := new C.List of Popup.Row of TMsg();
   var Columns: int := Sys.Math.Max(18, Width);
   var All: bool := true;
   for Index: int := 0 to Field.Items.Length - 1 do
     const Caption: string := Field.Items[Index].Label;
     const Checked: bool := Field.Selected[Index];
-    const Item: Popup.Item<TMsg> := Popup.Checkbox<TMsg>(
+    const Item: Popup.Item of TMsg := Popup.Checkbox of TMsg(
       Selects.OptionId(Field.Id, Index),
       Caption,
       'multi-select-option',
       Checked,
-      new Toggle<TMsg>(Field, Index)
+      new Toggle of TMsg(Field, Index)
     );
-    Rows.Add(Popup.Row<TMsg>.Choice(Item));
+    Rows.Add((Popup.Row of TMsg).Choice(Item));
     Columns := Sys.Math.Max(Columns, G.Measure(Item.Caption) + 1);
     All := All and Checked;
   end for;
@@ -108,16 +108,16 @@ begin
       'Select all'
     end if;
     Rows.Add(
-      Popup.Row<TMsg>.Choice(
-        new Popup.Item<TMsg>(
+      (Popup.Row of TMsg).Choice(
+        new Popup.Item of TMsg(
           Field.Id + '/bulk', Label, ' ' + Label, 'multi-select-bulk',
-          new Bulk<TMsg>(Field, not All), KeepOpen := true
+          new Bulk of TMsg(Field, not All), KeepOpen := true
         )
       )
     );
   end if;
 
-  return new Popup.Content<TMsg>(
+  return new Popup.Content of TMsg(
     Rows.ToArray(), Columns, Searchable := Field.Settings.Searchable, SpaceActivates := true
   );
 end function;
@@ -170,7 +170,7 @@ begin
     end if;
   end if;
 
-  return Prefix + Sys.String.Join<string>(', ', Linq.Take<string>(Names, Shown)) +
+  return Prefix + Sys.String.Join of string(', ', Linq.Take of string(Names, Shown)) +
     (if Shown < Count then
       ' ' + CountBadge(Count - Shown)
     else
@@ -185,13 +185,13 @@ end function;
 // - `Field`: Current picker binding.
 // ## Returns
 // Optional field caption and its interactive trigger.
-public function Lower<TMsg>(Field: Trigger<TMsg>): E.Element<TMsg>;
+public function Lower of TMsg(Field: Trigger of TMsg): E.Element of TMsg;
   function Resolve(Width: int): string;
   begin
     return Caption(Names, Limit, Placeholder, Width);
   end function;
 begin
-  const Selected: C.List<string> := new C.List<string>();
+  const Selected: C.List of string := new C.List of string();
   for Index: int := 0 to Field.Items.Length - 1 do
     if Field.Selected[Index] then
       Selected.Add(G.SingleLine(Field.Items[Index].Label));
@@ -215,7 +215,7 @@ begin
   else
     Field.Settings.Label
   end if;
-  const Button: E.Element<TMsg> := E.Element<TMsg>.Action(
+  const Button: E.Element of TMsg := (E.Element of TMsg).Action(
     Field.Id, Field, Field.Settings.Enabled,
     new E.ActionView(
       Resolve(E.MaximumColumns),
@@ -233,8 +233,8 @@ begin
   return if Field.Settings.Label = '' then
     Button
   else
-    E.Element<TMsg>.Stack(
-      [E.Element<TMsg>.Label(Field.Settings.Label), Button],
+    (E.Element of TMsg).Stack(
+      [(E.Element of TMsg).Label(Field.Settings.Label), Button],
       false,
       new E.Flow()
     )

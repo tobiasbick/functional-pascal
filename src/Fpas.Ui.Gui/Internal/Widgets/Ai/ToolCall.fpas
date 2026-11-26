@@ -15,19 +15,19 @@ uses Fpas.Ui.Widgets.Ai.ToolCalls as ToolCalls;
 // - `Id`: Stable widget identity.
 // - `Name`: Displayed tool name.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Name: string; Settings: ToolCalls.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Name: string; Settings: ToolCalls.Options);
 begin
   const Role: string := 'tool-call';
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled and (Settings.Input <> ''
     or Settings.Output <> '');
   const Header: string := C.Token(Role, Id + '/toggle');
-  const Focus: bool := C.WantsFocus<TMsg>(
+  const Focus: bool := C.WantsFocus of TMsg(
     Frame,
     Id + '/toggle',
     Header,
     Enabled
-  ) or C.WantsFocus<TMsg>(Frame, Id, Header, Enabled);
+  ) or C.WantsFocus of TMsg(Frame, Id, Header, Enabled);
   const Open: bool := Frame.Window.ToolCall(
     Token, Name, cast<int>(Settings.Status), Settings.Icon, Settings.Detail,
     Settings.Input, Settings.Output, Settings.Seconds, Enc.Bits(Enabled, 1) or Enc.Bits(Focus, 2),
@@ -37,8 +37,8 @@ begin
       Header
     end if
   );
-  P.Root<TMsg>(Frame, Id, Role, Name, false, Open.ToString());
-  P.Part<TMsg>(Frame, Id, Role, 'toggle', Name, Enabled, Open.ToString());
+  P.Root of TMsg(Frame, Id, Role, Name, false, Open.ToString());
+  P.Part of TMsg(Frame, Id, Role, 'toggle', Name, Enabled, Open.ToString());
 end procedure;
 
 end unit;

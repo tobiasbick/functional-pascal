@@ -15,23 +15,23 @@ public sealed partial class AsyncControlTests
             program AsyncCallers;
             uses System as Sys; uses System.Console as Console; uses System.Threading.Tasks as Tasks;
               uses System.IO.File as File; uses System.Threading.Thread as Thread;
-            async function Child(Gate: Tasks.Task<int>): Tasks.Task<int>;
+            async function Child(Gate: Tasks.Task of int): Tasks.Task of int;
             begin
               const Release: int := await Gate;
               var Value: int := Release + 19;
               return Value;
             end function;
-            async function Parent(Pending: Tasks.Task<int>; Increment: int): Tasks.Task<int>;
+            async function Parent(Pending: Tasks.Task of int; Increment: int): Tasks.Task of int;
             begin
               const Value: int := await Pending;
               return Value + Increment;
             end function;
             begin
-              const Gate: Tasks.TaskCompletionSource<int> := new Tasks.TaskCompletionSource<int>(Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
-              const Pending: Tasks.Task<int> := Child(Gate.Task);
+              const Gate: Tasks.TaskCompletionSource of int := new Tasks.TaskCompletionSource of int(Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
+              const Pending: Tasks.Task of int := Child(Gate.Task);
               // PARENTS
               Console.WriteLine('pending');
-              const Releaser: Tasks.Task<int> := Tasks.Task.Run<int>(function(): int
+              const Releaser: Tasks.Task of int := Tasks.Task.Run of int(function(): int
               begin
                 while not File.Exists('release.txt') do Thread.Sleep(10); end while;
                 Gate.SetResult(22);
@@ -43,7 +43,7 @@ public sealed partial class AsyncControlTests
             end;
             end program;
             """;
-        if (multiple) source = source.Replace("// PARENTS", "const First: Tasks.Task<int> := Parent(Pending, 1); const Second: Tasks.Task<int> := Parent(Pending, 2);", StringComparison.Ordinal)
+        if (multiple) source = source.Replace("// PARENTS", "const First: Tasks.Task of int := Parent(Pending, 1); const Second: Tasks.Task of int := Parent(Pending, 2);", StringComparison.Ordinal)
             .Replace("// RESULTS", "Console.WriteLine(First.GetAwaiter().GetResult()); Console.WriteLine(Second.GetAwaiter().GetResult());", StringComparison.Ordinal);
         await program.Compile(source);
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));

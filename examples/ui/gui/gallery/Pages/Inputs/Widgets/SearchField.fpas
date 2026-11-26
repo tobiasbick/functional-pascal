@@ -16,9 +16,9 @@ uses GuiGallery.Shared.State as Demo;
 // - `Model`: Current search query.
 // ## Returns
 // The original Search projects field.
-public function View(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+public function View(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
 begin
-  return Search.SearchField<State.Msg>(
+  return Search.SearchField of State.Msg(
     'input-search', Model.SearchQuery, State.Msg.SetSearchQuery,
     new Search.Options(
       Label := Strings.Get('Text.Search'),

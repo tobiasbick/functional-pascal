@@ -40,14 +40,14 @@ end function;
 // - `Child`: Canvas underneath the rail.
 // - `Settings`: Native widget settings.
 // - `Visit`: Presents embedded content.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Viewport: N.View; Toggles: array of D.Toggle; Changed: function(D.Event): TMsg; Child: E.Element<TMsg>; Settings: D.Options; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Viewport: N.View; Toggles: array of D.Toggle; Changed: function(D.Event): TMsg; Child: E.Element of TMsg; Settings: D.Options; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
 begin
   Visit(Child, Frame, false, L.Alignment.Default);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
-  const Items: Lists.List<CuiCanvas.CuiCanvasToggle> := new Lists.List<CuiCanvas.CuiCanvasToggle>(
+  const Items: Lists.List of CuiCanvas.CuiCanvasToggle := new Lists.List of CuiCanvas.CuiCanvasToggle(
     Toggles.Length
   );
-  const Values: Lists.List<bool> := new Lists.List<bool>(Toggles.Length);
+  const Values: Lists.List of bool := new Lists.List of bool(Toggles.Length);
   for Entry: D.Toggle in Toggles do
     Items.Add(new CuiCanvas.CuiCanvasToggle(Entry.Icon, Entry.Label));
     Values.Add(Entry.On);

@@ -15,21 +15,21 @@ uses System.Text as Text;
 // Model-owned input and callbacks for one terminal field.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Field<TMsg> = record
+public type Field of TMsg = record
   // Stable widget identity.
   public Id: string;
   // Text supplied by the model.
   public Value: string;
   // Publishes a proposed replacement.
-  public Change: function(string): Actions.Result<TMsg>;
+  public Change: function(string): Actions.Result of TMsg;
   // Shared field options.
   public Settings: Fields.Options;
   // Optional Enter action.
-  public Submit: Sys.Func<string, Actions.Result<TMsg>>?;
+  public Submit: Sys.Func of (string, Actions.Result of TMsg)?;
   // Snapshot role for the kind of field using the editor.
   public Role: string := 'text-field';
   // Optional widget-specific key action. Null leaves the key to the editor.
-  public KeyAction: Sys.Func<K.Key, K.KeyModifiers, Actions.Result<TMsg>?>? := null;
+  public KeyAction: Sys.Func of (K.Key, K.KeyModifiers, (Actions.Result of TMsg)?)? := null;
 end record;
 
 // Per-field edit position retained between presentations.
@@ -122,7 +122,7 @@ begin
   return Position;
 end function;
 
-procedure Replace<TMsg>(Field: Field<TMsg>; Position: Tracking; Start: int; Count: int; Added: string; Apply: procedure(TMsg));
+procedure Replace of TMsg(Field: Field of TMsg; Position: Tracking; Start: int; Count: int; Added: string; Apply: procedure(TMsg));
 begin
   const Value: string := Field.Value.Remove(Start, Count).Insert(Start, Added);
   const EndOffset: int := Start + Added.Length;
@@ -135,7 +135,7 @@ begin
     Position.Write(Next);
   else
     Position.Propose(Next);
-    Actions.Dispatch<TMsg>(Field.Change(Value), Apply);
+    Actions.Dispatch of TMsg(Field.Change(Value), Apply);
   end if;
 end procedure;
 
@@ -147,7 +147,7 @@ end procedure;
 // - `Position`: Field's cursor.
 // - `Input`: Incoming text.
 // - `Apply`: Dispatches a proposed edit.
-public procedure Insert<TMsg>(Field: Field<TMsg>; Position: Tracking; Input: string; Apply: procedure(TMsg));
+public procedure Insert of TMsg(Field: Field of TMsg; Position: Tracking; Input: string; Apply: procedure(TMsg));
 begin
   if Field.Settings.ReadOnly then
     return;
@@ -158,7 +158,7 @@ begin
   const Available: int := Field.Settings.MaxUtf8Bytes - Text.Encoding.UTF8.GetByteCount(Remaining);
   const Added: string := TextEdit.Insertable(Input, Available, false);
   if Added <> '' then
-    Replace<TMsg>(Field, Position, Selected.Start, Selected.Stop - Selected.Start, Added, Apply);
+    Replace of TMsg(Field, Position, Selected.Start, Selected.Stop - Selected.Start, Added, Apply);
   end if;
 end procedure;
 
@@ -173,7 +173,7 @@ end procedure;
 // - `Apply`: Dispatches an edit or submission.
 // ## Returns
 // Whether the field consumed this key.
-public function Key<TMsg>(Field: Field<TMsg>; Position: Tracking; Pressed: K.Key; Modifiers: K.KeyModifiers; Apply: procedure(TMsg)): bool;
+public function Key of TMsg(Field: Field of TMsg; Position: Tracking; Pressed: K.Key; Modifiers: K.KeyModifiers; Apply: procedure(TMsg)): bool;
   procedure Move(Offset: int);
   begin
     Position.Write(
@@ -185,10 +185,10 @@ public function Key<TMsg>(Field: Field<TMsg>; Position: Tracking; Pressed: K.Key
   end procedure;
 begin
   case Field.KeyAction of
-    when is Sys.Func<K.Key, K.KeyModifiers, Actions.Result<TMsg>?> as Handler:
-      const Action: Actions.Result<TMsg>? := Handler.Invoke(Pressed, Modifiers);
+    when is Sys.Func of (K.Key, K.KeyModifiers, (Actions.Result of TMsg)?) as Handler:
+      const Action: (Actions.Result of TMsg)? := Handler.Invoke(Pressed, Modifiers);
       if Action <> null then
-        Actions.Dispatch<TMsg>(Action, Apply);
+        Actions.Dispatch of TMsg(Action, Apply);
         return true;
       end if;
     else
@@ -251,7 +251,7 @@ begin
         else
           At
         end if;
-        Replace<TMsg>(Field, Position, Start, Stop - Start, '', Apply);
+        Replace of TMsg(Field, Position, Start, Stop - Start, '', Apply);
       end if;
     when K.Key.Enter:
       if Extend then
@@ -259,8 +259,8 @@ begin
       end if;
 
       case Field.Submit of
-        when is Sys.Func<string, Actions.Result<TMsg>> as Submit:
-          Actions.Dispatch<TMsg>(Submit.Invoke(Field.Value), Apply);
+        when is Sys.Func of (string, Actions.Result of TMsg) as Submit:
+          Actions.Dispatch of TMsg(Submit.Invoke(Field.Value), Apply);
         else
       end case;
     else

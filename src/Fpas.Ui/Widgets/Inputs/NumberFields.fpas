@@ -31,13 +31,13 @@ end record;
 // - `Settings`: Optional caption, suffix, increment and precision.
 // ## Returns
 // A graphical or terminal number field with a model-owned value.
-public function NumberField<TMsg>(
+public function NumberField of TMsg(
   Id: string; Value: double; Minimum: double; Maximum: double; OnChange: function(double): TMsg;
   Settings: Options? := null
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.NumberField(
+  return (E.Element of TMsg).NumberField(
     Id,
     Value,
     Minimum,

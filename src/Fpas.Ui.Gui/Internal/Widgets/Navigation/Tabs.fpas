@@ -20,15 +20,15 @@ uses System.Collections.Generic as Lists;
 // - `Selected`: Model-owned index.
 // - `OnChange`: Maps a proposed index to a message.
 // - `Settings`: Native appearance, width and input permission.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Items: array of T.Item; Selected: int;
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Items: array of T.Item; Selected: int;
   OnChange: function(int): TMsg; Settings: T.Options
 );
 begin
   const Enabled: bool := Settings.Enabled and Frame.AcceptInput;
-  const Labels: Lists.List<string> := new Lists.List<string>();
-  const Icons: Lists.List<string> := new Lists.List<string>();
-  const Tokens: Lists.List<string> := new Lists.List<string>();
+  const Labels: Lists.List of string := new Lists.List of string();
+  const Icons: Lists.List of string := new Lists.List of string();
+  const Tokens: Lists.List of string := new Lists.List of string();
   Tokens.Add(C.Token('tabs', Id));
   var Focus: int := 0;
   for Index: int := 0 to Items.Length - 1 do
@@ -36,8 +36,8 @@ begin
     Icons.Add(Items[Index].Icon);
     const Token: string := C.Token('tab', Id, Index.ToString());
     Tokens.Add(Token);
-    if C.WantsFocus<TMsg>(Frame, T.ItemId(Id, Index), Token, Enabled)
-      or C.WantsFocus<TMsg>(Frame, Id, Token, Enabled, Index = Selected)
+    if C.WantsFocus of TMsg(Frame, T.ItemId(Id, Index), Token, Enabled)
+      or C.WantsFocus of TMsg(Frame, Id, Token, Enabled, Index = Selected)
     then
       Focus := Index + 1;
     end if;

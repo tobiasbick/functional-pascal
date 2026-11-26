@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Inputs.TextAreas as Areas;
 // - `About`: Model-owned text with LF line endings, up to 511 UTF-8 bytes.
 // ## Returns
 // An editor that proposes changes to the description.
-public function View(About: string): E.Element<string>;
+public function View(About: string): E.Element of string;
 begin
-  return Areas.TextArea<string>('about', About, function(Value: string): string => Value,
+  return Areas.TextArea of string('about', About, function(Value: string): string => Value,
     new Areas.Options(Label := 'About', Placeholder := 'Write a short description',
       Height := 96, MaxUtf8Bytes := 511));
 end function;

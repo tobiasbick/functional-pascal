@@ -16,8 +16,8 @@ uses System.Threading.Tasks as Tasks;
 // - `A`: Dependency supplied by this layer.
 // - `E`: Expected acquisition failure.
 // - `R`: Environment needed to acquire the dependency.
-public type Layer<A, E, R> = record
-  Acquire: function(R, S.Scope): Tasks.Task<Fx.Outcome<A, E>>;
+public type Layer of (A, E, R) = record
+  Acquire: function(R, S.Scope): Tasks.Task of Fx.Outcome of (A, E);
 
   // Couples an acquisition with its release.
   //
@@ -27,10 +27,10 @@ public type Layer<A, E, R> = record
   //
   // ## Returns
   // The deferred layer.
-  public static function Create(Work: Fx.Effect<A, E, R>; Release: function(A): Tasks.Task): Layer<A, E, R>;
-    async function Build(Environment: R; Lifetime: S.Scope): Tasks.Task<Fx.Outcome<A, E>>;
+  public static function Create(Work: Fx.Effect of (A, E, R); Release: function(A): Tasks.Task): Layer of (A, E, R);
+    async function Build(Environment: R; Lifetime: S.Scope): Tasks.Task of Fx.Outcome of (A, E);
     begin
-      const Result: Fx.Outcome<A, E> := await Work.Run(
+      const Result: Fx.Outcome of (A, E) := await Work.Run(
         Environment,
         Lifetime.Token
       ).ConfigureAwait(false);
@@ -56,7 +56,7 @@ public type Layer<A, E, R> = record
       return Result;
     end function;
   begin
-    return new Layer<A, E, R>(Build);
+    return new Layer of (A, E, R)(Build);
   end function;
 
   // Builds and registers this dependency in an open scope.
@@ -67,7 +67,7 @@ public type Layer<A, E, R> = record
   //
   // ## Returns
   // A task containing the dependency or the expected acquisition failure.
-  public function Build(Environment: R; Lifetime: S.Scope): Tasks.Task<Fx.Outcome<A, E>>;
+  public function Build(Environment: R; Lifetime: S.Scope): Tasks.Task of Fx.Outcome of (A, E);
   begin
     return self.Acquire(Environment, Lifetime);
   end function;
@@ -82,8 +82,8 @@ public type Layer<A, E, R> = record
   //
   // ## Returns
   // The composed layer, with dependencies released in reverse acquisition order.
-  public function ThenBuild<B>(Next: Layer<B, E, A>): Layer<B, E, R>;
-    async function Build(Environment: R; Lifetime: S.Scope): Tasks.Task<Fx.Outcome<B, E>>;
+  public function ThenBuild of B(Next: Layer of (B, E, A)): Layer of (B, E, R);
+    async function Build(Environment: R; Lifetime: S.Scope): Tasks.Task of Fx.Outcome of (B, E);
     begin
       case await self.Build(Environment, Lifetime).ConfigureAwait(false) of
         when Fx.Outcome.Success(const Value: A):
@@ -93,7 +93,7 @@ public type Layer<A, E, R> = record
       end case;
     end function;
   begin
-    return new Layer<B, E, R>(Build);
+    return new Layer of (B, E, R)(Build);
   end function;
 end record;
 
@@ -111,9 +111,9 @@ end record;
 //
 // ## Returns
 // A deferred workflow that releases the dependency before returning.
-public function Provide<A, B, E, R>(Work: Fx.Effect<B, E, A>; Dependencies: Layer<A, E, R>): Fx.Effect<B, E, R>;
-  function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task<Fx.Outcome<B, E>>;
-    async function Use(Lifetime: S.Scope): Tasks.Task<Fx.Outcome<B, E>>;
+public function Provide of (A, B, E, R)(Work: Fx.Effect of (B, E, A); Dependencies: Layer of (A, E, R)): Fx.Effect of (B, E, R);
+  function Execute(Environment: R; Cancellation: Threads.CancellationToken): Tasks.Task of Fx.Outcome of (B, E);
+    async function Use(Lifetime: S.Scope): Tasks.Task of Fx.Outcome of (B, E);
     begin
       case await Dependencies.Build(Environment, Lifetime).ConfigureAwait(false) of
         when Fx.Outcome.Success(const Value: A):
@@ -123,10 +123,10 @@ public function Provide<A, B, E, R>(Work: Fx.Effect<B, E, A>; Dependencies: Laye
       end case;
     end function;
   begin
-    return S.Scope.Use<Fx.Outcome<B, E>>(Use, Cancellation);
+    return S.Scope.Use of Fx.Outcome of (B, E)(Use, Cancellation);
   end function;
 begin
-  return Fx.Effect<B, E, R>.Defer(Execute);
+  return Fx.Effect of (B, E, R).Defer(Execute);
 end function;
 
 end unit;

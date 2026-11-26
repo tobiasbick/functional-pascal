@@ -20,7 +20,7 @@ end function;
 public function Items(Item: J.JsonElement; Name: string): array of J.JsonElement;
 begin
   const Value: J.JsonElement := Property(Item, Name);
-  const Result: C.List<J.JsonElement> := new C.List<J.JsonElement>();
+  const Result: C.List of J.JsonElement := new C.List of J.JsonElement();
   if Value.ValueKind = J.JsonValueKind.Array then
     for Child: J.JsonElement in Value.EnumerateArray() do
       Result.Add(Child);

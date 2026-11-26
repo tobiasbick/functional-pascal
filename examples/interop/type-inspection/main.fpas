@@ -10,7 +10,7 @@ type Player = record
   public Score: int;
 end record;
 
-function TypeName<T>(): string;
+function TypeName of T(): string;
 begin
   return typeof(T).Name;
 end function;
@@ -21,7 +21,7 @@ begin
   Console.WriteLine(typeof(int?).IsValueType);
   Console.WriteLine(typeof(Player).IsClass);
   Console.WriteLine(typeof(array[,] of int).GetArrayRank());
-  Console.WriteLine(TypeName<string>());
+  Console.WriteLine(TypeName of string());
 end;
 
 end program;

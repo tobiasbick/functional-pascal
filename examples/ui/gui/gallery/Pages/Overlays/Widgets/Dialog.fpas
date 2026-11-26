@@ -22,27 +22,27 @@ uses System as Sys;
 //
 // ## Returns
 // The native gallery's accepted actions in their original card.
-public function Section(): E.Element<State.Msg>;
+public function Section(): E.Element of State.Msg;
 begin
-  return E.Column<State.Msg>(
+  return E.Column of State.Msg(
     new L.Flow(Gap := G.Points(20)),
-    G.Heading<State.Msg>(
+    G.Heading of State.Msg(
       Strings.Get('Text.DialogsAndSheets'),
       Strings.Get('Text.OverlayHint')
     ),
-    G.Card<State.Msg>(
+    G.Card of State.Msg(
       12, [
-        E.Row<State.Msg>(
+        E.Row of State.Msg(
           new L.Flow(Gap := G.Points(8), Wrap := true),
-          B.Button<State.Msg>(
+          B.Button of State.Msg(
             'edit-profile-open', Strings.Get('Text.EditProfile'), State.Msg.SetProfileDialog(true),
             new B.Options(Icon := Sys.Char.ConvertFromUtf32($E1F9))
           ),
-          B.Button<State.Msg>(
+          B.Button of State.Msg(
             'sheet-open', Strings.Get('Text.OpenSheet'), State.Msg.SetSheet(true),
             new B.Options(Icon := Sys.Char.ConvertFromUtf32($E12A))
           ),
-          B.Button<State.Msg>(
+          B.Button of State.Msg(
             'delete-project-open',
             Strings.Get('Text.DeleteProject'),
             State.Msg.SetDeleteDialog(true),
@@ -51,7 +51,7 @@ begin
               Icon := Sys.Char.ConvertFromUtf32($E18E)
             )
           ),
-          B.Button<State.Msg>(
+          B.Button of State.Msg(
             'overlay-palette', Strings.Get('Text.CommandPalette'), State.Msg.SetPalette(true),
             new B.Options(
               Variant := S.ButtonVariant.Outline, Icon := Sys.Char.ConvertFromUtf32($E09A),
@@ -75,17 +75,17 @@ end function;
 // - `Messages`: Embeds this page's messages in the application.
 // ## Returns
 // The view with the controlled native dialog and action footer.
-public function Wrap<TParent>(Model: State.Model; Data: Demo.Model; Base: E.Element<TParent>; Messages: function(State.Msg): TParent): E.Element<TParent>;
+public function Wrap of TParent(Model: State.Model; Data: Demo.Model; Base: E.Element of TParent; Messages: function(State.Msg): TParent): E.Element of TParent;
 begin
-  const Content: E.Element<State.Msg> := E.Column<State.Msg>(
+  const Content: E.Element of State.Msg := E.Column of State.Msg(
     new L.Flow(Gap := G.Points(16), Align := L.Alignment.Stretch),
-    TextFields.TextField<State.Msg>(
+    TextFields.TextField of State.Msg(
       'edit-profile-name',
       Data.Name,
       function(SharedValue: string): State.Msg => State.Msg.Shared(Demo.Msg.SetName(SharedValue)),
       new TextFields.Options(Label := Strings.Get('Text.Name'), MaxUtf8Bytes := 63)
     ),
-    TextFields.TextField<State.Msg>(
+    TextFields.TextField of State.Msg(
       'edit-profile-email',
       Data.Email,
       function(SharedValue: string): State.Msg => State.Msg.Shared(Demo.Msg.SetEmail(SharedValue)),
@@ -95,26 +95,26 @@ begin
         MaxUtf8Bytes := 95
       )
     ),
-    Switches.View<State.Msg>(
+    Switches.View of State.Msg(
       Switches.PublicProfile,
       Data.Wifi,
       function(SharedValue: bool): State.Msg => State.Msg.Shared(Demo.Msg.SetWifi(SharedValue))
     ),
-    F.ActionFooter<State.Msg>(
-      B.Button<State.Msg>(
+    F.ActionFooter of State.Msg(
+      B.Button of State.Msg(
         'edit-profile-cancel',
         Strings.Get('Text.Cancel'),
         State.Msg.SetProfileDialog(false)
       ),
-      B.Button<State.Msg>(
+      B.Button of State.Msg(
         'edit-profile-save', Strings.Get('Text.SaveChanges'), State.Msg.SaveProfile,
         new B.Options(Variant := S.ButtonVariant.Primary)
       )
     )
   );
-  return D.Dialog<TParent>(
-    'edit-profile', Base, U.Map<State.Msg, TParent>(
-      E.Size<State.Msg>(Content, new L.Flex(Height := new L.AxisSize(Basis := L.Extent.Fill))),
+  return D.Dialog of TParent(
+    'edit-profile', Base, U.Map of (State.Msg, TParent)(
+      E.Size of State.Msg(Content, new L.Flex(Height := new L.AxisSize(Basis := L.Extent.Fill))),
       Messages
     ), Model.ProfileDialog,
     new D.Options(

@@ -37,13 +37,13 @@ end record;
 // - `Settings`: Native toggle mode, size, icons and input permission.
 // ## Returns
 // A group which proposes a new selection without mutating the supplied flags.
-public function ToggleGroup<TMsg>(
+public function ToggleGroup of TMsg(
   Id: string; Items: array of Item; Selected: array of bool;
   OnChange: function(array of bool): TMsg; Settings: Options? := null
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Toggles(Id, Items, Selected, OnChange, Settings ?? new Options());
+  return (E.Element of TMsg).Toggles(Id, Items, Selected, OnChange, Settings ?? new Options());
 end function;
 
 // Gets a positional toggle's stable identity for application focus requests.

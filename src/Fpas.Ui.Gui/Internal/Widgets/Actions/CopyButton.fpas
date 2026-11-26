@@ -18,22 +18,22 @@ uses System as Sys;
 // - `Text`: Literal clipboard text.
 // - `OnCopied`: Optional application notification.
 // - `Enabled`: Model-owned input permission.
-public procedure Draw<TMsg>(State: C.State<TMsg>; Id: string; Text: string; OnCopied: Sys.Func<TMsg>?; Enabled: bool);
+public procedure Draw of TMsg(State: C.State of TMsg; Id: string; Text: string; OnCopied: (Sys.Func of TMsg)?; Enabled: bool);
 begin
   const Allowed: bool := Enabled and State.AcceptInput;
   const Token: string := C.Token('copy-button', Id);
-  const Focus: bool := C.WantsFocus<TMsg>(State, Id, Token, Allowed);
+  const Focus: bool := C.WantsFocus of TMsg(State, Id, Token, Allowed);
   const Events: int := State.Window.CopyButton(Token, Text, Allowed, Focus);
   if (Events and 1) <> 0 then
     case OnCopied of
-      when is Sys.Func<TMsg> as Notify:
+      when is Sys.Func of TMsg as Notify:
         State.Messages.Add(Notify.Invoke());
       else
     end case;
   end if;
 
   const Recent: bool := (Events and 2) <> 0;
-  C.Track<TMsg>(
+  C.Track of TMsg(
     State, new App.Control(
       Id, if Recent then
         'Copied'

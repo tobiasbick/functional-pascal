@@ -20,15 +20,15 @@ uses Fpas.Ui.Widgets.Inputs.RadioGroups as R;
 // - `OnChange`: Maps a different choice to a message.
 // - `Enabled`: Group input permission.
 // - `Gap`: Distance between rows.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Items: array of R.Item; Selected: int;
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Items: array of R.Item; Selected: int;
   OnChange: function(int): TMsg; Enabled: bool; Gap: L.Spacing
 );
 begin
   Frame.Window.BeginGroup(false, 0, Size.Spacing(Gap), cast<int>(L.Alignment.Default), false);
   for Index: int := 0 to Items.Length - 1 do
     const Item: R.Item := Items[Index];
-    Radio.Draw<TMsg>(
+    Radio.Draw of TMsg(
       Frame, R.ItemId(Id, Index), Item.Label, Index = Selected,
       function(): TMsg => OnChange(Index), Item.Description, Enabled and Item.Enabled
     );

@@ -98,7 +98,7 @@ public sealed class ParameterOrderTests(SdkPackageFixture sdk) : IClassFixture<S
     {
         const string source = """
             unit Demo.Bridge;
-            function Use<T>(Scale: int; ref State: int; Item: T; Count: int := 3): T;
+            function Use of T(Scale: int; ref State: int; Item: T; Count: int := 3): T;
             begin
               State := State + Scale * Count;
               return Item;
@@ -130,14 +130,14 @@ public sealed class ParameterOrderTests(SdkPackageFixture sdk) : IClassFixture<S
             """;
         using var directory = RenameFixture.Create(sdk, source);
         var analysis = await RenameFixture.Analyze(directory);
-        var prepared = Prepare("Use<T>", "Scale", "Item", "State", "Count");
+        var prepared = Prepare("Use of T", "Scale", "Item", "State", "Count");
         var document = Assert.Single(prepared.Edits.Documents);
-        Assert.Contains("Use<T>(Scale: int; Item: T; ref State: int; Count: int := 3)", document.NewText);
+        Assert.Contains("Use of T(Scale: int; Item: T; ref State: int; Count: int := 3)", document.NewText);
         Assert.Contains("Use(2, State := ref Counter, Item := Use(1, State := ref Counter, Item := 'answer', Count := 5))",
             document.NewText);
-        Assert.Equal(0, Prepare("Use<T>", "Scale", "State", "Item", "Count").Edits.EditCount);
-        Assert.Contains("exactly once", Assert.Throws<ContextFailure>(() => Prepare("Use<T>", "Scale", "Unknown", "State", "Count")).Message);
-        Assert.Contains("required parameters", Assert.Throws<ContextFailure>(() => Prepare("Use<T>", "Count", "Scale", "State", "Item")).Message);
+        Assert.Equal(0, Prepare("Use of T", "Scale", "State", "Item", "Count").Edits.EditCount);
+        Assert.Contains("exactly once", Assert.Throws<ContextFailure>(() => Prepare("Use of T", "Scale", "Unknown", "State", "Count")).Message);
+        Assert.Contains("required parameters", Assert.Throws<ContextFailure>(() => Prepare("Use of T", "Count", "Scale", "State", "Item")).Message);
         Assert.Contains("comment", Assert.Throws<ContextFailure>(() => Prepare("Commented(", "Second", "First")).Message);
         Assert.Contains("comment", Assert.Throws<ContextFailure>(() => Prepare("CommentedOpening(", "Second", "First")).Message);
         Assert.Equal("refactor_conflict", Assert.Throws<ContextFailure>(() => Prepare("Overload(", "Second", "First")).Code);

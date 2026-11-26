@@ -52,7 +52,7 @@ const Feed: string := '<rss version="2.0" xmlns:itunes="http://www.itunes.com/dt
   <item><title>Duplicate</title><guid>night</guid><enclosure url="duplicate.wav" type="audio/wav" /></item>
   </channel></rss>';
 
-function Control(Window: Gui.Session<App.Msg>; Id: string; Key: string := ''): Gui.Control;
+function Control(Window: Gui.Session of App.Msg; Id: string; Key: string := ''): Gui.Control;
 begin
   for Entry: Gui.Control in Window.Snapshot().Controls do
     if Entry.Id = Id and Entry.Key = Key then
@@ -63,29 +63,29 @@ begin
   raise new Sys.InvalidOperationException('Missing podcast control: ' + Id + ' ' + Key);
 end function;
 
-procedure Step(Window: Gui.Session<App.Msg>);
+procedure Step(Window: Gui.Session of App.Msg);
 begin
   discard Window.Post(App.Msg.Settings(Settings.Msg.DismissError));
   X.Assert.True(Window.Step());
 end procedure;
 
-procedure Send(Window: Gui.Session<App.Msg>; Message: App.Msg);
+procedure Send(Window: Gui.Session of App.Msg; Message: App.Msg);
 begin
   discard Window.Post(Message);
   Step(Window);
 end procedure;
 
-procedure Deliver(Window: Gui.Session<App.Msg>; Held: Channels.ChannelReader<Effects.Reply<App.Msg>>);
+procedure Deliver(Window: Gui.Session of App.Msg; Held: Channels.ChannelReader of Effects.Reply of App.Msg);
 begin
   using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(10000);
-  const Reply: Effects.Reply<App.Msg> := Held.ReadAsync(
+  const Reply: Effects.Reply of App.Msg := Held.ReadAsync(
     Deadline.Token
   ).AsTask().GetAwaiter().GetResult();
   Reply.Release().WaitAsync(Deadline.Token).GetAwaiter().GetResult();
   Step(Window);
 end procedure;
 
-procedure Wait(Window: Gui.Session<App.Msg>; Ready: function(): bool; Message: string);
+procedure Wait(Window: Gui.Session of App.Msg; Ready: function(): bool; Message: string);
 begin
   const Limit: long := Sys.Environment.TickCount64 + 8000L;
   while not Ready() and Sys.Environment.TickCount64 < Limit do
@@ -96,7 +96,7 @@ begin
   X.Assert.True(Ready(), Message);
 end procedure;
 
-procedure SaveImage(Window: Gui.Session<App.Msg>; File: string);
+procedure SaveImage(Window: Gui.Session of App.Msg; File: string);
 begin
   const Directory: string? := Sys.Environment.GetEnvironmentVariable('FPAS_AMP_UI_ARTIFACTS');
   if Directory <> null then
@@ -106,7 +106,7 @@ begin
 end procedure;
 
 procedure Exercise(Store: Library.Session; Data: string; Show: P.Show);
-  procedure Click(Window: Gui.Session<App.Msg>; Bounds: Cui.CuiRectangle);
+  procedure Click(Window: Gui.Session of App.Msg; Bounds: Cui.CuiRectangle);
   begin
     PointerX := Bounds.X + Bounds.Width * 0.5F;
     PointerY := Bounds.Y + Bounds.Height * 0.5F;
@@ -120,7 +120,7 @@ procedure Exercise(Store: Library.Session; Data: string; Show: P.Show);
 begin
   const Device: Audio.Session := new Audio.Session(true);
   const Port: Playback.Connection := Playback.Connection.Create(Device);
-  const Gate: Effects.Effects<App.Msg> := Effects.Effects<App.Msg>.Create();
+  const Gate: Effects.Effects of App.Msg := (Effects.Effects of App.Msg).Create();
   const Route: Nav.Route := Nav.Route.Podcast(Show.Id());
   const Other: P.Show := new P.Show(
     'https://example.invalid/other.rss',
@@ -144,10 +144,10 @@ begin
       true
     );
     Native.SetReducedMotion(true);
-    using const Window: Gui.Session<App.Msg> := Host.StartThemed<App.State, App.Msg>(
+    using const Window: Gui.Session of App.Msg := Host.StartThemed of (App.State, App.Msg)(
       Current,
-      function(Model: App.State; Message: App.Msg): A.Transition<App.State, App.Msg> begin
-        const Next: A.Transition<App.State, App.Msg> := Controller.Apply(
+      function(Model: App.State; Message: App.Msg): A.Transition of (App.State, App.Msg) begin
+        const Next: A.Transition of (App.State, App.Msg) := Controller.Apply(
           Model, Message,
           procedure(Value: Settings.Preferences) begin
             Saved.Save(Data, Value);
@@ -174,9 +174,9 @@ begin
                   ]
                 end if;
                 // Only the external Apple response is simulated. RSS and audio use HTTP below.
-                Next.Commands[Index] := A.StartBackground<App.Msg>(
+                Next.Commands[Index] := A.StartBackground of App.Msg(
                   Id,
-                  A.FromWorker<App.Msg>(
+                  A.FromWorker of App.Msg(
                     function(Post: function(App.Msg): Tasks.Task; _Stop: T.CancellationToken): Tasks.Task => Post(
                       App.Msg.Podcasts(P.Msg.Found(Revision, Matches))
                     ),
@@ -190,7 +190,7 @@ begin
           end case;
         end for;
 
-        return Gate.Wrap<App.State>(Next);
+        return Gate.Wrap of App.State(Next);
       end function,
       Shell.View, Native, 128, procedure() begin
         Native.MovePointer(PointerX, PointerY);
@@ -200,52 +200,60 @@ begin
         end if;
       end procedure, App.Theme(Current, null), App.Theme, false
     );
-    const Charts: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('podcasts/search');
+    const Charts: Channels.ChannelReader of Effects.Reply of App.Msg := Gate.Watch(
+      'podcasts/search'
+    );
     Send(Window, App.Msg.WatchLibrary);
-    X.Assert.Equal<string>('Loading top podcasts…', Control(Window, 'podcasts-empty').Text);
+    X.Assert.Equal of string('Loading top podcasts…', Control(Window, 'podcasts-empty').Text);
     Deliver(Window, Charts);
     const ShowButton: string := 'podcast-open-' + Show.Id();
-    X.Assert.Equal<string>('Chart DE all', Control(Window, ShowButton).Text);
-    X.Assert.Equal<string>('', Control(Window, 'podcast-search-input').Value);
-    const Market: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('podcasts/search');
+    X.Assert.Equal of string('Chart DE all', Control(Window, ShowButton).Text);
+    X.Assert.Equal of string('', Control(Window, 'podcast-search-input').Value);
+    const Market: Channels.ChannelReader of Effects.Reply of App.Msg := Gate.Watch(
+      'podcasts/search'
+    );
     Click(Window, Control(Window, 'podcast-filters').Bounds);
     Send(Window, App.Msg.Podcasts(P.Msg.Market('US')));
-    X.Assert.Equal<string>('Chart DE all', Control(Window, ShowButton).Text);
+    X.Assert.Equal of string('Chart DE all', Control(Window, ShowButton).Text);
     Click(Window, Control(Window, 'podcast-filter-apply').Bounds);
-    X.Assert.Equal<string>('Loading top podcasts…', Control(Window, 'podcasts-empty').Text);
+    X.Assert.Equal of string('Loading top podcasts…', Control(Window, 'podcasts-empty').Text);
     Deliver(Window, Market);
-    X.Assert.Equal<string>('Chart US all', Control(Window, ShowButton).Text);
-    const Genre: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('podcasts/search');
+    X.Assert.Equal of string('Chart US all', Control(Window, ShowButton).Text);
+    const Genre: Channels.ChannelReader of Effects.Reply of App.Msg := Gate.Watch(
+      'podcasts/search'
+    );
     Click(Window, Control(Window, 'podcast-filters').Bounds);
     Click(Window, Control(Window, 'podcast-genre').Bounds);
     Click(Window, Control(Window, Select.OptionId('podcast-genre', 1)).Bounds);
-    X.Assert.Equal<string>('', Current.Podcasts.Genre);
+    X.Assert.Equal of string('', Current.Podcasts.Genre);
     Click(Window, Control(Window, 'podcast-filter-apply').Bounds);
-    X.Assert.Equal<string>('Loading top podcasts…', Control(Window, 'podcasts-empty').Text);
+    X.Assert.Equal of string('Loading top podcasts…', Control(Window, 'podcasts-empty').Text);
     Deliver(Window, Genre);
-    X.Assert.Equal<string>('Chart US 1301', Control(Window, ShowButton).Text);
-    const Search: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('podcasts/search');
+    X.Assert.Equal of string('Chart US 1301', Control(Window, ShowButton).Text);
+    const Search: Channels.ChannelReader of Effects.Reply of App.Msg := Gate.Watch(
+      'podcasts/search'
+    );
     Send(Window, App.Msg.Podcasts(P.Msg.Query('coast')));
     Click(Window, Control(Window, 'podcast-search-submit').Bounds);
     X.Assert.False(Control(Window, 'podcast-search-submit').Enabled);
-    X.Assert.Equal<string>('Searching Apple Podcasts…', Control(Window, 'podcasts-empty').Text);
+    X.Assert.Equal of string('Searching Apple Podcasts…', Control(Window, 'podcasts-empty').Text);
     Deliver(Window, Search);
-    X.Assert.Equal<string>('Coastlines', Control(Window, ShowButton).Text);
-    X.Assert.DoesNotContain<string>('Other podcast', Window.Snapshot().Text);
+    X.Assert.Equal of string('Coastlines', Control(Window, ShowButton).Text);
+    X.Assert.DoesNotContain of string('Other podcast', Window.Snapshot().Text);
     Click(Window, Control(Window, 'podcast-filters').Bounds);
     Send(Window, App.Msg.Podcasts(P.Msg.Genre('')));
     Click(Window, Control(Window, 'podcast-filter-apply').Bounds);
     const OtherButton: string := 'podcast-open-' + Other.Id();
-    X.Assert.Equal<string>('Other podcast', Control(Window, OtherButton).Text);
+    X.Assert.Equal of string('Other podcast', Control(Window, OtherButton).Text);
     Send(Window, App.Msg.Podcasts(P.Msg.Subscribe(Other, true)));
     Click(Window, Control(Window, 'podcast-filters').Bounds);
     Click(Window, Control(Window, 'podcast-subscription-filter').Bounds);
     Click(Window, Control(Window, Select.OptionId('podcast-subscription-filter', 2)).Bounds);
     Click(Window, Control(Window, 'podcast-filter-apply').Bounds);
-    X.Assert.Equal<int>(1, Current.Podcasts.ShownResults.Length);
-    X.Assert.Equal<string>(Show.Url, Current.Podcasts.ShownResults[0].Url);
+    X.Assert.Equal of int(1, Current.Podcasts.ShownResults.Length);
+    X.Assert.Equal of string(Show.Url, Current.Podcasts.ShownResults[0].Url);
     Send(Window, App.Msg.Podcasts(P.Msg.Subscribe(Other, false)));
-    X.Assert.Equal<string>('Other podcast', Control(Window, OtherButton).Text);
+    X.Assert.Equal of string('Other podcast', Control(Window, OtherButton).Text);
     Click(Window, Control(Window, 'podcast-filters').Bounds);
     Click(Window, Control(Window, 'podcast-subscription-filter').Bounds);
     Click(Window, Control(Window, Select.OptionId('podcast-subscription-filter', 0)).Bounds);
@@ -255,59 +263,59 @@ begin
       Tables.HeaderId('podcast-results', 1)
     ).Bounds;
     Click(Window, Publisher);
-    X.Assert.Equal<Tables.Sort>(new Tables.Sort(1), Current.Podcasts.SearchOrder);
+    X.Assert.Equal of Tables.Sort(new Tables.Sort(1), Current.Podcasts.SearchOrder);
     X.Assert.True(Control(Window, OtherButton).Bounds.Y < Control(Window, ShowButton).Bounds.Y);
     Click(Window, Publisher);
-    X.Assert.Equal<Tables.Sort>(new Tables.Sort(1, true), Current.Podcasts.SearchOrder);
+    X.Assert.Equal of Tables.Sort(new Tables.Sort(1, true), Current.Podcasts.SearchOrder);
     X.Assert.True(Control(Window, ShowButton).Bounds.Y < Control(Window, OtherButton).Bounds.Y);
-    X.Assert.Equal<string>('Publisher · Z–A', Control(Window, 'podcast-sort').Text);
+    X.Assert.Equal of string('Publisher · Z–A', Control(Window, 'podcast-sort').Text);
     Click(Window, Control(Window, 'podcast-sort').Bounds);
     Click(Window, Control(Window, 'podcast-sort/default').Bounds);
-    X.Assert.Equal<Tables.Sort>(new Tables.Sort(-1), Current.Podcasts.SearchOrder);
+    X.Assert.Equal of Tables.Sort(new Tables.Sort(-1), Current.Podcasts.SearchOrder);
     Click(Window, Control(Window, 'podcast-filters').Bounds);
     Send(Window, App.Msg.Podcasts(P.Msg.Genre('1301')));
     Click(Window, Control(Window, 'podcast-filter-apply').Bounds);
-    X.Assert.DoesNotContain<string>('Other podcast', Window.Snapshot().Text);
+    X.Assert.DoesNotContain of string('Other podcast', Window.Snapshot().Text);
     SaveImage(Window, 'podcast-search.png');
 
-    const Open: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('podcasts/feed');
+    const Open: Channels.ChannelReader of Effects.Reply of App.Msg := Gate.Watch('podcasts/feed');
     Click(Window, Control(Window, ShowButton).Bounds);
-    X.Assert.Equal<Nav.Route>(Route, Current.Navigation.Active);
-    X.Assert.Equal<string>('Loading episodes…', Control(Window, 'podcast-episodes-empty').Text);
+    X.Assert.Equal of Nav.Route(Route, Current.Navigation.Active);
+    X.Assert.Equal of string('Loading episodes…', Control(Window, 'podcast-episodes-empty').Text);
     Deliver(Window, Open);
-    X.Assert.Equal<int>(2, Current.Podcasts.Episodes.Length);
-    X.Assert.Equal<string>('North Pier Studio', (Current.Podcasts.Show ?? Show).Publisher);
-    X.Assert.Contains<string>('The Night Ferry', Window.Snapshot().Text);
+    X.Assert.Equal of int(2, Current.Podcasts.Episodes.Length);
+    X.Assert.Equal of string('North Pier Studio', (Current.Podcasts.Show ?? Show).Publisher);
+    X.Assert.Contains of string('The Night Ferry', Window.Snapshot().Text);
     const Night: P.Episode := Current.Podcasts.Episodes[1];
-    X.Assert.Equal<double>(5000.0, Night.Duration);
-    X.Assert.Equal<string>('A night crossing.', Night.Description);
+    X.Assert.Equal of double(5000.0, Night.Duration);
+    X.Assert.Equal of string('A night crossing.', Night.Description);
     Deliver(Window, Open);
     discard Control(Window, 'podcast-cover');
     Click(Window, Control(Window, 'episode-filters').Bounds);
     Click(Window, Control(Window, 'episode-filter-year').Bounds);
     Click(Window, Control(Window, Select.OptionId('episode-filter-year', 1)).Bounds);
-    X.Assert.Equal<int>(2, Current.Podcasts.ShownEpisodes.Length);
+    X.Assert.Equal of int(2, Current.Podcasts.ShownEpisodes.Length);
     Click(Window, Control(Window, 'episode-filter-apply').Bounds);
-    X.Assert.Equal<int>(1, Current.Podcasts.ShownEpisodes.Length);
-    X.Assert.Equal<string>('night', Current.Podcasts.ShownEpisodes[0].Id);
+    X.Assert.Equal of int(1, Current.Podcasts.ShownEpisodes.Length);
+    X.Assert.Equal of string('night', Current.Podcasts.ShownEpisodes[0].Id);
     Click(Window, Control(Window, 'episode-filters').Bounds);
     Click(Window, Control(Window, 'episode-filter-reset').Bounds);
     Click(Window, Control(Window, 'episode-filter-duration').Bounds);
     Click(Window, Control(Window, Select.OptionId('episode-filter-duration', 4)).Bounds);
     Click(Window, Control(Window, 'episode-filter-apply').Bounds);
-    X.Assert.Equal<int>(1, Current.Podcasts.ShownEpisodes.Length);
-    X.Assert.Equal<string>('old', Current.Podcasts.ShownEpisodes[0].Id);
+    X.Assert.Equal of int(1, Current.Podcasts.ShownEpisodes.Length);
+    X.Assert.Equal of string('old', Current.Podcasts.ShownEpisodes[0].Id);
     Click(Window, Control(Window, 'episode-filters').Bounds);
     Click(Window, Control(Window, 'episode-filter-reset').Bounds);
     Click(Window, Control(Window, 'episode-filter-apply').Bounds);
-    X.Assert.Equal<int>(2, Current.Podcasts.ShownEpisodes.Length);
+    X.Assert.Equal of int(2, Current.Podcasts.ShownEpisodes.Length);
     const Episodes: string := 'podcast-episodes/' + Show.Id();
     const Published: Cui.CuiRectangle := Control(Window, Tables.HeaderId(Episodes, 1)).Bounds;
     Send(Window, App.Msg.Podcasts(P.Msg.SelectEpisode(0, 0.0F)));
     Click(Window, Published);
-    X.Assert.Equal<string>('old', Current.Podcasts.ShownEpisodes[0].Id);
-    X.Assert.Equal<string>('Published · Oldest first', Control(Window, 'episode-sort').Text);
-    X.Assert.Equal<string>(
+    X.Assert.Equal of string('old', Current.Podcasts.ShownEpisodes[0].Id);
+    X.Assert.Equal of string('Published · Oldest first', Control(Window, 'episode-sort').Text);
+    X.Assert.Equal of string(
       'night',
       Current.Podcasts.ShownEpisodes[Current.Podcasts.EpisodeCursor].Id
     );
@@ -316,43 +324,43 @@ begin
     );
     case Podcasts.Play(Current, Night) of
       when Player.Msg.PlayEpisodes(
-        const Queue: I.ImmutableArray<Tracks.Entry>,
+        const Queue: I.ImmutableArray of Tracks.Entry,
         const Index: int,
         _
       ):
         X.Assert.True(Queue[0].TrackId.EndsWith(':old'));
-        X.Assert.Equal<int>(1, Index);
+        X.Assert.Equal of int(1, Index);
       else
         X.Assert.True(false, 'Playback must use the sorted episode row order.');
     end case;
 
     Click(Window, Control(Window, Tables.HeaderId(Episodes, 2)).Bounds);
-    X.Assert.Equal<string>('night', Current.Podcasts.ShownEpisodes[0].Id);
+    X.Assert.Equal of string('night', Current.Podcasts.ShownEpisodes[0].Id);
     Click(Window, Control(Window, Tables.HeaderId(Episodes, 0)).Bounds);
-    X.Assert.Equal<string>('old', Current.Podcasts.ShownEpisodes[0].Id);
+    X.Assert.Equal of string('old', Current.Podcasts.ShownEpisodes[0].Id);
     Click(Window, Control(Window, 'episode-sort').Bounds);
     Click(Window, Control(Window, 'episode-sort/1').Bounds);
     Click(Window, Control(Window, 'episode-sort').Bounds);
     Click(Window, Control(Window, 'episode-sort/descending').Bounds);
-    X.Assert.Equal<Tables.Sort>(new Tables.Sort(1, true), Current.Podcasts.EpisodeOrder);
-    X.Assert.Equal<string>('night', Current.Podcasts.ShownEpisodes[0].Id);
+    X.Assert.Equal of Tables.Sort(new Tables.Sort(1, true), Current.Podcasts.EpisodeOrder);
+    X.Assert.Equal of string('night', Current.Podcasts.ShownEpisodes[0].Id);
     Click(Window, Control(Window, 'episode-menu-night').Bounds);
     Click(Window, Control(Window, 'episode-menu-night/details').Bounds);
-    X.Assert.Contains<string>('A night crossing.', Window.Snapshot().Text);
+    X.Assert.Contains of string('A night crossing.', Window.Snapshot().Text);
     Send(Window, App.Msg.Podcasts(P.Msg.Details(null)));
     Click(Window, Control(Window, 'podcast-subscription').Bounds);
-    X.Assert.Equal<string>('Coastlines', Control(Window, 'navigation', Nav.Key(Route)).Text);
-    X.Assert.Equal<string>('Unsubscribe', Control(Window, 'podcast-subscription').Text);
-    X.Assert.Equal<string>(Show.Url, Saved.Load(Data).PodcastSubscriptions[0].Url);
+    X.Assert.Equal of string('Coastlines', Control(Window, 'navigation', Nav.Key(Route)).Text);
+    X.Assert.Equal of string('Unsubscribe', Control(Window, 'podcast-subscription').Text);
+    X.Assert.Equal of string(Show.Url, Saved.Load(Data).PodcastSubscriptions[0].Url);
     var Placement: Cui.CuiWindowPlacement := new Cui.CuiWindowPlacement();
     WindowState.Save(Data, WindowState.FromWindow(Placement, Current.Navigation));
-    X.Assert.Equal<Nav.Route?>(Route, Nav.Parse(WindowState.Load(Data).ActivePage));
+    X.Assert.Equal of Nav.Route? (Route, Nav.Parse(WindowState.Load(Data).ActivePage));
 
-    const Media: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch(
+    const Media: Channels.ChannelReader of Effects.Reply of App.Msg := Gate.Watch(
       'podcast-episode-media'
     );
     Click(Window, Control(Window, 'episode-play-night').Bounds);
-    X.Assert.Contains<string>('Preparing episode…', Window.Snapshot().Text);
+    X.Assert.Contains of string('Preparing episode…', Window.Snapshot().Text);
     X.Assert.False(Control(Window, 'player-position').Enabled);
     Deliver(Window, Media);
     Wait(
@@ -361,7 +369,7 @@ begin
       'The episode must play through the common decoder and build a waveform.'
     );
     X.Assert.True(Control(Window, 'player-position').Enabled);
-    X.Assert.Contains<string>('The Night Ferry', Window.Snapshot().Text);
+    X.Assert.Contains of string('The Night Ferry', Window.Snapshot().Text);
     SaveImage(Window, 'podcast-episodes.png');
     Send(Window, App.Msg.Player(Player.Msg.Toggle));
     Send(Window, App.Msg.Player(Player.Msg.Seek(0.5F)));
@@ -369,20 +377,20 @@ begin
       Window, function(): bool => not Current.Player.Playing and Current.Player.Position >= 2490.0,
       'The paused episode must accept a seek.'
     );
-    const NextMedia: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch(
+    const NextMedia: Channels.ChannelReader of Effects.Reply of App.Msg := Gate.Watch(
       'podcast-episode-media'
     );
     Send(Window, App.Msg.Player(Player.Msg.Next));
-    X.Assert.Equal<int>(1, Current.Player.Index);
+    X.Assert.Equal of int(1, Current.Player.Index);
     X.Assert.True(Current.Player.Buffering);
-    X.Assert.Equal<string>('', Current.Player.EpisodePath);
+    X.Assert.Equal of string('', Current.Player.EpisodePath);
     Deliver(Window, NextMedia);
     X.Assert.False(Current.Player.Buffering);
     X.Assert.NotEmpty(Current.Player.EpisodePath);
     Click(Window, Control(Window, 'podcast-subscription').Bounds);
-    X.Assert.Equal<string>('Subscribe', Control(Window, 'podcast-subscription').Text);
+    X.Assert.Equal of string('Subscribe', Control(Window, 'podcast-subscription').Text);
     X.Assert.Empty(Saved.Load(Data).PodcastSubscriptions);
-    X.Assert.Equal<Nav.Route>(Route, Current.Navigation.Active);
+    X.Assert.Equal of Nav.Route(Route, Current.Navigation.Active);
     Send(Window, App.Msg.Podcasts(P.Msg.Filter('Night')));
     Send(Window, App.Msg.Podcasts(P.Msg.SortEpisodes(new Tables.Sort(1, false))));
     Send(Window, App.Msg.Podcasts(P.Msg.SetEpisodeFilters(true)));
@@ -391,23 +399,25 @@ begin
     Send(Window, App.Msg.Podcasts(P.Msg.SelectEpisode(0, 0.0F)));
     Click(Window, Control(Window, 'podcast-back').Bounds);
     discard Control(Window, ShowButton);
-    const Cleared: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('podcasts/search');
+    const Cleared: Channels.ChannelReader of Effects.Reply of App.Msg := Gate.Watch(
+      'podcasts/search'
+    );
     Send(Window, App.Msg.Podcasts(P.Msg.Query('')));
-    X.Assert.Equal<string>('Loading top podcasts…', Control(Window, 'podcasts-empty').Text);
+    X.Assert.Equal of string('Loading top podcasts…', Control(Window, 'podcasts-empty').Text);
     Deliver(Window, Cleared);
-    X.Assert.Equal<string>('Chart US 1301', Control(Window, ShowButton).Text);
+    X.Assert.Equal of string('Chart US 1301', Control(Window, ShowButton).Text);
     Click(Window, Control(Window, 'podcast-add').Bounds);
     Send(Window, App.Msg.Podcasts(P.Msg.EditUrl(Show.Url)));
-    const Manual: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('podcasts/feed');
+    const Manual: Channels.ChannelReader of Effects.Reply of App.Msg := Gate.Watch('podcasts/feed');
     Click(Window, Control(Window, 'podcast-feed-add').Bounds);
     X.Assert.Empty(Saved.Load(Data).PodcastSubscriptions);
-    X.Assert.Equal<string>('Night', Control(Window, 'podcast-episode-search').Value);
+    X.Assert.Equal of string('Night', Control(Window, 'podcast-episode-search').Value);
     Deliver(Window, Manual);
-    X.Assert.Equal<string>('Coastlines', Control(Window, 'navigation', Nav.Key(Route)).Text);
-    X.Assert.Equal<string>(Show.Url, Saved.Load(Data).PodcastSubscriptions[0].Url);
-    X.Assert.Equal<string>('short', Current.Podcasts.AppliedEpisodes.Duration);
-    X.Assert.Equal<string>('Published · Oldest first', Control(Window, 'episode-sort').Text);
-    X.Assert.Equal<string>(
+    X.Assert.Equal of string('Coastlines', Control(Window, 'navigation', Nav.Key(Route)).Text);
+    X.Assert.Equal of string(Show.Url, Saved.Load(Data).PodcastSubscriptions[0].Url);
+    X.Assert.Equal of string('short', Current.Podcasts.AppliedEpisodes.Duration);
+    X.Assert.Equal of string('Published · Oldest first', Control(Window, 'episode-sort').Text);
+    X.Assert.Equal of string(
       'night',
       Current.Podcasts.ShownEpisodes[Current.Podcasts.EpisodeCursor].Id
     );
@@ -447,18 +457,18 @@ public type NativePodcastTests = record
       P.Msg.Loaded(2L, new P.Feed(Show, [Dated, Undated])),
       []
     ).Model;
-    X.Assert.Equal<string>('', Updated.AppliedEpisodes.Year);
-    X.Assert.Equal<string>('short', Updated.AppliedEpisodes.Duration);
-    X.Assert.Equal<string>('2025', (Updated.EpisodeDraft ?? new P.EpisodeFilters()).Year);
-    X.Assert.Equal<string>('long', (Updated.EpisodeDraft ?? new P.EpisodeFilters()).Duration);
-    X.Assert.Equal<int>(1, Updated.ShownEpisodes.Length);
-    X.Assert.Equal<string>('dated', Updated.ShownEpisodes[0].Id);
+    X.Assert.Equal of string('', Updated.AppliedEpisodes.Year);
+    X.Assert.Equal of string('short', Updated.AppliedEpisodes.Duration);
+    X.Assert.Equal of string('2025', (Updated.EpisodeDraft ?? new P.EpisodeFilters()).Year);
+    X.Assert.Equal of string('long', (Updated.EpisodeDraft ?? new P.EpisodeFilters()).Duration);
+    X.Assert.Equal of int(1, Updated.ShownEpisodes.Length);
+    X.Assert.Equal of string('dated', Updated.ShownEpisodes[0].Id);
     const SingleYear: P.State := Update.Apply(
       Updated,
       P.Msg.Loaded(2L, new P.Feed(Show, [Dated])),
       []
     ).Model;
-    X.Assert.Equal<string>('', (SingleYear.EpisodeDraft ?? new P.EpisodeFilters()).Year);
+    X.Assert.Equal of string('', (SingleYear.EpisodeDraft ?? new P.EpisodeFilters()).Year);
   end procedure;
 
   // Undated episodes appear as a filter choice and can be selected on their own.
@@ -472,14 +482,14 @@ public type NativePodcastTests = record
         Published := new Sys.DateTimeOffset(2025, 3, 1, 0, 0, 0, Sys.TimeSpan.Zero)
       )
     ];
-    X.Assert.Equal<string>(['2025', P.UnknownYear], Browse.Years(Items));
+    X.Assert.Equal of string(['2025', P.UnknownYear], Browse.Years(Items));
     const Filtered: P.State := Browse.SelectEpisodes(
       new P.State(
         Episodes := Items, AppliedEpisodes := new P.EpisodeFilters(Year := P.UnknownYear)
       )
     );
-    X.Assert.Equal<int>(1, Filtered.ShownEpisodes.Length);
-    X.Assert.Equal<string>('undated', Filtered.ShownEpisodes[0].Id);
+    X.Assert.Equal of int(1, Filtered.ShownEpisodes.Length);
+    X.Assert.Equal of string('undated', Filtered.ShownEpisodes[0].Id);
   end procedure;
 
   // Opens a simulated Apple match and drives two real enclosures from a loopback RSS feed.

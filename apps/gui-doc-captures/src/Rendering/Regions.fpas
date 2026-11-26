@@ -29,7 +29,7 @@ end record;
 // - `Name`: Basename of the documented widget.
 // - `Rectangle`: Left, top, right and bottom pixel coordinates, in that order.
 public procedure CaptureRectangle(
-  Session: Gui.Session<Gallery.Msg>; Output: string; Name: string; Rectangle: array of int
+  Session: Gui.Session of Gallery.Msg; Output: string; Name: string; Rectangle: array of int
 );
 requires Rectangle.Length = 4;
 begin
@@ -42,7 +42,7 @@ begin
 
   const Target: string := IO.Path.Combine(Output, Name);
   Session.CapturePng(Target + '.png');
-  IO.File.WriteAllText(Target + '.crop', Sys.String.Join<int>(',', Rectangle));
+  IO.File.WriteAllText(Target + '.crop', Sys.String.Join of int(',', Rectangle));
 end procedure;
 
 // Captures the union of named gallery controls in one presented frame.
@@ -53,7 +53,7 @@ end procedure;
 // - `Padding`: Adjustments to the crop margins for native captions or panel edges.
 // - `Ids`: Controls to include. Use `Id/Key` for a keyed part with a shared ID.
 public procedure Capture(
-  Session: Gui.Session<Gallery.Msg>; Output: string; Name: string;
+  Session: Gui.Session of Gallery.Msg; Output: string; Name: string;
   Padding: Insets; params Ids: array of string
 );
 begin
@@ -107,7 +107,7 @@ end procedure;
 // - `Output`: Directory for the full frame and crop bounds.
 // - `Name`: Basename for both files.
 // - `Ids`: Controls to include in the crop.
-public procedure Shot(Session: Gui.Session<Gallery.Msg>; Output: string; Name: string; params Ids: array of string);
+public procedure Shot(Session: Gui.Session of Gallery.Msg; Output: string; Name: string; params Ids: array of string);
 begin
   Capture(Session, Output, Name, new Insets(), Ids);
 end procedure;
@@ -120,11 +120,11 @@ end procedure;
 // - `Id`: Identity shared by the root and descendant control IDs.
 // - `Padding`: Adjustments to the crop margins for native captions or panel edges.
 public procedure CaptureParts(
-  Session: Gui.Session<Gallery.Msg>; Output: string; Name: string; Id: string; Padding: Insets
+  Session: Gui.Session of Gallery.Msg; Output: string; Name: string; Id: string; Padding: Insets
 );
 requires Id <> '';
 begin
-  const Parts: Generic.List<string> := new Generic.List<string>();
+  const Parts: Generic.List of string := new Generic.List of string();
   var HasDescendant: bool := false;
   for Control: Gui.Control in Session.Snapshot().Controls do
     const Child: bool := Control.Id.StartsWith(Id + '/', Sys.StringComparison.Ordinal);

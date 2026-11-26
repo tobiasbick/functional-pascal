@@ -21,13 +21,13 @@ const Flow: L.Flow := new L.Flow(
 
 // Builds the provider controls and result picker for Current at the dialog Width.
 // Returns a row on wide layouts and two stacked rows on narrower layouts.
-public function Build(Current: M.State; Width: int): E.Element<M.Msg>;
+public function Build(Current: M.State; Width: int): E.Element of M.Msg;
 begin
   const Ready: bool := not Current.Saving and not Current.Searching and not Current.Scanning;
   const MusicReady: bool := Ready and not Current.Provider.Busy and Current.Provider.Seconds = 0L;
   const ScanReady: bool := Ready and Current.CanScan and not Current.AcoustId.Busy
     and Current.AcoustId.Seconds = 0L;
-  const Matches: C.List<Select.Item> := new C.List<Select.Item>();
+  const Matches: C.List of Select.Item := new C.List of Select.Item();
   for Item: MB.Match in Current.Matches do
     Matches.Add(new Select.Item(Item.Label));
   end for;
@@ -35,19 +35,19 @@ begin
   if Matches.Count = 0 then
     Matches.Add(new Select.Item('Search or scan for a recording'));
   end if;
-  const Picker: E.Element<M.Msg> := Select.Select<M.Msg>(
+  const Picker: E.Element of M.Msg := Select.Select of M.Msg(
     'tag-match', Matches.ToArray(), Current.Match, M.Msg.Lookup,
     new Select.Options(
       Placeholder := 'Choose recording / release', Searchable := true,
       Enabled := Current.Matches.Length > 0 and MusicReady
     )
   );
-  const Query: E.Element<M.Msg> := Fields.TextField<M.Msg>(
+  const Query: E.Element of M.Msg := Fields.TextField of M.Msg(
     'tag-query', Current.Query, M.Msg.Query,
     new Fields.Options(Enabled := not Current.Saving, MaxUtf8Bytes := 4095),
     OnSubmit := function(_Value: string): M.Msg => M.Msg.Search
   );
-  const Search: E.Element<M.Msg> := B.Button<M.Msg>(
+  const Search: E.Element of M.Msg := B.Button of M.Msg(
     'tag-search', 'Search MusicBrainz', M.Msg.Search,
     new B.Options(
       Variant := S.ButtonVariant.Outline,
@@ -55,7 +55,7 @@ begin
       Enabled := MusicReady and Current.Query.Trim() <> ''
     )
   );
-  const Scan: E.Element<M.Msg> := B.Button<M.Msg>(
+  const Scan: E.Element of M.Msg := B.Button of M.Msg(
     'tag-scan', 'Scan AcoustID', M.Msg.Scan,
     new B.Options(
       Variant := S.ButtonVariant.Outline, ControlSize := B.Size.Medium, Enabled := ScanReady,
@@ -67,15 +67,15 @@ begin
     )
   );
   if Width < 680 then
-    return E.Column<M.Msg>(
+    return E.Column of M.Msg(
       new L.Flow(Gap := Flow.Gap, Align := L.Alignment.Stretch),
-      Query, E.Row<M.Msg>(Flow, Search, Scan), Picker
+      Query, E.Row of M.Msg(Flow, Search, Scan), Picker
     );
   end if;
 
-  return E.Row<M.Msg>(
-    Flow, E.Size<M.Msg>(Query, Fill), Search, Scan,
-    E.Size<M.Msg>(Picker, new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(255))))
+  return E.Row of M.Msg(
+    Flow, E.Size of M.Msg(Query, Fill), Search, Scan,
+    E.Size of M.Msg(Picker, new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(255))))
   );
 end function;
 

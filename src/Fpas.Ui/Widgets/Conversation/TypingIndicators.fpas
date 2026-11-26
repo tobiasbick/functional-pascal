@@ -12,10 +12,10 @@ uses Fpas.Ui.Elements as E;
 // - `Name`: Name shown as an avatar.
 // ## Returns
 // The graphical element.
-public function TypingIndicator<TMsg>(Id: string; Name: string): E.Element<TMsg>;
+public function TypingIndicator of TMsg(Id: string; Name: string): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.TypingIndicator(Id, Name);
+  return (E.Element of TMsg).TypingIndicator(Id, Name);
 end function;
 
 end unit;

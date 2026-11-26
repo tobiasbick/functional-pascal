@@ -15,12 +15,12 @@ public sealed class CaptureInspectionTests
         var source = """
             program AsyncClosure;
             uses System.Console as Console; uses System.Threading.Tasks as Tasks; uses System.Runtime.CompilerServices as Runtime;
-            function Factory(Seed: int): function(): Tasks.Task<int>;
+            function Factory(Seed: int): function(): Tasks.Task of int;
             begin
               var Value: int := Seed;
-              const Box: Runtime.StrongBox<int> := new Runtime.StrongBox<int>(70);
+              const Box: Runtime.StrongBox of int := new Runtime.StrongBox of int(70);
               Console.WriteLine('declaring');
-              return async function(): Tasks.Task<int> begin
+              return async function(): Tasks.Task of int begin
                 await Tasks.Task.Delay(20);
                 Value := Value + 2;
                 Console.WriteLine('closure');
@@ -28,7 +28,7 @@ public sealed class CaptureInspectionTests
               end function;
             end function;
             begin
-              const Read: function(): Tasks.Task<int> := Factory(40);
+              const Read: function(): Tasks.Task of int := Factory(40);
               Console.WriteLine(Read().GetAwaiter().GetResult());
             end;
             end program;
@@ -65,7 +65,7 @@ public sealed class CaptureInspectionTests
             function Factory(Seed: int): function(int): int;
             begin
               var Value: int := Seed;
-              const Box: Runtime.StrongBox<int> := new Runtime.StrongBox<int>(70);
+              const Box: Runtime.StrongBox of int := new Runtime.StrongBox of int(70);
               return function(Input: int): int begin
                 Value := Value + Input;
                 Console.WriteLine('captured');
@@ -121,7 +121,7 @@ public sealed class CaptureInspectionTests
             async function Observe(): Tasks.Task;
             begin
               var Value: int := 40;
-              const Box: Runtime.StrongBox<int> := new Runtime.StrongBox<int>(70);
+              const Box: Runtime.StrongBox of int := new Runtime.StrongBox of int(70);
               const Read: function(): int := function(): int => Value + Box.Value;
               Console.WriteLine('before');
               await Tasks.Task.Delay(20);

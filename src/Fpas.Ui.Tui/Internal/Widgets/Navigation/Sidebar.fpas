@@ -21,15 +21,15 @@ uses System.Collections.Generic as C;
 // - `Enabled`: Input permission for the sidebar.
 // ## Returns
 // A stack of full-width terminal destinations.
-public function Lower<TMsg>(Id: string; Sections: array of N.Section<TMsg>; Active: string?; Enabled: bool): E.Element<TMsg>;
+public function Lower of TMsg(Id: string; Sections: array of N.Section of TMsg; Active: string?; Enabled: bool): E.Element of TMsg;
 begin
-  const Rows: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
-  for Section: N.Section<TMsg> in Sections do
+  const Rows: C.List of E.Element of TMsg := new C.List of E.Element of TMsg();
+  for Section: N.Section of TMsg in Sections do
     if Section.Title <> '' then
-      Rows.Add(E.Element<TMsg>.Label(' ' + Section.Title));
+      Rows.Add((E.Element of TMsg).Label(' ' + Section.Title));
     end if;
 
-    for Item: N.Item<TMsg> in Section.Items do
+    for Item: N.Item of TMsg in Section.Items do
       const Selected: bool := Active = Item.Key;
       const Caption: string := if Item.Badge = '' then
         Item.Label
@@ -37,8 +37,8 @@ begin
         Item.Label + ' [' + Item.Badge + ']'
       end if;
       Rows.Add(
-        E.Element<TMsg>.Action(
-          N.ItemId(Id, Item.Key), new A.Direct<TMsg>(Item.Message), Enabled and Item.Enabled,
+        (E.Element of TMsg).Action(
+          N.ItemId(Id, Item.Key), new A.Direct of TMsg(Item.Message), Enabled and Item.Enabled,
           new E.ActionView(
             Caption, Role := 'navigation', Value := if Selected then
               'true'
@@ -57,7 +57,7 @@ begin
     end for;
   end for;
 
-  return E.Element<TMsg>.Stack(Rows.ToArray(), false, new E.Flow(Align := L.Alignment.Stretch));
+  return (E.Element of TMsg).Stack(Rows.ToArray(), false, new E.Flow(Align := L.Alignment.Stretch));
 end function;
 
 end unit;

@@ -25,21 +25,21 @@ public type PodcastEffectTests = record
   // Keeps unsubmitted text separate from the query rerun by a market change.
   [X.FactAttribute]
   public procedure MarketChangesRerunTheSubmittedTerm();
-    function ChangeMarket(Page: P.State; Market: string): A.Transition<P.State, P.Msg>;
+    function ChangeMarket(Page: P.State; Market: string): A.Transition of (P.State, P.Msg);
     begin
       const Form: P.State := Podcasts.Apply(Page, P.Msg.SetDiscoveryFilters(true), []).Model;
       const Changed: P.State := Podcasts.Apply(Form, P.Msg.Market(Market), []).Model;
       return Podcasts.Apply(Changed, P.Msg.ApplyDiscoveryFilters, []);
     end function;
   begin
-    const Draft: A.Transition<P.State, P.Msg> := Podcasts.Apply(
+    const Draft: A.Transition of (P.State, P.Msg) := Podcasts.Apply(
       new P.State(Market := 'DE'), P.Msg.Query('unsubmitted'), []
     );
-    X.Assert.Equal<int>(0, Draft.Commands.Length);
-    const Charts: A.Transition<P.State, P.Msg> := ChangeMarket(Draft.Model, 'US');
-    X.Assert.Equal<string>('unsubmitted', Charts.Model.Query);
+    X.Assert.Equal of int(0, Draft.Commands.Length);
+    const Charts: A.Transition of (P.State, P.Msg) := ChangeMarket(Draft.Model, 'US');
+    X.Assert.Equal of string('unsubmitted', Charts.Model.Query);
     X.Assert.False(Charts.Model.Searched());
-    X.Assert.Equal<int>(1, Charts.Commands.Length);
+    X.Assert.Equal of int(1, Charts.Commands.Length);
 
     const Selected: P.State := Podcasts.Apply(
       Charts.Model,
@@ -47,10 +47,10 @@ public type PodcastEffectTests = record
       []
     ).Model;
     const Edited: P.State := Podcasts.Apply(Selected, P.Msg.Query('another draft'), []).Model;
-    const Rerun: A.Transition<P.State, P.Msg> := ChangeMarket(Edited, 'DE');
-    X.Assert.Equal<string>('submitted', Rerun.Model.SearchTerm);
-    X.Assert.Equal<string>('another draft', Rerun.Model.Query);
-    X.Assert.Equal<int>(1, Rerun.Commands.Length);
+    const Rerun: A.Transition of (P.State, P.Msg) := ChangeMarket(Edited, 'DE');
+    X.Assert.Equal of string('submitted', Rerun.Model.SearchTerm);
+    X.Assert.Equal of string('another draft', Rerun.Model.Query);
+    X.Assert.Equal of int(1, Rerun.Commands.Length);
   end procedure;
 
   // Distinguishes a broken provider envelope from a chart containing individual unusable rows.
@@ -59,12 +59,12 @@ public type PodcastEffectTests = record
   begin
     for Payload: string in ['{}', '{"results":{}}', '[]'] do
       using const Response: J.JsonDocument := J.JsonDocument.Parse(Payload);
-      discard X.Assert.Throws<J.JsonException>(
+      discard X.Assert.Throws of J.JsonException(
         procedure() begin
           discard Directory.Search(Response.RootElement);
         end procedure
       );
-      discard X.Assert.Throws<J.JsonException>(
+      discard X.Assert.Throws of J.JsonException(
         procedure() begin
           discard Directory.Lookup(Response.RootElement, [42L]);
         end procedure
@@ -72,7 +72,7 @@ public type PodcastEffectTests = record
     end for;
 
     using const Broken: J.JsonDocument := J.JsonDocument.Parse('{"feed":[]}');
-    discard X.Assert.Throws<J.JsonException>(
+    discard X.Assert.Throws of J.JsonException(
       procedure() begin
         discard Directory.Chart(Broken.RootElement, false, 2);
       end procedure
@@ -82,17 +82,17 @@ public type PodcastEffectTests = record
       '{"id":{"attributes":{"im:id":"42"}}},{"id":{"attributes":{"im:id":"42"}}},' +
       '{"id":{"attributes":{"im:id":"7"}}},{"id":{"attributes":{"im:id":"8"}}}]}}'
     );
-    X.Assert.Equal<long>([42L, 7L], Directory.Chart(Genre.RootElement, true, 2));
+    X.Assert.Equal of long([42L, 7L], Directory.Chart(Genre.RootElement, true, 2));
   end procedure;
 
   // Applies metadata, artwork, and a typed parse failure in separate owner turns.
   [X.FactAttribute]
   public procedure FeedRepliesRemainOrderedAndTyped();
-    function Update(Model: P.State; Message: P.Msg): A.Transition<P.State, P.Msg>;
+    function Update(Model: P.State; Message: P.Msg): A.Transition of (P.State, P.Msg);
     begin
-      return Gate.Wrap<P.State>(Podcasts.Apply(Model, Message, []));
+      return Gate.Wrap of P.State(Podcasts.Apply(Model, Message, []));
     end function;
-    procedure Deliver(Session: Runtime.Runtime<P.State, P.Msg, int>; Reply: Replies.Reply<P.Msg>; Token: T.CancellationToken);
+    procedure Deliver(Session: Runtime.Runtime of (P.State, P.Msg, int); Reply: Replies.Reply of P.Msg; Token: T.CancellationToken);
     begin
       Reply.Release().WaitAsync(Token).GetAwaiter().GetResult();
       discard Session.Advance();
@@ -113,14 +113,14 @@ public type PodcastEffectTests = record
         new Http.Reply('200 OK', '<broken', ContentType := 'application/rss+xml')
       ], Stop.Token
     );
-    const Gate: Replies.Effects<P.Msg> := Replies.Effects<P.Msg>.Create();
-    const Session: Runtime.Runtime<P.State, P.Msg, int> := Runtime.Start<P.State, P.Msg, int>(
+    const Gate: Replies.Effects of P.Msg := (Replies.Effects of P.Msg).Create();
+    const Session: Runtime.Runtime of (P.State, P.Msg, int) := Runtime.Start of (P.State, P.Msg, int)(
       new P.State(), Update, procedure(_Request: A.HostRequest) begin end procedure, 4
     );
     try
-      const Reader: Channels.ChannelReader<Replies.Reply<P.Msg>> := Gate.Watch('feed');
+      const Reader: Channels.ChannelReader of Replies.Reply of P.Msg := Gate.Watch('feed');
       Session.Dispatch(P.Msg.Open(new P.Show(Base + '/feed.xml', 'Opening'), false));
-      const Metadata: Replies.Reply<P.Msg> := Reader.ReadAsync(
+      const Metadata: Replies.Reply of P.Msg := Reader.ReadAsync(
         Stop.Token
       ).AsTask().GetAwaiter().GetResult();
       X.Assert.True(Session.Model().Loading);
@@ -132,18 +132,18 @@ public type PodcastEffectTests = record
         raise new Sys.InvalidOperationException('Missing loaded podcast.');
       end if;
 
-      X.Assert.Equal<string>('Coastlines', Loaded.Title);
+      X.Assert.Equal of string('Coastlines', Loaded.Title);
 
-      const Image: Replies.Reply<P.Msg> := Reader.ReadAsync(
+      const Image: Replies.Reply of P.Msg := Reader.ReadAsync(
         Stop.Token
       ).AsTask().GetAwaiter().GetResult();
       X.Assert.False(Session.Model().Covers.ContainsKey(Cover));
       Deliver(Session, Image, Stop.Token);
       X.Assert.True(Session.Model().Covers.ContainsKey(Cover));
 
-      const Broken: Channels.ChannelReader<Replies.Reply<P.Msg>> := Gate.Watch('feed');
+      const Broken: Channels.ChannelReader of Replies.Reply of P.Msg := Gate.Watch('feed');
       Session.Dispatch(P.Msg.Open(new P.Show(Base + '/broken.xml', 'Broken'), false));
-      const Failure: Replies.Reply<P.Msg> := Broken.ReadAsync(
+      const Failure: Replies.Reply of P.Msg := Broken.ReadAsync(
         Stop.Token
       ).AsTask().GetAwaiter().GetResult();
       X.Assert.True(Session.Model().Loading);

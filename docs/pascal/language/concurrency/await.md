@@ -2,7 +2,7 @@
 
 `await Expression` is valid in an async function/lambda or an async program body.
 It suspends without blocking the executing thread when completion is pending.
-Awaiting `Task<T>` yields `T`; awaiting Task has no value and is a statement.
+Awaiting `Task of T` yields `T`; awaiting Task has no value and is a statement.
 Awaiting a faulted/canceled operation propagates the corresponding .NET exception.
 
 The baseline consumes Task, Task<T>, ValueTask, ValueTask<T>, and their standard

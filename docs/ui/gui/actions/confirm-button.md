@@ -15,9 +15,9 @@ uses Fpas.Ui.Widgets.Actions.ConfirmButtons as C;
 // Builds the example view.
 // ## Returns
 // The widget with its message type.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return C.ConfirmButton<string>('delete', 'Delete project', 'delete',
+  return C.ConfirmButton of string('delete', 'Delete project', 'delete',
     new C.Options(ConfirmLabel := 'Confirm deletion'));
 end function;
 

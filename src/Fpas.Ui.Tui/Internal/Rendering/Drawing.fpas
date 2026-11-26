@@ -39,7 +39,7 @@ public type Surface = record
   public Lines: array of string;
 end record;
 
-public procedure Fill(Operations: Generic.List<Operation>; Area: F.Rect; Style: T.Style);
+public procedure Fill(Operations: Generic.List of Operation; Area: F.Rect; Style: T.Style);
 begin
   const Spaces: string := new string(#32, Area.Width);
   for Row: int := Area.Y to Area.Y + Area.Height - 1 do
@@ -72,7 +72,7 @@ end function;
 
 // Paints the horizontal border of the status bar in the visible cells.
 public procedure HorizontalRule(
-  Operations: Generic.List<Operation>; Area: F.Rect; Clip: F.Rect;
+  Operations: Generic.List of Operation; Area: F.Rect; Clip: F.Rect;
   Style: T.Style; Widgets: Th.WidgetStyles?
 );
 begin
@@ -91,7 +91,7 @@ begin
 end procedure;
 
 public procedure Border(
-  Operations: Generic.List<Operation>; Area: F.Rect; Clip: F.Rect; Title: string;
+  Operations: Generic.List of Operation; Area: F.Rect; Clip: F.Rect; Title: string;
   Style: T.Style; Widgets: Th.WidgetStyles?
 );
   procedure Line(Value: string; Column: int; Row: int; Width: int);
@@ -262,7 +262,7 @@ function PaintRow(Operations: array of Operation; Columns: int; TargetRow: int; 
     end while;
   end procedure;
 begin
-  const Buffer: Generic.List<T.Cell> := new Generic.List<T.Cell>(Columns);
+  const Buffer: Generic.List of T.Cell := new Generic.List of T.Cell(Columns);
   for Column: int := 1 to Columns do
     Buffer.Add(Blank);
   end for;
@@ -279,16 +279,16 @@ begin
 end function;
 
 public function Render(
-  Operations: Generic.List<Operation>; Columns: int; Rows: int;
+  Operations: Generic.List of Operation; Columns: int; Rows: int;
   Previous: array of PaintedRow; DefaultStyle: T.Style
 ): Surface;
 begin
   const Blank: T.Cell := new T.Cell(' ', DefaultStyle);
-  const Pending: Generic.List<Generic.List<Operation>> := new Generic.List<Generic.List<Operation>>(
+  const Pending: Generic.List of Generic.List of Operation := new Generic.List of Generic.List of Operation(
     Rows
   );
   for Row: int := 1 to Rows do
-    Pending.Add(new Generic.List<Operation>());
+    Pending.Add(new Generic.List of Operation());
   end for;
 
   for Item: Operation in Operations do
@@ -297,9 +297,9 @@ begin
       Pending[Row].Add(Item);
     end for;
   end for;
-  const Painted: Generic.List<PaintedRow> := new Generic.List<PaintedRow>(Rows);
-  const Cells: Generic.List<T.Cell> := new Generic.List<T.Cell>(Columns * Rows);
-  const Lines: Generic.List<string> := new Generic.List<string>(Rows);
+  const Painted: Generic.List of PaintedRow := new Generic.List of PaintedRow(Rows);
+  const Cells: Generic.List of T.Cell := new Generic.List of T.Cell(Columns * Rows);
+  const Lines: Generic.List of string := new Generic.List of string(Rows);
   for Row: int := 0 to Rows - 1 do
     const Plan: array of Operation := Pending[Row].ToArray();
     const Complete: PaintedRow := if Row < Previous.Length and Previous[Row].Cells.Length = Columns

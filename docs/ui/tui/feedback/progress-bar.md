@@ -18,10 +18,10 @@ uses Fpas.Ui.Widgets.Feedback.ProgressBars as W;
 // - `Fraction`: Completed fraction, from zero to one.
 // ## Returns
 // The resulting view.
-public function View(Fraction: float): E.Element<string>;
+public function View(Fraction: float): E.Element of string;
 requires Fraction >= 0.0F and Fraction <= 1.0F;
 begin
-  return W.ProgressBar<string>('upload', Fraction,
+  return W.ProgressBar of string('upload', Fraction,
     new W.Options(Label := 'Uploading assets', ShowValue := true, Tone := S.Tone.Info));
 end function;
 

@@ -20,14 +20,14 @@ uses Fpas.Ui.Widgets.Desktop.Toolbars as W;
 // - `Bold`: Current Bold toggle state.
 // ## Returns
 // The toolbar with action proposals.
-public function View(Bold: bool): E.Element<W.Event>;
+public function View(Bold: bool): E.Element of W.Event;
 begin
   const Items: array of W.Item := [
     W.Item.Group([W.Item.Button(new W.Button(null, 'Undo')),
       W.Item.Button(new W.Button(null, 'Bold', Toggle := Bold))]),
     W.Item.Primary(new W.Button(null, 'Generate'))
   ];
-  return W.Toolbar<W.Event>('tools', Items, function(Change: W.Event): W.Event => Change,
+  return W.Toolbar of W.Event('tools', Items, function(Change: W.Event): W.Event => Change,
     new W.Options(Style := 1));
 end function;
 

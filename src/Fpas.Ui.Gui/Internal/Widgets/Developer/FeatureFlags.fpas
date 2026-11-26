@@ -12,7 +12,7 @@ uses System.Collections.Generic as Lists;
 
 function PackFlag(Items: array of D.Flag): array of CuiDeveloper.CuiDevFlag;
 begin
-  const Native: Lists.List<CuiDeveloper.CuiDevFlag> := new Lists.List<CuiDeveloper.CuiDevFlag>(
+  const Native: Lists.List of CuiDeveloper.CuiDevFlag := new Lists.List of CuiDeveloper.CuiDevFlag(
     Items.Length
   );
   for Entry: D.Flag in Items do
@@ -32,7 +32,7 @@ end function;
 // - `Environments`: Environments supplied to the widget.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Entries: array of D.Flag; Environments: array of string; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Entries: array of D.Flag; Environments: array of string; Changed: function(D.Event): TMsg; Settings: D.Options);
 begin
   const Role: string := 'feature-flags';
   const Token: string := C.Token(Role, Id);
@@ -47,7 +47,7 @@ begin
     Width.Value,
     Enabled
   );
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, '');
   if not Enabled then
     return;
   end if;

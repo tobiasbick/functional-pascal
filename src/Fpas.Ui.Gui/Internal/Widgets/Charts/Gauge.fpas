@@ -15,7 +15,7 @@ uses Fpas.Ui.Gui.Internal.Core.Context as C;
 // - `Label`: Literal caption.
 // - `Value`: Fraction.
 // - `Diameter`: Logical diameter.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Label: string; Value: float; Diameter: float);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Label: string; Value: float; Diameter: float);
 begin
   const Token: string := C.Token('gauge', Id);
   Frame.Window.Gauge(Token, Label, Value, Diameter, not Frame.PaintingClosed);

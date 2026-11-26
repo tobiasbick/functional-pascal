@@ -48,7 +48,7 @@ end function;
 // Native binding series.
 public function Series(Values: array of C.Series): array of CuiCharts.CuiChartSeries;
 begin
-  const Result: Lists.List<CuiCharts.CuiChartSeries> := new Lists.List<CuiCharts.CuiChartSeries>();
+  const Result: Lists.List of CuiCharts.CuiChartSeries := new Lists.List of CuiCharts.CuiChartSeries();
   for Item: C.Series in Values do
     Result.Add(new CuiCharts.CuiChartSeries(Item.Name, Item.Values, Color(Item.Color)));
   end for;
@@ -63,7 +63,7 @@ end function;
 // Native items retaining input order and semantic colors.
 public function Items(Values: array of C.Item): array of CuiCharts.CuiVizItem;
 begin
-  const Result: Lists.List<CuiCharts.CuiVizItem> := new Lists.List<CuiCharts.CuiVizItem>();
+  const Result: Lists.List of CuiCharts.CuiVizItem := new Lists.List of CuiCharts.CuiVizItem();
   for Item: C.Item in Values do
     Result.Add(new CuiCharts.CuiVizItem(Item.Label, Item.Value, Color(Item.Color)));
   end for;
@@ -79,7 +79,7 @@ end function;
 public function Options(Value: C.Options): CuiCharts.CuiChartOptions;
 begin
   const Width: Size.NativeExtent := Size.Extent(Value.Width);
-  const Items: Lists.List<CuiCharts.CuiChartAnnotation> := new Lists.List<CuiCharts.CuiChartAnnotation>();
+  const Items: Lists.List of CuiCharts.CuiChartAnnotation := new Lists.List of CuiCharts.CuiChartAnnotation();
   for Item: C.Annotation in Value.Annotations do
     Items.Add(
       new CuiCharts.CuiChartAnnotation(

@@ -23,12 +23,12 @@ const Member: R.Regex := new R.Regex(
 function Entries(Input: string; Opening: string): array of string;
 begin
   const Text: string := Input.TrimStart();
-  const Parts: C.List<string> := new C.List<string>();
+  const Parts: C.List of string := new C.List of string();
   if not Text.StartsWith(Opening, Sys.StringComparison.Ordinal) then
     return Parts.ToArray();
   end if;
 
-  const Ends: C.Stack<string> := new C.Stack<string>();
+  const Ends: C.Stack of string := new C.Stack of string();
   var Start: int := 1;
   var Finish: int := Text.Length;
   var Token: R.Match := Tokens.Match(Text, Start);
@@ -71,7 +71,7 @@ begin
   if not Text.TrimStart().StartsWith('[', Sys.StringComparison.Ordinal) then
     return null;
   end if;
-  const Items: C.List<J.JsonElement> := new C.List<J.JsonElement>();
+  const Items: C.List of J.JsonElement := new C.List of J.JsonElement();
   for Part: string in Entries(Text, '[') do
     const Item: J.JsonElement? := Parsed(Part);
     if Item <> null then
@@ -101,8 +101,8 @@ end function;
 // An object containing the recoverable properties.
 public function Recover(Text: string; ArrayKey: string): J.JsonElement;
 begin
-  const Values: C.Dictionary<string, J.JsonElement> := new C.Dictionary<string, J.JsonElement>();
-  const Seen: C.HashSet<string> := new C.HashSet<string>();
+  const Values: C.Dictionary of (string, J.JsonElement) := new C.Dictionary of (string, J.JsonElement)();
+  const Seen: C.HashSet of string := new C.HashSet of string();
   for Part: string in Entries(Text, '{') do
     const Header: R.Match := Member.Match(Part);
     if not Header.Success then
@@ -135,7 +135,7 @@ begin
   return Output.Element(
     procedure(Writer: J.Utf8JsonWriter) begin
       Writer.WriteStartObject();
-      for Value: C.KeyValuePair<string, J.JsonElement> in Values do
+      for Value: C.KeyValuePair of (string, J.JsonElement) in Values do
         Writer.WritePropertyName(Value.Key);
         Value.Value.WriteTo(Writer);
       end for;

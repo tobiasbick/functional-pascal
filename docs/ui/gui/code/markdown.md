@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Display.Markdowns as W;
 // - `Streaming`: Whether the document is still arriving.
 // ## Returns
 // Markdown with link and task events as messages.
-public function View(Text: string; Streaming: bool): E.Element<W.Event>;
+public function View(Text: string; Streaming: bool): E.Element of W.Event;
 begin
-  return W.Markdown<W.Event>('notes', Text, function(Change: W.Event): W.Event => Change,
+  return W.Markdown of W.Event('notes', Text, function(Change: W.Event): W.Event => Change,
     new W.Options(Streaming := Streaming));
 end function;
 

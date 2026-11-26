@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Audio.Waveforms as W;
 // - `Progress`: Fraction played from zero through one.
 // ## Returns
 // The waveform with the proposed progress as its message.
-public function View(Peaks: array of float; Progress: float): E.Element<float>;
+public function View(Peaks: array of float; Progress: float): E.Element of float;
 begin
-  return W.Waveform<float>('waveform', Peaks, Progress, function(Next: float): float => Next,
+  return W.Waveform of float('waveform', Peaks, Progress, function(Next: float): float => Next,
     new W.Options(Height := 34.0F));
 end function;
 

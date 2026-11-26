@@ -13,9 +13,9 @@ uses GuiGallery.Pages.Disclosure.State as S;
 // - `Model`: Current Disclosure model.
 // ## Returns
 // The native banner and its reopening action.
-public function View(Model: S.Model): E.Element<S.Msg>;
+public function View(Model: S.Model): E.Element of S.Msg;
 begin
-  const Banner: E.Element<S.Msg> := Banners.Banner<S.Msg>(
+  const Banner: E.Element of S.Msg := Banners.Banner of S.Msg(
     'release-banner',
     'CUI 1.1 is out: data grid, kanban and forty new components.',
     Model.BannerOpen,
@@ -27,9 +27,9 @@ begin
     return Banner;
   end if;
 
-  return E.Column<S.Msg>(
+  return E.Column of S.Msg(
     Banner,
-    Buttons.Button<S.Msg>(
+    Buttons.Button of S.Msg(
       'show-release-banner', 'Show the banner again', S.Msg.SetBanner(true),
       new Buttons.Options(ControlSize := Buttons.Size.Small)
     )

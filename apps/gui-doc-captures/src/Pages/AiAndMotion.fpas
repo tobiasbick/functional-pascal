@@ -12,7 +12,7 @@ uses GuiGallery.Pages.Ai.State as Ai;
 uses GuiGallery.Pages.Motion.State as Motion;
 uses System as Sys;
 
-procedure RequireOpen(Session: Gui.Session<Gallery.Msg>; Id: string);
+procedure RequireOpen(Session: Gui.Session of Gallery.Msg; Id: string);
 begin
   for Control: Gui.Control in Session.Snapshot().Controls do
     if Control.Id = Id and Control.Value = 'True' then
@@ -27,7 +27,7 @@ end procedure;
 // ## Parameters
 // - `Session`: Presented AI page with the two disclosures open.
 // - `Output`: Directory for full-frame images and crop bounds.
-public procedure CaptureAi(Session: Gui.Session<Gallery.Msg>; Output: string);
+public procedure CaptureAi(Session: Gui.Session of Gallery.Msg; Output: string);
 begin
   RequireOpen(Session, 'ai-reasoning/toggle');
   RequireOpen(Session, 'ai-search/toggle');
@@ -54,7 +54,7 @@ end procedure;
 // ## Parameters
 // - `Session`: AI page with the model menu open.
 // - `Output`: Directory for the frame image and crop bounds.
-public procedure CaptureModelMenu(Session: Gui.Session<Gallery.Msg>; Output: string);
+public procedure CaptureModelMenu(Session: Gui.Session of Gallery.Msg; Output: string);
 begin
   Regions.Capture(
     Session, Output, 'model-picker-menu',
@@ -67,7 +67,7 @@ end procedure;
 // ## Parameters
 // - `Session`: Presented Motion page.
 // - `Output`: Directory for full-frame images and crop bounds.
-public procedure CaptureMotion(Session: Gui.Session<Gallery.Msg>; Output: string);
+public procedure CaptureMotion(Session: Gui.Session of Gallery.Msg; Output: string);
 begin
   Regions.Shot(Session, Output, 'shimmer-text', 'motion-thinking', 'motion-shimmer');
   Regions.Shot(Session, Output, 'typewriter', 'motion-typewriter');

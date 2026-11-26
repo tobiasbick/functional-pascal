@@ -21,9 +21,9 @@ uses Fpas.Ui.Widgets.Audio.VoiceOrbs as W;
 // - `Level`: Normalized current level from zero through one.
 // ## Returns
 // The orb with an activation message.
-public function View(Mode: V.Activity; Level: float): E.Element<string>;
+public function View(Mode: V.Activity; Level: float): E.Element of string;
 begin
-  return W.VoiceOrb<string>('voice-orb', Mode, Level, function(): string => 'toggle-listening');
+  return W.VoiceOrb of string('voice-orb', Mode, Level, function(): string => 'toggle-listening');
 end function;
 
 end unit;

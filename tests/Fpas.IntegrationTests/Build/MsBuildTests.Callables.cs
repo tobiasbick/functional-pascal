@@ -16,7 +16,7 @@ public sealed partial class MsBuildTests
             begin return Transform(Value); end function;
             public function Counter(Start: int): function(): int;
             begin var Value: int := Start; return function(): int begin Value := Value + 1; return Value; end function; end function;
-            public function Prefix(Prefix: string): Sys.Func<string?, string>;
+            public function Prefix(Prefix: string): Sys.Func of (string?, string);
             begin return function(Value: string?): string => Prefix + (Value ?? 'null'); end function;
             public function StructCapture(): int;
             begin
@@ -33,16 +33,16 @@ public sealed partial class MsBuildTests
             public function Run(): string;
             begin
               const Holder: D.DelegateHolder := new D.DelegateHolder(function(Value: int): int => Value + 1);
-              const Owner: D.MethodOwner<int> := new D.MethodOwner<int>(6);
+              const Owner: D.MethodOwner of int := new D.MethodOwner of int(6);
               const Abs: function(int): int := Sys.Math.Abs;
               const Transform: function(int): int := D.CallableApi.Receiver().Transform;
-              const Convert: Sys.Func<string, string> := D.CallableApi.MakePrefix('CLR:');
-              const Echo: function(int): int := Owner.Echo<int>;
-              const Generic: int := D.CallableApi.Apply<int, int>(3, function(Value: int): int => Value * 2);
+              const Convert: Sys.Func of (string, string) := D.CallableApi.MakePrefix('CLR:');
+              const Echo: function(int): int := Owner.Echo of int;
+              const Generic: int := D.CallableApi.Apply of (int, int)(3, function(Value: int): int => Value * 2);
               const Formatted: string := D.CallableApi.Format(function(Value: int): string => Value.ToString());
               const Selected: string := D.CallableApi.Overload(function(Value: int): string => Value.ToString());
               const Callback: string := D.CallableApi.Run(Console.WriteLine);
-              const Text: string := Owner.Convert<string>(function(Value: int): string => Value.ToString());
+              const Text: string := Owner.Convert of string(function(Value: int): string => Value.ToString());
               return Formatted + ':' + Selected + ':' + Text + ':' + Convert('value') + ':' +
                 (Abs(-2) + Transform(3) + Holder.Transform(4) + Generic + Echo(1) + D.CallableApi.ReadTransform(1)).ToString();
             end function;
@@ -84,14 +84,14 @@ public sealed partial class MsBuildTests
         Assert.True(build.ExitCode == 0, build.Output + build.Error);
         var cases = new (string Body, string? Error)[]
         {
-            ("discard D.CallableApi.Dispose<string>('text');", "FP3018"),
-            ("discard D.CallableApi.Create<string>();", "FP3018"),
-            ("discard D.CallableApi.Require<string?>(null);", "FP3018"),
+            ("discard D.CallableApi.Dispose of string('text');", "FP3018"),
+            ("discard D.CallableApi.Create of string();", "FP3018"),
+            ("discard D.CallableApi.Require of string?(null);", "FP3018"),
             ("discard D.CallableApi.Ambiguous(function(Value: int): bool => true);", "FP3003"),
             ("const F: function(int): bool := function(Value: int): bool => true; discard D.CallableApi.Format(F);", "FP3003"),
-            ("discard D.CallableApi.Identity<string?>(null);", null),
-            ("discard D.CallableApi.Create<int>();", null),
-            ("discard D.CallableApi.Apply<int, string>(1, function(Value: int): string => Value.ToString());", null),
+            ("discard D.CallableApi.Identity of string?(null);", null),
+            ("discard D.CallableApi.Create of int();", null),
+            ("discard D.CallableApi.Apply of (int, string)(1, function(Value: int): string => Value.ToString());", null),
             ("discard D.CallableApi.NullCallbacks(function(Value: string): string => Value);", "FP3003"),
             ("discard D.CallableApi.NullCallbacks(function(Value: string?): string? => Value);", null)
         };

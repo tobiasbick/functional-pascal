@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Audio.Faders as W;
 // - `Peaks`: Linear amplitudes for the two channels.
 // ## Returns
 // The fader, with each proposed gain as an application message.
-public function View(Gain: float; Peaks: array of float): E.Element<float>;
+public function View(Gain: float; Peaks: array of float): E.Element of float;
 begin
-  return W.Fader<float>('kick', 'Kick', Gain, -48.0F, 6.0F,
+  return W.Fader of float('kick', 'Kick', Gain, -48.0F, 6.0F,
     function(Value: float): float => Value,
     new W.Options(UnitLabel := 'dB', Length := 180.0F,
       Ticks := [6.0F, 0.0F, -6.0F, -12.0F, -24.0F, -48.0F], Levels := Peaks));

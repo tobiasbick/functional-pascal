@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Pickers.ColorPickers as W;
 // - `Brand`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Brand: G.Color): E.Element<G.Color>;
+public function View(Brand: G.Color): E.Element of G.Color;
 begin
-  return W.ColorPicker<G.Color>('input-brand-color', Brand, function(Value: G.Color): G.Color => Value);
+  return W.ColorPicker of G.Color('input-brand-color', Brand, function(Value: G.Color): G.Color => Value);
 end function;
 
 end unit;

@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Desktop.DocumentTabs as W;
 // - `Selected`: Selected zero-based index, or -1.
 // ## Returns
 // A strip that reports selection, close and reorder proposals.
-public function View(Tabs: array of W.Tab; Selected: int): E.Element<W.Change>;
+public function View(Tabs: array of W.Tab; Selected: int): E.Element of W.Change;
 begin
-  return W.DocumentTabs<W.Change>('documents', Tabs, Selected,
+  return W.DocumentTabs of W.Change('documents', Tabs, Selected,
     function(Change: W.Change): W.Change => Change,
     new W.Options(Shortcuts := true));
 end function;

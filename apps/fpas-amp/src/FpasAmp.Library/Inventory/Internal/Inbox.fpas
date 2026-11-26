@@ -16,10 +16,10 @@ public type ClearRequest = record
   // Source identity, or empty for the entire index.
   public Id: string;
   // Asynchronous acknowledgement with the post-clear snapshot.
-  Completion: Tasks.TaskCompletionSource<M.Snapshot>;
+  Completion: Tasks.TaskCompletionSource of M.Snapshot;
 
   // Creates a clear request for `Id` backed by `Completion`.
-  public static function Create(Id: string; Completion: Tasks.TaskCompletionSource<M.Snapshot>): ClearRequest;
+  public static function Create(Id: string; Completion: Tasks.TaskCompletionSource of M.Snapshot): ClearRequest;
   begin
     return new ClearRequest(Id, Completion);
   end function;
@@ -78,11 +78,11 @@ end record;
 public type Inbox = record
   Gate: object;
   Signal: T.SemaphoreSlim;
-  Dirty: C.HashSet<string>;
-  Recursive: C.HashSet<string>;
-  State: R.StrongBox<Pending>;
+  Dirty: C.HashSet of string;
+  Recursive: C.HashSet of string;
+  State: R.StrongBox of Pending;
   Limit: int;
-  Clears: C.Dictionary<string, Tasks.TaskCompletionSource<M.Snapshot>>;
+  Clears: C.Dictionary of (string, Tasks.TaskCompletionSource of M.Snapshot);
 
   // Creates an inbox. `Sources` are isolated settings; `Limit` is positive.
   public static function Create(Sources: array of S.MusicSource; Limit: int): Inbox;
@@ -90,11 +90,13 @@ public type Inbox = record
     return new Inbox(
       new object(),
       new T.SemaphoreSlim(0, 1),
-      new C.HashSet<string>(S.PathComparer()),
-      new C.HashSet<string>(S.PathComparer()),
-      new R.StrongBox<Pending>(new Pending(Sources, 1L, true, true, false)),
+      new C.HashSet of string(S.PathComparer()),
+      new C.HashSet of string(S.PathComparer()),
+      new R.StrongBox of Pending(new Pending(Sources, 1L, true, true, false)),
       Limit,
-      new C.Dictionary<string, Tasks.TaskCompletionSource<M.Snapshot>>(Sys.StringComparer.Ordinal)
+      new C.Dictionary of (string, Tasks.TaskCompletionSource of M.Snapshot)(
+        Sys.StringComparer.Ordinal
+      )
     );
   end function;
 
@@ -190,7 +192,7 @@ public type Inbox = record
 
   // Atomically pauses affected sources and queues a clear. `Id` is a configured
   // source or empty for all. Duplicate targets share one task; at most 16 targets queue.
-  public function Clear(Id: string): Tasks.Task<M.Snapshot>;
+  public function Clear(Id: string): Tasks.Task of M.Snapshot;
   begin
     T.Monitor.Enter(self.Gate);
     try
@@ -207,7 +209,7 @@ public type Inbox = record
         raise new Sys.InvalidOperationException('Too many pending library operations.');
       end if;
       var Known: bool := Id = '';
-      const Sources: C.List<S.MusicSource> := new C.List<S.MusicSource>();
+      const Sources: C.List of S.MusicSource := new C.List of S.MusicSource();
       for Source: S.MusicSource in Value.Sources do
         if Id = '' or Id = Source.Id then
           Known := true;
@@ -224,7 +226,7 @@ public type Inbox = record
       if not Known then
         raise new Sys.ArgumentException('Unknown music source.');
       end if;
-      const Completion: Tasks.TaskCompletionSource<M.Snapshot> := new Tasks.TaskCompletionSource<M.Snapshot>(
+      const Completion: Tasks.TaskCompletionSource of M.Snapshot := new Tasks.TaskCompletionSource of M.Snapshot(
         Tasks.TaskCreationOptions.RunContinuationsAsynchronously
       );
       self.Clears[Id] := Completion;
@@ -280,7 +282,7 @@ public type Inbox = record
     T.Monitor.Enter(self.Gate);
     try
       const Value: Pending := self.ReadState();
-      const Clears: C.List<ClearRequest> := new C.List<ClearRequest>();
+      const Clears: C.List of ClearRequest := new C.List of ClearRequest();
       for Id: string in self.Clears.Keys do
         Clears.Add(ClearRequest.Create(Id, self.Clears[Id]));
       end for;
@@ -289,8 +291,8 @@ public type Inbox = record
         Value.Version,
         Value.Revised,
         Value.Whole,
-        new C.List<string>(self.Dirty).ToArray(),
-        new C.List<string>(self.Recursive).ToArray(), Clears.ToArray()
+        new C.List of string(self.Dirty).ToArray(),
+        new C.List of string(self.Recursive).ToArray(), Clears.ToArray()
       );
       self.State.Value := Value with
         Revised := false;
@@ -334,7 +336,7 @@ public type Inbox = record
   end procedure;
 
   // Waits for a signal or timeout. `Milliseconds` is nonnegative; cancellation interrupts waiting.
-  public function Wait(Milliseconds: int; Cancellation: T.CancellationToken): Tasks.Task<bool>;
+  public function Wait(Milliseconds: int; Cancellation: T.CancellationToken): Tasks.Task of bool;
   begin
     return self.Signal.WaitAsync(Milliseconds, Cancellation);
   end function;
@@ -347,7 +349,7 @@ public type Inbox = record
       self.State.Value := self.ReadState() with
         Closed := true;
       end with;
-      for Completion: Tasks.TaskCompletionSource<M.Snapshot> in self.Clears.Values do
+      for Completion: Tasks.TaskCompletionSource of M.Snapshot in self.Clears.Values do
         discard Completion.TrySetCanceled();
       end for;
 

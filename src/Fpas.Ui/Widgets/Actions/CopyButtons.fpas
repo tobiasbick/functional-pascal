@@ -17,12 +17,12 @@ uses System as Sys;
 // - `Enabled`: Whether the control accepts input.
 // ## Returns
 // A graphical copy button.
-public function CopyButton<TMsg>(
-  Id: string; Text: string; OnCopied: Sys.Func<TMsg>? := null; Enabled: bool := true
-): E.Element<TMsg>;
+public function CopyButton of TMsg(
+  Id: string; Text: string; OnCopied: (Sys.Func of TMsg)? := null; Enabled: bool := true
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.CopyAction(Id, Text, OnCopied, Enabled);
+  return (E.Element of TMsg).CopyAction(Id, Text, OnCopied, Enabled);
 end function;
 
 end unit;

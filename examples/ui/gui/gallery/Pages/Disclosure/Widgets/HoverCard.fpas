@@ -14,50 +14,53 @@ uses GuiGallery.Pages.Disclosure.State as State;
 uses GuiGallery.Shared.Sections as G;
 uses System as Sys;
 
-function Details(): E.Element<State.Msg>;
+function Details(): E.Element of State.Msg;
 begin
-  const Copy: E.Element<State.Msg> := E.Column<State.Msg>(
+  const Copy: E.Element of State.Msg := E.Column of State.Msg(
     new L.Flow(Gap := G.Points(4), Clip := false),
-    E.Styled<State.Msg>(E.Text<State.Msg>('Jonas Berg'), S.Role.Strong),
-    E.Styled<State.Msg>(
-      E.Text<State.Msg>('Engineer on the rendering team. Joined March 2024.'),
+    E.Styled of State.Msg(E.Text of State.Msg('Jonas Berg'), S.Role.Strong),
+    E.Styled of State.Msg(
+      E.Text of State.Msg('Engineer on the rendering team. Joined March 2024.'),
       S.Role.Secondary
     ),
-    E.Column<State.Msg>(
-      G.Space<State.Msg>(4),
-      E.Row<State.Msg>(
+    E.Column of State.Msg(
+      G.Space of State.Msg(4),
+      E.Row of State.Msg(
         new L.Flow(Gap := G.Points(6), Wrap := true),
-        E.Styled<State.Msg>(E.Text<State.Msg>(Sys.Char.ConvertFromUtf32($E063)), S.Role.MutedGlyph),
-        E.Styled<State.Msg>(E.Text<State.Msg>('Usually replies within an hour'), S.Role.Caption)
+        E.Styled of State.Msg(
+          E.Text of State.Msg(Sys.Char.ConvertFromUtf32($E063)),
+          S.Role.MutedGlyph
+        ),
+        E.Styled of State.Msg(E.Text of State.Msg('Usually replies within an hour'), S.Role.Caption)
       )
     )
   );
-  return E.Row<State.Msg>(
+  return E.Row of State.Msg(
     new L.Flow(Gap := G.Points(12), Align := L.Alignment.Start, Clip := false),
-    A.Avatar<State.Msg>(
+    A.Avatar of State.Msg(
       'jonas-avatar',
       'Jonas Berg',
       new A.Options(Size := 44.0F, Status := 'online')
     ),
-    E.Size<State.Msg>(Copy, new L.Flex(Basis := L.Extent.Fill))
+    E.Size of State.Msg(Copy, new L.Flex(Basis := L.Extent.Fill))
   );
 end function;
 
 // Shows the original assignment link and the native profile card.
 // ## Returns
 // The Hover card section with CUI-owned pointer timing.
-public function View(): E.Element<State.Msg>;
+public function View(): E.Element of State.Msg;
 begin
-  return E.Column<State.Msg>(
+  return E.Column of State.Msg(
     new L.Flow(Gap := G.Points(20), Clip := false),
-    G.Heading<State.Msg>(Strings.Get('Heading.HoverCard'), Strings.Get('Heading.HoverCardHint')),
-    E.Row<State.Msg>(
+    G.Heading of State.Msg(Strings.Get('Heading.HoverCard'), Strings.Get('Heading.HoverCardHint')),
+    E.Row of State.Msg(
       new L.Flow(Gap := G.Points(6), Wrap := true),
-      E.Text<State.Msg>('Assigned to'),
-      H.HoverCard<State.Msg>(
-        'jonas-card', Link.Link<State.Msg>('jonas-link', '@jonas', State.Msg.Preview), Details()
+      E.Text of State.Msg('Assigned to'),
+      H.HoverCard of State.Msg(
+        'jonas-card', Link.Link of State.Msg('jonas-link', '@jonas', State.Msg.Preview), Details()
       ),
-      E.Text<State.Msg>('and due Friday.')
+      E.Text of State.Msg('and due Friday.')
     )
   );
 end function;

@@ -19,12 +19,12 @@ uses System as Sys;
 // - `Current`: Model-owned value.
 // - `Change`: Maps a native proposal.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Current: A.Value; Change: function(float): TMsg; Settings: A.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Current: A.Value; Change: function(float): TMsg; Settings: A.Options);
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Role: string := 'ratio-slider';
   const Token: string := C.Token(Role, Id);
-  const Focus: int := W.Focus<TMsg>(Frame, Id, Role, [''], [Enabled], 0);
+  const Focus: int := W.Focus of TMsg(Frame, Id, Role, [''], [Enabled], 0);
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   var Next: float := Current.Ratio;
   const Result: int := Frame.Window.RatioSlider(
@@ -36,7 +36,7 @@ begin
     Frame.Messages.Add(Change(Next));
   end if;
 
-  W.Root<TMsg>(
+  W.Root of TMsg(
     Frame,
     Id,
     Role,

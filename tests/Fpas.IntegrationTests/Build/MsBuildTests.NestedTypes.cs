@@ -54,58 +54,58 @@ public sealed partial class MsBuildTests
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Nested;
             uses Shared as S; uses Shared.Nesting as N; uses System as Sys; uses System.Collections.Generic as C;
-            public type Selected = N.Outer<string?>.Inner<int>;
-            type Root = N.Outer<string?>;
-            public function Create<T, U>(First: T; Second: U): S.Nesting.Outer<T>.Inner<U>;
+            public type Selected = (N.Outer of string?).Inner of int;
+            type Root = N.Outer of string?;
+            public function Create of (T, U)(First: T; Second: U): (S.Nesting.Outer of T).Inner of U;
             where T: class?; where U: struct;
-            begin return new S.Nesting.Outer<T>.Inner<U>(First, Second); end function;
+            begin return new (S.Nesting.Outer of T).Inner of U(First, Second); end function;
             // Exchange.
-            public function Exchange<T, U>(ref Value: N.Outer<T>.Inner<U>): N.Outer<T>.Inner<U>;
+            public function Exchange of (T, U)(ref Value: (N.Outer of T).Inner of U): (N.Outer of T).Inner of U;
             where T: class?; where U: struct;
             begin return Value; end function;
             public function Select(): Selected;
             begin
-              const Factory: function(string?, int): Selected := N.Outer<string?>.Inner<int>.Create;
-              const Value: Root.Inner<int> := Factory(null, 42);
+              const Factory: function(string?, int): Selected := ((N.Outer of string?).Inner of int).Create;
+              const Value: Root.Inner of int := Factory(null, 42);
               return Value;
             end function;
-            public function Deep<T, U, V>(Value: V): N.Outer<T>.Inner<U>.Deep<V>;
+            public function Deep of (T, U, V)(Value: V): ((N.Outer of T).Inner of U).Deep of V;
             where T: class?; where U: struct; where V: class?;
-            begin return new N.Outer<T>.Inner<U>.Deep<V>(Value); end function;
-            public function Leaf(Value: string?): N.Outer<string?>.Leaf;
-            begin return new N.Outer<string?>.Leaf(Value); end function;
-            public function Cell(Value: string?): N.Outer<string?>.Cell;
+            begin return new ((N.Outer of T).Inner of U).Deep of V(Value); end function;
+            public function Leaf(Value: string?): (N.Outer of string?).Leaf;
+            begin return new (N.Outer of string?).Leaf(Value); end function;
+            public function Cell(Value: string?): (N.Outer of string?).Cell;
             begin
-              var Item: N.Outer<string?>.Cell := new N.Outer<string?>.Cell('initial');
+              var Item: (N.Outer of string?).Cell := new (N.Outer of string?).Cell('initial');
               Item.Value := Value;
               return Item;
             end function;
             public function Map(): int;
             begin
-              const Handler: N.Outer<string>.Mapper<int> := function(Text: string): int => Text.Length;
+              const Handler: (N.Outer of string).Mapper of int := function(Text: string): int => Text.Length;
               return Handler('text');
             end function;
             public function Plain(): string;
-            begin return new N.Plain.Inner<string>('plain').Value; end function;
-            public function Related(): N.Outer<object>.Related<string>;
-            begin return new N.Outer<object>.Related<string>(); end function;
+            begin return new N.Plain.Inner of string('plain').Value; end function;
+            public function Related(): (N.Outer of object).Related of string;
+            begin return new (N.Outer of object).Related of string(); end function;
             public function Echo(): string;
-            begin return S.Nesting.Outer<string>.Inner<int>.Create('value', 7).Echo<string>('echo'); end function;
+            begin return ((S.Nesting.Outer of string).Inner of int).Create('value', 7).Echo of string('echo'); end function;
             public function Inspect(): Sys.Type;
-            begin return typeof(N.Outer<string?>.Inner<int>.Deep<string>); end function;
-            public function Optional(Value: (array of N.Outer<string?>.Inner<int>?)?): (array of N.Outer<string?>.Inner<int>?)?;
+            begin return typeof(((N.Outer of string?).Inner of int).Deep of string); end function;
+            public function Optional(Value: (array of ((N.Outer of string?).Inner of int)?)?): (array of ((N.Outer of string?).Inner of int)?)?;
             begin return Value; end function;
             public function Validate(Value: object): bool;
             begin
               const Cast: Selected := cast<Selected>(Value);
-              return Value is N.Outer<string?>.Inner<int> and Cast.Second = 42;
+              return Value is (N.Outer of string?).Inner of int and Cast.Second = 42;
             end function;
             public function Keys(): string;
             begin
-              const Values: C.Dictionary<string, int> := new C.Dictionary<string, int>();
+              const Values: C.Dictionary of (string, int) := new C.Dictionary of (string, int)();
               Values.Add('key', 42);
-              const Items: C.Dictionary<string, int>.KeyCollection := Values.Keys;
-              var Iterator: C.Dictionary<string, int>.KeyCollection.Enumerator := Items.GetEnumerator();
+              const Items: C.Dictionary of (string, int).KeyCollection := Values.Keys;
+              var Iterator: C.Dictionary of (string, int).KeyCollection.Enumerator := Items.GetEnumerator();
               if Iterator.MoveNext() then return Iterator.Current; else return 'missing'; end if;
             end function;
             end unit;
@@ -120,10 +120,10 @@ public sealed partial class MsBuildTests
         File.WriteAllText(project.File("Consumer/Consumer.fpas"), """
             unit Demo.Consumer;
             uses Demo.Nested as N; uses Shared.Nesting as S;
-            public function Replay(): S.Outer<string?>.Inner<int>;
+            public function Replay(): (S.Outer of string?).Inner of int;
             begin
               var Value: N.Selected := N.Select();
-              return N.Exchange<string?, int>(ref Value);
+              return N.Exchange of (string?, int)(ref Value);
             end function;
             end unit;
             """);
@@ -171,15 +171,15 @@ public sealed partial class MsBuildTests
         Assert.True(build.ExitCode == 0, build.Output + build.Error);
         (string Path, string Segment, string Code)[] cases =
         [
-            ("N.Outer<int>.Inner<int>", "Outer", "FP3018"),
-            ("N.Outer<string>.Inner<string>", "Inner", "FP3018"),
-            ("N.Outer<string>.Related<object>", "Related", "FP3018"),
-            ("N.Outer<string>.Inner<int, int>", "Inner", "FP3001"),
-            ("N.Outer<string>.Leaf<int>", "Leaf", "FP3001"),
-            ("N.Outer<string>.Hidden", "Hidden", "FP3001"),
-            ("N.Outer<string>.Missing<int>", "Missing", "FP3001"),
-            ("N.Outer<string>.Inner", "Inner", "FP3001"),
-            ("N<int>.Plain", "N", "FP3018")
+            ("(N.Outer of int).Inner of int", "Outer", "FP3018"),
+            ("(N.Outer of string).Inner of string", "Inner", "FP3018"),
+            ("(N.Outer of string).Related of object", "Related", "FP3018"),
+            ("(N.Outer of string).Inner of (int, int)", "Inner", "FP3001"),
+            ("(N.Outer of string).Leaf of int", "Leaf", "FP3001"),
+            ("(N.Outer of string).Hidden", "Hidden", "FP3001"),
+            ("(N.Outer of string).Missing of int", "Missing", "FP3001"),
+            ("(N.Outer of string).Inner", "Inner", "FP3001"),
+            ("(N of int).Plain", "N", "FP3018")
         ];
         foreach (var (path, segment, code) in cases)
         {

@@ -25,11 +25,11 @@ end variant;
 // - `Open`: Expansion flag from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Open: bool): E.Element<Msg>;
+public function View(Open: bool): E.Element of Msg;
 begin
-  return W.Branch<Msg>('tree-src', 'src', Open, [
-    W.Leaf<Msg>('file-main', 'main.c', function(): Msg => Msg.SelectFile('main.c')),
-    W.Leaf<Msg>('file-table', 'table.c', function(): Msg => Msg.SelectFile('table.c'))
+  return W.Branch of Msg('tree-src', 'src', Open, [
+    W.Leaf of Msg('file-main', 'main.c', function(): Msg => Msg.SelectFile('main.c')),
+    W.Leaf of Msg('file-table', 'table.c', function(): Msg => Msg.SelectFile('table.c'))
   ], Msg.SetSource);
 end function;
 

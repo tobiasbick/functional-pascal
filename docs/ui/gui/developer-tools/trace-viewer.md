@@ -29,9 +29,9 @@ public function View(
   Markers: array of W.Marker;
   Viewport: W.View;
   Selected: int
-): E.Element<W.Event>;
+): E.Element of W.Event;
 begin
-  return W.TraceViewer<W.Event>('trace', Tracks, Spans, Markers, Viewport, Selected,
+  return W.TraceViewer of W.Event('trace', Tracks, Spans, Markers, Viewport, Selected,
     function(Change: W.Event): W.Event => Change, new W.Options(Height := 320.0F));
 end function;
 

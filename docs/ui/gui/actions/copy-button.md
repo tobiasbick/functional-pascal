@@ -15,9 +15,9 @@ uses Fpas.Ui.Widgets.Actions.CopyButtons as C;
 // Builds the example view.
 // ## Returns
 // The widget with its message type.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return C.CopyButton<string>('copy-install', 'npm i cui');
+  return C.CopyButton of string('copy-install', 'npm i cui');
 end function;
 
 end unit;

@@ -29,7 +29,7 @@ public sealed partial class MsBuildTests
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Factory;
             uses System as Sys; uses Shared as S; uses System.Threading.Tasks as Tasks;
-            public function Counter(Start: int): Sys.Func<int>;
+            public function Counter(Start: int): Sys.Func of int;
               function Read(): int; begin return Next(); end function;
               function Next(): int; begin Value := Value + 1; return Value; end function;
             begin
@@ -41,7 +41,7 @@ public sealed partial class MsBuildTests
             begin
               return Add;
             end function;
-            public function Positive(Limit: int): Sys.Func<int, int>;
+            public function Positive(Limit: int): Sys.Func of (int, int);
               function Check(Value: int): int;
               requires Value >= 0;
               requires Value <= Limit;
@@ -50,22 +50,22 @@ public sealed partial class MsBuildTests
             begin
               return Check;
             end function;
-            public function ReadLater(Value: Tasks.Task<int>): Tasks.Task<int>;
-              async function Run(): Tasks.Task<int>; begin return (await Value) + 1; end function;
+            public function ReadLater(Value: Tasks.Task of int): Tasks.Task of int;
+              async function Run(): Tasks.Task of int; begin return (await Value) + 1; end function;
             begin
               return Run();
             end function;
-            public type Box<T> = record
+            public type Box of T = record
               public Value: T;
-              public function Capture<U>(Other: U): Sys.Func<T>;
-                function Pick<V>(Extra: V): T; where V: struct;
+              public function Capture of U(Other: U): Sys.Func of T;
+                function Pick of V(Extra: V): T; where V: struct;
                 begin discard Other; discard Extra; return self.Value; end function;
-                function Read(): T; begin return Pick<int>(2); end function;
+                function Read(): T; begin return Pick of int(2); end function;
               begin
                 return Read;
               end function;
             end record;
-            public function Format(): Sys.Func<int, string>;
+            public function Format(): Sys.Func of (int, string);
               function Convert(Value: int): string; begin return Value.ToString(); end function;
               function Convert(Value: string): string; begin return Value; end function;
             begin
@@ -85,8 +85,8 @@ public sealed partial class MsBuildTests
             uses Demo.Factory as F;
             public function Read(): string;
             begin
-              const Box: F.Box<string> := new F.Box<string>('saved');
-              return Box.Capture<int>(3)() + F.Format()(42);
+              const Box: F.Box of string := new F.Box of string('saved');
+              return Box.Capture of int(3)() + F.Format()(42);
             end function;
             end unit;
             """);

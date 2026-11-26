@@ -28,7 +28,7 @@ type CanvasMessage = variant
   Ignore;
 end variant;
 
-procedure Step<TMsg>(Session: Gui.Session<TMsg>; Window: Cui.CuiWindow);
+procedure Step of TMsg(Session: Gui.Session of TMsg; Window: Cui.CuiWindow);
 begin
   discard Window.TryWake();
   if not Session.Step() then
@@ -36,7 +36,7 @@ begin
   end if;
 end procedure;
 
-procedure RequireFocus<TMsg>(Session: Gui.Session<TMsg>; Id: string);
+procedure RequireFocus of TMsg(Session: Gui.Session of TMsg; Id: string);
 begin
   for Control: Gui.Control in Session.Snapshot().Controls do
     if Control.Id = Id and Control.Focused then
@@ -48,35 +48,35 @@ begin
 end procedure;
 
 procedure CanvasBacklog(Renderer: Cui.CuiRenderer);
-  function Update(Model: string; Message: CanvasMessage): Mvu.Transition<string, CanvasMessage>;
+  function Update(Model: string; Message: CanvasMessage): Mvu.Transition of (string, CanvasMessage);
   begin
     case Message of
       when CanvasMessage.Focus:
-        return new Mvu.Transition<string, CanvasMessage>(
+        return new Mvu.Transition of (string, CanvasMessage)(
           Model,
-          [Mvu.Focus<CanvasMessage>('canvas')]
+          [Mvu.Focus of CanvasMessage('canvas')]
         );
       when CanvasMessage.Input(const Value: Canvas.Input):
         case Value of
           when Canvas.Input.Text(const Text: string):
-            return new Mvu.Transition<string, CanvasMessage>(Model + Text, []);
+            return new Mvu.Transition of (string, CanvasMessage)(Model + Text, []);
           else
         end case;
       else
     end case;
 
-    return new Mvu.Transition<string, CanvasMessage>(Model, []);
+    return new Mvu.Transition of (string, CanvasMessage)(Model, []);
   end function;
 
-  function View(Model: string; Size: L.Viewport): E.Element<CanvasMessage>;
+  function View(Model: string; Size: L.Viewport): E.Element of CanvasMessage;
   begin
-    return E.Column<CanvasMessage>(
+    return E.Column of CanvasMessage(
       new L.Flow(),
-      Canvas.Canvas<CanvasMessage>(
+      Canvas.Canvas of CanvasMessage(
         'canvas', [], function(Value: Canvas.Event): CanvasMessage => CanvasMessage.Ignore,
         OnInput := CanvasMessage.Input
       ),
-      E.Text<CanvasMessage>(Model)
+      E.Text of CanvasMessage(Model)
     );
   end function;
 
@@ -97,7 +97,7 @@ begin
     Renderer,
     true
   );
-  using const Session: Gui.Session<CanvasMessage> := Host.Start<string, CanvasMessage>(
+  using const Session: Gui.Session of CanvasMessage := Host.Start of (string, CanvasMessage)(
     'Text: ', Update, View, Window, 1, Inject
   );
   Step(Session, Window);
@@ -132,39 +132,39 @@ end procedure;
 // ## Parameters
 // - `Renderer`: Native renderer used for the owned window.
 public procedure Verify(Renderer: Cui.CuiRenderer);
-  function Update(Open: bool; Msg: Message): Mvu.Transition<bool, Message>;
+  function Update(Open: bool; Msg: Message): Mvu.Transition of (bool, Message);
   begin
-    const Placement: Mvu.Command<Message> := Windows.ReadPlacement<Message>(
+    const Placement: Mvu.Command of Message := Windows.ReadPlacement of Message(
       function(Value: Cui.CuiWindowPlacement): Message => Message.Placement
     );
     return case Msg of
-      when Message.Focus: new Mvu.Transition<bool, Message>(
+      when Message.Focus: new Mvu.Transition of (bool, Message)(
         Open,
-        [Mvu.Focus<Message>('base-target'), Placement]
+        [Mvu.Focus of Message('base-target'), Placement]
       );
-      when Message.Open: new Mvu.Transition<bool, Message>(true, [Placement]);
-      when Message.Close: new Mvu.Transition<bool, Message>(false, [Placement]);
-      when Message.Placement: new Mvu.Transition<bool, Message>(Open, []);
+      when Message.Open: new Mvu.Transition of (bool, Message)(true, [Placement]);
+      when Message.Close: new Mvu.Transition of (bool, Message)(false, [Placement]);
+      when Message.Placement: new Mvu.Transition of (bool, Message)(Open, []);
     end case;
   end function;
 
-  function View(Open: bool; Size: L.Viewport): E.Element<Message>;
+  function View(Open: bool; Size: L.Viewport): E.Element of Message;
   begin
-    return D.Dialog<Message>(
+    return D.Dialog of Message(
       'dialog',
-      E.Column<Message>(
+      E.Column of Message(
         new L.Flow(Scope := new L.FocusScope('workspace', true)),
-        B.Button<Message>('first', 'First', Message.Focus),
-        B.Button<Message>('base-target', 'Base target', Message.Open)
+        B.Button of Message('first', 'First', Message.Focus),
+        B.Button of Message('base-target', 'Base target', Message.Open)
       ),
-      E.Column<Message>(
+      E.Column of Message(
         new L.Flow(),
-        Canvas.Canvas<Message>(
+        Canvas.Canvas of Message(
           'modal-canvas', [], function(Value: Canvas.Event): Message => Message.Close,
           OnInput := function(Value: Canvas.Input): Message => Message.Placement
         ),
-        B.Button<Message>('other', 'Other', Message.Close),
-        B.Button<Message>('modal-target', 'Modal target', Message.Close)
+        B.Button of Message('other', 'Other', Message.Close),
+        B.Button of Message('modal-target', 'Modal target', Message.Close)
       ),
       Open,
       new D.Options('Modal', InitialFocus := 'modal-target'),
@@ -190,7 +190,7 @@ begin
     true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<Message> := Host.Start<bool, Message>(
+  using const Session: Gui.Session of Message := Host.Start of (bool, Message)(
     false, Update, View, Window, 1, Inject
   );
   Step(Session, Window);

@@ -20,13 +20,13 @@ uses Fpas.Ui.Widgets.Audio.VoiceNotes as VoiceNotes;
 // - `Playback`: Model-owned transport state.
 // - `Changed`: Maps a transport proposal.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Levels: array of float; Playback: VoiceNotes.Value; Changed: function(VoiceNotes.Event): TMsg; Settings: VoiceNotes.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Levels: array of float; Playback: VoiceNotes.Value; Changed: function(VoiceNotes.Event): TMsg; Settings: VoiceNotes.Options);
 begin
   const Role: string := 'voice-note';
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Keys: array of string := ['play', 'seek', 'speed'];
-  const Focus: int := P.Focus<TMsg>(Frame, Id, Role, Keys, P.Inputs(Keys.Length, Enabled), 0);
+  const Focus: int := P.Focus of TMsg(Frame, Id, Role, Keys, P.Inputs(Keys.Length, Enabled), 0);
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   const Result: CuiAudio.CuiVoiceNoteResult := Frame.Window.VoiceNote(
     Token,
@@ -39,10 +39,10 @@ begin
     Width.Value,
     Enc.Bits(Enabled, 1) or Enc.Bits(Settings.Mine, 2),
     Focus,
-    P.Tracker<TMsg>(Frame, Id, Role, Keys)
+    P.Tracker of TMsg(Frame, Id, Role, Keys)
   );
-  P.Root<TMsg>(Frame, Id, Role, '', false, Playback.Position.ToString());
-  Data.Parts<TMsg>(Frame, Id, Role, Keys, Result.Parts, Enabled);
+  P.Root of TMsg(Frame, Id, Role, '', false, Playback.Position.ToString());
+  Data.Parts of TMsg(Frame, Id, Role, Keys, Result.Parts, Enabled);
   if (Result.Events and 1) <> 0 then
     Frame.Messages.Add(Changed(VoiceNotes.Event.Toggle(Result.Playing)));
   end if;

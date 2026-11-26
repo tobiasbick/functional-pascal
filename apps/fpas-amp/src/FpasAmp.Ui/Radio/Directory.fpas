@@ -52,8 +52,8 @@ end function;
 
 function Decode(Root: J.JsonElement): array of M.Station;
 begin
-  const Result: C.List<M.Station> := new C.List<M.Station>();
-  const Seen: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+  const Result: C.List of M.Station := new C.List of M.Station();
+  const Seen: C.HashSet of string := new C.HashSet of string(Sys.StringComparer.Ordinal);
   for Item: J.JsonElement in Root.EnumerateArray() do
     if Item.ValueKind <> J.JsonValueKind.Object then
       continue;
@@ -97,7 +97,7 @@ begin
 end function;
 
 // Fetches up to 100 matching stations, falling back to another mirror on failure.
-public async function Search(Query: M.Query; Stop: T.CancellationToken): Tasks.Task<array of M.Station>;
+public async function Search(Query: M.Query; Stop: T.CancellationToken): Tasks.Task of array of M.Station;
 begin
   const Path: string := '/json/stations/search?hidebroken=true&order=clickcount&reverse=true&limit=' +
     Maximum.ToString() + Filter('name', Query.Name) + Filter('country', Query.Country) +

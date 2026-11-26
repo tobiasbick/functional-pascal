@@ -23,50 +23,50 @@ public sealed partial class MsBuildTests
             uses System as Sys; uses Demo as D; uses System.Threading.Tasks as Tasks; uses System.ComponentModel as Metadata;
             public var Disposals: int := 0;
             [Metadata.DescriptionAttribute('source interface')]
-            public type IRoot<T> = protocol
+            public type IRoot of T = protocol
               [Metadata.DescriptionAttribute('value property')]
               Value: T;
               [Metadata.DescriptionAttribute('read method')]
               function Read(): T;
             end protocol;
-            public type ILeft<T> = protocol extends IRoot<T> end protocol;
-            public type IRight<T> = protocol extends IRoot<T> end protocol;
-            public type IOther<T> = protocol Value: T; function Read(): T; end protocol;
-            public type IApi<T> =
+            public type ILeft of T = protocol extends IRoot of T end protocol;
+            public type IRight of T = protocol extends IRoot of T end protocol;
+            public type IOther of T = protocol Value: T; function Read(): T; end protocol;
+            public type IApi of T =
             where T: class;
-            protocol extends ILeft<T>, IRight<T>, D.IOverrideApi, D.IExceptionApi, Sys.IDisposable
+            protocol extends ILeft of T, IRight of T, D.IOverrideApi, D.IExceptionApi, Sys.IDisposable
               Name: string;
               function Read(Other: T): T;
-              function Echo<U>(Value: U): U;
+              function Echo of U(Value: U): U;
               where U: class;
-              function Narrow<U>(Value: U): U;
+              function Narrow of U(Value: U): U;
               where U: T;
               procedure Adjust(ref Value: int; out Before: int; in Step: int);
               function Sum(Base: int := 3; params Values: array of int): int;
               function Optional(Value: string?): string?;
-              function ReadAsync(): Tasks.Task<T>;
+              function ReadAsync(): Tasks.Task of T;
             end protocol;
-            public type Api<T> =
+            public type Api of T =
             where T: class;
-            record implements IApi<T>, IOther<T>
+            record implements IApi of T, IOther of T
               public Name: string;
               public Value: T;
               public function Read(): T; begin return self.Value; end function;
               public function Read(Other: T): T;
               requires Other <> null;
               begin return Other; end function;
-              public function Echo<U>(Value: U): U; where U: class; begin return Value; end function;
-              public function Narrow<U>(Value: U): U; where U: T; begin return Value; end function;
-              public function Exception<U>(Value: U): U; where U: Sys.Exception; begin return Value; end function;
+              public function Echo of U(Value: U): U; where U: class; begin return Value; end function;
+              public function Narrow of U(Value: U): U; where U: T; begin return Value; end function;
+              public function Exception of U(Value: U): U; where U: Sys.Exception; begin return Value; end function;
               public procedure Adjust(ref Value: int; out Before: int; in Step: int);
               begin Before := Value; Value := Value + Step; end procedure;
               public function Sum(Base: int := 3; params Values: array of int): int;
               begin var Total: int := Base; for Value: int in Values do Total := Total + Value; end for; return Total; end function;
               public function Optional(Value: string?): string?; begin return Value; end function;
-              public async function ReadAsync(): Tasks.Task<T>; begin return self.Value; end function;
+              public async function ReadAsync(): Tasks.Task of T; begin return self.Value; end function;
               public procedure Dispose(); begin Disposals := Disposals + 1; end procedure;
             end record;
-            public function Accept(Value: IApi<string>): string;
+            public function Accept(Value: IApi of string): string;
             begin
               var Number: int := 1; var Before: int := 0; const Step: int := 2;
               Value.Adjust(ref Number, out Before, in Step);
@@ -77,13 +77,13 @@ public sealed partial class MsBuildTests
               const Read: function(): string := Value.Read;
               return Value.Name + Value.Value + Read() + Value.Read(Other := 'other') + Value.Echo('echo');
             end function;
-            public function Constrained<T>(Value: T): string;
-            where T: IApi<string>;
+            public function Constrained of T(Value: T): string;
+            where T: IApi of string;
             begin return Value.Read(); end function;
-            public function Infer<T>(Value: IRoot<T>): T; begin return Value.Read(); end function;
+            public function Infer of T(Value: IRoot of T): T; begin return Value.Read(); end function;
             public function Local(): string;
             begin
-              const Value: IApi<string> := new Api<string>('fpas', 'value');
+              const Value: IApi of string := new Api of string('fpas', 'value');
               if Infer(Value) <> 'value' then raise new Sys.InvalidOperationException('Interface inference failed'); end if;
               return Accept(Value);
             end function;
@@ -99,28 +99,28 @@ public sealed partial class MsBuildTests
         File.WriteAllText(project.File("Consumer/Consumer.fpas"), """
             unit Demo.Consumer;
             uses Demo.Contracts as C; uses System as Sys; uses System.Threading.Tasks as Tasks;
-            public type Local = record implements C.IRoot<string>
+            public type Local = record implements C.IRoot of string
               public Value: string;
               public function Read(): string; begin return self.Value; end function;
             end record;
-            public type External<T> = where T: class;
-            record implements C.IApi<T>
+            public type External of T = where T: class;
+            record implements C.IApi of T
               public Name: string; public Value: T;
               public function Read(): T; begin return self.Value; end function;
               public function Read(Other: T): T; begin return Other; end function;
-              public function Echo<U>(Value: U): U; where U: class; begin return Value; end function;
-              public function Narrow<U>(Value: U): U; where U: T; begin return Value; end function;
-              public function Exception<U>(Value: U): U; where U: Sys.Exception; begin return Value; end function;
+              public function Echo of U(Value: U): U; where U: class; begin return Value; end function;
+              public function Narrow of U(Value: U): U; where U: T; begin return Value; end function;
+              public function Exception of U(Value: U): U; where U: Sys.Exception; begin return Value; end function;
               public procedure Adjust(ref Value: int; out Before: int; in Step: int); begin Before := Value; Value := Value + Step; end procedure;
               public function Sum(Base: int := 3; params Values: array of int): int; begin return Base; end function;
               public function Optional(Value: string?): string?; begin return Value; end function;
-              public function ReadAsync(): Tasks.Task<T>; begin return Tasks.Task.FromResult(self.Value); end function;
+              public function ReadAsync(): Tasks.Task of T; begin return Tasks.Task.FromResult(self.Value); end function;
               public procedure Dispose(); begin end procedure;
             end record;
-            public function Accept(Value: C.IApi<string>): string;
+            public function Accept(Value: C.IApi of string): string;
             begin return Value.Read() + Value.Echo('external') + Value.ReadAsync().GetAwaiter().GetResult(); end function;
             public function Run(): string;
-            begin const Value: C.IRoot<string> := new Local('consumer'); return Value.Value + Value.Read(); end function;
+            begin const Value: C.IRoot of string := new Local('consumer'); return Value.Value + Value.Read(); end function;
             end unit;
             """);
         var host = project.File("Host/Host.csproj");

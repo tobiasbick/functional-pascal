@@ -17,8 +17,8 @@ uses Fpas.Ui.Widgets.Pickers.WheelPickers as W;
 // - `Selected`: Model-owned zero-based index.
 // - `OnChange`: Maps a proposed index to a message.
 // - `Settings`: Wheel presentation and input settings.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Items: array of string; Selected: int;
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Items: array of string; Selected: int;
   OnChange: function(int): TMsg; Settings: W.Options
 );
 begin
@@ -35,7 +35,7 @@ begin
     Settings.JoinLeft,
     Settings.JoinRight,
     Enabled,
-    C.WantsFocus<TMsg>(Frame, Id, Token, Enabled),
+    C.WantsFocus of TMsg(Frame, Id, Token, Enabled),
     not Frame.PaintingClosed
   );
   if Proposed <> Selected then

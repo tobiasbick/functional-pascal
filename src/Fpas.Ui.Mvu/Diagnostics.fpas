@@ -35,7 +35,7 @@ public type SessionSnapshot = record
   // The maximum number of items the mailbox can hold.
   public MailboxCapacity: int;
   // A read-only list of the runs observed in progress when the owner inspected the session.
-  public ActiveEffects: Generic.IReadOnlyList<EffectRun>;
+  public ActiveEffects: Generic.IReadOnlyList of EffectRun;
   // The number of invalidated effect messages discarded by Advance.
   public StaleReplies: long;
 end record;

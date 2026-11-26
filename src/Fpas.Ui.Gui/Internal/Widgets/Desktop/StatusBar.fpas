@@ -18,10 +18,10 @@ uses Fpas.Ui.Widgets.Overlays.Menus as M;
 // - `Id`: Stable bar identity.
 // - `Items`: Status messages, actions and progress in order.
 // - `HideBorder`: Omit the top hairline.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Items: array of S.Item<TMsg>; HideBorder: bool);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Items: array of S.Item of TMsg; HideBorder: bool);
 begin
   Frame.Window.BeginStatusBar(C.Token('status-bar', Id), not HideBorder);
-  for Item: S.Item<TMsg> in Items do
+  for Item: S.Item of TMsg in Items do
     case Item of
       when S.Item.Text(const Label: S.Label):
         Frame.Window.StatusBarText(Label.Text, Label.Icon, cast<int>(Label.Tone));
@@ -38,7 +38,7 @@ begin
         const Accept: bool := Frame.AcceptInput and Enabled;
         const Result: CuiDesktop.CuiStatusBarResult := Frame.Window.StatusBarItem(
           Key, Label.Text, Label.Icon, cast<int>(Label.Tone), Tip,
-          Accept, C.WantsFocus<TMsg>(Frame, Action, Token, Accept),
+          Accept, C.WantsFocus of TMsg(Frame, Action, Token, Accept),
           if Frame.PaintingClosed then
             null
           else
@@ -67,7 +67,7 @@ begin
   end for;
 
   Frame.Window.EndStatusBar();
-  P.Root<TMsg>(Frame, Id, 'status-bar', '', Frame.AcceptInput, '');
+  P.Root of TMsg(Frame, Id, 'status-bar', '', Frame.AcceptInput, '');
 end procedure;
 
 end unit;

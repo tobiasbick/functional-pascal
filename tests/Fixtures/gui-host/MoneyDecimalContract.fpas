@@ -40,8 +40,8 @@ begin
   for Places: int in [-1, 29] do
     var Rejected: bool := false;
     try
-      discard V.Prepare<decimal>(
-        Money.MoneyField<decimal>(
+      discard V.Prepare of decimal(
+        Money.MoneyField of decimal(
           'amount', 0M, function(Value: decimal): decimal => Value,
           new Money.Options(DecimalPlaces := Places)
         ), V.Target.Graphical
@@ -54,8 +54,8 @@ begin
   end for;
   var Rejected: bool := false;
   try
-    discard V.Prepare<decimal>(
-      Money.MoneyField<decimal>('amount', 0.001M, function(Value: decimal): decimal => Value),
+    discard V.Prepare of decimal(
+      Money.MoneyField of decimal('amount', 0.001M, function(Value: decimal): decimal => Value),
       V.Target.Graphical
     );
   catch Error: Sys.ArgumentException do
@@ -63,8 +63,8 @@ begin
   end try;
 
   Check(Rejected, 'The prepared view silently rounded a model amount.');
-  discard V.Prepare<decimal>(
-    Money.MoneyField<decimal>(
+  discard V.Prepare of decimal(
+    Money.MoneyField of decimal(
       'amount', decimal.MaxValue, function(Value: decimal): decimal => Value,
       new Money.Options(DecimalPlaces := 28)
     ), V.Target.Graphical
@@ -77,10 +77,10 @@ end procedure;
 // - `Capture`: Optional destination for a screenshot of the accepted decimal field.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string? := null);
 requires Renderer = Cui.CuiRenderer.Software or Renderer = Cui.CuiRenderer.OpenGl;
-  function Update(Current: Model; Message: Msg): Mvu.Transition<Model, Msg>;
+  function Update(Current: Model; Message: Msg): Mvu.Transition of (Model, Msg);
   begin
     return case Message of
-      when Msg.Changed(const Value: decimal): new Mvu.Transition<Model, Msg>(
+      when Msg.Changed(const Value: decimal): new Mvu.Transition of (Model, Msg)(
         if Current.Accept then
           Current with
             Amount := Value;
@@ -89,24 +89,24 @@ requires Renderer = Cui.CuiRenderer.Software or Renderer = Cui.CuiRenderer.OpenG
           Current
         end if, []
       );
-      when Msg.Focus: new Mvu.Transition<Model, Msg>(Current, [Mvu.Focus<Msg>('amount')]);
-      when Msg.Reject: new Mvu.Transition<Model, Msg>(
+      when Msg.Focus: new Mvu.Transition of (Model, Msg)(Current, [Mvu.Focus of Msg('amount')]);
+      when Msg.Reject: new Mvu.Transition of (Model, Msg)(
         Current with
           Accept := false;
         end with, []
       );
-      when Msg.Accept: new Mvu.Transition<Model, Msg>(
+      when Msg.Accept: new Mvu.Transition of (Model, Msg)(
         Current with
           Accept := true;
         end with, []
       );
     end case;
   end function;
-  function View(Current: Model; Size: L.Viewport): E.Element<Msg>;
+  function View(Current: Model; Size: L.Viewport): E.Element of Msg;
   begin
     Last := Current;
-    return Composition.Map<decimal, Msg>(
-      Money.MoneyField<decimal>(
+    return Composition.Map of (decimal, Msg)(
+      Money.MoneyField of decimal(
         'amount',
         Current.Amount,
         function(Value: decimal): decimal => Value,
@@ -135,13 +135,13 @@ requires Renderer = Cui.CuiRenderer.Software or Renderer = Cui.CuiRenderer.OpenG
       Text := null;
     end if;
   end procedure;
-  procedure Steps(Value: Gui.Session<Msg>);
+  procedure Steps(Value: Gui.Session of Msg);
   begin
     for Index: int := 0 to 3 do
       Check(Value.Step(), 'The decimal session closed.');
     end for;
   end procedure;
-  procedure Replace(Value: Gui.Session<Msg>; Draft: string);
+  procedure Replace(Value: Gui.Session of Msg; Draft: string);
   begin
     Select := true;
     Steps(Value);
@@ -154,7 +154,7 @@ begin
   var Select: bool := false;
   var Text: string? := null;
   const Window: Cui.CuiWindow := new Cui.CuiWindow('FPAS decimal money', 520, 200, Renderer, true);
-  using const Session: Gui.Session<Msg> := Host.Start<Model, Msg>(
+  using const Session: Gui.Session of Msg := Host.Start of (Model, Msg)(
     Last,
     Update,
     View,

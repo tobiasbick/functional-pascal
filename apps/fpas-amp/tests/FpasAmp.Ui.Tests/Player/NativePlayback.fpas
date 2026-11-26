@@ -71,9 +71,9 @@ public type NativePlaybackTests = record
       Preferences.Save(Data.Path, Value);
     end procedure;
     try
-      const Entries: I.ImmutableArray<Tracks.Entry> := Fixtures.Until(
+      const Entries: I.ImmutableArray of Tracks.Entry := Fixtures.Until(
         Fixtures.Tags(Store),
-        function(Items: I.ImmutableArray<Tracks.Entry>): bool => Items.Length = 2
+        function(Items: I.ImmutableArray of Tracks.Entry): bool => Items.Length = 2
       ).GetAwaiter().GetResult();
       var Placement: Cui.CuiWindowPlacement := new Cui.CuiWindowPlacement();
       Placement.Width := 1320;
@@ -103,9 +103,9 @@ public type NativePlaybackTests = record
         );
       end;
       const Saved: Transport.Saved := Storage.Load(Data.Path).Player;
-      X.Assert.Equal<int>(1, Saved.Index);
-      X.Assert.Equal<string>(Entries[1].TrackId, Saved.TrackId);
-      const Found: I.ImmutableArray<Tracks.Entry> := Fixtures.Tags(Store).QueueAsync(
+      X.Assert.Equal of int(1, Saved.Index);
+      X.Assert.Equal of string(Entries[1].TrackId, Saved.TrackId);
+      const Found: I.ImmutableArray of Tracks.Entry := Fixtures.Tags(Store).QueueAsync(
         Saved.Source.AlbumId,
         T.CancellationToken.None
       ).GetAwaiter().GetResult();
@@ -126,11 +126,11 @@ public type NativePlaybackTests = record
       const Paused: Player.State := Second.State().Player;
       X.Assert.False(Paused.Playing);
       X.Assert.True(Paused.NeedsOpen);
-      X.Assert.Equal<double>(Saved.Position, Paused.Position);
-      X.Assert.Equal<string>(Saved.TrackId, Paused.Queue[Paused.Index].TrackId);
-      X.Assert.Equal<int>(2, Paused.Queue.Length);
-      X.Assert.Equal<float>(-14.0F, Paused.Volume);
-      X.Assert.Equal<int>(1, Presets.Match(Paused.Gains));
+      X.Assert.Equal of double(Saved.Position, Paused.Position);
+      X.Assert.Equal of string(Saved.TrackId, Paused.Queue[Paused.Index].TrackId);
+      X.Assert.Equal of int(2, Paused.Queue.Length);
+      X.Assert.Equal of float(-14.0F, Paused.Volume);
+      X.Assert.Equal of int(1, Presets.Match(Paused.Gains));
       Send(Second, Player.Msg.Toggle);
       WaitFor(
         Second, function(S: Player.State): bool => S.Playing and S.Position > Saved.Position
@@ -171,14 +171,14 @@ public type NativePlaybackTests = record
     IO.File.Copy(First, Second);
     const Store: Monitor.Session := Fixtures.Start([A, B], Data.Path);
     try
-      const Items: I.ImmutableArray<Tracks.Entry> := Fixtures.Until(
+      const Items: I.ImmutableArray of Tracks.Entry := Fixtures.Until(
         Fixtures.Tags(Store),
-        function(Rows: I.ImmutableArray<Tracks.Entry>): bool => Rows.Length = 2
+        function(Rows: I.ImmutableArray of Tracks.Entry): bool => Rows.Length = 2
       ).GetAwaiter().GetResult();
-      const Queue: I.ImmutableArray<Tracks.Entry> := if Items[0].Path = First then
+      const Queue: I.ImmutableArray of Tracks.Entry := if Items[0].Path = First then
         Items
       else
-        I.ImmutableArray.CreateRange<Tracks.Entry>([Items[1], Items[0]])
+        I.ImmutableArray.CreateRange of Tracks.Entry([Items[1], Items[0]])
       end if;
       var Placement: Cui.CuiWindowPlacement := new Cui.CuiWindowPlacement();
       Placement.Width := 900;
@@ -286,7 +286,7 @@ public type NativePlaybackTests = record
       Send(
         Session,
         Player.Msg.Play(
-          I.ImmutableArray.CreateRange<Tracks.Entry>([First, Second]),
+          I.ImmutableArray.CreateRange of Tracks.Entry([First, Second]),
           0,
           new Music.Selection()
         )

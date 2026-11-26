@@ -18,13 +18,13 @@ uses Fpas.Ui.Widgets.Actions.IconButtons as Icons;
 // - `Tooltip`: Accessible name and tooltip.
 // - `Message`: Proposed activation message.
 // - `Settings`: Model-owned input and appearance options.
-public procedure Draw<TMsg>(
-  State: C.State<TMsg>; Id: string; Icon: string; Tooltip: string; Message: TMsg; Settings: Icons.Options
+public procedure Draw of TMsg(
+  State: C.State of TMsg; Id: string; Icon: string; Tooltip: string; Message: TMsg; Settings: Icons.Options
 );
 begin
   const Enabled: bool := State.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('icon-button', Id);
-  const Focus: bool := C.WantsFocus<TMsg>(State, Id, Token, Enabled);
+  const Focus: bool := C.WantsFocus of TMsg(State, Id, Token, Enabled);
   if State.Window.IconButton(
     Token,
     Icon,
@@ -41,7 +41,7 @@ begin
     State.Messages.Add(Message);
   end if;
 
-  C.Track<TMsg>(
+  C.Track of TMsg(
     State, new App.Control(
       Id, Tooltip, 'icon-button', new Cui.CuiRectangle(), Enabled,
       Value := if Settings.Loading then

@@ -43,35 +43,35 @@ end function;
 // - `Horizontal`: Whether allocation runs along columns.
 // ## Returns
 // The scrollback and optional clear button.
-public function Lower<TMsg>(
+public function Lower of TMsg(
   Id: string; Entries: array of Logs.Entry; Clear: TMsg; Settings: Logs.Options; Horizontal: bool
-): E.Element<TMsg>;
+): E.Element of TMsg;
 begin
-  const Content: E.Element<TMsg> := E.Element<TMsg>.Log(Id, Entries, Settings.Timestamps);
-  var View: E.Element<TMsg> := Content;
+  const Content: E.Element of TMsg := (E.Element of TMsg).Log(Id, Entries, Settings.Timestamps);
+  var View: E.Element of TMsg := Content;
   if Settings.Height > 0.0F then
-    View := E.Element<TMsg>.Sized(
+    View := (E.Element of TMsg).Sized(
       Content,
       new E.Flex(Basis := cast<int>(Sys.Math.Ceiling(Settings.Height / 16.0F)))
     );
   elsif Settings.Height = -1.0F then
-    View := E.Element<TMsg>.Sized(Content, new E.Flex(Minimum := 1, Grow := 1));
+    View := (E.Element of TMsg).Sized(Content, new E.Flex(Minimum := 1, Grow := 1));
   end if;
 
   if Settings.Toolbar then
-    const Button: E.Element<TMsg> := E.Element<TMsg>.Action(
-      Id + '/clear', new Actions.Direct<TMsg>(Clear), true,
+    const Button: E.Element of TMsg := (E.Element of TMsg).Action(
+      Id + '/clear', new Actions.Direct of TMsg(Clear), true,
       new E.ActionView('Clear', Variant := S.ButtonVariant.Secondary)
     );
-    View := E.Element<TMsg>.Stack([View, Button], false, new E.Flow());
+    View := (E.Element of TMsg).Stack([View, Button], false, new E.Flow());
   end if;
 
   if Horizontal then
     case Settings.Width of
       when L.Extent.Fixed(const Width: L.Measure):
-        View := E.Element<TMsg>.Sized(View, new E.Flex(Basis := F.Cells(Width)));
+        View := (E.Element of TMsg).Sized(View, new E.Flex(Basis := F.Cells(Width)));
       when L.Extent.Fill:
-        View := E.Element<TMsg>.Sized(View, new E.Flex(Grow := 1));
+        View := (E.Element of TMsg).Sized(View, new E.Flex(Grow := 1));
       else
     end case;
   end if;
@@ -97,25 +97,25 @@ end function;
 // - `Operations`: Paint commands.
 // ## Returns
 // The scrollback control.
-public function Arrange<TMsg>(
-  Id: string; Entries: array of Logs.Entry; Timestamps: bool; Before: A.Control<TMsg>?; Area: F.Rect;
-  Style: T.Style; Theme: Th.Theme; Scope: string; FocusReturn: string; Offsets: C.Dictionary<string, int>;
-  Regions: C.List<A.ScrollRegion>; Operations: C.List<D.Operation>
-): A.Control<TMsg>;
+public function Arrange of TMsg(
+  Id: string; Entries: array of Logs.Entry; Timestamps: bool; Before: (A.Control of TMsg)?; Area: F.Rect;
+  Style: T.Style; Theme: Th.Theme; Scope: string; FocusReturn: string; Offsets: C.Dictionary of (string, int);
+  Regions: C.List of A.ScrollRegion; Operations: C.List of D.Operation
+): A.Control of TMsg;
 begin
   var Offset: int := 0;
   discard Offsets.TryGetValue(Id, out Offset);
   var Position: E.ScrollPosition := E.ScrollPosition.End;
   if Before <> null then
     case Before.Action of
-      when A.Binding.Scroll(const Old: V.Viewport<TMsg>):
+      when A.Binding.Scroll(const Old: V.Viewport of TMsg):
         if Offset < Old.Maximum then
           Position := E.ScrollPosition.Offset(Offset);
         end if;
       else
     end case;
   end if;
-  const View: V.Viewport<TMsg> := V.Resolve<TMsg>(Position, Entries.Length, Area, true, null);
+  const View: V.Viewport of TMsg := V.Resolve of TMsg(Position, Entries.Length, Area, true, null);
   Offsets[Id] := View.Offset;
   Regions.Add(new A.ScrollRegion(Id, Scope, Area, View.Maximum));
   D.Fill(Operations, Area, Style);
@@ -125,7 +125,7 @@ begin
     Area.Width
   end if;
   const Count: int := Sys.Math.Min(Area.Height, Entries.Length - View.Offset);
-  const Lines: C.List<string> := new C.List<string>(Count);
+  const Lines: C.List of string := new C.List of string(Count);
   var Longest: int := Width;
   for Row: int := 0 to Count - 1 do
     const Entry: Logs.Entry := Entries[View.Offset + Row];
@@ -177,10 +177,10 @@ begin
     );
   end for;
 
-  V.DrawBar<TMsg>(View, Operations, Area, Area, Style, Theme.Widgets);
-  return new A.Control<TMsg>(
+  V.DrawBar of TMsg(View, Operations, Area, Area, Style, Theme.Widgets);
+  return new A.Control of TMsg(
     Id, Id, 'log', View.Offset.ToString(), Area, Scope, FocusReturn, true,
-    A.Binding<TMsg>.Scroll(View), S.ButtonVariant.Default, Pan := Pan
+    (A.Binding of TMsg).Scroll(View), S.ButtonVariant.Default, Pan := Pan
   );
 end function;
 

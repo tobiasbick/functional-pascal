@@ -42,18 +42,18 @@ public sealed partial class MsBuildTests
               end try;
               return Trace;
             end function;
-            public async function AwaitPair(First: Tasks.Task<int?>; Second: Tasks.Task<int?>): Tasks.Task<int?>;
+            public async function AwaitPair(First: Tasks.Task of int?; Second: Tasks.Task of int?): Tasks.Task of int?;
             begin
               return (await First) + (await Second);
             end function;
-            public function GenericAdd<T>(A: T?; B: T?): T?;
-            where T: struct, N.INumber<T>;
+            public function GenericAdd of T(A: T?; B: T?): T?;
+            where T: struct, N.INumber of T;
             begin return A + B; end function;
-            public function GenericLess<T>(A: T?; B: T?): bool;
-            where T: struct, N.INumber<T>;
+            public function GenericLess of T(A: T?; B: T?): bool;
+            where T: struct, N.INumber of T;
             begin return A < B; end function;
-            public function GenericShift<T>(A: T?; B: int?): T?;
-            where T: struct, N.IBinaryInteger<T>;
+            public function GenericShift of T(A: T?; B: int?): T?;
+            where T: struct, N.IBinaryInteger of T;
             begin return A shl B; end function;
             public function UIntConstant(A: uint?): uint?; begin return A + (1 + 2); end function;
             public function UIntVariable(A: uint?; B: int): long?; begin return A + B; end function;
@@ -86,8 +86,8 @@ public sealed partial class MsBuildTests
             public function NullRight(A: int?): int?; begin return A + null; end function;
             public function NullShift(A: long?): long?; begin return A shl null; end function;
             public function SourceCalls(): bool;
-            begin return GenericAdd<int>(1, 2) = 3 and GenericAdd<int>(null, 2) = null and
-              not GenericLess<int>(null, 1) and GenericShift<int>(3, 1) = 6; end function;
+            begin return GenericAdd of int(1, 2) = 3 and GenericAdd of int(null, 2) = null and
+              not GenericLess of int(null, 1) and GenericShift of int(3, 1) = 6; end function;
             public function Contract(A: int?; B: int?): int?;
             requires A + B = 3;
             begin return A + B; end function;

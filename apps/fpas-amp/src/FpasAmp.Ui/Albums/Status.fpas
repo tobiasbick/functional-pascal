@@ -27,7 +27,7 @@ begin
 end function;
 
 // Returns the status bar for the album, artist or genre grid in `Current`.
-public function Build(Current: M.State): E.Element<M.Msg>;
+public function Build(Current: M.State): E.Element of M.Msg;
 begin
   const Scoped: bool := Toolbar.Root(Current.Scope) <> Current.Scope;
   const Noun: string := Toolbar.ItemName(Current.Scope).ToLowerInvariant();
@@ -48,11 +48,14 @@ begin
       Scoped or Toolbar.Count(Current.Toolbar.Applied) > 0
     )
   end if;
-  return Status.StatusBar<M.Msg>('album-status', [Status.Item<M.Msg>.Text(new Status.Label(Text))]);
+  return Status.StatusBar of M.Msg(
+    'album-status',
+    [(Status.Item of M.Msg).Text(new Status.Label(Text))]
+  );
 end function;
 
 // Returns the visible track count and duration for `Current` against the indexed `LibraryTotal`.
-public function Tracks(Current: Music.State; LibraryTotal: long): E.Element<Music.Msg>;
+public function Tracks(Current: Music.State; LibraryTotal: long): E.Element of Music.Msg;
 begin
   const Text: string := if Current.Loaded then
     Caption(
@@ -65,11 +68,11 @@ begin
   else
     'Loading tracks…'
   end if;
-  return Status.StatusBar<Music.Msg>(
+  return Status.StatusBar of Music.Msg(
     'track-status', [
-      Status.Item<Music.Msg>.Text(new Status.Label(Text)),
-      Status.Item<Music.Msg>.Spacer,
-      Status.Item<Music.Msg>.Text(new Status.Label(Browse.Time(Current.TotalMilliseconds)))
+      (Status.Item of Music.Msg).Text(new Status.Label(Text)),
+      (Status.Item of Music.Msg).Spacer,
+      (Status.Item of Music.Msg).Text(new Status.Label(Browse.Time(Current.TotalMilliseconds)))
     ]
   );
 end function;

@@ -106,8 +106,8 @@ public type HeadlessSession = record implements Sys.IDisposable
   SendInput: function(Input): Admission;
   Process: function(): StepResult;
   ReadFrame: function(): Frame;
-  ReadOutcome: function(long, Sys.TimeSpan): Tasks.Task<StepResult?>;
-  ReadReady: function(Threads.CancellationToken): Tasks.Task<bool>;
+  ReadOutcome: function(long, Sys.TimeSpan): Tasks.Task of StepResult?;
+  ReadReady: function(Threads.CancellationToken): Tasks.Task of bool;
   Status: function(): bool;
   BeginClose: function(): Tasks.Task;
   Release: procedure();
@@ -128,8 +128,8 @@ public type HeadlessSession = record implements Sys.IDisposable
   // The headless session.
   public static function Create(
     SendInput: function(Input): Admission; Process: function(): StepResult;
-    ReadFrame: function(): Frame; ReadOutcome: function(long, Sys.TimeSpan): Tasks.Task<StepResult?>;
-    ReadReady: function(Threads.CancellationToken): Tasks.Task<bool>; Status: function(): bool;
+    ReadFrame: function(): Frame; ReadOutcome: function(long, Sys.TimeSpan): Tasks.Task of StepResult?;
+    ReadReady: function(Threads.CancellationToken): Tasks.Task of bool; Status: function(): bool;
     BeginClose: function(): Tasks.Task; Release: procedure()
   ): HeadlessSession;
   begin
@@ -177,7 +177,7 @@ public type HeadlessSession = record implements Sys.IDisposable
   //
   // ## Returns
   // The outcome, or null when it is unavailable.
-  public function Wait(InputId: long; Timeout: Sys.TimeSpan): Tasks.Task<StepResult?>;
+  public function Wait(InputId: long; Timeout: Sys.TimeSpan): Tasks.Task of StepResult?;
   begin
     return self.ReadOutcome(InputId, Timeout);
   end function;
@@ -189,7 +189,7 @@ public type HeadlessSession = record implements Sys.IDisposable
   //
   // ## Returns
   // Whether the queue may contain an entry.
-  public function WaitForWork(Cancellation: Threads.CancellationToken): Tasks.Task<bool>;
+  public function WaitForWork(Cancellation: Threads.CancellationToken): Tasks.Task of bool;
   begin
     return self.ReadReady(Cancellation);
   end function;

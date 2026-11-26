@@ -106,158 +106,158 @@ end function;
 // - `Message`: Navigation or a typed slice message.
 // ## Returns
 // Next application model and mapped commands.
-public function Update(State: G.Model; Message: G.Msg): Mvu.Transition<G.Model, G.Msg>;
+public function Update(State: G.Model; Message: G.Msg): Mvu.Transition of (G.Model, G.Msg);
 begin
   case Message of
     when G.Msg.Feedback(const Value: Feedback.Msg):
-      const Child: Mvu.Transition<Feedback.Model, G.Msg> := C.MapTransition<Feedback.Model, Feedback.Msg, G.Msg>(
+      const Child: Mvu.Transition of (Feedback.Model, G.Msg) := C.MapTransition of (Feedback.Model, Feedback.Msg, G.Msg)(
         FeedbackUpdate.Update(State.Feedback, Value), G.Msg.Feedback, 'feedback'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Feedback := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.AI(const Value: Ai.Msg):
-      const Child: Mvu.Transition<Ai.Model, G.Msg> := C.MapTransition<Ai.Model, Ai.Msg, G.Msg>(
+      const Child: Mvu.Transition of (Ai.Model, G.Msg) := C.MapTransition of (Ai.Model, Ai.Msg, G.Msg)(
         AiUpdate.Update(State.AI, Value),
         G.Msg.AI,
         'ai'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           AI := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.Voice(const Value: Voice.Msg):
-      const Child: Mvu.Transition<Voice.Model, G.Msg> := C.MapTransition<Voice.Model, Voice.Msg, G.Msg>(
+      const Child: Mvu.Transition of (Voice.Model, G.Msg) := C.MapTransition of (Voice.Model, Voice.Msg, G.Msg)(
         VoiceUpdate.Update(State.Voice, Value),
         G.Msg.Voice,
         'voice'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Voice := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.Social(const Value: Social.Msg):
-      const Child: Mvu.Transition<Social.Model, G.Msg> := C.MapTransition<Social.Model, Social.Msg, G.Msg>(
+      const Child: Mvu.Transition of (Social.Model, G.Msg) := C.MapTransition of (Social.Model, Social.Msg, G.Msg)(
         SocialUpdate.Update(State.Social, Value), G.Msg.Social, 'social'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Social := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.Developer(const Value: Developer.Msg):
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Developer := DeveloperUpdate.Update(State.Developer, Value);
         end with, []
       );
     when G.Msg.MoreDeveloper(const Value: MoreDeveloper.Msg):
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           MoreDeveloper := MoreDeveloperUpdate.Update(State.MoreDeveloper, Value);
         end with, []
       );
     when G.Msg.Editing(const Value: Editing.Msg):
-      const Child: Mvu.Transition<Editing.Model, G.Msg> := C.MapTransition<Editing.Model, Editing.Msg, G.Msg>(
+      const Child: Mvu.Transition of (Editing.Model, G.Msg) := C.MapTransition of (Editing.Model, Editing.Msg, G.Msg)(
         EditUpdate.Update(State.Editing, Value), G.Msg.Editing, 'editing'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Editing := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.Code(const Value: CodePage.Msg):
-      const Child: Mvu.Transition<CodePage.Model, G.Msg> := C.MapTransition<CodePage.Model, CodePage.Msg, G.Msg>(
+      const Child: Mvu.Transition of (CodePage.Model, G.Msg) := C.MapTransition of (CodePage.Model, CodePage.Msg, G.Msg)(
         CodeUpdate.Update(State.Code, Value), G.Msg.Code, 'code'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Code := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.Files(Files.Msg.Terminal(TerminalWidget.Event.Interrupt)):
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State,
-        [Toasts.Show<G.Msg>(Strings.Get('Text.Interrupted'))]
+        [Toasts.Show of G.Msg(Strings.Get('Text.Interrupted'))]
       );
     when G.Msg.Files(const Value: Files.Msg):
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Files := FileUpdate.Update(State.Files, Value);
         end with, []
       );
     when G.Msg.Planning(const Value: Planning.Msg):
-      const Child: Mvu.Transition<Planning.Model, G.Msg> := C.MapTransition<Planning.Model, Planning.Msg, G.Msg>(
+      const Child: Mvu.Transition of (Planning.Model, G.Msg) := C.MapTransition of (Planning.Model, Planning.Msg, G.Msg)(
         PlanningUpdate.Update(State.Planning, Value), G.Msg.Planning, 'planning'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Planning := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.Desktop(const Value: Desktop.Msg):
-      const Child: Mvu.Transition<Desktop.Model, G.Msg> := C.MapTransition<Desktop.Model, Desktop.Msg, G.Msg>(
+      const Child: Mvu.Transition of (Desktop.Model, G.Msg) := C.MapTransition of (Desktop.Model, Desktop.Msg, G.Msg)(
         DesktopUpdate.Update(State.Desktop, Value), G.Msg.Desktop, 'desktop'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Desktop := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.Canvas(const Value: Canvas.Msg):
-      const Child: Mvu.Transition<Canvas.Model, G.Msg> := C.MapTransition<Canvas.Model, Canvas.Msg, G.Msg>(
+      const Child: Mvu.Transition of (Canvas.Model, G.Msg) := C.MapTransition of (Canvas.Model, Canvas.Msg, G.Msg)(
         CanvasUpdate.Update(State.Canvas, Value), G.Msg.Canvas, 'canvas'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Canvas := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.Creative(const Value: Creative.Msg):
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Creative := CreativeUpdate.Update(State.Creative, Value);
         end with, []
       );
     when G.Msg.Motion(const Value: Motion.Msg):
-      const Child: Mvu.Transition<Motion.Model, G.Msg> := C.MapTransition<Motion.Model, Motion.Msg, G.Msg>(
+      const Child: Mvu.Transition of (Motion.Model, G.Msg) := C.MapTransition of (Motion.Model, Motion.Msg, G.Msg)(
         MotionUpdate.Update(State.Motion, Value), G.Msg.Motion, 'motion'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Motion := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.Instruments(const Value: Instruments.Msg):
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Instruments := InstrumentsUpdate.Update(State.Instruments, Value);
         end with, []
       );
     when G.Msg.DataGrid(const Value: Grid.Msg):
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           DataGrid := GridUpdate.Update(State.DataGrid, Value);
         end with, []
       );
     when G.Msg.MoreCharts(const Value: MoreCharts.Msg):
-      const Child: Mvu.Transition<MoreChartsData.Samples, G.Msg> := C.MapTransition<MoreChartsData.Samples, MoreCharts.Msg, G.Msg>(
+      const Child: Mvu.Transition of (MoreChartsData.Samples, G.Msg) := C.MapTransition of (MoreChartsData.Samples, MoreCharts.Msg, G.Msg)(
         MoreChartsUpdate.Update(State.MoreCharts, Value), G.Msg.MoreCharts, 'more-charts'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           MoreCharts := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.Charts(const Value: Charts.Msg):
-      const Child: Mvu.Transition<Charts.Model, G.Msg> := C.MapTransition<Charts.Model, Charts.Msg, G.Msg>(
+      const Child: Mvu.Transition of (Charts.Model, G.Msg) := C.MapTransition of (Charts.Model, Charts.Msg, G.Msg)(
         ChartsUpdate.Update(State.Charts, Value), G.Msg.Charts, 'charts'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Charts := Child.Model;
         end with, Child.Commands
@@ -273,21 +273,21 @@ begin
     ), G.Msg.Actions(
       Actions.Msg.Shared(const Value: Demo.Msg)
     ), G.Msg.Overview(Overview.Msg.Shared(const Value: Demo.Msg)):
-      const Child: Mvu.Transition<Demo.Model, G.Msg> := C.MapTransition<Demo.Model, Demo.Msg, G.Msg>(
+      const Child: Mvu.Transition of (Demo.Model, G.Msg) := C.MapTransition of (Demo.Model, Demo.Msg, G.Msg)(
         DemoUpdate.Update(State.Shared, Value),
         G.Msg.Shared,
         'shared'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Shared := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.Overview(const Value: Overview.Msg):
-      const Child: Mvu.Transition<Overview.Model, G.Msg> := C.MapTransition<Overview.Model, Overview.Msg, G.Msg>(
+      const Child: Mvu.Transition of (Overview.Model, G.Msg) := C.MapTransition of (Overview.Model, Overview.Msg, G.Msg)(
         OverviewUpdate.Update(State.Overview, Value), G.Msg.Overview, 'overview'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Overview := Child.Model;
         end with, Child.Commands
@@ -295,182 +295,182 @@ begin
     when G.Msg.Buttons(Buttons.Msg.OpenDeleteDialog):
       return Update(State, G.Msg.Overlays(Overlays.Msg.SetDeleteDialog(true)));
     when G.Msg.Buttons(const Value: Buttons.Msg):
-      const Child: Mvu.Transition<Buttons.Model, G.Msg> := C.MapTransition<Buttons.Model, Buttons.Msg, G.Msg>(
+      const Child: Mvu.Transition of (Buttons.Model, G.Msg) := C.MapTransition of (Buttons.Model, Buttons.Msg, G.Msg)(
         ButtonsUpdate.Update(State.Buttons, Value),
         G.Msg.Buttons,
         'buttons'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Buttons := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.Inputs(const Value: Inputs.Msg):
-      const Child: Mvu.Transition<Inputs.Model, G.Msg> := C.MapTransition<Inputs.Model, Inputs.Msg, G.Msg>(
+      const Child: Mvu.Transition of (Inputs.Model, G.Msg) := C.MapTransition of (Inputs.Model, Inputs.Msg, G.Msg)(
         InputsUpdate.Update(State.Inputs, Value),
         G.Msg.Inputs,
         'inputs'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Inputs := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.Selection(const Value: Selection.Msg):
-      const Child: Mvu.Transition<Selection.Model, G.Msg> := C.MapTransition<Selection.Model, Selection.Msg, G.Msg>(
+      const Child: Mvu.Transition of (Selection.Model, G.Msg) := C.MapTransition of (Selection.Model, Selection.Msg, G.Msg)(
         SelectionUpdate.Update(State.Selection, Value),
         G.Msg.Selection,
         'selection'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Selection := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.Navigation(const Value: Navigation.Msg):
-      const Child: Mvu.Transition<Navigation.Model, G.Msg> := C.MapTransition<Navigation.Model, Navigation.Msg, G.Msg>(
+      const Child: Mvu.Transition of (Navigation.Model, G.Msg) := C.MapTransition of (Navigation.Model, Navigation.Msg, G.Msg)(
         NavigationUpdate.Update(State.Navigation, Value),
         G.Msg.Navigation,
         'navigation'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Navigation := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.Lists(const Value: Lists.Msg):
-      const Child: Mvu.Transition<Lists.Model, G.Msg> := C.MapTransition<Lists.Model, Lists.Msg, G.Msg>(
+      const Child: Mvu.Transition of (Lists.Model, G.Msg) := C.MapTransition of (Lists.Model, Lists.Msg, G.Msg)(
         ListsUpdate.Update(State.Lists, Value),
         G.Msg.Lists,
         'lists'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Lists := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.Overlays(const Value: Overlays.Msg):
-      const Child: Mvu.Transition<Overlays.Model, G.Msg> := C.MapTransition<Overlays.Model, Overlays.Msg, G.Msg>(
+      const Child: Mvu.Transition of (Overlays.Model, G.Msg) := C.MapTransition of (Overlays.Model, Overlays.Msg, G.Msg)(
         OverlaysUpdate.Update(State.Overlays, Value),
         G.Msg.Overlays,
         'overlays'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Overlays := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.Actions(const Value: Actions.Msg):
-      const Child: Mvu.Transition<Actions.Model, G.Msg> := C.MapTransition<Actions.Model, Actions.Msg, G.Msg>(
+      const Child: Mvu.Transition of (Actions.Model, G.Msg) := C.MapTransition of (Actions.Model, Actions.Msg, G.Msg)(
         ActionsUpdate.Update(State.Actions, Value),
         G.Msg.Actions,
         'actions'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Actions := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.SmartInputs(const Value: SmartInputs.Msg):
-      const Child: Mvu.Transition<SmartInputs.Model, G.Msg> := C.MapTransition<SmartInputs.Model, SmartInputs.Msg, G.Msg>(
+      const Child: Mvu.Transition of (SmartInputs.Model, G.Msg) := C.MapTransition of (SmartInputs.Model, SmartInputs.Msg, G.Msg)(
         SmartInputsUpdate.Update(State.SmartInputs, Value),
         G.Msg.SmartInputs,
         'smartinputs'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           SmartInputs := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.Pickers(const Value: Pickers.Msg):
-      const Child: Mvu.Transition<Pickers.Model, G.Msg> := C.MapTransition<Pickers.Model, Pickers.Msg, G.Msg>(
+      const Child: Mvu.Transition of (Pickers.Model, G.Msg) := C.MapTransition of (Pickers.Model, Pickers.Msg, G.Msg)(
         PickersUpdate.Update(State.Pickers, Value), G.Msg.Pickers, 'pickers'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Pickers := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.Disclosure(const Value: Disclosure.Msg):
-      const Child: Mvu.Transition<Disclosure.Model, G.Msg> := C.MapTransition<Disclosure.Model, Disclosure.Msg, G.Msg>(
+      const Child: Mvu.Transition of (Disclosure.Model, G.Msg) := C.MapTransition of (Disclosure.Model, Disclosure.Msg, G.Msg)(
         DisclosureUpdate.Update(State.Disclosure, Value),
         G.Msg.Disclosure,
         'disclosure'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Disclosure := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.Capture(const Value: Capture.Msg):
-      const Child: Mvu.Transition<Capture.Model, G.Msg> := C.MapTransition<Capture.Model, Capture.Msg, G.Msg>(
+      const Child: Mvu.Transition of (Capture.Model, G.Msg) := C.MapTransition of (Capture.Model, Capture.Msg, G.Msg)(
         CaptureUpdate.Update(State.Capture, Value), G.Msg.Capture, 'capture'
       );
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Capture := Child.Model;
         end with, Child.Commands
       );
     when G.Msg.Audio(const Value: Audio.Msg):
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Audio := AudioUpdate.Update(State.Audio, Value);
         end with, []
       );
     when G.Msg.Show(const Value: G.Page):
-      const Commands: Collections.List<Mvu.Command<G.Msg>> := new Collections.List<Mvu.Command<G.Msg>>();
+      const Commands: Collections.List of Mvu.Command of G.Msg := new Collections.List of Mvu.Command of G.Msg();
       if Value <> State.Active then
         if State.Active = G.Page.Audio then
-          Commands.Add(Mvu.CancelBackground<G.Msg>(AudioClock.Id));
+          Commands.Add(Mvu.CancelBackground of G.Msg(AudioClock.Id));
         elsif State.Active = G.Page.Motion or State.Active = G.Page.Voice or State.Active =
           G.Page.AI or State.Active = G.Page.CanvasAndBars
         then
-          Commands.Add(Mvu.CancelBackground<G.Msg>(MotionClock.Id));
+          Commands.Add(Mvu.CancelBackground of G.Msg(MotionClock.Id));
         elsif State.Active = G.Page.EditingTools then
-          Commands.Add(Mvu.CancelBackground<G.Msg>('editing/shot-playback'));
+          Commands.Add(Mvu.CancelBackground of G.Msg('editing/shot-playback'));
         elsif State.Active = G.Page.Code then
-          Commands.Add(Mvu.CancelBackground<G.Msg>('code/markdown-replay'));
+          Commands.Add(Mvu.CancelBackground of G.Msg('code/markdown-replay'));
         elsif State.Active = G.Page.Disclosure then
-          Commands.Add(Mvu.CancelBackground<G.Msg>(DisclosureClock.Id));
+          Commands.Add(Mvu.CancelBackground of G.Msg(DisclosureClock.Id));
         end if;
 
         if Value = G.Page.Audio then
           Commands.Add(
-            AudioClock.Start<G.Msg>(
+            AudioClock.Start of G.Msg(
               G.Msg.Audio(Audio.Msg.Tick), function(Error: Sys.Exception): G.Msg => G.Msg.Preview
             )
           );
         elsif Value = G.Page.Motion then
           Commands.Add(
-            MotionClock.Start<G.Msg>(
+            MotionClock.Start of G.Msg(
               function(Seconds: float): G.Msg => G.Msg.Motion(Motion.Msg.Tick(Seconds)),
               function(Error: Sys.Exception): G.Msg => G.Msg.Preview
             )
           );
         elsif Value = G.Page.CanvasAndBars then
           Commands.Add(
-            MotionClock.Start<G.Msg>(
+            MotionClock.Start of G.Msg(
               function(Seconds: float): G.Msg => G.Msg.Canvas(Canvas.Msg.Tick(Seconds)),
               function(Error: Sys.Exception): G.Msg => G.Msg.Preview, 400
             )
           );
         elsif Value = G.Page.Voice then
           Commands.Add(
-            MotionClock.Start<G.Msg>(
+            MotionClock.Start of G.Msg(
               function(Seconds: float): G.Msg => G.Msg.Voice(Voice.Msg.Tick(Seconds)),
               function(Error: Sys.Exception): G.Msg => G.Msg.Preview, 50
             )
           );
         elsif Value = G.Page.AI then
           Commands.Add(
-            MotionClock.Start<G.Msg>(
+            MotionClock.Start of G.Msg(
               function(Seconds: float): G.Msg => G.Msg.AI(Ai.Msg.Tick(Seconds)),
               function(Error: Sys.Exception): G.Msg => G.Msg.Preview
             )
           );
         elsif Value = G.Page.Disclosure then
           Commands.Add(
-            DisclosureClock.Start<G.Msg>(
+            DisclosureClock.Start of G.Msg(
               State.Disclosure.Deadline,
               function(Target: Sys.DateTimeOffset; Seconds: double): G.Msg => G.Msg.Disclosure(
                 Disclosure.Msg.SetCountdown(Target, Seconds)
@@ -481,7 +481,7 @@ begin
         end if;
       end if;
 
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Active := Value;
           NavigationRevision := State.NavigationRevision + 1;
@@ -516,19 +516,19 @@ begin
         end with, Commands.ToArray()
       );
     when G.Msg.SetDrawer(const Open: bool):
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           Drawer := Open;
         end with, []
       );
     when G.Msg.DisplaySwatch(const Index: int):
-      return new Mvu.Transition<G.Model, G.Msg>(
+      return new Mvu.Transition of (G.Model, G.Msg)(
         State with
           DisplaySwatch := Index;
         end with, []
       );
     when G.Msg.Preview:
-      return new Mvu.Transition<G.Model, G.Msg>(State, []);
+      return new Mvu.Transition of (G.Model, G.Msg)(State, []);
   end case;
 end function;
 

@@ -41,7 +41,7 @@ uses System.Threading.Tasks as Tasks;
 async function Download(
   Address: string;
   Cancellation: Threading.CancellationToken
-): Tasks.Task<string>;
+): Tasks.Task of string;
 begin
   using const Client: Http.HttpClient := new Http.HttpClient();
   return await Client.GetStringAsync(Address, Cancellation);

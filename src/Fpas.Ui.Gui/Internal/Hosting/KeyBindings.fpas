@@ -11,9 +11,9 @@ uses System.Collections.Generic as Lists;
 // Retained typed bindings and their ABI-ready native combinations.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Prepared<TMsg> = record
+public type Prepared of TMsg = record
   // Immutable model-owned typed bindings.
-  public Entries: array of S.Binding<TMsg>;
+  public Entries: array of S.Binding of TMsg;
   // Corresponding native key/modifier policies.
   public Native: array of Cui.CuiShortcut;
 end record;
@@ -27,14 +27,14 @@ end record;
 // - `Select`: Optional model selector.
 // ## Returns
 // Retained bindings; an absent selector supplies no application shortcuts.
-public function Prepare<TModel, TMsg>(Model: TModel; Select: Sys.Func<TModel, array of S.Binding<TMsg>>?): Prepared<TMsg>;
+public function Prepare of (TModel, TMsg)(Model: TModel; Select: Sys.Func of (TModel, array of S.Binding of TMsg)?): Prepared of TMsg;
 begin
-  const Entries: array of S.Binding<TMsg> := case Select of
-    when is Sys.Func<TModel, array of S.Binding<TMsg>> as Choose: Choose.Invoke(Model);
+  const Entries: array of S.Binding of TMsg := case Select of
+    when is Sys.Func of (TModel, array of S.Binding of TMsg) as Choose: Choose.Invoke(Model);
     else [];
   end case;
-  const Native: Lists.List<Cui.CuiShortcut> := new Lists.List<Cui.CuiShortcut>(Entries.Length);
-  for Entry: S.Binding<TMsg> in Entries do
+  const Native: Lists.List of Cui.CuiShortcut := new Lists.List of Cui.CuiShortcut(Entries.Length);
+  for Entry: S.Binding of TMsg in Entries do
     Native.Add(
       new Cui.CuiShortcut(
         cast<int>(Entry.Combination.Key), cast<int>(Entry.Combination.Modifiers),
@@ -43,7 +43,7 @@ begin
     );
   end for;
 
-  return new Prepared<TMsg>(Entries, Native.ToArray());
+  return new Prepared of TMsg(Entries, Native.ToArray());
 end function;
 
 // Collects application shortcuts after all native widgets have processed input.
@@ -54,7 +54,7 @@ end function;
 // - `Bindings`: Retained bindings for this view.
 // - `Accept`: Whether application input is admitted.
 // - `Messages`: Typed proposals to enqueue after presentation.
-public procedure Collect<TMsg>(Window: Cui.CuiWindow; Bindings: Prepared<TMsg>; Accept: bool; Messages: Lists.List<TMsg>);
+public procedure Collect of TMsg(Window: Cui.CuiWindow; Bindings: Prepared of TMsg; Accept: bool; Messages: Lists.List of TMsg);
 begin
   if not Accept then
     return;

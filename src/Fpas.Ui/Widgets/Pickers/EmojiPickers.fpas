@@ -108,12 +108,12 @@ end function;
 // - `Settings`: Optional layout, labels and input settings.
 // ## Returns
 // The graphical emoji picker.
-public function EmojiPicker<TMsg>(
+public function EmojiPicker of TMsg(
   Id: string; Value: State; OnChange: function(Change): TMsg; Settings: Options? := null
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.EmojiPicker(Id, Value, OnChange, Settings ?? new Options());
+  return (E.Element of TMsg).EmojiPicker(Id, Value, OnChange, Settings ?? new Options());
 end function;
 
 end unit;

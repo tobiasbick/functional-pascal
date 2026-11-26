@@ -13,9 +13,9 @@ uses System as Sys;
 const Row: L.Flow := new L.Flow(Gap := L.Spacing.Normal, Align := L.Alignment.Center);
 const Stack: L.Flow := new L.Flow(Gap := L.Spacing.Loose);
 
-function Sample<TMsg>(Preview: TMsg; Id: string; Label: string; Style: S.ButtonVariant := S.ButtonVariant.Default; Size: B.Size := B.Size.Medium): E.Element<TMsg>;
+function Sample of TMsg(Preview: TMsg; Id: string; Label: string; Style: S.ButtonVariant := S.ButtonVariant.Default; Size: B.Size := B.Size.Medium): E.Element of TMsg;
 begin
-  return B.Button<TMsg>(
+  return B.Button of TMsg(
     Id,
     Label,
     Preview,
@@ -31,38 +31,38 @@ end function;
 // - `Wide`: Whether the samples fit on one row.
 // ## Returns
 // Variant buttons in gallery order.
-public function Variants<TMsg>(Preview: TMsg; Wide: bool): E.Element<TMsg>;
+public function Variants of TMsg(Preview: TMsg; Wide: bool): E.Element of TMsg;
 begin
-  const Primary: E.Element<TMsg> := Sample<TMsg>(
+  const Primary: E.Element of TMsg := Sample of TMsg(
     Preview,
     'primary',
     Strings.Get('Text.Primary'),
     S.ButtonVariant.Primary
   );
-  const Secondary: E.Element<TMsg> := Sample<TMsg>(
+  const Secondary: E.Element of TMsg := Sample of TMsg(
     Preview,
     'secondary',
     Strings.Get('Text.Secondary')
   );
-  const Outline: E.Element<TMsg> := Sample<TMsg>(
+  const Outline: E.Element of TMsg := Sample of TMsg(
     Preview,
     'outline',
     Strings.Get('Text.Outline'),
     S.ButtonVariant.Outline
   );
-  const Ghost: E.Element<TMsg> := Sample<TMsg>(
+  const Ghost: E.Element of TMsg := Sample of TMsg(
     Preview,
     'ghost',
     Strings.Get('Text.Ghost'),
     S.ButtonVariant.Ghost
   );
-  const Danger: E.Element<TMsg> := Sample<TMsg>(
+  const Danger: E.Element of TMsg := Sample of TMsg(
     Preview,
     'danger',
     Strings.Get('Text.Danger'),
     S.ButtonVariant.Destructive
   );
-  const Link: E.Element<TMsg> := Sample<TMsg>(
+  const Link: E.Element of TMsg := Sample of TMsg(
     Preview,
     'link',
     Strings.Get('Text.Link'),
@@ -70,7 +70,7 @@ begin
   );
 
   return if Wide then
-    E.Row<TMsg>(
+    E.Row of TMsg(
       Row,
       Primary,
       Secondary,
@@ -80,10 +80,10 @@ begin
       Link
     )
   else
-    E.Column<TMsg>(
+    E.Column of TMsg(
       Stack,
-      E.Row<TMsg>(Row, Primary, Secondary, Outline),
-      E.Row<TMsg>(Row, Ghost, Danger, Link)
+      E.Row of TMsg(Row, Primary, Secondary, Outline),
+      E.Row of TMsg(Row, Ghost, Danger, Link)
     )
   end if;
 end function;
@@ -95,13 +95,13 @@ end function;
 // - `Preview`: Message for a harmless sample activation.
 // ## Returns
 // The small, medium and large buttons.
-public function Sizes<TMsg>(Preview: TMsg): E.Element<TMsg>;
+public function Sizes of TMsg(Preview: TMsg): E.Element of TMsg;
 begin
-  return E.Row<TMsg>(
+  return E.Row of TMsg(
     Row,
-    Sample<TMsg>(Preview, 'small', Strings.Get('Text.Small'), Size := B.Size.Small),
-    Sample<TMsg>(Preview, 'medium', Strings.Get('Text.Medium')),
-    Sample<TMsg>(Preview, 'large', Strings.Get('Text.Large'), Size := B.Size.Large)
+    Sample of TMsg(Preview, 'small', Strings.Get('Text.Small'), Size := B.Size.Small),
+    Sample of TMsg(Preview, 'medium', Strings.Get('Text.Medium')),
+    Sample of TMsg(Preview, 'large', Strings.Get('Text.Large'), Size := B.Size.Large)
   );
 end function;
 
@@ -112,9 +112,9 @@ end function;
 // - `Preview`: Message for a harmless sample activation.
 // ## Returns
 // New project, Download and Continue.
-public function Icons<TMsg>(Preview: TMsg): array of E.Element<TMsg>;
+public function Icons of TMsg(Preview: TMsg): array of E.Element of TMsg;
 begin
-  const Project: E.Element<TMsg> := B.Button<TMsg>(
+  const Project: E.Element of TMsg := B.Button of TMsg(
     'new-project', Strings.Get('Text.NewProject'), Preview,
     new B.Options(
       Variant := S.ButtonVariant.Primary,
@@ -122,13 +122,13 @@ begin
       TerminalIcon := '+'
     )
   );
-  const Download: E.Element<TMsg> := B.Button<TMsg>(
+  const Download: E.Element of TMsg := B.Button of TMsg(
     'download',
     Strings.Get('Text.Download'),
     Preview,
     new B.Options(Icon := Sys.Char.ConvertFromUtf32($E0B2), TerminalIcon := '↓')
   );
-  const Continue: E.Element<TMsg> := B.Button<TMsg>(
+  const Continue: E.Element of TMsg := B.Button of TMsg(
     'continue', Strings.Get('Text.Continue'), Preview,
     new B.Options(
       Variant := S.ButtonVariant.Outline,
@@ -149,9 +149,9 @@ end function;
 // - `Toggle`: Maps a save or reset action.
 // ## Returns
 // The four state examples.
-public function States<TMsg>(Preview: TMsg; Wide: bool; Loading: bool; Toggle: function(bool): TMsg): E.Element<TMsg>;
+public function States of TMsg(Preview: TMsg; Wide: bool; Loading: bool; Toggle: function(bool): TMsg): E.Element of TMsg;
 begin
-  const Save: E.Element<TMsg> := B.Button<TMsg>(
+  const Save: E.Element of TMsg := B.Button of TMsg(
     'save',
     if Loading then
       Strings.Get('Text.Saving')
@@ -161,15 +161,15 @@ begin
     Toggle(true),
     new B.Options(Loading := Loading, Variant := S.ButtonVariant.Primary)
   );
-  const Reset: E.Element<TMsg> := B.Button<TMsg>(
+  const Reset: E.Element of TMsg := B.Button of TMsg(
     'finish-save',
     Strings.Get('Text.Reset'),
     Toggle(false)
   );
-  const Disabled: E.Element<TMsg> := B.Button<TMsg>(
+  const Disabled: E.Element of TMsg := B.Button of TMsg(
     'disabled', Strings.Get('Text.Disabled'), Preview, new B.Options(Enabled := false)
   );
-  const Selected: E.Element<TMsg> := B.Button<TMsg>(
+  const Selected: E.Element of TMsg := B.Button of TMsg(
     'selected', Strings.Get('Text.Selected'), Preview,
     new B.Options(
       Variant := S.ButtonVariant.Ghost,
@@ -179,7 +179,7 @@ begin
     )
   );
   return if Wide then
-    E.Row<TMsg>(
+    E.Row of TMsg(
       Row,
       Save,
       Reset,
@@ -187,10 +187,10 @@ begin
       Selected
     )
   else
-    E.Column<TMsg>(
+    E.Column of TMsg(
       Stack,
-      E.Row<TMsg>(Row, Save, Reset),
-      E.Row<TMsg>(Row, Disabled, Selected)
+      E.Row of TMsg(Row, Save, Reset),
+      E.Row of TMsg(Row, Disabled, Selected)
     )
   end if;
 end function;

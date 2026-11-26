@@ -23,10 +23,10 @@ uses Fpas.Ui.Widgets.Overlays.Sheets as Sheets;
 // - `Horizontal`: Parent layout axis.
 // - `Align`: Parent layout alignment.
 // - `Visit`: Host traversal used to draw the two child views.
-public procedure Draw<TMsg>(
-  Current: C.State<TMsg>; Id: string; Base: E.Element<TMsg>; Content: E.Element<TMsg>;
+public procedure Draw of TMsg(
+  Current: C.State of TMsg; Id: string; Base: E.Element of TMsg; Content: E.Element of TMsg;
   Open: bool; Settings: Sheets.Options; Dismiss: TMsg; Horizontal: bool; Align: L.Alignment;
-  Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment)
+  Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
 );
   function BeginNative(Enabled: bool; FocusClose: bool; CloseToken: string): int;
   begin
@@ -40,7 +40,7 @@ public procedure Draw<TMsg>(
     Current.Window.EndSheet();
   end procedure;
 begin
-  Modal.Draw<TMsg>(
+  Modal.Draw of TMsg(
     Current, Id, Base, Content, Open, Settings.Title, Settings.Description, Settings.InitialFocus,
     Sheets.CloseId(Id), Dismiss, Horizontal, Align, Visit, BeginNative, EndNative
   );

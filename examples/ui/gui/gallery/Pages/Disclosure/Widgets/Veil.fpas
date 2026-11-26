@@ -15,27 +15,27 @@ uses GuiGallery.Pages.Canvas.Picture as Picture;
 uses GuiGallery.Pages.Disclosure.State as State;
 uses GuiGallery.Shared.Sections as G;
 
-function SampleKey(Model: State.Model; Colors: Theme.Palette): E.Element<State.Msg>;
+function SampleKey(Model: State.Model; Colors: Theme.Palette): E.Element of State.Msg;
 begin
-  return E.Row<State.Msg>(
+  return E.Row of State.Msg(
     new L.Flow(
       Gap := G.Points(8), Align := L.Alignment.Center, Padding := G.Points(8),
       PaddingStart := G.Points(10), PaddingEnd := G.Points(10),
       Background := Colors.SurfaceMuted, CornerRadius := 10.0F, Clip := false
     ),
-    E.FormattedText<State.Msg>('demo-id-', M.Font.Mono, 12.5F, Colors.TextSecondary),
-    E.Size<State.Msg>(
-      E.Column<State.Msg>(
+    E.FormattedText of State.Msg('demo-id-', M.Font.Mono, 12.5F, Colors.TextSecondary),
+    E.Size of State.Msg(
+      E.Column of State.Msg(
         new L.Flow(Clip := false),
-        V.Veil<State.Msg>(
+        V.Veil of State.Msg(
           'sample-key', Model.KeyShown, State.Msg.SetKey,
-          E.FormattedText<State.Msg>('example-value-0000', M.Font.Mono, 12.5F, Colors.Foreground),
+          E.FormattedText of State.Msg('example-value-0000', M.Font.Mono, 12.5F, Colors.Foreground),
           new V.Options(Color := Colors.Surface)
         )
       ),
       new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fill))
     ),
-    B.Button<State.Msg>(
+    B.Button of State.Msg(
       'reveal-sample-key', if Model.KeyShown then
         'Hide'
       else
@@ -52,20 +52,20 @@ end function;
 // - `Colors`: Active theme palette.
 // ## Returns
 // A card containing the three native veils.
-public function View(Model: State.Model; Colors: Theme.Palette): E.Element<State.Msg>;
+public function View(Model: State.Model; Colors: Theme.Palette): E.Element of State.Msg;
 begin
-  return E.Size<State.Msg>(
-    E.Styled<State.Msg>(
-      E.Column<State.Msg>(
+  return E.Size of State.Msg(
+    E.Styled of State.Msg(
+      E.Column of State.Msg(
         new L.Flow(
           Gap := G.Points(12),
           Padding := G.Points(12),
           CornerRadius := 16.0F,
           Clip := false
         ),
-        V.Veil<State.Msg>(
+        V.Veil of State.Msg(
           'photo', Model.Photo, State.Msg.SetPhoto,
-          I.Image<State.Msg>(
+          I.Image of State.Msg(
             'veil-picture', Picture.Result,
             new I.Options(
               Width := L.Extent.Fixed(L.Measure.Logical(234)),
@@ -80,14 +80,14 @@ begin
           )
         ),
         SampleKey(Model, Colors),
-        E.Row<State.Msg>(
+        E.Row of State.Msg(
           new L.Flow(Gap := G.Points(4), Wrap := true, Align := L.Alignment.Center, Clip := false),
-          E.Text<State.Msg>('Finished it last night. The ending:'),
-          V.Veil<State.Msg>(
+          E.Text of State.Msg('Finished it last night. The ending:'),
+          V.Veil of State.Msg(
             'spoiler',
             Model.Spoiler,
             State.Msg.SetSpoiler,
-            E.Text<State.Msg>('the keeper was the narrator'),
+            E.Text of State.Msg('the keeper was the narrator'),
             new V.Options(Toggle := true, Radius := 4.0F)
           )
         )

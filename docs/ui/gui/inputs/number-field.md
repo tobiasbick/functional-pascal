@@ -17,10 +17,10 @@ uses Fpas.Ui.Widgets.Inputs.NumberFields as W;
 // - `Seats`: Current seat count from 0 through 99.
 // ## Returns
 // The widget for the application view.
-public function View(Seats: double): E.Element<double>;
+public function View(Seats: double): E.Element of double;
 requires Seats >= 0.0 and Seats <= 99.0;
 begin
-  return W.NumberField<double>('input-seats', Seats, 0.0, 99.0,
+  return W.NumberField of double('input-seats', Seats, 0.0, 99.0,
     function(Value: double): double => Value, new W.Options(Label := 'Seats'));
 end function;
 

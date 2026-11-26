@@ -27,10 +27,10 @@ uses System.Collections.Generic as Lists;
 // - `Horizontal`: Axis containing the trigger.
 // - `Align`: Alignment of the trigger.
 // - `Visit`: Host traversal for the trigger and content.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Trigger: E.Element<TMsg>; Content: E.Element<TMsg>;
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Trigger: E.Element of TMsg; Content: E.Element of TMsg;
   Open: bool; Dismiss: TMsg; Settings: P.Options; Horizontal: bool; Align: L.Alignment;
-  Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment)
+  Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment)
 );
 begin
   Visit(Trigger, Frame, Horizontal, Align);
@@ -39,7 +39,7 @@ begin
   end if;
 
   const ContainsModal: bool := Frame.Interactive and Frame.ActiveModal <> null
-    and F.TopModal<TMsg>(Content, Frame.Prepared, Frame.Previous) = Frame.ActiveModal;
+    and F.TopModal of TMsg(Content, Frame.Prepared, Frame.Previous) = Frame.ActiveModal;
   const Result: int := Frame.Window.BeginPopover(
     C.Token('popover', Id), cast<int>(Settings.Position), cast<float>(Settings.Width),
     cast<float>(Settings.Padding), cast<float>(Settings.Gap),
@@ -57,13 +57,13 @@ begin
   if Visible then
     Frame.Controls.Add(new App.Control(Id, '', 'popover', new Cui.CuiRectangle(), false));
   end if;
-  const Inside: C.State<TMsg> := Frame with
+  const Inside: C.State of TMsg := Frame with
     AcceptInput := Frame.AcceptInput and Visible;
     PaintingClosed := not Visible;
     Labels := if Visible then
       Frame.Labels
     else
-      new Lists.List<string>()
+      new Lists.List of string()
     end if;
   end with;
   Visit(Content, Inside, false, L.Alignment.Default);

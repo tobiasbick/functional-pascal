@@ -19,7 +19,7 @@ public type Position = record
   end function;
 end record;
 
-public function TotalWeight(Positions: Collections.IEnumerable<Position>): double;
+public function TotalWeight(Positions: Collections.IEnumerable of Position): double;
 begin
   var Total: double := 0.0;
 

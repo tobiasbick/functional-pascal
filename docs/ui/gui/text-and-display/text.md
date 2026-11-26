@@ -18,13 +18,13 @@ uses Fpas.Ui.Widgets.Display.Texts as W;
 // Shows a heading with an inline command hint.
 // ## Returns
 // Native text elements in a column.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return E.Column<string>(
-    W.Text<string>('Quickstart', W.Appearance.HeadingOne),
-    E.Row<string>(
-      W.Text<string>('Run', W.Appearance.Body),
-      W.Text<string>('fpas run', W.Appearance.Code)
+  return E.Column of string(
+    W.Text of string('Quickstart', W.Appearance.HeadingOne),
+    E.Row of string(
+      W.Text of string('Run', W.Appearance.Body),
+      W.Text of string('fpas run', W.Appearance.Code)
     )
   );
 end function;
@@ -34,9 +34,9 @@ end function;
 // - `Caption`: The visible heading.
 // ## Returns
 // A label styled with the graphical display title role.
-public function Title(Caption: string): E.Element<string>;
+public function Title(Caption: string): E.Element of string;
 begin
-  return E.Styled<string>(E.Text<string>(Caption), S.Role.DisplayTitle);
+  return E.Styled of string(E.Text of string(Caption), S.Role.DisplayTitle);
 end function;
 
 end unit;

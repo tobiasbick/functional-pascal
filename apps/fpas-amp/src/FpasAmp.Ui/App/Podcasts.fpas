@@ -28,14 +28,14 @@ uses System.Net.Http as H;
 uses System.Threading as T;
 uses System.Threading.Tasks as Tasks;
 
-function Change(Current: App.State; Action: M.Msg): A.Transition<App.State, App.Msg>;
+function Change(Current: App.State; Action: M.Msg): A.Transition of (App.State, App.Msg);
 begin
-  const Result: A.Transition<M.State, App.Msg> := Composition.MapTransition<M.State, M.Msg, App.Msg>(
+  const Result: A.Transition of (M.State, App.Msg) := Composition.MapTransition of (M.State, M.Msg, App.Msg)(
     Update.Apply(Current.Podcasts, Action, Current.Settings.Saved.PodcastSubscriptions),
     App.Msg.Podcasts,
     'podcasts'
   );
-  return new A.Transition<App.State, App.Msg>(
+  return new A.Transition of (App.State, App.Msg)(
     Current with
       Podcasts := Result.Model;
     end with, Result.Commands
@@ -52,21 +52,23 @@ begin
   end with;
 end function;
 
-function Open(Current: App.State; Show: M.Show; Subscribe: bool): A.Transition<App.State, App.Msg>;
+function Open(Current: App.State; Show: M.Show; Subscribe: bool): A.Transition of (App.State, App.Msg);
 begin
   return Change(Route(Current, Nav.Route.Podcast(Show.Id())), M.Msg.Open(Show, Subscribe));
 end function;
 
-function SearchPage(Current: App.State): A.Transition<App.State, App.Msg>;
+function SearchPage(Current: App.State): A.Transition of (App.State, App.Msg);
 begin
-  const Closed: A.Transition<App.State, App.Msg> := Change(Current, M.Msg.Back);
+  const Closed: A.Transition of (App.State, App.Msg) := Change(Current, M.Msg.Back);
   if Closed.Model.Podcasts.SearchRevision <> 0L then
     return Closed;
   end if;
-  const Started: A.Transition<App.State, App.Msg> := Change(Closed.Model, M.Msg.Search(''));
-  const Commands: C.List<A.Command<App.Msg>> := new C.List<A.Command<App.Msg>>(Closed.Commands);
+  const Started: A.Transition of (App.State, App.Msg) := Change(Closed.Model, M.Msg.Search(''));
+  const Commands: C.List of A.Command of App.Msg := new C.List of A.Command of App.Msg(
+    Closed.Commands
+  );
   Commands.AddRange(Started.Commands);
-  return new A.Transition<App.State, App.Msg>(Started.Model, Commands.ToArray());
+  return new A.Transition of (App.State, App.Msg)(Started.Model, Commands.ToArray());
 end function;
 
 // Loads podcast charts or opens a subscribed feed on navigation or startup.
@@ -75,7 +77,7 @@ end function;
 // - `Before`: The previous route.
 // ## Returns
 // The selected page and any commands that load or cancel its data.
-public function Navigate(Current: App.State; Before: Nav.Route): A.Transition<App.State, App.Msg>;
+public function Navigate(Current: App.State; Before: Nav.Route): A.Transition of (App.State, App.Msg);
 begin
   case Current.Navigation.Active of
     when Nav.Route.Page(Nav.Page.Podcasts):
@@ -98,7 +100,7 @@ begin
       end case;
   end case;
 
-  return new A.Transition<App.State, App.Msg>(Current, []);
+  return new A.Transition of (App.State, App.Msg)(Current, []);
 end function;
 
 function Persist(Current: App.State; Show: M.Show; Enabled: bool; Save: procedure(Settings.Preferences)): App.State;
@@ -108,7 +110,7 @@ begin
   if (M.Find(Old, Show.Id()) <> null) = Enabled then
     return Current;
   end if;
-  const Items: C.List<M.Show> := new C.List<M.Show>();
+  const Items: C.List of M.Show := new C.List of M.Show();
   for Item: M.Show in Old do
     if Item.Url <> Show.Url then
       Items.Add(Item);
@@ -154,7 +156,7 @@ end function;
 // - `Save`: Writes the updated preferences when subscriptions change.
 // ## Returns
 // The updated application state and its podcast commands.
-public function Apply(Current: App.State; Action: M.Msg; Save: procedure(Settings.Preferences)): A.Transition<App.State, App.Msg>;
+public function Apply(Current: App.State; Action: M.Msg; Save: procedure(Settings.Preferences)): A.Transition of (App.State, App.Msg);
 begin
   case Action of
     when M.Msg.Open(const Show: M.Show, const Subscribe: bool):
@@ -162,16 +164,16 @@ begin
     when M.Msg.Back:
       return SearchPage(Route(Current, Nav.Route.Page(Nav.Page.Podcasts)));
     when M.Msg.Subscribe(const Show: M.Show, const Enabled: bool):
-      return new A.Transition<App.State, App.Msg>(Persist(Current, Show, Enabled, Save), []);
+      return new A.Transition of (App.State, App.Msg)(Persist(Current, Show, Enabled, Save), []);
     when M.Msg.AddFeed:
       const Url: string := M.Address(Current.Podcasts.Draft ?? '');
       if Url <> '' then
         return Open(Current, new M.Show(Url, (new Sys.Uri(Url)).Host), true);
       end if;
     when M.Msg.Loaded(const Revision: long, const Feed: M.Feed):
-      const Result: A.Transition<App.State, App.Msg> := Change(Current, Action);
+      const Result: A.Transition of (App.State, App.Msg) := Change(Current, Action);
       if Revision = Current.Podcasts.FeedRevision and Current.Podcasts.AddOnLoad then
-        return new A.Transition<App.State, App.Msg>(
+        return new A.Transition of (App.State, App.Msg)(
           Persist(Result.Model, Feed.Show, true, Save),
           Result.Commands
         );
@@ -179,14 +181,14 @@ begin
 
       return Result;
     when M.Msg.Cover(_, _, const Url: string, const Image: Images.Bitmap):
-      const Result: A.Transition<App.State, App.Msg> := Change(Current, Action);
+      const Result: A.Transition of (App.State, App.Msg) := Change(Current, Action);
       const Show: M.Show? := Result.Model.Podcasts.Show;
       const Track: Tracks.Entry? := Player.Track(Current.Player);
       if Current.Player.Podcast and Track <> null and Show <> null and Show.Artwork = Url
         and Track.TrackId.StartsWith(Show.Id() + ':', Sys.StringComparison.Ordinal)
         and Result.Model.Podcasts.Covers <> Current.Podcasts.Covers
       then
-        return new A.Transition<App.State, App.Msg>(
+        return new A.Transition of (App.State, App.Msg)(
           Result.Model with
             Player := Current.Player with
               Cover := Image;
@@ -221,7 +223,7 @@ begin
     return Player.Msg.Toggle;
   end if;
   const Rows: array of M.Episode := Current.Podcasts.ShownEpisodes;
-  const Queue: I.ImmutableArray<Tracks.Entry>.Builder := I.ImmutableArray.CreateBuilder<Tracks.Entry>(
+  const Queue: (I.ImmutableArray of Tracks.Entry).Builder := I.ImmutableArray.CreateBuilder of Tracks.Entry(
     Rows.Length
   );
   var Slot: int := -1;
@@ -250,8 +252,8 @@ begin
   return Player.Msg.PlayEpisodes(Queue.MoveToImmutable(), Slot, Cover);
 end function;
 
-function DownloadEpisode(Port: Playback.Connection; Url: string; Codec: string; Revision: long): A.Command<App.Msg>;
-  async function Fetch(Cache: Sys.Lazy<IO.DirectoryInfo>; Stop: T.CancellationToken): Tasks.Task<Fx.Outcome<string, string>>;
+function DownloadEpisode(Port: Playback.Connection; Url: string; Codec: string; Revision: long): A.Command of App.Msg;
+  async function Fetch(Cache: Sys.Lazy of IO.DirectoryInfo; Stop: T.CancellationToken): Tasks.Task of Fx.Outcome of (string, string);
   begin
     try
       return Fx.Outcome.Success(
@@ -264,10 +266,11 @@ function DownloadEpisode(Port: Playback.Connection; Url: string; Codec: string; 
     end try;
   end function;
 begin
-  return A.StartBackground<App.Msg>(
-    'podcast-episode-media', A.FromEffect<string, string, Sys.Lazy<IO.DirectoryInfo>, App.Msg>(
-      Fx.Effect<string, string, Sys.Lazy<IO.DirectoryInfo>>.Defer(Fetch),
-      function(_Context: A.BackgroundContext<App.Msg>): Sys.Lazy<IO.DirectoryInfo> => Port.Cache,
+  return A.StartBackground of App.Msg(
+    'podcast-episode-media',
+    A.FromEffect of (string, string, Sys.Lazy of IO.DirectoryInfo, App.Msg)(
+      Fx.Effect of (string, string, Sys.Lazy of IO.DirectoryInfo).Defer(Fetch),
+      function(_Context: A.BackgroundContext of App.Msg): Sys.Lazy of IO.DirectoryInfo => Port.Cache,
       function(Path: string): App.Msg => App.Msg.Player(Player.Msg.EpisodeReady(Revision, Path)),
       function(Reason: string): App.Msg => App.Msg.Player(
         Player.Msg.EpisodeFailed(Revision, Reason)
@@ -284,9 +287,9 @@ end function;
 // - `Port`: Playback connection supplying the file workspace.
 // ## Returns
 // The application transition, augmented with the required background command.
-public function Prepare(Before: Player.State; Result: A.Transition<App.State, App.Msg>; Request: Player.Request?; Port: Playback.Connection): A.Transition<App.State, App.Msg>;
+public function Prepare(Before: Player.State; Result: A.Transition of (App.State, App.Msg); Request: Player.Request?; Port: Playback.Connection): A.Transition of (App.State, App.Msg);
 begin
-  const Command: A.Command<App.Msg>? := case Request of
+  const Command: (A.Command of App.Msg)? := case Request of
     when Player.Request.Download(
       const Url: string,
       const Codec: string,
@@ -295,7 +298,7 @@ begin
     else if Before.Podcast and Before.Buffering and Before.Revision <>
       Result.Model.Player.Revision
     then
-      A.CancelBackground<App.Msg>('podcast-episode-media')
+      A.CancelBackground of App.Msg('podcast-episode-media')
     else
       null
     end if;
@@ -309,9 +312,11 @@ begin
       Port.Send(Player.Request.Unload);
     else
   end case;
-  const Commands: C.List<A.Command<App.Msg>> := new C.List<A.Command<App.Msg>>(Result.Commands);
+  const Commands: C.List of A.Command of App.Msg := new C.List of A.Command of App.Msg(
+    Result.Commands
+  );
   Commands.Add(Command);
-  return new A.Transition<App.State, App.Msg>(Result.Model, Commands.ToArray());
+  return new A.Transition of (App.State, App.Msg)(Result.Model, Commands.ToArray());
 end function;
 
 end unit;

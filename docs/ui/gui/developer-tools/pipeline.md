@@ -21,9 +21,9 @@ uses Fpas.Ui.Widgets.Developer.Pipelines as W;
 // - `Selected`: Selected job index, or minus one.
 // ## Returns
 // The pipeline with selected and clicked jobs as proposals.
-public function View(Stages: array of string; Jobs: array of W.Job; Selected: int): E.Element<W.Event>;
+public function View(Stages: array of string; Jobs: array of W.Job; Selected: int): E.Element of W.Event;
 begin
-  return W.Pipeline<W.Event>('ci', Stages, Jobs, Selected,
+  return W.Pipeline of W.Event('ci', Stages, Jobs, Selected,
     function(Change: W.Event): W.Event => Change);
 end function;
 

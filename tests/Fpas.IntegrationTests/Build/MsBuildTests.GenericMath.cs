@@ -75,73 +75,73 @@ public sealed partial class MsBuildTests
         File.WriteAllText(project.File("Game/Bridge.fpas"), """
             unit Demo.Math;
             uses System.Numerics as N; uses System.Threading.Tasks as Tasks; uses Shared as S;
-            public function Add<T>(Left: T; Right: T): T;
-            where T: N.IAdditionOperators<T, T, T>;
+            public function Add of T(Left: T; Right: T): T;
+            where T: N.IAdditionOperators of (T, T, T);
             begin return Left + Right; end function;
-            public function Wrap<T>(Left: T; Right: T): T;
-            where T: N.IAdditionOperators<T, T, T>;
+            public function Wrap of T(Left: T; Right: T): T;
+            where T: N.IAdditionOperators of (T, T, T);
             begin return unchecked(Left + Right); end function;
-            public function Negate<T>(Value: T): T;
-            where T: N.IUnaryNegationOperators<T, T>;
+            public function Negate of T(Value: T): T;
+            where T: N.IUnaryNegationOperators of (T, T);
             begin return -Value; end function;
-            public function WrapNegate<T>(Value: T): T;
-            where T: N.IUnaryNegationOperators<T, T>;
+            public function WrapNegate of T(Value: T): T;
+            where T: N.IUnaryNegationOperators of (T, T);
             begin return unchecked(-Value); end function;
-            public function Positive<T>(Value: T): T;
-            where T: N.IUnaryPlusOperators<T, T>;
+            public function Positive of T(Value: T): T;
+            where T: N.IUnaryPlusOperators of (T, T);
             begin return +Value; end function;
-            public function Calculate<T>(Left: T; Right: T): T;
-            where T: N.INumber<T>;
+            public function Calculate of T(Left: T; Right: T): T;
+            where T: N.INumber of T;
             begin return (Left * Right + Left - Right) / T.CreateChecked(2); end function;
-            public function Bits<T>(Left: T; Right: T; Count: int): T;
-            where T: N.IBinaryInteger<T>;
+            public function Bits of T(Left: T; Right: T; Count: int): T;
+            where T: N.IBinaryInteger of T;
             begin return ((not Left and Right) or ((Left xor Right) shl Count)) shr 1; end function;
-            public function Divide<T>(Left: T; Right: T): T;
-            where T: N.IDivisionOperators<T, T, T>;
+            public function Divide of T(Left: T; Right: T): T;
+            where T: N.IDivisionOperators of (T, T, T);
             begin return Left div Right; end function;
-            public function Remainder<T>(Left: T; Right: T): T;
-            where T: N.IModulusOperators<T, T, T>;
+            public function Remainder of T(Left: T; Right: T): T;
+            where T: N.IModulusOperators of (T, T, T);
             begin return Left mod Right; end function;
-            public function Compare<T>(Left: T; Right: T): bool;
-            where T: N.IComparisonOperators<T, T, bool>;
+            public function Compare of T(Left: T; Right: T): bool;
+            where T: N.IComparisonOperators of (T, T, bool);
             begin return Left < Right and Right > Left and Left <= Right and Right >= Left and Left <> Right and Left = Left; end function;
-            public function Zero<T>(): T;
-            where T: N.INumber<T>;
+            public function Zero of T(): T;
+            where T: N.INumber of T;
             begin return T.Zero; end function;
-            public function Convert<T>(Value: int): T;
-            where T: N.INumberBase<T>;
+            public function Convert of T(Value: int): T;
+            where T: N.INumberBase of T;
             begin return T.CreateChecked(Value); end function;
-            public function Converter<T>(): function(int): T;
-            where T: N.INumberBase<T>;
-            begin return T.CreateChecked<int>; end function;
-            public function Capture<T>(Start: T): function(T): T;
-            where T: N.INumber<T>;
+            public function Converter of T(): function(int): T;
+            where T: N.INumberBase of T;
+            begin return T.CreateChecked of int; end function;
+            public function Capture of T(Start: T): function(T): T;
+            where T: N.INumber of T;
             begin return function(Value: T): T => Start + Value; end function;
-            public type Accumulator<T> = where T: N.INumber<T>;
+            public type Accumulator of T = where T: N.INumber of T;
             record
               public Value: T;
               public function Add(Other: T): T; begin return self.Value + Other; end function;
             end record;
-            public type DefaultRecord = record implements S.IDefault<DefaultRecord> end record;
-            public function DefaultValue<T>(): int;
-            where T: S.IDefault<T>;
+            public type DefaultRecord = record implements S.IDefault of DefaultRecord end record;
+            public function DefaultValue of T(): int;
+            where T: S.IDefault of T;
             begin return T.Value; end function;
-            public function DefaultEcho<T>(Value: T): T;
-            where T: S.IDefault<T>;
+            public function DefaultEcho of T(Value: T): T;
+            where T: S.IDefault of T;
             begin return T.Echo(Value); end function;
-            public function Mixed<TLeft, TRight, TResult>(Left: TLeft; Right: TRight): TResult;
-            where TLeft: N.IAdditionOperators<TLeft, TRight, TResult>;
+            public function Mixed of (TLeft, TRight, TResult)(Left: TLeft; Right: TRight): TResult;
+            where TLeft: N.IAdditionOperators of (TLeft, TRight, TResult);
             begin return Left + Right; end function;
-            public function Reverse<T>(Left: int; Right: T): long;
-            where T: S.IReverse<T>;
+            public function Reverse of T(Left: int; Right: T): long;
+            where T: S.IReverse of T;
             begin return Left + Right; end function;
-            public function Diamond<T>(Value: T): int;
-            where T: S.IDiamond<T>;
+            public function Diamond of T(Value: T): int;
+            where T: S.IDiamond of T;
             begin return Value + 42; end function;
             public function Order(): int;
-            begin return Mixed<S.Probe, S.Probe, int>(S.Probe.Left(), S.Probe.Right()); end function;
-            public async function Later<T>(First: T; Pending: Tasks.Task<T>): Tasks.Task<T>;
-            where T: N.INumber<T>;
+            begin return Mixed of (S.Probe, S.Probe, int)(S.Probe.Left(), S.Probe.Right()); end function;
+            public async function Later of T(First: T; Pending: Tasks.Task of T): Tasks.Task of T;
+            where T: N.INumber of T;
             begin return First + await Pending; end function;
             end unit;
             """);
@@ -155,8 +155,8 @@ public sealed partial class MsBuildTests
         File.WriteAllText(project.File("Consumer/Consumer.fpas"), """
             unit Demo.Consumer;
             uses Demo.Math as M; uses System.Numerics as N;
-            public function Forward<T>(Left: T; Right: T): T;
-            where T: N.INumber<T>;
+            public function Forward of T(Left: T; Right: T): T;
+            where T: N.INumber of T;
             begin return M.Add(Left, Right); end function;
             end unit;
             """);
@@ -206,12 +206,12 @@ public sealed partial class MsBuildTests
         Assert.True(build.ExitCode == 0, build.Output + build.Error);
         (string Source, string Code)[] cases =
         [
-            ("function F<T>(X: T): int; where T: S.IFirst<T>, S.ISecond<T>; begin return X + 1; end function;", "FP3003"),
-            ("function F<T>(): int; where T: S.IFirstProperty, S.ISecondProperty; begin return T.Value; end function;", "FP3003"),
-            ("function F<T>(X: T): T; where T: N.IAdditionOperators<T, T, T>; begin return X * X; end function;", "FP3002"),
+            ("function F of T(X: T): int; where T: S.IFirst of T, S.ISecond of T; begin return X + 1; end function;", "FP3003"),
+            ("function F of T(): int; where T: S.IFirstProperty, S.ISecondProperty; begin return T.Value; end function;", "FP3003"),
+            ("function F of T(X: T): T; where T: N.IAdditionOperators of (T, T, T); begin return X * X; end function;", "FP3002"),
             ("function F(): int; begin return S.IFirstProperty.Value; end function;", "FP3005"),
-            ("function F(): int; begin return S.IDefault<S.Default>.Echo(new S.Default()).GetHashCode(); end function;", "FP3005"),
-            ("function F<T>(X: T; Y: T): T; where T: N.IAdditionOperators<T, T, T>; begin return X + Y; end function; function Bad(): string; begin return F<string>('a', 'b'); end function;", "FP3018"),
+            ("function F(): int; begin return (S.IDefault of S.Default).Echo(new S.Default()).GetHashCode(); end function;", "FP3005"),
+            ("function F of T(X: T; Y: T): T; where T: N.IAdditionOperators of (T, T, T); begin return X + Y; end function; function Bad(): string; begin return F of string('a', 'b'); end function;", "FP3018"),
             ("type Bad = record implements S.IFirstProperty end record;", "FP3029")
         ];
         foreach (var (declaration, code) in cases)

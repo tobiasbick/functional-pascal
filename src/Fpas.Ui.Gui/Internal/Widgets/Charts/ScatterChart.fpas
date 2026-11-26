@@ -22,7 +22,7 @@ uses System as Sys;
 // - `Series`: Finite points and optional matching bubble sizes.
 // - `Settings`: Native presentation.
 // - `OnActivate`: Optional native click callback.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Series: array of W.Series; Settings: W.Options; OnActivate: Sys.Func<W.PointIndex, TMsg>?);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Series: array of W.Series; Settings: W.Options; OnActivate: Sys.Func of (W.PointIndex, TMsg)?);
 begin
   const Token: string := C.Token('scatter-chart', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
@@ -43,7 +43,7 @@ begin
     for Index: int := 0 to Series.Length - 1 do
       if Point < Series[Index].Points.Length then
         case OnActivate of
-          when is Sys.Func<W.PointIndex, TMsg> as Notify:
+          when is Sys.Func of (W.PointIndex, TMsg) as Notify:
             Frame.Messages.Add(Notify.Invoke(new W.PointIndex(Index, Point)));
           else
         end case;

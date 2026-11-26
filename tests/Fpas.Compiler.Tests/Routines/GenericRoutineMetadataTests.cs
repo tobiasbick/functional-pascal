@@ -14,9 +14,9 @@ public sealed class GenericRoutineMetadataTests
     {
         var result = TestCompilation.CompileAgainstFramework("""
             program Metadata;
-            function Id<T>(Value: T): T; begin return Value; end function;
-            function Hold<T>(Value: T): function(): T; begin return function(): T => Value; end function;
-            begin discard Id<int>(42); discard Hold<string>('text')(); end;
+            function Id of T(Value: T): T; begin return Value; end function;
+            function Hold of T(Value: T): function(): T; begin return function(): T => Value; end function;
+            begin discard Id of int(42); discard Hold of string('text')(); end;
             end program;
             """);
         Assert.True(result.Success, string.Join(';', result.Diagnostics));

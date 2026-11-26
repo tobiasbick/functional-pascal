@@ -21,21 +21,21 @@ uses System.Collections.Generic as Lists;
 
 const Clip: array of float := Script.Clip();
 
-function Limit(Body: E.Element<S.Msg>): E.Element<S.Msg>;
+function Limit(Body: E.Element of S.Msg): E.Element of S.Msg;
 begin
-  return E.Size<S.Msg>(
+  return E.Size of S.Msg(
     Body,
     new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fill, Maximum := L.Measure.Logical(620)))
   );
 end function;
 
-function Messages(Model: S.Model): E.Element<S.Msg>;
+function Messages(Model: S.Model): E.Element of S.Msg;
 begin
-  const Views: Lists.List<E.Element<S.Msg>> := new Lists.List<E.Element<S.Msg>>();
+  const Views: Lists.List of E.Element of S.Msg := new Lists.List of E.Element of S.Msg();
   for Item: S.Note in Model.Notes do
     const Key: int := Item.Key;
     Views.Add(
-      Notes.VoiceNote<S.Msg>(
+      Notes.VoiceNote of S.Msg(
         'voice-note-' + Key.ToString(Sys.Globalization.CultureInfo.InvariantCulture),
         Item.Levels,
         Item.Playback,
@@ -46,12 +46,12 @@ begin
   end for;
 
   Views.Add(
-    Editor.Composer<S.Msg>(
+    Editor.Composer of S.Msg(
       'voice-composer', Model.Editor, S.Msg.Editor,
       new Editor.Options(Placeholder := 'Message', MaxUtf8Bytes := 255, Microphone := true)
     )
   );
-  return Limit(E.Column<S.Msg>(new L.Flow(Gap := G.Points(10), Clip := false), Views.ToArray()));
+  return Limit(E.Column of S.Msg(new L.Flow(Gap := G.Points(10), Clip := false), Views.ToArray()));
 end function;
 
 // Builds the native voice page and the supplemental legacy orb.
@@ -59,23 +59,23 @@ end function;
 // - `Model`: Current synthetic call and playback state.
 // ## Returns
 // The original voice examples followed by the orb example.
-public function View(Model: S.Model): array of E.Element<S.Msg>;
+public function View(Model: S.Model): array of E.Element of S.Msg;
 begin
   const Moment: Script.Moment := Script.At(Model.Time - Model.Started, Model.Muted);
   return [
-    G.Heading<S.Msg>(
+    G.Heading of S.Msg(
       Strings.Get('Heading.VoiceMessages'),
       Strings.Get('Heading.VoiceMessagesHint')
     ),
     Messages(Model),
-    G.Heading<S.Msg>(
+    G.Heading of S.Msg(
       Strings.Get('Heading.VoiceSession'),
       Strings.Get('Heading.VoiceSessionHint')
     ),
     Limit(
-      Cards.Card<S.Msg>(
+      Cards.Card of S.Msg(
         'voice-session-card', [
-          Calls.VoiceSession<S.Msg>(
+          Calls.VoiceSession of S.Msg(
             'voice-call', Moment.Mode, Model.Timeline, Model.Muted, S.Msg.Call,
             new Calls.Options(
               Transcript := Moment.Spoken,
@@ -86,25 +86,25 @@ begin
         ], new Cards.Options(Width := L.Extent.Fill, Padding := 20.0F)
       )
     ),
-    G.Heading<S.Msg>(
+    G.Heading of S.Msg(
       Strings.Get('Heading.VoiceWaveform'),
       Strings.Get('Heading.VoiceWaveformHint')
     ),
     Limit(
-      E.Column<S.Msg>(
+      E.Column of S.Msg(
         new L.Flow(Gap := G.Points(12), Clip := false),
-        Waves.VoiceWave<S.Msg>('voice-live', Model.Timeline, null, null),
-        Waves.VoiceWave<S.Msg>(
+        Waves.VoiceWave of S.Msg('voice-live', Model.Timeline, null, null),
+        Waves.VoiceWave of S.Msg(
           'voice-clip', new V.Signal(Clip), Model.Progress,
           function(Value: float): S.Msg => S.Msg.Seek(Value)
         )
       )
     ),
-    G.Heading<S.Msg>(
+    G.Heading of S.Msg(
       Strings.Get('Heading.VoiceOrb'),
       Strings.Get('Heading.VoiceOrbHint')
     ),
-    Orbs.VoiceOrb<S.Msg>(
+    Orbs.VoiceOrb of S.Msg(
       'voice-orb', if Model.OrbListening then
         V.Activity.Listening
       else

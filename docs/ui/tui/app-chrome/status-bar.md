@@ -17,11 +17,11 @@ uses Fpas.Ui.Widgets.Desktop.StatusBars as W;
 // - `Encoding`: Current document encoding.
 // ## Returns
 // The resulting view.
-public function View(Encoding: string): E.Element<string>;
+public function View(Encoding: string): E.Element of string;
 begin
-  return W.StatusBar<string>('status', [
-    W.Item<string>.Text(new W.Label('Saved')), W.Item<string>.Spacer,
-    W.Item<string>.Action('encoding', new W.Label(Encoding), 'Change encoding', true, 'encoding')
+  return W.StatusBar of string('status', [
+    (W.Item of string).Text(new W.Label('Saved')), (W.Item of string).Spacer,
+    (W.Item of string).Action('encoding', new W.Label(Encoding), 'Change encoding', true, 'encoding')
   ], true);
 end function;
 

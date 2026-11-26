@@ -10,7 +10,7 @@ uses Fpas.Ui.Widgets.Actions.Buttons as B;
 //
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Item<TMsg> = record
+public type Item of TMsg = record
   // Stable key within the menu.
   public Key: string;
   // Literal caption.
@@ -68,13 +68,13 @@ end function;
 // - `Settings`: Optional control size, appearance and input settings.
 // ## Returns
 // The graphical split button.
-public function SplitButton<TMsg>(
-  Id: string; Label: string; Message: TMsg; Items: array of Item<TMsg>; Settings: Options? := null
-): E.Element<TMsg>;
+public function SplitButton of TMsg(
+  Id: string; Label: string; Message: TMsg; Items: array of Item of TMsg; Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 requires Items.Length > 0;
 begin
-  return E.Element<TMsg>.SplitAction(Id, Label, Message, Items, Settings ?? new Options());
+  return (E.Element of TMsg).SplitAction(Id, Label, Message, Items, Settings ?? new Options());
 end function;
 
 end unit;

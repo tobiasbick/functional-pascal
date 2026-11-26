@@ -23,9 +23,9 @@ uses Fpas.Ui.Widgets.Audio.VoiceSessions as W;
 // - `Spoken`: Words spoken so far.
 // ## Returns
 // The session with mute and end-call proposals.
-public function View(Mode: V.Activity; Signal: V.Signal; Muted: bool; Spoken: string): E.Element<W.Event>;
+public function View(Mode: V.Activity; Signal: V.Signal; Muted: bool; Spoken: string): E.Element of W.Event;
 begin
-  return W.VoiceSession<W.Event>('call', Mode, Signal, Muted,
+  return W.VoiceSession of W.Event('call', Mode, Signal, Muted,
     function(Change: W.Event): W.Event => Change, new W.Options(Transcript := Spoken));
 end function;
 

@@ -101,8 +101,8 @@ public type ControlTests = record
     );
     using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
     const Cleared: M.Snapshot := await Session.ClearAsync('second', Deadline.Token);
-    X.Assert.Equal<M.Availability>(M.Availability.Paused, Cleared.Sources[1].Status);
-    X.Assert.Equal<int>(0, Cleared.Sources[1].Files.Length);
+    X.Assert.Equal of M.Availability(M.Availability.Paused, Cleared.Sources[1].Status);
+    X.Assert.Equal of int(0, Cleared.Sources[1].Files.Length);
     X.Assert.True(H.Has(Cleared.Sources[0], Track));
     const New: string := IO.Path.Combine(Root.Path, 'new.flac');
     IO.File.WriteAllText(New, '');
@@ -111,11 +111,11 @@ public type ControlTests = record
       Session,
       function(Value: M.Snapshot): bool => H.Has(Value.Sources[0], New)
     );
-    X.Assert.Equal<int>(0, Other.Sources[1].Files.Length);
+    X.Assert.Equal of int(0, Other.Sources[1].Files.Length);
     begin
       using const Connection: Db.SqliteConnection := D.Open(Database);
-      X.Assert.Equal<long>(2L, D.Number(Connection, 'SELECT count(*) FROM files;'));
-      X.Assert.Equal<long>(
+      X.Assert.Equal of long(2L, D.Number(Connection, 'SELECT count(*) FROM files;'));
+      X.Assert.Equal of long(
         0L,
         D.Number(Connection, 'SELECT count(*) FROM source_files WHERE source_id=''second'';')
       );
@@ -149,15 +149,15 @@ public type ControlTests = record
     );
     using const Deadline: T.CancellationTokenSource := new T.CancellationTokenSource(15000);
     const Cleared: M.Snapshot := await Session.ClearAsync('', Deadline.Token);
-    X.Assert.Equal<int>(0, Cleared.Sources[0].Files.Length);
+    X.Assert.Equal of int(0, Cleared.Sources[0].Files.Length);
     X.Assert.True(IO.File.Exists(Track));
     Session.Refresh();
     const Empty: M.Snapshot := await H.Until(
       Session,
       function(Value: M.Snapshot): bool => Value.Revision > Cleared.Revision
     );
-    X.Assert.Equal<M.Availability>(M.Availability.Paused, Empty.Sources[0].Status);
-    X.Assert.Equal<int>(0, Empty.Sources[0].Files.Length);
+    X.Assert.Equal of M.Availability(M.Availability.Paused, Empty.Sources[0].Status);
+    X.Assert.Equal of int(0, Empty.Sources[0].Files.Length);
     Session.Configure([Source]);
     discard await H.Until(
       Session,
@@ -193,8 +193,8 @@ public type ControlTests = record
       Progress := await Session.Progress.ReadAsync(Deadline.Token);
     end while;
 
-    X.Assert.Equal<long>(1L, Progress.Sources[0].FilesFound);
-    X.Assert.Equal<long>(2L, Progress.Sources[0].DirectoriesChecked);
+    X.Assert.Equal of long(1L, Progress.Sources[0].FilesFound);
+    X.Assert.Equal of long(2L, Progress.Sources[0].DirectoriesChecked);
     Session.Configure(
       [
         Source with
@@ -211,8 +211,8 @@ public type ControlTests = record
       Progress := await Session.Progress.ReadAsync(Deadline.Token);
     end while;
 
-    X.Assert.Equal<long>(1L, Progress.Sources[0].FilesFound);
-    X.Assert.Equal<long>(2L, Progress.Sources[0].DirectoriesChecked);
+    X.Assert.Equal of long(1L, Progress.Sources[0].FilesFound);
+    X.Assert.Equal of long(2L, Progress.Sources[0].DirectoriesChecked);
   end function;
 
   // Changing a root inside the old tree cannot expose memberships removed from SQLite.
@@ -250,7 +250,7 @@ public type ControlTests = record
         Child
       ) and Value.Sources[0].Status = M.Availability.Unavailable
     );
-    X.Assert.Equal<int>(0, Changed.Sources[0].Files.Length);
+    X.Assert.Equal of int(0, Changed.Sources[0].Files.Length);
   end function;
 
   // A pause immediately after a committed parent check must not retain its deleted child in memory.
@@ -284,8 +284,8 @@ public type ControlTests = record
         return true;
       end function
     );
-    X.Assert.Equal<long>(0L, D.Number(Connection, 'SELECT count(*) FROM files;'));
-    X.Assert.Equal<int>(
+    X.Assert.Equal of long(0L, D.Number(Connection, 'SELECT count(*) FROM files;'));
+    X.Assert.Equal of int(
       0, Index.Describe(
         [
           Source with
@@ -331,13 +331,13 @@ public type ControlTests = record
     Scan(Sources);
     IO.Directory.Delete(IO.Path.GetDirectoryName(Child) ?? '', true);
     Scan(Paused);
-    X.Assert.Equal<int>(0, Index.Describe(Paused, [])[0].Files.Length);
+    X.Assert.Equal of int(0, Index.Describe(Paused, [])[0].Files.Length);
     X.Assert.True(H.Has(Index.Describe(Paused, [])[1], Track));
-    X.Assert.Equal<long>(1L, D.Number(Connection, 'SELECT count(*) FROM source_files;'));
+    X.Assert.Equal of long(1L, D.Number(Connection, 'SELECT count(*) FROM source_files;'));
 
     Scan(Sources);
-    X.Assert.Equal<long>(0L, D.Number(Connection, 'SELECT count(*) FROM source_files;'));
-    X.Assert.Equal<int>(0, Index.Describe(Sources, [])[1].Files.Length);
+    X.Assert.Equal of long(0L, D.Number(Connection, 'SELECT count(*) FROM source_files;'));
+    X.Assert.Equal of int(0, Index.Describe(Sources, [])[1].Files.Length);
   end procedure;
 end record;
 

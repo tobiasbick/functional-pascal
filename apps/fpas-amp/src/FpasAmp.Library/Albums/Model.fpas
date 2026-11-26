@@ -68,7 +68,7 @@ end record;
 // Release headers and the library-wide audio count from the same catalogue revision.
 public type Snapshot = record
   // One header per release in catalogue order.
-  public Releases: I.ImmutableArray<Album> := I.ImmutableArray<Album>.Empty;
+  public Releases: I.ImmutableArray of Album := (I.ImmutableArray of Album).Empty;
   // All indexed audio files, including those awaiting tags or album assignment.
   public TrackCount: long := 0L;
 end record;

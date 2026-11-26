@@ -52,15 +52,15 @@ Capturing a reference does not copy the object. Mutable captures need ordinary
 ## Type parameters and contracts
 
 Routine calls infer type arguments from supplied arguments. For a parameterless
-`Create<T>()`, even a typed destination needs `Create<int>()`. A generic method
-group also needs explicit arguments, as in `Identity<int>`. A variant constructor
-can use the expected type, as in `const Empty: Tree<int> := Tree.Empty;`.
+`Create of T()`, even a typed destination needs `Create of int()`. A generic method
+group also needs explicit arguments, as in `Identity of int`. A variant constructor
+can use the expected type, as in `const Empty: Tree of int := Tree.Empty;`.
 
 Where clauses follow a routine's header, or a type declaration's equals sign.
 Use real CLR requirements: class, class?, struct, base/interface constraints,
 type-parameter dependencies, and new() last. New T() requires a suitable
 constructor constraint. An unknown T needs a matching imported interface for
-numeric operators. For example, where T: N.INumber<T>; permits T.Zero,
+numeric operators. For example, `where T: N.INumber of T;` permits `T.Zero`,
 T.CreateChecked(Value), and arithmetic through constrained static CLR dispatch.
 
 Use `requires` for caller obligations and `ensures` for guarantees on successful
@@ -76,7 +76,7 @@ result only in that clause. It must have exactly the result type.
 Requires runs before the body; ensures runs after successful body cleanup, on all
 normal returns. False conditions throw InvalidOperationException in every build.
 Body/cleanup faults skip ensures. Conditions do not snapshot old values or undo
-effects. Async Task<T> ensures binds T, and failures fault the returned task.
+effects. For `Task of T`, async `ensures` binds `T`, and failures fault the returned task.
 
 ```pascal
 program AgentFunctions;
@@ -84,7 +84,7 @@ program AgentFunctions;
 uses System as Sys;
 uses System.Console as Console;
 
-function Identity<T>(Value: T): T;
+function Identity of T(Value: T): T;
 begin
   return Value;
 end function;

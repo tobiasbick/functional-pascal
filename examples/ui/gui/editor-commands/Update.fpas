@@ -18,35 +18,38 @@ uses EditorCommands.State as S;
 // - `Message`: Native proposal or application action.
 // ## Returns
 // The next model and owner-thread commands.
-public function Apply(Model: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+public function Apply(Model: S.Model; Message: S.Msg): Mvu.Transition of (S.Model, S.Msg);
 begin
   return case Message of
-    when S.Msg.Edited(const Value: Code.Event): new Mvu.Transition<S.Model, S.Msg>(
+    when S.Msg.Edited(const Value: Code.Event): new Mvu.Transition of (S.Model, S.Msg)(
       Model with
         Text := Value.Text ?? Model.Text;
         Editor := Value;
       end with, []
     );
-    when S.Msg.Search: new Mvu.Transition<S.Model, S.Msg>(
+    when S.Msg.Search: new Mvu.Transition of (S.Model, S.Msg)(
       Model,
-      [Editor.Find<S.Msg>('editor', '😀')]
+      [Editor.Find of S.Msg('editor', '😀')]
     );
-    when S.Msg.GoTo: new Mvu.Transition<S.Model, S.Msg>(Model, [Editor.GoTo<S.Msg>('editor', 2)]);
-    when S.Msg.SelectAll: new Mvu.Transition<S.Model, S.Msg>(
+    when S.Msg.GoTo: new Mvu.Transition of (S.Model, S.Msg)(
       Model,
-      [Editor.Select<S.Msg>('editor', 0, Model.Text.Length)]
+      [Editor.GoTo of S.Msg('editor', 2)]
     );
-    when S.Msg.Save: new Mvu.Transition<S.Model, S.Msg>(
+    when S.Msg.SelectAll: new Mvu.Transition of (S.Model, S.Msg)(
+      Model,
+      [Editor.Select of S.Msg('editor', 0, Model.Text.Length)]
+    );
+    when S.Msg.Save: new Mvu.Transition of (S.Model, S.Msg)(
       Model with
         Notice := 'Save message received.';
       end with, []
     );
-    when S.Msg.Account: new Mvu.Transition<S.Model, S.Msg>(
+    when S.Msg.Account: new Mvu.Transition of (S.Model, S.Msg)(
       Model with
         Notice := 'Account action received.';
       end with, []
     );
-    when S.Msg.Bulk(const Value: Bulk.Event): new Mvu.Transition<S.Model, S.Msg>(
+    when S.Msg.Bulk(const Value: Bulk.Event): new Mvu.Transition of (S.Model, S.Msg)(
       Model with
         Count := 0;
         Notice := if Value.Clear then
@@ -56,12 +59,12 @@ begin
         end if;
       end with, []
     );
-    when S.Msg.StartTour: new Mvu.Transition<S.Model, S.Msg>(
+    when S.Msg.StartTour: new Mvu.Transition of (S.Model, S.Msg)(
       Model with
         Tour := 0;
       end with, []
     );
-    when S.Msg.TourChanged(const Value: Tours.Change): new Mvu.Transition<S.Model, S.Msg>(
+    when S.Msg.TourChanged(const Value: Tours.Change): new Mvu.Transition of (S.Model, S.Msg)(
       Model with
         Tour := Value.Step;
       end with, []
@@ -74,14 +77,14 @@ end function;
 // - `Model`: Committed model used to enable commands.
 // ## Returns
 // Immutable application bindings for the current view.
-public function Bindings(Model: S.Model): array of Shortcuts.Binding<S.Msg>;
+public function Bindings(Model: S.Model): array of Shortcuts.Binding of S.Msg;
 begin
   return [
-    new Shortcuts.Binding<S.Msg>(
+    new Shortcuts.Binding of S.Msg(
       new Keys.Combination(Keys.Key.S, Keys.PrimaryModifier()), S.Msg.Save,
       AllowWhileEditing := true
     ),
-    new Shortcuts.Binding<S.Msg>(
+    new Shortcuts.Binding of S.Msg(
       new Keys.Combination(Keys.Key.F1),
       S.Msg.StartTour,
       AllowWhileEditing := true

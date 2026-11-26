@@ -34,12 +34,12 @@ const Fill: L.Flex := new L.Flex(Basis := L.Extent.Fill);
 const SortKeys: array of int := [0, 3, 4];
 const LibraryKeys: array of int := [0, 1, 2, 5, 3, 4];
 
-function Play(Item: Tracks.Entry; Id: string; Name: string; Playback: Player.State; Action: M.Msg): E.Element<M.Msg>;
+function Play(Item: Tracks.Entry; Id: string; Name: string; Playback: Player.State; Action: M.Msg): E.Element of M.Msg;
 begin
   const Track: Tracks.Entry? := Player.Track(Playback);
   const Active: bool := Track <> null and Track.FileId = Item.FileId;
   const Playing: bool := Active and Playback.Playing;
-  return Icons.IconButton<M.Msg>(
+  return Icons.IconButton of M.Msg(
     'track-play-' + Id,
     Sys.Char.ConvertFromUtf32(
       if Playing then
@@ -66,9 +66,9 @@ begin
   );
 end function;
 
-function TimeCell(Item: Tracks.Entry): Grid.Cell<M.Msg>;
+function TimeCell(Item: Tracks.Entry): Grid.Cell of M.Msg;
 begin
-  return Grid.Cell<M.Msg>.Text(
+  return (Grid.Cell of M.Msg).Text(
     if Browse.Duration(Item) > 0.0 then
       Browse.Time(Browse.Duration(Item))
     else
@@ -77,11 +77,11 @@ begin
   );
 end function;
 
-function RatingCell(Current: M.State; Item: Tracks.Entry; Id: string; Name: string): Grid.Cell<M.Msg>;
+function RatingCell(Current: M.State; Item: Tracks.Entry; Id: string; Name: string): Grid.Cell of M.Msg;
 begin
-  return Grid.Cell<M.Msg>.Content(
+  return (Grid.Cell of M.Msg).Content(
     [
-      Ratings.Rating<M.Msg>(
+      Ratings.Rating of M.Msg(
         'track-rating-' + Id,
         'Rate ' + Name + ' (1–10)',
         Item.Rating ?? 0,
@@ -94,25 +94,25 @@ begin
   );
 end function;
 
-function MenuCell(Item: Tracks.Entry; Id: string; Name: string): Grid.Cell<M.Msg>;
+function MenuCell(Item: Tracks.Entry; Id: string; Name: string): Grid.Cell of M.Msg;
 begin
-  return Grid.Cell<M.Msg>.Content(
+  return (Grid.Cell of M.Msg).Content(
     [
-      Menus.Menu<M.Msg>(
+      Menus.Menu of M.Msg(
         'track-menu-' + Id, 'More actions for ' + Name, [
-          Menus.Entry<M.Msg>.Action(
-            new Menus.Item<M.Msg>('details', 'Track details', M.Msg.Details(Item))
+          (Menus.Entry of M.Msg).Action(
+            new Menus.Item of M.Msg('details', 'Track details', M.Msg.Details(Item))
           ),
-          Menus.Entry<M.Msg>.Action(
-            new Menus.Item<M.Msg>(
+          (Menus.Entry of M.Msg).Action(
+            new Menus.Item of M.Msg(
               'edit-tags',
               'Edit tags',
               M.Msg.EditTags(Item),
               Enabled := Item.TrackId <> ''
             )
           ),
-          Menus.Entry<M.Msg>.Action(
-            new Menus.Item<M.Msg>('folder', 'Show in folder', M.Msg.ShowFolder(Item.Path))
+          (Menus.Entry of M.Msg).Action(
+            new Menus.Item of M.Msg('folder', 'Show in folder', M.Msg.ShowFolder(Item.Path))
           )
         ], new Menus.Options(IconOnly := true, Position := Menus.Placement.BottomEnd)
       )
@@ -120,27 +120,30 @@ begin
   );
 end function;
 
-function Song(Current: M.State; Index: int; Playback: Player.State): Grid.Row<M.Msg>;
+function Song(Current: M.State; Index: int; Playback: Player.State): Grid.Row of M.Msg;
 begin
   const Item: Tracks.Entry := Current.Shown[Index];
   const Id: string := Item.FileId.ToString();
   const Name: string := Browse.Title(Item);
-  return new Grid.Row<M.Msg>(
+  return new Grid.Row of M.Msg(
     Id, [
-      Grid.Cell<M.Msg>.Content(
+      (Grid.Cell of M.Msg).Content(
         [
-          E.Row<M.Msg>(
+          E.Row of M.Msg(
             new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8)), Align := L.Alignment.Center),
             Play(Item, Id, Name, Playback, M.Msg.Play(Item.FileId)),
-            E.Size<M.Msg>(
-              E.Column<M.Msg>(
+            E.Size of M.Msg(
+              E.Column of M.Msg(
                 new L.Flow(
                   Gap := L.Spacing.Fixed(L.Measure.Logical(2)),
                   Align := L.Alignment.Stretch
                 ),
-                E.Styled<M.Msg>(Texts.Text<M.Msg>(Name, Texts.Appearance.Label), S.Role.SingleLine),
-                E.Styled<M.Msg>(
-                  Texts.Text<M.Msg>(Browse.Artist(Item), Texts.Appearance.Muted),
+                E.Styled of M.Msg(
+                  Texts.Text of M.Msg(Name, Texts.Appearance.Label),
+                  S.Role.SingleLine
+                ),
+                E.Styled of M.Msg(
+                  Texts.Text of M.Msg(Browse.Artist(Item), Texts.Appearance.Muted),
                   S.Role.SingleLine
                 )
               ), Fill
@@ -153,9 +156,9 @@ begin
   );
 end function;
 
-function Link(Id: string; Label: string; Route: Nav.Route): E.Element<M.Msg>;
+function Link(Id: string; Label: string; Route: Nav.Route): E.Element of M.Msg;
 begin
-  return Buttons.Button<M.Msg>(
+  return Buttons.Button of M.Msg(
     Id, Label, M.Msg.Follow(Route),
     new Buttons.Options(
       Variant := S.ButtonVariant.Link,
@@ -165,10 +168,10 @@ begin
   );
 end function;
 
-function TagsCell(Id: string; Names: array of string; Artist: bool): Grid.Cell<M.Msg>;
+function TagsCell(Id: string; Names: array of string; Artist: bool): Grid.Cell of M.Msg;
 begin
-  const Items: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
-  const Seen: C.HashSet<string> := new C.HashSet<string>();
+  const Items: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();
+  const Seen: C.HashSet of string := new C.HashSet of string();
   for Name: string in Names do
     const Key: string := Albums.TagKey(Name);
     if Key <> '' and Seen.Add(Key) then
@@ -181,12 +184,12 @@ begin
     end if;
   end for;
 
-  return Grid.Cell<M.Msg>.Content(
-    [E.Row<M.Msg>(new L.Flow(Align := L.Alignment.Center, Clip := true), Items.ToArray())]
+  return (Grid.Cell of M.Msg).Content(
+    [E.Row of M.Msg(new L.Flow(Align := L.Alignment.Center, Clip := true), Items.ToArray())]
   );
 end function;
 
-function LibrarySong(Current: M.State; Index: int; Covers: I.ImmutableDictionary<string, Imaging.Bitmap?>; Playback: Player.State; Playlist: bool): Grid.Row<M.Msg>;
+function LibrarySong(Current: M.State; Index: int; Covers: I.ImmutableDictionary of (string, Imaging.Bitmap?); Playback: Player.State; Playlist: bool): Grid.Row of M.Msg;
 begin
   const Item: Tracks.Entry := Current.Shown[Index];
   const Id: string := Item.FileId.ToString() + if Playlist then
@@ -204,16 +207,19 @@ begin
   const Credit: array of string := (Item.Metadata ?? new Tags.Info()).Artists;
   var Cover: Imaging.Bitmap? := null;
   discard Covers.TryGetValue(Item.AlbumId, out Cover);
-  return new Grid.Row<M.Msg>(
+  return new Grid.Row of M.Msg(
     Id, [
-      Grid.Cell<M.Msg>.Content(
+      (Grid.Cell of M.Msg).Content(
         [
-          E.Row<M.Msg>(
+          E.Row of M.Msg(
             new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Logical(8)), Align := L.Alignment.Center),
             Play(Item, Id, Name, Playback, Action),
-            Artwork.Build<M.Msg>('track-cover-' + Id, Cover, 30),
-            E.Size<M.Msg>(
-              E.Styled<M.Msg>(Texts.Text<M.Msg>(Name, Texts.Appearance.Label), S.Role.SingleLine),
+            Artwork.Build of M.Msg('track-cover-' + Id, Cover, 30),
+            E.Size of M.Msg(
+              E.Styled of M.Msg(
+                Texts.Text of M.Msg(Name, Texts.Appearance.Label),
+                S.Role.SingleLine
+              ),
               Fill
             )
           )
@@ -221,9 +227,11 @@ begin
       ),
       TagsCell('track-artist-' + Id, Credit, true),
       if Item.AlbumId <> '' and Album <> '' then
-        Grid.Cell<M.Msg>.Content([Link('track-album-' + Id, Album, Nav.Route.Album(Item.AlbumId))])
+        (Grid.Cell of M.Msg).Content(
+          [Link('track-album-' + Id, Album, Nav.Route.Album(Item.AlbumId))]
+        )
       else
-        Grid.Cell<M.Msg>.Text(Album)
+        (Grid.Cell of M.Msg).Text(Album)
       end if,
       TagsCell('track-genre-' + Id, Browse.Genres(Item), false),
       TimeCell(Item), RatingCell(Current, Item, Id, Name), MenuCell(Item, Id, Name)
@@ -236,7 +244,7 @@ end function;
 // Playback identifies the current file and its transport state in either layout.
 // Playlist gives repeated file rows distinct keys and activation slots.
 // Returns the virtual table or the appropriate empty state.
-public function Build(Current: M.State; Width: int; Playback: Player.State; Covers: I.ImmutableDictionary<string, Imaging.Bitmap?>? := null; Playlist: bool := false): E.Element<M.Msg>;
+public function Build(Current: M.State; Width: int; Playback: Player.State; Covers: I.ImmutableDictionary of (string, Imaging.Bitmap?)? := null; Playlist: bool := false): E.Element of M.Msg;
 requires Width > 0;
   function Activate(Index: int): M.Msg;
   begin
@@ -265,7 +273,7 @@ requires Width > 0;
   end function;
 begin
   if Current.Shown.Length = 0 then
-    return Empty.EmptyState<M.Msg>(
+    return Empty.EmptyState of M.Msg(
       'tracks-empty', if not Current.Loaded then
         'Loading tracks…'
       elsif Current.Error <> null and Current.Tracks.Length = 0 then
@@ -292,7 +300,7 @@ begin
     LibraryKeys
   end if;
   const Display: Tables.Sort := new Tables.Sort(
-    Sys.Array.IndexOf<int>(Keys, Current.Order.Column),
+    Sys.Array.IndexOf of int(Keys, Current.Order.Column),
     Current.Order.Descending
   );
   const Value: Grid.Value := new Grid.Value(
@@ -302,7 +310,7 @@ begin
     Scroll := Current.Scroll
   );
   if Covers <> null then
-    return Grid.DataGrid<M.Msg>(
+    return Grid.DataGrid of M.Msg(
       'music-tracks',
       [
         new Grid.Column('Title', cast<float>(Sys.Math.Max(190, Width - 832)), Sortable := true),
@@ -314,7 +322,7 @@ begin
         new Grid.Column('', 44.0F, Fixed := true)
       ],
       Current.Shown.Length,
-      function(Index: int): Grid.Row<M.Msg> => LibrarySong(
+      function(Index: int): Grid.Row of M.Msg => LibrarySong(
         Current,
         Index,
         Covers,
@@ -330,7 +338,7 @@ begin
     );
   end if;
 
-  return Grid.DataGrid<M.Msg>(
+  return Grid.DataGrid of M.Msg(
     'album-tracks',
     [
       new Grid.Column('Title', cast<float>(Sys.Math.Max(110, Width - 302)), Sortable := true),
@@ -346,7 +354,7 @@ begin
       new Grid.Column('', 42.0F, Fixed := true)
     ],
     Current.Shown.Length,
-    function(Index: int): Grid.Row<M.Msg> => Song(Current, Index, Playback),
+    function(Index: int): Grid.Row of M.Msg => Song(Current, Index, Playback),
     Value, Change,
     new Grid.Options(RowHeight := 54.0F, HideCheckboxes := true), Activate
   );

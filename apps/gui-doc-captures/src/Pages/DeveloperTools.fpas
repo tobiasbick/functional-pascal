@@ -12,7 +12,7 @@ uses GuiGallery.App.State as Gallery;
 // - `Session`: Presented Developer tools page.
 // - `Output`: Directory for full-frame images and crop bounds.
 // - `Scroll`: Injects a vertical wheel delta over the page margin.
-public procedure Capture(Session: Gui.Session<Gallery.Msg>; Output: string; Scroll: procedure(float));
+public procedure Capture(Session: Gui.Session of Gallery.Msg; Output: string; Scroll: procedure(float));
 begin
   Presented.CaptureInView(Session, Output, 'trace-viewer', Scroll, 'dev-trace');
   Presented.CaptureInView(Session, Output, 'network-waterfall', Scroll, 'dev-net');
@@ -31,7 +31,7 @@ end procedure;
 // - `Session`: Presented More developer tools page.
 // - `Output`: Directory for full-frame images and crop bounds.
 // - `Scroll`: Injects a vertical wheel delta over the page margin.
-public procedure CaptureMore(Session: Gui.Session<Gallery.Msg>; Output: string; Scroll: procedure(float));
+public procedure CaptureMore(Session: Gui.Session of Gallery.Msg; Output: string; Scroll: procedure(float));
 begin
   Presented.CaptureInView(Session, Output, 'test-explorer', Scroll, 'dev-tests');
   Presented.CaptureInView(Session, Output, 'stack-trace', Scroll, 'dev-stack');

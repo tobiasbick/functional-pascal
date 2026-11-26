@@ -23,15 +23,18 @@ uses System.Threading.Channels as Channels;
 // - `Renderer`: Native renderer under test.
 // - `Capture`: Prefix for the audio page capture.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
-  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  function Update(Model: State.Model; Message: State.Msg): App.Transition of (State.Model, State.Msg);
   begin
-    const Next: App.Transition<State.Model, State.Msg> := G.Update(Model, Message);
+    const Next: App.Transition of (State.Model, State.Msg) := G.Update(Model, Message);
     Phase := Next.Model.Audio.Phase;
     if Target <> '' then
-      return new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Target)]);
+      return new App.Transition of (State.Model, State.Msg)(
+        Next.Model,
+        [App.Focus of State.Msg(Target)]
+      );
     end if;
 
-    return Effects.Wrap<State.Model>(Next);
+    return Effects.Wrap of State.Model(Next);
   end function;
 
   procedure Inject();
@@ -54,12 +57,12 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     end if;
   end procedure;
 
-  procedure Step(Session: Gui.Session<State.Msg>);
+  procedure Step(Session: Gui.Session of State.Msg);
   begin
     A.Check(Session.Step(), 'The Audio page closed unexpectedly.');
   end procedure;
 
-  procedure Aim(Session: Gui.Session<State.Msg>; Id: string);
+  procedure Aim(Session: Gui.Session of State.Msg; Id: string);
   begin
     const Bounds: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
     A.Check(Bounds.Width > 0.0F and Bounds.Height > 0.0F, 'Missing native geometry for ' + Id);
@@ -67,7 +70,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     Y := Bounds.Y + Bounds.Height / 2.0F;
   end procedure;
 
-  procedure Focus(Session: Gui.Session<State.Msg>; Id: string);
+  procedure Focus(Session: Gui.Session of State.Msg; Id: string);
   begin
     Target := Id;
     A.Send(Session, State.Msg.Preview);
@@ -75,14 +78,14 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     A.Check(A.Control(Session, Id).Focused, 'Focus did not reach ' + Id);
   end procedure;
 
-  procedure Key(Session: Gui.Session<State.Msg>; Value: int);
+  procedure Key(Session: Gui.Session of State.Msg; Value: int);
   begin
     PendingKey := Value;
     Step(Session);
     Step(Session);
   end procedure;
 
-  procedure Click(Session: Gui.Session<State.Msg>; Id: string);
+  procedure Click(Session: Gui.Session of State.Msg; Id: string);
   begin
     Aim(Session, Id);
     Button := 1;
@@ -94,7 +97,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     Step(Session);
   end procedure;
 
-  procedure CheckTour(Session: Gui.Session<State.Msg>; Index: int; Title: string);
+  procedure CheckTour(Session: Gui.Session of State.Msg; Index: int; Title: string);
   begin
     A.Check(
       A.Control(Session, 'audio-tour').Value = Index.ToString(),
@@ -107,7 +110,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     );
   end procedure;
 
-  procedure CheckClosed(Session: Gui.Session<State.Msg>);
+  procedure CheckClosed(Session: Gui.Session of State.Msg);
   begin
     for Item: Gui.Control in Session.Snapshot().Controls do
       A.Check(Item.Role <> 'tour', 'A closed tour left its overlay in the snapshot.');
@@ -121,7 +124,7 @@ begin
   var PendingKey: int := 0;
   var Target: string := '';
   var Phase: int := 1;
-  const Effects: Replies.Effects<State.Msg> := Replies.Effects<State.Msg>.Create();
+  const Effects: Replies.Effects of State.Msg := (Replies.Effects of State.Msg).Create();
   const Timeout: Sys.TimeSpan := Sys.TimeSpan.FromSeconds(5.0);
   const Cutoff: string := 'audio-cutoff';
   const Pan: string := 'audio-pan';
@@ -129,7 +132,7 @@ begin
   const Snare: string := 'audio-snare';
   const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI Audio', 1201, 800, Renderer, true);
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Audio),
     Update, View.Build, Window, 256, Inject, ThemeFor := G.ThemeFor
   );
@@ -230,10 +233,10 @@ begin
   );
 
   A.Send(Session, State.Msg.Show(State.Page.Overview));
-  const Signal: Channels.ChannelReader<Replies.Reply<State.Msg>> := Effects.Watch(Clock.Id);
+  const Signal: Channels.ChannelReader of Replies.Reply of State.Msg := Effects.Watch(Clock.Id);
   A.Send(Session, State.Msg.Show(State.Page.Audio));
   const StartPhase: int := Phase;
-  const Tick: Replies.Reply<State.Msg> := Signal.ReadAsync().AsTask().WaitAsync(
+  const Tick: Replies.Reply of State.Msg := Signal.ReadAsync().AsTask().WaitAsync(
     Timeout
   ).GetAwaiter().GetResult();
   Step(Session);
@@ -249,7 +252,7 @@ begin
     Phase = StartPhase + 1 and A.Control(Session, 'audio-master').Role = 'level-meter',
     'Releasing one signal reply must advance the meter by one tick.'
   );
-  const Pending: Replies.Reply<State.Msg> := Signal.ReadAsync().AsTask().WaitAsync(
+  const Pending: Replies.Reply of State.Msg := Signal.ReadAsync().AsTask().WaitAsync(
     Timeout
   ).GetAwaiter().GetResult();
   A.Send(Session, State.Msg.Show(State.Page.Overview));

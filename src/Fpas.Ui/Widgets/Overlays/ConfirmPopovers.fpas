@@ -34,12 +34,12 @@ end record;
 // - `OnDismiss`: Proposed cancellation on Cancel, Escape or a press outside.
 // ## Returns
 // A graphical view with the trigger's original layout.
-public function ConfirmPopover<TMsg>(
-  Id: string; Trigger: E.Element<TMsg>; Open: bool; Settings: Options; OnConfirm: TMsg; OnDismiss: TMsg
-): E.Element<TMsg>;
+public function ConfirmPopover of TMsg(
+  Id: string; Trigger: E.Element of TMsg; Open: bool; Settings: Options; OnConfirm: TMsg; OnDismiss: TMsg
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.ConfirmPopover(Id, Trigger, Open, Settings, OnConfirm, OnDismiss);
+  return (E.Element of TMsg).ConfirmPopover(Id, Trigger, Open, Settings, OnConfirm, OnDismiss);
 end function;
 
 // Returns the stable ID of the built-in affirmative button.

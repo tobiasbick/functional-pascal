@@ -20,12 +20,12 @@ public type Model = record
   // Display positions mapped to stable person indices.
   public Order: array of int := People.Order(
     new T.Sort(3, true),
-    new Lists.Dictionary<int, string>()
+    new Lists.Dictionary of (int, string)()
   );
   // Selected person identities.
   public Selected: array of bool := new bool[People.Count()];
   // Edited names by stable person index.
-  public Names: Lists.Dictionary<int, string> := new Lists.Dictionary<int, string>();
+  public Names: Lists.Dictionary of (int, string) := new Lists.Dictionary of (int, string)();
   // Expansion of the original src row.
   public SourceOpen: bool := true;
   // Expansion of the original ui row.

@@ -22,10 +22,10 @@ uses Fpas.Ui.Widgets.Collections.DataGrids as W;
 // - `Current`: Selection, ordering, cursor, anchor and optional vertical target.
 // ## Returns
 // The grid with proposed state changes as application messages.
-public function View(Count: int; BuildRow: function(int): W.Row<W.Value>;
-  Current: W.Value): E.Element<W.Value>;
+public function View(Count: int; BuildRow: function(int): W.Row of W.Value;
+  Current: W.Value): E.Element of W.Value;
 begin
-  return W.DataGrid<W.Value>('people',
+  return W.DataGrid of W.Value('people',
     [new W.Column('Name', 200.0F, Sortable := true), new W.Column('Team', 140.0F)],
     Count, BuildRow, Current, function(Value: W.Value): W.Value => Value,
     new W.Options(Height := L.Extent.Fixed(L.Measure.Logical(420))));

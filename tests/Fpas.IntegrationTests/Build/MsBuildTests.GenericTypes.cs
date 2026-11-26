@@ -25,23 +25,23 @@ public sealed partial class MsBuildTests
         File.WriteAllText(project.File("Game/Models.fpas"), """
             unit Demo.Models;
             uses System as Sys;
-            public type Box<T> = record
+            public type Box of T = record
               public Value: T;
               public Label: string := 'default';
               public function Get(): T; begin return self.Value; end function;
-              public function Capture<U>(Other: U): function(): function(): U;
+              public function Capture of U(Other: U): function(): function(): U;
               begin return function(): function(): U => function(): U begin discard self.Value; return Other; end function; end function;
-              public function Upcast<U>(Other: U): T; where U: T; begin return Other; end function;
+              public function Upcast of U(Other: U): T; where U: T; begin return Other; end function;
             end record;
-            public type ValueBox<T> = where T: struct;
+            public type ValueBox of T = where T: struct;
             record public Value: T?; public Label: string? := null; end record;
-            public type Factory<T> = where T: class, new();
+            public type Factory of T = where T: class, new();
             record
               public Value: T := new T();
               public function Read(): function(): T; begin return function(): T => self.Value; end function;
             end record;
-            public type Tree<T> = variant Empty; Leaf(Value: T); Branch(Left: Tree<T>; Right: Tree<T>); end variant;
-            public type Pair<T> = where T: Sys.IComparable<T>;
+            public type Tree of T = variant Empty; Leaf(Value: T); Branch(Left: Tree of T; Right: Tree of T); end variant;
+            public type Pair of T = where T: Sys.IComparable of T;
             record
               public Left: T; public Right: T;
               public function Compare(): int; begin return self.Left.CompareTo(self.Right); end function;
@@ -59,21 +59,21 @@ public sealed partial class MsBuildTests
         File.WriteAllText(project.File("Consumer/Consumer.fpas"), """
             unit Demo.Consumer;
             uses Demo.Models as M; uses System as Sys;
-            public function Box<T>(Value: T): M.Box<T>; begin return new M.Box<T>(Value); end function;
-            public function Copy<T>(Value: M.Box<T>; Next: T): M.Box<T>; begin return Value with Value := Next; end with; end function;
-            public function Missing<T>(Value: T?): M.ValueBox<T>; where T: struct;
-            begin return new M.ValueBox<T>(Value); end function;
-            public function Compare<T>(Left: T; Right: T): int; where T: Sys.IComparable<T>;
-            begin return new M.Pair<T>(Left, Right).Read()(); end function;
-            public function Create<T>(): M.Factory<T>; where T: class, new();
-            begin return new M.Factory<T>(); end function;
-            public function Build<T>(Value: T): M.Tree<T>;
-            begin return M.Tree<T>.Branch(M.Tree<T>.Leaf(Value), M.Tree<T>.Empty); end function;
-            public function Count<T>(Value: M.Tree<T>): int;
+            public function Box of T(Value: T): M.Box of T; begin return new M.Box of T(Value); end function;
+            public function Copy of T(Value: M.Box of T; Next: T): M.Box of T; begin return Value with Value := Next; end with; end function;
+            public function Missing of T(Value: T?): M.ValueBox of T; where T: struct;
+            begin return new M.ValueBox of T(Value); end function;
+            public function Compare of T(Left: T; Right: T): int; where T: Sys.IComparable of T;
+            begin return new M.Pair of T(Left, Right).Read()(); end function;
+            public function Create of T(): M.Factory of T; where T: class, new();
+            begin return new M.Factory of T(); end function;
+            public function Build of T(Value: T): M.Tree of T;
+            begin return (M.Tree of T).Branch((M.Tree of T).Leaf(Value), (M.Tree of T).Empty); end function;
+            public function Count of T(Value: M.Tree of T): int;
             begin return case Value of
               when M.Tree.Empty: 0;
               when M.Tree.Leaf(const Item: T): 1;
-              when M.Tree.Branch(const Left: M.Tree<T>, const Right: M.Tree<T>): Count<T>(Left) + Count<T>(Right);
+              when M.Tree.Branch(const Left: M.Tree of T, const Right: M.Tree of T): Count of T(Left) + Count of T(Right);
             end case; end function;
             end unit;
             """);

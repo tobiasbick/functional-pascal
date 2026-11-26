@@ -2,13 +2,13 @@
 
 unit Trees;
 
-public type Tree<T> = variant
+public type Tree of T = variant
   Empty;
   Leaf(Value: T);
-  Branch(Left: Tree<T>; Right: Tree<T>);
+  Branch(Left: Tree of T; Right: Tree of T);
 end variant;
 
-public type Summary<T> = record
+public type Summary of T = record
   public Value: T;
   public Count: int;
   public Label: string := 'tree';
@@ -19,35 +19,35 @@ public type Summary<T> = record
   end function;
 end record;
 
-public function Map<T, U>(Value: Tree<T>; Transform: function(T): U): Tree<U>;
+public function Map of (T, U)(Value: Tree of T; Transform: function(T): U): Tree of U;
 begin
   return case Value of
     when Tree.Empty: Tree.Empty;
     when Tree.Leaf(const Item: T): Tree.Leaf(Transform(Item));
     when Tree.Branch(
-      const Left: Tree<T>,
-      const Right: Tree<T>
+      const Left: Tree of T,
+      const Right: Tree of T
     ): Tree.Branch(Map(Left, Transform), Map(Right, Transform));
   end case;
 end function;
 
-public function Count<T>(Value: Tree<T>): int;
+public function Count of T(Value: Tree of T): int;
 begin
   return case Value of
     when Tree.Empty: 0;
     when Tree.Leaf(_): 1;
-    when Tree.Branch(const Left: Tree<T>, const Right: Tree<T>): Count(Left) + Count(Right);
+    when Tree.Branch(const Left: Tree of T, const Right: Tree of T): Count(Left) + Count(Right);
   end case;
 end function;
 
-public function Render(Value: Tree<string>): string;
+public function Render(Value: Tree of string): string;
 begin
   return case Value of
     when Tree.Empty: '.';
     when Tree.Leaf(const Item: string): Item;
     when Tree.Branch(
-      const Left: Tree<string>,
-      const Right: Tree<string>
+      const Left: Tree of string,
+      const Right: Tree of string
     ): '(' + Render(Left) + ', ' + Render(Right) + ')';
   end case;
 end function;

@@ -19,9 +19,9 @@ uses System as Sys;
 // - `Reading`: The formatted value with its unit.
 // ## Returns
 // A metric tile with a percentage change and sparkline.
-public function View(Reading: string): E.Element<string>;
+public function View(Reading: string): E.Element of string;
 begin
-  return W.Metric<string>('frame-time', 'Frame time', Reading,
+  return W.Metric of string('frame-time', 'Frame time', Reading,
     new W.Options(
       Delta := -18.0F,
       DeltaLabel := '-18% vs v0.9',

@@ -41,12 +41,12 @@ end function;
 // - `Settings`: Optional caption, width, presets and input permission.
 // ## Returns
 // A graphical range picker with CUI-owned popup layout and interaction.
-public function DateRangePicker<TMsg>(
+public function DateRangePicker of TMsg(
   Id: string; Value: R.Value; OnChange: function(R.Value): TMsg; Settings: Options? := null
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.RangePicker(Id, Value, OnChange, Settings ?? new Options());
+  return (E.Element of TMsg).RangePicker(Id, Value, OnChange, Settings ?? new Options());
 end function;
 
 end unit;

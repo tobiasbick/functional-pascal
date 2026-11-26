@@ -17,10 +17,10 @@ uses Fpas.Ui.Widgets.Collections.Tables as T;
 // - `Selected`: Currently selected ID.
 // ## Returns
 // A two-column table.
-public function View(Selected: string): E.Element<string>;
+public function View(Selected: string): E.Element of string;
 begin
-  return T.Table<string>('members', [new T.Column('Name'), new T.Column('Role')], [
-    new T.Row<string>('priya', [T.Cell<string>.Text('Priya Nair'), T.Cell<string>.Text('Admin')], Selected = 'priya')
+  return T.Table of string('members', [new T.Column('Name'), new T.Column('Role')], [
+    new T.Row of string('priya', [(T.Cell of string).Text('Priya Nair'), (T.Cell of string).Text('Admin')], Selected = 'priya')
   ], null, null, function(Id: string): string => Id);
 end function;
 

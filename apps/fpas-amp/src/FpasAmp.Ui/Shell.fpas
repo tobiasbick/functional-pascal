@@ -59,7 +59,7 @@ end function;
 
 // Builds the pure app view from `Current`, measured `Viewport` and resolved `Theme`.
 // The native session owns all input, layout and background effects separately.
-public function View(Current: M.State; Viewport: L.Viewport; Theme: Themes.Theme): E.Element<M.Msg>;
+public function View(Current: M.State; Viewport: L.Viewport; Theme: Themes.Theme): E.Element of M.Msg;
 begin
   const Width: int := Viewport.LogicalWidth ?? if Viewport.Width = L.SizeClass.Compact then
     600
@@ -96,13 +96,13 @@ begin
   else
     'Back to playlist'
   end if;
-  const Page: E.Element<M.Msg> := if Settings then
-    SettingsView.Build<M.Msg>(
+  const Page: E.Element of M.Msg := if Settings then
+    SettingsView.Build of M.Msg(
       Current.Settings, Current.Navigation.SettingsTab, Theme, Content, Padding, M.Msg.Settings,
       function(Index: int): M.Msg => M.Msg.Navigation(Nav.Msg.SelectSettingsTab(Index))
     )
   elsif Nav.SongTable(Current.Navigation.Active) then
-    Composition.Map<TrackModel.Msg, M.Msg>(
+    Composition.Map of (TrackModel.Msg, M.Msg)(
       TrackView.LibraryPage(
         Current.Songs.Page,
         Content,
@@ -130,7 +130,7 @@ begin
       function(Value: TrackModel.Msg): M.Msg => M.Msg.Songs(Songs.Msg.Song(Value))
     )
   elsif Nav.Browsing(Current.Navigation.Active) then
-    Composition.Map<AlbumModel.Msg, M.Msg>(
+    Composition.Map of (AlbumModel.Msg, M.Msg)(
       AlbumView.Build(Current.Albums, Content, Padding, Current.Player, BackLabel),
       function(Action: AlbumModel.Msg): M.Msg => if Origin <> null
         and (Action = AlbumModel.Msg.BackToAlbums or Action = AlbumModel.Msg.BackToGroups)
@@ -152,42 +152,42 @@ begin
     end case
   end if;
   // Every music destination keeps the player in view; settings do not.
-  const Framed: E.Element<M.Msg> := if Settings then
+  const Framed: E.Element of M.Msg := if Settings then
     Page
   else
-    E.Column<M.Msg>(
+    E.Column of M.Msg(
       new L.Flow(Align := L.Alignment.Stretch),
-      E.Size<M.Msg>(Page, Fill),
-      Composition.Map<PlayerModel.Msg, M.Msg>(
+      E.Size of M.Msg(Page, Fill),
+      Composition.Map of (PlayerModel.Msg, M.Msg)(
         PlayerView.Build(Current.Player, Content < FullPlayerWidth), M.Msg.Player
       )
     )
   end if;
-  const Main: E.Element<M.Msg> := if Compact then
-    E.Column<M.Msg>(
+  const Main: E.Element of M.Msg := if Compact then
+    E.Column of M.Msg(
       new L.Flow(Align := L.Alignment.Stretch),
-      E.Row<M.Msg>(
+      E.Row of M.Msg(
         new L.Flow(
           Padding := L.Spacing.Fixed(L.Measure.Logical(12)),
           Gap := L.Spacing.Fixed(L.Measure.Logical(8)),
           Align := L.Alignment.Center
         ),
-        Icons.IconButton<M.Msg>(
+        Icons.IconButton of M.Msg(
           'drawer-open',
           Sys.Char.ConvertFromUtf32($E115),
           'Navigation',
           M.Msg.Navigation(Nav.Msg.SetDrawer(true))
         ),
-        Texts.Text<M.Msg>('FPas-Amp', Texts.Appearance.HeadingThree)
-      ), E.Size<M.Msg>(Framed, Fill)
+        Texts.Text of M.Msg('FPas-Amp', Texts.Appearance.HeadingThree)
+      ), E.Size of M.Msg(Framed, Fill)
     )
   else
     Framed
   end if;
-  const Base: E.Element<M.Msg> := if Compact then
-    Sheets.Sheet<M.Msg>(
+  const Base: E.Element of M.Msg := if Compact then
+    Sheets.Sheet of M.Msg(
       'navigation-drawer',
-      E.Size<M.Msg>(Main, Fill),
+      E.Size of M.Msg(Main, Fill),
       NavView.Sidebar(Current, Theme, Viewport.LogicalHeight ?? 680),
       Current.Navigation.Drawer,
       new Sheets.Options(
@@ -198,16 +198,16 @@ begin
       M.Msg.Navigation(Nav.Msg.SetDrawer(false))
     )
   else
-    E.Size<M.Msg>(
-      E.Row<M.Msg>(
+    E.Size of M.Msg(
+      E.Row of M.Msg(
         new L.Flow(Align := L.Alignment.Stretch),
-        E.Size<M.Msg>(NavView.Sidebar(Current, Theme), Fixed(NavView.Width)),
-        E.Size<M.Msg>(E.Styled<M.Msg>(E.Column<M.Msg>(), S.Role.Divider), Fixed(1)),
-        E.Size<M.Msg>(Main, Fill)
+        E.Size of M.Msg(NavView.Sidebar(Current, Theme), Fixed(NavView.Width)),
+        E.Size of M.Msg(E.Styled of M.Msg(E.Column of M.Msg(), S.Role.Divider), Fixed(1)),
+        E.Size of M.Msg(Main, Fill)
       ), Fill
     )
   end if;
-  const SettingsOverlay: E.Element<M.Msg> := SettingsView.Overlay<M.Msg>(
+  const SettingsOverlay: E.Element of M.Msg := SettingsView.Overlay of M.Msg(
     Current.Settings,
     Base,
     M.Msg.Settings
@@ -217,7 +217,7 @@ begin
     return SettingsOverlay;
   end if;
 
-  return TagView.Build<M.Msg>(
+  return TagView.Build of M.Msg(
     Editor,
     Width,
     Viewport.LogicalHeight ?? 680,
@@ -226,7 +226,7 @@ begin
   );
 end function;
 
-function Station(Current: M.State; Id: string; Width: int; Padding: int): E.Element<M.Msg>;
+function Station(Current: M.State; Id: string; Width: int; Padding: int): E.Element of M.Msg;
 begin
   const Item: RadioModel.Station? := RadioModel.Find(Current.Settings.Saved.RadioFavorites, Id);
   return if Item <> null then
@@ -239,7 +239,7 @@ end function;
 // Manually driven native shell, useful for application hosting and focused UI checks.
 public type Session = record implements Sys.IDisposable
   // Native session, driven and disposed on its creating thread.
-  public Window: Gui.Session<M.Msg>;
+  public Window: Gui.Session of M.Msg;
   Read: function(): M.State;
 
   // Reads the latest owner-thread model, including accepted background publications.
@@ -304,10 +304,10 @@ public type Session = record implements Sys.IDisposable
       raise new Sys.ArgumentOutOfRangeException('Navigation');
     end if;
     var Last: M.State := Initial;
-    const Native: Gui.Session<M.Msg> := GuiHost.StartThemed<M.State, M.Msg>(
+    const Native: Gui.Session of M.Msg := GuiHost.StartThemed of (M.State, M.Msg)(
       Initial,
-      function(Current: M.State; Message: M.Msg): Mvu.Transition<M.State, M.Msg> begin
-        const Next: Mvu.Transition<M.State, M.Msg> := Updates.Apply(
+      function(Current: M.State; Message: M.Msg): Mvu.Transition of (M.State, M.Msg) begin
+        const Next: Mvu.Transition of (M.State, M.Msg) := Updates.Apply(
           Current,
           Message,
           Save,
@@ -325,7 +325,7 @@ public type Session = record implements Sys.IDisposable
       OnCloseRequested := function(): M.Msg => M.Msg.Closing(Port.Stop(Last.Player))
     );
     discard Native.Post(M.Msg.WatchLibrary);
-    const Observed: Gui.Session<M.Msg> := Gui.Session<M.Msg>.Create(
+    const Observed: Gui.Session of M.Msg := (Gui.Session of M.Msg).Create(
       function(): bool begin
         if not Native.Step() then
           return false;

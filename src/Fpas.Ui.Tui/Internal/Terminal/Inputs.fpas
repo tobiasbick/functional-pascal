@@ -51,7 +51,7 @@ begin
       return App.Input.Scroll(Event.Column, Event.Row, Event.Delta);
     when 'key':
       var Key: K.Key := K.Key.Unknown;
-      if Sys.Enum.TryParse<K.Key>(Event.Key, out Key) then
+      if Sys.Enum.TryParse of K.Key(Event.Key, out Key) then
         return App.Input.KeyPress(Key, cast<K.KeyModifiers>(Event.Modifiers));
       end if;
 

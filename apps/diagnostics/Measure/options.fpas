@@ -107,7 +107,7 @@ begin
   end if;
 
   const Executable: string := IO.Path.GetFullPath(Args[Index + 1]);
-  const Arguments: Collections.List<string> := new Collections.List<string>();
+  const Arguments: Collections.List of string := new Collections.List of string();
   for Offset: int := Index + 2 to Args.Length - 1 do
     Arguments.Add(Args[Offset]);
   end for;

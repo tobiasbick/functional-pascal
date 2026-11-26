@@ -25,9 +25,9 @@ public type SearchWordTests = record
   [X.FactAttribute]
   public procedure WordsAreFolded();
   begin
-    X.Assert.Equal<string>(['bjork', 'homogenic'], Words.Words('Björk – Homogénic!'));
-    X.Assert.Equal<string>(['strasse', 'aeon', 'dont'], Words.Words('STRASSE Æon Don''t'));
-    X.Assert.Equal<string>(['strasse'], Words.Words('Straße'));
+    X.Assert.Equal of string(['bjork', 'homogenic'], Words.Words('Björk – Homogénic!'));
+    X.Assert.Equal of string(['strasse', 'aeon', 'dont'], Words.Words('STRASSE Æon Don''t'));
+    X.Assert.Equal of string(['strasse'], Words.Words('Straße'));
     X.Assert.Empty(Words.Words('*?  ---'));
   end procedure;
 
@@ -35,45 +35,45 @@ public type SearchWordTests = record
   [X.FactAttribute]
   public procedure SupplementaryLettersAndDigitsAreSearchable();
   begin
-    X.Assert.Equal<string>(['𐐨𐐩', '𐒡𐒢'], Words.Words('𐐀𐐁 – 𐒡𐒢'));
+    X.Assert.Equal of string(['𐐨𐐩', '𐒡𐒢'], Words.Words('𐐀𐐁 – 𐒡𐒢'));
     X.Assert.True(Words.Numeric('𐒡𐒢'));
     X.Assert.False(Words.Numeric('𐐨𐐩'));
-    const Items: I.ImmutableArray<Matching.Document> := I.ImmutableArray.CreateRange<Matching.Document>(
+    const Items: I.ImmutableArray of Matching.Document := I.ImmutableArray.CreateRange of Matching.Document(
       [Album('𐐨𐐩', ''), Album('𐒡𐒢', ''), Album('𐒡𐒣', '')]
     );
     X.Assert.True(Matching.Rank(Matching.Query.Parse('𐐀𐐁'), Items)[0] > 0.0);
     const Scores: array of double := Matching.Rank(Matching.Query.Parse('𐒡𐒢'), Items);
     X.Assert.True(Scores[1] > 0.0);
-    X.Assert.Equal<double>(0.0, Scores[2]);
+    X.Assert.Equal of double(0.0, Scores[2]);
   end procedure;
 
   // Names that sound alike share a phonetic code; numbers have none.
   [X.FactAttribute]
   public procedure SoundAlikeNamesShareCodes();
   begin
-    X.Assert.Equal<string>(Words.Phonetic('meier'), Words.Phonetic('mayer'));
-    X.Assert.Equal<string>(Words.Phonetic('meier'), Words.Phonetic('maier'));
-    X.Assert.Equal<string>(Words.Phonetic('schmidt'), Words.Phonetic('schmitt'));
-    X.Assert.NotEqual<string>(Words.Phonetic('meier'), Words.Phonetic('miller'));
-    X.Assert.Equal<string>('', Words.Phonetic('1999'));
+    X.Assert.Equal of string(Words.Phonetic('meier'), Words.Phonetic('mayer'));
+    X.Assert.Equal of string(Words.Phonetic('meier'), Words.Phonetic('maier'));
+    X.Assert.Equal of string(Words.Phonetic('schmidt'), Words.Phonetic('schmitt'));
+    X.Assert.NotEqual of string(Words.Phonetic('meier'), Words.Phonetic('miller'));
+    X.Assert.Equal of string('', Words.Phonetic('1999'));
   end procedure;
 
   // A swap of neighbors counts as one edit, and the limit stops early.
   [X.FactAttribute]
   public procedure DistanceCountsEdits();
   begin
-    X.Assert.Equal<int>(1, Words.Distance('beatles', 'beatels', 2));
-    X.Assert.Equal<int>(1, Words.Distance('metalica', 'metallica', 2));
-    X.Assert.Equal<int>(0, Words.Distance('rock', 'rock', 1));
-    X.Assert.Equal<int>(2, Words.Distance('floyd', 'pink', 1));
-    X.Assert.Equal<int>(1, Words.Distance('beatles', 'beatels', int.MaxValue));
+    X.Assert.Equal of int(1, Words.Distance('beatles', 'beatels', 2));
+    X.Assert.Equal of int(1, Words.Distance('metalica', 'metallica', 2));
+    X.Assert.Equal of int(0, Words.Distance('rock', 'rock', 1));
+    X.Assert.Equal of int(2, Words.Distance('floyd', 'pink', 1));
+    X.Assert.Equal of int(1, Words.Distance('beatles', 'beatels', int.MaxValue));
   end procedure;
 
   // Quoted phrases require the original punctuation and order within one field.
   [X.FactAttribute]
   public procedure QuotedPhrasesRestrictRankedResults();
   begin
-    const Items: I.ImmutableArray<Matching.Document> := I.ImmutableArray.CreateRange<Matching.Document>(
+    const Items: I.ImmutableArray of Matching.Document := I.ImmutableArray.CreateRange of Matching.Document(
       [
         Album('Happy X-Mas (Live)', 'The Band'),
         Album('Happy X Mas', 'The Band'),
@@ -86,10 +86,10 @@ public type SearchWordTests = record
     const Phrase: string := '"happy x-mas"';
     const Exact: array of double := Matching.Rank(Matching.Query.Parse(Phrase), Items);
     X.Assert.True(Exact[0] > 0.0 and Exact[4] > 0.0);
-    X.Assert.Equal<double>(0.0, Exact[1]);
-    X.Assert.Equal<double>(0.0, Exact[2]);
-    X.Assert.Equal<double>(0.0, Exact[3]);
-    X.Assert.Equal<double>(0.0, Exact[5]);
+    X.Assert.Equal of double(0.0, Exact[1]);
+    X.Assert.Equal of double(0.0, Exact[2]);
+    X.Assert.Equal of double(0.0, Exact[3]);
+    X.Assert.Equal of double(0.0, Exact[5]);
     const Live: array of double := Matching.Rank(Matching.Query.Parse(Phrase + ' live'), Items);
     X.Assert.True(Live[0] > Live[4] and Live[4] > 0.0);
     const Both: array of double := Matching.Rank(
@@ -97,7 +97,7 @@ public type SearchWordTests = record
       Items
     );
     X.Assert.True(Both[0] > 0.0);
-    X.Assert.Equal<double>(0.0, Both[4]);
+    X.Assert.Equal of double(0.0, Both[4]);
   end procedure;
 end record;
 

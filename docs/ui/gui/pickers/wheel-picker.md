@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Pickers.WheelPickers as W;
 // - `Selected`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Selected: int): E.Element<int>;
+public function View(Selected: int): E.Element of int;
 begin
-  return W.WheelPicker<int>('picker-wheel-month', ['January', 'February', 'March', 'April', 'May',
+  return W.WheelPicker of int('picker-wheel-month', ['January', 'February', 'March', 'April', 'May',
     'June', 'July', 'August', 'September', 'October', 'November', 'December'],
     Selected, function(Index: int): int => Index,
     new W.Options(Width := 128.0F, Loop := true));

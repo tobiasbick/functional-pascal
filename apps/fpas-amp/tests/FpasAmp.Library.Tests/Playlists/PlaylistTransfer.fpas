@@ -37,8 +37,8 @@ public type TransferTests = record
     const Key: M.Key := await Lists.ImportAsync(Original, T.CancellationToken.None);
     IO.File.Delete(Original);
     const Before: M.Playlist := await P.Read(Lists, Key);
-    X.Assert.Equal<string>(Audio, Before.Entries[0].CurrentReference);
-    X.Assert.Equal<string>('Artist - Song: One, Two', Before.Entries[0].Title);
+    X.Assert.Equal of string(Audio, Before.Entries[0].CurrentReference);
+    X.Assert.Equal of string('Artist - Song: One, Two', Before.Entries[0].Title);
     const Destination: string := IO.Path.Combine(ListsFolder, 'export.m3u8');
     await Lists.ExportAsync(Key, Destination, T.CancellationToken.None);
     const Exported: string := IO.File.ReadAllText(Destination);
@@ -47,13 +47,13 @@ public type TransferTests = record
     X.Assert.DoesNotContain(Root.Path, Exported);
     const Roundtrip: M.Key := await Lists.ImportAsync(Destination, T.CancellationToken.None);
     const After: M.Playlist := await P.Read(Lists, Roundtrip);
-    X.Assert.Equal<int>(3, After.Entries.Length);
+    X.Assert.Equal of int(3, After.Entries.Length);
     for Position: int := 0 to 2 do
-      X.Assert.Equal<string>(
+      X.Assert.Equal of string(
         Before.Entries[Position].CurrentReference,
         After.Entries[Position].CurrentReference
       );
-      X.Assert.Equal<string>(Before.Entries[Position].Title, After.Entries[Position].Title);
+      X.Assert.Equal of string(Before.Entries[Position].Title, After.Entries[Position].Title);
     end for;
     var Rejected: bool := false;
     try
@@ -63,9 +63,9 @@ public type TransferTests = record
     end try;
 
     X.Assert.True(Rejected);
-    X.Assert.Equal<string>(Exported, IO.File.ReadAllText(Destination));
+    X.Assert.Equal of string(Exported, IO.File.ReadAllText(Destination));
     await Lists.ExportAsync(Key, Destination, T.CancellationToken.None, Overwrite := true);
-    X.Assert.Equal<int>(1, IO.Directory.GetFiles(ListsFolder).Length);
+    X.Assert.Equal of int(1, IO.Directory.GetFiles(ListsFolder).Length);
   end function;
 
   // Empty lists export, and cancellation/invalid entries never replace a good list.
@@ -79,7 +79,7 @@ public type TransferTests = record
     const Path: string := IO.Path.Combine(Data.Path, 'empty.m3u8');
     await Lists.ExportAsync(Key, Path, T.CancellationToken.None);
     const Imported: M.Key := await Lists.ImportAsync(Path, T.CancellationToken.None);
-    X.Assert.Equal<int>(0, (await P.Read(Lists, Imported)).Entries.Length);
+    X.Assert.Equal of int(0, (await P.Read(Lists, Imported)).Entries.Length);
     var Rejected: int := 0;
     for Target: M.Target in [
       M.Target.Location('relative.mp3'),
@@ -98,8 +98,8 @@ public type TransferTests = record
       end try;
     end for;
 
-    X.Assert.Equal<int>(3, Rejected);
-    X.Assert.Equal<string>('Empty', (await P.Read(Lists, Key)).Description.Name);
+    X.Assert.Equal of int(3, Rejected);
+    X.Assert.Equal of string('Empty', (await P.Read(Lists, Key)).Description.Name);
     using const Cancel: T.CancellationTokenSource := new T.CancellationTokenSource();
     Cancel.Cancel();
     var Cancelled: bool := false;
@@ -110,7 +110,7 @@ public type TransferTests = record
     end try;
 
     X.Assert.True(Cancelled);
-    X.Assert.Equal<string>('Empty', (await P.Read(Lists, Key)).Description.Name);
+    X.Assert.Equal of string('Empty', (await P.Read(Lists, Key)).Description.Name);
   end function;
 end record;
 

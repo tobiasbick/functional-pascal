@@ -56,7 +56,7 @@ end function;
 // - `Paint`: Optional deferred drawing capability, scoped to one native callback.
 // - `OnPointer`: Optional changed-state pointer mapper.
 // - `OnInput`: Optional ordered key, text and focus mapper.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Drawing: array of D.Shape; Clicked: function(D.Event): TMsg; Settings: D.Options; OnWheel: Sys.Func<D.Wheel, TMsg>?; Paint: Sys.Action<Painting.Surface>?; OnPointer: Sys.Func<D.Pointer, TMsg>?; OnInput: Sys.Func<D.Input, TMsg>?);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Drawing: array of D.Shape; Clicked: function(D.Event): TMsg; Settings: D.Options; OnWheel: Sys.Func of (D.Wheel, TMsg)?; Paint: (Sys.Action of Painting.Surface)?; OnPointer: Sys.Func of (D.Pointer, TMsg)?; OnInput: Sys.Func of (D.Input, TMsg)?);
 begin
   const Role: string := 'canvas';
   const Width: S.NativeExtent := S.Extent(Settings.Width);
@@ -76,14 +76,14 @@ begin
   var H: float := 0.0F;
   var WheelX: float := 0.0F;
   var WheelY: float := 0.0F;
-  const NativePaint: Sys.Action<CuiCanvas.CuiCanvasPainter>? := case Paint of
-    when is Sys.Action<Painting.Surface> as Draw: procedure(Painter: CuiCanvas.CuiCanvasPainter) begin
+  const NativePaint: (Sys.Action of CuiCanvas.CuiCanvasPainter)? := case Paint of
+    when is Sys.Action of Painting.Surface as Draw: procedure(Painter: CuiCanvas.CuiCanvasPainter) begin
       Draw.Invoke(new Surface.Adapter(Painter));
     end procedure;
     else null;
   end case;
-  const NativePointer: Sys.Action<CuiCanvas.CuiCanvasPointer>? := case OnPointer of
-    when is Sys.Func<D.Pointer, TMsg> as Notify: procedure(State: CuiCanvas.CuiCanvasPointer) begin
+  const NativePointer: (Sys.Action of CuiCanvas.CuiCanvasPointer)? := case OnPointer of
+    when is Sys.Func of (D.Pointer, TMsg) as Notify: procedure(State: CuiCanvas.CuiCanvasPointer) begin
       if Frame.AcceptInput then
         Frame.Messages.Add(
           Notify.Invoke(
@@ -94,8 +94,8 @@ begin
     end procedure;
     else null;
   end case;
-  const InputHandler: Sys.Action<CuiCanvas.CuiCanvasInput>? := case OnInput of
-    when is Sys.Func<D.Input, TMsg> as Notify: procedure(Value: CuiCanvas.CuiCanvasInput) begin
+  const InputHandler: (Sys.Action of CuiCanvas.CuiCanvasInput)? := case OnInput of
+    when is Sys.Func of (D.Input, TMsg) as Notify: procedure(Value: CuiCanvas.CuiCanvasInput) begin
       if Enabled then
         const Event: D.Input := if Value.Kind = CuiCanvas.CuiCanvasInputKind.Key then
           D.Input.Key(
@@ -114,7 +114,7 @@ begin
     end procedure;
     else null;
   end case;
-  const Focus: bool := C.WantsFocus<TMsg>(Frame, Id, Token, Enabled and Focusable);
+  const Focus: bool := C.WantsFocus of TMsg(Frame, Id, Token, Enabled and Focusable);
   const Activated: bool := Frame.Window.DrawingCanvas(
     Token, Width.Kind, Width.Value, Height.Kind, Height.Value,
     Shapes, Enabled or PreserveFocus, out X, out Y, out W, out H, OnWheel <> null and Enabled,
@@ -131,13 +131,13 @@ begin
 
   if Enabled and (WheelX <> 0.0F or WheelY <> 0.0F) then
     case OnWheel of
-      when is Sys.Func<D.Wheel, TMsg> as Notify:
+      when is Sys.Func of (D.Wheel, TMsg) as Notify:
         Frame.Messages.Add(Notify.Invoke(new D.Wheel(WheelX, WheelY)));
       else
     end case;
   end if;
 
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, '');
 end procedure;
 
 end unit;

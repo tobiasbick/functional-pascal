@@ -33,12 +33,12 @@ end record;
 // - `Settings`: Optional account details and popup settings.
 // ## Returns
 // A graphical account menu that dispatches the chosen command message.
-public function UserMenu<TMsg>(
-  Id: string; Name: string; Entries: array of M.Entry<TMsg>; Settings: Options? := null
-): E.Element<TMsg>;
+public function UserMenu of TMsg(
+  Id: string; Name: string; Entries: array of M.Entry of TMsg; Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.AccountMenu(Id, Name, Entries, Settings ?? new Options());
+  return (E.Element of TMsg).AccountMenu(Id, Name, Entries, Settings ?? new Options());
 end function;
 
 end unit;

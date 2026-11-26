@@ -40,7 +40,7 @@ begin
   Chart.Distance(Settings.Size, At);
   Chart.Distance(Settings.Speed, At);
   Chart.Distance(Settings.Delay, At);
-  if not Sys.Enum.IsDefined<M.Font>(Settings.Font) then
+  if not Sys.Enum.IsDefined of M.Font(Settings.Font) then
     R.Reject(At, 'Unknown native motion font.');
   end if;
 end procedure;
@@ -78,16 +78,16 @@ procedure Loader(Style: Load.Animation; Settings: Load.Options; At: string);
 begin
   Chart.Distance(Settings.Size, At);
   Chart.Color(Settings.Color, At);
-  if not Sys.Enum.IsDefined<Load.Animation>(Style) then
+  if not Sys.Enum.IsDefined of Load.Animation(Style) then
     R.Reject(At, 'Unknown loader style.');
   end if;
 end procedure;
 
-procedure Dock<TMsg>(Entries: array of D.Entry<TMsg>; Settings: D.Options; At: string);
+procedure Dock of TMsg(Entries: array of D.Entry of TMsg; Settings: D.Options; At: string);
 begin
   Chart.Distance(Settings.Size, At);
   Chart.Distance(Settings.Magnify, At);
-  for Entry: D.Entry<TMsg> in Entries do
+  for Entry: D.Entry of TMsg in Entries do
     case Entry of
       when D.Entry.Item(
         const Icon: string,
@@ -176,7 +176,7 @@ end procedure;
 // - `Visit`: Validates composed children.
 // ## Returns
 // True when this dispatcher handled the element.
-public function Check<TMsg>(Node: E.Element<TMsg>; Location: string; Current: R.Profile; Identify: function(string, string): string; Visit: procedure(E.Element<TMsg>?, string)): bool;
+public function Check of TMsg(Node: E.Element of TMsg; Location: string; Current: R.Profile; Identify: function(string, string): string; Visit: procedure((E.Element of TMsg)?, string)): bool;
 begin
   case Node of
     when E.Element.ShimmerText(
@@ -239,13 +239,13 @@ begin
       return true;
     when E.Element.Spotlight(
       const Id: string,
-      const Children: array of E.Element<TMsg>,
+      const Children: array of E.Element of TMsg,
       const Settings: Spot.Options
     ):
       const At: string := Identify(Id, Location + '/Spotlight');
       R.RequireProfile(Current, R.Profile.Graphical, At);
       Spotlight(Settings, At);
-      for Child: E.Element<TMsg> in Children do
+      for Child: E.Element of TMsg in Children do
         Visit(Child, At);
       end for;
 
@@ -261,12 +261,12 @@ begin
       return true;
     when E.Element.Dock(
       const Id: string,
-      const Entries: array of D.Entry<TMsg>,
+      const Entries: array of D.Entry of TMsg,
       const Settings: D.Options
     ):
       const At: string := Identify(Id, Location + '/Dock');
       R.RequireProfile(Current, R.Profile.Graphical, At);
-      Dock<TMsg>(Entries, Settings, At);
+      Dock of TMsg(Entries, Settings, At);
       for Index: int := 0 to Entries.Length - 1 do
         case Entries[Index] of
           when D.Entry.Item(_, _, _, _, _, _):

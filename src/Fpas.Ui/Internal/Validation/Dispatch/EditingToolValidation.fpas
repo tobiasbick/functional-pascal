@@ -43,7 +43,7 @@ begin
   Finite(Item.InY, Path);
   Finite(Item.OutX, Path);
   Finite(Item.OutY, Path);
-  if Item.X < Previous or not Sys.Enum.IsDefined<CurveEditors.Mode>(Item.Interpolation) then
+  if Item.X < Previous or not Sys.Enum.IsDefined of CurveEditors.Mode(Item.Interpolation) then
     R.Reject(Path, 'Invalid key order or interpolation.');
   end if;
 end procedure;
@@ -66,7 +66,7 @@ end procedure;
 // - `Location`: Diagnostic path.
 // - `Profile`: Rendering target.
 // - `Identify`: Stable identity registrar.
-public procedure Check<TMsg>(Node: E.Element<TMsg>; Location: string; Profile: R.Profile; Identify: function(string, string): string);
+public procedure Check of TMsg(Node: E.Element of TMsg; Location: string; Profile: R.Profile; Identify: function(string, string): string);
 begin
   R.RequireProfile(Profile, R.Profile.Graphical, Location);
   case Node of
@@ -219,7 +219,7 @@ begin
       Finite(Settings.Finish, Path);
       if Settings.Finish <= Settings.Start or not Sys.Single.IsFinite(Settings.FramesPerSecond)
         or Settings.FramesPerSecond <= 0.0F or Settings.FramesPerSecond > 1000.0F
-        or not Sys.Enum.IsDefined<TimelineEditors.Ruler>(Settings.Labels)
+        or not Sys.Enum.IsDefined of TimelineEditors.Ruler(Settings.Labels)
       then
         R.Reject(Path, 'Invalid timeline range, frame rate or ruler.');
       end if;

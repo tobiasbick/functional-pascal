@@ -31,19 +31,19 @@ uses System as Sys;
 // - `Identify`: Registers a widget ID.
 // ## Returns
 // True when this dispatcher handled the element.
-public function Check<TMsg>(Node: E.Element<TMsg>; Location: string; Current: R.Profile; Identify: function(string, string): string): bool;
+public function Check of TMsg(Node: E.Element of TMsg; Location: string; Current: R.Profile; Identify: function(string, string): string): bool;
 begin
   case Node of
     when E.Element.Banner(
-      const Id: string, const Announcement: string, _, const Dismiss: Sys.Func<TMsg>?,
-      const Action: Sys.Func<TMsg>?, const Settings: Banners.Options
+      const Id: string, const Announcement: string, _, const Dismiss: (Sys.Func of TMsg)?,
+      const Action: (Sys.Func of TMsg)?, const Settings: Banners.Options
     ):
       const At: string := Identify(Id, Location + '/banner');
       R.RequireProfile(Current, R.Profile.Graphical, At);
       R.CheckText(Announcement, At + '/text');
       R.CheckText(Settings.Icon, At + '/icon');
       R.CheckText(Settings.ActionLabel, At + '/action');
-      if Sys.String.IsNullOrWhiteSpace(Announcement) or not Sys.Enum.IsDefined<S.Tone>(
+      if Sys.String.IsNullOrWhiteSpace(Announcement) or not Sys.Enum.IsDefined of S.Tone(
         Settings.Tone
       )
       then
@@ -75,7 +75,7 @@ begin
       const Id: string,
       const Steps: array of Checklists.Step,
       _,
-      const Action: Sys.Func<int, TMsg>?,
+      const Action: Sys.Func of (int, TMsg)?,
       const Settings: Checklists.Options
     ):
       const At: string := Identify(Id, Location + '/checklist');

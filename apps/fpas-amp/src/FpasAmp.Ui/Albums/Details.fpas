@@ -33,35 +33,35 @@ end function;
 // Builds the compact cover/details design from existing `Album` and cached `Image`.
 // `Kind` labels the rating for this album, artist or genre.
 // Content is informational; rating changes remain on the album tile itself.
-public function Build(Album: Library.Album; Image: Imaging.Bitmap?; Kind: string := 'Album'): E.Element<M.Msg>;
+public function Build(Album: Library.Album; Image: Imaging.Bitmap?; Kind: string := 'Album'): E.Element of M.Msg;
 requires Album.Id <> '';
 begin
-  return E.Column<M.Msg>(
+  return E.Column of M.Msg(
     new L.Flow(Gap := Points(12), Align := L.Alignment.Stretch, Clip := false),
-    E.Row<M.Msg>(
+    E.Row of M.Msg(
       new L.Flow(Gap := Points(16), Align := L.Alignment.Start, Clip := false),
-      Artwork.Build<M.Msg>('album-detail-cover-' + Album.Id, Image, 80),
-      E.Size<M.Msg>(
-        E.Column<M.Msg>(
+      Artwork.Build of M.Msg('album-detail-cover-' + Album.Id, Image, 80),
+      E.Size of M.Msg(
+        E.Column of M.Msg(
           new L.Flow(Gap := Points(4), Clip := false),
-          E.Styled<M.Msg>(E.Text<M.Msg>(Album.Title), S.Role.Strong),
-          Texts.Text<M.Msg>(Album.Artist, Texts.Appearance.Secondary),
-          Texts.Text<M.Msg>(Songs(Album.Tracks), Texts.Appearance.Muted)
+          E.Styled of M.Msg(E.Text of M.Msg(Album.Title), S.Role.Strong),
+          Texts.Text of M.Msg(Album.Artist, Texts.Appearance.Secondary),
+          Texts.Text of M.Msg(Songs(Album.Tracks), Texts.Appearance.Muted)
         ), new L.Flex(Basis := L.Extent.Fill)
       )
     ),
-    E.Size<M.Msg>(
-      E.Styled<M.Msg>(E.Column<M.Msg>(), S.Role.Divider),
+    E.Size of M.Msg(
+      E.Styled of M.Msg(E.Column of M.Msg(), S.Role.Divider),
       new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(1)))
     ),
-    E.Row<M.Msg>(
+    E.Row of M.Msg(
       new L.Flow(Gap := Points(12), Align := L.Alignment.Center),
-      Ratings.Rating<M.Msg>(
+      Ratings.Rating of M.Msg(
         'album-detail-rating-' + Album.Id, Kind + ' rating', Album.Rating ?? 0,
         function(Value: int): M.Msg => M.Msg.Rate(Album.Id, Value), Maximum := 10, Enabled := false
       ),
-      E.Size<M.Msg>(E.Column<M.Msg>(), new L.Flex(Basis := L.Extent.Fill)),
-      Texts.Text<M.Msg>(
+      E.Size of M.Msg(E.Column of M.Msg(), new L.Flex(Basis := L.Extent.Fill)),
+      Texts.Text of M.Msg(
         if Album.Rating = null then
           'Not rated'
         else

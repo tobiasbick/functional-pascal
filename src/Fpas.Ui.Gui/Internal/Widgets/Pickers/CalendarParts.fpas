@@ -88,8 +88,8 @@ end function;
 // - `Enabled`: Whether the control accepts input.
 // - `Result`: Native selection and visible parts.
 // - `OnChange`: Maps a chosen date to a message.
-public procedure Publish<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Label: string; Role: string; Value: Sys.DateOnly?; Enabled: bool;
+public procedure Publish of TMsg(
+  Frame: C.State of TMsg; Id: string; Label: string; Role: string; Value: Sys.DateOnly?; Enabled: bool;
   Result: CuiPickers.CuiCalendarResult; OnChange: function(Sys.DateOnly): TMsg
 );
 begin

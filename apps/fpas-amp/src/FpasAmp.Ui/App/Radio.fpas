@@ -14,22 +14,22 @@ uses FpasAmp.Ui.Settings.Model as Settings;
 uses System as Sys;
 uses System.Collections.Generic as C;
 
-function Update(Current: App.State; Action: M.Msg): A.Transition<App.State, App.Msg>;
+function Update(Current: App.State; Action: M.Msg): A.Transition of (App.State, App.Msg);
 begin
-  const Result: A.Transition<M.State, App.Msg> := Composition.MapTransition<M.State, M.Msg, App.Msg>(
+  const Result: A.Transition of (M.State, App.Msg) := Composition.MapTransition of (M.State, M.Msg, App.Msg)(
     Search.Apply(Current.Radio, Action), App.Msg.Radio, 'radio'
   );
-  return new A.Transition<App.State, App.Msg>(
+  return new A.Transition of (App.State, App.Msg)(
     Current with
       Radio := Result.Model;
     end with, Result.Commands
   );
 end function;
 
-function Persist(Current: App.State; Item: M.Station; Remove: bool; Save: procedure(Settings.Preferences)): A.Transition<App.State, App.Msg>;
+function Persist(Current: App.State; Item: M.Station; Remove: bool; Save: procedure(Settings.Preferences)): A.Transition of (App.State, App.Msg);
 begin
   const Saved: Settings.Preferences := Current.Settings.Saved;
-  const Items: C.List<M.Station> := new C.List<M.Station>();
+  const Items: C.List of M.Station := new C.List of M.Station();
   var Added: bool := false;
   for Entry: M.Station in Saved.RadioFavorites do
     if Entry.Id <> Item.Id then
@@ -65,7 +65,7 @@ begin
         Error := Text;
       end with
     end if;
-    return new A.Transition<App.State, App.Msg>(
+    return new A.Transition of (App.State, App.Msg)(
       Next with
         Radio := Page;
       end with, []
@@ -88,11 +88,11 @@ begin
     );
   end if;
 
-  return new A.Transition<App.State, App.Msg>(Updated, []);
+  return new A.Transition of (App.State, App.Msg)(Updated, []);
 end function;
 
 // Maps radio actions into the app and saves favorites through the existing preferences writer.
-public function Apply(Current: App.State; Action: M.Msg; Save: procedure(Settings.Preferences)): A.Transition<App.State, App.Msg>;
+public function Apply(Current: App.State; Action: M.Msg; Save: procedure(Settings.Preferences)): A.Transition of (App.State, App.Msg);
 begin
   case Action of
     when M.Msg.Favorite(const Item: M.Station):

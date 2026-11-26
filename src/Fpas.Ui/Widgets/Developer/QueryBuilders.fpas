@@ -62,10 +62,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function QueryBuilder<TMsg>(Id: string; Fields: array of Field; Rules: array of Rule; Changed: function(Event): TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function QueryBuilder of TMsg(Id: string; Fields: array of Field; Rules: array of Rule; Changed: function(Event): TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.QueryBuilder(Id, Fields, Rules, Changed, Settings ?? new Options());
+  return (E.Element of TMsg).QueryBuilder(Id, Fields, Rules, Changed, Settings ?? new Options());
 end function;
 
 end unit;

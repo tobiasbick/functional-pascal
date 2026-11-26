@@ -83,7 +83,7 @@ public sealed class RemoveParameterTests(SdkPackageFixture sdk) : IClassFixture<
             function Divide(Arithmetic: int): int; begin return 3; end function;
             function Collision(Overload: int): int; begin return 4; end function;
             function Collision(): int; begin return 5; end function;
-            function Generic<T>(Inferred: T): int; begin return 6; end function;
+            function Generic of T(Inferred: T): int; begin return 6; end function;
             function Annotated(Note: int; // Document this parameter.
               Keep: int): int; begin return Keep; end function;
             public function Run(): int;

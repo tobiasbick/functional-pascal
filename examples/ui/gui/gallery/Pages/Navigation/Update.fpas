@@ -13,7 +13,7 @@ uses GuiGallery.Pages.Navigation.State as S;
 // - `Message`: Feature message.
 // ## Returns
 // Next feature model and commands.
-public function Update(State: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+public function Update(State: S.Model; Message: S.Msg): Mvu.Transition of (S.Model, S.Msg);
 begin
   const Next: S.Model := case Message of
     when S.Msg.SetTab(const Value: int): State with
@@ -30,11 +30,11 @@ begin
     end with;
     else State;
   end case;
-  return new Mvu.Transition<S.Model, S.Msg>(
+  return new Mvu.Transition of (S.Model, S.Msg)(
     Next, case Message of
-      when S.Msg.SelectAncestor(const Label: string): [Toasts.Show<S.Msg>(Label)];
+      when S.Msg.SelectAncestor(const Label: string): [Toasts.Show of S.Msg(Label)];
       when S.Msg.FinishSteps: [
-        Toasts.Show<S.Msg>('All set', new Toasts.Options(Appearance := Toasts.Tone.Success))
+        Toasts.Show of S.Msg('All set', new Toasts.Options(Appearance := Toasts.Tone.Success))
       ];
       else [];
     end case

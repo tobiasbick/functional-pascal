@@ -42,19 +42,19 @@ begin
   return Value;
 end function;
 
-function NameOf<T>(Value: T): string;
+function NameOf of T(Value: T): string;
 where T: struct, Sys.Enum;
 begin
-  return (Sys.Enum.GetName<T>(Value) ?? '').ToLowerInvariant();
+  return (Sys.Enum.GetName of T(Value) ?? '').ToLowerInvariant();
 end function;
 
-function Choice<T>(Value: Json.JsonElement; Fallback: T): T;
+function Choice of T(Value: Json.JsonElement; Fallback: T): T;
 where T: struct, Sys.Enum;
 begin
   if Value.ValueKind = Json.JsonValueKind.String then
     const Name: string := Value.GetString() ?? '';
-    for Candidate: T in Sys.Enum.GetValues<T>() do
-      if Name = NameOf<T>(Candidate) then
+    for Candidate: T in Sys.Enum.GetValues of T() do
+      if Name = NameOf of T(Candidate) then
         return Candidate;
       end if;
     end for;
@@ -80,8 +80,8 @@ begin
   end if;
 
   return new Settings(
-    Choice<Switchers.Selection>(Field(Root, 'appearance'), Default.Appearance),
-    Choice<Themes.Accent>(Field(Root, 'accent'), Default.Accent), Ratio
+    Choice of Switchers.Selection(Field(Root, 'appearance'), Default.Appearance),
+    Choice of Themes.Accent(Field(Root, 'accent'), Default.Accent), Ratio
   );
 end function;
 
@@ -115,8 +115,8 @@ begin
   Options.Indented := true;
   using const Writer: Json.Utf8JsonWriter := new Json.Utf8JsonWriter(Stream, Options);
   Writer.WriteStartObject();
-  Writer.WriteString('appearance', NameOf<Switchers.Selection>(Value.Appearance));
-  Writer.WriteString('accent', NameOf<Themes.Accent>(Value.Accent));
+  Writer.WriteString('appearance', NameOf of Switchers.Selection(Value.Appearance));
+  Writer.WriteString('accent', NameOf of Themes.Accent(Value.Accent));
   Writer.WriteNumber('splitRatio', Value.Ratio);
   Writer.WriteEndObject();
   Writer.Flush();

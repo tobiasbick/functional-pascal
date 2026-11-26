@@ -42,10 +42,10 @@ public type TrackFilterTests = record
   [X.InlineDataAttribute('Rock', 'Jazz', 'Jazz|Rock')]
   public procedure GenresThatNarrowTheAlbum(First: string; Second: string; Expected: string);
   begin
-    const Items: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray.CreateRange<Tracks.Entry>(
+    const Items: I.ImmutableArray of Tracks.Entry := I.ImmutableArray.CreateRange of Tracks.Entry(
       [Track(First), Track(Second)]
     );
-    X.Assert.Equal<string>(
+    X.Assert.Equal of string(
       Expected,
       Sys.String.Join('|', Browse.GenreChoices(Items, T.CancellationToken.None))
     );
@@ -56,11 +56,11 @@ public type TrackFilterTests = record
   public procedure SongCatalogueRefreshKeepsSurvivingSelections();
   begin
     const Applied: Music.Filters := new Music.Filters(
-      Genres := I.ImmutableHashSet.CreateRange<string>(['rock', 'Missing genre']),
+      Genres := I.ImmutableHashSet.CreateRange of string(['rock', 'Missing genre']),
       MinimumRating := 6, Performer := 'Missing artist', ReleaseFilter := 'missing-release'
     );
     const Draft: Music.Filters := new Music.Filters(
-      Genres := I.ImmutableHashSet.CreateRange<string>(['Pop', 'Missing genre']),
+      Genres := I.ImmutableHashSet.CreateRange of string(['Pop', 'Missing genre']),
       MinimumRating := 8, Performer := 'SOLOIST', ReleaseFilter := 'release-b'
     );
     const Page: Music.State := (new Songs.State()).Page with
@@ -68,7 +68,7 @@ public type TrackFilterTests = record
       Draft := Draft;
       FiltersOpen := true;
     end with;
-    const Items: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray.CreateRange<Tracks.Entry>(
+    const Items: I.ImmutableArray of Tracks.Entry := I.ImmutableArray.CreateRange of Tracks.Entry(
       [
         Track('Rock') with
           FileId := 1L;
@@ -84,7 +84,7 @@ public type TrackFilterTests = record
       ]
     );
     const Snapshot: Songs.Catalogue := new Songs.Catalogue(
-      Items, I.ImmutableDictionary<string, Albums.Album>.Empty,
+      Items, I.ImmutableDictionary of (string, Albums.Album).Empty,
       ['Soloist'], ['Release A', 'Release B'], ['release-a', 'release-b'], ['Pop', 'Rock']
     );
     const Updated: Songs.State := Songs.Apply(
@@ -92,16 +92,16 @@ public type TrackFilterTests = record
       Songs.Msg.Received(Page.Visit, 1L, Snapshot),
       null
     ).Model;
-    X.Assert.Equal<int>(1, Updated.Page.Shown.Length);
-    X.Assert.Equal<long>(1L, Updated.Page.Shown[0].FileId);
+    X.Assert.Equal of int(1, Updated.Page.Shown.Length);
+    X.Assert.Equal of long(1L, Updated.Page.Shown[0].FileId);
     X.Assert.True(Updated.Page.Applied.Genres.SetEquals(['Rock']));
-    X.Assert.Equal<string>('', Updated.Page.Applied.Performer);
-    X.Assert.Equal<string>('', Updated.Page.Applied.ReleaseFilter);
-    X.Assert.Equal<int>(6, Updated.Page.Applied.MinimumRating);
-    X.Assert.Equal<int>(2, Updated.Page.Applied.Count());
+    X.Assert.Equal of string('', Updated.Page.Applied.Performer);
+    X.Assert.Equal of string('', Updated.Page.Applied.ReleaseFilter);
+    X.Assert.Equal of int(6, Updated.Page.Applied.MinimumRating);
+    X.Assert.Equal of int(2, Updated.Page.Applied.Count());
     X.Assert.True(Updated.Page.Draft.Genres.SetEquals(['Pop']));
-    X.Assert.Equal<string>('Soloist', Updated.Page.Draft.Performer);
-    X.Assert.Equal<string>('release-b', Updated.Page.Draft.ReleaseFilter);
+    X.Assert.Equal of string('Soloist', Updated.Page.Draft.Performer);
+    X.Assert.Equal of string('release-b', Updated.Page.Draft.ReleaseFilter);
     X.Assert.True(Updated.Page.FiltersOpen);
   end procedure;
 
@@ -110,10 +110,10 @@ public type TrackFilterTests = record
   public procedure AlbumTrackRefreshClearsAChoiceThatNoLongerNarrows();
   begin
     const Applied: Music.Filters := new Music.Filters(
-      Genres := I.ImmutableHashSet.Create<string>('Rock')
+      Genres := I.ImmutableHashSet.Create of string('Rock')
     );
     const Album: Albums.Album := new Albums.Album('release-a', 'Studio', 'Artist', 2L, 'revision');
-    const Items: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray.CreateRange<Tracks.Entry>(
+    const Items: I.ImmutableArray of Tracks.Entry := I.ImmutableArray.CreateRange of Tracks.Entry(
       [Track('Rock'), Track('Rock')]
     );
     const Page: Music.State := new Music.State(
@@ -128,7 +128,7 @@ public type TrackFilterTests = record
       Music.Msg.Loaded(Page.Visit, 1L, Items),
       null
     ).Model;
-    X.Assert.Equal<int>(2, Updated.Shown.Length);
+    X.Assert.Equal of int(2, Updated.Shown.Length);
     X.Assert.True(Updated.Applied.Genres.IsEmpty);
     X.Assert.True(Updated.Draft.Genres.IsEmpty);
   end procedure;
@@ -141,7 +141,7 @@ public type TrackFilterTests = record
       1L, 'a', 'one.mp3', '', null,
       new MediaTags.Info(Album := 'Live', Artists := ['One', 'Two']), null, AlbumId := 'release-a'
     );
-    const Items: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray.CreateRange<Tracks.Entry>(
+    const Items: I.ImmutableArray of Tracks.Entry := I.ImmutableArray.CreateRange of Tracks.Entry(
       [
         First, First with
           FileId := 2L;
@@ -149,23 +149,26 @@ public type TrackFilterTests = record
         end with
       ]
     );
-    const Selected: I.ImmutableArray<Tracks.Entry> := Browse.Songs(
+    const Selected: I.ImmutableArray of Tracks.Entry := Browse.Songs(
       Items,
       new Music.Selection(Search := 'live two', Performer := 'two', ReleaseFilter := 'release-b')
     );
-    X.Assert.Equal<int>(1, Selected.Length);
-    X.Assert.Equal<long>(2L, Selected[0].FileId);
+    X.Assert.Equal of int(1, Selected.Length);
+    X.Assert.Equal of long(2L, Selected[0].FileId);
   end procedure;
 
   // Playback uses the same normalized identity as the catalogue and counts each track once.
   [X.FactAttribute]
   public procedure GenreQueueUsesCatalogueIdentity();
   begin
-    const Items: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray.CreateRange<Tracks.Entry>(
+    const Items: I.ImmutableArray of Tracks.Entry := I.ImmutableArray.CreateRange of Tracks.Entry(
       [Track(' Électro |Folk'), Track('E' + #769 + 'LECTRO|Électro'), Track('Folk'), Track('')]
     );
-    X.Assert.Equal<int>(2, Browse.Songs(Items, new Music.Selection(Genres := ['électro'])).Length);
-    X.Assert.Equal<int>(4, Browse.Songs(Items, new Music.Selection()).Length);
+    X.Assert.Equal of int(
+      2,
+      Browse.Songs(Items, new Music.Selection(Genres := ['électro'])).Length
+    );
+    X.Assert.Equal of int(4, Browse.Songs(Items, new Music.Selection()).Length);
   end procedure;
 
   // Track lists use literal phrases alongside their regular word filters.
@@ -176,7 +179,7 @@ public type TrackFilterTests = record
       1L, 'a', 'one.mp3', '', null,
       new MediaTags.Info(Title := 'Happy X-Mas (Live)', Genres := ['Holiday Rock']), null
     );
-    const Items: I.ImmutableArray<Tracks.Entry> := I.ImmutableArray.CreateRange<Tracks.Entry>(
+    const Items: I.ImmutableArray of Tracks.Entry := I.ImmutableArray.CreateRange of Tracks.Entry(
       [
         First,
         First with
@@ -194,19 +197,19 @@ public type TrackFilterTests = record
       ]
     );
     const Phrase: string := '"happy X-mas"';
-    const LibraryMatches: I.ImmutableArray<Tracks.Entry> := Browse.Songs(
+    const LibraryMatches: I.ImmutableArray of Tracks.Entry := Browse.Songs(
       Items,
       new Music.Selection(Search := Phrase + ' live')
     );
-    X.Assert.Equal<int>(1, LibraryMatches.Length);
-    X.Assert.Equal<long>(1L, LibraryMatches[0].FileId);
-    const AlbumMatches: I.ImmutableArray<Tracks.Entry> := Browse.Songs(
+    X.Assert.Equal of int(1, LibraryMatches.Length);
+    X.Assert.Equal of long(1L, LibraryMatches[0].FileId);
+    const AlbumMatches: I.ImmutableArray of Tracks.Entry := Browse.Songs(
       Items,
       new Music.Selection(AlbumId := 'album', Search := '"holiday rock"')
     );
-    X.Assert.Equal<int>(1, AlbumMatches.Length);
-    X.Assert.Equal<long>(1L, AlbumMatches[0].FileId);
-    X.Assert.Equal<int>(
+    X.Assert.Equal of int(1, AlbumMatches.Length);
+    X.Assert.Equal of long(1L, AlbumMatches[0].FileId);
+    X.Assert.Equal of int(
       4,
       Browse.Songs(Items, new Music.Selection(Search := '"happy X-mas')).Length
     );

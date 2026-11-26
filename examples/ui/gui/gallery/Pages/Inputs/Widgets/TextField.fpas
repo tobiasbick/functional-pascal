@@ -23,9 +23,9 @@ uses System.Text as Text;
 // - `Model`: Current values.
 // ## Returns
 // The Text fields section of the Inputs page.
-public function Inputs(Model: State.Model; Data: Demo.Model): E.Element<State.Msg>;
+public function Inputs(Model: State.Model; Data: Demo.Model): E.Element of State.Msg;
 begin
-  const Name: E.Element<State.Msg> := F.TextField<State.Msg>(
+  const Name: E.Element of State.Msg := F.TextField of State.Msg(
     'input-name',
     Data.Name,
     function(SharedValue: string): State.Msg => State.Msg.Shared(Demo.Msg.SetName(SharedValue)),
@@ -35,7 +35,7 @@ begin
       MaxUtf8Bytes := 63
     )
   );
-  const Email: E.Element<State.Msg> := F.TextField<State.Msg>(
+  const Email: E.Element of State.Msg := F.TextField of State.Msg(
     'input-email',
     Data.Email,
     function(SharedValue: string): State.Msg => State.Msg.Shared(Demo.Msg.SetEmail(SharedValue)),
@@ -52,7 +52,7 @@ begin
   else
     ''
   end if;
-  const Password: E.Element<State.Msg> := F.TextField<State.Msg>(
+  const Password: E.Element of State.Msg := F.TextField of State.Msg(
     'input-password', Model.Password, State.Msg.SetPassword,
     new F.Options(
       Label := Strings.Get('Text.Password'),
@@ -62,19 +62,19 @@ begin
       MaxUtf8Bytes := 63
     )
   );
-  const Query: E.Element<State.Msg> := Search.View(Model, Data);
-  const About: E.Element<State.Msg> := Area.View(Model);
-  const Fields: array of E.Element<State.Msg> := [
-    Grid.Grid<State.Msg>(
+  const Query: E.Element of State.Msg := Search.View(Model, Data);
+  const About: E.Element of State.Msg := Area.View(Model);
+  const Fields: array of E.Element of State.Msg := [
+    Grid.Grid of State.Msg(
       new Grid.Options(Columns := 2, MinimumColumnWidth := 260.0F, Gap := G.Points(16)),
       Name, Email, Password, Query
     ),
     About
   ];
-  return E.Column<State.Msg>(
+  return E.Column of State.Msg(
     new L.Flow(Gap := G.Points(20)),
-    G.Heading<State.Msg>(Strings.Get('Text.TextFields'), Strings.Get('Text.FieldHints')),
-    G.Card<State.Msg>(16, Fields)
+    G.Heading of State.Msg(Strings.Get('Text.TextFields'), Strings.Get('Text.FieldHints')),
+    G.Card of State.Msg(16, Fields)
   );
 end function;
 

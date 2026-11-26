@@ -14,14 +14,11 @@ Only `//` comments are recognized, ending at a line ending or EOF. Comments are
 lexical trivia rather than statements. Preserve their text and source locations
 for [declaration documentation](../pascal/language/basics/comments.md); Markdown sections
 do not add language tokens or change the grammar below.
-Keywords are lowercase and case-sensitive. `>>` is two generic closers, not a
-shift operator; shifts use `shr`/`shl`. `??` is one token for null coalescing.
+Keywords are lowercase and case-sensitive. Shifts use `shr` and `shl`.
+`??` is one token for null coalescing.
 `?` is used only in type syntax, including array element annotations and nullable
 reference constraints; it is not a postfix expression operator.
-Generic closing delimiters are recognized in their grammatical context: no
-whitespace is required between `<T>` and a declaration's `=`, or between a
-generic result type and `=>`. Thus `Box<T>=record` and `Box<T> = record` have the
-same meaning. In comparisons, compound operators require adjacent characters:
+In comparisons, compound operators require adjacent characters:
 `X>=1` and `X >= 1` are valid, while `X > = 1` is invalid.
 
 ## Sources and declarations
@@ -49,12 +46,14 @@ type_declaration = "type", identifier, [type_parameters], "=", {constraint},
                     record_body | variant_body | enum_body | protocol_body), ";" ;
 distinct_type   = "distinct", named_type ;
 subrange_type   = named_type, "range", expression, "..", expression ;
-type_parameters = "<", identifier, {",", identifier}, ">" ;
-type_arguments  = "<", type, {",", type}, ">" ;
+type_parameters = "of", (identifier | "(", identifier, ",", identifier,
+                         {",", identifier}, ")") ;
+type_arguments  = "of", (type | "(", type, ",", type, {",", type}, ")") ;
 type            = named_type, ["?"] | callable_type | array_type
-                | "(", array_type, ")", "?" ;
-named_type      = identifier, [type_arguments],
-                  {".", identifier, [type_arguments]} ;
+                | "(", (array_type | named_type), ")", "?" ;
+named_type      = (type_segment | "(", named_type, ")", ".", type_segment),
+                  {".", type_segment} ;
+type_segment    = identifier, [type_arguments] ;
 array_type      = "array", ["[", ",", {","}, "]"], "of", type ;
 callable_type   = "function", "(", [type_list], ")", ":", type
                 | "procedure", "(", [type_list], ")" ;
@@ -198,15 +197,15 @@ unary_expression = ("+" | "-" | "not" | "await"), unary_expression
                  | postfix_expression ;
 postfix_expression = primary, {postfix_suffix | record_update} ;
 member_expression = primary, {postfix_suffix} ;
-postfix_suffix  = ".", identifier, [type_arguments]
+postfix_suffix  = ".", identifier | type_arguments
                 | "(", [arguments], ")"
                 | "[", expression, {",", expression}, "]" ;
 record_update   = "with", identifier, ":=", expression, ";",
                   {identifier, ":=", expression, ";"}, "end", "with" ;
-primary         = literal | identifier, [type_arguments]
+primary         = literal | identifier
                 | "(", expression, ")"
                 | "[", [expression, {",", expression}], "]"
-                | "new", named_type, ["?"],
+                | "new", (named_type, ["?"] | "(", named_type, ")", "?"),
                   ("(", [arguments], ")" | "[", expression, {",", expression}, "]")
                 | "cast", "<", type, ">", "(", expression, ")"
                 | "typeof", "(", type, ")"
@@ -251,19 +250,21 @@ An ordinary alias remains distinct from the `BaseType range Low..High` productio
 The optional `?` after a new-expression's named type is allowed only for an
 array allocation's element annotation, not for constructing a nullable class.
 
-Disambiguate `<...>` type arguments from comparisons using standard syntactic
-lookahead: a complete type-argument list in a valid name/postfix context is
-required. In particular, comparison operands must not be consumed speculatively
-as type arguments when the following token cannot continue that name. Diagnostics
-must report ambiguous/invalid syntax rather than use symbol lookup to invent a
-different parse. An explicit parenthesized comparison is always available.
+An unparenthesized single type argument extends through its own type arguments,
+dotted names, and nullable suffix. `List of string?` contains nullable strings.
+Group a type whose final name segment takes one type argument before adding a
+suffix to that type, as in `(List of string)?` and `(Outer of int).Nested`.
+The same grouping marks an expression receiver, as in `(Box of int).Create(42)`.
+The `of` that closes a case selector is followed by `when`, `else`, or `end`.
+Use one type argument clause per name in an expression. Multiple arguments use
+a parenthesized, comma-separated list.
 
 An implementation must additionally validate clause pairing (`end function`
 versus `end procedure`), generic arity, valid statement expressions, binding scope,
 attribute placement, definite assignment, supported async results, and coverage.
 Contract conditions must be bool, obey their expression restrictions, and use
 correctly typed result bindings. Procedures/non-generic async Task functions
-cannot bind a result; async Task<T> functions bind T rather than Task<T>.
+cannot bind a result. Async functions returning `Task of T` bind the completed `T`.
 
 ## Source files
 

@@ -363,14 +363,14 @@ uses System as Sys;
 //
 // ## Parameters
 // - `State`: Frame context and retained resources.
-public procedure Draw<TMsg>(State: C.State<TMsg>);
+public procedure Draw of TMsg(State: C.State of TMsg);
   // Keep recursive layout visits out of the large widget dispatch frames.
-  procedure Visit(Node: E.Element<TMsg>; Current: C.State<TMsg>; Horizontal: bool; Align: L.Alignment);
+  procedure Visit(Node: E.Element of TMsg; Current: C.State of TMsg; Horizontal: bool; Align: L.Alignment);
   begin
     DrawTextAndEditors(Node, Current, Horizontal, Align);
   end procedure;
 
-  procedure DrawTextAndEditors(Node: E.Element<TMsg>; Current: C.State<TMsg>; Horizontal: bool; Align: L.Alignment);
+  procedure DrawTextAndEditors(Node: E.Element of TMsg; Current: C.State of TMsg; Horizontal: bool; Align: L.Alignment);
   begin
     case Node of
       when E.Element.FormattedText(
@@ -390,7 +390,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Changed: function(string): TMsg,
         const Settings: InlineEdits.Options
       ):
-        InlineWidget.Draw<TMsg>(Current, Id, Value, Changed, Settings);
+        InlineWidget.Draw of TMsg(Current, Id, Value, Changed, Settings);
       when E.Element.ScrubField(
         const Id: string,
         const Label: string,
@@ -400,57 +400,57 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Changed: function(float): TMsg,
         const Settings: ScrubFields.Options
       ):
-        ScrubWidget.Draw<TMsg>(Current, Id, Label, Value, Minimum, Maximum, Changed, Settings);
+        ScrubWidget.Draw of TMsg(Current, Id, Label, Value, Minimum, Maximum, Changed, Settings);
       when E.Element.MoneyField(
         const Id: string,
         const Value: decimal,
         const Changed: function(decimal): TMsg,
         const Settings: MoneyFields.Options
       ):
-        MoneyWidget.Draw<TMsg>(Current, Id, Value, Changed, Settings);
+        MoneyWidget.Draw of TMsg(Current, Id, Value, Changed, Settings);
       when E.Element.ShortcutRecorder(
         const Id: string,
         const Value: RecorderKeys.Combination,
         const Changed: function(RecorderKeys.Combination): TMsg,
         const Settings: RecorderKeys.Options
       ):
-        ShortcutWidget.Draw<TMsg>(Current, Id, Value, Changed, Settings);
+        ShortcutWidget.Draw of TMsg(Current, Id, Value, Changed, Settings);
       when E.Element.ShortcutLabel(const Value: RecorderKeys.Combination):
-        ShortcutWidget.Label<TMsg>(Current, Value);
+        ShortcutWidget.Label of TMsg(Current, Value);
       when E.Element.TextField(
         const Id: string, const Value: string, const OnChange: function(string): TMsg,
-        const Settings: TextFields.Options, const OnSubmit: Sys.Func<string, TMsg>?
+        const Settings: TextFields.Options, const OnSubmit: Sys.Func of (string, TMsg)?
       ):
-        TextFieldWidget.Draw<TMsg>(Current, Id, Value, OnChange, Settings, OnSubmit);
+        TextFieldWidget.Draw of TMsg(Current, Id, Value, OnChange, Settings, OnSubmit);
       when E.Element.SearchField(
         const Id: string, const Value: string, const OnChange: function(string): TMsg,
-        const Settings: SearchFields.Options, const OnSubmit: Sys.Func<string, TMsg>?
+        const Settings: SearchFields.Options, const OnSubmit: Sys.Func of (string, TMsg)?
       ):
-        SearchFieldWidget.Draw<TMsg>(Current, Id, Value, OnChange, Settings, OnSubmit);
+        SearchFieldWidget.Draw of TMsg(Current, Id, Value, OnChange, Settings, OnSubmit);
       when E.Element.TextArea(
         const Id: string, const Value: string, const OnChange: function(string): TMsg,
-        const Settings: TextAreas.Options, const OnSubmit: Sys.Func<string, TMsg>?
+        const Settings: TextAreas.Options, const OnSubmit: Sys.Func of (string, TMsg)?
       ):
-        TextAreaWidget.Draw<TMsg>(Current, Id, Value, OnChange, Settings, OnSubmit);
+        TextAreaWidget.Draw of TMsg(Current, Id, Value, OnChange, Settings, OnSubmit);
       when E.Element.TagInput(
         const Id: string,
         const Tags: array of string,
         const OnChange: function(array of string): TMsg,
         const Settings: TagInputs.Options
       ):
-        TagWidget.Draw<TMsg>(Current, Id, Tags, OnChange, Settings);
+        TagWidget.Draw of TMsg(Current, Id, Tags, OnChange, Settings);
       when E.Element.OneTimeCodeInput(
         const Id: string, const Value: string, const OnChange: function(string): TMsg,
-        const Settings: OneTimeCodes.Options, const OnComplete: Sys.Func<string, TMsg>?
+        const Settings: OneTimeCodes.Options, const OnComplete: Sys.Func of (string, TMsg)?
       ):
-        CodeWidget.Draw<TMsg>(Current, Id, Value, OnChange, Settings, OnComplete);
+        CodeWidget.Draw of TMsg(Current, Id, Value, OnChange, Settings, OnComplete);
       when E.Element.PasswordStrengthMeter(const Id: string, const Password: string):
-        StrengthWidget.Draw<TMsg>(Current, Id, Password);
+        StrengthWidget.Draw of TMsg(Current, Id, Password);
       when E.Element.Alert(
         const Id: string, const Title: string, const Settings: Alerts.Options,
-        const Notify: Sys.Func<TMsg>?
+        const Notify: (Sys.Func of TMsg)?
       ):
-        AlertWidget.Draw<TMsg>(Current, Id, Title, Settings, Notify);
+        AlertWidget.Draw of TMsg(Current, Id, Title, Settings, Notify);
       when E.Element.Problems(_, _, _, _), E.Element.Pipeline(
         _,
         _,
@@ -528,7 +528,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         _,
         _
       ), E.Element.RequestBar(_, _, _, _, _), E.Element.FeatureFlags(_, _, _, _, _):
-        DeveloperPresentation.Draw<TMsg>(Current, Node);
+        DeveloperPresentation.Draw of TMsg(Current, Node);
       when E.Element.FormatBar(
         _,
         _,
@@ -558,7 +558,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         _,
         _
       ), E.Element.Toolbar(_, _, _, _), E.Element.NodeEditor(_, _, _, _, _, _):
-        Canvas.Draw<TMsg>(Current, Node, Visit);
+        Canvas.Draw of TMsg(Current, Node, Visit);
       when E.Element.MenuBar(_, _, _), E.Element.StatusBar(_, _, _), E.Element.DocumentTabs(
         _,
         _,
@@ -573,7 +573,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         _,
         _
       ):
-        Chrome.Draw<TMsg>(Current, Node, Visit);
+        Chrome.Draw of TMsg(Current, Node, Visit);
       when E.Element.Markdown(_, _, _, _), E.Element.CodeEditor(_, _, _, _), E.Element.DiffView(
         _,
         _,
@@ -588,7 +588,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         _,
         _
       ), E.Element.LogConsole(_, _, _, _), E.Element.Terminal(_, _, _, _, _):
-        SourceTools.Draw<TMsg>(Current, Node);
+        SourceTools.Draw of TMsg(Current, Node);
       when E.Element.PropertyInspector(_, _, _, _), E.Element.FlameGraph(
         _,
         _,
@@ -602,7 +602,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         _,
         _
       ), E.Element.GradientEditor(_, _, _, _, _), E.Element.TimelineEditor(_, _, _, _, _):
-        EditingTools.Draw<TMsg>(Current, Node);
+        EditingTools.Draw of TMsg(Current, Node);
       when E.Element.NativeText(_, _), E.Element.Icon(
         _,
         _,
@@ -622,15 +622,15 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         _,
         _
       ):
-        Display.Draw<TMsg>(Current, Node, Visit);
+        Display.Draw of TMsg(Current, Node, Visit);
       when E.Element.VoiceWave(
         const Id: string,
         const Signal: Voice.Signal,
         const Progress: float?,
-        const Changed: Sys.Func<float, TMsg>?,
+        const Changed: Sys.Func of (float, TMsg)?,
         const Settings: VoiceWaves.Options
       ):
-        VoiceWaveWidget.Draw<TMsg>(Current, Id, Signal, Progress, Changed, Settings);
+        VoiceWaveWidget.Draw of TMsg(Current, Id, Signal, Progress, Changed, Settings);
       when E.Element.VoiceNote(
         const Id: string,
         const Samples: array of float,
@@ -638,7 +638,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Changed: function(VoiceNotes.Event): TMsg,
         const Settings: VoiceNotes.Options
       ):
-        VoiceNoteWidget.Draw<TMsg>(Current, Id, Samples, Playback, Changed, Settings);
+        VoiceNoteWidget.Draw of TMsg(Current, Id, Samples, Playback, Changed, Settings);
       when E.Element.VoiceSession(
         const Id: string,
         const Mode: Voice.Activity,
@@ -647,14 +647,14 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Changed: function(VoiceSessions.Event): TMsg,
         const Settings: VoiceSessions.Options
       ):
-        VoiceSessionWidget.Draw<TMsg>(Current, Id, Mode, Signal, Muted, Changed, Settings);
+        VoiceSessionWidget.Draw of TMsg(Current, Id, Mode, Signal, Muted, Changed, Settings);
       when E.Element.Composer(
         const Id: string,
         const Content: Composers.Value,
         const Changed: function(Composers.Event): TMsg,
         const Settings: Composers.Options
       ):
-        ComposerWidget.Draw<TMsg>(Current, Id, Content, Changed, Settings);
+        ComposerWidget.Draw of TMsg(Current, Id, Content, Changed, Settings);
       else
         DrawDeveloperAndMedia(Node, Current, Horizontal, Align);
         return;
@@ -663,57 +663,57 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
     Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
   end procedure;
 
-  procedure DrawDeveloperAndMedia(Node: E.Element<TMsg>; Current: C.State<TMsg>; Horizontal: bool; Align: L.Alignment);
+  procedure DrawDeveloperAndMedia(Node: E.Element of TMsg; Current: C.State of TMsg; Horizontal: bool; Align: L.Alignment);
   begin
     case Node of
       when E.Element.VoiceOrb(
         const Id: string,
         const Mode: Voice.Activity,
         const Level: float,
-        const Activate: Sys.Func<TMsg>?,
+        const Activate: (Sys.Func of TMsg)?,
         const Settings: VoiceOrbs.Options
       ):
-        VoiceOrbWidget.Draw<TMsg>(Current, Id, Mode, Level, Activate, Settings);
+        VoiceOrbWidget.Draw of TMsg(Current, Id, Mode, Level, Activate, Settings);
       when E.Element.Reasoning(
         const Id: string,
-        const Bodies: array of E.Element<TMsg>,
+        const Bodies: array of E.Element of TMsg,
         const Settings: Reasonings.Options
       ):
-        ReasoningWidget.Draw<TMsg>(Current, Id, Bodies, Settings, Visit);
+        ReasoningWidget.Draw of TMsg(Current, Id, Bodies, Settings, Visit);
       when E.Element.ToolCall(
         const Id: string,
         const Name: string,
         const Settings: ToolCalls.Options
       ):
-        ToolCallWidget.Draw<TMsg>(Current, Id, Name, Settings);
+        ToolCallWidget.Draw of TMsg(Current, Id, Name, Settings);
       when E.Element.AgentPlan(
         const Id: string,
         const Steps: array of AgentPlans.Step,
-        const Changed: Sys.Func<int, TMsg>?,
+        const Changed: Sys.Func of (int, TMsg)?,
         const Settings: AgentPlans.Options
       ):
-        AgentPlanWidget.Draw<TMsg>(Current, Id, Steps, Changed, Settings);
+        AgentPlanWidget.Draw of TMsg(Current, Id, Steps, Changed, Settings);
       when E.Element.AgentStatus(
         const Id: string,
         const Label: string,
         const Settings: AgentStatuses.Options
       ):
-        AgentStatusWidget.Draw<TMsg>(Current, Id, Label, Settings);
+        AgentStatusWidget.Draw of TMsg(Current, Id, Label, Settings);
       when E.Element.SourceList(
         const Id: string,
         const Documents: array of Sources.Item,
-        const Changed: Sys.Func<int, TMsg>?,
+        const Changed: Sys.Func of (int, TMsg)?,
         const Settings: SourceLists.Options
       ):
-        SourceListWidget.Draw<TMsg>(Current, Id, Documents, Changed, Settings);
+        SourceListWidget.Draw of TMsg(Current, Id, Documents, Changed, Settings);
       when E.Element.Citation(
         const Id: string,
         const Number: int,
         const Source: Sources.Item?,
-        const Activate: Sys.Func<TMsg>?,
+        const Activate: (Sys.Func of TMsg)?,
         const Settings: Citations.Options
       ):
-        CitationWidget.Draw<TMsg>(Current, Id, Number, Source, Activate, Settings);
+        CitationWidget.Draw of TMsg(Current, Id, Number, Source, Activate, Settings);
       when E.Element.ContextMeter(
         const Id: string,
         const Used: float,
@@ -721,21 +721,21 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Breakdown: array of ContextMeters.Part,
         const Settings: ContextMeters.Options
       ):
-        ContextMeterWidget.Draw<TMsg>(Current, Id, Used, Limit, Breakdown, Settings);
+        ContextMeterWidget.Draw of TMsg(Current, Id, Used, Limit, Breakdown, Settings);
       when E.Element.ResponseActions(
         const Id: string,
         const Vote: int?,
         const Changed: function(ResponseActions.Event): TMsg,
         const Settings: ResponseActions.Options
       ):
-        ResponseActionsWidget.Draw<TMsg>(Current, Id, Vote, Changed, Settings);
+        ResponseActionsWidget.Draw of TMsg(Current, Id, Vote, Changed, Settings);
       when E.Element.PromptSuggestions(
         const Id: string,
         const Items: array of PromptSuggestions.Item,
         const Changed: function(int): TMsg,
         const Settings: PromptSuggestions.Options
       ):
-        PromptSuggestionsWidget.Draw<TMsg>(Current, Id, Items, Changed, Settings);
+        PromptSuggestionsWidget.Draw of TMsg(Current, Id, Items, Changed, Settings);
       when E.Element.ModelPicker(
         const Id: string,
         const Items: array of ModelPickers.Item,
@@ -743,22 +743,22 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Changed: function(int): TMsg,
         const Settings: ModelPickers.Options
       ):
-        ModelPickerWidget.Draw<TMsg>(Current, Id, Items, Selected, Changed, Settings);
+        ModelPickerWidget.Draw of TMsg(Current, Id, Items, Selected, Changed, Settings);
       when E.Element.Carousel(
         const Id: string,
-        const Slides: array of E.Element<TMsg>,
+        const Slides: array of E.Element of TMsg,
         const Index: int,
         const Changed: function(int): TMsg,
         const Settings: Carousels.Options
       ):
-        CarouselWidget.Draw<TMsg>(Current, Id, Slides, Index, Changed, Settings, Visit);
+        CarouselWidget.Draw of TMsg(Current, Id, Slides, Index, Changed, Settings, Visit);
       when E.Element.CardStack(
         const Id: string,
-        const DeckItems: array of E.Element<TMsg>,
+        const DeckItems: array of E.Element of TMsg,
         const Changed: function(CardStacks.Direction): TMsg,
         const Settings: CardStacks.Options
       ):
-        CardStackWidget.Draw<TMsg>(Current, Id, DeckItems, Changed, Settings, Visit);
+        CardStackWidget.Draw of TMsg(Current, Id, DeckItems, Changed, Settings, Visit);
       when E.Element.ImageViewer(
         const Id: string,
         const Image: Media.Source,
@@ -766,7 +766,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Changed: function(ImageViewers.Value): TMsg,
         const Settings: ImageViewers.Options
       ):
-        ImageViewerWidget.Draw<TMsg>(Current, Id, Image, ViewValue, Changed, Settings);
+        ImageViewerWidget.Draw of TMsg(Current, Id, Image, ViewValue, Changed, Settings);
       when E.Element.ImageCropper(
         const Id: string,
         const Image: Media.Source,
@@ -774,7 +774,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Changed: function(ImageCroppers.Value): TMsg,
         const Settings: ImageCroppers.Options
       ):
-        ImageCropperWidget.Draw<TMsg>(Current, Id, Image, Crop, Changed, Settings);
+        ImageCropperWidget.Draw of TMsg(Current, Id, Image, Crop, Changed, Settings);
       when E.Element.ImageCompare(
         const Id: string,
         const Before: Media.Source,
@@ -783,17 +783,17 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Changed: function(float): TMsg,
         const Settings: ImageComparisons.Options
       ):
-        ImageCompareWidget.Draw<TMsg>(Current, Id, Before, After, Position, Changed, Settings);
+        ImageCompareWidget.Draw of TMsg(Current, Id, Before, After, Position, Changed, Settings);
       when E.Element.ChatMessage(
         const Id: string,
         const Text: string,
         const Settings: ChatMessages.Options
       ):
-        ChatMessageWidget.Draw<TMsg>(Current, Id, Text, Settings);
+        ChatMessageWidget.Draw of TMsg(Current, Id, Text, Settings);
       when E.Element.ChatDivider(const Id: string, const Label: string):
-        ChatDividerWidget.Draw<TMsg>(Current, Id, Label);
+        ChatDividerWidget.Draw of TMsg(Current, Id, Label);
       when E.Element.TypingIndicator(const Id: string, const Name: string):
-        TypingIndicatorWidget.Draw<TMsg>(Current, Id, Name);
+        TypingIndicatorWidget.Draw of TMsg(Current, Id, Name);
       when E.Element.Comment(
         const Id: string,
         const Author: string,
@@ -802,19 +802,19 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Change: function(Comments.Event): TMsg,
         const Settings: Comments.Options
       ):
-        CommentWidget.Draw<TMsg>(Current, Id, Author, Text, Likes, Change, Settings);
+        CommentWidget.Draw of TMsg(Current, Id, Author, Text, Likes, Change, Settings);
       when E.Element.Presence(
         const Id: string,
         const Users: array of Presences.User,
         const Settings: Presences.Options
       ):
-        PresenceWidget.Draw<TMsg>(Current, Id, Users, Settings);
+        PresenceWidget.Draw of TMsg(Current, Id, Users, Settings);
       when E.Element.Counter(
         const Id: string,
         const Value: double,
         const Settings: Counters.Options
       ):
-        CounterWidget.Draw<TMsg>(Current, Id, Value, Settings);
+        CounterWidget.Draw of TMsg(Current, Id, Value, Settings);
       else
         DrawVoiceAndChat(Node, Current, Horizontal, Align);
         return;
@@ -823,7 +823,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
     Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
   end procedure;
 
-  procedure DrawVoiceAndChat(Node: E.Element<TMsg>; Current: C.State<TMsg>; Horizontal: bool; Align: L.Alignment);
+  procedure DrawVoiceAndChat(Node: E.Element of TMsg; Current: C.State of TMsg; Horizontal: bool; Align: L.Alignment);
   begin
     case Node of
       when E.Element.Ticker(
@@ -831,116 +831,116 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Items: array of Tickers.Item,
         const Settings: Tickers.Options
       ):
-        TickerWidget.Draw<TMsg>(Current, Id, Items, Settings);
+        TickerWidget.Draw of TMsg(Current, Id, Items, Settings);
       when E.Element.StatusSpinner(
         const Id: string,
         const CurrentStatus: Status.Status,
         const Settings: StatusSpinners.Options
       ):
-        StatusSpinnerWidget.Draw<TMsg>(Current, Id, CurrentStatus, Settings);
+        StatusSpinnerWidget.Draw of TMsg(Current, Id, CurrentStatus, Settings);
       when E.Element.SkeletonGroup(
         const Id: string,
-        const Children: array of E.Element<TMsg>,
+        const Children: array of E.Element of TMsg,
         const Settings: SkeletonGroups.Options
       ):
-        SkeletonGroupWidget.Draw<TMsg>(Current, Id, Children, Settings, Visit);
+        SkeletonGroupWidget.Draw of TMsg(Current, Id, Children, Settings, Visit);
       when E.Element.Sparkline(
         const Id: string,
         const Values: array of float,
         const Settings: Sparklines.Options
       ):
-        SparklineWidget.Draw<TMsg>(Current, Id, Values, Settings);
+        SparklineWidget.Draw of TMsg(Current, Id, Values, Settings);
       when E.Element.ProgressBar(
         const Id: string,
         const Value: float,
         const Settings: ProgressBars.Options
       ):
-        ProgressWidget.Draw<TMsg>(Current, Id, Value, Settings);
+        ProgressWidget.Draw of TMsg(Current, Id, Value, Settings);
       when E.Element.Spinner(
         const Id: string,
         const Diameter: float,
         const Settings: Spinners.Options?
       ):
-        SpinnerWidget.Draw<TMsg>(Current, Id, Diameter, Settings ?? new Spinners.Options());
+        SpinnerWidget.Draw of TMsg(Current, Id, Diameter, Settings ?? new Spinners.Options());
       when E.Element.Skeleton(const Id: string, const Width: L.Extent, const Height: float):
-        SkeletonWidget.Draw<TMsg>(Current, Id, Width, Height);
+        SkeletonWidget.Draw of TMsg(Current, Id, Width, Height);
       when E.Element.TimelineItem(
         const Id: string,
         const Title: string,
         const Settings: Timeline.Options
       ):
-        TimelineWidget.Draw<TMsg>(Current, Id, Title, Settings);
+        TimelineWidget.Draw of TMsg(Current, Id, Title, Settings);
       when E.Element.ProgressRing(
         const Id: string, const Label: string, const Value: float, const Diameter: float
       ):
-        RingWidget.Draw<TMsg>(Current, Id, Label, Value, Diameter);
+        RingWidget.Draw of TMsg(Current, Id, Label, Value, Diameter);
       when E.Element.LevelMeter(
         const Id: string,
         const Peaks: array of float,
         const Settings: Levels.Options,
-        const Notify: Sys.Func<TMsg>?
+        const Notify: (Sys.Func of TMsg)?
       ):
-        LevelMeterWidget.Draw<TMsg>(Current, Id, Peaks, Settings, Notify);
+        LevelMeterWidget.Draw of TMsg(Current, Id, Peaks, Settings, Notify);
       when E.Element.Meter(
         const Id: string, const Label: string, const Used: float,
         const Total: float, const Unit: string
       ):
-        MeterWidget.Draw<TMsg>(Current, Id, Label, Used, Total, Unit);
+        MeterWidget.Draw of TMsg(Current, Id, Label, Used, Total, Unit);
       when E.Element.ColorPicker(
         const Id: string, const Value: G.Color, const Change: function(G.Color): TMsg,
         const Enabled: bool
       ):
-        ColorPickerWidget.Draw<TMsg>(Current, Id, Value, Change, Enabled);
+        ColorPickerWidget.Draw of TMsg(Current, Id, Value, Change, Enabled);
       when E.Element.EmojiPicker(
         const Id: string, const Value: Emojis.State, const Change: function(Emojis.Change): TMsg,
         const Settings: Emojis.Options
       ):
-        EmojiPickerWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        EmojiPickerWidget.Draw of TMsg(Current, Id, Value, Change, Settings);
       when E.Element.Calendar(
         const Id: string, const Value: Sys.DateOnly?, const Change: function(Sys.DateOnly): TMsg,
         const Enabled: bool
       ):
-        CalendarWidget.Draw<TMsg>(Current, Id, Value, Change, Enabled);
+        CalendarWidget.Draw of TMsg(Current, Id, Value, Change, Enabled);
       when E.Element.DatePicker(
         const Id: string, const Value: Sys.DateOnly?, const Change: function(Sys.DateOnly): TMsg,
         const Settings: DatePickers.Options
       ):
-        DatePickerWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        DatePickerWidget.Draw of TMsg(Current, Id, Value, Change, Settings);
       when E.Element.RangeCalendar(
         const Id: string, const Value: Dates.Value, const Change: function(Dates.Value): TMsg,
         const Months: int, const Enabled: bool
       ):
-        RangeCalendarWidget.Draw<TMsg>(Current, Id, Value, Change, Months, Enabled);
+        RangeCalendarWidget.Draw of TMsg(Current, Id, Value, Change, Months, Enabled);
       when E.Element.RangePicker(
         const Id: string, const Value: Dates.Value, const Change: function(Dates.Value): TMsg,
         const Settings: RangePickers.Options
       ):
-        RangePickerWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        RangePickerWidget.Draw of TMsg(Current, Id, Value, Change, Settings);
       when E.Element.TimePicker(
         const Id: string, const Value: Sys.TimeOnly, const Change: function(Sys.TimeOnly): TMsg,
         const Settings: TimePickers.Options
       ):
-        TimePickerWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        TimePickerWidget.Draw of TMsg(Current, Id, Value, Change, Settings);
       when E.Element.WheelPicker(
         const Id: string, const Items: array of string, const Selected: int,
         const Change: function(int): TMsg, const Settings: WheelPickers.Options
       ):
-        WheelPickerWidget.Draw<TMsg>(Current, Id, Items, Selected, Change, Settings);
+        WheelPickerWidget.Draw of TMsg(Current, Id, Items, Selected, Change, Settings);
       when E.Element.TimeDial(
         const Id: string, const Value: Sys.TimeOnly, const Change: function(Sys.TimeOnly): TMsg,
         const Diameter: float, const Enabled: bool
       ):
-        TimeDialWidget.Draw<TMsg>(Current, Id, Value, Change, Diameter, Enabled);
+        TimeDialWidget.Draw of TMsg(Current, Id, Value, Change, Diameter, Enabled);
       when E.Element.MultiSelectInput(
         const Id: string, const Items: array of Selects.Item, const Selected: array of bool,
         const Change: function(array of bool): TMsg, const Settings: Multi.Options
       ):
-        MultiWidget.Draw<TMsg>(Current, Id, Items, Selected, Change, Settings);
+        MultiWidget.Draw of TMsg(Current, Id, Items, Selected, Change, Settings);
       when E.Element.SelectInput(
         const Id: string, const Items: array of Selects.Item, const Selected: int,
         const OnChange: function(int): TMsg, const Settings: Selects.Options
       ):
-        SelectWidget.Draw<TMsg>(Current, Id, Items, Selected, OnChange, Settings);
+        SelectWidget.Draw of TMsg(Current, Id, Items, Selected, OnChange, Settings);
       else
         DrawButtonsAndMenus(Node, Current, Horizontal, Align);
         return;
@@ -949,14 +949,14 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
     Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
   end procedure;
 
-  procedure DrawButtonsAndMenus(Node: E.Element<TMsg>; Current: C.State<TMsg>; Horizontal: bool; Align: L.Alignment);
+  procedure DrawButtonsAndMenus(Node: E.Element of TMsg; Current: C.State of TMsg; Horizontal: bool; Align: L.Alignment);
   begin
     case Node of
       when E.Element.NumberField(
         const Id: string, const Value: double, const Minimum: double, const Maximum: double,
         const OnChange: function(double): TMsg, const Settings: NumberFields.Options
       ):
-        NumberWidget.Draw<TMsg>(Current, Id, Value, Minimum, Maximum, OnChange, Settings);
+        NumberWidget.Draw of TMsg(Current, Id, Value, Minimum, Maximum, OnChange, Settings);
       when E.Element.Separator(const Title: string):
         if Title = '' then
           Current.Window.Separator();
@@ -973,33 +973,33 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Message: TMsg,
         const Settings: B.Options
       ):
-        Button.Draw<TMsg>(Current, Id, Label, Message, Settings);
+        Button.Draw of TMsg(Current, Id, Label, Message, Settings);
       when E.Element.IconAction(
         const Id: string, const Icon: string, const Tooltip: string, const Message: TMsg,
         const Settings: Icons.Options
       ):
-        IconButton.Draw<TMsg>(Current, Id, Icon, Tooltip, Message, Settings);
+        IconButton.Draw of TMsg(Current, Id, Icon, Tooltip, Message, Settings);
       when E.Element.CopyAction(
         const Id: string,
         const Text: string,
-        const OnCopied: Sys.Func<TMsg>?,
+        const OnCopied: (Sys.Func of TMsg)?,
         const Enabled: bool
       ):
-        CopyButton.Draw<TMsg>(Current, Id, Text, OnCopied, Enabled);
+        CopyButton.Draw of TMsg(Current, Id, Text, OnCopied, Enabled);
       when E.Element.HoldAction(
         const Id: string,
         const Label: string,
         const Message: TMsg,
         const Settings: Holds.Options
       ):
-        HoldButton.Draw<TMsg>(Current, Id, Label, Message, Settings);
+        HoldButton.Draw of TMsg(Current, Id, Label, Message, Settings);
       when E.Element.ConfirmAction(
         const Id: string,
         const Label: string,
         const Message: TMsg,
         const Settings: Confirms.Options
       ):
-        ConfirmButton.Draw<TMsg>(Current, Id, Label, Message, Settings);
+        ConfirmButton.Draw of TMsg(Current, Id, Label, Message, Settings);
       when E.Element.StatusAction(
         const Id: string,
         const Label: string,
@@ -1007,29 +1007,29 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Message: TMsg,
         const Settings: Status.Options
       ):
-        StatusButton.Draw<TMsg>(Current, Id, Label, Value, Message, Settings);
+        StatusButton.Draw of TMsg(Current, Id, Label, Value, Message, Settings);
       when E.Element.ThemeFlip(
         const Id: string, const Appearance: Themes.Mode,
         const Change: function(Themes.Mode): TMsg, const Enabled: bool
       ):
-        ThemeToggle.Draw<TMsg>(Current, Id, Appearance, Change, Enabled);
+        ThemeToggle.Draw of TMsg(Current, Id, Appearance, Change, Enabled);
       when E.Element.Segments(
         const Id: string, const Items: array of Segmented.Item, const Selected: int,
         const Change: function(int): TMsg, const Settings: Segmented.Options
       ):
-        SegmentedWidget.Draw<TMsg>(Current, Id, Items, Selected, Change, Settings);
+        SegmentedWidget.Draw of TMsg(Current, Id, Items, Selected, Change, Settings);
       when E.Element.TabStrip(
         const Id: string, const Items: array of Tabs.Item, const Selected: int,
         const Change: function(int): TMsg, const Settings: Tabs.Options
       ):
-        TabsWidget.Draw<TMsg>(Current, Id, Items, Selected, Change, Settings);
+        TabsWidget.Draw of TMsg(Current, Id, Items, Selected, Change, Settings);
       when E.Element.BreadcrumbTrail(
         const Id: string,
         const Items: array of string,
         const Navigate: function(int): TMsg,
         const Enabled: bool
       ):
-        Breadcrumb.Draw<TMsg>(Current, Id, Items, Navigate, Enabled);
+        Breadcrumb.Draw of TMsg(Current, Id, Items, Navigate, Enabled);
       when E.Element.PaginationAction(
         const Id: string,
         const Page: int,
@@ -1037,21 +1037,21 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Change: function(int): TMsg,
         const Enabled: bool
       ):
-        Pagination.Draw<TMsg>(Current, Id, Page, Count, Change, Enabled);
+        Pagination.Draw of TMsg(Current, Id, Page, Count, Change, Enabled);
       when E.Element.StepProgress(const Id: string, const Steps: array of string, const Index: int):
-        Stepper.Draw<TMsg>(Current, Id, Steps, Index);
+        Stepper.Draw of TMsg(Current, Id, Steps, Index);
       when E.Element.Toggles(
         const Id: string, const Items: array of ToggleGroups.Item, const Selected: array of bool,
         const Change: function(array of bool): TMsg, const Settings: ToggleGroups.Options
       ):
-        ToggleGroup.Draw<TMsg>(Current, Id, Items, Selected, Change, Settings);
+        ToggleGroup.Draw of TMsg(Current, Id, Items, Selected, Change, Settings);
       when E.Element.ThemeChoice(
         const Id: string,
         const Selected: ThemeSwitchers.Selection,
         const Change: function(ThemeSwitchers.Selection): TMsg,
         const Settings: ThemeSwitchers.Options
       ):
-        ThemeSwitcher.Draw<TMsg>(Current, Id, Selected, Change, Settings);
+        ThemeSwitcher.Draw of TMsg(Current, Id, Selected, Change, Settings);
       when E.Element.CheckboxAction(
         const Id: string,
         const Label: string,
@@ -1061,7 +1061,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Enabled: bool,
         const Indeterminate: bool, const HideLabel: bool
       ):
-        Checkbox.Draw<TMsg>(
+        Checkbox.Draw of TMsg(
           Current,
           Id,
           Label,
@@ -1076,27 +1076,27 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Id: string, const Label: string, const On: bool, const Change: function(bool): TMsg,
         const Description: string, const Enabled: bool
       ):
-        Switch.Draw<TMsg>(Current, Id, Label, On, Change, Description, Enabled);
+        Switch.Draw of TMsg(Current, Id, Label, On, Change, Description, Enabled);
       when E.Element.RadioAction(
         const Id: string, const Label: string, const Selected: bool, const Select: function(): TMsg,
         const Description: string, const Enabled: bool
       ):
-        RadioButton.Draw<TMsg>(Current, Id, Label, Selected, Select, Description, Enabled);
+        RadioButton.Draw of TMsg(Current, Id, Label, Selected, Select, Description, Enabled);
       when E.Element.Radios(
         const Id: string, const Items: array of RadioGroups.Item, const Selected: int,
         const Change: function(int): TMsg, const Enabled: bool, const Gap: L.Spacing
       ):
-        RadioGroup.Draw<TMsg>(Current, Id, Items, Selected, Change, Enabled, Gap);
+        RadioGroup.Draw of TMsg(Current, Id, Items, Selected, Change, Enabled, Gap);
       when E.Element.Cards(
         const Id: string, const Items: array of RadioCards.Item, const Selected: int,
         const Change: function(int): TMsg, const Settings: RadioCards.Options
       ):
-        RadioCardsWidget.Draw<TMsg>(Current, Id, Items, Selected, Change, Settings);
+        RadioCardsWidget.Draw of TMsg(Current, Id, Items, Selected, Change, Settings);
       when E.Element.SliderAction(
         const Id: string, const Label: string, const Value: float, const Minimum: float,
         const Maximum: float, const Change: function(float): TMsg, const Settings: Sliders.Options
       ):
-        Slider.Draw<TMsg>(Current, Id, Label, Value, Minimum, Maximum, Change, Settings);
+        Slider.Draw of TMsg(Current, Id, Label, Value, Minimum, Maximum, Change, Settings);
       else
         DrawPickersAndSelection(Node, Current, Horizontal, Align);
         return;
@@ -1105,7 +1105,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
     Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
   end procedure;
 
-  procedure DrawPickersAndSelection(Node: E.Element<TMsg>; Current: C.State<TMsg>; Horizontal: bool; Align: L.Alignment);
+  procedure DrawPickersAndSelection(Node: E.Element of TMsg; Current: C.State of TMsg; Horizontal: bool; Align: L.Alignment);
   begin
     case Node of
       when E.Element.RangeSliderAction(
@@ -1117,70 +1117,70 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Change: function(RangeSliders.Interval): TMsg,
         const Enabled: bool
       ):
-        RangeSlider.Draw<TMsg>(Current, Id, Label, Value, Minimum, Maximum, Change, Enabled);
+        RangeSlider.Draw of TMsg(Current, Id, Label, Value, Minimum, Maximum, Change, Enabled);
       when E.Element.Banner(
-        const Id: string, const Text: string, const Open: bool, const Dismiss: Sys.Func<TMsg>?,
-        const Action: Sys.Func<TMsg>?, const Settings: Banners.Options
+        const Id: string, const Text: string, const Open: bool, const Dismiss: (Sys.Func of TMsg)?,
+        const Action: (Sys.Func of TMsg)?, const Settings: Banners.Options
       ):
-        BannerWidget.Draw<TMsg>(Current, Id, Text, Open, Dismiss, Action, Settings);
+        BannerWidget.Draw of TMsg(Current, Id, Text, Open, Dismiss, Action, Settings);
       when E.Element.Countdown(
         const Id: string,
         const Seconds: double,
         const Settings: Countdowns.Options
       ):
-        CountdownWidget.Draw<TMsg>(Current, Id, Seconds, Settings);
+        CountdownWidget.Draw of TMsg(Current, Id, Seconds, Settings);
       when E.Element.Checklist(
         const Id: string,
         const Steps: array of Checklists.Step,
         const Toggle: function(int, bool): TMsg,
-        const Action: Sys.Func<int, TMsg>?,
+        const Action: Sys.Func of (int, TMsg)?,
         const Settings: Checklists.Options
       ):
-        ChecklistWidget.Draw<TMsg>(Current, Id, Steps, Toggle, Action, Settings);
+        ChecklistWidget.Draw of TMsg(Current, Id, Steps, Toggle, Action, Settings);
       when E.Element.Dropzone(
         const Id: string,
         const Drop: function(array of string): TMsg,
-        const Browse: Sys.Func<TMsg>?,
+        const Browse: (Sys.Func of TMsg)?,
         const Settings: Dropzones.Options
       ):
-        DropzoneWidget.Draw<TMsg>(Current, Id, Drop, Browse, Settings);
+        DropzoneWidget.Draw of TMsg(Current, Id, Drop, Browse, Settings);
       when E.Element.AvatarUpload(
         const Id: string,
         const Name: string,
         const Path: string?,
         const Drop: function(string): TMsg,
-        const Browse: Sys.Func<TMsg>?,
+        const Browse: (Sys.Func of TMsg)?,
         const Diameter: float,
         const Enabled: bool
       ):
-        AvatarUploadWidget.Draw<TMsg>(Current, Id, Name, Path, Drop, Browse, Diameter, Enabled);
+        AvatarUploadWidget.Draw of TMsg(Current, Id, Name, Path, Drop, Browse, Diameter, Enabled);
       when E.Element.SignaturePad(
         const Id: string,
-        const Change: Sys.Func<Signatures.Signature, TMsg>?,
+        const Change: Sys.Func of (Signatures.Signature, TMsg)?,
         const Settings: Signatures.Options
       ):
-        SignaturePadWidget.Draw<TMsg>(Current, Id, Change, Settings);
+        SignaturePadWidget.Draw of TMsg(Current, Id, Change, Settings);
       when E.Element.Knob(
         const Id: string, const Label: string, const Value: float, const Minimum: float,
         const Maximum: float, const Change: function(float): TMsg, const Settings: Knobs.Options
       ):
-        KnobWidget.Draw<TMsg>(Current, Id, Label, Value, Minimum, Maximum, Change, Settings);
+        KnobWidget.Draw of TMsg(Current, Id, Label, Value, Minimum, Maximum, Change, Settings);
       when E.Element.Fader(
         const Id: string, const Label: string, const Value: float, const Minimum: float,
         const Maximum: float, const Change: function(float): TMsg, const Settings: Faders.Options
       ):
-        FaderWidget.Draw<TMsg>(Current, Id, Label, Value, Minimum, Maximum, Change, Settings);
+        FaderWidget.Draw of TMsg(Current, Id, Label, Value, Minimum, Maximum, Change, Settings);
       when E.Element.RulerSlider(
         const Id: string, const Label: string, const Value: float, const Minimum: float,
         const Maximum: float, const Change: function(float): TMsg, const Settings: Rulers.Options
       ):
-        RulerWidget.Draw<TMsg>(Current, Id, Label, Value, Minimum, Maximum, Change, Settings);
+        RulerWidget.Draw of TMsg(Current, Id, Label, Value, Minimum, Maximum, Change, Settings);
       when E.Element.HistogramSlider(
         const Id: string, const Label: string, const Bins: array of float,
         const Value: RangeSliders.Interval, const Minimum: float, const Maximum: float,
         const Change: function(RangeSliders.Interval): TMsg, const Settings: Histograms.Options
       ):
-        HistogramWidget.Draw<TMsg>(
+        HistogramWidget.Draw of TMsg(
           Current,
           Id,
           Label,
@@ -1199,39 +1199,39 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Icon: string,
         const Enabled: bool
       ):
-        Chip.Draw<TMsg>(Current, Id, Label, Selected, Change, Icon, Enabled);
+        Chip.Draw of TMsg(Current, Id, Label, Selected, Change, Icon, Enabled);
       when E.Element.RatingAction(
         const Id: string, const Label: string, const Value: int, const Change: function(int): TMsg,
         const Maximum: int, const Enabled: bool, const StarSize: float
       ):
-        Rating.Draw<TMsg>(Current, Id, Label, Value, Change, Maximum, Enabled, StarSize);
+        Rating.Draw of TMsg(Current, Id, Label, Value, Change, Maximum, Enabled, StarSize);
       when E.Element.SplitAction(
         const Id: string, const Label: string, const Message: TMsg,
-        const Items: array of Split.Item<TMsg>, const Settings: Split.Options
+        const Items: array of Split.Item of TMsg, const Settings: Split.Options
       ):
-        SplitButton.Draw<TMsg>(Current, Id, Label, Message, Items, Settings);
+        SplitButton.Draw of TMsg(Current, Id, Label, Message, Items, Settings);
       when E.Element.Contextual(
         const Id: string,
-        const Child: E.Element<TMsg>,
-        const Entries: array of Menus.Entry<TMsg>,
+        const Child: E.Element of TMsg,
+        const Entries: array of Menus.Entry of TMsg,
         const Enabled: bool
       ):
         Visit(Child, Current, Horizontal, Align);
-        ContextMenu.Draw<TMsg>(Current, Id, Entries, Enabled);
+        ContextMenu.Draw of TMsg(Current, Id, Entries, Enabled);
         return;
       when E.Element.Hinted(
-        const Child: E.Element<TMsg>,
+        const Child: E.Element of TMsg,
         const Caption: string,
         const Shortcut: string
       ):
         Visit(Child, Current, Horizontal, Align);
-        TooltipWidget.Attach<TMsg>(Current, Caption, Shortcut);
+        TooltipWidget.Attach of TMsg(Current, Caption, Shortcut);
         return;
       when E.Element.Accordion(
         const Id: string, const Title: string, const Open: bool,
-        const OnChange: function(bool): TMsg, const Content: E.Element<TMsg>, const Enabled: bool
+        const OnChange: function(bool): TMsg, const Content: E.Element of TMsg, const Enabled: bool
       ):
-        DisclosureWidget.Draw<TMsg>(
+        DisclosureWidget.Draw of TMsg(
           Current, Id, Title, Open, OnChange, Content, false,
           new ExpandableCards.Options(Enabled := Enabled), Visit
         );
@@ -1240,10 +1240,10 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Title: string,
         const Open: bool,
         const OnChange: function(bool): TMsg,
-        const Content: E.Element<TMsg>,
+        const Content: E.Element of TMsg,
         const Settings: ExpandableCards.Options
       ):
-        DisclosureWidget.Draw<TMsg>(
+        DisclosureWidget.Draw of TMsg(
           Current,
           Id,
           Title,
@@ -1256,27 +1256,27 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         );
       when E.Element.ExpandableText(
         const Id: string, const Text: string, const Settings: ExpandableTexts.Options,
-        const OnToggle: Sys.Func<TMsg>?
+        const OnToggle: (Sys.Func of TMsg)?
       ):
-        ExpandableTextWidget.Draw<TMsg>(Current, Id, Text, Settings, OnToggle);
+        ExpandableTextWidget.Draw of TMsg(Current, Id, Text, Settings, OnToggle);
       when E.Element.LinkAction(
         const Id: string,
         const Label: string,
         const Activate: TMsg,
         const Enabled: bool
       ):
-        LinkWidget.Draw<TMsg>(Current, Id, Label, Activate, Enabled);
+        LinkWidget.Draw of TMsg(Current, Id, Label, Activate, Enabled);
       when E.Element.Avatar(const Id: string, const Name: string, const Settings: Avatars.Options):
-        AvatarWidget.Draw<TMsg>(Current, Id, Name, Settings);
+        AvatarWidget.Draw of TMsg(Current, Id, Name, Settings);
         // CUI's avatar centers itself on the cross axis inside its row.
         return;
       when E.Element.HoverCard(
         const Id: string,
-        const Trigger: E.Element<TMsg>,
-        const Content: E.Element<TMsg>,
+        const Trigger: E.Element of TMsg,
+        const Content: E.Element of TMsg,
         const Settings: HoverCards.Options
       ):
-        HoverCardWidget.Draw<TMsg>(
+        HoverCardWidget.Draw of TMsg(
           Current,
           Id,
           Trigger,
@@ -1295,14 +1295,14 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
     Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
   end procedure;
 
-  procedure DrawDisclosureAndData(Node: E.Element<TMsg>; Current: C.State<TMsg>; Horizontal: bool; Align: L.Alignment);
+  procedure DrawDisclosureAndData(Node: E.Element of TMsg; Current: C.State of TMsg; Horizontal: bool; Align: L.Alignment);
   begin
     case Node of
       when E.Element.Popover(
-        const Id: string, const Trigger: E.Element<TMsg>, const Content: E.Element<TMsg>,
+        const Id: string, const Trigger: E.Element of TMsg, const Content: E.Element of TMsg,
         const Open: bool, const Dismiss: TMsg, const Settings: Popovers.Options
       ):
-        PopoverWidget.Draw<TMsg>(
+        PopoverWidget.Draw of TMsg(
           Current,
           Id,
           Trigger,
@@ -1316,10 +1316,10 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         );
         return;
       when E.Element.ConfirmPopover(
-        const Id: string, const Trigger: E.Element<TMsg>, const Open: bool,
+        const Id: string, const Trigger: E.Element of TMsg, const Open: bool,
         const Settings: ConfirmPopovers.Options, const Confirm: TMsg, const Dismiss: TMsg
       ):
-        ConfirmPopoverWidget.Draw<TMsg>(
+        ConfirmPopoverWidget.Draw of TMsg(
           Current,
           Id,
           Trigger,
@@ -1336,58 +1336,58 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Id: string, const Items: array of Reactions.Item,
         const Change: function(int, Reactions.Item): TMsg, const Enabled: bool
       ):
-        ReactionsWidget.Draw<TMsg>(Current, Id, Items, Change, Enabled);
+        ReactionsWidget.Draw of TMsg(Current, Id, Items, Change, Enabled);
       when E.Element.SpeedDialAction(
         const Id: string, const Items: array of Speed.Item, const Choose: function(int): TMsg,
         const Settings: Speed.Options
       ):
-        SpeedWidget.Draw<TMsg>(Current, Id, Items, Choose, Settings);
+        SpeedWidget.Draw of TMsg(Current, Id, Items, Choose, Settings);
       when E.Element.SwipeRow(
-        const Id: string, const Content: E.Element<TMsg>, const Left: array of Swipe.Item,
+        const Id: string, const Content: E.Element of TMsg, const Left: array of Swipe.Item,
         const Right: array of Swipe.Item, const Choose: function(Swipe.Side, int): TMsg,
         const Settings: Swipe.Options
       ):
-        SwipeWidget.Draw<TMsg>(Current, Id, Content, Left, Right, Choose, Settings, Visit);
+        SwipeWidget.Draw of TMsg(Current, Id, Content, Left, Right, Choose, Settings, Visit);
       when E.Element.AccountMenu(
-        const Id: string, const Name: string, const Entries: array of Menus.Entry<TMsg>,
+        const Id: string, const Name: string, const Entries: array of Menus.Entry of TMsg,
         const Settings: UserMenus.Options
       ):
-        UserMenuWidget.Draw<TMsg>(Current, Id, Name, Entries, Settings);
+        UserMenuWidget.Draw of TMsg(Current, Id, Name, Entries, Settings);
       when E.Element.Dropdown(
         const Id: string,
         const Label: string,
-        const Entries: array of Menus.Entry<TMsg>,
+        const Entries: array of Menus.Entry of TMsg,
         const Settings: Menus.Options
       ):
-        DropdownMenu.Draw<TMsg>(Current, Id, Label, Entries, Settings);
+        DropdownMenu.Draw of TMsg(Current, Id, Label, Entries, Settings);
       when E.Element.Sidebar(
         const Id: string,
-        const Sections: array of N.Section<TMsg>,
+        const Sections: array of N.Section of TMsg,
         const Active: string?,
         const Enabled: bool
       ):
-        Sidebar.Draw<TMsg>(Current, Id, Sections, Active, Enabled);
-      when E.Element.ButtonGroup(const Children: array of E.Element<TMsg>):
-        ButtonGroup.Draw<TMsg>(Current, Children, Visit);
-      when E.Element.ActionFooter(const Children: array of E.Element<TMsg>):
-        ActionFooterWidget.Draw<TMsg>(Current, Children, Visit);
+        Sidebar.Draw of TMsg(Current, Id, Sections, Active, Enabled);
+      when E.Element.ButtonGroup(const Children: array of E.Element of TMsg):
+        ButtonGroup.Draw of TMsg(Current, Children, Visit);
+      when E.Element.ActionFooter(const Children: array of E.Element of TMsg):
+        ActionFooterWidget.Draw of TMsg(Current, Children, Visit);
       when E.Element.ListItem(
         const Id: string,
         const Title: string,
-        const Activate: Sys.Func<TMsg>?,
+        const Activate: (Sys.Func of TMsg)?,
         const Settings: ListItems.Options
       ):
-        ListItemWidget.Draw<TMsg>(Current, Id, Title, Activate, Settings);
+        ListItemWidget.Draw of TMsg(Current, Id, Title, Activate, Settings);
       when E.Element.TreeNode(
         const Id: string,
         const Label: string,
         const Open: bool?,
-        const Children: array of E.Element<TMsg>,
-        const Change: Sys.Func<bool, TMsg>?,
-        const Activate: Sys.Func<TMsg>?,
+        const Children: array of E.Element of TMsg,
+        const Change: Sys.Func of (bool, TMsg)?,
+        const Activate: (Sys.Func of TMsg)?,
         const Settings: Trees.Options
       ):
-        TreeWidget.Draw<TMsg>(
+        TreeWidget.Draw of TMsg(
           Current,
           Id,
           Label,
@@ -1401,13 +1401,13 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
       when E.Element.Table(
         const Id: string,
         const Columns: array of Tables.Column,
-        const Rows: array of Tables.Row<TMsg>,
+        const Rows: array of Tables.Row of TMsg,
         const Order: Tables.Sort?,
-        const OnSort: Sys.Func<Tables.Sort, TMsg>?,
-        const OnSelect: Sys.Func<string, TMsg>?,
+        const OnSort: Sys.Func of (Tables.Sort, TMsg)?,
+        const OnSelect: Sys.Func of (string, TMsg)?,
         const Settings: Tables.Options
       ):
-        TableWidget.Draw<TMsg>(
+        TableWidget.Draw of TMsg(
           Current,
           Id,
           Columns,
@@ -1423,11 +1423,11 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Count: int,
         const RowHeight: float,
         const Height: L.Extent,
-        const Build: function(int): E.Element<TMsg>,
+        const Build: function(int): E.Element of TMsg,
         const Offset: float?,
-        const Scroll: Sys.Func<float, TMsg>?
+        const Scroll: Sys.Func of (float, TMsg)?
       ):
-        VirtualWidget.Draw<TMsg>(
+        VirtualWidget.Draw of TMsg(
           Current,
           Id,
           Count,
@@ -1446,14 +1446,14 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Capacity: int,
         const Enabled: bool
       ):
-        FilterWidget.Draw<TMsg>(Current, Id, Fields, Value, Change, Capacity, Enabled);
+        FilterWidget.Draw of TMsg(Current, Id, Fields, Value, Change, Capacity, Enabled);
       when E.Element.DataGrid(
         const Id: string, const Columns: array of DataGrids.Column, const Count: int,
-        const Build: function(int): DataGrids.Row<TMsg>, const Value: DataGrids.Value,
+        const Build: function(int): DataGrids.Row of TMsg, const Value: DataGrids.Value,
         const Change: function(DataGrids.Value): TMsg, const Settings: DataGrids.Options,
-        const DoubleClick: Sys.Func<int, TMsg>?
+        const DoubleClick: Sys.Func of (int, TMsg)?
       ):
-        GridDataWidget.Draw<TMsg>(
+        GridDataWidget.Draw of TMsg(
           Current,
           Id,
           Columns,
@@ -1467,16 +1467,16 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         );
       when E.Element.TreeCell(
         const Id: string, const Label: string, const Depth: int, const Open: bool?,
-        const Change: Sys.Func<bool, TMsg>?, const Icon: string
+        const Change: Sys.Func of (bool, TMsg)?, const Icon: string
       ):
-        TreeTableWidget.Cell<TMsg>(Current, Id, Label, Depth, Open, Change, Icon);
+        TreeTableWidget.Cell of TMsg(Current, Id, Label, Depth, Open, Change, Icon);
       when E.Element.TreeTable(
         const Id: string, const Columns: array of DataGrids.Column,
         const Nodes: array of TreeTables.Node, const Cursor: int, const Order: Tables.Sort?,
         const Change: function(TreeTables.Change): TMsg, const Settings: TreeTables.Options,
-        const Menu: Sys.Func<int, array of Menus.Entry<TMsg>>?
+        const Menu: Sys.Func of (int, array of Menus.Entry of TMsg)?
       ):
-        TreeTableWidget.Draw<TMsg>(
+        TreeTableWidget.Draw of TMsg(
           Current,
           Id,
           Columns,
@@ -1488,29 +1488,29 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
           Menu
         );
       when E.Element.ReorderableList(
-        const Id: string, const Items: array of E.Element<TMsg>, const Order: array of int,
+        const Id: string, const Items: array of E.Element of TMsg, const Order: array of int,
         const Change: function(array of int): TMsg, const Enabled: bool
       ):
-        ReorderWidget.Draw<TMsg>(Current, Id, Items, Order, Change, Enabled, Visit);
+        ReorderWidget.Draw of TMsg(Current, Id, Items, Order, Change, Enabled, Visit);
       when E.Element.CodeBlock(
         const Id: string,
         const Code: string,
         const Settings: CodeBlocks.Options
       ):
-        CodeBlockWidget.Draw<TMsg>(Current, Id, Code, Settings);
+        CodeBlockWidget.Draw of TMsg(Current, Id, Code, Settings);
       when E.Element.JsonView(
         const Id: string,
         const Json: string,
         const Settings: JsonViews.Options
       ):
-        JsonViewWidget.Draw<TMsg>(Current, Id, Json, Settings);
+        JsonViewWidget.Draw of TMsg(Current, Id, Json, Settings);
       when E.Element.Readout(
         const Id: string,
         const Label: string,
         const Value: string,
         const Settings: Readouts.Options
       ):
-        ReadoutWidget.Draw<TMsg>(Current, Id, Label, Value, Settings);
+        ReadoutWidget.Draw of TMsg(Current, Id, Label, Value, Settings);
       else
         DrawChartsAndSections(Node, Current, Horizontal, Align);
         return;
@@ -1519,7 +1519,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
     Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
   end procedure;
 
-  procedure DrawChartsAndSections(Node: E.Element<TMsg>; Current: C.State<TMsg>; Horizontal: bool; Align: L.Alignment);
+  procedure DrawChartsAndSections(Node: E.Element of TMsg; Current: C.State of TMsg; Horizontal: bool; Align: L.Alignment);
   begin
     case Node of
       when E.Element.DotDisplay(
@@ -1527,39 +1527,39 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Text: string,
         const Settings: DotDisplays.Options
       ):
-        DotDisplayWidget.Draw<TMsg>(Current, Id, Text, Settings);
+        DotDisplayWidget.Draw of TMsg(Current, Id, Text, Settings);
       when E.Element.DotChart(
         const Id: string, const Bands: array of DotCharts.Series, const Count: int,
-        const Activate: Sys.Func<DotCharts.Hit, TMsg>?, const Settings: DotCharts.Options
+        const Activate: Sys.Func of (DotCharts.Hit, TMsg)?, const Settings: DotCharts.Options
       ):
-        DotChartWidget.Draw<TMsg>(Current, Id, Bands, Count, Activate, Settings);
+        DotChartWidget.Draw of TMsg(Current, Id, Bands, Count, Activate, Settings);
       when E.Element.EventTrack(
         const Id: string, const Value: EventTracks.Value,
         const Change: function(EventTracks.Change): TMsg, const Settings: EventTracks.Options
       ):
-        EventTrackWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        EventTrackWidget.Draw of TMsg(Current, Id, Value, Change, Settings);
       when E.Element.PathBar(
         const Id: string,
         const Value: PathBars.Value,
         const Change: function(PathBars.Event): TMsg,
         const Settings: PathBars.Options
       ):
-        PathBarWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        PathBarWidget.Draw of TMsg(Current, Id, Value, Change, Settings);
       when E.Element.FileBrowser(
         const Id: string,
         const Folder: string,
         const Change: function(FileBrowsers.Event): TMsg,
         const Settings: FileBrowsers.Options
       ):
-        FileBrowserWidget.Draw<TMsg>(Current, Id, Folder, Change, Settings);
+        FileBrowserWidget.Draw of TMsg(Current, Id, Folder, Change, Settings);
       when E.Element.FilePicker(
         const Id: string,
-        const Base: E.Element<TMsg>?,
+        const Base: (E.Element of TMsg)?,
         const Open: bool,
         const Change: function(FilePickers.Event): TMsg,
         const Settings: FilePickers.Options
       ):
-        FilePickerWidget.Draw<TMsg>(
+        FilePickerWidget.Draw of TMsg(
           Current,
           Id,
           Base,
@@ -1577,36 +1577,36 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Change: function(WeekCalendars.Event): TMsg,
         const Settings: WeekCalendars.Options
       ):
-        WeekCalendarWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        WeekCalendarWidget.Draw of TMsg(Current, Id, Value, Change, Settings);
       when E.Element.MonthCalendar(
         const Id: string,
         const Value: MonthCalendars.Value,
         const Change: function(MonthCalendars.Event): TMsg,
         const Settings: MonthCalendars.Options
       ):
-        MonthCalendarWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        MonthCalendarWidget.Draw of TMsg(Current, Id, Value, Change, Settings);
       when E.Element.Gantt(
         const Id: string,
         const Value: Gantts.Value,
         const Change: function(Gantts.Event): TMsg,
         const Settings: Gantts.Options
       ):
-        GanttWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        GanttWidget.Draw of TMsg(Current, Id, Value, Change, Settings);
       when E.Element.Kanban(
         const Id: string,
-        const Columns: array of Kanbans.Column<TMsg>,
+        const Columns: array of Kanbans.Column of TMsg,
         const Change: function(Kanbans.Event): TMsg,
         const Settings: Kanbans.Options
       ):
-        KanbanWidget.Draw<TMsg>(Current, Id, Columns, Change, Settings, Visit);
+        KanbanWidget.Draw of TMsg(Current, Id, Columns, Change, Settings, Visit);
         return;
       when E.Element.StatusTag(
         const Id: string,
         const Value: StatusTags.Value,
-        const Remove: Sys.Func<TMsg>?,
+        const Remove: (Sys.Func of TMsg)?,
         const Settings: StatusTags.Options
       ):
-        StatusTagWidget.Draw<TMsg>(Current, Id, Value, Remove, Settings);
+        StatusTagWidget.Draw of TMsg(Current, Id, Value, Remove, Settings);
         return;
       when E.Element.RatioSlider(
         const Id: string,
@@ -1614,7 +1614,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Change: function(float): TMsg,
         const Settings: RatioSliders.Options
       ):
-        RatioSliderWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        RatioSliderWidget.Draw of TMsg(Current, Id, Value, Change, Settings);
         return;
       when E.Element.GradientSlider(
         const Id: string,
@@ -1622,7 +1622,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Change: function(GradientSliders.Event): TMsg,
         const Settings: GradientSliders.Options
       ):
-        GradientSliderWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        GradientSliderWidget.Draw of TMsg(Current, Id, Value, Change, Settings);
         return;
       when E.Element.StepSlider(
         const Id: string,
@@ -1630,7 +1630,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Change: function(StepSliders.Event): TMsg,
         const Settings: StepSliders.Options
       ):
-        StepSliderWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        StepSliderWidget.Draw of TMsg(Current, Id, Value, Change, Settings);
         return;
       when E.Element.PaletteStrip(
         const Id: string,
@@ -1638,7 +1638,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Change: function(PaletteStrips.Event): TMsg,
         const Settings: PaletteStrips.Options
       ):
-        PaletteStripWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        PaletteStripWidget.Draw of TMsg(Current, Id, Value, Change, Settings);
         return;
       when E.Element.AspectPicker(
         const Id: string,
@@ -1646,7 +1646,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Change: function(int): TMsg,
         const Settings: AspectPickers.Options
       ):
-        AspectPickerWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        AspectPickerWidget.Draw of TMsg(Current, Id, Value, Change, Settings);
         return;
       when E.Element.OptionAction(
         const Id: string,
@@ -1654,7 +1654,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Change: function(OptionActions.Event): TMsg,
         const Settings: OptionActions.Options
       ):
-        OptionActionWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        OptionActionWidget.Draw of TMsg(Current, Id, Value, Change, Settings);
         return;
       when E.Element.SeedField(
         const Id: string,
@@ -1662,66 +1662,66 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Change: function(SeedFields.Event): TMsg,
         const Settings: SeedFields.Options
       ):
-        SeedFieldWidget.Draw<TMsg>(Current, Id, Value, Change, Settings);
+        SeedFieldWidget.Draw of TMsg(Current, Id, Value, Change, Settings);
         return;
       when E.Element.ShimmerText(
         const Id: string,
         const Text: string,
         const Settings: Motion.TextOptions
       ):
-        ShimmerTextWidget.Draw<TMsg>(Current, Id, Text, Settings);
+        ShimmerTextWidget.Draw of TMsg(Current, Id, Text, Settings);
       when E.Element.Typewriter(
         const Id: string,
         const Text: string,
         const Replay: int,
         const Settings: Motion.TextOptions,
-        const OnComplete: Sys.Func<TMsg>?
+        const OnComplete: (Sys.Func of TMsg)?
       ):
-        TypewriterWidget.Draw<TMsg>(Current, Id, Text, Replay, Settings, OnComplete);
+        TypewriterWidget.Draw of TMsg(Current, Id, Text, Replay, Settings, OnComplete);
       when E.Element.TextReveal(
         const Id: string,
         const Text: string,
         const Replay: int,
         const Settings: Motion.TextOptions
       ):
-        TextRevealWidget.Draw<TMsg>(Current, Id, Text, Replay, Settings);
+        TextRevealWidget.Draw of TMsg(Current, Id, Text, Replay, Settings);
       when E.Element.WordRotate(
         const Id: string,
         const Words: array of string,
         const Interval: float,
         const Settings: Motion.TextOptions
       ):
-        WordRotateWidget.Draw<TMsg>(Current, Id, Words, Interval, Settings);
+        WordRotateWidget.Draw of TMsg(Current, Id, Words, Interval, Settings);
       when E.Element.NumberRoll(
         const Id: string,
         const Text: string,
         const Settings: Motion.TextOptions
       ):
-        NumberRollWidget.Draw<TMsg>(Current, Id, Text, Settings);
+        NumberRollWidget.Draw of TMsg(Current, Id, Text, Settings);
       when E.Element.GradientText(
         const Id: string,
         const Text: string,
         const Settings: GradientTexts.Options
       ):
-        GradientTextWidget.Draw<TMsg>(Current, Id, Text, Settings);
+        GradientTextWidget.Draw of TMsg(Current, Id, Text, Settings);
       when E.Element.Spotlight(
         const Id: string,
-        const Children: array of E.Element<TMsg>,
+        const Children: array of E.Element of TMsg,
         const Settings: Spotlights.Options
       ):
-        SpotlightWidget.Draw<TMsg>(Current, Id, Children, Settings, Visit);
+        SpotlightWidget.Draw of TMsg(Current, Id, Children, Settings, Visit);
       when E.Element.Loader(
         const Id: string,
         const Style: Loaders.Animation,
         const Settings: Loaders.Options
       ):
-        LoaderWidget.Draw<TMsg>(Current, Id, Style, Settings);
+        LoaderWidget.Draw of TMsg(Current, Id, Style, Settings);
       when E.Element.Dock(
         const Id: string,
-        const Entries: array of Docks.Entry<TMsg>,
+        const Entries: array of Docks.Entry of TMsg,
         const Settings: Docks.Options
       ):
-        DockWidget.Draw<TMsg>(Current, Id, Entries, Settings);
+        DockWidget.Draw of TMsg(Current, Id, Entries, Settings);
         return;
       when E.Element.ControlTile(
         const Id: string,
@@ -1730,7 +1730,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Change: function(bool): TMsg,
         const Settings: ControlTiles.Options
       ):
-        ControlTileWidget.Draw<TMsg>(Current, Id, Label, On, Change, Settings);
+        ControlTileWidget.Draw of TMsg(Current, Id, Label, On, Change, Settings);
         return;
       when E.Element.NowPlaying(
         const Id: string,
@@ -1738,15 +1738,15 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Change: function(NowPlaying.Event): TMsg,
         const Settings: NowPlaying.Options
       ):
-        NowPlayingWidget.Draw<TMsg>(Current, Id, Model, Change, Settings);
+        NowPlayingWidget.Draw of TMsg(Current, Id, Model, Change, Settings);
       when E.Element.Waveform(
         const Id: string,
         const Peaks: array of float,
         const Progress: float?,
-        const Change: Sys.Func<float, TMsg>?,
+        const Change: Sys.Func of (float, TMsg)?,
         const Settings: Waveforms.Options
       ):
-        WaveformWidget.Draw<TMsg>(Current, Id, Peaks, Progress, Change, Settings);
+        WaveformWidget.Draw of TMsg(Current, Id, Peaks, Progress, Change, Settings);
       when E.Element.TabBar(
         const Id: string,
         const Items: array of TabBars.Item,
@@ -1754,16 +1754,16 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Change: function(int): TMsg,
         const Settings: TabBars.Options
       ):
-        TabBarWidget.Draw<TMsg>(Current, Id, Items, Selected, Change, Settings);
+        TabBarWidget.Draw of TMsg(Current, Id, Items, Selected, Change, Settings);
       when E.Element.CommandPalette(
         const Id: string,
-        const Base: E.Element<TMsg>,
+        const Base: E.Element of TMsg,
         const Open: bool,
-        const Commands: array of Palettes.Command<TMsg>,
+        const Commands: array of Palettes.Command of TMsg,
         const Change: function(bool): TMsg,
         const Shortcut: bool
       ):
-        PaletteWidget.Draw<TMsg>(
+        PaletteWidget.Draw of TMsg(
           Current,
           Id,
           Base,
@@ -1776,44 +1776,47 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
           Visit
         );
         return;
-      when E.Element.Grid(const Settings: Grids.Options, const Children: array of E.Element<TMsg>):
-        GridWidget.Draw<TMsg>(Current, Settings, Children, Visit);
-      when E.Element.Card(
-        const Id: string, const Children: array of E.Element<TMsg>, const Settings: Cards.Options,
-        const Activate: Sys.Func<TMsg>?
+      when E.Element.Grid(
+        const Settings: Grids.Options,
+        const Children: array of E.Element of TMsg
       ):
-        CardWidget.Draw<TMsg>(Current, Id, Children, Settings, Activate, Visit);
+        GridWidget.Draw of TMsg(Current, Settings, Children, Visit);
+      when E.Element.Card(
+        const Id: string, const Children: array of E.Element of TMsg, const Settings: Cards.Options,
+        const Activate: (Sys.Func of TMsg)?
+      ):
+        CardWidget.Draw of TMsg(Current, Id, Children, Settings, Activate, Visit);
       when E.Element.Badge(const Id: string, const Text: string, const Settings: Badges.Options):
-        BadgeWidget.Draw<TMsg>(Current, Id, Text, Settings);
+        BadgeWidget.Draw of TMsg(Current, Id, Text, Settings);
       when E.Element.Sankey(
         const Id: string,
         const Nodes: array of Sankeys.Node,
         const Links: array of Sankeys.Link,
         const Settings: Sankeys.Options,
-        const OnActivate: Sys.Func<Sankeys.Selection, TMsg>?
+        const OnActivate: Sys.Func of (Sankeys.Selection, TMsg)?
       ):
-        SankeyWidget.Draw<TMsg>(Current, Id, Nodes, Links, Settings, OnActivate);
+        SankeyWidget.Draw of TMsg(Current, Id, Nodes, Links, Settings, OnActivate);
       when E.Element.BarList(
         const Id: string,
         const Items: array of Charts.Item,
         const Settings: BarLists.Options,
-        const OnActivate: Sys.Func<int, TMsg>?
+        const OnActivate: Sys.Func of (int, TMsg)?
       ):
-        BarListWidget.Draw<TMsg>(Current, Id, Items, Settings, OnActivate);
+        BarListWidget.Draw of TMsg(Current, Id, Items, Settings, OnActivate);
       when E.Element.ActivityRings(
         const Id: string,
         const Items: array of Charts.Item,
         const Settings: ActivityRings.Options,
-        const OnActivate: Sys.Func<int, TMsg>?
+        const OnActivate: Sys.Func of (int, TMsg)?
       ):
-        ActivityRingsWidget.Draw<TMsg>(Current, Id, Items, Settings, OnActivate);
+        ActivityRingsWidget.Draw of TMsg(Current, Id, Items, Settings, OnActivate);
       when E.Element.ScatterChart(
         const Id: string,
         const Series: array of ScatterCharts.Series,
         const Settings: ScatterCharts.Options,
-        const OnActivate: Sys.Func<ScatterCharts.PointIndex, TMsg>?
+        const OnActivate: Sys.Func of (ScatterCharts.PointIndex, TMsg)?
       ):
-        ScatterChartWidget.Draw<TMsg>(Current, Id, Series, Settings, OnActivate);
+        ScatterChartWidget.Draw of TMsg(Current, Id, Series, Settings, OnActivate);
       when E.Element.RadialGauge(
         const Id: string,
         const Value: float,
@@ -1821,130 +1824,130 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         const Maximum: float,
         const Settings: RadialGauges.Options
       ):
-        RadialGaugeWidget.Draw<TMsg>(Current, Id, Value, Minimum, Maximum, Settings);
+        RadialGaugeWidget.Draw of TMsg(Current, Id, Value, Minimum, Maximum, Settings);
       when E.Element.Candlestick(
         const Id: string,
         const Candles: array of Candlesticks.Candle,
         const Settings: Candlesticks.Options,
-        const OnCursorChange: Sys.Func<int, TMsg>?
+        const OnCursorChange: Sys.Func of (int, TMsg)?
       ):
-        CandlestickWidget.Draw<TMsg>(Current, Id, Candles, Settings, OnCursorChange);
+        CandlestickWidget.Draw of TMsg(Current, Id, Candles, Settings, OnCursorChange);
       when E.Element.Heatmap(
         const Id: string,
         const Values: array of float,
         const Rows: int,
         const Columns: int,
         const Settings: Heatmaps.Options,
-        const OnActivate: Sys.Func<Heatmaps.Cell, TMsg>?
+        const OnActivate: Sys.Func of (Heatmaps.Cell, TMsg)?
       ):
-        HeatmapWidget.Draw<TMsg>(Current, Id, Values, Rows, Columns, Settings, OnActivate);
+        HeatmapWidget.Draw of TMsg(Current, Id, Values, Rows, Columns, Settings, OnActivate);
       when E.Element.CalendarHeatmap(
         const Id: string,
         const Start: Sys.DateOnly,
         const Values: array of float,
         const Settings: CalendarHeatmaps.Options,
-        const OnActivate: Sys.Func<Sys.DateOnly, TMsg>?
+        const OnActivate: Sys.Func of (Sys.DateOnly, TMsg)?
       ):
-        CalendarHeatmapWidget.Draw<TMsg>(Current, Id, Start, Values, Settings, OnActivate);
+        CalendarHeatmapWidget.Draw of TMsg(Current, Id, Start, Values, Settings, OnActivate);
       when E.Element.Treemap(
         const Id: string,
         const Items: array of Charts.Item,
         const Selected: int,
-        const OnSelect: Sys.Func<int, TMsg>?,
+        const OnSelect: Sys.Func of (int, TMsg)?,
         const Settings: Treemaps.Options
       ):
-        TreemapWidget.Draw<TMsg>(Current, Id, Items, Selected, OnSelect, Settings);
+        TreemapWidget.Draw of TMsg(Current, Id, Items, Selected, OnSelect, Settings);
       when E.Element.RadarChart(
         const Id: string,
         const Series: array of Charts.Series,
         const Axes: array of string,
         const Settings: RadarCharts.Options,
-        const OnActivate: Sys.Func<int, TMsg>?
+        const OnActivate: Sys.Func of (int, TMsg)?
       ):
-        RadarChartWidget.Draw<TMsg>(Current, Id, Series, Axes, Settings, OnActivate);
+        RadarChartWidget.Draw of TMsg(Current, Id, Series, Axes, Settings, OnActivate);
       when E.Element.Funnel(
         const Id: string,
         const Items: array of Charts.Item,
         const Settings: Funnels.Options,
-        const OnActivate: Sys.Func<int, TMsg>?
+        const OnActivate: Sys.Func of (int, TMsg)?
       ):
-        FunnelWidget.Draw<TMsg>(Current, Id, Items, Settings, OnActivate);
+        FunnelWidget.Draw of TMsg(Current, Id, Items, Settings, OnActivate);
       when E.Element.SplitBar(
         const Id: string,
         const Items: array of Charts.Item,
         const Settings: SplitBars.Options,
-        const OnActivate: Sys.Func<int, TMsg>?
+        const OnActivate: Sys.Func of (int, TMsg)?
       ):
-        SplitBarWidget.Draw<TMsg>(Current, Id, Items, Settings, OnActivate);
+        SplitBarWidget.Draw of TMsg(Current, Id, Items, Settings, OnActivate);
       when E.Element.Waffle(
         const Id: string,
         const Items: array of Charts.Item,
         const Settings: Waffles.Options,
-        const OnActivate: Sys.Func<int, TMsg>?
+        const OnActivate: Sys.Func of (int, TMsg)?
       ):
-        WaffleWidget.Draw<TMsg>(Current, Id, Items, Settings, OnActivate);
+        WaffleWidget.Draw of TMsg(Current, Id, Items, Settings, OnActivate);
       when E.Element.LineChart(
         const Id: string,
         const Series: array of Charts.Series,
         const Settings: Charts.Options
       ):
-        LineChartWidget.Draw<TMsg>(Current, Id, Series, Settings);
+        LineChartWidget.Draw of TMsg(Current, Id, Series, Settings);
       when E.Element.BarChart(
         const Id: string,
         const Series: array of Charts.Series,
         const Settings: Charts.Options
       ):
-        BarChartWidget.Draw<TMsg>(Current, Id, Series, Settings);
+        BarChartWidget.Draw of TMsg(Current, Id, Series, Settings);
       when E.Element.DonutChart(
         const Id: string,
         const Values: array of float,
         const Labels: array of string,
         const Settings: Donuts.Options
       ):
-        DonutChartWidget.Draw<TMsg>(Current, Id, Values, Labels, Settings);
+        DonutChartWidget.Draw of TMsg(Current, Id, Values, Labels, Settings);
       when E.Element.Gauge(
         const Id: string,
         const Label: string,
         const Value: float,
         const Diameter: float
       ):
-        GaugeWidget.Draw<TMsg>(Current, Id, Label, Value, Diameter);
+        GaugeWidget.Draw of TMsg(Current, Id, Label, Value, Diameter);
       when E.Element.PatternMeter(
         const Id: string,
         const Parts: array of Patterns.Part,
         const Settings: Patterns.Options
       ):
-        PatternMeterWidget.Draw<TMsg>(Current, Id, Parts, Settings);
+        PatternMeterWidget.Draw of TMsg(Current, Id, Parts, Settings);
       when E.Element.Metric(
         const Id: string,
         const Label: string,
         const Reading: string,
         const Settings: Metrics.Options
       ):
-        MetricWidget.Draw<TMsg>(Current, Id, Label, Reading, Settings);
+        MetricWidget.Draw of TMsg(Current, Id, Label, Reading, Settings);
       when E.Element.AvatarGroup(
         const Id: string,
         const Names: array of string,
         const Settings: AvatarGroups.Options
       ):
-        AvatarGroupWidget.Draw<TMsg>(Current, Id, Names, Settings);
+        AvatarGroupWidget.Draw of TMsg(Current, Id, Names, Settings);
       when E.Element.EmptyState(
         const Id: string,
         const Title: string,
         const Settings: EmptyStates.Options,
-        const Action: Sys.Func<TMsg>?
+        const Action: (Sys.Func of TMsg)?
       ):
-        EmptyStateWidget.Draw<TMsg>(Current, Id, Title, Settings, Action);
+        EmptyStateWidget.Draw of TMsg(Current, Id, Title, Settings, Action);
       when E.Element.Tour(
         const Id: string,
-        const Base: E.Element<TMsg>,
+        const Base: E.Element of TMsg,
         const Steps: array of Tours.Step,
         const CurrentStep: int,
         const Changed: function(Tours.Change): TMsg,
         const Settings: Tours.Options
       ):
         Visit(Base, Current, Horizontal, Align);
-        TourWidget.Draw<TMsg>(Current, Id, Steps, CurrentStep, Changed, Settings);
+        TourWidget.Draw of TMsg(Current, Id, Steps, CurrentStep, Changed, Settings);
         return;
       else
         DrawLayout(Node, Current, Horizontal, Align);
@@ -1954,14 +1957,14 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
     Size.Apply(Current.Window, new L.Flex(), Horizontal, Align);
   end procedure;
 
-  procedure DrawLayout(Node: E.Element<TMsg>; Current: C.State<TMsg>; Horizontal: bool; Align: L.Alignment);
+  procedure DrawLayout(Node: E.Element of TMsg; Current: C.State of TMsg; Horizontal: bool; Align: L.Alignment);
   begin
     case Node of
       when E.Element.Spacer:
         Current.Window.Spacer();
       when E.Element.Gap(const Distance: L.Measure):
         Current.Window.Gap(Size.Measure(Distance));
-      when E.Element.Layered(const Children: array of E.Element<TMsg>, const Settings: L.Flow):
+      when E.Element.Layered(const Children: array of E.Element of TMsg, const Settings: L.Flow):
         Current.Window.BeginLayers(
           cast<int>(Settings.Align),
           cast<int>(Settings.Justify),
@@ -1973,7 +1976,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
           Current.Window.PushFocusScope(Scope.Id, Scope.Active);
         end if;
 
-        for Child: E.Element<TMsg> in Children do
+        for Child: E.Element of TMsg in Children do
           Visit(Child, Current, false, Settings.Align);
         end for;
 
@@ -1983,7 +1986,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
 
         Current.Window.EndGroup();
       when E.Element.Stack(
-        const Children: array of E.Element<TMsg>,
+        const Children: array of E.Element of TMsg,
         const Row: bool,
         const Settings: L.Flow
       ):
@@ -2001,7 +2004,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
           Current.Window.PushFocusScope(Scope.Id, Scope.Active);
         end if;
 
-        for Child: E.Element<TMsg> in Children do
+        for Child: E.Element of TMsg in Children do
           Visit(Child, Current, Row, Settings.Align);
         end for;
 
@@ -2010,15 +2013,15 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         end if;
 
         Current.Window.EndGroup();
-      when E.Element.Sized(const Child: E.Element<TMsg>, const Settings: L.Flex):
+      when E.Element.Sized(const Child: E.Element of TMsg, const Settings: L.Flex):
         Visit(Child, Current, Horizontal, Align);
         Size.Apply(Current.Window, Settings, Horizontal, Align);
         return;
-      when E.Element.Styled(const Child: E.Element<TMsg>, const Role: S.Role):
+      when E.Element.Styled(const Child: E.Element of TMsg, const Role: S.Role):
         Visit(Child, Current, Horizontal, Align);
         Current.Window.StyleLast(cast<int>(Role));
         return;
-      when E.Element.Framed(const Child: E.Element<TMsg>, const Title: string):
+      when E.Element.Framed(const Child: E.Element of TMsg, const Title: string):
         Current.Window.BeginGroup(false, 8, 8, 0, true);
         if Title <> '' then
           Current.Window.Text(Title);
@@ -2029,16 +2032,16 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         Current.Window.EndGroup();
       when E.Element.TableOfContents(
         const Id: string, const ScrollId: string, const Items: array of Toc.Item,
-        const Changed: Sys.Func<string, TMsg>?, const Enabled: bool
+        const Changed: Sys.Func of (string, TMsg)?, const Enabled: bool
       ):
-        TocWidget.Draw<TMsg>(Current, Id, ScrollId, Items, Changed, Enabled);
+        TocWidget.Draw of TMsg(Current, Id, ScrollId, Items, Changed, Enabled);
       when E.Element.ScrollAnchor(const Id: string):
-        AnchorWidget.Draw<TMsg>(Current, Id);
+        AnchorWidget.Draw of TMsg(Current, Id);
       when E.Element.Scroll(
         const Id: string,
-        const Child: E.Element<TMsg>,
+        const Child: E.Element of TMsg,
         const Position: L.ScrollPosition?,
-        const Scroll: Sys.Func<L.ScrollChange, TMsg>?,
+        const Scroll: Sys.Func of (L.ScrollChange, TMsg)?,
         const Bar: bool, const FadeEdges: bool, const HorizontalScroll: bool
       ):
         const Token: string := C.Token('scroll', Id);
@@ -2067,7 +2070,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         Current.Window.ScrollState(Token, -1, 0, out After, out Maximum);
         if Current.AcceptInput and After <> Before then
           case Scroll of
-            when is Sys.Func<L.ScrollChange, TMsg> as Changed:
+            when is Sys.Func of (L.ScrollChange, TMsg) as Changed:
               const Units: L.Measure := L.Measure.Logical(cast<int>(After));
               Current.Messages.Add(
                 Changed.Invoke(
@@ -2082,7 +2085,7 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
           end case;
         end if;
 
-        C.Track<TMsg>(
+        C.Track of TMsg(
           Current,
           new App.Control(
             Id,
@@ -2094,10 +2097,10 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
           )
         );
       when E.Element.Sheet(
-        const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>,
+        const Id: string, const Base: E.Element of TMsg, const Content: E.Element of TMsg,
         const Open: bool, const Settings: Sheets.Options, const Dismiss: TMsg
       ):
-        Sheet.Draw<TMsg>(
+        Sheet.Draw of TMsg(
           Current,
           Id,
           Base,
@@ -2111,10 +2114,10 @@ public procedure Draw<TMsg>(State: C.State<TMsg>);
         );
         return;
       when E.Element.Dialog(
-        const Id: string, const Base: E.Element<TMsg>, const Content: E.Element<TMsg>,
+        const Id: string, const Base: E.Element of TMsg, const Content: E.Element of TMsg,
         const Open: bool, const Settings: Dialogs.Options, const Dismiss: TMsg
       ):
-        DialogWidget.Draw<TMsg>(
+        DialogWidget.Draw of TMsg(
           Current,
           Id,
           Base,

@@ -18,9 +18,9 @@ uses Fpas.Ui.Elements as E;
 // - `Recent`: The view below the divider.
 // ## Returns
 // The two sections with a divider between them.
-public function View(Preferences: E.Element<string>; Recent: E.Element<string>): E.Element<string>;
+public function View(Preferences: E.Element of string; Recent: E.Element of string): E.Element of string;
 begin
-  return E.Column<string>(Preferences, E.Divider<string>(), Recent);
+  return E.Column of string(Preferences, E.Divider of string(), Recent);
 end function;
 
 end unit;

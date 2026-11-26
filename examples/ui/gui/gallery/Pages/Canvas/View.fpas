@@ -39,9 +39,9 @@ begin
   );
 end function;
 
-function Grouped(Model: State.Model): E.Element<State.Msg>;
+function Grouped(Model: State.Model): E.Element of State.Msg;
 begin
-  return T.Toolbar<State.Msg>(
+  return T.Toolbar of State.Msg(
     'canvas-tools', [
       T.Item.Group(
         [Tool(Glyph($E2A1), 'Undo', 'Ctrl Z'), Tool(Glyph($E2A0), 'Redo', 'Ctrl Shift Z')]
@@ -67,7 +67,7 @@ function People(Seconds: float; Avatar: string): array of Live.Person;
 begin
   const Names: array of string := ['Paul', 'Kate', 'Mario'];
   const Tones: array of S.Tone := [S.Tone.Warning, S.Tone.Info, S.Tone.Rose];
-  const Users: Lists.List<Live.Person> := new Lists.List<Live.Person>(3);
+  const Users: Lists.List of Live.Person := new Lists.List of Live.Person(3);
   for Index: int := 0 to 2 do
     const Step: uint := cast<uint>(cast<double>(Seconds) / (1.6 + 0.4 * Index));
     const Hash: uint := Step * 2654435761U + cast<uint>(Index) * 40503U;
@@ -92,16 +92,16 @@ begin
   return Users.ToArray();
 end function;
 
-function Nodes(Model: State.Model; Colors: Theme.Palette): array of N.Node<State.Msg>;
+function Nodes(Model: State.Model; Colors: Theme.Palette): array of N.Node of State.Msg;
 begin
   return [
-    new N.Node<State.Msg>(
+    new N.Node of State.Msg(
       0,
       Model.Positions[0].X,
       Model.Positions[0].Y,
       'Positive',
       [new N.Pin(1, 'Prompt', true, 1)],
-      E.FormattedText<State.Msg>(
+      E.FormattedText of State.Msg(
         'A black bear, minimalist style, soft gradients',
         M.Font.Body,
         12.0F,
@@ -109,33 +109,33 @@ begin
       ),
       SampleBounds.NodeWidth
     ),
-    new N.Node<State.Msg>(
+    new N.Node of State.Msg(
       1,
       Model.Positions[1].X,
       Model.Positions[1].Y,
       'Negative',
       [new N.Pin(2, 'Avoid', true, 1)],
-      E.FormattedText<State.Msg>('No text, no people', M.Font.Body, 12.0F, Colors.TextSecondary),
+      E.FormattedText of State.Msg('No text, no people', M.Font.Body, 12.0F, Colors.TextSecondary),
       SampleBounds.NodeWidth
     ),
-    new N.Node<State.Msg>(
+    new N.Node of State.Msg(
       2,
       Model.Positions[2].X,
       Model.Positions[2].Y,
       'Generate',
       [new N.Pin(3, 'Prompt', false, 1), new N.Pin(4, 'Avoid', false, 1)],
-      E.FormattedText<State.Msg>('Steps 30 · dpm++ 2M', M.Font.Body, 12.0F, Colors.TextSecondary),
+      E.FormattedText of State.Msg('Steps 30 · dpm++ 2M', M.Font.Body, 12.0F, Colors.TextSecondary),
       SampleBounds.NodeWidth,
       Ring := new R.Options(Tone := S.Tone.Warning, Name := 'Paul')
     )
   ];
 end function;
 
-function Canvas(Model: State.Model; Colors: Theme.Palette): E.Element<State.Msg>;
+function Canvas(Model: State.Model; Colors: Theme.Palette): E.Element of State.Msg;
 begin
   const Height: L.Extent := L.Extent.Fixed(L.Measure.Logical(360));
   const Users: array of Live.Person := People(Model.Seconds, Model.Avatar);
-  const Graph: E.Element<State.Msg> := N.NodeEditor<State.Msg>(
+  const Graph: E.Element of State.Msg := N.NodeEditor of State.Msg(
     'canvas-graph',
     Model.Viewport,
     Nodes(Model, Colors),
@@ -143,7 +143,7 @@ begin
     State.Msg.Graph,
     new N.Options(Height := Height, HideGrid := not Model.Grid)
   );
-  const Rail: E.Element<State.Msg> := C.CanvasControls<State.Msg>(
+  const Rail: E.Element of State.Msg := C.CanvasControls of State.Msg(
     'canvas-zoom',
     Model.Viewport,
     [
@@ -154,18 +154,18 @@ begin
     Graph,
     new C.Options(Content := SampleBounds.Content(Model))
   );
-  return E.Size<State.Msg>(
-    E.Element<State.Msg>.Layered(
+  return E.Size of State.Msg(
+    (E.Element of State.Msg).Layered(
       [
-        Live.LiveCursors<State.Msg>(
+        Live.LiveCursors of State.Msg(
           'canvas-people',
           Users,
           Rail,
           new Live.Options(View := Model.Viewport)
         ),
-        E.Column<State.Msg>(
+        E.Column of State.Msg(
           new L.Flow(Padding := G.Points(12)),
-          P.PresencePill<State.Msg>('canvas-here', Users)
+          P.PresencePill of State.Msg('canvas-here', Users)
         )
       ], new L.Flow(Clip := true, CornerRadius := 14.0F)
     ),
@@ -176,9 +176,9 @@ begin
   );
 end function;
 
-function Floating(Model: State.Model): E.Element<State.Msg>;
+function Floating(Model: State.Model): E.Element of State.Msg;
 begin
-  return T.Toolbar<State.Msg>(
+  return T.Toolbar of State.Msg(
     'canvas-result-actions', [
       Tool(Glyph($E113), 'Expand'),
       Tool(Glyph($E060), 'Save', Toggle := Model.Saved, Tone := S.Tone.Warning),
@@ -197,10 +197,10 @@ begin
   );
 end function;
 
-function FileRow(Index: int; Picked: bool; Name: string; Bytes: string; Colors: Theme.Palette): E.Element<State.Msg>;
+function FileRow(Index: int; Picked: bool; Name: string; Bytes: string; Colors: Theme.Palette): E.Element of State.Msg;
 begin
-  return E.Size<State.Msg>(
-    E.Row<State.Msg>(
+  return E.Size of State.Msg(
+    E.Row of State.Msg(
       new L.Flow(
         Gap := G.Points(12), PaddingStart := G.Points(10), PaddingEnd := G.Points(10),
         Align := L.Alignment.Center, CornerRadius := 10.0F, Background := if Picked then
@@ -209,17 +209,17 @@ begin
           null
         end if
       ),
-      Check.Checkbox<State.Msg>(
+      Check.Checkbox of State.Msg(
         'canvas-file-' + Index.ToString(), Name, Picked,
         function(Value: bool): State.Msg => State.Msg.Pick(Index, Value), HideLabel := true
       ),
-      E.Styled<State.Msg>(E.Text<State.Msg>(Glyph($E0F6)), S.Role.CompactMutedIcon),
-      E.Size<State.Msg>(
-        E.Column<State.Msg>(E.Styled<State.Msg>(E.Text<State.Msg>(Name), S.Role.Label)),
+      E.Styled of State.Msg(E.Text of State.Msg(Glyph($E0F6)), S.Role.CompactMutedIcon),
+      E.Size of State.Msg(
+        E.Column of State.Msg(E.Styled of State.Msg(E.Text of State.Msg(Name), S.Role.Label)),
         new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fill))
       ),
-      E.Styled<State.Msg>(
-        E.FormattedText<State.Msg>(Bytes, M.Font.Body, 12.0F, Colors.TextMuted),
+      E.Styled of State.Msg(
+        E.FormattedText of State.Msg(Bytes, M.Font.Body, 12.0F, Colors.TextMuted),
         S.Role.Tabular
       )
     ),
@@ -230,7 +230,7 @@ begin
   );
 end function;
 
-function Files(Model: State.Model; Colors: Theme.Palette): E.Element<State.Msg>;
+function Files(Model: State.Model; Colors: Theme.Palette): E.Element of State.Msg;
 begin
   const Names: array of string := [
     'hero-dark.png',
@@ -240,21 +240,21 @@ begin
     'demo@example.com'
   ];
   const Bytes: array of string := ['2.4 MB', '2.3 MB', '812 KB', '96 KB', '140 KB'];
-  const Rows: Lists.List<E.Element<State.Msg>> := new Lists.List<E.Element<State.Msg>>(
+  const Rows: Lists.List of E.Element of State.Msg := new Lists.List of E.Element of State.Msg(
     Names.Length
   );
   for Index: int := 0 to Names.Length - 1 do
     Rows.Add(FileRow(Index, Model.Picked[Index], Names[Index], Bytes[Index], Colors));
   end for;
 
-  return Bulk.SelectionBar<State.Msg>(
+  return Bulk.SelectionBar of State.Msg(
     'canvas-bulk', Bulk.Selection.Items(Model.Picked), [
       new Bulk.Action(Glyph($E121), 'Move'),
       new Bulk.Action(Glyph($E09E), 'Copy'),
       new Bulk.Action(Glyph($E18E), 'Delete', S.Tone.Danger)
-    ], State.Msg.Bulk, E.Size<State.Msg>(
-      E.Styled<State.Msg>(
-        E.Column<State.Msg>(
+    ], State.Msg.Bulk, E.Size of State.Msg(
+      E.Styled of State.Msg(
+        E.Column of State.Msg(
           new L.Flow(Padding := G.Points(4), Gap := G.Points(2), CornerRadius := 14.0F),
           Rows.ToArray()
         ),
@@ -271,10 +271,10 @@ begin
   );
 end function;
 
-function Results(Model: State.Model; Colors: Theme.Palette): E.Element<State.Msg>;
+function Results(Model: State.Model; Colors: Theme.Palette): E.Element of State.Msg;
 begin
-  return E.Size<State.Msg>(
-    E.Row<State.Msg>(
+  return E.Size of State.Msg(
+    E.Row of State.Msg(
       new L.Flow(
         Gap := G.Points(28),
         Wrap := true,
@@ -282,10 +282,10 @@ begin
         PaddingBottom := G.Points(60),
         Clip := false
       ),
-      E.Size<State.Msg>(
-        E.Column<State.Msg>(
+      E.Size of State.Msg(
+        E.Column of State.Msg(
           new L.Flow(Gap := G.Points(10), Align := L.Alignment.Center, Clip := false),
-          Result.ResultCard<State.Msg>(
+          Result.ResultCard of State.Msg(
             'canvas-result', Picture.Result, 'Final result', State.Msg.Preview,
             new Result.Options(
               Caption := 'Minimal illustration, soft gradients and smooth shapes against a clear sky',
@@ -308,7 +308,7 @@ end function;
 // - `Colors`: Active theme colors.
 // ## Returns
 // Sections and native widgets in original order.
-public function View(Model: State.Model; Colors: Theme.Palette): array of E.Element<State.Msg>;
+public function View(Model: State.Model; Colors: Theme.Palette): array of E.Element of State.Msg;
 begin
   const Note: string := if Model.Deleted = 0 then
     'The bar edits one struct; the app applies it to the selection.'
@@ -320,38 +320,38 @@ begin
     end if
   end if;
   return [
-    G.Heading<State.Msg>(
+    G.Heading of State.Msg(
       Strings.Get('Heading.GroupedToolbar'),
       Strings.Get('Heading.GroupedToolbarHint')
     ),
     Grouped(Model),
-    G.Heading<State.Msg>(
+    G.Heading of State.Msg(
       Strings.Get('Heading.FormatBar'),
       Strings.Get('Heading.FormatBarHint')
     ),
-    F.FormatBar<State.Msg>('canvas-format', Model.Format, State.Msg.Format),
-    E.Styled<State.Msg>(E.Text<State.Msg>(Note), S.Role.Caption),
-    G.Heading<State.Msg>(
+    F.FormatBar of State.Msg('canvas-format', Model.Format, State.Msg.Format),
+    E.Styled of State.Msg(E.Text of State.Msg(Note), S.Role.Caption),
+    G.Heading of State.Msg(
       Strings.Get('Heading.LiveCursorsAndCanvasControls'),
       Strings.Get('Heading.LiveCursorsAndCanvasControlsHint')
     ),
     Canvas(Model, Colors),
-    G.Heading<State.Msg>(
+    G.Heading of State.Msg(
       Strings.Get('Heading.ResultCardAndSelectionBar'),
       Strings.Get('Heading.ResultCardAndSelectionBarHint')
     ),
     Results(Model, Colors),
-    G.Heading<State.Msg>(
+    G.Heading of State.Msg(
       Strings.Get('Heading.PresenceAvatars'),
       Strings.Get('Heading.PresenceAvatarsHint')
     ),
-    G.Card<State.Msg>(
+    G.Card of State.Msg(
       12, [
-        P.PresencePill<State.Msg>('canvas-avatar-preview', People(Model.Seconds, Model.Avatar)),
-        E.Row<State.Msg>(
+        P.PresencePill of State.Msg('canvas-avatar-preview', People(Model.Seconds, Model.Avatar)),
+        E.Row of State.Msg(
           new L.Flow(Gap := G.Points(8), Wrap := true),
-          B.Button<State.Msg>('canvas-avatar-choose', 'Choose avatar', State.Msg.ChooseAvatar),
-          B.Button<State.Msg>(
+          B.Button of State.Msg('canvas-avatar-choose', 'Choose avatar', State.Msg.ChooseAvatar),
+          B.Button of State.Msg(
             'canvas-avatar-clear', 'Use initials', State.Msg.SetAvatar(''),
             new B.Options(Enabled := Model.Avatar <> '')
           )

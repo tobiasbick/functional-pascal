@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Actions.SwipeActions as S;
 // Builds the example view.
 // ## Returns
 // The widget with its message type.
-public function View(): E.Element<int>;
+public function View(): E.Element of int;
 begin
-  return S.SwipeItem<int>('task', E.Text<int>('Review the design tokens'), [],
+  return S.SwipeItem of int('task', E.Text of int('Review the design tokens'), [],
     [new S.Item('Archive', Tone := Style.Tone.Info)],
     function(At: S.Side; Index: int): int => Index);
 end function;

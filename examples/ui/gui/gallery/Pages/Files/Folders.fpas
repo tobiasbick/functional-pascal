@@ -27,7 +27,7 @@ end function;
 public function ReadFolder(Path: string; Hidden: bool): Listings.Listing?;
 begin
   try
-    const Result: Lists.List<Listings.Entry> := new Lists.List<Listings.Entry>();
+    const Result: Lists.List of Listings.Entry := new Lists.List of Listings.Entry();
     const Folder: IO.DirectoryInfo := new IO.DirectoryInfo(Path);
     for Child: IO.FileSystemInfo in Folder.EnumerateFileSystemInfos() do
       const IsHidden: bool := Child.Name.StartsWith('.')

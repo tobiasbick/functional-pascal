@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Charts.Meters as W;
 // - `Used`: Current usage in gigabytes.
 // ## Returns
 // The widget for the application view.
-public function View(Used: float): E.Element<string>;
+public function View(Used: float): E.Element of string;
 begin
-  return W.Meter<string>('storage-usage', 'Storage', Used, 20.0F, 'GB');
+  return W.Meter of string('storage-usage', 'Storage', Used, 20.0F, 'GB');
 end function;
 
 end unit;

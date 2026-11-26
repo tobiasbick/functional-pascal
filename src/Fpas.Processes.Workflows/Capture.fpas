@@ -41,10 +41,10 @@ public type Request = record
   // Working directory.
   public Directory: string;
   // Overrides applied to the child's inherited environment.
-  public Environment: C.IReadOnlyDictionary<string, string>? := null;
+  public Environment: C.IReadOnlyDictionary of (string, string)? := null;
 end record;
 
-async function Drain(Stream: IO.Stream; Limit: int; Cancellation: Threads.CancellationToken): Tasks.Task<string>;
+async function Drain(Stream: IO.Stream; Limit: int; Cancellation: Threads.CancellationToken): Tasks.Task of string;
 begin
   const Buffer: array of byte := new byte[4096];
   using const Bytes: IO.MemoryStream := new IO.MemoryStream();
@@ -80,7 +80,7 @@ begin
   return Reader.ReadToEnd();
 end function;
 
-function Start(Request: Request; Cancellation: Threads.CancellationToken): Tasks.Task<Fx.Outcome<Owned, CaptureFailure>>;
+function Start(Request: Request; Cancellation: Threads.CancellationToken): Tasks.Task of Fx.Outcome of (Owned, CaptureFailure);
 begin
   Cancellation.ThrowIfCancellationRequested();
   const Child: Owned := Owned.Start(
@@ -89,7 +89,7 @@ begin
     Request.Directory,
     Request.Environment
   );
-  return Tasks.Task.FromResult<Fx.Outcome<Owned, CaptureFailure>>(Fx.Outcome.Success(Child));
+  return Tasks.Task.FromResult of Fx.Outcome of (Owned, CaptureFailure)(Fx.Outcome.Success(Child));
 end function;
 
 // Builds a workflow that captures stdout, stderr, and exit status.
@@ -101,22 +101,22 @@ end function;
 // ## Returns
 // A deferred capture that joins the readers and terminates the owned tree
 // before returning. Launch and stream failures fault its task.
-public function Read(TimeoutSeconds: int; Limit: int): Fx.Effect<Captured, CaptureFailure, Request>;
+public function Read(TimeoutSeconds: int; Limit: int): Fx.Effect of (Captured, CaptureFailure, Request);
 requires TimeoutSeconds > 0;
 requires Limit > 0;
-  function Capture(Child: Owned; Cancellation: Threads.CancellationToken): Tasks.Task<Fx.Outcome<Captured, CaptureFailure>>;
-    async function Collect(Lifetime: S.Scope): Tasks.Task<Fx.Outcome<Captured, CaptureFailure>>;
-      function Stdout(Reader: S.Scope): Tasks.Task<string>;
+  function Capture(Child: Owned; Cancellation: Threads.CancellationToken): Tasks.Task of Fx.Outcome of (Captured, CaptureFailure);
+    async function Collect(Lifetime: S.Scope): Tasks.Task of Fx.Outcome of (Captured, CaptureFailure);
+      function Stdout(Reader: S.Scope): Tasks.Task of string;
       begin
         return Drain(Child.Output, Limit, Reader.Token);
       end function;
 
-      function Stderr(Reader: S.Scope): Tasks.Task<string>;
+      function Stderr(Reader: S.Scope): Tasks.Task of string;
       begin
         return Drain(Child.Error, Limit, Reader.Token);
       end function;
 
-      async function Wait(Observer: S.Scope): Tasks.Task<int>;
+      async function Wait(Observer: S.Scope): Tasks.Task of int;
       begin
         await Child.WaitForExit(Observer.Token).ConfigureAwait(false);
         const Code: int := Child.ExitCode;
@@ -127,10 +127,10 @@ requires Limit > 0;
     begin
       Child.Input.Dispose();
       try
-        const Output: S.Child<string> := Lifetime.Fork<string>(Stdout);
-        const Error: S.Child<string> := Lifetime.Fork<string>(Stderr);
-        const Exit: S.Child<int> := Lifetime.Fork<int>(Wait);
-        const Pending: C.List<Tasks.Task> := new C.List<Tasks.Task>(
+        const Output: S.Child of string := Lifetime.Fork of string(Stdout);
+        const Error: S.Child of string := Lifetime.Fork of string(Stderr);
+        const Exit: S.Child of int := Lifetime.Fork of int(Wait);
+        const Pending: C.List of Tasks.Task := new C.List of Tasks.Task(
           [Exit.Join, Output.Join, Error.Join]
         );
         while Pending.Count > 0 do
@@ -156,15 +156,15 @@ requires Limit > 0;
       end try;
     end function;
   begin
-    return S.Scope.Use<Fx.Outcome<Captured, CaptureFailure>>(Collect, Cancellation);
+    return S.Scope.Use of Fx.Outcome of (Captured, CaptureFailure)(Collect, Cancellation);
   end function;
 begin
-  const Dependency: Layers.Layer<Owned, CaptureFailure, Request> := Layers.Layer<Owned, CaptureFailure, Request>.Create(
-    Fx.Effect<Owned, CaptureFailure, Request>.Defer(Start),
+  const Dependency: Layers.Layer of (Owned, CaptureFailure, Request) := Layers.Layer of (Owned, CaptureFailure, Request).Create(
+    Fx.Effect of (Owned, CaptureFailure, Request).Defer(Start),
     function(Child: Owned): Tasks.Task => Child.DisposeAsync().AsTask()
   );
   return Policies.WithDeadline(
-    Layers.Provide(Fx.Effect<Captured, CaptureFailure, Owned>.Defer(Capture), Dependency),
+    Layers.Provide(Fx.Effect of (Captured, CaptureFailure, Owned).Defer(Capture), Dependency),
     Sys.TimeSpan.FromSeconds(TimeoutSeconds),
     function(): CaptureFailure => CaptureFailure.Deadline,
     Sys.TimeProvider.System

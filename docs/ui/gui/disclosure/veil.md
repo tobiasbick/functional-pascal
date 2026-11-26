@@ -19,10 +19,10 @@ uses Fpas.Ui.Widgets.Overlays.Veils as W;
 // - `Shown`: Current reveal state.
 // ## Returns
 // The widget for the application view.
-public function View(Shown: bool): E.Element<bool>;
+public function View(Shown: bool): E.Element of bool;
 begin
-  return W.Veil<bool>('spoiler', Shown, function(Value: bool): bool => Value,
-    E.Text<bool>('The keeper was the narrator.'),
+  return W.Veil of bool('spoiler', Shown, function(Value: bool): bool => Value,
+    E.Text of bool('The keeper was the narrator.'),
     new W.Options(Label := 'Spoiler', Hint := 'Click to show', Toggle := true, Radius := 4.0F));
 end function;
 

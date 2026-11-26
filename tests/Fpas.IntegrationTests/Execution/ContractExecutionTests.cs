@@ -66,7 +66,7 @@ public sealed class ContractExecutionTests
         => ProgramExecution.Output("""
             program Captures;
             uses System.Console as Console;
-            function Identity<T>(Value: T): T;
+            function Identity of T(Value: T): T;
             ensures (Returned: T): true;
             begin return Value; end function;
             function Length(Value: string?): int;

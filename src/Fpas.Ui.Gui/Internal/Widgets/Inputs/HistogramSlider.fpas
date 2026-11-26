@@ -23,8 +23,8 @@ uses System.Globalization as Culture;
 // - `Maximum`: Inclusive upper bound.
 // - `OnChange`: Maps proposed endpoints to a message.
 // - `Settings`: Chart and input settings.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Label: string; Bins: array of float; Value: R.Interval;
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Label: string; Bins: array of float; Value: R.Interval;
   Minimum: float; Maximum: float; OnChange: function(R.Interval): TMsg; Settings: H.Options
 );
 begin
@@ -35,7 +35,7 @@ begin
   var Upper: float := Value.Upper;
   if Frame.Window.HistogramSlider(
     Token, Label, Bins, Lower, Upper, Minimum, Maximum, Settings.Height, Settings.DecimalPlaces,
-    Settings.Prefix, Settings.Suffix, Enabled, C.WantsFocus<TMsg>(Frame, Id, Token, Enabled),
+    Settings.Prefix, Settings.Suffix, Enabled, C.WantsFocus of TMsg(Frame, Id, Token, Enabled),
     not Frame.PaintingClosed, out Lower, out Upper
   )
   then

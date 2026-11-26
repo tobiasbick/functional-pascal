@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Ai.PromptSuggestions as W;
 // - `Items`: Suggestion cards in display order.
 // ## Returns
 // The cards with the chosen index as an application message.
-public function View(Items: array of W.Item): E.Element<int>;
+public function View(Items: array of W.Item): E.Element of int;
 begin
-  return W.PromptSuggestions<int>('prompts', Items, function(Index: int): int => Index,
+  return W.PromptSuggestions of int('prompts', Items, function(Index: int): int => Index,
     new W.Options(Columns := 1));
 end function;
 

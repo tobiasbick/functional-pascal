@@ -94,9 +94,9 @@ end function;
 // - `Current`: Current tree state.
 // ## Returns
 // The Data display tree example.
-public function Tree(Current: State): E.Element<Msg>;
+public function Tree(Current: State): E.Element of Msg;
 begin
-  return SourceTree.View<Msg>(
+  return SourceTree.View of Msg(
     Current.Source, Current.Components, Current.Assets, Current.File,
     Msg.Source, Msg.Components, Msg.Assets, Msg.File
   );
@@ -107,18 +107,18 @@ end function;
 // - `Current`: Current log state.
 // ## Returns
 // The Code log example.
-public function Build(Current: State): E.Element<Msg>;
+public function Build(Current: State): E.Element of Msg;
 begin
-  return E.Column<Msg>(
+  return E.Column of Msg(
     new L.Flow(Gap := L.Spacing.Tight),
-    E.Text<Msg>(Strings.Get('Tui.Log.Keys')),
-    B.Button<Msg>(
+    E.Text of Msg(Strings.Get('Tui.Log.Keys')),
+    B.Button of Msg(
       'log-append', Strings.Get('Tui.Log.Append'), Msg.Append,
       new B.Options(Enabled := Current.LogCount < BuildLog.Entries.Length)
     ),
-    Log.LogConsole<Msg>(
+    Log.LogConsole of Msg(
       'log-console',
-      Linq.ToArray<Log.Entry>(Linq.Take<Log.Entry>(BuildLog.Entries, Current.LogCount)),
+      Linq.ToArray of Log.Entry(Linq.Take of Log.Entry(BuildLog.Entries, Current.LogCount)),
       Msg.Clear,
       new Log.Options(Height := 160.0F, Timestamps := true)
     )
@@ -135,34 +135,34 @@ end function;
 // - `Command`: Maps an activated setting into a gallery message.
 // ## Returns
 // One terminal status row.
-public function EditorStatus<TMsg>(Indent: int; Encoding: int; Language: int; Command: function(string): TMsg): E.Element<TMsg>;
+public function EditorStatus of TMsg(Indent: int; Encoding: int; Language: int; Command: function(string): TMsg): E.Element of TMsg;
 requires Indent >= 0 and Indent < 3 and Encoding >= 0 and Encoding < 2 and Language >= 0
   and Language < 3;
 begin
   const Spacing: array of string := ['2', '4', '8'];
   const Encodings: array of string := ['UTF-8', 'UTF-16'];
   const Languages: array of string := ['Markdown', 'C', Strings.Get('Text.PlainText')];
-  return Status.StatusBar<TMsg>(
+  return Status.StatusBar of TMsg(
     'desktop-status', [
-      Status.Item<TMsg>.Text(
+      (Status.Item of TMsg).Text(
         new Status.Label(Strings.Get('Text.Saved'), Tone := Style.Tone.Success)
       ),
-      Status.Item<TMsg>.Spacer,
-      Status.Item<TMsg>.Action(
+      (Status.Item of TMsg).Spacer,
+      (Status.Item of TMsg).Action(
         'encoding',
         new Status.Label(Encodings[Encoding]),
         '',
         true,
         Command('encoding')
       ),
-      Status.Item<TMsg>.Action(
+      (Status.Item of TMsg).Action(
         'spaces',
         new Status.Label(Strings.Get('Text.SpacesPrefix') + Spacing[Indent]),
         '',
         true,
         Command('spaces')
       ),
-      Status.Item<TMsg>.Action(
+      (Status.Item of TMsg).Action(
         'language',
         new Status.Label(Languages[Language]),
         '',

@@ -14,38 +14,42 @@ uses System.IO as IO;
 
 // Worker-owned source memberships. Paused sources never inherit another source's updates.
 public type Catalog = record
-  Members: C.Dictionary<string, C.HashSet<string>>;
-  Errors: C.Dictionary<string, C.Dictionary<string, string>>;
-  Roots: C.Dictionary<string, string>;
+  Members: C.Dictionary of (string, C.HashSet of string);
+  Errors: C.Dictionary of (string, C.Dictionary of (string, string));
+  Roots: C.Dictionary of (string, string);
   // An overlapping active scan cannot discard the directory links of a paused source.
-  Children: C.Dictionary<string, C.Dictionary<string, C.HashSet<string>>>;
-  ByDirectory: C.Dictionary<string, C.Dictionary<string, C.HashSet<string>>>;
+  Children: C.Dictionary of (string, C.Dictionary of (string, C.HashSet of string));
+  ByDirectory: C.Dictionary of (string, C.Dictionary of (string, C.HashSet of string));
 
   // Creates empty source-scoped collections.
   public static function Create(): Catalog;
   begin
     return new Catalog(
-      new C.Dictionary<string, C.HashSet<string>>(Sys.StringComparer.Ordinal),
-      new C.Dictionary<string, C.Dictionary<string, string>>(Sys.StringComparer.Ordinal),
-      new C.Dictionary<string, string>(Sys.StringComparer.Ordinal),
-      new C.Dictionary<string, C.Dictionary<string, C.HashSet<string>>>(Sys.StringComparer.Ordinal),
-      new C.Dictionary<string, C.Dictionary<string, C.HashSet<string>>>(Sys.StringComparer.Ordinal)
+      new C.Dictionary of (string, C.HashSet of string)(Sys.StringComparer.Ordinal),
+      new C.Dictionary of (string, C.Dictionary of (string, string))(Sys.StringComparer.Ordinal),
+      new C.Dictionary of (string, string)(Sys.StringComparer.Ordinal),
+      new C.Dictionary of (string, C.Dictionary of (string, C.HashSet of string))(
+        Sys.StringComparer.Ordinal
+      ),
+      new C.Dictionary of (string, C.Dictionary of (string, C.HashSet of string))(
+        Sys.StringComparer.Ordinal
+      )
     );
   end function;
 
   procedure Ensure(Id: string);
   begin
     if not self.Members.ContainsKey(Id) then
-      self.Members[Id] := new C.HashSet<string>(S.PathComparer());
-      self.Children[Id] := new C.Dictionary<string, C.HashSet<string>>(S.PathComparer());
+      self.Members[Id] := new C.HashSet of string(S.PathComparer());
+      self.Children[Id] := new C.Dictionary of (string, C.HashSet of string)(S.PathComparer());
     end if;
 
     if not self.Errors.ContainsKey(Id) then
-      self.Errors[Id] := new C.Dictionary<string, string>(S.PathComparer());
+      self.Errors[Id] := new C.Dictionary of (string, string)(S.PathComparer());
     end if;
 
     if not self.ByDirectory.ContainsKey(Id) then
-      self.ByDirectory[Id] := new C.Dictionary<string, C.HashSet<string>>(S.PathComparer());
+      self.ByDirectory[Id] := new C.Dictionary of (string, C.HashSet of string)(S.PathComparer());
     end if;
   end procedure;
 
@@ -63,11 +67,11 @@ public type Catalog = record
     self.Roots[Source.Id] := Source.Path;
   end procedure;
 
-  function ChildrenOf(Id: string; Path: string): C.HashSet<string>;
+  function ChildrenOf(Id: string; Path: string): C.HashSet of string;
   begin
-    const Directories: C.Dictionary<string, C.HashSet<string>> := self.Children[Id];
+    const Directories: C.Dictionary of (string, C.HashSet of string) := self.Children[Id];
     if not Directories.ContainsKey(Path) then
-      Directories[Path] := new C.HashSet<string>(S.PathComparer());
+      Directories[Path] := new C.HashSet of string(S.PathComparer());
     end if;
 
     return Directories[Path];
@@ -91,27 +95,27 @@ public type Catalog = record
     discard self.Members[Id].Add(Path);
     const Directory: string := IO.Path.GetDirectoryName(Path) ?? '';
     if not self.ByDirectory[Id].ContainsKey(Directory) then
-      self.ByDirectory[Id][Directory] := new C.HashSet<string>(S.PathComparer());
+      self.ByDirectory[Id][Directory] := new C.HashSet of string(S.PathComparer());
     end if;
 
     discard self.ByDirectory[Id][Directory].Add(Path);
   end procedure;
 
-  procedure ReconcileChildren(Id: string; Value: O.DirectoryObservation; Removed: C.HashSet<string>);
+  procedure ReconcileChildren(Id: string; Value: O.DirectoryObservation; Removed: C.HashSet of string);
   begin
-    const Children: C.HashSet<string> := self.ChildrenOf(Id, Value.Path);
+    const Children: C.HashSet of string := self.ChildrenOf(Id, Value.Path);
     if not Value.Complete then
       Children.UnionWith(Value.Children);
       return;
     end if;
 
-    const Pending: C.Stack<string> := new C.Stack<string>();
+    const Pending: C.Stack of string := new C.Stack of string();
     for Child: string in Children do
       if not Value.Children.Contains(Child) then
         Pending.Push(Child);
       end if;
     end for;
-    const Directories: C.Dictionary<string, C.HashSet<string>> := self.Children[Id];
+    const Directories: C.Dictionary of (string, C.HashSet of string) := self.Children[Id];
     while Pending.Count > 0 do
       const Path: string := Pending.Pop();
       if Directories.ContainsKey(Path) then
@@ -131,14 +135,14 @@ public type Catalog = record
       discard Removed.Add(Path);
     end while;
 
-    Directories[Value.Path] := new C.HashSet<string>(Value.Children, S.PathComparer());
+    Directories[Value.Path] := new C.HashSet of string(Value.Children, S.PathComparer());
   end procedure;
 
   // Applies a committed observation to active normalized `Sources` only.
   // Returns the disappeared directory paths to evict from the physical scan cache.
-  public function Apply(Value: O.DirectoryObservation; Sources: array of S.MusicSource): C.HashSet<string>;
+  public function Apply(Value: O.DirectoryObservation; Sources: array of S.MusicSource): C.HashSet of string;
   begin
-    const Removed: C.HashSet<string> := new C.HashSet<string>(S.PathComparer());
+    const Removed: C.HashSet of string := new C.HashSet of string(S.PathComparer());
     for Source: S.MusicSource in Sources do
       if Source.Offline or Source.Paused or not S.HasWork(Source) or not S.Within(
         Value.Path,
@@ -151,11 +155,11 @@ public type Catalog = record
       self.Bind(Source);
       self.RestoreDirectory(Source.Id, Value.Path, null);
       self.ReconcileChildren(Source.Id, Value, Removed);
-      const Extensions: C.HashSet<string> := new C.HashSet<string>(
+      const Extensions: C.HashSet of string := new C.HashSet of string(
         Source.Extensions,
         Sys.StringComparer.OrdinalIgnoreCase
       );
-      const Found: C.HashSet<string> := new C.HashSet<string>(S.PathComparer());
+      const Found: C.HashSet of string := new C.HashSet of string(S.PathComparer());
       for Path: string in Value.Files do
         if Extensions.Contains(IO.Path.GetExtension(Path) ?? '') then
           discard Found.Add(Path);
@@ -163,7 +167,7 @@ public type Catalog = record
       end for;
 
       if Value.Complete then
-        const Remove: C.List<string> := new C.List<string>();
+        const Remove: C.List of string := new C.List of string();
         if self.ByDirectory[Source.Id].ContainsKey(Value.Path) then
           for Path: string in self.ByDirectory[Source.Id][Value.Path] do
             if not Found.Contains(Path) then
@@ -186,7 +190,7 @@ public type Catalog = record
 
       if not Value.Complete then
         if not self.ByDirectory[Source.Id].ContainsKey(Value.Path) then
-          self.ByDirectory[Source.Id][Value.Path] := new C.HashSet<string>(S.PathComparer());
+          self.ByDirectory[Source.Id][Value.Path] := new C.HashSet of string(S.PathComparer());
         end if;
 
         self.ByDirectory[Source.Id][Value.Path].UnionWith(Found);
@@ -217,10 +221,10 @@ public type Catalog = record
   end procedure;
 
   // Returns all retained physical paths for pruning shared traversal caches.
-  public function KnownFiles(): C.HashSet<string>;
+  public function KnownFiles(): C.HashSet of string;
   begin
-    const Result: C.HashSet<string> := new C.HashSet<string>(S.PathComparer());
-    for Files: C.HashSet<string> in self.Members.Values do
+    const Result: C.HashSet of string := new C.HashSet of string(S.PathComparer());
+    for Files: C.HashSet of string in self.Members.Values do
       Result.UnionWith(Files);
     end for;
 
@@ -230,15 +234,15 @@ public type Catalog = record
   // Releases removed/out-of-root/excluded memberships after a configuration change.
   public procedure Prune(Sources: array of S.MusicSource);
   begin
-    const Keep: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+    const Keep: C.HashSet of string := new C.HashSet of string(Sys.StringComparer.Ordinal);
     for Source: S.MusicSource in Sources do
       discard Keep.Add(Source.Id);
       self.Bind(Source);
-      const Extensions: C.HashSet<string> := new C.HashSet<string>(
+      const Extensions: C.HashSet of string := new C.HashSet of string(
         Source.Extensions,
         Sys.StringComparer.OrdinalIgnoreCase
       );
-      const Remove: C.List<string> := new C.List<string>();
+      const Remove: C.List of string := new C.List of string();
       for Path: string in self.Members[Source.Id] do
         if not S.Within(
           Path,
@@ -270,7 +274,7 @@ public type Catalog = record
         discard self.Errors[Source.Id].Remove(Path);
       end for;
     end for;
-    const Removed: C.List<string> := new C.List<string>();
+    const Removed: C.List of string := new C.List of string();
     for Id: string in self.Members.Keys do
       if not Keep.Contains(Id) then
         Removed.Add(Id);
@@ -309,9 +313,9 @@ public type Catalog = record
   end function;
 
   // Creates detached per-source views. `Watched` contains installed active roots.
-  public function Describe(Sources: array of S.MusicSource; Watched: array of string): I.ImmutableArray<M.SourceSnapshot>;
+  public function Describe(Sources: array of S.MusicSource; Watched: array of string): I.ImmutableArray of M.SourceSnapshot;
   begin
-    const Views: C.List<M.SourceSnapshot> := new C.List<M.SourceSnapshot>();
+    const Views: C.List of M.SourceSnapshot := new C.List of M.SourceSnapshot();
     for Source: S.MusicSource in Sources do
       self.Bind(Source);
       var Status: M.Availability := M.Availability.Ready;
@@ -322,7 +326,7 @@ public type Catalog = record
           Status := M.Availability.Paused;
         end if;
       end if;
-      const Issues: C.List<M.ScanIssue> := new C.List<M.ScanIssue>();
+      const Issues: C.List of M.ScanIssue := new C.List of M.ScanIssue();
       for Directory: string in self.Errors[Source.Id].Keys do
         Issues.Add(new M.ScanIssue(Directory, self.Errors[Source.Id][Directory]));
         if not Source.Offline and not Source.Paused then
@@ -350,14 +354,14 @@ public type Catalog = record
           Source.Id,
           Source.Path,
           Status,
-          I.ImmutableArray.CreateRange<string>(self.Members[Source.Id]).Sort(S.PathComparer()),
-          I.ImmutableArray.CreateRange<M.ScanIssue>(Issues),
+          I.ImmutableArray.CreateRange of string(self.Members[Source.Id]).Sort(S.PathComparer()),
+          I.ImmutableArray.CreateRange of M.ScanIssue(Issues),
           Watching
         )
       );
     end for;
 
-    return I.ImmutableArray.CreateRange<M.SourceSnapshot>(Views);
+    return I.ImmutableArray.CreateRange of M.SourceSnapshot(Views);
   end function;
 end record;
 

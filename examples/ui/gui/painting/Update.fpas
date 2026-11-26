@@ -17,21 +17,21 @@ uses System.IO as IO;
 // - `Message`: User action or native completion.
 // ## Returns
 // Next model and owner-thread commands.
-public function Apply(Model: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+public function Apply(Model: S.Model; Message: S.Msg): Mvu.Transition of (S.Model, S.Msg);
 begin
   return case Message of
-    when S.Msg.LoadFont: new Mvu.Transition<S.Model, S.Msg>(
+    when S.Msg.LoadFont: new Mvu.Transition of (S.Model, S.Msg)(
       Model, [
-        Fonts.Apply<S.Msg>(
+        Fonts.Apply of S.Msg(
           if Model.Face = null then
-            Fonts.Operation<S.Msg>.Load(IO.File.ReadAllBytes(Model.FontPath), S.Msg.Loaded)
+            (Fonts.Operation of S.Msg).Load(IO.File.ReadAllBytes(Model.FontPath), S.Msg.Loaded)
           else
-            Fonts.Operation<S.Msg>.Assign(G.Font.Body, Model.Face)
+            (Fonts.Operation of S.Msg).Assign(G.Font.Body, Model.Face)
           end if
         )
       ]
     );
-    when S.Msg.Loaded(const Face: Resources.CuiFontFace?): new Mvu.Transition<S.Model, S.Msg>(
+    when S.Msg.Loaded(const Face: Resources.CuiFontFace?): new Mvu.Transition of (S.Model, S.Msg)(
       Model with
         Face := Face;
         Status := if Face = null then
@@ -43,15 +43,15 @@ begin
       if Face = null then
         []
       else
-        [Fonts.Apply<S.Msg>(Fonts.Operation<S.Msg>.Assign(G.Font.Body, Face))]
+        [Fonts.Apply of S.Msg((Fonts.Operation of S.Msg).Assign(G.Font.Body, Face))]
       end if
     );
-    when S.Msg.RestoreFont: new Mvu.Transition<S.Model, S.Msg>(
+    when S.Msg.RestoreFont: new Mvu.Transition of (S.Model, S.Msg)(
       Model with
         Status := 'Built-in body role restored; loaded faces live until close.';
-      end with, [Fonts.Apply<S.Msg>(Fonts.Operation<S.Msg>.Assign(G.Font.Body, null))]
+      end with, [Fonts.Apply of S.Msg((Fonts.Operation of S.Msg).Assign(G.Font.Body, null))]
     );
-    when S.Msg.ScaleText: new Mvu.Transition<S.Model, S.Msg>(
+    when S.Msg.ScaleText: new Mvu.Transition of (S.Model, S.Msg)(
       Model with
         Scale := if Model.Scale = 1.0F then
           1.35F
@@ -60,17 +60,17 @@ begin
         end if;
       end with, []
     );
-    when S.Msg.Motion: new Mvu.Transition<S.Model, S.Msg>(
+    when S.Msg.Motion: new Mvu.Transition of (S.Model, S.Msg)(
       Model with
         ReducedMotion := not Model.ReducedMotion;
       end with, []
     );
-    when S.Msg.PointerChanged(const Value: Canvas.Pointer): new Mvu.Transition<S.Model, S.Msg>(
+    when S.Msg.PointerChanged(const Value: Canvas.Pointer): new Mvu.Transition of (S.Model, S.Msg)(
       Model with
         Pointer := Value;
       end with, []
     );
-    when S.Msg.Clicked(_): new Mvu.Transition<S.Model, S.Msg>(Model, []);
+    when S.Msg.Clicked(_): new Mvu.Transition of (S.Model, S.Msg)(Model, []);
   end case;
 end function;
 

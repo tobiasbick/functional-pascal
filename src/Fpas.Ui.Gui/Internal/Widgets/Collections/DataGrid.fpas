@@ -65,18 +65,20 @@ end function;
 // - `Settings`: Viewport and input settings.
 // - `DoubleClick`: Optional action for a double-clicked row.
 // - `Visit`: Host traversal for composed cell content.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Defs: array of D.Column; Count: int; Build: function(int): D.Row<TMsg>; Current: D.Value; Change: function(D.Value): TMsg; Settings: D.Options; DoubleClick: Sys.Func<int, TMsg>?; Visit: procedure(E.Element<TMsg>, C.State<TMsg>, bool, L.Alignment));
-  procedure Children(Items: array of E.Element<TMsg>);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Defs: array of D.Column; Count: int; Build: function(int): D.Row of TMsg; Current: D.Value; Change: function(D.Value): TMsg; Settings: D.Options; DoubleClick: Sys.Func of (int, TMsg)?; Visit: procedure(E.Element of TMsg, C.State of TMsg, bool, L.Alignment));
+  procedure Children(Items: array of E.Element of TMsg);
   begin
     if Items.Length = 0 then
       return;
     end if;
-    const Prepared: V.Prepared<TMsg> := Realized.Prepare<TMsg>(E.Row<TMsg>(new L.Flow(), Items));
-    const Inner: C.State<TMsg> := Frame with
+    const Prepared: V.Prepared of TMsg := Realized.Prepare of TMsg(
+      E.Row of TMsg(new L.Flow(), Items)
+    );
+    const Inner: C.State of TMsg := Frame with
       Prepared := Prepared;
       AcceptInput := Frame.AcceptInput and Settings.Enabled;
     end with;
-    for Item: E.Element<TMsg> in Items do
+    for Item: E.Element of TMsg in Items do
       Visit(Item, Inner, true, L.Alignment.Default);
     end for;
   end procedure;
@@ -96,7 +98,7 @@ begin
     0
   end if;
   const State: array of int := [Order, Desc, Current.Cursor, Current.Anchor];
-  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+  const Track: Sys.Func of (int, string)? := if Frame.PaintingClosed then
     null
   else
     function(Index: int): string => C.Token('grid-header', T.HeaderId(Id, Index))
@@ -116,7 +118,7 @@ begin
     else
       0
     end if) +
-    (if C.WantsFocus<TMsg>(Frame, Id, Token, Enabled) then
+    (if C.WantsFocus of TMsg(Frame, Id, Token, Enabled) then
       8
     else
       0
@@ -152,7 +154,7 @@ begin
 
   const Selection: (array of bool)? := Current.Selected;
   for Index: int := Native.First to Native.Last - 1 do
-    const Row: D.Row<TMsg> := Build(Index);
+    const Row: D.Row of TMsg := Build(Index);
     if Row.Id = '' or Row.Cells.Length <> Defs.Length then
       raise new Sys.ArgumentException('A native data row needs an ID and one cell per column.');
     end if;
@@ -167,16 +169,16 @@ begin
       );
     end if;
 
-    for Cell: D.Cell<TMsg> in Row.Cells do
+    for Cell: D.Cell of TMsg in Row.Cells do
       case Cell of
         when D.Cell.Text(const Caption: string):
           Frame.Window.DataGridCell(Caption);
-        when D.Cell.Content(const Items: array of E.Element<TMsg>):
+        when D.Cell.Content(const Items: array of E.Element of TMsg):
           Frame.Window.DataGridCell(null);
           Children(Items);
         when D.Cell.Editable(
           const Caption: string, const Capacity: int,
-          const Commit: function(string): TMsg, const Leading: array of E.Element<TMsg>
+          const Commit: function(string): TMsg, const Leading: array of E.Element of TMsg
         ):
           Frame.Window.DataGridCell(null);
           Children(Leading);
@@ -194,7 +196,7 @@ begin
   else
     null
   end if;
-  C.Track<TMsg>(
+  C.Track of TMsg(
     Frame, new App.Control(
       Id, '', 'data-grid', new Cui.CuiRectangle(), Enabled,
       Value := Native.First.ToString() + ':' + Native.Last.ToString()
@@ -220,7 +222,7 @@ begin
 
   if Enabled and Activated >= 0 then
     case DoubleClick of
-      when is Sys.Func<int, TMsg> as Notify:
+      when is Sys.Func of (int, TMsg) as Notify:
         Frame.Messages.Add(Notify.Invoke(Activated));
       else
     end case;

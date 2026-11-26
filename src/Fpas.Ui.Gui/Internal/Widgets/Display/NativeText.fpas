@@ -12,7 +12,7 @@ uses Fpas.Ui.Widgets.Display.Texts as D;
 // - `Frame`: Current GUI frame.
 // - `Text`: Literal text.
 // - `Role`: Native text role.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Text: string; Role: D.Appearance);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Text: string; Role: D.Appearance);
 begin
   Frame.Window.DisplayText(Text, cast<int>(Role));
   Frame.Labels.Add(Text);

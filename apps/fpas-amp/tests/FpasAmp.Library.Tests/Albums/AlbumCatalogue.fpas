@@ -36,7 +36,7 @@ public type CatalogueTests = record
       await Observer.Run(
         Database, Ratings, function(Value: M.Snapshot): Tasks.Task begin
           X.Assert.Empty(Value.Releases);
-          X.Assert.Equal<long>(Publications, Value.TrackCount);
+          X.Assert.Equal of long(Publications, Value.TrackCount);
           Publications := Publications + 1;
           if Publications = 1 then
             Sql.Execute(
@@ -53,10 +53,10 @@ public type CatalogueTests = record
         end function, Stop.Token
       );
     catch Cancelled: Sys.OperationCanceledException do
-      X.Assert.Equal<T.CancellationToken>(Stop.Token, Cancelled.CancellationToken);
+      X.Assert.Equal of T.CancellationToken(Stop.Token, Cancelled.CancellationToken);
     end try;
 
-    X.Assert.Equal<int>(2, Publications);
+    X.Assert.Equal of int(2, Publications);
   end function;
 
   // Closing during the initial sort cancels promptly; re-opening still returns every release.
@@ -86,7 +86,7 @@ public type CatalogueTests = record
     // Cancel from that evaluation so the test does not race an unrelated thread-pool timer.
     Sql.Execute(Connection, 'ATTACH DATABASE $path AS users;', null, ['$path'], [Ratings]);
     var Scanned: int := 0;
-    Connection.CreateFunction<long, long>(
+    Connection.CreateFunction of (long, long)(
       'observed_size', function(Size: long): long begin
         Scanned := Scanned + 1;
         if Scanned = 1 then
@@ -104,17 +104,17 @@ public type CatalogueTests = record
       discard Albums.ReadAttached(Connection, Close.Token);
       X.Assert.Fail('The cancelled album snapshot completed.');
     catch Cancelled: Sys.OperationCanceledException do
-      X.Assert.Equal<T.CancellationToken>(Close.Token, Cancelled.CancellationToken);
+      X.Assert.Equal of T.CancellationToken(Close.Token, Cancelled.CancellationToken);
     end try;
 
-    X.Assert.InRange<int>(Scanned, 1, Count - 1);
+    X.Assert.InRange of int(Scanned, 1, Count - 1);
 
     using const Startup: T.CancellationTokenSource := new T.CancellationTokenSource(5000);
     const Catalog: M.Snapshot := Albums.Read(Database, Ratings, Startup.Token);
-    X.Assert.Equal<int>(Count, Catalog.Releases.Length);
-    X.Assert.Equal<long>(Count, Catalog.TrackCount);
+    X.Assert.Equal of int(Count, Catalog.Releases.Length);
+    X.Assert.Equal of long(Count, Catalog.TrackCount);
     // A whole-library queue includes every audio file, but no cover files or page-size limit.
-    X.Assert.Equal<int>(
+    X.Assert.Equal of int(
       Count,
       Songs.ReadRelease(Database, Ratings, '', T.CancellationToken.None).Length
     );

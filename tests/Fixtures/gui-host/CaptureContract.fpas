@@ -26,12 +26,12 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     end if;
   end procedure;
 
-  procedure Step(Session: Gui.Session<State.Msg>);
+  procedure Step(Session: Gui.Session of State.Msg);
   begin
     A.Check(Session.Step(), 'The Capture page closed unexpectedly.');
   end procedure;
 
-  function HasClear(Session: Gui.Session<State.Msg>): bool;
+  function HasClear(Session: Gui.Session of State.Msg): bool;
   begin
     for Item: Gui.Control in Session.Snapshot().Controls do
       if Item.Id = Signatures.ClearId(Signature) then
@@ -48,7 +48,7 @@ begin
   const Signature: string := 'capture-signature';
   const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI Capture', 1000, 1000, Renderer, true);
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Capture),
     G.Update, View.Build, Window, 256, Inject, ThemeFor := G.ThemeFor
   );

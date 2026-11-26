@@ -20,15 +20,19 @@ type Model = record
   public PendingDelete: bool := false;
 end record;
 
-const Entries: array of Menu.Entry<string> := [
-  Menu.Entry<string>.Label('Project'),
-  Menu.Entry<string>.Action(new Menu.Item<string>('rename', 'Rename', 'rename', Shortcut := 'F2')),
-  Menu.Entry<string>.Action(
-    new Menu.Item<string>('off', 'Unavailable', 'unexpected', Enabled := false)
+const Entries: array of Menu.Entry of string := [
+  (Menu.Entry of string).Label('Project'),
+  (Menu.Entry of string).Action(
+    new Menu.Item of string('rename', 'Rename', 'rename', Shortcut := 'F2')
   ),
-  Menu.Entry<string>.Separator,
-  Menu.Entry<string>.Action(new Menu.Item<string>('copy', 'Copy', 'copy', Checked := true)),
-  Menu.Entry<string>.Action(new Menu.Item<string>('delete', 'Delete', 'delete', Danger := true))
+  (Menu.Entry of string).Action(
+    new Menu.Item of string('off', 'Unavailable', 'unexpected', Enabled := false)
+  ),
+  (Menu.Entry of string).Separator,
+  (Menu.Entry of string).Action(new Menu.Item of string('copy', 'Copy', 'copy', Checked := true)),
+  (Menu.Entry of string).Action(
+    new Menu.Item of string('delete', 'Delete', 'delete', Danger := true)
+  )
 ];
 
 procedure Check(Condition: bool; Reason: string);
@@ -38,10 +42,10 @@ begin
   end if;
 end procedure;
 
-function Update(State: Model; Message: string): M.Transition<Model, string>;
+function Update(State: Model; Message: string): M.Transition of (Model, string);
 begin
   Check(Message <> 'unexpected', 'A disabled or covered command ran.');
-  return new M.Transition<Model, string>(
+  return new M.Transition of (Model, string)(
     case Message of
       when 'delete': State with
         PendingDelete := true;
@@ -56,34 +60,34 @@ begin
   );
 end function;
 
-function Options(Settings: Menu.Options): E.Element<string>;
+function Options(Settings: Menu.Options): E.Element of string;
 begin
-  return Menu.Menu<string>('options', 'Options', Entries, Settings);
+  return Menu.Menu of string('options', 'Options', Entries, Settings);
 end function;
 
-function MainView(State: Model): E.Element<string>;
+function MainView(State: Model): E.Element of string;
 begin
-  return Dialogs.Dialog<string>(
-    'confirm', E.Column<string>(
-      Buttons.Button<string>('outside', 'Outside', 'unexpected'),
+  return Dialogs.Dialog of string(
+    'confirm', E.Column of string(
+      Buttons.Button of string('outside', 'Outside', 'unexpected'),
       Options(new Menu.Options()),
-      Menu.Menu<string>('empty', 'Empty', []),
-      Menu.Menu<string>('disabled', 'Disabled', Entries, new Menu.Options(Enabled := false)),
-      E.Size<string>(
-        E.Text<string>('Selected ' + State.Choice),
+      Menu.Menu of string('empty', 'Empty', []),
+      Menu.Menu of string('disabled', 'Disabled', Entries, new Menu.Options(Enabled := false)),
+      E.Size of string(
+        E.Text of string('Selected ' + State.Choice),
         new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(16)))
       )
-    ), Buttons.Button<string>('cancel', 'Cancel', 'cancel'), State.PendingDelete,
+    ), Buttons.Button of string('cancel', 'Cancel', 'cancel'), State.PendingDelete,
     new Dialogs.Options('Confirm delete', InitialFocus := 'cancel'), 'cancel'
   );
 end function;
 
-function Side(State: Model): E.Element<string>;
+function Side(State: Model): E.Element of string;
 begin
   return Options(new Menu.Options(Position := Menu.Placement.RightStart, Width := 96.0F));
 end function;
 
-function Responsive(State: Model; Size: L.Viewport): E.Element<string>;
+function Responsive(State: Model; Size: L.Viewport): E.Element of string;
 begin
   return Options(new Menu.Options(Enabled := Size.Width <> L.SizeClass.Compact));
 end function;
@@ -131,7 +135,7 @@ begin
 end procedure;
 
 begin
-  using const Session: T.HeadlessSession := Headless.Start<Model, string>(
+  using const Session: T.HeadlessSession := Headless.Start of (Model, string)(
     new Model(),
     Update,
     MainView,
@@ -199,7 +203,7 @@ begin
   Click(Session, 'disabled');
   Check(Control(Session, 'disabled').Value = 'false', 'Disabled triggers stay closed.');
 
-  using const Narrow: T.HeadlessSession := Headless.Start<Model, string>(
+  using const Narrow: T.HeadlessSession := Headless.Start of (Model, string)(
     new Model(),
     Update,
     Side,
@@ -223,7 +227,7 @@ begin
   Key(Narrow, K.Key.Escape);
   Check(Control(Narrow, 'options').Focused, 'Focus returns after resizing an open menu.');
 
-  using const Changes: T.HeadlessSession := Headless.Start<Model, string>(
+  using const Changes: T.HeadlessSession := Headless.Start of (Model, string)(
     new Model(),
     Update,
     Responsive,

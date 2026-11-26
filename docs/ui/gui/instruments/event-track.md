@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Charts.EventTracks as W;
 // - `Cups`: Sorted times and selection from the model, such as `new W.Value([8.0, 10.75], 1)`.
 // ## Returns
 // The track with each proposed change as an application message.
-public function View(Cups: W.Value): E.Element<W.Change>;
+public function View(Cups: W.Value): E.Element of W.Change;
 begin
-  return W.EventTrack<W.Change>('cups', Cups, function(Change: W.Change): W.Change => Change,
+  return W.EventTrack of W.Change('cups', Cups, function(Change: W.Change): W.Change => Change,
     new W.Options(Capacity := 8, Minimum := 6.0, Maximum := 30.0, Step := 0.25,
       Units := D.AxisUnits.Hours, LabelStep := 6.0));
 end function;

@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Inputs.Selects as S;
 // - `Selected`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Selected: array of bool): E.Element<array of bool>;
+public function View(Selected: array of bool): E.Element of array of bool;
 begin
-  return W.MultiSelect<array of bool>('picker-languages',
+  return W.MultiSelect of array of bool('picker-languages',
     [new S.Item('C'), new S.Item('Rust'), new S.Item('Swift')], Selected,
     function(Value: array of bool): array of bool => Value,
     new W.Options(Label := 'Languages', Searchable := true));

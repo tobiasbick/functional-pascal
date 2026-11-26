@@ -31,9 +31,9 @@ public type UserListTests = record
     begin
       await using const Session: Monitor.Session := F.Start([F.Source(Root.Path)], Data.Path);
       const Lists: Access.Session := F.Tags(Session).Playlists;
-      const Audio: I.ImmutableArray<Tags.Entry> := await F.Until(
+      const Audio: I.ImmutableArray of Tags.Entry := await F.Until(
         F.Tags(Session),
-        function(Items: I.ImmutableArray<Tags.Entry>): bool => Items.Length = 1
+        function(Items: I.ImmutableArray of Tags.Entry): bool => Items.Length = 1
       );
       const Target: M.Input := new M.Input(M.Target.Track(Audio[0].TrackId), 'Track label');
       Identity := await Lists.SaveAsync(
@@ -43,23 +43,23 @@ public type UserListTests = record
         T.CancellationToken.None
       );
       const First: M.Playlist := await P.Read(Lists, Identity);
-      X.Assert.Equal<int>(3, First.Entries.Length);
-      X.Assert.Equal<M.Target>(First.Entries[0].Destination, First.Entries[2].Destination);
+      X.Assert.Equal of int(3, First.Entries.Length);
+      X.Assert.Equal of M.Target(First.Entries[0].Destination, First.Entries[2].Destination);
       await F.Tags(Session).SetRatingAsync(Audio[0].TrackId, 8, T.CancellationToken.None);
       IO.File.Move(Before, After);
       Session.Refresh();
       discard await F.Until(
         F.Tags(Session),
-        function(Items: I.ImmutableArray<Tags.Entry>): bool => Items.Length = 1 and Items[
+        function(Items: I.ImmutableArray of Tags.Entry): bool => Items.Length = 1 and Items[
           0
         ].Path = After
       );
       const Moved: M.Playlist := await P.Read(Lists, Identity);
-      X.Assert.Equal<string>(Before, Moved.Entries[0].Reference);
-      X.Assert.Equal<string>(After, Moved.Entries[0].CurrentReference);
+      X.Assert.Equal of string(Before, Moved.Entries[0].Reference);
+      X.Assert.Equal of string(After, Moved.Entries[0].CurrentReference);
       discard await Session.ClearAsync('', T.CancellationToken.None);
       const Cleared: M.Playlist := await P.Read(Lists, Identity);
-      X.Assert.Equal<int>(3, Cleared.Entries.Length);
+      X.Assert.Equal of int(3, Cleared.Entries.Length);
       X.Assert.False(Cleared.Entries[0].Indexed);
     end;
 
@@ -67,7 +67,7 @@ public type UserListTests = record
       await using const Session: Monitor.Session := F.Start([], Data.Path);
       const Lists: Access.Session := F.Tags(Session).Playlists;
       const Reloaded: M.Playlist := await P.Read(Lists, Identity);
-      X.Assert.Equal<string>(After, Reloaded.Entries[0].CurrentReference);
+      X.Assert.Equal of string(After, Reloaded.Entries[0].CurrentReference);
       discard await Lists.SaveAsync(
         Identity.Id,
         'Reordered',
@@ -77,7 +77,7 @@ public type UserListTests = record
         ],
         T.CancellationToken.None
       );
-      X.Assert.Equal<int>(2, (await P.Read(Lists, Identity)).Entries.Length);
+      X.Assert.Equal of int(2, (await P.Read(Lists, Identity)).Entries.Length);
       await Lists.DeleteAsync(Identity.Id, T.CancellationToken.None);
       X.Assert.Null(await Lists.ReadAsync(Identity, T.CancellationToken.None));
       X.Assert.True(IO.File.Exists(After));
@@ -103,24 +103,24 @@ public type UserListTests = record
     X.Assert.False((await P.Read(Lists, Key)).Entries[0].Indexed);
     // Publish the finished fixture to the watched source after its tags have been saved.
     IO.File.Move(F.Write(Data.Path, 'later.mp3'), Path);
-    const Audio: I.ImmutableArray<Tags.Entry> := await F.Until(
+    const Audio: I.ImmutableArray of Tags.Entry := await F.Until(
       F.Tags(Session),
-      function(Items: I.ImmutableArray<Tags.Entry>): bool => Items.Length = 1 and Items[
+      function(Items: I.ImmutableArray of Tags.Entry): bool => Items.Length = 1 and Items[
         0
       ].TrackId <> ''
     );
     const Resolved: M.Playlist := await P.Read(Lists, Key);
-    X.Assert.Equal<M.Target>(M.Target.Track(Audio[0].TrackId), Resolved.Entries[0].Destination);
+    X.Assert.Equal of M.Target(M.Target.Track(Audio[0].TrackId), Resolved.Entries[0].Destination);
     const Moved: string := IO.Path.Combine(Root.Path, 'moved.mp3');
     IO.File.Move(Path, Moved);
     Session.Refresh();
     discard await F.Until(
       F.Tags(Session),
-      function(Items: I.ImmutableArray<Tags.Entry>): bool => Items.Length = 1 and Items[
+      function(Items: I.ImmutableArray of Tags.Entry): bool => Items.Length = 1 and Items[
         0
       ].Path = Moved
     );
-    X.Assert.Equal<string>(Moved, (await P.Read(Lists, Key)).Entries[0].CurrentReference);
+    X.Assert.Equal of string(Moved, (await P.Read(Lists, Key)).Entries[0].CurrentReference);
   end function;
 end record;
 

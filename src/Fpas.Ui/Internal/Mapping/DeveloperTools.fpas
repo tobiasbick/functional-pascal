@@ -36,7 +36,7 @@ uses System as Sys;
 // - `Messages`: Maps each child proposal.
 // ## Returns
 // A widget retaining the original data and options.
-public function Map<TChild, TParent>(Value: E.Element<TChild>; Messages: function(TChild): TParent): E.Element<TParent>;
+public function Map of (TChild, TParent)(Value: E.Element of TChild; Messages: function(TChild): TParent): E.Element of TParent;
 begin
   case Value of
     when E.Element.Problems(
@@ -45,7 +45,7 @@ begin
       const Changed: function(ProblemsPanels.Event): TChild,
       const Settings: ProblemsPanels.Options
     ):
-      return E.Element<TParent>.Problems(
+      return (E.Element of TParent).Problems(
         Id,
         Diagnostics,
         function(Proposed: ProblemsPanels.Event): TParent => Messages(Changed(Proposed)),
@@ -59,7 +59,7 @@ begin
       const Changed: function(Pipelines.Event): TChild,
       const Settings: Pipelines.Options
     ):
-      return E.Element<TParent>.Pipeline(
+      return (E.Element of TParent).Pipeline(
         Id,
         Stages,
         Jobs,
@@ -75,7 +75,7 @@ begin
       const Changed: function(Keymaps.Event): TChild,
       const Settings: Keymaps.Options
     ):
-      return E.Element<TParent>.Keymap(
+      return (E.Element of TParent).Keymap(
         Id,
         Bindings,
         Categories,
@@ -90,7 +90,7 @@ begin
       const Changed: function(CommitGraphs.Event): TChild,
       const Settings: CommitGraphs.Options
     ):
-      return E.Element<TParent>.CommitGraph(
+      return (E.Element of TParent).CommitGraph(
         Id,
         Commits,
         Selection,
@@ -105,7 +105,7 @@ begin
       const Changed: function(DependencyGraphs.Event): TChild,
       const Settings: DependencyGraphs.Options
     ):
-      return E.Element<TParent>.DependencyGraph(
+      return (E.Element of TParent).DependencyGraph(
         Id,
         Vertices,
         Edges,
@@ -120,7 +120,7 @@ begin
       const Changed: function(NetworkWaterfalls.Event): TChild,
       const Settings: NetworkWaterfalls.Options
     ):
-      return E.Element<TParent>.NetworkWaterfall(
+      return (E.Element of TParent).NetworkWaterfall(
         Id,
         Requests,
         Selection,
@@ -137,7 +137,7 @@ begin
       const Changed: function(TraceViewers.Event): TChild,
       const Settings: TraceViewers.Options
     ):
-      return E.Element<TParent>.TraceViewer(
+      return (E.Element of TParent).TraceViewer(
         Id,
         Tracks,
         Spans,
@@ -153,7 +153,7 @@ begin
       const Changed: function(TestExplorers.Event): TChild,
       const Settings: TestExplorers.Options
     ):
-      return E.Element<TParent>.TestExplorer(
+      return (E.Element of TParent).TestExplorer(
         Id,
         Entries,
         function(Proposed: TestExplorers.Event): TParent => Messages(Changed(Proposed)),
@@ -165,7 +165,7 @@ begin
       const Changed: function(StackTraces.Event): TChild,
       const Settings: StackTraces.Options
     ):
-      return E.Element<TParent>.StackTrace(
+      return (E.Element of TParent).StackTrace(
         Id,
         Frames,
         function(Proposed: StackTraces.Event): TParent => Messages(Changed(Proposed)),
@@ -178,14 +178,14 @@ begin
       const Bytes: double,
       const Settings: ResponseStatuses.Options
     ):
-      return E.Element<TParent>.ResponseStatus(Id, Status, Seconds, Bytes, Settings);
+      return (E.Element of TParent).ResponseStatus(Id, Status, Seconds, Bytes, Settings);
     when E.Element.Uptime(
       const Id: string,
       const Services: array of Uptimes.Service,
       const LastDay: Sys.DateOnly,
       const Settings: Uptimes.Options
     ):
-      return E.Element<TParent>.Uptime(Id, Services, LastDay, Settings);
+      return (E.Element of TParent).Uptime(Id, Services, LastDay, Settings);
     when E.Element.TimeHistogram(
       const Id: string,
       const Start: double,
@@ -196,7 +196,7 @@ begin
       const Changed: function(TimeHistograms.Event): TChild,
       const Settings: TimeHistograms.Options
     ):
-      return E.Element<TParent>.TimeHistogram(
+      return (E.Element of TParent).TimeHistogram(
         Id,
         Start,
         Bucket,
@@ -212,7 +212,7 @@ begin
       const Changed: function(Coverages.Event): TChild,
       const Settings: Coverages.Options
     ):
-      return E.Element<TParent>.Coverage(
+      return (E.Element of TParent).Coverage(
         Id,
         ReportFiles,
         function(Proposed: Coverages.Event): TParent => Messages(Changed(Proposed)),
@@ -226,7 +226,7 @@ begin
       const Changed: function(Blames.Event): TChild,
       const Settings: Blames.Options
     ):
-      return E.Element<TParent>.Blame(
+      return (E.Element of TParent).Blame(
         Id,
         Lines,
         LineCommits,
@@ -241,7 +241,7 @@ begin
       const Changed: function(ApiExplorers.Event): TChild,
       const Settings: ApiExplorers.Options
     ):
-      return E.Element<TParent>.ApiExplorer(
+      return (E.Element of TParent).ApiExplorer(
         Id,
         Endpoints,
         Selection,
@@ -254,7 +254,7 @@ begin
       const Changed: function(KeyValueEditors.Event): TChild,
       const Settings: KeyValueEditors.Options
     ):
-      return E.Element<TParent>.KeyValueEditor(
+      return (E.Element of TParent).KeyValueEditor(
         Id,
         Pairs,
         function(Proposed: KeyValueEditors.Event): TParent => Messages(Changed(Proposed)),
@@ -267,7 +267,7 @@ begin
       const Changed: function(QueryBuilders.Event): TChild,
       const Settings: QueryBuilders.Options
     ):
-      return E.Element<TParent>.QueryBuilder(
+      return (E.Element of TParent).QueryBuilder(
         Id,
         Fields,
         RulesData,
@@ -280,7 +280,7 @@ begin
       const Changed: function(SchedulePickers.Event): TChild,
       const Settings: SchedulePickers.Options
     ):
-      return E.Element<TParent>.SchedulePicker(
+      return (E.Element of TParent).SchedulePicker(
         Id,
         Expression,
         function(Proposed: SchedulePickers.Event): TParent => Messages(Changed(Proposed)),
@@ -294,7 +294,7 @@ begin
       const Changed: function(RegexTesters.Event): TChild,
       const Settings: RegexTesters.Options
     ):
-      return E.Element<TParent>.RegexTester(
+      return (E.Element of TParent).RegexTester(
         Id,
         Pattern,
         Sample,
@@ -309,7 +309,7 @@ begin
       const Changed: function(RequestBars.Event): TChild,
       const Settings: RequestBars.Options
     ):
-      return E.Element<TParent>.RequestBar(
+      return (E.Element of TParent).RequestBar(
         Id,
         Method,
         Url,
@@ -323,7 +323,7 @@ begin
       const Changed: function(FeatureFlagEditors.Event): TChild,
       const Settings: FeatureFlagEditors.Options
     ):
-      return E.Element<TParent>.FeatureFlags(
+      return (E.Element of TParent).FeatureFlags(
         Id,
         Entries,
         Environments,

@@ -27,13 +27,13 @@ end function;
 // the selected value, or empty for all. Optional Captions label stable keys in Values.
 // Id identifies the native control, Label titles the field and All names the empty choice.
 // Change maps a selection to its TMsg message.
-public function Choice<TMsg>(
+public function Choice of TMsg(
   Id: string; Label: string; All: string; Values: array of string; Chosen: string;
   Change: function(string): TMsg; Captions: (array of string)? := null
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Captions = null or Captions.Length = Values.Length;
 begin
-  const Items: C.List<Selects.Item> := new C.List<Selects.Item>([new Selects.Item(All)]);
+  const Items: C.List of Selects.Item := new C.List of Selects.Item([new Selects.Item(All)]);
   var Selected: int := 0;
   for Index: int := 0 to Values.Length - 1 do
     Items.Add(
@@ -50,7 +50,7 @@ begin
     end if;
   end for;
 
-  return Selects.Select<TMsg>(
+  return Selects.Select of TMsg(
     Id, Items.ToArray(), Selected,
     function(Index: int): TMsg => Change(
       if Index <= 0 or Index > Values.Length then
@@ -74,27 +74,27 @@ end function;
 // - `Apply`: Confirms the draft.
 // ## Returns
 // The native form for the filter popup.
-public function Panel<TMsg>(Id: string; Title: string; Fields: array of E.Element<TMsg>; Reset: TMsg; Apply: TMsg): E.Element<TMsg>;
+public function Panel of TMsg(Id: string; Title: string; Fields: array of E.Element of TMsg; Reset: TMsg; Apply: TMsg): E.Element of TMsg;
 begin
-  const Parts: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>();
-  Parts.Add(Texts.Text<TMsg>(Title, Texts.Appearance.HeadingThree));
+  const Parts: C.List of E.Element of TMsg := new C.List of E.Element of TMsg();
+  Parts.Add(Texts.Text of TMsg(Title, Texts.Appearance.HeadingThree));
   Parts.AddRange(Fields);
   Parts.Add(
-    E.Size<TMsg>(
-      E.Styled<TMsg>(E.Column<TMsg>(), S.Role.Divider),
+    E.Size of TMsg(
+      E.Styled of TMsg(E.Column of TMsg(), S.Role.Divider),
       new L.Flex(Basis := L.Extent.Fixed(L.Measure.Logical(1)))
     )
   );
   Parts.Add(
-    E.Row<TMsg>(
+    E.Row of TMsg(
       new L.Flow(Gap := Points(8), Justify := L.Justification.End),
-      B.Button<TMsg>(
+      B.Button of TMsg(
         Id + '-filter-reset',
         'Reset',
         Reset,
         new B.Options(Variant := S.ButtonVariant.Outline)
       ),
-      B.Button<TMsg>(
+      B.Button of TMsg(
         Id + '-filter-apply',
         'Apply',
         Apply,
@@ -102,7 +102,7 @@ begin
       )
     )
   );
-  return E.Column<TMsg>(
+  return E.Column of TMsg(
     new L.Flow(Gap := Points(14), Align := L.Alignment.Stretch, Clip := false), Parts.ToArray()
   );
 end function;
@@ -121,15 +121,15 @@ end function;
 // - `Apply`: Message to confirm the draft.
 // ## Returns
 // The title, choice controls, rating slider and form buttons.
-public function Form<TMsg>(Id: string; Title: string; Fields: array of E.Element<TMsg>; Rating: int; Change: function(int): TMsg; Reset: TMsg; Apply: TMsg; RatingLabel: string := 'Minimum rating'): E.Element<TMsg>;
+public function Form of TMsg(Id: string; Title: string; Fields: array of E.Element of TMsg; Rating: int; Change: function(int): TMsg; Reset: TMsg; Apply: TMsg; RatingLabel: string := 'Minimum rating'): E.Element of TMsg;
 begin
-  const Parts: C.List<E.Element<TMsg>> := new C.List<E.Element<TMsg>>(Fields);
+  const Parts: C.List of E.Element of TMsg := new C.List of E.Element of TMsg(Fields);
   const Unrated: bool := Rating = -1;
   Parts.Add(
-    E.Row<TMsg>(
+    E.Row of TMsg(
       new L.Flow(Gap := Points(12), Align := L.Alignment.Start),
-      E.Size<TMsg>(
-        Sliders.Slider<TMsg>(
+      E.Size of TMsg(
+        Sliders.Slider of TMsg(
           Id + '-filter-rating',
           RatingLabel,
           cast<float>(Sys.Math.Max(0, Rating)),
@@ -139,7 +139,7 @@ begin
           new Sliders.Options(Step := 1.0F, Enabled := not Unrated)
         ), new L.Flex(Basis := L.Extent.Fill)
       ),
-      Texts.Text<TMsg>(
+      Texts.Text of TMsg(
         if Unrated then
           '—'
         elsif Rating = 0 then
@@ -151,7 +151,7 @@ begin
     )
   );
   Parts.Add(
-    Checks.Checkbox<TMsg>(
+    Checks.Checkbox of TMsg(
       Id + '-filter-unrated', 'Unrated only', Unrated,
       function(Value: bool): TMsg => Change(
         if Value then
@@ -162,7 +162,7 @@ begin
       )
     )
   );
-  return Panel<TMsg>(Id, Title, Parts.ToArray(), Reset, Apply);
+  return Panel of TMsg(Id, Title, Parts.ToArray(), Reset, Apply);
 end function;
 
 // Builds the shared filter button and its anchored form.
@@ -177,10 +177,10 @@ end function;
 // - `Width`: Maximum width in logical points.
 // ## Returns
 // The filter trigger and popup.
-public function Popup<TMsg>(Id: string; Panel: E.Element<TMsg>; Count: int; Open: bool; Toggle: function(bool): TMsg; Width: int): E.Element<TMsg>;
+public function Popup of TMsg(Id: string; Panel: E.Element of TMsg; Count: int; Open: bool; Toggle: function(bool): TMsg; Width: int): E.Element of TMsg;
 requires Width > 0;
 begin
-  const Trigger: E.Element<TMsg> := B.Button<TMsg>(
+  const Trigger: E.Element of TMsg := B.Button of TMsg(
     Id + '-filters', if Count > 0 then
       'Filters · ' + Count.ToString()
     else
@@ -191,7 +191,7 @@ begin
       Icon := Sys.Char.ConvertFromUtf32($E0DC)
     )
   );
-  return Popovers.Popover<TMsg>(
+  return Popovers.Popover of TMsg(
     Id + '-filter-panel', Trigger, Panel, Open, Toggle(false),
     new Popovers.Options(
       Position := Menus.Placement.BottomEnd,
@@ -214,13 +214,13 @@ end function;
 // The button, labelled with the number of applied filters, and its popover.
 public function Build(
   Current: M.State; Artists: array of string; Genres: array of string; Width: int; Scope: M.Scope := M.Scope.Albums
-): E.Element<M.Msg>;
+): E.Element of M.Msg;
 requires Width > 0;
 begin
-  const Fields: C.List<E.Element<M.Msg>> := new C.List<E.Element<M.Msg>>();
+  const Fields: C.List of E.Element of M.Msg := new C.List of E.Element of M.Msg();
   if (Scope = M.Scope.Albums or Scope = M.Scope.GenreAlbums) and Artists.Length > 0 then
     Fields.Add(
-      Choice<M.Msg>(
+      Choice of M.Msg(
         'album-filter-artist',
         'Artist',
         'All artists',
@@ -233,7 +233,7 @@ begin
 
   if M.Root(Scope) <> M.Scope.Genres and Genres.Length > 0 then
     Fields.Add(
-      Choice<M.Msg>(
+      Choice of M.Msg(
         'album-filter-genre',
         'Genre',
         'All genres',
@@ -243,13 +243,20 @@ begin
       )
     );
   end if;
-  const Panel: E.Element<M.Msg> := Form<M.Msg>(
+  const Panel: E.Element of M.Msg := Form of M.Msg(
     'album',
     'Filter ' + M.ItemName(Scope).ToLowerInvariant() + 's',
     Fields.ToArray(), Current.Draft.MinimumRating, M.Msg.MinimumRating, M.Msg.Reset, M.Msg.Apply,
     'Minimum ' + M.ItemName(Scope).ToLowerInvariant() + ' rating'
   );
-  return Popup<M.Msg>('album', Panel, M.Count(Current.Applied), Current.Open, M.Msg.SetOpen, Width);
+  return Popup of M.Msg(
+    'album',
+    Panel,
+    M.Count(Current.Applied),
+    Current.Open,
+    M.Msg.SetOpen,
+    Width
+  );
 end function;
 
 end unit;

@@ -12,10 +12,10 @@ uses GuiGallery.Pages.Charts.State as S;
 // - `Message`: Requested palette change.
 // ## Returns
 // Updated state and no commands.
-public function Update(State: S.Model; Message: S.Msg): M.Transition<S.Model, S.Msg>;
+public function Update(State: S.Model; Message: S.Msg): M.Transition of (S.Model, S.Msg);
 begin
   return case Message of
-    when S.Msg.SetGrayscale(const Value: bool): new M.Transition<S.Model, S.Msg>(
+    when S.Msg.SetGrayscale(const Value: bool): new M.Transition of (S.Model, S.Msg)(
       State with
         Grayscale := Value;
       end with, []

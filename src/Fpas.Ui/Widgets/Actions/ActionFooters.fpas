@@ -12,9 +12,9 @@ uses Fpas.Ui.Elements as E;
 // - `Children`: Actions in display order.
 // ## Returns
 // A graphical row with the native footer inset and spacing.
-public function ActionFooter<TMsg>(params Children: array of E.Element<TMsg>): E.Element<TMsg>;
+public function ActionFooter of TMsg(params Children: array of E.Element of TMsg): E.Element of TMsg;
 begin
-  return E.Element<TMsg>.ActionFooter(Children);
+  return (E.Element of TMsg).ActionFooter(Children);
 end function;
 
 end unit;

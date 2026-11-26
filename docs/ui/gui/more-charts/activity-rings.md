@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Charts.Charts as C;
 // Builds the activity rings example.
 // ## Returns
 // The widget for the application view.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return W.ActivityRings<string>('rings', [
+  return W.ActivityRings of string('rings', [
     new C.Item('Move', 0.82F), new C.Item('Exercise', 1.24F), new C.Item('Stand', 0.58F)
   ], new W.Options(Size := 170.0F, Center := '82%', Caption := 'of goal'));
 end function;

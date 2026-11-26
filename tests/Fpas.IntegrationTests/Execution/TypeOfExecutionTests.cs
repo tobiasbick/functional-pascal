@@ -14,13 +14,13 @@ public sealed class TypeOfExecutionTests
           Console.WriteLine(Type = typeof(Sys.Int32));
           Console.WriteLine(typeof(Number) = typeof(int));
           Console.WriteLine(typeof(string?) = typeof(string));
-          Console.WriteLine(typeof(int?) = typeof(Sys.Nullable<int>));
+          Console.WriteLine(typeof(int?) = typeof(Sys.Nullable of int));
           Console.WriteLine(typeof(int?) <> typeof(int));
-          Console.WriteLine(typeof(C.List<string?>) = typeof(C.List<string>));
+          Console.WriteLine(typeof(C.List of string?) = typeof(C.List of string));
           Console.WriteLine(typeof(array of int).IsArray);
           Console.WriteLine(typeof(array[,] of int).GetArrayRank());
           Console.WriteLine(typeof(array of array of int).GetArrayRank());
-          Console.WriteLine(typeof(function(int): string) = typeof(Sys.Func<int, string>));
+          Console.WriteLine(typeof(function(int): string) = typeof(Sys.Func of (int, string)));
           Console.WriteLine(typeof(procedure()) = typeof(Sys.Action));
           Console.WriteLine(typeof(Sys.IDisposable).IsInterface);
           Console.WriteLine(typeof(Sys.StringComparison).IsEnum);
@@ -35,37 +35,37 @@ public sealed class TypeOfExecutionTests
     public Task Generic_type_tokens_keep_type_method_closure_and_async_parameter_scopes() => ProgramExecution.Output("""
         async program GenericTypes;
         uses System as Sys; uses System.Console as Console; uses System.Threading.Tasks as Tasks; uses System.Collections.Generic as C;
-        type Box<T> = record
+        type Box of T = record
           public Value: T;
-          public function Get<U>(): array of Sys.Type;
-          begin return [typeof(T), typeof(U), typeof(Box<T>)]; end function;
-          public function Reader<U>(): function(): array of Sys.Type;
-          begin return function(): array of Sys.Type => [typeof(T), typeof(U), typeof(C.KeyValuePair<T, U>)]; end function;
+          public function Get of U(): array of Sys.Type;
+          begin return [typeof(T), typeof(U), typeof(Box of T)]; end function;
+          public function Reader of U(): function(): array of Sys.Type;
+          begin return function(): array of Sys.Type => [typeof(T), typeof(U), typeof(C.KeyValuePair of (T, U))]; end function;
         end record;
-        function Get<T>(): Sys.Type; begin return typeof(T); end function;
-        function NullableValue<T>(): Sys.Type; where T: struct; begin return typeof(T?); end function;
-        function NullableReference<T>(): Sys.Type; where T: class; begin return typeof(T?); end function;
-        function Nested<T>(): function(): Sys.Type;
-          function Local<U>(): Sys.Type; begin return typeof(C.KeyValuePair<T, U>); end function;
+        function Get of T(): Sys.Type; begin return typeof(T); end function;
+        function NullableValue of T(): Sys.Type; where T: struct; begin return typeof(T?); end function;
+        function NullableReference of T(): Sys.Type; where T: class; begin return typeof(T?); end function;
+        function Nested of T(): function(): Sys.Type;
+          function Local of U(): Sys.Type; begin return typeof(C.KeyValuePair of (T, U)); end function;
         begin
-          return Local<string>;
+          return Local of string;
         end function;
-        async function AsyncGet<T>(Gate: Tasks.Task): Tasks.Task<Sys.Type>;
+        async function AsyncGet of T(Gate: Tasks.Task): Tasks.Task of Sys.Type;
         begin await Gate; return typeof(T); end function;
         begin
-          Console.WriteLine(Get<int>() = typeof(int)); Console.WriteLine(Get<string>() = typeof(string));
-          Console.WriteLine(NullableValue<int>() = typeof(int?));
-          Console.WriteLine(NullableReference<string>() = typeof(string));
-          const Box: Box<int> := new Box<int>(1);
-          const Types: array of Sys.Type := Box.Get<string>();
+          Console.WriteLine(Get of int() = typeof(int)); Console.WriteLine(Get of string() = typeof(string));
+          Console.WriteLine(NullableValue of int() = typeof(int?));
+          Console.WriteLine(NullableReference of string() = typeof(string));
+          const Box: Box of int := new Box of int(1);
+          const Types: array of Sys.Type := Box.Get of string();
           Console.WriteLine(Types[0] = typeof(int)); Console.WriteLine(Types[1] = typeof(string));
-          Console.WriteLine(Types[2] = typeof(Box<int>));
-          const Closed: array of Sys.Type := Box.Reader<string>()();
+          Console.WriteLine(Types[2] = typeof(Box of int));
+          const Closed: array of Sys.Type := Box.Reader of string()();
           Console.WriteLine(Closed[0] = typeof(int)); Console.WriteLine(Closed[1] = typeof(string));
-          Console.WriteLine(Closed[2] = typeof(C.KeyValuePair<int, string>));
-          Console.WriteLine(Nested<int>()() = typeof(C.KeyValuePair<int, string>));
-          Console.WriteLine((await AsyncGet<int>(Tasks.Task.Delay(1))) = typeof(int));
-          Console.WriteLine((await AsyncGet<string>(Tasks.Task.Delay(1))) = typeof(string));
+          Console.WriteLine(Closed[2] = typeof(C.KeyValuePair of (int, string)));
+          Console.WriteLine(Nested of int()() = typeof(C.KeyValuePair of (int, string)));
+          Console.WriteLine((await AsyncGet of int(Tasks.Task.Delay(1))) = typeof(int));
+          Console.WriteLine((await AsyncGet of string(Tasks.Task.Delay(1))) = typeof(string));
         end;
         end program;
         """, "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True", "True");

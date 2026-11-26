@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Motion.ShimmerTexts as W;
 // - `Caption`: Visible waiting message.
 // ## Returns
 // The native shimmer text.
-public function View(Caption: string): E.Element<string>;
+public function View(Caption: string): E.Element of string;
 begin
-  return W.ShimmerText<string>('thinking', Caption, new M.TextOptions(Size := 15.0F));
+  return W.ShimmerText of string('thinking', Caption, new M.TextOptions(Size := 15.0F));
 end function;
 
 end unit;

@@ -34,7 +34,7 @@ uses System.Threading.Channels as Channels;
 uses System.Threading.Tasks as Tasks;
 uses Xunit as X;
 
-function Control(Session: Gui.Session<App.Msg>; Id: string; Key: string := ''): Gui.Control;
+function Control(Session: Gui.Session of App.Msg; Id: string; Key: string := ''): Gui.Control;
 begin
   for Item: Gui.Control in Session.Snapshot().Controls do
     if Item.Id = Id and Item.Key = Key then
@@ -45,7 +45,7 @@ begin
   raise new Sys.InvalidOperationException('Missing tag editor control: ' + Id);
 end function;
 
-procedure Capture(Session: Gui.Session<App.Msg>; FileName: string);
+procedure Capture(Session: Gui.Session of App.Msg; FileName: string);
 begin
   const Directory: string? := Sys.Environment.GetEnvironmentVariable('FPAS_AMP_UI_ARTIFACTS');
   if Directory <> null then
@@ -54,11 +54,11 @@ begin
   end if;
 end procedure;
 
-function ProviderFixture(Message: Editor.Msg; Id: string): Mvu.Command<App.Msg>;
+function ProviderFixture(Message: Editor.Msg; Id: string): Mvu.Command of App.Msg;
 begin
-  return Mvu.StartBackground<App.Msg>(
+  return Mvu.StartBackground of App.Msg(
     Id,
-    Mvu.FromWorker<App.Msg>(
+    Mvu.FromWorker of App.Msg(
       async function(Post: function(App.Msg): Tasks.Task; _Stop: T.CancellationToken): Tasks.Task begin
         case Message of
           when Editor.Msg.Scan:
@@ -79,7 +79,7 @@ begin
             await Post(
               App.Msg.TagEditor(
                 Editor.Msg.RecordingReady(
-                  I.ImmutableDictionary<string, string>.Empty.Add(
+                  I.ImmutableDictionary of (string, string).Empty.Add(
                     'recording',
                     '11111111-1111-1111-1111-111111111111'
                   ).Add('title', 'A corrected recording').Add('artist', 'Mara Vale').Add(
@@ -110,7 +110,7 @@ begin
 end function;
 
 procedure Exercise(Store: Library.Session; Path: string);
-  procedure Step(Session: Gui.Session<App.Msg>);
+  procedure Step(Session: Gui.Session of App.Msg);
   begin
     discard Window.TryWake();
     X.Assert.True(Session.Step());
@@ -133,7 +133,7 @@ procedure Exercise(Store: Library.Session; Path: string);
       Typed := '';
     end if;
   end procedure;
-  procedure Click(Session: Gui.Session<App.Msg>; Bounds: Cui.CuiRectangle);
+  procedure Click(Session: Gui.Session of App.Msg; Bounds: Cui.CuiRectangle);
   begin
     XPos := Bounds.X + Bounds.Width / 2.0F;
     YPos := Bounds.Y + Bounds.Height / 2.0F;
@@ -153,9 +153,9 @@ procedure Exercise(Store: Library.Session; Path: string);
 
     return Draft;
   end function;
-  procedure Deliver(Session: Gui.Session<App.Msg>; Replies: Channels.ChannelReader<Effects.Reply<App.Msg>>);
+  procedure Deliver(Session: Gui.Session of App.Msg; Replies: Channels.ChannelReader of Effects.Reply of App.Msg);
   begin
-    const Reply: Effects.Reply<App.Msg> := Replies.ReadAsync(
+    const Reply: Effects.Reply of App.Msg := Replies.ReadAsync(
       Stop.Token
     ).AsTask().GetAwaiter().GetResult();
     Reply.Release().WaitAsync(Stop.Token).GetAwaiter().GetResult();
@@ -164,17 +164,17 @@ procedure Exercise(Store: Library.Session; Path: string);
 begin
   using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(20000);
   const Stage: Metadata.Session := Fixture.Tags(Store);
-  const Songs: I.ImmutableArray<Tracks.Entry> := Fixture.Until(
+  const Songs: I.ImmutableArray of Tracks.Entry := Fixture.Until(
     Stage,
-    function(Rows: I.ImmutableArray<Tracks.Entry>): bool => Rows.Length = 1 and Rows[
+    function(Rows: I.ImmutableArray of Tracks.Entry): bool => Rows.Length = 1 and Rows[
       0
     ].TrackId <> ''
   ).GetAwaiter().GetResult();
   const Track: Tracks.Entry := Songs[0];
-  const Gate: Effects.Effects<App.Msg> := Effects.Effects<App.Msg>.Create();
-  const Reads: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('songs/observe');
-  const Loaded: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('tag-editor/load');
-  const Saved: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('tag-editor/save');
+  const Gate: Effects.Effects of App.Msg := (Effects.Effects of App.Msg).Create();
+  const Reads: Channels.ChannelReader of Effects.Reply of App.Msg := Gate.Watch('songs/observe');
+  const Loaded: Channels.ChannelReader of Effects.Reply of App.Msg := Gate.Watch('tag-editor/load');
+  const Saved: Channels.ChannelReader of Effects.Reply of App.Msg := Gate.Watch('tag-editor/save');
   using const Device: Audio.Session := new Audio.Session(true);
   const Port: Playback.Connection := Playback.Connection.Create(Device);
   var Current: App.State := new App.State(
@@ -198,10 +198,10 @@ begin
     true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<App.Msg> := Host.StartThemed<App.State, App.Msg>(
+  using const Session: Gui.Session of App.Msg := Host.StartThemed of (App.State, App.Msg)(
     Current,
-    function(Model: App.State; Message: App.Msg): Mvu.Transition<App.State, App.Msg> begin
-      const Next: Mvu.Transition<App.State, App.Msg> := Controller.Apply(
+    function(Model: App.State; Message: App.Msg): Mvu.Transition of (App.State, App.Msg) begin
+      const Next: Mvu.Transition of (App.State, App.Msg) := Controller.Apply(
         Model, Message, procedure(_Value: Settings.Preferences) begin end procedure, Store, Port
       );
       Current := Next.Model;
@@ -219,7 +219,7 @@ begin
         else
       end case;
 
-      return Gate.Wrap<App.State>(Next);
+      return Gate.Wrap of App.State(Next);
     end function, Shell.View, Window, 128, Inject, App.Theme(Current, null), App.Theme, false
   );
   discard Session.Post(App.Msg.WatchLibrary);
@@ -228,27 +228,31 @@ begin
   const Menu: string := 'track-menu-' + Track.FileId.ToString();
   Click(Session, Control(Session, Menu).Bounds);
   Step(Session);
-  X.Assert.Equal<string>('Edit tags', Control(Session, Menu + '/edit-tags').Text);
+  X.Assert.Equal of string('Edit tags', Control(Session, Menu + '/edit-tags').Text);
   Click(Session, Control(Session, Menu + '/edit-tags').Bounds);
-  X.Assert.Contains<string>('Reading tags…', Session.Snapshot().Text);
+  X.Assert.Contains of string('Reading tags…', Session.Snapshot().Text);
   Deliver(Session, Loaded);
-  const Scan: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('tag-editor/provider');
+  const Scan: Channels.ChannelReader of Effects.Reply of App.Msg := Gate.Watch(
+    'tag-editor/provider'
+  );
   X.Assert.True(Control(Session, 'tag-scan').Enabled);
   Click(Session, Control(Session, 'tag-scan').Bounds);
   X.Assert.False(Control(Session, 'tag-scan').Enabled);
   X.Assert.False(Control(Session, 'tag-search').Enabled);
   X.Assert.False(Control(Session, 'tag-match').Enabled);
-  X.Assert.Contains<string>('Waiting for AcoustID…', Session.Snapshot().Text);
+  X.Assert.Contains of string('Waiting for AcoustID…', Session.Snapshot().Text);
   Deliver(Session, Scan);
   X.Assert.True(Control(Session, 'tag-search').Enabled);
   X.Assert.True(Control(Session, 'tag-match').Enabled);
-  const Lookup: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('tag-editor/provider');
+  const Lookup: Channels.ChannelReader of Effects.Reply of App.Msg := Gate.Watch(
+    'tag-editor/provider'
+  );
   discard Session.Post(App.Msg.TagEditor(Editor.Msg.Lookup(0)));
   Step(Session);
   X.Assert.False(Control(Session, 'tag-match').Enabled);
-  X.Assert.DoesNotContain<string>('A corrected recording', Session.Snapshot().Text);
+  X.Assert.DoesNotContain of string('A corrected recording', Session.Snapshot().Text);
   Deliver(Session, Lookup);
-  X.Assert.Equal<string>('A corrected recording', Control(Session, 'tag-take-title').Text);
+  X.Assert.Equal of string('A corrected recording', Control(Session, 'tag-take-title').Text);
   X.Assert.False(Control(Session, 'tag-match').Enabled);
   Click(Session, Control(Session, 'tag-take-title').Bounds);
   Capture(Session, 'tag-editor-track.png');
@@ -259,22 +263,22 @@ begin
   end if;
 
   Deliver(Session, Lookup);
-  X.Assert.Contains<string>('MusicBrainz · next request in 4 s', Session.Snapshot().Text);
+  X.Assert.Contains of string('MusicBrainz · next request in 4 s', Session.Snapshot().Text);
   X.Assert.False(Control(Session, 'tag-search').Enabled);
-  X.Assert.Equal<string>('A corrected recording', Control(Session, 'tag-take-title').Text);
+  X.Assert.Equal of string('A corrected recording', Control(Session, 'tag-take-title').Text);
   Deliver(Session, Lookup);
-  X.Assert.Contains<string>(
+  X.Assert.Contains of string(
     'Could not load the release. Recording details are available.',
     Session.Snapshot().Text
   );
-  X.Assert.Contains<string>(
+  X.Assert.Contains of string(
     'HTTP/1.1 503 Service Unavailable · GET /ws/2/release/fixture · attempt 6/6',
     Session.Snapshot().Text
   );
-  X.Assert.Equal<string>('A corrected recording', Control(Session, 'tag-take-title').Text);
+  X.Assert.Equal of string('A corrected recording', Control(Session, 'tag-take-title').Text);
   X.Assert.True(State().Selected.Contains('title'));
   Click(Session, Control(Session, 'tag-tabs', '3').Bounds);
-  X.Assert.Equal<int>(50, State().Extra.Length);
+  X.Assert.Equal of int(50, State().Extra.Length);
   const Add: Cui.CuiRectangle := Control(Session, 'custom-add').Bounds;
   const Save: Cui.CuiRectangle := Control(Session, 'tag-save').Bounds;
   const First: Cui.CuiRectangle := Control(Session, 'custom-name-0').Bounds;
@@ -285,15 +289,15 @@ begin
   Step(Session);
   Step(Session);
   X.Assert.True(Control(Session, 'custom-name-0').Bounds.Y < First.Y);
-  X.Assert.Equal<float>(Add.Y, Control(Session, 'custom-add').Bounds.Y);
-  X.Assert.Equal<float>(Save.Y, Control(Session, 'tag-save').Bounds.Y);
+  X.Assert.Equal of float(Add.Y, Control(Session, 'custom-add').Bounds.Y);
+  X.Assert.Equal of float(Save.Y, Control(Session, 'tag-save').Bounds.Y);
   Click(Session, Add);
-  X.Assert.Equal<int>(51, State().Extra.Length);
+  X.Assert.Equal of int(51, State().Extra.Length);
   Step(Session);
   Typed := 'ADDED_TAG';
   Step(Session);
   Step(Session);
-  X.Assert.Equal<string>('ADDED_TAG', State().Extra[50].Name);
+  X.Assert.Equal of string('ADDED_TAG', State().Extra[50].Name);
   const Last: Cui.CuiRectangle := Control(Session, 'custom-value-50').Bounds;
   X.Assert.True(Last.Y > Add.Y and Last.Y < Save.Y);
   Click(Session, Last);
@@ -308,9 +312,9 @@ begin
   Deliver(Session, Saved);
   X.Assert.Null(Current.TagEditor);
   const Updated: Files.Snapshot := Stage.ReadTags(Track, Stop.Token).GetAwaiter().GetResult();
-  X.Assert.Equal<string>('Last value', Fields.Value(Updated.Values, Fields.Custom + 'ADDED_TAG'));
-  X.Assert.Equal<string>('A corrected recording', Fields.Value(Updated.Values, 'title'));
-  X.Assert.Equal<string>(
+  X.Assert.Equal of string('Last value', Fields.Value(Updated.Values, Fields.Custom + 'ADDED_TAG'));
+  X.Assert.Equal of string('A corrected recording', Fields.Value(Updated.Values, 'title'));
+  X.Assert.Equal of string(
     '33333333-3333-3333-3333-333333333333',
     Fields.Value(Updated.Values, ArtistId)
   );
@@ -321,7 +325,9 @@ begin
   );
   discard Session.Post(App.Msg.Settings(Settings.Msg.SaveAcoustIdKeys));
   Step(Session);
-  const Reopened: Channels.ChannelReader<Effects.Reply<App.Msg>> := Gate.Watch('tag-editor/load');
+  const Reopened: Channels.ChannelReader of Effects.Reply of App.Msg := Gate.Watch(
+    'tag-editor/load'
+  );
   discard Session.Post(App.Msg.TagEditor(Editor.Msg.Open(Track)));
   Step(Session);
   Deliver(Session, Reopened);
@@ -344,7 +350,7 @@ public type NativeTagEditorTests = record
     File.Title := 'Blue Hour';
     File.Artist := 'Mara Vale';
     File.Album := 'North Pier Sessions';
-    const Extra: C.IDictionary<string?, string?>? := File.AdditionalFields;
+    const Extra: C.IDictionary of (string?, string?)? := File.AdditionalFields;
     if Extra = null then
       raise new Sys.InvalidOperationException('Missing fixture tags.');
     end if;

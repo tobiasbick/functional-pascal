@@ -17,9 +17,9 @@ uses System as Sys;
 uses System.IO as IO;
 
 procedure Run(Page: G.Page; Renderer: Cui.CuiRenderer; Capture: string);
-  function Update(Model: G.Model; Message: G.Msg): Mvu.Transition<G.Model, G.Msg>;
+  function Update(Model: G.Model; Message: G.Msg): Mvu.Transition of (G.Model, G.Msg);
   begin
-    const Next: Mvu.Transition<G.Model, G.Msg> := U.Update(Model, Message);
+    const Next: Mvu.Transition of (G.Model, G.Msg) := U.Update(Model, Message);
     Latest := Next.Model;
     return Next;
   end function;
@@ -44,14 +44,14 @@ procedure Run(Page: G.Page; Renderer: Cui.CuiRenderer; Capture: string);
     end if;
   end procedure;
 
-  procedure Step(Session: Gui.Session<G.Msg>; Frames: int := 2);
+  procedure Step(Session: Gui.Session of G.Msg; Frames: int := 2);
   begin
     for Index: int := 1 to Frames do
       A.Check(Session.Step(), 'The gallery closed.');
     end for;
   end procedure;
 
-  procedure Click(Session: Gui.Session<G.Msg>; Id: string; Fraction: float := 0.5F);
+  procedure Click(Session: Gui.Session of G.Msg; Id: string; Fraction: float := 0.5F);
   begin
     const Bounds: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
     A.Check(Bounds.Width > 0.0F and Bounds.Height > 0.0F, 'Missing native bounds for ' + Id);
@@ -64,14 +64,14 @@ procedure Run(Page: G.Page; Renderer: Cui.CuiRenderer; Capture: string);
     Step(Session);
   end procedure;
 
-  procedure Press(Session: Gui.Session<G.Msg>; NativeKey: int; Mods: int := 0);
+  procedure Press(Session: Gui.Session of G.Msg; NativeKey: int; Mods: int := 0);
   begin
     Key := NativeKey;
     Modifiers := Mods;
     Step(Session);
   end procedure;
 
-  procedure CheckVoice(Session: Gui.Session<G.Msg>);
+  procedure CheckVoice(Session: Gui.Session of G.Msg);
   begin
     Click(Session, 'voice-note-0/play');
     A.Check(Latest.Voice.Notes[0].Playback.Playing, 'Play did not start the note.');
@@ -112,7 +112,7 @@ procedure Run(Page: G.Page; Renderer: Cui.CuiRenderer; Capture: string);
     A.Check(Latest.Voice.OrbListening, 'The legacy orb did not activate.');
   end procedure;
 
-  procedure CheckAi(Session: Gui.Session<G.Msg>);
+  procedure CheckAi(Session: Gui.Session of G.Msg);
   begin
     Click(Session, 'ai-reasoning/toggle');
     A.Check(A.Control(Session, 'ai-reasoning').Value = 'True', 'Reasoning did not open.');
@@ -175,7 +175,7 @@ begin
     'The requested renderer fell back.'
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<G.Msg> := Host.Start<G.Model, G.Msg>(
+  using const Session: Gui.Session of G.Msg := Host.Start of (G.Model, G.Msg)(
     Latest,
     Update,
     V.Build,

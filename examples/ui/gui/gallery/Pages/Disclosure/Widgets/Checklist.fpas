@@ -13,12 +13,12 @@ uses GuiGallery.Pages.Disclosure.State as S;
 // - `Model`: Current step completion.
 // ## Returns
 // The native checklist at its original width.
-public function View(Model: S.Model): E.Element<S.Msg>;
+public function View(Model: S.Model): E.Element of S.Msg;
 begin
-  return E.Row<S.Msg>(
+  return E.Row of S.Msg(
     new L.Flow(Align := L.Alignment.Start),
-    E.Size<S.Msg>(
-      K.Checklist<S.Msg>(
+    E.Size of S.Msg(
+      K.Checklist of S.Msg(
         'workspace-onboarding', Model.Steps, S.Msg.SetStep, S.Msg.CompleteStep,
         new K.Options(Title := 'Set up your workspace')
       ),

@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Canvas.PresencePills as W;
 // - `People`: Collaborator names and presence state.
 // ## Returns
 // The native presence indicator.
-public function View(People: array of L.Person): E.Element<string>;
+public function View(People: array of L.Person): E.Element of string;
 begin
-  return W.PresencePill<string>('presence', People);
+  return W.PresencePill of string('presence', People);
 end function;
 
 end unit;

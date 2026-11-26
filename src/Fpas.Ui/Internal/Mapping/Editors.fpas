@@ -35,7 +35,7 @@ uses System as Sys;
 // - `Messages`: Message translation.
 // ## Returns
 // The node producing parent messages.
-public function Map<TChild, TParent>(Value: E.Element<TChild>; Messages: function(TChild): TParent): E.Element<TParent>;
+public function Map of (TChild, TParent)(Value: E.Element of TChild; Messages: function(TChild): TParent): E.Element of TParent;
 begin
   case Value of
     when E.Element.InlineEdit(
@@ -44,7 +44,7 @@ begin
       const Changed: function(string): TChild,
       const Settings: InlineEdits.Options
     ):
-      return E.Element<TParent>.InlineEdit(
+      return (E.Element of TParent).InlineEdit(
         Id,
         Current,
         function(Next: string): TParent => Messages(Changed(Next)),
@@ -59,7 +59,7 @@ begin
       const Changed: function(float): TChild,
       const Settings: ScrubFields.Options
     ):
-      return E.Element<TParent>.ScrubField(
+      return (E.Element of TParent).ScrubField(
         Id,
         Label,
         Current,
@@ -74,7 +74,7 @@ begin
       const Changed: function(decimal): TChild,
       const Settings: MoneyFields.Options
     ):
-      return E.Element<TParent>.MoneyField(
+      return (E.Element of TParent).MoneyField(
         Id,
         Current,
         function(Next: decimal): TParent => Messages(Changed(Next)),
@@ -86,7 +86,7 @@ begin
       const Changed: function(RecorderKeys.Combination): TChild,
       const Settings: RecorderKeys.Options
     ):
-      return E.Element<TParent>.ShortcutRecorder(
+      return (E.Element of TParent).ShortcutRecorder(
         Id,
         Current,
         function(Next: RecorderKeys.Combination): TParent => Messages(Changed(Next)),
@@ -97,42 +97,42 @@ begin
       const FValue: string,
       const FOnChange: function(string): TChild,
       const FSettings: TextFields.Options,
-      const FOnSubmit: Sys.Func<string, TChild>?
+      const FOnSubmit: Sys.Func of (string, TChild)?
     ):
-      return E.Element<TParent>.TextField(
+      return (E.Element of TParent).TextField(
         FId,
         FValue,
         function(A0: string): TParent => Messages(FOnChange(A0)),
         FSettings,
-        M.Callback<string, TChild, TParent>(FOnSubmit, Messages)
+        M.Callback of (string, TChild, TParent)(FOnSubmit, Messages)
       );
     when E.Element.SearchField(
       const FId: string,
       const FValue: string,
       const FOnChange: function(string): TChild,
       const FSettings: SearchFields.Options,
-      const FOnSubmit: Sys.Func<string, TChild>?
+      const FOnSubmit: Sys.Func of (string, TChild)?
     ):
-      return E.Element<TParent>.SearchField(
+      return (E.Element of TParent).SearchField(
         FId,
         FValue,
         function(A0: string): TParent => Messages(FOnChange(A0)),
         FSettings,
-        M.Callback<string, TChild, TParent>(FOnSubmit, Messages)
+        M.Callback of (string, TChild, TParent)(FOnSubmit, Messages)
       );
     when E.Element.TextArea(
       const FId: string,
       const FValue: string,
       const FOnChange: function(string): TChild,
       const FSettings: TextAreas.Options,
-      const FOnSubmit: Sys.Func<string, TChild>?
+      const FOnSubmit: Sys.Func of (string, TChild)?
     ):
-      return E.Element<TParent>.TextArea(
+      return (E.Element of TParent).TextArea(
         FId,
         FValue,
         function(A0: string): TParent => Messages(FOnChange(A0)),
         FSettings,
-        M.Callback<string, TChild, TParent>(FOnSubmit, Messages)
+        M.Callback of (string, TChild, TParent)(FOnSubmit, Messages)
       );
     when E.Element.TagInput(
       const FId: string,
@@ -140,7 +140,7 @@ begin
       const FOnChange: function(array of string): TChild,
       const FSettings: TagInputs.Options
     ):
-      return E.Element<TParent>.TagInput(
+      return (E.Element of TParent).TagInput(
         FId,
         FTags,
         function(A0: array of string): TParent => Messages(FOnChange(A0)),
@@ -151,20 +151,20 @@ begin
       const FValue: string,
       const FOnChange: function(string): TChild,
       const FSettings: OneTimeCodes.Options,
-      const FOnComplete: Sys.Func<string, TChild>?
+      const FOnComplete: Sys.Func of (string, TChild)?
     ):
-      return E.Element<TParent>.OneTimeCodeInput(
+      return (E.Element of TParent).OneTimeCodeInput(
         FId,
         FValue,
         function(A0: string): TParent => Messages(FOnChange(A0)),
         FSettings,
-        M.Callback<string, TChild, TParent>(FOnComplete, Messages)
+        M.Callback of (string, TChild, TParent)(FOnComplete, Messages)
       );
     when E.Element.ColorPicker(
       const Id: string, const Value: Graphics.Color, const Change: function(Graphics.Color): TChild,
       const Enabled: bool
     ):
-      return E.Element<TParent>.ColorPicker(
+      return (E.Element of TParent).ColorPicker(
         Id,
         Value,
         function(Proposal: Graphics.Color): TParent => Messages(Change(Proposal)),
@@ -174,7 +174,7 @@ begin
       const Id: string, const Value: Emojis.State, const Change: function(Emojis.Change): TChild,
       const Settings: Emojis.Options
     ):
-      return E.Element<TParent>.EmojiPicker(
+      return (E.Element of TParent).EmojiPicker(
         Id,
         Value,
         function(Proposal: Emojis.Change): TParent => Messages(Change(Proposal)),
@@ -184,21 +184,21 @@ begin
       const Id: string, const Value: Sys.DateOnly?, const Change: function(Sys.DateOnly): TChild,
       const Enabled: bool
     ):
-      return E.Element<TParent>.Calendar(
+      return (E.Element of TParent).Calendar(
         Id, Value, function(Proposed: Sys.DateOnly): TParent => Messages(Change(Proposed)), Enabled
       );
     when E.Element.DatePicker(
       const Id: string, const Value: Sys.DateOnly?, const Change: function(Sys.DateOnly): TChild,
       const Settings: DatePickers.Options
     ):
-      return E.Element<TParent>.DatePicker(
+      return (E.Element of TParent).DatePicker(
         Id, Value, function(Proposed: Sys.DateOnly): TParent => Messages(Change(Proposed)), Settings
       );
     when E.Element.RangeCalendar(
       const Id: string, const Value: Dates.Value, const Change: function(Dates.Value): TChild,
       const Months: int, const Enabled: bool
     ):
-      return E.Element<TParent>.RangeCalendar(
+      return (E.Element of TParent).RangeCalendar(
         Id,
         Value,
         function(Proposed: Dates.Value): TParent => Messages(Change(Proposed)),
@@ -209,21 +209,21 @@ begin
       const Id: string, const Value: Dates.Value, const Change: function(Dates.Value): TChild,
       const Settings: RangePickers.Options
     ):
-      return E.Element<TParent>.RangePicker(
+      return (E.Element of TParent).RangePicker(
         Id, Value, function(Proposed: Dates.Value): TParent => Messages(Change(Proposed)), Settings
       );
     when E.Element.TimePicker(
       const Id: string, const Value: Sys.TimeOnly, const Change: function(Sys.TimeOnly): TChild,
       const Settings: TimePickers.Options
     ):
-      return E.Element<TParent>.TimePicker(
+      return (E.Element of TParent).TimePicker(
         Id, Value, function(Proposed: Sys.TimeOnly): TParent => Messages(Change(Proposed)), Settings
       );
     when E.Element.WheelPicker(
       const Id: string, const Items: array of string, const Selected: int,
       const Change: function(int): TChild, const Settings: WheelPickers.Options
     ):
-      return E.Element<TParent>.WheelPicker(
+      return (E.Element of TParent).WheelPicker(
         Id,
         Items,
         Selected,
@@ -234,7 +234,7 @@ begin
       const Id: string, const Value: Sys.TimeOnly, const Change: function(Sys.TimeOnly): TChild,
       const Size: float, const Enabled: bool
     ):
-      return E.Element<TParent>.TimeDial(
+      return (E.Element of TParent).TimeDial(
         Id,
         Value,
         function(Proposed: Sys.TimeOnly): TParent => Messages(Change(Proposed)),
@@ -245,7 +245,7 @@ begin
       const Id: string, const Items: array of Selects.Item, const Selected: array of bool,
       const Change: function(array of bool): TChild, const Settings: Multi.Options
     ):
-      return E.Element<TParent>.MultiSelectInput(
+      return (E.Element of TParent).MultiSelectInput(
         Id,
         Items,
         Selected,
@@ -259,7 +259,7 @@ begin
       const FOnChange: function(int): TChild,
       const FSettings: Selects.Options
     ):
-      return E.Element<TParent>.SelectInput(
+      return (E.Element of TParent).SelectInput(
         FId,
         FItems,
         FSelected,
@@ -274,7 +274,7 @@ begin
       const FOnChange: function(double): TChild,
       const FSettings: NumberFields.Options
     ):
-      return E.Element<TParent>.NumberField(
+      return (E.Element of TParent).NumberField(
         FId,
         FValue,
         FMinimum,

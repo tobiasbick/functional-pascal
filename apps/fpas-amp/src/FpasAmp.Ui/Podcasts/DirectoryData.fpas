@@ -41,7 +41,7 @@ begin
     return null;
   end if;
 
-  const Genres: C.List<string> := new C.List<string>();
+  const Genres: C.List of string := new C.List of string();
   var Values: J.JsonElement := new J.JsonElement();
   if Item.TryGetProperty('genreIds', out Values) and Values.ValueKind = J.JsonValueKind.Array then
     for Value: J.JsonElement in Values.EnumerateArray() do
@@ -64,8 +64,8 @@ end function;
 // Unique RSS shows in provider order, excluding unusable rows.
 public function Search(Response: J.JsonElement): array of M.Show;
 begin
-  const Shows: C.List<M.Show> := new C.List<M.Show>();
-  const Seen: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+  const Shows: C.List of M.Show := new C.List of M.Show();
+  const Seen: C.HashSet of string := new C.HashSet of string(Sys.StringComparer.Ordinal);
   for Item: J.JsonElement in Required(
     Response,
     'results',
@@ -121,8 +121,8 @@ begin
     raise new J.JsonException('The Apple Podcasts response has no valid entry field.');
   end if;
 
-  const Ranked: C.List<long> := new C.List<long>();
-  const Seen: C.HashSet<long> := new C.HashSet<long>();
+  const Ranked: C.List of long := new C.List of long();
+  const Seen: C.HashSet of long := new C.HashSet of long();
   for Item: J.JsonElement in Items.EnumerateArray() do
     var Id: long := 0L;
     if Item.ValueKind = J.JsonValueKind.Object and Sys.Int64.TryParse(
@@ -147,7 +147,7 @@ end function;
 // Unique RSS shows ordered by chart position.
 public function Lookup(Response: J.JsonElement; Ranked: array of long): array of M.Show;
 begin
-  const ById: C.Dictionary<long, M.Show?> := new C.Dictionary<long, M.Show?>();
+  const ById: C.Dictionary of (long, M.Show?) := new C.Dictionary of (long, M.Show?)();
   for Item: J.JsonElement in Required(
     Response,
     'results',
@@ -162,8 +162,8 @@ begin
       discard ById.TryAdd(Id, Pick);
     end if;
   end for;
-  const Shows: C.List<M.Show> := new C.List<M.Show>();
-  const Seen: C.HashSet<string> := new C.HashSet<string>(Sys.StringComparer.Ordinal);
+  const Shows: C.List of M.Show := new C.List of M.Show();
+  const Seen: C.HashSet of string := new C.HashSet of string(Sys.StringComparer.Ordinal);
   for Id: long in Ranked do
     var Pick: M.Show? := null;
     if ById.TryGetValue(Id, out Pick) and Pick <> null and Seen.Add(Pick.Url) then

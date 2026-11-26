@@ -18,7 +18,7 @@ uses Fpas.Ui.Widgets.Ai.ResponseActions as ResponseActions;
 // - `Vote`: Current vote: minus one, zero or one. Null leaves votes momentary.
 // - `Changed`: Maps a native action.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Vote: int?; Changed: function(ResponseActions.Event): TMsg; Settings: ResponseActions.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Vote: int?; Changed: function(ResponseActions.Event): TMsg; Settings: ResponseActions.Options);
 begin
   const Role: string := 'response-actions';
   const Token: string := C.Token(Role, Id);
@@ -27,10 +27,10 @@ begin
   const Result: CuiAi.CuiResponseResult := Frame.Window.ResponseActions(
     Token, Settings.CopyText, Vote,
     Enc.Bits(Enabled, 1) or Enc.Bits(Settings.HideRegenerate, 2) or Enc.Bits(Settings.HideShare, 4),
-    P.Tracker<TMsg>(Frame, Id, Role, Keys)
+    P.Tracker of TMsg(Frame, Id, Role, Keys)
   );
-  P.Root<TMsg>(Frame, Id, Role, '', false, (Vote ?? 0).ToString());
-  Data.Parts<TMsg>(Frame, Id, Role, Keys, Result.Parts, Enabled);
+  P.Root of TMsg(Frame, Id, Role, '', false, (Vote ?? 0).ToString());
+  Data.Parts of TMsg(Frame, Id, Role, Keys, Result.Parts, Enabled);
   if (Result.Events and 1) <> 0 then
     Frame.Messages.Add(Changed(ResponseActions.Event.Copy));
   end if;

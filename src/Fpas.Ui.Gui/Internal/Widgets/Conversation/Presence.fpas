@@ -16,7 +16,7 @@ uses Fpas.Ui.Widgets.Conversation.Presences as W;
 // - `Id`: Stable widget identity.
 // - `Users`: Users in visible order.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Users: array of W.User; Settings: W.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Users: array of W.User; Settings: W.Options);
 begin
   const Role: string := 'presence';
   const Token: string := C.Token(Role, Id);
@@ -34,7 +34,7 @@ begin
   end for;
 
   Frame.Window.Presence(Token, Data, Settings.MaximumVisible, Settings.Size);
-  P.Root<TMsg>(Frame, Id, Role, '', false, '');
+  P.Root of TMsg(Frame, Id, Role, '', false, '');
 end procedure;
 
 end unit;

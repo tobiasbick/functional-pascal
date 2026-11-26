@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Inputs.SeedFields as W;
 // - `Locked`: Whether to keep the current seed.
 // ## Returns
 // The field with seed and lock proposals.
-public function View(Seed: uint; Locked: bool): E.Element<W.Event>;
+public function View(Seed: uint; Locked: bool): E.Element of W.Event;
 begin
-  return W.SeedField<W.Event>('seed', new W.Value('Seed', Seed, Locked),
+  return W.SeedField of W.Event('seed', new W.Value('Seed', Seed, Locked),
     function(Change: W.Event): W.Event => Change);
 end function;
 

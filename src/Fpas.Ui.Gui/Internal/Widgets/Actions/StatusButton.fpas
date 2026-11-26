@@ -19,7 +19,7 @@ uses Fpas.Ui.Widgets.Actions.StatusButtons as B;
 // - `State`: Model-owned work state.
 // - `Message`: Proposed idle action.
 // - `Settings`: Feedback captions, appearance and input permission.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Label: string; State: B.Status; Message: TMsg; Settings: B.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Label: string; State: B.Status; Message: TMsg; Settings: B.Options);
 begin
   const Enabled: bool := Settings.Enabled and Frame.AcceptInput;
   const Token: string := C.Token('status-button', Id);
@@ -27,13 +27,13 @@ begin
     Token, Label, cast<int>(State), Text.Caption(Label, B.Status.Busy, Settings),
     Settings.SuccessLabel, Settings.ErrorLabel, Settings.Icon,
     cast<int>(Settings.Variant), cast<int>(Settings.ControlSize), Enabled,
-    C.WantsFocus<TMsg>(Frame, Id, Token, Enabled)
+    C.WantsFocus of TMsg(Frame, Id, Token, Enabled)
   )
   then
     Frame.Messages.Add(Message);
   end if;
 
-  C.Track<TMsg>(
+  C.Track of TMsg(
     Frame, new App.Control(
       Id, Text.Caption(Label, State, Settings), 'status-button', new Cui.CuiRectangle(), Enabled,
       Value := Text.Value(State)

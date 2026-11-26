@@ -8,7 +8,7 @@ uses Fpas.Ui.Widgets.Charts.Charts as C;
 // An item or separator in a native dock.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type Entry<TMsg> = variant
+public type Entry of TMsg = variant
   // An icon and label with an activation message.
   Item(Icon: string; Label: string; Activate: TMsg; Color: C.Color; Running: bool; Badge: int);
   // A separator between items.
@@ -34,10 +34,10 @@ end record;
 // - `Settings`: Optional native options.
 // ## Returns
 // The graphical widget.
-public function Dock<TMsg>(Id: string; Entries: array of Entry<TMsg>; Settings: Options? := null): E.Element<TMsg>;
+public function Dock of TMsg(Id: string; Entries: array of Entry of TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Dock(Id, Entries, Settings ?? new Options());
+  return (E.Element of TMsg).Dock(Id, Entries, Settings ?? new Options());
 end function;
 
 end unit;

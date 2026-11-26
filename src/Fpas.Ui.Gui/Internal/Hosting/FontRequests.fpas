@@ -16,7 +16,7 @@ uses System.Collections.Generic as Generic;
 // - `Action`: Font operation selected by the application.
 // - `Window`: Owning native context.
 // - `Pending`: Deferred completion messages.
-public procedure Apply<TMsg>(Action: Fonts.Operation<TMsg>; Window: Cui.CuiWindow; Pending: Generic.Queue<TMsg>);
+public procedure Apply of TMsg(Action: Fonts.Operation of TMsg; Window: Cui.CuiWindow; Pending: Generic.Queue of TMsg);
 begin
   case Action of
     when Fonts.Operation.Load(

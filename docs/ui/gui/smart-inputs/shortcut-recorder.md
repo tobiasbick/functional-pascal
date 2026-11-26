@@ -26,9 +26,9 @@ end function;
 // - `Current`: Key and modifiers from the model.
 // ## Returns
 // A recorder that sends a newly captured or cleared combination.
-public function View(Current: W.Combination): E.Element<W.Combination>;
+public function View(Current: W.Combination): E.Element of W.Combination;
 begin
-  return W.ShortcutRecorder<W.Combination>('palette-key', Current,
+  return W.ShortcutRecorder of W.Combination('palette-key', Current,
     function(Proposed: W.Combination): W.Combination => Proposed,
     new W.Options(Placeholder := 'Record shortcut'));
 end function;
@@ -38,9 +38,9 @@ end function;
 // - `Current`: Key and modifiers from the model.
 // ## Returns
 // A platform-formatted shortcut label.
-public function Preview(Current: W.Combination): E.Element<W.Combination>;
+public function Preview(Current: W.Combination): E.Element of W.Combination;
 begin
-  return W.Label<W.Combination>(Current);
+  return W.Label of W.Combination(Current);
 end function;
 
 end unit;

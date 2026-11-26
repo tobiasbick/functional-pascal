@@ -31,9 +31,9 @@ end function;
 // - `Current`: Playhead, viewport, selection and play range.
 // ## Returns
 // Timeline with edit and playback proposals.
-public function View(Tracks: array of W.Track; Current: W.View): E.Element<W.Event>;
+public function View(Tracks: array of W.Track; Current: W.View): E.Element of W.Event;
 begin
-  return W.TimelineEditor<W.Event>('shot', Tracks, Current,
+  return W.TimelineEditor of W.Event('shot', Tracks, Current,
     function(Change: W.Event): W.Event => Change,
     new W.Options(Finish := 5.0F, FramesPerSecond := 24.0F, Toggles := true));
 end function;

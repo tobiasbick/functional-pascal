@@ -28,7 +28,7 @@ begin
 end function;
 
 // Builds the context menu for one node of the virtual tree table.
-function TreeMenu(Model: S.Model; Index: int): array of M.Entry<S.Msg>;
+function TreeMenu(Model: S.Model; Index: int): array of M.Entry of S.Msg;
 begin
   const Item: TT.Node := Model.TreeNodes[Index];
   var Branch: bool := Item.HasChildren;
@@ -36,8 +36,8 @@ begin
     Branch := Branch or Other.Parent = Index;
   end for;
 
-  const Open: M.Entry<S.Msg> := M.Entry<S.Msg>.Action(
-    new M.Item<S.Msg>('open', 'Open', S.Msg.OpenNode(Index), Shortcut := 'Enter')
+  const Open: M.Entry of S.Msg := (M.Entry of S.Msg).Action(
+    new M.Item of S.Msg('open', 'Open', S.Msg.OpenNode(Index), Shortcut := 'Enter')
   );
   if not Branch then
     return [Open];
@@ -45,9 +45,9 @@ begin
 
   return [
     Open,
-    M.Entry<S.Msg>.Separator,
-    M.Entry<S.Msg>.Action(
-      new M.Item<S.Msg>(
+    (M.Entry of S.Msg).Separator,
+    (M.Entry of S.Msg).Action(
+      new M.Item of S.Msg(
         'toggle', if Item.Open then
           'Collapse'
         else
@@ -58,32 +58,32 @@ begin
   ];
 end function;
 
-function GridRow(Model: S.Model; Position: int): D.Row<S.Msg>;
+function GridRow(Model: S.Model; Position: int): D.Row of S.Msg;
 begin
   const Source: int := Model.Order[Position];
   const Id: string := 'grid-person-' + Source.ToString(Culture.CultureInfo.InvariantCulture);
   const Person: P.Person := P.At(Source);
   const Name: string := P.Name(Model.Names, Source, Person.Name);
   const Score: float := cast<float>(Person.Score) / 10.0F;
-  return new D.Row<S.Msg>(
+  return new D.Row of S.Msg(
     Id, [
-      D.Cell<S.Msg>.Editable(
+      (D.Cell of S.Msg).Editable(
         Name, 48, function(Value: string): S.Msg => S.Msg.Rename(Source, Value),
-        [A.Avatar<S.Msg>(Id + '/avatar', Name, new A.Options(Size := 24.0F))]
+        [A.Avatar of S.Msg(Id + '/avatar', Name, new A.Options(Size := 24.0F))]
       ),
-      D.Cell<S.Msg>.Text(Person.Email),
-      D.Cell<S.Msg>.Content([B.Badge<S.Msg>(Id + '/team', Person.Team)]),
-      D.Cell<S.Msg>.Text(Person.Commits.ToString(Culture.CultureInfo.InvariantCulture)),
-      D.Cell<S.Msg>.Content(
+      (D.Cell of S.Msg).Text(Person.Email),
+      (D.Cell of S.Msg).Content([B.Badge of S.Msg(Id + '/team', Person.Team)]),
+      (D.Cell of S.Msg).Text(Person.Commits.ToString(Culture.CultureInfo.InvariantCulture)),
+      (D.Cell of S.Msg).Content(
         [
-          Progress.ProgressBar<S.Msg>(
+          Progress.ProgressBar of S.Msg(
             Id + '/score', Score / 100.0F,
             new Progress.Options(Height := 5.0F, Width := Points(70))
           ),
-          E.Styled<S.Msg>(
-            E.Styled<S.Msg>(
-              E.Styled<S.Msg>(
-                E.Text<S.Msg>(Score.ToString('F1', Culture.CultureInfo.InvariantCulture)),
+          E.Styled of S.Msg(
+            E.Styled of S.Msg(
+              E.Styled of S.Msg(
+                E.Text of S.Msg(Score.ToString('F1', Culture.CultureInfo.InvariantCulture)),
                 Style.Role.Secondary
               ),
               Style.Role.SmallBody
@@ -97,22 +97,22 @@ end function;
 
 function OriginalRow(
   Id: string; Label: string; Depth: int; Files: string; Size: string; Icon: int;
-  Open: bool? := null; Toggle: Sys.Func<bool, S.Msg>? := null
-): T.Row<S.Msg>;
+  Open: bool? := null; Toggle: Sys.Func of (bool, S.Msg)? := null
+): T.Row of S.Msg;
 begin
-  return new T.Row<S.Msg>(
+  return new T.Row of S.Msg(
     Id, [
-      T.Cell<S.Msg>.Content(
-        [TT.TreeCell<S.Msg>(Id + '/name', Label, Depth, Open, Toggle, P.Icon(Icon))]
+      (T.Cell of S.Msg).Content(
+        [TT.TreeCell of S.Msg(Id + '/name', Label, Depth, Open, Toggle, P.Icon(Icon))]
       ),
-      T.Cell<S.Msg>.Text(Files), T.Cell<S.Msg>.Text(Size)
+      (T.Cell of S.Msg).Text(Files), (T.Cell of S.Msg).Text(Size)
     ]
   );
 end function;
 
-function OriginalTree(Model: S.Model): E.Element<S.Msg>;
+function OriginalTree(Model: S.Model): E.Element of S.Msg;
 begin
-  const Rows: Lists.List<T.Row<S.Msg>> := new Lists.List<T.Row<S.Msg>>();
+  const Rows: Lists.List of T.Row of S.Msg := new Lists.List of T.Row of S.Msg();
   Rows.Add(
     OriginalRow(
       'source-tree-src',
@@ -137,7 +137,7 @@ begin
   end if;
 
   Rows.Add(OriginalRow('source-tree-readme', 'README.md', 0, '1', '12 KB', $E0CC));
-  return T.Table<S.Msg>(
+  return T.Table of S.Msg(
     'source-tree', [
       new T.Column('Name'), new T.Column('Files', Points(80), Align := T.Alignment.Right),
       new T.Column('Size', Points(100), Align := T.Alignment.Right)
@@ -150,7 +150,7 @@ end function;
 // - `Model`: Current demonstration state.
 // ## Returns
 // Gallery sections in display order.
-public function View(Model: S.Model): array of E.Element<S.Msg>;
+public function View(Model: S.Model): array of E.Element of S.Msg;
 begin
   const Mask: array of bool := new bool[Model.Order.Length];
   var Any: bool := false;
@@ -160,27 +160,27 @@ begin
   end for;
 
   return [
-    H.Heading<S.Msg>(Strings.Get('Heading.FilterBar'), Strings.Get('Heading.FilterBarHint')),
-    Filters.View<S.Msg>(Model.Filter, S.Msg.SetFilter),
-    H.Heading<S.Msg>(
+    H.Heading of S.Msg(Strings.Get('Heading.FilterBar'), Strings.Get('Heading.FilterBarHint')),
+    Filters.View of S.Msg(Model.Filter, S.Msg.SetFilter),
+    H.Heading of S.Msg(
       Strings.Get('Page.DataGrid'),
       Strings.Get('Heading.DataGridHint')
     ),
-    D.DataGrid<S.Msg>(
+    D.DataGrid of S.Msg(
       'people-grid', [
         new D.Column('Name', 200.0F, Sortable := true),
         new D.Column('Email', 196.0F),
         new D.Column('Team', 110.0F, Sortable := true),
         new D.Column('Commits', 96.0F, T.Alignment.Right, true),
         new D.Column('Score', 130.0F, T.Alignment.Right, true)
-      ], Model.Order.Length, function(Position: int): D.Row<S.Msg> => GridRow(Model, Position),
+      ], Model.Order.Length, function(Position: int): D.Row of S.Msg => GridRow(Model, Position),
       Model.Grid with
         Selected := Mask;
       end with, function(Value: D.Value): S.Msg => S.Msg.SetGrid(Value, Model.Order),
       new D.Options(Height := Points(420))
     ),
-    E.Styled<S.Msg>(
-      E.Text<S.Msg>(
+    E.Styled of S.Msg(
+      E.Text of S.Msg(
         if Any then
           'Rows selected. Press Esc to clear.'
         else
@@ -188,13 +188,13 @@ begin
         end if
       ), Style.Role.Caption
     ),
-    H.Heading<S.Msg>(Strings.Get('Heading.TreeTable'), Strings.Get('Heading.TreeTableHint')),
+    H.Heading of S.Msg(Strings.Get('Heading.TreeTable'), Strings.Get('Heading.TreeTableHint')),
     OriginalTree(Model),
-    H.Heading<S.Msg>(
+    H.Heading of S.Msg(
       Strings.Get('Heading.VirtualTreeTable'),
       Strings.Get('Heading.VirtualTreeTableHint')
     ),
-    TT.TreeTable<S.Msg>(
+    TT.TreeTable of S.Msg(
       'virtual-tree',
       [
         new D.Column('Name', 380.0F),
@@ -206,10 +206,10 @@ begin
       null,
       S.Msg.SetTree,
       new TT.Options(Height := Points(240), Guides := true),
-      Menu := function(Index: int): array of M.Entry<S.Msg> => TreeMenu(Model, Index)
+      Menu := function(Index: int): array of M.Entry of S.Msg => TreeMenu(Model, Index)
     ),
-    E.Styled<S.Msg>(
-      E.Text<S.Msg>(
+    E.Styled of S.Msg(
+      E.Text of S.Msg(
         if Model.Activated = '' then
           'Enter opens the selected item. Right-click or Shift+F10 opens its menu.'
         else

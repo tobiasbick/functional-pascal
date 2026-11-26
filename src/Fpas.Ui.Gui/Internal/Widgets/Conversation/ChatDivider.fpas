@@ -12,12 +12,12 @@ uses Fpas.Ui.Gui.Internal.Core.Parts as P;
 // - `Frame`: Current GUI presentation frame.
 // - `Id`: Stable widget identity.
 // - `Label`: Divider caption.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Label: string);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Label: string);
 begin
   const Role: string := 'chat-divider';
   const Token: string := C.Token(Role, Id);
   Frame.Window.ChatDivider(Token, Label);
-  P.Root<TMsg>(Frame, Id, Role, Label, false, '');
+  P.Root of TMsg(Frame, Id, Role, Label, false, '');
 end procedure;
 
 end unit;

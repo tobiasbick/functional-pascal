@@ -67,7 +67,7 @@ end function;
 // - `Theme`: The same resolved theme used by CUI.
 // ## Returns
 // The declarative view; its paint callback only draws and never changes the model.
-public function Build(Model: S.Model; Viewport: L.Viewport; Theme: Themes.Theme): E.Element<S.Msg>;
+public function Build(Model: S.Model; Viewport: L.Viewport; Theme: Themes.Theme): E.Element of S.Msg;
   procedure Paint(Surface: Painting.Surface);
   begin
     const C: Themes.Palette := Theme.Colors;
@@ -143,23 +143,23 @@ public function Build(Model: S.Model; Viewport: L.Viewport; Theme: Themes.Theme)
     Surface.Line(32.0F, 205.0F, 32.0F + Size.Width, 205.0F, 1.0F, C.Accent);
   end procedure;
 begin
-  return E.Column<S.Msg>(
+  return E.Column of S.Msg(
     new L.Flow(Padding := L.Spacing.Normal, Gap := L.Spacing.Normal),
-    E.Text<S.Msg>('Native fonts, themes and custom painting'),
-    E.Row<S.Msg>(
+    E.Text of S.Msg('Native fonts, themes and custom painting'),
+    E.Row of S.Msg(
       new L.Flow(Gap := L.Spacing.Tight),
-      Buttons.Button<S.Msg>(
+      Buttons.Button of S.Msg(
         'load',
         'Load font',
         S.Msg.LoadFont,
         new Buttons.Options(Enabled := Model.FontPath <> '')
       ),
-      Buttons.Button<S.Msg>('restore', 'Restore font', S.Msg.RestoreFont),
-      Buttons.Button<S.Msg>('scale', 'Text scale', S.Msg.ScaleText),
-      Buttons.Button<S.Msg>('motion', 'Reduced motion', S.Msg.Motion)
+      Buttons.Button of S.Msg('restore', 'Restore font', S.Msg.RestoreFont),
+      Buttons.Button of S.Msg('scale', 'Text scale', S.Msg.ScaleText),
+      Buttons.Button of S.Msg('motion', 'Reduced motion', S.Msg.Motion)
     ),
-    E.Text<S.Msg>(Model.Status),
-    Canvas.Canvas<S.Msg>(
+    E.Text of S.Msg(Model.Status),
+    Canvas.Canvas of S.Msg(
       'paint',
       [],
       S.Msg.Clicked,
@@ -167,7 +167,7 @@ begin
       Paint := Paint,
       OnPointer := S.Msg.PointerChanged
     ),
-    E.Text<S.Msg>(
+    E.Text of S.Msg(
       'Hover: ' + Model.Pointer.Hovered.ToString() + '; press: ' + Model.Pointer.Pressed.ToString()
     )
   );

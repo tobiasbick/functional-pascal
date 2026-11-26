@@ -1,9 +1,9 @@
 # CLR calls, generics, and delegates
 
-Use `<...>` for explicit generic arguments, including static methods:
+Use `of T` or `of (A, B)` for explicit generic arguments, including static methods:
 
 ```pascal fragment context=json-player
-const Text: string := Json.JsonSerializer.Serialize<Player>(PlayerValue);
+const Text: string := Json.JsonSerializer.Serialize of Player(PlayerValue);
 ```
 
 The compiler must check metadata constraints, accessibility, optional arguments,
@@ -19,7 +19,7 @@ specified feature.
 
 Extension methods are callable in **static form** in the baseline. Import their
 declaring type, for example System.Linq.Enumerable, and call
-`Enumerable.Select<int, int>(Values, Transform)`. Automatic extension-method
+`Enumerable.Select of (int, int)(Values, Transform)`. Automatic extension-method
 discovery through dot syntax is not included. CLR instance methods remain normal
 dot calls.
 
@@ -27,8 +27,8 @@ dot calls.
 
 Members of a constructed CLR type substitute its actual arguments. Public nested
 types retain their declaring-type identity. Source paths put each segment's own
-arguments on that segment, such as `N.Outer<string>.Inner<int>`; a nested type
-with no parameters of its own uses `N.Outer<string>.Leaf`. Its CLR instantiation
+arguments on that segment, such as `(N.Outer of string).Inner of int`; a nested type
+with no parameters of its own uses `(N.Outer of string).Leaf`. Its CLR instantiation
 includes the outer arguments followed by the inner arguments. Imported constraints
 include class/class?, struct, new(), notnull, and base/interface requirements.
 Reference variance follows CLR in/out flags. Invariant nullable arguments and

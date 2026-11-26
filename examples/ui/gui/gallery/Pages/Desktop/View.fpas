@@ -21,33 +21,33 @@ uses GuiGallery.Shared.Sections as G;
 // - `Width`: Window width in logical points.
 // ## Returns
 // Editor chrome, docking, split view, and host commands.
-public function View(Model: S.Model; Colors: Theme.Palette; Width: int): array of E.Element<S.Msg>;
+public function View(Model: S.Model; Colors: Theme.Palette; Width: int): array of E.Element of S.Msg;
 begin
   return [
-    G.Heading<S.Msg>(
+    G.Heading of S.Msg(
       Strings.Get('Page.Desktop'),
       Strings.Get('Text.AppChromeIntro')
     ),
     Editor.View(Model, Colors),
-    G.Heading<S.Msg>(Strings.Get('Heading.Docking'), Strings.Get('Heading.DockingHint')),
+    G.Heading of S.Msg(Strings.Get('Heading.Docking'), Strings.Get('Heading.DockingHint')),
     Workspace.View(Model, Colors, Width < 620),
-    G.Heading<S.Msg>(Strings.Get('Heading.SplitView'), Strings.Get('Heading.SplitViewHint')),
-    Split.SplitView<S.Msg>(
+    G.Heading of S.Msg(Strings.Get('Heading.SplitView'), Strings.Get('Heading.SplitViewHint')),
+    Split.SplitView of S.Msg(
       'desktop-split', Model.Ratio,
-      E.Column<S.Msg>(
+      E.Column of S.Msg(
         new L.Flow(Padding := G.Points(16), Background := Colors.SurfaceMuted),
-        E.Text<S.Msg>('Notes')
+        E.Text of S.Msg('Notes')
       ),
-      E.Column<S.Msg>(
+      E.Column of S.Msg(
         new L.Flow(Padding := G.Points(16), Background := Colors.Surface),
-        E.Text<S.Msg>('Selected note')
+        E.Text of S.Msg('Selected note')
       ),
       S.Msg.Resize, new Split.Options(
         Height := L.Extent.Fixed(L.Measure.Logical(128)),
         MinimumFirst := 96.0F, MinimumSecond := 120.0F, Vertical := Width < 440
       )
     ),
-    G.Heading<S.Msg>(Strings.Get('Heading.WindowAndClipboard')),
+    G.Heading of S.Msg(Strings.Get('Heading.WindowAndClipboard')),
     HostActions.View(Model)
   ];
 end function;

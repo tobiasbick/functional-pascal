@@ -46,51 +46,51 @@ begin
   return App.Msg.Podcasts(Message);
 end function;
 
-function Image(Page: M.State; Show: M.Show; Id: string; Edge: int): E.Element<App.Msg>;
+function Image(Page: M.State; Show: M.Show; Id: string; Edge: int): E.Element of App.Msg;
 begin
   var Cover: Images.Bitmap? := null;
   discard Page.Covers.TryGetValue(Show.Artwork, out Cover);
-  return Artwork.Build<App.Msg>(Id, Cover, Edge);
+  return Artwork.Build of App.Msg(Id, Cover, Edge);
 end function;
 
-function Error(Id: string; Message: string?): E.Element<App.Msg>;
+function Error(Id: string; Message: string?): E.Element of App.Msg;
 begin
   return if Message <> null then
-    Alerts.Alert<App.Msg>(
+    Alerts.Alert of App.Msg(
       Id,
       'Podcast operation failed',
       new Alerts.Options(Tone := S.Tone.Warning, Description := Message)
     )
   else
-    E.Row<App.Msg>()
+    E.Row of App.Msg()
   end if;
 end function;
 
-function Result(Current: App.State; Show: M.Show): Grid.Row<App.Msg>;
+function Result(Current: App.State; Show: M.Show): Grid.Row of App.Msg;
 begin
   const Key: string := Show.Id();
   const Subscribed: bool := M.Find(Current.Settings.Saved.PodcastSubscriptions, Key) <> null;
-  return new Grid.Row<App.Msg>(
+  return new Grid.Row of App.Msg(
     Key, [
-      Grid.Cell<App.Msg>.Content(
+      (Grid.Cell of App.Msg).Content(
         [
-          E.Row<App.Msg>(
+          E.Row of App.Msg(
             new L.Flow(Gap := Points(6), Align := L.Alignment.Center),
             Image(Current.Podcasts, Show, 'podcast-result-cover-' + Key, 38),
-            B.Button<App.Msg>(
+            B.Button of App.Msg(
               'podcast-open-' + Key, Show.Title, Action(M.Msg.Open(Show, false)),
               new B.Options(Variant := S.ButtonVariant.Ghost, Tooltip := Show.Title)
             )
           )
         ]
       ),
-      Grid.Cell<App.Msg>.Text(Show.Publisher),
+      (Grid.Cell of App.Msg).Text(Show.Publisher),
       if Subscribed then
-        Grid.Cell<App.Msg>.Text('Subscribed')
+        (Grid.Cell of App.Msg).Text('Subscribed')
       else
-        Grid.Cell<App.Msg>.Content(
+        (Grid.Cell of App.Msg).Content(
           [
-            B.Button<App.Msg>(
+            B.Button of App.Msg(
               'podcast-subscribe-' + Key, 'Subscribe', Action(M.Msg.Subscribe(Show, true)),
               new B.Options(Variant := S.ButtonVariant.Outline, ControlSize := B.Size.Small)
             )
@@ -101,7 +101,7 @@ begin
   );
 end function;
 
-function Results(Current: App.State; Shows: array of M.Show; Width: int): E.Element<App.Msg>;
+function Results(Current: App.State; Shows: array of M.Show; Width: int): E.Element of App.Msg;
   function Change(Value: Grid.Value): App.Msg;
   begin
     const Order: Tables.Sort? := Value.Order;
@@ -125,10 +125,10 @@ begin
     else
       'No top podcasts available'
     end if;
-    return Empty.EmptyState<App.Msg>('podcasts-empty', Text);
+    return Empty.EmptyState of App.Msg('podcasts-empty', Text);
   end if;
   const Publisher: int := Sys.Math.Clamp(Width div 3, 120, 300);
-  return Grid.DataGrid<App.Msg>(
+  return Grid.DataGrid of App.Msg(
     'podcast-results',
     [
       new Grid.Column(
@@ -140,7 +140,7 @@ begin
       new Grid.Column('', 124.0F, Fixed := true)
     ],
     Shows.Length,
-    function(Index: int): Grid.Row<App.Msg> => Result(Current, Shows[Index]),
+    function(Index: int): Grid.Row of App.Msg => Result(Current, Shows[Index]),
     new Grid.Value(
       Order := Page.SearchOrder,
       Cursor := Page.SearchCursor,
@@ -153,21 +153,21 @@ begin
   );
 end function;
 
-function AddFeed(Base: E.Element<App.Msg>; Draft: string): E.Element<App.Msg>;
+function AddFeed(Base: E.Element of App.Msg; Draft: string): E.Element of App.Msg;
 begin
-  return Dialogs.Dialog<App.Msg>(
+  return Dialogs.Dialog of App.Msg(
     'podcast-add-dialog',
     Base,
-    E.Column<App.Msg>(
+    E.Column of App.Msg(
       new L.Flow(Align := L.Alignment.Stretch, Gap := Points(12)),
-      Fields.TextField<App.Msg>(
+      Fields.TextField of App.Msg(
         'podcast-feed-url', Draft, function(Value: string): App.Msg => Action(M.Msg.EditUrl(Value)),
         new Fields.Options(Label := 'RSS feed URL', MaxUtf8Bytes := 2047)
       ),
-      E.Row<App.Msg>(
+      E.Row of App.Msg(
         new L.Flow(Gap := Points(8), Justify := L.Justification.End),
-        B.Button<App.Msg>('podcast-feed-cancel', 'Cancel', Action(M.Msg.Cancel)),
-        B.Button<App.Msg>(
+        B.Button of App.Msg('podcast-feed-cancel', 'Cancel', Action(M.Msg.Cancel)),
+        B.Button of App.Msg(
           'podcast-feed-add', 'Subscribe', Action(M.Msg.AddFeed),
           new B.Options(Variant := S.ButtonVariant.Primary, Enabled := M.Address(Draft) <> '')
         )
@@ -186,7 +186,7 @@ end function;
 // - `Padding`: Inner content padding in logical points.
 // ## Returns
 // The podcast directory page.
-public function Search(Current: App.State; Width: int; Padding: int): E.Element<App.Msg>;
+public function Search(Current: App.State; Width: int; Padding: int): E.Element of App.Msg;
 begin
   const Page: M.State := Current.Podcasts;
   const Shows: array of M.Show := Page.ShownResults;
@@ -198,12 +198,15 @@ begin
     Shows.Length.ToString() + ' podcasts'
   end if;
   const ContentWidth: int := Sys.Math.Max(1, Width - Padding * 2);
-  const Parts: C.List<E.Element<App.Msg>> := new C.List<E.Element<App.Msg>>(
+  const Parts: C.List of E.Element of App.Msg := new C.List of E.Element of App.Msg(
     [
-      E.Row<App.Msg>(
+      E.Row of App.Msg(
         new L.Flow(Gap := Points(8), Align := L.Alignment.Center, Wrap := true),
-        E.Size<App.Msg>(Texts.Text<App.Msg>('Search podcasts', Texts.Appearance.HeadingOne), Fill),
-        B.Button<App.Msg>(
+        E.Size of App.Msg(
+          Texts.Text of App.Msg('Search podcasts', Texts.Appearance.HeadingOne),
+          Fill
+        ),
+        B.Button of App.Msg(
           'podcast-add', 'Add RSS feed', Action(M.Msg.Add),
           new B.Options(Variant := S.ButtonVariant.Outline)
         )
@@ -215,21 +218,21 @@ begin
   end if;
 
   if not Page.Searched() then
-    Parts.Add(Texts.Text<App.Msg>('Top podcasts', Texts.Appearance.HeadingThree));
+    Parts.Add(Texts.Text of App.Msg('Top podcasts', Texts.Appearance.HeadingThree));
   end if;
 
-  Parts.Add(E.Size<App.Msg>(Results(Current, Shows, ContentWidth), Fill));
-  const Body: E.Element<App.Msg> := E.Column<App.Msg>(
+  Parts.Add(E.Size of App.Msg(Results(Current, Shows, ContentWidth), Fill));
+  const Body: E.Element of App.Msg := E.Column of App.Msg(
     Stretch,
-    E.Size<App.Msg>(
-      E.Column<App.Msg>(
+    E.Size of App.Msg(
+      E.Column of App.Msg(
         new L.Flow(Padding := Points(Padding), Gap := Points(16), Align := L.Alignment.Stretch),
         Parts.ToArray()
       ), Fill
     ),
-    Status.StatusBar<App.Msg>(
+    Status.StatusBar of App.Msg(
       'podcast-search-status',
-      [Status.Item<App.Msg>.Text(new Status.Label(Count))]
+      [(Status.Item of App.Msg).Text(new Status.Label(Count))]
     )
   );
   const Draft: string? := Page.Draft;
@@ -240,13 +243,13 @@ begin
   end if;
 end function;
 
-function EpisodeRow(Current: App.State; ShowId: string; Item: M.Episode): Grid.Row<App.Msg>;
+function EpisodeRow(Current: App.State; ShowId: string; Item: M.Episode): Grid.Row of App.Msg;
 begin
   const Active: Tracks.Entry? := Player.Track(Current.Player);
   const Selected: bool := Current.Player.Podcast and Active <> null and Active.TrackId = ShowId +
     ':' + Item.Id;
   const Playing: bool := Selected and Current.Player.Playing;
-  const Play: E.Element<App.Msg> := Icons.IconButton<App.Msg>(
+  const Play: E.Element of App.Msg := Icons.IconButton of App.Msg(
     'episode-play-' + Item.Id,
     Sys.Char.ConvertFromUtf32(
       if Playing then
@@ -269,40 +272,40 @@ begin
     )
   );
   const Date: Sys.DateTimeOffset? := Item.Published;
-  return new Grid.Row<App.Msg>(
+  return new Grid.Row of App.Msg(
     Item.Id, [
-      Grid.Cell<App.Msg>.Content(
+      (Grid.Cell of App.Msg).Content(
         [
-          E.Row<App.Msg>(
+          E.Row of App.Msg(
             new L.Flow(Gap := Points(8), Align := L.Alignment.Center), Play,
-            E.Styled<App.Msg>(
-              Texts.Text<App.Msg>(Item.Title, Texts.Appearance.Label),
+            E.Styled of App.Msg(
+              Texts.Text of App.Msg(Item.Title, Texts.Appearance.Label),
               S.Role.SingleLine
             )
           )
         ]
       ),
-      Grid.Cell<App.Msg>.Text(
+      (Grid.Cell of App.Msg).Text(
         if Date <> null then
           Date.Value.ToString('d')
         else
           '—'
         end if
       ),
-      Grid.Cell<App.Msg>.Text(
+      (Grid.Cell of App.Msg).Text(
         if Item.Duration > 0.0 then
           Time.Time(Item.Duration)
         else
           '—'
         end if
       ),
-      Grid.Cell<App.Msg>.Content(
+      (Grid.Cell of App.Msg).Content(
         [
-          Menus.Menu<App.Msg>(
+          Menus.Menu of App.Msg(
             'episode-menu-' + Item.Id, 'More actions for ' + Item.Title,
             [
-              Menus.Entry<App.Msg>.Action(
-                new Menus.Item<App.Msg>('details', 'Episode details', Action(M.Msg.Details(Item)))
+              (Menus.Entry of App.Msg).Action(
+                new Menus.Item of App.Msg('details', 'Episode details', Action(M.Msg.Details(Item)))
               )
             ],
             new Menus.Options(IconOnly := true, Position := Menus.Placement.BottomEnd)
@@ -313,7 +316,7 @@ begin
   );
 end function;
 
-function EpisodeGrid(Current: App.State; Show: M.Show; Items: array of M.Episode; Width: int): E.Element<App.Msg>;
+function EpisodeGrid(Current: App.State; Show: M.Show; Items: array of M.Episode; Width: int): E.Element of App.Msg;
   function Change(Value: Grid.Value): App.Msg;
   begin
     const Order: Tables.Sort? := Value.Order;
@@ -326,7 +329,7 @@ function EpisodeGrid(Current: App.State; Show: M.Show; Items: array of M.Episode
 begin
   const Page: M.State := Current.Podcasts;
   if Items.Length = 0 then
-    return Empty.EmptyState<App.Msg>(
+    return Empty.EmptyState of App.Msg(
       'podcast-episodes-empty', if Page.Loading then
         'Loading episodes…'
       elsif Page.Episodes.Length > 0 then
@@ -337,7 +340,7 @@ begin
     );
   end if;
   const Key: string := Show.Id();
-  return Grid.DataGrid<App.Msg>(
+  return Grid.DataGrid of App.Msg(
     'podcast-episodes/' + Key,
     [
       new Grid.Column('Title', cast<float>(Sys.Math.Max(96, Width - 236)), Sortable := true),
@@ -345,7 +348,8 @@ begin
       new Grid.Column('Time', 76.0F, Sortable := true, Priority := 2),
       new Grid.Column('', 44.0F, Fixed := true)
     ],
-    Items.Length, function(Index: int): Grid.Row<App.Msg> => EpisodeRow(Current, Key, Items[Index]),
+    Items.Length,
+    function(Index: int): Grid.Row of App.Msg => EpisodeRow(Current, Key, Items[Index]),
     new Grid.Value(
       Order := Page.EpisodeOrder,
       Cursor := Page.EpisodeCursor,
@@ -358,13 +362,13 @@ begin
   );
 end function;
 
-function Details(Body: E.Element<App.Msg>; Item: M.Episode): E.Element<App.Msg>;
+function Details(Body: E.Element of App.Msg; Item: M.Episode): E.Element of App.Msg;
 begin
-  return Dialogs.Dialog<App.Msg>(
+  return Dialogs.Dialog of App.Msg(
     'podcast-episode-info', Body,
-    E.Size<App.Msg>(
-      E.ScrollView<App.Msg>(
-        'podcast-episode-description', Texts.Text<App.Msg>(
+    E.Size of App.Msg(
+      E.ScrollView of App.Msg(
+        'podcast-episode-description', Texts.Text of App.Msg(
           if Item.Description = '' then
             'No description provided.'
           else
@@ -385,7 +389,7 @@ end function;
 // - `Padding`: Inner content padding in logical points.
 // ## Returns
 // The selected podcast page.
-public function Podcast(Current: App.State; Width: int; Padding: int): E.Element<App.Msg>;
+public function Podcast(Current: App.State; Width: int; Padding: int): E.Element of App.Msg;
 begin
   const Page: M.State := Current.Podcasts;
   const Show: M.Show? := Page.Show;
@@ -399,17 +403,17 @@ begin
     Sys.Math.Clamp((Width - 540) div 2, 112, 190)
   end if;
   const Subscribed: bool := M.Find(Current.Settings.Saved.PodcastSubscriptions, Show.Id()) <> null;
-  const Info: E.Element<App.Msg> := E.Column<App.Msg>(
+  const Info: E.Element of App.Msg := E.Column of App.Msg(
     new L.Flow(Gap := Points(6), Align := L.Alignment.Start),
-    E.Styled<App.Msg>(
-      Texts.Text<App.Msg>(Show.Title, Texts.Appearance.HeadingTwo),
+    E.Styled of App.Msg(
+      Texts.Text of App.Msg(Show.Title, Texts.Appearance.HeadingTwo),
       S.Role.SingleLine
     ),
-    E.Styled<App.Msg>(
-      Texts.Text<App.Msg>(Show.Publisher, Texts.Appearance.Secondary),
+    E.Styled of App.Msg(
+      Texts.Text of App.Msg(Show.Publisher, Texts.Appearance.Secondary),
       S.Role.SingleLine
     ),
-    B.Button<App.Msg>(
+    B.Button of App.Msg(
       'podcast-subscription',
       if Subscribed then
         'Unsubscribe'
@@ -420,7 +424,7 @@ begin
       new B.Options(Variant := S.ButtonVariant.Outline, ControlSize := B.Size.Small)
     )
   );
-  const Cover: E.Element<App.Msg> := Image(Page, Show, 'podcast-cover', Edge);
+  const Cover: E.Element of App.Msg := Image(Page, Show, 'podcast-cover', Edge);
   const Items: array of M.Episode := Page.ShownEpisodes;
   const Inset: int := Edge + Padding * 2;
   const TableWidth: int := Width - Padding * 2 - if Compact then
@@ -428,7 +432,7 @@ begin
   else
     Inset + 1
   end if;
-  const Parts: C.List<E.Element<App.Msg>> := new C.List<E.Element<App.Msg>>(
+  const Parts: C.List of E.Element of App.Msg := new C.List of E.Element of App.Msg(
     [
       Toolbar.Episodes(Page, Sys.Math.Max(1, TableWidth))
     ]
@@ -437,35 +441,35 @@ begin
     Parts.Add(Error('podcast-feed-error', Page.FeedError));
     if Page.Episodes.Length = 0 then
       Parts.Add(
-        B.Button<App.Msg>('podcast-feed-retry', 'Retry', Action(M.Msg.Open(Show, Page.AddOnLoad)))
+        B.Button of App.Msg('podcast-feed-retry', 'Retry', Action(M.Msg.Open(Show, Page.AddOnLoad)))
       );
     end if;
   end if;
 
-  Parts.Add(E.Size<App.Msg>(EpisodeGrid(Current, Show, Items, TableWidth), Fill));
-  const EpisodePane: E.Element<App.Msg> := E.Column<App.Msg>(
+  Parts.Add(E.Size of App.Msg(EpisodeGrid(Current, Show, Items, TableWidth), Fill));
+  const EpisodePane: E.Element of App.Msg := E.Column of App.Msg(
     new L.Flow(Align := L.Alignment.Stretch, Padding := Points(Padding), Gap := Points(12)),
     Parts.ToArray()
   );
-  const Content: E.Element<App.Msg> := if Compact then
-    E.Column<App.Msg>(
+  const Content: E.Element of App.Msg := if Compact then
+    E.Column of App.Msg(
       Stretch,
-      E.Row<App.Msg>(
+      E.Row of App.Msg(
         new L.Flow(Padding := Points(Padding), Gap := Points(12)),
         Cover,
-        E.Size<App.Msg>(Info, Fill)
+        E.Size of App.Msg(Info, Fill)
       ),
-      E.Size<App.Msg>(EpisodePane, Fill)
+      E.Size of App.Msg(EpisodePane, Fill)
     )
   else
-    E.Row<App.Msg>(
+    E.Row of App.Msg(
       Stretch,
-      E.Size<App.Msg>(
-        E.Column<App.Msg>(new L.Flow(Padding := Points(Padding), Gap := Points(12)), Cover, Info),
+      E.Size of App.Msg(
+        E.Column of App.Msg(new L.Flow(Padding := Points(Padding), Gap := Points(12)), Cover, Info),
         Fixed(Inset)
       ),
-      E.Size<App.Msg>(E.Styled<App.Msg>(E.Column<App.Msg>(), S.Role.Divider), Fixed(1)),
-      E.Size<App.Msg>(EpisodePane, Fill)
+      E.Size of App.Msg(E.Styled of App.Msg(E.Column of App.Msg(), S.Role.Divider), Fixed(1)),
+      E.Size of App.Msg(EpisodePane, Fill)
     )
   end if;
   const Count: string := Items.Length.ToString() + (if Items.Length <> Page.Episodes.Length then
@@ -478,23 +482,23 @@ begin
     else
       ' episodes'
     end if;
-  const Body: E.Element<App.Msg> := E.Column<App.Msg>(
+  const Body: E.Element of App.Msg := E.Column of App.Msg(
     Stretch,
-    E.Row<App.Msg>(
+    E.Row of App.Msg(
       new L.Flow(Padding := Points(Padding), Gap := Points(6), Align := L.Alignment.Center),
-      Icons.IconButton<App.Msg>(
+      Icons.IconButton of App.Msg(
         'podcast-back',
         Sys.Char.ConvertFromUtf32($E048),
         'Back to podcast search',
         Action(M.Msg.Back)
       ),
-      Texts.Text<App.Msg>('Podcasts', Texts.Appearance.HeadingThree)
+      Texts.Text of App.Msg('Podcasts', Texts.Appearance.HeadingThree)
     ),
-    E.Size<App.Msg>(E.Styled<App.Msg>(E.Row<App.Msg>(), S.Role.Divider), Fixed(1)),
-    E.Size<App.Msg>(Content, Fill),
-    Status.StatusBar<App.Msg>(
+    E.Size of App.Msg(E.Styled of App.Msg(E.Row of App.Msg(), S.Role.Divider), Fixed(1)),
+    E.Size of App.Msg(Content, Fill),
+    Status.StatusBar of App.Msg(
       'podcast-status',
-      [Status.Item<App.Msg>.Text(new Status.Label(Count))]
+      [(Status.Item of App.Msg).Text(new Status.Label(Count))]
     )
   );
   const Item: M.Episode? := Page.Details;

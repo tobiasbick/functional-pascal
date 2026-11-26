@@ -33,10 +33,10 @@ end record;
 // - `Settings`: Confirmation caption, timeout, appearance and input permission.
 // ## Returns
 // A graphical confirmation button. Escape, an outside click or timeout disarms it.
-public function ConfirmButton<TMsg>(Id: string; Label: string; Message: TMsg; Settings: Options? := null): E.Element<TMsg>;
+public function ConfirmButton of TMsg(Id: string; Label: string; Message: TMsg; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.ConfirmAction(Id, Label, Message, Settings ?? new Options());
+  return (E.Element of TMsg).ConfirmAction(Id, Label, Message, Settings ?? new Options());
 end function;
 
 end unit;

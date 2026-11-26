@@ -11,8 +11,8 @@ internal sealed class UsageUnit
     internal UsageNames Names { get; } = new();
     internal bool HasByRefInputs { get; private set; }
 
-    internal string Receiver(ImportedType definition, TypeSymbol owner, bool isStatic)
-        => isStatic ? Names.Named(definition, owner.TypeArguments) : Input("receiver", owner, definition.IsValueType ? "ref" : "");
+    internal string Receiver(ImportedType definition, TypeSymbol owner, bool isStatic, bool constructor = false)
+        => isStatic ? Names.Named(definition, owner.TypeArguments, groupBeforeSuffix: !constructor) : Input("receiver", owner, definition.IsValueType ? "ref" : "");
 
     internal string Input(string parameterName, TypeSymbol type, string mode = "")
     {

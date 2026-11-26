@@ -55,7 +55,7 @@ begin
   );
   const ListId: string := Sys.Convert.ToString(Identity.ExecuteScalar()) ?? '';
   if Value.Error = null then
-    const Previous: C.Dictionary<string, string> := new C.Dictionary<string, string>();
+    const Previous: C.Dictionary of (string, string) := new C.Dictionary of (string, string)();
     begin
       using const Old: Db.SqliteCommand := Sql.Command(
         Connection,

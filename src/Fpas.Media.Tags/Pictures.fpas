@@ -26,7 +26,7 @@ public function Read(Path: string): Cover?;
 requires Path <> '';
 begin
   const Track: A.Track := new A.Track(Path);
-  const Pictures: C.IList<A.PictureInfo?>? := Track.EmbeddedPictures;
+  const Pictures: (C.IList of A.PictureInfo?)? := Track.EmbeddedPictures;
   var Selected: A.PictureInfo? := null;
   if Pictures <> null then
     for Picture: A.PictureInfo? in Pictures do
@@ -44,7 +44,7 @@ begin
   if Selected = null then
     return null;
   end if;
-  const Bytes: array of byte := Selected.PictureData ?? Sys.Array.Empty<byte>();
+  const Bytes: array of byte := Selected.PictureData ?? Sys.Array.Empty of byte();
   if Bytes.Length > 16777216 then
     raise new IO.InvalidDataException('Embedded artwork exceeds sixteen MiB.');
   end if;

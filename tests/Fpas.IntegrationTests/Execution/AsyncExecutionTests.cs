@@ -9,28 +9,28 @@ public sealed class AsyncExecutionTests
         => ProgramExecution.Output("""
             async program Asynchronous;
             uses System.Console as Console; uses System.Threading.Tasks as Tasks;
-            async function Echo<T>(Value: T): Tasks.Task<T>;
+            async function Echo of T(Value: T): Tasks.Task of T;
             begin await Tasks.Task.Delay(1); return Value; end function;
-            type Box<T> = record
+            type Box of T = record
               public Value: T;
-              public async function Read(): Tasks.Task<T>;
+              public async function Read(): Tasks.Task of T;
               begin await Tasks.Task.Delay(1).ConfigureAwait(false); return self.Value; end function;
             end record;
             begin
-              Console.WriteLine(await Echo<int>(42));
-              Console.WriteLine(await Echo<string>('text'));
-              const Item: Box<string> := new Box<string>('record');
+              Console.WriteLine(await Echo of int(42));
+              Console.WriteLine(await Echo of string('text'));
+              const Item: Box of string := new Box of string('record');
               Console.WriteLine(await Item.Read());
               var Captured: int := 1;
-              const Callback: function(int): Tasks.Task<int> := async function(Value: int): Tasks.Task<int>
+              const Callback: function(int): Tasks.Task of int := async function(Value: int): Tasks.Task of int
                 requires Value > 0;
                 ensures (Returned: int): Returned = Captured;
                 begin await Tasks.Task.Delay(1); Captured := Captured + Value; return Captured; end function;
               Console.WriteLine(await Callback(2));
               Console.WriteLine(Captured);
-              const Expression: function(int): Tasks.Task<int> := async function(Value: int): Tasks.Task<int> => await Echo<int>(Value);
+              const Expression: function(int): Tasks.Task of int := async function(Value: int): Tasks.Task of int => await Echo of int(Value);
               Console.WriteLine(await Expression(5));
-              const Value: Tasks.ValueTask<int> := new Tasks.ValueTask<int>(7);
+              const Value: Tasks.ValueTask of int := new Tasks.ValueTask of int(7);
               Console.WriteLine(await Value.ConfigureAwait(false));
               const Empty: Tasks.ValueTask := new Tasks.ValueTask();
               await Empty;
@@ -43,7 +43,7 @@ public sealed class AsyncExecutionTests
         => ProgramExecution.Output("""
             async program Expressions;
             uses System.Console as Console; uses System.Threading.Tasks as Tasks;
-            async function Number(Value: int): Tasks.Task<int>;
+            async function Number(Value: int): Tasks.Task of int;
             begin await Tasks.Task.Delay(1); return Value; end function;
             function Mark(Value: int): int;
             begin Console.WriteLine(Value); return Value; end function;
@@ -77,7 +77,7 @@ public sealed class AsyncExecutionTests
             uses System as Sys; uses System.Console as Console; uses System.Drawing as Drawing;
               uses System.Numerics as Numerics; uses System.Threading.Tasks as Tasks;
 
-            async function Update(Gate: Tasks.Task<int>): Tasks.Task;
+            async function Update(Gate: Tasks.Task of int): Tasks.Task;
             begin
               var Point: Drawing.Point := new Drawing.Point(1, 2);
               const Points: array of Drawing.Point := [Point];
@@ -92,7 +92,7 @@ public sealed class AsyncExecutionTests
             end function;
 
             begin
-              const Gate: Tasks.TaskCompletionSource<int> := new Tasks.TaskCompletionSource<int>();
+              const Gate: Tasks.TaskCompletionSource of int := new Tasks.TaskCompletionSource of int();
               const Pending: Tasks.Task := Update(Gate.Task);
               if Pending.IsCompleted then
                 raise new Sys.InvalidOperationException('The assignment must wait for the gate');
@@ -111,9 +111,9 @@ public sealed class AsyncExecutionTests
             async program GenericReceiver;
             uses System.Console as Console; uses System.Collections.Generic as C; uses System.Threading.Tasks as Tasks;
 
-            async function Update<T>(Original: T; Replacement: T; Gate: Tasks.Task<int>): Tasks.Task;
-            where T: class, C.IList<int>;
-              function ChangeReceiver(): Tasks.Task<int>;
+            async function Update of T(Original: T; Replacement: T; Gate: Tasks.Task of int): Tasks.Task;
+            where T: class, C.IList of int;
+              function ChangeReceiver(): Tasks.Task of int;
               begin
                 Current := Replacement;
                 return Gate;
@@ -124,12 +124,12 @@ public sealed class AsyncExecutionTests
             end function;
 
             begin
-              const First: C.List<int> := new C.List<int>();
+              const First: C.List of int := new C.List of int();
               First.Add(1);
-              const Second: C.List<int> := new C.List<int>();
+              const Second: C.List of int := new C.List of int();
               Second.Add(2);
 
-              const Gate: Tasks.TaskCompletionSource<int> := new Tasks.TaskCompletionSource<int>();
+              const Gate: Tasks.TaskCompletionSource of int := new Tasks.TaskCompletionSource of int();
               const Pending: Tasks.Task := Update(First, Second, Gate.Task);
               Gate.SetResult(42);
               await Pending;
@@ -144,7 +144,7 @@ public sealed class AsyncExecutionTests
         => ProgramExecution.Output("""
             async program Cleanup;
             uses System as Sys; uses System.Console as Console; uses System.Threading.Tasks as Tasks;
-            async function Work(State: array of int; Mode: int): Tasks.Task<int>;
+            async function Work(State: array of int; Mode: int): Tasks.Task of int;
             requires Mode >= 0;
             ensures (Returned: int): Returned = State[0];
             ensures State[1] = 1;

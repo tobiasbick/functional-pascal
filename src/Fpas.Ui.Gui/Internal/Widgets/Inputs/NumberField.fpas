@@ -21,8 +21,8 @@ uses System.Globalization as Culture;
 // - `Maximum`: Inclusive upper bound.
 // - `OnChange`: Maps an edit to a message.
 // - `Settings`: Caption, suffix, step and input options.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Value: double; Minimum: double; Maximum: double;
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Value: double; Minimum: double; Maximum: double;
   OnChange: function(double): TMsg; Settings: N.Options
 );
 begin
@@ -32,7 +32,7 @@ begin
   const Increase: string := N.IncreaseId(Id);
   const Proposed: double := Frame.Window.NumberField(
     Token, Value, Minimum, Maximum, Settings.Label, Settings.Suffix, Settings.Step,
-    Settings.DecimalPlaces, Enabled, C.WantsFocus<TMsg>(Frame, Id, Token, Enabled),
+    Settings.DecimalPlaces, Enabled, C.WantsFocus of TMsg(Frame, Id, Token, Enabled),
     if Frame.PaintingClosed then
       null
     else

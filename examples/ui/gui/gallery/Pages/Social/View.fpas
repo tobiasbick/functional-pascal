@@ -23,27 +23,27 @@ uses GuiGallery.Shared.Sections as G;
 uses System as Sys;
 uses System.Collections.Generic as Lists;
 
-function ChatColumn(): E.Element<S.Msg>;
+function ChatColumn(): E.Element of S.Msg;
 begin
-  return E.Column<S.Msg>(
+  return E.Column of S.Msg(
     new L.Flow(Gap := G.Points(10), Clip := false),
-    G.Heading<S.Msg>(Strings.Get('Heading.Chat'), Strings.Get('Heading.ChatHint')),
-    Cards.Card<S.Msg>(
+    G.Heading of S.Msg(Strings.Get('Heading.Chat'), Strings.Get('Heading.ChatHint')),
+    Cards.Card of S.Msg(
       'social-chat', [
-        Divider.ChatDivider<S.Msg>('social-today', 'Today'),
-        Chat.ChatMessage<S.Msg>(
+        Divider.ChatDivider of S.Msg('social-today', 'Today'),
+        Chat.ChatMessage of S.Msg(
           'social-message-1', 'Did the data grid make it into 1.1?',
           new Chat.Options(Author := 'Jonas Berg', Time := '9:41')
         ),
-        Chat.ChatMessage<S.Msg>(
+        Chat.ChatMessage of S.Msg(
           'social-message-2', 'I need it for the billing page.',
           new Chat.Options(Author := 'Jonas Berg', Grouped := true, LastInGroup := true)
         ),
-        Chat.ChatMessage<S.Msg>(
+        Chat.ChatMessage of S.Msg(
           'social-message-3', 'It did. 2,000 rows scroll at 60 fps on my laptop.',
           new Chat.Options(Mine := true)
         ),
-        Chat.ChatMessage<S.Msg>(
+        Chat.ChatMessage of S.Msg(
           'social-message-4', 'Shift and Ctrl clicks select like a spreadsheet.',
           new Chat.Options(
             Mine := true,
@@ -53,31 +53,31 @@ begin
             Time := '9:43'
           )
         ),
-        Typing.TypingIndicator<S.Msg>('social-typing', 'Jonas')
+        Typing.TypingIndicator of S.Msg('social-typing', 'Jonas')
       ], new Cards.Options(Padding := 16.0F)
     )
   );
 end function;
 
-function CommentColumn(Model: S.Model): E.Element<S.Msg>;
+function CommentColumn(Model: S.Model): E.Element of S.Msg;
 begin
-  return E.Column<S.Msg>(
+  return E.Column of S.Msg(
     new L.Flow(Gap := G.Points(10), Clip := false),
-    G.Heading<S.Msg>(Strings.Get('Text.Comments'), Strings.Get('Heading.CommentsHint')),
-    Cards.Card<S.Msg>(
+    G.Heading of S.Msg(Strings.Get('Text.Comments'), Strings.Get('Heading.CommentsHint')),
+    Cards.Card of S.Msg(
       'social-comments', [
-        Comments.Comment<S.Msg>(
+        Comments.Comment of S.Msg(
           'social-comment-1', 'Tomas Rivera',
           'The new numbers match the staging run. I would still test the import on a large file before Friday.',
           Model.Likes[0], function(Change: Comments.Event): S.Msg => S.Msg.Comment(0, Change),
           new Comments.Options(Time := '2h', Badge := 'Author')
         ),
-        Comments.Comment<S.Msg>(
+        Comments.Comment of S.Msg(
           'social-comment-2', 'Priya Nair', 'Agreed. I have a 2 GB export we can use.',
           Model.Likes[1], function(Change: Comments.Event): S.Msg => S.Msg.Comment(1, Change),
           new Comments.Options(Time := '1h', Depth := 1)
         ),
-        Comments.Comment<S.Msg>(
+        Comments.Comment of S.Msg(
           'social-comment-3', 'Maya Okafor', 'Scheduled it for 3 pm.',
           Model.Likes[2], function(Change: Comments.Event): S.Msg => S.Msg.Comment(2, Change),
           new Comments.Options(Time := '40m', Depth := 1, Edited := true)
@@ -101,20 +101,20 @@ end function;
 // - `Model`: Current like and counter values.
 // ## Returns
 // The native examples in gallery order.
-public function View(Model: S.Model): array of E.Element<S.Msg>;
+public function View(Model: S.Model): array of E.Element of S.Msg;
 begin
   const Column: L.Flex := new L.Flex(Grow := 1.0F);
-  const Sections: Lists.List<E.Element<S.Msg>> := new Lists.List<E.Element<S.Msg>>(
+  const Sections: Lists.List of E.Element of S.Msg := new Lists.List of E.Element of S.Msg(
     [
-      E.Row<S.Msg>(
+      E.Row of S.Msg(
         new L.Flow(Gap := G.Points(24), Align := L.Alignment.Start, Clip := false),
-        E.Size<S.Msg>(ChatColumn(), Column),
-        E.Size<S.Msg>(CommentColumn(Model), Column)
+        E.Size of S.Msg(ChatColumn(), Column),
+        E.Size of S.Msg(CommentColumn(Model), Column)
       ),
-      G.Heading<S.Msg>(Strings.Get('Heading.Presence'), Strings.Get('Heading.PresenceHint')),
-      E.Row<S.Msg>(
+      G.Heading of S.Msg(Strings.Get('Heading.Presence'), Strings.Get('Heading.PresenceHint')),
+      E.Row of S.Msg(
         new L.Flow(Gap := G.Points(24), Align := L.Alignment.Center, Clip := false),
-        Presence.Presence<S.Msg>(
+        Presence.Presence of S.Msg(
           'social-presence', [
             User('Maya Okafor', $7C, $5C, $FF), User('Jonas Berg', $22, $C5, $8B),
             User('Priya Nair', $F5, $9E, $0B), User('Lena Fischer', $38, $BD, $F8, true),
@@ -122,7 +122,7 @@ begin
             User('Rosa Delgado', $A8, $55, $F7)
           ]
         ),
-        Counter.Counter<S.Msg>(
+        Counter.Counter of S.Msg(
           'social-revenue', Model.Revenue,
           new Counter.Options(
             Format := new Charts.ValueFormat(Prefix := '$'),
@@ -130,13 +130,13 @@ begin
             GroupThousands := true
           )
         ),
-        B.Button<S.Msg>(
+        B.Button of S.Msg(
           'social-sale', 'Add a sale', S.Msg.Sale,
           new B.Options(ControlSize := B.Size.Small, Icon := Sys.Char.ConvertFromUtf32($E13D))
         )
       ),
-      G.Heading<S.Msg>(Strings.Get('Heading.Ticker'), Strings.Get('Heading.TickerHint')),
-      Ticker.Ticker<S.Msg>(
+      G.Heading of S.Msg(Strings.Get('Heading.Ticker'), Strings.Get('Heading.TickerHint')),
+      Ticker.Ticker of S.Msg(
         'social-ticker', [
           new Ticker.Item('Revenue', '$48.2k', 6.9F),
           new Ticker.Item('Active users', '12,408', 3.1F),

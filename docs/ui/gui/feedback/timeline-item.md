@@ -16,9 +16,9 @@ uses Fpas.Ui.Widgets.Planning.TimelineItems as W;
 // Builds the timeline item example.
 // ## Returns
 // The widget for the application view.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return W.TimelineItem<string>('deployed', 'Deployed to production',
+  return W.TimelineItem of string('deployed', 'Deployed to production',
     new W.Options(Time := '2m ago', Description := 'Release 1.0.3 is live.',
       Tone := S.Tone.Success, Last := true));
 end function;

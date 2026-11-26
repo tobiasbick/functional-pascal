@@ -37,7 +37,7 @@ public sealed class OverloadAndInterfaceDiagnosticsTests
     [InlineData("function F(V: int): int; begin return V; end function; function F(Other: int): string; begin return ''; end function;")]
     [InlineData("function F(V: string): int; begin return 1; end function; function F(V: string?): int; begin return 2; end function;")]
     [InlineData("function F(ref V: int): int; begin return V; end function; function F(in V: int): int; begin return V; end function;")]
-    [InlineData("function F<T>(V: T): T; begin return V; end function; function F<U>(Other: U): U; begin return Other; end function;")]
+    [InlineData("function F of T(V: T): T; begin return V; end function; function F of U(Other: U): U; begin return Other; end function;")]
     public void Duplicate_CLR_signatures_do_not_create_overloads(string declarations)
     {
         var result = TestCompilation.CompileAgainstFramework($"program Duplicate; {declarations} begin end; end program;");
@@ -47,7 +47,7 @@ public sealed class OverloadAndInterfaceDiagnosticsTests
 
     [Theory]
     [InlineData("Sys.IDisposable", "")]
-    [InlineData("Sys.IComparable<int>", "function CompareTo(Value: double): int; begin return 0; end function;")]
+    [InlineData("Sys.IComparable of int", "function CompareTo(Value: double): int; begin return 0; end function;")]
     [InlineData("Sys.String", "")]
     [InlineData("Sys.IDisposable?", "procedure Dispose(); begin end procedure;")]
     [InlineData("Sys.IDisposable, Sys.IDisposable", "procedure Dispose(); begin end procedure;")]

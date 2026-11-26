@@ -18,9 +18,9 @@ uses Fpas.Ui.Widgets.Pickers.DateRanges as R;
 // - `Period`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Period: R.Value): E.Element<R.Value>;
+public function View(Period: R.Value): E.Element of R.Value;
 begin
-  return W.DateRangePicker<R.Value>('picker-date-range', Period,
+  return W.DateRangePicker of R.Value('picker-date-range', Period,
     function(Value: R.Value): R.Value => Value, new W.Options(Width := 300.0F));
 end function;
 

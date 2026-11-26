@@ -20,7 +20,7 @@ begin
     R.CheckText(Scope.Id, Location + '/focusScope');
   end if;
 
-  if not Sys.Enum.IsDefined<L.Direction>(Settings.ReadingDirection) then
+  if not Sys.Enum.IsDefined of L.Direction(Settings.ReadingDirection) then
     R.Reject(Location, 'Unknown reading direction.');
   end if;
 
@@ -60,9 +60,9 @@ begin
   CheckContainer(Flow, Current, Location + '/layers');
   LR.CheckSpacing(Flow.Gap, Current, Location + '/layers');
   LR.CheckSpacing(Flow.Padding, Current, Location + '/layers');
-  if Flow.Wrap or not Sys.Enum.IsDefined<L.Alignment>(
+  if Flow.Wrap or not Sys.Enum.IsDefined of L.Alignment(
     Flow.Align
-  ) or not Sys.Enum.IsDefined<L.Justification>(Flow.Justify)
+  ) or not Sys.Enum.IsDefined of L.Justification(Flow.Justify)
   then
     R.Reject(
       Location,
@@ -92,11 +92,11 @@ begin
     end if;
   end if;
 
-  if not Sys.Enum.IsDefined<L.Alignment>(Flow.Align) then
+  if not Sys.Enum.IsDefined of L.Alignment(Flow.Align) then
     R.Reject(At, 'Unknown cross-axis alignment.');
   end if;
 
-  if not Sys.Enum.IsDefined<L.Justification>(Flow.Justify) then
+  if not Sys.Enum.IsDefined of L.Justification(Flow.Justify) then
     R.Reject(At, 'Unknown main-axis justification.');
   end if;
 

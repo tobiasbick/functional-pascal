@@ -20,9 +20,9 @@ uses System as Sys;
 // - `OnChange`: Maps a native edit to a message.
 // - `Settings`: Presentation, capacity and input options.
 // - `OnSubmit`: Optional Ctrl+Enter action.
-public procedure Draw<TMsg>(
-  Frame: C.State<TMsg>; Id: string; Value: string; OnChange: function(string): TMsg;
-  Settings: F.Options; OnSubmit: Sys.Func<string, TMsg>?
+public procedure Draw of TMsg(
+  Frame: C.State of TMsg; Id: string; Value: string; OnChange: function(string): TMsg;
+  Settings: F.Options; OnSubmit: Sys.Func of (string, TMsg)?
 );
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
@@ -46,11 +46,11 @@ begin
     cast<float>(Settings.Height),
     Settings.Clearable,
     Enabled,
-    C.WantsFocus<TMsg>(Frame, Id, Token, Enabled),
+    C.WantsFocus of TMsg(Frame, Id, Token, Enabled),
     not Frame.PaintingClosed,
     C.Token('button', F.ClearId(Id))
   );
-  Editor.Publish<TMsg>(
+  Editor.Publish of TMsg(
     Frame, Id, 'text-area', Value, Result, OnChange, OnSubmit, Enabled,
     Settings.Label, Settings.Hint, Settings.Error, Settings.Prefix, Settings.Suffix
   );

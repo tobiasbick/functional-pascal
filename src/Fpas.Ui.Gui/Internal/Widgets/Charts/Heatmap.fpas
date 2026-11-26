@@ -24,7 +24,7 @@ uses System as Sys;
 // - `Columns`: Nonnegative column count.
 // - `Settings`: Native presentation.
 // - `OnActivate`: Optional native click callback.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Values: array of float; Rows: int; Columns: int; Settings: W.Options; OnActivate: Sys.Func<W.Cell, TMsg>?);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Values: array of float; Rows: int; Columns: int; Settings: W.Options; OnActivate: Sys.Func of (W.Cell, TMsg)?);
 begin
   const Token: string := C.Token('heatmap', Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
@@ -54,7 +54,7 @@ begin
   );
   if Enabled and Clicked >= 0 then
     case OnActivate of
-      when is Sys.Func<W.Cell, TMsg> as Notify:
+      when is Sys.Func of (W.Cell, TMsg) as Notify:
         Frame.Messages.Add(Notify.Invoke(new W.Cell(Clicked div Columns, Clicked mod Columns)));
       else
     end case;

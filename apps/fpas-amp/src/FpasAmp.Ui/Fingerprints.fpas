@@ -32,12 +32,12 @@ end function;
 
 // Starts or replaces work named Key on Library for Track. Generate calculates missing values.
 // Reply wraps the result in the owner's message type TMsg. Returns the cancellable MVU command.
-public function Read<TMsg>(Key: string; Library: Metadata.Session; Track: Tracks.Entry; Generate: bool; Reply: function(State): TMsg): A.Command<TMsg>;
+public function Read of TMsg(Key: string; Library: Metadata.Session; Track: Tracks.Entry; Generate: bool; Reply: function(State): TMsg): A.Command of TMsg;
 requires Key <> '';
 begin
-  return A.StartBackground<TMsg>(
+  return A.StartBackground of TMsg(
     Key,
-    A.FromWorker<TMsg>(
+    A.FromWorker of TMsg(
       async function(Post: function(TMsg): Tasks.Task; Cancellation: T.CancellationToken): Tasks.Task begin
         const Value: string? := await Library.FingerprintAsync(
           Track,

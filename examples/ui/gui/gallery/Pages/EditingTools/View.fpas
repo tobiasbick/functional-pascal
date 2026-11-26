@@ -24,9 +24,9 @@ uses System as Sys;
 uses System.Collections.Generic as Lists;
 uses System.Globalization as Locale;
 
-function Limited(Value: E.Element<M.Msg>; Width: int): E.Element<M.Msg>;
+function Limited(Value: E.Element of M.Msg; Width: int): E.Element of M.Msg;
 begin
-  return E.Size<M.Msg>(
+  return E.Size of M.Msg(
     Value, new L.Flex(
       Width := new L.AxisSize(
         Basis := L.Extent.Fill,
@@ -36,9 +36,9 @@ begin
   );
 end function;
 
-function Flame(Model: M.Model; Colors: Theme.Palette): E.Element<M.Msg>;
+function Flame(Model: M.Model; Colors: Theme.Palette): E.Element of M.Msg;
 begin
-  var LabelText: E.Element<M.Msg> := E.FormattedText<M.Msg>(
+  var LabelText: E.Element of M.Msg := E.FormattedText of M.Msg(
     'Click a span to select it',
     Text.Font.Body,
     13.0F,
@@ -50,28 +50,28 @@ begin
       '0.00',
       Locale.CultureInfo.InvariantCulture
     ) + ' ms';
-    LabelText := E.Styled<M.Msg>(
-      E.FormattedText<M.Msg>(Label, Text.Font.Body, 13.0F, Colors.TextSecondary),
+    LabelText := E.Styled of M.Msg(
+      E.FormattedText of M.Msg(Label, Text.Font.Body, 13.0F, Colors.TextSecondary),
       S.Role.Tabular
     );
   end if;
 
-  return E.Column<M.Msg>(
+  return E.Column of M.Msg(
     new L.Flow(Gap := G.Points(10), Clip := false),
-    E.Row<M.Msg>(
+    E.Row of M.Msg(
       new L.Flow(Gap := G.Points(8), Align := L.Alignment.Center, Wrap := true, Clip := false),
-      E.FormattedText<M.Msg>('Frames 4812 to 4813', Text.Font.Medium, 13.0F, Colors.Foreground),
+      E.FormattedText of M.Msg('Frames 4812 to 4813', Text.Font.Medium, 13.0F, Colors.Foreground),
       LabelText
     ),
-    F.FlameGraph<M.Msg>('capture', Capture.Spans, Model.Flame, M.Msg.Flame)
+    F.FlameGraph of M.Msg('capture', Capture.Spans, Model.Flame, M.Msg.Flame)
   );
 end function;
 
-function TrackCurve(Model: M.Model; Index: int; Colors: Theme.Palette): array of E.Element<M.Msg>;
+function TrackCurve(Model: M.Model; Index: int; Colors: Theme.Palette): array of E.Element of M.Msg;
 begin
   if Index < 0 or Model.Tracks[Index].Capacity = 0 then
     return [
-      E.FormattedText<M.Msg>(
+      E.FormattedText of M.Msg(
         'Select a key or a track name to edit its curve here.',
         Text.Font.Body,
         13.0F,
@@ -81,14 +81,14 @@ begin
   end if;
   const Track: T.Track := Model.Tracks[Index];
   const Axes: Sample.Axis := Sample.Axes[Index];
-  const Keys: Lists.List<C.Key> := new Lists.List<C.Key>(Track.Keys.Length);
+  const Keys: Lists.List of C.Key := new Lists.List of C.Key(Track.Keys.Length);
   for Key: T.Key in Track.Keys do
     Keys.Add(Key.Curve);
   end for;
 
   return [
-    E.FormattedText<M.Msg>(Track.Name, Text.Font.Medium, 13.0F, Colors.Foreground),
-    C.CurveEditor<M.Msg>(
+    E.FormattedText of M.Msg(Track.Name, Text.Font.Medium, 13.0F, Colors.Foreground),
+    C.CurveEditor of M.Msg(
       'track-curve-' + Index.ToString(), Keys.ToArray(), Model.Timeline.KeyIndex,
       function(Value: C.Event): M.Msg => M.Msg.TrackCurve(Index, Value),
       new C.Options(
@@ -105,13 +105,13 @@ begin
   ];
 end function;
 
-function Shot(Model: M.Model; Colors: Theme.Palette): E.Element<M.Msg>;
+function Shot(Model: M.Model; Colors: Theme.Palette): E.Element of M.Msg;
 begin
-  const Items: Lists.List<E.Element<M.Msg>> := new Lists.List<E.Element<M.Msg>>();
+  const Items: Lists.List of E.Element of M.Msg := new Lists.List of E.Element of M.Msg();
   Items.Add(
-    E.Row<M.Msg>(
+    E.Row of M.Msg(
       new L.Flow(Gap := G.Points(8), Align := L.Alignment.Center, Wrap := true, Clip := false),
-      Button.IconButton<M.Msg>(
+      Button.IconButton of M.Msg(
         'shot-playback', Sys.Char.ConvertFromUtf32(
           if Model.Playing then
             $E12E
@@ -125,18 +125,18 @@ begin
           'Play'
         end if, M.Msg.Playback, new Button.Options()
       ),
-      E.FormattedText<M.Msg>('Shot 4', Text.Font.Medium, 13.0F, Colors.Foreground),
-      E.FormattedText<M.Msg>('5 seconds at 24 fps', Text.Font.Body, 13.0F, Colors.TextSecondary)
+      E.FormattedText of M.Msg('Shot 4', Text.Font.Medium, 13.0F, Colors.Foreground),
+      E.FormattedText of M.Msg('5 seconds at 24 fps', Text.Font.Body, 13.0F, Colors.TextSecondary)
     )
   );
   Items.Add(
-    T.TimelineEditor<M.Msg>(
+    T.TimelineEditor of M.Msg(
       'shot', Model.Tracks, Model.Timeline, M.Msg.Timeline,
       new T.Options(Finish := 5.0F, FramesPerSecond := 24.0F, Toggles := true)
     )
   );
   Items.AddRange(TrackCurve(Model, Model.Timeline.TrackIndex, Colors));
-  return E.Column<M.Msg>(new L.Flow(Gap := G.Points(12), Clip := false), Items.ToArray());
+  return E.Column of M.Msg(new L.Flow(Gap := G.Points(12), Clip := false), Items.ToArray());
 end function;
 
 // Shows the pinned CUI editing tool specimens.
@@ -145,12 +145,12 @@ end function;
 // - `Colors`: Active theme colors.
 // ## Returns
 // The five editing tools in gallery order.
-public function View(Model: M.Model; Colors: Theme.Palette): array of E.Element<M.Msg>;
+public function View(Model: M.Model; Colors: Theme.Palette): array of E.Element of M.Msg;
 begin
   return [
-    G.Heading<M.Msg>(Strings.Get('Heading.PropertyInspector')),
-    Card.Card<M.Msg>(
-      'crate-material', [I.PropertyInspector<M.Msg>('props', Model.Inspector, M.Msg.Inspector)],
+    G.Heading of M.Msg(Strings.Get('Heading.PropertyInspector')),
+    Card.Card of M.Msg(
+      'crate-material', [I.PropertyInspector of M.Msg('props', Model.Inspector, M.Msg.Inspector)],
       new Card.Options(
         Width := L.Extent.Fill,
         MaximumWidth := 460.0F,
@@ -158,12 +158,12 @@ begin
         PaddingY := 6.0F
       )
     ),
-    G.Heading<M.Msg>(Strings.Get('Heading.FlameGraph')), Flame(Model, Colors),
-    G.Heading<M.Msg>(Strings.Get('Heading.CurveEditor')),
+    G.Heading of M.Msg(Strings.Get('Heading.FlameGraph')), Flame(Model, Colors),
+    G.Heading of M.Msg(Strings.Get('Heading.CurveEditor')),
     Limited(
-      E.Column<M.Msg>(
+      E.Column of M.Msg(
         new L.Flow(Clip := false),
-        C.CurveEditor<M.Msg>(
+        C.CurveEditor of M.Msg(
           'ease', Model.Curve, Model.CurveKey, M.Msg.Curve,
           new C.Options(
             Capacity := 16,
@@ -175,23 +175,23 @@ begin
         )
       ), 620
     ),
-    G.Heading<M.Msg>(Strings.Get('Heading.GradientEditor')),
+    G.Heading of M.Msg(Strings.Get('Heading.GradientEditor')),
     Limited(
-      E.Column<M.Msg>(
+      E.Column of M.Msg(
         new L.Flow(Gap := G.Points(10), Clip := false),
-        E.FormattedText<M.Msg>(
+        E.FormattedText of M.Msg(
           'Flame color over lifetime',
           Text.Font.Medium,
           13.0F,
           Colors.Foreground
         ),
-        Ramp.GradientEditor<M.Msg>(
+        Ramp.GradientEditor of M.Msg(
           'flame-ramp', Model.Ramp, Model.Stop, M.Msg.Gradient,
           new Ramp.Options(Capacity := 12)
         )
       ), 560
     ),
-    G.Heading<M.Msg>(Strings.Get('Heading.TimelineEditor')), Shot(Model, Colors)
+    G.Heading of M.Msg(Strings.Get('Heading.TimelineEditor')), Shot(Model, Colors)
   ];
 end function;
 

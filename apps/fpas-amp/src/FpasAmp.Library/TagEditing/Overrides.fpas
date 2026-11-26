@@ -9,7 +9,7 @@ uses Microsoft.Data.Sqlite as Db;
 uses System.Collections.Immutable as I;
 
 // Reads the saved tag changes for Id from the attached users store.
-public function Read(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction?; Id: string): I.ImmutableDictionary<string, string?>;
+public function Read(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction?; Id: string): I.ImmutableDictionary of (string, string?);
 begin
   using const Command: Db.SqliteCommand := Sql.Command(
     Connection, 'SELECT edits FROM users.tag_edits WHERE track_id=$id;', Transaction, ['$id'], [Id]
@@ -17,14 +17,14 @@ begin
   const Result: object? := Command.ExecuteScalar();
   if Result is string then
     return Codec.ReadTagOverrides(cast<string>(Result)) ??
-      I.ImmutableDictionary<string, string?>.Empty;
+      I.ImmutableDictionary of (string, string?).Empty;
   end if;
 
-  return I.ImmutableDictionary<string, string?>.Empty;
+  return I.ImmutableDictionary of (string, string?).Empty;
 end function;
 
 // Writes the complete sparse override map within the caller's transaction.
-public procedure Save(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction; Id: string; Changes: I.ImmutableDictionary<string, string?>);
+public procedure Save(Connection: Db.SqliteConnection; Transaction: Db.SqliteTransaction; Id: string; Changes: I.ImmutableDictionary of (string, string?));
 begin
   Sql.Execute(
     Connection,

@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Inputs.RulerSliders as W;
 // - `Temperature`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Temperature: float): E.Element<float>;
+public function View(Temperature: float): E.Element of float;
 begin
-  return W.RulerSlider<float>('picker-temperature', 'Temperature', Temperature, 10.0F, 30.0F,
+  return W.RulerSlider of float('picker-temperature', 'Temperature', Temperature, 10.0F, 30.0F,
     function(Value: float): float => Value,
     new W.Options(Step := 0.5F, MajorEvery := 4, Spacing := 14.0F, DecimalPlaces := 1, UnitLabel := '°C'));
 end function;

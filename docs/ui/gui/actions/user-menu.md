@@ -16,11 +16,11 @@ uses Fpas.Ui.Widgets.Overlays.UserMenus as U;
 // Builds the example view.
 // ## Returns
 // The widget with its message type.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return U.UserMenu<string>('account', 'Maya Okafor', [
-    M.Entry<string>.Action(new M.Item<string>('settings', 'Settings', 'settings')),
-    M.Entry<string>.Action(new M.Item<string>('logout', 'Log out', 'logout'))
+  return U.UserMenu of string('account', 'Maya Okafor', [
+    (M.Entry of string).Action(new M.Item of string('settings', 'Settings', 'settings')),
+    (M.Entry of string).Action(new M.Item of string('logout', 'Log out', 'logout'))
   ], new U.Options(Detail := 'maya@example.com'));
 end function;
 

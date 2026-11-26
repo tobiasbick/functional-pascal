@@ -51,13 +51,13 @@ end function;
 // - `Settings`: Optional tone, icon, action caption and input settings.
 // ## Returns
 // The graphical banner.
-public function Banner<TMsg>(
-  Id: string; Text: string; Open: bool; OnDismiss: Sys.Func<TMsg>? := null;
-  OnAction: Sys.Func<TMsg>? := null; Settings: Options? := null
-): E.Element<TMsg>;
+public function Banner of TMsg(
+  Id: string; Text: string; Open: bool; OnDismiss: (Sys.Func of TMsg)? := null;
+  OnAction: (Sys.Func of TMsg)? := null; Settings: Options? := null
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Banner(Id, Text, Open, OnDismiss, OnAction, Settings ?? new Options());
+  return (E.Element of TMsg).Banner(Id, Text, Open, OnDismiss, OnAction, Settings ?? new Options());
 end function;
 
 end unit;

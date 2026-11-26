@@ -22,12 +22,12 @@ uses System.Collections.Generic as Lists;
 // - `Id`: Stable widget identity.
 // - `Entries`: Native dock entries.
 // - `Settings`: Native appearance and input options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Entries: array of W.Entry<TMsg>; Settings: W.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Entries: array of W.Entry of TMsg; Settings: W.Options);
 begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   const Token: string := C.Token('dock', Id);
-  const Icons: Lists.List<string> := new Lists.List<string>(Entries.Length);
-  const Labels: Lists.List<string> := new Lists.List<string>(Entries.Length);
+  const Icons: Lists.List of string := new Lists.List of string(Entries.Length);
+  const Labels: Lists.List of string := new Lists.List of string(Entries.Length);
   const Tones: array of CuiCharts.CuiChartColor := new CuiCharts.CuiChartColor[Entries.Length];
   const Badges: array of int := new int[Entries.Length];
   const Kinds: array of int := new int[Entries.Length];
@@ -51,12 +51,12 @@ begin
           1
         end if;
         const Part: string := Id + '/' + Index.ToString();
-        if C.WantsFocus<TMsg>(Frame, Part, C.Token('dock-item', Part), Enabled) then
+        if C.WantsFocus of TMsg(Frame, Part, C.Token('dock-item', Part), Enabled) then
           Focus := Index;
         end if;
     end case;
   end for;
-  const Track: Sys.Func<int, string>? := if Frame.PaintingClosed then
+  const Track: Sys.Func of (int, string)? := if Frame.PaintingClosed then
     null
   else
     function(Index: int): string => C.Token('dock-item', Id + '/' + Index.ToString())
@@ -73,7 +73,7 @@ begin
     end case;
   end if;
 
-  C.Track<TMsg>(Frame, new App.Control(Id, '', 'dock', new Cui.CuiRectangle(), false));
+  C.Track of TMsg(Frame, new App.Control(Id, '', 'dock', new Cui.CuiRectangle(), false));
   if not Frame.PaintingClosed then
     for Index: int := 0 to Entries.Length - 1 do
       if Kinds[Index] > 0 then

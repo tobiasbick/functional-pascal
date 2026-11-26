@@ -12,7 +12,7 @@ uses System.Collections.Generic as Lists;
 
 function PackCommit(Items: array of D.Commit): array of CuiDeveloper.CuiDevCommit;
 begin
-  const Native: Lists.List<CuiDeveloper.CuiDevCommit> := new Lists.List<CuiDeveloper.CuiDevCommit>(
+  const Native: Lists.List of CuiDeveloper.CuiDevCommit := new Lists.List of CuiDeveloper.CuiDevCommit(
     Items.Length
   );
   for Entry: D.Commit in Items do
@@ -42,7 +42,7 @@ end function;
 // - `Selection`: Selection supplied to the widget.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Commits: array of D.Commit; Selection: int; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Commits: array of D.Commit; Selection: int; Changed: function(D.Event): TMsg; Settings: D.Options);
 begin
   const Role: string := 'commit-graph';
   const Token: string := C.Token(Role, Id);
@@ -57,7 +57,7 @@ begin
     Width.Value,
     Enabled
   );
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, Selection.ToString());
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, Selection.ToString());
   if Enabled and (Result.Index <> Selection or Result.Action >= 0 or Result.Count >= 0) then
     Frame.Messages.Add(Changed(new D.Event(Result.Index, Result.Count, Result.Action)));
   end if;

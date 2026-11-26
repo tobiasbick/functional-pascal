@@ -7,7 +7,7 @@ uses Fpas.Ui.Tui.Internal.Layout.Flexible as F;
 uses Fpas.Ui.Tui.Internal.Layout.Scene as Tree;
 uses Fpas.Ui.Tui.Internal.Layout.ScrollViews as V;
 
-function SameBinding<TMsg>(Left: Tree.Binding<TMsg>; Right: Tree.Binding<TMsg>): bool;
+function SameBinding of TMsg(Left: Tree.Binding of TMsg; Right: Tree.Binding of TMsg): bool;
 begin
   case Left of
     when Tree.Binding.Grid(const Area: F.Rect, _):
@@ -38,24 +38,24 @@ begin
         else
           return false;
       end case;
-    when Tree.Binding.SelectionList(_, const Body: F.Rect, const View: V.Viewport<TMsg>):
+    when Tree.Binding.SelectionList(_, const Body: F.Rect, const View: V.Viewport of TMsg):
       case Right of
-        when Tree.Binding.SelectionList(_, const Other: F.Rect, const Offset: V.Viewport<TMsg>):
-          return Body = Other and V.Equivalent<TMsg>(View, Offset);
+        when Tree.Binding.SelectionList(_, const Other: F.Rect, const Offset: V.Viewport of TMsg):
+          return Body = Other and V.Equivalent of TMsg(View, Offset);
         else
           return false;
       end case;
-    when Tree.Binding.Scroll(const View: V.Viewport<TMsg>):
+    when Tree.Binding.Scroll(const View: V.Viewport of TMsg):
       case Right of
-        when Tree.Binding.Scroll(const Other: V.Viewport<TMsg>):
-          return V.Equivalent<TMsg>(View, Other);
+        when Tree.Binding.Scroll(const Other: V.Viewport of TMsg):
+          return V.Equivalent of TMsg(View, Other);
         else
           return false;
       end case;
   end case;
 end function;
 
-function SameKeys<TMsg>(Left: array of K.ShortcutBinding<TMsg>; Right: array of K.ShortcutBinding<TMsg>): bool;
+function SameKeys of TMsg(Left: array of K.ShortcutBinding of TMsg; Right: array of K.ShortcutBinding of TMsg): bool;
 begin
   if Left.Length <> Right.Length then
     return false;
@@ -70,7 +70,7 @@ begin
   return true;
 end function;
 
-function SameScope<TMsg>(Left: Tree.Scope<TMsg>?; Right: Tree.Scope<TMsg>?): bool;
+function SameScope of TMsg(Left: (Tree.Scope of TMsg)?; Right: (Tree.Scope of TMsg)?): bool;
 begin
   if Left = null then
     return Right = null;
@@ -78,7 +78,7 @@ begin
 
   if Right = null or Left.Id <> Right.Id or Left.Initial <> Right.Initial
     or Left.Panel <>
-    Right.Panel or not SameKeys<TMsg>(
+    Right.Panel or not SameKeys of TMsg(
     Left.Shortcuts,
     Right.Shortcuts
   )
@@ -89,15 +89,15 @@ begin
   return true;
 end function;
 
-public function Equivalent<TMsg>(Left: Tree.Layout<TMsg>; Right: Tree.Layout<TMsg>): bool;
+public function Equivalent of TMsg(Left: Tree.Layout of TMsg; Right: Tree.Layout of TMsg): bool;
 begin
   // Callback identity is not presentation state. The host always installs the new routing tree.
   if Left.Cells.Length <> Right.Cells.Length or Left.Controls.Length <> Right.Controls.Length
     or Left.Regions.Length <> Right.Regions.Length
-    or not SameScope<TMsg>(
+    or not SameScope of TMsg(
     Left.Active,
     Right.Active
-  ) or not SameKeys<TMsg>(Left.GlobalKeys, Right.GlobalKeys)
+  ) or not SameKeys of TMsg(Left.GlobalKeys, Right.GlobalKeys)
   then
     return false;
   end if;
@@ -109,8 +109,8 @@ begin
   end for;
 
   for Index: int := 0 to Left.Controls.Length - 1 do
-    const A: Tree.Control<TMsg> := Left.Controls[Index];
-    const B: Tree.Control<TMsg> := Right.Controls[Index];
+    const A: Tree.Control of TMsg := Left.Controls[Index];
+    const B: Tree.Control of TMsg := Right.Controls[Index];
     if A.Id <> B.Id or A.Label <> B.Label or A.Role <> B.Role or A.Value <> B.Value
       or A.Bounds <> B.Bounds or A.Scope <> B.Scope or A.FocusReturn <> B.FocusReturn
       or A.FocusReplacement <> B.FocusReplacement
@@ -118,7 +118,7 @@ begin
       or A.Hint <> B.Hint or A.Foreground <> B.Foreground
       or A.Enabled <>
       B.Enabled
-      or not SameBinding<TMsg>(A.Action, B.Action)
+      or not SameBinding of TMsg(A.Action, B.Action)
     then
       return false;
     end if;

@@ -20,9 +20,9 @@ uses System as Sys;
 // - `Count`: Current number of variations from one through four.
 // ## Returns
 // The slider with stop changes and Generate requests.
-public function View(Count: int): E.Element<W.Event>;
+public function View(Count: int): E.Element of W.Event;
 begin
-  return W.StepSlider<W.Event>('variants', new W.Value('Variations', Count, 1, 4),
+  return W.StepSlider of W.Event('variants', new W.Value('Variations', Count, 1, 4),
     function(Change: W.Event): W.Event => Change,
     new W.Options(Tool := new Tools.Tool(Sys.Char.ConvertFromUtf32($E145), 'Generate')));
 end function;

@@ -14,21 +14,21 @@ uses System.Text as Text;
 // Collection headers and the releases backing their artwork and drill-down.
 public type Catalog = record
   // One grid header per group, with its own rating.
-  public Headers: I.ImmutableArray<Library.Album> := I.ImmutableArray<Library.Album>.Empty;
+  public Headers: I.ImmutableArray of Library.Album := (I.ImmutableArray of Library.Album).Empty;
   // Members keyed by stable group identity, in album catalogue order.
-  public Releases: I.ImmutableDictionary<string, I.ImmutableArray<Library.Album>> := I.ImmutableDictionary<string, I.ImmutableArray<Library.Album>>.Empty;
+  public Releases: I.ImmutableDictionary of (string, I.ImmutableArray of Library.Album) := I.ImmutableDictionary of (string, I.ImmutableArray of Library.Album).Empty;
 end record;
 
 // Groups the artists or genres in the detached catalogue snapshot `Albums` according to `Scope`.
 // Returns lightweight headers and ordered cover candidates without opening any images.
-public function Build(Albums: I.ImmutableArray<Library.Album>; Scope: Toolbar.Scope): Catalog;
+public function Build(Albums: I.ImmutableArray of Library.Album; Scope: Toolbar.Scope): Catalog;
 begin
   const Kind: Toolbar.Scope := Toolbar.Root(Scope);
   if not Toolbar.IsGroup(Kind) then
     return new Catalog();
   end if;
-  const Buckets: C.Dictionary<string, C.List<Library.Album>> := new C.Dictionary<string, C.List<Library.Album>>();
-  const Tags: C.Dictionary<string, Library.Membership> := new C.Dictionary<string, Library.Membership>();
+  const Buckets: C.Dictionary of (string, C.List of Library.Album) := new C.Dictionary of (string, C.List of Library.Album)();
+  const Tags: C.Dictionary of (string, Library.Membership) := new C.Dictionary of (string, Library.Membership)();
   for Album: Library.Album in Albums do
     const Memberships: array of Library.Membership := if Kind = Toolbar.Scope.Artists then
       Album.Credits
@@ -37,7 +37,7 @@ begin
     end if;
     for Credit: Library.Membership in Memberships do
       if not Buckets.ContainsKey(Credit.Id) then
-        Buckets[Credit.Id] := new C.List<Library.Album>();
+        Buckets[Credit.Id] := new C.List of Library.Album();
         Tags[Credit.Id] := Credit;
       end if;
 
@@ -52,13 +52,13 @@ begin
       );
     end for;
   end for;
-  const Headers: I.ImmutableArray<Library.Album>.Builder := I.ImmutableArray.CreateBuilder<Library.Album>(
+  const Headers: (I.ImmutableArray of Library.Album).Builder := I.ImmutableArray.CreateBuilder of Library.Album(
     Buckets.Count
   );
-  const Releases: I.ImmutableDictionary<string, I.ImmutableArray<Library.Album>>.Builder := I.ImmutableDictionary.CreateBuilder<string, I.ImmutableArray<Library.Album>>();
+  const Releases: I.ImmutableDictionary of (string, I.ImmutableArray of Library.Album).Builder := I.ImmutableDictionary.CreateBuilder of (string, I.ImmutableArray of Library.Album)();
   for Id: string in Buckets.Keys do
-    const Members: C.List<Library.Album> := Buckets[Id];
-    const Genres: C.SortedSet<string> := new C.SortedSet<string>(
+    const Members: C.List of Library.Album := Buckets[Id];
+    const Genres: C.SortedSet of string := new C.SortedSet of string(
       Sys.StringComparer.OrdinalIgnoreCase
     );
     const Revision: Text.StringBuilder := new Text.StringBuilder();
@@ -71,7 +71,7 @@ begin
 
       discard Revision.Append(Album.Id).Append(Album.Revision);
     end for;
-    const Labels: array of string := Linq.Enumerable.ToArray<string>(Genres);
+    const Labels: array of string := Linq.Enumerable.ToArray of string(Genres);
     const Credit: Library.Membership := Tags[Id];
     Headers.Add(
       new Library.Album(
@@ -83,7 +83,7 @@ begin
         Tracks, Revision.ToString(), Credit.Rating, Labels
       )
     );
-    Releases[Id] := I.ImmutableArray.CreateRange<Library.Album>(Members);
+    Releases[Id] := I.ImmutableArray.CreateRange of Library.Album(Members);
   end for;
 
   return new Catalog(Headers.MoveToImmutable(), Releases.ToImmutable());

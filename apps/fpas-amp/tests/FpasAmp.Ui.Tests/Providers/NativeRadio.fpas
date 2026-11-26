@@ -79,9 +79,9 @@ begin
       NowPlaying := 'Mara Vale · Blue Hour', Levels := [0.46F, 0.57F]
     )
   );
-  using const Window: Gui.Session<App.Msg> := GuiHost.StartThemed<App.State, App.Msg>(
+  using const Window: Gui.Session of App.Msg := GuiHost.StartThemed of (App.State, App.Msg)(
     Fixture,
-    function(Current: App.State; _Message: App.Msg): Mvu.Transition<App.State, App.Msg> => new Mvu.Transition<App.State, App.Msg>(
+    function(Current: App.State; _Message: App.Msg): Mvu.Transition of (App.State, App.Msg) => new Mvu.Transition of (App.State, App.Msg)(
       Current,
       []
     ),
@@ -90,7 +90,7 @@ begin
     App.Theme
   );
   X.Assert.True(Window.Step());
-  X.Assert.Contains<string>('Mara Vale · Blue Hour', Window.Snapshot().Text);
+  X.Assert.Contains of string('Mara Vale · Blue Hour', Window.Snapshot().Text);
   Window.CapturePng(IO.Path.Combine(Directory, 'radio-stations-fixture.png'));
 end procedure;
 
@@ -125,12 +125,12 @@ public type NativeRadioTests = record
       Scroll := 145.0F
     );
     const Name: Radio.State := RadioUpdate.Apply(Initial, Radio.Msg.Sort(new Tables.Sort(0))).Model;
-    X.Assert.Equal<string>('high', Name.Items[0].Id);
-    X.Assert.Equal<string>('unknown', Name.Items[Name.Cursor].Id);
-    X.Assert.Equal<string>('low', Name.Items[Name.Anchor].Id);
+    X.Assert.Equal of string('high', Name.Items[0].Id);
+    X.Assert.Equal of string('unknown', Name.Items[Name.Cursor].Id);
+    X.Assert.Equal of string('low', Name.Items[Name.Anchor].Id);
     const Bitrate: Radio.State := RadioUpdate.Apply(Name, Radio.Msg.Sort(new Tables.Sort(4))).Model;
-    X.Assert.Equal<string>('low', Bitrate.Items[0].Id);
-    X.Assert.Equal<string>('unknown', Bitrate.Items[2].Id);
+    X.Assert.Equal of string('low', Bitrate.Items[0].Id);
+    X.Assert.Equal of string('unknown', Bitrate.Items[2].Id);
     const Descending: Radio.State := RadioUpdate.Apply(
       Bitrate,
       Radio.Msg.Sort(new Tables.Sort(4, true))
@@ -139,20 +139,20 @@ public type NativeRadioTests = record
       Descending,
       Radio.Msg.Found(0L, Initial.Items)
     ).Model;
-    X.Assert.Equal<string>('high', Updated.Items[0].Id);
-    X.Assert.Equal<string>('low', Updated.Items[1].Id);
-    X.Assert.Equal<string>('unknown', Updated.Items[2].Id);
-    X.Assert.Equal<string>('unknown', Updated.Items[Updated.Cursor].Id);
-    X.Assert.Equal<string>('low', Updated.Items[Updated.Anchor].Id);
-    X.Assert.Equal<float>(145.0F, Updated.Scroll);
+    X.Assert.Equal of string('high', Updated.Items[0].Id);
+    X.Assert.Equal of string('low', Updated.Items[1].Id);
+    X.Assert.Equal of string('unknown', Updated.Items[2].Id);
+    X.Assert.Equal of string('unknown', Updated.Items[Updated.Cursor].Id);
+    X.Assert.Equal of string('low', Updated.Items[Updated.Anchor].Id);
+    X.Assert.Equal of float(145.0F, Updated.Scroll);
     const Original: Radio.State := RadioUpdate.Apply(
       Updated,
       Radio.Msg.Sort(new Tables.Sort(-1))
     ).Model;
-    X.Assert.Equal<string>('unknown', Original.Items[0].Id);
-    X.Assert.Equal<string>('low', Original.Items[1].Id);
-    X.Assert.Equal<string>('high', Original.Items[2].Id);
-    X.Assert.Equal<string>('unknown', Initial.Items[0].Id);
+    X.Assert.Equal of string('unknown', Original.Items[0].Id);
+    X.Assert.Equal of string('low', Original.Items[1].Id);
+    X.Assert.Equal of string('high', Original.Items[2].Id);
+    X.Assert.Equal of string('unknown', Initial.Items[0].Id);
   end procedure;
 
   // The radio filter edits and resets a draft, preserving the name search on apply.
@@ -163,35 +163,35 @@ public type NativeRadioTests = record
       Filter := new Radio.Query('local', Country := 'France')
     );
     const Opened: Radio.State := RadioUpdate.Apply(Initial, Radio.Msg.SetFilters(true)).Model;
-    const Edited: Mvu.Transition<Radio.State, Radio.Msg> := RadioUpdate.Apply(
+    const Edited: Mvu.Transition of (Radio.State, Radio.Msg) := RadioUpdate.Apply(
       Opened,
       Radio.Msg.Filter('Language', ' German ')
     );
     X.Assert.Empty(Edited.Commands);
-    X.Assert.Equal<string>('', Edited.Model.Filter.Language);
-    const Applied: Mvu.Transition<Radio.State, Radio.Msg> := RadioUpdate.Apply(
+    X.Assert.Equal of string('', Edited.Model.Filter.Language);
+    const Applied: Mvu.Transition of (Radio.State, Radio.Msg) := RadioUpdate.Apply(
       RadioUpdate.Apply(Edited.Model, Radio.Msg.Filter('Codec', ' aac+ ')).Model,
       Radio.Msg.ApplyFilters
     );
-    X.Assert.Equal<int>(1, Applied.Commands.Length);
-    X.Assert.Equal<string>('German', Applied.Model.Filter.Language);
-    X.Assert.Equal<string>('AAC+', Applied.Model.Filter.Codec);
+    X.Assert.Equal of int(1, Applied.Commands.Length);
+    X.Assert.Equal of string('German', Applied.Model.Filter.Language);
+    X.Assert.Equal of string('AAC+', Applied.Model.Filter.Codec);
     X.Assert.Null(Applied.Model.FilterDraft);
     const Empty: Radio.State := RadioUpdate.Apply(
       Applied.Model,
       Radio.Msg.Found(Applied.Model.Revision, [])
     ).Model;
-    X.Assert.Equal<Radio.Query>(Applied.Model.Filter, Empty.Filter);
+    X.Assert.Equal of Radio.Query(Applied.Model.Filter, Empty.Filter);
     const Reset: Radio.State := RadioUpdate.Apply(
       RadioUpdate.Apply(Applied.Model, Radio.Msg.SetFilters(true)).Model,
       Radio.Msg.ResetFilters
     ).Model;
-    X.Assert.Equal<string>('France', Reset.Filter.Country);
+    X.Assert.Equal of string('France', Reset.Filter.Country);
     const Cleared: Radio.State := RadioUpdate.Apply(Reset, Radio.Msg.ApplyFilters).Model;
-    X.Assert.Equal<string>('local', Cleared.Filter.Name);
-    X.Assert.Equal<string>('', Cleared.Filter.Country);
-    X.Assert.Equal<string>('', Cleared.Filter.Language);
-    X.Assert.Equal<string>('', Cleared.Filter.Codec);
+    X.Assert.Equal of string('local', Cleared.Filter.Name);
+    X.Assert.Equal of string('', Cleared.Filter.Country);
+    X.Assert.Equal of string('', Cleared.Filter.Language);
+    X.Assert.Equal of string('', Cleared.Filter.Codec);
   end procedure;
 
   // Adds a favorite through the dialog, reloads the settings and opens the station from the sidebar.
@@ -238,19 +238,19 @@ public type NativeRadioTests = record
       Send(Session, App.Msg.Radio(Radio.Msg.Save));
       X.Assert.False(Has(Session, 'radio-url'));
       const Saved: array of Radio.Station := Store.Load(Data.Path).RadioFavorites;
-      X.Assert.Equal<int>(2, Saved.Length);
-      X.Assert.Equal<string>('Local Test Radio', Saved[1].Name);
+      X.Assert.Equal of int(2, Saved.Length);
+      X.Assert.Equal of string('Local Test Radio', Saved[1].Name);
       X.Assert.True(Saved[1].Hls);
       const Destination: Nav.Route := Nav.Route.Station(Saved[1].Id);
-      X.Assert.Equal<Nav.Route?>(Destination, Nav.Parse(Nav.Key(Destination)));
-      X.Assert.Contains<Gui.Control>(
+      X.Assert.Equal of Nav.Route? (Destination, Nav.Parse(Nav.Key(Destination)));
+      X.Assert.Contains of Gui.Control(
         Session.Window.Snapshot().Controls,
         function(Item: Gui.Control): bool => Item.Id = 'navigation'
           and Item.Key = Nav.Key(Destination) and Item.Text = 'Local Test Radio'
       );
       Send(Session, App.Msg.Navigation(Nav.Msg.Select(Destination)));
-      X.Assert.Contains<string>('Now playing', Session.Window.Snapshot().Text);
-      X.Assert.Contains<string>('Stopped', Session.Window.Snapshot().Text);
+      X.Assert.Contains of string('Now playing', Session.Window.Snapshot().Text);
+      X.Assert.Contains of string('Stopped', Session.Window.Snapshot().Text);
       X.Assert.True(Has(Session, 'radio-play-' + Saved[1].Id));
       const Artifacts: string? := Sys.Environment.GetEnvironmentVariable('FPAS_AMP_UI_ARTIFACTS');
       if Artifacts <> null then

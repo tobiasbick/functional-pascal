@@ -10,7 +10,7 @@ uses DesktopCommands.Update as Update;
 uses DesktopCommands.View as View;
 
 begin
-  Gui.RunThemed<S.Model, S.Msg>(
+  Gui.RunThemed of (S.Model, S.Msg)(
     S.Initialize(Preferences.DefaultPath()), Update.Apply, View.Build,
     new Gui.Options(
       Title := 'Native desktop commands', Width := 720, Height := 420,

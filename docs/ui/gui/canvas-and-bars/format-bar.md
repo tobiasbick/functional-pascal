@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Canvas.FormatBars as W;
 // - `Current`: The format of the current selection.
 // ## Returns
 // The format bar with edits and actions as messages.
-public function View(Current: W.Value): E.Element<W.Event>;
+public function View(Current: W.Value): E.Element of W.Event;
 begin
-  return W.FormatBar<W.Event>('format-selection', Current,
+  return W.FormatBar of W.Event('format-selection', Current,
     function(Change: W.Event): W.Event => Change);
 end function;
 

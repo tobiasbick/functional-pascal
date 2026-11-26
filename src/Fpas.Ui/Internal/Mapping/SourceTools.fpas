@@ -21,7 +21,7 @@ uses System as Sys;
 // - `Messages`: Message converter.
 // ## Returns
 // Equivalent element with mapped messages.
-public function Map<TChild, TParent>(Value: E.Element<TChild>; Messages: function(TChild): TParent): E.Element<TParent>;
+public function Map of (TChild, TParent)(Value: E.Element of TChild; Messages: function(TChild): TParent): E.Element of TParent;
 begin
   case Value of
     when E.Element.Markdown(
@@ -30,7 +30,7 @@ begin
       const Changed: function(Markdowns.Event): TChild,
       const Settings: Markdowns.Options
     ):
-      return E.Element<TParent>.Markdown(
+      return (E.Element of TParent).Markdown(
         Id,
         Text,
         function(Value: Markdowns.Event): TParent => Messages(Changed(Value)),
@@ -42,7 +42,7 @@ begin
       const Changed: function(CodeEditors.Event): TChild,
       const Settings: CodeEditors.Options
     ):
-      return E.Element<TParent>.CodeEditor(
+      return (E.Element of TParent).CodeEditor(
         Id,
         Text,
         function(Value: CodeEditors.Event): TParent => Messages(Changed(Value)),
@@ -56,7 +56,7 @@ begin
       const Changed: function(DiffViews.Event): TChild,
       const Settings: DiffViews.Options
     ):
-      return E.Element<TParent>.DiffView(
+      return (E.Element of TParent).DiffView(
         Id,
         Before,
         After,
@@ -71,7 +71,7 @@ begin
       const Changed: function(HexViews.Event): TChild,
       const Settings: HexViews.Options
     ):
-      return E.Element<TParent>.HexView(
+      return (E.Element of TParent).HexView(
         Id,
         Data,
         Selected,
@@ -84,7 +84,7 @@ begin
       const Cleared: TChild,
       const Settings: LogConsoles.Options
     ):
-      return E.Element<TParent>.LogConsole(Id, Entries, Messages(Cleared), Settings);
+      return (E.Element of TParent).LogConsole(Id, Entries, Messages(Cleared), Settings);
     when E.Element.Terminal(
       const Id: string,
       const Output: string,
@@ -92,7 +92,7 @@ begin
       const Received: function(Terminals.Event): TChild,
       const Settings: Terminals.Options
     ):
-      return E.Element<TParent>.Terminal(
+      return (E.Element of TParent).Terminal(
         Id,
         Output,
         Revision,

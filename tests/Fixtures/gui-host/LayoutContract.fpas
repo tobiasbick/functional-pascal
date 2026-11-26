@@ -21,10 +21,10 @@ uses GuiGallery.Shared.State as Shared;
 uses System as Sys;
 
 procedure Validate();
-  procedure Reject(Node: E.Element<int>; Profile: V.Target; Reason: string);
+  procedure Reject(Node: E.Element of int; Profile: V.Target; Reason: string);
   begin
     try
-      discard V.Prepare<int>(Node, Profile);
+      discard V.Prepare of int(Node, Profile);
     catch Error: Sys.ArgumentException do
       A.Check(Error.Message.Contains(Reason), Error.Message);
       return;
@@ -33,57 +33,64 @@ procedure Validate();
     raise new Sys.InvalidOperationException('Invalid layout was accepted.');
   end procedure;
 begin
-  var Nested: E.Element<int> := E.Text<int>('leaf');
+  var Nested: E.Element of int := E.Text of int('leaf');
   for Depth: int := 1 to 64 do
-    Nested := E.Styled<int>(Nested, Styles.Role.Default);
+    Nested := E.Styled of int(Nested, Styles.Role.Default);
   end for;
-  const Prepared: V.Prepared<int> := V.Prepare<int>(Nested, V.Target.Graphical);
+  const Prepared: V.Prepared of int := V.Prepare of int(Nested, V.Target.Graphical);
   A.Check(Sys.Object.ReferenceEquals(Nested, Prepared.Tree), 'Validation changed the nested view.');
 
   for Profile: V.Target in [V.Target.Terminal, V.Target.Portable] do
-    Reject(E.Spacer<int>(), Profile, 'Graphical');
-    Reject(E.Gap<int>(L.Measure.Logical(8)), Profile, 'Graphical');
-    Reject(Stacks.Stack<int>(new L.Flow(), E.Text<int>('test')), Profile, 'Graphical');
+    Reject(E.Spacer of int(), Profile, 'Graphical');
+    Reject(E.Gap of int(L.Measure.Logical(8)), Profile, 'Graphical');
+    Reject(Stacks.Stack of int(new L.Flow(), E.Text of int('test')), Profile, 'Graphical');
     Reject(
-      E.Row<int>(new L.Flow(ReadingDirection := L.Direction.RightToLeft)),
+      E.Row of int(new L.Flow(ReadingDirection := L.Direction.RightToLeft)),
       Profile,
       'Graphical'
     );
-    Reject(E.Column<int>(new L.Flow(PaddingTop := L.Spacing.None)), Profile, 'Graphical');
+    Reject(E.Column of int(new L.Flow(PaddingTop := L.Spacing.None)), Profile, 'Graphical');
     Reject(
-      E.Size<int>(E.Text<int>('test'), new L.Flex(Width := new L.AxisSize())),
+      E.Size of int(E.Text of int('test'), new L.Flex(Width := new L.AxisSize())),
       Profile,
       'Graphical'
     );
-    Reject(E.ScrollView<int>('x', E.Text<int>('test'), Horizontal := true), Profile, 'Graphical');
+    Reject(
+      E.ScrollView of int('x', E.Text of int('test'), Horizontal := true),
+      Profile,
+      'Graphical'
+    );
   end for;
 
-  Reject(E.Gap<int>(L.Measure.Logical(-1)), V.Target.Graphical, 'nonnegative');
-  Reject(E.Gap<int>(L.Measure.Cells(1)), V.Target.Graphical, 'terminal');
+  Reject(E.Gap of int(L.Measure.Logical(-1)), V.Target.Graphical, 'nonnegative');
+  Reject(E.Gap of int(L.Measure.Cells(1)), V.Target.Graphical, 'terminal');
   Reject(
-    E.Column<int>(new L.Flow(ReadingDirection := cast<L.Direction>(255))),
+    E.Column of int(new L.Flow(ReadingDirection := cast<L.Direction>(255))),
     V.Target.Graphical,
     'direction'
   );
   Reject(
-    E.Column<int>(new L.Flow(PaddingEnd := L.Spacing.Fixed(L.Measure.Logical(-1)))),
+    E.Column of int(new L.Flow(PaddingEnd := L.Spacing.Fixed(L.Measure.Logical(-1)))),
     V.Target.Graphical,
     'nonnegative'
   );
-  Reject(Stacks.Stack<int>(new L.Flow(Wrap := true)), V.Target.Graphical, 'without wrapping');
+  Reject(Stacks.Stack of int(new L.Flow(Wrap := true)), V.Target.Graphical, 'without wrapping');
   Reject(
-    E.Size<int>(E.Text<int>('test'), new L.Flex(Basis := L.Extent.Fill, Width := new L.AxisSize())),
+    E.Size of int(
+      E.Text of int('test'),
+      new L.Flex(Basis := L.Extent.Fill, Width := new L.AxisSize())
+    ),
     V.Target.Graphical,
     'cannot mix'
   );
   Reject(
-    E.Size<int>(E.Text<int>('test'), new L.Flex(Grow := 1, Height := new L.AxisSize())),
+    E.Size of int(E.Text of int('test'), new L.Flex(Grow := 1, Height := new L.AxisSize())),
     V.Target.Graphical,
     'cannot mix'
   );
   Reject(
-    E.Size<int>(
-      E.Text<int>('test'),
+    E.Size of int(
+      E.Text of int('test'),
       new L.Flex(
         Width := new L.AxisSize(Minimum := L.Measure.Logical(20), Maximum := L.Measure.Logical(10))
       )
@@ -92,16 +99,16 @@ begin
     'minimum exceeds'
   );
   Reject(
-    E.Size<int>(
-      E.Text<int>('test'),
+    E.Size of int(
+      E.Text of int('test'),
       new L.Flex(Height := new L.AxisSize(Basis := L.Extent.Percent(101.0F)))
     ),
     V.Target.Graphical,
     'percentage'
   );
   Reject(
-    E.Size<int>(
-      E.Text<int>('test'),
+    E.Size of int(
+      E.Text of int('test'),
       new L.Flex(Width := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Cells(4))))
     ),
     V.Target.Graphical,
@@ -122,15 +129,15 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
       Wheel := 0.0F;
     end if;
   end procedure;
-  procedure Step(Session: Gui.Session<State.Msg>);
+  procedure Step(Session: Gui.Session of State.Msg);
   begin
     A.Check(Session.Step(), 'Layout gallery closed.');
   end procedure;
 begin
   Validate();
-  discard V.Prepare<State.Msg>(
-    Composition.Map<int, State.Msg>(
-      Stacks.Stack<int>(new L.Flow(), E.Spacer<int>(), E.Gap<int>(L.Measure.Logical(4))),
+  discard V.Prepare of State.Msg(
+    Composition.Map of (int, State.Msg)(
+      Stacks.Stack of int(new L.Flow(), E.Spacer of int(), E.Gap of int(L.Measure.Logical(4))),
       function(Value: int): State.Msg => State.Msg.Preview
     ), V.Target.Graphical
   );
@@ -139,7 +146,7 @@ begin
   var Wheel: float := 0.0F;
   const Window: Cui.CuiWindow := new Cui.CuiWindow('FPas CUI Layout', 1100, 1050, Renderer, true);
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Layout), Update.Update, Gallery.Build, Window, 32, Inject,
     ThemeFor := Update.ThemeFor
   );

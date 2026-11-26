@@ -56,7 +56,7 @@ begin
     Rules.Reject(At, 'The minimum exceeds the maximum width.');
   end if;
 
-  if not Sys.Enum.IsDefined<L.Alignment>(
+  if not Sys.Enum.IsDefined of L.Alignment(
     Settings.Align
   ) or (Settings.Wrap and not Settings.Horizontal)
   then
@@ -73,9 +73,9 @@ public procedure Badge(Text: string; Settings: B.Options; At: string);
 begin
   Rules.CheckText(Text, At);
   Rules.CheckText(Settings.Icon, At + '/icon');
-  if not Sys.Enum.IsDefined<S.Tone>(
+  if not Sys.Enum.IsDefined of S.Tone(
     Settings.Tone
-  ) or not Sys.Enum.IsDefined<Buttons.Size>(Settings.Size)
+  ) or not Sys.Enum.IsDefined of Buttons.Size(Settings.Size)
   then
     Rules.Reject(At, 'Unknown badge tone or size.');
   end if;

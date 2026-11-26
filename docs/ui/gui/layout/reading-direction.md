@@ -17,18 +17,18 @@ uses Fpas.Ui.Layout as L;
 // Places the two labels on opposite sides of a mirrored row.
 // ## Returns
 // A row with explicit leading inset, gap and spacer.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return E.Row<string>(
+  return E.Row of string(
     new L.Flow(
       ReadingDirection := L.Direction.RightToLeft,
       Padding := L.Spacing.Fixed(L.Measure.Logical(12)),
       PaddingStart := L.Spacing.Fixed(L.Measure.Logical(24))
     ),
-    E.Text<string>('Start'),
-    E.Gap<string>(L.Measure.Logical(12)),
-    E.Spacer<string>(),
-    E.Text<string>('End')
+    E.Text of string('Start'),
+    E.Gap of string(L.Measure.Logical(12)),
+    E.Spacer of string(),
+    E.Text of string('End')
   );
 end function;
 

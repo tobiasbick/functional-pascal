@@ -16,12 +16,12 @@ uses GuiGallery.Pages.Lists.Widgets.Tasks as Tasks;
 uses GuiGallery.Pages.Lists.Widgets.TreeAndList as TreeAndList;
 uses GuiGallery.Shared.Sections as G;
 
-function Question(Model: State.Model; Index: int; Title: string; Answer: string): E.Element<State.Msg>;
+function Question(Model: State.Model; Index: int; Title: string; Answer: string): E.Element of State.Msg;
 begin
-  return A.Accordion<State.Msg>(
+  return A.Accordion of State.Msg(
     'accordion/' + Index.ToString(), Title, Model.AccordionOpen[Index],
     function(Open: bool): State.Msg => State.Msg.SetAccordion(Index, Open),
-    E.Styled<State.Msg>(E.Text<State.Msg>(Answer), S.Role.Secondary)
+    E.Styled of State.Msg(E.Text of State.Msg(Answer), S.Role.Secondary)
   );
 end function;
 
@@ -31,9 +31,9 @@ end function;
 // - `Model`: Model-owned expansion for each question.
 // ## Returns
 // The Data display page sections.
-public function View(Model: State.Model): array of E.Element<State.Msg>;
+public function View(Model: State.Model): array of E.Element of State.Msg;
 begin
-  const Items: array of E.Element<State.Msg> := [
+  const Items: array of E.Element of State.Msg := [
     Question(
       Model, 0, 'Is it really dependency free?',
       'Yes. The core is plain C99. Windows uses Win32, macOS uses Cocoa and Linux uses X11. Fonts and icons are embedded.'
@@ -48,17 +48,17 @@ begin
     )
   ];
   return [
-    G.Heading<State.Msg>(Strings.Get('Text.Table'), Strings.Get('Heading.TableHint')),
+    G.Heading of State.Msg(Strings.Get('Text.Table'), Strings.Get('Heading.TableHint')),
     People.View(Model),
     TreeAndList.View(Model),
-    G.Heading<State.Msg>(
+    G.Heading of State.Msg(
       Strings.Get('Heading.ReorderableList'),
       Strings.Get('Heading.ReorderableListHint')
     ),
     Tasks.View(Model),
-    G.Heading<State.Msg>(Strings.Get('Heading.Accordion')),
-    Cards.Card<State.Msg>('accordion-card', Items, new Cards.Options(PaddingY := 4.0F)),
-    G.Heading<State.Msg>(
+    G.Heading of State.Msg(Strings.Get('Heading.Accordion')),
+    Cards.Card of State.Msg('accordion-card', Items, new Cards.Options(PaddingY := 4.0F)),
+    G.Heading of State.Msg(
       Strings.Get('Heading.VirtualList'),
       Strings.Get('Heading.VirtualListHint')
     ),

@@ -7,8 +7,8 @@ For a short introduction and a feature composition example, see [Model–View–
 
 ## Driving a session
 
-In `Fpas.Ui.Mvu.Application`, `Transition<TModel, TMsg>` contains the next model
-and an array of `Command<TMsg>`. `Fpas.Ui.Mvu.Session.Start` takes an initial
+In `Fpas.Ui.Mvu.Application`, `Transition of (TModel, TMsg)` contains the next model
+and an array of `Command of TMsg`. `Fpas.Ui.Mvu.Session.Start` takes an initial
 model, an `Update` function, a host request handler and a mailbox capacity.
 The host owns input routing, the view and presentation. `Focus` and `Exit`
 produce host requests, so the host resolves control IDs and manages its own
@@ -43,11 +43,11 @@ Split substantial applications into feature slices, each with its own model,
 message type, update function and view. The parent routes messages to the owning
 slice and combines its transition with the application state in one session.
 Keep shared state under an explicit owner and control/effect IDs distinct across
-slices. Use `Fpas.Ui.Mvu.Composition.MapTransition<TModel, TChild, TParent>`
+slices. Use `Fpas.Ui.Mvu.Composition.MapTransition of (TModel, TChild, TParent)`
 to translate a child's transition with a pure message wrapper such as a parent
 variant case. It retains the next child model and returns parent commands in
 their original order. The parent places that child model in its own model.
-`MapCommand<TChild, TParent>` translates an individual command.
+`MapCommand of (TChild, TParent)` translates an individual command.
 
 The optional `Scope` prefixes background start and cancel IDs with `Scope/`.
 Use the same scope for a slice's lifetime so cancellation and supersession reach
@@ -55,9 +55,9 @@ its own runs. Focus IDs stay unchanged: they identify controls in the complete
 view. Mapping a command preserves deferred execution, the cancellation token,
 and backpressure while translating posts and expected failures to parent messages.
 
-Host-specific payloads implement `Application.HostExtension<TMsg>`. Its generic
-`Map<TNext>` method rebuilds the payload with translated message factories and
-returns `HostExtension<TNext>`. A mapped opaque payload is rejected instead of
+Host-specific payloads implement `Application.HostExtension of TMsg`. Its generic
+`Map of TNext` method rebuilds the payload with translated message factories and
+returns `HostExtension of TNext`. A mapped opaque payload is rejected instead of
 being delivered under the wrong message type. GUI toast requests implement this
 contract, including their Undo/action callbacks.
 
@@ -83,7 +83,7 @@ optimizations.
 
 `StartBackground` runs an SDK [effect](../../pascal/libraries/effects.md) on a
 worker, including the work before its first `await`. It provides a cancellation
-token and `BackgroundContext<TMsg>` with `Post` and `Clock`. Await `Post` to respect mailbox
+token and `BackgroundContext of TMsg` with `Post` and `Clock`. Await `Post` to respect mailbox
 capacity. Its completion reports admission, and `Update` receives the message
 on a later owner turn.
 
@@ -95,7 +95,7 @@ to the worker token. Composition and reply interception forward the same clock.
 The [desktop progress example](../../../examples/ui/gui/desktop-commands/Background.fpas)
 uses the effect's clock for its timer.
 
-Use `FromEffect` to project the dependencies of an `Effect<A, E, R>` from the
+Use `FromEffect` to project the dependencies of an `Effect of (A, E, R)` from the
 running context and translate `Outcome.Success` and `Outcome.Failure` into
 messages. The dependency projection can pass `Post` through for progress.
 Unexpected CLR exceptions fault the worker. Use `FromWorker` to adapt a
@@ -152,7 +152,7 @@ drives replacement and shutdown with a full mailbox.
 ## Testing effect replies
 
 Reference [Fpas.Ui.Mvu.Testing](../../../src/Fpas.Ui.Mvu.Testing/Fpas.Ui.Mvu.Testing.fpasproj)
-from a test project. Use `Effects<TMsg>.Watch(id)` before dispatching the operation
+from a test project. Use `(Effects of TMsg).Watch(id)` before dispatching the operation
 and wrap the resulting transition with `Wrap`. Read a held reply from the watcher,
 assert the intermediate model, then await `Release()` and advance the session.
 The [effect reply test](../../../tests/Fpas.Ui.Mvu.Tests/EffectRepliesTests.fpas)

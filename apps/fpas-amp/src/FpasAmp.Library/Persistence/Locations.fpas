@@ -17,7 +17,7 @@ begin
   if Source.Offline or Source.Paused then
     return true;
   end if;
-  const Extensions: C.HashSet<string> := new C.HashSet<string>(
+  const Extensions: C.HashSet of string := new C.HashSet of string(
     Source.Extensions,
     Sys.StringComparer.OrdinalIgnoreCase
   );
@@ -79,13 +79,13 @@ end function;
 public function Configure(Connection: Db.SqliteConnection; Sources: array of S.MusicSource; Current: function(): bool; Cancellation: T.CancellationToken): bool;
 begin
   using const Transaction: Db.SqliteTransaction := Connection.BeginTransaction();
-  const Wanted: C.Dictionary<string, string> := new C.Dictionary<string, string>(
+  const Wanted: C.Dictionary of (string, string) := new C.Dictionary of (string, string)(
     Sys.StringComparer.Ordinal
   );
   for Source: S.MusicSource in Sources do
     Wanted[Source.Id] := Sql.Key(Source.Path);
   end for;
-  const Remove: C.List<string> := new C.List<string>();
+  const Remove: C.List of string := new C.List of string();
   using const Query: Db.SqliteCommand := Sql.Command(
     Connection,
     'SELECT id,path_key FROM sources;',

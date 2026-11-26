@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Charts.RadialGauges as W;
 // - `Temperature`: Current temperature in degrees Celsius.
 // ## Returns
 // The widget for the application view.
-public function View(Temperature: float): E.Element<string>;
+public function View(Temperature: float): E.Element of string;
 begin
-  return W.RadialGauge<string>('temp', Temperature, 20.0F, 100.0F,
+  return W.RadialGauge of string('temp', Temperature, 20.0F, 100.0F,
     new W.Options(Label := 'GPU temperature', Unit := 'C', Target := 85.0F, Size := 180.0F));
 end function;
 

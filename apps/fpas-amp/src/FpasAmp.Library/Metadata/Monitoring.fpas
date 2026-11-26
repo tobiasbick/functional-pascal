@@ -45,7 +45,7 @@ public type Session = record implements Sys.IAsyncDisposable
   FingerprintGate: T.SemaphoreSlim;
 
   // Loads the editor's snapshot after the owned database schemas are ready.
-  public async function ReadTags(Track: M.Entry; Cancellation: T.CancellationToken): Tasks.Task<TagFiles.Snapshot>;
+  public async function ReadTags(Track: M.Entry; Cancellation: T.CancellationToken): Tasks.Task of TagFiles.Snapshot;
   begin
     await self.Ready.WaitAsync(Cancellation).ConfigureAwait(false);
     return TagAccess.Load(self.Database, self.UserDatabase, Track);
@@ -54,7 +54,7 @@ public type Session = record implements Sys.IAsyncDisposable
   // Records the editor's explicit changes in the selected destinations.
   public async function WriteTags(
     Track: M.Entry; Original: TagFiles.Snapshot;
-    Changes: I.ImmutableDictionary<string, string?>; ToDatabase: bool; ToFile: bool;
+    Changes: I.ImmutableDictionary of (string, string?); ToDatabase: bool; ToFile: bool;
     Cancellation: T.CancellationToken
   ): Tasks.Task;
   requires ToDatabase or ToFile;
@@ -92,7 +92,7 @@ public type Session = record implements Sys.IAsyncDisposable
   end procedure;
 
   // Reads a bounded page sorted/filtered by `Request`. Cancellation owns this query.
-  public async function QueryAsync(Request: M.Query; Cancellation: T.CancellationToken): Tasks.Task<I.ImmutableArray<M.Entry>>;
+  public async function QueryAsync(Request: M.Query; Cancellation: T.CancellationToken): Tasks.Task of I.ImmutableArray of M.Entry;
   requires Request.Limit >= 1 and Request.Limit <= 500;
   requires Request.Offset >= 0;
   requires Request.MinimumRating = null or (Request.MinimumRating >= 1 and Request.MinimumRating <=
@@ -103,8 +103,8 @@ public type Session = record implements Sys.IAsyncDisposable
       Cancellation
     );
     await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
-    return await Tasks.Task.Run<I.ImmutableArray<M.Entry>>(
-      function(): I.ImmutableArray<M.Entry> => Queries.Read(
+    return await Tasks.Task.Run of I.ImmutableArray of M.Entry(
+      function(): I.ImmutableArray of M.Entry => Queries.Read(
         self.Database,
         self.UserDatabase,
         Request,
@@ -120,7 +120,7 @@ public type Session = record implements Sys.IAsyncDisposable
   // - `Cancellation`: Cancels waiting and reading.
   // ## Returns
   // Current source entries in their default playback order.
-  public async function QueueAsync(AlbumId: string; Cancellation: T.CancellationToken): Tasks.Task<I.ImmutableArray<M.Entry>>;
+  public async function QueueAsync(AlbumId: string; Cancellation: T.CancellationToken): Tasks.Task of I.ImmutableArray of M.Entry;
   requires AlbumId <> null;
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
@@ -128,8 +128,8 @@ public type Session = record implements Sys.IAsyncDisposable
       Cancellation
     );
     await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
-    return await Tasks.Task.Run<I.ImmutableArray<M.Entry>>(
-      function(): I.ImmutableArray<M.Entry> => Queries.ReadRelease(
+    return await Tasks.Task.Run of I.ImmutableArray of M.Entry(
+      function(): I.ImmutableArray of M.Entry => Queries.ReadRelease(
         self.Database,
         self.UserDatabase,
         AlbumId,
@@ -141,7 +141,7 @@ public type Session = record implements Sys.IAsyncDisposable
 
   // Loads embedded artwork only on request and caches it by content hash.
   // `FileId` is an indexed file; cancellation bounds waiting and cache I/O.
-  public async function CoverAsync(FileId: long; Cancellation: T.CancellationToken): Tasks.Task<Pictures.Cover?>;
+  public async function CoverAsync(FileId: long; Cancellation: T.CancellationToken): Tasks.Task of Pictures.Cover?;
   requires FileId > 0L;
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
@@ -149,9 +149,9 @@ public type Session = record implements Sys.IAsyncDisposable
       Cancellation
     );
     await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
-    return await Tasks.TaskExtensions.Unwrap<Pictures.Cover?>(
-      Tasks.Task.Run<Tasks.Task<Pictures.Cover?>>(
-        function(): Tasks.Task<Pictures.Cover?> => Covers.Read(
+    return await Tasks.TaskExtensions.Unwrap of Pictures.Cover? (
+      Tasks.Task.Run of Tasks.Task of Pictures.Cover? (
+        function(): Tasks.Task of Pictures.Cover? => Covers.Read(
           self.Database,
           self.UserDatabase,
           FileId,
@@ -168,16 +168,16 @@ public type Session = record implements Sys.IAsyncDisposable
   // - `Cancellation`: Cancels this request independently of the session lifetime.
   // ## Returns
   // Normalized RMS levels in playback order.
-  public async function WaveformAsync(Track: M.Entry; Cancellation: T.CancellationToken): Tasks.Task<array of float>;
+  public async function WaveformAsync(Track: M.Entry; Cancellation: T.CancellationToken): Tasks.Task of array of float;
   requires Track.Path <> '';
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
       self.Lifetime, Cancellation
     );
     await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
-    return await Tasks.TaskExtensions.Unwrap<array of float>(
-      Tasks.Task.Run<Tasks.Task<array of float>>(
-        function(): Tasks.Task<array of float> => Waveforms.Read(
+    return await Tasks.TaskExtensions.Unwrap of array of float(
+      Tasks.Task.Run of Tasks.Task of array of float(
+        function(): Tasks.Task of array of float => Waveforms.Read(
           self.Database,
           Track,
           Linked.Token
@@ -189,7 +189,7 @@ public type Session = record implements Sys.IAsyncDisposable
 
   // Looks up the fingerprint for Track and optionally generates a missing value.
   // Cancellation interrupts the request and its child process. Returns the full encoded value or null.
-  public async function FingerprintAsync(Track: M.Entry; Generate: bool; Cancellation: T.CancellationToken): Tasks.Task<string?>;
+  public async function FingerprintAsync(Track: M.Entry; Generate: bool; Cancellation: T.CancellationToken): Tasks.Task of string?;
   requires Track.Path <> '';
   begin
     const Result: FingerprintData.Measurement? := await self.MeasureFingerprintAsync(
@@ -206,7 +206,7 @@ public type Session = record implements Sys.IAsyncDisposable
 
   // Reads the fingerprint and whole-file duration for Track and generates them on a miss if Generate is true.
   // Cancellation interrupts the request and any child process. Returns null when no cached value exists and Generate is false.
-  public async function MeasureFingerprintAsync(Track: M.Entry; Generate: bool; Cancellation: T.CancellationToken): Tasks.Task<FingerprintData.Measurement?>;
+  public async function MeasureFingerprintAsync(Track: M.Entry; Generate: bool; Cancellation: T.CancellationToken): Tasks.Task of FingerprintData.Measurement?;
   requires Track.Path <> '';
   begin
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
@@ -215,15 +215,15 @@ public type Session = record implements Sys.IAsyncDisposable
     );
     await self.Ready.WaitAsync(Linked.Token).ConfigureAwait(false);
     if not Generate then
-      return await Tasks.Task.Run<FingerprintData.Measurement?>(
+      return await Tasks.Task.Run of FingerprintData.Measurement? (
         function(): FingerprintData.Measurement? => Fingerprints.Cached(self.Database, Track),
         Linked.Token
       ).ConfigureAwait(false);
     end if;
 
-    return await Tasks.TaskExtensions.Unwrap<FingerprintData.Measurement?>(
-      Tasks.Task.Run<Tasks.Task<FingerprintData.Measurement?>>(
-        function(): Tasks.Task<FingerprintData.Measurement?> => Fingerprints.Generate(
+    return await Tasks.TaskExtensions.Unwrap of FingerprintData.Measurement? (
+      Tasks.Task.Run of Tasks.Task of FingerprintData.Measurement? (
+        function(): Tasks.Task of FingerprintData.Measurement? => Fingerprints.Generate(
           self.Database,
           Track,
           self.Policy,
@@ -276,15 +276,15 @@ public type Session = record implements Sys.IAsyncDisposable
     const Stop: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
       Cancellation
     );
-    const Ready: Tasks.TaskCompletionSource<bool> := new Tasks.TaskCompletionSource<bool>(
+    const Ready: Tasks.TaskCompletionSource of bool := new Tasks.TaskCompletionSource of bool(
       Tasks.TaskCreationOptions.RunContinuationsAsynchronously
     );
     const Running: Tasks.Task := Tasks.TaskExtensions.Unwrap(
-      Tasks.Task.Run<Tasks.Task>(
+      Tasks.Task.Run of Tasks.Task(
         function(): Tasks.Task => Worker.Run(Policy, Database, UserDatabase, Ready, Stop.Token)
       )
     );
-    const Cleanup: Sys.Lazy<Tasks.Task> := new Sys.Lazy<Tasks.Task>(
+    const Cleanup: Sys.Lazy of Tasks.Task := new Sys.Lazy of Tasks.Task(
       async function(): Tasks.Task begin
         try
           await Stop.CancelAsync().ConfigureAwait(false);

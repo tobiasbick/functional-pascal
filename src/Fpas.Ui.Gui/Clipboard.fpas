@@ -9,7 +9,7 @@ uses System as Sys;
 // Writes literal text to the owner window's clipboard.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type WriteRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
+public type WriteRequest of TMsg = record implements Mvu.HostExtension of TMsg
   // Text to submit to the system clipboard.
   public Text: string;
 
@@ -20,16 +20,16 @@ public type WriteRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
   // - `Messages`: Mapper for child messages.
   // ## Returns
   // The parent clipboard request.
-  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  public function Map of TNext(Messages: function(TMsg): TNext): Mvu.HostExtension of TNext;
   begin
-    return new WriteRequest<TNext>(self.Text);
+    return new WriteRequest of TNext(self.Text);
   end function;
 end record;
 
 // Reads clipboard text and produces an application message.
 // ## Type parameters
 // - `TMsg`: Application message type.
-public type ReadRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
+public type ReadRequest of TMsg = record implements Mvu.HostExtension of TMsg
   // Maps the current text, or an empty string if unavailable, to a message.
   public OnRead: function(string): TMsg;
 
@@ -40,10 +40,10 @@ public type ReadRequest<TMsg> = record implements Mvu.HostExtension<TMsg>
   // - `Messages`: Mapper for child messages.
   // ## Returns
   // The parent clipboard request.
-  public function Map<TNext>(Messages: function(TMsg): TNext): Mvu.HostExtension<TNext>;
+  public function Map of TNext(Messages: function(TMsg): TNext): Mvu.HostExtension of TNext;
   begin
     const Result: function(string): TMsg := self.OnRead;
-    return new ReadRequest<TNext>(function(Text: string): TNext => Messages(Result(Text)));
+    return new ReadRequest of TNext(function(Text: string): TNext => Messages(Result(Text)));
   end function;
 end record;
 
@@ -54,13 +54,13 @@ end record;
 // - `Text`: Literal text without embedded NUL characters.
 // ## Returns
 // The graphical clipboard command.
-public function WriteText<TMsg>(Text: string): Mvu.Command<TMsg>;
+public function WriteText of TMsg(Text: string): Mvu.Command of TMsg;
 begin
   if Text.Contains(Sys.Char.MinValue) then
     raise new Sys.ArgumentException('Clipboard text cannot contain embedded zero characters.');
   end if;
 
-  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new WriteRequest<TMsg>(Text)));
+  return (Mvu.Command of TMsg).Host(Mvu.HostRequest.Extension(new WriteRequest of TMsg(Text)));
 end function;
 
 // Reads the current clipboard text on the GUI owner.
@@ -70,9 +70,9 @@ end function;
 // - `OnRead`: Maps the text, or an empty string if unavailable, to one message.
 // ## Returns
 // The graphical clipboard command.
-public function ReadText<TMsg>(OnRead: function(string): TMsg): Mvu.Command<TMsg>;
+public function ReadText of TMsg(OnRead: function(string): TMsg): Mvu.Command of TMsg;
 begin
-  return Mvu.Command<TMsg>.Host(Mvu.HostRequest.Extension(new ReadRequest<TMsg>(OnRead)));
+  return (Mvu.Command of TMsg).Host(Mvu.HostRequest.Extension(new ReadRequest of TMsg(OnRead)));
 end function;
 
 end unit;

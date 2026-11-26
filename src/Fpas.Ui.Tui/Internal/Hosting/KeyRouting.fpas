@@ -33,18 +33,18 @@ uses System.Collections.Generic as Generic;
 // - `Invoke`: Runs a direct control action and reports whether it handled the key.
 // - `Dismiss`: Proposes dismissal of the active overlay.
 // - `Cycle`: Traverses tab stops, backwards when requested.
-public procedure Route<TMsg>(
-  Layout: A.Layout<TMsg>; Control: A.Control<TMsg>?; Key: K.Key; Modifiers: K.KeyModifiers;
-  ScrollOffsets: Generic.Dictionary<string, int>; Apply: procedure(TMsg);
-  SetFocus: procedure(A.Layout<TMsg>, string); RememberFocus: procedure(string);
-  Invoke: function(A.Control<TMsg>): bool; Dismiss: function(A.Scope<TMsg>?): bool;
-  Cycle: procedure(A.Layout<TMsg>, bool)
+public procedure Route of TMsg(
+  Layout: A.Layout of TMsg; Control: (A.Control of TMsg)?; Key: K.Key; Modifiers: K.KeyModifiers;
+  ScrollOffsets: Generic.Dictionary of (string, int); Apply: procedure(TMsg);
+  SetFocus: procedure(A.Layout of TMsg, string); RememberFocus: procedure(string);
+  Invoke: function(A.Control of TMsg): bool; Dismiss: function((A.Scope of TMsg)?): bool;
+  Cycle: procedure(A.Layout of TMsg, bool)
 );
 begin
-  const Modal: A.Scope<TMsg>? := Layout.Active;
+  const Modal: (A.Scope of TMsg)? := Layout.Active;
   if Modal = null and Key = K.Key.K and Modifiers = K.KeyModifiers.Ctrl then
     case Layout.OpenPalette of
-      when is Sys.Func<TMsg> as OpenPalette:
+      when is Sys.Func of TMsg as OpenPalette:
         Apply(OpenPalette.Invoke());
         return;
       else
@@ -70,8 +70,8 @@ begin
 
     if Modifiers = K.KeyModifiers.None then
       if Control.Role = 'treeitem' then
-        const TreeTarget: string? := TreeRows.Navigate<TMsg>(
-          A.Activatable<TMsg>(Control.Action),
+        const TreeTarget: string? := TreeRows.Navigate of TMsg(
+          A.Activatable of TMsg(Control.Action),
           Key,
           Apply
         );
@@ -84,9 +84,9 @@ begin
         end if;
       end if;
       const Next: string? := case Control.Role of
-        when 'radio': Radios.Move<TMsg>(A.Activatable<TMsg>(Control.Action), Key, Apply);
-        when 'tab', 'segment': ChoiceStrip.Move<TMsg>(
-          A.Activatable<TMsg>(Control.Action),
+        when 'radio': Radios.Move of TMsg(A.Activatable of TMsg(Control.Action), Key, Apply);
+        when 'tab', 'segment': ChoiceStrip.Move of TMsg(
+          A.Activatable of TMsg(Control.Action),
           Key,
           Apply
         );
@@ -94,7 +94,7 @@ begin
       end case;
       if Next <> null then
         RememberFocus(Next);
-        discard Navigation.Reveal<TMsg>(Layout, Next, ScrollOffsets, Apply);
+        discard Navigation.Reveal of TMsg(Layout, Next, ScrollOffsets, Apply);
         return;
       end if;
     end if;
@@ -103,7 +103,7 @@ begin
       and Modifiers =
       K.KeyModifiers.None
     then
-      const Id: string? := Navigation.Move<TMsg>(Layout, Control.Id, Key, ScrollOffsets, Apply);
+      const Id: string? := Navigation.Move of TMsg(Layout, Control.Id, Key, ScrollOffsets, Apply);
       if Id <> null then
         RememberFocus(Id);
         return;
@@ -123,11 +123,11 @@ begin
 
     case Control.Action of
       when A.Binding.SelectionList(
-        const List: E.SelectionListView<TMsg>,
+        const List: E.SelectionListView of TMsg,
         _,
-        const View: V.Viewport<TMsg>
+        const View: V.Viewport of TMsg
       ):
-        if Modifiers = K.KeyModifiers.None and SelectionList.Navigate<TMsg>(
+        if Modifiers = K.KeyModifiers.None and SelectionList.Navigate of TMsg(
           List,
           View,
           Key,
@@ -144,7 +144,7 @@ begin
           Cycle(Layout, Key = K.Key.Up);
           return;
         end if;
-      when A.Binding.Scroll(const View: V.Viewport<TMsg>):
+      when A.Binding.Scroll(const View: V.Viewport of TMsg):
         if (Control.Role = 'log' or Control.Role = 'table') and Modifiers =
           K.KeyModifiers.None
         then
@@ -159,15 +159,15 @@ begin
           end if;
         end if;
 
-        if Scrolling.Key<TMsg>(View, Key, Modifiers, Apply) then
+        if Scrolling.Key of TMsg(View, Key, Modifiers, Apply) then
           return;
         end if;
-      when A.Binding.EditArea(const Area: AreaEdit.View<TMsg>, _, _):
-        if AreaEdit.Key<TMsg>(Area, Key, Modifiers, Apply) then
+      when A.Binding.EditArea(const Area: AreaEdit.View of TMsg, _, _):
+        if AreaEdit.Key of TMsg(Area, Key, Modifiers, Apply) then
           return;
         end if;
-      when A.Binding.Edit(const Field: Edit.Field<TMsg>, const Position: Edit.Tracking, _, _):
-        if Edit.Key<TMsg>(Field, Position, Key, Modifiers, Apply) then
+      when A.Binding.Edit(const Field: Edit.Field of TMsg, const Position: Edit.Tracking, _, _):
+        if Edit.Key of TMsg(Field, Position, Key, Modifiers, Apply) then
           return;
         end if;
       when A.Binding.Grid(_, _):
@@ -195,12 +195,12 @@ begin
       end if;
     end for;
   end if;
-  const Keys: array of K.ShortcutBinding<TMsg> := if Modal = null then
+  const Keys: array of K.ShortcutBinding of TMsg := if Modal = null then
     Layout.GlobalKeys
   else
     Modal.Shortcuts
   end if;
-  for Shortcut: K.ShortcutBinding<TMsg> in Keys do
+  for Shortcut: K.ShortcutBinding of TMsg in Keys do
     if Shortcut.Character = '' and Shortcut.PressedKey = Key and Shortcut.Modifiers =
       Modifiers
     then

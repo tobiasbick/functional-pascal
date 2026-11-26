@@ -17,11 +17,14 @@ uses GuiGallery.App.View as View;
 // - `Renderer`: Native renderer under test.
 // - `Capture`: Prefix for the completed page, focus and range captures.
 public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
-  function Update(Model: State.Model; Message: State.Msg): App.Transition<State.Model, State.Msg>;
+  function Update(Model: State.Model; Message: State.Msg): App.Transition of (State.Model, State.Msg);
   begin
-    const Next: App.Transition<State.Model, State.Msg> := G.Update(Model, Message);
+    const Next: App.Transition of (State.Model, State.Msg) := G.Update(Model, Message);
     if Target <> '' then
-      return new App.Transition<State.Model, State.Msg>(Next.Model, [App.Focus<State.Msg>(Target)]);
+      return new App.Transition of (State.Model, State.Msg)(
+        Next.Model,
+        [App.Focus of State.Msg(Target)]
+      );
     end if;
 
     return Next;
@@ -49,12 +52,12 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     end if;
   end procedure;
 
-  procedure Step(Session: Gui.Session<State.Msg>);
+  procedure Step(Session: Gui.Session of State.Msg);
   begin
     A.Check(Session.Step(), 'The Pickers page closed unexpectedly.');
   end procedure;
 
-  procedure Aim(Session: Gui.Session<State.Msg>; Id: string; Fraction: float := 0.5F);
+  procedure Aim(Session: Gui.Session of State.Msg; Id: string; Fraction: float := 0.5F);
   begin
     const Track: Cui.CuiRectangle := A.Control(Session, Id).Bounds;
     A.Check(
@@ -65,7 +68,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     Y := Track.Y + Track.Height / 2.0F;
   end procedure;
 
-  procedure Release(Session: Gui.Session<State.Msg>);
+  procedure Release(Session: Gui.Session of State.Msg);
   begin
     Button := 0;
     Step(Session);
@@ -74,7 +77,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     Step(Session);
   end procedure;
 
-  procedure Focus(Session: Gui.Session<State.Msg>; Id: string);
+  procedure Focus(Session: Gui.Session of State.Msg; Id: string);
   begin
     Target := Id;
     A.Send(Session, State.Msg.Preview);
@@ -82,7 +85,7 @@ public procedure Verify(Renderer: Cui.CuiRenderer; Capture: string);
     A.Check(A.Control(Session, Id).Focused, 'Focus did not reach ' + Id);
   end procedure;
 
-  procedure Key(Session: Gui.Session<State.Msg>; Value: int; WithModifiers: int := 0);
+  procedure Key(Session: Gui.Session of State.Msg; Value: int; WithModifiers: int := 0);
   begin
     PendingKey := Value;
     Modifiers := WithModifiers;
@@ -109,7 +112,7 @@ begin
     true
   );
   Window.SetReducedMotion(true);
-  using const Session: Gui.Session<State.Msg> := Host.Start<State.Model, State.Msg>(
+  using const Session: Gui.Session of State.Msg := Host.Start of (State.Model, State.Msg)(
     new State.Model(Active := State.Page.Pickers),
     Update,
     View.Build,

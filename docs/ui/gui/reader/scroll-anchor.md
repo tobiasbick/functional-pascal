@@ -18,17 +18,17 @@ uses Fpas.Ui.Widgets.Navigation.ScrollAnchors as W;
 // Builds the viewport targeted by the outline example.
 // ## Returns
 // A scroll view with three anchored sections.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return E.Size<string>(
-    E.ScrollView<string>('article', E.Column<string>(
+  return E.Size of string(
+    E.ScrollView of string('article', E.Column of string(
       new L.Flow(Gap := L.Spacing.Normal),
-      W.ScrollAnchor<string>('intro'), E.Text<string>('Introduction'),
-      E.Gap<string>(L.Measure.Logical(180)),
-      W.ScrollAnchor<string>('install'), E.Text<string>('Installation'),
-      E.Gap<string>(L.Measure.Logical(180)),
-      W.ScrollAnchor<string>('cmake'), E.Text<string>('With CMake'),
-      E.Gap<string>(L.Measure.Logical(180))
+      W.ScrollAnchor of string('intro'), E.Text of string('Introduction'),
+      E.Gap of string(L.Measure.Logical(180)),
+      W.ScrollAnchor of string('install'), E.Text of string('Installation'),
+      E.Gap of string(L.Measure.Logical(180)),
+      W.ScrollAnchor of string('cmake'), E.Text of string('With CMake'),
+      E.Gap of string(L.Measure.Logical(180))
     )),
     new L.Flex(Height := new L.AxisSize(Basis := L.Extent.Fixed(L.Measure.Logical(160))))
   );

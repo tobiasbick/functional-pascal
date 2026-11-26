@@ -28,13 +28,13 @@ end record;
 // - `Gap`: Distance between rows, defaulting to CUI's ten logical points.
 // ## Returns
 // A radio group for graphical and terminal views.
-public function RadioGroup<TMsg>(
+public function RadioGroup of TMsg(
   Id: string; Items: array of Item; Selected: int; OnChange: function(int): TMsg;
   Enabled: bool := true; Gap: L.Spacing? := null
-): E.Element<TMsg>;
+): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.Radios(
+  return (E.Element of TMsg).Radios(
     Id,
     Items,
     Selected,

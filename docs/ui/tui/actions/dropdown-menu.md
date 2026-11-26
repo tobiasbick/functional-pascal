@@ -15,13 +15,13 @@ uses Fpas.Ui.Widgets.Overlays.Menus as Menu;
 // Builds the project command menu.
 // ## Returns
 // A dropdown that sends the chosen command as an application message.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return Menu.Menu<string>('options', 'Options', [
-    Menu.Entry<string>.Label('Project'),
-    Menu.Entry<string>.Action(new Menu.Item<string>('rename', 'Rename', 'rename')),
-    Menu.Entry<string>.Separator,
-    Menu.Entry<string>.Action(new Menu.Item<string>('delete', 'Delete', 'confirm-delete', Danger := true))
+  return Menu.Menu of string('options', 'Options', [
+    (Menu.Entry of string).Label('Project'),
+    (Menu.Entry of string).Action(new Menu.Item of string('rename', 'Rename', 'rename')),
+    (Menu.Entry of string).Separator,
+    (Menu.Entry of string).Action(new Menu.Item of string('delete', 'Delete', 'confirm-delete', Danger := true))
   ]);
 end function;
 

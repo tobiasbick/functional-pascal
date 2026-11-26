@@ -17,9 +17,9 @@ uses Fpas.Ui.Widgets.Inputs.RangeSliders as C;
 // - `Price`: Current value from the application model.
 // ## Returns
 // The widget for the application view.
-public function View(Price: C.Interval): E.Element<C.Interval>;
+public function View(Price: C.Interval): E.Element of C.Interval;
 begin
-  return C.RangeSlider<C.Interval>('price-range', 'Price range', Price, 0.0F, 100.0F,
+  return C.RangeSlider of C.Interval('price-range', 'Price range', Price, 0.0F, 100.0F,
     function(Value: C.Interval): C.Interval => Value);
 end function;
 

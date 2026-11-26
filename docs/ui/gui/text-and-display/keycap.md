@@ -16,9 +16,9 @@ uses Fpas.Ui.Widgets.Display.Keycaps as W;
 // Shows the command-palette shortcut hint.
 // ## Returns
 // Three native keycaps.
-public function View(): E.Element<string>;
+public function View(): E.Element of string;
 begin
-  return W.Keycap<string>('Ctrl Shift P');
+  return W.Keycap of string('Ctrl Shift P');
 end function;
 
 end unit;

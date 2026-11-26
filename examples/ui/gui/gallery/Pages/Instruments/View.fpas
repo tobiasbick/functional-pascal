@@ -43,10 +43,10 @@ end function;
 // - `Model`: Current caffeine events.
 // ## Returns
 // Readouts, aligned chart and track, and the bedtime display.
-public function View(Model: S.Model): array of E.Element<S.Msg>;
+public function View(Model: S.Model): array of E.Element of S.Msg;
 begin
   const Cups: array of double := Model.Cups.Times;
-  const Bands: Lists.List<D.Series> := new Lists.List<D.Series>(Cups.Length);
+  const Bands: Lists.List of D.Series := new Lists.List of D.Series(Cups.Length);
   const Totals: array of double := new double[97];
   var Bed: double := 0.0;
   for Index: int := 0 to Cups.Length - 1 do
@@ -103,13 +103,13 @@ begin
     ]
   end if;
   return [
-    G.Heading<S.Msg>(
+    G.Heading of S.Msg(
       Strings.Get('Heading.Readouts'),
       Strings.Get('Heading.ReadoutsHint')
     ),
-    E.Row<S.Msg>(
+    E.Row of S.Msg(
       new L.Flow(Gap := G.Points(40), Wrap := true, Align := L.Alignment.End),
-      R.Readout<S.Msg>(
+      R.Readout of S.Msg(
         'bed',
         'AT BED',
         BedValue,
@@ -120,28 +120,33 @@ begin
           Accent := High
         )
       ),
-      R.Readout<S.Msg>('peak', 'PEAK', PeakValue, new R.Options(Unit := 'MG', Detail := PeakTime)),
-      R.Readout<S.Msg>(
+      R.Readout of S.Msg(
+        'peak',
+        'PEAK',
+        PeakValue,
+        new R.Options(Unit := 'MG', Detail := PeakTime)
+      ),
+      R.Readout of S.Msg(
         'cup-count',
         'CUPS',
         CupLabel,
         new R.Options(Detail := '95 MG EACH', Size := R.Size.Small)
       )
     ),
-    G.Heading<S.Msg>(
+    G.Heading of S.Msg(
       Strings.Get('Heading.DotMatrixChartAndEventTrack'),
       Strings.Get('Heading.DotMatrixChartAndEventTrackHint')
     ),
-    E.Column<S.Msg>(
+    E.Column of S.Msg(
       new L.Flow(Clip := false),
-      D.DotChart<S.Msg>(
+      D.DotChart of S.Msg(
         'caffeine', Bands.ToArray(), 97, S.Msg.AddCup,
         new D.Options(
           Height := 240.0F, XMinimum := 6.0, XMaximum := 30.0, Units := D.AxisUnits.Hours,
           Range := new C.ValueRange(0.0F, 260.0F), Unit := 'MG', Axis := false, Annotations := Notes
         )
       ),
-      T.EventTrack<S.Msg>(
+      T.EventTrack of S.Msg(
         'cups', Model.Cups, S.Msg.EditCups,
         new T.Options(
           Capacity := 8, Minimum := 6.0, Maximum := 30.0, Step := 0.25,
@@ -149,11 +154,11 @@ begin
         )
       )
     ),
-    G.Heading<S.Msg>(
+    G.Heading of S.Msg(
       Strings.Get('Heading.DotMatrixDisplay'),
       Strings.Get('Heading.DotMatrixDisplayHint')
     ),
-    Display.DotDisplay<S.Msg>(
+    Display.DotDisplay of S.Msg(
       'bed-display',
       State + ' THE LINE AT BEDTIME',
       new Display.Options(Pitch := 3.0F, Accent := High)

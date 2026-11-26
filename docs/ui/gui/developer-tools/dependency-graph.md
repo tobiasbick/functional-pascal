@@ -21,9 +21,9 @@ uses Fpas.Ui.Widgets.Developer.DependencyGraphs as W;
 // - `Selected`: Selected node index, or minus one.
 // ## Returns
 // The graph with selection and activation as application messages.
-public function View(Vertices: array of W.Vertex; Edges: array of W.Edge; Selected: int): E.Element<W.Event>;
+public function View(Vertices: array of W.Vertex; Edges: array of W.Edge; Selected: int): E.Element of W.Event;
 begin
-  return W.DependencyGraph<W.Event>('dependencies', Vertices, Edges, Selected,
+  return W.DependencyGraph of W.Event('dependencies', Vertices, Edges, Selected,
     function(Change: W.Event): W.Event => Change, new W.Options(Height := 340.0F));
 end function;
 

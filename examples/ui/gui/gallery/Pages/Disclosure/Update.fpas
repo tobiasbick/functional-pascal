@@ -26,7 +26,7 @@ end function;
 // - `Message`: Feature message.
 // ## Returns
 // Next feature model and commands.
-public function Update(State: S.Model; Message: S.Msg): Mvu.Transition<S.Model, S.Msg>;
+public function Update(State: S.Model; Message: S.Msg): Mvu.Transition of (S.Model, S.Msg);
 begin
   const Next: S.Model := case Message of
     when S.Msg.SetBilling(const Open: bool): State with
@@ -62,23 +62,23 @@ begin
     when S.Msg.CompleteStep(const Index: int): WithStep(State, Index, true);
     else State;
   end case;
-  const Commands: array of Mvu.Command<S.Msg> := case Message of
+  const Commands: array of Mvu.Command of S.Msg := case Message of
     when S.Msg.ArchiveConversations: [
-      Toasts.Show<S.Msg>(
+      Toasts.Show of S.Msg(
         '3 conversations archived', new Toasts.Options(ActionLabel := 'Undo', ShowTimer := true),
         function(): S.Msg => S.Msg.Preview
       )
     ];
-    when S.Msg.ReadNotes: [Toasts.Show<S.Msg>('Opening release notes')];
+    when S.Msg.ReadNotes: [Toasts.Show of S.Msg('Opening release notes')];
     when S.Msg.CompleteStep(const Index: int): [
-      Toasts.Show<S.Msg>(
+      Toasts.Show of S.Msg(
         Next.Steps[Index].Title,
         new Toasts.Options(Appearance := Toasts.Tone.Success)
       )
     ];
     else [];
   end case;
-  return new Mvu.Transition<S.Model, S.Msg>(Next, Commands);
+  return new Mvu.Transition of (S.Model, S.Msg)(Next, Commands);
 end function;
 
 end unit;

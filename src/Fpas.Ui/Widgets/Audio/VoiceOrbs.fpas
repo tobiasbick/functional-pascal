@@ -30,10 +30,10 @@ end record;
 // - `Settings`: Optional native settings.
 // ## Returns
 // A graphical element.
-public function VoiceOrb<TMsg>(Id: string; Activity: Voice.Activity; Level: float; Activate: Sys.Func<TMsg>?; Settings: Options? := null): E.Element<TMsg>;
+public function VoiceOrb of TMsg(Id: string; Activity: Voice.Activity; Level: float; Activate: (Sys.Func of TMsg)?; Settings: Options? := null): E.Element of TMsg;
 requires Id <> '';
 begin
-  return E.Element<TMsg>.VoiceOrb(Id, Activity, Level, Activate, Settings ?? new Options());
+  return (E.Element of TMsg).VoiceOrb(Id, Activity, Level, Activate, Settings ?? new Options());
 end function;
 
 end unit;

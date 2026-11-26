@@ -19,9 +19,9 @@ uses Fpas.Ui.Widgets.Ai.ResponseActions as W;
 // - `Vote`: Current vote, from minus one through one.
 // ## Returns
 // The toolbar with response action messages.
-public function View(Answer: string; Vote: int): E.Element<W.Event>;
+public function View(Answer: string; Vote: int): E.Element of W.Event;
 begin
-  return W.ResponseActions<W.Event>('response-actions', Vote,
+  return W.ResponseActions of W.Event('response-actions', Vote,
     function(Change: W.Event): W.Event => Change, new W.Options(CopyText := Answer));
 end function;
 

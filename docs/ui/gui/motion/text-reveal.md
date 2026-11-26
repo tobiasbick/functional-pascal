@@ -20,9 +20,9 @@ uses Fpas.Ui.Widgets.Motion.TextReveals as W;
 // - `Revision`: Replay revision.
 // ## Returns
 // The native text reveal.
-public function View(Summary: string; Revision: int): E.Element<string>;
+public function View(Summary: string; Revision: int): E.Element of string;
 begin
-  return W.TextReveal<string>('build-report', Summary, Revision,
+  return W.TextReveal of string('build-report', Summary, Revision,
     new M.TextOptions(Font := M.Font.Display, Size := 20.0F));
 end function;
 

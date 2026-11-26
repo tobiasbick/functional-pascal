@@ -12,7 +12,7 @@ uses System.Collections.Generic as Lists;
 
 function PackGraphNode(Items: array of D.Vertex): array of CuiDeveloper.CuiDevGraphNode;
 begin
-  const Native: Lists.List<CuiDeveloper.CuiDevGraphNode> := new Lists.List<CuiDeveloper.CuiDevGraphNode>(
+  const Native: Lists.List of CuiDeveloper.CuiDevGraphNode := new Lists.List of CuiDeveloper.CuiDevGraphNode(
     Items.Length
   );
   for Entry: D.Vertex in Items do
@@ -24,7 +24,7 @@ end function;
 
 function PackEdge(Items: array of D.Edge): array of CuiDeveloper.CuiDevEdge;
 begin
-  const Native: Lists.List<CuiDeveloper.CuiDevEdge> := new Lists.List<CuiDeveloper.CuiDevEdge>(
+  const Native: Lists.List of CuiDeveloper.CuiDevEdge := new Lists.List of CuiDeveloper.CuiDevEdge(
     Items.Length
   );
   for Entry: D.Edge in Items do
@@ -45,7 +45,7 @@ end function;
 // - `Selection`: Selection supplied to the widget.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Vertices: array of D.Vertex; Edges: array of D.Edge; Selection: int; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Vertices: array of D.Vertex; Edges: array of D.Edge; Selection: int; Changed: function(D.Event): TMsg; Settings: D.Options);
 begin
   const Role: string := 'dependency-graph';
   const Token: string := C.Token(Role, Id);
@@ -62,7 +62,7 @@ begin
     Width.Value,
     Enabled
   );
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, Selection.ToString());
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, Selection.ToString());
   if Enabled and (Result.Index <> Selection or Result.Action >= 0 or Result.Count >= 0) then
     Frame.Messages.Add(Changed(new D.Event(Result.Index, Result.Count, Result.Action)));
   end if;

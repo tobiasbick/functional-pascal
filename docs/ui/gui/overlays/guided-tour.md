@@ -19,10 +19,10 @@ uses Fpas.Ui.Widgets.Overlays.Tours as W;
 // - `Current`: Zero-based step, or minus one when the tour is closed.
 // ## Returns
 // The panel with native navigation proposals as application messages.
-public function View(Panel: E.Element<W.Change>; Current: int): E.Element<W.Change>;
+public function View(Panel: E.Element of W.Change; Current: int): E.Element of W.Change;
 requires Current >= -1 and Current < 2;
 begin
-  return W.Tour<W.Change>('audio-tour', Panel,
+  return W.Tour of W.Change('audio-tour', Panel,
     [new W.Step(Target := 'cutoff', Title := 'Turn a knob', Body := 'Drag up and down.'),
      new W.Step(Target := 'master', Title := 'Watch the levels')],
     Current, function(Change: W.Change): W.Change => Change);

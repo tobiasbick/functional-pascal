@@ -44,7 +44,7 @@ logical chain.
 - `string + string`, `string + char`, and `char + string` concatenate.
   Arbitrary objects are not implicitly formatted into strings.
 - `Value ?? Fallback` evaluates the fallback only if the nullable value is null.
-  For `Nullable<T>`, the non-null result is the contained `T`.
+  For `Nullable of T`, the non-null result is the contained `T`.
 
 Compile-time constant evaluation checks both 32-bit and 64-bit native-integer
 widths. A required constant must produce the same value without an exception

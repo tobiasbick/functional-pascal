@@ -19,7 +19,7 @@ uses Fpas.Ui.Widgets.Developer.RegexTesters as D;
 // - `Modifiers`: Modifiers supplied to the widget.
 // - `Changed`: Maps a native proposal to an application message.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Pattern: string; Sample: string; Modifiers: int; Changed: function(D.Event): TMsg; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Pattern: string; Sample: string; Modifiers: int; Changed: function(D.Event): TMsg; Settings: D.Options);
 begin
   const Role: string := 'regex-tester';
   const Token: string := C.Token(Role, Id);
@@ -37,7 +37,7 @@ begin
     Width.Value,
     Enabled
   );
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, Result.Matches.ToString());
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, Result.Matches.ToString());
   if Enabled and (Result.Pattern <> Pattern or Result.Sample <> Sample or Result.Modifiers <>
     Modifiers)
   then

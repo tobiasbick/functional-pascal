@@ -21,34 +21,34 @@ uses System.Collections.Generic as Lists;
 // - `Documents`: Documents in display order.
 // - `Changed`: Optional source activation mapper.
 // - `Settings`: Native options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Documents: array of Sources.Item; Changed: Sys.Func<int, TMsg>?; Settings: SourceLists.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Documents: array of Sources.Item; Changed: Sys.Func of (int, TMsg)?; Settings: SourceLists.Options);
 begin
   const Role: string := 'source-list';
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
-  const Native: Lists.List<CuiAi.CuiSourceItem> := new Lists.List<CuiAi.CuiSourceItem>(
+  const Native: Lists.List of CuiAi.CuiSourceItem := new Lists.List of CuiAi.CuiSourceItem(
     Documents.Length
   );
   for Document: Sources.Item in Documents do
     Native.Add(Data.Source(Document));
   end for;
   const Keys: array of string := P.Indexed(Documents.Length);
-  const Focus: int := P.Focus<TMsg>(Frame, Id, Role, Keys, P.Inputs(Keys.Length, Enabled), 0);
+  const Focus: int := P.Focus of TMsg(Frame, Id, Role, Keys, P.Inputs(Keys.Length, Enabled), 0);
   const Picked: int := Frame.Window.SourceList(
     Token,
     Native.ToArray(),
     Enabled,
     Focus,
-    P.Tracker<TMsg>(Frame, Id, Role, Keys)
+    P.Tracker of TMsg(Frame, Id, Role, Keys)
   );
-  P.Root<TMsg>(Frame, Id, Role, '', false, '');
+  P.Root of TMsg(Frame, Id, Role, '', false, '');
   for Index: int := 0 to Documents.Length - 1 do
-    P.Part<TMsg>(Frame, Id, Role, Keys[Index], Documents[Index].Title, Enabled, '');
+    P.Part of TMsg(Frame, Id, Role, Keys[Index], Documents[Index].Title, Enabled, '');
   end for;
 
   if Picked >= 0 then
     case Changed of
-      when is Sys.Func<int, TMsg> as Callback:
+      when is Sys.Func of (int, TMsg) as Callback:
         Frame.Messages.Add(Callback.Invoke(Picked));
       else
     end case;

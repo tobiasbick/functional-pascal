@@ -17,7 +17,7 @@ uses Fpas.Ui.Widgets.Developer.ResponseStatuses as D;
 // - `Seconds`: Seconds supplied to the widget.
 // - `Bytes`: Bytes supplied to the widget.
 // - `Settings`: Native layout and interaction options.
-public procedure Draw<TMsg>(Frame: C.State<TMsg>; Id: string; Status: int; Seconds: double; Bytes: double; Settings: D.Options);
+public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Status: int; Seconds: double; Bytes: double; Settings: D.Options);
 begin
   const Role: string := 'response-status';
   const Token: string := C.Token(Role, Id);
@@ -32,7 +32,7 @@ begin
     Width.Value,
     Enabled
   );
-  P.Root<TMsg>(Frame, Id, Role, '', Enabled, '');
+  P.Root of TMsg(Frame, Id, Role, '', Enabled, '');
 end procedure;
 
 end unit;

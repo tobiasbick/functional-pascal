@@ -28,7 +28,7 @@ begin
     const Request: T.Request of TMsg := Pending.Dequeue();
     const Options: T.Options := Request.Settings;
     const Handle: int := Window.Toast(
-      Request.Title, Options.Description, cast<int>(Options.Appearance), Options.Duration,
+      Request.Title, Options.Description, cast Options.Appearance as int, Options.Duration,
       Options.ActionLabel, Options.ShowTimer
     );
     Active.Add(Handle, Request);

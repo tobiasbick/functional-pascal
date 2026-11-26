@@ -205,7 +205,7 @@ procedure CheckProgress(Session: Gui.Session of S.Msg; Steps: int; Status: strin
 begin
   const Frame: Gui.Frame := Session.Snapshot();
   const Progress: Gui.Control := Control(Frame, 'background-progress');
-  const Ratio: float := cast<float>(Steps) / cast<float>(S.WorkSteps);
+  const Ratio: float := cast Steps as float / cast S.WorkSteps as float;
   A.Check(
     Progress.Role = 'progress' and Sys.Single.Parse(
       Progress.Value,

@@ -128,7 +128,7 @@ begin
         ),
         Fill
       ),
-      Status.Tracks(Current, PlaylistCount ?? cast<long>(Current.Tracks.Length))
+      Status.Tracks(Current, PlaylistCount ?? cast Current.Tracks.Length as long)
     )
   );
 end function;

@@ -21,8 +21,8 @@ begin
     when C.Color.Palette(const Index: int): new CuiCharts.CuiChartColor(Index);
     when C.Color.Rgba(const Rgba: G.Color): new CuiCharts.CuiChartColor(
       -1,
-      cast<uint>(Rgba.Red) or (cast<uint>(Rgba.Green) shl 8) or (cast<uint>(Rgba.Blue) shl 16)
-      or (cast<uint>(Rgba.Alpha) shl 24)
+      cast Rgba.Red as uint or (cast Rgba.Green as uint shl 8) or (cast Rgba.Blue as uint shl 16)
+      or (cast Rgba.Alpha as uint shl 24)
     );
   end case;
 end function;
@@ -83,7 +83,7 @@ begin
   for Item: C.Annotation in Value.Annotations do
     Items.Add(
       new CuiCharts.CuiChartAnnotation(
-        cast<int>(Item.Kind),
+        cast Item.Kind as int,
         Item.X,
         Item.Y,
         Item.Label,

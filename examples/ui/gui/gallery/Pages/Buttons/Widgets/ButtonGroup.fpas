@@ -18,7 +18,7 @@ begin
     Id, Label, State.Msg.ToggleFormat(Style),
     new B.Options(
       Icon := Sys.Char.ConvertFromUtf32(Icon),
-      Selected := (Model.Formats and cast<int>(Style)) <> 0
+      Selected := (Model.Formats and cast Style as int) <> 0
     )
   );
 end function;

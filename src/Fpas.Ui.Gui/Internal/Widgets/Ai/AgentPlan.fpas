@@ -28,7 +28,7 @@ begin
     Steps.Length
   );
   for Step: AgentPlans.Step in Steps do
-    Native.Add(new CuiAi.CuiPlanStep(Step.Title, Step.Detail, cast<int>(Step.Status)));
+    Native.Add(new CuiAi.CuiPlanStep(Step.Title, Step.Detail, cast Step.Status as int));
   end for;
   const Keys: array of string := P.Indexed(Steps.Length);
   const Picked: int := Frame.Window.AgentPlan(

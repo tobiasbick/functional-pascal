@@ -98,7 +98,7 @@ begin
     Settings.Height,
     Settings.RowHeight,
     Settings.TrackWidth,
-    cast<int>(Settings.Labels),
+    cast Settings.Labels as int,
     Width.Kind,
     Width.Value,
     Enc.Bits(Enabled, 1) or Enc.Bits(

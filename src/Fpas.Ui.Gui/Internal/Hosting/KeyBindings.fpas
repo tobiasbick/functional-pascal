@@ -37,7 +37,7 @@ begin
   for Entry: S.Binding of TMsg in Entries do
     Native.Add(
       new Cui.CuiShortcut(
-        cast<int>(Entry.Combination.Key), cast<int>(Entry.Combination.Modifiers),
+        cast Entry.Combination.Key as int, cast Entry.Combination.Modifiers as int,
         Entry.Enabled, Entry.Repeat, Entry.AllowWhileEditing
       )
     );

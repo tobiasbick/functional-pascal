@@ -36,7 +36,7 @@ begin
     end if);
   Frame.Window.DotDisplay(
     C.Token('dot-display', Id), Text, Settings.Pitch, Charts.Color(Settings.Color),
-    cast<int>(Settings.Align), Width.Kind, Width.Value, Flags
+    cast Settings.Align as int, Width.Kind, Width.Value, Flags
   );
   C.Track of TMsg(Frame, new App.Control(Id, Text, 'dot-display', new Cui.CuiRectangle(), false));
 end procedure;

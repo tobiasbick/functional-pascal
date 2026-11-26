@@ -130,7 +130,7 @@ begin
         Activated := State.TreeNodes[Index].Label;
       end with;
     when S.Msg.ToggleNode(const Index: int):
-      const Nodes: array of Tree.Node := cast<array of Tree.Node>(State.TreeNodes.Clone());
+      const Nodes: array of Tree.Node := cast State.TreeNodes.Clone() as array of Tree.Node;
       Nodes[Index] := Nodes[Index] with
         Open := not Nodes[Index].Open;
       end with;

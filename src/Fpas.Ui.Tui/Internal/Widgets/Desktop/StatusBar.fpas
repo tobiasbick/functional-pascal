@@ -69,7 +69,7 @@ begin
           Parts.Add((E.Element of TMsg).Label('…'));
         else
           const Cells: int := if Width > 0.0F then
-            cast<int>(Sys.Math.Min(cast<double>(E.MaximumColumns), Sys.Math.Ceiling(Width / 8.0)))
+            cast Sys.Math.Min(cast E.MaximumColumns as double, Sys.Math.Ceiling(Width / 8.0)) as int
           else
             8
           end if;

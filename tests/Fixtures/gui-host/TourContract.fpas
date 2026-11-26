@@ -108,7 +108,7 @@ begin
     'zero'
   );
   Reject(
-    View([new T.Step(Position := cast<M.Placement>(255))], 0, Settings),
+    View([new T.Step(Position := cast 255 as M.Placement)], 0, Settings),
     V.Target.Graphical,
     'placement'
   );

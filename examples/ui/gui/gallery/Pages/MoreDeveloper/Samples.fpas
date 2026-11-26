@@ -224,19 +224,19 @@ begin
   const Warnings: array of float := new float[96];
   const Errors: array of float := new float[96];
   for Index: int := 0 to 95 do
-    Info[Index] := cast<float>(120.0 + 80.0 * Sys.Math.Sin(
+    Info[Index] := cast (120.0 + 80.0 * Sys.Math.Sin(
       Index / 96.0 * 6.28 * 2
-    ) + (Index * 37 mod 23));
-    Warnings[Index] := cast<float>(12 + (Index * 13 mod 9) + (if Index > 60 and Index < 70 then
+    ) + (Index * 37 mod 23)) as float;
+    Warnings[Index] := cast (12 + (Index * 13 mod 9) + (if Index > 60 and Index < 70 then
       40
     else
       0
-    end if));
-    Errors[Index] := cast<float>((Index * 7 mod 5) + (if Index > 62 and Index < 67 then
+    end if)) as float;
+    Errors[Index] := cast ((Index * 7 mod 5) + (if Index > 62 and Index < 67 then
       30
     else
       0
-    end if));
+    end if)) as float;
   end for;
 
   return [

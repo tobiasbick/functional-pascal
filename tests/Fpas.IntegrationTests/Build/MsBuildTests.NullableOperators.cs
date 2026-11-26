@@ -33,7 +33,7 @@ public sealed partial class MsBuildTests
               Trace := 0;
               const Quotient: double? := Tap(1, null) / Tap(2, 3);
               if Quotient <> null then raise new Sys.InvalidOperationException('Missing result lost'); end if;
-              const Skipped: int? := cast<int?>(null) div 0;
+              const Skipped: int? := cast null as int? div 0;
               if Skipped <> null then raise new Sys.InvalidOperationException('Division should be absent'); end if;
               try
                 discard Tap(3, null) / (1 div 0);

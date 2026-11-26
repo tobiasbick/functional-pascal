@@ -55,7 +55,7 @@ begin
       Item.Day,
       Item.Start,
       Item.Finish,
-      cast<int>(Item.Tone)
+      cast Item.Tone as int
     );
   end for;
 
@@ -100,7 +100,7 @@ begin
       Day(Item.Finish),
       Item.Time,
       Item.AllDay,
-      cast<int>(Item.Tone)
+      cast Item.Tone as int
     );
   end for;
 
@@ -119,7 +119,7 @@ begin
     const Item: G.Task := Items[Index];
     Result[Index] := new CuiPlanning.CuiGanttTask(
       Item.Name, Item.Owner, Item.Start, Item.Finish, Item.Progress,
-      cast<int>(Item.Tone), Item.DependsOn, Item.Milestone, cast<int>(Item.State)
+      cast Item.Tone as int, Item.DependsOn, Item.Milestone, cast Item.State as int
     );
   end for;
 

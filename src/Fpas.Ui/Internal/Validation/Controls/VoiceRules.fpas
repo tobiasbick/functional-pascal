@@ -38,7 +38,7 @@ begin
     end if;
 
     for Tag: byte in Tags do
-      Owner(cast<V.Owner>(Tag), At);
+      Owner(cast Tag as V.Owner, At);
     end for;
   end if;
 end procedure;

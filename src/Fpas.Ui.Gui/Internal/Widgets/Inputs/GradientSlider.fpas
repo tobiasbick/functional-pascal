@@ -47,7 +47,7 @@ begin
     ref Next,
     Current.Minimum,
     Current.Maximum,
-    cast<int>(Settings.Kind),
+    cast Settings.Kind as int,
     Positions,
     Colors,
     Chart.Color(Settings.Color),

@@ -22,8 +22,8 @@ end function;
 function Generate(): array of F.Span;
   function Random(): double;
   begin
-    Seed := cast<uint>((cast<ulong>(Seed) * 1103515245UL + 12345UL) and $FFFFFFFFUL);
-    return cast<double>((Seed shr 16) and $7FFFU) / 32767.0;
+    Seed := cast ((cast Seed as ulong * 1103515245UL + 12345UL) and $FFFFFFFFUL) as uint;
+    return cast ((Seed shr 16) and $7FFFU) as double / 32767.0;
   end function;
 
   procedure Put(Name: string; Start: double; Finish: double; Depth: int; Color: uint := 0U);
@@ -33,10 +33,10 @@ function Generate(): array of F.Span;
 
   procedure Split(Name: string; Start: double; Finish: double; Depth: int; Count: int; Fill: double);
   begin
-    const Slot: double := (Finish - Start) / cast<double>(Count);
+    const Slot: double := (Finish - Start) / cast Count as double;
     for Index: int := 0 to Count - 1 do
       const Width: double := Slot * Fill * (0.55 + 0.45 * Random());
-      const A: double := Start + cast<double>(Index) * Slot + (Slot - Width) * Random();
+      const A: double := Start + cast Index as double * Slot + (Slot - Width) * Random();
       Put(Name, A, A + Width, Depth);
     end for;
   end procedure;
@@ -49,7 +49,7 @@ function Generate(): array of F.Span;
       Total := Total + Weight;
     end for;
     const Gap: double := (Finish - Start) * 0.012;
-    const Length: double := (Finish - Start) - Gap * cast<double>(Names.Length + 1);
+    const Length: double := (Finish - Start) - Gap * cast (Names.Length + 1) as double;
     for Index: int := 0 to Names.Length - 1 do
       const A: double := X + Gap;
       const B: double := A + Length * Weights[Index] / Total;

@@ -55,7 +55,7 @@ type Toggle of TMsg = record implements Actions.IActivatable of TMsg
 
   public function Activate(): Actions.Result of TMsg;
   begin
-    const Selection: array of bool := cast<array of bool>(self.Field.Selected.Clone());
+    const Selection: array of bool := cast self.Field.Selected.Clone() as array of bool;
     Selection[self.Index] := not Selection[self.Index];
     return (Actions.Result of TMsg).Send(self.Field.Change(Selection));
   end function;

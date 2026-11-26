@@ -37,7 +37,11 @@ begin
   const Enabled: bool := Settings.Enabled and Frame.AcceptInput and Frame.Controls.Count > Before
     and Frame.Controls[Frame.Controls.Count - 1].Enabled;
   const Result: int := Frame.Window.BeginHoverCard(
-    C.Token('hover-card', Id), cast<int>(Settings.Position), Settings.Width, Settings.Delay, Enabled
+    C.Token('hover-card', Id),
+    cast Settings.Position as int,
+    Settings.Width,
+    Settings.Delay,
+    Enabled
   );
   if (Result and 1) = 0 then
     return;

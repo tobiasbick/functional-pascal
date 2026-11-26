@@ -62,7 +62,7 @@ begin
       Modified
     ) or (IO.File.GetAttributes(
       Path
-    ) and IO.FileAttributes.ReparsePoint) <> cast<IO.FileAttributes>(0)
+    ) and IO.FileAttributes.ReparsePoint) <> cast 0 as IO.FileAttributes
     then
       raise new IO.IOException('The file changed before metadata reading.');
     end if;

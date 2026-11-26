@@ -100,11 +100,11 @@ public type TrackNavigationTests = record
       function Fill(Id: string): int;
       begin
         const Bounds: Cui.CuiRectangle := Control(Session, Id).Bounds;
-        const PixelX: int := cast<int>(Bounds.X + Bounds.Width * 0.2F);
+        const PixelX: int := cast (Bounds.X + Bounds.Width * 0.2F) as int;
         // CoverDecoder fits the landscape screenshot into a square of the same logical width.
-        const PixelY: int := cast<int>(Bounds.Y + Bounds.Height / 2.0F + (Size.Width -
+        const PixelY: int := cast (Bounds.Y + Bounds.Height / 2.0F + (Size.Width -
           Size.Height) /
-          2.0F);
+          2.0F) as int;
         return Sys.BitConverter.ToInt32(Image.Pixels, 4 * (PixelY * Image.Width + PixelX));
       end function;
     begin
@@ -113,7 +113,7 @@ public type TrackNavigationTests = record
       const Size: Cui.CuiSize := Session.Snapshot().Size;
       const Image: Images.Bitmap := Images.CoverDecoder.Decode(
         IO.File.ReadAllBytes(Path),
-        cast<int>(Size.Width),
+        cast Size.Width as int,
         T.CancellationToken.None
       );
       const Accent: int := Fill('player-toggle');
@@ -156,7 +156,7 @@ public type TrackNavigationTests = record
     for Id: int := 0 to Count - 1 do
       Items.Add(
         new Tracks.Entry(
-          cast<long>(Id + 1),
+          cast (Id + 1) as long,
           Id.ToString(),
           IO.Path.Combine(Root.Path, Id.ToString(), ((Id + 1) div 2).ToString('D5') + '.mp3'),
           '',
@@ -260,7 +260,7 @@ public type TrackNavigationTests = record
     X.Assert.Equal of int(File - 1, Page().Cursor);
     Click(Session);
     X.Assert.True(Current.Player.Playing);
-    X.Assert.Equal of long(cast<long>(File), Current.Player.Queue[Current.Player.Index].FileId);
+    X.Assert.Equal of long(cast File as long, Current.Player.Queue[Current.Player.Index].FileId);
     const ButtonId: string := 'track-play-' + File.ToString();
     X.Assert.StartsWith('Pause ', Control(Session, ButtonId).Text);
     const OtherVersion: int := if File mod 2 = 0 then

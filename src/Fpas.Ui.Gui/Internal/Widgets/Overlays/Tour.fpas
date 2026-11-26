@@ -54,7 +54,7 @@ begin
     var Target: string := '';
     Titles.Add(Steps[Index].Title);
     Bodies.Add(Steps[Index].Body);
-    Positions[Index] := cast<int>(Steps[Index].Position);
+    Positions[Index] := cast Steps[Index].Position as int;
     for Control: App.Control in Frame.Controls do
       if Control.Id = Steps[Index].Target and Control.Key = '' then
         Target := C.Token(Control.Role, Control.Id);
@@ -81,7 +81,7 @@ begin
     Settings.NextLabel, Settings.BackLabel, Settings.DoneLabel, Settings.CountFormat
   );
   if Result.Event <> 0 and Frame.AcceptInput then
-    Frame.Messages.Add(OnChange(new T.Change(Result.Step, cast<T.Event>(Result.Event))));
+    Frame.Messages.Add(OnChange(new T.Change(Result.Step, cast Result.Event as T.Event)));
   end if;
 
   Frame.Labels.Add(Steps[Current].Title);

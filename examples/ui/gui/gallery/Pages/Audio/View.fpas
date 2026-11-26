@@ -18,8 +18,8 @@ uses System as Sys;
 
 function Peak(Phase: int; Track: int; Channel: int): float;
 begin
-  const Index: float := cast<float>(Track);
-  const Time: float := cast<float>(Phase + Channel * 5) / 60.0F;
+  const Index: float := cast Track as float;
+  const Time: float := cast (Phase + Channel * 5) as float / 60.0F;
   const Cycle: float := Time * (1.8F + 0.2F * Index) + Index * 0.31F;
   const Beat: float := Cycle - Sys.MathF.Floor(Cycle);
   return (0.3F + 0.1F * Index) * (0.2F + 0.8F * Sys.MathF.Exp(-Beat * (2.5F + Index)));

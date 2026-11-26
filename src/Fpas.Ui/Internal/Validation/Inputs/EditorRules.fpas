@@ -15,10 +15,10 @@ procedure CheckValue(Value: string; Capacity: int; Size: B.Size; Password: bool;
 begin
   R.CheckText(Value, At + '/value');
   if Multiline then
-    if Value.Contains(cast<char>(13)) then
+    if Value.Contains(cast 13 as char) then
       R.Reject(At, 'A text area requires LF line endings.');
     end if;
-  elsif Value.Contains(cast<char>(10)) or Value.Contains(cast<char>(13)) then
+  elsif Value.Contains(cast 10 as char) or Value.Contains(cast 13 as char) then
     R.Reject(At, 'A single-line editor requires a single-line value.');
   end if;
 

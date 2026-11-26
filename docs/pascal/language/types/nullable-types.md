@@ -94,7 +94,7 @@ begin
   end if;
 
   Console.WriteLine(Total ?? 0.00M);
-  Console.WriteLine(Missing = cast<decimal?>(null));
+  Console.WriteLine(Missing = cast null as decimal?);
 end;
 
 end program;

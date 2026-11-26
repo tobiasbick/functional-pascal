@@ -46,8 +46,8 @@ begin
   elsif Ink.Alpha = 0 then
     1u
   else
-    cast<uint>(Ink.Red) or (cast<uint>(Ink.Green) shl 8)
-    or (cast<uint>(Ink.Blue) shl 16) or (cast<uint>(Ink.Alpha) shl 24)
+    cast Ink.Red as uint or (cast Ink.Green as uint shl 8)
+    or (cast Ink.Blue as uint shl 16) or (cast Ink.Alpha as uint shl 24)
   end if;
   var ClearVisible: bool := false;
   const Value: CuiFiles.CuiSignature? := Frame.Window.SignaturePad(

@@ -61,8 +61,8 @@ begin
   const Result: Text.StringBuilder := new Text.StringBuilder();
   const CarriageReturn: string := Sys.Char.ConvertFromUtf32(13);
   for Step: int := 0 to 20 do
-    const Filled: string := new Sys.String(cast<char>($2588), Step);
-    const Empty: string := new Sys.String(cast<char>($2591), 20 - Step);
+    const Filled: string := new Sys.String(cast $2588 as char, Step);
+    const Empty: string := new Sys.String(cast $2591 as char, 20 - Step);
     discard Result.Append(
       CarriageReturn + Escape + '[32m' + Filled + Empty + Reset +
       ' ' + (Step * 5).ToString(Locale.CultureInfo.InvariantCulture).PadLeft(3) + '%'

@@ -69,8 +69,8 @@ begin
     )
   ];
   for Index: int := 0 to Requests.Length - 1 do
-    const Request: Files.Request of string := cast<Files.Request of string>(Map(Requests[Index]));
-    Check(cast<int>(Request.Kind) = Index, 'Mapping lost the native dialog kind.');
+    const Request: Files.Request of string := cast Map(Requests[Index]) as Files.Request of string;
+    Check(cast Request.Kind as int = Index, 'Mapping lost the native dialog kind.');
     Check(Request.OnSelected('été') = 'child:3', 'Selected paths did not map into the parent.');
     case Request.OnCancelled of
       when is Sys.Func of string as Notify:
@@ -86,21 +86,21 @@ begin
       );
     end if;
   end for;
-  const Silent: Files.Request of string := cast<Files.Request of string>(Map(
+  const Silent: Files.Request of string := cast Map(
     Files.ChooseFolder of int(function(Path: string): int => Path.Length)
-  ));
+  ) as Files.Request of string;
   Check(Silent.OnCancelled = null, 'Mapping must preserve silent cancellation.');
-  const Title: Windows.TitleRequest of string := cast<Windows.TitleRequest of string>(Map(
+  const Title: Windows.TitleRequest of string := cast Map(
     Windows.SetTitle of int('Document')
-  ));
+  ) as Windows.TitleRequest of string;
   Check(Title.Title = 'Document', 'Mapping lost the window title.');
-  const Size: Windows.SizeRequest of string := cast<Windows.SizeRequest of string>(Map(
+  const Size: Windows.SizeRequest of string := cast Map(
     Windows.Resize of int(420, 300)
-  ));
+  ) as Windows.SizeRequest of string;
   Check(Size.Width = 420 and Size.Height = 300, 'Mapping lost the native size.');
-  const Frame: Frames.Request of string := cast<Frames.Request of string>(Map(
+  const Frame: Frames.Request of string := cast Map(
     Frames.Redraw of int(0.25F)
-  ));
+  ) as Frames.Request of string;
   Check(Frame.DelaySeconds = 0.25F, 'Mapping lost the native frame deadline.');
   Check(
     Map(Closing.Cancel of int()) is Closing.CancelRequest of string,

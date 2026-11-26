@@ -30,7 +30,7 @@ end function;
 public procedure Apply(Window: Cui.CuiWindow; Theme: Themes.Theme);
 begin
   Window.SetTheme(
-    Theme.Appearance = Themes.Mode.Dark, cast<int>(Theme.AccentFamily),
+    Theme.Appearance = Themes.Mode.Dark, cast Theme.AccentFamily as int,
     Themes.Rgba(Theme), Metrics.Native(Theme.Metrics)
   );
 end procedure;

@@ -22,7 +22,7 @@ public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Value: float; 
 begin
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   Frame.Window.Progress(
-    C.Token('progress', Id), Value, cast<int>(Settings.Tone),
+    C.Token('progress', Id), Value, cast Settings.Tone as int,
     Settings.Indeterminate, Settings.Height, Settings.Label, Settings.ShowValue, Settings.Dither,
     Width.Kind, Width.Value
   );

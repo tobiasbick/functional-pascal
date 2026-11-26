@@ -48,7 +48,7 @@ begin
     when Fx.Outcome.Failure(const Reason: FetchFailure):
       case Reason of
         when FetchFailure.Rejected(const Status: Net.HttpStatusCode):
-          Console.WriteLine('HTTP status ' + cast<int>(Status).ToString());
+          Console.WriteLine('HTTP status ' + (cast Status as int).ToString());
         when FetchFailure.RequestFailed(const Detail: string):
           Console.WriteLine('Request failed: ' + Detail);
       end case;

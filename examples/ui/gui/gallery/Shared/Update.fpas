@@ -36,7 +36,7 @@ begin
       Accent := Value;
     end with;
     when S.Msg.NextAccent: State with
-      Accent := cast<Themes.Accent>((cast<int>(State.Accent) + 1) mod 8);
+      Accent := cast ((cast State.Accent as int + 1) mod 8) as Themes.Accent;
     end with;
     when S.Msg.SetSystemAppearance(const Value: Themes.Mode): State with
       SystemAppearance := Value;

@@ -44,7 +44,7 @@ public sealed class CaseCoverageTests
     [InlineData("Choice", "when Choice.A: return 0; when Choice.B(_, _) if false: return 1;", "Choice.B(_, _)")]
     [InlineData("Choice", "when Choice.A: return 0; when Choice.B(Bit.Off, _): return 1; when Choice.B(Bit.On, true): return 2;", "Choice.B(Bit.On, false)")]
     [InlineData("Choice?", "when Choice.A: return 0; when Choice.B(_, _): return 1;", "null")]
-    [InlineData("Flag", "when 1..2: return 0;", "cast<byte>(3)")]
+    [InlineData("Flag", "when 1..2: return 0;", "cast 3 as byte")]
     [InlineData("bool", "when true: return 0;", "false")]
     public void Missing_patterns_are_disjoint_from_covered_arms(string selector, string arms, string expected)
     {
@@ -101,7 +101,7 @@ public sealed class CaseCoverageTests
     [InlineData("discard case 1 of when (1 mod 0)..2: 0; else 1; end case;", "FP3024")]
     [InlineData("discard case 1 of when 0..10: 0; when 2..4: 1; else 2; end case;", "FP3025")]
     [InlineData("discard case 1 of when -2147483648..2147483647: 0; end case;", "FP3025")]
-    [InlineData("discard case cast<object>('x') of when is object as O: 0; when is string as S: 1; else 2; end case;", "FP3025")]
+    [InlineData("discard case cast 'x' as object of when is object as O: 0; when is string as S: 1; else 2; end case;", "FP3025")]
     [InlineData("var Text: string? := 'known'; case true of when true: Text := null; when false: begin end; end case; discard Text.Length;", "FP3013")]
     [InlineData("var Text: string? := 'known'; const Clear: function(): bool := function(): bool begin Text := null; return false; end function; Text := 'known'; case 1 of when 1 if Clear(): begin end; else discard Text.Length; end case;", "FP3013")]
     [InlineData("var Text: string? := 'known'; const Clear: function(): bool := function(): bool begin Text := null; return false; end function; Text := 'known'; discard case 1 of when 1 if Clear(): 0; else Text.Length; end case;", "FP3013")]

@@ -23,7 +23,7 @@ public sealed class ExpressionInspectionTests
             procedure Observe of T(Value: T);
             begin
               const Removed: T := Value;
-              Console.WriteLine(cast<object?>(Value));
+              Console.WriteLine(cast Value as object?);
             end procedure;
             begin Observe of int(42); end;
             end program;
@@ -66,8 +66,8 @@ public sealed class ExpressionInspectionTests
               const Value: int := 41;
               const @array: int := 7;
               const Unsigned: uint := 42U;
-              const NativeSigned: nint := cast<nint>(41);
-              const NativeUnsigned: nuint := cast<nuint>(41);
+              const NativeSigned: nint := cast 41 as nint;
+              const NativeUnsigned: nuint := cast 41 as nuint;
               const Amount: decimal := 1.2500M;
               const Wide: long := 16777217L;
               const Rounded: float := 16777216.0F;

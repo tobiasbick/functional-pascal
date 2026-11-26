@@ -59,7 +59,7 @@ end function;
 // Formats a nonnegative duration `Milliseconds` as a compact time value.
 public function Time(Milliseconds: double): string;
 begin
-  const Seconds: long := cast<long>(Sys.Math.Max(0.0, Milliseconds) / 1000.0);
+  const Seconds: long := cast (Sys.Math.Max(0.0, Milliseconds) / 1000.0) as long;
   const Minutes: long := Seconds div 60L;
   if Minutes >= 60L then
     return (Minutes div 60L).ToString() + ':' + (Minutes mod 60L).ToString(

@@ -28,11 +28,11 @@ end procedure;
 
 public procedure Move of TMsg(View: V.Viewport of TMsg; Delta: int; Apply: procedure(TMsg));
 begin
-  const Offset: int := cast<int>(Sys.Math.Clamp(
-    cast<long>(View.Offset) + cast<long>(Delta),
+  const Offset: int := cast Sys.Math.Clamp(
+    cast View.Offset as long + cast Delta as long,
     0L,
-    cast<long>(View.Maximum)
-  ));
+    cast View.Maximum as long
+  ) as int;
   if Offset <> View.Offset then
     Notify of TMsg(View, L.ScrollPosition.Offset(L.Measure.Cells(Offset)), Offset, Apply);
   end if;
@@ -78,11 +78,11 @@ public procedure MoveOffset(Offsets: C.Dictionary of (string, int); Region: A.Sc
 begin
   var Before: int := 0;
   discard Offsets.TryGetValue(Region.Id, out Before);
-  Offsets[Region.Id] := cast<int>(Sys.Math.Clamp(
-    cast<long>(Before) + Delta,
+  Offsets[Region.Id] := cast Sys.Math.Clamp(
+    cast Before as long + Delta,
     0L,
-    cast<long>(Region.Maximum)
-  ));
+    cast Region.Maximum as long
+  ) as int;
 end procedure;
 
 // Routes the wheel to the active control or its enclosing viewport.

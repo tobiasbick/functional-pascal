@@ -114,7 +114,7 @@ begin
     'Eleventh',
     'Twelfth'
   ];
-  const LineFeed: string := cast<char>(10).ToString();
+  const LineFeed: string := (cast 10 as char).ToString();
   var Initial: string := Lines[0];
   for Index: int := 1 to Lines.Length - 1 do
     Initial := Initial + LineFeed + Lines[Index];
@@ -166,7 +166,7 @@ begin
   const Edited: string := Control(Session, 'area').Value;
   Check(
     Edited.StartsWith(
-      'First' + cast<char>(10),
+      'First' + cast 10 as char,
       Sys.StringComparison.Ordinal
     ) and Edited.Contains('!'),
     'Clicking at the top after scrolling must edit a later line. Marker index ' +

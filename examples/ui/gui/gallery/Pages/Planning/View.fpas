@@ -40,7 +40,7 @@ begin
     Result.Add(
       new Month.Appointment(
         Names[Index], Start, Finish,
-        9.0F + cast<float>(Index mod 8), Span or Index = 4, cast<S.Tone>(1 + Index mod 8)
+        9.0F + cast (Index mod 8) as float, Span or Index = 4, cast (1 + Index mod 8) as S.Tone
       )
     );
   end for;
@@ -55,7 +55,7 @@ end function;
 // Native examples in gallery order.
 public function View(Model: M.Model): array of E.Element of M.Msg;
 begin
-  const Day: int := (cast<int>(Model.Today.DayOfWeek) + 6) mod 7;
+  const Day: int := (cast Model.Today.DayOfWeek as int + 6) mod 7;
   const Monday: Sys.DateOnly := Model.Today.AddDays(-Day);
   return [
     G.Heading of M.Msg(

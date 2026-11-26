@@ -133,10 +133,10 @@ begin
     [
       new Grid.Column(
         'Podcast',
-        cast<float>(Sys.Math.Max(112, Width - Publisher - 124)),
+        cast Sys.Math.Max(112, Width - Publisher - 124) as float,
         Sortable := true
       ),
-      new Grid.Column('Publisher', cast<float>(Publisher), Sortable := true, Priority := 1),
+      new Grid.Column('Publisher', cast Publisher as float, Sortable := true, Priority := 1),
       new Grid.Column('', 124.0F, Fixed := true)
     ],
     Shows.Length,
@@ -343,7 +343,7 @@ begin
   return Grid.DataGrid of App.Msg(
     'podcast-episodes/' + Key,
     [
-      new Grid.Column('Title', cast<float>(Sys.Math.Max(96, Width - 236)), Sortable := true),
+      new Grid.Column('Title', cast Sys.Math.Max(96, Width - 236) as float, Sortable := true),
       new Grid.Column('Published', 116.0F, Sortable := true, Priority := 1),
       new Grid.Column('Time', 76.0F, Sortable := true, Priority := 2),
       new Grid.Column('', 44.0F, Fixed := true)

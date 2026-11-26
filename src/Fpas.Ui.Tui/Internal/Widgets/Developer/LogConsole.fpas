@@ -24,7 +24,7 @@ begin
   const Milliseconds: long := if Seconds > 1000000000000.0 then
     0L
   else
-    cast<long>(Seconds * 1000.0 + 0.5)
+    cast (Seconds * 1000.0 + 0.5) as long
   end if;
   const Time: Sys.TimeSpan := new Sys.TimeSpan(
     (Milliseconds mod 86400000L) * Sys.TimeSpan.TicksPerMillisecond
@@ -52,7 +52,7 @@ begin
   if Settings.Height > 0.0F then
     View := (E.Element of TMsg).Sized(
       Content,
-      new E.Flex(Basis := cast<int>(Sys.Math.Ceiling(Settings.Height / 16.0F)))
+      new E.Flex(Basis := cast Sys.Math.Ceiling(Settings.Height / 16.0F) as int)
     );
   elsif Settings.Height = -1.0F then
     View := (E.Element of TMsg).Sized(Content, new E.Flex(Minimum := 1, Grow := 1));

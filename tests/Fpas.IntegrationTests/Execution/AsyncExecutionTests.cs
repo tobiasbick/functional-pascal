@@ -86,9 +86,9 @@ public sealed class AsyncExecutionTests
 
               var Vector: Numerics.Vector2 := new Numerics.Vector2(0.0F, 0.0F);
               Point.X := await Gate;
-              Vector.X := cast<float>(await Gate);
+              Vector.X := cast await Gate as float;
               Console.WriteLine(Point.X);
-              Console.WriteLine(cast<int>(Vector.X));
+              Console.WriteLine(cast Vector.X as int);
             end function;
 
             begin

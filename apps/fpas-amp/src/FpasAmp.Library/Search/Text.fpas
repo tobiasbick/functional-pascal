@@ -30,7 +30,7 @@ begin
   elsif Code = 305 then
     discard Word.Append('i');
   elsif Letter.IsBmp then
-    discard Word.Append(cast<char>(Code));
+    discard Word.Append(cast Code as char);
   else
     discard Word.Append(Letter.ToString());
   end if;
@@ -248,7 +248,7 @@ begin
       continue;
     end if;
 
-    if Index > 0 and cast<int>(Digit) = 48 then
+    if Index > 0 and cast Digit as int = 48 then
       continue;
     end if;
 

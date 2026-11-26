@@ -222,7 +222,7 @@ begin
       raise new Sys.InvalidOperationException('Cleanup lost the completed outcome');
     end if;
 
-    const Completed: Fx.Outcome of (int, string) := cast<Fx.Outcome of (int, string)>(Stored);
+    const Completed: Fx.Outcome of (int, string) := cast Stored as Fx.Outcome of (int, string);
     case Completed of
       when Fx.Outcome.Failure(const Reason: string):
         Check(Reason = 'expected outcome', 'Cleanup lost the completed expected outcome');

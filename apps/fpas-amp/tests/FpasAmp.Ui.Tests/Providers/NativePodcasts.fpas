@@ -501,7 +501,7 @@ public type NativePodcastTests = record
     using const Listener: Sockets.TcpListener := new Sockets.TcpListener(N.IPAddress.Loopback, 0);
     using const Stop: T.CancellationTokenSource := new T.CancellationTokenSource(40000);
     Listener.Start();
-    const Address: N.IPEndPoint := cast<N.IPEndPoint>(Listener.LocalEndpoint);
+    const Address: N.IPEndPoint := cast Listener.LocalEndpoint as N.IPEndPoint;
     const Url: string := 'http://127.0.0.1:' + Address.Port.ToString() + '/feed.rss';
     const AudioPath: string := IO.Path.Combine(Data.Path, 'fixture.wav');
     Tone.Tone(AudioPath, QuietPassage := true);

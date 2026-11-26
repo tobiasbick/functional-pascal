@@ -33,7 +33,7 @@ public sealed class CallQueryTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
           const Boxed: Box of int := new Box of int(Read(1));
           const Item: Choice := Choice.Value(Boxed.Value);
           const Empty: Choice := Choice.Empty;
-          const Payload: Choice.ValueCase := cast<Choice.ValueCase>(Item);
+          const Payload: Choice.ValueCase := cast Item as Choice.ValueCase;
           discard Payload.Item;
           discard Payload.GetHashCode();
           return Boxed.Value;
@@ -53,7 +53,7 @@ public sealed class CallQueryTests(SdkPackageFixture sdk) : IClassFixture<SdkPac
           const Boxed: A.Box of int := new A.Box of int(A.Read(1));
           const Item: A.Choice := A.Choice.Value(Boxed.Value);
           const Empty: A.Choice := A.Choice.Empty;
-          const Payload: A.Choice.ValueCase := cast<A.Choice.ValueCase>(Item);
+          const Payload: A.Choice.ValueCase := cast Item as A.Choice.ValueCase;
           discard Payload.Item;
           discard Payload.GetHashCode();
         end;

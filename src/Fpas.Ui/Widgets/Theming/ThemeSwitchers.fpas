@@ -72,8 +72,8 @@ end function;
 // ## Returns
 // The concrete mode to use in the application's ThemeFor callback.
 public function Resolve(Selected: Selection; SystemAppearance: Themes.Mode): Themes.Mode;
-requires cast<int>(Selected) >= 0 and cast<int>(Selected) <= 2;
-requires cast<int>(SystemAppearance) >= 0 and cast<int>(SystemAppearance) <= 1;
+requires cast Selected as int >= 0 and cast Selected as int <= 2;
+requires cast SystemAppearance as int >= 0 and cast SystemAppearance as int <= 1;
 begin
   return if Selected = Selection.System then
     SystemAppearance

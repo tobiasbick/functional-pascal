@@ -28,7 +28,7 @@ public function Start of TMsg(Tick: function(float): TMsg; OnFailure: function(S
     const Clock: Diagnostics.Stopwatch := Diagnostics.Stopwatch.StartNew();
     while not Token.IsCancellationRequested do
       await Tasks.Task.Delay(Interval, Token).ConfigureAwait(false);
-      const Seconds: float := cast<float>(Clock.Elapsed.TotalSeconds);
+      const Seconds: float := cast Clock.Elapsed.TotalSeconds as float;
       Clock.Restart();
       await Post(Tick(Seconds)).ConfigureAwait(false);
     end while;

@@ -17,12 +17,12 @@ begin
   File.Write($45564157);
   File.Write($20746D66);
   File.Write(16);
-  File.Write(cast<short>(1));
-  File.Write(cast<short>(2));
+  File.Write(cast 1 as short);
+  File.Write(cast 2 as short);
   File.Write(44100);
   File.Write(44100 * 4);
-  File.Write(cast<short>(4));
-  File.Write(cast<short>(16));
+  File.Write(cast 4 as short);
+  File.Write(cast 16 as short);
   File.Write($61746164);
   File.Write(Frames * 4);
   for Frame: int := 0 to Frames - 1 do
@@ -37,8 +37,8 @@ begin
         end if) * Frame / 44100.0
       )
     end if;
-    File.Write(cast<short>(3277.0 * Sample));
-    File.Write(cast<short>(819.0 * Sample));
+    File.Write(cast (3277.0 * Sample) as short);
+    File.Write(cast (819.0 * Sample) as short);
   end for;
 end procedure;
 

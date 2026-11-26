@@ -116,7 +116,7 @@ end function;
 function ThemeControl(Model: Shared.Model; Colors: Themes.Palette): E.Element of State.Msg;
   function Swatch(Index: int): E.Element of State.Msg;
   begin
-    const Accent: Themes.Accent := cast<Themes.Accent>(Index);
+    const Accent: Themes.Accent := cast Index as Themes.Accent;
     const Name: string := Accent.ToString().ToLowerInvariant();
     const Dot: Canvases.Shape := Canvases.Shape.Circle(11.0F, 11.0F, 7.0F, AccentColors[Index]);
     const Shapes: array of Canvases.Shape := if Accent = Model.Accent then
@@ -154,9 +154,9 @@ begin
         new Segments.Item(Strings.Get('Text.ThemeLight'), Icon := Sys.Char.ConvertFromUtf32($E178)),
         new Segments.Item(Strings.Get('Text.ThemeDark'), Icon := Sys.Char.ConvertFromUtf32($E11E))
       ],
-      cast<int>(Switchers.Resolve(Model.Appearance, Model.SystemAppearance)),
+      cast Switchers.Resolve(Model.Appearance, Model.SystemAppearance) as int,
       function(Index: int): State.Msg => State.Msg.Shared(
-        Shared.Msg.SetAppearance(cast<Switchers.Selection>(Index))
+        Shared.Msg.SetAppearance(cast Index as Switchers.Selection)
       ),
       new Segments.Options(ControlSize := Buttons.Size.Small, FullWidth := true)
     ),

@@ -97,7 +97,7 @@ public sealed partial class MsBuildTests
             begin return Value; end function;
             public function Validate(Value: object): bool;
             begin
-              const Cast: Selected := cast<Selected>(Value);
+              const Cast: Selected := cast Value as Selected;
               return Value is (N.Outer of string?).Inner of int and Cast.Second = 42;
             end function;
             public function Keys(): string;

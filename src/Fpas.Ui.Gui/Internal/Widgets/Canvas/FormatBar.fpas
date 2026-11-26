@@ -26,10 +26,10 @@ begin
   const Token: string := C.Token(Role, Id);
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled;
   var Value: CuiCanvas.CuiTextFormat := new CuiCanvas.CuiTextFormat(
-    cast<int>(Format.Color),
-    cast<byte>(Enc.Bits(Format.Bold, 1)),
-    cast<byte>(Enc.Bits(Format.Underline, 1)),
-    cast<byte>(Enc.Bits(Format.Link, 1)),
+    cast Format.Color as int,
+    cast Enc.Bits(Format.Bold, 1) as byte,
+    cast Enc.Bits(Format.Underline, 1) as byte,
+    cast Enc.Bits(Format.Link, 1) as byte,
     Format.Style,
     Format.Size,
     Format.Alignment,
@@ -40,12 +40,12 @@ begin
   );
   for Style: D.Style in Settings.Styles do
     Styles.Add(
-      new CuiCanvas.CuiTextStyle(Style.Name, Style.Size, Style.PreviewSize, cast<int>(Style.Font))
+      new CuiCanvas.CuiTextStyle(Style.Name, Style.Size, Style.PreviewSize, cast Style.Font as int)
     );
   end for;
   const Tones: Lists.List of int := new Lists.List of int(Settings.Colors.Length);
   for Tone: S.Tone in Settings.Colors do
-    Tones.Add(cast<int>(Tone));
+    Tones.Add(cast Tone as int);
   end for;
   const Event: int := Frame.Window.FormatBar(
     Token, ref Value, Styles.ToArray(), Tones.ToArray(),
@@ -55,7 +55,7 @@ begin
   P.Root of TMsg(Frame, Id, Role, '', Enabled, Value.Size.ToString());
   if Event <> 0 then
     const Next: D.Value := new D.Value(
-      cast<S.Tone>(Value.Color), Value.Bold <> 0, Value.Underline <> 0,
+      cast Value.Color as S.Tone, Value.Bold <> 0, Value.Underline <> 0,
       Value.Link <> 0, Value.Style, Value.Size, Value.Alignment, Value.List
     );
     Frame.Messages.Add(

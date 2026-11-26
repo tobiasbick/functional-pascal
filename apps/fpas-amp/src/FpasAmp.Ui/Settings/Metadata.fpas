@@ -111,7 +111,7 @@ begin
       )
     ],
     new Cards.Options(
-      Width := L.Extent.Fill, Align := L.Alignment.Stretch, Padding := cast<float>(Padding),
+      Width := L.Extent.Fill, Align := L.Alignment.Stretch, Padding := cast Padding as float,
       Gap := 14.0F
     )
   );

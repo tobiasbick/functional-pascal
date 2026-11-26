@@ -114,7 +114,7 @@ begin
   const Normalized: string := if Multiline then
     Input.Replace(
       new string([#13, #10]),
-      cast<char>(10).ToString()
+      (cast 10 as char).ToString()
     ).Replace(#13, #10).Replace(#8232, #10).Replace(#8233, #10)
   else
     G.SingleLine(Input)

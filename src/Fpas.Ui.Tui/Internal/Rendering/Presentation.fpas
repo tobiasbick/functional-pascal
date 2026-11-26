@@ -18,7 +18,7 @@ begin
       '49'
     end if;
   end if;
-  const Rgb: int := Sys.Math.Min(cast<int>(Value), 16777215);
+  const Rgb: int := Sys.Math.Min(cast Value as int, 16777215);
   return (if Foreground then
     '38;2;'
   else

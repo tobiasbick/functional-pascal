@@ -25,7 +25,7 @@ begin
   const Enabled: bool := Frame.AcceptInput and Settings.Enabled and Items.Length > 0;
   const Focus: bool := C.WantsFocus of TMsg(Frame, Id, Token, Enabled);
   const Next: int := Frame.Window.ModelPicker(
-    Token, Data.Models(Items), Selected, cast<int>(Settings.Placement),
+    Token, Data.Models(Items), Selected, cast Settings.Placement as int,
     Enc.Bits(Enabled, 1) or Enc.Bits(Focus, 2) or Enc.Bits(Settings.Ghost, 4)
   );
   P.Root of TMsg(

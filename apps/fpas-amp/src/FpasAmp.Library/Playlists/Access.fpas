@@ -86,7 +86,7 @@ public type Session = record
   requires Name <> '';
   requires Items <> null and Items.Length <= 100000;
   begin
-    const Copy: array of M.Input := cast<array of M.Input>(Items.Clone());
+    const Copy: array of M.Input := cast Items.Clone() as array of M.Input;
     using const Linked: T.CancellationTokenSource := T.CancellationTokenSource.CreateLinkedTokenSource(
       self.Lifetime,
       Cancellation

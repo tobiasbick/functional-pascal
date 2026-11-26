@@ -31,8 +31,8 @@ procedure CheckPage(Page: State.Page; Renderer: Cui.CuiRenderer; Root: string; W
     end if;
 
     if Enter then
-      Window.SetKey(cast<int>(Keys.Key.Enter), true);
-      Window.SetKey(cast<int>(Keys.Key.Enter), false);
+      Window.SetKey(cast Keys.Key.Enter as int, true);
+      Window.SetKey(cast Keys.Key.Enter as int, false);
       Enter := false;
     end if;
 

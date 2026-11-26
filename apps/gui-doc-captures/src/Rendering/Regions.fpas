@@ -58,8 +58,8 @@ public procedure Capture(
 );
 begin
   const Frame: Gui.Frame := Session.Snapshot();
-  var Left: float := cast<float>(Frame.Size.Width);
-  var Top: float := cast<float>(Frame.Size.Height);
+  var Left: float := cast Frame.Size.Width as float;
+  var Top: float := cast Frame.Size.Height as float;
   var Right: float := 0.0F;
   var Bottom: float := 0.0F;
   for Id: string in Ids do
@@ -87,15 +87,15 @@ begin
   end if;
 
   const Rectangle: array of int := [
-    Sys.Math.Max(0, cast<int>(Sys.Math.Floor(Left)) - 8 - Padding.Left),
-    Sys.Math.Max(0, cast<int>(Sys.Math.Floor(Top)) - 8 - Padding.Top),
+    Sys.Math.Max(0, cast Sys.Math.Floor(Left) as int - 8 - Padding.Left),
+    Sys.Math.Max(0, cast Sys.Math.Floor(Top) as int - 8 - Padding.Top),
     Sys.Math.Min(
-      cast<int>(Frame.Size.Width),
-      cast<int>(Sys.Math.Ceiling(Right)) + 8 + Padding.Right
+      cast Frame.Size.Width as int,
+      cast Sys.Math.Ceiling(Right) as int + 8 + Padding.Right
     ),
     Sys.Math.Min(
-      cast<int>(Frame.Size.Height),
-      cast<int>(Sys.Math.Ceiling(Bottom)) + 8 + Padding.Bottom
+      cast Frame.Size.Height as int,
+      cast Sys.Math.Ceiling(Bottom) as int + 8 + Padding.Bottom
     )
   ];
   CaptureRectangle(Session, Output, Name, Rectangle);

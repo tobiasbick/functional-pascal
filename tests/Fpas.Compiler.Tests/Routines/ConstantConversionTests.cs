@@ -25,8 +25,8 @@ public sealed class ConstantConversionTests
     /// <summary>Rejects operations that must unwrap runtime storage in optional defaults.</summary>
     /// <param name="expression">The runtime conversion used as an optional default.</param>
     [Theory]
-    [InlineData("cast<int>(cast<object>(1L))")]
-    [InlineData("cast<int>(cast<int?>(null))")]
+    [InlineData("cast cast 1L as object as int")]
+    [InlineData("cast cast null as int? as int")]
     public void Runtime_unboxing_and_nullable_unwrapping_are_not_optional_constants(string expression)
     {
         var result = TestCompilation.CompileAgainstFramework($"program Constants; procedure P(Value: int := {expression}); begin end procedure; begin end; end program;");
@@ -39,7 +39,7 @@ public sealed class ConstantConversionTests
     [Fact]
     public void Runtime_reference_downcasts_are_not_optional_string_constants()
     {
-        var result = TestCompilation.CompileAgainstFramework("program Constants; procedure P(Value: string := cast<string>(cast<object>(1))); begin end procedure; begin end; end program;");
+        var result = TestCompilation.CompileAgainstFramework("program Constants; procedure P(Value: string := cast cast 1 as object as string); begin end procedure; begin end; end program;");
         Assert.False(result.Success);
         Assert.Equal("FP3028", Assert.Single(result.Diagnostics).Code);
     }
@@ -47,10 +47,10 @@ public sealed class ConstantConversionTests
     /// <summary>Rejects reference equality whose result depends on runtime object identity.</summary>
     /// <param name="expression">The boxed reference comparison used as a default.</param>
     [Theory]
-    [InlineData("cast<object>(cast<nint>(1)) = cast<object>(1L)")]
-    [InlineData("cast<object>(cast<nuint>(1)) = cast<object>(1UL)")]
-    [InlineData("cast<object>(1) = cast<object>(1)")]
-    [InlineData("cast<object>('a' + 'b') = cast<object>('ab')")]
+    [InlineData("cast cast 1 as nint as object = cast 1L as object")]
+    [InlineData("cast cast 1 as nuint as object = cast 1UL as object")]
+    [InlineData("cast 1 as object = cast 1 as object")]
+    [InlineData("cast ('a' + 'b') as object = cast 'ab' as object")]
     public void Boxed_reference_identity_is_not_a_compile_time_value_comparison(string expression)
     {
         var result = TestCompilation.CompileAgainstFramework($"program Constants; procedure P(Value: bool := {expression}); begin end procedure; begin end; end program;");
@@ -63,7 +63,7 @@ public sealed class ConstantConversionTests
     [Fact]
     public void Null_tests_and_string_value_equality_remain_constant()
     {
-        var result = TestCompilation.CompileAgainstFramework("program Constants; procedure P(Present: bool := cast<object>(cast<nint>(1)) <> null; EqualText: bool := 'a' + 'b' = 'ab'); begin end procedure; begin P(); end; end program;");
+        var result = TestCompilation.CompileAgainstFramework("program Constants; procedure P(Present: bool := cast cast 1 as nint as object <> null; EqualText: bool := 'a' + 'b' = 'ab'); begin end procedure; begin P(); end; end program;");
         Assert.True(result.Success, string.Join(';', result.Diagnostics));
         using var pe = new PEReader(new MemoryStream(result.Program!.AssemblyImage));
         var reader = pe.GetMetadataReader();
@@ -79,7 +79,7 @@ public sealed class ConstantConversionTests
     [Fact]
     public void Subrange_construction_preserves_runtime_unboxing_instead_of_panicking_during_constant_validation()
     {
-        var result = TestCompilation.Compile("program Constants; type Small = int range 0..9; begin discard new Small(cast<int>(cast<object>('x'))); end; end program;");
+        var result = TestCompilation.Compile("program Constants; type Small = int range 0..9; begin discard new Small(cast cast 'x' as object as int); end; end program;");
         Assert.True(result.Success, string.Join(';', result.Diagnostics));
     }
 
@@ -87,7 +87,7 @@ public sealed class ConstantConversionTests
     [Fact]
     public void Constant_patterns_diagnose_runtime_unboxing()
     {
-        var result = TestCompilation.CompileAgainstFramework("program Constants; begin discard case 1 of when cast<int>(cast<object>(1L)): 1; else 0; end case; end; end program;");
+        var result = TestCompilation.CompileAgainstFramework("program Constants; begin discard case 1 of when cast cast 1L as object as int: 1; else 0; end case; end; end program;");
         Assert.False(result.Success);
         Assert.Equal("FP3024", Assert.Single(result.Diagnostics).Code);
     }
@@ -96,7 +96,7 @@ public sealed class ConstantConversionTests
     [Fact]
     public void Attribute_constants_reject_runtime_unboxing()
     {
-        var result = TestCompilation.CompileAgainstFramework("program Constants; uses System as Sys; [Sys.ComponentModel.DefaultValueAttribute(cast<int>(cast<object>(1L)))] procedure P(); begin end procedure; begin end; end program;");
+        var result = TestCompilation.CompileAgainstFramework("program Constants; uses System as Sys; [Sys.ComponentModel.DefaultValueAttribute(cast cast 1L as object as int)] procedure P(); begin end procedure; begin end; end program;");
         Assert.False(result.Success);
         Assert.Equal("FP3035", Assert.Single(result.Diagnostics).Code);
     }
@@ -105,7 +105,7 @@ public sealed class ConstantConversionTests
     [Fact]
     public void Safe_boxing_preserves_attribute_constant_payload_and_numeric_defaults()
     {
-        var result = TestCompilation.CompileAgainstFramework("program Constants; uses System as Sys; [Sys.ComponentModel.DefaultValueAttribute(cast<object>(1))] procedure P(Value: long := cast<long>(1)); begin end procedure; begin P(); end; end program;");
+        var result = TestCompilation.CompileAgainstFramework("program Constants; uses System as Sys; [Sys.ComponentModel.DefaultValueAttribute(cast 1 as object)] procedure P(Value: long := cast 1 as long); begin end procedure; begin P(); end; end program;");
         Assert.True(result.Success, string.Join(';', result.Diagnostics));
         using var pe = new PEReader(new MemoryStream(result.Program!.AssemblyImage));
         var reader = pe.GetMetadataReader();

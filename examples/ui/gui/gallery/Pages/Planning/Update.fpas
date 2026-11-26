@@ -17,7 +17,7 @@ uses System.Collections.Generic as Lists;
 
 function Move(Model: M.Model; Key: int; Source: int; Destination: int; Index: int): M.Model;
 begin
-  const Columns: array of array of int := cast<array of array of int>(Model.Columns.Clone());
+  const Columns: array of array of int := cast Model.Columns.Clone() as array of array of int;
   const FromItems: Lists.List of int := new Lists.List of int(Columns[Source]);
   if not FromItems.Remove(Key) then
     return Model;

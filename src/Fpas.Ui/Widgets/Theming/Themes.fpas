@@ -150,8 +150,8 @@ begin
     Global.CultureInfo.InvariantCulture
   );
   return new G.Color(
-    cast<byte>(Value shr 24), cast<byte>((Value shr 16) and 255),
-    cast<byte>((Value shr 8) and 255), cast<byte>(Value and 255)
+    cast (Value shr 24) as byte, cast ((Value shr 16) and 255) as byte,
+    cast ((Value shr 8) and 255) as byte, cast (Value and 255) as byte
   );
 end function;
 
@@ -210,9 +210,9 @@ end function;
 // ## Returns
 // A theme accepted by either UI host.
 public function Light(Color: Accent := Accent.Neutral): Theme;
-requires cast<int>(Color) >= 0 and cast<int>(Color) <= 7;
+requires cast Color as int >= 0 and cast Color as int <= 7;
 begin
-  return new Theme(Mode.Light, Color, CreatePalette(false, cast<int>(Color)));
+  return new Theme(Mode.Light, Color, CreatePalette(false, cast Color as int));
 end function;
 
 // Creates CUI's dark palette with the selected accent.
@@ -223,9 +223,9 @@ end function;
 // ## Returns
 // A theme accepted by either UI host.
 public function Dark(Color: Accent := Accent.Neutral): Theme;
-requires cast<int>(Color) >= 0 and cast<int>(Color) <= 7;
+requires cast Color as int >= 0 and cast Color as int <= 7;
 begin
-  return new Theme(Mode.Dark, Color, CreatePalette(true, cast<int>(Color)));
+  return new Theme(Mode.Dark, Color, CreatePalette(true, cast Color as int));
 end function;
 
 // Composites a palette color onto an opaque background for explicit cell drawing.
@@ -240,8 +240,8 @@ public function Rgb(Value: G.Color; Background: G.Color): int;
 requires Background.Alpha = 255;
   function Channel(Foreground: byte; Back: byte): int;
   begin
-    return (cast<int>(Foreground) * cast<int>(Value.Alpha) + cast<int>(Back) * (255 -
-      cast<int>(Value.Alpha)) + 127) div 255;
+    return (cast Foreground as int * cast Value.Alpha as int + cast Back as int * (255 -
+      cast Value.Alpha as int) + 127) div 255;
   end function;
 begin
   return (Channel(Value.Red, Background.Red) shl 16)
@@ -256,13 +256,13 @@ end function;
 // ## Returns
 // A detached array, excluding CUI's reserved zero token.
 public function Rgba(Value: Theme): array of uint;
-requires cast<int>(Value.Appearance) >= 0 and cast<int>(Value.Appearance) <= 1;
-requires cast<int>(Value.AccentFamily) >= 0 and cast<int>(Value.AccentFamily) <= 7;
+requires cast Value.Appearance as int >= 0 and cast Value.Appearance as int <= 1;
+requires cast Value.AccentFamily as int >= 0 and cast Value.AccentFamily as int <= 7;
 requires Value.Colors.Background.Alpha = 255;
   function Pack(Color: G.Color): uint;
   begin
-    return cast<uint>(Color.Red) or (cast<uint>(Color.Green) shl 8)
-      or (cast<uint>(Color.Blue) shl 16) or (cast<uint>(Color.Alpha) shl 24);
+    return cast Color.Red as uint or (cast Color.Green as uint shl 8)
+      or (cast Color.Blue as uint shl 16) or (cast Color.Alpha as uint shl 24);
   end function;
 begin
   const C: Palette := Value.Colors;

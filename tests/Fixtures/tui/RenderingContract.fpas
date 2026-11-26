@@ -106,7 +106,7 @@ procedure ZeroWidthClusters();
       Output.Contains(Painted + 'A'),
       'Presentation must emit the normalized cluster followed by adjacent text.'
     );
-    const Next: array of Terminal.Cell := cast<array of Terminal.Cell>(Frame.Cells.Clone());
+    const Next: array of Terminal.Cell := cast Frame.Cells.Clone() as array of Terminal.Cell;
     Next[Span] := new Terminal.Cell('B', Frame.Cells[Span].Colors);
     Present(6, 1, Next);
     Check(

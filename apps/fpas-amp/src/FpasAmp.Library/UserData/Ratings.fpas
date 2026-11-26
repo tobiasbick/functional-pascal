@@ -20,7 +20,7 @@ begin
     'UPDATE tracks SET rating=$rating WHERE id=$id;',
     null,
     ['$rating', '$id'],
-    [cast<object?>(Value), Id]
+    [cast Value as object?, Id]
   );
   if Query.ExecuteNonQuery() <> 1 then
     raise new Sys.ArgumentException('Unknown track identity.');

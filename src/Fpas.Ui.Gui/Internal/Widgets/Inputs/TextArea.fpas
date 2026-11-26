@@ -35,7 +35,7 @@ begin
     Settings.Error,
     Settings.Prefix,
     Settings.Suffix,
-    cast<int>(Settings.ControlSize),
+    cast Settings.ControlSize as int,
     Settings.ReadOnly,
     Settings.MaxUtf8Bytes
   );
@@ -43,7 +43,7 @@ begin
     Token,
     Value,
     Native,
-    cast<float>(Settings.Height),
+    cast Settings.Height as float,
     Settings.Clearable,
     Enabled,
     C.WantsFocus of TMsg(Frame, Id, Token, Enabled),

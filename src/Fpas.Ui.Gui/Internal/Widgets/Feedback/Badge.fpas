@@ -19,11 +19,11 @@ public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Text: string; 
 begin
   Frame.Window.Badge(
     Text,
-    cast<int>(Settings.Tone),
+    cast Settings.Tone as int,
     Settings.Dot,
     Settings.Solid,
     Settings.Icon,
-    cast<int>(Settings.Size)
+    cast Settings.Size as int
   );
   C.Track of TMsg(Frame, new App.Control(Id, Text, 'badge', new Cui.CuiRectangle(), false));
 end procedure;

@@ -67,7 +67,7 @@ public function MapCommand of (TChild, TParent)(
 
         return (A.Command of TParent).Host(
           A.HostRequest.Extension(
-            cast<A.HostExtension of TChild>(Payload).Map of TParent(Messages)
+            (cast Payload as A.HostExtension of TChild).Map of TParent(Messages)
           )
         );
       else

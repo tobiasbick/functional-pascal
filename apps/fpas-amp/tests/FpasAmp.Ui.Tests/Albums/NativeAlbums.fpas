@@ -128,9 +128,9 @@ public type NativeAlbumTests = record
         discard Art.Track(Folder, 'track-' + Track.ToString() + '.mp3', Title);
       end for;
       const Picture: array of byte := Art.Picture(
-        cast<byte>(35 + Index mod 4 * 35),
-        cast<byte>(80 + Index mod 3 * 40),
-        cast<byte>(100 + Index mod 5 * 25)
+        cast (35 + Index mod 4 * 35) as byte,
+        cast (80 + Index mod 3 * 40) as byte,
+        cast (100 + Index mod 5 * 25) as byte
       );
       if Index mod 3 = 0 then
         Art.Embed(Path, Picture);

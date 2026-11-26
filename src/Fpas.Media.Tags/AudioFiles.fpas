@@ -234,7 +234,7 @@ begin
     Grouping := Track.Group ?? '',
     Label := Track.Publisher ?? '',
     Copyright := Track.Copyright ?? '',
-    Bpm := PositiveReal(cast<double?>(Track.BPM)),
+    Bpm := PositiveReal(cast Track.BPM as double?),
     MusicBrainzRecordingId := RecordingId(Track),
     MusicBrainzReleaseId := Extra(Track, 'MUSICBRAINZALBUMID'),
     MusicBrainzArtistIds := Values(Extra(Track, 'MUSICBRAINZARTISTID')),

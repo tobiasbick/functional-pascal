@@ -27,8 +27,8 @@ end function;
 // Packed native channels.
 public function Pack(Color: G.Color): uint;
 begin
-  return cast<uint>(Color.Red) or (cast<uint>(Color.Green) shl 8)
-    or (cast<uint>(Color.Blue) shl 16) or (cast<uint>(Color.Alpha) shl 24);
+  return cast Color.Red as uint or (cast Color.Green as uint shl 8)
+    or (cast Color.Blue as uint shl 16) or (cast Color.Alpha as uint shl 24);
 end function;
 
 // Decodes an RGBA color.
@@ -39,8 +39,8 @@ end function;
 public function Unpack(Value: uint): G.Color;
 begin
   return new G.Color(
-    cast<byte>(Value and 255U), cast<byte>((Value shr 8) and 255U),
-    cast<byte>((Value shr 16) and 255U), cast<byte>(Value shr 24)
+    cast (Value and 255U) as byte, cast ((Value shr 8) and 255U) as byte,
+    cast ((Value shr 16) and 255U) as byte, cast (Value shr 24) as byte
   );
 end function;
 

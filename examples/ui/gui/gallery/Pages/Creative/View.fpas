@@ -40,7 +40,7 @@ begin
   const Parts: Lists.List of E.Element of M.Msg := new Lists.List of E.Element of M.Msg();
   for Index: int := 0 to TagNames.Length - 1 do
     if not Small or (Model.Hidden and (1 shl Index)) = 0 then
-      const Status: Tags.Status := cast<Tags.Status>(Index);
+      const Status: Tags.Status := cast Index as Tags.Status;
       const Value: Tags.Value := new Tags.Value(TagNames[Index], Status);
       if Small then
         const Slot: int := Index;

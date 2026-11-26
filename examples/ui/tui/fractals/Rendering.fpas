@@ -21,7 +21,7 @@ function Blend(A: int; B: int; Amount: double): int;
   begin
     const From: int := (A shr Shift) and 255;
     const Target: int := (B shr Shift) and 255;
-    return cast<int>(From + (Target - From) * Amount);
+    return cast (From + (Target - From) * Amount) as int;
   end function;
 begin
   return (Channel(16) shl 16) or (Channel(8) shl 8) or Channel(0);
@@ -95,7 +95,7 @@ begin
   const Phase: double := Sys.Math.Abs(
     Sys.Math.IEEERemainder(Smooth / 10.0, 2.0)
   ) * (Ramp.Length - 1);
-  const Index: int := Sys.Math.Min(cast<int>(Phase), Ramp.Length - 2);
+  const Index: int := Sys.Math.Min(cast Phase as int, Ramp.Length - 2);
   return Blend(Ramp[Index], Ramp[Index + 1], Phase - Index);
 end function;
 

@@ -112,7 +112,7 @@ begin
     Frame.Messages.Add(
       Changed(
         new D.Event(
-          new D.View(Result.X, Result.Y, cast<float>(Result.Z), Result.A, Result.B),
+          new D.View(Result.X, Result.Y, cast Result.Z as float, Result.A, Result.B),
           Result.Index, Result.Action, Result.Count <> 0, Hovered
         )
       )

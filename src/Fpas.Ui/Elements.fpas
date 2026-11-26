@@ -1034,7 +1034,7 @@ public function CachedSubview of (TDeps, TMsg)(
   function Resolve(Previous: (CacheEntry of TMsg)?): CacheEntry of TMsg;
   begin
     if Previous <> null and Previous.Dependencies is DependencyBox of TDeps then
-      const Old: DependencyBox of TDeps := cast<DependencyBox of TDeps>(Previous.Dependencies);
+      const Old: DependencyBox of TDeps := cast Previous.Dependencies as DependencyBox of TDeps;
       if Equal(Old.Value, Dependencies) then
         return Previous;
       end if;

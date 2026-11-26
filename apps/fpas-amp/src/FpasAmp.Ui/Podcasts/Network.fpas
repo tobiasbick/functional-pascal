@@ -94,7 +94,7 @@ begin
       return;
     end if;
 
-    Total := Total + cast<long>(Count);
+    Total := Total + cast Count as long;
     if Total > Limit then
       raise new IO.InvalidDataException('The response exceeds the size limit.');
     end if;

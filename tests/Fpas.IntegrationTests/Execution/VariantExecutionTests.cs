@@ -12,7 +12,7 @@ public sealed class VariantExecutionTests
         begin
           const Value: Result := Result.Success(42);
           Console.WriteLine(Value is Result.SuccessCase);
-          Console.WriteLine(case cast<object>(Value) of when is Result.SuccessCase as Found: Found.Value; else 0; end case);
+          Console.WriteLine(case cast Value as object of when is Result.SuccessCase as Found: Found.Value; else 0; end case);
         end;
         end program;
         """, "True", "42");
@@ -41,7 +41,7 @@ public sealed class VariantExecutionTests
           Console.WriteLine(Describe(Outcome.Blocked('wall')));
           Console.WriteLine(First = Equal); Console.WriteLine(First <> Outcome.Blocked('wall'));
           Console.WriteLine(Outcome.Idle = Outcome.Idle);
-          Console.WriteLine(First.Equals(cast<object>(Equal)));
+          Console.WriteLine(First.Equals(cast Equal as object));
           Console.WriteLine(First.GetHashCode() = Equal.GetHashCode());
           const Seen: Collections.HashSet of Outcome := new Collections.HashSet of Outcome();
           discard Seen.Add(First); discard Seen.Add(Equal); discard Seen.Add(Outcome.Idle);
@@ -101,8 +101,8 @@ public sealed class VariantExecutionTests
           Console.WriteLine(case Number of when null: -1; when 0..5: 1; else 2; end case);
           Console.WriteLine(case true of when true: 'yes'; when false: 'no'; end case);
           Console.WriteLine(case #65 of when #65..#90: 'upper'; else 'other'; end case);
-          Console.WriteLine(cast<object>(42) is int);
-          Console.WriteLine(cast<object>('text') is Sys.Exception);
+          Console.WriteLine(cast 42 as object is int);
+          Console.WriteLine(cast 'text' as object is Sys.Exception);
         end;
         end program;
         """, "null", "answer", "text", "failure", "other", "1", "yes", "upper", "True", "False");

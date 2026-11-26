@@ -132,8 +132,8 @@ begin
       ),
       Summary(Current, Item, Info, Cover, Compact),
       Tabs.Tabs of M.Msg(
-        'track-detail-tabs', Sections, cast<int>(Current.ActiveDetailTab),
-        function(Index: int): M.Msg => M.Msg.SelectDetailTab(cast<M.DetailTab>(Index))
+        'track-detail-tabs', Sections, cast Current.ActiveDetailTab as int,
+        function(Index: int): M.Msg => M.Msg.SelectDetailTab(cast Index as M.DetailTab)
       ),
       E.Size of M.Msg(
         Metadata.Panel(Current.ActiveDetailTab, Info, Compact), new L.Flex(

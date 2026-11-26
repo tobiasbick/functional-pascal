@@ -45,7 +45,7 @@ begin
   );
   const Native: CuiCharts.CuiDotOptions := new CuiCharts.CuiDotOptions(
     Common, Settings.XMinimum, Settings.XMaximum,
-    Settings.XStep, cast<int>(Settings.Units), Charts.Format(Settings.XFormat), Settings.Unit,
+    Settings.XStep, cast Settings.Units as int, Charts.Format(Settings.XFormat), Settings.Unit,
     Settings.Pitch, Settings.Axis, Settings.Readout, Settings.XLabel, Settings.ValueLabel
   );
   const Hit: CuiCharts.CuiDotHit := Frame.Window.DotChart(

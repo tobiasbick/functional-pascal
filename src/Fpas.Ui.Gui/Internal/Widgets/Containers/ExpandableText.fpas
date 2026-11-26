@@ -17,8 +17,8 @@ begin
   elsif Color.Alpha = 0 then
     1u
   else
-    cast<uint>(Color.Red) or (cast<uint>(Color.Green) shl 8)
-    or (cast<uint>(Color.Blue) shl 16) or (cast<uint>(Color.Alpha) shl 24)
+    cast Color.Red as uint or (cast Color.Green as uint shl 8)
+    or (cast Color.Blue as uint shl 16) or (cast Color.Alpha as uint shl 24)
   end if;
 end function;
 

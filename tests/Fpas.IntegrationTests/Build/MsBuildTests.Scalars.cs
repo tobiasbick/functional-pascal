@@ -57,7 +57,7 @@ public sealed partial class MsBuildTests
             public function Echo(Value: MaybeText): MaybeText; begin return Value; end function;
             public function EchoTexts(Value: Texts): Texts; begin return Value; end function;
             public function Boxed(Value: Count): CountBox; begin return new CountBox(Value); end function;
-            public function Native(Value: nint; Other: nuint): nint; begin return Value + cast<nint>(Other); end function;
+            public function Native(Value: nint; Other: nuint): nint; begin return Value + cast Other as nint; end function;
             public function NativeDefault(Value: nint := 0): nint; begin return Value; end function;
             public function NativeOne(Value: nint := 1): nint; begin return Value; end function;
             public function CharFloat(Value: float := #65): float; begin return Value; end function;
@@ -81,17 +81,17 @@ public sealed partial class MsBuildTests
             public function Texts(Value: M.Texts): M.Texts; begin return M.EchoTexts(Value); end function;
             public function Boxed(): M.CountBox; begin return M.Boxed(18446744073709551615UL); end function;
             public function Id(Value: long): M.UserId; begin return new M.UserId(Value); end function;
-            public function IdValue(Value: M.UserId): long; begin return cast<long>(Value); end function;
-            public function Port(Value: ushort): M.Port; begin return cast<M.Port>(Value); end function;
+            public function IdValue(Value: M.UserId): long; begin return cast Value as long; end function;
+            public function Port(Value: ushort): M.Port; begin return cast Value as M.Port; end function;
             public function PortValue(Value: M.Port): int; begin return Value; end function;
             public function Bounds(): int; begin return M.Port.LowerBound + M.Port.UpperBound; end function;
             public function Price(): decimal; begin return S.Numbers.Add(S.Numbers.Price) + M.Amount() + S.Numbers.Price - S.Numbers.Price; end function;
-            public function Foreign(): uint; begin return cast<uint>(S.External.High); end function;
+            public function Foreign(): uint; begin return cast S.External.High as uint; end function;
             public function Combine(): M.Direction; begin return M.Direction.East or M.Direction.West; end function;
             public function Native(): nint;
             begin
               discard S.Numbers.UnsignedDefault();
-              return S.Numbers.Native(cast<nint>(40)) + S.Numbers.NativeDefault() + M.NativeOne() + M.NativeDefault();
+              return S.Numbers.Native(cast 40 as nint) + S.Numbers.NativeDefault() + M.NativeOne() + M.NativeDefault();
             end function;
             end unit;
             """);

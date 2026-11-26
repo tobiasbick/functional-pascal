@@ -109,7 +109,7 @@ begin
   R.CheckText(Current.Label, At);
   R.CheckText(Settings.Display, At);
   Tool(Settings.Tool, At);
-  const Range: long := cast<long>(Current.Maximum) - Current.Minimum;
+  const Range: long := cast Current.Maximum as long - Current.Minimum;
   if Range < 1L or Range > 16777216L or Current.Current < Current.Minimum or Current.Current >
     Current.Maximum
   then
@@ -162,7 +162,7 @@ begin
     const Base: double := if Settings.Base = 0 then
       1080.0
     else
-      cast<double>(Settings.Base)
+      cast Settings.Base as double
     end if;
     if Ratio.Width <= 0 or Ratio.Height <= 0
       or Base * Sys.Math.Max(

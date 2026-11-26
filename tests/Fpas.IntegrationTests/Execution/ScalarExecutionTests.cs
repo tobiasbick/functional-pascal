@@ -1,9 +1,32 @@
 // [Documentation](../../../docs/pascal/language/basics/primitive-types.md)
 using Fpas.IntegrationTests.Support;
+using Fpas.Compiler.Formatting;
 namespace Fpas.IntegrationTests.Execution;
 
 public sealed class ScalarExecutionTests
 {
+    [Fact]
+    public async Task Casts_preserve_operand_grouping_and_member_access_after_formatting()
+    {
+        const string source = """
+            program Casts;
+            uses System.Console as Console;
+            begin
+              const Value: int := int.MaxValue;
+              const Text: object := 'FPAS';
+              Console.WriteLine(cast Value as long + 1);
+              Console.WriteLine(cast(Value - 2147483605)as long);
+              Console.WriteLine((cast Text as string).Length);
+              Console.WriteLine(cast cast 42 as object as int);
+            end;
+            end program;
+            """;
+        var formatted = FpasFormatter.Format(new("casts.fpas", source));
+        Assert.True(formatted.Success, string.Join('\n', formatted.Diagnostics));
+        Assert.Contains("cast (Value - 2147483605) as long", formatted.Text);
+        await ProgramExecution.Output(formatted.Text!, "2147483648", "42", "4", "42");
+    }
+
     [Fact]
     public Task Aliases_and_real_enums_preserve_underlying_types_constants_and_bitwise_values() => ProgramExecution.Output("""
         program Types;
@@ -16,11 +39,11 @@ public sealed class ScalarExecutionTests
         begin
           const Count: Counter := 42L; Console.WriteLine(Count);
           const Values: Directions := [Direction.North, Direction.West];
-          Console.WriteLine(Values[1].ToString()); Console.WriteLine(cast<byte>(Direction.West));
+          Console.WriteLine(Values[1].ToString()); Console.WriteLine(cast Direction.West as byte);
           Console.WriteLine(Direction.East = Direction.Alias); Console.WriteLine(Direction.Forward = Direction.Last);
-          Console.WriteLine(cast<byte>(Direction.East or Direction.West)); Console.WriteLine(cast<byte>(not Direction.North));
-          Console.WriteLine(cast<ulong>(Big.Max));
-          const Unknown: Direction := cast<Direction>(3); Console.WriteLine(cast<byte>(Unknown));
+          Console.WriteLine(cast (Direction.East or Direction.West) as byte); Console.WriteLine(cast not Direction.North as byte);
+          Console.WriteLine(cast Big.Max as ulong);
+          const Unknown: Direction := cast 3 as Direction; Console.WriteLine(cast Unknown as byte);
           const Maybe: Direction? := null; Console.WriteLine((Maybe ?? Direction.East) = Direction.East);
         end;
         end program;
@@ -39,18 +62,18 @@ public sealed class ScalarExecutionTests
         requires Left < Right;
         begin return true; end function;
         begin
-          const Id: UserId := new UserId(42L); Console.WriteLine(cast<long>(Echo(Id)));
+          const Id: UserId := new UserId(42L); Console.WriteLine(cast Echo(Id) as long);
           Console.WriteLine(Id = new UserId(42L)); Console.WriteLine(Id < new UserId(43L));
           const Items: C.HashSet of UserId := new C.HashSet of UserId(); discard Items.Add(Id); discard Items.Add(new UserId(42L)); Console.WriteLine(Items.Count);
-          const Name: PlayerName := new PlayerName('Ada'); Console.WriteLine(Name.Value); Console.WriteLine(Name = cast<PlayerName>('Ada'));
+          const Name: PlayerName := new PlayerName('Ada'); Console.WriteLine(Name.Value); Console.WriteLine(Name = cast 'Ada' as PlayerName);
           const Missing: PlayerName? := null; Console.WriteLine(Missing = null);
           Console.WriteLine(new PlayerName('Ada') < new PlayerName('Zed'));
-          const Amount: Money := cast<Money>(1.25M); Console.WriteLine(cast<decimal>(Amount));
+          const Amount: Money := cast 1.25M as Money; Console.WriteLine(cast Amount as decimal);
           const Default: UserId := new UserId(); Console.WriteLine(Default.Value);
-          const Optional: Flag? := cast<Flag?>(true); Console.WriteLine((Optional ?? new Flag(false)).Value);
-          const Present: bool? := true; const Lifted: Flag? := cast<Flag?>(Present);
-          Console.WriteLine(cast<bool?>(Lifted) ?? false);
-          const Absent: bool? := null; Console.WriteLine(cast<Flag?>(Absent) = null);
+          const Optional: Flag? := cast true as Flag?; Console.WriteLine((Optional ?? new Flag(false)).Value);
+          const Present: bool? := true; const Lifted: Flag? := cast Present as Flag?;
+          Console.WriteLine(cast Lifted as bool? ?? false);
+          const Absent: bool? := null; Console.WriteLine(cast Absent as Flag? = null);
           Console.WriteLine(Ordered(new PlayerName('Ada'), new PlayerName('Zed')));
         end;
         end program;
@@ -102,8 +125,8 @@ public sealed class ScalarExecutionTests
 
     [Theory]
     [InlineData("new Percent(Value)")]
-    [InlineData("cast<Percent>(Value)")]
-    [InlineData("unchecked(cast<Percent>(Value))")]
+    [InlineData("cast Value as Percent")]
+    [InlineData("unchecked(cast Value as Percent)")]
     public async Task Runtime_subrange_validation_cannot_be_disabled(string expression)
     {
         var result = await ProgramExecution.Run("program Ranges; type Percent = int range 1..100; begin const Value: int := 101; discard " + expression + "; end; end program;");

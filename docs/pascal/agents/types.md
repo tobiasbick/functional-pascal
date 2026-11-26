@@ -28,7 +28,7 @@ C# record. Generated CLR member names cannot be redeclared by source members.
 
 `type Label = string;` is transparent and creates no CLR type. Use
 `type UserId = distinct long;` for nominal identity. Construct with new UserId(7L),
-unwrap with cast<long>(Id) or Id.Value. Distinct values have explicit base
+unwrap with `cast Id as long` or `Id.Value`. Distinct values have explicit base
 conversions and same-domain comparisons, without automatic arithmetic/member
 forwarding. Distinct string wrappers reject null.
 
@@ -74,7 +74,7 @@ begin
   const Wrapped: Box of UserId := new Box of UserId(Id);
   const Ports: array of Port := new Port[1];
   if Original.X <> 1 or Moved.X <> 4 or Moved.Y <> 2
-    or cast<long>(Wrapped.Value) <> 7L or Ports[0].Value <> 1
+    or cast Wrapped.Value as long <> 7L or Ports[0].Value <> 1
   then
     raise new Sys.InvalidOperationException('Incorrect record or domain behavior');
   end if;

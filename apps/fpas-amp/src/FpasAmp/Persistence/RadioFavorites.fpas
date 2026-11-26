@@ -38,7 +38,7 @@ begin
       Result.Add(
         new Radio.Station(
           Id, Name, Url, Read(Item, 'country'), Read(Item, 'language'),
-          Read(Item, 'genre'), Read(Item, 'codec'), cast<int>(Bitrate ?? 0.0),
+          Read(Item, 'genre'), Read(Item, 'codec'), cast (Bitrate ?? 0.0) as int,
           Fields.BooleanValue(Fields.Field(Item, 'hls')) ?? false,
           Radio.Address(Read(Item, 'website'))
         )

@@ -25,8 +25,8 @@ public sealed class OverloadAndInterfaceDiagnosticsTests
             begin
               discard F({{first}});
               discard F({{second}});
-              discard G([cast<A?>({{first}})]);
-              discard G([cast<B?>({{second}})]);
+              discard G([cast {{first}} as A?]);
+              discard G([cast {{second}} as B?]);
             end;
             end program;
             """);

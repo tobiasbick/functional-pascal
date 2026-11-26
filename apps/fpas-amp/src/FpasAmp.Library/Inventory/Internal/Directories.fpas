@@ -13,11 +13,11 @@ begin
   var Current: string := Path;
   while Current <> '' do
     const Attributes: IO.FileAttributes := IO.File.GetAttributes(Current);
-    if (Attributes and IO.FileAttributes.ReparsePoint) <> cast<IO.FileAttributes>(0) then
+    if (Attributes and IO.FileAttributes.ReparsePoint) <> cast 0 as IO.FileAttributes then
       raise new IO.IOException('Directory links are not traversed.');
     end if;
 
-    if (Attributes and IO.FileAttributes.Directory) = cast<IO.FileAttributes>(0) then
+    if (Attributes and IO.FileAttributes.Directory) = cast 0 as IO.FileAttributes then
       raise new IO.IOException('The configured location is not a directory.');
     end if;
 

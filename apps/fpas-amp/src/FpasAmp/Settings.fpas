@@ -32,7 +32,7 @@ const FileName: string := 'settings.json';
 function DecodeSource(Item: J.JsonElement; UsedIds: C.HashSet of string; ref Valid: bool): Locations.MusicSource?;
 begin
   const Folder: string := Fields.StringValue(Fields.Field(Item, 'path')) ?? '';
-  if not IO.Path.IsPathFullyQualified(Folder) or Folder.Contains(cast<char>(0)) then
+  if not IO.Path.IsPathFullyQualified(Folder) or Folder.Contains(cast 0 as char) then
     Valid := false;
     return null;
   end if;
@@ -154,11 +154,11 @@ begin
         Valid := false;
       end if;
 
-      Gains[Index] := cast<float>(Gain ?? 0.0);
+      Gains[Index] := cast (Gain ?? 0.0) as float;
     end for;
   end if;
 
-  return new Audio.Settings(cast<float>(Volume ?? 0.0), Gains);
+  return new Audio.Settings(cast (Volume ?? 0.0) as float, Gains);
 end function;
 
 function AcoustIdKey(Keys: J.JsonElement; Name: string; ref Valid: bool): string;

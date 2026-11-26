@@ -32,7 +32,7 @@ begin
     Native.Add(
       new CuiCanvas.CuiLivePerson(
         Item.Name,
-        cast<int>(Item.Tone),
+        cast Item.Tone as int,
         Item.X,
         Item.Y,
         Item.Says,

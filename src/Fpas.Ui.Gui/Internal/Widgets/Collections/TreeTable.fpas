@@ -237,7 +237,7 @@ begin
 
   var Changed: bool := State[0] <> SortIndex or State[1] <> Desc or State[2] <> Cursor
     or Result.Activated >= 0 or Result.Load.Length <> 0;
-  const Proposed: array of T.Node := cast<array of T.Node>(Nodes.Clone());
+  const Proposed: array of T.Node := cast Nodes.Clone() as array of T.Node;
   for Row: int := 0 to Nodes.Length - 1 do
     const Bits: uint := NativeFlags[Row];
     if Flags(Nodes[Row]) <> Bits then

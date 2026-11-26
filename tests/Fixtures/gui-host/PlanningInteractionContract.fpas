@@ -167,8 +167,8 @@ requires Renderer = Cui.CuiRenderer.Software or Renderer = Cui.CuiRenderer.OpenG
   procedure Inject();
   begin
     if Pending <> Keys.Key.None then
-      Window.SetKey(cast<int>(Pending), true);
-      Window.SetKey(cast<int>(Pending), false);
+      Window.SetKey(cast Pending as int, true);
+      Window.SetKey(cast Pending as int, false);
       Pending := Keys.Key.None;
     end if;
 

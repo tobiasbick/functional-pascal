@@ -99,8 +99,8 @@ begin
       if Enabled then
         const Event: D.Input := if Value.Kind = CuiCanvas.CuiCanvasInputKind.Key then
           D.Input.Key(
-            cast<Keys.Key>(Value.Key),
-            cast<Keys.Modifier>(Value.Modifiers),
+            cast Value.Key as Keys.Key,
+            cast Value.Modifiers as Keys.Modifier,
             Value.Down,
             Value.Repeated
           )
@@ -122,7 +122,7 @@ begin
     if Settings.HoverCursor = null then
       -1
     else
-      cast<int>(Settings.HoverCursor ?? D.Cursor.Arrow)
+      cast (Settings.HoverCursor ?? D.Cursor.Arrow) as int
     end if, InputHandler, Settings.Enabled
   );
   if Enabled and Activated then

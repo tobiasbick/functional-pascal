@@ -170,7 +170,7 @@ begin
         new C.KeyValuePair of (string?, string?)('client', ApplicationKey),
         new C.KeyValuePair of (string?, string?)(
           'duration',
-          (cast<long>(Sys.Math.Floor(Audio.Duration))).ToString(G.CultureInfo.InvariantCulture)
+          (cast Sys.Math.Floor(Audio.Duration) as long).ToString(G.CultureInfo.InvariantCulture)
         ),
         new C.KeyValuePair of (string?, string?)('fingerprint', Audio.Value),
         new C.KeyValuePair of (string?, string?)('meta', 'recordings releasegroups releases'),
@@ -191,7 +191,7 @@ begin
     if not Reply.IsSuccessStatusCode then
       const Retry: Headers.RetryConditionHeaderValue? := Reply.Headers.RetryAfter;
       raise new H.HttpRequestException(
-        'HTTP/' + Reply.Version.ToString() + ' ' + (cast<int>(Reply.StatusCode)).ToString() +
+        'HTTP/' + Reply.Version.ToString() + ' ' + (cast Reply.StatusCode as int).ToString() +
         ' ' + (Reply.ReasonPhrase ?? '') + ' · POST /v2/lookup' +
         (if Retry <> null then
           ' · Retry-After: ' + Retry.ToString()

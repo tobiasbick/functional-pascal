@@ -199,7 +199,11 @@ public function Draw of TMsg(
     procedure MoveTo(Position: long);
     begin
       if Enabled.Count > 0 then
-        const Index: int := cast<int>(Sys.Math.Clamp(Position, 0L, cast<long>(Enabled.Count - 1)));
+        const Index: int := cast Sys.Math.Clamp(
+          Position,
+          0L,
+          cast (Enabled.Count - 1) as long
+        ) as int;
         Popup.Write(
           Cursor with
             Highlight := Enabled[Index].Id;
@@ -260,7 +264,7 @@ public function Draw of TMsg(
         end if;
       when App.Input.Scroll(const X: int, const Y: int, const Delta: int):
         if Panel.Contains(X, Y) then
-          MoveTo(cast<long>(At) + Delta);
+          MoveTo(cast At as long + Delta);
         end if;
       when App.Input.Focus(const Id: string):
         const Index: int := Enabled.FindIndex(function(Item: Item of TMsg): bool => Item.Id = Id);

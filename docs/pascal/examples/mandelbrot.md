@@ -32,8 +32,8 @@ begin
   for Y: int := 0 to Height - 1 do
     var Row: string := '';
     for X: int := 0 to Width - 1 do
-      const CReal: double := -2.0 + 3.0 * cast<double>(X) / cast<double>(Width - 1);
-      const CImaginary: double := -1.0 + 2.0 * cast<double>(Y) / cast<double>(Height - 1);
+      const CReal: double := -2.0 + 3.0 * cast X as double / cast (Width - 1) as double;
+      const CImaginary: double := -1.0 + 2.0 * cast Y as double / cast (Height - 1) as double;
       const Count: int := EscapeIterations(CReal, CImaginary, Limit);
       Row := Row + if Count = Limit then
         '#'

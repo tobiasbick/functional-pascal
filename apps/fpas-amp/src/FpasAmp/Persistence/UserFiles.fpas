@@ -119,7 +119,7 @@ begin
     ValidEncoding := false;
   end try;
 
-  TextValue := TextValue.TrimStart(cast<char>($FEFF));
+  TextValue := TextValue.TrimStart(cast $FEFF as char);
   try
     const Result: Decoded of T := Decode(J.JsonElement.Parse(TextValue));
     return new Decoded of T(Result.Value, Result.Valid and ValidEncoding);

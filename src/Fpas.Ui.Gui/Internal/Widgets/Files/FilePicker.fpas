@@ -43,7 +43,7 @@ begin
     C.Token(Role, Id),
     Open,
     Enabled,
-    cast<int>(Settings.Kind),
+    cast Settings.Kind as int,
     Settings.Title,
     Settings.Start,
     Settings.Name,

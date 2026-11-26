@@ -41,10 +41,10 @@ public sealed class NativeConstantTests
     /// <summary>Rejects defaults whose native intermediate results differ or overflow on one architecture.</summary>
     /// <param name="expression">The native expression producing an optional Boolean default.</param>
     [Theory]
-    [InlineData("unchecked(cast<nint>(2147483647) + cast<nint>(1)) < 0")]
-    [InlineData("cast<nint>(2147483647) + cast<nint>(1) < 0")]
-    [InlineData("cast<nint>(1) shl 32 = cast<nint>(1)")]
-    [InlineData("cast<nint>(4294967296.0) > 0")]
+    [InlineData("unchecked(cast 2147483647 as nint + cast 1 as nint) < 0")]
+    [InlineData("cast 2147483647 as nint + cast 1 as nint < 0")]
+    [InlineData("cast 1 as nint shl 32 = cast 1 as nint")]
+    [InlineData("cast 4294967296.0 as nint > 0")]
     public void Architecture_dependent_optional_constants_are_diagnosed(string expression)
     {
         var result = TestCompilation.CompileAgainstFramework($"program Constants; procedure P(Value: bool := {expression}); begin end procedure; begin end; end program;");
@@ -58,10 +58,10 @@ public sealed class NativeConstantTests
     /// <param name="body">The executable body to validate.</param>
     /// <param name="code">The owning source diagnostic code.</param>
     [Theory]
-    [InlineData("type E = enum A = cast<int>(cast<nint>(1) shl 32); end enum;", "", "FP3031")]
-    [InlineData("", "discard case cast<nint>(1) of when (cast<nint>(1) shl 32): 1; else 0; end case;", "FP3024")]
-    [InlineData("[Sys.ComponentModel.DefaultValueAttribute(cast<long>(cast<nint>(1) shl 32))] procedure P(); begin end procedure;", "", "FP3035")]
-    [InlineData("type R = long range 0L..5000000000L;", "discard new R(cast<long>(cast<nint>(1) shl 32));", "FP3031")]
+    [InlineData("type E = enum A = cast (cast 1 as nint shl 32) as int; end enum;", "", "FP3031")]
+    [InlineData("", "discard case cast 1 as nint of when (cast 1 as nint shl 32): 1; else 0; end case;", "FP3024")]
+    [InlineData("[Sys.ComponentModel.DefaultValueAttribute(cast (cast 1 as nint shl 32) as long)] procedure P(); begin end procedure;", "", "FP3035")]
+    [InlineData("type R = long range 0L..5000000000L;", "discard new R(cast (cast 1 as nint shl 32) as long);", "FP3031")]
     public void Architecture_dependent_constants_do_not_escape_other_validation_paths(string declarations, string body, string code)
     {
         var result = TestCompilation.Compile($"program Constants; uses System as Sys; {declarations} begin {body} end; end program;");
@@ -76,10 +76,10 @@ public sealed class NativeConstantTests
     {
         var result = TestCompilation.Compile("""
             unit Constants;
-            public procedure P(Value: nint := cast<nint>(42); Positive: bool := cast<nint>(10) + cast<nint>(1) = cast<nint>(11));
+            public procedure P(Value: nint := cast 42 as nint; Positive: bool := cast 10 as nint + cast 1 as nint = cast 11 as nint);
             begin end procedure;
             public function Runtime(Value: nint): nint;
-            begin return unchecked(Value + cast<nint>(1)); end function;
+            begin return unchecked(Value + cast 1 as nint); end function;
             end unit;
             """, CompilationTarget.Library);
         Assert.True(result.Success, string.Join(';', result.Diagnostics));

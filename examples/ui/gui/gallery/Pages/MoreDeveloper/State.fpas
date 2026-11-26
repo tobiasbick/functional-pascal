@@ -21,8 +21,8 @@ public type Model = record
   public Pattern: string := '(?<user>[\w.]+)@(?<host>[\w-]+)\.(com|org)';
   // Sample input in the native tester.
   public Sample: string := 'Contact maya.okafor@example.com or jonas@example.org for access.' +
-    cast<char>(10) +
-    'Old address: priya@demo1.test (no longer read).' + cast<char>(10) +
+    cast 10 as char +
+    'Old address: priya@demo1.test (no longer read).' + cast 10 as char +
     'Support: help@example.com';
   // Active regex flags.
   public Modifiers: int := 0;

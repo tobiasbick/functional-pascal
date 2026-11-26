@@ -25,7 +25,7 @@ begin
     ):
       Pending.Enqueue(Loaded(Window.LoadFont(Data)));
     when Fonts.Operation.Assign(const Role: G.Font, const Face: Resources.CuiFontFace?):
-      Window.SetFontRole(cast<int>(Role), Face);
+      Window.SetFontRole(cast Role as int, Face);
     when Fonts.Operation.Fallback(
       const Face: Resources.CuiFontFace,
       const Fallback: Resources.CuiFontFace

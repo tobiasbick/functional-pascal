@@ -23,9 +23,9 @@ public type Image = record
   // An immutable snapshot which may be published from a background worker.
   public static function Create(Columns: int; Rows: int; Cells: array of T.Cell): Image;
   requires Columns >= 0 and Rows >= 0;
-  requires cast<long>(Columns) * Rows = Cells.Length;
+  requires cast Columns as long * Rows = Cells.Length;
   begin
-    const Copy: array of T.Cell := cast<array of T.Cell>(Cells.Clone());
+    const Copy: array of T.Cell := cast Cells.Clone() as array of T.Cell;
     for Cell: T.Cell in Copy do
       if Cell = null or Cell.Colors = null or Cell.Text = null then
         raise new Sys.ArgumentException('Every grid cell needs text and a style.');

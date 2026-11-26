@@ -40,8 +40,8 @@ begin
   ) + Enc.Bits(Remove <> null, 2) + Enc.Bits(Enabled, 4);
   const Focus: int := W.Focus of TMsg(Frame, Id, Role, [''], [Enabled], 0);
   const Result: int := Frame.Window.StatusTag(
-    Token, Current.Label, cast<int>(Current.Preset),
-    Settings.Icon, cast<int>(Settings.Tone), Flags, Focus, null
+    Token, Current.Label, cast Current.Preset as int,
+    Settings.Icon, cast Settings.Tone as int, Flags, Focus, null
   );
   if Result <> 0 then
     case Remove of
@@ -53,7 +53,7 @@ begin
   const Caption: string := if Current.Label <> '' then
     Current.Label
   else
-    DefaultLabels[cast<int>(Current.Preset)]
+    DefaultLabels[cast Current.Preset as int]
   end if;
   W.Root of TMsg(Frame, Id, Role, Caption, Enabled, '');
 end procedure;

@@ -24,7 +24,7 @@ begin
   const Token: string := C.Token('confirm-button', Id);
   const Result: CuiActions.CuiConfirmButtonResult := State.Window.ConfirmButton(
     Token, Label, Settings.ConfirmLabel, Settings.Icon, Settings.TimeoutMilliseconds,
-    cast<int>(Settings.Variant), cast<int>(Settings.ControlSize), Enabled,
+    cast Settings.Variant as int, cast Settings.ControlSize as int, Enabled,
     C.WantsFocus of TMsg(State, Id, Token, Enabled)
   );
   if Result.Confirmed then

@@ -379,7 +379,7 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         const FontSize: float,
         const Tint: G.Color
       ):
-        Current.Window.FormattedText(Value, cast<int>(Font), FontSize, CreativeParts.Pack(Tint));
+        Current.Window.FormattedText(Value, cast Font as int, FontSize, CreativeParts.Pack(Tint));
         Current.Labels.Add(Value);
       when E.Element.Label(const Value: string):
         Current.Window.Text(Value);
@@ -1966,8 +1966,8 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         Current.Window.Gap(Size.Measure(Distance));
       when E.Element.Layered(const Children: array of E.Element of TMsg, const Settings: L.Flow):
         Current.Window.BeginLayers(
-          cast<int>(Settings.Align),
-          cast<int>(Settings.Justify),
+          cast Settings.Align as int,
+          cast Settings.Justify as int,
           Settings.Clip ?? false
         );
         Size.Container(Current.Window, Settings, true);
@@ -1994,9 +1994,9 @@ public procedure Draw of TMsg(State: C.State of TMsg);
           Row,
           Size.Spacing(Settings.Padding),
           Size.Spacing(Settings.Gap),
-          cast<int>(Settings.Align),
+          cast Settings.Align as int,
           false,
-          Settings.Wrap, Settings.Clip ?? not Settings.Wrap, cast<int>(Settings.Justify)
+          Settings.Wrap, Settings.Clip ?? not Settings.Wrap, cast Settings.Justify as int
         );
         Size.Container(Current.Window, Settings);
         const Scope: L.FocusScope? := Settings.Scope;
@@ -2019,7 +2019,7 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         return;
       when E.Element.Styled(const Child: E.Element of TMsg, const Role: S.Role):
         Visit(Child, Current, Horizontal, Align);
-        Current.Window.StyleLast(cast<int>(Role));
+        Current.Window.StyleLast(cast Role as int);
         return;
       when E.Element.Framed(const Child: E.Element of TMsg, const Title: string):
         Current.Window.BeginGroup(false, 8, 8, 0, true);
@@ -2071,13 +2071,13 @@ public procedure Draw of TMsg(State: C.State of TMsg);
         if Current.AcceptInput and After <> Before then
           case Scroll of
             when is Sys.Func of (L.ScrollChange, TMsg) as Changed:
-              const Units: L.Measure := L.Measure.Logical(cast<int>(After));
+              const Units: L.Measure := L.Measure.Logical(cast After as int);
               Current.Messages.Add(
                 Changed.Invoke(
                   new L.ScrollChange(
                     L.ScrollPosition.Offset(Units),
                     Units,
-                    L.Measure.Logical(cast<int>(Maximum))
+                    L.Measure.Logical(cast Maximum as int)
                   )
                 )
               );

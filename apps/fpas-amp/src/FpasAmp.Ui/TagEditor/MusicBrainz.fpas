@@ -45,7 +45,7 @@ begin
     else '/ws/2/';
   end case;
   return 'HTTP/' + Reply.Version.ToString() + ' ' +
-    (cast<int>(Reply.StatusCode)).ToString() +
+    (cast Reply.StatusCode as int).ToString() +
     ' ' + (Reply.ReasonPhrase ?? '') + ' · GET ' + Route + ' · attempt ' +
     (Attempt + 1).ToString() + '/' + (RetryCount + 1).ToString() +
     (if Hint <> null then
@@ -74,7 +74,7 @@ begin
     end if;
 
     Failure[0] := Diagnostics(Reply, Args.AttemptNumber);
-    const Status: int := cast<int>(Reply.StatusCode);
+    const Status: int := cast Reply.StatusCode as int;
     const Transient: bool := Status = 429 or Status = 503;
     Gate.Cooldown(
       if Transient then
@@ -88,7 +88,7 @@ begin
   Options.DelayGenerator := function(Args: Retry.RetryDelayGeneratorArguments of H.HttpResponseMessage): Tasks.ValueTask of Sys.TimeSpan? begin
     const Reply: H.HttpResponseMessage? := Args.Outcome.Result;
     const Delay: Sys.TimeSpan? := if Reply <> null then
-      Sys.TimeSpan.FromMilliseconds(cast<double>(RetryDelay(Reply, Args.AttemptNumber)))
+      Sys.TimeSpan.FromMilliseconds(cast RetryDelay(Reply, Args.AttemptNumber) as double)
     else
       null
     end if;

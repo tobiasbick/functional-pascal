@@ -24,11 +24,11 @@ begin
     return Notes;
   end if;
 
-  Bytes[Offset] := cast<byte>(if Checked then
+  Bytes[Offset] := cast if Checked then
     120
   else
     32
-  end if);
+  end if as byte;
   return Text.Encoding.UTF8.GetString(Bytes);
 end function;
 

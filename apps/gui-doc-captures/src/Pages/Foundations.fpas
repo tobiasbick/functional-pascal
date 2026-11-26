@@ -22,8 +22,8 @@ begin
   // Passive text and glyphs have no snapshot IDs. Anchor their scale-one
   // crops to the illustration directly below the specimens.
   const Picture: Cui.CuiRectangle := Presented.Bounds(Session, 'picture');
-  const Left: int := cast<int>(Picture.X) - 8;
-  const ImageTop: int := cast<int>(Picture.Y);
+  const Left: int := cast Picture.X as int - 8;
+  const ImageTop: int := cast Picture.Y as int;
   Specimen('text', 497, 374, 249);
   Specimen('icon', 184, 92, 35);
   Specimen('emoji', 146, 127, 32);
@@ -66,10 +66,10 @@ begin
   );
   const Tabs: Cui.CuiRectangle := Presented.Bounds(Session, 'desktop-documents');
   const Status: Cui.CuiRectangle := Presented.Bounds(Session, 'desktop-status');
-  const Left: int := cast<int>(Tabs.X);
+  const Left: int := cast Tabs.X as int;
   Regions.CaptureRectangle(
     Session, Output, 'formatted-text', [
-      Left, cast<int>(Tabs.Y + Tabs.Height), Left + 532, cast<int>(Status.Y)
+      Left, cast (Tabs.Y + Tabs.Height) as int, Left + 532, cast Status.Y as int
     ]
   );
   Regions.Shot(Session, Output, 'status-bar', 'desktop-status');

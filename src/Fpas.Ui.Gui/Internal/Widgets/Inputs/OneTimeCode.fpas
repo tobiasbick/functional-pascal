@@ -32,7 +32,7 @@ begin
   if Settings.Label <> '' then
     Frame.Window.BeginGroup(false, 0, 8, 1, false);
     Frame.Window.Text(Settings.Label);
-    Frame.Window.StyleLast(cast<int>(S.Role.Label));
+    Frame.Window.StyleLast(cast S.Role.Label as int);
   end if;
   const Result: CuiInputs.CuiOneTimeCodeResult := Frame.Window.OneTimeCode(
     Token, Value, Settings.Length, Allowed,

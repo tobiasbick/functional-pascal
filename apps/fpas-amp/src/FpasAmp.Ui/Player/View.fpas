@@ -190,7 +190,7 @@ begin
     'player-eq-' + M.Bands[Index], M.Bands[Index], Current.Gains[Index], -M.Boost, M.Boost,
     function(Value: float): M.Msg => M.Msg.Gain(Index, Value),
     new Faders.Options(
-      Step := 0.5F, UnitLabel := 'dB', HideValue := true, Length := cast<float>(FaderLength)
+      Step := 0.5F, UnitLabel := 'dB', HideValue := true, Length := cast FaderLength as float
     )
   );
 end function;
@@ -269,7 +269,7 @@ function Volume(Current: M.State): E.Element of M.Msg;
 begin
   return Faders.Fader of M.Msg(
     'player-volume', 'Volume', Current.Volume, M.Quietest, 0.0F, M.Msg.Volume,
-    new Faders.Options(Step := 0.5F, UnitLabel := 'dB', Length := cast<float>(FaderLength))
+    new Faders.Options(Step := 0.5F, UnitLabel := 'dB', Length := cast FaderLength as float)
   );
 end function;
 
@@ -285,7 +285,7 @@ begin
     'player-position',
     Peaks,
     if Length > 0.0 then
-      cast<float>(Sys.Math.Min(1.0, Current.Position / Length))
+      cast Sys.Math.Min(1.0, Current.Position / Length) as float
     else
       0.0F
     end if,
@@ -325,7 +325,7 @@ begin
         Volume(Current),
         Meters.LevelMeter of M.Msg(
           'player-levels', Current.Levels,
-          new Meters.Options(Length := cast<float>(FaderLength), Thickness := 5.0F)
+          new Meters.Options(Length := cast FaderLength as float, Thickness := 5.0F)
         )
       )
     )

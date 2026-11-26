@@ -68,7 +68,7 @@ begin
   Reject(
     Cards.ExpandableCard of int(
       'c', 'Title', false, Change, Body,
-      new Cards.Options(BadgeTone := cast<S.Tone>(255))
+      new Cards.Options(BadgeTone := cast 255 as S.Tone)
     ), V.Target.Graphical, 'badge tone'
   );
   Reject(

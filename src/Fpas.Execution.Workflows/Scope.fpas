@@ -145,14 +145,14 @@ public type Scope = record
         Faults
       );
       if Body.IsCompletedSuccessfully then
-        Combined.Data['Fpas.Execution.Workflows.CompletedValue'] := cast<object?>(Body.Result);
+        Combined.Data['Fpas.Execution.Workflows.CompletedValue'] := cast Body.Result as object?;
       end if;
 
       raise Combined;
     end if;
 
     if Primary is Sys.OperationCanceledException then
-      const Cancelled: Sys.OperationCanceledException := cast<Sys.OperationCanceledException>(Primary);
+      const Cancelled: Sys.OperationCanceledException := cast Primary as Sys.OperationCanceledException;
       if Cancelled.CancellationToken = self.Token then
         Parent.ThrowIfCancellationRequested();
       end if;

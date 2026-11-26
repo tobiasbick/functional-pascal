@@ -194,6 +194,7 @@ additive_expression = product_expression, {("+" | "-"), product_expression} ;
 product_expression = unary_expression,
                      {("*" | "/" | "div" | "mod"), unary_expression} ;
 unary_expression = ("+" | "-" | "not" | "await"), unary_expression
+                 | "cast", unary_expression, "as", type
                  | postfix_expression ;
 postfix_expression = primary, {postfix_suffix | record_update} ;
 member_expression = primary, {postfix_suffix} ;
@@ -207,7 +208,6 @@ primary         = literal | identifier
                 | "[", [expression, {",", expression}], "]"
                 | "new", (named_type, ["?"] | "(", named_type, ")", "?"),
                   ("(", [arguments], ")" | "[", expression, {",", expression}, "]")
-                | "cast", "<", type, ">", "(", expression, ")"
                 | "typeof", "(", type, ")"
                 | "unchecked", "(", expression, ")"
                 | if_expression | case_expression | lambda ;
@@ -249,6 +249,10 @@ alternative.
 An ordinary alias remains distinct from the `BaseType range Low..High` production.
 The optional `?` after a new-expression's named type is allowed only for an
 array allocation's element annotation, not for constructing a nullable class.
+
+A cast takes a unary operand. Group a binary operand as in `cast (A + B) as long`.
+To call a member or index the result, group the cast as in
+`(cast Value as string).Length`.
 
 An unparenthesized single type argument extends through its own type arguments,
 dotted names, and nullable suffix. `List of string?` contains nullable strings.

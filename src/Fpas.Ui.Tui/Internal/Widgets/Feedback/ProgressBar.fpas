@@ -32,7 +32,7 @@ begin
   end case;
   const Caption: string := Glyphs.SingleLine(Settings.Label);
   const Percent: string := if Settings.ShowValue then
-    cast<int>(Sys.MathF.Floor(100.0F * Fraction + 0.5F)).ToString() + '%'
+    (cast Sys.MathF.Floor(100.0F * Fraction + 0.5F) as int).ToString() + '%'
   else
     ''
   end if;
@@ -91,9 +91,9 @@ begin
     Left := Left + LabelWidth + 2;
     TrackWidth := TrackWidth - LabelWidth - 2;
   end if;
-  const Filled: int := cast<int>(Sys.Math.Round(
-    cast<double>(Fraction) * TrackWidth, Sys.MidpointRounding.AwayFromZero
-  ));
+  const Filled: int := cast Sys.Math.Round(
+    cast Fraction as double * TrackWidth, Sys.MidpointRounding.AwayFromZero
+  ) as int;
   const Back: int := Style.Background ?? Theme.Text.Background ?? 0;
   Operations.Add(
     new D.Operation(

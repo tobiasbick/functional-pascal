@@ -77,16 +77,11 @@ internal sealed partial class Parser
         }
         if (At("cast"))
         {
+            using var nesting = EnterNesting();
             position++;
-            var angle = position;
-            Expect("<");
-            var type = ReadType();
-            Expect(">");
-            if (layout is not null) { layout.Tight.Add(angle); layout.Tight.Add(position - 1); }
-            Expect("(");
-            var operand = ReadExpression();
-            Expect(")");
-            return ReadSuffix(Extent(new CastSyntax(start, type, operand), start));
+            var operand = ReadUnary();
+            Expect("as");
+            return Extent(new CastSyntax(start, ReadType(), operand), start);
         }
         return ReadPostfix();
     }

@@ -127,14 +127,14 @@ begin
   for Step: int := -8 to 8 do
     Lines.Add(
       Canvas.Shape.Line(
-        130.0F + cast<float>(Step) * 14.0F, 58.0F,
-        130.0F + cast<float>(Step) * 120.0F, 190.0F, 1.0F, Colors.Border
+        130.0F + cast Step as float * 14.0F, 58.0F,
+        130.0F + cast Step as float * 120.0F, 190.0F, 1.0F, Colors.Border
       )
     );
   end for;
 
   for Step: int := 1 to 6 do
-    const Y: float := 58.0F + cast<float>(Step * Step) * (132.0F / 36.0F);
+    const Y: float := 58.0F + cast (Step * Step) as float * (132.0F / 36.0F);
     Lines.Add(Canvas.Shape.Line(0.0F, Y, 760.0F, Y, 1.0F, Colors.Border));
   end for;
 

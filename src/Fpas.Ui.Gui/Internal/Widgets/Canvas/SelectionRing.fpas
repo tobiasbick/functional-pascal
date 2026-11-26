@@ -23,7 +23,7 @@ begin
     else
   end case;
 
-  Window.SelectionRing(cast<int>(Settings.Tone), Color, Settings.Name, Settings.Radius);
+  Window.SelectionRing(cast Settings.Tone as int, Color, Settings.Name, Settings.Radius);
 end procedure;
 
 // Presents CUI's native SelectionRing widget.

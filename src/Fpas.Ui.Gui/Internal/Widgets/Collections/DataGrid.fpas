@@ -29,7 +29,7 @@ begin
   for Index: int := 0 to Values.Length - 1 do
     const Column: D.Column := Values[Index];
     Native[Index] := new CuiCollections.CuiGridColumn(
-      Column.Title, Column.Width, cast<int>(Column.Align),
+      Column.Title, Column.Width, cast Column.Align as int,
       Column.Sortable, Column.Fixed, Column.Priority
     );
   end for;

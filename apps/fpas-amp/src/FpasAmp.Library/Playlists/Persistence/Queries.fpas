@@ -73,7 +73,7 @@ begin
     ['$source', '$storage', '$limit', '$offset'],
     [
       Request.SourceId, if Request.Storage <> null then
-        cast<object?>(Storage(Request.Storage.Value))
+        cast Storage(Request.Storage.Value) as object?
       else
         null
       end if, Request.Limit, Request.Offset

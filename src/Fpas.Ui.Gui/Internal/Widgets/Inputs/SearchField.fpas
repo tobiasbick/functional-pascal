@@ -35,7 +35,7 @@ begin
     Settings.Error,
     Settings.Prefix,
     Settings.Suffix,
-    cast<int>(Settings.ControlSize),
+    cast Settings.ControlSize as int,
     Settings.ReadOnly,
     Settings.MaxUtf8Bytes
   );

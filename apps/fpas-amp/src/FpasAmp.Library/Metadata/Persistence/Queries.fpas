@@ -76,7 +76,7 @@ begin
     ['$source', '$album', '$artist', '$genre', '$rating', '$limit', '$offset'],
     [
       Request.SourceId, Key(Request.Album), Key(Request.Artist), Key(Request.Genre),
-      cast<object?>(Request.MinimumRating), Request.Limit, Request.Offset
+      cast Request.MinimumRating as object?, Request.Limit, Request.Offset
     ]
   );
   return Entries(Query, Cancellation);

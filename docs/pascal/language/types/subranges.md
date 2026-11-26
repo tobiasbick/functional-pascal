@@ -6,7 +6,7 @@ type Percent = int range 0..100;
 type PortNumber = ushort range 1..65535;
 
 const Level: Percent := new Percent(50);
-const Number: int := cast<int>(Level);
+const Number: int := cast Level as int;
 ```
 
 A subrange has an explicit integral base and inclusive compile-time bounds.
@@ -19,7 +19,7 @@ Each declaration introduces a nominal CLR type. Equal bounds do not make two
 separately declared types identical; aliases of one declaration remain compatible.
 Crossing domain identities requires explicit unwrapping and checked construction.
 
-`new Percent(Value)` and `cast<Percent>(Value)` validate a base-typed value.
+`new Percent(Value)` and `cast Value as Percent` validate a base-typed value.
 A statically known violation is a compile-time error; a runtime value outside
 the interval throws ArgumentOutOfRangeException. A narrowing numeric conversion
 performed explicitly before wrapping throws OverflowException first if it cannot
@@ -71,7 +71,7 @@ begin
   const Level: Percent := new Percent(50);
   const Increased: int := Level + 10;
   const Next: Percent := new Percent(Increased);
-  Console.WriteLine(cast<int>(Next)); // 60
+  Console.WriteLine(cast Next as int); // 60
 
   const Ports: array of PortNumber := new PortNumber[2];
   Console.WriteLine(Ports[0].Value); // 1: the valid lower bound, not zero

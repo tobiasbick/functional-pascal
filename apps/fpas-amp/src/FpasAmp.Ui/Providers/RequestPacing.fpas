@@ -22,7 +22,7 @@ begin
   else
     Sys.TimeSpan.Zero
   end if;
-  return cast<long>(Sys.Math.Ceiling(Sys.Math.Max(0.0, Delay.TotalMilliseconds)));
+  return cast Sys.Math.Ceiling(Sys.Math.Max(0.0, Delay.TotalMilliseconds)) as long;
 end function;
 
 // Observable permission to start another request to the provider.
@@ -83,7 +83,7 @@ public type Gate = record
     var Remaining: long := self.Remaining();
     while Remaining > 0L do
       await Tasks.Task.Delay(
-        cast<int>(Sys.Math.Min(Remaining, 60000L)),
+        cast Sys.Math.Min(Remaining, 60000L) as int,
         Stop
       ).ConfigureAwait(false);
       Remaining := self.Remaining();

@@ -13,15 +13,15 @@ uses System as Sys;
 
 function Pack(Value: G.Color): uint;
 begin
-  return cast<uint>(Value.Red) or (cast<uint>(Value.Green) shl 8)
-    or (cast<uint>(Value.Blue) shl 16) or (cast<uint>(Value.Alpha) shl 24);
+  return cast Value.Red as uint or (cast Value.Green as uint shl 8)
+    or (cast Value.Blue as uint shl 16) or (cast Value.Alpha as uint shl 24);
 end function;
 
 function Unpack(Value: uint): G.Color;
 begin
   return new G.Color(
-    cast<byte>(Value and 255u), cast<byte>((Value shr 8) and 255u),
-    cast<byte>((Value shr 16) and 255u), cast<byte>(Value shr 24)
+    cast (Value and 255u) as byte, cast ((Value shr 8) and 255u) as byte,
+    cast ((Value shr 16) and 255u) as byte, cast (Value shr 24) as byte
   );
 end function;
 

@@ -157,7 +157,7 @@ begin
   const Result: CuiOverlays.CuiMenuResult := if Account <> null then
     State.Window.UserMenu(
       Token, Label, Account.Detail, Account.Status, Account.Compact, Prepared.Entries,
-      cast<int>(Account.Position), Account.Width, Accept,
+      cast Account.Position as int, Account.Width, Accept,
       C.WantsFocus of TMsg(State, Id, Token, Accept),
       Prepared.Tokens, Account.AvatarPath
     )
@@ -171,8 +171,8 @@ begin
       Label,
       Settings.Icon,
       Prepared.Entries,
-      cast<int>(Settings.Variant),
-      cast<int>(Settings.Position),
+      cast Settings.Variant as int,
+      cast Settings.Position as int,
       Settings.Width,
       Settings.IconOnly,
       Accept,

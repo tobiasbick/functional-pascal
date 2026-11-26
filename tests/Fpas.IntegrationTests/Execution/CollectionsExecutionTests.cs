@@ -48,7 +48,7 @@ public sealed class CollectionsExecutionTests
               const Text: string := 'A😀';
               Console.WriteLine(Text.Length);
               Console.WriteLine(Text[0]);
-              for Unit: char in Text do Console.WriteLine(cast<int>(Unit)); end for;
+              for Unit: char in Text do Console.WriteLine(cast Unit as int); end for;
               Console.WriteLine('line' + #10 + 'two');
               Console.WriteLine(#65 + 1);
               try discard Values[3]; catch Failure: Sys.IndexOutOfRangeException do Console.WriteLine('bounds'); end try;
@@ -100,7 +100,7 @@ public sealed class CollectionsExecutionTests
             begin
               Console.WriteLine(Echo([]).Length);
               Console.WriteLine(Empty(true).Length);
-              Console.WriteLine(cast<array of int>([]).Length);
+              Console.WriteLine((cast [] as array of int).Length);
             end;
             end program;
             """, "0", "0", "0");

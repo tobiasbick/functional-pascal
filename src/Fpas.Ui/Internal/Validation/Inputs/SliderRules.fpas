@@ -73,7 +73,7 @@ begin
     );
   end if;
 
-  if Settings.MajorEvery < 1 or not Sys.Single.IsFinite(cast<float>(Settings.MajorEvery) * Step)
+  if Settings.MajorEvery < 1 or not Sys.Single.IsFinite(cast Settings.MajorEvery as float * Step)
     or not Sys.Single.IsFinite(Settings.Spacing) or Settings.Spacing < 1.0F
     or not Sys.Single.IsFinite(Settings.Width) or Settings.Width < 0.0F
     or Settings.Width / Settings.Spacing > 8388608.0F

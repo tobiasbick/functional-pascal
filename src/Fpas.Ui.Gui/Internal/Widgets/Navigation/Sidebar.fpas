@@ -23,7 +23,7 @@ begin
   State.Window.BeginSidebar(Group, Active <> null);
   for Section: N.Section of TMsg in Sections do
     if Section.GapBefore > 0 then
-      State.Window.Gap(cast<float>(Section.GapBefore));
+      State.Window.Gap(cast Section.GapBefore as float);
     end if;
 
     if Section.Title <> '' then

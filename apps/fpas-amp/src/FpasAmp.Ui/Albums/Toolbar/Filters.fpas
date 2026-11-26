@@ -132,10 +132,10 @@ begin
         Sliders.Slider of TMsg(
           Id + '-filter-rating',
           RatingLabel,
-          cast<float>(Sys.Math.Max(0, Rating)),
+          cast Sys.Math.Max(0, Rating) as float,
           0.0F,
           10.0F,
-          function(Value: float): TMsg => Change(cast<int>(Sys.Math.Round(Value))),
+          function(Value: float): TMsg => Change(cast Sys.Math.Round(Value) as int),
           new Sliders.Options(Step := 1.0F, Enabled := not Unrated)
         ), new L.Flex(Basis := L.Extent.Fill)
       ),

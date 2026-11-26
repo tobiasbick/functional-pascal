@@ -68,7 +68,7 @@ begin
   end case;
 
   Console.WriteLine(Compare of int(2, 3));
-  const Facing: Direction := cast<Direction>(255);
+  const Facing: Direction := cast 255 as Direction;
   case Facing of
     when Direction.North:
       Console.WriteLine('North');

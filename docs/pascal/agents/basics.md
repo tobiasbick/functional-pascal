@@ -40,7 +40,8 @@ floating-point types. Integer arithmetic/conversions check overflow; use
 Floating operations can produce NaN/infinity. Subrange validation always remains.
 
 Use div/mod for the integral quotient and remainder. `1 / 2` yields
-`0.5` as double. Use `cast<T>(Value)` for explicit conversions.
+`0.5` as double. Use `cast Value as T` for explicit conversions. Group binary
+operands as in `cast (X + Y) as T` and member receivers as in `(cast X as T).Name`.
 No implicit conversion to bool exists. Boolean and/or short-circuit; xor is eager.
 Integral and/or/xor/not and shl/shr are bitwise, with CLR promotion/shift rules.
 

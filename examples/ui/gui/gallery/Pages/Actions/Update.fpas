@@ -11,7 +11,7 @@ uses GuiGallery.Pages.Actions.State as S;
 
 function ChangeReaction(Items: array of React.Item; Index: int; Value: React.Item): array of React.Item;
 begin
-  const Next: array of React.Item := cast<array of React.Item>(Items.Clone());
+  const Next: array of React.Item := cast Items.Clone() as array of React.Item;
   Next[Index] := Value;
   return Next;
 end function;

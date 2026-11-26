@@ -51,7 +51,7 @@ begin
   end for;
   const Proposal: int := Frame.Window.Segmented(
     Tokens[0], Labels.ToArray(), Icons.ToArray(), Selected,
-    cast<int>(Settings.ControlSize), Settings.FullWidth, Enabled, Focus,
+    cast Settings.ControlSize as int, Settings.FullWidth, Enabled, Focus,
     if Frame.PaintingClosed then
       null
     else

@@ -48,7 +48,12 @@ begin
 
   return (E.Element of TMsg).Breadcrumb(
     new E.BreadcrumbView of TMsg(
-      Id, Captions, Widths, cast<int>(Sys.Math.Min(Width, E.MaximumColumns + 1L)), Navigate, Enabled
+      Id,
+      Captions,
+      Widths,
+      cast Sys.Math.Min(Width, E.MaximumColumns + 1L) as int,
+      Navigate,
+      Enabled
     )
   );
 end function;

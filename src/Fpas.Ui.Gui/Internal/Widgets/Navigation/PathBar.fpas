@@ -44,7 +44,7 @@ begin
   );
   const Result: CuiNavigation.CuiPathResult := Frame.Window.PathBar(
     Token, Current.Segments, Current.Children, Current.Text,
-    Settings.Icon, Settings.Placeholder, cast<int>(Settings.ControlSize), Width.Kind, Width.Value,
+    Settings.Icon, Settings.Placeholder, cast Settings.ControlSize as int, Width.Kind, Width.Value,
     Flags, Focus, P.Tracker of TMsg(Frame, Id, Role, Parts.ToArray())
   );
   if Enabled and (Result.Segment >= 0 or Result.Text <> null or Result.Child >= 0) then

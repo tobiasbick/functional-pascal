@@ -163,11 +163,11 @@ begin
     PreferredWidth := PreferredWidth + Size;
   end for;
   const Maximum: int := if Value.Settings.HorizontalScroll then
-    cast<int>(Sys.Math.Clamp(
+    cast Sys.Math.Clamp(
       PreferredWidth - Width,
       0L,
-      cast<long>(int.MaxValue - E.MaximumColumns)
-    ))
+      cast (int.MaxValue - E.MaximumColumns) as long
+    ) as int
   else
     0
   end if;

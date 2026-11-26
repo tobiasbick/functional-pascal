@@ -116,11 +116,11 @@ begin
     while true do
       Cancellation.ThrowIfCancellationRequested();
       if not First then
-        const Remaining: int := cast<int>(Sys.Math.Clamp(
+        const Remaining: int := cast Sys.Math.Clamp(
           Deadline - Sys.Environment.TickCount64,
           0L,
-          cast<long>(int.MaxValue)
-        ));
+          cast int.MaxValue as long
+        ) as int;
         const Signalled: bool := await Inbox.Wait(Remaining, Cancellation).ConfigureAwait(false);
         if Signalled and Options.DebounceMilliseconds > 0 then
           await Tasks.Task.Delay(Options.DebounceMilliseconds, Cancellation).ConfigureAwait(false);

@@ -90,7 +90,7 @@ begin
           ['$key'],
           [Item.Reference.Key]
         );
-        Track := cast<string?>(Known.ExecuteScalar());
+        Track := cast Known.ExecuteScalar() as string?;
         if Track = null and Previous.ContainsKey(Key) then
           Track := Previous[Key];
         end if;

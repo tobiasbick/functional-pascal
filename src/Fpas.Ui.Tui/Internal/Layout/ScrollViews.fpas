@@ -98,11 +98,11 @@ begin
   end if;
   const Thumb: int := Sys.Math.Max(
     1,
-    cast<int>(cast<long>(View.Rows) * cast<long>(View.Rows) div (cast<long>(View.Maximum) +
-      cast<long>(View.Rows)))
+    cast (cast View.Rows as long * cast View.Rows as long div (cast View.Maximum as long +
+      cast View.Rows as long)) as int
   );
-  const Start: int := cast<int>(cast<long>(View.Offset) * cast<long>(View.Rows - Thumb) div
-    cast<long>(View.Maximum));
+  const Start: int := cast (cast View.Offset as long * cast (View.Rows - Thumb) as long div
+    cast View.Maximum as long) as int;
   const TrackStyle: T.Style := if Widgets = null then
     Style
   else

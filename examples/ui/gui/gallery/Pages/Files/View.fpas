@@ -69,7 +69,7 @@ begin
   end if;
 
   const Relative: string := Path.Substring(Root.Length).Replace(Sys.Char.ConvertFromUtf32(92), '/');
-  for Part: string in Relative.Split(cast<char>(47)) do
+  for Part: string in Relative.Split(cast 47 as char) do
     if Part <> '' then
       Parts.Add(Part);
     end if;

@@ -57,18 +57,18 @@ end function;
 // The corresponding demonstration record.
 public function At(Index: int): Person;
 begin
-  var Hash: uint := unchecked(cast<uint>(Index) * 2654435761u);
+  var Hash: uint := unchecked(cast Index as uint * 2654435761u);
   Hash := Hash xor (Hash shr 15);
   Hash := unchecked(Hash * 2246822519u);
   Hash := Hash xor (Hash shr 13);
-  const First: string := FirstNames[cast<int>(Hash mod 16u)];
-  const Last: string := LastNames[cast<int>((Hash shr 4) mod 16u)];
+  const First: string := FirstNames[cast (Hash mod 16u) as int];
+  const Last: string := LastNames[cast ((Hash shr 4) mod 16u) as int];
   const Number: uint := ((Hash shr 8) mod 90u) + 10u;
   const Email: string := (First + '.' + Last.Substring(0, 1) +
     Number.ToString(Culture.CultureInfo.InvariantCulture) + '@example.com').ToLowerInvariant();
   return new Person(
-    First + ' ' + Last, Email, Teams[cast<int>((Hash shr 12) mod 5u)],
-    cast<int>((Hash shr 16) mod 1400u) + 12, cast<int>((Hash shr 3) mod 1000u)
+    First + ' ' + Last, Email, Teams[cast ((Hash shr 12) mod 5u) as int],
+    cast ((Hash shr 16) mod 1400u) as int + 12, cast ((Hash shr 3) mod 1000u) as int
   );
 end function;
 

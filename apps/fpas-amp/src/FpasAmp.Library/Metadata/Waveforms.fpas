@@ -66,7 +66,7 @@ begin
       const Packed: array of byte := Rows.GetFieldValue of array of byte(0);
       const Levels: array of float := new float[Buckets];
       for Index: int := 0 to Buckets - 1 do
-        Levels[Index] := cast<float>(Packed[Index]) / 255.0F;
+        Levels[Index] := cast Packed[Index] as float / 255.0F;
       end for;
 
       return Levels;

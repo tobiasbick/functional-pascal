@@ -287,7 +287,7 @@ begin
         return false;
       end if;
 
-      Insert of TMsg(View, cast<char>(10).ToString(), Apply);
+      Insert of TMsg(View, (cast 10 as char).ToString(), Apply);
     else
       return false;
   end case;
@@ -330,11 +330,11 @@ public function Scroll of TMsg(View: View of TMsg; Delta: int): bool;
 begin
   const Position: Cursor := View.Position.Read(View.Field.Value);
   const Limit: int := Sys.Math.Max(0, View.Rows.Length - View.Height);
-  const Top: int := cast<int>(Sys.Math.Clamp(
-    cast<long>(Position.Top) + Delta,
+  const Top: int := cast Sys.Math.Clamp(
+    cast Position.Top as long + Delta,
     0L,
-    cast<long>(Limit)
-  ));
+    cast Limit as long
+  ) as int;
   if Top = Position.Top then
     return false;
   end if;

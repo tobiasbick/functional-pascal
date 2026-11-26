@@ -45,8 +45,8 @@ end procedure;
 // - `At`: Diagnostic location.
 public procedure Heatmap(Values: array of float; Rows: int; Columns: int; Settings: H.Options; At: string);
 begin
-  if Rows < 0 or Columns < 0 or cast<long>(Rows) * cast<long>(Columns) <>
-    cast<long>(Values.Length)
+  if Rows < 0 or Columns < 0 or cast Rows as long * cast Columns as long <>
+    cast Values.Length as long
   then
     R.Reject(At, 'Heatmap samples must match rows times columns.');
   end if;
@@ -77,8 +77,8 @@ end procedure;
 public procedure CalendarHeatmap(Start: Sys.DateOnly; Values: array of float; Settings: Calendar.Options; At: string);
 begin
   Samples(Values, false, At);
-  if cast<long>(Start.DayNumber) + cast<long>(Values.Length) - 1 >
-    cast<long>(Sys.DateOnly.MaxValue.DayNumber)
+  if cast Start.DayNumber as long + cast Values.Length as long - 1 >
+    cast Sys.DateOnly.MaxValue.DayNumber as long
   then
     R.Reject(At, 'Calendar heatmap dates exceed the supported range.');
   end if;

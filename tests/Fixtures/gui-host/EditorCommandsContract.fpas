@@ -118,8 +118,8 @@ public procedure Verify(Renderer: Cui.CuiRenderer);
   procedure Inject();
   begin
     if Input then
-      Window.SetKey(cast<int>(Keys.Key.S), true, cast<int>(Keys.PrimaryModifier()));
-      Window.SetKey(cast<int>(Keys.Key.S), false);
+      Window.SetKey(cast Keys.Key.S as int, true, cast Keys.PrimaryModifier() as int);
+      Window.SetKey(cast Keys.Key.S as int, false);
       Input := false;
     end if;
   end procedure;

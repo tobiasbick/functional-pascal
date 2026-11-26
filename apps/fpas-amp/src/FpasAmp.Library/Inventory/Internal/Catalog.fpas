@@ -309,7 +309,7 @@ public type Catalog = record
       end if;
     end if;
 
-    return new P.Result(Status, cast<long>(self.Members[Source.Id].Count));
+    return new P.Result(Status, cast self.Members[Source.Id].Count as long);
   end function;
 
   // Creates detached per-source views. `Watched` contains installed active roots.

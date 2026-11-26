@@ -21,7 +21,7 @@ begin
   Frame.Window.AgentStatus(
     Token,
     Label,
-    cast<int>(Settings.Status),
+    cast Settings.Status as int,
     Settings.Seconds,
     Settings.Icon
   );

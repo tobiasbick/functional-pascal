@@ -48,7 +48,7 @@ public function Update(Model: S.Model; Message: S.Msg): A.Transition of (S.Model
       when S.Msg.Comment(const Index: int, const Change: Comments.Event):
         case Change of
           when Comments.Event.Like(const Value: Comments.Value):
-            const Likes: array of Comments.Value := cast<array of Comments.Value>(Model.Likes.Clone());
+            const Likes: array of Comments.Value := cast Model.Likes.Clone() as array of Comments.Value;
             Likes[Index] := Value;
             return Model with
               Likes := Likes;

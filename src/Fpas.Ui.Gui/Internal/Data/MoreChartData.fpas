@@ -92,7 +92,7 @@ public function Bands(Values: array of R.Band): array of CuiCharts.CuiGaugeBand;
 begin
   const Result: Lists.List of CuiCharts.CuiGaugeBand := new Lists.List of CuiCharts.CuiGaugeBand();
   for Item: R.Band in Values do
-    Result.Add(new CuiCharts.CuiGaugeBand(Item.To, cast<int>(Item.Tone), Item.Name));
+    Result.Add(new CuiCharts.CuiGaugeBand(Item.To, cast Item.Tone as int, Item.Name));
   end for;
 
   return Result.ToArray();

@@ -450,7 +450,7 @@ public type DetailTests = record
         PointerX := Grid.X + 4.0F;
         PointerY := Grid.Y + Grid.Height / 2.0F;
         Step(Session);
-        Wheel := -cast<float>(24 + Index * 8);
+        Wheel := -cast (24 + Index * 8) as float;
         for Frame: int := 1 to 4 do
           Step(Session);
         end for;

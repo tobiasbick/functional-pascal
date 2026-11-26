@@ -59,7 +59,7 @@ begin
     Minimum := Sys.MathF.Min(Minimum, Value);
     Maximum := Sys.MathF.Max(Maximum, Value);
   end for;
-  const Range: double := cast<double>(Maximum) - cast<double>(Minimum);
+  const Range: double := cast Maximum as double - cast Minimum as double;
   const Back: int := Style.Background ?? Theme.Text.Background ?? 0;
   const Color: T.Style := new T.Style(Th.Rgb(Ink, Back), Back);
   const Levels: string := '▁▂▃▄▅▆▇█';
@@ -68,13 +68,13 @@ begin
   for Column: int := 0 to Clip.Width - 1 do
     const X: int := Clip.X + Column - Area.X;
     const Position: double := if Area.Width = 1 then
-      cast<double>(Last)
+      cast Last as double
     else
-      cast<double>(X) * cast<double>(Last) / cast<double>(Area.Width - 1)
+      cast X as double * cast Last as double / cast (Area.Width - 1) as double
     end if;
-    const Index: int := cast<int>(Sys.Math.Floor(Position));
-    const Left: double := cast<double>(Values[Index]);
-    const Right: double := cast<double>(Values[Sys.Math.Min(Index + 1, Last)]);
+    const Index: int := cast Sys.Math.Floor(Position) as int;
+    const Left: double := cast Values[Index] as double;
+    const Right: double := cast Values[Sys.Math.Min(Index + 1, Last)] as double;
     const Value: double := Left + (Right - Left) * (Position - Index);
     const Fraction: double := if Range = 0.0 then
       0.5
@@ -82,9 +82,9 @@ begin
       (Value - Minimum) / Range
     end if;
     Line[Column] := Levels[
-      cast<int>(Sys.Math.Round(
+      cast Sys.Math.Round(
         Fraction * 7.0, Sys.MidpointRounding.AwayFromZero
-      ))
+      ) as int
     ];
   end for;
 

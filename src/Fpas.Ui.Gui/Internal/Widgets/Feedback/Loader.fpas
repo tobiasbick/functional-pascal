@@ -21,7 +21,7 @@ public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Style: W.Anima
 begin
   Frame.Window.Loader(
     C.Token('loader', Id),
-    cast<int>(Style),
+    cast Style as int,
     Settings.Size,
     Colors.Color(Settings.Color)
   );

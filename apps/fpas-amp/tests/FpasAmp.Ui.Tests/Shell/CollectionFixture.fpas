@@ -159,9 +159,9 @@ begin
     if Index > 0 then
       IO.File.WriteAllBytes(
         IO.Path.Combine(Folder, 'cover.png'), Art.Picture(
-          cast<byte>(38 + Index * 19),
-          cast<byte>(69 + Index mod 3 * 38),
-          cast<byte>(130 - Index mod 4 * 21)
+          cast (38 + Index * 19) as byte,
+          cast (69 + Index mod 3 * 38) as byte,
+          cast (130 - Index mod 4 * 21) as byte
         )
       );
     end if;

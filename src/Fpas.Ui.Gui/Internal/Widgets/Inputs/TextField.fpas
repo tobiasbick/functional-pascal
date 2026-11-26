@@ -31,7 +31,7 @@ begin
   const Reveal: string := F.RevealId(Id);
   const Native: CuiInputs.CuiTextFieldOptions := new CuiInputs.CuiTextFieldOptions(
     Settings.Label, Settings.Placeholder, Settings.Icon, Settings.Hint, Settings.Error,
-    Settings.Prefix, Settings.Suffix, cast<int>(Settings.ControlSize), Settings.Password,
+    Settings.Prefix, Settings.Suffix, cast Settings.ControlSize as int, Settings.Password,
     Settings.Clearable, Settings.ReadOnly, Settings.MaxUtf8Bytes
   );
   const Result: CuiInputs.CuiTextFieldResult := Frame.Window.TextField(

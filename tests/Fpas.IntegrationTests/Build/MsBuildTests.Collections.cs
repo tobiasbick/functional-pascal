@@ -108,7 +108,7 @@ public sealed partial class MsBuildTests
             public procedure Old(Disposable: bool);
             begin
               const Source: Legacy.IEnumerable := new D.Legacy(Disposable);
-              for Item: object? in Source do D.Resource.Note(cast<string>(Item ?? 'null')); end for;
+              for Item: object? in Source do D.Resource.Note(cast (Item ?? 'null') as string); end for;
             end procedure;
             end unit;
             """);

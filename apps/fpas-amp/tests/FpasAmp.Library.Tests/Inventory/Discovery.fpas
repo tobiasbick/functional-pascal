@@ -210,7 +210,7 @@ public type DiscoveryTests = record
         Session,
         function(Value: M.Snapshot): bool => H.Has(Value.Sources[0], Track)
       );
-      IO.File.SetUnixFileMode(Child, cast<IO.UnixFileMode>(0));
+      IO.File.SetUnixFileMode(Child, cast 0 as IO.UnixFileMode);
       Session.Refresh();
       const Denied: M.Snapshot := await H.Until(
         Session,

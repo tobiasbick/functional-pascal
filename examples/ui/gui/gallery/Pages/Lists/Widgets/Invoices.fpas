@@ -16,7 +16,7 @@ uses System.Globalization as Culture;
 function Row(Index: int): E.Element of State.Msg;
 begin
   const Invariant: Culture.CultureInfo := Culture.CultureInfo.InvariantCulture;
-  const Hash: long := (cast<long>(Index + 1) * 2654435761L) mod 4294967296L;
+  const Hash: long := (cast (Index + 1) as long * 2654435761L) mod 4294967296L;
   const Dollars: long := 40L + (Hash div 256L) mod 2400L;
   const Cents: long := (Hash div 16L) mod 100L;
   const Title: string := 'Invoice 2026-' + (10000 - Index).ToString('D5', Invariant);

@@ -191,7 +191,7 @@ begin
   return Grid.DataGrid of App.Msg(
     'radio-stations',
     [
-      new Grid.Column('Station', cast<float>(Sys.Math.Max(200, Width - 582)), Sortable := true),
+      new Grid.Column('Station', cast Sys.Math.Max(200, Width - 582) as float, Sortable := true),
       new Grid.Column('Country', 126.0F, Sortable := true, Priority := 3),
       new Grid.Column('Language', 112.0F, Sortable := true, Priority := 4),
       new Grid.Column('Genre', 162.0F, Sortable := true, Priority := 5),

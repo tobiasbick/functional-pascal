@@ -152,7 +152,7 @@ public type Tree = record
     const Options: IO.EnumerationOptions := new IO.EnumerationOptions();
     Options.RecurseSubdirectories := false;
     Options.IgnoreInaccessible := false;
-    Options.AttributesToSkip := cast<IO.FileAttributes>(0);
+    Options.AttributesToSkip := cast 0 as IO.FileAttributes;
     while Pending.Count > 0 do
       if not Check() then
         return;
@@ -172,7 +172,7 @@ public type Tree = record
           Directories.Check(Directory);
         end if;
         const Info: IO.DirectoryInfo := new IO.DirectoryInfo(Directory);
-        if (Info.Attributes and IO.FileAttributes.ReparsePoint) <> cast<IO.FileAttributes>(0) then
+        if (Info.Attributes and IO.FileAttributes.ReparsePoint) <> cast 0 as IO.FileAttributes then
           continue;
         end if;
 
@@ -182,12 +182,12 @@ public type Tree = record
           end if;
 
           if (Entry.Attributes and IO.FileAttributes.ReparsePoint) <>
-            cast<IO.FileAttributes>(0)
+            cast 0 as IO.FileAttributes
           then
             continue;
           end if;
 
-          if (Entry.Attributes and IO.FileAttributes.Directory) <> cast<IO.FileAttributes>(0) then
+          if (Entry.Attributes and IO.FileAttributes.Directory) <> cast 0 as IO.FileAttributes then
             discard Children.Add(Entry.FullName);
             if Recursive or not self.Entries.ContainsKey(Entry.FullName) then
               Pending.Push(Entry.FullName);
@@ -203,7 +203,7 @@ public type Tree = record
               else
                 discard Found.Add(Entry.FullName);
               end if;
-              const File: IO.FileInfo := cast<IO.FileInfo>(Entry);
+              const File: IO.FileInfo := cast Entry as IO.FileInfo;
               Stamps[Entry.FullName] := new O.FileStamp(File.Length, File.LastWriteTimeUtc.Ticks);
             end if;
           end if;

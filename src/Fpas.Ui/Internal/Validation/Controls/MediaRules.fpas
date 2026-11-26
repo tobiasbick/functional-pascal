@@ -9,8 +9,8 @@ uses System as Sys;
 
 procedure Rgba(Width: int; Height: int; Pixels: array of byte; At: string);
 begin
-  if Width <= 0 or Height <= 0 or cast<long>(Width) * Height > Sys.Int32.MaxValue div 4
-    or Pixels = null or Pixels.Length <> cast<long>(Width) * Height * 4
+  if Width <= 0 or Height <= 0 or cast Width as long * Height > Sys.Int32.MaxValue div 4
+    or Pixels = null or Pixels.Length <> cast Width as long * Height * 4
   then
     R.Reject(At, 'The RGBA image must contain four bytes per pixel.');
   end if;

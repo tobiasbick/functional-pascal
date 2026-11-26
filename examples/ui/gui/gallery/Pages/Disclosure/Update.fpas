@@ -11,7 +11,7 @@ uses System as Sys;
 
 function WithStep(State: S.Model; Index: int; Done: bool): S.Model;
 begin
-  const Steps: array of K.Step := cast<array of K.Step>(State.Steps.Clone());
+  const Steps: array of K.Step := cast State.Steps.Clone() as array of K.Step;
   Steps[Index] := Steps[Index] with
     Done := Done;
   end with;

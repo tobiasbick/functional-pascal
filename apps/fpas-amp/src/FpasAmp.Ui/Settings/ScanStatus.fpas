@@ -91,7 +91,7 @@ begin
       Details := Count(Completed.Files) + ' files indexed';
     else
       if Data <> null then
-        Details := Count(cast<long>(Data.Files.Length)) + ' files indexed';
+        Details := Count(cast Data.Files.Length as long) + ' files indexed';
       end if;
     end if;
   end if;

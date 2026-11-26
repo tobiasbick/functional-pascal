@@ -43,7 +43,7 @@ begin
     end if;
   end for;
   const Proposal: int := Frame.Window.Tabs(
-    Tokens[0], Labels.ToArray(), Icons.ToArray(), Selected, cast<int>(Settings.Appearance),
+    Tokens[0], Labels.ToArray(), Icons.ToArray(), Selected, cast Settings.Appearance as int,
     Settings.FullWidth, Enabled, Focus,
     if Frame.PaintingClosed then
       null

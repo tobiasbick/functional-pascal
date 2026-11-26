@@ -69,7 +69,7 @@ public type MusicBrainzTests = record
     ];
     using const Listener: Sockets.TcpListener := new Sockets.TcpListener(Net.IPAddress.Loopback, 0);
     Listener.Start();
-    const Address: Net.IPEndPoint := cast<Net.IPEndPoint>(Listener.LocalEndpoint);
+    const Address: Net.IPEndPoint := cast Listener.LocalEndpoint as Net.IPEndPoint;
     using const Provider: MB.Service := MB.Service.Connect(
       new Sys.Uri('http://127.0.0.1:' + Address.Port.ToString())
     );

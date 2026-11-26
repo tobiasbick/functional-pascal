@@ -44,7 +44,7 @@ public type Model = record
   // Backup cron expression.
   public Cron: string := '30 9 * * 1-5';
   // Keyboard modifiers highlighted on the keymap.
-  public Modifiers: int := cast<int>(Shortcuts.PrimaryModifier());
+  public Modifiers: int := cast Shortcuts.PrimaryModifier() as int;
 end record;
 
 // Changes reported by the Developer tools examples.

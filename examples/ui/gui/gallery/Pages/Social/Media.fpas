@@ -68,11 +68,11 @@ begin
         else
           0.0F
         end if, new Color.Color(
-          255, 255, 255, cast<byte>(if Deck then
+          255, 255, 255, cast if Deck then
             $F0
           else
             $C0
-          end if)
+          end if as byte
         )
       )
     ),

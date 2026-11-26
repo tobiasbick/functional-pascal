@@ -89,13 +89,13 @@ begin
         'album-rating-' + Album.Id, 'Rate ' + Album.Title + ' (1–10)', Album.Rating ?? 0,
         function(Value: int): M.Msg => M.Msg.Rate(Album.Id, Value),
         Maximum := 10, Enabled := not Current.Saving.Contains(Album.Id),
-        StarSize := Sys.Math.Clamp(cast<float>(Edge - 18) / 10.0F, 1.0F, RatingStyle.StarSize)
+        StarSize := Sys.Math.Clamp(cast (Edge - 18) as float / 10.0F, 1.0F, RatingStyle.StarSize)
       )
     ],
     new Cards.Options(
       Width := L.Extent.Fixed(L.Measure.Logical(Edge + TilePadding * 2)),
       Height := L.Extent.Fixed(L.Measure.Logical(RowHeight - TileGap)),
-      Padding := cast<float>(TilePadding),
+      Padding := cast TilePadding as float,
       Gap := 6.0F,
       Align := L.Alignment.Center,
       Muted := true
@@ -250,7 +250,7 @@ begin
       E.Size of M.Msg(
         Virtual.VirtualList of M.Msg(
           GridId(Current), (Current.Shown.Length + Count - 1) div Count,
-          cast<float>(RowHeight), L.Extent.Fill, Row, Offset,
+          cast RowHeight as float, L.Extent.Fill, Row, Offset,
           function(Value: float): M.Msg => M.Msg.Scrolled(Key, Value)
         ), new L.Flex(Basis := L.Extent.Fill)
       )

@@ -31,8 +31,8 @@ public procedure Draw of TMsg(
   function BeginNative(Enabled: bool; FocusClose: bool; CloseToken: string): int;
   begin
     return Current.Window.BeginSheet(
-      C.Token('sheet', Id), Settings.Title, Settings.Description, cast<int>(Settings.Edge),
-      cast<float>(Settings.Size), Open, Enabled, FocusClose, CloseToken
+      C.Token('sheet', Id), Settings.Title, Settings.Description, cast Settings.Edge as int,
+      cast Settings.Size as float, Open, Enabled, FocusClose, CloseToken
     );
   end function;
   procedure EndNative();

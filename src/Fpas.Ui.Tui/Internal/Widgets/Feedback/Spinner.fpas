@@ -81,7 +81,7 @@ begin
   end if;
   Operations.Add(
     new D.Operation(
-      Frames.Substring(cast<int>(Phase mod Frames.Length), 1),
+      Frames.Substring(cast (Phase mod Frames.Length) as int, 1),
       Area, Clip, new T.Style(Th.Rgb(Ink, Back), Back), false
     )
   );

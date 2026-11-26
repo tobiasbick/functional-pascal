@@ -71,7 +71,7 @@ public sealed class ScalarMetadataTests
         CompilationSource[] sources =
         [
             new("types.fpas", "unit Model; public type Count = ulong; public type Id = distinct long; public type Port = ushort range 1..65535; public type Choice = enum : byte First; Last = 255; end enum; end unit;"),
-            new("api.fpas", "unit Api; uses Model as M; public function Create(Value: M.Count): M.Id; begin return new M.Id(cast<long>(Value)); end function; end unit;")
+            new("api.fpas", "unit Api; uses Model as M; public function Create(Value: M.Count): M.Id; begin return new M.Id(cast Value as long); end function; end unit;")
         ];
         string[] references = TestCompilation.References;
         var first = FpasCompiler.Compile(new(sources, "Scalars", references, CompilationTarget.Library));

@@ -29,7 +29,7 @@ begin
     Enabled
   ) or C.WantsFocus of TMsg(Frame, Id, Header, Enabled);
   const Open: bool := Frame.Window.ToolCall(
-    Token, Name, cast<int>(Settings.Status), Settings.Icon, Settings.Detail,
+    Token, Name, cast Settings.Status as int, Settings.Icon, Settings.Detail,
     Settings.Input, Settings.Output, Settings.Seconds, Enc.Bits(Enabled, 1) or Enc.Bits(Focus, 2),
     if Frame.PaintingClosed then
       null

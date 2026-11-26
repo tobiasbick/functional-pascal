@@ -81,7 +81,7 @@ begin
       ),
       SortKey(Tags.SortAlbumArtist, First(Tags.AlbumArtists)),
       Tags.ReleaseDate,
-      cast<object?>(Tags.DurationMilliseconds)
+      cast Tags.DurationMilliseconds as object?
     ]
   );
   People(Connection, Transaction, Id, 'artist', Tags.Artists);

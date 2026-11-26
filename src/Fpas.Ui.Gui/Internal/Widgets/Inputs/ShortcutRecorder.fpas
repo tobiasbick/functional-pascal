@@ -11,7 +11,7 @@ uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as K;
 
 function Native(Value: K.Combination): CuiInputs.CuiKeyCombination;
 begin
-  return new CuiInputs.CuiKeyCombination(cast<int>(Value.Key), cast<int>(Value.Modifiers));
+  return new CuiInputs.CuiKeyCombination(cast Value.Key as int, cast Value.Modifiers as int);
 end function;
 
 // Draws native recording, keycaps and the optional clear action.
@@ -46,8 +46,8 @@ begin
     C.WantsFocus of TMsg(Frame, Clear, C.Token('button', Clear), Enabled)
   );
   const Proposed: K.Combination := new K.Combination(
-    cast<K.Key>(Result.Value.Key),
-    cast<K.Modifier>(Result.Value.Modifiers)
+    cast Result.Value.Key as K.Key,
+    cast Result.Value.Modifiers as K.Modifier
   );
   if Enabled and Proposed <> Value then
     Frame.Messages.Add(OnChange(Proposed));

@@ -64,7 +64,7 @@ begin
   const Id: string := 'grid-person-' + Source.ToString(Culture.CultureInfo.InvariantCulture);
   const Person: P.Person := P.At(Source);
   const Name: string := P.Name(Model.Names, Source, Person.Name);
-  const Score: float := cast<float>(Person.Score) / 10.0F;
+  const Score: float := cast Person.Score as float / 10.0F;
   return new D.Row of S.Msg(
     Id, [
       (D.Cell of S.Msg).Editable(

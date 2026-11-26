@@ -99,7 +99,7 @@ internal sealed class PatternCoverage(ReferenceCatalog references, Syntax.Source
                 TypeKind.Int64 => text + "L",
                 TypeKind.UInt32 => text + "U",
                 TypeKind.UInt64 => text + "UL",
-                _ => $"cast<{type}>({text + (value > long.MaxValue ? "UL" : NumericFacts.Fits(value, TypeSymbol.Int32) ? "" : "L")})"
+                _ => $"cast {text + (value > long.MaxValue ? "UL" : NumericFacts.Fits(value, TypeSymbol.Int32) ? "" : "L")} as {type}"
             };
         }
 

@@ -23,7 +23,7 @@ procedure CapturePage(Page: State.Page; Renderer: Cui.CuiRenderer; Root: string;
     if Offset > 0 then
       var Current: float := 0.0F;
       var Maximum: float := 0.0F;
-      Window.ScrollState(Token, 0, cast<float>(Offset), out Current, out Maximum);
+      Window.ScrollState(Token, 0, cast Offset as float, out Current, out Maximum);
     end if;
 
     if Input <> '' then
@@ -134,7 +134,7 @@ begin
     Focus := '';
     Input := 'echo example output';
     Draw(Session);
-    Key := cast<int>(Keys.Key.Enter);
+    Key := cast Keys.Key.Enter as int;
     Draw(Session);
     Draw(Session);
     A.Check(Output.Contains('example output'), 'The terminal command must reach the Files model.');

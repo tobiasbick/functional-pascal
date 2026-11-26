@@ -66,7 +66,7 @@ begin
           ['$id'],
           [Id]
         );
-        const Path: string? := cast<string?>(Lookup.ExecuteScalar());
+        const Path: string? := cast Lookup.ExecuteScalar() as string?;
         if Path = null then
           raise new Sys.ArgumentException('Unknown durable track UUID.', 'Items');
         end if;
@@ -90,7 +90,7 @@ begin
             ['$key'],
             [Reference.Key]
           );
-          TrackId := cast<string?>(Lookup.ExecuteScalar());
+          TrackId := cast Lookup.ExecuteScalar() as string?;
         end if;
     end case;
 

@@ -16,14 +16,14 @@ uses System.Collections.Generic as Lists;
 
 function Inspector(Groups: array of I.Group; Value: I.Event): array of I.Group;
 begin
-  const Copy: array of I.Group := cast<array of I.Group>(Groups.Clone());
+  const Copy: array of I.Group := cast Groups.Clone() as array of I.Group;
   case Value of
     when I.Event.Expansion(const Index: int, const Open: bool):
       Copy[Index] := Copy[Index] with
         Open := Open;
       end with;
     when I.Event.Edit(const Index: int, const Row: int, const Current: I.Value):
-      const Rows: array of I.Property := cast<array of I.Property>(Copy[Index].Properties.Clone());
+      const Rows: array of I.Property := cast Copy[Index].Properties.Clone() as array of I.Property;
       Rows[Row] := Rows[Row] with
         Current := Current;
       end with;
@@ -37,7 +37,7 @@ end function;
 
 function TrackCurve(Model: M.Model; Index: int; Value: C.Event): M.Model;
 begin
-  const Tracks: array of T.Track := cast<array of T.Track>(Model.Tracks.Clone());
+  const Tracks: array of T.Track := cast Model.Tracks.Clone() as array of T.Track;
   const Keys: Lists.List of T.Key := new Lists.List of T.Key(Value.Keys.Length);
   for K: int := 0 to Value.Keys.Length - 1 do
     Keys.Add(new T.Key(Value.Keys[K], K = Value.Selected));
@@ -49,7 +49,7 @@ begin
         Keys := Keys.ToArray();
       end with;
     elsif Model.Timeline.KeyIndex <> Value.Selected or Value.Added >= 0 or Value.Removed >= 0 then
-      const Others: array of T.Key := cast<array of T.Key>(Tracks[Track].Keys.Clone());
+      const Others: array of T.Key := cast Tracks[Track].Keys.Clone() as array of T.Key;
       for K: int := 0 to Others.Length - 1 do
         if Others[K].Selected then
           Others[K] := Others[K] with

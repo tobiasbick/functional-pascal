@@ -18,7 +18,7 @@ function Trace(Model: M.Model; Value: T.Event): M.Model;
 begin
   var Tracks: array of T.Track := Model.Tracks;
   if Value.TrackIndex >= 0 and Value.TrackIndex < Tracks.Length then
-    Tracks := cast<array of T.Track>(Tracks.Clone());
+    Tracks := cast Tracks.Clone() as array of T.Track;
     const Lane: T.Track := Tracks[Value.TrackIndex];
     Tracks[Value.TrackIndex] := Lane with
       Collapsed := Value.Collapsed;

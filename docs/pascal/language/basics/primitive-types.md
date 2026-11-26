@@ -23,7 +23,7 @@ There are no implicit boxing-based collection conversions. Implicit narrowing
 numeric conversions are limited to the representable constant expressions
 described in [literal rules](lexical-rules.md#literals). Ordinary CLR boxing to
 `object` or an implemented interface is supported. Explicit unboxing uses
-`cast<T>` and requires the actual boxed type.
+`cast Value as T` and requires the actual boxed type.
 
 ## Example
 

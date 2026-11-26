@@ -33,7 +33,7 @@ public procedure Draw of TMsg(
   function BeginNative(Enabled: bool; FocusClose: bool; CloseToken: string): int;
   begin
     const Result: int := Frame.Window.BeginDialog(
-      C.Token('dialog', Id), Settings.Title, Settings.Description, cast<float>(Settings.Width),
+      C.Token('dialog', Id), Settings.Title, Settings.Description, cast Settings.Width as float,
       Open, Enabled, Settings.Persistent, Settings.CloseButton, FocusClose, CloseToken,
       Settings.Draggable, Settings.Resizable
     );

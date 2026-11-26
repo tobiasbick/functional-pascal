@@ -96,7 +96,10 @@ begin
   const Shown: int := if Thinking then
     Said.Text.Length
   else
-    cast<int>(cast<float>(Said.Text.Length) * Sys.MathF.Min(1.0F, Into / Current.Seconds * 1.15F))
+    cast (cast Said.Text.Length as float * Sys.MathF.Min(
+      1.0F,
+      Into / Current.Seconds * 1.15F
+    )) as int
   end if;
   return new Moment(Mode, Said.Speaker, Said.Text.Substring(0, Shown), Said.Text.Substring(Shown));
 end function;
@@ -133,7 +136,7 @@ begin
       0.0F
     else
       0.8F * Level(Time * 1.3F, 2.0F)
-    end if, cast<byte>(Speaker)
+    end if, cast Speaker as byte
   );
 end function;
 
@@ -154,7 +157,7 @@ public function Incoming(): array of float;
 begin
   const Values: array of float := new float[64];
   for Index: int := 0 to Values.Length - 1 do
-    const I: float := cast<float>(Index);
+    const I: float := cast Index as float;
     Values[Index] := (0.2F + Noise(I * 0.3F, 0.4F) * 0.8F) *
       (if Sys.MathF.Sin(I * 0.45F + 0.4F) > -0.7F then
         1.0F
@@ -173,7 +176,7 @@ public function Clip(): array of float;
 begin
   const Values: array of float := new float[160];
   for Index: int := 0 to Values.Length - 1 do
-    const I: float := cast<float>(Index);
+    const I: float := cast Index as float;
     Values[Index] := (0.2F + Noise(I * 0.22F, 1.3F) * 0.8F) *
       (if Sys.MathF.Sin(I * 0.12F + 1.0F) > -0.75F then
         1.0F

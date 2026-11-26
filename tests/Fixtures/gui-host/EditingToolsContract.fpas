@@ -21,7 +21,7 @@ procedure CapturePage(Renderer: Cui.CuiRenderer; Root: string; Width: int);
     if Offset > 0 then
       var Current: float := 0.0F;
       var Maximum: float := 0.0F;
-      Window.ScrollState(Token, 0, cast<float>(Offset), out Current, out Maximum);
+      Window.ScrollState(Token, 0, cast Offset as float, out Current, out Maximum);
     end if;
 
     if Key <> 0 then
@@ -89,11 +89,11 @@ begin
     A.Send(Session, State.Msg.Preview);
     Draw(Session);
     Focus := false;
-    Key := cast<int>(Keys.Key.Right);
+    Key := cast Keys.Key.Right as int;
     Draw(Session);
     Draw(Session);
     A.Check(Shot > 1.53F and Shot < 1.55F, 'The native timeline must step one 24-fps frame.');
-    Key := cast<int>(Keys.Key.Right);
+    Key := cast Keys.Key.Right as int;
     Modifiers := 4;
     Draw(Session);
     Draw(Session);

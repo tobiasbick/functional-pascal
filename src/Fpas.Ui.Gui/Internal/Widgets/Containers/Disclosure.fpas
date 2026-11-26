@@ -41,7 +41,7 @@ begin
   const Result: int := Frame.Window.BeginDisclosure(
     Token, Title, Card, Open, Allowed,
     C.WantsFocus of TMsg(Frame, Id, Token, Allowed), Settings.Description, Settings.Icon,
-    Settings.Badge, cast<int>(Settings.BadgeTone)
+    Settings.Badge, cast Settings.BadgeTone as int
   );
   if (Result and 2) <> 0 and Allowed then
     Frame.Messages.Add(OnChange((Result and 4) <> 0));

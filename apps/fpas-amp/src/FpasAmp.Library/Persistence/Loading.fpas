@@ -36,7 +36,7 @@ begin
       [Source.Id]
     );
     const Matches: bool := Sys.String.Equals(
-      cast<string?>(Context.ExecuteScalar()),
+      cast Context.ExecuteScalar() as string?,
       Sql.Key(Source.Path),
       Sys.StringComparison.Ordinal
     );

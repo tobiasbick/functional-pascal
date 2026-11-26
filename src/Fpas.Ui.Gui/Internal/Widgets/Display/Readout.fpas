@@ -26,10 +26,10 @@ begin
     Value,
     Settings.Unit,
     Settings.Detail,
-    cast<int>(Settings.Size),
-    cast<int>(Settings.Tone),
+    cast Settings.Size as int,
+    cast Settings.Tone as int,
     Settings.Accent,
-    cast<int>(Settings.Align),
+    cast Settings.Align as int,
     Width.Kind,
     Width.Value
   );

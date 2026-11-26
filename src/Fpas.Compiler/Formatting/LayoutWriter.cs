@@ -88,10 +88,10 @@ internal sealed class LayoutWriter(SourceText source, IReadOnlyList<Token> token
         var token = tokens[index]; var previous = tokens[index - 1];
         var current = token.Kind is TokenKind.Keyword or TokenKind.Symbol ? token.Text : "";
         var before = previous.Kind is TokenKind.Keyword or TokenKind.Symbol ? previous.Text : "";
-        if (layout.Tight.Contains(index) || layout.Tight.Contains(index - 1) && before == "<") return false;
+        if (layout.Tight.Contains(index)) return false;
         if (current is ";" or "," or ":" or "." or ".." or ")" or "]" or "?" || before is "." or ".." or "(" or "[") return false;
-        if (current == "(") return previous.Kind != TokenKind.Identifier && before is not (")" or "]" or "function" or "procedure" or "cast" or "typeof" or "unchecked" or "new") && !(before == ">" && layout.Tight.Contains(index - 1));
-        if (current == "[") return previous.Kind != TokenKind.Identifier && before is not (")" or "]" or "?") && !(before == ">" && layout.Tight.Contains(index - 1));
+        if (current == "(") return previous.Kind != TokenKind.Identifier && before is not (")" or "]" or "function" or "procedure" or "typeof" or "unchecked" or "new");
+        if (current == "[") return previous.Kind != TokenKind.Identifier && before is not (")" or "]" or "?");
         if (layout.Unary.Contains(index - 1) && before is "+" or "-") return false;
         return true;
     }

@@ -19,7 +19,7 @@ uses Fpas.Ui.Widgets.Feedback.Spinners as W;
 public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Size: float; Settings: W.Options);
 begin
   Frame.Window.Spinner(
-    C.Token('spinner', Id), Size, cast<int>(Settings.Animation),
+    C.Token('spinner', Id), Size, cast Settings.Animation as int,
     Colors.Color(Settings.Color), Colors.Color(Settings.Track), Settings.Inverse
   );
   C.Track of TMsg(Frame, new App.Control(Id, '', 'spinner', new Cui.CuiRectangle(), false));

@@ -108,7 +108,7 @@ public sealed class ScalarInspectionTests
             [Runtime.MethodImplAttribute(Runtime.MethodImplOptions.NoInlining)]
             function Calculate(Input: int): int;
             begin
-              const Unused: long := cast<long>(Input) + 100L;
+              const Unused: long := cast Input as long + 100L;
               var Value: int := Input + 1;
               File.WriteAllText('first.txt', 'done');
               Value := Value + 1;

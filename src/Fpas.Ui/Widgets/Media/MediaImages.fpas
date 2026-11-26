@@ -45,8 +45,8 @@ begin
       raise new Sys.ArgumentException('Only RGBA images accept pixel updates.');
   end case;
 
-  if W <= 0 or H <= 0 or cast<long>(W) * H > int.MaxValue div 4
-    or Previous = null or Previous.Length <> cast<long>(W) * H * 4
+  if W <= 0 or H <= 0 or cast W as long * H > int.MaxValue div 4
+    or Previous = null or Previous.Length <> cast W as long * H * 4
     or Width > W - X or Height > H - Y
   then
     raise new Sys.ArgumentException('The update must fit the RGBA image.');
@@ -57,7 +57,7 @@ begin
   else
     Stride
   end if;
-  if Pitch < RowBytes or Bytes = null or cast<long>(Height - 1) * Pitch + RowBytes >
+  if Pitch < RowBytes or Bytes = null or cast (Height - 1) as long * Pitch + RowBytes >
     Bytes.Length
   then
     raise new Sys.ArgumentException('The RGBA update does not contain every source row.');

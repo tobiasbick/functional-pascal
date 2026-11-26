@@ -33,7 +33,7 @@ begin
   Tokens.Add(Token);
   var Focus: int := 0;
   for Index: int := 0 to Count - 1 do
-    const Choice: S.Selection := cast<S.Selection>(Index);
+    const Choice: S.Selection := cast Index as S.Selection;
     const Part: string := C.Token('theme-choice', Id, Parts.Key(Choice));
     Tokens.Add(Part);
     if C.WantsFocus of TMsg(Frame, S.ItemId(Id, Choice), Part, Enabled) then
@@ -41,7 +41,7 @@ begin
     end if;
   end for;
   const Proposal: int := Frame.Window.ThemeSwitcher(
-    Token, cast<int>(Selected), Settings.WithSystem, Enabled,
+    Token, cast Selected as int, Settings.WithSystem, Enabled,
     Focus, if Frame.PaintingClosed then
       null
     else
@@ -49,7 +49,7 @@ begin
     end if
   );
   if Proposal >= 0 then
-    Frame.Messages.Add(OnChange(cast<S.Selection>(Proposal)));
+    Frame.Messages.Add(OnChange(cast Proposal as S.Selection));
   end if;
 
   if Frame.PaintingClosed then
@@ -63,7 +63,7 @@ begin
     )
   );
   for Index: int := 0 to Count - 1 do
-    const Choice: S.Selection := cast<S.Selection>(Index);
+    const Choice: S.Selection := cast Index as S.Selection;
     Frame.Controls.Add(
       new App.Control(
         Id, Parts.Label(Choice), 'theme-choice', new Cui.CuiRectangle(), Enabled,

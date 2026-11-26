@@ -72,7 +72,7 @@ begin
   return E.Column of S.Msg(
     new L.Flow(Gap := L.Spacing.Normal),
     Progress.ProgressBar of S.Msg(
-      'background-progress', cast<float>(Model.WorkProgress) / cast<float>(S.WorkSteps),
+      'background-progress', cast Model.WorkProgress as float / cast S.WorkSteps as float,
       new Progress.Options(Label := 'Background progress', ShowValue := true)
     ),
     E.Text of S.Msg(Model.WorkStatus),

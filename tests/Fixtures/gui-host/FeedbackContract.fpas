@@ -81,7 +81,7 @@ begin
     V.Target.Graphical, 'zero'
   );
   Reject(
-    Timeline.TimelineItem of int('t', 'Entry', new Timeline.Options(Tone := cast<S.Tone>(255))),
+    Timeline.TimelineItem of int('t', 'Entry', new Timeline.Options(Tone := cast 255 as S.Tone)),
     V.Target.Graphical, 'valid tone'
   );
   Reject(
@@ -158,7 +158,7 @@ begin
     'nonnegative'
   );
   Reject(
-    P.ProgressBar of int('p', 0.5F, new P.Options(Tone := cast<S.Tone>(255))),
+    P.ProgressBar of int('p', 0.5F, new P.Options(Tone := cast 255 as S.Tone)),
     V.Target.Graphical,
     'valid tone'
   );

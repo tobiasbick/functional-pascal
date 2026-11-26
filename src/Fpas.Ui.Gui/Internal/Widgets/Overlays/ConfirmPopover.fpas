@@ -39,7 +39,7 @@ begin
   const ConfirmId: string := P.ConfirmId(Id);
   const Result: int := Frame.Window.ConfirmPopover(
     C.Token('confirm-popover', Id), Settings.Title, Settings.Description,
-    Settings.ConfirmLabel, Settings.CancelLabel, cast<int>(Settings.Position), Settings.Danger,
+    Settings.ConfirmLabel, Settings.CancelLabel, cast Settings.Position as int, Settings.Danger,
     Open, Frame.AcceptInput, C.Token('button', CancelId), C.Token('button', ConfirmId)
   );
   if (Result and 1) <> 0 then

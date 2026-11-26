@@ -107,7 +107,7 @@ public procedure CaptureInView(
   Scroll: procedure(float); params Ids: array of string
 );
 begin
-  const Height: float := cast<float>(Session.Snapshot().Size.Height);
+  const Height: float := cast Session.Snapshot().Size.Height as float;
   var Top: float := Height;
   var Bottom: float := 0.0F;
   for Id: string in Ids do

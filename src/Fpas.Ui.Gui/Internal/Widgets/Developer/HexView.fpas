@@ -34,7 +34,7 @@ begin
   for Mark: D.Mark in Settings.Marks do
 
     Marks.Add(
-      new CuiDeveloper.CuiHexMark(Mark.Start, Mark.Length, cast<int>(Mark.Tone), Mark.Label)
+      new CuiDeveloper.CuiHexMark(Mark.Start, Mark.Length, cast Mark.Tone as int, Mark.Label)
     );
   end for;
   const Result: CuiDeveloper.CuiHexViewEvent? := Frame.Window.HexView(

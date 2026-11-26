@@ -14,20 +14,20 @@ uses System.Text as Text;
 procedure Number(Stream: IO.Stream; Value: uint);
 begin
   for Shift: int := 3 downto 0 do
-    Stream.WriteByte(cast<byte>((Value shr (Shift * 8)) and 255U));
+    Stream.WriteByte(cast ((Value shr (Shift * 8)) and 255U) as byte);
   end for;
 end procedure;
 
 procedure Chunk(Stream: IO.Stream; Kind: string; Bytes: array of byte);
 begin
-  Number(Stream, cast<uint>(Bytes.Length));
+  Number(Stream, cast Bytes.Length as uint);
   const Name: array of byte := Text.Encoding.ASCII.GetBytes(Kind);
   Stream.Write(Name, 0, Name.Length);
   Stream.Write(Bytes, 0, Bytes.Length);
   var Crc: uint := $FFFFFFFFU;
   for Block: array of byte in [Name, Bytes] do
     for Value: byte in Block do
-      Crc := Crc xor cast<uint>(Value);
+      Crc := Crc xor cast Value as uint;
       for Bit: int := 0 to 7 do
         Crc := if (Crc and 1U) <> 0U then
           (Crc shr 1) xor $EDB88320U
@@ -50,8 +50,8 @@ begin
   using const Png: IO.MemoryStream := new IO.MemoryStream();
   Png.Write([137, 80, 78, 71, 13, 10, 26, 10], 0, 8);
   using const Header: IO.MemoryStream := new IO.MemoryStream();
-  Number(Header, cast<uint>(Width));
-  Number(Header, cast<uint>(Height));
+  Number(Header, cast Width as uint);
+  Number(Header, cast Height as uint);
   Header.Write([8, 2, 0, 0, 0], 0, 5);
   Chunk(Png, 'IHDR', Header.ToArray());
   using const Compressed: IO.MemoryStream := new IO.MemoryStream();
@@ -69,21 +69,21 @@ begin
         const Ring: bool := Distance >= 100 and Distance <= 1764;
         Zlib.WriteByte(
           if Ring then
-            cast<byte>((cast<int>(Red) + 255) div 2)
+            cast ((cast Red as int + 255) div 2) as byte
           else
             Red
           end if
         );
         Zlib.WriteByte(
           if Ring then
-            cast<byte>((cast<int>(Green) + 255) div 2)
+            cast ((cast Green as int + 255) div 2) as byte
           else
             Green
           end if
         );
         Zlib.WriteByte(
           if Ring then
-            cast<byte>((cast<int>(Blue) + 255) div 2)
+            cast ((cast Blue as int + 255) div 2) as byte
           else
             Blue
           end if

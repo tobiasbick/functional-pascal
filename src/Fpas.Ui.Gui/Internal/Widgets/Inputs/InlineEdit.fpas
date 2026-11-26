@@ -26,7 +26,7 @@ begin
   const Width: Size.NativeExtent := Size.Extent(Settings.Width);
   const Result: CuiInputs.CuiInlineEditResult := Frame.Window.InlineEdit(
     Token, Value, Settings.Placeholder,
-    cast<int>(Settings.Face), Settings.FontSize, Settings.MaxUtf8Bytes, Width.Kind, Width.Value,
+    cast Settings.Face as int, Settings.FontSize, Settings.MaxUtf8Bytes, Width.Kind, Width.Value,
     Enabled, C.WantsFocus of TMsg(Frame, Id, Token, Enabled), not Frame.PaintingClosed
   );
   if Enabled and Result.Value <> Value then

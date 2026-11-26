@@ -34,7 +34,7 @@ begin
     Data.Bands(Settings.Bands),
     Settings.ShowLimits,
     Settings.Target,
-    cast<CuiCharts.CuiGaugeStyle>(cast<int>(Settings.Style)),
+    cast cast Settings.Style as int as CuiCharts.CuiGaugeStyle,
     Settings.Detail,
     Common.Color(Settings.Color)
   );

@@ -65,7 +65,7 @@ type Toggle of TMsg = record implements Actions.IActivatable of TMsg
 
   public function Activate(): Actions.Result of TMsg;
   begin
-    const Masks: array of uint := cast<array of uint>(self.Bar.Current.Selected.Clone());
+    const Masks: array of uint := cast self.Bar.Current.Selected.Clone() as array of uint;
     Masks[self.FieldIndex] := Masks[self.FieldIndex] xor (1u shl self.ValueIndex);
     return (Actions.Result of TMsg).Send(
       self.Bar.Change(new Filters.Value(Masks, self.Bar.Current.Search))
@@ -153,7 +153,7 @@ begin
           Id + '/search', Search,
           function(Text: string): Actions.Result of TMsg => (Actions.Result of TMsg).Send(
             Change(
-              new Filters.Value(cast<array of uint>(Current.Selected.Clone()), Text)
+              new Filters.Value(cast Current.Selected.Clone() as array of uint, Text)
             )
           ),
           new TextFields.Options(

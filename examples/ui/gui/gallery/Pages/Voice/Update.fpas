@@ -18,7 +18,7 @@ uses System.Collections.Generic as Lists;
 function Tick(Model: S.Model; Seconds: float): S.Model;
 begin
   const Now: float := Model.Time + Seconds;
-  const Last: int := cast<int>(Sys.MathF.Floor(Now * 20.0F));
+  const Last: int := cast Sys.MathF.Floor(Now * 20.0F) as int;
   const First: int := Sys.Math.Max(Model.SampleIndex, Last - 239);
   const Levels: Lists.List of float := new Lists.List of float(Model.Timeline.Levels);
   const PreviousTags: (array of byte)? := Model.Timeline.Owners;
@@ -33,7 +33,7 @@ begin
   end if;
 
   for Index: int := First to Last do
-    const Time: float := cast<float>(Index) / 20.0F;
+    const Time: float := cast Index as float / 20.0F;
     const Sample: Script.SampleValue := Script.Sample(
       Time,
       Sys.MathF.Max(0.0F, Time - Model.Started),
@@ -79,7 +79,7 @@ begin
       Take := if Take = null then
         null
       else
-        new Editor.Recording(Samples.ToArray(), cast<float>(Samples.Count) / 20.0F)
+        new Editor.Recording(Samples.ToArray(), cast Samples.Count as float / 20.0F)
       end if;
     end with;
   end with;

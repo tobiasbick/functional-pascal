@@ -43,7 +43,7 @@ begin
     Settings.PaddingY,
     Settings.Gap,
     Settings.Horizontal,
-    cast<int>(Settings.Align),
+    cast Settings.Align as int,
     Settings.Wrap,
     Settings.Muted,
     Settings.Selected,

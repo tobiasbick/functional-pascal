@@ -19,7 +19,7 @@ public procedure Draw of TMsg(Frame: C.State of TMsg; Id: string; Title: string;
 begin
   Frame.Window.TimelineItem(
     C.Token('timeline-item', Id), Title, Settings.Time,
-    Settings.Description, Settings.Icon, cast<int>(Settings.Tone), Settings.Last
+    Settings.Description, Settings.Icon, cast Settings.Tone as int, Settings.Last
   );
   if not Frame.PaintingClosed then
     Frame.Labels.Add(Title);

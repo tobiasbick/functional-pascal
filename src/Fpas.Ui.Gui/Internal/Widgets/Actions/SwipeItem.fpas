@@ -43,7 +43,7 @@ public procedure Draw of TMsg(
     for Item: S.Item in Items do
       Labels.Add(Item.Label);
       Icons.Add(Item.Icon);
-      Tones.Add(cast<int>(Item.Tone));
+      Tones.Add(cast Item.Tone as int);
     end for;
   end procedure;
 begin

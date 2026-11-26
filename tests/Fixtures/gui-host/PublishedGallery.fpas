@@ -329,8 +329,8 @@ begin
   while Session.Step() do
     const Frame: Gui.Frame := Session.Snapshot();
     Console.WriteLine(
-      'FRAME ' + Frame.Id.ToString() + ' ' + cast<int>(Frame.Size.Width).ToString() + ' ' +
-      cast<int>(Frame.Size.Height).ToString() + ' ' + (Frame.Theme.Appearance =
+      'FRAME ' + Frame.Id.ToString() + ' ' + (cast Frame.Size.Width as int).ToString() + ' ' +
+      (cast Frame.Size.Height as int).ToString() + ' ' + (Frame.Theme.Appearance =
         Themes.Mode.Dark).ToString()
     );
     for Label: string in Frame.Text do
@@ -340,8 +340,10 @@ begin
     for Item: Gui.Control in Frame.Controls do
       Console.WriteLine(
         'CONTROL ' + Encoded(Item.Id) + ' ' + Encoded(Item.Key) + ' ' + Encoded(Item.Value) + ' ' +
-        cast<int>(Item.Bounds.X).ToString() + ' ' + cast<int>(Item.Bounds.Y).ToString() + ' ' +
-        cast<int>(Item.Bounds.Width).ToString() + ' ' + cast<int>(Item.Bounds.Height).ToString() +
+        (cast Item.Bounds.X as int).ToString() + ' ' + (cast Item.Bounds.Y as int).ToString() +
+        ' ' +
+        (cast Item.Bounds.Width as int).ToString() + ' ' +
+        (cast Item.Bounds.Height as int).ToString() +
         ' ' + Item.Focused.ToString()
       );
     end for;

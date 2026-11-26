@@ -120,7 +120,7 @@ begin
   var Best: double := 0.0;
   if Other.StartsWith(Word, Sys.StringComparison.Ordinal) then
     // a word being typed: the more of it is there, the better
-    Best := 0.75 + 0.2 * cast<double>(Word.Length) / cast<double>(Other.Length);
+    Best := 0.75 + 0.2 * cast Word.Length as double / cast Other.Length as double;
   end if;
 
   if Tokens.Numeric(Word) then
@@ -143,7 +143,7 @@ begin
     end if;
     const Edits: int := Tokens.Distance(Word, Other, Limit);
     if Edits <= Limit then
-      Best := Sys.Math.Max(Best, 0.8 - 0.15 * cast<double>(Edits));
+      Best := Sys.Math.Max(Best, 0.8 - 0.15 * cast Edits as double);
     elsif Other.Length > Word.Length then
       // a typo in a word that is still being typed
       if Tokens.Distance(Word, Other.Substring(0, Word.Length), 1) <= 1 then
@@ -191,7 +191,7 @@ begin
     end for;
   end if;
 
-  const Count: double := cast<double>(Documents.Length);
+  const Count: double := cast Documents.Length as double;
   const Found: array of double := new double[Documents.Length];
   for Position: int := 0 to Search.Words.Length - 1 do
     var Hits: int := 0;
@@ -207,7 +207,7 @@ begin
     end for;
 
     // a word that many documents share, such as "the", says little
-    const Rarity: double := Sys.Math.Log(1.0 + Count / cast<double>(Sys.Math.Max(1, Hits)));
+    const Rarity: double := Sys.Math.Log(1.0 + Count / cast Sys.Math.Max(1, Hits) as double);
     for Index: int := 0 to Documents.Length - 1 do
       Scores[Index] := Scores[Index] + Found[Index] * Rarity;
     end for;

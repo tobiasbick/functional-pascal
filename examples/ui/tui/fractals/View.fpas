@@ -40,7 +40,7 @@ begin
     new L.Flow(Gap := L.Spacing.Fixed(L.Measure.Cells(1))),
     E.Size of X.Msg(E.Text of X.Msg(Caption), Fixed(10)),
     E.Size of X.Msg(E.Styled of X.Msg(E.Text of X.Msg(Keys), S.Role.Muted), Fixed(9)),
-    Bars.ProgressBar of X.Msg(Id, cast<float>(Fraction), new Bars.Options(Tone := Tone)),
+    Bars.ProgressBar of X.Msg(Id, cast Fraction as float, new Bars.Options(Tone := Tone)),
     E.Size of X.Msg(E.Text of X.Msg(Value), Fixed(11))
   );
 end function;

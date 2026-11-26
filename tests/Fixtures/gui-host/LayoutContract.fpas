@@ -65,7 +65,7 @@ begin
   Reject(E.Gap of int(L.Measure.Logical(-1)), V.Target.Graphical, 'nonnegative');
   Reject(E.Gap of int(L.Measure.Cells(1)), V.Target.Graphical, 'terminal');
   Reject(
-    E.Column of int(new L.Flow(ReadingDirection := cast<L.Direction>(255))),
+    E.Column of int(new L.Flow(ReadingDirection := cast 255 as L.Direction)),
     V.Target.Graphical,
     'direction'
   );

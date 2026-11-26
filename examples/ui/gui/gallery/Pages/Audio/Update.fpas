@@ -8,7 +8,7 @@ uses GuiGallery.Pages.Audio.State as S;
 
 function SetGain(Model: S.Model; Channel: int; Value: float): S.Model;
 begin
-  const Gains: array of float := cast<array of float>(Model.Gains.Clone());
+  const Gains: array of float := cast Model.Gains.Clone() as array of float;
   Gains[Channel] := Value;
   return Model with
     Gains := Gains;

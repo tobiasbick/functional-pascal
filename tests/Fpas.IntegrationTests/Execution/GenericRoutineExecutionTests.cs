@@ -64,7 +64,7 @@ public sealed class GenericRoutineExecutionTests
         function Box of T(Value: T): object?; begin return Value; end function;
         function Describe of T(Value: T): string;
         begin if Value = null then return 'null'; end if; return Value.ToString() ?? 'empty'; end function;
-        function Read of T(Value: object): T; begin return cast<T>(Value); end function;
+        function Read of T(Value: object): T; begin return cast Value as T; end function;
         function OrDefault of T(Value: T?): T;
         where T: struct;
         begin return Value ?? new T(); end function;

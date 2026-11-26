@@ -47,7 +47,7 @@ begin
   try
     const Wait: long := NextSearch - Sys.Environment.TickCount64;
     if Wait > 0L then
-      await Tasks.Task.Delay(cast<int>(Wait), Stop).ConfigureAwait(false);
+      await Tasks.Task.Delay(cast Wait as int, Stop).ConfigureAwait(false);
     end if;
 
     NextSearch := Sys.Environment.TickCount64 + 3200L;

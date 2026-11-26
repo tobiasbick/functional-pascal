@@ -100,7 +100,7 @@ begin
         2542.0F
       end if
     else
-      cast<float>(Index * 1050)
+      cast (Index * 1050) as float
     end if;
     for Frame: int := 0 to 2 do
       A.Check(Session.Step(), 'Developer gallery closed after scrolling.');

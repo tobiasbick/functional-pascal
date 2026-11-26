@@ -124,7 +124,7 @@ public type Effects of TMsg = record
     if self.Expected.Count = 0 then
       return Next;
     end if;
-    const Commands: array of A.Command of TMsg := cast<array of A.Command of TMsg>(Next.Commands.Clone());
+    const Commands: array of A.Command of TMsg := cast Next.Commands.Clone() as array of A.Command of TMsg;
     for Index: int := 0 to Commands.Length - 1 do
       case Commands[Index] of
         when A.Command.Start(

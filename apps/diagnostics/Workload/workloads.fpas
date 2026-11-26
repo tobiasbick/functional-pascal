@@ -24,7 +24,7 @@ public function CpuBatch(): long;
 begin
   var Result: long := 0;
   for Index: int := 0 to 32767 do
-    Result := Result + cast<long>(Index) * Index;
+    Result := Result + cast Index as long * Index;
   end for;
 
   return Result;
@@ -40,7 +40,7 @@ begin
   var Result: long := 0;
   for Index: int := 0 to 511 do
     const Buffer: array of byte := new byte[8192];
-    Buffer[0] := cast<byte>(Index mod 251);
+    Buffer[0] := cast (Index mod 251) as byte;
     Buffer[8191] := Buffer[0];
     Result := Result + Buffer[8191];
     Retained.Enqueue(Buffer);

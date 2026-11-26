@@ -29,7 +29,7 @@ begin
   var Next: float := Current.Ratio;
   const Result: int := Frame.Window.RatioSlider(
     Token, Current.First, Current.Second, ref Next,
-    cast<int>(Settings.Tone), Settings.Step, Settings.Height, Width.Kind, Width.Value,
+    cast Settings.Tone as int, Settings.Step, Settings.Height, Width.Kind, Width.Value,
     Enc.Bits(Enabled, 1), Focus, null
   );
   if Result <> 0 then

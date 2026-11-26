@@ -39,12 +39,12 @@ begin
       else
         0.45F
       end if;
-      const H: float := cast<float>(Hour);
+      const H: float := cast Hour as float;
       Traffic[Day * 24 + Hour] := Sys.MathF.Exp(
         -Sys.MathF.Pow((H - 13.5F) / 4.2F, 2.0F)
       ) * 90.0F * Work +
         Sys.MathF.Exp(-Sys.MathF.Pow((H - 20.5F) / 2.0F, 2.0F)) * 35.0F +
-        cast<float>((Day * 31 + Hour * 17) mod 11);
+        cast ((Day * 31 + Hour * 17) mod 11) as float;
     end for;
   end for;
   const Activity: array of float := new float[364];
@@ -54,13 +54,13 @@ begin
   for Index: int := 0 to 363 do
     Seed := unchecked(Seed * 1103515245u + 12345u);
     const Weekday: int := (Index + (BaseDay mod 7 + 10) mod 7) mod 7;
-    const Sine: float := Sys.MathF.Sin(cast<float>(Index) / 40.0F);
+    const Sine: float := Sys.MathF.Sin(cast Index as float / 40.0F);
     const Base: float := (if Weekday >= 5 then
       0.6F
     else
       3.2F
     end if) * (0.6F + 0.4F * Sine * Sine);
-    const Random: float := cast<float>((Seed shr 16) mod 1000u) / 1000.0F;
+    const Random: float := cast ((Seed shr 16) mod 1000u) as float / 1000.0F;
     Activity[Index] := if Random < 0.18F then
       0.0F
     else

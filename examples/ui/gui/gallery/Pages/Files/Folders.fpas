@@ -31,12 +31,12 @@ begin
     const Folder: IO.DirectoryInfo := new IO.DirectoryInfo(Path);
     for Child: IO.FileSystemInfo in Folder.EnumerateFileSystemInfos() do
       const IsHidden: bool := Child.Name.StartsWith('.')
-        or (cast<int>(Child.Attributes) and cast<int>(IO.FileAttributes.Hidden)) <> 0;
+        or (cast Child.Attributes as int and cast IO.FileAttributes.Hidden as int) <> 0;
       if Hidden or not IsHidden then
         const Modified: long := new Sys.DateTimeOffset(Child.LastWriteTimeUtc).ToUnixTimeSeconds();
         case Child of
           when is IO.FileInfo as File:
-            Result.Add(new Listings.Entry(Child.Name, false, cast<ulong>(File.Length), Modified));
+            Result.Add(new Listings.Entry(Child.Name, false, cast File.Length as ulong, Modified));
           else
             Result.Add(new Listings.Entry(Child.Name, true, 0UL, Modified));
         end case;

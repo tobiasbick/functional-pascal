@@ -149,13 +149,13 @@ public type Adapter = record implements D.Surface
   // Forwards X/Y, literal Text, Font, Size and Color to CUI.
   public procedure Text(X: float; Y: float; Text: string; Font: G.Font; Size: float; Color: G.Color);
   begin
-    self.Native.Text(X, Y, Text, cast<int>(Font), Size, Colors.Pack(Color));
+    self.Native.Text(X, Y, Text, cast Font as int, Size, Colors.Pack(Color));
   end procedure;
 
   // Measures Text with Font/Size and returns native scaled metrics.
   public function Measure(Text: string; Font: G.Font; Size: float): D.TextMetrics;
   begin
-    const M: Native.CuiTextMetrics := self.Native.Measure(Text, cast<int>(Font), Size);
+    const M: Native.CuiTextMetrics := self.Native.Measure(Text, cast Font as int, Size);
     return new D.TextMetrics(M.Width, M.Height, M.Ascent, M.Descent, M.LineHeight);
   end function;
 

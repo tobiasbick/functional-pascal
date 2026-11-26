@@ -28,7 +28,7 @@ begin
   const Allowed: bool := Settings.Enabled and Frame.AcceptInput;
   const Result: int := Frame.Window.Alert(
     C.Token('alert', Id), Title, Settings.Description,
-    Settings.Icon, cast<int>(Settings.Tone), Settings.Dismissible, Allowed,
+    Settings.Icon, cast Settings.Tone as int, Settings.Dismissible, Allowed,
     C.WantsFocus of TMsg(Frame, Dismiss, Token, Allowed and Settings.Dismissible), Token
   );
   if (Result and 2) <> 0 then

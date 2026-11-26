@@ -88,7 +88,7 @@ begin
   );
   const Cached: object? := Command.ExecuteScalar();
   if Cached is string then
-    const Tags: Media.Info? := Codec.ReadTrack(cast<string>(Cached));
+    const Tags: Media.Info? := Codec.ReadTrack(cast Cached as string);
     if Tags <> null then
       Store.Project(Connection, Transaction, Track.FileId, F.Project(Tags, Changes));
     end if;

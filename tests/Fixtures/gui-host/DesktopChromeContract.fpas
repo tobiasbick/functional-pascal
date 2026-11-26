@@ -25,8 +25,8 @@ procedure Run(Renderer: Cui.CuiRenderer; Root: string; Width: int; Page: State.P
     end if;
 
     if Key <> Keys.Key.None then
-      Window.SetKey(cast<int>(Key), true, Modifiers);
-      Window.SetKey(cast<int>(Key), false, Modifiers);
+      Window.SetKey(cast Key as int, true, Modifiers);
+      Window.SetKey(cast Key as int, false, Modifiers);
       Key := Keys.Key.None;
       Modifiers := 0;
     end if;
@@ -101,7 +101,7 @@ begin
   Y := -1.0F;
 
   Key := Keys.Key.V;
-  Modifiers := cast<int>(Keys.Modifier.Alt);
+  Modifiers := cast Keys.Modifier.Alt as int;
   Draw(Session);
   A.Check(A.Control(Session, 'desktop-menu/view').Value = 'true', 'Alt+V opens View.');
   Session.CapturePng(Root + '-view-open.png');
@@ -116,11 +116,11 @@ begin
   Draw(Session);
   A.Check(Last.Selected = 2, 'Right selects the next document.');
   Key := Keys.Key.Left;
-  Modifiers := cast<int>(Keys.Modifier.Shift);
+  Modifiers := cast Keys.Modifier.Shift as int;
   Draw(Session);
   A.Check(Last.Selected = 1 and Last.Tabs[1].Key = 'header', 'Shift+Left moves the selected tab.');
   Key := Keys.Key.W;
-  Modifiers := cast<int>(Keys.Modifier.Control);
+  Modifiers := cast Keys.Modifier.Control as int;
   Draw(Session);
   A.Check(
     Last.Tabs.Length = 3 and Last.Tabs[1].Key = 'source',

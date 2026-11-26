@@ -9,7 +9,7 @@ begin
   const Result: Sys.Text.StringBuilder := new Sys.Text.StringBuilder();
   for Index: int := 0 to Values.Length - 1 do
     if Index > 0 then
-      discard Result.Append(cast<char>(10));
+      discard Result.Append(cast 10 as char);
     end if;
 
     discard Result.Append(Values[Index]);

@@ -14,7 +14,7 @@ uses Fpas.Ui.Widgets.Display.Texts as D;
 // - `Role`: Native text role.
 public procedure Draw of TMsg(Frame: C.State of TMsg; Text: string; Role: D.Appearance);
 begin
-  Frame.Window.DisplayText(Text, cast<int>(Role));
+  Frame.Window.DisplayText(Text, cast Role as int);
   Frame.Labels.Add(Text);
 end procedure;
 

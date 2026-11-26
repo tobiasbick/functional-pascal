@@ -131,16 +131,16 @@ begin
         Asset := Name;
       end with;
     when S.Msg.Property(const Change: P.Event):
-      const Groups: array of P.Group := cast<array of P.Group>(Model.Properties.Clone());
+      const Groups: array of P.Group := cast Model.Properties.Clone() as array of P.Group;
       case Change of
         when P.Event.Expansion(const Index: int, const Open: bool):
           Groups[Index] := Groups[Index] with
             Open := Open;
           end with;
         when P.Event.Edit(const Index: int, const Row: int, const Value: P.Value):
-          const Rows: array of P.Property := cast<array of P.Property>(Groups[
+          const Rows: array of P.Property := cast Groups[
             Index
-          ].Properties.Clone());
+          ].Properties.Clone() as array of P.Property;
           Rows[Row] := Rows[Row] with
             Current := Value;
           end with;

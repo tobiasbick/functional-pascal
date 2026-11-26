@@ -144,7 +144,7 @@ begin
   case Transition.Commands[2] of
     when A.Command.Host(A.HostRequest.Extension(const Value: Sys.Object)):
       Check(
-        cast<Payload of string>(Value).Message = 'parent/9',
+        (cast Value as Payload of string).Message = 'parent/9',
         'Generic host payload dispatch lost its message type.'
       );
     else

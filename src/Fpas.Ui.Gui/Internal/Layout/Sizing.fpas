@@ -20,7 +20,7 @@ public function Measure(Value: L.Measure): float;
 begin
   case Value of
     when L.Measure.Logical(const Units: int):
-      return cast<float>(Units);
+      return cast Units as float;
     else
       raise new Sys.NotSupportedException('GUI layout requires logical units.');
   end case;
@@ -106,7 +106,7 @@ begin
     Spacing(Settings.PaddingEnd ?? Settings.Padding),
     Spacing(Settings.PaddingBottom ?? Settings.Padding),
     Spacing(Settings.PaddingStart ?? Settings.Padding),
-    cast<int>(Settings.ReadingDirection)
+    cast Settings.ReadingDirection as int
   );
 end procedure;
 
@@ -164,7 +164,7 @@ begin
     Minimum,
     Maximum,
     Value.Grow,
-    cast<int>(Align)
+    cast Align as int
   );
   Axis(Value.Width, true);
   Axis(Value.Height, false);
@@ -193,7 +193,7 @@ begin
     else
       L.SizeClass.Expanded
     end if,
-    cast<int>(Size.Width), cast<int>(Size.Height)
+    cast Size.Width as int, cast Size.Height as int
   );
 end function;
 

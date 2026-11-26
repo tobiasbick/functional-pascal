@@ -39,7 +39,7 @@ requires Concurrency > 0;
               break;
             end if;
 
-            const Index: int := cast<int>(Slot);
+            const Index: int := cast Slot as int;
             const Result: Fx.Outcome of (A, E) := await Inputs[Index].Run(
               Environment,
               Child.Token
@@ -102,7 +102,7 @@ requires Concurrency > 0;
     return S.Scope.Use of Fx.Outcome of (array of A, E)(RunWorkers, Cancellation);
   end function;
 begin
-  const Inputs: array of Fx.Effect of (A, E, R) := cast<array of Fx.Effect of (A, E, R)>(Work.Clone());
+  const Inputs: array of Fx.Effect of (A, E, R) := cast Work.Clone() as array of Fx.Effect of (A, E, R);
   return Fx.Effect of (array of A, E, R).Defer(Execute);
 end function;
 

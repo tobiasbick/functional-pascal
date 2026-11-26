@@ -42,7 +42,7 @@ begin
     Native[Index] := new CuiCollections.CuiFilterField(Field.Name, Field.Icon, Field.Values);
   end for;
 
-  const Selected: array of uint := cast<array of uint>(Current.Selected.Clone());
+  const Selected: array of uint := cast Current.Selected.Clone() as array of uint;
   const Track: Sys.Func of (int, string)? := if Frame.PaintingClosed then
     null
   else

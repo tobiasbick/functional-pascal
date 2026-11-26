@@ -40,7 +40,7 @@ begin
     Sql.Execute(
       Connection,
       'INSERT INTO album_ratings(album_id,rating) VALUES($id,$value) ON CONFLICT(album_id) DO UPDATE SET rating=excluded.rating;',
-      Transaction, ['$id', '$value'], [Id, cast<object?>(Value)]
+      Transaction, ['$id', '$value'], [Id, cast Value as object?]
     );
   end if;
 
@@ -71,7 +71,7 @@ begin
       'INSERT INTO group_ratings(group_id,rating) VALUES($id,$value) ON CONFLICT(group_id) DO UPDATE SET rating=excluded.rating;',
       Transaction,
       ['$id', '$value'],
-      [Id, cast<object?>(Value)]
+      [Id, cast Value as object?]
     );
   end if;
 

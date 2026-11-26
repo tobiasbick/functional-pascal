@@ -114,8 +114,8 @@ requires Capacity > 0;
     end if;
 
     return Last with
-      Text := cast<array of string>(Last.Text.Clone());
-      Controls := cast<array of App.Control>(Last.Controls.Clone());
+      Text := cast Last.Text.Clone() as array of string;
+      Controls := cast Last.Controls.Clone() as array of App.Control;
     end with;
   end function;
 

@@ -8,7 +8,7 @@ uses System as Sys;
 
 function Channel(Value: float): byte;
 begin
-  return cast<byte>(Sys.MathF.Min(1.0F, Sys.MathF.Max(0.0F, Value)) * 255.0F);
+  return cast (Sys.MathF.Min(1.0F, Sys.MathF.Max(0.0F, Value)) * 255.0F) as byte;
 end function;
 
 function Scene(Colored: bool): Media.Source;
@@ -17,9 +17,9 @@ begin
   const Height: int := 400;
   const Pixels: array of byte := new byte[Width * Height * 4];
   for Y: int := 0 to Height - 1 do
-    const V: float := cast<float>(Y) / Height;
+    const V: float := cast Y as float / Height;
     for X: int := 0 to Width - 1 do
-      const U: float := cast<float>(X) / Width;
+      const U: float := cast X as float / Width;
       var R: float := 0.56F + V * 0.34F;
       var G: float := 0.72F + V * 0.20F;
       var B: float := 0.88F + V * 0.06F;

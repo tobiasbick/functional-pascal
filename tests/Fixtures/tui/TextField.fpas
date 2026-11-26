@@ -68,7 +68,7 @@ begin
   if not Session.Snapshot().Lines[1].Contains('Untitled') then
     raise new Sys.Exception('Missing placeholder.');
   end if;
-  const Accent: string := 'e' + cast<char>(769);
+  const Accent: string := 'e' + cast 769 as char;
   Send(Session, Tui.Input.Paste(Accent + '界ab'));
   Key(Session, K.Key.Home);
   Key(Session, K.Key.Right);

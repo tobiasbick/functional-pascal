@@ -12,7 +12,7 @@ public sealed class NullableOperatorDiagnosticsTests
     [InlineData("bool?", "not A", "bool?")]
     [InlineData("int?", "A / B", "int?")]
     [InlineData("double?", "A and B", "double?")]
-    [InlineData("decimal?", "A + cast<double?>(B)", "decimal?")]
+    [InlineData("decimal?", "A + cast B as double?", "decimal?")]
     [InlineData("int?", "A + 'text'", "int?")]
     [InlineData("int?", "null + null", "int?")]
     public void Nullable_operators_do_not_invent_underlying_operators_or_Boolean_logic(string type, string expression, string result)

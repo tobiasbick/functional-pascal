@@ -17,7 +17,7 @@ begin
     Enc.Bits(Pressed = true, 1)
   end if;
   return Window.ToolbarButton(
-    Value.Icon, Value.Label, Value.Tooltip, Value.Shortcut, Toggle, cast<int>(Value.Tone),
+    Value.Icon, Value.Label, Value.Tooltip, Value.Shortcut, Toggle, cast Value.Tone as int,
     Enc.Bits(Value.Disabled, 1) or Enc.Bits(Value.Flyout, 2) or Enc.Bits(Primary, 4)
   );
 end function;

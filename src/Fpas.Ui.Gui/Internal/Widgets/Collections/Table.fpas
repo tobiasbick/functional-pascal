@@ -43,7 +43,7 @@ begin
         Column.Grow
       else
         Width.Value
-      end if, cast<int>(Column.Align), Column.Sortable
+      end if, cast Column.Align as int, Column.Sortable
     );
     const Header: string := T.HeaderId(Id, Index);
     if C.WantsFocus of TMsg(

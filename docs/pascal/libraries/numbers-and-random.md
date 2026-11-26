@@ -30,10 +30,10 @@ begin
     raise new Sys.FormatException('Invalid percentage');
   end if;
 
-  return cast<int>(Sys.Math.Round(
+  return cast Sys.Math.Round(
     Sys.Math.Clamp(Value, 0.0, 100.0),
     Sys.MidpointRounding.AwayFromZero
-  ));
+  ) as int;
 end function;
 
 begin

@@ -313,7 +313,7 @@ begin
     return Grid.DataGrid of M.Msg(
       'music-tracks',
       [
-        new Grid.Column('Title', cast<float>(Sys.Math.Max(190, Width - 832)), Sortable := true),
+        new Grid.Column('Title', cast Sys.Math.Max(190, Width - 832) as float, Sortable := true),
         new Grid.Column('Artist', 178.0F, Sortable := true, Priority := 1),
         new Grid.Column('Album', 205.0F, Sortable := true, Priority := 2),
         new Grid.Column('Genre', 135.0F, Sortable := true, Priority := 5),
@@ -341,7 +341,7 @@ begin
   return Grid.DataGrid of M.Msg(
     'album-tracks',
     [
-      new Grid.Column('Title', cast<float>(Sys.Math.Max(110, Width - 302)), Sortable := true),
+      new Grid.Column('Title', cast Sys.Math.Max(110, Width - 302) as float, Sortable := true),
       new Grid.Column(
         'Time',
         62.0F,

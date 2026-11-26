@@ -29,7 +29,7 @@ begin
   for Tag: string in Tags do
     R.CheckText(Tag, At + '/tag');
     if Tag = '' or Tag.StartsWith(' ') or Tag.EndsWith(' ') or Tag.Contains(',')
-      or Tag.Contains(cast<char>(10)) or Tag.Contains(cast<char>(13))
+      or Tag.Contains(cast 10 as char) or Tag.Contains(cast 13 as char)
     then
       R.Reject(At, 'Tags must be nonempty single lines without commas or surrounding spaces.');
     end if;

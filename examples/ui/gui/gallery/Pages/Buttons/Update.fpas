@@ -25,7 +25,7 @@ begin
       SegmentedRange := Value;
     end with;
     when S.Msg.ToggleFormat(const Style: S.TextFormat): State with
-      Formats := State.Formats xor cast<int>(Style);
+      Formats := State.Formats xor cast Style as int;
     end with;
     when S.Msg.ConfirmHold: State with
       HoldCount := State.HoldCount + 1;

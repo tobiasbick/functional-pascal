@@ -25,10 +25,10 @@ procedure Frame(Writer: IO.BinaryWriter; Kind: string; Owner: string; Bytes: arr
 begin
   const Name: array of byte := Text.Encoding.Latin1.GetBytes(Owner);
   Writer.Write(Text.Encoding.ASCII.GetBytes(Kind));
-  const Header: array of byte := [0, 0, 0, cast<byte>(Name.Length + 1 + Bytes.Length), 0, 0];
+  const Header: array of byte := [0, 0, 0, cast (Name.Length + 1 + Bytes.Length) as byte, 0, 0];
   Writer.Write(Header);
   Writer.Write(Name);
-  Writer.Write(cast<byte>(0));
+  Writer.Write(cast 0 as byte);
   Writer.Write(Bytes);
 end procedure;
 
@@ -54,7 +54,7 @@ public type TagEditingTests = record
       Frame(Frames, 'UFID', 'http://musicbrainz.org', Text.Encoding.ASCII.GetBytes(Recording));
       Frame(Frames, 'PRIV', Owner, PrivateData);
       Frames.Flush();
-      const Size: int := cast<int>(Payload.Length);
+      const Size: int := cast Payload.Length as int;
       using const Output: IO.BinaryWriter := new IO.BinaryWriter(IO.File.Create(Path));
       const Header: array of byte := [
         73,
@@ -65,8 +65,8 @@ public type TagEditingTests = record
         0,
         0,
         0,
-        cast<byte>(Size div 128),
-        cast<byte>(Size mod 128)
+        cast (Size div 128) as byte,
+        cast (Size mod 128) as byte
       ];
       Output.Write(Header);
       Output.Write(Payload.ToArray());

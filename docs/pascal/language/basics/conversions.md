@@ -1,6 +1,10 @@
 # Casts and runtime types
 
-`cast<T>(Expression)` performs an explicit numeric or CLR reference conversion.
+`cast Expression as T` performs an explicit numeric or CLR reference conversion.
+It binds to a unary operand. For example, `cast X as long + Y` casts `X` before
+the addition, and `cast (X + Y) as long` casts the sum. To access a member on the
+result, write `(cast Value as string).Length`.
+
 Numeric casts are checked unless enclosed by `unchecked`. An incompatible
 reference cast throws `InvalidCastException`; it is not an optional conversion.
 `Value is T` tests runtime type compatibility, yielding false for null.

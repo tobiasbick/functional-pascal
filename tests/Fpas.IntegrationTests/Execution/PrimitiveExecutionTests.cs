@@ -8,15 +8,15 @@ public sealed class PrimitiveExecutionTests
     public Task Unchecked_widening_retains_source_signedness_and_constant_evaluation_matches_runtime() => ProgramExecution.Output("""
         program Conversion;
         uses System.Console as Console;
-        function Folded(Value: int := unchecked(cast<int>(1.0e30))): int; begin return Value; end function;
-        function DecimalByte(Value: byte := unchecked(cast<byte>(12.75M))): byte; begin return Value; end function;
+        function Folded(Value: int := unchecked(cast 1.0e30 as int)): int; begin return Value; end function;
+        function DecimalByte(Value: byte := unchecked(cast 12.75M as byte)): byte; begin return Value; end function;
         begin
           const Negative: int := -1; const Positive: uint := 4294967295U;
-          Console.WriteLine(unchecked(cast<ulong>(Negative)) = 18446744073709551615UL);
-          Console.WriteLine(unchecked(cast<long>(Positive)) = 4294967295L);
-          Console.WriteLine(unchecked(cast<nuint>(Negative)) = unchecked(cast<nuint>(-1L)));
-          Console.WriteLine(unchecked(cast<nint>(Positive)) = unchecked(cast<nint>(4294967295L)));
-          const Large: double := 1.0e30; Console.WriteLine(Folded() = unchecked(cast<int>(Large)));
+          Console.WriteLine(unchecked(cast Negative as ulong) = 18446744073709551615UL);
+          Console.WriteLine(unchecked(cast Positive as long) = 4294967295L);
+          Console.WriteLine(unchecked(cast Negative as nuint) = unchecked(cast -1L as nuint));
+          Console.WriteLine(unchecked(cast Positive as nint) = unchecked(cast 4294967295L as nint));
+          const Large: double := 1.0e30; Console.WriteLine(Folded() = unchecked(cast Large as int));
           const U32: uint := 1U; const U64: ulong := 1UL;
           const Next32: uint := U32 + 1; const Next64: ulong := 1 + U64;
           Console.WriteLine(Next32 = Next64);
@@ -36,11 +36,11 @@ public sealed class PrimitiveExecutionTests
     [InlineData("ushort", "65535", "65535")]
     [InlineData("float", "1.5F * 2.0F", "3")]
     [InlineData("decimal", "0.1M + 0.2M", "0.3")]
-    [InlineData("byte", "unchecked(cast<byte>(256))", "0")]
-    [InlineData("long", "cast<long>(4294967295U)", "4294967295")]
-    [InlineData("double", "cast<double>(18446744073709551615UL)", "1.8446744073709552E+19")]
-    [InlineData("nint", "cast<nint>(42L)", "42")]
-    [InlineData("nuint", "cast<nuint>(42UL)", "42")]
+    [InlineData("byte", "unchecked(cast 256 as byte)", "0")]
+    [InlineData("long", "cast 4294967295U as long", "4294967295")]
+    [InlineData("double", "cast 18446744073709551615UL as double", "1.8446744073709552E+19")]
+    [InlineData("nint", "cast 42L as nint", "42")]
+    [InlineData("nuint", "cast 42UL as nuint", "42")]
     public Task All_primitives_literals_and_conversions_execute(string type, string expression, string output)
         => ProgramExecution.Output("program Numbers; uses System.Console as Console; begin const X: " + type + " := " + expression + "; Console.WriteLine(X); end; end program;", output);
 
@@ -66,8 +66,8 @@ public sealed class PrimitiveExecutionTests
     [Theory]
     [InlineData("discard 18446744073709551615UL + 1UL;")]
     [InlineData("discard 9223372036854775807L + 1L;")]
-    [InlineData("const X: int := 256; discard cast<byte>(X);")]
-    [InlineData("discard cast<long>(18446744073709551615UL);")]
+    [InlineData("const X: int := 256; discard cast X as byte;")]
+    [InlineData("discard cast 18446744073709551615UL as long;")]
     public async Task Integral_overflow_remains_checked(string body)
     {
         var result = await ProgramExecution.Run("program Numbers; begin " + body + " end; end program;");

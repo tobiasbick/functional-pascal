@@ -219,7 +219,7 @@ begin
   end if;
 
   const Index: int := if List.Selected >= 0 then
-    cast<int>(Sys.Math.Clamp(cast<long>(List.Selected) + Delta, 0L, cast<long>(Count - 1)))
+    cast Sys.Math.Clamp(cast List.Selected as long + Delta, 0L, cast (Count - 1) as long) as int
   elsif Key = K.Key.Down or Key = K.Key.PageDown or Key = K.Key.Home then
     0
   else

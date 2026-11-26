@@ -19,7 +19,7 @@ public sealed class MultilineStringExecutionTests
             begin
               const Text: string := {{literal}};
               for Character: char in Text do
-                Console.Write(cast<int>(Character));
+                Console.Write(cast Character as int);
                 Console.Write(',');
               end for;
               Console.WriteLine();

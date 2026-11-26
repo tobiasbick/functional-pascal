@@ -22,7 +22,7 @@ const Separators: array of char := [Slash, Backslash];
 public function IsChildName(Name: string): bool;
 begin
   return Name <> '' and Name <> '.' and Name <> '..' and Name.IndexOfAny(Separators) < 0
-    and not Name.Contains(cast<char>(0));
+    and not Name.Contains(cast 0 as char);
 end function;
 
 // Uses the separator already present in a path, as the CUI picker does.
@@ -116,13 +116,13 @@ begin
   for Item: IO.FileSystemInfo in Directory.EnumerateFileSystemInfos() do
     if not Item.Name.StartsWith(
       '.'
-    ) and (Item.Attributes and IO.FileAttributes.Hidden) = cast<IO.FileAttributes>(0)
+    ) and (Item.Attributes and IO.FileAttributes.Hidden) = cast 0 as IO.FileAttributes
       and IsChildName(Item.Name)
     then
       Entries.Add(
         new F.Entry(
           Item.Name,
-          (Item.Attributes and IO.FileAttributes.Directory) <> cast<IO.FileAttributes>(0)
+          (Item.Attributes and IO.FileAttributes.Directory) <> cast 0 as IO.FileAttributes
         )
       );
     end if;

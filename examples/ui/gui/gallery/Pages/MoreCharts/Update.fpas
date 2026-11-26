@@ -23,7 +23,9 @@ begin
       const Pages: Lists.List of C.Item := new Lists.List of C.Item(Model.Pages.Length);
       for Index: int := 0 to Model.Pages.Length - 1 do
         const Old: C.Item := Model.Pages[Index];
-        Pages.Add(new C.Item(Old.Label, cast<float>(Sys.Random.Shared.Next(500, 5500)), Old.Color));
+        Pages.Add(
+          new C.Item(Old.Label, cast Sys.Random.Shared.Next(500, 5500) as float, Old.Color)
+        );
       end for;
 
       return new M.Transition of (Data.Samples, State.Msg)(

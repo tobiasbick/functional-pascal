@@ -16,7 +16,7 @@ public function Options(Value: M.TextOptions): CuiMotion.CuiMotionText;
 begin
   const Width: S.NativeExtent := S.Extent(Value.Width);
   return new CuiMotion.CuiMotionText(
-    cast<int>(Value.Font), Width.Kind, Width.Value, Colors.Color(Value.Color),
+    cast Value.Font as int, Width.Kind, Width.Value, Colors.Color(Value.Color),
     Value.Size, Value.Speed, Value.Delay, Value.NoWrap, Value.Caret
   );
 end function;

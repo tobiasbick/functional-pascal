@@ -138,9 +138,9 @@ public function Start of (TModel, TMsg)(
         Value.Id,
         Value.Columns,
         Value.Rows,
-        cast<array of string>(Value.Lines.Clone()),
-        cast<array of T.Cell>(Value.Cells.Clone()),
-        cast<array of App.ControlSnapshot>(Value.Controls.Clone())
+        cast Value.Lines.Clone() as array of string,
+        cast Value.Cells.Clone() as array of T.Cell,
+        cast Value.Controls.Clone() as array of App.ControlSnapshot
       );
     finally
       Threads.Monitor.Exit(Gate);

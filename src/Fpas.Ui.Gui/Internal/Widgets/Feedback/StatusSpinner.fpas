@@ -21,7 +21,7 @@ begin
   const Role: string := 'status-spinner';
   const Token: string := C.Token(Role, Id);
   const Visible: bool := Frame.Window.StatusSpinner(
-    Token, cast<int>(Status), Settings.Size, Colors.Color(Settings.Color), Settings.Keep
+    Token, cast Status as int, Settings.Size, Colors.Color(Settings.Color), Settings.Keep
   );
   P.Root of TMsg(
     Frame, Id, Role, '', false, if Visible then

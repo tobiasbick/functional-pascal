@@ -26,7 +26,7 @@ begin
       else
         16
       end if;
-      return cast<int>((cast<long>(Units) + Scale - 1L) div Scale);
+      return cast ((cast Units as long + Scale - 1L) div Scale) as int;
   end case;
 end function;
 
@@ -182,7 +182,7 @@ begin
     end if;
   end for;
 
-  var Remaining: double := Sys.Math.Max(0, cast<double>(Available) - Used);
+  var Remaining: double := Sys.Math.Max(0, cast Available as double - Used);
   for Pass: int := 0 to Sizes.Length do
     if Weight <= 0 then
       break;
@@ -195,8 +195,8 @@ begin
         const Desired: double := Unit * Rule.Grow;
         Sizes[Index] := Sys.Math.Clamp(
           Desired,
-          cast<double>(Rule.Minimum),
-          cast<double>(Rule.Maximum)
+          cast Rule.Minimum as double,
+          cast Rule.Maximum as double
         );
         if Sizes[Index] <> Desired then
           Frozen[Index] := true;
@@ -239,11 +239,11 @@ begin
   var Previous: long := 0L;
   for Index: int := 0 to Sizes.Length - 1 do
     Boundary := Boundary + Sizes[Index];
-    const Edge: long := cast<long>(Sys.Math.Round(Boundary, Sys.MidpointRounding.AwayFromZero));
-    Result[Index] := cast<int>(Sys.Math.Min(
-      cast<long>(int.MaxValue),
+    const Edge: long := cast Sys.Math.Round(Boundary, Sys.MidpointRounding.AwayFromZero) as long;
+    Result[Index] := cast Sys.Math.Min(
+      cast int.MaxValue as long,
       Sys.Math.Max(0L, Edge - Previous)
-    ));
+    ) as int;
     Previous := Edge;
   end for;
 

@@ -3,7 +3,7 @@
 Precedence, high to low:
 
 1. Calls, member/index access, record `with` updates.
-2. Unary `+`, `-`, `not`, `await`.
+2. Unary `+`, `-`, `not`, `await`, `cast … as …`.
 3. `*`, `/`, `div`, `mod`.
 4. `+`, `-`.
 5. `shl`, `shr`.

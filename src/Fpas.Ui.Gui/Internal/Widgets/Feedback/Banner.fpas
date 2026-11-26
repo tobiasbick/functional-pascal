@@ -50,7 +50,7 @@ begin
     Open,
     Settings.ActionLabel,
     Settings.Icon,
-    cast<int>(Settings.Tone),
+    cast Settings.Tone as int,
     OnDismiss <> null,
     Enabled,
     Focus,

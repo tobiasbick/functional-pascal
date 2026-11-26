@@ -27,7 +27,7 @@ begin
     Label,
     Settings.Icon,
     Settings.DurationMilliseconds,
-    cast<int>(Settings.Variant),
+    cast Settings.Variant as int,
     Enabled,
     Focus
   )

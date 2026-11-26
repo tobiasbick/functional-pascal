@@ -57,7 +57,7 @@ begin
     return 0;
   end if;
   const Glyph: string := Sanitize(Value);
-  var Code: int := cast<int>(Glyph[0]);
+  var Code: int := cast Glyph[0] as int;
   if Glyph.Length > 1 and Sys.Char.IsSurrogatePair(Glyph[0], Glyph[1]) then
     Code := Sys.Char.ConvertToUtf32(Glyph[0], Glyph[1]);
   end if;
@@ -78,7 +78,7 @@ begin
     or (Code >= 65040 and Code <= 65376) or (Code >= 65504 and Code <= 65510)
     or (Code >= 127744 and Code <= 129791) or (Code >= 131072 and Code <= 196605)
     or (Code >= 196608 and Code <= 262141)
-    or Glyph.IndexOf(cast<char>(65039)) >= 0
+    or Glyph.IndexOf(cast 65039 as char) >= 0
   then
     return 2;
   end if;

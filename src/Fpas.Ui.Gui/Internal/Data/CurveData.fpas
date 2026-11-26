@@ -19,7 +19,7 @@ begin
     Value.InY,
     Value.OutX,
     Value.OutY,
-    cast<byte>(Value.Interpolation)
+    cast Value.Interpolation as byte
   );
 end function;
 
@@ -37,7 +37,7 @@ begin
     Value.InY,
     Value.OutX,
     Value.OutY,
-    cast<W.Mode>(Value.Mode)
+    cast Value.Mode as W.Mode
   );
 end function;
 

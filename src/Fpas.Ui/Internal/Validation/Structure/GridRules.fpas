@@ -78,7 +78,7 @@ begin
     R.CheckText(Field.Name, At + '/name');
     R.CheckText(Field.Icon, At + '/icon');
     if Field.Values.Length > 32 or (Field.Values.Length < 32
-      and cast<ulong>(Current.Selected[Index]) >= (1UL shl Field.Values.Length))
+      and cast Current.Selected[Index] as ulong >= (1UL shl Field.Values.Length))
     then
       R.Reject(At, 'A filter mask must name available values.');
     end if;
@@ -115,7 +115,7 @@ begin
   end if;
 
   if Count < 0 or not Sys.Single.IsFinite(RowHeight) or RowHeight < 1.0F
-    or (cast<double>(Count) + 1.0) * cast<double>(RowHeight) >= int.MaxValue
+    or (cast Count as double + 1.0) * cast RowHeight as double >= int.MaxValue
   then
     R.Reject(At, 'The logical row count and height must fit the native viewport.');
   end if;

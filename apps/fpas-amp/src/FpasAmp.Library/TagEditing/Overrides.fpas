@@ -16,7 +16,7 @@ begin
   );
   const Result: object? := Command.ExecuteScalar();
   if Result is string then
-    return Codec.ReadTagOverrides(cast<string>(Result)) ??
+    return Codec.ReadTagOverrides(cast Result as string) ??
       I.ImmutableDictionary of (string, string?).Empty;
   end if;
 

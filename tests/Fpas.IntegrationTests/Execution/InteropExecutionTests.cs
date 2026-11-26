@@ -21,7 +21,7 @@ public sealed class InteropExecutionTests
               Console.WriteLine(Date.GetType().Name);
               Console.WriteLine(Sys.Math.PI > 3.0);
               const Box: object := 42;
-              Console.WriteLine(cast<int>(Box));
+              Console.WriteLine(cast Box as int);
             end;
             end program;
             """, "Hello", "5", "2026", "3", "DateTime", "True", "42");

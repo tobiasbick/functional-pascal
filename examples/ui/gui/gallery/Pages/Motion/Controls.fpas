@@ -184,7 +184,7 @@ function Peaks(): array of float;
 begin
   const Result: array of float := new float[96];
   for Index: int := 0 to Result.Length - 1 do
-    const Sample: float := cast<float>(Index);
+    const Sample: float := cast Index as float;
     Result[Index] := 0.18F + 0.8F * Sys.MathF.Abs(
       Sys.MathF.Sin(Sample * 0.37F) * Sys.MathF.Sin(Sample * 0.11F + 1.3F)
     );

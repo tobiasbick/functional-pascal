@@ -57,8 +57,8 @@ procedure CapturePage(Page: State.Page; Renderer: Cui.CuiRenderer; Root: string;
     end if;
 
     if Escape then
-      Window.SetKey(cast<int>(Keys.Key.Escape), true);
-      Window.SetKey(cast<int>(Keys.Key.Escape), false);
+      Window.SetKey(cast Keys.Key.Escape as int, true);
+      Window.SetKey(cast Keys.Key.Escape as int, false);
       Escape := false;
     end if;
   end procedure;

@@ -78,7 +78,8 @@ end record;
 public function Rgb(Value: G.Color; Background: int): int;
   function Channel(Foreground: byte; Back: int): int;
   begin
-    return (cast<int>(Foreground) * cast<int>(Value.Alpha) + Back * (255 - cast<int>(Value.Alpha)) +
+    return (cast Foreground as int * cast Value.Alpha as int + Back * (255 -
+      cast Value.Alpha as int) +
       127) div 255;
   end function;
 begin
@@ -203,8 +204,8 @@ end function;
 // ## Returns
 // Derived terminal colors; applications configure only the shared theme.
 public function Resolve(Value: Shared.Theme): Theme;
-requires cast<int>(Value.Appearance) >= 0 and cast<int>(Value.Appearance) <= 1;
-requires cast<int>(Value.AccentFamily) >= 0 and cast<int>(Value.AccentFamily) <= 7;
+requires cast Value.Appearance as int >= 0 and cast Value.Appearance as int <= 1;
+requires cast Value.AccentFamily as int >= 0 and cast Value.AccentFamily as int <= 7;
 requires Value.Colors.Background.Alpha = 255;
 begin
   const C: Shared.Palette := Value.Colors;

@@ -109,7 +109,7 @@ public function Lower of TMsg(
   function Step(Amount: double; Scale: int): Actions.Result of TMsg;
   begin
     Session.Write(null);
-    return Propose(Sys.Math.Clamp(Value + Amount * cast<double>(Scale), Minimum, Maximum));
+    return Propose(Sys.Math.Clamp(Value + Amount * cast Scale as double, Minimum, Maximum));
   end function;
 
   function Key(Pressed: K.Key; Modifiers: K.KeyModifiers): (Actions.Result of TMsg)?;

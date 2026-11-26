@@ -44,7 +44,7 @@ begin
   end for;
 
   const Proposal: (array of bool)? := Frame.Window.ToggleGroup(
-    Tokens[0], Labels.ToArray(), Icons.ToArray(), Selected, cast<int>(Settings.ControlSize),
+    Tokens[0], Labels.ToArray(), Icons.ToArray(), Selected, cast Settings.ControlSize as int,
     Settings.Exclusive, Settings.IconOnly, Enabled, Focus,
     if Frame.PaintingClosed then
       null

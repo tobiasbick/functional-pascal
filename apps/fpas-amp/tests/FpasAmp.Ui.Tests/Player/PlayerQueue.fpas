@@ -164,7 +164,7 @@ public type PlayerQueueTests = record
     const All: (I.ImmutableArray of Tracks.Entry).Builder := I.ImmutableArray.CreateBuilder of Tracks.Entry();
     for N: int := 0 to 10009 do
       All.Add(
-        Song(cast<long>(N), cast<double>(N + 1)) with
+        Song(cast N as long, cast (N + 1) as double) with
           Rating := 8;
         end with
       );

@@ -783,7 +783,7 @@ begin
         else
           1
         end if) do
-          const Item: string := ThemeSwitchers.ItemId(Id, cast<ThemeSwitchers.Selection>(Index));
+          const Item: string := ThemeSwitchers.ItemId(Id, cast Index as ThemeSwitchers.Selection);
           if Preferred = null or Preferred = Item then
             return Item;
           end if;

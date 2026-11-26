@@ -31,7 +31,7 @@ begin
   );
   for Entry: D.Entry in Entries do
 
-    Rows.Add(new CuiDeveloper.CuiLogEntry(Entry.Text, Entry.Time, cast<int>(Entry.Severity)));
+    Rows.Add(new CuiDeveloper.CuiLogEntry(Entry.Text, Entry.Time, cast Entry.Severity as int));
   end for;
 
   if Frame.Window.LogConsole(

@@ -137,7 +137,7 @@ function Deferred of (TChild, TParent)(
   begin
     var Saved: MappedCache of (TChild, TParent)? := null;
     if Previous <> null and Previous.Dependencies is MappedCache of (TChild, TParent) then
-      Saved := cast<MappedCache of (TChild, TParent)>(Previous.Dependencies);
+      Saved := cast Previous.Dependencies as MappedCache of (TChild, TParent);
     end if;
     const Current: E.CacheEntry of TChild := Resolve(
       if Saved = null then

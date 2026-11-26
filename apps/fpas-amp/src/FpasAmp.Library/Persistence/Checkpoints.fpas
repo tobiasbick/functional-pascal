@@ -151,13 +151,13 @@ begin
       IO.Path.GetDirectoryName(Observation.Path) ?? ''
     );
     AddDirectory.Parameters['$checked'].Value := if Observation.Complete then
-      cast<object>(Sys.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds())
+      cast Sys.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() as object
     else
       Sys.DBNull.Value
     end if;
     AddDirectory.Parameters[
       '$error'
-    ].Value := cast<object?>(Observation.Failure) ?? Sys.DBNull.Value;
+    ].Value := cast Observation.Failure as object? ?? Sys.DBNull.Value;
     discard AddDirectory.ExecuteNonQuery();
     for Child: string in Observation.Children do
       Cancellation.ThrowIfCancellationRequested();

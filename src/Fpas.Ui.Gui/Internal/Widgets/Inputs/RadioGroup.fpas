@@ -25,7 +25,7 @@ public procedure Draw of TMsg(
   OnChange: function(int): TMsg; Enabled: bool; Gap: L.Spacing
 );
 begin
-  Frame.Window.BeginGroup(false, 0, Size.Spacing(Gap), cast<int>(L.Alignment.Default), false);
+  Frame.Window.BeginGroup(false, 0, Size.Spacing(Gap), cast L.Alignment.Default as int, false);
   for Index: int := 0 to Items.Length - 1 do
     const Item: R.Item := Items[Index];
     Radio.Draw of TMsg(

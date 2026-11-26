@@ -62,9 +62,9 @@ begin
           Result.Action,
           Result.Hover,
           Result.Flags <> 0,
-          cast<int>(Result.X),
-          cast<int>(Result.Y),
-          cast<int>(Result.Z),
+          cast Result.X as int,
+          cast Result.Y as int,
+          cast Result.Z as int,
           Result.Count
         )
       )

@@ -129,9 +129,9 @@ begin
   if Menu.Settings.Width > 0.0F then
     Width := Sys.Math.Max(
       1,
-      cast<int>(Sys.Math.Ceiling(
-        Sys.Math.Min(cast<double>(Columns), cast<double>(Menu.Settings.Width) / 8.0)
-      ))
+      cast Sys.Math.Ceiling(
+        Sys.Math.Min(cast Columns as double, cast Menu.Settings.Width as double / 8.0)
+      ) as int
     );
   end if;
 

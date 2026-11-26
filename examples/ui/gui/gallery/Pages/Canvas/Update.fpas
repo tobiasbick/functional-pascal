@@ -58,7 +58,7 @@ begin
         Viewport := Viewport;
       end with;
     when N.Event.Move(const Id: int, const X: float, const Y: float):
-      const Positions: array of M.Position := cast<array of M.Position>(Model.Positions.Clone());
+      const Positions: array of M.Position := cast Model.Positions.Clone() as array of M.Position;
       Positions[Id] := new M.Position(X, Y);
       return Model with
         Positions := Positions;
@@ -86,7 +86,7 @@ end function;
 
 function Pick(Model: M.Model; Index: int; Value: bool): M.Model;
 begin
-  const Picked: array of bool := cast<array of bool>(Model.Picked.Clone());
+  const Picked: array of bool := cast Model.Picked.Clone() as array of bool;
   Picked[Index] := Value;
   return Model with
     Picked := Picked;

@@ -44,7 +44,7 @@ public type WaveformTests = record
       );
       X.Assert.Equal of int(Waves.Buckets, Measured.Length);
       X.Assert.Equal of long(
-        cast<long>(Waves.Buckets),
+        cast Waves.Buckets as long,
         D.Number(Connection, 'SELECT length(levels) FROM waveforms;')
       );
       // Mark one interval in the test cache; decoding the silent fixture cannot produce it.
@@ -69,7 +69,7 @@ public type WaveformTests = record
     const Rebuilt: array of float := await Tags.WaveformAsync(Tracks[1], T.CancellationToken.None);
     X.Assert.Equal of int(Waves.Buckets, Rebuilt.Length);
     X.Assert.Equal of long(
-      cast<long>(Waves.Buckets),
+      cast Waves.Buckets as long,
       D.Number(Connection, 'SELECT length(levels) FROM waveforms;')
     );
   end function;

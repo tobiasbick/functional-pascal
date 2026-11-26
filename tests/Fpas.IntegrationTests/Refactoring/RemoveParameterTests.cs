@@ -91,7 +91,7 @@ public sealed class RemoveParameterTests(SdkPackageFixture sdk) : IClassFixture<
               const Callback: function(int): int := Indirect;
               const N: int := ValueOf();
               return Callback(N) + ReadValue(N) + Effect(ValueOf()) + Divide(42 div N) +
-                Collision(0) + Collision() + Generic(2) + Annotated(1, 2) + Narrow(cast<byte>(N));
+                Collision(0) + Collision() + Generic(2) + Annotated(1, 2) + Narrow(cast N as byte);
             end function;
             end unit;
             """;

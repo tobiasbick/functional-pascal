@@ -49,7 +49,7 @@ begin
   end if;
   const Result: CuiActions.CuiSpeedDialResult := Frame.Window.SpeedDial(
     Token, Labels.ToArray(), Icons.ToArray(), Settings.Icon, Settings.Tooltip,
-    cast<int>(Settings.Position), Enabled, Focus, Track
+    cast Settings.Position as int, Enabled, Focus, Track
   );
   if Result.Choice >= 0 then
     Frame.Messages.Add(OnChoose(Result.Choice));

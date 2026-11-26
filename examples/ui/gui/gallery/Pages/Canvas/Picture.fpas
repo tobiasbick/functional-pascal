@@ -70,9 +70,9 @@ begin
         Blue := Blue + B * 0.25F;
       end for;
       const At: int := (Y * Width + X) * 4;
-      Pixels[At] := cast<byte>(Red);
-      Pixels[At + 1] := cast<byte>(Green);
-      Pixels[At + 2] := cast<byte>(Blue);
+      Pixels[At] := cast Red as byte;
+      Pixels[At + 1] := cast Green as byte;
+      Pixels[At + 2] := cast Blue as byte;
       Pixels[At + 3] := 255;
     end for;
   end for;

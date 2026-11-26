@@ -102,7 +102,7 @@ end procedure;
 // - `At`: Diagnostic path.
 public procedure Combination(Value: K.Combination; At: string);
 begin
-  if not Sys.Enum.IsDefined of K.Key(Value.Key) or cast<int>(Value.Modifiers) > 15
+  if not Sys.Enum.IsDefined of K.Key(Value.Key) or cast Value.Modifiers as int > 15
     or (Value.Key = K.Key.None and Value.Modifiers <> K.Modifier.None)
   then
     R.Reject(At, 'Invalid shortcut key or modifier flags.');

@@ -24,7 +24,7 @@ begin
   for Item: S.Item of TMsg in Items do
     case Item of
       when S.Item.Text(const Label: S.Label):
-        Frame.Window.StatusBarText(Label.Text, Label.Icon, cast<int>(Label.Tone));
+        Frame.Window.StatusBarText(Label.Text, Label.Icon, cast Label.Tone as int);
       when S.Item.Action(
         const Key: string,
         const Label: S.Label,
@@ -37,7 +37,7 @@ begin
         const Token: string := C.Token(Role, Action);
         const Accept: bool := Frame.AcceptInput and Enabled;
         const Result: CuiDesktop.CuiStatusBarResult := Frame.Window.StatusBarItem(
-          Key, Label.Text, Label.Icon, cast<int>(Label.Tone), Tip,
+          Key, Label.Text, Label.Icon, cast Label.Tone as int, Tip,
           Accept, C.WantsFocus of TMsg(Frame, Action, Token, Accept),
           if Frame.PaintingClosed then
             null

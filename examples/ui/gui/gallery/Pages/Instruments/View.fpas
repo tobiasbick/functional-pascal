@@ -24,13 +24,13 @@ begin
   end if;
   const Elimination: double := Sys.Math.Log(2.0) / 5.0;
   const Absorption: double := Sys.Math.Log(2.0) / 0.25;
-  return cast<float>(95.0 * Absorption / (Absorption - Elimination) *
-    (Sys.Math.Exp(-Elimination * Time) - Sys.Math.Exp(-Absorption * Time)));
+  return cast (95.0 * Absorption / (Absorption - Elimination) *
+    (Sys.Math.Exp(-Elimination * Time) - Sys.Math.Exp(-Absorption * Time))) as float;
 end function;
 
 function TimeLabel(Time: double): string;
 begin
-  const Minutes: int := cast<int>(Sys.Math.Round(Time * 60.0));
+  const Minutes: int := cast Sys.Math.Round(Time * 60.0) as int;
   const Invariant: Culture.CultureInfo := Culture.CultureInfo.InvariantCulture;
   return (Minutes div 60).ToString(
     'D2',
@@ -52,19 +52,19 @@ begin
   for Index: int := 0 to Cups.Length - 1 do
     const Values: array of float := new float[97];
     for Sample: int := 0 to Values.Length - 1 do
-      Values[Sample] := Dose(6.0 + cast<double>(Sample) / 4.0 - Cups[Index]);
-      Totals[Sample] := Totals[Sample] + cast<double>(Values[Sample]);
+      Values[Sample] := Dose(6.0 + cast Sample as double / 4.0 - Cups[Index]);
+      Totals[Sample] := Totals[Sample] + cast Values[Sample] as double;
     end for;
 
     Bands.Add(new D.Series(Values, Index = Model.Cups.Selected));
-    Bed := Bed + cast<double>(Dose(23.0 - Cups[Index]));
+    Bed := Bed + cast Dose(23.0 - Cups[Index]) as double;
   end for;
   var Peak: double := 0.0;
   var PeakAt: double := 6.0;
   for Index: int := 0 to Totals.Length - 1 do
     if Totals[Index] > Peak then
       Peak := Totals[Index];
-      PeakAt := 6.0 + cast<double>(Index) / 4.0;
+      PeakAt := 6.0 + cast Index as double / 4.0;
     end if;
   end for;
   const Invariant: Culture.CultureInfo := Culture.CultureInfo.InvariantCulture;

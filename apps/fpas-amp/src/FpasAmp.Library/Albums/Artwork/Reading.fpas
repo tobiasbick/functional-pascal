@@ -39,7 +39,7 @@ begin
   const Size: long := Info.Length;
   const Modified: long := Info.LastWriteTimeUtc.Ticks;
   if Size > 16777216L or (Info.Attributes and IO.FileAttributes.ReparsePoint) <>
-    cast<IO.FileAttributes>(0)
+    cast 0 as IO.FileAttributes
   then
     raise new IO.InvalidDataException('Unsupported artwork file.');
   end if;
@@ -52,7 +52,7 @@ begin
     65536,
     IO.FileOptions.Asynchronous
   );
-  const Bytes: array of byte := new byte[cast<int>(Size)];
+  const Bytes: array of byte := new byte[cast Size as int];
   var Position: int := 0;
   while Position < Bytes.Length do
     const Count: int := await Stream.ReadAsync(

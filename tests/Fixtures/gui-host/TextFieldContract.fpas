@@ -81,7 +81,7 @@ begin
     V.Target.Terminal, 'Graphical profile'
   );
   Reject(
-    TextAreas.TextArea of string('about', 'line' + cast<char>(13), Identity),
+    TextAreas.TextArea of string('about', 'line' + cast 13 as char, Identity),
     V.Target.Graphical,
     'LF line endings'
   );
@@ -192,7 +192,7 @@ procedure VerifyGallery(Renderer: Cui.CuiRenderer; Capture: string);
     Key(12);
     TypeText('!');
     Check(
-      Control of State.Msg(Session, 'input-about').Value = 'Alpha!' + cast<char>(10) + 'Béta',
+      Control of State.Msg(Session, 'input-about').Value = 'Alpha!' + cast 10 as char + 'Béta',
       'Enter must insert LF and Up and End must edit the previous visual line.'
     );
 

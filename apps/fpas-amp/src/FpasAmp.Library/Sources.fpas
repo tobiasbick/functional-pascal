@@ -73,7 +73,7 @@ begin
   const Result: C.List of MusicSource := new C.List of MusicSource();
   for Source: MusicSource in Sources do
     if Sys.String.IsNullOrWhiteSpace(Source.Id) or not Ids.Add(Source.Id)
-      or not IO.Path.IsPathFullyQualified(Source.Path) or Source.Path.Contains(cast<char>(0))
+      or not IO.Path.IsPathFullyQualified(Source.Path) or Source.Path.Contains(cast 0 as char)
     then
       raise new Sys.ArgumentException('Expected unique source IDs and absolute directory paths.');
     end if;
@@ -81,7 +81,7 @@ begin
       Sys.StringComparer.OrdinalIgnoreCase
     );
     for Extension: string in Source.Extensions do
-      if Extension.Length < 2 or Extension[0] <> cast<char>(46) then
+      if Extension.Length < 2 or Extension[0] <> cast 46 as char then
         raise new Sys.ArgumentException('Expected dot-prefixed file extensions.');
       end if;
 

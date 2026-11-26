@@ -856,7 +856,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
           1
         end if) do
           discard Identify(
-            ThemeSwitchers.ItemId(Id, cast<ThemeSwitchers.Selection>(Index)),
+            ThemeSwitchers.ItemId(Id, cast Index as ThemeSwitchers.Selection),
             At + '/item'
           );
         end for;
@@ -1066,7 +1066,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         end if;
 
         if Count < 0 or not Sys.Single.IsFinite(RowHeight) or RowHeight < 1.0F
-          or cast<double>(RowHeight) * Count >= int.MaxValue
+          or cast RowHeight as double * Count >= int.MaxValue
         then
           Rules.Reject(
             At,
@@ -1830,7 +1830,7 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
     for Shortcut: K.ShortcutBinding of TMsg in Shortcuts do
       if not Sys.Enum.IsDefined of K.Key(
         Shortcut.PressedKey
-      ) or (cast<int>(Shortcut.Modifiers) and not 7) <> 0
+      ) or (cast Shortcut.Modifiers as int and not 7) <> 0
       then
         Rules.Reject(Location, 'Unknown shortcut key or modifiers.');
       end if;
@@ -1854,7 +1854,8 @@ requires Profile = Target.Portable or Profile = Target.Terminal or Profile = Tar
         Rules.Reject(Location, 'A named shortcut needs a known key.');
       end if;
       const Gesture: string := Shortcut.Character + '/' +
-        cast<int>(Shortcut.PressedKey).ToString() + '/' + cast<int>(Shortcut.Modifiers).ToString();
+        (cast Shortcut.PressedKey as int).ToString() + '/' +
+        (cast Shortcut.Modifiers as int).ToString();
       if not Gestures.Add(Gesture) then
         Rules.Reject(Location, 'Duplicate shortcut binding.');
       end if;

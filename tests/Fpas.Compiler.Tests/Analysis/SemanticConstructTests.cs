@@ -171,7 +171,7 @@ public sealed class SemanticConstructTests
     {
         const string source = """
             program Original;
-            type Flags = enum First = 1; Second = First + 1; Third = cast<int>(Flags.First) + Second; end enum;
+            type Flags = enum First = 1; Second = First + 1; Third = cast Flags.First as int + Second; end enum;
             function Identity of T(Value: T): T; begin return Value; end function;
             begin const Flag: Flags := Flags.Second; discard Identity of int(42); end;
             end program;
@@ -182,7 +182,7 @@ public sealed class SemanticConstructTests
         Assert.Equal("method", parameterType.GenericOwner); Assert.Equal(0, parameterType.GenericIndex);
         var first = Assert.Single(snapshot.Symbols, symbol => symbol.Name == "First");
         Assert.Equal(first.Id, Select(snapshot, source, "First + 1").Id);
-        Assert.Equal(first.Id, Select(snapshot, source, "First) + Second").Id);
+        Assert.Equal(first.Id, Select(snapshot, source, "First as int + Second").Id);
         Assert.Equal("enum", snapshot.Types.Single(type => type.Id == first.Type).Kind);
         AssertConsistent(snapshot);
     }

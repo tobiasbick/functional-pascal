@@ -6,7 +6,7 @@ type UserId = distinct long;
 type SampleName = distinct string;
 
 const Id: UserId := new UserId(42L);
-const Raw: long := cast<long>(Id);
+const Raw: long := cast Id as long;
 ```
 
 A distinct declaration introduces a nominal type. Neither assignment nor a call
@@ -19,8 +19,8 @@ an array, an arbitrary class, or a generic parameter. Generic distinct declarati
 are not included.
 
 `new UserId(Value)` constructs from the underlying type using ordinary argument
-conversion rules. `cast<UserId>(Value)` wraps a base-typed value;
-`cast<long>(Id)` unwraps it. The public read-only Value property exposes the same
+conversion rules. `cast Value as UserId` wraps a base-typed value;
+`cast Id as long` unwraps it. The public read-only Value property exposes the same
 underlying value. Converting between different domains requires an explicit
 intermediate base value. Wrapping/unwrapping does not parse strings or implicitly
 change primitive types. Boxing preserves the wrapper's nominal identity.
@@ -56,9 +56,9 @@ type SampleName = distinct string;
 begin
   const Id: UserId := new UserId(42L);
   const Name: SampleName := new SampleName('Alpha');
-  const Raw: long := cast<long>(Id);
+  const Raw: long := cast Id as long;
   Console.WriteLine(Raw); // 42
-  Console.WriteLine(cast<string>(Name)); // Alpha
+  Console.WriteLine(cast Name as string); // Alpha
 
   const Missing: UserId? := null;
   Console.WriteLine(Missing.HasValue); // false

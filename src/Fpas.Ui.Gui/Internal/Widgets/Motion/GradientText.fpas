@@ -24,7 +24,7 @@ begin
   Frame.Window.GradientText(
     C.Token('gradient-text', Id), Text,
     new CuiMotion.CuiMotionText(
-      cast<int>(Settings.Font),
+      cast Settings.Font as int,
       Width.Kind,
       Width.Value,
       Colors.Color(Settings.From),

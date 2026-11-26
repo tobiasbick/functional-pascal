@@ -40,10 +40,10 @@ begin
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   const Labels: CuiAi.CuiVoiceSessionText := new CuiAi.CuiVoiceSessionText(
     Settings.Label, Settings.Transcript, Settings.Upcoming,
-    cast<int>(Settings.Speaker), Settings.You, Settings.Assistant
+    cast Settings.Speaker as int, Settings.You, Settings.Assistant
   );
   const Result: CuiAudio.CuiVoiceSessionResult := Frame.Window.VoiceSession(
-    Token, cast<int>(Mode), Signal.Levels, Signal.Owners,
+    Token, cast Mode as int, Signal.Levels, Signal.Owners,
     Labels, Muted, Width.Kind, Width.Value, Enc.Bits(Enabled, 1) or Enc.Bits(Settings.HideEnd, 2),
     Focus, P.Tracker of TMsg(Frame, Id, Role, Keys)
   );

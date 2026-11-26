@@ -38,7 +38,7 @@ begin
     Actions.Length
   );
   for Action: D.Action in Actions do
-    Items.Add(new CuiCanvas.CuiSelectionAction(Action.Icon, Action.Label, cast<int>(Action.Tone)));
+    Items.Add(new CuiCanvas.CuiSelectionAction(Action.Icon, Action.Label, cast Action.Tone as int));
   end for;
   const Index: int := Frame.Window.SelectionBar(
     C.Token('selection-bar', Id),

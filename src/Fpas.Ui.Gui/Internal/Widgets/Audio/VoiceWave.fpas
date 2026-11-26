@@ -31,7 +31,7 @@ begin
   const Width: S.NativeExtent := S.Extent(Settings.Width);
   const Next: float := Frame.Window.VoiceWave(
     Token, Signal.Levels, Signal.Owners, Progress, Width.Kind, Width.Value,
-    Settings.Pitch, Settings.Step, cast<int>(Settings.Owner), Colors.Color(Settings.Color),
+    Settings.Pitch, Settings.Step, cast Settings.Owner as int, Colors.Color(Settings.Color),
     Enc.Bits(Enabled, 1) or Enc.Bits(Focus, 2) or Enc.Bits(Settings.Clip, 4)
   );
   P.Root of TMsg(Frame, Id, Role, '', Enabled, (Progress ?? 0.0F).ToString());

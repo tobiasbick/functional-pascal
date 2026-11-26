@@ -50,10 +50,10 @@ end function;
 
 function Flag(Model: M.Model; Value: F.Event): M.Model;
 begin
-  const Flags: array of F.Flag := cast<array of F.Flag>(Model.Flags.Clone());
+  const Flags: array of F.Flag := cast Model.Flags.Clone() as array of F.Flag;
   const Row: F.Flag := Flags[Value.Index];
-  const Enabled: array of bool := cast<array of bool>(Row.On.Clone());
-  const Rollout: array of int := cast<array of int>(Row.Rollout.Clone());
+  const Enabled: array of bool := cast Row.On.Clone() as array of bool;
+  const Rollout: array of int := cast Row.Rollout.Clone() as array of int;
   Enabled[Value.Environment] := Value.On;
   Rollout[Value.Environment] := Value.Rollout;
   Flags[Value.Index] := Row with

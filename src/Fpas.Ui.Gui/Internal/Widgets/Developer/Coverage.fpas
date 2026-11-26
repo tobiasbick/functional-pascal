@@ -59,7 +59,7 @@ begin
   );
   P.Root of TMsg(Frame, Id, Role, '', Enabled, Result.X.ToString());
   if Enabled and (Result.Action >= 0) then
-    Frame.Messages.Add(Changed(new D.Event(Result.Action, cast<float>(Result.X))));
+    Frame.Messages.Add(Changed(new D.Event(Result.Action, cast Result.X as float)));
   end if;
 end procedure;
 

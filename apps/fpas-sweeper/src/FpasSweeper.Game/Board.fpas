@@ -1,0 +1,263 @@
+// [Documentation](../../doc/README.md#game-model)
+
+unit FpasSweeper.Game;
+
+uses System as Sys;
+uses System.Collections.Generic as Collections;
+
+// Smallest supported board dimension.
+public const MinimumSide: int := 5;
+// Largest supported board dimension.
+public const MaximumSide: int := 24;
+
+// Lifecycle of a round.
+public type Phase = enum
+  // Mine placement awaits the first reveal.
+  Ready;
+  // At least one cell has been revealed.
+  Playing;
+  // All safe cells have been revealed.
+  Won;
+  // A mine was triggered.
+  Lost;
+end enum;
+
+// Information a player can see about one cell.
+public type Cell = variant
+  // Unopened, unmarked cell.
+  Covered;
+  // A player's flag or a mine marked on victory.
+  Flagged;
+  // A revealed safe cell and its adjacent mine count.
+  Open(Adjacent: int);
+  // A mine displayed after a loss.
+  Mine(Triggered: bool);
+  // A flag placed on a safe cell, displayed after a loss.
+  WrongFlag;
+end variant;
+
+function Neighbours(Index: int; Width: int; Height: int): array of int;
+begin
+  const Column: int := Index mod Width;
+  const Row: int := Index div Width;
+  const Result: Collections.List of int := new Collections.List of int(8);
+  for Y: int := Sys.Math.Max(0, Row - 1) to Sys.Math.Min(Height - 1, Row + 1) do
+    for X: int := Sys.Math.Max(0, Column - 1) to Sys.Math.Min(Width - 1, Column + 1) do
+      const At: int := Y * Width + X;
+      if At <> Index then
+        Result.Add(At);
+      end if;
+    end for;
+  end for;
+
+  return Result.ToArray();
+end function;
+
+function CopyBits(Source: array of bool): array of bool;
+begin
+  const Result: array of bool := new bool[Source.Length];
+  Sys.Array.Copy(Source, Result, Source.Length);
+  return Result;
+end function;
+
+// An immutable snapshot of a seed-driven Minesweeper round.
+public type Board = record
+  // Number of columns.
+  public Width: int;
+  // Number of rows.
+  public Height: int;
+  // Number of planted or scheduled mines.
+  public MineCount: int;
+  // Current stage of the round.
+  public State: Phase;
+  // Number of marks placed by the player.
+  public FlagCount: int;
+  Seed: int;
+  Mines: array of bool;
+  Counts: array of int;
+  Revealed: array of bool;
+  Flags: array of bool;
+  SafeLeft: int;
+  Triggered: int;
+
+  // Creates an unopened board with a reproducible mine placement.
+  // ## Parameters
+  // - `Width`: Number of columns in the supported range.
+  // - `Height`: Number of rows in the supported range.
+  // - `MineCount`: Positive number of mines, below the number of cells.
+  // - `Seed`: Random seed for first-reveal placement.
+  // ## Returns
+  // The ready board.
+  public static function Create(Width: int; Height: int; MineCount: int; Seed: int): Board;
+  begin
+    if Width < MinimumSide or Width > MaximumSide then
+      raise new Sys.ArgumentOutOfRangeException('Width');
+    end if;
+
+    if Height < MinimumSide or Height > MaximumSide then
+      raise new Sys.ArgumentOutOfRangeException('Height');
+    end if;
+    const Size: int := Width * Height;
+    if MineCount <= 0 or MineCount >= Size then
+      raise new Sys.ArgumentOutOfRangeException('MineCount');
+    end if;
+
+    return new Board(
+      Width, Height, MineCount, Phase.Ready, 0, Seed, new bool[Size],
+      new int[Size], new bool[Size], new bool[Size], Size - MineCount, -1
+    );
+  end function;
+
+  // Gets the state visible to the player.
+  // ## Parameters
+  // - `Index`: Zero-based row-major cell index.
+  // ## Returns
+  // The cell state for drawing or inspection.
+  public function At(Index: int): Cell;
+  begin
+    if Index < 0 or Index >= self.Revealed.Length then
+      raise new Sys.ArgumentOutOfRangeException('Index');
+    end if;
+
+    if self.Revealed[Index] then
+      return Cell.Open(self.Counts[Index]);
+    end if;
+
+    if self.State = Phase.Lost then
+      if self.Flags[Index] and not self.Mines[Index] then
+        return Cell.WrongFlag;
+      elsif self.Mines[Index] and not self.Flags[Index] then
+        return Cell.Mine(self.Triggered = Index);
+      end if;
+    end if;
+
+    if self.Flags[Index] or (self.State = Phase.Won and self.Mines[Index]) then
+      return Cell.Flagged;
+    end if;
+
+    return Cell.Covered;
+  end function;
+
+  // Toggles a flag on an available covered cell.
+  // ## Parameters
+  // - `Index`: Zero-based row-major cell index.
+  // ## Returns
+  // The resulting board.
+  public function ToggleFlag(Index: int): Board;
+  begin
+    if Index < 0 or Index >= self.Flags.Length or self.Revealed[Index]
+      or self.State = Phase.Won or self.State = Phase.Lost
+    then
+      return self;
+    end if;
+
+    const Flags: array of bool := CopyBits(self.Flags);
+    Flags[Index] := not Flags[Index];
+    const Delta: int := if Flags[Index] then
+      1
+    else
+      -1
+    end if;
+    return self with
+      Flags := Flags;
+      FlagCount := self.FlagCount + Delta;
+    end with;
+  end function;
+
+  function Place(First: int): Board;
+  begin
+    const Size: int := self.Mines.Length;
+    const Safe: array of bool := new bool[Size];
+    Safe[First] := true;
+    const Halo: array of int := Neighbours(First, self.Width, self.Height);
+    if Size - 1 - Halo.Length >= self.MineCount then
+      for Index: int in Halo do
+        Safe[Index] := true;
+      end for;
+    end if;
+
+    const Eligible: Collections.List of int := new Collections.List of int(Size);
+    for Index: int := 0 to Size - 1 do
+      if not Safe[Index] then
+        Eligible.Add(Index);
+      end if;
+    end for;
+
+    const Mines: array of bool := new bool[Size];
+    const Counts: array of int := new int[Size];
+    const Random: Sys.Random := new Sys.Random(self.Seed);
+    for Index: int := 0 to self.MineCount - 1 do
+      const Other: int := Random.Next(Index, Eligible.Count);
+      const Mine: int := Eligible[Other];
+      Eligible[Other] := Eligible[Index];
+      Eligible[Index] := Mine;
+      Mines[Mine] := true;
+      for Adjacent: int in Neighbours(Mine, self.Width, self.Height) do
+        Counts[Adjacent] := Counts[Adjacent] + 1;
+      end for;
+    end for;
+
+    return self with
+      Mines := Mines;
+      Counts := Counts;
+      State := Phase.Playing;
+    end with;
+  end function;
+
+  // Reveals a cell and expands through adjacent zeroes. The first reveal is safe.
+  // ## Parameters
+  // - `Index`: Zero-based row-major cell index.
+  // ## Returns
+  // The resulting board and round state.
+  public function Reveal(Index: int): Board;
+  begin
+    if Index < 0 or Index >= self.Revealed.Length or self.Revealed[Index] or self.Flags[Index]
+      or self.State = Phase.Won or self.State = Phase.Lost
+    then
+      return self;
+    end if;
+
+    if self.State = Phase.Ready then
+      return self.Place(Index).Reveal(Index);
+    end if;
+
+    if self.Mines[Index] then
+      return self with
+        State := Phase.Lost;
+        Triggered := Index;
+      end with;
+    end if;
+
+    const Revealed: array of bool := CopyBits(self.Revealed);
+    const Pending: Collections.Queue of int := new Collections.Queue of int();
+    var Left: int := self.SafeLeft - 1;
+    Revealed[Index] := true;
+    Pending.Enqueue(Index);
+    while Pending.Count > 0 do
+      const Current: int := Pending.Dequeue();
+      if self.Counts[Current] <> 0 then
+        continue;
+      end if;
+
+      for Near: int in Neighbours(Current, self.Width, self.Height) do
+        if not Revealed[Near] and not self.Flags[Near] then
+          Revealed[Near] := true;
+          Left := Left - 1;
+          Pending.Enqueue(Near);
+        end if;
+      end for;
+    end while;
+
+    return self with
+      Revealed := Revealed;
+      SafeLeft := Left;
+      State := if Left = 0 then
+        Phase.Won
+      else
+        Phase.Playing
+      end if;
+    end with;
+  end function;
+end record;
+
+end unit;

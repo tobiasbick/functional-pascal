@@ -1,0 +1,217 @@
+// [Documentation](../../doc/README.md#desktop-ui)
+
+unit FpasSweeper.Update;
+
+uses Fpas.Ui.Mvu.Application as Mvu;
+uses Fpas.Ui.Widgets.Canvas.Canvases as Canvas;
+uses Fpas.Ui.Widgets.Inputs.ShortcutRecorders as Keys;
+uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Appearance;
+
+uses FpasSweeper.Game as G;
+uses FpasSweeper.State as S;
+uses System as Sys;
+uses System.Threading as Threads;
+uses System.Threading.Tasks as Tasks;
+
+const ClockId: string := 'round-clock';
+
+async function Clock(
+  Post: function(S.Msg): Tasks.Task;
+  Stop: Threads.CancellationToken
+): Tasks.Task;
+begin
+  while true do
+    await Tasks.Task.Delay(1000, Stop).ConfigureAwait(false);
+    await Post(S.Msg.Tick(Sys.Environment.TickCount64)).ConfigureAwait(false);
+  end while;
+end function;
+
+function Next(Model: S.Model): Mvu.Transition of (S.Model, S.Msg);
+begin
+  return new Mvu.Transition of (S.Model, S.Msg)(Model, []);
+end function;
+
+function Start(Model: S.Model): Mvu.Transition of (S.Model, S.Msg);
+begin
+  const Random: Sys.Random := new Sys.Random(Model.Seed);
+  const Seed: int := Random.Next();
+  const Board: G.Board := case Model.Difficulty of
+    when 0: G.Board.Create(8, 8, 10, Seed);
+    when 1: G.Board.Create(12, 12, 28, Seed);
+    when 2: G.Board.Create(16, 16, 56, Seed);
+    else G.Board.Create(
+      Model.CustomWidth, Model.CustomHeight,
+      Model.CustomWidth * Model.CustomHeight div 6, Seed
+    );
+  end case;
+  const Fresh: S.Model := Model with
+    Board := Board;
+    Seed := Seed;
+    Cursor := 0;
+    FlagMode := false;
+    Elapsed := 0L;
+    StartedAt := 0L;
+    ClockFailed := false;
+  end with;
+  return new Mvu.Transition of (S.Model, S.Msg)(Fresh, [Mvu.CancelBackground of S.Msg(ClockId)]);
+end function;
+
+function Elapsed(Model: S.Model; Now: long): long;
+begin
+  return Sys.Math.Max(0L, (Now - Model.StartedAt) div 1000L);
+end function;
+
+function Play(Model: S.Model; Index: int; Flag: bool): Mvu.Transition of (S.Model, S.Msg);
+begin
+  if Index < 0 or Index >= Model.Board.Width * Model.Board.Height then
+    return Next(Model);
+  end if;
+
+  const Board: G.Board := if Flag then
+    Model.Board.ToggleFlag(Index)
+  else
+    Model.Board.Reveal(Index)
+  end if;
+  const Updated: S.Model := Model with
+    Board := Board;
+    Cursor := Index;
+  end with;
+  if Board.State = G.Phase.Playing and Model.Board.State = G.Phase.Ready then
+    return new Mvu.Transition of (S.Model, S.Msg)(
+      Updated with
+        StartedAt := Sys.Environment.TickCount64;
+      end with,
+      [
+        Mvu.StartBackground of S.Msg(
+          ClockId, Mvu.FromWorker of S.Msg(
+            Clock, function(Error: Sys.Exception): S.Msg => S.Msg.ClockFailed
+          )
+        )
+      ]
+    );
+  end if;
+
+  if Model.Board.State = G.Phase.Playing and Board.State <> G.Phase.Playing then
+    return new Mvu.Transition of (S.Model, S.Msg)(
+      Updated with
+        Elapsed := Elapsed(Model, Sys.Environment.TickCount64);
+      end with,
+      [Mvu.CancelBackground of S.Msg(ClockId)]
+    );
+  end if;
+
+  return Next(Updated);
+end function;
+
+function Move(Model: S.Model; X: int; Y: int): Mvu.Transition of (S.Model, S.Msg);
+begin
+  const Column: int := Sys.Math.Clamp(
+    Model.Cursor mod Model.Board.Width + X,
+    0,
+    Model.Board.Width - 1
+  );
+  const Row: int := Sys.Math.Clamp(
+    Model.Cursor div Model.Board.Width + Y,
+    0,
+    Model.Board.Height - 1
+  );
+  return Next(
+    Model with
+      Cursor := Row * Model.Board.Width + Column;
+    end with
+  );
+end function;
+
+function Key(Model: S.Model; Code: Keys.Key; Repeated: bool): Mvu.Transition of (S.Model, S.Msg);
+begin
+  case Code of
+    when Keys.Key.Left:
+      return Move(Model, -1, 0);
+    when Keys.Key.Right:
+      return Move(Model, 1, 0);
+    when Keys.Key.Up:
+      return Move(Model, 0, -1);
+    when Keys.Key.Down:
+      return Move(Model, 0, 1);
+    when Keys.Key.F if not Repeated:
+      return Play(Model, Model.Cursor, true);
+    when Keys.Key.Enter, Keys.Key.Space if not Repeated:
+      return Play(Model, Model.Cursor, Model.FlagMode);
+    else
+      return Next(Model);
+  end case;
+end function;
+
+function BoardInput(Model: S.Model; Input: Canvas.Input): Mvu.Transition of (S.Model, S.Msg);
+begin
+  case Input of
+    when Canvas.Input.Key(const Code: Keys.Key, _, const Down: bool, const Repeated: bool) if Down:
+      return Key(Model, Code, Repeated);
+    else
+      return Next(Model);
+  end case;
+end function;
+
+// Applies one game or GUI event.
+// ## Parameters
+// - `Model`: Current application state.
+// - `Message`: Typed input or background event.
+// ## Returns
+// The next state and its background commands.
+public function Apply(Model: S.Model; Message: S.Msg): Mvu.Transition of (S.Model, S.Msg);
+begin
+  case Message of
+    when S.Msg.Difficulty(const Value: int):
+      return Next(
+        Model with
+          Difficulty := Value;
+        end with
+      );
+    when S.Msg.Width(const Value: int):
+      return Next(
+        Model with
+          CustomWidth := Value;
+        end with
+      );
+    when S.Msg.Height(const Value: int):
+      return Next(
+        Model with
+          CustomHeight := Value;
+        end with
+      );
+    when S.Msg.NewGame:
+      return Start(Model);
+    when S.Msg.FlagMode(const Value: bool):
+      return Next(
+        Model with
+          FlagMode := Value;
+        end with
+      );
+    when S.Msg.Play(const Index: int):
+      return Play(Model, Index, Model.FlagMode);
+    when S.Msg.BoardInput(const Value: Canvas.Input):
+      return BoardInput(Model, Value);
+    when S.Msg.Theme(const Value: Appearance.Selection):
+      return Next(
+        Model with
+          Theme := Value;
+        end with
+      );
+    when S.Msg.Tick(const Now: long) if Model.Board.State = G.Phase.Playing:
+      return Next(
+        Model with
+          Elapsed := Elapsed(Model, Now);
+        end with
+      );
+    when S.Msg.ClockFailed:
+      return Next(
+        Model with
+          ClockFailed := true;
+        end with
+      );
+    else
+      return Next(Model);
+  end case;
+end function;
+
+end unit;

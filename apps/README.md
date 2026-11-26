@@ -9,5 +9,6 @@ README, sources, project files and assets.
   unprofiled measurements and controlled failure targets for .NET tools.
 - [gui-doc-captures](gui-doc-captures/) captures gallery widgets for the UI handbook.
 - [FPas-Amp](fpas-amp/) is a desktop music player in development.
+- [fpas-sweeper](fpas-sweeper/) is a desktop Minesweeper-style game.
 
 See the [layout plan](../docs/architecture/project-layout.md#examples-and-applications).

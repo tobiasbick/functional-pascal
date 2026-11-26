@@ -1,0 +1,25 @@
+// [Documentation](../../doc/README.md#desktop-ui)
+
+program FpasSweeper;
+
+uses Fpas.Ui.Gui.Desktop as Gui;
+
+uses FpasSweeper.State as State;
+uses FpasSweeper.Update as Update;
+uses FpasSweeper.View as View;
+uses System as Sys;
+
+begin
+  Gui.RunThemed of (State.Model, State.Msg)(
+    State.Initial(Sys.Random.Shared.Next()),
+    Update.Apply,
+    View.Build,
+    new Gui.Options(
+      Title := 'fpas-sweeper', AppId := 'fpas-sweeper', Width := 1120, Height := 760,
+      MinimumWidth := 740, MinimumHeight := 640
+    ),
+    View.ThemeFor
+  );
+end;
+
+end program;

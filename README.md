@@ -149,10 +149,10 @@ provides project, test, and debug commands.
 
 ## Applications
 
-[`apps/`](apps/README.md) contains FPas-Amp, the desktop music player in development,
-the documentation example checker, GUI documentation captures and diagnostic
-workloads for profiling and failure investigation. Focused language and .NET API
-demonstrations live under [`examples/`](examples/README.md).
+[`apps/`](apps/README.md) contains the [FPas-Amp music player](apps/fpas-amp/),
+the [fpas-sweeper game](apps/fpas-sweeper/), the documentation example checker,
+GUI documentation captures and diagnostic workloads. Focused language and
+.NET API demonstrations live under [`examples/`](examples/README.md).
 
 ## Examples
 

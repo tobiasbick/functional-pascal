@@ -1,0 +1,14 @@
+<!-- [Documentation](doc/README.md) -->
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+    <Platform Name="Any CPU" />
+    <ProjectType Name="FPAS" Extension=".fpasproj" TypeId="{5D4B15AB-1024-4803-9015-4F069B13DE5A}">
+      <Platform Project="AnyCPU" />
+    </ProjectType>
+  </Configurations>
+  <Project Path="src/FpasSweeper/FpasSweeper.fpasproj" />
+  <Project Path="src/FpasSweeper.Game/FpasSweeper.Game.fpasproj" />
+  <Project Path="tests/FpasSweeper.Tests/FpasSweeper.Tests.fpasproj" />
+</Solution>

@@ -1,0 +1,149 @@
+// [Documentation](../README.md)
+
+unit FpasSweeper.Tests.BoardTests;
+
+uses FpasSweeper.Game as Game;
+uses System as Sys;
+uses Xunit as X;
+
+function Adjacent(Cell: Game.Cell): int;
+begin
+  return case Cell of
+    when Game.Cell.Open(const Count: int): Count;
+    else -1;
+  end case;
+end function;
+
+function IsFlag(Cell: Game.Cell): bool;
+begin
+  return case Cell of
+    when Game.Cell.Flagged: true;
+    else false;
+  end case;
+end function;
+
+function Find(Board: Game.Board; Outcome: Game.Phase): int;
+begin
+  for Index: int := 0 to Board.Width * Board.Height - 1 do
+    if Board.Reveal(Index).State = Outcome then
+      return Index;
+    end if;
+  end for;
+
+  raise new Sys.InvalidOperationException('No cell produces the expected round outcome.');
+end function;
+
+// Checks player-visible invariants using fixed round seeds.
+public type BoardTests = record
+  // Ready boards hide every cell and ignore out-of-range input.
+  [X.FactAttribute]
+  public procedure ReadyBoardIsCovered();
+  begin
+    const Board: Game.Board := Game.Board.Create(8, 8, 10, 1);
+    X.Assert.Equal of Game.Phase(Game.Phase.Ready, Board.Reveal(-1).Reveal(64).State);
+    X.Assert.Equal of int(0, Board.ToggleFlag(-1).ToggleFlag(64).FlagCount);
+    for Index: int := 0 to 63 do
+      X.Assert.Equal of Game.Cell(Game.Cell.Covered, Board.At(Index));
+    end for;
+  end procedure;
+
+  // Marking a cell blocks reveal without starting the round or changing the previous board.
+  [X.FactAttribute]
+  public procedure FlagsBlockRevealAndCanBeRemoved();
+  begin
+    const Original: Game.Board := Game.Board.Create(8, 8, 10, 2);
+    const Marked: Game.Board := Original.ToggleFlag(27);
+    X.Assert.True(IsFlag(Marked.At(27)));
+    X.Assert.Equal of int(1, Marked.FlagCount);
+    X.Assert.Equal of Game.Cell(Game.Cell.Covered, Original.At(27));
+    X.Assert.Equal of Game.Phase(Game.Phase.Ready, Marked.Reveal(27).State);
+    const Cleared: Game.Board := Marked.ToggleFlag(27);
+    X.Assert.Equal of int(0, Cleared.FlagCount);
+    X.Assert.Equal of int(0, Adjacent(Cleared.Reveal(27).At(27)));
+  end procedure;
+
+  // The first reveal clears the protected halo and leaves a flagged neighbour alone.
+  [X.FactAttribute]
+  public procedure FloodDoesNotRevealFlags();
+  begin
+    const Before: Game.Board := Game.Board.Create(8, 8, 10, 3).ToggleFlag(18);
+    const Opened: Game.Board := Before.Reveal(27);
+    X.Assert.Equal of int(0, Adjacent(Opened.At(27)));
+    X.Assert.True(IsFlag(Opened.At(18)));
+    X.Assert.True(Adjacent(Opened.At(36)) >= 0);
+    X.Assert.Equal of int(1, Opened.ToggleFlag(27).FlagCount);
+    X.Assert.Equal of Game.Cell(Game.Cell.Covered, Before.At(27));
+  end procedure;
+
+  // Dense boards still protect the first cell when there is no space for a halo.
+  [X.FactAttribute]
+  public procedure FirstRevealAtMaximumDensityWins();
+  begin
+    const Board: Game.Board := Game.Board.Create(5, 5, 24, 5).Reveal(12);
+    X.Assert.Equal of Game.Phase(Game.Phase.Won, Board.State);
+    X.Assert.Equal of int(8, Adjacent(Board.At(12)));
+    for Index: int := 0 to 24 do
+      X.Assert.Equal of bool(Index <> 12, IsFlag(Board.At(Index)));
+    end for;
+  end procedure;
+
+  // A long rectangular board counts neighbours locally and exposes exactly the protected cells.
+  [X.FactAttribute]
+  public procedure RectangularBoardCountsDiagonalNeighboursWithoutWrapping();
+  begin
+    const Board: Game.Board := Game.Board.Create(5, 24, 114, 13).Reveal(55);
+    X.Assert.Equal of Game.Phase(Game.Phase.Won, Board.State);
+    X.Assert.Equal of int(0, Adjacent(Board.At(55)));
+    X.Assert.Equal of int(2, Adjacent(Board.At(50)));
+    X.Assert.Equal of int(5, Adjacent(Board.At(51)));
+    X.Assert.True(IsFlag(Board.At(54)));
+    X.Assert.True(IsFlag(Board.At(59)));
+    var Count: int := 0;
+    for Index: int := 0 to 119 do
+      if IsFlag(Board.At(Index)) then
+        Count := Count + 1;
+      end if;
+    end for;
+
+    X.Assert.Equal of int(114, Count);
+  end procedure;
+
+  // Revealing a mine shows its trigger, an incorrect mark and the other mines.
+  [X.FactAttribute]
+  public procedure LossRevealsMinesAndIncorrectFlags();
+  begin
+    const Playing: Game.Board := Game.Board.Create(5, 5, 23, 19).Reveal(12);
+    const Safe: int := Find(Playing, Game.Phase.Won);
+    const Mine: int := Find(Playing, Game.Phase.Lost);
+    const Lost: Game.Board := Playing.ToggleFlag(Safe).Reveal(Mine);
+    X.Assert.Equal of Game.Phase(Game.Phase.Lost, Lost.State);
+    X.Assert.Equal of Game.Cell(Game.Cell.Mine(true), Lost.At(Mine));
+    X.Assert.Equal of Game.Cell(Game.Cell.WrongFlag, Lost.At(Safe));
+    X.Assert.Equal of Game.Cell(Game.Cell.WrongFlag, Lost.ToggleFlag(Safe).Reveal(Safe).At(Safe));
+    var Untriggered: int := 0;
+    for Index: int := 0 to 24 do
+      if Lost.At(Index) = Game.Cell.Mine(false) then
+        Untriggered := Untriggered + 1;
+      end if;
+    end for;
+
+    X.Assert.Equal of int(22, Untriggered);
+  end procedure;
+
+  // Flags alone do not finish a round. The last safe reveal marks mines and locks the result.
+  [X.FactAttribute]
+  public procedure LastSafeRevealWins();
+  begin
+    const Playing: Game.Board := Game.Board.Create(5, 5, 23, 23).Reveal(12);
+    const Safe: int := Find(Playing, Game.Phase.Won);
+    const Mine: int := Find(Playing, Game.Phase.Lost);
+    const Marked: Game.Board := Playing.ToggleFlag(Mine);
+    X.Assert.Equal of Game.Phase(Game.Phase.Playing, Marked.State);
+    const Won: Game.Board := Marked.Reveal(Safe);
+    X.Assert.Equal of Game.Phase(Game.Phase.Won, Won.State);
+    X.Assert.True(Adjacent(Won.At(Safe)) >= 0);
+    X.Assert.True(IsFlag(Won.ToggleFlag(Mine).Reveal(Mine).At(Mine)));
+  end procedure;
+end record;
+
+end unit;

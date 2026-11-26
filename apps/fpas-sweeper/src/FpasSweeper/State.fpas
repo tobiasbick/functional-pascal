@@ -1,0 +1,70 @@
+// [Documentation](../../doc/README.md#desktop-ui)
+
+unit FpasSweeper.State;
+
+uses Fpas.Ui.Widgets.Canvas.Canvases as Canvas;
+uses Fpas.Ui.Widgets.Theming.ThemeSwitchers as Appearance;
+
+uses FpasSweeper.Game as Game;
+
+// Input and background events handled by the application owner.
+public type Msg = variant
+  // Change the next game's difficulty.
+  Difficulty(Value: int);
+  // Change the next custom game's number of columns.
+  Width(Value: int);
+  // Change the next custom game's number of rows.
+  Height(Value: int);
+  // Start a new round using the selected settings.
+  NewGame;
+  // Choose whether activation marks or reveals a cell.
+  FlagMode(Value: bool);
+  // Activate a cell using the current mode.
+  Play(Index: int);
+  // Receive a keyboard or focus event for the board.
+  BoardInput(Value: Canvas.Input);
+  // Change the application's color scheme.
+  Theme(Value: Appearance.Selection);
+  // The round clock sampled the monotonic time.
+  Tick(Now: long);
+  // The clock reported a failure.
+  ClockFailed;
+end variant;
+
+// The current board, controls and round clock.
+public type Model = record
+  // Round being played.
+  public Board: Game.Board;
+  // Seed used by the current round.
+  public Seed: int;
+  // Selected difficulty index in the order Easy, Medium, Hard, Custom.
+  public Difficulty: int := 0;
+  // Editable custom width.
+  public CustomWidth: int := 8;
+  // Editable custom height.
+  public CustomHeight: int := 8;
+  // Whether ordinary activation toggles a flag.
+  public FlagMode: bool := false;
+  // Selected appearance.
+  public Theme: Appearance.Selection := Appearance.Selection.Light;
+  // Position used by keyboard moves.
+  public Cursor: int := 0;
+  // Monotonic tick count when the first cell was revealed.
+  public StartedAt: long := 0L;
+  // Whole seconds elapsed in the round.
+  public Elapsed: long := 0L;
+  // Whether the round clock stopped because of an error.
+  public ClockFailed: bool := false;
+end record;
+
+// Creates an easy round.
+// ## Parameters
+// - `Seed`: Initial random seed.
+// ## Returns
+// A new application model.
+public function Initial(Seed: int): Model;
+begin
+  return new Model(Game.Board.Create(8, 8, 10, Seed), Seed);
+end function;
+
+end unit;
